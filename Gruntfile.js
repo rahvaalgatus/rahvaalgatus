@@ -1,31 +1,15 @@
 'use strict';
 
 module.exports = function (grunt) {
-
-    // Project configuration.
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         concurrent: {
             dev: {
-                tasks: ['exec:start', 'uglify:dev', 'less:dev', 'mustache_render:dev', 'watch'],
+                tasks: ['uglify:dev', 'less:dev', 'watch'],
                 options: {
                     logConcurrentOutput: true
                 }
             }
-        },
-        exec: {
-            start: {
-                cmd: 'npm start'
-            },
-            test: {
-                cmd: 'npm test'
-            },
-            start_ep: {
-                cmd: 'sh _submodules/etherpad/bin/run.sh'
-            }
-        },
-        jshint: {
-            src: ['public/js/**/*.js', '!public/js/lib/**/*.js']
         },
         less: {
             dev: {
@@ -108,61 +92,6 @@ module.exports = function (grunt) {
                 }
             }
         },
-        mustache_render: {
-            dev: {
-                // TODO: Automatic discovery for new templates?
-                files: [
-                    {
-                        expand: true,
-                        src: 'emails/languages/*.json',
-                        template: 'emails/accountVerification.mu',
-                        dest: 'emails/build/',
-                        extDot: 'first',
-                        ext: '.mu',
-                        flatten: true,
-                        rename: function (dest, src) {
-                            return dest + 'accountVerification_' + src;
-                        }
-                    },
-                    {
-                        expand: true,
-                        src: 'emails/languages/*.json',
-                        template: 'emails/passwordReset.mu',
-                        dest: 'emails/build/',
-                        extDot: 'first',
-                        ext: '.mu',
-                        flatten: true,
-                        rename: function (dest, src) {
-                            return dest + 'passwordReset_' + src;
-                        }
-                    },
-                    {
-                        expand: true,
-                        src: 'emails/languages/*.json',
-                        template: 'emails/inviteGroup.mu',
-                        dest: 'emails/build/',
-                        extDot: 'first',
-                        ext: '.mu',
-                        flatten: true,
-                        rename: function (dest, src) {
-                            return dest + 'inviteGroup_' + src;
-                        }
-                    },
-                    {
-                        expand: true,
-                        src: 'emails/languages/*.json',
-                        template: 'emails/inviteTopic.mu',
-                        dest: 'emails/build/',
-                        extDot: 'first',
-                        ext: '.mu',
-                        flatten: true,
-                        rename: function (dest, src) {
-                            return dest + 'inviteTopic_' + src;
-                        }
-                    }
-                ]
-            }
-        },
         watch: {
             js: {
                 files: ['js/**/*.js', '!js/<%= pkg.name %>.bundle.js'],
@@ -178,17 +107,12 @@ module.exports = function (grunt) {
     // Load the plugins
     grunt.loadNpmTasks('grunt-contrib-cssmin');
     grunt.loadNpmTasks('grunt-contrib-less');
-    grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-cache-breaker');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-concurrent');
-    grunt.loadNpmTasks('grunt-exec');
-    grunt.loadNpmTasks('grunt-mustache-render');
 
     // Default task(s).
     grunt.registerTask('default', ['concurrent:dev']);
     grunt.registerTask('start', ['concurrent:dev']);
-    grunt.registerTask('test', ['exec:test']);
-
 };
