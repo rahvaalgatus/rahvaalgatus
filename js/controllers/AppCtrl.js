@@ -183,12 +183,13 @@ app.controller("AppCtrl", [ "$scope", "$rootScope", "$window", "$state", "$trans
     });
     checkCookie = function(){
         var dearUserCookie=getCookie("dearuser");
-        if (dearUserCookie!="") {           
-        }
-        else{
-            document.cookie="dearuser=dearuser; expires=Thu, 18 Dec 2030 12:00:00 UTC";
-            $scope.dearUser();
-        }
+
+        // The beta warning used to be a permanent cookie, but then desired to
+        // be a session cookie. Overwriting it whether it exists or not changes
+        // the permantent cookie to a session one.
+        document.cookie="dearuser=dearuser;";
+
+        if (!dearUserCookie) $scope.dearUser()
     };
     checkCookie();
     function getCookie(cname) {
