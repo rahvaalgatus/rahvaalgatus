@@ -1,0 +1,53 @@
+<div id="popup" class="ngdialog-overlay" ng-controller="GroupTopicsViewCtrl">
+    <div class="inline" style="width:725px;">
+        <div class="buttons">
+            <div class="btn-close" ng-click="closeThisDialog()">&nbsp;</div>
+        </div>
+        <!--/buttons-->
+
+        <h2 class="no_border"><span class="gray" translate="HEADING_IN_GROUP">in group:</span> <i>{{group.name}}</i></h2>
+
+        <table class="header">
+            <tr>
+                <td>
+                    <div href="#" class="tab">
+                        <span class="title" translate="{{'Topics (\{\{count\}\})' | translate: topics}}">Topics (0)</span>
+                        <a href="" ui-sref="topics.create" ng-click="closeThisDialog()" translate="LNK_CREATE_A_TOPIC">Create a topic</a>
+                    </div>
+                </td>
+                <td>
+                    <!--div class="search_field TODO">
+                        <input type="text" placeholder="{{'PLACEHOLDER_SEARCH_TOPIC' | translate}}" />
+                    </div-->
+                </td>
+            </tr>
+        </table>
+        <table class="list">
+            <tr>
+                <th translate="TH_TITLE">Title</th>
+                <th translate="TH_USERS">Users</th>
+                <th translate="TH_REMOVE">Remove</th>
+            </tr>
+        </table>
+        <!--/list-->
+        <div class="scroller">
+            <table class="list">
+                <tr ng-repeat="topic in topics.rows">
+                    <td>{{topic.title}}</td>
+                    <td><u>{{topic.members.users.count}}</u></td>
+                    <td>
+                        <button class="remove" ng-disabled="topic.permission.level != 'admin'" ng-click="delete(topic.id)" translate="BTN_REMOVE">Remove</button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <!--/scroller-->
+    </div>
+    <!--/inline-->
+</div>
+<script type="text/javascript">
+    // Not the most elegant solution, find a better one.
+    setTimeout(function () {
+        $('#popup').popup();
+    }, 100);
+</script>

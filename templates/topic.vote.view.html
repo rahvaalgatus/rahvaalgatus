@@ -1,0 +1,117 @@
+<div ng-controller="TopicVoteViewFormCtrl">
+    <!-- Vote in progress view -->
+    <div class="admin-role-cal" ng-show="!hasVoted && !hasEnded" ng-if="!app.topicLoad">
+        <div class="head clearfix"> 
+            <p class="left" translate="HEADING_CAST_YOUR_VOTE">Cast your vote</p>
+            <p class="right">{{voteCountTotal}} <span translate="TXT_N_VOTES_COUNTED">votes counted</span></p>
+        </div>
+        <div class="con clearfix">
+            <div class="left" translate="HEADING_VOTE_REQUIRE_HARD_ID">
+                    This document needs a signing by ID card or Mobile ID to be registered. You can not vote if you don’t identify yourself.
+            </div>
+            <div class="right">
+                    <p><a><img src="images/icon-mobile-id.png" alt="Image"></a></p>
+                <p><a><img src="images/icon-kart-id.png" alt="Image"></a></p>
+            </div>
+        </div>
+        <div class="sign-in" >
+            <a href="#" ng-click="!hasEnded && doVote(option)" translate="SIGN_THIS_DOCUMENT">SIGN THIS DOCUMENT</a>
+        </div> 
+        <div class="con sign-info"><p translate="SIGNING_INFO"></p></div>
+
+    </div>
+    <div class="voting-block" ng-if="!app.topicLoad">
+        <div class="message theme-4" ng-if="hasVoted && !hasEnded && (!isAdmin() && !canEdit())">
+            <div class="admin-role-cal">
+                    <div class="head clearfix">
+                    <p class="left" translate="DOCUMENT_SIGNED">Document signed</p>
+                    <p class="right">{{voteCountTotal}} <span translate="TXT_N_VOTES_COUNTED">votes counted</span></p>
+                </div>
+                <div class="con-down clearfix">
+                    <div class="left"><span translate="HEADING_VOTE_REGISTERED">Your vote has been registered!</span></div>
+                    <div class="right"><a votedata="{{vote.downloads}}" ng-href="{{vote.downloads.bdocVote}}" ng-show="isAuthTypeHard() && hasVoted" target="_blank" class="download pull-right" translate="LNK_DOWNLOAD_USER_BDOC">Download your BDOC</a></div>
+                </div>
+                <div class="sign-in">
+                    <a href="#" ng-click="doVote(optionRevoke)" translate="REVOKE_SIGNATURE">REVOKE SIGNATURE</a>
+                </div>
+                <!--<div class="future-progress">
+                    <p translate="WANT_TO_KEEP_INFORMED_ABOUT_FURTHER_PROGRESS">Want to keep informed about further progress?</p>
+                    <form>
+                            <input type="email" placeholder="{{'Email address' | translate}}">
+                        <input type="submit" value="{{'KEEP ME INFORMED' | translate}}">
+                    </form>
+                </div>-->
+            </div>
+        </div>
+        <div class="message theme-4" ng-if="hasVoted && !hasEnded && (!isAdmin() && !canEdit())">
+            <div class="admin-role-cal">
+                    <div class="head clearfix">
+                    <p class="left" translate="DOCUMENT_SIGNED">Document signed</p>
+                    <p class="right">{{voteCountTotal}} <span translate="TXT_N_VOTES_COUNTED">votes counted</span></p>
+                </div>
+                <div class="con-down clearfix">
+                    <div class="left"><span translate="HEADING_VOTE_REGISTERED">Your vote has been registered!</span></div>
+                    <div class="right"><a votedata="{{vote.downloads}}" ng-href="{{vote.downloads.bdocVote}}" ng-show="isAuthTypeHard() && hasVoted" target="_blank" class="download pull-right" translate="LNK_DOWNLOAD_USER_BDOC">Download your BDOC</a></div>
+                </div>
+                <div class="sign-in">
+                    <a href="#" ng-click="doVote(optionRevoke)" translate="REVOKE_SIGNATURE">REVOKE SIGNATURE</a>
+                </div>
+                <!--<div class="future-progress">
+                    <p translate="WANT_TO_KEEP_INFORMED_ABOUT_FURTHER_PROGRESS">Want to keep informed about further progress?</p>
+                    <form>
+                            <input type="email" placeholder="{{'Email address' | translate}}">
+                        <input type="submit" value="{{'KEEP ME INFORMED' | translate}}">
+                    </form>
+                </div>-->
+            </div>
+        </div>
+        <div class="admin-role-cal" ng-if="(!app.topicLoad && hasEnded && (isAdmin() || canEdit()) && canSendToFollowUp() && hasVotesRequired)  topic.status != 'followUp'">
+                <div class="head clearfix">
+                <p class="left" translate="BTN_SEND_TO_FOLLOWUP">Sent to parliament</p>
+                <p class="right" >{{voteCountTotal}} <span translate="TXT_N_VOTES_COUNTED">votes counted</span></p>
+            </div>
+            <div class="con clearfix">
+                <div class="left" translate="AT_LEAST_1000_SIGNATURES_COLLECTED">
+                        At least 1000 signatures were collected. You can now send this to the parliament.
+                </div>
+            </div>
+            <div class="sign-in clearfix">
+                <div class="left"><a ng-href="{{vote.downloads.bdocVote}}" ng-show="isAuthTypeHard() && hasVoted" target="_blank" class="download pull-right" ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}" translate="LNK_DOWNLOAD_USER_BDOC">Download your BDOC</a></div>
+                <div class="right" ng-show="isAdmin() && canSendToFollowUp()"><a  href="#" ng-click="setTopicStatusToFollowUp(topic)" translate="BTN_SEND_TO_FOLLOWUP"  ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}">REOPEN TOPIC</a></div>
+            </div>
+        </div>
+        <div class="admin-role-cal" ng-if="(!app.topicLoad && hasEnded && (isAdmin() || canEdit()) && !hasVotesRequired) && topic.status != 'followUp'">
+                <div class="head clearfix">
+                <p class="left" translate="SIGNING_DEADLINE_REACHED">Sent to parliament</p>
+                <p class="right" >{{voteCountTotal}} <span translate="TXT_N_VOTES_COUNTED">votes counted</span></p>
+            </div>
+            <div class="con clearfix">
+                <div class="left" translate="NOT_ENOUGH_SIGNATURES">
+                        At least 1000 signatures were collected. You can now send this to the parliament.
+                </div>
+            </div>
+            <div class="sign-in clearfix">
+                <div class="left"><a ng-href="{{vote.downloads.bdocVote}}" ng-show="isAuthTypeHard() && hasVoted" target="_blank" class="download pull-right" ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}" translate="LNK_DOWNLOAD_USER_BDOC">Download your BDOC</a></div>
+                <div class="right" ng-show="isAdmin() && voteCountTotal < 1000"><a ng-if="topic.status != 'closed'" href="#" ng-click="reopenTopic(topic)" translate="REOPEN_TOPIC"  ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}">REOPEN TOPIC</a></div>
+            </div>
+        </div>
+        <div class="admin-role-cal" ng-if="!app.topicLoad && (isAdmin() || canEdit()) && topic.status == 'followUp'">
+                <div class="head clearfix">
+                <p class="left" translate="SENT_TO_PARLIAMENT">Sent to parliament</p>
+                <p class="right" >{{voteCountTotal}} <span translate="TXT_N_VOTES_COUNTED">votes counted</span></p>
+            </div>
+            <div class="con clearfix">
+                <div class="left" translate="SENT_TO_PARLIAMENT_CONTENT">
+                        At least 1000 signatures were collected. You can now send this to the parliament.
+                </div>
+            </div>
+            <div class="sign-in clearfix">
+                <div class="left"><a ng-href="{{vote.downloads.bdocFinal}}" ng-show="isAuthTypeHard()" target="_blank" class="download pull-right" ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}" translate="BTN_DOWNLOAD_FINAL_BDOC">Download your BDOC</a></div>
+                <div class="right" ng-show="isAdmin() && voteCountTotal < 1000"><a href="#" ng-click="reopenTopic(topic)" translate="REOPEN_TOPIC"  ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}">REOPEN TOPIC</a></div>
+            </div>
+        </div>
+        <!--/message-->
+    </div>
+    <!--/voting-block-->
+
+</div>

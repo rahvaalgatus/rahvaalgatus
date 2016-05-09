@@ -1,0 +1,96 @@
+<!-- FIXME: padding inline style :( -->
+<div class="grid" style="padding-top: 1.88em" ng-controller="GroupCtrl">
+
+    <div class="entry theme-21" ng-controller="GroupCreateFormCtrl">
+        <span class="wrapper" ng-show="!showForm">
+            <div class="create" ng-click="doShowForm()" translate="BTN_CREATE_A_NEW_GROUP">
+                Create a new group.
+            </div><!--/create-->
+        </span>
+
+        <form class="wrapper" ng-show="showForm">
+            <a href="#" class="close-btn" ng-click="doHideForm()"></a>
+
+            <div class="label" ng-class="{error: errors.name}">
+                <input type="text" ng-model="form.name" placeholder="{{'LBL_GROUP_NAME' | translate}}" />
+                <span class="error_message" ng-show="errors.name">
+                    <span translate="{{errors.name}}"></span>
+                </span>
+            </div>
+            <!--/label-->
+
+            <div class="label">
+                <button class="button secondary" ng-click="doShowPermissionsAddDialog()"><span translate="BTN_INVITE_MORE_USERS">INVITE MORE USERS</span></button>
+                <div class="info" translate="{{'TXT_N_USERS_WILL_BE_INVITED' | translate: users}}">0 USERS WILL BE INVITED</div>
+            </div>
+            <!--/label-->
+
+            <div class="label">
+                <button class="button secondary" ng-click="doShowTopicsAddDialog()"><span translate="BTN_ADD_MORE_TOPICS">ADD MORE TOPICS</span></button>
+                <div class="info" translate="{{'TXT_N_TOPICS_WILL_BE_ADDED' | translate: topics}}">0 TOPICS WILL BE ADDED</div>
+            </div>
+            <!--/label-->
+            <div class="label submit">
+                <button type="submit" class="button" ng-click="submit()" translate="BTN_CREATE_GROUP">CREATE THIS GROUP</button>
+            </div>
+            <!--/label-->
+        </form>
+        <!--/wrapper-->
+    </div>
+    <!--/entry-->
+
+    <div class="entry" ng-class="{'theme-21': showForm, 'theme-20 group': !showForm}" ng-repeat="group in groups" ng-controller="GroupEditFormCtrl"
+         ng-init="init(group, doShowGroupEditView(group.id))">
+        <span class="wrapper" ng-show="!showForm">
+            <span class="title">{{group.name}}</span>
+            <a href="" class="settings" ng-click="doShowForm()" ng-show="isAdmin()"></a>
+            <div class="columns">
+                <div class="column">
+                    <span translate="LBL_USERS">USERS</span>
+                    <a href="" class="big" ng-dialog="/templates/modals/groupPermissionsView.html"
+                       ng-dialog-data="{{group}}">{{group.members.count}}</a>
+                </div>
+                <!--/entry-->
+                <div class="column">
+                    <span translate="LBL_TOPICS">TOPICS</span>
+                    <a href="" class="big" ng-dialog="/templates/modals/groupTopicsView.html"
+                       ng-dialog-data="{{group}}">{{group.topics.count}}</a>
+                </div>
+                <!--/entry-->
+            </div><!--/columns-->
+            <span class="body" ng-show="group.topics.latest.title">
+                <span class="small" translate="LBL_LATEST_ACTIVE_TOPIC">LATEST ACTIVE TOPIC</span>{{group.topics.latest.title}}
+            </span>
+        </span>
+
+        <form class="wrapper" ng-show="showForm">
+            <a href="#" class="close-btn" ng-click="doHideForm()"></a>
+
+            <div class="label" ng-class="{error: errors.name}">
+                <input type="text" placeholder="{{'LBL_GROUP_NAME' | translate}}" ng-model="form.name"/>
+                <span class="error_message" ng-show="errors.name">
+                    <span translate="{{errors.name}}"></span>
+                </span>
+            </div>
+            <!--/label-->
+
+            <div class="label">
+                <button class="button secondary" ng-click="doShowPermissionsAddDialog()"><span translate="BTN_INVITE_MORE_USERS">INVITE MORE USERS</span></button>
+                <div class="info" translate="{{'TXT_N_USERS_WILL_BE_INVITED' | translate: users}}">0 USERS WILL BE INVITED</div>
+            </div>
+            <!--/label-->
+
+            <div class="label">
+                <button class="button secondary" ng-click="doShowTopicsAddDialog()"><span translate="BTN_ADD_MORE_TOPICS">ADD MORE TOPICS</span></button>
+                <div class="info" translate="{{'TXT_N_TOPICS_WILL_BE_ADDED' | translate: topics}}">0 TOPICS WILL BE ADDED</div>
+            </div>
+            <!--/label-->
+
+            <div class="label buttons">
+                <button class="button" ng-click="submit()" translate="BTN_SAVE">SAVE</button>
+                <button class="button btn-small delete " ng-click="delete()"></button>
+            </div>
+        </form>
+    </div>
+
+</div><!--/grid-->

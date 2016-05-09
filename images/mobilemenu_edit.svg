@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="23px" height="23px" viewBox="0 0 23 23" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+    <!-- Generator: Sketch 3.4.4 (17249) - http://www.bohemiancoding.com/sketch -->
+    <title>mobilemenu_edit</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+        <g id="13e---mobile-view---Topic---admin-role---Create-singing-phase" sketch:type="MSArtboardGroup" transform="translate(-234.000000, -14.000000)" fill="#FFFFFF">
+            <g id="menu" sketch:type="MSLayerGroup">
+                <g id="text-edit-menu" transform="translate(228.000000, 11.000000)" sketch:type="MSShapeGroup">
+                    <g id="mobilemenu_edit" transform="translate(16.000000, 15.500000) scale(-1, -1) rotate(-315.000000) translate(-16.000000, -15.500000) translate(9.000000, 1.000000)">
+                        <rect id="Rectangle-2095" x="3" y="12" width="8" height="16"></rect>
+                        <path d="M2.23223305,2.73223305 L11.767767,6.26776695 L5.76776695,12.267767 L2.23223305,2.73223305 Z" id="Rectangle-2096" transform="translate(7.000000, 7.500000) rotate(-315.000000) translate(-7.000000, -7.500000) "></path>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

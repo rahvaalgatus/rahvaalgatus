@@ -1,0 +1,102 @@
+<div id="popup" class="ngdialog-overlay">
+    <div class="inline" style="width:500px;">
+        <div class="buttons">
+            <div class="btn-close" ng-click="closeThisDialog()">&nbsp;</div>
+        </div>
+        <!--/buttons-->
+        <div class="scroller">
+
+            <div class="form">
+                <form name="signUpForm" ng-controller="SignUpFormCtrl">
+                    <!--div class="label TODO">
+                        <div class="title">Picture</div>
+                        <div class="element">
+                            <div class="image-circle">
+                                <div class="upload">+</div>
+                            </div>
+                        </div>
+                    </div-->
+                    <!--/label-->
+                    <div class="label" ng-class="{error: errors.name}">
+                        <div class="title"><span translate="LBL_FULL_NAME">Full name</span> *</div>
+                        <div class="element">
+                            <input type="text" placeholder="{{'PLACEHOLDER_FULL_NAME' | translate}}" ng-model="form.name" required/>
+
+                            <div class="error_message" ng-show="errors.name">
+                                <span translate="{{errors.name}}"></span>
+                            </div>
+                        </div>
+                        <!--/element-->
+                    </div>
+                    <div class="label">
+                        <div class="title" translate="LBL_COMPANY">Company</div>
+                        <div class="element">
+                            <input type="text" placeholder="{{'PLACEHOLDER_COMPANY' | translate}}" ng-model="form.company"/>
+
+                            <div class="error_message" ng-show="errors.company">
+                                <span translate="{{errors.company}}"></span>
+                            </div>
+                        </div>
+                        <!--/element-->
+                    </div>
+                    <!--/label-->
+                    <div class="label" ng-class="{error: errors.email}">
+                        <div class="title"><span translate="LBL_EMAIL">Email</span> *</div>
+                        <div class="element">
+                            <input type="text" placeholder="{{'PLACEHOLDER_EMAIL' | translate}}" ng-model="form.email" required/>
+
+                            <div class="error_message" ng-show="errors.email">
+                                <span translate="{{errors.email}}"></span>
+                            </div>
+                        </div>
+                        <!--/element-->
+                    </div>
+                    <!--/label-->
+                    <div class="label" ng-class="{error: errors.password}">
+                        <div class="title"><span translate="LBL_PASSWORD">Password</span> *</div>
+                        <div class="element">
+                            <input type="password" placeholder="{{'PLACEHOLDER_PASSWORD' | translate}}" ng-model="form.password" required/>
+
+                            <div class="error_message" ng-show="errors.password">
+                                <span translate="{{errors.password}}"></span>
+                            </div>
+                        </div>
+                        <!--/element-->
+                    </div>
+                    <!--/label-->
+                    <div class="label" ng-class="{error: errors.passwordRepeat}">
+                        <div class="title"><span translate="LBL_PASSWORD_REPEAT">Repeat password</span> *</div>
+                        <div class="element">
+                            <input type="password" placeholder="{{'PLACEHOLDER_PASSWORD_REPEAT' | translate}}" ng-model="form.passwordRepeat" required/>
+
+                            <div class="error_message" ng-show="errors.passwordRepeat">
+                                <span translate="{{errors.passwordRepeat}}"></span>
+                            </div>
+                        </div>
+                        <!--/element-->
+                    </div>
+                    <!--/label-->
+                    <div class="label">
+                        <div class="title">&nbsp;</div>
+                        <div class="element">
+                            <button type="submit" class="button secondary"
+                                    ng-click="submit()"
+                                    ng-disabled="signUpForm.$invalid" translate="BTN_SAVE">SAVE
+                            </button>
+                        </div>
+                        <!--/element-->
+                    </div>
+                    <!--/label-->
+                </form>
+                <!--/form-->
+            </div>
+
+        </div>
+        <!--/scroller-->
+    </div>
+</div>
+<script type="text/javascript">
+    setTimeout(function () {
+        $('#popup').popup();
+    }, 100);
+</script>

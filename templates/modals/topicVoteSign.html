@@ -1,0 +1,95 @@
+<div id="vote-sign" class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-front ui-draggable ui-resizable" tabindex="-1" role="dialog" aria-describedby="signpop" aria-labelledby="ui-id-35"  ng-controller="TopicVoteSignCtrl">
+    <div ng-show="showdonate" id="signpop" class="ui-dialog-content ui-widget-content" style="display: block; width: auto; min-height: 110px; max-height: none; height: auto;">
+        <div class="sign-type clearfix">
+                <p ng-hide="showVoteRevokedResult" translate="THANKS_FOR_SIGNING">Thanks for signing!</p><br>
+                <p ng-show="showVoteRevokedResult" translate="VOTE_REVOKED">Thanks for signing!</p><br>
+            <!--<p translate="PAY_RAHVAALGATUS_IS">Rahvaalgatus is a labour of love, but we can always use some extra help. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam id auctor purus. Praesent pharetra neque at leo ornare convallis. Fusce non purus tempor, tincidunt nulla in, vehicula eros.</p><br>
+            <p><strong translate="PAY_WHAT_YOU_WANT">Pay what you want:</strong></p>
+            <p><input type="text" placeholder="€ 5,00" style="width:130px; margin-top:15px;"></p>
+            <ul class="banks">
+                <li><img src="images/bank_ibverso.png" alt="Image"></li>
+                <li><img src="images/bank_krediidipank.png" alt="Image"></li>
+                <li><img src="images/bank_swedbank.png" alt="Image"></li>
+                <li><img src="images/bank_seb.png" alt="Image"></li>
+                <li><img src="images/bank_danskebank.png" alt="Image"></li>
+                <li><img src="images/bank_nordea.png" alt="Image"></li>
+                <li><img src="images/bank_lhv.png" alt="Image"></li>
+            </ul>-->
+        </div>
+        <div class="skip">
+                <a href="#" ng-click="skipDonate()" translate="CLOSE">SKIP THIS</a>
+        </div>
+    </div>
+    
+    
+    <div ng-hide="showdonate" showdonate='{{showdonate}}' class="ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix ui-draggable-handle">
+        <span id="ui-id-35" class="ui-dialog-title" translate="HEADING_VOTE_CHOOSE_A_SIGNING_METHOD">CHOOSE A SIGNING METHOD</span>
+        <button ng-click="closeThisDialog()" type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only ui-dialog-titlebar-close" role="button" title="Close">
+            <span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span>
+            <span class="ui-button-text" translate="CLOSE">Close</span>
+        </button>
+    </div>
+    <div ng-hide="showdonate"  id="signpop" class="ui-dialog-content ui-widget-content" style="display: block; width: auto; min-height: 0px; max-height: none; height: auto;">
+        <div class="notifications" ng-show="voteSignError">
+            <div class="entry error">
+                <span translate="{{voteSignError}}">Wow, we failed!</span>
+
+                <div class="close" ng-click="doCloseVoteSignError()">&nbsp;</div>
+            </div>
+        </div>
+        <div class="sign-type clearfix">
+            <div ng-if="isLoadingIdCard" class="spinner-wrapper">
+                <div ng-show="isLoadingIdCard || formMobile.isLoading" class="spinner"></div>
+            </div>
+            <div class="box">
+                <img ng-show="!isLoadingIdCard" src="images/id-kart-icon.png" alt="Image">
+                
+                <div ng-show="!isLoadingIdCard">
+                        <img src="images/idcard_illustration.png" alt="Image">
+                    <a ng-show="!isLoadingIdCard && !formMobile.challengeID" href="#" ng-click="doSignWithCard()" translate="BTN_VOTE_SIGN_WITH_ID_CARD">SIGN WITH ID CARD</a>
+                </div>
+            </div>
+            <div class="box" ng-hide="isLoadingIdCard">     
+                <img src="images/mobile-id-icon.png" alt="Image">
+                <form name="formMobileSign" ng-show="!formMobile.challengeID" novalidate> 
+                    <div ng-show="!formMobile.isLoading">
+                        <label class="label" ng-class="{error: formMobileSign.phoneNumber.$error.pattern && formMobileSign.phoneNumber.$touched}">
+                            <input type="text" name="phoneNumber" ng-model="formMobile.phoneNumber" placeholder="{{'PLACEHOLDER_PHONE_NUMBER' | translate}}" ng-pattern="/^\+?[0-9\s-]{7,}$/" required />
+                            <span class="error_message" ng-show="formMobileSign.phoneNumber.$error.pattern && formMobileSign.phoneNumber.$touched" translate="MSG_ERROR_INVALID_PHONE_NUMBER">Invalid phone number</span>
+                        </label>
+                        <label class="label" ng-class="{error: formMobileSign.pid.$error.pattern && formMobileSign.pid.$touched}">
+                            <input type="text" name="pid" ng-model="formMobile.pid" placeholder="{{'PLACEHOLDER_PERSONAL_IDENTIFICATION_CODE' | translate}}" ng-pattern="/^[0-9]{11}$/" required/>
+                            <span class="error_message" ng-show="formMobileSign.pid.$error.pattern && formMobileSign.pid.$touched" translate="MSG_ERROR_INVALID_PERSONAL_IDENTIFICATION_CODE">Invalid personal identification code</span>
+                        </label>
+                    </div>
+                    <div class="submit">
+                    <button translate="BTN_VOTE_SIGN_WITH_MOBILE_ID" ng-show="!formMobile.isLoading" ng-click="doSignWithMobile()" ng-disabled="formMobileSign.$invalid">SIGN WITH
+                        MOBILE ID
+                    </button>
+                    </div>
+            </form>
+            <!-- TODO: translate -->
+            <div  style="color:#4a555d;"class="pending" ng-show="formMobile.challengeID && formMobile.isLoading">
+                <div class="row">
+                    <h3 translate="HEADING_MOBILEID_CONTROL_CODE" translate-values="{code: formMobile.challengeID}" >Control code: </h3>
+
+                    <div class="spinner"></div>
+                    <p translate="MAKE_SURE_CONTROL_CODE">
+                        Make sure control code matches with one in the phone screen and enter Mobile-ID PIN2.
+                    </p>
+                </div>
+                <div class="row">
+                </div>
+            </div>
+            </div>
+        </div>
+        </div>
+    <div class="ui-resizable-handle ui-resizable-n" style="z-index: 90;"></div>
+    <div class="ui-resizable-handle ui-resizable-e" style="z-index: 90;"></div>
+    <div class="ui-resizable-handle ui-resizable-s" style="z-index: 90;"></div>
+    <div class="ui-resizable-handle ui-resizable-w" style="z-index: 90;"></div>
+    <div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se" style="z-index: 90;"></div>
+    <div class="ui-resizable-handle ui-resizable-sw" style="z-index: 90;"></div>
+    <div class="ui-resizable-handle ui-resizable-ne" style="z-index: 90;"></div>
+    <div class="ui-resizable-handle ui-resizable-nw" style="z-index: 90;"></div>        
+</div>

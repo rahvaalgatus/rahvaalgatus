@@ -1,0 +1,24 @@
+<div ng-controller="TopicRenewDeadlineFormCtrl">
+
+    <div class="voting-options">
+        <div ng-show="form.voteType">
+            <div class='admin-role-cal'>
+                <div class="head">
+                    <p translate="RENEW_DEADLINE">Set the deadline for the signature collecting</p>
+                </div>  
+                <div class="calendar cal-deadline" ng-show="form.showCalendar">
+                    <div class="clearfix dates">
+                        <p class="left">Deadline: {{form.endsAt | amDateFormat : 'L'}}</p>
+                        <p class="right" translate="{{'TXT_DEADLINE_CALENDAR_DAYS_LEFT' | translate: form}}">1 days left</p>
+                    </div>
+                    <div date-picker="form.endsAt" max-view="date" min-view="date" template="/templates/components/datePicker.html?1312234239084"></div>
+                </div>
+                <!--/calendar-->
+                <div class="sign-in">
+                        <a href="#" ng-click="save()" ng-disabled="topicVoteForm.$invalid" translate="BTN_CONFIRM_NEW_DEADLINE" class="ng-scope">BTN_CONFIRM_NEW_DEADLINE</a>
+                </div>
+            </div>            
+        </div>
+    </div>
+    <!--/voting-options-->
+</div>

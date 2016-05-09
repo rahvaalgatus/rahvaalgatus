@@ -1,0 +1,28 @@
+<!--Not logged-in-->
+        <div ng-show="!app.user.isLoading && !app.user.loggedIn">
+            <a href="" class="logo" ui-sref="home"><img src="static/imgs/logo.png"/></a>
+
+            <div class="login" ng-show="!app.user.loggedIn">
+                <form name="loginForm" ng-controller="LoginFormCtrl">
+                    <div class="label" ng-class="{error: errors.email}">
+                        <input type="text" placeholder="{{'PLACEHOLDER_EMAIL' | translate}}" ng-model="form.email" required/>
+                        <span class="error_message" ng-show="errors.email" translate="{{errors.email}}"></span>
+                    </div>
+                    <div class="label" ng-class="{error: errors.password}">
+                        <input type="password" placeholder="{{'PLACEHOLDER_PASSWORD' | translate}}" ng-model="form.password" required/>
+                        <span class="error_message" ng-show="errors.password" translate="{{errors.password}}">{{errors.password}}</span>
+                    </div>
+                    <button type="submit" class="button" ng-disabled="loginForm.$invalid" ng-click="submit()" translate="BTN_LOG_IN_REGISTER">LOG
+                        IN/REGISTER
+                    </button>
+                    <a href="" class="link" ng-click="doRecoverPassword()" translate="LNK_FORGOT_PASSWORD">Forgot password?</a>
+                    <button type="button" class="button btn-social-login login-fb" ng-click="loginPartner('facebook')" translate="BTN_LOG_IN_FACEBOOK">FACEBOOK LOGIN</button>
+                    <button type="button" class="button btn-social-login login-google" ng-click="loginPartner('google')" translate="BTN_LOG_IN_GOOGLE">GOOGLE LOGIN</button>
+                </form>
+            </div>
+        </div>
+
+        <!--Logged in-->
+        <div class="right login-after" ng-show="!app.user.isLoading && app.user.loggedIn">
+                    Hello, Jannus Jaska &nbsp;|&nbsp; <a href="#" class="open-profile">My profile</a> &nbsp;|&nbsp; <a href="#" translate="BTN_LOG_OFF">Log out</a>
+                </div>

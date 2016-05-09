@@ -1,0 +1,57 @@
+<div id="popup" class="ngdialog-overlay">
+    <div class="inline" style="width:430px;">
+        <div class="buttons">
+            <div class="btn-close" ng-click="closeThisDialog()">&nbsp;</div>
+        </div>
+        <!--/buttons-->
+
+        <div class="scroller">
+            <form class="invite" ng-controller="GroupInviteFormCtrl">
+                <h2 class="no_border"><span class="gray" translate="HEADING_ADD_MEMBERS_TO">Add members to:</span> {{group.name}}</h2>
+
+                <typeahead class="auto-complete" items="searchResults.users" term="searchString" search="search(term)"
+                           select="selectMember(item)" placeholder="{{'PLACEHOLDER_USERNAME_OR_EMAIL' | translate}}">
+                    <div class="ac-dropdown" ng-cloak>
+                        <div class="ac-dataset" ng-show="searchResults.users.length">
+                            <h5 class="ac-topic" translate="LBL_USERS">Users</h5>
+
+                            <div class="ac-suggestions">
+                                <div class="ac-suggestion" typeahead-item="user" ng-repeat="user in searchResults.users">{{user.name}}</div>
+                            </div>
+                        </div>
+
+                        <div class="ac-empty-message" ng-show="!searchResults.users.length && !searchResults.groups.length" translate="TXT_NO_RESULTS_FOUND">
+                            No results found
+                        </div>
+                    </div>
+                </typeahead>
+
+                <h4 ng-show="users.rows.length">Users</h4>
+                <table class="list users">
+                    <tr ng-repeat="user in users.rows">
+                        <td>
+                            <div class="image icon-user">
+                                <img ng-src="{{user.imageUrl}}"/>
+                            </div>
+                            <div class="description">
+                                {{user.name}}<br>
+                                <span class="gray">{{user.company}}</span>
+                            </div>
+                            <!--/description-->
+                        </td>
+                        <td>
+                            <button class="remove" ng-click="removeMember($index)" translate="BTN_REMOVE">Remove</button>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+    </div>
+    <!--/inline-->
+</div>
+<script type="text/javascript">
+    // Not the most elegant solution, find a better one.
+    setTimeout(function () {
+        $('#popup').popup();
+    }, 100);
+</script>
