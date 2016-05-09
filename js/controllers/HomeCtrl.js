@@ -326,7 +326,7 @@ app.controller("HomeCtrl", [ "$scope", "$rootScope", "$state", "$kookies", "$log
             break;
 
           case "voting":
-            if ($scope.searchString == null || $scope.searchString == "") {
+            if (!($scope.searchString == null || $scope.searchString == "")) {
                 var topics = $scope.searchResults[$scope.searchString]["voting"];
                 $scope.rangevotingtopicList = new Array(Math.ceil(topics.length / $scope.filters.limit));
                 topics = topics.slice(page * $scope.filters.limit, page * $scope.filters.limit + $scope.filters.limit);
