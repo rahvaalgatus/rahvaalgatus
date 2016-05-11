@@ -1,5 +1,8 @@
+NODE = node
 PORT = 3000
 ENV = development
+
+export PORT
 export ENV
 
 love:
@@ -12,7 +15,7 @@ autocompile:
 	./node_modules/.bin/grunt watch
 
 server:
-	python -m SimpleHTTPServer "$(PORT)"
+	@$(NODE) bin/www
 	
 .PHONY: love
 .PHONY: compile autocompile

@@ -4,6 +4,7 @@
   "private": true,
 
   "devDependencies": {
+    "express": "^4.13.4",
     "grunt-cli": "^1.2.0",
     "grunt-cache-breaker": "1.0.1",
     "grunt-concurrent": "1.0.0",

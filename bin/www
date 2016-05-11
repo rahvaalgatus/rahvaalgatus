@@ -1,0 +1,21 @@
+#!/usr/bin/env node
+var Url = require("url")
+var Http = require("http")
+var Express = require("express")
+var PORT = process.env.PORT || 3000
+var PUBLIC_DIR = __dirname + "/../"
+
+var app = Express()
+app.use(Express.static(PUBLIC_DIR))
+
+app.use(function(req, res, next) {
+  res.sendFile("index.html", {root: PUBLIC_DIR})
+})
+
+Http.createServer(app).listen(PORT, function() {
+  var addr = this.address()
+
+  console.log("Listening on %s.", typeof addr == "string" ? addr : Url.format({
+    protocol: "http", hostname: addr.address, port: addr.port
+  }))
+})
