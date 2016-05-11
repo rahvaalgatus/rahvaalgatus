@@ -16,7 +16,11 @@ autocompile:
 
 server:
 	@$(NODE) bin/www
+
+shrinkwrap:
+	npm shrinkwrap --dev
 	
 .PHONY: love
 .PHONY: compile autocompile
 .PHONY: server
+.PHONY: shrinkwrap
