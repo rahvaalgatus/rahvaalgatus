@@ -3,6 +3,8 @@
 module.exports = function (grunt) {
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
+        env: process.env.ENV,
+
         concurrent: {
             dev: {
                 tasks: ['uglify:dev', 'less:dev', 'watch'],
@@ -41,6 +43,7 @@ module.exports = function (grunt) {
                 },
                 files: {
                     'js/<%= pkg.name %>.bundle.js': [
+                        'config/<%= env %>.js',
                         'js/lib/ext/device.min.js',
                         'js/lib/ext/jquery-1.11.1.min.js',
                         'js/lib/ext/jquery.autosize.min.js',

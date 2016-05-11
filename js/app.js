@@ -11,7 +11,7 @@ app.factory("apiUrl", function() {
     return {
         request: function(config) {
             if (config.url.indexOf("api/") > -1 && config.url.indexOf("id.citizenos") == -1) {
-               config.url = "https://citizenos.com" + config.url;
+               config.url = Config.API_URL + config.url;
             } 
             return config;
         }
@@ -188,10 +188,10 @@ app.config(function($stateProvider, $urlRouterProvider, $locationProvider, $http
     $httpProvider.interceptors.push("apiUrl"); // Services use relative url, so we use interceptor for now to fix this :(
 
     CitizenOSOpenIdProvider.setConfig({
-        authorizationUri: "https://citizenos.com/api/auth/openid/authorize",
+        authorizationUri: Config.AUTHORIZATION_URI,
         responseType: "id_token token",
-        clientId: "b563ee8c-ba8e-4cd6-b592-fbcd4e8f22bb",
-        redirectUri: "https://rahvaalgatus.ee/auth/callback",
+        clientId: Config.CLIENT_ID,
+        redirectUri: Config.REDIRECT_URI,
         scope: "openid", // TODO: define scopes
         cookies: { // Names of the cookies used - http://openid.net/specs/openid-connect-implicit-1_0.html#rfc.section.2.1.1.1
             accessToken: "citizenos.accessToken", // Cookie name where CitizenOS OpenID access token (access_token) is stored. This is used to authorize COS requests

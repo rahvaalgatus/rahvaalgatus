@@ -1,4 +1,6 @@
 PORT = 3000
+ENV = development
+export ENV
 
 love:
 	@echo "Feel like makin' love."
