@@ -1,11 +1,13 @@
-<IfModule mod_rewrite.c>
 RewriteEngine On
-RewriteCond %{SERVER_PORT} 80 
-RewriteRule ^(.*)$ https://rahvaalgatus.ee/$1 [R=301,L]
+
+RewriteCond %{HTTPS} off
+RewriteCond %{HTTP_HOST} ^rahvaalgatus.ee$ [nocase]
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [qsappend,last,redirect=301]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule . /index.html [L]
-</IfModule>
+RewriteRule . /index.html [last]
+
 <filesMatch "\.html$">
   FileETag None
   <ifModule mod_headers.c>
@@ -15,6 +17,7 @@ RewriteRule . /index.html [L]
      Header set Expires "Wed, 11 Jan 1984 05:00:00 GMT"
   </ifModule>
 </filesMatch>
+
 <IfModule mod_deflate.c>
   # Compress HTML, CSS, JavaScript, Text, XML and fonts
   AddOutputFilterByType DEFLATE application/javascript
