@@ -69,40 +69,15 @@ module.exports = function (grunt) {
                 }
             }
         },
-        cachebreaker: {
-            js: {
-                options: {
-                    match: ['app.bundle.js'],
-                    replacement: 'md5',
-                    src: {
-                        path: 'public/js/app.bundle.js'
-                    }
-                },
-                files: {
-                    src: ['public/index.html']
-                }
-            },
-            css: {
-                options: {
-                    match: ['style.css'],
-                    replacement: 'md5',
-                    src: {
-                        path: 'public/style.css'
-                    }
-                },
-                files: {
-                    src: ['public/index.html']
-                }
-            }
-        },
+
         watch: {
             js: {
                 files: ['js/**/*.js'],
-                tasks: ['uglify:dev', 'cachebreaker:js']
+                tasks: ['uglify:dev']
             },
             css: {
                 files: ['public/styles/**/*.less', 'public/styles/lib/**/*.css', '!public/styles/default.css', '!public/styles/fonts.css'],
-                tasks: ['less:dev', 'cachebreaker:css']
+                tasks: ['less:dev']
             }
         }
     });
@@ -111,7 +86,6 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-cssmin');
     grunt.loadNpmTasks('grunt-contrib-less');
     grunt.loadNpmTasks('grunt-contrib-uglify');
-    grunt.loadNpmTasks('grunt-cache-breaker');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-concurrent');
 

@@ -437,25 +437,6 @@
         }
       }
     },
-    "grunt-cache-breaker": {
-      "version": "1.0.1",
-      "from": "grunt-cache-breaker@1.0.1",
-      "resolved": "https://registry.npmjs.org/grunt-cache-breaker/-/grunt-cache-breaker-1.0.1.tgz",
-      "dependencies": {
-        "cache-breaker": {
-          "version": "0.0.4",
-          "from": "cache-breaker@0.0.4",
-          "resolved": "https://registry.npmjs.org/cache-breaker/-/cache-breaker-0.0.4.tgz",
-          "dependencies": {
-            "lodash": {
-              "version": "2.2.1",
-              "from": "lodash@2.2.1",
-              "resolved": "https://registry.npmjs.org/lodash/-/lodash-2.2.1.tgz"
-            }
-          }
-        }
-      }
-    },
     "grunt-cli": {
       "version": "1.2.0",
       "from": "grunt-cli@*",
