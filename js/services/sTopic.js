@@ -122,7 +122,7 @@ app.service("sTopic", [ "$http", "$q", "$log", function($http, $q, $log) {
                     categories: categories,
                     offset: offset,
                     limit: limit,
-                    sourcePartnerId:'b563ee8c-ba8e-4cd6-b592-fbcd4e8f22bb'
+                    sourcePartnerId: Config.CLIENT_ID
                 },
                 timeout: deferredAbort.promise
             });
