@@ -201,7 +201,7 @@ app.config(function($stateProvider, $urlRouterProvider, $locationProvider, $http
             nonce: "citizenos.nonce", // Cookie name where CitizenOS OpenID authorization request nonce (nonce) is stored
             state: "citizenos.state" // Cookie name where CitizenOS OpenID authorization request state (state) is stored
         },
-        publicKey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvPEHFHwwWmSDdHYOWmi7\n+dwtjLjY7d4Dwk62hH9GBmeK/wu1xrSPk1w/suK902+Flh4P2LBWRjTfDsCsFthB\nkAYCoW1xNacGY9yaWusQz3a47skI28kY4l1hfL6UlMAY5z7loydrRLf6BlytDTqH\nGFAKilptAez+VS6bSg7g0+YoTZNELEblL6dfXIRNmUvtjpAwEYgNoJyfv5UCA1MZ\nmYyGubuvCNt39/EYFr1ND4XsZGMd2JB2iu0HJpWfHKO6SYOk/8n2Gemes86w5V+3\nkGeslklVVhq3FK74zta3ygv41RGeSbEY1vOBq1wZ+pD1VvlB6Hfn/2LuuIHAgqjn\nFQIDAQAB\n-----END PUBLIC KEY-----"
+        publicKey: Config.AUTHORIZATION_PUBLIC_KEY
     });
     $httpProvider.interceptors.push("CitizenOSOpenIDAuthInterceptor"); // Interceptor that includes the authorization headers for authorizing CitizenOS requests
 });
