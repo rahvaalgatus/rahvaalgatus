@@ -43,28 +43,6 @@
                 </div>-->
             </div>
         </div>
-        <div class="message theme-4" ng-if="hasVoted && !hasEnded && (!isAdmin() && !canEdit())">
-            <div class="admin-role-cal">
-                    <div class="head clearfix">
-                    <p class="left" translate="DOCUMENT_SIGNED">Document signed</p>
-                    <p class="right">{{voteCountTotal}} <span translate="TXT_N_VOTES_COUNTED">votes counted</span></p>
-                </div>
-                <div class="con-down clearfix">
-                    <div class="left"><span translate="HEADING_VOTE_REGISTERED">Your vote has been registered!</span></div>
-                    <div class="right"><a votedata="{{vote.downloads}}" ng-href="{{vote.downloads.bdocVote}}" ng-show="isAuthTypeHard() && hasVoted" target="_blank" class="download pull-right" translate="LNK_DOWNLOAD_USER_BDOC">Download your BDOC</a></div>
-                </div>
-                <div class="sign-in">
-                    <a href="#" ng-click="doVote(optionRevoke)" translate="REVOKE_SIGNATURE">REVOKE SIGNATURE</a>
-                </div>
-                <!--<div class="future-progress">
-                    <p translate="WANT_TO_KEEP_INFORMED_ABOUT_FURTHER_PROGRESS">Want to keep informed about further progress?</p>
-                    <form>
-                            <input type="email" placeholder="{{'Email address' | translate}}">
-                        <input type="submit" value="{{'KEEP ME INFORMED' | translate}}">
-                    </form>
-                </div>-->
-            </div>
-        </div>
         <div class="admin-role-cal" ng-if="(!app.topicLoad && hasEnded && (isAdmin() || canEdit()) && canSendToFollowUp() && hasVotesRequired) && topic.status != 'followUp'">
                 <div class="head clearfix">
                 <p class="left" translate="BTN_SEND_TO_FOLLOWUP">Sent to parliament</p>
