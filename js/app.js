@@ -187,11 +187,14 @@ app.config(function($stateProvider, $urlRouterProvider, $locationProvider, $http
     ////
     $httpProvider.interceptors.push("apiUrl"); // Services use relative url, so we use interceptor for now to fix this :(
 
+    var location = window.location
+    var callback = location.protocol + "//" + location.host + "/auth/callback"
+
     CitizenOSOpenIdProvider.setConfig({
         authorizationUri: Config.AUTHORIZATION_URI,
         responseType: "id_token token",
         clientId: Config.CLIENT_ID,
-        redirectUri: Config.REDIRECT_URI,
+        redirectUri: callback,
         scope: "openid", // TODO: define scopes
         cookies: { // Names of the cookies used - http://openid.net/specs/openid-connect-implicit-1_0.html#rfc.section.2.1.1.1
             accessToken: "citizenos.accessToken", // Cookie name where CitizenOS OpenID access token (access_token) is stored. This is used to authorize COS requests
