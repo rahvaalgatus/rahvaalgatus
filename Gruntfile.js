@@ -39,10 +39,10 @@ module.exports = function (grunt) {
                     beautify: true,
                     preserveComments: 'all',
                     sourceMap: true,
-                    sourceMapName: 'js/<%= pkg.name %>.bundle.js.map'
+                    sourceMapName: 'public/js/<%= pkg.name %>.bundle.js.map'
                 },
                 files: {
-                    'js/<%= pkg.name %>.bundle.js': [
+                    'public/js/<%= pkg.name %>.bundle.js': [
                         'config/<%= env %>.js',
                         'js/lib/ext/device.min.js',
                         'js/lib/ext/jquery-1.11.1.min.js',
@@ -75,11 +75,11 @@ module.exports = function (grunt) {
                     match: ['app.bundle.js'],
                     replacement: 'md5',
                     src: {
-                        path: 'js/app.bundle.js'
+                        path: 'public/js/app.bundle.js'
                     }
                 },
                 files: {
-                    src: ['index.html']
+                    src: ['public/index.html']
                 }
             },
             css: {
@@ -87,17 +87,17 @@ module.exports = function (grunt) {
                     match: ['style.css'],
                     replacement: 'md5',
                     src: {
-                        path: 'style.css'
+                        path: 'public/style.css'
                     }
                 },
                 files: {
-                    src: ['index.html']
+                    src: ['public/index.html']
                 }
             }
         },
         watch: {
             js: {
-                files: ['js/**/*.js', '!js/<%= pkg.name %>.bundle.js'],
+                files: ['js/**/*.js'],
                 tasks: ['uglify:dev', 'cachebreaker:js']
             },
             css: {

@@ -3,7 +3,7 @@ var Url = require("url")
 var Http = require("http")
 var Express = require("express")
 var PORT = process.env.PORT || 3000
-var PUBLIC_DIR = __dirname + "/../"
+var PUBLIC_DIR = __dirname + "/../public"
 
 var app = Express()
 app.use(Express.static(PUBLIC_DIR))
