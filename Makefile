@@ -5,7 +5,9 @@ ENV = development
 TEST_OPTS =
 TEST_URL = http://dev.rahvaalgatus.ee:3000
 
+DEPLOY_HOST =
 STAGING_HOST = staging.rahvaalgatus.ee
+PRODUCTION_HOST = production.rahvaalgatus.ee
 LFTP_MIRROR_OPTS = --verbose=1 --continue --reverse --delete --dereference
 
 export PORT
@@ -33,12 +35,19 @@ server:
 shrinkwrap:
 	npm shrinkwrap --dev
 
-staging:
-	lftp $(STAGING_HOST) -e "mirror $(LFTP_MIRROR_OPTS) ./public .; exit"
+deploy: DEPLOY_HOST ?= $(error "Please set DEPLOY_HOST")
+deploy:
+	lftp "$(DEPLOY_HOST)" -e "mirror $(LFTP_MIRROR_OPTS) ./public .; exit"
+
+staging: DEPLOY_HOST = $(STAGING_HOST)
+staging: deploy
+
+production: DEPLOY_HOST = $(PRODUCTION_HOST)
+production: deploy
 	
 .PHONY: love
 .PHONY: compile autocompile
 .PHONY: spec autospec
 .PHONY: server
 .PHONY: shrinkwrap
-.PHONY: staging
+.PHONY: deploy staging production
