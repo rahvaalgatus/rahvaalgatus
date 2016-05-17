@@ -49,6 +49,15 @@ To have the frontend be compiled automatically as you change files, use `autocom
 make autocompile
 ```
 
+### Environments
+
+Environment specific configuration is in `config/$ENV.js`. It'll get included in the app during complication.
+
+For example, to compile for the production environment, set `ENV` to `production`:
+
+```sh
+make compile ENV=production
+```
 
 Testing
 -------
