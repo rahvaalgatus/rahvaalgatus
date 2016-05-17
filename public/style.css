@@ -2797,3 +2797,13 @@ h4.ac-topic{
     background: #02905d;
     width:100%;
 }
+
+.topic-content {
+	padding-bottom: 40px;
+}
+
+.topic-content h2,
+.topic-content h3,
+.topic-content h4 {
+	line-height: 125%;
+}
