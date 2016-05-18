@@ -18,6 +18,13 @@ RewriteRule . /index.html [last]
   </ifModule>
 </filesMatch>
 
+# The editorless.css file is included by CitizenOS's Etherpad frame.
+<Files "editorless.css">
+Header add Access-Control-Allow-Origin "*"
+Header add Access-Control-Allow-Headers "origin, x-requested-with, content-type"
+Header add Access-Control-Allow-Methods "GET, OPTIONS"
+</Files>
+
 <IfModule mod_deflate.c>
   # Compress HTML, CSS, JavaScript, Text, XML and fonts
   AddOutputFilterByType DEFLATE application/javascript
