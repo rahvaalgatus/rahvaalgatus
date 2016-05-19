@@ -59,6 +59,18 @@ For example, to compile for the production environment, set `ENV` to `production
 make compile ENV=production
 ```
 
+### Signin
+
+To sign in during development, use one of the [Mobile-Id test phone numbers](http://www.id.ee/?lang=en&id=36381):
+
+Phone        | Personal id
+-------------|------------
++37200007    | 14212128025
++37260000007 | 51001091072
+
+See more at <http://www.id.ee/?lang=en&id=36381>.
+
+
 Testing
 -------
 The project has a Ruby MiniTest and Watir WebDriver based test harness ready. 
