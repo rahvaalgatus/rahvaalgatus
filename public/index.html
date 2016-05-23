@@ -1,53 +1,37 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" ng-app="app">
-    <base href="/">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="viewport" content="width=device-width" />
-<title>Rahvaalgatus</title>
-<link rel="stylesheet" type="text/css" href="MyFontsWebfontsKit.css">
-<link rel="stylesheet" href="style.css" type="text/css" />
-        <script type="text/javascript" src="js/jquery.js"></script>
-        <meta property="og:url" content="https://rahvaalgatus.ee/" />
-        <meta property="og:title" content="https://rahvaalgatus.ee/" />
-        <meta property="og:image" content="https://rahvaalgatus.ee/images/index_logo.png" />
-        <meta property="og:image" content="https://rahvaalgatus.ee/images/index_logo.png" />
-        <meta property="fb:app_id" content="176292542463322" />
-	<script src="/js/app.bundle.js"></script>
-        <script>
-            (function (i, s, o, g, r, a, m) {
-                i['GoogleAnalyticsObject'] = r;
-                i[r] = i[r] || function () {
-                            (i[r].q = i[r].q || []).push(arguments)
-                        }, i[r].l = 1 * new Date();
-                a = s.createElement(o),
-                        m = s.getElementsByTagName(o)[0];
-                a.async = 1;
-                a.src = g;
-                m.parentNode.insertBefore(a, m)
-            })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+<!DOCTYPE html>
+<html ng-app="app">
+    <head>
+      <title>Rahvaalgatus</title>
 
-            ga('create', 'UA-74848422-1', {'cookieDomain': 'none'});
+      <base href="/">
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width" />
 
-          </script>
-        <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+      <link rel="stylesheet" type="text/css" href="MyFontsWebfontsKit.css">
+      <link rel="stylesheet" href="style.css" type="text/css" />
 
-	<script src="https://cdn.ravenjs.com/3.0.3/raven.min.js"></script>
-	<script>
-		Raven.config('https://ead693e3e8074571ad59dc81dc0bdfa6@app.getsentry.com/77593').install()
-	</script>
+      <meta property="og:url" content="https://rahvaalgatus.ee/" />
+      <meta property="og:title" content="https://rahvaalgatus.ee/" />
+      <meta property="og:image" content="https://rahvaalgatus.ee/images/index_logo.png" />
+      <meta property="og:image" content="https://rahvaalgatus.ee/images/index_logo.png" />
+      <meta property="fb:app_id" content="176292542463322" />
 
-	<script src="/js/bootstro.js/bootstro.js"></script>
-        <link rel="stylesheet" href="/js/bootstro.js/bootstro.css" type="text/css"/>
-        <style>
-            .language a:not(:first-child)::before{
-                content:"/";
-            }
-            .language a{
-                cursor:pointer;
-            }
-        </style>
-</head>
+      <script type="text/javascript" src="js/jquery.js"></script>
+      <script src="/js/app.bundle.js"></script>
+
+      <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+
+    	<script src="/js/bootstro.js/bootstro.js"></script>
+      <link rel="stylesheet" href="/js/bootstro.js/bootstro.css" type="text/css"/>
+      <style>
+          .language a:not(:first-child)::before {
+              content:"/";
+          }
+          .language a {
+              cursor:pointer;
+          }
+      </style>
+    </head>
     <body ng-controller="AppCtrl">
         <div id="wrapper">
         <div class="notifications" ng-show="app.notifications.info || app.notifications.error">
@@ -168,9 +152,28 @@
         </div>
     </div>
 </footer>
-<div class="dummy"></div><!--Dont Remove this**This is calculating for entire height of the page-->
+<div class="dummy"></div><!--Dont Remove this**This is calculating for entire height of the page -->
+
 <script type="text/javascript" src="js/jquery-ui.min.js"></script>
 <script type="text/javascript" src="js/custom.js"></script>
-        </div>
+<script>
+  (function (i, s, o, g, r, a, m) {
+      i['GoogleAnalyticsObject'] = r;
+      i[r] = i[r] || function () {
+                  (i[r].q = i[r].q || []).push(arguments)
+              }, i[r].l = 1 * new Date();
+      a = s.createElement(o),
+              m = s.getElementsByTagName(o)[0];
+      a.async = 1;
+      a.src = g;
+      m.parentNode.insertBefore(a, m)
+  })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+  ga('create', 'UA-74848422-1', {'cookieDomain': 'none'});
+</script>
+<script src="https://cdn.ravenjs.com/3.0.3/raven.min.js"></script>
+<script>
+  Raven.config('https://ead693e3e8074571ad59dc81dc0bdfa6@app.getsentry.com/77593').install()
+</script>
 </body>
 </html>
