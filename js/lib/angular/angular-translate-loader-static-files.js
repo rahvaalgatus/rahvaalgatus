@@ -24,7 +24,7 @@ angular.module('pascalprecht.translate')
     if (!options || (!angular.isArray(options.files) && (!angular.isString(options.prefix) || !angular.isString(options.suffix)))) {
       throw new Error('Couldn\'t load static files, no files and prefix or suffix specified!');
     }
-    
+
     if (!options.files) {
       options.files = [{
         prefix: options.prefix,

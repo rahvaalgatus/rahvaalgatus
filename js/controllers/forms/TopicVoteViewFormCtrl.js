@@ -42,7 +42,7 @@ app.controller("TopicVoteViewFormCtrl", [ "$scope", "$rootScope", "$state", "$lo
             $scope.hasVoted = getUserHasVoted();
             $scope.hasEnded = getVoteHasEnded();
             $scope.hasVotesRequired = hasVotesNeeded();
-            
+
             // For unauthenticated voting, the bdocUri is passed in init() to show download url
             if (bdocUri) {
                 $scope.vote.downloads = {
@@ -211,7 +211,7 @@ app.controller("TopicVoteViewFormCtrl", [ "$scope", "$rootScope", "$state", "$lo
         return $scope.vote && $scope.vote.endsAt && new Date() > new Date($scope.vote.endsAt);
     };
     var hasVotesNeeded = function(){
-        if($scope.vote){ 
+        if($scope.vote){
             for(var i=0; i<$scope.vote.options.rows.length; i++){
                 var member = $scope.vote.options.rows[i];
                 if (member.value == 'Yes' && member.voteCount >=1000) {

@@ -83,9 +83,9 @@ app.controller("TopicRenewDeadlineFormCtrl", [ "$scope", "$rootScope", "$state",
                 id: $state.params.id
             });
         }
-        $scope.endsAt = new Date($scope.topic.endsAt);       
+        $scope.endsAt = new Date($scope.topic.endsAt);
         $scope.form.endsAt = $scope.endsAt;
-        if ($scope.topic.vote.id != undefined) {  
+        if ($scope.topic.vote.id != undefined) {
             voteRead($scope.topic.id, $scope.topic.vote.id).then(function(res) {
                 $scope.vote = res.data.data;
                 $scope.endsAt = new Date($scope.vote.endsAt);
@@ -94,7 +94,7 @@ app.controller("TopicRenewDeadlineFormCtrl", [ "$scope", "$rootScope", "$state",
                  $scope.form.numberOfDaysLeft = Math.round(($scope.form.endsA - today) / (1e3 * 60 * 60 * 24));
             }, function() {});
         }
-       
+
     }
     $scope.loadTopic();
 } ]);

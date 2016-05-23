@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- *  Angular App 
+ *  Angular App
  *
  *  @see https://angularjs.org/
  */
@@ -12,7 +12,7 @@ app.factory("apiUrl", function() {
         request: function(config) {
             if (config.url.indexOf("api/") > -1 && config.url.indexOf("id.citizenos") == -1) {
                config.url = Config.API_URL + config.url;
-            } 
+            }
             return config;
         }
     };
@@ -183,7 +183,7 @@ app.config(function($stateProvider, $urlRouterProvider, $locationProvider, $http
     });
     $translateProvider.preferredLanguage(toruConfig.language.default).registerAvailableLanguageKeys(Object.keys(toruConfig.language.list)).useSanitizeValueStrategy("escaped").useStorage("translateKookieStorage");
     UserVoiceProvider.setApiKey("X2tNuk059z6CD4Em5Q65KQ");
-    
+
     ////
     $httpProvider.interceptors.push("apiUrl"); // Services use relative url, so we use interceptor for now to fix this :(
 

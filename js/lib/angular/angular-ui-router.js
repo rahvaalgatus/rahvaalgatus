@@ -2964,7 +2964,7 @@ if (typeof module !== "undefined" && typeof exports !== "undefined" && module.ex
        *
        * `reload()` is just an alias for:
        * <pre>
-       * $state.transitionTo($state.current, $stateParams, { 
+       * $state.transitionTo($state.current, $stateParams, {
      *   reload: true, inherit: false, notify: true
      * });
        * </pre>
@@ -2986,7 +2986,7 @@ if (typeof module !== "undefined" && typeof exports !== "undefined" && module.ex
        *
        * `reload()` is just an alias for:
        * <pre>
-       * $state.transitionTo($state.current, $stateParams, { 
+       * $state.transitionTo($state.current, $stateParams, {
      *   reload: true, inherit: false, notify: true
      * });
        * </pre>
@@ -3794,7 +3794,7 @@ if (typeof module !== "undefined" && typeof exports !== "undefined" && module.ex
  *     "": {
  *       template: "<h1>HELLO!</h1>"
  *     }
- *   }    
+ *   }
  * })
    * </pre>
    *
@@ -3810,7 +3810,7 @@ if (typeof module !== "undefined" && typeof exports !== "undefined" && module.ex
  *     "main": {
  *       template: "<h1>HELLO!</h1>"
  *     }
- *   }    
+ *   }
  * })
    * </pre>
    *
@@ -3833,7 +3833,7 @@ if (typeof module !== "undefined" && typeof exports !== "undefined" && module.ex
  *     "data": {
  *       template: "<data_thing/>"
  *     }
- *   }    
+ *   }
  * })
    * </pre>
    *

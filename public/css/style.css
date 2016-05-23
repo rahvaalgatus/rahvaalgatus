@@ -1,4 +1,4 @@
-@charset "utf-8"; 
+@charset "utf-8";
 /* CSS Document */
 /************************	Reset styles		************************************************************/
 *						{	margin:0;padding:0																}
@@ -203,11 +203,11 @@ header{
         text-transform: capitalize;
 }
 #vote-sign{
-    position: absolute; 
-    height: auto; 
-    width: 40%; 
-    top: 140px; 
-    left: 30%; 
+    position: absolute;
+    height: auto;
+    width: 40%;
+    top: 140px;
+    left: 30%;
     display: block;
 }
 /**Profile box**/
@@ -653,30 +653,30 @@ footer{
 	background:url(../images/hero-list-arrow-act.png) no-repeat right center;
 }
 #terms_dialog{
-    position: absolute; 
-    height: auto; 
-    width: 60%; 
-    top: 10%; 
-    left: 20%; 
+    position: absolute;
+    height: auto;
+    width: 60%;
+    top: 10%;
+    left: 20%;
     display: block;
 }
 #dear_user_dialog{
-    position: absolute; 
-    height: auto; 
-    width: 50%; 
-    top: 10%; 
-    left: 25%; 
+    position: absolute;
+    height: auto;
+    width: 50%;
+    top: 10%;
+    left: 25%;
     display: block;
 }
 #terms_dialog .content, #dear_user_dialog .content{
     padding:20px;
 }
 #home_video_dialog{
-    position: absolute; 
-    height: auto; 
-    width: 30%; 
-    top: 25%; 
-    left: 35%; 
+    position: absolute;
+    height: auto;
+    width: 30%;
+    top: 25%;
+    left: 35%;
     display: block;
 }
 #home-video-icon{
@@ -1510,7 +1510,7 @@ footer{
 	border-radius:2px;
 	text-align:center;
 	padding:0 20px;
-	margin-right:10px;       
+	margin-right:10px;
 }
 .admin-role-cal .sign-in .right a{
 	display:inline-block;
@@ -1678,11 +1678,11 @@ footer{
     display:none;
 }
 .click-check input[type=checkbox] + label:before {
-    content: "";  
-    width: 20px;  
-    height: 20px;  
+    content: "";
+    width: 20px;
+    height: 20px;
     vertical-align:middle;
-    margin-right: 8px; 
+    margin-right: 8px;
 	background:#fff;
 	border-radius:3px;
 	border:1px solid #ccc;
@@ -1695,14 +1695,14 @@ footer{
 .click-check input[type=checkbox]:checked + label:before {
     content:"\2714"; /* Tick */
     color:#fff;
-	background:#45a0e6; 
+	background:#45a0e6;
     text-align:center;
     line-height:20px;
-    text-shadow:0px 0px 0px #3ba534; 
+    text-shadow:0px 0px 0px #3ba534;
 	font-weight:500;
 	font-size:15px;
 	border:1px solid #3390d7;
-	
+
 }
 .click-check label {
 	color:#4A555D;
@@ -1872,7 +1872,7 @@ footer{
 .author-form form{
 	text-align:left;
 }
-.author-form form  input, .author-form input{	
+.author-form form  input, .author-form input{
 	margin-bottom:15px;
 	border:1px solid #cecece;
 	line-height:18px;
@@ -2100,17 +2100,17 @@ footer{
     padding-bottom: 250px;
 }
 #home_video_dialog{
-    position: absolute; 
-    height: auto; 
-    width: 60%; 
-    top: 25%; 
-    left: 20%; 
+    position: absolute;
+    height: auto;
+    width: 60%;
+    top: 25%;
+    left: 20%;
     display: block;
 }
 #terms_dialog, #dear_user_dialog{
-    width: 80%; 
-    top: 25%; 
-    left: 10%; 
+    width: 80%;
+    top: 25%;
+    left: 10%;
 }
 .lang, .login, .login-after{
 	margin:0 10px;
@@ -2283,7 +2283,7 @@ footer{
 .main-navi, .admin-role-box > .right{
 	display:block !important;
 }
-/******/	
+/******/
 }
 @media (max-width: 767px) {
 /******/
@@ -2306,16 +2306,16 @@ footer{
 }
 
 #home_video_dialog{
-    position: absolute; 
-    height: auto; 
-    width: 80%; 
-    top: 25%; 
-    left: 10%; 
+    position: absolute;
+    height: auto;
+    width: 80%;
+    top: 25%;
+    left: 10%;
     display: block;
 }
 #terms_dialog, #dear_user_dialog{
-    width: 80%; 
-    top: 25%; 
+    width: 80%;
+    top: 25%;
     left: 10%;
 }
 .r-hide{
@@ -2643,9 +2643,9 @@ footer{
 }
 .admin-role-cal .head .left,
 .admin-role-cal .head .right,
-.admin-role-cal .con .left, 
+.admin-role-cal .con .left,
 .admin-role-cal .con-down .left,
-.admin-role-cal .con .right, 
+.admin-role-cal .con .right,
 .admin-role-cal .con-down .right,
 .admin-role-cal .sign-in .left,
 .admin-role-cal .sign-in .right{
@@ -2709,7 +2709,7 @@ footer{
     font-family: 'MuseoSansCyrl-300';
     font-size:14px;
     line-height: 22px;
-    color:#3A434A;    
+    color:#3A434A;
     background: #f7f7f7;
     padding-top: 20px;
     padding-left: 10px;
@@ -2719,7 +2719,7 @@ footer{
 h4.ac-topic{
     padding-top: 0;
     padding-bottom: 5px;
-    text-transform: capitalize; 
+    text-transform: capitalize;
 }
 .ac-suggestion{
     padding-left: 25px;

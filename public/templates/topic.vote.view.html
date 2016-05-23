@@ -1,7 +1,7 @@
 <div ng-controller="TopicVoteViewFormCtrl">
     <!-- Vote in progress view -->
     <div class="admin-role-cal" ng-show="!hasVoted && !hasEnded" ng-if="!app.topicLoad">
-        <div class="head clearfix"> 
+        <div class="head clearfix">
             <p class="left" translate="HEADING_CAST_YOUR_VOTE">Cast your vote</p>
             <p class="right">{{voteCountTotal}} <span translate="TXT_N_VOTES_COUNTED">votes counted</span></p>
         </div>
@@ -16,7 +16,7 @@
         </div>
         <div class="sign-in" >
             <a href="#" ng-click="!hasEnded && doVote(option)" translate="SIGN_THIS_DOCUMENT">SIGN THIS DOCUMENT</a>
-        </div> 
+        </div>
         <div class="con sign-info"><p translate="SIGNING_INFO"></p></div>
 
     </div>

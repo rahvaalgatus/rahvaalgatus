@@ -12,7 +12,7 @@ app.controller("AppCtrl", [ "$scope", "$rootScope", "$window", "$state", "$trans
     $scope.app.languagesAvailable = toruConfig.language.list;
     $scope.app.notifications = {
         info: null,
-        error: null 
+        error: null
     };
     $scope.app.login = function () {
         CitizenOSOpenId.authorize({},$scope.app.language);
@@ -81,23 +81,23 @@ app.controller("AppCtrl", [ "$scope", "$rootScope", "$window", "$state", "$trans
         }
     };
     $scope.app.editProfile = function() {
-        
+
         if ($scope.app.user.loggedIn) {
-            ngDialog.closeAll();                   
+            ngDialog.closeAll();
             setTimeout(function(){
                 ngDialog.open({
                     template: "/templates/modals/profileEdit.html",
                     scope: $scope
                 });
                 $('.pp-layer').show();},400);
-            
+
         }
     };
     $scope.finalize = function() {
         if($scope.app.finalizeOpen == true){
-            console.log("finalizer");  
+            console.log("finalizer");
             $("#reg").html("");
-            console.log("finalize");            
+            console.log("finalize");
             ngDialog.open({
                 template: "/templates/modals/finalize.html",
                 appendTo: "#reg",
@@ -106,13 +106,13 @@ app.controller("AppCtrl", [ "$scope", "$rootScope", "$window", "$state", "$trans
         }
     };
     $scope.dearUser = function() {
-            console.log("dearUser");  
+            console.log("dearUser");
             $("#reg").html("");
-            console.log("dearUser");            
+            console.log("dearUser");
             ngDialog.open({
                 template: "/templates/modals/dear_user.html",
                 scope: $scope
-            });        
+            });
     };
     $rootScope.$on("user.change", function(event, data) {
         sAuth.status();
@@ -154,7 +154,7 @@ app.controller("AppCtrl", [ "$scope", "$rootScope", "$window", "$state", "$trans
     }, function(loggedIn) {
         if (loggedIn) {
             console.log($scope.app.user.email);
-            if ($scope.app.user.email== null) {               
+            if ($scope.app.user.email== null) {
                 $scope.finalize();
             }else{
                 $scope.app.finalizeOpen=false;
@@ -166,7 +166,7 @@ app.controller("AppCtrl", [ "$scope", "$rootScope", "$window", "$state", "$trans
             } ]);
         }
     });
-    
+
     // Set up UserVoice - https://developer.uservoice.com/docs/widgets/options/
     // TODO: Ideally this should be in provider.config...
     UserVoice.push([ "set", {

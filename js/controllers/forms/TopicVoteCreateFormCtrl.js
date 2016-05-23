@@ -90,8 +90,8 @@ app.controller("TopicVoteCreateFormCtrl", [ "$scope", "$rootScope", "$state", "$
         var numberdays = Math.ceil(testtime / (1e3 * 3600 * 24));
         if($scope.form.numberOfDaysLeft > numberdays){
             $scope.form.endsAt = moment(new Date()).add(1, "y").toDate();
-        } 
-        
+        }
+
     });
     $scope.save = function() {
         var options = angular.copy($scope.form.options);

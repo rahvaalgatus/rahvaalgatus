@@ -1,7 +1,7 @@
 
 <div class="home-hero clearfix">
     	<div class="box clearfix">
-            <div class="right">                
+            <div class="right">
                 <div >
             	<h2 translate="LINK_DISCUSSION" style="width:400px;">Tere tulemast Rahvaalgatus!</h2>
                 <p translate="DISCUSSION_CONTENT">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean interdum turpis at leo placerat consectetur. Praesent fermentum, lacus at rhoncus efficitur, risus nulla tincidunt purus, eget ultricies odio odio id quam. Integer sem augue, elementum vitae aliquam vel.</p>
@@ -28,7 +28,7 @@
                             <div class="clearfix">
                                 <ul class="article-pagi clearfix" ng-show="rangediscussiontopicList.length > 1">
                                     <li><a ng-show="filters.discussion_offset==0" class="disable" ><img src="images/pagi-left.png" alt="Image" /></a>
-                                    <a ng-show="filters.discussion_offset>0"><img src="images/pagi-left.png" alt="Image" ng-click="setPage('inProgress',(filters.discussion_offset/filters.limit)-1);"/></a></li>                                    
+                                    <a ng-show="filters.discussion_offset>0"><img src="images/pagi-left.png" alt="Image" ng-click="setPage('inProgress',(filters.discussion_offset/filters.limit)-1);"/></a></li>
                                     <li>
                                         <a ng-show="(filters.discussion_offset/filters.limit) > 1"  ng-click="setPage('inProgress',0);">{{1}}</a>
                                     </li>
@@ -36,11 +36,11 @@
                                     <li data-ng-repeat="i in rangediscussiontopicList.slice(0,myCount) track by $index">
                                         <a ng-show="((filters.discussion_offset/filters.limit)== $index  || (filters.discussion_offset/filters.limit)+1== $index || (filters.discussion_offset/filters.limit)-1== $index )" ng-if="((filters.discussion_offset/filters.limit)) == $index" class="disable">{{$index+1}}</a>
                                         <a ng-show="((filters.discussion_offset/filters.limit)== $index  || (filters.discussion_offset/filters.limit)+1== $index || (filters.discussion_offset/filters.limit)-1== $index)" ng-if="((filters.discussion_offset/filters.limit)) != $index" ng-click="setPage('inProgress',$index);">{{$index+1}}</a>
-                                    </li>   
+                                    </li>
                                     <li ng-show="(filters.discussion_offset/filters.limit) < (rangediscussiontopicList.length-3)">...</li>
                                     <li>
                                         <a ng-show="(filters.discussion_offset/filters.limit) < (rangediscussiontopicList.length-2)"  ng-click="setPage('inProgress',rangediscussiontopicList.length-1);">{{rangediscussiontopicList.length}}</a>
-                                    </li> 
+                                    </li>
                                     <li>
                                         <a href="#" ng-show="((filters.discussion_offset/filters.limit)+1) != rangediscussiontopicList.length" ng-click="setPage('inProgress',(filters.discussion_offset/filters.limit)+1);"><img src="images/pagi-right.png" alt="Image" /></a>
                                         <a href="#" ng-show="((filters.discussion_offset/filters.limit)+1) == rangediscussiontopicList.length" class="disable"><img  src="images/pagi-right.png" alt="Image" /></a>
@@ -61,16 +61,16 @@
                         </div>
                     </div>
                 </div>
-            <!--articles end-->      	
+            <!--articles end-->
         </div><!--enclose end-->
     </div><!--Discussions end-->
 
 <script>
          var maxheight = 0;
         $(function(){
-            
+
             $(".article-box .right .in .link").each(function(){
-                if($(this).height()>maxheight){ 
+                if($(this).height()>maxheight){
                     maxheight =$(this).height();
                     $(".article-box .right .in .link").css("height",maxheight);
                 }

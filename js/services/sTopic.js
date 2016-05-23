@@ -270,26 +270,26 @@ app.service("sTopic", [ "$http", "$q", "$log", function($http, $q, $log) {
          var path = '/api/users/self/topics/:topicId/votes/:voteId/sign'
              .replace(':topicId', topicId)
              .replace(':voteId', voteId);
- 
+
          var data = {
             signatureValue: signatureValue,
             token: token
          };
- 
+
          return $http.post(path, data);
-     };         
-    
+     };
+
     Topic.voteVoteStatus = function (topicId, voteId, token) {
         var path = '/api/users/self/topics/:topicId/votes/:voteId/status?token=:token'.replace(":topicId", topicId).replace(":voteId", voteId).replace(':token', token);
         return $http.get(path);
     };
-    
+
     Topic.voteVoteStatusUnauth = function (topicId, voteId, token) {
         var path = '/api/topics/:topicId/votes/:voteId/status?token=:token'
              .replace(':topicId', topicId)
              .replace(':voteId', voteId)
              .replace(':token', token);
- 
+
          return $http.get(path);
      };
     Topic.voteDelegationCreate = function(topicId, voteId, toUserId) {
@@ -302,12 +302,12 @@ app.service("sTopic", [ "$http", "$q", "$log", function($http, $q, $log) {
          var path = '/api/topics/:topicId/votes/:voteId/sign'
              .replace(':topicId', topicId)
              .replace(':voteId', voteId);
- 
+
          var data = {
             signatureValue: signatureValue,
             token: token
          };
- 
+
          return $http.post(path, data);
      };
     Topic.voteDelegationDelete = function(topicId, voteId) {

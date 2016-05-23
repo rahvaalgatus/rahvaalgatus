@@ -120,7 +120,7 @@ angular.module('ng.shims.placeholder', [])
 
 			function conditionalDefer(callback, event) {
 				// IE8/9: ngModel uses a keydown handler with deferrered
-				// execution to check for changes to the input. this $timeout 
+				// execution to check for changes to the input. this $timeout
 				// prevents callback from firing before the keydown handler,
 				// which is an issue when tabbing out of an input.
 				// the conditional tests IE version, matches $sniffer.
@@ -232,7 +232,7 @@ angular.module('ng.shims.placeholder', [])
 					// force hide the placeholder when element is hidden by
 					// ngShow/ngHide. we cannot rely on stylePasswordPlaceholder
 					// above to copy the ng-hide class, because the ngShow/ngHide
-					// $watch functions apply the ng-hide class with $animate, 
+					// $watch functions apply the ng-hide class with $animate,
 					// so the class is not applied when our $watch executes
 					hideElement(clone);
 				} else if (elem.hasClass(emptyClassName) && domElem !== document.activeElement) {

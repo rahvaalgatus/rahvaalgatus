@@ -51,7 +51,7 @@ app.controller("TopicCtrl", [ "$scope", "$rootScope", "$sce", "$compile", "$stat
         var end;
         $scope.items = [];
         $scope.topicended = false;
-        var start = new Date($scope.topic.createdAt);        
+        var start = new Date($scope.topic.createdAt);
         var fullwidth = 850;
         if ($scope.topic.status == "voting") {
             end = new Date($scope.vote.endsAt);
@@ -91,7 +91,7 @@ app.controller("TopicCtrl", [ "$scope", "$rootScope", "$sce", "$compile", "$stat
                     });
                 }
             }
-        }   
+        }
         var extra = 0;
         var nowitem = {
             day: $scope.daynow,
@@ -106,24 +106,24 @@ app.controller("TopicCtrl", [ "$scope", "$rootScope", "$sce", "$compile", "$stat
             }
             else{
                 nowitem.src = "images/role-active-green.png";
-                
-            }   
+
+            }
             nowitem.width = 30;
             extra = extra+30;
-        }        
+        }
         else{
             extra = extra + 136;
             nowitem.width = 136;
         }
-        var itemcount  = Object.keys($scope.items).length;         
+        var itemcount  = Object.keys($scope.items).length;
         extra = extra+(itemcount*30);
         $scope.items.push(nowitem);
         itemcount++;
         fullwidth = fullwidth-extra;
-        var daylength = Math.floor(fullwidth/$scope.fullDiff);        
-        var lastday = 0;        
-        angular.forEach($scope.items, function(item, key) {            
-            item.id = "item-" + key;            
+        var daylength = Math.floor(fullwidth/$scope.fullDiff);
+        var lastday = 0;
+        angular.forEach($scope.items, function(item, key) {
+            item.id = "item-" + key;
             if (item.type == "voteitem") {
                 item.src = "images/role-active-green.png";
                 item.left = ((item.day - lastday) * daylength)
@@ -132,12 +132,12 @@ app.controller("TopicCtrl", [ "$scope", "$rootScope", "$sce", "$compile", "$stat
                 item.src = "images/role-active.png";
                 item.left = ((item.day - lastday) * daylength)
             }
-            else{            
+            else{
                  item.left = ((item.day - lastday) * daylength)
             }
             $scope.items[key] = item;
             lastday = item.day;
-        });     
+        });
         console.log($scope.items);
     };
     var readMembers = function(topicId) {
@@ -149,7 +149,7 @@ app.controller("TopicCtrl", [ "$scope", "$rootScope", "$sce", "$compile", "$stat
                     $scope.memberslist.splice(key, 1);
                 }
             });
-        }); 
+        });
     };
     var voteRead = function(topicId, voteId) {
         if ($scope.app.user && $scope.app.user.loggedIn) {
@@ -165,7 +165,7 @@ app.controller("TopicCtrl", [ "$scope", "$rootScope", "$sce", "$compile", "$stat
     $scope.goToComments = function(){
         var top = $('#commentBlock').position().top;
         $(window).scrollTop( top );
-    } 
+    }
     $scope.doTopicLoad = function() {
         if ($state.current.name.indexOf("topic") !== -1) {
             $scope.app.isTopicLoading = true;
@@ -195,7 +195,7 @@ app.controller("TopicCtrl", [ "$scope", "$rootScope", "$sce", "$compile", "$stat
                         $;
                         //scope.topic.endsAt = new Date($scope.vote.endsAt);
                         progress();
-                    }, function() {             
+                    }, function() {
                     });
                 } else {
                     progress();
@@ -370,7 +370,7 @@ app.controller("TopicCtrl", [ "$scope", "$rootScope", "$sce", "$compile", "$stat
     // TODO: This logic is kinda duplicate in DashboardCtrl
     $scope.canSendToFollowUp = function() {
         return $scope.topic.vote && $scope.topic.vote.id && $scope.topic.permission.level == sTopic.LEVELS.admin && $scope.topic.status !== sTopic.STATUSES.followUp;
-    };    
+    };
     $scope.isAdmin = function() {
         return $scope.topic.permission.level == sTopic.LEVELS.admin;
     };
@@ -527,7 +527,7 @@ app.controller("TopicCtrl", [ "$scope", "$rootScope", "$sce", "$compile", "$stat
                         });
                     }
                 }
-            }            
+            }
         }, angular.noop);
     };
     // TODO: This logic is kinda duplicate in DashboardCtrl

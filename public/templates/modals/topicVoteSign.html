@@ -20,8 +20,8 @@
                 <a href="#" ng-click="skipDonate()" translate="CLOSE">SKIP THIS</a>
         </div>
     </div>
-    
-    
+
+
     <div ng-hide="showdonate" showdonate='{{showdonate}}' class="ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix ui-draggable-handle">
         <span id="ui-id-35" class="ui-dialog-title" translate="HEADING_VOTE_CHOOSE_A_SIGNING_METHOD">CHOOSE A SIGNING METHOD</span>
         <button ng-click="closeThisDialog()" type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only ui-dialog-titlebar-close" role="button" title="Close">
@@ -43,15 +43,15 @@
             </div>
             <div class="box">
                 <img ng-show="!isLoadingIdCard" src="images/id-kart-icon.png" alt="Image">
-                
+
                 <div ng-show="!isLoadingIdCard">
                         <img src="images/idcard_illustration.png" alt="Image">
                     <a ng-show="!isLoadingIdCard && !formMobile.challengeID" href="#" ng-click="doSignWithCard()" translate="BTN_VOTE_SIGN_WITH_ID_CARD">SIGN WITH ID CARD</a>
                 </div>
             </div>
-            <div class="box" ng-hide="isLoadingIdCard">     
+            <div class="box" ng-hide="isLoadingIdCard">
                 <img src="images/mobile-id-icon.png" alt="Image">
-                <form name="formMobileSign" ng-show="!formMobile.challengeID" novalidate> 
+                <form name="formMobileSign" ng-show="!formMobile.challengeID" novalidate>
                     <div ng-show="!formMobile.isLoading">
                         <label class="label" ng-class="{error: formMobileSign.phoneNumber.$error.pattern && formMobileSign.phoneNumber.$touched}">
                             <input type="text" name="phoneNumber" ng-model="formMobile.phoneNumber" placeholder="{{'PLACEHOLDER_PHONE_NUMBER' | translate}}" ng-pattern="/^\+?[0-9\s-]{7,}$/" required />
@@ -91,5 +91,5 @@
     <div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se" style="z-index: 90;"></div>
     <div class="ui-resizable-handle ui-resizable-sw" style="z-index: 90;"></div>
     <div class="ui-resizable-handle ui-resizable-ne" style="z-index: 90;"></div>
-    <div class="ui-resizable-handle ui-resizable-nw" style="z-index: 90;"></div>        
+    <div class="ui-resizable-handle ui-resizable-nw" style="z-index: 90;"></div>
 </div>

@@ -60,7 +60,7 @@
             </div>
         </div>
     </div>
-    
+
     <div ng-tabs ng-show="topicLoadSuccess && !isTopicLoading && !('topics.create2' | isState) && !('topics.create1' | isState)">
 	<div class="admin-role-progress">
             <div class="enclose">
@@ -73,13 +73,13 @@
                 <div class="progress-btns clearfix" id="progressBar" data-fulldif="{{fullDiff}}" data-now="{{daynow}}" data-createdAt="{{topic.createdAt}}" data-discussionEnd="{{topic.endsAt}}">
                     <ul class="clearfix">
                         <li><a href="#"><img src="images/role-close.png" alt="Image"></a></li>
-                        
+
                         <li ng-repeat='item in items' data-type="{{item.type}}" id="{{(item.id)}}" data-day='{{item.day}}' ng-class="{'days' :(item.type=='now' && !item.ended), 'days reader':(item.type=='now' && !item.ended && (topic.status=='voting') && ((vote.endsAt | amDifference : today : 'days' )>=0))}" style="padding-left:{{item.left}}px">
                             <a href="#" ng-if="item.type!='now' || item.ended ">
                                 <img ng-src="{{item.src}}" alt="Image">
                             </a>
                             <a ng-if="(item.type=='now' && !item.ended && topic.status=='voting')" >{{'TXT_DEADLINE_CALENDAR_DAYS_LEFT' | translate: vote}}</a>
-                            <a ng-if="item.type=='now' && !item.ended && topic.status=='inProgress'" >{{'TXT_DEADLINE_CALENDAR_DAYS_LEFT' | translate: topic}}</a> 
+                            <a ng-if="item.type=='now' && !item.ended && topic.status=='inProgress'" >{{'TXT_DEADLINE_CALENDAR_DAYS_LEFT' | translate: topic}}</a>
                         </li>
                     </ul>
                 </div>
@@ -90,19 +90,19 @@
                 <li><a ng-tab-head href="" ng-class="{deactive: !('topics.view' | isState) && !('topics.create' | isState), active:('topics.view' | isState) || ('topics.create' | isState)}" ui-sref="topics.view({id:topic.id})" translate="HEADING_TAB_ORIGINAL">Original</a></li>
                 <li ng-show="topic.vote.id && topic.status != 'followUp' || ('topics.view.vote.create' | isState) && topic.status != 'followUp'"><a ng-tab-head href="" ng-class="{deactive: !('topics.view.vote.view' | isState) && !('topics.view.vote.create' | isState), active:!('topics.view' | isState) && !('topics.create' | isState)}" ui-sref="topics.view.vote.view({id:topic.id, voteId:topic.vote.id})" translate="HEADING_TAB_VOTE">Vote</a></li>
                 <li ng-show="topic.status=='followUp'"><a href="" class="active" ng-class="{deactive: !('topics.view.vote.view' | isState) && !('topics.view.vote.create' | isState)}" ui-sref="topics.view.vote.view({id:topic.id, voteId:topic.vote.id})" translate="HEADING_TAB_IN_PROCESSING">In processing</a></li>
-            </ul>            
+            </ul>
         </div>
     <div class="admin-role-content" >
     	<div class="enclose">
             <div class="admin-role-box clearfix">
-                <div class="left tab-content" style="overflow: hidden">     
+                <div class="left tab-content" style="overflow: hidden">
                     <div class="clearfix c-by">
-                        <p class="left"><span translate="CREATED_BY">Created by</span> 
+                        <p class="left"><span translate="CREATED_BY">Created by</span>
                             <a href="#" >{{topic.creator.name}}</a>
                         </p>
                         <p class="right">{{topic.createdAt | amDateFormat : 'L'}}</p>
                     </div>
-                    <p class="in-cat"><span ng-repeat="category in topic.categories"><a href="#">{{'TXT_TOPIC_CATEGORY_' + category | uppercase | translate}}</a>,</span> 
+                    <p class="in-cat"><span ng-repeat="category in topic.categories"><a href="#">{{'TXT_TOPIC_CATEGORY_' + category | uppercase | translate}}</a>,</span>
                     </p>
                     <div class="clearfix args">
                             <p class="left">
@@ -112,7 +112,7 @@
                       <!--  <p class="right">3 social mentions #rahvaalgatus</p>-->
                     </div>
                     <div ui-view></div>
-                    
+
                     <div class="arg-social-tabs" ng-show="topic.id" id='commentBlock'>
                         	<ul class="arg-tabs clearfix version2">
                             	<li>
@@ -142,7 +142,7 @@
                                                 <a href="#"><img src="images/comment-notification.png" alt="Image"></a>
                                             </p>
                                             </div>
-                                            <ul>                                            	
+                                            <ul>
                                                 <li ng-repeat="reply in comment.replies.rows">
                                                     <p class="author">{{reply.creator.name}} | {{reply.createdAt | amTimeAgo}}</p>
                                                     <p class="subject" ng-bind-html="reply.subject | linky">Final pro argument coming from me!</p>
@@ -152,7 +152,7 @@
                                                         <a href="#" ng-click="doCommentVoteReply(comment.id, reply.id, -1)"><img src="images/comment-dislike.png" alt="Image"></a>&nbsp;&nbsp;<span>{{reply.votes.down.count}}</span> &nbsp;|&nbsp;
                                                         <a href="#"><img src="images/comment-notification.png" alt="Image"></a>
                                                     </p>
-                                                </li> 
+                                                </li>
                                             </ul>
                                             <div class="arg-form" ng-show="showReplyForm">
                                                 <div class="overlay" ng-show="!app.user.loggedIn">
@@ -182,7 +182,7 @@
                                         	<button ng-if="topic.status=='inProgress'" class="right" ng-click="submitCon()" ng-disabled="topicCommentCreateForm.$invalid" translate="BTN_ADD_ARGUMENT_CON">POST AS A CON ARGUMENT</button>
                                         	<button ng-if="topic.status!='inProgress'" class="right comment" ng-click="submitCon()" ng-disabled="topicCommentCreateForm.$invalid" translate="POST_COMMENT">BTN_ADD_COMMENT</button>
                                         </div>
-                                    </form>                                	
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -209,7 +209,7 @@
                                 <ul class="categories" ng-show='!isClosed()'>
                                     <li class="clearfix" ng-repeat="(key, value) in CATEGORIES" ng-show="isCategorySelected(value)"><a ng-click="updateCategories(value)">{{'TXT_TOPIC_CATEGORY_' + value | uppercase | translate}}</a></li>
                                 </ul>
-                                <ul class="hash-category" ng-show='!isClosed()'> 
+                                <ul class="hash-category" ng-show='!isClosed()'>
                                     <li class="clearfix" ng-repeat="(key, value) in CATEGORIES" ng-show="!isCategorySelected(value)"><a href="#" ng-click="updateCategories(value)" >{{'TXT_TOPIC_CATEGORY_' + value | uppercase | translate}}</a></li>
                                 </ul>
                             </div>
@@ -290,8 +290,8 @@
                 $(this).parent().find(".comment-content").removeClass("long-comment");
                 $(this).hide();
             });
-        },1000);            
-        
+        },1000);
+
     });
     setProgress = function(){
         var length = $("#progressBar").data("fulldif");
@@ -300,11 +300,11 @@
         var discussionEnd = $("#progressBar").data("discussionend").replace(/"/g,'');
         var createdAt = $("#progressBar").data("createdat");
         createdAt = new Date(createdAt);
-        var barwidth = $("#progressBar").width();  
+        var barwidth = $("#progressBar").width();
         var daysset = 0;
-        var previtem;        
+        var previtem;
         if($("#discussionEnd").length > 0){
-            
+
             discussionEnd = new Date(discussionEnd);
             var start = Math.floor( createdAt.getTime() / (3600*24*1000)); //days as integer from..
             var end   = Math.floor( discussionEnd.getTime() / (3600*24*1000)); //days as integer from..
@@ -321,13 +321,13 @@
                 previtem = $("#discussionEnd");
             }
         }
-        $(".progress-item").each(function(){            
+        $(".progress-item").each(function(){
             if(daysset==0){
                 var date = $(this).data("date");
                 date = new Date(date);
                 var start = Math.floor( createdAt.getTime() / (3600*24*1000));
                 var end   = Math.floor( date.getTime() / (3600*24*1000)); //days as integer from..
-                var day = end-start; 
+                var day = end-start;
                 var left = Math.round((barwidth/length)*day);
                 console.log(left);
                 if((left-$(this).width()-Math.ceil($("#nowProgress").width())-7)< 0){}
@@ -337,14 +337,14 @@
                     console.log(Math.ceil($("#nowProgress").width()));
                     left = left-$(this).width()-Math.ceil($("#nowProgress").width())-7;
                 }
-                
+
                 $(this).css("padding-left",left);
             }
-            else{                
+            else{
                 var start = Math.floor( createdAt.getTime() / (3600*24*1000));
                 var date = $(this).data("date");
                 var end   = Math.floor( date.getTime() / (3600*24*1000)); //days as integer from..
-                var day = end-start; 
+                var day = end-start;
                 left = Math.round((barwidth/length)*($(this).data("day")-previtem.data("day")));
                 console.log(left);
                 if((left-$(this).width()-Math.ceil($("#nowProgress").width())-7)< 0){}
@@ -356,8 +356,8 @@
             }
             previtem = $(this);
             daysset++;
-        });                   
-        if(previtem == undefined){  
+        });
+        if(previtem == undefined){
             console.log(length);
             console.log($("#progressBar").data("now"));
             left = Math.round((barwidth/length)*($("#progressBar").data("now")));
@@ -365,13 +365,13 @@
             else{    left = left-30-$("#nowProgress").width();}
             $("#nowProgress").css("padding-left",left);
         }
-        else{           
+        else{
             left = Math.round((barwidth/length)*($("#progressBar").data("now")-previtem.data("day")));
             if(left-previtem.width()-$("#nowProgress").width()< 0){}
             else{    left = left-previtem.width()-$("#nowProgress").width();}
             $("#nowProgress").css("padding-left",left);
         }
-    }   
+    }
 </script>
 
 

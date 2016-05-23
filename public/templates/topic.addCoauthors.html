@@ -1,7 +1,7 @@
 <div class="create3-bg" ng-controller="TopicMembersInviteFormCtrl" ng-init="init();">
     	<div class="enclose">
         	<div class="create-step3 clearfix">
-            	<div class="step-three left"></div>                    
+            	<div class="step-three left"></div>
                 <div class="create3-content left">
                     <h1 translate="CO_AUTHORS">Co-authors</h1>
                     <p translate="CO_AUTHORS_TEXT">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam erat erat, dictum faucibus bibendum nec, pretium eu libero. Pellentesque faucibus tempus mi, in tempus risus tempus id.</p>
@@ -10,15 +10,15 @@
                     	<li>{{topic.creator.name}} (you),</li>
                         <li ng-repeat="user in invite.users"><a href="#" ng-click="removeUser($index)">{{user.name || user}}<span>×</span></a></li>
                     </ul>
-                        <div class="step3-buttton">                            
+                        <div class="step3-buttton">
                         	<a class="blue-button" href="#" ng-click="submitAddusers();" translate="CONTINUE_TO_WRITING_THE_DOCUMENT">CONTINUE TO WRITING THE DOCUMENT</a>
                         </div>
                     <div class="step-back">
                         <a href="#" ng-click='stepBack()' translate="BACK_TO_PREVIOUS_CHOICE"></a>
                     </div>
                 </div>
-                   
-                <div class="author-form">      
+
+                <div class="author-form">
                          <form method="post">
                             <h3 translate="ADD_CO_AUTHOR">Add co-author</h3>
                             <input type="text" ng-model="urlJoin" ng-show="false">
@@ -41,11 +41,11 @@
                         </div>
                     </div>
                 </typeahead>
-                                
+
                             <a href="#" ng-click="addCoAuthor()" translate="ADD_CO_AUTHOR">ADD CO-AUTHOR</a>
                              </form>
                 </div>
-                    
+
             </div>
         </div>
     </div>

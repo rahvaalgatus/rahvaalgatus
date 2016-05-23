@@ -1,4 +1,4 @@
-<div id="popup" class="ngdialog-overlay" >    
+<div id="popup" class="ngdialog-overlay" >
 <div class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-front ui-draggable ui-resizable" tabindex="-1" role="dialog" aria-describedby="invitepop" aria-labelledby="ui-id-40" style="position: absolute; height: auto; width: 680px; top: 50px; left: 612px;">
     <div class="ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix ui-draggable-handle">
     <span id="ui-id-40" class="ui-dialog-title" translate="INVITE_PEOPLE">INVITE PEOPLE</span>
@@ -7,7 +7,7 @@
         <span class="ui-button-text" translate="CLOSE">Close</span>
     </button>
 </div>
-<div id="invitepop" class="invits ui-dialog-content ui-widget-content" style="width: auto; min-height: 0px; max-height: none; height: auto;">   
+<div id="invitepop" class="invits ui-dialog-content ui-widget-content" style="width: auto; min-height: 0px; max-height: none; height: auto;">
     <form method="post" ng-controller="TopicUsersInviteFormCtrl" ng-init="init($parent.ngDialogData)">
     <div class="sign-inner">
                 <typeahead class="auto-complete ui-autocomplete-input" items="searchResults.all" term="searchString"
@@ -49,12 +49,12 @@
            <div class="submit"><button class="sign-inner input" ng-click="submit(); closeThisDialog();"
                         ng-disabled="!isInvited()" translate="BTN_SEND_INVITE">SEND INVITE
                 </button></div>
-           
+
 
     </div>
     </form>
 </div>
-    
+
 <div class="ui-resizable-handle ui-resizable-n" style="z-index: 90;"></div>
 <div class="ui-resizable-handle ui-resizable-e" style="z-index: 90;"></div>
 <div class="ui-resizable-handle ui-resizable-s" style="z-index: 90;"></div>

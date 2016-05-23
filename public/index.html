@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" ng-app="app">
     <base href="/">
-<head>        
+<head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="viewport" content="width=device-width" />
 <title>Rahvaalgatus</title>
@@ -13,7 +13,7 @@
         <meta property="og:image" content="https://rahvaalgatus.ee/images/index_logo.png" />
         <meta property="og:image" content="https://rahvaalgatus.ee/images/index_logo.png" />
         <meta property="fb:app_id" content="176292542463322" />
-	<script src="/js/app.bundle.js"></script>        
+	<script src="/js/app.bundle.js"></script>
         <script>
             (function (i, s, o, g, r, a, m) {
                 i['GoogleAnalyticsObject'] = r;
@@ -37,8 +37,8 @@
 		Raven.config('https://ead693e3e8074571ad59dc81dc0bdfa6@app.getsentry.com/77593').install()
 	</script>
 
-	<script src="/js/bootstro.js/bootstro.js"></script>        
-        <link rel="stylesheet" href="/js/bootstro.js/bootstro.css" type="text/css"/>        
+	<script src="/js/bootstro.js/bootstro.js"></script>
+        <link rel="stylesheet" href="/js/bootstro.js/bootstro.css" type="text/css"/>
         <style>
             .language a:not(:first-child)::before{
                 content:"/";
@@ -47,7 +47,7 @@
                 cursor:pointer;
             }
         </style>
-</head> 
+</head>
     <body ng-controller="AppCtrl">
         <div id="wrapper">
         <div class="notifications" ng-show="app.notifications.info || app.notifications.error">
@@ -75,22 +75,22 @@
 
                 <!--login-->
                 <div class="right login" ng-show="!app.user.isLoading && !app.user.loggedIn">
-                    <a href="#" ng-click="app.login()" translate="BTN_LOG_IN_REGISTER">LOG IN / REGISTER TO PARTICIPATE</a>                
+                    <a href="#" ng-click="app.login()" translate="BTN_LOG_IN_REGISTER">LOG IN / REGISTER TO PARTICIPATE</a>
                 </div><!--Login end-->
                 <!--Logged in-->
                 <div class="right login">
                     <div class="log-pop" id="reg" ng-show="app.user.loggedIn && app.finalizeOpen && app.user.email==null">
-                        
+
                     </div>
                 </div>
                 <div class="right login-after" ng-show="!app.user.isLoading && app.user.loggedIn">
                     <span translate="HELLO">Hello</span> {{app.user.name}} &nbsp;|&nbsp; <a href="" class="open-profile" ng-click="app.dashboard()" translate="MY_PROFILE">My profile</a> &nbsp;|&nbsp; <a ng-click="app.logout()" href="#" translate="BTN_LOG_OFF">Log out</a>
                 </div>
-                
-                 
+
+
             </div>
             <!--header top end--´
-            <!--Navigation-->        
+            <!--Navigation-->
             <div class="clearfix navigation">
                     <a href="index.html" class="left logo"><img src="images/rahvaalagatus_logo.png" alt="image" /></a>
                 <a href="#" class="mobile-menu"></a>
@@ -129,19 +129,19 @@
             <!--navigation end-->
         </div><!--enclose end-->
     </header>
-        
+
 <div class="pp-layer"></div>
-<!--Private Profiles-->        
+<!--Private Profiles-->
 
 <!--Private Profiles end-->
 
-<!--Edit Profiles-->        
+<!--Edit Profiles-->
 
 <!--Edit Profiles end-->
 
 <div class="h-top"></div><!--Top padding-->
 <section id="main-section" ui-view ng-if="!app.user.isLoading">
-	
+
 </section>
 
 <footer>

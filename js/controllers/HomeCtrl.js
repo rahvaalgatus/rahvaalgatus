@@ -234,7 +234,7 @@ app.controller("HomeCtrl", [ "$scope", "$rootScope", "$state", "$kookies", "$log
         loadvotingTopicListPromise = sTopic.listUnauth("voting", $scope.filters.categories.value, offset, $scope.filters.limit);
         loadvotingTopicListPromise.then(function(res) {
             var topics = res.data.data.rows;
-            angular.forEach(topics, function(value, key) {                
+            angular.forEach(topics, function(value, key) {
                 sTopic.readUnauth(value).then(function(res) {
                     value = res.data.data;
                     sTopic.voteReadUnauth(value.id, value.vote.id).then(function(res) {

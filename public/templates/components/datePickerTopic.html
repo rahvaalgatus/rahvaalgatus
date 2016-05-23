@@ -12,7 +12,7 @@
                     <span class="ui-datepicker-month" ng-click="setView('month')">{{date|amDateFormat:'MMMM'}}</span>&nbsp;
                     <span class="ui-datepicker-year">{{date|amDateFormat:'YYYY'}}</span>
                 </div>
-                </div>                
+                </div>
                 <!--/head-->
                 <table class="ui-datepicker-calendar">
                     <thead>
@@ -23,13 +23,13 @@
                     <tbody>
                         <tr ng-repeat="week in weeks">
                             <td ng-repeat="day in week" ng-class="{'ui-datepicker-days-cell-over   ui-datepicker-current-day ui-datepicker-today':isNow(day)}">
-                                <a ng-show="(day.getMonth()==date.getMonth())" class="ui-state-default" href="#" 
+                                <a ng-show="(day.getMonth()==date.getMonth())" class="ui-state-default" href="#"
                                    ng-class="{'ui-state-default ui-state-highlight ui-state-active':isNow(day),'ui-state-active':isSameDay(day),'after':isAfter(day),'before':isBefore(day)}"
-                                   ng-click="setDate(day)" 
+                                   ng-click="setDate(day)"
                                    ng-bind="day.getDate()">1
                                 </a>
                             </td>
-                        </tr>                        
+                        </tr>
                     </tbody>
                 </table>
         </div>

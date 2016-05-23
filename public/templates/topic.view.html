@@ -1,4 +1,4 @@
-<div>    
+<div>
     <div ui-view></div>
 
     <iframe ng-if="isAdmin() || canEdit()" iframe name="topicframe" toru-etherpad frameborder="0" scrolling="no" ng-show="topic.padUrl" ng-src="{{topic.padUrl}}" width="100%" height="600"></iframe>

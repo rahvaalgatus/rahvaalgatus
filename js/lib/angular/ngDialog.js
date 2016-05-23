@@ -59,7 +59,7 @@
                     }
                 },
                 performCloseDialog: function($dialog, value) {
-                    var id = $dialog.attr("id");                     
+                    var id = $dialog.attr("id");
                     if (typeof window.Hammer !== "undefined") {
                         var hammerTime = angular.element($dialog).scope().hammerTime;
                         hammerTime.off("tap", closeByDocumentHandler);

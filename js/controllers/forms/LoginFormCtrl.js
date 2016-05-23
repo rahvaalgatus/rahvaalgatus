@@ -75,7 +75,7 @@ app.controller("LoginFormCtrl", [ "$scope", "$rootScope", "$window", "$state", "
     };
     $scope.loginPartner = function(partnerId) {
         var url = "https://citizenos.com/api/auth/:partnerId".replace(":partnerId", partnerId);
-        //if ($stateParams.redirectSuccess) {            
+        //if ($stateParams.redirectSuccess) {
         url += "?redirectSuccess=http://rahvaalgatus.ee/";
         //}
         $window.location.href = url;

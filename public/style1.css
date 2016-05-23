@@ -33,12 +33,12 @@
     display:none;
 }
 .click-check input[type=checkbox] + label:before {
-    content: "";  
-    display: inline-block;  
-    width: 20px;  
-    height: 20px;  
+    content: "";
+    display: inline-block;
+    width: 20px;
+    height: 20px;
     vertical-align:middle;
-    margin-right: 8px; 
+    margin-right: 8px;
 	background:#45a0e6;
 	border-radius:3px;
 	border:1px solid #3390d7;
@@ -49,13 +49,13 @@
 .click-check input[type=checkbox]:checked + label:before {
     content:"\2714"; /* Tick */
     color:#fff;
-	background:#45a0e6; 
+	background:#45a0e6;
     text-align:center;
     line-height:20px;
-    text-shadow:0px 0px 0px #3ba534; 
+    text-shadow:0px 0px 0px #3ba534;
 	font-weight:500;
 	font-size:15px;
-	
+
 }
 .click-check label {
 	color:#4A555D;
