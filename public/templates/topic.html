@@ -102,8 +102,10 @@
                         </p>
                         <p class="right">{{topic.createdAt | amDateFormat : 'L'}}</p>
                     </div>
-                    <p class="in-cat"><span ng-repeat="category in topic.categories"><a href="#">{{'TXT_TOPIC_CATEGORY_' + category | uppercase | translate}}</a>,</span>
-                    </p>
+                    <!--
+                      FIXME: hidding the categories list until it is actually operational
+                      p class="in-cat"><span ng-repeat="category in topic.categories"><a href="#">{{'TXT_TOPIC_CATEGORY_' + category | uppercase | translate}}</a>,</span>
+                    </p -->
                     <div class="clearfix args">
                             <p class="left">
                                 <a href="#" ng-if="topic.status=='inProgress'" ng-click='goToComments()' translate="HEADING_ARGUMENTS" translate-values="{count: '{{topicComments.rows.length || 0}}'}">5 arguments</a>
@@ -373,6 +375,3 @@
         }
     }
 </script>
-
-
-
