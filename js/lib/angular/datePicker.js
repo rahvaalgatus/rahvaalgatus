@@ -335,6 +335,13 @@
           }
           return is;
         };
+
+        scope.isInThePast = function(date) {
+          var now = ~~(new Date() / 10000);
+          var point = ~~(new Date(date) / 10000);
+
+          return point < now;
+        };
       }
     };
   }]);

@@ -26,7 +26,8 @@
                                 <a ng-show="(day.getMonth()==date.getMonth())" class="ui-state-default" href="#"
                                    ng-class="{'ui-state-default ui-state-highlight ui-state-active':isNow(day),'ui-state-active':isSameDay(day),'after':isAfter(day),'before':isBefore(day)}"
                                    ng-click="setDate(day)"
-                                   ng-bind="day.getDate()">1
+                                   ng-bind="day.getDate()"
+                                   ng-disabled="isInThePast(day)">1
                                 </a>
                             </td>
                         </tr>

@@ -23,6 +23,10 @@ input, textarea			{	outline:none																	}
 .relative				{	position:relative																}
 .absolute				{	position:absolute																}
 h1, h2, h3, h4, h5, h6	{	font-weight:normal;line-height:100%;											}
+a[disabled] {
+  opacity: 0.7;
+  pointer-events: none;
+}
 /************************	Reset styles end	************************************************************/
 @font-face {
     font-family: 'tisaproregular';
