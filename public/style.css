@@ -619,6 +619,11 @@ footer{
 	padding-right:30px;
 	padding-top:50px;
 }
+@media (max-width: 979px) {
+  .home-hero .right {
+    float: none;
+  }
+}
 .home-hero .right h2{
 	font-size:34px;
 	color:#1C71A2;
@@ -695,6 +700,9 @@ footer{
     font-family: 'MuseoSansCyrl-900';
     font-size: 16px;
     text-transform: uppercase;
+}
+#home-video a {
+  display: inline-flex;
 }
 #home-video-text{
     float: left;
