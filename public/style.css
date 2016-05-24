@@ -1636,6 +1636,8 @@ footer{
 .ui-dialog{
 	position:absolute;
 	z-index:150;
+  top: calc((100vh - 50%) / 2) !important;
+  left: calc((100vw - 680px) / 2) !important;
 }
 .ui-dialog-titlebar-close{
 	position:absolute;
