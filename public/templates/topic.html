@@ -140,8 +140,7 @@
                                             <p class="meta">
                                                 <span ng-click="showReplyForm = !showReplyForm"><a href="#" translate="REPLY">Reply</a> &nbsp;|&nbsp; </span>
                                                 <a href="#"><img src="images/comment-like.png" alt="Image" ng-click="doCommentVote(comment.id, 1)"></a>&nbsp;&nbsp;<span>{{comment.votes.up.count}}</span>&nbsp;&nbsp;&nbsp;
-                                                <a href="#"><img src="images/comment-dislike.png" alt="Image" ng-click="doCommentVote(comment.id, -1)"></a>&nbsp;&nbsp;<span>{{comment.votes.down.count}}</span> &nbsp;|&nbsp;
-                                                <a href="#"><img src="images/comment-notification.png" alt="Image"></a>
+                                                <a href="#"><img src="images/comment-dislike.png" alt="Image" ng-click="doCommentVote(comment.id, -1)"></a>&nbsp;&nbsp;<span>{{comment.votes.down.count}}</span>
                                             </p>
                                             </div>
                                             <ul>
@@ -151,8 +150,7 @@
                                                     <div class="desc"><div  ng-bind-html="reply.text | linky" class="comment-content"></div></div>
                                                     <p class="meta">
                                                         <a href="#" ng-click="doCommentVoteReply(comment.id, reply.id, 1)"><img src="images/comment-like.png" alt="Image"></a>&nbsp;&nbsp;<span>{{reply.votes.up.count}}</span>&nbsp;&nbsp;&nbsp;
-                                                        <a href="#" ng-click="doCommentVoteReply(comment.id, reply.id, -1)"><img src="images/comment-dislike.png" alt="Image"></a>&nbsp;&nbsp;<span>{{reply.votes.down.count}}</span> &nbsp;|&nbsp;
-                                                        <a href="#"><img src="images/comment-notification.png" alt="Image"></a>
+                                                        <a href="#" ng-click="doCommentVoteReply(comment.id, reply.id, -1)"><img src="images/comment-dislike.png" alt="Image"></a>&nbsp;&nbsp;<span>{{reply.votes.down.count}}</span>
                                                     </p>
                                                 </li>
                                             </ul>
