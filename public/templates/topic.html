@@ -136,7 +136,7 @@
                                             <div ng-class="{'{{comment.type}}':topic.status=='inProgress', sign:topic.status !='inProgress'}">
                                         	<p class="author">{{comment.creator.name}} | {{comment.createdAt | amDateFormat: 'LLL'}} {{comment.createdAt | amTimeAgo}}</p>
                                             <p class="subject" ng-bind-html="comment.subject | linky"></p>
-                                            <div class="desc"><div ng-bind-html="comment.text | linky" class="comment-content"></div><p class='read-more'><a class="left">read more</a></p></div>
+                                            <div class="desc"><div ng-bind-html="comment.text | linky" class="comment-content"></div></div>
                                             <p class="meta">
                                                 <span ng-click="showReplyForm = !showReplyForm"><a href="#" translate="REPLY">Reply</a> &nbsp;|&nbsp; </span>
                                                 <a href="#"><img src="images/comment-like.png" alt="Image" ng-click="doCommentVote(comment.id, 1)"></a>&nbsp;&nbsp;<span>{{comment.votes.up.count}}</span>&nbsp;&nbsp;&nbsp;
@@ -148,7 +148,7 @@
                                                 <li ng-repeat="reply in comment.replies.rows">
                                                     <p class="author">{{reply.creator.name}} | {{reply.createdAt | amTimeAgo}}</p>
                                                     <p class="subject" ng-bind-html="reply.subject | linky">Final pro argument coming from me!</p>
-                                                    <div class="desc"><div  ng-bind-html="reply.text | linky" class="comment-content"></div><p class='read-more'><a class="left" >read more</a></p></div>
+                                                    <div class="desc"><div  ng-bind-html="reply.text | linky" class="comment-content"></div></div>
                                                     <p class="meta">
                                                         <a href="#" ng-click="doCommentVoteReply(comment.id, reply.id, 1)"><img src="images/comment-like.png" alt="Image"></a>&nbsp;&nbsp;<span>{{reply.votes.up.count}}</span>&nbsp;&nbsp;&nbsp;
                                                         <a href="#" ng-click="doCommentVoteReply(comment.id, reply.id, -1)"><img src="images/comment-dislike.png" alt="Image"></a>&nbsp;&nbsp;<span>{{reply.votes.down.count}}</span> &nbsp;|&nbsp;
@@ -275,103 +275,3 @@
     </div>
     </div>
 </div>
-<script>
-    $(function(){
-        setTimeout(function(){
-    //        setProgress();
-            $(".comment-content").each(function(){
-                console.log($(this).height());
-                if($(this).height()>135){
-                    $(this).addClass("long-comment");
-                    $(this).parent().find(".read-more").show();
-                }else{
-                    $(this).parent().find(".read-more").hide();
-                }
-            });
-            $(".read-more").on("click",function(){
-                $(this).parent().find(".comment-content").removeClass("long-comment");
-                $(this).hide();
-            });
-        },1000);
-
-    });
-    setProgress = function(){
-        var length = $("#progressBar").data("fulldif");
-        if(length == 0)
-            length = 1
-        var discussionEnd = $("#progressBar").data("discussionend").replace(/"/g,'');
-        var createdAt = $("#progressBar").data("createdat");
-        createdAt = new Date(createdAt);
-        var barwidth = $("#progressBar").width();
-        var daysset = 0;
-        var previtem;
-        if($("#discussionEnd").length > 0){
-
-            discussionEnd = new Date(discussionEnd);
-            var start = Math.floor( createdAt.getTime() / (3600*24*1000)); //days as integer from..
-            var end   = Math.floor( discussionEnd.getTime() / (3600*24*1000)); //days as integer from..
-            var daysDiff = end - start; // exact dates
-            if(daysDiff==0){
-                $("#progressBar ul li:first").addClass("progress-item");
-                $("#discussionEnd").remove();
-            }
-            else{
-                var left = Math.round((barwidth/length)*daysDiff);
-                if(left-31-$("#nowProgress").width()> 0)
-                    left = left-31-$("#nowProgress").width()
-                $("#discussionEnd").css("padding-left",(left));
-                previtem = $("#discussionEnd");
-            }
-        }
-        $(".progress-item").each(function(){
-            if(daysset==0){
-                var date = $(this).data("date");
-                date = new Date(date);
-                var start = Math.floor( createdAt.getTime() / (3600*24*1000));
-                var end   = Math.floor( date.getTime() / (3600*24*1000)); //days as integer from..
-                var day = end-start;
-                var left = Math.round((barwidth/length)*day);
-                console.log(left);
-                if((left-$(this).width()-Math.ceil($("#nowProgress").width())-7)< 0){}
-                else{
-                    console.log(left);
-                    console.log($(this).width());
-                    console.log(Math.ceil($("#nowProgress").width()));
-                    left = left-$(this).width()-Math.ceil($("#nowProgress").width())-7;
-                }
-
-                $(this).css("padding-left",left);
-            }
-            else{
-                var start = Math.floor( createdAt.getTime() / (3600*24*1000));
-                var date = $(this).data("date");
-                var end   = Math.floor( date.getTime() / (3600*24*1000)); //days as integer from..
-                var day = end-start;
-                left = Math.round((barwidth/length)*($(this).data("day")-previtem.data("day")));
-                console.log(left);
-                if((left-$(this).width()-Math.ceil($("#nowProgress").width())-7)< 0){}
-                else{
-                    left = left-$(this).width()-Math.ceil($("#nowProgress").width())-7;
-                }
-                console.log(left)
-                $(this).css("padding-left",left);
-            }
-            previtem = $(this);
-            daysset++;
-        });
-        if(previtem == undefined){
-            console.log(length);
-            console.log($("#progressBar").data("now"));
-            left = Math.round((barwidth/length)*($("#progressBar").data("now")));
-            if(left-30-$("#nowProgress").width()< 0){}
-            else{    left = left-30-$("#nowProgress").width();}
-            $("#nowProgress").css("padding-left",left);
-        }
-        else{
-            left = Math.round((barwidth/length)*($("#progressBar").data("now")-previtem.data("day")));
-            if(left-previtem.width()-$("#nowProgress").width()< 0){}
-            else{    left = left-previtem.width()-$("#nowProgress").width();}
-            $("#nowProgress").css("padding-left",left);
-        }
-    }
-</script>

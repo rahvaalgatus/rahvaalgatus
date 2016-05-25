@@ -2821,3 +2821,6 @@ h4.ac-topic{
 .topic-content h4 {
 	line-height: 125%;
 }
+.comment-content {
+  white-space: pre-wrap;
+}
