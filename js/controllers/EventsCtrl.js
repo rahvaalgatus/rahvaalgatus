@@ -1,6 +1,6 @@
 "use strict";
 
-app.controller("EventsCtrl", ["$scope", "sTopic", "sAuth", function($scope, sTopic, sAuth) {
+app.controller("EventsCtrl", ["$scope", "$state", "ngDialog", "sTopic", function($scope, $state, ngDialog, sTopic) {
   $scope.events = {
     status: null,
     list:   []
@@ -11,6 +11,18 @@ app.controller("EventsCtrl", ["$scope", "sTopic", "sAuth", function($scope, sTop
       loadEvents(topicId);
     }
   });
+
+  $scope.openNewEntryDialog = function() {
+    console.log("opening the dialog");
+    ngDialog.open({
+      template: "/templates/modals/topicEventsCreate.html"
+    });
+  };
+
+  console.log("state", $state);
+  if ($state.current.url === "/create") {
+    $scope.openNewEntryDialog();
+  }
 
   function loadEvents(topicId) {
     $scope.events.status = 'loading';
