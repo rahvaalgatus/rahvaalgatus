@@ -318,4 +318,8 @@ app.service("sTopic", [ "$http", "$q", "$log", function($http, $q, $log) {
         if (!status || !Topic.STATUSES[status]) throw Error("Invalid status", status);
         return Topic.STATUSES_DISABLED.indexOf(status) > -1;
     };
+    Topic.eventsList = function(topicId) {
+      var path = "/api/topics/:topicId/events".replace(":topicId", topicId);
+      return $http.get(path);
+    };
 } ]);

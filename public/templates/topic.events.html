@@ -1,0 +1,14 @@
+<div ng-controller="EventsCtrl">
+  <div ng-if="events.status=='loading'">
+    Loading events...
+  </div>
+  <div ng-if="events.status=='failed'">
+    <h3>Failed to load the events list :(</h3>
+  </div>
+  <div ng-if="events.status=='loaded'">
+    <div ng-if="events.list.length==0">
+      <h3>No government responses were posted yet</h3>
+    </div>
+  </div>
+</div>
+<div ui-view></div>

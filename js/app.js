@@ -161,6 +161,12 @@ app.config(function($stateProvider, $urlRouterProvider, $locationProvider, $http
     }).state("topics.view.vote.view", {
         url: "/:voteId",
         templateUrl: "/templates/topic.vote.view.html"
+    }).state("topics.view.events", {
+      url: "/events",
+      templateUrl: "/templates/topic.events.html"
+    }).state("topics.view.events.create", {
+      url: "/create",
+      templateUrl: "/templates/topic.events.create.html"
     }).state("join", {
         // Join a Topic via shared url
         url: "/join/:tokenJoin",
