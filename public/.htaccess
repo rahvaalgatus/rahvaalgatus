@@ -1,8 +1,9 @@
 RewriteEngine On
 
 RewriteCond %{HTTPS} off
-RewriteCond %{HTTP_HOST} ^rahvaalgatus.ee$ [nocase]
-RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [qsappend,last,redirect=301]
+RewriteCond %{HTTP_HOST} ^rahvaalgatus\.ee$ [nocase,ornext]
+RewriteCond %{HTTP_HOST} ^www\.rahvaalgatus\.ee$ [nocase]
+RewriteRule ^ https://rahvaalgatus.ee%{REQUEST_URI} [qsappend,last,redirect=301]
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
