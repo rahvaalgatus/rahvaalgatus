@@ -306,5 +306,10 @@
   "NOT_ENOUGH_SIGNATURES": "We're sorry but you didn't collect enough signatures before your set deadline. You can reopen the topic, set a new deadline and collect more signatures.",
   "ARE_YOU_SURE_SEND_TO_PARLIAMENT": "Вы уверены, что хотите отправить обращение в парламент? Канцелярия Рийгикогу проведет контроль соответствия личностей, которые предоставили свои подписи в поддержку, и в ходе этого может выясниться, что у некоторых поддерживающих вас отсутствует право сделать это (им нет 16 лет или не являются резидентами). Поэтому рекомендуем собрать как минимум 1050 подписей, и только после этого отправлять обращение в парламент.",
   "TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE": "Чтобы принять участие, Вам необходимо войти в систему.",
-  "CHOOSE_DEADLINE_TO_CONTINUE": "To continue, choose a date from the calendar on the right!"
+  "CHOOSE_DEADLINE_TO_CONTINUE": "Чтобы продолжить, выберите доту в календаре справа!",
+  "POST_INITIATIVE_UPDATE": "Поместить обновление о процессе инициативы",
+  "POST_INITIATIVE_TITLE": "Зоголовок",
+  "POST_INITIATIVE_TEXT": "Текст",
+  "BTN_POST_UPDATE": "Сохранить",
+  "BTN_CANCEL": "Отменить"
 }

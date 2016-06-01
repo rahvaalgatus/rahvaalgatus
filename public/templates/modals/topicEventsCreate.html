@@ -9,7 +9,7 @@
     <div class="arg-form" style="margin:0;padding:1em">
       <form ng-submit="postEvent(event)" name="newEventForm">
         <p>
-          <label translate="POST_INITIATIVE_SUBJECT">Subject</label>
+          <label translate="POST_INITIATIVE_TITLE">Subject</label>
           <input type="text" ng-model="event.subject" required />
         </p>
         <p>
@@ -20,8 +20,8 @@
           {savingError}
         </p>
         <p class="clearfix">
-          <button type="submit" class="right" ng-disabled="newEventForm.$invalid||savingEvent" translate="BUTTON_POST_UPDATE">POST UPDATE</button>
-          <button type="button" class="left" ng-disabled="savingEvent" ng-click="closeThisDialog()" translate="BUTTON_CANCEL">CANCEL</button>
+          <button type="submit" class="right" ng-disabled="newEventForm.$invalid||savingEvent" translate="BTN_POST_UPDATE">POST UPDATE</button>
+          <button type="button" class="left" ng-disabled="savingEvent" ng-click="closeThisDialog()" translate="BTN_CANCEL">CANCEL</button>
         </p>
       </form>
     </div>

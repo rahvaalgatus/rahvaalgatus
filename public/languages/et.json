@@ -306,5 +306,10 @@
   "NOT_ENOUGH_SIGNATURES": "Kahjuks ei kogunud te piisavalt allkirju enne enda seatud tähtaja lõppu. Te võite teema uuesti avada, seada uue tähtaja ning koguda rohkem allkirju.",
   "ARE_YOU_SURE_SEND_TO_PARLIAMENT": "Kas oled kindel, et soovid algatuse parlamenti saata? Riigikogu kantselei teeb kõigi toetusallkirja andnute osas isikutuvastuse kontrolli ning selle käigus võib selguda, et mõni toetaja ei ole allkirjaõiguslik (näiteks on alla 16aastane või mitteresident). Seega soovitame koguda vähemalt 1050 allkirja ja alles siis algatus parlamenti saata. ",
   "TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE": "Osalemiseks pead sisse logima.",
-  "CHOOSE_DEADLINE_TO_CONTINUE": "Jätkamiseks vali parempoolsest kalendrist õige kuu ja kuupäev!"
+  "CHOOSE_DEADLINE_TO_CONTINUE": "Jätkamiseks vali parempoolsest kalendrist õige kuu ja kuupäev!",
+  "POST_INITIATIVE_UPDATE": "Postita uuendatud algatusel",
+  "POST_INITIATIVE_TITLE": "Pealkiri",
+  "POST_INITIATIVE_TEXT": "Sisutext",
+  "BTN_POST_UPDATE": "Post uuendus",
+  "BTN_CANCEL": "Tühistama"
 }
