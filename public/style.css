@@ -2840,3 +2840,32 @@ h4.ac-topic{
   background: rgba(0,0,0,0.5);
   z-index: 99;
 }
+
+.event {
+  margin-top: 2em;
+}
+.event + .event {
+  margin-top: 3em;
+}
+.event h2 {
+  font-size: 1rem;
+}
+.event h2:before {
+  content: "";
+  display: block;
+  position: absolute;
+  width:20px;
+	height:21px;
+  margin-left: -30px;
+  margin-top: -4px;
+  background:url(../images/chapter-col-icons.png) no-repeat top center;
+}
+.event h2 .date {
+  float: right;
+  font-weight: normal;
+}
+.event h1 {
+  font-size: 2rem;
+  color: #195f8e;
+  margin: 1rem 0;
+}

@@ -9,6 +9,23 @@
     <div ng-if="events.list.length==0">
       <h3>No government responses were posted yet</h3>
     </div>
+    <div ng-repeat="(i, event) in events.list" class="event">
+      <h2 class="separator">
+        <div class="date">{{event.createdAt | date : 'dd.MM.yyyy'}}</div>
+
+        <div ng-if="i==0" translate="1ST_MILESTONE">1ST MILESTONE</div>
+        <div ng-if="i==1" translate="2ND_MILESTONE">2ND MILESTONE</div>
+        <div ng-if="i==2" translate="3RD_MILESTONE">3RD MILESTONE</div>
+        <div ng-if="i==3" translate="4TH_MILESTONE">4TH MILESTONE</div>
+        <div ng-if="i==4" translate="5TH_MILESTONE">5TH MILESTONE</div>
+        <div ng-if="i==5" translate="6TH_MILESTONE">6TH MILESTONE</div>
+        <div ng-if="i==6" translate="7TH_MILESTONE">7TH MILESTONE</div>
+        <div ng-if="i==7" translate="8TH_MILESTONE">8TH MILESTONE</div>
+        <div ng-if="i==8" translate="9TH_MILESTONE">9TH MILESTONE</div>
+      </h2>
+      <h1 ng-bind-html="event.subject | linky"></h1>
+      <div ng-bind-html="event.text | linky" class="comment-content"></div>
+    </div>
   </div>
 </div>
 <div ui-view></div>
