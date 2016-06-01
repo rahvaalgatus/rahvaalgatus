@@ -6,6 +6,24 @@
     <button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only ui-dialog-titlebar-close" role="button" title="Close" ng-click="closeThisDialog()"><span class="ui-button-icon-primary ui-icon ui-icon-closethick"></span><span class="ui-button-text">Close</span></button>
   </div>
   <div class="ui-dialog-content ui-widget-content" style="width: auto; min-height: 110px; max-height: none; height: auto;">
-    <h1>blah!</h1>
+    <div class="arg-form" style="margin:0;padding:1em">
+      <form ng-submit="postEvent(event)" name="newEventForm">
+        <p>
+          <label translate="POST_INITIATIVE_SUBJECT">Subject</label>
+          <input type="text" ng-model="event.subject" required />
+        </p>
+        <p>
+          <label translate="POST_INITIATIVE_TEXT">Text</label>
+          <textarea ng-model="event.text" required></textarea>
+        </p>
+        <p ng-if="savingError">
+          {savingError}
+        </p>
+        <p class="clearfix">
+          <button type="submit" class="right" ng-disabled="newEventForm.$invalid||savingEvent" translate="BUTTON_POST_UPDATE">POST UPDATE</button>
+          <button type="button" class="left" ng-disabled="savingEvent" ng-click="closeThisDialog()" translate="BUTTON_CANCEL">CANCEL</button>
+        </p>
+      </form>
+    </div>
   </div>
 </div>

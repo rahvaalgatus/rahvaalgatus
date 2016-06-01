@@ -13,13 +13,34 @@ app.controller("EventsCtrl", ["$scope", "$state", "ngDialog", "sTopic", function
   });
 
   $scope.openNewEntryDialog = function() {
-    console.log("opening the dialog");
+    $scope.event = {
+      subject: "",
+      text: ""
+    };
+
     ngDialog.open({
-      template: "/templates/modals/topicEventsCreate.html"
+      template: "/templates/modals/topicEventsCreate.html",
+      scope: $scope
     });
   };
 
-  console.log("state", $state);
+  $scope.postEvent = function() {
+    $scope.savingEvent = true;
+
+    sTopic.eventCreate($scope.topic.id, $scope.event)
+      .then(function(event) {
+        $scope.events.list.push(event);
+        $state.go('^');
+      })
+      .catch(function(error) {
+        console.log("failed", error);
+        $scope.savingError = error.message;
+      })
+      .finally(function() {
+        $scope.savingEvent = false;
+      });
+  };
+
   if ($state.current.url === "/create") {
     $scope.openNewEntryDialog();
   }
@@ -27,9 +48,9 @@ app.controller("EventsCtrl", ["$scope", "$state", "ngDialog", "sTopic", function
   function loadEvents(topicId) {
     $scope.events.status = 'loading';
 
-    sTopic.eventsList(topicId).then(function(response) {
+    sTopic.eventsList(topicId).then(function(events) {
       $scope.events.status = 'loaded';
-      $scope.events.list = response.data.data.rows;
+      $scope.events.list = events;
     }, function(error) {
       $scope.events.status = 'failed';
     });

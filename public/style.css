@@ -1304,6 +1304,12 @@ footer{
 	border-radius:2px;
 	text-align:center;
 	padding:0 20px;
+  cursor: pointer;
+}
+.arg-form button:disabled {
+  opacity: 0.5;
+  color: #eee;
+  cursor: default;
 }
 .arg-form button.left{
 	background:#89cb00;

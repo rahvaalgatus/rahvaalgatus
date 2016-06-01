@@ -320,6 +320,14 @@ app.service("sTopic", [ "$http", "$q", "$log", function($http, $q, $log) {
     };
     Topic.eventsList = function(topicId) {
       var path = "/api/topics/:topicId/events".replace(":topicId", topicId);
-      return $http.get(path);
+      return $http.get(path).then(function(response) {
+        return response.data.data.rows;
+      });
+    };
+    Topic.eventCreate = function(topicId, eventData) {
+      var path = "/api/users/self/topics/:topicId/events".replace(":topicId", topicId);
+      return $http.post(path, eventData).then(function(response) {
+        return response.data.data;
+      });
     };
 } ]);
