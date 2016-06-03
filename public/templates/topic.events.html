@@ -23,8 +23,9 @@
         <div ng-if="i==7" translate="8TH_MILESTONE">8TH MILESTONE</div>
         <div ng-if="i==8" translate="9TH_MILESTONE">9TH MILESTONE</div>
       </h2>
-      <h1 ng-bind-html="event.subject | linky"></h1>
-      <div ng-bind-html="event.text | linky" class="comment-content"></div>
+
+      <h1>{{event.subject}}</h1>
+      <div class="comment-content">{{event.text | linky}}</div>
     </div>
   </div>
 </div>
