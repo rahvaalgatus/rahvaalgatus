@@ -312,14 +312,5 @@
   "POST_INITIATIVE_TEXT": "Текст",
   "BTN_POST_UPDATE": "Сохранить",
   "BTN_CANCEL": "Отменить",
-  "1ST_MILESTONE": "1ЫЙ ЭТАП",
-  "2ND_MILESTONE": "2ОЙ ЭТАП",
-  "3RD_MILESTONE": "3ИЙ ЭТАП",
-  "4TH_MILESTONE": "4ЫЙ ЭТАП",
-  "5TH_MILESTONE": "5ЫЙ ЭТАП",
-  "6TH_MILESTONE": "6ОЙ ЭТАП",
-  "7TH_MILESTONE": "7ОЙ ЭТАП",
-  "8TH_MILESTONE": "8ОЙ ЭТАП",
-  "9TH_MILESTONE": "9ЫЙ ЭТАП",
   "FAILED_TO_SAVE_INITIATIVE": "Не удалось сохранить обновление"
 }
