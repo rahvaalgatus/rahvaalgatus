@@ -1,6 +1,8 @@
 "use strict";
 
-app.controller("EventsCtrl", ["$scope", "$state", "ngDialog", "sTopic", function($scope, $state, ngDialog, sTopic) {
+app.controller("EventsCtrl", ["$scope", "$state", "$location", "ngDialog", "sTopic", function($scope, $state, $location, ngDialog, sTopic) {
+  var authToken = $location.search().token;
+
   $scope.events = {
     status: null,
     list:   []
@@ -27,7 +29,7 @@ app.controller("EventsCtrl", ["$scope", "$state", "ngDialog", "sTopic", function
   $scope.postEvent = function() {
     $scope.savingEvent = true;
 
-    sTopic.eventCreate($scope.topic.id, $scope.event)
+    sTopic.eventCreate($scope.topic.id, $scope.event, authToken)
       .then(function(event) {
         $scope.events.list.push(event);
         $state.go('^');

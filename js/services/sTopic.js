@@ -324,9 +324,16 @@ app.service("sTopic", [ "$http", "$q", "$log", function($http, $q, $log) {
         return response.data.data.rows;
       });
     };
-    Topic.eventCreate = function(topicId, eventData) {
+    Topic.eventCreate = function(topicId, eventData, authToken) {
       var path = "/api/users/self/topics/:topicId/events".replace(":topicId", topicId);
-      return $http.post(path, eventData).then(function(response) {
+      return $http({
+        url: path,
+        method: 'POST',
+        data: eventData,
+        headers: {
+          Authorization: "Bearer "+ authToken
+        }
+      }).then(function(response) {
         return response.data.data;
       });
     };
