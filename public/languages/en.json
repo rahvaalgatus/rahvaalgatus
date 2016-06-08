@@ -312,5 +312,5 @@
   "POST_INITIATIVE_TEXT": "Text",
   "BTN_POST_UPDATE": "Respond",
   "BTN_CANCEL": "Cancel",
-  "FAILED_TO_SAVE_INITIATIVE": "Could not save the initiative update"
+  "FAILED_TO_SAVE_INITIATIVE": "Sorry! Saving your response failed."
 }

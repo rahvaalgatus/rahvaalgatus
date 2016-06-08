@@ -312,5 +312,5 @@
   "POST_INITIATIVE_TEXT": "Sisu",
   "BTN_POST_UPDATE": "Vasta",
   "BTN_CANCEL": "Tühista",
-  "FAILED_TO_SAVE_INITIATIVE": "Ei saa salvestada algatusel uuendus"
+  "FAILED_TO_SAVE_INITIATIVE": "Andestust! Vastuse salvestamine ebaõnnestus."
 }
