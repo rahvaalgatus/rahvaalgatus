@@ -16,12 +16,14 @@
           <label translate="POST_INITIATIVE_TEXT">Text</label>
           <textarea ng-model="event.text" required></textarea>
         </p>
-        <p ng-if="savingError">
-          {savingError}
-        </p>
         <p class="clearfix">
           <button type="submit" class="right" ng-disabled="newEventForm.$invalid||savingEvent" translate="BTN_POST_UPDATE">POST UPDATE</button>
           <button type="button" class="left" ng-disabled="savingEvent" ng-click="closeThisDialog()" translate="BTN_CANCEL">CANCEL</button>
+        </p>
+        <p ng-if="savingError" class="error">
+          <br/>
+          <span translate="FAILED_TO_SAVE_INITIATIVE">Failed to save</span>
+          <span>({{savingError}})</span>
         </p>
       </form>
     </div>

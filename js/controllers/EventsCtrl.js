@@ -34,7 +34,7 @@ app.controller("EventsCtrl", ["$scope", "$state", "ngDialog", "sTopic", function
       })
       .catch(function(error) {
         console.log("failed", error);
-        $scope.savingError = error.message;
+        $scope.savingError = error.data.status.message;
       })
       .finally(function() {
         $scope.savingEvent = false;
