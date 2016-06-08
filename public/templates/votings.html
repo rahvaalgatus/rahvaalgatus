@@ -20,52 +20,7 @@
     <div class="article-bg">
     	<div class="enclose">
         	<!--articles-->
-        	<div class="article-box" ng-if="!filters.statuses.value || filters.statuses.value == 'voting'"ng-show="votingtopicList.length > 0">
-                    <div class="clearfix">
-                        <div class="left">
-                            <h3 translate="INITIATIVE_LIST">ALGATUSTE LOEND</h3>
-                            <div class="clearfix">
-                                <ul class="article-pagi clearfix" ng-show="rangevotingtopicList.length > 1">
-                                    <li><a ng-show="filters.voting_offset==0" class="disable" ><img src="images/pagi-left.png" alt="Image" /></a>
-                                    <a ng-show="filters.voting_offset>0"><img src="images/pagi-left.png" alt="Image" ng-click="setPage('voting',(filters.voting_offset/filters.limit)-1);"/></a></li>
-                                    <li>
-                                        <a ng-show="(filters.voting_offset/filters.limit) > 1"  ng-click="setPage('voting',0);">{{1}}</a>
-                                    </li>
-                                    <li ng-show="(filters.voting_offset/filters.limit) > 2">...</li>
-                                    <li data-ng-repeat="i in rangevotingtopicList.slice(0,myCount) track by $index">
-                                        <a ng-show="((filters.voting_offset/filters.limit)== $index  || (filters.voting_offset/filters.limit)+1== $index || (filters.voting_offset/filters.limit)-1== $index )" ng-if="((filters.voting_offset/filters.limit)) == $index" class="disable">{{$index+1}}</a>
-                                        <a ng-show="((filters.voting_offset/filters.limit)== $index  || (filters.voting_offset/filters.limit)+1== $index || (filters.voting_offset/filters.limit)-1== $index)" ng-if="((filters.voting_offset/filters.limit)) != $index" ng-click="setPage('voting',$index);">{{$index+1}}</a>
-                                    </li>
-                                    <li ng-show="(filters.voting_offset/filters.limit) < (rangevotingtopicList.length-3)">...</li>
-                                    <li>
-                                        <a ng-show="(filters.voting_offset/filters.limit) < (rangevotingtopicList.length-2)"  ng-click="setPage('voting',rangevotingtopicList.length-1);">{{rangevotingtopicList.length}}</a>
-                                    </li>
-                                    <li>
-                                        <a href="#" ng-show="((filters.voting_offset/filters.limit)+1) != rangevotingtopicList.length" ng-click="setPage('voting',(filters.voting_offset/filters.limit)+1);"><img src="images/pagi-right.png" alt="Image" /></a>
-                                        <a href="#" ng-show="((filters.voting_offset/filters.limit)+1) == rangevotingtopicList.length" class="disable"><img  src="images/pagi-right.png" alt="Image" /></a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="right">
-                            <div class="clearfix articles" >
-                                <div class="in" ui-sref="topics.view({id: topic.id})" ng-repeat="topic in votingtopicList" ng-class="getCategoryTheme(topic.categories[0])">
-                                    <p class="date">{{topic.createdAt | amDateFormat : 'L'}}</p>
-                                    <p class="link"><a href="#">{{topic.title}}</a></p>
-                                    <p class="author">{{topic.creator.name}}</p>
-                                    <div class="bar">
-                                        <p ng-if="(topic.vote.options.rows[topic.vote.yesindex].voteCount >=1000)" class="signatures-over"></p>
-                                        <p ng-class='{"signature":((today | amDateFormat : "L") >= (topic.vote.endsAt | amDateFormat : "L" )),"signature-fail":(((topic.vote.endsAt | amDifference : today : "days" )<0) && (!topic.vote.options.rows[topic.vote.yesindex].voteCount || topic.vote.options.rows[topic.vote.yesindex].voteCount <1000) )}' ng-style="::getProgress(topic)"></p>
-                                        <span ng-if="(((topic.vote.endsAt | amDifference : today : 'days' )<0) && (!topic.vote.options.rows[topic.vote.yesindex].voteCount || topic.vote.options.rows[topic.vote.yesindex].voteCount <1000 ))" ng-class="{'vote-success':(topic.vote.options.rows[topic.vote.yesindex].voteCount >=1000),'fail':(((topic.vote.endsAt | amDifference : today : 'days' )<0) && (!topic.vote.options.rows[topic.vote.yesindex].voteCount || topic.vote.options.rows[topic.vote.yesindex].voteCount <1000) )}" translate="N_SIGNATURES_FAILED" translate-values="{votes:{{topic.vote.options.rows[topic.vote.yesindex].voteCount || 0}}}"></span>
-                                        <span ng-if="(((topic.vote.endsAt | amDifference : today : 'days' )<0) && (topic.vote.options.rows[topic.vote.yesindex].voteCount >=1000))" ng-class="{'vote-success':(topic.vote.options.rows[topic.vote.yesindex].voteCount >=1000),'fail':((!topic.vote.options.rows[topic.vote.yesindex].voteCount || topic.vote.options.rows[topic.vote.yesindex].voteCount <1000) )}" translate="N_SIGNATURES" translate-values="{votes:{{topic.vote.options.rows[topic.vote.yesindex].voteCount || 0}}}"></span>
-                                        <span ng-if="(((topic.vote.endsAt | amDifference : today : 'days' )>=0)  || (((topic.vote.endsAt | amDifference : today : 'days' )<0) && (topic.vote.options.rows[topic.vote.yesindex].voteCount >1000)))" ng-class="{'vote-success-progress': ((topic.vote.endsAt | amDifference : today : 'days' )>=0) &&  (topic.vote.options.rows[topic.vote.yesindex].voteCount >=1000) , 'vote-success':((topic.vote.endsAt | amDifference : today : 'days' )<0) &&  (topic.vote.options.rows[topic.vote.yesindex].voteCount >=1000),'fail':(((topic.vote.endsAt | amDifference : today : 'days' )<0) && (topic.vote.options.rows[topic.vote.yesindex].voteCount <1000) )}" translate="N_SIGNATURES" translate-values="{votes:{{topic.vote.options.rows[topic.vote.yesindex].voteCount || 0}}}"></span>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
+          <div ng-include=" 'templates/components/initiativesList.html' "></div>
             <!--articles end-->
         </div><!--enclose end-->
     </div><!--Discussions end-->
