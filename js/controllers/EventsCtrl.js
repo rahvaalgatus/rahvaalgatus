@@ -1,7 +1,12 @@
 "use strict";
 
-app.controller("EventsCtrl", ["$scope", "$state", "$location", "ngDialog", "sTopic", function($scope, $state, $location, ngDialog, sTopic) {
+app.controller("EventsCtrl", ["$scope", "$rootScope", "$state", "$location", "ngDialog", "sTopic", function($scope, $rootScope, $state, $location, ngDialog, sTopic) {
   var authToken = $location.search().token;
+
+  $rootScope.onEventsPage = true;
+  $scope.$on("$destroy", function() {
+    $rootScope.onEventsPage = false;
+  });
 
   $scope.events = {
     status: null,

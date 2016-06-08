@@ -1,6 +1,7 @@
 "use strict";
 
 app.controller("TopicCtrl", [ "$scope", "$rootScope", "$sce", "$compile", "$state", "$filter", "$log", "$timeout", "ngDialog", "sTopic", "sTranslate", "sAuth", function($scope, $rootScope, $sce, $compile, $state, $filter, $log, $timeout, ngDialog, sTopic, sTranslate, sAuth) {
+
     $scope.topic = {
         id: null,
         title: null,
