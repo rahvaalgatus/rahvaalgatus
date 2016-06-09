@@ -2851,16 +2851,6 @@ h4.ac-topic{
   font-size: 1rem;
   transform: translateY(.5rem);
 }
-.event h2:before {
-  content: "";
-  display: block;
-  position: absolute;
-  width:20px;
-	height:21px;
-  margin-left: -30px;
-  margin-top: -4px;
-  background:url(../images/chapter-col-icons.png) no-repeat top center;
-}
 .event h2 .date {
   float: right;
   font-weight: normal;
