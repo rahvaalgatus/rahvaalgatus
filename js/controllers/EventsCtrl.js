@@ -44,4 +44,13 @@ app.controller("EventsCtrl", ["$scope", "$rootScope", "$state", "$location", "ng
   if ($state.current.url === "/create") {
     $scope.openNewEntryDialog();
   }
+
+  $scope.$watch(function() { return $state.params.eventId }, function(eventId) {
+    $scope.currentEventId = eventId;
+    $scope.$watch("topicEvents.list", function(list) {
+      $scope.topicEvents.current = list.filter(function(event) {
+        return event.id == eventId;
+      })[0];
+    }, true);
+  });
 }]);
