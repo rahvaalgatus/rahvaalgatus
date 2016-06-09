@@ -43,6 +43,9 @@ app.controller("TopicCtrl", [
     $scope.CATEGORIES_COUNT_MAX = sTopic.CATEGORIES_COUNT_MAX;
     $scope.today = new Date();
     $scope.progress = new Progress();
+    var recalculateProgress = function() {
+      $scope.progress.recalculate($scope.topic, $scope.vote, $scope.hasVotesRequired, $scope.topicEvents.list);
+    };
     var topicRead = function(topicId) {
         if ($scope.app.user && $scope.app.user.loggedIn) {
             return sTopic.read({
@@ -109,11 +112,10 @@ app.controller("TopicCtrl", [
                         });
                         $;
                         //scope.topic.endsAt = new Date($scope.vote.endsAt);
-                        $scope.progress.recalculate($scope.topic, $scope.vote, $scope.hasVotesRequired);
-                    }, function() {
+                        recalculateProgress();
                     });
                 } else {
-                    $scope.progress.recalculate($scope.topic, $scope.vote, $scope.hasVotesRequired);
+                    recalculateProgress();
                 }
                 $log.debug("Topic loaded!", topic);
                 $scope.loadComments();
@@ -128,6 +130,7 @@ app.controller("TopicCtrl", [
             sTopic.eventsList($state.params.id).then(function(events) {
               $scope.topicEvents.status = 'loaded';
               $scope.topicEvents.list = events;
+              recalculateProgress();
             }, function(error) {
               $scope.topicEvents.status = 'failed';
             });
