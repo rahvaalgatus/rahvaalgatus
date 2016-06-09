@@ -9,7 +9,7 @@
     <div ng-if="events.list.length==0">
       <h3>No government responses were posted yet</h3>
     </div>
-    <div ng-repeat="(i, event) in events.list" class="event">
+    <div ng-repeat="(i, event) in events.list | orderBy:'createdAt'" class="event">
       <h2 class="separator">
         <div class="date">{{event.createdAt | date : 'dd.MM.yyyy'}}</div>
       </h2>
