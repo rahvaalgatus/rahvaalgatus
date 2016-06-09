@@ -89,6 +89,9 @@
             <ul class="profile-tabs left adminrole-tabs nav nav-tabs">
                 <li><a ng-tab-head href="" ng-class="{deactive: !('topics.view' | isState) && !('topics.create' | isState), active:('topics.view' | isState) || ('topics.create' | isState)}" ui-sref="topics.view({id:topic.id})" translate="HEADING_TAB_ORIGINAL">Original</a></li>
                 <li ng-show="topic.vote.id && topic.status != 'followUp' || ('topics.view.vote.create' | isState) && topic.status != 'followUp'"><a ng-tab-head href="" ng-class="{deactive: !('topics.view.vote.view' | isState) && !('topics.view.vote.create' | isState), active:!('topics.view' | isState) && !('topics.create' | isState)}" ui-sref="topics.view.vote.view({id:topic.id, voteId:topic.vote.id})" translate="HEADING_TAB_VOTE">Vote</a></li>
+                <li class="event" ng-repeat="(i, event) in topicEvents.list | orderBy:'createdAt'" ng-style="{display: topicEvents.list.length - i > 4 ? 'none' : ''}">
+                  <a ng-href="/votes/{{topic.id}}/events/{{event.id}}">Version {{i + 1}}</a>
+                </li>
                 <li ng-show="topic.status=='followUp'"><a href="" class="active" ng-class="{deactive: !('topics.view.vote.view' | isState) && !('topics.view.vote.create' | isState)}" ui-sref="topics.view.vote.view({id:topic.id, voteId:topic.vote.id})" translate="HEADING_TAB_IN_PROCESSING">In processing</a></li>
             </ul>
         </div>
