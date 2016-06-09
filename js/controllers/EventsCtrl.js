@@ -27,7 +27,9 @@ app.controller("EventsCtrl", ["$scope", "$rootScope", "$state", "$location", "ng
 
     ngDialog.open({
       template: "/templates/modals/topicEventsCreate.html",
-      scope: $scope
+      scope: $scope,
+      closeByEscape: false,
+      closeByDocument: false
     });
   };
 
