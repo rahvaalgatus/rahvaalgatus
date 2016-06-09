@@ -53,6 +53,7 @@
   "HEADING_TAB_VOTE": "голосование",
   "CREATED_BY": "Aвтор",
   "HEADING_TAB_IN_PROCESSING": "на рассмотрении",
+  "HEADING_TAB_EVENTS": "Обновления",
   "HEADING_ARGUMENTS": "{{count}} aргументов",
   "HEADING_COMMENTS": "{{count}} комментарии",
   "ARGUMENTS": "Aргументы",

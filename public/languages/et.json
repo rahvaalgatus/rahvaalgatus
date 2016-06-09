@@ -53,6 +53,7 @@
   "HEADING_TAB_VOTE": "Hääletus",
   "CREATED_BY": "Autor",
   "HEADING_TAB_IN_PROCESSING": "Menetluses",
+  "HEADING_TAB_EVENTS": "Events",
   "HEADING_ARGUMENTS": "{{count}} argumenti",
   "HEADING_COMMENTS": "{{count}} kommentaari",
   "ARGUMENTS": "Argumendid",
