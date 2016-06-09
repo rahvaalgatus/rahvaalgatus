@@ -1,6 +1,8 @@
 "use strict";
 
-app.controller("TopicCtrl", [ "$scope", "$rootScope", "$sce", "$compile", "$state", "$filter", "$log", "$timeout", "ngDialog", "sTopic", "sTranslate", "sAuth", function($scope, $rootScope, $sce, $compile, $state, $filter, $log, $timeout, ngDialog, sTopic, sTranslate, sAuth) {
+app.controller("TopicCtrl", [
+  "$scope", "$rootScope", "$sce", "$compile", "$state", "$filter", "$log", "$timeout", "ngDialog", "sTopic", "sTranslate", "sAuth", "sProgress",
+  function($scope, $rootScope, $sce, $compile, $state, $filter, $log, $timeout, ngDialog, sTopic, sTranslate, sAuth, Progress) {
 
     $scope.topic = {
         id: null,
@@ -40,7 +42,7 @@ app.controller("TopicCtrl", [ "$scope", "$rootScope", "$sce", "$compile", "$stat
     $scope.CATEGORIES = sTopic.CATEGORIES;
     $scope.CATEGORIES_COUNT_MAX = sTopic.CATEGORIES_COUNT_MAX;
     $scope.today = new Date();
-    $scope.items = [];
+    $scope.progress = new Progress();
     var topicRead = function(topicId) {
         if ($scope.app.user && $scope.app.user.loggedIn) {
             return sTopic.read({
@@ -52,99 +54,7 @@ app.controller("TopicCtrl", [ "$scope", "$rootScope", "$sce", "$compile", "$stat
             });
         }
     };
-    var progress = function() {
-        var end;
-        $scope.items = [];
-        $scope.topicended = false;
-        var start = new Date($scope.topic.createdAt);
-        var fullwidth = 850;
-        if ($scope.topic.status == "voting") {
-            end = new Date($scope.vote.endsAt);
-        } else {
-            end = new Date($scope.topic.endsAt);
-        }
-        if (end >= new Date()) {
-            $scope.daysToDeadline = Math.round((end - $scope.today) / (1e3 * 60 * 60 * 24));
-            $scope.topic.numberOfDaysLeft = $scope.daysToDeadline;
-            $scope.daynow = Math.round((new Date() - start) / (1e3 * 60 * 60 * 24));
-            $scope.fullDiff = Math.round((end - start) / (1e3 * 60 * 60 * 24));
-            if ($scope.topic.status == "voting") {
-                $scope.vote.numberOfDaysLeft = ($scope.daysToDeadline +1);
-                var createdate = new Date($scope.vote.createdAt);
-                console.log;
-                var day = Math.round((createdate - start) / (1e3 * 60 * 60 * 24));
-                if (day != 0) $scope.items.push({
-                    date: createdate,
-                    day: day,
-                    type: "voteitem"
-                });
-            }
-        } else {
-            $scope.daysToDeadline = Math.round((new Date() - start) / (1e3 * 60 * 60 * 24));
-            $scope.topic.numberOfDaysLeft = $scope.daysToDeadline;
-            $scope.daynow = Math.round((new Date() - start) / (1e3 * 60 * 60 * 24));
-            $scope.topicended = true;
-            $scope.fullDiff = Math.round((new Date() - start) / (1e3 * 60 * 60 * 24));
-            if (end < $scope.today) {
-                var day = Math.round(($scope.today - end) / (1e3 * 60 * 60 * 24));
-                console.log(day);
-                if ($scope.topic.status == "voting") {
-                    $scope.items.push({
-                        date: $scope.vote.endsAt,
-                        day: day,
-                        type: "voteitem"
-                    });
-                }
-            }
-        }
-        var extra = 0;
-        var nowitem = {
-            day: $scope.daynow,
-            date: new Date(),
-            id: "nowProgress",
-            type: "now"
-        };
-        if ($scope.topicended) {
-            nowitem.ended = true;
-            if(!$scope.hasVotesRequired){
-                nowitem.src = "images/role-not.png";
-            }
-            else{
-                nowitem.src = "images/role-active-green.png";
 
-            }
-            nowitem.width = 30;
-            extra = extra+30;
-        }
-        else{
-            extra = extra + 136;
-            nowitem.width = 136;
-        }
-        var itemcount  = Object.keys($scope.items).length;
-        extra = extra+(itemcount*30);
-        $scope.items.push(nowitem);
-        itemcount++;
-        fullwidth = fullwidth-extra;
-        var daylength = Math.floor(fullwidth/$scope.fullDiff);
-        var lastday = 0;
-        angular.forEach($scope.items, function(item, key) {
-            item.id = "item-" + key;
-            if (item.type == "voteitem") {
-                item.src = "images/role-active-green.png";
-                item.left = ((item.day - lastday) * daylength)
-            }
-            else if(item.type !='now'){
-                item.src = "images/role-active.png";
-                item.left = ((item.day - lastday) * daylength)
-            }
-            else{
-                 item.left = ((item.day - lastday) * daylength)
-            }
-            $scope.items[key] = item;
-            lastday = item.day;
-        });
-        console.log($scope.items);
-    };
     var readMembers = function(topicId) {
         sTopic.membersList(topicId).then(function(res) {
             $scope.memberslist = res.data.data.users.rows;
@@ -199,11 +109,11 @@ app.controller("TopicCtrl", [ "$scope", "$rootScope", "$sce", "$compile", "$stat
                         });
                         $;
                         //scope.topic.endsAt = new Date($scope.vote.endsAt);
-                        progress();
+                        $scope.progress.recalculate($scope.topic, $scope.vote, $scope.hasVotesRequired);
                     }, function() {
                     });
                 } else {
-                    progress();
+                    $scope.progress.recalculate($scope.topic, $scope.vote, $scope.hasVotesRequired);
                 }
                 $log.debug("Topic loaded!", topic);
                 $scope.loadComments();

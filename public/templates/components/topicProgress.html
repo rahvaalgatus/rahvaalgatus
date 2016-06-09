@@ -6,11 +6,11 @@
            <span ng-if="topic.status=='voting' && (vote.endsAt | amDifference : today : 'days' )<0" translate="SIGNING_DEADLINE_REACHED" >Signing deadline reached: </span>
        </p>
        <!--Progress bar -->
-       <div class="progress-btns clearfix" id="progressBar" data-fulldif="{{fullDiff}}" data-now="{{daynow}}" data-createdAt="{{topic.createdAt}}" data-discussionEnd="{{topic.endsAt}}">
+       <div class="progress-btns clearfix" id="progressBar" data-fulldif="{{progress.fullDiff}}" data-now="{{progress.daynow}}" data-createdAt="{{topic.createdAt}}" data-discussionEnd="{{topic.endsAt}}">
            <ul class="clearfix">
                <li><a href="#"><img src="images/role-close.png" alt="Image"></a></li>
 
-               <li ng-repeat='item in items' data-type="{{item.type}}" id="{{(item.id)}}" data-day='{{item.day}}' ng-class="{'days' :(item.type=='now' && !item.ended), 'days reader':(item.type=='now' && !item.ended && (topic.status=='voting') && ((vote.endsAt | amDifference : today : 'days' )>=0))}" style="padding-left:{{item.left}}px">
+               <li ng-repeat='item in progress.items' data-type="{{item.type}}" id="{{(item.id)}}" data-day='{{item.day}}' ng-class="{'days' :(item.type=='now' && !item.ended), 'days reader':(item.type=='now' && !item.ended && (topic.status=='voting') && ((vote.endsAt | amDifference : today : 'days' )>=0))}" style="padding-left:{{item.left}}px">
                    <a href="#" ng-if="item.type!='now' || item.ended ">
                        <img ng-src="{{item.src}}" alt="Image">
                    </a>
