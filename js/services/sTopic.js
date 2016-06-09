@@ -326,13 +326,13 @@ app.service("sTopic", [ "$http", "$q", "$log", function($http, $q, $log) {
     };
     Topic.eventCreate = function(topicId, eventData, authToken) {
       var path = "/api/users/self/topics/:topicId/events".replace(":topicId", topicId);
+      var headers = authToken ? { Authorization: "Bearer "+ authToken } : undefined;
+
       return $http({
         url: path,
         method: 'POST',
         data: eventData,
-        headers: {
-          Authorization: "Bearer "+ authToken
-        }
+        headers: headers
       }).then(function(response) {
         return response.data.data;
       });
