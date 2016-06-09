@@ -1,0 +1,23 @@
+<div class="admin-role-progress">
+   <div class="enclose">
+       <p class="deadline">
+           <span ng-if="topic.status=='inProgress'" translate="DISCUSSION_DEADLINE" translate-values="{endsAt:(topic.endsAt | amDateFormat : 'L')}">Discussion deadline: </span>
+           <span ng-if="topic.status=='voting' && (vote.endsAt | amDifference : today : 'days' )>=0" translate="VOTING_DEADLINE" translate-values="{endsAt:(vote.endsAt | amDateFormat : 'L')}">Voting deadline: </span>
+           <span ng-if="topic.status=='voting' && (vote.endsAt | amDifference : today : 'days' )<0" translate="SIGNING_DEADLINE_REACHED" >Signing deadline reached: </span>
+       </p>
+       <!--Progress bar -->
+       <div class="progress-btns clearfix" id="progressBar" data-fulldif="{{fullDiff}}" data-now="{{daynow}}" data-createdAt="{{topic.createdAt}}" data-discussionEnd="{{topic.endsAt}}">
+           <ul class="clearfix">
+               <li><a href="#"><img src="images/role-close.png" alt="Image"></a></li>
+
+               <li ng-repeat='item in items' data-type="{{item.type}}" id="{{(item.id)}}" data-day='{{item.day}}' ng-class="{'days' :(item.type=='now' && !item.ended), 'days reader':(item.type=='now' && !item.ended && (topic.status=='voting') && ((vote.endsAt | amDifference : today : 'days' )>=0))}" style="padding-left:{{item.left}}px">
+                   <a href="#" ng-if="item.type!='now' || item.ended ">
+                       <img ng-src="{{item.src}}" alt="Image">
+                   </a>
+                   <a ng-if="(item.type=='now' && !item.ended && topic.status=='voting')" >{{'TXT_DEADLINE_CALENDAR_DAYS_LEFT' | translate: vote}}</a>
+                   <a ng-if="item.type=='now' && !item.ended && topic.status=='inProgress'" >{{'TXT_DEADLINE_CALENDAR_DAYS_LEFT' | translate: topic}}</a>
+               </li>
+           </ul>
+       </div>
+   </div>
+</div>
