@@ -15,6 +15,10 @@ app.controller("TopicCtrl", [ "$scope", "$rootScope", "$sce", "$compile", "$stat
         },
         upUrl: null
     };
+    $scope.topicEvents = {
+      status: null,
+      list:   []
+    };
     $scope.notConfirmedRead = false;
     $scope.dateNotSet = false;
     $scope.topictype;
@@ -208,6 +212,14 @@ app.controller("TopicCtrl", [ "$scope", "$rootScope", "$sce", "$compile", "$stat
                 $scope.topicLoadSuccess = false;
             }).finally(function() {
                 $scope.app.isTopicLoading = false;
+            });
+
+            $scope.topicEvents.status = 'loading';
+            sTopic.eventsList($state.params.id).then(function(events) {
+              $scope.topicEvents.status = 'loaded';
+              $scope.topicEvents.list = events;
+            }, function(error) {
+              $scope.topicEvents.status = 'failed';
             });
         }
     };

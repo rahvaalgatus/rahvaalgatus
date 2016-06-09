@@ -1,15 +1,15 @@
 <div ng-controller="EventsCtrl">
-  <div ng-if="events.status=='loading'">
-    Loading events...
+  <div ng-if="topicEvents.status=='loading'">
+    Loading topicEvents...
   </div>
-  <div ng-if="events.status=='failed'">
+  <div ng-if="topicEvents.status=='failed'">
     <h3>Failed to load the events list :(</h3>
   </div>
-  <div ng-if="events.status=='loaded'">
-    <div ng-if="events.list.length==0">
+  <div ng-if="topicEvents.status=='loaded'">
+    <div ng-if="topicEvents.list.length==0">
       <h3>No government responses were posted yet</h3>
     </div>
-    <div ng-repeat="(i, event) in events.list | orderBy:'createdAt'" class="event">
+    <div ng-repeat="(i, event) in topicEvents.list | orderBy:'createdAt'" class="event">
       <h2 class="separator">
         <div class="date">{{event.createdAt | date : 'dd.MM.yyyy'}}</div>
       </h2>
