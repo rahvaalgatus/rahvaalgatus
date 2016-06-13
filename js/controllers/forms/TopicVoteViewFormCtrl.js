@@ -214,11 +214,11 @@ app.controller("TopicVoteViewFormCtrl", [ "$scope", "$rootScope", "$state", "$lo
         if($scope.vote){
             for(var i=0; i<$scope.vote.options.rows.length; i++){
                 var member = $scope.vote.options.rows[i];
-                if (member.value == 'Yes' && member.voteCount >=1000) {
+                if (member.value == 'Yes' && member.voteCount >= Config.VOTES_REQUIRED) {
                     return true;
                     i = 100;
                 }
-                else if(member.value == 'Yes' && member.voteCount < 1000){
+                else if(member.value == 'Yes' && member.voteCount < Config.VOTES_REQUIRED){
                     return false;
                     i = 100;
                 }

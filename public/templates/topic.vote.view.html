@@ -70,7 +70,7 @@
             </div>
             <div class="sign-in clearfix">
                 <div class="left"><a ng-href="{{vote.downloads.bdocVote}}" ng-show="isAuthTypeHard() && hasVoted" target="_blank" class="download pull-right" ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}" translate="LNK_DOWNLOAD_USER_BDOC">Download your BDOC</a></div>
-                <div class="right" ng-show="isAdmin() && voteCountTotal < 1000"><a ng-if="topic.status != 'closed'" href="#" ng-click="reopenTopic(topic)" translate="REOPEN_TOPIC"  ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}">REOPEN TOPIC</a></div>
+                <div class="right" ng-show="isAdmin() && voteCountTotal < Config.VOTES_REQUIRED"><a ng-if="topic.status != 'closed'" href="#" ng-click="reopenTopic(topic)" translate="REOPEN_TOPIC"  ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}">REOPEN TOPIC</a></div>
             </div>
         </div>
         <div class="admin-role-cal" ng-if="!app.topicLoad && (isAdmin() || canEdit()) && topic.status == 'followUp'">
@@ -80,12 +80,12 @@
             </div>
             <div class="con clearfix">
                 <div class="left" translate="SENT_TO_PARLIAMENT_CONTENT">
-                        At least 1000 signatures were collected. You can now send this to the parliament.
+									At least {{Config.VOTES_REQUIRED}} signatures were collected. You can now send this to the parliament.
                 </div>
             </div>
             <div class="sign-in clearfix">
                 <div class="left"><a ng-href="{{vote.downloads.bdocFinal}}" ng-show="isAuthTypeHard()" target="_blank" class="download pull-right" ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}" translate="BTN_DOWNLOAD_FINAL_BDOC">Download your BDOC</a></div>
-                <div class="right" ng-show="isAdmin() && voteCountTotal < 1000"><a href="#" ng-click="reopenTopic(topic)" translate="REOPEN_TOPIC"  ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}">REOPEN TOPIC</a></div>
+                <div class="right" ng-show="isAdmin() && voteCountTotal < Config.VOTES_REQUIRED"><a href="#" ng-click="reopenTopic(topic)" translate="REOPEN_TOPIC"  ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}">REOPEN TOPIC</a></div>
             </div>
         </div>
         <!--/message-->

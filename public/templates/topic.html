@@ -181,7 +181,7 @@
                         <a href="#" ng-show="!isClosed() && isAdmin() && topic.visibility=='public'" ng-click="doSetVisibility('private')" translate="UNPUBLISH_TOPIC">UNPUBLISH TOPIC</a>
                     </p>
                     <p class="collect-signatures s"><a href="#" ng-show="isAdmin() && !topic.vote.id" ui-sref="topics.view.vote.create({id: topic.id})" translate="BTN_SEND_TO_VOTE">COLLECT SIGNATURES</a></p>
-                    <p class="publish-topic" ng-show="(isAdmin()&& !isClosed() || canEdit() && !isClosed()) && canSendToFollowUp() && (vote && vote.options.rows[0].voteCount > 1000)" ><a ng-click="setTopicStatusToFollowUp(topic)" translate="SEND_TO_PARLIAMENT"  href="#">SEND TO PARLIAMENT</a></p>
+                    <p class="publish-topic" ng-show="(isAdmin()&& !isClosed() || canEdit() && !isClosed()) && canSendToFollowUp() && (vote && vote.options.rows[0].voteCount >= Config.VOTES_REQUIRED)" ><a ng-click="setTopicStatusToFollowUp(topic)" translate="SEND_TO_PARLIAMENT"  href="#">SEND TO PARLIAMENT</a></p>
                     <p class="publish-topic" ng-show="isAdmin() && topic.status=='followUp'" ><a ng-click="setTopicStatusToVoting(topic)" translate="BTN_SEND_BACK_TO_VOTE"  href="#">SEND TO PARLIAMENT</a></p>
                     <div class="admin-role-options">
                     	<p class="heading" translate="OPTIONS">OPTIONS</p>
