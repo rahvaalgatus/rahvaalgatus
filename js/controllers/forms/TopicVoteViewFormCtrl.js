@@ -218,7 +218,7 @@ app.controller("TopicVoteViewFormCtrl", [ "$scope", "$rootScope", "$state", "$lo
                     return true;
                     i = 100;
                 }
-                else if(member.value == 'Yes' && member.voteCount <=1000){
+                else if(member.value == 'Yes' && member.voteCount < 1000){
                     return false;
                     i = 100;
                 }
