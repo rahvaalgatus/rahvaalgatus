@@ -43,7 +43,7 @@
                 </div>-->
             </div>
         </div>
-        <div class="admin-role-cal" ng-if="(!app.topicLoad && hasEnded && (isAdmin() || canEdit()) && canSendToFollowUp() && hasVotesRequired) && topic.status != 'followUp'">
+        <div class="admin-role-cal" ng-if="(!app.topicLoad && (isAdmin() || canEdit()) && canSendToFollowUp() && hasVotesRequired) && topic.status != 'followUp'">
                 <div class="head clearfix">
                 <p class="left" translate="BTN_SEND_TO_FOLLOWUP">Sent to parliament</p>
                 <p class="right" >{{voteCountTotal}} <span translate="TXT_N_VOTES_COUNTED">votes counted</span></p>
