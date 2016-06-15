@@ -64,9 +64,7 @@
                 <p class="right" >{{voteCountTotal}} <span translate="TXT_N_VOTES_COUNTED">votes counted</span></p>
             </div>
             <div class="con clearfix">
-                <div class="left" translate="NOT_ENOUGH_SIGNATURES">
-                        At least 1000 signatures were collected. You can now send this to the parliament.
-                </div>
+                <div class="left" translate="NOT_ENOUGH_SIGNATURES"></div>
             </div>
             <div class="sign-in clearfix">
                 <div class="left"><a ng-href="{{vote.downloads.bdocVote}}" ng-show="isAuthTypeHard() && hasVoted" target="_blank" class="download pull-right" ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}" translate="LNK_DOWNLOAD_USER_BDOC">Download your BDOC</a></div>
@@ -79,9 +77,7 @@
                 <p class="right" >{{voteCountTotal}} <span translate="TXT_N_VOTES_COUNTED">votes counted</span></p>
             </div>
             <div class="con clearfix">
-                <div class="left" translate="SENT_TO_PARLIAMENT_CONTENT">
-									At least {{Config.VOTES_REQUIRED}} signatures were collected. You can now send this to the parliament.
-                </div>
+                <div class="left" translate="SENT_TO_PARLIAMENT_CONTENT"></div>
             </div>
             <div class="sign-in clearfix">
                 <div class="left"><a ng-href="{{vote.downloads.bdocFinal}}" ng-show="isAuthTypeHard()" target="_blank" class="download pull-right" ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}" translate="BTN_DOWNLOAD_FINAL_BDOC">Download your BDOC</a></div>
