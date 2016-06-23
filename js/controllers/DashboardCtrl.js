@@ -37,19 +37,7 @@ app.controller("DashboardCtrl", [ "$scope", "$rootScope", "$state", "$log", "ngD
             showUserTab: showUserTab
         };
     };
-    // TODO: This logic is kinda duplicate in TopicCtrl
-    $scope.setTopicStatusToFollowUp = function(topic) {
-        ngDialog.openConfirm({
-            template: "/templates/modals/topicConfirmFollowUp.html"
-        }).then(function() {
-            var newStatus = sTopic.STATUSES.followUp;
-            sTopic.setStatus(topic, newStatus).then(function() {
-                topic.status = newStatus;
-            }, function(err) {
-                $log.error("Failed to set Topic status", topic, err);
-            });
-        }, angular.noop);
-    };
+
     // TODO: This logic is kinda duplicate in TopicCtrl
     $scope.doLeaveTopic = function(topic) {
         ngDialog.openConfirm({

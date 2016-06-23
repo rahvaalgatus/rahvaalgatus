@@ -95,12 +95,6 @@ app.service("sTopic", [ "$http", "$q", "$log", function($http, $q, $log) {
         var path = "/api/users/self/topics/:topicId/tokenJoin".replace(":topicId", topicId);
         return $http.put(path);
     };
-    Topic.setStatus = function(topic, status) {
-        return Topic.update({
-            id: topic.id,
-            status: status
-        });
-    };
     Topic.setEndsAt = function (topic, endsAt) {
         return Topic.update({id: topic.id, endsAt: endsAt});
     };

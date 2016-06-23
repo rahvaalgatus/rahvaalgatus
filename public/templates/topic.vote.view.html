@@ -55,7 +55,7 @@
             </div>
             <div class="sign-in clearfix">
                 <div class="left"><a ng-href="{{vote.downloads.bdocVote}}" ng-show="isAuthTypeHard() && hasVoted" target="_blank" class="download pull-right" ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}" translate="LNK_DOWNLOAD_USER_BDOC">Download your BDOC</a></div>
-                <div class="right" ng-show="isAdmin() && canSendToFollowUp()"><a  href="#" ng-click="setTopicStatusToFollowUp(topic)" translate="BTN_SEND_TO_FOLLOWUP"  ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}">REOPEN TOPIC</a></div>
+                <div class="right" ng-show="isAdmin() && canSendToFollowUp()"><a  href="#" ng-click="confirmTopicFollowUp(topic)" translate="BTN_SEND_TO_FOLLOWUP"  ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}">REOPEN TOPIC</a></div>
             </div>
         </div>
         <div class="admin-role-cal" ng-if="(!app.topicLoad && hasEnded && (isAdmin() || canEdit()) && !hasVotesRequired) && topic.status != 'followUp'">

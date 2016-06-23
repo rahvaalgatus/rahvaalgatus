@@ -1306,11 +1306,13 @@ footer{
 	padding:0 20px;
   cursor: pointer;
 }
+
 .arg-form button:disabled {
-  opacity: 0.5;
-  color: #eee;
-  cursor: default;
+  opacity: 0.5 !important;
+  color: #eee !important;
+  cursor: default !important;
 }
+
 .arg-form button.left{
 	background:#89cb00;
 	border:1px solid #7ab500;
@@ -1323,6 +1325,13 @@ footer{
 	background:#45a0e6;
 	border:1px solid #3390d7;
 }
+
+.arg-form input[type=submit],
+.arg-form button[type=submit] {
+	background: #385c90;
+	border:1px solid #274266;
+}
+
 .progress-btns{
 	height:30px;
 	position:relative;
@@ -2859,4 +2868,12 @@ h4.ac-topic{
   font-size: 2rem;
   color: #195f8e;
   margin: 1rem 0;
+}
+
+#topic-confirm-follow-up .prologue {
+	margin-bottom: 1em;
+}
+
+#topic-confirm-follow-up label {
+	font-weight: bold;
 }

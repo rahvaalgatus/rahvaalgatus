@@ -15,7 +15,8 @@ app.controller("TopicCtrl", [
         permission: {
             level: null
         },
-        upUrl: null
+        upUrl: null,
+        contact: {name: "", email: "", phone: ""}
     };
     $scope.topicEvents = {
       status: null,
@@ -358,21 +359,33 @@ app.controller("TopicCtrl", [
         $log.debug("Comments order by", orderBy);
         $scope.topicComments.orderBy = orderBy;
     };
-    // TODO: This logic is kinda duplicate in DashboardCtrl
-    $scope.setTopicStatusToFollowUp = function(topic) {
-        ngDialog.openConfirm({
-            template: "/templates/modals/topicConfirmFollowUp.html"
-        }).then(function() {
-            var newStatus = sTopic.STATUSES.followUp;
-            sTopic.setStatus(topic, newStatus).then(function() {
-                $state.go("topics.view", {
-                    id: topic.id
-                });
-            }, function(err) {
-                $log.error("Failed to set Topic status", topic, err);
-            });
-        }, angular.noop);
+
+    $scope.confirmTopicFollowUp = function(topic) {
+        ngDialog.open({
+            template: "/templates/modals/topicConfirmFollowUp.html",
+            scope: $scope,
+            closeByEscape: false,
+            closeByDocument: false
+        })
     };
+
+    $scope.updateTopicStatusToFollowUp = function(topic) {
+        $scope.savingTopic = true;
+
+        sTopic.update({
+            id: topic.id,
+            status: sTopic.STATUSES.followUp,
+            contact: topic.contact
+        }).then(function() {
+            $state.go("topics.view", {id: topic.id})
+        }).catch(function(err) {
+            $log.error("Failed to set Topic status", topic, err)
+            $scope.savingError = error.data.status.message;
+        }).finally(function() {
+            $scope.savingEvent = false
+        })
+    }
+
     $scope.deleteMemberUser = function(userId) {
         sTopic.memberUserDelete($scope.topic.id, userId).then(function(res) {
             $log.log("Member user delete success!", $scope.topic.id, userId);
