@@ -16,6 +16,11 @@
 		<meta property="og:image" content="https://rahvaalgatus.ee/images/index_logo.png" />
 		<meta property="fb:app_id" content="176292542463322" />
 
+		<script src="https://cdn.ravenjs.com/3.0.3/raven.min.js"></script>
+		<script>
+			Raven.config("https://ead693e3e8074571ad59dc81dc0bdfa6@app.getsentry.com/77593").install()
+		</script>
+
 		<script type="text/javascript" src="js/jquery.js"></script>
 		<script src="/js/app.bundle.js"></script>
 
@@ -167,11 +172,6 @@
 				})(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
 
 				ga('create', 'UA-74848422-1', {'cookieDomain': 'none'});
-			</script>
-
-			<script src="https://cdn.ravenjs.com/3.0.3/raven.min.js"></script>
-			<script>
-Raven.config('https://ead693e3e8074571ad59dc81dc0bdfa6@app.getsentry.com/77593').install()
 			</script>
 	</body>
 </html>
