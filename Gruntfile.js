@@ -38,7 +38,7 @@ module.exports = function (grunt) {
                     compress: false,
                     beautify: true,
                     preserveComments: 'all',
-                    sourceMap: true,
+                    sourceMap: false,
                     sourceMapName: 'public/js/<%= pkg.name %>.bundle.js.map'
                 },
                 files: {
