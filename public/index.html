@@ -1,179 +1,177 @@
 <!DOCTYPE html>
 <html ng-app="app">
-    <head>
-      <title>Rahvaalgatus</title>
+	<head>
+		<title>Rahvaalgatus</title>
 
-      <base href="/">
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width" />
+		<base href="/">
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width" />
 
-      <link rel="stylesheet" type="text/css" href="MyFontsWebfontsKit.css">
-      <link rel="stylesheet" href="style.css" type="text/css" />
+		<link rel="stylesheet" type="text/css" href="MyFontsWebfontsKit.css">
+		<link rel="stylesheet" href="style.css" type="text/css" />
 
-      <meta property="og:url" content="https://rahvaalgatus.ee/" />
-      <meta property="og:title" content="https://rahvaalgatus.ee/" />
-      <meta property="og:image" content="https://rahvaalgatus.ee/images/index_logo.png" />
-      <meta property="og:image" content="https://rahvaalgatus.ee/images/index_logo.png" />
-      <meta property="fb:app_id" content="176292542463322" />
+		<meta property="og:url" content="https://rahvaalgatus.ee/" />
+		<meta property="og:title" content="https://rahvaalgatus.ee/" />
+		<meta property="og:image" content="https://rahvaalgatus.ee/images/index_logo.png" />
+		<meta property="og:image" content="https://rahvaalgatus.ee/images/index_logo.png" />
+		<meta property="fb:app_id" content="176292542463322" />
 
-      <script type="text/javascript" src="js/jquery.js"></script>
-      <script src="/js/app.bundle.js"></script>
+		<script type="text/javascript" src="js/jquery.js"></script>
+		<script src="/js/app.bundle.js"></script>
 
-      <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+		<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
 
-    	<script src="/js/bootstro.js/bootstro.js"></script>
-      <link rel="stylesheet" href="/js/bootstro.js/bootstro.css" type="text/css"/>
-      <style>
-          .language a:not(:first-child)::before {
-              content:"/";
-          }
-          .language a {
-              cursor:pointer;
-          }
-      </style>
-    </head>
-    <body ng-controller="AppCtrl">
-        <div id="wrapper">
-        <div class="notifications" ng-show="app.notifications.info || app.notifications.error">
-            <div class="entry" ng-show="app.notifications.info">
-                <div ng-repeat="info in app.notifications.info">
-                    <span translate="{{info}}"></span>
-                </div>
-                <div class="close" ng-click="app.hideInfo()">&nbsp;</div>
-            </div>
-            <div class="entry error" ng-show="app.notifications.error">
-                <div ng-repeat="error in app.notifications.error">
-                    <span translate="{{error}}"></span>
-                </div>
-                <div class="close" ng-click="app.hideError()">&nbsp;</div>
-            </div>
-        </div>
-        <header>
-            <div class="enclose">
-            <!--header top-->
-            <div class="clearfix header-top">
-                <div class="tp-layer"></div>
-                <div class="left lang" toru-select on-select="app.setLanguage(selected)" class="left lang language">
-                    <a toru-select-item="key" ng-repeat="(key, value) in app.languagesAvailable"  ng-class="{'active': app.language == key}">{{key | translate}} </a>
-                </div>
+		<script src="/js/bootstro.js/bootstro.js"></script>
+		<link rel="stylesheet" href="/js/bootstro.js/bootstro.css" type="text/css"/>
 
-                <!--login-->
-                <div class="right login" ng-show="!app.user.isLoading && !app.user.loggedIn">
-                    <a href="#" ng-click="app.login()" translate="BTN_LOG_IN_REGISTER">LOG IN / REGISTER TO PARTICIPATE</a>
-                </div><!--Login end-->
-                <!--Logged in-->
-                <div class="right login">
-                    <div class="log-pop" id="reg" ng-show="app.user.loggedIn && app.finalizeOpen && app.user.email==null">
+		<style>
+			.language a:not(:first-child)::before { content:"/"; }
+			.language a { cursor:pointer; }
+		</style>
 
-                    </div>
-                </div>
-                <div class="right login-after" ng-show="!app.user.isLoading && app.user.loggedIn">
-                    <span translate="HELLO">Hello</span> {{app.user.name}} &nbsp;|&nbsp; <a href="" class="open-profile" ng-click="app.dashboard()" translate="MY_PROFILE">My profile</a> &nbsp;|&nbsp; <a ng-click="app.logout()" href="#" translate="BTN_LOG_OFF">Log out</a>
-                </div>
+	</head>
+	<body ng-controller="AppCtrl">
+		<div id="wrapper">
+			<div class="notifications" ng-show="app.notifications.info || app.notifications.error">
+				<div class="entry" ng-show="app.notifications.info">
+					<div ng-repeat="info in app.notifications.info">
+						<span translate="{{info}}"></span>
+					</div>
+					<div class="close" ng-click="app.hideInfo()">&nbsp;</div>
+				</div>
+				<div class="entry error" ng-show="app.notifications.error">
+					<div ng-repeat="error in app.notifications.error">
+						<span translate="{{error}}"></span>
+					</div>
+					<div class="close" ng-click="app.hideError()">&nbsp;</div>
+				</div>
+			</div>
+			<header>
+				<div class="enclose">
+					<!--header top-->
+					<div class="clearfix header-top">
+						<div class="tp-layer"></div>
+						<div class="left lang" toru-select on-select="app.setLanguage(selected)" class="left lang language">
+							<a toru-select-item="key" ng-repeat="(key, value) in app.languagesAvailable"	ng-class="{'active': app.language == key}">{{key | translate}} </a>
+						</div>
 
+						<!--login-->
+						<div class="right login" ng-show="!app.user.isLoading && !app.user.loggedIn">
+							<a href="#" ng-click="app.login()" translate="BTN_LOG_IN_REGISTER">LOG IN / REGISTER TO PARTICIPATE</a>
+						</div><!--Login end-->
+						<!--Logged in-->
+						<div class="right login">
+							<div class="log-pop" id="reg" ng-show="app.user.loggedIn && app.finalizeOpen && app.user.email==null">
 
-            </div>
-            <!--header top end--´
-            <!--Navigation-->
-            <div class="clearfix navigation">
-                    <a href="index.html" class="left logo"><img src="images/rahvaalagatus_logo.png" alt="image" /></a>
-                <a href="#" class="mobile-menu"></a>
-                <a href="#" class="mobile-set"></a>
-                <ul class="left main-navi clearfix bootstro" data-bootstro-title="I am simple" data-bootstro-content="Call bootstro.start('.bootstro') or just <b>bootstro.start()</b>" data-bootstro-step="1" data-original-title="" title="">
-                    <li ui-sref-active="active" ng-class="{'header-link-rus': app.language == 'ru'}"><a href="#" ui-sref='discussions' ng-class="{active: ('discussions' | isState)}" translate="LINK_DISCUSSION">Arutelud</a></li>
-                    <li ui-sref-active="active" ng-class="{'header-link-rus': app.language == 'ru'}"><a href="#" ui-sref='votings' ng-class="{active: ('votings' | isState)}" translate="LINK_VOTING">Algatused</a></li>
-                    <li ui-sref-active="active" ng-class="{'header-link-rus': app.language == 'ru'}"><a href="" ui-sref='about' ng-class="{active: ('about' | isState)}" translate='LNK_ABOUT'>Platvormist</a></li>
-                    <li ui-sref-active="active" ng-class="{'header-link-rus': app.language == 'ru'}"><a href="" ui-sref="goodpractice" ng-class="{active: ('goodpractice' | isState)}" translate="LNK_GOOD_PRACTICE">Kasutamise hea tava</a></li>
-                    <li ui-sref-active="active" ng-class="{'header-link-rus': app.language == 'ru'}"><a href="" ui-sref="support" ng-class="{active: ('support' | isState)}" translate="LNK_SUPPORT">Support us</a></li>
-                    <!--Before Login-->
-                    <li class="mobile-items" ng-show="!app.user.isLoading && !app.user.loggedIn">
-                            <p><a href="#" class="m-login" translate="BTN_LOG_IN_REGISTER">LOG IN / REGISTER TO PARTICIPATE</a></p>
-                        <ul class="clearfix" toru-select on-select="app.setLanguage(selected)">
-                            <li toru-select-item="key" ng-repeat="(key, value) in app.languagesAvailable"><a style="text-transform: uppercase;" ng-class="{'active': app.language == key}">{{key | translate}} </a></li>
-                        </ul>
-                    </li>
-                    <li class="mobile-items" ng-show="!app.user.isLoading && app.user.loggedIn">
-                	<p class="name">Hello, {{app.user.name}}!</p>
-                	<p><a href="#" class="m-profile" ng-click="app.dashboard()">View Profile</a></p>
-                    <p class="logout"><a href="#" ng-click="app.logout()" translate="BTN_LOG_OFF">Log out</a></p>
-                    <ul class="clearfix" toru-select on-select="app.setLanguage(selected)">
-                        <li toru-select-item="key" ng-repeat="(key, value) in app.languagesAvailable"><a style="text-transform: uppercase;" ng-class="{'active': app.language == key}">{{key | translate}} </a></li>
-                    </ul>
-                </li>
-                </ul>
-                <div class="right help-switch">
-                    <a href="#"><span translate="ON" class="switch-on">ON</span><span translate="OFF" class="switch-off">OFF</span></a>
-                    <div class="help-tip">
-                            <h4 translate="HELP_DONT_KNOW">Don’t know what to do?</h4>
-                        <p translate="HELP_TURN_ON">Turn on the help and we will show you tips & pointers like this one on the page you’re currently visiting.</p>
-                        <p><a href="#" translate="HELP_GOT_IT">GOT IT, NOW HIDE THIS!</a></p>
-                    </div>
-                </div>
-            </div>
-            <!--navigation end-->
-        </div><!--enclose end-->
-    </header>
+							</div>
+						</div>
+						<div class="right login-after" ng-show="!app.user.isLoading && app.user.loggedIn">
+							<span translate="HELLO">Hello</span> {{app.user.name}} &nbsp;|&nbsp; <a href="" class="open-profile" ng-click="app.dashboard()" translate="MY_PROFILE">My profile</a> &nbsp;|&nbsp; <a ng-click="app.logout()" href="#" translate="BTN_LOG_OFF">Log out</a>
+						</div>
+					</div>
+					<!--header top end--´
+			 <!--Navigation-->
+			 <div class="clearfix navigation">
+				 <a href="index.html" class="left logo"><img src="images/rahvaalagatus_logo.png" alt="image" /></a>
+				 <a href="#" class="mobile-menu"></a>
+				 <a href="#" class="mobile-set"></a>
+				 <ul class="left main-navi clearfix bootstro" data-bootstro-title="I am simple" data-bootstro-content="Call bootstro.start('.bootstro') or just <b>bootstro.start()</b>" data-bootstro-step="1" data-original-title="" title="">
+					 <li ui-sref-active="active" ng-class="{'header-link-rus': app.language == 'ru'}"><a href="#" ui-sref='discussions' ng-class="{active: ('discussions' | isState)}" translate="LINK_DISCUSSION">Arutelud</a></li>
+					 <li ui-sref-active="active" ng-class="{'header-link-rus': app.language == 'ru'}"><a href="#" ui-sref='votings' ng-class="{active: ('votings' | isState)}" translate="LINK_VOTING">Algatused</a></li>
+					 <li ui-sref-active="active" ng-class="{'header-link-rus': app.language == 'ru'}"><a href="" ui-sref='about' ng-class="{active: ('about' | isState)}" translate='LNK_ABOUT'>Platvormist</a></li>
+					 <li ui-sref-active="active" ng-class="{'header-link-rus': app.language == 'ru'}"><a href="" ui-sref="goodpractice" ng-class="{active: ('goodpractice' | isState)}" translate="LNK_GOOD_PRACTICE">Kasutamise hea tava</a></li>
+					 <li ui-sref-active="active" ng-class="{'header-link-rus': app.language == 'ru'}"><a href="" ui-sref="support" ng-class="{active: ('support' | isState)}" translate="LNK_SUPPORT">Support us</a></li>
+					 <!--Before Login-->
+					 <li class="mobile-items" ng-show="!app.user.isLoading && !app.user.loggedIn">
+						 <p><a href="#" class="m-login" translate="BTN_LOG_IN_REGISTER">LOG IN / REGISTER TO PARTICIPATE</a></p>
+						 <ul class="clearfix" toru-select on-select="app.setLanguage(selected)">
+							 <li toru-select-item="key" ng-repeat="(key, value) in app.languagesAvailable"><a style="text-transform: uppercase;" ng-class="{'active': app.language == key}">{{key | translate}} </a></li>
+						 </ul>
+					 </li>
+					 <li class="mobile-items" ng-show="!app.user.isLoading && app.user.loggedIn">
+						 <p class="name">Hello, {{app.user.name}}!</p>
+						 <p><a href="#" class="m-profile" ng-click="app.dashboard()">View Profile</a></p>
+						 <p class="logout"><a href="#" ng-click="app.logout()" translate="BTN_LOG_OFF">Log out</a></p>
+						 <ul class="clearfix" toru-select on-select="app.setLanguage(selected)">
+							 <li toru-select-item="key" ng-repeat="(key, value) in app.languagesAvailable"><a style="text-transform: uppercase;" ng-class="{'active': app.language == key}">{{key | translate}} </a></li>
+						 </ul>
+					 </li>
+				 </ul>
+				 <div class="right help-switch">
+					 <a href="#"><span translate="ON" class="switch-on">ON</span><span translate="OFF" class="switch-off">OFF</span></a>
+					 <div class="help-tip">
+						 <h4 translate="HELP_DONT_KNOW">Don’t know what to do?</h4>
+						 <p translate="HELP_TURN_ON">Turn on the help and we will show you tips & pointers like this one on the page you’re currently visiting.</p>
+						 <p><a href="#" translate="HELP_GOT_IT">GOT IT, NOW HIDE THIS!</a></p>
+					 </div>
+				 </div>
+			 </div>
+			 <!--navigation end-->
+				</div><!--enclose end-->
+			</header>
 
-<div class="pp-layer"></div>
-<!--Private Profiles-->
+			<div class="pp-layer"></div>
+			<!--Private Profiles-->
 
-<!--Private Profiles end-->
+			<!--Private Profiles end-->
 
-<!--Edit Profiles-->
+			<!--Edit Profiles-->
 
-<!--Edit Profiles end-->
+			<!--Edit Profiles end-->
 
-<div class="h-top"></div><!--Top padding-->
-<section id="main-section" ui-view ng-if="!app.user.isLoading">
+			<div class="h-top"></div><!--Top padding-->
+			<section id="main-section" ui-view ng-if="!app.user.isLoading">
 
-</section>
+			</section>
 
-<footer>
-	<div class="enclose">
-    	<div class="clearfix">
-        	<div class="f-box">
-            	<a href="http://kogu.ee" target="_blank" ng-show="app.language === 'et'"><img width="200" src="images/esstikoostoo_logo.png" alt="image" /></a>
-            	<a href="http://kogu.ee" target="_blank" ng-show="app.language !== 'et'"><img width="200" src="images/esstikoostoo_logo_en.png" alt="image" /></a>
-            </div>
-            <div class="f-box">
-                <p  class="bootstro" data-bootstro-title="Hello, I am a normal BOOTSTRAP popover" data-bootstro-content="Because bootstrap rocks. Life before bootstrap was sooo miserable" data-bootstro-width="400px" data-bootstro-placement="bottom" data-bootstro-step="0" data-original-title="" title="" translate="FOOTER_SA">SA Eesti Koostöö Kogu</p>
-                <p translate="FOOTER_ADDRESS">Roheline Aas 5, Tallinn</p>
-                <p translate="FOOTER_EMAIL" translate-values="{email:'info[at]rahvaalgatus.ee'}">Email: <a href="mailto:info@rahvaalgatus.ee">info@kogu.ee</a></p>
-                <p translate="FOOTER_PHONE" translate-values="{phone:'+3726938330'}">Telefon: <a href="tel:+3726938330">+372 6938330</a></p>
-            </div>
-            <div class="f-box social ng-hide">
-            	<p><a href="#" class="f-fb" translate="VISIT_FACEBOOK">Visit us on Facebook</a></p>
-                <p><a href="#" class="f-tw" translate="VISIT_TWITTER">Visit us on Twitter</a></p>
-            </div>
-            <div class="f-box textright">
-            	<p translate="POWERED_BY">Powered by:</p>
-                <p><a href="http://citizenos.com"><img src="images/citizenos_logo_big.png" alt="Image" /></a></p>
-            </div>
-        </div>
-    </div>
-</footer>
-<div class="dummy"></div><!--Dont Remove this**This is calculating for entire height of the page -->
+			<footer>
+				<div class="enclose">
+					<div class="clearfix">
+						<div class="f-box">
+							<a href="http://kogu.ee" target="_blank" ng-show="app.language === 'et'"><img width="200" src="images/esstikoostoo_logo.png" alt="image" /></a>
+							<a href="http://kogu.ee" target="_blank" ng-show="app.language !== 'et'"><img width="200" src="images/esstikoostoo_logo_en.png" alt="image" /></a>
+						</div>
+						<div class="f-box">
+							<p	class="bootstro" data-bootstro-title="Hello, I am a normal BOOTSTRAP popover" data-bootstro-content="Because bootstrap rocks. Life before bootstrap was sooo miserable" data-bootstro-width="400px" data-bootstro-placement="bottom" data-bootstro-step="0" data-original-title="" title="" translate="FOOTER_SA">SA Eesti Koostöö Kogu</p>
+							<p translate="FOOTER_ADDRESS">Roheline Aas 5, Tallinn</p>
+							<p translate="FOOTER_EMAIL" translate-values="{email:'info[at]rahvaalgatus.ee'}">Email: <a href="mailto:info@rahvaalgatus.ee">info@kogu.ee</a></p>
+							<p translate="FOOTER_PHONE" translate-values="{phone:'+3726938330'}">Telefon: <a href="tel:+3726938330">+372 6938330</a></p>
+						</div>
+						<div class="f-box social ng-hide">
+							<p><a href="#" class="f-fb" translate="VISIT_FACEBOOK">Visit us on Facebook</a></p>
+							<p><a href="#" class="f-tw" translate="VISIT_TWITTER">Visit us on Twitter</a></p>
+						</div>
+						<div class="f-box textright">
+							<p translate="POWERED_BY">Powered by:</p>
+							<p><a href="http://citizenos.com"><img src="images/citizenos_logo_big.png" alt="Image" /></a></p>
+						</div>
+					</div>
+				</div>
+			</footer>
+			<div class="dummy"></div><!--Dont Remove this**This is calculating for entire height of the page -->
 
-<script type="text/javascript" src="js/jquery-ui.min.js"></script>
-<script type="text/javascript" src="js/custom.js"></script>
-<script>
-  (function (i, s, o, g, r, a, m) {
-      i['GoogleAnalyticsObject'] = r;
-      i[r] = i[r] || function () {
-                  (i[r].q = i[r].q || []).push(arguments)
-              }, i[r].l = 1 * new Date();
-      a = s.createElement(o),
-              m = s.getElementsByTagName(o)[0];
-      a.async = 1;
-      a.src = g;
-      m.parentNode.insertBefore(a, m)
-  })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+			<script type="text/javascript" src="js/jquery-ui.min.js"></script>
+			<script type="text/javascript" src="js/custom.js"></script>
 
-  ga('create', 'UA-74848422-1', {'cookieDomain': 'none'});
-</script>
-<script src="https://cdn.ravenjs.com/3.0.3/raven.min.js"></script>
-<script>
-  Raven.config('https://ead693e3e8074571ad59dc81dc0bdfa6@app.getsentry.com/77593').install()
-</script>
-</body>
+			<script>
+				(function (i, s, o, g, r, a, m) {
+					i['GoogleAnalyticsObject'] = r;
+					i[r] = i[r] || function () {
+						(i[r].q = i[r].q || []).push(arguments)
+					}, i[r].l = 1 * new Date();
+					a = s.createElement(o),
+					m = s.getElementsByTagName(o)[0];
+					a.async = 1;
+					a.src = g;
+					m.parentNode.insertBefore(a, m)
+				})(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+				ga('create', 'UA-74848422-1', {'cookieDomain': 'none'});
+			</script>
+
+			<script src="https://cdn.ravenjs.com/3.0.3/raven.min.js"></script>
+			<script>
+Raven.config('https://ead693e3e8074571ad59dc81dc0bdfa6@app.getsentry.com/77593').install()
+			</script>
+	</body>
 </html>
