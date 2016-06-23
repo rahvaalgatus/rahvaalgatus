@@ -383,7 +383,7 @@ app.controller("TopicCtrl", [
             $scope.savingError = error.data.status.message;
         }).finally(function() {
             $scope.savingEvent = false
-        })
+        }).catch(Raven.captureException)
     }
 
     $scope.deleteMemberUser = function(userId) {
