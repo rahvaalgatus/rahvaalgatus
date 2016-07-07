@@ -313,5 +313,6 @@
   "BTN_POST_UPDATE": "Respond",
   "BTN_CANCEL": "Cancel",
   "FAILED_TO_SAVE_INITIATIVE": "Sorry! Saving your response failed.",
-  "NO_EVENTS": "No government response yet."
+  "NO_EVENTS": "No government response yet.",
+  "TOPIC_CONFIRM_HEADER": "Data Confirmation"
 }

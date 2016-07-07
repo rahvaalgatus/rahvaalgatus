@@ -313,5 +313,6 @@
   "BTN_POST_UPDATE": "Vasta",
   "BTN_CANCEL": "Tühista",
   "FAILED_TO_SAVE_INITIATIVE": "Andestust! Vastuse salvestamine ebaõnnestus.",
-  "NO_EVENTS": "Ootame Riigikogu Kantselei vastust."
+  "NO_EVENTS": "Ootame Riigikogu Kantselei vastust.",
+  "TOPIC_CONFIRM_HEADER": "Kontaktandmete kinnitamine"
 }
