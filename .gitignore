@@ -1,15 +1,6 @@
 /node_modules/
-/public/js/app.bundle.js
-/public/js/app.bundle.js.map
+/public/assets/
 /public/index.html
-/public/templates/topic.html
-/public/templates/support_us.html
-/public/templates/home.html
-/public/templates/components/
-/public/templates/initiatives/
-/public/templates/discussions/
-/public/templates/modals/topic_vote_sign.html
-/public/templates/**/_*.html
-/public/templates/topic.*.html
+/public/templates/**/*.html
 /public/stylesheets/*.css
 /tmp/

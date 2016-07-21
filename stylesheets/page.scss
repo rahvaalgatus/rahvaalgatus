@@ -269,3 +269,36 @@ body {
 	border-radius: 2px;
 	text-transform: uppercase;
 }
+
+button.green-button,
+button.blue-button,
+button.yellow-button {
+	border-radius: 3px;
+	border: 0px solid transparent;
+	display: inline-block;
+	font-family: "MuseoSansCyrl-700";
+	font-size: 14px;
+	height: 40px;
+	padding: 0 25px;
+	text-align: center;
+	text-transform: uppercase;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+button.green-button {
+	background: #00cb81;
+	color: white;
+	border: 1px solid #02b071;
+}
+
+button.blue-button {
+	background: $light-blue;
+	color: white;
+}
+
+button.yellow-button {
+	background: #ffb400;
+	color: #4a555d;
+	border: 1px solid #f1aa01;
+}

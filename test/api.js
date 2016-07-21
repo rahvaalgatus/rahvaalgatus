@@ -1,5 +1,5 @@
 var Config = require("root/config/test")
-var TOKEN = Config.sessions[0]
+var TOKEN = Config.sessions[1] // Use second test number for automations.
 var api = require("root/lib/citizen_os")
 var fetchDefaults = require("fetch-defaults")
 

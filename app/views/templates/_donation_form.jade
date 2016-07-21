@@ -1,0 +1,25 @@
+form#donation-form(method="GET", action="{{$sce.trustAsResourceUrl(Config.MAKSEKESKUS_URL)}}")
+	input(type="hidden", name="shopId", value="{{Config.MAKSEKESKUS_ID}}")
+	input(type="hidden", name="paymentId", value="Donation")
+
+	label.form-label(translate="SUPPORT_LABEL")
+
+	input.form-input(
+		type="numeric",
+		name="amount",
+		value="5",
+		placeholder="€",
+		requried)
+
+	button.form-submit(translate="SUPPORT_BUTTON") Toeta
+
+	p
+		span(translate="SUPPORT_REDIRECT")
+
+		ul.banks
+			li: img(src="images/bank_danskebank.png")
+			li: img(src="images/bank_krediidipank.png")
+			li: img(src="images/bank_lhv.png")
+			li: img(src="images/bank_nordea.png")
+			li: img(src="images/bank_seb.png")
+			li: img(src="images/bank_swedbank.png")

@@ -1,0 +1,12 @@
+{
+	"name": "@rahvaalgatus/web-app",
+	"version": "0.0.0",
+	"private": true,
+
+	"devDependencies": {
+		"browserify": "",
+		"watchify": "",
+		"uglify-js": "",
+		"jade": ""
+	}
+}

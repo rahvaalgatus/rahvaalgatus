@@ -5,7 +5,6 @@ ENV = development
 TEST =
 TEST_OPTS =
 TEST_URL = http://dev.rahvaalgatus.ee:3000
-JADE = ./node_modules/.bin/jade
 SASS = ./node_modules/.bin/node-sass --recursive --indent-type tab --indent-width 1 --output-style expanded
 GRUNT = ./node_modules/.bin/grunt
 DEPLOY_HOST =
@@ -15,7 +14,19 @@ SELENIUM_BROWSER = chrome
 
 STAGING_HOST = staging.rahvaalgatus.ee
 PRODUCTION_HOST = production.rahvaalgatus.ee
-LFTP_MIRROR_OPTS = --verbose=1 --continue --reverse --delete --dereference
+APP_HOST = app.rahvaalgatus.ee
+
+LFTP_MIRROR_OPTS = \
+	--verbose=1 \
+	--continue \
+	--parallel=4 \
+	--dereference \
+	--reverse \
+	--exclude node_modules/root/ \
+	--exclude \.git/ \
+	--exclude-glob .* \
+	--exclude-glob .git* \
+	--delete
 
 export PORT
 export ENV
@@ -32,10 +43,10 @@ autocompile:
 	$(MAKE) -j3 autojavascripts autostylesheets autoviews
 
 javascripts:
-	$(GRUNT) uglify:dev
+	$(MAKE) -C app compile
 
 autojavascripts:
-	$(GRUNT) watch
+	$(MAKE) -C app autocompile
 
 stylesheets:
 	$(SASS) --output public/stylesheets stylesheets
@@ -44,10 +55,10 @@ autostylesheets: SASS := $(SASS) --watch
 autostylesheets: stylesheets
 
 views:
-	$(JADE) --hierarchy --out public views
+	$(MAKE) -C app views
 
-autoviews: JADE := $(JADE) --watch
-autoviews: views
+autoviews:
+	$(MAKE) -C app autoviews
 
 test:
 	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R dot $(TEST_OPTS)
@@ -65,7 +76,7 @@ server:
 	@$(NODE) bin/web
 
 shrinkwrap:
-	npm shrinkwrap --dev
+	npm shrinkwrap
 
 deploy: DEPLOY_HOST ?= $(error "Please set DEPLOY_HOST")
 deploy:
@@ -73,6 +84,11 @@ deploy:
 
 staging: DEPLOY_HOST = $(STAGING_HOST)
 staging: deploy
+
+staging/app: DEPLOY_HOST = $(APP_HOST)
+staging/app: tmp/deploy
+staging/app:
+	lftp "$(DEPLOY_HOST)" -e "mirror $(LFTP_MIRROR_OPTS) tmp/deploy/ .; exit"
 
 production: DEPLOY_HOST = $(PRODUCTION_HOST)
 production: deploy
@@ -95,6 +111,9 @@ tmp:
 
 tmp/translations.json: tmp
 	wget "$(TRANSLATIONS_URL)" -O "$@"
+
+tmp/deploy:
+	git clone . "$@"
 	
 .PHONY: love
 .PHONY: compile autocompile

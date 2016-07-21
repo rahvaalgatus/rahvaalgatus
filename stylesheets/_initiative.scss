@@ -1,3 +1,5 @@
+$new-initiative-background-height: 515px;
+
 #initiative {
 	h1 {
 		font-size: 48px;
@@ -5,6 +7,11 @@
 		line-height: 60px;
 		margin-bottom: 20px;
 	}
+}
+
+#initiative-aside > button {
+	width: 100%;
+	margin-bottom: 20px;
 }
 
 .aside-box {
@@ -99,5 +106,241 @@
 				border-bottom-color: #f2f2f2;
 			}
 		}
+	}
+}
+
+.new-initiative {
+	padding: 40px 0;
+	background: url(/images/bg-1.png) no-repeat;
+	background-position: calc(50% - 200px) top;
+	min-height: $new-initiative-background-height;
+
+	.new-initiative-step {
+		position: relative;
+		padding: 0 80px;
+
+		.step-counter { position: absolute; top: -10px; left: 0; }
+	}
+
+	h1 {
+		color: #1C71A2;
+		font-size: 34px;
+		margin-bottom: 10px;
+	}
+
+	h2 {
+		color: #1C71A2;
+		font-size: 24px;
+		margin-bottom: 10px;
+	}
+
+	h3 {
+		font-family: "MuseoSansCyrl-700";
+		margin-bottom: 10px;
+	}
+
+	h1 ~ h2 { margin-top: 40px; }
+	h1 ~ h3 { margin-top: 20px; }
+
+	p {
+		padding-top: 20px;
+		color: #4A555D;
+		font-size: 14px;
+		white-space: pre-wrap;
+		line-height: 1.4;
+	}
+
+	form.title {
+		margin-top: 40px;
+
+		input[name=title] {
+			width: 100%;
+		}
+
+		// NOTE: This needs rewriting to honor tabbing through form elements.
+		input[name=accept-tos] {
+			display: none;
+
+			& + label:before {
+				content: "";
+				display: inline-block;
+				width: 20px;
+				height: 20px;
+				vertical-align: middle;
+				margin-right: 8px;
+				background: white;
+				border-radius: 3px;
+				border: 1px solid #ccc;
+			}
+
+			&:checked + label:before {
+				color: white;
+				background: $light-blue;
+				text-align: center;
+				text-shadow: 0px 0px 0px #3ba534;
+				border: 1px solid #3390d7;
+				font-weight: 500;
+				font-size: 15px;
+				line-height: 20px;
+				content: "\2714";
+			}
+		}
+
+		label[for=accept-tos] {
+			margin-top: 10px;
+			color: #4A555D;
+			font-size: 14px;
+			position: relative;
+			line-height: 20px;
+			display: block;
+			cursor: pointer;
+
+			a {
+				// Currently there's a slightly annoying background image on the wizard
+				// which makes blue links unreadable.
+				text-decoration: underline;
+				color: black;
+			}
+		}
+	}
+
+	.calendar,
+	.calendar-output {
+		max-width: 400px;
+		font-family: 'MuseoSansCyrl-700';
+	}
+
+	.calendar {
+		margin-top: 40px;
+		max-width: 400px;
+	}
+
+	.calendar-output {
+		margin-top: 20px;
+		border-top: 1px solid #ccc;
+		padding-top: 20px;
+	}
+
+	.ui-datepicker {
+		text-align: center;
+
+		.ui-datepicker-prev.ui-corner-all, .ui-datepicker-next.ui-corner-all {
+			cursor: pointer;
+		}
+
+		.ui-icon {
+			&.ui-icon-circle-triangle-w, &.ui-icon-circle-triangle-e {
+				display: block;
+				height: 22px;
+				text-indent: -9999px;
+				width: 15px;
+			}
+
+			&.ui-icon-circle-triangle-w {
+				background: black url("/images/calendar-prev.png") no-repeat scroll left center;
+				float: left;
+			}
+
+			&.ui-icon-circle-triangle-e {
+				background: black url("/images/calendar-next.png") no-repeat scroll right center;
+				float: right;
+			}
+		}
+
+		.ui-datepicker-title {
+			color: #4a555d;
+			font-size: 14px;
+			text-transform: capitalize;
+		}
+
+		table.ui-datepicker-calendar {
+			padding-top: 20px;
+			width: 100%;
+		}
+
+		.ui-datepicker-calendar span {
+			color: #1c71a2;
+			font-size: 16px;
+		}
+
+		.ui-state-default {
+			color: #4a555d;
+			display: block;
+			font-size: 16px;
+			height: 46px;
+			line-height: 46px;
+			width: 47px;
+		}
+
+		.ui-state-active {
+			background-image: url("/images/date-active.png");
+			display: block;
+			height: 46px;
+			line-height: 46px;
+			width: 47px;
+		}
+
+		.ui-state-highlight {
+			background-image: none !important;
+		}
+	}
+
+	ol.authors {
+		list-style: outside none none;
+		margin-bottom: 20px;
+
+		li {
+			display: inline;
+		}
+
+		li + li:before {
+			content: ", "
+		}
+
+		li a {
+			color: #3a434a;
+			font-size: 16px;
+			font-weight: bold;
+			padding-left: 5px;
+		}
+	}
+
+	form.authors {
+		max-width: 400px;
+		margin-top: 40px;
+		margin-bottom: 40px;
+
+		input {
+			margin-bottom: 15px;
+			border: 1px solid #cecece;
+			line-height: 18px;
+			padding: 10px;
+			background: white;
+			color: #4a555d;
+			font-size: 14px;
+			font-family: 'MuseoSansCyrl-300';
+			border-radius: 2px;
+			width: 100%;
+		}
+
+		.ac-suggestion {
+			cursor: pointer;
+		}
+
+		.add-author {
+			background: #f7f7f7;
+			color: #4a555d;
+			display: block;
+			height: 40px;
+			line-height: 38px;
+			text-align: center;
+			width: 100%;
+			border: 1px solid #cecece;
+		}
+	}
+
+	button.next-button {
+		margin-top: 20px;
+		max-width: 360px;
 	}
 }
