@@ -251,38 +251,22 @@ div(ng-controller="TopicCtrl")
 									ul.hash-category(ng-show="!isClosed()")
 										li.clearfix(ng-repeat="(key, value) in CATEGORIES", ng-show="!isCategorySelected(value)")
 											a(href="#", ng-click="updateCategories(value)") {{'TXT_TOPIC_CATEGORY_' + value | uppercase | translate}}
-								|                             
+
 								ul(ng-show="isAdmin() && !isClosed()")
-									// TODO
 									li(ng-show="false")
 										a.pop-hashatg(href="#", ng-click="setHashtag()", ng-show="isAdmin() || canEdit()", translate="SET_HASHTAG") Set hashtag
-									// 
+
 									li
 										a(href="#", ng-show="isAdmin() && !isClosed()", ng-click="setTopicStatusToClosed(topic)", translate="CLOSE_TOPIC") Close topic
-									|                                 
+
 									li
 										a(ng-show="!isClosed() && isAdmin()", href="#", ui-sref="topics.view.renewdeadline({id: topic.id})", translate="RENEW_DEADLINE") Delete topic
-									|                                 
+									
 									li
 										a(ng-show="isAdmin()", ng-click="doDelete()", href="#", translate="BTN_DELETE_TOPIC") Delete topic
-									// TODO
-									// <li><a href="#" ng-show="isAdmin() || canEdit()" ng-click="createNewVersion()" translate="CREATE_A_NEW_VERSION">Create a new version</a></li>
-									// 
-								|                             
+
 								ul
 									li
 										a(style="width: 100%;", href="http://twitter.com/intent/tweet?status={{shortDescription}}+https://rahvaalgatus.ee/topics/{{topic.id}}", target="_blank")
 											span(translate="SHARE_ON_TWITTER")
 											.icon-twitter
-									// <li><a href="#" ng-dialog="/templates/modals/topicUsersInvite.html" ng-dialog-data="{{topic}}" ><span translate="INVITE_BY_EMAIL">INVITE_BY_EMAIL</span></a></li>
-							// TODO
-							p.edit-topic(ng-show="false")
-								a(href="#", translate="EDIT_TOPIC") Edit topic
-							// 
-						// TODO
-						.admin-role-notes(ng-show="false")
-							p.heading(translate="PERSONAL_NOTES") PERSONAL NOTES
-							|                         
-							ul
-								li.link
-									a(href="#", translate="ADD_PERSONAL_NOTES") Add personal note…
