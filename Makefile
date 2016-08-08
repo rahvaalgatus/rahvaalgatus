@@ -4,6 +4,8 @@ PORT = 3000
 ENV = development
 TEST_OPTS =
 TEST_URL = http://dev.rahvaalgatus.ee:3000
+JADE = ./node_modules/.bin/jade
+GRUNT = ./node_modules/.bin/grunt
 
 DEPLOY_HOST =
 STAGING_HOST = staging.rahvaalgatus.ee
@@ -17,11 +19,22 @@ export TEST_URL
 love:
 	@echo "Feel like makin' love."
 
-compile:
-	./node_modules/.bin/grunt uglify:dev
+compile: javascripts views
 
 autocompile:
-	./node_modules/.bin/grunt watch
+	$(MAKE) -j2 autojavascripts autoviews
+
+javascripts:
+	$(GRUNT) uglify:dev
+
+autojavascripts:
+	$(GRUNT) watch
+
+views:
+	$(JADE) --hierarchy --pretty --out public views
+
+autoviews: JADE := $(JADE) --watch
+autoviews: views
 
 spec: $(wildcard test/*_test.rb)
 	@$(RUBY) -I. $(addprefix -r, $^) -e ""
@@ -47,6 +60,8 @@ production: deploy
 	
 .PHONY: love
 .PHONY: compile autocompile
+.PHONY: javascripts autojavascripts
+.PHONY: views autoviews
 .PHONY: spec autospec
 .PHONY: server
 .PHONY: shrinkwrap
