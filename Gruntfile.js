@@ -7,27 +7,9 @@ module.exports = function (grunt) {
 
         concurrent: {
             dev: {
-                tasks: ['uglify:dev', 'less:dev', 'watch'],
+                tasks: ['uglify:dev', 'watch'],
                 options: {
                     logConcurrentOutput: true
-                }
-            }
-        },
-        less: {
-            dev: {
-                options: {
-                    paths: ['public/styles'],
-                    compress: true,
-                    cleancss: false
-                },
-                files: {
-                    'public/styles/default.css': [
-                        'public/styles/lib/*.css',
-                        'public/styles/build.less'
-                    ],
-                    'public/styles/etherpad.css': [
-                        'public/styles/buildEtherpad.less'
-                    ]
                 }
             }
         },
@@ -74,17 +56,10 @@ module.exports = function (grunt) {
             js: {
                 files: ['js/**/*.js'],
                 tasks: ['uglify:dev']
-            },
-            css: {
-                files: ['public/styles/**/*.less', 'public/styles/lib/**/*.css', '!public/styles/default.css', '!public/styles/fonts.css'],
-                tasks: ['less:dev']
             }
         }
     });
 
-    // Load the plugins
-    grunt.loadNpmTasks('grunt-contrib-cssmin');
-    grunt.loadNpmTasks('grunt-contrib-less');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-concurrent');
