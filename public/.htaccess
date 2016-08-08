@@ -20,6 +20,8 @@ RewriteRule . /index.html [last]
 </filesMatch>
 
 # The editorless.css file is included by CitizenOS's Etherpad frame.
+RewriteRule ^/css/editorless\.css$ /stylesheets/editor.css [last]
+
 <Files "editorless.css">
 Header add Access-Control-Allow-Origin "*"
 Header add Access-Control-Allow-Headers "origin, x-requested-with, content-type"

@@ -3,7 +3,7 @@
 
     <div ng-if="!onEventsPage">
       <iframe ng-if="isAdmin() || canEdit()" iframe name="topicframe" toru-etherpad frameborder="0" scrolling="no" ng-show="topic.padUrl" ng-src="{{topic.padUrl}}" width="100%" height="600"></iframe>
-      <link ng-if="!isAdmin() && !canEdit()" rel="stylesheet" type="text/css" href="/css/editorless.css?v=1">
+      <link ng-if="!isAdmin() && !canEdit()" rel="stylesheet" type="text/css" href="/stylesheets/editor.css">
       <div class="admin-role-info topic-content" ng-if="!isAdmin() && !canEdit()" ng-bind-html="topicContent"></div>
     </div>
 </div>

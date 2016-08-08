@@ -9,6 +9,8 @@
 		"grunt-concurrent": "1.0.0",
 		"grunt-contrib-uglify": "0.6.0",
 		"grunt-contrib-watch": "0.6.1",
-		"jade": ""
+		"jade": "",
+		"postcss-cli": "",
+		"precss": ""
 	}
 }
