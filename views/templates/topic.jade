@@ -270,37 +270,6 @@ div(ng-controller="TopicCtrl")
 									// 
 								|                             
 								ul
-									#fb-root
-									|                                 
-									script.
-										window.fbAsyncInit = function() {
-										FB.init({
-										appId      : '139457666450574',
-										xfbml      : true,
-										version    : 'v2.5'
-										});
-										};
-										(function(d, s, id){
-										var js, fjs = d.getElementsByTagName(s)[0];
-										if (d.getElementById(id)) {return;}
-										js = d.createElement(s); js.id = id;
-										js.src = "//connect.facebook.net/en_US/sdk.js";
-										fjs.parentNode.insertBefore(js, fjs);
-										}(document, 'script', 'facebook-jssdk'));
-									|                               
-									style.
-										.facebookButton{
-										display:none;
-										}
-										.facebookShare{
-										width:100%;
-										}
-									|                                 
-									li
-										a.facebookShare(facebook-feed-share="", data-url="https://rahvaalgatus.ee/topics/{{topic.id}}", data-title="{{topic.title}}", data-shares="shares", data-description="{{shortDescription}}", data-picture-url="https://dev.rahvaalgatus.ee/images/rahvaalagatus_logo_email.png")
-											span(translate="SHARE_ON_FACEBOOK")
-											.icon-facebook
-									|                                 
 									li
 										a(style="width: 100%;", href="http://twitter.com/intent/tweet?status={{shortDescription}}+https://rahvaalgatus.ee/topics/{{topic.id}}", target="_blank")
 											span(translate="SHARE_ON_TWITTER")
