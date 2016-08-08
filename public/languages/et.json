@@ -179,7 +179,6 @@
   "HELP_TURN_ON": "Lülita abiline sisse, et saada juhiseid sellel lehel, mida parajasti vaatad. ",
   "HELP_GOT_IT": "Sain aru, lülita abiline välja!   ",
   "HELP_ON/OFF": "sees/väljas",
-  "FOOTER_ADDRESS": "Roheline aas 5, Tallinn",
   "FOOTER_EMAIL": "Email: <a href=\"mailto:{{email}}\">{{email}}</a>",
   "FOOTER_PHONE": "Telefon: <a href=\"tel:{{phone}}\">{{phone}}</a>",
   "VISIT_FACEBOOK": "jälgi Facebookis",

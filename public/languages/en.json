@@ -179,7 +179,6 @@
   "HELP_TURN_ON": "Turn on the help and it will show you tips and pointers like this one on the page you’re currently visiting.",
   "HELP_GOT_IT": "Got it, now hide this!",
   "HELP_ON/OFF": "ON/OFF",
-  "FOOTER_ADDRESS": "Roheline Aas 5, Tallinn",
   "FOOTER_EMAIL": "Email: <a href=\"mailto:{{email}}\">{{email}}</a>",
   "FOOTER_PHONE": "Phone: <a href=\"tel:{{phone}}\">{{phone}}</a>",
   "VISIT_FACEBOOK": "Visit us on Facebook",
