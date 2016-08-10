@@ -319,8 +319,20 @@ app.service("sTopic", [ "$http", "$q", "$log", function($http, $q, $log) {
 		});
 	};
 	Topic.eventCreate = function(topicId, eventData, authToken) {
-		var path = "/api/users/self/topics/:topicId/events".replace(":topicId", topicId);
-		var headers = authToken ? { Authorization: "Bearer "+ authToken } : undefined;
+		var path, headers
+
+		// Currently an external or anonymous token requires the endpoint to be
+		// separate from when the token is of the user. This will hopefully be
+		// unified so endpoints are not dependent on token sources.
+		if (authToken) {
+			path = "/api/topics/:topicId/events"
+			headers = {Authorization: "Bearer "+ authToken}
+		}
+		else {
+			path = "/api/users/self/topics/:topicId/events"
+		}
+
+		path = path.replace(":topicId", topicId)
 
 		return $http({
 			url: path,
@@ -328,7 +340,7 @@ app.service("sTopic", [ "$http", "$q", "$log", function($http, $q, $log) {
 			data: eventData,
 			headers: headers
 		}).then(function(response) {
-			return response.data.data;
-		});
+			return response.data.data
+		})
 	};
 } ]);
