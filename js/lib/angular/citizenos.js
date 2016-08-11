@@ -218,19 +218,24 @@
      * HTTP Provider interceptor that will provide CitizenOS authorization headers
      */
     app.service('CitizenOSOpenIDAuthInterceptor', ['CitizenOSOpenId', function (CitizenOSOpenId) {
-        this.request = function (config) {
+        this.request = function(config) {
             var re = /https:\/\/[^\/]*/;
 
             // Only send token to API requests that go to the same domain as the authorization requests itself.
             if (config.url.match(re) && config.url.match(re)[0] === CitizenOSOpenId.getConfig().authorizationUri.match(re)[0]) {
                 // Lets check that the top level domain name matches for the request, only then pass the authorization header.
                 var accessToken = CitizenOSOpenId.getAccessToken();
-                if (accessToken) {
-                    config.headers.authorization = 'Bearer ' + accessToken;
+                if (accessToken && !hasAuthorization(config.headers)) {
+									config.headers.Authorization = 'Bearer ' + accessToken;
                 }
             }
 
             return config;
         };
     }]);
+
+		function hasAuthorization(obj) {
+			for (var key in obj) if (key.toLowerCase() == "authorization") return true
+			return false
+		}
 })(window, angular);
