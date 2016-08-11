@@ -33,7 +33,7 @@ autojavascripts:
 	$(GRUNT) watch
 
 stylesheets:
-	$(POSTCSS) --use precss --dir public/stylesheets $(CSS)
+	$(POSTCSS) --parser postcss-scss --use precss --dir public/stylesheets $(CSS)
 
 autostylesheets: POSTCSS := $(POSTCSS) --watch
 autostylesheets: stylesheets

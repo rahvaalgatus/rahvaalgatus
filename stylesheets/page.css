@@ -1,15 +1,10 @@
+// vim: ft=scss
 @charset "utf-8";
-/* CSS Document */
-/************************	Reset styles		************************************************************/
-*						{	margin:0;padding:0																}
-*						{	-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box	}
-:before, :after			{	-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box	}
+@import "reset";
+
 .clear					{	clear:both																		}
 .clearfix:after			{	content:".";display:block;clear:both;visibility:hidden;line-height:0;height:0	}
-img						{	border:0;max-width:100%;height:auto;vertical-align:top;display:inline-block		}
-a						{	text-decoration:none;transition:all ease 0.4s;color:#53B1EB						}
-input, textarea			{	outline:none																	}
-:active, :focus			{	outline:0;outline-style:none;outline-width:0									}
+
 .hide					{	display:none																	}
 .show					{	display:block																	}
 .vhidden				{	visibility:hidden																}
@@ -22,12 +17,7 @@ input, textarea			{	outline:none																	}
 .right					{	float:right																		}
 .relative				{	position:relative																}
 .absolute				{	position:absolute																}
-h1, h2, h3, h4, h5, h6	{	font-weight:normal;line-height:100%;											}
-a[disabled] {
-  opacity: 0.7;
-  pointer-events: none;
-}
-/************************	Reset styles end	************************************************************/
+
 @font-face {
     font-family: 'tisaproregular';
     src: url('/fonts/tisapro-regular-webfont.eot');
@@ -39,22 +29,18 @@ a[disabled] {
     font-weight: normal;
     font-style: normal;
 }
-
-
-/**********//*
-[translate=""],
-[placeholder]:not([translate-attr-placeholder]){
-  border: 2px solid magenta !important;
-}*/
-body{
-    font-family: 'MuseoSansCyrl-300';
-    font-size:14px;
-    color:#4A555D;
+html, body{
+	height:100%;
+	width:100%;
 }
-html,body{
-    height:100%;
-    width:100%;
+
+body {
+	font-family: 'MuseoSansCyrl-300';
+	font-size:14px;
+	color:#4A555D;
+	line-height: 1;
 }
+
 .h-top{
 	min-height:90px;
 }

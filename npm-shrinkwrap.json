@@ -2240,6 +2240,42 @@
         }
       }
     },
+    "postcss-scss": {
+      "version": "0.1.9",
+      "from": "postcss-scss@*",
+      "resolved": "https://registry.npmjs.org/postcss-scss/-/postcss-scss-0.1.9.tgz",
+      "dependencies": {
+        "postcss": {
+          "version": "5.1.2",
+          "from": "postcss@>=5.1.0 <6.0.0",
+          "resolved": "https://registry.npmjs.org/postcss/-/postcss-5.1.2.tgz",
+          "dependencies": {
+            "supports-color": {
+              "version": "3.1.2",
+              "from": "supports-color@>=3.1.2 <4.0.0",
+              "resolved": "https://registry.npmjs.org/supports-color/-/supports-color-3.1.2.tgz",
+              "dependencies": {
+                "has-flag": {
+                  "version": "1.0.0",
+                  "from": "has-flag@>=1.0.0 <2.0.0",
+                  "resolved": "https://registry.npmjs.org/has-flag/-/has-flag-1.0.0.tgz"
+                }
+              }
+            },
+            "source-map": {
+              "version": "0.5.6",
+              "from": "source-map@>=0.5.6 <0.6.0",
+              "resolved": "https://registry.npmjs.org/source-map/-/source-map-0.5.6.tgz"
+            },
+            "js-base64": {
+              "version": "2.1.9",
+              "from": "js-base64@>=2.1.9 <3.0.0",
+              "resolved": "https://registry.npmjs.org/js-base64/-/js-base64-2.1.9.tgz"
+            }
+          }
+        }
+      }
+    },
     "precss": {
       "version": "1.4.0",
       "from": "precss@*",

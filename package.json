@@ -11,6 +11,7 @@
 		"grunt-contrib-watch": "0.6.1",
 		"jade": "",
 		"postcss-cli": "",
-		"precss": ""
+		"precss": "",
+		"postcss-scss": ""
 	}
 }
