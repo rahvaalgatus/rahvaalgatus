@@ -9,14 +9,8 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.html [last]
 
-<filesMatch "\.html$">
-  FileETag None
-  <ifModule mod_headers.c>
-     Header unset ETag
-     Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
-     Header set Pragma "no-cache"
-     Header set Expires "Wed, 11 Jan 1984 05:00:00 GMT"
-  </ifModule>
+<FilesMatch "\.(html|js|css)$">
+Header set Cache-Control "max-age=0, public, must-revalidate"
 </filesMatch>
 
 # The editorless.css file is included by CitizenOS's Etherpad frame.
@@ -29,32 +23,28 @@ Header add Access-Control-Allow-Methods "GET, OPTIONS"
 </Files>
 
 <IfModule mod_deflate.c>
-  # Compress HTML, CSS, JavaScript, Text, XML and fonts
-  AddOutputFilterByType DEFLATE application/javascript
-  AddOutputFilterByType DEFLATE application/rss+xml
-  AddOutputFilterByType DEFLATE application/vnd.ms-fontobject
-  AddOutputFilterByType DEFLATE application/x-font
-  AddOutputFilterByType DEFLATE application/x-font-opentype
-  AddOutputFilterByType DEFLATE application/x-font-otf
-  AddOutputFilterByType DEFLATE application/x-font-truetype
-  AddOutputFilterByType DEFLATE application/x-font-ttf
-  AddOutputFilterByType DEFLATE application/x-javascript
-  AddOutputFilterByType DEFLATE application/xhtml+xml
-  AddOutputFilterByType DEFLATE application/xml
-  AddOutputFilterByType DEFLATE font/opentype
-  AddOutputFilterByType DEFLATE font/otf
-  AddOutputFilterByType DEFLATE font/ttf
-  AddOutputFilterByType DEFLATE image/svg+xml
-  AddOutputFilterByType DEFLATE image/x-icon
-  AddOutputFilterByType DEFLATE text/css
-  AddOutputFilterByType DEFLATE text/html
-  AddOutputFilterByType DEFLATE text/javascript
-  AddOutputFilterByType DEFLATE text/plain
-  AddOutputFilterByType DEFLATE text/xml
+Header edit ETag "^\"(.+)-gzip\"$" "\"$1\"" "expr=resp('Content-Encoding') == 'gzip'"
 
-  # Remove browser bugs (only needed for really old browsers)
-  BrowserMatch ^Mozilla/4 gzip-only-text/html
-  BrowserMatch ^Mozilla/4\.0[678] no-gzip
-  BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
-  Header append Vary User-Agent
+# Compress HTML, CSS, JavaScript, Text, XML and fonts
+AddOutputFilterByType DEFLATE application/javascript
+AddOutputFilterByType DEFLATE application/rss+xml
+AddOutputFilterByType DEFLATE application/vnd.ms-fontobject
+AddOutputFilterByType DEFLATE application/x-font
+AddOutputFilterByType DEFLATE application/x-font-opentype
+AddOutputFilterByType DEFLATE application/x-font-otf
+AddOutputFilterByType DEFLATE application/x-font-truetype
+AddOutputFilterByType DEFLATE application/x-font-ttf
+AddOutputFilterByType DEFLATE application/x-javascript
+AddOutputFilterByType DEFLATE application/xhtml+xml
+AddOutputFilterByType DEFLATE application/xml
+AddOutputFilterByType DEFLATE font/opentype
+AddOutputFilterByType DEFLATE font/otf
+AddOutputFilterByType DEFLATE font/ttf
+AddOutputFilterByType DEFLATE image/svg+xml
+AddOutputFilterByType DEFLATE image/x-icon
+AddOutputFilterByType DEFLATE text/css
+AddOutputFilterByType DEFLATE text/html
+AddOutputFilterByType DEFLATE text/javascript
+AddOutputFilterByType DEFLATE text/plain
+AddOutputFilterByType DEFLATE text/xml
 </IfModule>
