@@ -1,14 +1,15 @@
 RewriteEngine On
 
-<FilesMatch "\.(html|js|css)$">
+<FilesMatch "\.(html|js|css|eot|woff|woff2|ttf|svg)$">
 Header set Cache-Control "max-age=0, public, must-revalidate"
-</filesMatch>
+</FilesMatch>
 
-<Files "editor.css">
+# Editor's CSS and its fonts are referenced by CitizenOS's <iframe>.
+<FilesMatch "editor\.css|\.eot$|\.woff$|\.woff2$|\.ttf|\.svg$">
 Header add Access-Control-Allow-Origin "*"
 Header add Access-Control-Allow-Headers "origin, x-requested-with, content-type"
 Header add Access-Control-Allow-Methods "GET, OPTIONS"
-</Files>
+</FilesMatch>
 
 <IfModule mod_deflate.c>
 Header edit ETag "^\"(.+)-gzip\"$" "\"$1\"" "expr=resp('Content-Encoding') == 'gzip'"
