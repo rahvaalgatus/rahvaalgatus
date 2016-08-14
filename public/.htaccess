@@ -1,22 +1,10 @@
 RewriteEngine On
 
-RewriteCond %{HTTPS} off
-RewriteCond %{HTTP_HOST} ^rahvaalgatus\.ee$ [nocase,ornext]
-RewriteCond %{HTTP_HOST} ^www\.rahvaalgatus\.ee$ [nocase]
-RewriteRule ^ https://rahvaalgatus.ee%{REQUEST_URI} [qsappend,last,redirect=301]
-
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule . /index.html [last]
-
 <FilesMatch "\.(html|js|css)$">
 Header set Cache-Control "max-age=0, public, must-revalidate"
 </filesMatch>
 
-# The editorless.css file is included by CitizenOS's Etherpad frame.
-RewriteRule ^/css/editorless\.css$ /stylesheets/editor.css [last]
-
-<Files "editorless.css">
+<Files "editor.css">
 Header add Access-Control-Allow-Origin "*"
 Header add Access-Control-Allow-Headers "origin, x-requested-with, content-type"
 Header add Access-Control-Allow-Methods "GET, OPTIONS"
@@ -48,3 +36,15 @@ AddOutputFilterByType DEFLATE text/javascript
 AddOutputFilterByType DEFLATE text/plain
 AddOutputFilterByType DEFLATE text/xml
 </IfModule>
+
+RewriteCond %{HTTPS} off
+RewriteCond %{HTTP_HOST} ^rahvaalgatus\.ee$ [nocase,ornext]
+RewriteCond %{HTTP_HOST} ^www\.rahvaalgatus\.ee$ [nocase]
+RewriteRule ^ https://rahvaalgatus.ee%{REQUEST_URI} [qsappend,last,redirect=301]
+
+# The editorless.css file is included by CitizenOS's Etherpad frame.
+RewriteRule ^css/editorless\.css$ /stylesheets/editor.css [last]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [last]
