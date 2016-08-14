@@ -1,9 +1,14 @@
-"use strict";
+"use strict"
+var _ = window._
+var $ = window.$
+var Raven = window.Raven
+var app = window.app
+var angular = window.angular
+var moment = window.moment
 
 app.controller("TopicCtrl", [
   "$scope", "$rootScope", "$sce", "$compile", "$state", "$filter", "$log", "$timeout", "ngDialog", "sTopic", "sTranslate", "sAuth", "sProgress",
   function($scope, $rootScope, $sce, $compile, $state, $filter, $log, $timeout, ngDialog, sTopic, sTranslate, sAuth, Progress) {
-
     $scope.topic = {
         id: null,
         title: null,
@@ -24,7 +29,6 @@ app.controller("TopicCtrl", [
     };
     $scope.notConfirmedRead = false;
     $scope.dateNotSet = false;
-    $scope.topictype;
     $scope.topicComments = {
         rows: null,
         counts: {
@@ -44,10 +48,12 @@ app.controller("TopicCtrl", [
     $scope.CATEGORIES_COUNT_MAX = sTopic.CATEGORIES_COUNT_MAX;
     $scope.today = new Date();
     $scope.progress = new Progress();
-    var recalculateProgress = function() {
+
+    function recalculateProgress() {
       $scope.progress.recalculate($scope.topic, $scope.vote, $scope.hasVotesRequired, $scope.topicEvents.list);
     };
-    var topicRead = function(topicId) {
+
+    function topicRead(topicId) {
         if ($scope.app.user && $scope.app.user.loggedIn) {
             return sTopic.read({
                 id: topicId
@@ -59,24 +65,14 @@ app.controller("TopicCtrl", [
         }
     };
 
-    var readMembers = function(topicId) {
-        sTopic.membersList(topicId).then(function(res) {
-            $scope.memberslist = res.data.data.users.rows;
-            angular.forEach($scope.memberslist, function(member, key) {
-                if (member.id == $scope.topic.creator.id) {
-                    $scope.memberslist.splice(key, 1);
-                }
-            });
-        });
-    };
-    var voteRead = function(topicId, voteId) {
+    function voteRead(topicId, voteId) {
         if ($scope.app.user && $scope.app.user.loggedIn) {
             return sTopic.voteRead(topicId, voteId);
         } else {
             return sTopic.voteReadUnauth(topicId, voteId);
         }
     };
-    var getContentHtml = function(topic) {
+    function getContentHtml(topic) {
         $scope.shortDescription = $scope.htmlToPlaintext(topic.description).replace(topic.title,"").substring(0,200)+"...";
         $scope.topicContent = $sce.trustAsHtml(topic.description);
     };
@@ -110,7 +106,6 @@ app.controller("TopicCtrl", [
                         $scope.vote.noindex = _.findIndex($scope.vote.options.rows, function(o) {
                             return o.value == "No";
                         });
-                        $;
                         //scope.topic.endsAt = new Date($scope.vote.endsAt);
                         recalculateProgress();
                     });
@@ -160,7 +155,7 @@ app.controller("TopicCtrl", [
         $scope.topic.numberOfDaysLeft = Math.ceil(diffTime / (1e3 * 3600 * 24));
         var testtime =  (moment(new Date()).add(2, "y").toDate().getTime() - new Date().getTime());
         var numberdays = Math.ceil(testtime / (1e3 * 3600 * 24));
-        if($scope.topic.numberOfDaysLeft > numberdays){
+        if($scope.topic.numberOfDaysLeft > numberdays) {
             $scope.topic.endsAt = moment(new Date()).add(2, "y").toDate();
         }
     });
@@ -376,7 +371,7 @@ app.controller("TopicCtrl", [
             $state.go("topics.view", {id: topic.id})
         }).catch(function(err) {
             $log.error("Failed to set Topic status", topic, err)
-            $scope.savingError = error.data.status.message;
+            $scope.savingError = err.data.status.message;
         }).finally(function() {
             $scope.savingEvent = false
         }).catch(Raven.captureException)
@@ -482,10 +477,9 @@ app.controller("TopicCtrl", [
         var categoryIndex = $scope.topic.categories.indexOf(category);
         if (categoryIndex > -1) {
             $scope.topic.categories.splice(categoryIndex, 1);
-        } else {
-            if ($scope.topic.categories.length < $scope.CATEGORIES_COUNT_MAX) {
-                $scope.topic.categories.push(category);
-            }
+				}
+				else if ($scope.topic.categories.length < $scope.CATEGORIES_COUNT_MAX) {
+					$scope.topic.categories.push(category);
         }
         $scope.doUpdate();
     };
