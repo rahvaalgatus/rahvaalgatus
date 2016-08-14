@@ -63,7 +63,6 @@ app.controller("TopicCtrl", [
         sTopic.membersList(topicId).then(function(res) {
             $scope.memberslist = res.data.data.users.rows;
             angular.forEach($scope.memberslist, function(member, key) {
-                console.log(member);
                 if (member.id == $scope.topic.creator.id) {
                     $scope.memberslist.splice(key, 1);
                 }
@@ -190,7 +189,6 @@ app.controller("TopicCtrl", [
     $scope.triggerStart = function(type) {
         if ($scope.understandConditions && $scope.app.user.loggedIn) {
             $scope.notConfirmedRead = false;
-            console.log($scope.topic);
             sTopic.create($scope.topic).then(function(res) {
                 var topic = res.data.data;
                 $log.log("Created!", topic);
@@ -240,7 +238,6 @@ app.controller("TopicCtrl", [
     $scope.doSetVisibility = function(visibility) {
         if (!visibility || $scope.topic.visibility === visibility) return;
         //  if(visibility ==)
-        console.log(visibility);
         if (visibility == "public") {
             sTopic.update({
                 id: $scope.topic.id,
@@ -356,7 +353,6 @@ app.controller("TopicCtrl", [
         });
     };
     $scope.doCommentOrderBy = function(orderBy) {
-        $log.debug("Comments order by", orderBy);
         $scope.topicComments.orderBy = orderBy;
     };
 
@@ -455,7 +451,6 @@ app.controller("TopicCtrl", [
             }else{
                 if($scope.vote){
                     var datediff = Math.round((new Date($scope.vote.endsAt) - new Date()) / (1e3 * 60 * 60 * 24));
-                    console.log(datediff);
                     if(datediff < 0){
                         var endsAt = new Date();
                         endsAt.setHours(23,59,59);
@@ -490,7 +485,6 @@ app.controller("TopicCtrl", [
         } else {
             if ($scope.topic.categories.length < $scope.CATEGORIES_COUNT_MAX) {
                 $scope.topic.categories.push(category);
-                console.log($scope.topic.categories);
             }
         }
         $scope.doUpdate();
@@ -516,7 +510,4 @@ app.controller("TopicCtrl", [
             scope: $scope
         });
     };
-    $scope.createNewVersion = function() {
-        console.log($scope.topic);
-    };
-} ]);
+}]);
