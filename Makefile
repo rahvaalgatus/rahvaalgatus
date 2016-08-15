@@ -9,6 +9,8 @@ POSTCSS = ./node_modules/.bin/postcss
 GRUNT = ./node_modules/.bin/grunt
 DEPLOY_HOST =
 CSS = $(addprefix stylesheets/, fonts.css page.css editor.css)
+TRANSLATIONS_URL = https://spreadsheets.google.com/feeds/list/1JKPUNp8Y_8Aigq7eGJXtWT6nZFhd31k2Ht3AjC-i-Q8/1/public/full?alt=json
+JQ_OPTS = --tab --sort-keys
 
 STAGING_HOST = staging.rahvaalgatus.ee
 PRODUCTION_HOST = production.rahvaalgatus.ee
@@ -65,6 +67,25 @@ staging: deploy
 
 production: DEPLOY_HOST = $(PRODUCTION_HOST)
 production: deploy
+
+public/languages: public/languages/en.json
+public/languages: public/languages/et.json
+public/languages: public/languages/ru.json
+
+public/languages/en.json: tmp/translations.json
+	jq $(JQ_OPTS) -f scripts/translation.jq --arg lang english "$<" > "$@"
+
+public/languages/et.json: tmp/translations.json
+	jq $(JQ_OPTS) -f scripts/translation.jq --arg lang estonian "$<" > "$@"
+	
+public/languages/ru.json: tmp/translations.json
+	jq $(JQ_OPTS) -f scripts/translation.jq --arg lang russian "$<" > "$@"
+
+tmp:
+	mkdir -p tmp
+
+tmp/translations.json: tmp
+	wget "$(TRANSLATIONS_URL)" -O "$@"
 	
 .PHONY: love
 .PHONY: compile autocompile
@@ -75,3 +96,4 @@ production: deploy
 .PHONY: server
 .PHONY: shrinkwrap
 .PHONY: deploy staging production
+.PHONY: public/languages
