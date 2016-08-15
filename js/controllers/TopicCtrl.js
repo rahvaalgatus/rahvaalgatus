@@ -1,6 +1,5 @@
 "use strict"
 var _ = window._
-var $ = window.$
 var Raven = window.Raven
 var app = window.app
 var angular = window.angular
@@ -76,10 +75,6 @@ app.controller("TopicCtrl", [
         $scope.shortDescription = $scope.htmlToPlaintext(topic.description).replace(topic.title,"").substring(0,200)+"...";
         $scope.topicContent = $sce.trustAsHtml(topic.description);
     };
-    $scope.goToComments = function(){
-        var top = $('#commentBlock').position().top;
-        $(window).scrollTop( top );
-    }
     $scope.doTopicLoad = function() {
         if ($state.current.name.indexOf("topic") !== -1) {
             $scope.app.isTopicLoading = true;

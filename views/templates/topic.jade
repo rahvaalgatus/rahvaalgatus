@@ -99,19 +99,15 @@ div(ng-controller="TopicCtrl")
 								a(href="#") {{topic.creator.name}}
 							|                         
 							p.right {{topic.createdAt | amDateFormat : 'L'}}
-						//
-							FIXME: hidding the categories list until it is actually operational
-							p class="in-cat"><span ng-repeat="category in topic.categories"><a href="#">{{'TXT_TOPIC_CATEGORY_' + category | uppercase | translate}}</a>,</span>
-							</p
+
 						.clearfix.args
 							p.left
-								a(href="#", ng-if="topic.status=='inProgress'", ng-click="goToComments()", translate="HEADING_ARGUMENTS", translate-values="{count: '{{topicComments.rows.length || 0}}'}") 5 arguments
+								a(href="#commentBlock", ng-if="topic.status=='inProgress'", translate="HEADING_ARGUMENTS", translate-values="{count: '{{topicComments.rows.length || 0}}'}")
 								|                                 
-								a(href="#", ng-if="topic.status!='inProgress'", ng-click="goToComments()", translate="HEADING_COMMENTS", translate-values="{count: '{{topicComments.rows.length || 0}}'}") 5 comments
-							// <p class="right">3 social mentions #rahvaalgatus</p>
-						|                     
+								a(href="#commentBlock", ng-if="topic.status!='inProgress'", translate="HEADING_COMMENTS", translate-values="{count: '{{topicComments.rows.length || 0}}'}")
+
 						div(ui-view="")
-						|                     
+
 						#commentBlock.arg-social-tabs(ng-show="topic.id")
 							ul.arg-tabs.clearfix.version2
 								li
