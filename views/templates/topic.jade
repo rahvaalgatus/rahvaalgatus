@@ -206,8 +206,8 @@ div(ng-controller="TopicCtrl")
 											button.right(ng-if="topic.status=='inProgress'", ng-click="submitCon()", ng-disabled="topicCommentCreateForm.$invalid", translate="BTN_ADD_ARGUMENT_CON") POST AS A CON ARGUMENT
 											|                                         	
 											button.right.comment(ng-if="topic.status!='inProgress'", ng-click="submitCon()", ng-disabled="topicCommentCreateForm.$invalid", translate="POST_COMMENT") BTN_ADD_COMMENT
-					// left end
-					.right
+
+					aside.right
 						p.publish-topic
 							a(href="#", ng-show="!isClosed() && isAdmin() && topic.visibility=='private'", ng-click="doSetVisibility('public')", translate="PUBLISH_TOPIC") PUBLISH TOPIC
 							|                         
@@ -222,47 +222,59 @@ div(ng-controller="TopicCtrl")
 						p.publish-topic(ng-show="isAdmin() && topic.status=='followUp'")
 							a(ng-click="setTopicStatusToVoting(topic)", translate="BTN_SEND_BACK_TO_VOTE", href="#") SEND TO PARLIAMENT
 						|                     
-						.admin-role-options
-							p.heading(translate="OPTIONS") OPTIONS
-							|                         
-							div
-								ul(ng-show="isAdmin() && !isClosed()")
-									li
-										a(href="#", ng-show="canInvite() && !isShowInVotingNotification()", ng-dialog="/templates/modals/topicMembersInvite.html", ng-dialog-data="{{topic}}")
-											span(translate="INVITE_PEOPLE") Invite people
-									|                                 
-									li
-										a(href="#", ng-show="isShowInVotingNotification() && canInvite()", ng-dialog="/templates/modals/topicMembersInvite.html", ng-dialog-data="{{topic}}")
-											span(translate="REMIND_PEOPLE_TO_SIGN") Remind people to sign
-								|                             
-								p.edit-topic.assign-category.clearfix(ng-show="isAdmin() || canEdit()")
-									a(href="#", ng-show="isAdmin() || canEdit()", ng-click="showCategories = !showCategories", ng-class="{active:showCategories}")
-										span(translate="ASSIGN_CATEGORIES") Assign categories 
-								|                             
-								#categories-list.assign-categories-list(ng-show="showCategories")
-									ul.categories(ng-show="!isClosed()")
-										li.clearfix(ng-repeat="(key, value) in CATEGORIES", ng-show="isCategorySelected(value)")
-											a(ng-click="updateCategories(value)") {{'TXT_TOPIC_CATEGORY_' + value | uppercase | translate}}
-									|                                 
-									ul.hash-category(ng-show="!isClosed()")
-										li.clearfix(ng-repeat="(key, value) in CATEGORIES", ng-show="!isCategorySelected(value)")
-											a(href="#", ng-click="updateCategories(value)") {{'TXT_TOPIC_CATEGORY_' + value | uppercase | translate}}
 
-								ul(ng-show="isAdmin() && !isClosed()")
-									li(ng-show="false")
-										a.pop-hashatg(href="#", ng-click="setHashtag()", ng-show="isAdmin() || canEdit()", translate="SET_HASHTAG") Set hashtag
+						.aside-box
+							h1.aside-box-header(translate="OPTIONS")
 
-									li
-										a(href="#", ng-show="isAdmin() && !isClosed()", ng-click="setTopicStatusToClosed(topic)", translate="CLOSE_TOPIC") Close topic
+							menu.aside-box-list(ng-show="isAdmin() && !isClosed()")
+								li(ng-show="canInvite() && !isShowInVotingNotification()"): a(
+									ng-dialog="/templates/modals/topicMembersInvite.html",
+									ng-dialog-data="{{topic}}")
+									span(translate="INVITE_PEOPLE")
 
-									li
-										a(ng-show="!isClosed() && isAdmin()", href="#", ui-sref="topics.view.renewdeadline({id: topic.id})", translate="RENEW_DEADLINE") Delete topic
-									
-									li
-										a(ng-show="isAdmin()", ng-click="doDelete()", href="#", translate="BTN_DELETE_TOPIC") Delete topic
+								li(ng-show="isShowInVotingNotification() && canInvite()"): a(
+									ng-dialog="/templates/modals/topicMembersInvite.html",
+									ng-dialog-data="{{topic}}")
+									span(translate="REMIND_PEOPLE_TO_SIGN")
 
-								ul
-									li
-										a(style="width: 100%;", href="http://twitter.com/intent/tweet?status={{shortDescription}}+https://rahvaalgatus.ee/topics/{{topic.id}}", target="_blank")
-											span(translate="SHARE_ON_TWITTER")
-											.icon-twitter
+								li(ng-show="isAdmin() && !isClosed()"): a(
+									ng-click="setTopicStatusToClosed(topic)",
+									translate="CLOSE_TOPIC")
+
+								li: a(
+									ui-sref="topics.view.renewdeadline({id: topic.id})",
+									translate="RENEW_DEADLINE")
+								
+								li: a(
+									ng-click="doDelete()",
+									translate="BTN_DELETE_TOPIC")
+
+							a.aside-category-button(
+								ng-show="isAdmin() || canEdit()",
+								ng-click="$parent.showCategories = !$parent.showCategories",
+								ng-class="{active: showCategories}",
+								translate="ASSIGN_CATEGORIES")
+
+							div(ng-show="showCategories")
+								menu.categories.aside-box-list
+									li(
+										ng-repeat="(key, value) in CATEGORIES",
+										ng-show="isCategorySelected(value)"
+									): a(ng-click="updateCategories(value)")
+										| {{'TXT_TOPIC_CATEGORY_' + value | uppercase | translate}}
+
+								ul.hash-category
+									li(
+										ng-repeat="(key, value) in CATEGORIES",
+										ng-show="!isCategorySelected(value)"
+									): a(ng-click="updateCategories(value)")
+										| {{'TXT_TOPIC_CATEGORY_' + value | uppercase | translate}}
+
+							menu.aside-box-list
+								li
+									a(
+										href="http://twitter.com/intent/tweet?status={{shortDescription}}+https://rahvaalgatus.ee/topics/{{topic.id}}",
+										target="_blank"
+									)
+										span(translate="SHARE_ON_TWITTER")
+										i.icon-twitter

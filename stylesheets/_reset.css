@@ -35,6 +35,10 @@ footer, header, hgroup, menu, nav, section {
 	box-sizing: border-box
 }
 
+li {
+  list-style-type: none;
+}
+
 // TODO: Remove image reset.
 img	{
 	max-width: 100%;
