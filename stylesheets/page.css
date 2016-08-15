@@ -148,6 +148,7 @@ body {
   display: inline-block;
   vertical-align: top;
   font-family: 'MuseoSansCyrl-700', sans-serif;
+	text-transform: uppercase;
 
   background: $light-blue;
   border: 1px solid $dark-blue;
@@ -302,4 +303,24 @@ body {
 	display: block;
 
 	&.active { background-image: url("/images/cat-down.png"); }
+}
+
+#initiative-email-subscription {
+  padding: 10px;
+
+  h1 {
+    margin: -10px -10px 10px;
+  }
+
+  label {
+    display: block;
+    &::after { content: ":"; }
+  }
+
+  input[type=email],
+	button {
+    display: block;
+    margin-top: 5px;
+    width: 100%;
+  }
 }
