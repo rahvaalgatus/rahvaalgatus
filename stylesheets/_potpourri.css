@@ -982,14 +982,14 @@ footer {
 			color: #AAAAAA;
 			font-size: 13px;
 			padding: 15px 20px;
-			font-family: 'tisaproregular';
+			font-family: 'tisaproregular', serif;
 		}
 
 		.author {
 			color: #AAAAAA;
 			font-size: 13px;
 			padding: 30px 20px 20px;
-			font-family: 'tisaproregular';
+			font-family: 'tisaproregular', serif;
 		}
 
 		.link a {
@@ -1224,12 +1224,12 @@ footer {
 
 	.desc {
 		font-size: 18px;
-		font-family: 'tisaproregular';
+		font-family: 'tisaproregular', serif;
 		line-height: 28px;
 	}
 
 	font-size: 18px;
-	font-family: 'tisaproregular';
+	font-family: 'tisaproregular', serif;
 	line-height: 28px;
 
 	.chapters {
@@ -1261,7 +1261,7 @@ footer {
 
 		.ui-accordion-content {
 			font-size: 18px;
-			font-family: 'tisaproregular';
+			font-family: 'tisaproregular', serif;
 			line-height: 28px;
 			padding-bottom: 20px;
 
