@@ -3,9 +3,5 @@ root = true
 [Makefile]
 indent_style = tab
 
-[*.js]
-indent_style = tab
-indent_size = 2
-
-[*.{html,json,jade,css}]
+[*.{js,json,html,jade,css}]
 indent_style = tab
