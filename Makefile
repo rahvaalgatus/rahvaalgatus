@@ -41,7 +41,7 @@ autostylesheets: POSTCSS := $(POSTCSS) --watch
 autostylesheets: stylesheets
 
 views:
-	$(JADE) --hierarchy --pretty --out public views
+	$(JADE) --hierarchy --out public views
 
 autoviews: JADE := $(JADE) --watch
 autoviews: views
