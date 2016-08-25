@@ -1,5 +1,6 @@
 // vim: ft=scss
 $light-blue: #45a0e6;
+$dark-blue: #3390d7;
 $blue: #53B1EB;
 
 @import "reset";
@@ -12,6 +13,117 @@ body {
 	font-size: 14px;
 	color: #4A555D;
 	line-height: 1;
+}
+
+.content-wrapper {
+	padding-top: 40px;
+	padding-bottom: 40px;
+	background: url(/images/general-bg.png) no-repeat;
+	background-position: 1000px 0px;
+	min-height: 370px;
+}
+
+.content {
+	* + & {
+		margin-top: 40px;
+	}
+
+	h1, h2 {
+		font-family: 'MuseoSansCyrl-300';
+		color: $dark-blue;
+	}
+
+	h1 {
+		font-size: 34px;
+		line-height: 34px;
+		margin-bottom: 30px;
+	}
+
+	h2 {
+		font-size: 24px;
+		line-height: 24px;
+		margin-bottom: 20px;
+	}
+
+	p {
+		line-height: 1.4;
+		font-size: 14px;
+		color: black;
+		white-space: pre-line;
+	}
+
+	p + p {
+		margin-top: 20px;
+	}
+}
+
+#donation-form {
+	margin-top: 20px;
+
+	label {
+		display: block;
+	}
+
+	input {
+		width: 100px;
+		text-align: right;
+	}
+
+	button {
+		margin-left: 10px;
+	}
+
+	p {
+		margin-top: 10px;
+		font-size: 12px;
+		line-height: 1.4;
+	}
+
+	.banks {
+		margin-top: 10px;
+		li { display: inline-block; }
+		li + li { margin-left: 10px; }
+	}
+}
+
+$form-input-padding: 8px;
+
+.form-label,
+.form-input,
+.form-submit {
+  line-height: 18px;
+  font-size: 14px;
+  font-family: 'MuseoSansCyrl-500', sans-serif;
+}
+
+.form-label {
+  font-family: 'MuseoSansCyrl-700', sans-serif;
+	font-weight: bold;
+}
+
+.form-input {
+  border: 1px solid #cecece;
+
+  padding: $form-input-padding 10px;
+
+  background: white;
+  color: #4a555d;
+  border-radius: 2px;
+}
+
+.form-submit {
+  appearance: none;
+  display: inline-block;
+  vertical-align: top;
+  font-family: 'MuseoSansCyrl-700', sans-serif;
+
+  background: $light-blue;
+  border: 1px solid $dark-blue;
+  border-radius: 2px;
+
+  padding: $form-input-padding 20px;
+
+  color: white;
 }
 
 .aside-box {

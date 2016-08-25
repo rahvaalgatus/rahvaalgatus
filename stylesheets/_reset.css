@@ -57,3 +57,5 @@ a[disabled] {
   opacity: 0.7;
   pointer-events: none;
 }
+
+button, input[type=submit] { cursor: pointer }
