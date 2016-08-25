@@ -2106,11 +2106,14 @@ footer {
 		line-height: 20px;
 		padding-left: 30px;
 		display: block;
+		cursor: pointer;
 	}
 
-	> label > span {
-		color: #53b1eb;
-		font-size: 14px;
+	a {
+		// Currently there's a slightly annoying background image on the wizard
+		// which makes blue links unreadable.
+		text-decoration: underline;
+		color: black;
 	}
 }
 

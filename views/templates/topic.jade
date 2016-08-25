@@ -18,8 +18,8 @@ div(ng-controller="TopicCtrl")
 							input#check(type="checkbox", ng-checked="understandConditions", ng-click="checkConditionsRead()")
 							|                             
 							label(for="check")
-								p(style="display:inline;", translate="I_HAVE_READ") I have read and agree with 
-								a(href="#", ng-click="termsModal()", translate="TERMS_AND_CONDITIONS") the Terms & Conditions
+								span(ng-bind-html="'I_HAVE_READ' | translate:{url: '/goodpractice'}")
+
 							br
 							|                             
 							p.error.error_message(ng-show="!app.user.loggedIn", translate="LOGIN_TO_CREATE_TOPIC") Teema loomiseks peate sisse logima!
