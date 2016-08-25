@@ -25,6 +25,7 @@ module.exports = function (grunt) {
                 },
                 files: {
                     'public/js/<%= pkg.name %>.bundle.js': [
+                        'config/index.js',
                         'config/<%= env %>.js',
                         'js/lib/ext/device.min.js',
                         'js/lib/ext/jquery-1.11.1.min.js',
