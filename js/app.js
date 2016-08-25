@@ -43,7 +43,6 @@ app.constant("toruConfig", {
 });
 
 app.config(function($stateProvider, $urlRouterProvider, $locationProvider, $httpProvider, $translateProvider, toruConfig, UserVoiceProvider, CitizenOSOpenIdProvider) {
-    console.log("app.config toruConfig", toruConfig);
     // https://docs.angularjs.org/api/ng/provider/$locationProvider
     $locationProvider.html5Mode({
         enabled: true,
@@ -62,7 +61,6 @@ app.config(function($stateProvider, $urlRouterProvider, $locationProvider, $http
     }).state("authCallback",{
         url:"/auth/callback",
         controller:function($scope, $location, $state, $stateParams, $window, $log, CitizenOSOpenId) {
-                $log.debug('CallbackCtrl', $state, $stateParams, $location);
                 $scope.result = CitizenOSOpenId.validate(); // CitizenOSOpenID service Will read all the params from the hash of the url, that is after #.
                 $window.location.href="/";
             }
@@ -216,7 +214,6 @@ app.config(function($stateProvider, $urlRouterProvider, $locationProvider, $http
 
 // This is how Angular-Moment wants to be configured..
 app.run(function(amMoment, toruConfig) {
-    console.log("app.run toruConfig", toruConfig);
     amMoment.changeLocale(toruConfig.language.default);
 });
 'use strict';
