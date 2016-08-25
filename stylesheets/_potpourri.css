@@ -130,6 +130,7 @@ header {
 	}
 
 	color: white;
+	cursor: pointer;
 }
 
 .login > a, .login-after > a, .log-pop > a {
