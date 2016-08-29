@@ -100,7 +100,7 @@ app.controller("TopicVoteViewFormCtrl", [ "$scope", "$rootScope", "$state", "$lo
             document.getElementsByClassName("pp-layer")[0].style.display = "block";
             ngDialog.open({
                 scope: $scope,
-                template: "/templates/modals/topicVoteSign.html",
+                template: "/templates/modals/topic_vote_sign.html",
                 data: {
                     topicId: $state.params.id,
                     voteId: $state.params.voteId,

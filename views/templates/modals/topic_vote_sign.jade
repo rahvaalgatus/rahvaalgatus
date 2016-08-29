@@ -1,0 +1,62 @@
+include ../_mixins
+
+#vote-sign.ui-dialog.ui-widget.ui-widget-content.ui-corner-all.ui-front.ui-draggable.ui-resizable(tabindex="-1", role="dialog", aria-describedby="signpop", aria-labelledby="ui-id-35", ng-controller="TopicVoteSignCtrl")
+
+	+dialog-header("THANKS_FOR_SIGNING")(ng-show="showdonate")
+	#signpop.ui-dialog-content.ui-widget-content(ng-show="showdonate", style="display: block; width: auto; min-height: 110px; max-height: none; height: auto;")
+		.sign-type
+			p(ng-hide="showVoteRevokedResult", translate="THANKS_FOR_SIGNING")
+			p(ng-show="showVoteRevokedResult", translate="VOTE_REVOKED")
+
+		.skip: a(href="#", ng-click="skipDonate()", translate="CLOSE")
+
+	+dialog-header("HEADING_VOTE_CHOOSE_A_SIGNING_METHOD")(ng-hide="showdonate")
+	#signpop.ui-dialog-content.ui-widget-content(ng-hide="showdonate", style="display: block; width: auto; min-height: 0px; max-height: none; height: auto;")
+		.notifications(ng-show="voteSignError")
+			.entry.error
+				span(translate="{{voteSignError}}")
+				|                 
+				.close(ng-click="doCloseVoteSignError()")  
+		|         
+		.sign-type.clearfix
+			.spinner-wrapper(ng-if="isLoadingIdCard")
+				.spinner(ng-show="isLoadingIdCard || formMobile.isLoading")
+			|             
+			.box
+				img(ng-show="!isLoadingIdCard", src="images/id-kart-icon.png", alt="Image")
+				|                 
+				div(ng-show="!isLoadingIdCard")
+					img(src="images/idcard_illustration.png", alt="Image")
+					|                     
+					a(ng-show="!isLoadingIdCard && !formMobile.challengeID", href="#", ng-click="doSignWithCard()", translate="BTN_VOTE_SIGN_WITH_ID_CARD")
+			|             
+			.box(ng-hide="isLoadingIdCard")
+				img(src="images/mobile-id-icon.png", alt="Image")
+				|                 
+				form(name="formMobileSign", ng-show="!formMobile.challengeID", novalidate="")
+					div(ng-show="!formMobile.isLoading")
+						label.label(ng-class="{error: formMobileSign.phoneNumber.$error.pattern && formMobileSign.phoneNumber.$touched}")
+							input(type="text", name="phoneNumber", ng-model="formMobile.phoneNumber", placeholder="{{'PLACEHOLDER_PHONE_NUMBER' | translate}}", ng-pattern="/^\+?[0-9\s-]{7,}$/", required="")
+							|                             
+							span.error_message(ng-show="formMobileSign.phoneNumber.$error.pattern && formMobileSign.phoneNumber.$touched", translate="MSG_ERROR_INVALID_PHONE_NUMBER") Invalid phone number
+						|                         
+						label.label(ng-class="{error: formMobileSign.pid.$error.pattern && formMobileSign.pid.$touched}")
+							input(type="text", name="pid", ng-model="formMobile.pid", placeholder="{{'PLACEHOLDER_PERSONAL_IDENTIFICATION_CODE' | translate}}", ng-pattern="/^[0-9]{11}$/", required="")
+							|                             
+							span.error_message(ng-show="formMobileSign.pid.$error.pattern && formMobileSign.pid.$touched", translate="MSG_ERROR_INVALID_PERSONAL_IDENTIFICATION_CODE") Invalid personal identification code
+					|                     
+					.submit
+						button(translate="BTN_VOTE_SIGN_WITH_MOBILE_ID", ng-show="!formMobile.isLoading", ng-click="doSignWithMobile()", ng-disabled="formMobileSign.$invalid")
+							| SIGN WITH
+							| MOBILE ID
+				// TODO: translate
+				.pending(style="color:#4a555d;", ng-show="formMobile.challengeID && formMobile.isLoading")
+					.row
+						h3(translate="HEADING_MOBILEID_CONTROL_CODE", translate-values="{code: formMobile.challengeID}") Control code: 
+						|                     
+						.spinner
+						|                     
+						p(translate="MAKE_SURE_CONTROL_CODE")
+							| Make sure control code matches with one in the phone screen and enter Mobile-ID PIN2.
+					|                 
+					.row

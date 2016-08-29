@@ -1,0 +1,8 @@
+mixin dialog-header(title)
+	.ui-dialog-titlebar.ui-widget-header.ui-corner-all.ui-helper-clearfix.ui-draggable-handle&attributes(attributes)
+		span.ui-dialog-title(translate=title)
+
+		button.ui-button.ui-widget.ui-state-default.ui-corner-all.ui-button-icon-only.ui-dialog-titlebar-close(ng-click="closeThisDialog()", type="button", role="button")
+			span.ui-button-icon-primary.ui-icon.ui-icon-closethick
+			span.ui-button-text(translate="CLOSE")
+
