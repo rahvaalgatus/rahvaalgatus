@@ -1,0 +1,22 @@
+.admin-role-progress
+	.enclose
+		p.deadline
+			span(ng-if="topic.status=='inProgress'", translate="DISCUSSION_DEADLINE", translate-values="{endsAt:(topic.endsAt | amDateFormat : 'L')}") Discussion deadline: 
+			|            
+			span(ng-if="topic.status=='voting' && (vote.endsAt | amDifference : today : 'days' )>=0", translate="VOTING_DEADLINE", translate-values="{endsAt:(vote.endsAt | amDateFormat : 'L')}") Voting deadline: 
+			|            
+			span(ng-if="topic.status=='voting' && (vote.endsAt | amDifference : today : 'days' )<0", translate="SIGNING_DEADLINE_REACHED") Signing deadline reached: 
+		// Progress bar
+		#progressBar.progress-btns.clearfix(data-fulldif="{{progress.fullDiff}}", data-now="{{progress.daynow}}", data-createdat="{{topic.createdAt}}", data-discussionend="{{topic.endsAt}}")
+			ul.clearfix
+				li
+					a(href="#")
+						img(src="images/role-close.png", alt="Image")
+				|                
+				li(ng-repeat="item in progress.items", data-type="{{item.type}}", id="{{(item.id)}}", data-day="{{item.day}}", ng-class="{'days' :(item.type=='now' && !item.ended), 'days reader':(item.type=='now' && !item.ended && (topic.status=='voting') && ((vote.endsAt | amDifference : today : 'days' )>=0))}", style="padding-left:{{item.left}}px")
+					a(href="#", ng-if="item.type!='now' || item.ended ")
+						img(ng-src="{{item.src}}", alt="Image")
+					|                    
+					a(ng-if="(item.type=='now' && !item.ended && topic.status=='voting')") {{'TXT_DEADLINE_CALENDAR_DAYS_LEFT' | translate: vote}}
+					|                    
+					a(ng-if="item.type=='now' && !item.ended && topic.status=='inProgress'") {{'TXT_DEADLINE_CALENDAR_DAYS_LEFT' | translate: topic}}
