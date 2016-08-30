@@ -38,12 +38,10 @@ html(ng-app="app")
 					| 					
 					.close(ng-click="app.hideError()")  
 			| 			
-			header
+			header#header
 				.enclose
 					// header top
 					.clearfix.header-top
-						.tp-layer
-						| 						
 						.left.lang(toru-select="", on-select="app.setLanguage(selected)")
 							a(toru-select-item="key", ng-repeat="(key, value) in app.languagesAvailable", ng-class="{'active': app.language == key}") {{key | translate}} 
 						// login
@@ -121,19 +119,12 @@ html(ng-app="app")
 								| 						 
 								p
 									a(href="#", translate="HELP_GOT_IT") GOT IT, NOW HIDE THIS!
-					// navigation end
-				// enclose end
-			| 			
-			.pp-layer
-			// Private Profiles
-			// Private Profiles end
-			// Edit Profiles
-			// Edit Profiles end
+
 			.h-top
-			// Top padding
+
 			main#main-section(ui-view="", ng-if="!app.user.isLoading")
 
-			footer
+			footer#footer
 				.enclose
 					.clearfix
 						.f-box

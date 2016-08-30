@@ -2,6 +2,8 @@
 $light-blue: #45a0e6;
 $dark-blue: #3390d7;
 $blue: #53B1EB;
+$form-input-padding: 8px;
+$header-color: #124267;
 
 @import "reset";
 @import "potpourri";
@@ -15,6 +17,25 @@ body {
 	line-height: 1;
 }
 
+#header {
+	background: $header-color;
+	padding: 15px 0;
+	position: fixed;
+	width: 100%;
+	z-index: 50;
+}
+
+#footer {
+	background: $header-color;
+	padding: 20px 0;
+	color: white;
+	line-height: 20px;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+}
+
 .content-wrapper {
 	padding-top: 40px;
 	padding-bottom: 40px;
@@ -23,11 +44,8 @@ body {
 	min-height: 370px;
 }
 
-.content {
-	* + & {
-		margin-top: 40px;
-	}
-
+.content,
+.dialog-content {
 	h1, h2 {
 		font-family: 'MuseoSansCyrl-300';
 		color: $dark-blue;
@@ -46,7 +64,7 @@ body {
 	}
 
 	p {
-		line-height: 1.4;
+		line-height: 1.5;
 		font-size: 14px;
 		color: black;
 		white-space: pre-line;
@@ -57,11 +75,18 @@ body {
 	}
 }
 
+.content {
+	* + & {
+		margin-top: 40px;
+	}
+}
+
 #donation-form {
 	margin-top: 20px;
 
 	label {
 		display: block;
+		margin-bottom: 10px;
 	}
 
 	input {
@@ -76,17 +101,24 @@ body {
 	p {
 		margin-top: 10px;
 		font-size: 12px;
-		line-height: 1.4;
+		line-height: 1.5;
 	}
 
 	.banks {
-		margin-top: 10px;
-		li { display: inline-block; }
-		li + li { margin-left: 10px; }
+		li {
+			// Add right margin so when banks wrap, they'll be left-aligned.
+			display: inline-block;
+			margin-top: 10px;
+			margin-right: 10px;
+		}
 	}
 }
 
-$form-input-padding: 8px;
+#voting-dialog {
+	max-width: 640px;
+	margin-left: auto;
+	margin-right: auto;
+}
 
 .form-label,
 .form-input,
@@ -126,6 +158,110 @@ $form-input-padding: 8px;
   color: white;
 }
 
+.ngdialog-overlay {
+	position: fixed;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.5);
+	z-index: 99;
+}
+
+.ngdialog-content {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 100;
+	padding: 10px;
+	overflow: auto;
+}
+
+.dialog {
+	position: relative;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+.ui-dialog {
+	position: absolute;
+	z-index: 150;
+	top: calc((100vh - 50%) / 2) !important;
+	left: calc((100vw - 680px) / 2) !important;
+}
+
+.dialog-header,
+.ui-dialog-titlebar,
+.dialog-footer {
+	font-family: 'MuseoSansCyrl-700';
+	color: #4A555D;
+	font-size: 14px;
+	line-height: 40px;
+	padding: 0 5px 0 15px;
+}
+
+.dialog-header,
+.ui-dialog-titlebar {
+	background: #d8d8d8;
+	text-transform: uppercase;
+}
+
+.dialog-header-close {
+	border: 0;
+	margin-top: 5px;
+	float: right;
+	width: 30px;
+	height: 30px;
+	background: url(/images/dialog-close-btn.png);
+	text-indent: -9999px;
+}
+
+.ui-dialog-titlebar-close {
+	position: absolute;
+	right: 5px;
+	top: 5px;
+	width: 30px;
+	height: 30px;
+	border: 0;
+	background: url(/images/dialog-close-btn.png);
+	text-indent: -9999px;
+	cursor: pointer;
+}
+
+.dialog-content {
+	background: white;
+	padding: 15px;
+	line-height: 1.5;
+}
+
+.ui-dialog-content {
+	background: white;
+}
+
+.dialog-footer {
+	text-align: center;
+	background: #eeeeee;
+	padding: 20px;
+	border-top: 1px solid #cecece;
+}
+
+.dialog-footer-button {
+	display: inline-block;
+	border: 1px solid #cecece;
+	font-size: 12px;
+	height: 40px;
+	line-height: 40px;
+	padding: 0 20px;
+	background: #f7f7f7;
+	color: #4a555d;
+	font-size: 12px;
+	font-family: 'MuseoSansCyrl-700';
+	border-radius: 2px;
+	text-transform: uppercase;
+}
+
 .aside-box {
   background: white;
   margin-bottom: 20px;
@@ -152,7 +288,6 @@ $form-input-padding: 8px;
 
 .aside-box-list {
   padding: 10px 0;
-  //border-bottom: 1px solid #d8d8d8;
   margin: 0 10px 10px;
   list-style: none;
 

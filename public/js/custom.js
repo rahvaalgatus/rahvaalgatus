@@ -31,13 +31,13 @@ $(document).ready(function(){
   });
   //Login/register
   $('.login > a').click(function(){
-    $('.tp-layer, .log-pop').show();
+    $('.log-pop').show();
     $('.log-pop #reg').remove();
     $('.log-pop #emailLogin').show();
     return false;
   });
   $('html').click(function() {
-    $('.tp-layer, .log-pop').hide();
+    $('.log-pop').hide();
   });
   $('.log-pop').click(function(event){
     event.stopPropagation();
@@ -46,7 +46,6 @@ $(document).ready(function(){
   $('.mobile-set').click(function(){
     $(this).toggleClass('active');
     $('.admin-role-box > .right').slideToggle(300);
-    $('.pp-layer').toggle();
     return false;
   });
   //
@@ -61,13 +60,13 @@ $(document).ready(function(){
 
   $('.open-profile, .m-profile').click(function(){
     $('.main-navi').hide();
-    $('.pp-layer, .my-profile.private').show();
+    $('.my-profile.private').show();
     $('.mobile-menu').removeClass('open');
     return false;
   });
 
   $('.profile-close, .cancel').click(function(){
-    $('.pp-layer, .my-profile').hide();
+    $('.my-profile').hide();
     return false;
   });
   //

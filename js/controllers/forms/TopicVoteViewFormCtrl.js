@@ -97,7 +97,6 @@ app.controller("TopicVoteViewFormCtrl", [ "$scope", "$rootScope", "$state", "$lo
     $scope.doVote = function(option) {
         if (!$scope.canVote() || $scope.topic.status !== sTopic.STATUSES.voting) return;
         if ($scope.isAuthTypeHard()) {
-            document.getElementsByClassName("pp-layer")[0].style.display = "block";
             ngDialog.open({
                 scope: $scope,
                 template: "/templates/modals/topic_vote_sign.html",

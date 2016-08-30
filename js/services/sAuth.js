@@ -51,7 +51,6 @@ app.service("sAuth", [ "$http", "$q", "$log", function($http, $q, $log) {
             $log.debug("Auth.loginMobileIdStatus", "success");
             if ([ 20002, 20003 ].indexOf(response.data.status.code) > -1) {
                 Auth.user.loggedIn = true;
-                $('.tp-layer').hide();
                 angular.extend(Auth.user, response.data.data);
             }
             return response;
@@ -64,7 +63,6 @@ app.service("sAuth", [ "$http", "$q", "$log", function($http, $q, $log) {
             if ([20002, 20003].indexOf(response.data.status.code) > -1) {
                 Auth.user.loggedIn = true;
                 angular.extend(Auth.user, response.data.data);
-                $('.tp-layer').hide();
             }
             return response;
         };

@@ -91,7 +91,7 @@ app.controller("AppCtrl", [ "$scope", "$rootScope", "$window", "$state", "$trans
                     template: "/templates/modals/profileEdit.html",
                     scope: $scope
                 });
-                $('.pp-layer').show();},400);
+							},400);
 
         }
     };

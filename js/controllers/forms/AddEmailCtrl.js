@@ -27,8 +27,7 @@ app.controller("AddEmailCtrl", [ "$scope", "$rootScope", "$log", "ngDialog", "sA
         sUser.update(null, $scope.form.email).then(success, error);
     };
     $scope.closeFinalizeDialog = function(){
-        $(".login, .log-pop ,.tp-layer").hide();
-        console.log("close this 2");
+        $(".login, .log-pop").hide();
         ngDialog.closeAll();
         $scope.app.finalizeOpen = false;
         $scope.$apply();
