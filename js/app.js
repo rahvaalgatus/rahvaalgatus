@@ -182,12 +182,22 @@ app.config(function($stateProvider, $urlRouterProvider, $locationProvider, $http
         url: "/groups/:groupId/edit",
         templateUrl: "/templates/groups.html"
     });
-    // Set up translating system
+
     $translateProvider.useStaticFilesLoader({
-        prefix: "/languages/",
-        suffix: ".json"
+      prefix: "/languages/",
+      suffix: ".json"
     });
-    $translateProvider.preferredLanguage(toruConfig.language.default).registerAvailableLanguageKeys(Object.keys(toruConfig.language.list)).useSanitizeValueStrategy("escaped").useStorage("translateKookieStorage");
+
+    var LANGUAGES = Object.keys(toruConfig.language.list)
+    $translateProvider.registerAvailableLanguageKeys(LANGUAGES)
+
+    $translateProvider.useSanitizeValueStrategy("escaped")
+    $translateProvider.useStorage("translateKookieStorage")
+
+    // Using fallback language for some reason breaks translation on page load.
+    //$translateProvider.fallbackLanguage("et")
+    $translateProvider.preferredLanguage(toruConfig.language.default)
+
     UserVoiceProvider.setApiKey("X2tNuk059z6CD4Em5Q65KQ");
 
     ////
