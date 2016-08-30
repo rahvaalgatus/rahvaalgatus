@@ -1,0 +1,100 @@
+div(ng-controller="HomeCtrl")
+	.home-hero.clearfix
+		.box.clearfix
+			.right
+				div
+					h2(translate="HOME_WELCOME_TITLE")
+					p(translate="HOME_WELCOME")
+
+					#home-video
+						a(href="#", ng-click="watchvideo()")
+							span#home-video-icon
+							span#home-video-text(translate="HOME_VIDEO_TEXT")
+
+		.box.clearfix.bg
+			.left
+				ul.h-list
+					li
+						a(href="#", translate="BTN_PARTICIPATE_TOPIC", ui-sref="discussions")
+					li
+						a(href="#", translate="BTN_VOTE_TOPIC", ui-sref="votings")
+					li
+						a.active(href="#", ui-sref="topics.create1", ui-sref-opts="{reload: true}", translate="BTN_NEW_TOPIC")
+
+	.article-bg
+		.enclose
+			.article-search
+				ul.clearfix
+					li(ng-repeat="value in filters.statuses.options", ng-show="value!='closed'")
+						a(ng-click="filters.changeStatus(value)", href="#", ng-class="{'complete':filters.statuses.value == value}") {{'TXT_TOPIC_STATUS_' + value | uppercase | translate}}
+
+					li.last
+						form.clearfix
+							input(type="text", ng-model="searchString")
+							input(type="submit", ng-click="searchTopics()", value="{{'SEARCH'| translate}}")
+
+			.article-box(ng-if="!filters.statuses.value || filters.statuses.value == 'inProgress'", ng-show="discussiontopicList.length > 0")
+				.clearfix
+					.left
+						h3(translate="DISCUSSIONS_LIST")
+
+						.clearfix
+							ul.article-pagi.clearfix(ng-show="rangediscussiontopicList.length > 1")
+								li
+									a.disable(ng-show="filters.discussion_offset==0")
+										img(src="images/pagi-left.png", alt="Image")
+
+									a(ng-show="filters.discussion_offset>0")
+										img(src="images/pagi-left.png", alt="Image", ng-click="setPage('inProgress',(filters.discussion_offset/filters.limit)-1);")
+								
+								li
+									a(ng-show="(filters.discussion_offset/filters.limit) > 1", ng-click="setPage('inProgress',0);") {{1}}
+
+								li(ng-show="(filters.discussion_offset/filters.limit) > 2") ...
+
+								li(data-ng-repeat="i in rangediscussiontopicList.slice(0,myCount) track by $index")
+									a.disable(ng-show="((filters.discussion_offset/filters.limit)== $index  || (filters.discussion_offset/filters.limit)+1== $index || (filters.discussion_offset/filters.limit)-1== $index )", ng-if="((filters.discussion_offset/filters.limit)) == $index") {{$index+1}}
+
+									a(ng-show="((filters.discussion_offset/filters.limit)== $index  || (filters.discussion_offset/filters.limit)+1== $index || (filters.discussion_offset/filters.limit)-1== $index)", ng-if="((filters.discussion_offset/filters.limit)) != $index", ng-click="setPage('inProgress',$index);") {{$index+1}}
+
+								li(ng-show="(filters.discussion_offset/filters.limit) < (rangediscussiontopicList.length-3)") ...
+
+								li
+									a(ng-show="(filters.discussion_offset/filters.limit) < (rangediscussiontopicList.length-2)", ng-click="setPage('inProgress',rangediscussiontopicList.length-1);") {{rangediscussiontopicList.length}}
+								|                                     
+								li
+									a(href="#", ng-show="((filters.discussion_offset/filters.limit)+1) != rangediscussiontopicList.length", ng-click="setPage('inProgress',(filters.discussion_offset/filters.limit)+1);")
+										img(src="images/pagi-right.png", alt="Image")
+									|                                         
+									a.disable(href="#", ng-show="((filters.discussion_offset/filters.limit)+1) == rangediscussiontopicList.length")
+										img(src="images/pagi-right.png", alt="Image")
+
+					.right
+						.clearfix.articles
+							.in(ui-sref="topics.view({id: topic.id})", ng-repeat="topic in discussiontopicList", ng-class="getCategoryTheme(topic.categories[0])")
+								p.date(data-topic="{{topic}}") {{topic.createdAt | amDateFormat : 'L'}}
+
+								p.link
+									a(href="#") {{topic.title}}
+
+								p.author {{topic.creator.name}}
+
+								.bar
+									p(ng-class="{progress:topic.endsAt !=null && ((topic.endsAt | amDifference : today : 'days' )>=0), finished:(topic.endsAt ==null || ((topic.endsAt | amDifference : today : 'days' )<0))}", ng-style="::getProgress(topic)")
+									span(ng-if="topic.endsAt !=null && ((topic.endsAt | amDifference : today : 'days' )>=0)") {{'TXT_DEADLINE_CALENDAR_DAYS_LEFT' | translate: topic}}
+									span.discussion-finished(ng-if="topic.endsAt ==null || ((topic.endsAt | amDifference : today : 'days' )<0)", translate="DISCUSSION_FINISHED")
+
+			div(ng-include=" 'templates/components/initiativesList.html' ")
+			div(ng-include=" 'templates/components/followupsList.html' ")
+			div(style="width:100%;height:10px;clear:both;position:relative;")
+
+	script.
+		$(function(){
+			var max = 0
+
+			$(".article-box .right .in .link").each(function() {
+				if ($(this).height() > max) { max =$(this).height() }
+			})
+
+			$(".article-box .right .in .link").css("height", max)
+		})

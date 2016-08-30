@@ -4,6 +4,7 @@
 /public/index.html
 /public/templates/topic.html
 /public/templates/support_us.html
+/public/templates/home.html
 /public/templates/modals/topic_vote_sign.html
 /public/templates/**/_*.html
 /public/stylesheets/*.css
