@@ -962,7 +962,7 @@
 			line-height: 22px;
 			padding: 0 20px;
 			min-height: 95px;
-			word-break: break-word;
+			word-wrap: break-word;
 
 			&:hover {
 				color: #1C71A2;
