@@ -1,8 +1,0 @@
-<div>
-    <div ui-view></div>
-
-    <div ng-if="!onEventsPage">
-      <iframe ng-if="isAdmin() || canEdit()" iframe name="topicframe" toru-etherpad frameborder="0" scrolling="no" ng-show="topic.padUrl" ng-src="{{topic.padUrl}}" width="100%" height="600"></iframe>
-      <div class="admin-role-info topic-content" ng-if="!isAdmin() && !canEdit()" ng-bind-html="topicContent"></div>
-    </div>
-</div>

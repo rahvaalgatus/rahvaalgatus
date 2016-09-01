@@ -1,0 +1,18 @@
+div(ng-if="topicEvents.status=='loading'")
+	| Loading events...
+div(ng-if="topicEvents.status=='failed'")
+	h3 Sorry, failed to load events.
+div(ng-if="topicEvents.status=='loaded'")
+	.event(ng-if="topicEvents.list.length==0")
+		h2.separator
+		|     
+		.comment-content(translate="NO_EVENTS")
+			| No events yet.
+	|   
+	.event(ng-repeat="(i, event) in topicEvents.list | orderBy:'createdAt'")
+		h2.separator
+			.date {{event.createdAt | date : 'dd.MM.yyyy'}}
+		|     
+		h1(ng-bind-html="event.subject | linky")
+		|     
+		.comment-content(ng-bind-html="event.text | linky")

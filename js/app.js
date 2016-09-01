@@ -153,22 +153,14 @@ app.config(function($stateProvider, $urlRouterProvider, $locationProvider, $http
 
 		$stateProvider.state("topics.create1", {
 			url: "/create1",
-			templateUrl: "/templates/topic.create.html"
 		})
 
 		$stateProvider.state("topics.create2", {
 			url: "/create2/:id",
-			templateUrl: "/templates/topic.create.html"
 		})
 
 		$stateProvider.state("addCoauthors", {
 			url: "/create3/:id",
-			templateUrl: "/templates/topic.addCoauthors.html"
-		})
-
-		$stateProvider.state("topics.create", {
-			url: "/create",
-			templateUrl: "/templates/topic.create.html"
 		})
 
 		$stateProvider.state("topics.view", {
@@ -203,8 +195,7 @@ app.config(function($stateProvider, $urlRouterProvider, $locationProvider, $http
 		})
 
 		$stateProvider.state("topics.view.events.create", {
-			url: "/create",
-			templateUrl: "/templates/topic.events.create.html"
+			url: "/create"
 		})
 
 		$stateProvider.state("topics.view.events.view", {

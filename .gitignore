@@ -8,5 +8,6 @@
 /public/templates/components/
 /public/templates/modals/topic_vote_sign.html
 /public/templates/**/_*.html
+/public/templates/topic.*.html
 /public/stylesheets/*.css
 /tmp/
