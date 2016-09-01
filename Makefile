@@ -1,7 +1,9 @@
 NODE = node
+NODE_OPTS =
 RUBY = ruby
 PORT = 3000
 ENV = development
+TEST =
 TEST_OPTS =
 TEST_URL = http://dev.rahvaalgatus.ee:3000
 JADE = ./node_modules/.bin/jade
@@ -18,6 +20,7 @@ LFTP_MIRROR_OPTS = --verbose=1 --continue --reverse --delete --dereference
 
 export PORT
 export ENV
+export TEST
 export TEST_URL
 
 love:
@@ -46,10 +49,22 @@ views:
 autoviews: JADE := $(JADE) --watch
 autoviews: views
 
-spec: $(wildcard test/*_test.rb)
-	@$(RUBY) -I. $(addprefix -r, $^) -e ""
+test:
+	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R dot $(TEST_OPTS)
+
+spec:
+	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R spec $(TEST_OPTS)
+
+autotest:
+	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R dot --watch $(TEST_OPTS)
 
 autospec:
+	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R spec --watch $(TEST_OPTS)
+
+uispec: $(wildcard test/*_test.rb)
+	@$(RUBY) -I. $(addprefix -r, $^) -e ""
+
+autouispec:
 	@bundle exec autotest
 
 server:
@@ -92,7 +107,8 @@ tmp/translations.json: tmp
 .PHONY: javascripts autojavascripts
 .PHONY: stylesheets autostylesheets
 .PHONY: views autoviews
-.PHONY: spec autospec
+.PHONY: uispec autouispec
+.PHONY: test spec autotest autospec
 .PHONY: server
 .PHONY: shrinkwrap
 .PHONY: deploy staging production
