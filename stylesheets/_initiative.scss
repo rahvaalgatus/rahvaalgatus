@@ -1,0 +1,67 @@
+.aside-box {
+  background: white;
+  margin-bottom: 20px;
+
+  a {
+    color: $blue;
+    line-height: 22px;
+    cursor: pointer;
+
+    &:hover { text-decoration: underline; }
+  }
+}
+
+.aside-box-header {
+  background: $light-blue;
+  padding: 0 10px;
+  line-height: 40px;
+  color: white;
+  font-family: 'MuseoSansCyrl-700';
+  font-size: 14px;
+
+  text-transform: uppercase;
+}
+
+.aside-box-list {
+  padding: 10px 0;
+  margin: 0 10px 10px;
+  list-style: none;
+
+  li > a {
+    display: block;
+  }
+}
+
+.aside-category-button {
+	margin: 0 0 10px 10px;
+	background: transparent url("/images/cat-up.png") no-repeat center right;
+	display: block;
+
+	&.active { background-image: url("/images/cat-down.png"); }
+}
+
+#initiative-email-subscription {
+  padding: 10px;
+
+  h1 {
+    margin: -10px -10px 10px;
+  }
+
+  label {
+    display: block;
+    &::after { content: ":"; }
+  }
+
+  input[type=email],
+	button {
+    display: block;
+    margin-top: 5px;
+    width: 100%;
+  }
+}
+
+#voting-dialog {
+	max-width: 640px;
+	margin-left: auto;
+	margin-right: auto;
+}
