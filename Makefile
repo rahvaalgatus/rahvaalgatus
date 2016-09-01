@@ -7,7 +7,7 @@ TEST =
 TEST_OPTS =
 TEST_URL = http://dev.rahvaalgatus.ee:3000
 JADE = ./node_modules/.bin/jade
-POSTCSS = ./node_modules/.bin/postcss --log
+POSTCSS = ./node_modules/.bin/postcss --config config/postcss --log
 GRUNT = ./node_modules/.bin/grunt
 DEPLOY_HOST =
 CSS = $(addprefix stylesheets/, fonts.css page.css editor.css)
@@ -38,7 +38,7 @@ autojavascripts:
 	$(GRUNT) watch
 
 stylesheets:
-	$(POSTCSS) --parser postcss-scss --use precss --dir public/stylesheets $(CSS)
+	$(POSTCSS) --dir public/stylesheets $(CSS)
 
 autostylesheets: POSTCSS := $(POSTCSS) --watch
 autostylesheets: stylesheets
