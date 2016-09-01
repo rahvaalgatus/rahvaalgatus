@@ -16,8 +16,6 @@
 		"grunt-contrib-uglify": "0.6.0",
 		"grunt-contrib-watch": "0.6.1",
 		"jade": "",
-		"postcss-cli": "",
-		"precss": "",
-		"postcss-scss": ""
+		"node-sass": ""
 	}
 }

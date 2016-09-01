@@ -1,4 +1,3 @@
-//main: build.less
 @font-face {
     font-family: 'tisaproregular';
     src: url('/fonts/tisapro-regular-webfont.eot');
@@ -67,6 +66,10 @@
     font-style: normal;
 }
 
+$button-primary: #0680fc;
+$button-secondary: #b1b1b1;
+$button-delete: #ff1d42;
+
 $base-1: #252525;
 $base-2: #f6f6f6;
 $base-3: #ffffff;
@@ -114,10 +117,6 @@ $border-16: #164475;
 $border-17: #ebebeb;
 $border-18: #e0e0e0;
 $border-19: #e5e5e5;
-
-$button-primary: #0680fc;
-$button-secondary: #b1b1b1;
-$button-delete: #ff1d42;
 
 $highlight-1: #fedc32;
 $highlight-2: #2eecb4;
