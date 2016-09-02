@@ -8,6 +8,8 @@ var moment = window.moment
 app.controller("TopicCtrl", [
 	"$scope", "$rootScope", "$sce", "$compile", "$state", "$filter", "$log", "$timeout", "ngDialog", "sTopic", "sTranslate", "sAuth", "sProgress",
 	function($scope, $rootScope, $sce, $compile, $state, $filter, $log, $timeout, ngDialog, sTopic, sTranslate, sAuth, Progress) {
+    $scope.page = ""
+
 		$scope.topic = {
 			id: null,
 			title: null,
@@ -71,69 +73,70 @@ app.controller("TopicCtrl", [
 				return sTopic.voteReadUnauth(topicId, voteId);
 			}
 		};
-		function getContentHtml(topic) {
-			$scope.shortDescription = $scope.htmlToPlaintext(topic.description).replace(topic.title,"").substring(0,200)+"...";
-			$scope.topicContent = $sce.trustAsHtml(topic.description);
-		};
-		$scope.doTopicLoad = function() {
-			if ($state.current.name.indexOf("topic") !== -1) {
-				$scope.app.isTopicLoading = true;
-				topicRead($state.params.id).then(function(res) {
-					var topic = res.data.data;
-					getContentHtml(topic);
-					if ($state.current.name == "topics.view" && topic.vote.id !== undefined && topic.vote.id !== null) {
-						$state.go("topics.view.vote.view", {
-							id: topic.id,
-							voteId: topic.vote.id
-						});
-					}
-					if (topic.endsAt != null) {
-						topic.endsAt = new Date(topic.endsAt);
-					}
-					topic.padUrl = $sce.trustAsResourceUrl(topic.padUrl);
-					angular.copy(topic, $scope.topic);
-					if (topic.vote.id != undefined) {
-						voteRead(topic.id, topic.vote.id).then(function(res) {
-							$scope.vote = res.data.data;
-							$scope.vote.yesindex = _.findIndex($scope.vote.options.rows, function(o) {
-								return o.value == "Yes";
-							});
-							$scope.vote.noindex = _.findIndex($scope.vote.options.rows, function(o) {
-								return o.value == "No";
-							});
-							//scope.topic.endsAt = new Date($scope.vote.endsAt);
-							recalculateProgress();
-						});
-					} else {
-						recalculateProgress();
-					}
-					$log.debug("Topic loaded!", topic);
-					$scope.loadComments();
-				}, function(res) {
-					$log.error("Topic read failed", res);
-					$scope.topicLoadSuccess = false;
-				}).finally(function() {
-					$scope.app.isTopicLoading = false;
-				});
 
-				$scope.topicEvents.status = 'loading';
-				sTopic.eventsList($state.params.id).then(function(events) {
-					$scope.topicEvents.status = 'loaded';
-					$scope.topicEvents.list = events;
-					recalculateProgress();
-				}, function(error) {
-					$scope.topicEvents.status = 'failed';
-				});
-			}
-		};
-		if ($state.params.id) {
-			$scope.doTopicLoad();
+		$scope.doTopicLoad = function() {
+      $scope.app.isTopicLoading = true;
+
+      topicRead($state.params.id).then(function(res) {
+        var topic = res.data.data
+
+        if ($state.current.name == "topics.read") {
+          var page = topic.vote.id == null ? "discussion" : "vote"
+          return void $state.go("topics." + page, {id: topic.id})
+        }
+
+        $scope.shortDescription = $scope.htmlToPlaintext(topic.description).replace(topic.title,"").substring(0,200)+"...";
+        $scope.topicContent = $sce.trustAsHtml(topic.description);
+
+        if (topic.endsAt != null) {
+          topic.endsAt = new Date(topic.endsAt);
+        }
+        topic.padUrl = $sce.trustAsResourceUrl(topic.padUrl);
+        angular.copy(topic, $scope.topic);
+
+        if (topic.vote.id != undefined) {
+          voteRead(topic.id, topic.vote.id).then(function(res) {
+            $scope.vote = res.data.data;
+            $scope.vote.yesindex = _.findIndex($scope.vote.options.rows, function(o) {
+              return o.value == "Yes";
+            });
+            $scope.vote.noindex = _.findIndex($scope.vote.options.rows, function(o) {
+              return o.value == "No";
+            });
+            //scope.topic.endsAt = new Date($scope.vote.endsAt);
+            recalculateProgress();
+          });
+
+        } else {
+          recalculateProgress();
+        }
+
+        $scope.loadComments();
+      }, function(res) {
+        $scope.topicLoadSuccess = false
+      }).finally(function() {
+        $scope.app.isTopicLoading = false
+      });
+
+      $scope.topicEvents.status = 'loading'
+
+      sTopic.eventsList($state.params.id).then(function(events) {
+        $scope.topicEvents.status = 'loaded';
+        $scope.topicEvents.list = events;
+        recalculateProgress();
+      }, function(error) {
+        $scope.topicEvents.status = 'failed';
+      });
 		}
+
+		if ($state.params.id) $scope.doTopicLoad()
+
 		$rootScope.$on("$stateChangeStart", function(event, toState, toParams, fromState, fromParams) {
 			if (fromParams.id != toParams.id) $state.params.id = toParams.id;
 			if ($state.params.id) $scope.doTopicLoad();
 			ngDialog.closeAll();
 		});
+
 		$scope.$on("topic.members.change", function(event, data) {
 			topicRead(data.id).then(function(res) {
 				var topic = res.data.data;
@@ -143,6 +146,7 @@ app.controller("TopicCtrl", [
 				$log.error("Topic read failed on topic.members.change!", res);
 			});
 		});
+
 		$scope.$watch("topic.endsAt", function(newValue, oldValue) {
 			if (!newValue) return;
 			newValue = new Date(newValue);
@@ -154,6 +158,7 @@ app.controller("TopicCtrl", [
 				$scope.topic.endsAt = moment(new Date()).add(2, "y").toDate();
 			}
 		});
+
 		$scope.loadComments = function() {
 			if (!$scope.topic.id) return;
 			var success = function(res) {
@@ -165,30 +170,24 @@ app.controller("TopicCtrl", [
 				$scope.topicComments.counts.con = _.filter($scope.topicComments.rows, {
 					type: sTopic.COMMENT_TYPES.con
 				}).length;
-				$log.debug("Topic comments loaded!", comments);
 			};
-			var error = function(err, res) {
-				$log.error("Topic comments load failed", err, res);
-			};
+
 			if ($scope.app.user && $scope.app.user.loggedIn) {
-				sTopic.commentList($scope.topic.id, $scope.topicComments.orderBy).then(success, error);
+				sTopic.commentList($scope.topic.id, $scope.topicComments.orderBy).then(success);
 			} else {
-				sTopic.commentListUnauth($scope.topic.id, $scope.topicComments.orderBy).then(success, error);
+				sTopic.commentListUnauth($scope.topic.id, $scope.topicComments.orderBy).then(success);
 			}
 		};
+
 		$scope.triggerStart = function(type) {
 			if ($scope.understandConditions && $scope.app.user.loggedIn) {
 				$scope.notConfirmedRead = false;
 				sTopic.create($scope.topic).then(function(res) {
 					var topic = res.data.data;
-					$log.log("Created!", topic);
 					angular.copy(topic, $scope.topic);
 					$scope.topictype=type;
-					$state.go("topics.create2", {
-						id: topic.id
-					});
+					$state.go("topics.deadline", {id: topic.id})
 				}, function(res) {
-					$log.log("Topic creation failed", res);
 					$scope.app.showError(_.values(res.data.errors));
 					$scope.app.isTopicLoading = false;
 				});
@@ -197,6 +196,7 @@ app.controller("TopicCtrl", [
 				$scope.notConfirmedRead = true;
 			}
 		};
+
 		$scope.createDeadlineEnd = function(deadline) {
 			var topic = $scope.topic;
 			if($scope.topic.endsAt !==null){
@@ -211,20 +211,17 @@ app.controller("TopicCtrl", [
 						$scope.app.showError(_.values(res.data.errors));
 					});
 				}
-				$state.go("addCoauthors", {
-					id: topic.id
-				});
+				$state.go("topics.authors", {id: topic.id})
 			}
 			else{
 				$scope.dateNotSet = true;
 			}
 		};
+
 		$scope.coAuthorsAdded = function() {
-			var topic = $scope.topic;
-			$state.go("topics.view", {
-				id: topic.id
-			});
+			$state.go("topics.discussion", {id: $scope.topic.id})
 		};
+
 		$scope.doSetVisibility = function(visibility) {
 			if (!visibility || $scope.topic.visibility === visibility) return;
 			//  if(visibility ==)
@@ -254,6 +251,7 @@ app.controller("TopicCtrl", [
 				});
 			}
 		};
+
 		$scope.checkConditionsRead = function() {
 			if ($scope.understandConditions == false) {
 				$scope.understandConditions = true;
@@ -261,6 +259,7 @@ app.controller("TopicCtrl", [
 				$scope.understandConditions = false;
 			}
 		};
+
 		$scope.$watch(function() {
 			return $scope.topicComments.orderBy;
 		}, function(newVal, oldVal) {
@@ -268,12 +267,15 @@ app.controller("TopicCtrl", [
 				$scope.loadComments();
 			}
 		});
+
 		$scope.canEdit = function() {
 			return !$scope.topic.id || [ sTopic.LEVELS.admin, sTopic.LEVELS.edit ].indexOf($scope.topic.permission.level) > -1 && !sTopic.isStatusDisabled($scope.topic.status);
 		};
+
 		$scope.canInvite = function() {
 			return $scope.topic.id && $scope.topic.permission.level == sTopic.LEVELS.admin;
 		};
+
 		$scope.canComment = function() {
 			if ($scope.topic.visibility === sTopic.VISIBILITY.public) {
 				return $scope.app.user && $scope.app.user.loggedIn;
@@ -281,6 +283,7 @@ app.controller("TopicCtrl", [
 				return !!$scope.topic.id;
 			}
 		};
+
 		// TODO: This logic is kinda duplicate in DashboardCtrl
 		$scope.canSendToFollowUp = function() {
 			return $scope.topic.vote && $scope.topic.vote.id && $scope.topic.permission.level == sTopic.LEVELS.admin && $scope.topic.status !== sTopic.STATUSES.followUp;
@@ -295,7 +298,7 @@ app.controller("TopicCtrl", [
 			return $scope.topic.status === sTopic.STATUSES.closed;
 		};
 		$scope.isShowInVotingNotification = function() {
-			return $scope.topic.status === sTopic.STATUSES.voting && !$filter("includedByState")("topics.view.vote");
+			return $scope.topic.status === sTopic.STATUSES.voting && !$filter("includedByState")("topics.read.vote");
 		};
 		$scope.doUpdate = function() {
 			sTopic.update($scope.topic).then(function(res) {
@@ -310,10 +313,7 @@ app.controller("TopicCtrl", [
 				template: "/templates/modals/topicConfirmDelete.html"
 			}).then(function() {
 				sTopic.delete($scope.topic.id).then(function(result) {
-					$log.log("Topic was deleted successfully", result);
-					$state.go("dashboard");
-				}, function(result) {
-					$log.log("Topic deletion failed", result);
+					$state.go("home");
 				});
 			}, angular.noop);
 		};
@@ -363,7 +363,7 @@ app.controller("TopicCtrl", [
 				status: sTopic.STATUSES.followUp,
 				contact: topic.contact
 			}).then(function() {
-				$state.go("topics.view", {id: topic.id})
+				$state.go("topics.read", {id: topic.id})
 			}).catch(function(err) {
 				$log.error("Failed to set Topic status", topic, err)
 				$scope.savingError = err.data.status.message;
@@ -408,12 +408,7 @@ app.controller("TopicCtrl", [
 				scope: $scope
 			});
 		};
-		$scope.renewDeadline = function() {
-			ngDialog.open({
-				template: "/templates/modals/topicRenewDeadline.html",
-				scope: $scope
-			});
-		};
+
 		$scope.setTopicStatusToVoting = function(topic) {
 			ngDialog.openConfirm({
 				template: "/templates/modals/topicConfirmFollowUp.html"
@@ -426,6 +421,7 @@ app.controller("TopicCtrl", [
 				});
 			}, angular.noop);
 		};
+
 		$scope.reopenTopic = function(topic) {
 			ngDialog.openConfirm({
 				template: "/templates/modals/topicConfirmReopen.html"
@@ -445,9 +441,7 @@ app.controller("TopicCtrl", [
 							var endsAt = new Date();
 							endsAt.setHours(23,59,59);
 							sTopic.voteUpdate($scope.topic.id,$scope.vote.id, endsAt).then(function(res){
-								$state.go("topics.view", {
-									id: $state.params.id
-								});
+								$state.go("topics.read", {id: $state.params.id});
 							});
 						}
 					}

@@ -1,0 +1,100 @@
+div(ng-controller="TopicVoteViewFormCtrl")
+	.admin-role-cal(ng-show="!hasVoted && !hasEnded", ng-if="!loading")
+		.head.clearfix
+			p.left(translate="HEADING_CAST_YOUR_VOTE")
+
+			p.right
+				| {{voteCountTotal}} 
+				span(translate="TXT_N_VOTES_COUNTED")
+
+		.con.clearfix
+			.left(translate="HEADING_VOTE_REQUIRE_HARD_ID")
+
+			.right
+				p
+					a
+						img(src="images/icon-mobile-id.png", alt="Image")
+
+				p
+					a
+						img(src="images/icon-kart-id.png", alt="Image")
+
+		.sign-in
+			a(href="#", ng-click="!hasEnded && doVote(option)", translate="SIGN_THIS_DOCUMENT")
+
+		.con.sign-info
+			p(translate="SIGNING_INFO")
+
+	.voting-block(ng-if="!loading")
+		.message.theme-4(ng-if="hasVoted && !hasEnded")
+			.admin-role-cal
+				.head.clearfix
+					p.left(translate="DOCUMENT_SIGNED")
+
+					p.right
+						| {{voteCountTotal}} 
+						span(translate="TXT_N_VOTES_COUNTED")
+
+				.con-down.clearfix
+					.left
+						span(translate="HEADING_VOTE_REGISTERED")
+
+					.right
+						a.download.pull-right(votedata="{{vote.downloads}}", ng-href="{{vote.downloads.bdocVote}}", ng-show="isAuthTypeHard() && hasVoted", target="_blank", translate="LNK_DOWNLOAD_USER_BDOC")
+
+				.sign-in
+					a(href="#", ng-click="doVote(optionRevoke)", translate="REVOKE_SIGNATURE")
+
+		.admin-role-cal(ng-if="(!loading && (isAdmin() || canEdit()) && canSendToFollowUp() && hasVotesRequired) && topic.status != 'followUp'")
+			.head.clearfix
+				p.left(translate="BTN_SEND_TO_FOLLOWUP")
+
+				p.right
+					| {{voteCountTotal}} 
+					span(translate="TXT_N_VOTES_COUNTED")
+
+			.con.clearfix
+				.left(translate="AT_LEAST_1000_SIGNATURES_COLLECTED")
+
+			.sign-in.clearfix
+				.left
+					a.download.pull-right(ng-href="{{vote.downloads.bdocVote}}", ng-show="isAuthTypeHard() && hasVoted", target="_blank", ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}", translate="LNK_DOWNLOAD_USER_BDOC")
+
+				.right(ng-show="isAdmin() && canSendToFollowUp()")
+					a(href="#", ng-click="confirmTopicFollowUp(topic)", translate="BTN_SEND_TO_FOLLOWUP", ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}")
+
+		.admin-role-cal(ng-if="(!loading && hasEnded && (isAdmin() || canEdit()) && !hasVotesRequired) && topic.status != 'followUp'")
+			.head.clearfix
+				p.left(translate="SIGNING_DEADLINE_REACHED")
+
+				p.right
+					| {{voteCountTotal}} 
+					span(translate="TXT_N_VOTES_COUNTED")
+
+			.con.clearfix
+				.left(translate="NOT_ENOUGH_SIGNATURES")
+
+			.sign-in.clearfix
+				.left
+					a.download.pull-right(ng-href="{{vote.downloads.bdocVote}}", ng-show="isAuthTypeHard() && hasVoted", target="_blank", ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}", translate="LNK_DOWNLOAD_USER_BDOC")
+
+				.right(ng-show="isAdmin() && voteCountTotal < Config.VOTES_REQUIRED")
+					a(ng-if="topic.status != 'closed'", href="#", ng-click="reopenTopic(topic)", translate="REOPEN_TOPIC", ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}")
+
+		.admin-role-cal(ng-if="!loading && (isAdmin() || canEdit()) && topic.status == 'followUp'")
+			.head.clearfix
+				p.left(translate="SENT_TO_PARLIAMENT")
+
+				p.right
+					| {{voteCountTotal}} 
+					span(translate="TXT_N_VOTES_COUNTED")
+
+			.con.clearfix
+				.left(translate="SENT_TO_PARLIAMENT_CONTENT")
+
+			.sign-in.clearfix
+				.left
+					a.download.pull-right(ng-href="{{vote.downloads.bdocFinal}}", ng-show="isAuthTypeHard()", target="_blank", ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}", translate="BTN_DOWNLOAD_FINAL_BDOC")
+
+				.right(ng-show="isAdmin() && voteCountTotal < Config.VOTES_REQUIRED")
+					a(href="#", ng-click="reopenTopic(topic)", translate="REOPEN_TOPIC", ng-class="{voteEndEt: (app.language==='et'),voteEndRu: (app.language==='ru'), 'voteEndEn': (app.language==='en')}")

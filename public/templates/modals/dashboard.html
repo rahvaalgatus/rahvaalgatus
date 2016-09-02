@@ -21,7 +21,7 @@
                         <div class="right" ><span translate="STARTED">Started</span> {{topic.createdAt | amDateFormat : 'L'}}</div>
                     </div>
                     <div class="p-content">
-                        <p class="title"><a href="" ui-sref="topics.view({id: topic.id})">{{topic.title || 'undefined' }}</a></p>
+                        <p class="title"><a href="" ui-sref="topics.read({id: topic.id})">{{topic.title || 'undefined' }}</a></p>
                         <p class="meta">
                             <a href="#"><img src="images/discussion-icon.png" alt="Image" />{{topic.comments.count}} <span translate="COMMENTS">comments</span></a>
                        <!-- TODO  <a href="#" class="notes"><img src="images/note-icon.png" alt="Image" /> 3 personal notes</a> -->

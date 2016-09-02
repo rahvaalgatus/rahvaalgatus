@@ -114,12 +114,7 @@ app.controller("TopicVoteCreateFormCtrl", [ "$scope", "$rootScope", "$state", "$
             $scope.topic.endsAt = new Date();
             sTopic.setEndsAt($scope.topic, new Date());
             $log.debug("Vote creation succeeded", res, vote);
-            $state.go("topics.view.vote.view", {
-                id: $scope.topic.id,
-                voteId: vote.id
-            }, {
-                reload: true
-            });
+            $state.go("topics.vote", {id: $scope.topic.id}, {reload: true})
         }, function(res) {
             $log.error("Vote creation failed", res);
             if (res.status === 400 && res.data.errors) {

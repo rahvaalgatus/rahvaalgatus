@@ -3374,6 +3374,11 @@
           }
         }
       }
+    },
+    "oolong": {
+      "version": "1.15.1",
+      "from": "oolong@latest",
+      "resolved": "https://registry.npmjs.org/oolong/-/oolong-1.15.1.tgz"
     }
   }
 }

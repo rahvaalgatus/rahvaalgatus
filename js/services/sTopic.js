@@ -235,7 +235,6 @@ app.service("sTopic", [ "$http", "$q", "$log", function($http, $q, $log) {
 		return $http.get(path);
 	};
 	Topic.voteVote = function(topicId, voteId, voteList, certificate, pid, phoneNumber) {
-		console.log("auth");
 		var path = "/api/users/self/topics/:topicId/votes/:voteId".replace(":topicId", topicId).replace(":voteId", voteId);
 		var data = {
 			options: voteList,
@@ -246,7 +245,6 @@ app.service("sTopic", [ "$http", "$q", "$log", function($http, $q, $log) {
 		return $http.post(path, data);
 	};
 	Topic.voteVoteUnauth = function (topicId, voteId, voteList, certificate, pid, phoneNumber) {
-		console.log("unauth");
 		var path = '/api/topics/:topicId/votes/:voteId'
 			.replace(':topicId', topicId)
 			.replace(':voteId', voteId);
@@ -257,7 +255,6 @@ app.service("sTopic", [ "$http", "$q", "$log", function($http, $q, $log) {
 			pid: pid,
 			phoneNumber: phoneNumber
 		};
-		console.log(path);
 		return $http.post(path, data);
 	};
 	Topic.voteVoteSign = function (topicId, voteId, signatureValue, token) {

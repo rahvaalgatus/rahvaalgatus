@@ -1,6 +1,0 @@
-div(ng-controller="EventsCtrl")
-	div(ng-if="!currentEventId", ng-include=" 'templates/topic.events.list.html' ")
-
-	div(ng-if="currentEventId", ng-include=" 'templates/topic.events.view.html' ")
-
-div(ui-view="")

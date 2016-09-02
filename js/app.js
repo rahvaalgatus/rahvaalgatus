@@ -46,8 +46,6 @@ app.config(function($stateProvider, $urlRouterProvider, $locationProvider, $http
 				rewriteLinks: true,
 				requireBase: true
 		});
-		// https://github.com/angular-ui/ui-router/wiki/URL-Routing
-		$urlRouterProvider.otherwise("/");
 
 		$stateProvider.state("home", {
 			url: "/",
@@ -131,75 +129,80 @@ app.config(function($stateProvider, $urlRouterProvider, $locationProvider, $http
 		})
 
 		$stateProvider.state("discussions", {
+			abstract: true,
+			template: "<ui-view />",
+		})
+
+		$stateProvider.state("discussions.index", {
 			url: "/discussions",
-			templateUrl: "/templates/discussions.html"
+			templateUrl: "/templates/discussions/index.html"
+		})
+
+		$stateProvider.state("topics", {
+			abstract: true,
+			template: "<ui-view />",
+		})
+
+		$stateProvider.state("topics.index", {
+			url: "/topics",
+			templateUrl: "/templates/initiatives/index.html"
+		})
+
+		$stateProvider.state("topics.create", {
+			url: "/topics/new",
+			controller: "TopicCtrl",
+			templateUrl: "/templates/initiatives/create.html"
+		})
+
+		$stateProvider.state("topics.events.create", {url: "/create"})
+
+		$stateProvider.state("topics.read", {
+			url: "/topics/:id",
+			controller: "TopicCtrl",
+			template: "<ui-view />",
+		})
+
+		$stateProvider.state("topics.deadline", {
+			url: "/topics/:id/deadline",
+			controller: "TopicCtrl",
+			templateUrl: "/templates/initiatives/create.html"
+		})
+
+		$stateProvider.state("topics.authors", {
+			url: "/topics/:id/authors",
+			templateUrl: "/templates/initiatives/authors.html"
+		})
+
+		$stateProvider.state("topics.discussion", {
+			url: "/topics/:id/discussion",
+			controller: "TopicCtrl",
+			templateUrl: "/templates/initiatives/discussion.html"
+		})
+
+		$stateProvider.state("topics.vote", {
+			url: "/topics/:id/vote",
+			controller: "TopicCtrl",
+			templateUrl: "/templates/initiatives/vote.html"
+		})
+
+		$stateProvider.state("topics.vote.renew", {
+			url: "/topics/:id/renew",
+			templateUrl: "/templates/initiatives/renew.html"
+		})
+
+		$stateProvider.state("topics.events", {
+			url: "/topics/:id/events",
+			controller: "EventsCtrl",
+			templateUrl: "/templates/initiatives/events.html"
+		})
+
+		$stateProvider.state("topics.discussion.finish", {
+			templateUrl: "/templates/initiatives/vote/create.html"
 		})
 
 		$stateProvider.state("goodpractice", {
 			url: "/goodpractice",
 			templateUrl: "/templates/goodpractice.html"
-		})
-
-		$stateProvider.state("votings", {
-			url: "/votings",
-			templateUrl: "/templates/votings.html"
-		})
-
-		$stateProvider.state("topics", {
-			abstract: true,
-			url: "/topics",
-			templateUrl: "/templates/topic.html"
-		})
-
-		$stateProvider.state("topics.create1", {
-			url: "/create1",
-		})
-
-		$stateProvider.state("topics.create2", {
-			url: "/create2/:id",
-		})
-
-		$stateProvider.state("addCoauthors", {
-			url: "/create3/:id",
-		})
-
-		$stateProvider.state("topics.view", {
-			url: "/:id",
-			templateUrl: "/templates/topic.view.html"
-		})
-
-		$stateProvider.state("topics.view.vote", {
-			"abstract": true,
-			url: "/votes",
-			templateUrl: "/templates/topic.vote.html"
-		})
-
-		$stateProvider.state("topics.view.vote.create", {
-			url: "/create",
-			templateUrl: "/templates/topic.vote.create.html"
-		})
-
-		$stateProvider.state("topics.view.renewdeadline", {
-			url: "/create",
-			templateUrl: "/templates/topic.renew.deadline.html"
-		})
-
-		$stateProvider.state("topics.view.vote.view", {
-			url: "/:voteId",
-			templateUrl: "/templates/topic.vote.view.html"
-		})
-
-		$stateProvider.state("topics.view.events", {
-			url: "/events",
-			templateUrl: "/templates/topic.events.html"
-		})
-
-		$stateProvider.state("topics.view.events.create", {
-			url: "/create"
-		})
-
-		$stateProvider.state("topics.view.events.view", {
-			url: "/:eventId"
 		})
 
 		$stateProvider.state("join", {

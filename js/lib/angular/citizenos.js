@@ -204,7 +204,6 @@
                  * Get the access token (access_token) stored after successful validation.
                  */
                 getAccessToken: function () {
-                    console.log('getAccessToken', config.cookies.accessToken, store);
                     return store.get(config.cookies.accessToken);
                 },
                 getConfig: function () {

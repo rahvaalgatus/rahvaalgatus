@@ -1,10 +1,11 @@
+var O = require("oolong")
 var request = require("fetch-off/request")
 var fetchDefaults = require("fetch-defaults")
+var URL = process.env.URL || "https://rahvaalgatus.ee"
 var CANONICAL_URL = "https://rahvaalgatus.ee"
 
 if (process.env.TEST.match(/\bserver\b/))
-describe("https://rahvaalgatus.ee", function() {
-	var URL = this.title
+describe(URL, function() {
 	before(function() { this.request = fetchDefaults(request, URL) })
 
 	describe("/", function() {
@@ -54,6 +55,36 @@ describe("https://rahvaalgatus.ee", function() {
 			})
 
 			res.statusCode.must.equal(304)
+		})
+	})
+
+	O.each({
+		"/votings": "/topics",
+		"/topics/42/votes/69": "/topics/42/vote",
+	}, function(to, from) {
+		describe(from, function() {
+			before(function*() {
+				this.res = yield this.request(from, {method: "HEAD"})
+			})
+
+			it("must redirect to " + to, function() {
+				this.res.statusCode.must.equal(301)
+				this.res.headers.location.must.equal(URL + to)
+			})
+		})
+	})
+
+	;[
+		"/topics/42",
+	].forEach(function(path) {
+		describe(path, function() {
+			before(function*() {
+				this.res = yield this.request(path, {method: "HEAD"})
+			})
+
+			it("must not redirect", function() {
+				this.res.statusCode.must.equal(200)
+			})
 		})
 	})
 })

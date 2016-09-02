@@ -46,6 +46,9 @@ RewriteRule ^ https://rahvaalgatus.ee%{REQUEST_URI} [qsappend,last,redirect=301]
 # The editorless.css file is included by CitizenOS's Etherpad frame.
 RewriteRule ^css/editorless\.css$ /stylesheets/editor.css [last]
 
+RewriteRule ^votings$ /topics [qsappend,last,redirect=301]
+RewriteRule ^topics/([^/]+)/votes/.*$ /topics/$1/vote [qsappend,last,redirect=301]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.html [last]

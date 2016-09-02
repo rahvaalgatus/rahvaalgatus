@@ -1,0 +1,11 @@
+include ./_comments
+extends ./_layout
+
+block body
+	ui-view
+	include ./_vote
+
+	.admin-role-info.topic-content(ng-bind-html="topicContent")
+
+	+comments({header: "COMMENT_HEADING", create: "POST_COMMENT"})
+		button.right.comment(ng-click="submitCon()", ng-disabled="topicCommentCreateForm.$invalid", translate="POST_COMMENT")

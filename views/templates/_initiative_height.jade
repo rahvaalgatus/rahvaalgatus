@@ -1,0 +1,10 @@
+script.
+	$(function(){
+		var max = 0
+
+		$(".article-box .right .link").each(function() {
+			if ($(this).height() > max) { max = $(this).height() }
+		})
+
+		$(".article-box .right .in .link").css("height", max)
+	})

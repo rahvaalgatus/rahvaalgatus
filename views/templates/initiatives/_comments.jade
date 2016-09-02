@@ -1,0 +1,82 @@
+mixin comments(translations)
+	#commentBlock.arg-social-tabs(ng-show="topic.id")
+		#argumentsv2.tab-content
+			.clearfix.arg-header
+				h2.left(translate=translations.header)
+
+				a.right(
+					href="#new_comment_form",
+					ng-show="app.user.loggedIn",
+					translate=translations.create)
+
+			.arg-comments
+				ul
+					li(ng-repeat="comment in topicComments.rows")
+						div(ng-class="{'{{comment.type}}':topic.status=='inProgress', sign:topic.status !='inProgress'}")
+							p.author
+								| {{comment.creator.name}} | {{comment.createdAt | amDateFormat: 'LLL'}} {{comment.createdAt | amTimeAgo}}
+
+							p.subject(ng-bind-html="comment.subject | linky")
+
+							.desc
+								.comment-content(ng-bind-html="comment.text | linky")
+
+							p.meta
+								span(ng-click="showReplyForm = !showReplyForm")
+									a(href="#", translate="REPLY") Reply
+									|   
+
+								a(href="#")
+									img(src="images/comment-like.png", alt="Image", ng-click="doCommentVote(comment.id, 1)")
+								|  
+								span {{comment.votes.up.count}}
+								|  
+
+								a(href="#")
+									img(src="images/comment-dislike.png", alt="Image", ng-click="doCommentVote(comment.id, -1)")
+								|  
+								span {{comment.votes.down.count}}
+
+						ul
+							li(ng-repeat="reply in comment.replies.rows")
+								p.author {{reply.creator.name}} | {{reply.createdAt | amTimeAgo}}
+
+								p.subject(ng-bind-html="reply.subject | linky") Final pro argument coming from me!
+
+								.desc
+									.comment-content(ng-bind-html="reply.text | linky")
+
+								p.meta
+									a(href="#", ng-click="doCommentVoteReply(comment.id, reply.id, 1)")
+										img(src="images/comment-like.png", alt="Image")
+									|  
+									span {{reply.votes.up.count}}
+									|  
+
+									a(href="#", ng-click="doCommentVoteReply(comment.id, reply.id, -1)")
+										img(src="images/comment-dislike.png", alt="Image")
+									|  
+									span {{reply.votes.down.count}}
+
+						.arg-form(ng-show="showReplyForm")
+							.overlay(ng-show="!app.user.loggedIn")
+								h3(translate="TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE")
+
+							form(name="topicCommentReplyForm", ng-controller="TopicCommentCreateFormCtrl")
+								textarea(msd-elastic="", ng-model="form.text", placeholder="{{'PLACEHOLDER_ADD_YOUR_REPLY_TO_ARGUMENT' | translate: comment.creator}}", maxlength="{{maxLengthText}}", ng-disabled="!canComment()", required="")
+
+								.pull-left.character-count(translate="TXT_TOPIC_COMMENT_CHARACTERS_LEFT", translate-values="{count: charactersLeft}") 512 characters left
+
+								.clearfix
+									button.right.reply-button(ng-click="submitReply(comment.id)", ng-disabled="topicCommentReplyForm.$invalid", translate="REPLY") REPLY
+
+			#new_comment_form.arg-form(ng-show="app.user.loggedIn")
+				form(name="topicCommentCreateForm", ng-controller="TopicCommentCreateFormCtrl")
+					p
+						input(type="text", ng-model="form.subject", placeholder="{{'PLACEHOLDER_ADD_ARGUMENT_SUBJECT' | translate}}", maxlength="{{maxLengthSubject}}", ng-disabled="!canComment()", required)
+
+					p
+						textarea(msd-elastic="", ng-model="form.text", placeholder="{{'PLACEHOLDER_ADD_ARGUMENT_TEXT' | translate}}", maxlength="{{maxLengthText}}", ng-disabled="!canComment()", required)
+
+					.clearfix
+						block

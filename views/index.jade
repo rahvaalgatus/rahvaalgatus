@@ -62,7 +62,7 @@ html(ng-app="app")
 						header top end--´
 						<!--Navigation
 					.clearfix.navigation
-						a.left.logo(href="index.html")
+						a.left.logo(href="/")
 							img(src="images/rahvaalagatus_logo.png", alt="image")
 						| 				 
 						a.mobile-menu(href="#")
@@ -71,20 +71,20 @@ html(ng-app="app")
 						| 				 
 						ul.left.main-navi.clearfix.bootstro(data-bootstro-title="I am simple", data-bootstro-content="Call bootstro.start('.bootstro') or just <b>bootstro.start()</b>", data-bootstro-step="1", data-original-title="", title="")
 							li(ui-sref-active="active", ng-class="{'header-link-rus': app.language == 'ru'}")
-								a(href="#", ui-sref="discussions", ng-class="{active: ('discussions' | isState)}", translate="LINK_DISCUSSION") Arutelud
-							| 					 
+								a(href="/discussions", ng-class="{active: ('discussions' | isState)}", translate="LINK_DISCUSSION")
+
 							li(ui-sref-active="active", ng-class="{'header-link-rus': app.language == 'ru'}")
-								a(href="#", ui-sref="votings", ng-class="{active: ('votings' | isState)}", translate="LINK_VOTING") Algatused
-							| 					 
+								a(href="/topics", ng-class="{active: ('votings' | isState)}", translate="LINK_VOTING")
+
 							li(ui-sref-active="active", ng-class="{'header-link-rus': app.language == 'ru'}")
-								a(href="", ui-sref="about", ng-class="{active: ('about' | isState)}", translate="LNK_ABOUT") Platvormist
-							| 					 
+								a(href="/about", ng-class="{active: ('about' | isState)}", translate="LNK_ABOUT")
+
 							li(ui-sref-active="active", ng-class="{'header-link-rus': app.language == 'ru'}")
-								a(href="", ui-sref="goodpractice", ng-class="{active: ('goodpractice' | isState)}", translate="LNK_GOOD_PRACTICE") Kasutamise hea tava
-							| 					 
+								a(href="/goodpractice", ng-class="{active: ('goodpractice' | isState)}", translate="LNK_GOOD_PRACTICE")
+
 							li(ui-sref-active="active", ng-class="{'header-link-rus': app.language == 'ru'}")
-								a(href="", ui-sref="support", ng-class="{active: ('support' | isState)}", translate="LNK_SUPPORT") Support us
-							// Before Login
+								a(href="/support_us", ng-class="{active: ('support' | isState)}", translate="LNK_SUPPORT")
+
 							li.mobile-items(ng-show="!app.user.isLoading && !app.user.loggedIn")
 								p
 									a.m-login(href="#", translate="BTN_LOG_IN_REGISTER") LOG IN / REGISTER TO PARTICIPATE

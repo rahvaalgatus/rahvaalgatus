@@ -1,35 +1,18 @@
+.home-hero.clearfix
+	.box.clearfix
+		.right
+			div
+				h2(translate="LINK_DISCUSSION", style="width:400px;")
+				p(translate="DISCUSSION_CONTENT")
+
+	.box.clearfix.bg
+		.left
+			ul.h-list
+				li: a.active(href="/topics/new", translate="BTN_NEW_TOPIC")
+
 div(ng-controller="HomeCtrl")
-	.home-hero.clearfix
-		.box.clearfix
-			.right
-				div
-					h2(translate="HOME_WELCOME_TITLE")
-					p(translate="HOME_WELCOME")
-
-					#home-video
-						a(href="#", ng-click="watchvideo()")
-							span#home-video-icon
-							span#home-video-text(translate="HOME_VIDEO_TEXT")
-
-		.box.clearfix.bg
-			.left
-				ul.h-list
-					li: a(href="/discussions", translate="BTN_PARTICIPATE_TOPIC")
-					li: a(href="/votings", translate="BTN_VOTE_TOPIC")
-					li: a.active(href="/topics/new", translate="BTN_NEW_TOPIC")
-
 	.article-bg
 		.enclose
-			.article-search
-				ul.clearfix
-					li(ng-repeat="value in filters.statuses.options", ng-show="value!='closed'")
-						a(ng-click="filters.changeStatus(value)", href="#", ng-class="{'complete':filters.statuses.value == value}") {{'TXT_TOPIC_STATUS_' + value | uppercase | translate}}
-
-					li.last
-						form.clearfix
-							input(type="text", ng-model="searchString")
-							input(type="submit", ng-click="searchTopics()", value="{{'SEARCH'| translate}}")
-
 			.article-box(ng-if="!filters.statuses.value || filters.statuses.value == 'inProgress'", ng-show="discussiontopicList.length > 0")
 				.clearfix
 					.left
@@ -68,7 +51,7 @@ div(ng-controller="HomeCtrl")
 
 					.right
 						.clearfix.articles
-							.in(ui-sref="topics.read({id: topic.id})", ng-repeat="topic in discussiontopicList", ng-class="getCategoryTheme(topic.categories[0])")
+							.in(ui-sref="topics.discussion({id: topic.id})", ng-repeat="topic in discussiontopicList", ng-class="getCategoryTheme(topic.categories[0])")
 								p.date(data-topic="{{topic}}") {{topic.createdAt | amDateFormat : 'L'}}
 
 								p.link
@@ -81,8 +64,4 @@ div(ng-controller="HomeCtrl")
 									span(ng-if="topic.endsAt !=null && ((topic.endsAt | amDifference : today : 'days' )>=0)") {{'TXT_DEADLINE_CALENDAR_DAYS_LEFT' | translate: topic}}
 									span.discussion-finished(ng-if="topic.endsAt ==null || ((topic.endsAt | amDifference : today : 'days' )<0)", translate="DISCUSSION_FINISHED")
 
-			div(ng-include=" 'templates/components/initiativesList.html' ")
-			div(ng-include=" 'templates/components/followupsList.html' ")
-			div(style="width:100%;height:10px;clear:both;position:relative;")
-
-	include ./_initiative_height
+	include ../_initiative_height

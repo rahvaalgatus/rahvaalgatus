@@ -3,7 +3,7 @@
 app.controller("JoinCtrl", [ "$scope", "$rootScope", "$state", "$stateParams", "$location", "$filter", "$log", "sTopic", function($scope, $rootScope, $state, $stateParams, $location, $filter, $log, sTopic) {
     sTopic.join($stateParams.tokenJoin).then(function(res) {
         var topic = res.data.data;
-        $state.go("topics.view", {
+        $state.go("topics.read", {
             id: topic.id
         });
     }, function(res) {
