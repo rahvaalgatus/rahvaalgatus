@@ -3,14 +3,19 @@ $dark-blue: #3390d7;
 $blue: #53B1EB;
 $form-input-padding: 8px;
 $header-color: #124267;
+$header-height: 90px;
+$footer-height: 120px;
 
 @import "reset";
 @import "potpourri";
 @import "initiative";
 
+html,
 body {
 	height: 100%;
-	width: 100%;
+}
+
+body {
 	font-family: 'MuseoSansCyrl-300';
 	font-size: 14px;
 	color: #4A555D;
@@ -20,20 +25,28 @@ body {
 #header {
 	background: $header-color;
 	padding: 15px 0;
+	height: $header-height;
 	position: fixed;
 	width: 100%;
 	z-index: 50;
 }
 
+#main {
+	min-height: 100%;
+	height: auto;
+	padding-top: $header-height;
+	padding-bottom: $footer-height;
+	margin-bottom: -$footer-height;
+}
+
 #footer {
-	background: $header-color;
+	position: relative;
+	min-height: $footer-height;
 	padding: 20px 0;
+
+	background: $header-color;
 	color: white;
 	line-height: 20px;
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	width: 100%;
 }
 
 .content-wrapper {
