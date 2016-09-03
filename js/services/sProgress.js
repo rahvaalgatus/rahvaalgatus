@@ -13,6 +13,7 @@ app.factory("sProgress", function() {
      var start = new Date(topic.createdAt);
      var fullwidth = 850;
      var end = new Date(topic.status == "voting" ? vote.endsAt : topic.endsAt);
+     var day
 
      this.items.splice(0, this.items.length);
 
@@ -23,7 +24,8 @@ app.factory("sProgress", function() {
          if (topic.status == "voting") {
              vote.numberOfDaysLeft = (topic.numberOfDaysLeft +1);
              var createdate = new Date(vote.createdAt);
-             var day = toDays(createdate - start);
+             day = toDays(createdate - start);
+
              if (day != 0) this.items.push({
                  date: createdate,
                  day: day,
@@ -36,7 +38,7 @@ app.factory("sProgress", function() {
          this.daynow = toDays(new Date() - start);
          this.fullDiff = toDays(new Date() - start);
          if (end < today) {
-             var day = toDays(today - end);
+             day = toDays(today - end);
              if (topic.status == "voting") {
                  this.items.push({
                      date: vote.endsAt,
