@@ -44,20 +44,16 @@ html(ng-app="app")
 						a(toru-select-item="key", ng-repeat="(key, value) in app.languagesAvailable", ng-class="{'active': app.language == key}") {{key | translate}}
 
 					.right.login(ng-show="!app.user.isLoading && !app.user.loggedIn")
-						a(href="#", ng-click="app.login()", translate="BTN_LOG_IN_REGISTER")
+						a(ng-click="app.login()", translate="BTN_LOG_IN_REGISTER")
 
 					.right.login
 						#reg.log-pop(ng-show="app.user.loggedIn && app.finalizeOpen && app.user.email==null")
 
 					.right.login-after(ng-show="!app.user.isLoading && app.user.loggedIn")
-						span(translate="HELLO") Hello
-						|  {{app.user.name}}  |  
-						a.open-profile(href="", ng-click="app.dashboard()", translate="MY_PROFILE") My profile
-						|   |  
-						a(ng-click="app.logout()", href="#", translate="BTN_LOG_OFF") Log out
-				//
-					header top end--´
-					<!--Navigation
+						a.open-profile(ng-click="app.dashboard()") {{app.user.name}}
+						|  | 
+						a(ng-click="app.logout()", translate="BTN_LOG_OFF")
+
 				.clearfix.navigation
 					a.left.logo(href="/")
 						img(src="images/rahvaalagatus_logo.png", alt="image")

@@ -51,9 +51,11 @@ a	{
 	text-decoration: none;
 	transition: color ease 0.4s;
 	color:#53B1EB;
+	cursor: pointer;
 }
 
 a[disabled] {
+	cursor: auto;
 	opacity: 0.7;
 	pointer-events: none;
 }
