@@ -61,6 +61,7 @@ describe(URL, function() {
 	O.each({
 		"/votings": "/topics",
 		"/topics/42/votes/69": "/topics/42/vote",
+		"/topics/create1": "/topics/new",
 	}, function(to, from) {
 		describe(from, function() {
 			before(function*() {
