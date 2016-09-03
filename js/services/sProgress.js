@@ -1,7 +1,6 @@
-/**
- * Handles a topic progress calculations
- */
- app.factory("sProgress", function() {
+var app = window.app
+
+app.factory("sProgress", function() {
    function toDays(ms) { return Math.round(ms / (1e3 * 60 * 60 * 24)); }
 
    function Progress() {
