@@ -1691,6 +1691,11 @@
         }
       }
     },
+    "lodash": {
+      "version": "4.16.1",
+      "from": "lodash@>=4.0.0 <5.0.0",
+      "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.16.1.tgz"
+    },
     "mocha": {
       "version": "2.5.3",
       "from": "mocha@>=2.1.0 <3.0.0",

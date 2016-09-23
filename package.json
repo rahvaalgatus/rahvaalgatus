@@ -3,6 +3,12 @@
 	"version": "0.0.0",
 	"private": true,
 
+	"dependencies": {
+		"express": "",
+		"lodash": "",
+		"oolong": ""
+	},
+
 	"devDependencies": {
 		"mocha": ">= 2.1.0 < 3",
 		"co-mocha": ">= 1.1.0 < 2",
@@ -10,13 +16,11 @@
 		"fetch-off": ">= 1.0.0 < 2",
 		"fetch-defaults": ">= 1.0.0 < 2",
 
-		"express": "^4.13.4",
 		"grunt-cli": "^1.2.0",
 		"grunt-concurrent": "1.0.0",
 		"grunt-contrib-uglify": "0.6.0",
 		"grunt-contrib-watch": "0.6.1",
 		"jade": "",
-		"node-sass": "",
-		"oolong": ""
+		"node-sass": ""
 	}
 }
