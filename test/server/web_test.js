@@ -90,10 +90,12 @@ describe(URL, function() {
 	})
 })
 
+if (process.env.TEST.match(/\bserver\b/))
 describe("http://rahvaalgatus.ee", function() {
 	mustRedirectToCanonical(this.title)
 })
 
+if (process.env.TEST.match(/\bserver\b/))
 describe("http://www.rahvaalgatus.ee", function() {
 	mustRedirectToCanonical(this.title)
 })
