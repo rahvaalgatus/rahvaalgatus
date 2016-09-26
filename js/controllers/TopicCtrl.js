@@ -81,7 +81,11 @@ app.controller("TopicCtrl", [
         var topic = res.data.data
 
         if ($state.current.name == "topics.read") {
-          var page = topic.vote.id == null ? "discussion" : "vote"
+          var page
+          if (topic.vote.id == null) page = "discussion"
+          else if (topic.status == "followUp") page = "events"
+          else page = "vote"
+
           return void $state.go("topics." + page, {id: topic.id})
         }
 
