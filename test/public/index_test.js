@@ -1,6 +1,6 @@
 if (process.env.TEST.match(/\bui\b/))
 describe("Account view", function() {
-	require("root/test/www")()
+	require("root/test/web")()
 	require("root/test/browser")()
 	this.timeout(10000)
 

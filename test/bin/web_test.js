@@ -1,5 +1,5 @@
 describe("Web server", function() {
-	require("root/test/www")()
+	require("root/test/web")()
 
 	describe("/", function() {
 		it("must respond with 200 OK", function*() {

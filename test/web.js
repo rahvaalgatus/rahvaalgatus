@@ -9,7 +9,7 @@ exports = module.exports = function() {
 }
 
 exports.listen = function*() {
-	this.server = new Http.Server(require("root/bin/www"))
+	this.server = new Http.Server(require("root/bin/web"))
 	this.server.listen(0, "127.0.0.1")
 
 	yield wait(this.server, "listening")
