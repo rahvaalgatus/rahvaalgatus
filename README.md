@@ -73,24 +73,25 @@ See more at <http://www.id.ee/?lang=en&id=36381>.
 
 Testing
 -------
-The project has a Ruby MiniTest and Watir WebDriver based test harness ready. 
+The project has JavaScript server unit tests and Selenium WebDriver based UI tests ready:
 
-1. Install the required Ruby gems:
-
-   ```sh
-   bundle install
-   ```
-
-2. Run tests with `spec`:
+1. Run unit tests with `test`:
 
    ```sh
-   make spec
+   make test
    ```
+
+2. Run UI tests with `test` and `TEST=ui`:
+
+   ```sh
+   make test TEST=ui
+   ```
+
 
 ### Autotesting
 
-To have the UI tests run automatically as you change files, use `autospec`:
+To have the UI tests run automatically as you change files, use `autotest`:
 
 ```sh
-make autospec
+make autotest
 ```
