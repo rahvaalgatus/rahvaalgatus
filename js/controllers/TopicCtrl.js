@@ -131,11 +131,13 @@ app.controller("TopicCtrl", [
 
 		if ($state.params.id) $scope.doTopicLoad()
 
-		$rootScope.$on("$stateChangeStart", function(event, toState, toParams, fromState, fromParams) {
+		var offStateChange = $rootScope.$on("$stateChangeStart", function(event, toState, toParams, fromState, fromParams) {
 			if (fromParams.id != toParams.id) $state.params.id = toParams.id;
 			if ($state.params.id) $scope.doTopicLoad();
 			ngDialog.closeAll();
 		});
+
+		$scope.$on("$destroy", offStateChange)
 
 		$scope.$on("topic.members.change", function(event, data) {
 			topicRead(data.id).then(function(res) {
