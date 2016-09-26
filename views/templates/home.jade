@@ -81,8 +81,8 @@ div(ng-controller="HomeCtrl")
 									span(ng-if="topic.endsAt !=null && ((topic.endsAt | amDifference : today : 'days' )>=0)") {{'TXT_DEADLINE_CALENDAR_DAYS_LEFT' | translate: topic}}
 									span.discussion-finished(ng-if="topic.endsAt ==null || ((topic.endsAt | amDifference : today : 'days' )<0)", translate="DISCUSSION_FINISHED")
 
-			div(ng-include=" 'templates/components/initiativesList.html' ")
-			div(ng-include=" 'templates/components/followupsList.html' ")
+			include ./initiatives/_initiatives
+			include ./initiatives/_followups
 			div(style="width:100%;height:10px;clear:both;position:relative;")
 
 	include ./_initiative_height
