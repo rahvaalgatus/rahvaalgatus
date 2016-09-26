@@ -17,6 +17,8 @@ exports.listen = function*() {
 	this.request = fetchDefaults(request, this.url)
 }
 
-exports.close = function(done) {
-	this.server.close(done)
+// UI tests keep the connection alive preventing the server from shutting down
+// on time. Ignore it for now.
+exports.close = function() {
+	this.server.close()
 }

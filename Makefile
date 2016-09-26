@@ -1,6 +1,5 @@
 NODE = node
 NODE_OPTS =
-RUBY = ruby
 PORT = 3000
 ENV = development
 TEST =
@@ -12,6 +11,7 @@ GRUNT = ./node_modules/.bin/grunt
 DEPLOY_HOST =
 TRANSLATIONS_URL = https://spreadsheets.google.com/feeds/list/1JKPUNp8Y_8Aigq7eGJXtWT6nZFhd31k2Ht3AjC-i-Q8/1/public/full?alt=json
 JQ_OPTS = --tab --sort-keys
+SELENIUM_BROWSER = chrome
 
 STAGING_HOST = staging.rahvaalgatus.ee
 PRODUCTION_HOST = production.rahvaalgatus.ee
@@ -21,6 +21,7 @@ export PORT
 export ENV
 export TEST
 export TEST_URL
+export SELENIUM_BROWSER
 
 love:
 	@echo "Feel like makin' love."
@@ -59,12 +60,6 @@ autotest:
 
 autospec:
 	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R spec --watch $(TEST_OPTS)
-
-uispec: $(wildcard test/*_test.rb)
-	@$(RUBY) -I. $(addprefix -r, $^) -e ""
-
-autouispec:
-	@bundle exec autotest
 
 server:
 	@$(NODE) bin/www
@@ -106,7 +101,6 @@ tmp/translations.json: tmp
 .PHONY: javascripts autojavascripts
 .PHONY: stylesheets autostylesheets
 .PHONY: views autoviews
-.PHONY: uispec autouispec
 .PHONY: test spec autotest autospec
 .PHONY: server
 .PHONY: shrinkwrap
