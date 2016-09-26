@@ -1,4 +1,5 @@
 var _ = require("lodash")
+var O = require("oolong")
 var Selenium = require("selenium-webdriver")
 var SeleniumError = require("selenium-webdriver").error.Error
 var WebElement = require("selenium-webdriver").WebElement
@@ -45,6 +46,11 @@ exports.close = function() {
 		this.browser.manage().deleteAllCookies()
 	]).catch(_.noop)
 }
+
+O.defineGetter(WebElement.prototype, "textContent", function() {
+	var script = "return arguments[0].textContent"
+	return this.getDriver().executeScript(script, this)
+})
 
 WebElement.prototype.isPresent = function() {
 	// Perhaps checking getTagName is cheaper than isDisplayed.

@@ -1,0 +1,8 @@
+{
+	"url": "http://dev.rahvaalgatus.ee",
+	"apiUrl": "https://citizenos-citizenos-web-test.herokuapp.com",
+
+	"sessions": [
+		"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpZCI6ImQ3YzYzY2U3LTUwMTYtNDlhZi1iZWIzLTg4ODNmNjRjYTA5NiIsInBhcnRuZXJJZCI6IjNiYzJlNDI4LTg4NzUtNGYxOS04MDA3LTY0ODRiYTBkOGM1OCIsInNjb3BlIjoicGFydG5lciIsImlhdCI6MTQ3NDkwMjYzMiwiZXhwIjoxNDc1NTA3NDMyfQ.PX2HS-oHxMlCKNat0Jq5oUkuuWB0kL-1Ycn7CI3cnvz-5AoO25nStnaNnQG1EDjVveZWtzMDQwXpsLaWWEAR5fPZYHF-OShMq7jS7iwVeerEytjEXidzC0OPa4dlapNk7gyGB1c-oU10i8miiauzKPYjPKvVDPyIBnUm0W23ELKxflJ2WEFWO81bA-VZzu-4NZj5dgPkxjzWBIhnSn0v2Pn6kzdfsn0kSN6Ou11rmzFNV09gNydUk8jiPvxbTW9txyI9pCn6wqpcR-jWYp_76NuTEDGgvHf8Alwb4NbGsETsBst7fzFqaDHTrPhBmPTdduuTi7O8sca_u1FwdwIKKA"
+	]
+}

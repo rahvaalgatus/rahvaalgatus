@@ -268,6 +268,11 @@
         }
       }
     },
+    "fetch-jsonify": {
+      "version": "1.0.0",
+      "from": "fetch-jsonify@>=1.0.0 <2.0.0",
+      "resolved": "https://registry.npmjs.org/fetch-jsonify/-/fetch-jsonify-1.0.0.tgz"
+    },
     "fetch-off": {
       "version": "1.0.0",
       "from": "fetch-off@>=1.0.0 <2.0.0",
@@ -306,6 +311,32 @@
           "version": "1.0.1",
           "from": "lazy-object@>=1.0.0 <2.0.0",
           "resolved": "https://registry.npmjs.org/lazy-object/-/lazy-object-1.0.1.tgz"
+        }
+      }
+    },
+    "fetch-throw": {
+      "version": "1.0.0",
+      "from": "fetch-throw@>=1.0.0 <2.0.0",
+      "resolved": "https://registry.npmjs.org/fetch-throw/-/fetch-throw-1.0.0.tgz",
+      "dependencies": {
+        "fetch-error": {
+          "version": "1.0.0",
+          "from": "fetch-error@>=1.0.0 <2.0.0",
+          "resolved": "https://registry.npmjs.org/fetch-error/-/fetch-error-1.0.0.tgz",
+          "dependencies": {
+            "standard-http-error": {
+              "version": "2.0.0",
+              "from": "standard-http-error@>=2.0.0 <3.0.0",
+              "resolved": "https://registry.npmjs.org/standard-http-error/-/standard-http-error-2.0.0.tgz",
+              "dependencies": {
+                "standard-error": {
+                  "version": "1.1.0",
+                  "from": "standard-error@>=1.1.0 <2.0.0",
+                  "resolved": "https://registry.npmjs.org/standard-error/-/standard-error-1.1.0.tgz"
+                }
+              }
+            }
+          }
         }
       }
     },
