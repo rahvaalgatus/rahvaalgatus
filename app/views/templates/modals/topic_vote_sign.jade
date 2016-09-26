@@ -11,8 +11,8 @@ include ../_mixins
 	article.dialog-content(ng-show="showdonate")
 		div(ng-hide="showVoteRevokedResult")
 			p(translate="THANKS_FOR_SIGNING")
-			p(translate="SUPPORT_US_CONTENT")
-			include ../_donation_form
+			//-p(translate="SUPPORT_US_CONTENT")
+			//-include ../_donation_form
 
 		p(ng-show="showVoteRevokedResult", translate="VOTE_REVOKED")
 
