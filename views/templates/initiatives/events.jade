@@ -1,6 +1,9 @@
 extends ./_layout
 
 block body
+	article#initiative
+		h1 {{topic.title}}
+
 	div(ng-if="topicEvents.status=='loading'") Loading events...
 
 	div(ng-if="topicEvents.status=='failed'")
