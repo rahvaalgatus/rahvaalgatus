@@ -148,14 +148,14 @@ app.controller("TopicUsersInviteFormCtrl", [ "$scope", "$rootScope", "$state", "
                 $rootScope.$broadcast("topic.members.change", {
                     id: $scope.topic.id
                 });
-                $state.go("topics.view", {
+                $state.go("topics.read", {
                     id: $scope.topic.id
                 }, {});
             }, function(err) {
                 $log.error("Some invites have failed", err);
             });
         } else {
-            $state.go("topics.view", {
+            $state.go("topics.read", {
                 id: $scope.topic.id
             }, {});
         }

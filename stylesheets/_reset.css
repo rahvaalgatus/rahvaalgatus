@@ -16,17 +16,17 @@ main, article, aside, canvas, details, embed,
 figure, figcaption, footer, header, hgroup,
 menu, nav, output, ruby, section, summary,
 time, mark, audio, video {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  font-size: 100%;
-  font: inherit;
-  vertical-align: baseline;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
 }
 
 main, article, aside, details, figcaption, figure,
 footer, header, hgroup, menu, nav, section {
-  display: block;
+	display: block;
 }
 
 *	{
@@ -36,7 +36,7 @@ footer, header, hgroup, menu, nav, section {
 }
 
 li {
-  list-style-type: none;
+	list-style-type: none;
 }
 
 // TODO: Remove image reset.
@@ -48,12 +48,16 @@ img	{
 }
 
 a	{
-  text-decoration: none;
-  transition: color ease 0.4s;
-  color:#53B1EB;
+	text-decoration: none;
+	transition: color ease 0.4s;
+	color:#53B1EB;
+	cursor: pointer;
 }
 
 a[disabled] {
-  opacity: 0.7;
-  pointer-events: none;
+	cursor: auto;
+	opacity: 0.7;
+	pointer-events: none;
 }
+
+button, input[type=submit] { cursor: pointer }

@@ -1,0 +1,9 @@
+mixin dialog-header(title)
+	header.dialog-header&attributes(attributes)
+		span(translate=title)
+
+		button.dialog-header-close(
+			ng-click="closeThisDialog()",
+			type="button",
+			role="button",
+			translate="CLOSE")

@@ -1,9 +1,11 @@
 "use strict";
 
-app.controller("AppCtrl", [ "$scope", "$rootScope", "$window", "$state", "$translate", "$log", "hotkeys", "amMoment", "UserVoice", "ngDialog", "toruConfig", "toruSessionSettings", "sAuth", "sUser", "CitizenOSOpenId", function($scope, $rootScope, $window, $state, $translate, $log, hotkeys, amMoment, UserVoice, ngDialog, toruConfig, toruSessionSettings, sAuth, sUser, CitizenOSOpenId) {
+app.controller("AppCtrl", [ "$scope", "$rootScope", "$window", "$state", "$translate", "$log", "hotkeys", "amMoment", "UserVoice", "ngDialog", "toruConfig", "toruSessionSettings", "sAuth", "sUser", "CitizenOSOpenId", "$sce", function($scope, $rootScope, $window, $state, $translate, $log, hotkeys, amMoment, UserVoice, ngDialog, toruConfig, toruSessionSettings, sAuth, sUser, CitizenOSOpenId, $sce) {
     $scope.app = {
         config: toruConfig
     };
+    $scope.$sce = $sce
+    $scope.Config = window.Config
     $scope.app.finalizeOpen = null;
     $scope.citizenosLogin=false;
     $scope.app.user = sAuth.user;
@@ -89,7 +91,7 @@ app.controller("AppCtrl", [ "$scope", "$rootScope", "$window", "$state", "$trans
                     template: "/templates/modals/profileEdit.html",
                     scope: $scope
                 });
-                $('.pp-layer').show();},400);
+							},400);
 
         }
     };

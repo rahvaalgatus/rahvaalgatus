@@ -30,7 +30,7 @@ app.controller("TopicMembersInviteFormCtrl", [ "$scope", "$rootScope", "$state",
         };
     };
     $scope.stepBack  = function(){
-            $state.go("topics.create2", {
+            $state.go("topics.deadline", {
                 id: $scope.topic.id
             });
     }
@@ -150,14 +150,14 @@ app.controller("TopicMembersInviteFormCtrl", [ "$scope", "$rootScope", "$state",
                 $rootScope.$broadcast("topic.members.change", {
                     id: $scope.topic.id
                 });
-                $state.go("topics.view", {
+                $state.go("topics.read", {
                     id: $scope.topic.id
                 }, {});
             }, function(err) {
                 $log.error("Some invites have failed", err);
             });
         } else {
-            $state.go("topics.view", {
+            $state.go("topics.read", {
                 id: $scope.topic.id
             }, {});
         }

@@ -1,0 +1,48 @@
+.article-box(ng-if="!filters.statuses.value || filters.statuses.value == 'followUp'", ng-show="followuptopicList.length > 0")
+	.clearfix
+		.left
+			h3(translate="IN_FOLLOW_UP_LIST") RAKENDAMISEL
+
+			.clearfix
+				ul.article-pagi.clearfix(ng-show="rangefollowuptopicList.length > 1")
+					li
+						a.disable(ng-show="filters.followUp_offset==0")
+							img(src="images/pagi-left.png", alt="Image")
+
+						a(ng-show="filters.followUp_offset>0")
+							img(src="images/pagi-left.png", alt="Image", ng-click="setPage('followUp',(filters.followUp_offset/filters.limit)-1);")
+
+					li
+						a(ng-show="(filters.followUp_offset/filters.limit) > 1", ng-click="setPage('followUp',0);") {{1}}
+
+					li(ng-show="(filters.followUp_offset/filters.limit) > 2") ...
+
+					li(data-ng-repeat="i in rangefollowuptopicList.slice(0,myCount) track by $index")
+						a.disable(ng-show="((filters.followUp_offset/filters.limit)== $index  || (filters.followUp_offset/filters.limit)+1== $index || (filters.followUp_offset/filters.limit)-1== $index )", ng-if="((filters.followUp_offset/filters.limit)) == $index") {{$index+1}}
+
+						a(ng-show="((filters.followUp_offset/filters.limit)== $index  || (filters.followUp_offset/filters.limit)+1== $index || (filters.followUp_offset/filters.limit)-1== $index)", ng-if="((filters.followUp_offset/filters.limit)) != $index", ng-click="setPage('followUp',$index);") {{$index+1}}
+
+					li(ng-show="(filters.followUp_offset/filters.limit) < (rangefollowuptopicList.length-3)") ...
+
+					li
+						a(ng-show="(filters.followUp_offset/filters.limit) < (rangefollowuptopicList.length-2)", ng-click="setPage('voting',rangefollowuptopicList.length-1);") {{rangefollowuptopicList.length}}
+
+					li
+						a(href="#", ng-show="((filters.followUp_offset/filters.limit)+1) != rangefollowuptopicList.length", ng-click="setPage('voting',(filters.followUp_offset/filters.limit)+1);")
+							img(src="images/pagi-right.png", alt="Image")
+
+						a.disable(href="#", ng-show="((filters.followUp_offset/filters.limit)+1) == rangefollowuptopicList.length")
+							img(src="images/pagi-right.png", alt="Image")
+
+		.right
+			.clearfix.articles
+				.in(ui-sref="topics.read({id: topic.id})", ng-repeat="topic in followuptopicList", ng-class="getCategoryTheme(topic.categories[0])")
+					p.date {{topic.createdAt | amDateFormat : 'L'}}
+
+					p.link
+						a(href="#") {{topic.title}}
+
+					p.author {{topic.creator.name}}
+
+					.bar.clock
+						span {{topic.createdAt | amDateFormat : 'L'}}

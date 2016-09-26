@@ -1,0 +1,43 @@
+.create3-bg(ng-controller="TopicMembersInviteFormCtrl", ng-init="init()")
+	.enclose
+		.create-step3.clearfix
+			.step-three.left
+
+			.create3-content.left
+				h1(translate="CO_AUTHORS") Co-authors
+				p(translate="CO_AUTHORS_TEXT")
+
+				h3(translate="CURRENT_AUTHORS") Current authors
+
+				ul
+					li {{topic.creator.name}} (you),
+
+					li(ng-repeat="user in invite.users")
+						a(href="#", ng-click="removeUser($index)")
+							| {{user.name || user}}
+							span ×
+
+				.step3-buttton
+					a.blue-button(href="#", ng-click="submitAddusers();", translate="CONTINUE_TO_WRITING_THE_DOCUMENT") CONTINUE TO WRITING THE DOCUMENT
+
+				.step-back
+					a(href="#", ng-click="stepBack()", translate="BACK_TO_PREVIOUS_CHOICE")
+
+			.author-form
+				form(method="post")
+					h3(translate="ADD_CO_AUTHOR") Add co-author
+
+					input(type="text", ng-model="urlJoin", ng-show="false")
+
+					typeahead.auto-complete.ui-autocomplete-input(items="searchResults.all", term="searchString", search="search(term)", select="selectMember(item)", placeholder="{{'PLACEHOLDER_USERNAME_EMAIL_OR_GROUP' | translate}}")
+						.ac-dropdown(ng-cloak="")
+							.ac-dataset(ng-show="searchResults.users.length")
+								h4.ac-topic(translate="HEADING_USERS") Users:
+
+								.ac-suggestions
+									.ac-suggestion(typeahead-item="user", ng-repeat="user in searchResults.users") {{user.name}}
+
+							.ac-empty-message(ng-show="term !='' && !searchResults.users.length", translate="TXT_NO_RESULTS_FOUND")
+								| No results found
+
+					a(href="#", ng-click="addCoAuthor()", translate="ADD_CO_AUTHOR")

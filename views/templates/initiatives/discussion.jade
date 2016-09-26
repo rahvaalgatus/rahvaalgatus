@@ -1,0 +1,13 @@
+include ./_comments
+extends ./_layout
+
+block body
+	ui-view
+
+	iframe(ng-if="isAdmin() || canEdit()", iframe="", name="topicframe", toru-etherpad="", frameborder="0", scrolling="no", ng-show="topic.padUrl", ng-src="{{topic.padUrl}}", width="100%", height="600")
+
+	.admin-role-info.topic-content(ng-if="!isAdmin() && !canEdit()", ng-bind-html="topicContent")
+
+	+comments({header: "ARGUMENTS", create: "POST_ARGUMENT"})
+		button.left(ng-click="submitPro()", ng-disabled="topicCommentCreateForm.$invalid", translate="BTN_ADD_ARGUMENT_PRO")
+		button.right(ng-click="submitCon()", ng-disabled="topicCommentCreateForm.$invalid", translate="BTN_ADD_ARGUMENT_CON")

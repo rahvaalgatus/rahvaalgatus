@@ -57,14 +57,14 @@ app.controller("TopicRenewDeadlineFormCtrl", [ "$scope", "$rootScope", "$state",
         if($scope.topic.status == 'voting'){
             console.log('UPDATE VOTING')
              sTopic.voteUpdate($scope.topic.id,$scope.vote.id, endsAt).then(function(res){
-                $state.go("topics.view", {
+                $state.go("topics.read", {
                     id: $state.params.id
                 });
             });
         }
         else if($scope.topic.status == 'inProgress'){
             sTopic.setEndsAt($scope.topic, endsAt).then(function(res){
-                $state.go("topics.view", {
+                $state.go("topics.read", {
                     id: $state.params.id
                 });
             });
@@ -79,7 +79,7 @@ app.controller("TopicRenewDeadlineFormCtrl", [ "$scope", "$rootScope", "$state",
     };
     $scope.loadTopic = function(){
         if(!$scope.topic.id){
-                $state.go("topics.view", {
+                $state.go("topics.read", {
                 id: $state.params.id
             });
         }

@@ -79,8 +79,6 @@
                         $dialog.scope().$destroy();
                         $timeout(function () {
                              $dialog.remove();
-                             document.getElementsByClassName('pp-layer')[0].style.display = 'none';
-                             document.getElementsByClassName('tp-layer')[0].style.display = 'none';
                              if (dialogsCount === 0) {
                                 $body.removeClass("ngdialog-open");
                                 privateMethods.resetBodyPadding();
@@ -90,8 +88,6 @@
                         $dialog.unbind(animationEndEvent).bind(animationEndEvent, function() {
                             $dialog.scope().$destroy();
                             $dialog.remove();
-                            document.getElementsByClassName('pp-layer')[0].style.display = 'none';
-                            document.getElementsByClassName('tp-layer')[0].style.display = 'none';
                             if (dialogsCount === 0) {
                                 $body.removeClass("ngdialog-open");
                                 privateMethods.resetBodyPadding();
@@ -101,8 +97,6 @@
                     } else {
                         $dialog.scope().$destroy();
                         $dialog.remove();
-                        document.getElementsByClassName('pp-layer')[0].style.display = 'none';
-                        document.getElementsByClassName('tp-layer')[0].style.display = 'none';
                         if (dialogsCount === 0) {
                             $body.removeClass("ngdialog-open");
                             privateMethods.resetBodyPadding();

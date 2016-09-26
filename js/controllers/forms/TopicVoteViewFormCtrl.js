@@ -13,21 +13,24 @@ app.controller("TopicVoteViewFormCtrl", [ "$scope", "$rootScope", "$state", "$lo
     $scope.voteAuthTypes = sTopic.VOTE_AUTH_TYPES;
     $scope.voteTypes = sTopic.VOTE_TYPES;
     $scope.hasVotesRequired = false;
-    $log.debug("TopicVoteViewFormCtrl Vote view!", $state.params);
-    var voteRead = function(topicId, voteId) {
+    $scope.loading = true
+
+    function voteRead(topicId, voteId) {
         if ($scope.app.isLoggedIn()) {
             return sTopic.voteRead(topicId, voteId);
         } else {
             return sTopic.voteReadUnauth(topicId, voteId);
         }
     };
+
     $scope.init = function(options, bdocUri) {
-        $scope.app.topicLoad = true;
+      if ($scope.topic.vote == null) return
+      $state.params.voteId = $scope.topic.vote.id
+
         return voteRead($state.params.id, $state.params.voteId).then(function(res) {
             var vote = res.data.data;
             $scope.option = vote.options.rows[0];
             $scope.optionRevoke = vote.options.rows[1];
-            $log.debug("Vote load succeeded!", vote);
             $scope.vote = vote;
             $scope.showVoteDelegation = !!vote.delegation;
             if (!$scope.app.isLoggedIn()) {
@@ -49,21 +52,23 @@ app.controller("TopicVoteViewFormCtrl", [ "$scope", "$rootScope", "$state", "$lo
                     bdocVote: bdocUri
                 };
             }
-            $scope.app.topicLoad = false;
+
+            $scope.loading = false;
         }, function(res) {
             $log.error("Vote load failed!", res);
         });
     };
-    $scope.init();
+
     $scope.$watch(function() {
-        return $scope.topic.status;
+        return $scope.loading;
     }, function() {
-        if(!$scope.app.topicLoad)
-            $scope.hasEnded = getVoteHasEnded();
+        if (!$scope.loading) $scope.hasEnded = getVoteHasEnded();
     });
+
     $scope.getOptionLetter = function(index) {
         return String.fromCharCode(65 + index);
     };
+
     $scope.getOptionTheme = function(option) {
         var theme;
         switch (option.value.toLowerCase()) {
@@ -97,10 +102,9 @@ app.controller("TopicVoteViewFormCtrl", [ "$scope", "$rootScope", "$state", "$lo
     $scope.doVote = function(option) {
         if (!$scope.canVote() || $scope.topic.status !== sTopic.STATUSES.voting) return;
         if ($scope.isAuthTypeHard()) {
-            document.getElementsByClassName("pp-layer")[0].style.display = "block";
             ngDialog.open({
                 scope: $scope,
-                template: "/templates/modals/topicVoteSign.html",
+                template: "/templates/modals/topic_vote_sign.html",
                 data: {
                     topicId: $state.params.id,
                     voteId: $state.params.voteId,
@@ -117,10 +121,7 @@ app.controller("TopicVoteViewFormCtrl", [ "$scope", "$rootScope", "$state", "$lo
         sTopic.voteVote($state.params.id, $state.params.voteId, [ {
             optionId: option.id
         } ]).then(function(res) {
-            $log.debug("Voting succeeded!", res);
             $scope.init();
-        }, function(res) {
-            $log.error("Voting failed!", res);
         });
     };
     $scope.doDelegate = function(user) {
@@ -227,4 +228,7 @@ app.controller("TopicVoteViewFormCtrl", [ "$scope", "$rootScope", "$state", "$lo
             return false;
         }
     };
-} ]);
+
+    function onVote() { return $scope.topic.vote }
+    $scope.$watch(onVote, $scope.init.bind($scope))
+}]);

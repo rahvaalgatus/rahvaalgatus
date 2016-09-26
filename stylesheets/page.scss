@@ -1,0 +1,271 @@
+$light-blue: #45a0e6;
+$dark-blue: #3390d7;
+$blue: #53B1EB;
+$form-input-padding: 8px;
+$header-color: #124267;
+$header-height: 90px;
+$footer-height: 120px;
+
+@import "reset";
+@import "potpourri";
+@import "initiative";
+
+html,
+body {
+	height: 100%;
+}
+
+body {
+	font-family: 'MuseoSansCyrl-300';
+	font-size: 14px;
+	color: #4A555D;
+	line-height: 1;
+}
+
+#header {
+	background: $header-color;
+	padding: 15px 0;
+	height: $header-height;
+	position: fixed;
+	width: 100%;
+	z-index: 50;
+}
+
+#main {
+	min-height: 100%;
+	height: auto;
+	padding-top: $header-height;
+	padding-bottom: $footer-height;
+	margin-bottom: -$footer-height;
+}
+
+#footer {
+	position: relative;
+	min-height: $footer-height;
+	padding: 20px 0;
+
+	background: $header-color;
+	color: white;
+	line-height: 20px;
+}
+
+.content-wrapper {
+	padding-top: 40px;
+	padding-bottom: 40px;
+	background: url(/images/general-bg.png) no-repeat;
+	background-position: 1000px 0px;
+	min-height: 370px;
+}
+
+.content,
+.dialog-content {
+	h1, h2 {
+		font-family: 'MuseoSansCyrl-300';
+		color: $dark-blue;
+	}
+
+	h1 {
+		font-size: 34px;
+		line-height: 34px;
+		margin-bottom: 30px;
+	}
+
+	h2 {
+		font-size: 24px;
+		line-height: 24px;
+		margin-bottom: 20px;
+	}
+
+	p {
+		line-height: 1.5;
+		font-size: 14px;
+		color: black;
+		white-space: pre-line;
+	}
+
+	p + p {
+		margin-top: 20px;
+	}
+}
+
+.content {
+	* + & {
+		margin-top: 40px;
+	}
+}
+
+#donation-form {
+	margin-top: 20px;
+
+	label {
+		display: block;
+		margin-bottom: 10px;
+	}
+
+	input {
+		width: 100px;
+		text-align: right;
+	}
+
+	button {
+		margin-left: 10px;
+	}
+
+	p {
+		margin-top: 10px;
+		font-size: 12px;
+		line-height: 1.5;
+	}
+
+	.banks {
+		li {
+			// Add right margin so when banks wrap, they'll be left-aligned.
+			display: inline-block;
+			margin-top: 10px;
+			margin-right: 10px;
+		}
+	}
+}
+
+.form-label,
+.form-input,
+.form-submit {
+  line-height: 18px;
+  font-size: 14px;
+  font-family: 'MuseoSansCyrl-500', sans-serif;
+}
+
+.form-label {
+  font-family: 'MuseoSansCyrl-700', sans-serif;
+	font-weight: bold;
+}
+
+.form-input {
+  border: 1px solid #cecece;
+
+  padding: $form-input-padding 10px;
+
+  background: white;
+  color: #4a555d;
+  border-radius: 2px;
+}
+
+.form-submit {
+  appearance: none;
+  display: inline-block;
+  vertical-align: top;
+  font-family: 'MuseoSansCyrl-700', sans-serif;
+	text-transform: uppercase;
+
+  background: $light-blue;
+  border: 1px solid $dark-blue;
+  border-radius: 2px;
+
+  padding: $form-input-padding 20px;
+
+  color: white;
+}
+
+.ngdialog-overlay {
+	position: fixed;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.5);
+	z-index: 99;
+}
+
+.ngdialog-content {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 100;
+	padding: 10px;
+	overflow: auto;
+}
+
+.dialog {
+	position: relative;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+.ui-dialog {
+	position: absolute;
+	z-index: 150;
+	top: calc((100vh - 50%) / 2) !important;
+	left: calc((100vw - 680px) / 2) !important;
+}
+
+.dialog-header,
+.ui-dialog-titlebar,
+.dialog-footer {
+	font-family: 'MuseoSansCyrl-700';
+	color: #4A555D;
+	font-size: 14px;
+	line-height: 40px;
+	padding: 0 5px 0 15px;
+}
+
+.dialog-header,
+.ui-dialog-titlebar {
+	background: #d8d8d8;
+	text-transform: uppercase;
+}
+
+.dialog-header-close {
+	border: 0;
+	margin-top: 5px;
+	float: right;
+	width: 30px;
+	height: 30px;
+	background: url(/images/dialog-close-btn.png);
+	text-indent: -9999px;
+}
+
+.ui-dialog-titlebar-close {
+	position: absolute;
+	right: 5px;
+	top: 5px;
+	width: 30px;
+	height: 30px;
+	border: 0;
+	background: url(/images/dialog-close-btn.png);
+	text-indent: -9999px;
+	cursor: pointer;
+}
+
+.dialog-content {
+	background: white;
+	padding: 15px;
+	line-height: 1.5;
+}
+
+.ui-dialog-content {
+	background: white;
+}
+
+.dialog-footer {
+	text-align: center;
+	background: #eeeeee;
+	padding: 20px;
+	border-top: 1px solid #cecece;
+}
+
+.dialog-footer-button {
+	display: inline-block;
+	border: 1px solid #cecece;
+	font-size: 12px;
+	height: 40px;
+	line-height: 40px;
+	padding: 0 20px;
+	background: #f7f7f7;
+	color: #4a555d;
+	font-size: 12px;
+	font-family: 'MuseoSansCyrl-700';
+	border-radius: 2px;
+	text-transform: uppercase;
+}

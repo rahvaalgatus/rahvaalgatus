@@ -1,4 +1,5 @@
-"use strict";
+var _ = window._
+var app = window.app
 
 app.controller("HomeCtrl", [ "$scope", "$rootScope", "$state", "$kookies", "$log", "toruSessionSettings", "sTopic","ngDialog", function($scope, $rootScope, $state, $kookies, $log, toruSessionSettings, sTopic, ngDialog) {
     $scope.isTopicListLoading = true;

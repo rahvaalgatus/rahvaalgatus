@@ -1,14 +1,9 @@
-"use strict";
+var app = window.app
 
-app.controller("EventsCtrl", ["$scope", "$rootScope", "$state", "$location", "ngDialog", "sTopic", function($scope, $rootScope, $state, $location, ngDialog, sTopic) {
-  // inherits $scope.topicEvents from TopicCtrl
+app.controller("EventsCtrl", ["$scope", "$controller", "$state", "$location", "ngDialog", "sTopic", function($scope, $controller, $state, $location, ngDialog, sTopic) {
+	$controller("TopicCtrl", {$scope: $scope})
 
   var authToken = $location.search().token;
-
-  $rootScope.onEventsPage = true;
-  $scope.$on("$destroy", function() {
-    $rootScope.onEventsPage = false;
-  });
 
   $scope.openNewEntryDialog = function() {
     $scope.event = {
@@ -33,7 +28,6 @@ app.controller("EventsCtrl", ["$scope", "$rootScope", "$state", "$location", "ng
         $state.go('^');
       })
       .catch(function(error) {
-        console.log("failed", error);
         $scope.savingError = error.data.status.message;
       })
       .finally(function() {
@@ -41,16 +35,5 @@ app.controller("EventsCtrl", ["$scope", "$rootScope", "$state", "$location", "ng
       });
   };
 
-  if ($state.current.url === "/create") {
-    $scope.openNewEntryDialog();
-  }
-
-  $scope.$watch(function() { return $state.params.eventId }, function(eventId) {
-    $scope.currentEventId = eventId;
-    $scope.$watch("topicEvents.list", function(list) {
-      $scope.topicEvents.current = list.filter(function(event) {
-        return event.id == eventId;
-      })[0];
-    }, true);
-  });
+  if ($state.current.url === "/create") $scope.openNewEntryDialog()
 }]);
