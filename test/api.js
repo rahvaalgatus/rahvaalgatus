@@ -1,4 +1,5 @@
 var Config = require("root/config/test")
+var TOKEN = Config.sessions[0]
 var api = require("root/lib/citizen_os")
 var fetchDefaults = require("fetch-defaults")
 
@@ -9,7 +10,7 @@ exports = module.exports = function() {
 
 exports.create = function() {
 	this.api = fetchDefaults(api, Config.apiUrl, {
-		headers: {Authorization: "Bearer " + Config.sessions[0]}
+		headers: {Authorization: "Bearer " + TOKEN}
 	})
 }
 
