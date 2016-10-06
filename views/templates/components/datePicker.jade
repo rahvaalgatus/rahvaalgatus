@@ -23,9 +23,18 @@ div(ng-switch="view")
 					|                     
 					tbody
 						tr(ng-repeat="week in weeks")
-							td(ng-repeat="day in week", ng-class="{'ui-datepicker-days-cell-over   ui-datepicker-current-day ui-datepicker-today':isNow(day)}")
-								a.ui-state-default(ng-show="(day.getMonth()==date.getMonth())", href="#", ng-class="{'ui-state-default ui-state-highlight ui-state-active':isNow(day),'ui-state-active':isSameDay(day),'after':isAfter(day),'before':isBefore(day)}", ng-click="setDate(day)", ng-bind="day.getDate()")
-									| 1
+							td(
+								ng-repeat="day in week",
+								ng-class="{'ui-datepicker-days-cell-over   ui-datepicker-current-day ui-datepicker-today':isNow(day)}")
+
+								a.ui-state-default(
+									ng-show="(day.getMonth()==date.getMonth())",
+									href="#",
+									ng-class="{'ui-state-default ui-state-highlight ui-state-active':isNow(day),'ui-state-active':isSameDay(day),'after':isAfter(day),'before':isBefore(day)}",
+									ng-click="setDate(day)",
+									ng-bind="day.getDate()",
+									data-date="{{day | amDateFormat: 'YYYY-MM-DD'}}")
+
 	// TODO: below this line nothing is actually used and not ported to angular-moment. But we don't know what future holds...
 	div(ng-switch-when="year")
 		.deadline-date

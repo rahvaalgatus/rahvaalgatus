@@ -107,8 +107,9 @@ app.controller("TopicVoteCreateFormCtrl", [ "$scope", "$rootScope", "$state", "$
 						// There must be a more elegant solution..
 						$scope.form.endsAt = null;
 				}
-				// Ends at midnight of the date chosen, thus 00:00:00 of the next day.
-				var endsAt = moment($scope.form.endsAt).add(1, "d").toDate();
+
+				var endsAt = new Date($scope.form.endsAt)
+				endsAt.setHours(23, 59, 59, 999)
 
 				sTopic.voteCreate($scope.topic.id, options, null, null, $scope.form.delegationIsAllowed, endsAt, null, $scope.form.voteType, $scope.form.authType).then(function(res) {
 						var vote = res.data.data;

@@ -3,7 +3,13 @@ var Url = require("url")
 var Config = require("root/config/test")
 var Moment = require("moment")
 var TOKEN = Config.sessions[0]
-var DAY = 86400
+
+var DEFAULT_INITIATIVE = {
+	"description": "<!DOCTYPE HTML><html><body><h1>Automation Proposal</h1><br><p>More automated tests!</p></body></html>",
+	"visibility": "public",
+	"endsAt": Moment().startOf("day").add(90, "days").toDate(),
+	"contact": {"name": "", "email": "", "phone": ""}
+}
 
 if (process.env.TEST.match(/\bui\b/))
 describe("Account view", function() {
@@ -64,37 +70,59 @@ describe("Account view", function() {
 			var initiative = res.body.data
 			initiative.status.must.equal("inProgress")
 			initiative.visibility.must.equal("private")
-			initiative.endsAt.must.equal(formatTime(tomorrow))
+			initiative.endsAt.must.equal(formatTime(Moment(tomorrow).endOf("day")))
 		})
 	})
 
 	describe("/topics/:id", function() {
 		beforeEach(acceptBeta)
 
-		it("must show initiative in voting to anonymous user", function*() {
-			var end = new Date(Date.now() + 90 * DAY)
-			var res
+		it("must send discussion to voting", function*() {
+			var query = this.browser.querySelector.bind(this.browser)
+			var tomorrow = Moment().startOf("day").add(1, "day").toDate()
+			var tomorrowString = formatDate(tomorrow)
+			yield signIn.call(this)
 
-			res = yield this.api("/api/users/self/topics", {
+			var res = yield this.api("/api/users/self/topics", {
 				method: "POST",
+				json: DEFAULT_INITIATIVE
+			})
 
-				json: {
-					"description": "<!DOCTYPE HTML><html><body><h1>Automation Proposal</h1><br><p>More automated tests!</p></body></html>",
-					"visibility": "public",
-					"endsAt": end,
-					"contact": {"name": "", "email": "", "phone": ""}
-				}
+			var initiative = res.body.data, id = initiative.id
+			yield this.browser.get(this.url + "/topics/" + id)
+
+			yield sleep(500)
+			yield query(".collect-signatures a").click()
+
+			yield sleep(500)
+			yield query(`.deadline-date a[data-date="${tomorrowString}"]`).click()
+			yield query(".admin-role-cal .sign-in a").click()
+
+			yield sleep(500)
+			res = yield this.api(`/api/users/self/topics/${id}`)
+			initiative = res.body.data
+
+			var voteId = initiative.vote.id
+			res = yield this.api(`/api/users/self/topics/${id}/votes/${voteId}`)
+			var vote = res.body.data
+
+			vote.endsAt.must.equal(formatTime(Moment(tomorrow).endOf("day")))
+		})
+
+		it("must show initiative in voting to anonymous user", function*() {
+			var res = yield this.api("/api/users/self/topics", {
+				method: "POST",
+				json: DEFAULT_INITIATIVE
 			})
 
 			var initiative = res.body.data
-
 			res = yield this.api(`/api/users/self/topics/${initiative.id}/votes`, {
 				method: "POST",
 
 				json: {
 					"options": [{"value": "Yes"}, {"value": "No"}],
 					"delegationIsAllowed": false,
-					"endsAt": end,
+					"endsAt": Moment().startOf("day").add(90, "days").toDate(),
 					"type": "regular",
 					"authType": "hard"
 				}

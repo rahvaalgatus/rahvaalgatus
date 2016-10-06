@@ -53,9 +53,8 @@ app.controller("TopicRenewDeadlineFormCtrl", [ "$scope", "$rootScope", "$state",
         var endsAt = moment($scope.form.endsAt).toDate();
         endsAt = new Date(endsAt);
         endsAt.setHours(23,59,59);
-        console.log(endsAt);
+
         if($scope.topic.status == 'voting'){
-            console.log('UPDATE VOTING')
              sTopic.voteUpdate($scope.topic.id,$scope.vote.id, endsAt).then(function(res){
                 $state.go("topics.read", {
                     id: $state.params.id

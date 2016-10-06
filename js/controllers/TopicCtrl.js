@@ -207,8 +207,10 @@ app.controller("TopicCtrl", [
 			var topic = $scope.topic;
 			if($scope.topic.endsAt !==null){
 				$scope.dateNotSet = false;
+
 				if (deadline) {
 					deadline = new Date(deadline);
+					deadline.setHours(23, 59, 59, 999)
 					$scope.topic.endsAt = deadline;
 					sTopic.setEndsAt(topic, deadline).then(function(res) {
 						$log.log("Updated!", res);
