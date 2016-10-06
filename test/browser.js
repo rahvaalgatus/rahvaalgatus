@@ -44,7 +44,8 @@ exports.close = function() {
 	// Some unused promises or requests in the Selenium queue may throw after the
 	// test. Catch and ignore those errors here.
 	return Promise.all([
-		this.browser.manage().deleteAllCookies()
+		this.browser.manage().deleteAllCookies(),
+		this.browser.eval(() => window.localStorage.clear())
 	]).catch(_.noop)
 }
 
