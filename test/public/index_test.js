@@ -28,13 +28,7 @@ describe("Account view", function() {
 	})
 
 	describe("/topics/:id", function() {
-		beforeEach(function*() {
-			var url = yield this.browser.getCurrentUrl()
-			if (!~url.indexOf(this.url)) yield this.browser.get(this.url)
-
-			var browser = this.browser.manage()
-			yield browser.addCookie("dearuser", "dearuser", "/", ".rahvaalgatus.ee")
-		})
+		beforeEach(acceptBeta)
 
 		it("must show initiative in voting to anonymous user", function*() {
 			var end = new Date(Date.now() + 90 * DAY)
@@ -78,3 +72,11 @@ describe("Account view", function() {
 		})
 	})
 })
+
+function* acceptBeta() {
+	var url = yield this.browser.getCurrentUrl()
+	if (!~url.indexOf(this.url)) yield this.browser.get(this.url)
+
+	var browser = this.browser.manage()
+	yield browser.addCookie("dearuser", "dearuser", "/", ".rahvaalgatus.ee")
+}
