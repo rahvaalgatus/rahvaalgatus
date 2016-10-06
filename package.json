@@ -6,7 +6,8 @@
 	"dependencies": {
 		"express": "",
 		"lodash": "",
-		"oolong": ""
+		"oolong": "",
+		"moment": ""
 	},
 
 	"devDependencies": {
