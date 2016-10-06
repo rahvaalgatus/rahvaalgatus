@@ -2,6 +2,7 @@ var _ = require("lodash")
 var O = require("oolong")
 var Selenium = require("selenium-webdriver")
 var SeleniumError = require("selenium-webdriver").error.Error
+var WebDriver = require("selenium-webdriver").WebDriver
 var WebElement = require("selenium-webdriver").WebElement
 var WIDTH = 1024
 var HEIGHT = 600
@@ -46,6 +47,8 @@ exports.close = function() {
 		this.browser.manage().deleteAllCookies()
 	]).catch(_.noop)
 }
+
+WebDriver.prototype.eval = WebDriver.prototype.executeScript
 
 O.defineGetter(WebElement.prototype, "textContent", function() {
 	var script = "return arguments[0].textContent"
