@@ -36,7 +36,7 @@ describe("Account view", function() {
 			yield browser.addCookie("dearuser", "dearuser", "/", ".rahvaalgatus.ee")
 		})
 
-		it.only("must show initiative in voting to anonymous user", function*() {
+		it("must show initiative in voting to anonymous user", function*() {
 			var end = new Date(Date.now() + 90 * DAY)
 			var res
 
