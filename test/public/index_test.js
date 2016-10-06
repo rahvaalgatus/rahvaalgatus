@@ -87,15 +87,8 @@ describe("Account view", function() {
 			})
 
 			var initiative = res.body.data
-			var url = "/api/users/self/topics/" + initiative.id
 
-			// API seems to need another PUT to really update visibility.
-			res = yield this.api(url, {
-				method: "PUT",
-				json: {"visibility": "public"}
-			})
-
-			res = yield this.api(url + "/votes", {
+			res = yield this.api(`/api/users/self/topics/${initiative.id}/votes`, {
 				method: "POST",
 
 				json: {
