@@ -5,7 +5,7 @@ var SeleniumError = require("selenium-webdriver").error.Error
 var WebDriver = require("selenium-webdriver").WebDriver
 var WebElement = require("selenium-webdriver").WebElement
 var WIDTH = 1024
-var HEIGHT = 600
+var HEIGHT = 800
 
 require("selenium-dom")(Selenium)
 
