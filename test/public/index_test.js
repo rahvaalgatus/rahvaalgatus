@@ -12,7 +12,7 @@ var DEFAULT_INITIATIVE = {
 }
 
 if (process.env.TEST.match(/\bui\b/))
-describe("Account view", function() {
+describe("Rahvaalgatus", function() {
 	require("root/test/web")()
 	require("root/test/api")()
 	require("root/test/browser")()
