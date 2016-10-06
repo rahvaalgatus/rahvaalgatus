@@ -1,3 +1,8 @@
+var _ = require("lodash")
+var Url = require("url")
+var Config = require("root/config/test")
+var Moment = require("moment")
+var TOKEN = Config.sessions[0]
 var DAY = 86400
 
 if (process.env.TEST.match(/\bui\b/))
@@ -24,6 +29,42 @@ describe("Account view", function() {
 			yield this.browser.get(this.url)
 			dialog = this.browser.querySelector("#dear_user_dialog")
 			yield dialog.isPresent().must.then.be.false()
+		})
+	})
+
+	describe("/topics/new", function() {
+		beforeEach(signIn)
+		beforeEach(acceptBeta)
+
+		it("must create new discussion", function*() {
+			var query = this.browser.querySelector.bind(this.browser)
+			var tomorrow = Moment().startOf("day").add(1, "day").toDate()
+
+			yield this.browser.get(this.url + "/topics/new")
+
+			// An URL inside the <label> interferes with clicking. Workaroun for now.
+			yield sleep(500)
+			yield this.browser.eval(function() {
+				document.querySelector("label[for=check]").click()
+			})
+
+			yield this.browser.querySelector(".step1-buttons .green-button").click()
+
+			yield sleep(500)
+			yield query(`a[data-date="${formatDate(tomorrow)}"]`).click()
+			yield query(".step2-button .blue-button").click()
+
+			yield sleep(500)
+			yield query(".step3-button .blue-button").click()
+
+			var url = Url.parse(yield this.browser.getCurrentUrl())
+			var id = _.last(url.pathname.split("/"))
+
+			var res = yield this.api(`/api/users/self/topics/${id}`)
+			var initiative = res.body.data
+			initiative.status.must.equal("inProgress")
+			initiative.visibility.must.equal("private")
+			initiative.endsAt.must.equal(formatTime(tomorrow))
 		})
 	})
 
@@ -67,6 +108,7 @@ describe("Account view", function() {
 			})
 
 			yield this.browser.get(this.url + "/topics/" + initiative.id)
+			yield sleep(500)
 			var body = yield this.browser.body.textContent
 			body.must.include("Anna sellele algatusele oma allkiri!")
 		})
@@ -74,9 +116,24 @@ describe("Account view", function() {
 })
 
 function* acceptBeta() {
-	var url = yield this.browser.getCurrentUrl()
-	if (!~url.indexOf(this.url)) yield this.browser.get(this.url)
+	yield ensureAt(this.browser, this.url)
 
 	var browser = this.browser.manage()
 	yield browser.addCookie("dearuser", "dearuser", "/", ".rahvaalgatus.ee")
 }
+
+function* signIn() {
+	yield ensureAt(this.browser, this.url)
+
+	yield this.browser.eval(function(token) {
+		window.localStorage.setItem("citizenos.accessToken", JSON.stringify(token))
+	}, TOKEN)
+}
+
+function* ensureAt(browser, url) {
+	if (!~(yield browser.getCurrentUrl()).indexOf(url)) yield browser.get(url)
+}
+
+function sleep(timeout) { return (fn) => setTimeout(fn, timeout) }
+function formatDate(date) { return Moment(date).format("YYYY-MM-DD") }
+function formatTime(time) { return time.toISOString() }
