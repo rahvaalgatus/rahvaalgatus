@@ -54,7 +54,7 @@ describe("Rahvaalgatus", function() {
 				document.querySelector("label[for=check]").click()
 			})
 
-			yield this.browser.querySelector(".step1-buttons .green-button").click()
+			yield this.browser.querySelector(".step1-buttons .yellow-button").click()
 
 			yield sleep(500)
 			yield query(`a[data-date="${formatDate(tomorrow)}"]`).click()

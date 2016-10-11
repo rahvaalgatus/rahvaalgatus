@@ -20,15 +20,17 @@
 							span(ng-bind-html="'I_HAVE_READ' | translate:{url: '/goodpractice'}")
 
 						br
-						|                             
-						p.error.error_message(ng-show="!app.user.loggedIn", translate="LOGIN_TO_CREATE_TOPIC") Teema loomiseks peate sisse logima!
-						|                             
-						p.error.error_message(ng-show="notConfirmedRead", translate="CONFIRM_I_HAVE_READ") Teema loomiseks peate sisse logima!
-					|                         
+
+						p.error.error_message(ng-show="!app.user.loggedIn", translate="LOGIN_TO_CREATE_TOPIC")
+
+						p.error.error_message(ng-show="notConfirmedRead", translate="CONFIRM_I_HAVE_READ")
+
 					.step1-buttons.clearfix
-						a.yellow-button(href="#", ng-disabled="!app.user.loggedIn", ng-click="triggerStart('discussion')", translate="START_DISCUSSION") ALUSTA ARUTELU JA KOGU OMA IDEELE TEOTUST
-						|                             
-						a.green-button(href="#", ng-disabled="!app.user.loggedIn", ng-click="triggerStart('initiative')", translate="POST_INITIATIVE") POSTITA ALGATUS JA ALUSTA ALLKIRJADE KOGUMIST
+						a.yellow-button(
+							href="#",
+							ng-disabled="!app.user.loggedIn",
+							ng-click="triggerStart('discussion')",
+							translate="START_DISCUSSION")
 
 .create2-bg(ng-show="('topics.deadline' | isState)")
 	.enclose
