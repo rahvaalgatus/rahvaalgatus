@@ -60,7 +60,7 @@ describe("Rahvaalgatus", function() {
 			yield query(`a[data-date="${formatDate(tomorrow)}"]`).click()
 			yield query(".step2-button .blue-button").click()
 
-			yield sleep(500)
+			yield sleep(1000)
 			yield query(".step3-button .blue-button").click()
 
 			var url = Url.parse(yield this.browser.getCurrentUrl())
