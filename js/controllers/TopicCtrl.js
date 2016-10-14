@@ -4,8 +4,8 @@ var Raven = window.Raven
 var app = window.app
 var angular = window.angular
 var moment = window.moment
+var Config = window.Config
 var DOCTYPE = "<!DOCTYPE HTML>"
-var MIN_DEADLINE = 3
 
 app.controller("TopicCtrl", [
 	"$scope", "$rootScope", "$sce", "$compile", "$state", "$filter", "$log", "$timeout", "ngDialog", "sTopic", "sTranslate", "sAuth", "sProgress",
@@ -19,7 +19,7 @@ app.controller("TopicCtrl", [
 			status: null,
 			visibility: null,
 			categories: [],
-			endsAt: moment().startOf("day").add(MIN_DEADLINE, "day").toDate(),
+			endsAt: moment().startOf("day").add(Config.MIN_DEADLINE_DAYS, "day").toDate(),
 			permission: {
 				level: null
 			},
@@ -498,6 +498,17 @@ app.controller("TopicCtrl", [
 				scope: $scope
 			});
 		};
+
+		$scope.isProposable = function() {
+			var topic = $scope.topic
+			if (!$scope.isAdmin()) return false
+			if (topic.visibility != "public") return false
+			if (topic.vote && topic.vote.id) return false
+
+			var createdOn = moment(topic.createdAt).startOf("day")
+			var minDeadline = moment(createdOn).add(Config.MIN_DEADLINE_DAYS, "day")
+			return new Date() >= minDeadline
+		}
 }]);
 
 function formatDescription(html, attrs) {

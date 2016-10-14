@@ -87,6 +87,7 @@ describe("Rahvaalgatus", function() {
 			page = yield page.next()
 
 			yield page.author.sendKeys("andri@dot.ee")
+			yield sleep(500)
 			yield page.el.querySelector(".ac-dataset").click()
 			page = yield page.next()
 			
@@ -120,7 +121,7 @@ describe("Rahvaalgatus", function() {
 				yield this.browser.get(this.url + "/topics/" + id)
 
 				yield sleep(500)
-				yield query(".collect-signatures a").click()
+				yield query(".send-to-vote-button").click()
 
 				yield sleep(500)
 				yield query(`.deadline-date a[data-date="${tomorrowString}"]`).click()
@@ -135,6 +136,31 @@ describe("Rahvaalgatus", function() {
 				var vote = res.body.data
 
 				vote.endsAt.must.equal(formatTime(Moment(tomorrow).endOf("day")))
+			})
+
+			it("must show send to vote button", function*() {
+				var initiative = yield createDiscussion(this.api)
+				var id = initiative.id
+				var page = yield InitiativePage.open(this.browser, this.url, id)
+				var body = yield page.el.querySelector("aside").textContent
+				body.must.include("Kogu allkirju")
+			})
+
+			xit("must show send to vote button when 3 days passed", function*() {
+				// NOTE: Hardcoded failure-prone manually created link until I figure
+				// out how to create an initiative in the past.
+				var id = "84fb7ef0-8ad6-4b06-bb2c-244679e73cfd"
+				var page = yield InitiativePage.open(this.browser, this.url, id)
+				var body = yield page.el.querySelector("aside").textContent
+				body.must.include("Kogu allkirju")
+			})
+
+			xit("must not show send to vote button right away", function*() {
+				var initiative = yield createDiscussion(this.api)
+				var id = initiative.id
+				var page = yield InitiativePage.open(this.browser, this.url, id)
+				var body = yield page.el.querySelector("aside").textContent
+				body.must.not.include("Kogu allkirju")
 			})
 
 			it("must show publish button if private", function*() {

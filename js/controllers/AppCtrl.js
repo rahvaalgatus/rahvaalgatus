@@ -4,8 +4,11 @@ app.controller("AppCtrl", [ "$scope", "$rootScope", "$window", "$state", "$trans
     $scope.app = {
         config: toruConfig
     };
+
     $scope.$sce = $sce
-    $scope.Config = window.Config
+    $rootScope.window = window
+    $rootScope.Config = window.Config
+
     $scope.app.finalizeOpen = null;
     $scope.citizenosLogin=false;
     $scope.app.user = sAuth.user;

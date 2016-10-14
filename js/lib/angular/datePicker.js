@@ -165,7 +165,7 @@
         before: '=?'
       },
       link: function (scope, element, attrs) {
-
+        scope.window = window
         scope.date = new Date(scope.model || new Date());
         scope.views = datePickerConfig.views.concat();
         scope.view = attrs.view || datePickerConfig.view;

@@ -28,5 +28,5 @@ div(ng-switch="view")
 								ng-class="{'ui-state-default ui-state-highlight ui-state-active':isNow(day),'ui-state-active':isSameDay(day),'after':isAfter(day),'before':isBefore(day)}",
 								ng-click="setDate(day)",
 								ng-bind="day.getDate()",
-								ng-disabled="!isAtLeastDaysInFuture(3, day)",
+								ng-disabled="!isAtLeastDaysInFuture(window.Config.MIN_DEADLINE_DAYS, day)",
 								data-date="{{day | amDateFormat: 'YYYY-MM-DD'}}")

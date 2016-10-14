@@ -43,23 +43,21 @@ div(ng-tabs="", ng-show="topicLoadSuccess && !isTopicLoading")
 
 					block body
 
-				aside.right
-					p.publish-topic
-						a(
-							href="#",
-							ng-if="!isClosed() && isAdmin() && topic.visibility=='private'",
-							ng-click="doSetVisibility('public')",
-							translate="PUBLISH_TOPIC")
+				aside#initiative-aside.right
+					button.blue-button.publish-button(
+						ng-if="!isClosed() && isAdmin() && topic.visibility=='private'",
+						ng-click="doSetVisibility('public')",
+						translate="PUBLISH_TOPIC")
 
-					p.collect-signatures.s
-						a(ng-if="isAdmin() && !topic.vote.id", ui-sref="topics.discussion.finish({id: topic.id})", translate="BTN_SEND_TO_VOTE")
+					button.green-button.send-to-vote-button(
+						ng-if="isProposable()",
+						ui-sref="topics.discussion.finish({id: topic.id})",
+						translate="BTN_SEND_TO_VOTE")
 
-					p.publish-topic(ng-show="(isAdmin()&& !isClosed() || canEdit() && !isClosed()) && canSendToFollowUp() && (vote && vote.options.rows[0].voteCount >= Config.VOTES_REQUIRED)")
-						a(ng-click="confirmTopicFollowUp(topic)", translate="SEND_TO_PARLIAMENT", href="#") SEND TO PARLIAMENT
-
-					p.publish-topic(ng-show="isAdmin() && topic.status=='followUp'")
-						a(ng-click="setTopicStatusToVoting(topic)", translate="BTN_SEND_BACK_TO_VOTE", href="#") SEND TO PARLIAMENT
-
+					button.green-button.send-to-parliament-button(
+						ng-if="(isAdmin()&& !isClosed() || canEdit() && !isClosed()) && canSendToFollowUp() && (vote && vote.options.rows[0].voteCount >= Config.VOTES_REQUIRED)",
+						ng-click="confirmTopicFollowUp(topic)",
+						translate="SEND_TO_PARLIAMENT")
 
 					.aside-box
 						h1.aside-box-header(translate="OPTIONS")

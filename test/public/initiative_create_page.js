@@ -14,7 +14,7 @@ InitiativeCreatePage.open = co.wrap(function*(browser, baseUrl) {
 	return new InitiativeCreatePage(browser)
 })
 
-InitiativeCreatePage.prototype.nextButton = ".create-initiative"
+InitiativeCreatePage.prototype.nextButton = ".create-initiative-button"
 
 InitiativeCreatePage.prototype.acceptTos = co.wrap(function*() {
 	// An URL inside the <label> interferes with clicking. Workaround for now.
@@ -28,11 +28,11 @@ InitiativeCreatePage.prototype.next = co.wrap(function*() {
 	yield sleep(1000)
 
 	switch (this.nextButton) {
-		case ".create-initiative":
-			return {__proto__: this, nextButton: ".create-deadline"}
-		case ".create-deadline":
-			return {__proto__: this, nextButton: ".create-authors"}
-		case ".create-authors":
+		case ".create-initiative-button":
+			return {__proto__: this, nextButton: ".create-deadline-button"}
+		case ".create-deadline-button":
+			return {__proto__: this, nextButton: ".create-authors-button"}
+		case ".create-authors-button":
 			return new InitiativePage(this.browser)
 
 		default: throw new Error("Unknown state")

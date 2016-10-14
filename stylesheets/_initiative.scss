@@ -9,6 +9,11 @@ $new-initiative-background-height: 515px;
 	}
 }
 
+#initiative-aside > button {
+	width: 100%;
+	margin-bottom: 20px;
+}
+
 .aside-box {
   background: white;
   margin-bottom: 20px;
@@ -334,32 +339,8 @@ $new-initiative-background-height: 515px;
 		}
 	}
 
-	a.create {
-		display: inline-block;
+	button.next-button {
 		margin-top: 20px;
-
-		font-family: "MuseoSansCyrl-700";
-		padding: 15px 25px;
-		text-align: center;
 		max-width: 360px;
-		border-radius: 3px;
-		font-size: 15px;
-
-		//&.yellow-button {
-		//  background: #ffb400;
-		//  color: #4a555d;
-		//  border: 1px solid #f1aa01;
-		//}
-
-		&.green-button {
-			background: #00cb81;
-			color: white;
-			border: 1px solid #02b071;
-		}
-
-		&.blue-button {
-			background: $light-blue;
-			color: white;
-		}
 	}
 }

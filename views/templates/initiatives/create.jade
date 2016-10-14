@@ -30,7 +30,7 @@
 					ng-show="notConfirmedRead",
 					translate="CONFIRM_I_HAVE_READ")
 
-				a.create.create-initiative.green-button(
+				button.next-button.create-initiative-button.green-button(
 					href="#",
 					ng-disabled="!app.user.loggedIn || topic.title == ''",
 					ng-click="triggerStart('discussion')",
@@ -55,7 +55,7 @@
 				span(translate="{{'TXT_DEADLINE_CALENDAR_DAYS_LEFT' | translate: topic}}")
 				| )
 
-			a.create.create-deadline.blue-button(
+			button.next-button.create-deadline-button.blue-button(
 				href="",
 				ng-click="createDeadlineEnd(topic.endsAt)",
 				translate="CONTINUE_TO_ADD_COAUTHORS")

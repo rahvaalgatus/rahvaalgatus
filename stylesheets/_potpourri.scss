@@ -1097,19 +1097,6 @@
 	}
 }
 
-.collect-signatures a {
-	display: block;
-	font-size: 14px;
-	color: white;
-	font-family: 'MuseoSansCyrl-700';
-	line-height: 38px;
-	background: #00cb81;
-	border: 1px solid #07b174;
-	border-radius: 2px;
-	margin-bottom: 20px;
-	text-align: center;
-}
-
 .admin-role-notes {
 	.heading {
 		background: #d8d8d8;
@@ -1912,21 +1899,6 @@
 
 /**************/
 /**style1.css merged**/
-
-
-.publish-topic a {
-	background: $light-blue;
-	border: 1px solid #3390d7;
-	border-radius: 2px;
-	color: white;
-	display: block;
-	font-family: "MuseoSansCyrl-700";
-	font-size: 14px;
-	line-height: 38px;
-	margin-bottom: 20px;
-	text-align: center;
-	text-transform: uppercase;
-}
 
 .categories {
 	border-bottom: medium none !important;
