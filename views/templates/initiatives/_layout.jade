@@ -45,12 +45,12 @@ div(ng-tabs="", ng-show="topicLoadSuccess && !isTopicLoading")
 
 				aside.right
 					p.publish-topic
-						a(href="#", ng-show="!isClosed() && isAdmin() && topic.visibility=='private'", ng-click="doSetVisibility('public')", translate="PUBLISH_TOPIC") PUBLISH TOPIC
+						a(href="#", ng-if="!isClosed() && isAdmin() && topic.visibility=='private'", ng-click="doSetVisibility('public')", translate="PUBLISH_TOPIC") PUBLISH TOPIC
 
-						a(href="#", ng-show="!isClosed() && isAdmin() && topic.visibility=='public'", ng-click="doSetVisibility('private')", translate="UNPUBLISH_TOPIC") UNPUBLISH TOPIC
+						a(href="#", ng-if="!isClosed() && isAdmin() && topic.visibility=='public'", ng-click="doSetVisibility('private')", translate="UNPUBLISH_TOPIC") UNPUBLISH TOPIC
 
 					p.collect-signatures.s
-						a(ng-show="isAdmin() && !topic.vote.id", ui-sref="topics.discussion.finish({id: topic.id})", translate="BTN_SEND_TO_VOTE")
+						a(ng-if="isAdmin() && !topic.vote.id", ui-sref="topics.discussion.finish({id: topic.id})", translate="BTN_SEND_TO_VOTE")
 
 					p.publish-topic(ng-show="(isAdmin()&& !isClosed() || canEdit() && !isClosed()) && canSendToFollowUp() && (vote && vote.options.rows[0].voteCount >= Config.VOTES_REQUIRED)")
 						a(ng-click="confirmTopicFollowUp(topic)", translate="SEND_TO_PARLIAMENT", href="#") SEND TO PARLIAMENT
@@ -63,19 +63,20 @@ div(ng-tabs="", ng-show="topicLoadSuccess && !isTopicLoading")
 						h1.aside-box-header(translate="OPTIONS")
 
 						menu.aside-box-list(ng-show="isAdmin() && !isClosed()")
-							li(ng-show="canInvite() && !isShowInVotingNotification()"): a(
+							li(ng-if="canInvite() && !isShowInVotingNotification()"): a(
 								ng-dialog="/templates/modals/topicMembersInvite.html",
 								ng-dialog-data="{{topic}}")
 								span(translate="INVITE_PEOPLE")
 
-							li(ng-show="isShowInVotingNotification() && canInvite()"): a(
+							li(ng-if="isShowInVotingNotification() && canInvite()"): a(
 								ng-dialog="/templates/modals/topicMembersInvite.html",
 								ng-dialog-data="{{topic}}")
 								span(translate="REMIND_PEOPLE_TO_SIGN")
 
-							li(ng-show="isAdmin() && !isClosed()"): a(
-								ng-click="setTopicStatusToClosed(topic)",
-								translate="CLOSE_TOPIC")
+							li(ng-if="isAdmin() && !isClosed() && !topic.vote.id")
+								a(
+									ng-click="setTopicStatusToClosed(topic)",
+									translate="CLOSE_TOPIC")
 
 							li: a(
 								ui-sref="topics.vote.renew({id: topic.id})",

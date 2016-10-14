@@ -1,6 +1,7 @@
 var _ = require("lodash")
 var Config = require("root/config/test")
 var Moment = require("moment")
+var InitiativePage = require("./initiative_page")
 var InitiativeCreatePage = require("./initiative_create_page")
 var TOKEN = Config.sessions[1]
 
@@ -9,6 +10,14 @@ var DEFAULT_INITIATIVE = {
 	"visibility": "public",
 	"endsAt": Moment().startOf("day").add(90, "days").toDate(),
 	"contact": {"name": "", "email": "", "phone": ""}
+}
+
+var DEFAULT_VOTE = {
+	"options": [{"value": "Yes"}, {"value": "No"}],
+	"delegationIsAllowed": false,
+	"endsAt": Moment().startOf("day").add(90, "days").toDate(),
+	"type": "regular",
+	"authType": "hard"
 }
 
 if (process.env.TEST.match(/\bui\b/))
@@ -93,61 +102,69 @@ describe("Rahvaalgatus", function() {
 	describe("/topics/:id", function() {
 		beforeEach(acceptBeta)
 
-		it("must send discussion to voting", function*() {
-			var query = this.browser.querySelector.bind(this.browser)
-			var tomorrow = Moment().startOf("day").add(1, "day").toDate()
-			var tomorrowString = formatDate(tomorrow)
-			yield signIn.call(this)
+		describe("when in discussion", function() {
+			beforeEach(signIn)
 
-			var res = yield this.api("/api/users/self/topics", {
-				method: "POST",
-				json: DEFAULT_INITIATIVE
+			it("must send discussion to voting", function*() {
+				var query = this.browser.querySelector.bind(this.browser)
+				var tomorrow = Moment().startOf("day").add(1, "day").toDate()
+				var tomorrowString = formatDate(tomorrow)
+
+				var res = yield this.api("/api/users/self/topics", {
+					method: "POST",
+					json: DEFAULT_INITIATIVE
+				})
+
+				var initiative = res.body.data, id = initiative.id
+				yield this.browser.get(this.url + "/topics/" + id)
+
+				yield sleep(500)
+				yield query(".collect-signatures a").click()
+
+				yield sleep(500)
+				yield query(`.deadline-date a[data-date="${tomorrowString}"]`).click()
+				yield query(".admin-role-cal .sign-in a").click()
+
+				yield sleep(500)
+				res = yield this.api(`/api/users/self/topics/${id}`)
+				initiative = res.body.data
+
+				var voteId = initiative.vote.id
+				res = yield this.api(`/api/users/self/topics/${id}/votes/${voteId}`)
+				var vote = res.body.data
+
+				vote.endsAt.must.equal(formatTime(Moment(tomorrow).endOf("day")))
 			})
 
-			var initiative = res.body.data, id = initiative.id
-			yield this.browser.get(this.url + "/topics/" + id)
+			it("must show close discussion button", function*() {
+				var initiative = yield createDiscussion(this.api)
+				var id = initiative.id
+				var page = yield InitiativePage.open(this.browser, this.url, id)
+				var body = yield page.el.querySelector("aside").textContent
+				body.must.include("Peata arutelu")
+			})
+		})
+		
+		describe("when in voting", function() {
+			beforeEach(signIn)
 
-			yield sleep(500)
-			yield query(".collect-signatures a").click()
-
-			yield sleep(500)
-			yield query(`.deadline-date a[data-date="${tomorrowString}"]`).click()
-			yield query(".admin-role-cal .sign-in a").click()
-
-			yield sleep(500)
-			res = yield this.api(`/api/users/self/topics/${id}`)
-			initiative = res.body.data
-
-			var voteId = initiative.vote.id
-			res = yield this.api(`/api/users/self/topics/${id}/votes/${voteId}`)
-			var vote = res.body.data
-
-			vote.endsAt.must.equal(formatTime(Moment(tomorrow).endOf("day")))
+			it("must not show close discussion button", function*() {
+				var initiative = yield createVote(this.api)
+				var id = initiative.id
+				var page = yield InitiativePage.open(this.browser, this.url, id)
+				var body = yield page.el.querySelector("aside").textContent
+				body.must.not.include("Peata arutelu")
+			})
 		})
 
-		it("must show initiative in voting to anonymous user", function*() {
-			var res = yield this.api("/api/users/self/topics", {
-				method: "POST",
-				json: DEFAULT_INITIATIVE
+		describe("when in voting but not signed in", function() {
+			it("must show initiative to anonymous user", function*() {
+				var initiative = yield createVote(this.api)
+				var id = initiative.id
+				var page = yield InitiativePage.open(this.browser, this.url, id)
+				var body = yield page.el.body.textContent
+				body.must.include("Anna sellele algatusele oma allkiri!")
 			})
-
-			var initiative = res.body.data
-			res = yield this.api(`/api/users/self/topics/${initiative.id}/votes`, {
-				method: "POST",
-
-				json: {
-					"options": [{"value": "Yes"}, {"value": "No"}],
-					"delegationIsAllowed": false,
-					"endsAt": Moment().startOf("day").add(90, "days").toDate(),
-					"type": "regular",
-					"authType": "hard"
-				}
-			})
-
-			yield this.browser.get(this.url + "/topics/" + initiative.id)
-			yield sleep(500)
-			var body = yield this.browser.body.textContent
-			body.must.include("Anna sellele algatusele oma allkiri!")
 		})
 	})
 })
@@ -165,6 +182,31 @@ function* signIn() {
 	yield this.browser.eval(function(token) {
 		window.localStorage.setItem("citizenos.accessToken", JSON.stringify(token))
 	}, TOKEN)
+}
+
+function* createDiscussion(api) {
+	var res = yield api("/api/users/self/topics", {
+		method: "POST",
+		json: DEFAULT_INITIATIVE
+	})
+
+	return res.body.data
+}
+
+function* createVote(api) {
+	var res = yield api("/api/users/self/topics", {
+		method: "POST",
+		json: DEFAULT_INITIATIVE
+	})
+
+	var initiative = res.body.data
+
+	res = yield api(`/api/users/self/topics/${initiative.id}/votes`, {
+		method: "POST",
+		json: DEFAULT_VOTE
+	})
+
+	return initiative
 }
 
 function* ensureAt(browser, url) {
