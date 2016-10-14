@@ -1,6 +1,6 @@
 RewriteEngine On
 
-<FilesMatch "\.(html|js|css|eot|woff|woff2|ttf|svg)$">
+<FilesMatch "\.(html|js|json|css|eot|woff|woff2|ttf|svg)$">
 Header set Cache-Control "max-age=0, public, must-revalidate"
 </FilesMatch>
 
@@ -16,6 +16,7 @@ Header edit ETag "^\"(.+)-gzip\"$" "\"$1\"" "expr=resp('Content-Encoding') == 'g
 
 # Compress HTML, CSS, JavaScript, Text, XML and fonts
 AddOutputFilterByType DEFLATE application/javascript
+AddOutputFilterByType DEFLATE application/json
 AddOutputFilterByType DEFLATE application/rss+xml
 AddOutputFilterByType DEFLATE application/vnd.ms-fontobject
 AddOutputFilterByType DEFLATE application/x-font

@@ -20,41 +20,46 @@ describe(URL, function() {
 		})
 	})
 	
-	describe("/stylesheets/page.css", function() {
-		var PATH = this.title
+	;[
+		"/stylesheets/page.css",
+		"/languages/et.json"
+	].forEach(function(path) {
+		describe(path, function() {
+			var PATH = this.title
 
-		before(function*() {
-			this.res = yield this.request(PATH, {
-				method: "HEAD",
-				headers: {"Accept-Encoding": "gzip"}
-			})
-		})
-
-		it("must have a Cache-Control header", function() {
-			var control = this.res.headers["cache-control"]
-			control.must.equal("max-age=0, public, must-revalidate")
-		})
-
-		it("must not have an Expires header", function() {
-			this.res.headers.must.not.have.property("expires")
-		})
-
-		it("must have an ETag header", function() {
-			this.res.headers.must.have.property("etag")
-		})
-
-		// Apache has an issue that if the content is encoded with gzip, the
-		// returned ETag has a "-gzip suffix and that breaks futher comparison.
-		it("must respond with 304 Not Modified if given ETag", function*() {
-			this.res.headers["content-encoding"].must.equal("gzip")
-
-			var etag = this.res.headers.etag
-			var res = yield this.request(PATH, {
-				method: "HEAD",
-				headers: {"Accept-Encoding": "gzip", "If-None-Match": etag}
+			before(function*() {
+				this.res = yield this.request(PATH, {
+					method: "HEAD",
+					headers: {"Accept-Encoding": "gzip"}
+				})
 			})
 
-			res.statusCode.must.equal(304)
+			it("must have a Cache-Control header", function() {
+				var control = this.res.headers["cache-control"]
+				control.must.equal("max-age=0, public, must-revalidate")
+			})
+
+			it("must not have an Expires header", function() {
+				this.res.headers.must.not.have.property("expires")
+			})
+
+			it("must have an ETag header", function() {
+				this.res.headers.must.have.property("etag")
+			})
+
+			// Apache has an issue that if the content is encoded with gzip, the
+			// returned ETag has a "-gzip suffix and that breaks futher comparison.
+			it("must respond with 304 Not Modified if given ETag", function*() {
+				this.res.headers["content-encoding"].must.equal("gzip")
+
+				var etag = this.res.headers.etag
+				var res = yield this.request(PATH, {
+					method: "HEAD",
+					headers: {"Accept-Encoding": "gzip", "If-None-Match": etag}
+				})
+
+				res.statusCode.must.equal(304)
+			})
 		})
 	})
 
