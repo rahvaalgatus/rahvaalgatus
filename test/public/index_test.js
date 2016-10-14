@@ -163,6 +163,14 @@ describe("Rahvaalgatus", function() {
 				var body = yield page.el.querySelector("aside").textContent
 				body.must.include("Peata arutelu")
 			})
+
+			it("must show invite button", function*() {
+				var initiative = yield createDiscussion(this.api)
+				var id = initiative.id
+				var page = yield InitiativePage.open(this.browser, this.url, id)
+				var body = yield page.el.querySelector("aside").textContent
+				body.must.include("Kutsu arutajaid")
+			})
 		})
 		
 		describe("when in voting", function() {
@@ -182,6 +190,14 @@ describe("Rahvaalgatus", function() {
 				var page = yield InitiativePage.open(this.browser, this.url, id)
 				var body = yield page.el.querySelector("aside").textContent
 				body.must.not.include("Peata arutelu")
+			})
+
+			it("must not show invite button", function*() {
+				var initiative = yield createVote(this.api)
+				var id = initiative.id
+				var page = yield InitiativePage.open(this.browser, this.url, id)
+				var body = yield page.el.querySelector("aside").textContent
+				body.must.not.include("Kutsu arutajaid")
 			})
 		})
 
