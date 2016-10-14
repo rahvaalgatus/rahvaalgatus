@@ -73,9 +73,11 @@ app.service("sTopic", [ "$http", "$q", "$log", function($http, $q, $log) {
 		popularity: "popularity",
 		date: "date"
 	};
+
 	Topic.create = function(topic) {
 		return $http.post("/api/users/self/topics", topic);
 	};
+
 	//TODO: What was I thinking? This interface is funky, it should have 1 input topicId
 	Topic.read = function(topic) {
 		var path = "/api/users/self/topics/:topicId".replace(":topicId", topic.id);
