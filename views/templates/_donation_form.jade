@@ -2,7 +2,7 @@ form#donation-form(method="GET", action="{{$sce.trustAsResourceUrl(Config.MAKSEK
 	input(type="hidden", name="shopId", value="{{Config.MAKSEKESKUS_ID}}")
 	input(type="hidden", name="paymentId", value="Donation")
 
-	label.form-label Toetuse suurus eurodes:
+	label.form-label(translate="SUPPORT_LABEL")
 
 	input.form-input(
 		type="numeric",
@@ -11,11 +11,10 @@ form#donation-form(method="GET", action="{{$sce.trustAsResourceUrl(Config.MAKSEK
 		placeholder="€",
 		requried)
 
-	button.form-submit Toeta
+	button.form-submit(translate="SUPPORT_BUTTON") Toeta
 
 	p
-		| Toetuseks suuname su Maksekeskusse, kus saad teha ülekande läbi
-		| järgmiste Eesti Interneti-pankade:
+		span(translate="SUPPORT_REDIRECT")
 
 		ul.banks
 			li: img(src="images/bank_danskebank.png")
