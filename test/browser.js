@@ -49,6 +49,10 @@ exports.close = function() {
 	]).catch(_.noop)
 }
 
+WebDriver.prototype.getDriver = function() {
+	return this
+}
+
 WebDriver.prototype.eval = WebDriver.prototype.executeScript
 
 O.defineGetter(WebElement.prototype, "textContent", function() {

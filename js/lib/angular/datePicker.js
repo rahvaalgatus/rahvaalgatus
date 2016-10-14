@@ -342,6 +342,10 @@
 
           return point < now;
         };
+
+        scope.isAtLeastDaysInFuture = function(days, date) {
+          return date >= moment().startOf("day").add(days, "day").toDate()
+        }
       }
     };
   }]);

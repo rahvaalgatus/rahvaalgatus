@@ -1,8 +1,8 @@
 var _ = require("lodash")
-var Url = require("url")
 var Config = require("root/config/test")
 var Moment = require("moment")
-var TOKEN = Config.sessions[0]
+var InitiativeCreatePage = require("./initiative_create_page")
+var TOKEN = Config.sessions[1]
 
 var DEFAULT_INITIATIVE = {
 	"description": "<!DOCTYPE HTML><html><body><h1>Automation Proposal</h1><br><p>More automated tests!</p></body></html>",
@@ -42,35 +42,51 @@ describe("Rahvaalgatus", function() {
 		beforeEach(signIn)
 		beforeEach(acceptBeta)
 
-		it("must create new discussion", function*() {
-			var query = this.browser.querySelector.bind(this.browser)
-			var tomorrow = Moment().startOf("day").add(1, "day").toDate()
+		it("must create a new initiative", function*() {
+			var deadline = Moment().startOf("day").add(3, "day").toDate()
+			var page = yield InitiativeCreatePage.open(this.browser, this.url)
 
-			yield this.browser.get(this.url + "/topics/new")
+			yield page.title.sendKeys("Automation Proposal")
+			yield page.acceptTos()
+			page = yield page.next()
 
-			// An URL inside the <label> interferes with clicking. Workaroun for now.
-			yield sleep(500)
-			yield this.browser.eval(function() {
-				document.querySelector("label[for=check]").click()
-			})
+			yield page.setDeadline(deadline)
+			page = yield page.next()
 
-			yield this.browser.querySelector(".step1-buttons .yellow-button").click()
-
-			yield sleep(500)
-			yield query(`a[data-date="${formatDate(tomorrow)}"]`).click()
-			yield query(".step2-button .blue-button").click()
-
-			yield sleep(1000)
-			yield query(".step3-button .blue-button").click()
-
-			var url = Url.parse(yield this.browser.getCurrentUrl())
-			var id = _.last(url.pathname.split("/"))
-
-			var res = yield this.api(`/api/users/self/topics/${id}`)
+			// No authors for happy-path.
+			page = yield page.next()
+			
+			var res = yield this.api(`/api/users/self/topics/${yield page.id}`)
 			var initiative = res.body.data
+
+			initiative.title.must.equal("Automation Proposal")
 			initiative.status.must.equal("inProgress")
 			initiative.visibility.must.equal("private")
-			initiative.endsAt.must.equal(formatTime(Moment(tomorrow).endOf("day")))
+			initiative.endsAt.must.equal(formatTime(Moment(deadline).endOf("day")))
+		})
+
+		it("must create initiative with co-author", function*() {
+			var deadline = Moment().startOf("day").add(3, "day").toDate()
+			var page = yield InitiativeCreatePage.open(this.browser, this.url)
+
+			yield page.title.sendKeys("Automation Proposal")
+			yield page.acceptTos()
+			page = yield page.next()
+
+			yield page.setDeadline(deadline)
+			page = yield page.next()
+
+			yield page.author.sendKeys("andri@dot.ee")
+			yield page.el.querySelector(".ac-dataset").click()
+			page = yield page.next()
+			
+			var id = yield page.id
+			var res = yield this.api(`/api/users/self/topics/${id}/members`)
+			var members = res.body.data
+
+			var users = _.sortBy(members.users.rows, "name")
+			users.length.must.equal(2)
+			users[0].name.must.equal("Andri")
 		})
 	})
 

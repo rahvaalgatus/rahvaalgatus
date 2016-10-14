@@ -11,6 +11,7 @@
 	},
 
 	"devDependencies": {
+		"co": ">= 4 < 5",
 		"mocha": ">= 2.1.0 < 3",
 		"co-mocha": ">= 1.1.0 < 2",
 		"must": ">= 0.13 < 0.14",
@@ -20,6 +21,7 @@
 		"fetch-throw": ">= 1.0.0 < 2",
 		"selenium-webdriver": ">= 2.53.3 < 3",
 		"selenium-dom": ">= 0.1.337 < 0.2",
+		"lazy-object": ">= 1 < 2",
 
 		"grunt-cli": "^1.2.0",
 		"grunt-concurrent": "1.0.0",

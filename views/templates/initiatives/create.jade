@@ -1,69 +1,65 @@
-.create1-bg(ng-show="('topics.create' | isState)")
+.new-initiative
 	.enclose
-		.step-two.right
-		|                 
-		.create-step1.clearfix
-			.step-one.left
-			|                 
-			.create1-content.right
-				h1(translate="EXPLANATION") Seletus
-				|                     
-				p(translate="EXPLANATION_CONTENT")
-				|                         
-				hr(style="color:#cecece; margin-top:30px;")
-				|                     
-				form
-					.click-check
-						input#check(type="checkbox", ng-checked="understandConditions", ng-click="checkConditionsRead()")
-						|                             
-						label(for="check")
-							span(ng-bind-html="'I_HAVE_READ' | translate:{url: '/goodpractice'}")
+		.new-initiative-step(ng-show="('topics.create' | isState)")
+			img.step-counter(src="/images/one.png")
+			h1(translate="EXPLANATION")
+			p(translate="EXPLANATION_CONTENT")
 
-						br
+			form.title
+				h2(translate="TITLE_FIELD")
 
-						p.error.error_message(ng-show="!app.user.loggedIn", translate="LOGIN_TO_CREATE_TOPIC")
+				input.form-input(
+					type="text",
+					name="title",
+					ng-model="topic.title",
+					required)
 
-						p.error.error_message(ng-show="notConfirmedRead", translate="CONFIRM_I_HAVE_READ")
+				input#accept-tos(
+					type="checkbox",
+					name="accept-tos",
+					ng-model="understandConditions")
 
-					.step1-buttons.clearfix
-						a.yellow-button(
-							href="#",
-							ng-disabled="!app.user.loggedIn",
-							ng-click="triggerStart('discussion')",
-							translate="START_DISCUSSION")
+				label(for="accept-tos")
+					span(
+						ng-bind-html="'I_HAVE_READ' | translate:{url: '/goodpractice'}")
 
-.create2-bg(ng-show="('topics.deadline' | isState)")
-	.enclose
-		.create-step2.clearfix
-			.step-two.left
-			|                 
-			.create2-content.left
-				h1(translate="DEADLINE_TITLE") Valikud
-				|                     
-				div(ng-if="!topictype || topictype=='discussion'", translate="DEADLINE_EXPLANATION_DISCUSSION")
-				div(ng-if="topictype=='initiative'", translate="DEADLINE_EXPLANATION_INITIATIVE")
+				p.error.error_message(
+					ng-show="!app.user.loggedIn",
+					translate="LOGIN_TO_CREATE_TOPIC")
+				p.error.error_message(
+					ng-show="notConfirmedRead",
+					translate="CONFIRM_I_HAVE_READ")
 
-				h3(ng-if="!topictype || topictype=='discussion'", translate="YOU_CAN_STILL_CHANGE_DEADLINE_DISCUSSION")
+				a.create.create-initiative.green-button(
+					href="#",
+					ng-disabled="!app.user.loggedIn || topic.title == ''",
+					ng-click="triggerStart('discussion')",
+					translate="START_DISCUSSION")
 
-				h3(ng-if="topictype=='initiative'", translate="YOU_CAN_STILL_CHANGE_DEADLINE_INITIATIVE")
-				|                         
-				.step2-button
-					a.blue-button(href="", ng-click="createDeadlineEnd(topic.endsAt)", translate="CONTINUE_TO_ADD_COAUTHORS")
+		.new-initiative-step(ng-show="('topics.deadline' | isState)")
+			img.step-counter(src="/images/two.png")
+			h1(translate="DEADLINE_TITLE")
+			p(translate="DEADLINE_EXPLANATION")
 
-				.step-back
-					a(href="/topics/new", translate="BACK_TO_PREVIOUS_CHOICE")
+			.calendar
+				div(
+					date-picker="topic.endsAt",
+					max-view="date",
+					min-view="date",
+					template="/templates/initiatives/_deadline_picker.html")
 
-				p.error.error_message(ng-show="dateNotSet", translate="CHOOSE_DEADLINE_TO_CONTINUE") Teema loomiseks peate sisse logima!
+			.calendar-output(ng-show="topic.endsAt")
+				span(translate="DEADLINE")
+				| : {{topic.endsAt | amDateFormat : 'L'}}
+				| (
+				span(translate="{{'TXT_DEADLINE_CALENDAR_DAYS_LEFT' | translate: topic}}")
+				| )
 
-			.calendar-block
-				.deadline-calendar.clearfix
-					p.left
-						span(translate="DEADLINE") Deadline
-						| : {{topic.endsAt | amDateFormat : 'L'}}
-					|                         
-					p.right(translate="{{'TXT_DEADLINE_CALENDAR_DAYS_LEFT' | translate: topic}}") 23 days left
+			a.create.create-deadline.blue-button(
+				href="",
+				ng-click="createDeadlineEnd(topic.endsAt)",
+				translate="CONTINUE_TO_ADD_COAUTHORS")
 
-				hr(style="margin-bottom:20px;")
-
-				.calendar-right.clearfix.hasDatepicker
-					div(date-picker="topic.endsAt", max-view="date", min-view="date", template="/templates/components/datePickerTopic.html?1312234239084")
+			p.error.error_message(
+				ng-show="dateNotSet",
+				translate="CHOOSE_DEADLINE_TO_CONTINUE")

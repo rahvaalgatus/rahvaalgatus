@@ -4,6 +4,8 @@ var Raven = window.Raven
 var app = window.app
 var angular = window.angular
 var moment = window.moment
+var DOCTYPE = "<!DOCTYPE HTML>"
+var MIN_DEADLINE = 3
 
 app.controller("TopicCtrl", [
 	"$scope", "$rootScope", "$sce", "$compile", "$state", "$filter", "$log", "$timeout", "ngDialog", "sTopic", "sTranslate", "sAuth", "sProgress",
@@ -12,12 +14,12 @@ app.controller("TopicCtrl", [
 
 		$scope.topic = {
 			id: null,
-			title: null,
-			description: '<!DOCTYPE HTML><html><body><h1>Lühike, selge ja kokkuvõtlik pealkiri algatusele</h1><br><p>Lühike (u 350 tähemärki) või säutsu-lühike (140 tähemärki) sisukokkuvõte – see oleks mõeldud selleks, et algatusi platvormis ja sotsiaalmeedias paremini kajastada</p><br><h2>Ettepanek - </h2><br><p>Mida tahetakse muuta</p><br><h2>Põhjendus - </h2><br><p>Miks see on oluline</p><br><p>Kogu see tekstimaht maksimaalselt 12 000 tähemärki</p><br></body></html>',
+			title: "",
+			description: "<!DOCTYPE HTML><html><body><h1></h1><br><p>Lühike (u 350 tähemärki) või säutsu-lühike (140 tähemärki) sisukokkuvõte – see oleks mõeldud selleks, et algatusi platvormis ja sotsiaalmeedias paremini kajastada</p><br><h2>Ettepanek - </h2><br><p>Mida tahetakse muuta</p><br><h2>Põhjendus - </h2><br><p>Miks see on oluline</p><br><p>Kogu see tekstimaht maksimaalselt 12 000 tähemärki</p><br></body></html>",
 			status: null,
 			visibility: null,
 			categories: [],
-			endsAt: null,
+			endsAt: moment().startOf("day").add(MIN_DEADLINE, "day").toDate(),
 			permission: {
 				level: null
 			},
@@ -89,7 +91,7 @@ app.controller("TopicCtrl", [
           return void $state.go("topics." + page, {id: topic.id})
         }
 
-        $scope.shortDescription = $scope.htmlToPlaintext(topic.description).replace(topic.title,"").substring(0,200)+"...";
+        $scope.shortDescription = $scope.htmlToPlaintext(topic.description).replace(topic.title, "").substring(0,200)+"...";
         $scope.topicContent = $sce.trustAsHtml(topic.description);
 
         if (topic.endsAt != null) {
@@ -186,21 +188,28 @@ app.controller("TopicCtrl", [
 		};
 
 		$scope.triggerStart = function(type) {
-			if ($scope.understandConditions && $scope.app.user.loggedIn) {
-				$scope.notConfirmedRead = false;
-				sTopic.create($scope.topic).then(function(res) {
-					var topic = res.data.data;
-					angular.copy(topic, $scope.topic);
-					$scope.topictype=type;
-					$state.go("topics.deadline", {id: topic.id})
-				}, function(res) {
-					$scope.app.showError(_.values(res.data.errors));
-					$scope.app.isTopicLoading = false;
-				});
-			}
-			else if(!$scope.understandConditions){
-				$scope.notConfirmedRead = true;
-			}
+			if (!$scope.app.user.loggedIn) return
+
+			if (!$scope.understandConditions)
+				return void ($scope.notConfirmedRead = true)
+
+			var topic = $scope.topic
+			$scope.emptyTitle = false
+			$scope.notConfirmedRead = false
+
+			topic.description = formatDescription(topic.description, {
+				title: topic.title
+			})
+
+			sTopic.create(topic).then(function(res) {
+				var topic = res.data.data;
+				angular.copy(topic, $scope.topic);
+				$scope.topictype=type;
+				$state.go("topics.deadline", {id: topic.id})
+			}, function(res) {
+				$scope.app.showError(_.values(res.data.errors));
+				$scope.app.isTopicLoading = false;
+			});
 		};
 
 		$scope.createDeadlineEnd = function(deadline) {
@@ -224,10 +233,6 @@ app.controller("TopicCtrl", [
 			else{
 				$scope.dateNotSet = true;
 			}
-		};
-
-		$scope.coAuthorsAdded = function() {
-			$state.go("topics.discussion", {id: $scope.topic.id})
 		};
 
 		$scope.doSetVisibility = function(visibility) {
@@ -257,14 +262,6 @@ app.controller("TopicCtrl", [
 				}, function(result) {
 					$log.error("Topic visibility update failed", result);
 				});
-			}
-		};
-
-		$scope.checkConditionsRead = function() {
-			if ($scope.understandConditions == false) {
-				$scope.understandConditions = true;
-			} else {
-				$scope.understandConditions = false;
 			}
 		};
 
@@ -502,3 +499,10 @@ app.controller("TopicCtrl", [
 			});
 		};
 }]);
+
+function formatDescription(html, attrs) {
+	var el = document.createElement("html")
+	el.innerHTML = html
+	el.querySelector("h1").textContent = attrs.title
+	return DOCTYPE + el.outerHTML
+}

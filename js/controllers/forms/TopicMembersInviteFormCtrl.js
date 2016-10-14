@@ -29,11 +29,6 @@ app.controller("TopicMembersInviteFormCtrl", [ "$scope", "$rootScope", "$state",
             rows: []
         };
     };
-    $scope.stepBack  = function(){
-            $state.go("topics.deadline", {
-                id: $scope.topic.id
-            });
-    }
     $scope.search = function(str) {
         $scope.selectedMember = null;
         if (str && str.length >= 2) {
