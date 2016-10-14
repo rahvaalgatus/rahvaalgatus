@@ -45,9 +45,11 @@ div(ng-tabs="", ng-show="topicLoadSuccess && !isTopicLoading")
 
 				aside.right
 					p.publish-topic
-						a(href="#", ng-if="!isClosed() && isAdmin() && topic.visibility=='private'", ng-click="doSetVisibility('public')", translate="PUBLISH_TOPIC") PUBLISH TOPIC
-
-						a(href="#", ng-if="!isClosed() && isAdmin() && topic.visibility=='public'", ng-click="doSetVisibility('private')", translate="UNPUBLISH_TOPIC") UNPUBLISH TOPIC
+						a(
+							href="#",
+							ng-if="!isClosed() && isAdmin() && topic.visibility=='private'",
+							ng-click="doSetVisibility('public')",
+							translate="PUBLISH_TOPIC")
 
 					p.collect-signatures.s
 						a(ng-if="isAdmin() && !topic.vote.id", ui-sref="topics.discussion.finish({id: topic.id})", translate="BTN_SEND_TO_VOTE")

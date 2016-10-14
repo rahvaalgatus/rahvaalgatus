@@ -1,4 +1,5 @@
 var _ = require("lodash")
+var O = require("oolong")
 var Config = require("root/config/test")
 var Moment = require("moment")
 var InitiativePage = require("./initiative_page")
@@ -136,6 +137,25 @@ describe("Rahvaalgatus", function() {
 				vote.endsAt.must.equal(formatTime(Moment(tomorrow).endOf("day")))
 			})
 
+			it("must show publish button if private", function*() {
+				var initiative = yield createDiscussion(this.api, {
+					"visibility": "private"
+				})
+
+				var id = initiative.id
+				var page = yield InitiativePage.open(this.browser, this.url, id)
+				var body = yield page.el.querySelector("aside").textContent
+				body.must.include("Muuda avalikuks")
+			})
+
+			it("must not show unpublish button if public", function*() {
+				var initiative = yield createDiscussion(this.api)
+				var id = initiative.id
+				var page = yield InitiativePage.open(this.browser, this.url, id)
+				var body = yield page.el.querySelector("aside").textContent
+				body.must.not.include("Muuda privaatseks")
+			})
+
 			it("must show close discussion button", function*() {
 				var initiative = yield createDiscussion(this.api)
 				var id = initiative.id
@@ -147,6 +167,14 @@ describe("Rahvaalgatus", function() {
 		
 		describe("when in voting", function() {
 			beforeEach(signIn)
+
+			it("must not show unpublish button", function*() {
+				var initiative = yield createVote(this.api)
+				var id = initiative.id
+				var page = yield InitiativePage.open(this.browser, this.url, id)
+				var body = yield page.el.querySelector("aside").textContent
+				body.must.not.include("Muuda privaatseks")
+			})
 
 			it("must not show close discussion button", function*() {
 				var initiative = yield createVote(this.api)
@@ -184,19 +212,19 @@ function* signIn() {
 	}, TOKEN)
 }
 
-function* createDiscussion(api) {
+function* createDiscussion(api, attrs) {
 	var res = yield api("/api/users/self/topics", {
 		method: "POST",
-		json: DEFAULT_INITIATIVE
+		json: O.merge({}, DEFAULT_INITIATIVE, attrs)
 	})
 
 	return res.body.data
 }
 
-function* createVote(api) {
+function* createVote(api, attrs) {
 	var res = yield api("/api/users/self/topics", {
 		method: "POST",
-		json: DEFAULT_INITIATIVE
+		json: O.merge({}, DEFAULT_INITIATIVE, attrs)
 	})
 
 	var initiative = res.body.data
