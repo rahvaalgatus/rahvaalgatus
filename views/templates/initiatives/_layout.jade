@@ -78,7 +78,13 @@ div(ng-tabs="", ng-show="topicLoadSuccess && !isTopicLoading")
 									ng-click="setTopicStatusToClosed(topic)",
 									translate="CLOSE_TOPIC")
 
-							li: a(
+							li: a.renew-deadline-button(
+								ng-if="!topic.vote.id",
+								ui-sref="topics.deadline({id: topic.id})",
+								translate="RENEW_DEADLINE")
+
+							li: a.renew-deadline-button(
+								ng-if="topic.vote.id",
 								ui-sref="topics.vote.renew({id: topic.id})",
 								translate="RENEW_DEADLINE")
 

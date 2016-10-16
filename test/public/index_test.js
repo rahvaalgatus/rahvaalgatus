@@ -107,18 +107,31 @@ describe("Rahvaalgatus", function() {
 		describe("when in discussion", function() {
 			beforeEach(signIn)
 
+			it("must renew deadline", function*() {
+				var initiative = yield createDiscussion(this.api), id = initiative.id
+				var page = yield InitiativePage.open(this.browser, this.url, id)
+
+				yield page.el.querySelector(".renew-deadline-button").click()
+				yield sleep(500)
+
+				page = new InitiativeCreatePage(this.browser, "deadline")
+				var deadline = Moment().startOf("day").add(5, "day").toDate()
+				yield page.setDeadline(deadline)
+				page = yield page.next()
+				page = yield page.next()
+				
+				var res = yield this.api(`/api/users/self/topics/${yield page.id}`)
+				initiative = res.body.data
+				initiative.endsAt.must.equal(formatTime(Moment(deadline).endOf("day")))
+			})
+
 			it("must send discussion to voting", function*() {
 				var query = this.browser.querySelector.bind(this.browser)
 				var tomorrow = Moment().startOf("day").add(1, "day").toDate()
 				var tomorrowString = formatDate(tomorrow)
 
-				var res = yield this.api("/api/users/self/topics", {
-					method: "POST",
-					json: DEFAULT_INITIATIVE
-				})
-
-				var initiative = res.body.data, id = initiative.id
-				yield this.browser.get(this.url + "/topics/" + id)
+				var initiative = yield createDiscussion(this.api), id = initiative.id
+				yield InitiativePage.open(this.browser, this.url, id)
 
 				yield sleep(500)
 				yield query(".send-to-vote-button").click()
@@ -128,7 +141,7 @@ describe("Rahvaalgatus", function() {
 				yield query(".admin-role-cal .sign-in a").click()
 
 				yield sleep(500)
-				res = yield this.api(`/api/users/self/topics/${id}`)
+				var res = yield this.api(`/api/users/self/topics/${id}`)
 				initiative = res.body.data
 
 				var voteId = initiative.vote.id

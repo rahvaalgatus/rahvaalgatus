@@ -5,7 +5,13 @@ var InitiativePage = require("./initiative_page")
 var co = require("co")
 var lazies = require("lazy-object").defineLazyProperties
 
-class InitiativeCreatePage extends Page {}
+class InitiativeCreatePage extends Page {
+	constructor(el, step) {
+		super(el)
+		if (step) this.step = step
+	}
+}
+
 module.exports = InitiativeCreatePage
 
 InitiativeCreatePage.open = co.wrap(function*(browser, baseUrl) {
@@ -14,7 +20,7 @@ InitiativeCreatePage.open = co.wrap(function*(browser, baseUrl) {
 	return new InitiativeCreatePage(browser)
 })
 
-InitiativeCreatePage.prototype.nextButton = ".create-initiative-button"
+InitiativeCreatePage.prototype.step = "title"
 
 InitiativeCreatePage.prototype.acceptTos = co.wrap(function*() {
 	// An URL inside the <label> interferes with clicking. Workaround for now.
@@ -24,18 +30,22 @@ InitiativeCreatePage.prototype.acceptTos = co.wrap(function*() {
 })
 
 InitiativeCreatePage.prototype.next = co.wrap(function*() {
-	yield this.el.querySelector(this.nextButton).click()
+	var selector
+	switch (this.step) {
+		case "title": selector = ".create-initiative-button"; break
+		case "deadline": selector = ".create-deadline-button"; break
+		case "authors": selector = ".create-authors-button"; break
+		default: throw new Error("Unknown state: " + this.step)
+	}
+
+	yield this.el.querySelector(selector).click()
 	yield sleep(1000)
 
-	switch (this.nextButton) {
-		case ".create-initiative-button":
-			return {__proto__: this, nextButton: ".create-deadline-button"}
-		case ".create-deadline-button":
-			return {__proto__: this, nextButton: ".create-authors-button"}
-		case ".create-authors-button":
-			return new InitiativePage(this.browser)
-
-		default: throw new Error("Unknown state")
+	switch (this.step) {
+		case "title": return new InitiativeCreatePage(this.el, "deadline")
+		case "deadline": return new InitiativeCreatePage(this.el, "authors")
+		case "authors": return new InitiativePage(this.browser)
+		default: throw new Error("Unknown state: " + this.step)
 	}
 })
 
