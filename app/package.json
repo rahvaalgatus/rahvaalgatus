@@ -5,6 +5,7 @@
 
 	"devDependencies": {
 		"browserify": "",
-		"watchify": ""
+		"watchify": "",
+		"uglify-js": ""
 	}
 }
