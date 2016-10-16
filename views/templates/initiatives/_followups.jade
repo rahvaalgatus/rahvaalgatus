@@ -1,7 +1,7 @@
 .article-box(ng-if="!filters.statuses.value || filters.statuses.value == 'followUp'", ng-show="followuptopicList.length > 0")
 	.clearfix
 		.left
-			h3(translate="IN_FOLLOW_UP_LIST") RAKENDAMISEL
+			h3(translate="IN_FOLLOW_UP_LIST")
 
 			.clearfix
 				ul.article-pagi.clearfix(ng-show="rangefollowuptopicList.length > 1")
@@ -45,4 +45,6 @@
 					p.author {{topic.creator.name}}
 
 					.bar.clock
-						span {{topic.createdAt | amDateFormat : 'L'}}
+						span(
+							translate="N_SIGNATURES",
+							translate-values="{votes: {{topic.vote.options.rows[topic.vote.yesindex].voteCount || 0}}}")

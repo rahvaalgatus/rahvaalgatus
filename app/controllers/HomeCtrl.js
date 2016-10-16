@@ -1,5 +1,6 @@
-var _ = window._
-var app = window.app
+var _ = require("lodash")
+var app = require("../app")
+var angular = require("angular")
 
 app.controller("HomeCtrl", [ "$scope", "$rootScope", "$state", "$kookies", "$log", "toruSessionSettings", "sTopic","ngDialog", function($scope, $rootScope, $state, $kookies, $log, toruSessionSettings, sTopic, ngDialog) {
     $scope.isTopicListLoading = true;
@@ -191,7 +192,6 @@ app.controller("HomeCtrl", [ "$scope", "$rootScope", "$state", "$kookies", "$log
     var loadFollowUpTopicListPromise = null;
     $scope.loadFollowUpList = function() {
         // Disable infiniteScroll loading whyle fetching new data
-        $scope.filters.infiniteScrollDisabled = true;
         $scope.isTopicListLoading = true;
         if (loadFollowUpTopicListPromise) {
             loadFollowUpTopicListPromise.abort();
@@ -201,25 +201,45 @@ app.controller("HomeCtrl", [ "$scope", "$rootScope", "$state", "$kookies", "$log
             offset = offset - 1;
         }
         loadFollowUpTopicListPromise = sTopic.listUnauth("followUp", $scope.filters.categories.value, offset, $scope.filters.limit);
+
         loadFollowUpTopicListPromise.then(function(res) {
-            var topics = res.data.data.rows;
-            var pages = Math.ceil(res.data.data.countTotal / $scope.filters.limit);
-            $scope.rangefollowuptopicList = new Array(pages);
-            $scope.followuptopicList = [];
-            if (topics && topics.length) {
-                $scope.followuptopicList = $scope.followuptopicList.concat(topics);
-                $scope.filters.offset += $scope.filters.limit;
-                $scope.filters.infiniteScrollDisabled = false;
-            }
-            if (!topics || !topics.length || topics.length < $scope.filters.limit) {
-                $scope.filters.infiniteScrollDisabled = true;
-            }
-            $scope.isTopicListLoading = false;
-        }, function(res) {
-            $log.log("List fetch failed or was cancelled", res);
-            $scope.isTopicListLoading = false;
+					var topics = res.data.data.rows
+
+					topics = topics.map(function(topic) {
+						return sTopic.readUnauth(topic).then(function(res) {
+							return res.data.data
+						})
+					})
+
+					topics = topics.map(function(topic) {
+						return topic.then(function(topic) {
+							var vote = sTopic.voteReadUnauth(topic.id, topic.vote.id)
+
+							return vote.then(function(res) {
+								topic.vote = res.data.data
+								topic.vote.yesindex = getYesIndex(topic.vote)
+								return topic
+							})
+						})
+					})
+
+					Promise.all(topics).then(function(topics) {
+						$scope.followuptopicList = topics
+						$scope.filters.offset += $scope.filters.limit
+						$scope.$digest()
+            $scope.isTopicListLoading = false
+					})
+
+					var pages = Math.ceil(res.data.data.countTotal / $scope.filters.limit)
+					$scope.rangefollowuptopicList = new Array(pages);
+					$scope.followuptopicList = res.data.data.rows
+
+        }, function(err) {
+					$scope.isTopicListLoading = false;
+					throw err
         });
     };
+
     var loadVotingTopicListPromise = null;
     $scope.loadVotingList = function() {
         // Disable infiniteScroll loading whyle fetching new data
@@ -437,3 +457,11 @@ app.controller("HomeCtrl", [ "$scope", "$rootScope", "$state", "$kookies", "$log
         });
     };
 } ]);
+
+function getYesIndex(vote) {
+	for (var i = 0; i < vote.options.rows.length; ++i) {
+		if (vote.options.rows[i].value.toLowerCase() === "yes") return i
+	}
+
+	return null
+}
