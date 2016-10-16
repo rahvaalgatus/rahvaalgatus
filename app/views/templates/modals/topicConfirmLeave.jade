@@ -1,0 +1,17 @@
+.confirmation
+	.inline
+		h2(translate="HEADING_ARE_YOU_SURE") Are you sure you want to continue?
+		|         
+		p(translate="TXT_NO_UNDO") Please keep in mind you cannot undo this action.
+		|         
+		ul
+			li(translate="TXT_TOPIC_ACCESS_REMOVED") You cannot participate in the Topic any more.
+			|             
+			li(translate="TXT_TOPIC_ACCESS_ADMIN_CAN_ADD_BACK") Topic administrator can add you back later if needed.
+		|         
+		.buttons
+			button.button.highlight-5(ng-click="closeThisDialog()", translate="BTN_NO_LEAVE") NO, DON'T LEAVE THE TOPIC
+			|             
+			button.button.highlight-4(ng-click="confirm()", translate="BTN_YES_LEAVE") YES, LEAVE THE TOPIC
+		// /buttons
+	// /inline

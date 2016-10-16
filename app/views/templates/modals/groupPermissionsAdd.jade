@@ -1,0 +1,45 @@
+#popup
+	.inline(style="width:430px;")
+		.buttons
+			.btn-close(ng-click="closeThisDialog()")  
+		// /buttons
+		.scroller
+			form.invite(ng-controller="GroupInviteFormCtrl")
+				h2.no_border
+					span.gray(translate="HEADING_ADD_MEMBERS_TO") Add members to:
+					|  {{group.name}}
+				|                 
+				typeahead.auto-complete(items="searchResults.users", term="searchString", search="search(term)", select="selectMember(item)", placeholder="{{'PLACEHOLDER_USERNAME_OR_EMAIL' | translate}}")
+					.ac-dropdown(ng-cloak="")
+						.ac-dataset(ng-show="searchResults.users.length")
+							h5.ac-topic(translate="LBL_USERS") Users
+							|                             
+							.ac-suggestions
+								.ac-suggestion(typeahead-item="user", ng-repeat="user in searchResults.users") {{user.name}}
+						|                         
+						.ac-empty-message(ng-show="!searchResults.users.length && !searchResults.groups.length", translate="TXT_NO_RESULTS_FOUND")
+							| No results found
+				|                 
+				h4(ng-show="users.rows.length") Users
+				|                 
+				table.list.users
+					tr(ng-repeat="user in users.rows")
+						td
+							.image.icon-user
+								img(ng-src="{{user.imageUrl}}")
+							|                             
+							.description
+								| {{user.name}}
+								br
+								|                                 
+								span.gray {{user.company}}
+							// /description
+						|                         
+						td
+							button.remove(ng-click="removeMember($index)", translate="BTN_REMOVE") Remove
+	// /inline
+script(type="text/javascript").
+	// Not the most elegant solution, find a better one.
+	setTimeout(function () {
+	$('#popup').popup();
+	}, 100);

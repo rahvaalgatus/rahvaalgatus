@@ -1,0 +1,19 @@
+div(ng-controller="AddEmailCtrl")
+	a(ng-click="closeFinalizeDialog()")
+		img(src="images/profile-close.png", alt="Image")
+	|     
+	h2(translate="LBL_EMAIL") E-MAIL ADDRESS
+	|     
+	p(translate="PLEASE_FILL_EMAIL") Please also fill in your e-mail address
+	|     
+	form
+		p
+			input(ng-model="form.email", type="email", placeholder="{{'PLACEHOLDER_EMAIL'| translate}}")
+		|         
+		p
+			input(ng-click="submit()", type="submit", value="{{'FINALISE_REGISTRATION'| translate}}")
+|     
+script.
+	$(function(){
+	$(".login, .log-pop").show();
+	});

@@ -1,0 +1,64 @@
+#reg.sign-block-wrapper.confirmation(ng-controller="LoginEstidCtrl")
+	.inline
+		.sign-block
+			.notifications(ng-show="estidLoginError")
+				.entry.error
+					span(translate="{{estidLoginError}}") Wow, we failed!
+					|                     
+					.close(ng-click="doCloseEstidLoginError()")  
+			|             
+			.btn-close(ng-click="closeThisDialog()")
+			|             
+			.title(translate="HEADING_LOGIN_ID_CHOOSE_A_METHOD") Choose a log in method method
+			// TODO: Remove inner CSS when ID card login is implemented
+			.column.mobile(style="width: 100%; border: none")
+				form(name="formMobileSign", ng-show="!formMobile.challengeID", novalidate="")
+					.row
+						img(src="images/icon-mobile-id.png")
+					|                     
+					.row
+						.spinner(ng-show="formMobile.isLoading")
+						|                         
+						div(ng-show="!formMobile.isLoading")
+							label.label(ng-class="{error: formMobileSign.phoneNumber.$error.pattern && formMobileSign.phoneNumber.$touched}")
+								input(type="text", name="phoneNumber", ng-model="formMobile.phoneNumber", placeholder="{{'PLACEHOLDER_PHONE_NUMBER' | translate}}", ng-pattern="/^\+?[0-9\s-]{7,}$/", required="")
+								|                                 
+								span.error_message(ng-show="formMobileSign.phoneNumber.$error.pattern && formMobileSign.phoneNumber.$touched", translate="MSG_ERROR_INVALID_PHONE_NUMBER") Invalid phone number
+							|                             
+							label.label(ng-class="{error: formMobileSign.pid.$error.pattern && formMobileSign.pid.$touched}")
+								input(type="text", name="pid", ng-model="formMobile.pid", placeholder="{{'PLACEHOLDER_PERSONAL_IDENTIFICATION_CODE' | translate}}", ng-pattern="/^[0-9]{11}$/", required="")
+								|                                 
+								span.error_message(ng-show="formMobileSign.pid.$error.pattern && formMobileSign.pid.$touched", translate="MSG_ERROR_INVALID_PERSONAL_IDENTIFICATION_CODE") Invalid personal identification code
+					|                     
+					.row
+						input(type="button", value='{{"BTN_LOG_IN_REGISTER" |translate}}', ng-show="!formMobile.isLoading", ng-click="doLoginWithMobile()", ng-disabled="formMobileSign.$invalid")
+				|                 
+				.pending(ng-show="formMobile.challengeID && formMobile.isLoading")
+					.row
+						img(src="images/icon-mobile-id.png")
+					|                     
+					.row(style="color:#4A555D")
+						h3(translate="HEADING_MOBILEID_CONTROL_CODE", translate-values="{code: formMobile.challengeID}") Control code: 1234
+						|                         
+						.spinner
+						|                         
+						p(translate="TXT_MOBILEID_CHECK_CONTROL_CODE_PIN1")
+							| Make sure control code matches with one in the phone screen and enter Mobile-ID PIN1.
+					|                     
+					.row
+			//
+				div class="column smartcard">
+				<div class="row TODO">
+				<img src="static/imgs/logo_id_card_big.png"/>
+				</div>
+				<div class="row card TODO">
+				<img ng-show="!isLoadingIdCard" src="static/imgs/smartcard.png"/>
+				<div ng-show="isLoadingIdCard" class="spinner"></div>
+				</div>
+				<div class="row TODO">
+				<button ng-disabled="isLoadingIdCard" class="button secondary" translate="BTN_LOG_IN_WITH_ID_CARD">LOG IN WITH ID-CARD</button>
+				</div>
+				</div
+script.
+	$('#emailLogin').hide();
+	console.log($(".login").position());

@@ -1,0 +1,63 @@
+#popup(ng-controller="GroupPermissionsViewCtrl")
+	.inline(style="width:725px;")
+		.buttons
+			.btn-close(ng-click="closeThisDialog()")  
+		// /buttons
+		h2.no_border
+			span.gray(translate="HEADING_IN_GROUP") in group:
+			|  
+			i {{group.name}}
+		|         
+		table.header
+			tr
+				td
+					.tab(href="#")
+						span.title(translate="{{ 'HEADING_USERS_N' | translate: members }}") Users (0)
+						// a href="" class="TODO" ng-show="isAdmin()">Invite more users</a
+				|                 
+				td
+					//
+						div class="search_field TODO">
+						<input type="text" placeholder="{{'PLACEHOLDER_SEARCH_TOPIC' | translate}}" />
+						</div
+		|         
+		table.list
+			tr
+				th(translate="TH_PROFILE") Profile
+				|                 
+				th(translate="TH_RIGHTS") Rights
+				|                 
+				th(ng-show="isAdmin()", translate="TH_REMOVE") Remove
+		// /list
+		.scroller
+			table.list
+				tr(ng-repeat="user in members.rows")
+					td
+						.image.icon-user
+							img(ng-src="{{user.imageUrl}}")
+						|                         
+						.description
+							| {{user.name}}
+							br
+							|                             
+							span.gray(ng-show="user.company") {{user.company}}
+					|                     
+					td
+						div(ng-show="!isAdmin()")
+							| {{'TXT_GROUP_LEVELS_' + user.level | uppercase | translate}}
+						|                         
+						.dropdown(toru-select="", on-select="setUserLevel(user, selected)", ng-show="isAdmin()")
+							.active {{'TXT_GROUP_LEVELS_' + user.level | uppercase | translate}}
+							|                             
+							.more
+								a(href="", toru-select-item="level", ng-repeat="level in LEVELS", ng-click="setGroupUserLevel(user, level)") {{'TXT_GROUP_LEVELS_' + level | uppercase | translate}}
+					|                     
+					td(ng-show="isAdmin()")
+						button.remove(ng-click="delete($index)", translate="BTN_REMOVE") Remove
+		// /scroller
+	// /inline
+script(type="text/javascript").
+	// Not the most elegant solution, find a better one.
+	setTimeout(function () {
+	$('#popup').popup();
+	}, 100);
