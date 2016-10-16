@@ -7,7 +7,6 @@ app.controller("AppCtrl", [ "$scope", "$rootScope", "$window", "$state", "$trans
     };
 
     $scope.$sce = $sce
-    $rootScope.window = window
     $rootScope.Config = Config
 
     $scope.app.finalizeOpen = null;

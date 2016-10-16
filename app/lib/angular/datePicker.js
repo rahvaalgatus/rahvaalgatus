@@ -1,10 +1,11 @@
 'use strict';
+var Config = require("root/config")
 
 /**
  * https://github.com/g00fy-/angular-datepicker
  */
 
-(function(angular){
+;(function(angular){
   'use strict';
 
   var Module = angular.module('datePicker', []);
@@ -165,12 +166,12 @@
         before: '=?'
       },
       link: function (scope, element, attrs) {
-        scope.window = window
         scope.date = new Date(scope.model || new Date());
         scope.views = datePickerConfig.views.concat();
         scope.view = attrs.view || datePickerConfig.view;
         scope.now = new Date();
         scope.template = attrs.template || datePickerConfig.template;
+        scope.Config = Config
 
         var step = parseInt(attrs.step || datePickerConfig.step, 10);
         var partial = !!attrs.partial;
