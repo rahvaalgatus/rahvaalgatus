@@ -27,8 +27,8 @@
 		"grunt-concurrent": "1.0.0",
 		"grunt-contrib-uglify": "0.6.0",
 		"grunt-contrib-watch": "0.6.1",
-		"jade": "",
-		"node-sass": ""
+		"jade": ">= 1.11 < 2",
+		"node-sass": ">= 3.8 < 4"
 	},
 
 	"engines" : {

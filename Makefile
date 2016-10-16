@@ -65,7 +65,7 @@ server:
 	@$(NODE) bin/web
 
 shrinkwrap:
-	npm shrinkwrap --dev
+	npm shrinkwrap
 
 deploy: DEPLOY_HOST ?= $(error "Please set DEPLOY_HOST")
 deploy:
