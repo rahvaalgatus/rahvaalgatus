@@ -18,7 +18,7 @@ app.controller("TopicCtrl", [
 			status: null,
 			visibility: null,
 			categories: [],
-			endsAt: moment().startOf("day").add(Config.MIN_DEADLINE_DAYS, "day").toDate(),
+			endsAt: moment().startOf("day").add(Config.MIN_DEADLINE_DAYS, "day").endOf("day").toDate(),
 			permission: {
 				level: null
 			},
