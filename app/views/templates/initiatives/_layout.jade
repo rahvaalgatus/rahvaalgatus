@@ -73,7 +73,8 @@ div(ng-tabs="", ng-show="topicLoadSuccess && !isTopicLoading")
 								ng-dialog-data="{{topic}}")
 								span(translate="REMIND_PEOPLE_TO_SIGN")
 
-							li(ng-if="isAdmin() && !isClosed() && !topic.vote.id")
+							li.close-initiative-button(
+								ng-if="isAdmin() && !isClosed() && !topic.vote.id")
 								a(
 									ng-click="setTopicStatusToClosed(topic)",
 									translate="CLOSE_TOPIC")

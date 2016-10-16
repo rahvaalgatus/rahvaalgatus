@@ -392,12 +392,9 @@ app.controller("TopicCtrl", [
 			ngDialog.openConfirm({
 				template: "/templates/modals/topicConfirmClosed.html"
 			}).then(function() {
-				var newStatus = sTopic.STATUSES.closed;
-				sTopic.setStatus(topic, newStatus).then(function() {
-					$scope.topic.status = newStatus;
-				}, function(err) {
-					$log.error("Failed to set Topic status", topic, err);
-				});
+				var closed = sTopic.STATUSES.closed
+				$scope.topic.status = closed
+				sTopic.update({id: topic.id, status: closed})
 			}, angular.noop);
 		};
 		$scope.setHashtag = function() {

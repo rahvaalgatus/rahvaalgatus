@@ -108,7 +108,7 @@ describe("Rahvaalgatus", function() {
 		describe("when in discussion", function() {
 			beforeEach(signIn)
 
-			it("must renew deadline", function*() {
+			it("must be able to renew deadline", function*() {
 				var initiative = yield createDiscussion(this.api), id = initiative.id
 				var page = yield InitiativePage.open(this.browser, this.url, id)
 
@@ -196,12 +196,17 @@ describe("Rahvaalgatus", function() {
 				body.must.not.include("Muuda privaatseks")
 			})
 
-			it("must show close discussion button", function*() {
+			it("must be able to close discussion", function*() {
 				var initiative = yield createDiscussion(this.api)
 				var id = initiative.id
 				var page = yield InitiativePage.open(this.browser, this.url, id)
-				var body = yield page.el.querySelector("aside").textContent
-				body.must.include("Peata arutelu")
+				yield page.el.querySelector(".close-initiative-button").click()
+				yield page.el.querySelector("#popup .confirm-button").click()
+				yield sleep(500)
+
+				var res = yield this.api(`/api/users/self/topics/${id}`)
+				initiative = res.body.data
+				initiative.status.must.equal("closed")
 			})
 
 			it("must show invite button", function*() {

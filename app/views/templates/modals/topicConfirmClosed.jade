@@ -24,8 +24,6 @@
 					p(translate="TXT_VOTING_ENDS") Voting ends and further voting is not possible.
 					|                 
 					.buttons
-						button.button.deletetopic(style="width:50%; float:left;", ng-click="closeThisDialog()", translate="BTN_NO_CHANGE_TO_FOLLOWUP") NO, DON'T CHANGE STATUS
-						|                     
-						button.button.deletetopic(style="width:50%;", ng-click="confirm()", translate="BTN_YES_CHANGE_TO_FOLLOWUP") YES, CHANGE THE STATUS
-					// /buttons
-				// /inline
+						button.button.deletetopic.cancel-button(style="width:50%; float:left;", ng-click="closeThisDialog()", translate="BTN_NO_CHANGE_TO_FOLLOWUP")
+
+						button.button.deletetopic.confirm-button(style="width:50%;", ng-click="confirm()", translate="BTN_YES_CHANGE_TO_FOLLOWUP")
