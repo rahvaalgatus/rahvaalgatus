@@ -15,7 +15,19 @@ SELENIUM_BROWSER = chrome
 
 STAGING_HOST = staging.rahvaalgatus.ee
 PRODUCTION_HOST = production.rahvaalgatus.ee
-LFTP_MIRROR_OPTS = --verbose=1 --continue --reverse --delete --dereference
+APP_HOST = app.rahvaalgatus.ee
+
+LFTP_MIRROR_OPTS = \
+	--verbose=1 \
+	--continue \
+	--parallel=4 \
+	--dereference \
+	--reverse \
+	--exclude node_modules/root/ \
+	--exclude \.git/ \
+	--exclude-glob .* \
+	--exclude-glob .git* \
+	--delete
 
 export PORT
 export ENV
@@ -74,6 +86,11 @@ deploy:
 staging: DEPLOY_HOST = $(STAGING_HOST)
 staging: deploy
 
+staging/app: DEPLOY_HOST = $(APP_HOST)
+staging/app: tmp/deploy
+staging/app:
+	lftp "$(DEPLOY_HOST)" -e "mirror $(LFTP_MIRROR_OPTS) tmp/deploy/ .; exit"
+
 production: DEPLOY_HOST = $(PRODUCTION_HOST)
 production: deploy
 
@@ -95,6 +112,9 @@ tmp:
 
 tmp/translations.json: tmp
 	wget "$(TRANSLATIONS_URL)" -O "$@"
+
+tmp/deploy:
+	git clone . "$@"
 	
 .PHONY: love
 .PHONY: compile autocompile
