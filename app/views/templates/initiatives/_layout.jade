@@ -35,12 +35,6 @@ div(ng-tabs="", ng-show="topicLoadSuccess && !isTopicLoading")
 
 						p.right {{topic.createdAt | amDateFormat : 'L'}}
 
-					.clearfix.args
-						p.left
-							a(href="#commentBlock", ng-if="topic.status=='inProgress'", translate="HEADING_ARGUMENTS", translate-values="{count: '{{topicComments.rows.length || 0}}'}")
-
-							a(href="#commentBlock", ng-if="topic.status!='inProgress'", translate="HEADING_COMMENTS", translate-values="{count: '{{topicComments.rows.length || 0}}'}")
-
 					block body
 
 				aside#initiative-aside.right
