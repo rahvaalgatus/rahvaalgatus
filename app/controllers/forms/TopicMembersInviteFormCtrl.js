@@ -83,16 +83,18 @@ app.controller("TopicMembersInviteFormCtrl", [ "$scope", "$rootScope", "$state",
                 id: member.id
             })) {
                 $scope.invite.users.push({
-                    userId: member.id,
-                    name: member.name,
-                    imageUrl: member.imageUrl
+                  userId: member.id,
+                  name: member.name,
+                  level: "edit",
+                  imageUrl: member.imageUrl
                 });
             } else if (_.find($scope.searchResults.groups, {
                 id: member.id
             })) {
                 $scope.invite.groups.push({
-                    groupId: member.id,
-                    name: member.name
+                  groupId: member.id,
+                  level: "edit",
+                  name: member.name
                 });
             } else {
                 $log.error("Member did not belong to any of the search results. Ignoring.", member);
@@ -105,8 +107,9 @@ app.controller("TopicMembersInviteFormCtrl", [ "$scope", "$rootScope", "$state",
                     userId: $scope.searchString
                 })) {
                     $scope.invite.users.push({
-                        userId: $scope.searchString,
-                        name: $scope.searchString
+                      userId: $scope.searchString,
+                      level: "edit",
+                      name: $scope.searchString
                     });
                 }
             } else {

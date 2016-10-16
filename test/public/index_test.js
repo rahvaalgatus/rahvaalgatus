@@ -75,7 +75,7 @@ describe("Rahvaalgatus", function() {
 			initiative.endsAt.must.equal(formatTime(Moment(deadline).endOf("day")))
 		})
 
-		it("must create initiative with co-author", function*() {
+		it("must update initiative with co-author", function*() {
 			var deadline = Moment().startOf("day").add(3, "day").toDate()
 			var page = yield InitiativeCreatePage.open(this.browser, this.url)
 
@@ -98,6 +98,7 @@ describe("Rahvaalgatus", function() {
 			var users = _.sortBy(members.users.rows, "name")
 			users.length.must.equal(2)
 			users[0].name.must.equal("Andri")
+			users[0].level.must.equal("edit")
 		})
 	})
 
