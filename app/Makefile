@@ -4,6 +4,7 @@ FILES = $(patsubst %, public/assets/%.js, index)
 BROWSERIFY = ./node_modules/.bin/browserify
 WATCHIFY = ./node_modules/.bin/watchify -v
 UGLIFY = ./node_modules/.bin/uglifyjs
+JADE = ./node_modules/.bin/jade
 
 BROWSERIFY_OPTS =
 BROWSERIFY_OPTS += --no-detect-globals
@@ -28,6 +29,12 @@ minify: $(patsubst %.js, %.min.js, $(FILES))
 
 autocompile:
 	@$(MAKE) --always-make -j $(words $(FILES)) BROWSERIFY="$(WATCHIFY)" $(FILES)
+
+views:
+	$(JADE) --hierarchy --out public views
+
+autoviews: JADE := $(JADE) --watch
+autoviews: views
 
 public/assets:
 	mkdir -p "$@"
@@ -55,7 +62,8 @@ shrinkwrap:
 	npm shrinkwrap --dev
 
 .PHONY: love
-.PHONY: compile autocompile
+.PHONY: compile autocompile minify
+.PHONY: views autoviews
 .PHONY: shrinkwrap
 
 # Precious stops Make from deleting files after exiting autocompiling.

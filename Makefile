@@ -5,7 +5,6 @@ ENV = development
 TEST =
 TEST_OPTS =
 TEST_URL = http://dev.rahvaalgatus.ee:3000
-JADE = ./node_modules/.bin/jade
 SASS = ./node_modules/.bin/node-sass --recursive --indent-type tab --indent-width 1 --output-style expanded
 GRUNT = ./node_modules/.bin/grunt
 DEPLOY_HOST =
@@ -56,10 +55,10 @@ autostylesheets: SASS := $(SASS) --watch
 autostylesheets: stylesheets
 
 views:
-	$(JADE) --hierarchy --out public views
+	$(MAKE) -C app views
 
-autoviews: JADE := $(JADE) --watch
-autoviews: views
+autoviews:
+	$(MAKE) -C app autoviews
 
 test:
 	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R dot $(TEST_OPTS)
