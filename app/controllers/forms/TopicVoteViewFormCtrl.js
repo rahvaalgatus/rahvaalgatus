@@ -1,4 +1,6 @@
-"use strict";
+var _ = require("lodash")
+var Config = require("root/config")
+var app = require("root/app")
 
 app.controller("TopicVoteViewFormCtrl", [ "$scope", "$rootScope", "$state", "$log", "$q", "ngDialog", "toruConfig", "sTopic", function($scope, $rootScope, $state, $log, $q, ngDialog, toruConfig, sTopic) {
     $scope.vote = null;

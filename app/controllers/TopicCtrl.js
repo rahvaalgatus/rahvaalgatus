@@ -1,10 +1,9 @@
-"use strict"
-var _ = window._
+var _ = require("lodash")
 var Raven = window.Raven
-var app = window.app
-var angular = window.angular
-var moment = window.moment
-var Config = window.Config
+var Config = require("root/config")
+var angular = require("angular")
+var moment = require("moment")
+var app = require("root/app")
 var DOCTYPE = "<!DOCTYPE HTML>"
 
 app.controller("TopicCtrl", [

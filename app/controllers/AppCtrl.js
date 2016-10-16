@@ -1,4 +1,5 @@
-"use strict";
+var Config = require("root/config")
+var app = require("../app")
 
 app.controller("AppCtrl", [ "$scope", "$rootScope", "$window", "$state", "$translate", "$log", "hotkeys", "amMoment", "UserVoice", "ngDialog", "toruConfig", "toruSessionSettings", "sAuth", "sUser", "CitizenOSOpenId", "$sce", function($scope, $rootScope, $window, $state, $translate, $log, hotkeys, amMoment, UserVoice, ngDialog, toruConfig, toruSessionSettings, sAuth, sUser, CitizenOSOpenId, $sce) {
     $scope.app = {
@@ -7,7 +8,7 @@ app.controller("AppCtrl", [ "$scope", "$rootScope", "$window", "$state", "$trans
 
     $scope.$sce = $sce
     $rootScope.window = window
-    $rootScope.Config = window.Config
+    $rootScope.Config = Config
 
     $scope.app.finalizeOpen = null;
     $scope.citizenosLogin=false;

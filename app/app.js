@@ -1,8 +1,7 @@
-"use strict";
+var angular = require("angular")
+var Config = require("root/config")
 
-var angular = window.angular
-var Config = window.Config
-var app = angular.module("app", ["ui.router", "pascalprecht.translate", "angularMoment", "ngKookies", "ngSanitize", "ngDialog", "typeahead", "datePicker", "cfp.hotkeys", "infinite-scroll", "monospaced.elastic", "monospaced.qrcode", "ng.shims.placeholder", "angulartics", "angulartics.google.analytics", "angularHwcrypto", "toruSelect", "toruSessionSettings", "toruUtils", "toruUserVoice", "toruEtherpad", "ngCookies", "angular-storage", "CitizenOS", "djds4rce.angular-socialshare"]);
+var app = module.exports = angular.module("app", ["ui.router", "pascalprecht.translate", "angularMoment", "ngKookies", "ngSanitize", "ngDialog", "typeahead", "datePicker", "cfp.hotkeys", "infinite-scroll", "monospaced.elastic", "monospaced.qrcode", "ng.shims.placeholder", "angulartics", "angulartics.google.analytics", "angularHwcrypto", "toruSelect", "toruSessionSettings", "toruUtils", "toruUserVoice", "toruEtherpad", "ngCookies", "angular-storage", "CitizenOS", "djds4rce.angular-socialshare"]);
 
 app.factory("apiUrl", function() {
 	return {

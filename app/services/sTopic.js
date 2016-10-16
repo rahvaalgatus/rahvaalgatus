@@ -1,4 +1,4 @@
-"use strict";
+var Config = require("root/config")
 
 app.service("sTopic", [ "$http", "$q", "$log", function($http, $q, $log) {
 	var Topic = this;

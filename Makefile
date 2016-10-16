@@ -44,10 +44,10 @@ autocompile:
 	$(MAKE) -j3 autojavascripts autostylesheets autoviews
 
 javascripts:
-	$(GRUNT) uglify:dev
+	$(MAKE) -C app compile
 
 autojavascripts:
-	$(GRUNT) watch
+	$(MAKE) -C app autocompile
 
 stylesheets:
 	$(SASS) --output public/stylesheets stylesheets

@@ -1,6 +1,6 @@
 /*! This is hwcrypto.js 0.0.10 generated on 2015-04-17 */
 /* DO NOT EDIT (use src/hwcrypto.js) */
-var hwcrypto = function hwcrypto() {
+var hwcrypto = module.exports = function hwcrypto() {
     "use strict";
     var _debug = function (x) {
     };

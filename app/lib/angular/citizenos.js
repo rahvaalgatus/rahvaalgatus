@@ -1,4 +1,8 @@
 'use strict';
+var angular = require("angular")
+var KJUR = require("jsrsasign").KJUR
+var KEYUTIL = require("jsrsasign").KEYUTIL
+var stob64u = require("jsrsasign").stob64u
 
 /**
  * CitizenOS
@@ -6,7 +10,7 @@
  * Requires Angular >=1.4
  */
 
-(function (window, angular) {
+;(function (window, angular) {
     var app = angular.module('CitizenOS', ['angular-storage']);
 
     app.provider('CitizenOSOpenId', function () {
