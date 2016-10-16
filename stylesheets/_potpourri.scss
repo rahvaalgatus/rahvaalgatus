@@ -894,9 +894,9 @@
 }
 
 .article-box {
-	border-top: 1px solid #cecece;
-	padding-top: 40px;
-	padding-bottom: 20px;
+	& + .article-box {
+		margin-top: 40px;
+	}
 
 	.left {
 		width: 23.5%;

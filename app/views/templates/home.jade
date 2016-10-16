@@ -20,16 +20,6 @@ div(ng-controller="HomeCtrl")
 
 	.article-bg
 		.enclose
-			.article-search
-				ul.clearfix
-					li(ng-repeat="value in filters.statuses.options", ng-show="value!='closed'")
-						a(ng-click="filters.changeStatus(value)", href="#", ng-class="{'complete':filters.statuses.value == value}") {{'TXT_TOPIC_STATUS_' + value | uppercase | translate}}
-
-					li.last
-						form.clearfix
-							input(type="text", ng-model="searchString")
-							input(type="submit", ng-click="searchTopics()", value="{{'SEARCH'| translate}}")
-
 			.article-box(ng-if="!filters.statuses.value || filters.statuses.value == 'inProgress'", ng-show="discussiontopicList.length > 0")
 				.clearfix
 					.left

@@ -381,64 +381,7 @@ app.controller("HomeCtrl", [ "$scope", "$rootScope", "$state", "$kookies", "$log
             break;
         }
     };
-    /// searchHack
-    $scope.searchTopics = function() {
-        if ($scope.searchString == null || $scope.searchString == "") {
-            $scope.loadFollowUpList();
-            $scope.loadDiscussionsList();
-            $scope.loadVotingList();
-        } else {
-            if (!$scope.searchResults[$scope.searchString]) {
-                $scope.loadTopicList();
-            }
-            var loaderwatcher = $scope.$watch("isTopicListLoading", function(oldValue, newValue) {
-                if (!$scope.isTopicListLoading) {
-                    angular.forEach(sTopic.STATUSES, function(value, key) {
-                        switch (value) {
-                          case "inProgress":
-                            var topics = $scope.searchResults[$scope.searchString]["inProgress"];
-                            $scope.rangediscussiontopicList = new Array(Math.ceil(topics.length / $scope.filters.limit));
-                            topics = topics.slice(0, $scope.filters.limit);
-                            $scope.discussiontopicList = [];
-                            if (topics && topics.length) {
-                                $scope.discussiontopicList = $scope.discussiontopicList.concat(topics);
-                                $scope.filters.discussion_offset = 0 * $scope.filters.limit;
-                                $scope.filters.infiniteScrollDisabled = false;
-                            }
-                            break;
 
-                          case "voting":
-                            var topics = $scope.searchResults[$scope.searchString]["voting"];
-                            $scope.rangevotingtopicList = new Array(Math.ceil(topics.length / $scope.filters.limit));
-                            topics = topics.slice(0, $scope.filters.limit);
-                            $scope.votingtopicList = [];
-                            if (topics && topics.length) {
-                                $scope.votingtopicList = $scope.votingtopicList.concat(topics);
-                                $scope.filters.voting_offset = 0 * $scope.filters.limit;
-                                $scope.filters.infiniteScrollDisabled = false;
-                            }
-                            break;
-
-                          case "followUp":
-                            var topics = $scope.searchResults[$scope.searchString]["followUp"];
-                            $scope.rangefollowuptopicList = new Array(Math.ceil(topics.length / $scope.filters.limit));
-                            topics = topics.slice(0, $scope.filters.limit);
-                            $scope.followuptopicList = [];
-                            if (topics && topics.length) {
-                                $scope.followuptopicList = $scope.followuptopicList.concat(topics);
-                                $scope.filters.followUp_offset = 0 * $scope.filters.limit;
-                                $scope.filters.infiniteScrollDisabled = false;
-                            }
-                            break;
-                        }
-                    });
-                    loaderwatcher();
-                }
-            });
-        }
-    };
-    //////
-    // $scope.loadTopicList();
     $scope.loadFollowUpList();
     $scope.loadDiscussionsList();
     $scope.loadVotingList();
