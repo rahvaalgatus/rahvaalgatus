@@ -93,17 +93,17 @@ staging/app:
 production: DEPLOY_HOST = $(PRODUCTION_HOST)
 production: deploy
 
-public/languages: public/languages/en.json
-public/languages: public/languages/et.json
-public/languages: public/languages/ru.json
+translations: public/assets/en.json
+translations: public/assets/et.json
+translations: public/assets/ru.json
 
-public/languages/en.json: tmp/translations.json
+public/assets/en.json: tmp/translations.json
 	jq $(JQ_OPTS) -f scripts/translation.jq --arg lang english "$<" > "$@"
 
-public/languages/et.json: tmp/translations.json
+public/assets/et.json: tmp/translations.json
 	jq $(JQ_OPTS) -f scripts/translation.jq --arg lang estonian "$<" > "$@"
 	
-public/languages/ru.json: tmp/translations.json
+public/assets/ru.json: tmp/translations.json
 	jq $(JQ_OPTS) -f scripts/translation.jq --arg lang russian "$<" > "$@"
 
 tmp:
@@ -124,4 +124,4 @@ tmp/deploy:
 .PHONY: server
 .PHONY: shrinkwrap
 .PHONY: deploy staging production
-.PHONY: public/languages
+.PHONY: translations

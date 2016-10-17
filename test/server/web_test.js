@@ -22,7 +22,7 @@ describe(URL, function() {
 	
 	;[
 		"/stylesheets/page.css",
-		"/languages/et.json"
+		"/assets/et.json"
 	].forEach(function(path) {
 		describe(path, function() {
 			var PATH = this.title

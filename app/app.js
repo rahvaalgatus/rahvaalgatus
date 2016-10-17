@@ -227,7 +227,7 @@ app.config(function($stateProvider, $urlRouterProvider, $locationProvider, $http
 		});
 
 		$translateProvider.useStaticFilesLoader({
-			prefix: "/languages/",
+			prefix: "/assets/",
 			suffix: ".json"
 		});
 
