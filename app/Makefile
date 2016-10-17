@@ -12,6 +12,8 @@ BROWSERIFY_OPTS += --noparse ./lib/angular/angular.js
 BROWSERIFY_OPTS += --noparse ./lib/angular/angular-moment.js
 BROWSERIFY_OPTS += --noparse ./lib/jsrsasign-latest-all-min.js
 BROWSERIFY_OPTS += --noparse ./lib/moment-with-locales.js
+BROWSERIFY_OPTS += --noparse ./vendor/jquery.min.js
+BROWSERIFY_OPTS += --noparse ./vendor/jquery-ui.min.js
 
 UGLIFY_OPTS =
 UGLIFY_OPTS += --stats
