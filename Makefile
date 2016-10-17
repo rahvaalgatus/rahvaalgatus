@@ -24,7 +24,8 @@ LFTP_MIRROR_OPTS = \
 	--reverse \
 	--exclude node_modules/root/ \
 	--exclude \.git/ \
-	--exclude-glob .* \
+	--exclude-glob .editorconfig \
+	--exclude-glob .gitignore \
 	--exclude-glob .git* \
 	--delete
 
