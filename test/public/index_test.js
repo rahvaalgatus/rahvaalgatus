@@ -182,15 +182,24 @@ describe("Rahvaalgatus", function() {
 				body.must.not.include("Kogu allkirju")
 			})
 
-			it("must show publish button if private", function*() {
+			it("must be able to publish", function*() {
 				var initiative = yield createDiscussion(this.api, {
 					"visibility": "private"
 				})
 
 				var id = initiative.id
 				var page = yield InitiativePage.open(this.browser, this.url, id)
+				yield page.el.querySelector(".publish-button").click()
+				yield sleep(500)
+
+				var res = yield this.api(`/api/users/self/topics/${id}`)
+				initiative = res.body.data
+				initiative.visibility.must.equal("public")
+
+				// The was a bug where it didn't refresh the internal state and
+				// didn't show options.
 				var body = yield page.el.querySelector("aside").textContent
-				body.must.include("Muuda avalikuks")
+				body.must.include("Kutsu arutajaid")
 			})
 
 			it("must not show unpublish button if public", function*() {

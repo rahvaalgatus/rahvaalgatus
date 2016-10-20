@@ -38,7 +38,7 @@ div(ng-tabs="", ng-show="topicLoadSuccess && !isTopicLoading")
 					block body
 
 				aside#initiative-aside.right
-					button.blue-button.publish-button(
+					button.green-button.publish-button(
 						ng-if="!isClosed() && isAdmin() && topic.visibility=='private'",
 						ng-click="doSetVisibility('public')",
 						translate="PUBLISH_TOPIC")

@@ -233,33 +233,14 @@ app.controller("TopicCtrl", [
 		};
 
 		$scope.doSetVisibility = function(visibility) {
-			if (!visibility || $scope.topic.visibility === visibility) return;
-			//  if(visibility ==)
-			if (visibility == "public") {
-				sTopic.update({
-					id: $scope.topic.id,
-					visibility: visibility,
-					permission: {
-						level: "read"
-					}
-				}).then(function(result) {
-					$log.debug("Topic visibility update succeeded", result);
-					$scope.topic.visibility = visibility;
-					$scope.topic.permission.level = "read";
-				}, function(result) {
-					$log.error("Topic visibility update failed", result);
-				});
-			} else {
-				sTopic.update({
-					id: $scope.topic.id,
-					visibility: visibility
-				}).then(function(result) {
-					$log.debug("Topic visibility update succeeded", result);
-					$scope.topic.visibility = visibility;
-				}, function(result) {
-					$log.error("Topic visibility update failed", result);
-				});
-			}
+			if (!visibility || $scope.topic.visibility === visibility) return
+	
+			sTopic.update({
+				id: $scope.topic.id,
+				visibility: visibility
+			}).then(function(result) {
+				$scope.topic.visibility = visibility
+			}).catch(console.error.bind(console))
 		};
 
 		$scope.$watch(function() {
