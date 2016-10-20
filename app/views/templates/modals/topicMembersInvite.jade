@@ -1,4 +1,4 @@
-#popup
+#initiative-authors-dialog
 	.ui-dialog.ui-widget.ui-widget-content.ui-corner-all.ui-front.ui-draggable.ui-resizable(tabindex="-1", role="dialog", aria-describedby="invitepop", aria-labelledby="ui-id-40", style="position: absolute; height: auto; width: 680px; top: 50px; left: 612px;")
 		.ui-dialog-titlebar.ui-widget-header.ui-corner-all.ui-helper-clearfix.ui-draggable-handle
 			span#ui-id-40.ui-dialog-title(translate="INVITE_PEOPLE") INVITE PEOPLE
@@ -44,32 +44,34 @@
 							|                         
 							.ac-empty-message(ng-show="!searchResults.users.length && !searchResults.groups.length", translate="TXT_NO_RESULTS_FOUND")
 								| No results found
-					|                 
+
+					button.white-button.add-author-button(
+						ng-click="addCoAuthor()",
+						translate="ADD_CO_AUTHOR")
+
 					table.list.users(ng-show="invite.users.length")
 						tr(ng-repeat="user in invite.users")
 							td
 								.image.icon-user
 									img(ng-src="{{user.imageUrl}}")
-								|                             
+
 								.description
 									| {{user.name}}
 									br
-									|                                 
 									span.gray {{user.company}}
-								// /description
-							|                         
+								
 							td
-								button.remove(ng-click="removeUser($index)", translate="BTN_REMOVE") Remove
-					|                 
+								button.remove(ng-click="removeUser($index)", translate="BTN_REMOVE")
+
 					.qrcode(style="text-align: center;padding:10px;")
 						qrcode(data="{{urlJoin}}", size="200", version="3", error-correction-level="L", download="")
-					|            
+
 					p
 						textarea {{'Add an optional message for the invitee(s)…' | translate}}
-					|            
+
 					.submit
-						button.sign-inner.input(ng-click="submit(); closeThisDialog();", ng-disabled="!isInvited()", translate="BTN_SEND_INVITE")
-							| SEND INVITE
+						button.blue-button.create-authors-button(ng-click="submit(); closeThisDialog();", ng-disabled="!isInvited()", translate="BTN_SEND_INVITE")
+
 		.ui-resizable-handle.ui-resizable-n(style="z-index: 90;")
 		.ui-resizable-handle.ui-resizable-e(style="z-index: 90;")
 		.ui-resizable-handle.ui-resizable-s(style="z-index: 90;")

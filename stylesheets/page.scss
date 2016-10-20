@@ -272,7 +272,8 @@ body {
 
 button.green-button,
 button.blue-button,
-button.yellow-button {
+button.yellow-button,
+button.white-button {
 	border-radius: 3px;
 	border: 0px solid transparent;
 	display: inline-block;
@@ -301,4 +302,10 @@ button.yellow-button {
 	background: #ffb400;
 	color: #4a555d;
 	border: 1px solid #f1aa01;
+}
+
+button.white-button {
+	background: white;
+	border: 1px solid #cecece;
+	color: #4a555d;
 }

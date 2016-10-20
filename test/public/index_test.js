@@ -221,6 +221,33 @@ describe("Rahvaalgatus", function() {
 				var body = yield page.el.querySelector("aside").textContent
 				body.must.include("Kutsu arutajaid")
 			})
+
+			it("must be able to add co-authors", function*() {
+				var initiative = yield createDiscussion(this.api)
+				var id = initiative.id
+				var page = yield InitiativePage.open(this.browser, this.url, id)
+				yield page.invite()
+				yield sleep(500)
+
+				// The auto-complete moves the add button around. Focus on body to hide
+				// it.
+				var random = Crypto.randomBytes(6).toString("hex")
+				var dialog = page.el.querySelector("#initiative-authors-dialog")
+				var input = dialog.querySelector(".ac-input input")
+				yield input.sendKeys(`andri+${random}@dot.ee`)
+				yield this.browser.body.click()
+				yield dialog.querySelector(".add-author-button").click()
+
+				yield dialog.querySelector(".create-authors-button").click()
+
+				var res = yield this.api(`/api/users/self/topics/${id}/members`)
+				var members = res.body.data
+
+				var users = _.sortBy(members.users.rows, "name")
+				users.length.must.equal(2)
+				users[0].name.must.equal(`Andri+${random}`)
+				users[0].level.must.equal("edit")
+			})
 		})
 		
 		describe("when in voting", function() {

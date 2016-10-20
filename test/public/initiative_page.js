@@ -19,4 +19,8 @@ lazy(InitiativePage.prototype, "id", co.wrap(function*() {
 	return url.pathname.split("/")[2]
 }))
 
+InitiativePage.prototype.invite = function() {
+	return this.el.querySelector(".invite-authors-button").click()
+}
+
 function sleep(timeout) { return (fn) => setTimeout(fn, timeout) }

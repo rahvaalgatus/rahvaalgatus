@@ -57,10 +57,11 @@ div(ng-tabs="", ng-show="topicLoadSuccess && !isTopicLoading")
 						h1.aside-box-header(translate="OPTIONS")
 
 						menu.aside-box-list(ng-show="isAdmin() && !isClosed()")
-							li(ng-if="canInvite() && !isShowInVotingNotification()"): a(
-								ng-dialog="/templates/modals/topicMembersInvite.html",
-								ng-dialog-data="{{topic}}")
-								span(translate="INVITE_PEOPLE")
+							li(ng-if="canInvite() && !isShowInVotingNotification()")
+								a.invite-authors-button(
+									ng-dialog="/templates/modals/topicMembersInvite.html",
+									ng-dialog-data="{{topic}}")
+									span(translate="INVITE_PEOPLE")
 
 							li(ng-if="isShowInVotingNotification() && canInvite()"): a(
 								ng-dialog="/templates/modals/topicMembersInvite.html",
