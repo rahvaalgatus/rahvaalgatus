@@ -1,37 +1,22 @@
 #initiative-authors-dialog
 	.ui-dialog.ui-widget.ui-widget-content.ui-corner-all.ui-front.ui-draggable.ui-resizable(tabindex="-1", role="dialog", aria-describedby="invitepop", aria-labelledby="ui-id-40", style="position: absolute; height: auto; width: 680px; top: 50px; left: 612px;")
 		.ui-dialog-titlebar.ui-widget-header.ui-corner-all.ui-helper-clearfix.ui-draggable-handle
-			span#ui-id-40.ui-dialog-title(translate="INVITE_PEOPLE") INVITE PEOPLE
+			span#ui-id-40.ui-dialog-title(translate="CO_AUTHORS")
 
 			button.ui-button.ui-widget.ui-state-default.ui-corner-all.ui-button-icon-only.ui-dialog-titlebar-close(type="button", role="button", title="Close", ng-click="closeThisDialog()")
 				span.ui-button-icon-primary.ui-icon.ui-icon-closethick
 
-				span.ui-button-text(translate="CLOSE") Close
+				span.ui-button-text(translate="CLOSE")
+
 		#invitepop.invits.ui-dialog-content.ui-widget-content(style="width: auto; min-height: 0px; max-height: none; height: auto;")
 			form(method="post", ng-controller="TopicMembersInviteFormCtrl", ng-init="init($parent.ngDialogData)")
-				.sign-type.clearfix
-					p
-						strong(translate="TXT_INVITE_PEOPLE") Invite people you want to join the topic
-
-					br
-
-					.url
-						img#fbshare(data-shareurl="http://www.facebook.com/share.php?u={{urlJoin}}&title={{topic.title}}", src="images/fb.jpg", alt="social")
-
-						img#twshare(data-shareurl="http://twitter.com/intent/tweet?status={{topic.title}}+{{urlJoin}}", src="images/tw.jpg", alt="social")
-
-						input(type="text", ng-model="urlJoin")
-
 				.sign-inner
-					p
-						strong(translate="OR_INVITE") Or invite them via their profile or e-mail
+					p.dialog-description(translate="CO_AUTHORS_TEXT")
 
-					br
-
-					typeahead.auto-complete.ui-autocomplete-input(items="searchResults.all", term="searchString", search="search(term)", select="selectMember(item)", placeholder="{{'PLACEHOLDER_USERNAME_EMAIL_OR_GROUP' | translate}}", label="{{!!topic.tokenJoin ? ('LBL_INVITE_USERS_AND_GROUPS' | translate) : null}}")
+					typeahead.auto-complete.ui-autocomplete-input(items="searchResults.all", term="searchString", search="search(term)", select="selectMember(item)", placeholder="{{'PLACEHOLDER_USERNAME_EMAIL_OR_GROUP' | translate}}")
 						.ac-dropdown(ng-cloak="")
 							.ac-dataset(ng-show="searchResults.users.length")
-								h5.ac-topic(translate="HEADING_USERS") Users
+								h5.ac-topic(translate="HEADING_USERS")
 
 								.ac-suggestions
 									.ac-suggestion(typeahead-item="user", ng-repeat="user in searchResults.users") {{user.name}}
@@ -62,12 +47,6 @@
 								
 							td
 								button.remove(ng-click="removeUser($index)", translate="BTN_REMOVE")
-
-					.qrcode(style="text-align: center;padding:10px;")
-						qrcode(data="{{urlJoin}}", size="200", version="3", error-correction-level="L", download="")
-
-					p
-						textarea {{'Add an optional message for the invitee(s)…' | translate}}
 
 					.submit
 						button.blue-button.create-authors-button(ng-click="submit(); closeThisDialog();", ng-disabled="!isInvited()", translate="BTN_SEND_INVITE")

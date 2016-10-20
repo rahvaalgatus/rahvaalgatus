@@ -235,7 +235,7 @@ describe("Rahvaalgatus", function() {
 				var dialog = page.el.querySelector("#initiative-authors-dialog")
 				var input = dialog.querySelector(".ac-input input")
 				yield input.sendKeys(`andri+${random}@dot.ee`)
-				yield this.browser.body.click()
+				yield this.browser.eval(() => document.activeElement.blur())
 				yield dialog.querySelector(".add-author-button").click()
 
 				yield dialog.querySelector(".create-authors-button").click()

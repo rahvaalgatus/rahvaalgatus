@@ -82,6 +82,12 @@ $new-initiative-background-height: 515px;
 	margin-right: auto;
 }
 
+#initiative-authors-dialog {
+	.dialog-description  {
+		margin-bottom: 1em;
+	}
+}
+
 .initiative-tabs {
 	li {
 		display: inline-block;
