@@ -63,11 +63,6 @@ div(ng-tabs="", ng-show="topicLoadSuccess && !isTopicLoading")
 									ng-dialog-data="{{topic}}")
 									span(translate="INVITE_PEOPLE")
 
-							li(ng-if="isShowInVotingNotification() && canInvite()"): a(
-								ng-dialog="/templates/modals/topicMembersInvite.html",
-								ng-dialog-data="{{topic}}")
-								span(translate="REMIND_PEOPLE_TO_SIGN")
-
 							li: a.renew-deadline-button(
 								ng-if="!topic.vote.id",
 								ui-sref="topics.deadline({id: topic.id})",
