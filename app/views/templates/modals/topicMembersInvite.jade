@@ -2,46 +2,46 @@
 	.ui-dialog.ui-widget.ui-widget-content.ui-corner-all.ui-front.ui-draggable.ui-resizable(tabindex="-1", role="dialog", aria-describedby="invitepop", aria-labelledby="ui-id-40", style="position: absolute; height: auto; width: 680px; top: 50px; left: 612px;")
 		.ui-dialog-titlebar.ui-widget-header.ui-corner-all.ui-helper-clearfix.ui-draggable-handle
 			span#ui-id-40.ui-dialog-title(translate="INVITE_PEOPLE") INVITE PEOPLE
-			|     
+
 			button.ui-button.ui-widget.ui-state-default.ui-corner-all.ui-button-icon-only.ui-dialog-titlebar-close(type="button", role="button", title="Close", ng-click="closeThisDialog()")
 				span.ui-button-icon-primary.ui-icon.ui-icon-closethick
-				|         
+
 				span.ui-button-text(translate="CLOSE") Close
 		#invitepop.invits.ui-dialog-content.ui-widget-content(style="width: auto; min-height: 0px; max-height: none; height: auto;")
 			form(method="post", ng-controller="TopicMembersInviteFormCtrl", ng-init="init($parent.ngDialogData)")
 				.sign-type.clearfix
 					p
 						strong(translate="TXT_INVITE_PEOPLE") Invite people you want to join the topic
-					|  
+
 					br
-					|         
+
 					.url
 						img#fbshare(data-shareurl="http://www.facebook.com/share.php?u={{urlJoin}}&title={{topic.title}}", src="images/fb.jpg", alt="social")
-						|             
+
 						img#twshare(data-shareurl="http://twitter.com/intent/tweet?status={{topic.title}}+{{urlJoin}}", src="images/tw.jpg", alt="social")
-						|             
+
 						input(type="text", ng-model="urlJoin")
-				|     
+
 				.sign-inner
 					p
 						strong(translate="OR_INVITE") Or invite them via their profile or e-mail
-					|  
+
 					br
-					|                 
+
 					typeahead.auto-complete.ui-autocomplete-input(items="searchResults.all", term="searchString", search="search(term)", select="selectMember(item)", placeholder="{{'PLACEHOLDER_USERNAME_EMAIL_OR_GROUP' | translate}}", label="{{!!topic.tokenJoin ? ('LBL_INVITE_USERS_AND_GROUPS' | translate) : null}}")
 						.ac-dropdown(ng-cloak="")
 							.ac-dataset(ng-show="searchResults.users.length")
 								h5.ac-topic(translate="HEADING_USERS") Users
-								|                             
+
 								.ac-suggestions
 									.ac-suggestion(typeahead-item="user", ng-repeat="user in searchResults.users") {{user.name}}
-							|                         
+
 							.ac-dataset(ng-show="searchResults.groups.length")
 								h5.ac-topic(translate="HEADING_GROUPS") Groups
-								|                             
+
 								.ac-suggestions
 									.ac-suggestion(typeahead-item="group", active-class="ac-cursor", ng-repeat="group in searchResults.groups") {{group.name}}
-							|                         
+
 							.ac-empty-message(ng-show="!searchResults.users.length && !searchResults.groups.length", translate="TXT_NO_RESULTS_FOUND")
 								| No results found
 
