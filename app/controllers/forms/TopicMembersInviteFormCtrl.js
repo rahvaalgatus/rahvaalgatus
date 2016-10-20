@@ -1,4 +1,4 @@
-"use strict";
+var validator = require("root/lib/validator")
 
 app.controller("TopicMembersInviteFormCtrl", [ "$scope", "$rootScope", "$state", "$window", "$log", "$q", "sSearch", "sTopic", "sGroup", "sTranslate", function($scope, $rootScope, $state, $window, $log, $q, sSearch, sTopic, sGroup, sTranslate) {
     $scope.init = function(topic) {

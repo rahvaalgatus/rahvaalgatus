@@ -1,4 +1,4 @@
-"use strict";
+var validator = require("root/lib/validator")
 
 app.controller("GroupInviteFormCtrl", [ "$scope", "$rootScope", "$state", "$log", "$q", "sSearch", function($scope, $rootScope, $state, $log, $q, sSearch) {
     /**

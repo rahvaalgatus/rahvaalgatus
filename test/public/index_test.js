@@ -1,6 +1,7 @@
 var _ = require("lodash")
 var O = require("oolong")
 var Config = require("root/config/test")
+var Crypto = require("crypto")
 var Moment = require("moment")
 var InitiativePage = require("./initiative_page")
 var InitiativeCreatePage = require("./initiative_create_page")
@@ -75,7 +76,7 @@ describe("Rahvaalgatus", function() {
 			initiative.endsAt.must.equal(formatTime(Moment(deadline).endOf("day")))
 		})
 
-		it("must update initiative with co-author", function*() {
+		it("must update initiative with co-author by email", function*() {
 			var deadline = Moment().startOf("day").add(3, "day").toDate()
 			var page = yield InitiativeCreatePage.open(this.browser, this.url)
 
@@ -86,9 +87,13 @@ describe("Rahvaalgatus", function() {
 			yield page.setDeadline(deadline)
 			page = yield page.next()
 
-			yield page.author.sendKeys("andri@dot.ee")
-			yield sleep(500)
-			yield page.el.querySelector(".ac-dataset").click()
+			var random = Crypto.randomBytes(6).toString("hex")
+
+			// The auto-complete moves the add button around. Focus on body to hide
+			// it.
+			yield page.author.sendKeys(`andri+${random}@dot.ee`)
+			yield this.browser.body.click()
+			yield page.el.querySelector(".add-author-button").click()
 			page = yield page.next()
 			
 			var id = yield page.id
@@ -97,7 +102,7 @@ describe("Rahvaalgatus", function() {
 
 			var users = _.sortBy(members.users.rows, "name")
 			users.length.must.equal(2)
-			users[0].name.must.equal("Andri")
+			users[0].name.must.equal(`Andri+${random}`)
 			users[0].level.must.equal("edit")
 		})
 	})
