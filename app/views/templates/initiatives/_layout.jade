@@ -68,12 +68,6 @@ div(ng-tabs="", ng-show="topicLoadSuccess && !isTopicLoading")
 								ng-dialog-data="{{topic}}")
 								span(translate="REMIND_PEOPLE_TO_SIGN")
 
-							li.close-initiative-button(
-								ng-if="isAdmin() && !isClosed() && !topic.vote.id")
-								a(
-									ng-click="setTopicStatusToClosed(topic)",
-									translate="CLOSE_TOPIC")
-
 							li: a.renew-deadline-button(
 								ng-if="!topic.vote.id",
 								ui-sref="topics.deadline({id: topic.id})",

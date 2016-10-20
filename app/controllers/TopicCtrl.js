@@ -388,15 +388,7 @@ app.controller("TopicCtrl", [
 				$log.error("Topic member user deletion failed!", res, $scope.topic, userId);
 			});
 		};
-		$scope.setTopicStatusToClosed = function(topic) {
-			ngDialog.openConfirm({
-				template: "/templates/modals/topicConfirmClosed.html"
-			}).then(function() {
-				var closed = sTopic.STATUSES.closed
-				$scope.topic.status = closed
-				sTopic.update({id: topic.id, status: closed})
-			}, angular.noop);
-		};
+
 		$scope.setHashtag = function() {
 			ngDialog.open({
 				template: "/templates/modals/topicSetHashtag.html",
