@@ -36,7 +36,7 @@
 
 		.right
 			.clearfix.articles
-				.in(ui-sref="topics.read({id: topic.id})", ng-repeat="topic in votingtopicList", ng-class="getCategoryTheme(topic.categories[0])")
+				.in(ui-sref="topics.read({id: topic.id})", ng-repeat="topic in votingtopicList")
 					p.date {{topic.createdAt | amDateFormat : 'L'}}
 
 					p.link

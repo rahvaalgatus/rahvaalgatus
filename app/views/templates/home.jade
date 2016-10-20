@@ -58,7 +58,7 @@ div(ng-controller="HomeCtrl")
 
 					.right
 						.clearfix.articles
-							.in(ui-sref="topics.read({id: topic.id})", ng-repeat="topic in discussiontopicList", ng-class="getCategoryTheme(topic.categories[0])")
+							.in(ui-sref="topics.read({id: topic.id})", ng-repeat="topic in discussiontopicList")
 								p.date(data-topic="{{topic}}") {{topic.createdAt | amDateFormat : 'L'}}
 
 								p.link

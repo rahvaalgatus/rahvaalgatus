@@ -7,35 +7,7 @@ app.controller("HomeCtrl", [ "$scope", "$rootScope", "$state", "$kookies", "$log
     $scope.searchString = null;
     $scope.searchResults = [];
     $scope.today = new Date();
-    var CATEGORY_THEME = {
-        politics: "theme-1",
-        // Politics and public administration
-        taxes: "theme-2",
-        // Taxes and budgeting
-        defense: "theme-3",
-        //  Defense and security
-        environment: "theme-4",
-        // Environment, animal protection
-        agriculture: "theme-5",
-        // Agriculture
-        culture: "theme-6",
-        // Culture, media and sports
-        communities: "theme-7",
-        // Communities and urban development
-        integration: "theme-8",
-        // Integration and human rights
-        business: "theme-9",
-        // Business and industry
-        work: "theme-10",
-        // Work and employment
-        transport: "theme-11",
-        // Public transport and road safety
-        health: "theme-12",
-        // Health care and social care
-        education: "theme-13",
-        // Education
-        varia: "theme-14"
-    };
+
     var SETTINGS_DISCLAIMER_KEY = "isDisclaimerHidden";
     $scope.isDisclaimerHidden = !!toruSessionSettings.get("isDisclaimerHidden") || false;
     //TODO: As the DOM is totally different from any other select (the actual dropdown list is not inside the element itself). I will now implement all the select logic in controller
@@ -44,11 +16,6 @@ app.controller("HomeCtrl", [ "$scope", "$rootScope", "$state", "$kookies", "$log
             isVisible: false,
             value: null,
             options: _.values(sTopic.STATUSES)
-        },
-        categories: {
-            isVisible: false,
-            value: null,
-            options: _.values(sTopic.CATEGORIES)
         },
         orderBy: {
             isVisible: false,
@@ -70,6 +37,7 @@ app.controller("HomeCtrl", [ "$scope", "$rootScope", "$state", "$kookies", "$log
             }
         });
     };
+
     $scope.filters.changeStatus = function(status) {
         if (status !== $scope.filters.statuses.value) {
             $scope.filters.statuses.value = status;
@@ -81,17 +49,7 @@ app.controller("HomeCtrl", [ "$scope", "$rootScope", "$state", "$kookies", "$log
         $scope.filters.offset = 0;
         $scope.loadTopicList();
     };
-    $scope.filters.changeCategory = function(category) {
-        if (category !== $scope.filters.categories.value) {
-            $scope.filters.categories.value = category;
-        } else {
-            $scope.filters.categories.value = null;
-        }
-        $scope.topicList = [];
-        $scope.filters.infiniteScrollDisabled = false;
-        $scope.filters.offset = 0;
-        $scope.loadTopicList();
-    };
+
     $scope.topicList = [];
     $scope.followuptopicList = [];
     $scope.votingtopicList = [];
@@ -157,7 +115,7 @@ app.controller("HomeCtrl", [ "$scope", "$rootScope", "$state", "$kookies", "$log
             limit = 1e3;
             offset = 0;
         }
-        loadTopicListPromise = sTopic.listUnauth($scope.filters.statuses.value, $scope.filters.categories.value, offset, limit);
+        loadTopicListPromise = sTopic.listUnauth($scope.filters.statuses.value, offset, limit);
         loadTopicListPromise.then(function(res) {
             var topics = res.data.data.rows;
             if ($scope.searchString != null && !$scope.searchResults[$scope.searchString]) {
@@ -200,7 +158,7 @@ app.controller("HomeCtrl", [ "$scope", "$rootScope", "$state", "$kookies", "$log
         if (offset > 0) {
             offset = offset - 1;
         }
-        loadFollowUpTopicListPromise = sTopic.listUnauth("followUp", $scope.filters.categories.value, offset, $scope.filters.limit);
+        loadFollowUpTopicListPromise = sTopic.listUnauth("followUp", offset, $scope.filters.limit);
 
         loadFollowUpTopicListPromise.then(function(res) {
 					var topics = res.data.data.rows
@@ -252,7 +210,7 @@ app.controller("HomeCtrl", [ "$scope", "$rootScope", "$state", "$kookies", "$log
         if (offset > 0) {
             offset = offset - 1;
         }
-        loadvotingTopicListPromise = sTopic.listUnauth("voting", $scope.filters.categories.value, offset, $scope.filters.limit);
+        loadvotingTopicListPromise = sTopic.listUnauth("voting", offset, $scope.filters.limit);
         loadvotingTopicListPromise.then(function(res) {
             var topics = res.data.data.rows;
             angular.forEach(topics, function(value, key) {
@@ -302,7 +260,7 @@ app.controller("HomeCtrl", [ "$scope", "$rootScope", "$state", "$kookies", "$log
         if (offset > 0) {
             offset = offset - 1;
         }
-        loadDiscussionsTopicListPromise = sTopic.listUnauth("inProgress", $scope.filters.categories.value, offset, $scope.filters.limit);
+        loadDiscussionsTopicListPromise = sTopic.listUnauth("inProgress", offset, $scope.filters.limit);
         loadDiscussionsTopicListPromise.then(function(res) {
             var topics = res.data.data.rows;
             angular.forEach(topics, function(value, key) {
@@ -385,14 +343,12 @@ app.controller("HomeCtrl", [ "$scope", "$rootScope", "$state", "$kookies", "$log
     $scope.loadFollowUpList();
     $scope.loadDiscussionsList();
     $scope.loadVotingList();
-    $scope.getCategoryTheme = function(category) {
-        var theme = CATEGORY_THEME[category];
-        return theme ? theme : CATEGORY_THEME.varia;
-    };
+
     $scope.hideDisclaimer = function() {
         $scope.isDisclaimerHidden = true;
         toruSessionSettings.set(SETTINGS_DISCLAIMER_KEY, true);
     };
+
     $scope.watchvideo = function() {
         ngDialog.open({
             template: "/templates/modals/home_video.html",

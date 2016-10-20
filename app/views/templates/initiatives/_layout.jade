@@ -77,27 +77,6 @@ div(ng-tabs="", ng-show="topicLoadSuccess && !isTopicLoading")
 								ng-click="doDelete()",
 								translate="BTN_DELETE_TOPIC")
 
-						a.aside-category-button(
-							ng-show="isAdmin() || canEdit()",
-							ng-click="$parent.showCategories = !$parent.showCategories",
-							ng-class="{active: showCategories}",
-							translate="ASSIGN_CATEGORIES")
-
-						div(ng-show="showCategories")
-							menu.categories.aside-box-list
-								li(
-									ng-repeat="(key, value) in CATEGORIES",
-									ng-show="isCategorySelected(value)"
-								): a(ng-click="updateCategories(value)")
-									| {{'TXT_TOPIC_CATEGORY_' + value | uppercase | translate}}
-
-							ul.hash-category
-								li(
-									ng-repeat="(key, value) in CATEGORIES",
-									ng-show="!isCategorySelected(value)"
-								): a(ng-click="updateCategories(value)")
-									| {{'TXT_TOPIC_CATEGORY_' + value | uppercase | translate}}
-
 						menu.aside-box-list
 							li
 								a(

@@ -24,37 +24,7 @@ app.service("sTopic", [ "$http", "$q", "$log", function($http, $q, $log) {
 		// Everyone has read-only on the Topic.  Pops up in the searches..
 		"private": "private"
 	};
-	Topic.CATEGORIES = {
-		business: "business",
-		// Business and industry
-		transport: "transport",
-		// Public transport and road safety
-		taxes: "taxes",
-		// Taxes and budgeting
-		agriculture: "agriculture",
-		// Agriculture
-		environment: "environment",
-		// Environment, animal protection
-		culture: "culture",
-		// Culture, media and sports
-		health: "health",
-		// Health care and social care
-		work: "work",
-		// Work and employment
-		education: "education",
-		// Education
-		politics: "politics",
-		// Politics and public administration
-		communities: "communities",
-		// Communities and urban development
-		defense: "defense",
-		//  Defense and security
-		integration: "integration",
-		// Integration and human rights
-		varia: "varia"
-	};
-	Topic.CATEGORIES_COUNT_MAX = 3;
-	// Maximum of 3 categories allowed at the time.
+
 	Topic.VOTE_TYPES = {
 		regular: "regular",
 		multiple: "multiple"
@@ -108,14 +78,13 @@ app.service("sTopic", [ "$http", "$q", "$log", function($http, $q, $log) {
 		var path = "/api/users/self/topics";
 		return $http.get(path);
 	};
-	Topic.listUnauth = function(statuses, categories, offset, limit) {
+	Topic.listUnauth = function(statuses, offset, limit) {
 		return function() {
 			var path = "/api/topics";
 			var deferredAbort = $q.defer();
 			var promise = $http.get(path, {
 				params: {
 					statuses: statuses,
-					categories: categories,
 					offset: offset,
 					limit: limit,
 					sourcePartnerId: Config.CLIENT_ID

@@ -46,8 +46,6 @@ app.controller("TopicCtrl", [
 		$scope.COMMENT_ORDER_BY = sTopic.COMMENT_ORDER_BY;
 		$scope.app.isTopicLoading = true;
 		$scope.topicLoadSuccess = true;
-		$scope.CATEGORIES = sTopic.CATEGORIES;
-		$scope.CATEGORIES_COUNT_MAX = sTopic.CATEGORIES_COUNT_MAX;
 		$scope.today = new Date();
 		$scope.progress = new Progress();
 
@@ -455,19 +453,7 @@ app.controller("TopicCtrl", [
 				});
 			}, angular.noop);
 		};
-		$scope.updateCategories = function(category) {
-			var categoryIndex = $scope.topic.categories.indexOf(category);
-			if (categoryIndex > -1) {
-				$scope.topic.categories.splice(categoryIndex, 1);
-			}
-			else if ($scope.topic.categories.length < $scope.CATEGORIES_COUNT_MAX) {
-				$scope.topic.categories.push(category);
-			}
-			$scope.doUpdate();
-		};
-		$scope.isCategorySelected = function(category) {
-			return $scope.topic.categories.indexOf(category) > -1;
-		};
+
 		/**
 		 * Used by textAngular ta-paste solving the issue of Chrome adding useless elements and attributes on paste.
 		 * Not ideal, but works.

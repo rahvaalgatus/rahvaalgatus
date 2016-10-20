@@ -48,14 +48,6 @@ $new-initiative-background-height: 515px;
   }
 }
 
-.aside-category-button {
-	margin: 0 0 10px 10px;
-	background: transparent url("/images/cat-up.png") no-repeat center right;
-	display: block;
-
-	&.active { background-image: url("/images/cat-down.png"); }
-}
-
 #initiative-email-subscription {
   padding: 10px;
 

@@ -1901,47 +1901,6 @@
 /**************/
 /**style1.css merged**/
 
-.categories {
-	border-bottom: medium none !important;
-	margin: 5px !important;
-	padding: 0 !important;
-
-	li {
-		margin-bottom: 5px;
-
-		a {
-			background: #f7f7f7 url("/images/close.png") no-repeat right center;
-			display: block;
-			height: 27px !important;
-			line-height: 27px !important;
-			padding: 0 5px;
-			border-radius: 2px;
-			font-size: 11px;
-		}
-	}
-}
-
-.hash-category {
-	border-bottom: medium none !important;
-	padding: 0 !important;
-	margin: 5px !important;
-
-	> li {
-		margin-bottom: 5px;
-
-		a {
-			color: white !important;
-			background: $light-blue url("/images/cat-add.png") no-repeat no-repeat center right;
-			display: block;
-			height: 28px;
-			line-height: 12px;
-			padding: 5px 15px 0 5px;
-			border-radius: 2px;
-			font-size: 12px;
-		}
-	}
-}
-
 .hashtag-comment {
 	padding: 20px;
 
