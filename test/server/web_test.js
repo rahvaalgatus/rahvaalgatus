@@ -65,6 +65,10 @@ describe(URL, function() {
 
 	O.each({
 		"/votings": "/topics",
+		"/topics": "/",
+		"/topics/": "/",
+		"/discussions": "/",
+		"/goodpractice": "/about",
 		"/topics/42/votes/69": "/topics/42/vote",
 		"/topics/create1": "/topics/new",
 	}, function(to, from) {
@@ -74,7 +78,7 @@ describe(URL, function() {
 			})
 
 			it("must redirect to " + to, function() {
-				this.res.statusCode.must.equal(301)
+				;[301, 302].must.include(this.res.statusCode)
 				this.res.headers.location.must.equal(URL + to)
 			})
 		})

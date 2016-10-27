@@ -48,6 +48,9 @@ RewriteRule ^ https://rahvaalgatus.ee%{REQUEST_URI} [qsappend,last,redirect=301]
 RewriteRule ^css/editorless\.css$ /stylesheets/editor.css [last]
 
 RewriteRule ^votings$ /topics [qsappend,last,redirect=301]
+RewriteRule ^topics/?$ / [qsappend,last,redirect=302]
+RewriteRule ^discussions$ / [qsappend,last,redirect=302]
+RewriteRule ^goodpractice$ /about [qsappend,last,redirect=301]
 RewriteRule ^topics/create1$ /topics/new [qsappend,last,redirect=301]
 RewriteRule ^topics/([^/]+)/votes/.*$ /topics/$1/vote [qsappend,last,redirect=301]
 

@@ -127,24 +127,9 @@ app.config(function($stateProvider, $urlRouterProvider, $locationProvider, $http
 			templateUrl: "/templates/support_us.html"
 		})
 
-		$stateProvider.state("discussions", {
-			abstract: true,
-			template: "<ui-view />",
-		})
-
-		$stateProvider.state("discussions.index", {
-			url: "/discussions",
-			templateUrl: "/templates/discussions/index.html"
-		})
-
 		$stateProvider.state("topics", {
 			abstract: true,
 			template: "<ui-view />",
-		})
-
-		$stateProvider.state("topics.index", {
-			url: "/topics",
-			templateUrl: "/templates/initiatives/index.html"
 		})
 
 		$stateProvider.state("topics.create", {
@@ -197,11 +182,6 @@ app.config(function($stateProvider, $urlRouterProvider, $locationProvider, $http
 
 		$stateProvider.state("topics.discussion.finish", {
 			templateUrl: "/templates/initiatives/vote/create.html"
-		})
-
-		$stateProvider.state("goodpractice", {
-			url: "/goodpractice",
-			templateUrl: "/templates/goodpractice.html"
 		})
 
 		$stateProvider.state("join", {
