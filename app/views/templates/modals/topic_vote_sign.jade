@@ -39,7 +39,7 @@ include ../_mixins
 			form(name="formMobileSign", ng-show="!formMobile.challengeID", novalidate="")
 				div(ng-show="!formMobile.isLoading")
 					label.label(ng-class="{error: formMobileSign.phoneNumber.$error.pattern && formMobileSign.phoneNumber.$touched}")
-						input(type="text", name="phoneNumber", ng-model="formMobile.phoneNumber", placeholder="{{'PLACEHOLDER_PHONE_NUMBER' | translate}}", ng-pattern="/^\+?[0-9\s-]{7,}$/", required="")
+						input(type="text", name="phoneNumber", ng-model="formMobile.phoneNumber", placeholder="{{'PLACEHOLDER_PHONE_NUMBER' | translate}}", ng-pattern="/^\\+?[0-9\\s-]{7,}$/", required="")
 						span.error_message(ng-show="formMobileSign.phoneNumber.$error.pattern && formMobileSign.phoneNumber.$touched", translate="MSG_ERROR_INVALID_PHONE_NUMBER")
 					label.label(ng-class="{error: formMobileSign.pid.$error.pattern && formMobileSign.pid.$touched}")
 						input(type="text", name="pid", ng-model="formMobile.pid", placeholder="{{'PLACEHOLDER_PERSONAL_IDENTIFICATION_CODE' | translate}}", ng-pattern="/^[0-9]{11}$/", required="")
