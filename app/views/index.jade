@@ -16,12 +16,11 @@ html(ng-app="app")
 		script.
 			Raven.config("https://ead693e3e8074571ad59dc81dc0bdfa6@app.getsentry.com/77593").install()
 		script(src="/assets/index.js")
-		script(src="//netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js")
-		script(src="/js/bootstro.js/bootstro.js")
-		link(rel="stylesheet", href="/js/bootstro.js/bootstro.css", type="text/css")
+
 		style.
 			.language a:not(:first-child)::before { content:"/"; }
 			.language a { cursor:pointer; }
+
 	body(ng-controller="AppCtrl")
 		.notifications(ng-show="app.notifications.info || app.notifications.error")
 			.entry(ng-show="app.notifications.info")
@@ -61,7 +60,7 @@ html(ng-app="app")
 
 					a.mobile-set(href="#")
 
-					ul.left.main-navi.clearfix.bootstro(data-bootstro-title="I am simple", data-bootstro-content="Call bootstro.start('.bootstro') or just <b>bootstro.start()</b>", data-bootstro-step="1", data-original-title="", title="")
+					ul.left.main-navi.clearfix
 						li(ui-sref-active="active", ng-class="{'header-link-rus': app.language == 'ru'}")
 							a(href="/discussions", ng-class="{active: ('discussions' | isState)}", translate="LINK_DISCUSSION")
 
@@ -125,13 +124,16 @@ html(ng-app="app")
 							img(width="200", src="images/esstikoostoo_logo_en.png", alt="image")
 
 					.f-box
-						p.bootstro(data-bootstro-title="Hello, I am a normal BOOTSTRAP popover", data-bootstro-content="Because bootstrap rocks. Life before bootstrap was sooo miserable", data-bootstro-width="400px", data-bootstro-placement="bottom", data-bootstro-step="0", data-original-title="", title="", translate="FOOTER_SA") SA Eesti Koostöö Kogu
-
+						p(translate="FOOTER_SA")
 						p(translate="FOOTER_ADDRESS")
 
-						p(translate="FOOTER_EMAIL", translate-values="{email:'info@rahvaalgatus.ee'}")
+						p(
+							translate="FOOTER_EMAIL",
+							translate-values="{email:'info@rahvaalgatus.ee'}")
 
-						p(translate="FOOTER_PHONE", translate-values="{phone:'+3726408714'}")
+						p(
+							translate="FOOTER_PHONE",
+							translate-values="{phone:'+3726408714'}")
 
 					.f-box.social.ng-hide
 						p
