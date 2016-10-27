@@ -1,3 +1,5 @@
+require("./lib/html5/promise")(window)
+
 window._ = require("./lib/lodash.js")
 window.moment = require("./lib/moment-with-locales.js")
 
