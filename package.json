@@ -22,6 +22,7 @@
 		"selenium-webdriver": ">= 2.53.3 < 3",
 		"selenium-dom": ">= 0.1.337 < 0.2",
 		"lazy-object": ">= 1 < 2",
+		"livereload": ">= 0.6 < 0.7",
 
 		"node-sass": ">= 3.8 < 4"
 	},

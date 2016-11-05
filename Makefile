@@ -76,6 +76,9 @@ autospec:
 server:
 	@$(NODE) bin/web
 
+livereload:
+	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/livereload public --wait 50
+
 shrinkwrap:
 	npm shrinkwrap
 
