@@ -56,4 +56,5 @@ RewriteRule ^topics/([^/]+)/votes/.*$ /topics/$1/vote [qsappend,last,redirect=30
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule . /index.html [last]
+RewriteRule . /app.html [last]
+RewriteRule ^$ /app.html [last]

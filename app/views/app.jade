@@ -6,7 +6,7 @@ html(ng-app="app")
 		meta(charset="utf-8")
 		meta(name="viewport", content="width=device-width")
 		link(rel="stylesheet", type="text/css", href="/stylesheets/fonts.css")
-		link(rel="stylesheet", href="/stylesheets/page.css", type="text/css")
+		link(rel="stylesheet", href="/stylesheets/app.css", type="text/css")
 		meta(property="og:url", content="https://rahvaalgatus.ee/")
 		meta(property="og:title", content="https://rahvaalgatus.ee/")
 		meta(property="og:image", content="https://rahvaalgatus.ee/images/index_logo.png")
@@ -15,7 +15,7 @@ html(ng-app="app")
 		script(src="https://cdn.ravenjs.com/3.0.3/raven.min.js")
 		script.
 			Raven.config("https://ead693e3e8074571ad59dc81dc0bdfa6@app.getsentry.com/77593").install()
-		script(src="/assets/index.js")
+		script(src="/assets/app.js")
 
 		style.
 			.language a:not(:first-child)::before { content:"/"; }

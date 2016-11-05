@@ -14,7 +14,7 @@ var app = module.exports = Express()
 app.use(Express.static(PUBLIC_DIR))
 
 app.use(function(req, res, next) {
-  res.sendFile("index.html", {root: PUBLIC_DIR})
+  res.sendFile("app.html", {root: PUBLIC_DIR})
 })
 
 if (module.parent) return

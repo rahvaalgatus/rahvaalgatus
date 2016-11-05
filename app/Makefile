@@ -1,6 +1,6 @@
 NODE = node
 ENV = development
-FILES = $(patsubst %, public/assets/%.js, index)
+FILES = $(patsubst %, public/assets/%.js, app)
 BROWSERIFY = ./node_modules/.bin/browserify
 WATCHIFY = ./node_modules/.bin/watchify -v
 UGLIFY = ./node_modules/.bin/uglifyjs
@@ -41,7 +41,7 @@ autoviews: views
 public/assets:
 	mkdir -p "$@"
 
-public/assets/index.js:
+public/assets/app.js:
 	@echo "Compiling $@ for $(ENV)…"
 	@$(BROWSERIFY) \
 		$(BROWSERIFY_OPTS) \

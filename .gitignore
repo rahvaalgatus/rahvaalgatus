@@ -1,7 +1,7 @@
 /node_modules/
 /public/assets/*
 !public/assets/*.json
-/public/index.html
+/public/app.html
 /public/templates/**/*.html
 /public/stylesheets/*.css
 /tmp/
