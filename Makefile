@@ -50,7 +50,7 @@ autojavascripts:
 	$(MAKE) -C app autocompile
 
 stylesheets:
-	$(SASS) --output public/stylesheets stylesheets
+	$(SASS) --output public/assets stylesheets
 
 autostylesheets: SASS := $(SASS) --watch
 autostylesheets: stylesheets

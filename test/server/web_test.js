@@ -21,7 +21,7 @@ describe(URL, function() {
 	})
 	
 	;[
-		"/stylesheets/page.css",
+		"/assets/page.css",
 		"/assets/et.json"
 	].forEach(function(path) {
 		describe(path, function() {

@@ -3,5 +3,4 @@
 !public/assets/*.json
 /public/app.html
 /public/templates/**/*.html
-/public/stylesheets/*.css
 /tmp/
