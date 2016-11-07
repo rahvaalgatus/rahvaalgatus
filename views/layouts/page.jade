@@ -1,0 +1,51 @@
+-
+	function selected(a, b) { return a === b ? "selected" : "" }
+
+doctype html
+html
+	head
+		title Rahvaalgatus
+		meta(charset="utf-8")
+		meta(name="viewport", content="width=device-width")
+		link(rel="stylesheet", type="text/css", href="/assets/fonts.css")
+		link(rel="stylesheet", href="/assets/page.css", type="text/css")
+
+		if process.env.ENV == "development"
+			script(src="http://#{req.hostname}:35729/livereload.js?snipver=1", async)
+
+	body(id=page + "-page")
+		header#header: center
+			a.logo(href="/")
+				img(src="/images/rahvaalagatus_logo.png", alt="image")
+
+			nav
+				ul
+					li: a(href="/", class=selected(page, "home"))= t("LINK_VOTING")
+					li: a(href="https://rahvaalgatus.uservoice.com")= t("LINK_HELP")
+					li: a(href="/about")= t("LNK_ABOUT")
+					li: a(href="/support_us")= t("LNK_SUPPORT")
+
+		main#main
+			block body
+
+		footer#footer
+			center
+				.contact
+					a(href="http://kogu.ee")
+						- var logo = "/images/esstikoostoo_logo.png"
+						- if (req.lang !== "et") logo = "/images/esstikoostoo_logo_en.png"
+						img(width="200", src=logo, alt=t("FOOTER_SA"))
+
+					//-p= t("FOOTER_SA")
+					p= t("FOOTER_ADDRESS")
+					p!= t("FOOTER_EMAIL", {email: "info@rahvaalgatus.ee"})
+					p!= t("FOOTER_PHONE", {phone: "+3726408714"})
+
+				.powered-by
+					p
+						a(href="https://citizenos.com")
+							img(
+								src="/images/citizenos_logo_big.png",
+								title=t("POWERED_BY") + " Citizen OS",
+								alt="Citizen OS")
+

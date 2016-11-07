@@ -1,0 +1,78 @@
+extends /layouts/page.jade
+
+block body
+	section#welcome.white-section: center
+		h1= t("HOME_WELCOME_TITLE")
+		p= t("HOME_WELCOME")
+
+		a#create-link(href="/topics/new")= t("BTN_NEW_TOPIC")
+
+		a#video-link
+			i.icon
+			span= t("HOME_VIDEO_TEXT")
+
+	section#initiatives.grey-section: center
+		h2= t("DISCUSSIONS_LIST")
+		+initiatives(discussions)
+
+		h2= t("INITIATIVE_LIST")
+		+initiatives(votings)
+
+		h2= t("IN_FOLLOW_UP_LIST")
+		+initiatives(processes)
+
+mixin initiatives(initiatives)
+	ol.initiatives
+		for initiative in initiatives
+			+initiative(initiative)
+
+mixin initiative(initiative)
+	-
+		var Initiative = require("root/lib/initiative")
+		var Css = require("root/lib/css")
+		var Config = require("root/config")
+		var differenceInDays = require("date-fns/difference_in_calendar_days")
+		var formatDate = require("date-fns/format")
+		var createdAt = new Date(initiative.createdAt)
+		var endsAt = new Date(initiative.endsAt)
+
+		var klass
+		switch (initiative.status) {
+			case "inProgress": klass = "discussable"; break
+			case "voting": klass = "votable"; break
+			case "followUp": klass = "processable"; break
+		}
+
+	li.initiative(class=klass)
+		a(href=`/initiatives/${initiative.id}`)
+			time(datetime=initiative.createdAt)= formatDate(createdAt, "D.MM.YYYY")
+			h3= initiative.title
+			span.author= initiative.creator.name
+
+			case initiative.status
+				when "inProgress"
+					if !Initiative.hasEnded(initiative)
+						- var passed = differenceInDays(new Date, createdAt)
+						- var total = differenceInDays(endsAt, createdAt)
+						- var left = total - passed
+
+						.progress(style=Css.linearBackground("#ffb400", passed / total))
+							= t("TXT_DEADLINE_CALENDAR_DAYS_LEFT", {numberOfDaysLeft: left})
+					else
+						.progress.completed= t("DISCUSSION_FINISHED")
+					
+				when "voting"
+					- var sigs = Initiative.countSignatures(initiative, "Yes")
+					- var required = Config.votesRequired
+
+					if !Initiative.hasEnded(initiative)
+						.progress(style=Css.linearBackground("#00cb81", sigs / required))
+							= t("N_SIGNATURES", {votes: sigs})
+					else if Initiative.isSuccessful(initiative)
+						.progress.completed= t("N_SIGNATURES_COLLECTED", {votes: sigs})
+					else
+						.progress.failed= t("N_SIGNATURES_FAILED", {votes: sigs})
+
+				when "followUp"
+					- var signatures = Initiative.countSignatures(initiative, "Yes")
+					.progress= t("N_SIGNATURES", {votes: signatures})

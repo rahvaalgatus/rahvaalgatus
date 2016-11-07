@@ -7,7 +7,15 @@
 		"express": "",
 		"lodash": "",
 		"oolong": "",
-		"moment": ""
+		"moment": "",
+		"co-next": "",
+		"fetch-off": "",
+		"fetch-defaults": "",
+		"fetch-jsonify": "",
+		"fetch-throw": "",
+		"jade": "",
+		"date-fns": "",
+		"morgan": ""
 	},
 
 	"devDependencies": {
@@ -15,10 +23,7 @@
 		"mocha": ">= 2.1.0 < 3",
 		"co-mocha": ">= 1.1.0 < 2",
 		"must": ">= 0.13 < 0.14",
-		"fetch-off": ">= 1.0.0 < 2",
-		"fetch-defaults": ">= 1.0.0 < 2",
-		"fetch-jsonify": ">= 1.0.0 < 2",
-		"fetch-throw": ">= 1.0.0 < 2",
+		"mitm": ">= 1 < 2",
 		"selenium-webdriver": ">= 2.53.3 < 3",
 		"selenium-dom": ">= 0.1.337 < 0.2",
 		"lazy-object": ">= 1 < 2",

@@ -9,9 +9,7 @@ exports = module.exports = function() {
 }
 
 exports.create = function() {
-	this.api = fetchDefaults(api, Config.apiUrl, {
-		headers: {Authorization: "Bearer " + TOKEN}
-	})
+	this.api = fetchDefaults(api, {headers: {Authorization: "Bearer " + TOKEN}})
 }
 
 exports.delete = function() {

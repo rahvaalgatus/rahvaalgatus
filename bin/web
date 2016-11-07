@@ -11,7 +11,17 @@ var PORT = process.env.PORT || 3000
 var PUBLIC_DIR = __dirname + "/../public"
 
 var app = module.exports = Express()
+
+app.set("view engine", "jade")
+app.locals.pretty = false
+app.locals.require = require
+app.locals.basedir = app.get("views")
+
 app.use(Express.static(PUBLIC_DIR))
+if (process.env.ENV == "development") app.use(require("morgan")("dev"))
+app.use((req, res, next) => { res.locals.req = req; next() })
+app.use(require("root/lib/middleware/i18n_middleware"))
+app.use(require("root/controllers/home_controller").router)
 
 app.use(function(req, res, next) {
   res.sendFile("app.html", {root: PUBLIC_DIR})
