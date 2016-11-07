@@ -65,9 +65,9 @@ div(ng-controller="HomeCtrl")
 								p.author {{topic.creator.name}}
 
 								.bar
-									p(ng-class="{progress:topic.endsAt !=null && ((topic.endsAt | amDifference : today : 'days' )>=0), finished:(topic.endsAt ==null || ((topic.endsAt | amDifference : today : 'days' )<0))}", ng-style="::getProgress(topic)")
-									span(ng-if="topic.endsAt !=null && ((topic.endsAt | amDifference : today : 'days' )>=0)") {{'TXT_DEADLINE_CALENDAR_DAYS_LEFT' | translate: topic}}
-									span.discussion-finished(ng-if="topic.endsAt ==null || ((topic.endsAt | amDifference : today : 'days' )<0)", translate="DISCUSSION_FINISHED")
+									p(ng-class="{progress:topic.endsAt !=null && ((topic.endsAt | amDifference : today : 'days' )>=0), finished:(topic.endsAt ==null || (parseDate(topics.endsAt) < Date.now()) || ((topic.endsAt | amDifference : today : 'days' )<0))}", ng-style="::getProgress(topic)")
+									span(ng-if="topic.endsAt !=null && (parseDate(topic.endsAt) > Date.now())") {{'TXT_DEADLINE_CALENDAR_DAYS_LEFT' | translate: topic}}
+									span.discussion-finished(ng-if="topic.endsAt == null || (parseDate(topic.endsAt) < Date.now())", translate="DISCUSSION_FINISHED")
 
 			include ./initiatives/_initiatives
 			include ./initiatives/_followups

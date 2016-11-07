@@ -7,6 +7,8 @@ app.controller("AppCtrl", [ "$scope", "$rootScope", "$window", "$state", "$trans
     };
 
     $scope.$sce = $sce
+    $scope.Date = Date
+    $scope.parseDate = function(date) { return new Date(date) }
     $rootScope.Config = Config
 
     $scope.app.finalizeOpen = null;
