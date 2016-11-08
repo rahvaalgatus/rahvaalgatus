@@ -7,6 +7,23 @@
       "from": "co-next@latest",
       "resolved": "https://registry.npmjs.org/co-next/-/co-next-1.0.0.tgz"
     },
+    "cookie-parser": {
+      "version": "1.4.3",
+      "from": "cookie-parser@latest",
+      "resolved": "https://registry.npmjs.org/cookie-parser/-/cookie-parser-1.4.3.tgz",
+      "dependencies": {
+        "cookie": {
+          "version": "0.3.1",
+          "from": "cookie@0.3.1",
+          "resolved": "https://registry.npmjs.org/cookie/-/cookie-0.3.1.tgz"
+        },
+        "cookie-signature": {
+          "version": "1.0.6",
+          "from": "cookie-signature@1.0.6",
+          "resolved": "https://registry.npmjs.org/cookie-signature/-/cookie-signature-1.0.6.tgz"
+        }
+      }
+    },
     "date-fns": {
       "version": "1.10.0",
       "from": "date-fns@latest",
@@ -261,6 +278,11 @@
         }
       }
     },
+    "fetch-error": {
+      "version": "1.0.0",
+      "from": "fetch-error@latest",
+      "resolved": "https://registry.npmjs.org/fetch-error/-/fetch-error-1.0.0.tgz"
+    },
     "fetch-jsonify": {
       "version": "1.0.0",
       "from": "fetch-jsonify@>=1.0.0 <2.0.0",
@@ -310,28 +332,7 @@
     "fetch-throw": {
       "version": "1.0.0",
       "from": "fetch-throw@>=1.0.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/fetch-throw/-/fetch-throw-1.0.0.tgz",
-      "dependencies": {
-        "fetch-error": {
-          "version": "1.0.0",
-          "from": "fetch-error@>=1.0.0 <2.0.0",
-          "resolved": "https://registry.npmjs.org/fetch-error/-/fetch-error-1.0.0.tgz",
-          "dependencies": {
-            "standard-http-error": {
-              "version": "2.0.0",
-              "from": "standard-http-error@>=2.0.0 <3.0.0",
-              "resolved": "https://registry.npmjs.org/standard-http-error/-/standard-http-error-2.0.0.tgz",
-              "dependencies": {
-                "standard-error": {
-                  "version": "1.1.0",
-                  "from": "standard-error@>=1.1.0 <2.0.0",
-                  "resolved": "https://registry.npmjs.org/standard-error/-/standard-error-1.1.0.tgz"
-                }
-              }
-            }
-          }
-        }
-      }
+      "resolved": "https://registry.npmjs.org/fetch-throw/-/fetch-throw-1.0.0.tgz"
     },
     "jade": {
       "version": "1.11.0",
@@ -718,6 +719,18 @@
       "version": "1.15.1",
       "from": "oolong@latest",
       "resolved": "https://registry.npmjs.org/oolong/-/oolong-1.15.1.tgz"
+    },
+    "standard-http-error": {
+      "version": "2.0.0",
+      "from": "standard-http-error@latest",
+      "resolved": "https://registry.npmjs.org/standard-http-error/-/standard-http-error-2.0.0.tgz",
+      "dependencies": {
+        "standard-error": {
+          "version": "1.1.0",
+          "from": "standard-error@>=1.1.0 <2.0.0",
+          "resolved": "https://registry.npmjs.org/standard-error/-/standard-error-1.1.0.tgz"
+        }
+      }
     }
   }
 }

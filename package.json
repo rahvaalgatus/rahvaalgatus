@@ -5,10 +5,13 @@
 
 	"dependencies": {
 		"express": "",
+		"cookie-parser": "",
 		"lodash": "",
 		"oolong": "",
 		"moment": "",
 		"co-next": "",
+		"standard-http-error": "",
+		"fetch-error": "",
 		"fetch-off": "",
 		"fetch-defaults": "",
 		"fetch-jsonify": "",
@@ -28,6 +31,7 @@
 		"selenium-dom": ">= 0.1.337 < 0.2",
 		"lazy-object": ">= 1 < 2",
 		"livereload": ">= 0.6 < 0.7",
+		"tough-cookie": ">= 2 < 3",
 
 		"node-sass": ">= 3.8 < 4"
 	},

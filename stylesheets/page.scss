@@ -48,11 +48,45 @@ center {
 	background-color: white;
 }
 
+.text-section {
+	padding-top: 4rem;
+	padding-bottom: 4rem;
+
+	h1 {
+		font-size: 34px;
+		color: $link;
+	}
+
+	h1 + p {
+		margin-top: 2rem;
+	}
+
+	p {
+		line-height: 1.5;
+	}
+}
+
 #header {
 	background: $header-color;
-	padding-top: 5rem;
+	padding-top: 1.5rem;
 	padding-bottom: 1rem;
 	color: white;
+
+	.right {
+		float: right;
+	}
+
+	menu {
+		margin-bottom: 2rem;
+		overflow: hidden;
+		font-size: 1.2rem;
+		text-transform: uppercase;
+		font-family: "MuseoSansCyrl-500";
+
+		.user {
+			text-transform: none;
+		}
+	}
 
 	.logo {
 		display: block;
@@ -98,21 +132,15 @@ center {
 	$half-width: 48rem;
 
 	#welcome {
-		padding-top: 4rem;
-		padding-bottom: 4rem;
 		//min-height: 35rem;
 		background: url(/images/hero-bg.png) no-repeat right center;
 		background-position: calc(50% + 450px) center;
 
 		h1 {
-			font-size: 34px;
-			color: $link;
 			max-width: $half-width;
 		}
 
 		p {
-			line-height: 1.5;
-			margin-top: 2rem;
 			margin-bottom: 2rem;
 			max-width: $half-width;
 		}

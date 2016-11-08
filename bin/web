@@ -18,14 +18,20 @@ app.locals.require = require
 app.locals.basedir = app.get("views")
 
 app.use(Express.static(PUBLIC_DIR))
+app.use(require("cookie-parser")())
 if (process.env.ENV == "development") app.use(require("morgan")("dev"))
+
 app.use((req, res, next) => { res.locals.req = req; next() })
 app.use(require("root/lib/middleware/i18n_middleware"))
-app.use(require("root/controllers/home_controller").router)
+app.use(require("root/lib/middleware/session_middleware"))
+app.use("/", require("root/controllers/home_controller").router)
+app.use("/session", require("root/controllers/session_controller").router)
 
 app.use(function(req, res, next) {
   res.sendFile("app.html", {root: PUBLIC_DIR})
 })
+
+app.use(require("root/lib/middleware/error_middleware"))
 
 if (module.parent) return
 

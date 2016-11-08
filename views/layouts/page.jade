@@ -15,6 +15,12 @@ html
 
 	body(id=page + "-page")
 		header#header: center
+			menu
+				if req.user
+					span.user.right= req.user.name
+				else
+					a.right(href="/session/new")= t("BTN_LOG_IN_REGISTER")
+
 			a.logo(href="/")
 				img(src="/images/rahvaalagatus_logo.png", alt="image")
 
