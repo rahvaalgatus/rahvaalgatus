@@ -66,6 +66,20 @@ center {
 	}
 }
 
+button.inherited {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	-ms-appearance: none;
+	appearance: none;
+
+	border: none;
+	background: none;
+	font: inherit;
+	color: inherit;
+	padding: 0;
+	margin: 0;
+}
+
 #header {
 	background: $header-color;
 	padding-top: 1.5rem;
@@ -85,6 +99,12 @@ center {
 
 		.user {
 			text-transform: none;
+		}
+
+		form {
+			display: inline;
+
+			&:before { margin: 0 1rem; content: "|"; }
 		}
 	}
 

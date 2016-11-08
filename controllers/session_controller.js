@@ -15,6 +15,11 @@ exports.router.get("/new", function(req, res, next) {
 	else redirect(req, res, next)
 })
 
+exports.router.delete("/", function(req, res) {
+	res.clearCookie("citizenos_token")
+	res.redirect(302, "/")
+})
+
 function redirect(req, res) {
   csrf.reset(req, res)
 

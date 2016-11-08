@@ -6,6 +6,7 @@
 	"dependencies": {
 		"express": "",
 		"cookie-parser": "",
+		"body-parser": "",
 		"lodash": "",
 		"oolong": "",
 		"moment": "",
@@ -18,7 +19,8 @@
 		"fetch-throw": "",
 		"jade": "",
 		"date-fns": "",
-		"morgan": ""
+		"morgan": "",
+		"method-override": ""
 	},
 
 	"devDependencies": {

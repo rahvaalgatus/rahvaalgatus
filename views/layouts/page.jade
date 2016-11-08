@@ -17,7 +17,10 @@ html
 		header#header: center
 			menu
 				if req.user
-					span.user.right= req.user.name
+					.right
+						span.user= req.user.name
+						form(action="/session", method="post")
+							button.inherited(name="_method", value="delete")= t("BTN_LOG_OFF")
 				else
 					a.right(href="/session/new")= t("BTN_LOG_IN_REGISTER")
 

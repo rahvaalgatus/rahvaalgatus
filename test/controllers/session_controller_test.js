@@ -11,6 +11,7 @@ var CSRF_COOKIE_PATH = "/session"
 
 describe("SessionController", function() {
 	require("root/test/web")()
+	require("root/test/mitm")()
 
 	describe("GET /new", function() {
 		it("must redirect to Citizen OS", function*() {
@@ -72,6 +73,28 @@ describe("SessionController", function() {
 		it("must respond with 412 given no CSRF token", function*() {
 			var res = yield this.request(PATH + "?error=access_denied")
 			res.statusCode.must.equal(412)
+		})
+	})
+
+	describe("DELETE /", function() {
+		it("must delete token", function*() {
+			this.mitm.on("request", function(req, res) {
+				switch (req.url) {
+					case "/api/auth/status": res.end("{}"); break
+				}
+			})
+
+			var res = yield this.request("/session", {
+				method: "DELETE",
+				headers: {Cookie: "citizenos_token=12345"}
+			})
+
+			res.statusCode.must.equal(302)
+			res.headers.location.must.equal("/")
+
+			var cookie = Cookie.parse(res.headers["set-cookie"][0])
+			cookie.key.must.equal("citizenos_token")
+			cookie.expires.must.be.lt(new Date)
 		})
 	})
 })
