@@ -1,9 +1,7 @@
 var O = require("oolong")
 var Router = require("express").Router
-var Config = require("root/config")
 var api = require("root/lib/citizen_os")
 var next = require("co-next")
-var PARTNER_PARAM = "sourcePartnerId=" + Config.apiPartnerId
 
 exports.router = Router({mergeParams: true})
 
@@ -28,7 +26,7 @@ exports.router.get("/", next(function*(req, res, next) {
 }))
 	
 function readInitiatives(status) {
-	return api(`/api/topics?${PARTNER_PARAM}&statuses=${status}`)
+	return api(`/api/topics?statuses=${status}`)
 }
 
 function readInitiativesWithVotes(initiatives) {
