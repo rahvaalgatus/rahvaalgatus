@@ -61,13 +61,8 @@ html(ng-app="app")
 					a.mobile-set(href="#")
 
 					ul.left.main-navi.clearfix
-						li(
-							ui-sref-active="active",
-							ng-class="{'header-link-rus': app.language == 'ru'}")
-							a(
-								ui-sref="home",
-								ng-class="{active: ('home' | isState)}",
-								translate="LINK_VOTING")
+						li(ng-class="{'header-link-rus': app.language == 'ru'}")
+							a(href="/", translate="LINK_VOTING")
 
 						li(
 							ui-sref-active="active",
