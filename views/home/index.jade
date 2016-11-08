@@ -51,7 +51,7 @@ mixin initiative(initiative)
 
 			case initiative.status
 				when "inProgress"
-					if !Initiative.hasEnded(initiative)
+					if !Initiative.hasDiscussionEnded(initiative)
 						- var passed = differenceInDays(new Date, createdAt)
 						- var total = differenceInDays(endsAt, createdAt)
 						- var left = total - passed
@@ -65,7 +65,7 @@ mixin initiative(initiative)
 					- var sigs = Initiative.countSignatures(initiative, "Yes")
 					- var required = Config.votesRequired
 
-					if !Initiative.hasEnded(initiative)
+					if !Initiative.hasVoteEnded(initiative)
 						.progress(style=Css.linearBackground("#00cb81", sigs / required))
 							= t("N_SIGNATURES", {votes: sigs})
 					else if Initiative.isSuccessful(initiative)
