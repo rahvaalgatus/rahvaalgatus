@@ -20,7 +20,7 @@ var stob64u = require("jsrsasign").stob64u
             config = conf;
         };
 
-        this.$get = ['$window', '$location', '$log', '$httpParamSerializer', 'store', function ($window, $location, $log, $httpParamSerializer, store) {
+        this.$get = ['$window', '$location', '$log', '$httpParamSerializer', 'store', "$cookies", function ($window, $location, $log, $httpParamSerializer, store, $cookies) {
             if (typeof KJUR === 'undefined') throw new Error('CitizenOSOpenId requires JSRSASIGN library to work. Please include the library - http://kjur.github.io/jsrsasign/jsrsasign-latest-all-min.js');
             if (!config) throw new Error('CitizenOSOpenId requires config to be set. Set the config in configuration phase using CitizenOSOpenIdProvider.setConfig().');
 
@@ -208,7 +208,7 @@ var stob64u = require("jsrsasign").stob64u
                  * Get the access token (access_token) stored after successful validation.
                  */
                 getAccessToken: function () {
-                    return store.get(config.cookies.accessToken);
+                    return $cookies.get(config.cookies.accessToken);
                 },
                 getConfig: function () {
                     return config;

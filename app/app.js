@@ -38,7 +38,9 @@ app.constant("toruConfig", {
 	}
 })
 
-app.config(function($stateProvider, $urlRouterProvider, $locationProvider, $httpProvider, $translateProvider, toruConfig, UserVoiceProvider, CitizenOSOpenIdProvider) {
+app.config(function($stateProvider, storeProvider, $urlRouterProvider, $locationProvider, $httpProvider, $translateProvider, toruConfig, UserVoiceProvider, CitizenOSOpenIdProvider) {
+		storeProvider.setStore("cookieStorage")
+
 		// https://docs.angularjs.org/api/ng/provider/$locationProvider
 		$locationProvider.html5Mode({
 				enabled: true,
@@ -236,7 +238,7 @@ app.config(function($stateProvider, $urlRouterProvider, $locationProvider, $http
 				redirectUri: callback,
 				scope: "openid", // TODO: define scopes
 				cookies: { // Names of the cookies used - http://openid.net/specs/openid-connect-implicit-1_0.html#rfc.section.2.1.1.1
-						accessToken: "citizenos.accessToken", // Cookie name where CitizenOS OpenID access token (access_token) is stored. This is used to authorize COS requests
+						accessToken: "citizenos_token", // Cookie name where CitizenOS OpenID access token (access_token) is stored. This is used to authorize COS requests
 						nonce: "citizenos.nonce", // Cookie name where CitizenOS OpenID authorization request nonce (nonce) is stored
 						state: "citizenos.state" // Cookie name where CitizenOS OpenID authorization request state (state) is stored
 				},

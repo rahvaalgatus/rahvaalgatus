@@ -267,10 +267,7 @@ function* acceptBeta() {
 
 function* signIn() {
 	yield ensureAt(this.browser, this.url)
-
-	yield this.browser.eval(function(token) {
-		window.localStorage.setItem("citizenos.accessToken", JSON.stringify(token))
-	}, TOKEN)
+	this.browser.manage().addCookie("citizenos_token", TOKEN)
 }
 
 function* createDiscussion(api, attrs) {
