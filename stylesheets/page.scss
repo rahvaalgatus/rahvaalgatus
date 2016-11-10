@@ -425,6 +425,16 @@ button.inherited {
 	$aside-width: 24rem;
 	background-color: $grey-background;
 
+	.white-section,
+	.grey-section {
+		padding-top: 4rem;
+		padding-bottom: 4rem;
+	}
+
+	.grey-section + .grey-section {
+		padding-top: 0;
+	}
+
 	#initiative-tabs {
 		padding-top: 4rem;
 		background: $grey-background;
@@ -461,13 +471,6 @@ button.inherited {
 
 			& + .button { margin-left: 1rem; }
 		}
-	}
-
-	#initiative,
-	#initiative-events,
-	#initiative-comments {
-		padding-top: 4rem;
-		padding-bottom: 4rem;
 	}
 
 	#initiative,
@@ -514,6 +517,7 @@ button.inherited {
 
 	#initiative-subscribe {
 		padding-top: 4rem;
+		padding-bottom: 4rem;
 
 		h2 {
 			margin-bottom: 0.5rem;
@@ -540,7 +544,6 @@ button.inherited {
 		h2 {
 			font-family: 'MuseoSansCyrl-700';
 			font-size: 2.8rem;
-			margin-top: 1rem;
 			margin-bottom: 1rem;
 		}
 
