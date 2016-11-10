@@ -1,0 +1,50 @@
+extends /layouts/page
+include ./_comments
+
+block body
+	- var formatDate = require("date-fns/format")
+
+	section#initiative: center
+		aside.right
+			.aside-box
+				h1.aside-box-header= t("OPTIONS")
+
+				menu.aside-box-list
+					li
+						a(
+							href="http://twitter.com/intent/tweet?status=#{initiative.title} https://rahvaalgatus.ee/topics/#{initiative.id}",
+							target="_blank"
+						)
+							span= t("SHARE_ON_TWITTER")
+							i.icon-twitter
+
+			form#initiative-email-subscription.aside-box(
+				action="https://docs.google.com/forms/d/e/1FAIpQLScP706DtEaSwnt8GYvgw30KOWvdfl7DBhjwyW82V0IesDrx0g/formResponse",
+				target="_blank",
+				method="POST")
+				h1.aside-box-header Teavitused
+
+				input(name="entry.1310039861", type="hidden", value=initiative.id)
+				input(name="entry.426608193", type="hidden", value=initiative.title)
+				input(name="fbzx", value="-7339236801065826742", type="hidden")
+
+				label.form-label(for="entry.120482688")= t("LBL_EMAIL")
+				input.form-input(name="entry.120482688", type="email")
+				button.form-submit(type="submit")= t("BTN_SUBSCRIBE")
+
+		article
+			header
+				span.author
+					= t("CREATED_BY")
+					| &#32;
+					= initiative.creator.name
+
+				br
+				time.deadline(datetime=initiative.endsAt)
+					- var endsAt = formatDate(initiative.endsAt, "D.MM.YYYY")
+					= t("DISCUSSION_DEADLINE", {endsAt: endsAt})
+
+			!= text
+
+	section.grey-section: center
+		+comments("ARGUMENTS", comments)

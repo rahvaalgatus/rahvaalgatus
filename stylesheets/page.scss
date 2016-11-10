@@ -7,6 +7,8 @@ $blue: #53B1EB;
 $form-input-padding: 8px;
 $header-color: #124267;
 $footer-height: 12rem;
+$grey-background: #f2f2f2;
+$darker-grey-background: #e8e8e8;
 
 @import "reset";
 @import "_fonts";
@@ -41,7 +43,7 @@ center {
 }
 
 .grey-section {
-	background-color: #f2f2f2;
+	background-color: $grey-background;
 }
 
 .white-section {
@@ -78,6 +80,45 @@ button.inherited {
 	color: inherit;
 	padding: 0;
 	margin: 0;
+}
+
+.form-label,
+.form-input,
+.form-submit {
+  line-height: 18px;
+  font-size: 14px;
+  font-family: 'MuseoSansCyrl-500', sans-serif;
+}
+
+.form-label {
+  font-family: 'MuseoSansCyrl-700', sans-serif;
+	font-weight: bold;
+}
+
+.form-input {
+  border: 1px solid #cecece;
+
+  padding: $form-input-padding 10px;
+
+  background: white;
+  color: #4a555d;
+  border-radius: 2px;
+}
+
+.form-submit {
+  appearance: none;
+  display: inline-block;
+  vertical-align: top;
+  font-family: 'MuseoSansCyrl-700', sans-serif;
+	text-transform: uppercase;
+
+  background: $light-blue;
+  border: 1px solid $dark-blue;
+  border-radius: 2px;
+
+  padding: $form-input-padding 20px;
+
+  color: white;
 }
 
 #header {
@@ -308,6 +349,181 @@ button.inherited {
 				background-position: 1rem center;
 				padding-left: 3.5rem;
 			}
+		}
+	}
+}
+
+#initiative-page {
+	$aside-width: 24rem;
+	background-color: $grey-background;
+
+	#initiative {
+		overflow: hidden;
+		background: white;
+	}
+
+	article,
+	aside {
+		padding-top: 4rem;
+		padding-bottom: 4rem;
+	}
+
+	article {
+		padding-left: 2rem;
+		margin-right: $aside-width + 1rem;
+		//padding-left: 2rem;
+
+		font-size: 18px;
+		font-family: 'tisaproregular', serif;
+		line-height: 1.4;
+
+		header {
+			font-family: 'MuseoSansCyrl-500';
+			font-size: 1.4rem;
+			color: #999;
+		}
+
+		.deadline {
+			text-transform: capitalize;
+		}
+
+		h1 {
+			font-size: 48px;
+			font-family: 'MuseoSansCyrl-700';
+			line-height: 60px;
+			margin-top: 2rem;
+			margin-bottom: 1rem;
+		}
+	}
+
+	aside {
+		float: right;
+		width: $aside-width;
+		padding-left: 1rem;
+		padding-right: 1rem;
+
+		& > button {
+			width: 100%;
+			margin-bottom: 20px;
+		}
+
+		.aside-box {
+			background: white;
+			margin-bottom: 20px;
+
+			a {
+				color: $blue;
+				line-height: 22px;
+				cursor: pointer;
+
+				&:hover { text-decoration: underline; }
+			}
+		}
+
+		.aside-box-header {
+			background: $light-blue;
+			padding: 0 10px;
+			line-height: 40px;
+			color: white;
+			font-family: 'MuseoSansCyrl-700';
+			font-size: 14px;
+
+			text-transform: uppercase;
+		}
+
+		.aside-box-list {
+			padding: 10px 0;
+			margin: 0 10px 10px;
+			list-style: none;
+
+			li > a {
+				display: block;
+			}
+		}
+	}
+
+	#comments {
+		margin: 4rem 2rem 4rem;
+		max-width: 68rem;
+
+		h2 {
+			font-family: 'MuseoSansCyrl-700';
+			font-size: 2.8rem;
+			margin-top: 1rem;
+			margin-bottom: 2rem;
+		}
+
+		.comment {
+			margin-left: -2rem;
+			margin-right: -2rem;
+			padding-left: 2rem;
+			padding-right: 2rem;
+
+			h3 {
+				font-family: 'MuseoSansCyrl-700';
+				font-size: 1.6rem;
+				display: inline;
+			}
+
+			time,
+			.author {
+				color: #aaa;
+			}
+
+			.author:before { content: " — " }
+			.author:after { content: ", " }
+
+			p {
+				line-height: 1.5;
+			}
+
+			&.pro {
+				border-left: 4px solid #89cb00;
+			}
+
+			&.con {
+				border-right: 4px solid #f00052;
+			}
+
+			& + .comment {
+				margin-top: 2rem;
+			}
+		}
+
+		.reply {
+			margin-top: 2rem;
+			padding-left: 2rem;
+			background: url(/images/reply-arrow.png) no-repeat left top;
+
+			.author:before { content: "" }
+			time:after { content: ":" }
+		}
+
+		.anonymous {
+			text-align: center;
+			border-top: 1px solid #cecece;
+			margin-top: 2rem;
+			padding-top: 2rem;
+		}
+	}
+
+	#initiative-email-subscription {
+		padding: 10px;
+
+		h1 {
+			margin: -10px -10px 10px;
+		}
+
+		label {
+			display: block;
+			&::after { content: ":"; }
+		}
+
+		input[type=email],
+		button {
+			display: block;
+			margin-top: 5px;
+			width: 100%;
 		}
 	}
 }

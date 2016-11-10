@@ -1,0 +1,31 @@
+mixin comments(header, comments)
+	//- TODO: Linkify
+	-
+		var formatDate = require("date-fns/format")
+
+		function formatTimestamp(time) {
+			return formatDate(time, "D.MM.YYYY HH:mm")
+		}
+
+	#comments
+		h2.left= t(header)
+
+		ol.comments
+			for comment in comments
+				li.comment(class=comment.type)
+					h3.subject= comment.subject
+					span.author= comment.creator.name
+					| &#32;
+					time(datetime=comment.createdAt)= formatTimestamp(comment.createdAt)
+					p= comment.text
+
+					ol.replies
+						for reply in comment.replies
+							li.reply
+								h3.subject= reply.subject
+								span.author= reply.creator.name
+								| &#32;
+								time(datetime=reply.createdAt)= formatTimestamp(reply.createdAt)
+								p= reply.text
+
+		p.anonymous= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE")

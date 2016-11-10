@@ -4,6 +4,7 @@ var Fs = require("fs")
 var ROOT_LINK = __dirname + "/../node_modules/root"
 if (!Fs.existsSync(ROOT_LINK)) Fs.symlinkSync("..", ROOT_LINK)
 
+var O = require("oolong")
 var Url = require("url")
 var Http = require("http")
 var Express = require("express")
@@ -26,8 +27,12 @@ if (process.env.ENV == "development") app.use(require("morgan")("dev"))
 app.use((req, res, next) => { res.locals.req = req; next() })
 app.use(require("root/lib/middleware/i18n_middleware"))
 app.use(require("root/lib/middleware/session_middleware"))
-app.use("/", require("root/controllers/home_controller").router)
-app.use("/session", require("root/controllers/session_controller").router)
+
+O.each({
+	"/": require("root/controllers/home_controller").router,
+	"/initiatives": require("root/controllers/initiatives_controller").router,
+	"/session": require("root/controllers/session_controller").router,
+}, (router, path) => app.use(path, router))
 
 app.use(function(req, res, next) {
   res.sendFile("app.html", {root: PUBLIC_DIR})
