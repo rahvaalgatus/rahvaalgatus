@@ -69,6 +69,16 @@ center {
 
 	p {
 		line-height: 1.5;
+		white-space: pre-wrap;
+
+		& + p {
+			margin-top: 2rem;
+		}
+	}
+
+	a {
+		color: $blue;
+		&:hover { text-decoration: underline; }
 	}
 }
 

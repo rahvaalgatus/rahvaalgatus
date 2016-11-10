@@ -26,6 +26,9 @@ exports.router.get("/", next(function*(req, res, next) {
 		processes: processes
 	})
 }))
+
+exports.router.get("/about", (req, res) => res.render("home/about"))
+exports.router.get("/support", (req, res) => res.render("home/support"))
 	
 function readInitiatives(status) {
 	return api(`/api/topics?statuses=${status}`)

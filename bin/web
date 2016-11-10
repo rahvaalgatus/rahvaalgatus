@@ -39,6 +39,7 @@ app.get("/topics/:id/discussion", redirect(302, "/initiatives/:id/discussion"))
 app.get("/topics/:id/vote", redirect(302, "/initiatives/:id/vote"))
 app.get("/topics/:id/events", redirect(302, "/initiatives/:id/events"))
 app.get("/topics/:id/votes/*", redirect(302, "/initiatives/:id/vote"))
+app.get("/support_us", redirect(302, "/support"))
 
 O.each({
 	"/": require("root/controllers/home_controller").router,
