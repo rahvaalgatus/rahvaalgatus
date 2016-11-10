@@ -1,0 +1,25 @@
+extends ./layout
+
+block prepend tab
+	- var I18n = require("root/lib/i18n")
+
+	section#initiative-events.white-section: center
+		header
+			span.author
+				= t("CREATED_BY")
+				| &#32;
+				= initiative.creator.name
+
+			h1= initiative.title
+
+		if events.length
+			ol.events
+				for event in events
+					li.event
+						h2.subject= event.subject
+						time(datetime=event.createdAt)
+							= I18n.formatDate("numeric" ,event.createdAt)
+
+						p= event.text
+		else
+			p= t("NO_EVENTS")

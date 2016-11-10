@@ -1,10 +1,9 @@
--
-	function selected(a, b) { return a === b ? "selected" : "" }
+- var selected = require("root/lib/css").selected
 
 doctype html
 html
 	head
-		title Rahvaalgatus
+		title #{title == null ? "" : title + " - "} Rahvaalgatus
 		meta(charset="utf-8")
 		meta(name="viewport", content="width=device-width")
 		link(rel="stylesheet", type="text/css", href="/assets/fonts.css")

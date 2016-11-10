@@ -8,6 +8,7 @@ var O = require("oolong")
 var Url = require("url")
 var Http = require("http")
 var Express = require("express")
+var redirect = require("root/lib/middleware/redirect_middleware")
 var PORT = process.env.PORT || 3000
 var PUBLIC_DIR = __dirname + "/../public"
 
@@ -27,6 +28,17 @@ if (process.env.ENV == "development") app.use(require("morgan")("dev"))
 app.use((req, res, next) => { res.locals.req = req; next() })
 app.use(require("root/lib/middleware/i18n_middleware"))
 app.use(require("root/lib/middleware/session_middleware"))
+
+app.get("/topics", redirect(302, "/"))
+app.get("/topics/create1", redirect(302, "/initiatives/new"))
+app.get("/votings", redirect(302, "/"))
+app.get("/discussions", redirect(302, "/"))
+app.get("/goodpractice", redirect(302, "/about"))
+app.get("/topics/:id", redirect(302, "/initiatives/:id"))
+app.get("/topics/:id/discussion", redirect(302, "/initiatives/:id/discussion"))
+app.get("/topics/:id/vote", redirect(302, "/initiatives/:id/vote"))
+app.get("/topics/:id/events", redirect(302, "/initiatives/:id/events"))
+app.get("/topics/:id/votes/*", redirect(302, "/initiatives/:id/vote"))
 
 O.each({
 	"/": require("root/controllers/home_controller").router,

@@ -1,6 +1,8 @@
+var _ = require("lodash")
 var O = require("oolong")
 var Router = require("express").Router
 var api = require("root/lib/citizen_os")
+var readInitiative = api.readInitiative
 var next = require("co-next")
 
 exports.router = Router({mergeParams: true})
@@ -14,8 +16,8 @@ exports.router.get("/", next(function*(req, res, next) {
 		
 	initiatives = O.map(initiatives, (res) => res.body.data.rows)
 	var discussions = initiatives.discussions
-	var votings = yield readInitiativesWithVotes(initiatives.votings)
-	var processes = yield readInitiativesWithVotes(initiatives.processes)
+	var votings = yield _.map(initiatives.votings, "id").map(readInitiative)
+	var processes = yield _.map(initiatives.processes, "id").map(readInitiative)
 
 	res.render("home/index", {
 		page: "home",
@@ -27,14 +29,4 @@ exports.router.get("/", next(function*(req, res, next) {
 	
 function readInitiatives(status) {
 	return api(`/api/topics?statuses=${status}`)
-}
-
-function readInitiativesWithVotes(initiatives) {
-	return initiatives.map(function(initiative) {
-		return api(`/api/topics/${initiative.id}`).then(function(res) {
-			var initiative = res.body.data, voteId = initiative.vote.id
-			var vote = api(`/api/topics/${initiative.id}/votes/${voteId}`)
-			return vote.then((res) => ({__proto__: initiative, vote: res.body.data}))
-		})
-	})
 }

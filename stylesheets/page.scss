@@ -9,6 +9,7 @@ $header-color: #124267;
 $footer-height: 12rem;
 $grey-background: #f2f2f2;
 $darker-grey-background: #e8e8e8;
+$black-text: #4A555D;
 
 @import "reset";
 @import "_fonts";
@@ -21,7 +22,7 @@ body {
 body {
 	font-family: 'MuseoSansCyrl-300';
 	font-size: 1.4rem;
-	color: #4A555D;
+	color: $black-text;
 }
 
 center {
@@ -33,6 +34,9 @@ center {
 	// text-align: inherit.
 	& > p { margin-right: auto }
 }
+
+.left { float: left; }
+.right { float: right; }
 
 #header,
 .grey-section,
@@ -82,6 +86,51 @@ button.inherited {
 	margin: 0;
 }
 
+.green-button,
+.blue-button,
+.yellow-button,
+.white-button {
+	border-radius: 3px;
+	border: 0px solid transparent;
+	display: inline-block;
+	font-family: "MuseoSansCyrl-700";
+	font-size: 1.3rem;
+	height: 4rem;
+	line-height: 4rem;
+	padding: 0 2rem;
+	text-align: center;
+	text-transform: uppercase;
+  vertical-align: middle;
+
+	i {
+		margin-right: 1rem;
+		margin-left: -1rem;
+	}
+}
+
+.green-button {
+	background: #00cb81;
+	color: white;
+	border: 1px solid #02b071;
+}
+
+.blue-button {
+	background: $light-blue;
+	color: white;
+}
+
+.yellow-button {
+	background: #ffb400;
+	color: #4a555d;
+	border: 1px solid #f1aa01;
+}
+
+.white-button {
+	background: white;
+	border: 1px solid #cecece;
+	color: #4a555d;
+}
+
 .form-label,
 .form-input,
 .form-submit {
@@ -119,6 +168,15 @@ button.inherited {
   padding: $form-input-padding 20px;
 
   color: white;
+}
+
+.icon-twitter {
+	//display: block;
+	float: left;
+	background: url(/images/twitter.png) no-repeat center;
+	width: 22px;
+	height: 100%;
+	background-size: 100%;
 }
 
 #header {
@@ -357,34 +415,59 @@ button.inherited {
 	$aside-width: 24rem;
 	background-color: $grey-background;
 
-	#initiative {
-		overflow: hidden;
-		background: white;
+	#initiative-tabs {
+		padding-top: 4rem;
+		background: $grey-background;
+		border-bottom: 1px solid #cecece;
+		padding-left: 2rem;
+		padding-right: 2rem;
+
+		a.tab {
+			display: inline-block;
+			text-align: center;
+			line-height: 4rem;
+
+			width: 12rem;
+			font-size: 14px;
+			font-family: 'MuseoSansCyrl-500';
+			color: #4A555D;
+
+			background-color: $grey-background;
+			border: 1px solid #cecece;
+			text-align: center;
+			margin-bottom: -1px;
+
+			&.selected {
+				background-color: white;
+				border-bottom: 1px solid white;
+			}
+
+			& + a { margin-left: 1rem; }
+		}
+
+		.button {
+			height: 3.5rem;
+			line-height: 3.5rem;
+
+			& + .button { margin-left: 1rem; }
+		}
 	}
 
-	article,
-	aside {
+	#initiative,
+	#initiative-events,
+	#initiative-comments {
 		padding-top: 4rem;
 		padding-bottom: 4rem;
 	}
 
-	article {
-		padding-left: 2rem;
-		margin-right: $aside-width + 1rem;
-		//padding-left: 2rem;
-
-		font-size: 18px;
-		font-family: 'tisaproregular', serif;
-		line-height: 1.4;
+	#initiative,
+	#initiative-events {
+		overflow: hidden;
 
 		header {
 			font-family: 'MuseoSansCyrl-500';
 			font-size: 1.4rem;
 			color: #999;
-		}
-
-		.deadline {
-			text-transform: capitalize;
 		}
 
 		h1 {
@@ -393,64 +476,71 @@ button.inherited {
 			line-height: 60px;
 			margin-top: 2rem;
 			margin-bottom: 1rem;
+			color: $black-text;
 		}
 	}
 
-	aside {
-		float: right;
-		width: $aside-width;
-		padding-left: 1rem;
-		padding-right: 1rem;
+	#initiative {
+		article {
+			font-size: 18px;
+			font-family: 'tisaproregular', serif;
+			line-height: 1.4;
+			max-width: 72rem;
 
-		& > button {
+			.deadline {
+				text-transform: capitalize;
+			}
+
+			strong { font-weight: bold; }
+			em { font-style: italic; }
+			u { text-decoration: underline; }
+
+			li {
+				margin-left: 2rem;
+				list-style-position: outside;
+			}
+		}
+	}
+
+	#initiative-subscribe {
+		padding-top: 4rem;
+
+		h2 {
+			margin-bottom: 0.5rem;
+			font-family: 'MuseoSansCyrl-500';
+			font-size: 1.6rem;
+		}
+
+		input[type=email],
+		button {
+			display: inline-block;
+		}
+
+		input[type=email] {
 			width: 100%;
-			margin-bottom: 20px;
+			max-width: 24rem;
 		}
 
-		.aside-box {
-			background: white;
-			margin-bottom: 20px;
-
-			a {
-				color: $blue;
-				line-height: 22px;
-				cursor: pointer;
-
-				&:hover { text-decoration: underline; }
-			}
-		}
-
-		.aside-box-header {
-			background: $light-blue;
-			padding: 0 10px;
-			line-height: 40px;
-			color: white;
-			font-family: 'MuseoSansCyrl-700';
-			font-size: 14px;
-
-			text-transform: uppercase;
-		}
-
-		.aside-box-list {
-			padding: 10px 0;
-			margin: 0 10px 10px;
-			list-style: none;
-
-			li > a {
-				display: block;
-			}
+		button {
+			margin-left: 1rem;
 		}
 	}
 
-	#comments {
-		margin: 4rem 2rem 4rem;
-		max-width: 68rem;
-
+	#initiative-comments {
 		h2 {
 			font-family: 'MuseoSansCyrl-700';
 			font-size: 2.8rem;
 			margin-top: 1rem;
-			margin-bottom: 2rem;
+			margin-bottom: 1rem;
+		}
+
+		.comments,
+		form {
+			max-width: 72rem;
+		}
+
+		.comments {
+			margin-top: 2rem;
 		}
 
 		.comment {
@@ -460,8 +550,8 @@ button.inherited {
 			padding-right: 2rem;
 
 			h3 {
-				font-family: 'MuseoSansCyrl-700';
-				font-size: 1.6rem;
+				font-family: 'MuseoSansCyrl-500';
+				font-size: 1.8rem;
 				display: inline;
 			}
 
@@ -474,15 +564,9 @@ button.inherited {
 			.author:after { content: ", " }
 
 			p {
+				margin-top: 0.5rem;
 				line-height: 1.5;
-			}
-
-			&.pro {
-				border-left: 4px solid #89cb00;
-			}
-
-			&.con {
-				border-right: 4px solid #f00052;
+				white-space: pre-wrap;
 			}
 
 			& + .comment {
@@ -499,31 +583,50 @@ button.inherited {
 			time:after { content: ":" }
 		}
 
-		.anonymous {
+		form {
 			text-align: center;
 			border-top: 1px solid #cecece;
-			margin-top: 2rem;
+			margin-top: 4rem;
 			padding-top: 2rem;
+		}
+
+		&.discussion .comment.pro {
+			border-left: 4px solid #89cb00;
+		}
+
+		&.discussion .comment.con {
+			border-right: 4px solid #f00052;
 		}
 	}
 
-	#initiative-email-subscription {
-		padding: 10px;
-
-		h1 {
-			margin: -10px -10px 10px;
+	#initiative-events {
+		.events {
+			max-width: 72rem;
 		}
 
-		label {
-			display: block;
-			&::after { content: ":"; }
-		}
+		.event {
+			h2 {
+				font-family: 'MuseoSansCyrl-500';
+				font-size: 1.8rem;
+				display: inline;
+				color: $link;
+			}
 
-		input[type=email],
-		button {
-			display: block;
-			margin-top: 5px;
-			width: 100%;
+			time {
+				color: #aaa;
+			}
+
+			time:before { content: " — " }
+
+			p {
+				margin-top: 0.5rem;
+				line-height: 1.5;
+				white-space: pre-wrap;
+			}
+
+			& + .event {
+				margin-top: 2rem;
+			}
 		}
 	}
 }

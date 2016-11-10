@@ -135,7 +135,7 @@ app.config(function($stateProvider, storeProvider, $urlRouterProvider, $location
 		})
 
 		$stateProvider.state("topics.create", {
-			url: "/topics/new",
+			url: "/initiatives/new",
 			controller: "TopicCtrl",
 			templateUrl: "/templates/initiatives/create.html"
 		})
@@ -143,41 +143,41 @@ app.config(function($stateProvider, storeProvider, $urlRouterProvider, $location
 		$stateProvider.state("topics.events.create", {url: "/create"})
 
 		$stateProvider.state("topics.read", {
-			url: "/topics/:id",
+			url: "/initiatives/:id",
 			controller: "TopicCtrl",
 			template: "<ui-view />",
 		})
 
 		$stateProvider.state("topics.deadline", {
-			url: "/topics/:id/deadline",
+			url: "/initiatives/:id/deadline",
 			controller: "TopicCtrl",
 			templateUrl: "/templates/initiatives/create.html"
 		})
 
 		$stateProvider.state("topics.authors", {
-			url: "/topics/:id/authors",
+			url: "/initiatives/:id/authors",
 			templateUrl: "/templates/initiatives/authors.html"
 		})
 
 		$stateProvider.state("topics.discussion", {
-			url: "/topics/:id/discussion",
+			url: "/initiatives/:id/discussion",
 			controller: "TopicCtrl",
 			templateUrl: "/templates/initiatives/discussion.html"
 		})
 
 		$stateProvider.state("topics.vote", {
-			url: "/topics/:id/vote",
+			url: "/initiatives/:id/vote",
 			controller: "TopicCtrl",
 			templateUrl: "/templates/initiatives/vote.html"
 		})
 
 		$stateProvider.state("topics.vote.renew", {
-			url: "/topics/:id/renew",
+			url: "/initiatives/:id/renew",
 			templateUrl: "/templates/initiatives/renew.html"
 		})
 
 		$stateProvider.state("topics.events", {
-			url: "/topics/:id/events",
+			url: "/initiatives/:id/events",
 			controller: "EventsCtrl",
 			templateUrl: "/templates/initiatives/events.html"
 		})

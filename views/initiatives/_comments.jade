@@ -1,31 +1,30 @@
-mixin comments(header, comments)
+mixin comments(subpage, comments)
 	//- TODO: Linkify
-	-
-		var formatDate = require("date-fns/format")
+	- var I18n = require("root/lib/i18n")
 
-		function formatTimestamp(time) {
-			return formatDate(time, "D.MM.YYYY HH:mm")
-		}
+	h2= t(subpage == "discussion" ? "ARGUMENTS" : "COMMENT_HEADING")
 
-	#comments
-		h2.left= t(header)
+	ol.comments
+		for comment in comments
+			li.comment(class=comment.type)
+				h3.subject= comment.subject
+				span.author= comment.creator.name
+				| &#32;
+				time(datetime=comment.createdAt)
+					= I18n.formatTime("numeric", comment.createdAt)
 
-		ol.comments
-			for comment in comments
-				li.comment(class=comment.type)
-					h3.subject= comment.subject
-					span.author= comment.creator.name
-					| &#32;
-					time(datetime=comment.createdAt)= formatTimestamp(comment.createdAt)
-					p= comment.text
+				p= comment.text
 
-					ol.replies
-						for reply in comment.replies
-							li.reply
-								h3.subject= reply.subject
-								span.author= reply.creator.name
-								| &#32;
-								time(datetime=reply.createdAt)= formatTimestamp(reply.createdAt)
-								p= reply.text
+				ol.replies
+					for reply in comment.replies
+						li.reply
+							h3.subject= reply.subject
+							span.author= reply.creator.name
+							| &#32;
+							time(datetime=reply.createdAt)
+								= I18n.formatTime("numeric", reply.createdAt)
 
-		p.anonymous= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE")
+							p= reply.text
+
+	form
+		p= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE")

@@ -31,8 +31,8 @@ mixin initiative(initiative)
 		var Initiative = require("root/lib/initiative")
 		var Css = require("root/lib/css")
 		var Config = require("root/config")
+		var I18n = require("root/lib/i18n")
 		var differenceInDays = require("date-fns/difference_in_calendar_days")
-		var formatDate = require("date-fns/format")
 		var createdAt = new Date(initiative.createdAt)
 		var endsAt = new Date(initiative.endsAt)
 
@@ -45,7 +45,7 @@ mixin initiative(initiative)
 
 	li.initiative(class=klass)
 		a(href=`/initiatives/${initiative.id}`)
-			time(datetime=initiative.createdAt)= formatDate(createdAt, "D.MM.YYYY")
+			time(datetime=initiative.createdAt)= I18n.formatDate("numeric", createdAt)
 			h3= initiative.title
 			span.author= initiative.creator.name
 

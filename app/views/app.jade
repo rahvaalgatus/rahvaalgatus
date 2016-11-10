@@ -42,7 +42,7 @@ html(ng-app="app")
 						a(toru-select-item="key", ng-repeat="(key, value) in app.languagesAvailable", ng-class="{'active': app.language == key}") {{key | translate}}
 
 					.right.login(ng-show="!app.user.isLoading && !app.user.loggedIn")
-						a(ng-click="app.login()", translate="BTN_LOG_IN_REGISTER")
+						a(href="/session/new", translate="BTN_LOG_IN_REGISTER")
 
 					.right.login
 						#reg.log-pop(ng-show="app.user.loggedIn && app.finalizeOpen && app.user.email==null")

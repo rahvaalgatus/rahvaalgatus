@@ -1,0 +1,54 @@
+extends /layouts/page
+include ./_comments
+
+block body
+	- var selected = require("root/lib/css").selected
+
+		nav#initiative-tabs: center
+			.right
+				a.button.blue-button(
+					href="#subscribe",
+					onclick="document.getElementById('initiative-subscribe-email').focus()")
+					span Jälgi algatust
+	
+				a.button.white-button(
+					href="http://twitter.com/intent/tweet?status=#{initiative.title} https://rahvaalgatus.ee/topics/#{initiative.id}",
+					target="_blank")
+					i.icon-twitter
+					span= t("SHARE_ON_TWITTER")
+	
+			if initiative.status == "inProgress"
+				a.tab(
+					href="/initiatives/#{initiative.id}/discussion",
+					class=selected(subpage, "discussion"))
+					= t("HEADING_TAB_ORIGINAL")
+			else
+				a.tab(
+					href="/initiatives/#{initiative.id}/vote",
+					class=selected(subpage, "vote"))
+					= t("HEADING_TAB_VOTE")
+
+			if initiative.status == "followUp"
+				a.tab(
+					href="/initiatives/#{initiative.id}/events",
+					class=selected(subpage, "events"))
+					= t("HEADING_TAB_EVENTS")
+
+	block tab
+		section#initiative-subscribe.grey-section: center
+			form(
+				action="https://docs.google.com/forms/d/e/1FAIpQLScP706DtEaSwnt8GYvgw30KOWvdfl7DBhjwyW82V0IesDrx0g/formResponse",
+				target="_blank",
+				method="POST")
+				h2 Soovid olla kursis algatuse käekäiguga?
+
+				input(name="entry.1310039861", type="hidden", value=initiative.id)
+				input(name="entry.426608193", type="hidden", value=initiative.title)
+				input(name="fbzx", value="-7339236801065826742", type="hidden")
+
+				input#initiative-subscribe-email.form-input(
+					name="entry.120482688",
+					type="email",
+					placeholder=t("LBL_EMAIL"))
+
+				button.form-submit(type="submit")= t("BTN_SUBSCRIBE")
