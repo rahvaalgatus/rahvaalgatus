@@ -23,7 +23,13 @@ app.use(Express.static(PUBLIC_DIR))
 app.use(require("cookie-parser")())
 app.use(require("body-parser").urlencoded({extended: true}))
 app.use(require("root/lib/middleware/method_override_middleware"))
-if (process.env.ENV == "development") app.use(require("morgan")("dev"))
+
+switch (process.env.ENV) {
+	case "development":
+	case "staging":
+		app.use(require("morgan")("dev"))
+		break
+}
 
 app.use((req, res, next) => { res.locals.req = req; next() })
 app.use(require("root/lib/middleware/i18n_middleware"))

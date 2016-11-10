@@ -14,7 +14,7 @@ SELENIUM_BROWSER = chrome
 
 STAGING_HOST = staging.rahvaalgatus.ee
 PRODUCTION_HOST = production.rahvaalgatus.ee
-APP_HOST = app.rahvaalgatus.ee
+APP_HOST = rahvaalgatus.ee
 
 LFTP_MIRROR_OPTS = \
 	--verbose=1 \
@@ -22,12 +22,28 @@ LFTP_MIRROR_OPTS = \
 	--parallel=4 \
 	--dereference \
 	--reverse \
-	--exclude node_modules/root/ \
-	--exclude \.git/ \
-	--exclude-glob .editorconfig \
-	--exclude-glob .gitignore \
-	--exclude-glob .git* \
 	--delete
+
+RSYNC_OPTS = \
+	--compress \
+	--recursive \
+	--links \
+	--itemize-changes \
+	--omit-dir-times \
+	--times \
+	--delete \
+	--delete-excluded \
+	--prune-empty-dirs \
+	--exclude ".*" \
+	--exclude "/tags" \
+	--exclude "/app/***" \
+	--exclude "/stylesheets/***" \
+	--exclude "/test/***" \
+	--exclude "/scripts/***" \
+	--exclude "/node_modules/selenium-*/***" \
+	--exclude "/node_modules/mocha/***" \
+	--exclude "/node_modules/node-sass/***" \
+	--exclude "/tmp/***"
 
 export PORT
 export ENV
@@ -93,10 +109,8 @@ deploy:
 staging: DEPLOY_HOST = $(STAGING_HOST)
 staging: deploy
 
-staging/app: DEPLOY_HOST = $(APP_HOST)
-staging/app: tmp/deploy
 staging/app:
-	lftp "$(DEPLOY_HOST)" -e "mirror $(LFTP_MIRROR_OPTS) tmp/deploy/ .; exit"
+	@rsync $(RSYNC_OPTS) . "$(APP_HOST)":domeenid/www.rahvaalgatus.ee/app/
 
 production: DEPLOY_HOST = $(PRODUCTION_HOST)
 production: deploy
@@ -104,6 +118,12 @@ production: deploy
 translations: public/assets/en.json
 translations: public/assets/et.json
 translations: public/assets/ru.json
+
+tmp:
+	mkdir -p tmp
+
+tmp/translations.json: tmp
+	wget "$(TRANSLATIONS_URL)" -O "$@"
 
 public/assets/en.json: tmp/translations.json
 	jq $(JQ_OPTS) -f scripts/translation.jq --arg lang english "$<" > "$@"
@@ -114,15 +134,6 @@ public/assets/et.json: tmp/translations.json
 public/assets/ru.json: tmp/translations.json
 	jq $(JQ_OPTS) -f scripts/translation.jq --arg lang russian "$<" > "$@"
 
-tmp:
-	mkdir -p tmp
-
-tmp/translations.json: tmp
-	wget "$(TRANSLATIONS_URL)" -O "$@"
-
-tmp/deploy:
-	git clone . "$@"
-	
 .PHONY: love
 .PHONY: compile autocompile
 .PHONY: javascripts autojavascripts
@@ -131,5 +142,5 @@ tmp/deploy:
 .PHONY: test spec autotest autospec
 .PHONY: server
 .PHONY: shrinkwrap
-.PHONY: deploy staging production
+.PHONY: deploy staging staging/app production
 .PHONY: translations

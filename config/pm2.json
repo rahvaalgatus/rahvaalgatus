@@ -1,0 +1,13 @@
+{
+	"apps": [{
+		"name": "rahvaalgatus",
+		"cwd": "/data02/virt55369/domeenid/www.rahvaalgatus.ee/app",
+		"script": "./bin/web",
+		"watch": true,
+		"instances": 2,
+
+		"env": {
+			"ENV": "staging"
+		}
+	}]
+}
