@@ -755,16 +755,8 @@
 	display: block;
 }
 
-#dear_user_dialog {
-	position: absolute;
-	height: auto;
-	width: 50%;
-	top: 10%;
-	left: 25%;
-	display: block;
-}
 
-#terms_dialog .content, #dear_user_dialog .content {
+#terms_dialog .content, {
 	padding: 20px;
 }
 
@@ -2221,7 +2213,7 @@ h4.ac-topic {
     display: block;
   }
 
-  #terms_dialog, #dear_user_dialog {
+  #terms_dialog {
     width: 80%;
     top: 25%;
     left: 10%;
@@ -2470,7 +2462,7 @@ h4.ac-topic {
     display: block;
   }
 
-  #terms_dialog, #dear_user_dialog {
+  #terms_dialog {
     width: 80%;
     top: 25%;
     left: 10%;

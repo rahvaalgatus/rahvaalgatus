@@ -31,7 +31,6 @@ describe("Rahvaalgatus", function() {
 
 	describe("/topics/new", function() {
 		beforeEach(signIn)
-		beforeEach(acceptBeta)
 
 		it("must create a new initiative", function*() {
 			var deadline = Moment().startOf("day").add(3, "day").toDate()
@@ -88,8 +87,6 @@ describe("Rahvaalgatus", function() {
 	})
 
 	describe("/topics/:id", function() {
-		beforeEach(acceptBeta)
-
 		describe("when in discussion", function() {
 			beforeEach(signIn)
 
@@ -257,13 +254,6 @@ describe("Rahvaalgatus", function() {
 		})
 	})
 })
-
-function* acceptBeta() {
-	yield ensureAt(this.browser, this.url)
-
-	var browser = this.browser.manage()
-	yield browser.addCookie("dearuser", "dearuser", "/", ".rahvaalgatus.ee")
-}
 
 function* signIn() {
 	yield ensureAt(this.browser, this.url)

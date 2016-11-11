@@ -112,15 +112,7 @@ app.controller("AppCtrl", [ "$scope", "$rootScope", "$window", "$state", "$trans
             });
         }
     };
-    $scope.dearUser = function() {
-            console.log("dearUser");
-            $("#reg").html("");
-            console.log("dearUser");
-            ngDialog.open({
-                template: "/templates/modals/dear_user.html",
-                scope: $scope
-            });
-    };
+
     $rootScope.$on("user.change", function(event, data) {
         sAuth.status();
     });
@@ -188,25 +180,4 @@ app.controller("AppCtrl", [ "$scope", "$rootScope", "$window", "$state", "$trans
     $rootScope.$on("$stateChangeStart", function(event, toState, toParams, fromState, fromParams) {
         $log.debug("AppCtrl $stateChangeStart to:", toState, toParams, "from:", fromState, fromParams);
     });
-    checkCookie = function(){
-        var dearUserCookie=getCookie("dearuser");
-
-        // The beta warning used to be a permanent cookie, but then desired to
-        // be a session cookie. Overwriting it whether it exists or not changes
-        // the permantent cookie to a session one.
-        document.cookie="dearuser=dearuser;";
-
-        if (!dearUserCookie) $scope.dearUser()
-    };
-    checkCookie();
-    function getCookie(cname) {
-        var name = cname + "=";
-        var ca = document.cookie.split(';');
-        for(var i=0; i<ca.length; i++) {
-            var c = ca[i];
-            while (c.charAt(0)==' ') c = c.substring(1);
-            if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
-        }
-        return "";
-    }
 } ]);
