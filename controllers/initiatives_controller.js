@@ -8,6 +8,7 @@ var redirect = require("root/lib/middleware/redirect_middleware")
 exports.router = Router({mergeParams: true})
 
 exports.router.get("/", redirect(302, "/"))
+exports.router.get("/new", require("root/controllers/app_controller").read)
 
 exports.router.use("/:id", next(function*(req, res, next) {
 	req.initiative = yield readInitiative(req.params.id)

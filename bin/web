@@ -53,10 +53,7 @@ O.each({
 	"/session": require("root/controllers/session_controller").router,
 }, (router, path) => app.use(path, router))
 
-app.use(function(req, res, next) {
-  res.sendFile("app.html", {root: PUBLIC_DIR})
-})
-
+app.use(require("root/controllers/app_controller").router)
 app.use(require("root/lib/middleware/error_middleware"))
 
 if (module.parent) return
