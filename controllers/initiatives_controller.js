@@ -1,5 +1,6 @@
 var Router = require("express").Router
 var Path = require("path")
+var AppController = require("root/controllers/app_controller")
 var next = require("co-next")
 var api = require("root/lib/citizen_os")
 var readInitiative = api.readInitiative
@@ -8,7 +9,8 @@ var redirect = require("root/lib/middleware/redirect_middleware")
 exports.router = Router({mergeParams: true})
 
 exports.router.get("/", redirect(302, "/"))
-exports.router.get("/new", require("root/controllers/app_controller").read)
+exports.router.get("/new", AppController.read)
+exports.router.get("/:id/deadline", AppController.read)
 
 exports.router.use("/:id", next(function*(req, res, next) {
 	req.initiative = yield readInitiative(req.params.id)

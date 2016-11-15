@@ -29,7 +29,6 @@ div(ng-switch="view")
 
 								a.ui-state-default(
 									ng-show="(day.getMonth()==date.getMonth())",
-									href="#",
 									ng-class="{'ui-state-default ui-state-highlight ui-state-active':isNow(day),'ui-state-active':isSameDay(day),'after':isAfter(day),'before':isBefore(day)}",
 									ng-click="setDate(day)",
 									ng-bind="day.getDate()",
