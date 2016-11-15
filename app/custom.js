@@ -29,13 +29,6 @@ $(document).ready(function(){
     $(this).parent().parent().find('.toggle-meta').slideToggle();
     return false;
   });
-  //Login/register
-  $('.login > a').click(function(){
-    $('.log-pop').show();
-    $('.log-pop #reg').remove();
-    $('.log-pop #emailLogin').show();
-    return false;
-  });
   $('html').click(function() {
     $('.log-pop').hide();
   });
