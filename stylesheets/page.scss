@@ -1,5 +1,6 @@
-$page-width: 960px;
+$page-width: 96rem;
 $page-padding: 20px;
+$page-padding: 2rem;
 $light-blue: #45a0e6;
 $dark-blue: #3390d7;
 $link: #1C71A2;
@@ -30,7 +31,9 @@ body {
 }
 
 center {
-  max-width: $page-width;
+  max-width: $page-width + 4rem;
+	padding-left: $page-padding;
+	padding-right: $page-padding;
   margin: 0 auto;
   text-align: inherit;
 
@@ -41,14 +44,6 @@ center {
 
 .left { float: left; }
 .right { float: right; }
-
-#header,
-.grey-section,
-.white-section,
-#footer {
-	padding-left: 2rem;
-	padding-right: 2rem;
-}
 
 .grey-section {
 	background-color: $grey-background;
@@ -446,8 +441,6 @@ button.inherited {
 		padding-top: 4rem;
 		background: $grey-background;
 		border-bottom: 1px solid #cecece;
-		padding-left: 2rem;
-		padding-right: 2rem;
 
 		a.tab {
 			display: inline-block;
@@ -491,10 +484,10 @@ button.inherited {
 		}
 
 		h1 {
-			font-size: 48px;
+			font-size: 4.4rem;
 			font-family: $museo-sans;
 			font-weight: bold;
-			line-height: 60px;
+			line-height: 1.2;
 			margin-top: 2rem;
 			margin-bottom: 1rem;
 			color: $black-text;
@@ -610,10 +603,10 @@ button.inherited {
 		}
 
 		.comment {
-			margin-left: -2rem;
-			margin-right: -2rem;
-			padding-left: 2rem;
-			padding-right: 2rem;
+			margin-left: -$page-padding;
+			margin-right: -$page-padding;
+			padding-left: $page-padding;
+			padding-right: $page-padding;
 
 			h3 {
 				font-family: $museo-sans;
