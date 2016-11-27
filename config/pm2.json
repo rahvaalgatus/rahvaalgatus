@@ -7,7 +7,7 @@
 		"instances": 2,
 
 		"env": {
-			"ENV": "staging"
+			"ENV": "production"
 		}
 	}]
 }
