@@ -43,10 +43,14 @@ html
 						- if (req.lang !== "et") logo = "/images/esstikoostoo_logo_en.png"
 						img(width="200", src=logo, alt=t("FOOTER_SA"))
 
-					//-p= t("FOOTER_SA")
-					p= t("FOOTER_ADDRESS")
-					p!= t("FOOTER_EMAIL", {email: "info@rahvaalgatus.ee"})
-					p!= t("FOOTER_PHONE", {phone: "+3726408714"})
+					p
+						//-= t("FOOTER_SA")
+						//-br
+						= t("FOOTER_ADDRESS")
+						br
+						!= t("FOOTER_EMAIL", {email: "info@rahvaalgatus.ee"})
+						br
+						!= t("FOOTER_PHONE", {phone: "+3726408714"})
 
 				.powered-by
 					p
