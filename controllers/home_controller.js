@@ -26,4 +26,4 @@ exports.router.get("/", next(function*(req, res, next) {
 }))
 
 exports.router.get("/about", (req, res) => res.render("home/about"))
-exports.router.get("/support", (req, res) => res.render("home/support"))
+exports.router.get("/donate", (req, res) => res.render("home/donate"))

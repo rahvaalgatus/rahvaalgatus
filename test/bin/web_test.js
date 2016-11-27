@@ -15,7 +15,7 @@ describe("Web", function() {
 		"/topics/create1": "/initiatives/new",
 		"/discussions": "/",
 		"/goodpractice": "/about",
-		"/support_us": "/support",
+		"/support_us": "/donate",
 	}, function(to, from) {
 		describe(from, function() {
 			before(function*() {
