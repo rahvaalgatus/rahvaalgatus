@@ -1,5 +1,6 @@
 var _ = require("lodash")
 var Router = require("express").Router
+var Config = require("root/config")
 var api = require("root/lib/citizen_os")
 var readInitiative = api.readInitiative
 var next = require("co-next")
@@ -8,7 +9,8 @@ var ARR = Array.prototype
 exports.router = Router({mergeParams: true})
 
 exports.router.get("/", next(function*(req, res, next) {
-	var initiatives = (yield api(`/api/topics`)).body.data.rows
+	var path = `/api/topics?sourcePartnerId=${Config.apiPartnerId}`
+	var initiatives = (yield api(path)).body.data.rows
 	initiatives = _.groupBy(initiatives, "status")
 
 	initiatives = yield {
