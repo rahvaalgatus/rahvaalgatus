@@ -6,7 +6,6 @@ TEST =
 TEST_OPTS =
 TEST_URL = http://dev.rahvaalgatus.ee:3000
 SASS = ./node_modules/.bin/node-sass --recursive --indent-type tab --indent-width 1 --output-style expanded
-GRUNT = ./node_modules/.bin/grunt
 DEPLOY_HOST =
 TRANSLATIONS_URL = https://spreadsheets.google.com/feeds/list/1JKPUNp8Y_8Aigq7eGJXtWT6nZFhd31k2Ht3AjC-i-Q8/1/public/full?alt=json
 JQ_OPTS = --tab --sort-keys
