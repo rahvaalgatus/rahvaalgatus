@@ -16,6 +16,7 @@
 		"fetch-off": "",
 		"fetch-defaults": "",
 		"fetch-jsonify": "",
+		"fetch-parse": "",
 		"fetch-throw": "",
 		"jade": "",
 		"date-fns": "",

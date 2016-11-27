@@ -433,6 +433,18 @@
         }
       }
     },
+    "fetch-parse": {
+      "version": "1.1.0",
+      "from": "fetch-parse@latest",
+      "resolved": "https://registry.npmjs.org/fetch-parse/-/fetch-parse-1.1.0.tgz",
+      "dependencies": {
+        "medium-type": {
+          "version": "1.0.0",
+          "from": "medium-type@>=1.0.0 <2.0.0",
+          "resolved": "https://registry.npmjs.org/medium-type/-/medium-type-1.0.0.tgz"
+        }
+      }
+    },
     "fetch-throw": {
       "version": "1.0.0",
       "from": "fetch-throw@>=1.0.0 <2.0.0",

@@ -5,6 +5,8 @@ var Cookie = require("tough-cookie").Cookie
 var Crypto = require("crypto")
 var fetchDefaults = require("fetch-defaults")
 var PATH = "/session/new"
+var HEADERS = {"Content-Type": "application/json"}
+var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var AUTHORIZE_URL = Config.apiAuthorizeUrl
 var CSRF_COOKIE_NAME = "authenticity_token_for_citizenos"
 var CSRF_COOKIE_PATH = "/session"
@@ -80,7 +82,10 @@ describe("SessionController", function() {
 		it("must delete token", function*() {
 			this.mitm.on("request", function(req, res) {
 				switch (req.url) {
-					case "/api/auth/status": res.end("{}"); break
+					case "/api/auth/status":
+						res.writeHead(200, HEADERS)
+						res.end(JSON.stringify({data: {id: UUID}}))
+						break
 				}
 			})
 
