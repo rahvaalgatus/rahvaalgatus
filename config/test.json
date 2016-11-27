@@ -1,5 +1,5 @@
 {
-	"url": "http://dev.rahvaalgatus.ee",
+	"url": "http://localhost.rahvaalgatus.ee",
 	"apiUrl": "https://citizenos-citizenos-web-test.herokuapp.com",
 
 	"sessions": [
