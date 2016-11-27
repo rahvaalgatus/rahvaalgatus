@@ -512,13 +512,57 @@ button.inherited {
 				text-transform: capitalize;
 			}
 
-			strong { font-weight: bold; }
+			strong {
+				// Rahvaalgatus lacks weights other than normal for Tisa Pro.
+				font-size: 1.7rem;
+				font-family: $museo-sans;
+				font-weight: bold;
+			}
+
 			em { font-style: italic; }
 			u { text-decoration: underline; }
+
+			h2,
+			h3 {
+				font-family: $museo-sans;
+				font-weight: bold;
+			}
+
+			h2 {
+				margin: 2rem 0 1rem;
+				font-size: 3.0rem;
+			}
+
+			h3 {
+				margin: 2rem 0 1rem;
+				font-size: 2.2rem;
+			}
+
+			ol, ul {
+				margin-top: 1rem;
+				margin-bottom: 1rem;
+			}
 
 			li {
 				margin-left: 2rem;
 				list-style-position: outside;
+			}
+
+			// Etherpad generates non-standard HTML by putting a nested <ol> directly
+			// under <ul>.
+			ol ol,
+			ul ul,
+			ol ul,
+			ul ol {
+				margin-left: 2rem;
+			}
+
+			ul > li { list-style-type: disc; }
+			ol > li { list-style-type: decimal; }
+
+			a {
+				color: $blue;
+				text-decoration: underline;
 			}
 		}
 	}
@@ -662,7 +706,8 @@ button.inherited {
 
 	background: $header-color;
 	color: white;
-	line-height: 20px;
+	line-height: 1.4;
+	font-size: 1.3rem;
 
 	a {
 		color: $blue;
