@@ -11,6 +11,9 @@ $grey-background: #f2f2f2;
 $darker-grey-background: #e8e8e8;
 $black-text: #4A555D;
 
+$museo-sans: "Museo Sans Cyrl", sans-serif;
+$tisa-pro: "Tisa Pro Regular", serif;
+
 @import "reset";
 @import "_fonts";
 
@@ -20,7 +23,8 @@ body {
 }
 
 body {
-	font-family: 'MuseoSansCyrl-300';
+	font-family: $museo-sans;
+	font-weight: 300;
 	font-size: 1.4rem;
 	color: $black-text;
 }
@@ -103,7 +107,8 @@ button.inherited {
 	border-radius: 3px;
 	border: 0px solid transparent;
 	display: inline-block;
-	font-family: "MuseoSansCyrl-700";
+	font-family: $museo-sans;
+	font-weight: bold;
 	font-size: 1.3rem;
 	height: 4rem;
 	line-height: 4rem;
@@ -146,11 +151,12 @@ button.inherited {
 .form-submit {
   line-height: 18px;
   font-size: 14px;
-  font-family: 'MuseoSansCyrl-500', sans-serif;
+  font-family: $museo-sans;
+	font-weight: 500;
 }
 
 .form-label {
-  font-family: 'MuseoSansCyrl-700', sans-serif;
+  font-family: $museo-sans;
 	font-weight: bold;
 }
 
@@ -168,7 +174,8 @@ button.inherited {
   appearance: none;
   display: inline-block;
   vertical-align: top;
-  font-family: 'MuseoSansCyrl-700', sans-serif;
+  font-family: $museo-sans;
+	font-weight: bold;
 	text-transform: uppercase;
 
   background: $light-blue;
@@ -200,7 +207,7 @@ button.inherited {
 		overflow: hidden;
 		font-size: 1.2rem;
 		text-transform: uppercase;
-		font-family: "MuseoSansCyrl-500";
+		font-family: $museo-sans;
 
 		.user {
 			text-transform: none;
@@ -276,7 +283,8 @@ button.inherited {
 		line-height: 30px;
 		padding-right: 25px;
 
-		font-family: 'MuseoSansCyrl-900';
+		font-family: $museo-sans;
+		font-weight: 900;
 		font-size: 16px;
 		color: #ffd900;
 		border-bottom: 1px solid #ffd900;
@@ -286,7 +294,8 @@ button.inherited {
 	#video-link {
 		line-height: 22px;
 		color: #45A0E6;
-		font-family: 'MuseoSansCyrl-900';
+		font-family: $museo-sans;
+		font-weight: 900;
 		font-size: 16px;
 		text-transform: uppercase;
 		max-width: $half-width;
@@ -318,7 +327,8 @@ button.inherited {
 			color: $link;
 			border-bottom: 1px solid #00cb81;
 			text-align: right;
-			font-family: 'MuseoSansCyrl-900';
+			font-family: $museo-sans;
+			font-weight: 900;
 			text-transform: uppercase;
 			max-width: $initiative-width;
 
@@ -377,7 +387,8 @@ button.inherited {
 				padding: 1rem 2rem 0.8rem;
 				font-size: 1.3rem;
 				line-height: 1;
-				font-family: "MuseoSansCyrl-700";
+				font-family: $museo-sans;
+				font-weight: bold;
 				color: #3a434a;
 
 				background-color: #eee;
@@ -445,7 +456,7 @@ button.inherited {
 
 			width: 12rem;
 			font-size: 14px;
-			font-family: 'MuseoSansCyrl-500';
+			font-family: $museo-sans;
 			color: #4A555D;
 
 			background-color: $grey-background;
@@ -474,14 +485,15 @@ button.inherited {
 		overflow: hidden;
 
 		header {
-			font-family: 'MuseoSansCyrl-500';
+			font-family: $museo-sans;
 			font-size: 1.4rem;
 			color: #999;
 		}
 
 		h1 {
 			font-size: 48px;
-			font-family: 'MuseoSansCyrl-700';
+			font-family: $museo-sans;
+			font-weight: bold;
 			line-height: 60px;
 			margin-top: 2rem;
 			margin-bottom: 1rem;
@@ -491,8 +503,8 @@ button.inherited {
 
 	#initiative {
 		article {
-			font-size: 18px;
-			font-family: 'tisaproregular', serif;
+			font-size: 1.8rem;
+			font-family: $tisa-pro;
 			line-height: 1.4;
 			max-width: 72rem;
 
@@ -517,7 +529,7 @@ button.inherited {
 
 		h2 {
 			margin-bottom: 0.5rem;
-			font-family: 'MuseoSansCyrl-500';
+			font-family: $museo-sans;
 			font-size: 1.6rem;
 		}
 
@@ -538,7 +550,8 @@ button.inherited {
 
 	#initiative-comments {
 		h2 {
-			font-family: 'MuseoSansCyrl-700';
+			font-family: $museo-sans;
+			font-weight: bold;
 			font-size: 2.8rem;
 			margin-bottom: 1rem;
 		}
@@ -559,7 +572,7 @@ button.inherited {
 			padding-right: 2rem;
 
 			h3 {
-				font-family: 'MuseoSansCyrl-500';
+				font-family: $museo-sans;
 				font-size: 1.8rem;
 				display: inline;
 			}
@@ -615,7 +628,7 @@ button.inherited {
 
 		.event {
 			h2 {
-				font-family: 'MuseoSansCyrl-500';
+				font-family: $museo-sans;
 				font-size: 1.8rem;
 				display: inline;
 				color: $link;
