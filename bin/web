@@ -49,13 +49,15 @@ app.get("/topics/:id/events", redirect(302, "/initiatives/:id/events"))
 app.get("/topics/:id/votes/*", redirect(302, "/initiatives/:id/vote"))
 app.get("/support_us", redirect(302, "/donate"))
 
+// For rendering the SPA for all endpoints, uncomment the following:
+//app.use("/", require("root/controllers/app_controller").router)
+
 O.each({
 	"/": require("root/controllers/home_controller").router,
 	"/initiatives": require("root/controllers/initiatives_controller").router,
 	"/session": require("root/controllers/session_controller").router,
 }, (router, path) => app.use(path, router))
 
-app.use(require("root/controllers/app_controller").router)
 app.use(require("root/lib/middleware/error_middleware"))
 
 if (module.parent) return
