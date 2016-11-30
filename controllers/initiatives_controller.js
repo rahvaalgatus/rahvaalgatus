@@ -1,5 +1,4 @@
 var Router = require("express").Router
-var Path = require("path")
 var AppController = require("root/controllers/app_controller")
 var next = require("co-next")
 var api = require("root/lib/citizen_os")
@@ -14,6 +13,8 @@ exports.router.get("/:id/deadline", AppController.read)
 
 exports.router.use("/:id", next(function*(req, res, next) {
 	req.initiative = yield readInitiative(req.params.id)
+	res.locals.page = "initiative"
+	res.locals.initiative = req.initiative
 	next()
 }))
 
@@ -30,25 +31,22 @@ exports.router.get("/:id", function(req, res, next) {
 	next()
 })
 
-exports.router.get("/:id/discussion", next(read))
-exports.router.get("/:id/vote", next(read))
+exports.router.get("/:id/discussion", next(read.bind(null, "discussion")))
+exports.router.get("/:id/vote", next(read.bind(null, "vote")))
 
-exports.router.get("/:id/events", next(function*(req, res, next) {
+exports.router.get("/:id/events", next(function*(req, res) {
 	var initiative = req.initiative
 	var events = yield api(`/api/topics/${initiative.id}/events`)
 	events = events.body.data.rows
 
 	res.render("initiatives/events", {
 		title: initiative.title,
-		page: "initiative",
 		subpage: "events",
-
-		initiative: initiative,
 		events: events,
 	})
 }))
 
-function* read(req, res, next) {
+function* read(subpage, req, res, next) {
 	if (req.user) return void next()
 
 	var initiative = req.initiative
@@ -57,10 +55,7 @@ function* read(req, res, next) {
 
 	res.render("initiatives/read", {
 		title: initiative.title,
-		page: "initiative",
-		subpage: Path.basename(req.path),
-
-		initiative: initiative,
+		subpage: subpage,
 		comments: comments,
 		text: normalizeText(initiative.description)
 	})
