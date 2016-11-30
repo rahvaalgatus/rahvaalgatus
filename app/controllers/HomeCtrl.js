@@ -1,6 +1,7 @@
 var _ = require("lodash")
 var app = require("../app")
 var angular = require("angular")
+var Config = require("root/config")
 
 app.controller("HomeCtrl", [ "$scope", "$rootScope", "$state", "$kookies", "$log", "toruSessionSettings", "sTopic","ngDialog", function($scope, $rootScope, $state, $kookies, $log, toruSessionSettings, sTopic, ngDialog) {
     $scope.isTopicListLoading = true;
@@ -88,14 +89,16 @@ app.controller("HomeCtrl", [ "$scope", "$rootScope", "$state", "$kookies", "$log
                 width: percent + "%"
             };
         }
+
         if (topic.status == "voting") {
             var votes = 0;
             if (topic.vote !== undefined) {
-                if (topic.vote.options.rows[topic.vote.yesindex].voteCount !== undefined) {
-                    votes = topic.vote.options.rows[topic.vote.yesindex].voteCount;
+							var yesIndex = getYesIndex(topic.vote)
+                if (topic.vote.options.rows[yesIndex].voteCount !== undefined) {
+                    votes = topic.vote.options.rows[yesIndex].voteCount;
                 }
             }
-            var percent = votes / 1e3 * 100;
+            var percent = votes / Config.VOTES_REQUIRED * 100;
             if (percent > 100) percent = 100;
             return {
                 width: percent + "%"
@@ -163,30 +166,13 @@ app.controller("HomeCtrl", [ "$scope", "$rootScope", "$state", "$kookies", "$log
         loadFollowUpTopicListPromise.then(function(res) {
 					var topics = res.data.data.rows
 
-					topics = topics.map(function(topic) {
-						return sTopic.readUnauth(topic).then(function(res) {
-							return res.data.data
-						})
+					topics.forEach(function(topic) {
+						topic.vote.yesindex = getYesIndex(topic.vote)
 					})
 
-					topics = topics.map(function(topic) {
-						return topic.then(function(topic) {
-							var vote = sTopic.voteReadUnauth(topic.id, topic.vote.id)
-
-							return vote.then(function(res) {
-								topic.vote = res.data.data
-								topic.vote.yesindex = getYesIndex(topic.vote)
-								return topic
-							})
-						})
-					})
-
-					Promise.all(topics).then(function(topics) {
-						$scope.followuptopicList = topics
-						$scope.filters.offset += $scope.filters.limit
-						$scope.$digest()
-            $scope.isTopicListLoading = false
-					})
+					$scope.followuptopicList = topics
+					$scope.filters.offset += $scope.filters.limit
+					$scope.isTopicListLoading = false
 
 					var pages = Math.ceil(res.data.data.countTotal / $scope.filters.limit)
 					$scope.rangefollowuptopicList = new Array(pages);
@@ -216,19 +202,15 @@ app.controller("HomeCtrl", [ "$scope", "$rootScope", "$state", "$kookies", "$log
             angular.forEach(topics, function(value, key) {
                 sTopic.readUnauth(value).then(function(res) {
                     value = res.data.data;
-                    sTopic.voteReadUnauth(value.id, value.vote.id).then(function(res) {
-                        value.vote = res.data.data;
-                        value.vote.yesindex = _.findIndex(value.vote.options.rows, function(o) {
-                            return o.value.toLowerCase() == "yes";
-                        });
-                        topics[key] = value;
-                        $scope.votingtopicList = [];
-                        if (topics && topics.length) {
-                            $scope.votingtopicList = $scope.votingtopicList.concat(topics);
-                            $scope.filters.offset += $scope.filters.limit;
-                            $scope.filters.infiniteScrollDisabled = false;
-                        }
-                    }, function() {});
+										value.vote.yesindex = getYesIndex(value.vote)
+
+										topics[key] = value;
+										$scope.votingtopicList = [];
+										if (topics && topics.length) {
+												$scope.votingtopicList = $scope.votingtopicList.concat(topics);
+												$scope.filters.offset += $scope.filters.limit;
+												$scope.filters.infiniteScrollDisabled = false;
+										}
                 });
             });
             var pages = Math.ceil(res.data.data.countTotal / $scope.filters.limit);

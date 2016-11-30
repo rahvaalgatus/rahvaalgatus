@@ -124,13 +124,9 @@ describe("Rahvaalgatus", function() {
 				yield query(".admin-role-cal .sign-in a").click()
 
 				yield sleep(500)
-				var res = yield this.api(`/api/users/self/topics/${id}`)
+				var res = yield this.api(`/api/users/self/topics/${id}?include[]=vote`)
 				initiative = res.body.data
-
-				var voteId = initiative.vote.id
-				res = yield this.api(`/api/users/self/topics/${id}/votes/${voteId}`)
-				var vote = res.body.data
-
+				var vote = initiative.vote
 				vote.endsAt.must.equal(formatTime(Moment(tomorrow).endOf("day")))
 			})
 

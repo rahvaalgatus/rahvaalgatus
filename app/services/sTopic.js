@@ -50,12 +50,12 @@ app.service("sTopic", [ "$http", "$q", "$log", function($http, $q, $log) {
 
 	//TODO: What was I thinking? This interface is funky, it should have 1 input topicId
 	Topic.read = function(topic) {
-		var path = "/api/users/self/topics/:topicId".replace(":topicId", topic.id);
+		var path = "/api/users/self/topics/:topicId?include[]=vote".replace(":topicId", topic.id);
 		return $http.get(path);
 	};
 	//TODO: What was I thinking? This interface is funky, it should have 1 input topicId
 	Topic.readUnauth = function(topic) {
-		var path = "/api/topics/:topicId".replace(":topicId", topic.id);
+		var path = "/api/topics/:topicId?include[]=vote".replace(":topicId", topic.id);
 		return $http.get(path);
 	};
 	//TODO: This interface is funky, it should have 1 input topicId and second data
@@ -75,12 +75,12 @@ app.service("sTopic", [ "$http", "$q", "$log", function($http, $q, $log) {
 		return $http.delete(path);
 	};
 	Topic.list = function() {
-		var path = "/api/users/self/topics";
+		var path = "/api/users/self/topics&include[]=vote";
 		return $http.get(path);
 	};
 	Topic.listUnauth = function(statuses, offset, limit) {
 		return function() {
-			var path = "/api/topics";
+			var path = "/api/topics?include[]=vote";
 			var deferredAbort = $q.defer();
 			var promise = $http.get(path, {
 				params: {

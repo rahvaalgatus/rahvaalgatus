@@ -84,7 +84,7 @@ app.controller("TopicRenewDeadlineFormCtrl", [ "$scope", "$rootScope", "$state",
         }
         $scope.endsAt = new Date($scope.topic.endsAt);
         $scope.form.endsAt = $scope.endsAt;
-        if ($scope.topic.vote.id != undefined) {
+        if ($scope.topic.vote) {
             voteRead($scope.topic.id, $scope.topic.vote.id).then(function(res) {
                 $scope.vote = res.data.data;
                 $scope.endsAt = new Date($scope.vote.endsAt);

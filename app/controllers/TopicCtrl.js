@@ -81,7 +81,7 @@ app.controller("TopicCtrl", [
 
         if ($state.current.name == "topics.read") {
           var page
-          if (topic.vote.id == null) page = "discussion"
+          if (topic.vote == null) page = "discussion"
           else if (topic.status == "followUp") page = "events"
           else page = "vote"
 
@@ -97,7 +97,7 @@ app.controller("TopicCtrl", [
         topic.padUrl = $sce.trustAsResourceUrl(topic.padUrl);
         angular.copy(topic, $scope.topic);
 
-        if (topic.vote.id != undefined) {
+        if (topic.vote) {
           voteRead(topic.id, topic.vote.id).then(function(res) {
             $scope.vote = res.data.data;
             $scope.vote.yesindex = _.findIndex($scope.vote.options.rows, function(o) {
@@ -458,7 +458,7 @@ app.controller("TopicCtrl", [
 			var topic = $scope.topic
 			if (!$scope.isAdmin()) return false
 			if (topic.visibility != "public") return false
-			if (topic.vote && topic.vote.id) return false
+			if (topic.vote) return false
 
 			var createdOn = moment(topic.createdAt).startOf("day")
 			var minDeadline = moment(createdOn).add(Config.MIN_DEADLINE_DAYS, "day")
