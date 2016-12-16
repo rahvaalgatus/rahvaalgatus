@@ -62,7 +62,7 @@ mixin initiative(initiative)
 						.progress.completed= t("DISCUSSION_FINISHED")
 					
 				when "voting"
-					- var sigs = Initiative.countSignatures(initiative, "Yes")
+					- var sigs = Initiative.countSignatures("Yes", initiative)
 					- var required = Config.votesRequired
 
 					if !Initiative.hasVoteEnded(initiative)
@@ -74,5 +74,5 @@ mixin initiative(initiative)
 						.progress.failed= t("N_SIGNATURES_FAILED", {votes: sigs})
 
 				when "followUp"
-					- var signatures = Initiative.countSignatures(initiative, "Yes")
+					- var signatures = Initiative.countSignatures("Yes", initiative)
 					.progress= t("N_SIGNATURES", {votes: signatures})

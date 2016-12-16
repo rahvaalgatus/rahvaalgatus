@@ -450,6 +450,18 @@
       "from": "fetch-throw@>=1.0.0 <2.0.0",
       "resolved": "https://registry.npmjs.org/fetch-throw/-/fetch-throw-1.0.0.tgz"
     },
+    "flash-fiction": {
+      "version": "1.0.0",
+      "from": "flash-fiction@latest",
+      "resolved": "https://registry.npmjs.org/flash-fiction/-/flash-fiction-1.0.0.tgz",
+      "dependencies": {
+        "on-headers": {
+          "version": "1.0.1",
+          "from": "on-headers@>=1.0.0 <2.0.0",
+          "resolved": "https://registry.npmjs.org/on-headers/-/on-headers-1.0.1.tgz"
+        }
+      }
+    },
     "jade": {
       "version": "1.11.0",
       "from": "jade@>=1.0.0 <2.0.0",

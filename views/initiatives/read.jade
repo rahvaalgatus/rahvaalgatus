@@ -1,16 +1,24 @@
 extends ./layout
+include ./_mixins
 
 block prepend tab
 	- var I18n = require("root/lib/i18n")
+	- var Initiative = require("root/lib/initiative")
 
 	section#initiative.white-section: center
-		article
-			header
-				span.author
-					= t("CREATED_BY")
-					| &#32;
-					= initiative.creator.name
+		include /_flash.jade
 
+		if flash("signed")
+			#initiative-signed
+				h2= req.t("DOCUMENT_SIGNED")
+				p
+					= req.t("THANKS_FOR_SIGNING")
+					br
+					br
+					a(href=flash("signed"))= t("LNK_DOWNLOAD_USER_BDOC")
+
+		article
+			+header(initiative)
 				br
 				time.deadline(datetime=initiative.endsAt)
 					if subpage == "discussion"
@@ -21,7 +29,40 @@ block prepend tab
 						= t("VOTING_DEADLINE", {endsAt: endsAt})
 
 			!= text
-	
+
+		if initiative.status == "voting"
+			#initiative-vote
+				h2= t("HEADING_CAST_YOUR_VOTE")
+				p= t("HEADING_VOTE_REQUIRE_HARD_ID")
+
+				p
+					- var sigs = Initiative.countSignatures("Yes", initiative)
+					= t("N_SIGNATURES", {votes: sigs})
+
+				form.mobile-id(
+					method="post",
+					action="/initiatives/#{initiative.id}/signature")
+					h3: img(src="/images/mobile-id-icon.png", alt="Mobile ID")
+
+					- var optionId = Initiative.findOptionId("Yes", initiative)
+					input(type="hidden", name="optionId", value=optionId)
+
+					input.form-input(
+						type="tel",
+						name="pid",
+						placeholder=t("PLACEHOLDER_PERSONAL_IDENTIFICATION_CODE"),
+						required)
+					br
+
+					input.form-input(
+						type="tel",
+						name="phoneNumber",
+						placeholder=t("PLACEHOLDER_PHONE_NUMBER"),
+						required)
+					br
+
+					button.green-button= t("BTN_VOTE_SIGN_WITH_MOBILE_ID")
+
 block append tab
 	section#initiative-comments.grey-section(class=subpage): center
 		+comments(subpage, comments)

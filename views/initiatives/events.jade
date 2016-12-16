@@ -1,15 +1,11 @@
 extends ./layout
+include ./_mixins
 
 block prepend tab
 	- var I18n = require("root/lib/i18n")
 
 	section#initiative-events.white-section: center
-		header
-			span.author
-				= t("CREATED_BY")
-				| &#32;
-				= initiative.creator.name
-
+		+header(initiative)
 			h1= initiative.title
 
 		if events.length

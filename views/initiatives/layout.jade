@@ -6,16 +6,20 @@ block body
 
 		nav#initiative-tabs: center
 			.right
+				if initiative.status == "voting"
+					a.button.green-button(href="#initiative-vote")
+						= t("SIGN_THIS_DOCUMENT")
+	
 				a.button.blue-button(
 					href="#subscribe",
 					onclick="document.getElementById('initiative-subscribe-email').focus()")
-					span Jälgi algatust
+					| Jälgi algatust
 	
 				a.button.white-button(
 					href="http://twitter.com/intent/tweet?status=#{initiative.title} https://rahvaalgatus.ee/topics/#{initiative.id}",
 					target="_blank")
 					i.icon-twitter
-					span= t("SHARE_ON_TWITTER")
+					= t("SHARE_ON_TWITTER")
 	
 			if initiative.status == "inProgress"
 				a.tab(
@@ -51,4 +55,4 @@ block body
 					type="email",
 					placeholder=t("LBL_EMAIL"))
 
-				button.form-submit(type="submit")= t("BTN_SUBSCRIBE")
+				button.blue-button(type="submit")= t("BTN_SUBSCRIBE")

@@ -5,12 +5,15 @@ $light-blue: #45a0e6;
 $dark-blue: #3390d7;
 $link: #1C71A2;
 $blue: #53B1EB;
-$form-input-padding: 8px;
 $header-color: #124267;
 $footer-height: 12rem;
 $grey-background: #f2f2f2;
 $darker-grey-background: #e8e8e8;
 $black-text: #4A555D;
+$button-height: 3.6rem;
+$button-radius: 0.3rem;
+$flash-header-color: #282d33;
+$flash-body-color: #3d434a;
 
 $museo-sans: "Museo Sans Cyrl", sans-serif;
 $tisa-pro: "Tisa Pro Regular", serif;
@@ -31,11 +34,11 @@ body {
 }
 
 center {
-  max-width: $page-width + 4rem;
+	max-width: $page-width + 4rem;
 	padding-left: $page-padding;
 	padding-right: $page-padding;
-  margin: 0 auto;
-  text-align: inherit;
+	margin: 0 auto;
+	text-align: inherit;
 
 	// Internet Explorer still centers <p>s under <center> even with
 	// text-align: inherit.
@@ -99,18 +102,18 @@ button.inherited {
 .blue-button,
 .yellow-button,
 .white-button {
-	border-radius: 3px;
+	border-radius: $button-radius;
 	border: 0px solid transparent;
 	display: inline-block;
 	font-family: $museo-sans;
 	font-weight: bold;
 	font-size: 1.3rem;
-	height: 4rem;
-	line-height: 4rem;
+	height: $button-height;
+	line-height: $button-height;
 	padding: 0 2rem;
 	text-align: center;
 	text-transform: uppercase;
-  vertical-align: middle;
+	vertical-align: middle;
 
 	i {
 		margin-right: 1rem;
@@ -144,51 +147,40 @@ button.inherited {
 .form-label,
 .form-input,
 .form-submit {
-  line-height: 18px;
-  font-size: 14px;
-  font-family: $museo-sans;
+	line-height: 20rem;
+	font-size: 14px;
+	font-family: $museo-sans;
 	font-weight: 500;
 }
 
 .form-label {
-  font-family: $museo-sans;
 	font-weight: bold;
 }
 
 .form-input {
-  border: 1px solid #cecece;
+	border: 1px solid #cecece;
+	height: $button-height;
+	padding: 0 1rem;
 
-  padding: $form-input-padding 10px;
-
-  background: white;
-  color: #4a555d;
-  border-radius: 2px;
-}
-
-.form-submit {
-  appearance: none;
-  display: inline-block;
-  vertical-align: top;
-  font-family: $museo-sans;
-	font-weight: bold;
-	text-transform: uppercase;
-
-  background: $light-blue;
-  border: 1px solid $dark-blue;
-  border-radius: 2px;
-
-  padding: $form-input-padding 20px;
-
-  color: white;
+	background: white;
+	color: #4a555d;
+	border-radius: $button-radius;
 }
 
 .icon-twitter {
-	//display: block;
 	float: left;
 	background: url(/images/twitter.png) no-repeat center;
 	width: 22px;
 	height: 100%;
 	background-size: 100%;
+}
+
+.flash {
+	background: $flash-header-color;
+	padding: 1.2rem 2rem;
+	color: white;
+	border-radius: $button-radius;
+	margin-bottom: 1rem;
 }
 
 #header {
@@ -358,7 +350,7 @@ button.inherited {
 			.author {
 				color: #AAAAAA;
 				font-size: 1.4rem;
-				font-family: "Tisa Pro Regular", serif;
+				font-family: $tisa-pro;
 			}
 
 			h3 {
@@ -474,7 +466,8 @@ button.inherited {
 	}
 
 	#initiative,
-	#initiative-events {
+	#initiative-events,
+	#initiative-signature {
 		overflow: hidden;
 
 		header {
@@ -491,6 +484,27 @@ button.inherited {
 			margin-top: 2rem;
 			margin-bottom: 1rem;
 			color: $black-text;
+		}
+	}
+
+	#initiative-signed {
+		background: $flash-body-color;
+		color: white;
+		border-radius: $button-radius;
+		margin-bottom: 2rem;
+
+		h2, p {
+			padding: 1.2rem 2rem;
+		}
+
+		h2 {
+			border-top-left-radius: $button-radius;
+			border-top-right-radius: $button-radius;
+			background: $flash-header-color;
+		}
+
+		a {
+			text-decoration: underline;
 		}
 	}
 
@@ -560,6 +574,28 @@ button.inherited {
 		}
 	}
 
+	#initiative-comments,
+	#initiative-vote {
+		h2 {
+			font-family: $museo-sans;
+			font-weight: bold;
+			font-size: 2.8rem;
+			margin-bottom: 1rem;
+		}
+	}
+
+	#initiative-vote {
+		margin-top: 4rem;
+		border-top: 1px solid #ccc;
+		padding-top: 2rem;
+
+		form {
+			margin-top: 1rem;
+
+			input, button { margin-top: 0.5rem; }
+		}
+	}
+
 	#initiative-subscribe {
 		padding-top: 4rem;
 		padding-bottom: 4rem;
@@ -586,13 +622,6 @@ button.inherited {
 	}
 
 	#initiative-comments {
-		h2 {
-			font-family: $museo-sans;
-			font-weight: bold;
-			font-size: 2.8rem;
-			margin-bottom: 1rem;
-		}
-
 		.comments,
 		form {
 			max-width: 72rem;

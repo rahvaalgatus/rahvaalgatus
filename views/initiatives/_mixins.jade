@@ -1,0 +1,8 @@
+mixin header
+	header(initiative)
+		span.author
+			= t("CREATED_BY")
+			| &#32;
+			= initiative.creator.name
+
+		block

@@ -1,0 +1,23 @@
+extends ../layout
+include ../_mixins
+
+block prepend tab
+	section#initiative-signature.white-section: center
+		+header(initiative)
+			h1= initiative.title
+
+		if error
+			p.flash.error= error
+		else
+			p
+				= t("HEADING_MOBILEID_CONTROL_CODE", {code: code})
+				br
+				= t("MAKE_SURE_CONTROL_CODE")
+		
+			:javascript
+				fetch("#{poll}", {redirect: "manual"}).then(function(res) {
+					if (res.status >= 302 && res.status <= 303)
+						window.location.assign(res.headers.get("location"))
+					else
+						window.location.assign(res.url)
+				})
