@@ -28,4 +28,22 @@ describe("Web", function() {
 			})
 		})
 	})
+
+	;[
+		"/webfonts/3084E9_3_0.eot",
+		"/webfonts/3084E9_3_0.woff2",
+		"/webfonts/3084E9_3_0.woff",
+		"/webfonts/3084E9_3_0.ttf",
+		"/fonts/tisapro-regular-webfont.svg"
+	].forEach(function(path) {
+		describe(path, function() {
+			before(function*() {
+				this.res = yield this.request(path, {method: "HEAD"})
+			})
+
+			it("must have CORS headers for Voog", function() {
+				this.res.headers["access-control-allow-origin"].must.equal("*")
+			})
+		})
+	})
 })

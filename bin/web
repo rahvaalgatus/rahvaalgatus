@@ -14,6 +14,7 @@ var HttpError = require("standard-http-error")
 var redirect = require("root/lib/middleware/redirect_middleware")
 var PORT = process.env.PORT || 3000
 var PUBLIC_DIR = __dirname + "/../public"
+var FONT_SUFFIXES = [".eot", ".woff", ".woff2", ".ttf", ".svg"]
 
 var app = module.exports = Express()
 
@@ -23,7 +24,7 @@ app.locals.require = require
 app.locals.basedir = app.get("views")
 Jade.filters.javascript = require("root/lib/jade/javascript_filter")
 
-app.use(Express.static(PUBLIC_DIR))
+app.use(Express.static(PUBLIC_DIR, {setHeaders: setCorsHeaders}))
 app.use(require("cookie-parser")(Config.cookieSecret))
 app.use(require("body-parser").urlencoded({extended: true}))
 app.use(require("flash-fiction/express"))
@@ -82,3 +83,8 @@ Http.createServer(app).listen(PORT, function() {
     protocol: "http", hostname: addr.address, port: addr.port
   }))
 })
+
+function setCorsHeaders(res, path) {
+	if (FONT_SUFFIXES.some((s) => path.endsWith(s)))
+		res.setHeader("Access-Control-Allow-Origin", "*")
+}
