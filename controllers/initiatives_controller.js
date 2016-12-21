@@ -1,12 +1,18 @@
+var O = require("oolong")
 var Router = require("express").Router
 var AppController = require("root/controllers/app_controller")
 var FetchError = require("fetch-error")
 var HttpError = require("standard-http-error")
+var isOk = require("root/lib/http").isOk
 var next = require("co-next")
 var api = require("root/lib/citizen_os")
 var sleep = require("root/lib/promise").sleep
 var readInitiative = api.readInitiative
 var redirect = require("root/lib/middleware/redirect_middleware")
+
+var TRANSLATIONS = O.map(require("root/lib/i18n").LANGUAGES, function(lang) {
+	return O.filter(lang, (v, k) => k.indexOf("HWCRYPTO") >= 0)
+})
 
 exports.router = Router({mergeParams: true})
 
@@ -49,33 +55,77 @@ exports.router.get("/:id/events", next(function*(req, res) {
 	})
 }))
 
+exports.router.get("/:id/signable", next(function*(req, res) {
+	var initiative = req.initiative
+	var vote = initiative.vote
+
+	var signable = yield api(`/api/topics/${initiative.id}/votes/${vote.id}`, {
+		method: "POST",
+
+		json: {
+			options: [{optionId: req.query.optionId}],
+			certificate: req.query.certificate
+		}
+	}).catch(catchUserError)
+
+	if (isOk(signable)) res.json({
+		token: signable.body.data.token,
+		digest: signable.body.data.signedInfoDigest,
+		hash: signable.body.data.signedInfoHashType
+	})
+	else res.status(422).json({
+		error: translateCitizenError(req.t, signable.body.status)
+	})
+}))
+
 exports.router.post("/:id/signature", next(function*(req, res) {
 	var initiative = req.initiative
 	var vote = initiative.vote
 
-	var sign = yield api(`/api/topics/${initiative.id}/votes/${vote.id}`, {
-		method: "POST",
+	res.locals.subpage = "vote"
+	res.locals.title = initiative.title
+	res.locals.method = req.body.method
 
-		json: {
-			options: [{optionId: req.body.optionId}],
-			pid: req.body.pid,
-			phoneNumber: req.body.phoneNumber
-		}
-	}).catch(catchMobileIdError)
+	switch (req.body.method) {
+		case "id-card":
+			var path = `/api/topics/${initiative.id}/votes/${vote.id}/sign`
+			var signed = yield api(path, {
+				method: "POST",
+				json: {token: req.body.token, signatureValue: req.body.signature}
+			}).catch(catchUserError)
 
-	if (sign.statusCode >= 200 && sign.statusCode < 300) {
-		res.locals.code = sign.body.data.challengeID
-		res.locals.poll = req.baseUrl + req.path + "?token=" + sign.body.data.token
+			if (isOk(signed)) {
+				res.flash("signed", signed.body.data.bdocUri)
+				res.redirect(303, req.baseUrl + "/" + initiative.id)
+			}
+			else res.status(422).render("initiatives/signature/create", {
+				error: translateCitizenError(req.t, signed.body.status)
+			})
+			break
+
+		case "mobile-id":
+			var signing = yield api(`/api/topics/${initiative.id}/votes/${vote.id}`, {
+				method: "POST",
+				json: {
+					options: [{optionId: req.body.optionId}],
+					pid: req.body.pid,
+					phoneNumber: req.body.phoneNumber,
+				}
+			}).catch(catchUserError)
+
+			if (isOk(signing)) {
+				res.render("initiatives/signature/create", {
+					code: signing.body.data.challengeID,
+					poll: req.baseUrl + req.path + "?token=" + signing.body.data.token
+				})
+			}
+			else res.status(422).render("initiatives/signature/create", {
+				error: translateCitizenError(req.t, signed.body.status)
+			})
+			break
+
+		default: throw new HttpError(422, "Unknown Signing Method")
 	}
-	else {
-		res.status(422)
-		res.locals.error = translateMobileIdError(req.t, sign.body.status)
-	}
-
-	res.render("initiatives/signature/create", {
-		title: initiative.title,
-		subpage: "vote"
-	})
 }))
 
 exports.router.get("/:id/signature", next(function*(req, res) {
@@ -90,7 +140,7 @@ exports.router.get("/:id/signature", next(function*(req, res) {
 			break
 
 		default:
-			res.flash("error", translateMobileIdError(req.t, signature.body.status))
+			res.flash("error", translateCitizenError(req.t, signature.body.status))
 			break
 	}
 
@@ -108,7 +158,8 @@ function* read(subpage, req, res, next) {
 		title: initiative.title,
 		subpage: subpage,
 		comments: comments,
-		text: normalizeText(initiative.description)
+		text: normalizeText(initiative.description),
+		translations: TRANSLATIONS[req.lang]
 	})
 }
 
@@ -118,7 +169,7 @@ function* readSignature(initiative, token) {
 	path += "?token=" + encodeURIComponent(token)
 
 	RETRY: for (var i = 0; i < 60; ++i) {
-		var res = yield api(path).catch(catchMobileIdError)
+		var res = yield api(path).catch(catchUserError)
 
 		switch (res.statusCode) {
 			case 200:
@@ -135,7 +186,7 @@ function* readSignature(initiative, token) {
 	throw new HttpError(500, "Mobile-Id Took Too Long")
 }
 
-function catchMobileIdError(err) {
+function catchUserError(err) {
 	if (err instanceof FetchError && err.code === 400) return err.response
 	else throw err
 }
@@ -149,7 +200,7 @@ function normalizeComment(comment) {
 	return comment
 }
 
-function translateMobileIdError(t, status) {
+function translateCitizenError(t, status) {
 	return t(keyifyError(status.code)) || status.message
 }
 

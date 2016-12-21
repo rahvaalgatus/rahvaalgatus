@@ -11,6 +11,8 @@ html
 		if process.env.ENV == "development"
 			script(src="http://#{req.hostname}:35729/livereload.js?snipver=1", async)
 
+		block head
+
 	body(id=page + "-page")
 		header#header: center
 			menu

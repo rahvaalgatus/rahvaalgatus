@@ -1,9 +1,13 @@
 extends ./layout
 include ./_mixins
 
+block append head
+	script(src="/assets/hwcrypto.js")
+
 block prepend tab
 	- var I18n = require("root/lib/i18n")
 	- var Initiative = require("root/lib/initiative")
+	- var stringify = require("root/lib/json").stringify
 
 	section#initiative.white-section: center
 		include /_flash.jade
@@ -32,19 +36,86 @@ block prepend tab
 
 		if initiative.status == "voting"
 			#initiative-vote
+				- var optionId = Initiative.findOptionId("Yes", initiative)
 				h2= t("HEADING_CAST_YOUR_VOTE")
 				p= t("HEADING_VOTE_REQUIRE_HARD_ID")
+				p#initiative-vote-flash.flash.error
 
-				p
+				//-p
 					- var sigs = Initiative.countSignatures("Yes", initiative)
 					= t("N_SIGNATURES", {votes: sigs})
 
-				form.mobile-id(
+				form#id-card-form(
+					method="post",
+					action="/initiatives/#{initiative.id}/signature")
+					h3: img(src="/images/id-kart-icon.png", alt="ID-card")
+					input(type="hidden", name="optionId", value=optionId)
+					input(type="hidden", name="certificate", value="")
+					input(type="hidden", name="signature", value="")
+					input(type="hidden", name="token", value="")
+
+					//- The Id-card form will be submitted async therefore no button
+					//- value.
+					input(type="hidden", name="method", value="id-card")
+					button.green-button= t("BTN_VOTE_SIGN_WITH_ID_CARD")
+
+				:javascript
+					var Hwcrypto = require("@rahvaalgatus/hwcrypto")
+					var TRANSLATIONS = !{stringify(translations)}
+					var form = document.getElementById("id-card-form")
+					var flash = document.getElementById("initiative-vote-flash")
+					var all = Promise.all.bind(Promise)
+
+					form.addEventListener("submit", function(ev) {
+						notice("")
+						if (form.elements.signature.value === "") ev.preventDefault()
+
+						var certificate = Hwcrypto.authenticate()
+
+						var token = certificate.then(function(certificate) {
+							var query = ""
+							query += "certificate=" + encodeURIComponent(certificate)
+							query += "&"
+							query += "optionId=#{optionId}"
+							return fetch("/initiatives/#{initiative.id}/signable?" + query)
+						})
+
+						token = token.then(read).then(function(res) {
+							if (!res.ok) throw res.json
+							else return res.json
+						})
+
+						var sig = all([certificate, token]).then(function(all) {
+							return Hwcrypto.sign(all[0], all[1].hash, all[1].digest)
+						})
+
+						var done = all([certificate, token, sig]).then(function(all) {
+							form.elements.certificate.value = all[0]
+							form.elements.token.value = all[1].token
+							form.elements.signature.value = all[2]
+							form.submit()
+						})
+
+						done.catch(noticeError)
+						done.catch(raise)
+					})
+
+					function noticeError(err) {
+						notice(err.code ? TRANSLATIONS[err.code] : err.message)
+					}
+
+					function read(res) {
+						return res.json().then(function(v) { return res.json = v, res })
+					}
+
+					function notice(msg) { flash.textContent = msg }
+					function raise(err) { setTimeout(function() { throw err }) }
+
+				form#mobile-id-form(
 					method="post",
 					action="/initiatives/#{initiative.id}/signature")
 					h3: img(src="/images/mobile-id-icon.png", alt="Mobile ID")
 
-					- var optionId = Initiative.findOptionId("Yes", initiative)
 					input(type="hidden", name="optionId", value=optionId)
 
 					input.form-input(
@@ -61,7 +132,8 @@ block prepend tab
 						required)
 					br
 
-					button.green-button= t("BTN_VOTE_SIGN_WITH_MOBILE_ID")
+					button.green-button(name="method", value="mobile-id")
+						= t("BTN_VOTE_SIGN_WITH_MOBILE_ID")
 
 block append tab
 	section#initiative-comments.grey-section(class=subpage): center

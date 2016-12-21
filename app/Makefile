@@ -1,6 +1,6 @@
 NODE = node
 ENV = development
-FILES = $(patsubst %, public/assets/%.js, app)
+FILES = $(patsubst %, public/assets/%.js, app hwcrypto)
 BROWSERIFY = ./node_modules/.bin/browserify
 WATCHIFY = ./node_modules/.bin/watchify -v
 UGLIFY = ./node_modules/.bin/uglifyjs
@@ -51,6 +51,13 @@ public/assets/app.js:
 		--require ./lib/jsrsasign-latest-all-min.js:jsrsasign \
 		--require ./lib/moment-with-locales.js:moment \
 		--entry ./ \
+		--outfile "$@"
+
+public/assets/hwcrypto.js:
+	@echo "Compiling $@ for $(ENV)…"
+	@$(BROWSERIFY) \
+		$(BROWSERIFY_OPTS) \
+		--require ./hwcrypto:@rahvaalgatus/hwcrypto \
 		--outfile "$@"
 
 public/assets/%.max.js: public/assets/%.js

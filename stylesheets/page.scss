@@ -169,11 +169,12 @@ button.inherited {
 	background-size: 100%;
 }
 
-.flash {
+.flash:not(:empty) {
 	background: $flash-header-color;
 	padding: 1.2rem 2rem;
 	color: white;
 	border-radius: $button-radius;
+	margin-top: 1rem;
 	margin-bottom: 1rem;
 }
 
@@ -582,9 +583,12 @@ button.inherited {
 		margin-top: 4rem;
 		border-top: 1px solid #ccc;
 		padding-top: 2rem;
+		overflow: hidden;
 
 		form {
+			float: left;
 			margin-top: 1rem;
+			margin-right: 1rem;
 
 			input, button { margin-top: 0.5rem; }
 		}
