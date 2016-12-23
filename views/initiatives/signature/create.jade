@@ -1,6 +1,9 @@
 extends ../layout
 include ../_mixins
 
+block append options
+	- var subpage = "vote"
+
 block prepend tab
 	section#initiative-signature.white-section: center
 		+header(initiative)

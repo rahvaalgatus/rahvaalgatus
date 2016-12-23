@@ -27,7 +27,6 @@ exports.router.use("/:id", next(function*(req, res, next) {
 		`/api/topics/${req.params.id}?include[]=vote`
 
 	req.initiative = yield req.api(path).then(getBody)
-	res.locals.page = "initiative"
 	res.locals.initiative = req.initiative
 	next()
 }))
@@ -48,7 +47,6 @@ exports.router.put("/:id", next(function*(req, res) {
 	if (!Initiative.isParliamentable(initiative)) throw new HttpError(401)
 	if (req.body.status !== "followUp") throw new HttpError(422)
 
-	res.locals.title = initiative.title
 	res.locals.subpage = "vote"
 
 	if (req.body.contact == null) return void res.render("initiatives/update", {
@@ -84,7 +82,6 @@ exports.router.get("/:id/events", next(function*(req, res) {
 	events = events.body.data.rows
 
 	res.render("initiatives/events", {
-		title: initiative.title,
 		subpage: "events",
 		events: events,
 	})
@@ -117,8 +114,6 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 	var initiative = req.initiative
 	var vote = initiative.vote
 
-	res.locals.subpage = "vote"
-	res.locals.title = initiative.title
 	res.locals.method = req.body.method
 
 	switch (req.body.method) {
@@ -189,7 +184,6 @@ function* read(subpage, req, res, next) {
 	comments = comments.body.data.rows.map(normalizeComment)
 
 	res.render("initiatives/read", {
-		title: initiative.title,
 		subpage: subpage,
 		comments: comments,
 		text: normalizeText(initiative.description),

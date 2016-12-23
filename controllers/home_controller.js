@@ -20,8 +20,8 @@ exports.router.get("/", next(function*(req, res, next) {
 	})
 }))
 
-exports.router.get("/about", render.bind(null, "about", "home/about"))
-exports.router.get("/donate", render.bind(null, "donate", "home/donate"))
+exports.router.get("/about", (req, res) => res.render("home/about"))
+exports.router.get("/donate", (req, res) => res.render("home/donate"))
 
 // If not requesting per-status, limit applies to the entire returned set.
 // Saving us from pagination for now.
@@ -33,5 +33,3 @@ function read(status) {
 	path += `&statuses=${status}`
 	return api(path).then((res) => res.body.data.rows)
 }
-
-function render(page, template, req, res) { res.render(template, {page: page}) }
