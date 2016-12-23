@@ -205,6 +205,10 @@ button.inherited {
 	margin-top: 1rem;
 }
 
+.form-input ~ .form-checkbox {
+	margin-top: 1rem;
+}
+
 .form-label {
 	display: inline-block;
 	font-weight: bold;
@@ -222,6 +226,20 @@ button.inherited {
 	background: white;
 	color: #4a555d;
 	border-radius: $button-radius;
+}
+
+.form-checkbox {
+	display: block;
+	cursor: pointer;
+
+	input[type=checkbox] {
+		margin: 0;
+		margin-right: 1rem;
+		width: 2rem;
+		height: 2rem;
+		display: inline-block;
+		vertical-align: middle;
+	}
 }
 
 .icon-twitter {
@@ -474,8 +492,30 @@ button.inherited {
 	}
 }
 
+#initiative-create-page #initiative {
+	$new-initiative-background-height: 515px;
+
+	center {
+		position: relative;
+	}
+
+	background: url(/images/bg-1.png) no-repeat;
+	background-position: calc(50% - 200px) top;
+	min-height: $new-initiative-background-height;
+
+	.step-counter { position: absolute; top: -10px; left: -60px; }
+
+	form {
+		input[name=title] {
+			display: block;
+			width: 100%;
+			font-size: 2rem;
+			height: 4.4rem;
+		}
+	}
+}
+
 #initiative-page {
-	$aside-width: 24rem;
 	background-color: $grey-background;
 
 	.white-section,

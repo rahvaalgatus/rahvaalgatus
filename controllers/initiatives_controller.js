@@ -9,6 +9,7 @@ var next = require("co-next")
 var sleep = require("root/lib/promise").sleep
 var api = require("root/lib/citizen_os")
 var redirect = require("root/lib/middleware/redirect_middleware")
+var EMPTY_INITIATIVE = {title: ""}
 var EMPTY_CONTACT = {name: "", email: "", phone: ""}
 
 var TRANSLATIONS = O.map(require("root/lib/i18n").LANGUAGES, function(lang) {
@@ -18,14 +19,50 @@ var TRANSLATIONS = O.map(require("root/lib/i18n").LANGUAGES, function(lang) {
 exports.router = Router({mergeParams: true})
 
 exports.router.get("/", redirect(302, "/"))
-exports.router.get("/new", AppController.read)
+
+exports.router.get("/new", function(req, res) {
+	res.render("initiatives/create", {attrs: EMPTY_INITIATIVE})
+})
+
+exports.router.post("/", next(function*(req, res) {
+	var attrs = O.assign({}, EMPTY_INITIATIVE, {
+		title: req.body.title,
+		visibility: "private",
+
+		// NOTE: CitizenOS or Etherpad saves all given whitespace as
+		// non-breaking-spaces, so make sure to not have any around <body> or other
+		// tags.
+		description: `
+			<!DOCTYPE HTML>
+			<html><body><h1>${req.body.title}</h1><br><p>Body</p></body></html>
+		`,
+	})
+
+	if (!req.body["accept-tos"]) res.render("initiative/create", {
+		error: req.t("CONFIRM_I_HAVE_READ"),
+		attrs: attrs
+	})
+
+	var created = yield req.api("/api/users/self/topics", {
+		method: "POST",
+		json: attrs
+	}).catch(catchUserError)
+
+	if (isOk(created)) {
+		var initiative = created.body.data
+		res.redirect(303, req.baseUrl + "/" + initiative.id)
+	}
+	else res.status(422).render("initiatives/create", {
+		error: translateCitizenError(req.t, created.body.status),
+		attrs: attrs
+	})
+}))
+
 exports.router.get("/:id/deadline", AppController.read)
 
 exports.router.use("/:id", next(function*(req, res, next) {
-	var path = req.user ?
-		`/api/users/self/topics/${req.params.id}?include[]=vote` :
-		`/api/topics/${req.params.id}?include[]=vote`
-
+	var path = `/api/topics/${req.params.id}?include[]=vote`
+	if (req.user) path = "/api/users/self" + path.slice(4)
 	req.initiative = yield req.api(path).then(getBody)
 	res.locals.initiative = req.initiative
 	next()
@@ -180,7 +217,8 @@ exports.router.get("/:id/signature", next(function*(req, res) {
 function* read(subpage, req, res, next) {
 	var initiative = req.initiative
 	var path = `/api/topics/${initiative.id}/comments?orderBy=date`
-	var comments = yield api(path)
+	if (req.user) path = "/api/users/self" + path.slice(4)
+	var comments = yield req.api(path)
 	comments = comments.body.data.rows.map(normalizeComment)
 
 	res.render("initiatives/read", {
