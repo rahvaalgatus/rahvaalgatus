@@ -69,6 +69,11 @@ html(ng-app="app")
 								ng-class="{active: ('home' | isState)}",
 								translate="LINK_VOTING")
 
+						li
+							a(
+								href="http://help.rahvaalgatus.ee/abi",
+								translate="LINK_HELP")
+
 						li(
 							ui-sref-active="active",
 							ng-class="{'header-link-rus': app.language == 'ru'}")
