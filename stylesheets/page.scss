@@ -156,11 +156,12 @@ button.inherited {
 	font-weight: bold;
 	font-size: 1.3rem;
 	height: $button-height;
-	line-height: $button-height;
 	padding: 0 2rem;
 	text-align: center;
 	text-transform: uppercase;
 	vertical-align: middle;
+
+	&:not(button) { line-height: $button-height; }
 
 	i {
 		margin-right: 1rem;
@@ -194,14 +195,23 @@ button.inherited {
 .form-label,
 .form-input,
 .form-submit {
-	line-height: 20rem;
+	line-height: 1.5;
 	font-size: 14px;
 	font-family: $museo-sans;
 	font-weight: 500;
 }
 
+.form-input ~ .form-submit {
+	margin-top: 1rem;
+}
+
 .form-label {
+	display: inline-block;
 	font-weight: bold;
+
+	& ~ .form-label {
+		margin-top: 1rem;
+	}
 }
 
 .form-input {
@@ -229,6 +239,7 @@ button.inherited {
 	border-radius: $button-radius;
 	margin-top: 1rem;
 	margin-bottom: 1rem;
+	white-space: pre-wrap;
 }
 
 #header {
@@ -507,9 +518,13 @@ button.inherited {
 
 		.button {
 			height: 3.5rem;
-			line-height: 3.5rem;
+			margin-left: 1rem;
 
-			& + .button { margin-left: 1rem; }
+			&:not(button) { line-height: 3.5rem; }
+		}
+
+		form {
+			display: inline;
 		}
 	}
 

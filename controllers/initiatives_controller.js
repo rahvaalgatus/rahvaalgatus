@@ -3,11 +3,13 @@ var Router = require("express").Router
 var AppController = require("root/controllers/app_controller")
 var FetchError = require("fetch-error")
 var HttpError = require("standard-http-error")
+var Initiative = require("root/lib/initiative")
 var isOk = require("root/lib/http").isOk
 var next = require("co-next")
 var sleep = require("root/lib/promise").sleep
 var api = require("root/lib/citizen_os")
 var redirect = require("root/lib/middleware/redirect_middleware")
+var EMPTY_CONTACT = {name: "", email: "", phone: ""}
 
 var TRANSLATIONS = O.map(require("root/lib/i18n").LANGUAGES, function(lang) {
 	return O.filter(lang, (v, k) => k.indexOf("HWCRYPTO") >= 0)
@@ -40,6 +42,38 @@ exports.router.get("/:id", function(req, res, next) {
 
 	next()
 })
+
+exports.router.put("/:id", next(function*(req, res) {
+	var initiative = req.initiative
+	if (!Initiative.isParliamentable(initiative)) throw new HttpError(401)
+	if (req.body.status !== "followUp") throw new HttpError(422)
+
+	res.locals.title = initiative.title
+	res.locals.subpage = "vote"
+
+	if (req.body.contact == null) return void res.render("initiatives/update", {
+		attrs: {contact: EMPTY_CONTACT}
+	})
+
+	var attrs = {
+		status: req.body.status,
+		contact: O.assign({}, EMPTY_CONTACT, req.body.contact)
+	}
+
+	var updated = yield req.api(`/api/users/self/topics/${initiative.id}`, {
+		method: "PUT",
+		json: attrs
+	}).catch(catchUserError)
+
+	if (isOk(updated)) {
+		res.flash("notice", req.t("SENT_TO_PARLIAMENT_CONTENT"))
+		res.redirect(303, req.baseUrl + "/" + initiative.id)
+	}
+	else res.status(422).render("initiatives/update", {
+		error: translateCitizenError(req.t, updated.body.status),
+		attrs: attrs
+	})
+}))
 
 exports.router.get("/:id/discussion", next(read.bind(null, "discussion")))
 exports.router.get("/:id/vote", next(read.bind(null, "vote")))

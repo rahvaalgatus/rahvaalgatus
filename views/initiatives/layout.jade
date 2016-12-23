@@ -2,11 +2,18 @@ extends /layouts/page
 include ./_comments
 
 block body
+	- var Initiative = require("root/lib/initiative")
 	- var selected = require("root/lib/css").selected
 
 		nav#initiative-tabs: center
 			.right
-				if initiative.status == "voting"
+				if Initiative.isParliamentable(initiative)
+					form(method="post", action="/initiatives/#{initiative.id}")
+						input(type="hidden", name="_method", value="put")
+						button.button.green-button(name="status", value="followUp")
+							= t("SEND_TO_PARLIAMENT")
+
+				if Initiative.isVotable(initiative)
 					a.button.green-button(href="#initiative-vote")
 						= t("SIGN_THIS_DOCUMENT")
 	
