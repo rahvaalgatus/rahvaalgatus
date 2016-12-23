@@ -42,6 +42,7 @@ switch (ENV) {
 app.use((req, res, next) => { res.locals.req = req; next() })
 app.use(require("root/lib/middleware/i18n_middleware"))
 app.use(require("root/lib/middleware/session_middleware"))
+app.use(require("root/lib/middleware/api_middleware"))
 
 app.get("/topics", redirect(302, "/"))
 app.get("/topics/create1", redirect(302, "/initiatives/new"))

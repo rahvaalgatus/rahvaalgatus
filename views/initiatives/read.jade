@@ -21,7 +21,7 @@ block prepend tab
 					br
 					a(href=flash("signed"))= t("LNK_DOWNLOAD_USER_BDOC")
 
-		article
+		article.text
 			+header(initiative)
 				br
 				time.deadline(datetime=initiative.endsAt)
@@ -32,7 +32,25 @@ block prepend tab
 						- var endsAt = I18n.formatDate("numeric", initiative.vote.endsAt)
 						= t("VOTING_DEADLINE", {endsAt: endsAt})
 
-			!= text
+			if Initiative.isEditable(initiative)
+				iframe#initiative-etherpad(
+					src=initiative.padUrl,
+					frameborder="0",
+					scrolling="no")
+
+				:javascript
+					var el = document.getElementById("initiative-etherpad")
+
+					window.addEventListener("message", function(ev) {
+						switch (ev.data.name) {
+							case "ep_resize":
+								var height = ev.data.data.height
+								if (el.offsetHeight != height) el.style.height = height + "px"
+								break
+						}
+					})
+			else
+				!= text
 
 		if initiative.status == "voting"
 			#initiative-vote
@@ -120,15 +138,15 @@ block prepend tab
 
 					input.form-input(
 						type="tel",
-						name="pid",
-						placeholder=t("PLACEHOLDER_PERSONAL_IDENTIFICATION_CODE"),
+						name="phoneNumber",
+						placeholder=t("PLACEHOLDER_PHONE_NUMBER"),
 						required)
 					br
 
 					input.form-input(
 						type="tel",
-						name="phoneNumber",
-						placeholder=t("PLACEHOLDER_PHONE_NUMBER"),
+						name="pid",
+						placeholder=t("PLACEHOLDER_PERSONAL_IDENTIFICATION_CODE"),
 						required)
 					br
 

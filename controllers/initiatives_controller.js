@@ -5,9 +5,8 @@ var FetchError = require("fetch-error")
 var HttpError = require("standard-http-error")
 var isOk = require("root/lib/http").isOk
 var next = require("co-next")
-var api = require("root/lib/citizen_os")
 var sleep = require("root/lib/promise").sleep
-var readInitiative = api.readInitiative
+var api = require("root/lib/citizen_os")
 var redirect = require("root/lib/middleware/redirect_middleware")
 
 var TRANSLATIONS = O.map(require("root/lib/i18n").LANGUAGES, function(lang) {
@@ -21,15 +20,17 @@ exports.router.get("/new", AppController.read)
 exports.router.get("/:id/deadline", AppController.read)
 
 exports.router.use("/:id", next(function*(req, res, next) {
-	req.initiative = yield readInitiative(req.params.id)
+	var path = req.user ?
+		`/api/users/self/topics/${req.params.id}?include[]=vote` :
+		`/api/topics/${req.params.id}?include[]=vote`
+
+	req.initiative = yield req.api(path).then(getBody)
 	res.locals.page = "initiative"
 	res.locals.initiative = req.initiative
 	next()
 }))
 
 exports.router.get("/:id", function(req, res, next) {
-	if (req.user) return void next()
-
 	var initiative = req.initiative
 	switch (initiative.status) {
 		case "inProgress": req.url = req.path + "/discussion"; break
@@ -148,10 +149,9 @@ exports.router.get("/:id/signature", next(function*(req, res) {
 }))
 
 function* read(subpage, req, res, next) {
-	if (req.user) return void next()
-
 	var initiative = req.initiative
-	var comments = yield api(`/api/topics/${initiative.id}/comments?orderBy=date`)
+	var path = `/api/topics/${initiative.id}/comments?orderBy=date`
+	var comments = yield api(path)
 	comments = comments.body.data.rows.map(normalizeComment)
 
 	res.render("initiatives/read", {
@@ -205,3 +205,4 @@ function translateCitizenError(t, status) {
 }
 
 function keyifyError(citizenCode) { return `MSG_ERROR_${citizenCode}_VOTE` }
+function getBody(res) { return res.body.data }

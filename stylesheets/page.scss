@@ -50,31 +50,84 @@ center {
 	background-color: white;
 }
 
-.text-section {
-	padding-top: 4rem;
-	padding-bottom: 4rem;
+.text {
+	line-height: 1.4;
 
 	h1 {
-		font-size: 34px;
+		font-size: 3.4rem;
 		color: $link;
+		font-family: $museo-sans;
+		line-height: 1.2;
 	}
 
 	h1 + p {
 		margin-top: 2rem;
 	}
 
+	h2,
+	h3 {
+		font-family: $museo-sans;
+		font-weight: bold;
+	}
+
+	h2 {
+		margin: 2rem 0 1rem;
+		font-size: 3.0rem;
+	}
+
+	h3 {
+		margin: 2rem 0 1rem;
+		font-size: 2.2rem;
+	}
+
 	p {
 		line-height: 1.5;
-		white-space: pre-wrap;
 
 		& + p {
 			margin-top: 2rem;
 		}
 	}
 
+	strong {
+		// Rahvaalgatus lacks weights other than normal for Tisa Pro.
+		font-size: 1.7rem;
+		font-family: $museo-sans;
+		font-weight: bold;
+	}
+
+	em { font-style: italic; }
+	u { text-decoration: underline; }
+
 	a {
 		color: $blue;
 		&:hover { text-decoration: underline; }
+	}
+
+	ol, ul {
+		margin-top: 1rem;
+		margin-bottom: 1rem;
+	}
+
+	li {
+		margin-left: 2rem;
+		list-style-position: outside;
+	}
+
+	ul > li { list-style-type: disc; }
+	ol > li { list-style-type: decimal; }
+
+	form {
+		margin-top: 1rem;
+	}
+}
+
+.text-section {
+	@extend .text;
+	padding-top: 4rem;
+	padding-bottom: 4rem;
+
+	p {
+		white-space: pre-wrap;
 	}
 }
 
@@ -473,13 +526,43 @@ button.inherited {
 
 		h1 {
 			font-size: 4.4rem;
+			color: $link;
 			font-family: $museo-sans;
-			font-weight: bold;
 			line-height: 1.2;
+
 			margin-top: 2rem;
 			margin-bottom: 1rem;
-			color: $black-text;
 		}
+	}
+
+	#initiative {
+		article {
+			font-size: 1.8rem;
+			font-family: $tisa-pro;
+			max-width: 72rem;
+
+			.deadline {
+				text-transform: capitalize;
+			}
+
+			// Etherpad generates non-standard HTML by putting a nested <ol> directly
+			// under <ul>.
+			ol ol,
+			ul ul,
+			ol ul,
+			ul ol {
+				margin-left: 2rem;
+			}
+
+			a {
+				color: $blue;
+				text-decoration: underline;
+			}
+		}
+	}
+
+	#initiative-etherpad {
+		width: 100%;
 	}
 
 	#initiative-signed {
@@ -500,72 +583,6 @@ button.inherited {
 
 		a {
 			text-decoration: underline;
-		}
-	}
-
-	#initiative {
-		article {
-			font-size: 1.8rem;
-			font-family: $tisa-pro;
-			line-height: 1.4;
-			max-width: 72rem;
-
-			.deadline {
-				text-transform: capitalize;
-			}
-
-			strong {
-				// Rahvaalgatus lacks weights other than normal for Tisa Pro.
-				font-size: 1.7rem;
-				font-family: $museo-sans;
-				font-weight: bold;
-			}
-
-			em { font-style: italic; }
-			u { text-decoration: underline; }
-
-			h2,
-			h3 {
-				font-family: $museo-sans;
-				font-weight: bold;
-			}
-
-			h2 {
-				margin: 2rem 0 1rem;
-				font-size: 3.0rem;
-			}
-
-			h3 {
-				margin: 2rem 0 1rem;
-				font-size: 2.2rem;
-			}
-
-			ol, ul {
-				margin-top: 1rem;
-				margin-bottom: 1rem;
-			}
-
-			li {
-				margin-left: 2rem;
-				list-style-position: outside;
-			}
-
-			// Etherpad generates non-standard HTML by putting a nested <ol> directly
-			// under <ul>.
-			ol ol,
-			ul ul,
-			ol ul,
-			ul ol {
-				margin-left: 2rem;
-			}
-
-			ul > li { list-style-type: disc; }
-			ol > li { list-style-type: decimal; }
-
-			a {
-				color: $blue;
-				text-decoration: underline;
-			}
 		}
 	}
 
