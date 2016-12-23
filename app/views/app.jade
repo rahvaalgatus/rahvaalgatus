@@ -71,7 +71,7 @@ html(ng-app="app")
 
 						li
 							a(
-								href="http://help.rahvaalgatus.ee/abi",
+								ng-href="{{Config.HELP_URLS[app.language]}}",
 								translate="LINK_HELP")
 
 						li(
