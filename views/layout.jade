@@ -31,8 +31,8 @@ html
 				ul
 					li: a(href="/", class=selected(page, "home"))= t("LINK_VOTING")
 					li: a(href="http://help.rahvaalgatus.ee/abi")= t("LINK_HELP")
-					li: a(href="/about")= t("LNK_ABOUT")
-					li: a(href="/donate")= t("LNK_SUPPORT")
+					li: a(href="/about", class=selected(page, "about"))= t("LNK_ABOUT")
+					li: a(href="/donate", class=selected(page, "donate"))= t("LNK_SUPPORT")
 
 		main#main
 			block body
