@@ -35,8 +35,11 @@ block prepend tab
 							= t("VOTING_DEADLINE", {endsAt: endsAt})
 
 			if Initiative.isEditable(initiative)
+				- var url = initiative.padUrl + "&theme=" + Config.etherpadTheme
+				- if (Config.etherpadInsecure) url = url.replace(/^https/, "http")
+
 				iframe#initiative-etherpad(
-					src=initiative.padUrl + "&theme=" + Config.etherpadTheme,
+					src=url,
 					frameborder="0",
 					scrolling="no")
 
