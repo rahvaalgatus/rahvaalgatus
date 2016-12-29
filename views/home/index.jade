@@ -12,14 +12,17 @@ block body
 			span= t("HOME_VIDEO_TEXT")
 
 	section#initiatives.grey-section: center
-		h2= t("DISCUSSIONS_LIST")
-		+initiatives(discussions)
+		if discussions.length > 0
+			h2= t("DISCUSSIONS_LIST")
+			+initiatives(discussions)
 
-		h2= t("INITIATIVE_LIST")
-		+initiatives(votings)
+		if votings.length > 0
+			h2= t("INITIATIVE_LIST")
+			+initiatives(votings)
 
-		h2= t("IN_FOLLOW_UP_LIST")
-		+initiatives(processes)
+		if processes.length > 0
+			h2= t("IN_FOLLOW_UP_LIST")
+			+initiatives(processes)
 
 mixin initiatives(initiatives)
 	ol.initiatives
