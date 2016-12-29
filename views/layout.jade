@@ -11,7 +11,9 @@ html
 		link(rel="stylesheet", href="/assets/page.css", type="text/css")
 
 		if process.env.ENV == "development"
-			script(src="http://#{req.hostname}:35729/livereload.js?snipver=1", async)
+			script(
+				src="http://#{req.hostname}:35729/livereload.js?snipver=1",
+				async, defer)
 
 		block head
 
