@@ -71,8 +71,8 @@ autojavascripts:
 stylesheets:
 	$(SASS) --output public/assets stylesheets
 
-autostylesheets: SASS := $(SASS) --watch
 autostylesheets: stylesheets
+	$(MAKE) SASS="$(SASS) --watch" "$<"
 
 views:
 	$(MAKE) -C app views
