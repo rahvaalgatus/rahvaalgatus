@@ -3,3 +3,4 @@
 --globals browser
 --require co-mocha
 --require must
+--require ./test
