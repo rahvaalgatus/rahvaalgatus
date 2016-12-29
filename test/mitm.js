@@ -1,18 +1,18 @@
 var Mitm = require("mitm")
 
 exports = module.exports = function() {
-  beforeEach(exports.listen)
-  afterEach(exports.close)
+	beforeEach(exports.listen)
+	afterEach(exports.close)
 }
 
 exports.listen = function() {
-  this.mitm = Mitm()
-  this.mitm.on("connect", bypassLocalhost)
-  this.mitm.on("request", setImmediate.bind(null, checkIntercept))
+	this.mitm = Mitm()
+	this.mitm.on("connect", bypassLocalhost)
+	this.mitm.on("request", setImmediate.bind(null, checkIntercept))
 }
 
 exports.close = function() {
-  this.mitm.disable()
+	this.mitm.disable()
 }
 
 function checkIntercept(req, res) {

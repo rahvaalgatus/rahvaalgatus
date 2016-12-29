@@ -23,14 +23,15 @@ block prepend tab
 
 		article.text
 			+header(initiative)
-				br
-				time.deadline(datetime=initiative.endsAt)
-					if subpage == "discussion"
-						- var endsAt = I18n.formatDate("numeric", initiative.endsAt)
-						= t("DISCUSSION_DEADLINE", {endsAt: endsAt})
-					else
-						- var endsAt = I18n.formatDate("numeric", initiative.vote.endsAt)
-						= t("VOTING_DEADLINE", {endsAt: endsAt})
+				if initiative.endsAt != null
+					br
+					time.deadline(datetime=initiative.endsAt)
+						if subpage == "discussion"
+							- var endsAt = I18n.formatDate("numeric", initiative.endsAt)
+							= t("DISCUSSION_DEADLINE", {endsAt: endsAt})
+						else
+							- var endsAt = I18n.formatDate("numeric", initiative.vote.endsAt)
+							= t("VOTING_DEADLINE", {endsAt: endsAt})
 
 			if Initiative.isEditable(initiative)
 				iframe#initiative-etherpad(

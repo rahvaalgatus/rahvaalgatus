@@ -1,0 +1,23 @@
+extends ./layout
+include ./_mixins
+
+block tab
+	section.white-section.text-section: center
+		h1= t("DEADLINE_TITLE")
+		p= t("DEADLINE_EXPLANATION")
+
+		if error
+			p.flash.error= error
+
+		form.form(method="post", action="/initiatives/#{initiative.id}")
+			input(type="hidden", name="_method", value="put")
+
+			input.form-input(
+				type="date",
+				name="endsAt",
+				value=attrs.endsAt,
+				required)
+			br
+
+			button.form-submit.green-button(name="visibility", value="public")
+				= t("PUBLISH_TOPIC")

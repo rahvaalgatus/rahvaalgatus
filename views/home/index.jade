@@ -35,7 +35,7 @@ mixin initiative(initiative)
 		var Css = require("root/lib/css")
 		var Config = require("root/config")
 		var I18n = require("root/lib/i18n")
-		var differenceInDays = require("date-fns/difference_in_calendar_days")
+		var DateFns = require("date-fns")
 		var createdAt = new Date(initiative.createdAt)
 		var endsAt = new Date(initiative.endsAt)
 
@@ -55,8 +55,8 @@ mixin initiative(initiative)
 			case initiative.status
 				when "inProgress"
 					if !Initiative.hasDiscussionEnded(initiative)
-						- var passed = differenceInDays(new Date, createdAt)
-						- var total = differenceInDays(endsAt, createdAt)
+						- var passed = DateFns.differenceInDays(new Date, createdAt)
+						- var total = DateFns.differenceInDays(endsAt, createdAt)
 						- var left = total - passed
 
 						.progress(style=Css.linearBackground("#ffb400", passed / total))

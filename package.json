@@ -16,6 +16,7 @@
 		"fetch-off": "",
 		"fetch-defaults": "",
 		"fetch-jsonify": "",
+		"fetch-formify": "",
 		"fetch-parse": "",
 		"fetch-throw": "",
 		"flash-fiction": "",

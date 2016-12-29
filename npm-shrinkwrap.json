@@ -397,6 +397,11 @@
       "from": "fetch-error@latest",
       "resolved": "https://registry.npmjs.org/fetch-error/-/fetch-error-1.0.0.tgz"
     },
+    "fetch-formify": {
+      "version": "1.0.0",
+      "from": "fetch-formify@latest",
+      "resolved": "https://registry.npmjs.org/fetch-formify/-/fetch-formify-1.0.0.tgz"
+    },
     "fetch-jsonify": {
       "version": "1.0.0",
       "from": "fetch-jsonify@>=1.0.0 <2.0.0",

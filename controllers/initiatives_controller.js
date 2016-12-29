@@ -4,13 +4,14 @@ var AppController = require("root/controllers/app_controller")
 var FetchError = require("fetch-error")
 var HttpError = require("standard-http-error")
 var Initiative = require("root/lib/initiative")
+var DateFns = require("date-fns")
 var isOk = require("root/lib/http").isOk
 var next = require("co-next")
 var sleep = require("root/lib/promise").sleep
 var api = require("root/lib/citizen_os")
 var redirect = require("root/lib/middleware/redirect_middleware")
-var EMPTY_INITIATIVE = {title: ""}
-var EMPTY_CONTACT = {name: "", email: "", phone: ""}
+var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
+var UPDATE_ERR = "Invalid Attribute Value"
 
 var TRANSLATIONS = O.map(require("root/lib/i18n").LANGUAGES, function(lang) {
 	return O.filter(lang, (v, k) => k.indexOf("HWCRYPTO") >= 0)
@@ -74,6 +75,7 @@ exports.router.get("/:id", function(req, res, next) {
 		case "inProgress": req.url = req.path + "/discussion"; break
 		case "voting": req.url = req.path + "/vote"; break
 		case "followUp": req.url = req.path + "/events"; break
+		default: return void next(new HttpError(403, "Unknown Status"))
 	}
 
 	next()
@@ -81,19 +83,38 @@ exports.router.get("/:id", function(req, res, next) {
 
 exports.router.put("/:id", next(function*(req, res) {
 	var initiative = req.initiative
-	if (!Initiative.isParliamentable(initiative)) throw new HttpError(401)
-	if (req.body.status !== "followUp") throw new HttpError(422)
 
-	res.locals.subpage = "vote"
+	var tmpl
+	res.locals.subpage = initiative.status == "inProgress" ? "discussion" : "vote"
+	var attrs = EMPTY_INITIATIVE
 
-	if (req.body.contact == null) return void res.render("initiatives/update", {
-		attrs: {contact: EMPTY_CONTACT}
-	})
+	if ("status" in req.body) {
+		tmpl = "initiatives/update_for_parliament"
+		if (!Initiative.isParliamentable(initiative)) throw new HttpError(401)
+		if (req.body.status !== "followUp") throw new HttpError(422, UPDATE_ERR)
+		if (req.body.contact == null) return void res.render(tmpl, {attrs: attrs})
 
-	var attrs = {
-		status: req.body.status,
-		contact: O.assign({}, EMPTY_CONTACT, req.body.contact)
+		attrs = {
+			status: req.body.status,
+			contact: O.defaults(req.body.contact, EMPTY_INITIATIVE.contact)
+		}
 	}
+	else if ("visibility" in req.body) {
+		tmpl = "initiatives/update_for_publish"
+		if (!Initiative.isPublishable(initiative)) throw new HttpError(401)
+		if (req.body.visibility !== "public") throw new HttpError(422, UPDATE_ERR)
+		if (req.body.endsAt == null) return void res.render(tmpl, {attrs: attrs})
+
+		var endsAt = DateFns.endOfDay(new Date(req.body.endsAt))
+		if (!Initiative.isDeadlineOk(new Date, endsAt))
+			return void res.render(tmpl, {
+				error: "Deadline must be between 3 days and a year from now.",
+				attrs: attrs
+			})
+
+		attrs = {visibility: "public", endsAt: endsAt}
+	}
+	else throw new HttpError(422, "Invalid Attribute")
 
 	var updated = yield req.api(`/api/users/self/topics/${initiative.id}`, {
 		method: "PUT",
@@ -101,10 +122,14 @@ exports.router.put("/:id", next(function*(req, res) {
 	}).catch(catchUserError)
 
 	if (isOk(updated)) {
-		res.flash("notice", req.t("SENT_TO_PARLIAMENT_CONTENT"))
+		if ("status" in req.body)
+			res.flash("notice", req.t("SENT_TO_PARLIAMENT_CONTENT"))
+		else if ("visibility" in req.body)
+			res.flash("notice", "Initiative is now public.")
+
 		res.redirect(303, req.baseUrl + "/" + initiative.id)
 	}
-	else res.status(422).render("initiatives/update", {
+	else res.status(422).render(tmpl, {
 		error: translateCitizenError(req.t, updated.body.status),
 		attrs: attrs
 	})

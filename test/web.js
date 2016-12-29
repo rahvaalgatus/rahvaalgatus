@@ -1,6 +1,7 @@
 var Http = require("http")
 var Web = require("root/bin/web")
 var request = require("fetch-off/request")
+request = require("fetch-formify")(request)
 var fetchDefaults = require("fetch-defaults")
 var wait = require("root/lib/promise").wait
 

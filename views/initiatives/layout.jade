@@ -11,6 +11,12 @@ block body
 
 		nav#initiative-tabs: center
 			.right
+				if Initiative.isPublishable(initiative)
+					form(method="post", action="/initiatives/#{initiative.id}")
+						input(type="hidden", name="_method", value="put")
+						button.button.green-button(name="visibility", value="public")
+							= t("PUBLISH_TOPIC")
+
 				if Initiative.isParliamentable(initiative)
 					form(method="post", action="/initiatives/#{initiative.id}")
 						input(type="hidden", name="_method", value="put")
