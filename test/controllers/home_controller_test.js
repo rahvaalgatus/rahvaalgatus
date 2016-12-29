@@ -1,21 +1,14 @@
-var Mitm = require("mitm")
-var HEADERS = {"Content-Type": "application/json"}
+var respond = require("root/test/fixtures").respond
 
 describe("HomeController", function() {
 	require("root/test/web")()
-	beforeEach(function() { this.mitm = Mitm() })
-	afterEach(function() { this.mitm.disable() })
+	require("root/test/mitm")()
 
 	describe("/", function() {
 		it("must respond with 200 OK", function*() {
-			this.mitm.on("request", respondWith.bind(null, []))
-			var res = yield this.request("/", {method: "HEAD"})
+			this.mitm.on("request", respond.bind(null, "/topics", {data: {rows: []}}))
+			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
 		})
 	})
 })
-
-function respondWith(initiatives, req, res) {
-	res.writeHead(200, HEADERS)
-	res.end(JSON.stringify({data: initiatives}))
-}

@@ -8,7 +8,7 @@ exports = module.exports = function() {
 exports.listen = function() {
   this.mitm = Mitm()
   this.mitm.on("connect", bypassLocalhost)
-  this.mitm.on("request", setTimeout.bind(null, checkIntercept, 100))
+  this.mitm.on("request", setImmediate.bind(null, checkIntercept))
 }
 
 exports.close = function() {
