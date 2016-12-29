@@ -7,6 +7,7 @@ if (!Fs.existsSync(ROOT_LINK)) Fs.symlinkSync("..", ROOT_LINK)
 var O = require("oolong")
 var Url = require("url")
 var Http = require("http")
+var Path = require("path")
 var Jade = require("jade")
 var Express = require("express")
 var Config = require("root/config")
@@ -26,7 +27,7 @@ app.locals.require = require
 app.locals.basedir = app.get("views")
 Jade.filters.javascript = require("root/lib/jade/javascript_filter")
 
-app.use(Express.static(PUBLIC_DIR, {setHeaders: setCorsHeaders}))
+app.use(Express.static(PUBLIC_DIR, {setHeaders: setStaticHeaders}))
 app.use(require("cookie-parser")(Config.cookieSecret))
 app.use(require("body-parser").urlencoded({extended: true}))
 app.use(require("flash-fiction/express"))
@@ -95,7 +96,16 @@ function onListening() {
   }))
 }
 
-function setCorsHeaders(res, path) {
-	if (FONT_SUFFIXES.some((s) => path.endsWith(s)))
-		res.setHeader("Access-Control-Allow-Origin", "*")
+function setStaticHeaders(res, path) {
+	if (isCorsable(path)) res.setHeader("Access-Control-Allow-Origin", "*")
+}
+
+function isCorsable(path) {
+	path = Path.relative(PUBLIC_DIR, path)
+	if (FONT_SUFFIXES.some((s) => path.endsWith(s))) return true
+
+	switch (path) {
+		case "assets/etherpad.css": return true
+		default: return false
+	}
 }

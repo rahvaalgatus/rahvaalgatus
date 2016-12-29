@@ -6,6 +6,7 @@ block append head
 
 block prepend tab
 	- var I18n = require("root/lib/i18n")
+	- var Config = require("root/config")
 	- var Initiative = require("root/lib/initiative")
 	- var stringify = require("root/lib/json").stringify
 
@@ -35,7 +36,7 @@ block prepend tab
 
 			if Initiative.isEditable(initiative)
 				iframe#initiative-etherpad(
-					src=initiative.padUrl,
+					src=initiative.padUrl + "&theme=" + Config.etherpadTheme,
 					frameborder="0",
 					scrolling="no")
 
