@@ -32,7 +32,7 @@ html
 
 				if req.user
 					.right
-						span.user= req.user.name
+						a.user(href="/user")= req.user.name
 						form.signout(action="/session", method="post")
 							button.inherited(name="_method", value="delete")= t("BTN_LOG_OFF")
 				else

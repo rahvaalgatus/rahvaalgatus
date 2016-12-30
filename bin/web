@@ -64,6 +64,7 @@ O.each({
 	"/": require("root/controllers/home_controller").router,
 	"/initiatives": require("root/controllers/initiatives_controller").router,
 	"/session": require("root/controllers/session_controller").router,
+	"/user": require("root/controllers/user_controller").router,
 }, (router, path) => app.use(path, router))
 
 app.use(function(err, req, res, next) {

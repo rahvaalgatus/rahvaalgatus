@@ -152,6 +152,128 @@ center {
 	}
 }
 
+.initiatives-section {
+	$initiative-width: 22.5rem;
+
+	h2 {
+		font-size: 2rem;
+		line-height: 3rem;
+		color: $link;
+		border-bottom: 1px solid #00cb81;
+		text-align: right;
+		font-family: $museo-sans;
+		font-weight: 900;
+		text-transform: uppercase;
+		max-width: $initiative-width;
+
+		margin-bottom: -3rem;
+
+		& ~ h2 {
+			margin-top: 4rem;
+		}
+
+		@include tablet {
+			text-align: left;
+			margin-bottom: 2rem;
+		}
+	}
+
+	.initiatives {
+		overflow: hidden;
+		margin-left: $initiative-width;
+
+		@include tablet {
+			margin-left: 0;
+		}
+	}
+
+	.initiative {
+		background: white;
+		box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+
+		width: $initiative-width;
+		float: left;
+		padding: 1rem 2rem 0;
+		margin-left: 2rem;
+		margin-bottom: 2rem;
+
+		@include tablet {
+			margin-left: 0;
+			margin-right: 2rem;
+		}
+
+		a {
+			display: block;
+		}
+
+		time,
+		.author {
+			color: #AAAAAA;
+			font-size: 1.4rem;
+			font-family: $tisa-pro;
+		}
+
+		h3 {
+			font-size: 17px;
+			color: #4F4F4F;
+			line-height: 1.5;
+			margin-top: 1rem;
+			word-wrap: break-word;
+			min-height: 16rem;
+		}
+
+		&:hover {
+			box-shadow: 0 1px 10px 0 rgba(0, 0, 0, 0.4);
+			h3 { color: $link; }
+		}
+
+		.progress {
+			display: block;
+
+			margin: 0.5rem -2rem 0;
+			padding: 1rem 2rem 0.8rem;
+			font-size: 1.3rem;
+			line-height: 1;
+			font-family: $museo-sans;
+			font-weight: bold;
+			color: #3a434a;
+
+			background-color: #eee;
+			background-repeat: no-repeat;
+		}
+
+		&.discussable .progress.completed {
+			background-color: #ffb400;
+			background-image: url(/images/discussion-over.png);
+			background-position: 1rem center;
+			padding-left: 3.5rem;
+		}
+
+		&.votable .progress.completed {
+			color: white;
+			background-color: #00cb81;
+			background-image: url(/images/vote-success.png);
+			background-position: 1rem center;
+			padding-left: 3.5rem;
+		}
+
+		&.votable .progress.failed {
+			color: white;
+			background-color: #9a9a9a;
+			background-image: url(/images/vote-failed.png);
+			background-position: 1rem center;
+			padding-left: 3.5rem;
+		}
+
+		&.processable .progress {
+			color: #1C71A2;
+			background-image: url(/images/clock.png);
+			background-position: 1rem center;
+			padding-left: 3.5rem;
+		}
+	}
+}
+
 button.inherited {
 	-webkit-appearance: none;
 	-moz-appearance: none;
@@ -434,128 +556,6 @@ button.inherited {
 			display: block;
 			margin-left: 6rem;
 			padding-top: 0.5rem;
-		}
-	}
-
-	#initiatives {
-		$initiative-width: 22.5rem;
-
-		h2 {
-			font-size: 2rem;
-			line-height: 3rem;
-			color: $link;
-			border-bottom: 1px solid #00cb81;
-			text-align: right;
-			font-family: $museo-sans;
-			font-weight: 900;
-			text-transform: uppercase;
-			max-width: $initiative-width;
-
-			margin-bottom: -3rem;
-
-			& ~ h2 {
-				margin-top: 4rem;
-			}
-
-			@include tablet {
-				text-align: left;
-				margin-bottom: 2rem;
-			}
-		}
-
-		.initiatives {
-			overflow: hidden;
-			margin-left: $initiative-width;
-
-			@include tablet {
-				margin-left: 0;
-			}
-		}
-
-		.initiative {
-			background: white;
-			box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
-
-			width: $initiative-width;
-			float: left;
-			padding: 1rem 2rem 0;
-			margin-left: 2rem;
-			margin-bottom: 2rem;
-
-			@include tablet {
-				margin-left: 0;
-				margin-right: 2rem;
-			}
-
-			a {
-				display: block;
-			}
-
-			time,
-			.author {
-				color: #AAAAAA;
-				font-size: 1.4rem;
-				font-family: $tisa-pro;
-			}
-
-			h3 {
-				font-size: 17px;
-				color: #4F4F4F;
-				line-height: 1.5;
-				margin-top: 1rem;
-				word-wrap: break-word;
-				min-height: 16rem;
-			}
-
-			&:hover {
-				box-shadow: 0 1px 10px 0 rgba(0, 0, 0, 0.4);
-				h3 { color: $link; }
-			}
-
-			.progress {
-				display: block;
-
-				margin: 0.5rem -2rem 0;
-				padding: 1rem 2rem 0.8rem;
-				font-size: 1.3rem;
-				line-height: 1;
-				font-family: $museo-sans;
-				font-weight: bold;
-				color: #3a434a;
-
-				background-color: #eee;
-				background-repeat: no-repeat;
-			}
-
-			&.discussable .progress.completed {
-				background-color: #ffb400;
-				background-image: url(/images/discussion-over.png);
-				background-position: 1rem center;
-				padding-left: 3.5rem;
-			}
-
-			&.votable .progress.completed {
-				color: white;
-				background-color: #00cb81;
-				background-image: url(/images/vote-success.png);
-				background-position: 1rem center;
-				padding-left: 3.5rem;
-			}
-
-			&.votable .progress.failed {
-				color: white;
-				background-color: #9a9a9a;
-				background-image: url(/images/vote-failed.png);
-				background-position: 1rem center;
-				padding-left: 3.5rem;
-			}
-
-			&.processable .progress {
-				color: #1C71A2;
-				background-image: url(/images/clock.png);
-				background-position: 1rem center;
-				padding-left: 3.5rem;
-			}
 		}
 	}
 
@@ -890,6 +890,15 @@ button.inherited {
 				margin-top: 2rem;
 			}
 		}
+	}
+}
+
+#user-page {
+	background: $grey-background;
+
+	.initiatives-section {
+		.initiatives { margin-left: 0; }
+		.initiative { margin-left: 0; margin-right: 2rem; }
 	}
 }
 

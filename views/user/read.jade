@@ -1,0 +1,12 @@
+extends ../layout
+include ../home/_mixins
+
+block options
+	- var page = "user"
+
+block body
+	section#welcome.white-section.text-section: center
+		h1= user.name
+
+	section#initiatives.grey-section.initiatives-section: center
+		+initiatives(initiatives)
