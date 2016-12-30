@@ -1,9 +1,11 @@
+"use strict"
 var O = require("oolong")
 var Router = require("express").Router
 var AppController = require("root/controllers/app_controller")
 var HttpError = require("standard-http-error")
 var Initiative = require("root/lib/initiative")
 var DateFns = require("date-fns")
+var Config = require("root/config")
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch400
 var isFetchError = require("root/lib/fetch").is
@@ -15,7 +17,6 @@ var redirect = require("root/lib/redirect")
 var co = require("co")
 var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
 var EMPTY_COMMENT = {subject: "", text: ""}
-var UPDATE_ERR = "Invalid Attribute Value"
 
 var UI_TRANSLATIONS = O.map(require("root/lib/i18n").LANGUAGES, function(lang) {
 	return O.filter(lang, (v, k) => k.indexOf("HWCRYPTO") >= 0)
@@ -88,15 +89,52 @@ exports.router.get("/:id", function(req, res, next) {
 
 exports.router.put("/:id", next(function*(req, res) {
 	var initiative = req.initiative
+	res.locals.subpage = initiative.status == "inProgress" ? "discussion" : "vote"
 
 	var tmpl
-	res.locals.subpage = initiative.status == "inProgress" ? "discussion" : "vote"
+	var method = "PUT"
+	var path = `/api/users/self/topics/${initiative.id}`
 	var attrs = EMPTY_INITIATIVE
 
-	if ("status" in req.body) {
+	if (req.body.visibility === "public") {
+		tmpl = "initiatives/update_for_publish"
+		if (!Initiative.isPublishable(initiative)) throw new HttpError(401)
+		if (req.body.endsAt == null) return void res.render(tmpl, {attrs: attrs})
+
+		let endsAt = DateFns.endOfDay(new Date(req.body.endsAt))
+		if (!Initiative.isDeadlineOk(new Date, endsAt))
+			return void res.render(tmpl, {
+				error: req.t("DEADLINE_ERR", {days: Config.minDeadlineDays}),
+				attrs: {endsAt: endsAt}
+			})
+
+		attrs = {visibility: "public", endsAt: endsAt}
+	}
+	else if (req.body.status === "voting") {
+		tmpl = "initiatives/update_for_voting"
+		if (!Initiative.isProposable(new Date, initiative)) throw new HttpError(401)
+		if (req.body.endsAt == null) return void res.render(tmpl, {attrs: attrs})
+
+		let endsAt = DateFns.endOfDay(new Date(req.body.endsAt))
+		if (!Initiative.isDeadlineOk(new Date, endsAt))
+			return void res.render(tmpl, {
+				error: req.t("DEADLINE_ERR", {days: Config.minDeadlineDays}),
+				attrs: {endsAt: endsAt}
+			})
+
+		method = "POST"
+		path += "/votes"
+		attrs = {
+			endsAt: endsAt,
+			authType: "hard",
+			voteType: "regular",
+			delegationIsAllowed: false,
+			options: [{value: "Yes"}, {value: "No"}]
+		}
+	}
+	else if (req.body.status === "followUp") {
 		tmpl = "initiatives/update_for_parliament"
 		if (!Initiative.isParliamentable(initiative)) throw new HttpError(401)
-		if (req.body.status !== "followUp") throw new HttpError(422, UPDATE_ERR)
 		if (req.body.contact == null) return void res.render(tmpl, {attrs: attrs})
 
 		attrs = {
@@ -104,33 +142,20 @@ exports.router.put("/:id", next(function*(req, res) {
 			contact: O.defaults(req.body.contact, EMPTY_INITIATIVE.contact)
 		}
 	}
-	else if ("visibility" in req.body) {
-		tmpl = "initiatives/update_for_publish"
-		if (!Initiative.isPublishable(initiative)) throw new HttpError(401)
-		if (req.body.visibility !== "public") throw new HttpError(422, UPDATE_ERR)
-		if (req.body.endsAt == null) return void res.render(tmpl, {attrs: attrs})
-
-		var endsAt = DateFns.endOfDay(new Date(req.body.endsAt))
-		if (!Initiative.isDeadlineOk(new Date, endsAt))
-			return void res.render(tmpl, {
-				error: "Deadline must be between 3 days and a year from now.",
-				attrs: attrs
-			})
-
-		attrs = {visibility: "public", endsAt: endsAt}
-	}
 	else throw new HttpError(422, "Invalid Attribute")
 
-	var updated = yield req.api(`/api/users/self/topics/${initiative.id}`, {
-		method: "PUT",
+	var updated = yield req.api(path, {
+		method: method,
 		json: attrs
 	}).catch(catch400)
 
 	if (isOk(updated)) {
-		if ("status" in req.body)
+		if (req.body.visibility === "public")
+			res.flash("notice", "Algatus on nüüd avalik.")
+		else if (req.body.status === "voting")
+			res.flash("notice", "Algatus on avatud allkirjade kogumiseks.")
+		else if (req.body.status === "followUp")
 			res.flash("notice", req.t("SENT_TO_PARLIAMENT_CONTENT"))
-		else if ("visibility" in req.body)
-			res.flash("notice", "Initiative is now public.")
 
 		res.redirect(303, req.baseUrl + "/" + initiative.id)
 	}

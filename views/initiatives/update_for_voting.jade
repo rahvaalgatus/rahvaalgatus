@@ -5,7 +5,7 @@ block tab
 	section.white-section.text-section: center
 		+header(initiative)
 		h2= t("DEADLINE_TITLE")
-		p= t("DEADLINE_EXPLANATION")
+		p= t("SET_DEADLINE_FOR_SIGNATURE_COLLECTING")
 
 		if error
 			p.flash.error= error
@@ -20,5 +20,5 @@ block tab
 				required)
 			br
 
-			button.form-submit.green-button(name="visibility", value="public")
-				= t("PUBLISH_TOPIC")
+			button.form-submit.green-button(name="status", value="voting")
+				= t("BTN_CREATE_VOTE")

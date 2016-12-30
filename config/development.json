@@ -6,5 +6,6 @@
 	"apiAuthorizeUrl": "https://citizenos-citizenos-web-test.herokuapp.com/api/auth/openid/authorize",
 	"votesRequired": 2,
 	"etherpadTheme": "raa_dev",
-	"etherpadInsecure": true
+	"etherpadInsecure": true,
+	"minDeadlineDays": 0
 }

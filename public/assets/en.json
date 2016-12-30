@@ -67,6 +67,7 @@
 	"CREATE_A_NEW_VERSION": "Create a new version",
 	"CURRENT_AUTHORS": "Current authors:",
 	"DEADLINE": "Deadline",
+	"DEADLINE_ERR": "Deadline must be at least {{days}} days in the future.",
 	"DEADLINE_EXPLANATION": "Set the time-frame for the co-creation phase: select the deadline date from the calendar. Your initiative will be in a discussion state for at least three days from publication, but we recommend a longer period (for example, a month).\nIf necessary, you can later extend the co-creation period.",
 	"DEADLINE_TITLE": "Set the deadline ",
 	"DEAR_USER": "Dear user!",

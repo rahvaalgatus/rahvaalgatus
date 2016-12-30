@@ -16,13 +16,19 @@ block body
 						button.button.green-button(name="visibility", value="public")
 							= t("PUBLISH_TOPIC")
 
+				if Initiative.isProposable(new Date, initiative)
+					form(method="post", action="/initiatives/#{initiative.id}")
+						input(type="hidden", name="_method", value="put")
+						button.button.green-button(name="status", value="voting")
+							= t("BTN_SEND_TO_VOTE")
+
 				if Initiative.isParliamentable(initiative)
 					form(method="post", action="/initiatives/#{initiative.id}")
 						input(type="hidden", name="_method", value="put")
 						button.button.green-button(name="status", value="followUp")
 							= t("SEND_TO_PARLIAMENT")
 
-				if Initiative.isSignable(initiative)
+				if Initiative.isVotable(initiative)
 					a.button.green-button(href="#initiative-vote")
 						= t("SIGN_THIS_DOCUMENT")
 	

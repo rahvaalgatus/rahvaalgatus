@@ -67,6 +67,7 @@
 	"CREATE_A_NEW_VERSION": "Loo uus versioon",
 	"CURRENT_AUTHORS": "Praegused autorid:",
 	"DEADLINE": "Tähtaeg",
+	"DEADLINE_ERR": "Tähtpäev peab olema vähemalt {{days}} päeva pärast.",
 	"DEADLINE_EXPLANATION": "Sea algatuse ühisloome-faasile ajaraam: vali kalendrist sobiv kuupäev tähtajaks. Algatus peab alates sisestamise hetkest olema vähemalt kolm päeva arutelu-olekus, aga soovitame pikemalt (näiteks kuu aega).  \nKui osutub vajalikuks, saad algatuse käigus tähtaega pikendada. ",
 	"DEADLINE_TITLE": "Tähtaja seadmine",
 	"DEAR_USER": "Hea kasutaja!",
