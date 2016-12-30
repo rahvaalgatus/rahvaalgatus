@@ -33,8 +33,22 @@ exports.router.use("/:id", next(function*(req, res, next) {
 	next()
 }))
 
+exports.router.get("/:id", function(req, res, next) {
+	var initiative = req.initiative
+	switch (initiative.status) {
+		case "inProgress": req.url = req.path + "/discussion"; break
+		case "voting": req.url = req.path + "/vote"; break
+		case "followUp": req.url = req.path + "/events"; break
+		default: return void next(new HttpError(403, "Unknown Status"))
+	}
+
+	next()
+})
+
 exports.router.use("/:id/comments",
 	require("./initiatives/comments_controller").router)
+exports.router.use("/:id/events",
+	require("./initiatives/events_controller").router)
 
 exports.router.get("/", redirect(302, "/"))
 
@@ -74,18 +88,6 @@ exports.router.post("/", next(function*(req, res) {
 }))
 
 exports.router.get("/:id/deadline", AppController.read)
-
-exports.router.get("/:id", function(req, res, next) {
-	var initiative = req.initiative
-	switch (initiative.status) {
-		case "inProgress": req.url = req.path + "/discussion"; break
-		case "voting": req.url = req.path + "/vote"; break
-		case "followUp": req.url = req.path + "/events"; break
-		default: return void next(new HttpError(403, "Unknown Status"))
-	}
-
-	next()
-})
 
 exports.router.put("/:id", next(function*(req, res) {
 	var initiative = req.initiative
@@ -184,17 +186,6 @@ exports.read = co.wrap(function*(subpage, req, res) {
 
 exports.router.get("/:id/discussion", exports.read.bind(null, "discussion"))
 exports.router.get("/:id/vote", exports.read.bind(null, "vote"))
-
-exports.router.get("/:id/events", next(function*(req, res) {
-	var initiative = req.initiative
-	var events = yield api(`/api/topics/${initiative.id}/events`)
-	events = events.body.data.rows
-
-	res.render("initiatives/events", {
-		subpage: "events",
-		events: events,
-	})
-}))
 
 exports.router.get("/:id/signable", next(function*(req, res) {
 	var initiative = req.initiative
