@@ -9,7 +9,7 @@ var isOk = require("root/lib/http").isOk
 var next = require("co-next")
 var sleep = require("root/lib/promise").sleep
 var api = require("root/lib/citizen_os")
-var redirect = require("root/lib/middleware/redirect_middleware")
+var redirect = require("root/lib/redirect")
 var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
 var UPDATE_ERR = "Invalid Attribute Value"
 
