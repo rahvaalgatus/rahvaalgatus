@@ -6,6 +6,7 @@ var QueryCsrfMiddleware = require("root/lib/middleware/query_csrf_middleware")
 var AUTHORIZE_URL = Config.apiAuthorizeUrl
 var LANGS = require("root/lib/i18n").LANGUAGES
 var DEFAULT_LANG = require("root/lib/i18n").DEFAULT_LANGUAGE
+var next = require("co-next")
 var csrf = new QueryCsrfMiddleware("authenticity_token_for_citizenos", "state")
 
 exports.router = Router({mergeParams: true})
@@ -17,7 +18,7 @@ exports.router.get("/new", function(req, res, next) {
 	else redirect(req, res, next)
 })
 
-exports.router.put("/", function(req, res) {
+exports.router.put("/", next(function*(req, res) {
 	var lang = req.body.language in LANGS ? req.body.language : DEFAULT_LANG
 
   res.cookie("language", lang, {
@@ -26,8 +27,12 @@ exports.router.put("/", function(req, res) {
     httpOnly: true
   })
 
+	if (req.user) yield req.api("/api/users/self", {
+		method: "PUT", json: {language: lang}
+	})
+
 	res.redirect(303, req.headers.referer || "/")
-})
+}))
 
 exports.router.delete("/", function(req, res) {
 	res.clearCookie("citizenos_token")
