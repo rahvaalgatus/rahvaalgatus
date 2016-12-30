@@ -1,23 +1,39 @@
 var O = require("oolong")
 var Router = require("express").Router
 var AppController = require("root/controllers/app_controller")
-var FetchError = require("fetch-error")
 var HttpError = require("standard-http-error")
 var Initiative = require("root/lib/initiative")
 var DateFns = require("date-fns")
 var isOk = require("root/lib/http").isOk
+var catch400 = require("root/lib/fetch").catch400
+var isFetchError = require("root/lib/fetch").is
 var next = require("co-next")
 var sleep = require("root/lib/promise").sleep
 var api = require("root/lib/citizen_os")
+var translateCitizenError = require("root/lib/citizen_os").translateError
 var redirect = require("root/lib/redirect")
+var co = require("co")
 var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
+var EMPTY_COMMENT = {subject: "", text: ""}
 var UPDATE_ERR = "Invalid Attribute Value"
 
-var TRANSLATIONS = O.map(require("root/lib/i18n").LANGUAGES, function(lang) {
+var UI_TRANSLATIONS = O.map(require("root/lib/i18n").LANGUAGES, function(lang) {
 	return O.filter(lang, (v, k) => k.indexOf("HWCRYPTO") >= 0)
 })
 
 exports.router = Router({mergeParams: true})
+
+exports.router.use("/:id", next(function*(req, res, next) {
+	var path = `/api/topics/${req.params.id}?include[]=vote`
+	if (req.user) path = "/api/users/self" + path.slice(4)
+	try { req.initiative = yield req.api(path).then(getBody) }
+	catch (ex) { if (isFetchError(404, ex)) throw new HttpError(404); throw ex }
+	res.locals.initiative = req.initiative
+	next()
+}))
+
+exports.router.use("/:id/comments",
+	require("./initiatives/comments_controller").router)
 
 exports.router.get("/", redirect(302, "/"))
 
@@ -44,33 +60,19 @@ exports.router.post("/", next(function*(req, res) {
 	var created = yield req.api("/api/users/self/topics", {
 		method: "POST",
 		json: attrs
-	}).catch(catchUserError)
+	}).catch(catch400)
 
 	if (isOk(created)) {
 		var initiative = created.body.data
 		res.redirect(303, req.baseUrl + "/" + initiative.id)
 	}
 	else res.status(422).render("initiatives/create", {
-		error: translateCitizenError(req.t, created.body.status),
+		error: translateCitizenError(req.t, created.body),
 		attrs: attrs
 	})
 }))
 
 exports.router.get("/:id/deadline", AppController.read)
-
-exports.router.use("/:id", next(function*(req, res, next) {
-	var path = `/api/topics/${req.params.id}?include[]=vote`
-	if (req.user) path = "/api/users/self" + path.slice(4)
-
-	try { req.initiative = yield req.api(path).then(getBody) }
-	catch (ex) {
-		if (ex instanceof FetchError && ex.code === 404) throw new HttpError(404)
-		throw ex
-	}
-
-	res.locals.initiative = req.initiative
-	next()
-}))
 
 exports.router.get("/:id", function(req, res, next) {
 	var initiative = req.initiative
@@ -122,7 +124,7 @@ exports.router.put("/:id", next(function*(req, res) {
 	var updated = yield req.api(`/api/users/self/topics/${initiative.id}`, {
 		method: "PUT",
 		json: attrs
-	}).catch(catchUserError)
+	}).catch(catch400)
 
 	if (isOk(updated)) {
 		if ("status" in req.body)
@@ -133,13 +135,30 @@ exports.router.put("/:id", next(function*(req, res) {
 		res.redirect(303, req.baseUrl + "/" + initiative.id)
 	}
 	else res.status(422).render(tmpl, {
-		error: translateCitizenError(req.t, updated.body.status),
+		error: translateCitizenError(req.t, updated.body),
 		attrs: attrs
 	})
 }))
 
-exports.router.get("/:id/discussion", next(read.bind(null, "discussion")))
-exports.router.get("/:id/vote", next(read.bind(null, "vote")))
+exports.read = co.wrap(function*(subpage, req, res) {
+	var initiative = req.initiative
+
+	var path = `/api/topics/${initiative.id}/comments?orderBy=date`
+	if (req.user) path = "/api/users/self" + path.slice(4)
+	var comments = yield req.api(path)
+	comments = comments.body.data.rows.map(normalizeComment).reverse()
+
+	res.render("initiatives/read", {
+		subpage: subpage,
+		comments: comments,
+		comment: res.locals.comment || EMPTY_COMMENT,
+		text: normalizeText(initiative.description),
+		translations: UI_TRANSLATIONS[req.lang]
+	})
+})
+
+exports.router.get("/:id/discussion", exports.read.bind(null, "discussion"))
+exports.router.get("/:id/vote", exports.read.bind(null, "vote"))
 
 exports.router.get("/:id/events", next(function*(req, res) {
 	var initiative = req.initiative
@@ -163,7 +182,7 @@ exports.router.get("/:id/signable", next(function*(req, res) {
 			options: [{optionId: req.query.optionId}],
 			certificate: req.query.certificate
 		}
-	}).catch(catchUserError)
+	}).catch(catch400)
 
 	if (isOk(signable)) res.json({
 		token: signable.body.data.token,
@@ -171,7 +190,7 @@ exports.router.get("/:id/signable", next(function*(req, res) {
 		hash: signable.body.data.signedInfoHashType
 	})
 	else res.status(422).json({
-		error: translateCitizenError(req.t, signable.body.status)
+		error: translateCitizenError(req.t, signable.body)
 	})
 }))
 
@@ -187,14 +206,14 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 			var signed = yield api(path, {
 				method: "POST",
 				json: {token: req.body.token, signatureValue: req.body.signature}
-			}).catch(catchUserError)
+			}).catch(catch400)
 
 			if (isOk(signed)) {
 				res.flash("signed", signed.body.data.bdocUri)
 				res.redirect(303, req.baseUrl + "/" + initiative.id)
 			}
 			else res.status(422).render("initiatives/signature/create", {
-				error: translateCitizenError(req.t, signed.body.status)
+				error: translateCitizenError(req.t, signed.body)
 			})
 			break
 
@@ -206,7 +225,7 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 					pid: req.body.pid,
 					phoneNumber: req.body.phoneNumber,
 				}
-			}).catch(catchUserError)
+			}).catch(catch400)
 
 			if (isOk(signing)) {
 				res.render("initiatives/signature/create", {
@@ -215,7 +234,7 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 				})
 			}
 			else res.status(422).render("initiatives/signature/create", {
-				error: translateCitizenError(req.t, signed.body.status)
+				error: translateCitizenError(req.t, signed.body)
 			})
 			break
 
@@ -235,7 +254,7 @@ exports.router.get("/:id/signature", next(function*(req, res) {
 			break
 
 		default:
-			res.flash("error", translateCitizenError(req.t, signature.body.status))
+			res.flash("error", translateCitizenError(req.t, signature.body))
 			break
 	}
 
@@ -248,28 +267,13 @@ exports.router.use(function(err, req, res, next) {
 	res.render("initiatives/404", {error: err})
 })
 
-function* read(subpage, req, res, next) {
-	var initiative = req.initiative
-	var path = `/api/topics/${initiative.id}/comments?orderBy=date`
-	if (req.user) path = "/api/users/self" + path.slice(4)
-	var comments = yield req.api(path)
-	comments = comments.body.data.rows.map(normalizeComment)
-
-	res.render("initiatives/read", {
-		subpage: subpage,
-		comments: comments,
-		text: normalizeText(initiative.description),
-		translations: TRANSLATIONS[req.lang]
-	})
-}
-
 function* readSignature(initiative, token) {
 	var vote = initiative.vote
 	var path = `/api/topics/${initiative.id}/votes/${vote.id}/status`
 	path += "?token=" + encodeURIComponent(token)
 
 	RETRY: for (var i = 0; i < 60; ++i) {
-		var res = yield api(path).catch(catchUserError)
+		var res = yield api(path).catch(catch400)
 
 		switch (res.statusCode) {
 			case 200:
@@ -286,11 +290,6 @@ function* readSignature(initiative, token) {
 	throw new HttpError(500, "Mobile-Id Took Too Long")
 }
 
-function catchUserError(err) {
-	if (err instanceof FetchError && err.code === 400) return err.response
-	else throw err
-}
-
 function normalizeText(html) {
 	return html.match(/<body>(.*)<\/body>/)[1]
 }
@@ -299,10 +298,4 @@ function normalizeComment(comment) {
 	comment.replies = comment.replies.rows
 	return comment
 }
-
-function translateCitizenError(t, status) {
-	return t(keyifyError(status.code)) || status.message
-}
-
-function keyifyError(citizenCode) { return `MSG_ERROR_${citizenCode}_VOTE` }
 function getBody(res) { return res.body.data }

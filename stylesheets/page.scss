@@ -209,6 +209,7 @@ button.inherited {
 
 .form-label,
 .form-input,
+.form-textarea,
 .form-submit {
 	line-height: 1.5;
 	font-size: 14px;
@@ -237,6 +238,15 @@ button.inherited {
 	border: 1px solid #cecece;
 	height: $button-height;
 	padding: 0 1rem;
+
+	background: white;
+	color: #4a555d;
+	border-radius: $button-radius;
+}
+
+.form-textarea {
+	border: 1px solid #cecece;
+	padding: 0.5rem 1rem;
 
 	background: white;
 	color: #4a555d;
@@ -812,19 +822,29 @@ button.inherited {
 		}
 
 		form {
-			text-align: center;
 			border-top: 1px solid #cecece;
 			margin-top: 4rem;
 			padding-top: 2rem;
+
+			input, textarea {
+				width: 100%;
+				margin-bottom: 1rem;
+			}
+
+			textarea {
+				min-height: 10rem;
+			}
+
+			button + button { margin-left: 1rem; }
+
+			p {
+				text-align: center;
+			}
 		}
 
-		&.discussion .comment.pro {
-			border-left: 4px solid #89cb00;
-		}
-
-		&.discussion .comment.con {
-			border-right: 4px solid #f00052;
-		}
+		// Side of pro-con indicator should match the order of submit <button>s.
+		&.discussion .comment.pro { border-right: 4px solid #89cb00; }
+		&.discussion .comment.con { border-left: 4px solid #f00052; }
 	}
 
 	#initiative-events {
