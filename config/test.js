@@ -1,9 +1,6 @@
-{
+module.exports = {
+	__proto__: require("./development"),
 	"url": "http://localhost.rahvaalgatus.ee",
-	"apiUrl": "https://citizenos-citizenos-web-test.herokuapp.com",
-	"apiPartnerId": "3bc2e428-8875-4f19-8007-6484ba0d8c58",
-	"apiAuthorizeUrl": "https://citizenos-citizenos-web-test.herokuapp.com/api/auth/openid/authorize",
-	"votesRequired": 2,
 
 	"sessions": [
 		"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpZCI6ImEyZWM3OTk3LTg1NTktNDgwZi1iODY1LTdmMWFkYzMyMzUwOCIsInBhcnRuZXJJZCI6IjNiYzJlNDI4LTg4NzUtNGYxOS04MDA3LTY0ODRiYTBkOGM1OCIsInNjb3BlIjoicGFydG5lciIsImlhdCI6MTQ4MDUyMzM0NCwiZXhwIjoxNDgxMTI4MTQ0fQ.Fx2Xl60HGoixFS_m_ixgg2W3Sa69nZdv1dTAyl0eyg38hgO90EHg9hT1KTkbJ6xvZg-HY_imwQviOKMui8d18se0PabYWykP3xwTj_iwZAAKD99UliYIsv6Q0vs2kjQPTuDknO7BooD-xl5xGBIyGAfIcCXkByYEkFn0cyv4F7dV4c_MAA7CGyfCS0m0PVrf2BpyfiviqbJnCqCSi7GOol7KfdHNMVceqXG5fu_QwQYlsvqtNyO4GdEO-4TT9TjL-brHjAgRE3aV8UWNWoJmhibR9O0J7vP-Pnf_3c6qsKksg__lc4VVVtwbCyO2ZzXtdRONwo7R7zCJHFaskNMkFA",
