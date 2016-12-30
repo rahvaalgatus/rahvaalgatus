@@ -5,11 +5,11 @@ block body
 		h1= t("HOME_WELCOME_TITLE")
 		p= t("HOME_WELCOME")
 
-		a#create-link(href="/initiatives/new")= t("BTN_NEW_TOPIC")
-
 		a#video-link
 			i.icon
 			span= t("HOME_VIDEO_TEXT")
+
+		a#create-link(href="/initiatives/new")= t("BTN_NEW_TOPIC")
 
 	section#initiatives.grey-section: center
 		if discussions.length > 0

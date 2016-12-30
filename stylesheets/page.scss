@@ -37,10 +37,27 @@ center {
 	// Internet Explorer still centers <p>s under <center> even with
 	// text-align: inherit.
 	& > p { margin-right: auto }
+
+	@include tablet {
+		padding-left: 1.5rem;
+		padding-right: 1.5rem;
+	}
 }
 
 .left { float: left; }
 .right { float: right; }
+
+.grey-section,
+.white-section,
+.text-section {
+	padding-top: 4rem;
+	padding-bottom: 4rem;
+
+	@include tablet {
+		padding-top: 2.5rem;
+		padding-bottom: 2.5rem;
+	}
+}
 
 .grey-section {
 	background-color: $grey-background;
@@ -123,8 +140,6 @@ center {
 
 .text-section {
 	@extend .text;
-	padding-top: 4rem;
-	padding-bottom: 4rem;
 
 	p {
 		white-space: pre-wrap;
@@ -304,7 +319,6 @@ button.inherited {
 	nav a {
 		display: inline-block;
 		font-size: 1.6rem;
-		line-height: 2rem;
 		padding: 0.5rem 1rem;
 		border-radius: 2px;
 		transition: color ease 0.4s;
@@ -313,6 +327,22 @@ button.inherited {
 		&:hover {
 			background-color: white;
 			color: #45A0E6;
+		}
+	}
+
+	@include tablet {
+		menu { margin-bottom: 1rem; }
+		.logo { float: none; }
+
+		nav li {
+			margin-right: 0.5rem;
+			& + li { margin-left: 0; }
+		}
+
+		nav a {
+			font-size: 1.4rem;
+			line-height: 1;
+			padding: 0.5rem 0.7rem;
 		}
 	}
 }
@@ -328,9 +358,11 @@ button.inherited {
 	$half-width: 48rem;
 
 	#welcome {
-		//min-height: 35rem;
 		background: url(/images/hero-bg.png) no-repeat right center;
 		background-position: calc(50% + 450px) center;
+
+		// Overflow: hidden for video and create links' floats.
+		overflow: hidden;
 
 		h1 {
 			max-width: $half-width;
@@ -345,14 +377,12 @@ button.inherited {
 	#create-link {
 		float: right;
 		line-height: 30px;
-		padding-right: 25px;
 
 		font-family: $museo-sans;
 		font-weight: 900;
 		font-size: 16px;
 		color: #ffd900;
 		border-bottom: 1px solid #ffd900;
-		background: url(/images/hero-list-arrow-act.png) no-repeat right center;
 	}
 
 	#video-link {
@@ -364,6 +394,7 @@ button.inherited {
 		text-transform: uppercase;
 		max-width: $half-width;
 		display: block;
+		float: left;
 
 		.icon {
 			float: left;
@@ -382,8 +413,6 @@ button.inherited {
 
 	#initiatives {
 		$initiative-width: 22.5rem;
-		padding-top: 4rem;
-		padding-bottom: 4rem;
 
 		h2 {
 			font-size: 2rem;
@@ -401,11 +430,20 @@ button.inherited {
 			& ~ h2 {
 				margin-top: 4rem;
 			}
+
+			@include tablet {
+				text-align: left;
+				margin-bottom: 2rem;
+			}
 		}
 
 		.initiatives {
 			overflow: hidden;
 			margin-left: $initiative-width;
+
+			@include tablet {
+				margin-left: 0;
+			}
 		}
 
 		.initiative {
@@ -418,6 +456,11 @@ button.inherited {
 			padding: 1rem 2rem 0;
 			margin-left: 2rem;
 			margin-bottom: 2rem;
+
+			@include tablet {
+				margin-left: 0;
+				margin-right: 2rem;
+			}
 
 			a {
 				display: block;
@@ -490,6 +533,26 @@ button.inherited {
 			}
 		}
 	}
+
+	@include tablet {
+		#welcome {
+			background: none;
+		}
+
+		#welcome h1,
+		#welcome p { max-width: none; }
+
+		#video-link,
+		#create-link {
+			float: none;
+			display: inline-block;
+		}
+
+		#video-link {
+			display: block;
+			margin-bottom: 2rem;
+		}
+	}
 }
 
 #initiative-create-page #initiative {
@@ -518,12 +581,6 @@ button.inherited {
 #initiative-page {
 	background-color: $grey-background;
 
-	.white-section,
-	.grey-section {
-		padding-top: 4rem;
-		padding-bottom: 4rem;
-	}
-
 	.grey-section + .grey-section {
 		padding-top: 0;
 	}
@@ -533,7 +590,7 @@ button.inherited {
 		background: $grey-background;
 		border-bottom: 1px solid #cecece;
 
-		a.tab {
+		.tab {
 			display: inline-block;
 			text-align: center;
 			line-height: 4rem;
@@ -563,8 +620,23 @@ button.inherited {
 			&:not(button) { line-height: 3.5rem; }
 		}
 
+		menu {
+			float: right;
+		}
+
 		form {
 			display: inline;
+		}
+
+		@include tablet {
+			menu {
+				float: none;
+				display: block;
+			}
+
+			.button {
+				margin: 0 1rem 1rem 0;
+			}
 		}
 	}
 
@@ -667,9 +739,6 @@ button.inherited {
 	}
 
 	#initiative-subscribe {
-		padding-top: 4rem;
-		padding-bottom: 4rem;
-
 		h2 {
 			margin-bottom: 0.5rem;
 			font-family: $museo-sans;

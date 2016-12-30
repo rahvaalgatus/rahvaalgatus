@@ -4,3 +4,8 @@ $header-color: #124267;
 $link: #1C71A2;
 $page-width: 96rem;
 $black-text: #4A555D;
+$mobile-width: 569px;
+
+@mixin tablet {
+  @media only screen and (max-width: 680px) { @content }
+}

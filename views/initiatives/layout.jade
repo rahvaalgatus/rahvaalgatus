@@ -10,7 +10,7 @@ block body
 	- var selected = require("root/lib/css").selected
 
 		nav#initiative-tabs: center
-			.right
+			menu
 				if Initiative.isPublishable(initiative)
 					form(method="post", action="/initiatives/#{initiative.id}")
 						input(type="hidden", name="_method", value="put")
