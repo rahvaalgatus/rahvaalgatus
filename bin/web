@@ -75,7 +75,7 @@ app.use(function(err, req, res, next) {
 
   res.statusCode = err.code
   res.statusMessage = err.message
-  res.render("500", {error: err})
+  res.render(err.code === 404 ? "404" : "500", {error: err})
 })
 
 if (module.parent) return
