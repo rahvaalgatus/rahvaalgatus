@@ -144,6 +144,12 @@ center {
 	p {
 		white-space: pre-wrap;
 	}
+
+	.form-input,
+	.form-textarea {
+		width: 100%;
+		max-width: 64rem;
+	}
 }
 
 button.inherited {
@@ -247,6 +253,7 @@ button.inherited {
 .form-textarea {
 	border: 1px solid #cecece;
 	padding: 0.5rem 1rem;
+	min-height: 10rem;
 
 	background: white;
 	color: #4a555d;
