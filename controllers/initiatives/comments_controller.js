@@ -2,7 +2,7 @@ var Path = require("path")
 var Router = require("express").Router
 var InitiativesController = require("../initiatives_controller")
 var isOk = require("root/lib/http").isOk
-var catch400 = require("root/lib/fetch").catch400
+var catch400 = require("root/lib/fetch").catch.bind(null, 400)
 var translateCitizenError = require("root/lib/citizen_os").translateError
 var next = require("co-next")
 
@@ -22,9 +22,8 @@ exports.router.post("/", next(function*(req, res, next) {
 		}
 	}).catch(catch400)
 
-	if (isOk(created)) {
+	if (isOk(created))
 		res.redirect(303, Path.dirname(req.baseUrl) + "#initiative-comments")
-	}
 	else {
 		var subpage = initiative.status === "inProgress" ? "discussion" : "vote"
 		res.locals.comment = req.body
