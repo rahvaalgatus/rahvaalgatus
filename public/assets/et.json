@@ -117,6 +117,7 @@
 	"HOME_WELCOME": "Sul on mõte, kuidas ühiskonnaelu parandada? Tahad arutada, kuidas mõnda seadust muuta? Selle platvormi kaudu saad Riigikogule koostada ja esitada kollektiivseid ehk vähemalt 1000 digiallkirjaga pöördumisi ning jälgida, kas algatused saavad seaduseelnõudeks. ",
 	"HOME_WELCOME_TITLE": "Tere tulemast rahvaalgatuse koju!",
 	"INITIATIVE_CONTENT": "Siin saad ülevaate kõigist algatustest, mida koostatakse ühisloomena või millele kogutakse juba toetusallkirju, samuti jälgida Riigikogu vastuseid esitatud algatustele. Kui soovid oma mõtete või digiallkirjaga panustada, kliki huvipakkuva algatuse peal. ",
+	"INITIATIVE_DEFAULT_HTML": "<!DOCTYPE HTML><html><body><h1>{{title}}</h1><br><p>Lühike (u 350 tähemärki) või säutsu-lühike (140 tähemärki) sisukokkuvõte – see oleks mõeldud selleks, et algatusi platvormis ja sotsiaalmeedias paremini kajastada</p><br><h2>Ettepanek - </h2><br><p>Mida tahetakse muuta</p><br><h2>Põhjendus - </h2><br><p>Miks see on oluline</p><br><p>Kogu see tekstimaht maksimaalselt 12 000 tähemärki</p><br></body></html>",
 	"INITIATIVE_LIST": "Hääletamisel",
 	"INVITE_BY_EMAIL": "Kutsu e-postiga",
 	"INVITE_PEOPLE": "Kutsu arutajaid juurde",

@@ -117,6 +117,7 @@
 	"HOME_WELCOME": "Do you feel like some things could be done better in Estonia? Or that some regulations could be changed? \nRahvaalgatus.ee enables you to compile and send collective addresses - with at least 1000 digital dignatures - to the parliament of Estonia. Also, you can follow whether your proposal will be turned into draft act. ",
 	"HOME_WELCOME_TITLE": "Welcome to the home of citizen initiatives! ",
 	"INITIATIVE_CONTENT": "Here you can get an overview of all the initiatives that are being co-created or which already collect signatures of support, as well as monitor the response of Riigikogu to the initiatives received. If you would like to contribute your thoughts or digital signature, click on the title of the initiative of your interest.",
+	"INITIATIVE_DEFAULT_HTML": "<!DOCTYPE HTML><html><body><h1>{{title}}</h1><br><p>Lühike (u 350 tähemärki) või säutsu-lühike (140 tähemärki) sisukokkuvõte – see oleks mõeldud selleks, et algatusi platvormis ja sotsiaalmeedias paremini kajastada</p><br><h2>Ettepanek - </h2><br><p>Mida tahetakse muuta</p><br><h2>Põhjendus - </h2><br><p>Miks see on oluline</p><br><p>Kogu see tekstimaht maksimaalselt 12 000 tähemärki</p><br></body></html>",
 	"INITIATIVE_LIST": "In voting",
 	"INVITE_BY_EMAIL": "Invite by e-mail",
 	"INVITE_PEOPLE": "Invite people",

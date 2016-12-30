@@ -117,6 +117,7 @@
 	"HOME_WELCOME": "У вас есть идея, как улучшить жизнь людей в Эстонии или вашем городе? Хотите обсудить, как изменить тот или иной закон? Воспользуйтесь платформой rahvaalgatus.ee: составьте коллективное обращение, соберите минимум 1000 дигитальных подписей в поддержку, и отправьте Рийгикогу! После этого проследите, станет ли ваше предложение законопроектом!",
 	"HOME_WELCOME_TITLE": "Добро пожаловать на rahvaalgatus.ee!",
 	"INITIATIVE_CONTENT": "Здесь Вы видите все обращения, которые находятся либо на стадии совместного составления, либо уже ждут подписей в поддержку, также здесь можно следить за ответами Рийгикогу на представленные обращения. Если Вы хотите внести свой вклад в виде мыслей или подписи, нажмите на интересующее Вас обращение.",
+	"INITIATIVE_DEFAULT_HTML": "<!DOCTYPE HTML><html><body><h1>{{title}}</h1><br><p>Lühike (u 350 tähemärki) või säutsu-lühike (140 tähemärki) sisukokkuvõte – see oleks mõeldud selleks, et algatusi platvormis ja sotsiaalmeedias paremini kajastada</p><br><h2>Ettepanek - </h2><br><p>Mida tahetakse muuta</p><br><h2>Põhjendus - </h2><br><p>Miks see on oluline</p><br><p>Kogu see tekstimaht maksimaalselt 12 000 tähemärki</p><br></body></html>",
 	"INITIATIVE_LIST": "Hа голосовании",
 	"INVITE_BY_EMAIL": "Пригласите по e-mail",
 	"INVITE_PEOPLE": "Позвать обсуждать",

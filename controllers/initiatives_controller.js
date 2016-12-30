@@ -33,10 +33,7 @@ exports.router.post("/", next(function*(req, res) {
 		// NOTE: CitizenOS or Etherpad saves all given whitespace as
 		// non-breaking-spaces, so make sure to not have any around <body> or other
 		// tags.
-		description: `
-			<!DOCTYPE HTML>
-			<html><body><h1>${req.body.title}</h1><br><p>Body</p></body></html>
-		`,
+		description: req.t("INITIATIVE_DEFAULT_HTML", {title: req.body.title}),
 	})
 
 	if (!req.body["accept-tos"]) res.render("initiative/create", {
