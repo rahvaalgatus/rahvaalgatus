@@ -1,7 +1,6 @@
 "use strict"
 var O = require("oolong")
 var Router = require("express").Router
-var AppController = require("root/controllers/app_controller")
 var HttpError = require("standard-http-error")
 var Initiative = require("root/lib/initiative")
 var DateFns = require("date-fns")
@@ -86,8 +85,6 @@ exports.router.post("/", next(function*(req, res) {
 		attrs: attrs
 	})
 }))
-
-exports.router.get("/:id/deadline", AppController.read)
 
 exports.router.put("/:id", next(function*(req, res) {
 	var initiative = req.initiative
