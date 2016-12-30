@@ -64,7 +64,13 @@ exports.router.get("/:id/deadline", AppController.read)
 exports.router.use("/:id", next(function*(req, res, next) {
 	var path = `/api/topics/${req.params.id}?include[]=vote`
 	if (req.user) path = "/api/users/self" + path.slice(4)
-	req.initiative = yield req.api(path).then(getBody)
+
+	try { req.initiative = yield req.api(path).then(getBody) }
+	catch (ex) {
+		if (ex instanceof FetchError && ex.code === 404) throw new HttpError(404)
+		throw ex
+	}
+
 	res.locals.initiative = req.initiative
 	next()
 }))
@@ -238,6 +244,12 @@ exports.router.get("/:id/signature", next(function*(req, res) {
 
 	res.redirect(303, req.baseUrl + "/" + initiative.id)
 }))
+
+exports.router.use(function(err, req, res, next) {
+  if (!(err instanceof HttpError)) return void next(err)
+  if (err.code !== 404) return void next(err)
+	res.render("initiatives/404", {error: err})
+})
 
 function* read(subpage, req, res, next) {
 	var initiative = req.initiative
