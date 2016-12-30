@@ -3,7 +3,8 @@ include ./_mixins
 
 block tab
 	section.white-section.text-section: center
-		h1= t("DEADLINE_TITLE")
+		+header(initiative)
+		h2= t("DEADLINE_TITLE")
 		p= t("DEADLINE_EXPLANATION")
 
 		if error
