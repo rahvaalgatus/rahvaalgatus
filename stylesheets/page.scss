@@ -299,20 +299,28 @@ button.inherited {
 	color: white;
 
 	menu {
-		margin-bottom: 2rem;
+		margin-bottom: 1.5rem;
 		overflow: hidden;
 		font-size: 1.2rem;
 		text-transform: uppercase;
 		font-family: $museo-sans;
 		font-weight: normal;
 
+		.languages {
+			display: inline;
+			font-weight: bold;
+
+			button { text-transform: uppercase; }
+			button[disabled] { color: $blue; }
+			button + button { margin-left: 1rem; }
+		}
+
 		.user {
 			text-transform: none;
 		}
 
-		form {
+		.signout {
 			display: inline;
-
 			&:before { margin: 0 1rem; content: "|"; }
 		}
 	}
