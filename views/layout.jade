@@ -1,3 +1,4 @@
+- var Config = require("root/config")
 - var LANGS = require("root/lib/i18n").LANGUAGES
 - var selected = require("root/lib/css").selected
 
@@ -47,7 +48,7 @@ html
 						href="/",
 						class=selected(page, "home") || selected(page, "initiative"))
 						= t("LINK_VOTING")
-					li: a(href="http://help.rahvaalgatus.ee/abi")= t("LINK_HELP")
+					li: a(href=Config.helpUrls[req.lang])= t("LINK_HELP")
 					li: a(href="/about", class=selected(page, "about"))= t("LNK_ABOUT")
 					li: a(href="/donate", class=selected(page, "donate"))= t("LNK_SUPPORT")
 
