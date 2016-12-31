@@ -241,6 +241,11 @@ center {
 			background-color: #eee;
 			background-repeat: no-repeat;
 		}
+		
+		.progress.private {
+			color: white;
+			background-color: #9a9a9a;
+		}
 
 		&.discussable .progress.completed {
 			background-color: #ffb400;
@@ -257,7 +262,7 @@ center {
 			padding-left: 3.5rem;
 		}
 
-		&.votable .progress.failed {
+		.progress.failed {
 			color: white;
 			background-color: #9a9a9a;
 			background-image: url(/images/vote-failed.png);

@@ -28,7 +28,9 @@ mixin initiative(initiative)
 
 			case initiative.status
 				when "inProgress"
-					if !Initiative.hasDiscussionEnded(new Date, initiative)
+					if initiative.visibility == "private"
+						.progress.private= t("TXT_TOPIC_VISIBILITY_PRIVATE")
+					else if !Initiative.hasDiscussionEnded(new Date, initiative)
 						- var passed = DateFns.differenceInDays(new Date, createdAt)
 						- var total = DateFns.differenceInDays(endsAt, createdAt)
 						- var left = total - passed
