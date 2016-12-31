@@ -6,6 +6,17 @@ var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var VOTES = require("root/config").votesRequired
 var HEADERS = {"Content-Type": "application/json"}
 
+var PUBLISHABLE_INITIATIVE = {
+	data: {
+		id: UUID,
+		status: "inProgress",
+		description: "<body><h1>My thoughts.</h1></body>",
+		creator: {name: "John"},
+		visibility: "private",
+		permission: {level: "admin"}
+	}
+}
+
 describe("InitiativesController", function() {
 	require("root/test/web")()
 	require("root/test/mitm")()
@@ -70,17 +81,21 @@ describe("InitiativesController", function() {
 	describe("PUT /initiatives/:id", function() {
 		require("root/test/fixtures").user()
 
+		it("must render visibility update page", function*() {
+			this.mitm.on("request",
+				respond.bind(null, `/topics/${UUID}?`, PUBLISHABLE_INITIATIVE))
+
+			var res = yield this.request("/initiatives/" + UUID, {
+				method: "PUT",
+				form: {visibility: "public"}
+			})
+
+			res.statusCode.must.equal(200)
+		})
+
 		it("must update visibility", function*() {
-			this.mitm.on("request", respond.bind(null, `/topics/${UUID}?`, {
-				data: {
-					id: UUID,
-					status: "inProgress",
-					description: "<body><h1>My thoughts.</h1></body>",
-					creator: {name: "John"},
-					visibility: "private",
-					permission: {level: "admin"}
-				}
-			}))
+			this.mitm.on("request",
+				respond.bind(null, `/topics/${UUID}?`, PUBLISHABLE_INITIATIVE))
 
 			var today = DateFns.startOfDay(new Date)
 			var endsAt = DateFns.endOfDay(DateFns.addDays(today, 5))
