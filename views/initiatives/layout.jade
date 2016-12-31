@@ -32,10 +32,9 @@ block body
 					a.button.green-button(href="#initiative-vote")
 						= t("SIGN_THIS_DOCUMENT")
 	
-				a.button.blue-button(
-					href="#subscribe",
-					onclick="document.getElementById('initiative-subscribe-email').focus()")
-					| Jälgi algatust
+				if Initiative.isInvitable(initiative)
+					a.button.blue-button(href="/initiatives/#{initiative.id}/authors/new")
+						= t("INVITE_PEOPLE")
 	
 				a.button.white-button(
 					href="http://twitter.com/intent/tweet?status=#{initiative.title} https://rahvaalgatus.ee/topics/#{initiative.id}",
