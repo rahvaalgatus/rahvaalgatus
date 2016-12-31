@@ -7,14 +7,23 @@ var VOTES = require("root/config").votesRequired
 var HEADERS = {"Content-Type": "application/json"}
 
 var PUBLISHABLE_INITIATIVE = {
-	data: {
-		id: UUID,
-		status: "inProgress",
-		description: "<body><h1>My thoughts.</h1></body>",
-		creator: {name: "John"},
-		visibility: "private",
-		permission: {level: "admin"}
-	}
+	id: UUID,
+	createdAt: new Date(2000, 0, 1),
+	status: "inProgress",
+	description: "<body><h1>My thoughts.</h1></body>",
+	creator: {name: "John"},
+	visibility: "private",
+	permission: {level: "admin"}
+}
+
+var PROPOSABLE_INITIATIVE = {
+	id: UUID,
+	createdAt: new Date(2000, 0, 1),
+	status: "inProgress",
+	description: "<body><h1>My thoughts.</h1></body>",
+	creator: {name: "John"},
+	visibility: "public",
+	permission: {level: "admin"}
 }
 
 describe("InitiativesController", function() {
@@ -81,9 +90,9 @@ describe("InitiativesController", function() {
 	describe("PUT /initiatives/:id", function() {
 		require("root/test/fixtures").user()
 
-		it("must render visibility update page", function*() {
+		it("must render update visibility page", function*() {
 			this.mitm.on("request",
-				respond.bind(null, `/topics/${UUID}?`, PUBLISHABLE_INITIATIVE))
+				respond.bind(null, `/topics/${UUID}?`, {data: PUBLISHABLE_INITIATIVE}))
 
 			var res = yield this.request("/initiatives/" + UUID, {
 				method: "PUT",
@@ -95,7 +104,7 @@ describe("InitiativesController", function() {
 
 		it("must update visibility", function*() {
 			this.mitm.on("request",
-				respond.bind(null, `/topics/${UUID}?`, PUBLISHABLE_INITIATIVE))
+				respond.bind(null, `/topics/${UUID}?`, {data: PUBLISHABLE_INITIATIVE}))
 
 			var today = DateFns.startOfDay(new Date)
 			var endsAt = DateFns.endOfDay(DateFns.addDays(today, 5))
@@ -117,6 +126,18 @@ describe("InitiativesController", function() {
 			res = yield res
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal(path)
+		})
+
+		it("must render update status for voting page", function*() {
+			this.mitm.on("request",
+				respond.bind(null, `/topics/${UUID}?`, {data: PROPOSABLE_INITIATIVE}))
+
+			var res = yield this.request("/initiatives/" + UUID, {
+				method: "PUT",
+				form: {status: "voting"}
+			})
+
+			res.statusCode.must.equal(200)
 		})
 
 		it("must update status", function*() {
