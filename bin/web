@@ -12,6 +12,7 @@ var Jade = require("jade")
 var Express = require("express")
 var Config = require("root/config")
 var HttpError = require("standard-http-error")
+var FetchError = require("fetch-error")
 var redirect = require("root/lib/redirect")
 var ENV = process.env.ENV
 var PORT = process.env.PORT || 3000
@@ -71,12 +72,18 @@ app.use(function(err, req, res, next) {
   // Stop handling here if there was an error, but it's been responded to
   // already. That happens when you want to still report the error to Sentry,
   // but have displayed something to the user.
-  if (res.headersSent) return void 0
-  if (!(err instanceof HttpError)) return void next(err)
+  if (res.headersSent) return
 
-  res.statusCode = err.code
-  res.statusMessage = err.message
-  res.render(err.code === 404 ? "404" : "500", {error: err})
+  if (err instanceof HttpError) {
+		res.statusCode = err.code
+		res.statusMessage = err.message
+		res.render(err.code === 404 ? "404" : "500", {error: err})
+	}
+	else if (err instanceof FetchError) {
+		res.statusCode = 500
+		res.render("500", {error: err})
+	}
+	else next(err)
 })
 
 if (module.parent) return
