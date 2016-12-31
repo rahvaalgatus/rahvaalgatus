@@ -1,5 +1,6 @@
 var _ = require("lodash")
 var fetchDefaults = require("fetch-defaults")
+var HEADERS = {"Content-Type": "application/json"}
 
 exports.user = function() {
 	beforeEach(function() {
@@ -22,6 +23,6 @@ exports.respond = respond
 function respond(url, json, req, res) {
 	if (typeof url === "string") url = _.escapeRegExp(url)
 	if (!req.url.match(url)) return
-	res.writeHead(200, {"Content-Type": "application/json"})
+	res.writeHead(200, HEADERS)
 	res.end(JSON.stringify(json))
 }
