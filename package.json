@@ -21,8 +21,10 @@
 		"fetch-throw": "",
 		"flash-fiction": "",
 		"jade": "",
+		"lazy-object": "",
 		"linkifyjs": "",
 		"date-fns": "",
+		"raven": "",
 		"morgan": "",
 		"method-override": ""
 	},
@@ -35,7 +37,6 @@
 		"mitm": ">= 1 < 2",
 		"selenium-webdriver": ">= 2.53.3 < 3",
 		"selenium-dom": ">= 0.1.337 < 0.2",
-		"lazy-object": ">= 1 < 2",
 		"livereload": ">= 0.6 < 0.7",
 		"tough-cookie": ">= 2 < 3",
 
