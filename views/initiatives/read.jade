@@ -13,14 +13,15 @@ block prepend tab
 	section#initiative.white-section: center
 		include /_flash.jade
 
-		if flash("signed")
+		if flash("signed") || Initiative.hasVoted(initiative)
 			#initiative-signed
 				h2= req.t("DOCUMENT_SIGNED")
 				p
 					= req.t("THANKS_FOR_SIGNING")
 					br
 					br
-					a(href=flash("signed"))= t("LNK_DOWNLOAD_USER_BDOC")
+					- var url = flash("signed") || initiative.vote.downloads.bdocVote
+					a(href=url)= t("LNK_DOWNLOAD_USER_BDOC")
 
 		article.text
 			header
