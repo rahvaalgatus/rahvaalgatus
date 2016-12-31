@@ -1,4 +1,5 @@
 "use strict"
+var _ = require("lodash")
 var O = require("oolong")
 var Router = require("express").Router
 var HttpError = require("standard-http-error")
@@ -26,6 +27,7 @@ exports.router = Router({mergeParams: true})
 exports.router.get("/", redirect(302, "/"))
 
 exports.router.post("/", next(function*(req, res) {
+	var title = _.escape(req.body.title)
 	var attrs = O.assign({}, EMPTY_INITIATIVE, {
 		title: req.body.title,
 		visibility: "private",
@@ -33,7 +35,7 @@ exports.router.post("/", next(function*(req, res) {
 		// NOTE: CitizenOS or Etherpad saves all given whitespace as
 		// non-breaking-spaces, so make sure to not have any around <body> or other
 		// tags.
-		description: req.t("INITIATIVE_DEFAULT_HTML", {title: req.body.title}),
+		description: req.t("INITIATIVE_DEFAULT_HTML", {title: title}),
 	})
 
 	if (!req.body["accept-tos"]) res.render("initiatives/create", {

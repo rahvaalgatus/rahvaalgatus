@@ -1,8 +1,10 @@
 var DateFns = require("date-fns")
+var I18n = require("root/lib/i18n")
 var respond = require("root/test/fixtures").respond
+var wait = require("root/lib/promise").wait
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var VOTES = require("root/config").votesRequired
-var wait = require("root/lib/promise").wait
+var HEADERS = {"Content-Type": "application/json"}
 
 describe("InitiativesController", function() {
 	require("root/test/web")()
@@ -14,6 +16,31 @@ describe("InitiativesController", function() {
 		it("must render", function*() {
 			var res = yield this.request("/initiatives/new")
 			res.statusCode.must.equal(200)
+		})
+	})
+
+	describe("POST /initiatives", function() {
+		require("root/test/fixtures").user()
+
+		it("must escape title", function*() {
+			var res = this.request("/initiatives", {
+				method: "POST",
+				form: {"accept-tos": true, title: "Hello <mike>!"}
+			})
+
+			var req, next = wait.bind(null, this.mitm, "request")
+			while ((req = yield next()) && req.method !== "POST");
+			req.res.writeHead(200, HEADERS)
+			req.res.end(JSON.stringify({data: {id: UUID}}))
+
+			var attrs = JSON.parse(req.read())
+			var title = "Hello &lt;mike&gt;!"
+			var html = I18n.t("et", "INITIATIVE_DEFAULT_HTML", {title: title})
+			attrs.description.must.equal(html)
+
+			res = yield res
+			res.statusCode.must.equal(303)
+			res.headers.location.must.equal("/initiatives/" + UUID)
 		})
 	})
 
