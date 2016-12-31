@@ -70,6 +70,40 @@ describe("InitiativesController", function() {
 	describe("PUT /initiatives/:id", function() {
 		require("root/test/fixtures").user()
 
+		it("must update visibility", function*() {
+			this.mitm.on("request", respond.bind(null, `/topics/${UUID}?`, {
+				data: {
+					id: UUID,
+					status: "inProgress",
+					description: "<body><h1>My thoughts.</h1></body>",
+					creator: {name: "John"},
+					visibility: "private",
+					permission: {level: "admin"}
+				}
+			}))
+
+			var today = DateFns.startOfDay(new Date)
+			var endsAt = DateFns.endOfDay(DateFns.addDays(today, 5))
+
+			var path = "/initiatives/" + UUID
+			var res = this.request(path, {
+				method: "PUT",
+				form: {visibility: "public", endsAt: endsAt.toJSON().slice(0, 10)}
+			})
+
+			var req, next = wait.bind(null, this.mitm, "request")
+			while ((req = yield next()) && req.method !== "PUT");
+			req.res.end()
+
+			JSON.parse(req.read()).must.eql({
+				visibility: "public", endsAt: endsAt.toJSON()
+			})
+
+			res = yield res
+			res.statusCode.must.equal(303)
+			res.headers.location.must.equal(path)
+		})
+
 		it("must update status", function*() {
 			this.mitm.on("request", respond.bind(null, `/topics/${UUID}?`, {
 				data: {
@@ -100,40 +134,6 @@ describe("InitiativesController", function() {
 			JSON.parse(req.read()).must.eql({
 				status: "followUp",
 				contact: {name: "John", email: "john@example.com", phone: "42"}
-			})
-
-			res = yield res
-			res.statusCode.must.equal(303)
-			res.headers.location.must.equal(path)
-		})
-
-		it("must update visibility", function*() {
-			this.mitm.on("request", respond.bind(null, `/topics/${UUID}?`, {
-				data: {
-					id: UUID,
-					status: "inProgress",
-					description: "<body><h1>My thoughts.</h1></body>",
-					creator: {name: "John"},
-					visibility: "private",
-					permission: {level: "admin"}
-				}
-			}))
-
-			var today = DateFns.startOfDay(new Date)
-			var endsAt = DateFns.endOfDay(DateFns.addDays(today, 5))
-
-			var path = "/initiatives/" + UUID
-			var res = this.request(path, {
-				method: "PUT",
-				form: {visibility: "public", endsAt: endsAt.toJSON().slice(0, 10)}
-			})
-
-			var req, next = wait.bind(null, this.mitm, "request")
-			while ((req = yield next()) && req.method !== "PUT");
-			req.res.end()
-
-			JSON.parse(req.read()).must.eql({
-				visibility: "public", endsAt: endsAt.toJSON()
 			})
 
 			res = yield res
