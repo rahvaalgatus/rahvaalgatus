@@ -14,7 +14,6 @@ var sleep = require("root/lib/promise").sleep
 var api = require("root/lib/citizen_os")
 var translateCitizenError = require("root/lib/citizen_os").translateError
 var redirect = require("root/lib/redirect")
-var co = require("co")
 var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
 var EMPTY_COMMENT = {subject: "", text: ""}
 
@@ -161,7 +160,7 @@ exports.router.put("/:id", next(function*(req, res) {
 	})
 }))
 
-exports.read = co.wrap(function*(subpage, req, res) {
+exports.read = next(function*(subpage, req, res) {
 	var initiative = req.initiative
 
 	var path = `/api/topics/${initiative.id}/comments?orderBy=date`
