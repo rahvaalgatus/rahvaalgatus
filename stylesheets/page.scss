@@ -68,7 +68,7 @@ center {
 }
 
 .text {
-	line-height: 1.4;
+	line-height: 1.5;
 
 	h1 {
 		font-size: 3.4rem;
@@ -97,12 +97,8 @@ center {
 		font-size: 2.2rem;
 	}
 
-	p {
-		line-height: 1.5;
-
-		& + p {
-			margin-top: 2rem;
-		}
+	p + p {
+		margin-top: 2rem;
 	}
 
 	strong {
@@ -822,7 +818,6 @@ button.inherited {
 
 			p {
 				margin-top: 0.5rem;
-				line-height: 1.5;
 				white-space: pre-wrap;
 			}
 

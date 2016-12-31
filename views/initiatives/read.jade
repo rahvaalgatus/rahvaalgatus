@@ -166,9 +166,9 @@ block prepend tab
 
 block append tab
 	- var I18n = require("root/lib/i18n")
+	- var linkify = require("root/lib/linkify")
 
 	section#initiative-comments.grey-section(class=subpage): center
-		//- TODO: Linkify
 		h2= t(subpage == "discussion" ? "ARGUMENTS" : "COMMENT_HEADING")
 
 		ol.comments
@@ -180,7 +180,7 @@ block append tab
 					time(datetime=comment.createdAt)
 						= I18n.formatTime("numeric", comment.createdAt)
 
-					p= comment.text
+					p.text!= linkify(comment.text)
 
 					ol.replies
 						for reply in comment.replies
