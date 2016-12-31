@@ -8,6 +8,15 @@ describe("InitiativesController", function() {
 	require("root/test/web")()
 	require("root/test/mitm")()
 
+	describe("GET /initiatives/new", function() {
+		require("root/test/fixtures").user()
+
+		it("must render", function*() {
+			var res = yield this.request("/initiatives/new")
+			res.statusCode.must.equal(200)
+		})
+	})
+
 	describe("GET /initiatives/:id", function() {
 		describe("when not logged in", function() {
 			it("must render discussion", function*() {

@@ -23,6 +23,43 @@ var UI_TRANSLATIONS = O.map(require("root/lib/i18n").LANGUAGES, function(lang) {
 
 exports.router = Router({mergeParams: true})
 
+exports.router.get("/", redirect(302, "/"))
+
+exports.router.post("/", next(function*(req, res) {
+	var attrs = O.assign({}, EMPTY_INITIATIVE, {
+		title: req.body.title,
+		visibility: "private",
+
+		// NOTE: CitizenOS or Etherpad saves all given whitespace as
+		// non-breaking-spaces, so make sure to not have any around <body> or other
+		// tags.
+		description: req.t("INITIATIVE_DEFAULT_HTML", {title: req.body.title}),
+	})
+
+	if (!req.body["accept-tos"]) res.render("initiatives/create", {
+		error: req.t("CONFIRM_I_HAVE_READ"),
+		attrs: attrs
+	})
+
+	var created = yield req.api("/api/users/self/topics", {
+		method: "POST",
+		json: attrs
+	}).catch(catch400)
+
+	if (isOk(created)) {
+		var initiative = created.body.data
+		res.redirect(303, req.baseUrl + "/" + initiative.id)
+	}
+	else res.status(422).render("initiatives/create", {
+		error: translateCitizenError(req.t, created.body),
+		attrs: attrs
+	})
+}))
+
+exports.router.get("/new", function(req, res) {
+	res.render("initiatives/create", {attrs: EMPTY_INITIATIVE})
+})
+
 exports.router.use("/:id", next(function*(req, res, next) {
 	var path = `/api/topics/${req.params.id}?include[]=vote`
 	if (req.user) path = "/api/users/self" + path.slice(4)
@@ -43,48 +80,6 @@ exports.router.get("/:id", function(req, res, next) {
 
 	next()
 })
-
-exports.router.use("/:id/comments",
-	require("./initiatives/comments_controller").router)
-exports.router.use("/:id/events",
-	require("./initiatives/events_controller").router)
-
-exports.router.get("/", redirect(302, "/"))
-
-exports.router.get("/new", function(req, res) {
-	res.render("initiatives/create", {attrs: EMPTY_INITIATIVE})
-})
-
-exports.router.post("/", next(function*(req, res) {
-	var attrs = O.assign({}, EMPTY_INITIATIVE, {
-		title: req.body.title,
-		visibility: "private",
-
-		// NOTE: CitizenOS or Etherpad saves all given whitespace as
-		// non-breaking-spaces, so make sure to not have any around <body> or other
-		// tags.
-		description: req.t("INITIATIVE_DEFAULT_HTML", {title: req.body.title}),
-	})
-
-	if (!req.body["accept-tos"]) res.render("initiative/create", {
-		error: req.t("CONFIRM_I_HAVE_READ"),
-		attrs: attrs
-	})
-
-	var created = yield req.api("/api/users/self/topics", {
-		method: "POST",
-		json: attrs
-	}).catch(catch400)
-
-	if (isOk(created)) {
-		var initiative = created.body.data
-		res.redirect(303, req.baseUrl + "/" + initiative.id)
-	}
-	else res.status(422).render("initiatives/create", {
-		error: translateCitizenError(req.t, created.body),
-		attrs: attrs
-	})
-}))
 
 exports.router.put("/:id", next(function*(req, res) {
 	var initiative = req.initiative
@@ -183,6 +178,11 @@ exports.read = co.wrap(function*(subpage, req, res) {
 
 exports.router.get("/:id/discussion", exports.read.bind(null, "discussion"))
 exports.router.get("/:id/vote", exports.read.bind(null, "vote"))
+
+exports.router.use("/:id/comments",
+	require("./initiatives/comments_controller").router)
+exports.router.use("/:id/events",
+	require("./initiatives/events_controller").router)
 
 exports.router.get("/:id/signable", next(function*(req, res) {
 	var initiative = req.initiative
