@@ -9,15 +9,16 @@ block prepend tab
 	- var Config = require("root/config")
 	- var Initiative = require("root/lib/initiative")
 	- var stringify = require("root/lib/json").stringify
+	- var hasVote = flash("signed") || Initiative.hasVote("Yes", initiative)
 
 	section#initiative.white-section: center
 		include /_flash.jade
 
-		if flash("signed") || Initiative.hasVoted(initiative)
+		if hasVote
 			#initiative-signed
-				h2= req.t("DOCUMENT_SIGNED")
+				h2= t("DOCUMENT_SIGNED")
 				p
-					= req.t("THANKS_FOR_SIGNING")
+					= t("THANKS_FOR_SIGNING")
 					br
 					br
 					- var url = flash("signed") || initiative.vote.downloads.bdocVote
@@ -65,10 +66,15 @@ block prepend tab
 				!= text
 
 		if initiative.status == "voting"
+			- var optId = Initiative.findOptionId(hasVote ? "No" : "Yes", initiative)
+
 			#initiative-vote
-				- var optionId = Initiative.findOptionId("Yes", initiative)
-				h2= t("HEADING_CAST_YOUR_VOTE")
-				p= t("HEADING_VOTE_REQUIRE_HARD_ID")
+				if hasVote
+					h2= t("REVOKE_SIGNATURE")
+				else
+					h2= t("HEADING_CAST_YOUR_VOTE")
+					p= t("HEADING_VOTE_REQUIRE_HARD_ID")
+
 				p#initiative-vote-flash.flash.error
 
 				//-p
@@ -79,7 +85,7 @@ block prepend tab
 					method="post",
 					action="/initiatives/#{initiative.id}/signature")
 					h3: img(src="/images/id-kart-icon.png", alt="ID-card")
-					input(type="hidden", name="optionId", value=optionId)
+					input(type="hidden", name="optionId", value=optId)
 					input(type="hidden", name="certificate", value="")
 					input(type="hidden", name="signature", value="")
 					input(type="hidden", name="token", value="")
@@ -106,7 +112,7 @@ block prepend tab
 							var query = ""
 							query += "certificate=" + encodeURIComponent(certificate)
 							query += "&"
-							query += "optionId=#{optionId}"
+							query += "optionId=#{optId}"
 							return fetch("/initiatives/#{initiative.id}/signable?" + query)
 						})
 
@@ -146,7 +152,7 @@ block prepend tab
 					action="/initiatives/#{initiative.id}/signature")
 					h3: img(src="/images/mobile-id-icon.png", alt="Mobile ID")
 
-					input(type="hidden", name="optionId", value=optionId)
+					input(type="hidden", name="optionId", value=optId)
 
 					input.form-input(
 						type="tel",
@@ -204,13 +210,13 @@ block append tab
 					value=comment.subject,
 					maxlength=128,
 					required,
-					placeholder=req.t("PLACEHOLDER_ADD_ARGUMENT_SUBJECT"))
+					placeholder=t("PLACEHOLDER_ADD_ARGUMENT_SUBJECT"))
 
 				textarea.form-textarea(
 					name="text",
 					maxlength=2048,
 					required,
-					placeholder=req.t("PLACEHOLDER_ADD_ARGUMENT_TEXT"))= comment.text
+					placeholder=t("PLACEHOLDER_ADD_ARGUMENT_TEXT"))= comment.text
 
 				if initiative.status === "inProgress"
 					fieldset.buttons

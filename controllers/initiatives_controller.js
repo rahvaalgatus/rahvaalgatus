@@ -266,6 +266,7 @@ exports.router.get("/:id/signature", next(function*(req, res) {
 
 	switch (signature.statusCode) {
 		case 200:
+			// Cannot currently know which option the person signed.
 			res.flash("signed", signature.body.data.bdocUri)
 			break
 
