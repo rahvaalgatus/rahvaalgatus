@@ -12,7 +12,6 @@ var Jade = require("jade")
 var Express = require("express")
 var Config = require("root/config")
 var HttpError = require("standard-http-error")
-var FetchError = require("fetch-error")
 var redirect = require("root/lib/redirect")
 var reportError = require("root").errorReporter
 var ENV = process.env.ENV
@@ -83,12 +82,13 @@ app.use(function(err, req, res, next) {
 		res.statusCode = err.code
 		res.statusMessage = err.message
 		res.render(err.code === 404 ? "404" : "500", {error: err})
+		return
 	}
-	else if (err instanceof FetchError) {
-		res.statusCode = 500
-		res.render("500", {error: err})
-	}
-	else next(err)
+
+	if (ENV === "development") return void next(err)
+
+	res.statusCode = 500
+	res.render("500", {error: {message: req.t("MSG_ERROR_50000")}})
 })
 
 if (module.parent) return

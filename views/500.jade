@@ -2,9 +2,5 @@ extends ./layout
 
 block body
 	section#error.white-section.text-section: center
-		h1= error.name
-
-		if description
-			p= description
-		else
-			h2= error.message
+		h1= error.name || "Vabandame!"
+		p= error.message

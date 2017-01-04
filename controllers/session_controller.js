@@ -85,8 +85,7 @@ function error(req, res, next) {
   csrf.delete(req, res)
 
 	res.render("500", {
-		error: new Error(req.query.error),
-		description: req.query.error_description
+		error: {name: req.query.error, message: req.query.error_description},
 	})
 }
 
