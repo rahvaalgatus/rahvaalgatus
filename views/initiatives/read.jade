@@ -94,7 +94,11 @@ block prepend tab
 					//- The Id-card form will be submitted async therefore no button
 					//- value.
 					input(type="hidden", name="method", value="id-card")
-					button.green-button= t("BTN_VOTE_SIGN_WITH_ID_CARD")
+
+					if hasVote
+						button.white-button= t("BTN_VOTE_REVOKE_WITH_ID_CARD")
+					else
+						button.green-button= t("BTN_VOTE_SIGN_WITH_ID_CARD")
 
 				:javascript
 					var Hwcrypto = require("@rahvaalgatus/hwcrypto")
@@ -151,11 +155,16 @@ block prepend tab
 				form#mobile-id-form(
 					method="post",
 					action="/initiatives/#{initiative.id}/signature")
+					-
+						var btnClass = hasVote ? "white-button" : "green-button"
+						var btnText = hasVote
+							? t("BTN_VOTE_REVOKE_WITH_MOBILE_ID")
+							: t("BTN_VOTE_SIGN_WITH_MOBILE_ID")
+
 					h3: img(src="/images/mobile-id-icon.png", alt="Mobile ID")
 
 					input#mobile-id-form-toggle(type="checkbox", style="display: none")
-					label.green-button(for="mobile-id-form-toggle")
-						= t("BTN_VOTE_SIGN_WITH_MOBILE_ID")
+					label(for="mobile-id-form-toggle", class=btnClass)= btnText
 
 					input(type="hidden", name="optionId", value=optId)
 
@@ -171,8 +180,7 @@ block prepend tab
 						placeholder=t("PLACEHOLDER_PERSONAL_IDENTIFICATION_CODE"),
 						required)
 
-					button.green-button(name="method", value="mobile-id")
-						= t("BTN_VOTE_SIGN_WITH_MOBILE_ID")
+					button(name="method", value="mobile-id", class=btnClass)= btnText
 
 block append tab
 	- var I18n = require("root/lib/i18n")
