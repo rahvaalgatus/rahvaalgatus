@@ -153,6 +153,10 @@ block prepend tab
 					action="/initiatives/#{initiative.id}/signature")
 					h3: img(src="/images/mobile-id-icon.png", alt="Mobile ID")
 
+					input#mobile-id-form-toggle(type="checkbox", style="display: none")
+					label.green-button(for="mobile-id-form-toggle")
+						= t("BTN_VOTE_SIGN_WITH_MOBILE_ID")
+
 					input(type="hidden", name="optionId", value=optId)
 
 					input.form-input(

@@ -304,6 +304,7 @@ button.inherited {
 	text-align: center;
 	text-transform: uppercase;
 	vertical-align: middle;
+	cursor: pointer;
 
 	&:not(button) { line-height: $button-height; }
 
@@ -826,15 +827,30 @@ button.inherited {
 		margin-top: 4rem;
 		border-top: 1px solid #ccc;
 		padding-top: 2rem;
-		overflow: hidden;
+
+		// Don't use overflow to not cut off the blur around buttons.
+		&:after { display: block; clear: both; content: ""; }
+
+		h3 {
+			margin-bottom: 0.5rem;
+		}
 
 		form {
 			float: left;
 			margin-top: 1rem;
 			margin-right: 1rem;
 
-			input, button { margin-top: 0.5rem; }
+			input { margin-bottom: 0.5rem; }
 		}
+	}
+
+	#mobile-id-form {
+		#mobile-id-form-toggle:not(:checked) {
+			& ~ input,
+			& ~ button { display: none; }
+		}
+
+		#mobile-id-form-toggle:checked + label { display: none; }
 	}
 
 	#initiative-subscribe {
