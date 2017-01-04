@@ -250,7 +250,7 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 				})
 			}
 			else res.status(422).render("initiatives/signature/create", {
-				error: translateCitizenError(req.t, signed.body)
+				error: translateCitizenError(req.t, signing.body)
 			})
 			break
 
