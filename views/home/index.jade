@@ -2,11 +2,13 @@ extends ../layout
 include ./_mixins
 
 block body
+	- var Config = require("root/config")
+
 	section#welcome.white-section.text-section: center
 		h1= t("HOME_WELCOME_TITLE")
 		p= t("HOME_WELCOME")
 
-		a#video-link
+		a#video-link(href=Config.videoUrls[req.lang], target="_blank")
 			i.icon
 			span= t("HOME_VIDEO_TEXT")
 
