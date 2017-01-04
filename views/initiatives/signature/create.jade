@@ -5,7 +5,7 @@ block append options
 	- var subpage = "vote"
 
 block prepend tab
-	section#initiative-signature.white-section: center
+	section#initiative-signature.text-section.white-section: center
 		+header(initiative)
 
 		if error
@@ -14,7 +14,7 @@ block prepend tab
 			case method
 				when "mobile-id"
 					p
-						= t("HEADING_MOBILEID_CONTROL_CODE", {code: code})
+						strong= t("HEADING_MOBILEID_CONTROL_CODE", {code: code})
 						br
 						= t("MAKE_SURE_CONTROL_CODE")
 				
