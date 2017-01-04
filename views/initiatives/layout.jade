@@ -28,7 +28,7 @@ block body
 						button.button.green-button(name="status", value="followUp")
 							= t("SEND_TO_PARLIAMENT")
 
-				if Initiative.isVotable(initiative) && !Initiative.hasVote("Yes", initiative)
+				if Initiative.isVotable(new Date, initiative) && !Initiative.hasVote("Yes", initiative)
 					a.button.green-button(href="#initiative-vote")
 						= t("SIGN_THIS_DOCUMENT")
 	
