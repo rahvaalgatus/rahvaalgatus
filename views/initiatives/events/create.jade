@@ -14,17 +14,13 @@ block tab
 		
 		form.form(method="post", action="/initiatives/#{initiative.id}/events")
 			label.form-label= t("POST_INITIATIVE_TITLE")
-			br
 			input.form-input(
 				type="text",
 				name="subject",
 				value=attrs.subject,
 				required)
-			br
 
 			label.form-label= t("POST_INITIATIVE_TEXT")
-			br
 			textarea.form-textarea(name="text", required)= attrs.text
-			br
 
 			button.form-submit.green-button= t("BTN_POST_UPDATE")

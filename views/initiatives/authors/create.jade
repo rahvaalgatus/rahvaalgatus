@@ -15,12 +15,10 @@ block tab
 		
 		form.form(method="post", action="/initiatives/#{initiative.id}/authors")
 			label.form-label= t("LBL_EMAIL")
-			br
 			input.form-input(
 				type="text",
 				name="email",
 				value=attrs.email,
 				required)
-			br
 
 			button.form-submit.green-button= t("ADD_CO_AUTHOR")

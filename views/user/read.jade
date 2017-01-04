@@ -16,21 +16,17 @@ block body
 				p.flash.error= error
 
 			label.form-label= t("LBL_FULL_NAME")
-			br
 			input.form-input(
 				type="text",
 				name="name",
 				value=attrs.name,
 				required)
-			br
 
 			label.form-label= t("LBL_EMAIL")
-			br
 			input.form-input(
 				type="email",
 				name="email",
 				value=attrs.email)
-			br
 
 			button.form-submit.green-button= t("BTN_SAVE")
 

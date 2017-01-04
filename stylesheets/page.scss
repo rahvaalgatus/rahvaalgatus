@@ -364,6 +364,11 @@ button.inherited {
 	}
 }
 
+.form-input,
+.form-textarea {
+	display: block;
+}
+
 .form-input {
 	border: 1px solid #cecece;
 	height: $button-height;
@@ -961,8 +966,8 @@ button.inherited {
 	}
 
 	#initiative-form {
-		input {
-			max-width: 48rem;
+		input[type=date] {
+			max-width: 24rem;
 		}
 	}
 }
@@ -983,7 +988,11 @@ button.inherited {
 			max-width: 48rem;
 		}
 
-		.form-input { max-width: 24rem; }
+		.form-input {
+			margin-left: auto;
+			margin-right: auto;
+			max-width: 24rem;
+		}
 	}
 
 	.initiatives-section {

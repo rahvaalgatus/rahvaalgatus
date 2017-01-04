@@ -75,6 +75,7 @@ block prepend tab
 					h2= t("HEADING_CAST_YOUR_VOTE")
 					p= t("HEADING_VOTE_REQUIRE_HARD_ID")
 
+				//- This flash is for the the Id-card JavaScript code below.
 				p#initiative-vote-flash.flash.error
 
 				//-p
@@ -159,14 +160,12 @@ block prepend tab
 						name="phoneNumber",
 						placeholder=t("PLACEHOLDER_PHONE_NUMBER"),
 						required)
-					br
 
 					input.form-input(
 						type="tel",
 						name="pid",
 						placeholder=t("PLACEHOLDER_PERSONAL_IDENTIFICATION_CODE"),
 						required)
-					br
 
 					button.green-button(name="method", value="mobile-id")
 						= t("BTN_VOTE_SIGN_WITH_MOBILE_ID")

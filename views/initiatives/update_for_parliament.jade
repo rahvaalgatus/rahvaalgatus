@@ -18,31 +18,25 @@ block tab
 			input(type="hidden", name="_method", value="put")
 
 			label.form-label= t("LBL_FULL_NAME")
-			br
 			input.form-input(
 				type="text",
 				name="contact[name]",
 				value=attrs.contact.name,
 				required)
-			br
 
 			label.form-label= t("LBL_EMAIL")
-			br
 			input.form-input(
 				type="email",
 				name="contact[email]",
 				value=attrs.contact.email,
 				required)
-			br
 
 			label.form-label= t("PLACEHOLDER_PHONE_NUMBER")
-			br
 			input.form-input(
 				type="tel",
 				name="contact[phone]",
 				value=attrs.contact.phone,
 				required)
-			br
 
 			button.form-submit.green-button(name="status", value="followUp")
 				= t("SEND_TO_PARLIAMENT")
