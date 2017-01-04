@@ -10,6 +10,7 @@ block prepend tab
 	- var Initiative = require("root/lib/initiative")
 	- var stringify = require("root/lib/json").stringify
 	- var hasVote = flash("signed") || Initiative.hasVote("Yes", initiative)
+	- var now = new Date
 
 	section#initiative.white-section: center
 		include /_flash.jade
@@ -65,7 +66,7 @@ block prepend tab
 			else
 				!= text
 
-		if Initiative.isVotable(new Date, initiative)
+		if Initiative.isVotable(now, initiative)
 			- var optId = Initiative.findOptionId(hasVote ? "No" : "Yes", initiative)
 
 			#initiative-vote

@@ -7,57 +7,58 @@ block options
 block body
 	- var Initiative = require("root/lib/initiative")
 	- var selected = require("root/lib/css").selected
+	- var now = new Date
 
-		nav#initiative-tabs: center
-			menu
-				if Initiative.isPublishable(initiative)
-					form(method="post", action="/initiatives/#{initiative.id}")
-						input(type="hidden", name="_method", value="put")
-						button.button.green-button(name="visibility", value="public")
-							= t("PUBLISH_TOPIC")
+	nav#initiative-tabs: center
+		menu
+			if Initiative.isPublishable(initiative)
+				form(method="post", action="/initiatives/#{initiative.id}")
+					input(type="hidden", name="_method", value="put")
+					button.button.green-button(name="visibility", value="public")
+						= t("PUBLISH_TOPIC")
 
-				if Initiative.isProposable(new Date, initiative)
-					form(method="post", action="/initiatives/#{initiative.id}")
-						input(type="hidden", name="_method", value="put")
-						button.button.green-button(name="status", value="voting")
-							= t("BTN_SEND_TO_VOTE")
+			if Initiative.isProposable(new Date, initiative)
+				form(method="post", action="/initiatives/#{initiative.id}")
+					input(type="hidden", name="_method", value="put")
+					button.button.green-button(name="status", value="voting")
+						= t("BTN_SEND_TO_VOTE")
 
-				if Initiative.isParliamentable(initiative)
-					form(method="post", action="/initiatives/#{initiative.id}")
-						input(type="hidden", name="_method", value="put")
-						button.button.green-button(name="status", value="followUp")
-							= t("SEND_TO_PARLIAMENT")
+			if Initiative.isParliamentable(initiative)
+				form(method="post", action="/initiatives/#{initiative.id}")
+					input(type="hidden", name="_method", value="put")
+					button.button.green-button(name="status", value="followUp")
+						= t("SEND_TO_PARLIAMENT")
 
-				if Initiative.isVotable(new Date, initiative) && !Initiative.hasVote("Yes", initiative)
-					a.button.green-button(href="#initiative-vote")
-						= t("SIGN_THIS_DOCUMENT")
-	
-				if Initiative.isInvitable(initiative)
-					a.button.blue-button(href="/initiatives/#{initiative.id}/authors/new")
-						= t("INVITE_PEOPLE")
-	
-				a.button.white-button(
-					href="http://twitter.com/intent/tweet?status=#{initiative.title} https://rahvaalgatus.ee/topics/#{initiative.id}",
-					target="_blank")
-					i.icon-twitter
-					= t("SHARE_ON_TWITTER")
-	
-			if initiative.status == "inProgress"
-				a.tab(
-					href="/initiatives/#{initiative.id}/discussion",
-					class=selected(subpage, "discussion"))
-					= t("HEADING_TAB_ORIGINAL")
-			else
-				a.tab(
-					href="/initiatives/#{initiative.id}/vote",
-					class=selected(subpage, "vote"))
-					= t("HEADING_TAB_VOTE")
+			if Initiative.isVotable(new Date, initiative) && !Initiative.hasVote("Yes", initiative)
+				a.button.green-button(href="#initiative-vote")
+					= t("SIGN_THIS_DOCUMENT")
 
-			if initiative.status == "followUp"
-				a.tab(
-					href="/initiatives/#{initiative.id}/events",
-					class=selected(subpage, "events"))
-					= t("HEADING_TAB_EVENTS")
+			if Initiative.isInvitable(initiative)
+				a.button.blue-button(href="/initiatives/#{initiative.id}/authors/new")
+					= t("INVITE_PEOPLE")
+
+			a.button.white-button(
+				href="http://twitter.com/intent/tweet?status=#{initiative.title} https://rahvaalgatus.ee/topics/#{initiative.id}",
+				target="_blank")
+				i.icon-twitter
+				= t("SHARE_ON_TWITTER")
+
+		if initiative.status == "inProgress"
+			a.tab(
+				href="/initiatives/#{initiative.id}/discussion",
+				class=selected(subpage, "discussion"))
+				= t("HEADING_TAB_ORIGINAL")
+		else
+			a.tab(
+				href="/initiatives/#{initiative.id}/vote",
+				class=selected(subpage, "vote"))
+				= t("HEADING_TAB_VOTE")
+
+		if initiative.status == "followUp"
+			a.tab(
+				href="/initiatives/#{initiative.id}/events",
+				class=selected(subpage, "events"))
+				= t("HEADING_TAB_EVENTS")
 
 	block tab
 		section#initiative-subscribe.grey-section: center
