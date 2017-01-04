@@ -1,3 +1,4 @@
+var _ = require("lodash")
 var Router = require("express").Router
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
@@ -14,6 +15,7 @@ exports.router.get("/", next(function*(req, res) {
 	var initiative = req.initiative
 	var events = yield api(`/api/topics/${initiative.id}/events`)
 	events = events.body.data.rows
+	events = _.sortBy(events, (event) => new Date(event.createdAt))
 	res.render("initiatives/events", {events: events})
 }))
 
