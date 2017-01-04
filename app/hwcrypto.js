@@ -23,13 +23,13 @@ function errorify(err) {
 
 function identifyError(err) {
 	switch (err.message) {
+		case Hwcrypto.NOT_ALLOWED:
 		case Hwcrypto.NO_CERTIFICATES:
 		case Hwcrypto.USER_CANCEL:
 		case Hwcrypto.NO_IMPLEMENTATION:
 			return ERR_PREFIX + err.message.toUpperCase()
 
 		case Hwcrypto.INVALID_ARGUMENT:
-		case Hwcrypto.NOT_ALLOWED:
 		case Hwcrypto.TECHNICAL_ERROR:
 		default:
 			return ERR_PREFIX + "TECHNICAL_ERROR"

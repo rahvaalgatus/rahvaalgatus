@@ -183,6 +183,7 @@
 	"MSG_ERROR_40031_LOGIN": "Kasutajakonto on juba seotud teise isikukoodiga. Sama kasutajakonto alt ei ole lubatud erinevate isikukoodidega hääletada.",
 	"MSG_ERROR_40031_VOTE": "Kasutajakonto on juba seotud teise isikukoodiga. Sama kasutajakonto alt ei ole lubatud erinevate isikukoodidega hääletada.",
 	"MSG_ERROR_50000": "Vabandame, aga midagi meie süsteemis ei toiminud. Proovi palun uuesti. Kui viga kordub, võta ühendust kasutajatoega.",
+	"MSG_ERROR_HWCRYPTO_NOT_ALLOWED": "Sinu arvutis puudub digitaalse allkirjastamise tarkvara. Tarkvara saate paigaldada installer.id.ee veebilehelt.",
 	"MSG_ERROR_HWCRYPTO_NO_CERTIFICATES": "Lugeja ei leia ID-kaarti. Palun kontrolli, kas ID-kaart on korralikult lugejas. Uutel ID-kaartidel on kiip kaardi tagaküljel.",
 	"MSG_ERROR_HWCRYPTO_NO_CERTIFICATES_LOGIN": "Lugeja ei leia ID-kaarti. Palun kontrolli, kas ID-kaart on korralikult lugejas. Uutel ID-kaartidel on kiip kaardi tagaküljel.",
 	"MSG_ERROR_HWCRYPTO_NO_IMPLEMENTATION": "Sinu arvutis puudub digitaalse allkirjastamise tarkvara. Tarkvara saate paigaldada installer.id.ee veebilehelt.",

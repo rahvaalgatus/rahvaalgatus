@@ -183,6 +183,7 @@
 	"MSG_ERROR_40031_LOGIN": "User account is already connected to another personal identification code. Signing initiatives with the same account but with different personal identification codes is not allowed.",
 	"MSG_ERROR_40031_VOTE": "User account is already connected to another personal identification code. Signing initiatives with the same account but with different personal identification codes is not allowed.",
 	"MSG_ERROR_50000": "We are sorry, but something went wrong in our system. Please try one more time. If the error persists, contact our customer support.",
+	"MSG_ERROR_HWCRYPTO_NOT_ALLOWED": "Digital signing support is not installed. Please visit the website installer.id.ee to install the support.",
 	"MSG_ERROR_HWCRYPTO_NO_CERTIFICATES": "No card in reader. Check if the ID card is inserted correctly to the reader. New ID cards have chip on the back side of the card.",
 	"MSG_ERROR_HWCRYPTO_NO_CERTIFICATES_LOGIN": "No card in the reader. Check if the ID card is inserted correctly to the reader. New ID cards have chip on the back side of the card.",
 	"MSG_ERROR_HWCRYPTO_NO_IMPLEMENTATION": "Digital signing support is not installed. Please visit the website installer.id.ee to install the support.",
