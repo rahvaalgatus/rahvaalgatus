@@ -6,3 +6,21 @@ mixin header(initiative)
 			= initiative.creator.name
 
 		h1= initiative.title
+
+mixin date-picker(selector)
+	- var _ = require("lodash")
+	- var id = _.uniqueId("date-picker-")
+
+	.form-date-picker(id=id)
+		:javascript
+			var Pikaday = require("pikaday")
+			var input = document.querySelector("#{selector}")
+
+			new Pikaday({
+				firstDay: 1,
+				field: input,
+				minDate: input.min ? new Date(input.min) : null,
+				maxDate: input.max ? new Date(input.max) : null,
+				container: document.getElementById("#{id}"),
+				bound: false,
+			})

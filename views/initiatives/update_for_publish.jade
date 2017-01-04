@@ -1,7 +1,13 @@
 extends ./layout
 include ./_mixins
 
+block append head
+	script(src="/assets/inputs.js")
+
 block tab
+	- var formatIso = require("root/lib/i18n").formatDate.bind(null, "iso")
+	- var min = Initiative.getMinDeadline(new Date)
+
 	section.white-section.text-section: center
 		+header(initiative)
 		h2= t("DEADLINE_TITLE")
@@ -10,15 +16,20 @@ block tab
 		if error
 			p.flash.error= error
 
-		form.form(method="post", action="/initiatives/#{initiative.id}")
+		form#initiative-form.form(
+			method="post",
+			action="/initiatives/#{initiative.id}")
 			input(type="hidden", name="_method", value="put")
 
 			input.form-input(
 				type="date",
 				name="endsAt",
-				value=attrs.endsAt && attrs.endsAt.toISOString().slice(0, 10),
+				min=formatIso(min),
+				value=formatIso(attrs.endsAt || min),
 				required)
 			br
+
+			+date-picker("#initiative-form input[name=endsAt]")
 
 			button.form-submit.green-button(name="visibility", value="public")
 				= t("PUBLISH_TOPIC")

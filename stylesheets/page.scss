@@ -346,12 +346,13 @@ button.inherited {
 	font-weight: 500;
 }
 
-.form-input ~ .form-submit {
+.form-input ~ .form-submit,
+.form-input ~ .form-checkbox {
 	margin-top: 1rem;
 }
 
-.form-input ~ .form-checkbox {
-	margin-top: 1rem;
+.form-input ~ .form-date-picker {
+	margin-top: 2rem;
 }
 
 .form-label {
@@ -394,6 +395,73 @@ button.inherited {
 		height: 2rem;
 		display: inline-block;
 		vertical-align: middle;
+	}
+}
+
+.form-date-picker {
+	font-family: $museo-sans;
+	max-width: 32rem;
+
+	.pika-title {
+		text-align: center;
+		font-weight: bold;
+		overflow: hidden;
+		margin-bottom: 1rem;
+		line-height: 2.5rem;
+	}
+
+	.pika-label {
+		display: inline-block;
+		select { display: none; }
+
+		& + .pika-label { margin-left: 0.5rem; }
+	}
+
+	.pika-prev,
+	.pika-next {
+		@extend button.inherited;
+		width: 2.5rem;
+		height: 2.5rem;
+		text-indent: -9999px;
+	}
+
+	.pika-prev {
+		float: left;
+		background: url(/images/calendar-prev.png) center no-repeat;
+	}
+
+	.pika-next {
+		float: right;
+		background: url(/images/calendar-next.png) center no-repeat;
+	}
+
+	table {
+		width: 100%;
+		text-align: center;
+		table-layout: fixed;
+	}
+
+	thead {
+		text-transform: uppercase;
+		color: #195d91;
+		font-weight: bold;
+		line-height: 3rem;
+	}
+
+	td {
+		font-weight: bold;
+		line-height: 4.6rem; // Height of the selected background image.
+
+		button {
+			@extend button.inherited;
+			width: 100%;
+		}
+
+		&.is-selected {
+			background: url(/images/date-active.png) center no-repeat;
+		}
+
+		&.is-disabled { color: #bbb; }
 	}
 }
 
@@ -889,6 +957,12 @@ button.inherited {
 			& + .event {
 				margin-top: 2rem;
 			}
+		}
+	}
+
+	#initiative-form {
+		input {
+			max-width: 48rem;
 		}
 	}
 }

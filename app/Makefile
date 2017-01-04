@@ -1,6 +1,6 @@
 NODE = node
 ENV = development
-FILES = $(patsubst %, public/assets/%.js, app hwcrypto)
+FILES = $(patsubst %, public/assets/%.js, app hwcrypto inputs)
 BROWSERIFY = ./node_modules/.bin/browserify
 WATCHIFY = ./node_modules/.bin/watchify -v
 UGLIFY = ./node_modules/.bin/uglifyjs
@@ -43,8 +43,7 @@ public/assets:
 
 public/assets/app.js:
 	@echo "Compiling $@ for $(ENV)…"
-	@$(BROWSERIFY) \
-		$(BROWSERIFY_OPTS) \
+	@$(BROWSERIFY) $(BROWSERIFY_OPTS) \
 		--require ./config/$(ENV).js:root/config \
 		--require ./lib/angular/angular.js:angular \
 		--require ./lib/lodash.js:lodash \
@@ -53,11 +52,16 @@ public/assets/app.js:
 		--entry ./ \
 		--outfile "$@"
 
+public/assets/inputs.js:
+	@echo "Compiling $@ for $(ENV)…"
+	@$(BROWSERIFY) $(BROWSERIFY_OPTS) \
+		--require pikaday \
+		--outfile "$@"
+
 public/assets/hwcrypto.js:
 	@echo "Compiling $@ for $(ENV)…"
-	@$(BROWSERIFY) \
-		$(BROWSERIFY_OPTS) \
-		--require ./hwcrypto:@rahvaalgatus/hwcrypto \
+	@$(BROWSERIFY) $(BROWSERIFY_OPTS) \
+		--require ./$(@F):@rahvaalgatus/$(@F:%.js=%) \
 		--outfile "$@"
 
 public/assets/%.max.js: public/assets/%.js
