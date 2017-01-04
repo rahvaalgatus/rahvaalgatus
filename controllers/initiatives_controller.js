@@ -62,10 +62,18 @@ exports.router.get("/new", function(req, res) {
 })
 
 exports.router.use("/:id", next(function*(req, res, next) {
-	var path = `/api/topics/${req.params.id}?include[]=vote`
-	if (req.user) path = "/api/users/self" + path.slice(4)
-	try { req.initiative = yield req.api(path).then(getBody) }
-	catch (ex) { if (isFetchError(404, ex)) throw new HttpError(404); throw ex }
+	try {
+		var path = `/api/topics/${req.params.id}?include[]=vote`
+		if (req.user) path = "/api/users/self" + path.slice(4)
+		req.initiative = yield req.api(path).then(getBody)
+	}
+	catch (ex) {
+		// CitizenOS throws 500 for invalid UUIDs. Workaround that.
+		if (isFetchError(404, ex)) throw new HttpError(404)
+		if (isFetchError(500, ex)) throw new HttpError(404)
+		throw ex
+	}
+
 	res.locals.initiative = req.initiative
 	next()
 }))
