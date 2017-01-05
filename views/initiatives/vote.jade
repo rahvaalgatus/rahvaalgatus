@@ -18,6 +18,17 @@ block prepend tab
 	section#initiative.white-section: center
 		include /_flash.jade
 
+		if Initiative.hasVoteEnded(now, initiative)
+			#initiative-ended
+				- var sigs = Initiative.countSignatures("Yes", initiative)
+
+				if Initiative.isSuccessful(initiative)
+					h2= t("N_SIGNATURES_COLLECTED", {votes: sigs})
+					p= t("VOTING_SUCCEEDED")
+				else
+					h2= t("N_SIGNATURES_FAILED", {votes: sigs})
+					p= t("VOTING_FAILED")
+
 		if hasVote
 			#initiative-signed
 				h2= t("DOCUMENT_SIGNED")
