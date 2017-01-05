@@ -707,7 +707,8 @@ button.inherited {
 			text-align: center;
 			line-height: 4rem;
 
-			width: 12rem;
+			padding: 0 2rem;
+			min-width: 11rem;
 			font-size: 14px;
 			font-family: $museo-sans;
 			color: #4A555D;
