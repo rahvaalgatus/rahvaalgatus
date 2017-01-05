@@ -9,3 +9,7 @@ $mobile-width: 569px;
 @mixin tablet {
   @media only screen and (max-width: 680px) { @content }
 }
+
+@mixin mobile {
+  @media only screen and (max-width: 350px) { @content }
+}

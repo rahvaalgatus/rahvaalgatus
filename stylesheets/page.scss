@@ -172,6 +172,10 @@ center {
 			text-align: left;
 			margin-bottom: 2rem;
 		}
+
+		@include mobile {
+			max-width: none;
+		}
 	}
 
 	.initiatives {
@@ -271,6 +275,10 @@ center {
 			background-image: url(/images/clock.png);
 			background-position: 1rem center;
 			padding-left: 3.5rem;
+		}
+
+		@include mobile {
+			width: 100%;
 		}
 	}
 }
