@@ -7,6 +7,7 @@ block append head
 block tab
 	- var formatIso = require("root/lib/i18n").formatDate.bind(null, "iso")
 	- var min = Initiative.getMinDeadline(new Date)
+	- var max = Initiative.getMaxDeadline(new Date)
 
 	section.white-section.text-section: center
 		+header(initiative)
@@ -25,6 +26,7 @@ block tab
 				type="date",
 				name="endsAt",
 				min=formatIso(min),
+				max=formatIso(max),
 				value=formatIso(attrs.endsAt || min),
 				required)
 
