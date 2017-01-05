@@ -1,4 +1,6 @@
 {
+	"maxDeadlineDays": 366,
+
 	"helpUrls": {
 		"et": "http://help.rahvaalgatus.ee/abi",
 		"en": "http://help.rahvaalgatus.ee/help",
