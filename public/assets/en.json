@@ -24,7 +24,7 @@
 	"BTN_LOG_IN_GOOGLE": "google login",
 	"BTN_LOG_IN_ID": "ID card login",
 	"BTN_LOG_IN_MOBILE_ID": "Mobile ID login ",
-	"BTN_LOG_IN_REGISTER": "log in / register to participate",
+	"BTN_LOG_IN_REGISTER": "Log in or register",
 	"BTN_LOG_IN_WITH_ID_CARD": "log in with ID card",
 	"BTN_LOG_OFF": "Log off",
 	"BTN_NEW_TOPIC": "CREATE AN INITIATIVE ",
