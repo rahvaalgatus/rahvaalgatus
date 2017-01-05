@@ -35,10 +35,7 @@
 		"co-mocha": ">= 1.1.0 < 2",
 		"must": ">= 0.13 < 0.14",
 		"mitm": ">= 1 < 2",
-		"selenium-webdriver": ">= 2.53.3 < 3",
-		"selenium-dom": ">= 0.1.337 < 0.2",
 		"livereload": ">= 0.6 < 0.7",
-		"tough-cookie": ">= 2 < 3",
 
 		"node-sass": ">= 3.8 < 4"
 	},

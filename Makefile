@@ -9,7 +9,6 @@ SASS = ./node_modules/.bin/node-sass --recursive --indent-type tab --indent-widt
 DEPLOY_HOST =
 TRANSLATIONS_URL = https://spreadsheets.google.com/feeds/list/1JKPUNp8Y_8Aigq7eGJXtWT6nZFhd31k2Ht3AjC-i-Q8/1/public/full?alt=json
 JQ_OPTS = --tab --sort-keys
-SELENIUM_BROWSER = chrome
 
 STAGING_HOST = staging.rahvaalgatus.ee
 PRODUCTION_HOST = production.rahvaalgatus.ee
@@ -48,7 +47,6 @@ export PORT
 export ENV
 export TEST
 export TEST_URL
-export SELENIUM_BROWSER
 
 ifneq ($(filter test spec autotest autospec, $(MAKECMDGOALS)),)
 	ENV = test
@@ -57,10 +55,10 @@ endif
 love:
 	@echo "Feel like makin' love."
 
-compile: javascripts stylesheets views
+compile: javascripts stylesheets
 
 autocompile:
-	$(MAKE) -j3 autojavascripts autostylesheets autoviews
+	$(MAKE) -j3 autojavascripts autostylesheets
 
 javascripts:
 	$(MAKE) -C app compile
@@ -73,12 +71,6 @@ stylesheets:
 
 autostylesheets: stylesheets
 	$(MAKE) SASS="$(SASS) --watch" "$<"
-
-views:
-	$(MAKE) -C app views
-
-autoviews:
-	$(MAKE) -C app autoviews
 
 test:
 	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R dot $(TEST_OPTS)
@@ -137,7 +129,6 @@ public/assets/ru.json: tmp/translations.json
 .PHONY: compile autocompile
 .PHONY: javascripts autojavascripts
 .PHONY: stylesheets autostylesheets
-.PHONY: views autoviews
 .PHONY: test spec autotest autospec
 .PHONY: server
 .PHONY: shrinkwrap

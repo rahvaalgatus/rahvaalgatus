@@ -4,14 +4,12 @@
 	"private": true,
 
 	"dependencies": {
-		"promise": "",
 		"pikaday": ""
 	},
 
 	"devDependencies": {
 		"browserify": "",
 		"watchify": "",
-		"uglify-js": "",
-		"jade": ""
+		"uglify-js": ""
 	}
 }
