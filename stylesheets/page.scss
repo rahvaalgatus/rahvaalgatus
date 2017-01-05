@@ -77,6 +77,10 @@ center {
 		line-height: 1.2;
 	}
 
+	h1 ~ h1 {
+		margin-top: 4rem;
+	}
+
 	h1 + p {
 		margin-top: 2rem;
 	}
