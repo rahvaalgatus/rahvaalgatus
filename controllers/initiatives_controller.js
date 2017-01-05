@@ -176,11 +176,10 @@ exports.read = next(function*(subpage, req, res) {
 	var comments = yield req.api(path)
 	comments = comments.body.data.rows.map(normalizeComment).reverse()
 
-	res.render("initiatives/read", {
-		subpage: subpage,
+	res.render("initiatives/" + subpage, {
+		text: normalizeText(initiative.description),
 		comments: comments,
 		comment: res.locals.comment || EMPTY_COMMENT,
-		text: normalizeText(initiative.description),
 		translations: UI_TRANSLATIONS[req.lang]
 	})
 })

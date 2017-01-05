@@ -7,6 +7,65 @@ mixin header(initiative)
 
 		h1= initiative.title
 
+mixin comments(page, comments)
+	- var I18n = require("root/lib/i18n")
+	- var linkify = require("root/lib/linkify")
+
+	section#initiative-comments.grey-section(class=page): center
+		h2= t(page == "discussion" ? "ARGUMENTS" : "COMMENT_HEADING")
+
+		ol.comments
+			for comment in comments
+				li.comment(class=comment.type)
+					h3.subject= comment.subject
+					span.author= comment.creator.name
+					| &#32;
+					time(datetime=comment.createdAt)
+						= I18n.formatTime("numeric", comment.createdAt)
+
+					p.text!= linkify(comment.text)
+
+					ol.replies
+						for reply in comment.replies
+							li.reply
+								h3.subject= reply.subject
+								span.author= reply.creator.name
+								| &#32;
+								time(datetime=reply.createdAt)
+									= I18n.formatTime("numeric", reply.createdAt)
+
+								p= reply.text
+
+		//- Comment form anchor used for redirecting to error.
+		form#initiative-comment-form(
+			method="post",
+			action="/initiatives/#{initiative.id}/comments")
+			if req.user
+				input.form-input(
+					name="subject",
+					value=comment.subject,
+					maxlength=128,
+					required,
+					placeholder=t("PLACEHOLDER_ADD_ARGUMENT_SUBJECT"))
+
+				textarea.form-textarea(
+					name="text",
+					maxlength=2048,
+					required,
+					placeholder=t("PLACEHOLDER_ADD_ARGUMENT_TEXT"))= comment.text
+
+				if initiative.status === "inProgress"
+					fieldset.buttons
+						button.blue-button(name="type", value="con")
+							= t("BTN_ADD_ARGUMENT_CON")
+						button.blue-button(name="type", value="pro")
+							= t("BTN_ADD_ARGUMENT_PRO")
+				else
+					button.blue-button(name="type", value="pro")= t("POST_COMMENT")
+
+			else
+				p= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE")
+
 mixin date-picker(selector)
 	- var _ = require("lodash")
 	- var id = _.uniqueId("date-picker-")

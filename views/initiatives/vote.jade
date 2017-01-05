@@ -1,6 +1,9 @@
 extends ./layout
 include ./_mixins
 
+block append options
+	- var subpage = "vote"
+
 block append head
 	script(src="/assets/hwcrypto.js")
 
@@ -32,39 +35,13 @@ block prepend tab
 					| &#32;
 					= initiative.creator.name
 
-				if subpage == "discussion" && initiative.endsAt
-					br
-					time.deadline(datetime=initiative.endsAt)
-						- var endsAt = I18n.formatDate("numeric", initiative.endsAt)
-						= t("DISCUSSION_DEADLINE", {endsAt: endsAt})
-				else if subpage == "vote" && initiative.vote.endsAt
+				if initiative.vote.endsAt
 					br
 					time.deadline(datetime=initiative.vote.endsAt)
 						- var endsAt = I18n.formatDate("numeric", initiative.vote.endsAt)
 						= t("VOTING_DEADLINE", {endsAt: endsAt})
 
-			if Initiative.isEditable(initiative)
-				- var url = initiative.padUrl + "&theme=" + Config.etherpadTheme
-				- if (Config.etherpadInsecure) url = url.replace(/^https/, "http")
-
-				iframe#initiative-etherpad(
-					src=url,
-					frameborder="0",
-					scrolling="no")
-
-				:javascript
-					var el = document.getElementById("initiative-etherpad")
-
-					window.addEventListener("message", function(ev) {
-						switch (ev.data.name) {
-							case "ep_resize":
-								var height = ev.data.data.height
-								if (el.offsetHeight != height) el.style.height = height + "px"
-								break
-						}
-					})
-			else
-				!= text
+			!= text
 
 		if Initiative.isVotable(now, initiative)
 			- var optId = Initiative.findOptionId(hasVote ? "No" : "Yes", initiative)
@@ -184,60 +161,4 @@ block prepend tab
 					button(name="method", value="mobile-id", class=btnClass)= btnText
 
 block append tab
-	- var I18n = require("root/lib/i18n")
-	- var linkify = require("root/lib/linkify")
-
-	section#initiative-comments.grey-section(class=subpage): center
-		h2= t(subpage == "discussion" ? "ARGUMENTS" : "COMMENT_HEADING")
-
-		ol.comments
-			for comment in comments
-				li.comment(class=comment.type)
-					h3.subject= comment.subject
-					span.author= comment.creator.name
-					| &#32;
-					time(datetime=comment.createdAt)
-						= I18n.formatTime("numeric", comment.createdAt)
-
-					p.text!= linkify(comment.text)
-
-					ol.replies
-						for reply in comment.replies
-							li.reply
-								h3.subject= reply.subject
-								span.author= reply.creator.name
-								| &#32;
-								time(datetime=reply.createdAt)
-									= I18n.formatTime("numeric", reply.createdAt)
-
-								p= reply.text
-
-		//- Comment form anchor used for redirecting to error.
-		form#initiative-comment-form(
-			method="post",
-			action="/initiatives/#{initiative.id}/comments")
-			if req.user
-				input.form-input(
-					name="subject",
-					value=comment.subject,
-					maxlength=128,
-					required,
-					placeholder=t("PLACEHOLDER_ADD_ARGUMENT_SUBJECT"))
-
-				textarea.form-textarea(
-					name="text",
-					maxlength=2048,
-					required,
-					placeholder=t("PLACEHOLDER_ADD_ARGUMENT_TEXT"))= comment.text
-
-				if initiative.status === "inProgress"
-					fieldset.buttons
-						button.blue-button(name="type", value="con")
-							= t("BTN_ADD_ARGUMENT_CON")
-						button.blue-button(name="type", value="pro")
-							= t("BTN_ADD_ARGUMENT_PRO")
-				else
-					button.blue-button(name="type", value="pro")= t("POST_COMMENT")
-
-			else
-				p= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE")
+	+comments("vote", comments)
