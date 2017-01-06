@@ -900,11 +900,6 @@ button.inherited {
 		}
 
 		.comment {
-			margin-left: -$page-padding;
-			margin-right: -$page-padding;
-			padding-left: $page-padding;
-			padding-right: $page-padding;
-
 			h3 {
 				font-family: $museo-sans;
 				font-size: 1.8rem;
@@ -958,10 +953,6 @@ button.inherited {
 				text-align: center;
 			}
 		}
-
-		// Side of pro-con indicator should match the order of submit <button>s.
-		&.discussion .comment.pro { border-right: 4px solid #89cb00; }
-		&.discussion .comment.con { border-left: 4px solid #f00052; }
 	}
 
 	#initiative-events {

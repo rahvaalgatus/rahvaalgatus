@@ -65,16 +65,16 @@ mixin header(initiative)
 
 		h1= initiative.title
 
-mixin comments(page, comments)
+mixin comments(comments)
 	- var I18n = require("root/lib/i18n")
 	- var linkify = require("root/lib/linkify")
 
-	section#initiative-comments.grey-section(class=page): center
-		h2= t(page == "discussion" ? "ARGUMENTS" : "COMMENT_HEADING")
+	section#initiative-comments.grey-section: center
+		h2= t("COMMENT_HEADING")
 
 		ol.comments
 			for comment in comments
-				li.comment(class=comment.type)
+				li.comment
 					h3.subject= comment.subject
 					span.author= comment.creator.name
 					| &#32;
@@ -112,14 +112,7 @@ mixin comments(page, comments)
 					required,
 					placeholder=t("PLACEHOLDER_ADD_ARGUMENT_TEXT"))= comment.text
 
-				if initiative.status === "inProgress"
-					fieldset.buttons
-						button.blue-button(name="type", value="con")
-							= t("BTN_ADD_ARGUMENT_CON")
-						button.blue-button(name="type", value="pro")
-							= t("BTN_ADD_ARGUMENT_PRO")
-				else
-					button.blue-button(name="type", value="pro")= t("POST_COMMENT")
+				button.blue-button= t("POST_COMMENT")
 
 			else
 				p= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE")

@@ -16,7 +16,7 @@ exports.router.post("/", next(function*(req, res, next) {
 		method: "POST",
 		json: {
 			parentId: null,
-			type: req.body.type,
+			type: "pro",
 			subject: req.body.subject,
 			text: req.body.text
 		}
