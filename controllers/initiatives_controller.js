@@ -13,7 +13,6 @@ var next = require("co-next")
 var sleep = require("root/lib/promise").sleep
 var api = require("root/lib/citizen_os")
 var translateCitizenError = require("root/lib/citizen_os").translateError
-var redirect = require("root/lib/redirect")
 var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
 var EMPTY_COMMENT = {subject: "", text: ""}
 
@@ -23,7 +22,9 @@ var UI_TRANSLATIONS = O.map(require("root/lib/i18n").LANGUAGES, function(lang) {
 
 exports.router = Router({mergeParams: true})
 
-exports.router.get("/", redirect(302, "/"))
+exports.router.get("/", next(function*(req, res) {
+	res.render("initiatives/index", yield api.readInitiatives())
+}))
 
 exports.router.post("/", next(function*(req, res) {
 	var title = _.escape(req.body.title)

@@ -1,5 +1,7 @@
 extends ../layout
-include ./_mixins
+
+block append options
+	- var page = "home"
 
 block body
 	- var Config = require("root/config")
@@ -14,15 +16,4 @@ block body
 
 		a#create-link(href="/initiatives/new")= t("BTN_NEW_TOPIC")
 
-	section#initiatives.grey-section.initiatives-section: center
-		if discussions.length > 0
-			h2= t("DISCUSSIONS_LIST")
-			+initiatives(discussions)
-
-		if votings.length > 0
-			h2= t("INITIATIVE_LIST")
-			+initiatives(votings)
-
-		if processes.length > 0
-			h2= t("IN_FOLLOW_UP_LIST")
-			+initiatives(processes)
+	include ../initiatives/_initiatives
