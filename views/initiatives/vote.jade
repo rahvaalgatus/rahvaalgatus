@@ -84,9 +84,9 @@ block prepend tab
 					input(type="hidden", name="method", value="id-card")
 
 					if hasVote
-						button.white-button= t("BTN_VOTE_REVOKE_WITH_ID_CARD")
+						button.button.white-button= t("BTN_VOTE_REVOKE_WITH_ID_CARD")
 					else
-						button.green-button= t("BTN_VOTE_SIGN_WITH_ID_CARD")
+						button.button.green-button= t("BTN_VOTE_SIGN_WITH_ID_CARD")
 
 				:javascript
 					var Hwcrypto = require("@rahvaalgatus/hwcrypto")
@@ -152,7 +152,7 @@ block prepend tab
 					h3: img(src="/images/mobile-id-icon.png", alt="Mobile ID")
 
 					input#mobile-id-form-toggle(type="checkbox", style="display: none")
-					label(for="mobile-id-form-toggle", class=btnClass)= btnText
+					label.button(for="mobile-id-form-toggle", class=btnClass)= btnText
 
 					input(type="hidden", name="optionId", value=optId)
 
@@ -168,7 +168,8 @@ block prepend tab
 						placeholder=t("PLACEHOLDER_PERSONAL_IDENTIFICATION_CODE"),
 						required)
 
-					button(name="method", value="mobile-id", class=btnClass)= btnText
+					button.button(name="method", value="mobile-id", class=btnClass)
+						= btnText
 
 block append tab
 	+comments(comments)

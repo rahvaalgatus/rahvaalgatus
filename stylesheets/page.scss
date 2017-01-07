@@ -869,8 +869,21 @@ button.inherited {
 			float: left;
 			margin-top: 1rem;
 			margin-right: 1rem;
+		}
 
-			input { margin-bottom: 0.5rem; }
+		input { margin-bottom: 0.5rem; }
+
+		@include mobile {
+			form {
+				float: none;
+				margin-right: 0;
+				margin-top: 2rem;
+			}
+
+			input, .button {
+				display: block;
+				width: 100%;
+			}
 		}
 	}
 
@@ -890,18 +903,24 @@ button.inherited {
 			font-size: 1.6rem;
 		}
 
-		input[type=email],
+		input,
 		button {
 			display: inline-block;
 		}
 
-		input[type=email] {
+		input {
 			width: 100%;
 			max-width: 24rem;
+			margin-right: 1rem;
 		}
 
-		button {
-			margin-left: 1rem;
+		@include mobile {
+			input, button {
+				margin-bottom: 0.5rem;
+				max-width: none;
+				display: block;
+				width: 100%;
+			}
 		}
 	}
 
