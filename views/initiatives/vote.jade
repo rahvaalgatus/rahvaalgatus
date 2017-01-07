@@ -70,10 +70,6 @@ block prepend tab
 				//- This flash is for the the Id-card JavaScript code below.
 				p#initiative-vote-flash.flash.error
 
-				//-p
-					- var sigs = Initiative.countSignatures("Yes", initiative)
-					= t("N_SIGNATURES", {votes: sigs})
-
 				+form#id-card-form(
 					method="post",
 					action="/initiatives/#{initiative.id}/signature")
