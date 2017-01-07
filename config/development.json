@@ -1,12 +1,12 @@
 {
 	"url": "http://dev.rahvaalgatus.ee",
-	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
 	"apiUrl": "https://citizenos-citizenos-web-test.herokuapp.com",
 	"apiPartnerId": "3bc2e428-8875-4f19-8007-6484ba0d8c58",
 	"apiAuthorizeUrl": "https://citizenos-citizenos-web-test.herokuapp.com/api/auth/openid/authorize",
+
+	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
 	"votesRequired": 2,
-	"etherpadTheme": "raa_dev",
-	"etherpadInsecure": true,
 	"minDeadlineDays": 0,
-	"sentryDsn": "https://ead693e3e8074571ad59dc81dc0bdfa6:4a7eb69226764278873979497ed3162c@sentry.io/77593"
+	"etherpadTheme": "raa_dev",
+	"etherpadInsecure": true
 }

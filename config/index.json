@@ -1,5 +1,9 @@
 {
+	"votesRequired": 1000,
+	"minDeadlineDays": 3,
 	"maxDeadlineDays": 366,
+
+	"googleAnalyticsAccount": "UA-74848422-1",
 
 	"helpUrls": {
 		"et": "http://help.rahvaalgatus.ee/abi",

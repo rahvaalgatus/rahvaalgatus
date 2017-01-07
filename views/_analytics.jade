@@ -1,6 +1,6 @@
 - var Config = require("root/config")
 
-if Config.googleAnalyticsAccount
+if process.env.ENV === "production" && Config.googleAnalyticsAccount
 	script.
 		(function (i, s, o, g, r, a, m) {
 		i['GoogleAnalyticsObject'] = r;
