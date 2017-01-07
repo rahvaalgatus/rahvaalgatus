@@ -30,10 +30,6 @@ describe("Web", function() {
 	})
 
 	;[
-		"/webfonts/3084E9_3_0.eot",
-		"/webfonts/3084E9_3_0.woff2",
-		"/webfonts/3084E9_3_0.woff",
-		"/webfonts/3084E9_3_0.ttf",
 		"/fonts/tisapro-regular-webfont.svg",
 		"/assets/etherpad.css"
 	].forEach(function(path) {
