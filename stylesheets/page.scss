@@ -437,13 +437,18 @@ button.inherited {
 	}
 }
 
+.icon-facebook,
 .icon-twitter {
 	float: left;
-	background: url(/images/twitter.png) no-repeat center;
 	width: 22px;
 	height: 100%;
+	background-repeat: no-repeat;
+	background-position: center;
 	background-size: 100%;
 }
+
+.icon-facebook { background-image: url(/images/mentions-fb-icon.png); }
+.icon-twitter { background-image: url(/images/mentions-tw-icon.png); }
 
 .flash:not(:empty) {
 	background: $flash-header-color;
