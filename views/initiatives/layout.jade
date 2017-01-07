@@ -4,6 +4,11 @@ block options
 	- var title = initiative.title
 	- var page = "initiative"
 
+block append head
+	- var Config = require("root/config")
+	meta(property="og:url", content=`${Config.url}/initiatives/${initiative.id}`)
+	meta(property="og:title", content=initiative.title)
+
 block body
 	-
 		var Config = require("root/config")
