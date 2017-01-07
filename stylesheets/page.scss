@@ -229,54 +229,10 @@ center {
 			h3 { color: $link; }
 		}
 
-		.progress {
-			display: block;
-
+		.initiative-progress {
 			margin: 0.5rem -2rem 0;
-			padding: 1rem 2rem 0.8rem;
-			font-size: 1.3rem;
-			line-height: 1;
-			font-family: $museo-sans;
-			font-weight: bold;
-			color: #3a434a;
-
-			background-color: #eee;
-			background-repeat: no-repeat;
-		}
-		
-		.progress.private {
-			color: white;
-			background-color: #9a9a9a;
-		}
-
-		&.discussable .progress.completed {
-			background-color: #ffb400;
-			background-image: url(/images/discussion-over.png);
-			background-position: 1rem center;
-			padding-left: 3.5rem;
-		}
-
-		&.votable .progress.completed {
-			color: white;
-			background-color: #00cb81;
-			background-image: url(/images/vote-success.png);
-			background-position: 1rem center;
-			padding-left: 3.5rem;
-		}
-
-		.progress.failed {
-			color: white;
-			background-color: #9a9a9a;
-			background-image: url(/images/vote-failed.png);
-			background-position: 1rem center;
-			padding-left: 3.5rem;
-		}
-
-		&.processable .progress {
-			color: #1C71A2;
-			background-image: url(/images/clock.png);
-			background-position: 1rem center;
-			padding-left: 3.5rem;
+			padding-top: 1rem;
+			padding-bottom: 0.8rem;
 		}
 
 		@include mobile {
@@ -497,6 +453,56 @@ button.inherited {
 	margin-top: 1rem;
 	margin-bottom: 1rem;
 	white-space: pre-wrap;
+}
+
+.initiative-progress {
+	display: block;
+
+	padding-left: 2rem;
+	padding-right: 2rem;
+	font-size: 1.3rem;
+	line-height: 1;
+	font-family: $museo-sans;
+	font-weight: bold;
+	color: #3a434a;
+
+	background-color: #eee;
+	background-repeat: no-repeat;
+
+	&.private {
+		color: white;
+		background-color: #9a9a9a;
+	}
+
+	&.discussable.completed {
+		background-color: #ffb400;
+		background-image: url(/images/discussion-over.png);
+		background-position: 1rem center;
+		padding-left: 3.5rem;
+	}
+
+	&.votable.completed {
+		color: white;
+		background-color: #00cb81;
+		background-image: url(/images/vote-success.png);
+		background-position: 1rem center;
+		padding-left: 3.5rem;
+	}
+
+	&.processable {
+		color: #1C71A2;
+		background-image: url(/images/clock.png);
+		background-position: 1rem center;
+		padding-left: 3.5rem;
+	}
+
+	&.failed {
+		color: white;
+		background-color: #9a9a9a;
+		background-image: url(/images/vote-failed.png);
+		background-position: 1rem center;
+		padding-left: 3.5rem;
+	}
 }
 
 #header {
