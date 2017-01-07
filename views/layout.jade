@@ -1,6 +1,7 @@
 - var Config = require("root/config")
 - var LANGS = require("root/lib/i18n").LANGUAGES
 - var selected = require("root/lib/css").selected
+include ./_mixins
 
 doctype html
 html
@@ -22,7 +23,7 @@ html
 	body(id=page + "-page")
 		header#header: center
 			menu
-				form.languages(action="/session", method="post")
+				+form.languages(action="/session", method="post")
 					input(type="hidden", name="_method", value="put")
 
 					each _, lang in LANGS
@@ -34,7 +35,7 @@ html
 				if req.user
 					.right
 						a.user(href="/user")= req.user.name
-						form.signout(action="/session", method="post")
+						+form.signout(action="/session", method="post")
 							button.inherited(name="_method", value="delete")= t("BTN_LOG_OFF")
 				else
 					a.right(href="/session/new")= t("BTN_LOG_IN_REGISTER")

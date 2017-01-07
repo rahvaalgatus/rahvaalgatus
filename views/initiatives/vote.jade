@@ -71,7 +71,7 @@ block prepend tab
 					- var sigs = Initiative.countSignatures("Yes", initiative)
 					= t("N_SIGNATURES", {votes: sigs})
 
-				form#id-card-form(
+				+form#id-card-form(
 					method="post",
 					action="/initiatives/#{initiative.id}/signature")
 					h3: img(src="/images/id-kart-icon.png", alt="ID-card")
@@ -141,7 +141,7 @@ block prepend tab
 					function notice(msg) { flash.textContent = msg }
 					function raise(err) { setTimeout(function() { throw err }) }
 
-				form#mobile-id-form(
+				+form#mobile-id-form(
 					method="post",
 					action="/initiatives/#{initiative.id}/signature")
 					-

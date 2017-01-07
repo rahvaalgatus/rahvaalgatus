@@ -17,7 +17,7 @@ block tab
 		if error
 			p.flash.error= error
 
-		form#initiative-form.form(
+		+form#initiative-form.form(
 			method="post",
 			action="/initiatives/#{initiative.id}")
 			input(type="hidden", name="_method", value="put")

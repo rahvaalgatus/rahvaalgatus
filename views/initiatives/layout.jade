@@ -12,19 +12,19 @@ block body
 	nav#initiative-tabs: center
 		menu
 			if Initiative.isPublishable(initiative)
-				form(method="post", action="/initiatives/#{initiative.id}")
+				+form(method="post", action="/initiatives/#{initiative.id}")
 					input(type="hidden", name="_method", value="put")
 					button.button.green-button(name="visibility", value="public")
 						= t("PUBLISH_TOPIC")
 
 			if Initiative.isProposable(new Date, initiative)
-				form(method="post", action="/initiatives/#{initiative.id}")
+				+form(method="post", action="/initiatives/#{initiative.id}")
 					input(type="hidden", name="_method", value="put")
 					button.button.green-button(name="status", value="voting")
 						= t("BTN_SEND_TO_VOTE")
 
 			if Initiative.isParliamentable(initiative)
-				form(method="post", action="/initiatives/#{initiative.id}")
+				+form(method="post", action="/initiatives/#{initiative.id}")
 					input(type="hidden", name="_method", value="put")
 					button.button.green-button(name="status", value="followUp")
 						= t("SEND_TO_PARLIAMENT")
@@ -62,7 +62,7 @@ block body
 
 	block tab
 		section#initiative-subscribe.grey-section: center
-			form(
+			+form(
 				action="https://docs.google.com/forms/d/e/1FAIpQLScP706DtEaSwnt8GYvgw30KOWvdfl7DBhjwyW82V0IesDrx0g/formResponse",
 				target="_blank",
 				method="POST")

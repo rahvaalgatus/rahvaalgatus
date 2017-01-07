@@ -13,7 +13,7 @@ block tab
 		if error
 			p.flash.error= error
 		
-		form.form(method="post", action="/initiatives/#{initiative.id}/authors")
+		+form.form(method="post", action="/initiatives/#{initiative.id}/authors")
 			label.form-label= t("LBL_EMAIL")
 			input.form-input(
 				type="text",

@@ -8,7 +8,7 @@ var PATH = "/session/new"
 var HEADERS = {"Content-Type": "application/json"}
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var AUTHORIZE_URL = Config.apiAuthorizeUrl
-var CSRF_COOKIE_NAME = "authenticity_token_for_citizenos"
+var CSRF_COOKIE_NAME = "csrf_token_for_citizenos"
 var CSRF_COOKIE_PATH = "/session"
 
 describe("SessionController", function() {
@@ -33,8 +33,8 @@ describe("SessionController", function() {
 			var res = yield this.request("/session/new")
 			var url = Url.parse(res.headers.location, true)
 
-			var cookie = Cookie.parse(res.headers["set-cookie"][0])
-			cookie.key.must.equal(CSRF_COOKIE_NAME)
+			var cookies = _.keyBy(res.headers["set-cookie"].map(Cookie.parse), "key")
+			var cookie = cookies[CSRF_COOKIE_NAME]
 			cookie.path.must.equal(CSRF_COOKIE_PATH)
 			cookie.value.must.have.length(32)
 			cookie.httpOnly.must.be.true()
@@ -64,7 +64,7 @@ describe("SessionController", function() {
 
 		it("must respond with 412 given mismatching CSRF tokens", function*() {
 			var res = yield this.request(this.url + "&access_token=123456", {
-				headers: {Cookie: "authenticity_token_for_citizenos=42"}
+				headers: {Cookie: `${CSRF_COOKIE_NAME}=42`}
 			})
 
 			res.statusCode.must.equal(412)
@@ -90,8 +90,9 @@ describe("SessionController", function() {
 			})
 
 			var res = yield this.request("/session", {
-				method: "DELETE",
-				headers: {Cookie: "citizenos_token=12345"}
+				method: "POST",
+				headers: {Cookie: "citizenos_token=12345;csrf_token=54321"},
+				form: {_method: "delete", _csrf_token: 54321}
 			})
 
 			res.statusCode.must.equal(302)
@@ -109,7 +110,7 @@ function authorize() {
 	this.url = PATH + "?state=" + token
 
 	this.request = fetchDefaults(this.request, {
-		headers: {Cookie: "authenticity_token_for_citizenos=" + token}
+		headers: {Cookie: `${CSRF_COOKIE_NAME}=${token}`}
 	})
 }
 

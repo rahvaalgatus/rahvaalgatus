@@ -1,4 +1,5 @@
 var _ = require("lodash")
+var Crypto = require("crypto")
 var fetchDefaults = require("fetch-defaults")
 var HEADERS = {"Content-Type": "application/json"}
 
@@ -7,10 +8,15 @@ exports.user = function() {
 		// https://github.com/mochajs/mocha/issues/2014:
 		delete this.request
 
-		var token = Math.floor(Math.random() * 1000)
-		this.request = fetchDefaults(this.request, {
-			headers: {Cookie: "citizenos_token=" + token}
-		})
+		var csrfToken = rand(16)
+
+		var cookie = [
+			"citizenos_token=" + rand(16),
+			"csrf_token=" + csrfToken
+		].join("; ")
+
+		this.request = fetchDefaults(this.request, {headers: {Cookie: cookie}})
+		this.csrfToken = csrfToken
 
 		this.mitm.on("request", respond.bind(null, "/auth/status", {
 			data: {}
@@ -26,3 +32,5 @@ function respond(url, json, req, res) {
 	res.writeHead(200, HEADERS)
 	res.end(JSON.stringify(json))
 }
+
+function rand(length) { return Crypto.randomBytes(length).toString("hex") }

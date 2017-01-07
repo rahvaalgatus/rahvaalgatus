@@ -13,7 +13,7 @@ block body
 		unless req.user
 			p.flash.error= t("LOGIN_TO_CREATE_TOPIC")
 		else
-			form(action="/initiatives", method="post")
+			+form(action="/initiatives", method="post")
 				h2= t("TITLE_FIELD")
 
 				if error

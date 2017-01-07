@@ -45,7 +45,11 @@ describe("InitiativesController", function() {
 		it("must escape title", function*() {
 			var res = this.request("/initiatives", {
 				method: "POST",
-				form: {"accept-tos": true, title: "Hello <mike>!"}
+				form: {
+					_csrf_token: this.csrfToken,
+					"accept-tos": true,
+					title: "Hello <mike>!"
+				}
 			})
 
 			var req, next = wait.bind(null, this.mitm, "request")
@@ -96,7 +100,7 @@ describe("InitiativesController", function() {
 
 			var res = yield this.request("/initiatives/" + UUID, {
 				method: "PUT",
-				form: {visibility: "public"}
+				form: {_csrf_token: this.csrfToken, visibility: "public"}
 			})
 
 			res.statusCode.must.equal(200)
@@ -112,7 +116,11 @@ describe("InitiativesController", function() {
 			var path = "/initiatives/" + UUID
 			var res = this.request(path, {
 				method: "PUT",
-				form: {visibility: "public", endsAt: endsAt.toJSON().slice(0, 10)}
+				form: {
+					_csrf_token: this.csrfToken,
+					visibility: "public",
+					endsAt: endsAt.toJSON().slice(0, 10)
+				}
 			})
 
 			var req, next = wait.bind(null, this.mitm, "request")
@@ -134,7 +142,7 @@ describe("InitiativesController", function() {
 
 			var res = yield this.request("/initiatives/" + UUID, {
 				method: "PUT",
-				form: {status: "voting"}
+				form: {_csrf_token: this.csrfToken, status: "voting"}
 			})
 
 			res.statusCode.must.equal(200)
@@ -156,6 +164,7 @@ describe("InitiativesController", function() {
 			var res = this.request(path, {
 				method: "PUT",
 				form: {
+					_csrf_token: this.csrfToken,
 					status: "followUp",
 					"contact[name]": "John",
 					"contact[email]": "john@example.com",

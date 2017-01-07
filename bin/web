@@ -29,10 +29,6 @@ app.locals.basedir = app.get("views")
 Jade.filters.javascript = require("root/lib/jade/javascript_filter")
 
 app.use(Express.static(PUBLIC_DIR, {setHeaders: setStaticHeaders}))
-app.use(require("cookie-parser")(Config.cookieSecret))
-app.use(require("body-parser").urlencoded({extended: true}))
-app.use(require("flash-fiction/express"))
-app.use(require("root/lib/middleware/method_override_middleware"))
 
 switch (ENV) {
 	case "development":
@@ -42,7 +38,13 @@ switch (ENV) {
 }
 
 app.use((req, res, next) => { res.locals.req = req; next() })
+app.use(require("cookie-parser")(Config.cookieSecret))
+app.use(require("body-parser").urlencoded({extended: true}))
+app.use(require("root/lib/middleware/method_override_middleware"))
 app.use(require("root/lib/middleware/i18n_middleware"))
+app.use(require("root/lib/middleware/csrf_middleware"))
+app.use(require("flash-fiction/express"))
+
 app.use(require("root/lib/middleware/session_middleware"))
 app.use(require("root/lib/middleware/api_middleware"))
 
@@ -67,6 +69,7 @@ O.each({
 
 app.use(function(err, req, res, next) {
 	if (!(err instanceof HttpError)) reportError(err, req)
+	if (err instanceof HttpError && err.code == 412) reportError(err, req)
 	next(err)
 })
 app.use(function(err, req, res, next) {

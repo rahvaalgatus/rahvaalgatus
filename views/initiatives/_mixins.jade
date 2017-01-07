@@ -95,7 +95,7 @@ mixin comments(comments)
 								p= reply.text
 
 		//- Comment form anchor used for redirecting to error.
-		form#initiative-comment-form(
+		+form#initiative-comment-form(
 			method="post",
 			action="/initiatives/#{initiative.id}/comments")
 			if req.user

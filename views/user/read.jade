@@ -9,7 +9,7 @@ block body
 		h1= user.name
 		include ../_flash
 
-		form.form(method="post", action="/user")
+		+form.form(method="post", action="/user")
 			input(type="hidden", name="_method", value="put")
 
 			if error
