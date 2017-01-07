@@ -1,6 +1,6 @@
 NODE = node
 ENV = development
-FILES = $(patsubst %, public/assets/%.js, hwcrypto inputs)
+FILES = $(patsubst %, public/assets/%.js, html5 inputs hwcrypto)
 BROWSERIFY = ./node_modules/.bin/browserify
 WATCHIFY = ./node_modules/.bin/watchify -v
 UGLIFY = ./node_modules/.bin/uglifyjs
@@ -27,6 +27,10 @@ autocompile:
 
 public/assets:
 	mkdir -p "$@"
+
+public/assets/html5.js:
+	@echo "Compiling $@ for $(ENV)…"
+	@$(BROWSERIFY) $(BROWSERIFY_OPTS) --entry ./$(@F) --outfile "$@"
 
 public/assets/inputs.js:
 	@echo "Compiling $@ for $(ENV)…"
