@@ -7,6 +7,7 @@ block options
 block body
 	- var Initiative = require("root/lib/initiative")
 	- var selected = require("root/lib/css").selected
+	- var hasVote = flash("signed") || Initiative.hasVote("Yes", initiative)
 	- var now = new Date
 
 	nav#initiative-tabs: center
@@ -29,7 +30,7 @@ block body
 					button.button.green-button(name="status", value="followUp")
 						= t("SEND_TO_PARLIAMENT")
 
-			if Initiative.isVotable(new Date, initiative) && !Initiative.hasVote("Yes", initiative)
+			if Initiative.isVotable(new Date, initiative) && !hasVote
 				a.button.green-button(href="#initiative-vote")
 					= t("SIGN_THIS_DOCUMENT")
 
