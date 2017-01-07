@@ -123,7 +123,7 @@
 	"INITIATIVE_DEFAULT_HTML": "<!DOCTYPE HTML><html><body><h1>{{title}}</h1><br><p>Lühike (u 350 tähemärki) või säutsu-lühike (140 tähemärki) sisukokkuvõte – see oleks mõeldud selleks, et algatusi platvormis ja sotsiaalmeedias paremini kajastada</p><br><h2>Ettepanek - </h2><br><p>Mida tahetakse muuta</p><br><h2>Põhjendus - </h2><br><p>Miks see on oluline</p><br><p>Kogu see tekstimaht maksimaalselt 12 000 tähemärki</p><br></body></html>",
 	"INITIATIVE_LIST": "In voting",
 	"INVITE_BY_EMAIL": "Invite by e-mail",
-	"INVITE_PEOPLE": "Invite people",
+	"INVITE_PEOPLE": "Add Co-authors",
 	"IN_FOLLOW_UP_LIST": "In follow-up",
 	"I_HAVE_READ": "I have read and agree with the <a href=\"{{url}}\">terms of using rahvaalgatus.ee</a>.",
 	"KEEP ME INFORMED": "KEEP ME INFORMED ",
