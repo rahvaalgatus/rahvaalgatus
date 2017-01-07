@@ -9,6 +9,7 @@ lazy(exports, "errorReporter", function() {
 			var DSN = process.env.SENTRY_DSN || require("root/config").sentryDsn
 			return new ErrorReporter(DSN)
 
+		case "test": return _.noop
 		default: return _.ary(console.error, 1)
   }
 })
