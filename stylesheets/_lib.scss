@@ -5,6 +5,8 @@ $link: #1C71A2;
 $page-width: 96rem;
 $black-text: #4A555D;
 $mobile-width: 569px;
+$museo-sans: "Museo Sans Cyrl", sans-serif;
+$tisa-pro: "Tisa Pro Regular", serif;
 
 @mixin tablet {
   @media only screen and (max-width: 680px) { @content }

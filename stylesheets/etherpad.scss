@@ -1,74 +1,5 @@
-@font-face {
-    font-family: 'tisaproregular';
-    src: url('/fonts/tisapro-regular-webfont.eot');
-    src: url('/fonts/tisapro-regular-webfont.eot?#iefix') format('embedded-opentype'),
-         url('/fonts/tisapro-regular-webfont.woff2') format('woff2'),
-         url('/fonts/tisapro-regular-webfont.woff') format('woff'),
-         url('/fonts/tisapro-regular-webfont.ttf') format('truetype'),
-         url('/fonts/tisapro-regular-webfont.svg#tisaproregular') format('svg');
-    font-weight: normal;
-    font-style: normal;
-}
-@font-face {
-    font-family: 'museo_sans100';
-    src: url('/fonts/museosans-100-webfont.eot');
-    src: url('/fonts/museosans-100-webfont.eot?#iefix') format('embedded-opentype'),
-         url('/fonts/museosans-100-webfont.woff2') format('woff2'),
-         url('/fonts/museosans-100-webfont.woff') format('woff'),
-         url('/fonts/museosans-100-webfont.ttf') format('truetype'),
-         url('/fonts/museosans-100-webfont.svg#museo_sans100') format('svg');
-    font-weight: normal;
-    font-style: normal;
-}
-@font-face {
-    font-family: 'museo_sans300';
-    src: url('/fonts/museosans-300-webfont.eot');
-    src: url('/fonts/museosans-300-webfont.eot?#iefix') format('embedded-opentype'),
-         url('/fonts/museosans-300-webfont.woff2') format('woff2'),
-         url('/fonts/museosans-300-webfont.woff') format('woff'),
-         url('/fonts/museosans-300-webfont.ttf') format('truetype'),
-         url('/fonts/museosans-300-webfont.svg#museo_sans300') format('svg');
-    font-weight: normal;
-    font-style: normal;
-}
-@font-face {
-    font-family: 'museo_sans500';
-    src: url('/fonts/museosans_500-webfont.eot');
-    src: url('/fonts/museosans_500-webfont.eot?#iefix') format('embedded-opentype'),
-         url('/fonts/museosans_500-webfont.woff2') format('woff2'),
-         url('/fonts/museosans_500-webfont.woff') format('woff'),
-         url('/fonts/museosans_500-webfont.ttf') format('truetype'),
-         url('/fonts/museosans_500-webfont.svg#museo_sans500') format('svg');
-    font-weight: normal;
-    font-style: normal;
-}
-@font-face {
-    font-family: 'museo_sans700';
-    src: url('/fonts/museosans_700-webfont.eot');
-    src: url('/fonts/museosans_700-webfont.eot?#iefix') format('embedded-opentype'),
-         url('/fonts/museosans_700-webfont.woff2') format('woff2'),
-         url('/fonts/museosans_700-webfont.woff') format('woff'),
-         url('/fonts/museosans_700-webfont.ttf') format('truetype'),
-         url('/fonts/museosans_700-webfont.svg#museo_sans700') format('svg');
-    font-weight: normal;
-    font-style: normal;
-
-}
-@font-face {
-    font-family: 'museo_sans900';
-    src: url('/fonts/museosans_900-webfont.eot');
-    src: url('/fonts/museosans_900-webfont.eot?#iefix') format('embedded-opentype'),
-         url('/fonts/museosans_900-webfont.woff2') format('woff2'),
-         url('/fonts/museosans_900-webfont.woff') format('woff'),
-         url('/fonts/museosans_900-webfont.ttf') format('truetype'),
-         url('/fonts/museosans_900-webfont.svg#museo_sans900') format('svg');
-    font-weight: normal;
-    font-style: normal;
-}
-
-$button-primary: #0680fc;
-$button-secondary: #b1b1b1;
-$button-delete: #ff1d42;
+@import "_lib";
+@import "_fonts";
 
 $base-1: #252525;
 $base-2: #f6f6f6;
@@ -81,64 +12,10 @@ $base-8: #767676;
 $base-9: #292929;
 $base-10: #f2f2f2;
 
-$text-1: #f6f6f6;
-$text-2: #b1b1b1;
-$text-3: #999999;
-$text-4: #252525;
-$text-5: #a9a9a9;
-$text-6: #ffffff;
-$text-7: #767676;
-$text-8: #000000;
-$text-9: #989898;
-$text-10: #9f9f9f;
-$text-11: #6fb6ff;
-$text-12: #ff1d42;
-$text-13: #2eecb4;
-$text-14: #9f9f9f;
-$text-15: #f48a00;
-$text-16: $button-primary;
-
-$border-1: #111111;
-$border-2: #d6d6d6;
-$border-3: #a9a9a9;
-$border-4: #727272;
-$border-5: #767676;
-$border-6: #8e8e8e;
-$border-7: #e7e7e7;
-$border-8: #2e2e2e;
-$border-9: #505050;
-$border-10: #ffffff;
-$border-11: #363636;
-$border-12: #ff1d42;
-$border-13: #999999;
-$border-14: #4b4b4b;
-$border-15: #565656;
-$border-16: #164475;
-$border-17: #ebebeb;
-$border-18: #e0e0e0;
-$border-19: #e5e5e5;
-
-$highlight-1: #fedc32;
-$highlight-2: #2eecb4;
-$highlight-3: #49dbff;
-$highlight-4: #bae830;
-$highlight-5: #ff1d42;
-$highlight-6: #ececec;
-$highlight-7: #66ffd2;
-$highlight-8: #f5762d;
-$highlight-9: #6fb6ff;
-$highlight-10: $button-primary;
-
-$avatar-1: #c42a2a;
-$avatar-2: #406612;
-
-//Attributes
-$sidebarWidth: 190px;
-/** Main **/
-
 body{
-    color:#4A555D;
+	color: $black-text;
 }
+
 #editorcontainer {
   overflow: hidden;
 }
@@ -147,7 +24,6 @@ body{
   background: none;
 }
 
-/** iframe #ace_outer **/
 #outerdocbody {
   overflow: hidden;
   background: none;
@@ -159,24 +35,29 @@ body{
     background: none;
 
   * {
-    font-family: 'tisaproregular', serif;
+    font-family: $tisa-pro;
     font-size: 16px;
     line-height: 175%;
   }
 
   h1, h2, h3 {
     * {
-      font-family:  museo_sans700, sans-serif;
+      font-family: $museo-sans;
+			font-weight: bold;
+
       margin: 0;
       line-height: 120%;
     }
   }
+
   h1 * {
     font-size: 2.19em;
   }
+
   h2 * {
     font-size: 1.6425em;
   }
+
   h3 * {
     font-size: 1.231875em;
   }
