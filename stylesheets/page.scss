@@ -113,7 +113,7 @@ center {
 	em { font-style: italic; }
 	u { text-decoration: underline; }
 
-	a {
+	a:not(.button) {
 		color: $blue;
 		&:hover { text-decoration: underline; }
 	}
@@ -233,6 +233,7 @@ center {
 			margin: 0.5rem -2rem 0;
 			padding-top: 1rem;
 			padding-bottom: 0.8rem;
+			line-height: 1;
 		}
 
 		@include mobile {
@@ -466,7 +467,6 @@ button.inherited {
 	padding-left: 2rem;
 	padding-right: 2rem;
 	font-size: 1.3rem;
-	line-height: 1;
 	font-family: $museo-sans;
 	font-weight: bold;
 	color: #3a434a;
@@ -700,6 +700,7 @@ button.inherited {
 }
 
 #initiative-page {
+	$article-width: 72rem;
 	background-color: $grey-background;
 
 	.grey-section + .grey-section {
@@ -771,6 +772,7 @@ button.inherited {
 			font-family: $museo-sans;
 			font-size: 1.4rem;
 			color: #999;
+			margin-bottom: 0.5rem;
 		}
 
 		h1 {
@@ -779,8 +781,20 @@ button.inherited {
 			font-family: $museo-sans;
 			line-height: 1.2;
 
-			margin-top: 2rem;
 			margin-bottom: 1rem;
+		}
+	}
+
+	#initiative-progress {
+		margin-bottom: 3rem;
+		font-family: $museo-sans;
+		font-size: 1.4rem;
+		color: #999;
+
+		.initiative-progress {
+			margin-top: 0.5rem;
+			line-height: 3.4rem;
+			border-radius: $button-radius;
 		}
 	}
 
@@ -788,11 +802,7 @@ button.inherited {
 		article {
 			font-size: 1.8rem;
 			font-family: $tisa-pro;
-			max-width: 72rem;
-
-			.deadline {
-				text-transform: capitalize;
-			}
+			max-width: $article-width;
 
 			// Etherpad generates non-standard HTML by putting a nested <ol> directly
 			// under <ul>.
@@ -801,11 +811,6 @@ button.inherited {
 			ol ul,
 			ul ol {
 				margin-left: 2rem;
-			}
-
-			a {
-				color: $blue;
-				text-decoration: underline;
 			}
 		}
 	}
@@ -816,6 +821,7 @@ button.inherited {
 
 	#initiative-ended,
 	#initiative-signed {
+		max-width: $article-width;
 		background: $flash-body-color;
 		color: white;
 		border-radius: $button-radius;
@@ -847,6 +853,7 @@ button.inherited {
 	}
 
 	#initiative-vote {
+		max-width: $article-width;
 		margin-top: 4rem;
 		border-top: 1px solid #ccc;
 		padding-top: 2rem;

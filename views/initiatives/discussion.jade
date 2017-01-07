@@ -23,7 +23,7 @@ block prepend tab
 					br
 					time.deadline(datetime=initiative.endsAt)
 						- var endsAt = I18n.formatDate("numeric", initiative.endsAt)
-						= t("DISCUSSION_DEADLINE", {endsAt: endsAt})
+						= t("DISCUSSION_DEADLINE") + ": " + endsAt
 
 			if Initiative.isEditable(initiative)
 				- var url = initiative.padUrl + "&theme=" + Config.etherpadTheme

@@ -40,17 +40,19 @@ block prepend tab
 					a(href=url)= t("LNK_DOWNLOAD_USER_BDOC")
 
 		article.text
+			if initiative.status == "voting"
+				#initiative-progress
+					time.deadline(datetime=initiative.vote.endsAt)
+						- var endsAt = I18n.formatDate("numeric", initiative.vote.endsAt)
+						= t("VOTING_DEADLINE") + ": " + endsAt
+
+					+progress(initiative)
+
 			header
 				span.author
 					= t("CREATED_BY")
 					| &#32;
 					= initiative.creator.name
-
-				if initiative.vote.endsAt
-					br
-					time.deadline(datetime=initiative.vote.endsAt)
-						- var endsAt = I18n.formatDate("numeric", initiative.vote.endsAt)
-						= t("VOTING_DEADLINE", {endsAt: endsAt})
 
 			!= text
 
