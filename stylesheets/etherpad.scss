@@ -143,59 +143,8 @@ body{
   overflow: hidden;
 }
 
-.toolbar {
-  background: none;
-  border: none;
-}
-
 .timeslider-bar {
   background: none;
-}
-/*
-#editbar {
-  background: $base-2;
-  border-bottom: 1px solid #ccc;
-}*/
-#editbar  .buttonicon{
-    border-radius: 0;
-    background:#3A434A;
-    color:#fff;
-    width:23px;
-    height:20px;
-}
-#editbar li:hover, #editbar li:hover a, #editbar li:hover .buttonicon{
-    background:#262D33;
-}
-.toolbar{
-    ul{
-        li{
-            margin-left: 0;
-            padding-left:2px;
-            background: #3A434A;
-            height:auto;
-            a{
-                background:#3A434A;
-                border:none;
-            }
-            a.grouped-left {
-                border-radius: 0;
-                background:#3A434A;
-            }
-            a .buttontext{
-                color: #fff;
-            }
-            select {
-                background: #3A434A;
-                color: #fff;
-                padding: 4px;
-                line-height: 22px;
-                height: 30px;
-                border-radius: 0;
-                border: none;
-                outline: none;
-            }
-        }
-    }
 }
 
 /** iframe #ace_outer **/
@@ -248,10 +197,6 @@ body{
 
     * {
       font-family: bold, sans-serif;
-    }
-
-    .toolbar * {
-      font-family: regular, sans-serif;
     }
 
     #steppers .stepper {
