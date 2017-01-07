@@ -92,9 +92,9 @@ staging: deploy
 production: APP_PATH = htdocs/rahvaalgatus
 production: deploy
 
-translations: public/assets/en.json
-translations: public/assets/et.json
-translations: public/assets/ru.json
+translations: lib/i18n/en.json
+translations: lib/i18n/et.json
+translations: lib/i18n/ru.json
 
 tmp:
 	mkdir -p tmp
@@ -102,13 +102,13 @@ tmp:
 tmp/translations.json: tmp
 	wget "$(TRANSLATIONS_URL)" -O "$@"
 
-public/assets/en.json: tmp/translations.json
+lib/i18n/en.json: tmp/translations.json
 	jq $(JQ_OPTS) -f scripts/translation.jq --arg lang english "$<" > "$@"
 
-public/assets/et.json: tmp/translations.json
+lib/i18n/et.json: tmp/translations.json
 	jq $(JQ_OPTS) -f scripts/translation.jq --arg lang estonian "$<" > "$@"
 	
-public/assets/ru.json: tmp/translations.json
+lib/i18n/ru.json: tmp/translations.json
 	jq $(JQ_OPTS) -f scripts/translation.jq --arg lang russian "$<" > "$@"
 
 .PHONY: love
