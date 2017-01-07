@@ -6,21 +6,11 @@ TEST =
 TEST_OPTS =
 TEST_URL = http://dev.rahvaalgatus.ee:3000
 SASS = ./node_modules/.bin/node-sass --recursive --indent-type tab --indent-width 1 --output-style expanded
-DEPLOY_HOST =
 TRANSLATIONS_URL = https://spreadsheets.google.com/feeds/list/1JKPUNp8Y_8Aigq7eGJXtWT6nZFhd31k2Ht3AjC-i-Q8/1/public/full?alt=json
 JQ_OPTS = --tab --sort-keys
 
-STAGING_HOST = staging.rahvaalgatus.ee
-PRODUCTION_HOST = production.rahvaalgatus.ee
 APP_HOST = rahvaalgatus.ee
-
-LFTP_MIRROR_OPTS = \
-	--verbose=1 \
-	--continue \
-	--parallel=4 \
-	--dereference \
-	--reverse \
-	--delete
+APP_PATH =
 
 RSYNC_OPTS = \
 	--compress \
@@ -93,17 +83,13 @@ livereload:
 shrinkwrap:
 	npm shrinkwrap
 
-deploy: DEPLOY_HOST ?= $(error "Please set DEPLOY_HOST")
 deploy:
-	lftp "$(DEPLOY_HOST)" -e "mirror $(LFTP_MIRROR_OPTS) ./public .; exit"
+	@rsync $(RSYNC_OPTS) . "$(APP_HOST):./$(or $(APP_PATH), $(error "APP_PATH"))/"
 
-staging: DEPLOY_HOST = $(STAGING_HOST)
+staging: APP_PATH = htdocs/rahvaalgatus-staging
 staging: deploy
 
-staging/app:
-	@rsync $(RSYNC_OPTS) . "$(APP_HOST)":domeenid/www.rahvaalgatus.ee/app/
-
-production: DEPLOY_HOST = $(PRODUCTION_HOST)
+production: APP_PATH = htdocs/rahvaalgatus
 production: deploy
 
 translations: public/assets/en.json
@@ -132,5 +118,5 @@ public/assets/ru.json: tmp/translations.json
 .PHONY: test spec autotest autospec
 .PHONY: server
 .PHONY: shrinkwrap
-.PHONY: deploy staging staging/app production
+.PHONY: deploy staging production
 .PHONY: translations
