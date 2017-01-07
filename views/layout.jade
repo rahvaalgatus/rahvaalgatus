@@ -1,5 +1,6 @@
 - var Config = require("root/config")
 - var LANGS = require("root/lib/i18n").LANGUAGES
+- var ENV = process.env.ENV
 - var selected = require("root/lib/css").selected
 include ./_mixins
 
@@ -13,7 +14,16 @@ html
 		meta(name="viewport", content="width=device-width")
 		link(rel="stylesheet", href="/assets/page.css", type="text/css")
 
-		if process.env.ENV == "development"
+		case ENV
+			when "staging"
+			when "production"
+				script(src="https://cdn.ravenjs.com/3.9.1/raven.min.js")
+				script.
+					Raven.config("#{process.env.SENTRY_PUBLIC_DSN}", {
+						environment: "#{ENV}"
+					}).install()
+
+		if ENV === "development"
 			script(
 				src="http://#{req.hostname}:35729/livereload.js?snipver=1",
 				async, defer)
