@@ -1,4 +1,5 @@
 - var Config = require("root/config")
+- var stringify = require("root/lib/json").stringify
 
 if process.env.ENV === "production" && Config.googleAnalyticsAccount
 	script.
@@ -14,3 +15,21 @@ if process.env.ENV === "production" && Config.googleAnalyticsAccount
 		m.parentNode.insertBefore(a, m)
 		})(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
 		ga('create', '#{Config.googleAnalyticsAccount}', {'cookieDomain': 'none'});
+
+if process.env.ENV === "production" && Config.userVoiceApiKey
+	script(src="//widget.uservoice.com/#{Config.userVoiceApiKey}.js", async)
+	script.
+		window.UserVoice = [
+			["identify", !{stringify(req.user)}],
+
+			["set", {
+					accent_color: "#808283",
+					trigger_color: "white",
+					trigger_background_color: "rgba(46, 49, 51, 0.6)"
+			}],
+
+			["addTrigger", {
+				mode: "contact",
+				trigger_position: "bottom-right"
+			}]
+		]
