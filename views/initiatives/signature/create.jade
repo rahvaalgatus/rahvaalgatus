@@ -4,6 +4,9 @@ include ../_mixins
 block append options
 	- var subpage = "vote"
 
+block append head
+	script(src="/assets/html5.js")
+
 block prepend tab
 	section#initiative-signature.text-section.white-section: center
 		+header(initiative)
