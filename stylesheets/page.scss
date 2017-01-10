@@ -934,7 +934,7 @@ button.inherited {
 			margin-right: 1rem;
 		}
 
-		@include mobile {
+		@include tablet {
 			input, button {
 				margin-bottom: 0.5rem;
 				max-width: none;
