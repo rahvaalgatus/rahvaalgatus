@@ -24,7 +24,12 @@ html
 					Raven.config("#{process.env.SENTRY_PUBLIC_DSN}", {
 						environment: "#{ENV}",
 						user: !{stringify(req.user)},
-						ignoreErrors: ["no_implementation"]
+
+						ignoreErrors: [
+							"no_implementation",
+							"user_cancel",
+							"no_certificates"
+						]
 					}).install()
 
 		if ENV === "development"
