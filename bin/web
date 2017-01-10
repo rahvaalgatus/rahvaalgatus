@@ -30,12 +30,6 @@ app.locals.require = require
 app.locals.basedir = app.get("views")
 Jade.filters.javascript = require("root/lib/jade/javascript_filter")
 
-// Work around Zone's lack of X-Forwarded-Proto.
-if (ENV === "production") app.use(function(req, res, next) {
-	req.headers["x-forwarded-proto"] = "https"
-	next()
-})
-
 app.use(Express.static(PUBLIC_DIR, {setHeaders: setStaticHeaders}))
 
 switch (ENV) {
