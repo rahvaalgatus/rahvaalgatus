@@ -32,9 +32,9 @@ center {
 	margin: 0 auto;
 	text-align: inherit;
 
-	// Internet Explorer still centers <p>s under <center> even with
+	// Internet Explorer still centers things under <center> even with
 	// text-align: inherit.
-	& > p { margin-right: auto }
+	* { margin-right: auto }
 
 	@include tablet {
 		padding-left: 1.5rem;
