@@ -26,5 +26,6 @@ block prepend tab
 							if (res.status >= 302 && res.status <= 303)
 								window.location.assign(res.headers.get("location"))
 							else
-								window.location.assign(res.url)
+								// WhatWG-Fetch polyfill lacks res.url.
+								window.location.assign("#{poll}")
 						})
