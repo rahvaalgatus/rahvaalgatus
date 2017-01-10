@@ -84,7 +84,11 @@ block body
 				menu#initiative-aux-menu
 					h3= t("OPTIONS")
 					+form(method="post", action="/initiatives/#{initiative.id}")
-						button.button.white-button(name="_method", value="delete")
+						- var confirmText = t("TXT_ALL_DISCUSSIONS_AND_VOTES_DELETED")
+						button.button.white-button(
+							name="_method",
+							value="delete",
+							onclick="return confirm('#{confirmText}')")
 							= t("BTN_DELETE_TOPIC")
 
 			if Initiative.isPublic(initiative)
