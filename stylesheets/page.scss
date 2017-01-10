@@ -600,9 +600,12 @@ button.inherited {
 
 #home-page {
 	$half-width: 48rem;
+	background-color: $grey-background;
 
 	#welcome {
-		background: url(/images/hero-bg.png) no-repeat right center;
+		background-image: url(/images/hero-bg.png);
+		background-repeat: no-repeat;
+		background-position: right center;
 		background-position: calc(50% + 450px) center;
 
 		// Overflow: hidden for video and create links' floats.
@@ -697,6 +700,10 @@ button.inherited {
 			height: 4.4rem;
 		}
 	}
+}
+
+#initiatives-page {
+	background-color: $grey-background;
 }
 
 #initiative-page {
