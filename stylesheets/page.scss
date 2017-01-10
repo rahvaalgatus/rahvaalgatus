@@ -59,6 +59,8 @@ center {
 
 .grey-section {
 	background-color: $grey-background;
+
+	& + .grey-section { padding-top: 0; }
 }
 
 .white-section {
@@ -709,10 +711,6 @@ button.inherited {
 #initiative-page {
 	$article-width: 72rem;
 	background-color: $grey-background;
-
-	.grey-section + .grey-section {
-		padding-top: 0;
-	}
 
 	#initiative-tabs {
 		padding-top: 4rem;

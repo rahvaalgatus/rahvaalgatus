@@ -48,6 +48,11 @@ block body
 				a.button.blue-button(href="/initiatives/#{initiative.id}/authors/new")
 					= t("INVITE_PEOPLE")
 
+			if Initiative.isDeletable(initiative)
+				+form(method="post", action="/initiatives/#{initiative.id}")
+					button.button.white-button(name="_method", value="delete")
+						= t("BTN_DELETE_TOPIC")
+
 			if Initiative.isPublic(initiative)
 				a.button.white-button(
 					href="https://facebook.com/sharer/sharer.php?u=#{encode(shareUrl)}",

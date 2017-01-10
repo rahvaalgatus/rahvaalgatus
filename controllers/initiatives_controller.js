@@ -169,6 +169,14 @@ exports.router.put("/:id", next(function*(req, res) {
 	})
 }))
 
+exports.router.delete("/:id", next(function*(req, res) {
+	var initiative = req.initiative
+	if (!Initiative.isDeletable(initiative)) throw new HttpError(405)
+	yield req.api(`/api/users/self/topics/${initiative.id}`, {method: "DELETE"})
+	res.flash("notice", "Algatus on kustutatud.")
+	res.redirect(302, req.baseUrl)
+}))
+
 exports.read = next(function*(subpage, req, res) {
 	var initiative = req.initiative
 
