@@ -55,6 +55,8 @@ center {
 		padding-top: 2.5rem;
 		padding-bottom: 2.5rem;
 	}
+
+	&:after { display: block; content: ""; clear: both; }
 }
 
 .grey-section {
@@ -857,6 +859,13 @@ button.inherited {
 		}
 	}
 
+	.grey-section h3 {
+		margin-bottom: 1rem;
+		font-family: $museo-sans;
+		font-size: 1.6rem;
+		font-weight: 500;
+	}
+
 	#initiative-vote {
 		max-width: $article-width;
 		margin-top: 4rem;
@@ -900,14 +909,20 @@ button.inherited {
 
 		#mobile-id-form-toggle:checked + label { display: none; }
 	}
+	
+	#initiative-aux-menu {
+		float: right;
+		text-align: right;
+
+		@include tablet {
+			float: none;
+			text-align: left;
+			margin-bottom: 2rem;
+			.button { width: 100%; }
+		}
+	}
 
 	#initiative-subscribe {
-		h2 {
-			margin-bottom: 0.5rem;
-			font-family: $museo-sans;
-			font-size: 1.6rem;
-		}
-
 		input,
 		button {
 			display: inline-block;

@@ -201,7 +201,7 @@
 	"N_SIGNATURES": "{{votes}} signatures",
 	"N_SIGNATURES_COLLECTED": "{{votes}} signatures collected",
 	"N_SIGNATURES_FAILED": "Halted: {{votes}} signatures",
-	"OPTIONS": "OPTIONS",
+	"OPTIONS": "Other Options",
 	"OR_INVITE": "or invite them via their profile or e-mail",
 	"PAY_WHAT_YOU_WANT": "The amount of your donation:",
 	"PERSONAL_NOTES": "Personal notes",

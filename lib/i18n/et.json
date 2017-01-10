@@ -201,7 +201,7 @@
 	"N_SIGNATURES": "{{votes}} allkirja",
 	"N_SIGNATURES_COLLECTED": "{{votes}} allkirja kogutud",
 	"N_SIGNATURES_FAILED": "Peatatud: {{votes}} allkirja",
-	"OPTIONS": "VALIKUD",
+	"OPTIONS": "Lisavalikud",
 	"OR_INVITE": "või sisesta kutsutavate e-posti aadressid.",
 	"PAY_WHAT_YOU_WANT": "Annetuse suurus: ",
 	"PERSONAL_NOTES": "Isiklikud märkmed",

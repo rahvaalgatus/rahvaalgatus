@@ -48,11 +48,6 @@ block body
 				a.button.blue-button(href="/initiatives/#{initiative.id}/authors/new")
 					= t("INVITE_PEOPLE")
 
-			if Initiative.isDeletable(initiative)
-				+form(method="post", action="/initiatives/#{initiative.id}")
-					button.button.white-button(name="_method", value="delete")
-						= t("BTN_DELETE_TOPIC")
-
 			if Initiative.isPublic(initiative)
 				a.button.white-button(
 					href="https://facebook.com/sharer/sharer.php?u=#{encode(shareUrl)}",
@@ -84,13 +79,20 @@ block body
 				= t("HEADING_TAB_EVENTS")
 
 	block tab
-		if Initiative.isPublic(initiative)
-			section#initiative-subscribe.grey-section: center
-				+form(
+		section.grey-section: center
+			if Initiative.isDeletable(initiative)
+				menu#initiative-aux-menu
+					h3= t("OPTIONS")
+					+form(method="post", action="/initiatives/#{initiative.id}")
+						button.button.white-button(name="_method", value="delete")
+							= t("BTN_DELETE_TOPIC")
+
+			if Initiative.isPublic(initiative)
+				+form#initiative-subscribe(
 					action="https://docs.google.com/forms/d/e/1FAIpQLScP706DtEaSwnt8GYvgw30KOWvdfl7DBhjwyW82V0IesDrx0g/formResponse",
 					target="_blank",
 					method="POST")
-					h2= t("WANT_TO_KEEP_INFORMED_ABOUT_FURTHER_PROGRESS")
+					h3= t("WANT_TO_KEEP_INFORMED_ABOUT_FURTHER_PROGRESS")
 
 					input(name="entry.1310039861", type="hidden", value=initiative.id)
 					input(name="entry.426608193", type="hidden", value=initiative.title)
