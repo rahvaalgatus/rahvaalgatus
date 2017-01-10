@@ -7,6 +7,5 @@
 	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
 	"votesRequired": 2,
 	"minDeadlineDays": 0,
-	"etherpadTheme": "raa_dev",
 	"etherpadInsecure": true
 }

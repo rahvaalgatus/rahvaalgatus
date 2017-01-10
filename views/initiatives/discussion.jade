@@ -26,7 +26,7 @@ block prepend tab
 						= t("DISCUSSION_DEADLINE") + ": " + endsAt
 
 			if Initiative.isEditable(initiative)
-				- var url = initiative.padUrl + "&theme=" + Config.etherpadTheme
+				- var url = initiative.padUrl
 				- if (Config.etherpadInsecure) url = url.replace(/^https/, "http")
 
 				iframe#initiative-etherpad(
