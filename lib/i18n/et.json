@@ -305,6 +305,7 @@
 	"UNPUBLISH_TOPIC": "Muuda privaatseks",
 	"VISIT_FACEBOOK": "jälgi Facebookis",
 	"VISIT_TWITTER": "jälgi Twitteris ",
+	"VOTE_DEADLINE_EXPLANATION": "Sea algatuse ühisloome-faasile ajaraam: vali kalendrist sobiv kuupäev tähtajaks. Algatus peab alates sisestamise hetkest olema vähemalt kolm päeva arutelu-olekus, aga soovitame pikemalt (näiteks kuu aega).  \nKui osutub vajalikuks, saad algatuse käigus tähtaega pikendada. ",
 	"VOTE_REVOKED": "Allkiri on tühistatud.",
 	"VOTING_DEADLINE": "Hääletamise tähtaeg",
 	"VOTING_FAILED": "Allkirjade kogumine on lõppenud, enam ei saa digiallkirja anda. Kuna algatus ei kogunud seatud tähtajaks vajalikku miinimumi (1000 allkirja), on see praegu autorite poolt peatatud. Rahvaalgatus.ee säilitab kogutud allkirjad ühe aasta jooksul juhuks, kui algatus taasavatakse digiallkirjade kogumiseks. ",

@@ -305,6 +305,7 @@
 	"UNPUBLISH_TOPIC": "Unpublish",
 	"VISIT_FACEBOOK": "Visit us on Facebook",
 	"VISIT_TWITTER": "Visit us on Twitter",
+	"VOTE_DEADLINE_EXPLANATION": "Set the time-frame for the co-creation phase: select the deadline date from the calendar. Your initiative will be in a discussion state for at least three days from publication, but we recommend a longer period (for example, a month).\nIf necessary, you can later extend the co-creation period.",
 	"VOTE_REVOKED": "Your signature is revoked.",
 	"VOTING_DEADLINE": "Signing deadline",
 	"VOTING_FAILED": "Collecting signatures has ended. You cannot sign this initiatives anymore. Since the initiative did not get the necessary minimum amount (1000 signatures) by the set deadline, the initiative is stopped by authors.\nRahvaalgatus.ee keeps the collected signatures for one year in case the initiative will be re-opened for signing.     ",
