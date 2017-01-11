@@ -102,8 +102,14 @@ exports.router.put("/:id", next(function*(req, res) {
 
 	if (req.body.visibility === "public") {
 		tmpl = "initiatives/update_for_publish"
-		if (!Initiative.isPublishable(initiative)) throw new HttpError(401)
-		if (req.body.endsAt == null) return void res.render(tmpl, {attrs: attrs})
+		if (!(
+			Initiative.isPublishable(initiative) ||
+			Initiative.canUpdateDiscussionDeadline(initiative)
+		)) throw new HttpError(401)
+
+		if (req.body.endsAt == null) return void res.render(tmpl, {
+			attrs: {endsAt: initiative.endsAt && new Date(initiative.endsAt)}
+		})
 
 		let endsAt = DateFns.endOfDay(new Date(req.body.endsAt))
 		if (!Initiative.isDeadlineOk(new Date, endsAt))
@@ -331,4 +337,5 @@ function normalizeComment(comment) {
 	comment.replies = comment.replies.rows
 	return comment
 }
+
 function getBody(res) { return res.body.data }

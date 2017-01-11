@@ -80,16 +80,30 @@ block body
 
 	block tab
 		section.grey-section: center
-			if Initiative.isDeletable(initiative)
+			-
+				var showMenu = (
+					Initiative.canUpdateDiscussionDeadline(initiative) ||
+					Initiative.isDeletable(initiative)
+				)
+
+			if showMenu
 				menu#initiative-aux-menu
 					h3= t("OPTIONS")
-					+form(method="post", action="/initiatives/#{initiative.id}")
-						- var confirmText = t("TXT_ALL_DISCUSSIONS_AND_VOTES_DELETED")
-						button.button.white-button(
-							name="_method",
-							value="delete",
-							onclick="return confirm('#{confirmText}')")
-							= t("BTN_DELETE_TOPIC")
+
+					if Initiative.canUpdateDiscussionDeadline(initiative)
+						+form(method="post", action="/initiatives/#{initiative.id}")
+							input(type="hidden", name="_method", value="put")
+							button.button.white-button(name="visibility", value="public")
+								= t("RENEW_DEADLINE")
+
+					if Initiative.isDeletable(initiative)
+						+form(method="post", action="/initiatives/#{initiative.id}")
+							- var confirmText = t("TXT_ALL_DISCUSSIONS_AND_VOTES_DELETED")
+							button.button.white-button(
+								name="_method",
+								value="delete",
+								onclick="return confirm('#{confirmText}')")
+								= t("BTN_DELETE_TOPIC")
 
 			if Initiative.isPublic(initiative)
 				+form#initiative-subscribe(

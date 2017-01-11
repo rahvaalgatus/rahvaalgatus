@@ -914,11 +914,17 @@ button.inherited {
 		float: right;
 		text-align: right;
 
+		form { display: inline-block; }
+		form + form { margin-left: 1rem; }
+
 		@include tablet {
 			float: none;
 			text-align: left;
 			margin-bottom: 2rem;
 			.button { width: 100%; }
+
+			form { display: block; margin-top: 1rem; }
+			form + form { margin-left: 0; }
 		}
 	}
 
