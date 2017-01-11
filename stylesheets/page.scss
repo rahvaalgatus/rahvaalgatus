@@ -1103,12 +1103,23 @@ button.inherited {
 		float: left;
 	}
 
-	.contact img {
+	.contact img,
+	.powered-by img {
 		margin-bottom: 1rem;
 	}
 
 	.powered-by {
 		text-align: right;
 		float: right;
+	}
+
+	@include mobile {
+		.contact,
+		.powered-by {
+			float: none;
+			text-align: left;
+		}
+
+		.powered-by { margin-top: 1rem; }
 	}
 }
