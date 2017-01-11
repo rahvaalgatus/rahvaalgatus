@@ -122,8 +122,14 @@ exports.router.put("/:id", next(function*(req, res) {
 	}
 	else if (req.body.status === "voting") {
 		tmpl = "initiatives/update_for_voting"
-		if (!Initiative.isProposable(new Date, initiative)) throw new HttpError(401)
-		if (req.body.endsAt == null) return void res.render(tmpl, {attrs: attrs})
+		if (!(
+			Initiative.isProposable(new Date, initiative) ||
+			Initiative.canUpdateVoteDeadline(initiative)
+		)) throw new HttpError(401)
+
+		if (req.body.endsAt == null) return void res.render(tmpl, {
+			attrs: {endsAt: initiative.vote ? new Date(initiative.vote.endsAt) : null}
+		})
 
 		let endsAt = DateFns.endOfDay(new Date(req.body.endsAt))
 		if (!Initiative.isDeadlineOk(new Date, endsAt))
@@ -132,14 +138,21 @@ exports.router.put("/:id", next(function*(req, res) {
 				attrs: {endsAt: endsAt}
 			})
 
-		method = "POST"
-		path += "/votes"
-		attrs = {
-			endsAt: endsAt,
-			authType: "hard",
-			voteType: "regular",
-			delegationIsAllowed: false,
-			options: [{value: "Yes"}, {value: "No"}]
+		if (initiative.vote) {
+			method = "PUT"
+			path += `/votes/${initiative.vote.id}`
+			attrs = {endsAt: endsAt}
+		}
+		else {
+			method = "POST"
+			path += "/votes"
+			attrs = {
+				endsAt: endsAt,
+				authType: "hard",
+				voteType: "regular",
+				delegationIsAllowed: false,
+				options: [{value: "Yes"}, {value: "No"}]
+			}
 		}
 	}
 	else if (req.body.status === "followUp") {

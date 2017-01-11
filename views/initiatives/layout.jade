@@ -83,6 +83,7 @@ block body
 			-
 				var showMenu = (
 					Initiative.canUpdateDiscussionDeadline(initiative) ||
+					Initiative.canUpdateVoteDeadline(initiative) ||
 					Initiative.isDeletable(initiative)
 				)
 
@@ -94,6 +95,12 @@ block body
 						+form(method="post", action="/initiatives/#{initiative.id}")
 							input(type="hidden", name="_method", value="put")
 							button.button.white-button(name="visibility", value="public")
+								= t("RENEW_DEADLINE")
+
+					if Initiative.canUpdateVoteDeadline(initiative)
+						+form(method="post", action="/initiatives/#{initiative.id}")
+							input(type="hidden", name="_method", value="put")
+							button.button.white-button(name="status", value="voting")
 								= t("RENEW_DEADLINE")
 
 					if Initiative.isDeletable(initiative)
