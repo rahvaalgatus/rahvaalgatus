@@ -12,6 +12,7 @@ var isFetchError = require("root/lib/fetch").is
 var next = require("co-next")
 var sleep = require("root/lib/promise").sleep
 var api = require("root/lib/citizen_os")
+var encode = encodeURIComponent
 var translateCitizenError = require("root/lib/citizen_os").translateError
 var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
 var EMPTY_COMMENT = {subject: "", text: ""}
@@ -64,7 +65,7 @@ exports.router.get("/new", function(req, res) {
 
 exports.router.use("/:id", next(function*(req, res, next) {
 	try {
-		var path = `/api/topics/${req.params.id}?include[]=vote`
+		var path = `/api/topics/${encode(req.params.id)}?include[]=vote`
 		if (req.user) path = "/api/users/self" + path.slice(4)
 		req.initiative = yield req.api(path).then(getBody)
 	}
