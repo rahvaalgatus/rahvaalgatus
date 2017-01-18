@@ -20,6 +20,7 @@ var SSL_PORT = process.env.SSL_PORT
 var PUBLIC_DIR = __dirname + "/../public"
 var FONT_SUFFIXES = [".eot", ".woff", ".woff2", ".ttf", ".svg"]
 var COOKIE_SECRET = process.env.COOKIE_SECRET || Config.cookieSecret
+var ERR_TEMPLATES = {404: "404", 412: "412", 500: "500"}
 
 var app = module.exports = Express()
 
@@ -86,14 +87,14 @@ app.use(function(err, req, res, next) {
   if (err instanceof HttpError) {
 		res.statusCode = err.code
 		res.statusMessage = err.message
-		res.render(err.code === 404 ? "404" : "500", {error: err})
+		res.render(ERR_TEMPLATES[err.code] || ERR_TEMPLATES[500], {error: err})
 		return
 	}
 
 	if (ENV === "development") return void next(err)
 
 	res.statusCode = 500
-	res.render("500", {error: {message: req.t("MSG_ERROR_50000")}})
+	res.render(ERR_TEMPLATES[500], {error: {message: req.t("MSG_ERROR_50000")}})
 })
 
 if (module.parent) return
