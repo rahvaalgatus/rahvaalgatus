@@ -69,11 +69,14 @@ O.each({
 	"/user": require("root/controllers/user_controller").router,
 }, (router, path) => app.use(path, router))
 
+app.use(function(req, res, next) { next(new HttpError(404)) })
+
 app.use(function(err, req, res, next) {
 	if (!(err instanceof HttpError)) reportError(err, req)
-	if (err instanceof HttpError && err.code == 412) reportError(err, req)
+	if (err instanceof HttpError && err.code === 412) reportError(err, req)
 	next(err)
 })
+
 app.use(function(err, req, res, next) {
   // Stop handling here if there was an error, but it's been responded to
   // already. That happens when you want to still report the error to Sentry,
