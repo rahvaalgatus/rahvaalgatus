@@ -73,9 +73,9 @@ O.each({
 	"/user": require("root/controllers/user_controller").router,
 }, (router, path) => app.use(path, router))
 
-app.use(function(req, res, next) { next(new HttpError(404)) })
+app.use(function(_req, _res, next) { next(new HttpError(404)) })
 
-app.use(function(err, req, res, next) {
+app.use(function(err, req, _res, next) {
 	if (!(err instanceof HttpError)) reportError(err, req)
 	if (err instanceof HttpError && err.code === 412) reportError(err, req)
 	next(err)

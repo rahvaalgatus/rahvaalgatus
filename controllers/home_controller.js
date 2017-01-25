@@ -6,7 +6,7 @@ var next = require("co-next")
 
 exports.router = Router({mergeParams: true})
 
-exports.router.get("/", next(function*(req, res, next) {
+exports.router.get("/", next(function*(_req, res) {
 	var initiatives = yield api.readInitiatives()
 
 	var hasEnded = Initiative.hasDiscussionEnded.bind(null, new Date)
@@ -17,5 +17,5 @@ exports.router.get("/", next(function*(req, res, next) {
 	res.render("home/index", initiatives)
 }))
 
-exports.router.get("/about", (req, res) => res.render("home/about"))
-exports.router.get("/donate", (req, res) => res.render("home/donate"))
+exports.router.get("/about", (_req, res) => res.render("home/about"))
+exports.router.get("/donate", (_req, res) => res.render("home/donate"))

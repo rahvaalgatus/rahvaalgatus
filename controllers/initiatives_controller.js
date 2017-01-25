@@ -18,12 +18,12 @@ var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
 var EMPTY_COMMENT = {subject: "", text: ""}
 
 var UI_TRANSLATIONS = O.map(require("root/lib/i18n").LANGUAGES, function(lang) {
-	return O.filter(lang, (v, k) => k.indexOf("HWCRYPTO") >= 0)
+	return O.filter(lang, (_v, k) => k.indexOf("HWCRYPTO") >= 0)
 })
 
 exports.router = Router({mergeParams: true})
 
-exports.router.get("/", next(function*(req, res) {
+exports.router.get("/", next(function*(_req, res) {
 	res.render("initiatives/index", yield api.readInitiatives())
 }))
 
@@ -59,7 +59,7 @@ exports.router.post("/", next(function*(req, res) {
 	})
 }))
 
-exports.router.get("/new", function(req, res) {
+exports.router.get("/new", function(_req, res) {
 	res.render("initiatives/create", {attrs: EMPTY_INITIATIVE})
 })
 
@@ -80,7 +80,7 @@ exports.router.use("/:id", next(function*(req, res, next) {
 	next()
 }))
 
-exports.router.get("/:id", function(req, res, next) {
+exports.router.get("/:id", function(req, _res, next) {
 	var initiative = req.initiative
 	switch (initiative.status) {
 		case "inProgress": req.url = req.path + "/discussion"; break
@@ -314,7 +314,7 @@ exports.router.get("/:id/signature", next(function*(req, res) {
 	res.redirect(303, req.baseUrl + "/" + initiative.id)
 }))
 
-exports.router.use(function(err, req, res, next) {
+exports.router.use(function(err, _req, res, next) {
   if (!(err instanceof HttpError)) return void next(err)
   if (err.code !== 404) return void next(err)
 	res.render("initiatives/404", {error: err})

@@ -19,11 +19,11 @@ exports.router.get("/", next(function*(req, res) {
 	res.render("initiatives/events", {events: events})
 }))
 
-exports.router.get("/new", function(req, res) {
+exports.router.get("/new", function(_req, res) {
 	res.render("initiatives/events/create", {attrs: EMPTY_EVENT})
 })
 
-exports.router.post("/", next(function*(req, res, next) {
+exports.router.post("/", next(function*(req, res) {
 	var initiative = req.initiative
 	var token = req.query.token
 

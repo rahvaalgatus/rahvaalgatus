@@ -8,11 +8,11 @@ var EMPTY_AUTHOR = {email: ""}
 
 exports.router = Router({mergeParams: true})
 
-exports.router.get("/new", function(req, res) {
+exports.router.get("/new", function(_req, res) {
 	res.render("initiatives/authors/create", {attrs: EMPTY_AUTHOR})
 })
 
-exports.router.post("/", next(function*(req, res, next) {
+exports.router.post("/", next(function*(req, res) {
 	var initiative = req.initiative
 
 	var path = `/api/users/self/topics/${initiative.id}/members/users`

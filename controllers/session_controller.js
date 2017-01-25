@@ -68,7 +68,7 @@ function unhash(req, res) {
 }
 
 function create(req, res, next) {
-	var err = oAuthCsrf.validate(req, res)
+	var err = oAuthCsrf.validate(req)
 	if (err) return void next(err)
 	oAuthCsrf.delete(req, res)
 	csrf.reset(req, res)
@@ -83,7 +83,7 @@ function create(req, res, next) {
 }
 
 function error(req, res, next) {
-	var err = oAuthCsrf.validate(req, res)
+	var err = oAuthCsrf.validate(req)
 	if (err) return void next(err)
 	oAuthCsrf.delete(req, res)
 
