@@ -6,6 +6,7 @@ block append options
 
 block prepend tab
 	- var I18n = require("root/lib/i18n")
+	- var linkify = require("root/lib/linkify")
 
 	section#initiative-events.white-section: center
 		include /_flash.jade
@@ -19,6 +20,6 @@ block prepend tab
 						time(datetime=event.createdAt)
 							= I18n.formatDate("numeric" ,event.createdAt)
 
-						p= event.text
+						p.text!= linkify(event.text)
 		else
 			p= t("NO_EVENTS")
