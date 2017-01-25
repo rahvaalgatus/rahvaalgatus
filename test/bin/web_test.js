@@ -16,6 +16,9 @@ describe("Web", function() {
 		"/discussions": "/",
 		"/goodpractice": "/about",
 		"/support_us": "/donate",
+
+		"/initiatives/56b22c01-1c55-41cc-9e79-d1eab95de783/events/create?token=42":
+			"/initiatives/56b22c01-1c55-41cc-9e79-d1eab95de783/events/new?token=42",
 	}, function(to, from) {
 		describe(from, function() {
 			before(function*() {
