@@ -11,14 +11,15 @@ describe("Web", function() {
 		"/topics/42/discussion": "/initiatives/42/discussion",
 		"/topics/42/vote": "/initiatives/42/vote",
 		"/topics/42/events": "/initiatives/42/events",
+		"/topics/42/events/create?token=42": "/initiatives/42/events/new?token=42",
 		"/topics/42/votes/69": "/initiatives/42/vote",
 		"/topics/create1": "/initiatives/new",
 		"/discussions": "/",
 		"/goodpractice": "/about",
 		"/support_us": "/donate",
 
-		"/initiatives/56b22c01-1c55-41cc-9e79-d1eab95de783/events/create?token=42":
-			"/initiatives/56b22c01-1c55-41cc-9e79-d1eab95de783/events/new?token=42",
+		"/initiatives/42/events/create?token=42":
+			"/initiatives/42/events/new?token=42",
 	}, function(to, from) {
 		describe(from, function() {
 			before(function*() {

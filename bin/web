@@ -61,6 +61,7 @@ O.each({
 	"/topics/:id/discussion": "/initiatives/:id/discussion",
 	"/topics/:id/vote": "/initiatives/:id/vote",
 	"/topics/:id/events": "/initiatives/:id/events",
+	"/topics/:id/events/create": "/initiatives/:id/events/new",
 	"/initiatives/:id/events/create": "/initiatives/:id/events/new",
 	"/topics/:id/votes/*": "/initiatives/:id/vote",
 	"/support_us": "/donate",
