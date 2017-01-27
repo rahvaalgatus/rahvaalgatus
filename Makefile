@@ -2,6 +2,7 @@ NODE = node
 NODE_OPTS =
 PORT = 3000
 ENV = development
+NPM_REBUILD = npm --ignore-scripts false rebuild --build-from-source
 TEST =
 TEST_OPTS =
 TEST_URL = http://dev.rahvaalgatus.ee:3000
@@ -82,6 +83,9 @@ livereload:
 
 shrinkwrap:
 	npm shrinkwrap
+
+rebuild:
+	$(NPM_REBUILD) node-sass
 
 deploy:
 	@rsync $(RSYNC_OPTS) . "$(APP_HOST):./$(or $(APP_PATH), $(error "APP_PATH"))/"
