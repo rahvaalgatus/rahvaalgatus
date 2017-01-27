@@ -32,6 +32,11 @@ RSYNC_OPTS = \
 	--exclude "/node_modules/selenium-*/***" \
 	--exclude "/node_modules/mocha/***" \
 	--exclude "/node_modules/node-sass/***" \
+	--exclude "/node_modules/livereload/***" \
+	--exclude "/node_modules/must/***" \
+	--exclude "/node_modules/mitm/***" \
+	--exclude "/node_modules/mocha/***" \
+	--exclude "/node_modules/co-mocha/***" \
 	--exclude "/tmp/***"
 
 export PORT
