@@ -8,6 +8,7 @@ var DateFns = require("date-fns")
 var Config = require("root/config")
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
+var catch401 = require("root/lib/fetch").catch.bind(null, 401)
 var isFetchError = require("root/lib/fetch").is
 var next = require("co-next")
 var sleep = require("root/lib/promise").sleep
@@ -326,7 +327,9 @@ function* readSignature(initiative, token) {
 	path += "?token=" + encodeURIComponent(token)
 
 	RETRY: for (var i = 0; i < 60; ++i) {
-		var res = yield api(path).catch(catch400)
+		// The signature endpoint is valid only for a limited amount of time.
+		// If that time passes, 401 is thrown.
+		var res = yield api(path).catch(catch400).catch(catch401)
 
 		switch (res.statusCode) {
 			case 200:
