@@ -19,7 +19,7 @@ var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
 var EMPTY_COMMENT = {subject: "", text: ""}
 
 var UI_TRANSLATIONS = O.map(require("root/lib/i18n").LANGUAGES, function(lang) {
-	return O.filter(lang, (_v, k) => k.indexOf("HWCRYPTO") >= 0)
+	return O.filter(lang, (_value, key) => key.indexOf("HWCRYPTO") >= 0)
 })
 
 exports.router = Router({mergeParams: true})

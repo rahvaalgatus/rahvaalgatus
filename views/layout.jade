@@ -46,10 +46,17 @@ html
 					input(type="hidden", name="_method", value="put")
 
 					each _, lang in LANGS
+						if lang !== "xx"
+							button.inherited(
+								name="language",
+								value=lang,
+								disabled=req.lang === lang)= t(lang)
+
+					if req.lang === "xx" || "translatable" in req.query
 						button.inherited(
 							name="language",
-							value=lang,
-							disabled=req.lang === lang)= t(lang)
+							value="xx",
+							disabled=req.lang === "xx") Translate
 
 				if req.user
 					.right
