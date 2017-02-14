@@ -232,5 +232,5 @@ app.controller("TopicVoteViewFormCtrl", [ "$scope", "$rootScope", "$state", "$lo
     };
 
     function onVote() { return $scope.topic.vote }
-    $scope.$watch(onVote, $scope.init.bind($scope))
+    $scope.$watch(onVote, function() { $scope.init() })
 }]);

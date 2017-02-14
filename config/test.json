@@ -1,6 +1,5 @@
 {
 	"url": "http://localhost.rahvaalgatus.ee",
-	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
 	"apiUrl": "https://citizenos-citizenos-web-test.herokuapp.com",
 	"apiPartnerId": "3bc2e428-8875-4f19-8007-6484ba0d8c58",
 	"apiAuthorizeUrl": "https://citizenos-citizenos-web-test.herokuapp.com/api/auth/openid/authorize",

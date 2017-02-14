@@ -61,14 +61,34 @@ html(ng-app="app")
 					a.mobile-set(href="#")
 
 					ul.left.main-navi.clearfix
-						li(ng-class="{'header-link-rus': app.language == 'ru'}")
-							a(href="/", , target="_self", translate="LINK_VOTING")
+						li(
+							ui-sref-active="active",
+							ng-class="{'header-link-rus': app.language == 'ru'}")
+							a(
+								ui-sref="home",
+								ng-class="{active: ('home' | isState)}",
+								translate="LINK_VOTING")
 
-						li(ng-class="{'header-link-rus': app.language == 'ru'}")
-							a(href="/about" , target="_self", translate="LNK_ABOUT")
+						li
+							a(
+								ng-href="{{Config.HELP_URLS[app.language]}}",
+								translate="LINK_HELP")
 
-						li(ng-class="{'header-link-rus': app.language == 'ru'}")
-							a(href="/support", target="_self", translate="LNK_SUPPORT")
+						li(
+							ui-sref-active="active",
+							ng-class="{'header-link-rus': app.language == 'ru'}")
+							a(
+								ui-sref="about",
+								ng-class="{active: ('about' | isState)}",
+								translate="LNK_ABOUT")
+
+						li(
+							ui-sref-active="active",
+							ng-class="{'header-link-rus': app.language == 'ru'}")
+							a(
+								href="/support_us",
+								ng-class="{active: ('support' | isState)}",
+								translate="LNK_SUPPORT")
 
 						li.mobile-items(ng-show="!app.user.isLoading && !app.user.loggedIn")
 							p
