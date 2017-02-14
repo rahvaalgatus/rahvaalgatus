@@ -2,46 +2,59 @@ NODE = node
 NODE_OPTS =
 PORT = 3000
 ENV = development
+NPM_REBUILD = npm --ignore-scripts false rebuild --build-from-source
 TEST =
 TEST_OPTS =
 TEST_URL = http://dev.rahvaalgatus.ee:3000
 SASS = ./node_modules/.bin/node-sass --recursive --indent-type tab --indent-width 1 --output-style expanded
-GRUNT = ./node_modules/.bin/grunt
-DEPLOY_HOST =
 TRANSLATIONS_URL = https://spreadsheets.google.com/feeds/list/1JKPUNp8Y_8Aigq7eGJXtWT6nZFhd31k2Ht3AjC-i-Q8/1/public/full?alt=json
 JQ_OPTS = --tab --sort-keys
-SELENIUM_BROWSER = chrome
 
-STAGING_HOST = staging.rahvaalgatus.ee
-PRODUCTION_HOST = production.rahvaalgatus.ee
-APP_HOST = app.rahvaalgatus.ee
+APP_HOST = rahvaalgatus.ee
+APP_PATH =
 
-LFTP_MIRROR_OPTS = \
-	--verbose=1 \
-	--continue \
-	--parallel=4 \
-	--dereference \
-	--reverse \
-	--exclude node_modules/root/ \
-	--exclude \.git/ \
-	--exclude-glob .editorconfig \
-	--exclude-glob .gitignore \
-	--exclude-glob .git* \
-	--delete
+RSYNC_OPTS = \
+	--compress \
+	--recursive \
+	--links \
+	--itemize-changes \
+	--omit-dir-times \
+	--times \
+	--delete \
+	--delete-excluded \
+	--prune-empty-dirs \
+	--exclude ".*" \
+	--exclude "/tags" \
+	--exclude "/app/***" \
+	--exclude "/stylesheets/***" \
+	--exclude "/test/***" \
+	--exclude "/scripts/***" \
+	--exclude "/node_modules/selenium-*/***" \
+	--exclude "/node_modules/mocha/***" \
+	--exclude "/node_modules/node-sass/***" \
+	--exclude "/node_modules/livereload/***" \
+	--exclude "/node_modules/must/***" \
+	--exclude "/node_modules/mitm/***" \
+	--exclude "/node_modules/mocha/***" \
+	--exclude "/node_modules/co-mocha/***" \
+	--exclude "/tmp/***"
 
 export PORT
 export ENV
 export TEST
 export TEST_URL
-export SELENIUM_BROWSER
+
+ifneq ($(filter test spec autotest autospec, $(MAKECMDGOALS)),)
+	ENV = test
+endif
 
 love:
 	@echo "Feel like makin' love."
 
-compile: javascripts stylesheets views
+compile: javascripts stylesheets
 
 autocompile:
-	$(MAKE) -j3 autojavascripts autostylesheets autoviews
+	$(MAKE) -j3 autojavascripts autostylesheets
 
 javascripts:
 	$(MAKE) -C app compile
@@ -52,14 +65,8 @@ autojavascripts:
 stylesheets:
 	$(SASS) --output public/assets stylesheets
 
-autostylesheets: SASS := $(SASS) --watch
 autostylesheets: stylesheets
-
-views:
-	$(MAKE) -C app views
-
-autoviews:
-	$(MAKE) -C app autoviews
+	$(MAKE) SASS="$(SASS) --watch" "$<"
 
 test:
 	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R dot $(TEST_OPTS)
@@ -82,33 +89,21 @@ livereload:
 shrinkwrap:
 	npm shrinkwrap
 
-deploy: DEPLOY_HOST ?= $(error "Please set DEPLOY_HOST")
-deploy:
-	lftp "$(DEPLOY_HOST)" -e "mirror $(LFTP_MIRROR_OPTS) ./public .; exit"
+rebuild:
+	$(NPM_REBUILD) node-sass
 
-staging: DEPLOY_HOST = $(STAGING_HOST)
+deploy:
+	@rsync $(RSYNC_OPTS) . "$(APP_HOST):./$(or $(APP_PATH), $(error "APP_PATH"))/"
+
+staging: APP_PATH = htdocs/rahvaalgatus-staging
 staging: deploy
 
-staging/app: DEPLOY_HOST = $(APP_HOST)
-staging/app: tmp/deploy
-staging/app:
-	lftp "$(DEPLOY_HOST)" -e "mirror $(LFTP_MIRROR_OPTS) tmp/deploy/ .; exit"
-
-production: DEPLOY_HOST = $(PRODUCTION_HOST)
+production: APP_PATH = htdocs/rahvaalgatus
 production: deploy
 
-translations: public/assets/en.json
-translations: public/assets/et.json
-translations: public/assets/ru.json
-
-public/assets/en.json: tmp/translations.json
-	jq $(JQ_OPTS) -f scripts/translation.jq --arg lang english "$<" > "$@"
-
-public/assets/et.json: tmp/translations.json
-	jq $(JQ_OPTS) -f scripts/translation.jq --arg lang estonian "$<" > "$@"
-	
-public/assets/ru.json: tmp/translations.json
-	jq $(JQ_OPTS) -f scripts/translation.jq --arg lang russian "$<" > "$@"
+translations: lib/i18n/en.json
+translations: lib/i18n/et.json
+translations: lib/i18n/ru.json
 
 tmp:
 	mkdir -p tmp
@@ -116,14 +111,19 @@ tmp:
 tmp/translations.json: tmp
 	wget "$(TRANSLATIONS_URL)" -O "$@"
 
-tmp/deploy:
-	git clone . "$@"
+lib/i18n/en.json: tmp/translations.json
+	jq $(JQ_OPTS) -f scripts/translation.jq --arg lang english "$<" > "$@"
+
+lib/i18n/et.json: tmp/translations.json
+	jq $(JQ_OPTS) -f scripts/translation.jq --arg lang estonian "$<" > "$@"
 	
+lib/i18n/ru.json: tmp/translations.json
+	jq $(JQ_OPTS) -f scripts/translation.jq --arg lang russian "$<" > "$@"
+
 .PHONY: love
 .PHONY: compile autocompile
 .PHONY: javascripts autojavascripts
 .PHONY: stylesheets autostylesheets
-.PHONY: views autoviews
 .PHONY: test spec autotest autospec
 .PHONY: server
 .PHONY: shrinkwrap

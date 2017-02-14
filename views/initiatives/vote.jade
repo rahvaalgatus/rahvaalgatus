@@ -1,0 +1,175 @@
+extends ./layout
+include ./_mixins
+
+block append options
+	- var subpage = "vote"
+
+block append head
+	script(src="/assets/html5.js")
+	script(src="/assets/hwcrypto.js")
+
+block prepend tab
+	- var I18n = require("root/lib/i18n")
+	- var Config = require("root/config")
+	- var Initiative = require("root/lib/initiative")
+	- var stringify = require("root/lib/json").stringify
+	- var hasVote = flash("signed") || Initiative.hasVote("Yes", initiative)
+	- var now = new Date
+
+	section#initiative.white-section: center
+		include /_flash.jade
+
+		if Initiative.hasVoteEnded(now, initiative)
+			#initiative-ended
+				- var sigs = Initiative.countSignatures("Yes", initiative)
+
+				if Initiative.isSuccessful(initiative)
+					h2= t("N_SIGNATURES_COLLECTED", {votes: sigs})
+					p= t("VOTING_SUCCEEDED")
+				else
+					h2= t("N_SIGNATURES_FAILED", {votes: sigs})
+					p= t("VOTING_FAILED")
+
+		if hasVote
+			#initiative-signed
+				h2= t("DOCUMENT_SIGNED")
+				p
+					= t("THANKS_FOR_SIGNING")
+					br
+					br
+					- var url = flash("signed") || initiative.vote.downloads.bdocVote
+					a(href=url)= t("LNK_DOWNLOAD_USER_BDOC")
+
+		article.text
+			if initiative.status == "voting"
+				#initiative-progress
+					time.deadline(datetime=initiative.vote.endsAt)
+						- var endsAt = I18n.formatDate("numeric", initiative.vote.endsAt)
+						= t("VOTING_DEADLINE") + ": " + endsAt
+
+					+progress(initiative)
+
+			header
+				span.author
+					= t("CREATED_BY")
+					| &#32;
+					= initiative.creator.name
+
+			!= text
+
+		if Initiative.isVotable(now, initiative)
+			- var optId = Initiative.findOptionId(hasVote ? "No" : "Yes", initiative)
+
+			#initiative-vote
+				if hasVote
+					h2= t("REVOKE_SIGNATURE")
+				else
+					h2= t("HEADING_CAST_YOUR_VOTE")
+					p= t("HEADING_VOTE_REQUIRE_HARD_ID")
+
+				//- This flash is for the the Id-card JavaScript code below.
+				p#initiative-vote-flash.flash.error
+
+				+form#id-card-form(
+					method="post",
+					action="/initiatives/#{initiative.id}/signature")
+					h3: img(src="/images/id-kart-icon.png", alt="ID-card")
+					input(type="hidden", name="optionId", value=optId)
+					input(type="hidden", name="certificate", value="")
+					input(type="hidden", name="signature", value="")
+					input(type="hidden", name="token", value="")
+
+					//- The Id-card form will be submitted async therefore no button
+					//- value.
+					input(type="hidden", name="method", value="id-card")
+
+					if hasVote
+						button.button.white-button= t("BTN_VOTE_REVOKE_WITH_ID_CARD")
+					else
+						button.button.green-button= t("BTN_VOTE_SIGN_WITH_ID_CARD")
+
+				:javascript
+					var Hwcrypto = require("@rahvaalgatus/hwcrypto")
+					var TRANSLATIONS = !{stringify(translations)}
+					var form = document.getElementById("id-card-form")
+					var flash = document.getElementById("initiative-vote-flash")
+					var all = Promise.all.bind(Promise)
+
+					form.addEventListener("submit", function(ev) {
+						notice("")
+						if (form.elements.signature.value === "") ev.preventDefault()
+
+						var certificate = Hwcrypto.authenticate()
+
+						var token = certificate.then(function(certificate) {
+							var query = ""
+							query += "certificate=" + encodeURIComponent(certificate)
+							query += "&"
+							query += "optionId=#{optId}"
+							return fetch("/initiatives/#{initiative.id}/signable?" + query)
+						})
+
+						token = token.then(read).then(function(res) {
+							if (!res.ok) throw res.json
+							else return res.json
+						})
+
+						var sig = all([certificate, token]).then(function(all) {
+							return Hwcrypto.sign(all[0], all[1].hash, all[1].digest)
+						})
+
+						var done = all([certificate, token, sig]).then(function(all) {
+							form.elements.certificate.value = all[0]
+							form.elements.token.value = all[1].token
+							form.elements.signature.value = all[2]
+							form.submit()
+						})
+
+						done.catch(noticeError)
+						done.catch(raise)
+					})
+
+					function noticeError(err) {
+						notice(err.code ? TRANSLATIONS[err.code] : err.message)
+					}
+
+					function read(res) {
+						return res.json().then(function(v) { return res.json = v, res })
+					}
+
+					function notice(msg) { flash.textContent = msg }
+					function raise(err) { setTimeout(function() { throw err }) }
+
+				+form#mobile-id-form(
+					method="post",
+					action="/initiatives/#{initiative.id}/signature")
+					-
+						var btnClass = hasVote ? "white-button" : "green-button"
+						var btnText = hasVote
+							? t("BTN_VOTE_REVOKE_WITH_MOBILE_ID")
+							: t("BTN_VOTE_SIGN_WITH_MOBILE_ID")
+
+					h3: img(src="/images/mobile-id-icon.png", alt="Mobile ID")
+
+					input#mobile-id-form-toggle(type="checkbox", style="display: none")
+					label.button(for="mobile-id-form-toggle", class=btnClass)= btnText
+
+					input(type="hidden", name="optionId", value=optId)
+
+					input.form-input(
+						type="tel",
+						name="phoneNumber",
+						placeholder=t("PLACEHOLDER_PHONE_NUMBER"),
+						required)
+
+					input.form-input(
+						type="tel",
+						name="pid",
+						placeholder=t("PLACEHOLDER_PERSONAL_IDENTIFICATION_CODE"),
+						required)
+
+					button.button(name="method", value="mobile-id", class=btnClass)
+						= btnText
+
+block append tab
+	+comments(comments)

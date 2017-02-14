@@ -1,0 +1,20 @@
+{
+	"votesRequired": 1000,
+	"minDeadlineDays": 3,
+	"maxDeadlineDays": 366,
+
+	"googleAnalyticsAccount": "UA-74848422-1",
+	"userVoiceApiKey": "X2tNuk059z6CD4Em5Q65KQ",
+
+	"helpUrls": {
+		"et": "http://help.rahvaalgatus.ee/abi",
+		"en": "http://help.rahvaalgatus.ee/help",
+		"ru": "http://help.rahvaalgatus.ee/pomosh"
+	},
+
+	"videoUrls": {
+		"et": "https://www.youtube.com/watch?v=za230fHP6pg",
+		"en": "https://www.youtube.com/watch?v=27lN6HmwuY4",
+		"ru": "https://www.youtube.com/watch?v=3tZpKl-ICjQ"
+	}
+}

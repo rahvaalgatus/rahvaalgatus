@@ -1,0 +1,52 @@
+extends ./layout
+include ./_mixins
+
+block append options
+	- var subpage = "discussion"
+
+block prepend tab
+	- var I18n = require("root/lib/i18n")
+	- var Config = require("root/config")
+	- var Initiative = require("root/lib/initiative")
+
+	section#initiative.white-section: center
+		include /_flash.jade
+
+		article.text
+			header
+				span.author
+					= t("CREATED_BY")
+					| &#32;
+					= initiative.creator.name
+
+				if initiative.endsAt
+					br
+					time.deadline(datetime=initiative.endsAt)
+						- var endsAt = I18n.formatDate("numeric", initiative.endsAt)
+						= t("DISCUSSION_DEADLINE") + ": " + endsAt
+
+			if Initiative.isEditable(initiative)
+				- var url = initiative.padUrl
+				- if (Config.etherpadInsecure) url = url.replace(/^https/, "http")
+
+				iframe#initiative-etherpad(
+					src=url,
+					frameborder="0",
+					scrolling="no")
+
+				:javascript
+					var el = document.getElementById("initiative-etherpad")
+
+					window.addEventListener("message", function(ev) {
+						switch (ev.data.name) {
+							case "ep_resize":
+								var height = ev.data.data.height
+								if (el.offsetHeight != height) el.style.height = height + "px"
+								break
+						}
+					})
+			else
+				!= text
+
+block append tab
+	+comments(comments)

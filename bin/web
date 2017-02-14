@@ -4,25 +4,131 @@ var Fs = require("fs")
 var ROOT_LINK = __dirname + "/../node_modules/root"
 if (!Fs.existsSync(ROOT_LINK)) Fs.symlinkSync("..", ROOT_LINK)
 
+var O = require("oolong")
 var Url = require("url")
 var Http = require("http")
+var Path = require("path")
+var Jade = require("jade")
 var Express = require("express")
+var Config = require("root/config")
+var HttpError = require("standard-http-error")
+var redirect = require("root/lib/redirect")
+var reportError = require("root").errorReporter
+var ENV = process.env.ENV
 var PORT = process.env.PORT || 3000
+var SSL_PORT = process.env.SSL_PORT
 var PUBLIC_DIR = __dirname + "/../public"
+var FONT_SUFFIXES = [".eot", ".woff", ".woff2", ".ttf", ".svg"]
+var COOKIE_SECRET = process.env.COOKIE_SECRET || Config.cookieSecret
+var ERR_TEMPLATES = {404: "404", 412: "412", 500: "500"}
 
 var app = module.exports = Express()
-app.use(Express.static(PUBLIC_DIR))
 
-app.use(function(req, res, next) {
-  res.sendFile("app.html", {root: PUBLIC_DIR})
+app.enable("trust proxy", "loopback")
+app.set("view engine", "jade")
+app.locals.pretty = false
+app.locals.require = require
+app.locals.basedir = app.get("views")
+Jade.filters.javascript = require("root/lib/jade/javascript_filter")
+
+app.use(Express.static(PUBLIC_DIR, {setHeaders: setStaticHeaders}))
+
+switch (ENV) {
+	case "development":
+	case "staging":
+		app.use(require("morgan")("dev"))
+		break
+}
+
+app.use((req, res, next) => { res.locals.req = req; next() })
+app.use(require("cookie-parser")(COOKIE_SECRET))
+app.use(require("body-parser").urlencoded({extended: true}))
+app.use(require("root/lib/middleware/method_override_middleware"))
+app.use(require("root/lib/middleware/i18n_middleware"))
+app.use(require("root/lib/middleware/csrf_middleware"))
+app.use(require("flash-fiction/express"))
+
+app.use(require("root/lib/middleware/session_middleware"))
+app.use(require("root/lib/middleware/api_middleware"))
+
+O.each({
+	"/topics": "/",
+	"/topics/create1": "/initiatives/new",
+	"/votings": "/",
+	"/discussions": "/",
+	"/goodpractice": "/about",
+	"/topics/:id": "/initiatives/:id",
+	"/topics/:id/discussion": "/initiatives/:id/discussion",
+	"/topics/:id/vote": "/initiatives/:id/vote",
+	"/topics/:id/events": "/initiatives/:id/events",
+	"/topics/:id/events/create": "/initiatives/:id/events/new",
+	"/initiatives/:id/events/create": "/initiatives/:id/events/new",
+	"/topics/:id/votes/*": "/initiatives/:id/vote",
+	"/support_us": "/donate",
+}, (to, from) => app.get(from, redirect(302, to)))
+
+O.each({
+	"/": require("root/controllers/home_controller").router,
+	"/initiatives": require("root/controllers/initiatives_controller").router,
+	"/session": require("root/controllers/session_controller").router,
+	"/user": require("root/controllers/user_controller").router,
+}, (router, path) => app.use(path, router))
+
+app.use(function(_req, _res, next) { next(new HttpError(404)) })
+
+app.use(function(err, req, _res, next) {
+	if (!(err instanceof HttpError)) reportError(err, req)
+	if (err instanceof HttpError && err.code === 412) reportError(err, req)
+	next(err)
+})
+
+app.use(function(err, req, res, next) {
+  // Stop handling here if there was an error, but it's been responded to
+  // already. That happens when you want to still report the error to Sentry,
+  // but have displayed something to the user.
+  if (res.headersSent) return
+
+  if (err instanceof HttpError) {
+		res.statusCode = err.code
+		res.statusMessage = err.message
+		res.render(ERR_TEMPLATES[err.code] || ERR_TEMPLATES[500], {error: err})
+		return
+	}
+
+	if (ENV === "development") return void next(err)
+
+	res.statusCode = 500
+	res.render(ERR_TEMPLATES[500], {error: {message: req.t("MSG_ERROR_50000")}})
 })
 
 if (module.parent) return
 
-Http.createServer(app).listen(PORT, function() {
+Http.createServer(app).listen(PORT, onListening)
+
+if (SSL_PORT != null) require("https").createServer({
+	key: Fs.readFileSync(__dirname + "/../config/" + ENV + ".key"),
+	cert: Fs.readFileSync(__dirname + "/../config/" + ENV + ".pem"),
+}, app).listen(SSL_PORT, onListening)
+
+function onListening() {
   var addr = this.address()
+	var protocol = this.cert == null ? "http" : "https"
 
   console.log("Listening on %s.", typeof addr == "string" ? addr : Url.format({
-    protocol: "http", hostname: addr.address, port: addr.port
+    protocol: protocol, hostname: addr.address, port: addr.port
   }))
-})
+}
+
+function setStaticHeaders(res, path) {
+	if (isCorsable(path)) res.setHeader("Access-Control-Allow-Origin", "*")
+}
+
+function isCorsable(path) {
+	path = Path.relative(PUBLIC_DIR, path)
+	if (FONT_SUFFIXES.some((s) => path.endsWith(s))) return true
+
+	switch (path) {
+		case "assets/etherpad.css": return true
+		default: return false
+	}
+}

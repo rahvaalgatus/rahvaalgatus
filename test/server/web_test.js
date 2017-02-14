@@ -64,13 +64,17 @@ describe(URL, function() {
 	})
 
 	O.each({
-		"/votings": "/topics",
+		"/votings": "/",
 		"/topics": "/",
 		"/topics/": "/",
+		"/topics/42": "/initiatives/42",
+		"/topics/42/discussion": "/initiatives/42/discussion",
+		"/topics/42/vote": "/initiatives/42/vote",
+		"/topics/42/events": "/initiatives/42/events",
+		"/topics/42/votes/69": "/initiatives/42/vote",
+		"/topics/create1": "/initiatives/new",
 		"/discussions": "/",
 		"/goodpractice": "/about",
-		"/topics/42/votes/69": "/topics/42/vote",
-		"/topics/create1": "/topics/new",
 	}, function(to, from) {
 		describe(from, function() {
 			before(function*() {
@@ -80,20 +84,6 @@ describe(URL, function() {
 			it("must redirect to " + to, function() {
 				;[301, 302].must.include(this.res.statusCode)
 				this.res.headers.location.must.equal(URL + to)
-			})
-		})
-	})
-
-	;[
-		"/topics/42",
-	].forEach(function(path) {
-		describe(path, function() {
-			before(function*() {
-				this.res = yield this.request(path, {method: "HEAD"})
-			})
-
-			it("must not redirect", function() {
-				this.res.statusCode.must.equal(200)
 			})
 		})
 	})

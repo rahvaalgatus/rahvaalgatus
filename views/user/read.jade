@@ -1,0 +1,34 @@
+extends ../layout
+include ../initiatives/_mixins
+
+block options
+	- var page = "user"
+
+block body
+	section#user.white-section.text-section: center
+		h1= user.name
+		include ../_flash
+
+		+form.form(method="post", action="/user")
+			input(type="hidden", name="_method", value="put")
+
+			if error
+				p.flash.error= error
+
+			label.form-label= t("LBL_FULL_NAME")
+			input.form-input(
+				type="text",
+				name="name",
+				value=attrs.name,
+				required)
+
+			label.form-label= t("LBL_EMAIL")
+			input.form-input(
+				type="email",
+				name="email",
+				value=attrs.email)
+
+			button.form-submit.green-button= t("BTN_SAVE")
+
+	section#initiatives.grey-section.initiatives-section: center
+		+initiatives(initiatives)

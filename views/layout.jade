@@ -1,0 +1,115 @@
+include ./_mixins
+
+- var Config = require("root/config")
+- var stringify = require("root/lib/json").stringify
+- var selected = require("root/lib/css").selected
+- var LANGS = require("root/lib/i18n").LANGUAGES
+- var ENV = process.env.ENV
+
+doctype html
+html
+	block options
+
+	head
+		title #{title == null ? "" : title + " - "} Rahvaalgatus
+		meta(charset="utf-8")
+		meta(name="viewport", content="width=device-width")
+		link(rel="stylesheet", href="/assets/page.css", type="text/css")
+
+		case ENV
+			when "staging"
+			when "production"
+				script(src="https://cdn.ravenjs.com/3.9.1/raven.min.js")
+				script.
+					Raven.config("#{process.env.SENTRY_PUBLIC_DSN}", {
+						environment: "#{ENV}",
+						user: !{stringify(req.user)},
+
+						ignoreErrors: [
+							"no_implementation",
+							"user_cancel",
+							"no_certificates"
+						]
+					}).install()
+
+		if ENV === "development"
+			script(
+				src="http://#{req.hostname}:35729/livereload.js?snipver=1",
+				async, defer)
+
+		block head
+
+	body(id=page + "-page")
+		header#header: center
+			menu
+				+form.languages(action="/session", method="post")
+					input(type="hidden", name="_method", value="put")
+
+					each _, lang in LANGS
+						if lang !== "xx"
+							button.inherited(
+								name="language",
+								value=lang,
+								disabled=req.lang === lang)= t(lang)
+
+					if req.lang === "xx" || "translatable" in req.query
+						button.inherited(
+							name="language",
+							value="xx",
+							disabled=req.lang === "xx") Translate
+
+				if req.user
+					.right
+						a.user(href="/user")= req.user.name
+						+form.signout(action="/session", method="post")
+							button.inherited(name="_method", value="delete")= t("BTN_LOG_OFF")
+				else
+					a.right(href="/session/new")= t("BTN_LOG_IN_REGISTER")
+
+			a.logo(href="/")
+				img(src="/images/rahvaalgatus.png", alt="Rahvaalgatus")
+
+			nav
+				ul
+					li: a(
+						href="/initiatives",
+						class=selected(page, "initiatives") || selected(page, "initiative"))
+						= t("LINK_VOTING")
+					li: a(href=Config.helpUrls[req.lang])= t("LINK_HELP")
+					li: a(href="/about", class=selected(page, "about"))= t("LNK_ABOUT")
+					li: a(href="/donate", class=selected(page, "donate"))= t("LNK_SUPPORT")
+
+		main#main
+			block body
+
+		footer#footer
+			center
+				.contact
+					a(href="http://kogu.ee")
+						- var logo = "/images/esstikoostoo_logo.png"
+						- if (req.lang !== "et") logo = "/images/esstikoostoo_logo_en.png"
+						img(width="200", src=logo, alt=t("FOOTER_SA"))
+
+					p
+						//-= t("FOOTER_SA")
+						//-br
+						= t("FOOTER_ADDRESS")
+						br
+						!= t("FOOTER_EMAIL", {email: "info@rahvaalgatus.ee"})
+						br
+						!= t("FOOTER_PHONE", {phone: "+3726408714"})
+						br
+						| Facebook:&#32;
+						a(href="https://www.facebook.com/rahvaalgatus") fb.me/rahvaalgatus
+						br
+						| Twitter:&#32;
+						a(href="https://twitter.com/rahvaalgatus") @rahvaalgatus
+
+				.powered-by
+					p
+						a(href="https://citizenos.com")
+							img(src="/images/citizenos_logo_big.png", alt="Citizen OS")
+						br
+						= t("POWERED_BY")
+
+		include ./_analytics

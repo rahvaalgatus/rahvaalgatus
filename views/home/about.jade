@@ -1,0 +1,13 @@
+extends ../layout
+
+block options
+	- var title = t("ABOUT_TITLE")
+	- var page = "about"
+
+block body
+	section#about.white-section.text-section: center
+		h1= t("ABOUT_TITLE")
+		p= t("ABOUT_CONTENT")
+
+		h1#tos= t("GOOD_PRACTICE_TITLE")
+		p!= t("GOOD_PRACTICE_CONTENT")

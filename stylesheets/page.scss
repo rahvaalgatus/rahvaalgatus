@@ -1,0 +1,1125 @@
+@import "_lib";
+$page-padding: 20px;
+$page-padding: 2rem;
+$light-blue: #45a0e6;
+$dark-blue: #3390d7;
+$grey-background: #f2f2f2;
+$darker-grey-background: #e8e8e8;
+$button-height: 3.6rem;
+$button-radius: 0.3rem;
+$flash-header-color: #282d33;
+$flash-body-color: #3d434a;
+
+@import "reset";
+@import "_fonts";
+
+html,
+body {
+	height: 100%;
+}
+
+body {
+	font-family: $museo-sans;
+	font-weight: 300;
+	font-size: 1.4rem;
+	color: $black-text;
+}
+
+center {
+	max-width: $page-width + 4rem;
+	padding-left: $page-padding;
+	padding-right: $page-padding;
+	margin: 0 auto;
+	text-align: inherit;
+
+	// Internet Explorer still centers things under <center> even with
+	// text-align: inherit.
+	* { margin-right: auto }
+
+	@include tablet {
+		padding-left: 1.5rem;
+		padding-right: 1.5rem;
+	}
+}
+
+.left { float: left; }
+.right { float: right; }
+
+.grey-section,
+.white-section,
+.text-section {
+	padding-top: 4rem;
+	padding-bottom: 4rem;
+
+	@include tablet {
+		padding-top: 2.5rem;
+		padding-bottom: 2.5rem;
+	}
+
+	&:after { display: block; content: ""; clear: both; }
+}
+
+.grey-section {
+	background-color: $grey-background;
+
+	& + .grey-section { padding-top: 0; }
+}
+
+.white-section {
+	background-color: white;
+}
+
+.text {
+	line-height: 1.5;
+
+	h1 {
+		font-size: 3.4rem;
+		color: $link;
+		font-family: $museo-sans;
+		line-height: 1.2;
+	}
+
+	h1 ~ h1 {
+		margin-top: 4rem;
+	}
+
+	h1 + p {
+		margin-top: 2rem;
+	}
+
+	h2,
+	h3 {
+		font-family: $museo-sans;
+		font-weight: bold;
+	}
+
+	h2 {
+		margin: 2rem 0 1rem;
+		font-size: 3.0rem;
+	}
+
+	h3 {
+		margin: 2rem 0 1rem;
+		font-size: 2.2rem;
+	}
+
+	p + p {
+		margin-top: 2rem;
+	}
+
+	strong {
+		// Rahvaalgatus lacks weights other than normal for Tisa Pro.
+		font-size: 1.7rem;
+		font-family: $museo-sans;
+		font-weight: bold;
+	}
+
+	em { font-style: italic; }
+	u { text-decoration: underline; }
+
+	a:not(.button) {
+		color: $blue;
+		&:hover { text-decoration: underline; }
+	}
+
+	ol, ul {
+		margin-top: 1rem;
+		margin-bottom: 1rem;
+	}
+
+	li {
+		margin-left: 2rem;
+		list-style-position: outside;
+	}
+
+	ul > li { list-style-type: disc; }
+	ol > li { list-style-type: decimal; }
+
+	form {
+		margin-top: 1rem;
+	}
+}
+
+.text-section {
+	@extend .text;
+
+	p {
+		white-space: pre-wrap;
+	}
+
+	.form-input,
+	.form-textarea {
+		width: 100%;
+		max-width: 64rem;
+	}
+}
+
+.initiatives-section {
+	$initiative-width: 22.5rem;
+
+	h2 {
+		font-size: 2rem;
+		line-height: 3rem;
+		color: $link;
+		border-bottom: 1px solid #00cb81;
+		text-align: right;
+		font-family: $museo-sans;
+		font-weight: 900;
+		text-transform: uppercase;
+		max-width: $initiative-width;
+
+		margin-bottom: -3rem;
+
+		& ~ h2 {
+			margin-top: 4rem;
+		}
+
+		@include tablet {
+			text-align: left;
+			margin-bottom: 2rem;
+		}
+
+		@include mobile {
+			max-width: none;
+		}
+	}
+
+	.initiatives {
+		overflow: hidden;
+		margin-left: $initiative-width;
+
+		@include tablet {
+			margin-left: 0;
+		}
+	}
+
+	.initiative {
+		background: white;
+		box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+
+		width: $initiative-width;
+		float: left;
+		padding: 1rem 2rem 0;
+		margin-left: 2rem;
+		margin-bottom: 2rem;
+
+		@include tablet {
+			margin-left: 0;
+			margin-right: 2rem;
+		}
+
+		a {
+			display: block;
+		}
+
+		time,
+		.author {
+			color: #AAAAAA;
+			font-size: 1.4rem;
+			font-family: $tisa-pro;
+		}
+
+		h3 {
+			font-size: 17px;
+			color: #4F4F4F;
+			line-height: 1.5;
+			margin-top: 1rem;
+			word-wrap: break-word;
+			min-height: 16rem;
+		}
+
+		&:hover {
+			box-shadow: 0 1px 10px 0 rgba(0, 0, 0, 0.4);
+			h3 { color: $link; }
+		}
+
+		.initiative-progress {
+			margin: 0.5rem -2rem 0;
+			padding-top: 1rem;
+			padding-bottom: 0.8rem;
+			line-height: 1;
+		}
+
+		@include mobile {
+			width: 100%;
+		}
+	}
+}
+
+button.inherited {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	-ms-appearance: none;
+	appearance: none;
+
+	border: none;
+	background: none;
+	font: inherit;
+	color: inherit;
+	padding: 0;
+	margin: 0;
+}
+
+.green-button,
+.blue-button,
+.yellow-button,
+.white-button {
+	border-radius: $button-radius;
+	border: 0px solid transparent;
+	display: inline-block;
+	font-family: $museo-sans;
+	font-weight: bold;
+	font-size: 1.3rem;
+	height: $button-height;
+	padding: 0 2rem;
+	text-align: center;
+	text-transform: uppercase;
+	vertical-align: middle;
+	cursor: pointer;
+
+	&:not(button) { line-height: $button-height; }
+
+	i {
+		margin-right: 1rem;
+		margin-left: -1rem;
+	}
+}
+
+.green-button {
+	background: #00cb81;
+	color: white;
+	border: 1px solid #02b071;
+}
+
+.blue-button {
+	background: $light-blue;
+	color: white;
+}
+
+.yellow-button {
+	background: #ffb400;
+	color: #4a555d;
+	border: 1px solid #f1aa01;
+}
+
+.white-button {
+	background: white;
+	border: 1px solid #cecece;
+	color: #4a555d;
+}
+
+.form-label,
+.form-input,
+.form-textarea,
+.form-submit {
+	line-height: 1.5;
+	font-size: 14px;
+	font-family: $museo-sans;
+	font-weight: 500;
+}
+
+.form-input ~ .form-submit,
+.form-input ~ .form-checkbox {
+	margin-top: 1rem;
+}
+
+.form-input ~ .form-date-picker {
+	margin-top: 2rem;
+}
+
+.form-label {
+	display: inline-block;
+	font-weight: bold;
+
+	& ~ .form-label {
+		margin-top: 1rem;
+	}
+}
+
+.form-input,
+.form-textarea {
+	display: block;
+}
+
+.form-input {
+	border: 1px solid #cecece;
+	height: $button-height;
+	padding: 0 1rem;
+
+	background: white;
+	color: #4a555d;
+	border-radius: $button-radius;
+}
+
+.form-textarea {
+	border: 1px solid #cecece;
+	padding: 0.5rem 1rem;
+	min-height: 10rem;
+
+	background: white;
+	color: #4a555d;
+	border-radius: $button-radius;
+}
+
+.form-checkbox {
+	display: block;
+	cursor: pointer;
+
+	input[type=checkbox] {
+		margin: 0;
+		margin-right: 1rem;
+		width: 2rem;
+		height: 2rem;
+		display: inline-block;
+		vertical-align: middle;
+	}
+}
+
+.form-date-picker {
+	font-family: $museo-sans;
+	max-width: 32rem;
+
+	.pika-title {
+		text-align: center;
+		font-weight: bold;
+		overflow: hidden;
+		margin-bottom: 1rem;
+		line-height: 2.5rem;
+	}
+
+	.pika-label {
+		display: inline-block;
+		select { display: none; }
+
+		& + .pika-label { margin-left: 0.5rem; }
+	}
+
+	.pika-prev,
+	.pika-next {
+		@extend button.inherited;
+		width: 2.5rem;
+		height: 2.5rem;
+		text-indent: -9999px;
+	}
+
+	.pika-prev {
+		float: left;
+		background: url(/images/calendar-prev.png) center no-repeat;
+	}
+
+	.pika-next {
+		float: right;
+		background: url(/images/calendar-next.png) center no-repeat;
+	}
+
+	table {
+		width: 100%;
+		text-align: center;
+		table-layout: fixed;
+	}
+
+	thead {
+		text-transform: uppercase;
+		color: #195d91;
+		font-weight: bold;
+		line-height: 3rem;
+	}
+
+	td {
+		font-weight: bold;
+		line-height: 4.6rem; // Height of the selected background image.
+
+		button {
+			@extend button.inherited;
+			width: 100%;
+		}
+
+		&.is-selected {
+			background: url(/images/date-active.png) center no-repeat;
+		}
+
+		&.is-disabled { color: #bbb; }
+	}
+}
+
+.icon-facebook,
+.icon-twitter {
+	float: left;
+	width: 22px;
+	height: 100%;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: 100%;
+}
+
+.icon-facebook { background-image: url(/images/mentions-fb-icon.png); }
+.icon-twitter { background-image: url(/images/mentions-tw-icon.png); }
+
+.flash:not(:empty) {
+	background: $flash-header-color;
+	padding: 1.2rem 2rem;
+	color: white;
+	border-radius: $button-radius;
+	margin-top: 1rem;
+	margin-bottom: 1rem;
+	white-space: pre-wrap;
+}
+
+.initiative-progress {
+	display: block;
+
+	padding-left: 2rem;
+	padding-right: 2rem;
+	font-size: 1.3rem;
+	font-family: $museo-sans;
+	font-weight: bold;
+	color: #3a434a;
+
+	background-color: #eee;
+	background-repeat: no-repeat;
+
+	&.private {
+		color: white;
+		background-color: #9a9a9a;
+	}
+
+	&.discussable.completed {
+		background-color: #ffb400;
+		background-image: url(/images/discussion-over.png);
+		background-position: 1rem center;
+		padding-left: 3.5rem;
+	}
+
+	&.votable.completed {
+		color: white;
+		background-color: #00cb81;
+		background-image: url(/images/vote-success.png);
+		background-position: 1rem center;
+		padding-left: 3.5rem;
+	}
+
+	&.processable {
+		color: #1C71A2;
+		background-image: url(/images/clock.png);
+		background-position: 1rem center;
+		padding-left: 3.5rem;
+	}
+
+	&.failed {
+		color: white;
+		background-color: #9a9a9a;
+		background-image: url(/images/vote-failed.png);
+		background-position: 1rem center;
+		padding-left: 3.5rem;
+	}
+}
+
+#header {
+	background: $header-color;
+	padding-top: 1.5rem;
+	padding-bottom: 1rem;
+	color: white;
+
+	menu {
+		margin-bottom: 1.5rem;
+		overflow: hidden;
+		font-size: 1.2rem;
+		text-transform: uppercase;
+		font-family: $museo-sans;
+		font-weight: normal;
+
+		.languages {
+			display: inline;
+			font-weight: bold;
+
+			button { text-transform: uppercase; }
+			button[disabled] { color: $blue; }
+			button + button { margin-left: 1rem; }
+		}
+
+		.user {
+			text-transform: none;
+		}
+
+		.signout {
+			display: inline;
+			&:before { margin: 0 1rem; content: "|"; }
+		}
+	}
+
+	.logo {
+		display: block;
+		width: 18rem;
+		height: inherit;
+		margin-right: 2rem;
+
+		float: left;
+
+		img { width: 100%; }
+	}
+
+	nav li {
+		display: inline;
+
+		& + li { margin-left: 1rem; }
+	}
+
+	nav a {
+		display: inline-block;
+		font-size: 1.6rem;
+		padding: 0.5rem 1rem;
+		border-radius: 2px;
+		transition: color ease 0.4s;
+
+		&.selected,
+		&:hover {
+			background-color: white;
+			color: #45A0E6;
+		}
+	}
+
+	@include tablet {
+		menu { margin-bottom: 1rem; }
+		.logo { float: none; }
+
+		nav li {
+			margin-right: 0.5rem;
+			& + li { margin-left: 0; }
+		}
+
+		nav a {
+			font-size: 1.5rem;
+			line-height: 1;
+			padding: 0.5rem 0.7rem;
+		}
+	}
+}
+
+#main {
+	min-height: 100%;
+	height: auto;
+	padding-bottom: $footer-height;
+	margin-bottom: -$footer-height;
+}
+
+#home-page {
+	$half-width: 48rem;
+	background-color: $grey-background;
+
+	#welcome {
+		background-image: url(/images/hero-bg.png);
+		background-repeat: no-repeat;
+		background-position: right center;
+		background-position: calc(50% + 450px) center;
+
+		// Overflow: hidden for video and create links' floats.
+		overflow: hidden;
+
+		h1 {
+			max-width: $half-width;
+		}
+
+		p {
+			margin-bottom: 2rem;
+			max-width: $half-width;
+		}
+	}
+
+	#create-link {
+		float: right;
+		line-height: 30px;
+
+		font-family: $museo-sans;
+		font-weight: 900;
+		font-size: 16px;
+		color: #ffd900;
+		border-bottom: 1px solid #ffd900;
+	}
+
+	#video-link {
+		line-height: 22px;
+		color: #45A0E6;
+		font-family: $museo-sans;
+		font-weight: 900;
+		font-size: 16px;
+		text-transform: uppercase;
+		max-width: $half-width;
+		display: block;
+		float: left;
+
+		.icon {
+			float: left;
+			width: 5rem;
+			height: 5rem;
+			background: url(/images/home-video-icon.png) no-repeat right center;
+			background-size: 5rem;
+		}
+
+		span {
+			display: block;
+			margin-left: 6rem;
+			padding-top: 0.5rem;
+		}
+	}
+
+	@include tablet {
+		#welcome {
+			background: none;
+		}
+
+		#welcome h1,
+		#welcome p { max-width: none; }
+
+		#video-link,
+		#create-link {
+			float: none;
+			display: inline-block;
+		}
+
+		#video-link {
+			display: block;
+			margin-bottom: 2rem;
+		}
+	}
+}
+
+#initiative-create-page #initiative {
+	$new-initiative-background-height: 515px;
+
+	center {
+		position: relative;
+	}
+
+	background: url(/images/bg-1.png) no-repeat;
+	background-position: calc(50% - 200px) top;
+	min-height: $new-initiative-background-height;
+
+	.step-counter { position: absolute; top: -10px; left: -60px; }
+
+	form {
+		input[name=title] {
+			display: block;
+			width: 100%;
+			font-size: 2rem;
+			height: 4.4rem;
+		}
+	}
+}
+
+#initiatives-page {
+	background-color: $grey-background;
+}
+
+#initiative-page {
+	$article-width: 72rem;
+	background-color: $grey-background;
+
+	#initiative-tabs {
+		padding-top: 4rem;
+		background: $grey-background;
+		border-bottom: 1px solid #cecece;
+
+		.tab {
+			display: inline-block;
+			text-align: center;
+			line-height: 4rem;
+
+			padding: 0 2rem;
+			min-width: 11rem;
+			font-size: 14px;
+			font-family: $museo-sans;
+			color: #4A555D;
+
+			background-color: $grey-background;
+			border: 1px solid #cecece;
+			text-align: center;
+			margin-bottom: -1px;
+
+			&.selected {
+				background-color: white;
+				border-bottom: 1px solid white;
+			}
+
+			& + a { margin-left: 1rem; }
+		}
+
+		.button {
+			height: 3.5rem;
+			margin-left: 1rem;
+
+			&:not(button) { line-height: 3.5rem; }
+		}
+
+		menu {
+			float: right;
+		}
+
+		form {
+			display: inline;
+		}
+
+		@include tablet {
+			menu {
+				float: none;
+				display: block;
+			}
+
+			.button {
+				margin: 0 1rem 1rem 0;
+			}
+		}
+	}
+
+	#initiative,
+	#initiative-events,
+	#initiative-signature {
+		overflow: hidden;
+
+		header {
+			font-family: $museo-sans;
+			font-size: 1.4rem;
+			color: #999;
+			margin-bottom: 0.5rem;
+		}
+
+		h1 {
+			font-size: 4.4rem;
+			color: $link;
+			font-family: $museo-sans;
+			line-height: 1.2;
+
+			margin-bottom: 1rem;
+		}
+	}
+
+	#initiative-progress {
+		margin-bottom: 3rem;
+		font-family: $museo-sans;
+		font-size: 1.4rem;
+		color: #999;
+
+		.initiative-progress {
+			margin-top: 0.5rem;
+			line-height: 3.4rem;
+			border-radius: $button-radius;
+		}
+	}
+
+	#initiative {
+		article {
+			font-size: 1.8rem;
+			font-family: $tisa-pro;
+			max-width: $article-width;
+
+			// Etherpad generates non-standard HTML by putting a nested <ol> directly
+			// under <ul>.
+			ol ol,
+			ul ul,
+			ol ul,
+			ul ol {
+				margin-left: 2rem;
+			}
+		}
+	}
+
+	#initiative-etherpad {
+		width: 100%;
+	}
+
+	#initiative-ended,
+	#initiative-signed {
+		max-width: $article-width;
+		background: $flash-body-color;
+		color: white;
+		border-radius: $button-radius;
+		margin-bottom: 2rem;
+
+		h2, p {
+			padding: 1.2rem 2rem;
+		}
+
+		h2 {
+			border-top-left-radius: $button-radius;
+			border-top-right-radius: $button-radius;
+			background: $flash-header-color;
+		}
+
+		a {
+			text-decoration: underline;
+		}
+	}
+
+	#initiative-comments,
+	#initiative-vote {
+		h2 {
+			font-family: $museo-sans;
+			font-weight: bold;
+			font-size: 2.8rem;
+			margin-bottom: 1rem;
+		}
+	}
+
+	.grey-section h3 {
+		margin-bottom: 1rem;
+		font-family: $museo-sans;
+		font-size: 1.6rem;
+		font-weight: 500;
+	}
+
+	#initiative-vote {
+		max-width: $article-width;
+		margin-top: 4rem;
+		border-top: 1px solid #ccc;
+		padding-top: 2rem;
+
+		// Don't use overflow to not cut off the blur around buttons.
+		&:after { display: block; clear: both; content: ""; }
+
+		h3 {
+			margin-bottom: 0.5rem;
+		}
+
+		form {
+			float: left;
+			margin-top: 1rem;
+			margin-right: 1rem;
+		}
+
+		input { margin-bottom: 0.5rem; }
+
+		@include mobile {
+			form {
+				float: none;
+				margin-right: 0;
+				margin-top: 2rem;
+			}
+
+			input, .button {
+				display: block;
+				width: 100%;
+			}
+		}
+	}
+
+	#mobile-id-form {
+		#mobile-id-form-toggle:not(:checked) {
+			& ~ input,
+			& ~ button { display: none; }
+		}
+
+		#mobile-id-form-toggle:checked + label { display: none; }
+	}
+	
+	#initiative-aux-menu {
+		float: right;
+		text-align: right;
+
+		form { display: inline-block; }
+		form + form { margin-left: 1rem; }
+
+		@include tablet {
+			float: none;
+			text-align: left;
+			margin-bottom: 2rem;
+			.button { width: 100%; }
+
+			form { display: block; margin-top: 1rem; }
+			form + form { margin-left: 0; }
+		}
+	}
+
+	#initiative-subscribe {
+		input,
+		button {
+			display: inline-block;
+		}
+
+		input {
+			width: 100%;
+			max-width: 24rem;
+			margin-right: 1rem;
+		}
+
+		@include tablet {
+			input, button {
+				margin-bottom: 0.5rem;
+				max-width: none;
+				display: block;
+				width: 100%;
+			}
+		}
+	}
+
+	#initiative-comments {
+		.comments,
+		form {
+			max-width: 72rem;
+		}
+
+		.comments {
+			margin-top: 2rem;
+		}
+
+		.comment {
+			h3 {
+				font-family: $museo-sans;
+				font-size: 1.8rem;
+				display: inline;
+			}
+
+			time,
+			.author {
+				color: #aaa;
+			}
+
+			.author:before { content: " — " }
+			.author:after { content: ", " }
+
+			p {
+				margin-top: 0.5rem;
+				white-space: pre-wrap;
+			}
+
+			& + .comment {
+				margin-top: 2rem;
+			}
+		}
+
+		.reply {
+			margin-top: 2rem;
+			padding-left: 2rem;
+			background: url(/images/reply-arrow.png) no-repeat left top;
+
+			.author:before { content: "" }
+			time:after { content: ":" }
+		}
+
+		form {
+			border-top: 1px solid #cecece;
+			margin-top: 4rem;
+			padding-top: 2rem;
+
+			input, textarea {
+				width: 100%;
+				margin-bottom: 1rem;
+			}
+
+			textarea {
+				min-height: 10rem;
+			}
+
+			button + button { margin-left: 1rem; }
+
+			p {
+				text-align: center;
+			}
+		}
+	}
+
+	#initiative-events {
+		.events {
+			max-width: 72rem;
+		}
+
+		.event {
+			h2 {
+				font-family: $museo-sans;
+				font-size: 1.8rem;
+				display: inline;
+				color: $link;
+			}
+
+			time {
+				color: #aaa;
+			}
+
+			time:before { content: " — " }
+
+			p {
+				margin-top: 0.5rem;
+				line-height: 1.5;
+				white-space: pre-wrap;
+			}
+
+			& + .event {
+				margin-top: 2rem;
+			}
+		}
+	}
+
+	#initiative-form {
+		input[type=date] {
+			max-width: 24rem;
+		}
+	}
+}
+
+#user-page {
+	background: $grey-background;
+
+	#user {
+		text-align: center;
+
+		h1 {
+			margin-bottom: 2rem;
+		}
+
+		.flash {
+			margin-left: auto;
+			margin-right: auto;
+			max-width: 48rem;
+		}
+
+		.form-input {
+			margin-left: auto;
+			margin-right: auto;
+			max-width: 24rem;
+		}
+	}
+
+	.initiatives-section {
+		.initiatives { margin-left: 0; }
+		.initiative { margin-left: 0; margin-right: 2rem; }
+	}
+}
+
+#footer {
+	position: relative;
+	min-height: $footer-height;
+	padding-top: 2rem;
+	padding-bottom: 2rem;
+	overflow: hidden;
+
+	background: $header-color;
+	color: white;
+	line-height: 1.4;
+	font-size: 1.3rem;
+
+	a {
+		color: $blue;
+	}
+
+	.contact {
+		float: left;
+	}
+
+	.contact img,
+	.powered-by img {
+		margin-bottom: 1rem;
+	}
+
+	.powered-by {
+		text-align: right;
+		float: right;
+	}
+
+	@include mobile {
+		.contact,
+		.powered-by {
+			float: none;
+			text-align: left;
+		}
+
+		.powered-by { margin-top: 1rem; }
+	}
+}

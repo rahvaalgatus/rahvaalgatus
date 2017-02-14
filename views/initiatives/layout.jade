@@ -1,0 +1,131 @@
+extends ../layout
+
+block options
+	- var title = initiative.title
+	- var page = "initiative"
+
+block append head
+	- var Config = require("root/config")
+	meta(property="og:url", content=`${Config.url}/initiatives/${initiative.id}`)
+	meta(property="og:title", content=initiative.title)
+
+block body
+	-
+		var Config = require("root/config")
+		var Initiative = require("root/lib/initiative")
+		var selected = require("root/lib/css").selected
+		var hasVote = flash("signed") || Initiative.hasVote("Yes", initiative)
+		var shareUrl = `${Config.url}/initiatives/${initiative.id}`
+		var shareText = `${initiative.title} ${shareUrl}`
+		var encode = encodeURIComponent
+		var now = new Date
+
+	nav#initiative-tabs: center
+		menu
+			if Initiative.isPublishable(initiative)
+				+form(method="post", action="/initiatives/#{initiative.id}")
+					input(type="hidden", name="_method", value="put")
+					button.button.green-button(name="visibility", value="public")
+						= t("PUBLISH_TOPIC")
+
+			if Initiative.isProposable(new Date, initiative)
+				+form(method="post", action="/initiatives/#{initiative.id}")
+					input(type="hidden", name="_method", value="put")
+					button.button.green-button(name="status", value="voting")
+						= t("BTN_SEND_TO_VOTE")
+
+			if Initiative.isParliamentable(initiative)
+				+form(method="post", action="/initiatives/#{initiative.id}")
+					input(type="hidden", name="_method", value="put")
+					button.button.green-button(name="status", value="followUp")
+						= t("SEND_TO_PARLIAMENT")
+
+			if Initiative.isVotable(new Date, initiative) && !hasVote
+				a.button.green-button(href="#initiative-vote")
+					= t("SIGN_THIS_DOCUMENT")
+
+			if Initiative.isInvitable(initiative)
+				a.button.blue-button(href="/initiatives/#{initiative.id}/authors/new")
+					= t("INVITE_PEOPLE")
+
+			if Initiative.isPublic(initiative)
+				a.button.white-button(
+					href="https://facebook.com/sharer/sharer.php?u=#{encode(shareUrl)}",
+					target="_blank")
+					i.icon-facebook
+					= t("SHARE_ON_FACEBOOK")
+
+				a.button.white-button(
+					href="https://twitter.com/intent/tweet?status=#{encode(shareText)}",
+					target="_blank")
+					i.icon-twitter
+					= t("SHARE_ON_TWITTER")
+
+		if initiative.status == "inProgress"
+			a.tab(
+				href="/initiatives/#{initiative.id}/discussion",
+				class=selected(subpage, "discussion"))
+				= t("HEADING_TAB_ORIGINAL")
+		else
+			a.tab(
+				href="/initiatives/#{initiative.id}/vote",
+				class=selected(subpage, "vote"))
+				= t("HEADING_TAB_VOTE")
+
+		if initiative.status == "followUp"
+			a.tab(
+				href="/initiatives/#{initiative.id}/events",
+				class=selected(subpage, "events"))
+				= t("HEADING_TAB_EVENTS")
+
+	block tab
+		section.grey-section: center
+			-
+				var showMenu = (
+					Initiative.canUpdateDiscussionDeadline(initiative) ||
+					Initiative.canUpdateVoteDeadline(initiative) ||
+					Initiative.isDeletable(initiative)
+				)
+
+			if showMenu
+				menu#initiative-aux-menu
+					h3= t("OPTIONS")
+
+					if Initiative.canUpdateDiscussionDeadline(initiative)
+						+form(method="post", action="/initiatives/#{initiative.id}")
+							input(type="hidden", name="_method", value="put")
+							button.button.white-button(name="visibility", value="public")
+								= t("RENEW_DEADLINE")
+
+					if Initiative.canUpdateVoteDeadline(initiative)
+						+form(method="post", action="/initiatives/#{initiative.id}")
+							input(type="hidden", name="_method", value="put")
+							button.button.white-button(name="status", value="voting")
+								= t("RENEW_DEADLINE")
+
+					if Initiative.isDeletable(initiative)
+						+form(method="post", action="/initiatives/#{initiative.id}")
+							- var confirmText = t("TXT_ALL_DISCUSSIONS_AND_VOTES_DELETED")
+							button.button.white-button(
+								name="_method",
+								value="delete",
+								onclick="return confirm('#{confirmText}')")
+								= t("BTN_DELETE_TOPIC")
+
+			if Initiative.isPublic(initiative)
+				+form#initiative-subscribe(
+					action="https://docs.google.com/forms/d/e/1FAIpQLScP706DtEaSwnt8GYvgw30KOWvdfl7DBhjwyW82V0IesDrx0g/formResponse",
+					target="_blank",
+					method="POST")
+					h3= t("WANT_TO_KEEP_INFORMED_ABOUT_FURTHER_PROGRESS")
+
+					input(name="entry.1310039861", type="hidden", value=initiative.id)
+					input(name="entry.426608193", type="hidden", value=initiative.title)
+					input(name="fbzx", value="-7339236801065826742", type="hidden")
+
+					input#initiative-subscribe-email.form-input(
+						name="entry.120482688",
+						type="email",
+						placeholder=t("LBL_EMAIL"))
+
+					button.blue-button(type="submit")= t("BTN_SUBSCRIBE")

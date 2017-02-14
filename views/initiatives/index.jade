@@ -1,0 +1,11 @@
+extends ../layout
+
+block options
+	- var page = "initiatives"
+
+block body
+	if flash("notice")
+		section.grey-section: center
+			p.flash.notice= flash("notice")
+
+	include ./_initiatives
