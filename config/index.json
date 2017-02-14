@@ -1,23 +1,25 @@
 {
-	"title": "Rahvaalgatus",
-	"url": "https://rahvaalgatus.ee",
+	"title": "Uus Eakus",
+	"url": "https://uuseakus.rahvaalgatus.ee",
 	"apiUrl": "https://api.citizenos.com",
-	"apiPartnerId": "b563ee8c-ba8e-4cd6-b592-fbcd4e8f22bb",
+	"apiPartnerId": "a4cc118f-69f3-4708-8f84-d3f46ad1d63b",
 	"apiAuthorizeUrl": "https://api.citizenos.com/api/auth/openid/authorize",
 
 	"language": "et",
-	"languages": ["et", "en", "ru"],
+	"languages": ["et"],
 	"votesRequired": 1000,
 	"minDeadlineDays": 3,
 	"maxDeadlineDays": 366,
 
-	"googleAnalyticsAccount": "UA-74848422-1",
+	"googleAnalyticsAccount": "UA-15482981-17",
 	"userVoiceApiKey": "X2tNuk059z6CD4Em5Q65KQ",
 
 	"helpUrls": {
-		"et": "http://help.rahvaalgatus.ee/abi",
-		"en": "http://help.rahvaalgatus.ee/help",
-		"ru": "http://help.rahvaalgatus.ee/pomosh"
+		"et": "http://help.rahvaalgatus.ee/abi/tagged/uus_eakus"
+	},
+
+	"pressUrls": {
+		"et": "http://help.rahvaalgatus.ee/abi/tagged/pressinurk"
 	},
 
 	"videoUrls": {
@@ -26,5 +28,11 @@
 		"ru": "https://www.youtube.com/watch?v=3tZpKl-ICjQ"
 	},
 
-	"partners": {}
+	"partners": {
+		"a4cc118f-69f3-4708-8f84-d3f46ad1d63b": {
+			"name": "Uus Eakus",
+			"badge": "/images/badges-uuseakus.png",
+			"url": "https://uuseakus.rahvaalgatus.ee"
+		}
+	}
 }

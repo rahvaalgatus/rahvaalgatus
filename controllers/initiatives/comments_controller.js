@@ -25,6 +25,11 @@ exports.router.post("/", next(function*(req, res, next) {
 		}
 	}).catch(catch400)
 
+	yield req.api("/api/users/self", {
+		method: "PUT",
+		json: {email: req.body.email}
+	}).catch(catch400)
+
 	if (isOk(created)) {
 		var comment = created.body.data
 		res.redirect(303, Path.dirname(req.baseUrl) + "#comment-" + comment.id)

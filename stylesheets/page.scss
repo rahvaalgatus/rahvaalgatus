@@ -574,9 +574,10 @@ button.inherited {
 	.logo {
 		display: block;
 		float: left;
-		width: 18rem;
+		width: 14rem;
 		height: inherit;
 		margin-right: 2rem;
+		margin-top: -1rem;
 
 		img { width: 100%; }
 	}
@@ -610,11 +611,20 @@ button.inherited {
 			background-color: white;
 			color: $link;
 		}
+
+		&[href="/initiatives"] {
+			background-color: #ffb400;
+			color: black;
+		}
 	}
 
 	@include tablet {
 		menu { margin-bottom: 1rem; }
-		.logo { float: none; }
+
+		.logo {
+			float: none;
+			margin-top: 0;
+		}
 
 		nav li {
 			margin-right: 0.5rem;
@@ -646,81 +656,47 @@ button.inherited {
 	background-color: $secondary-background;
 
 	#welcome {
-		background-image: url(/images/hero-bg.png);
-		background-repeat: no-repeat;
-		background-position: right center;
-		background-position: calc(50% + 450px) center;
-
 		// Overflow: hidden for video and create links' floats.
 		overflow: hidden;
 
 		h1 {
 			max-width: $half-width;
+			margin-bottom: 2rem;
 		}
 
 		p {
-			margin-bottom: 2rem;
-			max-width: $half-width;
+			white-space: normal;
+		}
+
+		.schematic {
+			float: right;
+			max-width: 50%;
+			margin-left: 2rem;
+
+			iframe { max-width: 100%; }
+		}
+
+		@include tablet {
+			h1,
+			p { max-width: none; }
+		}
+
+		@include mobile {
+			.schematic {
+				float: none;
+				max-width: none;
+				margin-left: 0;
+			}
 		}
 	}
 
 	#create-link {
-		float: right;
 		line-height: 30px;
 
 		font-family: $museo-sans;
-		font-weight: 900;
+		font-weight: bold;
 		font-size: 16px;
-		color: #ffd900;
-		border-bottom: 1px solid #ffd900;
-		text-decoration: none;
-	}
-
-	#video-link {
-		line-height: 22px;
 		color: $link;
-		font-family: $museo-sans;
-		font-weight: 900;
-		font-size: 16px;
-		text-transform: uppercase;
-		text-decoration: none;
-		max-width: $half-width;
-		display: block;
-		float: left;
-
-		.icon {
-			float: left;
-			width: 5rem;
-			height: 5rem;
-			background: url(/images/home-video-icon.png) no-repeat right center;
-			background-size: 5rem;
-		}
-
-		span {
-			display: block;
-			margin-left: 6rem;
-			padding-top: 0.5rem;
-		}
-	}
-
-	@include tablet {
-		#welcome {
-			background-image: none;
-		}
-
-		#welcome h1,
-		#welcome p { max-width: none; }
-
-		#video-link,
-		#create-link {
-			float: none;
-			display: inline-block;
-		}
-
-		#video-link {
-			display: block;
-			margin-bottom: 2rem;
-		}
 	}
 }
 
@@ -962,15 +938,11 @@ button.inherited {
 
 		#mobile-id-form-toggle:checked + label { display: none; }
 	}
-
-	#initiative-aux-menu,
-	#initiative-subscribe {
-		margin-bottom: 2rem;
-	}
 	
 	#initiative-aux-menu {
 		float: right;
 		text-align: right;
+		margin-bottom: 2rem;
 
 		form { display: block; }
 		form + form { margin-top: 0.5rem; }
@@ -979,7 +951,7 @@ button.inherited {
 			min-width: 18rem;
 		}
 
-		@include tablet {
+		@media only screen and (max-width: 960px) {
 			float: none;
 			text-align: left;
 
@@ -990,6 +962,8 @@ button.inherited {
 	}
 
 	#initiative-subscribe {
+		margin-top: 4rem;
+
 		input,
 		button {
 			display: inline-block;
@@ -1012,10 +986,19 @@ button.inherited {
 	}
 
 	#initiative-comments {
-		clear: both;
 		max-width: 72rem;
-		margin-top: 4rem;
+		margin-top: 2rem;
 
+		.comment-button {
+			float: right;
+			margin-left: 2rem;
+		}
+
+		.empty {
+			text-align: center;
+		}
+
+		.empty,
 		.comment {
 			padding: 2.5rem $comment-padding;
 		}
@@ -1101,12 +1084,17 @@ button.inherited {
 			margin-bottom: 0.5rem;
 		}
 
-		textarea { min-height: 10rem; }
-		button + button { margin-left: 1rem; }
-		p { text-align: center; }
+		.comment-form {
+			input[type=email] {
+				max-width: 32rem;
+			}
 
-		@include mobile {
-			button { width: 100%; }
+			input:disabled,
+			textarea:disabled {
+				display: none;
+			}
+
+			.primary-button:disabled { @extend .primary-button; }
 		}
 	}
 
@@ -1126,7 +1114,7 @@ button.inherited {
 		&:target { display: block !important; }
 	}
 
-	.signin-to-act { margin-left: 1rem; }
+	.explanation { margin-left: 1rem; }
 
 	#initiative-events {
 		.events {
@@ -1204,12 +1192,16 @@ button.inherited {
 
 	background: $header-background;
 	color: white;
-	line-height: 1.4;
+	line-height: 1.3;
 	font-size: 1.3rem;
 
 	a {
 		color: $footer-link;
 		&:hover { text-decoration: underline; }
+	}
+
+	strong {
+		font-weight: bold;
 	}
 
 	.contact {
@@ -1219,9 +1211,11 @@ button.inherited {
 	.contact img,
 	.powered-by img {
 		margin-bottom: 1rem;
+		max-width: 20rem;
 	}
 
 	.powered-by {
+		margin-top: 1rem;
 		text-align: right;
 		float: right;
 	}
@@ -1233,6 +1227,6 @@ button.inherited {
 			text-align: left;
 		}
 
-		.powered-by { margin-top: 1rem; }
+		.powered-by { margin-top: 2rem; }
 	}
 }

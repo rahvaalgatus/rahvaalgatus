@@ -104,9 +104,7 @@ staging: deploy
 production: APP_PATH = htdocs/rahvaalgatus
 production: deploy
 
-translations: lib/i18n/en.json
 translations: lib/i18n/et.json
-translations: lib/i18n/ru.json
 
 tmp:
 	mkdir -p tmp

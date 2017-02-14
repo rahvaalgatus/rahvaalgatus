@@ -115,7 +115,7 @@ mixin initiative-aux-menu(initiative)
 
 	if showMenu
 		menu#initiative-aux-menu
-			h3= t("OPTIONS")
+			h2= t("OPTIONS")
 
 			if Initiative.canUpdateDiscussionDeadline(initiative)
 				+form(method="post", action="/initiatives/#{initiative.id}")
@@ -161,12 +161,24 @@ mixin initiative-subscribe(initiative)
 
 mixin comments(comments, editedComment)
 	- var commentsUrl = `/initiatives/${initiative.id}/comments`
+	- var email = req.user && req.user.email
 
 	#initiative-comments
+		if comments.length > 0
+			a.primary-button.comment-button(href="#initiative-comment-form")
+				= t("POST_COMMENT")
+
 		h2= t("COMMENT_HEADING")
 
 		if flash("commentError")
 			p.flash.error= flash("commentError")
+
+		if comments.length === 0
+			p.empty.text
+				strong Veel esitatud ideid ei ole. Võid olla esimene!
+				if req.user == null
+					br
+					| Pead esmalt vaid <a href="/session/new">sisse logima</a>.
 
 		ol.comments
 			for comment in comments
@@ -193,10 +205,22 @@ mixin comments(comments, editedComment)
 				disabled=!req.user)
 				= editedComment.parentId == null ? editedComment.text : null
 
-			button.secondary-button(disabled=!req.user)= t("POST_COMMENT")
+			input.form-input(
+				name="email",
+				type="email",
+				value=editedComment.parentId == null ? editedComment.email || email : email,
+				required,
+				placeholder=t("LBL_EMAIL"),
+				disabled=!req.user)
 
-			if !req.user
-				span.text.signin-to-act
+			button.primary-button(disabled=!req.user)= t("POST_COMMENT")
+
+			if req.user
+				span.text.explanation
+					| E-postile saadame ekspertide hinnangu pakutud ideele ja kutsed
+					| edasistele aruteludele.
+			else
+				span.text.explanation
 					!= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE", {url: "/session/new"})
 
 mixin comment(comment, editedComment)
@@ -219,6 +243,10 @@ mixin comment(comment, editedComment)
 	if req.user
 		a.comment-reply-button.white-button(href=`#comment-${comment.id}-reply`)
 			= t("REPLY")
+	else
+		a.comment-reply-button.white-button(disabled)= t("REPLY")
+		span.text.explanation
+			!= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE", {url: "/session/new"})
 
 	ol.comment-replies
 		for reply in comment.replies

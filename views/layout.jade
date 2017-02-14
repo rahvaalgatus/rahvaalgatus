@@ -68,13 +68,8 @@ html
 				else
 					a.right(href="/session/new")= t("BTN_LOG_IN_REGISTER")
 
-			a.uuseakus(
-				href="https://uuseakus.rahvaalgatus.ee",
-				title="Uue eakuse rahvakogu")
-				img(src="/images/uuseakus.png", alt="Uue eakuse rahvakogu")
-
 			a.logo(href="/")
-				img(src="/images/rahvaalgatus.png", alt=SITE_TITLE)
+				img(src="/images/uuseakus.png", alt=SITE_TITLE)
 
 			nav
 				ul
@@ -84,7 +79,7 @@ html
 						= t("LINK_VOTING")
 					li: a(href=Config.helpUrls[req.lang])= t("LINK_HELP")
 					li: a(href="/about", class=selected(page, "about"))= t("LNK_ABOUT")
-					li: a(href="/donate", class=selected(page, "donate"))= t("LNK_SUPPORT")
+					li: a(href=Config.pressUrls[req.lang])= t("LINK_PRESS")
 
 		main#main
 			block body
@@ -92,31 +87,24 @@ html
 		footer#footer
 			center
 				.contact
-					a(href="http://kogu.ee")
-						- var logo = "/images/esstikoostoo_logo.png"
-						- if (req.lang !== "et") logo = "/images/esstikoostoo_logo_en.png"
-						img(width="200", src=logo, alt=t("FOOTER_SA"))
-
 					p
-						//-= t("FOOTER_SA")
-						//-br
-						= t("FOOTER_ADDRESS")
+						strong Uue eakuse rahvakogu kontaktid:
 						br
-						!= t("FOOTER_EMAIL", {email: "info@rahvaalgatus.ee"})
+						| programmijuht Liisi Uder
 						br
-						!= t("FOOTER_PHONE", {phone: "+3726408714"})
+						| e-post <a href="mailto:liisi.uder@kogu.ee">liisi.uder@kogu.ee</a>
 						br
-						| Facebook:&#32;
-						a(href="https://www.facebook.com/rahvaalgatus") fb.me/rahvaalgatus
+						| tel <a href="tel:+3726408716">640 8716</tel>
 						br
-						| Twitter:&#32;
-						a(href="https://twitter.com/rahvaalgatus") @rahvaalgatus
-
+						a(href="http://pension2050.kogu.ee") http://pension2050.kogu.ee
+						
 				.powered-by
 					p
+						a(href="https://rahvaalgatus.ee")
+							img(src="/images/rahvaalgatus.png", alt="Rahvaalgatus")
+						br
+
 						a(href="https://citizenos.com")
 							img(src="/images/citizenos_logo_big.png", alt="Citizen OS")
-						br
-						= t("POWERED_BY")
 
 		include ./_analytics

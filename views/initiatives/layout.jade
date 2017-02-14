@@ -50,6 +50,9 @@ block body
 				a.button.primary-button(href="#initiative-vote")
 					= t("SIGN_THIS_DOCUMENT")
 
+			a.button.primary-button(href="#initiative-comment-form")
+				= t("POST_COMMENT")
+
 			if Initiative.isInvitable(initiative)
 				a.button.secondary-button(href="/initiatives/#{initiative.id}/authors/new")
 					= t("INVITE_PEOPLE")
