@@ -77,52 +77,79 @@ mixin header(initiative)
 
 		h1= initiative.title
 
-mixin comments(comments)
+mixin comments(comments, editedComment)
 	- var I18n = require("root/lib/i18n")
 	- var linkify = require("root/lib/linkify")
+	- var commentsUrl = `/initiatives/${initiative.id}/comments`
 
 	section#initiative-comments.grey-section: center
 		h2= t("COMMENT_HEADING")
 
+		if flash("commentError")
+			p.flash.error= flash("commentError")
+
 		ol.comments
 			for comment in comments
-				li.comment
-					h3.subject= comment.subject
+				- var isEdited = editedComment.parentId === comment.id
+
+				li.comment(id=`comment-${comment.id}`)
 					span.author= comment.creator.name
 					| &#32;
 					time(datetime=comment.createdAt)
-						= I18n.formatTime("numeric", comment.createdAt)
+						a(href=`#comment-${comment.id}`)
+							= I18n.formatTime("numeric", comment.createdAt)
 
+					h3.subject= comment.subject
 					p.text!= linkify(comment.text)
+
+					if req.user
+						a.reply-button.link-button(href=`#comment-${comment.id}-reply`)
+							= t("REPLY")
 
 					ol.replies
 						for reply in comment.replies
 							li.reply
-								h3.subject= reply.subject
 								span.author= reply.creator.name
 								| &#32;
 								time(datetime=reply.createdAt)
-									= I18n.formatTime("numeric", reply.createdAt)
+									a(href=`#comment-${reply.id}`)
+										= I18n.formatTime("numeric", reply.createdAt)
 
-								p= reply.text
+								p.text!= linkify(reply.text)
+
+					if req.user
+						+form.reply-form(
+							id=`comment-${comment.id}-reply`,
+							method="post",
+							action=`${commentsUrl}/${comment.id}/replies`,
+							hidden=!isEdited)
+
+							textarea.form-textarea(
+								name="text",
+								maxlength=2048,
+								required,
+								placeholder=t("PLACEHOLDER_ADD_ARGUMENT_TEXT"))
+								= isEdited ? editedComment.text : null
+
+							button.blue-button= t("POST_COMMENT")
 
 		//- Comment form anchor used for redirecting to error.
-		+form#initiative-comment-form(
+		+form#initiative-comment-form.comment-form(
 			method="post",
-			action="/initiatives/#{initiative.id}/comments")
+			action=commentsUrl)
 			if req.user
 				input.form-input(
 					name="subject",
-					value=comment.subject,
+					value=editedComment.parentId == null ? editedComment.subject : null,
 					maxlength=128,
-					required,
 					placeholder=t("PLACEHOLDER_ADD_ARGUMENT_SUBJECT"))
 
 				textarea.form-textarea(
 					name="text",
 					maxlength=2048,
 					required,
-					placeholder=t("PLACEHOLDER_ADD_ARGUMENT_TEXT"))= comment.text
+					placeholder=t("PLACEHOLDER_ADD_ARGUMENT_TEXT"))
+					= editedComment.parentId == null ? editedComment.text : null
 
 				button.blue-button= t("POST_COMMENT")
 

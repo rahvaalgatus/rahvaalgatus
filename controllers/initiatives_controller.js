@@ -16,7 +16,7 @@ var api = require("root/lib/citizen_os")
 var encode = encodeURIComponent
 var translateCitizenError = require("root/lib/citizen_os").translateError
 var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
-var EMPTY_COMMENT = {subject: "", text: ""}
+var EMPTY_COMMENT = {subject: "", text: "", parentId: null}
 
 var UI_TRANSLATIONS = O.map(require("root/lib/i18n").LANGUAGES, function(lang) {
 	return O.filter(lang, (_value, key) => key.indexOf("HWCRYPTO") >= 0)

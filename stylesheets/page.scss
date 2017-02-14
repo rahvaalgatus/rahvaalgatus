@@ -1,15 +1,4 @@
 @import "_lib";
-$page-padding: 20px;
-$page-padding: 2rem;
-$light-blue: #45a0e6;
-$dark-blue: #3390d7;
-$grey-background: #f2f2f2;
-$darker-grey-background: #e8e8e8;
-$button-height: 3.6rem;
-$button-radius: 0.3rem;
-$flash-header-color: #282d33;
-$flash-body-color: #3d434a;
-
 @import "reset";
 @import "_fonts";
 
@@ -306,6 +295,11 @@ button.inherited {
 	background: white;
 	border: 1px solid #cecece;
 	color: #4a555d;
+}
+
+.link-button {
+	color: $blue;
+	&:hover { text-decoration: underline; }
 }
 
 .form-label,
@@ -952,7 +946,8 @@ button.inherited {
 
 	#initiative-comments {
 		.comments,
-		form {
+		form,
+		p.flash {
 			max-width: 72rem;
 		}
 
@@ -962,39 +957,58 @@ button.inherited {
 
 		.comment {
 			h3 {
+				margin-top: 0.5rem;
 				font-family: $museo-sans;
 				font-size: 1.8rem;
-				display: inline;
+				color: black;
 			}
 
-			time,
 			.author {
-				color: #aaa;
+				font-weight: 500;
+				color: $black-text;
 			}
 
-			.author:before { content: " — " }
+			time {
+				color: $grey-on-grey;
+				font-weight: 500;
+			}
+
 			.author:after { content: ", " }
 
 			p {
-				margin-top: 0.5rem;
+				margin-top: 1rem;
 				white-space: pre-wrap;
 			}
 
+			// Anchor used for linking to comment itself via <time>.
+			a:hover { text-decoration: underline; }
+
+			.reply-button {
+				margin-top: 1rem;
+				display: inline-block;
+			}
+
 			& + .comment {
-				margin-top: 2rem;
+				margin-top: 4rem;
+			}
+		}
+
+		.reply,
+		.reply-form {
+			margin-left: 8rem;
+			//margin-right: 4rem;
+
+			@include mobile {
+				margin-left: 4rem;
 			}
 		}
 
 		.reply {
 			margin-top: 2rem;
-			padding-left: 2rem;
-			background: url(/images/reply-arrow.png) no-repeat left top;
-
-			.author:before { content: "" }
-			time:after { content: ":" }
 		}
 
-		form {
+		.comment-form,
+		.reply-form {
 			border-top: 1px solid #cecece;
 			margin-top: 4rem;
 			padding-top: 2rem;
@@ -1004,15 +1018,22 @@ button.inherited {
 				margin-bottom: 1rem;
 			}
 
-			textarea {
-				min-height: 10rem;
-			}
-
+			textarea { min-height: 10rem; }
 			button + button { margin-left: 1rem; }
+			p { text-align: center; }
 
-			p {
-				text-align: center;
+			@include mobile {
+				button { width: 100%; }
 			}
+		}
+
+		.reply-form {
+			margin-top: 3rem;
+
+			textarea { min-height: 5rem; }
+
+			// Override the default [hidden] attribute.
+			&:target { display: block !important; }
 		}
 	}
 

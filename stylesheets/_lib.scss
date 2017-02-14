@@ -1,11 +1,21 @@
-$blue: #53B1EB;
-$footer-height: 12rem;
-$header-color: #124267;
-$link: #1C71A2;
-$page-width: 96rem;
 $black-text: #4A555D;
+$blue: #53B1EB;
+$button-height: 3.6rem;
+$button-radius: 0.3rem;
+$dark-blue: #3390d7;
+$darker-grey-background: #e8e8e8;
+$flash-body-color: #3d434a;
+$flash-header-color: #282d33;
+$footer-height: 12rem;
+$grey-background: #f2f2f2;
+$grey-on-grey: #aaa;
+$header-color: #124267;
+$light-blue: #45a0e6;
+$link: #1C71A2;
 $mobile-width: 569px;
 $museo-sans: "Museo Sans Cyrl", sans-serif;
+$page-padding: 2rem;
+$page-width: 96rem;
 $tisa-pro: "Tisa Pro Regular", serif;
 
 @mixin tablet {
