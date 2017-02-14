@@ -4,6 +4,8 @@
 	"apiPartnerId": "b563ee8c-ba8e-4cd6-b592-fbcd4e8f22bb",
 	"apiAuthorizeUrl": "https://citizenos.com/api/auth/openid/authorize",
 
+	"language": "et",
+	"languages": ["et", "en", "ru"],
 	"votesRequired": 1000,
 	"minDeadlineDays": 3,
 	"maxDeadlineDays": 366,
