@@ -3,6 +3,7 @@ var Router = require("express").Router
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
 var catch401 = require("root/lib/fetch").catch.bind(null, 401)
+var catch403 = require("root/lib/fetch").catch.bind(null, 403)
 var translateCitizenError = require("root/lib/citizen_os").translateError
 var next = require("co-next")
 var api = require("root/lib/citizen_os")
@@ -37,7 +38,7 @@ exports.router.post("/", next(function*(req, res) {
 		method: "POST",
 		json: req.body,
 		headers: token == null ? EMPTY : {Authorization: "Bearer "+ token}
-	}).catch(catch400).catch(catch401)
+	}).catch(catch400).catch(catch401).catch(catch403)
 
 	if (isOk(created))
 		res.redirect(303, req.baseUrl)
