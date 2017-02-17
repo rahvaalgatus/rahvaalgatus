@@ -62,6 +62,9 @@ javascripts:
 autojavascripts:
 	$(MAKE) -C app autocompile
 
+minify:
+	$(MAKE) -C app minify
+
 stylesheets:
 	$(SASS) --output public/assets stylesheets
 
@@ -123,6 +126,7 @@ lib/i18n/ru.json: tmp/translations.json
 .PHONY: love
 .PHONY: compile autocompile
 .PHONY: javascripts autojavascripts
+.PHONY: minify
 .PHONY: stylesheets autostylesheets
 .PHONY: test spec autotest autospec
 .PHONY: server
