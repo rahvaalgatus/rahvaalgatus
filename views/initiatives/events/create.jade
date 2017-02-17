@@ -13,6 +13,8 @@ block tab
 			p.flash.error= error
 		
 		+form.form(method="post", action="/initiatives/#{initiative.id}/events")
+			input(type="hidden", name="token", value=attrs.token)
+
 			label.form-label= t("POST_INITIATIVE_TITLE")
 			input.form-input(
 				type="text",

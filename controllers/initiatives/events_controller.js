@@ -1,4 +1,5 @@
 var _ = require("lodash")
+var O = require("oolong")
 var Router = require("express").Router
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
@@ -20,13 +21,15 @@ exports.router.get("/", next(function*(req, res) {
 	res.render("initiatives/events", {events: events})
 }))
 
-exports.router.get("/new", function(_req, res) {
-	res.render("initiatives/events/create", {attrs: EMPTY_EVENT})
+exports.router.get("/new", function(req, res) {
+	res.render("initiatives/events/create", {
+		attrs: O.create(EMPTY_EVENT, {token: req.query.token})
+	})
 })
 
 exports.router.post("/", next(function*(req, res) {
 	var initiative = req.initiative
-	var token = req.query.token
+	var token = req.body.token || null
 
 	// Currently an external or anonymous token requires the endpoint to be
 	// separate from when the token is of the user. This will hopefully be
@@ -36,7 +39,7 @@ exports.router.post("/", next(function*(req, res) {
 
 	var created = yield req.api(path, {
 		method: "POST",
-		json: req.body,
+		json: {subject: req.body.subject, text: req.body.text},
 		headers: token == null ? EMPTY : {Authorization: "Bearer "+ token}
 	}).catch(catch400).catch(catch401).catch(catch403)
 
