@@ -108,7 +108,7 @@ mixin comments(comments, editedComment)
 
 					ol.replies
 						for reply in comment.replies
-							li.reply
+							li.reply(id=`comment-${reply.id}`)
 								span.author= reply.creator.name
 								| &#32;
 								time(datetime=reply.createdAt)
