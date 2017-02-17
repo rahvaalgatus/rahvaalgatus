@@ -23,8 +23,10 @@ exports.router.post("/", next(function*(req, res, next) {
 		}
 	}).catch(catch400)
 
-	if (isOk(created))
-		res.redirect(303, Path.dirname(req.baseUrl) + "#initiative-comments")
+	if (isOk(created)) {
+		var comment = created.body.data
+		res.redirect(303, Path.dirname(req.baseUrl) + "#comment-" + comment.id)
+	}
 	else {
 		res.locals.comment = req.body
 		renderWithError(initiative, created.body, req, res, next)
@@ -44,8 +46,10 @@ exports.router.post("/:commentId/replies", next(function*(req, res, next) {
 		}
 	}).catch(catch400)
 
-	if (isOk(created))
-		res.redirect(303, Path.dirname(req.baseUrl) + "#initiative-comments")
+	if (isOk(created)) {
+		var comment = created.body.data
+		res.redirect(303, Path.dirname(req.baseUrl) + "#comment-" + comment.id)
+	}
 	else {
 		res.locals.comment = {__proto__: req.body, parentId: commentId}
 		renderWithError(initiative, created.body, req, res, next)
