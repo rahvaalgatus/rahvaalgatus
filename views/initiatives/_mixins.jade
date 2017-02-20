@@ -82,7 +82,7 @@ mixin comments(comments, editedComment)
 	- var linkify = require("root/lib/linkify")
 	- var commentsUrl = `/initiatives/${initiative.id}/comments`
 
-	section#initiative-comments.grey-section: center
+	section#initiative-comments.secondary-section: center
 		h2= t("COMMENT_HEADING")
 
 		if flash("commentError")

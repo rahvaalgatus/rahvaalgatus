@@ -34,8 +34,8 @@ center {
 .left { float: left; }
 .right { float: right; }
 
-.grey-section,
-.white-section,
+.secondary-section,
+.primary-section,
 .text-section {
 	padding-top: 4rem;
 	padding-bottom: 4rem;
@@ -48,13 +48,13 @@ center {
 	&:after { display: block; content: ""; clear: both; }
 }
 
-.grey-section {
+.secondary-section {
 	background-color: $secondary-background;
 
-	& + .grey-section { padding-top: 0; }
+	& + .secondary-section { padding-top: 0; }
 }
 
-.white-section {
+.primary-section {
 	background-color: white;
 }
 
@@ -853,7 +853,7 @@ button.inherited {
 		}
 	}
 
-	.grey-section h3 {
+	.secondary-section h3 {
 		margin-bottom: 1rem;
 		font-family: $museo-sans;
 		font-size: 1.6rem;

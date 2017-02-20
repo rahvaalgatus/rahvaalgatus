@@ -5,7 +5,7 @@ block options
 	- var page = "user"
 
 block body
-	section#user.white-section.text-section: center
+	section#user.primary-section.text-section: center
 		h1= user.name
 		include ../_flash
 
@@ -30,5 +30,5 @@ block body
 
 			button.form-submit.green-button= t("BTN_SAVE")
 
-	section#initiatives.grey-section.initiatives-section: center
+	section#initiatives.secondary-section.initiatives-section: center
 		+initiatives(initiatives)
