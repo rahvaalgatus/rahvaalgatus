@@ -150,7 +150,7 @@ center {
 		font-size: 2rem;
 		line-height: 3rem;
 		color: $title-text;
-		border-bottom: 1px solid #00cb81;
+		border-bottom: 1px solid $initiatives-section-title-border;
 		text-align: right;
 		font-family: $museo-sans;
 		font-weight: 900;
@@ -543,11 +543,10 @@ button.inherited {
 
 	.logo {
 		display: block;
+		float: left;
 		width: 18rem;
 		height: inherit;
 		margin-right: 2rem;
-
-		float: left;
 
 		img { width: 100%; }
 	}
@@ -1117,7 +1116,8 @@ button.inherited {
 	font-size: 1.3rem;
 
 	a {
-		color: $link;
+		color: $footer-link;
+		&:hover { text-decoration: underline; }
 	}
 
 	.contact {
