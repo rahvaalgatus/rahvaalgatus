@@ -563,12 +563,12 @@ button.inherited {
 		font-size: 1.6rem;
 		padding: 0.5rem 1rem;
 		border-radius: 2px;
-		transition: color ease 0.4s;
+		transition: color ease 0.1s;
 
 		&.selected,
 		&:hover {
 			background-color: white;
-			color: #45A0E6;
+			color: $link;
 		}
 	}
 
@@ -632,7 +632,7 @@ button.inherited {
 
 	#video-link {
 		line-height: 22px;
-		color: #45A0E6;
+		color: $link;
 		font-family: $museo-sans;
 		font-weight: 900;
 		font-size: 16px;
