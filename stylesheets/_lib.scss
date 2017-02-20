@@ -1,22 +1,20 @@
-$black-text: #4A555D;
-$blue: #53B1EB;
+$header-background: #124267;
+$secondary-background: #f2f2f2;
+$secondary-light-text: #aaa;
+$text: #4A555D;
+$title-text: #1C71A2;
+$link: #53B1EB;
+$flash-background: #3d434a;
+$flash-header-background: #282d33;
+
+$museo-sans: "Museo Sans Cyrl", sans-serif;
+$tisa-pro: "Tisa Pro Regular", serif;
 $button-height: 3.6rem;
 $button-radius: 0.3rem;
-$dark-blue: #3390d7;
-$darker-grey-background: #e8e8e8;
-$flash-body-color: #3d434a;
-$flash-header-color: #282d33;
 $footer-height: 12rem;
-$grey-background: #f2f2f2;
-$grey-on-grey: #aaa;
-$header-color: #124267;
-$light-blue: #45a0e6;
-$link: #1C71A2;
 $mobile-width: 569px;
-$museo-sans: "Museo Sans Cyrl", sans-serif;
 $page-padding: 2rem;
 $page-width: 96rem;
-$tisa-pro: "Tisa Pro Regular", serif;
 
 @mixin tablet {
   @media only screen and (max-width: 680px) { @content }

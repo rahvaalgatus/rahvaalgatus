@@ -11,7 +11,7 @@ body {
 	font-family: $museo-sans;
 	font-weight: 300;
 	font-size: 1.4rem;
-	color: $black-text;
+	color: $text;
 }
 
 center {
@@ -49,7 +49,7 @@ center {
 }
 
 .grey-section {
-	background-color: $grey-background;
+	background-color: $secondary-background;
 
 	& + .grey-section { padding-top: 0; }
 }
@@ -63,7 +63,7 @@ center {
 
 	h1 {
 		font-size: 3.4rem;
-		color: $link;
+		color: $title-text;
 		font-family: $museo-sans;
 		line-height: 1.2;
 	}
@@ -107,7 +107,7 @@ center {
 	u { text-decoration: underline; }
 
 	a:not(.button) {
-		color: $blue;
+		color: $link;
 		&:hover { text-decoration: underline; }
 	}
 
@@ -149,7 +149,7 @@ center {
 	h2 {
 		font-size: 2rem;
 		line-height: 3rem;
-		color: $link;
+		color: $title-text;
 		border-bottom: 1px solid #00cb81;
 		text-align: right;
 		font-family: $museo-sans;
@@ -219,7 +219,7 @@ center {
 
 		&:hover {
 			box-shadow: 0 1px 10px 0 rgba(0, 0, 0, 0.4);
-			h3 { color: $link; }
+			h3 { color: $title-text; }
 		}
 
 		.initiative-progress {
@@ -281,7 +281,7 @@ button.inherited {
 }
 
 .blue-button {
-	background: $light-blue;
+	background: #45a0e6;
 	color: white;
 }
 
@@ -298,7 +298,7 @@ button.inherited {
 }
 
 .link-button {
-	color: $blue;
+	color: $link;
 	&:hover { text-decoration: underline; }
 }
 
@@ -450,7 +450,7 @@ button.inherited {
 .icon-twitter { background-image: url(/images/mentions-tw-icon.png); }
 
 .flash:not(:empty) {
-	background: $flash-header-color;
+	background: $flash-header-background;
 	padding: 1.2rem 2rem;
 	color: white;
 	border-radius: $button-radius;
@@ -509,7 +509,7 @@ button.inherited {
 }
 
 #header {
-	background: $header-color;
+	background: $header-background;
 	padding-top: 1.5rem;
 	padding-bottom: 1rem;
 	color: white;
@@ -527,7 +527,7 @@ button.inherited {
 			font-weight: bold;
 
 			button { text-transform: uppercase; }
-			button[disabled] { color: $blue; }
+			button[disabled] { color: $link; }
 			button + button { margin-left: 1rem; }
 		}
 
@@ -598,7 +598,7 @@ button.inherited {
 
 #home-page {
 	$half-width: 48rem;
-	background-color: $grey-background;
+	background-color: $secondary-background;
 
 	#welcome {
 		background-image: url(/images/hero-bg.png);
@@ -701,16 +701,16 @@ button.inherited {
 }
 
 #initiatives-page {
-	background-color: $grey-background;
+	background-color: $secondary-background;
 }
 
 #initiative-page {
 	$article-width: 72rem;
-	background-color: $grey-background;
+	background-color: $secondary-background;
 
 	#initiative-tabs {
 		padding-top: 4rem;
-		background: $grey-background;
+		background: $secondary-background;
 		border-bottom: 1px solid #cecece;
 
 		.tab {
@@ -724,7 +724,7 @@ button.inherited {
 			font-family: $museo-sans;
 			color: #4A555D;
 
-			background-color: $grey-background;
+			background-color: $secondary-background;
 			border: 1px solid #cecece;
 			text-align: center;
 			margin-bottom: -1px;
@@ -778,7 +778,7 @@ button.inherited {
 
 		h1 {
 			font-size: 4.4rem;
-			color: $link;
+			color: $title-text;
 			font-family: $museo-sans;
 			line-height: 1.2;
 
@@ -823,7 +823,7 @@ button.inherited {
 	#initiative-ended,
 	#initiative-signed {
 		max-width: $article-width;
-		background: $flash-body-color;
+		background: $flash-background;
 		color: white;
 		border-radius: $button-radius;
 		margin-bottom: 2rem;
@@ -835,7 +835,7 @@ button.inherited {
 		h2 {
 			border-top-left-radius: $button-radius;
 			border-top-right-radius: $button-radius;
-			background: $flash-header-color;
+			background: $flash-header-background;
 		}
 
 		a {
@@ -965,11 +965,11 @@ button.inherited {
 
 			.author {
 				font-weight: 500;
-				color: $black-text;
+				color: $text;
 			}
 
 			time {
-				color: $grey-on-grey;
+				color: $secondary-light-text;
 				font-weight: 500;
 			}
 
@@ -1047,7 +1047,7 @@ button.inherited {
 				font-family: $museo-sans;
 				font-size: 1.8rem;
 				display: inline;
-				color: $link;
+				color: $title-text;
 			}
 
 			time {
@@ -1076,7 +1076,7 @@ button.inherited {
 }
 
 #user-page {
-	background: $grey-background;
+	background: $secondary-background;
 
 	#user {
 		text-align: center;
@@ -1111,13 +1111,13 @@ button.inherited {
 	padding-bottom: 2rem;
 	overflow: hidden;
 
-	background: $header-color;
+	background: $header-background;
 	color: white;
 	line-height: 1.4;
 	font-size: 1.3rem;
 
 	a {
-		color: $blue;
+		color: $link;
 	}
 
 	.contact {
