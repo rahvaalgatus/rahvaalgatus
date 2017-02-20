@@ -86,7 +86,7 @@ block prepend tab
 					if hasVote
 						button.button.white-button= t("BTN_VOTE_REVOKE_WITH_ID_CARD")
 					else
-						button.button.green-button= t("BTN_VOTE_SIGN_WITH_ID_CARD")
+						button.button.primary-button= t("BTN_VOTE_SIGN_WITH_ID_CARD")
 
 				:javascript
 					var Hwcrypto = require("@rahvaalgatus/hwcrypto")
@@ -144,7 +144,7 @@ block prepend tab
 					method="post",
 					action="/initiatives/#{initiative.id}/signature")
 					-
-						var btnClass = hasVote ? "white-button" : "green-button"
+						var btnClass = hasVote ? "white-button" : "primary-button"
 						var btnText = hasVote
 							? t("BTN_VOTE_REVOKE_WITH_MOBILE_ID")
 							: t("BTN_VOTE_SIGN_WITH_MOBILE_ID")

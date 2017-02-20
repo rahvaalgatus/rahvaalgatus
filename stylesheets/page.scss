@@ -249,8 +249,8 @@ button.inherited {
 	margin: 0;
 }
 
-.green-button,
-.blue-button,
+.primary-button,
+.secondary-button,
 .yellow-button,
 .white-button {
 	border-radius: $button-radius;
@@ -274,15 +274,16 @@ button.inherited {
 	}
 }
 
-.green-button {
-	background: #00cb81;
-	color: white;
-	border: 1px solid #02b071;
+.primary-button {
+	background: $primary-button-background;
+	color: $primary-button-text;
+	border: 1px solid $primary-button-border;
 }
 
-.blue-button {
-	background: #45a0e6;
-	color: white;
+.secondary-button {
+	background: $secondary-button-background;
+	color: $secondary-button-text;
+	border: 1px solid $secondary-button-border;
 }
 
 .yellow-button {

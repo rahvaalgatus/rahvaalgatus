@@ -131,7 +131,7 @@ mixin comments(comments, editedComment)
 								placeholder=t("PLACEHOLDER_ADD_ARGUMENT_TEXT"))
 								= isEdited ? editedComment.text : null
 
-							button.blue-button= t("POST_COMMENT")
+							button.secondary-button= t("POST_COMMENT")
 
 		//- Comment form anchor used for redirecting to error.
 		+form#initiative-comment-form.comment-form(
@@ -151,7 +151,7 @@ mixin comments(comments, editedComment)
 					placeholder=t("PLACEHOLDER_ADD_ARGUMENT_TEXT"))
 					= editedComment.parentId == null ? editedComment.text : null
 
-				button.blue-button= t("POST_COMMENT")
+				button.secondary-button= t("POST_COMMENT")
 
 			else
 				p= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE")

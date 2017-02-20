@@ -25,27 +25,27 @@ block body
 			if Initiative.isPublishable(initiative)
 				+form(method="post", action="/initiatives/#{initiative.id}")
 					input(type="hidden", name="_method", value="put")
-					button.button.green-button(name="visibility", value="public")
+					button.button.primary-button(name="visibility", value="public")
 						= t("PUBLISH_TOPIC")
 
 			if Initiative.isProposable(new Date, initiative)
 				+form(method="post", action="/initiatives/#{initiative.id}")
 					input(type="hidden", name="_method", value="put")
-					button.button.green-button(name="status", value="voting")
+					button.button.primary-button(name="status", value="voting")
 						= t("BTN_SEND_TO_VOTE")
 
 			if Initiative.isParliamentable(initiative)
 				+form(method="post", action="/initiatives/#{initiative.id}")
 					input(type="hidden", name="_method", value="put")
-					button.button.green-button(name="status", value="followUp")
+					button.button.primary-button(name="status", value="followUp")
 						= t("SEND_TO_PARLIAMENT")
 
 			if Initiative.isVotable(new Date, initiative) && !hasVote
-				a.button.green-button(href="#initiative-vote")
+				a.button.primary-button(href="#initiative-vote")
 					= t("SIGN_THIS_DOCUMENT")
 
 			if Initiative.isInvitable(initiative)
-				a.button.blue-button(href="/initiatives/#{initiative.id}/authors/new")
+				a.button.secondary-button(href="/initiatives/#{initiative.id}/authors/new")
 					= t("INVITE_PEOPLE")
 
 			if Initiative.isPublic(initiative)
@@ -128,4 +128,4 @@ block body
 						type="email",
 						placeholder=t("LBL_EMAIL"))
 
-					button.blue-button(type="submit")= t("BTN_SUBSCRIBE")
+					button.secondary-button(type="submit")= t("BTN_SUBSCRIBE")
