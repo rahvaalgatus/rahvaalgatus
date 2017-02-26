@@ -22,7 +22,10 @@ block prepend tab
 						= t("MAKE_SURE_CONTROL_CODE")
 				
 					:javascript
-						fetch("#{poll}", {redirect: "manual"}).then(function(res) {
+						fetch("#{poll}", {
+							redirect: "manual",
+							credentials: "same-origin"
+						}).then(function(res) {
 							if (res.status >= 302 && res.status <= 303)
 								window.location.assign(res.headers.get("location"))
 							else

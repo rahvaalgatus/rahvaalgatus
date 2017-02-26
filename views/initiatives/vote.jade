@@ -106,7 +106,9 @@ block prepend tab
 							query += "certificate=" + encodeURIComponent(certificate)
 							query += "&"
 							query += "optionId=#{optId}"
-							return fetch("/initiatives/#{initiative.id}/signable?" + query)
+							return fetch("/initiatives/#{initiative.id}/signable?" + query, {
+								credentials: "same-origin"
+							})
 						})
 
 						token = token.then(read).then(function(res) {
