@@ -2,5 +2,5 @@
 --check-leaks
 --globals browser
 --require co-mocha
---require must
+--require must/register
 --require ./test
