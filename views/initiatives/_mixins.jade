@@ -6,12 +6,19 @@ mixin initiatives(initiatives)
 mixin initiative(initiative)
 	-
 		var I18n = require("root/lib/i18n")
+		var Config = require("root/config")
+		var BADGES = Config.badges
 		var createdAt = new Date(initiative.createdAt)
+		var badge = BADGES[initiative.sourcePartnerId]
 
 	li.initiative
 		a(href=`/initiatives/${initiative.id}`)
 			time(datetime=initiative.createdAt)= I18n.formatDate("numeric", createdAt)
 			h3= initiative.title
+
+			if badge
+				img.badge(src=badge)
+
 			span.author= initiative.creator.name
 			+progress(initiative)
 
@@ -21,6 +28,7 @@ mixin progress(initiative)
 		var Css = require("root/lib/css")
 		var Config = require("root/config")
 		var DateFns = require("date-fns")
+		var VOTES_REQUIRED = Config.votesRequired
 		var createdAt = new Date(initiative.createdAt)
 		var endsAt = new Date(initiative.endsAt)
 
@@ -50,7 +58,6 @@ mixin progress(initiative)
 			
 		when "voting"
 			- var sigs = Initiative.countSignatures("Yes", initiative)
-			- var required = Config.votesRequired
 
 			if Initiative.isSuccessful(initiative)
 				.initiative-progress.completed(class=klass)
@@ -58,7 +65,7 @@ mixin progress(initiative)
 			else if !Initiative.hasVoteEnded(new Date, initiative)
 				.initiative-progress(
 					class=klass,
-					style=Css.linearBackground("#00cb81", sigs / required))
+					style=Css.linearBackground("#00cb81", sigs / VOTES_REQUIRED))
 					= t("N_SIGNATURES", {votes: sigs})
 			else
 				.initiative-progress.failed(class=klass)

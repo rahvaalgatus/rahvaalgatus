@@ -24,5 +24,13 @@
 		"et": "https://www.youtube.com/watch?v=za230fHP6pg",
 		"en": "https://www.youtube.com/watch?v=27lN6HmwuY4",
 		"ru": "https://www.youtube.com/watch?v=3tZpKl-ICjQ"
+	},
+
+	"apiPartnerIds": [
+		"a4cc118f-69f3-4708-8f84-d3f46ad1d63b"
+	],
+
+	"badges": {
+		"a4cc118f-69f3-4708-8f84-d3f46ad1d63b": "/images/badges-pension2050.png"
 	}
 }

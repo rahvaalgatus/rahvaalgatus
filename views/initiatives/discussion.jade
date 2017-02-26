@@ -5,15 +5,21 @@ block append options
 	- var subpage = "discussion"
 
 block prepend tab
-	- var I18n = require("root/lib/i18n")
-	- var Config = require("root/config")
-	- var Initiative = require("root/lib/initiative")
+	-
+		var I18n = require("root/lib/i18n")
+		var Config = require("root/config")
+		var Initiative = require("root/lib/initiative")
+		var BADGES = Config.badges
+		var badge = BADGES[initiative.sourcePartnerId]
 
 	section#initiative.primary-section: center
 		include /_flash.jade
 
 		article.text
 			header
+				if badge
+					img.badge(src=badge)
+
 				span.author
 					= t("CREATED_BY")
 					| &#32;

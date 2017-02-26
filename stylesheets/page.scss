@@ -186,9 +186,9 @@ center {
 		background: white;
 		box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
 
+		line-height: 1;
 		width: $initiative-width;
 		float: left;
-		padding: 1rem 2rem 0;
 		margin-left: 2rem;
 		margin-bottom: 2rem;
 
@@ -199,6 +199,7 @@ center {
 
 		a {
 			display: block;
+			padding: 1.5rem 2rem 0;
 		}
 
 		time,
@@ -212,9 +213,15 @@ center {
 			font-size: 17px;
 			color: #4F4F4F;
 			line-height: 1.5;
-			margin-top: 1rem;
+			margin-top: 0.5rem;
 			word-wrap: break-word;
 			min-height: 16rem;
+		}
+
+		.badge {
+			float: right;
+			width: 2rem;
+			margin-top: -0.5rem;
 		}
 
 		&:hover {
@@ -223,7 +230,8 @@ center {
 		}
 
 		.initiative-progress {
-			margin: 0.5rem -2rem 0;
+			clear: both;
+			margin: 1rem -2rem 0;
 			padding-top: 1rem;
 			padding-bottom: 0.8rem;
 			line-height: 1;
@@ -774,6 +782,12 @@ button.inherited {
 			font-size: 1.4rem;
 			color: #999;
 			margin-bottom: 0.5rem;
+		}
+
+		.badge {
+			float: left;
+			width: 4rem;
+			margin-right: 1rem;
 		}
 
 		h1 {
