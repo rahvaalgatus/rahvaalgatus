@@ -84,7 +84,7 @@ autospec:
 	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R spec --watch $(TEST_OPTS)
 
 server:
-	@$(NODE) bin/web
+	@$(NODE) ./bin/web
 
 livereload:
 	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/livereload public --wait 50
