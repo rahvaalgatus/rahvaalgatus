@@ -285,7 +285,7 @@
 	"TXT_TOPIC_CATEGORY_VARIA": "Другое",
 	"TXT_TOPIC_CATEGORY_WORK": "Трудовая жизнь, занятость",
 	"TXT_TOPIC_COMMENT_CHARACTERS_LEFT": "осталось {{count}} знаков",
-	"TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE": "Чтобы принять участие, Вам необходимо войти в систему.",
+	"TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE": "Чтобы принять участие, Вам необходимо <a href=\"{{url}}\">войти в систему</a>.",
 	"TXT_TOPIC_LEVELS_ADMIN": "администрирование",
 	"TXT_TOPIC_LEVELS_EDIT": "изменение",
 	"TXT_TOPIC_LEVELS_NONE": "нет",

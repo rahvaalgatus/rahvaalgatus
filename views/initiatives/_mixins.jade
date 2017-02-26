@@ -161,7 +161,8 @@ mixin comments(comments, editedComment)
 				button.secondary-button= t("POST_COMMENT")
 
 			else
-				p= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE")
+				p.text
+					!= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE", {url: "/session/new"})
 
 mixin date-picker(selector)
 	- var _ = require("lodash")

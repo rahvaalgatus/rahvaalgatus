@@ -285,7 +285,7 @@
 	"TXT_TOPIC_CATEGORY_VARIA": "Varia",
 	"TXT_TOPIC_CATEGORY_WORK": "Work and employment",
 	"TXT_TOPIC_COMMENT_CHARACTERS_LEFT": "{{count}} characters left",
-	"TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE": "You need to log in to participate.",
+	"TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE": "You need to <a href=\"{{url}}\">log in</a> to participate.",
 	"TXT_TOPIC_LEVELS_ADMIN": "administer",
 	"TXT_TOPIC_LEVELS_EDIT": "edit",
 	"TXT_TOPIC_LEVELS_NONE": "none",

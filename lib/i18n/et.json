@@ -285,7 +285,7 @@
 	"TXT_TOPIC_CATEGORY_VARIA": "Muu",
 	"TXT_TOPIC_CATEGORY_WORK": "Tööelu, hõive",
 	"TXT_TOPIC_COMMENT_CHARACTERS_LEFT": "{{count}} tähemärki jäänud",
-	"TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE": "Osalemiseks pead sisse logima.",
+	"TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE": "Osalemiseks pead <a href=\"{{url}}\">sisse logima</a>.",
 	"TXT_TOPIC_LEVELS_ADMIN": "haldamine",
 	"TXT_TOPIC_LEVELS_EDIT": "muutmine",
 	"TXT_TOPIC_LEVELS_NONE": "puuduvad",
