@@ -7,17 +7,17 @@ mixin initiative(initiative)
 	-
 		var I18n = require("root/lib/i18n")
 		var Config = require("root/config")
-		var BADGES = Config.badges
+		var PARTNERS = Config.partners
 		var createdAt = new Date(initiative.createdAt)
-		var badge = BADGES[initiative.sourcePartnerId]
+		var partner = PARTNERS[initiative.sourcePartnerId]
 
 	li.initiative
 		a(href=`/initiatives/${initiative.id}`)
 			time(datetime=initiative.createdAt)= I18n.formatDate("numeric", createdAt)
 			h3= initiative.title
 
-			if badge
-				img.badge(src=badge)
+			if partner
+				img.badge(src=partner.badge)
 
 			span.author= initiative.creator.name
 			+progress(initiative)

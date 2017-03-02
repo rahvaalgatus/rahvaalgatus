@@ -9,16 +9,17 @@ block prepend tab
 		var I18n = require("root/lib/i18n")
 		var Config = require("root/config")
 		var Initiative = require("root/lib/initiative")
-		var BADGES = Config.badges
-		var badge = BADGES[initiative.sourcePartnerId]
+		var PARTNERS = Config.partners
+		var partner = PARTNERS[initiative.sourcePartnerId]
 
 	section#initiative.primary-section: center
 		include /_flash.jade
 
 		article.text
 			header
-				if badge
-					img.badge(src=badge)
+				if partner
+					a.badge(href=partner.url, title=partner.name)
+						img.badge(src=partner.badge, alt=partner.name)
 
 				span.author
 					= t("CREATED_BY")
