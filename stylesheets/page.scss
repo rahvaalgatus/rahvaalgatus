@@ -117,7 +117,7 @@ center {
 	}
 
 	li {
-		margin-left: 2rem;
+		margin-left: 4rem;
 		list-style-position: outside;
 	}
 
@@ -134,6 +134,10 @@ center {
 
 	p {
 		white-space: pre-wrap;
+	}
+
+	img {
+		max-width: 100%;
 	}
 
 	.form-input,
