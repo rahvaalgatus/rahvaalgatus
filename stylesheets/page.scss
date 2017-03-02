@@ -204,9 +204,9 @@ center {
 
 		time,
 		.author {
-			color: #AAAAAA;
 			font-size: 1.4rem;
 			font-family: $tisa-pro;
+			color: $secondary-light-text;
 		}
 
 		h3 {
@@ -292,6 +292,12 @@ button.inherited {
 	background: $secondary-button-background;
 	color: $secondary-button-text;
 	border: 1px solid $secondary-button-border;
+
+	&:disabled {
+		background: $secondary-background;
+		border: 1px solid darken($secondary-background, 10%);
+		color: $secondary-light-text;
+	}
 }
 
 .yellow-button {
@@ -301,9 +307,9 @@ button.inherited {
 }
 
 .white-button {
-	background: white;
-	border: 1px solid #cecece;
-	color: #4a555d;
+	background: $white-button-background;
+	border: 1px solid $white-button-border;
+	color: $white-button-text;
 }
 
 .link-button {
@@ -319,6 +325,10 @@ button.inherited {
 	font-size: 14px;
 	font-family: $museo-sans;
 	font-weight: 500;
+
+	&:disabled {
+		background-color: $secondary-background;
+	}
 }
 
 .form-input ~ .form-submit,
@@ -362,6 +372,7 @@ button.inherited {
 	background: white;
 	color: #4a555d;
 	border-radius: $button-radius;
+	resize: vertical;
 }
 
 .form-checkbox {
@@ -861,8 +872,9 @@ button.inherited {
 	#initiative-vote {
 		h2 {
 			font-family: $museo-sans;
-			font-weight: bold;
-			font-size: 2.8rem;
+			//font-weight: 500;
+			font-size: 3.2rem;
+			color: $title-text;
 			margin-bottom: 1rem;
 		}
 	}
@@ -959,77 +971,78 @@ button.inherited {
 	}
 
 	#initiative-comments {
+		$padding: 3rem;
+
 		.comments,
 		form,
 		p.flash {
 			max-width: 72rem;
 		}
 
-		.comments {
-			margin-top: 2rem;
-		}
-
 		.comment {
+			background: white;
+			padding: 2.5rem $padding;
+
 			h3 {
-				margin-top: 0.5rem;
 				font-family: $museo-sans;
 				font-size: 1.8rem;
+				line-height: 1.7;
 				color: black;
 			}
 
-			.author {
-				font-weight: 500;
-				color: $text;
+			.author,
+			time {
+				font-size: 1.4rem;
+				font-family: $tisa-pro;
+				color: $secondary-light-text;
 			}
 
-			time {
-				color: $secondary-light-text;
-				font-weight: 500;
-			}
+			// Anchor used for linking to comment itself via <time>.
+			time a:hover { text-decoration: underline; }
 
 			.author:after { content: ", " }
 
 			p {
-				margin-top: 1rem;
+				font-family: $tisa-pro;
+				line-height: 1.7;
 				white-space: pre-wrap;
 			}
 
-			// Anchor used for linking to comment itself via <time>.
-			a:hover { text-decoration: underline; }
-
 			.reply-button {
-				margin-top: 1rem;
+				margin-top: 1.5rem;
 				display: inline-block;
+				height: 3.2rem;
+				line-height: 3.2rem;
+				color: $title-text;
 			}
 
 			& + .comment {
-				margin-top: 4rem;
+				margin-top: 1rem;
 			}
 		}
 
 		.reply,
 		.reply-form {
-			margin-left: 8rem;
-			//margin-right: 4rem;
+			border-top: 1px solid $secondary-background;
+			margin: 2rem (-$padding) 0;
+			padding: 2rem $padding 0;
+		}
+
+		.reply {
+			padding-left: $padding + 6rem;
 
 			@include mobile {
 				margin-left: 4rem;
 			}
 		}
 
-		.reply {
-			margin-top: 2rem;
-		}
-
 		.comment-form,
 		.reply-form {
-			border-top: 1px solid #cecece;
-			margin-top: 4rem;
-			padding-top: 2rem;
+			margin-top: 2rem;
 
 			input, textarea {
 				width: 100%;
-				margin-bottom: 1rem;
+				margin-bottom: 0.5rem;
 			}
 
 			textarea { min-height: 10rem; }
@@ -1041,9 +1054,11 @@ button.inherited {
 			}
 		}
 
-		.reply-form {
-			margin-top: 3rem;
+		.comment-form {
+			.signin-to-act { margin-left: 1rem; }
+		}
 
+		.reply-form {
 			textarea { min-height: 5rem; }
 
 			// Override the default [hidden] attribute.
@@ -1065,7 +1080,7 @@ button.inherited {
 			}
 
 			time {
-				color: #aaa;
+				color: $secondary-light-text;
 			}
 
 			time:before { content: " — " }

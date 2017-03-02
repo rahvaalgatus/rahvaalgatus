@@ -97,10 +97,11 @@ mixin comments(comments, editedComment)
 
 		ol.comments
 			for comment in comments
+				- var name = comment.creator.name
 				- var isEdited = editedComment.parentId === comment.id
 
 				li.comment(id=`comment-${comment.id}`)
-					span.author= comment.creator.name
+					span.author= name
 					| &#32;
 					time(datetime=comment.createdAt)
 						a(href=`#comment-${comment.id}`)
@@ -110,7 +111,7 @@ mixin comments(comments, editedComment)
 					p.text!= linkify(comment.text)
 
 					if req.user
-						a.reply-button.link-button(href=`#comment-${comment.id}-reply`)
+						a.reply-button.white-button(href=`#comment-${comment.id}-reply`)
 							= t("REPLY")
 
 					ol.replies
@@ -135,33 +136,34 @@ mixin comments(comments, editedComment)
 								name="text",
 								maxlength=2048,
 								required,
-								placeholder=t("PLACEHOLDER_ADD_ARGUMENT_TEXT"))
+								placeholder=t("PLACEHOLDER_ADD_YOUR_REPLY", {name: name}))
 								= isEdited ? editedComment.text : null
 
-							button.secondary-button= t("POST_COMMENT")
+							button.secondary-button= t("POST_REPLY")
 
 		//- Comment form anchor used for redirecting to error.
 		+form#initiative-comment-form.comment-form(
 			method="post",
 			action=commentsUrl)
-			if req.user
-				input.form-input(
-					name="subject",
-					value=editedComment.parentId == null ? editedComment.subject : null,
-					maxlength=128,
-					placeholder=t("PLACEHOLDER_ADD_ARGUMENT_SUBJECT"))
+			input.form-input(
+				name="subject",
+				value=editedComment.parentId == null ? editedComment.subject : null,
+				maxlength=128,
+				placeholder=t("PLACEHOLDER_ADD_ARGUMENT_SUBJECT"),
+				disabled=!req.user)
 
-				textarea.form-textarea(
-					name="text",
-					maxlength=2048,
-					required,
-					placeholder=t("PLACEHOLDER_ADD_ARGUMENT_TEXT"))
-					= editedComment.parentId == null ? editedComment.text : null
+			textarea.form-textarea(
+				name="text",
+				maxlength=2048,
+				required,
+				placeholder=t("PLACEHOLDER_ADD_ARGUMENT_TEXT"),
+				disabled=!req.user)
+				= editedComment.parentId == null ? editedComment.text : null
 
-				button.secondary-button= t("POST_COMMENT")
+			button.secondary-button(disabled=!req.user)= t("POST_COMMENT")
 
-			else
-				p.text
+			if !req.user
+				span.text.signin-to-act
 					!= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE", {url: "/session/new"})
 
 mixin date-picker(selector)

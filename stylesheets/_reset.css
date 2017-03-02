@@ -54,8 +54,8 @@ a {
 	cursor: pointer;
 }
 
-a[disabled],
-button[disabled] {
+a:disabled,
+button:disabled {
 	cursor: auto;
 }
 
