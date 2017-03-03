@@ -932,22 +932,30 @@ button.inherited {
 
 		#mobile-id-form-toggle:checked + label { display: none; }
 	}
+
+	#initiative-aux-menu,
+	#initiative-subscribe {
+		margin-bottom: 2rem;
+	}
 	
 	#initiative-aux-menu {
 		float: right;
 		text-align: right;
 
-		form { display: inline-block; }
-		form + form { margin-left: 1rem; }
+		form { display: block; }
+		form + form { margin-top: 0.5rem; }
+
+		button {
+			min-width: 18rem;
+		}
 
 		@include tablet {
 			float: none;
 			text-align: left;
-			margin-bottom: 2rem;
-			.button { width: 100%; }
 
 			form { display: block; margin-top: 1rem; }
 			form + form { margin-left: 0; }
+			button { width: 100%; }
 		}
 	}
 
@@ -974,13 +982,10 @@ button.inherited {
 	}
 
 	#initiative-comments {
+		clear: both;
+		max-width: 72rem;
+		margin-top: 4rem;
 		$padding: 3rem;
-
-		.comments,
-		form,
-		p.flash {
-			max-width: 72rem;
-		}
 
 		.comment {
 			background: white;
@@ -1056,6 +1061,8 @@ button.inherited {
 				button { width: 100%; }
 			}
 		}
+
+		.comments:empty + .comment-form { margin-top: 0; }
 
 		.comment-form {
 			.signin-to-act { margin-left: 1rem; }

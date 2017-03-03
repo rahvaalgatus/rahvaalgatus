@@ -173,5 +173,7 @@ block prepend tab
 					button.button(name="method", value="mobile-id", class=btnClass)
 						= btnText
 
-block append tab
-	+comments(comments, comment)
+	section.secondary-section: center
+		+initiative-aux-menu(initiative)
+		+initiative-subscribe(initiative)
+		+comments(comments, comment)

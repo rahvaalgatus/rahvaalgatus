@@ -84,12 +84,68 @@ mixin header(initiative)
 
 		h1= initiative.title
 
+mixin initiative-aux-menu(initiative)
+	-
+		var Initiative = require("root/lib/initiative")
+
+		var showMenu = (
+			Initiative.canUpdateDiscussionDeadline(initiative) ||
+			Initiative.canUpdateVoteDeadline(initiative) ||
+			Initiative.isDeletable(initiative)
+		)
+
+	if showMenu
+		menu#initiative-aux-menu
+			h3= t("OPTIONS")
+
+			if Initiative.canUpdateDiscussionDeadline(initiative)
+				+form(method="post", action="/initiatives/#{initiative.id}")
+					input(type="hidden", name="_method", value="put")
+					button.button.white-button(name="visibility", value="public")
+						= t("RENEW_DEADLINE")
+
+			if Initiative.canUpdateVoteDeadline(initiative)
+				+form(method="post", action="/initiatives/#{initiative.id}")
+					input(type="hidden", name="_method", value="put")
+					button.button.white-button(name="status", value="voting")
+						= t("RENEW_DEADLINE")
+
+			if Initiative.isDeletable(initiative)
+				+form(method="post", action="/initiatives/#{initiative.id}")
+					- var confirmText = t("TXT_ALL_DISCUSSIONS_AND_VOTES_DELETED")
+					button.button.white-button(
+						name="_method",
+						value="delete",
+						onclick="return confirm('#{confirmText}')")
+						= t("BTN_DELETE_TOPIC")
+
+mixin initiative-subscribe(initiative)
+	- var Initiative = require("root/lib/initiative")
+
+	if Initiative.isPublic(initiative)
+		+form#initiative-subscribe(
+			action="https://docs.google.com/forms/d/e/1FAIpQLScP706DtEaSwnt8GYvgw30KOWvdfl7DBhjwyW82V0IesDrx0g/formResponse",
+			target="_blank",
+			method="POST")
+			h3= t("WANT_TO_KEEP_INFORMED_ABOUT_FURTHER_PROGRESS")
+
+			input(name="entry.1310039861", type="hidden", value=initiative.id)
+			input(name="entry.426608193", type="hidden", value=initiative.title)
+			input(name="fbzx", value="-7339236801065826742", type="hidden")
+
+			input#initiative-subscribe-email.form-input(
+				name="entry.120482688",
+				type="email",
+				placeholder=t("LBL_EMAIL"))
+
+			button.secondary-button(type="submit")= t("BTN_SUBSCRIBE")
+
 mixin comments(comments, editedComment)
 	- var I18n = require("root/lib/i18n")
 	- var linkify = require("root/lib/linkify")
 	- var commentsUrl = `/initiatives/${initiative.id}/comments`
 
-	section#initiative-comments.secondary-section: center
+	#initiative-comments
 		h2= t("COMMENT_HEADING")
 
 		if flash("commentError")
@@ -149,6 +205,7 @@ mixin comments(comments, editedComment)
 				name="subject",
 				value=editedComment.parentId == null ? editedComment.subject : null,
 				maxlength=128,
+				required,
 				placeholder=t("PLACEHOLDER_ADD_ARGUMENT_SUBJECT"),
 				disabled=!req.user)
 
