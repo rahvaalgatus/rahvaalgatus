@@ -872,11 +872,10 @@ button.inherited {
 		}
 	}
 
-	#initiative-comments,
-	#initiative-vote {
+	#initiative-vote,
+	.secondary-section {
 		h2 {
 			font-family: $museo-sans;
-			//font-weight: 500;
 			font-size: 3.2rem;
 			color: $title-text;
 			margin-bottom: 1rem;
