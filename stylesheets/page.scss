@@ -575,6 +575,17 @@ button.inherited {
 		img { width: 100%; }
 	}
 
+	.uuseakus {
+		display: block;
+		float: right;
+		width: 10rem;
+		height: inherit;
+		margin-left: 2rem;
+		margin-top: -0.5rem;
+
+		img { width: 100%; }
+	}
+
 	nav li {
 		display: inline;
 
@@ -609,6 +620,11 @@ button.inherited {
 			line-height: 1;
 			padding: 0.5rem 0.7rem;
 		}
+	}
+
+	@include mobile {
+		.logo { max-width: 16rem; }
+		nav { clear: both; }
 	}
 }
 
