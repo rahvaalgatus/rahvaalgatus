@@ -98,7 +98,6 @@ center {
 
 	strong {
 		// Rahvaalgatus lacks weights other than normal for Tisa Pro.
-		font-size: 1.7rem;
 		font-family: $museo-sans;
 		font-weight: bold;
 	}
@@ -1065,6 +1064,11 @@ button.inherited {
 		.comments:empty + .comment-form { margin-top: 0; }
 
 		.comment-form {
+			input:disabled,
+			textarea:disabled {
+				display: none;
+			}
+
 			.signin-to-act { margin-left: 1rem; }
 		}
 
