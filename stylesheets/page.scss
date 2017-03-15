@@ -107,7 +107,7 @@ center {
 
 	a:not(.button) {
 		color: $link;
-		&:hover { text-decoration: underline; }
+		text-decoration: underline;
 	}
 
 	ol, ul {
@@ -651,6 +651,7 @@ button.inherited {
 		font-size: 16px;
 		color: #ffd900;
 		border-bottom: 1px solid #ffd900;
+		text-decoration: none;
 	}
 
 	#video-link {
@@ -660,6 +661,7 @@ button.inherited {
 		font-weight: 900;
 		font-size: 16px;
 		text-transform: uppercase;
+		text-decoration: none;
 		max-width: $half-width;
 		display: block;
 		float: left;
