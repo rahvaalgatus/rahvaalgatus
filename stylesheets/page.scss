@@ -277,12 +277,13 @@ button.inherited {
 	vertical-align: middle;
 	cursor: pointer;
 
-	&:not(button) { line-height: $button-height; }
-
 	i {
 		margin-right: 1rem;
 		margin-left: -1rem;
 	}
+
+	&:not(button) { line-height: $button-height; }
+	&:disabled { cursor: auto; }
 }
 
 .primary-button {
