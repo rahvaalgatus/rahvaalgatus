@@ -1,0 +1,176 @@
+@import "_lib";
+@import "_fonts";
+$page-width: 960px;
+
+html {
+  font-size: 62.5%;
+}
+
+body {
+	font-weight: 300;
+}
+
+.container {
+	// Voog overwrites this inline.
+	max-width: 100% !important;
+}
+
+center,
+main {
+  max-width: $page-width;
+  margin: 0 auto;
+	padding-left: 2rem;
+	padding-right: 2rem;
+}
+
+center {
+	text-align: inherit;
+
+	// Internet Explorer still centers <p>s under <center> even with
+	// text-align: inherit.
+	& > p { margin-right: auto }
+}
+
+#header {
+	background: $header-background;
+	padding-left: 0;
+	padding-right: 0;
+	padding-top: 1.5rem;
+	padding-bottom: 1rem;
+	color: white;
+
+	nav, ol, ul, li {
+		margin: 0;
+		padding: 0;
+	}
+
+	a {
+		color: inherit;
+	}
+
+	.languages {
+		margin-bottom: 2rem;
+		font-size: 1.2rem;
+		text-transform: uppercase;
+		display: block;
+		font-weight: bold;
+
+		li {
+			list-style-type: none;
+			display: inline-block;
+
+			& + li { margin-left: 1rem; }
+		}
+	}
+
+	.logo {
+		display: block;
+		float: left;
+		width: 18rem;
+		height: inherit;
+		margin-right: 2rem;
+
+		img { width: 100%; }
+	}
+
+	.uuseakus {
+		display: block;
+		float: right;
+		width: 10rem;
+		height: inherit;
+		margin-left: 2rem;
+		margin-top: -0.5rem;
+
+		img { width: 100%; }
+	}
+
+	nav li {
+		display: inline;
+
+		& + li { margin-left: 1rem; }
+	}
+
+	nav a {
+		display: inline-block;
+		font-size: 1.6rem;
+		line-height: 2rem;
+		padding: 0.5rem 1rem;
+		border-radius: 2px;
+		transition: color ease 0.4s;
+
+		&.active,
+		&:hover {
+			background-color: white;
+			color: #45A0E6;
+		}
+	}
+
+	@include tablet {
+		menu { margin-bottom: 1rem; }
+		.logo { float: none; }
+
+		nav li {
+			margin-right: 0.5rem;
+			& + li { margin-left: 0; }
+		}
+
+		nav a {
+			font-size: 1.5rem;
+			line-height: 1;
+			padding: 0.5rem 0.7rem;
+		}
+	}
+
+	@include mobile {
+		.logo { max-width: 16rem; }
+		nav { clear: both; }
+	}
+}
+
+.menu-tags {
+	// Defaults to inline-block.
+	display: block;
+}
+
+.menu-sub {
+	margin-top: 2rem;
+}
+
+.post-content .read-more {
+	display: block;
+	margin-top: 1rem;
+	color: $link;
+	font-size: 1.4rem;
+}
+
+#footer {
+	margin-top: 4rem;
+
+	min-height: $footer-height;
+	padding-top: 2rem;
+	padding-bottom: 2rem;
+	overflow: hidden;
+
+	background: $header-background;
+	color: white;
+	line-height: 1.4;
+	font-size: 1.3rem;
+
+	p {
+		margin: 0;
+		padding: 0;
+	}
+
+	a {
+		color: $link;
+	}
+
+	.contact {
+		float: left;
+	}
+
+	.powered-by {
+		text-align: right;
+		float: right;
+	}
+}
