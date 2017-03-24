@@ -89,6 +89,53 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 			})
 		})
+
+		describe("when logged in", function() {
+			require("root/test/fixtures").user()
+
+			it("must render discussion", function*() {
+				this.mitm.on("request", respond.bind(null, `/topics/${UUID}?`, {
+					data: {
+						id: UUID,
+						status: "inProgress",
+						description: "<body><h1>My thoughts.</h1></body>",
+						creator: {name: "John"},
+						permission: {level: "read"}
+					}
+				}))
+
+				this.mitm.on("request", respond.bind(null, `/topics/${UUID}/comments`, {
+					data: {rows: []}
+				}))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+			})
+
+			// This was a bug noticed on Mar 24, 2017 where the UI translation strings
+			// were not rendered on the page. They were used only for ID-card errors.
+			it("must render UI strings when voting", function*() {
+				this.mitm.on("request", respond.bind(null, `/topics/${UUID}?`, {
+					data: {
+						id: UUID,
+						status: "voting",
+						description: "<body><h1>My thoughts.</h1></body>",
+						creator: {name: "John"},
+						permission: {level: "read"},
+						vote: {options: {rows: [{value: "Yes", voteCount: 0}]}}
+					}
+				}))
+
+				this.mitm.on("request", respond.bind(null, `/topics/${UUID}/comments`, {
+					data: {rows: []}
+				}))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+				var body = res.read().toString()
+				body.must.include("MSG_ERROR_HWCRYPTO_NO_CERTIFICATES")
+			})
+		})
 	})
 
 	describe("PUT /initiatives/:id", function() {
