@@ -24,7 +24,6 @@ function checkIntercept(req, res) {
 
 function bypassLocalhost(socket, opts) {
 	switch (opts.host) {
-		case "localhost":
-		case "localhost.rahvaalgatus.ee": socket.bypass(); break
+		case "localhost": socket.bypass(); break
 	}
 }
