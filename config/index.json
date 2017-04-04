@@ -1,9 +1,9 @@
 {
 	"title": "Rahvaalgatus",
 	"url": "https://rahvaalgatus.ee",
-	"apiUrl": "https://citizenos.com",
+	"apiUrl": "https://api.citizenos.com",
 	"apiPartnerId": "b563ee8c-ba8e-4cd6-b592-fbcd4e8f22bb",
-	"apiAuthorizeUrl": "https://citizenos.com/api/auth/openid/authorize",
+	"apiAuthorizeUrl": "https://api.citizenos.com/api/auth/openid/authorize",
 
 	"language": "et",
 	"languages": ["et", "en", "ru"],
