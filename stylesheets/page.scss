@@ -274,7 +274,6 @@ button.inherited {
 	padding: 0 2rem;
 	text-align: center;
 	text-transform: uppercase;
-	vertical-align: middle;
 	cursor: pointer;
 
 	i {
@@ -1040,6 +1039,8 @@ button.inherited {
 				height: 3.2rem;
 				line-height: 3.2rem;
 				color: $title-text;
+
+				&[disabled] { color: #ccc; }
 			}
 
 			& + .comment {
@@ -1087,8 +1088,6 @@ button.inherited {
 			textarea:disabled {
 				display: none;
 			}
-
-			.signin-to-act { margin-left: 1rem; }
 		}
 
 		.reply-form {
@@ -1097,6 +1096,8 @@ button.inherited {
 			// Override the default [hidden] attribute.
 			&:target { display: block !important; }
 		}
+
+		.signin-to-act { margin-left: 1rem; }
 	}
 
 	#initiative-events {
