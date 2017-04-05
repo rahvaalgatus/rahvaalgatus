@@ -18,7 +18,7 @@ block prepend tab
 					li.event
 						h2.subject= event.subject
 						time(datetime=event.createdAt)
-							= I18n.formatDate("numeric" ,event.createdAt)
+							= I18n.formatDate("numeric", event.createdAt)
 
 						p.text!= linkify(event.text)
 		else
