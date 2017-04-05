@@ -4,12 +4,15 @@ var Config = require("root/config")
 var Cookie = require("tough-cookie").Cookie
 var Crypto = require("crypto")
 var fetchDefaults = require("fetch-defaults")
+var encode = encodeURIComponent
+var decode = decodeURIComponent
 var PATH = "/session/new"
 var HEADERS = {"Content-Type": "application/json"}
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var AUTHORIZE_URL = Config.apiAuthorizeUrl
 var CSRF_COOKIE_NAME = "csrf_token_for_citizenos"
 var CSRF_COOKIE_PATH = "/session"
+var REFERRER_COOKIE_NAME = "session_referrer"
 
 describe("SessionController", function() {
 	require("root/test/web")()
@@ -33,7 +36,7 @@ describe("SessionController", function() {
 			var res = yield this.request("/session/new")
 			var url = Url.parse(res.headers.location, true)
 
-			var cookies = _.keyBy(res.headers["set-cookie"].map(Cookie.parse), "key")
+			var cookies = parseCookies(res.headers["set-cookie"])
 			var cookie = cookies[CSRF_COOKIE_NAME]
 			cookie.path.must.equal(CSRF_COOKIE_PATH)
 			cookie.value.must.have.length(32)
@@ -41,20 +44,54 @@ describe("SessionController", function() {
 			cookie.expires.must.be.equal("Infinity")
 			url.query.state.must.equal(cookie.value)
 		})
+
+		it("must set session referrer cookie", function*() {
+			var res = yield this.request("/session/new", {
+				headers: {Referer: this.url + "/foo"}
+			})
+
+			var cookies = parseCookies(res.headers["set-cookie"])
+			var cookie = cookies[REFERRER_COOKIE_NAME]
+			decode(cookie.value).must.equal(this.url + "/foo")
+		})
+
+		it("must not set session referrer cookie if referred from outside",
+			function*() {
+			var res = yield this.request("/session/new", {
+				headers: {Referer: "http://example.com/evil"}
+			})
+
+			var cookies = parseCookies(res.headers["set-cookie"])
+			cookies.must.not.have.property(REFERRER_COOKIE_NAME)
+		})
 	})
 
 	describe("GET /new with code", function() {
 		beforeEach(authorize)
 
 		it("must set token cookie", function*() {
-			var res = yield this.request(this.url + "&access_token=123456")
+			var res = yield this.request(this.path + "&access_token=123456")
 			res.statusCode.must.equal(302)
 			res.headers.location.must.equal("/")
 
-			var cookies = _.keyBy(res.headers["set-cookie"].map(Cookie.parse), "key")
+			var cookies = parseCookies(res.headers["set-cookie"])
 			cookies.citizenos_token.path.must.equal("/")
 			cookies.citizenos_token.value.must.equal("123456")
 			cookies.citizenos_token.httpOnly.must.be.true()
+		})
+
+		it("must redirect to session referrer cookie path", function*() {
+			var token = rand(16)
+			var path = `${PATH}?state=${token}&access_token=123456`
+			var res = yield this.request(path, {
+				headers: {Cookie: serializeCookies({
+					[CSRF_COOKIE_NAME]: token,
+					[REFERRER_COOKIE_NAME]: this.url + "/foo"
+				})}
+			})
+
+			res.statusCode.must.equal(302)
+			res.headers.location.must.equal(this.url + "/foo")
 		})
 
 		it("must respond with 412 given no CSRF token in query", function*() {
@@ -63,7 +100,7 @@ describe("SessionController", function() {
 		})
 
 		it("must respond with 412 given mismatching CSRF tokens", function*() {
-			var res = yield this.request(this.url + "&access_token=123456", {
+			var res = yield this.request(this.path + "&access_token=123456", {
 				headers: {Cookie: `${CSRF_COOKIE_NAME}=42`}
 			})
 
@@ -80,9 +117,23 @@ describe("SessionController", function() {
 		})
 
 		it("must redirect to home page if access_denied", function*() {
-			var res = yield this.request(this.url + "&error=access_denied")
+			var res = yield this.request(this.path + "&error=access_denied")
 			res.statusCode.must.equal(302)
 			res.headers.location.must.equal("/")
+		})
+
+		it("must redirect to referrer path if access_denied", function*() {
+			var token = rand(16)
+			var path = `${PATH}?state=${token}&error=access_denied`
+			var res = yield this.request(path, {
+				headers: {Cookie: serializeCookies({
+					[CSRF_COOKIE_NAME]: token,
+					[REFERRER_COOKIE_NAME]: this.url + "/foo"
+				})}
+			})
+
+			res.statusCode.must.equal(302)
+			res.headers.location.must.equal(this.url + "/foo")
 		})
 	})
 
@@ -115,7 +166,7 @@ describe("SessionController", function() {
 
 function authorize() {
 	var token = rand(16)
-	this.url = PATH + "?state=" + token
+	this.path = PATH + "?state=" + token
 
 	this.request = fetchDefaults(this.request, {
 		headers: {Cookie: `${CSRF_COOKIE_NAME}=${token}`}
@@ -123,3 +174,11 @@ function authorize() {
 }
 
 function rand(length) { return Crypto.randomBytes(length).toString("hex") }
+
+function parseCookies(header) {
+	return _.keyBy(header.map(Cookie.parse), "key")
+}
+
+function serializeCookies(obj) {
+	return _.map(obj, (value, name) => `${name}=${encode(value)}`).join("; ")
+}

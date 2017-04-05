@@ -44,6 +44,14 @@ exports.router.delete("/", function(req, res) {
 function redirect(req, res) {
 	oAuthCsrf.reset(req, res)
 
+	var referrer = req.headers.referer
+	if (referrer && Url.parse(referrer).hostname === req.hostname) {
+		res.cookie("session_referrer", referrer, {
+			secure: req.secure,
+			httpOnly: true
+		})
+	}
+
 	var host = `${req.protocol}://${req.headers.host}`
 	var cb = `${host}${req.baseUrl}${req.path}?unhash`
 
@@ -79,7 +87,9 @@ function create(req, res, next) {
 		httpOnly: true
 	})
 
-	res.redirect(302, "/")
+	var referrer = req.cookies.session_referrer || "/"
+	res.clearCookie("session_referrer")
+	res.redirect(302, referrer)
 }
 
 function error(req, res, next) {
@@ -87,8 +97,13 @@ function error(req, res, next) {
 	if (err) return void next(err)
 	oAuthCsrf.delete(req, res)
 
+	var referrer = req.cookies.session_referrer || "/"
+	res.clearCookie("session_referrer")
+
 	switch (req.query.error) {
-		case "access_denied": return void res.redirect(302, "/")
+		case "access_denied":
+			res.redirect(302, referrer)
+			break
 
 		default: res.render("500", {
 			error: {name: req.query.error, message: req.query.error_description},
