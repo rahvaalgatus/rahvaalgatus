@@ -54,7 +54,7 @@ describe("SessionController", function() {
 			var cookies = _.keyBy(res.headers["set-cookie"].map(Cookie.parse), "key")
 			cookies.citizenos_token.path.must.equal("/")
 			cookies.citizenos_token.value.must.equal("123456")
-			cookies.citizenos_token.httpOnly.must.be.false()
+			cookies.citizenos_token.httpOnly.must.be.true()
 		})
 
 		it("must respond with 412 given no CSRF token in query", function*() {

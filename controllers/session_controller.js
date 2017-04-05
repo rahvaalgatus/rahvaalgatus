@@ -76,7 +76,7 @@ function create(req, res, next) {
 	res.cookie("citizenos_token", req.query.access_token, {
 		maxAge: 30 * 86400 * 1000,
 		secure: req.secure,
-		httpOnly: false
+		httpOnly: true
 	})
 
 	res.redirect(302, "/")
