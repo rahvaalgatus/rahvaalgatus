@@ -72,9 +72,17 @@ describe("SessionController", function() {
 	})
 
 	describe("GET /new with error", function() {
+		beforeEach(authorize)
+
 		it("must respond with 412 given no CSRF token", function*() {
 			var res = yield this.request(PATH + "?error=access_denied")
 			res.statusCode.must.equal(412)
+		})
+
+		it("must redirect to home page if access_denied", function*() {
+			var res = yield this.request(this.url + "&error=access_denied")
+			res.statusCode.must.equal(302)
+			res.headers.location.must.equal("/")
 		})
 	})
 

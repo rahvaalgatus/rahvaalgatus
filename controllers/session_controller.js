@@ -87,9 +87,13 @@ function error(req, res, next) {
 	if (err) return void next(err)
 	oAuthCsrf.delete(req, res)
 
-	res.render("500", {
-		error: {name: req.query.error, message: req.query.error_description},
-	})
+	switch (req.query.error) {
+		case "access_denied": return void res.redirect(302, "/")
+
+		default: res.render("500", {
+			error: {name: req.query.error, message: req.query.error_description},
+		})
+	}
 }
 
 function rand(length) { return Crypto.randomBytes(length).toString("hex") }
