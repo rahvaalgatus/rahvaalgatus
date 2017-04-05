@@ -522,6 +522,13 @@ button.inherited {
 		padding-left: 3.5rem;
 	}
 
+	&.finished {
+		color: #1C71A2;
+		background-image: url(/images/discussion-over.png);
+		background-position: 1rem center;
+		padding-left: 3.5rem;
+	}
+
 	&.failed {
 		color: white;
 		background-color: #9a9a9a;

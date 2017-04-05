@@ -87,6 +87,7 @@ exports.router.get("/:id", function(req, _res, next) {
 		case "inProgress": req.url = req.path + "/discussion"; break
 		case "voting": req.url = req.path + "/vote"; break
 		case "followUp": req.url = req.path + "/events"; break
+		case "closed": req.url = req.path + "/events"; break
 		default: return void next(new HttpError(403, "Unknown Status"))
 	}
 
@@ -167,6 +168,10 @@ exports.router.put("/:id", next(function*(req, res) {
 			contact: O.defaults(req.body.contact, EMPTY_INITIATIVE.contact)
 		}
 	}
+	else if (req.body.status === "closed") {
+		if (!Initiative.isFinishable(initiative)) throw new HttpError(401)
+		attrs = {status: req.body.status}
+	}
 	else throw new HttpError(422, "Invalid Attribute")
 
 	var updated = yield req.api(path, {
@@ -181,6 +186,8 @@ exports.router.put("/:id", next(function*(req, res) {
 			res.flash("notice", "Algatus on avatud allkirjade kogumiseks.")
 		else if (req.body.status === "followUp")
 			res.flash("notice", req.t("SENT_TO_PARLIAMENT_CONTENT"))
+		else if (req.body.status === "closed")
+			res.flash("notice", "Algatuse menetlus on lõpetatud.")
 
 		res.redirect(303, req.baseUrl + "/" + initiative.id)
 	}

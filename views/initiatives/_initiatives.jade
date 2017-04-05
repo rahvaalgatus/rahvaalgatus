@@ -12,3 +12,7 @@ section#initiatives.secondary-section.initiatives-section: center
 	if processes.length > 0
 		h2= t("IN_FOLLOW_UP_LIST")
 		+initiatives(processes)
+
+	if finished.length > 0
+		h2 Lõpetatud
+		+initiatives(finished)

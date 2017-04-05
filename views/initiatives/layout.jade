@@ -40,6 +40,12 @@ block body
 					button.button.primary-button(name="status", value="followUp")
 						= t("SEND_TO_PARLIAMENT")
 
+			if Initiative.isFinishable(initiative)
+				+form(method="post", action="/initiatives/#{initiative.id}")
+					input(type="hidden", name="_method", value="put")
+					button.button.primary-button(name="status", value="closed")
+						| Lõpeta menetlus
+
 			if Initiative.isVotable(new Date, initiative) && !hasVote
 				a.button.primary-button(href="#initiative-vote")
 					= t("SIGN_THIS_DOCUMENT")
@@ -72,7 +78,7 @@ block body
 				class=selected(subpage, "vote"))
 				= t("HEADING_TAB_VOTE")
 
-		if initiative.status == "followUp"
+		if initiative.status == "followUp" || initiative.status == "closed"
 			a.tab(
 				href="/initiatives/#{initiative.id}/events",
 				class=selected(subpage, "events"))

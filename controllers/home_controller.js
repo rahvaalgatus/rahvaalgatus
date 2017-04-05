@@ -3,6 +3,7 @@ var Router = require("express").Router
 var Initiative = require("root/lib/initiative")
 var api = require("root/lib/citizen_os")
 var next = require("co-next")
+var EMPTY_ARR = Array.prototype
 
 exports.router = Router({mergeParams: true})
 
@@ -13,6 +14,7 @@ exports.router.get("/", next(function*(_req, res) {
 	initiatives.discussions = _.reject(initiatives.discussions, hasEnded)
 	var hasFailed = Initiative.hasVoteFailed.bind(null, new Date)
 	initiatives.votings = _.reject(initiatives.votings, hasFailed)
+	initiatives.finished = EMPTY_ARR
 
 	res.render("home/index", initiatives)
 }))
