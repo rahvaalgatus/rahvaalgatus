@@ -21,7 +21,7 @@ exports.router.post("/", next(function*(req, res, next) {
 			parentId: null,
 			type: "pro",
 			subject: req.body.subject,
-			text: req.body.text
+			text: normalizeNewlines(req.body.text)
 		}
 	}).catch(catch400)
 
@@ -62,7 +62,7 @@ exports.router.post("/:commentId/replies", next(function*(req, res, next) {
 		json: {
 			parentId: commentId,
 			type: "reply",
-			text: req.body.text
+			text: normalizeNewlines(req.body.text)
 		}
 	}).catch(catch400)
 
@@ -89,3 +89,5 @@ function normalizeComment(comment) {
 	comment.replies = comment.replies.rows
 	return comment
 }
+
+function normalizeNewlines(text) { return text.replace(/\r\n/g, "\n") }
