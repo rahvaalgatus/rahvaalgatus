@@ -753,6 +753,7 @@ button.inherited {
 
 #initiative-page {
 	$article-width: 72rem;
+	$comment-padding: 3rem;
 	background-color: $secondary-background;
 
 	#initiative-tabs {
@@ -814,6 +815,7 @@ button.inherited {
 
 	#initiative,
 	#initiative-events,
+	#initiative-comment,
 	#initiative-signature {
 		overflow: hidden;
 
@@ -837,6 +839,8 @@ button.inherited {
 			line-height: 1.2;
 
 			margin-bottom: 1rem;
+
+			a:hover { text-decoration: underline; }
 		}
 	}
 
@@ -898,6 +902,7 @@ button.inherited {
 	}
 
 	#initiative-vote,
+	#initiative-comment,
 	.secondary-section {
 		h2 {
 			font-family: $museo-sans;
@@ -1010,103 +1015,107 @@ button.inherited {
 		clear: both;
 		max-width: 72rem;
 		margin-top: 4rem;
-		$padding: 3rem;
 
 		.comment {
-			background: white;
-			padding: 2.5rem $padding;
-
-			h3 {
-				font-family: $museo-sans;
-				font-size: 1.8rem;
-				line-height: 1.7;
-				color: black;
-			}
-
-			.author,
-			time {
-				font-size: 1.4rem;
-				font-family: $tisa-pro;
-				color: $secondary-light-text;
-			}
-
-			// Anchor used for linking to comment itself via <time>.
-			time a:hover { text-decoration: underline; }
-
-			.author:after { content: ", " }
-
-			p {
-				font-family: $tisa-pro;
-				line-height: 1.7;
-				white-space: pre-wrap;
-			}
-
-			.reply-button {
-				margin-top: 1.5rem;
-				display: inline-block;
-				height: 3.2rem;
-				line-height: 3.2rem;
-				color: $title-text;
-
-				&[disabled] { color: #ccc; }
-			}
-
-			& + .comment {
-				margin-top: 1rem;
-			}
+			padding: 2.5rem $comment-padding;
 		}
-
-		.reply,
-		.reply-form {
-			border-top: 1px solid $secondary-background;
-			margin: 2rem (-$padding) 0;
-			padding: 2rem $padding 0;
-		}
-
-		.reply {
-			padding-left: $padding + 6rem;
-
-			@include mobile {
-				margin-left: 4rem;
-			}
-		}
-
-		.comment-form,
-		.reply-form {
-			margin-top: 2rem;
-
-			input, textarea {
-				width: 100%;
-				margin-bottom: 0.5rem;
-			}
-
-			textarea { min-height: 10rem; }
-			button + button { margin-left: 1rem; }
-			p { text-align: center; }
-
-			@include mobile {
-				button { width: 100%; }
-			}
-		}
-
-		.comments:empty + .comment-form { margin-top: 0; }
-
-		.comment-form {
-			input:disabled,
-			textarea:disabled {
-				display: none;
-			}
-		}
-
-		.reply-form {
-			textarea { min-height: 5rem; }
-
-			// Override the default [hidden] attribute.
-			&:target { display: block !important; }
-		}
-
-		.signin-to-act { margin-left: 1rem; }
 	}
+
+	.comment {
+		background: white;
+
+		h3 {
+			font-family: $museo-sans;
+			font-size: 1.8rem;
+			line-height: 1.7;
+			color: black;
+
+			a:hover { text-decoration: underline; }
+		}
+
+		.author,
+		time {
+			font-size: 1.4rem;
+			font-family: $tisa-pro;
+			color: $secondary-light-text;
+		}
+
+		// Anchor used for linking to comment itself via <time>.
+		time a:hover { text-decoration: underline; }
+
+		.author:after { content: ", " }
+
+		p {
+			font-family: $tisa-pro;
+			line-height: 1.7;
+			white-space: pre-wrap;
+		}
+
+		.comment-reply-button {
+			margin-top: 1.5rem;
+			display: inline-block;
+			height: 3.2rem;
+			line-height: 3.2rem;
+			color: $title-text;
+
+			&[disabled] { color: #ccc; }
+		}
+
+		& + .comment {
+			margin-top: 1rem;
+		}
+	}
+
+	.comment-reply,
+	.comment-reply-form {
+		border-top: 1px solid $secondary-background;
+		margin: 2rem (-$comment-padding) 0;
+		padding: 2rem $comment-padding 0;
+	}
+
+	.comment-reply {
+		padding-left: $comment-padding + 6rem;
+
+		@include mobile {
+			margin-left: 4rem;
+		}
+	}
+
+	.comment-form,
+	.comment-reply-form {
+		margin-top: 2rem;
+
+		input, textarea {
+			width: 100%;
+			margin-bottom: 0.5rem;
+		}
+
+		textarea { min-height: 10rem; }
+		button + button { margin-left: 1rem; }
+		p { text-align: center; }
+
+		@include mobile {
+			button { width: 100%; }
+		}
+	}
+
+	.comments:empty + .comment-form { margin-top: 0; }
+
+	.comment-form {
+		input:disabled,
+		textarea:disabled {
+			display: none;
+		}
+	}
+
+	.comment-reply-form {
+		textarea { min-height: 5rem; }
+
+		// Override the default [hidden] attribute.
+		&:target { display: block !important; }
+	}
+
+	.signin-to-act { margin-left: 1rem; }
 
 	#initiative-events {
 		.events {

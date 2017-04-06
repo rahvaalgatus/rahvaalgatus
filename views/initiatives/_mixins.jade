@@ -86,6 +86,17 @@ mixin header(initiative)
 
 		h1= initiative.title
 
+mixin header-link(initiative)
+		span.author
+			= t("CREATED_BY")
+			| &#32;
+			= initiative.creator.name
+
+		h1
+			| ←
+			| &#32;
+			a(href=`/initiatives/${initiative.id}`)= initiative.title
+
 mixin initiative-aux-menu(initiative)
 	-
 		var Initiative = require("root/lib/initiative")
@@ -143,8 +154,6 @@ mixin initiative-subscribe(initiative)
 			button.secondary-button(type="submit")= t("BTN_SUBSCRIBE")
 
 mixin comments(comments, editedComment)
-	- var I18n = require("root/lib/i18n")
-	- var linkify = require("root/lib/linkify")
 	- var commentsUrl = `/initiatives/${initiative.id}/comments`
 
 	#initiative-comments
@@ -155,49 +164,8 @@ mixin comments(comments, editedComment)
 
 		ol.comments
 			for comment in comments
-				- var name = comment.creator.name
-				- var isEdited = editedComment.parentId === comment.id
-
 				li.comment(id=`comment-${comment.id}`)
-					span.author= name
-					| &#32;
-					time(datetime=comment.createdAt)
-						a(href=`#comment-${comment.id}`)
-							= I18n.formatTime("numeric", comment.createdAt)
-
-					h3.subject= comment.subject
-					p.text!= linkify(comment.text)
-
-					if req.user
-						a.reply-button.white-button(href=`#comment-${comment.id}-reply`)
-							= t("REPLY")
-
-					ol.replies
-						for reply in comment.replies
-							li.reply(id=`comment-${reply.id}`)
-								span.author= reply.creator.name
-								| &#32;
-								time(datetime=reply.createdAt)
-									a(href=`#comment-${reply.id}`)
-										= I18n.formatTime("numeric", reply.createdAt)
-
-								p.text!= linkify(reply.text)
-
-					if req.user
-						+form.reply-form(
-							id=`comment-${comment.id}-reply`,
-							method="post",
-							action=`${commentsUrl}/${comment.id}/replies`,
-							hidden=!isEdited)
-
-							textarea.form-textarea(
-								name="text",
-								maxlength=2048,
-								required,
-								placeholder=t("PLACEHOLDER_ADD_YOUR_REPLY", {name: name}))
-								= isEdited ? editedComment.text : null
-
-							button.secondary-button= t("POST_REPLY")
+					+comment(comment, editedComment)
 
 		//- Comment form anchor used for redirecting to error.
 		+form#initiative-comment-form.comment-form(
@@ -224,6 +192,53 @@ mixin comments(comments, editedComment)
 			if !req.user
 				span.text.signin-to-act
 					!= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE", {url: "/session/new"})
+
+mixin comment(comment, editedComment)
+	- var I18n = require("root/lib/i18n")
+	- var linkify = require("root/lib/linkify")
+	- var name = comment.creator.name
+	- var isEdited = editedComment.parentId === comment.id
+	- var commentUrl = `/initiatives/${initiative.id}/comments/${comment.id}`
+
+	span.author= name
+	| &#32;
+	time(datetime=comment.createdAt)
+		a(href=commentUrl)
+			= I18n.formatTime("numeric", comment.createdAt)
+
+	h3.subject: a(href=commentUrl)= comment.subject
+	p.text!= linkify(comment.text)
+
+	if req.user
+		a.comment-reply-button.white-button(href=`#comment-${comment.id}-reply`)
+			= t("REPLY")
+
+	ol.comment-replies
+		for reply in comment.replies
+			li.comment-reply(id=`comment-${reply.id}`)
+				span.author= reply.creator.name
+				| &#32;
+				time(datetime=reply.createdAt)
+					a(href=commentUrl + `#comment-${reply.id}`)
+						= I18n.formatTime("numeric", reply.createdAt)
+
+				p.text!= linkify(reply.text)
+
+	if req.user
+		+form.comment-reply-form(
+			id=`comment-${comment.id}-reply`,
+			method="post",
+			action=commentUrl + "/replies",
+			hidden=!isEdited)
+
+			textarea.form-textarea(
+				name="text",
+				maxlength=2048,
+				required,
+				placeholder=t("PLACEHOLDER_ADD_YOUR_REPLY", {name: name}))
+				= isEdited ? editedComment.text : null
+
+			button.secondary-button= t("POST_REPLY")
 
 mixin date-picker(selector)
 	- var _ = require("lodash")

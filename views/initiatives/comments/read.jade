@@ -1,0 +1,16 @@
+extends ../layout
+include ../_mixins
+
+block append options
+	- var subpage = initiative.status === "inProgress" ? "discussion" : "vote"
+
+block prepend tab
+	section#initiative-comment.primary-section: center
+		include /_flash.jade
+		+header-link(initiative)
+
+		h2= t("COMMENT_HEADING")
+		article.comment: +comment(comment, editedComment)
+
+	section.secondary-section: center
+		+initiative-subscribe(initiative)
