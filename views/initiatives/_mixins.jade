@@ -194,6 +194,7 @@ mixin comments(comments, editedComment)
 					!= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE", {url: "/session/new"})
 
 mixin comment(comment, editedComment)
+	- var Initiative = require("root/lib/initiative")
 	- var I18n = require("root/lib/i18n")
 	- var linkify = require("root/lib/linkify")
 	- var name = comment.creator.name
@@ -215,7 +216,9 @@ mixin comment(comment, editedComment)
 
 	ol.comment-replies
 		for reply in comment.replies
-			li.comment-reply(id=`comment-${reply.id}`)
+			li.comment-reply(
+				id=`comment-${reply.id}`,
+				class=Initiative.isCommentShort(reply) ? "short" : "")
 				span.author= reply.creator.name
 				| &#32;
 				time(datetime=reply.createdAt)

@@ -1081,6 +1081,17 @@ button.inherited {
 		}
 	}
 
+	.comment-reply.short {
+		p { display: inline; }
+		time:after { content: ": "; }
+
+		& + .comment-reply.short {
+			padding-top: 0;
+			border-top: 0;
+			margin-top: 0;
+		}
+	}
+
 	.comment-form,
 	.comment-reply-form {
 		margin-top: 2rem;
