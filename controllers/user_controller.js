@@ -8,7 +8,9 @@ var next = require("co-next")
 exports.router = Router({mergeParams: true})
 
 exports.read = next(function*(req, res) {
-	var initiatives = req.api("/api/users/self/topics?include[]=vote")
+	var path = "/api/users/self/topics"
+	path += "?include[]=vote"
+	var initiatives = req.api(path)
 	initiatives = yield initiatives.then(getRows)
 
 	res.render("user/read", {
