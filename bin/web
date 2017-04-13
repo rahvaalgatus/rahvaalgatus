@@ -83,12 +83,12 @@ app.use(function(err, req, _res, next) {
 })
 
 app.use(function(err, req, res, next) {
-  // Stop handling here if there was an error, but it's been responded to
-  // already. That happens when you want to still report the error to Sentry,
-  // but have displayed something to the user.
-  if (res.headersSent) return
+	// Stop handling here if there was an error, but it's been responded to
+	// already. That happens when you want to still report the error to Sentry,
+	// but have displayed something to the user.
+	if (res.headersSent) return
 
-  if (err instanceof HttpError) {
+	if (err instanceof HttpError) {
 		res.statusCode = err.code
 		res.statusMessage = err.message
 		res.render(ERR_TEMPLATES[err.code] || ERR_TEMPLATES[500], {error: err})
@@ -111,12 +111,12 @@ if (SSL_PORT != null) require("https").createServer({
 }, app).listen(SSL_PORT, onListening)
 
 function onListening() {
-  var addr = this.address()
+	var addr = this.address()
 	var protocol = this.cert == null ? "http" : "https"
 
-  console.log("Listening on %s.", typeof addr == "string" ? addr : Url.format({
-    protocol: protocol, hostname: addr.address, port: addr.port
-  }))
+	console.log("Listening on %s.", typeof addr == "string" ? addr : Url.format({
+		protocol: protocol, hostname: addr.address, port: addr.port
+	}))
 }
 
 function setStaticHeaders(res, path) {
