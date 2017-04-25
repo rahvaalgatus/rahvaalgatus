@@ -15,9 +15,13 @@ exports.router = Router({mergeParams: true})
 
 exports.router.get("/", next(function*(req, res) {
 	var initiative = req.initiative
-	var events = yield api(`/api/topics/${initiative.id}/events`)
+
+	var path = `/api/topics/${initiative.id}/events`
+	if (req.user) path = "/api/users/self" + path.slice(4)
+	var events = yield api(path)
 	events = events.body.data.rows
 	events = _.sortBy(events, (event) => new Date(event.createdAt))
+
 	res.render("initiatives/events", {events: events})
 }))
 

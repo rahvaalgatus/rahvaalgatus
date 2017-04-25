@@ -78,7 +78,7 @@ block body
 				class=selected(subpage, "vote"))
 				= t("HEADING_TAB_VOTE")
 
-		if initiative.status == "followUp" || initiative.status == "closed"
+		if Initiative.isEventable(initiative)
 			a.tab(
 				href="/initiatives/#{initiative.id}/events",
 				class=selected(subpage, "events"))

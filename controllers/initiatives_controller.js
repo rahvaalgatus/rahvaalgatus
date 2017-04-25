@@ -83,11 +83,18 @@ exports.router.use("/:id", next(function*(req, res, next) {
 
 exports.router.get("/:id", function(req, _res, next) {
 	var initiative = req.initiative
+
 	switch (initiative.status) {
 		case "inProgress": req.url = req.path + "/discussion"; break
 		case "voting": req.url = req.path + "/vote"; break
 		case "followUp": req.url = req.path + "/events"; break
-		case "closed": req.url = req.path + "/events"; break
+
+		case "closed":
+			if (Initiative.isEventable(initiative)) req.url = req.path + "/events"
+			else if (initiative.vote) req.url = req.path + "/events"
+			else req.url = req.path + "/discussion"
+			break
+
 		default: return void next(new HttpError(403, "Unknown Status"))
 	}
 
