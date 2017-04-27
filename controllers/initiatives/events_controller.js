@@ -7,7 +7,6 @@ var catch401 = require("root/lib/fetch").catch.bind(null, 401)
 var catch403 = require("root/lib/fetch").catch.bind(null, 403)
 var translateCitizenError = require("root/lib/citizen_os").translateError
 var next = require("co-next")
-var api = require("root/lib/citizen_os")
 var EMPTY = Object.prototype
 var EMPTY_EVENT = {subject: "", text: ""}
 
@@ -18,7 +17,7 @@ exports.router.get("/", next(function*(req, res) {
 
 	var path = `/api/topics/${initiative.id}/events`
 	if (req.user) path = "/api/users/self" + path.slice(4)
-	var events = yield api(path)
+	var events = yield req.api(path)
 	events = events.body.data.rows
 	events = _.sortBy(events, (event) => new Date(event.createdAt))
 
