@@ -12,7 +12,7 @@ var catch401 = require("root/lib/fetch").catch.bind(null, 401)
 var isFetchError = require("root/lib/fetch").is
 var next = require("co-next")
 var sleep = require("root/lib/promise").sleep
-var api = require("root/lib/citizen_os")
+var readInitiatives = require("root/lib/citizen_os").readInitiatives
 var encode = encodeURIComponent
 var translateCitizenError = require("root/lib/citizen_os").translateError
 var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
@@ -25,7 +25,7 @@ var UI_TRANSLATIONS = O.map(require("root/lib/i18n").STRINGS, function(lang) {
 exports.router = Router({mergeParams: true})
 
 exports.router.get("/", next(function*(_req, res) {
-	res.render("initiatives/index", yield api.readInitiatives())
+	res.render("initiatives/index", yield readInitiatives())
 }))
 
 exports.router.post("/", next(function*(req, res) {
@@ -242,7 +242,8 @@ exports.router.get("/:id/signable", next(function*(req, res) {
 	var initiative = req.initiative
 	var vote = initiative.vote
 
-	var signable = yield api(`/api/topics/${initiative.id}/votes/${vote.id}`, {
+	var path = `/api/topics/${initiative.id}/votes/${vote.id}`
+	var signable = yield req.api(path, {
 		method: "POST",
 
 		json: {
@@ -262,6 +263,7 @@ exports.router.get("/:id/signable", next(function*(req, res) {
 }))
 
 exports.router.post("/:id/signature", next(function*(req, res) {
+	var path
 	var initiative = req.initiative
 	var vote = initiative.vote
 
@@ -269,8 +271,8 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 
 	switch (req.body.method) {
 		case "id-card":
-			var path = `/api/topics/${initiative.id}/votes/${vote.id}/sign`
-			var signed = yield api(path, {
+			path = `/api/topics/${initiative.id}/votes/${vote.id}/sign`
+			var signed = yield req.api(path, {
 				method: "POST",
 				json: {token: req.body.token, signatureValue: req.body.signature}
 			}).catch(catch400)
@@ -285,7 +287,8 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 			break
 
 		case "mobile-id":
-			var signing = yield api(`/api/topics/${initiative.id}/votes/${vote.id}`, {
+			path = `/api/topics/${initiative.id}/votes/${vote.id}`
+			var signing = yield req.api(path, {
 				method: "POST",
 				json: {
 					options: [{optionId: req.body.optionId}],
@@ -313,7 +316,7 @@ exports.router.get("/:id/signature", next(function*(req, res) {
 	var token = req.query.token
 	if (token == null) throw new HttpError(400, "Missing Token")
 	var initiative = req.initiative
-	var signature = yield readSignature(initiative, token)
+	var signature = yield readSignature(req.api, initiative, token)
 
 	switch (signature.statusCode) {
 		case 200:
@@ -335,7 +338,7 @@ exports.router.use(function(err, _req, res, next) {
 	res.render("initiatives/404", {error: err})
 })
 
-function* readSignature(initiative, token) {
+function* readSignature(api, initiative, token) {
 	var vote = initiative.vote
 	var path = `/api/topics/${initiative.id}/votes/${vote.id}/status`
 	path += "?token=" + encodeURIComponent(token)

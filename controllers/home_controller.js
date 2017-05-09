@@ -1,14 +1,14 @@
 var _ = require("lodash")
 var Router = require("express").Router
 var Initiative = require("root/lib/initiative")
-var api = require("root/lib/citizen_os")
+var readInitiatives = require("root/lib/citizen_os").readInitiatives
 var next = require("co-next")
 var EMPTY_ARR = Array.prototype
 
 exports.router = Router({mergeParams: true})
 
 exports.router.get("/", next(function*(_req, res) {
-	var initiatives = yield api.readInitiatives()
+	var initiatives = yield readInitiatives()
 
 	var hasEnded = Initiative.hasDiscussionEnded.bind(null, new Date)
 	initiatives.discussions = _.reject(initiatives.discussions, hasEnded)
