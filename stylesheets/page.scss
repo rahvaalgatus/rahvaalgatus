@@ -612,7 +612,7 @@ button.inherited {
 			color: $link;
 		}
 
-		&[href="/initiatives"] {
+		&.emphasized {
 			background-color: #ffb400;
 			color: black;
 		}

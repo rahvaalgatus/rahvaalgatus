@@ -21,3 +21,4 @@ exports.router.get("/", next(function*(_req, res) {
 
 exports.router.get("/about", (_req, res) => res.render("home/about"))
 exports.router.get("/donate", (_req, res) => res.render("home/donate"))
+exports.router.get("/effective-ideas", (_req, res) => res.render("home/ideas"))

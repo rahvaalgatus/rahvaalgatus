@@ -77,6 +77,7 @@ html
 						href="/initiatives",
 						class=selected(page, "initiatives") || selected(page, "initiative"))
 						= t("LINK_VOTING")
+					li: a.emphasized(href="/effective-ideas") Mõjusad ettepanekud
 					li: a(href=Config.helpUrls[req.lang])= t("LINK_HELP")
 					li: a(href="/about", class=selected(page, "about"))= t("LNK_ABOUT")
 					li: a(href=Config.pressUrls[req.lang])= t("LINK_PRESS")
