@@ -174,11 +174,7 @@ mixin comments(comments, editedComment)
 			p.flash.error= flash("commentError")
 
 		if comments.length === 0
-			p.empty.text
-				strong Veel esitatud ideid ei ole. Võid olla esimene!
-				if req.user == null
-					br
-					| Pead esmalt vaid <a href="/session/new">sisse logima</a>.
+			p.empty.text: strong= t("NO_COMMENTS_BLOCK")
 
 		ol.comments
 			for comment in comments

@@ -995,6 +995,7 @@ button.inherited {
 		}
 
 		.empty {
+			background: white;
 			text-align: center;
 		}
 
@@ -1097,8 +1098,6 @@ button.inherited {
 			.primary-button:disabled { @extend .primary-button; }
 		}
 	}
-
-	.comments:empty + .comment-form { margin-top: 0; }
 
 	.comment-form {
 		input:disabled,
