@@ -212,7 +212,7 @@ mixin comments(comments, editedComment)
 			button.primary-button(disabled=!req.user)= t("POST_COMMENT")
 
 			if req.user
-				span.text.explanation
+				p.text.explanation
 					| E-postile saadame ekspertide hinnangu pakutud ideele ja kutsed
 					| edasistele aruteludele.
 			else

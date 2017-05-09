@@ -1084,26 +1084,19 @@ button.inherited {
 			width: 100%;
 			margin-bottom: 0.5rem;
 		}
-
-		.comment-form {
-			input[type=email] {
-				max-width: 32rem;
-			}
-
-			input:disabled,
-			textarea:disabled {
-				display: none;
-			}
-
-			.primary-button:disabled { @extend .primary-button; }
-		}
 	}
 
 	.comment-form {
+		input[type=email] {
+			max-width: 32rem;
+		}
+
 		input:disabled,
 		textarea:disabled {
 			display: none;
 		}
+
+		button:disabled { @extend .primary-button; }
 	}
 
 	.comment-reply-form {
@@ -1113,7 +1106,8 @@ button.inherited {
 		&:target { display: block !important; }
 	}
 
-	.explanation { margin-left: 1rem; }
+	span.explanation { margin-left: 1rem; }
+	p.explanation { margin-top: 1rem; }
 
 	#initiative-events {
 		.events {
