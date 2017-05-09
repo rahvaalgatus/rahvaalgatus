@@ -161,7 +161,6 @@ mixin initiative-subscribe(initiative)
 
 mixin comments(comments, editedComment)
 	- var commentsUrl = `/initiatives/${initiative.id}/comments`
-	- var email = req.user && req.user.email
 
 	#initiative-comments
 		if comments.length > 0
@@ -201,21 +200,9 @@ mixin comments(comments, editedComment)
 				disabled=!req.user)
 				= editedComment.parentId == null ? editedComment.text : null
 
-			input.form-input(
-				name="email",
-				type="email",
-				value=editedComment.parentId == null ? editedComment.email || email : email,
-				required,
-				placeholder=t("LBL_EMAIL"),
-				disabled=!req.user)
-
 			button.primary-button(disabled=!req.user)= t("POST_COMMENT")
 
-			if req.user
-				p.text.explanation
-					| E-postile saadame ekspertide hinnangu pakutud ideele ja kutsed
-					| edasistele aruteludele.
-			else
+			if req.user == null
 				span.text.explanation
 					!= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE", {url: "/session/new"})
 

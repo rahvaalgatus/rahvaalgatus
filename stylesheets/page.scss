@@ -1087,10 +1087,6 @@ button.inherited {
 	}
 
 	.comment-form {
-		input[type=email] {
-			max-width: 32rem;
-		}
-
 		input:disabled,
 		textarea:disabled {
 			display: none;
@@ -1107,7 +1103,6 @@ button.inherited {
 	}
 
 	span.explanation { margin-left: 1rem; }
-	p.explanation { margin-top: 1rem; }
 
 	#initiative-events {
 		.events {
