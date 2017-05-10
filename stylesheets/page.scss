@@ -127,6 +127,17 @@ center {
 	form {
 		margin-top: 1rem;
 	}
+
+	hr {
+		border: 0 solid;
+		border-top-width: 1px;
+		border-color: #ccc;
+		margin: 4rem 0;
+	}
+
+	big {
+		font-size: 2rem;
+	}
 }
 
 .text-section {
@@ -1145,7 +1156,8 @@ button.inherited {
 }
 
 #about-page,
-#effective-ideas-page {
+#effective-ideas-page,
+#effective-ideas-for-gov-page {
 	.text-section center { max-width: 64rem; }
 }
 
