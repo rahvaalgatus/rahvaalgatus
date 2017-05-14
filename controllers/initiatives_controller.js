@@ -72,6 +72,7 @@ exports.router.use("/:id", next(function*(req, res, next) {
 	}
 	catch (ex) {
 		// CitizenOS throws 500 for invalid UUIDs. Workaround that.
+		if (isFetchError(403, ex)) throw new HttpError(404)
 		if (isFetchError(404, ex)) throw new HttpError(404)
 		if (isFetchError(500, ex)) throw new HttpError(404)
 		throw ex
@@ -333,9 +334,11 @@ exports.router.get("/:id/signature", next(function*(req, res) {
 }))
 
 exports.router.use(function(err, _req, res, next) {
-  if (!(err instanceof HttpError)) return void next(err)
-  if (err.code !== 404) return void next(err)
-	res.render("initiatives/404", {error: err})
+	if (err instanceof HttpError && err.code === 404) {
+		res.statusCode = err.code
+		res.render("initiatives/404", {error: err})
+	}
+	else next(err)
 })
 
 function* readSignature(api, initiative, token) {

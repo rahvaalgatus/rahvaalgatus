@@ -29,6 +29,15 @@ var PROPOSABLE_INITIATIVE = {
 	permission: {level: "admin"}
 }
 
+var VOTING_INITIATIVE = {
+	id: UUID,
+	status: "voting",
+	description: "<body><h1>My thoughts.</h1></body>",
+	creator: {name: "John"},
+	permission: {level: "read"},
+	vote: {options: {rows: [{value: "Yes", voteCount: 0}]}}
+}
+
 describe("InitiativesController", function() {
 	require("root/test/web")()
 	require("root/test/mitm")()
@@ -125,25 +134,50 @@ describe("InitiativesController", function() {
 			// This was a bug noticed on Mar 24, 2017 where the UI translation strings
 			// were not rendered on the page. They were used only for ID-card errors.
 			it("must render UI strings when voting", function*() {
-				this.mitm.on("request", respondFor.bind(null, `/topics/${UUID}?`, {
-					data: {
-						id: UUID,
-						status: "voting",
-						description: "<body><h1>My thoughts.</h1></body>",
-						creator: {name: "John"},
-						permission: {level: "read"},
-						vote: {options: {rows: [{value: "Yes", voteCount: 0}]}}
-					}
+				var router = Router()
+
+				router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
+					data: VOTING_INITIATIVE
 				}))
 
-				this.mitm.on("request", respondFor.bind(null, `/topics/${UUID}/comments`, {
-					data: {rows: []}
-				}))
+				router.get(`/api/users/self/topics/${UUID}/comments`,
+					respond.bind(null, {data: {rows: []}})
+				)
+
+				this.mitm.on("request", route.bind(null, router))
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
 				var body = res.read().toString()
 				body.must.include("MSG_ERROR_HWCRYPTO_NO_CERTIFICATES")
+			})
+
+			it("must respond with 404 when API responds 403 Forbidden", function*() {
+				var router = Router()
+
+				router.get(`/api/users/self/topics/${UUID}`, function(_req, res) {
+					res.statusCode = 403
+					res.end()
+				})
+
+				this.mitm.on("request", route.bind(null, router))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(404)
+			})
+
+			it("must respond with 404 when API responds 404 Not Found", function*() {
+				var router = Router()
+
+				router.get(`/api/users/self/topics/${UUID}`, function(_req, res) {
+					res.statusCode = 404
+					res.end()
+				})
+
+				this.mitm.on("request", route.bind(null, router))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(404)
 			})
 		})
 	})
