@@ -1,10 +1,13 @@
+var Router = require("express").Router
 var DateFns = require("date-fns")
 var I18n = require("root/lib/i18n")
+var parseBody = require("body-parser").json()
+var respond = require("root/test/fixtures").respond
 var respondFor = require("root/test/fixtures").respondFor
+var route = require("root/test/mitm").route
 var wait = require("root/lib/promise").wait
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var VOTES = require("root/config").votesRequired
-var HEADERS = {"Content-Type": "application/json"}
 
 var PUBLISHABLE_INITIATIVE = {
 	id: UUID,
@@ -30,7 +33,7 @@ describe("InitiativesController", function() {
 	require("root/test/web")()
 	require("root/test/mitm")()
 
-	describe("GET /initiatives/new", function() {
+	describe("GET /new", function() {
 		require("root/test/fixtures").user()
 
 		it("must render", function*() {
@@ -39,11 +42,28 @@ describe("InitiativesController", function() {
 		})
 	})
 
-	describe("POST /initiatives", function() {
+	describe("POST /", function() {
 		require("root/test/fixtures").user()
 
 		it("must escape title", function*() {
-			var res = this.request("/initiatives", {
+			var router = Router().use(parseBody)
+
+			var created = 0
+			router.post("/api/users/self/topics", function(req, res) {
+				++created
+				req.headers.authorization.must.exist(0)
+
+				var title = "Hello &lt;mike&gt;!"
+				var html = I18n.t("et", "INITIATIVE_DEFAULT_HTML", {title: title})
+				req.body.visibility.must.equal("private")
+				req.body.description.must.equal(html)
+
+				respond({data: {id: UUID}}, req, res)
+			})
+
+			this.mitm.on("request", route.bind(null, router))
+
+			var res = yield this.request("/initiatives", {
 				method: "POST",
 				form: {
 					_csrf_token: this.csrfToken,
@@ -52,23 +72,13 @@ describe("InitiativesController", function() {
 				}
 			})
 
-			var req, next = wait.bind(null, this.mitm, "request")
-			while ((req = yield next()) && req.method !== "POST");
-			req.res.writeHead(200, HEADERS)
-			req.res.end(JSON.stringify({data: {id: UUID}}))
-
-			var attrs = JSON.parse(req.read())
-			var title = "Hello &lt;mike&gt;!"
-			var html = I18n.t("et", "INITIATIVE_DEFAULT_HTML", {title: title})
-			attrs.description.must.equal(html)
-
-			res = yield res
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/initiatives/" + UUID)
+			created.must.equal(1)
 		})
 	})
 
-	describe("GET /initiatives/:id", function() {
+	describe("GET /:id", function() {
 		describe("when not logged in", function() {
 			it("must render discussion", function*() {
 				this.mitm.on("request", respondFor.bind(null, `/topics/${UUID}?`, {
@@ -138,7 +148,7 @@ describe("InitiativesController", function() {
 		})
 	})
 
-	describe("PUT /initiatives/:id", function() {
+	describe("PUT /:id", function() {
 		require("root/test/fixtures").user()
 
 		it("must render update visibility page", function*() {
