@@ -8,11 +8,21 @@ exports = module.exports = function() {
 exports.listen = function() {
 	this.mitm = Mitm()
 	this.mitm.on("connect", bypassLocalhost)
-	this.mitm.on("request", setImmediate.bind(null, checkIntercept))
+
+	// Using setImmediate for intercept checks failed when using Express Router.
+	this.mitm.on("request", setTimeout.bind(null, checkIntercept, 0))
 }
 
 exports.close = function() {
 	this.mitm.disable()
+}
+
+exports.route = function(router, req, res) {
+	router(req, res, function(err) {
+		if (err == null) return
+		res.writeHead(502)
+		throw err
+	})
 }
 
 function checkIntercept(req, res) {
