@@ -1,6 +1,6 @@
 var DateFns = require("date-fns")
 var I18n = require("root/lib/i18n")
-var respond = require("root/test/fixtures").respond
+var respondFor = require("root/test/fixtures").respondFor
 var wait = require("root/lib/promise").wait
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var VOTES = require("root/config").votesRequired
@@ -71,7 +71,7 @@ describe("InitiativesController", function() {
 	describe("GET /initiatives/:id", function() {
 		describe("when not logged in", function() {
 			it("must render discussion", function*() {
-				this.mitm.on("request", respond.bind(null, `/topics/${UUID}?`, {
+				this.mitm.on("request", respondFor.bind(null, `/topics/${UUID}?`, {
 					data: {
 						id: UUID,
 						status: "inProgress",
@@ -81,7 +81,7 @@ describe("InitiativesController", function() {
 					}
 				}))
 
-				this.mitm.on("request", respond.bind(null, `/topics/${UUID}/comments`, {
+				this.mitm.on("request", respondFor.bind(null, `/topics/${UUID}/comments`, {
 					data: {rows: []}
 				}))
 
@@ -94,7 +94,7 @@ describe("InitiativesController", function() {
 			require("root/test/fixtures").user()
 
 			it("must render discussion", function*() {
-				this.mitm.on("request", respond.bind(null, `/topics/${UUID}?`, {
+				this.mitm.on("request", respondFor.bind(null, `/topics/${UUID}?`, {
 					data: {
 						id: UUID,
 						status: "inProgress",
@@ -104,7 +104,7 @@ describe("InitiativesController", function() {
 					}
 				}))
 
-				this.mitm.on("request", respond.bind(null, `/topics/${UUID}/comments`, {
+				this.mitm.on("request", respondFor.bind(null, `/topics/${UUID}/comments`, {
 					data: {rows: []}
 				}))
 
@@ -115,7 +115,7 @@ describe("InitiativesController", function() {
 			// This was a bug noticed on Mar 24, 2017 where the UI translation strings
 			// were not rendered on the page. They were used only for ID-card errors.
 			it("must render UI strings when voting", function*() {
-				this.mitm.on("request", respond.bind(null, `/topics/${UUID}?`, {
+				this.mitm.on("request", respondFor.bind(null, `/topics/${UUID}?`, {
 					data: {
 						id: UUID,
 						status: "voting",
@@ -126,7 +126,7 @@ describe("InitiativesController", function() {
 					}
 				}))
 
-				this.mitm.on("request", respond.bind(null, `/topics/${UUID}/comments`, {
+				this.mitm.on("request", respondFor.bind(null, `/topics/${UUID}/comments`, {
 					data: {rows: []}
 				}))
 
@@ -143,7 +143,7 @@ describe("InitiativesController", function() {
 
 		it("must render update visibility page", function*() {
 			this.mitm.on("request",
-				respond.bind(null, `/topics/${UUID}?`, {data: PUBLISHABLE_INITIATIVE}))
+				respondFor.bind(null, `/topics/${UUID}?`, {data: PUBLISHABLE_INITIATIVE}))
 
 			var res = yield this.request("/initiatives/" + UUID, {
 				method: "PUT",
@@ -155,7 +155,7 @@ describe("InitiativesController", function() {
 
 		it("must update visibility", function*() {
 			this.mitm.on("request",
-				respond.bind(null, `/topics/${UUID}?`, {data: PUBLISHABLE_INITIATIVE}))
+				respondFor.bind(null, `/topics/${UUID}?`, {data: PUBLISHABLE_INITIATIVE}))
 
 			var today = DateFns.startOfDay(new Date)
 			var endsAt = DateFns.endOfDay(DateFns.addDays(today, 5))
@@ -185,7 +185,7 @@ describe("InitiativesController", function() {
 
 		it("must render update status for voting page", function*() {
 			this.mitm.on("request",
-				respond.bind(null, `/topics/${UUID}?`, {data: PROPOSABLE_INITIATIVE}))
+				respondFor.bind(null, `/topics/${UUID}?`, {data: PROPOSABLE_INITIATIVE}))
 
 			var res = yield this.request("/initiatives/" + UUID, {
 				method: "PUT",
@@ -196,7 +196,7 @@ describe("InitiativesController", function() {
 		})
 
 		it("must update status", function*() {
-			this.mitm.on("request", respond.bind(null, `/topics/${UUID}?`, {
+			this.mitm.on("request", respondFor.bind(null, `/topics/${UUID}?`, {
 				data: {
 					id: UUID,
 					status: "voting",

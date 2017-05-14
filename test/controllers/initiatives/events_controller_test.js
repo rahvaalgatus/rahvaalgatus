@@ -1,4 +1,4 @@
-var respond = require("root/test/fixtures").respond
+var respondFor = require("root/test/fixtures").respondFor
 var wait = require("root/lib/promise").wait
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 
@@ -8,7 +8,7 @@ describe("EventsController", function() {
 
 	describe("POST", function() {
 		it("must create event given token", function*() {
-			this.mitm.on("request", respond.bind(null, `/topics/${UUID}?`, {
+			this.mitm.on("request", respondFor.bind(null, `/topics/${UUID}?`, {
 				data: {
 					id: UUID,
 					status: "followUp",
