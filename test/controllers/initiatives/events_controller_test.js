@@ -71,9 +71,9 @@ describe("EventsController", function() {
 					data: INITIATIVE
 				}))
 
-				var posted = 0
+				var created = 0
 				router.post(`/api/topics/${UUID}/events`, function(req, res) {
-					++posted
+					++created
 					req.headers.authorization.must.equal("Bearer FOOBAR")
 					req.body.must.eql({subject: "Finished!", text: "All good."})
 					res.end()
@@ -93,7 +93,7 @@ describe("EventsController", function() {
 				})
 
 				res.statusCode.must.equal(303)
-				posted.must.equal(1)
+				created.must.equal(1)
 			})
 		})
 	})
