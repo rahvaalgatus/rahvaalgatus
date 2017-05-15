@@ -951,11 +951,15 @@ button.inherited {
 
 		#mobile-id-form-toggle:checked + label { display: none; }
 	}
-	
+
+	#initiative-aux-menu,
+	#initiative-subscribe {
+		margin-bottom: 2rem;
+	}
+
 	#initiative-aux-menu {
 		float: right;
 		text-align: right;
-		margin-bottom: 2rem;
 
 		form { display: block; }
 		form + form { margin-top: 0.5rem; }
@@ -975,8 +979,6 @@ button.inherited {
 	}
 
 	#initiative-subscribe {
-		margin-top: 4rem;
-
 		input,
 		button {
 			display: inline-block;
@@ -999,8 +1001,9 @@ button.inherited {
 	}
 
 	#initiative-comments {
+		clear: both;
 		max-width: 72rem;
-		margin-top: 2rem;
+		margin-top: 4rem;
 
 		.comment-button {
 			float: right;
