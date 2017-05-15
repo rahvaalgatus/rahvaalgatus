@@ -46,8 +46,8 @@ mixin progress(initiative)
 				.initiative-progress.private(class=klass)
 					= t("TXT_TOPIC_VISIBILITY_PRIVATE")
 			else if !Initiative.hasDiscussionEnded(new Date, initiative)
-				- var passed = DateFns.differenceInDays(new Date, createdAt)
-				- var total = DateFns.differenceInDays(endsAt, createdAt)
+				- var passed = DateFns.differenceInCalendarDays(new Date, createdAt)
+				- var total = DateFns.differenceInCalendarDays(endsAt, createdAt) + 1
 				- var left = total - passed
 
 				.initiative-progress(
