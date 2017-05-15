@@ -212,6 +212,13 @@ center {
 			color: $secondary-light-text;
 		}
 
+		.author {
+			display: block;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
 		h3 {
 			font-size: 17px;
 			color: #4F4F4F;
