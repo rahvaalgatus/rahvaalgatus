@@ -1,10 +1,13 @@
+var O = require("oolong")
 var Url = require("url")
 var DateFns = require("date-fns")
 var I18n = require("root/lib/i18n")
 var Config = require("root/config")
 var respond = require("root/test/fixtures").respond
+var concat = Array.prototype.concat.bind(Array.prototype)
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var VOTES = require("root/config").votesRequired
+var PARTNER_IDS = concat(Config.apiPartnerId, O.keys(Config.partners))
 
 var PUBLISHABLE_DISCUSSION = {
 	id: UUID,
@@ -79,8 +82,7 @@ describe("InitiativesController", function() {
 					++requested
 					var query = Url.parse(req.url, true).query
 					query["include[]"].must.be.a.permutationOf(["vote", "event"])
-					query["sourcePartnerId[]"].must.equal(Config.apiPartnerId)
-
+					query["sourcePartnerId[]"].must.be.a.permutationOf(PARTNER_IDS)
 
 					respond({data: {rows: []}}, req, res)
 				})
