@@ -1,4 +1,6 @@
 var Mitm = require("mitm")
+var Router = require("express").Router
+var parseBody = require("body-parser").json()
 
 exports = module.exports = function() {
 	beforeEach(exports.listen)
@@ -13,11 +15,18 @@ exports.listen = function() {
 	this.mitm.on("request", setTimeout.bind(null, checkIntercept, 0))
 }
 
+exports.router = function() {
+	this.router = Router().use(parseBody)
+	this.mitm.on("request", route.bind(null, this.router))
+}
+
 exports.close = function() {
 	this.mitm.disable()
 }
 
-exports.route = function(router, req, res) {
+exports.route = route
+
+function route(router, req, res) {
 	router(req, res, function(err) {
 		if (err == null) return
 		res.writeHead(502)

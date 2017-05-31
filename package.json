@@ -4,6 +4,7 @@
 	"private": true,
 
 	"dependencies": {
+		"qs": "",
 		"express": "",
 		"cookie-parser": "",
 		"body-parser": "",

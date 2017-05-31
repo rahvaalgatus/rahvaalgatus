@@ -1,4 +1,3 @@
-var _ = require("lodash")
 var Crypto = require("crypto")
 var fetchDefaults = require("fetch-defaults")
 var HEADERS = {"Content-Type": "application/json"}
@@ -17,20 +16,11 @@ exports.user = function() {
 
 		this.request = fetchDefaults(this.request, {headers: {Cookie: cookie}})
 		this.csrfToken = csrfToken
-
-		this.mitm.on("request", respondFor.bind(null, "/auth/status", {
-			data: {}
-		}))
+		this.router.get("/api/auth/status", respond.bind(null, {data: {}}))
 	})
 }
 
 exports.respond = respond
-exports.respondFor = respondFor
-
-function respondFor(url, json, req, res) {
-	if (typeof url === "string") url = _.escapeRegExp(url)
-	if (req.url.match(url)) respond(json, req, res)
-}
 
 function respond(json, _req, res) {
 	res.writeHead(200, HEADERS)
