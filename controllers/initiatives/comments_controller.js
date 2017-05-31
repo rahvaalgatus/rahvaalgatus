@@ -1,5 +1,6 @@
 var Path = require("path")
 var Router = require("express").Router
+var Initiative = require("root/lib/initiative")
 var InitiativesController = require("../initiatives_controller")
 var HttpError = require("standard-http-error")
 var isOk = require("root/lib/http").isOk
@@ -77,7 +78,8 @@ exports.router.post("/:commentId/replies", next(function*(req, res, next) {
 }))
 
 function renderWithError(initiative, err, req, res, next) {
-	var subpage = initiative.status === "inProgress" ? "discussion" : "vote"
+	var unclosedStatus = Initiative.getUnclosedStatus(initiative)
+	var subpage = unclosedStatus === "inProgress" ? "discussion" : "vote"
 	var msg = translateCitizenError(req.t, err)
 	res.flash("error", msg)
 	res.flash("commentError", msg)

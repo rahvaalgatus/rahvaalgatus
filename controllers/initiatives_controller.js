@@ -109,7 +109,8 @@ exports.router.get("/:id", function(req, _res, next) {
 
 exports.router.put("/:id", next(function*(req, res) {
 	var initiative = req.initiative
-	res.locals.subpage = initiative.status == "inProgress" ? "discussion" : "vote"
+	var unclosedStatus = Initiative.getUnclosedStatus(initiative)
+	res.locals.subpage = unclosedStatus == "inProgress" ? "discussion" : "vote"
 
 	var tmpl
 	var method = "PUT"
