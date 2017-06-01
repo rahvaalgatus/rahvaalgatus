@@ -29,18 +29,18 @@ mixin progress(initiative)
 		var Config = require("root/config")
 		var DateFns = require("date-fns")
 		var VOTES_REQUIRED = Config.votesRequired
+
+		var unclosedStatus = Initiative.getUnclosedStatus(initiative)
 		var createdAt = new Date(initiative.createdAt)
 		var endsAt = new Date(initiative.endsAt)
 
-		var klass
-		switch (initiative.status) {
-			case "inProgress": klass = "discussable"; break
-			case "voting": klass = "votable"; break
-			case "followUp": klass = "processable"; break
-			case "closed": klass = "finished"; break
-		}
+		var klass = {
+			inProgress: "discussable",
+			voting: "votable",
+			followUp: "processable"
+		}[unclosedStatus]
 
-	case initiative.status
+	case unclosedStatus
 		when "inProgress"
 			if initiative.visibility == "private"
 				.initiative-progress.private(class=klass)
@@ -73,15 +73,9 @@ mixin progress(initiative)
 					= t("N_SIGNATURES_FAILED", {votes: sigs})
 
 		when "followUp"
+			- klass = initiative.status == "closed" ? "finished" : "processable"
 			- var sigs = Initiative.countSignatures("Yes", initiative)
 			.initiative-progress(class=klass)= t("N_SIGNATURES", {votes: sigs})
-
-		when "closed"
-			if initiative.vote
-				- var sigs = Initiative.countSignatures("Yes", initiative)
-				.initiative-progress(class=klass)= t("N_SIGNATURES", {votes: sigs})
-			else
-				.initiative-progress.completed(class=klass)= t("DISCUSSION_FINISHED")
 
 mixin header(initiative)
 	header

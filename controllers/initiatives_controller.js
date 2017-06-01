@@ -16,6 +16,8 @@ var api = require("root/lib/api")
 var readInitiativesWithStatus = api.readInitiativesWithStatus
 var encode = encodeURIComponent
 var translateCitizenError = require("root/lib/api").translateError
+var concat = Array.prototype.concat.bind(Array.prototype)
+var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
 var EMPTY_COMMENT = {subject: "", text: "", parentId: null}
 
@@ -27,19 +29,19 @@ exports.router = Router({mergeParams: true})
 
 exports.router.get("/", next(function*(_req, res) {
 	var initiatives = yield {
-		discussions: readInitiativesWithStatus("inProgress"),
-		votings: readInitiativesWithStatus("voting"),
-		processes: readInitiativesWithStatus("followUp"),
+		inProgress: readInitiativesWithStatus("inProgress"),
+		voting: readInitiativesWithStatus("voting"),
+		followUp: readInitiativesWithStatus("followUp"),
 		closed: readInitiativesWithStatus("closed"),
 	}
 
-	var processed = initiatives.closed.filter(Initiative.isParliamented)
+	var closed = _.groupBy(initiatives.closed, Initiative.getUnclosedStatus)
 
 	res.render("initiatives/index", {
-		discussions: initiatives.discussions,
-		votings: initiatives.votings,
-		processes: initiatives.processes,
-		processed: processed,
+		discussions: concat(initiatives.inProgress, closed.inProgress || EMPTY_ARR),
+		votings: concat(initiatives.voting, closed.voting || EMPTY_ARR),
+		processes: initiatives.followUp,
+		processed: closed.followUp || EMPTY_ARR,
 	})
 }))
 

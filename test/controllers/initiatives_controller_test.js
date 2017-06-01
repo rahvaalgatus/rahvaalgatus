@@ -109,7 +109,7 @@ describe("InitiativesController", function() {
 				body.must.include(UUID)
 			})
 
-			it("must not show closed discussions", function*() {
+			it("must show closed discussions", function*() {
 				this.router.get("/api/topics", function(req, res) {
 					var initiatives
 					switch (Url.parse(req.url, true).query.statuses) {
@@ -123,7 +123,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives")
 				res.statusCode.must.equal(200)
 				var body = res.read().toString()
-				body.must.not.include(UUID)
+				body.must.include(UUID)
 			})
 		})
 	})
