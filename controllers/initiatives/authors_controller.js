@@ -2,7 +2,7 @@ var Path = require("path")
 var Router = require("express").Router
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
-var translateCitizenError = require("root/lib/citizen_os").translateError
+var translateCitizenError = require("root/lib/api").translateError
 var next = require("co-next")
 var EMPTY_AUTHOR = {email: ""}
 

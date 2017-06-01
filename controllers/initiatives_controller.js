@@ -12,10 +12,10 @@ var catch401 = require("root/lib/fetch").catch.bind(null, 401)
 var isFetchError = require("root/lib/fetch").is
 var next = require("co-next")
 var sleep = require("root/lib/promise").sleep
-var api = require("root/lib/citizen_os")
+var api = require("root/lib/api")
 var readInitiativesWithStatus = api.readInitiativesWithStatus
 var encode = encodeURIComponent
-var translateCitizenError = require("root/lib/citizen_os").translateError
+var translateCitizenError = require("root/lib/api").translateError
 var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
 var EMPTY_COMMENT = {subject: "", text: "", parentId: null}
 
