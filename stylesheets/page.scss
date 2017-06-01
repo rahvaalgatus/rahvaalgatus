@@ -230,6 +230,7 @@ center {
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
+			padding-bottom: 1rem; // For descenders like "j" and "g".
 		}
 
 		h3 {
@@ -254,7 +255,7 @@ center {
 
 		.initiative-progress {
 			clear: both;
-			margin: 1rem -2rem 0;
+			margin: 0 -2rem;
 			padding-top: 1rem;
 			padding-bottom: 0.8rem;
 			line-height: 1;

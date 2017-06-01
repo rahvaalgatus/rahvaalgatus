@@ -3,7 +3,7 @@ var Router = require("express").Router
 var HttpError = require("standard-http-error")
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
-var translateCitizenError = require("root/lib/citizen_os").translateError
+var translateCitizenError = require("root/lib/api").translateError
 var next = require("co-next")
 
 exports.router = Router({mergeParams: true})

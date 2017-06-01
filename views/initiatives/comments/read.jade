@@ -2,7 +2,10 @@ extends ../layout
 include ../_mixins
 
 block append options
-	- var subpage = initiative.status === "inProgress" ? "discussion" : "vote"
+	-
+		var Initiative = require("root/lib/initiative")
+		var unclosedStatus = Initiative.getUnclosedStatus(initiative)
+		var subpage = unclosedStatus === "inProgress" ? "discussion" : "vote"
 
 block prepend tab
 	section#initiative-comment.primary-section: center

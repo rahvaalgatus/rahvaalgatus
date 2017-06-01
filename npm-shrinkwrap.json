@@ -290,11 +290,6 @@
             }
           }
         },
-        "qs": {
-          "version": "4.0.0",
-          "from": "qs@4.0.0",
-          "resolved": "https://registry.npmjs.org/qs/-/qs-4.0.0.tgz"
-        },
         "range-parser": {
           "version": "1.0.3",
           "from": "range-parser@>=1.0.3 <1.1.0",
@@ -889,6 +884,11 @@
       "version": "1.15.1",
       "from": "oolong@latest",
       "resolved": "https://registry.npmjs.org/oolong/-/oolong-1.15.1.tgz"
+    },
+    "qs": {
+      "version": "4.0.0",
+      "from": "qs@>=4.0.0 <5.0.0",
+      "resolved": "https://registry.npmjs.org/qs/-/qs-4.0.0.tgz"
     },
     "raven": {
       "version": "1.1.1",

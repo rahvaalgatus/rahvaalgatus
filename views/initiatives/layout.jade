@@ -19,6 +19,7 @@ block body
 		var shareText = `${initiative.title} ${shareUrl}`
 		var encode = encodeURIComponent
 		var now = new Date
+		var unclosedStatus = Initiative.getUnclosedStatus(initiative)
 
 	nav#initiative-tabs: center
 		menu
@@ -70,7 +71,7 @@ block body
 					i.icon-twitter
 					= t("SHARE_ON_TWITTER")
 
-		if initiative.status == "inProgress"
+		if unclosedStatus == "inProgress"
 			a.tab(
 				href="/initiatives/#{initiative.id}/discussion",
 				class=selected(subpage, "discussion"))
@@ -81,7 +82,7 @@ block body
 				class=selected(subpage, "vote"))
 				= t("HEADING_TAB_VOTE")
 
-		if Initiative.isEventable(initiative)
+		if unclosedStatus === "followUp"
 			a.tab(
 				href="/initiatives/#{initiative.id}/events",
 				class=selected(subpage, "events"))

@@ -29,18 +29,18 @@ mixin progress(initiative)
 		var Config = require("root/config")
 		var DateFns = require("date-fns")
 		var VOTES_REQUIRED = Config.votesRequired
+
+		var unclosedStatus = Initiative.getUnclosedStatus(initiative)
 		var createdAt = new Date(initiative.createdAt)
 		var endsAt = new Date(initiative.endsAt)
 
-		var klass
-		switch (initiative.status) {
-			case "inProgress": klass = "discussable"; break
-			case "voting": klass = "votable"; break
-			case "followUp": klass = "processable"; break
-			case "closed": klass = "finished"; break
-		}
+		var klass = {
+			inProgress: "discussable",
+			voting: "votable",
+			followUp: "processable"
+		}[unclosedStatus]
 
-	case initiative.status
+	case unclosedStatus
 		when "inProgress"
 			if initiative.visibility == "private"
 				.initiative-progress.private(class=klass)
@@ -73,15 +73,9 @@ mixin progress(initiative)
 					= t("N_SIGNATURES_FAILED", {votes: sigs})
 
 		when "followUp"
+			- klass = initiative.status == "closed" ? "finished" : "processable"
 			- var sigs = Initiative.countSignatures("Yes", initiative)
 			.initiative-progress(class=klass)= t("N_SIGNATURES", {votes: sigs})
-
-		when "closed"
-			if initiative.vote
-				- var sigs = Initiative.countSignatures("Yes", initiative)
-				.initiative-progress(class=klass)= t("N_SIGNATURES", {votes: sigs})
-			else
-				.initiative-progress.completed(class=klass)= t("DISCUSSION_FINISHED")
 
 mixin header(initiative)
 	header
@@ -180,31 +174,32 @@ mixin comments(comments, editedComment)
 				li.comment(id=`comment-${comment.id}`)
 					+comment(comment, editedComment)
 
-		//- Comment form anchor used for redirecting to error.
-		+form#initiative-comment-form.comment-form(
-			method="post",
-			action=commentsUrl)
-			input.form-input(
-				name="subject",
-				value=editedComment.parentId == null ? editedComment.subject : null,
-				maxlength=128,
-				required,
-				placeholder=t("PLACEHOLDER_ADD_ARGUMENT_SUBJECT"),
-				disabled=!req.user)
+		if initiative.status != "closed"
+			//- Comment form anchor used for redirecting to error.
+			+form#initiative-comment-form.comment-form(
+				method="post",
+				action=commentsUrl)
+				input.form-input(
+					name="subject",
+					value=editedComment.parentId == null ? editedComment.subject : null,
+					maxlength=128,
+					required,
+					placeholder=t("PLACEHOLDER_ADD_ARGUMENT_SUBJECT"),
+					disabled=!req.user)
 
-			textarea.form-textarea(
-				name="text",
-				maxlength=2048,
-				required,
-				placeholder=t("PLACEHOLDER_ADD_ARGUMENT_TEXT"),
-				disabled=!req.user)
-				= editedComment.parentId == null ? editedComment.text : null
+				textarea.form-textarea(
+					name="text",
+					maxlength=2048,
+					required,
+					placeholder=t("PLACEHOLDER_ADD_ARGUMENT_TEXT"),
+					disabled=!req.user)
+					= editedComment.parentId == null ? editedComment.text : null
 
-			button.primary-button(disabled=!req.user)= t("POST_COMMENT")
+				button.primary-button(disabled=!req.user)= t("POST_COMMENT")
 
-			if req.user == null
-				span.text.explanation
-					!= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE", {url: "/session/new"})
+				if req.user == null
+					span.text.explanation
+						!= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE", {url: "/session/new"})
 
 mixin comment(comment, editedComment)
 	- var Initiative = require("root/lib/initiative")
@@ -223,7 +218,7 @@ mixin comment(comment, editedComment)
 	h3.subject: a(href=commentUrl)= comment.subject
 	p.text!= linkify(comment.text)
 
-	if req.user
+	if req.user && initiative.status != "closed"
 		a.comment-reply-button.white-button(href=`#comment-${comment.id}-reply`)
 			= t("REPLY")
 	else
@@ -244,7 +239,7 @@ mixin comment(comment, editedComment)
 
 				p.text!= linkify(reply.text)
 
-	if req.user
+	if req.user && initiative.status != "closed"
 		+form.comment-reply-form(
 			id=`comment-${comment.id}-reply`,
 			method="post",

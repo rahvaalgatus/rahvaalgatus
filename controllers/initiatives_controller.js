@@ -12,9 +12,12 @@ var catch401 = require("root/lib/fetch").catch.bind(null, 401)
 var isFetchError = require("root/lib/fetch").is
 var next = require("co-next")
 var sleep = require("root/lib/promise").sleep
-var readInitiatives = require("root/lib/citizen_os").readInitiatives
+var api = require("root/lib/api")
+var readInitiativesWithStatus = api.readInitiativesWithStatus
 var encode = encodeURIComponent
-var translateCitizenError = require("root/lib/citizen_os").translateError
+var translateCitizenError = require("root/lib/api").translateError
+var concat = Array.prototype.concat.bind(Array.prototype)
+var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
 var EMPTY_COMMENT = {subject: "", text: "", parentId: null}
 
@@ -25,7 +28,21 @@ var UI_TRANSLATIONS = O.map(require("root/lib/i18n").STRINGS, function(lang) {
 exports.router = Router({mergeParams: true})
 
 exports.router.get("/", next(function*(_req, res) {
-	res.render("initiatives/index", yield readInitiatives())
+	var initiatives = yield {
+		inProgress: readInitiativesWithStatus("inProgress"),
+		voting: readInitiativesWithStatus("voting"),
+		followUp: readInitiativesWithStatus("followUp"),
+		closed: readInitiativesWithStatus("closed"),
+	}
+
+	var closed = _.groupBy(initiatives.closed, Initiative.getUnclosedStatus)
+
+	res.render("initiatives/index", {
+		discussions: concat(initiatives.inProgress, closed.inProgress || EMPTY_ARR),
+		votings: concat(initiatives.voting, closed.voting || EMPTY_ARR),
+		processes: initiatives.followUp,
+		processed: closed.followUp || EMPTY_ARR,
+	})
 }))
 
 exports.router.post("/", next(function*(req, res) {
@@ -66,7 +83,7 @@ exports.router.get("/new", function(_req, res) {
 
 exports.router.use("/:id", next(function*(req, res, next) {
 	try {
-		var path = `/api/topics/${encode(req.params.id)}?include[]=vote`
+		var path = `/api/topics/${encode(req.params.id)}?include[]=vote&include[]=event`
 		if (req.user) path = "/api/users/self" + path.slice(4)
 		req.initiative = yield req.api(path).then(getBody)
 	}
@@ -83,20 +100,10 @@ exports.router.use("/:id", next(function*(req, res, next) {
 }))
 
 exports.router.get("/:id", function(req, _res, next) {
-	var initiative = req.initiative
-
-	switch (initiative.status) {
+	switch (Initiative.getUnclosedStatus(req.initiative)) {
 		case "inProgress": req.url = req.path + "/discussion"; break
 		case "voting": req.url = req.path + "/vote"; break
 		case "followUp": req.url = req.path + "/events"; break
-
-		case "closed":
-			if (Initiative.isEventable(initiative)) req.url = req.path + "/events"
-			else if (initiative.vote) req.url = req.path + "/events"
-			else req.url = req.path + "/discussion"
-			break
-
-		default: return void next(new HttpError(403, "Unknown Status"))
 	}
 
 	next()
@@ -104,7 +111,8 @@ exports.router.get("/:id", function(req, _res, next) {
 
 exports.router.put("/:id", next(function*(req, res) {
 	var initiative = req.initiative
-	res.locals.subpage = initiative.status == "inProgress" ? "discussion" : "vote"
+	var unclosedStatus = Initiative.getUnclosedStatus(initiative)
+	res.locals.subpage = unclosedStatus == "inProgress" ? "discussion" : "vote"
 
 	var tmpl
 	var method = "PUT"
