@@ -52,6 +52,22 @@ block prepend tab
 								break
 						}
 					})
+
+					var scrolled
+					window.addEventListener("scroll", function(ev) {
+						clearTimeout(scrolled)
+						scrolled = setTimeout(handleScroll, 100)
+					})
+
+					function handleScroll() {
+						el.contentWindow.postMessage({
+							name: "ep_embed_floating_toolbar_scroll",
+							data: {
+								scroll: {top: window.pageYOffset, left: window.pageXOffset},
+								frameOffset: {top: el.offsetTop, left: el.offsetLeft}
+							}
+						}, "*")
+					}
 			else
 				!= text
 
