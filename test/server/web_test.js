@@ -1,4 +1,3 @@
-var O = require("oolong")
 var request = require("fetch-off/request")
 var fetchDefaults = require("fetch-defaults")
 var URL = process.env.URL || "https://rahvaalgatus.ee"
@@ -21,10 +20,9 @@ describe(URL, function() {
 	})
 	
 	;[
-		"/assets/page.css",
-		"/assets/et.json"
+		"/assets/page.css"
 	].forEach(function(path) {
-		describe(path, function() {
+		xdescribe(path, function() {
 			var PATH = this.title
 
 			before(function*() {
@@ -62,40 +60,15 @@ describe(URL, function() {
 			})
 		})
 	})
-
-	O.each({
-		"/votings": "/",
-		"/topics": "/",
-		"/topics/": "/",
-		"/topics/42": "/initiatives/42",
-		"/topics/42/discussion": "/initiatives/42/discussion",
-		"/topics/42/vote": "/initiatives/42/vote",
-		"/topics/42/events": "/initiatives/42/events",
-		"/topics/42/votes/69": "/initiatives/42/vote",
-		"/topics/create1": "/initiatives/new",
-		"/discussions": "/",
-		"/goodpractice": "/about",
-	}, function(to, from) {
-		describe(from, function() {
-			before(function*() {
-				this.res = yield this.request(from, {method: "HEAD"})
-			})
-
-			it("must redirect to " + to, function() {
-				;[301, 302].must.include(this.res.statusCode)
-				this.res.headers.location.must.equal(URL + to)
-			})
-		})
-	})
 })
 
 if (process.env.TEST.match(/\bserver\b/))
-describe("http://rahvaalgatus.ee", function() {
+xdescribe("http://rahvaalgatus.ee", function() {
 	mustRedirectToCanonical(this.title)
 })
 
 if (process.env.TEST.match(/\bserver\b/))
-describe("http://www.rahvaalgatus.ee", function() {
+xdescribe("http://www.rahvaalgatus.ee", function() {
 	mustRedirectToCanonical(this.title)
 })
 
