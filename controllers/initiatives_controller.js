@@ -16,6 +16,7 @@ var api = require("root/lib/api")
 var readInitiativesWithStatus = api.readInitiativesWithStatus
 var encode = encodeURIComponent
 var translateCitizenError = require("root/lib/api").translateError
+var hasMainPartnerId = Initiative.hasPartnerId.bind(null, Config.apiPartnerId)
 var concat = Array.prototype.concat.bind(Array.prototype)
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
@@ -38,7 +39,11 @@ exports.router.get("/", next(function*(_req, res) {
 	var closed = _.groupBy(initiatives.closed, Initiative.getUnclosedStatus)
 
 	res.render("initiatives/index", {
-		discussions: concat(initiatives.inProgress, closed.inProgress || EMPTY_ARR),
+		discussions: concat(
+			initiatives.inProgress,
+			(closed.inProgress || EMPTY_ARR).filter(hasMainPartnerId)
+		),
+
 		votings: concat(initiatives.voting, closed.voting || EMPTY_ARR),
 		processes: initiatives.followUp,
 		processed: closed.followUp || EMPTY_ARR,

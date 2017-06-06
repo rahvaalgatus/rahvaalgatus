@@ -7,7 +7,9 @@ var respond = require("root/test/fixtures").respond
 var concat = Array.prototype.concat.bind(Array.prototype)
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var VOTES = require("root/config").votesRequired
-var PARTNER_IDS = concat(Config.apiPartnerId, O.keys(Config.partners))
+var PARTNER_ID = Config.apiPartnerId
+var EXTERNAL_PARTNER_ID = O.keys(Config.partners)[0]
+var PARTNER_IDS = concat(PARTNER_ID, O.keys(Config.partners))
 
 var PUBLISHABLE_DISCUSSION = {
 	id: UUID,
@@ -31,6 +33,17 @@ var DISCUSSION = {
 
 var CLOSED_DISCUSSION = {
 	id: UUID,
+	sourcePartnerId: PARTNER_ID,
+	status: "closed",
+	description: "<body><h1>My thoughts.</h1></body>",
+	creator: {name: "John"},
+	permission: {level: "read"},
+	events: {count: 0}
+}
+
+var CLOSED_EXTERNAL_DISCUSSION = {
+	id: UUID,
+	sourcePartnerId: EXTERNAL_PARTNER_ID,
 	status: "closed",
 	description: "<body><h1>My thoughts.</h1></body>",
 	creator: {name: "John"},
@@ -124,6 +137,23 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				var body = res.read().toString()
 				body.must.include(UUID)
+			})
+
+			it("must not show closed discussions of other sites", function*() {
+				this.router.get("/api/topics", function(req, res) {
+					var initiatives
+					switch (Url.parse(req.url, true).query.statuses) {
+						case "closed": initiatives = [CLOSED_EXTERNAL_DISCUSSION]; break
+						default: initiatives = []
+					}
+
+					respond({data: {rows: initiatives}}, req, res)
+				})
+	
+				var res = yield this.request("/initiatives")
+				res.statusCode.must.equal(200)
+				var body = res.read().toString()
+				body.must.not.include(UUID)
 			})
 		})
 	})
