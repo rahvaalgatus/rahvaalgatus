@@ -16,7 +16,7 @@ block tab
 		+form.form(method="post", action="/initiatives/#{initiative.id}/authors")
 			label.form-label= t("LBL_EMAIL")
 			input.form-input(
-				type="text",
+				type="email",
 				name="email",
 				value=attrs.email,
 				required)
