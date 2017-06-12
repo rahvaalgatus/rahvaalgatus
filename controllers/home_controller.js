@@ -15,9 +15,8 @@ exports.router.get("/", next(function*(_req, res) {
 		processes: readInitiativesWithStatus("followUp"),
 	}
 
-	var hasEnded = Initiative.hasDiscussionEnded.bind(null, new Date)
 	var hasFailed = Initiative.hasVoteFailed.bind(null, new Date)
-	var discussions = _.reject(initiatives.discussions, hasEnded)
+	var discussions = initiatives.discussions
 	var votings = _.reject(initiatives.votings, hasFailed)
 	var processes = initiatives.processes
 
