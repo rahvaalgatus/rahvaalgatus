@@ -873,6 +873,9 @@ button.inherited {
 			font-family: $tisa-pro;
 			max-width: $article-width;
 
+			// Clear the badge's floating.
+			h1 { clear: left; }
+
 			// Etherpad generates non-standard HTML by putting a nested <ol> directly
 			// under <ul>.
 			ol ol,
