@@ -1,1 +1,11 @@
-development.json
+{
+	"apiUrl": "https://citizenos-citizenos-api-test.herokuapp.com",
+	"apiPartnerId": "8d89302e-2317-4b1e-b65d-61c6fbe53e0c",
+	"apiAuthorizeUrl": "https://citizenos-citizenos-api-test.herokuapp.com/api/auth/openid/authorize",
+	"adminCoauthors": ["admin@example.com"],
+
+	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
+	"votesRequired": 2,
+	"minDeadlineDays": 0,
+	"etherpadInsecure": true
+}

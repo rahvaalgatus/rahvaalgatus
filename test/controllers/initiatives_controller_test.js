@@ -10,6 +10,7 @@ var VOTES = require("root/config").votesRequired
 var PARTNER_ID = Config.apiPartnerId
 var EXTERNAL_PARTNER_ID = O.keys(Config.partners)[0]
 var PARTNER_IDS = concat(PARTNER_ID, O.keys(Config.partners))
+var ADMIN_COAUTHORS = Config.adminCoauthors
 
 var PUBLISHABLE_DISCUSSION = {
 	id: UUID,
@@ -328,6 +329,35 @@ describe("InitiativesController", function() {
 				res.headers.location.must.equal(`/initiatives/${UUID}`)
 			})
 
+			it("must add admin as a coauthor", function*() {
+				this.router.get(`/api/users/self/topics/${UUID}`,
+					respond.bind(null, {data: PUBLISHABLE_DISCUSSION}))
+
+				this.router.put(`/api/users/self/topics/${UUID}`, endRequest)
+
+				var added = 0
+				this.router.post(`/api/users/self/topics/${UUID}/members/users`,
+					function(req, res) {
+					++added
+					req.body.must.eql([{userId: ADMIN_COAUTHORS[0], level: "admin"}])
+					res.end()
+				})
+
+				var today = DateFns.startOfDay(new Date)
+				var endsAt = DateFns.endOfDay(DateFns.addDays(today, 5))
+				var res = yield this.request(`/initiatives/${UUID}`, {
+					method: "PUT",
+					form: {
+						_csrf_token: this.csrfToken,
+						visibility: "public",
+						endsAt: endsAt.toJSON().slice(0, 10)
+					}
+				})
+
+				added.must.equal(1)
+				res.statusCode.must.equal(303)
+			})
+
 			it("must render update status for voting page", function*() {
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: PROPOSABLE_DISCUSSION}))
@@ -381,3 +411,5 @@ describe("InitiativesController", function() {
 		})
 	})
 })
+
+function endRequest(_req, res) { res.end() }
