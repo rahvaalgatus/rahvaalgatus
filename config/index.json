@@ -4,7 +4,7 @@
 	"apiUrl": "https://api.citizenos.com",
 	"apiPartnerId": "a4cc118f-69f3-4708-8f84-d3f46ad1d63b",
 	"apiAuthorizeUrl": "https://api.citizenos.com/api/auth/openid/authorize",
-	"adminCoauthors": [],
+	"adminCoauthors": ["koostookogu@gmail.com"],
 
 	"language": "et",
 	"languages": ["et"],
