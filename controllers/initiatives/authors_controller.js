@@ -18,7 +18,7 @@ exports.router.post("/", next(function*(req, res) {
 	var path = `/api/users/self/topics/${initiative.id}/members/users`
 	var created = yield req.api(path, {
 		method: "POST",
-		json: {userId: req.body.email, level: "edit"}
+		json: {userId: req.body.email, level: "admin"}
 	}).catch(catch400)
 
 	if (isOk(created)) {
