@@ -263,8 +263,9 @@ exports.router.get("/:id/signable", next(function*(req, res) {
 	var initiative = req.initiative
 	var vote = initiative.vote
 
-	var path = `/api/topics/${initiative.id}/votes/${vote.id}`
-	var signable = yield req.api(path, {
+	// NOTE: Do not send signing requests through the current user. See below for
+	// an explanation.
+	var signable = yield api(`/api/topics/${initiative.id}/votes/${vote.id}`, {
 		method: "POST",
 
 		json: {
@@ -284,16 +285,18 @@ exports.router.get("/:id/signable", next(function*(req, res) {
 }))
 
 exports.router.post("/:id/signature", next(function*(req, res) {
-	var path
 	var initiative = req.initiative
 	var vote = initiative.vote
 
 	res.locals.method = req.body.method
 
+	// NOTE: Do not send signing requests through the current user. CitizenOS API
+	// limits signing with one personal id number to a single account,
+	// a requirement we don't need to enforce.
 	switch (req.body.method) {
 		case "id-card":
-			path = `/api/topics/${initiative.id}/votes/${vote.id}/sign`
-			var signed = yield req.api(path, {
+			var path = `/api/topics/${initiative.id}/votes/${vote.id}/sign`
+			var signed = yield api(path, {
 				method: "POST",
 				json: {token: req.body.token, signatureValue: req.body.signature}
 			}).catch(catch400)
@@ -308,8 +311,7 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 			break
 
 		case "mobile-id":
-			path = `/api/topics/${initiative.id}/votes/${vote.id}`
-			var signing = yield req.api(path, {
+			var signing = yield api(`/api/topics/${initiative.id}/votes/${vote.id}`, {
 				method: "POST",
 				json: {
 					options: [{optionId: req.body.optionId}],
@@ -337,7 +339,7 @@ exports.router.get("/:id/signature", next(function*(req, res) {
 	var token = req.query.token
 	if (token == null) throw new HttpError(400, "Missing Token")
 	var initiative = req.initiative
-	var signature = yield readSignature(req.api, initiative, token)
+	var signature = yield readSignature(initiative, token)
 
 	switch (signature.statusCode) {
 		case 200:
@@ -361,7 +363,7 @@ exports.router.use(function(err, _req, res, next) {
 	else next(err)
 })
 
-function* readSignature(api, initiative, token) {
+function* readSignature(initiative, token) {
 	var vote = initiative.vote
 	var path = `/api/topics/${initiative.id}/votes/${vote.id}/status`
 	path += "?token=" + encodeURIComponent(token)
