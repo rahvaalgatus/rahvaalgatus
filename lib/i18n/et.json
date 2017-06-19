@@ -231,7 +231,7 @@
 	"SEARCH": "Otsi",
 	"SEND_TO_PARLIAMENT": "SAADA PARLAMENTI ",
 	"SENT_TO_PARLIAMENT": "Algatus on Riigikogule edastatud!",
-	"SENT_TO_PARLIAMENT_CONTENT": "Algatus on Riigikogule edastatud! \nAlgatuse menetlusse võtmiseks on seaduses ette nähtud 30 päeva. Kui algatus vastab kollektiivsete pöördumiste nõuetele, annab Riigikogu kantselei algatuse esitajale kirjalikult teada, milline komisjon hakkab pöördumist arutama. See info saab ka rahvaalgatus.ee-s kuvatud. \nKui algatus jõuab järgmisesse faasi, tekivad algatuse autori(te)le VALIKUD-menüüsse uued funktsioonid vaheetappide ja täienduste lisamiseks.",
+	"SENT_TO_PARLIAMENT_CONTENT": "Algatus on Riigikogule edastatud!\n\nAlgatuse menetlusse võtmiseks on seaduses ette nähtud 30 päeva. Kui algatus vastab kollektiivsete pöördumiste nõuetele, annab Riigikogu kantselei algatuse esitajale kirjalikult teada, milline komisjon hakkab pöördumist arutama. See info saab ka Rahvaalgatusel kuvatud. \n",
 	"SET_DEADLINE_FOR_SIGNATURE_COLLECTING": "Sea allkirjade kogumisele tähtaeg",
 	"SET_HASHTAG": "Määra hashtag",
 	"SET_HASTAG_FOR_TOPIC": "määra arutelule või algatusele hashtag",
