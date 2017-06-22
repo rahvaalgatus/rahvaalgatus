@@ -721,6 +721,147 @@ button.inherited {
 	}
 }
 
+#vision {
+	$initiative-height: 75px;
+	$initiative-width: 130px;
+	position: relative;
+	text-align: center;
+
+	.text-section center { max-width: 64rem; }
+	.unpointable { pointer-events: none; }
+
+	#vision-visions {
+		display: block;
+		margin: 0 auto 1rem;
+
+		strong {
+			font-family: $museo-sans;
+			font-weight: bold;
+		}
+
+		.vision-arc {
+			cursor: pointer;
+
+			-webkit-tap-highlight-color: rgba(black, 0);
+			-webkit-user-select: none;
+			user-select: none;
+
+			.fillable { fill: white; }
+
+			text {
+				fill: $title-text;
+				font-family: $museo-sans;
+				font-weight: 500;
+				font-size: 1.7rem;
+			}
+
+			&.highlighted {
+				.fillable { fill: $title-text; filter: url(#vision-shadow); }
+				text { fill: white; }
+			}
+		}
+
+		.vision-description p {
+			text-align: center;
+			font-family: $tisa-pro;
+			padding: 0.5rem;
+			font-size: 1.3rem;
+		}
+	}
+
+	.initiative,
+	.initiative-details {
+		background: white;
+		text-align: left;
+	}
+
+	.initiative {
+		display: inline-block;
+		vertical-align: top;
+		box-shadow: 0 1px 5px 0 rgba(0, 0, 0, 0.4);
+		transition:
+			transform 300ms ease-out,
+			opacity 300ms ease-out;
+
+		.initiative-title {
+			$line-height: 1.6rem;
+
+			display: block;
+			height: $line-height * 3;
+			overflow: hidden;
+			color: #757575;
+			margin: 1rem 1rem 0.7rem;
+			font-size: 1.3rem;
+			line-height: $line-height;
+			hyphens: auto;
+			text-overflow: ellipsis;
+		}
+
+		.initiative-progress {
+			height: 1rem;
+			background-image: none;
+		}
+
+		&.inline {
+			margin-bottom: 1rem;
+			margin-right: 1rem;
+		}
+
+		&.highlighted {
+			box-shadow: 0 1px 14px 1px rgba(0, 0, 0, 0.5);
+			.initiative-title { color: $text; }
+		}
+
+		&.disabled {
+			transform: scale(0.9);
+			opacity: 0.8;
+		}
+	}
+
+	.initiative-details {
+		$line-height: 17px;
+		$progress-height: 20px;
+		$min-height: $line-height * 3 + $progress-height + 2 * 13px;
+		$width: 260px;
+
+		width: $width;
+		min-height: $min-height;
+		margin-left: -$width / 2;
+		margin-top: -$min-height / 2;
+		z-index: 100;
+
+		box-shadow: 0 1px 10px 1px rgba(0, 0, 0, 0.5);
+		border-radius: 0.8rem;
+		animation: 150ms ease-out forwards scale-in;
+		overflow: hidden;
+
+		.initiative-title {
+			display: block;
+			min-height: $min-height - $progress-height - 2 * 13px;
+			margin: 13px;
+			font-size: 1.4rem;
+			font-weight: 500;
+			line-height: $line-height;
+			color: black;
+
+			small {
+				font-family: $tisa-pro;
+				font-size: 1.3rem;
+				color: #7d7d7d;
+			}
+		}
+
+		.initiative-progress {
+			padding-left: 13px;
+			height: $progress-height;
+			line-height: $progress-height + 4px;
+			font-size: 1.1rem;
+			font-weight: normal;
+			background-image: none;
+		}
+	}
+}
+
 #initiative-create-page #initiative {
 	$new-initiative-background-height: 515px;
 
@@ -1250,4 +1391,9 @@ button.inherited {
 
 		.powered-by { margin-top: 2rem; }
 	}
+}
+
+@keyframes scale-in {
+  from { transform: scale(0.7) }
+  to { transform: scale(1); }
 }

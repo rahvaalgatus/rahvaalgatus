@@ -6,12 +6,28 @@
 	"dependencies": {
 		"pikaday": "",
 		"promise": "",
-		"whatwg-fetch": ""
+		"whatwg-fetch": "",
+		"d3-shape": "",
+		"virtual-dom": "",
+		"jsx-transform": "",
+		"lodash.assign": "",
+		"lodash.assignin": "",
+		"lodash.debounce": ""
 	},
 
 	"devDependencies": {
 		"browserify": "",
 		"watchify": "",
 		"uglify-js": ""
+	},
+
+	"browserify": {
+		"transform": [
+			["jsx-transform/browserify", {
+				"factory": "Jsx",
+				"extensions": [".jsx"],
+				"arrayChildren": true
+			}]
+		]
 	}
 }

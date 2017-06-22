@@ -5,6 +5,7 @@ block append options
 
 block body
 	- var Config = require("root/config")
+	- var stringify = require("root/lib/json").stringify
 
 	section#welcome.primary-section.text-section: center
 		h1= t("HOME_WELCOME_TITLE")
@@ -21,4 +22,20 @@ block body
 
 		p!= t("HOME_WELCOME")
 
-	include ../initiatives/_initiatives
+	section#vision-section.secondary-section: center
+	script(src="/assets/vision.js")
+
+	:javascript
+		var Viz = require("@rahvaalgatus/vision")
+		var section = document.getElementById("vision-section")
+
+		var viz = new Viz({
+			initiatives: !{stringify(visionInitiatives)},
+			maxWidth: section.offsetWidth
+		})
+
+		viz.render()
+		section.firstChild.appendChild(viz.el)
+
+	noscript
+		include ../initiatives/_initiatives

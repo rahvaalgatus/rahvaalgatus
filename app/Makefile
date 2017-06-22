@@ -1,12 +1,13 @@
 NODE = node
 ENV = development
-FILES = $(patsubst %, public/assets/%.js, html5 inputs hwcrypto)
+FILES = $(patsubst %, public/assets/%.js, html5 inputs hwcrypto vision)
 BROWSERIFY = ./node_modules/.bin/browserify
 WATCHIFY = ./node_modules/.bin/watchify -v
 UGLIFY = ./node_modules/.bin/uglifyjs
 
 BROWSERIFY_OPTS =
 BROWSERIFY_OPTS += --no-detect-globals
+BROWSERIFY_OPTS += --extension=jsx
 
 UGLIFY_OPTS =
 UGLIFY_OPTS += --stats
@@ -39,6 +40,12 @@ public/assets/inputs.js:
 		--outfile "$@"
 
 public/assets/hwcrypto.js:
+	@echo "Compiling $@ for $(ENV)…"
+	@$(BROWSERIFY) $(BROWSERIFY_OPTS) \
+		--require ./$(@F:%.js=%):@rahvaalgatus/$(@F:%.js=%) \
+		--outfile "$@"
+
+public/assets/vision.js:
 	@echo "Compiling $@ for $(ENV)…"
 	@$(BROWSERIFY) $(BROWSERIFY_OPTS) \
 		--require ./$(@F:%.js=%):@rahvaalgatus/$(@F:%.js=%) \
