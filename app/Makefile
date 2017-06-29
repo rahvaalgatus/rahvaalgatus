@@ -30,7 +30,7 @@ public/assets:
 
 public/assets/html5.js:
 	@echo "Compiling $@ for $(ENV)…"
-	@$(BROWSERIFY) $(BROWSERIFY_OPTS) --entry ./$(@F) --outfile "$@"
+	@$(BROWSERIFY) $(BROWSERIFY_OPTS) --entry ./$(@F:%.js=%) --outfile "$@"
 
 public/assets/inputs.js:
 	@echo "Compiling $@ for $(ENV)…"
@@ -41,7 +41,7 @@ public/assets/inputs.js:
 public/assets/hwcrypto.js:
 	@echo "Compiling $@ for $(ENV)…"
 	@$(BROWSERIFY) $(BROWSERIFY_OPTS) \
-		--require ./$(@F):@rahvaalgatus/$(@F:%.js=%) \
+		--require ./$(@F:%.js=%):@rahvaalgatus/$(@F:%.js=%) \
 		--outfile "$@"
 
 public/assets/%.max.js: public/assets/%.js
