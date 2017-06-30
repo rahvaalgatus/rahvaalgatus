@@ -31,7 +31,8 @@ exports.router.put("/", next(function*(req, res, next) {
 function* read(req, res) {
 	if (req.user == null) throw new HttpError(401)
 
-	var initiatives = req.api("/api/users/self/topics?include[]=vote")
+	var path = "/api/users/self/topics?include[]=vote&include[]=event"
+	var initiatives = req.api(path)
 	initiatives = yield initiatives.then(getRows)
 
 	res.render("user/read", {
