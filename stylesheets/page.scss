@@ -779,9 +779,11 @@ button.inherited {
 		display: inline-block;
 		vertical-align: top;
 		box-shadow: 0 1px 5px 0 rgba(0, 0, 0, 0.4);
+
 		transition:
-			transform 300ms ease-out,
-			opacity 300ms ease-out;
+			transform 200ms ease-out,
+			box-shadow 200ms ease-out,
+			opacity 200ms ease-out;
 
 		.initiative-title {
 			$line-height: 1.6rem;
@@ -808,13 +810,13 @@ button.inherited {
 		}
 
 		&.highlighted {
-			box-shadow: 0 1px 14px 1px rgba(0, 0, 0, 0.5);
+			box-shadow: 0 1px 10px 1px rgba($title-text, 0.6);
 			.initiative-title { color: $text; }
 		}
 
 		&.disabled {
 			transform: scale(0.9);
-			opacity: 0.8;
+			opacity: 0.5;
 		}
 	}
 
