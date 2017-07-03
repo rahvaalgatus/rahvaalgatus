@@ -20,6 +20,7 @@ exports.router.get("/", next(function*(req, res) {
 	var events = yield req.api(path)
 	events = events.body.data.rows
 	events = _.sortBy(events, (event) => new Date(event.createdAt))
+	events = events.reverse()
 
 	res.render("initiatives/events", {events: events})
 }))

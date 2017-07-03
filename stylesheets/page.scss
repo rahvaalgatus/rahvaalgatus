@@ -1200,31 +1200,73 @@ button.inherited {
 
 	#initiative-events {
 		.events {
-			max-width: 72rem;
+			max-width: 64rem;
+			padding-top: 1.5rem;
 		}
 
 		.event {
+			position: relative;
+			border-left: 0.3rem solid #385c90;
+			padding-left: 3rem;
+			padding-bottom: 5rem;
+
+			&:before {
+				display: block;
+				background: url(/images/icon-check-blue.png) center 0.5rem no-repeat;
+				background-color: white;
+				width: 3rem;
+				height: 3.2rem;
+				content: "";
+
+				position: absolute;
+				left: -0.15rem - 1.5rem;
+				top: 0;
+			}
+
+			&:last-child:before {
+				background: url(/images/icon-check-green-ball.png) center 0.5rem no-repeat;
+				background-color: white;
+				height: 3.5rem;
+			}
+
 			h2 {
 				font-family: $museo-sans;
-				font-size: 1.8rem;
-				display: inline;
+				font-size: 2rem;
+				font-weight: 500;
 				color: $title-text;
+				margin-top: 0.2rem;
+				margin-bottom: 1rem;
 			}
 
 			time {
-				color: $secondary-light-text;
-			}
+				display: block;
+				font-size: 1.6rem;
+				line-height: 2rem;
 
-			time:before { content: " — " }
+				$offset: 1.5rem;
+				position: relative;
+				top: -$offset;
+				margin-bottom: -$offset;
+
+				color: $secondary-light-text;
+				font-family: $tisa-pro;
+			}
 
 			p {
-				margin-top: 0.5rem;
 				line-height: 1.5;
 				white-space: pre-wrap;
+				color: #636363;
+				font-size: 1.6rem;
+				font-family: $tisa-pro;
 			}
 
-			& + .event {
-				margin-top: 2rem;
+			&:last-child {
+				padding-bottom: 0;
+				border-color: #75c682;
+
+				h2 {
+					color: #555;
+				}
 			}
 		}
 	}
