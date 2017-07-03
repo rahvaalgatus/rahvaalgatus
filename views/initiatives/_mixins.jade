@@ -77,27 +77,6 @@ mixin progress(initiative)
 			- var sigs = Initiative.countSignatures("Yes", initiative)
 			.initiative-progress(class=klass)= t("N_SIGNATURES", {votes: sigs})
 
-mixin header(initiative)
-	header
-		span.author
-			= t("CREATED_BY")
-			| &#32;
-			= initiative.creator.name
-
-		h1= initiative.title
-
-mixin header-link(initiative)
-	header
-		span.author
-			= t("CREATED_BY")
-			| &#32;
-			= initiative.creator.name
-
-		h1
-			| ←
-			| &#32;
-			a(href=`/initiatives/${initiative.id}`)= initiative.title
-
 mixin initiative-aux-menu(initiative)
 	-
 		var Initiative = require("root/lib/initiative")

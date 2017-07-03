@@ -788,9 +788,27 @@ button.inherited {
 	$comment-padding: 3rem;
 	background-color: $secondary-background;
 
+	#initiative-header {
+		background-color: #f6f6f6;
+		padding-top: 4rem;
+		font-family: $tisa-pro;
+
+		h1 {
+			color: $title-text;
+			font-size: 4.2rem;
+			line-height: 1.2;
+		}
+
+		time,
+		.author {
+			font-size: 1.6rem;
+			color: #8a8a8a;
+		}
+	}
+
 	#initiative-tabs {
 		padding-top: 4rem;
-		background: $secondary-background;
+		background-color: #f6f6f6;
 		border-bottom: 1px solid #cecece;
 
 		.tab {
@@ -802,9 +820,9 @@ button.inherited {
 			min-width: 11rem;
 			font-size: 14px;
 			font-family: $museo-sans;
+			font-weight: 500;
 			color: #4A555D;
 
-			background-color: $secondary-background;
 			border: 1px solid #cecece;
 			text-align: center;
 			margin-bottom: -1px;
@@ -865,9 +883,9 @@ button.inherited {
 		}
 
 		h1 {
-			font-size: 4.4rem;
+			font-size: 4.2rem;
 			color: $title-text;
-			font-family: $museo-sans;
+			font-family: $tisa-pro;
 			line-height: 1.2;
 
 			margin-bottom: 1rem;
