@@ -2,7 +2,7 @@ NODE = node
 ENV = development
 FILES = $(patsubst %, public/assets/%.js, html5 inputs hwcrypto)
 BROWSERIFY = ./node_modules/.bin/browserify
-WATCHIFY = ./node_modules/.bin/watchify -v
+WATCHIFY = ./node_modules/.bin/watchify --verbose
 UGLIFY = ./node_modules/.bin/uglifyjs
 
 BROWSERIFY_OPTS =
@@ -13,17 +13,16 @@ UGLIFY_OPTS += --stats
 # Not mangling atm for debugging purposes.
 #UGLIFY_OPTS += --mangle
 
-love:
-	@echo "Feel like makin' love."
+love:public/assets
+	@$(MAKE) --always-make $(FILES)
 
-compile: public/assets
-	$(MAKE) --always-make $(FILES)
-
-minify: $(patsubst %.js, %.min.js, $(FILES))
-	@for file in $^; do mv "$$file" "$${file%.min.js}.js"; done
+compile: love
 
 autocompile:
 	@$(MAKE) --always-make -j $(words $(FILES)) BROWSERIFY="$(WATCHIFY)" $(FILES)
+
+minify: $(patsubst %.js, %.min.js, $(FILES))
+	@for file in $^; do mv "$$file" "$${file%.min.js}.js"; done
 
 public/assets:
 	mkdir -p "$@"

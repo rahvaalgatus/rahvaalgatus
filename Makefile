@@ -50,7 +50,7 @@ love:
 compile: javascripts stylesheets
 
 autocompile:
-	$(MAKE) -j3 autojavascripts autostylesheets
+	$(MAKE) -j2 autojavascripts autostylesheets
 
 javascripts:
 	$(MAKE) -C app compile
