@@ -652,83 +652,57 @@ button.inherited {
 }
 
 #home-page {
-	$half-width: 48rem;
+	$half-width: 50%;
 	background-color: $secondary-background;
 
 	#welcome {
 		background-image: url(/images/hero-bg.png);
 		background-repeat: no-repeat;
-		background-position: right center;
-		background-position: calc(50% + 450px) center;
-
-		// Overflow: hidden for video and create links' floats.
-		overflow: hidden;
+		background-position: right bottom;
+		background-position: calc(50% + 450px) bottom;
 
 		h1 {
-			max-width: $half-width;
+			margin-bottom: 2rem;
 		}
 
 		p {
 			margin-bottom: 2rem;
-			max-width: $half-width;
+			max-width: 50%;
+		}
+
+		.video {
+			float: right;
+			max-width: 50%;
+			margin-left: 2rem;
+
+			iframe {
+				max-width: 100%;
+				border-radius: 0.5rem;
+			}
 		}
 	}
 
 	#create-link {
-		float: right;
 		line-height: 30px;
 
 		font-family: $museo-sans;
-		font-weight: 900;
+		font-weight: bold;
 		font-size: 16px;
-		color: #ffd900;
-		border-bottom: 1px solid #ffd900;
+		color: $title-text;
+		border-bottom: 1px solid $title-text;
 		text-decoration: none;
-	}
-
-	#video-link {
-		line-height: 22px;
-		color: $link;
-		font-family: $museo-sans;
-		font-weight: 900;
-		font-size: 16px;
-		text-transform: uppercase;
-		text-decoration: none;
-		max-width: $half-width;
-		display: block;
-		float: left;
-
-		.icon {
-			float: left;
-			width: 5rem;
-			height: 5rem;
-			background: url(/images/home-video-icon.png) no-repeat right center;
-			background-size: 5rem;
-		}
-
-		span {
-			display: block;
-			margin-left: 6rem;
-			padding-top: 0.5rem;
-		}
 	}
 
 	@include tablet {
-		#welcome {
-			background-image: none;
-		}
+		#welcome { background-image: none; }
 
 		#welcome h1,
 		#welcome p { max-width: none; }
 
-		#video-link,
-		#create-link {
+		#welcome .video {
 			float: none;
-			display: inline-block;
-		}
-
-		#video-link {
-			display: block;
+			max-width: none;
+			margin-left: 0;
 			margin-bottom: 2rem;
 		}
 	}
