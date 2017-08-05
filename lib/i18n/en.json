@@ -229,7 +229,7 @@
 	"SEARCH": "search",
 	"SEND_TO_PARLIAMENT": "SEND TO PARLIAMENT ",
 	"SENT_TO_PARLIAMENT": "The initiative has been sent to Riigikogu!",
-	"SENT_TO_PARLIAMENT_CONTENT": "The initiative has been sent to Riigikogu! \nThe parliament has 30 days to decide whether to process the initiative. If the initiative corresponds to the criteria of collective addresses, the Chancellery of the Riigikogu will inform the author of the initiative about which commission will discuss the initiative. This information will be public on rahvaalgatus.ee as well. \nIf the initiative moves to next processing phase, the author(s) of the initiative can add new phases and information from the OPTIONS menu.  ",
+	"SENT_TO_PARLIAMENT_CONTENT": "The initiative has been sent to Riigikogu! \n\nThe parliament has 30 days to decide whether to process the initiative. If the initiative corresponds to the criteria of collective addresses, the Chancellery of the Riigikogu will inform the author of the initiative about which commission will discuss the initiative. This information will be publicized on Rahvaalgatus as well.",
 	"SET_DEADLINE_FOR_SIGNATURE_COLLECTING": "Set the deadline for collecting signatures",
 	"SET_HASHTAG": "Set hashtag",
 	"SET_HASTAG_FOR_TOPIC": "Set a hashtag for this discussion or initiative ",
