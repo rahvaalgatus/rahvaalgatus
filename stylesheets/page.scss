@@ -106,8 +106,7 @@ center {
 }
 
 .secondary-section,
-.primary-section,
-.text-section {
+.primary-section {
 	padding-top: 4rem;
 	padding-bottom: 4rem;
 
@@ -399,6 +398,11 @@ button.inherited {
 		height: 2rem;
 		display: inline-block;
 		vertical-align: middle;
+	}
+
+	a {
+		color: $link;
+		text-decoration: underline;
 	}
 }
 
@@ -1155,7 +1159,63 @@ button.inherited {
 
 #about-page,
 #donate-page {
-	.text-section center { max-width: 64rem; }
+	section center { max-width: 64rem; }
+}
+
+#donate-page section {
+	font-size: 1.6rem;
+
+	form {
+		margin-top: 2rem;
+
+		h2 {
+			font-weight: bold;
+			margin-bottom: 1rem;
+		}
+
+		.amount-input {
+			&:before {
+				vertical-align: middle;
+				content: "€";
+				text-align: center;
+				display: inline-block;
+				color: #ccc;
+				width: 2.5rem;
+				margin-right: -2.5rem;
+			}
+
+			input {
+				padding-left: 2.5rem;
+				width: 8rem;
+				display: inline-block;
+				background-color: transparent;
+			}
+		}
+
+		button {
+			margin-left: 1rem;
+		}
+
+		.tos-checkbox {
+			margin-top: 1rem;
+			font-size: 1.4rem;
+			line-height: 2.1rem;
+		}
+
+		p {
+			margin-top: 2rem;
+			font-size: 1.4rem;
+		}
+
+		.banks {
+			li {
+				// Add right margin so when banks wrap, they'll be left-aligned.
+				display: inline-block;
+				margin-top: 0.5rem;
+				margin-right: 1rem;
+			}
+		}
+	}
 }
 
 #user-page {
