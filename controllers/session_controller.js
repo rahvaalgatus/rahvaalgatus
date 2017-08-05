@@ -1,8 +1,8 @@
 var Url = require("url")
 var Router = require("express").Router
 var Config = require("root/config")
-var Crypto = require("crypto")
 var QueryCsrfMiddleware = require("root/lib/middleware/query_csrf_middleware")
+var randomHex = require("root/lib/crypto").randomHex
 var AUTHORIZE_URL = Config.apiAuthorizeUrl
 var DEFAULT_LANG = Config.language
 var LANGS = require("root/lib/i18n").STRINGS
@@ -64,7 +64,7 @@ function redirect(req, res) {
 			client_id: Config.apiPartnerId,
 			redirect_uri: cb,
 			scope: "openid",
-			nonce: rand(16),
+			nonce: randomHex(16),
 			state: req.cookies.csrf_token_for_citizenos,
 			ui_locales: req.lang
 		}
@@ -110,5 +110,3 @@ function error(req, res, next) {
 		})
 	}
 }
-
-function rand(length) { return Crypto.randomBytes(length).toString("hex") }

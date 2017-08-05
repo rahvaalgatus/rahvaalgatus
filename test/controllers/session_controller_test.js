@@ -2,7 +2,7 @@ var _ = require("lodash")
 var Url = require("url")
 var Config = require("root/config")
 var Cookie = require("tough-cookie").Cookie
-var Crypto = require("crypto")
+var pseudoHex = require("root/lib/crypto").pseudoHex
 var fetchDefaults = require("fetch-defaults")
 var encode = encodeURIComponent
 var decode = decodeURIComponent
@@ -81,7 +81,7 @@ describe("SessionController", function() {
 		})
 
 		it("must redirect to session referrer cookie path", function*() {
-			var token = rand(16)
+			var token = pseudoHex(16)
 			var path = `${PATH}?state=${token}&access_token=123456`
 			var res = yield this.request(path, {
 				headers: {Cookie: serializeCookies({
@@ -123,7 +123,7 @@ describe("SessionController", function() {
 		})
 
 		it("must redirect to referrer path if access_denied", function*() {
-			var token = rand(16)
+			var token = pseudoHex(16)
 			var path = `${PATH}?state=${token}&error=access_denied`
 			var res = yield this.request(path, {
 				headers: {Cookie: serializeCookies({
@@ -165,15 +165,13 @@ describe("SessionController", function() {
 })
 
 function authorize() {
-	var token = rand(16)
+	var token = pseudoHex(16)
 	this.path = PATH + "?state=" + token
 
 	this.request = fetchDefaults(this.request, {
 		headers: {Cookie: `${CSRF_COOKIE_NAME}=${token}`}
 	})
 }
-
-function rand(length) { return Crypto.randomBytes(length).toString("hex") }
 
 function parseCookies(header) {
 	return _.keyBy(header.map(Cookie.parse), "key")
