@@ -1203,17 +1203,8 @@ button.inherited {
 		}
 
 		p {
-			margin-top: 2rem;
+			margin-top: 0.5rem;
 			font-size: 1.4rem;
-		}
-
-		.banks {
-			li {
-				// Add right margin so when banks wrap, they'll be left-aligned.
-				display: inline-block;
-				margin-top: 0.5rem;
-				margin-right: 1rem;
-			}
 		}
 	}
 }
