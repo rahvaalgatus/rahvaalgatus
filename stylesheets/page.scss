@@ -1175,13 +1175,14 @@ button.inherited {
 
 		.amount-input {
 			&:before {
-				vertical-align: middle;
-				content: "€";
+				vertical-align: top;
+				line-height: $button-height;
+				margin-right: -2.5rem;
 				text-align: center;
 				display: inline-block;
 				color: #ccc;
 				width: 2.5rem;
-				margin-right: -2.5rem;
+				content: "€";
 			}
 
 			input {
