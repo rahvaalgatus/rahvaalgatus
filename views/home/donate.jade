@@ -6,9 +6,6 @@ block options
 
 block body
 	- var Config = require("root/config")
-	- var pseudoInt = require("root/lib/crypto").pseudoInt
-	- var amount = 3 + pseudoInt(7)
-
 	section.primary-section
 		center.text-section
 			p!= t("SUPPORT_US_CONTENT")
@@ -16,7 +13,7 @@ block body
 		center
 			form(method="GET", action=Config.maksekeskusUrl)
 				input(type="hidden", name="shopId", value=Config.maksekeskusId)
-				input(type="hidden", name="paymentId", value="donation-" + amount)
+				input(type="hidden", name="paymentId", value=reference)
 
 				h2= t("SUPPORT_LABEL")
 
