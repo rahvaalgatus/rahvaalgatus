@@ -5,6 +5,32 @@ block options
 	- var page = "donate"
 
 block body
-	section#about.primary-section.text-section: center
-		h1= t("SUPPORT_US_TITLE")
-		p= t("SUPPORT_US_CONTENT")
+	- var Config = require("root/config")
+	section.primary-section
+		center.text-section
+			p!= t("SUPPORT_US_CONTENT")
+
+		center
+			form(method="GET", action=Config.maksekeskusUrl)
+				input(type="hidden", name="shopId", value=Config.maksekeskusId)
+				input(type="hidden", name="paymentId", value=reference)
+
+				h2= t("SUPPORT_LABEL")
+
+				label.amount-input
+					input.form-input(
+						type="numeric",
+						name="amount",
+						value=amount,
+						required)
+
+				button.form-submit.secondary-button= t("SUPPORT_BUTTON")
+
+				label.form-checkbox.tos-checkbox
+					input(type="checkbox", name="accept-tos", required)
+					!= t("I_HAVE_READ", {url: "/about#tos"})
+
+				p.text= t("SUPPORT_REDIRECT")
+
+	section.secondary-section.text-section: center
+		p!= t("SUPPORTERS")
