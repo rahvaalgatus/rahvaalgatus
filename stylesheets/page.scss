@@ -552,6 +552,50 @@ button.inherited {
 	}
 }
 
+.donate-form {
+	margin-top: 2rem;
+
+	h2 {
+		font-weight: bold;
+		margin-bottom: 1rem;
+	}
+
+	.amount-input {
+		&:before {
+			vertical-align: top;
+			line-height: $button-height;
+			margin-right: -2.5rem;
+			text-align: center;
+			display: inline-block;
+			color: #ccc;
+			width: 2.5rem;
+			content: "€";
+		}
+
+		input {
+			padding-left: 2.5rem;
+			width: 8rem;
+			display: inline-block;
+			background-color: transparent;
+		}
+	}
+
+	button {
+		margin-left: 1rem;
+	}
+
+	.tos-checkbox {
+		margin-top: 1rem;
+		font-size: 1.4rem;
+		line-height: 2.1rem;
+	}
+
+	p {
+		margin-top: 0.5rem;
+		font-size: 1.4rem;
+	}
+}
+
 #header {
 	background: $header-background;
 	padding-top: 1.5rem;
@@ -801,7 +845,7 @@ button.inherited {
 		}
 	}
 
-	#initiative,
+	#initiative article,
 	#initiative-events,
 	#initiative-comment,
 	#initiative-signature {
@@ -870,25 +914,42 @@ button.inherited {
 	}
 
 	#initiative-ended,
-	#initiative-signed {
+	#initiative-signed,
+	#initiative-donate {
 		max-width: $article-width;
 		background: $flash-background;
 		color: white;
 		border-radius: $button-radius;
 		margin-bottom: 2rem;
+		padding: 0 2rem 1.2rem;
 
-		h2, p {
-			padding: 1.2rem 2rem;
-		}
-
-		h2 {
+		h1 {
+			padding: 1.1rem 2rem 0.8rem;
+			margin-left: -2rem;
+			margin-right: -2rem;
+			margin-bottom: 1.2rem;
 			border-top-left-radius: $button-radius;
 			border-top-right-radius: $button-radius;
 			background: $flash-header-background;
+			font-weight: bold;
 		}
 
 		a {
 			text-decoration: underline;
+		}
+
+		h1 ~ * + * {
+			margin-top: 2rem;
+		}
+
+		.form-input {
+			color: white;
+		}
+	}
+
+	#initiative-donate {
+		p {
+			white-space: pre-wrap;
 		}
 	}
 
@@ -1165,50 +1226,6 @@ button.inherited {
 
 #donate-page section {
 	font-size: 1.6rem;
-
-	form {
-		margin-top: 2rem;
-
-		h2 {
-			font-weight: bold;
-			margin-bottom: 1rem;
-		}
-
-		.amount-input {
-			&:before {
-				vertical-align: top;
-				line-height: $button-height;
-				margin-right: -2.5rem;
-				text-align: center;
-				display: inline-block;
-				color: #ccc;
-				width: 2.5rem;
-				content: "€";
-			}
-
-			input {
-				padding-left: 2.5rem;
-				width: 8rem;
-				display: inline-block;
-				background-color: transparent;
-			}
-		}
-
-		button {
-			margin-left: 1rem;
-		}
-
-		.tos-checkbox {
-			margin-top: 1rem;
-			font-size: 1.4rem;
-			line-height: 2.1rem;
-		}
-
-		p {
-			margin-top: 0.5rem;
-			font-size: 1.4rem;
-		}
-	}
 }
 
 #user-page {
