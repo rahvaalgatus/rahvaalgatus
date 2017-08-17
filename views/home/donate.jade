@@ -1,10 +1,14 @@
 extends ../layout
+include ./_donate_form
 
 block options
 	- var title = t("SUPPORT_US_TITLE")
 	- var page = "donate"
 
 block body
-	section#about.primary-section.text-section: center
-		h1= t("SUPPORT_US_TITLE")
-		p= t("SUPPORT_US_CONTENT")
+	section.primary-section
+		center.text-section!= t("SUPPORT_US_CONTENT")
+		center: +donate-form(reference, amount)
+
+	section.secondary-section.text-section: center
+		p!= t("SUPPORTERS")

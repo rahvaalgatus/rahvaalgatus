@@ -1,4 +1,7 @@
 {
+	"maksekeskusUrl": "https://payment-test.maksekeskus.ee/pay/1/link.html",
+	"maksekeskusId": "45626d92-f1b2-45a5-832b-39588b192dae",
+
 	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
 	"votesRequired": 2,
 	"minDeadlineDays": 0,

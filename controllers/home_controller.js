@@ -2,9 +2,9 @@ var _ = require("lodash")
 var Router = require("express").Router
 var Initiative = require("root/lib/initiative")
 var DateFns = require("date-fns")
+var next = require("co-next")
 var api = require("root/lib/api")
 var readInitiativesWithStatus = api.readInitiativesWithStatus
-var next = require("co-next")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var VOTES_REQUIRED = require("root/config").votesRequired
 var EMPTY_ARR = Array.prototype
@@ -38,8 +38,17 @@ exports.router.get("/", next(function*(req, res) {
 	})
 }))
 
+exports.router.get("/donate", function(req, res) {
+	var transaction = "json" in req.query ? parseJson(req.query.json) : null
+
+	res.render("home/donate", {
+		amount: transaction && Number(transaction.amount),
+		reference: transaction && transaction.reference
+	})
+})
+
 exports.router.get("/about", (_req, res) => res.render("home/about"))
-exports.router.get("/donate", (_req, res) => res.render("home/donate"))
+exports.router.get("/donated", (_req, res) => res.render("home/donated"))
 exports.router.get("/effective-ideas", (_req, res) => res.render("home/ideas"))
 
 exports.router.get("/effective-ideas/govermental", function(_req, res) {
@@ -101,4 +110,8 @@ function serializeForVision(t, initiative) {
 		progress: progress,
 		progressText: progressText
 	}
+}
+
+function parseJson(json) {
+	try { return JSON.parse(json) } catch (ex) { return null }
 }

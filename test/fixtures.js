@@ -1,4 +1,4 @@
-var Crypto = require("crypto")
+var pseudoHex = require("root/lib/crypto").pseudoHex
 var fetchDefaults = require("fetch-defaults")
 var HEADERS = {"Content-Type": "application/json"}
 
@@ -7,10 +7,10 @@ exports.user = function() {
 		// https://github.com/mochajs/mocha/issues/2014:
 		delete this.request
 
-		var csrfToken = rand(16)
+		var csrfToken = pseudoHex(16)
 
 		var cookie = [
-			"citizenos_token=" + rand(16),
+			"citizenos_token=" + pseudoHex(16),
 			"csrf_token=" + csrfToken
 		].join("; ")
 
@@ -26,5 +26,3 @@ function respond(json, _req, res) {
 	res.writeHead(200, HEADERS)
 	res.end(JSON.stringify(json))
 }
-
-function rand(length) { return Crypto.randomBytes(length).toString("hex") }

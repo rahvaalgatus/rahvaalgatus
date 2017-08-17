@@ -38,7 +38,7 @@
 		"mitm": ">= 1 < 2",
 		"livereload": ">= 0.6 < 0.7",
 
-		"node-sass": ">= 3.8 < 4"
+		"node-sass": "~4"
 	},
 
 	"engines" : {
