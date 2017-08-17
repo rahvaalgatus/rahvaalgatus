@@ -462,5 +462,5 @@ function isVisionArc(el) {
 function translate(x, y) { return "translate(" + x + ", " + y + ")" }
 function depythagoras(c, a) { return Math.sqrt(c * c - a * a) }
 function desqpythagoras(c) { return Math.sqrt(c * c / 2) }
-function indexOfParent(el) { return indexOf(el.parentNode.children, el) }
+function indexOfParent(el) { return indexOf(el.parentNode.childNodes, el) }
 function getWeight(v) { return v.weight }
