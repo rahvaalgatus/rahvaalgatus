@@ -20,6 +20,15 @@ exports.user = function() {
 	})
 }
 
+exports.csrf = function() {
+	beforeEach(function() {
+		var csrfToken = pseudoHex(16)
+		var cookie = "csrf_token=" + csrfToken
+		this.request = fetchDefaults(this.request, {headers: {Cookie: cookie}})
+		this.csrfToken = csrfToken
+	})
+}
+
 exports.respond = respond
 
 function respond(json, _req, res) {

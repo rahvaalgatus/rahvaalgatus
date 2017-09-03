@@ -1,22 +1,17 @@
+include /_mixins
+
 mixin donate-form(reference, amount)
 	-
-		var Config = require("root/config")
 		var pseudoInt = require("root/lib/crypto").pseudoInt
 		if (amount == null) amount = 3 + pseudoInt(7)
-		if (reference == null) reference = "donation-" + amount
 
-	form.donate-form(method="GET", action=Config.maksekeskusUrl)
-		input(type="hidden", name="shopId", value=Config.maksekeskusId)
-		input(type="hidden", name="paymentId", value=reference)
+	+form.donate-form(method="POST", action="/donation")
+		input(type="hidden", name="default", value=amount)
 
 		h2= t("SUPPORT_LABEL")
 
 		label.amount-input
-			input.form-input(
-				type="numeric",
-				name="amount",
-				value=amount,
-				required)
+			input.form-input(type="numeric", name="amount", value=amount, required)
 
 		button.form-submit.secondary-button= t("SUPPORT_BUTTON")
 
