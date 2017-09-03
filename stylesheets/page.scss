@@ -333,7 +333,6 @@ button.inherited {
 .form-input,
 .form-textarea,
 .form-submit {
-	line-height: 1.5;
 	font-size: 14px;
 	font-family: $museo-sans;
 	font-weight: 500;
@@ -564,12 +563,14 @@ button.inherited {
 		&:before {
 			vertical-align: top;
 			line-height: $button-height;
-			margin-right: -2.5rem;
-			text-align: center;
+			margin-right: -8rem;
 			display: inline-block;
+			text-indent: 1rem;
 			color: #ccc;
-			width: 2.5rem;
+			width: 8rem;
 			content: "€";
+			background: white;
+			border-radius: $button-radius;
 		}
 
 		input {
@@ -578,10 +579,6 @@ button.inherited {
 			display: inline-block;
 			background-color: transparent;
 		}
-	}
-
-	button {
-		margin-left: 1rem;
 	}
 
 	.tos-checkbox {
@@ -940,10 +937,6 @@ button.inherited {
 
 		h1 ~ * + * {
 			margin-top: 2rem;
-		}
-
-		.form-input {
-			color: white;
 		}
 	}
 

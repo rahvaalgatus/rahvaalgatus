@@ -31,7 +31,8 @@ describe("DonationsController", function() {
 				form: {
 					_csrf_token: this.csrfToken,
 					default: 5,
-					amount: 10
+					amount: 10,
+					person: "11412090004"
 				}
 			})
 
@@ -40,7 +41,7 @@ describe("DonationsController", function() {
 			url.host.must.equal("payment.maksekeskus.ee")
 			url.query.amount.must.equal("10")
 			url.query.shopId.must.equal(Config.maksekeskusId)
-			url.query.paymentId.must.equal("default=5")
+			url.query.paymentId.must.equal("default=5 person=11412090004")
 		})
 	})
 

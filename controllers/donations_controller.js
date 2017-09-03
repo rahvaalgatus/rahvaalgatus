@@ -14,11 +14,13 @@ exports.router.get("/new", function(req, res) {
 })
 
 exports.router.post("/", function(req, res) {
-	var id = "default=" + Number(req.body.default)
+	var person = (req.body.person || "").trim()
+	var def = Number(req.body.default)
+
 	var url = Config.maksekeskusUrl
 	url += "?shopId=" + encode(Config.maksekeskusId)
 	url += "&amount=" + Number(req.body.amount)
-	url += "&paymentId=" + encode(id)
+	url += "&paymentId=" + encode(`default=${def} person=${encode(person)}`)
 	res.redirect(url)
 })
 
