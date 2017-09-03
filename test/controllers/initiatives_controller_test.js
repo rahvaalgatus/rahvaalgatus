@@ -119,8 +119,7 @@ describe("InitiativesController", function() {
 	
 				var res = yield this.request("/initiatives")
 				res.statusCode.must.equal(200)
-				var body = res.read().toString()
-				body.must.include(UUID)
+				res.body.must.include(UUID)
 			})
 
 			it("must show closed discussions", function*() {
@@ -136,8 +135,7 @@ describe("InitiativesController", function() {
 	
 				var res = yield this.request("/initiatives")
 				res.statusCode.must.equal(200)
-				var body = res.read().toString()
-				body.must.include(UUID)
+				res.body.must.include(UUID)
 			})
 
 			it("must not show closed discussions of other sites", function*() {
@@ -153,8 +151,7 @@ describe("InitiativesController", function() {
 	
 				var res = yield this.request("/initiatives")
 				res.statusCode.must.equal(200)
-				var body = res.read().toString()
-				body.must.not.include(UUID)
+				res.body.must.not.include(UUID)
 			})
 		})
 	})
@@ -259,8 +256,7 @@ describe("InitiativesController", function() {
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
-				var body = res.read().toString()
-				body.must.include("MSG_ERROR_HWCRYPTO_NO_CERTIFICATES")
+				res.body.must.include("MSG_ERROR_HWCRYPTO_NO_CERTIFICATES")
 			})
 
 			it("must respond with 404 when API responds 403 Forbidden", function*() {
