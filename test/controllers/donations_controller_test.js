@@ -1,7 +1,7 @@
 var Url = require("url")
 var Config = require("root/config")
 
-describe("DonationController", function() {
+describe("DonationsController", function() {
 	require("root/test/web")()
 	require("root/test/mitm")()
 
@@ -13,19 +13,19 @@ describe("DonationController", function() {
 		})
 	})
 
-	describe("GET /donation/new", function() {
+	describe("GET /donations/new", function() {
 		it("must respond with 200 OK", function*() {
-			var res = yield this.request("/donation/new")
+			var res = yield this.request("/donations/new")
 			res.statusCode.must.equal(200)
 			res.body.must.include("Maksekeskus")
 		})
 	})
 
-	describe("POST /donation", function() {
+	describe("POST /donations", function() {
 		require("root/test/fixtures").csrf()
 
 		it("must redirect", function*() {
-			var res = yield this.request("/donation", {
+			var res = yield this.request("/donations", {
 				method: "POST",
 
 				form: {

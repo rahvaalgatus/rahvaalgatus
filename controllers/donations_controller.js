@@ -7,7 +7,7 @@ exports.router = Router({mergeParams: true})
 exports.router.get("/new", function(req, res) {
 	var transaction = "json" in req.query ? parseJson(req.query.json) : null
 
-	res.render("donation/create", {
+	res.render("donations/create", {
 		amount: transaction && Number(transaction.amount),
 		reference: transaction && transaction.reference
 	})
@@ -22,7 +22,7 @@ exports.router.post("/", function(req, res) {
 	res.redirect(url)
 })
 
-exports.router.get("/", (_req, res) => res.render("donation/created"))
+exports.router.get("/created", (_req, res) => res.render("donations/created"))
 
 function parseJson(json) {
 	try { return JSON.parse(json) } catch (ex) { return null }

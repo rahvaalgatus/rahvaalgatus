@@ -30,7 +30,7 @@ exports.router.get("/", next(function*(_req, res) {
 }))
 
 exports.router.get("/about", (_req, res) => res.render("home/about"))
-exports.router.get("/donate", alias.bind(null, "/donation/new"))
-exports.router.get("/donated", alias.bind(null, "/donation"))
+exports.router.get("/donate", alias.bind(null, "/donations/new"))
+exports.router.get("/donated", alias.bind(null, "/donations/created"))
 
 function alias(url, req, _res, next) { req.url = url; next() }

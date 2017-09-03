@@ -5,7 +5,7 @@ mixin donate-form(reference, amount)
 		var pseudoInt = require("root/lib/crypto").pseudoInt
 		if (amount == null) amount = 3 + pseudoInt(7)
 
-	+form.donate-form(method="POST", action="/donation")
+	+form.donate-form(method="POST", action="/donations")
 		input(type="hidden", name="default", value=amount)
 
 		h2= t("SUPPORT_LABEL")
