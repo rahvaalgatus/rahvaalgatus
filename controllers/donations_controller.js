@@ -8,8 +8,7 @@ exports.router.get("/new", function(req, res) {
 	var transaction = "json" in req.query ? parseJson(req.query.json) : null
 
 	res.render("donations/create", {
-		amount: transaction && Number(transaction.amount),
-		reference: transaction && transaction.reference
+		amount: transaction && Number(transaction.amount)
 	})
 })
 

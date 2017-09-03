@@ -3,15 +3,19 @@ include /_mixins
 mixin donate-form(reference, amount)
 	-
 		var pseudoInt = require("root/lib/crypto").pseudoInt
-		if (amount == null) amount = 3 + pseudoInt(7)
+		var def = amount == null ? 3 + pseudoInt(7) : 0
 
 	+form.donate-form(method="POST", action="/donations")
-		input(type="hidden", name="default", value=amount)
+		input(type="hidden", name="default", value=def)
 
 		label.form-label= t("SUPPORT_LABEL")
 		br
 		label.amount-input
-			input.form-input(type="numeric", name="amount", value=amount, required)
+			input.form-input(
+				type="numeric",
+				name="amount",
+				value=amount || def,
+				required)
 
 		br
 		label.form-label Isikukood (kui soovid tulumaksu tagasi)
