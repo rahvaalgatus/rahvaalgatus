@@ -69,6 +69,7 @@ O.each({
 
 O.each({
 	"/": require("root/controllers/home_controller").router,
+	"/donations": require("root/controllers/donations_controller").router,
 	"/initiatives": require("root/controllers/initiatives_controller").router,
 	"/session": require("root/controllers/session_controller").router,
 	"/user": require("root/controllers/user_controller").router,
@@ -95,7 +96,7 @@ app.use(function(err, req, res, next) {
 		return
 	}
 
-	if (ENV === "development") return void next(err)
+	if (ENV === "development" || ENV === "test") return void next(err)
 
 	res.statusCode = 500
 	res.render(ERR_TEMPLATES[500], {error: {message: req.t("MSG_ERROR_50000")}})

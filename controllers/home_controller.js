@@ -38,17 +38,9 @@ exports.router.get("/", next(function*(req, res) {
 	})
 }))
 
-exports.router.get("/donate", function(req, res) {
-	var transaction = "json" in req.query ? parseJson(req.query.json) : null
-
-	res.render("home/donate", {
-		amount: transaction && Number(transaction.amount),
-		reference: transaction && transaction.reference
-	})
-})
-
 exports.router.get("/about", (_req, res) => res.render("home/about"))
-exports.router.get("/donated", (_req, res) => res.render("home/donated"))
+exports.router.get("/donate", alias.bind(null, "/donations/new"))
+exports.router.get("/donated", alias.bind(null, "/donations/created"))
 exports.router.get("/effective-ideas", (_req, res) => res.render("home/ideas"))
 
 exports.router.get("/effective-ideas/govermental", function(_req, res) {
@@ -112,6 +104,4 @@ function serializeForVision(t, initiative) {
 	}
 }
 
-function parseJson(json) {
-	try { return JSON.parse(json) } catch (ex) { return null }
-}
+function alias(url, req, _res, next) { req.url = url; next() }

@@ -44,8 +44,7 @@ ifneq ($(filter test spec autotest autospec, $(MAKECMDGOALS)),)
 	ENV = test
 endif
 
-love:
-	@echo "Feel like makin' love."
+love: compile
 
 compile: javascripts stylesheets
 
