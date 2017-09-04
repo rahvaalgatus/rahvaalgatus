@@ -34,30 +34,6 @@ center {
 .left { float: left; }
 .right { float: right; }
 
-.secondary-section,
-.primary-section,
-.text-section {
-	padding-top: 4rem;
-	padding-bottom: 4rem;
-
-	@include tablet {
-		padding-top: 2.5rem;
-		padding-bottom: 2.5rem;
-	}
-
-	&:after { display: block; content: ""; clear: both; }
-}
-
-.secondary-section {
-	background-color: $secondary-background;
-
-	& + .secondary-section { padding-top: 0; }
-}
-
-.primary-section {
-	background-color: white;
-}
-
 .text {
 	line-height: 1.5;
 
@@ -150,25 +126,6 @@ center {
 
 .primary-section {
 	background-color: white;
-}
-
-.text-section {
-	@extend .text;
-	font-size: 1.6rem;
-
-	p {
-		white-space: pre-wrap;
-	}
-
-	img {
-		max-width: 100%;
-	}
-
-	.form-input,
-	.form-textarea {
-		width: 100%;
-		max-width: 64rem;
-	}
 }
 
 .text-section {
