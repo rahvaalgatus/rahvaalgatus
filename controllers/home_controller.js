@@ -48,6 +48,7 @@ exports.router.get("/effective-ideas/govermental", function(_req, res) {
 })
 
 function serializeForVision(t, initiative) {
+	var sigs
 	var progress
 	var progressText = ""
 	var createdAt = new Date(initiative.createdAt)
@@ -70,7 +71,7 @@ function serializeForVision(t, initiative) {
 			break
 
 		case "voting":
-			var sigs = Initiative.countSignatures("Yes", initiative)
+			sigs = Initiative.countSignatures("Yes", initiative)
 
 			if (Initiative.isSuccessful(initiative)) {
 				progress = "completed"
@@ -87,7 +88,8 @@ function serializeForVision(t, initiative) {
 			break
 
 		case "followUp":
-			progress = Initiative.countSignatures("Yes", initiative)
+			sigs = Initiative.countSignatures("Yes", initiative)
+			progress = 1
 			progressText = t("N_SIGNATURES", {votes: sigs})
 			break
 	}
