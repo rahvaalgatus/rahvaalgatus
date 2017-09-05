@@ -367,7 +367,7 @@ function InitiativeProgress(props) {
 	var className = disabled ? "initiative-progress disabled" : {
 		inProgress: "initiative-progress discussable",
 		voting: "initiative-progress votable",
-		followUp: "initiative-progress processable"
+		followUp: "initiative-progress votable completed"
 	}[initiative.status]
 
 	switch (initiative.status) {
