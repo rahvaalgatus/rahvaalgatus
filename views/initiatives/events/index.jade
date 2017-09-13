@@ -15,7 +15,7 @@ block prepend tab
 			ol.events
 				for event in events
 					li.event
-						time(datetime=event.createdAt)
+						time(datetime=event.createdAt.toJSON())
 							= I18n.formatDate("numeric", event.createdAt)
 
 						h2= event.subject
