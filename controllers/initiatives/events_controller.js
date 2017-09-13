@@ -1,4 +1,3 @@
-var _ = require("lodash")
 var O = require("oolong")
 var Router = require("express").Router
 var isOk = require("root/lib/http").isOk
@@ -7,6 +6,8 @@ var catch401 = require("root/lib/fetch").catch.bind(null, 401)
 var catch403 = require("root/lib/fetch").catch.bind(null, 403)
 var translateCitizenError = require("root/lib/api").translateError
 var next = require("co-next")
+var ISO8601_DATE = /^(\d\d\d\d)-(\d\d)-(\d\d)\s+/
+var LOCAL_DATE = /^(\d\d)\.(\d\d)\.(\d\d\d\d)\s+/
 var EMPTY = Object.prototype
 var EMPTY_EVENT = {subject: "", text: ""}
 
@@ -18,9 +19,8 @@ exports.router.get("/", next(function*(req, res) {
 	var path = `/api/topics/${initiative.id}/events`
 	if (req.user) path = "/api/users/self" + path.slice(4)
 	var events = yield req.api(path)
-	events = events.body.data.rows
-	events = _.sortBy(events, (event) => new Date(event.createdAt))
-	events = events.reverse()
+	events = events.body.data.rows.map(parseCitizenEvent)
+	events = events.sort((a, b) => +b.createdAt - +a.createdAt)
 
 	res.render("initiatives/events/index", {events: events})
 }))
@@ -54,3 +54,25 @@ exports.router.post("/", next(function*(req, res) {
 		attrs: req.body
 	})
 }))
+
+function parseCitizenEvent(obj) {
+	// Parse dates from the title until CitizenOS supports setting the creation
+	// date when necessary.
+	var subject = parsePrefixDate(obj.subject)
+
+	return {
+		subject: subject[0],
+		text: obj.text,
+		createdAt: subject[1] || new Date(obj.createdAt)
+	}
+}
+
+function parsePrefixDate(str) {
+	var match, date = (
+		(match = ISO8601_DATE.exec(str)) ? new Date(match[1], match[2], match[3]) :
+		(match = LOCAL_DATE.exec(str)) ? new Date(match[3], match[2], match[1]) :
+		null
+	)
+		
+	return [match ? str.slice(match[0].length) : str, date]
+}
