@@ -1,5 +1,4 @@
 NODE = node
-ENV = development
 FILES = $(patsubst %, public/assets/%.js, html5 inputs hwcrypto)
 BROWSERIFY = ./node_modules/.bin/browserify
 WATCHIFY = ./node_modules/.bin/watchify --verbose
@@ -28,17 +27,17 @@ public/assets:
 	mkdir -p "$@"
 
 public/assets/html5.js:
-	@echo "Compiling $@ for $(ENV)…"
+	@echo "Compiling $@…"
 	@$(BROWSERIFY) $(BROWSERIFY_OPTS) --entry ./$(@F:%.js=%) --outfile "$@"
 
 public/assets/inputs.js:
-	@echo "Compiling $@ for $(ENV)…"
+	@echo "Compiling $@…"
 	@$(BROWSERIFY) $(BROWSERIFY_OPTS) \
 		--require pikaday \
 		--outfile "$@"
 
 public/assets/hwcrypto.js:
-	@echo "Compiling $@ for $(ENV)…"
+	@echo "Compiling $@…"
 	@$(BROWSERIFY) $(BROWSERIFY_OPTS) \
 		--require ./$(@F:%.js=%):@rahvaalgatus/$(@F:%.js=%) \
 		--outfile "$@"
