@@ -18,6 +18,6 @@ block body
 				allowfullscreen)
 
 		p!= t("HOME_WELCOME")
-		a#create-link(href="/initiatives/new")= t("BTN_NEW_TOPIC")
+		a.button.secondary-button(href="/initiatives/new")= t("BTN_NEW_TOPIC")
 
 	include ../initiatives/_initiatives

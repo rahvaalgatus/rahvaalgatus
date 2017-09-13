@@ -333,7 +333,6 @@ button.inherited {
 .form-input,
 .form-textarea,
 .form-submit {
-	line-height: 1.5;
 	font-size: 14px;
 	font-family: $museo-sans;
 	font-weight: 500;
@@ -564,12 +563,14 @@ button.inherited {
 		&:before {
 			vertical-align: top;
 			line-height: $button-height;
-			margin-right: -2.5rem;
-			text-align: center;
+			margin-right: -8rem;
 			display: inline-block;
+			text-indent: 1rem;
 			color: #ccc;
-			width: 2.5rem;
+			width: 8rem;
 			content: "€";
+			background: white;
+			border-radius: $button-radius;
 		}
 
 		input {
@@ -578,10 +579,6 @@ button.inherited {
 			display: inline-block;
 			background-color: transparent;
 		}
-	}
-
-	button {
-		margin-left: 1rem;
 	}
 
 	.tos-checkbox {
@@ -704,16 +701,14 @@ button.inherited {
 	background-color: $secondary-background;
 
 	#welcome {
-		background-image: url(/images/hero-bg.png);
-		background-repeat: no-repeat;
-		background-position: right bottom;
-		background-position: calc(50% + 450px) bottom;
-
 		h1 {
-			margin-bottom: 2rem;
+			margin-top: 1rem;
+			margin-bottom: 3rem;
 		}
 
 		p {
+			font-size: 1.8rem;
+			line-height: 1.7;
 			margin-bottom: 2rem;
 			max-width: 50%;
 		}
@@ -721,29 +716,22 @@ button.inherited {
 		.video {
 			float: right;
 			max-width: 50%;
-			margin-left: 2rem;
+			margin-left: 4rem;
 
 			iframe {
 				max-width: 100%;
 				border-radius: 0.5rem;
 			}
 		}
-	}
 
-	#create-link {
-		line-height: 30px;
-
-		font-family: $museo-sans;
-		font-weight: bold;
-		font-size: 16px;
-		color: $title-text;
-		border-bottom: 1px solid $title-text;
-		text-decoration: none;
+		.button {
+			font-size: 1.6rem;
+			line-height: 4rem;
+			height: 4rem;
+		}
 	}
 
 	@include tablet {
-		#welcome { background-image: none; }
-
 		#welcome h1,
 		#welcome p { max-width: none; }
 
@@ -958,10 +946,6 @@ button.inherited {
 
 		h1 ~ * + * {
 			margin-top: 2rem;
-		}
-
-		.form-input {
-			color: white;
 		}
 	}
 
