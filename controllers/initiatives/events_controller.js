@@ -22,7 +22,7 @@ exports.router.get("/", next(function*(req, res) {
 	events = _.sortBy(events, (event) => new Date(event.createdAt))
 	events = events.reverse()
 
-	res.render("initiatives/events", {events: events})
+	res.render("initiatives/events/index", {events: events})
 }))
 
 exports.router.get("/new", function(req, res) {
