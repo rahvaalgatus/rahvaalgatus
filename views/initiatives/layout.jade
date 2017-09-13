@@ -80,12 +80,12 @@ block body
 			a.tab(
 				href="/initiatives/#{initiative.id}/discussion",
 				class=selected(subpage, "discussion"))
-				= "Algatus" || t("HEADING_TAB_ORIGINAL")
+				= t("HEADING_TAB_ORIGINAL")
 		else
 			a.tab(
 				href="/initiatives/#{initiative.id}/vote",
 				class=selected(subpage, "vote"))
-				= "Algatus" || t("HEADING_TAB_VOTE")
+				= t("HEADING_TAB_VOTE")
 
 		if unclosedStatus === "followUp"
 			a.tab(
