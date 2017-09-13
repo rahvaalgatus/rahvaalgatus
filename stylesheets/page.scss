@@ -785,12 +785,19 @@ button.inherited {
 			color: $title-text;
 			font-size: 4.2rem;
 			line-height: 1.2;
+			word-wrap: break-word;
 		}
 
 		time,
 		.author {
 			font-size: 1.6rem;
 			color: #8a8a8a;
+		}
+
+		@include mobile {
+			padding-top: 2rem;
+
+			h1 { font-size: 3.2rem; }
 		}
 	}
 
@@ -840,6 +847,8 @@ button.inherited {
 		}
 
 		@include tablet {
+			padding-top: 2rem;
+
 			menu {
 				float: none;
 				display: block;
@@ -1183,6 +1192,8 @@ button.inherited {
 	.signin-to-act { margin-left: 1rem; }
 
 	#initiative-events {
+		padding-bottom: 0;
+
 		.events {
 			max-width: 64rem;
 			padding-top: 1.5rem;
@@ -1245,13 +1256,16 @@ button.inherited {
 			}
 
 			&:last-child {
-				padding-bottom: 0;
 				border-color: #75c682;
 
 				h2 {
 					color: #555;
 				}
 			}
+		}
+
+		@include tablet {
+			.events { padding-left: 1rem; }
 		}
 	}
 
