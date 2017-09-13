@@ -702,10 +702,13 @@ button.inherited {
 
 	#welcome {
 		h1 {
-			margin-bottom: 2rem;
+			margin-top: 1rem;
+			margin-bottom: 3rem;
 		}
 
 		p {
+			font-size: 1.8rem;
+			line-height: 1.7;
 			margin-bottom: 2rem;
 			max-width: 50%;
 		}
@@ -713,29 +716,22 @@ button.inherited {
 		.video {
 			float: right;
 			max-width: 50%;
-			margin-left: 2rem;
+			margin-left: 4rem;
 
 			iframe {
 				max-width: 100%;
 				border-radius: 0.5rem;
 			}
 		}
-	}
 
-	#create-link {
-		line-height: 30px;
-
-		font-family: $museo-sans;
-		font-weight: bold;
-		font-size: 16px;
-		color: $title-text;
-		border-bottom: 1px solid $title-text;
-		text-decoration: none;
+		.button {
+			font-size: 1.6rem;
+			line-height: 4rem;
+			height: 4rem;
+		}
 	}
 
 	@include tablet {
-		#welcome { background-image: none; }
-
 		#welcome h1,
 		#welcome p { max-width: none; }
 
