@@ -776,9 +776,34 @@ button.inherited {
 	$comment-padding: 3rem;
 	background-color: $secondary-background;
 
+	#initiative-header {
+		background-color: #f6f6f6;
+		padding-top: 4rem;
+		font-family: $tisa-pro;
+
+		h1 {
+			color: $title-text;
+			font-size: 4.2rem;
+			line-height: 1.2;
+			word-wrap: break-word;
+		}
+
+		time,
+		.author {
+			font-size: 1.6rem;
+			color: #8a8a8a;
+		}
+
+		@include mobile {
+			padding-top: 2rem;
+
+			h1 { font-size: 3.2rem; }
+		}
+	}
+
 	#initiative-tabs {
 		padding-top: 4rem;
-		background: $secondary-background;
+		background-color: #f6f6f6;
 		border-bottom: 1px solid #cecece;
 
 		.tab {
@@ -790,9 +815,9 @@ button.inherited {
 			min-width: 11rem;
 			font-size: 14px;
 			font-family: $museo-sans;
+			font-weight: 500;
 			color: #4A555D;
 
-			background-color: $secondary-background;
 			border: 1px solid #cecece;
 			text-align: center;
 			margin-bottom: -1px;
@@ -822,6 +847,8 @@ button.inherited {
 		}
 
 		@include tablet {
+			padding-top: 2rem;
+
 			menu {
 				float: none;
 				display: block;
@@ -853,9 +880,9 @@ button.inherited {
 		}
 
 		h1 {
-			font-size: 4.4rem;
+			font-size: 4.2rem;
 			color: $title-text;
-			font-family: $museo-sans;
+			font-family: $tisa-pro;
 			line-height: 1.2;
 
 			margin-bottom: 1rem;
@@ -1165,33 +1192,80 @@ button.inherited {
 	.signin-to-act { margin-left: 1rem; }
 
 	#initiative-events {
+		padding-bottom: 0;
+
 		.events {
-			max-width: 72rem;
+			max-width: 64rem;
+			padding-top: 1.5rem;
 		}
 
 		.event {
+			position: relative;
+			border-left: 0.3rem solid #385c90;
+			padding-left: 3rem;
+			padding-bottom: 5rem;
+
+			&:before {
+				display: block;
+				background: url(/images/icon-check-blue.png) center 0.5rem no-repeat;
+				background-color: white;
+				width: 3rem;
+				height: 3.2rem;
+				content: "";
+
+				position: absolute;
+				left: -0.15rem - 1.5rem;
+				top: 0;
+			}
+
+			&:last-child:before {
+				background: url(/images/icon-check-green-ball.png) center 0.5rem no-repeat;
+				background-color: white;
+				height: 3.5rem;
+			}
+
 			h2 {
 				font-family: $museo-sans;
-				font-size: 1.8rem;
-				display: inline;
+				font-size: 2rem;
+				font-weight: 500;
 				color: $title-text;
+				margin-top: 0.2rem;
+				margin-bottom: 1rem;
 			}
 
 			time {
-				color: $secondary-light-text;
-			}
+				display: block;
+				font-size: 1.6rem;
+				line-height: 2rem;
 
-			time:before { content: " — " }
+				$offset: 1.5rem;
+				position: relative;
+				top: -$offset;
+				margin-bottom: -$offset;
+
+				color: $secondary-light-text;
+				font-family: $tisa-pro;
+			}
 
 			p {
-				margin-top: 0.5rem;
 				line-height: 1.5;
 				white-space: pre-wrap;
+				color: #636363;
+				font-size: 1.6rem;
+				font-family: $tisa-pro;
 			}
 
-			& + .event {
-				margin-top: 2rem;
+			&:last-child {
+				border-color: #75c682;
+
+				h2 {
+					color: #555;
+				}
 			}
+		}
+
+		@include tablet {
+			.events { padding-left: 1rem; }
 		}
 	}
 

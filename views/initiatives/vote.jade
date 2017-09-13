@@ -63,11 +63,6 @@ block prepend tab
 					a.badge(href=partner.url, title=partner.name)
 						img.badge(src=partner.badge, alt=partner.name)
 
-				span.author
-					= t("CREATED_BY")
-					| &#32;
-					= initiative.creator.name
-
 			!= text
 
 		if Initiative.isVotable(now, initiative)
