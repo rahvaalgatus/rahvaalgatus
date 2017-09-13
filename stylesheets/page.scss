@@ -701,11 +701,6 @@ button.inherited {
 	background-color: $secondary-background;
 
 	#welcome {
-		background-image: url(/images/hero-bg.png);
-		background-repeat: no-repeat;
-		background-position: right bottom;
-		background-position: calc(50% + 450px) bottom;
-
 		h1 {
 			margin-bottom: 2rem;
 		}
