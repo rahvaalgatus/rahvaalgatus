@@ -3,7 +3,7 @@ var fetchDefaults = require("fetch-defaults")
 var URL = process.env.URL || "https://rahvaalgatus.ee"
 var CANONICAL_URL = "https://rahvaalgatus.ee"
 
-if (process.env.TEST.match(/\bserver\b/))
+if (/\bserver\b/.test(process.env.TEST_TAGS))
 describe(URL, function() {
 	before(function() { this.request = fetchDefaults(request, URL) })
 
@@ -62,12 +62,12 @@ describe(URL, function() {
 	})
 })
 
-if (process.env.TEST.match(/\bserver\b/))
+if (/\bserver\b/.test(process.env.TEST_TAGS))
 xdescribe("http://rahvaalgatus.ee", function() {
 	mustRedirectToCanonical(this.title)
 })
 
-if (process.env.TEST.match(/\bserver\b/))
+if (/\bserver\b/.test(process.env.TEST_TAGS))
 xdescribe("http://www.rahvaalgatus.ee", function() {
 	mustRedirectToCanonical(this.title)
 })
