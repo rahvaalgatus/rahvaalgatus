@@ -34,6 +34,12 @@
 			"name": "Uus Eakus",
 			"badge": "/images/badges-uuseakus.png",
 			"url": "https://uuseakus.rahvaalgatus.ee"
+		},
+
+		"ca492880-8092-45fe-6978-219c29a85381": {
+			"name": "Arvamusfestival",
+			"badge": "/images/badges-arvamusfestival.png",
+			"url": "https://rahvaalgatus.ee"
 		}
 	}
 }
