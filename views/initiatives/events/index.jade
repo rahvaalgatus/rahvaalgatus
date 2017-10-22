@@ -11,6 +11,25 @@ block prepend tab
 	section#initiative-events.primary-section: center
 		include /_flash.jade
 
+		aside#oss
+			h2 Kas Sulle tundub ka, et menetlusvaade võiks olla parem?
+			p
+				| Unistame visualiseeritud andmevoodest!
+				br
+				| Märksõnad: avaandmed, andmeajakirjandus, argumenteeritud arutelu,
+				| osalejate panus, algatuse mõju.
+
+			p.links
+				a.secondary-button(href="http://sidh2017.ut.ee")
+					| Tule häkatonile!
+				a.secondary-button(href="https://github.com/rahvaalgatus/rahvaalgatus")
+					| Häki kodus
+				br
+				a.white-button(href="https://rahvaalgatus.ee/donate")
+					| Anneta
+				a.white-button(href="mailto:abi@rahvaalgatus.ee")
+					| Küsi veel
+
 		if events.length
 			ol.events
 				for event in events
@@ -21,7 +40,7 @@ block prepend tab
 						h2= event.subject
 						p.text!= linkify(event.text)
 		else
-			p= t("NO_EVENTS")
+			p.text.empty= t("NO_EVENTS")
 
 	section.secondary-section: center
 		+initiative-subscribe(initiative)

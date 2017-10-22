@@ -55,6 +55,7 @@ center {
 	h2,
 	h3 {
 		font-family: $museo-sans;
+		line-height: 1.2;
 	}
 
 	h2 {
@@ -1194,6 +1195,11 @@ button.inherited {
 	#initiative-events {
 		padding-bottom: 0;
 
+		.empty {
+			margin-bottom: 4rem;
+			font-size: 1.6rem;
+		}
+
 		.events {
 			max-width: 64rem;
 			padding-top: 1.5rem;
@@ -1261,6 +1267,48 @@ button.inherited {
 				h2 {
 					color: #555;
 				}
+			}
+		}
+
+		#oss {
+			// Max width for the events is 64rem. With some for margin, that
+			// leaves ~30rem for the sidebar.
+			max-width: 30rem;
+			float: right;
+			margin-left: 3rem;
+			margin-bottom: 4rem;
+			border: 1px dashed #ccc;
+			padding: 2.5rem 1.5rem 1rem;
+			line-height: 1.5;
+			text-align: center;
+			font-size: 1.6rem;
+			border-radius: $button-radius;
+
+			h2 {
+				font-family: $museo-sans;
+				line-height: 1.2;
+				font-size: 2rem;
+				color: $title-text;
+				font-weight: 500;
+				margin-bottom: 1rem;
+			}
+
+			p + p {
+				margin-top: 2rem;
+			}
+
+			a {
+				margin-right: 0.5rem;
+				margin-bottom: 0.5rem;
+				padding: 0 1rem;
+				font-size: 1.2rem;
+				height: 3rem;
+				line-height: 3rem;
+			}
+
+			@include mobile {
+				float: none;
+				margin-left: 0;
 			}
 		}
 
