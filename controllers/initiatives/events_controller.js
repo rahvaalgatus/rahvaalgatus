@@ -68,11 +68,11 @@ function parseCitizenEvent(obj) {
 }
 
 function parsePrefixDate(str) {
-	var match, date = (
-		(match = ISO8601_DATE.exec(str)) ? new Date(match[1], match[2], match[3]) :
-		(match = LOCAL_DATE.exec(str)) ? new Date(match[3], match[2], match[1]) :
+	var m, date = (
+		(m = ISO8601_DATE.exec(str)) ? new Date(m[1], m[2] - 1, m[3]) :
+		(m = LOCAL_DATE.exec(str)) ? new Date(m[3], m[2] - 1, m[1]) :
 		null
 	)
 		
-	return [match ? str.slice(match[0].length) : str, date]
+	return [m ? str.slice(m[0].length) : str, date]
 }
