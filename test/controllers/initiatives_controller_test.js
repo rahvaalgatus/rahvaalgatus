@@ -68,7 +68,11 @@ var INITIATIVE = {
 	description: "<body><h1>My thoughts.</h1></body>",
 	creator: {name: "John"},
 	permission: {level: "read"},
-	vote: {options: {rows: [{value: "Yes", voteCount: 0}]}}
+
+	vote: {
+		id: "396b0e5b-cca7-4255-9238-19b464e60b65",
+		options: {rows: [{value: "Yes", voteCount: 0}]}
+	}
 }
 
 var PROCESSED_INITIATIVE = {
@@ -403,6 +407,85 @@ describe("InitiativesController", function() {
 				updated.must.equal(1)
 				res.statusCode.must.equal(303)
 				res.headers.location.must.equal(`/initiatives/${UUID}`)
+			})
+		})
+	})
+
+	describe("PUT /:id/signature", function() {
+		describe("when not logged in", function() {
+			require("root/test/fixtures").csrf()
+
+			it("must send mobile-id vote", function*() {
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: INITIATIVE}))
+
+				var created = 0
+				this.router.post(`/api/topics/${UUID}/votes/${INITIATIVE.vote.id}`,
+					function(req, res) {
+					++created
+					req.body.must.eql({
+						options: [{optionId: "0bf34d36-59cd-438f-afd1-9a3a779b78b0"}],
+						pid: "11412090004",
+						phoneNumber: "+37200000766",
+					})
+
+					respond({data: {challengeID: "1337", token: "abcdef"}}, req, res)
+				})
+
+				var res = yield this.request(`/initiatives/${UUID}/signature`, {
+					method: "POST",
+					form: {
+						_csrf_token: this.csrfToken,
+						method: "mobile-id",
+						optionId: "0bf34d36-59cd-438f-afd1-9a3a779b78b0",
+						pid: "11412090004",
+						phoneNumber: "+37200000766"
+					}
+				})
+
+				created.must.equal(1)
+				res.statusCode.must.equal(200)
+			})
+
+			O.each({
+				"00000766": "+37200000766",
+				"37000000766": "37000000766",
+				"37200000766": "37200000766",
+				"37100000766": "37100000766",
+				"+37000000766": "+37000000766",
+				"+37200000766": "+37200000766"
+			}, function(long, short) {
+				it(`must transform mobile-id number ${short} to ${long}`, function*() {
+					this.router.get(`/api/topics/${UUID}`,
+						respond.bind(null, {data: INITIATIVE}))
+
+					var created = 0
+					this.router.post(`/api/topics/${UUID}/votes/${INITIATIVE.vote.id}`,
+						function(req, res) {
+						++created
+						req.body.must.eql({
+							options: [{optionId: "0bf34d36-59cd-438f-afd1-9a3a779b78b0"}],
+							pid: "11412090004",
+							phoneNumber: long,
+						})
+
+						respond({data: {challengeID: "1337", token: "abcdef"}}, req, res)
+					})
+
+					var res = yield this.request(`/initiatives/${UUID}/signature`, {
+						method: "POST",
+						form: {
+							_csrf_token: this.csrfToken,
+							method: "mobile-id",
+							optionId: "0bf34d36-59cd-438f-afd1-9a3a779b78b0",
+							pid: "11412090004",
+							phoneNumber: short
+						}
+					})
+
+					created.must.equal(1)
+					res.statusCode.must.equal(200)
+				})
 			})
 		})
 	})

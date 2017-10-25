@@ -55,6 +55,7 @@ center {
 	h2,
 	h3 {
 		font-family: $museo-sans;
+		line-height: 1.2;
 	}
 
 	h2 {
@@ -232,7 +233,7 @@ center {
 
 		.badge {
 			float: right;
-			width: 2rem;
+			height: 2rem;
 			margin-top: -0.5rem;
 		}
 
@@ -711,47 +712,47 @@ button.inherited {
 	background-color: $secondary-background;
 
 	#welcome {
-		// Overflow: hidden for video and create links' floats.
-		overflow: hidden;
-
 		h1 {
-			max-width: $half-width;
-			margin-bottom: 2rem;
+			margin-top: 1rem;
+			margin-bottom: 3rem;
 		}
 
 		p {
+			font-size: 1.8rem;
+			line-height: 1.7;
+			margin-bottom: 2rem;
+			max-width: 50%;
 			white-space: normal;
 		}
 
-		.schematic {
+		.video {
 			float: right;
 			max-width: 50%;
-			margin-left: 2rem;
+			margin-left: 4rem;
 
-			iframe { max-width: 100%; }
-		}
-
-		@include tablet {
-			h1,
-			p { max-width: none; }
-		}
-
-		@include mobile {
-			.schematic {
-				float: none;
-				max-width: none;
-				margin-left: 0;
+			iframe {
+				max-width: 100%;
+				border-radius: 0.5rem;
 			}
+		}
+
+		.button {
+			font-size: 1.6rem;
+			line-height: 4rem;
+			height: 4rem;
 		}
 	}
 
-	#create-link {
-		line-height: 30px;
+	@include tablet {
+		#welcome h1,
+		#welcome p { max-width: none; }
 
-		font-family: $museo-sans;
-		font-weight: bold;
-		font-size: 16px;
-		color: $link;
+		#welcome .video {
+			float: none;
+			max-width: none;
+			margin-left: 0;
+			margin-bottom: 2rem;
+		}
 	}
 }
 
@@ -930,9 +931,34 @@ button.inherited {
 	$comment-padding: 3rem;
 	background-color: $secondary-background;
 
+	#initiative-header {
+		background-color: #f6f6f6;
+		padding-top: 4rem;
+		font-family: $tisa-pro;
+
+		h1 {
+			color: $title-text;
+			font-size: 4.2rem;
+			line-height: 1.2;
+			word-wrap: break-word;
+		}
+
+		time,
+		.author {
+			font-size: 1.6rem;
+			color: #8a8a8a;
+		}
+
+		@include mobile {
+			padding-top: 2rem;
+
+			h1 { font-size: 3.2rem; }
+		}
+	}
+
 	#initiative-tabs {
 		padding-top: 4rem;
-		background: $secondary-background;
+		background-color: #f6f6f6;
 		border-bottom: 1px solid #cecece;
 
 		.tab {
@@ -944,9 +970,9 @@ button.inherited {
 			min-width: 11rem;
 			font-size: 14px;
 			font-family: $museo-sans;
+			font-weight: 500;
 			color: #4A555D;
 
-			background-color: $secondary-background;
 			border: 1px solid #cecece;
 			text-align: center;
 			margin-bottom: -1px;
@@ -976,6 +1002,8 @@ button.inherited {
 		}
 
 		@include tablet {
+			padding-top: 2rem;
+
 			menu {
 				float: none;
 				display: block;
@@ -1002,14 +1030,14 @@ button.inherited {
 
 		.badge {
 			float: left;
-			width: 4rem;
+			height: 4rem;
 			margin-right: 1rem;
 		}
 
 		h1 {
-			font-size: 4.4rem;
+			font-size: 4.2rem;
 			color: $title-text;
-			font-family: $museo-sans;
+			font-family: $tisa-pro;
 			line-height: 1.2;
 
 			margin-bottom: 1rem;
@@ -1322,33 +1350,127 @@ button.inherited {
 	span.explanation { margin-left: 1rem; }
 
 	#initiative-events {
+		padding-bottom: 0;
+
+		.empty {
+			margin-bottom: 4rem;
+			font-size: 1.6rem;
+		}
+
 		.events {
-			max-width: 72rem;
+			max-width: 64rem;
+			padding-top: 1.5rem;
 		}
 
 		.event {
+			position: relative;
+			border-left: 0.3rem solid #385c90;
+			padding-left: 3rem;
+			padding-bottom: 5rem;
+
+			&:before {
+				display: block;
+				background: url(/images/icon-check-blue.png) center 0.5rem no-repeat;
+				background-color: white;
+				width: 3rem;
+				height: 3.2rem;
+				content: "";
+
+				position: absolute;
+				left: -0.15rem - 1.5rem;
+				top: 0;
+			}
+
+			&:last-child:before {
+				background: url(/images/icon-check-green-ball.png) center 0.5rem no-repeat;
+				background-color: white;
+				height: 3.5rem;
+			}
+
 			h2 {
 				font-family: $museo-sans;
-				font-size: 1.8rem;
-				display: inline;
+				font-size: 2rem;
+				font-weight: 500;
 				color: $title-text;
+				margin-top: 0.2rem;
+				margin-bottom: 1rem;
 			}
 
 			time {
-				color: $secondary-light-text;
-			}
+				display: block;
+				font-size: 1.6rem;
+				line-height: 2rem;
 
-			time:before { content: " — " }
+				$offset: 1.5rem;
+				position: relative;
+				top: -$offset;
+				margin-bottom: -$offset;
+
+				color: $secondary-light-text;
+				font-family: $tisa-pro;
+			}
 
 			p {
-				margin-top: 0.5rem;
 				line-height: 1.5;
 				white-space: pre-wrap;
+				color: #636363;
+				font-size: 1.6rem;
+				font-family: $tisa-pro;
 			}
 
-			& + .event {
+			&:last-child {
+				border-color: #75c682;
+
+				h2 {
+					color: #555;
+				}
+			}
+		}
+
+		#oss {
+			// Max width for the events is 64rem. With some for margin, that
+			// leaves ~30rem for the sidebar.
+			max-width: 30rem;
+			float: right;
+			margin-left: 3rem;
+			margin-bottom: 4rem;
+			border: 1px dashed #ccc;
+			padding: 2.5rem 1.5rem 1rem;
+			line-height: 1.5;
+			text-align: center;
+			font-size: 1.6rem;
+			border-radius: $button-radius;
+
+			h2 {
+				font-family: $museo-sans;
+				line-height: 1.2;
+				font-size: 2rem;
+				color: $title-text;
+				font-weight: 500;
+				margin-bottom: 1rem;
+			}
+
+			p + p {
 				margin-top: 2rem;
 			}
+
+			a {
+				margin-right: 0.5rem;
+				margin-bottom: 0.5rem;
+				padding: 0 1rem;
+				font-size: 1.2rem;
+				height: 3rem;
+				line-height: 3rem;
+			}
+
+			@include mobile {
+				float: none;
+				margin-left: 0;
+			}
+		}
+
+		@include tablet {
+			.events { padding-left: 1rem; }
 		}
 	}
 

@@ -3,8 +3,8 @@ NODE_OPTS =
 PORT = 3000
 ENV = development
 NPM_REBUILD = npm --ignore-scripts false rebuild --build-from-source
-TEST =
-TEST_OPTS =
+TEST = test/**/*_test.js
+TEST_TAGS =
 SASS = ./node_modules/.bin/node-sass --recursive --indent-type tab --indent-width 1 --output-style expanded
 TRANSLATIONS_URL = https://spreadsheets.google.com/feeds/list/1JKPUNp8Y_8Aigq7eGJXtWT6nZFhd31k2Ht3AjC-i-Q8/1/public/full?alt=json
 JQ_OPTS = --tab --sort-keys
@@ -67,16 +67,16 @@ autostylesheets: stylesheets
 	$(MAKE) SASS="$(SASS) --watch" "$<"
 
 test:
-	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R dot $(TEST_OPTS)
+	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R dot $(TEST)
 
 spec:
-	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R spec $(TEST_OPTS)
+	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R spec $(TEST)
 
 autotest:
-	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R dot --watch $(TEST_OPTS)
+	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R dot --watch $(TEST)
 
 autospec:
-	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R spec --watch $(TEST_OPTS)
+	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R spec --watch $(TEST)
 
 server:
 	@$(NODE) ./bin/web

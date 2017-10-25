@@ -316,7 +316,7 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 				json: {
 					options: [{optionId: req.body.optionId}],
 					pid: req.body.pid,
-					phoneNumber: req.body.phoneNumber,
+					phoneNumber: ensureAreaCode(req.body.phoneNumber),
 				}
 			}).catch(catch400)
 
@@ -395,6 +395,14 @@ function normalizeText(html) {
 function normalizeComment(comment) {
 	comment.replies = comment.replies.rows
 	return comment
+}
+
+function ensureAreaCode(number) {
+	// Numbers without a leading "+" but with a suitable area code, like
+	// 37200000766, seem to work.
+	if (/^\+/.exec(number)) return number
+	if (/^37[012]/.exec(number)) return number
+	return "+372" + number
 }
 
 function getBody(res) { return res.body.data }

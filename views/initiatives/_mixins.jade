@@ -5,19 +5,21 @@ mixin initiatives(initiatives)
 
 mixin initiative(initiative)
 	-
+		var _ = require("lodash")
 		var I18n = require("root/lib/i18n")
 		var Config = require("root/config")
-		var PARTNERS = Config.partners
 		var createdAt = new Date(initiative.createdAt)
-		var partner = PARTNERS[initiative.sourcePartnerId]
+		var partner = Config.partners[initiative.sourcePartnerId]
+		var category = _.values(_.pick(Config.categories, initiative.categories))[0]
+		var badge = partner || category
 
 	li.initiative
 		a(href=`/initiatives/${initiative.id}`)
 			time(datetime=initiative.createdAt)= I18n.formatDate("numeric", createdAt)
 			h3= initiative.title
 
-			if partner
-				img.badge(src=partner.badge)
+			if badge
+				img.badge(src=badge.icon)
 
 			span.author= initiative.creator.name
 			+progress(initiative)
@@ -76,27 +78,6 @@ mixin progress(initiative)
 			- klass = initiative.status == "closed" ? "finished" : "processable"
 			- var sigs = Initiative.countSignatures("Yes", initiative)
 			.initiative-progress(class=klass)= t("N_SIGNATURES", {votes: sigs})
-
-mixin header(initiative)
-	header
-		span.author
-			= t("CREATED_BY")
-			| &#32;
-			= initiative.creator.name
-
-		h1= initiative.title
-
-mixin header-link(initiative)
-	header
-		span.author
-			= t("CREATED_BY")
-			| &#32;
-			= initiative.creator.name
-
-		h1
-			| ←
-			| &#32;
-			a(href=`/initiatives/${initiative.id}`)= initiative.title
 
 mixin initiative-aux-menu(initiative)
 	-
@@ -273,3 +254,10 @@ mixin date-picker(selector)
 				container: document.getElementById("#{id}"),
 				bound: false,
 			})
+
+mixin initiative-badge(badge)
+	if badge.url
+		a.badge(href=badge.url, title=badge.name)
+			img.badge(src=badge.icon, alt=badge.name)
+	else
+		img.badge(src=badge.icon, alt=badge.name, title=badge.name)

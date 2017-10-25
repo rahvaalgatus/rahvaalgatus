@@ -11,14 +11,16 @@ block append head
 
 block prepend tab
 	-
+		var _ = require("lodash")
 		var I18n = require("root/lib/i18n")
 		var Config = require("root/config")
 		var Initiative = require("root/lib/initiative")
 		var stringify = require("root/lib/json").stringify
 		var hasVote = flash("signed") || Initiative.hasVote("Yes", initiative)
 		var now = new Date
-		var PARTNERS = Config.partners
-		var partner = PARTNERS[initiative.sourcePartnerId]
+		var partner = Config.partners[initiative.sourcePartnerId]
+		var category = _.values(_.pick(Config.categories, initiative.categories))[0]
+		var badge = partner || category
 
 	section#initiative.primary-section: center
 		include /_flash.jade
@@ -59,14 +61,8 @@ block prepend tab
 					+progress(initiative)
 
 			header
-				if partner
-					a.badge(href=partner.url, title=partner.name)
-						img.badge(src=partner.badge, alt=partner.name)
-
-				span.author
-					= t("CREATED_BY")
-					| &#32;
-					= initiative.creator.name
+				if badge
+					+initiative-badge(badge)
 
 			!= text
 

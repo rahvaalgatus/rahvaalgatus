@@ -10,7 +10,7 @@ block body
 	section#welcome.primary-section.text-section: center
 		h1= t("HOME_WELCOME_TITLE")
 
-		.schematic
+		.video
 			iframe(
 				width="480",
 				height="270",
@@ -18,7 +18,7 @@ block body
 				frameborder="0",
 				allowfullscreen)
 
-			a#create-link(href="/about")= t("BTN_NEW_TOPIC")
+			a.button.secondary-button(href="/about")= t("BTN_NEW_TOPIC")
 
 		p!= t("HOME_WELCOME")
 
