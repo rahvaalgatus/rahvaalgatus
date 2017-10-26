@@ -24,9 +24,9 @@
 	},
 
 	"videoUrls": {
-		"et": "https://www.youtube.com/watch?v=za230fHP6pg",
-		"en": "https://www.youtube.com/watch?v=27lN6HmwuY4",
-		"ru": "https://www.youtube.com/watch?v=3tZpKl-ICjQ"
+		"et": "https://www.youtube.com/embed/za230fHP6pg",
+		"en": "https://www.youtube.com/embed/27lN6HmwuY4",
+		"ru": "https://www.youtube.com/embed/3tZpKl-ICjQ"
 	},
 
 	"partners": {
