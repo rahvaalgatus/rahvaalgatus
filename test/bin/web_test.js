@@ -40,6 +40,7 @@ describe("Web", function() {
 		describe(path, function() {
 			before(function*() {
 				this.res = yield this.request(path, {method: "HEAD"})
+				this.res.statusCode.must.equal(200)
 			})
 
 			it("must have CORS headers", function() {

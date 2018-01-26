@@ -30,6 +30,8 @@ describe(URL, function() {
 					method: "HEAD",
 					headers: {"Accept-Encoding": "gzip"}
 				})
+
+				this.res.statusCode.must.equal(200)
 			})
 
 			it("must have a Cache-Control header", function() {
@@ -43,6 +45,10 @@ describe(URL, function() {
 
 			it("must have an ETag header", function() {
 				this.res.headers.must.have.property("etag")
+			})
+
+			it("must not have a Last-Modified header", function() {
+				this.res.headers.must.not.have.property("last-modified")
 			})
 
 			// Apache has an issue that if the content is encoded with gzip, the
