@@ -6,6 +6,7 @@ var HttpError = require("standard-http-error")
 var Initiative = require("root/lib/initiative")
 var DateFns = require("date-fns")
 var Config = require("root/config")
+var countVotes = Initiative.countSignatures.bind(null, "Yes")
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
 var catch401 = require("root/lib/fetch").catch.bind(null, 401)
@@ -38,6 +39,7 @@ exports.router.get("/", next(function*(_req, res) {
 	}
 
 	var closed = _.groupBy(initiatives.closed, Initiative.getUnclosedStatus)
+	var votings = concat(initiatives.voting, closed.voting || EMPTY_ARR)
 
 	res.render("initiatives/index", {
 		discussions: concat(
@@ -45,7 +47,7 @@ exports.router.get("/", next(function*(_req, res) {
 			(closed.inProgress || EMPTY_ARR).filter(hasMainPartnerId)
 		),
 
-		votings: concat(initiatives.voting, closed.voting || EMPTY_ARR),
+		votings: _.sortBy(votings, countVotes).reverse(),
 		processes: initiatives.followUp,
 		processed: closed.followUp || EMPTY_ARR,
 	})
