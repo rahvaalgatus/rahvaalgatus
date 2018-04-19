@@ -34,15 +34,15 @@ After installing a stable version of [Node.js](https://nodejs.org) (so far teste
    make server PORT=8888
    ```
 
-4. Set up a <rahvaalgatus.dev> domain.
+4. Set up a <rahvaalgatus.test> domain.
 
-   CitizenOS's backend server replies to cross-origin requests only if they come from `rahvalgatus.dev`. Add such a subdomain to your `/etc/hosts` file for development:
+   CitizenOS's backend server replies to cross-origin requests only if they come from `rahvalgatus.test`. Add such a subdomain to your `/etc/hosts` file for development:
 
    ```
-   127.0.0.1 rahvaalgatus.dev
+   127.0.0.1 rahvaalgatus.test
    ```
 
-5. Open your local domain (e.g. <http://rahvaalgatus.dev:3000>) in your browser and proceed with typing code.
+5. Open your local domain (e.g. <http://rahvaalgatus.test:3000>) in your browser and proceed with typing code.
 
 ### Autocompiling
 
