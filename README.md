@@ -2,7 +2,7 @@ Rahvaalgatus
 ============
 The website of <https://rahvaalgatus.ee> built with JavaScript on Node.js, Jade/Pug for templates and Sass for CSS.
 
-Rahvaalgatus is dependent on [CitizenOS][]'s' backend. While it's not yet available publicly (as of Sep 13, 2017 at least), they do provide a test environment to develop against. Its tokens are embedded in Rahvaalgatus' source code, so no configuration necessary.
+Rahvaalgatus is dependent on [CitizenOS][]'s [backend](https://github.com/citizenos/citizenos-api). While open sourced late March 2018, the full backend may be too much to run locally for development. Fortunately they provide an online test environment to develop against. Its tokens are embedded in Rahvaalgatus' source code, so no configuration necessary.
 
 [CitizenOS]: https://citizenos.com
 
