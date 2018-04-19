@@ -1270,7 +1270,7 @@ button.inherited {
 			}
 		}
 
-		#oss {
+		#contribute {
 			// Max width for the events is 64rem. With some for margin, that
 			// leaves ~30rem for the sidebar.
 			max-width: 30rem;
@@ -1293,6 +1293,7 @@ button.inherited {
 				margin-bottom: 1rem;
 			}
 
+			p { white-space: pre-wrap; }
 			p + p {
 				margin-top: 2rem;
 			}

@@ -11,24 +11,17 @@ block prepend tab
 	section#initiative-events.primary-section: center
 		include /_flash.jade
 
-		aside#oss
-			h2 Kas Sulle tundub ka, et menetlusvaade võiks olla parem?
-			p
-				| Unistame visualiseeritud andmevoodest!
-				br
-				| Märksõnad: avaandmed, andmeajakirjandus, argumenteeritud arutelu,
-				| osalejate panus, algatuse mõju.
+		aside#contribute
+			h2= t("PARLIAMENT_BANNER_TITLE")
+			p= t("PARLIAMENT_BANNER_CONTENT")
 
 			p.links
-				a.secondary-button(href="http://sidh2017.ut.ee")
-					| Tule häkatonile!
-				a.secondary-button(href="https://github.com/rahvaalgatus/rahvaalgatus")
-					| Häki kodus
-				br
-				a.white-button(href="https://rahvaalgatus.ee/donate")
-					| Anneta
-				a.white-button(href="mailto:abi@rahvaalgatus.ee")
-					| Küsi veel
+				a.secondary-button(href=t("PARLIAMENT_BANNER_CONTRIBUTE_URL"))
+					= t("PARLIAMENT_BANNER_CONTRIBUTE")
+				a.secondary-button(href=t("PARLIAMENT_BANNER_DONATE_URL"))
+					= t("PARLIAMENT_BANNER_DONATE")
+				a.secondary-button(href=t("PARLIAMENT_BANNER_INFO_URL"))
+					= t("PARLIAMENT_BANNER_INFO")
 
 		if events.length
 			ol.events
