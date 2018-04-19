@@ -36,7 +36,7 @@ After installing a stable version of [Node.js](https://nodejs.org) (so far teste
 
 4. Set up a <rahvaalgatus.test> domain.
 
-   CitizenOS's backend server replies to cross-origin requests only if they come from `rahvalgatus.test`. Add such a subdomain to your `/etc/hosts` file for development:
+   CitizenOS's authentication and editor servers reply to cross-origin requests only if they come from `rahvalgatus.test`. Add such a subdomain to your `/etc/hosts` file for development:
 
    ```
    127.0.0.1 rahvaalgatus.test
