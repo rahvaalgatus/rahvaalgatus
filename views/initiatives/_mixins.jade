@@ -149,32 +149,31 @@ mixin comments(comments, editedComment)
 				li.comment(id=`comment-${comment.id}`)
 					+comment(comment, editedComment)
 
-		if initiative.status != "closed"
-			//- Comment form anchor used for redirecting to error.
-			+form#initiative-comment-form.comment-form(
-				method="post",
-				action=commentsUrl)
-				input.form-input(
-					name="subject",
-					value=editedComment.parentId == null ? editedComment.subject : null,
-					maxlength=128,
-					required,
-					placeholder=t("PLACEHOLDER_ADD_ARGUMENT_SUBJECT"),
-					disabled=!req.user)
+		//- Comment form anchor used for redirecting to error.
+		+form#initiative-comment-form.comment-form(
+			method="post",
+			action=commentsUrl)
+			input.form-input(
+				name="subject",
+				value=editedComment.parentId == null ? editedComment.subject : null,
+				maxlength=128,
+				required,
+				placeholder=t("PLACEHOLDER_ADD_ARGUMENT_SUBJECT"),
+				disabled=!req.user)
 
-				textarea.form-textarea(
-					name="text",
-					maxlength=2048,
-					required,
-					placeholder=t("PLACEHOLDER_ADD_ARGUMENT_TEXT"),
-					disabled=!req.user)
-					= editedComment.parentId == null ? editedComment.text : null
+			textarea.form-textarea(
+				name="text",
+				maxlength=2048,
+				required,
+				placeholder=t("PLACEHOLDER_ADD_ARGUMENT_TEXT"),
+				disabled=!req.user)
+				= editedComment.parentId == null ? editedComment.text : null
 
-				button.secondary-button(disabled=!req.user)= t("POST_COMMENT")
+			button.secondary-button(disabled=!req.user)= t("POST_COMMENT")
 
-				if !req.user
-					span.text.signin-to-act
-						!= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE", {url: "/session/new"})
+			if !req.user
+				span.text.signin-to-act
+					!= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE", {url: "/session/new"})
 
 mixin comment(comment, editedComment)
 	- var Initiative = require("root/lib/initiative")
@@ -193,7 +192,7 @@ mixin comment(comment, editedComment)
 	h3.subject: a(href=commentUrl)= comment.subject
 	p.text!= linkify(comment.text)
 
-	if req.user && initiative.status != "closed"
+	if req.user
 		a.comment-reply-button.white-button(href=`#comment-${comment.id}-reply`)
 			= t("REPLY")
 
@@ -210,7 +209,7 @@ mixin comment(comment, editedComment)
 
 				p.text!= linkify(reply.text)
 
-	if req.user && initiative.status != "closed"
+	if req.user
 		+form.comment-reply-form(
 			id=`comment-${comment.id}-reply`,
 			method="post",
