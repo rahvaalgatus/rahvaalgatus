@@ -23,6 +23,8 @@ var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
 var EMPTY_COMMENT = {subject: "", text: "", parentId: null}
 var ADMIN_COAUTHORS = Config.adminCoauthors
+var ISO8601_DATE = /^(\d\d\d\d)-(\d\d)-(\d\d)\s+/
+var LOCAL_DATE = /^(\d\d)\.(\d\d)\.(\d\d\d\d)\s+/
 
 var UI_TRANSLATIONS = O.map(require("root/lib/i18n").STRINGS, function(lang) {
 	return O.filter(lang, (_value, key) => key.indexOf("HWCRYPTO") >= 0)
@@ -237,22 +239,34 @@ exports.router.delete("/:id", next(function*(req, res) {
 
 exports.read = next(function*(subpage, req, res) {
 	var initiative = req.initiative
+	var events
 
-	var path = `/api/topics/${initiative.id}/comments?orderBy=date`
-	if (req.user) path = "/api/users/self" + path.slice(4)
-	var comments = yield req.api(path)
+	var commentsPath = `/api/topics/${initiative.id}/comments?orderBy=date`
+	if (req.user) commentsPath = "/api/users/self" + commentsPath.slice(4)
+	var comments = yield req.api(commentsPath)
 	comments = comments.body.data.rows.map(normalizeComment).reverse()
+
+	if (subpage == "events") {
+		var eventsPath = `/api/topics/${initiative.id}/events`
+		if (req.user) eventsPath = "/api/users/self" + eventsPath.slice(4)
+		events = yield req.api(eventsPath)
+		events = events.body.data.rows.map(parseCitizenEvent)
+		events = events.sort((a, b) => +b.createdAt - +a.createdAt)
+	}
+	else events = EMPTY_ARR
 
 	res.render("initiatives/" + subpage, {
 		text: normalizeText(initiative.description),
 		comments: comments,
 		comment: res.locals.comment || EMPTY_COMMENT,
+		events: events,
 		translations: UI_TRANSLATIONS[req.lang]
 	})
 })
 
 exports.router.get("/:id/discussion", exports.read.bind(null, "discussion"))
 exports.router.get("/:id/vote", exports.read.bind(null, "vote"))
+exports.router.get("/:id/events", exports.read.bind(null, "events"))
 
 exports.router.use("/:id/comments",
 	require("./initiatives/comments_controller").router)
@@ -405,6 +419,28 @@ function ensureAreaCode(number) {
 	if (/^\+/.exec(number)) return number
 	if (/^37[012]/.exec(number)) return number
 	return "+372" + number
+}
+
+function parseCitizenEvent(obj) {
+	// Parse dates from the title until CitizenOS supports setting the creation
+	// date when necessary.
+	var subject = parsePrefixDate(obj.subject)
+
+	return {
+		subject: subject[0],
+		text: obj.text,
+		createdAt: subject[1] || new Date(obj.createdAt)
+	}
+}
+
+function parsePrefixDate(str) {
+	var m, date = (
+		(m = ISO8601_DATE.exec(str)) ? new Date(m[1], m[2] - 1, m[3]) :
+		(m = LOCAL_DATE.exec(str)) ? new Date(m[3], m[2] - 1, m[1]) :
+		null
+	)
+		
+	return [m ? str.slice(m[0].length) : str, date]
 }
 
 function getBody(res) { return res.body.data }
