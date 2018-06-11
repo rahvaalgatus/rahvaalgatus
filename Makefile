@@ -5,6 +5,7 @@ ENV = development
 NPM_REBUILD = npm --ignore-scripts false rebuild --build-from-source
 TEST = test/**/*_test.js
 TEST_TAGS =
+MOCHA = ./node_modules/.bin/_mocha
 SASS = ./node_modules/.bin/node-sass --recursive --indent-type tab --indent-width 1 --output-style expanded
 TRANSLATIONS_URL = https://spreadsheets.google.com/feeds/list/1JKPUNp8Y_8Aigq7eGJXtWT6nZFhd31k2Ht3AjC-i-Q8/1/public/full?alt=json
 JQ_OPTS = --tab --sort-keys
@@ -40,7 +41,7 @@ export PORT
 export ENV
 export TEST
 
-ifneq ($(filter test spec autotest autospec, $(MAKECMDGOALS)),)
+ifneq ($(filter test spec autotest autospec test/%, $(MAKECMDGOALS)),)
 	ENV = test
 endif
 
@@ -67,16 +68,20 @@ autostylesheets: stylesheets
 	$(MAKE) SASS="$(SASS) --watch" "$<"
 
 test:
-	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R dot $(TEST)
+	@$(NODE) $(NODE_OPTS) $(MOCHA) -R dot $(TEST)
 
 spec:
-	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R spec $(TEST)
+	@$(NODE) $(NODE_OPTS) $(MOCHA) -R spec $(TEST)
 
 autotest:
-	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R dot --watch $(TEST)
+	@$(NODE) $(NODE_OPTS) $(MOCHA) -R dot --watch $(TEST)
 
 autospec:
-	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/_mocha -R spec --watch $(TEST)
+	@$(NODE) $(NODE_OPTS) $(MOCHA) -R spec --watch $(TEST)
+
+test/server: export TEST_TAGS = server
+test/server:
+	@$(NODE) $(NODE_OPTS) $(MOCHA) -R spec test/server/**/*_test.js
 
 server:
 	@$(NODE) ./bin/web
@@ -122,6 +127,7 @@ lib/i18n/ru.json: tmp/translations.json
 .PHONY: minify
 .PHONY: stylesheets autostylesheets
 .PHONY: test spec autotest autospec
+.PHONY: test/server
 .PHONY: server
 .PHONY: shrinkwrap
 .PHONY: deploy staging production

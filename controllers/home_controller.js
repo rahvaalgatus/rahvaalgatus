@@ -2,6 +2,7 @@ var _ = require("lodash")
 var Router = require("express").Router
 var Initiative = require("root/lib/initiative")
 var DateFns = require("date-fns")
+var countVotes = Initiative.countSignatures.bind(null, "Yes")
 var next = require("co-next")
 var api = require("root/lib/api")
 var readInitiativesWithStatus = api.readInitiativesWithStatus
@@ -26,7 +27,7 @@ exports.router.get("/", next(function*(req, res) {
 
 	res.render("home/index", {
 		discussions: discussions,
-		votings: votings,
+		votings: _.sortBy(votings, countVotes).reverse(),
 		processes: processes,
 		processed: EMPTY_ARR,
 

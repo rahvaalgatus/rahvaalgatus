@@ -2,7 +2,7 @@ Rahvaalgatus
 ============
 The website of <https://rahvaalgatus.ee> built with JavaScript on Node.js, Jade/Pug for templates and Sass for CSS.
 
-Rahvaalgatus is dependent on [CitizenOS][]'s' backend. While it's not yet available publicly (as of Sep 13, 2017 at least), they do provide a test environment to develop against. Its tokens are embedded in Rahvaalgatus' source code, so no configuration necessary.
+Rahvaalgatus is dependent on [CitizenOS][]'s [backend](https://github.com/citizenos/citizenos-api). While open sourced late March 2018, the full backend may be too much to run locally for development. Fortunately they provide an online test environment to develop against. Its tokens are embedded in Rahvaalgatus' source code, so no configuration necessary.
 
 [CitizenOS]: https://citizenos.com
 
@@ -34,15 +34,15 @@ After installing a stable version of [Node.js](https://nodejs.org) (so far teste
    make server PORT=8888
    ```
 
-4. Set up a <rahvaalgatus.dev> domain.
+4. Set up a <rahvaalgatus.test> domain.
 
-   CitizenOS's backend server replies to cross-origin requests only if they come from `rahvalgatus.dev`. Add such a subdomain to your `/etc/hosts` file for development:
+   CitizenOS's authentication and editor servers reply to cross-origin requests only if they come from `rahvalgatus.test`. Add such a subdomain to your `/etc/hosts` file for development:
 
    ```
-   127.0.0.1 rahvaalgatus.dev
+   127.0.0.1 rahvaalgatus.test
    ```
 
-5. Open your local domain (e.g. <http://rahvaalgatus.dev:3000>) in your browser and proceed with typing code.
+5. Open your local domain (e.g. <http://rahvaalgatus.test:3000>) in your browser and proceed with typing code.
 
 ### Autocompiling
 

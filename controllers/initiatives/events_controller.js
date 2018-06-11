@@ -6,24 +6,10 @@ var catch401 = require("root/lib/fetch").catch.bind(null, 401)
 var catch403 = require("root/lib/fetch").catch.bind(null, 403)
 var translateCitizenError = require("root/lib/api").translateError
 var next = require("co-next")
-var ISO8601_DATE = /^(\d\d\d\d)-(\d\d)-(\d\d)\s+/
-var LOCAL_DATE = /^(\d\d)\.(\d\d)\.(\d\d\d\d)\s+/
 var EMPTY = Object.prototype
 var EMPTY_EVENT = {subject: "", text: ""}
 
 exports.router = Router({mergeParams: true})
-
-exports.router.get("/", next(function*(req, res) {
-	var initiative = req.initiative
-
-	var path = `/api/topics/${initiative.id}/events`
-	if (req.user) path = "/api/users/self" + path.slice(4)
-	var events = yield req.api(path)
-	events = events.body.data.rows.map(parseCitizenEvent)
-	events = events.sort((a, b) => +b.createdAt - +a.createdAt)
-
-	res.render("initiatives/events/index", {events: events})
-}))
 
 exports.router.get("/new", function(req, res) {
 	res.render("initiatives/events/create", {
@@ -54,25 +40,3 @@ exports.router.post("/", next(function*(req, res) {
 		attrs: req.body
 	})
 }))
-
-function parseCitizenEvent(obj) {
-	// Parse dates from the title until CitizenOS supports setting the creation
-	// date when necessary.
-	var subject = parsePrefixDate(obj.subject)
-
-	return {
-		subject: subject[0],
-		text: obj.text,
-		createdAt: subject[1] || new Date(obj.createdAt)
-	}
-}
-
-function parsePrefixDate(str) {
-	var m, date = (
-		(m = ISO8601_DATE.exec(str)) ? new Date(m[1], m[2] - 1, m[3]) :
-		(m = LOCAL_DATE.exec(str)) ? new Date(m[3], m[2] - 1, m[1]) :
-		null
-	)
-		
-	return [m ? str.slice(m[0].length) : str, date]
-}

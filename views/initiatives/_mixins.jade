@@ -135,7 +135,7 @@ mixin initiative-subscribe(initiative)
 
 			button.secondary-button(type="submit")= t("BTN_SUBSCRIBE")
 
-mixin comments(comments, editedComment)
+mixin comments(comments, editedComment, referrer)
 	- var commentsUrl = `/initiatives/${initiative.id}/comments`
 
 	#initiative-comments
@@ -154,13 +154,15 @@ mixin comments(comments, editedComment)
 		ol.comments
 			for comment in comments
 				li.comment(id=`comment-${comment.id}`)
-					+comment(comment, editedComment)
+					+comment(comment, editedComment, referrer)
 
 		if initiative.status != "closed"
 			//- Comment form anchor used for redirecting to error.
 			+form#initiative-comment-form.comment-form(
 				method="post",
 				action=commentsUrl)
+				input(type="hidden", name="referrer", value=referrer)
+
 				input.form-input(
 					name="subject",
 					value=editedComment.parentId == null ? editedComment.subject : null,
@@ -183,7 +185,7 @@ mixin comments(comments, editedComment)
 					span.text.explanation
 						!= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE", {url: "/session/new"})
 
-mixin comment(comment, editedComment)
+mixin comment(comment, editedComment, referrer)
 	- var Initiative = require("root/lib/initiative")
 	- var I18n = require("root/lib/i18n")
 	- var linkify = require("root/lib/linkify")
@@ -200,7 +202,7 @@ mixin comment(comment, editedComment)
 	h3.subject: a(href=commentUrl)= comment.subject
 	p.text!= linkify(comment.text)
 
-	if req.user && initiative.status != "closed"
+	if req.user
 		a.comment-reply-button.white-button(href=`#comment-${comment.id}-reply`)
 			= t("REPLY")
 	else
@@ -221,12 +223,13 @@ mixin comment(comment, editedComment)
 
 				p.text!= linkify(reply.text)
 
-	if req.user && initiative.status != "closed"
+	if req.user
 		+form.comment-reply-form(
 			id=`comment-${comment.id}-reply`,
 			method="post",
 			action=commentUrl + "/replies",
 			hidden=!isEdited)
+			input(type="hidden", name="referrer", value=referrer)
 
 			textarea.form-textarea(
 				name="text",

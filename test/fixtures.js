@@ -14,8 +14,8 @@ exports.user = function() {
 			"csrf_token=" + csrfToken
 		].join("; ")
 
-		this.request = fetchDefaults(this.request, {headers: {Cookie: cookie}})
 		this.csrfToken = csrfToken
+		this.request = fetchDefaults(this.request, {headers: {Cookie: cookie}})
 		this.router.get("/api/auth/status", respond.bind(null, {data: {}}))
 	})
 }
@@ -24,8 +24,8 @@ exports.csrf = function() {
 	beforeEach(function() {
 		var csrfToken = pseudoHex(16)
 		var cookie = "csrf_token=" + csrfToken
-		this.request = fetchDefaults(this.request, {headers: {Cookie: cookie}})
 		this.csrfToken = csrfToken
+		this.request = fetchDefaults(this.request, {headers: {Cookie: cookie}})
 	})
 }
 
