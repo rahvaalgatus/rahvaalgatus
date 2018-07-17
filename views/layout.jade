@@ -99,11 +99,9 @@ html
 					a(href="http://kogu.ee")
 						- var logo = "/images/esstikoostoo_logo.png"
 						- if (req.lang !== "et") logo = "/images/esstikoostoo_logo_en.png"
-						img(width="200", src=logo, alt=t("FOOTER_SA"))
+						img(width="200", src=logo, alt=t("KOGU"))
 
 					p
-						//-= t("FOOTER_SA")
-						//-br
 						= t("FOOTER_ADDRESS")
 						br
 						!= t("FOOTER_EMAIL")

@@ -127,6 +127,7 @@
 	"IN_FOLLOW_UP_LIST": "Menetluses ",
 	"I_HAVE_READ": "Olen tutvunud ja nõustun <a href=\"{{url}}\">rahvaalgatus.ee kasutamise hea tavaga</a>.",
 	"KEEP ME INFORMED": "TELLI TEAVITUS",
+	"KOGU": "Eesti Koostöö Kogu",
 	"LBL_EMAIL": "E-posti aadress",
 	"LBL_FULL_NAME": "Ees- ja perenimi",
 	"LBL_INVITE_USERS_AND_GROUPS": "lisa kasutajaid",
