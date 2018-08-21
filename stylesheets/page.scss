@@ -637,16 +637,19 @@ button.inherited {
 		img { width: 100%; }
 	}
 
-	.uuseakus {
+	.uuseakus,
+	.kestame {
 		display: block;
 		float: right;
-		width: 10rem;
 		height: inherit;
 		margin-left: 2rem;
 		margin-top: -0.5rem;
 
 		img { width: 100%; }
 	}
+
+	.uuseakus { width: 10rem; }
+	.kestame { width: 15rem; }
 
 	nav li {
 		display: inline;
