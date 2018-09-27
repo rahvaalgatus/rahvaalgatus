@@ -23,9 +23,9 @@ exports.router.put("/", next(function*(req, res) {
 	var lang = req.body.language in LANGS ? req.body.language : DEFAULT_LANG
 
 	res.cookie("language", lang, {
-		maxAge: 365 * 86400 * 1000,
+		httpOnly: true,
 		secure: req.secure,
-		httpOnly: true
+		maxAge: 365 * 86400 * 1000
 	})
 
 	if (req.user) yield req.api("/api/users/self", {
@@ -36,7 +36,12 @@ exports.router.put("/", next(function*(req, res) {
 }))
 
 exports.router.delete("/", function(req, res) {
-	res.clearCookie("citizenos_token")
+	res.clearCookie("citizenos_token", {
+		httpOnly: true,
+		secure: req.secure,
+		domain: Config.cookieDomain
+	})
+
 	csrf.reset(req, res)
 	res.redirect(302, req.headers.referer || "/")
 })
@@ -82,9 +87,10 @@ function create(req, res, next) {
 	csrf.reset(req, res)
 
 	res.cookie("citizenos_token", req.query.access_token, {
-		maxAge: 30 * 86400 * 1000,
+		httpOnly: true,
 		secure: req.secure,
-		httpOnly: true
+		domain: Config.cookieDomain,
+		maxAge: 30 * 86400 * 1000
 	})
 
 	var referrer = req.cookies.session_referrer || "/"
