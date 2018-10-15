@@ -16,7 +16,6 @@ var redirect = require("root/lib/redirect")
 var reportError = require("root").errorReporter
 var ENV = process.env.ENV
 var PORT = process.env.PORT || 3000
-var SSL_PORT = process.env.SSL_PORT
 var PUBLIC_DIR = __dirname + "/../public"
 var FONT_SUFFIXES = [".eot", ".woff", ".woff2", ".ttf", ".svg"]
 var COOKIE_SECRET = process.env.COOKIE_SECRET || Config.cookieSecret
@@ -105,11 +104,6 @@ app.use(function(err, req, res, next) {
 if (module.parent) return
 
 Http.createServer(app).listen(PORT, onListening)
-
-if (SSL_PORT != null) require("https").createServer({
-	key: Fs.readFileSync(__dirname + "/../config/" + ENV + ".key"),
-	cert: Fs.readFileSync(__dirname + "/../config/" + ENV + ".pem"),
-}, app).listen(SSL_PORT, onListening)
 
 function onListening() {
 	var addr = this.address()
