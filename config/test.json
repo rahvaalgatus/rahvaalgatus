@@ -3,6 +3,9 @@
 	"apiPartnerId": "8d89302e-2317-4b1e-b65d-61c6fbe53e0c",
 	"apiAuthorizeUrl": "https://citizenos-citizenos-api-test.herokuapp.com/api/auth/openid/authorize",
 	"adminCoauthors": ["admin@example.com"],
+	"mailchimpApiKey": "13371337133713371337133713371337-us42",
+	"mailchimpListId": "deadbeef",
+	"mailchimpInterestCategoryId": "beefalo",
 
 	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
 	"votesRequired": 2,

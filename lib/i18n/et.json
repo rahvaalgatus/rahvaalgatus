@@ -252,6 +252,7 @@
 	"START_DISCUSSION": "LOO ALGATUS",
 	"STATUS": "olek:",
 	"SUBMIT_QUERY": "KINNITA ",
+	"SUBSCRIBED": "Täname! Saate meilitsi teavituse algatuse edenemisest.",
 	"SUPPORTERS": "<h2 id=\"toetajad\">Toetajad</h2>\n\n<ul>\n  <li>Teeme Ära SA</li>\n  <li>Kodanikuühiskonna Sihtkapital</li>\n</ul>\n\n",
 	"SUPPORT_BUTTON": "TOETA   ",
 	"SUPPORT_LABEL": "Toetuse suurus eurodes ",

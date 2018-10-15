@@ -6,6 +6,9 @@ var HttpError = require("standard-http-error")
 var Initiative = require("root/lib/initiative")
 var DateFns = require("date-fns")
 var Config = require("root/config")
+var I18n = require("root/lib/i18n")
+var md5 = require("root/lib/crypto").md5
+var db = require("root").db
 var countVotes = Initiative.countSignatures.bind(null, "Yes")
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
@@ -14,6 +17,8 @@ var isFetchError = require("root/lib/fetch").is
 var next = require("co-next")
 var sleep = require("root/lib/promise").sleep
 var api = require("root/lib/api")
+var parseCitizenInitiative = api.parseCitizenInitiative
+var mailchimp = require("root/lib/mailchimp")
 var readInitiativesWithStatus = api.readInitiativesWithStatus
 var encode = encodeURIComponent
 var translateCitizenError = require("root/lib/api").translateError
@@ -95,7 +100,8 @@ exports.router.use("/:id", next(function*(req, res, next) {
 	try {
 		var path = `/api/topics/${encode(req.params.id)}?include[]=vote&include[]=event`
 		if (req.user) path = "/api/users/self" + path.slice(4)
-		req.initiative = yield req.api(path).then(getBody)
+		req.initiative = yield req.api(path).then(getBody).
+			then(parseCitizenInitiative)
 	}
 	catch (ex) {
 		// CitizenOS throws 500 for invalid UUIDs. Workaround that.
@@ -371,6 +377,31 @@ exports.router.get("/:id/signature", next(function*(req, res) {
 	res.redirect(303, req.baseUrl + "/" + initiative.id)
 }))
 
+
+exports.router.post("/:id/subscriptions", next(function*(req, res, next) {
+	var initiative = req.initiative
+
+	if (!Initiative.isPublic(initiative))
+		return void next(new HttpError(403, "Initiative Not Public"))
+
+	var interestId = yield readOrCreateMailchimpInterest(initiative)
+	var email = req.body.email
+	var emailHash = md5(email.toLowerCase())
+
+	yield mailchimp(`/3.0/lists/${Config.mailchimpListId}/members/${emailHash}`, {
+		method: "PUT",
+		json: {
+			email_address: email,
+			status_if_new: "pending",
+			interests: {[interestId]: true},
+			ip_signup: req.ip
+		}
+	})
+
+	res.flash("notice", req.t("SUBSCRIBED"))
+	res.redirect(303, req.baseUrl + "/" + initiative.id)
+}))
+
 exports.router.use(function(err, _req, res, next) {
 	if (err instanceof HttpError && err.code === 404) {
 		res.statusCode = err.code
@@ -402,6 +433,41 @@ function* readSignature(initiative, token) {
 	}
 
 	throw new HttpError(500, "Mobile-Id Took Too Long")
+}
+
+function* readOrCreateMailchimpInterest(initiative) {
+	var obj = yield db.read("SELECT * FROM initiatives WHERE uuid = ?", [
+		initiative.id
+	])
+
+	if (obj) return obj.mailchimp_interest_id
+	return yield createMailchimpInterest(initiative)
+}
+
+function* createMailchimpInterest(initiative) {
+	var path = "/3.0/lists/" + Config.mailchimpListId
+	path += "/interest-categories/" + Config.mailchimpInterestCategoryId
+	path += "/interests"
+
+	var interest
+	try { interest = yield create(initiative.title) }
+	catch (err) {
+		// Basic fail-safe as interests have to have unique names in Mailchimp.
+		if (!isNameTakenErr(err)) throw err
+		var date = I18n.formatDate("iso", initiative.createdAt)
+		interest = yield create(`${initiative.title} (${date})`)
+	}
+
+	yield db.create("initiatives", {
+		uuid: initiative.id,
+		mailchimp_interest_id: interest.body.id
+	})
+
+	return interest.body.id
+
+	function create(title) {
+		return mailchimp(path, {method: "POST", json: {name: title}})
+	}
 }
 
 function normalizeText(html) {
@@ -441,6 +507,10 @@ function parsePrefixDate(str) {
 	)
 		
 	return [m ? str.slice(m[0].length) : str, date]
+}
+
+function isNameTakenErr(err) {
+	return err.code == 400 && /already exists/.test(err.response.body.detail)
 }
 
 function getBody(res) { return res.body.data }

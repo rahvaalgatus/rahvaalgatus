@@ -4,3 +4,4 @@
 /public/app.html
 /public/templates/**/*.html
 /tmp/
+/db/*.sqlite3

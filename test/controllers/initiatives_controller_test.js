@@ -5,6 +5,9 @@ var I18n = require("root/lib/i18n")
 var Config = require("root/config")
 var respond = require("root/test/fixtures").respond
 var concat = Array.prototype.concat.bind(Array.prototype)
+var randomHex = require("root/lib/crypto").randomHex
+var md5 = require("root/lib/crypto").md5
+var db = require("root").db
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var VOTES = require("root/config").votesRequired
 var PARTNER_ID = Config.apiPartnerId
@@ -34,6 +37,7 @@ var DISCUSSION = {
 
 var CLOSED_DISCUSSION = {
 	id: UUID,
+	createdAt: new Date(2000, 0, 1),
 	sourcePartnerId: PARTNER_ID,
 	status: "closed",
 	description: "<body><h1>My thoughts.</h1></body>",
@@ -44,6 +48,7 @@ var CLOSED_DISCUSSION = {
 
 var CLOSED_EXTERNAL_DISCUSSION = {
 	id: UUID,
+	createdAt: new Date(2000, 0, 1),
 	sourcePartnerId: EXTERNAL_PARTNER_ID,
 	status: "closed",
 	description: "<body><h1>My thoughts.</h1></body>",
@@ -64,9 +69,12 @@ var PROPOSABLE_DISCUSSION = {
 
 var INITIATIVE = {
 	id: UUID,
+	createdAt: new Date(2000, 0, 1),
 	status: "voting",
-	description: "<body><h1>My thoughts.</h1></body>",
+	title: "My thoughts",
+	description: "<body><h1>My thoughts</h1></body>",
 	creator: {name: "John"},
+	visibility: "public",
 	permission: {level: "read"},
 
 	vote: {
@@ -77,6 +85,7 @@ var INITIATIVE = {
 
 var PROCESSED_INITIATIVE = {
 	id: UUID,
+	createdAt: new Date(2000, 0, 1),
 	status: "closed",
 	description: "<body><h1>My thoughts.</h1></body>",
 	creator: {name: "John"},
@@ -412,10 +421,49 @@ describe("InitiativesController", function() {
 	})
 
 	describe("PUT /:id/signature", function() {
-		describe("when not logged in", function() {
-			require("root/test/fixtures").csrf()
+		require("root/test/fixtures").csrf()
 
-			it("must send mobile-id vote", function*() {
+		it("must send mobile-id vote", function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
+
+			var created = 0
+			this.router.post(`/api/topics/${UUID}/votes/${INITIATIVE.vote.id}`,
+				function(req, res) {
+				++created
+				req.body.must.eql({
+					options: [{optionId: "0bf34d36-59cd-438f-afd1-9a3a779b78b0"}],
+					pid: "11412090004",
+					phoneNumber: "+37200000766",
+				})
+
+				respond({data: {challengeID: "1337", token: "abcdef"}}, req, res)
+			})
+
+			var res = yield this.request(`/initiatives/${UUID}/signature`, {
+				method: "POST",
+				form: {
+					_csrf_token: this.csrfToken,
+					method: "mobile-id",
+					optionId: "0bf34d36-59cd-438f-afd1-9a3a779b78b0",
+					pid: "11412090004",
+					phoneNumber: "+37200000766"
+				}
+			})
+
+			created.must.equal(1)
+			res.statusCode.must.equal(200)
+		})
+
+		O.each({
+			"00000766": "+37200000766",
+			"37000000766": "37000000766",
+			"37200000766": "37200000766",
+			"37100000766": "37100000766",
+			"+37000000766": "+37000000766",
+			"+37200000766": "+37200000766"
+		}, function(long, short) {
+			it(`must transform mobile-id number ${short} to ${long}`, function*() {
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -426,7 +474,7 @@ describe("InitiativesController", function() {
 					req.body.must.eql({
 						options: [{optionId: "0bf34d36-59cd-438f-afd1-9a3a779b78b0"}],
 						pid: "11412090004",
-						phoneNumber: "+37200000766",
+						phoneNumber: long,
 					})
 
 					respond({data: {challengeID: "1337", token: "abcdef"}}, req, res)
@@ -439,54 +487,155 @@ describe("InitiativesController", function() {
 						method: "mobile-id",
 						optionId: "0bf34d36-59cd-438f-afd1-9a3a779b78b0",
 						pid: "11412090004",
-						phoneNumber: "+37200000766"
+						phoneNumber: short
 					}
 				})
 
 				created.must.equal(1)
 				res.statusCode.must.equal(200)
 			})
+		})
+	})
 
-			O.each({
-				"00000766": "+37200000766",
-				"37000000766": "37000000766",
-				"37200000766": "37200000766",
-				"37100000766": "37100000766",
-				"+37000000766": "+37000000766",
-				"+37200000766": "+37200000766"
-			}, function(long, short) {
-				it(`must transform mobile-id number ${short} to ${long}`, function*() {
-					this.router.get(`/api/topics/${UUID}`,
-						respond.bind(null, {data: INITIATIVE}))
+	describe("POST /:id/subscriptions", function() {
+		require("root/test/db")()
+		require("root/test/fixtures").csrf()
 
-					var created = 0
-					this.router.post(`/api/topics/${UUID}/votes/${INITIATIVE.vote.id}`,
-						function(req, res) {
-						++created
-						req.body.must.eql({
-							options: [{optionId: "0bf34d36-59cd-438f-afd1-9a3a779b78b0"}],
-							pid: "11412090004",
-							phoneNumber: long,
-						})
+		var MAILCHIMP_INTERESTS_PATH = [
+			"/3.0/lists",
+			Config.mailchimpListId,
+			"interest-categories",
+			Config.mailchimpInterestCategoryId,
+			"interests"
+		].join("/")
 
-						respond({data: {challengeID: "1337", token: "abcdef"}}, req, res)
-					})
+		var MAILCHIMP_MEMBERS_PATH = `/3.0/lists/${Config.mailchimpListId}/members`
 
-					var res = yield this.request(`/initiatives/${UUID}/signature`, {
-						method: "POST",
-						form: {
-							_csrf_token: this.csrfToken,
-							method: "mobile-id",
-							optionId: "0bf34d36-59cd-438f-afd1-9a3a779b78b0",
-							pid: "11412090004",
-							phoneNumber: short
-						}
-					})
+		O.each({
+			discussion: DISCUSSION,
+			initiative: INITIATIVE
+		}, function(initiative, name) {
+			it(`must subscribe to ${name}'s Mailchimp list`, function*() {
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: initiative}))
 
-					created.must.equal(1)
-					res.statusCode.must.equal(200)
+				var interestId = randomHex(10)
+				yield db.create("initiatives", {
+					uuid: UUID,
+					mailchimp_interest_id: interestId
 				})
+
+				var email = "User@example.com"
+				var emailHash = md5(email.toLowerCase())
+
+				var path = `/3.0/lists/${Config.mailchimpListId}/members/${emailHash}`
+				this.router.put(path, function(req, res) {
+					req.body.must.eql({
+						email_address: email,
+						status_if_new: "pending",
+						interests: {[interestId]: true},
+						ip_signup: "127.0.0.1"
+					})
+
+					res.end()
+				})
+				
+				var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
+					method: "POST",
+					form: {_csrf_token: this.csrfToken, email: email}
+				})
+
+				res.statusCode.must.equal(303)
+				res.headers.location.must.equal("/initiatives/" + UUID)
 			})
+		})
+
+		it("must create Mailchimp group before subscribing", function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
+
+			var interestId = randomHex(10)
+			this.router.post(MAILCHIMP_INTERESTS_PATH, function(req, res) {
+				req.body.must.eql({name: INITIATIVE.title})
+				respond({id: interestId}, req, res)
+			})
+
+			var email = "User@example.com"
+			var emailHash = md5(email.toLowerCase())
+			this.router.put(MAILCHIMP_MEMBERS_PATH + "/" + emailHash, (req, res) => {
+				req.body.interests.must.eql({[interestId]: true})
+				res.end()
+			})
+			
+			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
+				method: "POST",
+				form: {_csrf_token: this.csrfToken, email: email}
+			})
+
+			res.statusCode.must.equal(303)
+
+			yield db.search("SELECT * FROM initiatives").must.then.eql([{
+				uuid: UUID, mailchimp_interest_id: interestId
+			}])
+		})
+
+		it("must increment title if already exists", function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
+
+			var created = 0
+			var interestId = randomHex(10)
+			this.router.post(MAILCHIMP_INTERESTS_PATH, function(req, res) {
+				if (!created++) {
+					res.statusCode = 400
+
+					respond({
+						title: "Invalid Resource",
+						status: 400,
+						detail: `Cannot add "${INITIATIVE.title}" because it already exists on the list.`,
+						instance: "a660879b-b8d7-4165-989d-60851ff36a10"
+					}, req, res)
+				}
+				else {
+					req.body.must.eql({name: INITIATIVE.title + " (2000-01-01)"})
+					respond({id: interestId}, req, res)
+				}
+			})
+
+			var email = "User@example.com"
+			var emailHash = md5(email.toLowerCase())
+			var path = `/3.0/lists/${Config.mailchimpListId}/members/${emailHash}`
+			this.router.put(path, function(req, res) {
+				req.body.interests.must.eql({[interestId]: true})
+				res.end()
+			})
+			
+			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
+				method: "POST",
+				form: {_csrf_token: this.csrfToken, email: email}
+			})
+
+			res.statusCode.must.equal(303)
+
+			yield db.search("SELECT * FROM initiatives").must.then.eql([{
+				uuid: UUID, mailchimp_interest_id: interestId
+			}])
+		})
+
+		it("must respond with 403 Forbidden if discussion not public",
+			function*() {
+			PUBLISHABLE_DISCUSSION.visibility.must.not.equal("public")
+
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: PUBLISHABLE_DISCUSSION}))
+			
+			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
+				method: "POST",
+				form: {_csrf_token: this.csrfToken, email: "user@example.com"}
+			})
+
+			res.statusCode.must.equal(403)
+			yield db.search("SELECT * FROM initiatives").must.then.eql([])
 		})
 	})
 })

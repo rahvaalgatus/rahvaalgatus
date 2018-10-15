@@ -252,6 +252,7 @@
 	"START_DISCUSSION": "CREATE AN INITIATIVE ",
 	"STATUS": "status",
 	"SUBMIT_QUERY": "SUBMIT",
+	"SUBSCRIBED": "Täname! Saate meilitsi teavituse algatuse edenemisest.",
 	"SUPPORTERS": "<h2 id=\"supporters\">Supporters</h2>\n\n<ul>\n  <li>Let’s Do It Foundation</li>\n  <li>National Foundation of Civil Society</li>\n</ul>\n",
 	"SUPPORT_BUTTON": "SUPPORT ",
 	"SUPPORT_LABEL": "Donation amount in euros",
