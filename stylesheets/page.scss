@@ -638,7 +638,8 @@ button.inherited {
 	}
 
 	.uuseakus,
-	.kestame {
+	.kestame,
+	.hea-annetus {
 		display: block;
 		float: right;
 		height: inherit;
@@ -650,6 +651,13 @@ button.inherited {
 
 	.uuseakus { width: 10rem; }
 	.kestame { width: 15rem; }
+	.hea-annetus { height: 3.6rem; }
+
+	@include tablet {
+		.uuseakus,
+		.kestame,
+		.hea-annetus { display: none; }
+	}
 
 	nav li {
 		display: inline;
@@ -671,7 +679,7 @@ button.inherited {
 		}
 	}
 
-	@include tablet {
+  @media only screen and (max-width: 999px) {
 		menu { margin-bottom: 1rem; }
 		.logo { float: none; }
 
