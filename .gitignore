@@ -5,3 +5,5 @@
 /public/templates/**/*.html
 /tmp/
 /db/*.sqlite3
+/config/staging.json
+/config/production.json
