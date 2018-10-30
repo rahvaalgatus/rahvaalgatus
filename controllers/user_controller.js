@@ -4,6 +4,7 @@ var HttpError = require("standard-http-error")
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
 var translateCitizenError = require("root/lib/api").translateError
+var parseCitizenInitiative = require("root/lib/api").parseCitizenInitiative
 var next = require("co-next")
 
 exports.router = Router({mergeParams: true})
@@ -34,6 +35,7 @@ function* read(req, res) {
 	var path = "/api/users/self/topics?include[]=vote&include[]=event"
 	var initiatives = req.api(path)
 	initiatives = yield initiatives.then(getRows)
+	initiatives = initiatives.map(parseCitizenInitiative)
 
 	res.render("user/read", {
 		user: req.user,
