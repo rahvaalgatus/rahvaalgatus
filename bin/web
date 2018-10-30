@@ -1,9 +1,4 @@
 #!/usr/bin/env node
-// Deploying to Zone through FTP loses the node_modules/root symlink.
-var Fs = require("fs")
-var ROOT_LINK = __dirname + "/../node_modules/root"
-if (!Fs.existsSync(ROOT_LINK)) Fs.symlinkSync("..", ROOT_LINK)
-
 var O = require("oolong")
 var Url = require("url")
 var Http = require("http")
