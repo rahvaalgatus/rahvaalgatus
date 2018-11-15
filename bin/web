@@ -14,7 +14,7 @@ var PORT = process.env.PORT || 3000
 var PUBLIC_DIR = __dirname + "/../public"
 var FONT_SUFFIXES = [".eot", ".woff", ".woff2", ".ttf", ".svg"]
 var COOKIE_SECRET = process.env.COOKIE_SECRET || Config.cookieSecret
-var ERR_TEMPLATES = {401: "401", 404: "404", 412: "412", 500: "500"}
+var ERR_TEMPLATES = {401: "401", 404: "404", 412: "412", 500: "500", 503: "503"}
 
 var app = module.exports = Express()
 
@@ -42,6 +42,7 @@ app.use(require("root/lib/middleware/i18n_middleware"))
 app.use(require("root/lib/middleware/csrf_middleware"))
 app.use(require("flash-fiction/express"))
 
+app.use(require("root/lib/middleware/maintenance_middleware"))
 app.use(require("root/lib/middleware/session_middleware"))
 app.use(require("root/lib/middleware/api_middleware"))
 
