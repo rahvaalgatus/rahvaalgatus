@@ -1,10 +1,14 @@
 {
 	"title": "Uus Eakus",
 	"url": "https://uuseakus.rahvaalgatus.ee",
-	"apiUrl": "https://api.citizenos.com",
+	"apiUrl": "https://cos.rahvaalgatus.ee",
 	"apiPartnerId": "a4cc118f-69f3-4708-8f84-d3f46ad1d63b",
-	"apiAuthorizeUrl": "https://api.citizenos.com/api/auth/openid/authorize",
+	"apiAuthorizeUrl": "https://cos.rahvaalgatus.ee/api/auth/openid/authorize",
+	"etherpadUrl": "https://cos.rahvaalgatus.ee/etherpad",
 	"adminCoauthors": ["koostookogu@gmail.com"],
+	"cookieSecret": null,
+	"cookieDomain": "rahvaalgatus.ee",
+	"maintenance": false,
 
 	"language": "et",
 	"languages": ["et"],
@@ -16,6 +20,9 @@
 	"userVoiceApiKey": "X2tNuk059z6CD4Em5Q65KQ",
 	"maksekeskusUrl": "https://payment.maksekeskus.ee/pay/1/link.html",
 	"maksekeskusId": "62c9e4f7-beea-4120-a08d-3dbafda55c9a",
+	"mailchimpApiKey": "-us1",
+	"mailchimpListId": "",
+	"mailchimpInterestCategoryId": "",
 
 	"helpUrls": {
 		"et": "http://help.rahvaalgatus.ee/abi/tagged/uus_eakus"

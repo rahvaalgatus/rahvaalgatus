@@ -21,13 +21,13 @@ block body
 		var encode = encodeURIComponent
 		var now = new Date
 		var unclosedStatus = Initiative.getUnclosedStatus(initiative)
-		var createdAt = new Date(initiative.createdAt)
+		var createdAt = initiative.createdAt
 
 	header#initiative-header: center
 		h1= initiative.title
 		span.author= initiative.creator.name
 		= ", "
-		time(datetime=initiative.createdAt)= I18n.formatDate("numeric", createdAt)
+		time(datetime=createdAt.toJSON())= I18n.formatDate("numeric", createdAt)
 
 	nav#initiative-tabs: center
 		menu

@@ -8,14 +8,14 @@ mixin initiative(initiative)
 		var _ = require("lodash")
 		var I18n = require("root/lib/i18n")
 		var Config = require("root/config")
-		var createdAt = new Date(initiative.createdAt)
+		var createdAt = initiative.createdAt
 		var partner = Config.partners[initiative.sourcePartnerId]
 		var category = _.values(_.pick(Config.categories, initiative.categories))[0]
 		var badge = partner || category
 
 	li.initiative
 		a(href=`/initiatives/${initiative.id}`)
-			time(datetime=initiative.createdAt)= I18n.formatDate("numeric", createdAt)
+			time(datetime=createdAt.toJSON())= I18n.formatDate("numeric", createdAt)
 			h3= initiative.title
 
 			if badge
@@ -33,7 +33,7 @@ mixin progress(initiative)
 		var VOTES_REQUIRED = Config.votesRequired
 
 		var unclosedStatus = Initiative.getUnclosedStatus(initiative)
-		var createdAt = new Date(initiative.createdAt)
+		var createdAt = initiative.createdAt
 		var endsAt = new Date(initiative.endsAt)
 
 		var klass = {
@@ -119,17 +119,12 @@ mixin initiative-subscribe(initiative)
 
 	if Initiative.isPublic(initiative)
 		+form#initiative-subscribe(
-			action="https://docs.google.com/forms/d/e/1FAIpQLScP706DtEaSwnt8GYvgw30KOWvdfl7DBhjwyW82V0IesDrx0g/formResponse",
-			target="_blank",
-			method="POST")
+			method="post",
+			action="/initiatives/#{initiative.id}/subscriptions")
 			h3= t("WANT_TO_KEEP_INFORMED_ABOUT_FURTHER_PROGRESS")
 
-			input(name="entry.1310039861", type="hidden", value=initiative.id)
-			input(name="entry.426608193", type="hidden", value=initiative.title)
-			input(name="fbzx", value="-7339236801065826742", type="hidden")
-
 			input#initiative-subscribe-email.form-input(
-				name="entry.120482688",
+				name="email",
 				type="email",
 				placeholder=t("LBL_EMAIL"))
 

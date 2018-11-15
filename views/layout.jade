@@ -26,7 +26,7 @@ html
 			when "production"
 				script(src="https://cdn.ravenjs.com/3.9.1/raven.min.js")
 				script.
-					Raven.config("#{process.env.SENTRY_PUBLIC_DSN}", {
+					Raven.config("#{Config.sentryPublicDsn}", {
 						environment: "#{ENV}",
 						user: !{stringify(req.user)},
 
@@ -71,6 +71,11 @@ html
 							button.inherited(name="_method", value="delete")= t("BTN_LOG_OFF")
 				else
 					a.right(href="/session/new")= t("BTN_LOG_IN_REGISTER")
+
+			a.hea-annetus(
+				href="https://heakodanik.ee/annetuste-kogumise-hea-tava/",
+				title="Hea annetuse koguja")
+				img(src="/images/hea-annetus.png", alt="Hea annetuse koguja")
 
 			a.logo(href="/")
 				img(src="/images/uuseakus.png", alt=SITE_TITLE)

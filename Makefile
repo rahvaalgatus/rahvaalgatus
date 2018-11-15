@@ -21,20 +21,22 @@ RSYNC_OPTS = \
 	--omit-dir-times \
 	--times \
 	--delete \
-	--delete-excluded \
 	--prune-empty-dirs \
 	--exclude ".*" \
-	--exclude "/tags" \
 	--exclude "/app/***" \
+	--exclude "/config/staging.json" \
+	--exclude "/config/production.json" \
 	--exclude "/stylesheets/***" \
 	--exclude "/test/***" \
 	--exclude "/scripts/***" \
+	--exclude "/db/*.sqlite3" \
 	--exclude "/node_modules/co-mocha/***" \
 	--exclude "/node_modules/livereload/***" \
 	--exclude "/node_modules/mitm/***" \
 	--exclude "/node_modules/mocha/***" \
 	--exclude "/node_modules/must/***" \
 	--exclude "/node_modules/node-sass/***" \
+	--exclude "/node_modules/sqlite3/***" \
 	--exclude "/tmp/***"
 
 export PORT
@@ -67,16 +69,16 @@ stylesheets:
 autostylesheets: stylesheets
 	$(MAKE) SASS="$(SASS) --watch" "$<"
 
-test:
+test: db/test.sqlite3
 	@$(NODE) $(NODE_OPTS) $(MOCHA) -R dot $(TEST)
 
-spec:
+spec: db/test.sqlite3
 	@$(NODE) $(NODE_OPTS) $(MOCHA) -R spec $(TEST)
 
-autotest:
+autotest: db/test.sqlite3
 	@$(NODE) $(NODE_OPTS) $(MOCHA) -R dot --watch $(TEST)
 
-autospec:
+autospec: db/test.sqlite3
 	@$(NODE) $(NODE_OPTS) $(MOCHA) -R spec --watch $(TEST)
 
 test/server: export TEST_TAGS = server
@@ -94,6 +96,16 @@ shrinkwrap:
 
 rebuild:
 	$(NPM_REBUILD) node-sass
+	$(NPM_REBUILD) sqlite3
+
+db/create: db/$(ENV).sqlite3
+
+db/test:
+	rm -f db/test.sqlite3
+	$(MAKE) db/test.sqlite3
+
+db/%.sqlite3:
+	sqlite3 "$@" < db/database.sql
 
 deploy:
 	@rsync $(RSYNC_OPTS) . "$(APP_HOST):./$(or $(APP_PATH), $(error "APP_PATH"))/"
@@ -131,4 +143,5 @@ lib/i18n/ru.json: tmp/translations.json
 .PHONY: server
 .PHONY: shrinkwrap
 .PHONY: deploy staging production
+.PHONY: db/create db/test
 .PHONY: translations

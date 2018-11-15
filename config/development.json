@@ -3,7 +3,7 @@
 	"maksekeskusId": "45626d92-f1b2-45a5-832b-39588b192dae",
 
 	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
+	"cookieDomain": null,
 	"votesRequired": 2,
-	"minDeadlineDays": 0,
-	"etherpadInsecure": true
+	"minDeadlineDays": 0
 }

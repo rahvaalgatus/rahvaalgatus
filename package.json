@@ -25,6 +25,8 @@
 		"lazy-object": "",
 		"linkifyjs": "",
 		"date-fns": "",
+		"denodeify": "",
+		"sqlite3": "",
 		"raven": "",
 		"morgan": "",
 		"method-override": ""

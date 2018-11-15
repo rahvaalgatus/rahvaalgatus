@@ -22,6 +22,6 @@ block tab
 				required)
 
 			label.form-label= t("POST_INITIATIVE_TEXT")
-			textarea.form-textarea(name="text", required)= attrs.text
+			textarea.form-textarea(name="text", required, maxlength=10000)= attrs.text
 
 			button.form-submit.primary-button= t("BTN_POST_UPDATE")

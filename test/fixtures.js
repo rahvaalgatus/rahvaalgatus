@@ -32,6 +32,6 @@ exports.csrf = function() {
 exports.respond = respond
 
 function respond(json, _req, res) {
-	res.writeHead(200, HEADERS)
+	res.writeHead(res.statusCode, HEADERS)
 	res.end(JSON.stringify(json))
 }

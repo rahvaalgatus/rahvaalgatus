@@ -638,15 +638,26 @@ button.inherited {
 		img { width: 100%; }
 	}
 
-	.uuseakus {
+	.uuseakus,
+	.kestame,
+	.hea-annetus {
 		display: block;
 		float: right;
-		width: 10rem;
 		height: inherit;
 		margin-left: 2rem;
 		margin-top: -0.5rem;
 
 		img { width: 100%; }
+	}
+
+	.uuseakus { width: 10rem; }
+	.kestame { width: 15rem; }
+	.hea-annetus img { height: 3.6rem; }
+
+	@include tablet {
+		.uuseakus,
+		.kestame,
+		.hea-annetus { display: none; }
 	}
 
 	nav li {
@@ -674,7 +685,7 @@ button.inherited {
 		}
 	}
 
-	@include tablet {
+  @media only screen and (max-width: 999px) {
 		menu { margin-bottom: 1rem; }
 
 		.logo {
