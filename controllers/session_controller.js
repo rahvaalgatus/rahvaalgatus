@@ -60,6 +60,9 @@ function redirect(req, res) {
 	var host = `${req.protocol}://${req.headers.host}`
 	var cb = `${host}${req.baseUrl}${req.path}?unhash`
 
+	// Delete stale TLD cookies.
+	res.clearCookie("citizenos_token", {httpOnly: true, secure: req.secure})
+
 	res.redirect(302, Url.format({
 		__proto__: Url.parse(AUTHORIZE_URL),
 
