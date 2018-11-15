@@ -7,8 +7,8 @@ lazy(exports, "errorReporter", function() {
     case "staging":
     case "production":
 			var ErrorReporter = require("root/lib/error_reporter")
-			var DSN = process.env.SENTRY_DSN || require("root/config").sentryDsn
-			return new ErrorReporter(DSN)
+			var Config = require("root/config")
+			return new ErrorReporter(Config.sentryDsn)
 
 		case "test": return _.noop
 		default: return _.ary(console.error, 1)

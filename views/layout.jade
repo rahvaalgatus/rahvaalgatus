@@ -26,7 +26,7 @@ html
 			when "production"
 				script(src="https://cdn.ravenjs.com/3.9.1/raven.min.js")
 				script.
-					Raven.config("#{process.env.SENTRY_PUBLIC_DSN}", {
+					Raven.config("#{Config.sentryPublicDsn}", {
 						environment: "#{ENV}",
 						user: !{stringify(req.user)},
 
