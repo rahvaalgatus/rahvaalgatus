@@ -11,7 +11,7 @@ lazy(exports, "errorReporter", function() {
 			return new ErrorReporter(Config.sentryDsn)
 
 		case "test": return _.noop
-		default: return _.ary(console.error, 1)
+		default: return require("root/lib/console_error_reporter")
   }
 })
 
