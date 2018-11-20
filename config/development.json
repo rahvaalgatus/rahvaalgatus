@@ -4,6 +4,7 @@
 	"apiAuthorizeUrl": "https://citizenos-citizenos-api-test.herokuapp.com/api/auth/openid/authorize",
 	"maksekeskusUrl": "https://payment-test.maksekeskus.ee/pay/1/link.html",
 	"maksekeskusId": "45626d92-f1b2-45a5-832b-39588b192dae",
+	"etherpadUrl": null,
 
 	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
 	"cookieDomain": null,
