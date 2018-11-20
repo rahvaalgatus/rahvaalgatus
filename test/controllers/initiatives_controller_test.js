@@ -14,6 +14,7 @@ var PARTNER_ID = Config.apiPartnerId
 var EXTERNAL_PARTNER_ID = O.keys(Config.partners)[0]
 var PARTNER_IDS = concat(PARTNER_ID, O.keys(Config.partners))
 var ADMIN_COAUTHORS = Config.adminCoauthors
+var INITIATIVE_TYPE = "application/vnd.rahvaalgatus.initiative+json; v=1"
 
 var PUBLISHABLE_DISCUSSION = {
 	id: UUID,
@@ -290,6 +291,29 @@ describe("InitiativesController", function() {
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(404)
+			})
+		})
+	})
+
+	describe(`GET /:id with ${INITIATIVE_TYPE}`, function() {
+		it("must respond with JSON", function*() {
+			this.router.get(`/api/topics/${UUID}`, respond.bind(null, {
+				data: INITIATIVE
+			}))
+
+			this.router.get(`/api/topics/${UUID}/comments`,
+				respond.bind(null, EMPTY_COMMENTS_RES))
+
+			var res = yield this.request("/initiatives/" + UUID, {
+				headers: {Accept: INITIATIVE_TYPE}
+			})
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(INITIATIVE_TYPE)
+
+			res.body.must.eql({
+				title: INITIATIVE.title,
+				signatureCount: 0
 			})
 		})
 	})
