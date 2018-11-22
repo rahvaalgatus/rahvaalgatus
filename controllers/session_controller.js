@@ -6,6 +6,7 @@ var randomHex = require("root/lib/crypto").randomHex
 var AUTHORIZE_URL = Config.apiAuthorizeUrl
 var DEFAULT_LANG = Config.language
 var LANGS = require("root/lib/i18n").STRINGS
+var TOKEN_COOKIE_NAME = "citizenos_token"
 var next = require("co-next")
 var csrf = require("root/lib/middleware/csrf_middleware")
 var oAuthCsrf = new QueryCsrfMiddleware("csrf_token_for_citizenos", "state")
@@ -36,7 +37,7 @@ exports.router.put("/", next(function*(req, res) {
 }))
 
 exports.router.delete("/", function(req, res) {
-	res.clearCookie("citizenos_token", {
+	res.clearCookie(TOKEN_COOKIE_NAME, {
 		httpOnly: true,
 		secure: req.secure,
 		domain: Config.cookieDomain
@@ -60,8 +61,10 @@ function redirect(req, res) {
 	var host = `${req.protocol}://${req.headers.host}`
 	var cb = `${host}${req.baseUrl}${req.path}?unhash`
 
-	// Delete stale TLD cookies.
-	res.clearCookie("citizenos_token", {httpOnly: true, secure: req.secure})
+	// Delete stale TLD cookies. Previously domains were set on
+	// "rahvaalgatus.ee", but are now set on ".rahvaalgatus.ee". Without removing
+	// the former, they would get sent before the latter.
+	res.clearCookie(TOKEN_COOKIE_NAME, {httpOnly: true, secure: req.secure})
 
 	res.redirect(302, Url.format({
 		__proto__: Url.parse(AUTHORIZE_URL),
@@ -89,12 +92,15 @@ function create(req, res, next) {
 	oAuthCsrf.delete(req, res)
 	csrf.reset(req, res)
 
-	res.cookie("citizenos_token", req.query.access_token, {
-		httpOnly: true,
-		secure: req.secure,
-		domain: Config.cookieDomain,
-		maxAge: 30 * 86400 * 1000
-	})
+	// In production the CitizenOS instance sets the token cookie for a larger
+	// scope than it redirects here with. Use that as it works across partnerIds.
+	if (req.cookies[TOKEN_COOKIE_NAME] == null)
+		res.cookie(TOKEN_COOKIE_NAME, req.query.access_token, {
+			httpOnly: true,
+			secure: req.secure,
+			domain: Config.cookieDomain,
+			maxAge: 30 * 86400 * 1000
+		})
 
 	var referrer = req.cookies.session_referrer || "/"
 	res.clearCookie("session_referrer")

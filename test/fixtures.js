@@ -1,6 +1,5 @@
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var fetchDefaults = require("fetch-defaults")
-var HEADERS = {"Content-Type": "application/json"}
 
 exports.user = function() {
 	beforeEach(function() {
@@ -32,6 +31,6 @@ exports.csrf = function() {
 exports.respond = respond
 
 function respond(json, _req, res) {
-	res.writeHead(res.statusCode, HEADERS)
+	res.writeHead(res.statusCode, {"Content-Type": "application/json"})
 	res.end(JSON.stringify(json))
 }
