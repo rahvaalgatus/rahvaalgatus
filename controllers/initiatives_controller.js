@@ -7,6 +7,9 @@ var Initiative = require("root/lib/initiative")
 var DateFns = require("date-fns")
 var Config = require("root/config")
 var I18n = require("root/lib/i18n")
+var MediaType = require("medium-type")
+var ResponseTypeMiddeware =
+	require("root/lib/middleware/response_type_middleware")
 var md5 = require("root/lib/crypto").md5
 var db = require("root").db
 var countVotes = Initiative.countSignatures.bind(null, "Yes")
@@ -34,6 +37,11 @@ var LOCAL_DATE = /^(\d\d)\.(\d\d)\.(\d\d\d\d)\s+/
 var UI_TRANSLATIONS = O.map(require("root/lib/i18n").STRINGS, function(lang) {
 	return O.filter(lang, (_value, key) => key.indexOf("HWCRYPTO") >= 0)
 })
+
+var RESPONSE_TYPES = [
+	"text/html",
+	"application/vnd.rahvaalgatus.initiative+json; v=1"
+]
 
 exports.router = Router({mergeParams: true})
 
@@ -115,14 +123,28 @@ exports.router.use("/:id", next(function*(req, res, next) {
 	next()
 }))
 
-exports.router.get("/:id", function(req, _res, next) {
-	switch (Initiative.getUnclosedStatus(req.initiative)) {
-		case "inProgress": req.url = req.path + "/discussion"; break
-		case "voting": req.url = req.path + "/vote"; break
-		case "followUp": req.url = req.path + "/events"; break
-	}
+exports.router.get("/:id",
+	new ResponseTypeMiddeware(RESPONSE_TYPES.map(MediaType)),
+	function(req, res, next) {
+	var initiative = req.initiative
 
-	next()
+	switch (res.contentType.name) {
+		case "application/vnd.rahvaalgatus.initiative+json":
+			res.setHeader("Content-Type", res.contentType)
+			res.send({
+				title: initiative.title,
+				signatureCount: initiative.vote ? countVotes(initiative) : 0
+			})
+			break
+
+		default: switch (Initiative.getUnclosedStatus(initiative)) {
+			case "inProgress": req.url = req.path + "/discussion"; break
+			case "voting": req.url = req.path + "/vote"; break
+			case "followUp": req.url = req.path + "/events"; break
+		}
+
+		next()
+	}
 })
 
 exports.router.put("/:id", next(function*(req, res) {

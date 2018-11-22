@@ -29,7 +29,8 @@
 		"sqlite3": "",
 		"raven": "",
 		"morgan": "",
-		"method-override": ""
+		"method-override": "",
+		"medium-type": ""
 	},
 
 	"devDependencies": {

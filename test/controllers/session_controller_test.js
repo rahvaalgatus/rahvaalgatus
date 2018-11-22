@@ -4,12 +4,14 @@ var Config = require("root/config")
 var Cookie = require("tough-cookie").Cookie
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var fetchDefaults = require("fetch-defaults")
+var respond = require("root/test/fixtures").respond
 var encode = encodeURIComponent
 var decode = decodeURIComponent
 var PATH = "/session/new"
 var HEADERS = {"Content-Type": "application/json"}
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var AUTHORIZE_URL = Config.apiAuthorizeUrl
+var TOKEN_COOKIE_NAME = "citizenos_token"
 var CSRF_COOKIE_NAME = "csrf_token_for_citizenos"
 var CSRF_COOKIE_PATH = "/session"
 var REFERRER_COOKIE_NAME = "session_referrer"
@@ -17,6 +19,7 @@ var REFERRER_COOKIE_NAME = "session_referrer"
 describe("SessionController", function() {
 	require("root/test/web")()
 	require("root/test/mitm")()
+	beforeEach(require("root/test/mitm").router)
 
 	describe("GET /new", function() {
 		it("must redirect to Citizen OS", function*() {
@@ -75,17 +78,35 @@ describe("SessionController", function() {
 			res.headers.location.must.equal("/")
 
 			var cookies = parseCookies(res.headers["set-cookie"])
-			cookies.citizenos_token.path.must.equal("/")
-			cookies.citizenos_token.value.must.equal("123456")
-			cookies.citizenos_token.httpOnly.must.be.true()
+			cookies[TOKEN_COOKIE_NAME].path.must.equal("/")
+			cookies[TOKEN_COOKIE_NAME].value.must.equal("123456")
+			cookies[TOKEN_COOKIE_NAME].domain.must.equal(Config.cookieDomain)
+			cookies[TOKEN_COOKIE_NAME].httpOnly.must.be.true()
+		})
+
+		// This is for production where the CitizenOS instance sets the cookie.
+		it("must not overwrite token cookie", function*() {
+			this.router.get("/api/auth/status", respond.bind(null, {data: {
+				id: UUID
+			}}))
+
+			var res = yield this.request(this.path + "&access_token=123456", {
+				headers: {Cookie: serializeCookies({
+					[CSRF_COOKIE_NAME]: this.csrfToken,
+					[TOKEN_COOKIE_NAME]: "7890"
+				})}
+			})
+
+			res.statusCode.must.equal(302)
+			res.headers.location.must.equal("/")
+			var cookies = parseCookies(res.headers["set-cookie"])
+			cookies.must.not.have.property(TOKEN_COOKIE_NAME)
 		})
 
 		it("must redirect to session referrer cookie path", function*() {
-			var token = pseudoHex(16)
-			var path = `${PATH}?state=${token}&access_token=123456`
-			var res = yield this.request(path, {
+			var res = yield this.request(this.path + "&access_token=123456", {
 				headers: {Cookie: serializeCookies({
-					[CSRF_COOKIE_NAME]: token,
+					[CSRF_COOKIE_NAME]: this.csrfToken,
 					[REFERRER_COOKIE_NAME]: this.url + "/foo"
 				})}
 			})
@@ -158,18 +179,19 @@ describe("SessionController", function() {
 			res.headers.location.must.equal("/")
 
 			var cookie = Cookie.parse(res.headers["set-cookie"][0])
-			cookie.key.must.equal("citizenos_token")
+			cookie.key.must.equal(TOKEN_COOKIE_NAME)
 			cookie.expires.must.be.lt(new Date)
 		})
 	})
 })
 
 function authorize() {
-	var token = pseudoHex(16)
-	this.path = PATH + "?state=" + token
+	var csrfToken = pseudoHex(16)
+	this.csrfToken = csrfToken
+	this.path = PATH + "?state=" + csrfToken
 
 	this.request = fetchDefaults(this.request, {
-		headers: {Cookie: `${CSRF_COOKIE_NAME}=${token}`}
+		headers: {Cookie: `${CSRF_COOKIE_NAME}=${csrfToken}`}
 	})
 }
 
