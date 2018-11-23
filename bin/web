@@ -91,9 +91,10 @@ app.use(function(err, req, res, next) {
 		return
 	}
 
-	if (ENV === "development" || ENV === "test") return void next(err)
-
+	// The final Express handler in dev/tests doesn't seem to overwrite status
+	// with 500 if it's set to anything. Ensure it's 500.
 	res.statusCode = 500
+	if (ENV === "development" || ENV === "test") return void next(err)
 	res.render(ERR_TEMPLATES[500], {error: {message: req.t("MSG_ERROR_50000")}})
 })
 
