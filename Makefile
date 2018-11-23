@@ -109,6 +109,7 @@ db/%.sqlite3:
 
 deploy:
 	@rsync $(RSYNC_OPTS) . "$(APP_HOST):./$(or $(APP_PATH), $(error "APP_PATH"))/"
+	ssh $(APP_HOST) pm2 reload $(notdir $(APP_PATH))
 
 staging: APP_PATH = htdocs/rahvaalgatus-staging
 staging: deploy
