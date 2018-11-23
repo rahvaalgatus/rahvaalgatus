@@ -122,6 +122,8 @@
 	"INITIATIVE_CONTENT": "Here you can get an overview of all the initiatives that are being co-created or which already collect signatures of support, as well as monitor the response of Riigikogu to the initiatives received. If you would like to contribute your thoughts or digital signature, click on the title of the initiative of your interest.",
 	"INITIATIVE_DEFAULT_HTML": "<!DOCTYPE HTML><html><body><h1>{{title}}</h1><br><p>Short (about 350 characters) or tweets - short (140 characters) summary – it is aimed at the better reflection of initiatives in the platform and social media</p><br><h2>Proposal</h2><br><p>What change is wanted</p><br><h2>Justification</h2><br><p>Why is it important</p><br><p>This whole text volume is a maximum of 12,000 characters</p><br></body></html>",
 	"INITIATIVE_LIST": "In voting",
+	"INVALID_EMAIL": "Email seems invalid.",
+	"INVALID_FORM": "Sorry, but there seems to be a mistake",
 	"INVITE_BY_EMAIL": "Invite by e-mail",
 	"INVITE_PEOPLE": "Add Co-authors",
 	"IN_FOLLOW_UP_LIST": "In follow-up",

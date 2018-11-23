@@ -610,16 +610,12 @@ describe("InitiativesController", function() {
 			var created = 0
 			var interestId = randomHex(10)
 			this.router.post(MAILCHIMP_INTERESTS_PATH, function(req, res) {
-				if (!created++) {
-					res.statusCode = 400
-
-					respond({
-						title: "Invalid Resource",
-						status: 400,
-						detail: `Cannot add "${INITIATIVE.title}" because it already exists on the list.`,
-						instance: "a660879b-b8d7-4165-989d-60851ff36a10"
-					}, req, res)
-				}
+				if (!created++) respondWithMailchimpError({
+					title: "Invalid Resource",
+					status: 400,
+					detail: `Cannot add "${INITIATIVE.title}" because it already exists on the list.`,
+					instance: "a660879b-b8d7-4165-989d-60851ff36a10"
+				}, req, res)
 				else {
 					req.body.must.eql({name: INITIATIVE.title + " (2000-01-01)"})
 					respond({id: interestId}, req, res)
@@ -646,8 +642,7 @@ describe("InitiativesController", function() {
 			}])
 		})
 
-		it("must respond with 403 Forbidden if discussion not public",
-			function*() {
+		it("must respond with 403 Forbidden if discussion not public", function*() {
 			PUBLISHABLE_DISCUSSION.visibility.must.not.equal("public")
 
 			this.router.get(`/api/topics/${UUID}`,
@@ -661,7 +656,66 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(403)
 			yield db.search("SELECT * FROM initiatives").must.then.eql([])
 		})
+
+		it("must respond with 422 given missing email", function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
+
+			var path = `/3.0/lists/${Config.mailchimpListId}/members/${md5("")}`
+			this.router.put(path, respondWithMailchimpError.bind(null, {
+				type: "http://developer.mailchimp.com/documentation/mailchimp/guides/error-glossary/",
+				title: "Invalid Resource",
+				status: 400,
+				detail: "The resource submitted could not be validated. For field-specific details, see the \"errors\" array.",
+				instance: "88d753ef-5540-42e2-8976-d05754580e9e",
+
+				errors: [{
+					field: "email_address", message: "This value should not be blank."
+				}]
+			}))
+
+			yield db.create("initiatives", {uuid: UUID, mailchimp_interest_id: "x"})
+			
+			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
+				method: "POST",
+				form: {_csrf_token: this.csrfToken, email: ""}
+			})
+
+			res.statusCode.must.equal(422)
+		})
+
+		it("must respond with 422 given invalid email", function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
+
+			var email = "fubar"
+			var emailHash = md5(email.toLowerCase())
+			var path = `/3.0/lists/${Config.mailchimpListId}/members/${emailHash}`
+			this.router.put(path, respondWithMailchimpError.bind(null, {
+				type: "http://developer.mailchimp.com/documentation/mailchimp/guides/error-glossary/",
+				title: "Invalid Resource",
+				status: 400,
+				detail: "Please provide a valid email address.",
+				instance: "fec7d7c0-6c0e-405d-a090-0a05cf988f19"
+			}))
+
+			yield db.create("initiatives", {uuid: UUID, mailchimp_interest_id: "x"})
+			
+			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
+				method: "POST",
+				form: {_csrf_token: this.csrfToken, email: email}
+			})
+
+			res.statusCode.must.equal(422)
+		})
 	})
 })
+
+
+function respondWithMailchimpError(json, _req, res) {
+	if (res.statusCode === 200) res.statusCode = 400
+	res.writeHead(res.statusCode, {"Content-Type": "application/problem+json"})
+	res.end(JSON.stringify(json))
+}
 
 function endRequest(_req, res) { res.end() }

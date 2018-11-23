@@ -126,6 +126,7 @@ mixin initiative-subscribe(initiative)
 			input#initiative-subscribe-email.form-input(
 				name="email",
 				type="email",
+				required,
 				placeholder=t("LBL_EMAIL"))
 
 			button.secondary-button(type="submit")= t("BTN_SUBSCRIBE")

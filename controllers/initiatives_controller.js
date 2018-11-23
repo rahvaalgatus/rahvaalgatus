@@ -410,15 +410,24 @@ exports.router.post("/:id/subscriptions", next(function*(req, res, next) {
 	var email = req.body.email
 	var emailHash = md5(email.toLowerCase())
 
-	yield mailchimp(`/3.0/lists/${Config.mailchimpListId}/members/${emailHash}`, {
-		method: "PUT",
-		json: {
-			email_address: email,
-			status_if_new: "pending",
-			interests: {[interestId]: true},
-			ip_signup: req.ip
-		}
-	})
+	try {
+		var path = `/3.0/lists/${Config.mailchimpListId}/members/${emailHash}`
+		yield mailchimp(path, {
+			method: "PUT",
+			json: {
+				email_address: email,
+				status_if_new: "pending",
+				interests: {[interestId]: true},
+				ip_signup: req.ip
+			}
+		})
+	}
+	catch (ex) {
+		if (isMailchimpEmailErr(ex)) return void res.status(422).render("422", {
+			errors: [req.t("INVALID_EMAIL")]
+		})
+		else throw ex
+	}
 
 	res.flash("notice", req.t("SUBSCRIBED"))
 	res.redirect(303, req.baseUrl + "/" + initiative.id)
@@ -475,7 +484,7 @@ function* createMailchimpInterest(initiative) {
 	try { interest = yield create(initiative.title) }
 	catch (err) {
 		// Basic fail-safe as interests have to have unique names in Mailchimp.
-		if (!isNameTakenErr(err)) throw err
+		if (!isMailchimpNameTakenErr(err)) throw err
 		var date = I18n.formatDate("iso", initiative.createdAt)
 		interest = yield create(`${initiative.title} (${date})`)
 	}
@@ -531,8 +540,16 @@ function parsePrefixDate(str) {
 	return [m ? str.slice(m[0].length) : str, date]
 }
 
-function isNameTakenErr(err) {
+function isMailchimpNameTakenErr(err) {
 	return err.code == 400 && /already exists/.test(err.response.body.detail)
+}
+
+function isMailchimpEmailErr(err) {
+	return err.code == 400 && (
+		err.response.body.errors &&
+		err.response.body.errors.some((e) => e.field == "email_address") ||
+		/email address/.test(err.response.body.detail)
+	)
 }
 
 function getBody(res) { return res.body.data }

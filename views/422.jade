@@ -1,0 +1,8 @@
+extends ./layout
+
+block body
+	section#error.primary-section.text-section: center
+		h1= t("INVALID_FORM")
+		ol
+			each error in errors
+				li= error
