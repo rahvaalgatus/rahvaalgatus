@@ -25,9 +25,9 @@ center {
 	// text-align: inherit.
 	* { margin-right: auto }
 
-	@include tablet {
-		padding-left: 1.5rem;
-		padding-right: 1.5rem;
+	@include mobile {
+		padding-left: $page-mobile-padding;
+		padding-right: $page-mobile-padding;
 	}
 }
 
@@ -111,7 +111,7 @@ center {
 	padding-top: 4rem;
 	padding-bottom: 4rem;
 
-	@include tablet {
+	@include mobile {
 		padding-top: 2.5rem;
 		padding-bottom: 2.5rem;
 	}
@@ -151,6 +151,11 @@ center {
 .initiatives-section {
 	$initiative-width: 22.5rem;
 
+	center {
+		padding-right: 0;
+		@include mobile { padding-right: $page-mobile-padding; }
+	}
+
 	h2 {
 		font-size: 2rem;
 		line-height: 3rem;
@@ -161,12 +166,9 @@ center {
 		font-weight: 900;
 		text-transform: uppercase;
 		max-width: $initiative-width;
-
 		margin-bottom: -3rem;
 
-		& ~ h2 {
-			margin-top: 4rem;
-		}
+		& ~ h2 { margin-top: 4rem; }
 
 		@include tablet {
 			text-align: left;
@@ -179,12 +181,10 @@ center {
 	}
 
 	.initiatives {
-		overflow: hidden;
-		margin-left: $initiative-width;
+		margin-left: $initiative-width + 2rem;
 
-		@include tablet {
-			margin-left: 0;
-		}
+		@include tablet { margin-left: 0; }
+		&:after { display: block; content: ""; clear: both; }
 	}
 
 	.initiative {
@@ -194,13 +194,9 @@ center {
 		line-height: 1;
 		width: $initiative-width;
 		float: left;
-		margin-left: 2rem;
 		margin-bottom: 2rem;
-
-		@include tablet {
-			margin-left: 0;
-			margin-right: 2rem;
-		}
+		margin-left: 0;
+		margin-right: 2rem;
 
 		a {
 			display: block;
