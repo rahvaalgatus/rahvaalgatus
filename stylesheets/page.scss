@@ -219,12 +219,16 @@ center {
 		}
 
 		h3 {
-			font-size: 17px;
+			$font-size: 1.7rem;
+			$line-height: 1.5 * $font-size;
+			font-size: $font-size;
 			color: #4F4F4F;
-			line-height: 1.5;
+			line-height: $line-height;
 			margin-top: 0.5rem;
 			word-wrap: break-word;
-			min-height: 16rem;
+			height: 5 * $line-height;
+			overflow: hidden;
+			margin-bottom: $line-height;
 		}
 
 		.badge {

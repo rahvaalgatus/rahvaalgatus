@@ -56,7 +56,7 @@ block prepend tab
 
 					+progress(initiative)
 
-			!= text
+			!= initiative.html
 
 		if Initiative.isVotable(now, initiative)
 			- var optId = Initiative.findOptionId(hasVote ? "No" : "Yes", initiative)

@@ -8,6 +8,7 @@
 		"express": "",
 		"cookie-parser": "",
 		"body-parser": "",
+		"ent": "",
 		"lodash": "",
 		"oolong": "",
 		"moment": "",

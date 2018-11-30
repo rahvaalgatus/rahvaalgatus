@@ -284,7 +284,6 @@ exports.read = next(function*(subpage, req, res) {
 	else events = EMPTY_ARR
 
 	res.render("initiatives/" + subpage, {
-		text: normalizeText(initiative.description),
 		comments: comments,
 		comment: res.locals.comment || EMPTY_COMMENT,
 		events: events,
@@ -499,12 +498,6 @@ function* createMailchimpInterest(initiative) {
 	function create(title) {
 		return mailchimp(path, {method: "POST", json: {name: title}})
 	}
-}
-
-function normalizeText(html) {
-	html = html.match(/<body>(.*)<\/body>/)[1]
-	html = html.replace(/<h1>(.*?)<\/h1>/, "")
-	return html
 }
 
 function normalizeComment(comment) {
