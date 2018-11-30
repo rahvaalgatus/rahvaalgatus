@@ -242,9 +242,17 @@ mixin date-picker(selector)
 				bound: false,
 			})
 
-mixin initiative-badge(badge)
-	if badge.url
-		a.badge(href=badge.url, title=badge.name)
-			img.badge(src=badge.icon, alt=badge.name)
-	else
-		img.badge(src=badge.icon, alt=badge.name, title=badge.name)
+mixin initiative-badge(initiative)
+	-
+		var _ = require("lodash")
+		var Config = require("root/config")
+		var partner = Config.partners[initiative.sourcePartnerId]
+		var category = _.values(_.pick(Config.categories, initiative.categories))[0]
+		var badge = partner || category
+
+	if badge
+		if badge.url
+			a.badge(href=badge.url, title=badge.name)
+				img.badge(src=badge.icon, alt=badge.name)
+		else
+			img.badge(src=badge.icon, alt=badge.name, title=badge.name)

@@ -502,7 +502,9 @@ function* createMailchimpInterest(initiative) {
 }
 
 function normalizeText(html) {
-	return html.match(/<body>(.*)<\/body>/)[1]
+	html = html.match(/<body>(.*)<\/body>/)[1]
+	html = html.replace(/<h1>(.*?)<\/h1>/, "")
+	return html
 }
 
 function normalizeComment(comment) {

@@ -6,22 +6,15 @@ block append options
 
 block prepend tab
 	-
-		var _ = require("lodash")
 		var I18n = require("root/lib/i18n")
 		var Config = require("root/config")
 		var Initiative = require("root/lib/initiative")
-		var partner = Config.partners[initiative.sourcePartnerId]
-		var category = _.values(_.pick(Config.categories, initiative.categories))[0]
-		var badge = partner || category
 
 	section#initiative.primary-section: center
 		include /_flash.jade
 
 		article.text
 			header
-				if badge
-					+initiative-badge(badge)
-
 				if initiative.endsAt
 					br
 					time.deadline(datetime=initiative.endsAt)

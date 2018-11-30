@@ -11,16 +11,12 @@ block append head
 
 block prepend tab
 	-
-		var _ = require("lodash")
 		var I18n = require("root/lib/i18n")
 		var Config = require("root/config")
 		var Initiative = require("root/lib/initiative")
 		var stringify = require("root/lib/json").stringify
 		var hasVote = flash("signed") || Initiative.hasVote("Yes", initiative)
 		var now = new Date
-		var partner = Config.partners[initiative.sourcePartnerId]
-		var category = _.values(_.pick(Config.categories, initiative.categories))[0]
-		var badge = partner || category
 
 	section#initiative.primary-section: center
 		include /_flash.jade
@@ -59,10 +55,6 @@ block prepend tab
 						= t("VOTING_DEADLINE") + ": " + endsAt
 
 					+progress(initiative)
-
-			header
-				if badge
-					+initiative-badge(badge)
 
 			!= text
 

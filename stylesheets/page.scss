@@ -793,6 +793,15 @@ button.inherited {
 		padding-top: 4rem;
 		font-family: $tisa-pro;
 
+		img.badge {
+			vertical-align: middle;
+			display: inline-block;
+			height: 3rem;
+			margin-left: 2rem;
+		}
+
+		a.badge img { vertical-align: baseline; }
+
 		h1 {
 			color: $title-text;
 			font-size: 4.2rem;
@@ -810,6 +819,8 @@ button.inherited {
 			padding-top: 2rem;
 
 			h1 { font-size: 3.2rem; }
+			a.badge { display: block; margin-left: 0; }
+			img.badge { margin-top: 1rem; margin-left: 0; }
 		}
 	}
 
@@ -885,12 +896,6 @@ button.inherited {
 			margin-bottom: 0.5rem;
 		}
 
-		.badge {
-			float: left;
-			height: 4rem;
-			margin-right: 1rem;
-		}
-
 		h1 {
 			font-size: 4.2rem;
 			color: $title-text;
@@ -921,9 +926,6 @@ button.inherited {
 			font-size: 1.8rem;
 			font-family: $tisa-pro;
 			max-width: $article-width;
-
-			// Clear the badge's floating.
-			h1 { clear: left; }
 
 			// Etherpad generates non-standard HTML by putting a nested <ol> directly
 			// under <ul>.

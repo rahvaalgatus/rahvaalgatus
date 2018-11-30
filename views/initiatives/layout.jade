@@ -24,7 +24,10 @@ block body
 		var createdAt = initiative.createdAt
 
 	header#initiative-header: center
-		h1= initiative.title
+		h1
+			= initiative.title
+			+initiative-badge(initiative)
+
 		span.author= initiative.creator.name
 		= ", "
 		time(datetime=createdAt.toJSON())= I18n.formatDate("numeric", createdAt)
