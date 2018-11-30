@@ -870,16 +870,15 @@ button.inherited {
 		}
 
 		@include tablet {
+			.button { margin: 0 1rem 1rem 0; }
+
+			// They take up too much space on constrained mobile. Hide them for now.
+			.share-button { display: none; }
+		}
+
+		@include mobile {
 			padding-top: 2rem;
-
-			menu {
-				float: none;
-				display: block;
-			}
-
-			.button {
-				margin: 0 1rem 1rem 0;
-			}
+			menu { float: none; display: block; }
 		}
 	}
 

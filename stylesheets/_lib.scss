@@ -23,12 +23,11 @@ $tisa-pro: "Tisa Pro Regular", serif;
 $button-height: 3.6rem;
 $button-radius: 0.3rem;
 $footer-height: 12rem;
-$mobile-width: 569px;
 $page-padding: 2rem;
 $page-width: 96rem;
 
 @mixin tablet {
-  @media only screen and (max-width: 680px) { @content }
+  @media only screen and (max-width: 768px) { @content }
 }
 
 @mixin mobile {

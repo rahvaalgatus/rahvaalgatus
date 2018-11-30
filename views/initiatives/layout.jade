@@ -67,13 +67,13 @@ block body
 					= t("INVITE_PEOPLE")
 
 			if Initiative.isPublic(initiative)
-				a.button.white-button(
+				a.button.white-button.share-button(
 					href="https://facebook.com/sharer/sharer.php?u=#{encode(shareUrl)}",
 					target="_blank")
 					i.icon-facebook
 					= t("SHARE_ON_FACEBOOK")
 
-				a.button.white-button(
+				a.button.white-button.share-button(
 					href="https://twitter.com/intent/tweet?status=#{encode(shareText)}",
 					target="_blank")
 					i.icon-twitter
