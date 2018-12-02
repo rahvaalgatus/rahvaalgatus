@@ -1,13 +1,7 @@
 extends ../layout
 include ../_mixins
 
-block append options
-	-
-		var Initiative = require("root/lib/initiative")
-		var unclosedStatus = Initiative.getUnclosedStatus(initiative)
-		var subpage = unclosedStatus === "inProgress" ? "discussion" : "vote"
-
-block prepend tab
+block prepend subpage
 	section#initiative-comment.primary-section: center
 		include /_flash.jade
 

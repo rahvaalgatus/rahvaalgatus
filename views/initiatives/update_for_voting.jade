@@ -4,7 +4,7 @@ include ./_mixins
 block append head
 	script(src="/assets/inputs.js")
 
-block tab
+block subpage
 	- var formatIso = require("root/lib/i18n").formatDate.bind(null, "iso")
 	- var min = Initiative.getMinDeadline(new Date)
 	- var max = Initiative.getMaxDeadline(new Date)

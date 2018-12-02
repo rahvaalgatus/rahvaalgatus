@@ -1,14 +1,21 @@
 $header-background: #124267;
 $secondary-background: #f2f2f2;
+$light-background: #f6f6f6;
+$light-background-border: #e1e1e1;
 $secondary-light-text: #aaa;
+$discussion-color: #ffb400;
+$voting-color: #00cb81;
+$parliament-color: #1C71A2;
 $text: #4A555D;
-$title-text: #1C71A2;
+$title-text: $parliament-color;
 $link: #53B1EB;
 $flash-background: #3d434a;
 $flash-header-background: #282d33;
-$initiatives-section-title-border: #00cb81;
+$progress-bar-color: #3a434a;
+$progress-bar-background: #eee;
+$initiatives-section-title-border: $voting-color;
 $footer-link: $link;
-$primary-button-background: #00cb81;
+$primary-button-background: $voting-color;
 $primary-button-border: #02b071;
 $primary-button-text: white;
 $secondary-button-background: #45a0e6;
@@ -26,6 +33,7 @@ $footer-height: 12rem;
 $page-padding: 2rem;
 $page-mobile-padding: 1.5rem;
 $page-width: 96rem;
+$flash-min-height: 4rem;
 
 @mixin tablet {
   @media only screen and (max-width: 768px) { @content }
@@ -33,4 +41,8 @@ $page-width: 96rem;
 
 @mixin mobile {
   @media only screen and (max-width: 350px) { @content }
+}
+
+@mixin mobile-and-tablet {
+  @media only screen and (max-width: 767px) { @content }
 }

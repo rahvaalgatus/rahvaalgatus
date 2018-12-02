@@ -1,6 +1,5 @@
 var Path = require("path")
 var Router = require("express").Router
-var Initiative = require("root/lib/initiative")
 var InitiativesController = require("../initiatives_controller")
 var HttpError = require("standard-http-error")
 var isOk = require("root/lib/http").isOk
@@ -15,7 +14,6 @@ exports.router = Router({mergeParams: true})
 
 exports.router.post("/", next(function*(req, res, next) {
 	var initiative = req.initiative
-	var subpage = req.body.referrer || initiativePath(initiative)
 
 	var created = yield req.api(commentsPath(initiative.id), {
 		method: "POST",
@@ -29,13 +27,12 @@ exports.router.post("/", next(function*(req, res, next) {
 
 	if (isOk(created)) {
 		var comment = created.body.data
-		var path = Path.dirname(req.baseUrl)
-		path += "/" + subpage + "#comment-" + comment.id
+		var path = Path.dirname(req.baseUrl) + "#comment-" + comment.id
 		res.redirect(303, path)
 	}
 	else {
 		res.locals.comment = req.body
-		renderWithError(subpage, created.body, req, res, next)
+		renderWithError(created.body, req, res, next)
 	}
 }))
 
@@ -60,7 +57,6 @@ exports.router.get("/:commentId", next(function*(req, res) {
 exports.router.post("/:commentId/replies", next(function*(req, res, next) {
 	var initiative = req.initiative
 	var commentId = req.params.commentId
-	var subpage = req.body.referrer || initiativePath(initiative)
 
 	var created = yield req.api(commentsPath(initiative.id), {
 		method: "POST",
@@ -73,36 +69,26 @@ exports.router.post("/:commentId/replies", next(function*(req, res, next) {
 
 	if (isOk(created)) {
 		var comment = created.body.data
-		var path = Path.dirname(req.baseUrl)
-		path += "/" + subpage + "#comment-" + comment.id
+		var path = Path.dirname(req.baseUrl) + "#comment-" + comment.id
 		res.redirect(303, path)
 	}
 	else {
 		res.locals.comment = {__proto__: req.body, parentId: commentId}
-		renderWithError(subpage, created.body, req, res, next)
+		renderWithError(created.body, req, res, next)
 	}
 }))
 
-function renderWithError(subpage, err, req, res, next) {
+function renderWithError(err, req, res, next) {
 	var msg = translateCitizenError(req.t, err)
 	res.flash("error", msg)
 	res.flash("commentError", msg)
 	res.status(422)
-	InitiativesController.read(subpage, req, res, next)
+	InitiativesController.read(req, res, next)
 }
 
 function normalizeComment(comment) {
 	comment.replies = comment.replies.rows
 	return comment
-}
-
-function initiativePath(initiative) {
-	switch (Initiative.getUnclosedStatus(initiative)) {
-		case "inProgress": return "discussion"
-		case "voting": return "vote"
-		case "followUp": return "events"
-		default: throw new RangeError("Invalid status: " + initiative.status)
-	}
 }
 
 function normalizeNewlines(text) { return text.replace(/\r\n/g, "\n") }

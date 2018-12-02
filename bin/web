@@ -54,11 +54,14 @@ O.each({
 	"/goodpractice": "/about",
 	"/topics/:id": "/initiatives/:id",
 	"/topics/:id/discussion": "/initiatives/:id/discussion",
-	"/topics/:id/vote": "/initiatives/:id/vote",
+	"/topics/:id/vote": "/initiatives/:id",
 	"/topics/:id/events": "/initiatives/:id/events",
 	"/topics/:id/events/create": "/initiatives/:id/events/new",
 	"/initiatives/:id/events/create": "/initiatives/:id/events/new",
-	"/topics/:id/votes/*": "/initiatives/:id/vote",
+	"/topics/:id/votes/*": "/initiatives/:id",
+	"/initiatives/:id/discussion": "/initiatives/:id",
+	"/initiatives/:id/vote": "/initiatives/:id",
+	"/initiatives/:id/events": "/initiatives/:id",
 	"/support_us": "/donate",
 }, (to, from) => app.get(from, redirect(302, to)))
 

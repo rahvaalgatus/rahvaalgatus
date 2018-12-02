@@ -1,13 +1,10 @@
 extends ../layout
 include ../_mixins
 
-block append options
-	- var subpage = "vote"
-
 block append head
 	script(src="/assets/html5.js")
 
-block prepend tab
+block prepend subpage
 	section#initiative-signature.text-section.primary-section: center
 		if error
 			p.flash.error= error

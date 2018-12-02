@@ -92,7 +92,7 @@ exports.router.post("/", next(function*(req, res) {
 
 	if (isOk(created)) {
 		var initiative = created.body.data
-		res.redirect(303, req.baseUrl + "/" + initiative.id)
+		res.redirect(303, req.baseUrl + "/" + initiative.id + "/edit")
 	}
 	else res.status(422).render("initiatives/create", {
 		error: translateCitizenError(req.t, created.body),
@@ -137,15 +137,37 @@ exports.router.get("/:id",
 			})
 			break
 
-		default: switch (Initiative.getUnclosedStatus(initiative)) {
-			case "inProgress": req.url = req.path + "/discussion"; break
-			case "voting": req.url = req.path + "/vote"; break
-			case "followUp": req.url = req.path + "/events"; break
-		}
-
-		next()
+		default: next()
 	}
 })
+
+exports.read = next(function*(req, res) {
+	var initiative = req.initiative
+	var events
+
+	var commentsPath = `/api/topics/${initiative.id}/comments?orderBy=date`
+	if (req.user) commentsPath = "/api/users/self" + commentsPath.slice(4)
+	var comments = yield req.api(commentsPath)
+	comments = comments.body.data.rows.map(normalizeComment).reverse()
+
+	if (initiative.status == "followUp" || initiative.status == "closed") {
+		var eventsPath = `/api/topics/${initiative.id}/events`
+		if (req.user) eventsPath = "/api/users/self" + eventsPath.slice(4)
+		events = yield req.api(eventsPath)
+		events = events.body.data.rows.map(parseCitizenEvent)
+		events = events.sort((a, b) => +b.createdAt - +a.createdAt)
+	}
+	else events = EMPTY_ARR
+
+	res.render("initiatives/read", {
+		comments: comments,
+		comment: res.locals.comment || EMPTY_COMMENT,
+		events: events,
+		translations: UI_TRANSLATIONS[req.lang]
+	})
+})
+
+exports.router.get("/:id", exports.read)
 
 exports.router.put("/:id", next(function*(req, res) {
 	var initiative = req.initiative
@@ -160,7 +182,7 @@ exports.router.put("/:id", next(function*(req, res) {
 	if (req.body.visibility === "public") {
 		tmpl = "initiatives/update_for_publish"
 		if (!(
-			Initiative.isPublishable(initiative) ||
+			Initiative.canPublish(initiative) ||
 			Initiative.canUpdateDiscussionDeadline(initiative)
 		)) throw new HttpError(401)
 
@@ -180,7 +202,7 @@ exports.router.put("/:id", next(function*(req, res) {
 	else if (req.body.status === "voting") {
 		tmpl = "initiatives/update_for_voting"
 		if (!(
-			Initiative.isProposable(new Date, initiative) ||
+			Initiative.canPropose(new Date, initiative) ||
 			Initiative.canUpdateVoteDeadline(initiative)
 		)) throw new HttpError(401)
 
@@ -214,7 +236,7 @@ exports.router.put("/:id", next(function*(req, res) {
 	}
 	else if (req.body.status === "followUp") {
 		tmpl = "initiatives/update_for_parliament"
-		if (!Initiative.isParliamentable(initiative)) throw new HttpError(401)
+		if (!Initiative.canSendToParliament(initiative)) throw new HttpError(401)
 		if (req.body.contact == null) return void res.render(tmpl, {attrs: attrs})
 
 		attrs = {
@@ -223,7 +245,7 @@ exports.router.put("/:id", next(function*(req, res) {
 		}
 	}
 	else if (req.body.status === "closed") {
-		if (!Initiative.isFinishable(initiative)) throw new HttpError(401)
+		if (!Initiative.canFinish(initiative)) throw new HttpError(401)
 		attrs = {status: req.body.status}
 	}
 	else throw new HttpError(422, "Invalid Attribute")
@@ -259,41 +281,16 @@ exports.router.put("/:id", next(function*(req, res) {
 
 exports.router.delete("/:id", next(function*(req, res) {
 	var initiative = req.initiative
-	if (!Initiative.isDeletable(initiative)) throw new HttpError(405)
+	if (!Initiative.canDelete(initiative)) throw new HttpError(405)
 	yield req.api(`/api/users/self/topics/${initiative.id}`, {method: "DELETE"})
 	res.flash("notice", "Algatus on kustutatud.")
 	res.redirect(302, req.baseUrl)
 }))
 
-exports.read = next(function*(subpage, req, res) {
-	var initiative = req.initiative
-	var events
-
-	var commentsPath = `/api/topics/${initiative.id}/comments?orderBy=date`
-	if (req.user) commentsPath = "/api/users/self" + commentsPath.slice(4)
-	var comments = yield req.api(commentsPath)
-	comments = comments.body.data.rows.map(normalizeComment).reverse()
-
-	if (subpage == "events") {
-		var eventsPath = `/api/topics/${initiative.id}/events`
-		if (req.user) eventsPath = "/api/users/self" + eventsPath.slice(4)
-		events = yield req.api(eventsPath)
-		events = events.body.data.rows.map(parseCitizenEvent)
-		events = events.sort((a, b) => +b.createdAt - +a.createdAt)
-	}
-	else events = EMPTY_ARR
-
-	res.render("initiatives/" + subpage, {
-		comments: comments,
-		comment: res.locals.comment || EMPTY_COMMENT,
-		events: events,
-		translations: UI_TRANSLATIONS[req.lang]
-	})
+exports.router.get("/:id/edit", function(req, res) {
+	if (!Initiative.canEdit(req.initiative)) throw new HttpError(401)
+	res.render("initiatives/update")
 })
-
-exports.router.get("/:id/discussion", exports.read.bind(null, "discussion"))
-exports.router.get("/:id/vote", exports.read.bind(null, "vote"))
-exports.router.get("/:id/events", exports.read.bind(null, "events"))
 
 exports.router.use("/:id/comments",
 	require("./initiatives/comments_controller").router)
@@ -397,7 +394,6 @@ exports.router.get("/:id/signature", next(function*(req, res) {
 
 	res.redirect(303, req.baseUrl + "/" + initiative.id)
 }))
-
 
 exports.router.post("/:id/subscriptions", next(function*(req, res, next) {
 	var initiative = req.initiative

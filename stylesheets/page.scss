@@ -15,7 +15,7 @@ body {
 }
 
 center {
-	max-width: $page-width + 4rem;
+	max-width: $page-width + $page-padding;
 	padding-left: $page-padding;
 	padding-right: $page-padding;
 	margin: 0 auto;
@@ -29,6 +29,12 @@ center {
 		padding-left: $page-mobile-padding;
 		padding-right: $page-mobile-padding;
 	}
+}
+
+strong {
+	// Rahvaalgatus lacks weights other than normal for Tisa Pro.
+	font-family: $museo-sans;
+	font-weight: bold;
 }
 
 .left { float: left; }
@@ -59,9 +65,10 @@ center {
 	}
 
 	h2 {
-		margin: 2rem 0 1rem;
-		font-size: 2.7rem;
+		margin: 4rem 0 1rem;
+		font-size: 2.4rem;
 		font-weight: 500;
+		color: $title-text;
 	}
 
 	h3 {
@@ -72,12 +79,6 @@ center {
 
 	p + p {
 		margin-top: 2rem;
-	}
-
-	strong {
-		// Rahvaalgatus lacks weights other than normal for Tisa Pro.
-		font-family: $museo-sans;
-		font-weight: bold;
 	}
 
 	em { font-style: italic; }
@@ -107,7 +108,8 @@ center {
 }
 
 .secondary-section,
-.primary-section {
+.primary-section,
+.transparent-section {
 	padding-top: 4rem;
 	padding-bottom: 4rem;
 
@@ -123,6 +125,10 @@ center {
 	background-color: $secondary-background;
 
 	& + .secondary-section { padding-top: 0; }
+}
+
+.transparent-section {
+	& + .transparent-section { padding-top: 0; }
 }
 
 .primary-section {
@@ -326,8 +332,15 @@ button.inherited {
 }
 
 .link-button {
+	@extend button.inherited;
+
 	color: $link;
 	&:hover { text-decoration: underline; }
+}
+
+.inherited-button {
+	@extend button.inherited;
+	cursor: pointer;
 }
 
 .form-label,
@@ -378,7 +391,7 @@ button.inherited {
 
 .form-textarea {
 	border: 1px solid #cecece;
-	padding: 0.5rem 1rem;
+	padding: 1rem 1rem;
 	min-height: 10rem;
 
 	background: white;
@@ -473,27 +486,17 @@ button.inherited {
 	}
 }
 
-.icon-facebook,
-.icon-twitter {
-	float: left;
-	width: 22px;
-	height: 100%;
-	background-repeat: no-repeat;
-	background-position: center;
-	background-size: 100%;
-}
-
-.icon-facebook { background-image: url(/images/mentions-fb-icon.png); }
-.icon-twitter { background-image: url(/images/mentions-tw-icon.png); }
-
-.flash:not(:empty) {
+.flash {
 	background: $flash-header-background;
-	padding: 1.2rem 2rem;
+	padding: 1.2rem 2rem 1rem;
 	color: white;
 	border-radius: $button-radius;
-	margin-top: 1rem;
-	margin-bottom: 1rem;
 	white-space: pre-wrap;
+	font-size: 1.3rem;
+	min-height: $flash-min-height;
+	line-height: 1.3;
+
+	&:empty { display: none; }
 }
 
 .initiative-progress {
@@ -504,9 +507,9 @@ button.inherited {
 	font-size: 1.3rem;
 	font-family: $museo-sans;
 	font-weight: bold;
-	color: #3a434a;
+	color: $progress-bar-color;
 
-	background-color: #eee;
+	background-color: $progress-bar-background;
 	background-repeat: no-repeat;
 
 	&.private {
@@ -515,7 +518,7 @@ button.inherited {
 	}
 
 	&.discussable.completed {
-		background-color: #ffb400;
+		background-color: $discussion-color;
 		background-image: url(/images/discussion-over.png);
 		background-position: 1rem center;
 		padding-left: 3.5rem;
@@ -523,21 +526,21 @@ button.inherited {
 
 	&.votable.completed {
 		color: white;
-		background-color: #00cb81;
+		background-color: $voting-color;
 		background-image: url(/images/vote-success.png);
 		background-position: 1rem center;
 		padding-left: 3.5rem;
 	}
 
 	&.processable {
-		color: #1C71A2;
+		color: $parliament-color;
 		background-image: url(/images/clock.png);
 		background-position: 1rem center;
 		padding-left: 3.5rem;
 	}
 
 	&.finished {
-		color: #1C71A2;
+		color: $parliament-color;
 		background-image: url(/images/discussion-over.png);
 		background-position: 1rem center;
 		padding-left: 3.5rem;
@@ -785,12 +788,16 @@ button.inherited {
 
 #initiative-page {
 	$article-width: 72rem;
+	$article-padding: 3rem;
+	$article-width-percentage: 70%;
+	$sidebar-padding: 2rem;
 	$comment-padding: 3rem;
+
 	background-color: $secondary-background;
 
 	#initiative-header {
-		background-color: #f6f6f6;
-		padding-top: 4rem;
+		margin-top: 4rem;
+		margin-bottom: 4rem;
 		font-family: $tisa-pro;
 
 		img.badge {
@@ -824,70 +831,295 @@ button.inherited {
 		}
 	}
 
-	#initiative-tabs {
-		padding-top: 4rem;
-		background-color: #f6f6f6;
-		border-bottom: 1px solid #cecece;
-
-		.tab {
-			display: inline-block;
-			text-align: center;
-			line-height: 4rem;
-
-			padding: 0 2rem;
-			min-width: 11rem;
-			font-size: 14px;
-			font-family: $museo-sans;
-			font-weight: 500;
-			color: #4A555D;
-
-			border: 1px solid #cecece;
-			text-align: center;
-			margin-bottom: -1px;
-
-			&.selected {
-				background-color: white;
-				border-bottom: 1px solid white;
-			}
-
-			& + a { margin-left: 1rem; }
-		}
-
-		.button {
-			height: 3.5rem;
-			margin-left: 1rem;
-			vertical-align: middle;
-
-			&:not(button) { line-height: 3.5rem; }
-		}
-
-		menu {
-			float: right;
-		}
-
-		form {
-			display: inline;
-		}
-
-		@include tablet {
-			.button { margin: 0 1rem 1rem 0; }
-
-			// They take up too much space on constrained mobile. Hide them for now.
-			.share-button { display: none; }
-		}
-
-		@include mobile {
-			padding-top: 2rem;
-			menu { float: none; display: block; }
+	#initiative-section,
+	#initiative-events {
+		center {
+			max-width: $page-width + $article-padding;
+			padding-left: 0;
+			padding-right: 0;
 		}
 	}
 
-	#initiative article,
+	#initiative-section #initiative-sheet,
+	#initiative-events article {
+		background: white;
+		box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.15);
+		width: $article-width-percentage;
+		padding: $article-padding $article-padding;
+
+		@include mobile-and-tablet { width: auto; }
+	}
+
+	#initiative-section {
+		padding-top: 0;
+
+		#initiative-sheet,
+		#initiative-sidebar {
+			display: inline-block;
+			vertical-align: top;
+
+			@include mobile-and-tablet {
+				display: block;
+			}
+		}
+
+		#initiative-sheet {
+			position: relative; // To have box-shadow be on top of <aside>.
+
+			& > .flash,
+			#initiative-donate,
+			#initiative-ended {
+				margin: (-$article-padding) (-$article-padding) $article-padding;
+			}
+
+			& > .flash {
+				border-radius: 0;
+			}
+
+			& > .note {
+				background-color: $light-background;
+				font-weight: 600;
+				line-height: 4rem;
+				padding: 0 $article-padding;
+				margin: (-$article-padding) (-$article-padding) $article-padding;
+			}
+		}
+
+		article {
+			font-size: 1.6rem;
+			font-family: $tisa-pro;
+
+			// Etherpad generates non-standard HTML by putting a nested <ol> directly
+			// under <ul>.
+			ol ol,
+			ul ul,
+			ol ul,
+			ul ol {
+				margin-left: 2rem;
+			}
+		}
+
+		#initiative-sidebar {
+			width: 100% - $article-width-percentage;
+			background-color: $light-background;
+			padding: $sidebar-padding;
+			font-size: 1.3rem;
+
+			button {
+				min-width: 18rem;
+			}
+
+			@include mobile-and-tablet {
+				width: auto;
+			}
+
+			@include tablet {
+				float: none;
+				text-align: left;
+
+				form { display: block; margin-top: 1rem; }
+				form + form { margin-left: 0; }
+				button { width: 100%; }
+			}
+
+			a.button + p {
+				margin-top: 1rem;
+			}
+
+			.wide-button {
+				width: 100%;
+			}
+
+			.link-button {
+				display: block;
+				text-align: center;
+				line-height: 3rem;
+				font-weight: bold;
+			}
+
+			form + form,
+			.wide-button + form,
+			form + .wide-button,
+			.wide-button + .wide-button {
+				margin-top: 0.5rem;
+			}
+
+			.initiative-progress {
+				margin-top: -$sidebar-padding;
+				margin-left: -$sidebar-padding;
+				margin-right: -$sidebar-padding;
+				margin-bottom: 1rem;
+				line-height: $flash-min-height;
+			}
+
+			p.initiative-progress-text span { display: block; }
+
+			#initiative-notes {
+				font-weight: 500;
+				line-height: 1.5;
+				margin: 0 (-$sidebar-padding);
+				padding: 1.5rem $sidebar-padding;
+
+				h2 {
+					color: #7c7c7c;
+					margin-bottom: 0.5rem;
+					font-weight: bold;
+
+					&:after { content: ":"; }
+				}
+
+				p {
+					white-space: pre-wrap;
+				}
+			}
+
+			#initiative-notes-form {
+				margin-top: 2rem;
+				textarea { width: 100%; min-height: 20rem; }
+				button { margin-top: 0.5rem; }
+			}
+		}
+
+		p.initiative-progress-text {
+			text-align: center;
+			margin-top: 1rem;
+			margin-bottom: 1rem;
+
+			time { @extend strong; }
+		}
+
+		#initiative-sidebar #initiative-subscribe {
+			margin-top: 2rem;
+			margin-bottom: 2rem;
+
+			h3 {
+				font-weight: bold;
+				margin-bottom: 0.5rem;
+				text-align: center;
+			}
+
+			input,
+			button {
+				display: block;
+				margin: 0 auto;
+				width: 100%;
+			}
+
+			button {
+				margin-top: 0.5rem;
+			}
+		}
+	}
+
+	#initiative-vote {
+		border-top: 1px solid $light-background-border;
+		margin: 4rem (-$article-padding) (-$article-padding);
+		padding: 2rem $article-padding;
+		background-color: $light-background;
+
+		// Don't use overflow to not cut off the blur around buttons.
+		&:after { display: block; clear: both; content: ""; }
+
+		.initiative-progress {
+			line-height: 3.2rem;
+			border-radius: 4px;
+		}
+
+		p {
+			margin-top: 1rem;
+			text-align: center;
+		}
+
+		h2 {
+			margin-top: 2rem;
+			color: $title-text;
+			text-align: center;
+			font-size: 2.4rem;
+			font-weight: 500;
+		}
+
+		form {
+			padding: 0 1rem;
+			display: inline-block;
+			width: 50%;
+			margin-top: 1rem;
+			vertical-align: top;
+		}
+
+		#id-card-form { text-align: right; }
+		input { margin-bottom: 0.5rem; }
+		.flash { margin-top: 1rem; }
+
+		@include mobile-and-tablet {
+			form {
+				width: auto;
+				display: block;
+				text-align: center;
+			}
+
+			input,
+			button {
+				margin-left: auto;
+				margin-right: auto;
+			}
+
+			#id-card-form { text-align: center; }
+		}
+
+		@include mobile {
+			input, .button {
+				display: block;
+				width: 100%;
+			}
+		}
+
+		#mobile-id-form {
+			#mobile-id-form-toggle:not(:checked) {
+				& ~ input,
+				& ~ button { display: none; }
+			}
+
+			#mobile-id-form-toggle:checked + label { display: none; }
+		}
+	}
+
+	#initiative-ended,
+	#initiative-donate {
+		max-width: $article-width;
+		padding: 0 2rem 2rem;
+		font-size: 1.5rem;
+		line-height: 1.5;
+		border-bottom: 1px solid $light-background-border;
+		background: $light-background;
+
+		h1 {
+			padding: 0 2rem;
+			line-height: $flash-min-height;
+			margin: 0 (-2rem)  2rem (-2rem);
+			font-size: 1.3rem;
+			background: $flash-header-background;
+			color: white;
+			font-weight: bold;
+		}
+
+		a {
+			text-decoration: underline;
+		}
+
+		h1 ~ * + * {
+			margin-top: 2rem;
+		}
+	}
+
+	#initiative-donate {
+		p {
+			white-space: pre-wrap;
+		}
+	}
+
 	#initiative-events,
 	#initiative-comment,
 	#initiative-signature {
-		overflow: hidden;
-
 		header {
 			font-family: $museo-sans;
 			font-size: 1.4rem;
@@ -907,305 +1139,16 @@ button.inherited {
 		}
 	}
 
-	#initiative-progress {
-		margin-bottom: 3rem;
-		font-family: $museo-sans;
-		font-size: 1.4rem;
-		color: #999;
-
-		.initiative-progress {
-			margin-top: 0.5rem;
-			line-height: 3.4rem;
-			border-radius: $button-radius;
-		}
-	}
-
-	#initiative {
-		article {
-			font-size: 1.8rem;
-			font-family: $tisa-pro;
-			max-width: $article-width;
-
-			// Etherpad generates non-standard HTML by putting a nested <ol> directly
-			// under <ul>.
-			ol ol,
-			ul ul,
-			ol ul,
-			ul ol {
-				margin-left: 2rem;
-			}
-		}
-	}
-
 	#initiative-etherpad {
 		width: 100%;
+		margin: (-$article-padding) 0;
+		min-height: 50rem;
 	}
-
-	#initiative-ended,
-	#initiative-signed,
-	#initiative-donate {
-		max-width: $article-width;
-		background: $flash-background;
-		color: white;
-		border-radius: $button-radius;
-		margin-bottom: 2rem;
-		padding: 0 2rem 1.2rem;
-
-		h1 {
-			padding: 1.1rem 2rem 0.8rem;
-			margin-left: -2rem;
-			margin-right: -2rem;
-			margin-bottom: 1.2rem;
-			border-top-left-radius: $button-radius;
-			border-top-right-radius: $button-radius;
-			background: $flash-header-background;
-			font-weight: bold;
-		}
-
-		a {
-			text-decoration: underline;
-		}
-
-		h1 ~ * + * {
-			margin-top: 2rem;
-		}
-	}
-
-	#initiative-donate {
-		p {
-			white-space: pre-wrap;
-		}
-	}
-
-	#initiative-vote,
-	#initiative-comment,
-	.secondary-section {
-		h2 {
-			font-family: $museo-sans;
-			font-size: 3.2rem;
-			color: $title-text;
-			margin-bottom: 1rem;
-		}
-	}
-
-	.secondary-section h3 {
-		margin-bottom: 1rem;
-		font-family: $museo-sans;
-		font-size: 1.6rem;
-		font-weight: 500;
-	}
-
-	#initiative-vote {
-		max-width: $article-width;
-		margin-top: 4rem;
-		border-top: 1px solid #ccc;
-		padding-top: 2rem;
-
-		// Don't use overflow to not cut off the blur around buttons.
-		&:after { display: block; clear: both; content: ""; }
-
-		h3 {
-			margin-bottom: 0.5rem;
-		}
-
-		form {
-			float: left;
-			margin-top: 1rem;
-			margin-right: 1rem;
-		}
-
-		input { margin-bottom: 0.5rem; }
-
-		@include mobile {
-			form {
-				float: none;
-				margin-right: 0;
-				margin-top: 2rem;
-			}
-
-			input, .button {
-				display: block;
-				width: 100%;
-			}
-		}
-	}
-
-	#mobile-id-form {
-		#mobile-id-form-toggle:not(:checked) {
-			& ~ input,
-			& ~ button { display: none; }
-		}
-
-		#mobile-id-form-toggle:checked + label { display: none; }
-	}
-
-	#initiative-aux-menu,
-	#initiative-subscribe {
-		margin-bottom: 2rem;
-	}
-	
-	#initiative-aux-menu {
-		float: right;
-		text-align: right;
-
-		form { display: block; }
-		form + form { margin-top: 0.5rem; }
-
-		button {
-			min-width: 18rem;
-		}
-
-		@include tablet {
-			float: none;
-			text-align: left;
-
-			form { display: block; margin-top: 1rem; }
-			form + form { margin-left: 0; }
-			button { width: 100%; }
-		}
-	}
-
-	#initiative-subscribe {
-		input,
-		button {
-			display: inline-block;
-		}
-
-		input {
-			width: 100%;
-			max-width: 24rem;
-			margin-right: 1rem;
-		}
-
-		@include tablet {
-			input, button {
-				margin-bottom: 0.5rem;
-				max-width: none;
-				display: block;
-				width: 100%;
-			}
-		}
-	}
-
-	#initiative-comments {
-		clear: both;
-		max-width: 72rem;
-		margin-top: 4rem;
-
-		.comment {
-			padding: 2.5rem $comment-padding;
-		}
-	}
-
-	.comment {
-		background: white;
-
-		h3 {
-			font-family: $museo-sans;
-			font-size: 1.8rem;
-			line-height: 1.7;
-			color: black;
-
-			a:hover { text-decoration: underline; }
-		}
-
-		.author,
-		time {
-			font-size: 1.4rem;
-			font-family: $tisa-pro;
-			color: $secondary-light-text;
-		}
-
-		// Anchor used for linking to comment itself via <time>.
-		time a:hover { text-decoration: underline; }
-
-		.author:after { content: ", " }
-
-		p {
-			font-family: $tisa-pro;
-			line-height: 1.7;
-			white-space: pre-wrap;
-		}
-
-		.comment-reply-button {
-			margin-top: 1.5rem;
-			display: inline-block;
-			height: 3.2rem;
-			line-height: 3.2rem;
-			color: $title-text;
-
-			&[disabled] { color: #ccc; }
-		}
-
-		& + .comment {
-			margin-top: 1rem;
-		}
-	}
-
-	.comment-reply,
-	.comment-reply-form {
-		border-top: 1px solid $secondary-background;
-		margin: 2rem (-$comment-padding) 0;
-		padding: 2rem $comment-padding 0;
-	}
-
-	.comment-reply {
-		padding-left: $comment-padding + 6rem;
-
-		@include mobile {
-			margin-left: 4rem;
-		}
-	}
-
-	.comment-reply.short {
-		p { display: inline; }
-		time:after { content: ": "; }
-
-		& + .comment-reply.short {
-			padding-top: 0;
-			border-top: 0;
-			margin-top: 0;
-		}
-	}
-
-	.comment-form,
-	.comment-reply-form {
-		margin-top: 2rem;
-
-		input, textarea {
-			width: 100%;
-			margin-bottom: 0.5rem;
-		}
-
-		textarea { min-height: 10rem; }
-		button + button { margin-left: 1rem; }
-		p { text-align: center; }
-
-		@include mobile {
-			button { width: 100%; }
-		}
-	}
-
-	.comments:empty + .comment-form { margin-top: 0; }
-
-	.comment-form {
-		input:disabled,
-		textarea:disabled {
-			display: none;
-		}
-	}
-
-	.comment-reply-form {
-		textarea { min-height: 5rem; }
-
-		// Override the default [hidden] attribute.
-		&:target { display: block !important; }
-	}
-
-	.signin-to-act { margin-left: 1rem; }
 
 	#initiative-events {
-		padding-bottom: 0;
+		article {
+			padding-bottom: 0;
+		}
 
 		.empty {
 			margin-bottom: 4rem;
@@ -1329,6 +1272,138 @@ button.inherited {
 			.events { padding-left: 1rem; }
 		}
 	}
+
+	#initiative-comment,
+	#initiative-comments {
+		h2 {
+			font-family: $museo-sans;
+			font-size: 2.4rem;
+			color: $title-text;
+			margin-bottom: 1rem;
+			font-weight: 500;
+		}
+
+		h3 {
+			margin-bottom: 1rem;
+			font-family: $museo-sans;
+			font-size: 1.6rem;
+			font-weight: 500;
+		}
+	}
+
+	#initiative-comments {
+		center > * {
+			width: $article-width-percentage;
+			@include mobile-and-tablet { width: auto; }
+		}
+
+		.comment {
+			padding: 2.5rem $comment-padding;
+		}
+	}
+
+	.comment {
+		background: white;
+
+		h3 {
+			font-family: $museo-sans;
+			font-size: 1.8rem;
+			line-height: 1.7;
+			color: black;
+
+			a:hover { text-decoration: underline; }
+		}
+
+		.author,
+		time {
+			font-size: 1.4rem;
+			font-family: $tisa-pro;
+			color: $secondary-light-text;
+		}
+
+		// Anchor used for linking to comment itself via <time>.
+		time a:hover { text-decoration: underline; }
+
+		.author:after { content: ", " }
+
+		p {
+			font-family: $tisa-pro;
+			line-height: 1.7;
+			white-space: pre-wrap;
+		}
+
+		.comment-reply-button {
+			margin-top: 1.5rem;
+			display: inline-block;
+			height: 3.2rem;
+			line-height: 3.2rem;
+			color: $title-text;
+
+			&[disabled] { color: #ccc; }
+		}
+
+		& + .comment {
+			margin-top: 1rem;
+		}
+	}
+
+	.comment-reply,
+	.comment-reply-form {
+		border-top: 1px solid $secondary-background;
+		margin: 2rem (-$comment-padding) 0;
+		padding: 2rem $comment-padding 0;
+	}
+
+	.comment-reply {
+		padding-left: $comment-padding;
+	}
+
+	.comment-reply.short {
+		p { display: inline; }
+		time:after { content: ": "; }
+
+		& + .comment-reply.short {
+			padding-top: 0;
+			border-top: 0;
+			margin-top: 0;
+		}
+	}
+
+	.comment-form,
+	.comment-reply-form {
+		margin-top: 2rem;
+
+		input, textarea {
+			width: 100%;
+			margin-bottom: 0.5rem;
+		}
+
+		textarea { min-height: 10rem; }
+		button + button { margin-left: 1rem; }
+		p { text-align: center; }
+
+		@include mobile {
+			button { width: 100%; }
+		}
+	}
+
+	.comments:empty + .comment-form { margin-top: 0; }
+
+	.comment-form {
+		input:disabled,
+		textarea:disabled {
+			display: none;
+		}
+	}
+
+	.comment-reply-form {
+		textarea { min-height: 5rem; }
+
+		// Override the default [hidden] attribute.
+		&:target { display: block !important; }
+	}
+
+	.signin-to-act { margin-left: 1rem; }
 
 	#initiative-form {
 		input[type=date] {

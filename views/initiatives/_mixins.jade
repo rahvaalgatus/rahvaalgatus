@@ -79,40 +79,37 @@ mixin progress(initiative)
 			- var sigs = Initiative.countSignatures("Yes", initiative)
 			.initiative-progress(class=klass)= t("N_SIGNATURES", {votes: sigs})
 
-mixin initiative-aux-menu(initiative)
+mixin progress-text(initiative)
 	-
 		var Initiative = require("root/lib/initiative")
+		var Config = require("root/config")
+		var I18n = require("root/lib/i18n")
 
-		var showMenu = (
-			Initiative.canUpdateDiscussionDeadline(initiative) ||
-			Initiative.canUpdateVoteDeadline(initiative) ||
-			Initiative.isDeletable(initiative)
-		)
+	p.initiative-progress-text
+		if initiative.status == "voting"
+			- var sigs = Initiative.countSignatures("Yes", initiative)
 
-	if showMenu
-		menu#initiative-aux-menu
-			h3= t("OPTIONS")
+			span
+				if sigs >= Config.votesRequired
+					| Riigikokku saatmiseks hääled koos!
+				else
+					| <strong>#{Config.votesRequired - sigs} häält puudu</strong>
+					| riigikokku saatmiseks.
 
-			if Initiative.canUpdateDiscussionDeadline(initiative)
-				+form(method="post", action="/initiatives/#{initiative.id}")
-					input(type="hidden", name="_method", value="put")
-					button.button.white-button(name="visibility", value="public")
-						= t("RENEW_DEADLINE")
+			= " "
+			span
+				= t("VOTING_DEADLINE")
+				= ": "
+				- var endsAt = I18n.formatTime("numeric", initiative.vote.endsAt)
+				time.deadline(datetime=initiative.vote.endsAt)= endsAt
+				| .
 
-			if Initiative.canUpdateVoteDeadline(initiative)
-				+form(method="post", action="/initiatives/#{initiative.id}")
-					input(type="hidden", name="_method", value="put")
-					button.button.white-button(name="status", value="voting")
-						= t("RENEW_DEADLINE")
-
-			if Initiative.isDeletable(initiative)
-				+form(method="post", action="/initiatives/#{initiative.id}")
-					- var confirmText = t("TXT_ALL_DISCUSSIONS_AND_VOTES_DELETED")
-					button.button.white-button(
-						name="_method",
-						value="delete",
-						onclick="return confirm('#{confirmText}')")
-						= t("BTN_DELETE_TOPIC")
+		else if initiative.status == "inProcess"
+			span
+				= t("DISCUSSION_DEADLINE")
+				= ": "
+				- var endsAt = I18n.formatTime("numeric", initiative.endsAt)
+				time(datetime=initiative.endsAt)= endsAt
 
 mixin initiative-subscribe(initiative)
 	- var Initiative = require("root/lib/initiative")
@@ -131,49 +128,7 @@ mixin initiative-subscribe(initiative)
 
 			button.secondary-button(type="submit")= t("BTN_SUBSCRIBE")
 
-mixin comments(comments, editedComment, referrer)
-	- var commentsUrl = `/initiatives/${initiative.id}/comments`
-
-	#initiative-comments
-		h2= t("COMMENT_HEADING")
-
-		if flash("commentError")
-			p.flash.error= flash("commentError")
-
-		ol.comments
-			for comment in comments
-				li.comment(id=`comment-${comment.id}`)
-					+comment(comment, editedComment, referrer)
-
-		//- Comment form anchor used for redirecting to error.
-		+form#initiative-comment-form.comment-form(
-			method="post",
-			action=commentsUrl)
-			input(type="hidden", name="referrer", value=referrer)
-
-			input.form-input(
-				name="subject",
-				value=editedComment.parentId == null ? editedComment.subject : null,
-				maxlength=128,
-				required,
-				placeholder=t("PLACEHOLDER_ADD_ARGUMENT_SUBJECT"),
-				disabled=!req.user)
-
-			textarea.form-textarea(
-				name="text",
-				maxlength=2048,
-				required,
-				placeholder=t("PLACEHOLDER_ADD_ARGUMENT_TEXT"),
-				disabled=!req.user)
-				= editedComment.parentId == null ? editedComment.text : null
-
-			button.secondary-button(disabled=!req.user)= t("POST_COMMENT")
-
-			if !req.user
-				span.text.signin-to-act
-					!= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE", {url: "/session/new"})
-
-mixin comment(comment, editedComment, referrer)
+mixin comment(comment, editedComment)
 	- var Initiative = require("root/lib/initiative")
 	- var I18n = require("root/lib/i18n")
 	- var linkify = require("root/lib/linkify")
@@ -213,8 +168,6 @@ mixin comment(comment, editedComment, referrer)
 			method="post",
 			action=commentUrl + "/replies",
 			hidden=!isEdited)
-			input(type="hidden", name="referrer", value=referrer)
-
 			textarea.form-textarea(
 				name="text",
 				maxlength=2048,

@@ -1,10 +1,7 @@
 extends ../layout
 include ../_mixins
 
-block append options
-	- var subpage = "events"
-
-block tab
+block subpage
 	section.primary-section.text-section: center
 		h2= t("POST_INITIATIVE_UPDATE")
 

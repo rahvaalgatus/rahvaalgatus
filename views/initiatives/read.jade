@@ -1,0 +1,296 @@
+extends ./layout
+include ./_mixins
+include ../donations/_form
+
+block append head
+	script(src="/assets/html5.js")
+	script(src="/assets/hwcrypto.js")
+
+block prepend subpage
+	-
+		var I18n = require("root/lib/i18n")
+		var Config = require("root/config")
+		var Initiative = require("root/lib/initiative")
+		var linkify = require("root/lib/linkify")
+		var stringify = require("root/lib/json").stringify
+		var hasVote = flash("signed") || Initiative.hasVote("Yes", initiative)
+		var now = new Date
+
+	section#initiative-section.transparent-section: center
+		#initiative-sheet
+			include /_flash.jade
+
+			if flash("signed")
+				#initiative-donate
+					!= t("SUPPORT_US_CONTENT")
+					+donate-form(null, null)
+
+			if Initiative.hasVoteEnded(now, initiative)
+				if events.length == 0
+					#initiative-ended
+						- var sigs = Initiative.countSignatures("Yes", initiative)
+
+						if Initiative.isSuccessful(initiative)
+							h1= t("N_SIGNATURES_COLLECTED", {votes: sigs})
+							p= t("VOTING_SUCCEEDED")
+						else
+							h1= t("N_SIGNATURES_FAILED", {votes: sigs})
+							p= t("VOTING_FAILED")
+				else
+					.note
+						| Algatus on parlamendis.
+						= " "
+						a.link-button(href="#initiative-events") Vaata menetlust
+						= "."
+
+			if Initiative.isPublic(initiative) && initiative.status == "inProgress"
+				p.note
+					| Algatus on veel arutelufaasis.
+					= " "
+					a.link-button(href="#initiative-comment-form") Esita oma kommentaar
+					= "."
+
+			article.text!= initiative.html
+
+			if Initiative.isVotable(now, initiative)
+				#initiative-vote
+					+progress(initiative)
+					+progress-text(initiative)
+
+					- var opt = hasVote ? "No" : "Yes"
+					- var optId = Initiative.findOptionId(opt, initiative)
+
+					if hasVote
+						h2= t("THANKS_FOR_SIGNING")
+						p Soovid allkirja tühistada?
+					else
+						h2= t("HEADING_CAST_YOUR_VOTE")
+						p= t("HEADING_VOTE_REQUIRE_HARD_ID")
+
+					+form#id-card-form(
+						method="post",
+						action="/initiatives/#{initiative.id}/signature")
+						input(type="hidden", name="optionId", value=optId)
+						input(type="hidden", name="certificate", value="")
+						input(type="hidden", name="signature", value="")
+						input(type="hidden", name="token", value="")
+
+						//- The Id-card form will be submitted async therefore no button
+						//- value.
+						input(type="hidden", name="method", value="id-card")
+
+						-
+							var alt = !hasVote
+								? t("BTN_VOTE_SIGN_WITH_ID_CARD")
+								: t("BTN_VOTE_REVOKE_WITH_ID_CARD")
+						button.inherited-button
+							img(src="/images/id-kaart-button.png", title=alt, alt=alt)
+
+					+form#mobile-id-form(
+						method="post",
+						action="/initiatives/#{initiative.id}/signature")
+						-
+							var btnClass = hasVote ? "white-button" : "primary-button"
+							var btnText = !hasVote
+								? t("BTN_VOTE_SIGN_WITH_MOBILE_ID")
+								: t("BTN_VOTE_REVOKE_WITH_MOBILE_ID")
+
+						input#mobile-id-form-toggle(type="checkbox", style="display: none")
+						label.inherited-button(for="mobile-id-form-toggle"): img(
+							src="/images/mobile-id-button.png",
+							title=btnText,
+							alt=btnText)
+
+						input(type="hidden", name="optionId", value=optId)
+
+						input.form-input(
+							type="tel",
+							name="phoneNumber",
+							placeholder=t("PLACEHOLDER_PHONE_NUMBER"),
+							required)
+
+						input.form-input(
+							type="tel",
+							name="pid",
+							placeholder=t("PLACEHOLDER_PERSONAL_IDENTIFICATION_CODE"),
+							required)
+
+						button.button(name="method", value="mobile-id", class=btnClass)
+							= btnText
+
+					//- This flash is for the the Id-card JavaScript code below.
+					p#initiative-vote-flash.flash.error
+
+					:javascript
+						var Hwcrypto = require("@rahvaalgatus/hwcrypto")
+						var TRANSLATIONS = !{stringify(translations)}
+						var form = document.getElementById("id-card-form")
+						var flash = document.getElementById("initiative-vote-flash")
+						var all = Promise.all.bind(Promise)
+
+						form.addEventListener("submit", function(ev) {
+							notice("")
+							if (form.elements.signature.value === "") ev.preventDefault()
+
+							var certificate = Hwcrypto.authenticate()
+
+							var token = certificate.then(function(certificate) {
+								var query = ""
+								query += "certificate=" + encodeURIComponent(certificate)
+								query += "&"
+								query += "optionId=#{optId}"
+								return fetch("/initiatives/#{initiative.id}/signable?" + query, {
+									credentials: "same-origin"
+								})
+							})
+
+							token = token.then(read).then(function(res) {
+								if (!res.ok) throw res.json
+								else return res.json
+							})
+
+							var sig = all([certificate, token]).then(function(all) {
+								return Hwcrypto.sign(all[0], all[1].hash, all[1].digest)
+							})
+
+							var done = all([certificate, token, sig]).then(function(all) {
+								form.elements.certificate.value = all[0]
+								form.elements.token.value = all[1].token
+								form.elements.signature.value = all[2]
+								form.submit()
+							})
+
+							done.catch(noticeError)
+							done.catch(raise)
+						})
+
+						function noticeError(err) {
+							notice(err.code ? TRANSLATIONS[err.code] : err.message)
+						}
+
+						function read(res) {
+							return res.json().then(function(v) { return res.json = v, res })
+						}
+
+						function notice(msg) { flash.textContent = msg }
+						function raise(err) { setTimeout(function() { throw err }) }
+
+		aside#initiative-sidebar
+			if Initiative.isPublic(initiative)
+				+progress(initiative)
+
+				if initiative.status == "inProgress"
+					+progress-text(initiative)
+
+				else
+					if Initiative.isVotable(now, initiative)
+						if !hasVote
+							a.primary-button.wide-button.sign-button(href="#initiative-vote")
+								= t("SIGN_THIS_DOCUMENT")
+						else
+							a.white-button.wide-button.revoke-button(href="#initiative-vote")
+								= t("REVOKE_SIGNATURE")
+
+					+progress-text(initiative)
+
+			if Initiative.canPublish(initiative)
+				+form(method="post", action="/initiatives/#{initiative.id}")
+					input(type="hidden", name="_method", value="put")
+					button.primary-button.wide-button(name="visibility", value="public")
+						= t("PUBLISH_TOPIC")
+
+			if Initiative.canPropose(new Date, initiative)
+				+form(method="post", action="/initiatives/#{initiative.id}")
+					input(type="hidden", name="_method", value="put")
+					button.primary-button.wide-button(name="status", value="voting")
+						= t("BTN_SEND_TO_VOTE")
+
+			if Initiative.canSendToParliament(initiative)
+				+form(method="post", action="/initiatives/#{initiative.id}")
+					input(type="hidden", name="_method", value="put")
+					button.primary-button.wide-button(name="status", value="followUp")
+						= t("SEND_TO_PARLIAMENT")
+
+			if Initiative.canFinish(initiative)
+				+form(method="post", action="/initiatives/#{initiative.id}")
+					input(type="hidden", name="_method", value="put")
+					button.primary-button.wide-button(name="status", value="closed")
+						| Lõpeta menetlus
+
+			if Initiative.canEdit(initiative)
+				a.link-button.wide-button(
+					href="/initiatives/" + initiative.id + "/edit")
+					| Muuda algatust
+
+			if dbInitiative.notes
+				#initiative-notes
+					h2= t("NOTES_HEADER")
+					p.text!= linkify(dbInitiative.notes)
+
+			+initiative-subscribe(initiative)
+
+			if Initiative.isPublic(initiative)
+				a.link-button.wide-button.share-button(
+					href="https://facebook.com/sharer/sharer.php?u=#{encode(shareUrl)}",
+					target="_blank")
+					= t("SHARE_ON_FACEBOOK")
+
+				a.link-button.wide-button.share-button(
+					href="https://twitter.com/intent/tweet?status=#{encode(shareText)}",
+					target="_blank")
+					= t("SHARE_ON_TWITTER")
+
+	if Initiative.isInParliament(initiative, events)
+		section#initiative-events.transparent-section: center
+			article
+				if events.length
+					ol.events
+						for event in events
+							li.event
+								time(datetime=event.createdAt.toJSON())
+									= I18n.formatDate("numeric", event.createdAt)
+
+								h2= event.subject
+								p.text!= linkify(event.text)
+				else
+					p.text.empty= t("NO_EVENTS")
+
+	section#initiative-comments.transparent-section: center
+		- var editedComment = comment
+		- var commentsUrl = `/initiatives/${initiative.id}/comments`
+
+		h2= t("COMMENT_HEADING")
+
+		if flash("commentError")
+			p.flash.error= flash("commentError")
+
+		ol.comments
+			for comment in comments
+				li.comment(id=`comment-${comment.id}`)
+					+comment(comment, editedComment)
+
+		//- Comment form anchor used for redirecting to error.
+		+form#initiative-comment-form.comment-form(
+			method="post",
+			action=commentsUrl)
+			input.form-input(
+				name="subject",
+				value=editedComment.parentId == null ? editedComment.subject : null,
+				maxlength=128,
+				required,
+				placeholder=t("PLACEHOLDER_ADD_ARGUMENT_SUBJECT"),
+				disabled=!req.user)
+
+			textarea.form-textarea(
+				name="text",
+				maxlength=2048,
+				required,
+				placeholder=t("PLACEHOLDER_ADD_ARGUMENT_TEXT"),
+				disabled=!req.user)
+				= editedComment.parentId == null ? editedComment.text : null
+
+			button.secondary-button(disabled=!req.user)= t("POST_COMMENT")
+
+			if !req.user
+				span.text.signin-to-act
+					!= t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE", {url: "/session/new"})

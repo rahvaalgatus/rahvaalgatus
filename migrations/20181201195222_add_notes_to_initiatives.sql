@@ -1,0 +1,2 @@
+ALTER TABLE initiatives
+ADD COLUMN notes TEXT NOT NULL DEFAULT "";

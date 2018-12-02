@@ -25,75 +25,16 @@ block body
 
 	header#initiative-header: center
 		h1
-			= initiative.title
+			- var path = "/initiatives/" + initiative.id
+			if req.method != "GET" || req.baseUrl + req.path != path
+				a(href=path)= initiative.title
+			else
+				= initiative.title
+
 			+initiative-badge(initiative)
 
 		span.author= initiative.creator.name
 		= ", "
 		time(datetime=createdAt.toJSON())= I18n.formatDate("numeric", createdAt)
 
-	nav#initiative-tabs: center
-		menu
-			if Initiative.isPublishable(initiative)
-				+form(method="post", action="/initiatives/#{initiative.id}")
-					input(type="hidden", name="_method", value="put")
-					button.button.primary-button(name="visibility", value="public")
-						= t("PUBLISH_TOPIC")
-
-			if Initiative.isProposable(new Date, initiative)
-				+form(method="post", action="/initiatives/#{initiative.id}")
-					input(type="hidden", name="_method", value="put")
-					button.button.primary-button(name="status", value="voting")
-						= t("BTN_SEND_TO_VOTE")
-
-			if Initiative.isParliamentable(initiative)
-				+form(method="post", action="/initiatives/#{initiative.id}")
-					input(type="hidden", name="_method", value="put")
-					button.button.primary-button(name="status", value="followUp")
-						= t("SEND_TO_PARLIAMENT")
-
-			if Initiative.isFinishable(initiative)
-				+form(method="post", action="/initiatives/#{initiative.id}")
-					input(type="hidden", name="_method", value="put")
-					button.button.primary-button(name="status", value="closed")
-						| Lõpeta menetlus
-
-			if Initiative.isVotable(new Date, initiative) && !hasVote
-				a.button.primary-button(href="#initiative-vote")
-					= t("SIGN_THIS_DOCUMENT")
-
-			if Initiative.isInvitable(initiative)
-				a.button.secondary-button(href="/initiatives/#{initiative.id}/authors/new")
-					= t("INVITE_PEOPLE")
-
-			if Initiative.isPublic(initiative)
-				a.button.white-button.share-button(
-					href="https://facebook.com/sharer/sharer.php?u=#{encode(shareUrl)}",
-					target="_blank")
-					i.icon-facebook
-					= t("SHARE_ON_FACEBOOK")
-
-				a.button.white-button.share-button(
-					href="https://twitter.com/intent/tweet?status=#{encode(shareText)}",
-					target="_blank")
-					i.icon-twitter
-					= t("SHARE_ON_TWITTER")
-
-		if unclosedStatus == "inProgress"
-			a.tab(
-				href="/initiatives/#{initiative.id}/discussion",
-				class=selected(subpage, "discussion"))
-				= t("HEADING_TAB_ORIGINAL")
-		else
-			a.tab(
-				href="/initiatives/#{initiative.id}/vote",
-				class=selected(subpage, "vote"))
-				= t("HEADING_TAB_VOTE")
-
-		if unclosedStatus === "followUp"
-			a.tab(
-				href="/initiatives/#{initiative.id}/events",
-				class=selected(subpage, "events"))
-				= t("HEADING_TAB_EVENTS")
-
-	block tab
+	block subpage

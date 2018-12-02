@@ -209,7 +209,7 @@ describe("InitiativesController", function() {
 				})
 
 				res.statusCode.must.equal(303)
-				res.headers.location.must.equal("/initiatives/" + UUID)
+				res.headers.location.must.equal("/initiatives/" + UUID + "/edit")
 				created.must.equal(1)
 			})
 		})
