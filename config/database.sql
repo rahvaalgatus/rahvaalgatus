@@ -1,12 +1,12 @@
 CREATE TABLE initiatives (
-	uuid STRING PRIMARY KEY NOT NULL,
-	mailchimp_interest_id STRING NULL UNIQUE, notes TEXT NOT NULL DEFAULT "",
+  uuid STRING PRIMARY KEY NOT NULL,
+  mailchimp_interest_id STRING NULL UNIQUE, notes TEXT NOT NULL DEFAULT "",
 
-	CONSTRAINT initiatives_uuid_length
-	CHECK (length(uuid) == 36),
+  CONSTRAINT initiatives_uuid_length
+  CHECK (length(uuid) == 36),
 
-	CONSTRAINT initiatives_mailchimp_interest_id
-	CHECK (length(mailchimp_interest_id) > 0)
+  CONSTRAINT initiatives_mailchimp_interest_id
+  CHECK (length(mailchimp_interest_id) > 0)
 );
 
 PRAGMA foreign_keys=OFF;

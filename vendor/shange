@@ -1,0 +1,171 @@
+#!/bin/bash
+warn() { echo "$@" >&2; }
+
+APP=Shange
+EXE=$(basename "$0")
+VERSION=0.1.337
+AUTHOR_NAME="Andri Möll"
+AUTHOR_EMAIL="andri@dot.ee"
+MIGRATIONS_DIR=migrations
+DATABASE=
+
+usage() {
+	echo "Usage: $EXE [options] <command>";
+	[ -z "$1" ] || [ "$1" = create ]  && echo "       $EXE create <name>"
+	[ -z "$1" ] || [ "$1" = status ]  && echo "       $EXE status"
+	[ -z "$1" ] || [ "$1" = migrate ] && echo "       $EXE migrate"
+	[ -z "$1" ] || [ "$1" = schema ]  && echo "       $EXE schema"
+}
+
+help() {
+	usage
+	echo
+	echo "Options:"
+	echo "    -f=DATABASE    Set database file."
+	echo "    -d=MIGRATIONS  Set migrations directory [default: migrations]."
+	echo "    -h             Show this help."
+	echo "    -V             Show version and exit."
+	echo
+	echo "Commands:"
+	echo "    create         Create a new migration."
+	echo "    status         Show applied and pending migrations."
+	echo "    migrate        Apply pending migrations."
+	echo "    schema         Dump schema in SQL."
+	echo
+	echo "For more help or to give feedback, please contact $AUTHOR_EMAIL."
+}
+
+sqlite() {
+	# All I know is that `-batch` arrived later than SQLite3 v3.3.6 (2006-06-06).
+	# Let's not use it so those in cobwebs can still run `status`. Migrating is
+	# risky, though, as v3.3.6 doesn't exit with an error code on SQL errors.
+	[ -z "$DATABASE" ] && warn "Please set -f DATABASE." && exit 2
+	sqlite3 -init "" "$DATABASE" "$@"
+}
+
+sqlite_migrations() {
+	if [ -n "$(sqlite ".table migrations")" ]; then
+		sqlite "SELECT version FROM migrations ORDER BY version ASC"
+	fi
+}
+
+local_migrations() {
+	pat="[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_*"
+	find "$MIGRATIONS_DIR" -name "$pat" 2>/dev/null | while read -r file; do
+		file=$(basename "$file")
+		file=${file%%_*}
+		echo "$file"
+	done | sort
+}
+
+name_migration() {
+	for path in "$MIGRATIONS_DIR/$1_"*; do
+		name=$(basename "$path")
+		name=${name#*_}
+		name=${name%.*}
+		name=${name//_/ }
+		echo "$name"
+		break
+	done
+}
+
+diff_migrations() {
+	a=$(mktemp)
+	b=$(mktemp)
+	sqlite_migrations > "$a" || exit 2
+	local_migrations > "$b" || exit 2
+
+	# Zone.ee's hosting, the second place I tried Shange on, is not running
+	# a "cutting edge" version of GNUutils that has --output-delimiter. That is,
+	# any above v7.2 (2009-03-31). They're sticking in there with v5.97 from
+	# 2006!
+	diff=$(comm "$a" "$b")
+	rm "$a"
+	rm "$b"
+	echo "$diff"
+}
+
+red() { printf "\\033[31m%b\\033[0m" "$*"; }
+green() { printf "\\033[32m%b\\033[0m" "$*"; }
+yellow() { printf "\\033[33m%b\\033[0m" "$*"; }
+clear_line() { printf "\\r\\033[2K"; }
+
+while getopts f:d:hV option; do
+	case "$option" in
+		f) DATABASE=$OPTARG;;
+		d) MIGRATIONS_DIR=$OPTARG;;
+		\? | h) help; exit 0;;
+
+		V)
+			echo "$APP v$VERSION"
+			echo "Copyright (c) 2018– $AUTHOR_NAME <$AUTHOR_EMAIL>"
+			echo "For more help or to give feedback, please contact $AUTHOR_EMAIL."
+			exit 0
+			;;
+	esac
+done
+
+shift $((OPTIND-1))
+
+[ $# -eq 0 ] && help && exit 0
+
+cmd=$1; shift
+
+case "$cmd" in
+	create)
+		[ $# -ne 1 ] || [ -z "$1" ] && warn "$(usage create)" && exit 1
+
+		mkdir -p "$MIGRATIONS_DIR"
+		path="$MIGRATIONS_DIR/$(date -u +%Y%m%d%H%M%S)_$1.sql"
+		touch "$path"
+		echo "$path"
+		;;
+
+	status)
+		[ $# -ne 0 ] && warn "$(usage status)" && exit 1
+
+		diff_migrations | while IFS= read -r versions; do
+			new=${versions#*	}; new=${new%	*}
+			mis=${versions%%	*}
+			old=${versions##*	}
+
+			if [ -n "$new" ]; then yellow "down  $new  $(name_migration "$new")\\n"
+			elif [ -n "$mis" ]; then red "miss  $mis\\n"
+			else green "up    $old  $(name_migration "$old")\\n"
+			fi
+		done
+		;;
+
+	migrate)
+		[ $# -ne 0 ] && warn "$(usage migrate)" && exit 1
+
+		sqlite <<-end
+			CREATE TABLE IF NOT EXISTS migrations (version TEXT PRIMARY KEY NOT NULL);
+		end
+
+		diff_migrations | while IFS= read -r versions; do
+			new=${versions#*	}; new=${new%	*}
+			[ -z "$new" ] && continue
+
+			yellow "up    $new…  $(name_migration "$new")"
+			cat "$MIGRATIONS_DIR/${new}_"*.sql | sqlite || exit 3
+			sqlite "INSERT INTO migrations (version) VALUES ('$new')"
+			clear_line
+			green "up    $new  $(name_migration "$new")\\n"
+		done
+		;;
+
+	schema)
+		[ $# -ne 0 ] && warn "$(usage schema)" && exit 1
+
+		sqlite .schema | grep -v "^CREATE TABLE migrations (.*);$"
+		echo
+		sqlite ".dump migrations"
+		;;
+
+	*)
+		echo "Unknown command: $cmd" >&2
+		usage >&2
+		exit 1
+		;;
+esac

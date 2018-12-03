@@ -9,6 +9,7 @@ MOCHA = ./node_modules/.bin/_mocha
 SASS = ./node_modules/.bin/node-sass --recursive --indent-type tab --indent-width 1 --output-style expanded
 TRANSLATIONS_URL = https://spreadsheets.google.com/feeds/list/1JKPUNp8Y_8Aigq7eGJXtWT6nZFhd31k2Ht3AjC-i-Q8/1/public/full?alt=json
 JQ_OPTS = --tab --sort-keys
+SHANGE = vendor/shange -f "db/$(ENV).sqlite3"
 
 APP_HOST = rahvaalgatus.ee
 APP_PATH =
@@ -98,6 +99,9 @@ rebuild:
 	$(NPM_REBUILD) node-sass
 	$(NPM_REBUILD) sqlite3
 
+config/database.sql:
+	@$(SHANGE) schema > config/database.sql
+
 db/create: db/$(ENV).sqlite3
 
 db/test:
@@ -105,7 +109,14 @@ db/test:
 	$(MAKE) db/test.sqlite3
 
 db/%.sqlite3:
-	sqlite3 "$@" < db/database.sql
+	sqlite3 "$@" < config/database.sql
+
+db/status:
+	@$(SHANGE) status
+
+db/migrate:
+	@$(SHANGE) migrate
+	@$(SHANGE) schema > config/database.sql
 
 deploy:
 	@rsync $(RSYNC_OPTS) . "$(APP_HOST):./$(or $(APP_PATH), $(error "APP_PATH"))/"

@@ -100,6 +100,7 @@ var EMPTY_COMMENTS_RES = {data: {rows: []}}
 describe("InitiativesController", function() {
 	require("root/test/web")()
 	require("root/test/mitm")()
+	require("root/test/db")()
 	beforeEach(require("root/test/mitm").router)
 
 	describe("GET /", function() {
@@ -441,6 +442,68 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(303)
 				res.headers.location.must.equal(`/initiatives/${UUID}`)
 			})
+
+			describe("given notes", function() {
+				it("must update notes", function*() {
+					this.router.get(`/api/users/self/topics/${UUID}`,
+						respond.bind(null, {data: PUBLISHABLE_DISCUSSION}))
+
+					var res = yield this.request(`/initiatives/${UUID}`, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, notes: "Hello, world"}
+					})
+
+					res.statusCode.must.equal(303)
+					res.headers.location.must.equal(`/initiatives/${UUID}/edit`)
+
+					yield db.search("SELECT * FROM initiatives").must.then.eql([{
+						uuid: UUID,
+						mailchimp_interest_id: null,
+						notes: "Hello, world"
+					}])
+				})
+
+				it("must not update other initiatives", function*() {
+					this.router.get(`/api/users/self/topics/${UUID}`,
+						respond.bind(null, {data: PUBLISHABLE_DISCUSSION}))
+
+					var other = yield db.create("initiatives", {
+						uuid: "a8166697-7f68-43e4-a729-97a7868b4d51"
+					})
+
+					var res = yield this.request(`/initiatives/${UUID}`, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, notes: "Hello, world"}
+					})
+
+					res.statusCode.must.equal(303)
+					res.headers.location.must.equal(`/initiatives/${UUID}/edit`)
+
+					yield db.search("SELECT * FROM initiatives").must.then.eql([other, {
+						uuid: UUID,
+						mailchimp_interest_id: null,
+						notes: "Hello, world"
+					}])
+				})
+
+				it("must throw 401 when not permitted to edit", function*() {
+					this.router.get(`/api/users/self/topics/${UUID}`,
+						respond.bind(null, {data: DISCUSSION}))
+
+					var res = yield this.request(`/initiatives/${UUID}`, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, notes: "Hello, world"}
+					})
+
+					res.statusCode.must.equal(401)
+
+					yield db.search("SELECT * FROM initiatives").must.then.eql([{
+						uuid: UUID,
+						mailchimp_interest_id: null,
+						notes: ""
+					}])
+				})
+			})
 		})
 	})
 
@@ -522,7 +585,6 @@ describe("InitiativesController", function() {
 	})
 
 	describe("POST /:id/subscriptions", function() {
-		require("root/test/db")()
 		require("root/test/fixtures").csrf()
 
 		var MAILCHIMP_INTERESTS_PATH = [
@@ -599,7 +661,39 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(303)
 
 			yield db.search("SELECT * FROM initiatives").must.then.eql([{
-				uuid: UUID, mailchimp_interest_id: interestId
+				uuid: UUID,
+				mailchimp_interest_id: interestId,
+				notes: ""
+			}])
+		})
+
+		it("must not update other initiatives", function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
+
+			var interestId = randomHex(10)
+			this.router.post(MAILCHIMP_INTERESTS_PATH,
+				respond.bind(null, {id: interestId}))
+
+			var email = "user@example.com"
+			var emailHash = md5(email.toLowerCase())
+			this.router.put(MAILCHIMP_MEMBERS_PATH + "/" + emailHash, endRequest)
+			
+			var other = yield db.create("initiatives", {
+				uuid: "a8166697-7f68-43e4-a729-97a7868b4d51"
+			})
+			
+			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
+				method: "POST",
+				form: {_csrf_token: this.csrfToken, email: email}
+			})
+
+			res.statusCode.must.equal(303)
+
+			yield db.search("SELECT * FROM initiatives").must.then.eql([other, {
+				uuid: UUID,
+				mailchimp_interest_id: interestId,
+				notes: ""
 			}])
 		})
 
@@ -638,7 +732,9 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(303)
 
 			yield db.search("SELECT * FROM initiatives").must.then.eql([{
-				uuid: UUID, mailchimp_interest_id: interestId
+				uuid: UUID,
+				mailchimp_interest_id: interestId,
+				notes: ""
 			}])
 		})
 
@@ -654,7 +750,6 @@ describe("InitiativesController", function() {
 			})
 
 			res.statusCode.must.equal(403)
-			yield db.search("SELECT * FROM initiatives").must.then.eql([])
 		})
 
 		it("must respond with 422 given missing email", function*() {

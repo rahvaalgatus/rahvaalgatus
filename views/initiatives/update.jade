@@ -91,3 +91,11 @@ block prepend subpage
 						value="delete",
 						onclick="return confirm('#{confirmText}')")
 						= t("DELETE_DISCUSSION")
+
+			+form#initiative-notes-form(
+				method="post", action="/initiatives/#{initiative.id}")
+				input(type="hidden", name="_method", value="put")
+				input(type="hidden", name="referrer", value=editUrl)
+				h2= t("NOTES_HEADER")
+				textarea.form-textarea(name="notes")= dbInitiative.notes
+				button.secondary-button.wide-button= t("UPDATE_NOTES")

@@ -814,6 +814,7 @@ button.inherited {
 			font-size: 4.2rem;
 			line-height: 1.2;
 			word-wrap: break-word;
+			margin-bottom: 1rem;
 		}
 
 		time,
@@ -954,12 +955,8 @@ button.inherited {
 
 			p.initiative-progress-text span { display: block; }
 
-			#initiative-notes {
-				font-weight: 500;
-				line-height: 1.5;
-				margin: 0 (-$sidebar-padding);
-				padding: 1.5rem $sidebar-padding;
-
+			#initiative-notes,
+			#initiative-notes-form {
 				h2 {
 					color: #7c7c7c;
 					margin-bottom: 0.5rem;
@@ -967,9 +964,17 @@ button.inherited {
 
 					&:after { content: ":"; }
 				}
+			}
+
+			#initiative-notes {
+				font-weight: 500;
+				line-height: 1.5;
+				margin: 0 (-$sidebar-padding);
+				padding: 1.5rem $sidebar-padding;
 
 				p {
 					white-space: pre-wrap;
+					word-wrap: break-word;
 				}
 			}
 
@@ -984,6 +989,7 @@ button.inherited {
 			text-align: center;
 			margin-top: 1rem;
 			margin-bottom: 1rem;
+			line-height: 1.5;
 
 			time { @extend strong; }
 		}
@@ -1025,17 +1031,18 @@ button.inherited {
 			border-radius: 4px;
 		}
 
-		p {
-			margin-top: 1rem;
-			text-align: center;
-		}
-
 		h2 {
 			margin-top: 2rem;
 			color: $title-text;
 			text-align: center;
 			font-size: 2.4rem;
 			font-weight: 500;
+		}
+
+		p {
+			margin-top: 1rem;
+			text-align: center;
+			line-height: 1.5;
 		}
 
 		form {
@@ -1151,8 +1158,10 @@ button.inherited {
 		}
 
 		.empty {
-			margin-bottom: 4rem;
-			font-size: 1.6rem;
+			text-align: center;
+			font-size: 1.3rem;
+			font-weight: 500;
+			padding-bottom: $article-padding;
 		}
 
 		.events {

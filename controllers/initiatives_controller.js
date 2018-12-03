@@ -110,6 +110,8 @@ exports.router.use("/:id", next(function*(req, res, next) {
 		if (req.user) path = "/api/users/self" + path.slice(4)
 		req.initiative = yield req.api(path).then(getBody).
 			then(parseCitizenInitiative)
+
+		req.dbInitiative = yield readOrCreateDbInitiative(req.initiative.id)
 	}
 	catch (ex) {
 		// CitizenOS throws 500 for invalid UUIDs. Workaround that.
@@ -120,6 +122,7 @@ exports.router.use("/:id", next(function*(req, res, next) {
 	}
 
 	res.locals.initiative = req.initiative
+	res.locals.dbInitiative = req.dbInitiative
 	next()
 }))
 
@@ -247,6 +250,22 @@ exports.router.put("/:id", next(function*(req, res) {
 	else if (req.body.status === "closed") {
 		if (!Initiative.canFinish(initiative)) throw new HttpError(401)
 		attrs = {status: req.body.status}
+	}
+	else if ("notes" in req.body) {
+		if (!Initiative.canEdit(initiative)) throw new HttpError(401)
+
+		yield db.update(`
+			UPDATE initiatives
+			SET notes = $notes
+			WHERE uuid = $uuid
+		`, {
+			$uuid: initiative.id,
+			$notes: String(req.body.notes).trim()
+		})
+
+		res.flash("notice", req.t("NOTES_UPDATED"))
+		res.redirect(303, req.baseUrl + "/" + initiative.id + "/edit")
+		return
 	}
 	else throw new HttpError(422, "Invalid Attribute")
 
@@ -397,11 +416,12 @@ exports.router.get("/:id/signature", next(function*(req, res) {
 
 exports.router.post("/:id/subscriptions", next(function*(req, res, next) {
 	var initiative = req.initiative
+	var dbInitiative = req.dbInitiative
 
 	if (!Initiative.isPublic(initiative))
 		return void next(new HttpError(403, "Initiative Not Public"))
 
-	var interestId = yield readOrCreateMailchimpInterest(initiative)
+	var interestId = yield readOrCreateMailchimpInterest(dbInitiative, initiative)
 	var email = req.body.email
 	var emailHash = md5(email.toLowerCase())
 
@@ -461,13 +481,11 @@ function* readSignature(initiative, token) {
 	throw new HttpError(500, "Mobile-Id Took Too Long")
 }
 
-function* readOrCreateMailchimpInterest(initiative) {
-	var obj = yield db.read("SELECT * FROM initiatives WHERE uuid = ?", [
-		initiative.id
-	])
-
-	if (obj) return obj.mailchimp_interest_id
-	return yield createMailchimpInterest(initiative)
+function* readOrCreateMailchimpInterest(dbInitiative, initiative) {
+	if (dbInitiative.mailchimp_interest_id)
+		return dbInitiative.mailchimp_interest_id
+	else
+		return yield createMailchimpInterest(initiative)
 }
 
 function* createMailchimpInterest(initiative) {
@@ -484,9 +502,13 @@ function* createMailchimpInterest(initiative) {
 		interest = yield create(`${initiative.title} (${date})`)
 	}
 
-	yield db.create("initiatives", {
-		uuid: initiative.id,
-		mailchimp_interest_id: interest.body.id
+	yield db.update(`
+		UPDATE initiatives
+		SET mailchimp_interest_id = $interestId
+		WHERE uuid = $uuid
+	`, {
+		$uuid: initiative.id,
+		$interestId: interest.body.id
 	})
 
 	return interest.body.id
@@ -541,6 +563,15 @@ function isMailchimpEmailErr(err) {
 		err.response.body.errors.some((e) => e.field == "email_address") ||
 		/email address/.test(err.response.body.detail)
 	)
+}
+
+function* readOrCreateDbInitiative(uuid) {
+	var obj = yield db.read("SELECT * FROM initiatives WHERE uuid = ?", [uuid])
+	if (obj) return obj
+
+	obj = {uuid: uuid}
+	yield db.create("initiatives", obj)
+	return obj
 }
 
 function getBody(res) { return res.body.data }
