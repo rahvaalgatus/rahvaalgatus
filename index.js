@@ -17,5 +17,5 @@ lazy(exports, "errorReporter", function() {
 
 lazy(exports, "db", function() {
 	var Db = require("root/lib/db")
-	return new Db(__dirname + "/db/" + ENV + ".sqlite3")
+	return new Db(__dirname + "/config/" + ENV + ".sqlite3")
 })

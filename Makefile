@@ -9,7 +9,7 @@ MOCHA = ./node_modules/.bin/_mocha
 SASS = ./node_modules/.bin/node-sass --recursive --indent-type tab --indent-width 1 --output-style expanded
 TRANSLATIONS_URL = https://spreadsheets.google.com/feeds/list/1JKPUNp8Y_8Aigq7eGJXtWT6nZFhd31k2Ht3AjC-i-Q8/1/public/full?alt=json
 JQ_OPTS = --tab --sort-keys
-SHANGE = vendor/shange -f "db/$(ENV).sqlite3"
+SHANGE = vendor/shange -f "config/$(ENV).sqlite3"
 
 APP_HOST = rahvaalgatus.ee
 APP_PATH =
@@ -27,10 +27,10 @@ RSYNC_OPTS = \
 	--exclude "/app/***" \
 	--exclude "/config/staging.json" \
 	--exclude "/config/production.json" \
+	--exclude "/config/*.sqlite3" \
 	--exclude "/stylesheets/***" \
 	--exclude "/test/***" \
 	--exclude "/scripts/***" \
-	--exclude "/db/*.sqlite3" \
 	--exclude "/node_modules/co-mocha/***" \
 	--exclude "/node_modules/livereload/***" \
 	--exclude "/node_modules/mitm/***" \
@@ -70,16 +70,16 @@ stylesheets:
 autostylesheets: stylesheets
 	$(MAKE) SASS="$(SASS) --watch" "$<"
 
-test: db/test.sqlite3
+test: config/test.sqlite3
 	@$(NODE) $(NODE_OPTS) $(MOCHA) -R dot $(TEST)
 
-spec: db/test.sqlite3
+spec: config/test.sqlite3
 	@$(NODE) $(NODE_OPTS) $(MOCHA) -R spec $(TEST)
 
-autotest: db/test.sqlite3
+autotest: config/test.sqlite3
 	@$(NODE) $(NODE_OPTS) $(MOCHA) -R dot --watch $(TEST)
 
-autospec: db/test.sqlite3
+autospec: config/test.sqlite3
 	@$(NODE) $(NODE_OPTS) $(MOCHA) -R spec --watch $(TEST)
 
 test/server: export TEST_TAGS = server
@@ -102,14 +102,14 @@ rebuild:
 config/database.sql:
 	@$(SHANGE) schema > config/database.sql
 
-db/create: db/$(ENV).sqlite3
+config/%.sqlite3:
+	sqlite3 "$@" < config/database.sql
+
+db/create: config/$(ENV).sqlite3
 
 db/test:
-	rm -f db/test.sqlite3
-	$(MAKE) db/test.sqlite3
-
-db/%.sqlite3:
-	sqlite3 "$@" < config/database.sql
+	rm -f config/test.sqlite3
+	$(MAKE) config/test.sqlite3
 
 db/status:
 	@$(SHANGE) status
@@ -160,5 +160,5 @@ lib/i18n/ru.json: tmp/translations.json
 .PHONY: server
 .PHONY: shrinkwrap
 .PHONY: deploy staging production
-.PHONY: db/create db/test
+.PHONY: db/create db/test db/status db/migrate
 .PHONY: translations
