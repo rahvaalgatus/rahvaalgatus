@@ -612,7 +612,7 @@ describe("InitiativesController", function() {
 				})
 
 				var email = "User@example.com"
-				var emailHash = md5(email.toLowerCase())
+				var emailHash = hashEmail(email)
 
 				var path = `/3.0/lists/${Config.mailchimpListId}/members/${emailHash}`
 				this.router.put(path, function(req, res) {
@@ -647,7 +647,42 @@ describe("InitiativesController", function() {
 			})
 
 			var email = "User@example.com"
-			var emailHash = md5(email.toLowerCase())
+			var emailHash = hashEmail(email)
+			this.router.put(MAILCHIMP_MEMBERS_PATH + "/" + emailHash, (req, res) => {
+				req.body.interests.must.eql({[interestId]: true})
+				res.end()
+			})
+			
+			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
+				method: "POST",
+				form: {_csrf_token: this.csrfToken, email: email}
+			})
+
+			res.statusCode.must.equal(303)
+
+			yield db.search("SELECT * FROM initiatives").must.then.eql([{
+				uuid: UUID,
+				mailchimp_interest_id: interestId,
+				notes: ""
+			}])
+		})
+
+		// A bug noticed on Dec 11, 2018 with SQLite that interpreted the id
+		// "452e778485" as a number in scientific notation because the column type
+		// was STRING, not TEXT.
+		it("must create Mailchimp group if id in scientific notation",
+			function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
+
+			var interestId = "452e778485"
+			this.router.post(MAILCHIMP_INTERESTS_PATH, function(req, res) {
+				req.body.must.eql({name: INITIATIVE.title})
+				respond({id: interestId}, req, res)
+			})
+
+			var email = "User@example.com"
+			var emailHash = hashEmail(email)
 			this.router.put(MAILCHIMP_MEMBERS_PATH + "/" + emailHash, (req, res) => {
 				req.body.interests.must.eql({[interestId]: true})
 				res.end()
@@ -676,7 +711,7 @@ describe("InitiativesController", function() {
 				respond.bind(null, {id: interestId}))
 
 			var email = "user@example.com"
-			var emailHash = md5(email.toLowerCase())
+			var emailHash = hashEmail(email)
 			this.router.put(MAILCHIMP_MEMBERS_PATH + "/" + emailHash, endRequest)
 			
 			var other = yield db.create("initiatives", {
@@ -717,7 +752,7 @@ describe("InitiativesController", function() {
 			})
 
 			var email = "User@example.com"
-			var emailHash = md5(email.toLowerCase())
+			var emailHash = hashEmail(email)
 			var path = `/3.0/lists/${Config.mailchimpListId}/members/${emailHash}`
 			this.router.put(path, function(req, res) {
 				req.body.interests.must.eql({[interestId]: true})
@@ -756,7 +791,7 @@ describe("InitiativesController", function() {
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
-			var path = `/3.0/lists/${Config.mailchimpListId}/members/${md5("")}`
+			var path = `/3.0/lists/${Config.mailchimpListId}/members/${hashEmail("")}`
 			this.router.put(path, respondWithMailchimpError.bind(null, {
 				type: "http://developer.mailchimp.com/documentation/mailchimp/guides/error-glossary/",
 				title: "Invalid Resource",
@@ -784,7 +819,7 @@ describe("InitiativesController", function() {
 				respond.bind(null, {data: INITIATIVE}))
 
 			var email = "fubar"
-			var emailHash = md5(email.toLowerCase())
+			var emailHash = hashEmail(email)
 			var path = `/3.0/lists/${Config.mailchimpListId}/members/${emailHash}`
 			this.router.put(path, respondWithMailchimpError.bind(null, {
 				type: "http://developer.mailchimp.com/documentation/mailchimp/guides/error-glossary/",
@@ -813,4 +848,5 @@ function respondWithMailchimpError(json, _req, res) {
 	res.end(JSON.stringify(json))
 }
 
+function hashEmail(email) { return md5(email.toLowerCase()) }
 function endRequest(_req, res) { res.end() }
