@@ -64,7 +64,7 @@ name_migration() {
 		name=${name#*_}
 		name=${name%.*}
 		name=${name//_/ }
-		echo "$name"
+		[ "$name" != "*" ] && echo "$name"
 		break
 	done
 }
@@ -125,12 +125,12 @@ case "$cmd" in
 		[ $# -ne 0 ] && warn "$(usage status)" && exit 1
 
 		diff_migrations | while IFS= read -r versions; do
-			new=${versions#*	}; new=${new%	*}
 			mis=${versions%%	*}
+			new=${versions#*	}; new=${new%	*}
 			old=${versions##*	}
 
-			if [ -n "$new" ]; then yellow "down  $new  $(name_migration "$new")\\n"
-			elif [ -n "$mis" ]; then red "miss  $mis\\n"
+			if [ -n "$mis" ]; then red "miss  $mis\\n"
+			elif [ -n "$new" ]; then yellow "down  $new  $(name_migration "$new")\\n"
 			else green "up    $old  $(name_migration "$old")\\n"
 			fi
 		done
