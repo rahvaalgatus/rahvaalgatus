@@ -7,6 +7,7 @@ var AUTHORIZE_URL = Config.apiAuthorizeUrl
 var DEFAULT_LANG = Config.language
 var LANGS = require("root/lib/i18n").STRINGS
 var TOKEN_COOKIE_NAME = "citizenos_token"
+var ENV = process.env.ENV
 var next = require("co-next")
 var csrf = require("root/lib/middleware/csrf_middleware")
 var oAuthCsrf = new QueryCsrfMiddleware("csrf_token_for_citizenos", "state")
@@ -94,13 +95,15 @@ function create(req, res, next) {
 
 	// In production the CitizenOS instance sets the token cookie for a larger
 	// scope than it redirects here with. Use that as it works across partnerIds.
-	if (req.cookies[TOKEN_COOKIE_NAME] == null)
-		res.cookie(TOKEN_COOKIE_NAME, req.query.access_token, {
-			httpOnly: true,
-			secure: req.secure,
-			domain: Config.cookieDomain,
-			maxAge: 30 * 86400 * 1000
-		})
+	if (
+		(ENV !== "production" && ENV !== "test") ||
+		req.cookies[TOKEN_COOKIE_NAME] == null
+	) res.cookie(TOKEN_COOKIE_NAME, req.query.access_token, {
+		httpOnly: true,
+		secure: req.secure,
+		domain: Config.cookieDomain,
+		maxAge: 30 * 86400 * 1000
+	})
 
 	var referrer = req.cookies.session_referrer || "/"
 	res.clearCookie("session_referrer")
