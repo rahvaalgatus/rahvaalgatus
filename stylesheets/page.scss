@@ -256,9 +256,7 @@ strong {
 			line-height: 1;
 		}
 
-		@include mobile {
-			width: 100%;
-		}
+		@include mobile { width: 100%; }
 	}
 }
 
@@ -789,6 +787,7 @@ button.inherited {
 #initiative-page {
 	$article-width: 72rem;
 	$article-padding: 3rem;
+	$article-padding-mobile: 2rem;
 	$article-width-percentage: 70%;
 	$sidebar-padding: 2rem;
 	$comment-padding: 3rem;
@@ -824,7 +823,8 @@ button.inherited {
 		}
 
 		@include mobile {
-			padding-top: 2rem;
+			margin-top: 2rem;
+			margin-bottom: 2rem;
 
 			h1 { font-size: 3.2rem; }
 			a.badge { display: block; margin-left: 0; }
@@ -846,9 +846,10 @@ button.inherited {
 		background: white;
 		box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.15);
 		width: $article-width-percentage;
-		padding: $article-padding $article-padding;
+		padding: $article-padding;
 
 		@include mobile-and-tablet { width: auto; }
+		@include mobile { padding: $article-padding-mobile; }
 	}
 
 	#initiative-section {
@@ -868,9 +869,17 @@ button.inherited {
 			position: relative; // To have box-shadow be on top of <aside>.
 
 			& > .flash,
+			& > .note,
+			& > .quicksign,
 			#initiative-donate,
 			#initiative-ended {
-				margin: (-$article-padding) (-$article-padding) $article-padding;
+				margin: -$article-padding;
+				margin-bottom: $article-padding;
+
+				@include mobile {
+					margin: -$article-padding-mobile;
+					margin-bottom: $article-padding-mobile;
+				}
 			}
 
 			& > .flash {
@@ -880,9 +889,28 @@ button.inherited {
 			& > .note {
 				background-color: $light-background;
 				font-weight: 600;
-				line-height: 4rem;
-				padding: 0 $article-padding;
-				margin: (-$article-padding) (-$article-padding) $article-padding;
+				min-height: 4rem;
+				padding: 1.1rem $article-padding 0.8rem;
+				line-height: 2rem;
+				border-bottom: 1px solid $light-background-border;
+			}
+
+			.quicksign {
+				display: none;
+				background-color: $light-background;
+				text-align: center;
+				padding: $sidebar-padding $article-padding;
+				border-bottom: 1px solid $light-background-border;
+
+				.initiative-progress { line-height: 3.2rem; border-radius: 0.4rem; }
+				.sign-button { margin-top: 1rem; }
+
+				@include mobile-and-tablet { display: block; }
+
+				@include mobile {
+					padding-left: $article-padding-mobile;
+					padding-right: $article-padding-mobile;
+				}
 			}
 		}
 
@@ -912,6 +940,7 @@ button.inherited {
 
 			@include mobile-and-tablet {
 				width: auto;
+				.quicksign { display: none; }
 			}
 
 			@include tablet {
@@ -988,7 +1017,6 @@ button.inherited {
 		p.initiative-progress-text {
 			text-align: center;
 			margin-top: 1rem;
-			margin-bottom: 1rem;
 			line-height: 1.5;
 
 			time { @extend strong; }
@@ -1019,16 +1047,22 @@ button.inherited {
 
 	#initiative-vote {
 		border-top: 1px solid $light-background-border;
+		background-color: $light-background;
+
 		margin: 4rem (-$article-padding) (-$article-padding);
 		padding: 2rem $article-padding;
-		background-color: $light-background;
+
+		@include mobile {
+			padding: 2rem $article-padding-mobile;
+			margin: 4rem (-$article-padding-mobile) (-$article-padding-mobile);
+		}
 
 		// Don't use overflow to not cut off the blur around buttons.
 		&:after { display: block; clear: both; content: ""; }
 
 		.initiative-progress {
 			line-height: 3.2rem;
-			border-radius: 4px;
+			border-radius: 0.4rem;
 		}
 
 		h2 {
@@ -1062,6 +1096,7 @@ button.inherited {
 				width: auto;
 				display: block;
 				text-align: center;
+				padding: 0;
 			}
 
 			input,

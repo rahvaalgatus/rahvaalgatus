@@ -50,6 +50,7 @@ block prepend subpage
 					a.link-button(href="#initiative-comment-form") Esita oma kommentaar
 					= "."
 
+			+quicksign(initiative)
 			article.text!= initiative.html
 
 			if Initiative.isVotable(now, initiative)
@@ -176,22 +177,7 @@ block prepend subpage
 						function raise(err) { setTimeout(function() { throw err }) }
 
 		aside#initiative-sidebar
-			if Initiative.isPublic(initiative)
-				+progress(initiative)
-
-				if initiative.status == "inProgress"
-					+progress-text(initiative)
-
-				else
-					if Initiative.isVotable(now, initiative)
-						if !hasVote
-							a.primary-button.wide-button.sign-button(href="#initiative-vote")
-								= t("SIGN_THIS_DOCUMENT")
-						else
-							a.white-button.wide-button.revoke-button(href="#initiative-vote")
-								= t("REVOKE_SIGNATURE")
-
-					+progress-text(initiative)
+			+quicksign(initiative)
 
 			if Initiative.canPublish(initiative)
 				+form(method="post", action="/initiatives/#{initiative.id}")
