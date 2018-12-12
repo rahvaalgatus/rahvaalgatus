@@ -19,3 +19,19 @@ lazy(exports, "db", function() {
 	var Db = require("root/lib/db")
 	return new Db(__dirname + "/config/" + ENV + ".sqlite3")
 })
+
+lazy(exports, "sendEmail", function() {
+  var config = require("root/config").email
+
+  switch (ENV) {
+		case "test": return require("root/lib/test_emailer")(config)
+		default: return require("root/lib/emailer")(config)
+  }
+})
+
+lazy(exports, "logger", function() {
+  switch (ENV) {
+		case "test": return require("root/lib/null_logger")
+		default: return console
+  }
+})

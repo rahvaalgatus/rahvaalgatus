@@ -3,6 +3,7 @@ var Url = require("url")
 var DateFns = require("date-fns")
 var I18n = require("root/lib/i18n")
 var Config = require("root/config")
+var ValidDbInitiative = require("root/test/valid_db_initiative")
 var respond = require("root/test/fixtures").respond
 var concat = Array.prototype.concat.bind(Array.prototype)
 var randomHex = require("root/lib/crypto").randomHex
@@ -456,11 +457,9 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(303)
 					res.headers.location.must.equal(`/initiatives/${UUID}/edit`)
 
-					yield db.search("SELECT * FROM initiatives").must.then.eql([{
-						uuid: UUID,
-						mailchimp_interest_id: null,
-						notes: "Hello, world"
-					}])
+					yield db.search("SELECT * FROM initiatives").must.then.eql([
+						new ValidDbInitiative({uuid: UUID, notes: "Hello, world"})
+					])
 				})
 
 				it("must not update other initiatives", function*() {
@@ -479,11 +478,10 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(303)
 					res.headers.location.must.equal(`/initiatives/${UUID}/edit`)
 
-					yield db.search("SELECT * FROM initiatives").must.then.eql([other, {
-						uuid: UUID,
-						mailchimp_interest_id: null,
-						notes: "Hello, world"
-					}])
+					yield db.search("SELECT * FROM initiatives").must.then.eql([
+						other,
+						new ValidDbInitiative({uuid: UUID, notes: "Hello, world"})
+					])
 				})
 
 				it("must throw 401 when not permitted to edit", function*() {
@@ -497,11 +495,9 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(401)
 
-					yield db.search("SELECT * FROM initiatives").must.then.eql([{
-						uuid: UUID,
-						mailchimp_interest_id: null,
-						notes: ""
-					}])
+					yield db.search("SELECT * FROM initiatives").must.then.eql([
+						new ValidDbInitiative({uuid: UUID})
+					])
 				})
 			})
 		})
@@ -660,11 +656,9 @@ describe("InitiativesController", function() {
 
 			res.statusCode.must.equal(303)
 
-			yield db.search("SELECT * FROM initiatives").must.then.eql([{
-				uuid: UUID,
-				mailchimp_interest_id: interestId,
-				notes: ""
-			}])
+			yield db.search("SELECT * FROM initiatives").must.then.eql([
+				new ValidDbInitiative({uuid: UUID, mailchimp_interest_id: interestId})
+			])
 		})
 
 		// A bug noticed on Dec 11, 2018 with SQLite that interpreted the id
@@ -695,11 +689,9 @@ describe("InitiativesController", function() {
 
 			res.statusCode.must.equal(303)
 
-			yield db.search("SELECT * FROM initiatives").must.then.eql([{
-				uuid: UUID,
-				mailchimp_interest_id: interestId,
-				notes: ""
-			}])
+			yield db.search("SELECT * FROM initiatives").must.then.eql([
+				new ValidDbInitiative({uuid: UUID, mailchimp_interest_id: interestId})
+			])
 		})
 
 		it("must not update other initiatives", function*() {
@@ -725,11 +717,10 @@ describe("InitiativesController", function() {
 
 			res.statusCode.must.equal(303)
 
-			yield db.search("SELECT * FROM initiatives").must.then.eql([other, {
-				uuid: UUID,
-				mailchimp_interest_id: interestId,
-				notes: ""
-			}])
+			yield db.search("SELECT * FROM initiatives").must.then.eql([
+				other,
+				new ValidDbInitiative({uuid: UUID, mailchimp_interest_id: interestId})
+			])
 		})
 
 		it("must increment title if already exists", function*() {
@@ -766,11 +757,9 @@ describe("InitiativesController", function() {
 
 			res.statusCode.must.equal(303)
 
-			yield db.search("SELECT * FROM initiatives").must.then.eql([{
-				uuid: UUID,
-				mailchimp_interest_id: interestId,
-				notes: ""
-			}])
+			yield db.search("SELECT * FROM initiatives").must.then.eql([
+				new ValidDbInitiative({uuid: UUID, mailchimp_interest_id: interestId})
+			])
 		})
 
 		it("must respond with 403 Forbidden if discussion not public", function*() {

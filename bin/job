@@ -1,0 +1,45 @@
+#!/usr/bin/env node
+var Neodoc = require("neodoc")
+
+var USAGE_TEXT = `
+Usage: job [options] <job-name>
+
+Options:
+    -h, --help           Display this help and exit.
+
+Jobs:
+		parliament-monitor   Monitors initiatives in the parliament API.
+
+For more help or to give feedback, please see https://github.com/rahvaalgatus .
+`
+
+var args = Neodoc.run(USAGE_TEXT, {versionFlags: []})
+if (args["--help"]) return void process.stdout.write(USAGE_TEXT.trimLeft())
+
+var co = require("co")
+var reportError = require("root").errorReporter
+
+var JOBS = {
+	"parliament-monitor": require.resolve("root/jobs/parliament_monitor_job")
+}
+
+var jobName = args["<job-name>"]
+var jobPath = JOBS[jobName]
+if (jobPath == null) return void die("No such job: %s", jobName)
+
+co(function*() {
+	var job = require(jobPath)
+	yield job()
+}).catch(handleError)
+
+function handleError(err) {
+	reportError(err)
+	console.error(err)
+	console.error(err.stack.replace(/^[^\n]+\n/, ""))
+	process.exitCode = 1
+}
+
+function die() {
+	console.error.apply(console, arguments)
+	process.exit(2)
+}

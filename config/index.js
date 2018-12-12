@@ -1,10 +1,8 @@
 var O = require("oolong")
+var Fs = require("root/lib/fs")
+var envPath = __dirname + "/" + process.env.ENV + ".json"
 
-module.exports = O.create(
-	require("./index.json"),
-	resolve("./" + process.env.ENV) && require("./" + process.env.ENV)
+module.exports = O.merge(
+	Fs.readJsonSync(__dirname + "/index.json"),
+	Fs.existsSync(envPath) && Fs.readJsonSync(envPath)
 )
-
-function resolve(path) {
-	try { return require.resolve(path) } catch (ex) { return null }
-}

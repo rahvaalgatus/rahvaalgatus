@@ -8,7 +8,9 @@
 	"adminCoauthors": [],
 	"cookieSecret": null,
 	"cookieDomain": "rahvaalgatus.ee",
+	"userAgent": "Rahvaalgatus (+https://rahvaalgatus.ee)",
 	"maintenance": false,
+	"notificationEmails": [],
 
 	"language": "et",
 	"languages": ["et", "en", "ru"],
@@ -23,6 +25,14 @@
 	"mailchimpApiKey": "-us1",
 	"mailchimpListId": "",
 	"mailchimpInterestCategoryId": "",
+
+	"email": {
+		"from": "Rahvaalgatus <abi@rahvaalgatus.ee>",
+		"host": null,
+		"secure": true,
+		"user": null,
+		"password": null
+	},
 
 	"helpUrls": {
 		"et": "http://help.rahvaalgatus.ee/abi/tagged/juhend",
