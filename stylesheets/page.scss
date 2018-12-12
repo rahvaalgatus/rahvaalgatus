@@ -15,7 +15,7 @@ body {
 }
 
 center {
-	max-width: $page-width + $page-padding;
+	max-width: $page-width + 2 * $page-padding;
 	padding-left: $page-padding;
 	padding-right: $page-padding;
 	margin: 0 auto;
