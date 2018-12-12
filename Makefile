@@ -118,6 +118,10 @@ db/migrate:
 	@$(SHANGE) migrate
 	@$(SHANGE) schema > config/database.sql
 
+db/migration: NAME = $(error "Please set NAME.")
+db/migration:
+	@$(SHANGE) create "$(NAME)"
+
 deploy:
 	@rsync $(RSYNC_OPTS) . "$(APP_HOST):./$(or $(APP_PATH), $(error "APP_PATH"))/"
 	ssh $(APP_HOST) pm2 reload $(notdir $(APP_PATH))
@@ -160,5 +164,5 @@ lib/i18n/ru.json: tmp/translations.json
 .PHONY: server
 .PHONY: shrinkwrap
 .PHONY: deploy staging production
-.PHONY: db/create db/test db/status db/migrate
+.PHONY: db/create db/test db/status db/migrate db/migration
 .PHONY: translations
