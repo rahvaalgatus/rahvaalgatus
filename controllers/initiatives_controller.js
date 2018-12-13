@@ -153,7 +153,10 @@ exports.read = next(function*(req, res) {
 	var comments = yield req.api(commentsPath)
 	comments = comments.body.data.rows.map(normalizeComment).reverse()
 
-	if (initiative.status == "followUp" || initiative.status == "closed") {
+	if (initiative.vote && (
+		initiative.status == "followUp" ||
+		initiative.status == "closed"
+	)) {
 		var eventsPath = `/api/topics/${initiative.id}/events`
 		if (req.user) eventsPath = "/api/users/self" + eventsPath.slice(4)
 		events = yield req.api(eventsPath)

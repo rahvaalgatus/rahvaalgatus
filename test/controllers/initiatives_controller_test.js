@@ -16,6 +16,7 @@ var EXTERNAL_PARTNER_ID = O.keys(Config.partners)[0]
 var PARTNER_IDS = concat(PARTNER_ID, O.keys(Config.partners))
 var ADMIN_COAUTHORS = Config.adminCoauthors
 var INITIATIVE_TYPE = "application/vnd.rahvaalgatus.initiative+json; v=1"
+var EMPTY_RES = {data: {rows: []}}
 
 var PUBLISHABLE_DISCUSSION = {
 	id: UUID,
@@ -92,11 +93,9 @@ var PROCESSED_INITIATIVE = {
 	description: "<body><h1>My thoughts.</h1></body>",
 	creator: {name: "John"},
 	permission: {level: "read"},
-	vote: {options: {rows: [{value: "Yes", voteCount: 0}]}},
+	vote: {options: {rows: [{value: "Yes", voteCount: 2}]}},
 	events: {count: 1} // No actual events returned, it seems.
 }
-
-var EMPTY_COMMENTS_RES = {data: {rows: []}}
 
 describe("InitiativesController", function() {
 	require("root/test/web")()
@@ -227,7 +226,7 @@ describe("InitiativesController", function() {
 				})
 
 				this.router.get(`/api/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_COMMENTS_RES))
+					respond.bind(null, EMPTY_RES))
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
@@ -237,8 +236,32 @@ describe("InitiativesController", function() {
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: DISCUSSION}))
 				this.router.get(`/api/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_COMMENTS_RES))
+					respond.bind(null, EMPTY_RES))
 
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+			})
+
+			// This was a bug on Dec 13, 2018 where the code checking to display vote
+			// results assumed a closed initiative had been voted on.
+			it("must render closed discussion", function*() {
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: CLOSED_DISCUSSION}))
+				this.router.get(`/api/topics/${UUID}/comments`,
+					respond.bind(null, EMPTY_RES))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+			})
+
+			it("must show closed initiative", function*() {
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: PROCESSED_INITIATIVE}))
+				this.router.get(`/api/topics/${UUID}/comments`,
+					respond.bind(null, EMPTY_RES))
+				this.router.get(`/api/topics/${UUID}/events`,
+					respond.bind(null, EMPTY_RES))
+	
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
 			})
@@ -253,7 +276,7 @@ describe("InitiativesController", function() {
 				}))
 
 				this.router.get(`/api/users/self/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_COMMENTS_RES)
+					respond.bind(null, EMPTY_RES)
 				)
 	
 				var res = yield this.request("/initiatives/" + UUID)
@@ -268,7 +291,7 @@ describe("InitiativesController", function() {
 				}))
 
 				this.router.get(`/api/users/self/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_COMMENTS_RES))
+					respond.bind(null, EMPTY_RES))
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
@@ -304,7 +327,7 @@ describe("InitiativesController", function() {
 			}))
 
 			this.router.get(`/api/topics/${UUID}/comments`,
-				respond.bind(null, EMPTY_COMMENTS_RES))
+				respond.bind(null, EMPTY_RES))
 
 			var res = yield this.request("/initiatives/" + UUID, {
 				headers: {Accept: INITIATIVE_TYPE}
