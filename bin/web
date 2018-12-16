@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 var O = require("oolong")
+var Fs = require("fs")
 var Url = require("url")
 var Http = require("http")
 var Path = require("path")
@@ -103,16 +104,15 @@ app.use(function(err, req, res, next) {
 
 if (module.parent) return
 
-Http.createServer(app).listen(PORT, onListening)
-
-function onListening() {
+Http.createServer(app).listen(PORT, function() {
+  // Make world-writable to allow the web server to read and write to it.
+  if (!isFinite(PORT)) Fs.chmodSync(PORT, 0o777)
 	var addr = this.address()
-	var protocol = this.cert == null ? "http" : "https"
 
 	console.log("Listening on %s.", typeof addr == "string" ? addr : Url.format({
-		protocol: protocol, hostname: addr.address, port: addr.port
+		protocol: "http", hostname: addr.address, port: addr.port
 	}))
-}
+})
 
 function setStaticHeaders(res, path) {
 	if (isCorsable(path)) res.setHeader("Access-Control-Allow-Origin", "*")
