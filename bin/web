@@ -105,6 +105,10 @@ app.use(function(err, req, res, next) {
 
 if (module.parent) return
 
+if (!isFinite(PORT)) {
+  if (Fs.existsSync(PORT) && Fs.lstatSync(PORT).isSocket()) Fs.unlinkSync(PORT)
+}
+
 Http.createServer(app).listen(PORT, function() {
   // Make world-writable to allow the web server to read and write to it.
   if (!isFinite(PORT)) Fs.chmodSync(PORT, 0o777)
