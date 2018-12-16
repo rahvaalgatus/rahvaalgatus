@@ -131,7 +131,7 @@ describe("InitiativesController", function() {
 
 					respond({data: {rows: initiatives}}, req, res)
 				})
-	
+
 				var res = yield this.request("/initiatives")
 				res.statusCode.must.equal(200)
 				res.body.must.include(UUID)
@@ -147,7 +147,7 @@ describe("InitiativesController", function() {
 
 					respond({data: {rows: initiatives}}, req, res)
 				})
-	
+
 				var res = yield this.request("/initiatives")
 				res.statusCode.must.equal(200)
 				res.body.must.include(UUID)
@@ -163,7 +163,7 @@ describe("InitiativesController", function() {
 
 					respond({data: {rows: initiatives}}, req, res)
 				})
-	
+
 				var res = yield this.request("/initiatives")
 				res.statusCode.must.equal(200)
 				res.body.must.not.include(UUID)
@@ -261,7 +261,7 @@ describe("InitiativesController", function() {
 					respond.bind(null, EMPTY_RES))
 				this.router.get(`/api/topics/${UUID}/events`,
 					respond.bind(null, EMPTY_RES))
-	
+
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
 			})
@@ -278,7 +278,7 @@ describe("InitiativesController", function() {
 				this.router.get(`/api/users/self/topics/${UUID}/comments`,
 					respond.bind(null, EMPTY_RES)
 				)
-	
+
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
 			})
@@ -644,7 +644,7 @@ describe("InitiativesController", function() {
 
 					res.end()
 				})
-				
+
 				var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
 					method: "POST",
 					form: {_csrf_token: this.csrfToken, email: email}
@@ -671,7 +671,7 @@ describe("InitiativesController", function() {
 				req.body.interests.must.eql({[interestId]: true})
 				res.end()
 			})
-			
+
 			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
 				method: "POST",
 				form: {_csrf_token: this.csrfToken, email: email}
@@ -704,7 +704,7 @@ describe("InitiativesController", function() {
 				req.body.interests.must.eql({[interestId]: true})
 				res.end()
 			})
-			
+
 			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
 				method: "POST",
 				form: {_csrf_token: this.csrfToken, email: email}
@@ -728,11 +728,11 @@ describe("InitiativesController", function() {
 			var email = "user@example.com"
 			var emailHash = hashEmail(email)
 			this.router.put(MAILCHIMP_MEMBERS_PATH + "/" + emailHash, endRequest)
-			
+
 			var other = yield db.create("initiatives", {
 				uuid: "a8166697-7f68-43e4-a729-97a7868b4d51"
 			})
-			
+
 			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
 				method: "POST",
 				form: {_csrf_token: this.csrfToken, email: email}
@@ -772,7 +772,7 @@ describe("InitiativesController", function() {
 				req.body.interests.must.eql({[interestId]: true})
 				res.end()
 			})
-			
+
 			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
 				method: "POST",
 				form: {_csrf_token: this.csrfToken, email: email}
@@ -790,7 +790,7 @@ describe("InitiativesController", function() {
 
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: PUBLISHABLE_DISCUSSION}))
-			
+
 			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
 				method: "POST",
 				form: {_csrf_token: this.csrfToken, email: "user@example.com"}
@@ -817,7 +817,7 @@ describe("InitiativesController", function() {
 			}))
 
 			yield db.create("initiatives", {uuid: UUID, mailchimp_interest_id: "x"})
-			
+
 			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
 				method: "POST",
 				form: {_csrf_token: this.csrfToken, email: ""}
@@ -842,7 +842,7 @@ describe("InitiativesController", function() {
 			}))
 
 			yield db.create("initiatives", {uuid: UUID, mailchimp_interest_id: "x"})
-			
+
 			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
 				method: "POST",
 				form: {_csrf_token: this.csrfToken, email: email}
