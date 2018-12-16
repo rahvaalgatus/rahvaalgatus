@@ -1,5 +1,5 @@
 NODE = node
-NODE_OPTS =
+NODE_OPTS = --use-strict
 PORT = 3000
 ENV = development
 NPM_REBUILD = npm --ignore-scripts false rebuild --build-from-source
