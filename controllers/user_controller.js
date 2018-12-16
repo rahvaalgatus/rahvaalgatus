@@ -3,8 +3,8 @@ var Router = require("express").Router
 var HttpError = require("standard-http-error")
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
-var translateCitizenError = require("root/lib/api").translateError
-var parseCitizenInitiative = require("root/lib/api").parseCitizenInitiative
+var translateCitizenError = require("root/lib/citizenos_api").translateError
+var parseCitizenInitiative = require("root/lib/citizenos_api").parseCitizenInitiative
 var next = require("co-next")
 
 exports.router = Router({mergeParams: true})
@@ -12,7 +12,7 @@ exports.router = Router({mergeParams: true})
 exports.router.get("/", next(read))
 
 exports.router.put("/", next(function*(req, res, next) {
-	var updated = yield req.api("/api/users/self", {
+	var updated = yield req.cosApi("/api/users/self", {
 		method: "PUT",
 		json: {name: req.body.name, email: req.body.email}
 	}).catch(catch400)
@@ -33,7 +33,7 @@ function* read(req, res) {
 	if (req.user == null) throw new HttpError(401)
 
 	var path = "/api/users/self/topics?include[]=vote&include[]=event"
-	var initiatives = req.api(path)
+	var initiatives = req.cosApi(path)
 	initiatives = yield initiatives.then(getRows)
 	initiatives = initiatives.map(parseCitizenInitiative)
 

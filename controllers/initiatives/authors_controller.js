@@ -2,7 +2,7 @@ var Path = require("path")
 var Router = require("express").Router
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
-var translateCitizenError = require("root/lib/api").translateError
+var translateCitizenError = require("root/lib/citizenos_api").translateError
 var next = require("co-next")
 var EMPTY_AUTHOR = {email: ""}
 
@@ -16,7 +16,7 @@ exports.router.post("/", next(function*(req, res) {
 	var initiative = req.initiative
 
 	var path = `/api/users/self/topics/${initiative.id}/members/users`
-	var created = yield req.api(path, {
+	var created = yield req.cosApi(path, {
 		method: "POST",
 		json: {userId: req.body.email, level: "edit"}
 	}).catch(catch400)

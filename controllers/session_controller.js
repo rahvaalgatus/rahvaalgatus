@@ -30,7 +30,7 @@ exports.router.put("/", next(function*(req, res) {
 		maxAge: 365 * 86400 * 1000
 	})
 
-	if (req.user) yield req.api("/api/users/self", {
+	if (req.user) yield req.cosApi("/api/users/self", {
 		method: "PUT", json: {language: lang}
 	})
 

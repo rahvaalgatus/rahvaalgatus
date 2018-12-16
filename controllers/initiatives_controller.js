@@ -19,12 +19,12 @@ var catch401 = require("root/lib/fetch").catch.bind(null, 401)
 var isFetchError = require("root/lib/fetch").is
 var next = require("co-next")
 var sleep = require("root/lib/promise").sleep
-var api = require("root/lib/api")
-var parseCitizenInitiative = api.parseCitizenInitiative
+var cosApi = require("root/lib/citizenos_api")
+var parseCitizenInitiative = cosApi.parseCitizenInitiative
 var mailchimp = require("root/lib/mailchimp")
-var readInitiativesWithStatus = api.readInitiativesWithStatus
+var readInitiativesWithStatus = cosApi.readInitiativesWithStatus
 var encode = encodeURIComponent
-var translateCitizenError = require("root/lib/api").translateError
+var translateCitizenError = require("root/lib/citizenos_api").translateError
 var hasMainPartnerId = Initiative.hasPartnerId.bind(null, Config.apiPartnerId)
 var concat = Array.prototype.concat.bind(Array.prototype)
 var EMPTY_ARR = Array.prototype
@@ -85,7 +85,7 @@ exports.router.post("/", next(function*(req, res) {
 		attrs: attrs
 	})
 
-	var created = yield req.api("/api/users/self/topics", {
+	var created = yield req.cosApi("/api/users/self/topics", {
 		method: "POST",
 		json: attrs
 	}).catch(catch400)
@@ -108,7 +108,7 @@ exports.router.use("/:id", next(function*(req, res, next) {
 	try {
 		var path = `/api/topics/${encode(req.params.id)}?include[]=vote&include[]=event`
 		if (req.user) path = "/api/users/self" + path.slice(4)
-		req.initiative = yield req.api(path).then(getBody).
+		req.initiative = yield req.cosApi(path).then(getBody).
 			then(parseCitizenInitiative)
 
 		req.dbInitiative = yield readOrCreateDbInitiative(req.initiative.id)
@@ -150,7 +150,7 @@ exports.read = next(function*(req, res) {
 
 	var commentsPath = `/api/topics/${initiative.id}/comments?orderBy=date`
 	if (req.user) commentsPath = "/api/users/self" + commentsPath.slice(4)
-	var comments = yield req.api(commentsPath)
+	var comments = yield req.cosApi(commentsPath)
 	comments = comments.body.data.rows.map(normalizeComment).reverse()
 
 	if (initiative.vote && (
@@ -159,7 +159,7 @@ exports.read = next(function*(req, res) {
 	)) {
 		var eventsPath = `/api/topics/${initiative.id}/events`
 		if (req.user) eventsPath = "/api/users/self" + eventsPath.slice(4)
-		events = yield req.api(eventsPath)
+		events = yield req.cosApi(eventsPath)
 		events = events.body.data.rows.map(parseCitizenEvent)
 		events = events.sort((a, b) => +b.createdAt - +a.createdAt)
 	}
@@ -272,7 +272,7 @@ exports.router.put("/:id", next(function*(req, res) {
 	}
 	else throw new HttpError(422, "Invalid Attribute")
 
-	var updated = yield req.api(path, {
+	var updated = yield req.cosApi(path, {
 		method: method,
 		json: attrs
 	}).catch(catch400)
@@ -288,7 +288,7 @@ exports.router.put("/:id", next(function*(req, res) {
 			res.flash("notice", "Algatuse menetlus on lõpetatud.")
 
 		if (req.body.visibility === "public" && ADMIN_COAUTHORS.length > 0)
-			yield req.api(`/api/users/self/topics/${initiative.id}/members/users`, {
+			yield req.cosApi(`/api/users/self/topics/${initiative.id}/members/users`, {
 				method: "POST",
 				json: ADMIN_COAUTHORS.map((email) => ({userId: email, level: "admin"}))
 			}).catch(_.noop)
@@ -304,7 +304,7 @@ exports.router.put("/:id", next(function*(req, res) {
 exports.router.delete("/:id", next(function*(req, res) {
 	var initiative = req.initiative
 	if (!Initiative.canDelete(initiative)) throw new HttpError(405)
-	yield req.api(`/api/users/self/topics/${initiative.id}`, {method: "DELETE"})
+	yield req.cosApi(`/api/users/self/topics/${initiative.id}`, {method: "DELETE"})
 	res.flash("notice", "Algatus on kustutatud.")
 	res.redirect(302, req.baseUrl)
 }))
@@ -327,7 +327,7 @@ exports.router.get("/:id/signable", next(function*(req, res) {
 
 	// NOTE: Do not send signing requests through the current user. See below for
 	// an explanation.
-	var signable = yield api(`/api/topics/${initiative.id}/votes/${vote.id}`, {
+	var signable = yield cosApi(`/api/topics/${initiative.id}/votes/${vote.id}`, {
 		method: "POST",
 
 		json: {
@@ -347,6 +347,7 @@ exports.router.get("/:id/signable", next(function*(req, res) {
 }))
 
 exports.router.post("/:id/signature", next(function*(req, res) {
+	var path
 	var initiative = req.initiative
 	var vote = initiative.vote
 
@@ -357,8 +358,8 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 	// a requirement we don't need to enforce.
 	switch (req.body.method) {
 		case "id-card":
-			var path = `/api/topics/${initiative.id}/votes/${vote.id}/sign`
-			var signed = yield api(path, {
+			path = `/api/topics/${initiative.id}/votes/${vote.id}/sign`
+			var signed = yield cosApi(path, {
 				method: "POST",
 				json: {token: req.body.token, signatureValue: req.body.signature}
 			}).catch(catch400)
@@ -373,7 +374,8 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 			break
 
 		case "mobile-id":
-			var signing = yield api(`/api/topics/${initiative.id}/votes/${vote.id}`, {
+			path = `/api/topics/${initiative.id}/votes/${vote.id}`
+			var signing = yield cosApi(path, {
 				method: "POST",
 				json: {
 					options: [{optionId: req.body.optionId}],
@@ -467,7 +469,7 @@ function* readSignature(initiative, token) {
 	RETRY: for (var i = 0; i < 60; ++i) {
 		// The signature endpoint is valid only for a limited amount of time.
 		// If that time passes, 401 is thrown.
-		var res = yield api(path).catch(catch400).catch(catch401)
+		var res = yield cosApi(path).catch(catch400).catch(catch401)
 
 		switch (res.statusCode) {
 			case 200:

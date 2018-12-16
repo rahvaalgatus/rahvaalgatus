@@ -4,7 +4,7 @@ var InitiativesController = require("../initiatives_controller")
 var HttpError = require("standard-http-error")
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
-var translateCitizenError = require("root/lib/api").translateError
+var translateCitizenError = require("root/lib/citizenos_api").translateError
 var next = require("co-next")
 var format = require("util").format
 var commentsPath = format.bind(null, "/api/users/self/topics/%s/comments")
@@ -15,7 +15,7 @@ exports.router = Router({mergeParams: true})
 exports.router.post("/", next(function*(req, res, next) {
 	var initiative = req.initiative
 
-	var created = yield req.api(commentsPath(initiative.id), {
+	var created = yield req.cosApi(commentsPath(initiative.id), {
 		method: "POST",
 		json: {
 			parentId: null,
@@ -42,7 +42,7 @@ exports.router.get("/:commentId", next(function*(req, res) {
 	// NOTE: CitizenOS doesn't have a comment endpoint.
 	var path = `/api/topics/${initiative.id}/comments`
 	if (req.user) path = "/api/users/self" + path.slice(4)
-	var comments = yield req.api(path)
+	var comments = yield req.cosApi(path)
 	comments = comments.body.data.rows.map(normalizeComment)
 
 	var comment = comments.find((comment) => comment.id === req.params.commentId)
@@ -58,7 +58,7 @@ exports.router.post("/:commentId/replies", next(function*(req, res, next) {
 	var initiative = req.initiative
 	var commentId = req.params.commentId
 
-	var created = yield req.api(commentsPath(initiative.id), {
+	var created = yield req.cosApi(commentsPath(initiative.id), {
 		method: "POST",
 		json: {
 			parentId: commentId,

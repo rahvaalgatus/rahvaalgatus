@@ -1,5 +1,5 @@
 var _ = require("lodash")
-var Api = require("root/lib/api")
+var Api = require("root/lib/citizenos_api")
 var parseCitizenInitiative = Api.parseCitizenInitiative
 var outdent = require("root/lib/outdent")
 var DATE = new Date(2015, 5, 18)

@@ -1,6 +1,6 @@
 var Config = require("root/config")
 var _ = require("root/lib/underscore")
-var citizenApi = require("root/lib/api")
+var cosApi = require("root/lib/citizenos_api")
 var parliamentApi = require("root/lib/parliament_api")
 var db = require("root").db
 var is404 = require("root/lib/fetch_error").is.bind(null, 404)
@@ -72,7 +72,7 @@ function* readOrCreateDbInitiative(uuid) {
 	if (obj) return obj
 
 	var res
-	try { res = yield citizenApi("/api/topics/" + uuid) }
+	try { res = yield cosApi("/api/topics/" + uuid) }
 	catch (ex) { if (is404(ex)) return null; throw ex }
 	assert(res.body.data.id === uuid)
 

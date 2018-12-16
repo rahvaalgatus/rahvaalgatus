@@ -4,7 +4,7 @@ var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
 var catch401 = require("root/lib/fetch").catch.bind(null, 401)
 var catch403 = require("root/lib/fetch").catch.bind(null, 403)
-var translateCitizenError = require("root/lib/api").translateError
+var translateCitizenError = require("root/lib/citizenos_api").translateError
 var next = require("co-next")
 var EMPTY = Object.prototype
 var EMPTY_EVENT = {subject: "", text: ""}
@@ -27,7 +27,7 @@ exports.router.post("/", next(function*(req, res) {
 	var path = `/api/topics/${initiative.id}/events`
 	if (token == null) path = "/api/users/self" + path.slice(4)
 
-	var created = yield req.api(path, {
+	var created = yield req.cosApi(path, {
 		method: "POST",
 		json: {subject: req.body.subject, text: req.body.text},
 		headers: token == null ? EMPTY : {Authorization: "Bearer "+ token}
