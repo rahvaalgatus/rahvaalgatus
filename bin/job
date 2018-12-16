@@ -8,7 +8,7 @@ Options:
     -h, --help           Display this help and exit.
 
 Jobs:
-		parliament-monitor   Monitors initiatives in the parliament API.
+    parliament-monitor   Monitors initiatives in the parliament API.
 
 For more help or to give feedback, please see https://github.com/rahvaalgatus .
 `
