@@ -96,7 +96,11 @@ block prepend subpage
 								? t("BTN_VOTE_SIGN_WITH_MOBILE_ID")
 								: t("BTN_VOTE_REVOKE_WITH_MOBILE_ID")
 
-						input#mobile-id-form-toggle(type="checkbox", style="display: none")
+						input#mobile-id-form-toggle(
+							type="checkbox",
+							style="display: none"
+							onchange="this.form.phoneNumber.focus()")
+
 						label.inherited-button(for="mobile-id-form-toggle"): img(
 							src="/images/mobile-id-button.png",
 							title=btnText,
