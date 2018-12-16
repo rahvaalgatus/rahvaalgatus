@@ -1,18 +1,15 @@
 var request = require("fetch-off/request")
 var fetchDefaults = require("fetch-defaults")
-var URL = process.env.URL || "https://rahvaalgatus.ee"
-var CANONICAL_URL = "https://rahvaalgatus.ee"
+var URL = "https://rahvaalgatus.ee"
+var HEADERS = {headers: {"User-Agent": "Rahvaalgatus Tests"}}
 
 if (/\bserver\b/.test(process.env.TEST_TAGS))
 describe(URL, function() {
-	before(function() { this.request = fetchDefaults(request, URL) })
+	this.timeout(5000)
+	var req = fetchDefaults(request, URL, HEADERS)
 
 	describe("/", function() {
-		var PATH = this.title
-
-		before(function*() {
-			this.res = yield this.request(PATH, {method: "HEAD"})
-		})
+		before(function*() { this.res = yield req("/", {method: "HEAD"}) })
 
 		it("must respond with 200 OK", function() {
 			this.res.statusCode.must.equal(200)
@@ -22,11 +19,9 @@ describe(URL, function() {
 	;[
 		"/assets/page.css"
 	].forEach(function(path) {
-		xdescribe(path, function() {
-			var PATH = this.title
-
+		describe(path, function() {
 			before(function*() {
-				this.res = yield this.request(PATH, {
+				this.res = yield req(path, {
 					method: "HEAD",
 					headers: {"Accept-Encoding": "gzip"}
 				})
@@ -51,13 +46,14 @@ describe(URL, function() {
 				this.res.headers.must.not.have.property("last-modified")
 			})
 
-			// Apache has an issue that if the content is encoded with gzip, the
-			// returned ETag has a "-gzip suffix and that breaks futher comparison.
+			// Zone's Apache has an issue that if the content is encoded with gzip,
+			// the returned ETag has a "-gzip suffix and that breaks futher
+			// comparison.
 			it("must respond with 304 Not Modified if given ETag", function*() {
 				this.res.headers["content-encoding"].must.equal("gzip")
 
 				var etag = this.res.headers.etag
-				var res = yield this.request(PATH, {
+				var res = yield req(path, {
 					method: "HEAD",
 					headers: {"Accept-Encoding": "gzip", "If-None-Match": etag}
 				})
@@ -68,49 +64,37 @@ describe(URL, function() {
 	})
 })
 
-if (/\bserver\b/.test(process.env.TEST_TAGS))
-xdescribe("http://rahvaalgatus.ee", function() {
-	mustRedirectToCanonical(this.title)
+if (/\bserver\b/.test(process.env.TEST_TAGS)) [
+	"http://rahvaalgatus.ee",
+	"http://www.rahvaalgatus.ee",
+	"https://www.rahvaalgatus.ee"
+].forEach(function(url) {
+	describe(url, function() {
+		mustRedirectTo(url, URL)
+	})
 })
 
-if (/\bserver\b/.test(process.env.TEST_TAGS))
-xdescribe("http://www.rahvaalgatus.ee", function() {
-	mustRedirectToCanonical(this.title)
-})
+function mustRedirectTo(from, to) {
+  var req = fetchDefaults(request, from, HEADERS)
 
-function mustRedirectToCanonical(url) {
-	describe("as not a canonical URL", function() {
-		before(function() { this.request = fetchDefaults(request, url) })
-
+	describe("as a canonical URL", function() {
 		describe("/", function() {
-			var PATH = this.title
+			before(function*() { this.res = yield req("/", {method: "HEAD"}) })
 
-			before(function*() {
-				this.res = yield this.request(PATH, {method: "HEAD"})
-			})
-
-			it("must redirect to " + CANONICAL_URL, function() {
-				this.res.headers.location.must.equal(CANONICAL_URL + "/")
-			})
-
-			it("must redirect with 301 Moved Permanently", function() {
+			it("must redirect to " + to, function() {
 				this.res.statusCode.must.equal(301)
+				this.res.headers.location.must.equal(to + "/")
 			})
 		})
 
 		describe("/foo/bar?42", function() {
-			var PATH = this.title
-
 			before(function*() {
-				this.res = yield this.request(PATH, {method: "HEAD"})
+				this.res = yield req("/foo/bar?42", {method: "HEAD"})
 			})
 
-			it("must redirect to same path over HTTPS", function() {
-				this.res.headers.location.must.equal(CANONICAL_URL + "/foo/bar?42")
-			})
-
-			it("must redirect with 301 Moved Permanently", function() {
+			it("must redirect to same path on " + to, function() {
 				this.res.statusCode.must.equal(301)
+				this.res.headers.location.must.equal(to + "/foo/bar?42")
 			})
 		})
 	})

@@ -12,7 +12,7 @@ JQ_OPTS = --tab --sort-keys
 SHANGE = vendor/shange -f "config/$(ENV).sqlite3"
 
 APP_HOST = rahvaalgatus.ee
-APP_PATH =
+APP_PATH = $(error "Please set APP_PATH")
 
 RSYNC_OPTS = \
 	--compress \
@@ -123,13 +123,12 @@ db/migration:
 	@$(SHANGE) create "$(NAME)"
 
 deploy:
-	@rsync $(RSYNC_OPTS) . "$(APP_HOST):./$(or $(APP_PATH), $(error "APP_PATH"))/"
-	ssh $(APP_HOST) pm2 reload $(notdir $(APP_PATH))
+	@rsync $(RSYNC_OPTS) . "$(APP_HOST):$(or $(APP_PATH), $(error "APP_PATH"))/"
 
-staging: APP_PATH = htdocs/rahvaalgatus-staging
+staging: APP_PATH = /var/www/rahvaalgatus-next
 staging: deploy
 
-production: APP_PATH = htdocs/rahvaalgatus
+production: APP_PATH = /var/www/rahvaalgatus
 production: deploy
 
 translations: lib/i18n/en.json
