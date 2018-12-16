@@ -7,6 +7,7 @@
 	"mailchimpApiKey": "13371337133713371337133713371337-us42",
 	"mailchimpListId": "deadbeef",
 	"mailchimpInterestCategoryId": "beefalo",
+	"mailchimpInterestInAllId": "beefcake",
 
 	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
 	"votesRequired": 2,

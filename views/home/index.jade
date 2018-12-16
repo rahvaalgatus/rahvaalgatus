@@ -7,6 +7,8 @@ block body
 	- var Config = require("root/config")
 
 	section#welcome.primary-section.text-section: center
+		include /_flash.jade
+
 		h1= t("HOME_WELCOME_TITLE")
 
 		.video
@@ -17,7 +19,31 @@ block body
 				frameborder="0",
 				allowfullscreen)
 
-		p!= t("HOME_WELCOME")
-		a.button.secondary-button(href="/initiatives/new")= t("BTN_NEW_TOPIC")
+		p.welcome-paragraph!= t("HOME_WELCOME")
+		a.button.large-button.secondary-button(href="/initiatives/new")
+			= t("BTN_NEW_TOPIC")
+
+		+form#initiatives-subscribe(
+			method="post",
+			action="/subscriptions")
+			input#subscriptions-form-toggle(
+				type="checkbox",
+				style="display: none"
+				onchange="this.form.email.focus()")
+
+			label.large-button.primary-button(for="subscriptions-form-toggle")
+				= t("SUBSCRIBE_TO_INITIATIVES_BUTTON")
+
+			h2= t("SUBSCRIBE_TO_INITIATIVES_TITLE")
+			p= t("SUBSCRIBE_TO_INITIATIVES_EXPLANATION")
+
+			input#subscriptions-form-email.form-input(
+				name="email",
+				type="email",
+				required,
+				placeholder=t("LBL_EMAIL"))
+
+			button.primary-button(type="submit")
+				= t("SUBSCRIBE_TO_INITIATIVES_BUTTON")
 
 	include ../initiatives/_initiatives

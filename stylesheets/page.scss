@@ -719,7 +719,7 @@ button.inherited {
 			margin-bottom: 3rem;
 		}
 
-		p {
+		.welcome-paragraph {
 			font-size: 1.8rem;
 			line-height: 1.7;
 			margin-bottom: 2rem;
@@ -737,22 +737,48 @@ button.inherited {
 			}
 		}
 
-		.button {
+		.large-button {
 			font-size: 1.6rem;
 			line-height: 4rem;
 			height: 4rem;
 		}
-	}
 
-	@include tablet {
-		#welcome h1,
-		#welcome p { max-width: none; }
+		#initiatives-subscribe {
+			max-width: 50%;
 
-		#welcome .video {
-			float: none;
-			max-width: none;
-			margin-left: 0;
-			margin-bottom: 2rem;
+			input[type=email] {
+				margin-top: 1rem;
+				max-width: 32rem;
+			}
+
+			button { margin-top: 0.7rem; }
+
+			#subscriptions-form-toggle:not(:checked) {
+				& ~ h2,
+				& ~ p,
+				& ~ input,
+				& ~ button { display: none; }
+			}
+
+			#subscriptions-form-toggle:checked { margin-top: 2rem; }
+			#subscriptions-form-toggle:checked + label { display: none; }
+		}
+
+		@include mobile-and-tablet {
+			h1,
+			.welcome-paragraph,
+			#initiatives-subscribe { max-width: none; }
+
+			.video {
+				float: none;
+				max-width: none;
+				margin-left: 0;
+				margin-bottom: 2rem;
+			}
+		}
+
+		@include mobile {
+			.large-button, button { width: 100%; }
 		}
 	}
 }

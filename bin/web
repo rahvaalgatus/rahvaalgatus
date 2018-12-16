@@ -70,6 +70,7 @@ O.each({
 	"/": require("root/controllers/home_controller").router,
 	"/donations": require("root/controllers/donations_controller").router,
 	"/initiatives": require("root/controllers/initiatives_controller").router,
+	"/subscriptions": require("root/controllers/subscriptions_controller").router,
 	"/session": require("root/controllers/session_controller").router,
 	"/user": require("root/controllers/user_controller").router,
 }, (router, path) => app.use(path, router))

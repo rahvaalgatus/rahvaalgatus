@@ -1,4 +1,3 @@
-"use strict"
 var _ = require("lodash")
 var O = require("oolong")
 var Router = require("express").Router
@@ -10,7 +9,6 @@ var I18n = require("root/lib/i18n")
 var MediaType = require("medium-type")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
-var md5 = require("root/lib/crypto").md5
 var db = require("root").db
 var countVotes = Initiative.countSignatures.bind(null, "Yes")
 var isOk = require("root/lib/http").isOk
@@ -427,26 +425,14 @@ exports.router.post("/:id/subscriptions", next(function*(req, res, next) {
 		return void next(new HttpError(403, "Initiative Not Public"))
 
 	var interestId = yield readOrCreateMailchimpInterest(dbInitiative, initiative)
-	var email = req.body.email
-	var emailHash = md5(email.toLowerCase())
 
-	try {
-		var path = `/3.0/lists/${Config.mailchimpListId}/members/${emailHash}`
-		yield mailchimp(path, {
-			method: "PUT",
-			json: {
-				email_address: email,
-				status_if_new: "pending",
-				interests: {[interestId]: true},
-				ip_signup: req.ip
-			}
-		})
-	}
+	try { yield mailchimp.subscribe(interestId, req.body.email, req.ip) }
 	catch (ex) {
-		if (isMailchimpEmailErr(ex)) return void res.status(422).render("422", {
+		if (!mailchimp.isMailchimpEmailError(ex)) throw ex
+		
+		return void res.status(422).render("422", {
 			errors: [req.t("INVALID_EMAIL")]
 		})
-		else throw ex
 	}
 
 	res.flash("notice", req.t("SUBSCRIBED"))
@@ -560,14 +546,6 @@ function parsePrefixDate(str) {
 
 function isMailchimpNameTakenErr(err) {
 	return err.code == 400 && /already exists/.test(err.response.body.detail)
-}
-
-function isMailchimpEmailErr(err) {
-	return err.code == 400 && (
-		err.response.body.errors &&
-		err.response.body.errors.some((e) => e.field == "email_address") ||
-		/email address/.test(err.response.body.detail)
-	)
 }
 
 function* readOrCreateDbInitiative(uuid) {
