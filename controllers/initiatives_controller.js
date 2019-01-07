@@ -56,8 +56,8 @@ exports.router.get("/", next(function*(_req, res) {
 
 	res.render("initiatives/index", {
 		discussions: concat(
-			initiatives.inProgress,
-			(closed.inProgress || EMPTY_ARR).filter(hasMainPartnerId)
+			sortByCreatedAt(initiatives.inProgress, "createdAt").reverse(),
+			sortByCreatedAt((closed.inProgress || EMPTY_ARR).filter(hasMainPartnerId))
 		),
 
 		votings: _.sortBy(votings, countVotes).reverse(),
@@ -558,3 +558,4 @@ function* readOrCreateDbInitiative(uuid) {
 }
 
 function getBody(res) { return res.body.data }
+function sortByCreatedAt(arr) { return _.sortBy(arr, "createdAt").reverse() }

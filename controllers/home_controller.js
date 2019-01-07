@@ -23,7 +23,7 @@ exports.router.get("/", next(function*(_req, res) {
 	var processes = initiatives.processes
 
 	res.render("home/index", {
-		discussions: discussions,
+		discussions: _.sortBy(discussions, "createdAt").reverse(),
 		votings: _.sortBy(votings, countVotes).reverse(),
 		processes: processes,
 		processed: EMPTY_ARR,
