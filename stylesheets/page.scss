@@ -40,6 +40,34 @@ strong {
 .left { float: left; }
 .right { float: right; }
 
+.secondary-section,
+.primary-section,
+.transparent-section {
+	padding-top: 4rem;
+	padding-bottom: 4rem;
+
+	@include mobile {
+		padding-top: 2.5rem;
+		padding-bottom: 2.5rem;
+	}
+
+	&:after { display: block; content: ""; clear: both; }
+}
+
+.secondary-section {
+	background-color: $secondary-background;
+
+	& + .secondary-section { padding-top: 0; }
+}
+
+.transparent-section {
+	& + .transparent-section { padding-top: 0; }
+}
+
+.primary-section {
+	background-color: white;
+}
+
 .text {
 	line-height: 1.5;
 
@@ -64,8 +92,10 @@ strong {
 		line-height: 1.2;
 	}
 
+	* + h2 { margin-top: 4rem; }
+
 	h2 {
-		margin: 4rem 0 1rem;
+		margin-bottom: 1rem;
 		font-size: 2.4rem;
 		font-weight: 500;
 		color: $title-text;
@@ -107,34 +137,6 @@ strong {
 	}
 }
 
-.secondary-section,
-.primary-section,
-.transparent-section {
-	padding-top: 4rem;
-	padding-bottom: 4rem;
-
-	@include mobile {
-		padding-top: 2.5rem;
-		padding-bottom: 2.5rem;
-	}
-
-	&:after { display: block; content: ""; clear: both; }
-}
-
-.secondary-section {
-	background-color: $secondary-background;
-
-	& + .secondary-section { padding-top: 0; }
-}
-
-.transparent-section {
-	& + .transparent-section { padding-top: 0; }
-}
-
-.primary-section {
-	background-color: white;
-}
-
 .text-section {
 	@extend .text;
 	font-size: 1.6rem;
@@ -151,112 +153,6 @@ strong {
 	.form-textarea {
 		width: 100%;
 		max-width: 64rem;
-	}
-}
-
-.initiatives-section {
-	$initiative-width: 22.5rem;
-
-	center {
-		padding-right: 0;
-		@include mobile { padding-right: $page-mobile-padding; }
-	}
-
-	h2 {
-		font-size: 2rem;
-		line-height: 3rem;
-		color: $title-text;
-		border-bottom: 1px solid $initiatives-section-title-border;
-		text-align: right;
-		font-family: $museo-sans;
-		font-weight: 900;
-		text-transform: uppercase;
-		max-width: $initiative-width;
-		margin-bottom: -3rem;
-
-		& ~ h2 { margin-top: 4rem; }
-
-		@include tablet {
-			text-align: left;
-			margin-bottom: 2rem;
-		}
-
-		@include mobile {
-			max-width: none;
-		}
-	}
-
-	.initiatives {
-		margin-left: $initiative-width + 2rem;
-
-		@include tablet { margin-left: 0; }
-		&:after { display: block; content: ""; clear: both; }
-	}
-
-	.initiative {
-		background: white;
-		box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
-
-		line-height: 1;
-		width: $initiative-width;
-		float: left;
-		margin-bottom: 2rem;
-		margin-left: 0;
-		margin-right: 2rem;
-
-		a {
-			display: block;
-			padding: 1.5rem 2rem 0;
-		}
-
-		time,
-		.author {
-			font-size: 1.4rem;
-			font-family: $tisa-pro;
-			color: $secondary-light-text;
-		}
-
-		.author {
-			display: block;
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			padding-bottom: 1rem; // For descenders like "j" and "g".
-		}
-
-		h3 {
-			$font-size: 1.7rem;
-			$line-height: 1.5 * $font-size;
-			font-size: $font-size;
-			color: #4F4F4F;
-			line-height: $line-height;
-			margin-top: 0.5rem;
-			word-wrap: break-word;
-			height: 5 * $line-height;
-			overflow: hidden;
-			margin-bottom: $line-height;
-		}
-
-		.badge {
-			float: right;
-			height: 2rem;
-			margin-top: -0.5rem;
-		}
-
-		&:hover {
-			box-shadow: 0 1px 10px 0 rgba(0, 0, 0, 0.4);
-			h3 { color: $title-text; }
-		}
-
-		.initiative-progress {
-			clear: both;
-			margin: 0 -2rem;
-			padding-top: 1rem;
-			padding-bottom: 0.8rem;
-			line-height: 1;
-		}
-
-		@include mobile { width: 100%; }
 	}
 }
 
@@ -495,6 +391,112 @@ button.inherited {
 	line-height: 1.3;
 
 	&:empty { display: none; }
+}
+
+.initiatives-section {
+	$initiative-width: 22.5rem;
+
+	center {
+		padding-right: 0;
+		@include mobile { padding-right: $page-mobile-padding; }
+	}
+
+	h2 {
+		font-size: 2rem;
+		line-height: 3rem;
+		color: $title-text;
+		border-bottom: 1px solid $initiatives-section-title-border;
+		text-align: right;
+		font-family: $museo-sans;
+		font-weight: 900;
+		text-transform: uppercase;
+		max-width: $initiative-width;
+		margin-bottom: -3rem;
+
+		& ~ h2 { margin-top: 4rem; }
+
+		@include tablet {
+			text-align: left;
+			margin-bottom: 2rem;
+		}
+
+		@include mobile {
+			max-width: none;
+		}
+	}
+
+	.initiatives {
+		margin-left: $initiative-width + 2rem;
+
+		@include tablet { margin-left: 0; }
+		&:after { display: block; content: ""; clear: both; }
+	}
+
+	.initiative {
+		background: white;
+		box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+
+		line-height: 1;
+		width: $initiative-width;
+		float: left;
+		margin-bottom: 2rem;
+		margin-left: 0;
+		margin-right: 2rem;
+
+		a {
+			display: block;
+			padding: 1.5rem 2rem 0;
+		}
+
+		time,
+		.author {
+			font-size: 1.4rem;
+			font-family: $tisa-pro;
+			color: $secondary-light-text;
+		}
+
+		.author {
+			display: block;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			padding-bottom: 1rem; // For descenders like "j" and "g".
+		}
+
+		h3 {
+			$font-size: 1.7rem;
+			$line-height: 1.5 * $font-size;
+			font-size: $font-size;
+			color: #4F4F4F;
+			line-height: $line-height;
+			margin-top: 0.5rem;
+			word-wrap: break-word;
+			height: 5 * $line-height;
+			overflow: hidden;
+			margin-bottom: $line-height;
+		}
+
+		.badge {
+			float: right;
+			height: 2rem;
+			margin-top: -0.5rem;
+		}
+
+		&:hover {
+			box-shadow: 0 1px 10px 0 rgba(0, 0, 0, 0.4);
+			h3 { color: $title-text; }
+		}
+
+		.initiative-progress {
+			clear: both;
+			margin: 0 -2rem;
+			padding-top: 1rem;
+			padding-bottom: 0.8rem;
+			line-height: 1;
+		}
+
+		@include mobile { width: 100%; }
+	}
 }
 
 .initiative-progress {
@@ -929,7 +931,7 @@ button.inherited {
 				border-bottom: 1px solid $light-background-border;
 
 				.initiative-progress { line-height: 3.2rem; border-radius: 0.4rem; }
-				.sign-button { margin-top: 1rem; }
+				.sign-button, .revoke-button { margin-top: 1rem; }
 
 				@include mobile-and-tablet { display: block; }
 
@@ -960,22 +962,12 @@ button.inherited {
 			padding: $sidebar-padding;
 			font-size: 1.3rem;
 
+			& > * + * {
+				margin-top: 0.5rem;
+			}
+
 			button {
 				min-width: 18rem;
-			}
-
-			@include mobile-and-tablet {
-				width: auto;
-				.quicksign { display: none; }
-			}
-
-			@include tablet {
-				float: none;
-				text-align: left;
-
-				form { display: block; margin-top: 1rem; }
-				form + form { margin-left: 0; }
-				button { width: 100%; }
 			}
 
 			a.button + p {
@@ -991,13 +983,6 @@ button.inherited {
 				text-align: center;
 				line-height: 3rem;
 				font-weight: bold;
-			}
-
-			form + form,
-			.wide-button + form,
-			form + .wide-button,
-			.wide-button + .wide-button {
-				margin-top: 0.5rem;
 			}
 
 			.initiative-progress {
@@ -1037,6 +1022,20 @@ button.inherited {
 				margin-top: 2rem;
 				textarea { width: 100%; min-height: 20rem; }
 				button { margin-top: 0.5rem; }
+			}
+
+			@include mobile-and-tablet {
+				width: auto;
+				.quicksign { display: none; }
+			}
+
+			@include tablet {
+				float: none;
+				text-align: left;
+
+				form { display: block; margin-top: 1rem; }
+				form + form { margin-left: 0; }
+				button { width: 100%; }
 			}
 		}
 
