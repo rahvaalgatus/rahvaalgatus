@@ -10,6 +10,7 @@ var MediaType = require("medium-type")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
 var db = require("root").db
+var initiativesDb = require("root/db/initiatives_db")
 var countVotes = Initiative.countSignatures.bind(null, "Yes")
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
@@ -279,8 +280,14 @@ exports.router.put("/:id", next(function*(req, res) {
 			res.flash("notice", "Algatus on nüüd avalik.")
 		else if (req.body.status === "voting")
 			res.flash("notice", "Algatus on avatud allkirjade kogumiseks.")
-		else if (req.body.status === "followUp")
+		else if (req.body.status === "followUp") {
+			if (req.dbInitiative.sent_to_parliament_at == null) yield db.update(
+				"UPDATE initiatives SET sent_to_parliament_at = $at WHERE uuid = $uuid",
+				{$uuid: initiative.id, $at: new Date().toISOString()}
+			)
+
 			res.flash("notice", req.t("SENT_TO_PARLIAMENT_CONTENT"))
+		}
 		else if (req.body.status === "closed")
 			res.flash("notice", "Algatuse menetlus on lõpetatud.")
 
@@ -356,6 +363,7 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 			}).catch(catch400)
 
 			if (isOk(signed)) {
+				res.flash("notice", req.t("THANKS_FOR_SIGNING"))
 				res.flash("signed", signed.body.data.bdocUri)
 				res.redirect(303, req.baseUrl + "/" + initiative.id)
 			}
@@ -399,6 +407,7 @@ exports.router.get("/:id/signature", next(function*(req, res) {
 	switch (signature.statusCode) {
 		case 200:
 			// Cannot currently know which option the person signed.
+			res.flash("notice", req.t("THANKS_FOR_SIGNING"))
 			res.flash("signed", signature.body.data.bdocUri)
 			break
 
@@ -542,7 +551,7 @@ function isMailchimpNameTakenErr(err) {
 }
 
 function* readOrCreateDbInitiative(uuid) {
-	var obj = yield db.read("SELECT * FROM initiatives WHERE uuid = ?", [uuid])
+	var obj = yield initiativesDb.search(uuid)
 	if (obj) return obj
 
 	obj = {uuid: uuid}

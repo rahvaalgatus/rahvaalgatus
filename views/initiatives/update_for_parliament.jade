@@ -3,12 +3,8 @@ include ./_mixins
 
 block subpage
 	section.primary-section.text-section: center
-		h2= t("TOPIC_CONFIRM_HEADER")
-
-		p
-			= t("TXT_TOPIC_BECOMES_UNEDITABLE")
-			br
-			= t("TXT_VOTING_ENDS")
+		h2= t("SEND_TO_PARLIAMENT_HEADER")
+		p!= t("SEND_TO_PARLIAMENT_TEXT")
 
 		if error
 			p.flash.error= error

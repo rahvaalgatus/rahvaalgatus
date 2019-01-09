@@ -15,40 +15,58 @@ block prepend subpage
 		var stringify = require("root/lib/json").stringify
 		var hasVote = flash("signed") || Initiative.hasVote("Yes", initiative)
 		var now = new Date
+		var sentToParliamentAt = dbInitiative.sent_to_parliament_at
 
 	section#initiative-section.transparent-section: center
 		#initiative-sheet
 			include /_flash.jade
 
 			if flash("signed")
-				#initiative-donate
+				.initiative-status
 					!= t("SUPPORT_US_CONTENT")
 					+donate-form(null, null)
 
-			if Initiative.hasVoteEnded(now, initiative)
-				if events.length == 0
-					#initiative-ended
-						- var sigs = Initiative.countSignatures("Yes", initiative)
+			case initiative.status
+				when "inProgress"
+					if Initiative.isPublic(initiative) && !Initiative.hasDiscussionEnded(new Date, initiative)
+						.initiative-status: h1
+							= t("INITIATIVE_IN_DISCUSSION")
+							= " "
+							a.link-button(href="#initiative-comment-form")
+								= t("ADD_YOUR_COMMENT")
+							= "."
 
-						if Initiative.isSuccessful(initiative)
-							h1= t("N_SIGNATURES_COLLECTED", {votes: sigs})
-							p= t("VOTING_SUCCEEDED")
-						else
-							h1= t("N_SIGNATURES_FAILED", {votes: sigs})
-							p= t("VOTING_FAILED")
-				else
-					.note
-						| Algatus on parlamendis.
+				when "voting"
+					if Initiative.hasVoteEnded(now, initiative)
+						.initiative-status
+							if events.length == 0
+								- var sigs = Initiative.countSignatures("Yes", initiative)
+
+								if Initiative.isSuccessful(initiative)
+									h1= t("N_SIGNATURES_COLLECTED", {votes: sigs})
+									p= t("VOTING_SUCCEEDED")
+								else
+									h1= t("N_SIGNATURES_FAILED", {votes: sigs})
+									p= t("VOTING_FAILED")
+
+				when "followUp"
+					.initiative-status: h1
+						= t("INITIATIVE_IN_PARLIAMENT")
 						= " "
-						a.link-button(href="#initiative-events") Vaata menetlust
+						a.link-button(href="#initiative-events")= t("LOOK_AT_EVENTS")
 						= "."
 
-			if Initiative.isPublic(initiative) && initiative.status == "inProgress"
-				p.note
-					| Algatus on veel arutelufaasis.
-					= " "
-					a.link-button(href="#initiative-comment-form") Esita oma kommentaar
-					= "."
+				when "closed"
+					if Initiative.isInParliament(initiative, events) || sentToParliamentAt
+						.initiative-status: h1
+							= t("INITIATIVE_PROCESSED")
+							= " "
+							a.link-button(href="#initiative-events")= t("LOOK_AT_EVENTS")
+							= "."
+					else if initiative.vote
+						- var sigs = Initiative.countSignatures("Yes", initiative)
+						h1= t("N_SIGNATURES_FAILED", {votes: sigs})
+						p= t("VOTING_FAILED")
 
 			+quicksign(initiative)
 			article.text!= initiative.html
@@ -230,10 +248,12 @@ block prepend subpage
 					target="_blank")
 					= t("SHARE_ON_TWITTER")
 
-	if Initiative.isInParliament(initiative, events)
+	if Initiative.isInParliament(initiative, events) || sentToParliamentAt
 		section#initiative-events.transparent-section: center
 			article
-				if events.length
+				if events.length == 0 && sentToParliamentAt == null
+					p.text.empty= t("NO_EVENTS")
+				else
 					ol.events
 						for event in events
 							li.event
@@ -242,8 +262,14 @@ block prepend subpage
 
 								h2= event.subject
 								p.text!= linkify(event.text)
-				else
-					p.text.empty= t("NO_EVENTS")
+
+						if sentToParliamentAt
+							li.event
+								time(datetime=sentToParliamentAt.toJSON())
+									= I18n.formatDate("numeric", sentToParliamentAt)
+
+								h2= t("FIRST_PROCEEDING_TITLE")
+								p.text= t("FIRST_PROCEEDING_BODY")
 
 	section#initiative-comments.transparent-section: center
 		- var editedComment = comment

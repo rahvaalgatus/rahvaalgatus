@@ -76,14 +76,9 @@ strong {
 		color: $title-text;
 		font-family: $museo-sans;
 		line-height: 1.2;
-	}
 
-	h1 ~ h1 {
-		margin-top: 4rem;
-	}
-
-	h1 + p {
-		margin-top: 1.5rem;
+		& ~ h1 { margin-top: 4rem; }
+		& + p { margin-top: 1.5rem; }
 	}
 
 	h2,
@@ -92,13 +87,12 @@ strong {
 		line-height: 1.2;
 	}
 
-	* + h2 { margin-top: 4rem; }
-
 	h2 {
-		margin-bottom: 1rem;
 		font-size: 2.4rem;
 		font-weight: 500;
 		color: $title-text;
+
+		& + * { margin-top: 1rem; }
 	}
 
 	h3 {
@@ -132,9 +126,7 @@ strong {
 	ul > li { list-style-type: disc; }
 	ol > li { list-style-type: decimal; }
 
-	form {
-		margin-top: 1rem;
-	}
+	* + form { margin-top: 2rem; }
 }
 
 .text-section {
@@ -382,11 +374,12 @@ button.inherited {
 
 .flash {
 	background: $flash-header-background;
-	padding: 1.2rem 2rem 1rem;
+	padding: 1.2rem $page-padding 1rem;
 	color: white;
 	border-radius: $button-radius;
 	white-space: pre-wrap;
 	font-size: 1.3rem;
+	font-weight: 600;
 	min-height: $flash-min-height;
 	line-height: 1.3;
 
@@ -897,10 +890,8 @@ button.inherited {
 			position: relative; // To have box-shadow be on top of <aside>.
 
 			& > .flash,
-			& > .note,
 			& > .quicksign,
-			#initiative-donate,
-			#initiative-ended {
+			& > .initiative-status {
 				margin: -$article-padding;
 				margin-bottom: $article-padding;
 
@@ -910,18 +901,7 @@ button.inherited {
 				}
 			}
 
-			& > .flash {
-				border-radius: 0;
-			}
-
-			& > .note {
-				background-color: $light-background;
-				font-weight: 600;
-				min-height: 4rem;
-				padding: 1.1rem $article-padding 0.8rem;
-				line-height: 2rem;
-				border-bottom: 1px solid $light-background-border;
-			}
+			& > .flash { border-radius: 0; }
 
 			.quicksign {
 				display: none;
@@ -954,6 +934,10 @@ button.inherited {
 			ul ol {
 				margin-left: 2rem;
 			}
+
+			// Initiative HTML often has <h2> following plain non-tagged text, so
+			// `* + h2` won't work.
+			h2 { margin-top: 4rem; margin-bottom: 1rem; }
 		}
 
 		#initiative-sidebar {
@@ -1150,38 +1134,37 @@ button.inherited {
 		}
 	}
 
-	#initiative-ended,
-	#initiative-donate {
+	.initiative-status {
 		max-width: $article-width;
-		padding: 0 2rem 2rem;
-		font-size: 1.5rem;
+		padding: 1.5rem $page-padding 0;
+		font-size: 1.4rem;
 		line-height: 1.5;
 		border-bottom: 1px solid $light-background-border;
+		font-family: $tisa-pro;
 		background: $light-background;
 
 		h1 {
-			padding: 0 2rem;
-			line-height: $flash-min-height;
-			margin: 0 (-2rem)  2rem (-2rem);
+			font-family: $museo-sans;
+			padding: 1.1rem $page-padding 0.8rem;
+			margin: (-1.5rem) (-$page-padding) 0 (-$page-padding);
+			margin-bottom: 0;
+			line-height: 2rem;
 			font-size: 1.3rem;
-			background: $flash-header-background;
-			color: white;
-			font-weight: bold;
+			font-weight: 600;
+			background: $light-background;
+
+			&:not(:only-child) {
+				border-bottom: 1px solid $light-background-border;
+				margin-bottom: 1.5rem;
+			}
+
+			&:last-child { margin-bottom: 0; }
 		}
 
-		a {
-			text-decoration: underline;
-		}
-
-		h1 ~ * + * {
-			margin-top: 2rem;
-		}
-	}
-
-	#initiative-donate {
-		p {
-			white-space: pre-wrap;
-		}
+		p { white-space: pre-wrap; }
+		a { color: $link; text-decoration: underline; }
+		p + ul { margin-top: 1rem; }
+		:last-child { margin-bottom: 1.5rem; }
 	}
 
 	#initiative-events,

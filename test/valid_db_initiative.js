@@ -6,6 +6,7 @@ module.exports = function(attrs) {
 		uuid: newUuid(),
 		notes: "",
 		mailchimp_interest_id: null,
-		parliament_api_data: null
+		parliament_api_data: null,
+		sent_to_parliament_at: null
 	}, attrs)
 }

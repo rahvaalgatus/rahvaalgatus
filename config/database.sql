@@ -1,6 +1,6 @@
 CREATE TABLE initiatives (
 	uuid TEXT PRIMARY KEY NOT NULL,
-	mailchimp_interest_id TEXT NULL UNIQUE, notes TEXT NOT NULL DEFAULT "", parliament_api_data TEXT NULL,
+	mailchimp_interest_id TEXT NULL UNIQUE, notes TEXT NOT NULL DEFAULT "", parliament_api_data TEXT NULL, sent_to_parliament_at TEXT NULL,
 
 	CONSTRAINT initiatives_uuid_length
 	CHECK (length(uuid) == 36),
@@ -16,4 +16,5 @@ INSERT INTO migrations VALUES('20181201195222');
 INSERT INTO migrations VALUES('20181201200519');
 INSERT INTO migrations VALUES('20181209204318');
 INSERT INTO migrations VALUES('20181211192927');
+INSERT INTO migrations VALUES('20190108102703');
 COMMIT;
