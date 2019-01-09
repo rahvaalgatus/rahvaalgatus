@@ -28,7 +28,6 @@ var concat = Array.prototype.concat.bind(Array.prototype)
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
 var EMPTY_COMMENT = {subject: "", text: "", parentId: null}
-var ADMIN_COAUTHORS = Config.adminCoauthors
 var ISO8601_DATE = /^(\d\d\d\d)-(\d\d)-(\d\d)\s+/
 var LOCAL_DATE = /^(\d\d)\.(\d\d)\.(\d\d\d\d)\s+/
 
@@ -284,12 +283,6 @@ exports.router.put("/:id", next(function*(req, res) {
 			res.flash("notice", req.t("SENT_TO_PARLIAMENT_CONTENT"))
 		else if (req.body.status === "closed")
 			res.flash("notice", "Algatuse menetlus on lõpetatud.")
-
-		if (req.body.visibility === "public" && ADMIN_COAUTHORS.length > 0)
-			yield req.cosApi(`/api/users/self/topics/${initiative.id}/members/users`, {
-				method: "POST",
-				json: ADMIN_COAUTHORS.map((email) => ({userId: email, level: "admin"}))
-			}).catch(_.noop)
 
 		res.redirect(303, req.baseUrl + "/" + initiative.id)
 	}
