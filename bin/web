@@ -4,8 +4,7 @@ var Fs = require("fs")
 var Url = require("url")
 var Http = require("http")
 var Path = require("path")
-var Jade = require("jade")
-var Express = require("express")
+var Express = require("root/lib/express")
 var Config = require("root/config")
 var HttpError = require("standard-http-error")
 var redirect = require("root/lib/redirect")
@@ -15,15 +14,7 @@ var PORT = process.env.PORT || 3000
 var PUBLIC_DIR = __dirname + "/../public"
 var FONT_SUFFIXES = [".eot", ".woff", ".woff2", ".ttf", ".svg"]
 var ERR_TEMPLATES = {401: "401", 404: "404", 412: "412", 500: "500", 503: "503"}
-
-var app = module.exports = Express()
-
-app.enable("trust proxy", "loopback")
-app.set("view engine", "jade")
-app.locals.pretty = false
-app.locals.require = require
-app.locals.basedir = app.get("views")
-Jade.filters.javascript = require("root/lib/jade/javascript_filter")
+var app = module.exports = Express.new()
 
 if (ENV == "development" || ENV == "test") {
 	app.use(Express.static(PUBLIC_DIR, {setHeaders: setStaticHeaders}))
