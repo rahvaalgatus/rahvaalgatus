@@ -48,7 +48,7 @@
 	"partners": {
 		"a4cc118f-69f3-4708-8f84-d3f46ad1d63b": {
 			"name": "Uus Eakus",
-			"icon": "/images/badges-uuseakus.png",
+			"icon": "/assets/badges-uuseakus.png",
 			"url": "https://uuseakus.rahvaalgatus.ee"
 		}
 	},
@@ -56,7 +56,7 @@
 	"categories": {
 		"arvamusfestival": {
 			"name": "Arvamusfestival",
-			"icon": "/images/badges-arvamusfestival.png"
+			"icon": "/assets/badges-arvamusfestival.png"
 		}
 	}
 }

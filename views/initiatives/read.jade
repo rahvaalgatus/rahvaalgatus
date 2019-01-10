@@ -103,7 +103,7 @@ block prepend subpage
 								? t("BTN_VOTE_SIGN_WITH_ID_CARD")
 								: t("BTN_VOTE_REVOKE_WITH_ID_CARD")
 						button.inherited-button
-							img(src="/images/id-kaart-button.png", title=alt, alt=alt)
+							img(src="/assets/id-kaart-button.png", title=alt, alt=alt)
 
 					+form#mobile-id-form(
 						method="post",
@@ -120,7 +120,7 @@ block prepend subpage
 							onchange="this.form.phoneNumber.focus()")
 
 						label.inherited-button(for="mobile-id-form-toggle"): img(
-							src="/images/mobile-id-button.png",
+							src="/assets/mobile-id-button.png",
 							title=btnText,
 							alt=btnText)
 

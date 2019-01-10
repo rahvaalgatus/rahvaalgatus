@@ -334,12 +334,12 @@ button.inherited {
 
 	.pika-prev {
 		float: left;
-		background: url(/images/calendar-prev.png) center no-repeat;
+		background: url(/assets/calendar-prev.png) center no-repeat;
 	}
 
 	.pika-next {
 		float: right;
-		background: url(/images/calendar-next.png) center no-repeat;
+		background: url(/assets/calendar-next.png) center no-repeat;
 	}
 
 	table {
@@ -365,7 +365,7 @@ button.inherited {
 		}
 
 		&.is-selected {
-			background: url(/images/date-active.png) center no-repeat;
+			background: url(/assets/date-active.png) center no-repeat;
 		}
 
 		&.is-disabled { color: #bbb; }
@@ -512,7 +512,7 @@ button.inherited {
 
 	&.discussable.completed {
 		background-color: $discussion-color;
-		background-image: url(/images/discussion-over.png);
+		background-image: url(/assets/discussion-over.png);
 		background-position: 1rem center;
 		padding-left: 3.5rem;
 	}
@@ -520,21 +520,21 @@ button.inherited {
 	&.votable.completed {
 		color: white;
 		background-color: $voting-color;
-		background-image: url(/images/vote-success.png);
+		background-image: url(/assets/vote-success.png);
 		background-position: 1rem center;
 		padding-left: 3.5rem;
 	}
 
 	&.processable {
 		color: $parliament-color;
-		background-image: url(/images/clock.png);
+		background-image: url(/assets/clock.png);
 		background-position: 1rem center;
 		padding-left: 3.5rem;
 	}
 
 	&.finished {
 		color: $parliament-color;
-		background-image: url(/images/discussion-over.png);
+		background-image: url(/assets/discussion-over.png);
 		background-position: 1rem center;
 		padding-left: 3.5rem;
 	}
@@ -542,7 +542,7 @@ button.inherited {
 	&.failed {
 		color: white;
 		background-color: #9a9a9a;
-		background-image: url(/images/vote-failed.png);
+		background-image: url(/assets/vote-failed.png);
 		background-position: 1rem center;
 		padding-left: 3.5rem;
 	}
@@ -785,7 +785,7 @@ button.inherited {
 		position: relative;
 	}
 
-	background: url(/images/bg-1.png) no-repeat;
+	background: url(/assets/bg-1.png) no-repeat;
 	background-position: calc(50% - 200px) top;
 	min-height: $new-initiative-background-height;
 
@@ -1220,7 +1220,7 @@ button.inherited {
 
 			&:before {
 				display: block;
-				background: url(/images/icon-check-blue.png) center 0.5rem no-repeat;
+				background: url(/assets/icon-check-blue.png) center 0.5rem no-repeat;
 				background-color: white;
 				width: 3rem;
 				height: 3.2rem;
@@ -1232,7 +1232,7 @@ button.inherited {
 			}
 
 			&:last-child:before {
-				background: url(/images/icon-check-green-ball.png) center 0.5rem no-repeat;
+				background: url(/assets/icon-check-green-ball.png) center 0.5rem no-repeat;
 				background-color: white;
 				height: 3.5rem;
 			}

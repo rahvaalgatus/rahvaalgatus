@@ -1,6 +1,6 @@
 /node_modules/
-/public/assets/*
-!public/assets/*.json
+/public/assets/*.js
+/public/assets/*.css
 /public/app.html
 /public/templates/**/*.html
 /tmp/

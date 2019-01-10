@@ -37,8 +37,8 @@ describe("Web", function() {
 	})
 
 	;[
-		"/fonts/tisapro-regular-webfont.svg",
-		"/assets/etherpad.css"
+		"/assets/etherpad.css",
+		"/assets/tisapro-regular-webfont.svg"
 	].forEach(function(path) {
 		describe(path, function() {
 			before(function*() {
