@@ -1,5 +1,4 @@
 include ./_mixins
-
 - var Config = require("root/config")
 - var stringify = require("root/lib/json").stringify
 - var selected = require("root/lib/css").selected
@@ -37,11 +36,7 @@ html
 						]
 					}).install()
 
-		if ENV === "development"
-			script(
-				src="http://#{req.hostname}:35729/livereload.js?snipver=1",
-				async, defer)
-
+		include ./_livereload
 		block head
 
 	body(id=page + "-page")

@@ -1,0 +1,4 @@
+if process.env.ENV === "development"
+	script(
+		src="http://#{req.hostname}:35729/livereload.js?snipver=1",
+		async, defer)
