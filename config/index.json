@@ -57,6 +57,12 @@
 		"arvamusfestival": {
 			"name": "Arvamusfestival",
 			"icon": "/assets/badges-arvamusfestival.png"
+		},
+
+		"kestame": {
+			"name": "#kuidasmekestame",
+			"icon": "/assets/badges-kestame.png",
+			"url": "https://kestame.rahvaalgatus.ee"
 		}
 	}
 }
