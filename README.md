@@ -123,7 +123,7 @@ More details [about Rahvaalgatus the platform][about].
 
 If you find Rahvaalgatus needs improving, please don't hesitate to [create an issue on GitHub][issues].
 
-[moll]: http://themoll.com
+[moll]: https://m811.com
 [kogu]: https://www.kogu.ee
 [issues]: https://github.com/rahvaalgatus/rahvaalgatus/issues
 [teeme]: http://www.teemeara.ee
