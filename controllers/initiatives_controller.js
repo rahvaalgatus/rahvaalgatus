@@ -43,13 +43,17 @@ var RESPONSE_TYPES = [
 
 exports.router = Router({mergeParams: true})
 
-exports.router.get("/", next(function*(_req, res) {
+exports.router.get("/", next(function*(req, res) {
 	var initiatives = yield {
 		inProgress: readInitiativesWithStatus("inProgress"),
 		voting: readInitiativesWithStatus("voting"),
 		followUp: readInitiativesWithStatus("followUp"),
 		closed: readInitiativesWithStatus("closed"),
 	}
+
+	if (req.query.category) initiatives = O.map(initiatives, (initiatives) => (
+		initiatives.filter(hasCategory.bind(null, req.query.category))
+	))
 
 	var closed = _.groupBy(initiatives.closed, Initiative.getUnclosedStatus)
 	var votings = concat(initiatives.voting, closed.voting || EMPTY_ARR)
@@ -557,6 +561,10 @@ function* readOrCreateDbInitiative(uuid) {
 	obj = {uuid: uuid}
 	yield db.create("initiatives", obj)
 	return obj
+}
+
+function hasCategory(category, initiative) {
+	return _.includes(initiative.categories, category)
 }
 
 function getBody(res) { return res.body.data }
