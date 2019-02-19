@@ -260,7 +260,7 @@ block prepend subpage
 								time(datetime=event.createdAt.toJSON())
 									= I18n.formatDate("numeric", event.createdAt)
 
-								h2= event.subject
+								h2= event.title
 								p.text!= linkify(event.text)
 
 						if sentToParliamentAt

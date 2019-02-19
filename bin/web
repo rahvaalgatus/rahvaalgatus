@@ -1,14 +1,11 @@
 #!/usr/bin/env node
 var O = require("oolong")
-var Fs = require("fs")
-var Url = require("url")
-var Http = require("http")
 var Path = require("path")
 var Express = require("root/lib/express")
 var Config = require("root/config")
 var HttpError = require("standard-http-error")
+var runServer = require("root/lib/http").runServer
 var redirect = require("root/lib/redirect")
-var reportError = require("root").errorReporter
 var ENV = process.env.ENV
 var PORT = process.env.PORT || 3000
 var PUBLIC_DIR = __dirname + "/../public"
@@ -62,12 +59,7 @@ O.each({
 }, (router, path) => app.use(path, router))
 
 app.use(function(_req, _res, next) { next(new HttpError(404)) })
-
-app.use(function(err, req, _res, next) {
-	if (!(err instanceof HttpError)) reportError(err, req)
-	if (err instanceof HttpError && err.code === 412) reportError(err, req)
-	next(err)
-})
+app.use(require("root/lib/middleware/error_reporter_middleware"))
 
 app.use(function(err, req, res, next) {
 	// Stop handling here if there was an error, but it's been responded to
@@ -90,20 +82,7 @@ app.use(function(err, req, res, next) {
 })
 
 if (module.parent) return
-
-if (!isFinite(PORT)) {
-  if (Fs.existsSync(PORT) && Fs.lstatSync(PORT).isSocket()) Fs.unlinkSync(PORT)
-}
-
-Http.createServer(app).listen(PORT, function() {
-  // Make world-writable to allow the web server to read and write to it.
-  if (!isFinite(PORT)) Fs.chmodSync(PORT, 0o777)
-	var addr = this.address()
-
-	console.log("Listening on %s.", typeof addr == "string" ? addr : Url.format({
-		protocol: "http", hostname: addr.address, port: addr.port
-	}))
-})
+runServer(app, PORT)
 
 function setStaticHeaders(res, path) {
 	if (isCorsable(path)) res.setHeader("Access-Control-Allow-Origin", "*")

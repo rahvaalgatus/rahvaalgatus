@@ -1,0 +1,13 @@
+extends ../../layout
+include ./_form
+
+block head
+	- var PAGE = "create-event"
+	- var TITLE = "New Event for " + initiative.title
+
+block body
+	a.admin-back-2(href="/initiatives") Initiatives
+	a.admin-back(href="/initiatives/" + initiative.id)= initiative.title
+	h1.admin-heading New Event
+	include /_flash.jade
+	+event-form(event)

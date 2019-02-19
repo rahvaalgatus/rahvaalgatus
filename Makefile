@@ -1,6 +1,5 @@
 NODE = node
 NODE_OPTS = --use-strict
-PORT = 3000
 ENV = development
 NPM_REBUILD = npm --ignore-scripts false rebuild --build-from-source
 TEST = test/**/*_test.js
@@ -86,8 +85,16 @@ test/server: export TEST_TAGS = server
 test/server:
 	@$(NODE) $(NODE_OPTS) $(MOCHA) -R spec test/server/**/*_test.js
 
-server:
-	@$(NODE) ./bin/web
+web: PORT = 3000
+web:
+	@$(NODE) ./bin/$@
+
+adm: PORT = 3001
+adm:
+	@$(NODE) ./bin/$@
+
+servers:
+	@$(MAKE) -j2 web adm
 
 livereload:
 	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/livereload public --wait 50
@@ -160,7 +167,7 @@ lib/i18n/ru.json: tmp/translations.json
 .PHONY: stylesheets autostylesheets
 .PHONY: test spec autotest autospec
 .PHONY: test/server
-.PHONY: server
+.PHONY: servers web adm
 .PHONY: shrinkwrap
 .PHONY: deploy staging production
 .PHONY: db/create db/test db/status db/migrate db/migration

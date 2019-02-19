@@ -11,7 +11,7 @@ var respond = require("root/test/fixtures").respond
 var concat = Array.prototype.concat.bind(Array.prototype)
 var randomHex = require("root/lib/crypto").randomHex
 var md5 = require("root/lib/crypto").md5
-var db = require("root").db
+var sqlite = require("root").sqlite
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var VOTES = require("root/config").votesRequired
 var PARTNER_ID = Config.apiPartnerId
@@ -517,7 +517,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(303)
 				res.headers.location.must.equal(`/initiatives/${UUID}`)
 
-				yield db.search("SELECT * FROM initiatives").must.then.eql([
+				yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
 					new ValidDbInitiative({
 						uuid: UUID,
 						sent_to_parliament_at: new Date().toISOString()
@@ -538,7 +538,7 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(303)
 					res.headers.location.must.equal(`/initiatives/${UUID}/edit`)
 
-					yield db.search("SELECT * FROM initiatives").must.then.eql([
+					yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
 						new ValidDbInitiative({uuid: UUID, notes: "Hello, world"})
 					])
 				})
@@ -547,7 +547,7 @@ describe("InitiativesController", function() {
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {data: PRIVATE_DISCUSSION}))
 
-					var other = yield db.create("initiatives", {
+					var other = yield sqlite.create("initiatives", {
 						uuid: "a8166697-7f68-43e4-a729-97a7868b4d51"
 					})
 
@@ -559,7 +559,7 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(303)
 					res.headers.location.must.equal(`/initiatives/${UUID}/edit`)
 
-					yield db.search("SELECT * FROM initiatives").must.then.eql([
+					yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
 						other,
 						new ValidDbInitiative({uuid: UUID, notes: "Hello, world"})
 					])
@@ -576,7 +576,7 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(401)
 
-					yield db.search("SELECT * FROM initiatives").must.then.eql([
+					yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
 						new ValidDbInitiative({uuid: UUID})
 					])
 				})
@@ -683,7 +683,7 @@ describe("InitiativesController", function() {
 					respond.bind(null, {data: initiative}))
 
 				var interestId = randomHex(10)
-				yield db.create("initiatives", {
+				yield sqlite.create("initiatives", {
 					uuid: UUID,
 					mailchimp_interest_id: interestId
 				})
@@ -737,7 +737,7 @@ describe("InitiativesController", function() {
 
 			res.statusCode.must.equal(303)
 
-			yield db.search("SELECT * FROM initiatives").must.then.eql([
+			yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
 				new ValidDbInitiative({uuid: UUID, mailchimp_interest_id: interestId})
 			])
 		})
@@ -770,7 +770,7 @@ describe("InitiativesController", function() {
 
 			res.statusCode.must.equal(303)
 
-			yield db.search("SELECT * FROM initiatives").must.then.eql([
+			yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
 				new ValidDbInitiative({uuid: UUID, mailchimp_interest_id: interestId})
 			])
 		})
@@ -787,7 +787,7 @@ describe("InitiativesController", function() {
 			var emailHash = hashEmail(email)
 			this.router.put(MAILCHIMP_MEMBERS_PATH + "/" + emailHash, endRequest)
 
-			var other = yield db.create("initiatives", {
+			var other = yield sqlite.create("initiatives", {
 				uuid: "a8166697-7f68-43e4-a729-97a7868b4d51"
 			})
 
@@ -798,7 +798,7 @@ describe("InitiativesController", function() {
 
 			res.statusCode.must.equal(303)
 
-			yield db.search("SELECT * FROM initiatives").must.then.eql([
+			yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
 				other,
 				new ValidDbInitiative({uuid: UUID, mailchimp_interest_id: interestId})
 			])
@@ -838,7 +838,7 @@ describe("InitiativesController", function() {
 
 			res.statusCode.must.equal(303)
 
-			yield db.search("SELECT * FROM initiatives").must.then.eql([
+			yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
 				new ValidDbInitiative({uuid: UUID, mailchimp_interest_id: interestId})
 			])
 		})
@@ -874,7 +874,7 @@ describe("InitiativesController", function() {
 				}]
 			}))
 
-			yield db.create("initiatives", {uuid: UUID, mailchimp_interest_id: "x"})
+			yield sqlite.create("initiatives", {uuid: UUID, mailchimp_interest_id: "x"})
 
 			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
 				method: "POST",
@@ -899,7 +899,10 @@ describe("InitiativesController", function() {
 				instance: "fec7d7c0-6c0e-405d-a090-0a05cf988f19"
 			}))
 
-			yield db.create("initiatives", {uuid: UUID, mailchimp_interest_id: "x"})
+			yield sqlite.create("initiatives", {
+				uuid: UUID,
+				mailchimp_interest_id: "x"
+			})
 
 			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
 				method: "POST",

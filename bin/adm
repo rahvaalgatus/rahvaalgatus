@@ -1,0 +1,35 @@
+#!/usr/bin/env node
+var _ = require("root/lib/underscore")
+var Express = require("root/lib/express")
+var Config = require("root/config")
+var HttpError = require("standard-http-error")
+var runServer = require("root/lib/http").runServer
+var PORT = process.env.PORT || 3001
+var ENV = process.env.NODE_ENV
+
+var app = module.exports = Express.new()
+
+if (ENV == "development") {
+	app.use(Express.static(__dirname + "/../public"))
+}
+
+if (ENV == "development" || ENV == "staging") app.use(require("morgan")("dev"))
+
+app.use(require("cookie-parser")(Config.cookieSecret))
+app.use(require("body-parser").urlencoded({extended: true}))
+app.use(require("root/lib/middleware/method_override_middleware"))
+app.use(require("root/lib/middleware/csrf_middleware"))
+app.use(require("flash-fiction/express"))
+app.use(require("root/lib/middleware/session_middleware"))
+
+app.use(function(req, _res, next) {
+	if (req.user && _.contains(Config.adminUserIds, req.user.id)) next()
+	else next(new HttpError(401, "Not an Admin"))
+})
+
+app.use("/", require("root/controllers/admin_controller"))
+app.use(function(_req, _res, next) { next(new HttpError(404)) })
+app.use(require("root/lib/middleware/error_reporter_middleware"))
+
+if (module.parent) return
+runServer(app, PORT)

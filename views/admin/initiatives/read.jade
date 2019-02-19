@@ -1,0 +1,101 @@
+extends ../layout
+
+block head
+	- var PAGE = "initiative"
+	- var TITLE = initiative.title
+
+block body
+	-
+		var Initiative = require("root/lib/initiative")
+		var formatDate = require("root/lib/i18n").formatDate
+		var linkify = require("root/lib/linkify")
+
+	a.admin-back(href="/initiatives") Initiatives
+	h1.admin-heading= initiative.title
+	include /_flash.jade
+
+	table#initiative-table.admin-horizontal-table
+		if initiative.status == "followUp" || initiative.status == "closed"
+			tr
+				- var status = initiative.status
+				th(scope="row") Status
+				td
+					+form#status-form.admin-inline-form(
+						action="/initiatives/" + initiative.id, method="post")
+						input(type="hidden", name="_method", value="put")
+
+						select(name="status", onchange="this.form.submit()")
+							option(value="followUp", selected=status == "followUp")
+								| In Parliament
+							option(value="closed", selected=status == "closed")
+								| Finished
+
+			tr
+				- var sentToParliamentAt = dbInitiative.sent_to_parliament_at
+				th(scope="row") Sent to Parliament
+				td
+					if sentToParliamentAt
+						time= formatDate("iso", sentToParliamentAt)
+						br
+
+					input#show-sent-to-parliament(hidden, type="checkbox")
+					span.show-sent-to-parliament
+						if sentToParliamentAt
+							label.admin-link(for="show-sent-to-parliament") Edit
+							| &nbsp;or&nbsp;
+							+form-button(
+								`/initiatives/${initiative.id}`,
+								"sentToParliamentOn",
+								"").admin-link(onclick="return confirm('Sure?')") Remove
+						else
+							label.admin-link(for="show-sent-to-parliament") Set Date
+
+					+form#sent-to-parliament-form.admin-inline-form(
+						action="/initiatives/" + initiative.id, method="post")
+						input(type="hidden", name="_method", value="put")
+						input.admin-input(
+							type="date",
+							name="sentToParliamentOn"
+							value=sentToParliamentAt && formatDate("iso", sentToParliamentAt),
+							required)
+
+						button.admin-submit Set Date
+						| &nbsp;or&nbsp;
+						label.admin-link(for="show-sent-to-parliament") Cancel
+
+	.events
+		h2.admin-subheading
+			| Events
+			= " "
+			span.admin-count (#{events.length})
+
+		if events.length > 0
+			table.admin-table
+				thead
+					th Created On
+					th Title
+					th.new-event
+						a.admin-primary-button.new-event-button(
+							href=`/initiatives/${initiative.id}/events/new`) New Event
+
+				tbody
+					for event in events
+						tr.event
+							td: time(datetime=event.createdAt.toJSON())
+								= formatDate("iso", event.createdAt)
+
+							td
+								h3= event.title
+								- var toggleId = `show-event-${event.id}-text`
+								input.text-toggle(id=toggleId, hidden, type="checkbox")
+								label.admin-link(for=toggleId) Show text
+								p.admin-text!= linkify(event.text)
+
+							td
+								- var path = `/initiatives/${initiative.id}/events/${event.id}`
+								a.admin-link(href="#{path}/edit") Edit
+								| &nbsp;or&nbsp;
+								+form-button(
+									path,
+									"_method",
+									"delete").admin-link(onclick="return confirm('Sure?')") Delete

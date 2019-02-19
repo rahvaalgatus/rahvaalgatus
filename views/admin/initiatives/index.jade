@@ -1,0 +1,47 @@
+extends ../layout
+
+block head
+	- var PAGE = "initiatives"
+	- var TITLE = "Initiatives"
+
+mixin parliamented-initiatives(initiatives)
+	table.admin-table
+		thead: tr
+			th Sent to Parliament
+			th Title
+			th On Rahvaalgatus
+
+		tbody
+			each initiative in initiatives
+				- var dbInitiative = dbInitiatives[initiative.id]
+
+				tr
+					td
+						if dbInitiative.sent_to_parliament_at
+							= formatDate("iso", dbInitiative.sent_to_parliament_at)
+
+					td
+						a.admin-link(href="/initiatives/" + initiative.id)
+							= initiative.title
+
+					td
+						a.admin-link(href=Config.url + "/initiatives/" + initiative.id)
+							| View on Rahvaalgatus
+
+block body
+	- var formatDate = require("root/lib/i18n").formatDate
+	h1.admin-heading Initiatives
+
+	h2.admin-subheading
+		| In Parliament
+		= " "
+		span.admin-count (#{parliamented.length})
+
+	+parliamented-initiatives(parliamented)
+
+	h2.admin-subheading
+		| Finished
+		= " "
+		span.admin-count (#{closed.length})
+
+	+parliamented-initiatives(closed)

@@ -26,12 +26,12 @@ After installing a stable version of [Node.js](https://nodejs.org) (so far teste
 
 3. Run the server:
    ```sh
-   make server
+   make web
    ```
 
    For a different port, pass `PORT` to Make:
    ```sh
-   make server PORT=8888
+   make web PORT=8888
    ```
 
 4. Set up a <rahvaalgatus.test> domain.

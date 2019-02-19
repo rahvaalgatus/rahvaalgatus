@@ -15,9 +15,22 @@ lazy(exports, "errorReporter", function() {
   }
 })
 
-lazy(exports, "db", function() {
-	var Db = require("root/lib/db")
-	return new Db(__dirname + "/config/" + ENV + ".sqlite3")
+lazy(exports, "sqlite", function() {
+	var Sqlite = require("root/lib/sqlite")
+	return new Sqlite(__dirname + "/config/" + ENV + ".sqlite3")
+})
+
+lazy(exports, "cosDb", function() {
+  var Knex = require("knex")
+  var config = require("root/config").citizenOsDatabase
+
+  return Knex({
+    client: "pg",
+    debug: false,
+    connection: config.uri || config,
+    acquireConnectionTimeout: 20000,
+    pool: {min: 1, max: config.pool}
+  })
 })
 
 lazy(exports, "sendEmail", function() {

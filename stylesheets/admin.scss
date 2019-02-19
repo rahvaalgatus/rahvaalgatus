@@ -1,0 +1,289 @@
+@import "_lib";
+@import "reset";
+$back-color: #bbb;
+$button-height: 3rem;
+
+body {
+	font-family: $museo-sans;
+	font-weight: 400;
+	font-size: 1.4rem;
+	color: $text;
+	background: $secondary-background;
+}
+
+form { display: inline; }
+
+.inherited {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	-ms-appearance: none;
+	appearance: none;
+
+	border: none;
+	background: none;
+	font: inherit;
+	color: inherit;
+	padding: 0;
+	margin: 0;
+}
+
+#header {
+	background: $header-background;
+	padding: 1rem 2rem 1rem;
+	color: white;
+
+	h1 {
+		display: block;
+		margin-right: 2rem;
+		font-weight: 900;
+		font-family: $museo-sans;
+		text-transform: uppercase;
+		font-weight: 900;
+		font-size: 1.1rem;
+		margin-bottom: 0.5rem;
+	}
+
+	nav, nav ul, nav li {
+		display: inline;
+	}
+
+	nav li + li { margin-left: 1rem; }
+
+	nav a {
+		display: inline-block;
+		font-size: 1.6rem;
+		padding: 0.5rem 1rem;
+		border-radius: 2px;
+		transition: color ease 0.1s;
+
+		&.selected,
+		&:hover {
+			background-color: white;
+			color: $link;
+		}
+	}
+}
+
+main {
+	padding: 3rem 2rem;
+}
+
+.admin-heading {
+  font-size: 3.4rem;
+  margin-bottom: 3rem;
+}
+
+.admin-subheading {
+  font-size: 2.4rem;
+  margin-bottom: 1rem;
+	font-weight: 300;
+
+  & ~ .admin-subheading { margin-top: 3rem; }
+}
+
+.admin-count {
+  color: $back-color;
+}
+
+.admin-back,
+.admin-back-2 {
+  display: block;
+  color: $back-color;
+  margin-bottom: 0.5rem;
+}
+
+.admin-back { font-size: 2.4rem; }
+.admin-back-2 { font-size: 1.8rem; }
+
+button.admin-link { @extend .inherited; }
+
+.admin-link,
+button.admin-link {
+  color: $link;
+  text-decoration: underline;
+	cursor: pointer;
+}
+
+.admin-table,
+.admin-horizontal-table {
+  border-collapse: collapse;
+
+	th {
+		background: white;
+		font-size: 1.5rem;
+		padding: 1rem 2rem;
+		font-weight: bold;
+	}
+
+  tbody {
+    background: $light-background;
+    line-height: 1.5;
+  }
+
+  tbody td { padding: 0.5rem 2rem; }
+  tbody tr:first-child td { padding-top: 1rem; }
+  tbody tr + tr td { border-top: 1px solid white; }
+}
+
+.admin-table {
+	width: 100%;
+
+	th {
+		border-bottom: 1px solid #d4d9df;
+
+		&:first-child {
+			border-top-left-radius: 0.5rem;
+			border-bottom-left-radius: 0.5rem;
+		}
+
+		&:last-child {
+			border-top-right-radius: 0.5rem;
+			border-bottom-right-radius: 0.5rem;
+		}
+	}
+}
+
+.admin-horizontal-table {
+	th {
+		border-right: 1px solid #d4d9df;
+	}
+}
+
+.admin-primary-button,
+.admin-submit {
+	border-radius: $button-radius;
+	border: 0px solid transparent;
+	display: inline-block;
+	font-family: $museo-sans;
+	font-weight: bold;
+	font-size: 1.3rem;
+	height: $button-height;
+	padding: 0 2rem;
+	text-align: center;
+	text-transform: uppercase;
+	cursor: pointer;
+
+	i {
+		margin-right: 1rem;
+		margin-left: -1rem;
+	}
+
+	&:not(button) { line-height: $button-height; }
+	&:disabled { cursor: auto; }
+}
+
+.admin-primary-button,
+.admin-submit {
+	background: $secondary-button-background;
+	color: $secondary-button-text;
+	border: 1px solid $secondary-button-border;
+
+	&:disabled, &.disabled {
+		background: $secondary-background;
+		border: 1px solid darken($secondary-background, 10%);
+		color: $secondary-light-text;
+	}
+}
+
+.admin-form {
+	max-width: 60rem;
+
+	.admin-label,
+	.admin-input {
+		display: block;
+	}
+
+	.admin-input {
+		width: 100%;
+	}
+
+	textarea.admin-input {
+		min-height: 15rem;
+	}
+
+	.admin-label ~ .admin-label {
+		margin-top: 1rem;
+	}
+
+	.admin-submit {
+		margin-top: 1rem;
+	}
+}
+
+.admin-inline-form {
+	.admin-input ~ .admin-input,
+	.admin-input ~ .admin-submit { margin-left: 0.5rem; }
+}
+
+.admin-label {
+	&:after { content: ":"; }
+}
+
+.admin-input {
+	font-size: 1.4rem;
+	font-family: $museo-sans;
+	font-weight: 500;
+
+	border: 1px solid #cecece;
+	height: $button-height;
+	padding: 0 0.5rem;
+
+	background: white;
+	color: #4a555d;
+	border-radius: $button-radius;
+
+	&:disabled {
+		background-color: $secondary-background;
+	}
+}
+
+textarea.admin-input {
+	padding: 0.5rem;
+}
+
+.flash {
+	display: inline-block;
+	border-radius: 5px;
+	border: 1px solid #d4d9df;
+	background: $light-background;
+	padding: 1rem 2rem;
+	white-space: pre-wrap;
+	font-size: 1.3rem;
+	font-weight: 600;
+	line-height: 1.3;
+	margin-bottom: 1rem;
+
+	&:empty { display: none; }
+}
+
+.admin-text {
+	line-height: 1.5;
+	white-space: pre-wrap;
+
+	em { font-style: italic; }
+	u { text-decoration: underline; }
+	a { @extend .admin-link; }
+}
+
+#initiative-page {
+	#show-sent-to-parliament {
+		&:not(:checked) ~ #sent-to-parliament-form,
+		&:checked + .show-sent-to-parliament { display: none; }
+	}
+
+	.events {
+		margin-top: 4rem;
+
+		th { white-space: nowrap; }
+		h3 { font-weight: bold; }
+		p { margin-top: 0.5rem; }
+
+		.text-toggle:not(:checked) ~ p,
+		.text-toggle:checked + label { display: none; }
+
+		th:last-child { padding: 0.5rem; }
+
+		th:last-child,
+		td:last-child { text-align: right; }
+	}
+}

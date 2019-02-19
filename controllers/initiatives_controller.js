@@ -9,7 +9,7 @@ var I18n = require("root/lib/i18n")
 var MediaType = require("medium-type")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
-var db = require("root").db
+var sqlite = require("root").sqlite
 var initiativesDb = require("root/db/initiatives_db")
 var countVotes = Initiative.countSignatures.bind(null, "Yes")
 var isOk = require("root/lib/http").isOk
@@ -20,6 +20,7 @@ var next = require("co-next")
 var sleep = require("root/lib/promise").sleep
 var cosApi = require("root/lib/citizenos_api")
 var parseCitizenInitiative = cosApi.parseCitizenInitiative
+var parseCitizenEvent = cosApi.parseCitizenEvent
 var parseCitizenComment = cosApi.parseCitizenComment
 var mailchimp = require("root/lib/mailchimp")
 var readInitiativesWithStatus = cosApi.readInitiativesWithStatus
@@ -30,8 +31,6 @@ var concat = Array.prototype.concat.bind(Array.prototype)
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
 var EMPTY_COMMENT = {subject: "", text: "", parentId: null}
-var ISO8601_DATE = /^(\d\d\d\d)-(\d\d)-(\d\d)\s+/
-var LOCAL_DATE = /^(\d\d)\.(\d\d)\.(\d\d\d\d)\s+/
 
 var UI_TRANSLATIONS = O.map(require("root/lib/i18n").STRINGS, function(lang) {
 	return O.filter(lang, (_value, key) => key.indexOf("HWCRYPTO") >= 0)
@@ -114,7 +113,9 @@ exports.router.use("/:id", next(function*(req, res, next) {
 		req.initiative = yield req.cosApi(path).then(getBody).
 			then(parseCitizenInitiative)
 
-		req.dbInitiative = yield readOrCreateDbInitiative(req.initiative.id)
+		req.dbInitiative = yield initiativesDb.read(req.initiative.id, {
+			create: true
+		})
 	}
 	catch (ex) {
 		// CitizenOS throws 500 for invalid UUIDs. Workaround that.
@@ -260,7 +261,7 @@ exports.router.put("/:id", next(function*(req, res) {
 	else if ("notes" in req.body) {
 		if (!Initiative.canEdit(initiative)) throw new HttpError(401)
 
-		yield db.update(`
+		yield sqlite.update(`
 			UPDATE initiatives
 			SET notes = $notes
 			WHERE uuid = $uuid
@@ -286,7 +287,7 @@ exports.router.put("/:id", next(function*(req, res) {
 		else if (req.body.status === "voting")
 			res.flash("notice", "Algatus on avatud allkirjade kogumiseks.")
 		else if (req.body.status === "followUp") {
-			if (req.dbInitiative.sent_to_parliament_at == null) yield db.update(
+			if (req.dbInitiative.sent_to_parliament_at == null) yield sqlite.update(
 				"UPDATE initiatives SET sent_to_parliament_at = $at WHERE uuid = $uuid",
 				{$uuid: initiative.id, $at: new Date().toISOString()}
 			)
@@ -319,8 +320,6 @@ exports.router.get("/:id/edit", function(req, res) {
 
 exports.router.use("/:id/comments",
 	require("./initiatives/comments_controller").router)
-exports.router.use("/:id/events",
-	require("./initiatives/events_controller").router)
 exports.router.use("/:id/authors",
 	require("./initiatives/authors_controller").router)
 
@@ -500,7 +499,7 @@ function* createMailchimpInterest(initiative) {
 		interest = yield create(`${initiative.title} (${date})`)
 	}
 
-	yield db.update(`
+	yield sqlite.update(`
 		UPDATE initiatives
 		SET mailchimp_interest_id = $interestId
 		WHERE uuid = $uuid
@@ -524,39 +523,8 @@ function ensureAreaCode(number) {
 	return "+372" + number
 }
 
-function parseCitizenEvent(obj) {
-	// Parse dates from the title until CitizenOS supports setting the creation
-	// date when necessary.
-	var subject = parsePrefixDate(obj.subject)
-
-	return {
-		subject: subject[0],
-		text: obj.text,
-		createdAt: subject[1] || new Date(obj.createdAt)
-	}
-}
-
-function parsePrefixDate(str) {
-	var m, date = (
-		(m = ISO8601_DATE.exec(str)) ? new Date(m[1], m[2] - 1, m[3]) :
-		(m = LOCAL_DATE.exec(str)) ? new Date(m[3], m[2] - 1, m[1]) :
-		null
-	)
-		
-	return [m ? str.slice(m[0].length) : str, date]
-}
-
 function isMailchimpNameTakenErr(err) {
 	return err.code == 400 && /already exists/.test(err.response.body.detail)
-}
-
-function* readOrCreateDbInitiative(uuid) {
-	var obj = yield initiativesDb.search(uuid)
-	if (obj) return obj
-
-	obj = {uuid: uuid}
-	yield db.create("initiatives", obj)
-	return obj
 }
 
 function hasCategory(category, initiative) {

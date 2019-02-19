@@ -10,6 +10,7 @@
 	"userAgent": "Rahvaalgatus (+https://rahvaalgatus.ee)",
 	"maintenance": false,
 	"notificationEmails": [],
+	"adminUserIds": [],
 
 	"language": "et",
 	"languages": ["et", "en", "ru"],
@@ -24,6 +25,8 @@
 	"mailchimpApiKey": "-us1",
 	"mailchimpListId": "",
 	"mailchimpInterestCategoryId": "",
+
+	"citizenOsDatabase": {},
 
 	"email": {
 		"from": "Rahvaalgatus <abi@rahvaalgatus.ee>",

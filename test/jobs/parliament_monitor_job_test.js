@@ -3,7 +3,7 @@ var Config = require("root/config")
 var ValidDbInitiative = require("root/test/valid_db_initiative")
 var respond = require("root/test/fixtures").respond
 var job = require("root/jobs/parliament_monitor_job")
-var db = require("root").db
+var sqlite = require("root").sqlite
 
 var COMPLETED_INITIATIVE = {
 	id: "d597d201-1758-4c5b-8e62-6415d397983f",
@@ -33,7 +33,7 @@ describe("ParliamentMonitorJob", function() {
 
 	it("must set initiatives' parliament API properties and email", function*() {
 		var uuid = "a8166697-7f68-43e4-a729-97a7868b4d51"
-		yield db.create("initiatives", {uuid: uuid})
+		yield sqlite.create("initiatives", {uuid: uuid})
 
 		var parliamentApiData = {
 			uuid: "dcccf075-9da3-4224-96fb-8831e485a1be",
@@ -47,7 +47,7 @@ describe("ParliamentMonitorJob", function() {
 
 		yield job()
 
-		yield db.search("SELECT * FROM initiatives").must.then.eql([
+		yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
 			new ValidDbInitiative({
 				uuid: uuid,
 				parliament_api_data: JSON.stringify(parliamentApiData)
@@ -77,7 +77,7 @@ describe("ParliamentMonitorJob", function() {
 
 		yield job()
 
-		yield db.search("SELECT * FROM initiatives").must.then.eql([
+		yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
 			new ValidDbInitiative({
 				uuid: uuid,
 				parliament_api_data: JSON.stringify(parliamentApiData)
@@ -105,7 +105,7 @@ describe("ParliamentMonitorJob", function() {
 			}]
 		}
 
-		var initiative = yield db.create("initiatives", {
+		var initiative = yield sqlite.create("initiatives", {
 			uuid: uuid,
 			parliament_api_data: JSON.stringify(parliamentApiData)
 		})
@@ -115,7 +115,7 @@ describe("ParliamentMonitorJob", function() {
 		]))
 
 		yield job()
-		yield db.search("SELECT * FROM initiatives").must.then.eql([initiative])
+		yield sqlite.search("SELECT * FROM initiatives").must.then.eql([initiative])
 		this.emails.must.be.empty()
 	})
 
@@ -133,7 +133,7 @@ describe("ParliamentMonitorJob", function() {
 			}]
 		}
 
-		yield db.create("initiatives", {
+		yield sqlite.create("initiatives", {
 			uuid: uuid,
 			parliament_api_data: JSON.stringify(parliamentApiData)
 		})
@@ -152,7 +152,7 @@ describe("ParliamentMonitorJob", function() {
 		]))
 
 		yield job()
-		yield db.search("SELECT * FROM initiatives").must.then.eql([
+		yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
 			new ValidDbInitiative({
 				uuid: uuid,
 				parliament_api_data: JSON.stringify(parliamentApiData)
@@ -180,7 +180,7 @@ describe("ParliamentMonitorJob", function() {
 		this.router.get(`/api/topics/${uuid}`, respondWith404)
 
 		yield job()
-		yield db.search("SELECT * FROM initiatives").must.then.be.empty()
+		yield sqlite.search("SELECT * FROM initiatives").must.then.be.empty()
 		this.emails.must.be.empty()
 	})
 
@@ -191,7 +191,7 @@ describe("ParliamentMonitorJob", function() {
 		}]))
 
 		yield job()
-		yield db.search("SELECT * FROM initiatives").must.then.be.empty()
+		yield sqlite.search("SELECT * FROM initiatives").must.then.be.empty()
 		this.emails.must.be.empty()
 	})
 })

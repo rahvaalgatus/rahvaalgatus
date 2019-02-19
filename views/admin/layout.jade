@@ -1,0 +1,27 @@
+include ../_mixins
+
+-
+	var Config = require("root/config")
+	var SITE_TITLE = Config.title
+	var prefixed = require("root/lib/css").prefixed
+
+doctype html
+html
+	head
+		meta(charset="utf-8")
+		meta(name="viewport", content="width=device-width")
+		link(rel="stylesheet", href="/assets/admin.css", type="text/css")
+		block head
+		title #{TITLE == null ? "" : TITLE + " - "} Rahvaalgatus Admin
+		include ../_livereload
+
+	body(id=PAGE + "-page")
+		header#header
+			h1 Rahvaalgatus.ee Admin
+
+			nav
+				ul
+					li: a(href="/", class=prefixed("/initiatives", req.path)) Initiatives
+
+		main
+			block body

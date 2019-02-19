@@ -2,3 +2,11 @@ mixin form()
 	form&attributes(attributes)
 		input(type="hidden", name="_csrf_token", value=req.csrfToken)
 		block
+
+mixin form-button(action, name, value)
+	+form(action=action, method="post")
+		if name != "_method"
+			input(type="hidden", name="_method", value="put")
+
+		button(name=name, value=value)&attributes(attributes)
+			block

@@ -1,23 +1,30 @@
 var O = require("oolong")
-var db = require("root").db
+var sqlite = require("root").sqlite
+var Db = require("root/lib/sqlite_heaven")
 
-exports.search = function(uuid) {
-	return db.read("SELECT * FROM initiatives WHERE uuid = ?", [uuid]).then(parse)
+exports = module.exports = new Db(Object, sqlite, "initiatives")
+exports.idAttribute = "uuid"
+exports.idColumn = "uuid"
+
+exports._read = function(query, opts) {
+	var self = this
+
+	return Db.prototype._read.call(this, query).then(function(model) {
+		if (model) return model
+
+		if (opts && opts.create) switch (self.typeof(query)) {
+			case "string": return self.sqlite.create(self.table, {uuid: query})
+		}
+
+		return model
+	})
 }
 
-exports.read = exports.search
-
-exports.parse = function(obj) {
+exports.parse = function(attrs) {
 	return O.defaults({
 		parliament_api_data:
-			obj.parliament_api_data && JSON.parse(obj.parliament_api_data),
+			attrs.parliament_api_data && JSON.parse(attrs.parliament_api_data),
 		sent_to_parliament_at:
-			obj.sent_to_parliament_at && new Date(obj.sent_to_parliament_at)
-	}, obj)
-}
-
-function parse(obj) {
-	if (obj == null) return null
-	if (Array.isArray(obj)) return obj.map(exports.parse)
-	return exports.parse(obj)
+			attrs.sent_to_parliament_at && new Date(attrs.sent_to_parliament_at)
+	}, attrs)
 }
