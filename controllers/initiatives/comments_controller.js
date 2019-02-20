@@ -4,6 +4,8 @@ var InitiativesController = require("../initiatives_controller")
 var HttpError = require("standard-http-error")
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
+var cosApi = require("root/lib/citizenos_api")
+var parseCitizenComment = cosApi.parseCitizenComment
 var translateCitizenError = require("root/lib/citizenos_api").translateError
 var next = require("co-next")
 var format = require("util").format
@@ -43,7 +45,7 @@ exports.router.get("/:commentId", next(function*(req, res) {
 	var path = `/api/topics/${initiative.id}/comments`
 	if (req.user) path = "/api/users/self" + path.slice(4)
 	var comments = yield req.cosApi(path)
-	comments = comments.body.data.rows.map(normalizeComment)
+	comments = comments.body.data.rows.map(parseCitizenComment)
 
 	var comment = comments.find((comment) => comment.id === req.params.commentId)
 	if (comment == null) throw new HttpError(404)
@@ -84,11 +86,6 @@ function renderWithError(err, req, res, next) {
 	res.flash("commentError", msg)
 	res.status(422)
 	InitiativesController.read(req, res, next)
-}
-
-function normalizeComment(comment) {
-	comment.replies = comment.replies.rows
-	return comment
 }
 
 function normalizeNewlines(text) { return text.replace(/\r\n/g, "\n") }

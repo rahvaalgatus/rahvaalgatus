@@ -20,6 +20,7 @@ var next = require("co-next")
 var sleep = require("root/lib/promise").sleep
 var cosApi = require("root/lib/citizenos_api")
 var parseCitizenInitiative = cosApi.parseCitizenInitiative
+var parseCitizenComment = cosApi.parseCitizenComment
 var mailchimp = require("root/lib/mailchimp")
 var readInitiativesWithStatus = cosApi.readInitiativesWithStatus
 var encode = encodeURIComponent
@@ -153,7 +154,7 @@ exports.read = next(function*(req, res) {
 	var commentsPath = `/api/topics/${initiative.id}/comments?orderBy=date`
 	if (req.user) commentsPath = "/api/users/self" + commentsPath.slice(4)
 	var comments = yield req.cosApi(commentsPath)
-	comments = comments.body.data.rows.map(normalizeComment).reverse()
+	comments = comments.body.data.rows.map(parseCitizenComment).reverse()
 
 	if (initiative.vote && (
 		initiative.status == "followUp" ||
@@ -513,11 +514,6 @@ function* createMailchimpInterest(initiative) {
 	function create(title) {
 		return mailchimp(path, {method: "POST", json: {name: title}})
 	}
-}
-
-function normalizeComment(comment) {
-	comment.replies = comment.replies.rows
-	return comment
 }
 
 function ensureAreaCode(number) {
