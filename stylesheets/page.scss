@@ -1387,6 +1387,15 @@ button.inherited {
 			word-wrap: break-word;
 		}
 
+		.curse:not(:hover) {
+			// Inline block required for ::first-letter.
+			display: inline-block;
+			color: white;
+			text-decoration: line-through wavy red;
+
+			&::first-letter { color: $text; }
+		}
+
 		.comment-reply-button {
 			margin-top: 1.5rem;
 			display: inline-block;

@@ -152,8 +152,8 @@ mixin initiative-subscribe(initiative)
 
 mixin comment(comment, editedComment)
 	- var Initiative = require("root/lib/initiative")
+	- var Comment = require("root/lib/comment")
 	- var I18n = require("root/lib/i18n")
-	- var linkify = require("root/lib/linkify")
 	- var name = comment.creator.name
 	- var isEdited = editedComment.parentId === comment.id
 	- var commentUrl = `/initiatives/${initiative.id}/comments/${comment.id}`
@@ -165,7 +165,7 @@ mixin comment(comment, editedComment)
 			= I18n.formatTime("numeric", comment.createdAt)
 
 	h3.subject: a(href=commentUrl)= comment.subject
-	p.text!= linkify(comment.text)
+	p.text!= Comment.htmlify(comment.text)
 
 	if req.user
 		a.comment-reply-button.white-button(href=`#comment-${comment.id}-reply`)
@@ -182,7 +182,7 @@ mixin comment(comment, editedComment)
 					a(href=commentUrl + `#comment-${reply.id}`)
 						= I18n.formatTime("numeric", reply.createdAt)
 
-				p.text!= linkify(reply.text)
+				p.text!= Comment.htmlify(reply.text)
 
 	if req.user
 		+form.comment-reply-form(

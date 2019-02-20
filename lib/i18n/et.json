@@ -22,6 +22,7 @@
 	"CONTROL_CODE": "Kontrollkood: {{code}}",
 	"CO_AUTHORS": "Kaasautorite lisamine ",
 	"CO_AUTHORS_TEXT": "Head algatused sünnivad ühistööna. Kutsu algatusele kaasautoreid kas nime või e-posti aadressi alusel. Kaasautoritel on samad õigused, mis sinulgi. Kaasautoreid saab ka hiljem algatuse käigus juurde lisada.",
+	"CURSEWORDS": "nahhui",
 	"DEADLINE_ERR": "Tähtpäev peab olema vähemalt {{days}} päeva pärast.",
 	"DEADLINE_EXPLANATION": "Sea algatuse ühisloome-faasile ajaraam: vali kalendrist sobiv kuupäev tähtajaks. Algatus peab alates sisestamise hetkest olema vähemalt kolm päeva arutelu-olekus, aga soovitame pikemalt (näiteks kuu aega).  \nKui osutub vajalikuks, saad algatuse käigus tähtaega pikendada. ",
 	"DEADLINE_TITLE": "Tähtaja seadmine",
