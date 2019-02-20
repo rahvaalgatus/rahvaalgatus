@@ -811,11 +811,6 @@
       "from": "https://registry.npmjs.org/lazy-object/-/lazy-object-1.0.1.tgz",
       "resolved": "https://registry.npmjs.org/lazy-object/-/lazy-object-1.0.1.tgz"
     },
-    "linkifyjs": {
-      "version": "2.1.3",
-      "from": "https://registry.npmjs.org/linkifyjs/-/linkifyjs-2.1.3.tgz",
-      "resolved": "https://registry.npmjs.org/linkifyjs/-/linkifyjs-2.1.3.tgz"
-    },
     "lodash": {
       "version": "4.16.1",
       "from": "https://registry.npmjs.org/lodash/-/lodash-4.16.1.tgz",
