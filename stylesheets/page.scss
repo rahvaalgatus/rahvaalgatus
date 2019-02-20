@@ -1391,7 +1391,13 @@ button.inherited {
 			// Inline block required for ::first-letter.
 			display: inline-block;
 			color: white;
-			text-decoration: line-through wavy red;
+
+			text-decoration-line: line-through;
+			-webkit-text-decoration-line: line-through;
+			text-decoration-color: red;
+			-webkit-text-decoration-color: red;
+			text-decoration-style: wavy;
+			-webkit-text-decoration-style: wavy;
 
 			&::first-letter { color: $text; }
 		}
