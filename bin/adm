@@ -4,6 +4,7 @@ var Express = require("root/lib/express")
 var Config = require("root/config")
 var HttpError = require("standard-http-error")
 var runServer = require("root/lib/http").runServer
+var t = require("root/lib/i18n").t.bind(null, "en")
 var PORT = process.env.PORT || 3001
 var ENV = process.env.NODE_ENV
 
@@ -30,6 +31,12 @@ app.use(function(req, _res, next) {
 app.use("/", require("root/controllers/admin_controller"))
 app.use(function(_req, _res, next) { next(new HttpError(404)) })
 app.use(require("root/lib/middleware/error_reporter_middleware"))
+
+app.use(require("root/lib/middleware/error_handler_middleware").bind(null,
+	function(err, _req, res) {
+	if (err instanceof HttpError) res.end(err.message)
+	else res.end(t("MSG_ERROR_50000"))
+}))
 
 if (module.parent) return
 runServer(app, PORT)

@@ -61,25 +61,13 @@ O.each({
 app.use(function(_req, _res, next) { next(new HttpError(404)) })
 app.use(require("root/lib/middleware/error_reporter_middleware"))
 
-app.use(function(err, req, res, next) {
-	// Stop handling here if there was an error, but it's been responded to
-	// already. That happens when you want to still report the error to Sentry,
-	// but have displayed something to the user.
-	if (res.headersSent) return
-
-	if (err instanceof HttpError) {
-		res.statusCode = err.code
-		res.statusMessage = err.message
+app.use(require("root/lib/middleware/error_handler_middleware").bind(null,
+	function(err, req, res) {
+	if (err instanceof HttpError)
 		res.render(ERR_TEMPLATES[err.code] || ERR_TEMPLATES[500], {error: err})
-		return
-	}
-
-	// The final Express handler in dev/tests doesn't seem to overwrite status
-	// with 500 if it's set to anything. Ensure it's 500.
-	res.statusCode = 500
-	if (ENV === "development" || ENV === "test") return void next(err)
-	res.render(ERR_TEMPLATES[500], {error: {message: req.t("MSG_ERROR_50000")}})
-})
+	else
+		res.render(ERR_TEMPLATES[500], {error: {message: req.t("MSG_ERROR_50000")}})
+}))
 
 if (module.parent) return
 runServer(app, PORT)
