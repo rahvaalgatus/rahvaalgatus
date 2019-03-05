@@ -80,6 +80,7 @@
 	"N_SIGNATURES": "{{votes}} подписей",
 	"N_SIGNATURES_COLLECTED": "собрано {{votes}} подписей",
 	"N_SIGNATURES_FAILED": "{{votes}} подписей",
+	"N_SIGNATURES_WITH_DATE": "{{votes}} подписей",
 	"PLACEHOLDER_ADD_ARGUMENT_SUBJECT": "Добавь утверждение к своему аргументу...",
 	"PLACEHOLDER_ADD_ARGUMENT_TEXT": "Поясните и докажите аргументы",
 	"PLACEHOLDER_ADD_YOUR_REPLY": "Добавить ответ к комментарию {{name}}",

@@ -3,16 +3,16 @@ include ./_mixins
 section#initiatives.secondary-section.initiatives-section: center
 	if discussions.length > 0
 		h2= t("DISCUSSIONS_LIST")
-		+initiatives(discussions)
+		+initiatives(discussions, dbInitiatives)
 
 	if votings.length > 0
 		h2= t("INITIATIVE_LIST")
-		+initiatives(votings)
+		+initiatives(votings, dbInitiatives)
 
 	if processes.length > 0
 		h2= t("IN_FOLLOW_UP_LIST")
-		+initiatives(processes)
+		+initiatives(processes, dbInitiatives)
 
 	if processed.length > 0
 		h2 Menetletud
-		+initiatives(processed)
+		+initiatives(processed, dbInitiatives)

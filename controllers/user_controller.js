@@ -5,6 +5,7 @@ var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
 var translateCitizenError = require("root/lib/citizenos_api").translateError
 var parseCitizenInitiative = require("root/lib/citizenos_api").parseCitizenInitiative
+var initiativesDb = require("root/db/initiatives_db")
 var next = require("co-next")
 
 exports.router = Router({mergeParams: true})
@@ -37,9 +38,13 @@ function* read(req, res) {
 	initiatives = yield initiatives.then(getRows)
 	initiatives = initiatives.map(parseCitizenInitiative)
 
+	var uuids = initiatives.map((i) => i.id)
+	var dbInitiatives = yield initiativesDb.search(uuids, {create: true})
+
 	res.render("user/read", {
 		user: req.user,
 		initiatives: initiatives,
+		dbInitiatives: dbInitiatives,
 		attrs: O.create(req.user, res.locals.attrs)
 	})
 }

@@ -20,14 +20,14 @@ exports.get("/initiatives", next(function*(_req, res) {
 	var parliamented = yield readInitiativesWithStatus("followUp")
 	var closed = yield readInitiativesWithStatus("closed")
 
-	var dbInitiatives = yield initiativesDb.search(
-		concat(parliamented, closed).map((i) => i.id)
-	)
+	var uuids = concat(parliamented, closed).map((i) => i.id)
+	var dbInitiatives = yield initiativesDb.search(uuids, {create: true})
+	dbInitiatives = _.indexBy(dbInitiatives, "uuid")
 
 	res.render("admin/initiatives/index", {
 		parliamented: parliamented,
 		closed: closed,
-		dbInitiatives: _.indexBy(dbInitiatives, "uuid")
+		dbInitiatives: dbInitiatives
 	})
 }))
 
@@ -111,6 +111,11 @@ function parse(obj) {
 	if ("sentToParliamentOn" in obj)
 		attrs.sent_to_parliament_at = obj.sentToParliamentOn
 			? new Date(obj.sentToParliamentOn)
+			: null
+
+	if ("finishedInParliamentOn" in obj)
+		attrs.finished_in_parliament_at = obj.finishedInParliamentOn
+			? new Date(obj.finishedInParliamentOn)
 			: null
 
 	return attrs

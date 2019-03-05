@@ -5,9 +5,23 @@ block head
 	- var TITLE = "Initiatives"
 
 mixin parliamented-initiatives(initiatives)
+	-
+		var showSentTo = initiatives.some((i) => (
+			dbInitiatives[i.id].sent_to_parliament_at
+		))
+
+		var showFinishedIn = initiatives.some((i) => (
+			dbInitiatives[i.id].finished_in_parliament_at
+		))
+
 	table.admin-table
 		thead: tr
-			th Sent to Parliament
+			if showSentTo
+				th Sent to Parliament
+
+			if showFinishedIn
+				th Finished in Parliament
+
 			th Title
 			th On Rahvaalgatus
 
@@ -16,9 +30,15 @@ mixin parliamented-initiatives(initiatives)
 				- var dbInitiative = dbInitiatives[initiative.id]
 
 				tr
-					td
-						if dbInitiative.sent_to_parliament_at
-							= formatDate("iso", dbInitiative.sent_to_parliament_at)
+					if showSentTo
+						td
+							if dbInitiative.sent_to_parliament_at
+								= formatDate("iso", dbInitiative.sent_to_parliament_at)
+
+					if showFinishedIn
+						td
+							if dbInitiative.finished_in_parliament_at
+								= formatDate("iso", dbInitiative.finished_in_parliament_at)
 
 					td
 						a.admin-link(href="/initiatives/" + initiative.id)

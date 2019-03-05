@@ -16,6 +16,7 @@ block prepend subpage
 		var hasVote = flash("signed") || Initiative.hasVote("Yes", initiative)
 		var now = new Date
 		var sentToParliamentAt = dbInitiative.sent_to_parliament_at
+		var finishedInParliamentAt = dbInitiative.finished_in_parliament_at
 
 	section#initiative-section.transparent-section: center
 		#initiative-sheet
@@ -248,13 +249,21 @@ block prepend subpage
 					target="_blank")
 					= t("SHARE_ON_TWITTER")
 
-	if Initiative.isInParliament(initiative, events) || sentToParliamentAt
+	if Initiative.isInParliament(initiative, events) || sentToParliamentAt || finishedInParliamentAt
 		section#initiative-events.transparent-section: center
 			article
 				if events.length == 0 && sentToParliamentAt == null
 					p.text.empty= t("NO_EVENTS")
 				else
 					ol.events
+						if finishedInParliamentAt
+							li.event
+								time(datetime=finishedInParliamentAt.toJSON())
+									= I18n.formatDate("numeric", finishedInParliamentAt)
+
+								h2= t("PROCEEDING_FINISHED_TITLE")
+								p.text= t("PROCEEDING_FINISHED_BODY")
+
 						for event in events
 							li.event
 								time(datetime=event.createdAt.toJSON())

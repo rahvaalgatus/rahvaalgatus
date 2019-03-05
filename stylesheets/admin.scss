@@ -266,9 +266,9 @@ textarea.admin-input {
 }
 
 #initiative-page {
-	#show-sent-to-parliament {
-		&:not(:checked) ~ #sent-to-parliament-form,
-		&:checked + .show-sent-to-parliament { display: none; }
+	.form-toggle {
+		&:not(:checked) ~ .form-toggle-form,
+		&:checked + .form-toggle-buttons { display: none; }
 	}
 
 	.events {

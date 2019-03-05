@@ -7,6 +7,7 @@ module.exports = function(attrs) {
 		notes: "",
 		mailchimp_interest_id: null,
 		parliament_api_data: null,
-		sent_to_parliament_at: null
+		sent_to_parliament_at: null,
+		finished_in_parliament_at: null
 	}, attrs)
 }

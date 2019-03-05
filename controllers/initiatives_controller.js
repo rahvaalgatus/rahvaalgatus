@@ -1,4 +1,4 @@
-var _ = require("lodash")
+var _ = require("root/lib/underscore")
 var O = require("oolong")
 var Router = require("express").Router
 var HttpError = require("standard-http-error")
@@ -58,6 +58,14 @@ exports.router.get("/", next(function*(req, res) {
 	var closed = _.groupBy(initiatives.closed, Initiative.getUnclosedStatus)
 	var votings = concat(initiatives.voting, closed.voting || EMPTY_ARR)
 
+	var uuids = concat(
+		initiatives.followUp,
+		initiatives.closed || EMPTY_ARR
+	).map((i) => i.id)
+
+	var dbInitiatives = yield initiativesDb.search(uuids, {create: true})
+	dbInitiatives = _.indexBy(dbInitiatives, "uuid")
+
 	res.render("initiatives/index", {
 		discussions: concat(
 			sortByCreatedAt(initiatives.inProgress, "createdAt").reverse(),
@@ -65,8 +73,18 @@ exports.router.get("/", next(function*(req, res) {
 		),
 
 		votings: _.sortBy(votings, countVotes).reverse(),
-		processes: initiatives.followUp,
-		processed: closed.followUp || EMPTY_ARR,
+
+		processes: _.sortBy(initiatives.followUp, function(initiative) {
+			var dbInitiative = dbInitiatives[initiative.id]
+			return dbInitiative.sent_to_parliament_at || initiative.vote.createdAt
+		}).reverse(),
+
+		processed: _.sortBy(closed.followUp || EMPTY_ARR, function(initiative) {
+			var dbInitiative = dbInitiatives[initiative.id]
+			return dbInitiative.finished_in_parliament_at || initiative.vote.createdAt
+		}).reverse(),
+
+		dbInitiatives: dbInitiatives
 	})
 }))
 
@@ -528,7 +546,7 @@ function isMailchimpNameTakenErr(err) {
 }
 
 function hasCategory(category, initiative) {
-	return _.includes(initiative.categories, category)
+	return _.contains(initiative.categories, category)
 }
 
 function getBody(res) { return res.body.data }
