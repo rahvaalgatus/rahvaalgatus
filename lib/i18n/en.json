@@ -92,7 +92,7 @@
 	"N_SIGNATURES": "{{votes}} signatures",
 	"N_SIGNATURES_COLLECTED": "{{votes}} signatures collected",
 	"N_SIGNATURES_FAILED": "Halted: {{votes}} signatures",
-	"N_SIGNATURES_WITH_DATE": "{{date}} with {{votes}} signatures",
+	"N_SIGNATURES_WITH_DATE": "{{date}} • {{votes}} signatures",
 	"PLACEHOLDER_ADD_ARGUMENT_SUBJECT": "Add statement to your argument",
 	"PLACEHOLDER_ADD_ARGUMENT_TEXT": "Explain and prove your argument",
 	"PLACEHOLDER_ADD_YOUR_REPLY": "Add your reply to the comment by {{name}}",

@@ -94,7 +94,7 @@
 	"N_SIGNATURES": "{{votes}} allkirja",
 	"N_SIGNATURES_COLLECTED": "{{votes}} allkirja kogutud",
 	"N_SIGNATURES_FAILED": "Peatatud: {{votes}} allkirja",
-	"N_SIGNATURES_WITH_DATE": "{{date}}, {{votes}} allkirjaga",
+	"N_SIGNATURES_WITH_DATE": "{{date}} • {{votes}} allkirjaga",
 	"PLACEHOLDER_ADD_ARGUMENT_SUBJECT": "Esita argumendi põhiväide...",
 	"PLACEHOLDER_ADD_ARGUMENT_TEXT": "Selgita ja tõesta argumenti",
 	"PLACEHOLDER_ADD_YOUR_REPLY": "Lisa vastus {{name}} kommentaarile",
