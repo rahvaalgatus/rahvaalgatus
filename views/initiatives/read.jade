@@ -66,8 +66,9 @@ block prepend subpage
 							= "."
 					else if initiative.vote
 						- var sigs = Initiative.countSignatures("Yes", initiative)
-						h1= t("N_SIGNATURES_FAILED", {votes: sigs})
-						p= t("VOTING_FAILED")
+						.initiative-status
+							h1= t("N_SIGNATURES_FAILED", {votes: sigs})
+							p= t("VOTING_FAILED")
 
 			+quicksign(initiative)
 			article.text!= initiative.html
