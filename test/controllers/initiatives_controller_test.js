@@ -319,6 +319,7 @@ describe("InitiativesController", function() {
 				res.body.must.include(tHtml("VOTING_FAILED"))
 				res.body.must.not.include(tHtml("VOTING_SUCCEEDED"))
 				res.body.must.not.include(tHtml("INITIATIVE_PROCESSED"))
+				res.body.must.include(tHtml("VOTING_DEADLINE"))
 			})
 
 			it("must render processed successful initiative", function*() {
@@ -334,6 +335,7 @@ describe("InitiativesController", function() {
 				res.body.must.include(tHtml("INITIATIVE_PROCESSED"))
 				res.body.must.not.include(tHtml("VOTING_SUCCEEDED"))
 				res.body.must.not.include(tHtml("VOTING_FAILED"))
+				res.body.must.not.include(tHtml("VOTING_DEADLINE"))
 			})
 
 			it("must respond with 404 when API responds 403 Forbidden", function*() {

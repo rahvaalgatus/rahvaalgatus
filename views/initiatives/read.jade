@@ -58,7 +58,7 @@ block prepend subpage
 						= "."
 
 				when "closed"
-					if Initiative.isInParliament(initiative, events) || sentToParliamentAt
+					if Initiative.isInParliament(initiative) || sentToParliamentAt
 						.initiative-status: h1
 							= t("INITIATIVE_PROCESSED")
 							= " "
@@ -250,7 +250,7 @@ block prepend subpage
 					target="_blank")
 					= t("SHARE_ON_TWITTER")
 
-	if Initiative.isInParliament(initiative, events) || sentToParliamentAt || finishedInParliamentAt
+	if Initiative.isInParliament(initiative) || sentToParliamentAt || finishedInParliamentAt
 		section#initiative-events.transparent-section: center
 			article
 				if events.length == 0 && sentToParliamentAt == null

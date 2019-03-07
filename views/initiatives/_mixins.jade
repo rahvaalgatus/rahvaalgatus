@@ -115,7 +115,7 @@ mixin progress-text(initiative)
 		var Config = require("root/config")
 		var I18n = require("root/lib/i18n")
 
-	if initiative.status == "voting"
+	if initiative.status == "voting" || initiative.status == "closed" && initiative.vote && !Initiative.isInParliament(initiative)
 		- var sigs = Initiative.countSignatures("Yes", initiative)
 
 		p.initiative-progress-text
