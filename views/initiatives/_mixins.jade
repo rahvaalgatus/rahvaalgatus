@@ -97,21 +97,17 @@ mixin quicksign(initiative)
 		.quicksign
 			+progress(initiative)
 
-			if initiative.status == "inProgress"
-				+progress-text(initiative)
+			if Initiative.isVotable(now, initiative)
+				if !hasVote
+					a.primary-button.wide-button.sign-button(
+						href="#initiative-vote")
+						= t("SIGN_THIS_DOCUMENT")
+				else
+					a.white-button.wide-button.revoke-button(
+						href="#initiative-vote")
+						= t("REVOKE_SIGNATURE")
 
-			else
-				if Initiative.isVotable(now, initiative)
-					if !hasVote
-						a.primary-button.wide-button.sign-button(
-							href="#initiative-vote")
-							= t("SIGN_THIS_DOCUMENT")
-					else
-						a.white-button.wide-button.revoke-button(
-							href="#initiative-vote")
-							= t("REVOKE_SIGNATURE")
-
-				+progress-text(initiative)
+			+progress-text(initiative)
 
 mixin progress-text(initiative)
 	-
