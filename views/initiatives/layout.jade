@@ -12,15 +12,6 @@ block append head
 block body
 	-
 		var I18n = require("root/lib/i18n")
-		var Config = require("root/config")
-		var Initiative = require("root/lib/initiative")
-		var selected = require("root/lib/css").selected
-		var hasVote = flash("signed") || Initiative.hasVote("Yes", initiative)
-		var shareUrl = `${Config.url}/initiatives/${initiative.id}`
-		var shareText = `${initiative.title} ${shareUrl}`
-		var encode = encodeURIComponent
-		var now = new Date
-		var unclosedStatus = Initiative.getUnclosedStatus(initiative)
 		var createdAt = initiative.createdAt
 
 	header#initiative-header: center

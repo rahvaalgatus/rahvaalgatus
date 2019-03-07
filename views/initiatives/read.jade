@@ -17,6 +17,7 @@ block prepend subpage
 		var now = new Date
 		var sentToParliamentAt = dbInitiative.sent_to_parliament_at
 		var finishedInParliamentAt = dbInitiative.finished_in_parliament_at
+		var encode = encodeURIComponent
 
 	section#initiative-section.transparent-section: center
 		#initiative-sheet
@@ -240,6 +241,10 @@ block prepend subpage
 			+initiative-subscribe(initiative)
 
 			if Initiative.isPublic(initiative)
+				-
+					var shareUrl = `${Config.url}/initiatives/${initiative.id}`
+					var shareText = `${initiative.title} ${shareUrl}`
+
 				a.link-button.wide-button.share-button(
 					href="https://facebook.com/sharer/sharer.php?u=#{encode(shareUrl)}",
 					target="_blank")

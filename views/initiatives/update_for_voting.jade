@@ -5,9 +5,11 @@ block append head
 	script(src="/assets/inputs.js")
 
 block subpage
-	- var formatIso = require("root/lib/i18n").formatDate.bind(null, "iso")
-	- var min = Initiative.getMinDeadline(new Date)
-	- var max = Initiative.getMaxDeadline(new Date)
+	-
+		var Initiative = require("root/lib/initiative")
+		var formatIso = require("root/lib/i18n").formatDate.bind(null, "iso")
+		var min = Initiative.getMinDeadline(new Date)
+		var max = Initiative.getMaxDeadline(new Date)
 
 	section.primary-section.text-section: center
 		h2= t("DEADLINE_TITLE")
