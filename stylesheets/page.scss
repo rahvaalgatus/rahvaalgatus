@@ -940,6 +940,14 @@ button.inherited {
 			// Initiative HTML often has <h2> following plain non-tagged text, so
 			// `* + h2` won't work.
 			h2 { margin-top: 4rem; margin-bottom: 1rem; }
+
+			// Etherpad provides a fixed set of text colors.
+			.black { color: $text; }
+			.red { color: red; }
+			.green { color: #00cb81; }
+			.blue { color: #45a0e6; }
+			.yellow { color: yellow; }
+			.orange { color: #ffb400; }
 		}
 
 		#initiative-sidebar {
