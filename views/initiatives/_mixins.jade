@@ -138,7 +138,7 @@ mixin progress-text(initiative)
 				time.deadline(datetime=initiative.vote.endsAt)= endsAt
 				| .
 
-	else if initiative.status == "inProcess"
+	else if initiative.status == "inProgress"
 		p.initiative-progress-text
 			span
 				= t("DISCUSSION_DEADLINE")

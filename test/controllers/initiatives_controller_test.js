@@ -247,6 +247,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_IN_DISCUSSION"))
+				res.body.must.include(t("DISCUSSION_DEADLINE"))
 			})
 
 			it("must render initiative", function*() {
