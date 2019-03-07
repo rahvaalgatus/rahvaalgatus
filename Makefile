@@ -9,6 +9,7 @@ SASS = ./node_modules/.bin/node-sass --recursive --indent-type tab --indent-widt
 TRANSLATIONS_URL = https://spreadsheets.google.com/feeds/list/1JKPUNp8Y_8Aigq7eGJXtWT6nZFhd31k2Ht3AjC-i-Q8/1/public/full?alt=json
 JQ_OPTS = --tab --sort-keys
 SHANGE = vendor/shange -f "config/$(ENV).sqlite3"
+PGHOST = $(shell ENV=$(ENV) node -e 'console.log(require("./config").citizenOsDatabase.host)')
 
 APP_HOST = rahvaalgatus.ee
 APP_PATH = $(error "Please set APP_PATH")
@@ -42,6 +43,7 @@ RSYNC_OPTS = \
 export PORT
 export ENV
 export TEST
+export PGHOST
 
 ifneq ($(filter test spec autotest autospec test/%, $(MAKECMDGOALS)),)
 	ENV = test
@@ -112,11 +114,17 @@ config/database.sql:
 config/%.sqlite3:
 	sqlite3 "$@" < config/database.sql
 
+config/citizenos_database.sql:
+	wget https://raw.githubusercontent.com/citizenos/citizenos-api/master/db/config/database.sql -O "$@"
+
 db/create: config/$(ENV).sqlite3
 
+db/test: ENV = test
 db/test:
 	rm -f config/test.sqlite3
 	$(MAKE) config/test.sqlite3
+	-createdb -E utf8 -T template0 citizenos_test
+	psql -f config/citizenos_database.sql citizenos_test
 
 db/status:
 	@$(SHANGE) status

@@ -1,11 +1,14 @@
 var O = require("oolong")
 var Router = require("express").Router
 var HttpError = require("standard-http-error")
+var cosApi = require("root/lib/citizenos_api")
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
 var translateCitizenError = require("root/lib/citizenos_api").translateError
 var parseCitizenInitiative = require("root/lib/citizenos_api").parseCitizenInitiative
+var cosDb = require("root").cosDb
 var initiativesDb = require("root/db/initiatives_db")
+var concat = Array.prototype.concat.bind(Array.prototype)
 var next = require("co-next")
 
 exports.router = Router({mergeParams: true})
@@ -31,22 +34,52 @@ exports.router.put("/", next(function*(req, res, next) {
 }))
 
 function* read(req, res) {
-	if (req.user == null) throw new HttpError(401)
+	var user = req.user
+	if (user == null) throw new HttpError(401)
 
 	var path = "/api/users/self/topics?include[]=vote&include[]=event"
 	var initiatives = req.cosApi(path)
 	initiatives = yield initiatives.then(getRows)
 	initiatives = initiatives.map(parseCitizenInitiative)
 
-	var uuids = initiatives.map((i) => i.id)
+	var signatures = yield cosDb.raw(`
+		SELECT
+			DISTINCT ON (tv."topicId")
+			tv."topicId" as initiative_id,
+			signature."createdAt" as created_at,
+			opt.value AS support
+
+		FROM "VoteLists" AS signature
+		JOIN "Votes" AS vote ON vote.id = signature."voteId"
+		JOIN "TopicVotes" AS tv ON tv."voteId" = vote.id
+		JOIN "VoteOptions" AS opt ON opt."voteId" = vote.id
+
+		WHERE signature."userId" = :userId
+		AND vote.id IS NOT NULL
+		AND signature."optionId" = opt.id
+
+		ORDER BY tv."topicId", signature."createdAt" DESC
+	`, {userId: user.id}).then((res) => res.rows)
+
+	signatures = signatures.filter((sig) => sig.support == "Yes")
+
+	var signedInitiatives = yield signatures.map(function(sig) {
+		var path = `/api/topics/${sig.initiative_id}`
+		path += "?include[]=vote&include[]=event"
+		return cosApi(path).then(getBody).then(parseCitizenInitiative)
+	})
+
+	var uuids = concat(initiatives, signedInitiatives).map((i) => i.id)
 	var dbInitiatives = yield initiativesDb.search(uuids, {create: true})
 
 	res.render("user/read", {
-		user: req.user,
+		user: user,
 		initiatives: initiatives,
+		signedInitiatives: signedInitiatives,
 		dbInitiatives: dbInitiatives,
-		attrs: O.create(req.user, res.locals.attrs)
+		attrs: O.create(user, res.locals.attrs)
 	})
 }
 
+function getBody(res) { return res.body.data }
 function getRows(res) { return res.body.data.rows }

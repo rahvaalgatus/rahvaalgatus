@@ -1,3 +1,4 @@
+var newUuid = require("uuid/v4")
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var fetchDefaults = require("fetch-defaults")
 
@@ -7,6 +8,7 @@ exports.user = function() {
 		delete this.request
 
 		var csrfToken = pseudoHex(16)
+		var user = {id: newUuid()}
 
 		var cookie = [
 			"citizenos_token=" + pseudoHex(16),
@@ -14,8 +16,9 @@ exports.user = function() {
 		].join("; ")
 
 		this.csrfToken = csrfToken
+		this.user = user
 		this.request = fetchDefaults(this.request, {headers: {Cookie: cookie}})
-		this.router.get("/api/auth/status", respond.bind(null, {data: {}}))
+		this.router.get("/api/auth/status", respond.bind(null, {data: user}))
 	})
 }
 

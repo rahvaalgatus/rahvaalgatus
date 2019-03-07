@@ -10,5 +10,11 @@
 
 	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
 	"votesRequired": 2,
-	"minDeadlineDays": 0
+	"minDeadlineDays": 0,
+
+	"citizenOsDatabase": {
+		"host": "/tmp",
+		"database": "citizenos_test",
+		"pool": 1
+	}
 }

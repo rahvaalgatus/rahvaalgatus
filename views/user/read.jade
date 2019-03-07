@@ -31,4 +31,8 @@ block body
 			button.form-submit.primary-button= t("BTN_SAVE")
 
 	section#initiatives.secondary-section.initiatives-section: center
+		h2= t("MY_INITIATIVES")
 		+initiatives(initiatives, dbInitiatives)
+
+		h2= t("SIGNED_INITIATIVES")
+		+initiatives(signedInitiatives, dbInitiatives)
