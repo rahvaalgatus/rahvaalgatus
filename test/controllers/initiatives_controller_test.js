@@ -95,11 +95,6 @@ var PROCESSED_SUCCESSFUL_INITIATIVE = O.merge({}, SUCCESSFUL_INITIATIVE, {
 	events: {count: 1}
 })
 
-//var PROCESSED_FAILED_INITIATIVE_IN_PARLIAMENT = O.merge({}, FAILED_INITIATIVE, {
-//  status: "closed",
-//  events: {count: 0}
-//})
-
 describe("InitiativesController", function() {
 	require("root/test/web")()
 	require("root/test/mitm")()
