@@ -1,10 +1,10 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
+var LiveReload = require("../page").LiveReload
+var Form = require("../page").Form
 var prefixed = require("root/lib/css").prefixed
-var ENV = process.env.ENV
 exports = module.exports = Page
-exports.Form = Form
 exports.FormButton = FormButton
 exports.Flash = Flash
 
@@ -19,12 +19,7 @@ function Page(attrs, children) {
 			<meta name="viewport" content="width=device-width" />
 			<link rel="stylesheet" href="/assets/admin.css" type="text/css" />
 			<title>{title == null ? "" : title + " - "} Rahvaalgatus Admin</title>
-
-			{ENV === "development" ? <script
-				src={"http://" + req.hostname + ":35729/livereload.js?snipver=1"}
-				async
-				defer
-			/> : null}
+			<LiveReload req={req} />
 		</head>
 
 		<body id={id + "-page"}>
@@ -45,25 +40,6 @@ function Page(attrs, children) {
 			<main>{children}</main>
 		</body>
 	</html>
-}
-
-function Form(attrs, children) {
-	var method = attrs.method
-
-	return <form
-		id={attrs.id}
-		class={attrs.class}
-		action={attrs.action}
-		method={method == "get" ? method : "post"}
-	>
-		{!(method == "get" || method == "post") ?
-			<input type="hidden" name="_method" value={method} />
-		: null}
-
-		<input type="hidden" name="_csrf_token" value={attrs.req.csrfToken} />
-
-		{children}
-	</form>
 }
 
 function FormButton(attrs, children) {

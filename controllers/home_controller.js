@@ -42,7 +42,7 @@ exports.router.get("/", next(function*(_req, res) {
 	})
 }))
 
-exports.router.get("/about", (_req, res) => res.render("home/about"))
+exports.router.get("/about", (_req, res) => res.render("home/about_page.jsx"))
 exports.router.get("/donate", alias.bind(null, "/donations/new"))
 exports.router.get("/donated", alias.bind(null, "/donations/created"))
 
