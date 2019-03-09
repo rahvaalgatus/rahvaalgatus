@@ -1,5 +1,5 @@
 NODE = node
-NODE_OPTS = --use-strict
+NODE_OPTS = --use-strict --require j6pack/register
 ENV = development
 NPM_REBUILD = npm --ignore-scripts false rebuild --build-from-source
 TEST = test/**/*_test.js
@@ -89,11 +89,11 @@ test/server:
 
 web: PORT = 3000
 web:
-	@$(NODE) ./bin/$@
+	@$(NODE) $(NODE_OPTS) ./bin/$@
 
 adm: PORT = 3001
 adm:
-	@$(NODE) ./bin/$@
+	@$(NODE) $(NODE_OPTS) ./bin/$@
 
 servers:
 	@$(MAKE) -j2 web adm

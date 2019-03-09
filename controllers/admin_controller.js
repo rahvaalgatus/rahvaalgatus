@@ -24,7 +24,7 @@ exports.get("/initiatives", next(function*(_req, res) {
 	var dbInitiatives = yield initiativesDb.search(uuids, {create: true})
 	dbInitiatives = _.indexBy(dbInitiatives, "uuid")
 
-	res.render("admin/initiatives/index", {
+	res.render("admin/initiatives/index_page.jsx", {
 		parliamented: parliamented,
 		closed: closed,
 		dbInitiatives: dbInitiatives
@@ -44,7 +44,7 @@ exports.get("/initiatives/:id", next(function*(req, res) {
 	var events = yield readEvents(req.initiative.id)
 	events = events.sort((a, b) => +b.createdAt - +a.createdAt)
 
-	res.render("admin/initiatives/read", {
+	res.render("admin/initiatives/read_page.jsx", {
 		initiative: req.initiative,
 		dbInitiative: req.dbInitiative,
 		events: events
@@ -65,7 +65,7 @@ exports.put("/initiatives/:id", next(function*(req, res) {
 }))
 
 exports.get("/initiatives/:id/events/new", function(_req, res) {
-	res.render("admin/initiatives/events/create", {
+	res.render("admin/initiatives/events/create_page.jsx", {
 		event: {createdAt: new Date, title: "", text: ""}
 	})
 })
@@ -84,7 +84,7 @@ exports.post("/initiatives/:id/events", next(function*(req, res) {
 }))
 
 exports.get("/initiatives/:id/events/:eventId/edit", next(function*(req, res) {
-	res.render("admin/initiatives/events/update", {
+	res.render("admin/initiatives/events/update_page.jsx", {
 		event: yield readEvent(req.params.eventId)
 	})
 }))
