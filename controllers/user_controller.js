@@ -28,7 +28,7 @@ exports.router.put("/", next(function*(req, res, next) {
 	else {
 		res.status(422)
 		res.locals.error = translateCitizenError(req.t, updated.body)
-		res.locals.attrs = req.body
+		res.locals.userAttrs = req.body
 		yield read(req, res, next)
 	}
 }))
@@ -72,12 +72,12 @@ function* read(req, res) {
 	var uuids = concat(initiatives, signedInitiatives).map((i) => i.id)
 	var dbInitiatives = yield initiativesDb.search(uuids, {create: true})
 
-	res.render("user/read", {
+	res.render("user/read_page.jsx", {
 		user: user,
 		initiatives: initiatives,
 		signedInitiatives: signedInitiatives,
 		dbInitiatives: dbInitiatives,
-		attrs: O.create(user, res.locals.attrs)
+		userAttrs: O.create(user, res.locals.userAttrs)
 	})
 }
 

@@ -8,6 +8,7 @@ var SITE_TITLE = Config.title
 var LANGS = Config.languages
 var ENV = process.env.ENV
 exports = module.exports = Page
+exports.Flash = Flash
 exports.Form = Form
 exports.LiveReload = LiveReload
 
@@ -173,6 +174,15 @@ function Page(attrs, children) {
 			: null}
 		</body>
 	</html>
+}
+
+function Flash(attrs) {
+	var flash = attrs.flash
+
+	return <Fragment>
+		{flash("notice") ? <p class="flash notice">{flash("notice")}</p> : null}
+		{flash("error") ? <p class="flash error">{flash("error")}</p> : null}
+	</Fragment>
 }
 
 function Form(attrs, children) {
