@@ -10,7 +10,7 @@ module.exports = function(attrs) {
 	var event = attrs.event
 
 	return <Page
-		id="update-event"
+		page="update-event"
 		title={"Edit Event of " + initiative.title}
 		req={req}
 	>

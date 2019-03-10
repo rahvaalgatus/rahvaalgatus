@@ -14,7 +14,7 @@ exports.LiveReload = LiveReload
 function Page(attrs, children) {
 	var req = attrs.req
 	var t = req.t
-	var id = attrs.id
+	var page = attrs.id
 	var title = attrs.title
 	var translatable = req.lang === "xx" || "translatable" in req.query
 
@@ -40,7 +40,7 @@ function Page(attrs, children) {
 			<LiveReload req={req} />
 		</head>
 
-		<body id={id + "-page"}>
+		<body id={page + "-page"}>
 			<header id="header"><center>
 				<menu>
 					<Form action="/session" method="put" class="languages" req={req}>
@@ -106,7 +106,7 @@ function Page(attrs, children) {
 							<a
 								href="/initiatives"
 								class={
-									selected(id, "initiatives") || selected(id, "initiative")
+									selected(page, "initiatives") || selected(page, "initiative")
 								}>
 								{t("LINK_VOTING")}
 							</a>
@@ -116,11 +116,11 @@ function Page(attrs, children) {
 							{t("LINK_HELP")}
 						</a></li>
 
-						<li><a href="/about" class={selected(id, "about")}>
+						<li><a href="/about" class={selected(page, "about")}>
 							{t("LNK_ABOUT")}
 						</a></li>
 
-						<li><a href="/donate" class={selected(id, "donate")}>
+						<li><a href="/donate" class={selected(page, "donate")}>
 							{t("LNK_SUPPORT")}
 						</a></li>
 					</ul>

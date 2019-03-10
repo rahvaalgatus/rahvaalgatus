@@ -10,7 +10,7 @@ exports.Flash = Flash
 
 function Page(attrs, children) {
 	var req = attrs.req
-	var id = attrs.id
+	var page = attrs.id
 	var title = attrs.title
 
 	return <html>
@@ -22,7 +22,7 @@ function Page(attrs, children) {
 			<LiveReload req={req} />
 		</head>
 
-		<body id={id + "-page"}>
+		<body id={page + "-page"}>
 			<header id="header">
 				<h1>Rahvaalgatus.ee Admin</h1>
 

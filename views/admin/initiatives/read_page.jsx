@@ -16,7 +16,7 @@ module.exports = function(attrs) {
 	var status = initiative.status
 	var action = `/initiatives/${initiative.id}`
 
-	return <Page id="initiative" title={initiative.title} req={req}>
+	return <Page page="initiative" title={initiative.title} req={req}>
 		<a href="/initiatives" class="admin-back">Initiatives</a>
 		<h1 class="admin-heading">{initiative.title}</h1>
 

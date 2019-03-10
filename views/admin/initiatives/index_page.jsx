@@ -9,7 +9,7 @@ module.exports = function(attrs) {
 	var closed = attrs.closed
 	var dbInitiatives = attrs.dbInitiatives
 
-	return <Page id="initiatives" title="Initiatives" req={attrs.req}>
+	return <Page page="initiatives" title="Initiatives" req={attrs.req}>
 		<h1 class="admin-heading">Initiatives</h1>
 
 		<h2 class="admin-subheading">

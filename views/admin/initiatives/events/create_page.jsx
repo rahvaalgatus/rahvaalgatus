@@ -13,7 +13,7 @@ function CreatePage(attrs) {
 	var event = attrs.event
 
 	return <Page
-		id="create-event"
+		page="create-event"
 		title={"New Event for " + initiative.title}
 		req={req}
 	>
