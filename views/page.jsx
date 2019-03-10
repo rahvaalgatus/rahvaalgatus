@@ -139,9 +139,9 @@ function Page(attrs, children) {
 					<p>
 						{t("FOOTER_ADDRESS")}
 						<br />
-						{t("FOOTER_EMAIL")}
+						{Jsx.html(t("FOOTER_EMAIL"))}
 						<br />
-						{t("FOOTER_PHONE")}
+						{Jsx.html(t("FOOTER_PHONE"))}
 
 						<br />
 						Facebook: <a href="https://www.facebook.com/rahvaalgatus">
