@@ -5,13 +5,16 @@ var DateFns = require("date-fns")
 var Config = require("root/config")
 var Sinon = require("sinon")
 var ValidDbInitiative = require("root/test/valid_db_initiative")
+var ValidDbInitiativeSubscription =
+	require("root/test/valid_db_initiative_subscription")
+var sql = require("root/lib/sql")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var tHtml = _.compose(_.escape, t)
 var respond = require("root/test/fixtures").respond
 var concat = Array.prototype.concat.bind(Array.prototype)
 var randomHex = require("root/lib/crypto").randomHex
-var md5 = require("root/lib/crypto").md5
 var sqlite = require("root").sqlite
+var initiativeSubscriptionsDb = require("root/db/initiative_subscriptions_db")
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var VOTES = require("root/config").votesRequired
 var PARTNER_ID = Config.apiPartnerId
@@ -25,7 +28,8 @@ var DISCUSSION = {
 	createdAt: new Date(2000, 0, 1),
 	sourcePartnerId: PARTNER_ID,
 	status: "inProgress",
-	description: "<body><h1>My thoughts.</h1></body>",
+	title: "My future thoughts",
+	description: "<body><h1>My future thoughts.</h1></body>",
 	creator: {name: "John"},
 	visibility: "public",
 	permission: {level: "read"}
@@ -661,46 +665,21 @@ describe("InitiativesController", function() {
 
 	describe("POST /:id/subscriptions", function() {
 		require("root/test/fixtures").csrf()
+		require("root/test/email")()
 
-		var MAILCHIMP_INTERESTS_PATH = [
-			"/3.0/lists",
-			Config.mailchimpListId,
-			"interest-categories",
-			Config.mailchimpInterestCategoryId,
-			"interests"
-		].join("/")
-
-		var MAILCHIMP_MEMBERS_PATH = `/3.0/lists/${Config.mailchimpListId}/members`
+		beforeEach(function() {
+			this.time = Sinon.useFakeTimers(Date.now(), "Date")
+		})
 
 		O.each({
 			discussion: DISCUSSION,
 			initiative: INITIATIVE
 		}, function(initiative, name) {
-			it(`must subscribe to ${name}'s Mailchimp list`, function*() {
+			it(`must subscribe to ${name}`, function*() {
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: initiative}))
 
-				var interestId = randomHex(10)
-				yield sqlite.create("initiatives", {
-					uuid: UUID,
-					mailchimp_interest_id: interestId
-				})
-
 				var email = "User@example.com"
-				var emailHash = hashEmail(email)
-
-				var path = `/3.0/lists/${Config.mailchimpListId}/members/${emailHash}`
-				this.router.put(path, function(req, res) {
-					req.body.must.eql({
-						email_address: email,
-						status_if_new: "pending",
-						interests: {[interestId]: true},
-						ip_signup: "127.0.0.1"
-					})
-
-					res.end()
-				})
-
 				var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
 					method: "POST",
 					form: {_csrf_token: this.csrfToken, email: email}
@@ -708,137 +687,64 @@ describe("InitiativesController", function() {
 
 				res.statusCode.must.equal(303)
 				res.headers.location.must.equal("/initiatives/" + UUID)
-			})
-		})
 
-		it("must create Mailchimp group before subscribing", function*() {
-			this.router.get(`/api/topics/${UUID}`,
-				respond.bind(null, {data: INITIATIVE}))
+				var subscriptions = yield initiativeSubscriptionsDb.search(sql`
+					SELECT * FROM initiative_subscriptions
+				`)
 
-			var interestId = randomHex(10)
-			this.router.post(MAILCHIMP_INTERESTS_PATH, function(req, res) {
-				req.body.must.eql({name: INITIATIVE.title})
-				respond({id: interestId}, req, res)
-			})
+				subscriptions.length.must.equal(1)
+				var subscription = subscriptions[0]
 
-			var email = "User@example.com"
-			var emailHash = hashEmail(email)
-			this.router.put(MAILCHIMP_MEMBERS_PATH + "/" + emailHash, (req, res) => {
-				req.body.interests.must.eql({[interestId]: true})
-				res.end()
-			})
+				subscription.must.eql(new ValidDbInitiativeSubscription({
+					initiative_uuid: UUID,
+					email: email,
+					created_at: new Date,
+					updated_at: new Date,
+					confirmation_token: subscriptions[0].confirmation_token,
+					confirmation_sent_at: new Date
+				}))
 
-			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
-				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: email}
-			})
+				subscription.confirmation_token.must.exist()
 
-			res.statusCode.must.equal(303)
-
-			yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
-				new ValidDbInitiative({uuid: UUID, mailchimp_interest_id: interestId})
-			])
-		})
-
-		// A bug noticed on Dec 11, 2018 with SQLite that interpreted the id
-		// "452e778485" as a number in scientific notation because the column type
-		// was STRING, not TEXT.
-		it("must create Mailchimp group if id in scientific notation",
-			function*() {
-			this.router.get(`/api/topics/${UUID}`,
-				respond.bind(null, {data: INITIATIVE}))
-
-			var interestId = "452e778485"
-			this.router.post(MAILCHIMP_INTERESTS_PATH, function(req, res) {
-				req.body.must.eql({name: INITIATIVE.title})
-				respond({id: interestId}, req, res)
+				this.emails.length.must.equal(1)
+				this.emails[0].envelope.to.must.eql([email])
+				var body = String(this.emails[0].message)
+				body.match(/^Subject: .*/m)[0].must.include(initiative.title)
+				body.must.include(subscription.confirmation_token)
 			})
 
-			var email = "User@example.com"
-			var emailHash = hashEmail(email)
-			this.router.put(MAILCHIMP_MEMBERS_PATH + "/" + emailHash, (req, res) => {
-				req.body.interests.must.eql({[interestId]: true})
-				res.end()
+			it(`must subscribe to ${name} only once case-insensitively`,
+				function*() {
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: initiative}))
+
+				var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
+				var email = "User@example.com"
+
+				var subscription = new ValidDbInitiativeSubscription({
+					initiative_uuid: UUID,
+					email: email,
+					created_at: createdAt,
+					updated_at: createdAt,
+					confirmed_at: createdAt
+				})
+
+				yield initiativeSubscriptionsDb.create(subscription)
+
+				var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
+					method: "POST",
+					form: {_csrf_token: this.csrfToken, email: email.toUpperCase()}
+				})
+
+				res.statusCode.must.equal(303)
+				res.headers.location.must.equal("/initiatives/" + UUID)
+
+				yield initiativeSubscriptionsDb.search(sql`
+					SELECT * FROM initiative_subscriptions
+				`).must.then.eql([subscription])
+
+				this.emails.length.must.equal(0)
 			})
-
-			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
-				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: email}
-			})
-
-			res.statusCode.must.equal(303)
-
-			yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
-				new ValidDbInitiative({uuid: UUID, mailchimp_interest_id: interestId})
-			])
-		})
-
-		it("must not update other initiatives", function*() {
-			this.router.get(`/api/topics/${UUID}`,
-				respond.bind(null, {data: INITIATIVE}))
-
-			var interestId = randomHex(10)
-			this.router.post(MAILCHIMP_INTERESTS_PATH,
-				respond.bind(null, {id: interestId}))
-
-			var email = "user@example.com"
-			var emailHash = hashEmail(email)
-			this.router.put(MAILCHIMP_MEMBERS_PATH + "/" + emailHash, endRequest)
-
-			var other = yield sqlite.create("initiatives", {
-				uuid: "a8166697-7f68-43e4-a729-97a7868b4d51"
-			})
-
-			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
-				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: email}
-			})
-
-			res.statusCode.must.equal(303)
-
-			yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
-				other,
-				new ValidDbInitiative({uuid: UUID, mailchimp_interest_id: interestId})
-			])
-		})
-
-		it("must increment title if already exists", function*() {
-			this.router.get(`/api/topics/${UUID}`,
-				respond.bind(null, {data: INITIATIVE}))
-
-			var created = 0
-			var interestId = randomHex(10)
-			this.router.post(MAILCHIMP_INTERESTS_PATH, function(req, res) {
-				if (!created++) respondWithMailchimpError({
-					title: "Invalid Resource",
-					status: 400,
-					detail: `Cannot add "${INITIATIVE.title}" because it already exists on the list.`,
-					instance: "a660879b-b8d7-4165-989d-60851ff36a10"
-				}, req, res)
-				else {
-					req.body.must.eql({name: INITIATIVE.title + " (2000-01-01)"})
-					respond({id: interestId}, req, res)
-				}
-			})
-
-			var email = "User@example.com"
-			var emailHash = hashEmail(email)
-			var path = `/3.0/lists/${Config.mailchimpListId}/members/${emailHash}`
-			this.router.put(path, function(req, res) {
-				req.body.interests.must.eql({[interestId]: true})
-				res.end()
-			})
-
-			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
-				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: email}
-			})
-
-			res.statusCode.must.equal(303)
-
-			yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
-				new ValidDbInitiative({uuid: UUID, mailchimp_interest_id: interestId})
-			])
 		})
 
 		it("must respond with 403 Forbidden if discussion not public", function*() {
@@ -859,21 +765,6 @@ describe("InitiativesController", function() {
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
-			var path = `/3.0/lists/${Config.mailchimpListId}/members/${hashEmail("")}`
-			this.router.put(path, respondWithMailchimpError.bind(null, {
-				type: "http://developer.mailchimp.com/documentation/mailchimp/guides/error-glossary/",
-				title: "Invalid Resource",
-				status: 400,
-				detail: "The resource submitted could not be validated. For field-specific details, see the \"errors\" array.",
-				instance: "88d753ef-5540-42e2-8976-d05754580e9e",
-
-				errors: [{
-					field: "email_address", message: "This value should not be blank."
-				}]
-			}))
-
-			yield sqlite.create("initiatives", {uuid: UUID, mailchimp_interest_id: "x"})
-
 			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
 				method: "POST",
 				form: {_csrf_token: this.csrfToken, email: ""}
@@ -886,38 +777,101 @@ describe("InitiativesController", function() {
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
-			var email = "fubar"
-			var emailHash = hashEmail(email)
-			var path = `/3.0/lists/${Config.mailchimpListId}/members/${emailHash}`
-			this.router.put(path, respondWithMailchimpError.bind(null, {
-				type: "http://developer.mailchimp.com/documentation/mailchimp/guides/error-glossary/",
-				title: "Invalid Resource",
-				status: 400,
-				detail: "Please provide a valid email address.",
-				instance: "fec7d7c0-6c0e-405d-a090-0a05cf988f19"
-			}))
-
-			yield sqlite.create("initiatives", {
-				uuid: UUID,
-				mailchimp_interest_id: "x"
-			})
-
 			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
 				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: email}
+				form: {_csrf_token: this.csrfToken, email: "fubar"}
 			})
 
 			res.statusCode.must.equal(422)
 		})
 	})
+
+	describe("GET /:id/subscriptions/new", function() {
+		require("root/test/fixtures").csrf()
+
+		it("must confirm given a confirmation token", function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
+
+			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
+			var token = randomHex(8)
+
+			var subscription = new ValidDbInitiativeSubscription({
+				initiative_uuid: UUID,
+				created_at: createdAt,
+				updated_at: createdAt,
+				confirmation_token: token,
+				confirmation_sent_at: createdAt
+			})
+
+			yield initiativeSubscriptionsDb.create(subscription)
+
+			var res = yield this.request(
+				`/initiatives/${UUID}/subscriptions/new?confirmation_token=${token}`
+			)
+
+			res.statusCode.must.equal(303)
+			res.headers.location.must.equal("/initiatives/" + UUID)
+
+			yield initiativeSubscriptionsDb.read(token).must.then.eql({
+				__proto__: subscription,
+				confirmed_at: new Date,
+				confirmation_sent_at: null,
+				updated_at: new Date
+			})
+		})
+
+		it("must not confirm twice", function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
+
+			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
+			var token = randomHex(8)
+
+			var subscription = new ValidDbInitiativeSubscription({
+				initiative_uuid: UUID,
+				created_at: createdAt,
+				updated_at: createdAt,
+				confirmed_at: createdAt,
+				confirmation_token: token
+			})
+
+			yield initiativeSubscriptionsDb.create(subscription)
+
+			var res = yield this.request(
+				`/initiatives/${UUID}/subscriptions/new?confirmation_token=${token}`
+			)
+
+			res.statusCode.must.equal(303)
+			res.headers.location.must.equal("/initiatives/" + UUID)
+			yield initiativeSubscriptionsDb.read(token).must.then.eql(subscription)
+		})
+
+		it("must not confirm given the wrong token", function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
+			this.router.get(`/api/topics/${UUID}/comments`,
+				respond.bind(null, EMPTY_RES))
+
+			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
+			var token = randomHex(8)
+
+			var subscription = new ValidDbInitiativeSubscription({
+				initiative_uuid: UUID,
+				created_at: createdAt,
+				updated_at: createdAt,
+				confirmation_token: token,
+				confirmation_sent_at: createdAt
+			})
+
+			yield initiativeSubscriptionsDb.create(subscription)
+
+			var res = yield this.request(
+				`/initiatives/${UUID}/subscriptions/new?confirmation_token=deadbeef`
+			)
+
+			res.statusCode.must.equal(404)
+			yield initiativeSubscriptionsDb.read(token).must.then.eql(subscription)
+		})
+	})
 })
-
-
-function respondWithMailchimpError(json, _req, res) {
-	if (res.statusCode === 200) res.statusCode = 400
-	res.writeHead(res.statusCode, {"Content-Type": "application/problem+json"})
-	res.end(JSON.stringify(json))
-}
-
-function hashEmail(email) { return md5(email.toLowerCase()) }
-function endRequest(_req, res) { res.end() }

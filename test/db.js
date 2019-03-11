@@ -6,4 +6,5 @@ exports = module.exports = function() {
 
 exports.delete = function*() {
 	yield sqlite.delete("DELETE FROM initiatives")
+	yield sqlite.delete("DELETE FROM initiative_subscriptions")
 }

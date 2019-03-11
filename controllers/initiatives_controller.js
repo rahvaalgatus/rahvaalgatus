@@ -5,12 +5,14 @@ var HttpError = require("standard-http-error")
 var Initiative = require("root/lib/initiative")
 var DateFns = require("date-fns")
 var Config = require("root/config")
-var I18n = require("root/lib/i18n")
 var MediaType = require("medium-type")
+var Sqlite = require("root/lib/sqlite")
+var Http = require("root/lib/http")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
 var sqlite = require("root").sqlite
 var initiativesDb = require("root/db/initiatives_db")
+var initiativeSubscriptionsDb = require("root/db/initiative_subscriptions_db")
 var countVotes = Initiative.countSignatures.bind(null, "Yes")
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
@@ -19,15 +21,17 @@ var isFetchError = require("root/lib/fetch").is
 var next = require("co-next")
 var sleep = require("root/lib/promise").sleep
 var cosApi = require("root/lib/citizenos_api")
+var sql = require("root/lib/sql")
 var parseCitizenInitiative = cosApi.parseCitizenInitiative
 var parseCitizenEvent = cosApi.parseCitizenEvent
 var parseCitizenComment = cosApi.parseCitizenComment
-var mailchimp = require("root/lib/mailchimp")
 var readInitiativesWithStatus = cosApi.readInitiativesWithStatus
 var encode = encodeURIComponent
 var translateCitizenError = require("root/lib/citizenos_api").translateError
 var hasMainPartnerId = Initiative.hasPartnerId.bind(null, Config.apiPartnerId)
+var sendEmail = require("root").sendEmail
 var concat = Array.prototype.concat.bind(Array.prototype)
+var randomHex = require("root/lib/crypto").randomHex
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
 var EMPTY_COMMENT = {subject: "", text: "", parentId: null}
@@ -441,26 +445,94 @@ exports.router.get("/:id/signature", next(function*(req, res) {
 	res.redirect(303, req.baseUrl + "/" + initiative.id)
 }))
 
-exports.router.post("/:id/subscriptions", next(function*(req, res, next) {
+exports.router.use("/:id/subscriptions", function(req, _res, next) {
 	var initiative = req.initiative
-	var dbInitiative = req.dbInitiative
 
 	if (!Initiative.isPublic(initiative))
-		return void next(new HttpError(403, "Initiative Not Public"))
+		next(new HttpError(403, "Initiative Not Public"))
+	else
+		next()
+})
 
-	var interestId = yield readOrCreateMailchimpInterest(dbInitiative, initiative)
+exports.router.post("/:id/subscriptions", next(function*(req, res) {
+	var initiative = req.initiative
+	var email = req.body.email
 
-	try { yield mailchimp.subscribe(interestId, req.body.email, req.ip) }
+	if (!isValidEmail(email)) return void res.status(422).render("422", {
+		errors: [req.t("INVALID_EMAIL")]
+	})
+
+	var subscription
+	try {
+		subscription = yield initiativeSubscriptionsDb.create({
+			initiative_uuid: initiative.id,
+			email: email,
+			confirmation_token: randomHex(8),
+			created_at: new Date,
+			updated_at: new Date
+		})
+	}
 	catch (ex) {
-		if (!mailchimp.isMailchimpEmailError(ex)) throw ex
-		
-		return void res.status(422).render("422", {
-			errors: [req.t("INVALID_EMAIL")]
+		if (Sqlite.isUniqueError(ex))
+			subscription = yield initiativeSubscriptionsDb.read(sql`
+				SELECT * FROM initiative_subscriptions
+				WHERE (initiative_uuid, email) = (${initiative.id}, ${email})
+			`).then(_.first)
+
+		else throw ex
+	}
+
+	if (!subscription.confirmed_at && !subscription.confirmation_sent_at) {
+		var initiativeUrl = Http.link(req, req.baseUrl + "/" + initiative.id)
+		var token = subscription.confirmation_token
+
+		yield sendEmail({
+			to: email,
+
+			subject: req.t("CONFIRM_INITIATIVE_SUBSCRIPTION_TITLE", {
+				initiativeTitle: initiative.title
+			}),
+
+			text: req.t("CONFIRM_INITIATIVE_SUBSCRIPTION_BODY", {
+				url: initiativeUrl + "/subscriptions/new?confirmation_token=" + token,
+				initiativeTitle: initiative.title,
+				initiativeUrl: initiativeUrl,
+				siteUrl: Config.url
+			})
+		})
+
+		yield initiativeSubscriptionsDb.update(subscription, {
+			confirmation_sent_at: new Date,
+			updated_at: new Date
 		})
 	}
 
-	res.flash("notice", req.t("SUBSCRIBED"))
+	res.flash("notice", req.t("CONFIRM_INITIATIVE_SUBSCRIPTION"))
 	res.redirect(303, req.baseUrl + "/" + initiative.id)
+}))
+
+exports.router.get("/:id/subscriptions/new", next(function*(req, res, next) {
+	var initiative = req.initiative
+	var token = req.query.confirmation_token
+	var subscription = yield initiativeSubscriptionsDb.search(token)
+
+	if (subscription) {
+		if (!subscription.confirmed_at)
+			yield initiativeSubscriptionsDb.update(subscription, {
+				confirmed_at: new Date,
+				confirmation_sent_at: null,
+				updated_at: new Date
+			})
+		
+		res.flash("notice", req.t("SUBSCRIBED"))
+		res.redirect(303, req.baseUrl + "/" + initiative.id)
+	}
+	else {
+		res.statusCode = 404
+		res.statusMessage = "Invalid Confirmation Token"
+		res.flash("error", "ASWA")
+		exports.read(req, res, next)
+	}
 }))
 
 exports.router.use(function(err, _req, res, next) {
@@ -496,43 +568,6 @@ function* readSignature(initiative, token) {
 	throw new HttpError(500, "Mobile-Id Took Too Long")
 }
 
-function* readOrCreateMailchimpInterest(dbInitiative, initiative) {
-	if (dbInitiative.mailchimp_interest_id)
-		return dbInitiative.mailchimp_interest_id
-	else
-		return yield createMailchimpInterest(initiative)
-}
-
-function* createMailchimpInterest(initiative) {
-	var path = "/3.0/lists/" + Config.mailchimpListId
-	path += "/interest-categories/" + Config.mailchimpInterestCategoryId
-	path += "/interests"
-
-	var interest
-	try { interest = yield create(initiative.title) }
-	catch (err) {
-		// Basic fail-safe as interests have to have unique names in Mailchimp.
-		if (!isMailchimpNameTakenErr(err)) throw err
-		var date = I18n.formatDate("iso", initiative.createdAt)
-		interest = yield create(`${initiative.title} (${date})`)
-	}
-
-	yield sqlite.update(`
-		UPDATE initiatives
-		SET mailchimp_interest_id = $interestId
-		WHERE uuid = $uuid
-	`, {
-		$uuid: initiative.id,
-		$interestId: interest.body.id
-	})
-
-	return interest.body.id
-
-	function create(title) {
-		return mailchimp(path, {method: "POST", json: {name: title}})
-	}
-}
-
 function ensureAreaCode(number) {
 	// Numbers without a leading "+" but with a suitable area code, like
 	// 37200000766, seem to work.
@@ -541,13 +576,10 @@ function ensureAreaCode(number) {
 	return "+372" + number
 }
 
-function isMailchimpNameTakenErr(err) {
-	return err.code == 400 && /already exists/.test(err.response.body.detail)
-}
-
 function hasCategory(category, initiative) {
 	return _.contains(initiative.categories, category)
 }
 
 function getBody(res) { return res.body.data }
 function sortByCreatedAt(arr) { return _.sortBy(arr, "createdAt").reverse() }
+function isValidEmail(email) { return email.indexOf("@") >= 0 }

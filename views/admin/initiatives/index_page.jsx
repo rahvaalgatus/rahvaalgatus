@@ -8,6 +8,7 @@ module.exports = function(attrs) {
 	var parliamented = attrs.parliamented
 	var closed = attrs.closed
 	var dbInitiatives = attrs.dbInitiatives
+	var subscriberCounts = attrs.subscriberCounts
 
 	return <Page page="initiatives" title="Initiatives" req={attrs.req}>
 		<h1 class="admin-heading">Initiatives</h1>
@@ -18,7 +19,11 @@ module.exports = function(attrs) {
 			<span class="admin-count">({parliamented.length})</span>
 		</h2>
 
-		{renderParliamentedInitiatives(parliamented, dbInitiatives)}
+		<InitiativesView
+			initiatives={parliamented}
+			dbInitiatives={dbInitiatives}
+			subscriberCounts={subscriberCounts}
+		/>
 
 		<h2 class="admin-subheading">
 			Finished
@@ -26,11 +31,19 @@ module.exports = function(attrs) {
 			<span class="admin-count">({closed.length})</span>
 		</h2>
 
-		{renderParliamentedInitiatives(closed, dbInitiatives)}
+		<InitiativesView
+			initiatives={closed}
+			dbInitiatives={dbInitiatives}
+			subscriberCounts={subscriberCounts}
+		/>
 	</Page>
 }
 
-function renderParliamentedInitiatives(initiatives, dbInitiatives) {
+function InitiativesView(attrs) {
+	var initiatives = attrs.initiatives
+	var dbInitiatives = attrs.dbInitiatives
+	var subscriberCounts = attrs.subscriberCounts
+
 	var showSentTo = initiatives.some((i) => (
 		dbInitiatives[i.id].sent_to_parliament_at
 	))
@@ -39,12 +52,15 @@ function renderParliamentedInitiatives(initiatives, dbInitiatives) {
 		dbInitiatives[i.id].finished_in_parliament_at
 	))
 
+	var showSubscribers = initiatives.some((i) => subscriberCounts[i.id] > 0)
+
 	return <table class="admin-table">
 		<thead>
 			<tr>
 				{showSentTo ? <th>Sent to Parliament</th> : null}
 				{showFinishedIn ? <th>Finished in Parliament</th> : null}
 				<th>Title</th>
+				{showSubscribers ? <th>Subscribers</th> : null}
 				<th>On Rahvaalgatus</th>
 			</tr>
 		</thead>
@@ -69,6 +85,12 @@ function renderParliamentedInitiatives(initiatives, dbInitiatives) {
 							{initiative.title}
 						</a>
 					</td>
+
+					{showSubscribers ? <td><a
+						class="admin-link"
+						href={`/initiatives/${initiative.id}/subscriptions`}>
+						{subscriberCounts[initiative.id]}
+					</a></td> : null}
 
 					<td>
 						<a

@@ -12,9 +12,11 @@ module.exports = function(attrs) {
 	var req = attrs.req
 	var initiative = attrs.initiative
 	var dbInitiative = attrs.dbInitiative
+	var subscriberCount = attrs.subscriberCount
 	var events = attrs.events
 	var status = initiative.status
 	var action = `/initiatives/${initiative.id}`
+	var pendingSubscriberCount = subscriberCount.all - subscriberCount.confirmed
 
 	return <Page page="initiative" title={initiative.title} req={req}>
 		<a href="/initiatives" class="admin-back">Initiatives</a>
@@ -68,13 +70,26 @@ module.exports = function(attrs) {
 					/>
 				</td>
 			</tr>
+
+			<tr>
+				<th scope="row">Subscriber Count</th>
+				<td>
+					<a
+						class="admin-link"
+						href={`/initiatives/${initiative.id}/subscriptions`}>
+						{subscriberCount.confirmed}
+					</a>
+
+					{pendingSubscriberCount > 0 ?
+						" and " + pendingSubscriberCount + " pending"
+					: null}
+				</td>
+			</tr>
 		</table>
 
 		<div class="events">
 			<h2 class="admin-subheading">
-				Events
-				{" "}
-				<span class="admin-count">({events.length})</span>
+				Events <span class="admin-count">({events.length})</span>
 			</h2>
 
 			{events.length > 0 ? <table class="admin-table">
