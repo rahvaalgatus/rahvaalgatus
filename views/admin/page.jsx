@@ -5,12 +5,13 @@ var LiveReload = require("../page").LiveReload
 var Form = require("../page").Form
 var prefixed = require("root/lib/css").prefixed
 exports = module.exports = Page
+exports.Form = Form
 exports.FormButton = FormButton
 exports.Flash = Flash
 
 function Page(attrs, children) {
 	var req = attrs.req
-	var page = attrs.id
+	var page = attrs.page
 	var title = attrs.title
 
 	return <html>
