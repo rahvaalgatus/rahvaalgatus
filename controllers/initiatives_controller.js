@@ -271,10 +271,6 @@ exports.router.put("/:id", next(function*(req, res) {
 			contact: O.defaults(req.body.contact, EMPTY_INITIATIVE.contact)
 		}
 	}
-	else if (req.body.status === "closed") {
-		if (!Initiative.canFinish(initiative)) throw new HttpError(401)
-		attrs = {status: req.body.status}
-	}
 	else if ("notes" in req.body) {
 		if (!Initiative.canEdit(initiative)) throw new HttpError(401)
 

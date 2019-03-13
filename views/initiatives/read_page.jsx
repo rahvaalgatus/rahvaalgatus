@@ -347,18 +347,6 @@ module.exports = function(attrs) {
 					</button>
 				</Form> : null}
 
-				{Initiative.canFinish(initiative) ? <Form
-					req={req}
-					method="put"
-					action={"/initiatives/" + initiative.id}>
-					<button
-						name="status"
-						value="closed"
-						class="primary-button wide-button">
-						Lõpeta menetlus
-					</button>
-				</Form> : null}
-
 				{Initiative.canEdit(initiative) ? <a
 					href={"/initiatives/" + initiative.id + "/edit"}
 					class="link-button wide-button">
