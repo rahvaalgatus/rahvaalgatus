@@ -262,7 +262,7 @@ exports.router.put("/:id", next(function*(req, res) {
 		}
 	}
 	else if (req.body.status === "followUp") {
-		tmpl = "initiatives/update_for_parliament"
+		tmpl = "initiatives/update_for_parliament_page.jsx"
 		if (!Initiative.canSendToParliament(initiative)) throw new HttpError(401)
 		if (req.body.contact == null) return void res.render(tmpl, {attrs: attrs})
 
