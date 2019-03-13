@@ -207,7 +207,7 @@ exports.router.put("/:id", next(function*(req, res) {
 	var attrs = EMPTY_INITIATIVE
 
 	if (req.body.visibility === "public") {
-		tmpl = "initiatives/update_for_publish"
+		tmpl = "initiatives/update_for_publish_page.jsx"
 		if (!(
 			Initiative.canPublish(initiative) ||
 			Initiative.canUpdateDiscussionDeadline(initiative)
