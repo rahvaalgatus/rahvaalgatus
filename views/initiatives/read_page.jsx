@@ -350,7 +350,7 @@ module.exports = function(attrs) {
 				{Initiative.canEdit(initiative) ? <a
 					href={"/initiatives/" + initiative.id + "/edit"}
 					class="link-button wide-button">
-					Muuda algatust
+					{t("EDIT_INITIATIVE")}
 				</a> : null}
 
 				{dbInitiative.notes ? <div id="initiative-notes">
