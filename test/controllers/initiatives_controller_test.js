@@ -9,7 +9,7 @@ var ValidDbInitiativeSubscription =
 	require("root/test/valid_db_initiative_subscription")
 var sql = require("root/lib/sql")
 var t = require("root/lib/i18n").t.bind(null, "et")
-var tHtml = _.compose(_.escape, t)
+var tHtml = _.compose(_.escapeHtml, t)
 var respond = require("root/test/fixtures").respond
 var concat = Array.prototype.concat.bind(Array.prototype)
 var randomHex = require("root/lib/crypto").randomHex

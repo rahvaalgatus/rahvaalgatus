@@ -1,9 +1,12 @@
 /** @jsx Jsx */
+var _ = require("lodash")
+var O = require("oolong")
 var Jsx = require("j6pack")
 var Config = require("root/config")
 var Fragment = Jsx.Fragment
 var stringify = require("root/lib/json").stringify
 var selected = require("root/lib/css").selected
+var javascript = require("root/lib/jsx").javascript
 var SITE_TITLE = Config.title
 var LANGS = Config.languages
 var ENV = process.env.ENV
@@ -12,11 +15,16 @@ exports.Flash = Flash
 exports.Form = Form
 exports.LiveReload = LiveReload
 
+var DEFAULT_META = {
+	"og:image": Config.url + "/assets/rahvaalgatus-description.png"
+}
+
 function Page(attrs, children) {
 	var req = attrs.req
 	var t = req.t
-	var page = attrs.id
+	var page = attrs.page
 	var title = attrs.title
+	var meta = O.assign({}, DEFAULT_META, attrs.meta)
 	var translatable = req.lang === "xx" || "translatable" in req.query
 
 	var assemblyLogo = "/assets/esstikoostoo_logo.png"
@@ -28,11 +36,7 @@ function Page(attrs, children) {
 			<meta name="viewport" content="width=device-width" />
 			<link rel="stylesheet" href="/assets/page.css" type="text/css" />
 			<title>{title == null ? "" : title + " - "} {SITE_TITLE}</title>
-
-			<meta
-				property="og:image"
-				content={Config.url + "/assets/rahvaalgatus-description.png"}
-			/>
+			{_.map(meta, (value, name) => <meta property={name} content={value} />)}
 
 			{ENV === "staging" || ENV === "production" ?
 				<Sentry dsn={Config.sentryPublicDsn} req={req} />
@@ -192,6 +196,7 @@ function Form(attrs, children) {
 		id={attrs.id}
 		class={attrs.class}
 		action={attrs.action}
+		hidden={attrs.hidden}
 		method={method == "get" ? method : "post"}
 	>
 		{!(method == "get" || method == "post") ?
@@ -240,10 +245,10 @@ function GoogleAnalytics(attrs) {
 	var id = attrs.accountId
 
 	return <Fragment>
-		<script>{`(function() {
+		<script>{javascript`
 			function args() { return arguments }
 			window.dataLayer = [args("js", new Date), args("config", "${id}")]
-		})()`}</script>
+		`}</script>
 
 		<script src={"https://www.googletagmanager.com/gtag/js?id=" + id} async />
 	</Fragment>

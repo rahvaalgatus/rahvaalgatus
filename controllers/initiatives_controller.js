@@ -36,10 +36,6 @@ var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
 var EMPTY_COMMENT = {subject: "", text: "", parentId: null}
 
-var UI_TRANSLATIONS = O.map(require("root/lib/i18n").STRINGS, function(lang) {
-	return O.filter(lang, (_value, key) => key.indexOf("HWCRYPTO") >= 0)
-})
-
 var RESPONSE_TYPES = [
 	"text/html",
 	"application/vnd.rahvaalgatus.initiative+json; v=1"
@@ -93,7 +89,7 @@ exports.router.get("/", next(function*(req, res) {
 }))
 
 exports.router.post("/", next(function*(req, res) {
-	var title = _.escape(req.body.title)
+	var title = _.escapeHtml(req.body.title)
 	var attrs = O.assign({}, EMPTY_INITIATIVE, {
 		title: req.body.title,
 		visibility: "private",
@@ -191,11 +187,10 @@ exports.read = next(function*(req, res) {
 	}
 	else events = EMPTY_ARR
 
-	res.render("initiatives/read", {
+	res.render("initiatives/read_page.jsx", {
 		comments: comments,
 		comment: res.locals.comment || EMPTY_COMMENT,
-		events: events,
-		translations: UI_TRANSLATIONS[req.lang]
+		events: events
 	})
 })
 
