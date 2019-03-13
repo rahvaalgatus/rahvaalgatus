@@ -328,7 +328,7 @@ exports.router.delete("/:id", next(function*(req, res) {
 
 exports.router.get("/:id/edit", function(req, res) {
 	if (!Initiative.canEdit(req.initiative)) throw new HttpError(401)
-	res.render("initiatives/update")
+	res.render("initiatives/update_page.jsx")
 })
 
 exports.router.use("/:id/comments",
