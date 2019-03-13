@@ -17,6 +17,7 @@
 	"BTN_VOTE_REVOKE_WITH_MOBILE_ID": "Tühista Mobiil-Id abil",
 	"BTN_VOTE_SIGN_WITH_ID_CARD": "ALLKIRJASTA ID-KAARDIGA",
 	"BTN_VOTE_SIGN_WITH_MOBILE_ID": "ALLKIRJASTA MOBIIL-ID ABIL ",
+	"CANNOT_EDIT_INITIATIVE_TEXT": "Kuna algatus on juba allkirjastamises, ei saa enam selle teksti muuta. Küll aga saad lisada märkmeid või muuta tähtaega.",
 	"COMMENT_HEADING": "Kommentaarid",
 	"CONFIRM_INITIATIVE_SUBSCRIPTION": "Saatsime meilile teavituse tellimise kinnituse.",
 	"CONFIRM_INITIATIVE_SUBSCRIPTION_BODY": "Tere\n\nTellisid algatuse \"{{initiativeTitle}}\" teavitused. Palun kinnita oma meiliaadress minnes järgmisele lehele:\n{{url}}\n\nKui mõtlesid ümber või tegu on eksimusega, võid kirja kustutada. Ilma kinnituseta teavitusi ei saadeta. \n\nRahvaalgatus\n{{siteUrl}}",

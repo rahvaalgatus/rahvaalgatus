@@ -72,9 +72,13 @@ module.exports = function(attrs) {
 							}
 						}
 					`}</script>
-				</Fragment> : <article class="text">
-					{Jsx.html(initiative.html)}
-				</article>}
+				</Fragment> : <Fragment>
+					<div class="initiative-status">
+						<h1>{t("CANNOT_EDIT_INITIATIVE_TEXT")}</h1>
+					</div>
+
+					<article class="text">{Jsx.html(initiative.html)}</article>
+				</Fragment>}
 			</div>
 
 			<aside id="initiative-sidebar">
