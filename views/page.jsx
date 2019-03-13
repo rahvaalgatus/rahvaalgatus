@@ -13,6 +13,7 @@ var ENV = process.env.ENV
 exports = module.exports = Page
 exports.Flash = Flash
 exports.Form = Form
+exports.DatePickerInput = DatePickerInput
 exports.LiveReload = LiveReload
 
 var DEFAULT_META = {
@@ -276,6 +277,32 @@ function UserVoice(attrs) {
 		`}</script>
 
 		<script src={"//widget.uservoice.com/" + attrs.apiKey + ".js"} async />
+	</Fragment>
+}
+
+function DatePickerInput(attrs) {
+	var name = attrs.name
+	var id = _.uniqueId("date-picker-")
+
+	return <Fragment>
+		<input {...attrs} />
+
+		<div id={id} class="form-date-picker">
+			<script>{javascript`
+				var Pikaday = require("pikaday")
+				var input = document.querySelector("input[name=${name}]")
+
+				new Pikaday({
+					firstDay: 1,
+					field: input,
+					minDate: input.min ? new Date(input.min) : null,
+					maxDate: input.max ? new Date(input.max) : null,
+					container: document.getElementById("${id}"),
+					bound: false,
+				})
+
+			`}</script>
+		</div>
 	</Fragment>
 }
 

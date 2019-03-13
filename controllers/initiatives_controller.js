@@ -227,7 +227,7 @@ exports.router.put("/:id", next(function*(req, res) {
 		attrs = {visibility: "public", endsAt: endsAt}
 	}
 	else if (req.body.status === "voting") {
-		tmpl = "initiatives/update_for_voting"
+		tmpl = "initiatives/update_for_voting_page.jsx"
 		if (!(
 			Initiative.canPropose(new Date, initiative) ||
 			Initiative.canUpdateVoteDeadline(initiative)

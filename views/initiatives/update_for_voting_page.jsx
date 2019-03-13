@@ -24,7 +24,7 @@ module.exports = function(attributes) {
 
 		<section class="primary-section text-section"><center>
 			<h2>{t("DEADLINE_TITLE")}</h2>
-			<p>{t("DEADLINE_EXPLANATION")}</p>
+			<p>{t("VOTE_DEADLINE_EXPLANATION")}</p>
 
 			{error ? <p class="flash error">{error}</p> : null}
 
@@ -44,11 +44,8 @@ module.exports = function(attributes) {
 					class="form-input"
 				/>
 
-				<button
-					name="visibility"
-					value="public"
-					class="form-submit primary-button">
-					{t("PUBLISH_TOPIC")}
+				<button name="status" value="voting" class="form-submit primary-button">
+					{t("BTN_CREATE_VOTE")}
 				</button>
 			</Form>
 		</center></section>
