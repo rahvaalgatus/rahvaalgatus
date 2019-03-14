@@ -1,3 +1,4 @@
+var _ = require("root/lib/underscore")
 var O = require("oolong")
 var Router = require("express").Router
 var HttpError = require("standard-http-error")
@@ -6,8 +7,10 @@ var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
 var translateCitizenError = require("root/lib/citizenos_api").translateError
 var parseCitizenInitiative = require("root/lib/citizenos_api").parseCitizenInitiative
+var sql = require("root/lib/sql")
 var cosDb = require("root").cosDb
 var initiativesDb = require("root/db/initiatives_db")
+var initiativeSignaturesDb = require("root/db/initiative_signatures_db")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var next = require("co-next")
 
@@ -62,6 +65,17 @@ function* read(req, res) {
 	`, {userId: user.id}).then((res) => res.rows)
 
 	signatures = signatures.filter((sig) => sig.support == "Yes")
+
+	var dbSignatures = _.indexBy(yield initiativeSignaturesDb.search(sql`
+		SELECT * FROM initiative_signatures
+		WHERE user_uuid = ${user.id}
+		AND initiative_uuid IN ${signatures.map((sig) => sig.initiative_id)}
+	`), "initiative_uuid")
+
+	signatures = signatures.filter(function(sig) {
+		var dbSignature = dbSignatures[sig.initiative_id]
+		return !dbSignature || !dbSignature.hidden
+	})
 
 	var signedInitiatives = yield signatures.map(function(sig) {
 		var path = `/api/topics/${sig.initiative_id}`

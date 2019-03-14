@@ -12,9 +12,11 @@ var t = require("root/lib/i18n").t.bind(null, "et")
 var tHtml = _.compose(_.escapeHtml, t)
 var respond = require("root/test/fixtures").respond
 var concat = Array.prototype.concat.bind(Array.prototype)
+var encodeBase64 = require("root/lib/crypto").encodeBase64
 var randomHex = require("root/lib/crypto").randomHex
 var sqlite = require("root").sqlite
 var initiativeSubscriptionsDb = require("root/db/initiative_subscriptions_db")
+var initiativeSignaturesDb = require("root/db/initiative_signatures_db")
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var VOTES = require("root/config").votesRequired
 var PARTNER_ID = Config.apiPartnerId
@@ -70,6 +72,10 @@ var INITIATIVE = {
 		options: {rows: [{value: "Yes", voteCount: 0}]}
 	}
 }
+
+var SIGNED_INITIATIVE = O.merge({}, INITIATIVE, {
+	vote: {options: {rows: [{value: "Yes", voteCount: 1, selected: true}]}}
+})
 
 var SUCCESSFUL_INITIATIVE = O.merge({}, INITIATIVE, {
 	vote: {
@@ -393,6 +399,42 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
 			})
+
+			it("must render signed initiative", function*() {
+				this.router.get(`/api/users/self/topics/${UUID}`,
+					respond.bind(null, {data: SIGNED_INITIATIVE}))
+				this.router.get(`/api/users/self/topics/${UUID}/comments`,
+					respond.bind(null, EMPTY_RES))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+				res.body.must.include(tHtml("THANKS_FOR_SIGNING"))
+			})
+
+			it("must render signed initiative with hidden signature", function*() {
+				this.router.get(`/api/users/self/topics/${UUID}`,
+					respond.bind(null, {data: O.merge({}, INITIATIVE, {
+						vote: {
+							id: "396b0e5b-cca7-4255-9238-19b464e60b65",
+							endsAt: new Date(3000, 0, 1),
+							options: {rows: [{value: "Yes", voteCount: 1, selected: true}]}
+						}
+					})})
+				)
+
+				this.router.get(`/api/users/self/topics/${UUID}/comments`,
+					respond.bind(null, EMPTY_RES))
+
+				yield initiativeSignaturesDb.create({
+					initiative_uuid: UUID,
+					user_uuid: this.user.id,
+					hidden: true
+				})
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+				res.body.must.not.include(tHtml("THANKS_FOR_SIGNING"))
+			})
 		})
 	})
 
@@ -589,47 +631,147 @@ describe("InitiativesController", function() {
 	describe("POST /:id/signature", function() {
 		require("root/test/fixtures").csrf()
 
-		it("must send mobile-id vote", function*() {
-			this.router.get(`/api/topics/${UUID}`,
-				respond.bind(null, {data: INITIATIVE}))
-
-			var created = 0
-			this.router.post(`/api/topics/${UUID}/votes/${INITIATIVE.vote.id}`,
-				function(req, res) {
-				++created
-				req.body.must.eql({
-					options: [{optionId: "0bf34d36-59cd-438f-afd1-9a3a779b78b0"}],
-					pid: "11412090004",
-					phoneNumber: "+37200000766",
-				})
-
-				respond({data: {challengeID: "1337", token: "abcdef"}}, req, res)
-			})
-
-			var res = yield this.request(`/initiatives/${UUID}/signature`, {
-				method: "POST",
-				form: {
-					_csrf_token: this.csrfToken,
-					method: "mobile-id",
-					optionId: "0bf34d36-59cd-438f-afd1-9a3a779b78b0",
-					pid: "11412090004",
-					phoneNumber: "+37200000766"
-				}
-			})
-
-			created.must.equal(1)
-			res.statusCode.must.equal(200)
+		beforeEach(function() {
+			this.time = Sinon.useFakeTimers(Date.UTC(2015, 5, 18), "Date")
 		})
 
-		O.each({
-			"00000766": "+37200000766",
-			"37000000766": "37000000766",
-			"37200000766": "37200000766",
-			"37100000766": "37100000766",
-			"+37000000766": "+37000000766",
-			"+37200000766": "+37200000766"
-		}, function(long, short) {
-			it(`must transform mobile-id number ${short} to ${long}`, function*() {
+		afterEach(function() { this.time.restore() })
+
+		describe("when signing via Id-Card", function() {
+			var USER_ID = "bb7abca5-dac0-47c2-86c2-88dbd4850b7a"
+			var AUTH_TOKEN = "deadbeef"
+			var SIGN_TOKEN = "feedfed"
+			var BDOC_URL = "http://example.com/api/users/self/topics/" + UUID
+			BDOC_URL += `/votes/${INITIATIVE.vote.id}/downloads/bdocs/user`
+			BDOC_URL += "?token=" + fakeJwt({userId: USER_ID})
+
+			it("must send signature to CitizenOS", function*() {
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: INITIATIVE}))
+				
+				var created = 0
+				this.router.post(`/api/topics/${UUID}/votes/${INITIATIVE.vote.id}/sign`,
+					function(req, res) {
+					++created
+					req.body.must.eql({token: AUTH_TOKEN, signatureValue: SIGN_TOKEN})
+					respond({data: {bdocUri: BDOC_URL}}, req, res)
+				})
+
+				var res = yield this.request(`/initiatives/${UUID}/signature`, {
+					method: "POST",
+					form: {
+						_csrf_token: this.csrfToken,
+						method: "id-card",
+						token: AUTH_TOKEN,
+						signature: SIGN_TOKEN
+					}
+				})
+
+				created.must.equal(1)
+				res.statusCode.must.equal(303)
+				res.headers.location.must.equal(`/initiatives/${UUID}`)
+			})
+
+			it("must unhide signature", function*() {
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: INITIATIVE}))
+				
+				this.router.post(`/api/topics/${UUID}/votes/${INITIATIVE.vote.id}/sign`,
+					respond.bind(null, {data: {bdocUri: BDOC_URL}})
+				)
+
+				var signature = yield initiativeSignaturesDb.create({
+					initiative_uuid: UUID,
+					user_uuid: USER_ID,
+					hidden: true
+				})
+
+				var res = yield this.request(`/initiatives/${UUID}/signature`, {
+					method: "POST",
+					form: {
+						_csrf_token: this.csrfToken,
+						method: "id-card",
+						token: AUTH_TOKEN,
+						signature: SIGN_TOKEN
+					}
+				})
+
+				yield initiativeSignaturesDb.search(sql`
+					SELECT * FROM initiative_signatures
+				`).must.then.eql([{
+					__proto__: signature,
+					hidden: false,
+					updated_at: new Date
+				}])
+
+				res.statusCode.must.equal(303)
+			})
+
+			it("must not unhide other initiative's signature", function*() {
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: INITIATIVE}))
+				
+				this.router.post(`/api/topics/${UUID}/votes/${INITIATIVE.vote.id}/sign`,
+					respond.bind(null, {data: {bdocUri: BDOC_URL}})
+				)
+
+				var signature = yield initiativeSignaturesDb.create({
+					initiative_uuid: "5a1f604a-fedc-496c-9e21-ef0b9e971861",
+					user_uuid: USER_ID,
+					hidden: true
+				})
+
+				var res = yield this.request(`/initiatives/${UUID}/signature`, {
+					method: "POST",
+					form: {
+						_csrf_token: this.csrfToken,
+						method: "id-card",
+						token: AUTH_TOKEN,
+						signature: SIGN_TOKEN
+					}
+				})
+
+				yield initiativeSignaturesDb.search(sql`
+					SELECT * FROM initiative_signatures
+				`).must.then.eql([signature])
+
+				res.statusCode.must.equal(303)
+			})
+
+			it("must not unhide other user's signature", function*() {
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: INITIATIVE}))
+				
+				this.router.post(`/api/topics/${UUID}/votes/${INITIATIVE.vote.id}/sign`,
+					respond.bind(null, {data: {bdocUri: BDOC_URL}})
+				)
+
+				var signature = yield initiativeSignaturesDb.create({
+					initiative_uuid: UUID,
+					user_uuid: "93a13041-c015-431e-b8dd-302e9e4b3d5d",
+					hidden: true
+				})
+
+				var res = yield this.request(`/initiatives/${UUID}/signature`, {
+					method: "POST",
+					form: {
+						_csrf_token: this.csrfToken,
+						method: "id-card",
+						token: AUTH_TOKEN,
+						signature: SIGN_TOKEN
+					}
+				})
+
+				yield initiativeSignaturesDb.search(sql`
+					SELECT * FROM initiative_signatures
+				`).must.then.eql([signature])
+
+				res.statusCode.must.equal(303)
+			})
+		})
+
+		describe("when signing via Mobile-Id", function() {
+			it("must send mobile-id signature to CitizenOS", function*() {
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -640,7 +782,7 @@ describe("InitiativesController", function() {
 					req.body.must.eql({
 						options: [{optionId: "0bf34d36-59cd-438f-afd1-9a3a779b78b0"}],
 						pid: "11412090004",
-						phoneNumber: long,
+						phoneNumber: "+37200000766",
 					})
 
 					respond({data: {challengeID: "1337", token: "abcdef"}}, req, res)
@@ -653,12 +795,179 @@ describe("InitiativesController", function() {
 						method: "mobile-id",
 						optionId: "0bf34d36-59cd-438f-afd1-9a3a779b78b0",
 						pid: "11412090004",
-						phoneNumber: short
+						phoneNumber: "+37200000766"
 					}
 				})
 
 				created.must.equal(1)
 				res.statusCode.must.equal(200)
+			})
+
+			O.each({
+				"00000766": "+37200000766",
+				"37000000766": "37000000766",
+				"37200000766": "37200000766",
+				"37100000766": "37100000766",
+				"+37000000766": "+37000000766",
+				"+37200000766": "+37200000766"
+			}, function(long, short) {
+				it(`must transform mobile-id number ${short} to ${long}`, function*() {
+					this.router.get(`/api/topics/${UUID}`,
+						respond.bind(null, {data: INITIATIVE}))
+
+					var created = 0
+					this.router.post(`/api/topics/${UUID}/votes/${INITIATIVE.vote.id}`,
+						function(req, res) {
+						++created
+						req.body.must.eql({
+							options: [{optionId: "0bf34d36-59cd-438f-afd1-9a3a779b78b0"}],
+							pid: "11412090004",
+							phoneNumber: long,
+						})
+
+						respond({data: {challengeID: "1337", token: "abcdef"}}, req, res)
+					})
+
+					var res = yield this.request(`/initiatives/${UUID}/signature`, {
+						method: "POST",
+						form: {
+							_csrf_token: this.csrfToken,
+							method: "mobile-id",
+							optionId: "0bf34d36-59cd-438f-afd1-9a3a779b78b0",
+							pid: "11412090004",
+							phoneNumber: short
+						}
+					})
+
+					created.must.equal(1)
+					res.statusCode.must.equal(200)
+				})
+			})
+		})
+	})
+
+	describe("PUT /:id/signature", function() {
+		require("root/test/fixtures").csrf()
+
+		describe("when not logged in", function() {
+			it("must respond with 401 if not logged in", function*() {
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: INITIATIVE}))
+
+				var res = yield this.request(`/initiatives/${UUID}/signature`, {
+					method: "PUT",
+					form: {_csrf_token: this.csrfToken, hidden: true}
+				})
+
+				res.statusCode.must.equal(401)
+			})
+		})
+
+		describe("when logged in", function() {
+			require("root/test/fixtures").user()
+
+			beforeEach(function() {
+				this.time = Sinon.useFakeTimers(Date.UTC(2015, 5, 18), "Date")
+			})
+
+			afterEach(function() { this.time.restore() })
+			
+			it("must respond with 303 if hiding a non-existent signature",
+				function*() {
+				this.router.get(`/api/users/self/topics/${UUID}`,
+					respond.bind(null, {data: INITIATIVE}))
+
+				var res = yield this.request(`/initiatives/${UUID}/signature`, {
+					method: "PUT",
+					form: {_csrf_token: this.csrfToken, hidden: true}
+				})
+
+				yield initiativeSignaturesDb.search(sql`
+					SELECT * FROM initiative_signatures
+				`).must.then.be.empty()
+
+				res.statusCode.must.equal(303)
+				res.headers.location.must.equal(`/initiatives/${UUID}`)
+			})
+
+			it("must hide signature", function*() {
+				this.router.get(`/api/users/self/topics/${UUID}`,
+					respond.bind(null, {data: SIGNED_INITIATIVE}))
+
+				var user = this.user
+
+				var res = yield this.request(`/initiatives/${UUID}/signature`, {
+					method: "PUT",
+					form: {_csrf_token: this.csrfToken, hidden: true}
+				})
+
+				yield initiativeSignaturesDb.search(sql`
+					SELECT * FROM initiative_signatures
+				`).must.then.eql([{
+					initiative_uuid: UUID,
+					user_uuid: user.id,
+					hidden: true,
+					updated_at: new Date
+				}])
+
+				res.statusCode.must.equal(303)
+				res.headers.location.must.equal(`/initiatives/${UUID}`)
+			})
+
+			it("must hide signature that was previously made visible", function*() {
+				this.router.get(`/api/users/self/topics/${UUID}`,
+					respond.bind(null, {data: SIGNED_INITIATIVE}))
+
+				var user = this.user
+
+				var signature = yield initiativeSignaturesDb.create({
+					initiative_uuid: UUID,
+					user_uuid: user.id,
+					hidden: false
+				})
+
+				var res = yield this.request(`/initiatives/${UUID}/signature`, {
+					method: "PUT",
+					form: {_csrf_token: this.csrfToken, hidden: true}
+				})
+
+				yield initiativeSignaturesDb.search(sql`
+					SELECT * FROM initiative_signatures
+				`).must.then.eql([{
+					__proto__: signature,
+					hidden: true,
+					updated_at: new Date
+				}])
+
+				res.statusCode.must.equal(303)
+				res.headers.location.must.equal(`/initiatives/${UUID}`)
+			})
+
+			it("must hide an already hidden signature", function*() {
+				this.router.get(`/api/users/self/topics/${UUID}`,
+					respond.bind(null, {data: SIGNED_INITIATIVE}))
+
+				var user = this.user
+
+				yield initiativeSignaturesDb.create({
+					initiative_uuid: UUID,
+					user_uuid: user.id,
+					hidden: true
+				})
+
+				var res = yield this.request(`/initiatives/${UUID}/signature`, {
+					method: "PUT",
+					form: {_csrf_token: this.csrfToken, hidden: true}
+				})
+
+				var signature = yield initiativeSignaturesDb.read(sql`
+					SELECT * FROM initiative_signatures
+					WHERE (initiative_uuid, user_uuid) = (${INITIATIVE.id}, ${user.id})
+				`).then(_.first)
+
+				signature.hidden.must.be.true()
+				res.statusCode.must.equal(303)
+				res.headers.location.must.equal(`/initiatives/${UUID}`)
 			})
 		})
 	})
@@ -670,6 +979,8 @@ describe("InitiativesController", function() {
 		beforeEach(function() {
 			this.time = Sinon.useFakeTimers(Date.now(), "Date")
 		})
+
+		afterEach(function() { this.time.restore() })
 
 		O.each({
 			discussion: DISCUSSION,
@@ -789,6 +1100,12 @@ describe("InitiativesController", function() {
 	describe("GET /:id/subscriptions/new", function() {
 		require("root/test/fixtures").csrf()
 
+		beforeEach(function() {
+			this.time = Sinon.useFakeTimers(Date.UTC(2015, 5, 18), "Date")
+		})
+
+		afterEach(function() { this.time.restore() })
+
 		it("must confirm given a confirmation token", function*() {
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
@@ -875,3 +1192,9 @@ describe("InitiativesController", function() {
 		})
 	})
 })
+
+function fakeJwt(obj) {
+	var header = encodeBase64(JSON.stringify({typ: "JWT", alg: "RS256"}))
+	var body = encodeBase64(JSON.stringify(obj))
+	return header + "." + body + ".fakesignature"
+}

@@ -2,11 +2,10 @@
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var LiveReload = require("../page").LiveReload
-var Form = require("../page").Form
 var prefixed = require("root/lib/css").prefixed
 exports = module.exports = Page
-exports.Form = Form
-exports.FormButton = FormButton
+exports.Form = require("../page").Form
+exports.FormButton = require("../page").FormButton
 exports.Flash = Flash
 
 function Page(attrs, children) {
@@ -41,23 +40,6 @@ function Page(attrs, children) {
 			<main>{children}</main>
 		</body>
 	</html>
-}
-
-function FormButton(attrs, children) {
-	return <Form
-		req={attrs.req}
-		action={attrs.action}
-		method={attrs.name == "_method" ? "post" : "put"}
-	>
-		<button
-			id={attrs.id}
-			class={attrs.class}
-			type={attrs.type}
-			name={attrs.name}
-			value={attrs.value}
-			onclick={attrs.onclick}
-		>{children}</button>
-	</Form>
 }
 
 function Flash(attrs) {

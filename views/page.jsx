@@ -13,6 +13,7 @@ var ENV = process.env.ENV
 exports = module.exports = Page
 exports.Flash = Flash
 exports.Form = Form
+exports.FormButton = FormButton
 exports.DatePickerInput = DatePickerInput
 exports.LiveReload = LiveReload
 
@@ -208,6 +209,23 @@ function Form(attrs, children) {
 
 		{children}
 	</form>
+}
+
+function FormButton(attrs, children) {
+	return <Form
+		req={attrs.req}
+		action={attrs.action}
+		method={attrs.name == "_method" ? "post" : "put"}
+	>
+		<button
+			id={attrs.id}
+			class={attrs.class}
+			type={attrs.type}
+			name={attrs.name}
+			value={attrs.value}
+			onclick={attrs.onclick}
+		>{children}</button>
+	</Form>
 }
 	
 function Sentry(attrs) {

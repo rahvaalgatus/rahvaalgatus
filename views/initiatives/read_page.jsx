@@ -1,4 +1,5 @@
 /** @jsx Jsx */
+var _ = require("lodash")
 var O = require("oolong")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
@@ -10,6 +11,7 @@ var Initiative = require("root/lib/initiative")
 var Comment = require("root/lib/comment")
 var ProgressView = require("./initiative_page").ProgressView
 var Form = require("../page").Form
+var FormButton = require("../page").FormButton
 var javascript = require("root/lib/jsx").javascript
 var stringify = require("root/lib/json").stringify
 var linkify = require("root/lib/linkify")
@@ -22,6 +24,7 @@ var UI_TRANSLATIONS = O.map(I18n.STRINGS, function(lang) {
 module.exports = function(attrs) {
 	var req = attrs.req
 	var t = attrs.t
+	var signature = attrs.signature
 	var comment = attrs.comment
 	var comments = attrs.comments
 	var flash = attrs.flash
@@ -29,18 +32,17 @@ module.exports = function(attrs) {
 	var initiative = attrs.initiative
 	var dbInitiative = attrs.dbInitiative
 
-	var hasVote = flash("signed") || Initiative.hasVote("Yes", initiative)
 	var now = new Date
-	var opt = hasVote ? "No" : "Yes"
+	var opt = signature ? "No" : "Yes"
 	var optId = initiative.vote && Initiative.findOptionId(opt, initiative)
 	var sentToParliamentAt = dbInitiative.sent_to_parliament_at
 
-	var signWithIdCardText = !hasVote
+	var signWithIdCardText = !signature
 		? t("BTN_VOTE_SIGN_WITH_ID_CARD")
 		: t("BTN_VOTE_REVOKE_WITH_ID_CARD")
 
-	var signWithMobileClass = hasVote ? "white-button" : "primary-button"
-	var signWithMobileText = !hasVote
+	var signWithMobileClass = signature ? "white-button" : "primary-button"
+	var signWithMobileText = !signature
 		? t("BTN_VOTE_SIGN_WITH_MOBILE_ID")
 		: t("BTN_VOTE_REVOKE_WITH_MOBILE_ID")
 
@@ -82,7 +84,9 @@ module.exports = function(attrs) {
 								<h1>
 									{t("INITIATIVE_IN_DISCUSSION")}
 									{" "}
-									<a href="#initiative-comment-form" class="link-button">
+									<a
+										href="#initiative-comment-form"
+										class="link-button wide-button">
 										{t("ADD_YOUR_COMMENT")}
 									</a>
 									{"."}
@@ -112,7 +116,7 @@ module.exports = function(attrs) {
 							<h1>
 								{t("INITIATIVE_IN_PARLIAMENT")}
 								{" "}
-								<a href="#initiative-events" class="link-button">
+								<a href="#initiative-events" class="link-button wide-button">
 									{t("LOOK_AT_EVENTS")}
 								</a>.
 							</h1>
@@ -124,7 +128,9 @@ module.exports = function(attrs) {
 									<h1>
 										{t("INITIATIVE_PROCESSED")}
 										{" "}
-										<a href="#initiative-events" class="link-button">
+										<a
+											href="#initiative-events"
+											class="link-button wide-button">
 											{t("LOOK_AT_EVENTS")}
 										</a>.
 									</h1>
@@ -145,10 +151,11 @@ module.exports = function(attrs) {
 				})(initiative.status)}
 
 				<QuicksignView
+					req={req}
 					t={t}
-					flash={flash}
 					initiative={initiative}
 					dbInitiative={dbInitiative}
+					signature={signature}
 				/>
 
 				<article class="text">{Jsx.html(initiative.html)}</article>
@@ -162,7 +169,7 @@ module.exports = function(attrs) {
 
 					<ProgressTextView initiative={initiative} t={t} />
 
-					{hasVote ? [
+					{signature ? [
 						<h2>{t("THANKS_FOR_SIGNING")}</h2>,
 						<p>Soovid allkirja tühistada?</p>
 					] : [
@@ -305,10 +312,11 @@ module.exports = function(attrs) {
 
 			<aside id="initiative-sidebar">
 				<QuicksignView
+					req={req}
 					t={t}
-					flash={flash}
 					initiative={initiative}
 					dbInitiative={dbInitiative}
+					signature={signature}
 				/>
 
 				{Initiative.canPublish(initiative) ? <Form
@@ -687,27 +695,63 @@ function ProgressTextView(attrs) {
 
 function QuicksignView(attrs) {
 	var t = attrs.t
-	var flash = attrs.flash
+	var req = attrs.req
 	var initiative = attrs.initiative
 	var dbInitiative = attrs.dbInitiative
-	var hasVote = flash("signed") || Initiative.hasVote("Yes", initiative)
+	var signature = attrs.signature
 	if (!Initiative.isPublic(initiative)) return null
 
+	// There may be multiple QuicksignViews on the page.
+	var id = _.uniqueId("quicksign")
 	var now = new Date
 
 	return <div class="quicksign">
 		<ProgressView t={t} initiative={initiative} dbInitiative={dbInitiative} />
 
-		{Initiative.isVotable(now, initiative) ? !hasVote ? <a
+		{Initiative.isVotable(now, initiative) && !signature ? <a
 			href="#initiative-vote"
 			class="primary-button wide-button sign-button">
 			{t("SIGN_THIS_DOCUMENT")}
-		</a> : <a
-			href="#initiative-vote"
-			class="white-button wide-button revoke-button">
-			{t("REVOKE_SIGNATURE")}
-		</a> : null}
+			</a>
+		: null}
 
 		<ProgressTextView initiative={initiative} t={t} />
+
+		{Initiative.isVotable(now, initiative) && signature ? <Fragment>
+			<h2>{t("THANKS_FOR_SIGNING")}</h2>
+
+			<a href="#initiative-vote" class="link-button revoke-button">
+				{t("REVOKE_SIGNATURE")}
+			</a>
+
+			{signature.user_uuid ? <Fragment>
+				{" "}või vaid <FormButton
+					req={req}
+					class="link-button hide-button"
+					action={"/initiatives/" + initiative.id + "/signature"}
+					onclick={
+						`return confirm(${stringify(t("HIDE_SIGNATURE_CONFIRMATION"))})`
+					}
+					name="hidden"
+					value="true">
+					peida kontolt
+				</FormButton>.{" "}
+
+				<input
+					type="checkbox"
+					class="hiding-description-toggle"
+					id={"hiding-description-toggle-" + id}
+					hidden
+				/>
+
+				<label
+					class="link-button"
+					for={"hiding-description-toggle-" + id}>
+					(?)
+				</label>
+
+				<p class="hiding-description">{t("HIDE_SIGNATURE_DESCRIPTION")}</p>
+			</Fragment> : "."}
+		</Fragment> : null}
 	</div>
 }

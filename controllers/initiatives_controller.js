@@ -1,5 +1,6 @@
 var _ = require("root/lib/underscore")
 var O = require("oolong")
+var Url = require("url")
 var Router = require("express").Router
 var HttpError = require("standard-http-error")
 var Initiative = require("root/lib/initiative")
@@ -13,6 +14,7 @@ var ResponseTypeMiddeware =
 var sqlite = require("root").sqlite
 var initiativesDb = require("root/db/initiatives_db")
 var initiativeSubscriptionsDb = require("root/db/initiative_subscriptions_db")
+var initiativeSignaturesDb = require("root/db/initiative_signatures_db")
 var countVotes = Initiative.countSignatures.bind(null, "Yes")
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
@@ -32,6 +34,7 @@ var hasMainPartnerId = Initiative.hasPartnerId.bind(null, Config.apiPartnerId)
 var sendEmail = require("root").sendEmail
 var concat = Array.prototype.concat.bind(Array.prototype)
 var randomHex = require("root/lib/crypto").randomHex
+var decodeBase64 = require("root/lib/crypto").decodeBase64
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
 var EMPTY_COMMENT = {subject: "", text: "", parentId: null}
@@ -167,8 +170,27 @@ exports.router.get("/:id",
 })
 
 exports.read = next(function*(req, res) {
+	var user = req.user
 	var initiative = req.initiative
 	var events
+
+	var signature
+	if (user == null && req.flash("signed")) signature = {
+		initiative_uuid: initiative.id,
+		user_uuid: null,
+		hidden: false
+	}
+	else if (user && Initiative.hasVote("Yes", initiative)) signature = (
+		(yield initiativeSignaturesDb.search(sql`
+			SELECT * FROM initiative_signatures
+			WHERE (initiative_uuid, user_uuid) = (${initiative.id}, ${user.id})
+		`).then(_.first)) || {
+		initiative_uuid: initiative.id,
+		user_uuid: user.id,
+		hidden: false
+	})
+
+	if (signature && signature.hidden) signature = null
 
 	var commentsPath = `/api/topics/${initiative.id}/comments?orderBy=date`
 	if (req.user) commentsPath = "/api/users/self" + commentsPath.slice(4)
@@ -188,6 +210,7 @@ exports.read = next(function*(req, res) {
 	else events = EMPTY_ARR
 
 	res.render("initiatives/read_page.jsx", {
+		signature: signature,
 		comments: comments,
 		comment: res.locals.comment || EMPTY_COMMENT,
 		events: events
@@ -378,6 +401,9 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 			}).catch(catch400)
 
 			if (isOk(signed)) {
+				var userId = parseUserIdFromBdocUrl(signed.body.data.bdocUri)
+				yield unhideSignature(initiative.id, userId)
+
 				res.flash("notice", req.t("THANKS_FOR_SIGNING"))
 				res.flash("signed", signed.body.data.bdocUri)
 				res.redirect(303, req.baseUrl + "/" + initiative.id)
@@ -413,6 +439,37 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 	}
 }))
 
+exports.router.put("/:id/signature", next(function*(req, res) {
+	var user = req.user
+	var initiative = req.initiative
+	if (user == null) throw new HttpError(401)
+
+	if (Initiative.hasVote("Yes", initiative)) {
+		var signature = yield initiativeSignaturesDb.read(sql`
+			SELECT * FROM initiative_signatures
+			WHERE (initiative_uuid, user_uuid) = (${initiative.id}, ${user.id})
+		`).then(_.first)
+
+		if (!signature) yield initiativeSignaturesDb.create({
+			initiative_uuid: initiative.id,
+			user_uuid: user.id,
+			hidden: true,
+			updated_at: new Date
+		})
+		else if (!signature.hidden) yield sqlite.update(sql`
+			UPDATE initiative_signatures
+			SET hidden = 1, updated_at = ${new Date}
+			WHERE (initiative_uuid, user_uuid) = (${initiative.id}, ${user.id})
+		`)
+	}
+
+	// NOTE: Do not answer differently if there was no signature or it was already
+	// hidden — that'd permit detecting its visibility without actually
+	// re-signing.
+	res.flash("notice", req.t("SIGNATURE_HIDDEN"))
+	res.redirect(303, req.baseUrl + "/" + initiative.id)
+}))
+
 exports.router.get("/:id/signature", next(function*(req, res) {
 	var token = req.query.token
 	if (token == null) throw new HttpError(400, "Missing Token")
@@ -421,6 +478,9 @@ exports.router.get("/:id/signature", next(function*(req, res) {
 
 	switch (signature.statusCode) {
 		case 200:
+			var userId = parseUserIdFromBdocUrl(signature.body.data.bdocUri)
+			yield unhideSignature(initiative.id, userId)
+
 			// Cannot currently know which option the person signed.
 			res.flash("notice", req.t("THANKS_FOR_SIGNING"))
 			res.flash("signed", signature.body.data.bdocUri)
@@ -568,6 +628,22 @@ function ensureAreaCode(number) {
 function hasCategory(category, initiative) {
 	return _.contains(initiative.categories, category)
 }
+
+function parseUserIdFromBdocUrl(url) {
+	url = Url.parse(url, true)
+	return parseJwt(url.query.token).userId
+}
+
+function unhideSignature(initiativeId, userId) {
+	return sqlite.update(sql`
+		UPDATE initiative_signatures
+		SET hidden = 0, updated_at = ${new Date}
+		WHERE (initiative_uuid, user_uuid) = (${initiativeId}, ${userId})
+	`)
+}
+
+// NOTE: Use this only on JWTs from trusted sources as it does no validation.
+function parseJwt(jwt) { return JSON.parse(decodeBase64(jwt.split(".")[1])) }
 
 function getBody(res) { return res.body.data }
 function sortByCreatedAt(arr) { return _.sortBy(arr, "createdAt").reverse() }

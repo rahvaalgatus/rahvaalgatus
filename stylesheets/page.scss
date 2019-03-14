@@ -220,6 +220,7 @@ button.inherited {
 .link-button {
 	@extend button.inherited;
 
+	cursor: pointer;
 	color: $link;
 	&:hover { text-decoration: underline; }
 }
@@ -908,12 +909,11 @@ button.inherited {
 			.quicksign {
 				display: none;
 				background-color: $light-background;
-				text-align: center;
 				padding: $sidebar-padding $article-padding;
 				border-bottom: 1px solid $light-background-border;
 
 				.initiative-progress { line-height: 3.2rem; border-radius: 0.4rem; }
-				.sign-button, .revoke-button { margin-top: 1rem; }
+				.sign-button, { margin-top: 1rem; }
 
 				@include mobile-and-tablet { display: block; }
 
@@ -960,10 +960,6 @@ button.inherited {
 				margin-top: 0.5rem;
 			}
 
-			button {
-				min-width: 18rem;
-			}
-
 			a.button + p {
 				margin-top: 1rem;
 			}
@@ -972,7 +968,7 @@ button.inherited {
 				width: 100%;
 			}
 
-			.link-button {
+			.link-button.wide-button {
 				display: block;
 				text-align: center;
 				line-height: 3rem;
@@ -987,7 +983,11 @@ button.inherited {
 				line-height: $flash-min-height;
 			}
 
-			p.initiative-progress-text span { display: block; }
+			.quicksign {
+				margin-bottom: 2rem;
+
+				.initiative-progress-text span { display: block; }
+			}
 
 			#initiative-notes,
 			#initiative-notes-form {
@@ -1033,12 +1033,36 @@ button.inherited {
 			}
 		}
 
-		p.initiative-progress-text {
+		.quicksign {
 			text-align: center;
-			margin-top: 1rem;
 			line-height: 1.5;
 
-			time { @extend strong; }
+			.link-button {
+				font-weight: bold;
+			}
+
+			h2 {
+				margin-top: 1rem;
+				font-size: 1.6rem;
+				font-weight: bold;
+			}
+
+			form { display: inline; }
+
+			.initiative-progress-text {
+				margin-top: 1rem;
+
+				time { @extend strong; }
+			}
+
+			.hiding-description {
+				display: none;
+			}
+
+			.hiding-description-toggle:checked {
+				& + label { display: none; }
+				& ~ .hiding-description { display: block; }
+			}
 		}
 
 		#initiative-sidebar #initiative-subscribe {
