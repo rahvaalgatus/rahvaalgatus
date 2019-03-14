@@ -2,6 +2,7 @@ var _ = require("root/lib/underscore")
 var HeavenError = require("heaven/error")
 var ValidDbInitiative = require("root/test/valid_db_initiative")
 var sqlite = require("root").sqlite
+var sql = require("root/lib/sql")
 var initiativesDb = require("root/db/initiatives_db")
 
 describe("InitiativesDb", function() {
@@ -21,14 +22,14 @@ describe("InitiativesDb", function() {
 				catch (ex) { err = ex }
 				err.must.be.an.error(HeavenError)
 				err.code.must.equal(404)
-				yield sqlite.search("SELECT * FROM initiatives").must.then.eql([])
+				yield sqlite.search(sql`SELECT * FROM initiatives`).must.then.eql([])
 			})
 
 			it("must return existing initiative when creating", function*() {
 				var a = yield sqlite.create("initiatives", new ValidDbInitiative)
 				var b = yield initiativesDb.read(a.uuid, {create: true})
 				a.must.eql(b)
-				yield sqlite.search("SELECT * FROM initiatives").must.then.eql([a])
+				yield sqlite.search(sql`SELECT * FROM initiatives`).must.then.eql([a])
 			})
 
 			it("must create and return a new initiative when creating", function*() {
@@ -36,7 +37,7 @@ describe("InitiativesDb", function() {
 				var initiative = yield initiativesDb.read(uuid, {create: true})
 				initiative.must.eql(new ValidDbInitiative({uuid: uuid}))
 
-				yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
+				yield sqlite.search(sql`SELECT * FROM initiatives`).must.then.eql([
 					initiative
 				])
 			})
@@ -62,7 +63,7 @@ describe("InitiativesDb", function() {
 				catch (ex) { err = ex }
 				err.must.be.an.error(HeavenError)
 				err.code.must.equal(404)
-				yield sqlite.search("SELECT * FROM initiatives").must.then.eql([a])
+				yield sqlite.search(sql`SELECT * FROM initiatives`).must.then.eql([a])
 			})
 
 			it("must return and create initiatives when creating", function*() {

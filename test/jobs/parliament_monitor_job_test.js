@@ -4,6 +4,7 @@ var ValidDbInitiative = require("root/test/valid_db_initiative")
 var respond = require("root/test/fixtures").respond
 var job = require("root/jobs/parliament_monitor_job")
 var sqlite = require("root").sqlite
+var sql = require("root/lib/sql")
 
 var COMPLETED_INITIATIVE = {
 	id: "d597d201-1758-4c5b-8e62-6415d397983f",
@@ -47,7 +48,7 @@ describe("ParliamentMonitorJob", function() {
 
 		yield job()
 
-		yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
+		yield sqlite.search(sql`SELECT * FROM initiatives`).must.then.eql([
 			new ValidDbInitiative({
 				uuid: uuid,
 				parliament_api_data: JSON.stringify(parliamentApiData)
@@ -77,7 +78,7 @@ describe("ParliamentMonitorJob", function() {
 
 		yield job()
 
-		yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
+		yield sqlite.search(sql`SELECT * FROM initiatives`).must.then.eql([
 			new ValidDbInitiative({
 				uuid: uuid,
 				parliament_api_data: JSON.stringify(parliamentApiData)
@@ -115,7 +116,10 @@ describe("ParliamentMonitorJob", function() {
 		]))
 
 		yield job()
-		yield sqlite.search("SELECT * FROM initiatives").must.then.eql([initiative])
+		yield sqlite.search(sql`SELECT * FROM initiatives`).must.then.eql([
+			initiative
+		])
+
 		this.emails.must.be.empty()
 	})
 
@@ -152,7 +156,7 @@ describe("ParliamentMonitorJob", function() {
 		]))
 
 		yield job()
-		yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
+		yield sqlite.search(sql`SELECT * FROM initiatives`).must.then.eql([
 			new ValidDbInitiative({
 				uuid: uuid,
 				parliament_api_data: JSON.stringify(parliamentApiData)
@@ -180,7 +184,7 @@ describe("ParliamentMonitorJob", function() {
 		this.router.get(`/api/topics/${uuid}`, respondWith404)
 
 		yield job()
-		yield sqlite.search("SELECT * FROM initiatives").must.then.be.empty()
+		yield sqlite.search(sql`SELECT * FROM initiatives`).must.then.be.empty()
 		this.emails.must.be.empty()
 	})
 
@@ -191,7 +195,7 @@ describe("ParliamentMonitorJob", function() {
 		}]))
 
 		yield job()
-		yield sqlite.search("SELECT * FROM initiatives").must.then.be.empty()
+		yield sqlite.search(sql`SELECT * FROM initiatives`).must.then.be.empty()
 		this.emails.must.be.empty()
 	})
 })

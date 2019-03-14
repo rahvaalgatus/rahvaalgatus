@@ -3,6 +3,7 @@ var _ = require("root/lib/underscore")
 var cosApi = require("root/lib/citizenos_api")
 var parliamentApi = require("root/lib/parliament_api")
 var sqlite = require("root").sqlite
+var sql = require("root/lib/sql")
 var is404 = require("root/lib/fetch_error").is.bind(null, 404)
 var diff = require("root/lib/diff")
 var assert = require("assert")
@@ -42,14 +43,11 @@ function* updateDbInitiativeParliamentData(initiativeAndObj) {
 	var initiative = initiativeAndObj[0]
 	var obj = initiativeAndObj[1]
 
-	yield sqlite.update(`
+	yield sqlite.update(sql`
 		UPDATE initiatives
-		SET parliament_api_data = $data
-		WHERE uuid = $uuid
-	`, {
-		$uuid: initiative.uuid,
-		$data: JSON.stringify(obj)
-	})
+		SET parliament_api_data = ${JSON.stringify(obj)}
+		WHERE uuid = ${initiative.uuid}
+	`)
 }
 
 function* notify(initiativeAndObjAndDiff) {

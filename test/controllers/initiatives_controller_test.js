@@ -519,7 +519,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(303)
 				res.headers.location.must.equal(`/initiatives/${UUID}`)
 
-				yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
+				yield sqlite.search(sql`SELECT * FROM initiatives`).must.then.eql([
 					new ValidDbInitiative({
 						uuid: UUID,
 						sent_to_parliament_at: new Date().toISOString()
@@ -540,7 +540,7 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(303)
 					res.headers.location.must.equal(`/initiatives/${UUID}/edit`)
 
-					yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
+					yield sqlite.search(sql`SELECT * FROM initiatives`).must.then.eql([
 						new ValidDbInitiative({uuid: UUID, notes: "Hello, world"})
 					])
 				})
@@ -561,7 +561,7 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(303)
 					res.headers.location.must.equal(`/initiatives/${UUID}/edit`)
 
-					yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
+					yield sqlite.search(sql`SELECT * FROM initiatives`).must.then.eql([
 						other,
 						new ValidDbInitiative({uuid: UUID, notes: "Hello, world"})
 					])
@@ -578,7 +578,7 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(401)
 
-					yield sqlite.search("SELECT * FROM initiatives").must.then.eql([
+					yield sqlite.search(sql`SELECT * FROM initiatives`).must.then.eql([
 						new ValidDbInitiative({uuid: UUID})
 					])
 				})
@@ -586,7 +586,7 @@ describe("InitiativesController", function() {
 		})
 	})
 
-	describe("PUT /:id/signature", function() {
+	describe("POST /:id/signature", function() {
 		require("root/test/fixtures").csrf()
 
 		it("must send mobile-id vote", function*() {

@@ -274,14 +274,11 @@ exports.router.put("/:id", next(function*(req, res) {
 	else if ("notes" in req.body) {
 		if (!Initiative.canEdit(initiative)) throw new HttpError(401)
 
-		yield sqlite.update(`
+		yield sqlite.update(sql`
 			UPDATE initiatives
-			SET notes = $notes
-			WHERE uuid = $uuid
-		`, {
-			$uuid: initiative.id,
-			$notes: String(req.body.notes).trim()
-		})
+			SET notes = ${String(req.body.notes).trim()}
+			WHERE uuid = ${initiative.id}
+		`)
 
 		res.flash("notice", req.t("NOTES_UPDATED"))
 		res.redirect(303, req.baseUrl + "/" + initiative.id + "/edit")
@@ -300,10 +297,11 @@ exports.router.put("/:id", next(function*(req, res) {
 		else if (req.body.status === "voting")
 			res.flash("notice", "Algatus on avatud allkirjade kogumiseks.")
 		else if (req.body.status === "followUp") {
-			if (req.dbInitiative.sent_to_parliament_at == null) yield sqlite.update(
-				"UPDATE initiatives SET sent_to_parliament_at = $at WHERE uuid = $uuid",
-				{$uuid: initiative.id, $at: new Date().toISOString()}
-			)
+			if (!req.dbInitiative.sent_to_parliament_at) yield sqlite.update(sql`
+				UPDATE initiatives
+				SET sent_to_parliament_at = ${new Date}
+				WHERE uuid = ${initiative.id}
+			`)
 
 			res.flash("notice", req.t("SENT_TO_PARLIAMENT_CONTENT"))
 		}
