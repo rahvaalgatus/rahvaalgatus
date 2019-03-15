@@ -7,7 +7,6 @@ var cosApi = require("root/lib/citizenos_api")
 var readInitiativesWithStatus = cosApi.readInitiativesWithStatus
 var concat = Array.prototype.concat.bind(Array.prototype)
 var initiativesDb = require("root/db/initiatives_db")
-var EMPTY_ARR = Array.prototype
 
 exports.router = Router({mergeParams: true})
 
@@ -28,7 +27,7 @@ exports.router.get("/", next(function*(_req, res) {
 	var dbInitiatives = yield initiativesDb.search(uuids, {create: true})
 	dbInitiatives = _.indexBy(dbInitiatives, "uuid")
 
-	res.render("home/index", {
+	res.render("home_page.jsx", {
 		discussions: _.sortBy(discussions, "createdAt").reverse(),
 		votings: _.sortBy(votings, countVotes).reverse(),
 
@@ -37,7 +36,6 @@ exports.router.get("/", next(function*(_req, res) {
 			return dbInitiative.sent_to_parliament_at || initiative.vote.createdAt
 		}).reverse(),
 
-		processed: EMPTY_ARR,
 		dbInitiatives: dbInitiatives
 	})
 }))
