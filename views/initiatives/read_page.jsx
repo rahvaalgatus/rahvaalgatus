@@ -542,6 +542,7 @@ function CommentsView(attrs) {
 				disabled={!req.user}
 				class="form-input"
 			/>
+
 			<textarea
 				name="text"
 				maxlength={2048}
@@ -552,8 +553,11 @@ function CommentsView(attrs) {
 				{editedComment.parentId == null ? editedComment.text : null}
 			</textarea>
 			<button disabled={!req.user} class="secondary-button">{t("POST_COMMENT")}</button>
+
 			{!req.user ? <span class="text signin-to-act">
-				{t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE", {url: "/session/new"})}
+				{Jsx.html(t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE", {
+					url: "/session/new"
+				}))}
 			</span> : null}
 		</Form>
 	</center></section>
