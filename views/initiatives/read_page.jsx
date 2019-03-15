@@ -305,7 +305,6 @@ module.exports = function(attrs) {
 
 						function notice(msg) { flash.textContent = msg }
 						function raise(err) { setTimeout(function() { throw err }) }
-
 					`}</script>
 				</div> : null}
 			</div>
