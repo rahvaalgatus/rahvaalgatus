@@ -23,7 +23,9 @@ exports.router.post("/", function(req, res) {
 	res.redirect(url)
 })
 
-exports.router.get("/created", (_req, res) => res.render("donations/created"))
+exports.router.get("/created", (_req, res) => (
+	res.render("donations/created_page.jsx")
+))
 
 function parseJson(json) {
 	try { return JSON.parse(json) } catch (ex) { return null }
