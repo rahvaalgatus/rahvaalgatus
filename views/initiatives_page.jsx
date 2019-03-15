@@ -100,7 +100,7 @@ function InitiativeView(attrs) {
 				{I18n.formatDate("numeric", createdAt)}
 			</time>
 
-			<h3>{initiative.title}</h3>
+			<h3 lang="et">{initiative.title}</h3>
 			{badge ? <img src={badge.icon} class="badge" /> : null}
 
 			<span class="author">{initiative.creator.name}</span>

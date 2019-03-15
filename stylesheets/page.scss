@@ -468,6 +468,10 @@ button.inherited {
 			height: 5 * $line-height;
 			overflow: hidden;
 			margin-bottom: $line-height;
+
+			-webkit-hyphens: auto;
+			-moz-hyphens: auto;
+			hyphens: auto;
 		}
 
 		.badge {
