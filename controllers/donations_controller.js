@@ -7,7 +7,7 @@ exports.router = Router({mergeParams: true})
 exports.router.get("/new", function(req, res) {
 	var transaction = "json" in req.query ? parseJson(req.query.json) : null
 
-	res.render("donations/create", {
+	res.render("donations/create_page.jsx", {
 		amount: transaction && Number(transaction.amount)
 	})
 })

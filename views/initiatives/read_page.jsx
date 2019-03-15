@@ -12,6 +12,7 @@ var Comment = require("root/lib/comment")
 var ProgressView = require("./initiative_page").ProgressView
 var Form = require("../page").Form
 var FormButton = require("../page").FormButton
+var DonateForm = require("../donations/create_page").DonateForm
 var javascript = require("root/lib/jsx").javascript
 var stringify = require("root/lib/json").stringify
 var linkify = require("root/lib/linkify")
@@ -401,44 +402,6 @@ module.exports = function(attrs) {
 			comments={comments}
 		/>
 	</InitiativePage>
-}
-
-function DonateForm(attrs) {
-	var req = attrs.req
-	var t = attrs.t
-	var amount = attrs.amount
-	var pseudoInt = require("root/lib/crypto").pseudoInt
-	var def = amount == null ? 3 + pseudoInt(7) : 0
-
-	return <Form req={req} method="post" action="/donations" class="donate-form">
-		<input type="hidden" name="default" value={def} />
-
-		<label class="form-label">{t("SUPPORT_LABEL")}</label>
-		<br />
-		<label class="amount-input">
-			<input
-				type="numeric"
-				name="amount"
-				value={amount || def}
-				required
-				class="form-input"
-			/>
-		</label>
-
-		<br />
-		<label class="form-label">Isikukood (kui soovid tulumaksu tagasi)</label>
-		<br />
-		<input name="person" maxlength={32} class="form-input" />
-
-		<button class="form-submit secondary-button">{t("SUPPORT_BUTTON")}</button>
-
-		<label class="form-checkbox tos-checkbox">
-			<input type="checkbox" name="accept-tos" required />
-			{Jsx.html(t("I_HAVE_READ", {url: "/about#tos"}))}
-		</label>
-
-		<p class="text">{t("SUPPORT_REDIRECT")}</p>
-	</Form>
 }
 
 function EventsView(attrs) {
