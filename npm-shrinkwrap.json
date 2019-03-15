@@ -624,8 +624,8 @@
       "resolved": "https://registry.npmjs.org/inherits/-/inherits-2.0.1.tgz"
     },
     "j6pack": {
-      "version": "0.1.338",
-      "from": "j6pack@0.1.338",
+      "version": "0.2.0",
+      "from": "j6pack@>=0.2.0 <0.3.0",
       "dependencies": {
         "jsx-transform": {
           "version": "2.4.0",
@@ -879,7 +879,7 @@
         },
         "void-elements": {
           "version": "3.1.0",
-          "from": "void-elements@3.1.0",
+          "from": "void-elements@>=2.0.0 <4.0.0",
           "resolved": "https://registry.npmjs.org/void-elements/-/void-elements-3.1.0.tgz"
         },
         "concat-stream": {
