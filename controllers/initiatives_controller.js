@@ -69,7 +69,7 @@ exports.router.get("/", next(function*(req, res) {
 	var dbInitiatives = yield initiativesDb.search(uuids, {create: true})
 	dbInitiatives = _.indexBy(dbInitiatives, "uuid")
 
-	res.render("initiatives/index", {
+	res.render("initiatives_page.jsx", {
 		discussions: concat(
 			sortByCreatedAt(initiatives.inProgress, "createdAt").reverse(),
 			sortByCreatedAt((closed.inProgress || EMPTY_ARR).filter(hasMainPartnerId))
