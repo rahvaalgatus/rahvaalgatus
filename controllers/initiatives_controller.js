@@ -587,7 +587,7 @@ exports.router.get("/:id/subscriptions/new", next(function*(req, res, next) {
 exports.router.use(function(err, _req, res, next) {
 	if (err instanceof HttpError && err.code === 404) {
 		res.statusCode = err.code
-		res.render("initiatives/404", {error: err})
+		res.render("initiatives/404_page.jsx", {error: err})
 	}
 	else next(err)
 })
