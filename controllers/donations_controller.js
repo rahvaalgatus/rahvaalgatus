@@ -18,6 +18,7 @@ exports.router.post("/", function(req, res) {
 
 	var url = Config.maksekeskusUrl
 	url += "?shopId=" + encode(Config.maksekeskusId)
+	url += "&donate=true"
 	url += "&amount=" + Number(req.body.amount)
 	url += "&paymentId=" + encode(`default=${def} person=${encode(person)}`)
 	res.redirect(url)

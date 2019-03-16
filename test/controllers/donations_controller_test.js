@@ -39,6 +39,7 @@ describe("DonationsController", function() {
 			res.statusCode.must.equal(302)
 			var url = Url.parse(res.headers.location, true)
 			url.host.must.equal("payment.maksekeskus.ee")
+			url.query.donate.must.equal("true")
 			url.query.amount.must.equal("10")
 			url.query.shopId.must.equal(Config.maksekeskusId)
 			url.query.paymentId.must.equal("default=5 person=11412090004")
