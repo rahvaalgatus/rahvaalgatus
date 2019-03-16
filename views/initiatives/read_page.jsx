@@ -500,7 +500,7 @@ function CommentsView(attrs) {
 				value={editedComment.parentId == null ? editedComment.subject : null}
 				maxlength={128}
 				required
-				placeholder={t("PLACEHOLDER_ADD_ARGUMENT_SUBJECT")}
+				placeholder={t("COMMENT_TITLE_PLACEHOLDER")}
 				disabled={!req.user}
 				class="form-input"
 			/>
@@ -509,7 +509,7 @@ function CommentsView(attrs) {
 				name="text"
 				maxlength={2048}
 				required
-				placeholder={t("PLACEHOLDER_ADD_ARGUMENT_TEXT")}
+				placeholder={t("COMMENT_BODY_PLACEHOLDER")}
 				disabled={!req.user}
 				class="form-textarea">
 				{editedComment.parentId == null ? editedComment.text : null}
