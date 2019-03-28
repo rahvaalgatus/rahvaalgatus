@@ -14,6 +14,7 @@ var Form = require("../page").Form
 var FormButton = require("../page").FormButton
 var DonateForm = require("../donations/create_page").DonateForm
 var javascript = require("root/lib/jsx").javascript
+var confirm = require("root/lib/jsx").confirm
 var stringify = require("root/lib/json").stringify
 var linkify = require("root/lib/linkify")
 var encode = encodeURIComponent
@@ -695,9 +696,7 @@ function QuicksignView(attrs) {
 					req={req}
 					class="link-button hide-button"
 					action={"/initiatives/" + initiative.id + "/signature"}
-					onclick={
-						`return confirm(${stringify(t("HIDE_SIGNATURE_CONFIRMATION"))})`
-					}
+					onclick={confirm(t("HIDE_SIGNATURE_CONFIRMATION"))}
 					name="hidden"
 					value="true">
 					peida kontolt

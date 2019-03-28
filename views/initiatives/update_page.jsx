@@ -5,6 +5,7 @@ var InitiativePage = require("./initiative_page")
 var Initiative = require("root/lib/initiative")
 var Form = require("../page").Form
 var Flash = require("../page").Flash
+var confirm = require("root/lib/jsx").confirm
 var javascript = require("root/lib/jsx").javascript
 
 module.exports = function(attrs) {
@@ -13,7 +14,6 @@ module.exports = function(attrs) {
 	var dbInitiative = attrs.dbInitiative
 	var flash = attrs.flash
 	var t = attrs.t
-	var confirmText = t("TXT_ALL_DISCUSSIONS_AND_VOTES_DELETED")
 
 	return <InitiativePage
 		page="initiative"
@@ -128,7 +128,7 @@ module.exports = function(attrs) {
 					<button
 						name="_method"
 						value="delete"
-						onclick={"return confirm('" + confirmText + "')"}
+						onclick={confirm(t("TXT_ALL_DISCUSSIONS_AND_VOTES_DELETED"))}
 						class="link-button wide-button">
 						{t("DELETE_DISCUSSION")}
 					</button>

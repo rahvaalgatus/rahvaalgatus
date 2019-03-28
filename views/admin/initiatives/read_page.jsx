@@ -6,6 +6,7 @@ var Form = Page.Form
 var FormButton = Page.FormButton
 var Flash = Page.Flash
 var formatDate = require("root/lib/i18n").formatDate
+var confirm = require("root/lib/jsx").confirm
 var linkify = require("root/lib/linkify")
 
 module.exports = function(attrs) {
@@ -132,7 +133,7 @@ module.exports = function(attrs) {
 									action={path}
 									name="_method"
 									value="delete"
-									onclick="return confirm('Sure?')"
+									onclick={confirm("Sure?")}
 									class="admin-link">Delete</FormButton>
 							</td>
 						</tr>
@@ -168,7 +169,7 @@ function DateInputForm(attrs) {
 					action={action}
 					name={name}
 					value=""
-					onclick="return confirm('Sure?')"
+					onclick={confirm("Sure?")}
 					class="admin-link">Remove</FormButton>
 			</Fragment> : <label for={toggle} class="admin-link">Set Date</label>}
 		</span>
