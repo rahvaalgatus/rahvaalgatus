@@ -579,7 +579,9 @@ exports.router.get("/:id/subscriptions/new", next(function*(req, res, next) {
 	else {
 		res.statusCode = 404
 		res.statusMessage = "Invalid Confirmation Token"
-		res.flash("error", "ASWA")
+		res.flash("error",
+			req.t("INVALID_INITIATIVE_SUBSCRIPTION_CONFIRMATION_TOKEN"))
+
 		exports.read(req, res, next)
 	}
 }))

@@ -57,6 +57,7 @@
 	"INITIATIVE_PROCESSED": "Algatuse menetlus Riigikogus on lõppenud.",
 	"INVALID_EMAIL": "Meiliaadress ei paista õige.",
 	"INVALID_FORM": "Vormis tundub olevat viga",
+	"INVALID_INITIATIVE_SUBSCRIPTION_CONFIRMATION_TOKEN": "Ei õnnestunud kahjuks algatuse teavituste tellimist kinnitada.\nProovi palun uuesti linki meilis vajutada või vajadusel tellimus uuesti teavitada.",
 	"INVITE_PEOPLE": "Lisa kaasautoreid",
 	"IN_FOLLOW_UP_LIST": "Menetluses ",
 	"I_HAVE_READ": "Olen tutvunud ja nõustun <a href=\"{{url}}\">rahvaalgatus.ee kasutamise hea tavaga</a>.",
