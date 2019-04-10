@@ -562,8 +562,13 @@ exports.router.post("/:id/subscriptions", next(function*(req, res) {
 
 exports.router.get("/:id/subscriptions/new", next(function*(req, res, next) {
 	var initiative = req.initiative
-	var token = req.query.confirmation_token
-	var subscription = yield initiativeSubscriptionsDb.search(token)
+
+	var subscription = yield initiativeSubscriptionsDb.search(sql`
+		SELECT * FROM initiative_subscriptions
+		WHERE initiative_uuid = ${initiative.id}
+		AND confirmation_token = ${req.query.confirmation_token}
+		LIMIT 1
+	`).then(_.first)
 
 	if (subscription) {
 		if (!subscription.confirmed_at)
@@ -584,6 +589,43 @@ exports.router.get("/:id/subscriptions/new", next(function*(req, res, next) {
 
 		exports.read(req, res, next)
 	}
+}))
+
+exports.router.use("/:id/subscriptions/:token", next(function*(req, res, next) {
+	req.subscription = yield initiativeSubscriptionsDb.search(sql`
+		SELECT * FROM initiative_subscriptions
+		WHERE initiative_uuid = ${req.initiative.id}
+		AND update_token = ${req.params.token}
+		LIMIT 1
+	`).then(_.first)
+
+	if (req.subscription) return void next()
+
+	res.statusCode = 404
+
+	return void res.render("initiatives/404_page.jsx", {
+		title: req.t("SUBSCRIPTION_NOT_FOUND_TITLE"),
+		body: req.t("SUBSCRIPTION_NOT_FOUND_BODY")
+	})
+}))
+
+exports.router.get("/:id/subscriptions/:token", function(req, res) {
+	var subscription = req.subscription
+	res.render("initiatives/subscriptions/read.jsx", {subscription: subscription})
+})
+
+exports.router.delete("/:id/subscriptions/:token", next(function*(req, res) {
+	var initiative = req.initiative
+	var subscription = req.subscription
+
+	yield initiativeSubscriptionsDb.delete(sql`
+		DELETE FROM initiative_subscriptions
+		WHERE initiative_uuid = ${initiative.id}
+		AND update_token = ${subscription.update_token}
+	`)
+
+	res.flash("notice", req.t("UNSUBSCRIBED"))
+	res.redirect(303, req.baseUrl + "/" + initiative.id)
 }))
 
 exports.router.use(function(err, _req, res, next) {

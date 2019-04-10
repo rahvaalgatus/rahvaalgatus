@@ -1012,7 +1012,8 @@ describe("InitiativesController", function() {
 					created_at: new Date,
 					updated_at: new Date,
 					confirmation_token: subscriptions[0].confirmation_token,
-					confirmation_sent_at: new Date
+					confirmation_sent_at: new Date,
+					update_token: subscription.update_token
 				}))
 
 				subscription.confirmation_token.must.exist()
@@ -1189,6 +1190,129 @@ describe("InitiativesController", function() {
 
 			res.statusCode.must.equal(404)
 			yield initiativeSubscriptionsDb.read(token).must.then.eql(subscription)
+		})
+	})
+
+	describe("GET /:id/subscriptions/:token", function() {
+		require("root/test/fixtures").csrf()
+
+		it("must show subscription page", function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
+
+			var subscription = new ValidDbInitiativeSubscription({
+				initiative_uuid: UUID,
+				confirmed_at: new Date
+			})
+
+			yield initiativeSubscriptionsDb.create(subscription)
+
+			var res = yield this.request(
+				`/initiatives/${UUID}/subscriptions/${subscription.update_token}`
+			)
+
+			res.statusCode.must.equal(200)
+			res.body.must.include("Lõpeta teavituse tellimine")
+		})
+
+		it("must respond with 404 given invalid update token", function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
+
+			// Still have a single subscription to ensure it's not picking randomly.
+			yield initiativeSubscriptionsDb.create(new ValidDbInitiativeSubscription({
+				initiative_uuid: UUID,
+				confirmed_at: new Date
+			}))
+
+			var res = yield this.request(`/initiatives/${UUID}/subscriptions/beef`)
+			res.statusCode.must.equal(404)
+			res.body.must.include(t("SUBSCRIPTION_NOT_FOUND_TITLE"))
+		})
+	})
+
+	describe("DELETE /:id/subscriptions/:token", function() {
+		require("root/test/fixtures").csrf()
+
+		it("must delete subscription", function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
+
+			var subscription = new ValidDbInitiativeSubscription({
+				initiative_uuid: UUID,
+				confirmed_at: new Date
+			})
+
+			yield initiativeSubscriptionsDb.create(subscription)
+
+			var res = yield this.request(
+				`/initiatives/${UUID}/subscriptions/${subscription.update_token}`, {
+				method: "POST",
+				form: {_method: "delete", _csrf_token: this.csrfToken}
+			})
+
+			res.statusCode.must.equal(303)
+			res.headers.location.must.equal("/initiatives/" + UUID)
+
+			yield initiativeSubscriptionsDb.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`).must.then.be.empty()
+		})
+
+		it("must respond with 404 given invalid update token", function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
+
+			// Still have a single subscription to ensure it's not picking randomly.
+			var subscription = new ValidDbInitiativeSubscription({
+				initiative_uuid: UUID,
+				confirmed_at: new Date
+			})
+
+			yield initiativeSubscriptionsDb.create(subscription)
+
+			var res = yield this.request(
+				`/initiatives/${UUID}/subscriptions/deadbeef`, {
+				method: "POST",
+				form: {_method: "delete", _csrf_token: this.csrfToken}
+			})
+
+			res.statusCode.must.equal(404)
+			res.body.must.include(t("SUBSCRIPTION_NOT_FOUND_TITLE"))
+
+			yield initiativeSubscriptionsDb.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`).must.then.eql([subscription])
+		})
+
+		it("must not delete other subscription on same initiative", function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
+
+			var other = new ValidDbInitiativeSubscription({
+				initiative_uuid: UUID,
+				confirmed_at: new Date
+			})
+
+			var subscription = new ValidDbInitiativeSubscription({
+				initiative_uuid: UUID,
+				confirmed_at: new Date,
+			})
+
+			yield initiativeSubscriptionsDb.create([other, subscription])
+
+			var res = yield this.request(
+				`/initiatives/${UUID}/subscriptions/${subscription.update_token}`, {
+				method: "POST",
+				form: {_method: "delete", _csrf_token: this.csrfToken}
+			})
+
+			res.statusCode.must.equal(303)
+			res.headers.location.must.equal("/initiatives/" + UUID)
+
+			yield initiativeSubscriptionsDb.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`).must.then.eql([other])
 		})
 	})
 })

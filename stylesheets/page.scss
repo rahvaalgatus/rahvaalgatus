@@ -99,7 +99,7 @@ strong {
 	h3 {
 		margin: 2rem 0 1rem;
 		font-size: 2.2rem;
-		font-weight: bold;
+		font-weight: 500;
 	}
 
 	p + p {
@@ -184,8 +184,12 @@ button.inherited {
 		margin-left: -1rem;
 	}
 
-	&:not(button) { line-height: $button-height; }
-	&:disabled { cursor: auto; }
+	&:disabled {
+		cursor: auto;
+		background: $secondary-background;
+		border: 1px solid darken($secondary-background, 10%);
+		color: $secondary-light-text;
+	}
 }
 
 .primary-button {
@@ -198,12 +202,6 @@ button.inherited {
 	background: $secondary-button-background;
 	color: $secondary-button-text;
 	border: 1px solid $secondary-button-border;
-
-	&:disabled {
-		background: $secondary-background;
-		border: 1px solid darken($secondary-background, 10%);
-		color: $secondary-light-text;
-	}
 }
 
 .yellow-button {
@@ -233,12 +231,7 @@ button.inherited {
 
 .form-label,
 .form-input,
-.form-textarea,
-.form-submit {
-	font-size: 14px;
-	font-family: $museo-sans;
-	font-weight: 500;
-
+.form-textarea {
 	&:disabled {
 		background-color: $secondary-background;
 	}
