@@ -4,17 +4,12 @@ var Page = require("../page")
 
 module.exports = function(attrs) {
 	var req = attrs.req
+	var t = attrs.t
 
 	return <Page page="error" req={req}>
 		<section class="primary-section text-section"><center>
-			<h1>Algatust ei leitud</h1>
-
-			<p>
-				See võib olla tingitud vigasest lingist või avalikustamata algatuse
-				ligipääsupiirangutest. Kui arvad, et peaksid algatust nägema, palu
-				algatuse loojal kontrollida, kas sulle on antud enne avalikustamiseks
-				sellele ligipääs.
-			</p>
+			<h1>{attrs.title || t("INITIATIVE_404_TITLE")}</h1>
+			<p>{attrs.body || t("INITIATIVE_404_BODY")}</p>
 		</center></section>
 	</Page>
 }
