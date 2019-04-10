@@ -93,7 +93,7 @@ module.exports = function(attrs) {
 				Events <span class="admin-count">({events.length})</span>
 			</h2>
 
-			{events.length > 0 ? <table class="admin-table">
+			<table class="admin-table">
 				<thead>
 					<th>Created On</th>
 					<th>Title</th>
@@ -139,7 +139,7 @@ module.exports = function(attrs) {
 						</tr>
 					})}
 				</tbody>
-			</table> : null}
+			</table>
 		</div>
 	</Page>
 }
