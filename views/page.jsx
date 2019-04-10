@@ -32,7 +32,7 @@ function Page(attrs, children) {
 	var assemblyLogo = "/assets/esstikoostoo_logo.png"
 	if (req.lang !== "et") assemblyLogo = "/assets/esstikoostoo_logo_en.png"
 
-	return <html lang={req.lang}>
+	return <html lang={req.lang} class={attrs.class}>
 		<head>
 			<meta charset="utf-8" />
 			<meta name="viewport" content="width=device-width" />

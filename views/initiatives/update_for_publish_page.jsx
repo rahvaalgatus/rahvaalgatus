@@ -16,7 +16,8 @@ module.exports = function(attributes) {
 	var max = Initiative.getMaxDeadline(new Date)
 
 	return <InitiativePage
-		page="initiative"
+		page="initiative-publish"
+		class="initiative-page"
 		title={initiative.title}
 		initiative={initiative}
 		req={req}>
@@ -30,7 +31,6 @@ module.exports = function(attributes) {
 
 			<Form
 				req={req}
-				id="initiative-form"
 				method="put"
 				action={"/initiatives/" + initiative.id}
 				class="form">

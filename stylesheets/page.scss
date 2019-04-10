@@ -813,14 +813,8 @@ button.inherited {
 	background-color: $secondary-background;
 }
 
-#initiative-page {
-	$article-width: 72rem;
-	$article-padding: 3rem;
-	$article-padding-mobile: 2rem;
-	$article-width-percentage: 70%;
-	$sidebar-padding: 2rem;
-	$comment-padding: 3rem;
-
+#initiative-page,
+.initiative-page {
 	background-color: $secondary-background;
 
 	#initiative-header {
@@ -860,6 +854,15 @@ button.inherited {
 			img.badge { margin-top: 1rem; margin-left: 0; }
 		}
 	}
+}
+
+#initiative-page {
+	$article-width: 72rem;
+	$article-padding: 3rem;
+	$article-padding-mobile: 2rem;
+	$article-width-percentage: 70%;
+	$sidebar-padding: 2rem;
+	$comment-padding: 3rem;
 
 	#initiative-section,
 	#initiative-events {
@@ -1511,8 +1514,12 @@ button.inherited {
 	}
 
 	.signin-to-act { margin-left: 1rem; }
+}
 
-	#initiative-form {
+#initiative-publish-page,
+#initiative-send-to-voting-page,
+#initiative-send-to-parliament-page {
+	.primary-section form {
 		input[type=date] {
 			max-width: 24rem;
 		}
