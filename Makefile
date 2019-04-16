@@ -105,7 +105,7 @@ shrinkwrap:
 	npm shrinkwrap
 
 rebuild:
-	$(NPM_REBUILD) node-sass
+	$(NPM_REBUILD) node-sass --sass-binary-site=http://localhost:0
 	$(NPM_REBUILD) sqlite3
 
 config/database.sql:
