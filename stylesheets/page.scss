@@ -740,6 +740,7 @@ button.inherited {
 		}
 
 		#initiatives-subscribe {
+			margin-top: 1rem;
 			max-width: 50%;
 
 			input[type=email] {
@@ -756,8 +757,16 @@ button.inherited {
 				& ~ button { display: none; }
 			}
 
-			#subscriptions-form-toggle:checked { margin-top: 2rem; }
 			#subscriptions-form-toggle:checked + label { display: none; }
+			#subscriptions-form-toggle:checked ~ h2 { margin-top: 2rem; }
+		}
+
+		.social-media-logos {
+			margin-top: 1rem;
+
+			a { vertical-align: middle; }
+			a + a { margin-left: 1rem; }
+			img { height: 3.6rem; }
 		}
 
 		@include mobile-and-tablet {

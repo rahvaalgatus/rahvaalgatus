@@ -72,6 +72,16 @@ module.exports = function(attrs) {
 					{t("SUBSCRIBE_TO_INITIATIVES_BUTTON")}
 				</button>
 			</Form>
+
+			<div class="social-media-logos">
+				<a href="https://www.facebook.com/rahvaalgatus" class="facebook-logo">
+					<img src="/assets/facebook-logo.png" />
+				</a>
+
+				<a href="https://www.facebook.com/rahvaalgatus" class="twitter-logo">
+					<img src="/assets/twitter-logo.svg" />
+				</a>
+			</div>
 		</center></section>
 
 		<section id="initiatives" class="secondary-section initiatives-section">
