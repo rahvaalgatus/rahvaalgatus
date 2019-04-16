@@ -160,13 +160,14 @@ function Page(attrs, children) {
 						</a>
 					</p>
 				</div>
-				<div class="powered-by">
+				<div class="logos">
 					<p>
-						<a href="https://citizenos.com">
-							<img src="/assets/citizenos_logo_big.png" alt="Citizen OS" />
+						<a
+							href="https://github.com/rahvaalgatus/rahvaalgatus"
+							title={t("GITHUB_LOGO_TITLE")}
+						>
+							<img src="/assets/github-logo.svg" alt="GitHub" />
 						</a>
-						<br />
-						{t("POWERED_BY")}
 					</p>
 				</div>
 			</center></footer>

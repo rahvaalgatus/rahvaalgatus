@@ -1575,22 +1575,27 @@ button.inherited {
 	}
 
 	.contact img,
-	.powered-by img {
+	.logos img {
 		margin-bottom: 1rem;
 	}
 
-	.powered-by {
+	.logos {
 		text-align: right;
 		float: right;
+
+		img {
+			margin-top: 1rem;
+			height: 2rem;
+		}
 	}
 
 	@include mobile {
 		.contact,
-		.powered-by {
+		.logos {
 			float: none;
 			text-align: left;
 		}
 
-		.powered-by { margin-top: 1rem; }
+		.logos { margin-top: 1rem; }
 	}
 }
