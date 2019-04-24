@@ -84,7 +84,7 @@ function redirect(req, res) {
 }
 
 function unhash(req, res) {
-	res.render("session/unhash", {path: req.baseUrl + req.path})
+	res.render("session/unhash_page.jsx", {path: req.baseUrl + req.path})
 }
 
 function create(req, res, next) {
