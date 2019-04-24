@@ -10,6 +10,7 @@ TRANSLATIONS_URL = https://spreadsheets.google.com/feeds/list/1JKPUNp8Y_8Aigq7eG
 JQ_OPTS = --tab --sort-keys
 SHANGE = vendor/shange -f "config/$(ENV).sqlite3"
 PGHOST = $(shell ENV=$(ENV) node -e 'console.log(require("./config").citizenOsDatabase.host)')
+LIVERELOAD_PORT = 35731
 
 APP_HOST = rahvaalgatus.ee
 APP_PATH = $(error "Please set APP_PATH")
@@ -44,6 +45,7 @@ export PORT
 export ENV
 export TEST
 export PGHOST
+export LIVERELOAD_PORT
 
 ifneq ($(filter test spec autotest autospec test/%, $(MAKECMDGOALS)),)
 	ENV = test
@@ -99,7 +101,8 @@ servers:
 	@$(MAKE) -j2 web adm
 
 livereload:
-	@$(NODE) $(NODE_OPTS) ./node_modules/.bin/livereload public --wait 50
+	@$(NODE) \
+		./node_modules/.bin/livereload public --wait 50 --port $(LIVERELOAD_PORT)
 
 shrinkwrap:
 	npm shrinkwrap

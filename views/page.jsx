@@ -10,6 +10,7 @@ var javascript = require("root/lib/jsx").javascript
 var SITE_TITLE = Config.title
 var LANGS = Config.languages
 var ENV = process.env.ENV
+var LIVERELOAD_PORT = process.env.LIVERELOAD_PORT || 35729
 exports = module.exports = Page
 exports.Flash = Flash
 exports.Form = Form
@@ -251,11 +252,11 @@ function Sentry(attrs) {
 }
 
 function LiveReload(attrs) {
-	if (ENV !== "development") return null
+	if (ENV != "development") return null
 	var req = attrs.req
 
 	return <script
-		src={"http://" + req.hostname + ":35729/livereload.js?snipver=1"}
+		src={`http://${req.hostname}:${LIVERELOAD_PORT}/livereload.js?snipver=1`}
 		async
 		defer
 	/>
