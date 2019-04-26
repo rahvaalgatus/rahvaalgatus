@@ -10,8 +10,6 @@ exports = module.exports = function() {
 }
 
 exports.listen = function*() {
-	// NOTE: CitizenOS for some reason fails to respond with CORS headers if the
-	// port number is > 9999.
 	this.server = new Http.Server(Web)
 	this.server.listen(0, "127.0.0.1")
 
@@ -20,8 +18,6 @@ exports.listen = function*() {
 	this.request = fetchDefaults(request, this.url)
 }
 
-// UI tests keep the connection alive preventing the server from shutting down
-// on time. Ignore it for now.
-exports.close = function() {
-	this.server.close()
+exports.close = function(done) {
+	this.server.close(done)
 }
