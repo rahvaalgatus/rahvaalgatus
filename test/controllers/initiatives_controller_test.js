@@ -3,7 +3,6 @@ var O = require("oolong")
 var Url = require("url")
 var DateFns = require("date-fns")
 var Config = require("root/config")
-var Sinon = require("sinon")
 var ValidDbInitiative = require("root/test/valid_db_initiative")
 var ValidDbInitiativeSubscription =
 	require("root/test/valid_db_initiative_subscription")
@@ -462,11 +461,7 @@ describe("InitiativesController", function() {
 	})
 
 	describe("PUT /:id", function() {
-		beforeEach(function() {
-			this.time = Sinon.useFakeTimers(Date.UTC(2015, 5, 18), "Date")
-		})
-
-		afterEach(function() { this.time.restore() })
+		require("root/test/time")(Date.UTC(2015, 5, 18))
 
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
@@ -630,12 +625,7 @@ describe("InitiativesController", function() {
 
 	describe("POST /:id/signature", function() {
 		require("root/test/fixtures").csrf()
-
-		beforeEach(function() {
-			this.time = Sinon.useFakeTimers(Date.UTC(2015, 5, 18), "Date")
-		})
-
-		afterEach(function() { this.time.restore() })
+		require("root/test/time")(Date.UTC(2015, 5, 18))
 
 		describe("when signing via Id-Card", function() {
 			var USER_ID = "bb7abca5-dac0-47c2-86c2-88dbd4850b7a"
@@ -865,13 +855,8 @@ describe("InitiativesController", function() {
 
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
+			require("root/test/time")(Date.UTC(2015, 5, 18))
 
-			beforeEach(function() {
-				this.time = Sinon.useFakeTimers(Date.UTC(2015, 5, 18), "Date")
-			})
-
-			afterEach(function() { this.time.restore() })
-			
 			it("must respond with 303 if hiding a non-existent signature",
 				function*() {
 				this.router.get(`/api/users/self/topics/${UUID}`,
@@ -975,12 +960,7 @@ describe("InitiativesController", function() {
 	describe("POST /:id/subscriptions", function() {
 		require("root/test/fixtures").csrf()
 		require("root/test/email")()
-
-		beforeEach(function() {
-			this.time = Sinon.useFakeTimers(Date.now(), "Date")
-		})
-
-		afterEach(function() { this.time.restore() })
+		require("root/test/time")(Date.UTC(2015, 5, 18))
 
 		O.each({
 			discussion: DISCUSSION,
@@ -1100,12 +1080,7 @@ describe("InitiativesController", function() {
 
 	describe("GET /:id/subscriptions/new", function() {
 		require("root/test/fixtures").csrf()
-
-		beforeEach(function() {
-			this.time = Sinon.useFakeTimers(Date.UTC(2015, 5, 18), "Date")
-		})
-
-		afterEach(function() { this.time.restore() })
+		require("root/test/time")(Date.UTC(2015, 5, 18))
 
 		it("must confirm given a confirmation token", function*() {
 			this.router.get(`/api/topics/${UUID}`,
