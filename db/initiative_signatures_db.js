@@ -1,5 +1,5 @@
 var O = require("oolong")
-var Db = require("root/lib/sqlite_heaven")
+var Db = require("heaven-sqlite")
 var sqlite = require("root").sqlite
 exports = module.exports = new Db(Object, sqlite, "initiative_signatures")
 

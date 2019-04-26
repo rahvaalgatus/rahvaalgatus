@@ -6,7 +6,7 @@ var Config = require("root/config")
 var ValidDbInitiative = require("root/test/valid_db_initiative")
 var ValidDbInitiativeSubscription =
 	require("root/test/valid_db_initiative_subscription")
-var sql = require("root/lib/sql")
+var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var tHtml = _.compose(_.escapeHtml, t)
 var respond = require("root/test/fixtures").respond
@@ -14,6 +14,7 @@ var concat = Array.prototype.concat.bind(Array.prototype)
 var encodeBase64 = require("root/lib/crypto").encodeBase64
 var randomHex = require("root/lib/crypto").randomHex
 var sqlite = require("root").sqlite
+var initiativesDb = require("root/db/initiatives_db")
 var initiativeSubscriptionsDb = require("root/db/initiative_subscriptions_db")
 var initiativeSignaturesDb = require("root/db/initiative_signatures_db")
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
@@ -556,7 +557,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(303)
 				res.headers.location.must.equal(`/initiatives/${UUID}`)
 
-				yield sqlite.search(sql`SELECT * FROM initiatives`).must.then.eql([
+				yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
 					new ValidDbInitiative({
 						uuid: UUID,
 						sent_to_parliament_at: new Date().toISOString()
@@ -577,7 +578,7 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(303)
 					res.headers.location.must.equal(`/initiatives/${UUID}/edit`)
 
-					yield sqlite.search(sql`SELECT * FROM initiatives`).must.then.eql([
+					yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
 						new ValidDbInitiative({uuid: UUID, notes: "Hello, world"})
 					])
 				})
@@ -586,7 +587,7 @@ describe("InitiativesController", function() {
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {data: PRIVATE_DISCUSSION}))
 
-					var other = yield sqlite.create("initiatives", {
+					var other = yield initiativesDb.create({
 						uuid: "a8166697-7f68-43e4-a729-97a7868b4d51"
 					})
 
@@ -598,7 +599,7 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(303)
 					res.headers.location.must.equal(`/initiatives/${UUID}/edit`)
 
-					yield sqlite.search(sql`SELECT * FROM initiatives`).must.then.eql([
+					yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
 						other,
 						new ValidDbInitiative({uuid: UUID, notes: "Hello, world"})
 					])
@@ -615,7 +616,7 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(401)
 
-					yield sqlite.search(sql`SELECT * FROM initiatives`).must.then.eql([
+					yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
 						new ValidDbInitiative({uuid: UUID})
 					])
 				})
@@ -948,7 +949,7 @@ describe("InitiativesController", function() {
 				var signature = yield initiativeSignaturesDb.read(sql`
 					SELECT * FROM initiative_signatures
 					WHERE (initiative_uuid, user_uuid) = (${INITIATIVE.id}, ${user.id})
-				`).then(_.first)
+				`)
 
 				signature.hidden.must.be.true()
 				res.statusCode.must.equal(303)

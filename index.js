@@ -16,8 +16,8 @@ lazy(exports, "errorReporter", function() {
 })
 
 lazy(exports, "sqlite", function() {
-	var Sqlite = require("root/lib/sqlite")
-	return new Sqlite(__dirname + "/config/" + ENV + ".sqlite3")
+	var connect = require("root/lib/sqlite")
+	return connect(__dirname + "/config/" + ENV + ".sqlite3")
 })
 
 lazy(exports, "cosDb", function() {

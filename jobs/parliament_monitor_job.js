@@ -2,8 +2,6 @@ var Config = require("root/config")
 var _ = require("root/lib/underscore")
 var cosApi = require("root/lib/citizenos_api")
 var parliamentApi = require("root/lib/parliament_api")
-var sqlite = require("root").sqlite
-var sql = require("root/lib/sql")
 var is404 = require("root/lib/fetch_error").is.bind(null, 404)
 var diff = require("root/lib/diff")
 var assert = require("assert")
@@ -42,12 +40,7 @@ function diffParliamentData(initiativeAndObj) {
 function* updateDbInitiativeParliamentData(initiativeAndObj) {
 	var initiative = initiativeAndObj[0]
 	var obj = initiativeAndObj[1]
-
-	yield sqlite.update(sql`
-		UPDATE initiatives
-		SET parliament_api_data = ${JSON.stringify(obj)}
-		WHERE uuid = ${initiative.uuid}
-	`)
+	yield initiativesDb.update(initiative.uuid, {parliament_api_data: obj})
 }
 
 function* notify(initiativeAndObjAndDiff) {
@@ -66,7 +59,7 @@ function* notify(initiativeAndObjAndDiff) {
 }
 
 function* readOrCreateDbInitiative(uuid) {
-	var obj = yield initiativesDb.search(uuid)
+	var obj = yield initiativesDb.read(uuid)
 	if (obj) return obj
 
 	var res

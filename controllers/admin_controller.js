@@ -13,7 +13,7 @@ var parseCitizenInitiative = cosApi.parseCitizenInitiative
 var parseCitizenEvent = cosApi.parseCitizenEvent
 var newUuid = require("uuid/v4")
 var sqlite = require("root").sqlite
-var sql = require("root/lib/sql")
+var sql = require("sqlate")
 var STATUSES = ["followUp", "closed"]
 exports = module.exports = Router()
 
@@ -27,10 +27,10 @@ exports.get("/initiatives", next(function*(_req, res) {
 	var dbInitiatives = yield initiativesDb.search(uuids, {create: true})
 	dbInitiatives = _.indexBy(dbInitiatives, "uuid")
 
-	var subscriberCounts = yield sqlite.search(sql`
+	var subscriberCounts = yield sqlite(sql`
 		SELECT initiative_uuid, COUNT(*) as count
 		FROM initiative_subscriptions
-		WHERE initiative_uuid IN ${uuids}
+		WHERE initiative_uuid IN (${uuids})
 		AND confirmed_at IS NOT NULL
 		GROUP BY initiative_uuid
 	`)
@@ -62,7 +62,7 @@ exports.get("/initiatives/:id", next(function*(req, res) {
 	var events = yield readEvents(initiative.id)
 	events = events.sort((a, b) => +b.createdAt - +a.createdAt)
 
-	var subscriberCount = yield sqlite.read(sql`
+	var subscriberCount = yield sqlite(sql`
 		SELECT
 			COUNT(*) AS "all",
 			COALESCE(SUM(CASE WHEN confirmed_at IS NOT NULL THEN 1 ELSE 0 END), 0)
@@ -70,7 +70,7 @@ exports.get("/initiatives/:id", next(function*(req, res) {
 
 		FROM initiative_subscriptions
 		WHERE initiative_uuid = ${initiative.id}
-	`)
+	`).then(_.first)
 
 	res.render("admin/initiatives/read_page.jsx", {
 		initiative: initiative,

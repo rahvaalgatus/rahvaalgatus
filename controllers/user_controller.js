@@ -7,7 +7,7 @@ var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
 var translateCitizenError = require("root/lib/citizenos_api").translateError
 var parseCitizenInitiative = require("root/lib/citizenos_api").parseCitizenInitiative
-var sql = require("root/lib/sql")
+var sql = require("sqlate")
 var cosDb = require("root").cosDb
 var initiativesDb = require("root/db/initiatives_db")
 var initiativeSignaturesDb = require("root/db/initiative_signatures_db")
@@ -69,7 +69,7 @@ function* read(req, res) {
 	var dbSignatures = _.indexBy(yield initiativeSignaturesDb.search(sql`
 		SELECT * FROM initiative_signatures
 		WHERE user_uuid = ${user.id}
-		AND initiative_uuid IN ${signatures.map((sig) => sig.initiative_id)}
+		AND initiative_uuid IN (${signatures.map((sig) => sig.initiative_id)})
 	`), "initiative_uuid")
 
 	signatures = signatures.filter(function(sig) {
