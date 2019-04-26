@@ -7,7 +7,6 @@ var runServer = require("root/lib/http").runServer
 var t = require("root/lib/i18n").t.bind(null, "en")
 var PORT = process.env.PORT || 3001
 var ENV = process.env.NODE_ENV
-
 var app = module.exports = Express.new()
 
 if (ENV == "development") {
@@ -34,6 +33,7 @@ app.use(require("root/lib/middleware/error_reporter_middleware"))
 
 app.use(require("root/lib/middleware/error_handler_middleware").bind(null,
 	function(err, _req, res) {
+	res.setHeader("Content-Type", "text/plain")
 	if (err instanceof HttpError) res.end(err.message)
 	else res.end(t("MSG_ERROR_50000"))
 }))
