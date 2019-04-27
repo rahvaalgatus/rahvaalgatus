@@ -2788,18 +2788,6 @@
         }
       }
     },
-    "tough-cookie": {
-      "version": "2.3.2",
-      "from": "https://registry.npmjs.org/tough-cookie/-/tough-cookie-2.3.2.tgz",
-      "resolved": "https://registry.npmjs.org/tough-cookie/-/tough-cookie-2.3.2.tgz",
-      "dependencies": {
-        "punycode": {
-          "version": "1.4.1",
-          "from": "https://registry.npmjs.org/punycode/-/punycode-1.4.1.tgz",
-          "resolved": "https://registry.npmjs.org/punycode/-/punycode-1.4.1.tgz"
-        }
-      }
-    },
     "uuid": {
       "version": "3.3.2",
       "from": "uuid@latest",
