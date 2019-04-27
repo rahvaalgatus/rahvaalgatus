@@ -15,6 +15,7 @@ module.exports = function(attrs) {
 	var dbInitiative = attrs.dbInitiative
 	var subscriberCount = attrs.subscriberCount
 	var events = attrs.events
+	var messages = attrs.messages
 	var status = initiative.status
 	var action = `/initiatives/${initiative.id}`
 	var pendingSubscriberCount = subscriberCount.all - subscriberCount.confirmed
@@ -117,6 +118,7 @@ module.exports = function(attrs) {
 									{formatDate("iso", event.createdAt)}
 								</time>
 							</td>
+
 							<td>
 								<h3>{event.title}</h3>
 								<input id={toggleId} hidden type="checkbox" class="text-toggle" />
@@ -135,6 +137,47 @@ module.exports = function(attrs) {
 									value="delete"
 									onclick={confirm("Sure?")}
 									class="admin-link">Delete</FormButton>
+							</td>
+						</tr>
+					})}
+				</tbody>
+			</table>
+		</div>
+
+		<div class="messages">
+			<h2 class="admin-subheading">
+				Sent Messages <span class="admin-count">({messages.length})</span>
+			</h2>
+
+			<table class="admin-table">
+				<thead>
+					<th>Sent On</th>
+					<th>Title</th>
+					<th class="new-message">
+						<a
+							href={`/initiatives/${initiative.id}/messages/new`}
+							class="admin-primary-button new-message-button">
+							New Message
+						</a>
+					</th>
+				</thead>
+
+				<tbody>
+					{messages.map(function(message) {
+						var toggleId = `show-message-${message.id}-text`
+
+						return <tr class="message">
+							<td>
+								{message.sent_at ? <time datetime={message.sent_at.toJSON()}>
+									{formatDate("iso", message.sent_at)}
+								</time> : null}
+							</td>
+
+							<td colspan="2">
+								<h3>{message.title}</h3>
+								<input id={toggleId} hidden type="checkbox" class="text-toggle" />
+								<label for={toggleId} class="admin-link">Show text</label>
+								<p class="admin-text">{Jsx.html(linkify(message.text))}</p>
 							</td>
 						</tr>
 					})}

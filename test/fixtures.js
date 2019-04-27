@@ -2,13 +2,13 @@ var newUuid = require("uuid/v4")
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var fetchDefaults = require("fetch-defaults")
 
-exports.user = function() {
+exports.user = function(attrs) {
 	beforeEach(function() {
 		// https://github.com/mochajs/mocha/issues/2014:
 		delete this.request
 
 		var csrfToken = pseudoHex(16)
-		var user = {id: newUuid()}
+		var user = attrs || {id: newUuid()}
 
 		var cookie = [
 			"citizenos_token=" + pseudoHex(16),

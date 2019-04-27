@@ -7,6 +7,7 @@ Mocha.prototype.loadFiles = _.wrap(Mocha.prototype.loadFiles, function(orig) {
 	orig.apply(this, slice(arguments, 1))
 
 	// Mocha will not clear files in the bin directory.
+	after(function() { delete CACHE[require.resolve("root/bin/adm")] })
 	after(function() { delete CACHE[require.resolve("root/bin/web")] })
 
 	after(function() {

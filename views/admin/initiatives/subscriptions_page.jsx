@@ -3,8 +3,10 @@ var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var Page = require("../page")
 var formatTime = require("root/lib/i18n").formatTime
+exports = module.exports = SubscriptionsPage
+exports.SubscriptionsView = SubscriptionsView
 
-module.exports = function(attrs) {
+function SubscriptionsPage(attrs) {
 	var req = attrs.req
 	var initiative = attrs.initiative
 	var subscriptions = attrs.subscriptions

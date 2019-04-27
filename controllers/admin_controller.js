@@ -1,19 +1,26 @@
 var _ = require("root/lib/underscore")
 var Router = require("express").Router
+var Config = require("root/config")
+var HttpError = require("standard-http-error")
+var I18n = require("root/lib/i18n")
 var redirect = require("root/lib/redirect")
 var cosApi = require("root/lib/citizenos_api")
 var readInitiativesWithStatus = cosApi.readInitiativesWithStatus
 var initiativeSubscriptionsDb = require("root/db/initiative_subscriptions_db")
 var next = require("co-next")
 var initiativesDb = require("root/db/initiatives_db")
+var initiativeMessagesDb = require("root/db/initiative_messages_db")
 var cosDb = require("root").cosDb
 var encode = encodeURIComponent
 var concat = Array.prototype.concat.bind(Array.prototype)
 var parseCitizenInitiative = cosApi.parseCitizenInitiative
 var parseCitizenEvent = cosApi.parseCitizenEvent
 var newUuid = require("uuid/v4")
+var pseudoHex = require("root/lib/crypto").pseudoHex
 var sqlite = require("root").sqlite
 var sql = require("sqlate")
+var t = require("root/lib/i18n").t.bind(null, "et")
+var sendEmail = require("root").sendEmail
 var STATUSES = ["followUp", "closed"]
 exports = module.exports = Router()
 
@@ -72,11 +79,18 @@ exports.get("/initiatives/:id", next(function*(req, res) {
 		WHERE initiative_uuid = ${initiative.id}
 	`).then(_.first)
 
+	var messages = yield initiativeMessagesDb.search(sql`
+		SELECT * FROM initiative_messages
+		WHERE initiative_uuid = ${initiative.id}
+		ORDER BY created_at DESC
+	`)
+
 	res.render("admin/initiatives/read_page.jsx", {
 		initiative: initiative,
 		dbInitiative: req.dbInitiative,
 		events: events,
-		subscriberCount: subscriberCount
+		subscriberCount: subscriberCount,
+		messages: messages
 	})
 }))
 
@@ -108,11 +122,11 @@ exports.get("/initiatives/:id/subscriptions.:ext?", next(function*(req, res) {
 }))
 
 exports.put("/initiatives/:id", next(function*(req, res) {
-	var attrs = parse(req.body)
-	var citizenAttrs = parseForCitizen(req.body)
+	var attrs = parseInitiative(req.body)
+	var citizenAttrs = parseInitiativeForCitizen(req.body)
 
 	if (!_.isEmpty(attrs))
-		yield initiativesDb.update(req.initiative.id, parse(req.body))
+		yield initiativesDb.update(req.initiative.id, parseInitiative(req.body))
 	if (!_.isEmpty(citizenAttrs))
 		yield cosDb("Topics").where("id", req.params.id).update(citizenAttrs)
 
@@ -161,7 +175,90 @@ exports.delete("/initiatives/:id/events/:eventId", next(function*(req, res) {
 	res.redirect("/initiatives/" + req.initiative.id)
 }))
 
-function parse(obj) {
+exports.get("/initiatives/:id/messages/new", next(function*(req, res) {
+	var initiative = req.initiative
+
+	res.render("admin/initiatives/messages/create_page.jsx", {
+		message: {
+			title: t("DEFAULT_INITIATIVE_SUBSCRIPTION_MESSAGE_TITLE", {
+				initiativeTitle: initiative.title,
+			}),
+
+			text: t("DEFAULT_INITIATIVE_SUBSCRIPTION_MESSAGE_BODY", {
+				initiativeTitle: initiative.title,
+				initiativeUrl: Config.url + req.baseUrl + "/" + initiative.id,
+				unsubscribeUrl: "{{unsubscribeUrl}}",
+				siteUrl: Config.url
+			})
+		},
+
+		subscriptions: yield searchConfirmedSubscriptions(initiative)
+	})
+}))
+
+exports.post("/initiatives/:id/messages", next(function*(req, res) {
+	var initiative = req.initiative
+	var msg = req.body
+
+	switch (msg.action) {
+		case "send":
+			var message = yield initiativeMessagesDb.create({
+				initiative_uuid: initiative.id,
+				title: msg.title,
+				text: msg.text,
+				created_at: new Date,
+				updated_at: new Date,
+			})
+
+			var subscriptions = yield searchConfirmedSubscriptions(initiative)
+
+			for (
+				var i = 0, batches = _.chunk(subscriptions, 1000), sent = [];
+				i < batches.length;
+				++i
+			) {
+				yield sendInitiativeMessage(message, batches[i])
+				sent = sent.concat(batches[i].map((sub) => sub.email))
+
+				yield initiativeMessagesDb.update(message, {
+					updated_at: new Date,
+					sent_to: sent
+				})
+			}
+
+			yield initiativeMessagesDb.update(message, {
+				updated_at: new Date,
+				sent_at: new Date,
+			})
+
+			res.flash("notice", "Message sent.")
+			res.redirect("/initiatives/" + req.initiative.id)
+			break
+
+		case "preview":
+			var unsubscribeUrl= Config.url + "/initiatives/" + initiative.id
+			unsubscribeUrl += "/subscriptions/" + pseudoHex(8)
+
+			res.render("admin/initiatives/messages/create_page.jsx", {
+				message: {
+					title: msg.title,
+					text: msg.text,
+				},
+
+				preview: {
+					title: msg.title,
+					text: I18n.interpolate(msg.text, {unsubscribeUrl: unsubscribeUrl})
+				},
+
+				subscriptions: yield searchConfirmedSubscriptions(initiative)
+			})
+			break
+
+		default: throw new HttpError(422, "Invalid Action")
+	}
+}))
+
+function parseInitiative(obj) {
 	var attrs = {}
 
 	if ("sentToParliamentOn" in obj)
@@ -177,7 +274,7 @@ function parse(obj) {
 	return attrs
 }
 
-function parseForCitizen(obj) {
+function parseInitiativeForCitizen(obj) {
 	var attrs = {}
 
 	if ("status" in obj && _.contains(STATUSES, obj.status))
@@ -194,6 +291,42 @@ function* readEvent(id) {
 function* readEvents(initiativeId) {
 	var events = yield cosDb("TopicEvents").where("topicId", initiativeId)
 	return events.map(parseCitizenEvent)
+}
+
+function searchConfirmedSubscriptions(initiative) {
+	return initiativeSubscriptionsDb.search(sql`
+		SELECT * FROM initiative_subscriptions
+		WHERE initiative_uuid = ${initiative.id}
+		AND confirmed_at IS NOT NULL
+		ORDER BY created_at DESC
+	`)
+}
+
+function sendInitiativeMessage(msg, subscriptions) {
+	if (subscriptions.length > 1000)
+		// https://documentation.mailgun.com/en/latest/user_manual.html
+		throw new RangeError("Batch sending max limit is 1000 recipients")
+
+	var recipients = _.fromEntries(subscriptions.map((sub) => [sub.email, {
+		unsubscribeUrl: [
+			Config.url,
+			"initiatives",
+			sub.initiative_uuid,
+			"subscriptions",
+			sub.update_token
+		].join("/")
+	}]))
+
+	return sendEmail({
+		to: {name: "", address: "%recipient%"},
+		subject: msg.title,
+		headers: {"X-Mailgun-Recipient-Variables": JSON.stringify(recipients)},
+		envelope: {to: Object.keys(recipients)},
+
+		text: I18n.interpolate(msg.text, {
+			unsubscribeUrl: "%recipient.unsubscribeUrl%"
+		})
+	})
 }
 
 function parseEvent(obj) {

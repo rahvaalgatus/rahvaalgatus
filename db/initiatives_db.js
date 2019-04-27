@@ -54,12 +54,12 @@ exports.parse = function(attrs) {
 }
 
 exports.serialize = function(attrs) {
-	var columns = O.clone(attrs)
+	var obj = O.clone(attrs)
 
 	if ("parliament_api_data" in attrs)
-		columns.parliament_api_data = JSON.stringify(attrs.parliament_api_data)
+		obj.parliament_api_data = JSON.stringify(attrs.parliament_api_data)
 
-	return columns
+	return obj
 }
 
 function isString(value) { return typeof value == "string" }
