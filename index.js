@@ -16,8 +16,17 @@ lazy(exports, "errorReporter", function() {
 })
 
 lazy(exports, "sqlite", function() {
+	var Fs = require("fs")
 	var connect = require("root/lib/sqlite")
-	return connect(__dirname + "/config/" + ENV + ".sqlite3")
+
+	switch (ENV) {
+		case "test":
+			var sqlite = connect(":memory:")	
+			sqlite.batch(String(Fs.readFileSync(__dirname + "/config/database.sql")))
+			return sqlite
+
+		default: return connect(__dirname + "/config/" + ENV + ".sqlite3")
+	}
 })
 
 lazy(exports, "cosDb", function() {

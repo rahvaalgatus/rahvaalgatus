@@ -73,16 +73,16 @@ stylesheets:
 autostylesheets: stylesheets
 	$(MAKE) SASS="$(SASS) --watch" "$<"
 
-test: config/test.sqlite3
+test:
 	@$(NODE) $(NODE_OPTS) $(MOCHA) -R dot $(TEST)
 
-spec: config/test.sqlite3
+spec:
 	@$(NODE) $(NODE_OPTS) $(MOCHA) -R spec $(TEST)
 
-autotest: config/test.sqlite3
+autotest:
 	@$(NODE) $(NODE_OPTS) $(MOCHA) -R dot --watch $(TEST)
 
-autospec: config/test.sqlite3
+autospec:
 	@$(NODE) $(NODE_OPTS) $(MOCHA) -R spec --watch $(TEST)
 
 test/server: export TEST_TAGS = server
@@ -124,8 +124,6 @@ db/create: config/$(ENV).sqlite3
 
 db/test: ENV = test
 db/test:
-	rm -f config/test.sqlite3
-	$(MAKE) config/test.sqlite3
 	-createdb -E utf8 -T template0 citizenos_test
 	psql -f config/citizenos_database.sql citizenos_test
 
