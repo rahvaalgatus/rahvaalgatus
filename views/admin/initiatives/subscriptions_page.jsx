@@ -50,23 +50,22 @@ function SubscriptionsPage(attrs) {
 
 function SubscriptionsView(attrs) {
 	var subscriptions = attrs.subscriptions
-	var showConfirmedAt = subscriptions.some((s) => s.confirmed_at)
 
 	return <table class="admin-table">
 		<thead>
 			<th>Subscribed At</th>
-			{showConfirmedAt ? <th>Confirmed At</th> : null}
+			<th>Confirmed At</th>
 			<th>Email</th>
 		</thead>
 
-		<tbody>
-		{subscriptions.map(function(subscription) {
+		<tbody>{subscriptions.map(function(subscription) {
 			return <tr>
 				<td>{formatTime("numeric", subscription.created_at)}</td>
 
-				{subscription.confirmed_at ? <td>
-					{formatTime("numeric", subscription.confirmed_at)}
-				</td> : null}
+				<td>{subscription.confirmed_at
+					? formatTime("numeric", subscription.confirmed_at)
+					: null
+				}</td>
 
 				<td>
 					<a
@@ -76,7 +75,6 @@ function SubscriptionsView(attrs) {
 					</a>
 				</td>
 			</tr>
-		})}
-		</tbody>
+		})}</tbody>
 	</table>
 }
