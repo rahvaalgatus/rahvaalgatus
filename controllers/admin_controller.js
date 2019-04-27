@@ -262,6 +262,31 @@ exports.post("/initiatives/:id/messages", next(function*(req, res) {
 	}
 }))
 
+exports.get("/subscriptions", next(function*(_req, res) {
+	var subscriptions = yield initiativeSubscriptionsDb.search(sql`
+		SELECT *
+		FROM initiative_subscriptions
+		ORDER BY created_at DESC
+		LIMIT 15
+	`)
+
+	var uuids = _.uniq(subscriptions.map((s) => s.initiative_uuid))
+	var query = sql`SELECT id, title FROM "Topics" WHERE id IN (${uuids})`
+
+	var initiatives = _.indexBy(
+		yield cosDb.raw(String(query), query.parameters).then(getRows),
+		"id"
+	)
+
+	subscriptions.forEach(function(subscription) {
+		subscription.initiative = initiatives[subscription.initiative_uuid]
+	})
+
+	res.render("admin/subscriptions/index_page.jsx", {
+		subscriptions: subscriptions
+	})
+}))
+
 function parseInitiative(obj) {
 	var attrs = {}
 
@@ -339,3 +364,4 @@ function parseEvent(obj) {
 }
 
 function getBody(res) { return res.body.data }
+function getRows(res) { return res.rows }
