@@ -184,6 +184,8 @@ button.inherited {
 		margin-left: -1rem;
 	}
 
+	&:not(button) { line-height: $button-height; }
+
 	&:disabled {
 		cursor: auto;
 		background: $secondary-background;
