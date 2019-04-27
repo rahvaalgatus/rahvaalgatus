@@ -991,6 +991,7 @@ describe("InitiativesController", function() {
 					initiative_uuid: UUID,
 					email: email,
 					created_at: new Date,
+					created_ip: "127.0.0.1",
 					updated_at: new Date,
 					confirmation_token: subscriptions[0].confirmation_token,
 					confirmation_sent_at: new Date,

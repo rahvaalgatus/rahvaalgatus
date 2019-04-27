@@ -514,6 +514,7 @@ exports.router.post("/:id/subscriptions", next(function*(req, res) {
 			email: email,
 			confirmation_token: randomHex(8),
 			created_at: new Date,
+			created_ip: req.ip,
 			updated_at: new Date
 		})
 	}
