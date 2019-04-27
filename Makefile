@@ -105,7 +105,7 @@ livereload:
 		./node_modules/.bin/livereload public --wait 50 --port $(LIVERELOAD_PORT)
 
 shrinkwrap:
-	npm shrinkwrap
+	npm shrinkwrap --dev
 
 rebuild:
 	$(NPM_REBUILD) node-sass --sass-binary-site=http://localhost:0
