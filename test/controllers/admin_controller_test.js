@@ -122,6 +122,38 @@ describe("AdminController", function() {
 				var to = concat(this.emails[0].envelope.to, this.emails[1].envelope.to)
 				to.sort().must.eql(emails)
 			})
+
+			it("must not email subscribers of other initiatives", function*() {
+				yield initiativeSubscriptionsDb.create({
+					initiative_uuid: "20a431ac-d7fa-4469-af6f-0b914a76c9c7",
+					email: "user@example.com",
+					confirmed_at: new Date,
+					confirmation_token: "deadbeef"
+				})
+
+				var res = yield this.request(`/initiatives/${UUID}/messages`, {
+					method: "POST",
+
+					form: {
+						_csrf_token: this.csrfToken,
+						action: "send",
+						title: "Initiative was updated",
+						text: "Go check it out"
+					}
+				})
+
+				res.statusCode.must.equal(302)
+				res.headers.location.must.equal(`/initiatives/${UUID}`)
+
+				var messages = yield initiativeMessagesDb.search(sql`
+					SELECT * FROM initiative_messages
+				`)
+
+				messages.length.must.equal(1)
+				messages[0].sent_at.must.eql(new Date)
+				messages[0].sent_to.must.eql([])
+				this.emails.length.must.equal(0)
+			})
 		})
 	})
 })
