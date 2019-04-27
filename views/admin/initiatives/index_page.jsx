@@ -5,6 +5,7 @@ var Config = require("root/config")
 var formatDate = require("root/lib/i18n").formatDate
 
 module.exports = function(attrs) {
+	var votings = attrs.votings
 	var parliamented = attrs.parliamented
 	var closed = attrs.closed
 	var dbInitiatives = attrs.dbInitiatives
@@ -12,6 +13,18 @@ module.exports = function(attrs) {
 
 	return <Page page="initiatives" title="Initiatives" req={attrs.req}>
 		<h1 class="admin-heading">Initiatives</h1>
+
+		<h2 class="admin-subheading">
+			Voting
+			{" "}
+			<span class="admin-count">({votings.length})</span>
+		</h2>
+
+		<InitiativesView
+			initiatives={votings}
+			dbInitiatives={dbInitiatives}
+			subscriberCounts={subscriberCounts}
+		/>
 
 		<h2 class="admin-subheading">
 			In Parliament

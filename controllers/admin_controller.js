@@ -12,7 +12,7 @@ var initiativesDb = require("root/db/initiatives_db")
 var initiativeMessagesDb = require("root/db/initiative_messages_db")
 var cosDb = require("root").cosDb
 var encode = encodeURIComponent
-var concat = Array.prototype.concat.bind(Array.prototype)
+var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var parseCitizenInitiative = cosApi.parseCitizenInitiative
 var parseCitizenEvent = cosApi.parseCitizenEvent
 var newUuid = require("uuid/v4")
@@ -27,10 +27,13 @@ exports = module.exports = Router()
 exports.get("/", redirect(302, "/initiatives"))
 
 exports.get("/initiatives", next(function*(_req, res) {
-	var parliamented = yield readInitiativesWithStatus("followUp")
-	var closed = yield readInitiativesWithStatus("closed")
+	var initiatives = yield {
+		votings: readInitiativesWithStatus("voting"),
+		parliamented: yield readInitiativesWithStatus("followUp"),
+		closed: yield readInitiativesWithStatus("closed")
+	}
 
-	var uuids = concat(parliamented, closed).map((i) => i.id)
+	var uuids = flatten(_.values(initiatives)).map((i) => i.id)
 	var dbInitiatives = yield initiativesDb.search(uuids, {create: true})
 	dbInitiatives = _.indexBy(dbInitiatives, "uuid")
 
@@ -48,8 +51,9 @@ exports.get("/initiatives", next(function*(_req, res) {
 	)
 
 	res.render("admin/initiatives/index_page.jsx", {
-		parliamented: parliamented,
-		closed: closed,
+		votings: initiatives.votings,
+		parliamented: initiatives.parliamented,
+		closed: initiatives.closed,
 		dbInitiatives: dbInitiatives,
 		subscriberCounts: subscriberCounts
 	})
