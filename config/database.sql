@@ -18,7 +18,7 @@ CREATE TABLE initiative_signatures (
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid)
 );
 CREATE TABLE IF NOT EXISTS "initiative_subscriptions" (
-	initiative_uuid TEXT NOT NULL,
+	initiative_uuid TEXT NULL,
 	email TEXT COLLATE NOCASE NOT NULL,
 	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
 	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
@@ -60,6 +60,8 @@ CREATE TABLE initiative_messages (
 	CONSTRAINT initiative_messages_text_length
 	CHECK (length("text") > 0)
 );
+CREATE UNIQUE INDEX index_initiative_subscriptions_initiative_uuid_and_email
+ON initiative_subscriptions (COALESCE(initiative_uuid, ""), email);
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -75,4 +77,6 @@ INSERT INTO migrations VALUES('20190311183208');
 INSERT INTO migrations VALUES('20190410080730');
 INSERT INTO migrations VALUES('20190410173242');
 INSERT INTO migrations VALUES('20190427232247');
+INSERT INTO migrations VALUES('20190428103608');
+INSERT INTO migrations VALUES('20190428114010');
 COMMIT;

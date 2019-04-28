@@ -2,6 +2,7 @@
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var LiveReload = require("../page").LiveReload
+var selected = require("root/lib/css").selected
 var prefixed = require("root/lib/css").prefixed
 exports = module.exports = Page
 exports.Form = require("../page").Form
@@ -28,6 +29,12 @@ function Page(attrs, children) {
 
 				<nav>
 					<ul>
+						<li>
+							<a href="/" class={selected("/", req.path)}>
+								Dashboard
+							</a>
+						</li>
+
 						<li>
 							<a href="/initiatives" class={prefixed("/initiatives", req.path)}>
 								Initiatives

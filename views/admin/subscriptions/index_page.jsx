@@ -1,21 +1,33 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
+var Fragment = Jsx.Fragment
 var Page = require("../page")
 var formatTime = require("root/lib/i18n").formatTime
+exports = module.exports = IndexPage
+exports.SubscriptionsView = SubscriptionsView
 
-module.exports = function(attrs) {
+function IndexPage(attrs) {
 	var subscriptions = attrs.subscriptions
+	var confirmed = subscriptions.filter((s) => s.confirmed_at)
+	var pending = subscriptions.filter((s) => !s.confirmed_at)
 
 	return <Page page="subscriptions" title="Subscriptions" req={attrs.req}>
 		<h1 class="admin-heading">Subscriptions</h1>
 
-		<h2 class="admin-subheading">
-			Last Initiative Subscriptions
-			{" "}
-			<span class="admin-count">({subscriptions.length})</span>
-		</h2>
+		{confirmed.length > 0 ? <Fragment>
+			<h2 class="admin-subheading">
+				Confirmed <span class="admin-count">({confirmed.length})</span>
+			</h2>
 
-		<SubscriptionsView subscriptions={subscriptions} />
+			<SubscriptionsView subscriptions={confirmed} />
+		</Fragment> : null}
+
+		{pending.length > 0 ? <Fragment>
+			<h2 class="admin-subheading">
+				Pending <span class="admin-count">({pending.length})</span>
+			</h2>
+			<SubscriptionsView subscriptions={pending} />
+		</Fragment> : null}
 	</Page>
 }
 
@@ -26,13 +38,10 @@ function SubscriptionsView(attrs) {
 		<thead>
 			<th>Subscribed At</th>
 			<th>Confirmed At</th>
-			<th>Initiative</th>
-			<th>Person</th>
+			<th>Email</th>
 		</thead>
 
 		<tbody>{subscriptions.map(function(subscription) {
-			var initiative = subscription.initiative
-
 			return <tr>
 				<td>{formatTime("numeric", subscription.created_at)}</td>
 
@@ -42,17 +51,11 @@ function SubscriptionsView(attrs) {
 				}</td>
 
 				<td>
-					<a class="admin-link" href={"/initiatives/" + initiative.id}>
-						{initiative.title}
-					</a>
-				</td>
-
-				<td>
-					<a class="admin-link" href={"mailto:" + subscription.email}>
+					<a
+						class="admin-link"
+						href={"mailto:" + subscription.email}>
 						{subscription.email}
 					</a>
-					<br />
-					<small>{subscription.created_ip}</small>
 				</td>
 			</tr>
 		})}</tbody>

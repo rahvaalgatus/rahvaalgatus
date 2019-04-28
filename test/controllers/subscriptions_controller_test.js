@@ -1,5 +1,8 @@
-var Config = require("root/config")
-var md5 = require("root/lib/crypto").md5
+var ValidDbInitiativeSubscription =
+	require("root/test/valid_db_initiative_subscription")
+var randomHex = require("root/lib/crypto").randomHex
+var sql = require("sqlate")
+var db = require("root/db/initiative_subscriptions_db")
 
 describe("SubscriptionsController", function() {
 	require("root/test/web")()
@@ -9,22 +12,11 @@ describe("SubscriptionsController", function() {
 
 	describe("POST /", function() {
 		require("root/test/fixtures").csrf()
+		require("root/test/email")()
+		require("root/test/time")(Date.UTC(2015, 5, 18))
 
-		it(`must subscribe to Mailchimp list`, function*() {
-			var email = "User@example.com"
-			var emailHash = hashEmail(email)
-
-			var path = `/3.0/lists/${Config.mailchimpListId}/members/${emailHash}`
-			this.router.put(path, function(req, res) {
-				req.body.must.eql({
-					email_address: email,
-					status_if_new: "pending",
-					interests: {[Config.mailchimpInterestInAllId]: true},
-					ip_signup: "127.0.0.1"
-				})
-
-				res.end()
-			})
+		it("must subscribe", function*() {
+			var email = "user@example.com"
 
 			var res = yield this.request("/subscriptions", {
 				method: "POST",
@@ -33,22 +25,60 @@ describe("SubscriptionsController", function() {
 
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/")
+
+			var subscriptions = yield db.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`)
+
+			subscriptions.length.must.equal(1)
+			var subscription = subscriptions[0]
+
+			subscription.must.eql(new ValidDbInitiativeSubscription({
+				email: email,
+				created_at: new Date,
+				created_ip: "127.0.0.1",
+				updated_at: new Date,
+				confirmation_token: subscription.confirmation_token,
+				confirmation_sent_at: new Date,
+				update_token: subscription.update_token
+			}))
+
+			subscription.confirmation_token.must.exist()
+
+			this.emails.length.must.equal(1)
+			this.emails[0].envelope.to.must.eql([email])
+			var body = String(this.emails[0].message)
+			body.must.include(subscription.confirmation_token)
+		})
+
+		it("must subscribe only once case-insensitively",
+			function*() {
+			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
+			var email = "user@example.com"
+
+			var subscription = new ValidDbInitiativeSubscription({
+				email: email,
+				created_at: createdAt,
+				updated_at: createdAt,
+				confirmed_at: createdAt
+			})
+
+			yield db.create(subscription)
+
+			var res = yield this.request("/subscriptions", {
+				method: "POST",
+				form: {_csrf_token: this.csrfToken, email: email.toUpperCase()}
+			})
+
+			res.statusCode.must.equal(303)
+			res.headers.location.must.equal("/")
+
+			var subs = yield db.search(sql`SELECT * FROM initiative_subscriptions`)
+			subs.must.eql([subscription])
+			this.emails.length.must.equal(0)
 		})
 
 		it("must respond with 422 given missing email", function*() {
-			var path = `/3.0/lists/${Config.mailchimpListId}/members/${hashEmail("")}`
-			this.router.put(path, respondWithMailchimpError.bind(null, {
-				type: "http://developer.mailchimp.com/documentation/mailchimp/guides/error-glossary/",
-				title: "Invalid Resource",
-				status: 400,
-				detail: "The resource submitted could not be validated. For field-specific details, see the \"errors\" array.",
-				instance: "88d753ef-5540-42e2-8976-d05754580e9e",
-
-				errors: [{
-					field: "email_address", message: "This value should not be blank."
-				}]
-			}))
-
 			var res = yield this.request("/subscriptions", {
 				method: "POST",
 				form: {_csrf_token: this.csrfToken, email: ""}
@@ -58,31 +88,89 @@ describe("SubscriptionsController", function() {
 		})
 
 		it("must respond with 422 given invalid email", function*() {
-			var email = "fubar"
-			var emailHash = hashEmail(email)
-			var path = `/3.0/lists/${Config.mailchimpListId}/members/${emailHash}`
-			this.router.put(path, respondWithMailchimpError.bind(null, {
-				type: "http://developer.mailchimp.com/documentation/mailchimp/guides/error-glossary/",
-				title: "Invalid Resource",
-				status: 400,
-				detail: "Please provide a valid email address.",
-				instance: "fec7d7c0-6c0e-405d-a090-0a05cf988f19"
-			}))
-
 			var res = yield this.request("/subscriptions", {
 				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: email}
+				form: {_csrf_token: this.csrfToken, email: "fubar"}
 			})
 
 			res.statusCode.must.equal(422)
 		})
 	})
+
+	describe("GET /new", function() {
+		require("root/test/fixtures").csrf()
+		require("root/test/email")()
+		require("root/test/time")(Date.UTC(2015, 5, 18))
+		
+		it("must confirm given a confirmation token", function*() {
+			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
+			var token = randomHex(8)
+
+			var subscription = new ValidDbInitiativeSubscription({
+				created_at: createdAt,
+				updated_at: createdAt,
+				confirmation_token: token,
+				confirmation_sent_at: createdAt
+			})
+
+			yield db.create(subscription)
+
+			var res = yield this.request(
+				`/subscriptions/new?confirmation_token=${token}`
+			)
+
+			res.statusCode.must.equal(303)
+			res.headers.location.must.equal("/")
+
+			yield db.read(token).must.then.eql({
+				__proto__: subscription,
+				confirmed_at: new Date,
+				confirmation_sent_at: null,
+				updated_at: new Date
+			})
+		})
+
+		it("must not confirm twice", function*() {
+			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
+			var token = randomHex(8)
+
+			var subscription = new ValidDbInitiativeSubscription({
+				created_at: createdAt,
+				updated_at: createdAt,
+				confirmed_at: createdAt,
+				confirmation_token: token
+			})
+
+			yield db.create(subscription)
+
+			var res = yield this.request(
+				`/subscriptions/new?confirmation_token=${token}`
+			)
+
+			res.statusCode.must.equal(303)
+			res.headers.location.must.equal("/")
+			yield db.read(token).must.then.eql(subscription)
+		})
+
+		it("must not confirm given the wrong token", function*() {
+			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
+			var token = randomHex(8)
+
+			var subscription = new ValidDbInitiativeSubscription({
+				created_at: createdAt,
+				updated_at: createdAt,
+				confirmation_token: token,
+				confirmation_sent_at: createdAt
+			})
+
+			yield db.create(subscription)
+
+			var res = yield this.request(
+				"/subscriptions/new?confirmation_token=deadbeef"
+			)
+
+			res.statusCode.must.equal(404)
+			yield db.read(token).must.then.eql(subscription)
+		})
+	})
 })
-
-function respondWithMailchimpError(json, _req, res) {
-	if (res.statusCode === 200) res.statusCode = 400
-	res.writeHead(res.statusCode, {"Content-Type": "application/problem+json"})
-	res.end(JSON.stringify(json))
-}
-
-function hashEmail(email) { return md5(email.toLowerCase()) }

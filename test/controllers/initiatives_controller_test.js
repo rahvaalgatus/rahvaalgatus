@@ -971,7 +971,7 @@ describe("InitiativesController", function() {
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: initiative}))
 
-				var email = "User@example.com"
+				var email = "user@example.com"
 				var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
 					method: "POST",
 					form: {_csrf_token: this.csrfToken, email: email}
@@ -993,7 +993,7 @@ describe("InitiativesController", function() {
 					created_at: new Date,
 					created_ip: "127.0.0.1",
 					updated_at: new Date,
-					confirmation_token: subscriptions[0].confirmation_token,
+					confirmation_token: subscription.confirmation_token,
 					confirmation_sent_at: new Date,
 					update_token: subscription.update_token
 				}))
@@ -1013,7 +1013,7 @@ describe("InitiativesController", function() {
 					respond.bind(null, {data: initiative}))
 
 				var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
-				var email = "User@example.com"
+				var email = "user@example.com"
 
 				var subscription = new ValidDbInitiativeSubscription({
 					initiative_uuid: UUID,

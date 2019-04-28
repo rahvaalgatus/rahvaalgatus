@@ -2,11 +2,9 @@
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var Page = require("../page")
-var formatTime = require("root/lib/i18n").formatTime
-exports = module.exports = SubscriptionsPage
-exports.SubscriptionsView = SubscriptionsView
+var SubscriptionsView = require("../subscriptions/index_page").SubscriptionsView
 
-function SubscriptionsPage(attrs) {
+module.exports = function(attrs) {
 	var req = attrs.req
 	var initiative = attrs.initiative
 	var subscriptions = attrs.subscriptions
@@ -46,35 +44,4 @@ function SubscriptionsPage(attrs) {
 			<SubscriptionsView subscriptions={pending} />
 		</Fragment> : null}
 	</Page>
-}
-
-function SubscriptionsView(attrs) {
-	var subscriptions = attrs.subscriptions
-
-	return <table class="admin-table">
-		<thead>
-			<th>Subscribed At</th>
-			<th>Confirmed At</th>
-			<th>Email</th>
-		</thead>
-
-		<tbody>{subscriptions.map(function(subscription) {
-			return <tr>
-				<td>{formatTime("numeric", subscription.created_at)}</td>
-
-				<td>{subscription.confirmed_at
-					? formatTime("numeric", subscription.confirmed_at)
-					: null
-				}</td>
-
-				<td>
-					<a
-						class="admin-link"
-						href={"mailto:" + subscription.email}>
-						{subscription.email}
-					</a>
-				</td>
-			</tr>
-		})}</tbody>
-	</table>
 }

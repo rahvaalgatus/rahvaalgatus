@@ -280,6 +280,12 @@ textarea.admin-input {
 	a { @extend .admin-link; }
 }
 
+#dashboard-page {
+	.subscriptions-table {
+		i { font-style: italic; }
+	}
+}
+
 #initiative-page {
 	.form-toggle {
 		&:not(:checked) ~ .form-toggle-form,

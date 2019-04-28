@@ -4,12 +4,12 @@ var Page = require("../../page")
 var Fragment = Jsx.Fragment
 var Form = Page.Form
 var Flash = Page.Flash
-var SubscriptionsView = require("../subscriptions_page").SubscriptionsView
 var Config = require("root/config")
+var SubscriptionsView =
+	require("../../subscriptions/index_page").SubscriptionsView
 var linkify = require("root/lib/linkify")
-exports = module.exports = CreatePage
 
-function CreatePage(attrs) {
+module.exports = function(attrs) {
 	var req = attrs.req
 	var initiative = attrs.initiative
 	var message = attrs.message

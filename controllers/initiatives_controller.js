@@ -503,7 +503,7 @@ exports.router.post("/:id/subscriptions", next(function*(req, res) {
 	var initiative = req.initiative
 	var email = req.body.email
 
-	if (!isValidEmail(email)) return void res.status(422).render("422", {
+	if (!_.isValidEmail(email)) return void res.status(422).render("422", {
 		errors: [req.t("INVALID_EMAIL")]
 	})
 
@@ -575,7 +575,7 @@ exports.router.get("/:id/subscriptions/new", next(function*(req, res, next) {
 				updated_at: new Date
 			})
 		
-		res.flash("notice", req.t("SUBSCRIBED"))
+		res.flash("notice", req.t("CONFIRMED_INITIATIVE_SUBSCRIPTION"))
 		res.redirect(303, req.baseUrl + "/" + initiative.id)
 	}
 	else {
@@ -621,7 +621,7 @@ exports.router.delete("/:id/subscriptions/:token", next(function*(req, res) {
 		AND update_token = ${subscription.update_token}
 	`)
 
-	res.flash("notice", req.t("UNSUBSCRIBED"))
+	res.flash("notice", req.t("INITIATIVE_SUBSCRIPTION_DELETED"))
 	res.redirect(303, req.baseUrl + "/" + initiative.id)
 }))
 
@@ -688,4 +688,3 @@ function parseJwt(jwt) { return JSON.parse(decodeBase64(jwt.split(".")[1])) }
 
 function getBody(res) { return res.body.data }
 function sortByCreatedAt(arr) { return _.sortBy(arr, "createdAt").reverse() }
-function isValidEmail(email) { return email.indexOf("@") >= 0 }

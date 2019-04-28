@@ -3,7 +3,6 @@ var Router = require("express").Router
 var Config = require("root/config")
 var HttpError = require("standard-http-error")
 var I18n = require("root/lib/i18n")
-var redirect = require("root/lib/redirect")
 var cosApi = require("root/lib/citizenos_api")
 var readInitiativesWithStatus = cosApi.readInitiativesWithStatus
 var initiativeSubscriptionsDb = require("root/db/initiative_subscriptions_db")
@@ -24,7 +23,30 @@ var sendEmail = require("root").sendEmail
 var STATUSES = ["followUp", "closed"]
 exports = module.exports = Router()
 
-exports.get("/", redirect(302, "/initiatives"))
+exports.get("/", next(function*(_req, res) {
+	var subscriptions = yield initiativeSubscriptionsDb.search(sql`
+		SELECT *
+		FROM initiative_subscriptions
+		ORDER BY created_at DESC
+		LIMIT 15
+	`)
+
+	var uuids = _.uniq(subscriptions.map((s) => s.initiative_uuid))
+	var query = sql`SELECT id, title FROM "Topics" WHERE id IN (${uuids})`
+
+	var initiatives = _.indexBy(
+		yield cosDb.raw(String(query), query.parameters).then(getRows),
+		"id"
+	)
+
+	subscriptions.forEach(function(subscription) {
+		subscription.initiative = initiatives[subscription.initiative_uuid]
+	})
+
+	res.render("admin/dashboard_page.jsx", {
+		subscriptions: subscriptions
+	})
+}))
 
 exports.get("/initiatives", next(function*(_req, res) {
 	var initiatives = yield {
@@ -266,21 +288,9 @@ exports.get("/subscriptions", next(function*(_req, res) {
 	var subscriptions = yield initiativeSubscriptionsDb.search(sql`
 		SELECT *
 		FROM initiative_subscriptions
+		WHERE initiative_uuid IS NULL
 		ORDER BY created_at DESC
-		LIMIT 15
 	`)
-
-	var uuids = _.uniq(subscriptions.map((s) => s.initiative_uuid))
-	var query = sql`SELECT id, title FROM "Topics" WHERE id IN (${uuids})`
-
-	var initiatives = _.indexBy(
-		yield cosDb.raw(String(query), query.parameters).then(getRows),
-		"id"
-	)
-
-	subscriptions.forEach(function(subscription) {
-		subscription.initiative = initiatives[subscription.initiative_uuid]
-	})
 
 	res.render("admin/subscriptions/index_page.jsx", {
 		subscriptions: subscriptions
