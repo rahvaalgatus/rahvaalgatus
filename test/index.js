@@ -3,6 +3,8 @@ var Mocha = require("mocha")
 var slice = Function.call.bind(Array.prototype.slice)
 var CACHE = require.cache
 
+process.on("unhandledRejection", function() {})
+
 Mocha.prototype.loadFiles = _.wrap(Mocha.prototype.loadFiles, function(orig) {
 	orig.apply(this, slice(arguments, 1))
 
