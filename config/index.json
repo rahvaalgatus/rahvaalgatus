@@ -22,9 +22,6 @@
 	"userVoiceApiKey": "X2tNuk059z6CD4Em5Q65KQ",
 	"maksekeskusUrl": "https://payment.maksekeskus.ee/pay/1/link.html",
 	"maksekeskusId": "62c9e4f7-beea-4120-a08d-3dbafda55c9a",
-	"mailchimpApiKey": "-us1",
-	"mailchimpListId": "",
-	"mailchimpInterestCategoryId": "",
 
 	"citizenOsDatabase": {},
 
