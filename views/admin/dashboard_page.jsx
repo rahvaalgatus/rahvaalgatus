@@ -9,6 +9,13 @@ module.exports = function(attrs) {
 	return <Page page="dashboard" title="Dashboard" req={attrs.req}>
 		<h1 class="admin-heading">Dashboard</h1>
 
+		<h2 class="admin-subheading">Signatures</h2>
+
+		<table class="admin-horizontal-table">
+			<th scope="row">Unique signatures this month</th>
+			<td>{attrs.signatureCount}</td>
+		</table>
+
 		<h2 class="admin-subheading">
 			Last Subscriptions
 			{" "}

@@ -3,6 +3,7 @@ var Router = require("express").Router
 var Config = require("root/config")
 var HttpError = require("standard-http-error")
 var I18n = require("root/lib/i18n")
+var DateFns = require("date-fns")
 var cosApi = require("root/lib/citizenos_api")
 var readInitiativesWithStatus = cosApi.readInitiativesWithStatus
 var initiativeSubscriptionsDb = require("root/db/initiative_subscriptions_db")
@@ -24,6 +25,17 @@ var STATUSES = ["followUp", "closed"]
 exports = module.exports = Router()
 
 exports.get("/", next(function*(_req, res) {
+	var signatures = yield cosDb.raw(`
+		WITH signatures AS (
+			SELECT DISTINCT ON ("voteId", "userId") *
+			FROM "VoteLists"
+			WHERE "createdAt" >= :from
+			ORDER BY "voteId", "userId", "createdAt" DESC
+		)
+
+		SELECT COUNT(*) as count FROM signatures
+	`, {from: DateFns.startOfMonth(new Date)}).then(getRow)
+
 	var subscriptions = yield initiativeSubscriptionsDb.search(sql`
 		SELECT *
 		FROM initiative_subscriptions
@@ -46,7 +58,8 @@ exports.get("/", next(function*(_req, res) {
 	})
 
 	res.render("admin/dashboard_page.jsx", {
-		subscriptions: subscriptions
+		subscriptions: subscriptions,
+		signatureCount: signatures.count
 	})
 }))
 
@@ -376,4 +389,5 @@ function parseEvent(obj) {
 }
 
 function getBody(res) { return res.body.data }
+function getRow(res) { return res.rows[0] }
 function getRows(res) { return res.rows }
