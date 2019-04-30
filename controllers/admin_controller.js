@@ -32,7 +32,9 @@ exports.get("/", next(function*(_req, res) {
 	`)
 
 	var uuids = _.uniq(subscriptions.map((s) => s.initiative_uuid))
-	var query = sql`SELECT id, title FROM "Topics" WHERE id IN (${uuids})`
+	var query = sql`
+		SELECT id, title FROM "Topics" WHERE id IN ${sql.tuple(uuids)}
+	`
 
 	var initiatives = _.indexBy(
 		yield cosDb.raw(String(query), query.parameters).then(getRows),
@@ -62,7 +64,7 @@ exports.get("/initiatives", next(function*(_req, res) {
 	var subscriberCounts = yield sqlite(sql`
 		SELECT initiative_uuid, COUNT(*) as count
 		FROM initiative_subscriptions
-		WHERE initiative_uuid IN (${uuids})
+		WHERE initiative_uuid IN ${sql.tuple(uuids)}
 		AND confirmed_at IS NOT NULL
 		GROUP BY initiative_uuid
 	`)

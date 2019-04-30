@@ -626,9 +626,8 @@
       }
     },
     "heaven-sqlite": {
-      "version": "0.1.337",
-      "from": "heaven-sqlite@latest",
-      "resolved": "https://registry.npmjs.org/heaven-sqlite/-/heaven-sqlite-0.1.337.tgz"
+      "version": "0.2.0",
+      "from": "heaven-sqlite@>=0.2.0 <0.3.0"
     },
     "inherits": {
       "version": "2.0.1",
@@ -4109,8 +4108,8 @@
       }
     },
     "sqlate": {
-      "version": "1.0.0",
-      "from": "sqlate@latest"
+      "version": "2.0.0",
+      "from": "sqlate@>=2.0.0 <3.0.0"
     },
     "sqlite3": {
       "version": "4.0.2",
