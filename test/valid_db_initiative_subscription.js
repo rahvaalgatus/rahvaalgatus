@@ -9,6 +9,7 @@ module.exports = function(attrs) {
 		initiative_uuid: null,
 		email: pseudoInt(100) + "@example.com",
 		created_at: createdAt,
+		created_by: null,
 		updated_at: createdAt,
 		confirmation_sent_at: null,
 		confirmation_token: null,
