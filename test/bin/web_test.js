@@ -35,20 +35,4 @@ describe("Web", function() {
 			})
 		})
 	})
-
-	;[
-		"/assets/etherpad.css",
-		"/assets/tisapro-regular-webfont.svg"
-	].forEach(function(path) {
-		describe(path, function() {
-			before(function*() {
-				this.res = yield this.request(path, {method: "HEAD"})
-				this.res.statusCode.must.equal(200)
-			})
-
-			it("must have CORS headers", function() {
-				this.res.headers["access-control-allow-origin"].must.equal("*")
-			})
-		})
-	})
 })
