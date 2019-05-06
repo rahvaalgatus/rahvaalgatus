@@ -1,0 +1,15 @@
+language: node_js
+node_js:
+  - "6"
+
+addons:
+  postgresql: "9.6"
+
+before_script:
+  - make db/test PGHOST=localhost PGUSER=postgres
+  - ln -s .. node_modules/root
+
+script: make spec PGHOST=localhost PGUSER=postgres
+
+notifications:
+  email: ["andri@dot.ee"]
