@@ -1,4 +1,4 @@
-var _ = require("lodash")
+var _ = require("root/lib/underscore")
 var lazy = require("lazy-object").defineLazyProperty
 var ENV = process.env.ENV
 
@@ -10,7 +10,7 @@ lazy(exports, "errorReporter", function() {
 			var Config = require("root/config")
 			return new ErrorReporter(Config.sentryDsn)
 
-		case "test": return _.noop
+		case "test": return function() {}
 		default: return require("root/lib/console_error_reporter")
   }
 })
@@ -31,12 +31,21 @@ lazy(exports, "sqlite", function() {
 
 lazy(exports, "cosDb", function() {
   var Knex = require("knex")
+	var env = process.env
   var config = require("root/config").citizenOsDatabase
 
   return Knex({
     client: "pg",
     debug: false,
-    connection: config.uri || config,
+
+    connection: _.defaults({
+			host: env.PGHOST || config.host,
+			port: env.PGPORT || config.port,
+			user: env.PGUSER || config.user,
+			password: env.PGPASSWORD || config.password,
+			database: env.PGDATABASE || config.database
+		}, config),
+
     acquireConnectionTimeout: 20000,
     pool: {min: 1, max: config.pool}
   })

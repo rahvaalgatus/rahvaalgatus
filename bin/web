@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 var O = require("oolong")
-var Path = require("path")
 var Express = require("root/lib/express")
 var Config = require("root/config")
 var HttpError = require("standard-http-error")
@@ -9,14 +8,10 @@ var redirect = require("root/lib/redirect")
 var ENV = process.env.ENV
 var PORT = process.env.PORT || 3000
 var PUBLIC_DIR = __dirname + "/../public"
-var FONT_SUFFIXES = [".eot", ".woff", ".woff2", ".ttf", ".svg"]
 var ERR_TEMPLATES = {401: "401", 404: "404", 412: "412", 500: "500", 503: "503"}
 var app = module.exports = Express.new()
 
-if (ENV == "development" || ENV == "test") {
-	app.use(Express.static(PUBLIC_DIR, {setHeaders: setStaticHeaders}))
-}
-
+if (ENV == "development" || ENV == "test") app.use(Express.static(PUBLIC_DIR))
 if (ENV == "development" || ENV == "staging") app.use(require("morgan")("dev"))
 
 app.use(require("cookie-parser")(Config.cookieSecret))
@@ -71,17 +66,3 @@ app.use(require("root/lib/middleware/error_handler_middleware").bind(null,
 
 if (module.parent) return
 runServer(app, PORT)
-
-function setStaticHeaders(res, path) {
-	if (isCorsable(path)) res.setHeader("Access-Control-Allow-Origin", "*")
-}
-
-function isCorsable(path) {
-	path = Path.relative(PUBLIC_DIR, path)
-	if (FONT_SUFFIXES.some((s) => path.endsWith(s))) return true
-
-	switch (path) {
-		case "assets/etherpad.css": return true
-		default: return false
-	}
-}
