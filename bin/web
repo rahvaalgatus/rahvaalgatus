@@ -54,6 +54,10 @@ O.each({
 	"/user": require("root/controllers/user_controller").router,
 }, (router, path) => app.use(path, router))
 
+if (ENV == "development" || ENV == "staging") {
+	app.use("/admin", require("root/controllers/admin_controller"))
+}
+
 app.use(function(_req, _res, next) { next(new HttpError(404)) })
 app.use(require("root/lib/middleware/error_reporter_middleware"))
 

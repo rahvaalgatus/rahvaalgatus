@@ -17,8 +17,8 @@ function CreatePage(attrs) {
 		title={"New Event for " + initiative.title}
 		req={req}
 	>
-		<a href="/initiatives" class="admin-back-2">Initiatives</a>
-		<a href={"/initiatives/" + initiative.id} class="admin-back">
+		<a href={req.baseUrl + "/initiatives"} class="admin-back-2">Initiatives</a>
+		<a href={req.baseUrl + "/initiatives/" + initiative.id} class="admin-back">
 			{initiative.title}
 		</a>
 
@@ -33,7 +33,7 @@ function EventForm(attrs) {
 	var initiative = attrs.initiative
 	var event = attrs.event
 
-	var path = `/initiatives/${initiative.id}/events`
+	var path = `${req.baseUrl}/initiatives/${initiative.id}/events`
 	if (event.id) path += "/" + event.id
 
 	return <Form

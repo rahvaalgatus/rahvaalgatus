@@ -5,6 +5,7 @@ var Config = require("root/config")
 var formatDate = require("root/lib/i18n").formatDate
 
 module.exports = function(attrs) {
+	var req = attrs.req
 	var votings = attrs.votings
 	var parliamented = attrs.parliamented
 	var closed = attrs.closed
@@ -21,6 +22,7 @@ module.exports = function(attrs) {
 		</h2>
 
 		<InitiativesView
+			req={req}
 			initiatives={votings}
 			dbInitiatives={dbInitiatives}
 			subscriberCounts={subscriberCounts}
@@ -33,6 +35,7 @@ module.exports = function(attrs) {
 		</h2>
 
 		<InitiativesView
+			req={req}
 			initiatives={parliamented}
 			dbInitiatives={dbInitiatives}
 			subscriberCounts={subscriberCounts}
@@ -45,6 +48,7 @@ module.exports = function(attrs) {
 		</h2>
 
 		<InitiativesView
+			req={req}
 			initiatives={closed}
 			dbInitiatives={dbInitiatives}
 			subscriberCounts={subscriberCounts}
@@ -53,6 +57,7 @@ module.exports = function(attrs) {
 }
 
 function InitiativesView(attrs) {
+	var req = attrs.req
 	var initiatives = attrs.initiatives
 	var dbInitiatives = attrs.dbInitiatives
 	var subscriberCounts = attrs.subscriberCounts
@@ -94,14 +99,16 @@ function InitiativesView(attrs) {
 					}</td> : null}
 
 					<td>
-						<a href={"/initiatives/" + initiative.id} class="admin-link">
+						<a
+							href={`${req.baseUrl}/initiatives/${initiative.id}`}
+							class="admin-link">
 							{initiative.title}
 						</a>
 					</td>
 
 					{showSubscribers ? <td><a
 						class="admin-link"
-						href={`/initiatives/${initiative.id}/subscriptions`}>
+						href={`${req.baseUrl}/initiatives/${initiative.id}/subscriptions`}>
 						{subscriberCounts[initiative.id]}
 					</a></td> : null}
 

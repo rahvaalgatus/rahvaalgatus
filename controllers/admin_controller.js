@@ -24,6 +24,11 @@ var sendEmail = require("root").sendEmail
 var STATUSES = ["followUp", "closed"]
 exports = module.exports = Router()
 
+exports.use(function(req, _res, next) {
+	if (req.user && _.contains(Config.adminUserIds, req.user.id)) next()
+	else next(new HttpError(401, "Not an Admin"))
+})
+
 exports.get("/", next(function*(_req, res) {
 	var signatures = yield cosDb.raw(`
 		WITH signatures AS (
@@ -172,7 +177,7 @@ exports.put("/initiatives/:id", next(function*(req, res) {
 		yield cosDb("Topics").where("id", req.params.id).update(citizenAttrs)
 
 	res.flash("notice", "Initiative updated.")
-	res.redirect("/initiatives/" + req.initiative.id)
+	res.redirect(req.baseUrl + "/initiatives/" + req.initiative.id)
 }))
 
 exports.get("/initiatives/:id/events/new", function(_req, res) {
@@ -191,7 +196,7 @@ exports.post("/initiatives/:id/events", next(function*(req, res) {
 
 	yield cosDb("TopicEvents").insert(event)
 	res.flash("notice", "Event created.")
-	res.redirect("/initiatives/" + req.initiative.id)
+	res.redirect(req.baseUrl + "/initiatives/" + req.initiative.id)
 }))
 
 exports.get("/initiatives/:id/events/:eventId/edit", next(function*(req, res) {
@@ -206,14 +211,14 @@ exports.put("/initiatives/:id/events/:eventId", next(function*(req, res) {
 	yield query.update(event)
 
 	res.flash("notice", "Event updated.")
-	res.redirect("/initiatives/" + req.initiative.id)
+	res.redirect(req.baseUrl + "/initiatives/" + req.initiative.id)
 }))
 
 exports.delete("/initiatives/:id/events/:eventId", next(function*(req, res) {
 	var query = cosDb("TopicEvents").where("id", req.params.eventId)
 	yield query.update({deletedAt: new Date})
 	res.flash("notice", "Event deleted.")
-	res.redirect("/initiatives/" + req.initiative.id)
+	res.redirect(req.baseUrl + "/initiatives/" + req.initiative.id)
 }))
 
 exports.get("/initiatives/:id/messages/new", next(function*(req, res) {
@@ -273,7 +278,7 @@ exports.post("/initiatives/:id/messages", next(function*(req, res) {
 			})
 
 			res.flash("notice", "Message sent.")
-			res.redirect("/initiatives/" + req.initiative.id)
+			res.redirect(req.baseUrl + "/initiatives/" + req.initiative.id)
 			break
 
 		case "preview":

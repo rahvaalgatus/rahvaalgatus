@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-var _ = require("root/lib/underscore")
 var Express = require("root/lib/express")
 var Config = require("root/config")
 var HttpError = require("standard-http-error")
@@ -20,11 +19,6 @@ app.use(require("root/lib/middleware/method_override_middleware"))
 app.use(require("root/lib/middleware/csrf_middleware"))
 app.use(require("flash-fiction/express"))
 app.use(require("root/lib/middleware/session_middleware"))
-
-app.use(function(req, _res, next) {
-	if (req.user && _.contains(Config.adminUserIds, req.user.id)) next()
-	else next(new HttpError(401, "Not an Admin"))
-})
 
 app.use("/", require("root/controllers/admin_controller"))
 app.use(function(_req, _res, next) { next(new HttpError(404)) })

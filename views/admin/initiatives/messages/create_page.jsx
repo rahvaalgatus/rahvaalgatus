@@ -14,7 +14,7 @@ module.exports = function(attrs) {
 	var initiative = attrs.initiative
 	var message = attrs.message
 	var subscriptions = attrs.subscriptions
-	var path = `/initiatives/${initiative.id}/messages`
+	var path = `${req.baseUrl}/initiatives/${initiative.id}/messages`
 	var preview = attrs.preview
 
 	return <Page
@@ -22,8 +22,8 @@ module.exports = function(attrs) {
 		title={"New Message for " + initiative.title}
 		req={req}
 	>
-		<a href="/initiatives" class="admin-back-2">Initiatives</a>
-		<a href={"/initiatives/" + initiative.id} class="admin-back">
+		<a href={req.baseUrl + "/initiatives"} class="admin-back-2">Initiatives</a>
+		<a href={req.baseUrl + "/initiatives/" + initiative.id} class="admin-back">
 			{initiative.title}
 		</a>
 

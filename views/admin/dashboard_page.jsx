@@ -4,6 +4,7 @@ var Page = require("./page")
 var formatTime = require("root/lib/i18n").formatTime
 
 module.exports = function(attrs) {
+	var req = attrs.req
 	var subscriptions = attrs.subscriptions
 
 	return <Page page="dashboard" title="Dashboard" req={attrs.req}>
@@ -22,11 +23,12 @@ module.exports = function(attrs) {
 			<span class="admin-count">({subscriptions.length})</span>
 		</h2>
 
-		<SubscriptionsView subscriptions={subscriptions} />
+		<SubscriptionsView req={req} subscriptions={subscriptions} />
 	</Page>
 }
 
 function SubscriptionsView(attrs) {
+	var req = attrs.req
 	var subscriptions = attrs.subscriptions
 
 	return <table class="admin-table subscriptions-table">
@@ -49,13 +51,15 @@ function SubscriptionsView(attrs) {
 				}</td>
 
 				<td>{initiative ?
-					<a class="admin-link" href={"/initiatives/" + initiative.id}>
+					<a
+						href={`${req.baseUrl}/initiatives/${initiative.id}`}
+						class="admin-link">
 						{initiative.title}
 					</a>
 				: <i>All initiatives</i>}</td>
 
 				<td>
-					<a class="admin-link" href={"mailto:" + subscription.email}>
+					<a href={"mailto:" + subscription.email} class="admin-link">
 						{subscription.email}
 					</a>
 					<br />

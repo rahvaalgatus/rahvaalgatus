@@ -17,11 +17,11 @@ module.exports = function(attrs) {
 	var events = attrs.events
 	var messages = attrs.messages
 	var status = initiative.status
-	var action = `/initiatives/${initiative.id}`
+	var action = `${req.baseUrl}/initiatives/${initiative.id}`
 	var pendingSubscriberCount = subscriberCount.all - subscriberCount.confirmed
 
 	return <Page page="initiative" title={initiative.title} req={req}>
-		<a href="/initiatives" class="admin-back">Initiatives</a>
+		<a href={req.baseUrl + "/initiatives"} class="admin-back">Initiatives</a>
 		<h1 class="admin-heading">{initiative.title}</h1>
 
 		<Flash flash={req.flash} />
@@ -78,7 +78,7 @@ module.exports = function(attrs) {
 				<td>
 					<a
 						class="admin-link"
-						href={`/initiatives/${initiative.id}/subscriptions`}>
+						href={`${req.baseUrl}/initiatives/${initiative.id}/subscriptions`}>
 						{subscriberCount.confirmed}
 					</a>
 
@@ -100,7 +100,7 @@ module.exports = function(attrs) {
 					<th>Title</th>
 					<th class="new-event">
 						<a
-							href={`/initiatives/${initiative.id}/events/new`}
+							href={`${req.baseUrl}/initiatives/${initiative.id}/events/new`}
 							class="admin-primary-button new-event-button">
 							New Event
 						</a>
@@ -110,7 +110,8 @@ module.exports = function(attrs) {
 				<tbody>
 					{events.map(function(event) {
 						var toggleId = `show-event-${event.id}-text`
-						var path = `/initiatives/${initiative.id}/events/${event.id}`
+						var path = `${req.baseUrl}/initiatives/${initiative.id}`
+						path += `/events/${event.id}`
 
 						return <tr class="event">
 							<td>
@@ -155,7 +156,7 @@ module.exports = function(attrs) {
 					<th>Title</th>
 					<th class="new-message">
 						<a
-							href={`/initiatives/${initiative.id}/messages/new`}
+							href={`${req.baseUrl}/initiatives/${initiative.id}/messages/new`}
 							class="admin-primary-button new-message-button">
 							New Message
 						</a>
