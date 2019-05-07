@@ -69,10 +69,10 @@ The few client-side JavaScript files of Rahvaalgatus, however, are not dependent
 
 To sign in during development, use one of the [Mobile-Id test phone numbers](http://www.id.ee/?lang=en&id=36381):
 
-Phone        | Personal id
--------------|------------
-+37200000766 | 60001019906
-+37060000007 | 51001091072
+Phone        | Personal id | Name
+-------------|-------------|-----
++37200000766 | 60001019906 | Mary
++37060000007 | 51001091072 | Juhan
 
 See more at <http://www.id.ee/?lang=en&id=36381>.
 
