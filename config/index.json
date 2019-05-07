@@ -5,6 +5,7 @@
 	"apiPartnerId": "b563ee8c-ba8e-4cd6-b592-fbcd4e8f22bb",
 	"apiAuthorizeUrl": "https://cos.rahvaalgatus.ee/api/auth/openid/authorize",
 	"etherpadUrl": "https://cos.rahvaalgatus.ee/etherpad",
+	"cookieName": "citizenos_token",
 	"cookieSecret": null,
 	"cookieDomain": "rahvaalgatus.ee",
 	"userAgent": "Rahvaalgatus (+https://rahvaalgatus.ee)",

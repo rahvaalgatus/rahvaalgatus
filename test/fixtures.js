@@ -1,6 +1,8 @@
+var Config = require("root/config")
 var newUuid = require("uuid/v4")
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var fetchDefaults = require("fetch-defaults")
+var TOKEN_COOKIE_NAME = Config.cookieName
 
 exports.user = function(attrs) {
 	beforeEach(function() {
@@ -11,7 +13,7 @@ exports.user = function(attrs) {
 		var user = attrs || {id: newUuid()}
 
 		var cookie = [
-			"citizenos_token=" + pseudoHex(16),
+			TOKEN_COOKIE_NAME + "=" + pseudoHex(16),
 			"csrf_token=" + csrfToken
 		].join("; ")
 

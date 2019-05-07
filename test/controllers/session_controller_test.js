@@ -11,7 +11,7 @@ var PATH = "/session/new"
 var HEADERS = {"Content-Type": "application/json"}
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var AUTHORIZE_URL = Config.apiAuthorizeUrl
-var TOKEN_COOKIE_NAME = "citizenos_token"
+var TOKEN_COOKIE_NAME = Config.cookieName
 var CSRF_COOKIE_NAME = "csrf_token_for_citizenos"
 var CSRF_COOKIE_PATH = "/session"
 var REFERRER_COOKIE_NAME = "session_referrer"
@@ -171,7 +171,7 @@ describe("SessionController", function() {
 
 			var res = yield this.request("/session", {
 				method: "POST",
-				headers: {Cookie: "citizenos_token=12345;csrf_token=54321"},
+				headers: {Cookie: `${TOKEN_COOKIE_NAME}=12345;csrf_token=54321`},
 				form: {_method: "delete", _csrf_token: 54321}
 			})
 
