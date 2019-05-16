@@ -158,6 +158,8 @@ exports.router.get("/:id",
 	switch (res.contentType.name) {
 		case "application/vnd.rahvaalgatus.initiative+json":
 			res.setHeader("Content-Type", res.contentType)
+			res.setHeader("Access-Control-Allow-Origin", "*")
+
 			res.send({
 				title: initiative.title,
 				signatureCount: initiative.vote ? countVotes(initiative) : 0

@@ -453,6 +453,7 @@ describe("InitiativesController", function() {
 
 			res.statusCode.must.equal(200)
 			res.headers["content-type"].must.equal(INITIATIVE_TYPE)
+			res.headers["access-control-allow-origin"].must.equal("*")
 
 			res.body.must.eql({
 				title: INITIATIVE.title,
