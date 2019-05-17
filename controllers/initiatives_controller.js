@@ -609,8 +609,9 @@ exports.router.use("/:id/subscriptions/:token", next(function*(req, res, next) {
 }))
 
 exports.router.get("/:id/subscriptions/:token", function(req, res) {
-	var subscription = req.subscription
-	res.render("initiatives/subscriptions/read.jsx", {subscription: subscription})
+	res.render("initiatives/subscriptions/read_page.jsx", {
+		subscription: req.subscription
+	})
 })
 
 exports.router.delete("/:id/subscriptions/:token", next(function*(req, res) {

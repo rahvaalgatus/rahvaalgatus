@@ -3,6 +3,7 @@ var ValidDbInitiativeSubscription =
 var randomHex = require("root/lib/crypto").randomHex
 var sql = require("sqlate")
 var db = require("root/db/initiative_subscriptions_db")
+var t = require("root/lib/i18n").t.bind(null, "et")
 
 describe("SubscriptionsController", function() {
 	require("root/test/web")()
@@ -171,6 +172,104 @@ describe("SubscriptionsController", function() {
 
 			res.statusCode.must.equal(404)
 			yield db.read(token).must.then.eql(subscription)
+		})
+	})
+
+	describe("GET /:token", function() {
+		require("root/test/fixtures").csrf()
+
+		it("must show subscription page", function*() {
+			var subscription = new ValidDbInitiativeSubscription({
+				confirmed_at: new Date
+			})
+
+			yield db.create(subscription)
+
+			var res = yield this.request(
+				`/subscriptions/${subscription.update_token}`
+			)
+
+			res.statusCode.must.equal(200)
+			res.body.must.include(t("SUBSCRIPTIONS_UPDATE_TITLE"))
+		})
+
+		it("must respond with 404 given invalid update token", function*() {
+			// Still have a single subscription to ensure it's not picking randomly.
+			yield db.create(new ValidDbInitiativeSubscription({
+				confirmed_at: new Date
+			}))
+
+			var res = yield this.request("/subscriptions/beef")
+			res.statusCode.must.equal(404)
+			res.body.must.include(t("SUBSCRIPTION_NOT_FOUND_TITLE"))
+		})
+	})
+
+	describe("DELETE /:id/subscriptions/:token", function() {
+		require("root/test/fixtures").csrf()
+
+		it("must delete subscription", function*() {
+			var subscription = new ValidDbInitiativeSubscription({
+				confirmed_at: new Date
+			})
+
+			yield db.create(subscription)
+
+			var res = yield this.request(
+				`/subscriptions/${subscription.update_token}`, {
+				method: "POST",
+				form: {_method: "delete", _csrf_token: this.csrfToken}
+			})
+
+			res.statusCode.must.equal(303)
+			res.headers.location.must.equal("/")
+
+			yield db.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`).must.then.be.empty()
+		})
+
+		it("must respond with 404 given invalid update token", function*() {
+			// Still have a single subscription to ensure it's not picking randomly.
+			var subscription = new ValidDbInitiativeSubscription({
+				confirmed_at: new Date
+			}) 
+			yield db.create(subscription)
+
+			var res = yield this.request(`/subscriptions/deadbeef`, {
+				method: "POST",
+				form: {_method: "delete", _csrf_token: this.csrfToken}
+			})
+
+			res.statusCode.must.equal(404)
+			res.body.must.include(t("SUBSCRIPTION_NOT_FOUND_TITLE"))
+
+			yield db.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`).must.then.eql([subscription])
+		})
+
+		it("must not delete other subscription on same initiative", function*() {
+			var other = new ValidDbInitiativeSubscription({confirmed_at: new Date})
+
+			var subscription = new ValidDbInitiativeSubscription({
+				confirmed_at: new Date,
+			})
+
+			yield db.create([other, subscription])
+
+			var res = yield this.request(
+				`/subscriptions/${subscription.update_token}`, {
+				method: "POST",
+				form: {_method: "delete", _csrf_token: this.csrfToken}
+			})
+
+			res.statusCode.must.equal(303)
+			res.headers.location.must.equal("/")
+
+			yield db.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`).must.then.eql([other])
 		})
 	})
 })

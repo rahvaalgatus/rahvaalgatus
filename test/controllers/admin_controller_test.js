@@ -42,11 +42,18 @@ describe("AdminController", function() {
 
 		describe("with action=send", function() {
 			it("must create message and send email", function*() {
-				var subscription = yield initiativeSubscriptionsDb.create({
+				var a = yield initiativeSubscriptionsDb.create({
 					initiative_uuid: UUID,
-					email: "user@example.com",
+					email: "john@example.com",
 					confirmed_at: new Date,
 					confirmation_token: "deadbeef"
+				})
+
+				var b = yield initiativeSubscriptionsDb.create({
+					initiative_uuid: null,
+					email: "mike@example.com",
+					confirmed_at: new Date,
+					confirmation_token: "deadfeed"
 				})
 
 				var res = yield this.request(`/initiatives/${UUID}/messages`, {
@@ -75,14 +82,15 @@ describe("AdminController", function() {
 					title: "Initiative was updated",
 					text: "Go check it out",
 					sent_at: new Date,
-					sent_to: [subscription.email]
+					sent_to: [a.email, b.email]
 				}])
 
 				this.emails.length.must.equal(1)
-				this.emails[0].envelope.to.must.eql([subscription.email])
-				var body = String(this.emails[0].message)
-				body.match(/^Subject: .*/m)[0].must.include("Initiative was updated")
-				body.must.include(subscription.update_token)
+				this.emails[0].envelope.to.must.eql([a.email, b.email])
+				var msg = String(this.emails[0].message)
+				msg.match(/^Subject: .*/m)[0].must.include("Initiative was updated")
+				msg.must.include(`/initiatives/${UUID}/subscriptions/${a.update_token}`)
+				msg.must.include(`/subscriptions/${b.update_token}`)
 			})
 
 			it("must batch by 1000 recipients", function*() {
@@ -121,6 +129,57 @@ describe("AdminController", function() {
 				this.emails.length.must.equal(2)
 				var to = concat(this.emails[0].envelope.to, this.emails[1].envelope.to)
 				to.sort().must.eql(emails)
+			})
+
+			it("must not email the same subscriber twice", function*() {
+				var generic = yield initiativeSubscriptionsDb.create({
+					email: "user@example.com",
+					confirmed_at: new Date,
+					confirmation_token: "deadbeef"
+				})
+
+				var specific = yield initiativeSubscriptionsDb.create({
+					initiative_uuid: UUID,
+					email: "user@example.com",
+					confirmed_at: new Date,
+					confirmation_token: "deadfeed"
+				})
+
+				var res = yield this.request(`/initiatives/${UUID}/messages`, {
+					method: "POST",
+
+					form: {
+						_csrf_token: this.csrfToken,
+						action: "send",
+						title: "Initiative was updated",
+						text: "Go check it out"
+					}
+				})
+
+				res.statusCode.must.equal(302)
+				res.headers.location.must.equal(`/initiatives/${UUID}`)
+
+				var messages = yield initiativeMessagesDb.search(sql`
+					SELECT * FROM initiative_messages
+				`)
+
+				messages.must.eql([{
+					id: messages[0].id,
+					initiative_uuid: UUID,
+					created_at: new Date,
+					updated_at: new Date,
+					title: "Initiative was updated",
+					text: "Go check it out",
+					sent_at: new Date,
+					sent_to: [specific.email]
+				}])
+
+				this.emails.length.must.equal(1)
+				this.emails[0].envelope.to.must.eql([specific.email])
+				var body = String(this.emails[0].message)
+				body.match(/^Subject: .*/m)[0].must.include("Initiative was updated")
+				body.must.include(specific.update_token)
+				body.must.not.include(generic.update_token)
 			})
 
 			it("must not email subscribers of other initiatives", function*() {

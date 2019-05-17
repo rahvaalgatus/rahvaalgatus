@@ -1190,7 +1190,7 @@ describe("InitiativesController", function() {
 			)
 
 			res.statusCode.must.equal(200)
-			res.body.must.include("Lõpeta teavituse tellimine")
+			res.body.must.include(t("SUBSCRIPTION_UPDATE_TITLE"))
 		})
 
 		it("must respond with 404 given invalid update token", function*() {

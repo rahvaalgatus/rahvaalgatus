@@ -90,3 +90,38 @@ exports.router.get("/new", next(function*(req, res) {
 		})
 	}
 }))
+
+exports.router.use("/:token", next(function*(req, res, next) {
+	req.subscription = yield db.read(sql`
+		SELECT * FROM initiative_subscriptions
+		WHERE initiative_uuid IS NULL
+		AND update_token = ${req.params.token}
+		LIMIT 1
+	`)
+
+	if (req.subscription) return void next()
+
+	res.statusCode = 404
+
+	return void res.render("404_page.jsx", {
+		title: req.t("SUBSCRIPTION_NOT_FOUND_TITLE"),
+		body: req.t("SUBSCRIPTION_NOT_FOUND_BODY")
+	})
+}))
+
+exports.router.get("/:token", function(req, res) {
+	res.render("subscriptions/read_page.jsx", {subscription: req.subscription})
+})
+
+exports.router.delete("/:token", next(function*(req, res) {
+	var subscription = req.subscription
+
+	yield db.execute(sql`
+		DELETE FROM initiative_subscriptions
+		WHERE initiative_uuid IS NULL
+		AND update_token = ${subscription.update_token}
+	`)
+
+	res.flash("notice", req.t("INITIATIVES_SUBSCRIPTION_DELETED"))
+	res.redirect(303, "/")
+}))

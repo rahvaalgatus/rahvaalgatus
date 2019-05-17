@@ -354,10 +354,13 @@ function* readEvents(initiativeId) {
 
 function searchConfirmedSubscriptions(initiative) {
 	return initiativeSubscriptionsDb.search(sql`
-		SELECT * FROM initiative_subscriptions
-		WHERE initiative_uuid = ${initiative.id}
-		AND confirmed_at IS NOT NULL
-		ORDER BY created_at DESC
+		SELECT * FROM (
+			SELECT * FROM initiative_subscriptions
+			WHERE (initiative_uuid = ${initiative.id} OR initiative_uuid IS NULL)
+			AND confirmed_at IS NOT NULL
+			ORDER BY initiative_uuid IS NOT NULL, created_at DESC
+		)
+		GROUP BY email
 	`)
 }
 
@@ -367,13 +370,9 @@ function sendInitiativeMessage(msg, subscriptions) {
 		throw new RangeError("Batch sending max limit is 1000 recipients")
 
 	var recipients = _.fromEntries(subscriptions.map((sub) => [sub.email, {
-		unsubscribeUrl: [
-			Config.url,
-			"initiatives",
-			sub.initiative_uuid,
-			"subscriptions",
-			sub.update_token
-		].join("/")
+		unsubscribeUrl: sub.initiative_uuid
+			? `/initiatives/${sub.initiative_uuid}/subscriptions/${sub.update_token}`
+			: `/subscriptions/${sub.update_token}`
 	}]))
 
 	return sendEmail({
@@ -383,7 +382,7 @@ function sendInitiativeMessage(msg, subscriptions) {
 		envelope: {to: Object.keys(recipients)},
 
 		text: I18n.interpolate(msg.text, {
-			unsubscribeUrl: "%recipient.unsubscribeUrl%"
+			unsubscribeUrl: Config.url + "%recipient.unsubscribeUrl%"
 		})
 	})
 }

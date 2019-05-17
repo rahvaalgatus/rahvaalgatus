@@ -72,7 +72,7 @@ module.exports = function(attrs) {
 			{" "}
 			<span class="admin-count">({subscriptions.length})</span>
 		</h2>
-		<SubscriptionsView subscriptions={subscriptions} />
+		<SubscriptionsView subscriptions={subscriptions} all />
 	</Page>
 }
 

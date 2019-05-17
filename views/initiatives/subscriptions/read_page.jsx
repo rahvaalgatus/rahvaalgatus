@@ -8,7 +8,6 @@ module.exports = function(attrs) {
 	var t = req.t
 	var initiative = attrs.initiative
 	var subscription = attrs.subscription
-	var id = subscription.update_token
 
 	return <InitiativePage
 		page="initiative-subscription"
@@ -26,9 +25,9 @@ module.exports = function(attrs) {
 				req={req}
 				name="_method"
 				value="delete"
-				action={"/initiatives/" + initiative.id + "/subscriptions/" + id}
+				action={req.baseUrl + req.path}
 				class="form-submit primary-button">
-				{t("UNSUBSCRIBE_BUTTON")}
+				{t("SUBSCRIPTION_UNSUBSCRIBE_BUTTON")}
 			</FormButton>
 		</center></section>
 	</InitiativePage>

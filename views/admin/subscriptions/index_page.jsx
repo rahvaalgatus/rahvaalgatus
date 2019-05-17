@@ -56,6 +56,10 @@ function SubscriptionsView(attrs) {
 						href={"mailto:" + subscription.email}>
 						{subscription.email}
 					</a>
+
+					{attrs.all && subscription.initiative_uuid == null ?
+						<i> (All initiatives)</i>
+					: null}
 				</td>
 			</tr>
 		})}</tbody>
