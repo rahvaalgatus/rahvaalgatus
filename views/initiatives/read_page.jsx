@@ -171,13 +171,13 @@ module.exports = function(attrs) {
 
 					<ProgressTextView initiative={initiative} t={t} />
 
-					{signature ? [
-						<h2>{t("THANKS_FOR_SIGNING")}</h2>,
+					{signature ? <Fragment>
+						<h2>{t("THANKS_FOR_SIGNING")}</h2>
 						<p>Soovid allkirja tühistada?</p>
-					] : [
-						<h2>{t("HEADING_CAST_YOUR_VOTE")}</h2>,
+					</Fragment> : <Fragment>
+						<h2>{t("HEADING_CAST_YOUR_VOTE")}</h2>
 						<p>{t("HEADING_VOTE_REQUIRE_HARD_ID")}</p>
-					]}
+					</Fragment>}
 
 					<Form
 						req={req}
