@@ -30,40 +30,36 @@ exports.use(function(req, _res, next) {
 })
 
 exports.get("/", next(function*(_req, res) {
-	var signatures = yield cosDb.raw(`
+	var signatures = yield cosDb.query(sql`
 		WITH signatures AS (
 			SELECT DISTINCT ON ("voteId", "userId") *
 			FROM "VoteLists"
-			WHERE "createdAt" >= :from
+			WHERE "createdAt" >= ${DateFns.startOfMonth(new Date)}
 			ORDER BY "voteId", "userId", "createdAt" DESC
 		)
 
 		SELECT COUNT(*) as count FROM signatures
-	`, {from: DateFns.startOfMonth(new Date)}).then(getRow)
+	`).then(_.first)
 
-	var subscriptions = yield initiativeSubscriptionsDb.search(sql`
+	var subs = yield initiativeSubscriptionsDb.search(sql`
 		SELECT *
 		FROM initiative_subscriptions
 		ORDER BY created_at DESC
 		LIMIT 15
 	`)
 
-	var uuids = _.uniq(subscriptions.map((s) => s.initiative_uuid))
-	var query = sql`
-		SELECT id, title FROM "Topics" WHERE id IN ${sql.tuple(uuids)}
-	`
+	var initiatives = _.indexBy(yield cosDb.query(sql`
+		SELECT id, title
+		FROM "Topics"
+		WHERE id IN ${sql.tuple(_.uniq(subs.map((s) => s.initiative_uuid)))}
+	`), "id")
 
-	var initiatives = _.indexBy(
-		yield cosDb.raw(String(query), query.parameters).then(getRows),
-		"id"
-	)
-
-	subscriptions.forEach(function(subscription) {
+	subs.forEach(function(subscription) {
 		subscription.initiative = initiatives[subscription.initiative_uuid]
 	})
 
 	res.render("admin/dashboard_page.jsx", {
-		subscriptions: subscriptions,
+		subscriptions: subs,
 		signatureCount: signatures.count
 	})
 }))
@@ -393,5 +389,3 @@ function parseEvent(obj) {
 }
 
 function getBody(res) { return res.body.data }
-function getRow(res) { return res.rows[0] }
-function getRows(res) { return res.rows }

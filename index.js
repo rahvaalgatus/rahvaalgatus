@@ -34,7 +34,7 @@ lazy(exports, "cosDb", function() {
 	var env = process.env
   var config = require("root/config").citizenOsDatabase
 
-  return Knex({
+  var knex = Knex({
     client: "pg",
     debug: false,
 
@@ -49,6 +49,10 @@ lazy(exports, "cosDb", function() {
     acquireConnectionTimeout: 20000,
     pool: {min: 1, max: config.pool}
   })
+
+	knex.query = require("root/lib/knex").query.bind(null, knex)
+
+	return knex
 })
 
 lazy(exports, "sendEmail", function() {

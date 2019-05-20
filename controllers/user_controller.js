@@ -45,7 +45,7 @@ function* read(req, res) {
 	initiatives = yield initiatives.then(getRows)
 	initiatives = initiatives.map(parseCitizenInitiative)
 
-	var signatures = yield cosDb.raw(`
+	var signatures = yield cosDb.query(sql`
 		SELECT
 			DISTINCT ON (tv."topicId")
 			tv."topicId" as initiative_id,
@@ -57,12 +57,12 @@ function* read(req, res) {
 		JOIN "TopicVotes" AS tv ON tv."voteId" = vote.id
 		JOIN "VoteOptions" AS opt ON opt."voteId" = vote.id
 
-		WHERE signature."userId" = :userId
+		WHERE signature."userId" = ${user.id}
 		AND vote.id IS NOT NULL
 		AND signature."optionId" = opt.id
 
 		ORDER BY tv."topicId", signature."createdAt" DESC
-	`, {userId: user.id}).then((res) => res.rows)
+	`)
 
 	signatures = signatures.filter((sig) => sig.support == "Yes")
 
