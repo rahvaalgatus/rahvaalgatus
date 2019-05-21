@@ -5,7 +5,7 @@ var HttpError = require("standard-http-error")
 var runServer = require("root/lib/http").runServer
 var t = require("root/lib/i18n").t.bind(null, "en")
 var PORT = process.env.PORT || 3001
-var ENV = process.env.NODE_ENV
+var ENV = process.env.ENV
 var app = module.exports = Express.new()
 
 if (ENV == "development") {
