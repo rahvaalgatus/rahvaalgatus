@@ -102,7 +102,7 @@ exports.router.post("/", next(function*(req, res) {
 		description: req.t("INITIATIVE_DEFAULT_HTML", {title: title}),
 	})
 
-	if (!req.body["accept-tos"]) res.render("initiatives/create", {
+	if (!req.body["accept-tos"]) res.render("initiatives/create_page.jsx", {
 		error: req.t("CONFIRM_I_HAVE_READ"),
 		attrs: attrs
 	})
@@ -116,14 +116,14 @@ exports.router.post("/", next(function*(req, res) {
 		var initiative = created.body.data
 		res.redirect(303, req.baseUrl + "/" + initiative.id + "/edit")
 	}
-	else res.status(422).render("initiatives/create", {
+	else res.status(422).render("initiatives/create_page.jsx", {
 		error: translateCitizenError(req.t, created.body),
 		attrs: attrs
 	})
 }))
 
 exports.router.get("/new", function(_req, res) {
-	res.render("initiatives/create", {attrs: EMPTY_INITIATIVE})
+	res.render("initiatives/create_page.jsx", {attrs: EMPTY_INITIATIVE})
 })
 
 exports.router.use("/:id", next(function*(req, res, next) {
