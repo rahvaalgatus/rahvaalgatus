@@ -18,12 +18,14 @@ var confirm = require("root/lib/jsx").confirm
 var stringify = require("root/lib/json").stringify
 var linkify = require("root/lib/linkify")
 var encode = encodeURIComponent
+exports = module.exports = ReadPage
+exports.CommentView = CommentView
 
 var UI_TRANSLATIONS = O.map(I18n.STRINGS, function(lang) {
 	return O.filter(lang, (_value, key) => key.indexOf("HWCRYPTO") >= 0)
 })
 
-module.exports = function(attrs) {
+function ReadPage(attrs) {
 	var req = attrs.req
 	var t = attrs.t
 	var signature = attrs.signature

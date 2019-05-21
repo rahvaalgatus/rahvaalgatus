@@ -50,7 +50,7 @@ exports.router.get("/:commentId", next(function*(req, res) {
 	var comment = comments.find((comment) => comment.id === req.params.commentId)
 	if (comment == null) throw new HttpError(404)
 
-	res.render("initiatives/comments/read", {
+	res.render("initiatives/comments/read_page.jsx", {
 		comment: comment,
 		editedComment: EMPTY_COMMENT
 	})
