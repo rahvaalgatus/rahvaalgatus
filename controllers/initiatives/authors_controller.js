@@ -9,7 +9,7 @@ var EMPTY_AUTHOR = {email: ""}
 exports.router = Router({mergeParams: true})
 
 exports.router.get("/new", function(_req, res) {
-	res.render("initiatives/authors/create", {attrs: EMPTY_AUTHOR})
+	res.render("initiatives/authors/create_page.jsx", {attrs: EMPTY_AUTHOR})
 })
 
 exports.router.post("/", next(function*(req, res) {
@@ -25,7 +25,7 @@ exports.router.post("/", next(function*(req, res) {
 		res.flash("notice", "Kaasautor lisatud.")
 		res.redirect(303, Path.dirname(req.baseUrl))
 	}
-	else res.status(422).render("initiatives/authors/create", {
+	else res.status(422).render("initiatives/authors/create_page.jsx", {
 		error: translateCitizenError(req.t, created.body),
 		attrs: req.body
 	})
