@@ -104,7 +104,7 @@ function ReadPage(attrs) {
 
 								return <div class="initiative-status">
 									{events.length == 0 ? [
-										(Initiative.isSuccessful(initiative)) ? [
+										(Initiative.isSuccessful(initiative, dbInitiative)) ? [
 											<h1>{t("N_SIGNATURES_COLLECTED", {votes: sigs})}</h1>,
 											<p>{t("VOTING_SUCCEEDED")}</p>
 										] : [
@@ -127,8 +127,10 @@ function ReadPage(attrs) {
 						</div>
 
 						case "closed":
-							if (Initiative.isInParliament(initiative) || sentToParliamentAt) {
-								return <div class="initiative-status">
+							if (
+								Initiative.isInParliament(initiative, dbInitiative) ||
+								sentToParliamentAt
+							) return <div class="initiative-status">
 									<h1>
 										{t("INITIATIVE_PROCESSED")}
 										{" "}
@@ -139,7 +141,6 @@ function ReadPage(attrs) {
 										</a>.
 									</h1>
 								</div>
-							}
 							else if (initiative.vote) {
 								sigs = Initiative.countSignatures("Yes", initiative)
 
@@ -171,7 +172,11 @@ function ReadPage(attrs) {
 						dbInitiative={dbInitiative}
 					/>
 
-					<ProgressTextView initiative={initiative} t={t} />
+					<ProgressTextView
+						initiative={initiative}
+						dbInitiative={dbInitiative}
+						t={t}
+					/>
 
 					{signature ? <Fragment>
 						<h2>{t("THANKS_FOR_SIGNING")}</h2>
@@ -346,7 +351,7 @@ function ReadPage(attrs) {
 					</button>
 				</Form> : null}
 
-				{Initiative.canSendToParliament(initiative) ? <Form
+				{Initiative.canSendToParliament(initiative, dbInitiative) ? <Form
 					req={req}
 					method="put"
 					action={"/initiatives/" + initiative.id}>
@@ -421,11 +426,7 @@ function EventsView(attrs) {
 	var sentToParliamentAt = dbInitiative.sent_to_parliament_at
 	var finishedInParliamentAt = dbInitiative.finished_in_parliament_at
 
-	if (!(
-		Initiative.isInParliament(initiative) ||
-		sentToParliamentAt ||
-		finishedInParliamentAt)
-	) return null
+	if (!Initiative.isInParliament(initiative, dbInitiative)) return null
 		
 	return <section id="initiative-events" class="transparent-section"><center>
 		<article>
@@ -628,11 +629,12 @@ function InitiativeSubscribeView(attrs) {
 function ProgressTextView(attrs) {
 	var t = attrs.t
 	var initiative = attrs.initiative
+	var dbInitiative = attrs.dbInitiative
 
 	if (
 		initiative.status == "voting" ||
 		initiative.status == "closed" &&
-		initiative.vote && !Initiative.isInParliament(initiative)
+		initiative.vote && !Initiative.isInParliament(initiative, dbInitiative)
 	) {
 		var sigs = Initiative.countSignatures("Yes", initiative)
 		var missing = Config.votesRequired - sigs
@@ -690,7 +692,11 @@ function QuicksignView(attrs) {
 			</a>
 		: null}
 
-		<ProgressTextView initiative={initiative} t={t} />
+		<ProgressTextView
+			initiative={initiative}
+			dbInitiative={dbInitiative}
+			t={t}
+		/>
 
 		{Initiative.isVotable(now, initiative) && signature ? <Fragment>
 			<h2>{t("THANKS_FOR_SIGNING")}</h2>

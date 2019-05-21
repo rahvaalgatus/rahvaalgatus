@@ -79,7 +79,7 @@ function InitiativesView(attrs) {
 		{initiatives.map((initiative) => <InitiativeView
 			t={t}
 			initiative={initiative}
-			dbInitiatives={dbInitiatives[initiative.id]}
+			dbInitiative={dbInitiatives[initiative.id]}
 		/>)}
 	</ol>
 }

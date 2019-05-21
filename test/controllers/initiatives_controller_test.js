@@ -47,8 +47,7 @@ var EDITABLE_DISCUSSION = O.merge({}, DISCUSSION, {
 })
 
 var CLOSED_DISCUSSION = O.merge({}, DISCUSSION, {
-	status: "closed",
-	events: {count: 0}
+	status: "closed"
 })
 
 var CLOSED_EXTERNAL_DISCUSSION = O.merge({}, CLOSED_DISCUSSION, {
@@ -88,10 +87,6 @@ var SUCCESSFUL_INITIATIVE = O.merge({}, INITIATIVE, {
 	}
 })
 
-var PROCEEDING_INITIATIVE = O.merge({}, SUCCESSFUL_INITIATIVE, {
-	status: "followUp"
-})
-
 var FAILED_INITIATIVE = O.merge({}, INITIATIVE, {
 	vote: {
 		endsAt: new Date(Date.now() - 3600 * 1000),
@@ -99,14 +94,16 @@ var FAILED_INITIATIVE = O.merge({}, INITIATIVE, {
 	}
 })
 
+var PROCEEDING_INITIATIVE = O.merge({}, SUCCESSFUL_INITIATIVE, {
+	status: "followUp"
+})
+
 var PROCESSED_FAILED_INITIATIVE = O.merge({}, FAILED_INITIATIVE, {
-	status: "closed",
-	events: {count: 0}
+	status: "closed"
 })
 
 var PROCESSED_SUCCESSFUL_INITIATIVE = O.merge({}, SUCCESSFUL_INITIATIVE, {
-	status: "closed",
-	events: {count: 1}
+	status: "closed"
 })
 
 describe("InitiativesController", function() {
@@ -122,7 +119,7 @@ describe("InitiativesController", function() {
 				this.router.get("/api/topics", function(req, res) {
 					++requested
 					var query = Url.parse(req.url, true).query
-					query["include[]"].must.be.a.permutationOf(["vote", "event"])
+					query["include[]"].must.equal("vote")
 					query["sourcePartnerId[]"].must.be.a.permutationOf(PARTNER_IDS)
 
 					respond({data: {rows: []}}, req, res)
@@ -321,6 +318,11 @@ describe("InitiativesController", function() {
 			})
 
 			it("must render processed failed initiative", function*() {
+				yield initiativesDb.create({
+					uuid: UUID,
+					sent_to_parliament_at: new Date
+				})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: PROCESSED_FAILED_INITIATIVE}))
 				this.router.get(`/api/topics/${UUID}/comments`,
@@ -330,10 +332,10 @@ describe("InitiativesController", function() {
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
-				res.body.must.include(tHtml("VOTING_FAILED"))
+				res.body.must.include(tHtml("INITIATIVE_PROCESSED"))
 				res.body.must.not.include(tHtml("VOTING_SUCCEEDED"))
-				res.body.must.not.include(tHtml("INITIATIVE_PROCESSED"))
-				res.body.must.include(tHtml("VOTING_DEADLINE"))
+				res.body.must.not.include(tHtml("VOTING_FAILED"))
+				res.body.must.not.include(tHtml("VOTING_DEADLINE"))
 			})
 
 			it("must render processed successful initiative", function*() {

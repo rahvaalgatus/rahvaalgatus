@@ -62,7 +62,7 @@ function ProgressView(attrs) {
 	var t = attrs.t
 	var initiative = attrs.initiative
 	var dbInitiative = attrs.dbInitiative
-	var unclosedStatus = Initiative.getUnclosedStatus(initiative)
+	var unclosedStatus = Initiative.getUnclosedStatus(initiative, dbInitiative)
 	var createdAt = initiative.createdAt
 
 	var klass = {
@@ -97,7 +97,7 @@ function ProgressView(attrs) {
 		case "voting":
 			var sigs = Initiative.countSignatures("Yes", initiative)
 
-			if (Initiative.isSuccessful(initiative))
+			if (Initiative.isSuccessful(initiative, dbInitiative))
 				return <div class={"initiative-progress completed " + klass}>
 					{t("N_SIGNATURES_COLLECTED", {votes: sigs})}
 				</div>

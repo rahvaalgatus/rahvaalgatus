@@ -85,6 +85,7 @@ function* read(req, res) {
 
 	var uuids = concat(initiatives, signedInitiatives).map((i) => i.id)
 	var dbInitiatives = yield initiativesDb.search(uuids, {create: true})
+	dbInitiatives = _.indexBy(dbInitiatives, "uuid")
 
 	res.render("user/read_page.jsx", {
 		user: user,

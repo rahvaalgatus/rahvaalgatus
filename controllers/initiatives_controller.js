@@ -32,6 +32,7 @@ var translateCitizenError = require("root/lib/citizenos_api").translateError
 var hasMainPartnerId = Initiative.hasPartnerId.bind(null, Config.apiPartnerId)
 var sendEmail = require("root").sendEmail
 var concat = Array.prototype.concat.bind(Array.prototype)
+var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var randomHex = require("root/lib/crypto").randomHex
 var decodeBase64 = require("root/lib/crypto").decodeBase64
 var EMPTY_ARR = Array.prototype
@@ -57,16 +58,15 @@ exports.router.get("/", next(function*(req, res) {
 		initiatives.filter(hasCategory.bind(null, req.query.category))
 	))
 
-	var closed = _.groupBy(initiatives.closed, Initiative.getUnclosedStatus)
-	var votings = concat(initiatives.voting, closed.voting || EMPTY_ARR)
-
-	var uuids = concat(
-		initiatives.followUp,
-		initiatives.closed || EMPTY_ARR
-	).map((i) => i.id)
-
+	var uuids = flatten(_.values(initiatives)).map((i) => i.id)
 	var dbInitiatives = yield initiativesDb.search(uuids, {create: true})
 	dbInitiatives = _.indexBy(dbInitiatives, "uuid")
+
+	var closed = _.groupBy(initiatives.closed, (initiative) => (
+		Initiative.getUnclosedStatus(initiative, dbInitiatives[initiative.id])
+	))
+
+	var votings = concat(initiatives.voting, closed.voting || EMPTY_ARR)
 
 	res.render("initiatives_page.jsx", {
 		discussions: concat(
@@ -222,7 +222,8 @@ exports.router.get("/:id", exports.read)
 
 exports.router.put("/:id", next(function*(req, res) {
 	var initiative = req.initiative
-	var unclosedStatus = Initiative.getUnclosedStatus(initiative)
+	var dbInitiative = req.dbInitiative
+	var unclosedStatus = Initiative.getUnclosedStatus(initiative, dbInitiative)
 	res.locals.subpage = unclosedStatus == "inProgress" ? "discussion" : "vote"
 
 	var tmpl
@@ -287,7 +288,9 @@ exports.router.put("/:id", next(function*(req, res) {
 	}
 	else if (req.body.status === "followUp") {
 		tmpl = "initiatives/update_for_parliament_page.jsx"
-		if (!Initiative.canSendToParliament(initiative)) throw new HttpError(401)
+		if (!Initiative.canSendToParliament(initiative, dbInitiative))
+			throw new HttpError(401)
+
 		if (req.body.contact == null) return void res.render(tmpl, {attrs: attrs})
 
 		attrs = {
