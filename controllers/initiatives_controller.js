@@ -406,7 +406,7 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 				res.flash("signed", signed.body.data.bdocUri)
 				res.redirect(303, req.baseUrl + "/" + initiative.id)
 			}
-			else res.status(422).render("initiatives/signature/create", {
+			else res.status(422).render("initiatives/signature/create_page.jsx", {
 				error: translateCitizenError(req.t, signed.body)
 			})
 			break
@@ -423,12 +423,12 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 			}).catch(catch400)
 
 			if (isOk(signing)) {
-				res.render("initiatives/signature/create", {
+				res.render("initiatives/signature/create_page.jsx", {
 					code: signing.body.data.challengeID,
 					poll: req.baseUrl + req.path + "?token=" + signing.body.data.token
 				})
 			}
-			else res.status(422).render("initiatives/signature/create", {
+			else res.status(422).render("initiatives/signature/create_page.jsx", {
 				error: translateCitizenError(req.t, signing.body)
 			})
 			break

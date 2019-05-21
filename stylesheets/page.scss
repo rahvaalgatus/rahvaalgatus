@@ -1345,27 +1345,6 @@ button.inherited {
 		:last-child { margin-bottom: 1.5rem; }
 	}
 
-	#initiative-events,
-	#initiative-signature {
-		header {
-			font-family: $museo-sans;
-			font-size: 1.4rem;
-			color: #999;
-			margin-bottom: 0.5rem;
-		}
-
-		h1 {
-			font-size: 4.2rem;
-			color: $title-text;
-			font-family: $tisa-pro;
-			line-height: 1.2;
-
-			margin-bottom: 1rem;
-
-			a:hover { text-decoration: underline; }
-		}
-	}
-
 	#initiative-etherpad {
 		width: 100%;
 		margin: (-$article-padding) 0;
