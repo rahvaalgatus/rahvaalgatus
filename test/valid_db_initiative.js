@@ -8,6 +8,8 @@ module.exports = function(attrs) {
 		mailchimp_interest_id: null,
 		parliament_api_data: null,
 		sent_to_parliament_at: null,
-		finished_in_parliament_at: null
+		finished_in_parliament_at: null,
+		discussion_end_email_sent_at: null,
+		signing_end_email_sent_at: null
 	}, attrs)
 }

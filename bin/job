@@ -8,7 +8,8 @@ Options:
     -h, --help           Display this help and exit.
 
 Jobs:
-    parliament-monitor   Monitors initiatives in the parliament API.
+    parliament-monitor    Monitors initiatives in the parliament API.
+    initiative-end-email  Sends emails to authors for initiative deadlines.
 
 For more help or to give feedback, please see https://github.com/rahvaalgatus .
 `
@@ -20,7 +21,8 @@ var co = require("co")
 var reportError = require("root").errorReporter
 
 var JOBS = {
-	"parliament-monitor": require.resolve("root/jobs/parliament_monitor_job")
+	"parliament-monitor": require.resolve("root/jobs/parliament_monitor_job"),
+	"initiative-end-email": require.resolve("root/jobs/initiative_end_email_job")
 }
 
 var jobName = args["<job-name>"]
@@ -29,7 +31,10 @@ if (jobPath == null) return void die("No such job: %s", jobName)
 
 co(function*() {
 	var job = require(jobPath)
-	yield job()
+	var cosDb = require("root").cosDb
+
+	try { yield job() }
+	finally { yield cosDb.destroy() }
 }).catch(handleError)
 
 function handleError(err) {

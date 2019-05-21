@@ -314,6 +314,15 @@ exports.router.put("/:id", next(function*(req, res) {
 	}).catch(catch400)
 
 	if (isOk(updated)) {
+		if (initiative.status == "inProgress" && attrs.endsAt)
+			yield initiativesDb.update(initiative.id, {
+				discussion_end_email_sent_at: null
+			})
+		else if (initiative.status == "voting" && attrs.endsAt)
+			yield initiativesDb.update(initiative.id, {
+				signing_end_email_sent_at: null
+			})
+
 		if (req.body.visibility === "public")
 			res.flash("notice", "Algatus on nüüd avalik.")
 		else if (req.body.status === "voting")

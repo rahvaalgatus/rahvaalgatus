@@ -42,6 +42,10 @@ var PRIVATE_DISCUSSION = O.merge({}, DISCUSSION, {
 	permission: {level: "admin"}
 })
 
+var EDITABLE_DISCUSSION = O.merge({}, DISCUSSION, {
+	permission: {level: "admin"}
+})
+
 var CLOSED_DISCUSSION = O.merge({}, DISCUSSION, {
 	status: "closed",
 	events: {count: 0}
@@ -49,10 +53,6 @@ var CLOSED_DISCUSSION = O.merge({}, DISCUSSION, {
 
 var CLOSED_EXTERNAL_DISCUSSION = O.merge({}, CLOSED_DISCUSSION, {
 	sourcePartnerId: EXTERNAL_PARTNER_ID
-})
-
-var PROPOSABLE_DISCUSSION = O.merge({}, DISCUSSION, {
-	permission: {level: "admin"}
 })
 
 var INITIATIVE = {
@@ -72,6 +72,10 @@ var INITIATIVE = {
 		options: {rows: [{value: "Yes", voteCount: 0}]}
 	}
 }
+
+var EDITABLE_INITIATIVE = O.merge({}, INITIATIVE, {
+	permission: {level: "admin"}
+})
 
 var SIGNED_INITIATIVE = O.merge({}, INITIATIVE, {
 	vote: {options: {rows: [{value: "Yes", voteCount: 1, selected: true}]}}
@@ -480,7 +484,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 			})
 
-			it("must update visibility", function*() {
+			it("must update visibility and set discussion end time", function*() {
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: PRIVATE_DISCUSSION}))
 
@@ -508,9 +512,36 @@ describe("InitiativesController", function() {
 				res.headers.location.must.equal(`/initiatives/${UUID}`)
 			})
 
+			it("must clear end email when setting discussion end time", function*() {
+				var dbInitiative = yield initiativesDb.create({
+					uuid: UUID,
+					discussion_end_email_sent_at: new Date
+				})
+
+				this.router.get(`/api/users/self/topics/${UUID}`,
+					respond.bind(null, {data: EDITABLE_DISCUSSION}))
+
+				this.router.put(`/api/users/self/topics/${UUID}`, endResponse)
+
+				var res = yield this.request(`/initiatives/${UUID}`, {
+					method: "PUT",
+					form: {
+						_csrf_token: this.csrfToken,
+						visibility: "public",
+						endsAt: new Date().toJSON().slice(0, 10)
+					}
+				})
+
+				res.statusCode.must.equal(303)
+
+				yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
+					_.defaults({discussion_end_email_sent_at: null}, dbInitiative)
+				])
+			})
+
 			it("must render update status for voting page", function*() {
 				this.router.get(`/api/users/self/topics/${UUID}`,
-					respond.bind(null, {data: PROPOSABLE_DISCUSSION}))
+					respond.bind(null, {data: EDITABLE_DISCUSSION}))
 
 				var res = yield this.request("/initiatives/" + UUID, {
 					method: "PUT",
@@ -518,6 +549,36 @@ describe("InitiativesController", function() {
 				})
 
 				res.statusCode.must.equal(200)
+			})
+
+			it("must clear end email when setting signing end time", function*() {
+				var dbInitiative = yield initiativesDb.create({
+					uuid: UUID,
+					discussion_end_email_sent_at: new Date,
+					signing_end_email_sent_at: new Date
+				})
+
+				this.router.get(`/api/users/self/topics/${UUID}`,
+					respond.bind(null, {data: EDITABLE_INITIATIVE}))
+
+				var path = `/api/users/self/topics/${UUID}`
+				path += `/votes/${EDITABLE_INITIATIVE.vote.id}`
+				this.router.put(path, endResponse)
+
+				var res = yield this.request(`/initiatives/${UUID}`, {
+					method: "PUT",
+					form: {
+						_csrf_token: this.csrfToken,
+						status: "voting",
+						endsAt: new Date().toJSON().slice(0, 10)
+					}
+				})
+
+				res.statusCode.must.equal(303)
+
+				yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
+					_.defaults({signing_end_email_sent_at: null}, dbInitiative)
+				])
 			})
 
 			it("must update status to followUp", function*() {
@@ -1300,3 +1361,5 @@ function fakeJwt(obj) {
 	var body = encodeBase64(JSON.stringify(obj))
 	return header + "." + body + ".fakesignature"
 }
+
+function endResponse(_req, res) { res.end() }
