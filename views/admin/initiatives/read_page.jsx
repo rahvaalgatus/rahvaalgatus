@@ -1,6 +1,7 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
+var Config = require("root/config")
 var Page = require("../page")
 var Form = Page.Form
 var FormButton = Page.FormButton
@@ -23,6 +24,12 @@ module.exports = function(attrs) {
 	return <Page page="initiative" title={initiative.title} req={req}>
 		<a href={req.baseUrl + "/initiatives"} class="admin-back">Initiatives</a>
 		<h1 class="admin-heading">{initiative.title}</h1>
+
+		<a
+			id="production-link"
+			href={Config.url + "/initiatives/" + initiative.id}
+			class="admin-link"
+		>View on Rahvaalgatus</a>
 
 		<Flash flash={req.flash} />
 

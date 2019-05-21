@@ -1,6 +1,7 @@
 {
 	"title": "Rahvaalgatus",
 	"url": "https://rahvaalgatus.ee",
+	"adminUrl": "https://admin.rahvaalgatus.ee",
 	"apiUrl": "https://cos.rahvaalgatus.ee",
 	"apiPartnerId": "b563ee8c-ba8e-4cd6-b592-fbcd4e8f22bb",
 	"apiAuthorizeUrl": "https://cos.rahvaalgatus.ee/api/auth/openid/authorize",

@@ -71,7 +71,8 @@ main {
 
 .admin-heading {
   font-size: 3.4rem;
-  margin-bottom: 3rem;
+
+	& + * { margin-top: 3rem; }
 }
 
 .admin-subheading {
@@ -287,6 +288,11 @@ textarea.admin-input {
 }
 
 #initiative-page {
+	#production-link {
+		display: block;
+		margin-bottom: 1rem;
+	}
+
 	.form-toggle {
 		&:not(:checked) ~ .form-toggle-form,
 		&:checked + .form-toggle-buttons { display: none; }

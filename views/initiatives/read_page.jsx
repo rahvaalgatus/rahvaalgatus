@@ -1,5 +1,5 @@
 /** @jsx Jsx */
-var _ = require("lodash")
+var _ = require("root/lib/underscore")
 var O = require("oolong")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
@@ -385,6 +385,12 @@ function ReadPage(attrs) {
 						class="link-button wide-button share-button">
 						{t("SHARE_ON_TWITTER")}
 					</a>
+
+					{req.user && _.contains(Config.adminUserIds, req.user.id) ? <a
+						href={`${Config.adminUrl}/initiatives/${initiative.id}`}
+						class="link-button wide-button">
+						Administreeri algatust
+					</a> : null}
 				</Fragment> : null}
 			</aside>
 		</center></section>
