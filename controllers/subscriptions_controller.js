@@ -14,9 +14,10 @@ exports.router = Router({mergeParams: true})
 exports.router.post("/", next(function*(req, res) {
 	var email = req.body.email
 
-	if (!_.isValidEmail(email)) return void res.status(422).render("422", {
-		errors: [req.t("INVALID_EMAIL")]
-	})
+	if (!_.isValidEmail(email))
+		return void res.status(422).render("form_error_page.jsx", {
+			errors: [req.t("INVALID_EMAIL")]
+		})
 
 	var subscription
 	try {
@@ -85,7 +86,7 @@ exports.router.get("/new", next(function*(req, res) {
 		res.statusCode = 404
 		res.statusMessage = "Invalid Confirmation Token"
 
-		res.render("404_page.jsx", {
+		res.render("error_page.jsx", {
 			body: req.t("INVALID_INITIATIVES_SUBSCRIPTION_CONFIRMATION_TOKEN")
 		})
 	}
@@ -103,7 +104,7 @@ exports.router.use("/:token", next(function*(req, res, next) {
 
 	res.statusCode = 404
 
-	return void res.render("404_page.jsx", {
+	return void res.render("error_page.jsx", {
 		title: req.t("SUBSCRIPTION_NOT_FOUND_TITLE"),
 		body: req.t("SUBSCRIPTION_NOT_FOUND_BODY")
 	})

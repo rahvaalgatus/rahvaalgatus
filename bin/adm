@@ -28,7 +28,7 @@ app.use(require("root/lib/middleware/error_handler_middleware").bind(null,
 	function(err, _req, res) {
 	res.setHeader("Content-Type", "text/plain")
 	if (err instanceof HttpError) res.end(err.message)
-	else res.end(t("MSG_ERROR_50000"))
+	else res.end(t("500_BODY"))
 }))
 
 if (module.parent) return
