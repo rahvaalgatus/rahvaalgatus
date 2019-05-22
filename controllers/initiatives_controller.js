@@ -543,7 +543,12 @@ exports.router.post("/:id/subscriptions", next(function*(req, res) {
 		else throw ex
 	}
 
-	if (!subscription.confirmed_at && !subscription.confirmation_sent_at) {
+	if (
+		!subscription.confirmed_at && (
+			!subscription.confirmation_sent_at ||
+			new Date - subscription.confirmation_sent_at >= 3600 * 1000
+		)
+	) {
 		var initiativeUrl = Http.link(req, req.baseUrl + "/" + initiative.id)
 		var token = subscription.confirmation_token
 

@@ -1027,82 +1027,140 @@ describe("InitiativesController", function() {
 		require("root/test/email")()
 		require("root/test/time")(Date.UTC(2015, 5, 18))
 
-		O.each({
-			discussion: DISCUSSION,
-			initiative: INITIATIVE
-		}, function(initiative, name) {
-			it(`must subscribe to ${name}`, function*() {
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: initiative}))
+		it("must subscribe", function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
 
-				var email = "user@example.com"
-				var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, email: email}
-				})
-
-				res.statusCode.must.equal(303)
-				res.headers.location.must.equal("/initiatives/" + UUID)
-
-				var subscriptions = yield initiativeSubscriptionsDb.search(sql`
-					SELECT * FROM initiative_subscriptions
-				`)
-
-				subscriptions.length.must.equal(1)
-				var subscription = subscriptions[0]
-
-				subscription.must.eql(new ValidDbInitiativeSubscription({
-					initiative_uuid: UUID,
-					email: email,
-					created_at: new Date,
-					created_ip: "127.0.0.1",
-					updated_at: new Date,
-					confirmation_token: subscription.confirmation_token,
-					confirmation_sent_at: new Date,
-					update_token: subscription.update_token
-				}))
-
-				subscription.confirmation_token.must.exist()
-
-				this.emails.length.must.equal(1)
-				this.emails[0].envelope.to.must.eql([email])
-				var body = String(this.emails[0].message)
-				body.match(/^Subject: .*/m)[0].must.include(initiative.title)
-				body.must.include(subscription.confirmation_token)
+			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
+				method: "POST",
+				form: {_csrf_token: this.csrfToken, email: "user@example.com"}
 			})
 
-			it(`must subscribe to ${name} only once case-insensitively`,
-				function*() {
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: initiative}))
+			res.statusCode.must.equal(303)
+			res.headers.location.must.equal("/initiatives/" + UUID)
 
-				var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
-				var email = "user@example.com"
+			var subscriptions = yield initiativeSubscriptionsDb.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`)
 
-				var subscription = new ValidDbInitiativeSubscription({
-					initiative_uuid: UUID,
-					email: email,
-					created_at: createdAt,
-					updated_at: createdAt,
-					confirmed_at: createdAt
-				})
+			subscriptions.length.must.equal(1)
+			var subscription = subscriptions[0]
 
-				yield initiativeSubscriptionsDb.create(subscription)
+			subscription.must.eql(new ValidDbInitiativeSubscription({
+				initiative_uuid: UUID,
+				email: "user@example.com",
+				created_at: new Date,
+				created_ip: "127.0.0.1",
+				updated_at: new Date,
+				confirmation_token: subscription.confirmation_token,
+				confirmation_sent_at: new Date,
+				update_token: subscription.update_token
+			}))
 
-				var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, email: email.toUpperCase()}
-				})
+			subscription.confirmation_token.must.exist()
 
-				res.statusCode.must.equal(303)
-				res.headers.location.must.equal("/initiatives/" + UUID)
+			this.emails.length.must.equal(1)
+			this.emails[0].envelope.to.must.eql(["user@example.com"])
+			var body = String(this.emails[0].message)
+			body.match(/^Subject: .*/m)[0].must.include(INITIATIVE.title)
+			body.must.include(subscription.confirmation_token)
+		})
 
-				yield initiativeSubscriptionsDb.search(sql`
-					SELECT * FROM initiative_subscriptions
-				`).must.then.eql([subscription])
+		it(`must subscribe case-insensitively`, function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
 
-				this.emails.length.must.equal(0)
+			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
+			var email = "user@example.com"
+
+			var subscription = new ValidDbInitiativeSubscription({
+				initiative_uuid: UUID,
+				email: email,
+				created_at: createdAt,
+				updated_at: createdAt,
+				confirmed_at: createdAt
 			})
+
+			yield initiativeSubscriptionsDb.create(subscription)
+
+			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
+				method: "POST",
+				form: {_csrf_token: this.csrfToken, email: email.toUpperCase()}
+			})
+
+			res.statusCode.must.equal(303)
+			res.headers.location.must.equal("/initiatives/" + UUID)
+
+			yield initiativeSubscriptionsDb.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`).must.then.eql([subscription])
+
+			this.emails.length.must.equal(0)
+		})
+
+		it("must not resend confirmation email if less than an hour has passed",
+			function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
+
+			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
+				method: "POST",
+				form: {_csrf_token: this.csrfToken, email: "user@example.com"}
+			})
+
+			res.statusCode.must.equal(303)
+
+			var subscription = yield initiativeSubscriptionsDb.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`).then(_.first)
+
+			this.time.tick(3599 * 1000)
+			res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
+				method: "POST",
+				form: {_csrf_token: this.csrfToken, email: "user@example.com"}
+			})
+
+			res.statusCode.must.equal(303)
+
+			yield initiativeSubscriptionsDb.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`).must.then.eql([subscription])
+
+			this.emails.length.must.equal(1)
+		})
+
+		it("must resend confirmation email if an hour has passed", function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
+
+			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
+				method: "POST",
+				form: {_csrf_token: this.csrfToken, email: "user@example.com"}
+			})
+
+			res.statusCode.must.equal(303)
+
+			var subscription = yield initiativeSubscriptionsDb.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`).then(_.first)
+
+			this.time.tick(3600 * 1000)
+			res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
+				method: "POST",
+				form: {_csrf_token: this.csrfToken, email: "user@example.com"}
+			})
+
+			res.statusCode.must.equal(303)
+
+			yield initiativeSubscriptionsDb.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`).must.then.eql([{
+				__proto__: subscription,
+				updated_at: new Date,
+				confirmation_sent_at: new Date
+			}])
+
+			this.emails.length.must.equal(2)
 		})
 
 		it("must respond with 403 Forbidden if discussion not public", function*() {

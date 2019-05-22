@@ -39,7 +39,12 @@ exports.router.post("/", next(function*(req, res) {
 		else throw ex
 	}
 
-	if (!subscription.confirmed_at && !subscription.confirmation_sent_at) {
+	if (
+		!subscription.confirmed_at && (
+			!subscription.confirmation_sent_at ||
+			new Date - subscription.confirmation_sent_at >= 3600 * 1000
+		)
+	) {
 		var token = subscription.confirmation_token
 
 		yield sendEmail({
