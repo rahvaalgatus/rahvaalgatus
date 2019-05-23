@@ -28,6 +28,43 @@ describe("AdminController", function() {
 		}).returning("*").then(_.first)
 	})
 
+	describe("POST /initiatives/:id/events", function() {
+		require("root/test/fixtures").user({id: Config.adminUserIds[0]})
+
+		beforeEach(function*() {
+			this.topic = yield createTopic({creatorId: this.user.id})
+		})
+		
+		it("must create event", function*() {
+			var res = yield this.request(`/initiatives/${this.topic.id}/events`, {
+				method: "POST",
+
+				form: {
+					_csrf_token: this.csrfToken,
+					createdOn: "2020-01-02",
+					title: "Initiative was handled",
+					text: "All good."
+				}
+			})
+
+			res.statusCode.must.equal(302)
+			res.headers.location.must.equal(`/initiatives/${this.topic.id}`)
+
+			var events = yield cosDb.query(sql`SELECT * FROM "TopicEvents"`)
+			events.length.must.equal(1)
+
+			_.clone(events[0]).must.eql({
+				id: events[0].id,
+				topicId: this.topic.id,
+				createdAt: new Date,
+				updatedAt: new Date,
+				deletedAt: null,
+				subject: "2020-01-02 Initiative was handled",
+				text: "All good."
+			})
+		})
+	})
+
 	describe("POST /initiatives/:id/messages", function() {
 		require("root/test/fixtures").user({id: Config.adminUserIds[0]})
 
