@@ -1,28 +1,12 @@
 var _ = require("root/lib/underscore")
 var Config = require("root/config")
-var respond = require("root/test/fixtures").respond
 var concat = Array.prototype.concat.bind(Array.prototype)
 var sql = require("sqlate")
+var newUuid = require("uuid/v4")
+var pseudoHex = require("root/lib/crypto").pseudoHex
+var cosDb = require("root").cosDb
 var initiativeSubscriptionsDb = require("root/db/initiative_subscriptions_db")
 var initiativeMessagesDb = require("root/db/initiative_messages_db")
-var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
-
-var INITIATIVE = {
-	id: UUID,
-	createdAt: new Date(2000, 0, 1),
-	status: "voting",
-	title: "My thoughts",
-	description: "<body><h1>My thoughts</h1></body>",
-	creator: {name: "John"},
-	visibility: "public",
-	permission: {level: "read"},
-
-	vote: {
-		id: "396b0e5b-cca7-4255-9238-19b464e60b65",
-		endsAt: new Date(3000, 0, 1),
-		options: {rows: [{value: "Yes", voteCount: 0}]}
-	}
-}
 
 describe("AdminController", function() {
 	require("root/test/adm")()
@@ -32,18 +16,29 @@ describe("AdminController", function() {
 	require("root/test/email")()
 	beforeEach(require("root/test/mitm").router)
 
+	beforeEach(function*() {
+		this.user = yield cosDb("Users").insert({
+			id: Config.adminUserIds[0],
+			email: "user@example.com",
+			emailIsVerified: true,
+			emailVerificationCode: newUuid(),
+			createdAt: new Date,
+			updatedAt: new Date,
+			source: "citizenos"
+		}).returning("*").then(_.first)
+	})
+
 	describe("POST /initiatives/:id/messages", function() {
 		require("root/test/fixtures").user({id: Config.adminUserIds[0]})
 
-		beforeEach(function() {
-			this.router.get(`/api/topics/${UUID}`,
-				respond.bind(null, {data: INITIATIVE}))
+		beforeEach(function*() {
+			this.topic = yield createTopic({creatorId: this.user.id})
 		})
 
 		describe("with action=send", function() {
 			it("must create message and send email", function*() {
 				var a = yield initiativeSubscriptionsDb.create({
-					initiative_uuid: UUID,
+					initiative_uuid: this.topic.id,
 					email: "john@example.com",
 					confirmed_at: new Date,
 					confirmation_token: "deadbeef"
@@ -56,7 +51,7 @@ describe("AdminController", function() {
 					confirmation_token: "deadfeed"
 				})
 
-				var res = yield this.request(`/initiatives/${UUID}/messages`, {
+				var res = yield this.request(`/initiatives/${this.topic.id}/messages`, {
 					method: "POST",
 
 					form: {
@@ -68,7 +63,7 @@ describe("AdminController", function() {
 				})
 
 				res.statusCode.must.equal(302)
-				res.headers.location.must.equal(`/initiatives/${UUID}`)
+				res.headers.location.must.equal(`/initiatives/${this.topic.id}`)
 
 				var messages = yield initiativeMessagesDb.search(sql`
 					SELECT * FROM initiative_messages
@@ -76,7 +71,7 @@ describe("AdminController", function() {
 
 				messages.must.eql([{
 					id: messages[0].id,
-					initiative_uuid: UUID,
+					initiative_uuid: this.topic.id,
 					created_at: new Date,
 					updated_at: new Date,
 					title: "Initiative was updated",
@@ -89,13 +84,15 @@ describe("AdminController", function() {
 				this.emails[0].envelope.to.must.eql([a.email, b.email])
 				var msg = String(this.emails[0].message)
 				msg.match(/^Subject: .*/m)[0].must.include("Initiative was updated")
-				msg.must.include(`/initiatives/${UUID}/subscriptions/${a.update_token}`)
 				msg.must.include(`/subscriptions/${b.update_token}`)
+				msg.must.include(
+					`/initiatives/${this.topic.id}/subscriptions/${a.update_token}`
+				)
 			})
 
 			it("must batch by 1000 recipients", function*() {
 				var attrs = _.times(1337, (i) => ({
-					initiative_uuid: UUID,
+					initiative_uuid: this.topic.id,
 					email: `${i}@example.com`,
 					confirmed_at: new Date,
 					confirmation_token: String(i)
@@ -104,7 +101,7 @@ describe("AdminController", function() {
 				var subscriptions = yield initiativeSubscriptionsDb.create(attrs) 
 				var emails = subscriptions.map((sub) => sub.email).sort()
 
-				var res = yield this.request(`/initiatives/${UUID}/messages`, {
+				var res = yield this.request(`/initiatives/${this.topic.id}/messages`, {
 					method: "POST",
 
 					form: {
@@ -116,7 +113,7 @@ describe("AdminController", function() {
 				})
 
 				res.statusCode.must.equal(302)
-				res.headers.location.must.equal(`/initiatives/${UUID}`)
+				res.headers.location.must.equal(`/initiatives/${this.topic.id}`)
 
 				var messages = yield initiativeMessagesDb.search(sql`
 					SELECT * FROM initiative_messages
@@ -139,13 +136,13 @@ describe("AdminController", function() {
 				})
 
 				var specific = yield initiativeSubscriptionsDb.create({
-					initiative_uuid: UUID,
+					initiative_uuid: this.topic.id,
 					email: "user@example.com",
 					confirmed_at: new Date,
 					confirmation_token: "deadfeed"
 				})
 
-				var res = yield this.request(`/initiatives/${UUID}/messages`, {
+				var res = yield this.request(`/initiatives/${this.topic.id}/messages`, {
 					method: "POST",
 
 					form: {
@@ -157,7 +154,7 @@ describe("AdminController", function() {
 				})
 
 				res.statusCode.must.equal(302)
-				res.headers.location.must.equal(`/initiatives/${UUID}`)
+				res.headers.location.must.equal(`/initiatives/${this.topic.id}`)
 
 				var messages = yield initiativeMessagesDb.search(sql`
 					SELECT * FROM initiative_messages
@@ -165,7 +162,7 @@ describe("AdminController", function() {
 
 				messages.must.eql([{
 					id: messages[0].id,
-					initiative_uuid: UUID,
+					initiative_uuid: this.topic.id,
 					created_at: new Date,
 					updated_at: new Date,
 					title: "Initiative was updated",
@@ -190,7 +187,7 @@ describe("AdminController", function() {
 					confirmation_token: "deadbeef"
 				})
 
-				var res = yield this.request(`/initiatives/${UUID}/messages`, {
+				var res = yield this.request(`/initiatives/${this.topic.id}/messages`, {
 					method: "POST",
 
 					form: {
@@ -202,7 +199,7 @@ describe("AdminController", function() {
 				})
 
 				res.statusCode.must.equal(302)
-				res.headers.location.must.equal(`/initiatives/${UUID}`)
+				res.headers.location.must.equal(`/initiatives/${this.topic.id}`)
 
 				var messages = yield initiativeMessagesDb.search(sql`
 					SELECT * FROM initiative_messages
@@ -216,3 +213,15 @@ describe("AdminController", function() {
 		})
 	})
 })
+
+function createTopic(attrs) {
+	return cosDb("Topics").insert(_.assign({
+		id: newUuid(),
+		status: "inProgress",
+		visibility: "public",
+		createdAt: new Date,
+		updatedAt: new Date,
+		tokenJoin: pseudoHex(4),
+		padUrl: "/etherpad"
+	}, attrs)).returning("*").then(_.first)
+}

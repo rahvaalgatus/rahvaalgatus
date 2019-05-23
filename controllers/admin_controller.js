@@ -11,7 +11,6 @@ var next = require("co-next")
 var initiativesDb = require("root/db/initiatives_db")
 var initiativeMessagesDb = require("root/db/initiative_messages_db")
 var cosDb = require("root").cosDb
-var encode = encodeURIComponent
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var parseCitizenInitiative = cosApi.parseCitizenInitiative
 var parseCitizenEvent = cosApi.parseCitizenEvent
@@ -98,9 +97,16 @@ exports.get("/initiatives", next(function*(_req, res) {
 }))
 
 exports.use("/initiatives/:id", next(function*(req, res, next) {
-	var path = `/api/topics/${encode(req.params.id)}?include[]=vote&include[]=event`
-	req.initiative = yield cosApi(path).then(getBody).then(parseCitizenInitiative)
-	req.dbInitiative = yield initiativesDb.read(req.initiative.id, {create: true})
+	var initiative = yield cosDb.query(sql`
+		SELECT * FROM "Topics" WHERE id = ${req.params.id}
+	`).then(_.first)
+
+	if (initiative == null) return void next(new HttpError(404))
+
+	initiative = parseCitizenInitiative(initiative)
+	req.initiative = initiative
+	req.dbInitiative = yield initiativesDb.read(initiative.id, {create: true})
+
 	res.locals.initiative = req.initiative
 	res.locals.dbInitiative = req.dbInitiative
 	next()
@@ -396,5 +402,3 @@ function parseEvent(obj) {
   var title = obj.createdOn + " " + obj.title
 	return {subject: title, text: obj.text}
 }
-
-function getBody(res) { return res.body.data }
