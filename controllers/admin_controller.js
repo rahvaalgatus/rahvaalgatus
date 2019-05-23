@@ -239,7 +239,7 @@ exports.get("/initiatives/:id/messages/new", next(function*(req, res) {
 
 			text: t("DEFAULT_INITIATIVE_SUBSCRIPTION_MESSAGE_BODY", {
 				initiativeTitle: initiative.title,
-				initiativeUrl: Config.url + req.baseUrl + "/" + initiative.id,
+				initiativeUrl: `${Config.url}/initiatives/${initiative.id}`,
 				unsubscribeUrl: "{{unsubscribeUrl}}",
 				siteUrl: Config.url
 			})
