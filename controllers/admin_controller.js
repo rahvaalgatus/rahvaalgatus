@@ -195,23 +195,28 @@ exports.post("/initiatives/:id/events", next(function*(req, res) {
 	res.redirect(req.baseUrl + "/initiatives/" + req.initiative.id)
 }))
 
-exports.get("/initiatives/:id/events/:eventId/edit", next(function*(req, res) {
-	res.render("admin/initiatives/events/update_page.jsx", {
-		event: yield readEvent(req.params.eventId)
-	})
+exports.use("/initiatives/:id/events/:eventId",
+	next(function*(req, _res, next) {
+	var event = yield readEvent(req.params.eventId)
+	if (event.deletedAt) return void next(new HttpError(404))
+	req.event = event
+	next()
 }))
 
+exports.get("/initiatives/:id/events/:eventId/edit", function(req, res) {
+	res.render("admin/initiatives/events/update_page.jsx", {event: req.event})
+})
+
 exports.put("/initiatives/:id/events/:eventId", next(function*(req, res) {
-	var event = _.assign(parseEvent(req.body), {updatedAt: new Date})
-	var query = cosDb("TopicEvents").where("id", req.params.eventId)
-	yield query.update(event)
+	var query = cosDb("TopicEvents").where("id", req.event.id)
+	yield query.update(_.assign(parseEvent(req.body), {updatedAt: new Date}))
 
 	res.flash("notice", "Event updated.")
 	res.redirect(req.baseUrl + "/initiatives/" + req.initiative.id)
 }))
 
 exports.delete("/initiatives/:id/events/:eventId", next(function*(req, res) {
-	var query = cosDb("TopicEvents").where("id", req.params.eventId)
+	var query = cosDb("TopicEvents").where("id", req.event.id)
 	yield query.update({deletedAt: new Date})
 	res.flash("notice", "Event deleted.")
 	res.redirect(req.baseUrl + "/initiatives/" + req.initiative.id)
@@ -338,14 +343,17 @@ function parseInitiativeForCitizen(obj) {
 	return attrs
 }
 
-function* readEvent(id) {
-	var event = yield cosDb("TopicEvents").where("id", id).first()
-	return parseCitizenEvent(event)
+function readEvent(id) {
+	var event = cosDb.query(sql`SELECT * FROM "TopicEvents" WHERE id = ${id}`)
+	return event.then(_.first).then(parseCitizenEvent)
 }
 
-function* readEvents(initiativeId) {
-	var events = yield cosDb("TopicEvents").where("topicId", initiativeId)
-	return events.map(parseCitizenEvent)
+function readEvents(initiativeId) {
+	return cosDb.query(sql`
+		SELECT * FROM "TopicEvents"
+		WHERE "topicId" = ${initiativeId}
+		AND "deletedAt" IS NULL
+	`).then((events) => events.map(parseCitizenEvent))
 }
 
 function searchConfirmedSubscriptions(initiative) {
