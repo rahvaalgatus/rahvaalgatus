@@ -173,7 +173,6 @@ exports.router.get("/:id",
 exports.read = next(function*(req, res) {
 	var user = req.user
 	var initiative = req.initiative
-	var events
 
 	var signature
 	if (user == null && req.flash("signed")) signature = {
@@ -198,17 +197,7 @@ exports.read = next(function*(req, res) {
 	var comments = yield req.cosApi(commentsPath)
 	comments = comments.body.data.rows.map(parseCitizenComment).reverse()
 
-	if (initiative.vote && (
-		initiative.status == "followUp" ||
-		initiative.status == "closed"
-	)) {
-		var eventsPath = `/api/topics/${initiative.id}/events`
-		if (req.user) eventsPath = "/api/users/self" + eventsPath.slice(4)
-		events = yield req.cosApi(eventsPath)
-		events = events.body.data.rows.map(parseCitizenEvent)
-		events = events.sort((a, b) => +b.createdAt - +a.createdAt)
-	}
-	else events = EMPTY_ARR
+	var events = yield searchInitiativeEvents(initiative)
 
 	res.render("initiatives/read_page.jsx", {
 		signature: signature,
@@ -706,6 +695,22 @@ function unhideSignature(initiativeId, userId) {
 		SET hidden = 0, updated_at = ${new Date}
 		WHERE (initiative_uuid, user_uuid) = (${initiativeId}, ${userId})
 	`)
+}
+
+function* searchInitiativeEvents(initiative) {
+	var events
+
+	if (initiative.vote && (
+		initiative.status == "followUp" ||
+		initiative.status == "closed"
+	)) {
+		var eventsPath = `/api/topics/${initiative.id}/events`
+		events = yield cosApi(eventsPath)
+		events = events.body.data.rows.map(parseCitizenEvent)
+	}
+	else events = EMPTY_ARR
+
+	return events.sort((a, b) => +b.createdAt - +a.createdAt)
 }
 
 // NOTE: Use this only on JWTs from trusted sources as it does no validation.
