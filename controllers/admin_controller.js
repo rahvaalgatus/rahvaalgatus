@@ -189,16 +189,40 @@ exports.get("/initiatives/:id/events/new", function(_req, res) {
 })
 
 exports.post("/initiatives/:id/events", next(function*(req, res) {
-	var event = _.assign(parseEvent(req.body), {
-		id: newUuid(),
-		topicId: req.initiative.id,
-		createdAt: new Date,
-		updatedAt: new Date
-	})
+	var initiative = req.initiative
 
-	yield cosDb("TopicEvents").insert(event)
-	res.flash("notice", "Event created.")
-	res.redirect(req.baseUrl + "/initiatives/" + req.initiative.id)
+	switch (req.body.action) {
+		case "preview":
+			res.render("admin/initiatives/events/create_page.jsx", {
+				event: req.body,
+				message: renderEventMessage(initiative, req.body)
+			})
+			break
+
+		case "create":
+			yield cosDb("TopicEvents").insert(_.assign(parseEvent(req.body), {
+				id: newUuid(),
+				topicId: req.initiative.id,
+				createdAt: new Date,
+				updatedAt: new Date
+			}))
+
+			var message = yield initiativeMessagesDb.create({
+				__proto__: renderEventMessage(initiative, req.body),
+				initiative_uuid: initiative.id,
+				created_at: new Date,
+				updated_at: new Date,
+			})
+
+			var subscriptions = yield searchConfirmedSubscriptions(initiative)
+			yield sendInitiativeMessageInBatches(message, subscriptions)
+
+			res.flash("notice", "Event created and message sent.")
+			res.redirect(req.baseUrl + "/initiatives/" + req.initiative.id)
+			break
+
+		default: throw new HttpError(422, "Invalid Action")
+	}
 }))
 
 exports.use("/initiatives/:id/events/:eventId",
@@ -264,25 +288,7 @@ exports.post("/initiatives/:id/messages", next(function*(req, res) {
 			})
 
 			var subscriptions = yield searchConfirmedSubscriptions(initiative)
-
-			for (
-				var i = 0, batches = _.chunk(subscriptions, 1000), sent = [];
-				i < batches.length;
-				++i
-			) {
-				yield sendInitiativeMessage(message, batches[i])
-				sent = sent.concat(batches[i].map((sub) => sub.email))
-
-				yield initiativeMessagesDb.update(message, {
-					updated_at: new Date,
-					sent_to: sent
-				})
-			}
-
-			yield initiativeMessagesDb.update(message, {
-				updated_at: new Date,
-				sent_at: new Date,
-			})
+			yield sendInitiativeMessageInBatches(message, subscriptions)
 
 			res.flash("notice", "Message sent.")
 			res.redirect(req.baseUrl + "/initiatives/" + req.initiative.id)
@@ -363,6 +369,29 @@ function readEvents(initiativeId) {
 	`).then((events) => events.map(parseCitizenEvent))
 }
 
+function parseEvent(obj) {
+  var title = obj.createdOn + " " + obj.title
+	return {subject: title, text: obj.text}
+}
+
+function renderEventMessage(initiative, event) {
+	return {
+		title: t("DEFAULT_INITIATIVE_EVENT_MESSAGE_TITLE", {
+			title: event.title,
+			initiativeTitle: initiative.title,
+		}),
+
+		text: t("DEFAULT_INITIATIVE_EVENT_MESSAGE_BODY", {
+			title: event.title,
+			text: event.text,
+			initiativeTitle: initiative.title,
+			initiativeUrl: `${Config.url}/initiatives/${initiative.id}`,
+			siteUrl: Config.url,
+			unsubscribeUrl: "{{unsubscribeUrl}}"
+		})
+	}
+}
+
 function searchConfirmedSubscriptions(initiative) {
 	return initiativeSubscriptionsDb.search(sql`
 		SELECT * FROM (
@@ -373,6 +402,27 @@ function searchConfirmedSubscriptions(initiative) {
 		)
 		GROUP BY email
 	`)
+}
+
+function* sendInitiativeMessageInBatches(message, subscriptions) {
+	for (
+		var i = 0, batches = _.chunk(subscriptions, 1000), sent = [];
+		i < batches.length;
+		++i
+	) {
+		yield sendInitiativeMessage(message, batches[i])
+		sent = sent.concat(batches[i].map((sub) => sub.email))
+
+		yield initiativeMessagesDb.update(message, {
+			updated_at: new Date,
+			sent_to: sent
+		})
+	}
+
+	yield initiativeMessagesDb.update(message, {
+		updated_at: new Date,
+		sent_at: new Date,
+	})
 }
 
 function sendInitiativeMessage(msg, subscriptions) {
@@ -396,9 +446,4 @@ function sendInitiativeMessage(msg, subscriptions) {
 			unsubscribeUrl: Config.url + "%recipient.unsubscribeUrl%"
 		})
 	})
-}
-
-function parseEvent(obj) {
-  var title = obj.createdOn + " " + obj.title
-	return {subject: title, text: obj.text}
 }

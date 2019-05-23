@@ -4,9 +4,11 @@ var concat = Array.prototype.concat.bind(Array.prototype)
 var sql = require("sqlate")
 var newUuid = require("uuid/v4")
 var pseudoHex = require("root/lib/crypto").pseudoHex
+var pseudoInt = require("root/lib/crypto").pseudoInt
 var cosDb = require("root").cosDb
 var initiativeSubscriptionsDb = require("root/db/initiative_subscriptions_db")
 var initiativeMessagesDb = require("root/db/initiative_messages_db")
+var t = require("root/lib/i18n").t.bind(null, "et")
 
 describe("AdminController", function() {
 	require("root/test/adm")()
@@ -35,32 +37,102 @@ describe("AdminController", function() {
 			this.topic = yield createTopic({creatorId: this.user.id})
 		})
 		
-		it("must create event", function*() {
-			var res = yield this.request(`/initiatives/${this.topic.id}/events`, {
-				method: "POST",
+		describe("with action=create", function() {
+			it("must create event", function*() {
+				var res = yield this.request(`/initiatives/${this.topic.id}/events`, {
+					method: "POST",
 
-				form: {
-					_csrf_token: this.csrfToken,
-					createdOn: "2020-01-02",
-					title: "Initiative was handled",
+					form: {
+						_csrf_token: this.csrfToken,
+						action: "create",
+						createdOn: "2020-01-02",
+						title: "Initiative was handled",
+						text: "All good."
+					}
+				})
+
+				res.statusCode.must.equal(302)
+				res.headers.location.must.equal(`/initiatives/${this.topic.id}`)
+
+				var events = yield cosDb.query(sql`SELECT * FROM "TopicEvents"`)
+				events.length.must.equal(1)
+
+				_.clone(events[0]).must.eql({
+					id: events[0].id,
+					topicId: this.topic.id,
+					createdAt: new Date,
+					updatedAt: new Date,
+					deletedAt: null,
+					subject: "2020-01-02 Initiative was handled",
 					text: "All good."
-				}
+				})
 			})
 
-			res.statusCode.must.equal(302)
-			res.headers.location.must.equal(`/initiatives/${this.topic.id}`)
+			it("must create message and send email", function*() {
+				var a = yield initiativeSubscriptionsDb.create({
+					initiative_uuid: this.topic.id,
+					email: "john@example.com",
+					confirmed_at: new Date,
+					confirmation_token: "deadbeef"
+				})
 
-			var events = yield cosDb.query(sql`SELECT * FROM "TopicEvents"`)
-			events.length.must.equal(1)
+				var b = yield initiativeSubscriptionsDb.create({
+					initiative_uuid: null,
+					email: "mike@example.com",
+					confirmed_at: new Date,
+					confirmation_token: "deadfeed"
+				})
 
-			_.clone(events[0]).must.eql({
-				id: events[0].id,
-				topicId: this.topic.id,
-				createdAt: new Date,
-				updatedAt: new Date,
-				deletedAt: null,
-				subject: "2020-01-02 Initiative was handled",
-				text: "All good."
+				var res = yield this.request(`/initiatives/${this.topic.id}/events`, {
+					method: "POST",
+
+					form: {
+						_csrf_token: this.csrfToken,
+						action: "create",
+						createdOn: "2020-01-02",
+						title: "Initiative was handled",
+						text: "All good."
+					}
+				})
+
+				res.statusCode.must.equal(302)
+
+				var messages = yield initiativeMessagesDb.search(sql`
+					SELECT * FROM initiative_messages
+				`)
+
+				messages.must.eql([{
+					id: messages[0].id,
+					initiative_uuid: this.topic.id,
+					created_at: new Date,
+					updated_at: new Date,
+
+					title: t("DEFAULT_INITIATIVE_EVENT_MESSAGE_TITLE", {
+						title: "Initiative was handled",
+						initiativeTitle: this.topic.title
+					}),
+
+					text: t("DEFAULT_INITIATIVE_EVENT_MESSAGE_BODY", {
+						initiativeTitle: this.topic.title,
+						initiativeUrl: `${Config.url}/initiatives/${this.topic.id}`,
+						title: "Initiative was handled",
+						text: "All good.",
+						siteUrl: Config.url,
+						unsubscribeUrl: "{{unsubscribeUrl}}"
+					}),
+
+					sent_at: new Date,
+					sent_to: [a.email, b.email]
+				}])
+
+				this.emails.length.must.equal(1)
+				this.emails[0].envelope.to.must.eql([a.email, b.email])
+				var msg = String(this.emails[0].message)
+				msg.match(/^Subject: .*/m)[0].must.include("Initiative was handled")
+				msg.must.include(`/subscriptions/${b.update_token}`)
+				msg.must.include(
+					`/initiatives/${this.topic.id}/subscriptions/${a.update_token}`
+				)
 			})
 		})
 	})
@@ -254,6 +326,7 @@ describe("AdminController", function() {
 function createTopic(attrs) {
 	return cosDb("Topics").insert(_.assign({
 		id: newUuid(),
+		title: "Initiative #" + pseudoInt(100),
 		status: "inProgress",
 		visibility: "public",
 		createdAt: new Date,

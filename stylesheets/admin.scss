@@ -201,6 +201,7 @@ button.admin-link {
 }
 
 .admin-form {
+	display: block;
 	max-width: 60rem;
 
 	.admin-label,
@@ -224,7 +225,13 @@ button.admin-link {
 	.admin-submit {
 		margin-top: 1rem;
 	}
+
+	button + button {
+		margin-left: 1rem;
+	}
 }
+
+* + .admin-form { margin-top: 2rem; }
 
 .admin-inline-form {
 	.admin-input ~ .admin-input,
@@ -250,6 +257,32 @@ button.admin-link {
 
 	&:disabled {
 		background-color: $secondary-background;
+	}
+}
+
+.admin-message-preview {
+	background: white;
+	box-shadow: 0 1px 0.3rem 0 rgba(0, 0, 0, 0.2);
+
+	table {
+		padding: 2rem;
+
+		th {
+			font-weight: bold;
+			&:after { content: ":"; }
+		}
+
+		td {
+			padding: 0 0.5rem;
+		}
+	}
+
+	p {
+		padding: 2rem;
+		border-top: 1px solid #eee;
+		white-space: pre-wrap;
+
+		.link { @extend .admin-link; }
 	}
 }
 
@@ -335,31 +368,4 @@ textarea.admin-input {
 	}
 
 	.admin-submit + button { margin-left: 1rem; }
-
-	#preview {
-		background: white;
-		box-shadow: 0 1px 0.3rem 0 rgba(0, 0, 0, 0.2);
-		margin-bottom: 4rem;
-
-		table {
-			padding: 2rem;
-
-			th {
-				font-weight: bold;
-				&:after { content: ":"; }
-			}
-
-			td {
-				padding: 0 0.5rem;
-			}
-		}
-
-		p {
-			padding: 2rem;
-			border-top: 1px solid #eee;
-			white-space: pre-wrap;
-
-			.link { @extend .admin-link; }
-		}
-	}
 }

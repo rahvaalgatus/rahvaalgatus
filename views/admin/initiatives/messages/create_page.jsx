@@ -1,15 +1,16 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var Page = require("../../page")
-var Fragment = Jsx.Fragment
 var Form = Page.Form
 var Flash = Page.Flash
 var Config = require("root/config")
 var SubscriptionsView =
 	require("../../subscriptions/index_page").SubscriptionsView
 var linkify = require("root/lib/linkify")
+exports = module.exports = CreatePage
+exports.MessageView = MessageView
 
-module.exports = function(attrs) {
+function CreatePage(attrs) {
 	var req = attrs.req
 	var initiative = attrs.initiative
 	var message = attrs.message
@@ -29,10 +30,7 @@ module.exports = function(attrs) {
 
 		<h1 class="admin-heading">Send New Message to Subscribers</h1>
 		<Flash flash={req.flash} />
-
-		{preview ? <Fragment>
-			{renderPreview(preview)}
-		</Fragment> : null }
+		{preview ? <MessageView message={preview} /> : null }
 
 		<Form
 				req={req}
@@ -76,8 +74,10 @@ module.exports = function(attrs) {
 	</Page>
 }
 
-function renderPreview(preview) {
-	return <article id="preview">
+function MessageView(attrs) {
+	var msg = attrs.message
+
+	return <article class="admin-message-preview">
 		<table>
 			<tr>
 				<th>From</th>
@@ -85,10 +85,10 @@ function renderPreview(preview) {
 			</tr>
 			<tr>
 				<th>Subject</th>
-				<td>{preview.title}</td>
+				<td>{msg.title}</td>
 			</tr>
 		</table>
 
-		<p>{Jsx.html(linkify(preview.text))}</p>
+		<p>{Jsx.html(linkify(msg.text))}</p>
 	</article>
 }

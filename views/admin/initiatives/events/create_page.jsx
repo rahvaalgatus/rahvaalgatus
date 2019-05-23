@@ -1,6 +1,7 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var Page = require("../../page")
+var MessageView = require("../messages/create_page").MessageView
 var Form = Page.Form
 var Flash = Page.Flash
 var formatDate = require("root/lib/i18n").formatDate
@@ -11,6 +12,7 @@ function CreatePage(attrs) {
 	var req = attrs.req
 	var initiative = attrs.initiative
 	var event = attrs.event
+	var message = attrs.message
 
 	return <Page
 		page="create-event"
@@ -24,14 +26,25 @@ function CreatePage(attrs) {
 
 		<h1 class="admin-heading">New Event</h1>
 		<Flash flash={req.flash} />
-		<EventForm initiative={initiative} event={event} req={req} />
+		{message ? <MessageView message={message} /> : null }
+
+		<EventForm
+			initiative={initiative}
+			event={event}
+			req={req}
+			submit={message != null}>
+			<button class="admin-submit" name="action" value="preview">
+				Preview New Event
+			</button>
+		</EventForm>
 	</Page>
 }
 
-function EventForm(attrs) {
+function EventForm(attrs, children) {
 	var req = attrs.req
 	var initiative = attrs.initiative
 	var event = attrs.event
+	var submit = attrs.submit
 
 	var path = `${req.baseUrl}/initiatives/${initiative.id}/events`
 	if (event.id) path += "/" + event.id
@@ -46,8 +59,13 @@ function EventForm(attrs) {
 		<input
 			type="date"
 			name="createdOn"
-			value={formatDate("iso", event.createdAt)}
-			required class="admin-input"
+			required
+			class="admin-input"
+
+			value={
+				event.createdOn ||
+				event.createdAt && formatDate("iso", event.createdAt)
+			}
 		/>
 
 		<label class="admin-label">Title</label>
@@ -68,8 +86,13 @@ function EventForm(attrs) {
 			{event.text}
 		</textarea>
 
-		<button class="admin-submit">
+		{children}
+
+		{submit !== false ? <button
+			class="admin-danger-button"
+			name="action"
+			value="create">
 			{event.id ? "Update Event" : "Create New Event"}
-		</button>
+		</button> : null}
 	</Form>
 }
