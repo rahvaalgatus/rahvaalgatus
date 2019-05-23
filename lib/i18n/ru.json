@@ -76,7 +76,7 @@
 	"MSG_ERROR_HWCRYPTO_USER_CANCEL": "Вы прервали процесс подписания и Ваш голос не засчитан.",
 	"MSG_ERROR_INVALID_PERSONAL_IDENTIFICATION_CODE": "Ошибка в личном коде.",
 	"MSG_ERROR_INVALID_PHONE_NUMBER": "Неверный номер телефона. Пожалуйста, укажите номер вместе с кодом страны (+372 xxx xxxx).",
-	"NO_EVENTS": "Ожидаем ответа Канцелярии Рийгикогу. ",
+	"NO_GOVERNMENT_REPLY": "Ожидаем ответа Канцелярии Рийгикогу. ",
 	"N_SIGNATURES": "{{votes}} подписей",
 	"N_SIGNATURES_COLLECTED": "собрано {{votes}} подписей",
 	"N_SIGNATURES_FAILED": "{{votes}} подписей",

@@ -353,6 +353,7 @@ function readEvents(initiativeId) {
 		SELECT * FROM "TopicEvents"
 		WHERE "topicId" = ${initiativeId}
 		AND "deletedAt" IS NULL
+		ORDER BY "createdAt" DESC
 	`).then((events) => events.map(parseCitizenEvent))
 }
 

@@ -16,6 +16,7 @@ var initiativeSubscriptionsDb = require("root/db/initiative_subscriptions_db")
 var initiativeSignaturesDb = require("root/db/initiative_signatures_db")
 var countVotes = Initiative.countSignatures.bind(null, "Yes")
 var isOk = require("root/lib/http").isOk
+var cosDb = require("root").cosDb
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
 var catch401 = require("root/lib/fetch").catch.bind(null, 401)
 var isFetchError = require("root/lib/fetch").is
@@ -697,24 +698,16 @@ function unhideSignature(initiativeId, userId) {
 	`)
 }
 
-function* searchInitiativeEvents(initiative) {
-	var events
-
-	if (initiative.vote && (
-		initiative.status == "followUp" ||
-		initiative.status == "closed"
-	)) {
-		var eventsPath = `/api/topics/${initiative.id}/events`
-		events = yield cosApi(eventsPath)
-		events = events.body.data.rows.map(parseCitizenEvent)
-	}
-	else events = EMPTY_ARR
-
-	return events.sort((a, b) => +b.createdAt - +a.createdAt)
+function searchInitiativeEvents(initiative) {
+	return cosDb.query(sql`
+		SELECT * FROM "TopicEvents"
+		WHERE "topicId" = ${initiative.id}
+		AND "deletedAt" IS NULL
+		ORDER BY "createdAt" DESC
+	`).then((events) => events.map(parseCitizenEvent))
 }
 
 // NOTE: Use this only on JWTs from trusted sources as it does no validation.
 function parseJwt(jwt) { return JSON.parse(decodeBase64(jwt.split(".")[1])) }
-
 function getBody(res) { return res.body.data }
 function sortByCreatedAt(arr) { return _.sortBy(arr, "createdAt").reverse() }

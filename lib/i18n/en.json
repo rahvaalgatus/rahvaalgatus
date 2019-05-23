@@ -94,7 +94,7 @@
 	"MY_INITIATIVES": "My initiatives",
 	"NOTES_HEADER": "Notes from the organizer",
 	"NOTES_UPDATED": "Notes updated.",
-	"NO_EVENTS": "No government response yet.",
+	"NO_GOVERNMENT_REPLY": "No government response yet.",
 	"N_SIGNATURES": "{{votes}} signatures",
 	"N_SIGNATURES_COLLECTED": "{{votes}} signatures collected",
 	"N_SIGNATURES_FAILED": "Halted: {{votes}} signatures",

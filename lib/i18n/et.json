@@ -123,7 +123,7 @@
 	"MY_INITIATIVES": "Minu algatused",
 	"NOTES_HEADER": "Märkmed algatajalt",
 	"NOTES_UPDATED": "Märkmed salvestatud.",
-	"NO_EVENTS": "Ootame Riigikogu Kantselei vastust.\n",
+	"NO_GOVERNMENT_REPLY": "Ootame Riigikogu Kantselei vastust.\n",
 	"N_SIGNATURES": "{{votes}} allkirja",
 	"N_SIGNATURES_COLLECTED": "{{votes}} allkirja kogutud",
 	"N_SIGNATURES_FAILED": "Peatatud: {{votes}} allkirja",

@@ -103,15 +103,13 @@ function ReadPage(attrs) {
 								sigs = Initiative.countSignatures("Yes", initiative)
 
 								return <div class="initiative-status">
-									{events.length == 0 ? [
-										(Initiative.isSuccessful(initiative, dbInitiative)) ? [
-											<h1>{t("N_SIGNATURES_COLLECTED", {votes: sigs})}</h1>,
-											<p>{t("VOTING_SUCCEEDED")}</p>
-										] : [
-											<h1>{t("N_SIGNATURES_FAILED", {votes: sigs})}</h1>,
-											<p>{t("VOTING_FAILED")}</p>
-										]
-									] : null}
+									{Initiative.isSuccessful(initiative, dbInitiative)? <Fragment>
+										<h1>{t("N_SIGNATURES_COLLECTED", {votes: sigs})}</h1>
+										<p>{t("VOTING_SUCCEEDED")}</p>
+									</Fragment> : <Fragment>
+										<h1>{t("N_SIGNATURES_FAILED", {votes: sigs})}</h1>
+										<p>{t("VOTING_FAILED")}</p>
+									</Fragment>}
 								</div>
 							}
 							else return null
@@ -425,15 +423,14 @@ function EventsView(attrs) {
 	var events = attrs.events
 	var sentToParliamentAt = dbInitiative.sent_to_parliament_at
 	var finishedInParliamentAt = dbInitiative.finished_in_parliament_at
-
-	if (!Initiative.isInParliament(initiative, dbInitiative)) return null
 		
-	return <section id="initiative-events" class="transparent-section"><center>
+	if (
+		events.length > 0 ||
+		sentToParliamentAt ||
+		finishedInParliamentAt
+	) return <section id="initiative-events" class="transparent-section"><center>
 		<article>
-			{events.length == 0 && sentToParliamentAt == null
-				? <p class="text empty">{t("NO_EVENTS")}</p>
-				: <ol class="events">
-
+			<ol class="events">
 				{finishedInParliamentAt ? <li class="event">
 					<time datetime={finishedInParliamentAt.toJSON()}>
 						{I18n.formatDate("numeric", finishedInParliamentAt)}
@@ -461,9 +458,16 @@ function EventsView(attrs) {
 					<h2>{t("FIRST_PROCEEDING_TITLE")}</h2>
 					<p class="text">{t("FIRST_PROCEEDING_BODY")}</p>
 				</li> : null}
-			</ol>}
+			</ol>
 		</article>
 	</center></section>
+
+	else if (Initiative.isInParliament(initiative, dbInitiative))
+		return <section id="initiative-events" class="transparent-section"><center>
+		<article><p class="text empty">{t("NO_GOVERNMENT_REPLY")}</p></article>
+	</center></section>
+
+	else return null
 }
 
 function CommentsView(attrs) {
