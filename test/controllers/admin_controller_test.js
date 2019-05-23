@@ -106,6 +106,7 @@ describe("AdminController", function() {
 					initiative_uuid: this.topic.id,
 					created_at: new Date,
 					updated_at: new Date,
+					origin: "event",
 
 					title: t("DEFAULT_INITIATIVE_EVENT_MESSAGE_TITLE", {
 						title: "Initiative was handled",
@@ -183,6 +184,7 @@ describe("AdminController", function() {
 					initiative_uuid: this.topic.id,
 					created_at: new Date,
 					updated_at: new Date,
+					origin: "message",
 					title: "Initiative was updated",
 					text: "Go check it out",
 					sent_at: new Date,
@@ -274,6 +276,7 @@ describe("AdminController", function() {
 					initiative_uuid: this.topic.id,
 					created_at: new Date,
 					updated_at: new Date,
+					origin: "message",
 					title: "Initiative was updated",
 					text: "Go check it out",
 					sent_at: new Date,

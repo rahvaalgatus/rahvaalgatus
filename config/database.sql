@@ -50,7 +50,7 @@ CREATE TABLE initiative_messages (
 	title TEXT NOT NULL,
 	"text" TEXT NOT NULL,
 	sent_at TEXT,
-	sent_to TEXT NOT NULL DEFAULT '[]',
+	sent_to TEXT NOT NULL DEFAULT '[]', origin TEXT NOT NULL DEFAULT 'message',
 
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
 
@@ -81,4 +81,5 @@ INSERT INTO migrations VALUES('20190428103608');
 INSERT INTO migrations VALUES('20190428114010');
 INSERT INTO migrations VALUES('20190428170006');
 INSERT INTO migrations VALUES('20190519192050');
+INSERT INTO migrations VALUES('20190523150859');
 COMMIT;

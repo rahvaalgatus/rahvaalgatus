@@ -210,6 +210,7 @@ exports.post("/initiatives/:id/events", next(function*(req, res) {
 			var message = yield initiativeMessagesDb.create({
 				__proto__: renderEventMessage(initiative, req.body),
 				initiative_uuid: initiative.id,
+				origin: "event",
 				created_at: new Date,
 				updated_at: new Date,
 			})
@@ -281,6 +282,7 @@ exports.post("/initiatives/:id/messages", next(function*(req, res) {
 		case "send":
 			var message = yield initiativeMessagesDb.create({
 				initiative_uuid: initiative.id,
+				origin: "message",
 				title: msg.title,
 				text: msg.text,
 				created_at: new Date,
