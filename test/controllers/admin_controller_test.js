@@ -1,5 +1,6 @@
 var _ = require("root/lib/underscore")
 var Config = require("root/config")
+var ValidSubscription = require("root/test/valid_db_initiative_subscription")
 var sql = require("sqlate")
 var newUuid = require("uuid/v4")
 var pseudoHex = require("root/lib/crypto").pseudoHex
@@ -67,20 +68,18 @@ describe("AdminController", function() {
 				})
 			})
 
-			it("must create message and send email", function*() {
-				var a = yield subscriptionsDb.create({
-					initiative_uuid: this.topic.id,
-					email: "john@example.com",
-					confirmed_at: new Date,
-					confirmation_token: "deadbeef"
-				})
+			it("must email subscribers", function*() {
+				var subscriptions = yield subscriptionsDb.create([
+					new ValidSubscription({
+						initiative_uuid: this.topic.id,
+						confirmed_at: new Date
+					}),
 
-				var b = yield subscriptionsDb.create({
-					initiative_uuid: null,
-					email: "mike@example.com",
-					confirmed_at: new Date,
-					confirmation_token: "deadfeed"
-				})
+					new ValidSubscription({
+						initiative_uuid: null,
+						confirmed_at: new Date
+					})
+				])
 
 				var res = yield this.request(`/initiatives/${this.topic.id}/events`, {
 					method: "POST",
@@ -99,6 +98,8 @@ describe("AdminController", function() {
 				var messages = yield messagesDb.search(sql`
 					SELECT * FROM initiative_messages
 				`)
+
+				var emails = subscriptions.map((s) => s.email).sort()
 
 				messages.must.eql([{
 					id: messages[0].id,
@@ -122,17 +123,14 @@ describe("AdminController", function() {
 					}),
 
 					sent_at: new Date,
-					sent_to: [a.email, b.email]
+					sent_to: emails
 				}])
 
 				this.emails.length.must.equal(1)
-				this.emails[0].envelope.to.must.eql([a.email, b.email])
+				this.emails[0].envelope.to.must.eql(emails)
 				var msg = String(this.emails[0].message)
 				msg.match(/^Subject: .*/m)[0].must.include("Initiative was handled")
-				msg.must.include(`/subscriptions/${b.update_token}`)
-				msg.must.include(
-					`/initiatives/${this.topic.id}/subscriptions/${a.update_token}`
-				)
+				subscriptions.forEach((s) => msg.must.include(s.update_token))
 			})
 		})
 	})
@@ -145,20 +143,18 @@ describe("AdminController", function() {
 		})
 
 		describe("with action=send", function() {
-			it("must create message and send email", function*() {
-				var a = yield subscriptionsDb.create({
-					initiative_uuid: this.topic.id,
-					email: "john@example.com",
-					confirmed_at: new Date,
-					confirmation_token: "deadbeef"
-				})
+			it("must email subscribers", function*() {
+				var subscriptions = yield subscriptionsDb.create([
+					new ValidSubscription({
+						initiative_uuid: this.topic.id,
+						confirmed_at: new Date
+					}),
 
-				var b = yield subscriptionsDb.create({
-					initiative_uuid: null,
-					email: "mike@example.com",
-					confirmed_at: new Date,
-					confirmation_token: "deadfeed"
-				})
+					new ValidSubscription({
+						initiative_uuid: null,
+						confirmed_at: new Date
+					})
+				])
 
 				var res = yield this.request(`/initiatives/${this.topic.id}/messages`, {
 					method: "POST",
@@ -178,6 +174,8 @@ describe("AdminController", function() {
 					SELECT * FROM initiative_messages
 				`)
 
+				var emails = subscriptions.map((s) => s.email).sort()
+
 				messages.must.eql([{
 					id: messages[0].id,
 					initiative_uuid: this.topic.id,
@@ -187,17 +185,14 @@ describe("AdminController", function() {
 					title: "Initiative was updated",
 					text: "Go check it out",
 					sent_at: new Date,
-					sent_to: [a.email, b.email]
+					sent_to: emails
 				}])
 
 				this.emails.length.must.equal(1)
-				this.emails[0].envelope.to.must.eql([a.email, b.email])
+				this.emails[0].envelope.to.must.eql(emails)
 				var msg = String(this.emails[0].message)
 				msg.match(/^Subject: .*/m)[0].must.include("Initiative was updated")
-				msg.must.include(`/subscriptions/${b.update_token}`)
-				msg.must.include(
-					`/initiatives/${this.topic.id}/subscriptions/${a.update_token}`
-				)
+				subscriptions.forEach((s) => msg.must.include(s.update_token))
 			})
 
 			it("must not email the same subscriber twice", function*() {

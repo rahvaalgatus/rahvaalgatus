@@ -1,4 +1,5 @@
 /** @jsx Jsx */
+var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var Page = require("../page")
@@ -32,7 +33,7 @@ function IndexPage(attrs) {
 }
 
 function SubscriptionsView(attrs) {
-	var subscriptions = attrs.subscriptions
+	var subscriptions = _.sortBy(attrs.subscriptions, "created_at").reverse()
 
 	return <table class="admin-table">
 		<thead>

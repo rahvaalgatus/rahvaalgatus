@@ -24,8 +24,9 @@ exports.searchConfirmedByInitiativeId = function(id) {
 			SELECT * FROM initiative_subscriptions
 			WHERE (initiative_uuid = ${id} OR initiative_uuid IS NULL)
 			AND confirmed_at IS NOT NULL
-			ORDER BY initiative_uuid IS NOT NULL, created_at DESC
+			ORDER BY initiative_uuid IS NOT NULL
 		)
 		GROUP BY email
+		ORDER BY email
 	`)
 }
