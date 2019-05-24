@@ -4,12 +4,13 @@ var Config = require("root/config")
 var HttpError = require("standard-http-error")
 var I18n = require("root/lib/i18n")
 var DateFns = require("date-fns")
+var Subscription = require("root/lib/subscription")
 var cosApi = require("root/lib/citizenos_api")
 var readInitiativesWithStatus = cosApi.readInitiativesWithStatus
-var initiativeSubscriptionsDb = require("root/db/initiative_subscriptions_db")
+var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var next = require("co-next")
 var initiativesDb = require("root/db/initiatives_db")
-var initiativeMessagesDb = require("root/db/initiative_messages_db")
+var messagesDb = require("root/db/initiative_messages_db")
 var cosDb = require("root").cosDb
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var parseCitizenInitiative = cosApi.parseCitizenInitiative
@@ -19,7 +20,6 @@ var pseudoHex = require("root/lib/crypto").pseudoHex
 var sqlite = require("root").sqlite
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
-var sendEmail = require("root").sendEmail
 var STATUSES = ["followUp", "closed"]
 exports = module.exports = Router()
 
@@ -40,7 +40,7 @@ exports.get("/", next(function*(_req, res) {
 		SELECT COUNT(*) as count FROM signatures
 	`).then(_.first)
 
-	var subs = yield initiativeSubscriptionsDb.search(sql`
+	var subs = yield subscriptionsDb.search(sql`
 		SELECT *
 		FROM initiative_subscriptions
 		ORDER BY created_at DESC
@@ -127,7 +127,7 @@ exports.get("/initiatives/:id", next(function*(req, res) {
 		WHERE initiative_uuid = ${initiative.id}
 	`).then(_.first)
 
-	var messages = yield initiativeMessagesDb.search(sql`
+	var messages = yield messagesDb.search(sql`
 		SELECT * FROM initiative_messages
 		WHERE initiative_uuid = ${initiative.id}
 		ORDER BY created_at DESC
@@ -145,7 +145,7 @@ exports.get("/initiatives/:id", next(function*(req, res) {
 exports.get("/initiatives/:id/subscriptions.:ext?", next(function*(req, res) {
 	var initiative = req.initiative
 
-	var subs = yield initiativeSubscriptionsDb.search(sql`
+	var subs = yield subscriptionsDb.search(sql`
 		SELECT * FROM initiative_subscriptions
 		WHERE initiative_uuid = ${initiative.id}
 		ORDER BY created_at DESC
@@ -207,7 +207,7 @@ exports.post("/initiatives/:id/events", next(function*(req, res) {
 				updatedAt: new Date
 			}))
 
-			var message = yield initiativeMessagesDb.create({
+			var message = yield messagesDb.create({
 				__proto__: renderEventMessage(initiative, req.body),
 				initiative_uuid: initiative.id,
 				origin: "event",
@@ -215,8 +215,10 @@ exports.post("/initiatives/:id/events", next(function*(req, res) {
 				updated_at: new Date,
 			})
 
-			var subscriptions = yield searchConfirmedSubscriptions(initiative)
-			yield sendInitiativeMessageInBatches(message, subscriptions)
+			yield Subscription.send(
+				message,
+				yield subscriptionsDb.searchConfirmedByInitiativeId(initiative.id)
+			)
 
 			res.flash("notice", "Event created and message sent.")
 			res.redirect(req.baseUrl + "/initiatives/" + req.initiative.id)
@@ -270,7 +272,9 @@ exports.get("/initiatives/:id/messages/new", next(function*(req, res) {
 			})
 		},
 
-		subscriptions: yield searchConfirmedSubscriptions(initiative)
+		subscriptions: yield subscriptionsDb.searchConfirmedByInitiativeId(
+			initiative.id
+		)
 	})
 }))
 
@@ -280,7 +284,7 @@ exports.post("/initiatives/:id/messages", next(function*(req, res) {
 
 	switch (msg.action) {
 		case "send":
-			var message = yield initiativeMessagesDb.create({
+			var message = yield messagesDb.create({
 				initiative_uuid: initiative.id,
 				origin: "message",
 				title: msg.title,
@@ -289,8 +293,10 @@ exports.post("/initiatives/:id/messages", next(function*(req, res) {
 				updated_at: new Date,
 			})
 
-			var subscriptions = yield searchConfirmedSubscriptions(initiative)
-			yield sendInitiativeMessageInBatches(message, subscriptions)
+			yield Subscription.send(
+				message,
+				yield subscriptionsDb.searchConfirmedByInitiativeId(initiative.id)
+			)
 
 			res.flash("notice", "Message sent.")
 			res.redirect(req.baseUrl + "/initiatives/" + req.initiative.id)
@@ -311,7 +317,9 @@ exports.post("/initiatives/:id/messages", next(function*(req, res) {
 					text: I18n.interpolate(msg.text, {unsubscribeUrl: unsubscribeUrl})
 				},
 
-				subscriptions: yield searchConfirmedSubscriptions(initiative)
+				subscriptions: yield subscriptionsDb.searchConfirmedByInitiativeId(
+					initiative.id
+				)
 			})
 			break
 
@@ -320,7 +328,7 @@ exports.post("/initiatives/:id/messages", next(function*(req, res) {
 }))
 
 exports.get("/subscriptions", next(function*(_req, res) {
-	var subscriptions = yield initiativeSubscriptionsDb.search(sql`
+	var subscriptions = yield subscriptionsDb.search(sql`
 		SELECT *
 		FROM initiative_subscriptions
 		WHERE initiative_uuid IS NULL
@@ -392,60 +400,4 @@ function renderEventMessage(initiative, event) {
 			unsubscribeUrl: "{{unsubscribeUrl}}"
 		})
 	}
-}
-
-function searchConfirmedSubscriptions(initiative) {
-	return initiativeSubscriptionsDb.search(sql`
-		SELECT * FROM (
-			SELECT * FROM initiative_subscriptions
-			WHERE (initiative_uuid = ${initiative.id} OR initiative_uuid IS NULL)
-			AND confirmed_at IS NOT NULL
-			ORDER BY initiative_uuid IS NOT NULL, created_at DESC
-		)
-		GROUP BY email
-	`)
-}
-
-function* sendInitiativeMessageInBatches(message, subscriptions) {
-	for (
-		var i = 0, batches = _.chunk(subscriptions, 1000), sent = [];
-		i < batches.length;
-		++i
-	) {
-		yield sendInitiativeMessage(message, batches[i])
-		sent = sent.concat(batches[i].map((sub) => sub.email))
-
-		yield initiativeMessagesDb.update(message, {
-			updated_at: new Date,
-			sent_to: sent
-		})
-	}
-
-	yield initiativeMessagesDb.update(message, {
-		updated_at: new Date,
-		sent_at: new Date,
-	})
-}
-
-function sendInitiativeMessage(msg, subscriptions) {
-	if (subscriptions.length > 1000)
-		// https://documentation.mailgun.com/en/latest/user_manual.html
-		throw new RangeError("Batch sending max limit is 1000 recipients")
-
-	var recipients = _.fromEntries(subscriptions.map((sub) => [sub.email, {
-		unsubscribeUrl: sub.initiative_uuid
-			? `/initiatives/${sub.initiative_uuid}/subscriptions/${sub.update_token}`
-			: `/subscriptions/${sub.update_token}`
-	}]))
-
-	return sendEmail({
-		to: {name: "", address: "%recipient%"},
-		subject: msg.title,
-		headers: {"X-Mailgun-Recipient-Variables": JSON.stringify(recipients)},
-		envelope: {to: Object.keys(recipients)},
-
-		text: I18n.interpolate(msg.text, {
-			unsubscribeUrl: Config.url + "%recipient.unsubscribeUrl%"
-		})
-	})
 }

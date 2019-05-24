@@ -1,13 +1,12 @@
 var _ = require("root/lib/underscore")
 var Config = require("root/config")
-var concat = Array.prototype.concat.bind(Array.prototype)
 var sql = require("sqlate")
 var newUuid = require("uuid/v4")
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var pseudoInt = require("root/lib/crypto").pseudoInt
+var messagesDb = require("root/db/initiative_messages_db")
+var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var cosDb = require("root").cosDb
-var initiativeSubscriptionsDb = require("root/db/initiative_subscriptions_db")
-var initiativeMessagesDb = require("root/db/initiative_messages_db")
 var t = require("root/lib/i18n").t.bind(null, "et")
 
 describe("AdminController", function() {
@@ -69,14 +68,14 @@ describe("AdminController", function() {
 			})
 
 			it("must create message and send email", function*() {
-				var a = yield initiativeSubscriptionsDb.create({
+				var a = yield subscriptionsDb.create({
 					initiative_uuid: this.topic.id,
 					email: "john@example.com",
 					confirmed_at: new Date,
 					confirmation_token: "deadbeef"
 				})
 
-				var b = yield initiativeSubscriptionsDb.create({
+				var b = yield subscriptionsDb.create({
 					initiative_uuid: null,
 					email: "mike@example.com",
 					confirmed_at: new Date,
@@ -97,7 +96,7 @@ describe("AdminController", function() {
 
 				res.statusCode.must.equal(302)
 
-				var messages = yield initiativeMessagesDb.search(sql`
+				var messages = yield messagesDb.search(sql`
 					SELECT * FROM initiative_messages
 				`)
 
@@ -147,14 +146,14 @@ describe("AdminController", function() {
 
 		describe("with action=send", function() {
 			it("must create message and send email", function*() {
-				var a = yield initiativeSubscriptionsDb.create({
+				var a = yield subscriptionsDb.create({
 					initiative_uuid: this.topic.id,
 					email: "john@example.com",
 					confirmed_at: new Date,
 					confirmation_token: "deadbeef"
 				})
 
-				var b = yield initiativeSubscriptionsDb.create({
+				var b = yield subscriptionsDb.create({
 					initiative_uuid: null,
 					email: "mike@example.com",
 					confirmed_at: new Date,
@@ -175,7 +174,7 @@ describe("AdminController", function() {
 				res.statusCode.must.equal(302)
 				res.headers.location.must.equal(`/initiatives/${this.topic.id}`)
 
-				var messages = yield initiativeMessagesDb.search(sql`
+				var messages = yield messagesDb.search(sql`
 					SELECT * FROM initiative_messages
 				`)
 
@@ -201,52 +200,14 @@ describe("AdminController", function() {
 				)
 			})
 
-			it("must batch by 1000 recipients", function*() {
-				var attrs = _.times(1337, (i) => ({
-					initiative_uuid: this.topic.id,
-					email: `${i}@example.com`,
-					confirmed_at: new Date,
-					confirmation_token: String(i)
-				}))
-
-				var subscriptions = yield initiativeSubscriptionsDb.create(attrs) 
-				var emails = subscriptions.map((sub) => sub.email).sort()
-
-				var res = yield this.request(`/initiatives/${this.topic.id}/messages`, {
-					method: "POST",
-
-					form: {
-						_csrf_token: this.csrfToken,
-						action: "send",
-						title: "Initiative was updated",
-						text: "Go check it out"
-					}
-				})
-
-				res.statusCode.must.equal(302)
-				res.headers.location.must.equal(`/initiatives/${this.topic.id}`)
-
-				var messages = yield initiativeMessagesDb.search(sql`
-					SELECT * FROM initiative_messages
-				`)
-
-				messages.length.must.equal(1)
-				messages[0].sent_at.must.eql(new Date)
-				messages[0].sent_to.sort().must.eql(emails)
-
-				this.emails.length.must.equal(2)
-				var to = concat(this.emails[0].envelope.to, this.emails[1].envelope.to)
-				to.sort().must.eql(emails)
-			})
-
 			it("must not email the same subscriber twice", function*() {
-				var generic = yield initiativeSubscriptionsDb.create({
+				var generic = yield subscriptionsDb.create({
 					email: "user@example.com",
 					confirmed_at: new Date,
 					confirmation_token: "deadbeef"
 				})
 
-				var specific = yield initiativeSubscriptionsDb.create({
+				var specific = yield subscriptionsDb.create({
 					initiative_uuid: this.topic.id,
 					email: "user@example.com",
 					confirmed_at: new Date,
@@ -267,7 +228,7 @@ describe("AdminController", function() {
 				res.statusCode.must.equal(302)
 				res.headers.location.must.equal(`/initiatives/${this.topic.id}`)
 
-				var messages = yield initiativeMessagesDb.search(sql`
+				var messages = yield messagesDb.search(sql`
 					SELECT * FROM initiative_messages
 				`)
 
@@ -292,7 +253,7 @@ describe("AdminController", function() {
 			})
 
 			it("must not email subscribers of other initiatives", function*() {
-				yield initiativeSubscriptionsDb.create({
+				yield subscriptionsDb.create({
 					initiative_uuid: "20a431ac-d7fa-4469-af6f-0b914a76c9c7",
 					email: "user@example.com",
 					confirmed_at: new Date,
@@ -313,7 +274,7 @@ describe("AdminController", function() {
 				res.statusCode.must.equal(302)
 				res.headers.location.must.equal(`/initiatives/${this.topic.id}`)
 
-				var messages = yield initiativeMessagesDb.search(sql`
+				var messages = yield messagesDb.search(sql`
 					SELECT * FROM initiative_messages
 				`)
 
