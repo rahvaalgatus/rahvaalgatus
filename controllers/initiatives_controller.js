@@ -9,11 +9,13 @@ var Config = require("root/config")
 var MediaType = require("medium-type")
 var Sqlite = require("root/lib/sqlite")
 var Http = require("root/lib/http")
+var Subscription = require("root/lib/subscription")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
+var messagesDb = require("root/db/initiative_messages_db")
 var countSignatures = Initiative.countSignatures.bind(null, "Yes")
 var isOk = require("root/lib/http").isOk
 var cosDb = require("root").cosDb
@@ -23,6 +25,8 @@ var isFetchError = require("root/lib/fetch").is
 var next = require("co-next")
 var sleep = require("root/lib/promise").sleep
 var cosApi = require("root/lib/citizenos_api")
+var t = require("root/lib/i18n").t.bind(null, "et")
+var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var sql = require("sqlate")
 var parseCitizenInitiative = cosApi.parseCitizenInitiative
 var parseCitizenEvent = cosApi.parseCitizenEvent
@@ -325,6 +329,29 @@ exports.router.put("/:id", next(function*(req, res) {
 				yield initiativesDb.update(initiative.id, {
 					sent_to_parliament_at: new Date
 				})
+
+			var message = yield messagesDb.create({
+				initiative_uuid: initiative.id,
+				origin: "status",
+				created_at: new Date,
+				updated_at: new Date,
+
+				title: t("SENT_TO_PARLIAMENT_MESSAGE_TITLE", {
+					initiativeTitle: initiative.title
+				}),
+
+				text: renderEmail("SENT_TO_PARLIAMENT_MESSAGE_BODY", {
+					authorName: attrs.contact.name,
+					initiativeTitle: initiative.title,
+					initiativeUrl: `${Config.url}/initiatives/${initiative.id}`,
+					signatureCount: countSignatures(initiative)
+				})
+			})
+
+			yield Subscription.send(
+				message,
+				yield subscriptionsDb.searchConfirmedByInitiativeId(initiative.id)
+			)
 
 			res.flash("notice", req.t("SENT_TO_PARLIAMENT_CONTENT"))
 		}

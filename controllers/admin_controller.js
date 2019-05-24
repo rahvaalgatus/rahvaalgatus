@@ -2,7 +2,6 @@ var _ = require("root/lib/underscore")
 var Router = require("express").Router
 var Config = require("root/config")
 var HttpError = require("standard-http-error")
-var I18n = require("root/lib/i18n")
 var DateFns = require("date-fns")
 var Subscription = require("root/lib/subscription")
 var cosApi = require("root/lib/citizenos_api")
@@ -16,10 +15,10 @@ var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var parseCitizenInitiative = cosApi.parseCitizenInitiative
 var parseCitizenEvent = cosApi.parseCitizenEvent
 var newUuid = require("uuid/v4")
-var pseudoHex = require("root/lib/crypto").pseudoHex
 var sqlite = require("root").sqlite
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
+var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var STATUSES = ["followUp", "closed"]
 exports = module.exports = Router()
 
@@ -264,11 +263,9 @@ exports.get("/initiatives/:id/messages/new", next(function*(req, res) {
 				initiativeTitle: initiative.title,
 			}),
 
-			text: t("DEFAULT_INITIATIVE_SUBSCRIPTION_MESSAGE_BODY", {
+			text: renderEmail("DEFAULT_INITIATIVE_SUBSCRIPTION_MESSAGE_BODY", {
 				initiativeTitle: initiative.title,
-				initiativeUrl: `${Config.url}/initiatives/${initiative.id}`,
-				unsubscribeUrl: "{{unsubscribeUrl}}",
-				siteUrl: Config.url
+				initiativeUrl: `${Config.url}/initiatives/${initiative.id}`
 			})
 		},
 
@@ -303,9 +300,6 @@ exports.post("/initiatives/:id/messages", next(function*(req, res) {
 			break
 
 		case "preview":
-			var unsubscribeUrl= Config.url + "/initiatives/" + initiative.id
-			unsubscribeUrl += "/subscriptions/" + pseudoHex(8)
-
 			res.render("admin/initiatives/messages/create_page.jsx", {
 				message: {
 					title: msg.title,
@@ -314,7 +308,7 @@ exports.post("/initiatives/:id/messages", next(function*(req, res) {
 
 				preview: {
 					title: msg.title,
-					text: I18n.interpolate(msg.text, {unsubscribeUrl: unsubscribeUrl})
+					text: msg.text
 				},
 
 				subscriptions: yield subscriptionsDb.searchConfirmedByInitiativeId(
@@ -391,13 +385,11 @@ function renderEventMessage(initiative, event) {
 			initiativeTitle: initiative.title,
 		}),
 
-		text: t("DEFAULT_INITIATIVE_EVENT_MESSAGE_BODY", {
+		text: renderEmail("DEFAULT_INITIATIVE_EVENT_MESSAGE_BODY", {
 			title: event.title,
 			text: event.text,
 			initiativeTitle: initiative.title,
 			initiativeUrl: `${Config.url}/initiatives/${initiative.id}`,
-			siteUrl: Config.url,
-			unsubscribeUrl: "{{unsubscribeUrl}}"
 		})
 	}
 }

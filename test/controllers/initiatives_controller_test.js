@@ -8,6 +8,7 @@ var ValidDbInitiativeSubscription =
 	require("root/test/valid_db_initiative_subscription")
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
+var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var tHtml = _.compose(_.escapeHtml, t)
 var respond = require("root/test/fixtures").respond
 var concat = Array.prototype.concat.bind(Array.prototype)
@@ -16,6 +17,7 @@ var randomHex = require("root/lib/crypto").randomHex
 var sqlite = require("root").sqlite
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
+var messagesDb = require("root/db/initiative_messages_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var VOTES = require("root/config").votesRequired
@@ -110,6 +112,7 @@ describe("InitiativesController", function() {
 	require("root/test/web")()
 	require("root/test/mitm")()
 	require("root/test/db")()
+	require("root/test/email")()
 	beforeEach(require("root/test/mitm").router)
 
 	describe("GET /", function() {
@@ -634,6 +637,75 @@ describe("InitiativesController", function() {
 							sent_to_parliament_at: new Date().toISOString()
 						})
 					])
+				})
+
+				it("must email subscribers", function*() {
+					this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
+						data: _.assign({}, SUCCESSFUL_INITIATIVE, {
+							permission: {level: "admin"}
+						})
+					}))
+
+					this.router.put(`/api/users/self/topics/${UUID}`, endResponse)
+
+					var subscriptions = yield subscriptionsDb.create([
+						new ValidDbInitiativeSubscription({
+							initiative_uuid: UUID,
+							confirmed_at: new Date
+						}),
+
+						new ValidDbInitiativeSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date
+						})
+					])
+
+					var res = yield this.request(`/initiatives/${UUID}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "followUp",
+							"contact[name]": "John",
+							"contact[email]": "john@example.com",
+							"contact[phone]": "42"
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					var messages = yield messagesDb.search(sql`
+						SELECT * FROM initiative_messages
+					`)
+
+					var emails = subscriptions.map((s) => s.email).sort()
+
+					messages.must.eql([{
+						id: messages[0].id,
+						initiative_uuid: UUID,
+						created_at: new Date,
+						updated_at: new Date,
+						origin: "status",
+
+						title: t("SENT_TO_PARLIAMENT_MESSAGE_TITLE", {
+							initiativeTitle: INITIATIVE.title
+						}),
+
+						text: renderEmail("SENT_TO_PARLIAMENT_MESSAGE_BODY", {
+							authorName: "John",
+							initiativeTitle: INITIATIVE.title,
+							initiativeUrl: `${Config.url}/initiatives/${UUID}`,
+							signatureCount: 2
+						}),
+
+						sent_at: new Date,
+						sent_to: emails
+					}])
+
+					this.emails.length.must.equal(1)
+					this.emails[0].envelope.to.must.eql(emails)
+					var msg = String(this.emails[0].message)
+					msg.match(/^Subject: .*/m)[0].must.include(INITIATIVE.title)
+					subscriptions.forEach((s) => msg.must.include(s.update_token))
 				})
 			})
 

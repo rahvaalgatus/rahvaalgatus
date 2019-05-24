@@ -151,14 +151,10 @@ function Page(attrs, children) {
 						{Jsx.html(t("FOOTER_PHONE"))}
 
 						<br />
-						Facebook: <a href="https://www.facebook.com/rahvaalgatus">
-							fb.me/rahvaalgatus
-						</a>
+						Facebook: <a href={Config.facebookUrl}>fb.me/rahvaalgatus</a>
 
 						<br />
-						Twitter: <a href="https://twitter.com/rahvaalgatus">
-							@rahvaalgatus
-						</a>
+						Twitter: <a href={Config.twitterUrl}>@rahvaalgatus</a>
 					</p>
 				</div>
 				<div class="logos">
