@@ -12,9 +12,9 @@ var Http = require("root/lib/http")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
 var initiativesDb = require("root/db/initiatives_db")
-var initiativeSubscriptionsDb = require("root/db/initiative_subscriptions_db")
-var initiativeSignaturesDb = require("root/db/initiative_signatures_db")
-var countVotes = Initiative.countSignatures.bind(null, "Yes")
+var subscriptionsDb = require("root/db/initiative_subscriptions_db")
+var signaturesDb = require("root/db/initiative_signatures_db")
+var countSignatures = Initiative.countSignatures.bind(null, "Yes")
 var isOk = require("root/lib/http").isOk
 var cosDb = require("root").cosDb
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
@@ -75,7 +75,7 @@ exports.router.get("/", next(function*(req, res) {
 			sortByCreatedAt((closed.inProgress || EMPTY_ARR).filter(hasMainPartnerId))
 		),
 
-		votings: _.sortBy(votings, countVotes).reverse(),
+		votings: _.sortBy(votings, countSignatures).reverse(),
 
 		processes: _.sortBy(initiatives.followUp, function(initiative) {
 			var dbInitiative = dbInitiatives[initiative.id]
@@ -163,7 +163,7 @@ exports.router.get("/:id",
 
 			res.send({
 				title: initiative.title,
-				signatureCount: initiative.vote ? countVotes(initiative) : 0
+				signatureCount: initiative.vote ? countSignatures(initiative) : 0
 			})
 			break
 
@@ -182,7 +182,7 @@ exports.read = next(function*(req, res) {
 		hidden: false
 	}
 	else if (user && Initiative.hasVote("Yes", initiative)) signature = (
-		(yield initiativeSignaturesDb.read(sql`
+		(yield signaturesDb.read(sql`
 			SELECT * FROM initiative_signatures
 			WHERE (initiative_uuid, user_uuid) = (${initiative.id}, ${user.id})
 		`)) || {
@@ -445,18 +445,18 @@ exports.router.put("/:id/signature", next(function*(req, res) {
 	if (user == null) throw new HttpError(401)
 
 	if (Initiative.hasVote("Yes", initiative)) {
-		var signature = yield initiativeSignaturesDb.read(sql`
+		var signature = yield signaturesDb.read(sql`
 			SELECT * FROM initiative_signatures
 			WHERE (initiative_uuid, user_uuid) = (${initiative.id}, ${user.id})
 		`)
 
-		if (!signature) yield initiativeSignaturesDb.create({
+		if (!signature) yield signaturesDb.create({
 			initiative_uuid: initiative.id,
 			user_uuid: user.id,
 			hidden: true,
 			updated_at: new Date
 		})
-		else if (!signature.hidden) yield initiativeSignaturesDb.execute(sql`
+		else if (!signature.hidden) yield signaturesDb.execute(sql`
 			UPDATE initiative_signatures
 			SET hidden = 1, updated_at = ${new Date}
 			WHERE (initiative_uuid, user_uuid) = (${initiative.id}, ${user.id})
@@ -514,7 +514,7 @@ exports.router.post("/:id/subscriptions", next(function*(req, res) {
 
 	var subscription
 	try {
-		subscription = yield initiativeSubscriptionsDb.create({
+		subscription = yield subscriptionsDb.create({
 			initiative_uuid: initiative.id,
 			email: email,
 			confirmation_token: randomHex(8),
@@ -525,7 +525,7 @@ exports.router.post("/:id/subscriptions", next(function*(req, res) {
 	}
 	catch (ex) {
 		if (Sqlite.isUniqueError(ex))
-			subscription = yield initiativeSubscriptionsDb.read(sql`
+			subscription = yield subscriptionsDb.read(sql`
 				SELECT * FROM initiative_subscriptions
 				WHERE (initiative_uuid, email) = (${initiative.id}, ${email})
 			`)
@@ -557,7 +557,7 @@ exports.router.post("/:id/subscriptions", next(function*(req, res) {
 			})
 		})
 
-		yield initiativeSubscriptionsDb.update(subscription, {
+		yield subscriptionsDb.update(subscription, {
 			confirmation_sent_at: new Date,
 			updated_at: new Date
 		})
@@ -570,7 +570,7 @@ exports.router.post("/:id/subscriptions", next(function*(req, res) {
 exports.router.get("/:id/subscriptions/new", next(function*(req, res, next) {
 	var initiative = req.initiative
 
-	var subscription = yield initiativeSubscriptionsDb.read(sql`
+	var subscription = yield subscriptionsDb.read(sql`
 		SELECT * FROM initiative_subscriptions
 		WHERE initiative_uuid = ${initiative.id}
 		AND confirmation_token = ${req.query.confirmation_token}
@@ -579,7 +579,7 @@ exports.router.get("/:id/subscriptions/new", next(function*(req, res, next) {
 
 	if (subscription) {
 		if (!subscription.confirmed_at)
-			yield initiativeSubscriptionsDb.update(subscription, {
+			yield subscriptionsDb.update(subscription, {
 				confirmed_at: new Date,
 				confirmation_sent_at: null,
 				updated_at: new Date
@@ -599,7 +599,7 @@ exports.router.get("/:id/subscriptions/new", next(function*(req, res, next) {
 }))
 
 exports.router.use("/:id/subscriptions/:token", next(function*(req, res, next) {
-	req.subscription = yield initiativeSubscriptionsDb.read(sql`
+	req.subscription = yield subscriptionsDb.read(sql`
 		SELECT * FROM initiative_subscriptions
 		WHERE initiative_uuid = ${req.initiative.id}
 		AND update_token = ${req.params.token}
@@ -626,7 +626,7 @@ exports.router.delete("/:id/subscriptions/:token", next(function*(req, res) {
 	var initiative = req.initiative
 	var subscription = req.subscription
 
-	yield initiativeSubscriptionsDb.execute(sql`
+	yield subscriptionsDb.execute(sql`
 		DELETE FROM initiative_subscriptions
 		WHERE initiative_uuid = ${initiative.id}
 		AND update_token = ${subscription.update_token}
@@ -691,7 +691,7 @@ function parseUserIdFromBdocUrl(url) {
 }
 
 function unhideSignature(initiativeId, userId) {
-	return initiativeSignaturesDb.execute(sql`
+	return signaturesDb.execute(sql`
 		UPDATE initiative_signatures
 		SET hidden = 0, updated_at = ${new Date}
 		WHERE (initiative_uuid, user_uuid) = (${initiativeId}, ${userId})
