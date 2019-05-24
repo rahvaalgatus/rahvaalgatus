@@ -15,8 +15,8 @@ var encodeBase64 = require("root/lib/crypto").encodeBase64
 var randomHex = require("root/lib/crypto").randomHex
 var sqlite = require("root").sqlite
 var initiativesDb = require("root/db/initiatives_db")
-var initiativeSubscriptionsDb = require("root/db/initiative_subscriptions_db")
-var initiativeSignaturesDb = require("root/db/initiative_signatures_db")
+var subscriptionsDb = require("root/db/initiative_subscriptions_db")
+var signaturesDb = require("root/db/initiative_signatures_db")
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var VOTES = require("root/config").votesRequired
 var PARTNER_ID = Config.apiPartnerId
@@ -431,7 +431,7 @@ describe("InitiativesController", function() {
 				this.router.get(`/api/users/self/topics/${UUID}/comments`,
 					respond.bind(null, EMPTY_RES))
 
-				yield initiativeSignaturesDb.create({
+				yield signaturesDb.create({
 					initiative_uuid: UUID,
 					user_uuid: this.user.id,
 					hidden: true
@@ -474,159 +474,167 @@ describe("InitiativesController", function() {
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
 
-			it("must render update visibility page", function*() {
-				this.router.get(`/api/users/self/topics/${UUID}`,
-					respond.bind(null, {data: PRIVATE_DISCUSSION}))
+			describe("given visibility=public", function() {
+				it("must render update visibility page", function*() {
+					this.router.get(`/api/users/self/topics/${UUID}`,
+						respond.bind(null, {data: PRIVATE_DISCUSSION}))
 
-				var res = yield this.request("/initiatives/" + UUID, {
-					method: "PUT",
-					form: {_csrf_token: this.csrfToken, visibility: "public"}
-				})
-
-				res.statusCode.must.equal(200)
-			})
-
-			it("must update visibility and set discussion end time", function*() {
-				this.router.get(`/api/users/self/topics/${UUID}`,
-					respond.bind(null, {data: PRIVATE_DISCUSSION}))
-
-				var today = DateFns.startOfDay(new Date)
-				var endsAt = DateFns.endOfDay(DateFns.addDays(today, 5))
-
-				var updated = 0
-				this.router.put(`/api/users/self/topics/${UUID}`, function(req, res) {
-					++updated
-					req.body.must.eql({visibility: "public", endsAt: endsAt.toJSON()})
-					res.end()
-				})
-
-				var res = yield this.request(`/initiatives/${UUID}`, {
-					method: "PUT",
-					form: {
-						_csrf_token: this.csrfToken,
-						visibility: "public",
-						endsAt: endsAt.toJSON().slice(0, 10)
-					}
-				})
-
-				updated.must.equal(1)
-				res.statusCode.must.equal(303)
-				res.headers.location.must.equal(`/initiatives/${UUID}`)
-			})
-
-			it("must clear end email when setting discussion end time", function*() {
-				var dbInitiative = yield initiativesDb.create({
-					uuid: UUID,
-					discussion_end_email_sent_at: new Date
-				})
-
-				this.router.get(`/api/users/self/topics/${UUID}`,
-					respond.bind(null, {data: EDITABLE_DISCUSSION}))
-
-				this.router.put(`/api/users/self/topics/${UUID}`, endResponse)
-
-				var res = yield this.request(`/initiatives/${UUID}`, {
-					method: "PUT",
-					form: {
-						_csrf_token: this.csrfToken,
-						visibility: "public",
-						endsAt: new Date().toJSON().slice(0, 10)
-					}
-				})
-
-				res.statusCode.must.equal(303)
-
-				yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
-					_.defaults({discussion_end_email_sent_at: null}, dbInitiative)
-				])
-			})
-
-			it("must render update status for voting page", function*() {
-				this.router.get(`/api/users/self/topics/${UUID}`,
-					respond.bind(null, {data: EDITABLE_DISCUSSION}))
-
-				var res = yield this.request("/initiatives/" + UUID, {
-					method: "PUT",
-					form: {_csrf_token: this.csrfToken, status: "voting"}
-				})
-
-				res.statusCode.must.equal(200)
-			})
-
-			it("must clear end email when setting signing end time", function*() {
-				var dbInitiative = yield initiativesDb.create({
-					uuid: UUID,
-					discussion_end_email_sent_at: new Date,
-					signing_end_email_sent_at: new Date
-				})
-
-				this.router.get(`/api/users/self/topics/${UUID}`,
-					respond.bind(null, {data: EDITABLE_INITIATIVE}))
-
-				var path = `/api/users/self/topics/${UUID}`
-				path += `/votes/${EDITABLE_INITIATIVE.vote.id}`
-				this.router.put(path, endResponse)
-
-				var res = yield this.request(`/initiatives/${UUID}`, {
-					method: "PUT",
-					form: {
-						_csrf_token: this.csrfToken,
-						status: "voting",
-						endsAt: new Date().toJSON().slice(0, 10)
-					}
-				})
-
-				res.statusCode.must.equal(303)
-
-				yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
-					_.defaults({signing_end_email_sent_at: null}, dbInitiative)
-				])
-			})
-
-			it("must update status to followUp", function*() {
-				this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
-					data: {
-						id: UUID,
-						status: "voting",
-						description: "<body><h1>My thoughts.</h1></body>",
-						creator: {name: "John"},
-						permission: {level: "admin"},
-						vote: {options: {rows: [{value: "Yes", voteCount: VOTES}]}}
-					}
-				}))
-
-				var updated = 0
-				this.router.put(`/api/users/self/topics/${UUID}`, function(req, res) {
-					++updated
-					req.body.must.eql({
-						status: "followUp",
-						contact: {name: "John", email: "john@example.com", phone: "42"}
-
+					var res = yield this.request("/initiatives/" + UUID, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, visibility: "public"}
 					})
-					res.end()
+
+					res.statusCode.must.equal(200)
 				})
 
-				var res = yield this.request(`/initiatives/${UUID}`, {
-					method: "PUT",
-					form: {
-						_csrf_token: this.csrfToken,
-						status: "followUp",
-						"contact[name]": "John",
-						"contact[email]": "john@example.com",
-						"contact[phone]": "42"
-					}
+				it("must update visibility and set discussion end time", function*() {
+					this.router.get(`/api/users/self/topics/${UUID}`,
+						respond.bind(null, {data: PRIVATE_DISCUSSION}))
+
+					var today = DateFns.startOfDay(new Date)
+					var endsAt = DateFns.endOfDay(DateFns.addDays(today, 5))
+
+					var updated = 0
+					this.router.put(`/api/users/self/topics/${UUID}`, function(req, res) {
+						++updated
+						req.body.must.eql({visibility: "public", endsAt: endsAt.toJSON()})
+						res.end()
+					})
+
+					var res = yield this.request(`/initiatives/${UUID}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							visibility: "public",
+							endsAt: endsAt.toJSON().slice(0, 10)
+						}
+					})
+
+					updated.must.equal(1)
+					res.statusCode.must.equal(303)
+					res.headers.location.must.equal(`/initiatives/${UUID}`)
 				})
 
-				updated.must.equal(1)
-				res.statusCode.must.equal(303)
-				res.headers.location.must.equal(`/initiatives/${UUID}`)
-
-				yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
-					new ValidDbInitiative({
+				it("must clear end email when setting discussion end time",
+					function*() {
+					var dbInitiative = yield initiativesDb.create({
 						uuid: UUID,
-						sent_to_parliament_at: new Date().toISOString()
+						discussion_end_email_sent_at: new Date
 					})
-				])
+
+					this.router.get(`/api/users/self/topics/${UUID}`,
+						respond.bind(null, {data: EDITABLE_DISCUSSION}))
+
+					this.router.put(`/api/users/self/topics/${UUID}`, endResponse)
+
+					var res = yield this.request(`/initiatives/${UUID}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							visibility: "public",
+							endsAt: new Date().toJSON().slice(0, 10)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
+						_.defaults({discussion_end_email_sent_at: null}, dbInitiative)
+					])
+				})
+			})
+
+
+			describe("given status=voting", function() {
+				it("must render update status for voting page", function*() {
+					this.router.get(`/api/users/self/topics/${UUID}`,
+						respond.bind(null, {data: EDITABLE_DISCUSSION}))
+
+					var res = yield this.request("/initiatives/" + UUID, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, status: "voting"}
+					})
+
+					res.statusCode.must.equal(200)
+				})
+
+				it("must clear end email when setting signing end time", function*() {
+					var dbInitiative = yield initiativesDb.create({
+						uuid: UUID,
+						discussion_end_email_sent_at: new Date,
+						signing_end_email_sent_at: new Date
+					})
+
+					this.router.get(`/api/users/self/topics/${UUID}`,
+						respond.bind(null, {data: EDITABLE_INITIATIVE}))
+
+					var path = `/api/users/self/topics/${UUID}`
+					path += `/votes/${EDITABLE_INITIATIVE.vote.id}`
+					this.router.put(path, endResponse)
+
+					var res = yield this.request(`/initiatives/${UUID}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "voting",
+							endsAt: new Date().toJSON().slice(0, 10)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
+						_.defaults({signing_end_email_sent_at: null}, dbInitiative)
+					])
+				})
+			})
+
+			describe("given status=followUp", function() {
+				it("must update status to followUp", function*() {
+					this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
+						data: {
+							id: UUID,
+							status: "voting",
+							description: "<body><h1>My thoughts.</h1></body>",
+							creator: {name: "John"},
+							permission: {level: "admin"},
+							vote: {options: {rows: [{value: "Yes", voteCount: VOTES}]}}
+						}
+					}))
+
+					var updated = 0
+					this.router.put(`/api/users/self/topics/${UUID}`, function(req, res) {
+						++updated
+						req.body.must.eql({
+							status: "followUp",
+							contact: {name: "John", email: "john@example.com", phone: "42"}
+
+						})
+						res.end()
+					})
+
+					var res = yield this.request(`/initiatives/${UUID}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "followUp",
+							"contact[name]": "John",
+							"contact[email]": "john@example.com",
+							"contact[phone]": "42"
+						}
+					})
+
+					updated.must.equal(1)
+					res.statusCode.must.equal(303)
+					res.headers.location.must.equal(`/initiatives/${UUID}`)
+
+					yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
+						new ValidDbInitiative({
+							uuid: UUID,
+							sent_to_parliament_at: new Date().toISOString()
+						})
+					])
+				})
 			})
 
 			describe("given notes", function() {
@@ -735,7 +743,7 @@ describe("InitiativesController", function() {
 					respond.bind(null, {data: {bdocUri: BDOC_URL}})
 				)
 
-				var signature = yield initiativeSignaturesDb.create({
+				var signature = yield signaturesDb.create({
 					initiative_uuid: UUID,
 					user_uuid: USER_ID,
 					hidden: true
@@ -751,7 +759,7 @@ describe("InitiativesController", function() {
 					}
 				})
 
-				yield initiativeSignaturesDb.search(sql`
+				yield signaturesDb.search(sql`
 					SELECT * FROM initiative_signatures
 				`).must.then.eql([{
 					__proto__: signature,
@@ -770,7 +778,7 @@ describe("InitiativesController", function() {
 					respond.bind(null, {data: {bdocUri: BDOC_URL}})
 				)
 
-				var signature = yield initiativeSignaturesDb.create({
+				var signature = yield signaturesDb.create({
 					initiative_uuid: "5a1f604a-fedc-496c-9e21-ef0b9e971861",
 					user_uuid: USER_ID,
 					hidden: true
@@ -786,7 +794,7 @@ describe("InitiativesController", function() {
 					}
 				})
 
-				yield initiativeSignaturesDb.search(sql`
+				yield signaturesDb.search(sql`
 					SELECT * FROM initiative_signatures
 				`).must.then.eql([signature])
 
@@ -801,7 +809,7 @@ describe("InitiativesController", function() {
 					respond.bind(null, {data: {bdocUri: BDOC_URL}})
 				)
 
-				var signature = yield initiativeSignaturesDb.create({
+				var signature = yield signaturesDb.create({
 					initiative_uuid: UUID,
 					user_uuid: "93a13041-c015-431e-b8dd-302e9e4b3d5d",
 					hidden: true
@@ -817,7 +825,7 @@ describe("InitiativesController", function() {
 					}
 				})
 
-				yield initiativeSignaturesDb.search(sql`
+				yield signaturesDb.search(sql`
 					SELECT * FROM initiative_signatures
 				`).must.then.eql([signature])
 
@@ -932,7 +940,7 @@ describe("InitiativesController", function() {
 					form: {_csrf_token: this.csrfToken, hidden: true}
 				})
 
-				yield initiativeSignaturesDb.search(sql`
+				yield signaturesDb.search(sql`
 					SELECT * FROM initiative_signatures
 				`).must.then.be.empty()
 
@@ -951,7 +959,7 @@ describe("InitiativesController", function() {
 					form: {_csrf_token: this.csrfToken, hidden: true}
 				})
 
-				yield initiativeSignaturesDb.search(sql`
+				yield signaturesDb.search(sql`
 					SELECT * FROM initiative_signatures
 				`).must.then.eql([{
 					initiative_uuid: UUID,
@@ -970,7 +978,7 @@ describe("InitiativesController", function() {
 
 				var user = this.user
 
-				var signature = yield initiativeSignaturesDb.create({
+				var signature = yield signaturesDb.create({
 					initiative_uuid: UUID,
 					user_uuid: user.id,
 					hidden: false
@@ -981,7 +989,7 @@ describe("InitiativesController", function() {
 					form: {_csrf_token: this.csrfToken, hidden: true}
 				})
 
-				yield initiativeSignaturesDb.search(sql`
+				yield signaturesDb.search(sql`
 					SELECT * FROM initiative_signatures
 				`).must.then.eql([{
 					__proto__: signature,
@@ -999,7 +1007,7 @@ describe("InitiativesController", function() {
 
 				var user = this.user
 
-				yield initiativeSignaturesDb.create({
+				yield signaturesDb.create({
 					initiative_uuid: UUID,
 					user_uuid: user.id,
 					hidden: true
@@ -1010,7 +1018,7 @@ describe("InitiativesController", function() {
 					form: {_csrf_token: this.csrfToken, hidden: true}
 				})
 
-				var signature = yield initiativeSignaturesDb.read(sql`
+				var signature = yield signaturesDb.read(sql`
 					SELECT * FROM initiative_signatures
 					WHERE (initiative_uuid, user_uuid) = (${INITIATIVE.id}, ${user.id})
 				`)
@@ -1039,7 +1047,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/initiatives/" + UUID)
 
-			var subscriptions = yield initiativeSubscriptionsDb.search(sql`
+			var subscriptions = yield subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
 			`)
 
@@ -1081,7 +1089,7 @@ describe("InitiativesController", function() {
 				confirmed_at: createdAt
 			})
 
-			yield initiativeSubscriptionsDb.create(subscription)
+			yield subscriptionsDb.create(subscription)
 
 			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
 				method: "POST",
@@ -1091,7 +1099,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/initiatives/" + UUID)
 
-			yield initiativeSubscriptionsDb.search(sql`
+			yield subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
 			`).must.then.eql([subscription])
 
@@ -1110,7 +1118,7 @@ describe("InitiativesController", function() {
 
 			res.statusCode.must.equal(303)
 
-			var subscription = yield initiativeSubscriptionsDb.search(sql`
+			var subscription = yield subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
 			`).then(_.first)
 
@@ -1122,7 +1130,7 @@ describe("InitiativesController", function() {
 
 			res.statusCode.must.equal(303)
 
-			yield initiativeSubscriptionsDb.search(sql`
+			yield subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
 			`).must.then.eql([subscription])
 
@@ -1140,7 +1148,7 @@ describe("InitiativesController", function() {
 
 			res.statusCode.must.equal(303)
 
-			var subscription = yield initiativeSubscriptionsDb.search(sql`
+			var subscription = yield subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
 			`).then(_.first)
 
@@ -1152,7 +1160,7 @@ describe("InitiativesController", function() {
 
 			res.statusCode.must.equal(303)
 
-			yield initiativeSubscriptionsDb.search(sql`
+			yield subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
 			`).must.then.eql([{
 				__proto__: subscription,
@@ -1221,7 +1229,7 @@ describe("InitiativesController", function() {
 				confirmation_sent_at: createdAt
 			})
 
-			yield initiativeSubscriptionsDb.create(subscription)
+			yield subscriptionsDb.create(subscription)
 
 			var res = yield this.request(
 				`/initiatives/${UUID}/subscriptions/new?confirmation_token=${token}`
@@ -1230,7 +1238,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/initiatives/" + UUID)
 
-			yield initiativeSubscriptionsDb.read(token).must.then.eql({
+			yield subscriptionsDb.read(token).must.then.eql({
 				__proto__: subscription,
 				confirmed_at: new Date,
 				confirmation_sent_at: null,
@@ -1253,7 +1261,7 @@ describe("InitiativesController", function() {
 				confirmation_token: token
 			})
 
-			yield initiativeSubscriptionsDb.create(subscription)
+			yield subscriptionsDb.create(subscription)
 
 			var res = yield this.request(
 				`/initiatives/${UUID}/subscriptions/new?confirmation_token=${token}`
@@ -1261,7 +1269,7 @@ describe("InitiativesController", function() {
 
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/initiatives/" + UUID)
-			yield initiativeSubscriptionsDb.read(token).must.then.eql(subscription)
+			yield subscriptionsDb.read(token).must.then.eql(subscription)
 		})
 
 		it("must not confirm given the wrong token", function*() {
@@ -1281,14 +1289,14 @@ describe("InitiativesController", function() {
 				confirmation_sent_at: createdAt
 			})
 
-			yield initiativeSubscriptionsDb.create(subscription)
+			yield subscriptionsDb.create(subscription)
 
 			var res = yield this.request(
 				`/initiatives/${UUID}/subscriptions/new?confirmation_token=deadbeef`
 			)
 
 			res.statusCode.must.equal(404)
-			yield initiativeSubscriptionsDb.read(token).must.then.eql(subscription)
+			yield subscriptionsDb.read(token).must.then.eql(subscription)
 		})
 	})
 
@@ -1304,7 +1312,7 @@ describe("InitiativesController", function() {
 				confirmed_at: new Date
 			})
 
-			yield initiativeSubscriptionsDb.create(subscription)
+			yield subscriptionsDb.create(subscription)
 
 			var res = yield this.request(
 				`/initiatives/${UUID}/subscriptions/${subscription.update_token}`
@@ -1319,7 +1327,7 @@ describe("InitiativesController", function() {
 				respond.bind(null, {data: INITIATIVE}))
 
 			// Still have a single subscription to ensure it's not picking randomly.
-			yield initiativeSubscriptionsDb.create(new ValidDbInitiativeSubscription({
+			yield subscriptionsDb.create(new ValidDbInitiativeSubscription({
 				initiative_uuid: UUID,
 				confirmed_at: new Date
 			}))
@@ -1342,7 +1350,7 @@ describe("InitiativesController", function() {
 				confirmed_at: new Date
 			})
 
-			yield initiativeSubscriptionsDb.create(subscription)
+			yield subscriptionsDb.create(subscription)
 
 			var res = yield this.request(
 				`/initiatives/${UUID}/subscriptions/${subscription.update_token}`, {
@@ -1353,7 +1361,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/initiatives/" + UUID)
 
-			yield initiativeSubscriptionsDb.search(sql`
+			yield subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
 			`).must.then.be.empty()
 		})
@@ -1368,7 +1376,7 @@ describe("InitiativesController", function() {
 				confirmed_at: new Date
 			})
 
-			yield initiativeSubscriptionsDb.create(subscription)
+			yield subscriptionsDb.create(subscription)
 
 			var res = yield this.request(
 				`/initiatives/${UUID}/subscriptions/deadbeef`, {
@@ -1379,7 +1387,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(404)
 			res.body.must.include(t("SUBSCRIPTION_NOT_FOUND_TITLE"))
 
-			yield initiativeSubscriptionsDb.search(sql`
+			yield subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
 			`).must.then.eql([subscription])
 		})
@@ -1398,7 +1406,7 @@ describe("InitiativesController", function() {
 				confirmed_at: new Date,
 			})
 
-			yield initiativeSubscriptionsDb.create([other, subscription])
+			yield subscriptionsDb.create([other, subscription])
 
 			var res = yield this.request(
 				`/initiatives/${UUID}/subscriptions/${subscription.update_token}`, {
@@ -1409,7 +1417,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/initiatives/" + UUID)
 
-			yield initiativeSubscriptionsDb.search(sql`
+			yield subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
 			`).must.then.eql([other])
 		})
