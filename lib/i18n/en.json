@@ -49,6 +49,7 @@
 	"INITIATIVE_IN_PARLIAMENT": "Initiative is in the parliament",
 	"INITIATIVE_LIST": "In voting",
 	"INITIATIVE_PROCESSED": "Initiative proceedings have finished.",
+	"INITIATIVE_SUBSCRIBER_COUNT": "<strong>{{count}}</strong> people subscribed already.",
 	"INVALID_EMAIL": "Email seems invalid.",
 	"INVALID_FORM": "Sorry, but there seems to be a mistake",
 	"INVITE_PEOPLE": "Add Co-authors",

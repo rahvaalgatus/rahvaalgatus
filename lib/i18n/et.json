@@ -77,6 +77,7 @@
 	"INITIATIVE_IN_PARLIAMENT": "Algatus on Riigikogus.",
 	"INITIATIVE_LIST": "Hääletamisel",
 	"INITIATIVE_PROCESSED": "Algatuse menetlus Riigikogus on lõppenud.",
+	"INITIATIVE_SUBSCRIBER_COUNT": "Algatust jälgib juba <strong>{{count}}</strong> inimest.",
 	"INITIATIVE_SUBSCRIPTION_DELETED": "Teavituse tellimine on lõpetatud.",
 	"INVALID_EMAIL": "Meiliaadress ei paista õige.",
 	"INVALID_FORM": "Vormis tundub olevat viga",

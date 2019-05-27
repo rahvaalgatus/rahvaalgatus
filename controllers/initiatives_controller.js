@@ -18,6 +18,7 @@ var signaturesDb = require("root/db/initiative_signatures_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var countSignatures = Initiative.countSignatures.bind(null, "Yes")
 var isOk = require("root/lib/http").isOk
+var sqlite = require("root").sqlite
 var cosDb = require("root").cosDb
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
 var catch401 = require("root/lib/fetch").catch.bind(null, 401)
@@ -197,6 +198,13 @@ exports.read = next(function*(req, res) {
 
 	if (signature && signature.hidden) signature = null
 
+	var subscriberCount = yield sqlite(sql`
+		SELECT COUNT(*) AS count
+		FROM initiative_subscriptions
+		WHERE (initiative_uuid = ${initiative.id} OR initiative_uuid IS NULL)
+		AND confirmed_at IS NOT NULL
+	`).then(_.first).then((row) => row.count)
+
 	var commentsPath = `/api/topics/${initiative.id}/comments?orderBy=date`
 	if (req.user) commentsPath = "/api/users/self" + commentsPath.slice(4)
 	var comments = yield req.cosApi(commentsPath)
@@ -206,6 +214,7 @@ exports.read = next(function*(req, res) {
 
 	res.render("initiatives/read_page.jsx", {
 		signature: signature,
+		subscriberCount: subscriberCount,
 		comments: comments,
 		comment: res.locals.comment || EMPTY_COMMENT,
 		events: events

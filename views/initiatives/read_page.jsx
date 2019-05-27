@@ -35,6 +35,7 @@ function ReadPage(attrs) {
 	var events = attrs.events
 	var initiative = attrs.initiative
 	var dbInitiative = attrs.dbInitiative
+	var subscriberCount = attrs.subscriberCount
 
 	var now = new Date
 	var opt = signature ? "No" : "Yes"
@@ -372,7 +373,12 @@ function ReadPage(attrs) {
 					<p class="text">{Jsx.html(linkify(dbInitiative.notes))}</p>
 				</div> : null}
 
-				<InitiativeSubscribeView req={req} initiative={initiative} t={t} />
+				<InitiativeSubscribeView
+					req={req}
+					initiative={initiative}
+					count={subscriberCount}
+					t={t}
+				/>
 
 				{Initiative.isPublic(initiative) ? <Fragment>
 					<a
@@ -607,6 +613,7 @@ function InitiativeSubscribeView(attrs) {
 	var t = attrs.t
 	var req = attrs.req
 	var initiative = attrs.initiative
+	var count = attrs.count
 
 	if (!Initiative.isPublic(initiative)) return null
 
@@ -627,6 +634,7 @@ function InitiativeSubscribeView(attrs) {
 		/>
 
 		<button type="submit" class="secondary-button">{t("BTN_SUBSCRIBE")}</button>
+		<p>{Jsx.html(t("INITIATIVE_SUBSCRIBER_COUNT", {count: count}))}</p>
 	</Form>
 }
 
