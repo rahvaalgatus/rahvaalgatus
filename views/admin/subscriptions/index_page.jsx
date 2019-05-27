@@ -3,7 +3,7 @@ var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var Page = require("../page")
-var formatTime = require("root/lib/i18n").formatTime
+var formatDateTime = require("root/lib/i18n").formatDateTime
 exports = module.exports = IndexPage
 exports.SubscriptionsView = SubscriptionsView
 
@@ -44,10 +44,10 @@ function SubscriptionsView(attrs) {
 
 		<tbody>{subscriptions.map(function(subscription) {
 			return <tr>
-				<td>{formatTime("numeric", subscription.created_at)}</td>
+				<td>{formatDateTime("numeric", subscription.created_at)}</td>
 
 				<td>{subscription.confirmed_at
-					? formatTime("numeric", subscription.confirmed_at)
+					? formatDateTime("numeric", subscription.confirmed_at)
 					: null
 				}</td>
 

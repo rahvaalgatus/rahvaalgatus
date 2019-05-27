@@ -1,5 +1,5 @@
 var formatDate = require("root/lib/i18n").formatDate
-var formatTime = require("root/lib/i18n").formatTime
+var formatDateTime = require("root/lib/i18n").formatDateTime
 
 describe("I18n", function() {
 	describe(".formatDate", function() {
@@ -26,11 +26,11 @@ describe("I18n", function() {
 		})
 	})
 
-	describe(".formatTime", function() {
+	describe(".formatDateTime", function() {
 		describe("numeric", function() {
 			it("must format date in local time", function() {
 				var time = new Date(2015, 5, 18, 13, 37, 42, 666)
-				formatTime("numeric", time).must.equal("18.06.2015\xa013:37")
+				formatDateTime("numeric", time).must.equal("18.06.2015\xa013:37")
 			})
 		})
 	})

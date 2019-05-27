@@ -1,7 +1,7 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var Page = require("./page")
-var formatTime = require("root/lib/i18n").formatTime
+var formatDateTime = require("root/lib/i18n").formatDateTime
 
 module.exports = function(attrs) {
 	var req = attrs.req
@@ -43,10 +43,10 @@ function SubscriptionsView(attrs) {
 			var initiative = subscription.initiative
 
 			return <tr>
-				<td>{formatTime("numeric", subscription.created_at)}</td>
+				<td>{formatDateTime("numeric", subscription.created_at)}</td>
 
 				<td>{subscription.confirmed_at
-					? formatTime("numeric", subscription.confirmed_at)
+					? formatDateTime("numeric", subscription.confirmed_at)
 					: null
 				}</td>
 

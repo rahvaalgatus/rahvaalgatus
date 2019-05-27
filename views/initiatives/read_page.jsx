@@ -561,7 +561,7 @@ function CommentView(attrs) {
 		{" "}
 		<time datetime={comment.createdAt}>
 			<a href={commentUrl}>
-				{I18n.formatTime("numeric", comment.createdAt)}
+				{I18n.formatDateTime("numeric", comment.createdAt)}
 			</a>
 		</time>
 
@@ -582,7 +582,7 @@ function CommentView(attrs) {
 			{" "}
 			<time datetime={reply.createdAt}>
 				<a href={commentUrl + `#comment-${reply.id}`}>
-					{I18n.formatTime("numeric", reply.createdAt)}
+					{I18n.formatDateTime("numeric", reply.createdAt)}
 				</a>
 			</time>
 
@@ -663,7 +663,7 @@ function ProgressTextView(attrs) {
 				{t("VOTING_DEADLINE")}
 				{": "}
 				<time datetime={initiative.vote.endsAt} class="deadline">
-					{I18n.formatTime("numeric", initiative.vote.endsAt)}
+					{I18n.formatDateTime("numeric", initiative.vote.endsAt)}
 				</time>.
 			</span>
 		</p>
@@ -674,7 +674,7 @@ function ProgressTextView(attrs) {
 				{t("DISCUSSION_DEADLINE")}
 				{": "}
 				<time datetime={initiative.endsAt}>
-					{I18n.formatTime("numeric", initiative.endsAt)}
+					{I18n.formatDateTime("numeric", initiative.endsAt)}
 				</time>
 			</span>
 		</p>
