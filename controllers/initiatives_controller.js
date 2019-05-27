@@ -221,6 +221,7 @@ exports.router.put("/:id", next(function*(req, res) {
 	res.locals.subpage = unclosedStatus == "inProgress" ? "discussion" : "vote"
 
 	var tmpl
+	var message
 	var method = "PUT"
 	var path = `/api/users/self/topics/${initiative.id}`
 	var attrs = EMPTY_INITIATIVE
@@ -322,15 +323,39 @@ exports.router.put("/:id", next(function*(req, res) {
 
 		if (req.body.visibility === "public")
 			res.flash("notice", "Algatus on nüüd avalik.")
-		else if (req.body.status === "voting")
+		else if (req.body.status === "voting") {
+			if (initiative.vote == null) {
+				message = yield messagesDb.create({
+					initiative_uuid: initiative.id,
+					origin: "status",
+					created_at: new Date,
+					updated_at: new Date,
+
+					title: t("SENT_TO_SIGNING_MESSAGE_TITLE", {
+						initiativeTitle: initiative.title
+					}),
+
+					text: renderEmail("SENT_TO_SIGNING_MESSAGE_BODY", {
+						initiativeTitle: initiative.title,
+						initiativeUrl: `${Config.url}/initiatives/${initiative.id}`,
+					})
+				})
+
+				yield Subscription.send(
+					message,
+					yield subscriptionsDb.searchConfirmedByInitiativeId(initiative.id)
+				)
+			}
+
 			res.flash("notice", "Algatus on avatud allkirjade kogumiseks.")
+		}
 		else if (req.body.status === "followUp") {
 			if (!req.dbInitiative.sent_to_parliament_at)
 				yield initiativesDb.update(initiative.id, {
 					sent_to_parliament_at: new Date
 				})
 
-			var message = yield messagesDb.create({
+			message = yield messagesDb.create({
 				initiative_uuid: initiative.id,
 				origin: "status",
 				created_at: new Date,

@@ -19,6 +19,7 @@ var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
+var encodeMime = require("nodemailer/lib/mime-funcs").encodeWord
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var VOTES = require("root/config").votesRequired
 var PARTNER_ID = Config.apiPartnerId
@@ -33,7 +34,7 @@ var DISCUSSION = {
 	sourcePartnerId: PARTNER_ID,
 	status: "inProgress",
 	title: "My future thoughts",
-	description: "<body><h1>My future thoughts.</h1></body>",
+	description: "<body><h1>My future thoughts</h1></body>",
 	creator: {name: "John"},
 	visibility: "public",
 	permission: {level: "read"}
@@ -73,10 +74,6 @@ var INITIATIVE = {
 		options: {rows: [{value: "Yes", voteCount: 0}]}
 	}
 }
-
-var EDITABLE_INITIATIVE = O.merge({}, INITIATIVE, {
-	permission: {level: "admin"}
-})
 
 var SIGNED_INITIATIVE = O.merge({}, INITIATIVE, {
 	vote: {options: {rows: [{value: "Yes", voteCount: 1, selected: true}]}}
@@ -547,7 +544,6 @@ describe("InitiativesController", function() {
 				})
 			})
 
-
 			describe("given status=voting", function() {
 				it("must render update status for voting page", function*() {
 					this.router.get(`/api/users/self/topics/${UUID}`,
@@ -568,11 +564,12 @@ describe("InitiativesController", function() {
 						signing_end_email_sent_at: new Date
 					})
 
-					this.router.get(`/api/users/self/topics/${UUID}`,
-						respond.bind(null, {data: EDITABLE_INITIATIVE}))
+					this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
+						data: _.assign({}, INITIATIVE, {permission: {level: "admin"}})
+					}))
 
 					var path = `/api/users/self/topics/${UUID}`
-					path += `/votes/${EDITABLE_INITIATIVE.vote.id}`
+					path += `/votes/${INITIATIVE.vote.id}`
 					this.router.put(path, endResponse)
 
 					var res = yield this.request(`/initiatives/${UUID}`, {
@@ -589,6 +586,71 @@ describe("InitiativesController", function() {
 					yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
 						_.defaults({signing_end_email_sent_at: null}, dbInitiative)
 					])
+				})
+
+				it("must email subscribers", function*() {
+					this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
+						data: _.assign({}, DISCUSSION, {permission: {level: "admin"}})
+					}))
+
+					this.router.post(`/api/users/self/topics/${UUID}/votes`, endResponse)
+
+					var subscriptions = yield subscriptionsDb.create([
+						new ValidDbInitiativeSubscription({
+							initiative_uuid: UUID,
+							confirmed_at: new Date
+						}),
+
+						new ValidDbInitiativeSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date
+						})
+					])
+
+					var res = yield this.request(`/initiatives/${UUID}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "voting",
+							endsAt: new Date().toJSON().slice(0, 10)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					var messages = yield messagesDb.search(sql`
+						SELECT * FROM initiative_messages
+					`)
+
+					var message = messages[0]
+					var emails = subscriptions.map((s) => s.email).sort()
+
+					messages.must.eql([{
+						id: message.id,
+						initiative_uuid: UUID,
+						created_at: new Date,
+						updated_at: new Date,
+						origin: "status",
+
+						title: t("SENT_TO_SIGNING_MESSAGE_TITLE", {
+							initiativeTitle: DISCUSSION.title
+						}),
+
+						text: renderEmail("SENT_TO_SIGNING_MESSAGE_BODY", {
+							initiativeTitle: DISCUSSION.title,
+							initiativeUrl: `${Config.url}/initiatives/${UUID}`,
+						}),
+
+						sent_at: new Date,
+						sent_to: emails
+					}])
+
+					this.emails.length.must.equal(1)
+					this.emails[0].envelope.to.must.eql(emails)
+					var msg = String(this.emails[0].message)
+					var subject = encodeMime(message.title).slice(0, 50)
+					msg.match(/^Subject: .*/m)[0].must.include(subject)
+					subscriptions.forEach((s) => msg.must.include(s.update_token))
 				})
 			})
 
