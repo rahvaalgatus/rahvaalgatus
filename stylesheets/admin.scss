@@ -204,14 +204,13 @@ button.admin-link {
 	display: block;
 	max-width: 60rem;
 
-	.admin-label,
-	.admin-input {
+	& > .admin-label,
+	& > .admin-input {
 		display: block;
 	}
 
-	.admin-input {
-		width: 100%;
-	}
+	& > .admin-input,
+	& > .admin-datetime-input { width: 100%; }
 
 	textarea.admin-input {
 		min-height: 15rem;
@@ -257,6 +256,17 @@ button.admin-link {
 
 	&:disabled {
 		background-color: $secondary-background;
+	}
+}
+
+.admin-datetime-input {
+	input[type=date] {
+		width: 15rem;
+		margin-right: 1rem;
+	}
+
+	input[type=time] {
+		width: 15rem;
 	}
 }
 

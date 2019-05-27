@@ -10,11 +10,10 @@ var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var next = require("co-next")
 var initiativesDb = require("root/db/initiatives_db")
 var messagesDb = require("root/db/initiative_messages_db")
+var eventsDb = require("root/db/initiative_events_db")
 var cosDb = require("root").cosDb
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var parseCitizenInitiative = cosApi.parseCitizenInitiative
-var parseCitizenEvent = cosApi.parseCitizenEvent
-var newUuid = require("uuid/v4")
 var sqlite = require("root").sqlite
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
@@ -113,8 +112,12 @@ exports.use("/initiatives/:id", next(function*(req, res, next) {
 
 exports.get("/initiatives/:id", next(function*(req, res) {
 	var initiative = req.initiative
-	var events = yield readEvents(initiative.id)
-	events = events.sort((a, b) => +b.createdAt - +a.createdAt)
+
+	var events = yield eventsDb.search(sql`
+		SELECT * FROM initiative_events
+		WHERE initiative_uuid = ${initiative.id}
+		ORDER BY "occurred_at" DESC
+	`)
 
 	var subscriberCount = yield sqlite(sql`
 		SELECT
@@ -183,31 +186,33 @@ exports.put("/initiatives/:id", next(function*(req, res) {
 
 exports.get("/initiatives/:id/events/new", function(_req, res) {
 	res.render("admin/initiatives/events/create_page.jsx", {
-		event: {createdAt: new Date, title: "", text: ""}
+		event: {occurred_at: new Date, title: "", text: ""}
 	})
 })
 
 exports.post("/initiatives/:id/events", next(function*(req, res) {
 	var initiative = req.initiative
 
+	var attrs = _.assign(parseEvent(req.body), {
+		initiative_uuid: req.initiative.id,
+		created_at: new Date,
+		updated_at: new Date,
+		created_by: req.user.id
+	})
+
 	switch (req.body.action) {
 		case "preview":
 			res.render("admin/initiatives/events/create_page.jsx", {
-				event: req.body,
-				message: renderEventMessage(initiative, req.body)
+				event: attrs,
+				message: renderEventMessage(initiative, attrs)
 			})
 			break
 
 		case "create":
-			yield cosDb("TopicEvents").insert(_.assign(parseEvent(req.body), {
-				id: newUuid(),
-				topicId: req.initiative.id,
-				createdAt: new Date,
-				updatedAt: new Date
-			}))
+			yield eventsDb.create(attrs)
 
 			var message = yield messagesDb.create({
-				__proto__: renderEventMessage(initiative, req.body),
+				__proto__: renderEventMessage(initiative, attrs),
 				initiative_uuid: initiative.id,
 				origin: "event",
 				created_at: new Date,
@@ -229,8 +234,8 @@ exports.post("/initiatives/:id/events", next(function*(req, res) {
 
 exports.use("/initiatives/:id/events/:eventId",
 	next(function*(req, _res, next) {
-	var event = yield readEvent(req.params.eventId)
-	if (event.deletedAt) return void next(new HttpError(404))
+	var event = yield eventsDb.read(req.params.eventId)
+	if (event == null) return void next(new HttpError(404))
 	req.event = event
 	next()
 }))
@@ -240,16 +245,14 @@ exports.get("/initiatives/:id/events/:eventId/edit", function(req, res) {
 })
 
 exports.put("/initiatives/:id/events/:eventId", next(function*(req, res) {
-	var query = cosDb("TopicEvents").where("id", req.event.id)
-	yield query.update(_.assign(parseEvent(req.body), {updatedAt: new Date}))
-
+	var attrs = _.assign(parseEvent(req.body), {updated_at: new Date})
+	yield eventsDb.update(req.event.id, attrs)
 	res.flash("notice", "Event updated.")
 	res.redirect(req.baseUrl + "/initiatives/" + req.initiative.id)
 }))
 
 exports.delete("/initiatives/:id/events/:eventId", next(function*(req, res) {
-	var query = cosDb("TopicEvents").where("id", req.event.id)
-	yield query.update({deletedAt: new Date})
+	yield eventsDb.delete(req.event.id)
 	res.flash("notice", "Event deleted.")
 	res.redirect(req.baseUrl + "/initiatives/" + req.initiative.id)
 }))
@@ -359,23 +362,12 @@ function parseInitiativeForCitizen(obj) {
 	return attrs
 }
 
-function readEvent(id) {
-	var event = cosDb.query(sql`SELECT * FROM "TopicEvents" WHERE id = ${id}`)
-	return event.then(_.first).then(parseCitizenEvent)
-}
-
-function readEvents(initiativeId) {
-	return cosDb.query(sql`
-		SELECT * FROM "TopicEvents"
-		WHERE "topicId" = ${initiativeId}
-		AND "deletedAt" IS NULL
-		ORDER BY "createdAt" DESC
-	`).then((events) => events.map(parseCitizenEvent))
-}
-
 function parseEvent(obj) {
-  var title = obj.createdOn + " " + obj.title
-	return {subject: title, text: obj.text}
+	return {
+		title: obj.title,
+		text: obj.text,
+		occurred_at: new Date(obj.occurredOn + " " + obj.occurredAt)
+	}
 }
 
 function renderEventMessage(initiative, event) {

@@ -103,7 +103,7 @@ module.exports = function(attrs) {
 
 			<table class="admin-table">
 				<thead>
-					<th>Created On</th>
+					<th>Occurred On</th>
 					<th>Title</th>
 					<th class="new-event">
 						<a
@@ -122,8 +122,8 @@ module.exports = function(attrs) {
 
 						return <tr class="event">
 							<td>
-								<time datetime={event.createdAt.toJSON()}>
-									{formatDate("iso", event.createdAt)}
+								<time datetime={event.occurred_at.toJSON()}>
+									{formatDate("iso", event.occurred_at)}
 								</time>
 							</td>
 

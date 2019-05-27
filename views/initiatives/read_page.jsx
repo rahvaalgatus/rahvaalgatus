@@ -447,8 +447,8 @@ function EventsView(attrs) {
 
 				{events.map(function(event) {
 					return <li class="event">
-						<time datetime={event.createdAt.toJSON()}>
-							{I18n.formatDate("numeric", event.createdAt)}
+						<time datetime={event.occurred_at.toJSON()}>
+							{I18n.formatDate("numeric", event.occurred_at)}
 						</time>
 
 						<h2>{event.title}</h2>

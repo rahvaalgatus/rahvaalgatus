@@ -16,10 +16,10 @@ var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var messagesDb = require("root/db/initiative_messages_db")
+var eventsDb = require("root/db/initiative_events_db")
 var countSignatures = Initiative.countSignatures.bind(null, "Yes")
 var isOk = require("root/lib/http").isOk
 var sqlite = require("root").sqlite
-var cosDb = require("root").cosDb
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
 var catch401 = require("root/lib/fetch").catch.bind(null, 401)
 var isFetchError = require("root/lib/fetch").is
@@ -30,7 +30,6 @@ var t = require("root/lib/i18n").t.bind(null, "et")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var sql = require("sqlate")
 var parseCitizenInitiative = cosApi.parseCitizenInitiative
-var parseCitizenEvent = cosApi.parseCitizenEvent
 var parseCitizenComment = cosApi.parseCitizenComment
 var readInitiativesWithStatus = cosApi.readInitiativesWithStatus
 var encode = encodeURIComponent
@@ -210,7 +209,11 @@ exports.read = next(function*(req, res) {
 	var comments = yield req.cosApi(commentsPath)
 	comments = comments.body.data.rows.map(parseCitizenComment).reverse()
 
-	var events = yield searchInitiativeEvents(initiative)
+	var events = yield eventsDb.search(sql`
+		SELECT * FROM initiative_events
+		WHERE initiative_uuid = ${initiative.id}
+		ORDER BY "occurred_at" DESC
+	`)
 
 	res.render("initiatives/read_page.jsx", {
 		signature: signature,
@@ -757,15 +760,6 @@ function unhideSignature(initiativeId, userId) {
 		SET hidden = 0, updated_at = ${new Date}
 		WHERE (initiative_uuid, user_uuid) = (${initiativeId}, ${userId})
 	`)
-}
-
-function searchInitiativeEvents(initiative) {
-	return cosDb.query(sql`
-		SELECT * FROM "TopicEvents"
-		WHERE "topicId" = ${initiative.id}
-		AND "deletedAt" IS NULL
-		ORDER BY "createdAt" DESC
-	`).then((events) => events.map(parseCitizenEvent))
 }
 
 // NOTE: Use this only on JWTs from trusted sources as it does no validation.

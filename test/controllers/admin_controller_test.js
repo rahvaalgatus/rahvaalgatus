@@ -6,6 +6,7 @@ var newUuid = require("uuid/v4")
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var pseudoInt = require("root/lib/crypto").pseudoInt
 var messagesDb = require("root/db/initiative_messages_db")
+var eventsDb = require("root/db/initiative_events_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var cosDb = require("root").cosDb
 var t = require("root/lib/i18n").t.bind(null, "et")
@@ -45,7 +46,8 @@ describe("AdminController", function() {
 					form: {
 						_csrf_token: this.csrfToken,
 						action: "create",
-						createdOn: "2020-01-02",
+						occurredOn: "2020-01-02",
+						occurredAt: "13:37",
 						title: "Initiative was handled",
 						text: "All good."
 					}
@@ -54,16 +56,17 @@ describe("AdminController", function() {
 				res.statusCode.must.equal(302)
 				res.headers.location.must.equal(`/initiatives/${this.topic.id}`)
 
-				var events = yield cosDb.query(sql`SELECT * FROM "TopicEvents"`)
+				var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
 				events.length.must.equal(1)
 
-				_.clone(events[0]).must.eql({
+				events[0].must.eql({
 					id: events[0].id,
-					topicId: this.topic.id,
-					createdAt: new Date,
-					updatedAt: new Date,
-					deletedAt: null,
-					subject: "2020-01-02 Initiative was handled",
+					initiative_uuid: this.topic.id,
+					created_at: new Date,
+					updated_at: new Date,
+					occurred_at: new Date(2020, 0, 2, 13, 37),
+					created_by: this.user.id,
+					title: "Initiative was handled",
 					text: "All good."
 				})
 			})
@@ -87,7 +90,8 @@ describe("AdminController", function() {
 					form: {
 						_csrf_token: this.csrfToken,
 						action: "create",
-						createdOn: "2020-01-02",
+						occurredOn: "2020-01-02",
+						occurredAt: "13:37",
 						title: "Initiative was handled",
 						text: "All good."
 					}

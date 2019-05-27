@@ -5,6 +5,7 @@ var MessageView = require("../messages/create_page").MessageView
 var Form = Page.Form
 var Flash = Page.Flash
 var formatDate = require("root/lib/i18n").formatDate
+var formatTime = require("root/lib/i18n").formatTime
 exports = module.exports = CreatePage
 exports.EventForm = EventForm
 
@@ -55,18 +56,24 @@ function EventForm(attrs, children) {
 		method={event.id ? "put" : "post"}
 		class="admin-form"
 	>
-		<label class="admin-label">Created On</label>
-		<input
-			type="date"
-			name="createdOn"
-			required
-			class="admin-input"
+		<label class="admin-label">Occurred At</label>
+		<div class="admin-datetime-input">
+			<input
+				type="date"
+				name="occurredOn"
+				required
+				class="admin-input"
+				value={event.occurred_at && formatDate("iso", event.occurred_at)}
+			/>
 
-			value={
-				event.createdOn ||
-				event.createdAt && formatDate("iso", event.createdAt)
-			}
-		/>
+			<input
+				type="time"
+				name="occurredAt"
+				required
+				class="admin-input"
+				value={event.occurred_at && formatTime("iso", event.occurred_at)}
+			/>
+		</div>
 
 		<label class="admin-label">Title</label>
 		<input
