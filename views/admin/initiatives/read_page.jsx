@@ -1,4 +1,5 @@
 /** @jsx Jsx */
+var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var Config = require("root/config")
@@ -9,6 +10,7 @@ var Flash = Page.Flash
 var formatDate = require("root/lib/i18n").formatDate
 var confirm = require("root/lib/jsx").confirm
 var linkify = require("root/lib/linkify")
+var UPDATEABLE_STATUSES = ["voting", "followUp", "closed"]
 
 module.exports = function(attrs) {
 	var req = attrs.req
@@ -34,7 +36,7 @@ module.exports = function(attrs) {
 		<Flash flash={req.flash} />
 
 		<table id="initiative-table" class="admin-horizontal-table">
-			{initiative.status == "followUp" || initiative.status == "closed" ? <tr>
+			{_.contains(UPDATEABLE_STATUSES, initiative.status) ? <tr>
 				<th scope="row">Status</th>
 				<td>
 					<Form
@@ -45,6 +47,9 @@ module.exports = function(attrs) {
 						class="admin-inline-form"
 					>
 					<select name="status" onchange="this.form.submit()">
+						<option value="voting" selected={status == "voting"}>
+							In Signing
+						</option>
 						<option value="followUp" selected={status == "followUp"}>
 							In Parliament
 						</option>

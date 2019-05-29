@@ -18,7 +18,7 @@ var sqlite = require("root").sqlite
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
-var STATUSES = ["followUp", "closed"]
+var UPDATEABLE_STATUSES = ["voting", "followUp", "closed"]
 exports = module.exports = Router()
 
 exports.use(function(req, _res, next) {
@@ -356,7 +356,7 @@ function parseInitiative(obj) {
 function parseInitiativeForCitizen(obj) {
 	var attrs = {}
 
-	if ("status" in obj && _.contains(STATUSES, obj.status))
+	if ("status" in obj && _.contains(UPDATEABLE_STATUSES, obj.status))
 		attrs.status = obj.status
 
 	return attrs
