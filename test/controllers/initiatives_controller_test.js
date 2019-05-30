@@ -1372,7 +1372,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/initiatives/" + UUID)
 
-			yield subscriptionsDb.read(token).must.then.eql({
+			yield subscriptionsDb.read(subscription).must.then.eql({
 				__proto__: subscription,
 				confirmed_at: new Date,
 				confirmation_sent_at: null,
@@ -1403,7 +1403,7 @@ describe("InitiativesController", function() {
 
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/initiatives/" + UUID)
-			yield subscriptionsDb.read(token).must.then.eql(subscription)
+			yield subscriptionsDb.read(subscription).must.then.eql(subscription)
 		})
 
 		it("must not confirm given the wrong token", function*() {
@@ -1430,7 +1430,7 @@ describe("InitiativesController", function() {
 			)
 
 			res.statusCode.must.equal(404)
-			yield subscriptionsDb.read(token).must.then.eql(subscription)
+			yield subscriptionsDb.read(subscription).must.then.eql(subscription)
 		})
 	})
 

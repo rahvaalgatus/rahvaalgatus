@@ -1,6 +1,6 @@
 var _ = require("root/lib/underscore")
 var O = require("oolong")
-var Db = require("heaven-sqlite")
+var Db = require("root/lib/db")
 var sqlite = require("root").sqlite
 var concat = Array.prototype.concat.bind(Array.prototype)
 
