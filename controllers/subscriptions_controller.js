@@ -2,10 +2,10 @@ var _ = require("root/lib/underscore")
 var Http = require("root/lib/http")
 var Router = require("express").Router
 var Sqlite = require("root/lib/sqlite")
-var next = require("co-next")
-var Config = require("root/config")
 var randomHex = require("root/lib/crypto").randomHex
 var sendEmail = require("root").sendEmail
+var renderEmail = require("root/lib/i18n").email
+var next = require("co-next")
 var db = require("root/db/initiative_subscriptions_db")
 var sql = require("sqlate")
 
@@ -40,23 +40,29 @@ exports.router.post("/", next(function*(req, res) {
 	}
 
 	if (
-		!subscription.confirmed_at && (
-			!subscription.confirmation_sent_at ||
-			new Date - subscription.confirmation_sent_at >= 3600 * 1000
-		)
+		subscription.confirmation_sent_at == null ||
+		new Date - subscription.confirmation_sent_at >= 3600 * 1000
 	) {
-		var token = subscription.confirmation_token
-
-		yield sendEmail({
-			to: email,
-
-			subject: req.t("CONFIRM_INITIATIVES_SUBSCRIPTION_TITLE"),
-
-			text: req.t("CONFIRM_INITIATIVES_SUBSCRIPTION_BODY", {
-				url: Http.link(req, req.baseUrl + "/new?confirmation_token=" + token),
-				siteUrl: Config.url
+		if (subscription.confirmed_at) {
+			yield sendEmail({
+				to: email,
+				subject: req.t("ALREADY_SUBSCRIBED_TO_INITIATIVES_TITLE"),
+				text: renderEmail(req.lang, "ALREADY_SUBSCRIBED_TO_INITIATIVES_BODY", {
+					url: Http.link(req, req.baseUrl + "/" + subscription.update_token)
+				})
 			})
-		})
+		}
+		else {
+			var token = subscription.confirmation_token
+
+			yield sendEmail({
+				to: email,
+				subject: req.t("CONFIRM_INITIATIVES_SUBSCRIPTION_TITLE"),
+				text: renderEmail(req.lang, "CONFIRM_INITIATIVES_SUBSCRIPTION_BODY", {
+					url: Http.link(req, req.baseUrl + "/new?confirmation_token=" + token)
+				})
+			})
+		}
 
 		yield db.update(subscription, {
 			confirmation_sent_at: new Date,
@@ -80,7 +86,6 @@ exports.router.get("/new", next(function*(req, res) {
 		if (!subscription.confirmed_at)
 			yield db.update(subscription, {
 				confirmed_at: new Date,
-				confirmation_sent_at: null,
 				updated_at: new Date
 			})
 		

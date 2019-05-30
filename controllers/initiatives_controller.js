@@ -27,7 +27,7 @@ var next = require("co-next")
 var sleep = require("root/lib/promise").sleep
 var cosApi = require("root/lib/citizenos_api")
 var t = require("root/lib/i18n").t.bind(null, "et")
-var renderEmail = require("root/lib/i18n").email.bind(null, "et")
+var renderEmail = require("root/lib/i18n").email
 var sql = require("sqlate")
 var parseCitizenInitiative = cosApi.parseCitizenInitiative
 var parseCitizenComment = cosApi.parseCitizenComment
@@ -347,7 +347,7 @@ exports.router.put("/:id", next(function*(req, res) {
 						initiativeTitle: initiative.title
 					}),
 
-					text: renderEmail("SENT_TO_SIGNING_MESSAGE_BODY", {
+					text: renderEmail("et", "SENT_TO_SIGNING_MESSAGE_BODY", {
 						initiativeTitle: initiative.title,
 						initiativeUrl: `${Config.url}/initiatives/${initiative.id}`,
 					})
@@ -377,7 +377,7 @@ exports.router.put("/:id", next(function*(req, res) {
 					initiativeTitle: initiative.title
 				}),
 
-				text: renderEmail("SENT_TO_PARLIAMENT_MESSAGE_BODY", {
+				text: renderEmail("et", "SENT_TO_PARLIAMENT_MESSAGE_BODY", {
 					authorName: attrs.contact.name,
 					initiativeTitle: initiative.title,
 					initiativeUrl: `${Config.url}/initiatives/${initiative.id}`,
@@ -598,28 +598,43 @@ exports.router.post("/:id/subscriptions", next(function*(req, res) {
 	}
 
 	if (
-		!subscription.confirmed_at && (
-			!subscription.confirmation_sent_at ||
-			new Date - subscription.confirmation_sent_at >= 3600 * 1000
-		)
+		subscription.confirmation_sent_at == null ||
+		new Date - subscription.confirmation_sent_at >= 3600 * 1000
 	) {
 		var initiativeUrl = Http.link(req, req.baseUrl + "/" + initiative.id)
-		var token = subscription.confirmation_token
 
-		yield sendEmail({
-			to: email,
+		if (subscription.confirmed_at) {
+			yield sendEmail({
+				to: email,
 
-			subject: req.t("CONFIRM_INITIATIVE_SUBSCRIPTION_TITLE", {
-				initiativeTitle: initiative.title
-			}),
+				subject: req.t("ALREADY_SUBSCRIBED_TO_INITIATIVE_TITLE", {
+					initiativeTitle: initiative.title
+				}),
 
-			text: req.t("CONFIRM_INITIATIVE_SUBSCRIPTION_BODY", {
-				url: initiativeUrl + "/subscriptions/new?confirmation_token=" + token,
-				initiativeTitle: initiative.title,
-				initiativeUrl: initiativeUrl,
-				siteUrl: Config.url
+				text: renderEmail(req.lang, "ALREADY_SUBSCRIBED_TO_INITIATIVE_BODY", {
+					url: initiativeUrl + "/subscriptions/" + subscription.update_token,
+					initiativeTitle: initiative.title,
+					initiativeUrl: initiativeUrl
+				})
 			})
-		})
+		}
+		else {
+			var token = subscription.confirmation_token
+
+			yield sendEmail({
+				to: email,
+
+				subject: req.t("CONFIRM_INITIATIVE_SUBSCRIPTION_TITLE", {
+					initiativeTitle: initiative.title
+				}),
+
+				text: renderEmail(req.lang, "CONFIRM_INITIATIVE_SUBSCRIPTION_BODY", {
+					url: initiativeUrl + "/subscriptions/new?confirmation_token=" + token,
+					initiativeTitle: initiative.title,
+					initiativeUrl: initiativeUrl
+				})
+			})
+		}
 
 		yield subscriptionsDb.update(subscription, {
 			confirmation_sent_at: new Date,

@@ -4,8 +4,7 @@ var Url = require("url")
 var DateFns = require("date-fns")
 var Config = require("root/config")
 var ValidDbInitiative = require("root/test/valid_db_initiative")
-var ValidDbInitiativeSubscription =
-	require("root/test/valid_db_initiative_subscription")
+var ValidSubscription = require("root/test/valid_db_initiative_subscription")
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
@@ -13,7 +12,7 @@ var tHtml = _.compose(_.escapeHtml, t)
 var respond = require("root/test/fixtures").respond
 var concat = Array.prototype.concat.bind(Array.prototype)
 var encodeBase64 = require("root/lib/crypto").encodeBase64
-var randomHex = require("root/lib/crypto").randomHex
+var pseudoHex = require("root/lib/crypto").pseudoHex
 var sqlite = require("root").sqlite
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
@@ -596,12 +595,12 @@ describe("InitiativesController", function() {
 					this.router.post(`/api/users/self/topics/${UUID}/votes`, endResponse)
 
 					var subscriptions = yield subscriptionsDb.create([
-						new ValidDbInitiativeSubscription({
+						new ValidSubscription({
 							initiative_uuid: UUID,
 							confirmed_at: new Date
 						}),
 
-						new ValidDbInitiativeSubscription({
+						new ValidSubscription({
 							initiative_uuid: null,
 							confirmed_at: new Date
 						})
@@ -711,12 +710,12 @@ describe("InitiativesController", function() {
 					this.router.put(`/api/users/self/topics/${UUID}`, endResponse)
 
 					var subscriptions = yield subscriptionsDb.create([
-						new ValidDbInitiativeSubscription({
+						new ValidSubscription({
 							initiative_uuid: UUID,
 							confirmed_at: new Date
 						}),
 
-						new ValidDbInitiativeSubscription({
+						new ValidSubscription({
 							initiative_uuid: null,
 							confirmed_at: new Date
 						})
@@ -1188,7 +1187,7 @@ describe("InitiativesController", function() {
 			subscriptions.length.must.equal(1)
 			var subscription = subscriptions[0]
 
-			subscription.must.eql(new ValidDbInitiativeSubscription({
+			subscription.must.eql(new ValidSubscription({
 				initiative_uuid: UUID,
 				email: "user@example.com",
 				created_at: new Date,
@@ -1215,15 +1214,15 @@ describe("InitiativesController", function() {
 			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
 			var email = "user@example.com"
 
-			var subscription = new ValidDbInitiativeSubscription({
+			var subscription = yield subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: UUID,
 				email: email,
 				created_at: createdAt,
 				updated_at: createdAt,
-				confirmed_at: createdAt
-			})
-
-			yield subscriptionsDb.create(subscription)
+				confirmed_at: createdAt,
+				confirmation_token: pseudoHex(8),
+				confirmation_sent_at: new Date
+			}))
 
 			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
 				method: "POST",
@@ -1242,24 +1241,19 @@ describe("InitiativesController", function() {
 
 		it("must not resend confirmation email if less than an hour has passed",
 			function*() {
+			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+				initiative_uuid: UUID,
+				confirmation_sent_at: new Date,
+				confirmation_token: pseudoHex(8)
+			}))
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
+			this.time.tick(3599 * 1000)
 			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
 				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: "user@example.com"}
-			})
-
-			res.statusCode.must.equal(303)
-
-			var subscription = yield subscriptionsDb.search(sql`
-				SELECT * FROM initiative_subscriptions
-			`).then(_.first)
-
-			this.time.tick(3599 * 1000)
-			res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
-				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: "user@example.com"}
+				form: {_csrf_token: this.csrfToken, email: subscription.email}
 			})
 
 			res.statusCode.must.equal(303)
@@ -1268,28 +1262,23 @@ describe("InitiativesController", function() {
 				SELECT * FROM initiative_subscriptions
 			`).must.then.eql([subscription])
 
-			this.emails.length.must.equal(1)
+			this.emails.length.must.equal(0)
 		})
 
 		it("must resend confirmation email if an hour has passed", function*() {
+			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+				initiative_uuid: UUID,
+				confirmation_sent_at: new Date,
+				confirmation_token: pseudoHex(8)
+			}))
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
+			this.time.tick(3600 * 1000)
 			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
 				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: "user@example.com"}
-			})
-
-			res.statusCode.must.equal(303)
-
-			var subscription = yield subscriptionsDb.search(sql`
-				SELECT * FROM initiative_subscriptions
-			`).then(_.first)
-
-			this.time.tick(3600 * 1000)
-			res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
-				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: "user@example.com"}
+				form: {_csrf_token: this.csrfToken, email: subscription.email}
 			})
 
 			res.statusCode.must.equal(303)
@@ -1302,7 +1291,37 @@ describe("InitiativesController", function() {
 				confirmation_sent_at: new Date
 			}])
 
-			this.emails.length.must.equal(2)
+			this.emails.length.must.equal(1)
+		})
+
+		it("must send reminder email if an hour has passed", function*() {
+			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+				initiative_uuid: UUID,
+				confirmed_at: new Date,
+				confirmation_sent_at: new Date,
+				confirmation_token: pseudoHex(8)
+			}))
+
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
+
+			this.time.tick(3600 * 1000)
+			var res = yield this.request(`/initiatives/${UUID}/subscriptions`, {
+				method: "POST",
+				form: {_csrf_token: this.csrfToken, email: subscription.email}
+			})
+
+			res.statusCode.must.equal(303)
+
+			yield subscriptionsDb.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`).must.then.eql([{
+				__proto__: subscription,
+				updated_at: new Date,
+				confirmation_sent_at: new Date
+			}])
+
+			this.emails.length.must.equal(1)
 		})
 
 		it("must respond with 403 Forbidden if discussion not public", function*() {
@@ -1353,9 +1372,9 @@ describe("InitiativesController", function() {
 				respond.bind(null, {data: INITIATIVE}))
 
 			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
-			var token = randomHex(8)
+			var token = pseudoHex(8)
 
-			var subscription = new ValidDbInitiativeSubscription({
+			var subscription = new ValidSubscription({
 				initiative_uuid: UUID,
 				created_at: createdAt,
 				updated_at: createdAt,
@@ -1385,9 +1404,9 @@ describe("InitiativesController", function() {
 				respond.bind(null, {data: INITIATIVE}))
 
 			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
-			var token = randomHex(8)
+			var token = pseudoHex(8)
 
-			var subscription = new ValidDbInitiativeSubscription({
+			var subscription = new ValidSubscription({
 				initiative_uuid: UUID,
 				created_at: createdAt,
 				updated_at: createdAt,
@@ -1413,9 +1432,9 @@ describe("InitiativesController", function() {
 				respond.bind(null, EMPTY_RES))
 
 			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
-			var token = randomHex(8)
+			var token = pseudoHex(8)
 
-			var subscription = new ValidDbInitiativeSubscription({
+			var subscription = new ValidSubscription({
 				initiative_uuid: UUID,
 				created_at: createdAt,
 				updated_at: createdAt,
@@ -1441,7 +1460,7 @@ describe("InitiativesController", function() {
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
-			var subscription = new ValidDbInitiativeSubscription({
+			var subscription = new ValidSubscription({
 				initiative_uuid: UUID,
 				confirmed_at: new Date
 			})
@@ -1461,7 +1480,7 @@ describe("InitiativesController", function() {
 				respond.bind(null, {data: INITIATIVE}))
 
 			// Still have a single subscription to ensure it's not picking randomly.
-			yield subscriptionsDb.create(new ValidDbInitiativeSubscription({
+			yield subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: UUID,
 				confirmed_at: new Date
 			}))
@@ -1479,7 +1498,7 @@ describe("InitiativesController", function() {
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
-			var subscription = new ValidDbInitiativeSubscription({
+			var subscription = new ValidSubscription({
 				initiative_uuid: UUID,
 				confirmed_at: new Date
 			})
@@ -1505,7 +1524,7 @@ describe("InitiativesController", function() {
 				respond.bind(null, {data: INITIATIVE}))
 
 			// Still have a single subscription to ensure it's not picking randomly.
-			var subscription = new ValidDbInitiativeSubscription({
+			var subscription = new ValidSubscription({
 				initiative_uuid: UUID,
 				confirmed_at: new Date
 			})
@@ -1530,12 +1549,12 @@ describe("InitiativesController", function() {
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
-			var other = new ValidDbInitiativeSubscription({
+			var other = new ValidSubscription({
 				initiative_uuid: UUID,
 				confirmed_at: new Date
 			})
 
-			var subscription = new ValidDbInitiativeSubscription({
+			var subscription = new ValidSubscription({
 				initiative_uuid: UUID,
 				confirmed_at: new Date,
 			})

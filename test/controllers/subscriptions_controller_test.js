@@ -1,7 +1,6 @@
-var _ = require("root/lib/underscore")
-var ValidDbInitiativeSubscription =
+var ValidSubscription =
 	require("root/test/valid_db_initiative_subscription")
-var randomHex = require("root/lib/crypto").randomHex
+var pseudoHex = require("root/lib/crypto").pseudoHex
 var sql = require("sqlate")
 var db = require("root/db/initiative_subscriptions_db")
 var t = require("root/lib/i18n").t.bind(null, "et")
@@ -33,7 +32,7 @@ describe("SubscriptionsController", function() {
 			subscriptions.length.must.equal(1)
 			var subscription = subscriptions[0]
 
-			subscription.must.eql(new ValidDbInitiativeSubscription({
+			subscription.must.eql(new ValidSubscription({
 				email: "user@example.com",
 				created_at: new Date,
 				created_ip: "127.0.0.1",
@@ -55,11 +54,13 @@ describe("SubscriptionsController", function() {
 			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
 			var email = "user@example.com"
 
-			var subscription = yield db.create(new ValidDbInitiativeSubscription({
+			var subscription = yield db.create(new ValidSubscription({
 				email: email,
 				created_at: createdAt,
 				updated_at: createdAt,
-				confirmed_at: createdAt
+				confirmed_at: createdAt,
+				confirmation_sent_at: createdAt,
+				confirmation_token: pseudoHex(8)
 			}))
 
 			var res = yield this.request("/subscriptions", {
@@ -77,46 +78,34 @@ describe("SubscriptionsController", function() {
 
 		it("must not resend confirmation email if less than an hour has passed",
 			function*() {
-			var res = yield this.request("/subscriptions", {
-				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: "user@example.com"}
-			})
-
-			res.statusCode.must.equal(303)
-
-			var subscription = yield db.search(sql`
-				SELECT * FROM initiative_subscriptions
-			`).then(_.first)
+			var subscription = yield db.create(new ValidSubscription({
+				confirmation_sent_at: new Date,
+				confirmation_token: pseudoHex(8)
+			}))
 
 			this.time.tick(3599 * 1000)
-			res = yield this.request("/subscriptions", {
+			var res = yield this.request("/subscriptions", {
 				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: "user@example.com"}
+				form: {_csrf_token: this.csrfToken, email: subscription.email}
 			})
 
 			res.statusCode.must.equal(303)
 
 			var subs = yield db.search(sql`SELECT * FROM initiative_subscriptions`)
 			subs.must.eql([subscription])
-			this.emails.length.must.equal(1)
+			this.emails.length.must.equal(0)
 		})
 
 		it("must resend confirmation email if an hour has passed", function*() {
-			var res = yield this.request("/subscriptions", {
-				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: "user@example.com"}
-			})
-
-			res.statusCode.must.equal(303)
-
-			var subscription = yield db.search(sql`
-				SELECT * FROM initiative_subscriptions
-			`).then(_.first)
+			var subscription = yield db.create(new ValidSubscription({
+				confirmation_sent_at: new Date,
+				confirmation_token: pseudoHex(8)
+			}))
 
 			this.time.tick(3600 * 1000)
-			res = yield this.request("/subscriptions", {
+			var res = yield this.request("/subscriptions", {
 				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: "user@example.com"}
+				form: {_csrf_token: this.csrfToken, email: subscription.email}
 			})
 
 			res.statusCode.must.equal(303)
@@ -129,7 +118,31 @@ describe("SubscriptionsController", function() {
 				confirmation_sent_at: new Date
 			}])
 
-			this.emails.length.must.equal(2)
+			this.emails.length.must.equal(1)
+		})
+
+		it("must send reminder email if an hour has passed", function*() {
+			var subscription = yield db.create(new ValidSubscription({
+				confirmed_at: new Date,
+				confirmation_sent_at: new Date,
+				confirmation_token: pseudoHex(8)
+			}))
+
+			this.time.tick(3600 * 1000)
+			var res = yield this.request("/subscriptions", {
+				method: "POST",
+				form: {_csrf_token: this.csrfToken, email: subscription.email}
+			})
+
+			res.statusCode.must.equal(303)
+
+			yield db.read(subscription).must.then.eql({
+				__proto__: subscription,
+				updated_at: new Date,
+				confirmation_sent_at: new Date
+			})
+
+			this.emails.length.must.equal(1)
 		})
 
 		it("must respond with 422 given missing email", function*() {
@@ -158,9 +171,9 @@ describe("SubscriptionsController", function() {
 		
 		it("must confirm given a confirmation token", function*() {
 			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
-			var token = randomHex(8)
+			var token = pseudoHex(8)
 
-			var subscription = yield db.create(new ValidDbInitiativeSubscription({
+			var subscription = yield db.create(new ValidSubscription({
 				created_at: createdAt,
 				updated_at: createdAt,
 				confirmation_token: token,
@@ -174,19 +187,18 @@ describe("SubscriptionsController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/")
 
-			yield db.read(token).must.then.eql({
+			yield db.read(subscription).must.then.eql({
 				__proto__: subscription,
 				confirmed_at: new Date,
-				confirmation_sent_at: null,
 				updated_at: new Date
 			})
 		})
 
 		it("must not confirm twice", function*() {
 			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
-			var token = randomHex(8)
+			var token = pseudoHex(8)
 
-			var subscription = yield db.create(new ValidDbInitiativeSubscription({
+			var subscription = yield db.create(new ValidSubscription({
 				created_at: createdAt,
 				updated_at: createdAt,
 				confirmed_at: createdAt,
@@ -199,14 +211,14 @@ describe("SubscriptionsController", function() {
 
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/")
-			yield db.read(token).must.then.eql(subscription)
+			yield db.read(subscription).must.then.eql(subscription)
 		})
 
 		it("must not confirm given the wrong token", function*() {
 			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
-			var token = randomHex(8)
+			var token = pseudoHex(8)
 
-			var subscription = yield db.create(new ValidDbInitiativeSubscription({
+			var subscription = yield db.create(new ValidSubscription({
 				created_at: createdAt,
 				updated_at: createdAt,
 				confirmation_token: token,
@@ -218,7 +230,7 @@ describe("SubscriptionsController", function() {
 			)
 
 			res.statusCode.must.equal(404)
-			yield db.read(token).must.then.eql(subscription)
+			yield db.read(subscription).must.then.eql(subscription)
 		})
 	})
 
@@ -226,7 +238,7 @@ describe("SubscriptionsController", function() {
 		require("root/test/fixtures").csrf()
 
 		it("must show subscription page", function*() {
-			var subscription = yield db.create(new ValidDbInitiativeSubscription({
+			var subscription = yield db.create(new ValidSubscription({
 				confirmed_at: new Date
 			}))
 
@@ -240,7 +252,7 @@ describe("SubscriptionsController", function() {
 
 		it("must respond with 404 given invalid update token", function*() {
 			// Still have a single subscription to ensure it's not picking randomly.
-			yield db.create(new ValidDbInitiativeSubscription({
+			yield db.create(new ValidSubscription({
 				confirmed_at: new Date
 			}))
 
@@ -254,7 +266,7 @@ describe("SubscriptionsController", function() {
 		require("root/test/fixtures").csrf()
 
 		it("must delete subscription", function*() {
-			var subscription = yield db.create(new ValidDbInitiativeSubscription({
+			var subscription = yield db.create(new ValidSubscription({
 				confirmed_at: new Date
 			}))
 
@@ -274,7 +286,7 @@ describe("SubscriptionsController", function() {
 
 		it("must respond with 404 given invalid update token", function*() {
 			// Still have a single subscription to ensure it's not picking randomly.
-			var subscription = yield db.create(new ValidDbInitiativeSubscription({
+			var subscription = yield db.create(new ValidSubscription({
 				confirmed_at: new Date
 			}))
 
@@ -292,11 +304,11 @@ describe("SubscriptionsController", function() {
 		})
 
 		it("must not delete other subscription on same initiative", function*() {
-			var other = yield db.create(new ValidDbInitiativeSubscription({
+			var other = yield db.create(new ValidSubscription({
 				confirmed_at: new Date
 			}))
 
-			var subscription = yield db.create(new ValidDbInitiativeSubscription({
+			var subscription = yield db.create(new ValidSubscription({
 				confirmed_at: new Date,
 			}))
 

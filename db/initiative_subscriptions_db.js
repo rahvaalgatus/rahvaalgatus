@@ -4,8 +4,8 @@ var sqlite = require("root").sqlite
 var sql = require("sqlate")
 exports = module.exports = new Db(Object, sqlite, "initiative_subscriptions")
 
-exports.idAttribute = "confirmation_token"
-exports.idColumn = "confirmation_token"
+exports.idAttribute = "update_token"
+exports.idColumn = "update_token"
 
 exports.parse = function(attrs) {
 	return O.defaults({
