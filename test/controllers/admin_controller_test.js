@@ -5,6 +5,7 @@ var sql = require("sqlate")
 var newUuid = require("uuid/v4")
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var pseudoInt = require("root/lib/crypto").pseudoInt
+var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
@@ -120,12 +121,11 @@ describe("AdminController", function() {
 						initiativeTitle: this.topic.title
 					}),
 
-					text: t("DEFAULT_INITIATIVE_EVENT_MESSAGE_BODY", {
+					text: renderEmail("DEFAULT_INITIATIVE_EVENT_MESSAGE_BODY", {
 						initiativeTitle: this.topic.title,
 						initiativeUrl: `${Config.url}/initiatives/${this.topic.id}`,
 						title: "Initiative was handled",
 						text: "All good.",
-						siteUrl: Config.url,
 						unsubscribeUrl: "{{unsubscribeUrl}}"
 					}),
 
