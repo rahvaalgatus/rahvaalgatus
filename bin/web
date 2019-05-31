@@ -62,6 +62,8 @@ app.use(require("root/lib/middleware/error_reporter_middleware"))
 
 app.use(require("root/lib/middleware/error_handler_middleware").bind(null,
 	function(err, req, res) {
+	// Eventually when we're in control of signin, we should show the signin form
+	// for 401s.
 	if (err instanceof HttpError) res.render("error_page.jsx", {
 		title: req.t(err.code + "_TITLE") || err.name,
 		body: req.t(err.code + "_BODY") || err.message

@@ -1,5 +1,8 @@
 {
+	"401_BODY": "Seda saad teha paremalt üleval \"Logi sisse\" nupuga.",
 	"401_TITLE": "Lehekülje vaatamiseks pead sisse logima",
+	"403_BODY": "Kui tegu on algatuse alamlehega, siis võib näiteks olla, et sa pole algatuse autor.",
+	"403_TITLE": "Kahjuks pole sul õigust seda lehte vaadata",
 	"404_TITLE": "Lehekülge ei leitud",
 	"412_BODY": "Palun proovi uuesti. Kui probleem kordub, palun võta meiega ühendust.",
 	"412_TITLE": "Andestust! Päring ebaõnnestus turvalisuse põhjustel.",
