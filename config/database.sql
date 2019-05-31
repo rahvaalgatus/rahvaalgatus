@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS "initiative_subscriptions" (
 	confirmed_at TEXT,
 	confirmation_sent_at TEXT,
 	confirmation_token TEXT UNIQUE,
-	update_token TEXT UNIQUE NOT NULL DEFAULT (lower(hex(randomblob(8)))), created_ip TEXT NULL, created_by TEXT NULL,
+	update_token TEXT UNIQUE NOT NULL DEFAULT (lower(hex(randomblob(8)))), created_ip TEXT NULL, origin TEXT NULL,
 
 	PRIMARY KEY (initiative_uuid, email),
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
@@ -104,4 +104,5 @@ INSERT INTO migrations VALUES('20190519192050');
 INSERT INTO migrations VALUES('20190523150859');
 INSERT INTO migrations VALUES('20190527092632');
 INSERT INTO migrations VALUES('20190531131546');
+INSERT INTO migrations VALUES('20190531132234');
 COMMIT;

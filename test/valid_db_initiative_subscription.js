@@ -10,7 +10,7 @@ module.exports = function(attrs) {
 		email: pseudoInt(100) + "@example.com",
 		created_at: createdAt,
 		created_ip: null,
-		created_by: null,
+		origin: null,
 		updated_at: createdAt,
 		confirmation_sent_at: null,
 		confirmation_token: null,
