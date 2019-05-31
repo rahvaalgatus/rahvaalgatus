@@ -21,16 +21,14 @@ var signaturesDb = require("root/db/initiative_signatures_db")
 var encodeMime = require("nodemailer/lib/mime-funcs").encodeWord
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var VOTES = require("root/config").votesRequired
-var PARTNER_ID = Config.apiPartnerId
-var EXTERNAL_PARTNER_ID = O.keys(Config.partners)[0]
-var PARTNER_IDS = concat(PARTNER_ID, O.keys(Config.partners))
+var PARTNER_IDS = concat(Config.apiPartnerId, O.keys(Config.partners))
 var INITIATIVE_TYPE = "application/vnd.rahvaalgatus.initiative+json; v=1"
 var EMPTY_RES = {data: {rows: []}}
 
 var DISCUSSION = {
 	id: UUID,
 	createdAt: new Date(2000, 0, 1),
-	sourcePartnerId: PARTNER_ID,
+	sourcePartnerId: Config.apiPartnerId,
 	status: "inProgress",
 	title: "My future thoughts",
 	description: "<body><h1>My future thoughts</h1></body>",
@@ -53,13 +51,13 @@ var CLOSED_DISCUSSION = O.merge({}, DISCUSSION, {
 })
 
 var CLOSED_EXTERNAL_DISCUSSION = O.merge({}, CLOSED_DISCUSSION, {
-	sourcePartnerId: EXTERNAL_PARTNER_ID
+	sourcePartnerId: O.keys(Config.partners)[0]
 })
 
 var INITIATIVE = {
 	id: UUID,
 	createdAt: new Date(2000, 0, 1),
-	sourcePartnerId: PARTNER_ID,
+	sourcePartnerId: Config.apiPartnerId,
 	status: "voting",
 	title: "My thoughts",
 	description: "<body><h1>My thoughts</h1></body>",
