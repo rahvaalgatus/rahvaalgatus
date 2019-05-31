@@ -75,11 +75,13 @@ describe("AdminController", function() {
 			it("must email subscribers", function*() {
 				var subscriptions = yield subscriptionsDb.create([
 					new ValidSubscription({
+						email: "a@example.com",
 						initiative_uuid: this.topic.id,
 						confirmed_at: new Date
 					}),
 
 					new ValidSubscription({
+						email: "b@example.com",
 						initiative_uuid: null,
 						confirmed_at: new Date
 					})
@@ -151,11 +153,13 @@ describe("AdminController", function() {
 			it("must email subscribers", function*() {
 				var subscriptions = yield subscriptionsDb.create([
 					new ValidSubscription({
+						email: "a@example.com",
 						initiative_uuid: this.topic.id,
 						confirmed_at: new Date
 					}),
 
 					new ValidSubscription({
+						email: "b@example.com",
 						initiative_uuid: null,
 						confirmed_at: new Date
 					})
