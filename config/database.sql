@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS "initiative_events" (
 	occurred_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
 	created_by TEXT,
 	title TEXT NOT NULL,
-	"text" TEXT NOT NULL,
+	"text" TEXT NOT NULL, origin TEXT NOT NULL DEFAULT 'admin',
 
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
 
@@ -103,4 +103,5 @@ INSERT INTO migrations VALUES('20190428170006');
 INSERT INTO migrations VALUES('20190519192050');
 INSERT INTO migrations VALUES('20190523150859');
 INSERT INTO migrations VALUES('20190527092632');
+INSERT INTO migrations VALUES('20190531131546');
 COMMIT;

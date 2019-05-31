@@ -66,6 +66,7 @@ describe("AdminController", function() {
 					updated_at: new Date,
 					occurred_at: new Date(2020, 0, 2, 13, 37),
 					created_by: this.user.id,
+					origin: "admin",
 					title: "Initiative was handled",
 					text: "All good."
 				})
