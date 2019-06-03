@@ -3,10 +3,18 @@ var DateFns = require("date-fns")
 var Config = require("root/config")
 var job = require("root/jobs/initiative_end_email_job")
 var newUuid = require("uuid/v4")
+var newUser = require("root/test/citizenos_fixtures").newUser
+var newVote = require("root/test/citizenos_fixtures").newVote
+var newSignature = require("root/test/citizenos_fixtures").newSignature
+var createUser = require("root/test/citizenos_fixtures").createUser
+var createVote = require("root/test/citizenos_fixtures").createVote
+var createOptions = require("root/test/citizenos_fixtures").createOptions
+var createSignature = require("root/test/citizenos_fixtures").createSignature
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var cosDb = require("root").cosDb
 var sql = require("sqlate")
 var PARTNER_ID = Config.apiPartnerId
+var SIGS_REQUIRED = Config.votesRequired
 
 describe("InitiativeEndEmailJob", function() {
 	require("root/test/mitm")()
@@ -16,15 +24,7 @@ describe("InitiativeEndEmailJob", function() {
 	beforeEach(require("root/test/mitm").router)
 
 	beforeEach(function*() {
-		this.user = yield cosDb("Users").insert({
-			id: newUuid(),
-			email: "user@example.com",
-			emailIsVerified: true,
-			emailVerificationCode: newUuid(),
-			createdAt: new Date,
-			updatedAt: new Date,
-			source: "citizenos"
-		}).returning("*").then(_.first)
+		this.user = yield createUser(newUser())
 
 		this.partner = yield cosDb("Partners").insert({
 			id: PARTNER_ID,
@@ -41,7 +41,7 @@ describe("InitiativeEndEmailJob", function() {
 
 			yield job()
 			this.emails.length.must.equal(1)
-			this.emails[0].envelope.to.must.eql(["user@example.com"])
+			this.emails[0].envelope.to.must.eql([this.user.email])
 			var body = String(this.emails[0].message)
 			body.must.not.include("undefined")
 		})
@@ -124,20 +124,35 @@ describe("InitiativeEndEmailJob", function() {
 	})
 
 	describe("when in signing", function() {
-		it("must email when signing has ended", function*() {
+		it("must email when signing has ended and initiative successful",
+			function*() {
 			var topic = yield createTopic({creatorId: this.user.id, status: "voting"})
-			yield createVote(topic, {endsAt: new Date})
+			yield createVote(topic, newVote({endsAt: new Date}))
+			yield createSignatures(topic, SIGS_REQUIRED)
 
 			yield job()
 			this.emails.length.must.equal(1)
-			this.emails[0].envelope.to.must.eql(["user@example.com"])
+			this.emails[0].envelope.to.must.eql([this.user.email])
+			var body = String(this.emails[0].message)
+			body.must.not.include("undefined")
+		})
+
+		it("must email when signing has ended and initiative incomplete",
+			function*() {
+			var topic = yield createTopic({creatorId: this.user.id, status: "voting"})
+			yield createVote(topic, newVote({endsAt: new Date}))
+			yield createSignatures(topic, SIGS_REQUIRED - 1)
+
+			yield job()
+			this.emails.length.must.equal(1)
+			this.emails[0].envelope.to.must.eql([this.user.email])
 			var body = String(this.emails[0].message)
 			body.must.not.include("undefined")
 		})
 
 		it("must not email when signing not ended", function*() {
 			var topic = yield createTopic({creatorId: this.user.id, status: "voting"})
-			yield createVote(topic, {endsAt: DateFns.addSeconds(new Date, 1)})
+			yield createVote(topic, newVote({endsAt: DateFns.addSeconds(new Date, 1)}))
 			yield job()
 			this.emails.must.be.empty()
 		})
@@ -145,7 +160,7 @@ describe("InitiativeEndEmailJob", function() {
 		it("must not email if user email not set", function*() {
 			yield cosDb.query(sql`UPDATE "Users" SET email = NULL`)
 			var topic = yield createTopic({creatorId: this.user.id, status: "voting"})
-			yield createVote(topic, {endsAt: new Date})
+			yield createVote(topic, newVote({endsAt: new Date}))
 			yield job()
 			this.emails.must.be.empty()
 		})
@@ -153,7 +168,7 @@ describe("InitiativeEndEmailJob", function() {
 		it("must not email if user email not verified", function*() {
 			yield cosDb.query(sql`UPDATE "Users" SET "emailIsVerified" = false`)
 			var topic = yield createTopic({creatorId: this.user.id, status: "voting"})
-			yield createVote(topic, {endsAt: new Date})
+			yield createVote(topic, newVote({endsAt: new Date}))
 			yield job()
 			this.emails.must.be.empty()
 		})
@@ -165,7 +180,7 @@ describe("InitiativeEndEmailJob", function() {
 				status: "voting"
 			})
 
-			yield createVote(topic, {endsAt: new Date})
+			yield createVote(topic, newVote({endsAt: new Date}))
 			yield job()
 			this.emails.must.be.empty()
 		})
@@ -186,14 +201,14 @@ describe("InitiativeEndEmailJob", function() {
 				status: "voting"
 			})
 
-			yield createVote(topic, {endsAt: new Date})
+			yield createVote(topic, newVote({endsAt: new Date}))
 			yield job()
 			this.emails.must.be.empty()
 		})
 
 		it("must not email twice", function*() {
 			var topic = yield createTopic({creatorId: this.user.id, status: "voting"})
-			yield createVote(topic, {endsAt: new Date})
+			yield createVote(topic, newVote({endsAt: new Date}))
 
 			yield job()
 			this.emails.length.must.equal(1)
@@ -219,20 +234,14 @@ function createTopic(attrs) {
 	}, attrs)).returning("*").then(_.first)
 }
 
-function* createVote(topic, attrs) {
-	var vote = yield cosDb("Votes").insert(_.assign({
-		id: newUuid(),
-		createdAt: new Date(2015, 0, 1),
-		updatedAt: new Date(2015, 0, 1),
-		authType: "hard"
-	}, attrs)).returning("*").then(_.first)
+function* createSignatures(topic, n) {
+	var vote = yield createVote(topic, newVote())
+	var yesAndNo = yield createOptions(vote)
+	var users = yield _.times(n, _.compose(createUser, newUser))
 
-	yield cosDb("TopicVotes").insert({
-		topicId: topic.id,
+	return createSignature(users.map((user) => newSignature({
+		userId: user.id,
 		voteId: vote.id,
-		createdAt: new Date(2015, 0, 1),
-		updatedAt: new Date(2015, 0, 1),
-	})
-
-	return vote
+		optionId: yesAndNo[0]
+	})))
 }

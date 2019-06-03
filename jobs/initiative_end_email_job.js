@@ -8,6 +8,9 @@ var t = require("root/lib/i18n").t.bind(null, Config.language)
 var sqlite = require("root").sqlite
 var cosDb = require("root").cosDb
 var initiativesDb = require("root/db/initiatives_db")
+var renderEmail = require("root/lib/i18n").email.bind(null, "et")
+var countSignaturesByIds = require("root/lib/citizenos_db").countSignaturesByIds
+var SIGS_REQUIRED = Config.votesRequired
 var PARTNER_IDS = concat(Config.apiPartnerId, _.keys(Config.partners))
 var NO_UUIDS = sql`SELECT NULL::uuid LIMIT 0`
 
@@ -44,11 +47,10 @@ function* emailEndedDiscussions() {
 		yield sendEmail({
 			to: discussion.user_email,
 			subject: t("DISCUSSION_END_EMAIL_SUBJECT"),
-			text: t("DISCUSSION_END_EMAIL_BODY", {
+			text: renderEmail("DISCUSSION_END_EMAIL_BODY", {
 				initiativeTitle: discussion.title,
 				initiativeUrl: `${Config.url}/initiatives/${discussion.id}`,
-				initiativeEditUrl: `${Config.url}/initiatives/${discussion.id}/edit`,
-				siteUrl: Config.url
+				initiativeEditUrl: `${Config.url}/initiatives/${discussion.id}`
 			})
 		})
 
@@ -78,6 +80,8 @@ function* emailEndedInitiatives() {
 		AND "user"."emailIsVerified"
 	`)
 
+	var signatureCounts = yield countSignaturesByIds(initiatives.map((i) => i.id))
+
 	yield initiatives.map(function*(initiative) {
 		logger.info(
 			"Notifying %s of initiative %s signing end…",
@@ -87,12 +91,16 @@ function* emailEndedInitiatives() {
 
 		yield sendEmail({
 			to: initiative.user_email,
-			subject: t("SIGNING_END_EMAIL_SUBJECT"),
-			text: t("SIGNING_END_EMAIL_BODY", {
+			subject: signatureCounts[initiative.id] >= SIGS_REQUIRED
+				? t("SIGNING_END_COMPLETE_EMAIL_SUBJECT")
+				: t("SIGNING_END_INCOMPLETE_EMAIL_SUBJECT"),
+
+			text: renderEmail(signatureCounts[initiative.id] >= SIGS_REQUIRED
+				? "SIGNING_END_COMPLETE_EMAIL_BODY"
+				: "SIGNING_END_INCOMPLETE_EMAIL_BODY", {
 				initiativeTitle: initiative.title,
 				initiativeUrl: `${Config.url}/initiatives/${initiative.id}`,
-				initiativeEditUrl: `${Config.url}/initiatives/${initiative.id}/edit`,
-				siteUrl: Config.url
+				initiativeEditUrl: `${Config.url}/initiatives/${initiative.id}`
 			})
 		})
 
