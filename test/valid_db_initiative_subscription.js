@@ -1,13 +1,12 @@
-var O = require("oolong")
-var pseudoInt = require("root/lib/crypto").pseudoInt
+var _ = require("root/lib/underscore")
 var randomHex = require("root/lib/crypto").randomHex
 
 module.exports = function(attrs) {
 	var createdAt = new Date
 
-	return O.assign({
+	return _.assign({
 		initiative_uuid: null,
-		email: pseudoInt(100) + "@example.com",
+		email: _.uniqueId("user") + "@example.com",
 		created_at: createdAt,
 		created_ip: null,
 		origin: null,

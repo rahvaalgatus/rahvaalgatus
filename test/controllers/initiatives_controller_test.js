@@ -594,13 +594,11 @@ describe("InitiativesController", function() {
 
 					var subscriptions = yield subscriptionsDb.create([
 						new ValidSubscription({
-							email: "a@example.com",
 							initiative_uuid: UUID,
 							confirmed_at: new Date
 						}),
 
 						new ValidSubscription({
-							email: "b@example.com",
 							initiative_uuid: null,
 							confirmed_at: new Date
 						})
@@ -711,13 +709,11 @@ describe("InitiativesController", function() {
 
 					var subscriptions = yield subscriptionsDb.create([
 						new ValidSubscription({
-							email: "a@example.com",
 							initiative_uuid: UUID,
 							confirmed_at: new Date
 						}),
 
 						new ValidSubscription({
-							email: "b@example.com",
 							initiative_uuid: null,
 							confirmed_at: new Date
 						})
