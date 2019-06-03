@@ -280,15 +280,15 @@ exports.get("/initiatives/:id/messages/new", next(function*(req, res) {
 
 exports.post("/initiatives/:id/messages", next(function*(req, res) {
 	var initiative = req.initiative
-	var msg = req.body
+	var attrs = req.body
 
-	switch (msg.action) {
+	switch (attrs.action) {
 		case "send":
 			var message = yield messagesDb.create({
 				initiative_uuid: initiative.id,
 				origin: "message",
-				title: msg.title,
-				text: msg.text,
+				title: attrs.title,
+				text: attrs.text,
 				created_at: new Date,
 				updated_at: new Date,
 			})
@@ -305,13 +305,13 @@ exports.post("/initiatives/:id/messages", next(function*(req, res) {
 		case "preview":
 			res.render("admin/initiatives/messages/create_page.jsx", {
 				message: {
-					title: msg.title,
-					text: msg.text,
+					title: attrs.title,
+					text: attrs.text,
 				},
 
 				preview: {
-					title: msg.title,
-					text: msg.text
+					title: attrs.title,
+					text: attrs.text
 				},
 
 				subscriptions: yield subscriptionsDb.searchConfirmedByInitiativeId(
