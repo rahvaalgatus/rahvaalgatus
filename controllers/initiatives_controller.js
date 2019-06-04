@@ -415,6 +415,8 @@ exports.router.use("/:id/comments",
 	require("./initiatives/comments_controller").router)
 exports.router.use("/:id/authors",
 	require("./initiatives/authors_controller").router)
+exports.router.use("/:id/events",
+	require("./initiatives/events_controller").router)
 
 exports.router.get("/:id/signable", next(function*(req, res) {
 	var initiative = req.initiative

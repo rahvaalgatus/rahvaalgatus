@@ -284,6 +284,14 @@ button.inherited {
 	resize: vertical;
 }
 
+.form-submit + .form-epilogue {
+	margin-top: 0.5rem;
+}
+
+.form-epilogue {
+	font-size: 0.8em;
+}
+
 .form-checkbox {
 	display: block;
 	cursor: pointer;
@@ -1361,6 +1369,32 @@ button.inherited {
 			padding-bottom: 0;
 		}
 
+		.create-event-button {
+			border-top-left-radius: .5rem;
+			border-top-right-radius: .5rem;
+			display: block;
+			background: $light-background;
+			text-align: center;
+			color: $secondary-light-text;
+			line-height: 4rem;
+			max-width: $article-width-percentage;
+			text-transform: uppercase;
+			font-weight: bold;
+			border: 1px solid $light-background-border;
+			border-bottom: 0;
+
+			&:hover {
+				color: $link;
+			}
+
+			@include mobile-and-tablet {
+				border-radius: 0;
+				border-left: none;
+				border-right: none;
+				max-width: none;
+			}
+		}
+
 		.empty {
 			text-align: center;
 			font-size: 1.3rem;
@@ -1403,8 +1437,8 @@ button.inherited {
 				font-size: 2rem;
 				font-weight: 500;
 				color: $title-text;
-				margin-top: 0.2rem;
-				margin-bottom: 1rem;
+				margin-top: 0.5rem;
+				margin-bottom: 0.5rem;
 			}
 
 			time {

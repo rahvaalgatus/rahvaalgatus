@@ -429,12 +429,19 @@ function EventsView(attrs) {
 	var events = attrs.events
 	var sentToParliamentAt = dbInitiative.sent_to_parliament_at
 	var finishedInParliamentAt = dbInitiative.finished_in_parliament_at
-		
+
 	if (
 		events.length > 0 ||
 		sentToParliamentAt ||
-		finishedInParliamentAt
+		finishedInParliamentAt ||
+		Initiative.canCreateEvents(initiative)
 	) return <section id="initiative-events" class="transparent-section"><center>
+		{Initiative.canCreateEvents(initiative) ? <a
+			href={`/initiatives/${initiative.id}/events/new`}
+			class="create-event-button">
+			{t("CREATE_INITIATIVE_EVENT_BUTTON")}
+		</a> : null}
+
 		<article>
 			<ol class="events">
 				{finishedInParliamentAt ? <li class="event">
