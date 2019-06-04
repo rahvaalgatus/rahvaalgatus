@@ -146,8 +146,20 @@ describe("EventsController", function() {
 				})
 			})
 
-			it("must email subscribers", function*() {
+			it("must email subscribers interested in author events", function*() {
 				var subscriptions = yield subscriptionsDb.create([
+					new ValidSubscription({
+						initiative_uuid: INITIATIVE.id,
+						confirmed_at: new Date,
+						author_interest: false
+					}),
+
+					new ValidSubscription({
+						initiative_uuid: null,
+						confirmed_at: new Date,
+						author_interest: false
+					}),
+
 					new ValidSubscription({
 						initiative_uuid: INITIATIVE.id,
 						confirmed_at: new Date
@@ -177,7 +189,7 @@ describe("EventsController", function() {
 					SELECT * FROM initiative_messages
 				`)
 
-				var emails = subscriptions.map((s) => s.email).sort()
+				var emails = subscriptions.slice(2).map((s) => s.email).sort()
 
 				messages.must.eql([{
 					id: messages[0].id,
@@ -207,7 +219,7 @@ describe("EventsController", function() {
 				this.emails[0].envelope.to.must.eql(emails)
 				var msg = String(this.emails[0].message)
 				msg.match(/^Subject: .*/m)[0].must.include(INITIATIVE.title)
-				subscriptions.forEach((s) => msg.must.include(s.update_token))
+				subscriptions.slice(2).forEach((s) => msg.must.include(s.update_token))
 			})
 
 			it("must respond with 403 if not an admin", function*() {

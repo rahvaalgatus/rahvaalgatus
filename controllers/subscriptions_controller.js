@@ -8,6 +8,7 @@ var renderEmail = require("root/lib/i18n").email
 var next = require("co-next")
 var db = require("root/db/initiative_subscriptions_db")
 var sql = require("sqlate")
+exports.parse = parse
 
 exports.router = Router({mergeParams: true})
 
@@ -124,6 +125,16 @@ exports.router.get("/:token", function(req, res) {
 	res.render("subscriptions/read_page.jsx", {subscription: req.subscription})
 })
 
+exports.router.put("/:token", next(function*(req, res) {
+	yield db.update(req.subscription, {
+		__proto__: parse(req.body),
+		updated_at: new Date
+	})
+
+	res.flash("notice", req.t("INITIATIVE_SUBSCRIPTIONS_UPDATED"))
+	res.redirect(303, req.baseUrl + req.url)
+}))
+
 exports.router.delete("/:token", next(function*(req, res) {
 	var subscription = req.subscription
 
@@ -136,3 +147,14 @@ exports.router.delete("/:token", next(function*(req, res) {
 	res.flash("notice", req.t("INITIATIVES_SUBSCRIPTION_DELETED"))
 	res.redirect(303, "/")
 }))
+
+function parse(obj) {
+	var attrs = {}
+
+	if ("official_interest" in obj)
+		attrs.official_interest = _.parseBoolean(obj.official_interest)
+	if ("author_interest" in obj)
+		attrs.author_interest = _.parseBoolean(obj.author_interest)
+
+	return attrs
+}

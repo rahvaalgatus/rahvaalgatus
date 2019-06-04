@@ -262,6 +262,79 @@ describe("SubscriptionsController", function() {
 		})
 	})
 
+	describe("PUT /:id/subscriptions/:token", function() {
+		require("root/test/fixtures").csrf()
+		require("root/test/time")()
+
+		it("must update subscription", function*() {
+			var sub = yield db.create(new ValidSubscription({
+				confirmed_at: new Date
+			}))
+
+			var path = `/subscriptions/${sub.update_token}`
+			var res = yield this.request(path, {
+				method: "POST",
+					form: {
+						_method: "put",
+						_csrf_token: this.csrfToken,
+						official_interest: false,
+						author_interest: false
+					}
+			})
+
+			res.statusCode.must.equal(303)
+			res.headers.location.must.equal(path)
+
+			yield db.read(sub).must.then.eql({
+				__proto__: sub,
+				updated_at: new Date,
+				official_interest: false,
+				author_interest: false
+			})
+		})
+
+		it("must not update email", function*() {
+			var sub = yield db.create(new ValidSubscription({
+				confirmed_at: new Date
+			}))
+
+			var res = yield this.request(`/subscriptions/${sub.update_token}`, {
+				method: "POST",
+					form: {
+						_method: "put",
+						_csrf_token: this.csrfToken,
+						email: "root@example.com"
+					}
+			})
+
+			res.statusCode.must.equal(303)
+
+			yield db.read(sub).must.then.eql({
+				__proto__: sub,
+				updated_at: new Date
+			})
+		})
+
+		it("must respond with 404 given invalid update token", function*() {
+			// Still have a single subscription to ensure it's not picking randomly.
+			var subscription = yield db.create(new ValidSubscription({
+				confirmed_at: new Date
+			}))
+
+			var res = yield this.request(`/subscriptions/deadbeef`, {
+				method: "POST",
+				form: {_method: "put", _csrf_token: this.csrfToken}
+			})
+
+			res.statusCode.must.equal(404)
+			res.body.must.include(t("SUBSCRIPTION_NOT_FOUND_TITLE"))
+
+			yield db.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`).must.then.eql([subscription])
+		})
+	})
+
 	describe("DELETE /:id/subscriptions/:token", function() {
 		require("root/test/fixtures").csrf()
 

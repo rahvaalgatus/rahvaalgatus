@@ -221,7 +221,9 @@ exports.post("/initiatives/:id/events", next(function*(req, res) {
 
 			yield Subscription.send(
 				message,
-				yield subscriptionsDb.searchConfirmedByInitiativeId(initiative.id)
+				yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(
+					initiative.id
+				)
 			)
 
 			res.flash("notice", "Event created and message sent.")

@@ -14,6 +14,8 @@ module.exports = function(attrs) {
 		confirmation_sent_at: null,
 		confirmation_token: null,
 		confirmed_at: null,
-		update_token: randomHex(8)
+		update_token: randomHex(8),
+		official_interest: true,
+		author_interest: true
 	}, attrs)
 }

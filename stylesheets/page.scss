@@ -288,6 +288,10 @@ button.inherited {
 	margin-top: 0.5rem;
 }
 
+.form-checkbox + .form-submit {
+	margin-top: 0.5rem;
+}
+
 .form-epilogue {
 	font-size: 0.8em;
 }
@@ -375,6 +379,10 @@ button.inherited {
 
 		&.is-disabled { color: #bbb; }
 	}
+}
+
+.form-or {
+	margin: 0 0.5rem;
 }
 
 .flash {

@@ -28,7 +28,7 @@ exports.router.get("/new", next(function*(req, res) {
 	var initiative = req.initiative
 
 	var subscriberCount =
-		yield subscriptionsDb.countConfirmedByInitiativeId(initiative.id)
+		yield subscriptionsDb.countConfirmedByInitiativeIdForAuthor(initiative.id)
 
 	res.render("initiatives/events/create_page.jsx", {
 		attrs: EMPTY_EVENT,
@@ -70,7 +70,7 @@ exports.router.post("/", next(function*(req, res) {
 
 	yield Subscription.send(
 		message,
-		yield subscriptionsDb.searchConfirmedByInitiativeId(initiative.id)
+		yield subscriptionsDb.searchConfirmedByInitiativeIdForAuthor(initiative.id)
 	)
 
 	res.flash("notice", req.t("INITIATIVE_EVENT_BY_AUTHOR_CREATED"))

@@ -15,27 +15,53 @@ exports.parse = function(attrs) {
 
 		confirmation_sent_at: attrs.confirmation_sent_at &&
 			new Date(attrs.confirmation_sent_at),
+
+		official_interest: !!attrs.official_interest,
+		author_interest: !!attrs.author_interest
 	}, attrs)
 }
 
 exports.searchConfirmedByInitiativeId = function(id) {
-	return this.search(sql`
-		SELECT * FROM (
-			SELECT * FROM initiative_subscriptions
-			WHERE (initiative_uuid = ${id} OR initiative_uuid IS NULL)
-			AND confirmed_at IS NOT NULL
-			ORDER BY initiative_uuid IS NOT NULL
-		)
-		GROUP BY email
-		ORDER BY email
-	`)
+	return searchConfirmedByInitiativeIdWith(this, sql`1`, id)
 }
 
-exports.countConfirmedByInitiativeId = function(id) {
+exports.searchConfirmedByInitiativeIdForOfficial = function(id) {
+	return searchConfirmedByInitiativeIdWith(this, sql`official_interest`, id)
+}
+
+exports.searchConfirmedByInitiativeIdForAuthor = function(id) {
+	return searchConfirmedByInitiativeIdWith(this, sql`author_interest`, id)
+}
+
+exports.countConfirmedByInitiativeId =
+	countConfirmedByInitiativeIdWith.bind(null, sql`1`)
+
+exports.countConfirmedByInitiativeIdForOfficial =
+	countConfirmedByInitiativeIdWith.bind(null, sql`official_interest`)
+
+exports.countConfirmedByInitiativeIdForAuthor =
+	countConfirmedByInitiativeIdWith.bind(null, sql`author_interest`)
+
+function countConfirmedByInitiativeIdWith(filter, id) {
 	return sqlite(sql`
 		SELECT COUNT(*) AS count
 		FROM initiative_subscriptions
 		WHERE (initiative_uuid = ${id} OR initiative_uuid IS NULL)
 		AND confirmed_at IS NOT NULL
+		AND ${filter}
 	`).then(_.first).then((row) => row.count)
+}
+
+function searchConfirmedByInitiativeIdWith(db, filter, id) {
+	return db.search(sql`
+		SELECT * FROM (
+			SELECT * FROM initiative_subscriptions
+			WHERE (initiative_uuid = ${id} OR initiative_uuid IS NULL)
+			AND confirmed_at IS NOT NULL
+			AND ${filter}
+			ORDER BY initiative_uuid IS NOT NULL
+		)
+		GROUP BY email
+		ORDER BY email
+	`)
 }

@@ -199,7 +199,7 @@ function Form(attrs, children) {
 		hidden={attrs.hidden}
 		method={method == "get" ? method : "post"}
 	>
-		{!(method == "get" || method == "post") ?
+		{method && !(method == "get" || method == "post") ?
 			<input type="hidden" name="_method" value={method} />
 		: null}
 

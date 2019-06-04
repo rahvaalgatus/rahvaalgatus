@@ -1489,6 +1489,93 @@ describe("InitiativesController", function() {
 		})
 	})
 
+	describe("PUT /:id/subscriptions/:token", function() {
+		require("root/test/fixtures").csrf()
+		require("root/test/time")()
+
+		it("must update subscription", function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
+
+			var sub = yield subscriptionsDb.create(new ValidSubscription({
+				initiative_uuid: UUID,
+				confirmed_at: new Date
+			}))
+
+			var path = `/initiatives/${UUID}/subscriptions/${sub.update_token}`
+			var res = yield this.request(path, {
+				method: "POST",
+					form: {
+						_method: "put",
+						_csrf_token: this.csrfToken,
+						official_interest: false,
+						author_interest: false
+					}
+			})
+
+			res.statusCode.must.equal(303)
+			res.headers.location.must.equal(path)
+
+			yield subscriptionsDb.read(sub).must.then.eql({
+				__proto__: sub,
+				updated_at: new Date,
+				official_interest: false,
+				author_interest: false
+			})
+		})
+
+		it("must not update email", function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
+
+			var sub = yield subscriptionsDb.create(new ValidSubscription({
+				initiative_uuid: UUID,
+				confirmed_at: new Date
+			}))
+
+			var path = `/initiatives/${UUID}/subscriptions/${sub.update_token}`
+			var res = yield this.request(path, {
+				method: "POST",
+					form: {
+						_method: "put",
+						_csrf_token: this.csrfToken,
+						email: "root@example.com"
+					}
+			})
+
+			res.statusCode.must.equal(303)
+
+			yield subscriptionsDb.read(sub).must.then.eql({
+				__proto__: sub,
+				updated_at: new Date
+			})
+		})
+
+		it("must respond with 404 given invalid update token", function*() {
+			this.router.get(`/api/topics/${UUID}`,
+				respond.bind(null, {data: INITIATIVE}))
+
+			// Still have a single subscription to ensure it's not picking randomly.
+			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+				initiative_uuid: UUID,
+				confirmed_at: new Date
+			}))
+
+			var res = yield this.request(
+				`/initiatives/${UUID}/subscriptions/deadbeef`, {
+				method: "POST",
+				form: {_method: "put", _csrf_token: this.csrfToken}
+			})
+
+			res.statusCode.must.equal(404)
+			res.body.must.include(t("SUBSCRIPTION_NOT_FOUND_TITLE"))
+
+			yield subscriptionsDb.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`).must.then.eql([subscription])
+		})
+	})
+
 	describe("DELETE /:id/subscriptions/:token", function() {
 		require("root/test/fixtures").csrf()
 
@@ -1496,12 +1583,10 @@ describe("InitiativesController", function() {
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
-			var subscription = new ValidSubscription({
+			var subscription = yield subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: UUID,
 				confirmed_at: new Date
-			})
-
-			yield subscriptionsDb.create(subscription)
+			}))
 
 			var res = yield this.request(
 				`/initiatives/${UUID}/subscriptions/${subscription.update_token}`, {
@@ -1522,12 +1607,10 @@ describe("InitiativesController", function() {
 				respond.bind(null, {data: INITIATIVE}))
 
 			// Still have a single subscription to ensure it's not picking randomly.
-			var subscription = new ValidSubscription({
+			var subscription = yield subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: UUID,
 				confirmed_at: new Date
-			})
-
-			yield subscriptionsDb.create(subscription)
+			}))
 
 			var res = yield this.request(
 				`/initiatives/${UUID}/subscriptions/deadbeef`, {

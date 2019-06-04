@@ -18,6 +18,8 @@ var signaturesDb = require("root/db/initiative_signatures_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
 var countSignatures = Initiative.countSignatures.bind(null, "Yes")
+var parseSubscription =
+	require("root/controllers/subscriptions_controller").parse
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
 var catch401 = require("root/lib/fetch").catch.bind(null, 401)
@@ -697,6 +699,16 @@ exports.router.get("/:id/subscriptions/:token", function(req, res) {
 		subscription: req.subscription
 	})
 })
+
+exports.router.put("/:id/subscriptions/:token", next(function*(req, res) {
+	yield subscriptionsDb.update(req.subscription, {
+		__proto__: parseSubscription(req.body),
+		updated_at: new Date
+	})
+
+	res.flash("notice", req.t("INITIATIVE_SUBSCRIPTION_UPDATED"))
+	res.redirect(303, req.baseUrl + req.url)
+}))
 
 exports.router.delete("/:id/subscriptions/:token", next(function*(req, res) {
 	var initiative = req.initiative
