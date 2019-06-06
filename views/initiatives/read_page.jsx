@@ -434,33 +434,17 @@ function EventsView(attrs) {
 	var initiative = attrs.initiative
 	var dbInitiative = attrs.dbInitiative
 	var events = attrs.events
-	var sentToParliamentAt = dbInitiative.sent_to_parliament_at
-	var finishedInParliamentAt = dbInitiative.finished_in_parliament_at
 
-	if (
-		events.length > 0 ||
-		sentToParliamentAt ||
-		finishedInParliamentAt ||
-		Initiative.canCreateEvents(initiative)
-	) return <section id="initiative-events" class="transparent-section"><center>
-		{Initiative.canCreateEvents(initiative) ? <a
-			href={`/initiatives/${initiative.id}/events/new`}
-			class="create-event-button">
-			{t("CREATE_INITIATIVE_EVENT_BUTTON")}
-		</a> : null}
+	if (events.length > 0 || Initiative.canCreateEvents(initiative))
+		return <section id="initiative-events" class="transparent-section"><center>
+			{Initiative.canCreateEvents(initiative) ? <a
+				href={`/initiatives/${initiative.id}/events/new`}
+				class="create-event-button">
+				{t("CREATE_INITIATIVE_EVENT_BUTTON")}
+			</a> : null}
 
-		<article>
-			<ol class="events">
-				{finishedInParliamentAt ? <li class="event">
-					<time datetime={finishedInParliamentAt.toJSON()}>
-						{I18n.formatDate("numeric", finishedInParliamentAt)}
-					</time>
-					<h2>{t("PROCEEDING_FINISHED_TITLE")}</h2>
-					<p class="text">{t("PROCEEDING_FINISHED_BODY")}</p>
-				</li> : null}
-
-				{events.map(function(event) {
-					return <li class="event">
+			<article>
+				<ol class="events">{events.map((event) => <li class="event">
 						<time datetime={event.occurred_at.toJSON()}>
 							{I18n.formatDate("numeric", event.occurred_at)}
 						</time>
@@ -468,24 +452,14 @@ function EventsView(attrs) {
 						<h2>{event.title}</h2>
 						<p class="text">{Jsx.html(linkify(event.text))}</p>
 					</li>
-				})}
-
-				{sentToParliamentAt ? <li class="event">
-					<time datetime={sentToParliamentAt.toJSON()}>
-						{I18n.formatDate("numeric", sentToParliamentAt)}
-					</time>
-
-					<h2>{t("FIRST_PROCEEDING_TITLE")}</h2>
-					<p class="text">{t("FIRST_PROCEEDING_BODY")}</p>
-				</li> : null}
-			</ol>
-		</article>
-	</center></section>
+				)}</ol>
+			</article>
+		</center></section>
 
 	else if (Initiative.isInParliament(initiative, dbInitiative))
 		return <section id="initiative-events" class="transparent-section"><center>
-		<article><p class="text empty">{t("NO_GOVERNMENT_REPLY")}</p></article>
-	</center></section>
+			<article><p class="text empty">{t("NO_GOVERNMENT_REPLY")}</p></article>
+		</center></section>
 
 	else return null
 }

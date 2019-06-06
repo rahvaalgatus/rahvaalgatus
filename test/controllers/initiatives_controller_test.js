@@ -531,6 +531,57 @@ describe("InitiativesController", function() {
 			var feed = Atom.parse(res.body).feed
 			feed.updated.$.must.equal(INITIATIVE.updatedAt.toJSON())
 		})
+
+		it("must include generated parliament events", function*() {
+			this.router.get(`/api/topics/${UUID}`, respond.bind(null, {
+				data: PROCESSED_SUCCESSFUL_INITIATIVE
+			}))
+
+			var sentAt = new Date(2015, 5, 17)
+			var finishedAt = new Date(2015, 5, 21)
+
+			yield initiativesDb.create({
+				uuid: UUID,
+				sent_to_parliament_at: sentAt,
+				finished_in_parliament_at: finishedAt
+			})
+
+			var events = concat({
+				id: "sent-to-parliament",
+				title: t("FIRST_PROCEEDING_TITLE"),
+				text: t("FIRST_PROCEEDING_BODY"),
+				updated_at: sentAt,
+				occurred_at: sentAt
+			}, yield eventsDb.create({
+				initiative_uuid: UUID,
+				title: "We sent it.",
+				text: "To somewhere.",
+				created_at: new Date(2015, 5, 18),
+				updated_at: new Date(2015, 5, 19),
+				occurred_at: new Date(2015, 5, 20)
+			}), {
+				id: "finished-in-parliament",
+				title: t("PROCEEDING_FINISHED_TITLE"),
+				text: "",
+				updated_at: finishedAt,
+				occurred_at: finishedAt
+			})
+
+			var res = yield this.request(`/initiatives/${UUID}.atom`)
+			res.statusCode.must.equal(200)
+			var feed = Atom.parse(res.body).feed
+			feed.updated.$.must.equal(finishedAt.toJSON())
+
+			feed.entry.forEach(function(entry, i) {
+				var event = events[i]
+				var url = `${Config.url}/initiatives/${UUID}/events/${event.id}`
+				entry.id.$.must.equal(url)
+				entry.updated.$.must.equal(event.updated_at.toJSON())
+				entry.published.$.must.equal(event.occurred_at.toJSON())
+				entry.title.$.must.equal(event.title)
+				;(entry.content.$ || "").must.equal(event.text)
+			})
+		})
 	})
 
 	describe("PUT /:id", function() {

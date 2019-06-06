@@ -27,7 +27,7 @@ var isFetchError = require("root/lib/fetch").is
 var next = require("co-next")
 var sleep = require("root/lib/promise").sleep
 var cosApi = require("root/lib/citizenos_api")
-var t = require("root/lib/i18n").t.bind(null, "et")
+var t = require("root/lib/i18n").t.bind(null, Config.language)
 var renderEmail = require("root/lib/i18n").email
 var sql = require("sqlate")
 var parseCitizenInitiative = cosApi.parseCitizenInitiative
@@ -161,6 +161,7 @@ exports.router.get("/:id",
 	new ResponseTypeMiddeware(RESPONSE_TYPES.map(MediaType)),
 	next(function*(req, res, next) {
 	var initiative = req.initiative
+	var dbInitiative = req.dbInitiative
 
 	switch (res.contentType.name) {
 		case "application/vnd.rahvaalgatus.initiative+json":
@@ -174,12 +175,8 @@ exports.router.get("/:id",
 			break
 
 		case "application/atom+xml":
-			var events = yield eventsDb.search(sql`
-				SELECT * FROM initiative_events
-				WHERE initiative_uuid = ${initiative.id}
-				ORDER BY "occurred_at" ASC
-			`)
-
+			// Stick to the default language in the Atom feed.
+			var events = yield searchInitiativeEvents(t, dbInitiative)
 			res.setHeader("Content-Type", res.contentType)
 			res.render("initiatives/atom.jsx", {events: events})
 			break
@@ -191,6 +188,7 @@ exports.router.get("/:id",
 exports.read = next(function*(req, res) {
 	var user = req.user
 	var initiative = req.initiative
+	var dbInitiative = req.dbInitiative
 
 	var signature
 	if (user == null && req.flash("signed")) signature = {
@@ -218,11 +216,7 @@ exports.read = next(function*(req, res) {
 	var comments = yield req.cosApi(commentsPath)
 	comments = comments.body.data.rows.map(parseCitizenComment).reverse()
 
-	var events = yield eventsDb.search(sql`
-		SELECT * FROM initiative_events
-		WHERE initiative_uuid = ${initiative.id}
-		ORDER BY "occurred_at" DESC
-	`)
+	var events = _.reverse(yield searchInitiativeEvents(req.t, dbInitiative))
 
 	res.render("initiatives/read_page.jsx", {
 		signature: signature,
@@ -794,6 +788,39 @@ function unhideSignature(initiativeId, userId) {
 		SET hidden = 0, updated_at = ${new Date}
 		WHERE (initiative_uuid, user_uuid) = (${initiativeId}, ${userId})
 	`)
+}
+
+function* searchInitiativeEvents(t, initiative) {
+	var events = yield eventsDb.search(sql`
+		SELECT * FROM initiative_events
+		WHERE initiative_uuid = ${initiative.uuid}
+		ORDER BY "occurred_at" ASC
+	`)
+
+	var sentToParliamentAt = initiative.sent_to_parliament_at
+	var finishedInParliamentAt = initiative.finished_in_parliament_at
+
+	return concat(
+		sentToParliamentAt ? {
+			id: "sent-to-parliament",
+			title: t("FIRST_PROCEEDING_TITLE"),
+			text: t("FIRST_PROCEEDING_BODY"),
+			updated_at: sentToParliamentAt,
+			occurred_at: sentToParliamentAt,
+			origin: "admin"
+		} : EMPTY_ARR,
+
+		events,
+
+		finishedInParliamentAt ? {
+			id: "finished-in-parliament",
+			title: t("PROCEEDING_FINISHED_TITLE"),
+			text: "",
+			updated_at: finishedInParliamentAt,
+			occurred_at: finishedInParliamentAt,
+			origin: "admin"
+		} : EMPTY_ARR
+	)
 }
 
 // NOTE: Use this only on JWTs from trusted sources as it does no validation.
