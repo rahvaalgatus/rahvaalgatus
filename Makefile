@@ -29,7 +29,7 @@ RSYNC_OPTS = \
 	--exclude "/config/staging.json" \
 	--exclude "/config/production.json" \
 	--exclude "/config/*.sqlite3" \
-	--exclude "/stylesheets/***" \
+	--exclude "/assets/***" \
 	--exclude "/test/***" \
 	--exclude "/scripts/***" \
 	--exclude "/node_modules/co-mocha/***" \
@@ -68,7 +68,7 @@ minify:
 	$(MAKE) -C app minify
 
 stylesheets:
-	$(SASS) --output public/assets stylesheets
+	$(SASS) --output public/assets assets
 
 autostylesheets: stylesheets
 	$(MAKE) SASS="$(SASS) --watch" "$<"
