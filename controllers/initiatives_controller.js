@@ -47,7 +47,8 @@ var EMPTY_COMMENT = {subject: "", text: "", parentId: null}
 
 var RESPONSE_TYPES = [
 	"text/html",
-	"application/vnd.rahvaalgatus.initiative+json; v=1"
+	"application/vnd.rahvaalgatus.initiative+json; v=1",
+	"application/atom+xml"
 ]
 
 exports.router = Router({mergeParams: true})
@@ -158,7 +159,7 @@ exports.router.use("/:id", next(function*(req, res, next) {
 
 exports.router.get("/:id",
 	new ResponseTypeMiddeware(RESPONSE_TYPES.map(MediaType)),
-	function(req, res, next) {
+	next(function*(req, res, next) {
 	var initiative = req.initiative
 
 	switch (res.contentType.name) {
@@ -172,9 +173,20 @@ exports.router.get("/:id",
 			})
 			break
 
-		default: next()
+		case "application/atom+xml":
+			var events = yield eventsDb.search(sql`
+				SELECT * FROM initiative_events
+				WHERE initiative_uuid = ${initiative.id}
+				ORDER BY "occurred_at" ASC
+			`)
+
+			res.setHeader("Content-Type", res.contentType)
+			res.render("initiatives/atom.jsx", {events: events})
+			break
+
+		default: exports.read(req, res, next)
 	}
-})
+}))
 
 exports.read = next(function*(req, res) {
 	var user = req.user
@@ -220,8 +232,6 @@ exports.read = next(function*(req, res) {
 		events: events
 	})
 })
-
-exports.router.get("/:id", exports.read)
 
 exports.router.put("/:id", next(function*(req, res) {
 	var initiative = req.initiative

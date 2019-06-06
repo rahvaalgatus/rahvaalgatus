@@ -18,6 +18,7 @@
 	"ALREADY_SUBSCRIBED_TO_INITIATIVES_TITLE": "Oled juba algatuste teavitused tellinud",
 	"ALREADY_SUBSCRIBED_TO_INITIATIVE_BODY": "Tere\n\nTellisid algatuse \"{{initiativeTitle}}\" teavitused. Kuna olid varem juba teavitused tellinud ja oma meiliaadressi kinnitanud, ei pea sa nüüd teavituste saamiseks midagi tegema. Saad algatuse käekäigust ka edaspidi teada.\n\nKui mõtlesid ümber ja soovid teavitustest loobuda, saad seda teha {{url}} lehel.\n\n--\nRahvaalgatus\n{{siteUrl}}\n{{facebookUrl}}\n{{twitterUrl}}",
 	"ALREADY_SUBSCRIBED_TO_INITIATIVE_TITLE": "Oled juba tellinud algatuse \"{{initiativeTitle}}\" teavitused",
+	"ATOM_INITIATIVE_FEED_TITLE": "{{title}} Menetlusinfo",
 	"BACK_TO_DISCUSSION": "Tagasi arutelu juurde",
 	"BACK_TO_INITIATIVE": "Tagasi algatuse juurde",
 	"BTN_CREATE_VOTE": "Kogu allkirju",

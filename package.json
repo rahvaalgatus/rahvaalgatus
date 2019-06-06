@@ -39,7 +39,9 @@
 		"uuid": "",
 		"morgan": "",
 		"method-override": "",
-		"medium-type": ""
+		"medium-type": "",
+		"mime": "",
+		"hugml": ""
 	},
 
 	"devDependencies": {

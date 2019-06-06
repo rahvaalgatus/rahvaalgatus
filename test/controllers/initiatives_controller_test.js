@@ -1,6 +1,7 @@
 var _ = require("root/lib/underscore")
 var O = require("oolong")
 var Url = require("url")
+var Atom = require("root/lib/atom")
 var DateFns = require("date-fns")
 var Config = require("root/config")
 var ValidDbInitiative = require("root/test/valid_db_initiative")
@@ -16,6 +17,7 @@ var pseudoHex = require("root/lib/crypto").pseudoHex
 var sqlite = require("root").sqlite
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
+var eventsDb = require("root/db/initiative_events_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var encodeMime = require("nodemailer/lib/mime-funcs").encodeWord
@@ -23,11 +25,13 @@ var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var VOTES = require("root/config").votesRequired
 var PARTNER_IDS = concat(Config.apiPartnerId, O.keys(Config.partners))
 var INITIATIVE_TYPE = "application/vnd.rahvaalgatus.initiative+json; v=1"
+var ATOM_TYPE = "application/atom+xml"
 var EMPTY_RES = {data: {rows: []}}
 
 var DISCUSSION = {
 	id: UUID,
 	createdAt: new Date(2000, 0, 1),
+	updatedAt: new Date(2000, 0, 2),
 	sourcePartnerId: Config.apiPartnerId,
 	status: "inProgress",
 	title: "My future thoughts",
@@ -57,6 +61,7 @@ var CLOSED_EXTERNAL_DISCUSSION = O.merge({}, CLOSED_DISCUSSION, {
 var INITIATIVE = {
 	id: UUID,
 	createdAt: new Date(2000, 0, 1),
+	updatedAt: new Date(2000, 0, 2),
 	sourcePartnerId: Config.apiPartnerId,
 	status: "voting",
 	title: "My thoughts",
@@ -447,9 +452,6 @@ describe("InitiativesController", function() {
 				data: INITIATIVE
 			}))
 
-			this.router.get(`/api/topics/${UUID}/comments`,
-				respond.bind(null, EMPTY_RES))
-
 			var res = yield this.request("/initiatives/" + UUID, {
 				headers: {Accept: INITIATIVE_TYPE}
 			})
@@ -462,6 +464,72 @@ describe("InitiativesController", function() {
 				title: INITIATIVE.title,
 				signatureCount: 0
 			})
+		})
+	})
+
+	describe(`GET /:id with ${ATOM_TYPE}`, function() {
+		it("must respond with Atom feed", function*() {
+			this.router.get(`/api/topics/${UUID}`, respond.bind(null, {
+				data: INITIATIVE
+			}))
+
+			var events = yield eventsDb.create([{
+				initiative_uuid: UUID,
+				title: "We sent it.",
+				text: "To somewhere.",
+				created_at: new Date(2015, 5, 18),
+				updated_at: new Date(2015, 5, 19),
+				occurred_at: new Date(2015, 5, 20)
+			}, {
+				initiative_uuid: UUID,
+				title: "They got it.",
+				text: "From somewhere.",
+				created_at: new Date(2015, 5, 21),
+				updated_at: new Date(2015, 5, 22),
+				occurred_at: new Date(2015, 5, 22)
+			}])
+
+			var path = `/initiatives/${UUID}.atom`
+			var res = yield this.request(path)
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(ATOM_TYPE)
+
+			var feed = Atom.parse(res.body).feed
+			feed.id.$.must.equal(Config.url + path)
+			feed.updated.$.must.equal(events[1].updated_at.toJSON())
+
+			feed.title.$.must.equal(t("ATOM_INITIATIVE_FEED_TITLE", {
+				title: INITIATIVE.title
+			}))
+
+			var links = _.indexBy(feed.link, (link) => link.rel)
+			links.self.href.must.equal(Config.url + path)
+			links.alternate.href.must.equal(Config.url)
+
+			feed.author.name.$.must.equal(Config.title)
+			feed.author.uri.$.must.equal(Config.url)
+
+			feed.entry.forEach(function(entry, i) {
+				var event = events[i]
+				var url = `${Config.url}/initiatives/${UUID}/events/${event.id}`
+				entry.id.$.must.equal(url)
+				entry.updated.$.must.equal(event.updated_at.toJSON())
+				entry.published.$.must.equal(event.occurred_at.toJSON())
+				entry.title.$.must.equal(event.title)
+				entry.content.type.must.equal("text")
+				entry.content.$.must.equal(event.text)
+			})
+		})
+
+		it("must use initiative updated time if no events", function*() {
+			this.router.get(`/api/topics/${UUID}`, respond.bind(null, {
+				data: INITIATIVE
+			}))
+
+			var res = yield this.request(`/initiatives/${UUID}.atom`)
+			res.statusCode.must.equal(200)
+			var feed = Atom.parse(res.body).feed
+			feed.updated.$.must.equal(INITIATIVE.updatedAt.toJSON())
 		})
 	})
 

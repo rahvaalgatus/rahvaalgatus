@@ -1,12 +1,12 @@
 /** @jsx Jsx */
-var _ = require("lodash")
-var O = require("oolong")
+var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Config = require("root/config")
 var Fragment = Jsx.Fragment
 var stringify = require("root/lib/json").stringify
 var selected = require("root/lib/css").selected
 var javascript = require("root/lib/jsx").javascript
+var EMPTY_ARR = Array.prototype
 var SITE_TITLE = Config.title
 var LANGS = Config.languages
 var ENV = process.env.ENV
@@ -27,7 +27,8 @@ function Page(attrs, children) {
 	var t = req.t
 	var page = attrs.page
 	var title = attrs.title
-	var meta = O.assign({}, DEFAULT_META, attrs.meta)
+	var meta = _.assign({}, DEFAULT_META, attrs.meta)
+	var links = attrs.links || EMPTY_ARR
 	var translatable = req.lang === "xx" || "translatable" in req.query
 
 	var assemblyLogo = "/assets/esstikoostoo_logo.png"
@@ -40,6 +41,7 @@ function Page(attrs, children) {
 			<link rel="stylesheet" href="/assets/page.css" type="text/css" />
 			<title>{title == null ? "" : title + " - "} {SITE_TITLE}</title>
 			{_.map(meta, (value, name) => <meta property={name} content={value} />)}
+			{links.map((link) => <link {...link} />)}
 
 			{ENV === "staging" || ENV === "production" ?
 				<Sentry dsn={Config.sentryPublicDsn} req={req} />

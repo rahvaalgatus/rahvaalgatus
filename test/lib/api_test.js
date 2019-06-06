@@ -5,11 +5,13 @@ var outdent = require("root/lib/outdent")
 var DATE = new Date(2015, 5, 18)
 
 var INITIATIVE = {
-	createdAt: DATE.toUTCString()
+	createdAt: DATE.toUTCString(),
+	updatedAt: DATE.toUTCString()
 }
 
 var PARSED_INITIATIVE = {
-	createdAt: DATE
+	createdAt: DATE,
+	updatedAt: DATE
 }
 
 describe("Api", function() {

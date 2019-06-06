@@ -64,6 +64,13 @@ function ReadPage(attrs) {
 			"og:url": `${Config.url}/initiatives/${initiative.id}`
 		}}
 
+		links={[{
+			rel: "alternate",
+			type: "application/atom+xml",
+			title: t("ATOM_INITIATIVE_FEED_TITLE", {title: initiative.title}),
+			href: req.baseUrl + req.url + ".atom"
+		}]}
+
 		req={req}>
 		<script src="/assets/html5.js" />
 		<script src="/assets/hwcrypto.js" />
