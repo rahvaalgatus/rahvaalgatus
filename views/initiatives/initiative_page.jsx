@@ -18,7 +18,7 @@ function InitiativePage(attrs, children) {
 	var path = "/initiatives/" + initiative.id
 	var createdAt = initiative.createdAt
 
-	return <Page {...attrs}>
+	return <Page class={"initiative-page " + (attrs.class || "")} {...attrs}>
 		<header id="initiative-header">
 			<center>
 				<h1>

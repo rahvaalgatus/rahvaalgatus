@@ -12,7 +12,6 @@ module.exports = function(attrs) {
 
 	return <InitiativePage
 		page="initiative-subscription"
-		class="initiative-page"
 		title={initiative.title}
 		initiative={initiative}
 		req={req}>

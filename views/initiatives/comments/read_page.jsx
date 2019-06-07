@@ -13,7 +13,6 @@ module.exports = function(attrs) {
 
 	return <InitiativePage
 		page="initiative-comment"
-		class="initiative-page"
 		title={initiative.title}
 		initiative={initiative}
 		req={req}>

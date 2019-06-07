@@ -17,7 +17,6 @@ module.exports = function(attributes) {
 
 	return <InitiativePage
 		page="initiative-send-to-voting"
-		class="initiative-page"
 		title={initiative.title}
 		initiative={initiative}
 		req={req}>
