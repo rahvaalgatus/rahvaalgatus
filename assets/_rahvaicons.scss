@@ -1,0 +1,30 @@
+@font-face {
+  font-family: "Rahvaicons";
+  font-weight: normal;
+  font-style: normal;
+
+  src: url("/assets/Rahvaicons_c27d9ca37721d13c378651c09b236dcc.eot");
+  src: url("/assets/Rahvaicons_c27d9ca37721d13c378651c09b236dcc.eot?#iefix") format("embedded-opentype"),
+       url("/assets/Rahvaicons_c27d9ca37721d13c378651c09b236dcc.woff") format("woff"),
+       url("/assets/Rahvaicons_c27d9ca37721d13c378651c09b236dcc.woff2") format("woff2"),
+       url("/assets/Rahvaicons_c27d9ca37721d13c378651c09b236dcc.ttf") format("truetype");
+}
+
+.ra-icon-facebook-logo:before,
+.ra-icon-rss:before,
+.ra-icon-twitter-logo:before {
+  font-family: "Rahvaicons";
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  font-smoothing: antialiased;
+}
+
+/* NOTE: iOS (at least 4.2) doesn't seem to support CSS Unicode escapes. */
+.ra-icon-facebook-logo:before { content: ""; }
+.ra-icon-rss:before { content: ""; }
+.ra-icon-twitter-logo:before { content: ""; }
+
+/* vim: set ft=eruby.css :*/

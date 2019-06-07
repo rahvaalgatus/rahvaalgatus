@@ -3,20 +3,17 @@ var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var InitiativePage = require("./initiative_page")
 var Initiative = require("root/lib/initiative")
-var Form = require("../page").Form
 var Flash = require("../page").Flash
-var confirm = require("root/lib/jsx").confirm
 var javascript = require("root/lib/jsx").javascript
 
 module.exports = function(attrs) {
 	var req = attrs.req
 	var initiative = attrs.initiative
-	var dbInitiative = attrs.dbInitiative
 	var flash = attrs.flash
 	var t = attrs.t
 
 	return <InitiativePage
-		page="initiative"
+		page="edit-initiative"
 		title={initiative.title}
 		initiative={initiative}
 		req={req}>
@@ -82,73 +79,16 @@ module.exports = function(attrs) {
 			</div>
 
 			<aside id="initiative-sidebar">
-				<a
-					href={"/initiatives/" + initiative.id}
-					class="primary-button wide-button">
-					{Initiative.isDiscussion(initiative)
-						? t("BACK_TO_DISCUSSION")
-						: t("BACK_TO_INITIATIVE")
-					}
-				</a>
-
-				{Initiative.canUpdateDiscussionDeadline(initiative) ? <Form
-					req={req}
-					method="put"
-					action={"/initiatives/" + initiative.id}>
-					<button
-						name="visibility"
-						value="public"
-						class="link-button wide-button">
-						{t("RENEW_DEADLINE")}
-					</button>
-				</Form> : null}
-
-				{Initiative.canUpdateVoteDeadline(initiative) ? <Form
-					req={req}
-					method="put"
-					action={"/initiatives/" + initiative.id}>
-					<button
-						name="status"
-						value="voting"
-						class="link-button wide-button">
-						{t("RENEW_DEADLINE")}
-					</button>
-				</Form> : null}
-
-				{Initiative.canInvite(initiative) ? <a
-					href={"/initiatives/" + initiative.id + "/authors/new"}
-					class="link-button wide-button">
-					{t("INVITE_PEOPLE")}
-				</a> : null}
-
-				{Initiative.canDelete(initiative) ? <Form
-					req={req}
-					method="post"
-					action={"/initiatives/" + initiative.id}>
-					<button
-						name="_method"
-						value="delete"
-						onclick={confirm(t("TXT_ALL_DISCUSSIONS_AND_VOTES_DELETED"))}
-						class="link-button wide-button">
-						{t("DELETE_DISCUSSION")}
-					</button>
-				</Form> : null}
-
-				<Form
-					req={req}
-					id="initiative-notes-form"
-					method="put"
-					action={"/initiatives/" + initiative.id}>
-					<h2>{t("NOTES_HEADER")}</h2>
-
-					<textarea name="notes" class="form-textarea">
-						{dbInitiative.notes}
-					</textarea>
-
-					<button class="secondary-button wide-button">
-						{t("UPDATE_NOTES")}
-					</button>
-				</Form>
+				<div class="sidebar-section">
+					<a
+						href={"/initiatives/" + initiative.id}
+						class="blue-button wide-button">
+						{Initiative.isDiscussion(initiative)
+							? t("BACK_TO_DISCUSSION")
+							: t("BACK_TO_INITIATIVE")
+						}
+					</a>
+				</div>
 			</aside>
 		</center></section>
 	</InitiativePage>

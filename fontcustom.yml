@@ -1,0 +1,30 @@
+font_name: Rahvaicons
+css_selector: .ra-icon-{{glyph}}
+
+input:
+  vectors: assets/icons
+  templates: assets/icons
+
+output:
+  fonts: public/assets
+  _rahvaicons.scss: assets
+  _rahvaicons_lib.scss: assets
+
+templates:
+  - _rahvaicons.scss
+  - _rahvaicons_lib.scss
+
+preprocessor_path: /assets
+
+# Size (in pica points) for which your font is designed.
+font_design_size: 24
+
+# The em size. Setting this will scale the entire font to the given size.
+font_em: 1536
+
+# The font's ascent and descent. Used to calculate the baseline.
+font_ascent: 1536
+font_descent: 0
+
+# Horizontally fit glyphs to their individual vector widths.
+autowidth: true

@@ -1,0 +1,32 @@
+@font-face {
+  font-family: "<%= font_name %>";
+  font-weight: normal;
+  font-style: normal;
+
+  src: url("<%= path = @font_path_alt %>.eot");
+  src: url("<%= path %>.eot?#iefix") format("embedded-opentype"),
+       url("<%= path %>.woff") format("woff"),
+       url("<%= path %>.woff2") format("woff2"),
+       url("<%= path %>.ttf") format("truetype");
+}
+
+<%= glyph_selectors %> {
+  font-family: "<%= font_name %>";
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  font-smoothing: antialiased;
+}
+
+/* NOTE: iOS (at least 4.2) doesn't seem to support CSS Unicode escapes. */
+<%=
+  @glyphs.map do |name, value|
+    selector = @options[:css_selector].sub("{{glyph}}", name.to_s)
+    character = [value[:codepoint]].pack("U")
+    %(#{selector}:before { content: "#{character}"; })
+  end.join("\n")
+%>
+
+/* vim: set ft=eruby.css :*/

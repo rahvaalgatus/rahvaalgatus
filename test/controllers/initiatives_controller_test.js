@@ -898,7 +898,7 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(303)
-					res.headers.location.must.equal(`/initiatives/${UUID}/edit`)
+					res.headers.location.must.equal(`/initiatives/${UUID}`)
 
 					yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
 						new ValidDbInitiative({uuid: UUID, notes: "Hello, world"})
@@ -919,7 +919,6 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(303)
-					res.headers.location.must.equal(`/initiatives/${UUID}/edit`)
 
 					yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
 						other,

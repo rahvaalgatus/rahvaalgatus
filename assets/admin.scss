@@ -60,7 +60,7 @@ strong { font-weight: bold; }
 		&.selected,
 		&:hover {
 			background-color: white;
-			color: $link;
+			color: $link-color;
 		}
 	}
 }
@@ -101,7 +101,7 @@ button.admin-link { @extend .inherited; }
 
 .admin-link,
 button.admin-link {
-  color: $link;
+  color: $link-color;
   text-decoration: underline;
 	cursor: pointer;
 }

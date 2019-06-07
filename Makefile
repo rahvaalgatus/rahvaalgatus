@@ -6,6 +6,7 @@ TEST = test/**/*_test.js
 TEST_TAGS =
 MOCHA = ./node_modules/.bin/_mocha
 SASS = ./node_modules/.bin/node-sass --recursive --indent-type tab --indent-width 1 --output-style expanded
+BUNDLE = bundle
 TRANSLATIONS_URL = https://spreadsheets.google.com/feeds/list/1JKPUNp8Y_8Aigq7eGJXtWT6nZFhd31k2Ht3AjC-i-Q8/1/public/full?alt=json
 JQ_OPTS = --tab --sort-keys
 SHANGE = vendor/shange -f "config/$(ENV).sqlite3"
@@ -72,6 +73,9 @@ stylesheets:
 
 autostylesheets: stylesheets
 	$(MAKE) SASS="$(SASS) --watch" "$<"
+
+fonticons:
+	@$(BUNDLE) exec fontcustom compile
 
 test:
 	@$(NODE) $(NODE_OPTS) $(MOCHA) -R dot $(TEST)

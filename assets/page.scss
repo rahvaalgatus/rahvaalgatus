@@ -1,6 +1,8 @@
 @import "_lib";
 @import "reset";
 @import "_fonts";
+@import "_rahvaicons";
+@import "_rahvaicons_lib";
 $initiative-comment-padding: 3rem;
 
 html,
@@ -111,7 +113,7 @@ strong {
 	u { text-decoration: underline; }
 
 	a:not(.button) {
-		color: $link;
+		color: $link-color;
 		text-decoration: underline;
 	}
 
@@ -164,66 +166,111 @@ button.inherited {
 	margin: 0;
 }
 
-.primary-button,
-.secondary-button,
-.yellow-button,
-.white-button {
-	border-radius: $button-radius;
-	border: 0px solid transparent;
+%generic-button {
 	display: inline-block;
+	border-radius: $button-radius;
 	font-family: $museo-sans;
 	font-weight: bold;
 	font-size: 1.3rem;
-	height: $button-height;
-	padding: 0 2rem;
+	padding: 0 1.5rem;
 	text-align: center;
 	text-transform: uppercase;
 	cursor: pointer;
+	border: none;
+
+	height: $button-height;
+	line-height: $button-height;
 
 	i {
-		margin-right: 1rem;
-		margin-left: -1rem;
+		margin-right: 0.75rem;
+		margin-left: -0.75rem;
 	}
 
-	&:not(button) { line-height: $button-height; }
+	&:before {
+		display: inline-block;
+		vertical-align: middle;
+		margin-top: -.2rem;
+		margin-left: -0.2rem;
+		margin-right: 0.7rem;
+		font-size: 1.6rem;
+	}
+
+	&:focus {
+		box-shadow: 0 0 5px 2px $link-color;
+	}
 
 	&:disabled {
 		cursor: auto;
 		background: $secondary-background;
-		border: 1px solid darken($secondary-background, 10%);
+		border-color: darken($secondary-background, 10%);
 		color: $secondary-light-text;
 	}
 }
 
-.primary-button {
+.primary-button,
+.green-button {
+	@extend %generic-button;
+
 	background: $primary-button-background;
 	color: $primary-button-text;
-	border: 1px solid $primary-button-border;
+	border: 0.1rem solid $primary-button-border;
+	line-height: $button-height - .2rem;
 }
 
-.secondary-button {
+.secondary-button,
+.blue-button {
+	@extend %generic-button;
+
 	background: $secondary-button-background;
 	color: $secondary-button-text;
-	border: 1px solid $secondary-button-border;
+}
+
+.dark-blue-button {
+	@extend %generic-button;
+
+	background: $dark-blue;
+	color: white;
 }
 
 .yellow-button {
+	@extend %generic-button;
+
 	background: #ffb400;
 	color: #4a555d;
-	border: 1px solid #f1aa01;
+	border: .1rem solid #f1aa01;
+	line-height: $button-height - .2rem;
 }
 
 .white-button {
+	@extend %generic-button;
+
 	background: $white-button-background;
-	border: 1px solid $white-button-border;
 	color: $white-button-text;
+	border: .1rem solid $white-button-border;
+	line-height: $button-height - .2rem;
+}
+
+.grey-button {
+	@extend %generic-button;
+
+	padding: 0 1rem;
+	color: #aaa;
+	border: .1rem solid #bbb;
+	line-height: $button-height - .2rem;
+
+	&:focus { box-shadow: 0 0 3px 1px $link-color; }
+
+	&:hover {
+		color: $link-color;
+		border-color: $link-color;
+	}
 }
 
 .link-button {
 	@extend button.inherited;
 
 	cursor: pointer;
-	color: $link;
+	color: $link-color;
 	&:hover { text-decoration: underline; }
 }
 
@@ -309,7 +356,7 @@ button.inherited {
 	}
 
 	a {
-		color: $link;
+		color: $link-color;
 		text-decoration: underline;
 	}
 }
@@ -628,7 +675,7 @@ button.inherited {
 			font-weight: bold;
 
 			button { text-transform: uppercase; }
-			button[disabled] { color: $link; }
+			button[disabled] { color: $link-color; }
 			button + button { margin-left: 1rem; }
 		}
 
@@ -690,7 +737,7 @@ button.inherited {
 		&.selected,
 		&:hover {
 			background-color: white;
-			color: $link;
+			color: $link-color;
 		}
 	}
 
@@ -1009,12 +1056,13 @@ button.inherited {
 	}
 }
 
-#initiative-page {
+#initiative-page,
+#edit-initiative-page {
 	$article-width: 72rem;
 	$article-padding: 3rem;
 	$article-padding-mobile: 2rem;
 	$article-width-percentage: 70%;
-	$sidebar-padding: 2rem;
+	$sidebar-padding: 1.5rem;
 
 	#initiative-section,
 	#initiative-events {
@@ -1038,6 +1086,11 @@ button.inherited {
 
 	#initiative-section {
 		padding-top: 0;
+
+		& > center {
+			display: flex;
+			@include mobile-and-tablet { display: block; }
+		}
 
 		#initiative-sheet,
 		#initiative-sidebar {
@@ -1116,16 +1169,42 @@ button.inherited {
 			padding: $sidebar-padding;
 			font-size: 1.3rem;
 
-			& > * + * {
-				margin-top: 0.5rem;
+			.sidebar-section + .sidebar-section {
+				margin-top: 2rem;
 			}
 
-			a.button + p {
-				margin-top: 1rem;
+			.sidebar-header {
+				margin-bottom: 1rem;
+				margin-left: -$sidebar-padding;
+				margin-right: -$sidebar-padding;
+				padding: 0 $sidebar-padding;
+				line-height: 3.6rem;
+				background: #e3e3e3;
+				font-size: 1.6rem;
+				color: $dark-blue;
+				font-weight: 900;
+				text-transform: uppercase;
+			}
+
+			.sidebar-subheader {
+				color: $black;
+				font-size: 1.3rem;
+				line-height: 1.5;
+				font-weight: 500;
+				margin-bottom: 0.5rem;
+
+				& ~ .sidebar-subheader {
+					margin-top: 1.5rem;
+				}
 			}
 
 			.wide-button {
 				width: 100%;
+			}
+
+			.share-button {
+				margin-right: 0.5rem;
+				margin-bottom: 0.5rem;
 			}
 
 			.link-button.wide-button {
@@ -1135,61 +1214,67 @@ button.inherited {
 				font-weight: bold;
 			}
 
-			.initiative-progress {
-				margin-top: -$sidebar-padding;
-				margin-left: -$sidebar-padding;
-				margin-right: -$sidebar-padding;
-				margin-bottom: 1rem;
-				line-height: $flash-min-height;
-			}
-
 			.quicksign {
 				margin-bottom: 2rem;
+
+				.initiative-progress {
+					margin-top: -$sidebar-padding;
+					margin-left: -$sidebar-padding;
+					margin-right: -$sidebar-padding;
+					margin-bottom: 1rem;
+					line-height: $flash-min-height;
+				}
 
 				.initiative-progress-text span { display: block; }
 			}
 
-			#initiative-notes,
-			#initiative-notes-form {
-				h2 {
-					color: #7c7c7c;
-					margin-bottom: 0.5rem;
-					font-weight: bold;
-
-					&:after { content: ":"; }
-				}
+			#initiative-author-options {
+				h2 ~ * { margin-top: 0.5rem; }
 			}
 
-			#initiative-notes {
-				font-weight: 500;
-				line-height: 1.5;
-				margin: 0 (-$sidebar-padding);
-				padding: 1.5rem $sidebar-padding;
+			#initiative-info {
+				h2 .edit-button { float: right; }
 
-				p {
-					white-space: pre-wrap;
-					word-wrap: break-word;
+				#initiative-info-form-toggle {
+					&:not(:checked) ~ textarea,
+					&:not(:checked) ~ .form-buttons,
+					&:checked + h2 .edit-button,
+					&:checked ~ .edit-button,
+					&:checked ~ .form-output { display: none; }
 				}
-			}
 
-			#initiative-notes-form {
-				margin-top: 2rem;
-				textarea { width: 100%; min-height: 20rem; }
+				[name=notes] { width: 100%; min-height: 12rem; }
+
+				.text { white-space: pre-wrap; }
 				button { margin-top: 0.5rem; }
+			}
+
+			#initiative-subscribe {
+				p {
+					color: $grey;
+				}
+
+				input {
+					display: inline-block;
+					margin-right: 0.5rem;
+					margin-bottom: 0.5rem;
+
+					@include mobile { width: 100%; }
+				}
+
+				button {
+					padding-left: 1rem;
+					padding-right: 1rem;
+					margin-bottom: 0.5rem;
+
+					@include mobile { width: 100%; }
+				}
 			}
 
 			@include mobile-and-tablet {
 				width: auto;
+
 				.quicksign { display: none; }
-			}
-
-			@include tablet {
-				float: none;
-				text-align: left;
-
-				form { display: block; margin-top: 1rem; }
-				form + form { margin-left: 0; }
-				button { width: 100%; }
 			}
 		}
 
@@ -1223,33 +1308,6 @@ button.inherited {
 			margin-top: 1rem;
 
 			time { @extend strong; }
-		}
-
-		#initiative-subscribe {
-			margin-top: 2rem;
-			margin-bottom: 2rem;
-
-			h3 {
-				font-weight: bold;
-				margin-bottom: 1rem;
-				text-align: center;
-			}
-
-			p {
-				text-align: center;
-				margin-top: 1rem;
-			}
-
-			input,
-			button {
-				display: block;
-				margin: 0 auto;
-				width: 100%;
-			}
-
-			button {
-				margin-top: 0.5rem;
-			}
 		}
 	}
 
@@ -1361,7 +1419,7 @@ button.inherited {
 		}
 
 		p { white-space: pre-wrap; }
-		a { color: $link; text-decoration: underline; }
+		a { color: $link-color; text-decoration: underline; }
 		p + ul { margin-top: 1rem; }
 		:last-child { margin-bottom: 1.5rem; }
 	}
@@ -1392,7 +1450,7 @@ button.inherited {
 			border-bottom: 0;
 
 			&:hover {
-				color: $link;
+				color: $link-color;
 			}
 
 			@include mobile-and-tablet {

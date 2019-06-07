@@ -35,7 +35,6 @@ function ReadPage(attrs) {
 	var events = attrs.events
 	var initiative = attrs.initiative
 	var dbInitiative = attrs.dbInitiative
-	var subscriberCount = attrs.subscriberCount
 
 	var now = new Date
 	var opt = signature ? "No" : "Yes"
@@ -46,13 +45,14 @@ function ReadPage(attrs) {
 		? t("BTN_VOTE_SIGN_WITH_ID_CARD")
 		: t("BTN_VOTE_REVOKE_WITH_ID_CARD")
 
-	var signWithMobileClass = signature ? "white-button" : "primary-button"
+	var signWithMobileClass = signature ? "white-button" : "green-button"
 	var signWithMobileText = !signature
 		? t("BTN_VOTE_SIGN_WITH_MOBILE_ID")
 		: t("BTN_VOTE_REVOKE_WITH_MOBILE_ID")
 
 	var shareUrl = `${Config.url}/initiatives/${initiative.id}`
 	var shareText = `${initiative.title} ${shareUrl}`
+	var atomPath = req.baseUrl + req.url + ".atom"
 
 	return <InitiativePage
 		page="initiative"
@@ -68,7 +68,7 @@ function ReadPage(attrs) {
 			rel: "alternate",
 			type: "application/atom+xml",
 			title: t("ATOM_INITIATIVE_FEED_TITLE", {title: initiative.title}),
-			href: req.baseUrl + req.url + ".atom"
+			href: atomPath
 		}]}
 
 		req={req}>
@@ -325,89 +325,56 @@ function ReadPage(attrs) {
 			</div>
 
 			<aside id="initiative-sidebar">
-				<QuicksignView
+				<div class="sidebar-section">
+					<QuicksignView
+						req={req}
+						t={t}
+						initiative={initiative}
+						dbInitiative={dbInitiative}
+						signature={signature}
+					/>
+
+					{Initiative.isPublic(initiative) ? <Fragment>
+						<h3 class="sidebar-subheader">Tahad aidata? Jaga algatust…</h3>
+
+						<a
+							href={"https://facebook.com/sharer/sharer.php?u=" + encode(shareUrl)}
+							target="_blank"
+							class="grey-button ra-icon-facebook-logo share-button">
+							{t("SHARE_ON_FACEBOOK")}
+						</a>
+
+						<a
+							href={"https://twitter.com/intent/tweet?status=" + encode(shareText)}
+							target="_blank"
+							class="grey-button ra-icon-twitter-logo share-button">
+							{t("SHARE_ON_TWITTER")}
+						</a>
+					</Fragment> : null}
+				</div>
+
+				<SidebarAuthorView
 					req={req}
-					t={t}
 					initiative={initiative}
 					dbInitiative={dbInitiative}
-					signature={signature}
 				/>
 
-				{Initiative.canPublish(initiative) ? <Form
-					req={req}
-					method="put"
-					action={"/initiatives/" + initiative.id}>
-					<button
-						name="visibility"
-						value="public"
-						class="primary-button wide-button">
-						{t("PUBLISH_TOPIC")}
-					</button>
-				</Form> : null}
-
-				{Initiative.canPropose(new Date, initiative) ? <Form
-					req={req}
-					method="put"
-					action={"/initiatives/" + initiative.id}>
-					<button
-						name="status"
-						value="voting"
-						class="primary-button wide-button">
-						{t("BTN_SEND_TO_VOTE")}
-					</button>
-				</Form> : null}
-
-				{Initiative.canSendToParliament(initiative, dbInitiative) ? <Form
-					req={req}
-					method="put"
-					action={"/initiatives/" + initiative.id}>
-					<button
-						name="status"
-						value="followUp"
-						class="primary-button wide-button">
-						{t("SEND_TO_PARLIAMENT")}
-					</button>
-				</Form> : null}
-
-				{Initiative.canEdit(initiative) ? <a
-					href={"/initiatives/" + initiative.id + "/edit"}
-					class="link-button wide-button">
-					{t("EDIT_INITIATIVE")}
-				</a> : null}
-
-				{dbInitiative.notes ? <div id="initiative-notes">
-					<h2>{t("NOTES_HEADER")}</h2>
-					<p class="text">{Jsx.html(linkify(dbInitiative.notes))}</p>
-				</div> : null}
-
-				<InitiativeSubscribeView
+				<SidebarInfoView
 					req={req}
 					initiative={initiative}
-					count={subscriberCount}
-					t={t}
+					dbInitiative={dbInitiative}
 				/>
 
-				{Initiative.isPublic(initiative) ? <Fragment>
-					<a
-						href={"https://facebook.com/sharer/sharer.php?u=" + encode(shareUrl)}
-						target="_blank"
-						class="link-button wide-button share-button">
-						{t("SHARE_ON_FACEBOOK")}
-					</a>
+				<SidebarSubscribeView
+					req={req}
+					initiative={initiative}
+					subscriberCount={attrs.subscriberCount}
+				/>
 
-					<a
-						href={"https://twitter.com/intent/tweet?status=" + encode(shareText)}
-						target="_blank"
-						class="link-button wide-button share-button">
-						{t("SHARE_ON_TWITTER")}
-					</a>
-
-					{req.user && _.contains(Config.adminUserIds, req.user.id) ? <a
-						href={`${Config.adminUrl}/initiatives/${initiative.id}`}
-						class="link-button wide-button">
-						Administreeri algatust
-					</a> : null}
-				</Fragment> : null}
+				<SidebarAdminView
+					req={req}
+					initiative={initiative}
+				/>
 			</aside>
 		</center></section>
 
@@ -427,6 +394,188 @@ function ReadPage(attrs) {
 			comments={comments}
 		/>
 	</InitiativePage>
+}
+
+function SidebarAuthorView(attrs) {
+	var req = attrs.req
+	var t = req.t
+	var initiative = attrs.initiative
+	var dbInitiative = attrs.dbInitiative
+
+	var actions = <Fragment>
+		{Initiative.canPublish(initiative) ? <FormButton
+			req={req}
+			action={"/initiatives/" + initiative.id}
+			name="visibility"
+			value="public"
+			class="green-button wide-button">
+			{t("PUBLISH_TOPIC")}
+		</FormButton> : null}
+
+		{Initiative.canPropose(new Date, initiative) ? <FormButton
+			req={req}
+			action={"/initiatives/" + initiative.id}
+			name="status"
+			value="voting"
+			class="green-button wide-button">
+			{t("BTN_SEND_TO_VOTE")}
+		</FormButton> : null}
+
+		{Initiative.canSendToParliament(initiative, dbInitiative) ?
+			<FormButton
+				req={req}
+				action={"/initiatives/" + initiative.id}
+				name="status"
+				value="followUp"
+				class="green-button wide-button">
+				{t("SEND_TO_PARLIAMENT")}
+			</FormButton>
+		: null}
+
+		{Initiative.canEditBody(initiative) ? <a
+			href={"/initiatives/" + initiative.id + "/edit"}
+			class="link-button wide-button">
+			{t("EDIT_INITIATIVE_TEXT")}
+		</a> : null}
+
+		{Initiative.canUpdateDiscussionDeadline(initiative) ? <FormButton
+			req={req}
+			action={"/initiatives/" + initiative.id}
+			name="visibility"
+			value="public"
+			class="link-button wide-button">
+			{t("RENEW_DEADLINE")}
+		</FormButton> : null}
+
+		{Initiative.canUpdateVoteDeadline(initiative) ? <FormButton
+			req={req}
+			action={"/initiatives/" + initiative.id}
+			name="status"
+			value="voting"
+			class="link-button wide-button">
+			{t("RENEW_DEADLINE")}
+		</FormButton> : null}
+
+		{Initiative.canInvite(initiative) ? <a
+			href={"/initiatives/" + initiative.id + "/authors/new"}
+			class="link-button wide-button">
+			{t("INVITE_PEOPLE")}
+		</a> : null}
+
+		{Initiative.canDelete(initiative) ? <FormButton
+			req={req}
+			action={"/initiatives/" + initiative.id}
+			name="_method"
+			value="delete"
+			onclick={confirm(t("TXT_ALL_DISCUSSIONS_AND_VOTES_DELETED"))}
+			class="link-button wide-button">
+			{t("DELETE_DISCUSSION")}
+		</FormButton> : null}
+	</Fragment>
+
+	if (!actions.some(Boolean)) return null
+
+	return <div id="initiative-author-options" class="sidebar-section">
+		<h2 class="sidebar-header">Algatajale</h2>
+		{actions}
+	</div>
+}
+
+function SidebarInfoView(attrs) {
+	var req = attrs.req
+	var t = req.t
+	var initiative = attrs.initiative
+	var dbInitiative = attrs.dbInitiative
+	var canEdit = Initiative.canEdit(initiative)
+
+	if (!(dbInitiative.notes.length > 0 || canEdit)) return null
+
+	return <Form
+		req={req}
+		id="initiative-info"
+		class="sidebar-section"
+		method="put"
+		action={"/initiatives/" + initiative.id}>
+		<input type="checkbox" id="initiative-info-form-toggle" hidden />
+
+		<h2 class="sidebar-header">
+			{canEdit ? <label
+				class="edit-button link-button"
+				for="initiative-info-form-toggle">
+				{t("EDIT_INITIATIVE_INFO")}
+			</label> : null}
+
+			Lisainfo
+		</h2>
+
+		{dbInitiative.notes || canEdit ? <Fragment>
+			<h3 class="sidebar-subheader">{t("NOTES_HEADER")}</h3>
+
+			{dbInitiative.notes ? <p class="text form-output">
+				{Jsx.html(linkify(dbInitiative.notes))}
+			</p> : <label
+				class="edit-button link-button"
+				for="initiative-info-form-toggle">
+				{t("ADD_INITIATIVE_INFO")}
+			</label>}
+
+			<textarea name="notes" class="form-textarea">
+				{dbInitiative.notes}
+			</textarea>
+		</Fragment> : null}
+
+		<div class="form-buttons">
+			<button class="blue-button">{t("UPDATE_INITIATIVE_INFO")}</button>
+			<span class="form-or">{t("FORM_OR")}</span>
+			<label class="link-button" for="initiative-info-form-toggle">
+				{t("CANCEL_INITIATIVE_INFO")}
+			</label>
+		</div>
+	</Form>
+}
+
+function SidebarSubscribeView(attrs) {
+	var req = attrs.req
+	var t = req.t
+	var initiative = attrs.initiative
+	var subscriberCount = attrs.subscriberCount
+	var atomPath = req.baseUrl + req.url + ".atom"
+
+	return <div class="sidebar-section">
+		<h2 class="sidebar-header">Jälgi</h2>
+
+		<h3 class="sidebar-subheader">{t("INITIATIVE_SIDEBAR_SUBSCRIBE")}</h3>
+
+		<SubscribeEmailView
+			req={req}
+			initiative={initiative}
+			count={subscriberCount}
+			t={t}
+		/>
+
+		<h3 class="sidebar-subheader">{t("SUBSCRIBE_VIA_ATOM_HEADER")}</h3>
+
+		<a href={atomPath} class="grey-button ra-icon-rss">
+			{t("SUBSCRIBE_VIA_ATOM_BUTTON")}
+		</a>
+	</div>
+}
+
+function SidebarAdminView(attrs) {
+	var req = attrs.req
+	var initiative = attrs.initiative
+
+	var isAdmin = req.user && _.contains(Config.adminUserIds, req.user.id)
+	if (!isAdmin) return null
+
+	return <div class="sidebar-section">
+		<h2 class="sidebar-header">Administraatorile</h2>
+		<a
+			href={`${Config.adminUrl}/initiatives/${initiative.id}`}
+			class="link-button wide-button">
+			Administreeri algatust
+		</a>
+	</div>
 }
 
 function EventsView(attrs) {
@@ -597,7 +746,7 @@ function CommentView(attrs) {
 	</Fragment>
 }
 
-function InitiativeSubscribeView(attrs) {
+function SubscribeEmailView(attrs) {
 	var t = attrs.t
 	var req = attrs.req
 	var initiative = attrs.initiative
@@ -610,8 +759,6 @@ function InitiativeSubscribeView(attrs) {
 		id="initiative-subscribe"
 		method="post"
 		action={"/initiatives/" + initiative.id + "/subscriptions"}>
-		<h3>{t("WANT_TO_KEEP_INFORMED_ABOUT_FURTHER_PROGRESS")}</h3>
-
 		<input
 			id="initiative-subscribe-email"
 			name="email"
@@ -687,7 +834,7 @@ function QuicksignView(attrs) {
 
 		{Initiative.isVotable(now, initiative) && !signature ? <a
 			href="#initiative-vote"
-			class="primary-button wide-button sign-button">
+			class="green-button wide-button sign-button">
 			{t("SIGN_THIS_DOCUMENT")}
 			</a>
 		: null}

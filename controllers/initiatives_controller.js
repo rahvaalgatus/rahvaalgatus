@@ -314,7 +314,7 @@ exports.router.put("/:id", next(function*(req, res) {
 		})
 
 		res.flash("notice", req.t("NOTES_UPDATED"))
-		res.redirect(303, req.baseUrl + "/" + initiative.id + "/edit")
+		res.redirect(303, req.headers.referer || req.baseUrl + req.url)
 		return
 	}
 	else throw new HttpError(422, "Invalid Attribute")

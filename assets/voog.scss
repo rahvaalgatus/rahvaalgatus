@@ -139,7 +139,7 @@ center {
 .post-content .read-more {
 	display: block;
 	margin-top: 1rem;
-	color: $link;
+	color: $link-color;
 	font-size: 1.4rem;
 }
 
@@ -162,7 +162,7 @@ center {
 	}
 
 	a {
-		color: $link;
+		color: $link-color;
 	}
 
 	.contact {

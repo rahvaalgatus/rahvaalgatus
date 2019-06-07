@@ -1,0 +1,10 @@
+// NOTE: iOS (at least 4.2) doesn't seem to support CSS Unicode escapes.
+$<%= font_name.gsub(/[^\w\d_]/, "-").downcase %>: (
+<%=
+  @glyphs.map {|name, value|
+    %(  "#{name}": "#{[value[:codepoint]].pack("U")}")
+  }.join(",\n")
+%>
+);
+
+// vim: ft=eruby.scss

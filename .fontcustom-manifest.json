@@ -1,0 +1,63 @@
+{
+  "checksum": {
+    "previous": "c27d9ca37721d13c378651c09b236dccba8e51401d587b7e246d66b7951bed36",
+    "current": "c27d9ca37721d13c378651c09b236dccba8e51401d587b7e246d66b7951bed36"
+  },
+  "fonts": [
+    "public/assets/Rahvaicons_c27d9ca37721d13c378651c09b236dcc.ttf",
+    "public/assets/Rahvaicons_c27d9ca37721d13c378651c09b236dcc.svg",
+    "public/assets/Rahvaicons_c27d9ca37721d13c378651c09b236dcc.woff",
+    "public/assets/Rahvaicons_c27d9ca37721d13c378651c09b236dcc.eot",
+    "public/assets/Rahvaicons_c27d9ca37721d13c378651c09b236dcc.woff2"
+  ],
+  "glyphs": {
+    "facebook-logo": {
+      "codepoint": 61696,
+      "source": "assets/icons/facebook-logo.svg"
+    },
+    "rss": {
+      "codepoint": 61698,
+      "source": "assets/icons/rss.svg"
+    },
+    "twitter-logo": {
+      "codepoint": 61697,
+      "source": "assets/icons/twitter-logo.svg"
+    }
+  },
+  "options": {
+    "autowidth": true,
+    "config": "fontcustom.yml",
+    "copyright": "",
+    "css3": false,
+    "css_selector": ".ra-icon-{{glyph}}",
+    "debug": false,
+    "font_ascent": 1536,
+    "font_descent": 0,
+    "font_design_size": 24,
+    "font_em": 1536,
+    "font_name": "Rahvaicons",
+    "force": false,
+    "input": {
+      "templates": "assets/icons",
+      "vectors": "assets/icons"
+    },
+    "no_hash": false,
+    "output": {
+      "_rahvaicons.scss": "assets",
+      "_rahvaicons_lib.scss": "assets",
+      "css": "public/assets",
+      "fonts": "public/assets",
+      "preview": "public/assets"
+    },
+    "preprocessor_path": "/assets",
+    "quiet": false,
+    "templates": [
+      "_rahvaicons.scss",
+      "_rahvaicons_lib.scss"
+    ]
+  },
+  "templates": [
+    "assets/_rahvaicons.scss",
+    "assets/_rahvaicons_lib.scss"
+  ]
+}
