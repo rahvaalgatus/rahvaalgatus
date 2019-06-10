@@ -49,10 +49,10 @@ describe("ParliamentMonitorJob", function() {
 
 		yield job()
 
-		yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
+		yield initiativesDb.search(sql`SELECT * FROM initiatives`).must.then.eql([
 			new ValidDbInitiative({
 				uuid: uuid,
-				parliament_api_data: JSON.stringify(parliamentApiData)
+				parliament_api_data: parliamentApiData
 			})
 		])
 
@@ -79,10 +79,10 @@ describe("ParliamentMonitorJob", function() {
 
 		yield job()
 
-		yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
+		yield initiativesDb.search(sql`SELECT * FROM initiatives`).must.then.eql([
 			new ValidDbInitiative({
 				uuid: uuid,
-				parliament_api_data: JSON.stringify(parliamentApiData)
+				parliament_api_data: parliamentApiData
 			})
 		])
 
@@ -155,10 +155,11 @@ describe("ParliamentMonitorJob", function() {
 		]))
 
 		yield job()
-		yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
+
+		yield initiativesDb.search(sql`SELECT * FROM initiatives`).must.then.eql([
 			new ValidDbInitiative({
 				uuid: uuid,
-				parliament_api_data: JSON.stringify(parliamentApiData)
+				parliament_api_data: parliamentApiData
 			})
 		])
 

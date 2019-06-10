@@ -41,6 +41,7 @@ var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var randomHex = require("root/lib/crypto").randomHex
 var decodeBase64 = require("root/lib/crypto").decodeBase64
+var trim = Function.call.bind(String.prototype.trim)
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
 var EMPTY_COMMENT = {subject: "", text: "", parentId: null}
@@ -306,14 +307,10 @@ exports.router.put("/:id", next(function*(req, res) {
 			contact: O.defaults(req.body.contact, EMPTY_INITIATIVE.contact)
 		}
 	}
-	else if ("notes" in req.body) {
+	else if (isDbInitiativeUpdate(req.body)) {
 		if (!Initiative.canEdit(initiative)) throw new HttpError(401)
-
-		yield initiativesDb.update(initiative.id, {
-			notes: String(req.body.notes).trim()
-		})
-
-		res.flash("notice", req.t("NOTES_UPDATED"))
+		yield initiativesDb.update(initiative.id, parseInitiative(req.body))
+		res.flash("notice", req.t("INITIATIVE_INFO_UPDATED"))
 		res.redirect(303, req.headers.referer || req.baseUrl + req.url)
 		return
 	}
@@ -823,7 +820,57 @@ function* searchInitiativeEvents(t, initiative) {
 	)
 }
 
+function isDbInitiativeUpdate(obj) {
+	return (
+		"author_url" in obj ||
+		"url" in obj ||
+		"community_url" in obj ||
+		"organizations" in obj ||
+		"media_urls" in obj ||
+		"meetings" in obj ||
+		"notes" in obj
+	)
+}
+
+function parseInitiative(obj) {
+	var attrs = {}
+
+	if ("author_url" in obj) attrs.author_url = String(obj.author_url).trim()
+	if ("url" in obj) attrs.url = String(obj.url).trim()
+	if ("notes" in obj) attrs.notes = String(obj.notes).trim()
+
+	if ("community_url" in obj)
+		attrs.community_url = String(obj.community_url).trim()
+
+	if ("organizations" in obj) attrs.organizations =
+		obj.organizations.map(parseOrganization).filter(isOrganizationPresent)
+
+	if ("meetings" in obj) attrs.meetings =
+		obj.meetings.map(parseMeeting).filter(isMeetingPresent)
+
+	if ("media_urls" in obj) attrs.media_urls =
+		obj.media_urls.map(String).map(trim).filter(Boolean)
+
+	return attrs
+}
+
+function parseOrganization(obj) {
+	return {
+		name: String(obj.name || "").trim(),
+		url: String(obj.url || "").trim()
+	}
+}
+
+function parseMeeting(obj) {
+	return {
+		date: String(obj.date || "").trim(),
+		url: String(obj.url || "").trim()
+	}
+}
+
 // NOTE: Use this only on JWTs from trusted sources as it does no validation.
 function parseJwt(jwt) { return JSON.parse(decodeBase64(jwt.split(".")[1])) }
 function getBody(res) { return res.body.data }
 function sortByCreatedAt(arr) { return _.sortBy(arr, "createdAt").reverse() }
+function isOrganizationPresent(org) { return org.name || org.url }
+function isMeetingPresent(org) { return org.date || org.url }

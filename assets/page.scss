@@ -308,16 +308,23 @@ button.inherited {
 .form-input,
 .form-textarea {
 	display: block;
+
+	& + p { margin-top: 0.5rem; }
 }
 
 .form-input {
 	border: 1px solid #cecece;
 	height: $button-height;
-	padding: 0 1rem;
+	padding-left: 1rem;
+	padding-right: 1rem;
 
 	background: white;
 	color: #4a555d;
 	border-radius: $button-radius;
+
+	// Some browsers have a clear-field button on the right that gets pushed too
+	// far.
+	&[type=date] { padding-right: 0.5rem; }
 }
 
 .form-textarea {
@@ -1235,18 +1242,42 @@ button.inherited {
 			#initiative-info {
 				h2 .edit-button { float: right; }
 
+				input,
+				textarea { width: 100%; }
+
+				p + .form-list { margin-top: 0.5rem; }
+				ul.form-output { line-height: 1.5; }
+
+				[name=notes] { min-height: 12rem; }
+
+				.text { white-space: pre-wrap; }
+				[type=submit] { margin-top: 0.5rem; }
+				input[type=date] { flex-shrink: 0; }
+
 				#initiative-info-form-toggle {
 					&:not(:checked) ~ textarea,
+					&:not(:checked) ~ .form-fields,
 					&:not(:checked) ~ .form-buttons,
 					&:checked + h2 .edit-button,
 					&:checked ~ .edit-button,
 					&:checked ~ .form-output { display: none; }
 				}
 
-				[name=notes] { width: 100%; min-height: 12rem; }
+				#initiative-media-urls-form {
+					input { margin-bottom: 0.5rem; }
+				}
 
-				.text { white-space: pre-wrap; }
-				button { margin-top: 0.5rem; }
+				#initiative-organizations-form,
+				#initiative-meetings-form {
+					li { display: flex; }
+					input:first-child { margin-right: 0.5rem; }
+
+					input {
+						width: auto;
+						margin-bottom: 0.5rem;
+						min-width: 10rem;
+					}
+				}
 			}
 
 			#initiative-subscribe {

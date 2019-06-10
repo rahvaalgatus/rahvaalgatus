@@ -1,0 +1,17 @@
+ALTER TABLE initiatives
+ADD COLUMN author_url TEXT NOT NULL DEFAULT "";
+
+ALTER TABLE initiatives
+ADD COLUMN community_url TEXT NOT NULL DEFAULT "";
+
+ALTER TABLE initiatives
+ADD COLUMN organizations TEXT NOT NULL DEFAULT "[]";
+
+ALTER TABLE initiatives
+ADD COLUMN meetings TEXT NOT NULL DEFAULT "[]";
+
+ALTER TABLE initiatives
+ADD COLUMN url TEXT NOT NULL DEFAULT "";
+
+ALTER TABLE initiatives
+ADD COLUMN media_urls TEXT NOT NULL DEFAULT "[]";

@@ -14,7 +14,6 @@ var respond = require("root/test/fixtures").respond
 var concat = Array.prototype.concat.bind(Array.prototype)
 var encodeBase64 = require("root/lib/crypto").encodeBase64
 var pseudoHex = require("root/lib/crypto").pseudoHex
-var sqlite = require("root").sqlite
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var eventsDb = require("root/db/initiative_events_db")
@@ -654,7 +653,9 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(303)
 
-					yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
+					yield initiativesDb.search(sql`
+						SELECT * FROM initiatives
+					`).must.then.eql([
 						_.defaults({discussion_end_email_sent_at: null}, dbInitiative)
 					])
 				})
@@ -699,7 +700,9 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(303)
 
-					yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
+					yield initiativesDb.search(sql`
+						SELECT * FROM initiatives
+					`).must.then.eql([
 						_.defaults({signing_end_email_sent_at: null}, dbInitiative)
 					])
 				})
@@ -809,10 +812,12 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(303)
 					res.headers.location.must.equal(`/initiatives/${UUID}`)
 
-					yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
+					yield initiativesDb.search(sql`
+						SELECT * FROM initiatives
+					`).must.then.eql([
 						new ValidDbInitiative({
 							uuid: UUID,
-							sent_to_parliament_at: new Date().toISOString()
+							sent_to_parliament_at: new Date
 						})
 					])
 				})
@@ -887,21 +892,62 @@ describe("InitiativesController", function() {
 				})
 			})
 
-			describe("given notes", function() {
-				it("must update notes", function*() {
+			describe("given local info", function() {
+				it("must update attributes", function*() {
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {data: PRIVATE_DISCUSSION}))
 
 					var res = yield this.request(`/initiatives/${UUID}`, {
 						method: "PUT",
-						form: {_csrf_token: this.csrfToken, notes: "Hello, world"}
+						form: {
+							_csrf_token: this.csrfToken,
+							author_url: "http://example.com/author",
+							community_url: "http://example.com/community",
+							url: "http://example.com/initiative",
+
+							"organizations[0][name]": "Org A",
+							"organizations[0][url]": "http://example.com/org-a",
+							"organizations[1][name]": "Org B",
+							"organizations[1][url]": "http://example.com/org-b",
+							"meetings[0][date]": "2015-06-18",
+							"meetings[0][url]": "http://example.com/monday",
+							"meetings[1][date]": "2015-06-19",
+							"meetings[1][url]": "http://example.com/tuesday",
+							"media_urls[0]": "http://example.com/article1",
+							"media_urls[1]": "http://example.com/article2",
+							notes: "Hello, world"
+						}
 					})
 
 					res.statusCode.must.equal(303)
 					res.headers.location.must.equal(`/initiatives/${UUID}`)
 
-					yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
-						new ValidDbInitiative({uuid: UUID, notes: "Hello, world"})
+					yield initiativesDb.search(sql`
+						SELECT * FROM initiatives
+					`).must.then.eql([
+						new ValidDbInitiative({
+							uuid: UUID,
+							author_url: "http://example.com/author",
+							community_url: "http://example.com/community",
+							url: "http://example.com/initiative",
+
+							organizations: [
+								{name: "Org A", url: "http://example.com/org-a"},
+								{name: "Org B", url: "http://example.com/org-b"}
+							],
+
+							meetings: [
+								{date: "2015-06-18", url: "http://example.com/monday"},
+								{date: "2015-06-19", url: "http://example.com/tuesday"}
+							],
+
+							media_urls: [
+								"http://example.com/article1",
+								"http://example.com/article2"
+							],
+
+							notes: "Hello, world"
+						})
 					])
 				})
 
@@ -920,7 +966,9 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(303)
 
-					yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
+					yield initiativesDb.search(sql`
+						SELECT * FROM initiatives
+					`).must.then.eql([
 						other,
 						new ValidDbInitiative({uuid: UUID, notes: "Hello, world"})
 					])
@@ -937,9 +985,9 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(401)
 
-					yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([
-						new ValidDbInitiative({uuid: UUID})
-					])
+					yield initiativesDb.search(sql`
+						SELECT * FROM initiatives
+					`).must.then.eql([new ValidDbInitiative({uuid: UUID})])
 				})
 			})
 		})

@@ -18,6 +18,8 @@ var confirm = require("root/lib/jsx").confirm
 var stringify = require("root/lib/json").stringify
 var linkify = require("root/lib/linkify")
 var encode = encodeURIComponent
+var HTTP_URL = /^https?:\/\//i
+var EMPTY_ORG = {name: "", url: ""}
 exports = module.exports = ReadPage
 exports.CommentView = CommentView
 
@@ -487,8 +489,24 @@ function SidebarInfoView(attrs) {
 	var initiative = attrs.initiative
 	var dbInitiative = attrs.dbInitiative
 	var canEdit = Initiative.canEdit(initiative)
+	var authorUrl = dbInitiative.author_url
+	var communityUrl = dbInitiative.community_url
+	var externalUrl = dbInitiative.url
+	var organizations = dbInitiative.organizations
+	var mediaUrls = dbInitiative.media_urls
+	var meetings = dbInitiative.meetings
+	var notes = dbInitiative.notes
 
-	if (!(dbInitiative.notes.length > 0 || canEdit)) return null
+	if (!(
+		canEdit ||
+		authorUrl ||
+		communityUrl ||
+		organizations.length > 0 ||
+		meetings.length > 0 ||
+		mediaUrls.length > 0 ||
+		externalUrl ||
+		notes > 0
+	)) return null
 
 	return <Form
 		req={req}
@@ -508,25 +526,160 @@ function SidebarInfoView(attrs) {
 			Lisainfo
 		</h2>
 
-		{dbInitiative.notes || canEdit ? <Fragment>
-			<h3 class="sidebar-subheader">{t("NOTES_HEADER")}</h3>
+		{authorUrl || canEdit ? <InitiativeAttribute
+			t={t}
+			editable={canEdit}
+			title="Algatajast"
+			help="Ametliku veebilehe asemel sobib viidata ka lehele sotsiaalmeedias."
+			name="author_url"
+			type="url"
+			placeholder="https://"
+			value={authorUrl}
+		>
+			<UntrustedLink class="form-output" href={authorUrl} />
+		</InitiativeAttribute> : null}
 
-			{dbInitiative.notes ? <p class="text form-output">
-				{Jsx.html(linkify(dbInitiative.notes))}
-			</p> : <label
-				class="edit-button link-button"
-				for="initiative-info-form-toggle">
-				{t("ADD_INITIATIVE_INFO")}
-			</label>}
+		{communityUrl || canEdit ? <InitiativeAttribute
+			t={t}
+			editable={canEdit}
+			title="Virtuaalse arutelu kese"
+			help="Sotsiaalmeedia gruppide asemel võib lisada ka teemaviite (#hashtag-i)."
+			name="community_url"
+			placeholder="https://"
+			value={communityUrl}
+		>
+			<UntrustedLink class="form-output" href={communityUrl} />
+		</InitiativeAttribute> : null}
 
-			<textarea name="notes" class="form-textarea">
-				{dbInitiative.notes}
-			</textarea>
+		{organizations.length > 0 || canEdit ? <Fragment>
+			<h3 class="sidebar-subheader">Liitunud ühendused</h3>
+
+			{organizations.length > 0 ? <ul class="form-output">
+				{organizations.map((organization) => <li>
+					<UntrustedLink href={organization.url}>
+						{organization.name}
+					</UntrustedLink>
+				</li>)}
+			</ul> : <AddInitiativeInfoButton t={t} />}
+
+			{canEdit ? <InitiativeAttributeList
+				id="initiative-organizations-form"
+				add="Lisa ühendus"
+				help="Sisesta ühenduse nimi ja viide."
+				values={organizations}
+				default={EMPTY_ORG}
+			>{(organization, i) => <li>
+				<input
+					class="form-input"
+					placeholder="Ühenduse nimi"
+					name={`organizations[${i}][name]`}
+					value={organization.name}
+				/>
+
+				<input
+					class="form-input"
+					type="url"
+					name={`organizations[${i}][url]`}
+					value={organization.url}
+					placeholder="https://"
+				/>
+			</li>}</InitiativeAttributeList>: null}
 		</Fragment> : null}
 
+		{meetings.length > 0 || canEdit ? <Fragment>
+			<h3 class="sidebar-subheader">Avalikud arutelud</h3>
+
+			{meetings.length > 0 ? <ul class="form-output">
+				{meetings.map((meeting) => <li>
+					<UntrustedLink href={meeting.url}>
+						{meeting.date}
+					</UntrustedLink>
+				</li>)}
+			</ul> : <AddInitiativeInfoButton t={t} />}
+
+			{canEdit ? <InitiativeAttributeList
+				id="initiative-meetings-form"
+				add="Lisa arutelu"
+				help="Sisesta toimumiskuupäev ja viide."
+				values={meetings}
+				default={EMPTY_ORG}
+			>{(meeting, i) => <li>
+				<input
+					class="form-input"
+					type="date"
+					placeholder="Kuupäev"
+					name={`meetings[${i}][date]`}
+					value={meeting.date}
+				/>
+
+				<input
+					class="form-input"
+					type="url"
+					name={`meetings[${i}][url]`}
+					value={meeting.url}
+					placeholder="https://"
+				/>
+			</li>}</InitiativeAttributeList>: null}
+		</Fragment> : null}
+
+		{initiative.vote ? <Fragment>
+			{externalUrl || canEdit ? <InitiativeAttribute
+				t={t}
+				editable={canEdit}
+				title="Kampaanialeht"
+				name="url"
+				type="url"
+				placeholder="https://"
+				value={externalUrl}
+			>
+				<UntrustedLink class="form-output" href={externalUrl} />
+			</InitiativeAttribute> : null}
+		</Fragment> : null}
+
+		{Initiative.isInParliament(initiative, dbInitiative) ? <Fragment>
+			{mediaUrls.length > 0 || canEdit ? <Fragment>
+				<h3 class="sidebar-subheader">Menetluse meediakajastus</h3>
+
+				{mediaUrls.length > 0 ? <ul class="form-output">
+					{mediaUrls.map((url) => <li>
+						<UntrustedLink href={url}>{url}</UntrustedLink>
+					</li>)}
+				</ul> : <AddInitiativeInfoButton t={t} />}
+
+				{canEdit ? <InitiativeAttributeList
+					id="initiative-media-urls-form"
+					add="Lisa viide"
+					values={mediaUrls}
+				>{(url, i) => <li>
+					<input
+						class="form-input"
+						type="url"
+						name={`media_urls[${i}]`}
+						value={url}
+						placeholder="https://"
+					/>
+				</li>}</InitiativeAttributeList>: null}
+			</Fragment> : null}
+		</Fragment> : null}
+
+		{dbInitiative.notes || canEdit ? <InitiativeAttribute
+			t={t}
+			editable={canEdit}
+			type="textarea"
+			title={t("NOTES_HEADER")}
+			name="notes"
+			value={dbInitiative.notes}
+		>
+			<p class="text form-output">{Jsx.html(linkify(dbInitiative.notes))}</p>
+		</InitiativeAttribute> : null}
+
 		<div class="form-buttons">
-			<button class="blue-button">{t("UPDATE_INITIATIVE_INFO")}</button>
+			<button type="submit" class="green-button">
+				{t("UPDATE_INITIATIVE_INFO")}
+			</button>
+
 			<span class="form-or">{t("FORM_OR")}</span>
+
 			<label class="link-button" for="initiative-info-form-toggle">
 				{t("CANCEL_INITIATIVE_INFO")}
 			</label>
@@ -826,7 +979,7 @@ function QuicksignView(attrs) {
 	if (!Initiative.isPublic(initiative)) return null
 
 	// There may be multiple QuicksignViews on the page.
-	var id = _.uniqueId("quicksign")
+	var id = _.uniqueId("initiative-quicksign-")
 	var now = new Date
 
 	return <div class="quicksign">
@@ -880,4 +1033,102 @@ function QuicksignView(attrs) {
 			</Fragment> : "."}
 		</Fragment> : null}
 	</div>
+}
+
+function InitiativeAttribute(attrs, children) {
+	var t = attrs.t
+	var title = attrs.title
+	var type = attrs.type
+	var name = attrs.name
+	var value = attrs.value
+	var placeholder = attrs.placeholder
+	var help = attrs.help
+	var editable = attrs.editable
+
+	return <Fragment>
+		<h3 class="sidebar-subheader">{title}</h3>
+		{value ? children : <AddInitiativeInfoButton t={t} /> }
+
+		{editable ? <div class="form-fields">
+			{type == "textarea" ? <textarea
+				name={name}
+				class="form-textarea"
+				placeholder={placeholder}>
+				{value}
+			</textarea> : <input
+				name={name}
+				type={type}
+				class="form-input"
+				placeholder={placeholder}
+				value={value}
+			/>}
+
+			{help ? <p>{help}</p> : null}
+		</div> : null}
+	</Fragment>
+}
+
+function InitiativeAttributeList(attrs, children) {
+	var id = attrs.id
+	var values = attrs.values
+	var def = attrs.default
+	var add = attrs.add
+	var help = attrs.help
+	var render = children[0]
+	var buttonId = _.uniqueId("initiative-attributes-")
+
+	return <div id={id} class="form-fields">
+		{help ? <p>{help}</p> : null}
+
+		<ol class="form-list">
+			{(values.length > 0 ? values : [def]).map(render)}
+		</ol>
+
+		<button type="button" id={buttonId}>{add}</button>
+
+		<script>{javascript`
+			var button = document.getElementById("${buttonId}")
+			var list = button.previousSibling
+			var each = Function.call.bind(Array.prototype.forEach)
+
+			button.addEventListener("click", function(ev) {
+				var el = list.lastChild.cloneNode(true)
+				list.appendChild(el)
+				var inputs = el.getElementsByTagName("input")
+
+				each(inputs, function(input) {
+					input.name = incrementName(input.name)
+					input.value = ""
+				})
+
+				inputs[0].focus()
+			})
+
+			function incrementName(name) {
+				return name.replace(/\\[(\\d+)\\]/g, function(_all, n) {
+					return "[" + (+n + 1) + "]"
+				})
+			}
+		`}</script>
+	</div>
+}
+
+function UntrustedLink(attrs, children) {
+	var href = attrs.href
+	var klass = attrs.class || ""
+
+	if (HTTP_URL.test(href)) return <a {...attrs} class={klass + " link-button"}>
+		{children || href}
+	</a>
+	else return <span class={klass}>{children || href}</span>
+}
+
+function AddInitiativeInfoButton(attrs) {
+	var t = attrs.t
+
+	return <label
+		class="edit-button link-button"
+		for="initiative-info-form-toggle">
+		{t("ADD_INITIATIVE_INFO")}
+	</label>
 }
