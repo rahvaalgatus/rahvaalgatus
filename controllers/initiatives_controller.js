@@ -7,8 +7,6 @@ var Initiative = require("root/lib/initiative")
 var DateFns = require("date-fns")
 var Config = require("root/config")
 var MediaType = require("medium-type")
-var Sqlite = require("root/lib/sqlite")
-var Http = require("root/lib/http")
 var Subscription = require("root/lib/subscription")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
@@ -18,8 +16,6 @@ var signaturesDb = require("root/db/initiative_signatures_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
 var countSignatures = Initiative.countSignatures.bind(null, "Yes")
-var parseSubscription =
-	require("root/controllers/subscriptions_controller").parse
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
 var catch401 = require("root/lib/fetch").catch.bind(null, 401)
@@ -36,10 +32,8 @@ var readInitiativesWithStatus = cosApi.readInitiativesWithStatus
 var encode = encodeURIComponent
 var translateCitizenError = require("root/lib/citizenos_api").translateError
 var hasMainPartnerId = Initiative.hasPartnerId.bind(null, Config.apiPartnerId)
-var sendEmail = require("root").sendEmail
 var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
-var randomHex = require("root/lib/crypto").randomHex
 var decodeBase64 = require("root/lib/crypto").decodeBase64
 var trim = Function.call.bind(String.prototype.trim)
 var EMPTY_ARR = Array.prototype
@@ -420,6 +414,8 @@ exports.router.use("/:id/authors",
 	require("./initiatives/authors_controller").router)
 exports.router.use("/:id/events",
 	require("./initiatives/events_controller").router)
+exports.router.use("/:id/subscriptions",
+	require("./initiatives/subscriptions_controller").router)
 
 exports.router.get("/:id/signable", next(function*(req, res) {
 	var initiative = req.initiative
@@ -553,173 +549,6 @@ exports.router.get("/:id/signature", next(function*(req, res) {
 			break
 	}
 
-	res.redirect(303, req.baseUrl + "/" + initiative.id)
-}))
-
-exports.router.use("/:id/subscriptions", function(req, _res, next) {
-	var initiative = req.initiative
-
-	if (!Initiative.isPublic(initiative))
-		next(new HttpError(403, "Initiative Not Public"))
-	else
-		next()
-})
-
-exports.router.post("/:id/subscriptions", next(function*(req, res) {
-	var initiative = req.initiative
-	var email = req.body.email
-
-	if (!_.isValidEmail(email))
-		return void res.status(422).render("form_error_page.jsx", {
-			errors: [req.t("INVALID_EMAIL")]
-		})
-
-	var subscription
-	try {
-		subscription = yield subscriptionsDb.create({
-			initiative_uuid: initiative.id,
-			email: email,
-			confirmation_token: randomHex(8),
-			created_at: new Date,
-			created_ip: req.ip,
-			updated_at: new Date
-		})
-	}
-	catch (ex) {
-		if (Sqlite.isUniqueError(ex))
-			subscription = yield subscriptionsDb.read(sql`
-				SELECT * FROM initiative_subscriptions
-				WHERE (initiative_uuid, email) = (${initiative.id}, ${email})
-			`)
-
-		else throw ex
-	}
-
-	if (
-		subscription.confirmation_sent_at == null ||
-		new Date - subscription.confirmation_sent_at >= 3600 * 1000
-	) {
-		var initiativeUrl = Http.link(req, req.baseUrl + "/" + initiative.id)
-
-		if (subscription.confirmed_at) {
-			yield sendEmail({
-				to: email,
-
-				subject: req.t("ALREADY_SUBSCRIBED_TO_INITIATIVE_TITLE", {
-					initiativeTitle: initiative.title
-				}),
-
-				text: renderEmail(req.lang, "ALREADY_SUBSCRIBED_TO_INITIATIVE_BODY", {
-					url: initiativeUrl + "/subscriptions/" + subscription.update_token,
-					initiativeTitle: initiative.title,
-					initiativeUrl: initiativeUrl
-				})
-			})
-		}
-		else {
-			var token = subscription.confirmation_token
-
-			yield sendEmail({
-				to: email,
-
-				subject: req.t("CONFIRM_INITIATIVE_SUBSCRIPTION_TITLE", {
-					initiativeTitle: initiative.title
-				}),
-
-				text: renderEmail(req.lang, "CONFIRM_INITIATIVE_SUBSCRIPTION_BODY", {
-					url: initiativeUrl + "/subscriptions/new?confirmation_token=" + token,
-					initiativeTitle: initiative.title,
-					initiativeUrl: initiativeUrl
-				})
-			})
-		}
-
-		yield subscriptionsDb.update(subscription, {
-			confirmation_sent_at: new Date,
-			updated_at: new Date
-		})
-	}
-
-	res.flash("notice", req.t("CONFIRM_INITIATIVE_SUBSCRIPTION"))
-	res.redirect(303, req.baseUrl + "/" + initiative.id)
-}))
-
-exports.router.get("/:id/subscriptions/new", next(function*(req, res, next) {
-	var initiative = req.initiative
-
-	var subscription = yield subscriptionsDb.read(sql`
-		SELECT * FROM initiative_subscriptions
-		WHERE initiative_uuid = ${initiative.id}
-		AND confirmation_token = ${req.query.confirmation_token}
-		LIMIT 1
-	`)
-
-	if (subscription) {
-		if (!subscription.confirmed_at)
-			yield subscriptionsDb.update(subscription, {
-				confirmed_at: new Date,
-				confirmation_sent_at: null,
-				updated_at: new Date
-			})
-		
-		res.flash("notice", req.t("CONFIRMED_INITIATIVE_SUBSCRIPTION"))
-		res.redirect(303, req.baseUrl + "/" + initiative.id)
-	}
-	else {
-		res.statusCode = 404
-		res.statusMessage = "Invalid Confirmation Token"
-		res.flash("error",
-			req.t("INVALID_INITIATIVE_SUBSCRIPTION_CONFIRMATION_TOKEN"))
-
-		exports.read(req, res, next)
-	}
-}))
-
-exports.router.use("/:id/subscriptions/:token", next(function*(req, res, next) {
-	req.subscription = yield subscriptionsDb.read(sql`
-		SELECT * FROM initiative_subscriptions
-		WHERE initiative_uuid = ${req.initiative.id}
-		AND update_token = ${req.params.token}
-		LIMIT 1
-	`)
-
-	if (req.subscription) return void next()
-
-	res.statusCode = 404
-
-	return void res.render("error_page.jsx", {
-		title: req.t("SUBSCRIPTION_NOT_FOUND_TITLE"),
-		body: req.t("SUBSCRIPTION_NOT_FOUND_BODY")
-	})
-}))
-
-exports.router.get("/:id/subscriptions/:token", function(req, res) {
-	res.render("initiatives/subscriptions/read_page.jsx", {
-		subscription: req.subscription
-	})
-})
-
-exports.router.put("/:id/subscriptions/:token", next(function*(req, res) {
-	yield subscriptionsDb.update(req.subscription, {
-		__proto__: parseSubscription(req.body),
-		updated_at: new Date
-	})
-
-	res.flash("notice", req.t("INITIATIVE_SUBSCRIPTION_UPDATED"))
-	res.redirect(303, req.baseUrl + req.url)
-}))
-
-exports.router.delete("/:id/subscriptions/:token", next(function*(req, res) {
-	var initiative = req.initiative
-	var subscription = req.subscription
-
-	yield subscriptionsDb.execute(sql`
-		DELETE FROM initiative_subscriptions
-		WHERE initiative_uuid = ${initiative.id}
-		AND update_token = ${subscription.update_token}
-	`)
-
-	res.flash("notice", req.t("INITIATIVE_SUBSCRIPTION_DELETED"))
 	res.redirect(303, req.baseUrl + "/" + initiative.id)
 }))
 
