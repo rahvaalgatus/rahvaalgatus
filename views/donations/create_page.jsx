@@ -2,11 +2,13 @@
 var Jsx = require("j6pack")
 var Page = require("../page")
 var Form = require("../page").Form
+var I18n = require("root/lib/i18n")
 exports = module.exports = CreatePage
 exports.DonateForm = DonateForm
 
 function CreatePage(attrs) {
 	var req = attrs.req
+  var lang = req.lang
 	var t = req.t
 	var amount = attrs.amount
 
@@ -14,14 +16,14 @@ function CreatePage(attrs) {
 		<section class="primary-section">
 			<center class="text-section">
 				<h1>{t("SUPPORT_US_TITLE")}</h1>
-				{Jsx.html(t("SUPPORT_US_CONTENT"))}
+				{Jsx.html(I18n.markdown(lang, "donate"))}
 			</center>
 
 			<center><DonateForm req={req} t={t} amount={amount} /></center>
 		</section>
 
 		<section class="secondary-section text-section"><center>
-			<p>{Jsx.html(t("SUPPORTERS"))}</p>
+			<p>{Jsx.html(I18n.markdown(lang, "donators"))}</p>
 		</center></section>
 	</Page>
 }

@@ -30,6 +30,7 @@ var UI_TRANSLATIONS = O.map(I18n.STRINGS, function(lang) {
 function ReadPage(attrs) {
 	var req = attrs.req
 	var t = attrs.t
+  var lang = req.lang
 	var signature = attrs.signature
 	var comment = attrs.comment
 	var comments = attrs.comments
@@ -82,7 +83,7 @@ function ReadPage(attrs) {
 				<Flash flash={flash} />
 
 				{flash("signed") ? <div class="initiative-status">
-					{Jsx.html(t("SUPPORT_US_CONTENT"))}
+          {Jsx.html(I18n.markdown(lang, "donate"))}
 					<DonateForm req={req} t={t} />
 				</div> : null}
 

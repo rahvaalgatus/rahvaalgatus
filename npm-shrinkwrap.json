@@ -1960,6 +1960,11 @@
       "from": "https://registry.npmjs.org/lodash/-/lodash-4.16.1.tgz",
       "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.16.1.tgz"
     },
+    "marked": {
+      "version": "0.6.2",
+      "from": "marked@latest",
+      "resolved": "https://registry.npmjs.org/marked/-/marked-0.6.2.tgz"
+    },
     "medium-type": {
       "version": "1.0.0",
       "from": "medium-type@latest",
