@@ -274,6 +274,12 @@ button.inherited {
 	&:hover { text-decoration: underline; }
 }
 
+
+.form {
+	font-family: $museo-sans;
+	font-size: 1.3rem;
+}
+
 .inherited-button {
 	@extend button.inherited;
 	cursor: pointer;
@@ -629,36 +635,46 @@ button.inherited {
 		margin-bottom: 1rem;
 	}
 
+	.form-fields {
+		display: inline-block;
+		margin-right: 1rem;
+		margin-bottom: 0.5rem;
+
+		.form-label { margin-bottom: 0.5rem; }
+		input[name=person] { width: 100%; }
+		@include mobile { display: block; }
+	}
+
 	.amount-input {
 		&:before {
 			vertical-align: top;
-			line-height: $button-height;
-			margin-right: -8rem;
+			height: $button-height;
+			line-height: $button-height + 0.4rem;
+			margin-right: -10rem;
 			display: inline-block;
 			text-indent: 1rem;
+			font-size: 1.8rem;
 			color: #ccc;
-			width: 8rem;
+			width: 10rem;
 			content: "€";
+			font-weight: bold;
 			background: white;
 			border-radius: $button-radius;
 		}
 
 		input {
 			padding-left: 2.5rem;
-			width: 8rem;
+			width: 10rem;
 			display: inline-block;
 			background-color: transparent;
 		}
 	}
 
-	.tos-checkbox {
-		margin-top: 1rem;
-		font-size: 1.4rem;
-		line-height: 2.1rem;
+	button {
+		margin-bottom: 0.5rem;
 	}
 
 	p {
-		margin-top: 0.5rem;
 		font-size: 1.4rem;
 	}
 }
@@ -1449,10 +1465,19 @@ button.inherited {
 			&:last-child { margin-bottom: 0; }
 		}
 
+		h2 {
+			font-family: $museo-sans;
+			line-height: 3.6rem;
+			font-size: 1.6rem;
+			color: $dark-blue;
+			font-weight: 900;
+			text-transform: uppercase;
+		}
+
 		p { white-space: pre-wrap; }
 		a { color: $link-color; text-decoration: underline; }
 		p + ul { margin-top: 1rem; }
-		:last-child { margin-bottom: 1.5rem; }
+		& > :last-child { margin-bottom: 1.5rem; }
 	}
 
 	#initiative-etherpad {

@@ -35,32 +35,35 @@ function DonateForm(attrs) {
 	var pseudoInt = require("root/lib/crypto").pseudoInt
 	var def = amount == null ? 3 + pseudoInt(7) : 0
 
-	return <Form req={req} method="post" action="/donations" class="donate-form">
+  return <Form
+    req={req}
+    method="post"
+    action="/donations"
+    class="form donate-form"
+  >
 		<input type="hidden" name="default" value={def} />
 
-		<label class="form-label">{t("SUPPORT_LABEL")}</label>
-		<br />
-		<label class="amount-input">
-			<input
-				type="numeric"
-				name="amount"
-				value={amount || def}
-				required
-				class="form-input"
-			/>
-		</label>
+    <label class="form-fields">
+      <span class="form-label">{t("SUPPORT_LABEL")}</span>
+      <br />
+      <span class="amount-input">
+        <input
+          type="numeric"
+          name="amount"
+          value={amount || def}
+          required
+          class="form-input"
+        />
+      </span>
+    </label>
 
-		<br />
-		<label class="form-label">Isikukood (kui soovid tulumaksu tagasi)</label>
-		<br />
-		<input name="person" maxlength={32} class="form-input" />
+    <label class="form-fields">
+      <span class="form-label">{t("SUPPORT_PERSONAL_CODE")}</span>
+      <br />
+      <input name="person" maxlength={32} class="form-input" />
+    </label>
 
 		<button class="form-submit secondary-button">{t("SUPPORT_BUTTON")}</button>
-
-		<label class="form-checkbox tos-checkbox">
-			<input type="checkbox" name="accept-tos" required />
-			{Jsx.html(t("I_HAVE_READ", {url: "/about#tos"}))}
-		</label>
 
 		<p class="text">{t("SUPPORT_REDIRECT")}</p>
 	</Form>

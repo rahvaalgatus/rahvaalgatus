@@ -83,6 +83,7 @@ function ReadPage(attrs) {
 				<Flash flash={flash} />
 
 				{flash("signed") ? <div class="initiative-status">
+          <h2>{t("SUPPORT_US_TITLE")}</h2>
           {Jsx.html(I18n.markdown(lang, "donate"))}
 					<DonateForm req={req} t={t} />
 				</div> : null}
