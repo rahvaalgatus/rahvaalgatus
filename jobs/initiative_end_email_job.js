@@ -1,5 +1,6 @@
 var _ = require("root/lib/underscore")
 var Config = require("root/config")
+var DateFns = require("date-fns")
 var sql = require("sqlate")
 var sendEmail = require("root").sendEmail
 var concat = Array.prototype.concat.bind(Array.prototype)
@@ -29,6 +30,7 @@ function* emailEndedDiscussions() {
 		FROM "Topics" AS initiative
 		JOIN "Users" AS "user" ON "user".id = initiative."creatorId"
 		WHERE initiative.status = 'inProgress'
+		AND initiative."endsAt" >= ${DateFns.addMonths(new Date, -6)}
 		AND initiative."endsAt" <= ${new Date}
 		AND initiative.visibility = 'public'
 		AND initiative."sourcePartnerId" IN ${sql.tuple(PARTNER_IDS)}
@@ -72,6 +74,7 @@ function* emailEndedInitiatives() {
 		JOIN "TopicVotes" AS tv ON tv."topicId" = initiative.id
 		JOIN "Votes" AS vote ON vote.id = tv."voteId"
 		WHERE initiative.status = 'voting'
+		AND vote."endsAt" >= ${DateFns.addMonths(new Date, -6)}
 		AND vote."endsAt" <= ${new Date}
 		AND initiative.visibility = 'public'
 		AND initiative."sourcePartnerId" IN ${sql.tuple(PARTNER_IDS)}

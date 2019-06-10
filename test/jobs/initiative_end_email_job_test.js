@@ -38,12 +38,32 @@ describe("InitiativeEndEmailJob", function() {
 	describe("when in discussion", function() {
 		it("must email when discussion has ended", function*() {
 			yield createTopic({creatorId: this.user.id, endsAt: new Date})
-
 			yield job()
 			this.emails.length.must.equal(1)
 			this.emails[0].envelope.to.must.eql([this.user.email])
 			var body = String(this.emails[0].message)
 			body.must.not.include("undefined")
+		})
+
+		it("must email when discussion ended 6 months ago", function*() {
+			yield createTopic({
+				creatorId: this.user.id,
+				endsAt: DateFns.addMonths(new Date, -6)
+			})
+
+			yield job()
+			this.emails.length.must.equal(1)
+		})
+
+		it("must not email when discussion ended more than 6 months ago",
+			function*() {
+			yield createTopic({
+				creatorId: this.user.id,
+				endsAt: DateFns.addSeconds(DateFns.addMonths(new Date, -6), -1)
+			})
+
+			yield job()
+			this.emails.length.must.equal(0)
 		})
 
 		it("must not email when discussion not ended", function*() {
@@ -148,6 +168,30 @@ describe("InitiativeEndEmailJob", function() {
 			this.emails[0].envelope.to.must.eql([this.user.email])
 			var body = String(this.emails[0].message)
 			body.must.not.include("undefined")
+		})
+
+		it("must email when signing ended 6 months ago", function*() {
+			var topic = yield createTopic({creatorId: this.user.id, status: "voting"})
+
+			yield createVote(topic, newVote({
+				endsAt: DateFns.addMonths(new Date, -6)
+			}))
+
+			yield createSignatures(topic, SIGS_REQUIRED)
+			yield job()
+			this.emails.length.must.equal(1)
+		})
+
+		it("must not email when signing ended more than 6 months ago", function*() {
+			var topic = yield createTopic({creatorId: this.user.id, status: "voting"})
+
+			yield createVote(topic, newVote({
+				endsAt: DateFns.addSeconds(DateFns.addMonths(new Date, -6), -1)
+			}))
+
+			yield createSignatures(topic, SIGS_REQUIRED)
+			yield job()
+			this.emails.length.must.equal(0)
 		})
 
 		it("must not email when signing not ended", function*() {
