@@ -101,6 +101,17 @@ describe("InitiativeEndEmailJob", function() {
 			this.emails.must.be.empty()
 		})
 
+		it("must email when discussion deleted", function*() {
+			yield createTopic({
+				creatorId: this.user.id,
+				endsAt: new Date,
+				deletedAt: new Date
+			})
+
+			yield job()
+			this.emails.must.be.empty()
+		})
+
 		it("must not email if vote already created", function*() {
 			yield createTopic({
 				creatorId: this.user.id,
@@ -228,7 +239,19 @@ describe("InitiativeEndEmailJob", function() {
 			yield job()
 			this.emails.must.be.empty()
 		})
-		//
+
+		it("must not email if not public", function*() {
+			var topic = yield createTopic({
+				creatorId: this.user.id,
+				deletedAt: new Date,
+				status: "voting"
+			})
+
+			yield createVote(topic, newVote({endsAt: new Date}))
+			yield job()
+			this.emails.must.be.empty()
+		})
+
 		// Safety net for when running development on a shared server.
 		it("must not email about other partners", function*() {
 			var partner = yield cosDb("Partners").insert({
