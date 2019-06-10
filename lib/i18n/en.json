@@ -54,6 +54,7 @@
 	"INITIATIVE_IN_PARLIAMENT": "Initiative is in the parliament",
 	"INITIATIVE_LIST": "In voting",
 	"INITIATIVE_PROCESSED": "Initiative proceedings have finished.",
+	"INITIATIVE_SIDEBAR_FOLLOW_HEADER": "Follow",
 	"INITIATIVE_SIDEBAR_SUBSCRIBE": "Subscribe to be informed via email",
 	"INITIATIVE_SUBSCRIBER_COUNT": "<strong>{{count}}</strong> people subscribed already.",
 	"INVALID_EMAIL": "Email seems invalid.",

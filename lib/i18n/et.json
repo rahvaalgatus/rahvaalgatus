@@ -97,6 +97,7 @@
 	"INITIATIVE_IN_PARLIAMENT": "Algatus on Riigikogus.",
 	"INITIATIVE_LIST": "Hääletamisel",
 	"INITIATIVE_PROCESSED": "Algatuse menetlus Riigikogus on lõppenud.",
+	"INITIATIVE_SIDEBAR_FOLLOW_HEADER": "Jälgi",
 	"INITIATIVE_SIDEBAR_SUBSCRIBE": "Jälgi algatust meilitsi",
 	"INITIATIVE_SUBSCRIBER_COUNT": "Algatust jälgib juba <strong>{{count}}</strong> inimest.",
 	"INITIATIVE_SUBSCRIPTIONS_UPDATED": "Teavituste eelistused on uuendatud.",

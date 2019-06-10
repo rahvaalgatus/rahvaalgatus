@@ -468,7 +468,6 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 				var userId = parseUserIdFromBdocUrl(signed.body.data.bdocUri)
 				yield unhideSignature(initiative.id, userId)
 
-				res.flash("notice", req.t("THANKS_FOR_SIGNING"))
 				res.flash("signed", signed.body.data.bdocUri)
 				res.redirect(303, req.baseUrl + "/" + initiative.id)
 			}
@@ -546,7 +545,6 @@ exports.router.get("/:id/signature", next(function*(req, res) {
 			yield unhideSignature(initiative.id, userId)
 
 			// Cannot currently know which option the person signed.
-			res.flash("notice", req.t("THANKS_FOR_SIGNING"))
 			res.flash("signed", signature.body.data.bdocUri)
 			break
 

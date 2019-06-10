@@ -274,7 +274,6 @@ button.inherited {
 	&:hover { text-decoration: underline; }
 }
 
-
 .form {
 	font-family: $museo-sans;
 	font-size: 1.3rem;
@@ -676,6 +675,7 @@ button.inherited {
 
 	p {
 		font-size: 1.4rem;
+		color: $grey;
 	}
 }
 
@@ -1296,32 +1296,31 @@ button.inherited {
 				}
 			}
 
-			#initiative-subscribe {
-				p {
-					color: $grey;
-				}
-
-				input {
-					display: inline-block;
-					margin-right: 0.5rem;
-					margin-bottom: 0.5rem;
-
-					@include mobile { width: 100%; }
-				}
-
-				button {
-					padding-left: 1rem;
-					padding-right: 1rem;
-					margin-bottom: 0.5rem;
-
-					@include mobile { width: 100%; }
-				}
-			}
-
 			@include mobile-and-tablet {
 				width: auto;
 
 				.quicksign { display: none; }
+			}
+		}
+
+		.initiative-subscribe-form {
+			font-family: $museo-sans;
+
+			p { color: $grey; }
+
+			input {
+				display: inline-block;
+				margin-right: 1rem;
+				margin-bottom: 0.5rem;
+				max-width: 18rem;
+
+				@include mobile { width: 100%; }
+			}
+
+			button {
+				margin-bottom: 0.5rem;
+
+				@include mobile { width: 100%; }
 			}
 		}
 
@@ -1447,7 +1446,7 @@ button.inherited {
 		font-family: $tisa-pro;
 		background: $light-background;
 
-		h1 {
+		.status-header {
 			font-family: $museo-sans;
 			padding: 1.1rem $page-padding 0.8rem;
 			margin: (-1.5rem) (-$page-padding) 0 (-$page-padding);
@@ -1465,13 +1464,31 @@ button.inherited {
 			&:last-child { margin-bottom: 0; }
 		}
 
-		h2 {
+		.status-serif-header {
+			font-family: $tisa-pro;
+			font-size: 2.4rem;
+			color: $parliament-color;
+			margin-top: 0.5rem;
+			margin-bottom: 1rem;
+		}
+
+		.status-subheader {
 			font-family: $museo-sans;
 			line-height: 3.6rem;
 			font-size: 1.6rem;
 			color: $dark-blue;
 			font-weight: 900;
 			text-transform: uppercase;
+
+			& ~ .status-subheader { margin-top: 1rem; }
+		}
+
+		.status-subsubheader {
+			font-family: $museo-sans;
+			font-size: 1.3rem;
+			line-height: 1.5;
+			font-weight: bold;
+			margin-bottom: 0.5rem;
 		}
 
 		p { white-space: pre-wrap; }

@@ -38,6 +38,7 @@ function ReadPage(attrs) {
 	var events = attrs.events
 	var initiative = attrs.initiative
 	var dbInitiative = attrs.dbInitiative
+	var subscriberCount = attrs.subscriberCount
 
 	var now = new Date
 	var opt = signature ? "No" : "Yes"
@@ -83,9 +84,26 @@ function ReadPage(attrs) {
 				<Flash flash={flash} />
 
 				{flash("signed") ? <div class="initiative-status">
-          <h2>{t("SUPPORT_US_TITLE")}</h2>
+          <h1 class="status-serif-header">{t("THANKS_FOR_SIGNING")}</h1>
+
+          <h2 class="status-subheader">{t("SUPPORT_US_TITLE")}</h2>
           {Jsx.html(I18n.markdown(lang, "donate"))}
 					<DonateForm req={req} t={t} />
+
+          <h2 class="status-subheader">
+            {t("INITIATIVE_SIDEBAR_FOLLOW_HEADER")}
+          </h2>
+
+          <h3 class="status-subsubheader">
+            {t("INITIATIVE_SIDEBAR_SUBSCRIBE")}
+          </h3>
+
+          <SubscribeEmailView
+            req={req}
+            initiative={initiative}
+            count={subscriberCount}
+            t={t}
+          />
 				</div> : null}
 
 				{(function($value) {
@@ -97,7 +115,7 @@ function ReadPage(attrs) {
 								Initiative.isPublic(initiative) &&
 								!Initiative.hasDiscussionEnded(new Date, initiative)
 							) return <div class="initiative-status">
-								<h1>
+								<h1 class="status-header">
 									{t("INITIATIVE_IN_DISCUSSION")}
 									{" "}
 									<a
@@ -116,10 +134,16 @@ function ReadPage(attrs) {
 
 								return <div class="initiative-status">
 									{Initiative.isSuccessful(initiative, dbInitiative)? <Fragment>
-										<h1>{t("N_SIGNATURES_COLLECTED", {votes: sigs})}</h1>
+                    <h1 class="status-header">
+                      {t("N_SIGNATURES_COLLECTED", {votes: sigs})}
+                    </h1>
+
 										<p>{t("VOTING_SUCCEEDED")}</p>
 									</Fragment> : <Fragment>
-										<h1>{t("N_SIGNATURES_FAILED", {votes: sigs})}</h1>
+                    <h1 class="status-header">
+                      {t("N_SIGNATURES_FAILED", {votes: sigs})}
+                    </h1>
+
 										<p>{t("VOTING_FAILED")}</p>
 									</Fragment>}
 								</div>
@@ -127,7 +151,7 @@ function ReadPage(attrs) {
 							else return null
 
 						case "followUp": return <div class="initiative-status">
-							<h1>
+							<h1 class="status-header">
 								{t("INITIATIVE_IN_PARLIAMENT")}
 								{" "}
 								<a href="#initiative-events" class="link-button wide-button">
@@ -141,7 +165,7 @@ function ReadPage(attrs) {
 								Initiative.isInParliament(initiative, dbInitiative) ||
 								sentToParliamentAt
 							) return <div class="initiative-status">
-									<h1>
+									<h1 class="status-header">
 										{t("INITIATIVE_PROCESSED")}
 										{" "}
 										<a
@@ -155,7 +179,9 @@ function ReadPage(attrs) {
 								sigs = Initiative.countSignatures("Yes", initiative)
 
 								return <div class="initiative-status">
-									<h1>{t("N_SIGNATURES_FAILED", {votes: sigs})}</h1>
+                  <h1 class="status-header">
+                    {t("N_SIGNATURES_FAILED", {votes: sigs})}
+                  </h1>
 									<p>{t("VOTING_FAILED")}</p>
 								</div>
 							}
@@ -372,7 +398,7 @@ function ReadPage(attrs) {
 				<SidebarSubscribeView
 					req={req}
 					initiative={initiative}
-					subscriberCount={attrs.subscriberCount}
+					subscriberCount={subscriberCount}
 				/>
 
 				<SidebarAdminView
@@ -697,7 +723,7 @@ function SidebarSubscribeView(attrs) {
 	var atomPath = req.baseUrl + req.url + ".atom"
 
 	return <div class="sidebar-section">
-		<h2 class="sidebar-header">Jälgi</h2>
+		<h2 class="sidebar-header">{t("INITIATIVE_SIDEBAR_FOLLOW_HEADER")}</h2>
 
 		<h3 class="sidebar-subheader">{t("INITIATIVE_SIDEBAR_SUBSCRIBE")}</h3>
 
@@ -911,19 +937,19 @@ function SubscribeEmailView(attrs) {
 
 	return <Form
 		req={req}
-		id="initiative-subscribe"
+		class="initiative-subscribe-form"
 		method="post"
 		action={"/initiatives/" + initiative.id + "/subscriptions"}>
-		<input
-			id="initiative-subscribe-email"
-			name="email"
-			type="email"
-			required
-			placeholder={t("LBL_EMAIL")}
-			class="form-input"
-		/>
+    <input
+      id="initiative-subscribe-email"
+      name="email"
+      type="email"
+      required
+      placeholder={t("LBL_EMAIL")}
+      class="form-input"
+    />
 
-		<button type="submit" class="secondary-button">{t("BTN_SUBSCRIBE")}</button>
+    <button type="submit" class="secondary-button">{t("BTN_SUBSCRIBE")}</button>
 		<p>{Jsx.html(t("INITIATIVE_SUBSCRIBER_COUNT", {count: count}))}</p>
 	</Form>
 }
