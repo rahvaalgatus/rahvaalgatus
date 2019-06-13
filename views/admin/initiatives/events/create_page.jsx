@@ -88,7 +88,6 @@ function EventForm(attrs, children) {
 		<textarea
 			name="text"
 			required
-			maxlength={10000}
 			class="admin-input">
 			{event.text}
 		</textarea>
