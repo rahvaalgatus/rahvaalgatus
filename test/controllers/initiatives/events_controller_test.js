@@ -207,7 +207,7 @@ describe("EventsController", function() {
 						initiativeTitle: INITIATIVE.title,
 						initiativeUrl: `${Config.url}/initiatives/${UUID}`,
 						title: "Something happened",
-						text: "You shouldn't miss it.",
+						text: "> You shouldn't miss it.",
 						unsubscribeUrl: "{{unsubscribeUrl}}"
 					}),
 

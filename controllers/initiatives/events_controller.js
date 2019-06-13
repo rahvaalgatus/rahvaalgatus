@@ -1,3 +1,4 @@
+var _ = require("root/lib/underscore")
 var Config = require("root/config")
 var Router = require("express").Router
 var HttpError = require("standard-http-error")
@@ -64,7 +65,7 @@ exports.router.post("/", next(function*(req, res) {
 			initiativeTitle: initiative.title,
 			initiativeUrl: `${Config.url}/initiatives/${initiative.id}`,
 			title: event.title,
-			text: event.text
+			text: _.quoteEmail(event.text)
 		})
 	})
 

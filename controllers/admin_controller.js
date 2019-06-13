@@ -381,7 +381,7 @@ function renderEventMessage(initiative, event) {
 
 		text: renderEmail("DEFAULT_INITIATIVE_EVENT_MESSAGE_BODY", {
 			title: event.title,
-			text: event.text,
+			text: _.quoteEmail(event.text),
 			initiativeTitle: initiative.title,
 			initiativeUrl: `${Config.url}/initiatives/${initiative.id}`,
 		})

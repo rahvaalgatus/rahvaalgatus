@@ -135,7 +135,7 @@ describe("AdminController", function() {
 						initiativeTitle: this.topic.title,
 						initiativeUrl: `${Config.url}/initiatives/${this.topic.id}`,
 						title: "Initiative was handled",
-						text: "All good.",
+						text: "> All good.",
 						unsubscribeUrl: "{{unsubscribeUrl}}"
 					}),
 
