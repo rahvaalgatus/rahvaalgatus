@@ -215,15 +215,13 @@ describe("AdminController", function() {
 			it("must not email the same subscriber twice", function*() {
 				var generic = yield subscriptionsDb.create({
 					email: "user@example.com",
-					confirmed_at: new Date,
-					confirmation_token: "deadbeef"
+					confirmed_at: new Date
 				})
 
 				var specific = yield subscriptionsDb.create({
 					initiative_uuid: this.topic.id,
 					email: "user@example.com",
-					confirmed_at: new Date,
-					confirmation_token: "deadfeed"
+					confirmed_at: new Date
 				})
 
 				var res = yield this.request(`/initiatives/${this.topic.id}/messages`, {
@@ -268,8 +266,7 @@ describe("AdminController", function() {
 				yield subscriptionsDb.create({
 					initiative_uuid: "20a431ac-d7fa-4469-af6f-0b914a76c9c7",
 					email: "user@example.com",
-					confirmed_at: new Date,
-					confirmation_token: "deadbeef"
+					confirmed_at: new Date
 				})
 
 				var res = yield this.request(`/initiatives/${this.topic.id}/messages`, {

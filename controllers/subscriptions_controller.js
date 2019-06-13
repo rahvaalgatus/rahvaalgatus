@@ -2,7 +2,6 @@ var _ = require("root/lib/underscore")
 var Http = require("root/lib/http")
 var Router = require("express").Router
 var Sqlite = require("root/lib/sqlite")
-var randomHex = require("root/lib/crypto").randomHex
 var sendEmail = require("root").sendEmail
 var renderEmail = require("root/lib/i18n").email
 var next = require("co-next")
@@ -24,7 +23,6 @@ exports.router.post("/", next(function*(req, res) {
 	try {
 		subscription = yield db.create({
 			email: email,
-			confirmation_token: randomHex(8),
 			created_at: new Date,
 			created_ip: req.ip,
 			updated_at: new Date
@@ -44,26 +42,24 @@ exports.router.post("/", next(function*(req, res) {
 		subscription.confirmation_sent_at == null ||
 		new Date - subscription.confirmation_sent_at >= 3600 * 1000
 	) {
+		var token = subscription.update_token
+
 		if (subscription.confirmed_at) {
 			yield sendEmail({
 				to: email,
 				subject: req.t("ALREADY_SUBSCRIBED_TO_INITIATIVES_TITLE"),
 				text: renderEmail(req.lang, "ALREADY_SUBSCRIBED_TO_INITIATIVES_BODY", {
-					url: Http.link(req, req.baseUrl + "/" + subscription.update_token)
+					url: Http.link(req, req.baseUrl + "/" + token)
 				})
 			})
 		}
-		else {
-			var token = subscription.confirmation_token
-
-			yield sendEmail({
-				to: email,
-				subject: req.t("CONFIRM_INITIATIVES_SUBSCRIPTION_TITLE"),
-				text: renderEmail(req.lang, "CONFIRM_INITIATIVES_SUBSCRIPTION_BODY", {
-					url: Http.link(req, req.baseUrl + "/new?confirmation_token=" + token)
-				})
+		else yield sendEmail({
+			to: email,
+			subject: req.t("CONFIRM_INITIATIVES_SUBSCRIPTION_TITLE"),
+			text: renderEmail(req.lang, "CONFIRM_INITIATIVES_SUBSCRIPTION_BODY", {
+				url: Http.link(req, req.baseUrl + "/new?confirmation_token=" + token)
 			})
-		}
+		})
 
 		yield db.update(subscription, {
 			confirmation_sent_at: new Date,
@@ -79,7 +75,7 @@ exports.router.get("/new", next(function*(req, res) {
 	var subscription = yield db.read(sql`
 		SELECT * FROM initiative_subscriptions
 		WHERE initiative_uuid IS NULL
-		AND confirmation_token = ${req.query.confirmation_token}
+		AND update_token = ${req.query.confirmation_token}
 		LIMIT 1
 	`)
 

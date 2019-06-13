@@ -8,7 +8,6 @@ var Http = require("root/lib/http")
 var InitiativesController = require("../initiatives_controller")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var next = require("co-next")
-var randomHex = require("root/lib/crypto").randomHex
 var sql = require("sqlate")
 var sendEmail = require("root").sendEmail
 var renderEmail = require("root/lib/i18n").email
@@ -40,7 +39,6 @@ exports.router.post("/", next(function*(req, res) {
 		subscription = yield subscriptionsDb.create({
 			initiative_uuid: initiative.id,
 			email: email,
-			confirmation_token: randomHex(8),
 			created_at: new Date,
 			created_ip: req.ip,
 			updated_at: new Date
@@ -62,6 +60,7 @@ exports.router.post("/", next(function*(req, res) {
 	) {
 		var initiativeUrl = Http.link(req, Path.dirname(req.baseUrl))
 		var subscriptionsUrl = Http.link(req, req.baseUrl)
+		var token = subscription.update_token
 
 		if (subscription.confirmed_at) {
 			yield sendEmail({
@@ -72,29 +71,25 @@ exports.router.post("/", next(function*(req, res) {
 				}),
 
 				text: renderEmail(req.lang, "ALREADY_SUBSCRIBED_TO_INITIATIVE_BODY", {
-					url: subscriptionsUrl + "/" + subscription.update_token,
+					url: subscriptionsUrl + "/" + token,
 					initiativeTitle: initiative.title,
 					initiativeUrl: initiativeUrl
 				})
 			})
 		}
-		else {
-			var token = subscription.confirmation_token
+		else yield sendEmail({
+			to: email,
 
-			yield sendEmail({
-				to: email,
+			subject: req.t("CONFIRM_INITIATIVE_SUBSCRIPTION_TITLE", {
+				initiativeTitle: initiative.title
+			}),
 
-				subject: req.t("CONFIRM_INITIATIVE_SUBSCRIPTION_TITLE", {
-					initiativeTitle: initiative.title
-				}),
-
-				text: renderEmail(req.lang, "CONFIRM_INITIATIVE_SUBSCRIPTION_BODY", {
-					url: subscriptionsUrl + "/new?confirmation_token=" + token,
-					initiativeTitle: initiative.title,
-					initiativeUrl: initiativeUrl
-				})
+			text: renderEmail(req.lang, "CONFIRM_INITIATIVE_SUBSCRIPTION_BODY", {
+				url: subscriptionsUrl + "/new?confirmation_token=" + token,
+				initiativeTitle: initiative.title,
+				initiativeUrl: initiativeUrl
 			})
-		}
+		})
 
 		yield subscriptionsDb.update(subscription, {
 			confirmation_sent_at: new Date,
@@ -112,7 +107,7 @@ exports.router.get("/new", next(function*(req, res, next) {
 	var subscription = yield subscriptionsDb.read(sql`
 		SELECT * FROM initiative_subscriptions
 		WHERE initiative_uuid = ${initiative.id}
-		AND confirmation_token = ${req.query.confirmation_token}
+		AND update_token = ${req.query.confirmation_token}
 		LIMIT 1
 	`)
 

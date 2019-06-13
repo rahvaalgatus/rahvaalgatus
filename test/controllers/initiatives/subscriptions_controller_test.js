@@ -83,18 +83,17 @@ describe("SubscriptionsController", function() {
 				created_at: new Date,
 				created_ip: "127.0.0.1",
 				updated_at: new Date,
-				confirmation_token: subscription.confirmation_token,
 				confirmation_sent_at: new Date,
 				update_token: subscription.update_token
 			}))
 
-			subscription.confirmation_token.must.exist()
+			subscription.update_token.must.exist()
 
 			this.emails.length.must.equal(1)
 			this.emails[0].envelope.to.must.eql(["user@example.com"])
 			var body = String(this.emails[0].message)
 			body.match(/^Subject: .*/m)[0].must.include(INITIATIVE.title)
-			body.must.include(subscription.confirmation_token)
+			body.must.include(`confirmation_token=3D${subscription.update_token}`)
 		})
 
 		it(`must subscribe case-insensitively`, function*() {
@@ -110,7 +109,6 @@ describe("SubscriptionsController", function() {
 				created_at: createdAt,
 				updated_at: createdAt,
 				confirmed_at: createdAt,
-				confirmation_token: pseudoHex(8),
 				confirmation_sent_at: new Date
 			}))
 
@@ -133,8 +131,7 @@ describe("SubscriptionsController", function() {
 			function*() {
 			var subscription = yield subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: UUID,
-				confirmation_sent_at: new Date,
-				confirmation_token: pseudoHex(8)
+				confirmation_sent_at: new Date
 			}))
 
 			this.router.get(`/api/topics/${UUID}`,
@@ -158,8 +155,7 @@ describe("SubscriptionsController", function() {
 		it("must resend confirmation email if an hour has passed", function*() {
 			var subscription = yield subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: UUID,
-				confirmation_sent_at: new Date,
-				confirmation_token: pseudoHex(8)
+				confirmation_sent_at: new Date
 			}))
 
 			this.router.get(`/api/topics/${UUID}`,
@@ -188,8 +184,7 @@ describe("SubscriptionsController", function() {
 			var subscription = yield subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: UUID,
 				confirmed_at: new Date,
-				confirmation_sent_at: new Date,
-				confirmation_token: pseudoHex(8)
+				confirmation_sent_at: new Date
 			}))
 
 			this.router.get(`/api/topics/${UUID}`,
@@ -268,7 +263,7 @@ describe("SubscriptionsController", function() {
 				initiative_uuid: UUID,
 				created_at: createdAt,
 				updated_at: createdAt,
-				confirmation_token: token,
+				update_token: token,
 				confirmation_sent_at: createdAt
 			})
 
@@ -301,7 +296,7 @@ describe("SubscriptionsController", function() {
 				created_at: createdAt,
 				updated_at: createdAt,
 				confirmed_at: createdAt,
-				confirmation_token: token
+				update_token: token
 			})
 
 			yield subscriptionsDb.create(subscription)
@@ -328,7 +323,7 @@ describe("SubscriptionsController", function() {
 				initiative_uuid: UUID,
 				created_at: createdAt,
 				updated_at: createdAt,
-				confirmation_token: token,
+				update_token: token,
 				confirmation_sent_at: createdAt
 			})
 
