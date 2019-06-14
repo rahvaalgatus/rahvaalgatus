@@ -70,6 +70,7 @@
 	"EDIT_INITIATIVE_TEXT": "Muuda algatuse teksti",
 	"EMAIL_INITIATIVE_AUTHOR_EVENT_BODY": "Tere\n\nAlgatuse \"{{initiativeTitle}}\" ({{initiativeUrl}}) autor lisas algatusele menetlusinfot:\n\n{{title}}\n\n{{text}}\n\n--\nRahvaalgatus\n{{siteUrl}}\n{{facebookUrl}}\n{{twitterUrl}}\n\nPS. Said selle kirja, sest tellisid algatuse kohta teavitusi. Kui neid enam ei soovi, saad nad peatada lehel {{unsubscribeUrl}}.",
 	"EMAIL_INITIATIVE_AUTHOR_EVENT_TITLE": "{{initiativeTitle}}: {{title}}",
+	"EVENT_NOTIFICATIONS_DELAYED": "Teavitus algatuse jälgijatele saadetud <time datetime=\"{{isotime}}\">{{date}}</time>.",
 	"EXPLANATION": "Algatuse loomine",
 	"EXPLANATION_CONTENT": "Head algatused sünnivad arutelude tulemusel. Seepärast on loodud algatus vaikimisi kolmepäevases arutelu-olekus, mis tähendab, et kõige varem kolm päeva pärast algatuse sisestamist saab algatusele hakata digiallkirju koguma. Kasuta seda võimalust, et koos mõttekaaslastega teema sõnastada ja kui aeg küps, avalikusta oma algatus, et tekitada laiem arutelu, ühisloomes viimistleda algatuse teksti ning koguda algatusele toetusallkirju. \n\nAlgatuse loomine ja Riigikogule saatmine on tasuta, kuid annetused platvormi kvaliteedi tagamiseks on teretulnud.",
 	"FIRST_PROCEEDING_BODY": "Kollektiivse pöördumise menetlusse võtmise otsustab Riigikogu juhatus 30 kalendripäeva jooksul.",

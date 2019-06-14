@@ -1572,7 +1572,6 @@ button.inherited {
 			}
 
 			h2 {
-				font-family: $museo-sans;
 				font-size: 2rem;
 				font-weight: 500;
 				color: $title-text;
@@ -1580,7 +1579,7 @@ button.inherited {
 				margin-bottom: 0.5rem;
 			}
 
-			time {
+			.occurred-at {
 				display: block;
 				font-size: 1.6rem;
 				line-height: 2rem;
@@ -1594,12 +1593,21 @@ button.inherited {
 				font-family: $tisa-pro;
 			}
 
-			p {
+			.text {
 				line-height: 1.5;
 				white-space: pre-wrap;
 				color: #636363;
 				font-size: 1.6rem;
 				font-family: $tisa-pro;
+			}
+
+			.delay {
+				font-size: 1.5rem;
+				margin-top: 1.5rem;
+				line-height: 1.5;
+				font-weight: 500;
+				color: $secondary-light-text;
+				font-style: italic;
 			}
 
 			&:last-child {

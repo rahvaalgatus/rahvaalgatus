@@ -3,6 +3,7 @@ var _ = require("root/lib/underscore")
 var O = require("oolong")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
+var DateFns = require("date-fns")
 var InitiativePage = require("./initiative_page")
 var Config = require("root/config")
 var I18n = require("root/lib/i18n")
@@ -20,6 +21,7 @@ var linkify = require("root/lib/linkify")
 var encode = encodeURIComponent
 var HTTP_URL = /^https?:\/\//i
 var EMPTY_ORG = {name: "", url: ""}
+var EVENT_NOTIFICATIONS_SINCE = new Date(Config.eventNotificationsSince)
 exports = module.exports = ReadPage
 exports.CommentView = CommentView
 
@@ -774,15 +776,31 @@ function EventsView(attrs) {
 			</a> : null}
 
 			<article>
-				<ol class="events">{events.map((event) => <li class="event">
-						<time datetime={event.occurred_at.toJSON()}>
+        <ol class="events">{events.map(function(event) {
+          // No point in showing delay warnings for events that were created
+          // before we started notifying people of new events.
+          var delay = +event.created_at >= +EVENT_NOTIFICATIONS_SINCE
+            ? DateFns.differenceInCalendarDays(
+              event.occurred_at,
+              event.created_at
+            ) : 0
+
+          return <li class="event">
+						<time class="occurred-at" datetime={event.occurred_at.toJSON()}>
 							{I18n.formatDate("numeric", event.occurred_at)}
 						</time>
 
 						<h2>{event.title}</h2>
 						<p class="text">{Jsx.html(linkify(event.text))}</p>
+
+            {delay != 0 ? <p class="delay">
+              {Jsx.html(t("EVENT_NOTIFICATIONS_DELAYED", {
+                isotime: event.created_at.toJSON(),
+                date: I18n.formatDate("numeric", event.created_at)
+              }))}
+            </p> : null}
 					</li>
-				)}</ol>
+				})}</ol>
 			</article>
 		</center></section>
 
