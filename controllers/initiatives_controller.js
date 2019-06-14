@@ -28,12 +28,11 @@ var renderEmail = require("root/lib/i18n").email
 var sql = require("sqlate")
 var parseCitizenInitiative = cosApi.parseCitizenInitiative
 var parseCitizenComment = cosApi.parseCitizenComment
-var readInitiativesWithStatus = cosApi.readInitiativesWithStatus
 var encode = encodeURIComponent
 var translateCitizenError = require("root/lib/citizenos_api").translateError
 var hasMainPartnerId = Initiative.hasPartnerId.bind(null, Config.apiPartnerId)
+var searchInitiatives = require("root/lib/citizenos_db").searchInitiatives
 var concat = Array.prototype.concat.bind(Array.prototype)
-var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var decodeBase64 = require("root/lib/crypto").decodeBase64
 var trim = Function.call.bind(String.prototype.trim)
 var EMPTY_ARR = Array.prototype
@@ -49,31 +48,31 @@ var RESPONSE_TYPES = [
 exports.router = Router({mergeParams: true})
 
 exports.router.get("/", next(function*(req, res) {
-	var initiatives = yield {
-		inProgress: readInitiativesWithStatus("inProgress"),
-		voting: readInitiativesWithStatus("voting"),
-		followUp: readInitiativesWithStatus("followUp"),
-		closed: readInitiativesWithStatus("closed"),
-	}
+	var initiatives = yield searchInitiatives()
 
 	if (req.query.category) initiatives = O.map(initiatives, (initiatives) => (
 		initiatives.filter(hasCategory.bind(null, req.query.category))
 	))
 
-	var uuids = flatten(_.values(initiatives)).map((i) => i.id)
+	var uuids = initiatives.map((i) => i.id)
 	var dbInitiatives = yield initiativesDb.search(uuids, {create: true})
 	dbInitiatives = _.indexBy(dbInitiatives, "uuid")
 
-	var closed = _.groupBy(initiatives.closed, (initiative) => (
+	initiatives = _.groupBy(initiatives, "status")
+
+	var closed = _.groupBy(initiatives.closed || [], (initiative) => (
 		Initiative.getUnclosedStatus(initiative, dbInitiatives[initiative.id])
 	))
 
-	var votings = concat(initiatives.voting, closed.voting || EMPTY_ARR)
+	var votings = concat(
+		initiatives.voting || EMPTY_ARR,
+		closed.voting || EMPTY_ARR
+	)
 
 	res.render("initiatives_page.jsx", {
 		discussions: concat(
-			sortByCreatedAt(initiatives.inProgress, "createdAt").reverse(),
-			sortByCreatedAt((closed.inProgress || EMPTY_ARR).filter(hasMainPartnerId))
+			sortByCreatedAt(initiatives.inProgress || [], "createdAt").reverse(),
+			sortByCreatedAt((closed.inProgress || []).filter(hasMainPartnerId))
 		),
 
 		votings: _.sortBy(votings, countSignatures).reverse(),
@@ -83,7 +82,7 @@ exports.router.get("/", next(function*(req, res) {
 			return dbInitiative.sent_to_parliament_at || initiative.vote.createdAt
 		}).reverse(),
 
-		processed: _.sortBy(closed.followUp || EMPTY_ARR, function(initiative) {
+		processed: _.sortBy(closed.followUp || [], function(initiative) {
 			var dbInitiative = dbInitiatives[initiative.id]
 			return dbInitiative.finished_in_parliament_at || initiative.vote.createdAt
 		}).reverse(),

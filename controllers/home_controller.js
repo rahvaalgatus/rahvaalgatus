@@ -3,36 +3,33 @@ var Router = require("express").Router
 var Initiative = require("root/lib/initiative")
 var countVotes = Initiative.countSignatures.bind(null, "Yes")
 var next = require("co-next")
-var cosApi = require("root/lib/citizenos_api")
-var readInitiativesWithStatus = cosApi.readInitiativesWithStatus
-var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
+var searchInitiatives = require("root/lib/citizenos_db").searchInitiatives
+var sql = require("sqlate")
 var initiativesDb = require("root/db/initiatives_db")
 
 exports.router = Router({mergeParams: true})
 
 exports.router.get("/", next(function*(_req, res) {
-	var initiatives = yield {
-		discussions: readInitiativesWithStatus("inProgress"),
-		votings: readInitiativesWithStatus("voting"),
-		processes: readInitiativesWithStatus("followUp"),
-	}
+	var initiatives = yield searchInitiatives(sql`
+		initiative.status IN ('inProgress', 'voting', 'followUp')
+		AND (initiative.status <> 'inProgress' OR initiative."endsAt" > ${new Date})
+	`)
 
-	var uuids = flatten(_.values(initiatives)).map((i) => i.id)
+	var uuids = initiatives.map((i) => i.id)
 	var dbInitiatives = yield initiativesDb.search(uuids, {create: true})
 	dbInitiatives = _.indexBy(dbInitiatives, "uuid")
 
-	var hasEnded = Initiative.hasDiscussionEnded.bind(null, new Date)
-	var discussions = _.reject(initiatives.discussions, hasEnded)
+	initiatives = _.groupBy(initiatives, "status")
 
-	var votings = _.reject(initiatives.votings, (initiative) => (
+	var votings = _.reject(initiatives.voting || [], (initiative) => (
 		Initiative.hasVoteFailed(new Date, initiative, dbInitiatives[initiative.id])
 	))
 
 	res.render("home_page.jsx", {
-		discussions: _.sortBy(discussions, "createdAt").reverse(),
+		discussions: _.sortBy(initiatives.inProgress || [], "createdAt").reverse(),
 		votings: _.sortBy(votings, countVotes).reverse(),
 
-		processes: _.sortBy(initiatives.processes, function(initiative) {
+		processes: _.sortBy(initiatives.followUp || [], function(initiative) {
 			var dbInitiative = dbInitiatives[initiative.id]
 			return dbInitiative.sent_to_parliament_at || initiative.vote.createdAt
 		}).reverse(),

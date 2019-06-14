@@ -11,6 +11,14 @@ var t = require("root/lib/i18n").t.bind(null, "et")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var tHtml = _.compose(_.escapeHtml, t)
 var respond = require("root/test/fixtures").respond
+var newPartner = require("root/test/citizenos_fixtures").newPartner
+var newUser = require("root/test/citizenos_fixtures").newUser
+var newTopic = require("root/test/citizenos_fixtures").newTopic
+var newVote = require("root/test/citizenos_fixtures").newVote
+var createPartner = require("root/test/citizenos_fixtures").createPartner
+var createUser = require("root/test/citizenos_fixtures").createUser
+var createTopic = require("root/test/citizenos_fixtures").createTopic
+var createVote = require("root/test/citizenos_fixtures").createVote
 var concat = Array.prototype.concat.bind(Array.prototype)
 var encodeBase64 = require("root/lib/crypto").encodeBase64
 var initiativesDb = require("root/db/initiatives_db")
@@ -21,7 +29,6 @@ var signaturesDb = require("root/db/initiative_signatures_db")
 var encodeMime = require("nodemailer/lib/mime-funcs").encodeWord
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var VOTES = require("root/config").votesRequired
-var PARTNER_IDS = concat(Config.apiPartnerId, O.keys(Config.partners))
 var INITIATIVE_TYPE = "application/vnd.rahvaalgatus.initiative+json; v=1"
 var ATOM_TYPE = "application/atom+xml"
 var EMPTY_RES = {data: {rows: []}}
@@ -50,10 +57,6 @@ var EDITABLE_DISCUSSION = O.merge({}, DISCUSSION, {
 
 var CLOSED_DISCUSSION = O.merge({}, DISCUSSION, {
 	status: "closed"
-})
-
-var CLOSED_EXTERNAL_DISCUSSION = O.merge({}, CLOSED_DISCUSSION, {
-	sourcePartnerId: O.keys(Config.partners)[0]
 })
 
 var INITIATIVE = {
@@ -113,73 +116,144 @@ describe("InitiativesController", function() {
 	beforeEach(require("root/test/mitm").router)
 
 	describe("GET /", function() {
-		describe("when not logged in", function() {
-			it("must request initiatives", function*() {
-				var requested = 0
-				this.router.get("/api/topics", function(req, res) {
-					++requested
-					var query = Url.parse(req.url, true).query
-					query["include[]"].must.equal("vote")
-					query["sourcePartnerId[]"].must.be.a.permutationOf(PARTNER_IDS)
+		beforeEach(function*() {
+			this.user = yield createUser(newUser())
+			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
+		})
 
-					respond({data: {rows: []}}, req, res)
-				})
+		it("must show initiatives in discussion", function*() {
+			var topic = yield createTopic(newTopic({
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id
+			}))
+
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+			res.body.must.include(topic.id)
+		})
+
+		it("must show initiatives in signing", function*() {
+			var topic = yield createTopic(newTopic({
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				status: "voting"
+			}))
+
+			yield createVote(topic, newVote())
+
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+			res.body.must.include(topic.id)
+		})
+
+		it("must show initiatives in parliament", function*() {
+			var topic = yield createTopic(newTopic({
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				status: "followUp"
+			}))
+
+			yield createVote(topic, newVote())
+
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+			res.body.must.include(topic.id)
+		})
+
+		it("must show closed initiatives", function*() {
+			var topic = yield createTopic(newTopic({
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				status: "closed"
+			}))
+
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+			res.body.must.include(topic.id)
+		})
+
+		_.each(Config.partners, function(partner, id) {
+			if (id == Config.apiPartnerId) return
+
+			it("must show initiatives for " + partner.name, function*() {
+				var partner = yield createPartner(newPartner({id: id}))
+
+				var topic = yield createTopic(newTopic({
+					creatorId: this.user.id,
+					sourcePartnerId: partner.id
+				}))
 
 				var res = yield this.request("/initiatives")
 				res.statusCode.must.equal(200)
-				requested.must.equal(4)
+				res.body.must.include(topic.id)
 			})
 
-			it("must show processed initiative", function*() {
-				this.router.get("/api/topics", function(req, res) {
-					var initiatives
-					switch (Url.parse(req.url, true).query.statuses) {
-						case "closed":
-							initiatives = [PROCESSED_SUCCESSFUL_INITIATIVE]
-							break
+			it("must not show closed discussions for " + partner.name, function*() {
+				var partner = yield createPartner(newPartner({id: id}))
 
-						default: initiatives = []
-					}
-
-					respond({data: {rows: initiatives}}, req, res)
-				})
+				var topic = yield createTopic(newTopic({
+					creatorId: this.user.id,
+					sourcePartnerId: partner.id,
+					status: "closed"
+				}))
 
 				var res = yield this.request("/initiatives")
 				res.statusCode.must.equal(200)
-				res.body.must.include(UUID)
+				res.body.must.not.include(topic.id)
 			})
 
-			it("must show closed discussions", function*() {
-				this.router.get("/api/topics", function(req, res) {
-					var initiatives
-					switch (Url.parse(req.url, true).query.statuses) {
-						case "closed": initiatives = [CLOSED_DISCUSSION]; break
-						default: initiatives = []
-					}
+			it("must not show closed initiatives for " + partner.name, function*() {
+				var partner = yield createPartner(newPartner({id: id}))
 
-					respond({data: {rows: initiatives}}, req, res)
-				})
+				var topic = yield createTopic(newTopic({
+					creatorId: this.user.id,
+					sourcePartnerId: partner.id,
+					status: "closed"
+				}))
+
+				yield createVote(topic, newVote())
 
 				var res = yield this.request("/initiatives")
 				res.statusCode.must.equal(200)
-				res.body.must.include(UUID)
+				res.body.must.include(topic.id)
 			})
+		})
 
-			it("must not show closed discussions of other sites", function*() {
-				this.router.get("/api/topics", function(req, res) {
-					var initiatives
-					switch (Url.parse(req.url, true).query.statuses) {
-						case "closed": initiatives = [CLOSED_EXTERNAL_DISCUSSION]; break
-						default: initiatives = []
-					}
+		it("must not show initiatives from other partners", function*() {
+			var partner = yield createPartner(newPartner())
 
-					respond({data: {rows: initiatives}}, req, res)
-				})
+			var topic = yield createTopic(newTopic({
+				creatorId: this.user.id,
+				sourcePartnerId: partner.id
+			}))
 
-				var res = yield this.request("/initiatives")
-				res.statusCode.must.equal(200)
-				res.body.must.not.include(UUID)
-			})
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+			res.body.must.not.include(topic.id)
+		})
+
+		it("must not show private initiatives", function*() {
+			var topic = yield createTopic(newTopic({
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				visibility: "private"
+			}))
+
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+			res.body.must.not.include(topic.id)
+		})
+
+		it("must not show deleted initiatives", function*() {
+			var topic = yield createTopic(newTopic({
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				deletedAt: new Date
+			}))
+
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+			res.body.must.not.include(topic.id)
 		})
 	})
 

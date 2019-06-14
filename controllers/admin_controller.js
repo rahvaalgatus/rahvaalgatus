@@ -5,14 +5,13 @@ var HttpError = require("standard-http-error")
 var DateFns = require("date-fns")
 var Subscription = require("root/lib/subscription")
 var cosApi = require("root/lib/citizenos_api")
-var readInitiativesWithStatus = cosApi.readInitiativesWithStatus
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var next = require("co-next")
+var searchInitiatives = require("root/lib/citizenos_db").searchInitiatives
 var initiativesDb = require("root/db/initiatives_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
 var cosDb = require("root").cosDb
-var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var parseCitizenInitiative = cosApi.parseCitizenInitiative
 var sqlite = require("root").sqlite
 var sql = require("sqlate")
@@ -62,13 +61,13 @@ exports.get("/", next(function*(_req, res) {
 }))
 
 exports.get("/initiatives", next(function*(_req, res) {
-	var initiatives = yield {
-		votings: readInitiativesWithStatus("voting"),
-		parliamented: yield readInitiativesWithStatus("followUp"),
-		closed: yield readInitiativesWithStatus("closed")
-	}
+	var initiatives = yield searchInitiatives(sql`
+		initiative.status IN ('voting', 'followUp', 'closed')
+	`)
 
-	var uuids = flatten(_.values(initiatives)).map((i) => i.id)
+	var uuids = initiatives.map((i) => i.id)
+	initiatives = _.groupBy(initiatives, "status")
+
 	var dbInitiatives = yield initiativesDb.search(uuids, {create: true})
 	dbInitiatives = _.indexBy(dbInitiatives, "uuid")
 
@@ -86,9 +85,9 @@ exports.get("/initiatives", next(function*(_req, res) {
 	)
 
 	res.render("admin/initiatives/index_page.jsx", {
-		votings: initiatives.votings,
-		parliamented: initiatives.parliamented,
-		closed: initiatives.closed,
+		votings: initiatives.voting || [],
+		parliamented: initiatives.followUp || [],
+		closed: initiatives.closed || [],
 		dbInitiatives: dbInitiatives,
 		subscriberCounts: subscriberCounts
 	})
