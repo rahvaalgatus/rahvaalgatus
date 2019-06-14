@@ -6,7 +6,7 @@
 	"adminUserIds": ["6507839c-bb17-4fcc-81b3-644dac711961"],
 
 	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
-	"votesRequired": 2,
+	"votesRequired": 10,
 	"minDeadlineDays": 0,
 
 	"citizenOsDatabase": {

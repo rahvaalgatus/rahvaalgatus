@@ -28,7 +28,6 @@ var messagesDb = require("root/db/initiative_messages_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var encodeMime = require("nodemailer/lib/mime-funcs").encodeWord
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
-var VOTES = require("root/config").votesRequired
 var INITIATIVE_TYPE = "application/vnd.rahvaalgatus.initiative+json; v=1"
 var ATOM_TYPE = "application/atom+xml"
 var EMPTY_RES = {data: {rows: []}}
@@ -85,14 +84,14 @@ var SIGNED_INITIATIVE = O.merge({}, INITIATIVE, {
 var SUCCESSFUL_INITIATIVE = O.merge({}, INITIATIVE, {
 	vote: {
 		endsAt: new Date(Date.now() - 3600 * 1000),
-		options: {rows: [{value: "Yes", voteCount: VOTES}]}
+		options: {rows: [{value: "Yes", voteCount: Config.votesRequired}]}
 	}
 })
 
 var FAILED_INITIATIVE = O.merge({}, INITIATIVE, {
 	vote: {
 		endsAt: new Date(Date.now() - 3600 * 1000),
-		options: {rows: [{value: "Yes", voteCount: VOTES / 2}]}
+		options: {rows: [{value: "Yes", voteCount: Config.votesRequired / 2}]}
 	}
 })
 
@@ -855,7 +854,9 @@ describe("InitiativesController", function() {
 							description: "<body><h1>My thoughts.</h1></body>",
 							creator: {name: "John"},
 							permission: {level: "admin"},
-							vote: {options: {rows: [{value: "Yes", voteCount: VOTES}]}}
+							vote: {options: {rows: [
+								{value: "Yes", voteCount: Config.votesRequired}
+							]}}
 						}
 					}))
 
@@ -950,7 +951,7 @@ describe("InitiativesController", function() {
 							authorName: "John",
 							initiativeTitle: INITIATIVE.title,
 							initiativeUrl: `${Config.url}/initiatives/${UUID}`,
-							signatureCount: 2
+							signatureCount: Config.votesRequired
 						}),
 
 						sent_at: new Date,
