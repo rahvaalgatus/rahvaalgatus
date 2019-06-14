@@ -3,15 +3,18 @@ var cosDb = require("root").cosDb
 var newUuid = require("uuid/v4")
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var isArray = Array.isArray
+exports.newPartner = newPartner
 exports.newUser = newUser
 exports.newTopic = newTopic
 exports.newVote = newVote
 exports.newSignature = newSignature
+exports.createPartner = createPartner
 exports.createUser = createUser
 exports.createTopic = createTopic
 exports.createVote = createVote
 exports.createOptions = createOptions
 exports.createSignature = createSignature
+exports.createSignatures = createSignatures
 
 function newUser(attrs) {
 	return _.assign({
@@ -29,7 +32,7 @@ function newTopic(attrs) {
 	return _.assign({
 		id: newUuid(),
 		title: "For the win",
-		description: "Please sign.",
+		description: "<body>Please sign.</body>",
 		status: "inProgress",
 		visibility: "public",
 		createdAt: new Date,
@@ -48,8 +51,22 @@ function newVote(attrs) {
 	}, attrs)
 }
 
+function newPartner(attrs) {
+	return _.assign({
+		id: newUuid(),
+		website: "http://example.com",
+		redirectUriRegexp: "",
+		createdAt: new Date,
+		updatedAt: new Date
+	}, attrs)
+}
+
 function createUser(user) {
 	return cosDb("Users").insert(user).returning("*").then(_.first)
+}
+
+function createPartner(partner) {
+	return cosDb("Partners").insert(partner).returning("*").then(_.first)
 }
 
 function createTopic(topic) {
@@ -100,4 +117,15 @@ function newSignature(attrs) {
 function createSignature(signature) {
 	var get = isArray(signature) ? _.id : _.first
 	return cosDb("VoteLists").insert(signature).returning("*").then(get)
+}
+
+function* createSignatures(vote, n) {
+	var yesAndNo = yield createOptions(vote)
+	var users = yield _.times(n, _.compose(createUser, newUser))
+
+	return createSignature(users.map((user) => newSignature({
+		userId: user.id,
+		voteId: vote.id,
+		optionId: yesAndNo[0]
+	})))
 }
