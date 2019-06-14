@@ -49,10 +49,10 @@ exports.router = Router({mergeParams: true})
 
 exports.router.get("/", next(function*(req, res) {
 	var initiatives = yield searchInitiatives()
+	var category = req.query.category
 
-	if (req.query.category) initiatives = O.map(initiatives, (initiatives) => (
-		initiatives.filter(hasCategory.bind(null, req.query.category))
-	))
+	if (category)
+		initiatives = initiatives.filter(hasCategory.bind(null, category))
 
 	var uuids = initiatives.map((i) => i.id)
 	var dbInitiatives = yield initiativesDb.search(uuids, {create: true})

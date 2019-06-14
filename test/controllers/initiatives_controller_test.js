@@ -254,6 +254,24 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 			res.body.must.not.include(topic.id)
 		})
+
+		it("must show initiatives by category if given", function*() {
+			var topic = yield createTopic(newTopic({
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				categories: ["uuseakus"]
+			}))
+
+			var other = yield createTopic(newTopic({
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id
+			}))
+
+			var res = yield this.request("/initiatives?category=uuseakus")
+			res.statusCode.must.equal(200)
+			res.body.must.include(topic.id)
+			res.body.must.not.include(other.id)
+		})
 	})
 
 	describe("GET /new", function() {
