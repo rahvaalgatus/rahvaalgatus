@@ -1,4 +1,5 @@
 var _ = require("root/lib/underscore")
+var DateFns = require("date-fns")
 var cosDb = require("root").cosDb
 var newUuid = require("uuid/v4")
 var pseudoHex = require("root/lib/crypto").pseudoHex
@@ -123,9 +124,10 @@ function* createSignatures(vote, n) {
 	var yesAndNo = yield createOptions(vote)
 	var users = yield _.times(n, _.compose(createUser, newUser))
 
-	return createSignature(users.map((user) => newSignature({
+	return createSignature(users.map((user, i) => newSignature({
 		userId: user.id,
 		voteId: vote.id,
-		optionId: yesAndNo[0]
+		optionId: yesAndNo[0],
+		createdAt: DateFns.addMinutes(new Date, -n + i)
 	})))
 }

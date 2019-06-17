@@ -623,7 +623,7 @@ function* searchInitiativeEvents(t, initiative) {
 	var sentToParliamentAt = initiative.sent_to_parliament_at
 	var finishedInParliamentAt = initiative.finished_in_parliament_at
 
-	return concat(
+	return _.sortBy(concat(
 		sentToParliamentAt ? {
 			id: "sent-to-parliament",
 			title: t("FIRST_PROCEEDING_TITLE"),
@@ -632,6 +632,15 @@ function* searchInitiativeEvents(t, initiative) {
 			occurred_at: sentToParliamentAt,
 			origin: "admin"
 		} : EMPTY_ARR,
+
+		_.map(initiative.signature_milestones, (at, milestone) => ({
+			id: "milestone-" + milestone,
+			title: t("SIGNATURE_MILESTONE_EVENT_TITLE", {milestone: milestone}),
+			text: "",
+			updated_at: at,
+			occurred_at: at,
+			origin: "admin"
+		})),
 
 		events,
 
@@ -643,7 +652,7 @@ function* searchInitiativeEvents(t, initiative) {
 			occurred_at: finishedInParliamentAt,
 			origin: "admin"
 		} : EMPTY_ARR
-	)
+	), "occurred_at")
 }
 
 function isDbInitiativeUpdate(obj) {

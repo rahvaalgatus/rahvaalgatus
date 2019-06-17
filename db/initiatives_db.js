@@ -55,7 +55,9 @@ exports.parse = function(attrs) {
 		finished_in_parliament_at: attrs.finished_in_parliament_at &&
 			new Date(attrs.finished_in_parliament_at),
 		parliament_api_data: attrs.parliament_api_data &&
-			JSON.parse(attrs.parliament_api_data)
+			JSON.parse(attrs.parliament_api_data),
+		signature_milestones: attrs.signature_milestones &&
+			_.mapValues(JSON.parse(attrs.signature_milestones), parseDateTime)
 	}, attrs)
 }
 
@@ -66,11 +68,13 @@ exports.serialize = function(attrs) {
 
 	if ("parliament_api_data" in obj)
 		obj.parliament_api_data = JSON.stringify(obj.parliament_api_data)
-
 	if ("organizations" in obj)
 		obj.organizations = JSON.stringify(obj.organizations)
+	if ("signature_milestones" in obj)
+		obj.signature_milestones = JSON.stringify(obj.signature_milestones)
 
 	return obj
 }
 
 function isString(value) { return typeof value == "string" }
+function parseDateTime(string) { return new Date(string) }

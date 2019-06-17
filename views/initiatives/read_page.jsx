@@ -785,7 +785,7 @@ function EventsView(attrs) {
               event.created_at
             ) : 0
 
-          return <li class="event">
+          return <li class="event" id={"event-" + event.id}>
 						<time class="occurred-at" datetime={event.occurred_at.toJSON()}>
 							{I18n.formatDate("numeric", event.occurred_at)}
 						</time>

@@ -38,7 +38,7 @@ describe("CitizenosDb", function() {
 			yield createSignature(users.map((user, i) => newSignature({
 				userId: user.id,
 				voteId: this.vote.id,
-				optionId: this.yesAndNo[i % 2],
+				optionId: this.yesAndNo[i % 2]
 			})))
 
 			yield countSignaturesById(this.topic.id).must.then.equal(users.length / 2)

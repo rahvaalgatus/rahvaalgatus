@@ -1568,10 +1568,15 @@ button.inherited {
 				top: 0;
 			}
 
-			&:last-child:before {
-				background: url(/assets/icon-check-green-ball.png) center 0.5rem no-repeat;
-				background-color: white;
-				height: 3.5rem;
+			&#event-sent-to-parliament {
+				&:before {
+					background: url(/assets/icon-check-green-ball.png) center 0.5rem no-repeat;
+					background-color: white;
+					height: 3.5rem;
+				}
+
+				border-color: #75c682;
+				h2 { color: #555; }
 			}
 
 			h2 {
@@ -1611,14 +1616,6 @@ button.inherited {
 				font-weight: 500;
 				color: $secondary-light-text;
 				font-style: italic;
-			}
-
-			&:last-child {
-				border-color: #75c682;
-
-				h2 {
-					color: #555;
-				}
 			}
 		}
 

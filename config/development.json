@@ -7,6 +7,8 @@
 	"maksekeskusUrl": "https://payment-test.maksekeskus.ee/pay/1/link.html",
 	"maksekeskusId": "45626d92-f1b2-45a5-832b-39588b192dae",
 	"etherpadUrl": null,
+	"notificationEmails": ["andri@dot.ee"],
+	"signatureMilestones": [1, 2],
 	"adminUserIds": [
 		"335b1211-903c-4b76-9f83-b1501b551574",
 		"d80fad3a-1f0b-41a1-a708-7222c5826f25"

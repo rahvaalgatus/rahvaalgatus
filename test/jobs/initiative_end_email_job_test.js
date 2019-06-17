@@ -19,7 +19,6 @@ describe("InitiativeEndEmailJob", function() {
 	require("root/test/db")()
 	require("root/test/email")()
 	require("root/test/time")(new Date(2015, 5, 18, 13, 37, 42))
-	beforeEach(require("root/test/mitm").router)
 
 	beforeEach(function*() {
 		this.user = yield createUser(newUser())

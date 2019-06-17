@@ -21,8 +21,12 @@ var co = require("co")
 var reportError = require("root").errorReporter
 
 var JOBS = {
-	"parliament-monitor": require.resolve("root/jobs/parliament_monitor_job"),
-	"initiative-end-email": require.resolve("root/jobs/initiative_end_email_job")
+  "parliament-monitor":
+    require.resolve("root/jobs/parliament_monitor_job"),
+  "initiative-end-email":
+    require.resolve("root/jobs/initiative_end_email_job"),
+  "initiative-signature-milestones":
+    require.resolve("root/jobs/initiative_signature_milestones_job")
 }
 
 var jobName = args["<job-name>"]
