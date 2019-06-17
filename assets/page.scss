@@ -639,6 +639,10 @@ button.inherited {
 		margin-right: 1rem;
 		margin-bottom: 0.5rem;
 
+		// Without a vertical-align, Internet Explorer 11 doesn't align properly.
+		// Firefox does.
+		vertical-align: bottom;
+
 		.form-label { margin-bottom: 0.5rem; }
 		input[name=person] { width: 100%; }
 		@include mobile { display: block; }
