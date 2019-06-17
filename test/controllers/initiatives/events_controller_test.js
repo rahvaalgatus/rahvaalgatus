@@ -1,6 +1,8 @@
 var _ = require("root/lib/underscore")
 var Config = require("root/config")
+var DateFns = require("date-fns")
 var ValidSubscription = require("root/test/valid_db_initiative_subscription")
+var ValidEvent = require("root/test/valid_db_initiative_event")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var eventsDb = require("root/db/initiative_events_db")
 var messagesDb = require("root/db/initiative_messages_db")
@@ -10,6 +12,7 @@ var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var sql = require("sqlate")
 var PARTNER_ID = Config.apiPartnerId
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
+var EVENT_RATE = 3
 
 var INITIATIVE = {
 	id: UUID,
@@ -55,6 +58,10 @@ describe("EventsController", function() {
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
 
+			mustRateLimit(function() {
+				return this.request(`/initiatives/${UUID}/events/new`)
+			})
+
 			;["voting", "followUp"].forEach(function(status) {
 				it("must render if " + status, function*() {
 					this.router.get(`/api/users/self/topics/${UUID}`,
@@ -92,6 +99,17 @@ describe("EventsController", function() {
 	describe("POST /", function() {
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
+
+			mustRateLimit(function() {
+				return this.request(`/initiatives/${UUID}/events`, {
+					method: "POST",
+					form: {
+						_csrf_token: this.csrfToken,
+						title: "Something happened",
+						text: "You shouldn't miss it."
+					}
+				})
+			})
 
 			;["voting", "followUp"].forEach(function(status) {
 				it("must create event if in " + status, function*() {
@@ -236,3 +254,50 @@ describe("EventsController", function() {
 		})
 	})
 })
+
+function mustRateLimit(request) {
+	describe("as a rate limited endpoint", function() {
+		it(`must respond with 429 if created ${EVENT_RATE} events in the last 15m`,
+			function*() {
+			this.router.get(`/api/users/self/topics/${UUID}`,
+				respond.bind(null, {data: EDITABLE_INITIATIVE}))
+
+			yield eventsDb.create(_.times(EVENT_RATE, (_i) => new ValidEvent({
+				initiative_uuid: UUID,
+				created_at: DateFns.addSeconds(DateFns.addMinutes(new Date, -15), 1),
+				created_by: this.user.id
+			})))
+
+			var res = yield request.call(this)
+			res.statusCode.must.equal(429)
+		})
+
+		it(`must not respond with 429 if created <${EVENT_RATE} events in the last 15m`, function*() {
+			this.router.get(`/api/users/self/topics/${UUID}`,
+				respond.bind(null, {data: EDITABLE_INITIATIVE}))
+
+			yield eventsDb.create(_.times(EVENT_RATE - 1, (_i) => new ValidEvent({
+				initiative_uuid: UUID,
+				created_at: DateFns.addSeconds(DateFns.addMinutes(new Date, -15), 1),
+				created_by: this.user.id,
+			})))
+
+			var res = yield request.call(this)
+			res.statusCode.must.be.between(200, 399)
+		})
+
+		it(`must not respond with 429 if created ${EVENT_RATE} events earlier than 15m`, function*() {
+			this.router.get(`/api/users/self/topics/${UUID}`,
+				respond.bind(null, {data: EDITABLE_INITIATIVE}))
+
+			yield eventsDb.create(_.times(EVENT_RATE, (_i) => new ValidEvent({
+				initiative_uuid: UUID,
+				created_at: DateFns.addMinutes(new Date, -15),
+				created_by: this.user.id,
+			})))
+
+			var res = yield request.call(this)
+			res.statusCode.must.be.between(200, 399)
+		})
+	})
+}

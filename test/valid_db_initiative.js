@@ -1,8 +1,8 @@
-var O = require("oolong")
+var _ = require("root/lib/underscore")
 var newUuid = require("uuid/v4")
 
 module.exports = function(attrs) {
-	return O.assign({
+	return _.assign({
 		uuid: newUuid(),
 		author_url: "",
 		community_url: "",

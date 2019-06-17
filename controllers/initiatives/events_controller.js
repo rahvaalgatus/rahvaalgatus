@@ -1,6 +1,7 @@
 var _ = require("root/lib/underscore")
 var Config = require("root/config")
 var Router = require("express").Router
+var DateFns = require("date-fns")
 var HttpError = require("standard-http-error")
 var Initiative = require("root/lib/initiative")
 var Subscription = require("root/lib/subscription")
@@ -9,21 +10,24 @@ var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
+var sql = require("sqlate")
 var EMPTY_EVENT = {title: "", text: ""}
 
 exports.router = Router({mergeParams: true})
 
-exports.router.use(function(req, _res, next) {
-	if (req.user == null)
-		return void next(new HttpError(401))
+exports.router.use(next(function*(req, _res, next) {
+	if (req.user == null) throw new HttpError(401)
 
 	if (!Initiative.can("admin", req.initiative))
-		return void next(new HttpError(403, "Not an Initiative Admin"))
+		throw new HttpError(403, "Not an Initiative Admin")
 	if (!Initiative.canCreateEvents(req.initiative))
-		return void next(new HttpError(403, "Cannot Create Events"))
+		throw new HttpError(403, "Cannot Create Events")
+
+	var until = yield rateLimit(req.user, req.initiative)
+	if (until) throw new HttpError(429, "Too Many Events", {until: until})
 
 	next()
-})
+}))
 
 exports.router.get("/new", next(function*(req, res) {
 	var initiative = req.initiative
@@ -78,9 +82,40 @@ exports.router.post("/", next(function*(req, res) {
 	res.redirect("/initiatives/" + initiative.id)
 }))
 
+exports.router.use(function(err, req, res, next) {
+	if (err instanceof HttpError && err.code == 429) {
+		res.statusCode = err.code
+		res.statusMessage = err.message
+
+		var minutes = Math.max(
+			Math.abs(DateFns.differenceInMinutes(new Date, err.until)),
+			1
+		)
+
+		res.render("error_page.jsx", {
+			title: req.t("INITIATIVE_EVENT_RATE_LIMIT_TITLE", {minutes: minutes}),
+			body: req.t("INITIATIVE_EVENT_RATE_LIMIT_BODY", {minutes: minutes})
+		})
+	}
+	else next(err)
+})
+
 function parseEvent(obj) {
 	return {
 		title: obj.title,
 		text: obj.text
 	}
+}
+
+function* rateLimit(user, initiative) {
+	var events = yield eventsDb.search(sql`
+		SELECT created_at FROM initiative_events
+		WHERE initiative_uuid = ${initiative.id}
+		AND created_by = ${user.id}
+		AND created_at > ${DateFns.addMinutes(new Date, -15)}
+		ORDER BY created_at ASC
+		LIMIT 3
+	`)
+
+	return events.length < 3 ? null : DateFns.addMinutes(events[0].created_at, 15)
 }

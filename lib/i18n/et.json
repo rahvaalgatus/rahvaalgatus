@@ -93,6 +93,8 @@
 	"INITIATIVE_404_TITLE": "Algatust ei leitud",
 	"INITIATIVE_DEFAULT_HTML": "<!DOCTYPE HTML><html><body><h1>{{title}}</h1><br><p>Lühike (u 350 tähemärki) või säutsu-lühike (140 tähemärki) sisukokkuvõte – see oleks mõeldud selleks, et algatusi platvormis ja sotsiaalmeedias paremini kajastada</p><br><h2>Ettepanek</h2><br><p>Mida tahetakse muuta</p><br><h2>Põhjendus</h2><br><p>Miks see on oluline</p><br><p>Kogu see tekstimaht maksimaalselt 12 000 tähemärki</p><br></body></html>",
 	"INITIATIVE_EVENT_BY_AUTHOR_CREATED": "Menetlusinfo on lisatud ja teavitused jälgijatele saadetud.",
+	"INITIATIVE_EVENT_RATE_LIMIT_BODY": "Rahvaalgatus lubab lisada kolm menetlusinfo sissekannet veerand tunni jooksul ja tundub, et oled kolm juba sisestanud.\nVabandust, et pead ootama, kuid lisamise piiramine on rämpsposti tõkestamiseks vajalik — iga menetlusinfo peale läheb teavitus kõigile algatuse jälgijatele ja piiramatut kirjutamist võib keegi pahatahtlikult ära kasutada.\n\nPalun proovi {{minutes}} minuti pärast uuesti, näiteks lehte värskendades.",
+	"INITIATIVE_EVENT_RATE_LIMIT_TITLE": "Vabandust! Palun proovi {{minutes}} minuti pärast uuesti",
 	"INITIATIVE_EVENT_TEXT_INPUT": "Sisu",
 	"INITIATIVE_EVENT_TITLE_INPUT": "Pealkiri",
 	"INITIATIVE_INFO_UPDATED": "Lisainfo salvestatud",
