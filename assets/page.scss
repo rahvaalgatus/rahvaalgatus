@@ -26,7 +26,7 @@ center {
 
 	// Internet Explorer still centers things under <center> even with
 	// text-align: inherit.
-	* { margin-right: auto }
+	& > * { margin-right: auto }
 
 	@include mobile {
 		padding-left: $page-mobile-padding;
