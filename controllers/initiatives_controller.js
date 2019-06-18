@@ -346,7 +346,10 @@ exports.router.put("/:id", next(function*(req, res) {
 
 				yield Subscription.send(
 					message,
-					yield subscriptionsDb.searchConfirmedByInitiativeId(initiative.id)
+
+					yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(
+						initiative.id
+					)
 				)
 			}
 
@@ -378,7 +381,10 @@ exports.router.put("/:id", next(function*(req, res) {
 
 			yield Subscription.send(
 				message,
-				yield subscriptionsDb.searchConfirmedByInitiativeId(initiative.id)
+
+				yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(
+					initiative.id
+				)
 			)
 
 			res.flash("notice", req.t("SENT_TO_PARLIAMENT_CONTENT"))

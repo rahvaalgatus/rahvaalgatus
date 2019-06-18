@@ -807,6 +807,18 @@ describe("InitiativesController", function() {
 					var subscriptions = yield subscriptionsDb.create([
 						new ValidSubscription({
 							initiative_uuid: UUID,
+							confirmed_at: new Date,
+							official_interest: false
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date,
+							official_interest: false
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: UUID,
 							confirmed_at: new Date
 						}),
 
@@ -832,7 +844,7 @@ describe("InitiativesController", function() {
 					`)
 
 					var message = messages[0]
-					var emails = subscriptions.map((s) => s.email).sort()
+					var emails = subscriptions.slice(2).map((s) => s.email).sort()
 
 					messages.must.eql([{
 						id: message.id,
@@ -859,7 +871,10 @@ describe("InitiativesController", function() {
 					var msg = String(this.emails[0].message)
 					var subject = encodeMime(message.title).slice(0, 50)
 					msg.match(/^Subject: .*/m)[0].must.include(subject)
-					subscriptions.forEach((s) => msg.must.include(s.update_token))
+
+					subscriptions.slice(2).forEach((s) => (
+						msg.must.include(s.update_token)
+					))
 				})
 			})
 
@@ -926,6 +941,18 @@ describe("InitiativesController", function() {
 					var subscriptions = yield subscriptionsDb.create([
 						new ValidSubscription({
 							initiative_uuid: UUID,
+							confirmed_at: new Date,
+							official_interest: false
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date,
+							official_interest: false
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: UUID,
 							confirmed_at: new Date
 						}),
 
@@ -952,7 +979,7 @@ describe("InitiativesController", function() {
 						SELECT * FROM initiative_messages
 					`)
 
-					var emails = subscriptions.map((s) => s.email).sort()
+					var emails = subscriptions.slice(2).map((s) => s.email).sort()
 
 					messages.must.eql([{
 						id: messages[0].id,
@@ -980,7 +1007,10 @@ describe("InitiativesController", function() {
 					this.emails[0].envelope.to.must.eql(emails)
 					var msg = String(this.emails[0].message)
 					msg.match(/^Subject: .*/m)[0].must.include(INITIATIVE.title)
-					subscriptions.forEach((s) => msg.must.include(s.update_token))
+
+					subscriptions.slice(2).forEach((s) => (
+						msg.must.include(s.update_token)
+					))
 				})
 			})
 
