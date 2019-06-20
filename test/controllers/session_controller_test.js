@@ -1,8 +1,8 @@
-var _ = require("lodash")
+var _ = require("root/lib/underscore")
 var Url = require("url")
 var Config = require("root/config")
-var Cookie = require("tough-cookie").Cookie
 var pseudoHex = require("root/lib/crypto").pseudoHex
+var parseCookies = require("root/lib/http").parseCookies
 var fetchDefaults = require("fetch-defaults")
 var respond = require("root/test/fixtures").respond
 var encode = encodeURIComponent
@@ -10,8 +10,6 @@ var decode = decodeURIComponent
 var PATH = "/session/new"
 var HEADERS = {"Content-Type": "application/json"}
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
-var AUTHORIZE_URL = Config.apiAuthorizeUrl
-var TOKEN_COOKIE_NAME = Config.cookieName
 var CSRF_COOKIE_NAME = "csrf_token_for_citizenos"
 var CSRF_COOKIE_PATH = "/session"
 var REFERRER_COOKIE_NAME = "session_referrer"
@@ -27,7 +25,7 @@ describe("SessionController", function() {
 			res.statusCode.must.equal(302)
 
 			var url = Url.parse(res.headers.location, true)
-			res.headers.location.must.include(AUTHORIZE_URL)
+			res.headers.location.must.include(Config.apiAuthorizeUrl)
 			url.query.client_id.must.equal(Config.apiPartnerId)
 			url.query.redirect_uri.must.equal(`${this.url}${PATH}?unhash`)
 			url.query.response_type.must.equal("id_token token")
@@ -78,10 +76,10 @@ describe("SessionController", function() {
 			res.headers.location.must.equal("/")
 
 			var cookies = parseCookies(res.headers["set-cookie"])
-			cookies[TOKEN_COOKIE_NAME].path.must.equal("/")
-			cookies[TOKEN_COOKIE_NAME].value.must.equal("123456")
-			cookies[TOKEN_COOKIE_NAME].domain.must.equal(Config.cookieDomain)
-			cookies[TOKEN_COOKIE_NAME].httpOnly.must.be.true()
+			cookies[Config.cookieName].path.must.equal("/")
+			cookies[Config.cookieName].value.must.equal("123456")
+			cookies[Config.cookieName].domain.must.equal(Config.cookieDomain)
+			cookies[Config.cookieName].httpOnly.must.be.true()
 		})
 
 		// This is for production where the CitizenOS instance sets the cookie.
@@ -93,14 +91,14 @@ describe("SessionController", function() {
 			var res = yield this.request(this.path + "&access_token=123456", {
 				headers: {Cookie: serializeCookies({
 					[CSRF_COOKIE_NAME]: this.csrfToken,
-					[TOKEN_COOKIE_NAME]: "7890"
+					[Config.cookieName]: "7890"
 				})}
 			})
 
 			res.statusCode.must.equal(302)
 			res.headers.location.must.equal("/")
 			var cookies = parseCookies(res.headers["set-cookie"])
-			cookies.must.not.have.property(TOKEN_COOKIE_NAME)
+			cookies.must.not.have.property(Config.cookieName)
 		})
 
 		it("must redirect to session referrer cookie path", function*() {
@@ -171,15 +169,14 @@ describe("SessionController", function() {
 
 			var res = yield this.request("/session", {
 				method: "POST",
-				headers: {Cookie: `${TOKEN_COOKIE_NAME}=12345;csrf_token=54321`},
+				headers: {Cookie: `${Config.cookieName}=12345;csrf_token=54321`},
 				form: {_method: "delete", _csrf_token: 54321}
 			})
 
 			res.statusCode.must.equal(302)
 			res.headers.location.must.equal("/")
 
-			var cookie = Cookie.parse(res.headers["set-cookie"][0])
-			cookie.key.must.equal(TOKEN_COOKIE_NAME)
+			var cookie = parseCookies(res.headers["set-cookie"])[Config.cookieName]
 			cookie.expires.must.be.lt(new Date)
 		})
 	})
@@ -193,10 +190,6 @@ function authorize() {
 	this.request = fetchDefaults(this.request, {
 		headers: {Cookie: `${CSRF_COOKIE_NAME}=${csrfToken}`}
 	})
-}
-
-function parseCookies(header) {
-	return _.keyBy(header.map(Cookie.parse), "key")
 }
 
 function serializeCookies(obj) {
