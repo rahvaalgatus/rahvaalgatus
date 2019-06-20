@@ -208,13 +208,13 @@
           "version": "0.3.1",
           "from": "https://registry.npmjs.org/cookie/-/cookie-0.3.1.tgz",
           "resolved": "https://registry.npmjs.org/cookie/-/cookie-0.3.1.tgz"
-        },
-        "cookie-signature": {
-          "version": "1.0.6",
-          "from": "https://registry.npmjs.org/cookie-signature/-/cookie-signature-1.0.6.tgz",
-          "resolved": "https://registry.npmjs.org/cookie-signature/-/cookie-signature-1.0.6.tgz"
         }
       }
+    },
+    "cookie-signature": {
+      "version": "1.0.6",
+      "from": "cookie-signature@1.0.6",
+      "resolved": "https://registry.npmjs.org/cookie-signature/-/cookie-signature-1.0.6.tgz"
     },
     "date-fns": {
       "version": "1.10.0",
@@ -291,11 +291,6 @@
           "version": "0.4.0",
           "from": "cookie@0.4.0",
           "resolved": "https://registry.npmjs.org/cookie/-/cookie-0.4.0.tgz"
-        },
-        "cookie-signature": {
-          "version": "1.0.6",
-          "from": "cookie-signature@1.0.6",
-          "resolved": "https://registry.npmjs.org/cookie-signature/-/cookie-signature-1.0.6.tgz"
         },
         "debug": {
           "version": "2.6.9",

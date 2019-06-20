@@ -22,6 +22,7 @@ var catch401 = require("root/lib/fetch").catch.bind(null, 401)
 var isFetchError = require("root/lib/fetch").is
 var next = require("co-next")
 var sleep = require("root/lib/promise").sleep
+var cosDb = require("root").cosDb
 var cosApi = require("root/lib/citizenos_api")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var renderEmail = require("root/lib/i18n").email
@@ -183,9 +184,17 @@ exports.read = next(function*(req, res) {
 	var user = req.user
 	var initiative = req.initiative
 	var dbInitiative = req.dbInitiative
+	var voteId = req.flash("signatureId")
+
+	var vote = voteId ? yield cosDb.query(sql`
+		SELECT signature.*, opt.value AS support
+		FROM "VoteLists" AS signature
+		JOIN "VoteOptions" AS opt ON opt.id = signature."optionId"
+		WHERE signature.id = ${voteId}
+	`).then(_.first) : null
 
 	var signature
-	if (user == null && req.flash("signed")) signature = {
+	if (user == null && vote && vote.support == "Yes") signature = {
 		initiative_uuid: initiative.id,
 		user_uuid: null,
 		hidden: false
@@ -199,6 +208,8 @@ exports.read = next(function*(req, res) {
 			user_uuid: user.id,
 			hidden: false
 		})
+	else if (vote && vote.support == "No")
+		res.flash("notice", req.t("SIGNATURE_REVOKED"))
 
 	if (signature && signature.hidden) signature = null
 
@@ -213,6 +224,7 @@ exports.read = next(function*(req, res) {
 	var events = _.reverse(yield searchInitiativeEvents(req.t, dbInitiative))
 
 	res.render("initiatives/read_page.jsx", {
+		thank: vote && vote.support == "Yes",
 		signature: signature,
 		subscriberCount: subscriberCount,
 		comments: comments,
@@ -467,9 +479,9 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 
 			if (isOk(signed)) {
 				var userId = parseUserIdFromBdocUrl(signed.body.data.bdocUri)
+				var sig = yield searchCitizenSignature(initiative.id, userId)
 				yield unhideSignature(initiative.id, userId)
-
-				res.flash("signed", signed.body.data.bdocUri)
+				res.flash("signatureId", sig.id)
 				res.redirect(303, req.baseUrl + "/" + initiative.id)
 			}
 			else res.status(422).render("initiatives/signature/create_page.jsx", {
@@ -543,10 +555,9 @@ exports.router.get("/:id/signature", next(function*(req, res) {
 	switch (signature.statusCode) {
 		case 200:
 			var userId = parseUserIdFromBdocUrl(signature.body.data.bdocUri)
+			var sig = yield searchCitizenSignature(initiative.id, userId)
 			yield unhideSignature(initiative.id, userId)
-
-			// Cannot currently know which option the person signed.
-			res.flash("signed", signature.body.data.bdocUri)
+			res.flash("signatureId", sig.id)
 			break
 
 		default:
@@ -659,6 +670,18 @@ function* searchInitiativeEvents(t, initiative) {
 			origin: "admin"
 		} : EMPTY_ARR
 	), "occurred_at")
+}
+
+function searchCitizenSignature(topicId, userId) {
+	return cosDb.query(sql`
+		SELECT signature.*
+		FROM "VoteLists" AS signature
+		JOIN "TopicVotes" AS tv ON tv."topicId" = ${topicId}
+		WHERE signature."userId" = ${userId}
+		AND signature."voteId" = tv."voteId"
+		ORDER BY signature."createdAt" DESC
+		LIMIT 1
+	`).then(_.first)
 }
 
 function isDbInitiativeUpdate(obj) {

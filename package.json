@@ -53,6 +53,7 @@
 		"livereload": ">= 0.6 < 0.7",
 		"sinon": ">= 1 < 2",
 		"tough-cookie": ">= 2 < 3",
+		"cookie-signature": ">= 1 < 2",
 
 		"node-sass": "~4"
 	},

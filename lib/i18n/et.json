@@ -182,6 +182,7 @@
 	"SIGNATURES_COLLECTED": "Riigikokku saatmiseks hääled koos!",
 	"SIGNATURE_HIDDEN": "Allkiri on peidetud.",
 	"SIGNATURE_MILESTONE_EVENT_TITLE": "Algatus kogus {{milestone}} allkirja",
+	"SIGNATURE_REVOKED": "Allkiri on tühistatud.",
 	"SIGNED_INITIATIVES": "Allkirjastatud",
 	"SIGNING_END_COMPLETE_EMAIL_BODY": "Tere\n\nSu algatus \"{{initiativeTitle}}\" on läbinud allkirjastamise. Nüüd on valida, kas soovid pikendada allkirjastamise tähtaega või saata algatus Riigikokku. Mõlemat saad teha {{initiativeEditUrl}} lehel.\n\n--\nRahvaalgatus\n{{siteUrl}}\n{{facebookUrl}}\n{{twitterUrl}}",
 	"SIGNING_END_COMPLETE_EMAIL_SUBJECT": "Sinu algatuse järgmised sammud",

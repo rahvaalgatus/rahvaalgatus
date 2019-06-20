@@ -33,6 +33,7 @@ function ReadPage(attrs) {
 	var req = attrs.req
 	var t = attrs.t
   var lang = req.lang
+	var thank = attrs.thank
 	var signature = attrs.signature
 	var comment = attrs.comment
 	var comments = attrs.comments
@@ -85,7 +86,7 @@ function ReadPage(attrs) {
 			<div id="initiative-sheet">
 				<Flash flash={flash} />
 
-				{flash("signed") ? <div class="initiative-status">
+				{thank ? <div class="initiative-status">
           <h1 class="status-serif-header">{t("THANKS_FOR_SIGNING")}</h1>
 
           <h2 class="status-subheader">{t("SUPPORT_US_TITLE")}</h2>
