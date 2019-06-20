@@ -29,8 +29,9 @@ exports.route = route
 function route(router, req, res) {
 	router(req, res, function(err) {
 		if (err == null) return
-		res.writeHead(502)
-		throw err
+		res.statusCode = 502
+		res.end()
+		console.error(err)
 	})
 }
 
