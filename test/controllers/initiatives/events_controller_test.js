@@ -42,6 +42,7 @@ describe("EventsController", function() {
 	require("root/test/db")()
 	require("root/test/email")()
 	require("root/test/time")(Date.UTC(2015, 5, 18))
+	require("root/test/fixtures").csrf()
 	beforeEach(require("root/test/mitm").router)
 	
 	describe("GET /new", function() {

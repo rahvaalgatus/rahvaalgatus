@@ -2,34 +2,29 @@ var Config = require("root/config")
 var newUuid = require("uuid/v4")
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var fetchDefaults = require("fetch-defaults")
-var TOKEN_COOKIE_NAME = Config.cookieName
+
+exports.csrf = function() {
+	beforeEach(function() {
+		this.csrfToken = pseudoHex(16)
+
+		this.request = fetchDefaults(this.request, {
+			cookies: {csrf_token: this.csrfToken}
+		})
+	})
+}
 
 exports.user = function(attrs) {
 	beforeEach(function() {
 		// https://github.com/mochajs/mocha/issues/2014:
 		delete this.request
 
-		var csrfToken = pseudoHex(16)
-		var user = attrs || {id: newUuid()}
+		this.user = attrs || {id: newUuid()}
 
-		var cookie = [
-			TOKEN_COOKIE_NAME + "=" + pseudoHex(16),
-			"csrf_token=" + csrfToken
-		].join("; ")
+		this.request = fetchDefaults(this.request, {
+			cookies: {[Config.cookieName]: pseudoHex(16)}
+		})
 
-		this.csrfToken = csrfToken
-		this.user = user
-		this.request = fetchDefaults(this.request, {headers: {Cookie: cookie}})
-		this.router.get("/api/auth/status", respond.bind(null, {data: user}))
-	})
-}
-
-exports.csrf = function() {
-	beforeEach(function() {
-		var csrfToken = pseudoHex(16)
-		var cookie = "csrf_token=" + csrfToken
-		this.csrfToken = csrfToken
-		this.request = fetchDefaults(this.request, {headers: {Cookie: cookie}})
+		this.router.get("/api/auth/status", respond.bind(null, {data: this.user}))
 	})
 }
 

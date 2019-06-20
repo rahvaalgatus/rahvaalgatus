@@ -112,6 +112,7 @@ describe("InitiativesController", function() {
 	require("root/test/mitm")()
 	require("root/test/db")()
 	require("root/test/email")()
+	require("root/test/fixtures").csrf()
 	beforeEach(require("root/test/mitm").router)
 
 	describe("GET /", function() {
@@ -1116,7 +1117,6 @@ describe("InitiativesController", function() {
 	})
 
 	describe("POST /:id/signature", function() {
-		require("root/test/fixtures").csrf()
 		require("root/test/time")(Date.UTC(2015, 5, 18))
 
 		describe("when signing via Id-Card", function() {
