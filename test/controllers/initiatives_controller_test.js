@@ -563,6 +563,125 @@ describe("InitiativesController", function() {
 					res.body.must.include(this.yesAndNo[0])
 					res.body.must.not.include(this.yesAndNo[1])
 				})
+
+				it("must show thanks when signing twice", function*() {
+					var signatures = yield createSignature([
+						newSignature({
+							userId: this.user.id,
+							voteId: this.vote.id,
+							optionId: this.yesAndNo[0],
+							createdAt: DateFns.addMinutes(new Date, -2)
+						}),
+
+						newSignature({
+							userId: this.user.id,
+							voteId: this.vote.id,
+							optionId: this.yesAndNo[0],
+							createdAt: DateFns.addMinutes(new Date, -1)
+						}),
+					])
+
+					var res = yield this.request("/initiatives/" + UUID, {
+						cookies: {flash: serializeFlash({signatureId: signatures[1].id})}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("THANKS_FOR_SIGNING_AGAIN"))
+					res.body.must.include("donate-form")
+					res.body.must.not.include(this.yesAndNo[0])
+					res.body.must.include(this.yesAndNo[1])
+				})
+
+				it("must show thanks when signing after revoking", function*() {
+					var signatures = yield createSignature([
+						newSignature({
+							userId: this.user.id,
+							voteId: this.vote.id,
+							optionId: this.yesAndNo[1],
+							createdAt: DateFns.addMinutes(new Date, -2)
+						}),
+
+						newSignature({
+							userId: this.user.id,
+							voteId: this.vote.id,
+							optionId: this.yesAndNo[0],
+							createdAt: DateFns.addMinutes(new Date, -1)
+						}),
+					])
+
+					var res = yield this.request("/initiatives/" + UUID, {
+						cookies: {flash: serializeFlash({signatureId: signatures[1].id})}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("THANKS_FOR_SIGNING"))
+					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+					res.body.must.include("donate-form")
+					res.body.must.not.include(this.yesAndNo[0])
+					res.body.must.include(this.yesAndNo[1])
+				})
+
+				it("must show thanks when signing after signing on another initiative",
+					function*() {
+					var topic = yield createTopic(newTopic({
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
+
+					var vote = yield createVote(topic, newVote())
+
+					var signatures = yield createSignature([
+						newSignature({
+							userId: this.user.id,
+							voteId: vote.id,
+							optionId: this.yesAndNo[0],
+							createdAt: DateFns.addMinutes(new Date, -2)
+						}),
+
+						newSignature({
+							userId: this.user.id,
+							voteId: this.vote.id,
+							optionId: this.yesAndNo[0],
+							createdAt: DateFns.addMinutes(new Date, -1)
+						}),
+					])
+
+					var res = yield this.request("/initiatives/" + UUID, {
+						cookies: {flash: serializeFlash({signatureId: signatures[1].id})}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+				})
+
+				it("must show thanks when signing after another user signed",
+					function*() {
+					var user = yield createUser(newUser())
+
+					var signatures = yield createSignature([
+						newSignature({
+							userId: user.id,
+							voteId: this.vote.id,
+							optionId: this.yesAndNo[0],
+							createdAt: DateFns.addMinutes(new Date, -2)
+						}),
+
+						newSignature({
+							userId: this.user.id,
+							voteId: this.vote.id,
+							optionId: this.yesAndNo[0],
+							createdAt: DateFns.addMinutes(new Date, -1)
+						}),
+					])
+
+					var res = yield this.request("/initiatives/" + UUID, {
+						cookies: {flash: serializeFlash({signatureId: signatures[1].id})}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+				})
 			})
 		})
 

@@ -186,12 +186,19 @@ exports.read = next(function*(req, res) {
 	var dbInitiative = req.dbInitiative
 	var voteId = req.flash("signatureId")
 
-	var vote = voteId ? yield cosDb.query(sql`
+	var votes = voteId ? yield cosDb.query(sql`
 		SELECT signature.*, opt.value AS support
 		FROM "VoteLists" AS signature
+		JOIN "VoteLists" AS signed
+		ON signed."voteId" = signature."voteId"
+		AND signed."userId" = signature."userId"
 		JOIN "VoteOptions" AS opt ON opt.id = signature."optionId"
-		WHERE signature.id = ${voteId}
-	`).then(_.first) : null
+		WHERE signed.id = ${voteId}
+		ORDER BY "createdAt" DESC
+		LIMIT 2
+	`) : EMPTY_ARR
+
+	var vote = votes[0]
 
 	var signature
 	if (user == null && vote && vote.support == "Yes") signature = {
@@ -225,6 +232,7 @@ exports.read = next(function*(req, res) {
 
 	res.render("initiatives/read_page.jsx", {
 		thank: vote && vote.support == "Yes",
+		thankAgain: votes.length > 1 && votes[1].support == "Yes",
 		signature: signature,
 		subscriberCount: subscriberCount,
 		comments: comments,

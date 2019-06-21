@@ -213,6 +213,7 @@
 	"SUPPORT_REDIRECT": "Annetuse tegemiseks suuname su Maksekeskusesse, kus saad teha ülekande oma netipangas.\nAnnetuse saaja on SA Eesti Koostöö Kogu, kes kasutab kogutud summat Rahvaalgatus.ee ülalpidamiseks.",
 	"SUPPORT_US_TITLE": "Toeta",
 	"THANKS_FOR_SIGNING": "Aitäh allkirja eest!  ",
+	"THANKS_FOR_SIGNING_AGAIN": "Aitäh, kuigi olid algatust juba varem allkirjastanud.",
 	"TITLE_FIELD": "Sisesta oma algatuse teema (seda saad hiljem muuta)",
 	"TXT_ALL_DISCUSSIONS_AND_VOTES_DELETED": "Kõik arutelud ja hääled kustutatakse.",
 	"TXT_DEADLINE_CALENDAR_DAYS_LEFT": "{{numberOfDaysLeft}} päeva jäänud",

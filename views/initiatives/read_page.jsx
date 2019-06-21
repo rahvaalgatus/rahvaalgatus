@@ -34,6 +34,7 @@ function ReadPage(attrs) {
 	var t = attrs.t
   var lang = req.lang
 	var thank = attrs.thank
+	var thankAgain = attrs.thankAgain
 	var signature = attrs.signature
 	var comment = attrs.comment
 	var comments = attrs.comments
@@ -87,7 +88,10 @@ function ReadPage(attrs) {
 				<Flash flash={flash} />
 
 				{thank ? <div class="initiative-status">
-          <h1 class="status-serif-header">{t("THANKS_FOR_SIGNING")}</h1>
+          <h1 class="status-serif-header">{thankAgain
+            ? t("THANKS_FOR_SIGNING_AGAIN")
+            : t("THANKS_FOR_SIGNING")
+          }</h1>
 
           <h2 class="status-subheader">{t("SUPPORT_US_TITLE")}</h2>
           {Jsx.html(I18n.markdown(lang, "donate"))}
