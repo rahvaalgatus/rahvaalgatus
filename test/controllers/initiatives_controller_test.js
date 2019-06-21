@@ -4,7 +4,7 @@ var Url = require("url")
 var Atom = require("root/lib/atom")
 var DateFns = require("date-fns")
 var Config = require("root/config")
-var ValidDbInitiative = require("root/test/valid_db_initiative")
+var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSubscription = require("root/test/valid_db_initiative_subscription")
 var Http = require("root/lib/http")
 var sql = require("sqlate")
@@ -1129,7 +1129,7 @@ describe("InitiativesController", function() {
 					yield initiativesDb.search(sql`
 						SELECT * FROM initiatives
 					`).must.then.eql([
-						new ValidDbInitiative({
+						new ValidInitiative({
 							uuid: UUID,
 							sent_to_parliament_at: new Date
 						})
@@ -1254,7 +1254,7 @@ describe("InitiativesController", function() {
 					yield initiativesDb.search(sql`
 						SELECT * FROM initiatives
 					`).must.then.eql([
-						new ValidDbInitiative({
+						new ValidInitiative({
 							uuid: UUID,
 							author_url: "http://example.com/author",
 							community_url: "http://example.com/community",
@@ -1299,7 +1299,7 @@ describe("InitiativesController", function() {
 						SELECT * FROM initiatives
 					`).must.then.eql([
 						other,
-						new ValidDbInitiative({uuid: UUID, notes: "Hello, world"})
+						new ValidInitiative({uuid: UUID, notes: "Hello, world"})
 					])
 				})
 
@@ -1316,7 +1316,7 @@ describe("InitiativesController", function() {
 
 					yield initiativesDb.search(sql`
 						SELECT * FROM initiatives
-					`).must.then.eql([new ValidDbInitiative({uuid: UUID})])
+					`).must.then.eql([new ValidInitiative({uuid: UUID})])
 				})
 			})
 		})
