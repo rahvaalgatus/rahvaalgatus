@@ -7,6 +7,7 @@ module.exports = function(attrs) {
 		author_url: "",
 		community_url: "",
 		url: "",
+		phase: "edit",
 		organizations: [],
 		meetings: [],
 		media_urls: [],

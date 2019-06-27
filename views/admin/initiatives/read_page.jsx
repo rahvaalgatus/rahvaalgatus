@@ -10,7 +10,7 @@ var Flash = Page.Flash
 var formatDate = require("root/lib/i18n").formatDate
 var confirm = require("root/lib/jsx").confirm
 var linkify = require("root/lib/linkify")
-var UPDATEABLE_STATUSES = ["voting", "followUp", "closed"]
+var UPDATEABLE_PHASES = ["sign", "parliament"]
 
 module.exports = function(attrs) {
 	var req = attrs.req
@@ -19,7 +19,7 @@ module.exports = function(attrs) {
 	var subscriberCount = attrs.subscriberCount
 	var events = attrs.events
 	var messages = attrs.messages
-	var status = initiative.status
+	var phase = dbInitiative.phase
 	var action = `${req.baseUrl}/initiatives/${initiative.id}`
 	var pendingSubscriberCount = subscriberCount.all - subscriberCount.confirmed
 
@@ -36,30 +36,36 @@ module.exports = function(attrs) {
 		<Flash flash={req.flash} />
 
 		<table id="initiative-table" class="admin-horizontal-table">
-			{_.contains(UPDATEABLE_STATUSES, initiative.status) ? <tr>
-				<th scope="row">Status</th>
+			<tr>
+				<th scope="row">Phase</th>
 				<td>
 					<Form
 						req={req}
-						id="status-form"
+						id="phase-form"
 						action={action}
 						method="put"
 						class="admin-inline-form"
 					>
-					<select name="status" onchange="this.form.submit()">
-						<option value="voting" selected={status == "voting"}>
-							In Signing
-						</option>
-						<option value="followUp" selected={status == "followUp"}>
-							In Parliament
-						</option>
-						<option value="closed" selected={status == "closed"}>
-							Finished
-						</option>
-					</select>
+						<select
+							name="phase"
+							onchange="this.form.submit()"
+							disabled={!_.contains(UPDATEABLE_PHASES, phase)}
+						>
+							<option value="edit" selected={phase == "edit"} disabled>
+								Edit
+							</option>
+							<option value="sign" selected={phase == "sign"}>
+								Sign
+							</option>
+							<option value="parliament" selected={phase == "parliament"}>
+								Parliament
+							</option>
+						</select>
+
+						{initiative.status == "closed" ? " Archived" : ""}
 					</Form>
 				</td>
-			</tr> : null}
+			</tr>
 
 			<tr>
 				<th scope="row">Sent to Parliament</th>

@@ -17,7 +17,8 @@ var sqlite = require("root").sqlite
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
-var UPDATEABLE_STATUSES = ["voting", "followUp", "closed"]
+var UPDATEABLE_PHASES = ["sign", "parliament"]
+var PHASE_TO_STATUS = {sign: "voting", parliament: "followUp"}
 exports = module.exports = Router()
 
 exports.use(function(req, _res, next) {
@@ -176,7 +177,10 @@ exports.put("/initiatives/:id", next(function*(req, res) {
 
 	if (!_.isEmpty(attrs))
 		yield initiativesDb.update(req.initiative.id, parseInitiative(req.body))
-	if (!_.isEmpty(citizenAttrs))
+
+	// The "closed" status will eventually be brought over to SQLite to an
+	// "archived_at" column.
+	if (req.initiative.status != "closed" && !_.isEmpty(citizenAttrs))
 		yield cosDb("Topics").where("id", req.params.id).update(citizenAttrs)
 
 	res.flash("notice", "Initiative updated.")
@@ -341,6 +345,9 @@ exports.get("/subscriptions", next(function*(_req, res) {
 function parseInitiative(obj) {
 	var attrs = {}
 
+	if ("phase" in obj && _.contains(UPDATEABLE_PHASES, obj.phase))
+		attrs.phase = obj.phase
+
 	if ("sentToParliamentOn" in obj)
 		attrs.sent_to_parliament_at = obj.sentToParliamentOn
 			? new Date(obj.sentToParliamentOn)
@@ -357,8 +364,8 @@ function parseInitiative(obj) {
 function parseInitiativeForCitizen(obj) {
 	var attrs = {}
 
-	if ("status" in obj && _.contains(UPDATEABLE_STATUSES, obj.status))
-		attrs.status = obj.status
+	if ("phase" in obj && _.contains(UPDATEABLE_PHASES, obj.phase))
+		attrs.status = PHASE_TO_STATUS[obj.phase]
 
 	return attrs
 }

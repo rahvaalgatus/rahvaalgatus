@@ -114,14 +114,15 @@ exports.router.post("/", next(function*(req, res) {
 		json: attrs
 	}).catch(catch400)
 
-	if (isOk(created)) {
-		var initiative = created.body.data
-		res.redirect(303, req.baseUrl + "/" + initiative.id + "/edit")
-	}
-	else res.status(422).render("initiatives/create_page.jsx", {
-		error: translateCitizenError(req.t, created.body),
-		attrs: attrs
-	})
+	if (!isOk(created))
+		return void res.status(422).render("initiatives/create_page.jsx", {
+			error: translateCitizenError(req.t, created.body),
+			attrs: attrs
+		})
+
+	var initiative = created.body.data
+	yield initiativesDb.create({uuid: initiative.id})
+	res.redirect(303, req.baseUrl + "/" + initiative.id + "/edit")
 }))
 
 exports.router.get("/new", function(_req, res) {
@@ -243,188 +244,30 @@ exports.read = next(function*(req, res) {
 
 exports.router.put("/:id", next(function*(req, res) {
 	var initiative = req.initiative
-	var dbInitiative = req.dbInitiative
-	var unclosedStatus = Initiative.getUnclosedStatus(initiative, dbInitiative)
-	res.locals.subpage = unclosedStatus == "inProgress" ? "discussion" : "vote"
-
-	var tmpl
-	var message
-	var method = "PUT"
-	var path = `/api/users/self/topics/${initiative.id}`
-	var attrs = EMPTY_INITIATIVE
 
 	if (req.body.visibility === "public") {
-		tmpl = "initiatives/update_for_publish_page.jsx"
-		if (!(
-			Initiative.canPublish(initiative) ||
-			Initiative.canUpdateDiscussionDeadline(initiative)
-		)) throw new HttpError(401)
-
-		if (req.body.endsAt == null) return void res.render(tmpl, {
-			attrs: {endsAt: initiative.endsAt && new Date(initiative.endsAt)}
-		})
-
-		let endsAt = DateFns.endOfDay(new Date(req.body.endsAt))
-		if (!Initiative.isDeadlineOk(new Date, endsAt))
-			return void res.render(tmpl, {
-				error: req.t("DEADLINE_ERR", {days: Config.minDeadlineDays}),
-				attrs: {endsAt: endsAt}
-			})
-
-		attrs = {visibility: "public", endsAt: endsAt}
+		yield updateInitiativeToPublished(req, res)
 	}
 	else if (req.body.status === "voting") {
-		tmpl = "initiatives/update_for_voting_page.jsx"
-		if (!(
-			Initiative.canPropose(new Date, initiative) ||
-			Initiative.canUpdateVoteDeadline(initiative)
-		)) throw new HttpError(401)
-
-		if (req.body.endsAt == null) return void res.render(tmpl, {
-			attrs: {endsAt: initiative.vote ? new Date(initiative.vote.endsAt) : null}
-		})
-
-		let endsAt = DateFns.endOfDay(new Date(req.body.endsAt))
-		if (!Initiative.isDeadlineOk(new Date, endsAt))
-			return void res.render(tmpl, {
-				error: req.t("DEADLINE_ERR", {days: Config.minDeadlineDays}),
-				attrs: {endsAt: endsAt}
-			})
-
-		if (initiative.vote) {
-			method = "PUT"
-			path += `/votes/${initiative.vote.id}`
-			attrs = {endsAt: endsAt}
-		}
-		else {
-			method = "POST"
-			path += "/votes"
-			attrs = {
-				endsAt: endsAt,
-				authType: "hard",
-				voteType: "regular",
-				delegationIsAllowed: false,
-				options: [{value: "Yes"}, {value: "No"}]
-			}
-		}
+		yield updateInitiativePhaseToSign(req, res)
 	}
 	else if (req.body.status === "followUp") {
-		tmpl = "initiatives/update_for_parliament_page.jsx"
-		if (!Initiative.canSendToParliament(initiative, dbInitiative))
-			throw new HttpError(401)
-
-		if (req.body.contact == null) return void res.render(tmpl, {attrs: attrs})
-
-		attrs = {
-			status: req.body.status,
-			contact: O.defaults(req.body.contact, EMPTY_INITIATIVE.contact)
-		}
+		yield updateInitiativePhaseToParliament(req, res)
 	}
 	else if (isDbInitiativeUpdate(req.body)) {
 		if (!Initiative.canEdit(initiative)) throw new HttpError(401)
 		yield initiativesDb.update(initiative.id, parseInitiative(req.body))
 		res.flash("notice", req.t("INITIATIVE_INFO_UPDATED"))
 		res.redirect(303, req.headers.referer || req.baseUrl + req.url)
-		return
 	}
 	else throw new HttpError(422, "Invalid Attribute")
-
-	var updated = yield req.cosApi(path, {
-		method: method,
-		json: attrs
-	}).catch(catch400)
-
-	if (isOk(updated)) {
-		if (initiative.status == "inProgress" && attrs.endsAt)
-			yield initiativesDb.update(initiative.id, {
-				discussion_end_email_sent_at: null
-			})
-		else if (initiative.status == "voting" && attrs.endsAt)
-			yield initiativesDb.update(initiative.id, {
-				signing_end_email_sent_at: null
-			})
-
-		if (req.body.visibility === "public")
-			res.flash("notice", "Algatus on nüüd avalik.")
-		else if (req.body.status === "voting") {
-			if (initiative.vote == null) {
-				message = yield messagesDb.create({
-					initiative_uuid: initiative.id,
-					origin: "status",
-					created_at: new Date,
-					updated_at: new Date,
-
-					title: t("SENT_TO_SIGNING_MESSAGE_TITLE", {
-						initiativeTitle: initiative.title
-					}),
-
-					text: renderEmail("et", "SENT_TO_SIGNING_MESSAGE_BODY", {
-						initiativeTitle: initiative.title,
-						initiativeUrl: `${Config.url}/initiatives/${initiative.id}`,
-					})
-				})
-
-				yield Subscription.send(
-					message,
-
-					yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(
-						initiative.id
-					)
-				)
-			}
-
-			res.flash("notice", "Algatus on avatud allkirjade kogumiseks.")
-		}
-		else if (req.body.status === "followUp") {
-			if (!req.dbInitiative.sent_to_parliament_at)
-				yield initiativesDb.update(initiative.id, {
-					sent_to_parliament_at: new Date
-				})
-
-			message = yield messagesDb.create({
-				initiative_uuid: initiative.id,
-				origin: "status",
-				created_at: new Date,
-				updated_at: new Date,
-
-				title: t("SENT_TO_PARLIAMENT_MESSAGE_TITLE", {
-					initiativeTitle: initiative.title
-				}),
-
-				text: renderEmail("et", "SENT_TO_PARLIAMENT_MESSAGE_BODY", {
-					authorName: attrs.contact.name,
-					initiativeTitle: initiative.title,
-					initiativeUrl: `${Config.url}/initiatives/${initiative.id}`,
-					signatureCount: countSignatures(initiative)
-				})
-			})
-
-			yield Subscription.send(
-				message,
-
-				yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(
-					initiative.id
-				)
-			)
-
-			res.flash("notice", req.t("SENT_TO_PARLIAMENT_CONTENT"))
-		}
-		else if (req.body.status === "closed")
-			res.flash("notice", "Algatuse menetlus on lõpetatud.")
-
-		res.redirect(303, req.baseUrl + "/" + initiative.id)
-	}
-	else res.status(422).render(tmpl, {
-		error: translateCitizenError(req.t, updated.body),
-		attrs: attrs
-	})
 }))
 
 exports.router.delete("/:id", next(function*(req, res) {
 	var initiative = req.initiative
 	if (!Initiative.canDelete(initiative)) throw new HttpError(405)
 	yield req.cosApi(`/api/users/self/topics/${initiative.id}`, {method: "DELETE"})
-	res.flash("notice", "Algatus on kustutatud.")
+	res.flash("notice", req.t("INITIATIVE_DELETED"))
 	res.redirect(302, req.baseUrl)
 }))
 
@@ -702,6 +545,190 @@ function isDbInitiativeUpdate(obj) {
 		"meetings" in obj ||
 		"notes" in obj
 	)
+}
+
+function* updateInitiativeToPublished(req, res) {
+	var initiative = req.initiative
+	var tmpl = "initiatives/update_for_publish_page.jsx"
+
+	if (!(
+		Initiative.canPublish(initiative) ||
+		Initiative.canUpdateDiscussionDeadline(initiative)
+	)) throw new HttpError(401)
+
+	if (req.body.endsAt == null) return void res.render(tmpl, {
+		attrs: {endsAt: initiative.endsAt && new Date(initiative.endsAt)}
+	})
+
+	let endsAt = DateFns.endOfDay(new Date(req.body.endsAt))
+
+	if (!Initiative.isDeadlineOk(new Date, endsAt)) return void res.render(tmpl, {
+		error: req.t("DEADLINE_ERR", {days: Config.minDeadlineDays}),
+		attrs: {endsAt: endsAt}
+	})
+
+	var attrs = {visibility: "public", endsAt: endsAt}
+
+	var updated = yield req.cosApi(`/api/users/self/topics/${initiative.id}`, {
+		method: "PUT",
+		json: attrs
+	}).catch(catch400)
+
+	if (!isOk(updated)) return void res.status(422).render(tmpl, {
+		error: translateCitizenError(req.t, updated.body),
+		attrs: attrs
+	})
+
+	yield initiativesDb.update(initiative.id, {
+		discussion_end_email_sent_at: null
+	})
+
+	res.flash("notice", req.t("PUBLISHED_INITIATIVE"))
+	res.redirect(303, req.baseUrl + "/" + initiative.id)
+}
+
+function* updateInitiativePhaseToSign(req, res) {
+	var initiative = req.initiative
+	var tmpl = "initiatives/update_for_voting_page.jsx"
+
+	if (!(
+		Initiative.canPropose(new Date, initiative) ||
+		Initiative.canUpdateVoteDeadline(initiative)
+	)) throw new HttpError(401)
+
+	if (req.body.endsAt == null) return void res.render(tmpl, {
+		attrs: {endsAt: initiative.vote ? new Date(initiative.vote.endsAt) : null}
+	})
+
+	let endsAt = DateFns.endOfDay(new Date(req.body.endsAt))
+	var attrs = {endsAt: endsAt}
+
+	if (!Initiative.isDeadlineOk(new Date, endsAt))
+		return void res.render(tmpl, {
+			error: req.t("DEADLINE_ERR", {days: Config.minDeadlineDays}),
+			attrs: attrs
+		})
+
+	var updated
+	var path = `/api/users/self/topics/${initiative.id}`
+
+	if (initiative.vote)
+		updated = req.cosApi(`${path}/votes/${initiative.vote.id}`, {
+			method: "PUT",
+			json: {endsAt: endsAt}
+		})
+	else
+		updated = req.cosApi(`${path}/votes`, {
+			method: "POST",
+			json: {
+				endsAt: endsAt,
+				authType: "hard",
+				voteType: "regular",
+				delegationIsAllowed: false,
+				options: [{value: "Yes"}, {value: "No"}]
+			}
+		})
+
+	updated = yield updated.catch(catch400)
+
+	if (!isOk(updated)) return void res.status(422).render(tmpl, {
+		error: translateCitizenError(req.t, updated.body),
+		attrs: attrs
+	})
+
+	yield initiativesDb.update(initiative.id, {
+		phase: "sign",
+		signing_end_email_sent_at: null
+	})
+
+	if (initiative.vote == null) {
+		var message = yield messagesDb.create({
+			initiative_uuid: initiative.id,
+			origin: "status",
+			created_at: new Date,
+			updated_at: new Date,
+
+			title: t("SENT_TO_SIGNING_MESSAGE_TITLE", {
+				initiativeTitle: initiative.title
+			}),
+
+			text: renderEmail("et", "SENT_TO_SIGNING_MESSAGE_BODY", {
+				initiativeTitle: initiative.title,
+				initiativeUrl: `${Config.url}/initiatives/${initiative.id}`,
+			})
+		})
+
+		yield Subscription.send(
+			message,
+
+			yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(
+				initiative.id
+			)
+		)
+	}
+
+	res.flash("notice", req.t("INITIATIVE_SIGN_PHASE_UPDATED"))
+	res.redirect(303, req.baseUrl + "/" + initiative.id)
+}
+
+function* updateInitiativePhaseToParliament(req, res) {
+	var initiative = req.initiative
+	var dbInitiative = req.dbInitiative
+	var tmpl = "initiatives/update_for_parliament_page.jsx"
+
+	if (!Initiative.canSendToParliament(initiative, dbInitiative))
+		throw new HttpError(401)
+
+	var attrs = {
+		status: req.body.status,
+		contact: O.defaults(req.body.contact, EMPTY_INITIATIVE.contact)
+	}
+
+	if (req.body.contact == null) return void res.render(tmpl, {attrs: attrs})
+
+	var updated = yield req.cosApi(`/api/users/self/topics/${initiative.id}`, {
+		method: "PUT",
+		json: attrs
+	}).catch(catch400)
+
+	if (!isOk(updated)) return void res.status(422).render(tmpl, {
+		error: translateCitizenError(req.t, updated.body),
+		attrs: attrs
+	})
+
+	yield initiativesDb.update(initiative.id, {
+		phase: "parliament",
+		sent_to_parliament_at: new Date
+	})
+
+	var message = yield messagesDb.create({
+		initiative_uuid: initiative.id,
+		origin: "status",
+		created_at: new Date,
+		updated_at: new Date,
+
+		title: t("SENT_TO_PARLIAMENT_MESSAGE_TITLE", {
+			initiativeTitle: initiative.title
+		}),
+
+		text: renderEmail("et", "SENT_TO_PARLIAMENT_MESSAGE_BODY", {
+			authorName: attrs.contact.name,
+			initiativeTitle: initiative.title,
+			initiativeUrl: `${Config.url}/initiatives/${initiative.id}`,
+			signatureCount: countSignatures(initiative)
+		})
+	})
+
+	yield Subscription.send(
+		message,
+
+		yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(
+			initiative.id
+		)
+	)
+
+	res.flash("notice", req.t("SENT_TO_PARLIAMENT_CONTENT"))
+	res.redirect(303, req.baseUrl + "/" + initiative.id)
 }
 
 function parseInitiative(obj) {

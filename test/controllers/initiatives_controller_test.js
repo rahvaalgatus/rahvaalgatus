@@ -305,16 +305,46 @@ describe("InitiativesController", function() {
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
 
-			it("must escape title", function*() {
+			it("must create initiative", function*() {
 				var created = 0
 				this.router.post("/api/users/self/topics", function(req, res) {
 					++created
 					req.headers.authorization.must.exist(0)
 
-					var title = "Hello &lt;mike&gt;!"
-					var html = t("INITIATIVE_DEFAULT_HTML", {title: title})
 					req.body.visibility.must.equal("private")
-					req.body.description.must.equal(html)
+
+					req.body.description.must.equal(t("INITIATIVE_DEFAULT_HTML", {
+						title: "Hello!"
+					}))
+
+					respond({data: {id: UUID}}, req, res)
+				})
+
+				var res = yield this.request("/initiatives", {
+					method: "POST",
+					form: {
+						_csrf_token: this.csrfToken,
+						"accept-tos": true,
+						title: "Hello!"
+					}
+				})
+
+				res.statusCode.must.equal(303)
+				res.headers.location.must.equal("/initiatives/" + UUID + "/edit")
+				created.must.equal(1)
+
+				yield initiativesDb.search(sql`
+					SELECT * FROM initiatives
+				`).must.then.eql([new ValidInitiative({uuid: UUID})])
+			})
+
+			it("must escape title", function*() {
+				this.router.post("/api/users/self/topics", function(req, res) {
+					req.headers.authorization.must.exist(0)
+
+					req.body.description.must.equal(t("INITIATIVE_DEFAULT_HTML", {
+						title: "Hello &lt;mike&gt;!"
+					}))
 
 					respond({data: {id: UUID}}, req, res)
 				})
@@ -329,8 +359,6 @@ describe("InitiativesController", function() {
 				})
 
 				res.statusCode.must.equal(303)
-				res.headers.location.must.equal("/initiatives/" + UUID + "/edit")
-				created.must.equal(1)
 			})
 		})
 	})
@@ -898,7 +926,7 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(200)
 				})
 
-				it("must update visibility and set discussion end time", function*() {
+				it("must update initiative", function*() {
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {data: PRIVATE_DISCUSSION}))
 
@@ -924,6 +952,9 @@ describe("InitiativesController", function() {
 					updated.must.equal(1)
 					res.statusCode.must.equal(303)
 					res.headers.location.must.equal(`/initiatives/${UUID}`)
+
+					var flash = parseFlashFromCookies(res.headers["set-cookie"])
+					flash.notice.must.equal(t("PUBLISHED_INITIATIVE"))
 				})
 
 				it("must clear end email when setting discussion end time",
@@ -968,11 +999,59 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(200)
+					res.body.must.include(t("VOTE_DEADLINE_EXPLANATION"))
+				})
+
+				it("must update initiative", function*() {
+					var initiative = yield initiativesDb.create({uuid: UUID})
+
+					this.router.get(`/api/users/self/topics/${UUID}`,
+						respond.bind(null, {data: EDITABLE_DISCUSSION}))
+
+					var endsAt = DateFns.endOfDay(DateFns.addDays(new Date, 30))
+
+					this.router.post(
+						`/api/users/self/topics/${UUID}/votes`,
+						function(req, res) {
+							req.body.must.eql({
+								endsAt: endsAt.toJSON(),
+								authType: "hard",
+								voteType: "regular",
+								delegationIsAllowed: false,
+								options: [{value: "Yes"}, {value: "No"}]
+							})
+
+							res.end()
+						}
+					)
+
+					var res = yield this.request(`/initiatives/${UUID}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "voting",
+							endsAt: endsAt.toJSON().slice(0, 10)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+					res.headers.location.must.equal(`/initiatives/${UUID}`)
+
+					var flash = parseFlashFromCookies(res.headers["set-cookie"])
+					flash.notice.must.equal(t("INITIATIVE_SIGN_PHASE_UPDATED"))
+
+					yield initiativesDb.search(sql`
+						SELECT * FROM initiatives
+					`).must.then.eql([{
+						__proto__: initiative,
+						phase: "sign"
+					}])
 				})
 
 				it("must clear end email when setting signing end time", function*() {
-					var dbInitiative = yield initiativesDb.create({
+					var initiative = yield initiativesDb.create({
 						uuid: UUID,
+						phase: "sign",
 						discussion_end_email_sent_at: new Date,
 						signing_end_email_sent_at: new Date
 					})
@@ -999,9 +1078,10 @@ describe("InitiativesController", function() {
 
 					yield initiativesDb.search(sql`
 						SELECT * FROM initiatives
-					`).must.then.eql([
-						_.defaults({signing_end_email_sent_at: null}, dbInitiative)
-					])
+					`).must.then.eql([{
+						__proto__: initiative,
+						signing_end_email_sent_at: null
+					}])
 				})
 
 				it("must email subscribers", function*() {
@@ -1086,7 +1166,9 @@ describe("InitiativesController", function() {
 			})
 
 			describe("given status=followUp", function() {
-				it("must update status to followUp", function*() {
+				it("must update initiative", function*() {
+					var initiative = yield initiativesDb.create({uuid: UUID})
+
 					this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
 						data: {
 							id: UUID,
@@ -1126,14 +1208,16 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(303)
 					res.headers.location.must.equal(`/initiatives/${UUID}`)
 
+					var flash = parseFlashFromCookies(res.headers["set-cookie"])
+					flash.notice.must.equal(t("SENT_TO_PARLIAMENT_CONTENT"))
+
 					yield initiativesDb.search(sql`
 						SELECT * FROM initiatives
-					`).must.then.eql([
-						new ValidInitiative({
-							uuid: UUID,
-							sent_to_parliament_at: new Date
-						})
-					])
+					`).must.then.eql([{
+						__proto__: initiative,
+						phase: "parliament",
+						sent_to_parliament_at: new Date
+					}])
 				})
 
 				it("must email subscribers", function*() {
@@ -1322,6 +1406,56 @@ describe("InitiativesController", function() {
 		})
 	})
 
+	describe("DELETE /:id", function() {
+		describe("when logged in", function() {
+			require("root/test/fixtures").user()
+
+			it("must delete initiative", function*() {
+				this.router.get(`/api/users/self/topics/${UUID}`,
+					respond.bind(null, {data: EDITABLE_DISCUSSION}))
+
+				this.router.delete(`/api/users/self/topics/${UUID}`, endResponse)
+
+				var res = yield this.request("/initiatives/" + UUID, {
+					method: "POST",
+					form: {_csrf_token: this.csrfToken, _method: "delete"}
+				})
+
+				res.statusCode.must.equal(302)
+				res.headers.location.must.equal(`/initiatives`)
+
+				var flash = parseFlashFromCookies(res.headers["set-cookie"])
+				flash.notice.must.equal(t("INITIATIVE_DELETED"))
+			})
+
+			it("must respond with 405 given initiative in signing", function*() {
+				this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
+					data: _.assign({}, INITIATIVE, {permission: {level: "admin"}})
+				}))
+
+				var res = yield this.request("/initiatives/" + UUID, {
+					method: "POST",
+					form: {_csrf_token: this.csrfToken, _method: "delete"}
+				})
+
+				res.statusCode.must.equal(405)
+			})
+
+			it("must respond with 405 given non-editable discussion", function*() {
+				this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
+					data: DISCUSSION
+				}))
+
+				var res = yield this.request("/initiatives/" + UUID, {
+					method: "POST",
+					form: {_csrf_token: this.csrfToken, _method: "delete"}
+				})
+
+				res.statusCode.must.equal(405)
+			})
+		})
+	})
+
 	describe("GET /:id/signature", function() {
 		require("root/test/time")(Date.UTC(2015, 5, 18))
 		
@@ -1369,8 +1503,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(303)
 				res.headers.location.must.equal(`/initiatives/${UUID}`)
 
-				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
+				var flash = parseFlashFromCookies(res.headers["set-cookie"])
 				flash.signatureId.must.equal(signature.id)
 			})
 
@@ -1539,8 +1672,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(303)
 				res.headers.location.must.equal(`/initiatives/${UUID}`)
 
-				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
+				var flash = parseFlashFromCookies(res.headers["set-cookie"])
 				flash.signatureId.must.equal(signature.id)
 			})
 
@@ -1583,8 +1715,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(303)
 				res.headers.location.must.equal(`/initiatives/${UUID}`)
 
-				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
+				var flash = parseFlashFromCookies(res.headers["set-cookie"])
 				flash.signatureId.must.equal(signature.id)
 			})
 
@@ -1914,6 +2045,10 @@ function fakeJwt(obj) {
 	var header = encodeBase64(JSON.stringify({typ: "JWT", alg: "RS256"}))
 	var body = encodeBase64(JSON.stringify(obj))
 	return header + "." + body + ".fakesignature"
+}
+
+function parseFlashFromCookies(cookies) {
+	return parseFlash(parseCookies(cookies).flash.value)
 }
 
 function endResponse(_req, res) { res.end() }

@@ -1,0 +1,2 @@
+ALTER TABLE initiatives
+ADD COLUMN phase TEXT NOT NULL DEFAULT "edit";
