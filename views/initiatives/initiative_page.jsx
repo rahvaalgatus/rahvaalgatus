@@ -8,7 +8,6 @@ var Initiative = require("root/lib/initiative")
 var Css = require("root/lib/css")
 var DateFns = require("date-fns")
 var formatDate = require("root/lib/i18n").formatDate
-var VOTES_REQUIRED = Config.votesRequired
 exports = module.exports = InitiativePage
 exports.ProgressView = ProgressView
 	
@@ -104,7 +103,7 @@ function ProgressView(attrs) {
 
 			else if (!Initiative.hasVoteEnded(new Date, initiative))
 				return <div
-					style={Css.linearBackground("#00cb81", sigs / VOTES_REQUIRED)}
+					style={Css.linearBackground("#00cb81", sigs / Config.votesRequired)}
 					class={"initiative-progress " + klass}>
 					{t("N_SIGNATURES", {votes: sigs})}
 				</div>
