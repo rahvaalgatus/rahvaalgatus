@@ -40,6 +40,7 @@ RSYNC_OPTS = \
 	--exclude "/node_modules/must/***" \
 	--exclude "/node_modules/node-sass/***" \
 	--exclude "/node_modules/sqlite3/***" \
+	--exclude "/node_modules/jsdom/***" \
 	--exclude "/tmp/***"
 
 export PORT

@@ -17,9 +17,15 @@ var sqlite = require("root").sqlite
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
-var UPDATEABLE_PHASES = ["sign", "parliament"]
-var PHASE_TO_STATUS = {sign: "voting", parliament: "followUp"}
+var UPDATEABLE_PHASES = ["sign", "parliament", "government", "done"]
 exports = module.exports = Router()
+
+var PHASE_TO_STATUS = {
+	sign: "voting",
+	parliament: "followUp",
+	government: "followUp",
+	done: "followUp"
+}
 
 exports.use(function(req, _res, next) {
 	if (req.user && _.contains(Config.adminUserIds, req.user.id)) next()

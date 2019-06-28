@@ -19,9 +19,13 @@ var confirm = require("root/lib/jsx").confirm
 var stringify = require("root/lib/json").stringify
 var linkify = require("root/lib/linkify")
 var encode = encodeURIComponent
+var min = Math.min
+var diffInDays = DateFns.differenceInCalendarDays
+var PHASES = Initiative.PHASES
 var HTTP_URL = /^https?:\/\//i
 var EMPTY_ORG = {name: "", url: ""}
 var EVENT_NOTIFICATIONS_SINCE = new Date(Config.eventNotificationsSince)
+var DAYS_IN_PARLIAMENT = 30
 exports = module.exports = ReadPage
 exports.CommentView = CommentView
 
@@ -82,6 +86,12 @@ function ReadPage(attrs) {
 		req={req}>
 		<script src="/assets/html5.js" />
 		<script src="/assets/hwcrypto.js" />
+
+    <PhasesView
+      t={t}
+      initiative={initiative}
+      dbInitiative={dbInitiative}
+    />
 
 		<section id="initiative-section" class="transparent-section"><center>
 			<div id="initiative-sheet">
@@ -431,6 +441,124 @@ function ReadPage(attrs) {
 			comments={comments}
 		/>
 	</InitiativePage>
+}
+
+function PhasesView(attrs) {
+  var t = attrs.t
+  var initiative = attrs.initiative
+  var dbInitiative = attrs.dbInitiative
+	var phase = dbInitiative.phase
+  var vote = initiative.vote
+	var createdAt = initiative.createdAt
+  var sentToParliamentAt = dbInitiative.sent_to_parliament_at
+
+  var daysSinceCreated = diffInDays(new Date, createdAt)
+  var daysInEdit = Initiative.daysInDiscussion(initiative)
+  var editProgress = vote ? 1 : min(daysSinceCreated / daysInEdit, 1)
+  var discussionDaysLeft = daysInEdit - daysSinceCreated
+  var sigs = vote ? Initiative.countSignatures("Yes", initiative) : 0
+  var signProgress = sigs / Config.votesRequired
+
+	var editPhaseText
+	if (phase == "edit") {
+		if (initiative.visibility == "private")
+			editPhaseText = ""
+		else if (!Initiative.hasDiscussionEnded(new Date, initiative))
+			editPhaseText = t("TXT_DEADLINE_CALENDAR_DAYS_LEFT", {
+				numberOfDaysLeft: discussionDaysLeft
+			})
+		else editPhaseText = t("DISCUSSION_FINISHED")
+	}
+	else editPhaseText =
+		I18n.formatDateSpan("numeric", initiative.createdAt, vote.createdAt)
+
+  var signPhaseText
+	if (isPhaseAtLeast("sign", phase)) signPhaseText = t("N_SIGNATURES", {
+		votes: sigs
+	})
+
+	var parliamentProgress
+  var parliamentPhaseText
+
+  if (sentToParliamentAt) {
+    var daysSinceSentToParliament = diffInDays(new Date, sentToParliamentAt)
+    var daysLeftInParliament = DAYS_IN_PARLIAMENT - daysSinceSentToParliament
+
+		parliamentProgress = isPhaseAfter("parliament", phase)
+			? 1
+			: daysSinceSentToParliament / DAYS_IN_PARLIAMENT
+
+		if (isPhaseAfter("parliament", phase))
+			parliamentPhaseText = ""
+		else if (daysLeftInParliament > 0)
+			parliamentPhaseText = t("PARLIAMENT_PHASE_N_DAYS_LEFT", {
+				days: daysLeftInParliament
+			})
+    else if (daysLeftInParliament == 0)
+      parliamentPhaseText = t("PARLIAMENT_PHASE_0_DAYS_LEFT")
+    else
+			parliamentPhaseText = t("PARLIAMENT_PHASE_N_DAYS_OVER", {
+				days: Math.abs(daysLeftInParliament)
+			})
+  }
+
+	var governmentProgress = phase == "done" ? 1 : null
+
+  return <section id="initiative-phases" class="transparent-section"><center>
+    <ol>
+			<li id="edit-phase" class={classifyPhase("edit", phase)}>
+        <i>{t("EDIT_PHASE")}</i>
+				<ProgressView value={editProgress} text={editPhaseText} />
+      </li>
+
+			<li id="sign-phase" class={classifyPhase("sign", phase)}>
+        <i>{t("SIGN_PHASE")}</i>
+				<ProgressView value={signProgress} text={signPhaseText} />
+      </li>
+
+			<li id="parliament-phase" class={classifyPhase("parliament", phase)}>
+        <i>{t("PARLIAMENT_PHASE")}</i>
+				<ProgressView value={parliamentProgress} text={parliamentPhaseText} />
+      </li>
+
+			<li id="government-phase" class={classifyPhase("government", phase)}>
+        <i>{t("GOVERNMENT_PHASE")}</i>
+				<ProgressView value={governmentProgress} />
+      </li>
+
+      <li id="done-phase" class={classifyPhase("done", phase)}>
+        <i>{t("DONE_PHASE")}</i>
+      </li>
+    </ol>
+  </center></section>
+
+	function ProgressView(attrs) {
+		var value = attrs && attrs.value
+		var text = attrs && attrs.text
+
+		return <label class="progress">
+			<progress value={value == null ? null : min(1, value)} />
+			{text}
+		</label>
+	}
+
+	function classifyPhase(phase, given) {
+		var dist = PHASES.indexOf(given) - PHASES.indexOf(phase)
+
+		return (
+			dist == 0 ? "current" :
+			dist == 1 ? "past previous" :
+			dist > 0 ? "past" : ""
+		)
+	}
+
+	function isPhaseAtLeast(phase, than) {
+		return PHASES.indexOf(than) >= PHASES.indexOf(phase)
+	}
+
+	function isPhaseAfter(phase, than) {
+		return PHASES.indexOf(than) > PHASES.indexOf(phase)
+	}
 }
 
 function SidebarAuthorView(attrs) {
@@ -785,10 +913,8 @@ function EventsView(attrs) {
           // No point in showing delay warnings for events that were created
           // before we started notifying people of new events.
           var delay = +event.created_at >= +EVENT_NOTIFICATIONS_SINCE
-            ? DateFns.differenceInCalendarDays(
-              event.occurred_at,
-              event.created_at
-            ) : 0
+						? diffInDays(event.occurred_at, event.created_at)
+						: 0
 
           return <li class="event" id={"event-" + event.id}>
 						<time class="occurred-at" datetime={event.occurred_at.toJSON()}>

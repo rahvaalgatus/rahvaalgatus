@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="60px" height="60px" viewBox="0 0 60 60" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+    <!-- Generator: Sketch 3.4.4 (17249) - http://www.bohemiancoding.com/sketch -->
+    <title>done-phase</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+        <g id="Artboard-3" sketch:type="MSArtboardGroup" transform="translate(-240.000000, -63.000000)" fill="#FFFFFF">
+            <path d="M254.380769,96.9615385 C254.126923,96.7076923 254,96.3269231 254,96.0730769 C254,95.8192308 254.126923,95.4384615 254.380769,95.1846154 L256.157692,93.4076923 C256.665385,92.9 257.426923,92.9 257.934615,93.4076923 L258.061538,93.5346154 L265.042308,101.023077 C265.296154,101.276923 265.676923,101.276923 265.930769,101.023077 L282.938462,83.3807692 L283.065385,83.3807692 L283.065385,83.3807692 C283.573077,82.8730769 284.334615,82.8730769 284.842308,83.3807692 L286.619231,85.1576923 C287.126923,85.6653846 287.126923,86.4269231 286.619231,86.9346154 L286.619231,86.9346154 L266.311538,108.003846 C266.057692,108.257692 265.803846,108.384615 265.423077,108.384615 C265.042308,108.384615 264.788462,108.257692 264.534615,108.003846 L254.634615,97.3423077 L254.380769,96.9615385 L254.380769,96.9615385 Z" id="Shape" sketch:type="MSShapeGroup"></path>
+        </g>
+    </g>
+</svg>

@@ -1,15 +1,16 @@
 $dark-blue: #124267;
 $black: #161616;
 $grey: #7e7e7e;
+$text: #4a555d;
 $header-background: $dark-blue;
 $secondary-background: #f2f2f2;
 $light-background: #f6f6f6;
 $light-background-border: #e1e1e1;
 $secondary-light-text: #aaa;
-$discussion-color: #ffb400;
-$voting-color: #00cb81;
+$discussion-color: #ffb200;
+$green-color: #75c682;
+$voting-color: #12ca80;
 $parliament-color: #1C71A2;
-$text: #4A555D;
 $title-text: $parliament-color;
 $link-color: #53B1EB;
 $flash-background: #3d434a;
@@ -26,7 +27,8 @@ $secondary-button-border: #45a0e6;
 $secondary-button-text: white;
 $white-button-background: white;
 $white-button-border: #cecece;
-$white-button-text: #4a555d;
+$white-button-text: $text;
+$initiative-sidebar-header-background: #e3e3e3;
 
 $museo-sans: "Museo Sans Cyrl", sans-serif;
 $tisa-pro: "Tisa Pro Regular", serif;
@@ -38,6 +40,12 @@ $page-mobile-padding: 1.5rem;
 $page-width: 96rem;
 $flash-min-height: 4rem;
 
+$edit-phase-color: $discussion-color;
+$sign-phase-color: $voting-color;
+$parliament-phase-color: $parliament-color;
+$government-phase-color: $parliament-color;
+$done-phase-color: $dark-blue;
+
 @mixin tablet {
   @media only screen and (max-width: 768px) { @content }
 }
@@ -47,5 +55,29 @@ $flash-min-height: 4rem;
 }
 
 @mixin mobile-and-tablet {
-  @media only screen and (max-width: 767px) { @content }
+  @media only screen and (max-width: 768px) { @content }
+}
+
+@mixin appearance($value) {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	-ms-appearance: none;
+	appearance: none;
+}
+
+@mixin progress-bar() {
+	&::-moz-progress-bar { @content; }
+	&::-webkit-progress-value { @content; }
+	&::-ms-fill { @content; }
+}
+
+@mixin progress-bar-color($color) {
+	color: $color;
+	&::-moz-progress-bar { background-color: $color; }
+	&::-webkit-progress-value { background-color: $color; }
+}
+
+@mixin progress-bar-background-color($color) {
+	background-color: $color;
+	&::-webkit-progress-bar { background-color: $color; }
 }

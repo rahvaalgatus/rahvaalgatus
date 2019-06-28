@@ -153,10 +153,7 @@ strong {
 }
 
 button.inherited {
-	-webkit-appearance: none;
-	-moz-appearance: none;
-	-ms-appearance: none;
-	appearance: none;
+	@include appearance(none);
 
 	border: none;
 	background: none;
@@ -1107,6 +1104,249 @@ button.inherited {
 		@include mobile { padding: $article-padding-mobile; }
 	}
 
+	#initiative-phases {
+		$phase-icon-width: 6rem;
+		$phase-icon-current-width: 8rem;
+		$progress-height: 1.2rem;
+		$progress-background: $initiative-sidebar-header-background;
+
+		@media only screen and (max-width: 767px) {
+			display: none;
+		}
+
+		margin-top: -1rem;
+		padding-top: 0;
+		padding-bottom: 4rem;
+		overflow: hidden;
+
+		ol {
+			padding-top: 1rem;
+			height: 11rem;
+			position: relative;
+		}
+
+		li {
+			display: inline-block;
+			position: absolute;
+			width: 25%;
+			font-weight: normal;
+
+			i {
+				display: block;
+				width: 100%;
+				text-align: center;
+				position: relative;
+				left: -50%;
+				color: $secondary-light-text;
+			}
+
+			i:before {
+				content: "";
+				position: relative;
+				display: block;
+				margin: 0 auto;
+				width: $phase-icon-width;
+				height: $phase-icon-width;
+				background-color: $progress-background;
+				background-size: cover;
+				border-radius: 50%;
+				margin-bottom: 1rem;
+				z-index: 5;
+				background-repeat: no-repeat;
+				background-position: center;
+			}
+
+			.progress {
+				position: absolute;
+				top: ($phase-icon-width - $progress-height) / 2;
+				height: $progress-height;
+				left: 0;
+				right: 0;
+				z-index: 1;
+				margin: 0 -.2rem;
+
+				text-align: center;
+				font-size: 1.1rem;
+				line-height: 1.2;
+				color: $grey;
+			}
+
+			progress {
+				@include appearance(none);
+
+				width: 100%;
+				height: $progress-height;
+				z-index: 1;
+				margin-bottom: .2rem;
+				padding-right: .7rem;
+
+				@include progress-bar {
+					border-top-right-radius: 5rem;
+					border-bottom-right-radius: 5rem;
+				}
+
+				@include progress-bar-background-color($progress-background);
+
+				&:indeterminate {
+					@include progress-bar-color($progress-background !important);
+				}
+			}
+
+			&.previous {
+				.progress {
+					margin-right:
+						($phase-icon-current-width - $phase-icon-width) / 2 - 0.2rem;
+				}
+			}
+
+			&.current {
+				i:before {
+					position: relative;
+					top: -($phase-icon-current-width - $phase-icon-width) / 2;
+					margin-bottom: 0;
+					width: $phase-icon-current-width;
+					height: $phase-icon-current-width;
+				}
+
+				.progress {
+					margin-left:
+						($phase-icon-current-width - $phase-icon-width) / 2 - 0.2rem;
+				}
+			}
+
+			&:nth-child(1) {
+				left: 0;
+
+				i { margin-left: $phase-icon-width / 2; }
+				&.current i { margin-left: $phase-icon-current-width / 2; }
+
+				.progress {
+					left: $phase-icon-width;
+					right: $phase-icon-width / 2 - $phase-icon-width / 4;
+				}
+
+				&.current .progress {
+					margin-left: $phase-icon-current-width - $phase-icon-width - 0.2rem;
+				}
+			}
+
+			&:nth-child(2) {
+				left: 25%;
+
+				i { margin-left: $phase-icon-width / 4; }
+
+				.progress {
+					left: $phase-icon-width / 2 + $phase-icon-width / 4;
+					right: $phase-icon-width / 2;
+				}
+			}
+
+			&:nth-child(3) {
+				left: 50%;
+
+				.progress {
+					left: $phase-icon-width / 2;
+					right: $phase-icon-width / 2 + $phase-icon-width / 4;
+				}
+			}
+
+			&:nth-child(4) {
+				left: 75%;
+
+				i { margin-left: -$phase-icon-width / 4; }
+
+				.progress {
+					left: $phase-icon-width / 2 - $phase-icon-width / 4;
+					right: $phase-icon-width;
+				}
+
+				&.previous .progress {
+					margin-right: $phase-icon-current-width - $phase-icon-width - 0.2rem;
+				}
+			}
+
+			&:nth-child(5) {
+				right: 0;
+
+				i { left: 50%; margin-left: -$phase-icon-width / 2; }
+				&.current i { margin-left: -$phase-icon-current-width / 2; }
+			}
+
+			&#edit-phase {
+				i:before {
+					background-image: url("/assets/edit-phase.svg");
+					background-position: center bottom;
+				}
+
+				progress { @include progress-bar-color($edit-phase-color); }
+
+				&.past progress {
+					@include progress-bar-background-color($sign-phase-color);
+				}
+
+				&.current i,
+				&.past i {
+					color: $text;
+					&:before { background-color: $edit-phase-color; }
+				}
+			}
+
+			&#sign-phase {
+				i:before { background-image: url("/assets/sign-phase.svg"); }
+				progress { @include progress-bar-color($sign-phase-color); }
+
+				&.past progress {
+					@include progress-bar-background-color($parliament-phase-color);
+				}
+
+				&.current i,
+				&.past i {
+					color: #049862;
+					&:before { background-color: $sign-phase-color; }
+				}
+			}
+
+			&#parliament-phase {
+				i:before { background-image: url("/assets/parliament-phase.svg"); }
+				progress { @include progress-bar-color($parliament-phase-color); }
+
+				&.past progress {
+					@include progress-bar-background-color($government-phase-color);
+				}
+
+				&.current i,
+				&.past i {
+					color: $parliament-phase-color;
+					&:before { background-color: $parliament-phase-color; }
+				}
+			}
+
+			&#government-phase {
+				i:before { background-image: url("/assets/government-phase.svg"); }
+				progress { @include progress-bar-color($government-phase-color); }
+
+				&.past progress {
+					@include progress-bar-background-color($done-phase-color);
+				}
+
+				&.current i,
+				&.past i {
+					color: $government-phase-color;
+					&:before { background-color: $government-phase-color; }
+				}
+			}
+
+			&#done-phase {
+				i:before { background-image: url("/assets/done-phase.svg"); }
+
+				&.current i {
+					color: $done-phase-color;
+					&:before { background-color: $done-phase-color; }
+				}
+			}
+		}
+	}
+
 	#initiative-section {
 		padding-top: 0;
 
@@ -1205,7 +1445,7 @@ button.inherited {
 				margin-right: -$sidebar-padding;
 				padding: 0 $sidebar-padding;
 				line-height: 3.6rem;
-				background: #e3e3e3;
+				background: $initiative-sidebar-header-background;
 				font-size: 1.6rem;
 				color: $dark-blue;
 				font-weight: 900;
@@ -1575,7 +1815,7 @@ button.inherited {
 					height: 3.5rem;
 				}
 
-				border-color: #75c682;
+				border-color: $green-color;
 				h2 { color: #555; }
 			}
 

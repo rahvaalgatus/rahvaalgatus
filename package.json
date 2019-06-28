@@ -54,6 +54,7 @@
 		"sinon": ">= 1 < 2",
 		"tough-cookie": ">= 2 < 3",
 		"cookie-signature": ">= 1 < 2",
+		"jsdom": ">= 9 < 10",
 
 		"node-sass": "~4"
 	},

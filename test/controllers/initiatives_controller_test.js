@@ -7,6 +7,7 @@ var Config = require("root/config")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSubscription = require("root/test/valid_db_initiative_subscription")
 var Http = require("root/lib/http")
+var I18n = require("root/lib/i18n")
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
@@ -34,6 +35,7 @@ var eventsDb = require("root/db/initiative_events_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var encodeMime = require("nodemailer/lib/mime-funcs").encodeWord
+var parseDom = require("root/test/dom").parse
 var next = require("co-next")
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var VOTE_UUID = "396b0e5b-cca7-4255-9238-19b464e60b65"
@@ -87,6 +89,7 @@ var INITIATIVE = {
 
 	vote: {
 		id: VOTE_UUID,
+		createdAt: new Date(2999, 11, 15),
 		endsAt: new Date(3000, 0, 1),
 		options: {rows: [{value: "Yes", voteCount: 0}]}
 	}
@@ -379,21 +382,79 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 			})
 
-			it("must render discussion", function*() {
+			it("must render private discussion", function*() {
 				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: DISCUSSION}))
+					respond.bind(null, {data: PRIVATE_DISCUSSION}))
 				this.router.get(`/api/topics/${UUID}/comments`,
 					respond.bind(null, EMPTY_RES))
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
-				res.body.must.include(tHtml("INITIATIVE_IN_DISCUSSION"))
-				res.body.must.include(t("DISCUSSION_DEADLINE"))
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(0)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.current.must.be.true()
+				phases.edit.text.must.equal("")
 			})
 
-			it("must render initiative", function*() {
+			it("must render discussion", function*() {
 				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: INITIATIVE}))
+					respond.bind(null, {data: _.merge({}, DISCUSSION, {
+						endsAt: DateFns.addDays(new Date, 5)
+					})})
+				)
+
+				this.router.get(`/api/topics/${UUID}/comments`,
+					respond.bind(null, EMPTY_RES))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+
+				res.body.must.include(tHtml("INITIATIVE_IN_DISCUSSION"))
+				res.body.must.include(t("DISCUSSION_DEADLINE"))
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(0)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.current.must.be.true()
+
+				phases.edit.text.must.equal(
+					t("TXT_DEADLINE_CALENDAR_DAYS_LEFT", {numberOfDaysLeft: 6})
+				)
+			})
+
+			it("must render discussion over its deadline", function*() {
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: _.merge({}, DISCUSSION, {
+						endsAt: DateFns.addDays(new Date, -5)
+					})})
+				)
+
+				this.router.get(`/api/topics/${UUID}/comments`,
+					respond.bind(null, EMPTY_RES))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+				phases.edit.current.must.be.true()
+				phases.edit.text.must.equal(t("DISCUSSION_FINISHED"))
+			})
+
+			it("must render initiative in signing", function*() {
+				yield initiativesDb.create({
+					uuid: UUID,
+					phase: "sign"
+				})
+
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: SIGNED_INITIATIVE}))
 				this.router.get(`/api/topics/${UUID}/comments`,
 					respond.bind(null, EMPTY_RES))
 
@@ -402,9 +463,30 @@ describe("InitiativesController", function() {
 				res.body.must.not.include(tHtml("INITIATIVE_IN_DISCUSSION"))
 				res.body.must.not.include(tHtml("VOTING_SUCCEEDED"))
 				res.body.must.not.include(tHtml("VOTING_FAILED"))
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(1)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.past.must.be.true()
+				phases.sign.current.must.be.true()
+
+				phases.edit.text.must.equal(I18n.formatDateSpan(
+					"numeric",
+					INITIATIVE.createdAt,
+					INITIATIVE.vote.createdAt
+				))
+
+				phases.sign.text.must.equal(t("N_SIGNATURES", {votes: 1}))
 			})
 
 			it("must render successful initiative", function*() {
+				yield initiativesDb.create({
+					uuid: UUID,
+					phase: "sign"
+				})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: SUCCESSFUL_INITIATIVE}))
 				this.router.get(`/api/topics/${UUID}/comments`,
@@ -413,19 +495,156 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("VOTING_SUCCEEDED"))
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(1)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.past.must.be.true()
+				phases.sign.current.must.be.true()
+
+				phases.sign.text.must.equal(t("N_SIGNATURES", {votes: 10}))
 			})
 
-			it("must render proceeding initiative", function*() {
+			it("must render initiative in parliament", function*() {
+				yield initiativesDb.create({
+					uuid: UUID,
+					phase: "parliament",
+					sent_to_parliament_at: DateFns.addDays(new Date, -5)
+				})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
 				this.router.get(`/api/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_RES))
-				this.router.get(`/api/topics/${UUID}/events`,
 					respond.bind(null, EMPTY_RES))
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(2)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.past.must.be.true()
+				phases.sign.past.must.be.true()
+				phases.parliament.current.must.be.true()
+
+				phases.sign.text.must.equal(t("N_SIGNATURES", {
+					votes: Config.votesRequired
+				}))
+
+				phases.parliament.text.must.equal(t("PARLIAMENT_PHASE_N_DAYS_LEFT", {
+					days: 25
+				}))
+			})
+
+			it("must render initiative in parliament with deadline today",
+				function*() {
+				yield initiativesDb.create({
+					uuid: UUID,
+					phase: "parliament",
+					sent_to_parliament_at: DateFns.addDays(new Date, -30)
+				})
+
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+				this.router.get(`/api/topics/${UUID}/comments`,
+					respond.bind(null, EMPTY_RES))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+				phases.parliament.text.must.equal(t("PARLIAMENT_PHASE_0_DAYS_LEFT"))
+			})
+
+			it("must render initiative in parliament with deadline past",
+				function*() {
+				yield initiativesDb.create({
+					uuid: UUID,
+					phase: "parliament",
+					sent_to_parliament_at: DateFns.addDays(new Date, -35)
+				})
+
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+				this.router.get(`/api/topics/${UUID}/comments`,
+					respond.bind(null, EMPTY_RES))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				phases.parliament.text.must.equal(t("PARLIAMENT_PHASE_N_DAYS_OVER", {
+					days: 5
+				}))
+			})
+
+			it("must render initiative in government", function*() {
+				yield initiativesDb.create({
+					uuid: UUID,
+					phase: "government",
+					sent_to_parliament_at: new Date
+				})
+
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+				this.router.get(`/api/topics/${UUID}/comments`,
+					respond.bind(null, EMPTY_RES))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(3)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.past.must.be.true()
+				phases.sign.past.must.be.true()
+				phases.parliament.past.must.be.true()
+				phases.government.current.must.be.true()
+
+				phases.sign.text.must.equal(t("N_SIGNATURES", {
+					votes: Config.votesRequired
+				}))
+
+				phases.parliament.text.must.equal("")
+			})
+
+			it("must render done initiative", function*() {
+				yield initiativesDb.create({
+					uuid: UUID,
+					phase: "done",
+					sent_to_parliament_at: new Date
+				})
+
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+				this.router.get(`/api/topics/${UUID}/comments`,
+					respond.bind(null, EMPTY_RES))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(4)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.past.must.be.true()
+				phases.sign.past.must.be.true()
+				phases.parliament.past.must.be.true()
+				phases.government.past.must.be.true()
+				phases.done.current.must.be.true()
 			})
 
 			it("must render failed initiative", function*() {
@@ -462,8 +681,6 @@ describe("InitiativesController", function() {
 					respond.bind(null, {data: PROCESSED_FAILED_INITIATIVE}))
 				this.router.get(`/api/topics/${UUID}/comments`,
 					respond.bind(null, EMPTY_RES))
-				this.router.get(`/api/topics/${UUID}/events`,
-					respond.bind(null, EMPTY_RES))
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
@@ -477,8 +694,6 @@ describe("InitiativesController", function() {
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: PROCESSED_SUCCESSFUL_INITIATIVE}))
 				this.router.get(`/api/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_RES))
-				this.router.get(`/api/topics/${UUID}/events`,
 					respond.bind(null, EMPTY_RES))
 
 				var res = yield this.request("/initiatives/" + UUID)
@@ -2049,6 +2264,17 @@ function fakeJwt(obj) {
 
 function parseFlashFromCookies(cookies) {
 	return parseFlash(parseCookies(cookies).flash.value)
+}
+
+function queryPhases(html) {
+	var phases = html.querySelectorAll("#initiative-phases li")
+	var phasesById = _.indexBy(phases, (phase) => phase.id.match(/^\w+/)[0])
+
+	return _.mapValues(phasesById, (phase) => ({
+		current: phase.classList.contains("current"),
+		past: phase.classList.contains("past"),
+		text: (phase.querySelector(".progress") || Object).textContent
+	}))
 }
 
 function endResponse(_req, res) { res.end() }
