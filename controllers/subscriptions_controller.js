@@ -1,7 +1,7 @@
 var _ = require("root/lib/underscore")
 var Http = require("root/lib/http")
 var Router = require("express").Router
-var Sqlite = require("root/lib/sqlite")
+var SqliteError = require("root/lib/sqlite_error")
 var sendEmail = require("root").sendEmail
 var renderEmail = require("root/lib/i18n").email
 var next = require("co-next")
@@ -28,14 +28,14 @@ exports.router.post("/", next(function*(req, res) {
 			updated_at: new Date
 		})
 	}
-	catch (ex) {
-		if (Sqlite.isUniqueError(ex))
+	catch (err) {
+		if (err instanceof SqliteError && err.type == "unique")
 			subscription = yield db.read(sql`
 				SELECT * FROM initiative_subscriptions
 				WHERE initiative_uuid IS NULL AND email = ${email}
 			`)
 
-		else throw ex
+		else throw err
 	}
 
 	if (

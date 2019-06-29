@@ -19,6 +19,7 @@
 		"co": ">= 4 < 5",
 		"co-next": "",
 		"neodoc": "",
+		"standard-error": "",
 		"standard-http-error": "",
 		"fetch-error": "",
 		"fetch-off": "",

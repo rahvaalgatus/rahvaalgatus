@@ -32,7 +32,8 @@ describe("InitiativeSubscriptionsDb", function() {
 			var err
 			try { yield db.create(other) } catch (ex) { err = ex }
 			err.must.be.an.error(/UNIQUE.*initiative_uuid_and_email/)
-			err.code.must.equal("SQLITE_CONSTRAINT")
+			err.code.must.equal("constraint")
+			err.type.must.equal("unique")
 		})
 
 		it("must have a unique constraint on initiative_uuid", function*() {
@@ -48,7 +49,8 @@ describe("InitiativeSubscriptionsDb", function() {
 			var err
 			try { yield db.create(other) } catch (ex) { err = ex }
 			err.must.be.an.error(/UNIQUE.*initiative_uuid_and_email/)
-			err.code.must.equal("SQLITE_CONSTRAINT")
+			err.code.must.equal("constraint")
+			err.type.must.equal("unique")
 		})
 
 		it("must have a unique constraint on NULL initiative_uuid", function*() {
@@ -64,7 +66,8 @@ describe("InitiativeSubscriptionsDb", function() {
 			var err
 			try { yield db.create(other) } catch (ex) { err = ex }
 			err.must.be.an.error(/UNIQUE.*initiative_uuid_and_email/)
-			err.code.must.equal("SQLITE_CONSTRAINT")
+			err.code.must.equal("constraint")
+			err.type.must.equal("unique")
 		})
 	})
 })

@@ -3,9 +3,9 @@ var Path = require("path")
 var Router = require("express").Router
 var Initiative = require("root/lib/initiative")
 var HttpError = require("standard-http-error")
-var Sqlite = require("root/lib/sqlite")
 var Http = require("root/lib/http")
 var InitiativesController = require("../initiatives_controller")
+var SqliteError = require("root/lib/sqlite_error")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var next = require("co-next")
 var sql = require("sqlate")
@@ -44,14 +44,14 @@ exports.router.post("/", next(function*(req, res) {
 			updated_at: new Date
 		})
 	}
-	catch (ex) {
-		if (Sqlite.isUniqueError(ex))
+	catch (err) {
+		if (err instanceof SqliteError && err.type == "unique")
 			subscription = yield subscriptionsDb.read(sql`
 				SELECT * FROM initiative_subscriptions
 				WHERE (initiative_uuid, email) = (${initiative.id}, ${email})
 			`)
 
-		else throw ex
+		else throw err
 	}
 
 	if (

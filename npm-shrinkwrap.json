@@ -5000,17 +5000,15 @@
         }
       }
     },
+    "standard-error": {
+      "version": "1.1.0",
+      "from": "https://registry.npmjs.org/standard-error/-/standard-error-1.1.0.tgz",
+      "resolved": "https://registry.npmjs.org/standard-error/-/standard-error-1.1.0.tgz"
+    },
     "standard-http-error": {
       "version": "2.0.0",
       "from": "https://registry.npmjs.org/standard-http-error/-/standard-http-error-2.0.0.tgz",
-      "resolved": "https://registry.npmjs.org/standard-http-error/-/standard-http-error-2.0.0.tgz",
-      "dependencies": {
-        "standard-error": {
-          "version": "1.1.0",
-          "from": "https://registry.npmjs.org/standard-error/-/standard-error-1.1.0.tgz",
-          "resolved": "https://registry.npmjs.org/standard-error/-/standard-error-1.1.0.tgz"
-        }
-      }
+      "resolved": "https://registry.npmjs.org/standard-http-error/-/standard-http-error-2.0.0.tgz"
     },
     "tough-cookie": {
       "version": "2.4.3",
