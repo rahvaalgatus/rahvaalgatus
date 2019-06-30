@@ -87,7 +87,7 @@ exports.router.get("/new", next(function*(req, res) {
 			})
 		
 		res.flash("notice", req.t("CONFIRMED_INITIATIVES_SUBSCRIPTION"))
-		res.redirect(303, "/")
+		res.redirect(303, req.baseUrl + "/" + subscription.update_token)
 	}
 	else {
 		res.statusCode = 404

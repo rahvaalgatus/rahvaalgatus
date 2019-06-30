@@ -269,12 +269,11 @@ describe("InitiativeSubscriptionsController", function() {
 
 			yield subscriptionsDb.create(subscription)
 
-			var res = yield this.request(
-				`/initiatives/${UUID}/subscriptions/new?confirmation_token=${token}`
-			)
+			var path = `/initiatives/${UUID}/subscriptions`
+			var res = yield this.request(`${path}/new?confirmation_token=${token}`)
 
 			res.statusCode.must.equal(303)
-			res.headers.location.must.equal("/initiatives/" + UUID)
+			res.headers.location.must.equal(`${path}/${token}`)
 
 			yield subscriptionsDb.read(subscription).must.then.eql({
 				__proto__: subscription,
@@ -301,12 +300,10 @@ describe("InitiativeSubscriptionsController", function() {
 
 			yield subscriptionsDb.create(subscription)
 
-			var res = yield this.request(
-				`/initiatives/${UUID}/subscriptions/new?confirmation_token=${token}`
-			)
-
+			var path = `/initiatives/${UUID}/subscriptions`
+			var res = yield this.request(`${path}/new?confirmation_token=${token}`)
 			res.statusCode.must.equal(303)
-			res.headers.location.must.equal("/initiatives/" + UUID)
+			res.headers.location.must.equal(`${path}/${token}`)
 			yield subscriptionsDb.read(subscription).must.then.eql(subscription)
 		})
 

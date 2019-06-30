@@ -177,12 +177,10 @@ describe("SubscriptionsController", function() {
 				confirmation_sent_at: createdAt
 			}))
 
-			var res = yield this.request(
-				`/subscriptions/new?confirmation_token=${token}`
-			)
-
+			var path = `/subscriptions`
+			var res = yield this.request(`${path}/new?confirmation_token=${token}`)
 			res.statusCode.must.equal(303)
-			res.headers.location.must.equal("/")
+			res.headers.location.must.equal(`${path}/${token}`)
 
 			yield db.read(subscription).must.then.eql({
 				__proto__: subscription,
@@ -202,12 +200,10 @@ describe("SubscriptionsController", function() {
 				update_token: token
 			}))
 
-			var res = yield this.request(
-				`/subscriptions/new?confirmation_token=${token}`
-			)
-
+			var path = `/subscriptions`
+			var res = yield this.request(`${path}/new?confirmation_token=${token}`)
 			res.statusCode.must.equal(303)
-			res.headers.location.must.equal("/")
+			res.headers.location.must.equal(`${path}/${token}`)
 			yield db.read(subscription).must.then.eql(subscription)
 		})
 
