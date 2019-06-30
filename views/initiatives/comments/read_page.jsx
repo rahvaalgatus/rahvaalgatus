@@ -110,4 +110,6 @@ function CommentView(attrs) {
 	</Fragment>
 }
 
-function isCommentShort(comment) { return comment.text.length <= 30 }
+function isCommentShort(comment) {
+	return comment.text.length <= 30 && !comment.text.includes("\n")
+}
