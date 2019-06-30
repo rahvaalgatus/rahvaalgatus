@@ -46,7 +46,7 @@ var PRIVATE_DISCUSSION = _.merge({}, DISCUSSION, {
 	permission: {level: "admin"}
 })
 
-describe("SubscriptionsController", function() {
+describe("InitiativeSubscriptionsController", function() {
 	require("root/test/web")()
 	require("root/test/mitm")()
 	require("root/test/db")()

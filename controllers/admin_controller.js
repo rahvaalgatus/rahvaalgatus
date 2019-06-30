@@ -6,6 +6,7 @@ var DateFns = require("date-fns")
 var Subscription = require("root/lib/subscription")
 var cosApi = require("root/lib/citizenos_api")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
+var commentsDb = require("root/db/comments_db")
 var next = require("co-next")
 var searchInitiatives = require("root/lib/citizenos_db").searchInitiatives
 var initiativesDb = require("root/db/initiatives_db")
@@ -17,6 +18,7 @@ var sqlite = require("root").sqlite
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
+var EMPTY = Object.prototype
 var UPDATEABLE_PHASES = ["sign", "parliament", "government", "done"]
 exports = module.exports = Router()
 
@@ -333,6 +335,24 @@ exports.post("/initiatives/:id/messages", next(function*(req, res) {
 
 		default: throw new HttpError(422, "Invalid Action")
 	}
+}))
+
+exports.get("/comments", next(function*(_req, res) {
+	var comments = yield commentsDb.search(sql`
+		SELECT *
+		FROM comments
+		ORDER BY created_at DESC
+		LIMIT 15
+	`)
+
+	var usersById = comments.length > 0 ? _.indexBy(yield cosDb.query(sql`
+		SELECT id, name, email FROM "Users"
+		WHERE id IN ${sql.tuple(comments.map((c) => c.user_uuid))}
+	`), "id") : EMPTY
+
+	comments.forEach((comment) => comment.user = usersById[comment.user_uuid])
+
+	res.render("admin/comments/index_page.jsx", {comments: comments})
 }))
 
 exports.get("/subscriptions", next(function*(_req, res) {

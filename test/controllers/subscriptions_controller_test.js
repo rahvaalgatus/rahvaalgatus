@@ -147,6 +147,7 @@ describe("SubscriptionsController", function() {
 			})
 
 			res.statusCode.must.equal(422)
+			res.body.must.include(t("INVALID_EMAIL"))
 		})
 
 		it("must respond with 422 given invalid email", function*() {
@@ -156,6 +157,7 @@ describe("SubscriptionsController", function() {
 			})
 
 			res.statusCode.must.equal(422)
+			res.body.must.include(t("INVALID_EMAIL"))
 		})
 	})
 

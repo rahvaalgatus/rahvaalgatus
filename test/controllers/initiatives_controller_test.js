@@ -6,6 +6,7 @@ var DateFns = require("date-fns")
 var Config = require("root/config")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSubscription = require("root/test/valid_db_initiative_subscription")
+var ValidComment = require("root/test/valid_comment")
 var Http = require("root/lib/http")
 var I18n = require("root/lib/i18n")
 var sql = require("sqlate")
@@ -34,6 +35,7 @@ var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var eventsDb = require("root/db/initiative_events_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
+var commentsDb = require("root/db/comments_db")
 var encodeMime = require("nodemailer/lib/mime-funcs").encodeWord
 var parseDom = require("root/test/dom").parse
 var next = require("co-next")
@@ -41,7 +43,6 @@ var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var VOTE_UUID = "396b0e5b-cca7-4255-9238-19b464e60b65"
 var INITIATIVE_TYPE = "application/vnd.rahvaalgatus.initiative+json; v=1"
 var ATOM_TYPE = "application/atom+xml"
-var EMPTY_RES = {data: {rows: []}}
 var AUTH_TOKEN = "deadbeef"
 var SIGN_TOKEN = "feedfed"
 var USER_ID = "bb7abca5-dac0-47c2-86c2-88dbd4850b7a"
@@ -375,9 +376,6 @@ describe("InitiativesController", function() {
 					respond({data: DISCUSSION}, req, res)
 				})
 
-				this.router.get(`/api/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_RES))
-
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
 			})
@@ -385,8 +383,6 @@ describe("InitiativesController", function() {
 			it("must render private discussion", function*() {
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: PRIVATE_DISCUSSION}))
-				this.router.get(`/api/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_RES))
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
@@ -406,9 +402,6 @@ describe("InitiativesController", function() {
 						endsAt: DateFns.addDays(new Date, 5)
 					})})
 				)
-
-				this.router.get(`/api/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_RES))
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
@@ -435,9 +428,6 @@ describe("InitiativesController", function() {
 					})})
 				)
 
-				this.router.get(`/api/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_RES))
-
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
 
@@ -455,8 +445,6 @@ describe("InitiativesController", function() {
 
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: SIGNED_INITIATIVE}))
-				this.router.get(`/api/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_RES))
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
@@ -489,8 +477,6 @@ describe("InitiativesController", function() {
 
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: SUCCESSFUL_INITIATIVE}))
-				this.router.get(`/api/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_RES))
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
@@ -516,8 +502,6 @@ describe("InitiativesController", function() {
 
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
-				this.router.get(`/api/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_RES))
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
@@ -551,8 +535,6 @@ describe("InitiativesController", function() {
 
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
-				this.router.get(`/api/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_RES))
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
@@ -572,8 +554,6 @@ describe("InitiativesController", function() {
 
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
-				this.router.get(`/api/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_RES))
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
@@ -595,8 +575,6 @@ describe("InitiativesController", function() {
 
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
-				this.router.get(`/api/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_RES))
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
@@ -628,8 +606,6 @@ describe("InitiativesController", function() {
 
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
-				this.router.get(`/api/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_RES))
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
@@ -650,8 +626,6 @@ describe("InitiativesController", function() {
 			it("must render failed initiative", function*() {
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: FAILED_INITIATIVE}))
-				this.router.get(`/api/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_RES))
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
@@ -663,8 +637,6 @@ describe("InitiativesController", function() {
 			it("must render closed discussion", function*() {
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: CLOSED_DISCUSSION}))
-				this.router.get(`/api/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_RES))
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
@@ -679,8 +651,6 @@ describe("InitiativesController", function() {
 
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: PROCESSED_FAILED_INITIATIVE}))
-				this.router.get(`/api/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_RES))
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
@@ -693,8 +663,6 @@ describe("InitiativesController", function() {
 			it("must render processed successful initiative", function*() {
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: PROCESSED_SUCCESSFUL_INITIATIVE}))
-				this.router.get(`/api/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_RES))
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
@@ -702,6 +670,53 @@ describe("InitiativesController", function() {
 				res.body.must.not.include(tHtml("VOTING_SUCCEEDED"))
 				res.body.must.not.include(tHtml("VOTING_FAILED"))
 				res.body.must.not.include(tHtml("VOTING_DEADLINE"))
+			})
+
+			it("must render initiative comments", function*() {
+				yield initiativesDb.create({uuid: UUID})
+
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: DISCUSSION}))
+
+				var author = yield createUser(newUser({name: "Johnny Lang"}))
+				var replier = yield createUser(newUser({name: "Kenny Loggins"}))
+
+				var comment = yield commentsDb.create(new ValidComment({
+					initiative_uuid: UUID,
+					user_uuid: author.id
+				}))
+
+				var reply = yield commentsDb.create(new ValidComment({
+					initiative_uuid: UUID,
+					user_uuid: replier.id,
+					parent_id: comment.id
+				}))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var commentsEl = dom.getElementById("initiative-comments")
+				commentsEl.textContent.must.include(author.name)
+				commentsEl.textContent.must.include(comment.title)
+				commentsEl.textContent.must.include(comment.text)
+				commentsEl.textContent.must.include(replier.name)
+				commentsEl.textContent.must.include(reply.text)
+			})
+
+			it("must not render comments from other initiatives", function*() {
+				yield initiativesDb.create({uuid: UUID})
+
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: DISCUSSION}))
+
+				var comment = yield commentsDb.create(new ValidComment)
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var commentsEl = dom.getElementById("initiative-comments")
+				commentsEl.textContent.must.not.include(comment.text)
 			})
 
 			it("must respond with 404 when API responds 403 Forbidden", function*() {
@@ -730,9 +745,6 @@ describe("InitiativesController", function() {
 				this.router.get(`/api/topics/${UUID}`, respond.bind(null, {
 					data: INITIATIVE
 				}))
-
-				this.router.get(`/api/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_RES))
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
@@ -765,9 +777,6 @@ describe("InitiativesController", function() {
 							]}}
 						})
 					}))
-
-					this.router.get(`/api/topics/${UUID}/comments`,
-						respond.bind(null, EMPTY_RES))
 				})
 
 				it("must show thanks and revoke form", function*() {
@@ -936,10 +945,6 @@ describe("InitiativesController", function() {
 					data: DISCUSSION
 				}))
 
-				this.router.get(`/api/users/self/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_RES)
-				)
-
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
 			})
@@ -947,8 +952,6 @@ describe("InitiativesController", function() {
 			it("must render signed initiative", function*() {
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: SIGNED_INITIATIVE}))
-				this.router.get(`/api/users/self/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_RES))
 
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
@@ -966,9 +969,6 @@ describe("InitiativesController", function() {
 						}
 					})})
 				)
-
-				this.router.get(`/api/users/self/topics/${UUID}/comments`,
-					respond.bind(null, EMPTY_RES))
 
 				yield signaturesDb.create({
 					initiative_uuid: UUID,

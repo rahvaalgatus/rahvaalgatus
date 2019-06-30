@@ -9,11 +9,12 @@ var Config = require("root/config")
 var I18n = require("root/lib/i18n")
 var Flash = require("../page").Flash
 var Initiative = require("root/lib/initiative")
-var Comment = require("root/lib/comment")
 var ProgressView = require("./initiative_page").ProgressView
 var Form = require("../page").Form
 var FormButton = require("../page").FormButton
 var DonateForm = require("../donations/create_page").DonateForm
+var CommentView = require("./comments/read_page").CommentView
+var CommentForm = require("./comments/create_page").CommentForm
 var javascript = require("root/lib/jsx").javascript
 var confirm = require("root/lib/jsx").confirm
 var stringify = require("root/lib/json").stringify
@@ -26,21 +27,18 @@ var HTTP_URL = /^https?:\/\//i
 var EMPTY_ORG = {name: "", url: ""}
 var EVENT_NOTIFICATIONS_SINCE = new Date(Config.eventNotificationsSince)
 var DAYS_IN_PARLIAMENT = 30
-exports = module.exports = ReadPage
-exports.CommentView = CommentView
 
 var UI_TRANSLATIONS = O.map(I18n.STRINGS, function(lang) {
 	return O.filter(lang, (_value, key) => key.indexOf("HWCRYPTO") >= 0)
 })
 
-function ReadPage(attrs) {
+module.exports = function(attrs) {
 	var req = attrs.req
 	var t = attrs.t
   var lang = req.lang
 	var thank = attrs.thank
 	var thankAgain = attrs.thankAgain
 	var signature = attrs.signature
-	var comment = attrs.comment
 	var comments = attrs.comments
 	var flash = attrs.flash
 	var events = attrs.events
@@ -435,9 +433,7 @@ function ReadPage(attrs) {
 		<CommentsView
 			t={t}
 			req={req}
-			flash={flash}
 			initiative={initiative}
-			comment={comment}
 			comments={comments}
 		/>
 	</InitiativePage>
@@ -946,134 +942,26 @@ function EventsView(attrs) {
 function CommentsView(attrs) {
 	var t = attrs.t
 	var req = attrs.req
-	var flash = attrs.flash
 	var initiative = attrs.initiative
-	var comment = attrs.comment
 	var comments = attrs.comments
-	var editedComment = comment
-	var commentsUrl = `/initiatives/${initiative.id}/comments`
 
 	return <section id="initiative-comments" class="transparent-section"><center>
 		<h2>{t("COMMENT_HEADING")}</h2>
-
-		{flash("commentError") ?
-			<p class="flash error">{flash("commentError")}</p>
-		: null}
 
 		<ol class="comments">
 			{comments.map((comment) => <li
 				id={`comment-${comment.id}`}
 				class="comment">
-				<CommentView
-					req={req}
-					initiative={initiative}
-					comment={comment}
-					editedComment={editedComment}
-				/>
+				<CommentView req={req} initiative={initiative} comment={comment} />
 			</li>)}
 		</ol>
 
-		{
-			// Comment form anchor used for redirecting to error.
-		}
-		<Form
+		<CommentForm
 			req={req}
-			id="initiative-comment-form"
-			method="post"
-			action={commentsUrl}
-			class="comment-form">
-			<input
-				name="subject"
-				value={editedComment.parentId == null ? editedComment.subject : null}
-				maxlength={128}
-				required
-				placeholder={t("COMMENT_TITLE_PLACEHOLDER")}
-				disabled={!req.user}
-				class="form-input"
-			/>
-
-			<textarea
-				name="text"
-				maxlength={2048}
-				required
-				placeholder={t("COMMENT_BODY_PLACEHOLDER")}
-				disabled={!req.user}
-				class="form-textarea">
-				{editedComment.parentId == null ? editedComment.text : null}
-			</textarea>
-			<button disabled={!req.user} class="secondary-button">{t("POST_COMMENT")}</button>
-
-			{!req.user ? <span class="text signin-to-act">
-				{Jsx.html(t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE", {
-					url: "/session/new"
-				}))}
-			</span> : null}
-		</Form>
+			initiative={initiative}
+			referrer={req.baseUrl + req.path}
+		/>
 	</center></section>
-}
-
-function CommentView(attrs) {
-	var req = attrs.req
-	var t = req.t
-	var initiative = attrs.initiative
-	var comment = attrs.comment
-	var editedComment = attrs.editedComment
-
-	var name = comment.creator.name
-	var isEdited = editedComment.parentId === comment.id
-	var commentUrl = `/initiatives/${initiative.id}/comments/${comment.id}`
-
-	return <Fragment>
-		<span class="author">{name}</span>
-		{" "}
-		<time datetime={comment.createdAt}>
-			<a href={commentUrl}>
-				{I18n.formatDateTime("numeric", comment.createdAt)}
-			</a>
-		</time>
-
-		<h3 class="subject"><a href={commentUrl}>{comment.subject}</a></h3>
-		<p class="text">{Jsx.html(Comment.htmlify(comment.text))}</p>
-
-		{req.user ? <a
-			href={`#comment-${comment.id}-reply`}
-			class="comment-reply-button white-button">
-			{t("REPLY")}
-		</a> : null}
-
-		<ol class="comment-replies">{comment.replies.map((reply) => <li
-			id={`comment-${reply.id}`}
-			class={["comment-reply", Initiative.isCommentShort(reply) ? "short" : ""].join(" ")}>
-
-			<span class="author">{reply.creator.name}</span>
-			{" "}
-			<time datetime={reply.createdAt}>
-				<a href={commentUrl + `#comment-${reply.id}`}>
-					{I18n.formatDateTime("numeric", reply.createdAt)}
-				</a>
-			</time>
-
-			<p class="text">{Jsx.html(Comment.htmlify(reply.text))}</p>
-		</li>)} </ol>
-
-		{req.user ? <Form
-			req={req}
-			id={`comment-${comment.id}-reply`}
-			method="post"
-			action={commentUrl + "/replies"}
-			hidden={!isEdited}
-			class="comment-reply-form">
-			<textarea
-				name="text"
-				maxlength={2048}
-				required
-				placeholder={t("PLACEHOLDER_ADD_YOUR_REPLY", {name: name})}
-				class="form-textarea">
-				{isEdited ? editedComment.text : null}
-			</textarea>
-			<button class="secondary-button">{t("POST_REPLY")}</button>
-		</Form> : null}
-	</Fragment>
 }
 
 function SubscribeEmailView(attrs) {

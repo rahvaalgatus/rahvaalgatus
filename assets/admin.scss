@@ -364,6 +364,15 @@ textarea.admin-input {
 	}
 }
 
+#comments-page {
+	.comments {
+		h3 {
+			font-weight: bold;
+			margin-bottom: 1rem;
+		}
+	}
+}
+
 #initiative-subscriptions-page {
 	.download-link { float: right; }
 }

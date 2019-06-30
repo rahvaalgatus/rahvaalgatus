@@ -15,6 +15,7 @@ var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
+var commentsDb = require("root/db/comments_db")
 var countSignatures = Initiative.countSignatures.bind(null, "Yes")
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
@@ -28,7 +29,6 @@ var t = require("root/lib/i18n").t.bind(null, Config.language)
 var renderEmail = require("root/lib/i18n").email
 var sql = require("sqlate")
 var parseCitizenInitiative = cosApi.parseCitizenInitiative
-var parseCitizenComment = cosApi.parseCitizenComment
 var encode = encodeURIComponent
 var translateCitizenError = require("root/lib/citizenos_api").translateError
 var hasMainPartnerId = Initiative.hasPartnerId.bind(null, Config.apiPartnerId)
@@ -36,9 +36,9 @@ var searchInitiatives = require("root/lib/citizenos_db").searchInitiatives
 var concat = Array.prototype.concat.bind(Array.prototype)
 var decodeBase64 = require("root/lib/crypto").decodeBase64
 var trim = Function.call.bind(String.prototype.trim)
+var EMPTY = Object.prototype
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
-var EMPTY_COMMENT = {subject: "", text: "", parentId: null}
 
 var RESPONSE_TYPES = [
 	"text/html",
@@ -224,11 +224,7 @@ exports.read = next(function*(req, res) {
 	var subscriberCount =
 		yield subscriptionsDb.countConfirmedByInitiativeId(initiative.id)
 
-	var commentsPath = `/api/topics/${initiative.id}/comments?orderBy=date`
-	if (req.user) commentsPath = "/api/users/self" + commentsPath.slice(4)
-	var comments = yield req.cosApi(commentsPath)
-	comments = comments.body.data.rows.map(parseCitizenComment).reverse()
-
+	var comments = yield searchInitiativeComments(initiative.id)
 	var events = _.reverse(yield searchInitiativeEvents(req.t, dbInitiative))
 
 	res.render("initiatives/read_page.jsx", {
@@ -237,7 +233,6 @@ exports.read = next(function*(req, res) {
 		signature: signature,
 		subscriberCount: subscriberCount,
 		comments: comments,
-		comment: res.locals.comment || EMPTY_COMMENT,
 		events: events
 	})
 })
@@ -533,6 +528,31 @@ function searchCitizenSignature(topicId, userId) {
 		ORDER BY signature."createdAt" DESC
 		LIMIT 1
 	`).then(_.first)
+}
+
+function* searchInitiativeComments(initiativeId) {
+	var comments = yield commentsDb.search(sql`
+		SELECT * FROM comments
+		WHERE initiative_uuid = ${initiativeId}
+		ORDER BY created_at
+	`)
+
+	var usersById = comments.length > 0 ? _.indexBy(yield cosDb.query(sql`
+		SELECT id, name FROM "Users"
+		WHERE id IN ${sql.tuple(comments.map((c) => c.user_uuid))}
+	`), "id") : EMPTY
+
+	comments.forEach((comment) => comment.user = usersById[comment.user_uuid])
+
+	var parentsAndReplies = _.partition(comments, (c) => c.parent_id == null)
+	var parentsById = _.indexBy(parentsAndReplies[0], "id")
+
+	parentsAndReplies[1].forEach(function(comment) {
+		var parent = parentsById[comment.parent_id]
+		;(parent.replies || (parent.replies = [])).push(comment)
+	})
+
+	return parentsAndReplies[0]
 }
 
 function isDbInitiativeUpdate(obj) {

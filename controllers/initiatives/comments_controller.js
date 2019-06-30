@@ -1,91 +1,151 @@
+var _ = require("root/lib/underscore")
 var Path = require("path")
 var Router = require("express").Router
-var InitiativesController = require("../initiatives_controller")
 var HttpError = require("standard-http-error")
-var isOk = require("root/lib/http").isOk
-var catch400 = require("root/lib/fetch").catch.bind(null, 400)
-var cosApi = require("root/lib/citizenos_api")
-var parseCitizenComment = cosApi.parseCitizenComment
-var translateCitizenError = require("root/lib/citizenos_api").translateError
+var SqliteError = require("root/lib/sqlite_error")
 var next = require("co-next")
-var format = require("util").format
-var commentsPath = format.bind(null, "/api/users/self/topics/%s/comments")
-var EMPTY_COMMENT = {subject: "", text: "", parentId: null}
-
+var sql = require("sqlate")
+var cosDb = require("root").cosDb
+var commentsDb = require("root/db/comments_db")
+var concat = Array.prototype.concat.bind(Array.prototype)
+var MAX_TITLE_LENGTH = 140
+var MAX_TEXT_LENGTH = 3000
+exports.MAX_TITLE_LENGTH = MAX_TITLE_LENGTH
+exports.MAX_TEXT_LENGTH = MAX_TEXT_LENGTH
 exports.router = Router({mergeParams: true})
 
-exports.router.post("/", next(function*(req, res, next) {
+var CONSTRAINT_ERRORS = {
+	comments_title_present: [
+		"INITIATIVE_COMMENT_TITLE_LENGTH_ERROR", {max: MAX_TITLE_LENGTH}
+	],
+
+	comments_title_length: [
+		"INITIATIVE_COMMENT_TITLE_LENGTH_ERROR", {max: MAX_TITLE_LENGTH}
+	],
+
+	comments_text_length: [
+		"INITIATIVE_COMMENT_TEXT_LENGTH_ERROR", {max: MAX_TEXT_LENGTH}
+	]
+}
+
+exports.router.get("/new", function(_req, res) {
+	res.render("initiatives/comments/create_page.jsx")
+})
+
+exports.router.post("/", next(function*(req, res) {
+	if (req.user == null) throw new HttpError(401)
 	var initiative = req.initiative
 
-	var created = yield req.cosApi(commentsPath(initiative.id), {
-		method: "POST",
-		json: {
-			parentId: null,
-			type: "pro",
-			subject: req.body.subject,
-			text: normalizeNewlines(req.body.text || "")
-		}
-	}).catch(catch400)
+	var attrs = _.assign(parseComment(req.body), {
+		initiative_uuid: initiative.id,
+		user_uuid: req.user.id,
+		created_at: new Date,
+		updated_at: new Date
+	})
 
-	if (isOk(created)) {
-		var comment = created.body.data
-		var path = Path.dirname(req.baseUrl) + "#comment-" + comment.id
-		res.redirect(303, path)
+	try {
+		var comment = yield commentsDb.create(attrs)
+		var url = req.baseUrl + "/" + comment.id
+		if (req.body.referrer) url = req.body.referrer + "#comment-" + comment.id
+		res.redirect(303, url)
 	}
-	else {
-		res.locals.comment = req.body
-		renderWithError(created.body, req, res, next)
+	catch (err) {
+		if (err instanceof SqliteError && err.code == "constraint") {
+			res.status(422)
+			res.flash("error", req.t.apply(null, CONSTRAINT_ERRORS[err.constraint]))
+
+			res.render("initiatives/comments/create_page.jsx", {
+				referrer: req.body.referrer,
+				newComment: attrs
+			})
+		}
+		else throw err
 	}
+}))
+
+exports.router.use("/:commentId", next(function*(req, res, next) {
+	var id = req.params.commentId
+	var initiative = req.initiative
+	var baseUrl = Path.dirname(req.baseUrl)
+
+	var comment = yield commentsDb.read(sql`
+		SELECT * FROM comments
+		WHERE (id = ${id} OR uuid = ${id})
+		AND initiative_uuid = ${initiative.id}
+	`)
+
+	if (comment == null)
+		throw new HttpError(404)
+	if (comment.uuid == id)
+		return void res.redirect(308, baseUrl + "/" + comment.id)
+	
+	req.comment = comment
+	next()
 }))
 
 exports.router.get("/:commentId", next(function*(req, res) {
-	var initiative = req.initiative
+	var comment = req.comment
 
-	// NOTE: CitizenOS doesn't have a comment endpoint.
-	var path = `/api/topics/${initiative.id}/comments`
-	if (req.user) path = "/api/users/self" + path.slice(4)
-	var comments = yield req.cosApi(path)
-	comments = comments.body.data.rows.map(parseCitizenComment)
+	if (comment.parent_id)
+		return void res.redirect(302, req.baseUrl + "/" + comment.parent_id)
 
-	var comment = comments.find((comment) => comment.id === req.params.commentId)
-	if (comment == null) throw new HttpError(404)
+	yield renderComment(req, res)
+}))
 
-	res.render("initiatives/comments/read_page.jsx", {
-		comment: comment,
-		editedComment: EMPTY_COMMENT
+exports.router.post("/:commentId/replies", next(function*(req, res) {
+	var comment = req.comment
+	if (req.user == null) throw new HttpError(401)
+	if (comment.parent_id) throw new HttpError(405)
+
+	var attrs = _.assign(parseComment(req.body), {
+		initiative_uuid: comment.initiative_uuid,
+		parent_id: comment.id,
+		user_uuid: req.user.id,
+		created_at: new Date,
+		updated_at: new Date,
+		title: ""
 	})
-}))
 
-exports.router.post("/:commentId/replies", next(function*(req, res, next) {
-	var initiative = req.initiative
-	var commentId = req.params.commentId
-
-	var created = yield req.cosApi(commentsPath(initiative.id), {
-		method: "POST",
-		json: {
-			parentId: commentId,
-			type: "reply",
-			text: normalizeNewlines(req.body.text || "")
+	try {
+		var reply = yield commentsDb.create(attrs)
+		var url = req.body.referrer || req.baseUrl + "/" + comment.id
+		res.redirect(303, url + "#comment-" + reply.id)
+	}
+	catch (err) {
+		if (err instanceof SqliteError && err.code == "constraint") {
+			res.status(422)
+			res.flash("error", req.t.apply(null, CONSTRAINT_ERRORS[err.constraint]))
+			res.locals.newComment = attrs
+			yield renderComment(req, res)
 		}
-	}).catch(catch400)
-
-	if (isOk(created)) {
-		var comment = created.body.data
-		var path = Path.dirname(req.baseUrl) + "#comment-" + comment.id
-		res.redirect(303, path)
-	}
-	else {
-		res.locals.comment = {__proto__: req.body, parentId: commentId}
-		renderWithError(created.body, req, res, next)
+		else throw err
 	}
 }))
 
-function renderWithError(err, req, res, next) {
-	var msg = translateCitizenError(req.t, err)
-	res.flash("error", msg)
-	res.flash("commentError", msg)
-	res.status(422)
-	InitiativesController.read(req, res, next)
+function* renderComment(req, res) {
+	var comment = req.comment
+
+	var replies = comment.replies = yield commentsDb.search(sql`
+		SELECT * FROM comments WHERE parent_id = ${comment.id}
+	`)
+
+	var usersById = _.indexBy(yield cosDb.query(sql`
+		SELECT id, name FROM "Users"
+		WHERE id IN ${
+			sql.tuple(concat(comment.user_uuid, replies.map((r) => r.user_uuid)))
+		}
+	`), "id")
+
+	comment.user = usersById[comment.user_uuid]
+	replies.forEach((reply) => reply.user = usersById[reply.user_uuid])
+	res.render("initiatives/comments/read_page.jsx", {comment: comment})
+}
+
+function parseComment(obj) {
+	return {
+		title: String(obj.title || ""),
+		text: normalizeNewlines(String(obj.text || ""))
+	}
 }
 
 function normalizeNewlines(text) { return text.replace(/\r\n/g, "\n") }

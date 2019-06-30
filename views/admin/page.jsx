@@ -45,6 +45,14 @@ function Page(attrs, children) {
 
 						<li>
 							<a
+								href={req.baseUrl + "/comments"}
+								class={prefixed("/comments", req.path)}>
+								Comments
+							</a>
+						</li>
+
+						<li>
+							<a
 								href={req.baseUrl + "/subscriptions"}
 								class={prefixed("/subscriptions", req.path)}
 							>Subscriptions</a>

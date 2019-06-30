@@ -36,7 +36,7 @@ var EDITABLE_INITIATIVE = _.assign({}, INITIATIVE, {
 	permission: {level: "admin"}
 })
 
-describe("EventsController", function() {
+describe("InitiativeEventsController", function() {
 	require("root/test/web")()
 	require("root/test/mitm")()
 	require("root/test/db")()
