@@ -11,8 +11,7 @@ var next = require("co-next")
 var sql = require("sqlate")
 var sendEmail = require("root").sendEmail
 var renderEmail = require("root/lib/i18n").email
-var parseSubscription =
-	require("root/controllers/subscriptions_controller").parse
+var parseSubscription = require("../subscriptions_controller").parse
 
 exports.router = Router({mergeParams: true})
 

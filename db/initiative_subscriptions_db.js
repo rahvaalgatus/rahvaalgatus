@@ -17,7 +17,8 @@ exports.parse = function(attrs) {
 			new Date(attrs.confirmation_sent_at),
 
 		official_interest: !!attrs.official_interest,
-		author_interest: !!attrs.author_interest
+		author_interest: !!attrs.author_interest,
+		comment_interest: !!attrs.comment_interest
 	}, attrs)
 }
 
@@ -31,6 +32,10 @@ exports.searchConfirmedByInitiativeIdForOfficial = function(id) {
 
 exports.searchConfirmedByInitiativeIdForAuthor = function(id) {
 	return searchConfirmedByInitiativeIdWith(this, sql`author_interest`, id)
+}
+
+exports.searchConfirmedByInitiativeIdForComment = function(id) {
+	return searchConfirmedByInitiativeIdWith(this, sql`comment_interest`, id)
 }
 
 exports.countConfirmedByInitiativeId =

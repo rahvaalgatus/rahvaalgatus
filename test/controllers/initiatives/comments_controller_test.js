@@ -1,11 +1,14 @@
 var _ = require("root/lib/underscore")
 var Config = require("root/config")
 var ValidComment = require("root/test/valid_comment")
+var ValidSubscription = require("root/test/valid_db_initiative_subscription")
 var createUser = require("root/test/citizenos_fixtures").createUser
 var newUser = require("root/test/citizenos_fixtures").newUser
 var newUuid = require("uuid/v4")
 var respond = require("root/test/fixtures").respond
+var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var commentsDb = require("root/db/comments_db")
+var messagesDb = require("root/db/initiative_messages_db")
 var parseDom = require("root/test/dom").parse
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
@@ -37,6 +40,7 @@ describe("InitiativeCommentsController", function() {
 	require("root/test/web")()
 	require("root/test/mitm")()
 	require("root/test/db")()
+	require("root/test/email")()
 	require("root/test/time")()
 	require("root/test/fixtures").csrf()
 	beforeEach(require("root/test/mitm").router)
@@ -107,6 +111,61 @@ describe("InitiativeCommentsController", function() {
 
 				res.statusCode.must.equal(303)
 				res.headers.location.must.equal(path + "#comment-" + 1)
+			})
+
+			it("must email subscribers interested in comments", function*() {
+				this.router.get(`/api/users/self/topics/${UUID}`,
+					respond.bind(null, {data: INITIATIVE}))
+
+				var subscriptions = yield subscriptionsDb.create([
+					new ValidSubscription({
+						initiative_uuid: INITIATIVE.id,
+						confirmed_at: new Date,
+						comment_interest: false
+					}),
+
+					new ValidSubscription({
+						initiative_uuid: null,
+						confirmed_at: new Date,
+						comment_interest: false
+					}),
+
+					new ValidSubscription({
+						initiative_uuid: INITIATIVE.id,
+						confirmed_at: new Date,
+						comment_interest: true
+					}),
+
+					new ValidSubscription({
+						initiative_uuid: null,
+						confirmed_at: new Date,
+						comment_interest: true
+					})
+				])
+
+				var path = `/initiatives/${UUID}`
+				var res = yield this.request(path + `/comments`, {
+					method: "POST",
+					form: {
+						__proto__: VALID_ATTRS,
+						_csrf_token: this.csrfToken,
+						referrer: path
+					}
+				})
+
+				res.statusCode.must.equal(303)
+
+				yield messagesDb.search(sql`
+					SELECT * FROM initiative_messages
+				`).must.then.be.empty()
+
+				var emails = subscriptions.slice(2).map((s) => s.email).sort()
+
+				this.emails.length.must.equal(1)
+				this.emails[0].envelope.to.must.eql(emails)
+				var msg = String(this.emails[0].message)
+				msg.match(/^Subject: .*/m)[0].must.include(INITIATIVE.title)
+				subscriptions.slice(2).forEach((s) => msg.must.include(s.update_token))
 			})
 
 			;[[
@@ -372,6 +431,61 @@ describe("InitiativeCommentsController", function() {
 
 				res.statusCode.must.equal(303)
 				res.headers.location.must.equal(path + "#comment-" + (comment.id + 1))
+			})
+
+			it("must email subscribers interested in comments", function*() {
+				this.router.get(`/api/users/self/topics/${UUID}`,
+					respond.bind(null, {data: INITIATIVE}))
+
+				var comment = yield commentsDb.create(new ValidComment({
+					initiative_uuid: UUID
+				}))
+
+				var subscriptions = yield subscriptionsDb.create([
+					new ValidSubscription({
+						initiative_uuid: INITIATIVE.id,
+						confirmed_at: new Date,
+						comment_interest: false
+					}),
+
+					new ValidSubscription({
+						initiative_uuid: null,
+						confirmed_at: new Date,
+						comment_interest: false
+					}),
+
+					new ValidSubscription({
+						initiative_uuid: INITIATIVE.id,
+						confirmed_at: new Date,
+						comment_interest: true
+					}),
+
+					new ValidSubscription({
+						initiative_uuid: null,
+						confirmed_at: new Date,
+						comment_interest: true
+					})
+				])
+
+				var path = `/initiatives/${UUID}`
+				var res = yield this.request(path + `/comments/${comment.id}/replies`, {
+					method: "POST",
+					form: {__proto__: VALID_REPLY_ATTRS, _csrf_token: this.csrfToken}
+				})
+
+				res.statusCode.must.equal(303)
+
+				yield messagesDb.search(sql`
+					SELECT * FROM initiative_messages
+				`).must.then.be.empty()
+
+				var emails = subscriptions.slice(2).map((s) => s.email).sort()
+
+				this.emails.length.must.equal(1)
+				this.emails[0].envelope.to.must.eql(emails)
+				var msg = String(this.emails[0].message)
+				msg.match(/^Subject: .*/m)[0].must.include(INITIATIVE.title)
+				subscriptions.slice(2).forEach((s) => msg.must.include(s.update_token))
 			})
 
 			it("must respond with 405 given a reply", function*() {

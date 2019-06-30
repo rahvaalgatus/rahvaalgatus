@@ -151,6 +151,8 @@ function parse(obj) {
 		attrs.official_interest = _.parseBoolean(obj.official_interest)
 	if ("author_interest" in obj)
 		attrs.author_interest = _.parseBoolean(obj.author_interest)
+	if ("comment_interest" in obj)
+		attrs.comment_interest = _.parseBoolean(obj.comment_interest)
 
 	return attrs
 }

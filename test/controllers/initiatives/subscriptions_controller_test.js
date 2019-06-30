@@ -395,8 +395,9 @@ describe("InitiativeSubscriptionsController", function() {
 					form: {
 						_method: "put",
 						_csrf_token: this.csrfToken,
-						official_interest: false,
-						author_interest: false
+						official_interest: !sub.official_interest,
+						author_interest: !sub.author_interest,
+						comment_interest: !sub.comment_interest
 					}
 			})
 
@@ -406,8 +407,9 @@ describe("InitiativeSubscriptionsController", function() {
 			yield subscriptionsDb.read(sub).must.then.eql({
 				__proto__: sub,
 				updated_at: new Date,
-				official_interest: false,
-				author_interest: false
+				official_interest: !sub.official_interest,
+				author_interest: !sub.author_interest,
+				comment_interest: !sub.comment_interest
 			})
 		})
 

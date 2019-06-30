@@ -44,6 +44,16 @@ module.exports = function(attrs) {
 					<span>{t("SUBSCRIPTION_AUTHOR_INTEREST")}</span>
 				</label>
 
+				<label class="form-checkbox">
+					<input
+						type="checkbox"
+						name="comment_interest"
+						checked={subscription.comment_interest}
+					/>
+
+					<span>{t("SUBSCRIPTION_COMMENT_INTEREST")}</span>
+				</label>
+
 				<button
 					name="_method"
 					value="put"

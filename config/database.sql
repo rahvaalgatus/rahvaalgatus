@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS "initiative_subscriptions" (
   created_ip TEXT NULL,
   origin TEXT NULL,
   official_interest INTEGER NOT NULL DEFAULT 1,
-  author_interest INTEGER NOT NULL DEFAULT 1,
+  author_interest INTEGER NOT NULL DEFAULT 1, comment_interest INTEGER NOT NULL DEFAULT 0,
 
 	PRIMARY KEY (initiative_uuid, email),
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
@@ -140,4 +140,5 @@ INSERT INTO migrations VALUES('20190613120456');
 INSERT INTO migrations VALUES('20190614131543');
 INSERT INTO migrations VALUES('20190621112243');
 INSERT INTO migrations VALUES('20190628153405');
+INSERT INTO migrations VALUES('20190630200833');
 COMMIT;

@@ -1,13 +1,17 @@
 var _ = require("root/lib/underscore")
+var Config = require("root/config")
 var Path = require("path")
 var Router = require("express").Router
 var HttpError = require("standard-http-error")
 var SqliteError = require("root/lib/sqlite_error")
+var Subscription = require("root/lib/subscription")
 var next = require("co-next")
 var sql = require("sqlate")
 var cosDb = require("root").cosDb
 var commentsDb = require("root/db/comments_db")
+var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var concat = Array.prototype.concat.bind(Array.prototype)
+var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var MAX_TITLE_LENGTH = 140
 var MAX_TEXT_LENGTH = 3000
 exports.MAX_TITLE_LENGTH = MAX_TITLE_LENGTH
@@ -33,18 +37,38 @@ exports.router.get("/new", function(_req, res) {
 })
 
 exports.router.post("/", next(function*(req, res) {
-	if (req.user == null) throw new HttpError(401)
+	var user = req.user
 	var initiative = req.initiative
+	if (user == null) throw new HttpError(401)
 
 	var attrs = _.assign(parseComment(req.body), {
 		initiative_uuid: initiative.id,
-		user_uuid: req.user.id,
+		user_uuid: user.id,
 		created_at: new Date,
 		updated_at: new Date
 	})
 
 	try {
 		var comment = yield commentsDb.create(attrs)
+		var initiativeUrl = `${Config.url}/initiatives/${initiative.id}`
+
+		yield Subscription.send({
+			title: req.t("EMAIL_INITIATIVE_COMMENT_TITLE", {
+				initiativeTitle: initiative.title,
+			}),
+
+			text: renderEmail("EMAIL_INITIATIVE_COMMENT_BODY", {
+				initiativeTitle: initiative.title,
+				initiativeUrl: initiativeUrl,
+				userName: user.name,
+				commentTitle: comment.title.replace(/\r?\n/g, " "),
+				commentText: _.quoteEmail(comment.text),
+				commentUrl: initiativeUrl + "#comment-" + comment.id
+			})
+		}, yield subscriptionsDb.searchConfirmedByInitiativeIdForComment(
+			initiative.id
+		))
+
 		var url = req.baseUrl + "/" + comment.id
 		if (req.body.referrer) url = req.body.referrer + "#comment-" + comment.id
 		res.redirect(303, url)
@@ -93,14 +117,16 @@ exports.router.get("/:commentId", next(function*(req, res) {
 }))
 
 exports.router.post("/:commentId/replies", next(function*(req, res) {
+	var user = req.user
+	var initiative = req.initiative
 	var comment = req.comment
-	if (req.user == null) throw new HttpError(401)
+	if (user == null) throw new HttpError(401)
 	if (comment.parent_id) throw new HttpError(405)
 
 	var attrs = _.assign(parseComment(req.body), {
 		initiative_uuid: comment.initiative_uuid,
 		parent_id: comment.id,
-		user_uuid: req.user.id,
+		user_uuid: user.id,
 		created_at: new Date,
 		updated_at: new Date,
 		title: ""
@@ -108,6 +134,24 @@ exports.router.post("/:commentId/replies", next(function*(req, res) {
 
 	try {
 		var reply = yield commentsDb.create(attrs)
+		var initiativeUrl = `${Config.url}/initiatives/${initiative.id}`
+
+		yield Subscription.send({
+			title: req.t("EMAIL_INITIATIVE_COMMENT_REPLY_TITLE", {
+				initiativeTitle: initiative.title,
+			}),
+
+			text: renderEmail("EMAIL_INITIATIVE_COMMENT_REPLY_BODY", {
+				initiativeTitle: initiative.title,
+				initiativeUrl: initiativeUrl,
+				userName: user.name,
+				commentText: _.quoteEmail(reply.text),
+				commentUrl: initiativeUrl + "#comment-" + reply.id
+			})
+		}, yield subscriptionsDb.searchConfirmedByInitiativeIdForComment(
+			initiative.id
+		))
+
 		var url = req.body.referrer || req.baseUrl + "/" + comment.id
 		res.redirect(303, url + "#comment-" + reply.id)
 	}
