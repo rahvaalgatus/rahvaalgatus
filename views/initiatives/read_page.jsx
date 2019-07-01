@@ -746,7 +746,7 @@ function SidebarInfoView(attrs) {
 			{meetings.length > 0 ? <ul class="form-output">
 				{meetings.map((meeting) => <li>
 					<UntrustedLink href={meeting.url}>
-						{meeting.date}
+						{I18n.formatDate("numeric", new Date(meeting.date))}
 					</UntrustedLink>
 				</li>)}
 			</ul> : <AddInitiativeInfoButton t={t} />}
