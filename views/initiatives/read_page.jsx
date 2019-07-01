@@ -547,14 +547,6 @@ function PhasesView(attrs) {
 			dist > 0 ? "past" : ""
 		)
 	}
-
-	function isPhaseAtLeast(phase, than) {
-		return PHASES.indexOf(than) >= PHASES.indexOf(phase)
-	}
-
-	function isPhaseAfter(phase, than) {
-		return PHASES.indexOf(than) > PHASES.indexOf(phase)
-	}
 }
 
 function SidebarAuthorView(attrs) {
@@ -648,6 +640,7 @@ function SidebarInfoView(attrs) {
 	var initiative = attrs.initiative
 	var dbInitiative = attrs.dbInitiative
 	var canEdit = Initiative.canEdit(initiative)
+	var phase = dbInitiative.phase
 	var authorUrl = dbInitiative.author_url
 	var communityUrl = dbInitiative.community_url
 	var externalUrl = dbInitiative.url
@@ -655,6 +648,8 @@ function SidebarInfoView(attrs) {
 	var mediaUrls = dbInitiative.media_urls
 	var meetings = dbInitiative.meetings
 	var notes = dbInitiative.notes
+	var governmentChangeUrls = dbInitiative.government_change_urls
+	var publicChangeUrls = dbInitiative.public_change_urls
 
 	if (!(
 		canEdit ||
@@ -781,7 +776,7 @@ function SidebarInfoView(attrs) {
 			</li>}</InitiativeAttributeList>: null}
 		</Fragment> : null}
 
-		{initiative.vote ? <Fragment>
+		{isPhaseAtLeast("sign", phase) ? <Fragment>
 			{externalUrl || canEdit ? <InitiativeAttribute
 				t={t}
 				editable={canEdit}
@@ -795,7 +790,7 @@ function SidebarInfoView(attrs) {
 			</InitiativeAttribute> : null}
 		</Fragment> : null}
 
-		{Initiative.isInParliament(initiative, dbInitiative) ? <Fragment>
+		{isPhaseAtLeast("parliament", phase) ? <Fragment>
 			{mediaUrls.length > 0 || canEdit ? <Fragment>
 				<h3 class="sidebar-subheader">Menetluse meediakajastus</h3>
 
@@ -814,6 +809,60 @@ function SidebarInfoView(attrs) {
 						class="form-input"
 						type="url"
 						name={`media_urls[${i}]`}
+						value={url}
+						placeholder="https://"
+					/>
+				</li>}</InitiativeAttributeList>: null}
+			</Fragment> : null}
+		</Fragment> : null}
+
+		{isPhaseAtLeast("government", phase) ? <Fragment>
+			{mediaUrls.length > 0 || canEdit ? <Fragment>
+				<h3 class="sidebar-subheader">Arengut suunavad kokkulepped</h3>
+
+				{governmentChangeUrls.length > 0 ? <ul class="form-output">
+					{governmentChangeUrls.map((url) => <li>
+						<UntrustedLink href={url}>{url}</UntrustedLink>
+					</li>)}
+				</ul> : <AddInitiativeInfoButton t={t} />}
+
+				{canEdit ? <InitiativeAttributeList
+					id="initiative-government-change-urls-form"
+					add="Lisa viide"
+					help="Ühiskondliku toetuse leidnud ettepanekud võivad jõuda ka eelarvestrateegiasse, koalitsioonileppesse või arengukavasse."
+					values={governmentChangeUrls}
+				>{(url, i) => <li>
+					<input
+						class="form-input"
+						type="url"
+						name={`government_change_urls[${i}]`}
+						value={url}
+						placeholder="https://"
+					/>
+				</li>}</InitiativeAttributeList>: null}
+			</Fragment> : null}
+		</Fragment> : null}
+
+		{isPhaseAtLeast("done", phase) ? <Fragment>
+			{mediaUrls.length > 0 || canEdit ? <Fragment>
+				<h3 class="sidebar-subheader">Otsused ja muutused</h3>
+
+				{publicChangeUrls.length > 0 ? <ul class="form-output">
+					{publicChangeUrls.map((url) => <li>
+						<UntrustedLink href={url}>{url}</UntrustedLink>
+					</li>)}
+				</ul> : <AddInitiativeInfoButton t={t} />}
+
+				{canEdit ? <InitiativeAttributeList
+					id="initiative-public-change-urls-form"
+					add="Lisa viide"
+					help="Viited arengut suunavatele dokumentidele, vahearuannetele ja teadustöödele."
+					values={publicChangeUrls}
+				>{(url, i) => <li>
+					<input
+						class="form-input"
+						type="url"
+						name={`public_change_urls[${i}]`}
 						value={url}
 						placeholder="https://"
 					/>
@@ -1196,4 +1245,12 @@ function AddInitiativeInfoButton(attrs) {
 		for="initiative-info-form-toggle">
 		{t("ADD_INITIATIVE_INFO")}
 	</label>
+}
+
+function isPhaseAtLeast(than, phase) {
+	return PHASES.indexOf(phase) >= PHASES.indexOf(than)
+}
+
+function isPhaseAfter(than, phase) {
+	return PHASES.indexOf(phase) > PHASES.indexOf(than)
 }

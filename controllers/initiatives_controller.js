@@ -563,6 +563,8 @@ function isDbInitiativeUpdate(obj) {
 		"organizations" in obj ||
 		"media_urls" in obj ||
 		"meetings" in obj ||
+		"government_change_urls" in obj ||
+		"public_change_urls" in obj ||
 		"notes" in obj
 	)
 }
@@ -769,6 +771,12 @@ function parseInitiative(obj) {
 
 	if ("media_urls" in obj) attrs.media_urls =
 		obj.media_urls.map(String).map(trim).filter(Boolean)
+
+	if ("government_change_urls" in obj) attrs.government_change_urls =
+		obj.government_change_urls.map(String).map(trim).filter(Boolean)
+
+	if ("public_change_urls" in obj) attrs.public_change_urls =
+		obj.public_change_urls.map(String).map(trim).filter(Boolean)
 
 	return attrs
 }

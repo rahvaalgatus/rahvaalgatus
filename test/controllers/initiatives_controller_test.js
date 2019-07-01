@@ -1543,6 +1543,10 @@ describe("InitiativesController", function() {
 							"meetings[1][url]": "http://example.com/tuesday",
 							"media_urls[0]": "http://example.com/article1",
 							"media_urls[1]": "http://example.com/article2",
+							"government_change_urls[0]": "http://example.com/gov-change1",
+							"government_change_urls[1]": "http://example.com/gov-change2",
+							"public_change_urls[0]": "http://example.com/change1",
+							"public_change_urls[1]": "http://example.com/change2",
 							notes: "Hello, world"
 						}
 					})
@@ -1572,6 +1576,16 @@ describe("InitiativesController", function() {
 							media_urls: [
 								"http://example.com/article1",
 								"http://example.com/article2"
+							],
+
+							government_change_urls: [
+								"http://example.com/gov-change1",
+								"http://example.com/gov-change2"
+							],
+
+							public_change_urls: [
+								"http://example.com/change1",
+								"http://example.com/change2"
 							],
 
 							notes: "Hello, world"

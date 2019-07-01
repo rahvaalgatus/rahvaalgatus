@@ -1522,7 +1522,9 @@ button.inherited {
 					&:checked ~ .form-output { display: none; }
 				}
 
-				#initiative-media-urls-form {
+				#initiative-media-urls-form,
+				#initiative-government-change-urls-form,
+				#initiative-public-change-urls-form {
 					input { margin-bottom: 0.5rem; }
 				}
 

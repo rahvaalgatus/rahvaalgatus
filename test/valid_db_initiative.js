@@ -11,6 +11,8 @@ module.exports = function(attrs) {
 		organizations: [],
 		meetings: [],
 		media_urls: [],
+		government_change_urls: [],
+		public_change_urls: [],
 		signature_milestones: {},
 		notes: "",
 		mailchimp_interest_id: null,
