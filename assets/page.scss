@@ -105,7 +105,9 @@ strong {
 		font-weight: 500;
 	}
 
-	p + p {
+	p + p,
+	p + h2,
+	p + h3 {
 		margin-top: 2rem;
 	}
 
