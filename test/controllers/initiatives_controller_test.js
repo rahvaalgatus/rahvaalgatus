@@ -1381,20 +1381,29 @@ describe("InitiativesController", function() {
 			})
 
 			describe("given status=followUp", function() {
+				it("must render update status for parliament page", function*() {
+					this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
+						data: _.merge({}, SUCCESSFUL_INITIATIVE, {
+							permission: {level: "admin"}
+						})
+					}))
+
+					var res = yield this.request("/initiatives/" + UUID, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, status: "followUp"}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("SEND_TO_PARLIAMENT_HEADER"))
+				})
+
 				it("must update initiative", function*() {
 					var initiative = yield initiativesDb.create({uuid: UUID})
 
 					this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
-						data: {
-							id: UUID,
-							status: "voting",
-							description: "<body><h1>My thoughts.</h1></body>",
-							creator: {name: "John"},
-							permission: {level: "admin"},
-							vote: {options: {rows: [
-								{value: "Yes", voteCount: Config.votesRequired}
-							]}}
-						}
+						data: _.merge({}, SUCCESSFUL_INITIATIVE, {
+							permission: {level: "admin"}
+						})
 					}))
 
 					var updated = 0

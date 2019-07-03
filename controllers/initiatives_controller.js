@@ -38,7 +38,8 @@ var decodeBase64 = require("root/lib/crypto").decodeBase64
 var trim = Function.call.bind(String.prototype.trim)
 var EMPTY = Object.prototype
 var EMPTY_ARR = Array.prototype
-var EMPTY_INITIATIVE = {title: "", contact: {name: "", email: "", phone: ""}}
+var EMPTY_INITIATIVE = {title: ""}
+var EMPTY_CONTACT = {name: "", email: "", phone: ""}
 
 var RESPONSE_TYPES = [
 	"text/html",
@@ -703,7 +704,7 @@ function* updateInitiativePhaseToParliament(req, res) {
 
 	var attrs = {
 		status: req.body.status,
-		contact: O.defaults(req.body.contact, EMPTY_INITIATIVE.contact)
+		contact: req.body.contact || EMPTY_CONTACT
 	}
 
 	if (req.body.contact == null) return void res.render(tmpl, {attrs: attrs})
