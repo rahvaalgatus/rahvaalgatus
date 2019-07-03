@@ -17,7 +17,7 @@ module.exports = function(attributes) {
 		req={req}>
 		<section class="primary-section text-section"><center>
 			<h2>{t("SEND_TO_PARLIAMENT_HEADER")}</h2>
-			<p innerHTML={t("SEND_TO_PARLIAMENT_TEXT")} />
+			<p>{Jsx.html(t("SEND_TO_PARLIAMENT_TEXT"))}</p>
 
 			{error ? <p class="flash error">{error}</p> : null}
 

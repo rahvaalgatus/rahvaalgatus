@@ -1395,6 +1395,7 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(200)
 					res.body.must.include(t("SEND_TO_PARLIAMENT_HEADER"))
+					res.body.must.include(t("SEND_TO_PARLIAMENT_TEXT"))
 				})
 
 				it("must update initiative", function*() {
