@@ -144,8 +144,6 @@ exports.get("/initiatives/:id", next(function*(req, res) {
 	`)
 
 	res.render("admin/initiatives/read_page.jsx", {
-		initiative: initiative,
-		dbInitiative: req.dbInitiative,
 		events: events,
 		subscriberCount: subscriberCount,
 		messages: messages
@@ -172,8 +170,6 @@ exports.get("/initiatives/:id/subscriptions.:ext?", next(function*(req, res) {
 			break
 			
 		default: res.render("admin/initiatives/subscriptions_page.jsx", {
-			initiative: initiative,
-			dbInitiative: req.dbInitiative,
 			subscriptions: subs
 		})
 	}
