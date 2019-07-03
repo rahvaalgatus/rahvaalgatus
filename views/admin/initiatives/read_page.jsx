@@ -17,10 +17,10 @@ module.exports = function(attrs) {
 	var initiative = attrs.initiative
 	var dbInitiative = attrs.dbInitiative
 	var subscriberCount = attrs.subscriberCount
+	var initiativePath = `${req.baseUrl}/initiatives/${initiative.id}`
 	var events = attrs.events
 	var messages = attrs.messages
 	var phase = dbInitiative.phase
-	var action = `${req.baseUrl}/initiatives/${initiative.id}`
 	var pendingSubscriberCount = subscriberCount.all - subscriberCount.confirmed
 
 	return <Page page="initiative" title={initiative.title} req={req}>
@@ -42,7 +42,7 @@ module.exports = function(attrs) {
 					<Form
 						req={req}
 						id="phase-form"
-						action={action}
+						action={initiativePath}
 						method="put"
 						class="admin-inline-form"
 					>
@@ -78,7 +78,7 @@ module.exports = function(attrs) {
 				<td>
 					<DateInputForm
 						req={req}
-						action={action}
+						action={initiativePath}
 						name={"sentToParliamentOn"}
 						value={dbInitiative.sent_to_parliament_at}
 					/>
@@ -90,7 +90,7 @@ module.exports = function(attrs) {
 				<td>
 					<DateInputForm
 						req={req}
-						action={action}
+						action={initiativePath}
 						name={"finishedInParliamentOn"}
 						value={dbInitiative.finished_in_parliament_at}
 					/>
@@ -102,7 +102,7 @@ module.exports = function(attrs) {
 				<td>
 					<a
 						class="admin-link"
-						href={`${req.baseUrl}/initiatives/${initiative.id}/subscriptions`}>
+						href={`${initiativePath}/subscriptions`}>
 						{subscriberCount.confirmed}
 					</a>
 
@@ -124,7 +124,7 @@ module.exports = function(attrs) {
 					<th>Title</th>
 					<th class="new-event">
 						<a
-							href={`${req.baseUrl}/initiatives/${initiative.id}/events/new`}
+							href={`${initiativePath}/events/new`}
 							class="admin-primary-button new-event-button">
 							New Event
 						</a>
@@ -133,9 +133,8 @@ module.exports = function(attrs) {
 
 				<tbody>
 					{events.map(function(event) {
+						var eventPath = `${initiativePath}/events/${event.id}`
 						var toggleId = `show-event-${event.id}-text`
-						var path = `${req.baseUrl}/initiatives/${initiative.id}`
-						path += `/events/${event.id}`
 
 						return <tr class="event">
 							<td>
@@ -152,12 +151,12 @@ module.exports = function(attrs) {
 							</td>
 
 							<td>
-								<a href={path + "/edit"} class="admin-link">Edit</a>
+								<a href={eventPath + "/edit"} class="admin-link">Edit</a>
 								&nbsp;or&nbsp;
 
 								<FormButton
 									req={req}
-									action={path}
+									action={eventPath}
 									name="_method"
 									value="delete"
 									onclick={confirm("Sure?")}
@@ -180,7 +179,7 @@ module.exports = function(attrs) {
 					<th>Title</th>
 					<th class="new-message">
 						<a
-							href={`${req.baseUrl}/initiatives/${initiative.id}/messages/new`}
+							href={`${initiativePath}/messages/new`}
 							class="admin-primary-button new-message-button">
 							New Message
 						</a>
