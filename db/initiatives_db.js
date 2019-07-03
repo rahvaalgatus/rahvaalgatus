@@ -46,6 +46,7 @@ exports._read = function(query, opts) {
 
 exports.parse = function(attrs) {
 	return O.defaults({
+		has_paper_signatures: !!attrs.has_paper_signatures,
 		organizations: attrs.organizations && JSON.parse(attrs.organizations),
 		media_urls: attrs.media_urls && JSON.parse(attrs.media_urls),
 		meetings: attrs.meetings && JSON.parse(attrs.meetings),

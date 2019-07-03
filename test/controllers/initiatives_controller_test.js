@@ -1398,6 +1398,44 @@ describe("InitiativesController", function() {
 					res.body.must.include(t("SEND_TO_PARLIAMENT_TEXT"))
 				})
 
+				it("must render update status for parliament page if with paper signatures", function*() {
+					yield initiativesDb.create({
+						uuid: UUID,
+						phase: "sign",
+						has_paper_signatures: true
+					})
+
+					this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
+						data: _.merge({}, FAILED_INITIATIVE, {
+							permission: {level: "admin"}
+						})
+					}))
+
+					var res = yield this.request("/initiatives/" + UUID, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, status: "followUp"}
+					})
+
+					res.statusCode.must.equal(200)
+				})
+
+				it("must respond with 401 if initiative not successful", function*() {
+					yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
+					this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
+						data: _.merge({}, FAILED_INITIATIVE, {
+							permission: {level: "admin"}
+						})
+					}))
+
+					var res = yield this.request("/initiatives/" + UUID, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, status: "followUp"}
+					})
+
+					res.statusCode.must.equal(401)
+				})
+
 				it("must update initiative", function*() {
 					var initiative = yield initiativesDb.create({uuid: UUID})
 

@@ -98,6 +98,18 @@ module.exports = function(attrs) {
 			</tr>
 
 			<tr>
+				<th scope="row">Has Paper Signatures</th>
+				<td>
+					<CheckboxForm
+						req={req}
+						action={initiativePath}
+						name={"hasPaperSignatures"}
+						checked={dbInitiative.has_paper_signatures}
+					/>
+				</td>
+			</tr>
+
+			<tr>
 				<th scope="row">Subscriber Count</th>
 				<td>
 					<a
@@ -209,6 +221,30 @@ module.exports = function(attrs) {
 			</table>
 		</div>
 	</Page>
+}
+
+function CheckboxForm(attrs) {
+	var req = attrs.req
+	var action = attrs.action
+	var name = attrs.name
+	var checked = attrs.checked
+
+	return <Form
+		req={req}
+		action={action}
+		method="put"
+		class="admin-inline-form"
+	>
+		<input type="hidden" name={name} />
+
+		<input
+			type="checkbox"
+			name={name}
+			checked={checked}
+			class="admin-input"
+			onchange="this.form.submit()"
+		/>
+	</Form>
 }
 
 function DateInputForm(attrs) {

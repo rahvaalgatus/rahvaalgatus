@@ -15,6 +15,7 @@ module.exports = function(attrs) {
 		public_change_urls: [],
 		signature_milestones: {},
 		notes: "",
+		has_paper_signatures: false,
 		mailchimp_interest_id: null,
 		parliament_api_data: null,
 		sent_to_parliament_at: null,

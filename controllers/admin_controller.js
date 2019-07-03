@@ -367,6 +367,9 @@ exports.get("/subscriptions", next(function*(_req, res) {
 function parseInitiative(obj) {
 	var attrs = {}
 
+	if ("hasPaperSignatures" in obj)
+		attrs.has_paper_signatures = _.parseBoolean(obj.hasPaperSignatures)
+
 	if ("phase" in obj && _.contains(UPDATEABLE_PHASES, obj.phase))
 		attrs.phase = obj.phase
 
