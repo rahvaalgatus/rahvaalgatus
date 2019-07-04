@@ -32,7 +32,7 @@ When using rahvaalgatus.ee I will keep in mind the following:
 2. the submitted solution has to be proved and the proof in turn has to be controllable;
 3. when submitting a proposal or initiative I offer structured explanations in order to attract co-thinkers and others to join the discussion;
 4. I am convinced that Riigikogu (Parliament of Estonia) is the right addressee of my proposal or initiative;
-5. I can critisize ideas, not persons. When critizising I focus on solutions, not problems;
+5. I can criticise ideas, not persons. When criticising I focus on solutions, not problems;
 6. I engage other people to discussions and will consider their arguments in compiling the final initiative;
 7. I only use the platform if I do not have other channels for submitting my ideas and proposals for changing regulations.
 
@@ -47,12 +47,11 @@ If you need help or you hesitate whether rahvaalgatus.ee is the proper platform 
 Personal data are data relating to the user that are entered on the platform of rahvaalgatus.ee (‘public legislative initiative’). The user of rahvaalgatus.ee will grant the administrator of the platform the right to disclose, process and maintain the entered personal data. If the user wishes to cease the public disclosure, processing and maintenance of personal data by rahvaalgatus.ee, then rahvaalgatus.ee will enable the user to delete his/her user account and all data relating to it.
 
 The user account must be created in order to initiate the motion and provide commentaries.
-For administering of the user accounts, we use CitizenOS API (owner - Foundation Let’s Do It/Teeme ära SA) service. The terms and conditions of the service of CitizenOS API are publicly available [here](https://citizenos.com/et/topics/7abdd244-d45b-40d3-997c-a6290d4e972c).
 
 **There is no need to create a user account to give an endorsement signature.**
 
 By putting an endorsement signature, name and personal ID-code are saved.
-The list of persons who have granted their endorsement signatures is visible to the author(s) of the initiative after termination of voting time, at which point the authors’ body can download the container with digital signatures, and to authorised employees of the Chancellery of the Riigikogu who shall ensure that digital signatures have been given by permanent residents of Estonia who are at least 16 years of age.
+The list of persons who have granted their endorsement signatures is visible to authorised employees of the Chancellery of the Riigikogu who shall ensure that digital signatures have been given by permanent residents of Estonia who are at least 16 years of age.
 
 Rahvaalgatus.ee does not yet publicly display the endorsing signatories, although such a technical development is planned in the interest of transparency. When such a technical development is ready, it will not be applied retroactively, and the user will have the option to determine whether his/her support will be visible or not.
 

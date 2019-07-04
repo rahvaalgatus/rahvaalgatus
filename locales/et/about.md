@@ -50,7 +50,7 @@ Kasutajakonto on vaja luua algatuse loomiseks ja kommentaaride andmiseks.
 
 Toetusallkirja andmise jaoks ei ole vaja endale kasutajakontot luua. Toetusallkirja andmisel salvestatakse nimi ja isikukood.  Andmeid töödeldakse üksnes kollektiivse pöördumise esitamiseks ning töötlemine toimub märgukirjale ja selgitustaotlusele vastamise ning kollektiivse pöördumise esitamise seaduse 3. peatüki regulatsiooni alusel.
 
-Toetusallkirja andnute nimekiri on nähtav algatuse autori(te)le pärast hääletusaja lõppemist, mil autorkond saab alla laadida digiallkirjadega konteineri ja Riigikogu Kantselei vastutavale töötajale, kes kontrollib rahvastikuregistrist, et digiallkirjad on andnud vähemalt 16 aastased Eesti alalised elanikud.
+Toetusallkirja andnute nimekiri on nähtav Riigikogu Kantselei vastutavale töötajale, kes kontrollib rahvastikuregistrist, et digiallkirjad on andnud vähemalt 16 aastased Eesti alalised elanikud.
 
 Andmeid hoitakse konfidentsiaalsena ning kõiki isikuid, kellel on õigus isikandmeid töödelda, on teavitatud isikuandmete konfidentsiaalsest olemusest. Toetusallkirja andjaid rahvaalgatus.ee  avalikult ei kuva,  kuid selline tehniline arendus on avatuse nimel plaanis. Kui tehniline arendus valmib, siis tagasiulatuvalt seda ei rakendata ning kasutajal on võimalik ise määrata, kas ta toetus on avalik või mitte.
 
