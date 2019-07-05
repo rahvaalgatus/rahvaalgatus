@@ -21,18 +21,6 @@ describe("AdminController", function() {
 	require("root/test/fixtures").csrf()
 	beforeEach(require("root/test/mitm").router)
 
-	beforeEach(function*() {
-		this.user = yield cosDb("Users").insert({
-			id: Config.adminUserIds[0],
-			email: "user@example.com",
-			emailIsVerified: true,
-			emailVerificationCode: newUuid(),
-			createdAt: new Date,
-			updatedAt: new Date,
-			source: "citizenos"
-		}).returning("*").then(_.first)
-	})
-
 	describe("POST /initiatives/:id/events", function() {
 		require("root/test/fixtures").user({id: Config.adminUserIds[0]})
 

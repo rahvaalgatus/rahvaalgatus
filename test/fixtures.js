@@ -1,5 +1,6 @@
 var Config = require("root/config")
-var newUuid = require("uuid/v4")
+var newUser = require("root/test/citizenos_fixtures").newUser
+var createUser = require("root/test/citizenos_fixtures").createUser
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var fetchDefaults = require("fetch-defaults")
 
@@ -14,17 +15,21 @@ exports.csrf = function() {
 }
 
 exports.user = function(attrs) {
-	beforeEach(function() {
+	beforeEach(function*() {
 		// https://github.com/mochajs/mocha/issues/2014:
 		delete this.request
 
-		this.user = attrs || {id: newUuid()}
+		this.user = yield createUser(newUser(attrs))
 
 		this.request = fetchDefaults(this.request, {
 			cookies: {[Config.cookieName]: pseudoHex(16)}
 		})
 
-		this.router.get("/api/auth/status", respond.bind(null, {data: this.user}))
+		this.router.get("/api/auth/status", respond.bind(null, {data: {
+			id: this.user.id,
+			name: this.user.name,
+			email: this.user.email
+		}}))
 	})
 }
 
