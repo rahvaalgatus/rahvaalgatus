@@ -51,6 +51,31 @@ exports.router.post("/", next(function*(req, res) {
 	try {
 		var comment = yield commentsDb.create(attrs)
 		var initiativeUrl = `${Config.url}/initiatives/${initiative.id}`
+		var subscribe = _.parseTrilean(req.body.subscribe)
+
+		if (subscribe != null && user.emailIsVerified) {
+			var subscription = yield subscriptionsDb.read(sql`
+				SELECT * FROM initiative_subscriptions
+				WHERE (initiative_uuid, email) = (${initiative.id}, ${user.email})
+			`)
+
+			if (subscription) yield subscriptionsDb.update(subscription, {
+				comment_interest: subscribe,
+				updated_at: new Date,
+				confirmed_at: new Date
+			})
+			else if (subscribe) yield subscriptionsDb.create({
+				email: user.email,
+				initiative_uuid: initiative.id,
+				official_interest: false,
+				author_interest: false,
+				comment_interest: true,
+				created_at: new Date,
+				created_ip: req.ip,
+				updated_at: new Date,
+				confirmed_at: new Date
+			})
+		}
 
 		yield Subscription.send({
 			title: req.t("EMAIL_INITIATIVE_COMMENT_TITLE", {

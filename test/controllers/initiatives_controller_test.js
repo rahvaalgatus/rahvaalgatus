@@ -981,6 +981,85 @@ describe("InitiativesController", function() {
 				res.body.must.not.include(t("THANKS_FOR_SIGNING"))
 				res.body.must.not.include("donate-form")
 			})
+
+			it("must render comment form", function*() {
+				this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
+					data: DISCUSSION
+				}))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var form = dom.getElementById("comment-form")
+				var check = form.querySelector("input[type=checkbox][name=subscribe]")
+				check.checked.must.be.false()
+			})
+
+			it("must render subscribe checkbox if subscribed to initiative comments",
+				function*() {
+				yield subscriptionsDb.create(new ValidSubscription({
+					initiative_uuid: UUID,
+					email: this.user.email,
+					confirmed_at: new Date,
+					comment_interest: true
+				}))
+					
+				this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
+					data: DISCUSSION
+				}))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var form = dom.getElementById("comment-form")
+				var check = form.querySelector("input[type=checkbox][name=subscribe]")
+				check.checked.must.be.true()
+			})
+
+			it("must render subscribe checkbox if subscribed to initiative, but not to comments",
+				function*() {
+				yield subscriptionsDb.create(new ValidSubscription({
+					initiative_uuid: UUID,
+					email: this.user.email,
+					confirmed_at: new Date,
+					comment_interest: false
+				}))
+					
+				this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
+					data: DISCUSSION
+				}))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var form = dom.getElementById("comment-form")
+				var check = form.querySelector("input[type=checkbox][name=subscribe]")
+				check.checked.must.be.false()
+			})
+
+			it("must render subscribe checkbox if subscribed to initiatives' comments",
+				function*() {
+				yield subscriptionsDb.create(new ValidSubscription({
+					email: this.user.email,
+					confirmed_at: new Date,
+					comment_interest: true
+				}))
+					
+				this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
+					data: DISCUSSION
+				}))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var form = dom.getElementById("comment-form")
+				var check = form.querySelector("input[type=checkbox][name=subscribe]")
+				check.checked.must.be.false()
+			})
 		})
 	})
 

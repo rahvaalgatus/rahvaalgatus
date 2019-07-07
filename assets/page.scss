@@ -1056,7 +1056,8 @@ button.inherited {
 	.comment-reply-form {
 		margin-top: 2rem;
 
-		input, textarea {
+		input[type=text],
+		textarea {
 			width: 100%;
 			margin-bottom: 0.5rem;
 		}

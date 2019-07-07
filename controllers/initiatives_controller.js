@@ -228,10 +228,20 @@ exports.read = next(function*(req, res) {
 	var comments = yield searchInitiativeComments(initiative.id)
 	var events = _.reverse(yield searchInitiativeEvents(req.t, dbInitiative))
 
+	var subscription = user && user.emailIsVerified
+		? yield subscriptionsDb.read(sql`
+			SELECT * FROM initiative_subscriptions
+			WHERE initiative_uuid = ${initiative.id}
+			AND email = ${user.email}
+			LIMIT 1
+		`)
+		: null
+
 	res.render("initiatives/read_page.jsx", {
 		thank: vote && vote.support == "Yes",
 		thankAgain: votes.length > 1 && votes[1].support == "Yes",
 		signature: signature,
+		subscription: subscription,
 		subscriberCount: subscriberCount,
 		comments: comments,
 		events: events

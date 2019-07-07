@@ -11,6 +11,7 @@ var commentsDb = require("root/db/comments_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var parseDom = require("root/test/dom").parse
 var sql = require("sqlate")
+var cosDb = require("root").cosDb
 var t = require("root/lib/i18n").t.bind(null, "et")
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var MAX_TITLE_LENGTH = 140
@@ -93,6 +94,10 @@ describe("InitiativeCommentsController", function() {
 				`).must.then.eql([comment])
 
 				res.headers.location.must.equal(path + "/comments/" + comment.id)
+
+				yield subscriptionsDb.search(sql`
+					SELECT * FROM initiative_subscriptions
+				`).must.then.be.empty()
 			})
 
 			it("must redirect to referrer", function*() {
@@ -111,6 +116,201 @@ describe("InitiativeCommentsController", function() {
 
 				res.statusCode.must.equal(303)
 				res.headers.location.must.equal(path + "#comment-" + 1)
+			})
+
+			describe("when subscribing", function() {
+				it("must subscribe if not subscribed before", function*() {
+					this.router.get(`/api/users/self/topics/${UUID}`,
+						respond.bind(null, {data: INITIATIVE}))
+
+					var res = yield this.request(`/initiatives/${UUID}/comments`, {
+						method: "POST",
+
+						form: {
+							__proto__: VALID_ATTRS,
+							_csrf_token: this.csrfToken,
+							subscribe: true
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					var subscriptions = yield subscriptionsDb.search(sql`
+						SELECT * FROM initiative_subscriptions
+					`)
+
+					subscriptions.must.eql([new ValidSubscription({
+						initiative_uuid: UUID,
+						email: this.user.email,
+						update_token: subscriptions[0].update_token,
+						official_interest: false,
+						author_interest: false,
+						comment_interest: true,
+						created_ip: "127.0.0.1",
+						created_at: new Date,
+						updated_at: new Date,
+						confirmed_at: new Date
+					})])
+				})
+
+				it("must subscribe if subscribed to initiative before", function*() {
+					this.router.get(`/api/users/self/topics/${UUID}`,
+						respond.bind(null, {data: INITIATIVE}))
+
+					var sub = yield subscriptionsDb.create(new ValidSubscription({
+						initiative_uuid: UUID,
+						email: this.user.email,
+						confirmed_at: null,
+						official_interest: true,
+						author_interest: false,
+						comment_interest: false
+					}))
+
+					var res = yield this.request(`/initiatives/${UUID}/comments`, {
+						method: "POST",
+
+						form: {
+							__proto__: VALID_ATTRS,
+							_csrf_token: this.csrfToken,
+							subscribe: true
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					yield subscriptionsDb.search(sql`
+						SELECT * FROM initiative_subscriptions
+					`).must.then.eql([{
+						__proto__: sub,
+						comment_interest: true,
+						confirmed_at: new Date,
+						updated_at: new Date
+					}])
+				})
+
+				it("must subscribe if subscribed to initiatives before", function*() {
+					this.router.get(`/api/users/self/topics/${UUID}`,
+						respond.bind(null, {data: INITIATIVE}))
+
+					var sub = yield subscriptionsDb.create(new ValidSubscription({
+						email: this.user.email,
+						confirmed_at: new Date,
+						official_interest: true,
+						author_interest: false,
+						comment_interest: false
+					}))
+
+					var res = yield this.request(`/initiatives/${UUID}/comments`, {
+						method: "POST",
+
+						form: {
+							__proto__: VALID_ATTRS,
+							_csrf_token: this.csrfToken,
+							subscribe: true
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					var subscriptions = yield subscriptionsDb.search(sql`
+						SELECT * FROM initiative_subscriptions
+					`)
+
+					subscriptions.must.eql([sub, new ValidSubscription({
+						initiative_uuid: UUID,
+						email: this.user.email,
+						update_token: subscriptions[1].update_token,
+						official_interest: false,
+						author_interest: false,
+						comment_interest: true,
+						created_ip: "127.0.0.1",
+						created_at: new Date,
+						updated_at: new Date,
+						confirmed_at: new Date
+					})])
+				})
+
+				it("must not subscribe if email not verified", function*() {
+					yield cosDb.query(sql`UPDATE "Users" SET "emailIsVerified" = false`)
+
+					this.router.get(`/api/users/self/topics/${UUID}`,
+						respond.bind(null, {data: INITIATIVE}))
+
+					var res = yield this.request(`/initiatives/${UUID}/comments`, {
+						method: "POST",
+
+						form: {
+							__proto__: VALID_ATTRS,
+							_csrf_token: this.csrfToken,
+							subscribe: true
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					yield subscriptionsDb.search(sql`
+						SELECT * FROM initiative_subscriptions
+					`).must.then.be.empty()
+				})
+
+				it("must unsubscribe if subscribed to initiative before", function*() {
+					this.router.get(`/api/users/self/topics/${UUID}`,
+						respond.bind(null, {data: INITIATIVE}))
+
+					var sub = yield subscriptionsDb.create(new ValidSubscription({
+						initiative_uuid: UUID,
+						email: this.user.email,
+						comment_interest: true,
+						confirmed_at: new Date
+					}))
+
+					var res = yield this.request(`/initiatives/${UUID}/comments`, {
+						method: "POST",
+
+						form: {
+							__proto__: VALID_ATTRS,
+							_csrf_token: this.csrfToken,
+							subscribe: false
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					yield subscriptionsDb.search(sql`
+						SELECT * FROM initiative_subscriptions
+					`).must.then.eql([{
+						__proto__: sub,
+						comment_interest: false,
+						updated_at: new Date
+					}])
+				})
+
+				it("must unsubscribe if subscribed to initiatives before", function*() {
+					this.router.get(`/api/users/self/topics/${UUID}`,
+						respond.bind(null, {data: INITIATIVE}))
+
+					var sub = yield subscriptionsDb.create(new ValidSubscription({
+						email: this.user.email,
+						comment_interest: true,
+						confirmed_at: new Date
+					}))
+
+					var res = yield this.request(`/initiatives/${UUID}/comments`, {
+						method: "POST",
+
+						form: {
+							__proto__: VALID_ATTRS,
+							_csrf_token: this.csrfToken,
+							subscribe: false
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					yield subscriptionsDb.search(sql`
+						SELECT * FROM initiative_subscriptions
+					`).must.then.eql([sub])
+				})
 			})
 
 			it("must email subscribers interested in comments", function*() {

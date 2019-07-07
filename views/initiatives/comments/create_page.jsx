@@ -41,9 +41,11 @@ function CreatePage(attrs) {
 function CommentForm(attrs) {
 	var req = attrs.req
 	var t = req.t
+	var user = req.user
 	var initiative = attrs.initiative
 	var newComment = attrs.newComment
 	var referrer = attrs.referrer
+	var subscription = attrs.subscription
 	var commentsUrl = `/initiatives/${initiative.id}/comments`
 
 	return <Form
@@ -55,12 +57,13 @@ function CommentForm(attrs) {
 		{referrer ? <input type="hidden" name="referrer" value={referrer} /> : null}
 
 		<input
+			type="text"
 			name="title"
 			value={newComment && newComment.title}
 			maxlength={MAX_COMMENT_TITLE_LENGTH}
 			required
 			placeholder={t("COMMENT_TITLE_PLACEHOLDER")}
-			disabled={!req.user}
+			disabled={!user}
 			class="form-input"
 		/>
 
@@ -69,20 +72,31 @@ function CommentForm(attrs) {
 			maxlength={MAX_COMMENT_TEXT_LENGTH}
 			required
 			placeholder={t("COMMENT_BODY_PLACEHOLDER")}
-			disabled={!req.user}
+			disabled={!user}
 			class="form-textarea">
 			{newComment && newComment.text}
 		</textarea>
 
-		<button disabled={!req.user} class="secondary-button">
+		<button disabled={!user} class="secondary-button">
 			{t("POST_COMMENT")}
 		</button>
 
-		{!req.user ? <span class="text signin-to-act">
+		{user ? <label class="form-checkbox">
+			<input type="hidden" name="subscribe" value="0" />
+
+			<input
+				type="checkbox"
+				name="subscribe"
+				checked={subscription && subscription.comment_interest}
+			/>
+
+			{t("SUBSCRIBE_TO_COMMENTS_WHEN_COMMENTING")}
+		</label> : null}
+
+		{!user ? <span class="text signin-to-act">
 			{Jsx.html(t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE", {
 				url: "/session/new"
 			}))}
 		</span> : null}
 	</Form>
 }
-

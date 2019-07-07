@@ -40,6 +40,7 @@ module.exports = function(attrs) {
 	var thankAgain = attrs.thankAgain
 	var signature = attrs.signature
 	var comments = attrs.comments
+	var subscription = attrs.subscription
 	var flash = attrs.flash
 	var events = attrs.events
 	var initiative = attrs.initiative
@@ -434,6 +435,7 @@ module.exports = function(attrs) {
 			t={t}
 			req={req}
 			initiative={initiative}
+			subscription={subscription}
 			comments={comments}
 		/>
 	</InitiativePage>
@@ -993,6 +995,7 @@ function CommentsView(attrs) {
 	var req = attrs.req
 	var initiative = attrs.initiative
 	var comments = attrs.comments
+	var subscription = attrs.subscription
 
 	return <section id="initiative-comments" class="transparent-section"><center>
 		<h2>{t("COMMENT_HEADING")}</h2>
@@ -1008,6 +1011,7 @@ function CommentsView(attrs) {
 		<CommentForm
 			req={req}
 			initiative={initiative}
+			subscription={subscription}
 			referrer={req.baseUrl + req.path}
 		/>
 	</center></section>
