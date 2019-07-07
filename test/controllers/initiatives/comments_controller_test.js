@@ -368,6 +368,40 @@ describe("InitiativeCommentsController", function() {
 				subscriptions.slice(2).forEach((s) => msg.must.include(s.update_token))
 			})
 
+			it("must not email commentator if subscribed", function*() {
+				this.router.get(`/api/users/self/topics/${UUID}`,
+					respond.bind(null, {data: INITIATIVE}))
+
+				yield subscriptionsDb.create([
+					new ValidSubscription({
+						email: this.user.email,
+						initiative_uuid: INITIATIVE.id,
+						confirmed_at: new Date,
+						comment_interest: true
+					}),
+
+					new ValidSubscription({
+						email: this.user.email,
+						initiative_uuid: null,
+						confirmed_at: new Date,
+						comment_interest: true
+					})
+				])
+
+				var path = `/initiatives/${UUID}`
+				var res = yield this.request(path + `/comments`, {
+					method: "POST",
+					form: {
+						__proto__: VALID_ATTRS,
+						_csrf_token: this.csrfToken,
+						referrer: path
+					}
+				})
+
+				res.statusCode.must.equal(303)
+				this.emails.must.be.empty()
+			})
+
 			;[[
 				"title empty",
 				{title: ""},
@@ -686,6 +720,40 @@ describe("InitiativeCommentsController", function() {
 				var msg = String(this.emails[0].message)
 				msg.match(/^Subject: .*/m)[0].must.include(INITIATIVE.title)
 				subscriptions.slice(2).forEach((s) => msg.must.include(s.update_token))
+			})
+
+			it("must not email commentator if subscribed", function*() {
+				this.router.get(`/api/users/self/topics/${UUID}`,
+					respond.bind(null, {data: INITIATIVE}))
+
+				var comment = yield commentsDb.create(new ValidComment({
+					initiative_uuid: UUID
+				}))
+
+				yield subscriptionsDb.create([
+					new ValidSubscription({
+						email: this.user.email,
+						initiative_uuid: INITIATIVE.id,
+						confirmed_at: new Date,
+						comment_interest: true
+					}),
+
+					new ValidSubscription({
+						email: this.user.email,
+						initiative_uuid: null,
+						confirmed_at: new Date,
+						comment_interest: true
+					})
+				])
+
+				var path = `/initiatives/${UUID}`
+				var res = yield this.request(path + `/comments/${comment.id}/replies`, {
+					method: "POST",
+					form: {__proto__: VALID_REPLY_ATTRS, _csrf_token: this.csrfToken}
+				})
+
+				res.statusCode.must.equal(303)
+				this.emails.must.be.empty()
 			})
 
 			it("must respond with 405 given a reply", function*() {

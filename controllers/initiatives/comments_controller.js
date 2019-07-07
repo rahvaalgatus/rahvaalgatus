@@ -40,6 +40,7 @@ exports.router.post("/", next(function*(req, res) {
 	var user = req.user
 	var initiative = req.initiative
 	if (user == null) throw new HttpError(401)
+	var userEmail = user.emailIsVerified ? user.email : ""
 
 	var attrs = _.assign(parseComment(req.body), {
 		initiative_uuid: initiative.id,
@@ -56,7 +57,7 @@ exports.router.post("/", next(function*(req, res) {
 		if (subscribe != null && user.emailIsVerified) {
 			var subscription = yield subscriptionsDb.read(sql`
 				SELECT * FROM initiative_subscriptions
-				WHERE (initiative_uuid, email) = (${initiative.id}, ${user.email})
+				WHERE (initiative_uuid, email) = (${initiative.id}, ${userEmail})
 			`)
 
 			if (subscription) yield subscriptionsDb.update(subscription, {
@@ -77,6 +78,11 @@ exports.router.post("/", next(function*(req, res) {
 			})
 		}
 
+		var subscriptions = yield subscriptionsDb.searchConfirmedByInitiativeIdWith(
+			initiative.id,
+			sql`comment_interest AND email != ${userEmail}`
+		)
+
 		yield Subscription.send({
 			title: req.t("EMAIL_INITIATIVE_COMMENT_TITLE", {
 				initiativeTitle: initiative.title,
@@ -90,9 +96,7 @@ exports.router.post("/", next(function*(req, res) {
 				commentText: _.quoteEmail(comment.text),
 				commentUrl: initiativeUrl + "#comment-" + comment.id
 			})
-		}, yield subscriptionsDb.searchConfirmedByInitiativeIdForComment(
-			initiative.id
-		))
+		}, subscriptions)
 
 		var url = req.baseUrl + "/" + comment.id
 		if (req.body.referrer) url = req.body.referrer + "#comment-" + comment.id
@@ -160,6 +164,12 @@ exports.router.post("/:commentId/replies", next(function*(req, res) {
 	try {
 		var reply = yield commentsDb.create(attrs)
 		var initiativeUrl = `${Config.url}/initiatives/${initiative.id}`
+		var userEmail = user.emailIsVerified ? user.email : ""
+
+		var subscriptions = yield subscriptionsDb.searchConfirmedByInitiativeIdWith(
+			initiative.id,
+			sql`comment_interest AND email != ${userEmail}`
+		)
 
 		yield Subscription.send({
 			title: req.t("EMAIL_INITIATIVE_COMMENT_REPLY_TITLE", {
@@ -173,9 +183,7 @@ exports.router.post("/:commentId/replies", next(function*(req, res) {
 				commentText: _.quoteEmail(reply.text),
 				commentUrl: initiativeUrl + "#comment-" + reply.id
 			})
-		}, yield subscriptionsDb.searchConfirmedByInitiativeIdForComment(
-			initiative.id
-		))
+		}, subscriptions)
 
 		var url = req.body.referrer || req.baseUrl + "/" + comment.id
 		res.redirect(303, url + "#comment-" + reply.id)

@@ -26,6 +26,10 @@ exports.searchConfirmedByInitiativeId = function(id) {
 	return searchConfirmedByInitiativeIdWith(this, sql`1`, id)
 }
 
+exports.searchConfirmedByInitiativeIdWith = function(id, filter) {
+	return searchConfirmedByInitiativeIdWith(this, filter, id)
+}
+
 exports.searchConfirmedByInitiativeIdForOfficial = function(id) {
 	return searchConfirmedByInitiativeIdWith(this, sql`official_interest`, id)
 }
@@ -63,7 +67,7 @@ function searchConfirmedByInitiativeIdWith(db, filter, id) {
 			SELECT * FROM initiative_subscriptions
 			WHERE (initiative_uuid = ${id} OR initiative_uuid IS NULL)
 			AND confirmed_at IS NOT NULL
-			AND ${filter}
+			AND (${filter})
 			ORDER BY initiative_uuid IS NOT NULL
 		)
 		GROUP BY email
