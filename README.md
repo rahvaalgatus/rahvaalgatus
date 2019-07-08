@@ -12,7 +12,7 @@ Rahvaalgatus is dependent on [CitizenOS][]'s [backend](https://github.com/citize
 
 Development
 -----------
-After installing a stable version of [Node.js](https://nodejs.org) (so far tested against Node.js v4 and NPM v2), follow these steps:
+After installing a stable version of [Node.js](https://nodejs.org) (so far tested against Node.js v6 and NPM v2), follow these steps:
 
 1. Install the JavaScript modules necessary for the server and client-side components.
 
