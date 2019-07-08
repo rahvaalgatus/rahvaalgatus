@@ -378,6 +378,16 @@ function parseInitiative(obj) {
 			? new Date(obj.sentToParliamentOn)
 			: null
 
+	if ("receivedByParliamentOn" in obj)
+		attrs.received_by_parliament_at = obj.receivedByParliamentOn
+			? new Date(obj.receivedByParliamentOn)
+			: null
+
+	if ("acceptedByParliamentOn" in obj)
+		attrs.accepted_by_parliament_at = obj.acceptedByParliamentOn
+			? new Date(obj.acceptedByParliamentOn)
+			: null
+
 	if ("finishedInParliamentOn" in obj)
 		attrs.finished_in_parliament_at = obj.finishedInParliamentOn
 			? new Date(obj.finishedInParliamentOn)

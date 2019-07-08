@@ -86,6 +86,30 @@ module.exports = function(attrs) {
 			</tr>
 
 			<tr>
+				<th scope="row">Received by Parliament</th>
+				<td>
+					<DateInputForm
+						req={req}
+						action={initiativePath}
+						name={"receivedByParliamentOn"}
+						value={dbInitiative.received_by_parliament_at}
+					/>
+				</td>
+			</tr>
+
+			<tr>
+				<th scope="row">Accepted by Parliament</th>
+				<td>
+					<DateInputForm
+						req={req}
+						action={initiativePath}
+						name={"acceptedByParliamentOn"}
+						value={dbInitiative.accepted_by_parliament_at}
+					/>
+				</td>
+			</tr>
+
+			<tr>
 				<th scope="row">Finished in Parliament</th>
 				<td>
 					<DateInputForm

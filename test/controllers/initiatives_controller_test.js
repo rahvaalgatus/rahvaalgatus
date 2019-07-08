@@ -489,11 +489,34 @@ describe("InitiativesController", function() {
 				_.sum(_.map(phases, "current")).must.equal(1)
 				phases.edit.past.must.be.true()
 				phases.sign.current.must.be.true()
-
 				phases.sign.text.must.equal(t("N_SIGNATURES", {votes: 10}))
 			})
 
-			it("must render initiative in parliament", function*() {
+			it("must render initiative with paper signatures", function*() {
+				yield initiativesDb.create({
+					uuid: UUID,
+					phase: "sign",
+					has_paper_signatures: true
+				})
+
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: SIGNED_INITIATIVE}))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(1)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.past.must.be.true()
+				phases.sign.current.must.be.true()
+				phases.sign.text.must.equal(t("N_SIGNATURES_WITH_PAPER", {votes: 1}))
+			})
+
+			it("must render initiative in parliament based if not yet received",
+				function*() {
 				yield initiativesDb.create({
 					uuid: UUID,
 					phase: "parliament",
@@ -520,12 +543,46 @@ describe("InitiativesController", function() {
 					votes: Config.votesRequired
 				}))
 
-				phases.parliament.text.must.equal(t("PARLIAMENT_PHASE_N_DAYS_LEFT", {
-					days: 25
-				}))
+				phases.parliament.text.must.equal(
+					t("PARLIAMENT_PHASE_ACCEPTANCE_N_DAYS_LEFT", {days: 25})
+				)
 			})
 
-			it("must render initiative in parliament with deadline today",
+			it("must render initiative in parliament based on if also received",
+				function*() {
+				yield initiativesDb.create({
+					uuid: UUID,
+					phase: "parliament",
+					sent_to_parliament_at: DateFns.addDays(new Date, -6),
+					received_by_parliament_at: DateFns.addDays(new Date, -5)
+				})
+
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(2)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.past.must.be.true()
+				phases.sign.past.must.be.true()
+				phases.parliament.current.must.be.true()
+
+				phases.sign.text.must.equal(t("N_SIGNATURES", {
+					votes: Config.votesRequired
+				}))
+
+				phases.parliament.text.must.equal(
+					t("PARLIAMENT_PHASE_ACCEPTANCE_N_DAYS_LEFT", {days: 25})
+				)
+			})
+
+			it("must render initiative in parliament with acceptance deadline today",
 				function*() {
 				yield initiativesDb.create({
 					uuid: UUID,
@@ -541,10 +598,13 @@ describe("InitiativesController", function() {
 
 				var dom = parseDom(res.body)
 				var phases = queryPhases(dom)
-				phases.parliament.text.must.equal(t("PARLIAMENT_PHASE_0_DAYS_LEFT"))
+
+				phases.parliament.text.must.equal(
+					t("PARLIAMENT_PHASE_ACCEPTANCE_0_DAYS_LEFT")
+				)
 			})
 
-			it("must render initiative in parliament with deadline past",
+			it("must render initiative in parliament with acceptance deadline past",
 				function*() {
 				yield initiativesDb.create({
 					uuid: UUID,
@@ -561,16 +621,84 @@ describe("InitiativesController", function() {
 				var dom = parseDom(res.body)
 				var phases = queryPhases(dom)
 
+				phases.parliament.text.must.equal(
+					t("PARLIAMENT_PHASE_ACCEPTANCE_N_DAYS_OVER", {days: 5})
+				)
+			})
+
+			it("must render initiative in parliament with proceedings deadline in the future", function*() {
+				yield initiativesDb.create({
+					uuid: UUID,
+					phase: "parliament",
+					sent_to_parliament_at: DateFns.addDays(new Date, -35),
+					accepted_by_parliament_at: DateFns.addDays(new Date, -5)
+				})
+
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				var deadline = DateFns.addMonths(DateFns.addDays(new Date, -5), 6)
+				var days = DateFns.differenceInDays(deadline, new Date)
+
+				phases.parliament.text.must.equal(t("PARLIAMENT_PHASE_N_DAYS_LEFT", {
+					days: days
+				}))
+			})
+
+			it("must render initiative in parliament with proceedings deadline today", function*() {
+				yield initiativesDb.create({
+					uuid: UUID,
+					phase: "parliament",
+					sent_to_parliament_at: DateFns.addMonths(new Date, -7),
+					accepted_by_parliament_at: DateFns.addMonths(new Date, -6)
+				})
+
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+				phases.parliament.text.must.equal(t("PARLIAMENT_PHASE_0_DAYS_LEFT"))
+			})
+
+			it("must render initiative in parliament with proceedings deadline past", function*() {
+				yield initiativesDb.create({
+					uuid: UUID,
+					phase: "parliament",
+					sent_to_parliament_at: DateFns.addMonths(new Date, -7),
+					accepted_by_parliament_at:
+						DateFns.addDays(DateFns.addMonths(new Date, -6), -5)
+				})
+
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
 				phases.parliament.text.must.equal(t("PARLIAMENT_PHASE_N_DAYS_OVER", {
 					days: 5
 				}))
 			})
 
 			it("must render initiative in government", function*() {
-				yield initiativesDb.create({
+				var initiative = yield initiativesDb.create({
 					uuid: UUID,
 					phase: "government",
-					sent_to_parliament_at: new Date
+					sent_to_parliament_at: DateFns.addDays(new Date, -30),
+					received_by_parliament_at: DateFns.addDays(new Date, -25),
+					finished_in_parliament_at: DateFns.addDays(new Date, -5)
 				})
 
 				this.router.get(`/api/topics/${UUID}`,
@@ -594,7 +722,11 @@ describe("InitiativesController", function() {
 					votes: Config.votesRequired
 				}))
 
-				phases.parliament.text.must.equal("")
+				phases.parliament.text.must.equal(I18n.formatDateSpan(
+					"numeric",
+					initiative.received_by_parliament_at,
+					initiative.finished_in_parliament_at
+				))
 			})
 
 			it("must render done initiative", function*() {

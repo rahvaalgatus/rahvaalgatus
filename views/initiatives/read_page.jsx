@@ -26,7 +26,16 @@ var PHASES = Initiative.PHASES
 var HTTP_URL = /^https?:\/\//i
 var EMPTY_ORG = {name: "", url: ""}
 var EVENT_NOTIFICATIONS_SINCE = new Date(Config.eventNotificationsSince)
-var DAYS_IN_PARLIAMENT = 30
+
+// Kollektiivse pöördumise (edaspidi käesolevas peatükis pöördumine) menetlusse võtmise otsustab Riigikogu juhatus 30 kalendripäeva jooksul kollektiivse pöördumise esitamisest arvates.
+//
+// https://www.riigiteataja.ee/akt/122122014013?leiaKehtiv#para152b9
+var PARLIAMENT_ACCEPTANCE_DEADLINE_IN_DAYS = 30
+
+// Komisjon arutab pöördumist kolme kuu jooksul ning teeb otsuse pöördumise kohta kuue kuu jooksul pöördumise menetlusse võtmisest arvates.
+//
+// https://www.riigiteataja.ee/akt/122122014013?leiaKehtiv#para152b12
+var PARLIAMENT_PROCEEDINGS_DEADLINE_IN_MONTHS = 6
 
 var UI_TRANSLATIONS = O.map(I18n.STRINGS, function(lang) {
 	return O.filter(lang, (_value, key) => key.indexOf("HWCRYPTO") >= 0)
@@ -448,14 +457,19 @@ function PhasesView(attrs) {
 	var phase = dbInitiative.phase
   var vote = initiative.vote
 	var createdAt = initiative.createdAt
-  var sentToParliamentAt = dbInitiative.sent_to_parliament_at
+  var acceptedByParliamentAt = dbInitiative.accepted_by_parliament_at
+	var finishedInParliamentAt = dbInitiative.finished_in_parliament_at
+
+	var receivedByParliamentAt = (
+		dbInitiative.received_by_parliament_at ||
+		dbInitiative.sent_to_parliament_at
+	)
 
   var daysSinceCreated = diffInDays(new Date, createdAt)
   var daysInEdit = Initiative.daysInDiscussion(initiative)
   var editProgress = vote ? 1 : min(daysSinceCreated / daysInEdit, 1)
   var discussionDaysLeft = daysInEdit - daysSinceCreated
   var sigs = vote ? Initiative.countSignatures("Yes", initiative) : 0
-  var signProgress = sigs / Config.votesRequired
 
 	var editPhaseText
 	if (phase == "edit") {
@@ -470,35 +484,71 @@ function PhasesView(attrs) {
 	else editPhaseText =
 		I18n.formatDateSpan("numeric", initiative.createdAt, vote.createdAt)
 
+	var signProgress = isPhaseAfter("sign", phase)
+		? 1
+		: sigs / Config.votesRequired
+
   var signPhaseText
-	if (isPhaseAtLeast("sign", phase)) signPhaseText = t("N_SIGNATURES", {
-		votes: sigs
-	})
+
+	if (isPhaseAtLeast("sign", phase)) {
+		if (dbInitiative.has_paper_signatures)
+			signPhaseText = t("N_SIGNATURES_WITH_PAPER", {votes: sigs})
+		else
+			signPhaseText = t("N_SIGNATURES", {votes: sigs})
+	}
 
 	var parliamentProgress
   var parliamentPhaseText
 
-  if (sentToParliamentAt) {
-    var daysSinceSentToParliament = diffInDays(new Date, sentToParliamentAt)
-    var daysLeftInParliament = DAYS_IN_PARLIAMENT - daysSinceSentToParliament
+	if (isPhaseAfter("parliament", phase)) {
+		parliamentProgress = 1
+
+		parliamentPhaseText = finishedInParliamentAt ? I18n.formatDateSpan(
+			"numeric",
+			receivedByParliamentAt,
+			finishedInParliamentAt
+		) : ""
+	}
+	else if (phase != "parliament");
+	else if (receivedByParliamentAt && !acceptedByParliamentAt) {
+    var daysSinceSent = diffInDays(new Date, receivedByParliamentAt)
+    let daysLeft = PARLIAMENT_ACCEPTANCE_DEADLINE_IN_DAYS - daysSinceSent
+		parliamentProgress = daysSinceSent / PARLIAMENT_ACCEPTANCE_DEADLINE_IN_DAYS
+
+		if (daysLeft > 0)
+			parliamentPhaseText = t("PARLIAMENT_PHASE_ACCEPTANCE_N_DAYS_LEFT", {
+				days: daysLeft
+			})
+    else if (daysLeft == 0)
+      parliamentPhaseText = t("PARLIAMENT_PHASE_ACCEPTANCE_0_DAYS_LEFT")
+    else
+			parliamentPhaseText = t("PARLIAMENT_PHASE_ACCEPTANCE_N_DAYS_OVER", {
+				days: Math.abs(daysLeft)
+			})
+  }
+	else if (acceptedByParliamentAt) {
+		var proceedingsDeadline = DateFns.addMonths(
+			acceptedByParliamentAt,
+			PARLIAMENT_PROCEEDINGS_DEADLINE_IN_MONTHS
+		)
+
+    var daysSinceAccepted = diffInDays(new Date, acceptedByParliamentAt)
+		let daysLeft = diffInDays(proceedingsDeadline, new Date)
+		var daysTotal = diffInDays(proceedingsDeadline, acceptedByParliamentAt)
 
 		parliamentProgress = isPhaseAfter("parliament", phase)
 			? 1
-			: daysSinceSentToParliament / DAYS_IN_PARLIAMENT
+			: daysSinceAccepted / daysTotal
 
-		if (isPhaseAfter("parliament", phase))
-			parliamentPhaseText = ""
-		else if (daysLeftInParliament > 0)
-			parliamentPhaseText = t("PARLIAMENT_PHASE_N_DAYS_LEFT", {
-				days: daysLeftInParliament
-			})
-    else if (daysLeftInParliament == 0)
+		if (daysLeft > 0)
+			parliamentPhaseText = t("PARLIAMENT_PHASE_N_DAYS_LEFT", {days: daysLeft})
+    else if (daysLeft == 0)
       parliamentPhaseText = t("PARLIAMENT_PHASE_0_DAYS_LEFT")
     else
 			parliamentPhaseText = t("PARLIAMENT_PHASE_N_DAYS_OVER", {
-				days: Math.abs(daysLeftInParliament)
+				days: Math.abs(daysLeft)
 			})
-  }
+	}
 
 	var governmentProgress = phase == "done" ? 1 : null
 
