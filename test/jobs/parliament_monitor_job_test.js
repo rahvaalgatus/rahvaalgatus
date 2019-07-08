@@ -26,7 +26,7 @@ describe("ParliamentMonitorJob", function() {
 
 	it("must request from parliament", function*() {
 		this.router.get("/api/documents/collective-addresses", function(req, res) {
-			req.headers.host.must.equal("aavik.riigikogu.ee")
+			req.headers.host.must.equal("api.riigikogu.ee")
 			respond([], req, res)
 		})
 
