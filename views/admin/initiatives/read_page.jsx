@@ -10,7 +10,7 @@ var Flash = Page.Flash
 var formatDate = require("root/lib/i18n").formatDate
 var confirm = require("root/lib/jsx").confirm
 var linkify = require("root/lib/linkify")
-var UPDATEABLE_PHASES = ["sign", "parliament", "government", "done"]
+var UPDATEABLE_PHASES = ["sign", "parliament", "government", "effect", "done"]
 
 module.exports = function(attrs) {
 	var req = attrs.req
@@ -62,6 +62,9 @@ module.exports = function(attrs) {
 							</option>
 							<option value="government" selected={phase == "government"}>
 								Government
+							</option>
+							<option value="effect" selected={phase == "effect"}>
+								Effect
 							</option>
 							<option value="done" selected={phase == "done"}>
 								Done

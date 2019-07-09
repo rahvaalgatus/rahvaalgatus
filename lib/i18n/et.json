@@ -69,6 +69,7 @@
 	"EDIT_INITIATIVE_INFO": "Muuda",
 	"EDIT_INITIATIVE_TEXT": "Muuda algatuse teksti",
 	"EDIT_PHASE": "Ühisloomes",
+	"EFFECT_PHASE": "Järelkaja",
 	"EMAIL_INITIATIVE_AUTHOR_EVENT_BODY": "Tere\n\nAlgatuse \"{{initiativeTitle}}\" ({{initiativeUrl}}) autor lisas algatusele menetlusinfot:\n\n{{title}}\n\n{{text}}\n\n--\nRahvaalgatus\n{{siteUrl}}\n{{facebookUrl}}\n{{twitterUrl}}\n\nPS. Said selle kirja, sest tellisid algatuse kohta teavitusi. Kui neid enam ei soovi, saad nad peatada lehel {{unsubscribeUrl}}.",
 	"EMAIL_INITIATIVE_AUTHOR_EVENT_TITLE": "{{initiativeTitle}}: {{title}}",
 	"EMAIL_INITIATIVE_COMMENT_BODY": "Tere\n\nAlgatusele \"{{initiativeTitle}}\" ({{initiativeUrl}}) lisati uus kommentaar:\n\nPealkiri: {{commentTitle}}\nAutor: {{userName}}\n\n{{commentText}}\n\nLink kommentaarile: {{commentUrl}}\n\n--\nRahvaalgatus\n{{siteUrl}}\n{{facebookUrl}}\n{{twitterUrl}}\n\nPS. Said selle kirja, sest tellisid algatuse kohta teavitusi. Kui neid enam ei soovi, saad nad peatada lehel {{unsubscribeUrl}}.",

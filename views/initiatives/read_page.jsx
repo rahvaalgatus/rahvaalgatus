@@ -550,7 +550,7 @@ function PhasesView(attrs) {
 			})
 	}
 
-	var governmentProgress = phase == "done" ? 1 : null
+	var governmentProgress = isPhaseAfter("government", phase) ? 1 : null
 
   return <section id="initiative-phases" class="transparent-section"><center>
     <ol>
@@ -574,9 +574,15 @@ function PhasesView(attrs) {
 				<ProgressView value={governmentProgress} />
       </li>
 
-      <li id="done-phase" class={classifyPhase("done", phase)}>
+			{phase != "done" ? <li
+				id="effect-phase"
+				class={classifyPhase("effect", phase)}>
+        <i>{t("EFFECT_PHASE")}</i>
+			</li> : <li
+				id="done-phase"
+				class={classifyPhase("done", phase)}>
         <i>{t("DONE_PHASE")}</i>
-      </li>
+      </li>}
     </ol>
   </center></section>
 
@@ -590,12 +596,12 @@ function PhasesView(attrs) {
 		</label>
 	}
 
-	function classifyPhase(phase, given) {
-		var dist = PHASES.indexOf(given) - PHASES.indexOf(phase)
+	function classifyPhase(phase, current) {
+		var dist = PHASES.indexOf(current) - PHASES.indexOf(phase)
 
 		return (
 			dist == 0 ? "current" :
-			dist == 1 ? "past previous" :
+			dist == 1 || current == "done" && dist == 2 ? "past previous" :
 			dist > 0 ? "past" : ""
 		)
 	}

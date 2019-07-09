@@ -19,13 +19,14 @@ var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var EMPTY = Object.prototype
-var UPDATEABLE_PHASES = ["sign", "parliament", "government", "done"]
+var UPDATEABLE_PHASES = ["sign", "parliament", "government", "effect", "done"]
 exports = module.exports = Router()
 
 var PHASE_TO_STATUS = {
 	sign: "voting",
 	parliament: "followUp",
 	government: "followUp",
+	effect: "followUp",
 	done: "followUp"
 }
 
