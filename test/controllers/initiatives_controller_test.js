@@ -706,6 +706,38 @@ describe("InitiativesController", function() {
 				}))
 			})
 
+			it("must render initiative in parliament that's finished", function*() {
+				var initiative = yield initiativesDb.create({
+					uuid: UUID,
+					phase: "parliament",
+					sent_to_parliament_at: DateFns.addDays(new Date, -30),
+					received_by_parliament_at: DateFns.addDays(new Date, -25),
+					finished_in_parliament_at: DateFns.addDays(new Date, -5)
+				})
+
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(2)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.past.must.be.true()
+				phases.sign.past.must.be.true()
+				phases.parliament.current.must.be.true()
+
+				phases.parliament.text.must.equal(I18n.formatDateSpan(
+					"numeric",
+					initiative.received_by_parliament_at,
+					initiative.finished_in_parliament_at
+				))
+			})
+
 			it("must render initiative in government", function*() {
 				var initiative = yield initiativesDb.create({
 					uuid: UUID,

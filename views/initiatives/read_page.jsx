@@ -500,7 +500,7 @@ function PhasesView(attrs) {
 	var parliamentProgress
   var parliamentPhaseText
 
-	if (isPhaseAfter("parliament", phase)) {
+	if (isPhaseAfter("parliament", phase) || finishedInParliamentAt) {
 		parliamentProgress = 1
 
 		parliamentPhaseText = finishedInParliamentAt ? I18n.formatDateSpan(
