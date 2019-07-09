@@ -82,6 +82,7 @@ strong {
 		line-height: 1.2;
 
 		& ~ h1 { margin-top: 4rem; }
+		& + h2 { margin-top: 1.5rem; }
 		& + p { margin-top: 1.5rem; }
 	}
 
@@ -1977,6 +1978,20 @@ button.inherited {
 			max-width: 24rem;
 		}
 	}
+}
+
+#credits-page main {
+	li + li {
+		margin-top: 1rem;
+	}
+
+	img {
+		vertical-align: middle;
+		border-radius: .5rem;
+		background: $secondary-background;
+	}
+
+	.dark img { background-color: $dark-blue; }
 }
 
 #footer {

@@ -38,8 +38,10 @@ exports.router.get("/", next(function*(_req, res) {
 	})
 }))
 
-exports.router.get("/about", (_req, res) => res.render("home/about_page.jsx"))
+exports.router.get("/about", render.bind(null, "home/about_page.jsx"))
+exports.router.get("/credits", render.bind(null, "home/credits_page.jsx"))
 exports.router.get("/donate", alias.bind(null, "/donations/new"))
 exports.router.get("/donated", alias.bind(null, "/donations/created"))
 
 function alias(url, req, _res, next) { req.url = url; next() }
+function render(page, _req, res) { res.render(page) }
