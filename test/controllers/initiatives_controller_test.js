@@ -380,7 +380,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 			})
 
-			it("must show effect phase by default", function*() {
+			it("must show done phase by default", function*() {
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: DISCUSSION})
 				)
@@ -390,8 +390,8 @@ describe("InitiativesController", function() {
 
 				var dom = parseDom(res.body)
 				var phases = queryPhases(dom)
-				phases.must.have.property("effect")
-				phases.must.not.have.property("done")
+				phases.must.have.property("done")
+				phases.must.not.have.property("archived")
 			})
 
 			it("must render private discussion", function*() {
@@ -775,33 +775,6 @@ describe("InitiativesController", function() {
 				))
 			})
 
-			it("must render effective initiative", function*() {
-				yield initiativesDb.create({
-					uuid: UUID,
-					phase: "effect",
-					sent_to_parliament_at: new Date
-				})
-
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
-
-				var res = yield this.request("/initiatives/" + UUID)
-				res.statusCode.must.equal(200)
-				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
-
-				var dom = parseDom(res.body)
-				var phases = queryPhases(dom)
-
-				_.sum(_.map(phases, "past")).must.equal(4)
-				_.sum(_.map(phases, "current")).must.equal(1)
-				phases.edit.past.must.be.true()
-				phases.sign.past.must.be.true()
-				phases.parliament.past.must.be.true()
-				phases.government.past.must.be.true()
-				phases.effect.current.must.be.true()
-				phases.must.not.have.property("done")
-			})
-
 			it("must render done initiative", function*() {
 				yield initiativesDb.create({
 					uuid: UUID,
@@ -825,8 +798,36 @@ describe("InitiativesController", function() {
 				phases.sign.past.must.be.true()
 				phases.parliament.past.must.be.true()
 				phases.government.past.must.be.true()
-				phases.must.not.have.property("effect")
 				phases.done.current.must.be.true()
+				phases.must.not.have.property("archived")
+			})
+
+			it("must render archived initiative", function*() {
+				yield initiativesDb.create({
+					uuid: UUID,
+					phase: "done",
+					sent_to_parliament_at: new Date,
+					archived_at: new Date
+				})
+
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(4)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.past.must.be.true()
+				phases.sign.past.must.be.true()
+				phases.parliament.past.must.be.true()
+				phases.government.past.must.be.true()
+				phases.must.not.have.property("done")
+				phases.archived.current.must.be.true()
 			})
 
 			it("must render failed initiative", function*() {

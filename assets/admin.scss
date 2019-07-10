@@ -341,6 +341,10 @@ textarea.admin-input {
 		&:checked + .form-toggle-buttons { display: none; }
 	}
 
+	#initiative-table {
+		form ~ p { margin-top: 0.5rem; }
+	}
+
 	.events,
 	.messages {
 		margin-top: 4rem;

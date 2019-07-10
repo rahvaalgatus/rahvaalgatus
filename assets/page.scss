@@ -1340,21 +1340,21 @@ button.inherited {
 				}
 			}
 
-			&#effect-phase {
-				i:before { background-image: url("/assets/effect-phase.svg"); }
-
-				&.current i {
-					color: $effect-phase-color;
-					&:before { background-color: $effect-phase-color; }
-				}
-			}
-
 			&#done-phase {
 				i:before { background-image: url("/assets/done-phase.svg"); }
 
 				&.current i {
 					color: $done-phase-color;
 					&:before { background-color: $done-phase-color; }
+				}
+			}
+
+			&#archived-phase {
+				i:before { background-image: url("/assets/archived-phase.svg"); }
+
+				&.current i {
+					color: $archived-phase-color;
+					&:before { background-color: $archived-phase-color; }
 				}
 			}
 		}

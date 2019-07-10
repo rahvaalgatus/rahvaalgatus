@@ -10,7 +10,7 @@ var Flash = Page.Flash
 var formatDate = require("root/lib/i18n").formatDate
 var confirm = require("root/lib/jsx").confirm
 var linkify = require("root/lib/linkify")
-var UPDATEABLE_PHASES = ["sign", "parliament", "government", "effect", "done"]
+var UPDATEABLE_PHASES = ["sign", "parliament", "government", "done"]
 
 module.exports = function(attrs) {
 	var req = attrs.req
@@ -63,16 +63,23 @@ module.exports = function(attrs) {
 							<option value="government" selected={phase == "government"}>
 								Government
 							</option>
-							<option value="effect" selected={phase == "effect"}>
-								Effect
-							</option>
 							<option value="done" selected={phase == "done"}>
-								Done
+								Follow-Up
 							</option>
 						</select>
-
-						{initiative.status == "closed" ? " Archived" : ""}
 					</Form>
+					{" "}
+					<FormButton
+						req={req}
+						action={initiativePath}
+						name="archived"
+						value={String(!dbInitiative.archived_at)}>
+						{dbInitiative.archived_at ? "Unarchive" : "Archive"}
+					</FormButton>
+
+					{dbInitiative.archived_at ? <p>
+						Archived on {formatDate("iso", dbInitiative.archived_at)}.
+					</p> : null}
 				</td>
 			</tr>
 

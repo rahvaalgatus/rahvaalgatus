@@ -23,6 +23,7 @@ module.exports = function(attrs) {
 		accepted_by_parliament_at: null,
 		finished_in_parliament_at: null,
 		discussion_end_email_sent_at: null,
-		signing_end_email_sent_at: null
+		signing_end_email_sent_at: null,
+		archived_at: null
 	}, attrs)
 }

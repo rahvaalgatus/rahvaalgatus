@@ -44,8 +44,8 @@ $edit-phase-color: $discussion-color;
 $sign-phase-color: $voting-color;
 $parliament-phase-color: $parliament-color;
 $government-phase-color: $parliament-color;
-$effect-phase-color: $dark-blue;
 $done-phase-color: $dark-blue;
+$archived-phase-color: $dark-blue;
 
 @mixin tablet {
   @media only screen and (max-width: 768px) { @content }

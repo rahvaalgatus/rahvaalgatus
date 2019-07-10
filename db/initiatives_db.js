@@ -50,6 +50,7 @@ exports.parse = function(attrs) {
 		organizations: attrs.organizations && JSON.parse(attrs.organizations),
 		media_urls: attrs.media_urls && JSON.parse(attrs.media_urls),
 		meetings: attrs.meetings && JSON.parse(attrs.meetings),
+		archived_at: attrs.archived_at && new Date(attrs.archived_at),
 
 		sent_to_parliament_at: attrs.sent_to_parliament_at &&
 			new Date(attrs.sent_to_parliament_at),

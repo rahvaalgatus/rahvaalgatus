@@ -574,10 +574,10 @@ function PhasesView(attrs) {
 				<ProgressView value={governmentProgress} />
       </li>
 
-			{phase != "done" ? <li
-				id="effect-phase"
-				class={classifyPhase("effect", phase)}>
-        <i>{t("EFFECT_PHASE")}</i>
+			{phase == "done" && dbInitiative.archived_at ? <li
+				id="archived-phase"
+				class="current">
+        <i>{t("ARCHIVED_PHASE")}</i>
 			</li> : <li
 				id="done-phase"
 				class={classifyPhase("done", phase)}>
@@ -596,12 +596,12 @@ function PhasesView(attrs) {
 		</label>
 	}
 
-	function classifyPhase(phase, current) {
-		var dist = PHASES.indexOf(current) - PHASES.indexOf(phase)
+	function classifyPhase(phase, given) {
+		var dist = PHASES.indexOf(given) - PHASES.indexOf(phase)
 
 		return (
 			dist == 0 ? "current" :
-			dist == 1 || current == "done" && dist == 2 ? "past previous" :
+			dist == 1 ? "past previous" :
 			dist > 0 ? "past" : ""
 		)
 	}
