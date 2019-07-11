@@ -1,7 +1,6 @@
 var _ = require("root/lib/underscore")
 var Subscription = require("root/lib/subscription")
-var ValidInitiativeSubscription =
-	require("root/test/valid_db_initiative_subscription")
+var ValidSubscription = require("root/test/valid_subscription")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var sql = require("sqlate")
 var messagesDb = require("root/db/initiative_messages_db")
@@ -23,7 +22,7 @@ describe("Subscription", function() {
 				updated_at: new Date,
 			})
 
-			var subscriptions = _.times(1337, (i) => new ValidInitiativeSubscription({
+			var subscriptions = _.times(1337, (i) => new ValidSubscription({
 				initiative_uuid: message.initiative_uuid,
 				email: `${i}@example.com`,
 				confirmed_at: new Date,

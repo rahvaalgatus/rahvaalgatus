@@ -1,5 +1,5 @@
 var ValidSubscription =
-	require("root/test/valid_db_initiative_subscription")
+	require("root/test/valid_subscription")
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var sql = require("sqlate")
 var db = require("root/db/initiative_subscriptions_db")

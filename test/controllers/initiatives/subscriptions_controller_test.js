@@ -1,7 +1,7 @@
 var _ = require("root/lib/underscore")
 var Config = require("root/config")
 var respond = require("root/test/fixtures").respond
-var ValidSubscription = require("root/test/valid_db_initiative_subscription")
+var ValidSubscription = require("root/test/valid_subscription")
 var sql = require("sqlate")
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var t = require("root/lib/i18n").t.bind(null, "et")

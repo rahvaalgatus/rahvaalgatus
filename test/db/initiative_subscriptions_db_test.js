@@ -1,6 +1,5 @@
 var db = require("root/db/initiative_subscriptions_db")
-var ValidDbInitiativeSubscription =
-	require("root/test/valid_db_initiative_subscription")
+var ValidSubscription = require("root/test/valid_subscription")
 var sql = require("sqlate")
 
 describe("InitiativeSubscriptionsDb", function() {
@@ -9,8 +8,8 @@ describe("InitiativeSubscriptionsDb", function() {
 	describe(".prototype.create", function() {
 		it("must create different subscriptions for different emails", function*() {
 			var uuid = "d3ce1227-8ac8-41cf-b7ef-e454e2781347"
-			var a = new ValidDbInitiativeSubscription({initiative_uuid: uuid})
-			var b = new ValidDbInitiativeSubscription({initiative_uuid: uuid})
+			var a = new ValidSubscription({initiative_uuid: uuid})
+			var b = new ValidSubscription({initiative_uuid: uuid})
 			a = yield db.create(a)
 			b = yield db.create(b)
 
@@ -19,12 +18,12 @@ describe("InitiativeSubscriptionsDb", function() {
 		})
 
 		it("must have a unique constraint on case-insensitive email", function*() {
-			var subscription = yield db.create(new ValidDbInitiativeSubscription({
+			var subscription = yield db.create(new ValidSubscription({
 				initiative_uuid: "22999590-d52d-411c-9402-df9641c93d9c",
 				email: "user@example.com"
 			}))
 
-			var other = new ValidDbInitiativeSubscription({
+			var other = new ValidSubscription({
 				initiative_uuid: subscription.initiative_uuid,
 				email: subscription.email.toUpperCase()
 			})
@@ -37,11 +36,11 @@ describe("InitiativeSubscriptionsDb", function() {
 		})
 
 		it("must have a unique constraint on initiative_uuid", function*() {
-			var subscription = yield db.create(new ValidDbInitiativeSubscription({
+			var subscription = yield db.create(new ValidSubscription({
 				initiative_uuid: "22999590-d52d-411c-9402-df9641c93d9c"
 			}))
 
-			var other = new ValidDbInitiativeSubscription({
+			var other = new ValidSubscription({
 				initiative_uuid: subscription.initiative_uuid,
 				email: subscription.email
 			})
@@ -54,11 +53,11 @@ describe("InitiativeSubscriptionsDb", function() {
 		})
 
 		it("must have a unique constraint on NULL initiative_uuid", function*() {
-			var subscription = yield db.create(new ValidDbInitiativeSubscription({
+			var subscription = yield db.create(new ValidSubscription({
 				initiative_uuid: null,
 			}))
 
-			var other = new ValidDbInitiativeSubscription({
+			var other = new ValidSubscription({
 				initiative_uuid: null,
 				email: subscription.email
 			})
