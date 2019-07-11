@@ -2,7 +2,7 @@
 var Jsx = require("j6pack")
 var Page = require("../page")
 var readMarkdown = require("root/lib/markdown").readSync
-var CREDITS = readMarkdown(__dirname + "/../../CREDITS.md")
+var CREDITS = fixPaths(readMarkdown(__dirname + "/../../CREDITS.md"))
 
 module.exports = function(attrs) {
 	var req = attrs.req
@@ -13,3 +13,5 @@ module.exports = function(attrs) {
 		</center></section>
 	</Page>
 }
+
+function fixPaths(html) { return html.replace(/public\//g, "/") }
