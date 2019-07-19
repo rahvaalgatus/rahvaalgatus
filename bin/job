@@ -10,6 +10,7 @@ Options:
 Jobs:
     parliament-monitor    Monitors initiatives in the parliament API.
     initiative-end-email  Sends emails to authors for initiative deadlines.
+    initiative-signature-milestones  Records initiative signature milestones.
 
 For more help or to give feedback, please see https://github.com/rahvaalgatus .
 `
