@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 var Neodoc = require("neodoc")
+var concat = Array.prototype.concat.bind(Array.prototype)
 
 var USAGE_TEXT = `
-Usage: job [options] <job-name>
+Usage: cli [options] [<command> [<args>...]]
 
 Options:
     -h, --help           Display this help and exit.
 
-Jobs:
+Commands:
     parliament-monitor    Monitors initiatives in the parliament API.
     initiative-end-email  Sends emails to authors for initiative deadlines.
     initiative-signature-milestones  Records initiative signature milestones.
@@ -15,30 +16,32 @@ Jobs:
 For more help or to give feedback, please see https://github.com/rahvaalgatus .
 `
 
-var args = Neodoc.run(USAGE_TEXT, {versionFlags: []})
+var args = Neodoc.run(USAGE_TEXT, {optionsFirst: true, versionFlags: []})
 if (args["--help"]) return void process.stdout.write(USAGE_TEXT.trimLeft())
+
+var cmd = args["<command>"]
+if (cmd == null) return void process.stdout.write(USAGE_TEXT.trimLeft())
 
 var co = require("co")
 var reportError = require("root").errorReporter
 
-var JOBS = {
+var CLIS = {
   "parliament-monitor":
-    require.resolve("root/jobs/parliament_monitor_job"),
+    require.resolve("root/cli/parliament_monitor_cli"),
   "initiative-end-email":
-    require.resolve("root/jobs/initiative_end_email_job"),
+    require.resolve("root/cli/initiative_end_email_cli"),
   "initiative-signature-milestones":
-    require.resolve("root/jobs/initiative_signature_milestones_job")
+    require.resolve("root/cli/initiative_signature_milestones_cli")
 }
 
-var jobName = args["<job-name>"]
-var jobPath = JOBS[jobName]
-if (jobPath == null) return void die("No such job: %s", jobName)
+var cmdPath = CLIS[cmd]
+if (cmdPath == null) return void die("No such command: %s", cmd)
 
 co(function*() {
-	var job = require(jobPath)
+	var cli = require(cmdPath)
 	var cosDb = require("root").cosDb
 
-	try { yield job() }
+	try { yield cli(concat(cmd, args["<args>"])) }
 	finally { yield cosDb.destroy() }
 }).catch(handleError)
 

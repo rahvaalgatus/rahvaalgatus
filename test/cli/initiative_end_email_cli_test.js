@@ -1,7 +1,7 @@
 var _ = require("root/lib/underscore")
 var DateFns = require("date-fns")
 var Config = require("root/config")
-var job = require("root/jobs/initiative_end_email_job")
+var cli = require("root/cli/initiative_end_email_cli")
 var newUuid = require("uuid/v4")
 var newPartner = require("root/test/citizenos_fixtures").newPartner
 var newUser = require("root/test/citizenos_fixtures").newUser
@@ -14,7 +14,7 @@ var pseudoHex = require("root/lib/crypto").pseudoHex
 var cosDb = require("root").cosDb
 var sql = require("sqlate")
 
-describe("InitiativeEndEmailJob", function() {
+describe("InitiativeEndEmailCli", function() {
 	require("root/test/mitm")()
 	require("root/test/db")()
 	require("root/test/email")()
@@ -28,7 +28,7 @@ describe("InitiativeEndEmailJob", function() {
 	describe("when in discussion", function() {
 		it("must email when discussion has ended", function*() {
 			yield createTopic({creatorId: this.user.id, endsAt: new Date})
-			yield job()
+			yield cli()
 			this.emails.length.must.equal(1)
 			this.emails[0].envelope.to.must.eql([this.user.email])
 			var body = String(this.emails[0].message)
@@ -41,7 +41,7 @@ describe("InitiativeEndEmailJob", function() {
 				endsAt: DateFns.addMonths(new Date, -6)
 			})
 
-			yield job()
+			yield cli()
 			this.emails.length.must.equal(1)
 		})
 
@@ -52,7 +52,7 @@ describe("InitiativeEndEmailJob", function() {
 				endsAt: DateFns.addSeconds(DateFns.addMonths(new Date, -6), -1)
 			})
 
-			yield job()
+			yield cli()
 			this.emails.length.must.equal(0)
 		})
 
@@ -62,21 +62,21 @@ describe("InitiativeEndEmailJob", function() {
 				endsAt: DateFns.addSeconds(new Date, 1)
 			})
 
-			yield job()
+			yield cli()
 			this.emails.must.be.empty()
 		})
 
 		it("must not email if user email not set", function*() {
 			yield cosDb.query(sql`UPDATE "Users" SET email = NULL`)
 			yield createTopic({creatorId: this.user.id, endsAt: new Date})
-			yield job()
+			yield cli()
 			this.emails.must.be.empty()
 		})
 
 		it("must not email if user email not verified", function*() {
 			yield cosDb.query(sql`UPDATE "Users" SET "emailIsVerified" = false`)
 			yield createTopic({creatorId: this.user.id, endsAt: new Date})
-			yield job()
+			yield cli()
 			this.emails.must.be.empty()
 		})
 
@@ -87,7 +87,7 @@ describe("InitiativeEndEmailJob", function() {
 				visibility: "private"
 			})
 
-			yield job()
+			yield cli()
 			this.emails.must.be.empty()
 		})
 
@@ -98,7 +98,7 @@ describe("InitiativeEndEmailJob", function() {
 				deletedAt: new Date
 			})
 
-			yield job()
+			yield cli()
 			this.emails.must.be.empty()
 		})
 
@@ -109,7 +109,7 @@ describe("InitiativeEndEmailJob", function() {
 				status: "voting"
 			})
 
-			yield job()
+			yield cli()
 			this.emails.must.be.empty()
 		})
 
@@ -123,17 +123,17 @@ describe("InitiativeEndEmailJob", function() {
 				endsAt: new Date
 			})
 
-			yield job()
+			yield cli()
 			this.emails.must.be.empty()
 		})
 
 		it("must not email twice", function*() {
 			yield createTopic({creatorId: this.user.id, endsAt: new Date})
 
-			yield job()
+			yield cli()
 			this.emails.length.must.equal(1)
 
-			yield job()
+			yield cli()
 			this.emails.length.must.equal(1)
 		})
 	})
@@ -145,7 +145,7 @@ describe("InitiativeEndEmailJob", function() {
 			var vote = yield createVote(topic, newVote({endsAt: new Date}))
 			yield createSignatures(vote, Config.votesRequired)
 
-			yield job()
+			yield cli()
 			this.emails.length.must.equal(1)
 			this.emails[0].envelope.to.must.eql([this.user.email])
 			var body = String(this.emails[0].message)
@@ -158,7 +158,7 @@ describe("InitiativeEndEmailJob", function() {
 			var vote = yield createVote(topic, newVote({endsAt: new Date}))
 			yield createSignatures(vote, Config.votesRequired - 1)
 
-			yield job()
+			yield cli()
 			this.emails.length.must.equal(1)
 			this.emails[0].envelope.to.must.eql([this.user.email])
 			var body = String(this.emails[0].message)
@@ -173,7 +173,7 @@ describe("InitiativeEndEmailJob", function() {
 			}))
 
 			yield createSignatures(vote, Config.votesRequired)
-			yield job()
+			yield cli()
 			this.emails.length.must.equal(1)
 		})
 
@@ -185,14 +185,14 @@ describe("InitiativeEndEmailJob", function() {
 			}))
 
 			yield createSignatures(vote, Config.votesRequired)
-			yield job()
+			yield cli()
 			this.emails.length.must.equal(0)
 		})
 
 		it("must not email when signing not ended", function*() {
 			var topic = yield createTopic({creatorId: this.user.id, status: "voting"})
 			yield createVote(topic, newVote({endsAt: DateFns.addSeconds(new Date, 1)}))
-			yield job()
+			yield cli()
 			this.emails.must.be.empty()
 		})
 
@@ -200,7 +200,7 @@ describe("InitiativeEndEmailJob", function() {
 			yield cosDb.query(sql`UPDATE "Users" SET email = NULL`)
 			var topic = yield createTopic({creatorId: this.user.id, status: "voting"})
 			yield createVote(topic, newVote({endsAt: new Date}))
-			yield job()
+			yield cli()
 			this.emails.must.be.empty()
 		})
 
@@ -208,7 +208,7 @@ describe("InitiativeEndEmailJob", function() {
 			yield cosDb.query(sql`UPDATE "Users" SET "emailIsVerified" = false`)
 			var topic = yield createTopic({creatorId: this.user.id, status: "voting"})
 			yield createVote(topic, newVote({endsAt: new Date}))
-			yield job()
+			yield cli()
 			this.emails.must.be.empty()
 		})
 
@@ -220,7 +220,7 @@ describe("InitiativeEndEmailJob", function() {
 			})
 
 			yield createVote(topic, newVote({endsAt: new Date}))
-			yield job()
+			yield cli()
 			this.emails.must.be.empty()
 		})
 
@@ -232,7 +232,7 @@ describe("InitiativeEndEmailJob", function() {
 			})
 
 			yield createVote(topic, newVote({endsAt: new Date}))
-			yield job()
+			yield cli()
 			this.emails.must.be.empty()
 		})
 
@@ -247,7 +247,7 @@ describe("InitiativeEndEmailJob", function() {
 			})
 
 			yield createVote(topic, newVote({endsAt: new Date}))
-			yield job()
+			yield cli()
 			this.emails.must.be.empty()
 		})
 
@@ -255,10 +255,10 @@ describe("InitiativeEndEmailJob", function() {
 			var topic = yield createTopic({creatorId: this.user.id, status: "voting"})
 			yield createVote(topic, newVote({endsAt: new Date}))
 
-			yield job()
+			yield cli()
 			this.emails.length.must.equal(1)
 
-			yield job()
+			yield cli()
 			this.emails.length.must.equal(1)
 		})
 	})

@@ -2,7 +2,7 @@ var _ = require("root/lib/underscore")
 var Config = require("root/config")
 var DateFns = require("date-fns")
 var ValidSubscription = require("root/test/valid_subscription")
-var job = require("root/jobs/initiative_signature_milestones_job")
+var cli = require("root/cli/initiative_signature_milestones_cli")
 var newPartner = require("root/test/citizenos_fixtures").newPartner
 var newUser = require("root/test/citizenos_fixtures").newUser
 var newTopic = require("root/test/citizenos_fixtures").newTopic
@@ -25,7 +25,7 @@ var renderEmail = require("root/lib/i18n").email.bind(null, Config.language)
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var MILESTONES = _.sort(_.subtract, Config.signatureMilestones)
 
-describe("InitiativeSignatureMilestonesJob", function() {
+describe("InitiativeSignatureMilestonesCli", function() {
 	require("root/test/mitm")()
 	require("root/test/db")()
 	require("root/test/email")()
@@ -72,7 +72,7 @@ describe("InitiativeSignatureMilestonesJob", function() {
 			})
 		])
 
-		yield job()
+		yield cli()
 
 		yield db.search(sql`SELECT * FROM initiatives`).must.then.eql([{
 			__proto__: initiative,
@@ -141,7 +141,7 @@ describe("InitiativeSignatureMilestonesJob", function() {
 			})
 		])
 
-		yield job()
+		yield cli()
 
 		yield db.search(sql`SELECT * FROM initiatives`).must.then.eql([{
 			__proto__: initiative,
@@ -184,7 +184,7 @@ describe("InitiativeSignatureMilestonesJob", function() {
 			})
 		])
 
-		yield job()
+		yield cli()
 		this.emails.length.must.equal(1)
 	})
 
@@ -219,7 +219,7 @@ describe("InitiativeSignatureMilestonesJob", function() {
 			})
 		])
 
-		yield job()
+		yield cli()
 		this.emails.length.must.equal(0)
 	})
 
@@ -250,7 +250,7 @@ describe("InitiativeSignatureMilestonesJob", function() {
 			})
 		])
 
-		yield job()
+		yield cli()
 
 		yield db.search(sql`SELECT * FROM initiatives`).must.then.eql([{
 			__proto__: initiative,
@@ -275,7 +275,7 @@ describe("InitiativeSignatureMilestonesJob", function() {
 			var vote = yield createVote(topic, newVote())
 			var signatures = yield createSignatures(vote, 5)
 			var initiative = yield db.create({uuid: topic.id})
-			yield job()
+			yield cli()
 
 			yield db.search(sql`SELECT * FROM initiatives`).must.then.eql([{
 				__proto__: initiative,
@@ -305,7 +305,7 @@ describe("InitiativeSignatureMilestonesJob", function() {
 				})
 			])
 
-			yield job()
+			yield cli()
 			this.emails.length.must.equal(0)
 		})
 	})
@@ -321,7 +321,7 @@ describe("InitiativeSignatureMilestonesJob", function() {
 		var vote = yield createVote(topic, newVote())
 		yield createSignatures(vote, Config.votesRequired)
 		var initiative = yield db.create({uuid: topic.id})
-		yield job()
+		yield cli()
 		yield db.search(sql`SELECT * FROM initiatives`).must.then.eql([initiative])
 	})
 
@@ -341,7 +341,7 @@ describe("InitiativeSignatureMilestonesJob", function() {
 			var vote = yield createVote(topic, newVote())
 			var signatures = yield createSignatures(vote, 5)
 			var initiative = yield db.create({uuid: topic.id})
-			yield job()
+			yield cli()
 
 
 			yield db.search(sql`SELECT * FROM initiatives`).must.then.eql([{
@@ -363,7 +363,7 @@ describe("InitiativeSignatureMilestonesJob", function() {
 		var vote = yield createVote(topic, newVote())
 		yield createSignatures(vote, Config.votesRequired)
 		var initiative = yield db.create({uuid: topic.id})
-		yield job()
+		yield cli()
 		yield db.search(sql`SELECT * FROM initiatives`).must.then.eql([initiative])
 	})
 
@@ -382,7 +382,7 @@ describe("InitiativeSignatureMilestonesJob", function() {
 			signature_milestones: {5: pseudoDateTime()}
 		})
 
-		yield job()
+		yield cli()
 
 		yield db.search(sql`SELECT * FROM initiatives`).must.then.eql([{
 			__proto__: initiative,
@@ -416,7 +416,7 @@ describe("InitiativeSignatureMilestonesJob", function() {
 			})
 		])
 
-		yield job()
+		yield cli()
 		yield db.search(sql`SELECT * FROM initiatives`).must.then.eql([initiative])
 		this.emails.length.must.equal(0)
 	})
@@ -440,7 +440,7 @@ describe("InitiativeSignatureMilestonesJob", function() {
 		})))
 
 		var initiative = yield db.create({uuid: topic.id})
-		yield job()
+		yield cli()
 
 		yield db.search(sql`SELECT * FROM initiatives`).must.then.eql([{
 			__proto__: initiative,
@@ -476,7 +476,7 @@ describe("InitiativeSignatureMilestonesJob", function() {
 		])))
 
 		var initiative = yield db.create({uuid: topic.id})
-		yield job()
+		yield cli()
 
 		yield db.search(sql`SELECT * FROM initiatives`).must.then.eql([{
 			__proto__: initiative,

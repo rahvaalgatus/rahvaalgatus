@@ -3,7 +3,7 @@ var Config = require("root/config")
 var ValidDbInitiative = require("root/test/valid_db_initiative")
 var initiativesDb = require("root/db/initiatives_db")
 var respond = require("root/test/fixtures").respond
-var job = require("root/jobs/parliament_monitor_job")
+var cli = require("root/cli/parliament_monitor_cli")
 var sqlite = require("root").sqlite
 var sql = require("sqlate")
 
@@ -18,7 +18,7 @@ var COMPLETED_INITIATIVE = {
 	vote: {options: {rows: [{value: "Yes", voteCount: 0}]}}
 }
 
-describe("ParliamentMonitorJob", function() {
+describe("ParliamentMonitorCli", function() {
 	require("root/test/mitm")()
 	require("root/test/db")()
 	require("root/test/email")()
@@ -30,7 +30,7 @@ describe("ParliamentMonitorJob", function() {
 			respond([], req, res)
 		})
 
-		yield job()
+		yield cli()
 	})
 
 	it("must set initiatives' parliament API properties and email", function*() {
@@ -47,7 +47,7 @@ describe("ParliamentMonitorJob", function() {
 			parliamentApiData
 		]))
 
-		yield job()
+		yield cli()
 
 		yield initiativesDb.search(sql`SELECT * FROM initiatives`).must.then.eql([
 			new ValidDbInitiative({
@@ -77,7 +77,7 @@ describe("ParliamentMonitorJob", function() {
 			data: COMPLETED_INITIATIVE
 		}))
 
-		yield job()
+		yield cli()
 
 		yield initiativesDb.search(sql`SELECT * FROM initiatives`).must.then.eql([
 			new ValidDbInitiative({
@@ -116,7 +116,7 @@ describe("ParliamentMonitorJob", function() {
 			parliamentApiData
 		]))
 
-		yield job()
+		yield cli()
 		var initiatives = yield initiativesDb.search(sql`SELECT * FROM initiatives`)
 		initiatives.must.eql([initiative])
 		this.emails.must.be.empty()
@@ -154,7 +154,7 @@ describe("ParliamentMonitorJob", function() {
 			parliamentApiData
 		]))
 
-		yield job()
+		yield cli()
 
 		yield initiativesDb.search(sql`SELECT * FROM initiatives`).must.then.eql([
 			new ValidDbInitiative({
@@ -183,7 +183,7 @@ describe("ParliamentMonitorJob", function() {
 
 		this.router.get(`/api/topics/${uuid}`, respondWith404)
 
-		yield job()
+		yield cli()
 		yield sqlite(sql`SELECT * FROM initiatives`).must.then.be.empty()
 		this.emails.must.be.empty()
 	})
@@ -194,7 +194,7 @@ describe("ParliamentMonitorJob", function() {
 			title: "Speech of freedom!"
 		}]))
 
-		yield job()
+		yield cli()
 		yield sqlite(sql`SELECT * FROM initiatives`).must.then.be.empty()
 		this.emails.must.be.empty()
 	})
