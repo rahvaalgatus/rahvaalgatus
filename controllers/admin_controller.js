@@ -4,6 +4,7 @@ var Config = require("root/config")
 var HttpError = require("standard-http-error")
 var DateFns = require("date-fns")
 var Subscription = require("root/lib/subscription")
+var Time = require("root/lib/time")
 var cosApi = require("root/lib/citizenos_api")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var commentsDb = require("root/db/comments_db")
@@ -393,22 +394,22 @@ function parseInitiative(obj) {
 
 	if ("sentToParliamentOn" in obj)
 		attrs.sent_to_parliament_at = obj.sentToParliamentOn
-			? new Date(obj.sentToParliamentOn)
+			? Time.parseDate(obj.sentToParliamentOn)
 			: null
 
 	if ("receivedByParliamentOn" in obj)
 		attrs.received_by_parliament_at = obj.receivedByParliamentOn
-			? new Date(obj.receivedByParliamentOn)
+			? Time.parseDate(obj.receivedByParliamentOn)
 			: null
 
 	if ("acceptedByParliamentOn" in obj)
 		attrs.accepted_by_parliament_at = obj.acceptedByParliamentOn
-			? new Date(obj.acceptedByParliamentOn)
+			? Time.parseDate(obj.acceptedByParliamentOn)
 			: null
 
 	if ("finishedInParliamentOn" in obj)
 		attrs.finished_in_parliament_at = obj.finishedInParliamentOn
-			? new Date(obj.finishedInParliamentOn)
+			? Time.parseDate(obj.finishedInParliamentOn)
 			: null
 
 	return attrs
@@ -429,7 +430,9 @@ function parseEvent(event, obj) {
 			type: "text",
 			title: obj.title,
 			content: obj.content,
-			occurred_at: new Date(obj.occurredOn + " " + obj.occurredAt)
+			occurred_at: Time.parseDateTime(
+				obj.occurredOn + "T" + obj.occurredAt + ":00"
+			)
 		}
 
 		case "parliament-committee-meeting": return {

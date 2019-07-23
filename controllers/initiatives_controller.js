@@ -5,6 +5,7 @@ var Router = require("express").Router
 var HttpError = require("standard-http-error")
 var Initiative = require("root/lib/initiative")
 var DateFns = require("date-fns")
+var Time = require("root/lib/time")
 var Config = require("root/config")
 var MediaType = require("medium-type")
 var Subscription = require("root/lib/subscription")
@@ -644,7 +645,7 @@ function* updateInitiativeToPublished(req, res) {
 		attrs: {endsAt: initiative.endsAt && new Date(initiative.endsAt)}
 	})
 
-	let endsAt = DateFns.endOfDay(new Date(req.body.endsAt))
+	let endsAt = DateFns.endOfDay(Time.parseDate(req.body.endsAt))
 
 	if (!Initiative.isDeadlineOk(new Date, endsAt)) return void res.render(tmpl, {
 		error: req.t("DEADLINE_ERR", {days: Config.minDeadlineDays}),
@@ -684,7 +685,7 @@ function* updateInitiativePhaseToSign(req, res) {
 		attrs: {endsAt: initiative.vote ? new Date(initiative.vote.endsAt) : null}
 	})
 
-	let endsAt = DateFns.endOfDay(new Date(req.body.endsAt))
+	let endsAt = DateFns.endOfDay(Time.parseDate(req.body.endsAt))
 	var attrs = {endsAt: endsAt}
 
 	if (!Initiative.isDeadlineOk(new Date, endsAt))

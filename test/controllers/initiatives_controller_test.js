@@ -10,6 +10,7 @@ var ValidComment = require("root/test/valid_comment")
 var ValidEvent = require("root/test/valid_db_initiative_event")
 var Http = require("root/lib/http")
 var I18n = require("root/lib/i18n")
+var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
@@ -1522,7 +1523,7 @@ describe("InitiativesController", function() {
 						form: {
 							_csrf_token: this.csrfToken,
 							visibility: "public",
-							endsAt: endsAt.toJSON().slice(0, 10)
+							endsAt: formatIsoDate(endsAt)
 						}
 					})
 
@@ -1551,7 +1552,7 @@ describe("InitiativesController", function() {
 						form: {
 							_csrf_token: this.csrfToken,
 							visibility: "public",
-							endsAt: new Date().toJSON().slice(0, 10)
+							endsAt: formatIsoDate(new Date)
 						}
 					})
 
@@ -1608,7 +1609,7 @@ describe("InitiativesController", function() {
 						form: {
 							_csrf_token: this.csrfToken,
 							status: "voting",
-							endsAt: endsAt.toJSON().slice(0, 10)
+							endsAt: formatIsoDate(endsAt)
 						}
 					})
 
@@ -1648,7 +1649,7 @@ describe("InitiativesController", function() {
 						form: {
 							_csrf_token: this.csrfToken,
 							status: "voting",
-							endsAt: new Date().toJSON().slice(0, 10)
+							endsAt: formatIsoDate(new Date)
 						}
 					})
 
@@ -1700,7 +1701,7 @@ describe("InitiativesController", function() {
 						form: {
 							_csrf_token: this.csrfToken,
 							status: "voting",
-							endsAt: new Date().toJSON().slice(0, 10)
+							endsAt: formatIsoDate(new Date)
 						}
 					})
 

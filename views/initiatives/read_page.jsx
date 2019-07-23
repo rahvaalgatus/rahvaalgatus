@@ -3,6 +3,7 @@ var _ = require("root/lib/underscore")
 var O = require("oolong")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
+var Time = require("root/lib/time")
 var DateFns = require("date-fns")
 var InitiativePage = require("./initiative_page")
 var Config = require("root/config")
@@ -864,7 +865,7 @@ function SidebarInfoView(attrs) {
 			{meetings.length > 0 ? <ul class="form-output">
 				{meetings.map((meeting) => <li>
 					<UntrustedLink href={meeting.url}>
-						{I18n.formatDate("numeric", new Date(meeting.date))}
+						{I18n.formatDate("numeric", Time.parseDate(meeting.date))}
 					</UntrustedLink>
 				</li>)}
 			</ul> : <AddInitiativeInfoButton t={t} />}
