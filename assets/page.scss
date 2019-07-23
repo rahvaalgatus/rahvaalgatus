@@ -1123,7 +1123,6 @@ button.inherited {
 
 	#initiative-phases {
 		$phase-icon-width: 6rem;
-		$phase-icon-current-width: 8rem;
 		$progress-height: 1.2rem;
 		$progress-background: $initiative-sidebar-header-background;
 
@@ -1219,41 +1218,14 @@ button.inherited {
 				}
 			}
 
-			&.previous {
-				.progress {
-					margin-right:
-						($phase-icon-current-width - $phase-icon-width) / 2 - 0.2rem;
-				}
-			}
-
-			&.current {
-				i:before {
-					position: relative;
-					top: -($phase-icon-current-width - $phase-icon-width) / 2;
-					margin-bottom: 0;
-					width: $phase-icon-current-width;
-					height: $phase-icon-current-width;
-				}
-
-				.progress {
-					margin-left:
-						($phase-icon-current-width - $phase-icon-width) / 2 - 0.2rem;
-				}
-			}
-
 			&:nth-child(1) {
 				left: 0;
 
 				i { margin-left: $phase-icon-width / 2; }
-				&.current i { margin-left: $phase-icon-current-width / 2; }
 
 				.progress {
 					left: $phase-icon-width;
 					right: $phase-icon-width / 2 - $phase-icon-width / 4;
-				}
-
-				&.current .progress {
-					margin-left: $phase-icon-current-width - $phase-icon-width - 0.2rem;
 				}
 			}
 
@@ -1286,17 +1258,12 @@ button.inherited {
 					left: $phase-icon-width / 2 - $phase-icon-width / 4;
 					right: $phase-icon-width;
 				}
-
-				&.previous .progress {
-					margin-right: $phase-icon-current-width - $phase-icon-width - 0.2rem;
-				}
 			}
 
 			&:nth-child(5) {
 				right: 0;
 
 				i { left: 50%; margin-left: -$phase-icon-width / 2; }
-				&.current i { margin-left: -$phase-icon-current-width / 2; }
 			}
 
 			&#edit-phase {

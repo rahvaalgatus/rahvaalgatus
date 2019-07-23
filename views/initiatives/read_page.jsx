@@ -635,12 +635,7 @@ function PhasesView(attrs) {
 
 	function classifyPhase(phase, given) {
 		var dist = PHASES.indexOf(given) - PHASES.indexOf(phase)
-
-		return (
-			dist == 0 ? "current" :
-			dist == 1 ? "past previous" :
-			dist > 0 ? "past" : ""
-		)
+		return dist == 0 ? "current" : dist > 0 ? "past" : ""
 	}
 }
 
