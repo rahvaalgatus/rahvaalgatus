@@ -3,6 +3,7 @@ var O = require("oolong")
 var Express = require("root/lib/express")
 var Config = require("root/config")
 var HttpError = require("standard-http-error")
+var I18n = require("root/lib/i18n")
 var runServer = require("root/lib/http").runServer
 var redirect = require("root/lib/redirect")
 var ENV = process.env.ENV
@@ -63,15 +64,18 @@ app.use(require("root/lib/middleware/error_reporter_middleware"))
 
 app.use(require("root/lib/middleware/error_handler_middleware").bind(null,
 	function(err, req, res) {
+	// The error could've originated from middleware before req.t is set.
+	var t = req.t || I18n.t.bind(null, "et")
+
 	// Eventually when we're in control of signin, we should show the signin form
 	// for 401s.
 	if (err instanceof HttpError) res.render("error_page.jsx", {
-		title: req.t(err.code + "_TITLE") || err.name,
-		body: req.t(err.code + "_BODY") || err.message
+		title: t(err.code + "_TITLE") || err.name,
+		body: t(err.code + "_BODY") || err.message
 	})
 	else res.render("error_page.jsx", {
-		title: req.t("500_TITLE"),
-		body: req.t("500_BODY")
+		title: t("500_TITLE"),
+		body: t("500_BODY")
 	})
 }))
 
