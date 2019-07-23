@@ -1,11 +1,12 @@
 var _ = require("root/lib/underscore")
 var Config = require("root/config")
-var respond = require("root/test/fixtures").respond
 var ValidSubscription = require("root/test/valid_subscription")
+var t = require("root/lib/i18n").t.bind(null, "et")
+var respond = require("root/test/fixtures").respond
 var sql = require("sqlate")
 var pseudoHex = require("root/lib/crypto").pseudoHex
-var t = require("root/lib/i18n").t.bind(null, "et")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
+var initiativesDb = require("root/db/initiatives_db")
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var EMPTY_RES = {data: {rows: []}}
 
@@ -59,6 +60,8 @@ describe("InitiativeSubscriptionsController", function() {
 		require("root/test/time")(Date.UTC(2015, 5, 18))
 
 		it("must subscribe", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
@@ -97,6 +100,8 @@ describe("InitiativeSubscriptionsController", function() {
 		})
 
 		it(`must subscribe case-insensitively`, function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
@@ -129,6 +134,8 @@ describe("InitiativeSubscriptionsController", function() {
 
 		it("must not resend confirmation email if less than an hour has passed",
 			function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			var subscription = yield subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: UUID,
 				confirmation_sent_at: new Date
@@ -153,6 +160,8 @@ describe("InitiativeSubscriptionsController", function() {
 		})
 
 		it("must resend confirmation email if an hour has passed", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			var subscription = yield subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: UUID,
 				confirmation_sent_at: new Date
@@ -181,6 +190,8 @@ describe("InitiativeSubscriptionsController", function() {
 		})
 
 		it("must send reminder email if an hour has passed", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			var subscription = yield subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: UUID,
 				confirmed_at: new Date,
@@ -210,6 +221,7 @@ describe("InitiativeSubscriptionsController", function() {
 		})
 
 		it("must respond with 403 Forbidden if discussion not public", function*() {
+			yield initiativesDb.create({uuid: UUID})
 			PRIVATE_DISCUSSION.visibility.must.not.equal("public")
 
 			this.router.get(`/api/topics/${UUID}`,
@@ -224,6 +236,8 @@ describe("InitiativeSubscriptionsController", function() {
 		})
 
 		it("must respond with 422 given missing email", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
@@ -236,6 +250,8 @@ describe("InitiativeSubscriptionsController", function() {
 		})
 
 		it("must respond with 422 given invalid email", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
@@ -253,6 +269,8 @@ describe("InitiativeSubscriptionsController", function() {
 		require("root/test/time")(Date.UTC(2015, 5, 18))
 
 		it("must confirm given a confirmation token", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
@@ -284,6 +302,8 @@ describe("InitiativeSubscriptionsController", function() {
 		})
 
 		it("must not confirm twice", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
@@ -308,6 +328,8 @@ describe("InitiativeSubscriptionsController", function() {
 		})
 
 		it("must not confirm given the wrong token", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 			this.router.get(`/api/topics/${UUID}/comments`,
@@ -339,6 +361,8 @@ describe("InitiativeSubscriptionsController", function() {
 		require("root/test/fixtures").csrf()
 
 		it("must show subscription page", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
@@ -358,6 +382,8 @@ describe("InitiativeSubscriptionsController", function() {
 		})
 
 		it("must respond with 404 given invalid update token", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
@@ -378,6 +404,8 @@ describe("InitiativeSubscriptionsController", function() {
 		require("root/test/time")()
 
 		it("must update subscription", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
@@ -411,6 +439,8 @@ describe("InitiativeSubscriptionsController", function() {
 		})
 
 		it("must not update email", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
@@ -438,6 +468,8 @@ describe("InitiativeSubscriptionsController", function() {
 		})
 
 		it("must respond with 404 given invalid update token", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
@@ -466,6 +498,8 @@ describe("InitiativeSubscriptionsController", function() {
 		require("root/test/fixtures").csrf()
 
 		it("must delete subscription", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
@@ -489,6 +523,8 @@ describe("InitiativeSubscriptionsController", function() {
 		})
 
 		it("must respond with 404 given invalid update token", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
@@ -513,6 +549,8 @@ describe("InitiativeSubscriptionsController", function() {
 		})
 
 		it("must not delete other subscription on same initiative", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 

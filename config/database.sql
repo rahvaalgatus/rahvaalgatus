@@ -1,6 +1,6 @@
 CREATE TABLE initiatives (
 	uuid TEXT PRIMARY KEY NOT NULL,
-	mailchimp_interest_id TEXT NULL UNIQUE, notes TEXT NOT NULL DEFAULT "", parliament_api_data TEXT NULL, sent_to_parliament_at TEXT NULL, finished_in_parliament_at TEXT NULL, discussion_end_email_sent_at TEXT NULL, signing_end_email_sent_at TEXT NULL, author_url TEXT NOT NULL DEFAULT "", community_url TEXT NOT NULL DEFAULT "", organizations TEXT NOT NULL DEFAULT "[]", meetings TEXT NOT NULL DEFAULT "[]", url TEXT NOT NULL DEFAULT "", media_urls TEXT NOT NULL DEFAULT "[]", signature_milestones TEXT NOT NULL DEFAULT "{}", phase TEXT NOT NULL DEFAULT "edit", government_change_urls TEXT NOT NULL DEFAULT "[]", public_change_urls TEXT NOT NULL DEFAULT "[]", has_paper_signatures INTEGER NOT NULL DEFAULT 0, received_by_parliament_at TEXT, accepted_by_parliament_at TEXT, archived_at TEXT,
+	mailchimp_interest_id TEXT NULL UNIQUE, notes TEXT NOT NULL DEFAULT "", parliament_api_data TEXT NULL, sent_to_parliament_at TEXT NULL, finished_in_parliament_at TEXT NULL, discussion_end_email_sent_at TEXT NULL, signing_end_email_sent_at TEXT NULL, author_url TEXT NOT NULL DEFAULT "", community_url TEXT NOT NULL DEFAULT "", organizations TEXT NOT NULL DEFAULT "[]", meetings TEXT NOT NULL DEFAULT "[]", url TEXT NOT NULL DEFAULT "", media_urls TEXT NOT NULL DEFAULT "[]", signature_milestones TEXT NOT NULL DEFAULT "{}", phase TEXT NOT NULL DEFAULT "edit", government_change_urls TEXT NOT NULL DEFAULT "[]", public_change_urls TEXT NOT NULL DEFAULT "[]", has_paper_signatures INTEGER NOT NULL DEFAULT 0, received_by_parliament_at TEXT, accepted_by_parliament_at TEXT, archived_at TEXT, parliament_decision TEXT, parliament_committee TEXT, parliament_uuid TEXT, external INTEGER NOT NULL DEFAULT 0, title TEXT NOT NULL DEFAULT '', author_name TEXT NOT NULL DEFAULT '', created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')), parliament_synced_at TEXT,
 
 	CONSTRAINT initiatives_uuid_length
 	CHECK (length(uuid) == 36),
@@ -42,8 +42,8 @@ CREATE TABLE IF NOT EXISTS "initiative_events" (
 	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
 	occurred_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
 	created_by TEXT,
-	title TEXT NOT NULL,
-	"text" TEXT NOT NULL, origin TEXT NOT NULL DEFAULT 'admin',
+	title TEXT,
+	content TEXT, origin TEXT NOT NULL DEFAULT 'admin', external_id TEXT, type TEXT NOT NULL DEFAULT 'text',
 
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
 
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS "initiative_events" (
 	CHECK (length(title) > 0),
 
 	CONSTRAINT initiative_events_text_length
-	CHECK (length("text") > 0)
+	CHECK (length(content) > 0)
 );
 CREATE INDEX index_initiative_events_on_initiative_uuid
 ON initiative_events (initiative_uuid);
@@ -111,6 +111,50 @@ CREATE INDEX index_comments_on_parent_id
 ON comments (parent_id);
 CREATE INDEX index_comments_on_initiative_uuid
 ON comments (initiative_uuid);
+CREATE TABLE IF NOT EXISTS "initiative_files" (
+	id INTEGER PRIMARY KEY NOT NULL,
+	initiative_uuid TEXT NOT NULL,
+	event_id INTEGER,
+	external_id TEXT,
+	external_url TEXT,
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	name TEXT NOT NULL,
+	title TEXT,
+	url TEXT,
+	content BLOB NOT NULL,
+	content_type TEXT NOT NULL,
+
+	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
+	FOREIGN KEY (event_id) REFERENCES initiative_events (id),
+
+	CONSTRAINT initiative_files_external_id_length
+	CHECK (length(external_id) > 0),
+
+	CONSTRAINT initiative_files_external_url_length
+	CHECK (length(external_url) > 0),
+
+	CONSTRAINT initiative_files_name_length
+	CHECK (length(name) > 0),
+
+	CONSTRAINT initiative_files_title_length
+	CHECK (length(title) > 0),
+
+	CONSTRAINT initiative_files_url_length
+	CHECK (length(url) > 0),
+
+	CONSTRAINT initiative_files_content_length
+	CHECK (length(content) > 0),
+
+	CONSTRAINT initiative_files_content_type_length
+	CHECK (length(content_type) > 0)
+);
+CREATE INDEX index_initiative_files_on_initiative_uuid
+ON initiative_files (initiative_uuid);
+CREATE INDEX index_initiative_files_on_event_id
+ON initiative_files (event_id);
+CREATE UNIQUE INDEX index_initiative_files_on_event_id_and_external_id
+ON initiative_files (event_id, external_id);
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -146,4 +190,12 @@ INSERT INTO migrations VALUES('20190703115616');
 INSERT INTO migrations VALUES('20190708080000');
 INSERT INTO migrations VALUES('20190710214809');
 INSERT INTO migrations VALUES('20190710215940');
+INSERT INTO migrations VALUES('20190711000000');
+INSERT INTO migrations VALUES('20190711000010');
+INSERT INTO migrations VALUES('20190711000020');
+INSERT INTO migrations VALUES('20190711000030');
+INSERT INTO migrations VALUES('20190711000040');
+INSERT INTO migrations VALUES('20190711000050');
+INSERT INTO migrations VALUES('20190711000060');
+INSERT INTO migrations VALUES('20190711000070');
 COMMIT;

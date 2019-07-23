@@ -15,6 +15,7 @@ var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
+var filesDb = require("root/db/initiative_files_db")
 var commentsDb = require("root/db/comments_db")
 var countSignatures = Initiative.countSignatures.bind(null, "Yes")
 var isOk = require("root/lib/http").isOk
@@ -121,9 +122,14 @@ exports.router.post("/", next(function*(req, res) {
 			attrs: attrs
 		})
 
-	var initiative = created.body.data
-	yield initiativesDb.create({uuid: initiative.id})
-	res.redirect(303, req.baseUrl + "/" + initiative.id + "/edit")
+	var topic = created.body.data
+
+	yield initiativesDb.create({
+		uuid: topic.id,
+		created_at: new Date
+	})
+
+	res.redirect(303, req.baseUrl + "/" + topic.id + "/edit")
 }))
 
 exports.router.get("/new", function(_req, res) {
@@ -131,24 +137,44 @@ exports.router.get("/new", function(_req, res) {
 })
 
 exports.router.use("/:id", next(function*(req, res, next) {
-	try {
-		var path = `/api/topics/${encode(req.params.id)}?include[]=vote&include[]=event`
-		if (req.user) path = "/api/users/self" + path.slice(4)
-		req.initiative = yield req.cosApi(path).then(getBody).
-			then(parseCitizenInitiative)
+	var initiative
+	var dbInitiative = yield initiativesDb.read(req.params.id)
+	if (dbInitiative == null) throw new HttpError(404)
 
-		req.dbInitiative = yield initiativesDb.read(req.initiative.id, {
-			create: true
-		})
+	if (dbInitiative.external) initiative = {
+		id: dbInitiative.uuid,
+		title: dbInitiative.title,
+		creator: {name: dbInitiative.author_name},
+		createdAt: dbInitiative.created_at,
+		permission: {level: "read"},
+		visibility: "public",
+		status: "followUp",
+
+		vote: {
+			createdAt: dbInitiative.created_at,
+			options: {rows: [{value: "Yes", voteCount: Config.votesRequired}]}
+		}
 	}
-	catch (ex) {
-		// CitizenOS throws 500 for invalid UUIDs. Workaround that.
-		if (isFetchError(403, ex)) throw new HttpError(404)
-		if (isFetchError(404, ex)) throw new HttpError(404)
-		if (isFetchError(500, ex)) throw new HttpError(404)
-		throw ex
+	else {
+		try {
+			var path = `/api/topics/${encode(req.params.id)}`
+			path += "?include[]=vote&include[]=event"
+			if (req.user) path = "/api/users/self" + path.slice(4)
+
+			initiative = yield req.cosApi(path).then(getBody).
+				then(parseCitizenInitiative)
+		}
+		catch (ex) {
+			// CitizenOS throws 500 for invalid UUIDs. Workaround that.
+			if (isFetchError(403, ex)) throw new HttpError(404)
+			if (isFetchError(404, ex)) throw new HttpError(404)
+			if (isFetchError(500, ex)) throw new HttpError(404)
+			throw ex
+		}
 	}
 
+	req.initiative = initiative
+	req.dbInitiative = dbInitiative
 	res.locals.initiative = req.initiative
 	res.locals.dbInitiative = req.dbInitiative
 	next()
@@ -172,8 +198,7 @@ exports.router.get("/:id",
 			break
 
 		case "application/atom+xml":
-			// Stick to the default language in the Atom feed.
-			var events = yield searchInitiativeEvents(t, dbInitiative)
+			var events = yield searchInitiativeEvents(dbInitiative)
 			res.setHeader("Content-Type", res.contentType)
 			res.render("initiatives/atom.jsx", {events: events})
 			break
@@ -226,7 +251,7 @@ exports.read = next(function*(req, res) {
 		yield subscriptionsDb.countConfirmedByInitiativeId(initiative.id)
 
 	var comments = yield searchInitiativeComments(initiative.id)
-	var events = _.reverse(yield searchInitiativeEvents(req.t, dbInitiative))
+	var events = _.reverse(yield searchInitiativeEvents(dbInitiative))
 
 	var subscription = user && user.emailIsVerified
 		? yield subscriptionsDb.read(sql`
@@ -237,12 +262,20 @@ exports.read = next(function*(req, res) {
 		`)
 		: null
 
+	var files = yield filesDb.search(sql`
+		SELECT id, name, title, content_type, length(content) AS size
+		FROM initiative_files
+		WHERE initiative_uuid = ${dbInitiative.uuid}
+		AND event_id IS NULL
+	`)
+
 	res.render("initiatives/read_page.jsx", {
 		thank: vote && vote.support == "Yes",
 		thankAgain: votes.length > 1 && votes[1].support == "Yes",
 		signature: signature,
 		subscription: subscription,
 		subscriberCount: subscriberCount,
+		files: files,
 		comments: comments,
 		events: events
 	})
@@ -286,6 +319,8 @@ exports.router.use("/:id/comments",
 	require("./initiatives/comments_controller").router)
 exports.router.use("/:id/authors",
 	require("./initiatives/authors_controller").router)
+exports.router.use("/:id/files",
+	require("./initiatives/files_controller").router)
 exports.router.use("/:id/events",
 	require("./initiatives/events_controller").router)
 exports.router.use("/:id/subscriptions",
@@ -487,12 +522,27 @@ function unhideSignature(initiativeId, userId) {
 	`)
 }
 
-function* searchInitiativeEvents(t, initiative) {
+function* searchInitiativeEvents(initiative) {
 	var events = yield eventsDb.search(sql`
-		SELECT * FROM initiative_events
-		WHERE initiative_uuid = ${initiative.uuid}
+		SELECT event.*, json_group_array(json_object(
+			'id', file.id,
+			'name', file.name,
+			'title', file.title,
+			'url', file.url,
+			'content_type', file.content_type,
+			'size', length(file.content)
+		)) AS files
+
+		FROM initiative_events AS event
+		LEFT JOIN initiative_files AS file on file.event_id = event.id
+		WHERE event.initiative_uuid = ${initiative.uuid}
+		GROUP BY event.id
 		ORDER BY "occurred_at" ASC
 	`)
+
+	events.forEach(function(ev) {
+		ev.files = JSON.parse(ev.files).filter((f) => f.id).map(filesDb.parse)
+	})
 
 	var sentToParliamentAt = initiative.sent_to_parliament_at
 	var finishedInParliamentAt = initiative.finished_in_parliament_at
@@ -500,31 +550,32 @@ function* searchInitiativeEvents(t, initiative) {
 	return _.sortBy(concat(
 		sentToParliamentAt ? {
 			id: "sent-to-parliament",
-			title: t("FIRST_PROCEEDING_TITLE"),
-			text: t("FIRST_PROCEEDING_BODY"),
+			type: "sent-to-parliament",
 			updated_at: sentToParliamentAt,
 			occurred_at: sentToParliamentAt,
-			origin: "admin"
+			origin: "system"
 		} : EMPTY_ARR,
 
 		_.map(initiative.signature_milestones, (at, milestone) => ({
 			id: "milestone-" + milestone,
-			title: t("SIGNATURE_MILESTONE_EVENT_TITLE", {milestone: milestone}),
-			text: "",
+			type: "signature-milestone",
+			content: milestone,
 			updated_at: at,
 			occurred_at: at,
-			origin: "admin"
+			origin: "system"
 		})),
 
 		events,
 
-		finishedInParliamentAt ? {
+		(
+			finishedInParliamentAt &&
+			!events.some((ev) => ev.type == "parliament-finished")
+		) ? {
 			id: "finished-in-parliament",
-			title: t("PROCEEDING_FINISHED_TITLE"),
-			text: "",
 			updated_at: finishedInParliamentAt,
 			occurred_at: finishedInParliamentAt,
-			origin: "admin"
+			type: "parliament-finished",
+			origin: "system"
 		} : EMPTY_ARR
 	), "occurred_at")
 }

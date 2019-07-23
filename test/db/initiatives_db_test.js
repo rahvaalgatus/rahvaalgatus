@@ -1,5 +1,5 @@
 var _ = require("root/lib/underscore")
-var ValidDbInitiative = require("root/test/valid_db_initiative")
+var ValidInitiative = require("root/test/valid_db_initiative")
 var insert = require("heaven-sqlite").insert
 var sqlite = require("root").sqlite
 var sql = require("sqlate")
@@ -8,11 +8,12 @@ var serialize = db.serialize
 
 describe("InitiativesDb", function() {
 	require("root/test/db")()
+	require("root/test/time")()
 
 	describe(".search", function() {
 		describe("given a uuid", function() {
 			it("must return initiative", function*() {
-				var initiative = new ValidDbInitiative
+				var initiative = new ValidInitiative
 				yield sqlite(insert("initiatives", serialize(initiative)))
 				yield db.search(initiative.uuid).must.then.eql([initiative])
 			})
@@ -23,7 +24,7 @@ describe("InitiativesDb", function() {
 			})
 
 			it("must return existing initiative when creating", function*() {
-				var a = new ValidDbInitiative
+				var a = new ValidInitiative
 				yield sqlite(insert("initiatives", serialize(a)))
 				var b = yield db.search(a.uuid, {create: true})
 				b.must.eql([a])
@@ -33,7 +34,7 @@ describe("InitiativesDb", function() {
 			it("must create and return a new initiative when creating", function*() {
 				var uuid = "133ec861-b719-4d46-8483-4ba59d1d2412"
 				var initiatives = yield db.search(uuid, {create: true})
-				initiatives.must.eql([new ValidDbInitiative({uuid: uuid})])
+				initiatives.must.eql([new ValidInitiative({uuid: uuid})])
 
 				yield db.search(sql`SELECT * FROM initiatives`).must.then.eql(
 					initiatives
@@ -43,8 +44,8 @@ describe("InitiativesDb", function() {
 
 		describe("given an array of uuids", function() {
 			it("must return initiatives", function*() {
-				var a = new ValidDbInitiative
-				var b = new ValidDbInitiative
+				var a = new ValidInitiative
+				var b = new ValidInitiative
 				yield sqlite(insert("initiatives", serialize(a)))
 				yield sqlite(insert("initiatives", serialize(b)))
 				var initiatives = yield db.search([a.uuid, b.uuid])
@@ -52,8 +53,8 @@ describe("InitiativesDb", function() {
 			})
 
 			it("must return only found initiatives", function*() {
-				var a = new ValidDbInitiative
-				var b = new ValidDbInitiative
+				var a = new ValidInitiative
+				var b = new ValidInitiative
 				yield sqlite(insert("initiatives", serialize(a)))
 
 				yield db.search([a.uuid, b.uuid]).must.then.eql([a])
@@ -61,9 +62,9 @@ describe("InitiativesDb", function() {
 			})
 
 			it("must return and create initiatives when creating", function*() {
-				var a = new ValidDbInitiative({notes: "A"})
-				var b = new ValidDbInitiative
-				var c = new ValidDbInitiative({notes: "C"})
+				var a = new ValidInitiative({notes: "A"})
+				var b = new ValidInitiative
+				var c = new ValidInitiative({notes: "C"})
 				yield sqlite(insert("initiatives", serialize(a)))
 				yield sqlite(insert("initiatives", serialize(c)))
 
@@ -79,7 +80,7 @@ describe("InitiativesDb", function() {
 	describe(".read", function() {
 		describe("given a uuid", function() {
 			it("must return initiative", function*() {
-				var initiative = new ValidDbInitiative
+				var initiative = new ValidInitiative
 				yield sqlite(insert("initiatives", serialize(initiative)))
 				yield db.read(initiative.uuid).must.then.eql(initiative)
 			})
@@ -90,7 +91,7 @@ describe("InitiativesDb", function() {
 			})
 
 			it("must return existing initiative when creating", function*() {
-				var a = new ValidDbInitiative
+				var a = new ValidInitiative
 				yield sqlite(insert("initiatives", serialize(a)))
 				var b = yield db.read(a.uuid, {create: true})
 				b.must.eql(a)
@@ -100,7 +101,7 @@ describe("InitiativesDb", function() {
 			it("must create and return a new initiative when creating", function*() {
 				var uuid = "133ec861-b719-4d46-8483-4ba59d1d2412"
 				var initiative = yield db.read(uuid, {create: true})
-				initiative.must.eql(new ValidDbInitiative({uuid: uuid}))
+				initiative.must.eql(new ValidInitiative({uuid: uuid}))
 
 				yield db.search(sql`SELECT * FROM initiatives`).must.then.eql([
 					initiative

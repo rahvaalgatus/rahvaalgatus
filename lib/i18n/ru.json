@@ -77,6 +77,7 @@
 	"NO_GOVERNMENT_REPLY": "Ожидаем ответа Канцелярии Рийгикогу. ",
 	"N_SIGNATURES": "{{votes}} подписей",
 	"N_SIGNATURES_COLLECTED": "собрано {{votes}} подписей",
+	"N_SIGNATURES_EXTERNAL": "1000+ подписей",
 	"N_SIGNATURES_FAILED": "{{votes}} подписей",
 	"N_SIGNATURES_WITH_DATE": "{{votes}} подписей",
 	"N_SIGNATURES_WITH_PAPER": "{{votes}}+ подписей",

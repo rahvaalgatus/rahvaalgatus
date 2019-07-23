@@ -1,0 +1,8 @@
+ALTER TABLE initiatives
+ADD COLUMN external INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE initiatives
+ADD COLUMN title TEXT NOT NULL DEFAULT '';
+
+ALTER TABLE initiatives
+ADD COLUMN author_name TEXT NOT NULL DEFAULT '';

@@ -7,29 +7,31 @@ var Page = require("../page")
 var Form = Page.Form
 var FormButton = Page.FormButton
 var Flash = Page.Flash
+var AdminController = require("root/controllers/admin_controller")
+var isEditableEvent = AdminController.isEditableEvent
 var formatDate = require("root/lib/i18n").formatDate
+var formatDateTime = require("root/lib/i18n").formatDateTime
 var confirm = require("root/lib/jsx").confirm
 var linkify = require("root/lib/linkify")
 var UPDATEABLE_PHASES = ["sign", "parliament", "government", "done"]
 
 module.exports = function(attrs) {
 	var req = attrs.req
-	var initiative = attrs.initiative
 	var dbInitiative = attrs.dbInitiative
 	var subscriberCount = attrs.subscriberCount
-	var initiativePath = `${req.baseUrl}/initiatives/${initiative.id}`
+	var initiativePath = `${req.baseUrl}/initiatives/${dbInitiative.uuid}`
 	var events = attrs.events
 	var messages = attrs.messages
 	var phase = dbInitiative.phase
 	var pendingSubscriberCount = subscriberCount.all - subscriberCount.confirmed
 
-	return <Page page="initiative" title={initiative.title} req={req}>
+	return <Page page="initiative" title={dbInitiative.title} req={req}>
 		<a href={req.baseUrl + "/initiatives"} class="admin-back">Initiatives</a>
-		<h1 class="admin-heading">{initiative.title}</h1>
+		<h1 class="admin-heading">{dbInitiative.title}</h1>
 
 		<a
 			id="production-link"
-			href={Config.url + "/initiatives/" + initiative.id}
+			href={Config.url + "/initiatives/" + dbInitiative.uuid}
 			class="admin-link"
 		>View on Rahvaalgatus</a>
 
@@ -167,7 +169,8 @@ module.exports = function(attrs) {
 			<table class="admin-table">
 				<thead>
 					<th>Occurred On</th>
-					<th>Title</th>
+					<th>Type</th>
+					<th>Content</th>
 					<th class="new-event">
 						<a
 							href={`${initiativePath}/events/new`}
@@ -181,22 +184,78 @@ module.exports = function(attrs) {
 					{events.map(function(event) {
 						var eventPath = `${initiativePath}/events/${event.id}`
 						var toggleId = `show-event-${event.id}-text`
+						var title = event.title
+						var content
+
+						switch (event.type) {
+							case "sent": break
+							case "parliament-received": break
+							case "parliament-accepted": break
+							case "parliament-finished": break
+							case "signature-milestone": break
+
+							case "text":
+								content = <p class="text">{Jsx.html(linkify(event.content))}</p>
+								break
+
+							case "parliament-committee-meeting":
+								var meeting = event.content
+
+								content = <table class="admin-horizontal-table">
+									<tr>
+										<th scope="row">Comittee</th>
+										<td>{meeting.committee}</td>
+									</tr>
+
+									{meeting.decision ? <tr>
+										<th scope="row">Decision</th>
+										<td>{meeting.decision}</td>
+									</tr> : null}
+
+									{meeting.invitees ? <tr>
+										<th scope="row">Invitees</th>
+										<td>{meeting.invitees}</td>
+									</tr> : null}
+
+									{meeting.summary ? <tr>
+										<th scope="row">Summary</th>
+										<td>{Jsx.html(linkify(meeting.summary))}</td>
+									</tr> : null}
+								</table>
+								break
+
+							default:
+								throw new RangeError("Unsupported event type: " + event.type)
+						}
 
 						return <tr class="event">
 							<td>
 								<time datetime={event.occurred_at.toJSON()}>
-									{formatDate("iso", event.occurred_at)}
+									{formatDateTime("isoish", event.occurred_at)}
 								</time>
 							</td>
 
 							<td>
-								<h3>{event.title}</h3>
-								<input id={toggleId} hidden type="checkbox" class="text-toggle" />
-								<label for={toggleId} class="admin-link">Show text</label>
-								<p class="admin-text">{Jsx.html(linkify(event.text))}</p>
+								{event.type}
 							</td>
 
 							<td>
+								<h3>{title}</h3>
+
+								<input
+									id={toggleId}
+									checked={event.type != "text"}
+									hidden
+									type="checkbox"
+									class="text-toggle"
+								/>
+
+								<label for={toggleId} class="admin-link">Show</label>
+
+								{content}
+							</td>
+
+							{isEditableEvent(event) ? <td>
 								<a href={eventPath + "/edit"} class="admin-link">Edit</a>
 								&nbsp;or&nbsp;
 
@@ -207,7 +266,7 @@ module.exports = function(attrs) {
 									value="delete"
 									onclick={confirm("Sure?")}
 									class="admin-link">Delete</FormButton>
-							</td>
+							</td> : <td />}
 						</tr>
 					})}
 				</tbody>

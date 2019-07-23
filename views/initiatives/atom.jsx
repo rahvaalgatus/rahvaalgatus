@@ -31,13 +31,46 @@ module.exports = function(attrs) {
 			<uri>{Config.url}</uri>
 		</author>
 
-		{events.map((event) => <entry>
-			<id>{url + "/events/" + event.id}</id>
-			<title>{event.title}</title>
-			<published>{event.occurred_at.toJSON()}</published>
-			<updated>{event.updated_at.toJSON()}</updated>
-			<category term={CATEGORIES[event.origin]} />
-			<content type="text">{event.text}</content>
-		</entry>)}
+		{_.reject(events, isParliamentEvent).map(function(event) {
+			var title
+			var content
+			var category = CATEGORIES[event.origin]
+
+			switch (event.type) {
+				case "sent-to-parliament":
+					title = t("INITIATIVE_SENT_TO_PARLIAMENT_TITLE")
+					content = t("INITIATIVE_SENT_TO_PARLIAMENT_BODY")
+					break
+
+				case "parliament-finished":
+					title = t("PARLIAMENT_FINISHED")
+					break
+
+				case "signature-milestone":
+					title = t("SIGNATURE_MILESTONE_EVENT_TITLE", {
+						milestone: event.content
+					})
+					break
+
+				case "text":
+					title = event.title
+					content = event.content
+					break
+
+				default:
+					throw new RangeError("Unsupported event type: " + event.type)
+			}
+
+			return <entry>
+				<id>{url + "/events/" + event.id}</id>
+				<title>{title}</title>
+				<published>{event.occurred_at.toJSON()}</published>
+				<updated>{event.updated_at.toJSON()}</updated>
+				{category ? <category term={category} /> : null}
+				{content ? <content type="text">{content}</content> : null}
+				</entry>
+		})}
 	</feed>
 }
+
+function isParliamentEvent(event) { return event.origin == "parliament" }

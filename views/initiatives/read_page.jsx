@@ -24,6 +24,7 @@ var min = Math.min
 var diffInDays = DateFns.differenceInCalendarDays
 var PHASES = Initiative.PHASES
 var HTTP_URL = /^https?:\/\//i
+var EMPTY_ARR = Array.prototype
 var EMPTY_ORG = {name: "", url: ""}
 var EVENT_NOTIFICATIONS_SINCE = new Date(Config.eventNotificationsSince)
 
@@ -41,6 +42,29 @@ var UI_TRANSLATIONS = O.map(I18n.STRINGS, function(lang) {
 	return O.filter(lang, (_value, key) => key.indexOf("HWCRYPTO") >= 0)
 })
 
+var FILE_TYPE_ICONS = {
+	"application/pdf": "ra-icon-pdf",
+	"application/vnd.ms-powerpoint": "ra-icon-ppt",
+	"application/vnd.etsi.asic-e+zip": "ra-icon-ddoc",
+
+	"application/vnd.openxmlformats-officedocument.presentationml.presentation":
+		"ra-icon-ppt"
+}
+
+var FILE_TYPE_NAMES = {
+	"application/pdf": "PDF",
+	"application/vnd.etsi.asic-e+zip": "Digidoc",
+	"application/vnd.ms-powerpoint": "PowerPoint",
+
+	"application/vnd.openxmlformats-officedocument.presentationml.presentation":
+		"PowerPoint",
+
+	// https://api.riigikogu.ee/api/files/800ed589-3d0b-4048-9b70-2ff6b0684ed4
+	// has its type as "application/digidoc. I've not yet found whether that has
+	// ever been a valid MIME type.
+	"application/digidoc": "Digidoc"
+}
+
 module.exports = function(attrs) {
 	var req = attrs.req
 	var t = attrs.t
@@ -48,6 +72,7 @@ module.exports = function(attrs) {
 	var thank = attrs.thank
 	var thankAgain = attrs.thankAgain
 	var signature = attrs.signature
+	var files = attrs.files
 	var comments = attrs.comments
 	var subscription = attrs.subscription
 	var flash = attrs.flash
@@ -102,7 +127,7 @@ module.exports = function(attrs) {
     />
 
 		<section id="initiative-section" class="transparent-section"><center>
-			<div id="initiative-sheet">
+			<div id="initiative-sheet" class="sheet">
 				<Flash flash={flash} />
 
 				{thank ? <div class="initiative-status">
@@ -224,7 +249,11 @@ module.exports = function(attrs) {
 					signature={signature}
 				/>
 
-				<article class="text">{Jsx.html(initiative.html)}</article>
+				<InitiativeContentView
+					initiative={initiative}
+					dbInitiative={dbInitiative}
+					files={files}
+				/>
 
 				{Initiative.isVotable(now, initiative) ? <div id="initiative-vote">
 					<ProgressView
@@ -467,9 +496,12 @@ function PhasesView(attrs) {
 
   var daysSinceCreated = diffInDays(new Date, createdAt)
   var daysInEdit = Initiative.daysInDiscussion(initiative)
-  var editProgress = vote ? 1 : min(daysSinceCreated / daysInEdit, 1)
   var discussionDaysLeft = daysInEdit - daysSinceCreated
   var sigs = vote ? Initiative.countSignatures("Yes", initiative) : 0
+
+	var editProgress = isPhaseAfter("edit", phase)
+		? 1
+		: min(daysSinceCreated / daysInEdit, 1)
 
 	var editPhaseText
 	if (phase == "edit") {
@@ -481,7 +513,9 @@ function PhasesView(attrs) {
 			})
 		else editPhaseText = t("DISCUSSION_FINISHED")
 	}
-	else editPhaseText =
+	else if (dbInitiative.external)
+		editPhaseText = ""
+	else if (vote) editPhaseText =
 		I18n.formatDateSpan("numeric", initiative.createdAt, vote.createdAt)
 
 	var signProgress = isPhaseAfter("sign", phase)
@@ -491,7 +525,9 @@ function PhasesView(attrs) {
   var signPhaseText
 
 	if (isPhaseAtLeast("sign", phase)) {
-		if (dbInitiative.has_paper_signatures)
+		if (dbInitiative.external)
+			signPhaseText = t("N_SIGNATURES_EXTERNAL")
+		else if (dbInitiative.has_paper_signatures)
 			signPhaseText = t("N_SIGNATURES_WITH_PAPER", {votes: sigs})
 		else
 			signPhaseText = t("N_SIGNATURES", {votes: sigs})
@@ -605,6 +641,30 @@ function PhasesView(attrs) {
 			dist > 0 ? "past" : ""
 		)
 	}
+}
+
+function InitiativeContentView(attrs) {
+	var initiative = attrs.initiative
+	var dbInitiative = attrs.dbInitiative
+	var initiativePath = "/initiatives/" + dbInitiative.uuid
+	var files = attrs.files
+
+	if (initiative.html)
+		return <article class="text">{Jsx.html(initiative.html)}</article>
+	
+	if (dbInitiative.external) {
+		var pdf = files.find((file) => file.content_type == "application/pdf")
+		if (pdf == null) return null
+
+		return <article class="pdf">
+			<object
+				data={initiativePath + "/files/" + pdf.id}
+				type={pdf.content_type}
+			/>
+		</article>
+	}
+
+	return null
 }
 
 function SidebarAuthorView(attrs) {
@@ -1002,32 +1062,134 @@ function EventsView(attrs) {
 	var initiative = attrs.initiative
 	var dbInitiative = attrs.dbInitiative
 	var events = attrs.events
+	var initiativePath = "/initiatives/" + dbInitiative.uuid
 
 	if (events.length > 0 || Initiative.canCreateEvents(initiative))
 		return <section id="initiative-events" class="transparent-section"><center>
-			{Initiative.canCreateEvents(initiative) ? <a
-				href={`/initiatives/${initiative.id}/events/new`}
-				class="create-event-button">
-				{t("CREATE_INITIATIVE_EVENT_BUTTON")}
-			</a> : null}
+			<article class="sheet">
+				{Initiative.canCreateEvents(initiative) ? <a
+					href={`/initiatives/${initiative.id}/events/new`}
+					class="create-event-button">
+					{t("CREATE_INITIATIVE_EVENT_BUTTON")}
+				</a> : null}
 
-			<article>
         <ol class="events">{events.map(function(event) {
+					var title
+					var content
+					var phase = initiativePhaseFromEvent(event)
+
+					switch (event.type) {
+						case "sent-to-parliament":
+							title = t("INITIATIVE_SENT_TO_PARLIAMENT_TITLE")
+
+							content = <p class="text">
+								{t("INITIATIVE_SENT_TO_PARLIAMENT_BODY")}
+							</p>
+							break
+
+						case "parliament-received":
+							title = t("PARLIAMENT_RECEIVED")
+							break
+
+						case "parliament-accepted":
+							title = t("PARLIAMENT_ACCEPTED")
+							break
+
+						case "parliament-committee-meeting":
+							var meeting = event.content
+
+							title = meeting.committee
+								? t("PARLIAMENT_COMMITTEE_MEETING_BY", {
+									committee: meeting.committee
+								})
+								: t("PARLIAMENT_COMMITTEE_MEETING")
+
+							var decision = {
+								continue: t("PARLIAMENT_MEETING_DECISION_CONTINUE"),
+								reject: t("PARLIAMENT_MEETING_DECISION_REJECT"),
+								forward: t("PARLIAMENT_MEETING_DECISION_FORWARD"),
+
+								"solve-differently": t(
+									"PARLIAMENT_MEETING_DECISION_SOLVE_DIFFERENTLY"
+								)
+							}[meeting.decision]
+
+							content = <Fragment>
+								{meeting.summary ? <p class="text">
+										{Jsx.html(linkify(meeting.summary))}
+								</p> : null}
+
+								{decision ? <p class="text">{decision}</p> : null}
+
+								{meeting.invitees ? <p class="text">
+									{Jsx.html(t("PARLIAMENT_MEETING_INVITEES", {
+										invitees: _.escapeHtml(meeting.invitees)
+									}))}
+								</p> : null}
+							</Fragment>
+							break
+
+						case "parliament-finished":
+							title = t("PARLIAMENT_FINISHED")
+							break
+
+						case "signature-milestone":
+							title = t("SIGNATURE_MILESTONE_EVENT_TITLE", {
+								milestone: event.content
+							})
+							break
+
+						case "text":
+							title = event.title
+							content = <p class="text">{Jsx.html(linkify(event.content))}</p>
+							break
+
+						default:
+							throw new RangeError("Unsupported event type: " + event.type)
+					}
+
+					var files = event.files || EMPTY_ARR
+
           // No point in showing delay warnings for events that were created
           // before we started notifying people of new events.
           var delay = +event.created_at >= +EVENT_NOTIFICATIONS_SINCE
 						? diffInDays(event.occurred_at, event.created_at)
 						: 0
 
-          return <li class="event" id={"event-" + event.id}>
+					return <li
+						id={"event-" + event.id}
+						class={"event " + (phase ? ` ${phase}-phase` : "")}
+					>
+						<h2>{title}</h2>
+
 						<time class="occurred-at" datetime={event.occurred_at.toJSON()}>
 							{I18n.formatDate("numeric", event.occurred_at)}
 						</time>
 
-						<h2>{event.title}</h2>
-						<p class="text">{Jsx.html(linkify(event.text))}</p>
+						{content}
 
-            {delay != 0 ? <p class="delay">
+						{files.length > 0 ? <ul class="files">{files.map(function(file) {
+							var type = file.content_type
+							var title = file.title || file.name
+							var filePath =`${initiativePath}/files/${file.id}`
+							var icon = FILE_TYPE_ICONS[type]
+
+							return <li class="file">
+								<a href={filePath} tabindex="-1" class={"icon " + icon} />
+								<a class="name" title={title} href={filePath}>{title}</a>
+
+								<small class="type">{FILE_TYPE_NAMES[type] || type}</small>
+								{", "}
+								<small class="size">{I18n.formatBytes(file.size)}</small>
+								{". "}
+
+								{file.url ? <small><a class="external" href={file.url}>
+									Riigikogu dokumendiregistris.
+								</a></small> : null}
+							</li>
+						})}</ul> : null}
+
+            {event.type == "text" && delay != 0 ? <p class="delay">
               {Jsx.html(t("EVENT_NOTIFICATIONS_DELAYED", {
                 isotime: event.created_at.toJSON(),
                 date: I18n.formatDate("numeric", event.created_at)
@@ -1313,4 +1475,17 @@ function isPhaseAtLeast(than, phase) {
 
 function isPhaseAfter(than, phase) {
 	return PHASES.indexOf(phase) > PHASES.indexOf(than)
+}
+
+function initiativePhaseFromEvent(event) {
+	switch (event.type) {
+		case "signature-milestone": return "sign"
+		case "sent-to-parliament":
+		case "parliament-received":
+		case "parliament-accepted":
+		case "parliament-finished":
+		case "parliament-committee-meeting": return "parliament"
+		case "text": return null
+		default: throw new RangeError("Unsupported event type: " + event.type)
+	}
 }

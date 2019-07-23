@@ -9,9 +9,11 @@ module.exports = function(attrs) {
 		created_at: createdAt,
 		updated_at: createdAt,
 		occurred_at: createdAt,
-		created_by: newUuid(),
+		created_by: null,
 		origin: "author",
+		external_id: null,
+		type: "text",
 		title: _.uniqueId("Sent to institute "),
-		text: _.uniqueId("Handled by person ")
+		content: _.uniqueId("Handled by person ")
 	}, attrs)
 }

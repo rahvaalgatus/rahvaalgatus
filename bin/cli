@@ -9,7 +9,7 @@ Options:
     -h, --help           Display this help and exit.
 
 Commands:
-    parliament-monitor    Monitors initiatives in the parliament API.
+    parliament-sync       Sync initiatives against the parliament API.
     initiative-end-email  Sends emails to authors for initiative deadlines.
     initiative-signature-milestones  Records initiative signature milestones.
 
@@ -26,8 +26,8 @@ var co = require("co")
 var reportError = require("root").errorReporter
 
 var CLIS = {
-  "parliament-monitor":
-    require.resolve("root/cli/parliament_monitor_cli"),
+  "parliament-sync":
+    require.resolve("root/cli/parliament_sync_cli"),
   "initiative-end-email":
     require.resolve("root/cli/initiative_end_email_cli"),
   "initiative-signature-milestones":

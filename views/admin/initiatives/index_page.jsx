@@ -1,56 +1,83 @@
 /** @jsx Jsx */
+var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Page = require("../page")
 var Config = require("root/config")
 var formatDate = require("root/lib/i18n").formatDate
+var EMPTY_ARR = Array.prototype
 
 module.exports = function(attrs) {
 	var req = attrs.req
-	var votings = attrs.votings
-	var parliamented = attrs.parliamented
-	var closed = attrs.closed
-	var dbInitiatives = attrs.dbInitiatives
+	var initiatives = attrs.initiatives
 	var subscriberCounts = attrs.subscriberCounts
+
+	var initiativesByPhase = _.groupBy(initiatives, "phase")
+	var inEdit = initiativesByPhase.edit || EMPTY_ARR
+	var inSign = initiativesByPhase.sign || EMPTY_ARR
+	var inParliament = initiativesByPhase.parliament || EMPTY_ARR
+	var inGovernment = initiativesByPhase.government || EMPTY_ARR
+	var inDone = initiativesByPhase.done || EMPTY_ARR
 
 	return <Page page="initiatives" title="Initiatives" req={attrs.req}>
 		<h1 class="admin-heading">Initiatives</h1>
 
 		<h2 class="admin-subheading">
-			Voting
+			Edit Phase
 			{" "}
-			<span class="admin-count">({votings.length})</span>
+			<span class="admin-count">({inEdit.length})</span>
 		</h2>
 
 		<InitiativesView
 			req={req}
-			initiatives={votings}
-			dbInitiatives={dbInitiatives}
+			initiatives={inEdit}
 			subscriberCounts={subscriberCounts}
 		/>
 
 		<h2 class="admin-subheading">
-			In Parliament
+			Sign Phase
 			{" "}
-			<span class="admin-count">({parliamented.length})</span>
+			<span class="admin-count">({inSign.length})</span>
 		</h2>
 
 		<InitiativesView
 			req={req}
-			initiatives={parliamented}
-			dbInitiatives={dbInitiatives}
+			initiatives={inSign}
 			subscriberCounts={subscriberCounts}
 		/>
 
 		<h2 class="admin-subheading">
-			Finished
+			Parliament Phase
 			{" "}
-			<span class="admin-count">({closed.length})</span>
+			<span class="admin-count">({inParliament.length})</span>
 		</h2>
 
 		<InitiativesView
 			req={req}
-			initiatives={closed}
-			dbInitiatives={dbInitiatives}
+			initiatives={inParliament}
+			subscriberCounts={subscriberCounts}
+		/>
+
+		<h2 class="admin-subheading">
+			Government Phase
+			{" "}
+			<span class="admin-count">({inGovernment.length})</span>
+		</h2>
+
+		<InitiativesView
+			req={req}
+			initiatives={inGovernment}
+			subscriberCounts={subscriberCounts}
+		/>
+
+		<h2 class="admin-subheading">
+			Done Phase
+			{" "}
+			<span class="admin-count">({inDone.length})</span>
+		</h2>
+
+		<InitiativesView
+			req={req}
+			initiatives={inDone}
 			subscriberCounts={subscriberCounts}
 		/>
 	</Page>
@@ -59,18 +86,10 @@ module.exports = function(attrs) {
 function InitiativesView(attrs) {
 	var req = attrs.req
 	var initiatives = attrs.initiatives
-	var dbInitiatives = attrs.dbInitiatives
 	var subscriberCounts = attrs.subscriberCounts
-
-	var showSentTo = initiatives.some((i) => (
-		dbInitiatives[i.id].sent_to_parliament_at
-	))
-
-	var showFinishedIn = initiatives.some((i) => (
-		dbInitiatives[i.id].finished_in_parliament_at
-	))
-
-	var showSubscribers = initiatives.some((i) => subscriberCounts[i.id] > 0)
+	var showSentTo = initiatives.some((i) => i.sent_to_parliament_at)
+	var showFinishedIn = initiatives.some((i) => i.finished_in_parliament_at)
+	var showSubscribers = initiatives.some((i) => subscriberCounts[i.uuid] > 0)
 
 	return <table class="admin-table">
 		<thead>
@@ -85,36 +104,31 @@ function InitiativesView(attrs) {
 
 		<tbody>
 			{initiatives.map(function(initiative) {
-				var dbInitiative = dbInitiatives[initiative.id]
-
+				var initiativePath = `${req.baseUrl}/initiatives/${initiative.uuid}`
 				return <tr>
-					{showSentTo ? <td>{dbInitiative.sent_to_parliament_at
-						? formatDate("iso", dbInitiative.sent_to_parliament_at)
+					{showSentTo ? <td>{initiative.sent_to_parliament_at
+						? formatDate("iso", initiative.sent_to_parliament_at)
 						: null
 					}</td> : null}
 
-					{showFinishedIn ? <td>{dbInitiative.finished_in_parliament_at
-						? formatDate("iso", dbInitiative.finished_in_parliament_at)
+					{showFinishedIn ? <td>{initiative.finished_in_parliament_at
+						? formatDate("iso", initiative.finished_in_parliament_at)
 						: null
 					}</td> : null}
 
 					<td>
-						<a
-							href={`${req.baseUrl}/initiatives/${initiative.id}`}
-							class="admin-link">
-							{initiative.title}
-						</a>
+						<a href={initiativePath} class="admin-link">{initiative.title}</a>
 					</td>
 
 					{showSubscribers ? <td><a
 						class="admin-link"
-						href={`${req.baseUrl}/initiatives/${initiative.id}/subscriptions`}>
-						{subscriberCounts[initiative.id]}
+						href={`${initiativePath}/subscriptions`}>
+						{subscriberCounts[initiative.uuid]}
 					</a></td> : null}
 
 					<td>
 						<a
-							href={Config.url + "/initiatives/" + initiative.id}
+							href={Config.url + "/initiatives/" + initiative.uuid}
 							class="admin-link"
 						>View on Rahvaalgatus</a>
 					</td>

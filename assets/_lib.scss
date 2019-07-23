@@ -78,6 +78,12 @@ $archived-phase-color: $dark-blue;
 	&::-webkit-progress-value { background-color: $color; }
 }
 
+@mixin ellipsis {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
 @mixin progress-bar-background-color($color) {
 	background-color: $color;
 	&::-webkit-progress-bar { background-color: $color; }

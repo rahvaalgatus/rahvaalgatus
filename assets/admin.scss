@@ -349,22 +349,26 @@ textarea.admin-input {
 	.messages {
 		margin-top: 4rem;
 
-		th { white-space: nowrap; }
+		& > table > thead {
+			th { white-space: nowrap; }
+			th:last-child { padding: 0.5rem; }
+			th:last-child { text-align: right; }
+		}
+
 		h3 { font-weight: bold; }
 		p { margin-top: 0.5rem; }
 
-		th:last-child { padding: 0.5rem; }
-		th:last-child { text-align: right; }
+		.link { @extend .admin-link; }
 	}
 
 	.events,
 	.messages {
-		.text-toggle:not(:checked) ~ p,
+		.text-toggle:not(:checked) ~ :not(label),
 		.text-toggle:checked + label { display: none; }
 	}
 
-	.events {
-		td:last-child { text-align: right; }
+	.events > table > tbody > tr > td {
+		&:last-child { text-align: right; }
 	}
 }
 

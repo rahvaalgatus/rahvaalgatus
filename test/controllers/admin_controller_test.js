@@ -1,10 +1,12 @@
 var _ = require("root/lib/underscore")
 var Config = require("root/config")
 var ValidSubscription = require("root/test/valid_subscription")
+var ValidEvent = require("root/test/valid_db_initiative_event")
 var sql = require("sqlate")
 var newUuid = require("uuid/v4")
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var pseudoInt = require("root/lib/crypto").pseudoInt
+var initiativesDb = require("root/db/initiatives_db")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
@@ -26,6 +28,7 @@ describe("AdminController", function() {
 
 		beforeEach(function*() {
 			this.topic = yield createTopic({creatorId: this.user.id})
+			this.initiative = yield initiativesDb.create({uuid: this.topic.id})
 		})
 		
 		describe("with action=create", function() {
@@ -39,7 +42,7 @@ describe("AdminController", function() {
 						occurredOn: "2020-01-02",
 						occurredAt: "13:37",
 						title: "Initiative was handled",
-						text: "All good."
+						content: "All good."
 					}
 				})
 
@@ -49,7 +52,7 @@ describe("AdminController", function() {
 				var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
 				events.length.must.equal(1)
 
-				events[0].must.eql({
+				events[0].must.eql(new ValidEvent({
 					id: events[0].id,
 					initiative_uuid: this.topic.id,
 					created_at: new Date,
@@ -58,8 +61,8 @@ describe("AdminController", function() {
 					created_by: this.user.id,
 					origin: "admin",
 					title: "Initiative was handled",
-					text: "All good."
-				})
+					content: "All good."
+				}))
 			})
 
 			it("must email subscribers interested in official events", function*() {
@@ -96,7 +99,7 @@ describe("AdminController", function() {
 						occurredOn: "2020-01-02",
 						occurredAt: "13:37",
 						title: "Initiative was handled",
-						text: "All good."
+						content: "All good."
 					}
 				})
 
@@ -146,6 +149,7 @@ describe("AdminController", function() {
 
 		beforeEach(function*() {
 			this.topic = yield createTopic({creatorId: this.user.id})
+			this.initiative = yield initiativesDb.create({uuid: this.topic.id})
 		})
 
 		describe("with action=send", function() {

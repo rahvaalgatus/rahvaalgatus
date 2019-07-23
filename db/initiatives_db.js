@@ -10,12 +10,14 @@ exports.idColumn = "uuid"
 
 exports._search = function(query, opts) {
 	return Db.prototype._search.call(this, query).then((models) => {
+		var created
+
 		// Until Rahvaalgatus consolidates to a single database, it's convenient to
 		// autovivify initiatives in the auxiliary database.
 		if (opts && opts.create) switch (this.typeof(query)) {
 			case "string":
 				if (models.length > 0) break
-				var created = this.create({uuid: query}).then(this.serialize.bind(this))
+				created = this.create(newAttrs(query)).then(this.serialize.bind(this))
 				return created.then(concat)
 
 			case "array":
@@ -23,7 +25,7 @@ exports._search = function(query, opts) {
 				if (!query.every(isString)) break
 
 				var uuids = _.difference(query, models.map((m) => m.uuid))
-				created = this.create(uuids.map((uuid) => ({uuid: uuid})))
+				created = this.create(uuids.map(newAttrs))
 				created = created.then((arr) => arr.map(this.serialize.bind(this)))
 				return created.then(concat.bind(null, models))
 		}
@@ -37,7 +39,7 @@ exports._read = function(query, opts) {
 		if (opts && opts.create) switch (this.typeof(query)) {
 			case "string":
 				if (model) break
-				return this.create({uuid: query}).then(this.serialize.bind(this))
+				return this.create(newAttrs(query)).then(this.serialize.bind(this))
 		}
 
 		return model
@@ -46,10 +48,12 @@ exports._read = function(query, opts) {
 
 exports.parse = function(attrs) {
 	return O.defaults({
+		external: !!attrs.external,
 		has_paper_signatures: !!attrs.has_paper_signatures,
 		organizations: attrs.organizations && JSON.parse(attrs.organizations),
 		media_urls: attrs.media_urls && JSON.parse(attrs.media_urls),
 		meetings: attrs.meetings && JSON.parse(attrs.meetings),
+		created_at: attrs.created_at && new Date(attrs.created_at),
 		archived_at: attrs.archived_at && new Date(attrs.archived_at),
 
 		sent_to_parliament_at: attrs.sent_to_parliament_at &&
@@ -62,6 +66,8 @@ exports.parse = function(attrs) {
 			new Date(attrs.finished_in_parliament_at),
 		parliament_api_data: attrs.parliament_api_data &&
 			JSON.parse(attrs.parliament_api_data),
+		parliament_synced_at: attrs.parliament_synced_at &&
+			new Date(attrs.parliament_synced_at),
 		signature_milestones: attrs.signature_milestones &&
 			_.mapValues(JSON.parse(attrs.signature_milestones), parseDateTime),
 		government_change_urls: attrs.government_change_urls &&
@@ -90,5 +96,6 @@ exports.serialize = function(attrs) {
 	return obj
 }
 
+function newAttrs(uuid) { return {uuid: uuid, created_at: new Date} }
 function isString(value) { return typeof value == "string" }
 function parseDateTime(string) { return new Date(string) }

@@ -21,11 +21,12 @@
 }
 
 /* NOTE: iOS (at least 4.2) doesn't seem to support CSS Unicode escapes. */
+/* Use !important so we could provide fallback content in CSS. */
 <%=
   @glyphs.map do |name, value|
     selector = @options[:css_selector].sub("{{glyph}}", name.to_s)
     character = [value[:codepoint]].pack("U")
-    %(#{selector}:before { content: "#{character}"; })
+    %(#{selector}:before { content: "#{character}" !important; })
   end.join("\n")
 %>
 

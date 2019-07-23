@@ -7,6 +7,7 @@ var Config = require("root/config")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidComment = require("root/test/valid_comment")
+var ValidEvent = require("root/test/valid_db_initiative_event")
 var Http = require("root/lib/http")
 var I18n = require("root/lib/i18n")
 var sql = require("sqlate")
@@ -38,6 +39,7 @@ var signaturesDb = require("root/db/initiative_signatures_db")
 var commentsDb = require("root/db/comments_db")
 var encodeMime = require("nodemailer/lib/mime-funcs").encodeWord
 var parseDom = require("root/test/dom").parse
+var newUuid = require("uuid/v4")
 var next = require("co-next")
 var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 var VOTE_UUID = "396b0e5b-cca7-4255-9238-19b464e60b65"
@@ -308,6 +310,7 @@ describe("InitiativesController", function() {
 	describe("POST /", function() {
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
+			require("root/test/time")()
 
 			it("must create initiative", function*() {
 				var created = 0
@@ -370,6 +373,8 @@ describe("InitiativesController", function() {
 	describe("GET /:id", function() {
 		describe("when not logged in", function() {
 			it("must request initiative", function*() {
+				yield initiativesDb.create({uuid: UUID})
+
 				this.router.get(`/api/topics/${UUID}`, function(req, res) {
 					var query = Url.parse(req.url, true).query
 					query["include[]"].must.be.a.permutationOf(["vote", "event"])
@@ -381,6 +386,8 @@ describe("InitiativesController", function() {
 			})
 
 			it("must show done phase by default", function*() {
+				yield initiativesDb.create({uuid: UUID})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: DISCUSSION})
 				)
@@ -394,23 +401,9 @@ describe("InitiativesController", function() {
 				phases.must.not.have.property("archived")
 			})
 
-			it("must render private discussion", function*() {
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: PRIVATE_DISCUSSION}))
-
-				var res = yield this.request("/initiatives/" + UUID)
-				res.statusCode.must.equal(200)
-
-				var dom = parseDom(res.body)
-				var phases = queryPhases(dom)
-
-				_.sum(_.map(phases, "past")).must.equal(0)
-				_.sum(_.map(phases, "current")).must.equal(1)
-				phases.edit.current.must.be.true()
-				phases.edit.text.must.equal("")
-			})
-
 			it("must render discussion", function*() {
+				yield initiativesDb.create({uuid: UUID})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: _.merge({}, DISCUSSION, {
 						endsAt: DateFns.addDays(new Date, 5)
@@ -435,7 +428,21 @@ describe("InitiativesController", function() {
 				)
 			})
 
+			it("must respond with 404 given a private discussion", function*() {
+				yield initiativesDb.create({uuid: UUID})
+
+				this.router.get(`/api/topics/${UUID}`, function(_req, res) {
+					res.statusCode = 403
+					res.end()
+				})
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(404)
+			})
+
 			it("must render discussion over its deadline", function*() {
+				yield initiativesDb.create({uuid: UUID})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: _.merge({}, DISCUSSION, {
 						endsAt: DateFns.addDays(new Date, -5)
@@ -529,7 +536,7 @@ describe("InitiativesController", function() {
 				phases.sign.text.must.equal(t("N_SIGNATURES_WITH_PAPER", {votes: 1}))
 			})
 
-			it("must render initiative in parliament based if not yet received",
+			it("must render initiative in parliament but not yet received",
 				function*() {
 				yield initiativesDb.create({
 					uuid: UUID,
@@ -562,8 +569,7 @@ describe("InitiativesController", function() {
 				)
 			})
 
-			it("must render initiative in parliament based on if also received",
-				function*() {
+			it("must render initiative in parliament and also received", function*() {
 				yield initiativesDb.create({
 					uuid: UUID,
 					phase: "parliament",
@@ -738,6 +744,19 @@ describe("InitiativesController", function() {
 				))
 			})
 
+			it("must render external initiative in parliament", function*() {
+				var initiative = yield initiativesDb.create({
+					uuid: newUuid(),
+					external: true,
+					phase: "parliament",
+					received_by_parliament_at: new Date
+				})
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
+			})
+
 			it("must render initiative in government", function*() {
 				var initiative = yield initiativesDb.create({
 					uuid: UUID,
@@ -831,6 +850,8 @@ describe("InitiativesController", function() {
 			})
 
 			it("must render failed initiative", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: FAILED_INITIATIVE}))
 
@@ -842,6 +863,12 @@ describe("InitiativesController", function() {
 			// This was a bug on Dec 13, 2018 where the code checking to display vote
 			// results assumed a closed initiative had been voted on.
 			it("must render closed discussion", function*() {
+				yield initiativesDb.create({
+					uuid: UUID,
+					phase: "edit",
+					archived_at: new Date
+				})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: CLOSED_DISCUSSION}))
 
@@ -853,7 +880,9 @@ describe("InitiativesController", function() {
 			it("must render processed failed initiative", function*() {
 				yield initiativesDb.create({
 					uuid: UUID,
-					sent_to_parliament_at: new Date
+					phase: "sign",
+					sent_to_parliament_at: new Date,
+					archived_at: new Date
 				})
 
 				this.router.get(`/api/topics/${UUID}`,
@@ -868,6 +897,8 @@ describe("InitiativesController", function() {
 			})
 
 			it("must render processed successful initiative", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "done"})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: PROCESSED_SUCCESSFUL_INITIATIVE}))
 
@@ -949,6 +980,8 @@ describe("InitiativesController", function() {
 			// This was a bug noticed on Mar 24, 2017 where the UI translation strings
 			// were not rendered on the page. They were used only for ID-card errors.
 			it("must render UI strings when voting", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/topics/${UUID}`, respond.bind(null, {
 					data: INITIATIVE
 				}))
@@ -972,6 +1005,8 @@ describe("InitiativesController", function() {
 						sourcePartnerId: this.partner.id,
 						status: "voting"
 					}))
+
+					yield initiativesDb.create({uuid: this.topic.id, phase: "sign"})
 
 					this.vote = yield createVote(this.topic, newVote({id: VOTE_UUID}))
 					this.yesAndNo = yield createOptions(this.vote)
@@ -1148,6 +1183,8 @@ describe("InitiativesController", function() {
 			require("root/test/fixtures").user()
 
 			it("must render discussion", function*() {
+				yield initiativesDb.create({uuid: UUID})
+
 				this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
 					data: DISCUSSION
 				}))
@@ -1156,7 +1193,27 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 			})
 
+			it("must render private discussion", function*() {
+				yield initiativesDb.create({uuid: UUID})
+
+				this.router.get(`/api/users/self/topics/${UUID}`,
+					respond.bind(null, {data: PRIVATE_DISCUSSION}))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(0)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.current.must.be.true()
+				phases.edit.text.must.equal("")
+			})
+
 			it("must render signed initiative", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: SIGNED_INITIATIVE}))
 
@@ -1167,6 +1224,8 @@ describe("InitiativesController", function() {
 			})
 
 			it("must render signed initiative with hidden signature", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: O.merge({}, INITIATIVE, {
 						vote: {
@@ -1190,6 +1249,8 @@ describe("InitiativesController", function() {
 			})
 
 			it("must render comment form", function*() {
+				yield initiativesDb.create({uuid: UUID})
+
 				this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
 					data: DISCUSSION
 				}))
@@ -1205,6 +1266,8 @@ describe("InitiativesController", function() {
 
 			it("must render subscribe checkbox if subscribed to initiative comments",
 				function*() {
+				yield initiativesDb.create({uuid: UUID})
+
 				yield subscriptionsDb.create(new ValidSubscription({
 					initiative_uuid: UUID,
 					email: this.user.email,
@@ -1225,8 +1288,9 @@ describe("InitiativesController", function() {
 				check.checked.must.be.true()
 			})
 
-			it("must render subscribe checkbox if subscribed to initiative, but not to comments",
-				function*() {
+			it("must render subscribe checkbox if subscribed to initiative, but not to comments", function*() {
+				yield initiativesDb.create({uuid: UUID})
+
 				yield subscriptionsDb.create(new ValidSubscription({
 					initiative_uuid: UUID,
 					email: this.user.email,
@@ -1247,8 +1311,9 @@ describe("InitiativesController", function() {
 				check.checked.must.be.false()
 			})
 
-			it("must render subscribe checkbox if subscribed to initiatives' comments",
-				function*() {
+			it("must render subscribe checkbox if subscribed to initiatives' comments", function*() {
+				yield initiativesDb.create({uuid: UUID})
+
 				yield subscriptionsDb.create(new ValidSubscription({
 					email: this.user.email,
 					confirmed_at: new Date,
@@ -1272,6 +1337,8 @@ describe("InitiativesController", function() {
 
 	describe(`GET /:id with ${INITIATIVE_TYPE}`, function() {
 		it("must respond with JSON", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`, respond.bind(null, {
 				data: INITIATIVE
 			}))
@@ -1293,25 +1360,27 @@ describe("InitiativesController", function() {
 
 	describe(`GET /:id with ${ATOM_TYPE}`, function() {
 		it("must respond with Atom feed", function*() {
+			yield initiativesDb.create({uuid: UUID})
+
 			this.router.get(`/api/topics/${UUID}`, respond.bind(null, {
 				data: INITIATIVE
 			}))
 
-			var events = yield eventsDb.create([{
+			var events = yield eventsDb.create([new ValidEvent({
 				initiative_uuid: UUID,
 				title: "We sent it.",
-				text: "To somewhere.",
+				content: "To somewhere.",
 				created_at: new Date(2015, 5, 18),
 				updated_at: new Date(2015, 5, 19),
 				occurred_at: new Date(2015, 5, 20)
-			}, {
+			}), new ValidEvent({
 				initiative_uuid: UUID,
 				title: "They got it.",
-				text: "From somewhere.",
+				content: "From somewhere.",
 				created_at: new Date(2015, 5, 21),
 				updated_at: new Date(2015, 5, 22),
 				occurred_at: new Date(2015, 5, 22)
-			}])
+			})])
 
 			var path = `/initiatives/${UUID}.atom`
 			var res = yield this.request(path)
@@ -1341,11 +1410,13 @@ describe("InitiativesController", function() {
 				entry.published.$.must.equal(event.occurred_at.toJSON())
 				entry.title.$.must.equal(event.title)
 				entry.content.type.must.equal("text")
-				entry.content.$.must.equal(event.text)
+				entry.content.$.must.equal(event.content)
 			})
 		})
 
 		it("must use initiative updated time if no events", function*() {
+			yield initiativesDb.create({uuid: UUID})
+
 			this.router.get(`/api/topics/${UUID}`, respond.bind(null, {
 				data: INITIATIVE
 			}))
@@ -1357,36 +1428,36 @@ describe("InitiativesController", function() {
 		})
 
 		it("must include generated parliament events", function*() {
-			this.router.get(`/api/topics/${UUID}`, respond.bind(null, {
-				data: PROCESSED_SUCCESSFUL_INITIATIVE
-			}))
-
 			var sentAt = new Date(2015, 5, 17)
 			var finishedAt = new Date(2015, 5, 21)
 
 			yield initiativesDb.create({
 				uuid: UUID,
+				phase: "done",
 				sent_to_parliament_at: sentAt,
 				finished_in_parliament_at: finishedAt
 			})
 
+			this.router.get(`/api/topics/${UUID}`, respond.bind(null, {
+				data: PROCESSED_SUCCESSFUL_INITIATIVE
+			}))
+
 			var events = concat({
 				id: "sent-to-parliament",
-				title: t("FIRST_PROCEEDING_TITLE"),
-				text: t("FIRST_PROCEEDING_BODY"),
+				title: t("INITIATIVE_SENT_TO_PARLIAMENT_TITLE"),
+				content: t("INITIATIVE_SENT_TO_PARLIAMENT_BODY"),
 				updated_at: sentAt,
 				occurred_at: sentAt
-			}, yield eventsDb.create({
+			}, yield eventsDb.create(new ValidEvent({
 				initiative_uuid: UUID,
 				title: "We sent it.",
-				text: "To somewhere.",
+				content: "To somewhere.",
 				created_at: new Date(2015, 5, 18),
 				updated_at: new Date(2015, 5, 19),
 				occurred_at: new Date(2015, 5, 20)
-			}), {
+			})), {
 				id: "finished-in-parliament",
-				title: t("PROCEEDING_FINISHED_TITLE"),
-				text: "",
+				title: t("PARLIAMENT_FINISHED"),
 				updated_at: finishedAt,
 				occurred_at: finishedAt
 			})
@@ -1403,7 +1474,8 @@ describe("InitiativesController", function() {
 				entry.updated.$.must.equal(event.updated_at.toJSON())
 				entry.published.$.must.equal(event.occurred_at.toJSON())
 				entry.title.$.must.equal(event.title)
-				;(entry.content.$ || "").must.equal(event.text)
+				if (event.content == null) entry.must.not.have.property("content")
+				else entry.content.$.must.equal(event.content)
 			})
 		})
 	})
@@ -1416,6 +1488,8 @@ describe("InitiativesController", function() {
 
 			describe("given visibility=public", function() {
 				it("must render update visibility page", function*() {
+					yield initiativesDb.create({uuid: UUID})
+
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {data: PRIVATE_DISCUSSION}))
 
@@ -1428,6 +1502,8 @@ describe("InitiativesController", function() {
 				})
 
 				it("must update initiative", function*() {
+					yield initiativesDb.create({uuid: UUID})
+
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {data: PRIVATE_DISCUSSION}))
 
@@ -1460,7 +1536,7 @@ describe("InitiativesController", function() {
 
 				it("must clear end email when setting discussion end time",
 					function*() {
-					var dbInitiative = yield initiativesDb.create({
+					var initiative = yield initiativesDb.create({
 						uuid: UUID,
 						discussion_end_email_sent_at: new Date
 					})
@@ -1481,16 +1557,17 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(303)
 
-					yield initiativesDb.search(sql`
-						SELECT * FROM initiatives
-					`).must.then.eql([
-						_.defaults({discussion_end_email_sent_at: null}, dbInitiative)
-					])
+					yield initiativesDb.read(initiative).must.then.eql({
+						__proto__: initiative,
+						discussion_end_email_sent_at: null
+					})
 				})
 			})
 
 			describe("given status=voting", function() {
 				it("must render update status for voting page", function*() {
+					yield initiativesDb.create({uuid: UUID})
+
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {data: EDITABLE_DISCUSSION}))
 
@@ -1586,6 +1663,8 @@ describe("InitiativesController", function() {
 				})
 
 				it("must email subscribers", function*() {
+					yield initiativesDb.create({uuid: UUID})
+
 					this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
 						data: _.assign({}, DISCUSSION, {permission: {level: "admin"}})
 					}))
@@ -1668,6 +1747,8 @@ describe("InitiativesController", function() {
 
 			describe("given status=followUp", function() {
 				it("must render update status for parliament page", function*() {
+					yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 					this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
 						data: _.merge({}, SUCCESSFUL_INITIATIVE, {
 							permission: {level: "admin"}
@@ -1770,6 +1851,8 @@ describe("InitiativesController", function() {
 				})
 
 				it("must email subscribers", function*() {
+					yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 					this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
 						data: _.assign({}, SUCCESSFUL_INITIATIVE, {
 							permission: {level: "admin"}
@@ -1856,6 +1939,8 @@ describe("InitiativesController", function() {
 
 			describe("given local info", function() {
 				it("must update attributes", function*() {
+					var initiative = yield initiativesDb.create({uuid: UUID})
+
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {data: PRIVATE_DISCUSSION}))
 
@@ -1888,52 +1973,48 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(303)
 					res.headers.location.must.equal(`/initiatives/${UUID}`)
 
-					yield initiativesDb.search(sql`
-						SELECT * FROM initiatives
-					`).must.then.eql([
-						new ValidInitiative({
-							uuid: UUID,
-							author_url: "http://example.com/author",
-							community_url: "http://example.com/community",
-							url: "http://example.com/initiative",
+					yield initiativesDb.read(initiative).must.then.eql({
+						__proto__: initiative,
+						uuid: UUID,
+						author_url: "http://example.com/author",
+						community_url: "http://example.com/community",
+						url: "http://example.com/initiative",
 
-							organizations: [
-								{name: "Org A", url: "http://example.com/org-a"},
-								{name: "Org B", url: "http://example.com/org-b"}
-							],
+						organizations: [
+							{name: "Org A", url: "http://example.com/org-a"},
+							{name: "Org B", url: "http://example.com/org-b"}
+						],
 
-							meetings: [
-								{date: "2015-06-18", url: "http://example.com/monday"},
-								{date: "2015-06-19", url: "http://example.com/tuesday"}
-							],
+						meetings: [
+							{date: "2015-06-18", url: "http://example.com/monday"},
+							{date: "2015-06-19", url: "http://example.com/tuesday"}
+						],
 
-							media_urls: [
-								"http://example.com/article1",
-								"http://example.com/article2"
-							],
+						media_urls: [
+							"http://example.com/article1",
+							"http://example.com/article2"
+						],
 
-							government_change_urls: [
-								"http://example.com/gov-change1",
-								"http://example.com/gov-change2"
-							],
+						government_change_urls: [
+							"http://example.com/gov-change1",
+							"http://example.com/gov-change2"
+						],
 
-							public_change_urls: [
-								"http://example.com/change1",
-								"http://example.com/change2"
-							],
+						public_change_urls: [
+							"http://example.com/change1",
+							"http://example.com/change2"
+						],
 
-							notes: "Hello, world"
-						})
-					])
+						notes: "Hello, world"
+					})
 				})
 
 				it("must not update other initiatives", function*() {
+					var initiative = yield initiativesDb.create({uuid: UUID})
+					var other = yield initiativesDb.create(new ValidInitiative)
+
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {data: PRIVATE_DISCUSSION}))
-
-					var other = yield initiativesDb.create({
-						uuid: "a8166697-7f68-43e4-a729-97a7868b4d51"
-					})
 
 					var res = yield this.request(`/initiatives/${UUID}`, {
 						method: "PUT",
@@ -1945,12 +2026,14 @@ describe("InitiativesController", function() {
 					yield initiativesDb.search(sql`
 						SELECT * FROM initiatives
 					`).must.then.eql([
+						{__proto__: initiative, notes: "Hello, world"},
 						other,
-						new ValidInitiative({uuid: UUID, notes: "Hello, world"})
 					])
 				})
 
 				it("must throw 401 when not permitted to edit", function*() {
+					var initiative = yield initiativesDb.create({uuid: UUID})
+
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {data: DISCUSSION}))
 
@@ -1960,10 +2043,7 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(401)
-
-					yield initiativesDb.search(sql`
-						SELECT * FROM initiatives
-					`).must.then.eql([new ValidInitiative({uuid: UUID})])
+					yield initiativesDb.read(initiative).must.then.eql(initiative)
 				})
 			})
 		})
@@ -1974,6 +2054,8 @@ describe("InitiativesController", function() {
 			require("root/test/fixtures").user()
 
 			it("must delete initiative", function*() {
+				yield initiativesDb.create({uuid: UUID})
+
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: EDITABLE_DISCUSSION}))
 
@@ -1992,6 +2074,8 @@ describe("InitiativesController", function() {
 			})
 
 			it("must respond with 405 given initiative in signing", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
 					data: _.assign({}, INITIATIVE, {permission: {level: "admin"}})
 				}))
@@ -2005,6 +2089,8 @@ describe("InitiativesController", function() {
 			})
 
 			it("must respond with 405 given non-editable discussion", function*() {
+				yield initiativesDb.create({uuid: UUID})
+
 				this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
 					data: DISCUSSION
 				}))
@@ -2039,6 +2125,8 @@ describe("InitiativesController", function() {
 
 		describe("when signing via Mobile-Id", function() {
 			it("must redirect to initiative page", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -2071,6 +2159,8 @@ describe("InitiativesController", function() {
 			})
 
 			it("must unhide signature", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -2110,6 +2200,8 @@ describe("InitiativesController", function() {
 			})
 
 			it("must not unhide other initiative's signature", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -2145,6 +2237,8 @@ describe("InitiativesController", function() {
 			})
 
 			it("must not unhide other user's signature", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -2201,6 +2295,8 @@ describe("InitiativesController", function() {
 
 		describe("when signing via Id-Card", function() {
 			it("must send signature to CitizenOS", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -2240,6 +2336,8 @@ describe("InitiativesController", function() {
 			})
 
 			it("must send signature deletion to CitizenOS", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -2283,6 +2381,8 @@ describe("InitiativesController", function() {
 			})
 
 			it("must unhide signature", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -2327,6 +2427,8 @@ describe("InitiativesController", function() {
 			})
 
 			it("must not unhide other initiative's signature", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -2367,6 +2469,8 @@ describe("InitiativesController", function() {
 			})
 
 			it("must not unhide other user's signature", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -2409,6 +2513,8 @@ describe("InitiativesController", function() {
 
 		describe("when signing via Mobile-Id", function() {
 			it("must send mobile-id signature to CitizenOS", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -2449,6 +2555,8 @@ describe("InitiativesController", function() {
 				"+37200000766": "+37200000766"
 			}, function(long, short) {
 				it(`must transform mobile-id number ${short} to ${long}`, function*() {
+					yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 					this.router.get(`/api/topics/${UUID}`,
 						respond.bind(null, {data: INITIATIVE}))
 
@@ -2486,6 +2594,8 @@ describe("InitiativesController", function() {
 	describe("PUT /:id/signature", function() {
 		describe("when not logged in", function() {
 			it("must respond with 401 if not logged in", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -2504,6 +2614,8 @@ describe("InitiativesController", function() {
 
 			it("must respond with 303 if hiding a non-existent signature",
 				function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -2521,6 +2633,8 @@ describe("InitiativesController", function() {
 			})
 
 			it("must hide signature", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: SIGNED_INITIATIVE}))
 
@@ -2545,6 +2659,8 @@ describe("InitiativesController", function() {
 			})
 
 			it("must hide signature that was previously made visible", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: SIGNED_INITIATIVE}))
 
@@ -2574,6 +2690,8 @@ describe("InitiativesController", function() {
 			})
 
 			it("must hide an already hidden signature", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: SIGNED_INITIATIVE}))
 

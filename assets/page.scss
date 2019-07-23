@@ -3,7 +3,8 @@
 @import "_fonts";
 @import "_rahvaicons";
 @import "_rahvaicons_lib";
-$initiative-comment-padding: 3rem;
+$article-padding: 3rem;
+$article-padding-mobile: 2rem;
 
 html,
 body {
@@ -518,9 +519,7 @@ button.inherited {
 
 		.author {
 			display: block;
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
+			@include ellipsis;
 			padding-bottom: 1rem; // For descenders like "j" and "g".
 		}
 
@@ -916,6 +915,16 @@ button.inherited {
 		margin-bottom: 4rem;
 		font-family: $tisa-pro;
 
+		center {
+			padding-left: $article-padding;
+			padding-right: $article-padding;
+
+			@include mobile {
+				padding-left: $article-padding-mobile;
+				padding-right: $article-padding-mobile;
+			}
+		}
+
 		img.badge {
 			vertical-align: middle;
 			display: inline-block;
@@ -1031,15 +1040,41 @@ button.inherited {
 		}
 	}
 
-	.comment-reply,
+	.comment-replies,
 	.comment-reply-form {
 		border-top: 1px solid $secondary-background;
-		margin: 2rem (-$initiative-comment-padding) 0;
-		padding: 2rem $initiative-comment-padding 0;
+		margin-left: -$article-padding;
+		margin-right: -$article-padding;
+
+		@include mobile {
+			margin-left: -$article-padding-mobile;
+			margin-right: -$article-padding-mobile;
+		}
+	}
+
+	.comment-replies {
+		margin-top: 2rem;
+
+		&:empty { display: none; }
+	}
+
+	.comment-reply,
+	.comment-reply-form {
+		padding-top: 2rem;
+		padding-left: $article-padding;
+		padding-right: $article-padding;
+
+		@include mobile {
+			padding-left: $article-padding-mobile;
+			padding-right: $article-padding-mobile;
+		}
 	}
 
 	.comment-reply {
-		padding-left: $initiative-comment-padding;
+		& + .comment-reply {
+			margin-top: 2rem;
+			border-top: 1px solid $secondary-background;
+		}
 	}
 
 	.comment-reply.short {
@@ -1083,30 +1118,8 @@ button.inherited {
 #initiative-page,
 #edit-initiative-page {
 	$article-width: 72rem;
-	$article-padding: 3rem;
-	$article-padding-mobile: 2rem;
 	$article-width-percentage: 70%;
-	$sidebar-padding: 1.5rem;
-
-	#initiative-section,
-	#initiative-events {
-		center {
-			max-width: $page-width + $article-padding;
-			padding-left: 0;
-			padding-right: 0;
-		}
-	}
-
-	#initiative-section #initiative-sheet,
-	#initiative-events article {
-		background: white;
-		box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.15);
-		width: $article-width-percentage;
-		padding: $article-padding;
-
-		@include mobile-and-tablet { width: auto; }
-		@include mobile { padding: $article-padding-mobile; }
-	}
+	$sidebar-padding: 2rem;
 
 	#initiative-phases {
 		$phase-icon-width: 6rem;
@@ -1116,6 +1129,16 @@ button.inherited {
 
 		@media only screen and (max-width: 767px) {
 			display: none;
+		}
+
+		center {
+			padding-left: $article-padding;
+			padding-right: $article-padding;
+
+			@include mobile {
+				padding-left: $article-padding-mobile;
+				padding-right: $article-padding-mobile;
+			}
 		}
 
 		margin-top: -1rem;
@@ -1360,11 +1383,27 @@ button.inherited {
 		}
 	}
 
+	.sheet {
+		background: white;
+		box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.15);
+		width: $article-width-percentage;
+
+		@include mobile-and-tablet { width: auto; }
+	}
+
+	#initiative-section center,
+	#initiative-events center {
+		max-width: $page-width + $article-padding;
+		padding-left: 0;
+		padding-right: 0;
+	}
+
 	#initiative-section {
 		padding-top: 0;
 
-		& > center {
+		center {
 			display: flex;
+
 			@include mobile-and-tablet { display: block; }
 		}
 
@@ -1373,27 +1412,13 @@ button.inherited {
 			display: inline-block;
 			vertical-align: top;
 
-			@include mobile-and-tablet {
-				display: block;
-			}
+			@include mobile-and-tablet { display: block; }
 		}
 
 		#initiative-sheet {
 			position: relative; // To have box-shadow be on top of <aside>.
 			display: flex;
 			flex-direction: column;
-
-			& > .flash,
-			& > .quicksign,
-			& > .initiative-status {
-				margin: -$article-padding;
-				margin-bottom: $article-padding;
-
-				@include mobile {
-					margin: -$article-padding-mobile;
-					margin-bottom: $article-padding-mobile;
-				}
-			}
 
 			& > .flash { border-radius: 0; }
 
@@ -1415,10 +1440,13 @@ button.inherited {
 			}
 		}
 
-		article {
+		article.text {
 			flex-grow: 1;
 			font-size: 1.6rem;
 			font-family: $tisa-pro;
+			padding: $article-padding;
+
+			@include mobile { padding: $article-padding-mobile; }
 
 			// Etherpad generates non-standard HTML by putting a nested <ol> directly
 			// under <ul>.
@@ -1442,122 +1470,18 @@ button.inherited {
 			.orange { color: #ffb400; }
 		}
 
-		#initiative-sidebar {
-			width: 100% - $article-width-percentage;
-			background-color: $light-background;
-			padding: $sidebar-padding;
-			font-size: 1.3rem;
+		article.pdf {
+			// Whereas `height: 100%` on <object> works for Firefox, it doesn't on
+			// Chromium.  Use flex for backup.
+			display: flex;
+			flex-direction: column;
 
-			.sidebar-section + .sidebar-section {
-				margin-top: 2rem;
-			}
-
-			.sidebar-header {
-				margin-bottom: 1rem;
-				margin-left: -$sidebar-padding;
-				margin-right: -$sidebar-padding;
-				padding: 0 $sidebar-padding;
-				line-height: 3.6rem;
-				background: $initiative-sidebar-header-background;
-				font-size: 1.6rem;
-				color: $dark-blue;
-				font-weight: 900;
-				text-transform: uppercase;
-			}
-
-			.sidebar-subheader {
-				color: $black;
-				font-size: 1.3rem;
-				line-height: 1.5;
-				font-weight: 500;
-				margin-bottom: 0.5rem;
-
-				& ~ .sidebar-subheader {
-					margin-top: 1.5rem;
-				}
-			}
-
-			.wide-button {
-				width: 100%;
-			}
-
-			.share-button {
-				margin-right: 0.5rem;
-				margin-bottom: 0.5rem;
-			}
-
-			.link-button.wide-button {
+			object {
 				display: block;
-				text-align: center;
-				line-height: 3rem;
-				font-weight: bold;
-			}
-
-			.quicksign {
-				margin-bottom: 2rem;
-
-				.initiative-progress {
-					margin-top: -$sidebar-padding;
-					margin-left: -$sidebar-padding;
-					margin-right: -$sidebar-padding;
-					margin-bottom: 1rem;
-					line-height: $flash-min-height;
-				}
-
-				.initiative-progress-text span { display: block; }
-			}
-
-			#initiative-author-options {
-				h2 ~ * { margin-top: 0.5rem; }
-			}
-
-			#initiative-info {
-				h2 .edit-button { float: right; }
-
-				input,
-				textarea { width: 100%; }
-
-				p + .form-list { margin-top: 0.5rem; }
-				ul.form-output { line-height: 1.5; }
-
-				[name=notes] { min-height: 12rem; }
-
-				.text { white-space: pre-wrap; }
-				[type=submit] { margin-top: 0.5rem; }
-				input[type=date] { flex-shrink: 0; }
-
-				#initiative-info-form-toggle {
-					&:not(:checked) ~ textarea,
-					&:not(:checked) ~ .form-fields,
-					&:not(:checked) ~ .form-buttons,
-					&:checked + h2 .edit-button,
-					&:checked ~ .edit-button,
-					&:checked ~ .form-output { display: none; }
-				}
-
-				#initiative-media-urls-form,
-				#initiative-government-change-urls-form,
-				#initiative-public-change-urls-form {
-					input { margin-bottom: 0.5rem; }
-				}
-
-				#initiative-organizations-form,
-				#initiative-meetings-form {
-					li { display: flex; }
-					input:first-child { margin-right: 0.5rem; }
-
-					input {
-						width: auto;
-						margin-bottom: 0.5rem;
-						min-width: 10rem;
-					}
-				}
-			}
-
-			@include mobile-and-tablet {
-				width: auto;
-
-				.quicksign { display: none; }
+				min-height: 60rem;
+				width: 100%;
+				height: 100%;
+				flex-grow: 1;
 			}
 		}
 
@@ -1615,16 +1539,134 @@ button.inherited {
 		}
 	}
 
+	#initiative-sidebar {
+		width: 100% - $article-width-percentage;
+		background-color: $light-background;
+		padding: $sidebar-padding;
+		font-size: 1.3rem;
+
+		.sidebar-section + .sidebar-section {
+			margin-top: 2rem;
+		}
+
+		.sidebar-header {
+			margin-bottom: 1rem;
+			margin-left: -$sidebar-padding;
+			margin-right: -$sidebar-padding;
+			padding: 0 $sidebar-padding;
+			line-height: 3.6rem;
+			background: $initiative-sidebar-header-background;
+			font-size: 1.6rem;
+			color: $dark-blue;
+			font-weight: 900;
+			text-transform: uppercase;
+		}
+
+		.sidebar-subheader {
+			color: $black;
+			font-size: 1.3rem;
+			line-height: 1.5;
+			font-weight: 500;
+			margin-bottom: 0.5rem;
+
+			& ~ .sidebar-subheader {
+				margin-top: 1.5rem;
+			}
+		}
+
+		.wide-button {
+			width: 100%;
+		}
+
+		.share-button {
+			margin-right: 0.5rem;
+			margin-bottom: 0.5rem;
+		}
+
+		.link-button.wide-button {
+			display: block;
+			text-align: center;
+			line-height: 3rem;
+			font-weight: bold;
+		}
+
+		.quicksign {
+			margin-bottom: 2rem;
+
+			.initiative-progress {
+				margin-top: -$sidebar-padding;
+				margin-left: -$sidebar-padding;
+				margin-right: -$sidebar-padding;
+				margin-bottom: 1rem;
+				line-height: $flash-min-height;
+			}
+
+			.initiative-progress-text span { display: block; }
+		}
+
+		#initiative-author-options {
+			h2 ~ * { margin-top: 0.5rem; }
+		}
+
+		#initiative-info {
+			h2 .edit-button { float: right; }
+
+			input,
+			textarea { width: 100%; }
+
+			p + .form-list { margin-top: 0.5rem; }
+			ul.form-output { line-height: 1.5; }
+
+			[name=notes] { min-height: 12rem; }
+
+			.text { white-space: pre-wrap; }
+			[type=submit] { margin-top: 0.5rem; }
+			input[type=date] { flex-shrink: 0; }
+
+			#initiative-info-form-toggle {
+				&:not(:checked) ~ textarea,
+				&:not(:checked) ~ .form-fields,
+				&:not(:checked) ~ .form-buttons,
+				&:checked + h2 .edit-button,
+				&:checked ~ .edit-button,
+				&:checked ~ .form-output { display: none; }
+			}
+
+			#initiative-media-urls-form,
+			#initiative-government-change-urls-form,
+			#initiative-public-change-urls-form {
+				input { margin-bottom: 0.5rem; }
+			}
+
+			#initiative-organizations-form,
+			#initiative-meetings-form {
+				li { display: flex; }
+				input:first-child { margin-right: 0.5rem; }
+
+				input {
+					width: auto;
+					margin-bottom: 0.5rem;
+					min-width: 10rem;
+				}
+			}
+		}
+
+		@include mobile-and-tablet {
+			width: auto;
+
+			.quicksign { display: none; }
+		}
+	}
+
 	#initiative-vote {
 		border-top: 1px solid $light-background-border;
 		background-color: $light-background;
 
-		margin: 4rem (-$article-padding) (-$article-padding);
+		margin-top: 4rem;
 		padding: 2rem $article-padding;
 
 		@include mobile {
 			padding: 2rem $article-padding-mobile;
-			margin: 4rem (-$article-padding-mobile) (-$article-padding-mobile);
 		}
 
 		// Don't use overflow to not cut off the blur around buttons.
@@ -1696,30 +1738,52 @@ button.inherited {
 	}
 
 	.initiative-status {
-		max-width: $article-width;
-		padding: 1.5rem $page-padding 0;
+		$padding-vertical: 2rem;
+
 		font-size: 1.4rem;
 		line-height: 1.5;
 		border-bottom: 1px solid $light-background-border;
 		font-family: $tisa-pro;
 		background: $light-background;
+		padding-top: $padding-vertical;
+		padding-bottom: $padding-vertical;
+
+		&,
+		.status-header {
+			padding-left: $article-padding;
+			padding-right: $article-padding;
+
+			@include mobile {
+				padding-left: $article-padding-mobile;
+				padding-right: $article-padding-mobile;
+			}
+		}
 
 		.status-header {
 			font-family: $museo-sans;
-			padding: 1.1rem $page-padding 0.8rem;
-			margin: (-1.5rem) (-$page-padding) 0 (-$page-padding);
-			margin-bottom: 0;
+			padding-top: 1.1rem;
+			padding-right: .8rem;
+			padding-bottom: .9rem;
 			line-height: 2rem;
 			font-size: 1.3rem;
 			font-weight: 600;
 			background: $light-background;
+
+			margin-top: -$padding-vertical;
+			margin-left: -$article-padding;
+			margin-right: -$article-padding;
+
+			@include mobile {
+				margin-left: -$article-padding-mobile;
+				margin-right: -$article-padding-mobile;
+			}
 
 			&:not(:only-child) {
 				border-bottom: 1px solid $light-background-border;
 				margin-bottom: 1.5rem;
 			}
 
-			&:last-child { margin-bottom: 0; }
+			&:last-child { margin-bottom: -$padding-vertical; }
 		}
 
 		.status-serif-header {
@@ -1752,7 +1816,6 @@ button.inherited {
 		p { white-space: pre-wrap; }
 		a { color: $link-color; text-decoration: underline; }
 		p + ul { margin-top: 1rem; }
-		& > :last-child { margin-bottom: 1.5rem; }
 	}
 
 	#initiative-etherpad {
@@ -1762,26 +1825,25 @@ button.inherited {
 	}
 
 	#initiative-events {
-		article {
-			padding-bottom: 0;
-		}
-
 		.create-event-button {
-			border-top-left-radius: .5rem;
-			border-top-right-radius: .5rem;
 			display: block;
+
 			background: $light-background;
 			text-align: center;
 			color: $secondary-light-text;
 			line-height: 4rem;
-			max-width: $article-width-percentage;
 			text-transform: uppercase;
 			font-weight: bold;
-			border: 1px solid $light-background-border;
-			border-bottom: 0;
+			border-bottom: 1px solid $light-background-border;
 
 			&:hover {
 				color: $link-color;
+			}
+
+			&:focus {
+				box-shadow: 0 0 .5rem $link-color;
+				border-top-left-radius: .5rem;
+				border-top-right-radius: .5rem;
 			}
 
 			@include mobile-and-tablet {
@@ -1799,61 +1861,28 @@ button.inherited {
 			padding-bottom: $article-padding;
 		}
 
-		.events {
-			max-width: 64rem;
-			padding-top: 1.5rem;
-		}
-
 		.event {
 			position: relative;
-			border-left: 0.3rem solid #385c90;
-			padding-left: 3rem;
-			padding-bottom: 5rem;
+			padding: 2.5rem $article-padding;
+			border-left: 0.5rem solid transparent;
 
-			&:before {
-				display: block;
-				background: url(/assets/icon-check-blue.png) center 0.5rem no-repeat;
-				background-color: white;
-				width: 3rem;
-				height: 3.2rem;
-				content: "";
-
-				position: absolute;
-				left: -0.15rem - 1.5rem;
-				top: 0;
-			}
-
-			&#event-sent-to-parliament {
-				&:before {
-					background: url(/assets/icon-check-green-ball.png) center 0.5rem no-repeat;
-					background-color: white;
-					height: 3.5rem;
-				}
-
-				border-color: $green-color;
-				h2 { color: #555; }
+			@include mobile {
+				padding-left: $article-padding-mobile;
+				padding-right: $article-padding-mobile;
 			}
 
 			h2 {
 				font-size: 2rem;
 				font-weight: 500;
 				color: $title-text;
-				margin-top: 0.5rem;
-				margin-bottom: 0.5rem;
 			}
 
 			.occurred-at {
 				display: block;
 				font-size: 1.6rem;
-				line-height: 2rem;
-
-				$offset: 1.5rem;
-				position: relative;
-				top: -$offset;
-				margin-bottom: -$offset;
-
 				color: $secondary-light-text;
 				font-family: $tisa-pro;
+				margin-bottom: 0.5rem;
 			}
 
 			.text {
@@ -1864,6 +1893,10 @@ button.inherited {
 				font-family: $tisa-pro;
 			}
 
+			p + p {
+				margin-top: 1.5rem;
+			}
+
 			.delay {
 				font-size: 1.5rem;
 				margin-top: 1.5rem;
@@ -1872,10 +1905,60 @@ button.inherited {
 				color: $secondary-light-text;
 				font-style: italic;
 			}
+
+			.files {
+				margin-top: 2rem;
+			}
+
+			.file {
+				font-size: 1.3rem;
+				font-weight: 500;
+
+				.icon:before {
+					content: "";
+					vertical-align: top;
+					margin-right: .8rem;
+					margin-bottom: 0.5rem;
+					float: left;
+					font-size: 3.2rem;
+					width: 3.2rem;
+					height: 3.2rem;
+					display: inline-block;
+					border-radius: 0.5rem;
+					background-color: $light-background;
+				}
+
+				.icon.ra-icon-pdf:before { color: #a93939; }
+				.icon.ra-icon-ppt:before { color: #cb4a32; }
+				.icon.ra-icon-ddoc:before { color: #003168; background: none; }
+
+				.name {
+					display: block;
+					@include ellipsis;
+				}
+
+				a:hover,
+				.icon:hover + .name { color: $link-color; }
+				a:focus { outline: 1px dashed $link-color; }
+
+				small { color: $secondary-light-text; }
+
+				& + .file {
+					clear: both;
+					margin-top: 0.7rem;
+				}
+			}
+
+			&.sign-phase { border-left-color: $sign-phase-color; }
+			&.parliament-phase { border-left-color: $parliament-phase-color; }
+
+			// Border-top doesn't fill the whole width because we're using the left
+			// border for phase colors.
+			& + .event { box-shadow: 0 -1px 0 #eee; }
 		}
 
 		#contribute {
-			// Max width for the events is 64rem. With some for margin, that
+			// Max width for the events is ~64rem. With some for margin, that
 			// leaves ~30rem for the sidebar.
 			max-width: 30rem;
 			float: right;
@@ -1916,10 +1999,6 @@ button.inherited {
 				margin-left: 0;
 			}
 		}
-
-		@include tablet {
-			.events { padding-left: 1rem; }
-		}
 	}
 
 	#initiative-comments {
@@ -1928,17 +2007,46 @@ button.inherited {
 			@include mobile-and-tablet { width: auto; }
 		}
 
-		.comment {
-			padding: 2.5rem $initiative-comment-padding;
+		@include mobile-and-tablet {
+			center {
+				padding-left: 0;
+				padding-right: 0;
+			}
+
+			h2,
+			center > form {
+				padding-left: $article-padding;
+				padding-right: $article-padding;
+			}
 		}
-	}
 
-	.comments:empty + .comment-form { margin-top: 0; }
+		@include mobile {
+			h2,
+			center > form {
+				padding-left: $article-padding-mobile;
+				padding-right: $article-padding-mobile;
+			}
+		}
 
-	.comment-form {
-		input:disabled,
-		textarea:disabled {
-			display: none;
+		.comment {
+			padding-top: 2.5rem;
+			padding-bottom: 2.5rem;
+			padding-left: $article-padding;
+			padding-right: $article-padding;
+
+			@include mobile {
+				padding-left: $article-padding-mobile;
+				padding-right: $article-padding-mobile;
+			}
+		}
+
+		.comments:empty + .comment-form { margin-top: 0; }
+
+		.comment-form {
+			input:disabled,
+			textarea:disabled {
+				display: none;
+			}
 		}
 	}
 
@@ -1998,9 +2106,21 @@ button.inherited {
 		vertical-align: middle;
 		border-radius: .5rem;
 		background: $secondary-background;
+		height: 5rem;
 	}
 
 	.dark img { background-color: $dark-blue; }
+
+	i {
+		display: inline-block;
+		vertical-align: middle;
+		font-size: 5rem;
+		height: 5rem;
+		line-height: 5rem;
+		color: $dark-blue;
+
+		img { display: none; }
+	}
 }
 
 #footer {

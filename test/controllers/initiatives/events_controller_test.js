@@ -3,6 +3,7 @@ var Config = require("root/config")
 var DateFns = require("date-fns")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidEvent = require("root/test/valid_db_initiative_event")
+var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var eventsDb = require("root/db/initiative_events_db")
 var messagesDb = require("root/db/initiative_messages_db")
@@ -48,6 +49,8 @@ describe("InitiativeEventsController", function() {
 	describe("GET /new", function() {
 		describe("when not logged in", function() {
 			it("must respond with 401", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -65,6 +68,8 @@ describe("InitiativeEventsController", function() {
 
 			;["voting", "followUp"].forEach(function(status) {
 				it("must render if " + status, function*() {
+					yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {
 							data: _.assign({}, EDITABLE_INITIATIVE, {status: status})
@@ -77,6 +82,8 @@ describe("InitiativeEventsController", function() {
 
 			;["inProgress", "closed"].forEach(function(status) {
 				it("must respond with 403 if " + status, function*() {
+					yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {
 							data: _.assign({}, EDITABLE_INITIATIVE, {status: status})
@@ -88,6 +95,8 @@ describe("InitiativeEventsController", function() {
 			})
 
 			it("must respond with 403 if not an admin", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -107,13 +116,15 @@ describe("InitiativeEventsController", function() {
 					form: {
 						_csrf_token: this.csrfToken,
 						title: "Something happened",
-						text: "You shouldn't miss it."
+						content: "You shouldn't miss it."
 					}
 				})
 			})
 
 			;["voting", "followUp"].forEach(function(status) {
 				it("must create event if in " + status, function*() {
+					yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {
 							data: _.assign({}, EDITABLE_INITIATIVE, {status: status})
@@ -124,7 +135,7 @@ describe("InitiativeEventsController", function() {
 						form: {
 							_csrf_token: this.csrfToken,
 							title: "Something happened",
-							text: "You shouldn't miss it."
+							content: "You shouldn't miss it."
 						}
 					})
 
@@ -135,22 +146,21 @@ describe("InitiativeEventsController", function() {
 						SELECT * FROM initiative_events
 					`)
 
-					events.must.eql([{
+					events.must.eql([new ValidEvent({
 						id: events[0].id,
 						initiative_uuid: UUID,
-						created_at: new Date,
-						updated_at: new Date,
-						occurred_at: new Date,
 						created_by: this.user.id,
 						origin: "author",
 						title: "Something happened",
-						text: "You shouldn't miss it."
-					}])
+						content: "You shouldn't miss it."
+					})])
 				})
 			})
 
 			;["inProgress", "closed"].forEach(function(status) {
 				it("must respond with 403 if " + status, function*() {
+					yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {
 							data: _.assign({}, EDITABLE_INITIATIVE, {status: status})
@@ -166,6 +176,8 @@ describe("InitiativeEventsController", function() {
 			})
 
 			it("must email subscribers interested in author events", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				var subscriptions = yield subscriptionsDb.create([
 					new ValidSubscription({
 						initiative_uuid: INITIATIVE.id,
@@ -198,7 +210,7 @@ describe("InitiativeEventsController", function() {
 					form: {
 						_csrf_token: this.csrfToken,
 						title: "Something happened",
-						text: "You shouldn't miss it."
+						content: "You shouldn't miss it."
 					}
 				})
 
@@ -242,6 +254,8 @@ describe("InitiativeEventsController", function() {
 			})
 
 			it("must respond with 403 if not an admin", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -260,6 +274,8 @@ function mustRateLimit(request) {
 	describe("as a rate limited endpoint", function() {
 		it(`must respond with 429 if created ${EVENT_RATE} events in the last 15m`,
 			function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/users/self/topics/${UUID}`,
 				respond.bind(null, {data: EDITABLE_INITIATIVE}))
 
@@ -274,6 +290,8 @@ function mustRateLimit(request) {
 		})
 
 		it(`must not respond with 429 if created <${EVENT_RATE} events in the last 15m`, function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/users/self/topics/${UUID}`,
 				respond.bind(null, {data: EDITABLE_INITIATIVE}))
 
@@ -288,6 +306,8 @@ function mustRateLimit(request) {
 		})
 
 		it(`must not respond with 429 if created ${EVENT_RATE} events earlier than 15m`, function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/users/self/topics/${UUID}`,
 				respond.bind(null, {data: EDITABLE_INITIATIVE}))
 

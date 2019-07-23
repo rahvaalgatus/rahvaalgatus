@@ -39,11 +39,11 @@ module.exports = function(attributes) {
 
 					<label class="form-label">{t("INITIATIVE_EVENT_TEXT_INPUT")}</label>
 					<textarea
-						name="text"
+						name="content"
 						required
 						maxlength={10000}
 						class="form-textarea">
-						{attrs.text}
+						{attrs.content}
 					</textarea>
 
 					<button class="form-submit primary-button">

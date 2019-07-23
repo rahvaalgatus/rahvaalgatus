@@ -120,11 +120,23 @@ function ProgressView(attrs) {
 				? null
 				: initiative.status == "closed"
 				? dbInitiative.finished_in_parliament_at
-				: dbInitiative.sent_to_parliament_at
+				: (
+					dbInitiative.received_by_parliament_at ||
+					dbInitiative.sent_to_parliament_at
+				)
+
+			if (dbInitiative.external)
+				return <div class={"initiative-progress completed " + klass}>
+					{t("N_SIGNATURES_EXTERNAL")}
+				</div>
 
 			return <div class={"initiative-progress " + klass}>
-				{date
-					? t("N_SIGNATURES_WITH_DATE", {
+				{date && dbInitiative.external
+					? t("N_SIGNATURES_EXTERNAL_WITH_DATE", {
+						date: formatDate("numeric", date)
+					})
+
+					: date ? t("N_SIGNATURES_WITH_DATE", {
 						date: formatDate("numeric", date),
 						votes: sigs
 					})

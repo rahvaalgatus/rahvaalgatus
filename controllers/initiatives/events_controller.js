@@ -11,25 +11,11 @@ var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var sql = require("sqlate")
-var EMPTY_EVENT = {title: "", text: ""}
+var EMPTY_EVENT = {title: "", content: ""}
 
 exports.router = Router({mergeParams: true})
 
-exports.router.use(next(function*(req, _res, next) {
-	if (req.user == null) throw new HttpError(401)
-
-	if (!Initiative.can("admin", req.initiative))
-		throw new HttpError(403, "Not an Initiative Admin")
-	if (!Initiative.canCreateEvents(req.initiative))
-		throw new HttpError(403, "Cannot Create Events")
-
-	var until = yield rateLimit(req.user, req.initiative)
-	if (until) throw new HttpError(429, "Too Many Events", {until: until})
-
-	next()
-}))
-
-exports.router.get("/new", next(function*(req, res) {
+exports.router.get("/new", next(assertAdmin), next(function*(req, res) {
 	var initiative = req.initiative
 
 	var subscriberCount =
@@ -41,7 +27,7 @@ exports.router.get("/new", next(function*(req, res) {
 	})
 }))
 
-exports.router.post("/", next(function*(req, res) {
+exports.router.post("/", next(assertAdmin), next(function*(req, res) {
 	var initiative = req.initiative
 
 	var event = yield eventsDb.create({
@@ -69,7 +55,7 @@ exports.router.post("/", next(function*(req, res) {
 			initiativeTitle: initiative.title,
 			initiativeUrl: `${Config.url}/initiatives/${initiative.id}`,
 			title: event.title,
-			text: _.quoteEmail(event.text)
+			text: _.quoteEmail(event.content)
 		})
 	})
 
@@ -100,10 +86,25 @@ exports.router.use(function(err, req, res, next) {
 	else next(err)
 })
 
+function* assertAdmin(req, _res, next) {
+	if (req.user == null) throw new HttpError(401)
+
+	if (!Initiative.can("admin", req.initiative))
+		throw new HttpError(403, "Not an Initiative Admin")
+	if (!Initiative.canCreateEvents(req.initiative))
+		throw new HttpError(403, "Cannot Create Events")
+
+	var until = yield rateLimit(req.user, req.initiative)
+	if (until) throw new HttpError(429, "Too Many Events", {until: until})
+
+	next()
+}
+
 function parseEvent(obj) {
 	return {
 		title: obj.title,
-		text: obj.text
+		type: "text",
+		content: obj.content
 	}
 }
 

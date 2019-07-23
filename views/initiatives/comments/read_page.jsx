@@ -84,7 +84,7 @@ function CommentView(attrs) {
 			</time>
 
 			<p class="text">{Jsx.html(Comment.htmlify(reply.text))}</p>
-		</li>)} </ol>
+		</li>)}</ol>
 
 		{req.user ? <Form
 			req={req}

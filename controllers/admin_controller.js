@@ -21,6 +21,7 @@ var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var EMPTY = Object.prototype
 var UPDATEABLE_PHASES = ["sign", "parliament", "government", "done"]
 exports = module.exports = Router()
+exports.isEditableEvent = isEditableEvent
 
 var PHASE_TO_STATUS = {
 	sign: "voting",
@@ -70,20 +71,26 @@ exports.get("/", next(function*(_req, res) {
 }))
 
 exports.get("/initiatives", next(function*(_req, res) {
-	var initiatives = yield searchInitiatives(sql`
-		initiative.status IN ('voting', 'followUp', 'closed')
-	`)
+	var initiatives = yield initiativesDb.search(sql`SELECT * FROM initiatives`)
 
-	var uuids = initiatives.map((i) => i.id)
-	initiatives = _.groupBy(initiatives, "status")
+	var topics = _.indexBy(yield searchInitiatives(sql`
+		initiative.id IN ${sql.tuple(initiatives.map((i) => i.uuid))}
+	`), "id")
 
-	var dbInitiatives = yield initiativesDb.search(uuids, {create: true})
-	dbInitiatives = _.indexBy(dbInitiatives, "uuid")
+	initiatives = initiatives.filter((initiative) => (
+		initiative.external ||
+		topics[initiative.uuid]
+	))
+
+	initiatives.forEach(function(initiative) {
+		var topic = topics[initiative.uuid]
+		if (topic) initiative.title = topic.title
+	})
 
 	var subscriberCounts = yield sqlite(sql`
 		SELECT initiative_uuid, COUNT(*) as count
 		FROM initiative_subscriptions
-		WHERE initiative_uuid IN ${sql.tuple(uuids)}
+		WHERE initiative_uuid IN ${sql.tuple(initiatives.map((i) => i.uuid))}
 		AND confirmed_at IS NOT NULL
 		GROUP BY initiative_uuid
 	`)
@@ -94,36 +101,38 @@ exports.get("/initiatives", next(function*(_req, res) {
 	)
 
 	res.render("admin/initiatives/index_page.jsx", {
-		votings: initiatives.voting || [],
-		parliamented: initiatives.followUp || [],
-		closed: initiatives.closed || [],
-		dbInitiatives: dbInitiatives,
+		initiatives: initiatives,
 		subscriberCounts: subscriberCounts
 	})
 }))
 
 exports.use("/initiatives/:id", next(function*(req, res, next) {
+	var dbInitiative = yield initiativesDb.read(req.params.id)
+	if (dbInitiative == null) return void next(new HttpError(404))
+
 	var initiative = yield cosDb.query(sql`
-		SELECT * FROM "Topics" WHERE id = ${req.params.id}
+		SELECT * FROM "Topics" WHERE id = ${dbInitiative.uuid}
 	`).then(_.first)
 
-	if (initiative == null) return void next(new HttpError(404))
+	initiative = initiative && parseCitizenInitiative(initiative)
 
-	initiative = parseCitizenInitiative(initiative)
+	// Populate initiative's title from CitizenOS until we've found a way to sync
+	// them.
+	if (initiative) dbInitiative.title = initiative.title
+
 	req.initiative = initiative
-	req.dbInitiative = yield initiativesDb.read(initiative.id, {create: true})
-
-	res.locals.initiative = req.initiative
-	res.locals.dbInitiative = req.dbInitiative
+	req.dbInitiative = dbInitiative
+	res.locals.initiative = initiative
+	res.locals.dbInitiative = dbInitiative
 	next()
 }))
 
 exports.get("/initiatives/:id", next(function*(req, res) {
-	var initiative = req.initiative
+	var dbInitiative = req.dbInitiative
 
 	var events = yield eventsDb.search(sql`
 		SELECT * FROM initiative_events
-		WHERE initiative_uuid = ${initiative.id}
+		WHERE initiative_uuid = ${dbInitiative.uuid}
 		ORDER BY "occurred_at" DESC
 	`)
 
@@ -134,12 +143,12 @@ exports.get("/initiatives/:id", next(function*(req, res) {
 			AS confirmed
 
 		FROM initiative_subscriptions
-		WHERE initiative_uuid = ${initiative.id}
+		WHERE initiative_uuid = ${dbInitiative.uuid}
 	`).then(_.first)
 
 	var messages = yield messagesDb.search(sql`
 		SELECT * FROM initiative_messages
-		WHERE initiative_uuid = ${initiative.id}
+		WHERE initiative_uuid = ${dbInitiative.uuid}
 		ORDER BY created_at DESC
 	`)
 
@@ -151,11 +160,11 @@ exports.get("/initiatives/:id", next(function*(req, res) {
 }))
 
 exports.get("/initiatives/:id/subscriptions.:ext?", next(function*(req, res) {
-	var initiative = req.initiative
+	var dbInitiative = req.dbInitiative
 
 	var subs = yield subscriptionsDb.search(sql`
 		SELECT * FROM initiative_subscriptions
-		WHERE initiative_uuid = ${initiative.id}
+		WHERE initiative_uuid = ${dbInitiative.uuid}
 		ORDER BY created_at DESC
 	`)
 
@@ -176,32 +185,34 @@ exports.get("/initiatives/:id/subscriptions.:ext?", next(function*(req, res) {
 }))
 
 exports.put("/initiatives/:id", next(function*(req, res) {
+	var initiative = req.initiative
+	var dbInitiative = req.dbInitiative
 	var attrs = parseInitiative(req.body)
 	var citizenAttrs = parseInitiativeForCitizen(req.body)
 
 	if (!_.isEmpty(attrs))
-		yield initiativesDb.update(req.initiative.id, parseInitiative(req.body))
+		yield initiativesDb.update(dbInitiative.uuid, parseInitiative(req.body))
 
 	// The "closed" status will eventually be brought over to SQLite to an
 	// "archived_at" column.
-	if (req.initiative.status != "closed" && !_.isEmpty(citizenAttrs))
-		yield cosDb("Topics").where("id", req.params.id).update(citizenAttrs)
+	if (initiative && initiative.status != "closed" && !_.isEmpty(citizenAttrs))
+		yield cosDb("Topics").where("id", dbInitiative.uuid).update(citizenAttrs)
 
 	res.flash("notice", "Initiative updated.")
-	res.redirect(req.baseUrl + "/initiatives/" + req.initiative.id)
+	res.redirect(req.baseUrl + "/initiatives/" + dbInitiative.uuid)
 }))
 
 exports.get("/initiatives/:id/events/new", function(_req, res) {
 	res.render("admin/initiatives/events/create_page.jsx", {
-		event: {occurred_at: new Date, title: "", text: ""}
+		event: {occurred_at: new Date, title: "", type: "text", content: ""}
 	})
 })
 
 exports.post("/initiatives/:id/events", next(function*(req, res) {
-	var initiative = req.initiative
+	var dbInitiative = req.dbInitiative
 
-	var attrs = _.assign(parseEvent(req.body), {
-		initiative_uuid: req.initiative.id,
+	var attrs = _.assign(parseEvent(null, req.body), {
+		initiative_uuid: dbInitiative.uuid,
 		created_at: new Date,
 		updated_at: new Date,
 		created_by: req.user.id
@@ -211,7 +222,7 @@ exports.post("/initiatives/:id/events", next(function*(req, res) {
 		case "preview":
 			res.render("admin/initiatives/events/create_page.jsx", {
 				event: attrs,
-				message: renderEventMessage(initiative, attrs)
+				message: renderEventMessage(dbInitiative, attrs)
 			})
 			break
 
@@ -219,8 +230,8 @@ exports.post("/initiatives/:id/events", next(function*(req, res) {
 			yield eventsDb.create(attrs)
 
 			var message = yield messagesDb.create({
-				__proto__: renderEventMessage(initiative, attrs),
-				initiative_uuid: initiative.id,
+				__proto__: renderEventMessage(dbInitiative, attrs),
+				initiative_uuid: dbInitiative.uuid,
 				origin: "event",
 				created_at: new Date,
 				updated_at: new Date,
@@ -229,12 +240,12 @@ exports.post("/initiatives/:id/events", next(function*(req, res) {
 			yield Subscription.send(
 				message,
 				yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(
-					initiative.id
+					dbInitiative.uuid
 				)
 			)
 
 			res.flash("notice", "Event created and message sent.")
-			res.redirect(req.baseUrl + "/initiatives/" + req.initiative.id)
+			res.redirect(req.baseUrl + "/initiatives/" + dbInitiative.uuid)
 			break
 
 		default: throw new HttpError(422, "Invalid Action")
@@ -244,7 +255,8 @@ exports.post("/initiatives/:id/events", next(function*(req, res) {
 exports.use("/initiatives/:id/events/:eventId",
 	next(function*(req, _res, next) {
 	var event = yield eventsDb.read(req.params.eventId)
-	if (event == null) return void next(new HttpError(404))
+	if (event == null) throw new HttpError(404)
+	if (!isEditableEvent(event)) throw new HttpError(403, "Not Editable")
 	req.event = event
 	next()
 }))
@@ -254,47 +266,50 @@ exports.get("/initiatives/:id/events/:eventId/edit", function(req, res) {
 })
 
 exports.put("/initiatives/:id/events/:eventId", next(function*(req, res) {
-	var attrs = _.assign(parseEvent(req.body), {updated_at: new Date})
-	yield eventsDb.update(req.event.id, attrs)
+	var dbInitiative = req.dbInitiative
+	var event = req.event
+	var attrs = _.assign(parseEvent(event, req.body), {updated_at: new Date})
+	yield eventsDb.update(event, attrs)
 	res.flash("notice", "Event updated.")
-	res.redirect(req.baseUrl + "/initiatives/" + req.initiative.id)
+	res.redirect(req.baseUrl + "/initiatives/" + dbInitiative.uuid)
 }))
 
 exports.delete("/initiatives/:id/events/:eventId", next(function*(req, res) {
+	var dbInitiative = req.dbInitiative
 	yield eventsDb.delete(req.event.id)
 	res.flash("notice", "Event deleted.")
-	res.redirect(req.baseUrl + "/initiatives/" + req.initiative.id)
+	res.redirect(req.baseUrl + "/initiatives/" + dbInitiative.uuid)
 }))
 
 exports.get("/initiatives/:id/messages/new", next(function*(req, res) {
-	var initiative = req.initiative
+	var dbInitiative = req.dbInitiative
 
 	res.render("admin/initiatives/messages/create_page.jsx", {
 		message: {
 			title: t("DEFAULT_INITIATIVE_SUBSCRIPTION_MESSAGE_TITLE", {
-				initiativeTitle: initiative.title,
+				initiativeTitle: dbInitiative.title,
 			}),
 
 			text: renderEmail("DEFAULT_INITIATIVE_SUBSCRIPTION_MESSAGE_BODY", {
-				initiativeTitle: initiative.title,
-				initiativeUrl: `${Config.url}/initiatives/${initiative.id}`
+				initiativeTitle: dbInitiative.title,
+				initiativeUrl: `${Config.url}/initiatives/${dbInitiative.uuid}`
 			})
 		},
 
 		subscriptions: yield subscriptionsDb.searchConfirmedByInitiativeId(
-			initiative.id
+			dbInitiative.uuid
 		)
 	})
 }))
 
 exports.post("/initiatives/:id/messages", next(function*(req, res) {
-	var initiative = req.initiative
+	var dbInitiative = req.dbInitiative
 	var attrs = req.body
 
 	switch (attrs.action) {
 		case "send":
 			var message = yield messagesDb.create({
-				initiative_uuid: initiative.id,
+				initiative_uuid: dbInitiative.uuid,
 				origin: "message",
 				title: attrs.title,
 				text: attrs.text,
@@ -304,11 +319,11 @@ exports.post("/initiatives/:id/messages", next(function*(req, res) {
 
 			yield Subscription.send(
 				message,
-				yield subscriptionsDb.searchConfirmedByInitiativeId(initiative.id)
+				yield subscriptionsDb.searchConfirmedByInitiativeId(dbInitiative.uuid)
 			)
 
 			res.flash("notice", "Message sent.")
-			res.redirect(req.baseUrl + "/initiatives/" + req.initiative.id)
+			res.redirect(req.baseUrl + "/initiatives/" + dbInitiative.uuid)
 			break
 
 		case "preview":
@@ -324,7 +339,7 @@ exports.post("/initiatives/:id/messages", next(function*(req, res) {
 				},
 
 				subscriptions: yield subscriptionsDb.searchConfirmedByInitiativeId(
-					initiative.id
+					dbInitiative.uuid
 				)
 			})
 			break
@@ -408,11 +423,24 @@ function parseInitiativeForCitizen(obj) {
 	return attrs
 }
 
-function parseEvent(obj) {
-	return {
-		title: obj.title,
-		text: obj.text,
-		occurred_at: new Date(obj.occurredOn + " " + obj.occurredAt)
+function parseEvent(event, obj) {
+	switch (event ? event.type : "text") {
+		case "text": return {
+			type: "text",
+			title: obj.title,
+			content: obj.content,
+			occurred_at: new Date(obj.occurredOn + " " + obj.occurredAt)
+		}
+
+		case "parliament-committee-meeting": return {
+			type: event.type,
+
+			content: _.merge({}, event.content, {
+				summary: obj.content.summary || undefined
+			})
+		}
+
+		default: throw new RangeError("Unsupported event type: " + event.type)
 	}
 }
 
@@ -425,9 +453,16 @@ function renderEventMessage(initiative, event) {
 
 		text: renderEmail("DEFAULT_INITIATIVE_EVENT_MESSAGE_BODY", {
 			title: event.title,
-			text: _.quoteEmail(event.text),
+			text: _.quoteEmail(event.content),
 			initiativeTitle: initiative.title,
-			initiativeUrl: `${Config.url}/initiatives/${initiative.id}`,
+			initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 		})
 	}
+}
+
+function isEditableEvent(event) {
+	return (
+		event.type == "parliament-committee-meeting" ||
+		event.type == "text"
+	)
 }

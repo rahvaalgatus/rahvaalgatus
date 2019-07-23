@@ -24,8 +24,6 @@ exports.close = function() {
 	this.mitm.disable()
 }
 
-exports.route = route
-
 function route(router, req, res) {
 	router(req, res, function(err) {
 		if (err == null) return

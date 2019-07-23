@@ -18,5 +18,6 @@ exports.delete = function*() {
 	yield sqlite(sql`DELETE FROM initiative_signatures`)
 	yield sqlite(sql`DELETE FROM initiative_messages`)
 	yield sqlite(sql`DELETE FROM initiative_events`)
+	yield sqlite(sql`DELETE FROM initiative_files`)
 	yield sqlite(sql`DELETE FROM comments`)
 }

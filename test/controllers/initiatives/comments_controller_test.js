@@ -6,6 +6,7 @@ var createUser = require("root/test/citizenos_fixtures").createUser
 var newUser = require("root/test/citizenos_fixtures").newUser
 var newUuid = require("uuid/v4")
 var respond = require("root/test/fixtures").respond
+var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var commentsDb = require("root/db/comments_db")
 var messagesDb = require("root/db/initiative_messages_db")
@@ -49,6 +50,8 @@ describe("InitiativeCommentsController", function() {
 	describe("POST /", function() {
 		describe("when not logged in", function() {
 			it("must respond with 401 when not logged in", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -65,6 +68,8 @@ describe("InitiativeCommentsController", function() {
 			require("root/test/fixtures").user()
 
 			it("must create comment", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -101,6 +106,8 @@ describe("InitiativeCommentsController", function() {
 			})
 
 			it("must redirect to referrer", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -120,6 +127,8 @@ describe("InitiativeCommentsController", function() {
 
 			describe("when subscribing", function() {
 				it("must subscribe if not subscribed before", function*() {
+					yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {data: INITIATIVE}))
 
@@ -154,6 +163,8 @@ describe("InitiativeCommentsController", function() {
 				})
 
 				it("must subscribe if subscribed to initiative before", function*() {
+					yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {data: INITIATIVE}))
 
@@ -189,6 +200,8 @@ describe("InitiativeCommentsController", function() {
 				})
 
 				it("must subscribe if subscribed to initiatives before", function*() {
+					yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {data: INITIATIVE}))
 
@@ -232,6 +245,7 @@ describe("InitiativeCommentsController", function() {
 
 				it("must not subscribe if email not verified", function*() {
 					yield cosDb.query(sql`UPDATE "Users" SET "emailIsVerified" = false`)
+					yield initiativesDb.create({uuid: UUID, phase: "sign"})
 
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {data: INITIATIVE}))
@@ -254,6 +268,8 @@ describe("InitiativeCommentsController", function() {
 				})
 
 				it("must unsubscribe if subscribed to initiative before", function*() {
+					yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {data: INITIATIVE}))
 
@@ -286,6 +302,8 @@ describe("InitiativeCommentsController", function() {
 				})
 
 				it("must unsubscribe if subscribed to initiatives before", function*() {
+					yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {data: INITIATIVE}))
 
@@ -314,6 +332,8 @@ describe("InitiativeCommentsController", function() {
 			})
 
 			it("must email subscribers interested in comments", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -369,6 +389,8 @@ describe("InitiativeCommentsController", function() {
 			})
 
 			it("must not email commentator if subscribed", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -424,6 +446,8 @@ describe("InitiativeCommentsController", function() {
 				var err = test[2]
 
 				it(`must show error if ${description}`, function*() {
+					yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {data: INITIATIVE}))
 
@@ -446,6 +470,8 @@ describe("InitiativeCommentsController", function() {
 
 	describe("GET /:id", function() {
 		it("must show comment page", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
@@ -479,6 +505,8 @@ describe("InitiativeCommentsController", function() {
 		})
 
 		it("must not show other comment's replies", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
@@ -507,6 +535,8 @@ describe("InitiativeCommentsController", function() {
 		})
 
 		it("must include UUID anchors", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
@@ -536,6 +566,8 @@ describe("InitiativeCommentsController", function() {
 		})
 
 		it("must redirect UUID to id", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
@@ -551,6 +583,8 @@ describe("InitiativeCommentsController", function() {
 		})
 
 		it("must show 404 given a non-existent comment", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`, respond.bind(null, {
 				data: INITIATIVE
 			}))
@@ -560,6 +594,8 @@ describe("InitiativeCommentsController", function() {
 		})
 
 		it("must redirect given a reply", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
@@ -576,6 +612,8 @@ describe("InitiativeCommentsController", function() {
 		})
 
 		it("must show 404 given a comment id of another initiative", function*() {
+			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 			this.router.get(`/api/topics/${UUID}`, respond.bind(null, {
 				data: INITIATIVE
 			}))
@@ -590,6 +628,8 @@ describe("InitiativeCommentsController", function() {
 	describe("POST /:id/replies", function() {
 		describe("when not logged in", function() {
 			it("must respond with 401 when not logged in", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -611,6 +651,8 @@ describe("InitiativeCommentsController", function() {
 			require("root/test/fixtures").user()
 
 			it("must create reply", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -646,6 +688,8 @@ describe("InitiativeCommentsController", function() {
 			})
 
 			it("must redirect to referrer", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -668,6 +712,8 @@ describe("InitiativeCommentsController", function() {
 			})
 
 			it("must email subscribers interested in comments", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -723,6 +769,8 @@ describe("InitiativeCommentsController", function() {
 			})
 
 			it("must not email commentator if subscribed", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -757,6 +805,8 @@ describe("InitiativeCommentsController", function() {
 			})
 
 			it("must respond with 405 given a reply", function*() {
+				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
@@ -789,6 +839,8 @@ describe("InitiativeCommentsController", function() {
 				var err = test[2]
 
 				it(`must show error if ${description}`, function*() {
+					yield initiativesDb.create({uuid: UUID, phase: "sign"})
+
 					this.router.get(`/api/users/self/topics/${UUID}`,
 						respond.bind(null, {data: INITIATIVE}))
 

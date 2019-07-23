@@ -51,6 +51,10 @@ export LIVERELOAD_PORT
 
 ifneq ($(filter test spec autotest autospec test/%, $(MAKECMDGOALS)),)
 	ENV = test
+
+	# Times west of UTC are better to test invalid date parsing behavior as then
+	# any given UTC time at midnight would be on the previous day in local time.
+	export TZ = America/Noronha
 endif
 
 love: compile
