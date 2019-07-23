@@ -24,6 +24,7 @@ Usage: cli parliament-sync (-h | --help)
 
 Options:
     -h, --help           Display this help and exit.
+    --refresh            Force refreshing initiatives from the parliament API.
     --cached             Do not refresh initiatives from the parliament API.
     --uuid=UUID          Refresh a single initiative. Use only with --cached.
 `
@@ -48,13 +49,14 @@ module.exports = function*(argv) {
 
 		yield initiatives.map((i) => updateInitiative(i, i.parliament_api_data))
 	}
-	else yield sync()
+	else yield sync({refresh: args["--refresh"]})
 }
 
-function* sync() {
+function* sync(opts) {
 	var api = _.memoize(parliamentApi)
 	var docs = yield api("documents/collective-addresses").then(getBody)
 	var pairs = _.zip(yield docs.map(readInitiative), docs)
+	var refresh = opts && opts.refresh
 
 	pairs = yield pairs.map(function*(initiativeAndDocument) {
 		var initiative = initiativeAndDocument[0]
@@ -65,7 +67,7 @@ function* sync() {
 		// the assumption that no new files will appear after creation.
 		//
 		// https://github.com/riigikogu-kantselei/api/issues/14
-		if (initiative.parliament_api_data == null)
+		if (initiative.parliament_api_data == null || refresh)
 			document.files = yield api("documents/" + document.uuid).then((res) => (
 				res.body.files || EMPTY_ARR
 			))
