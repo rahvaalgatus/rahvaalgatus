@@ -12,7 +12,7 @@ UGLIFY_OPTS += --stats
 # Not mangling atm for debugging purposes.
 #UGLIFY_OPTS += --mangle
 
-love:public/assets
+love: public/assets
 	@$(MAKE) --always-make $(FILES)
 
 compile: love
