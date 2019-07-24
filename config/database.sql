@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS "initiative_events" (
 	title TEXT,
 	content TEXT, origin TEXT NOT NULL DEFAULT 'admin', external_id TEXT, type TEXT NOT NULL DEFAULT 'text',
 
-	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
+	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE,
 
 	CONSTRAINT initiative_events_title_length
 	CHECK (length(title) > 0),
@@ -125,8 +125,8 @@ CREATE TABLE IF NOT EXISTS "initiative_files" (
 	content BLOB NOT NULL,
 	content_type TEXT NOT NULL,
 
-	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
-	FOREIGN KEY (event_id) REFERENCES initiative_events (id),
+	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE,
+	FOREIGN KEY (event_id) REFERENCES initiative_events (id) ON DELETE CASCADE,
 
 	CONSTRAINT initiative_files_external_id_length
 	CHECK (length(external_id) > 0),
@@ -199,4 +199,5 @@ INSERT INTO migrations VALUES('20190711000050');
 INSERT INTO migrations VALUES('20190711000060');
 INSERT INTO migrations VALUES('20190711000070');
 INSERT INTO migrations VALUES('20190723152855');
+INSERT INTO migrations VALUES('20190724225535');
 COMMIT;
