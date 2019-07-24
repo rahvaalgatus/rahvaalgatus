@@ -122,6 +122,18 @@ module.exports = function(attrs) {
 			</tr>
 
 			<tr>
+				<th scope="row">Parliament Committee</th>
+				<td>
+					<InputForm
+						req={req}
+						action={initiativePath}
+						name={"parliamentCommittee"}
+						value={dbInitiative.parliament_committee}
+					/>
+				</td>
+			</tr>
+
+			<tr>
 				<th scope="row">Finished in Parliament</th>
 				<td>
 					<DateInputForm

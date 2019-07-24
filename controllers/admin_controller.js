@@ -392,6 +392,9 @@ function parseInitiative(obj) {
 	if ("phase" in obj && _.contains(UPDATEABLE_PHASES, obj.phase))
 		attrs.phase = obj.phase
 
+	if ("parliamentCommittee" in obj)
+		attrs.parliament_committee = obj.parliamentCommittee
+
 	if ("governmentAgency" in obj)
 		attrs.government_agency = obj.governmentAgency
 
