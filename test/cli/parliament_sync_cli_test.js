@@ -282,10 +282,16 @@ describe("ParliamentSyncCli", function() {
 	})
 
 	// It seems to be the case as of Jul 19, 2019 that the statuses array is
-	// sorted randomly on every response.
-	it("must ignore if API response shuffles statuses", function*() {
+	// sorted randomly on every response. Same for relatedDocuments and
+	// relatedVolumes.
+	it("must ignore if API response shuffles arrays", function*() {
+		var documents = [{uuid: newUuid()}, {uuid: newUuid()}, {uuid: newUuid()}]
+		var volumes = [{uuid: newUuid()}, {uuid: newUuid()}, {uuid: newUuid()}]
+
 		var parliamentResponse = {
 			uuid: INITIATIVE_UUID,
+			relatedDocuments: documents,
+			relatedVolumes: volumes,
 
 			statuses: [
 				// Note the test with two statuses on the same date, too.
@@ -299,11 +305,21 @@ describe("ParliamentSyncCli", function() {
 		this.router.get(INITIATIVES_URL, function(req, res) {
 			if (requests++ == 0) respond([parliamentResponse], req, res)
 			else respond([_.assign({}, parliamentResponse, {
-				statuses: _.shuffle(parliamentResponse.statuses)
+				statuses: _.shuffle(parliamentResponse.statuses),
+				relatedDocuments: _.shuffle(parliamentResponse.relatedDocuments),
+				relatedVolumes: _.shuffle(parliamentResponse.relatedVolumes)
 			})], req, res)
 		})
 
 		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+
+		documents.forEach((doc) => (
+			this.router.get(`/api/documents/${doc.uuid}`, respond.bind(null, doc))
+		))
+
+		volumes.forEach((volume) => (
+			this.router.get(`/api/volumes/${volume.uuid}`, respond.bind(null, volume))
+		))
 
 		yield job()
 		var initiative = yield initiativesDb.read(sql`SELECT * FROM initiatives`)

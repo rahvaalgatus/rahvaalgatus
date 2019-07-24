@@ -528,11 +528,14 @@ function parseTitle(title) {
 }
 
 function normalizeParliamentDocumentForDiff(doc) {
+	var relatedDocuments = doc.relatedDocuments
+	var relatedVolumes = doc.relatedVolumes
+
 	return {
 		__proto__: doc,
 		statuses: doc.statuses && sortStatuses(doc.statuses),
-		relatedDocuments: doc.relatedDocuments && doc.relatedDocuments.map(getUuid),
-		relatedVolumes: doc.relatedVolumes && doc.relatedVolumes.map(getUuid),
+		relatedDocuments: relatedDocuments && relatedDocuments.map(getUuid).sort(),
+		relatedVolumes: relatedVolumes && relatedVolumes.map(getUuid).sort(),
 		missingVolumes: null
 	}
 }
@@ -540,7 +543,7 @@ function normalizeParliamentDocumentForDiff(doc) {
 function* readParliamentVolumeWithDocuments(api, uuid) {
 	var volume = yield api("volumes/" + uuid).then(getBody)
 
-	volume.documents = yield volume.documents.map((doc) => (
+	volume.documents = yield (volume.documents || EMPTY_ARR).map((doc) => (
 		!isMeetingTopicDocument(doc) &&
 		api("documents/" + doc.uuid).then(getBody)
 	)).filter(Boolean)
