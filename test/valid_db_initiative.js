@@ -14,6 +14,8 @@ module.exports = function(attrs) {
 		organizations: [],
 		meetings: [],
 		media_urls: [],
+		government_agency: null,
+		sent_to_government_at: null,
 		government_change_urls: [],
 		public_change_urls: [],
 		signature_milestones: {},

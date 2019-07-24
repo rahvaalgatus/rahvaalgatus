@@ -58,6 +58,8 @@ exports.parse = function(attrs) {
 
 		sent_to_parliament_at: attrs.sent_to_parliament_at &&
 			new Date(attrs.sent_to_parliament_at),
+		sent_to_government_at: attrs.sent_to_government_at &&
+			new Date(attrs.sent_to_government_at),
 		received_by_parliament_at: attrs.received_by_parliament_at &&
 			new Date(attrs.received_by_parliament_at),
 		accepted_by_parliament_at: attrs.accepted_by_parliament_at &&

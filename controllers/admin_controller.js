@@ -392,6 +392,9 @@ function parseInitiative(obj) {
 	if ("phase" in obj && _.contains(UPDATEABLE_PHASES, obj.phase))
 		attrs.phase = obj.phase
 
+	if ("governmentAgency" in obj)
+		attrs.government_agency = obj.governmentAgency
+
 	if ("sentToParliamentOn" in obj)
 		attrs.sent_to_parliament_at = obj.sentToParliamentOn
 			? Time.parseDate(obj.sentToParliamentOn)
@@ -410,6 +413,11 @@ function parseInitiative(obj) {
 	if ("finishedInParliamentOn" in obj)
 		attrs.finished_in_parliament_at = obj.finishedInParliamentOn
 			? Time.parseDate(obj.finishedInParliamentOn)
+			: null
+
+	if ("sentToGovernmentOn" in obj)
+		attrs.sent_to_government_at = obj.sentToGovernmentOn
+			? Time.parseDate(obj.sentToGovernmentOn)
 			: null
 
 	return attrs

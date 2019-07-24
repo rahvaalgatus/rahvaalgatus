@@ -134,6 +134,30 @@ module.exports = function(attrs) {
 			</tr>
 
 			<tr>
+				<th scope="row">Sent to Government</th>
+				<td>
+					<DateInputForm
+						req={req}
+						action={initiativePath}
+						name={"sentToGovernmentOn"}
+						value={dbInitiative.sent_to_government_at}
+					/>
+				</td>
+			</tr>
+
+			<tr>
+				<th scope="row">Government Agency</th>
+				<td>
+					<InputForm
+						req={req}
+						action={initiativePath}
+						name={"governmentAgency"}
+						value={dbInitiative.government_agency}
+					/>
+				</td>
+			</tr>
+
+			<tr>
 				<th scope="row">Has Paper Signatures</th>
 				<td>
 					<CheckboxForm
@@ -340,16 +364,18 @@ function CheckboxForm(attrs) {
 	</Form>
 }
 
-function DateInputForm(attrs) {
+function InputForm(attrs) {
 	var req = attrs.req
 	var action = attrs.action
+	var type = attrs.type
 	var name = attrs.name
 	var value = attrs.value
+	var label = attrs.label || "Set"
 	var toggle = "show-" + name
 
 	return <Fragment>
 		{value ? <Fragment>
-			<time>{formatDate("iso", value)}</time>
+			{value}
 			<br />
 		</Fragment> : null}
 
@@ -367,7 +393,7 @@ function DateInputForm(attrs) {
 					value=""
 					onclick={confirm("Sure?")}
 					class="admin-link">Remove</FormButton>
-			</Fragment> : <label for={toggle} class="admin-link">Set Date</label>}
+			</Fragment> : <label for={toggle} class="admin-link">{label}</label>}
 		</span>
 
 		<Form
@@ -377,16 +403,25 @@ function DateInputForm(attrs) {
 			class="form-toggle-form admin-inline-form"
 		>
 			<input
-				type="date"
+				type={type}
 				name={name}
-				value={value && formatDate("iso", value)}
+				value={value}
 				required
 				class="admin-input"
 			/>
 
-			<button class="admin-submit">Set Date</button>
+			<button class="admin-submit">{label}</button>
 			&nbsp;or&nbsp;
 			<label for={toggle} class="admin-link">Cancel</label>
 		</Form>
 	</Fragment>
+}
+
+function DateInputForm(attrs) {
+	return <InputForm
+		{...attrs}
+		type="date"
+		label="Set Date"
+		value={attrs.value && formatDate("iso", attrs.value)}
+	/>
 }
