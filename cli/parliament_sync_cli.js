@@ -24,23 +24,19 @@ Usage: cli parliament-sync (-h | --help)
 
 Options:
     -h, --help           Display this help and exit.
-    --refresh            Force refreshing initiatives from the parliament API.
+    --force              Refreshing initiatives from the parliament API.
     --cached             Do not refresh initiatives from the parliament API.
-    --uuid=UUID          Refresh a single initiative. Use only with --cached.
+    --uuid=UUID          Refresh a single initiative.
 `
 
 module.exports = function*(argv) {
   var args = Neodoc.run(USAGE_TEXT, {argv: argv || ["parliament-sync"]})
   if (args["--help"]) return void process.stdout.write(USAGE_TEXT.trimLeft())
+	var uuid = args["--uuid"]
+	var cached = args["--cached"]
+	var force = args["--force"]
 
-	if (args["--uuid"] && !args["--cached"]) {
-		console.error("--uuid works only with --cached.")
-		process.exit(1)
-	}
-
-	if (args["--cached"]) {
-		var uuid = args["--uuid"]
-
+	if (cached) {
 		var initiatives = yield initiativesDb.search(sql`
 			SELECT * FROM initiatives
 			WHERE parliament_api_data IS NOT NULL
@@ -49,14 +45,20 @@ module.exports = function*(argv) {
 
 		yield initiatives.map((i) => updateInitiative(i, i.parliament_api_data))
 	}
-	else yield sync({refresh: args["--refresh"]})
+	else yield sync({uuid: uuid, force: force})
 }
 
 function* sync(opts) {
 	var api = _.memoize(parliamentApi)
-	var docs = yield api("documents/collective-addresses").then(getBody)
+	var uuid = opts && opts.uuid
+	var force = opts && opts.force
+
+	var docs = yield (uuid == null
+		? api("documents/collective-addresses").then(getBody)
+		: api(`documents/collective-addresses/${uuid}`).then(getBody).then(concat)
+	)
+
 	var pairs = _.zip(yield docs.map(readInitiative), docs)
-	var refresh = opts && opts.refresh
 
 	pairs = yield pairs.map(function*(initiativeAndDocument) {
 		var initiative = initiativeAndDocument[0]
@@ -67,7 +69,7 @@ function* sync(opts) {
 		// the assumption that no new files will appear after creation.
 		//
 		// https://github.com/riigikogu-kantselei/api/issues/14
-		if (initiative.parliament_api_data == null || refresh)
+		if (initiative.parliament_api_data == null || force)
 			document.files = yield api("documents/" + document.uuid).then((res) => (
 				res.body.files || EMPTY_ARR
 			))
@@ -81,7 +83,7 @@ function* sync(opts) {
 		var initiative = initiativeAndDocument[0]
 		var document = initiativeAndDocument[1]
 
-		return initiative.parliament_api_data == null || diff(
+		return initiative.parliament_api_data == null || force || diff(
 			normalizeParliamentDocumentForDiff(initiative.parliament_api_data),
 			normalizeParliamentDocumentForDiff(document)
 		)
