@@ -176,6 +176,7 @@
 	"PARLIAMENT_ACCEPTED": "Algatus menetlusse võetud",
 	"PARLIAMENT_COMMITTEE_MEETING": "Arutelu komisjonis",
 	"PARLIAMENT_COMMITTEE_MEETING_BY": "Arutelu {{committee}}-is",
+	"PARLIAMENT_DECISION": "Otsus",
 	"PARLIAMENT_FINISHED": "Algatuse menetlus Riigikogus on lõppenud",
 	"PARLIAMENT_MEETING_DECISION_CONTINUE": "Otsustati jätkata arutelu komisjonis.",
 	"PARLIAMENT_MEETING_DECISION_FORWARD": "Otsustati edastada ettepanek pädevale institutsioonile seisukoha võtmiseks ja lahendamiseks.",

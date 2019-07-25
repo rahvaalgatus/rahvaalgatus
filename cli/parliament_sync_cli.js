@@ -16,7 +16,6 @@ var DOCUMENT_URL = PARLIAMENT_URL + "/tegevus/dokumendiregister/dokument"
 var FILE_URL = PARLIAMENT_URL + "/download"
 var LOCAL_DATE = /\b(\d?\d)\.(\d?\d)\.(\d\d\d\d)\b/
 var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
-var unknown
 
 var USAGE_TEXT = `
 Usage: cli parliament-sync (-h | --help)
@@ -108,9 +107,9 @@ function* sync(opts) {
 			readParliamentVolumeWithDocuments.bind(null, api)
 		)
 
-		var meetingVolumeUuids = yield doc.relatedDocuments.filter((doc) => (
-			doc.documentType == "unitAgendaItemDocument"
-		)).map((doc) => doc.volume.uuid)
+		var meetingVolumeUuids = yield doc.relatedDocuments.filter(
+			isMeetingTopicDocument
+		).map((doc) => doc.volume.uuid)
 
 		var meetingVolumes = yield meetingVolumeUuids.map(
 			readParliamentVolumeWithDocuments.bind(null, api)
@@ -162,6 +161,14 @@ function* updateInitiative(initiative, document) {
 	var statuses = sortStatuses(document.statuses || EMPTY_ARR)
 	var update = attrsFrom(document)
 
+	var volumeDocumentUuids = new Set(flatten(volumes.map((volume) => (
+		volume.documents.map(getUuid)
+	))))
+
+	var documents = document.relatedDocuments.filter((doc) => (
+		!volumeDocumentUuids.has(doc.uuid))
+	)
+
 	// Deriving initiative attributes from all statuses, not only semantically
 	// unique ones as events below. This works for all orderings of
 	// MENETLUS_LOPETATUD is before TAGASI_LYKATUD.
@@ -195,8 +202,13 @@ function* updateInitiative(initiative, document) {
 
 	eventAttrs = concat(
 		eventAttrs,
-		volumes.map(eventAttrsFromVolume.bind(null, document)
-	).filter(Boolean))
+		volumes.map(eventAttrsFromVolume.bind(null, document)).filter(Boolean)
+	)
+
+	eventAttrs = concat(
+		eventAttrs,
+		documents.map(eventAttrsFromDocument).filter(Boolean)
+	)
 
 	eventAttrs = _.values(eventAttrs.reduce((obj, attrs) => (
 		(obj[attrs.external_id] = _.merge({}, obj[attrs.external_id], attrs)), obj
@@ -232,16 +244,20 @@ function* updateInitiative(initiative, document) {
 
 	eventsByExternalId = _.indexBy(events, "external_id")
 
-	var volumeDocumentUuids = new Set(flatten(volumes.map((volume) => (
-		volume.documents.map(getUuid)
-	))))
+	yield createEventFilesFromVolumes(initiative, events, volumes)
 
-	var documents = document.relatedDocuments.filter((doc) => (
-		!volumeDocumentUuids.has(doc.uuid))
+	documents = yield createEventFilesFromRelatedDocuments(
+		initiative,
+		events,
+		documents
 	)
 
-	yield createEventFilesFromVolumes(initiative, events, volumes)
-	yield createEventFilesFromRelatedDocuments(initiative, events, documents)
+	documents.forEach((document) => logger.warn(
+		"Ignored initiative %s document %s (%s)",
+		initiative.uuid,
+		document.uuid,
+		document.title
+	))
 
 	return initiative
 }
@@ -264,21 +280,16 @@ function* createFiles(initiative, document) {
 }
 
 function* createEventFilesFromRelatedDocuments(initiative, events, documents) {
-	yield filesDb.create(flatten(yield documents.map(function(document) {
+	var files = []
+
+	documents = _.reject(documents, function(document) {
 		var event = findEventFromDocument(events, document)
+		if (event) files.push(newEventFiles(initiative, event, document))
+		return Boolean(event)
+	})
 
-		if (event === unknown) {
-			logger.warn(
-				"Ignoring initiative %s document «%s»",
-				initiative.uuid,
-				document.title
-			)
-
-			return EMPTY_ARR
-		}
-
-		return newEventFiles(initiative, event, document)
-	})))
+	yield filesDb.create(flatten(yield files))
+	return documents
 }
 
 function* createEventFilesFromVolumes(initiative, events, volumes) {
@@ -287,7 +298,7 @@ function* createEventFilesFromVolumes(initiative, events, volumes) {
 
 		if (event == null) {
 			logger.warn(
-				"Ignoring initiative %s volume «%s»",
+				"Ignored initiative %s volume «%s»",
 				initiative.uuid,
 				volume.title
 			)
@@ -441,11 +452,27 @@ function eventAttrsFromVolume(document, volume) {
 	else return null
 }
 
-function findEventFromDocument(events, document) {
+function eventAttrsFromDocument(document) {
 	if (
 		document.documentType == "decisionDocument" &&
-		document.title == "Kollektiivse pöördumise menetlusse võtmine"
-	) return events.find((ev) => ev.type == "parliament-accepted")
+		!isParliamentAcceptanceDocument(document)
+	) return {
+		type: "parliament-decision",
+		origin: "parliament",
+		external_id: document.uuid,
+		occurred_at: Time.parseDateTime(document.created),
+		title: null,
+		content: {}
+	}
+	else return null
+}
+
+function findEventFromDocument(events, document) {
+	if (isParliamentAcceptanceDocument(document))
+		return events.find((ev) => ev.type == "parliament-accepted")
+
+	if (document.documentType == "decisionDocument")
+		return events.find((ev) => ev.external_id == document.uuid)
 
 	if (document.documentType == "protokoll") {
 		var date = (
@@ -453,18 +480,18 @@ function findEventFromDocument(events, document) {
 			document.volume && parseInlineDate(document.volume.title)
 		)
 
-		if (date == null) return unknown
-		return events.find((ev) => Time.isSameDate(ev.occurred_at, date))
+		return date && events.find((ev) => (
+			Time.isSameDate(ev.occurred_at, date) && (
+				ev.type == "parliament-accepted" ||
+				ev.type == "parliament-committee-meeting"
+			)
+		))
 	}
 
-	if (
-		document.documentType == "letterDocument" &&
-		document.title.match(/\bvastuskiri\b/i)
-	) return events.find((ev) => ev.type == "parliament-finished")
+	if (isParliamentResponseDocument(document))
+		return events.find((ev) => ev.type == "parliament-finished")
 
-	if (isMeetingTopicDocument(document)) return null
-
-	return unknown
+	return null
 }
 
 function findEventFromVolume(events, volume) {
@@ -529,16 +556,31 @@ function parseTitle(title) {
 	return title
 }
 
-function normalizeParliamentDocumentForDiff(doc) {
-	var relatedDocuments = doc.relatedDocuments
-	var relatedVolumes = doc.relatedVolumes
+function normalizeParliamentDocumentForDiff(document) {
+	var documents = document.relatedDocuments
+	var volumes = document.relatedVolumes
 
 	return {
-		__proto__: doc,
-		statuses: doc.statuses && sortStatuses(doc.statuses),
-		relatedDocuments: relatedDocuments && relatedDocuments.map(getUuid).sort(),
-		relatedVolumes: relatedVolumes && relatedVolumes.map(getUuid).sort(),
+		// NOTE: Diffing happens before documents and volumes have been populated
+		// and therefore don't contain files and documents respectively.
+		__proto__: document,
+		statuses: document.statuses && sortStatuses(document.statuses),
+
+		relatedDocuments:
+			documents && _.sortBy(documents.map(normalizeDocument), "uuid"),
+
+		relatedVolumes: volumes && _.sortBy(volumes.map(normalizeVolume), "uuid"),
 		missingVolumes: null
+	}
+
+	// Ideally we'd compare something like an updated-at attribute, but there's
+	// none in the /api/documents/collective-addresses response.
+	function normalizeDocument(doc) {
+		return {uuid: doc.uuid, title: doc.title, documentType: doc.documentType}
+	}
+
+	function normalizeVolume(doc) {
+		return {uuid: doc.uuid, title: doc.title, volumeType: doc.volumeType}
 	}
 }
 
@@ -546,9 +588,10 @@ function* readParliamentVolumeWithDocuments(api, uuid) {
 	var volume = yield api("volumes/" + uuid).then(getBody)
 
 	volume.documents = yield (volume.documents || EMPTY_ARR).map((doc) => (
-		!isMeetingTopicDocument(doc) &&
-		api("documents/" + doc.uuid).then(getBody)
-	)).filter(Boolean)
+		isMeetingTopicDocument(doc)
+			? Promise.resolve(doc)
+			: api("documents/" + doc.uuid).then(getBody)
+	))
 
 	return volume
 }
@@ -568,12 +611,28 @@ function isMeetingTopicDocument(doc) {
 	return doc.documentType == "unitAgendaItemDocument"
 }
 
+function isParliamentAcceptanceDocument(document) {
+	return (
+		document.documentType == "decisionDocument" &&
+		document.title == "Kollektiivse pöördumise menetlusse võtmine"
+	)
+}
+
+function isParliamentResponseDocument(document) {
+	return (
+		document.documentType == "letterDocument" &&
+		document.title.match(/\bvastuskiri\b/i) &&
+		document.direction.code == "VALJA"
+	)
+}
+
 function mergeEvent(event, attrs) {
-	if (event.type == "parliament-committee-meeting") {
+	if (event.type == "parliament-committee-meeting")
 		attrs.content = _.assign({}, event.content, attrs.content, {
 			committee: event.content.committee
 		})
-	}
+	else if (event.type == "parliament-decision")
+		attrs.content = _.assign({}, event.content, attrs.content)
 
 	return attrs
 }

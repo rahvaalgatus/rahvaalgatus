@@ -260,6 +260,12 @@ module.exports = function(attrs) {
 								</table>
 								break
 
+							case "parliament-decision":
+								var summary = event.content.summary
+								if (summary)
+									content = <p class="text">{Jsx.html(linkify(summary))}</p>
+								break
+
 							default:
 								throw new RangeError("Unsupported event type: " + event.type)
 						}

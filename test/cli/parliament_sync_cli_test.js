@@ -616,13 +616,10 @@ describe("ParliamentSyncCli", function() {
 	})
 
 	it("must update committee meeting event", function*() {
-		var initiative = yield initiativesDb.create({uuid: newUuid()})
-
 		var requested = 0
 		this.router.get(INITIATIVES_URL, function(req, res) {
 			if (requested++ == 0) respond([{
 				uuid: INITIATIVE_UUID,
-				senderReference: initiative.uuid,
 				responsibleCommittee: {name: "Sotsiaalkomisjon"},
 				statuses: [{
 					date: "2018-10-24",
@@ -632,7 +629,6 @@ describe("ParliamentSyncCli", function() {
 			}], req, res)
 			else respond([{
 				uuid: INITIATIVE_UUID,
-				senderReference: initiative.uuid,
 				responsibleCommittee: {name: "Majanduskomisjon"},
 				statuses: [{
 					date: "2018-10-24",
@@ -654,7 +650,7 @@ describe("ParliamentSyncCli", function() {
 
 		yield job()
 
-		yield eventsDb.read(sql`SELECT * FROM initiative_events`).must.then.eql({
+		yield eventsDb.read(event).must.then.eql({
 			__proto__: event,
 			content: {
 				committee: "Sotsiaalkomisjon",
@@ -664,43 +660,64 @@ describe("ParliamentSyncCli", function() {
 		})
 	})
 
-	it("must update committee meeting event decision", function*() {
-		var initiative = yield initiativesDb.create({uuid: newUuid()})
-
-		var requested = 0
+	it("must update decision", function*() {
+		var requestedInitiatives = 0
 		this.router.get(INITIATIVES_URL, function(req, res) {
-			if (requested++ == 0) respond([{
+			if (requestedInitiatives++ == 0) respond([{
 				uuid: INITIATIVE_UUID,
-				senderReference: initiative.uuid,
-				statuses: [{date: "2018-10-24", status: {code: "ARUTELU_KOMISJONIS"}}]
+				// Use an updated title as a way to force refetching of related
+				// documents.
+				relatedDocuments: [{
+					uuid: DOCUMENT_UUID,
+					documentType: "decisionDocument",
+					title: "A"
+				}]
 			}], req, res)
 			else respond([{
 				uuid: INITIATIVE_UUID,
-				senderReference: initiative.uuid,
-				statuses: [{
-					date: "2018-10-24",
-					status: {code: "ARUTELU_KOMISJONIS"},
-					committeeDecision: {code: "JATKATA_ARUTELU"}
+				relatedDocuments: [{
+					uuid: DOCUMENT_UUID,
+					documentType: "decisionDocument",
+					title: "B"
 				}]
 			}], req, res)
 		})
 
 		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
-		yield job()
+
+		var requestedDocuments = 0
+		this.router.get(`/api/documents/${DOCUMENT_UUID}`, function(req, res) {
+			if (requestedDocuments++ == 0) respond({
+				uuid: DOCUMENT_UUID,
+				title: "Otsuse muutmine",
+				documentType: "decisionDocument",
+				created: "2015-06-18T13:37:42.666"
+			}, req, res)
+			else respond({
+				uuid: DOCUMENT_UUID,
+				title: "Otsuse muutmine (uuendatud)",
+				documentType: "decisionDocument",
+				created: "2015-06-18T15:37:42.666"
+			}, req, res)
+		})
+
 		yield job()
 
-		yield eventsDb.search(sql`SELECT * FROM initiative_events`).must.then.eql([
-			new ValidEvent({
-				id: 1,
-				initiative_uuid: initiative.uuid,
-				occurred_at: new Date(2018, 9, 24),
-				origin: "parliament",
-				external_id: "ARUTELU_KOMISJONIS/2018-10-24",
-				type: "parliament-committee-meeting",
-				title: null,
-				content: {committee: null, decision: "continue"}
-			})
-		])
+		var event = yield eventsDb.read(sql`SELECT * FROM initiative_events`)
+
+		event = yield eventsDb.update(event, {
+			type: event.type,
+			content: _.assign(event.content, {summary: "An important decision"})
+		})
+
+		yield job()
+
+		yield eventsDb.read(event).must.then.eql({
+			__proto__: event,
+			occurred_at: new Date(2015, 5, 18, 15, 37, 42, 666),
+			updated_at: new Date,
+			content: {summary: "An important decision"}
+		})
 	})
 
 	// While supposedly a data error and fixed in the parliament APi response as
@@ -898,6 +915,7 @@ describe("ParliamentSyncCli", function() {
 					uuid: DOCUMENT_UUID,
 					title: "ÕIGK vastuskiri - Kollektiivne pöördumine X",
 					documentType: "letterDocument",
+					direction: {code: "VALJA"},
 
 					files: [{
 						uuid: "811eac10-a47e-468f-bec9-56c790157f08",
@@ -926,6 +944,7 @@ describe("ParliamentSyncCli", function() {
 					uuid: DOCUMENT_UUID,
 					title: "Kollektiivne pöördumine X - ÕISK vastuskiri reformimiseks",
 					documentType: "letterDocument",
+					direction: {code: "VALJA"},
 
 					files: [{
 						uuid: "811eac10-a47e-468f-bec9-56c790157f08",
@@ -954,6 +973,7 @@ describe("ParliamentSyncCli", function() {
 					uuid: DOCUMENT_UUID,
 					title: "Vastuskiri - Kollektiivne pöördumine X",
 					documentType: "letterDocument",
+					direction: {code: "VALJA"},
 
 					files: [{
 						uuid: "811eac10-a47e-468f-bec9-56c790157f08",
@@ -1085,13 +1105,14 @@ describe("ParliamentSyncCli", function() {
 
 			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
 				uuid: DOCUMENT_UUID,
-				title: "29.01.2019 juhatuse istungi protokoll",
-				documentType: "protokoll",
+				title: "ÕIGK vastuskiri - Kollektiivne pöördumine X",
+				documentType: "letterDocument",
+				direction: {code: "VALJA"},
 
 				files: [{
 					uuid: FILE_UUID,
-          fileName: "Protokoll.pdf",
-          fileTitle: "Juhatuse istungi protokoll",
+          fileName: "vastuskiri.pdf",
+          fileTitle: "Vastuskiri",
 					accessRestrictionType: "PUBLIC",
 					created: "2018-03-08T15:41:14.26"
 				}]
@@ -1111,8 +1132,8 @@ describe("ParliamentSyncCli", function() {
 				event_id: 1,
 				external_id: FILE_UUID,
 				external_url: `https://www.riigikogu.ee/download/${FILE_UUID}`,
-				name: "Protokoll.pdf",
-				title: "Juhatuse istungi protokoll",
+				name: "vastuskiri.pdf",
+				title: "Vastuskiri",
 				url: `https://www.riigikogu.ee/tegevus/dokumendiregister/dokument/${DOCUMENT_UUID}`,
 				content: Buffer.from("PDF"),
 				content_type: "application/pdf"
@@ -1212,6 +1233,63 @@ describe("ParliamentSyncCli", function() {
 				external_url: `https://www.riigikogu.ee/download/${FILE_UUID}`,
 				name: "Protokoll.pdf",
 				title: "SOTK protokoll 29.01.2019",
+				url: `https://www.riigikogu.ee/tegevus/dokumendiregister/dokument/${DOCUMENT_UUID}`,
+				content: Buffer.from("PDF"),
+				content_type: "application/pdf"
+			})])
+		})
+
+		it("must create event given a decision document", function*() {
+			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+				uuid: INITIATIVE_UUID,
+				relatedDocuments: [{uuid: DOCUMENT_UUID}]
+			}]))
+
+			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+
+			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
+				uuid: DOCUMENT_UUID,
+				title: "Otsuse muutmine",
+				documentType: "decisionDocument",
+				created: "2015-06-18T13:37:42.666",
+
+				files: [{
+					uuid: FILE_UUID,
+					fileName: "protokoll.pdf",
+					accessRestrictionType: "PUBLIC",
+					created: "2019-01-30T15:45:08.621",
+				}]
+			}))
+
+			this.router.get(`/download/${FILE_UUID}`,
+				respondWithRiigikoguDownload.bind(null, "application/pdf", "PDF")
+			)
+
+			yield job()
+
+			var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
+
+			events.must.eql([new ValidEvent({
+				id: 1,
+				initiative_uuid: INITIATIVE_UUID,
+				occurred_at: new Date(2015, 5, 18, 13, 37, 42, 666),
+				origin: "parliament",
+				external_id: DOCUMENT_UUID,
+				type: "parliament-decision",
+				title: null,
+				content: {}
+			})])
+
+			yield filesDb.search(sql`
+				SELECT * FROM initiative_files
+			`).must.then.eql([new ValidFile({
+				id: 1,
+				initiative_uuid: INITIATIVE_UUID,
+				event_id: 1,
+				external_id: FILE_UUID,
+				external_url: `https://www.riigikogu.ee/download/${FILE_UUID}`,
+				name: "protokoll.pdf",
+				title: "Otsuse muutmine",
 				url: `https://www.riigikogu.ee/tegevus/dokumendiregister/dokument/${DOCUMENT_UUID}`,
 				content: Buffer.from("PDF"),
 				content_type: "application/pdf"

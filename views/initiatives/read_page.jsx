@@ -1125,6 +1125,15 @@ function EventsView(attrs) {
 							</Fragment>
 							break
 
+						case "parliament-decision":
+							title = t("PARLIAMENT_DECISION")
+
+							var summary = event.content.summary
+							if (summary)
+								content = <p class="text">{Jsx.html(linkify(summary))}</p>
+
+							break
+
 						case "parliament-finished":
 							title = t("PARLIAMENT_FINISHED")
 							break
@@ -1479,6 +1488,7 @@ function initiativePhaseFromEvent(event) {
 		case "sent-to-parliament":
 		case "parliament-received":
 		case "parliament-accepted":
+		case "parliament-decision":
 		case "parliament-finished":
 		case "parliament-committee-meeting": return "parliament"
 		case "text": return null
