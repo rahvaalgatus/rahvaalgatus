@@ -464,15 +464,36 @@ function eventAttrsFromDocument(document) {
 		title: null,
 		content: {}
 	}
+	else if (
+		document.documentType == "letterDocument" &&
+		!isParliamentResponseDocument(document)
+	) {
+		var direction = parseLetterDirection(document.direction)
+
+		return {
+			type: "parliament-letter",
+			origin: "parliament",
+			external_id: document.uuid,
+			occurred_at: Time.parseDateTime(document.created),
+			title: null,
+
+			content: {
+				medium: parseLetterMedium(document.receiveType),
+				direction: direction,
+				title: document.title,
+				date: document.authorDate,
+				[direction == "incoming" ? "from" : "to"]: document.author
+			}
+		}
+	}
 	else return null
 }
 
 function findEventFromDocument(events, document) {
+	// NOTE: There's also "decisionDate" which could be used to confirm the
+	// document against the MENETLUSSE_VOETUD status's date.
 	if (isParliamentAcceptanceDocument(document))
 		return events.find((ev) => ev.type == "parliament-accepted")
-
-	if (document.documentType == "decisionDocument")
-		return events.find((ev) => ev.external_id == document.uuid)
 
 	if (document.documentType == "protokoll") {
 		var date = (
@@ -490,6 +511,11 @@ function findEventFromDocument(events, document) {
 
 	if (isParliamentResponseDocument(document))
 		return events.find((ev) => ev.type == "parliament-finished")
+
+	if (
+		document.documentType == "letterDocument" ||
+		document.documentType == "decisionDocument"
+	) return events.find((ev) => ev.external_id == document.uuid)
 
 	return null
 }
@@ -635,6 +661,17 @@ function mergeEvent(event, attrs) {
 		attrs.content = _.assign({}, event.content, attrs.content)
 
 	return attrs
+}
+
+function parseLetterDirection(direction) {
+	if (direction.code == "SISSE") return "incoming"
+	else if (direction.code == "VALJA") return "outgoing"
+	else throw new RangeError("Invalid direction: " + direction.code)
+}
+
+function parseLetterMedium(medium) {
+	if (medium.code == "E_POST") return "email"
+	else throw new RangeError("Invalid medium: " + medium.code)
 }
 
 function getBody(res) { return res.body }

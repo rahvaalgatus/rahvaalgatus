@@ -103,6 +103,7 @@ function EventForm(attrs, children) {
 				// Don't use the "require" attribute on the summary. This permits
 				// clearing it out.
 				case "parliament-committee-meeting":
+				case "parliament-letter":
 				case "parliament-decision": return <Fragment>
 					<label class="admin-label">Summary</label>
 					<textarea

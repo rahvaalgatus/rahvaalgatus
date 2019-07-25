@@ -260,6 +260,42 @@ module.exports = function(attrs) {
 								</table>
 								break
 
+							case "parliament-letter":
+								var letter = event.content
+
+								content = <table class="admin-horizontal-table">
+									<tr>
+										<th scope="row">Medium</th>
+										<td>{letter.medium}</td>
+									</tr>
+
+									<tr>
+										<th scope="row">Direction</th>
+										<td>{letter.direction}</td>
+									</tr>
+
+									<tr>
+										<th scope="row">Title</th>
+										<td>{letter.title}</td>
+									</tr>
+
+									{letter.from ? <tr>
+										<th scope="row">From</th>
+										<td>{letter.from}</td>
+									</tr> : null}
+
+									{letter.to ? <tr>
+										<th scope="row">To</th>
+										<td>{letter.to}</td>
+									</tr> : null}
+
+									{letter.summary ? <tr>
+										<th scope="row">Summary</th>
+										<td>{Jsx.html(linkify(letter.summary))}</td>
+									</tr> : null}
+								</table>
+								break
+
 							case "parliament-decision":
 								var summary = event.content.summary
 								if (summary)

@@ -1832,6 +1832,9 @@ button.inherited {
 			position: relative;
 			padding: 2.5rem $article-padding;
 			border-left: 0.5rem solid transparent;
+			font-size: 1.3rem;
+			line-height: 1.5;
+			font-weight: 500;
 
 			@include mobile {
 				padding-left: $article-padding-mobile;
@@ -1840,22 +1843,19 @@ button.inherited {
 
 			h2 {
 				font-size: 2rem;
-				font-weight: 500;
 				color: $title-text;
 			}
 
 			.occurred-at {
 				display: block;
-				font-size: 1.6rem;
+				font-size: 1.3rem;
 				color: $secondary-light-text;
-				font-family: $tisa-pro;
-				margin-bottom: 0.5rem;
 			}
 
 			.text {
-				line-height: 1.5;
 				white-space: pre-wrap;
 				color: #636363;
+				font-weight: normal;
 				font-size: 1.6rem;
 				font-family: $tisa-pro;
 			}
@@ -1865,12 +1865,9 @@ button.inherited {
 			}
 
 			.delay {
-				font-size: 1.5rem;
+				font-size: 1.3rem;
 				margin-top: 1.5rem;
-				line-height: 1.5;
-				font-weight: 500;
 				color: $secondary-light-text;
-				font-style: italic;
 			}
 
 			.files {
@@ -1878,8 +1875,7 @@ button.inherited {
 			}
 
 			.file {
-				font-size: 1.3rem;
-				font-weight: 500;
+				line-height: 1.3;
 
 				.icon:before {
 					content: "";
@@ -1891,13 +1887,14 @@ button.inherited {
 					width: 3.2rem;
 					height: 3.2rem;
 					display: inline-block;
+					line-height: 1;
 					border-radius: 0.5rem;
-					background-color: $light-background;
+					color: $dark-blue;
 				}
 
 				.icon.ra-icon-pdf:before { color: #a93939; }
 				.icon.ra-icon-ppt:before { color: #cb4a32; }
-				.icon.ra-icon-ddoc:before { color: #003168; background: none; }
+				.icon.unknown:before { background-color: $light-background; }
 
 				.name {
 					display: block;
@@ -1912,12 +1909,26 @@ button.inherited {
 
 				& + .file {
 					clear: both;
-					margin-top: 0.7rem;
+					margin-top: 1rem;
 				}
 			}
 
 			&.sign-phase { border-left-color: $sign-phase-color; }
 			&.parliament-phase { border-left-color: $parliament-phase-color; }
+
+			&.parliament-letter-event .letterhead {
+				margin-top: 1rem;
+				line-height: 1.5;
+				font-size: 1.3rem;
+				font-weight: 500;
+
+				th { font-weight: bold; text-align: right; &:after { content: ":"; }}
+				td { padding-left: 1rem; }
+
+				& + p {
+					margin-top: 1rem;
+				}
+			}
 
 			// Border-top doesn't fill the whole width because we're using the left
 			// border for phase colors.

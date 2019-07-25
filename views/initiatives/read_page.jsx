@@ -44,21 +44,28 @@ var UI_TRANSLATIONS = O.map(I18n.STRINGS, function(lang) {
 })
 
 var FILE_TYPE_ICONS = {
+	"text/html": "ra-icon-html",
 	"application/pdf": "ra-icon-pdf",
 	"application/vnd.ms-powerpoint": "ra-icon-ppt",
 	"application/vnd.etsi.asic-e+zip": "ra-icon-ddoc",
+	"application/digidoc": "ra-icon-ddoc",
 
+	"application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+		"ra-icon-doc",
 	"application/vnd.openxmlformats-officedocument.presentationml.presentation":
 		"ra-icon-ppt"
 }
 
 var FILE_TYPE_NAMES = {
+	"text/html": "HTML",
 	"application/pdf": "PDF",
 	"application/vnd.etsi.asic-e+zip": "Digidoc",
-	"application/vnd.ms-powerpoint": "PowerPoint",
+	"application/vnd.ms-powerpoint": "Microsoft PowerPoint",
 
+	"application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+		"Microsoft Word",
 	"application/vnd.openxmlformats-officedocument.presentationml.presentation":
-		"PowerPoint",
+		"Microsoft PowerPoint",
 
 	// https://api.riigikogu.ee/api/files/800ed589-3d0b-4048-9b70-2ff6b0684ed4
 	// has its type as "application/digidoc. I've not yet found whether that has
@@ -1072,7 +1079,10 @@ function EventsView(attrs) {
         <ol class="events">{events.map(function(event) {
 					var title
 					var content
+					var summary
+					var klass = `event ${event.type}-event`
 					var phase = initiativePhaseFromEvent(event)
+					if (phase) klass += ` ${phase}-phase`
 
 					switch (event.type) {
 						case "sent-to-parliament":
@@ -1125,13 +1135,43 @@ function EventsView(attrs) {
 							</Fragment>
 							break
 
+						case "parliament-letter":
+							var letter = event.content
+							summary = event.content.summary
+
+							title = letter.direction == "incoming"
+								? t("PARLIAMENT_LETTER_INCOMING")
+								: t("PARLIAMENT_LETTER_OUTGOING")
+
+							content = <Fragment>
+								<table class="letterhead">
+									<tr>
+										<th scope="row">{t("PARLIAMENT_LETTER_TITLE")}</th>
+										<td>{letter.title}</td>
+									</tr>
+									{letter.direction == "incoming" ? <tr>
+										<th scope="row">{t("PARLIAMENT_LETTER_FROM")}</th>
+										<td><ul>{letter.from.split(",").map((from) => (
+											<li>{from}</li>
+										))}</ul></td>
+									</tr> : <tr>
+										<th scope="row">{t("PARLIAMENT_LETTER_TO")}</th>
+										<td><ul>{letter.to.split(",").map((to) => (
+											<li>{to}</li>
+										))}</ul></td>
+									</tr>}
+								</table>
+
+								{summary && <p class="text">{Jsx.html(linkify(summary))}</p>}
+							</Fragment>
+							break
+
 						case "parliament-decision":
 							title = t("PARLIAMENT_DECISION")
 
-							var summary = event.content.summary
+							summary = event.content.summary
 							if (summary)
 								content = <p class="text">{Jsx.html(linkify(summary))}</p>
-
 							break
 
 						case "parliament-finished":
@@ -1161,10 +1201,7 @@ function EventsView(attrs) {
 						? diffInDays(event.occurred_at, event.created_at)
 						: 0
 
-					return <li
-						id={"event-" + event.id}
-						class={"event " + (phase ? ` ${phase}-phase` : "")}
-					>
+					return <li id={"event-" + event.id} class={klass}>
 						<h2>{title}</h2>
 
 						<time class="occurred-at" datetime={event.occurred_at.toJSON()}>
@@ -1174,10 +1211,10 @@ function EventsView(attrs) {
 						{content}
 
 						{files.length > 0 ? <ul class="files">{files.map(function(file) {
-							var type = file.content_type
+							var type = file.content_type.name
 							var title = file.title || file.name
 							var filePath =`${initiativePath}/files/${file.id}`
-							var icon = FILE_TYPE_ICONS[type]
+							var icon = FILE_TYPE_ICONS[type] || "unknown"
 
 							return <li class="file">
 								<a href={filePath} tabindex="-1" class={"icon " + icon} />
@@ -1488,6 +1525,7 @@ function initiativePhaseFromEvent(event) {
 		case "sent-to-parliament":
 		case "parliament-received":
 		case "parliament-accepted":
+		case "parliament-letter":
 		case "parliament-decision":
 		case "parliament-finished":
 		case "parliament-committee-meeting": return "parliament"

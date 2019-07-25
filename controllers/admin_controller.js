@@ -447,6 +447,7 @@ function parseEvent(event, obj) {
 		}
 
 		case "parliament-committee-meeting":
+		case "parliament-letter":
 		case "parliament-decision":
 			return {
 			type: event.type,
@@ -480,6 +481,7 @@ function isEditableEvent(event) {
 	return (
 		event.type == "parliament-committee-meeting" ||
 		event.type == "parliament-decision" ||
+		event.type == "parliament-letter" ||
 		event.type == "text"
 	)
 }
