@@ -446,7 +446,9 @@ function parseEvent(event, obj) {
 			)
 		}
 
-		case "parliament-committee-meeting": return {
+		case "parliament-committee-meeting":
+		case "parliament-decision":
+			return {
 			type: event.type,
 
 			content: _.merge({}, event.content, {
@@ -477,6 +479,7 @@ function renderEventMessage(initiative, event) {
 function isEditableEvent(event) {
 	return (
 		event.type == "parliament-committee-meeting" ||
+		event.type == "parliament-decision" ||
 		event.type == "text"
 	)
 }
