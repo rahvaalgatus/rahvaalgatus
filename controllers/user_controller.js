@@ -2,19 +2,24 @@ var _ = require("root/lib/underscore")
 var O = require("oolong")
 var Router = require("express").Router
 var HttpError = require("standard-http-error")
-var cosApi = require("root/lib/citizenos_api")
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
 var translateCitizenError = require("root/lib/citizenos_api").translateError
-var parseCitizenInitiative = require("root/lib/citizenos_api").parseCitizenInitiative
+var searchInitiatives = require("root/lib/citizenos_db").searchInitiatives
+var countSignaturesByIds = require("root/lib/citizenos_db").countSignaturesByIds
 var sql = require("sqlate")
 var cosDb = require("root").cosDb
 var initiativesDb = require("root/db/initiatives_db")
 var initiativeSignaturesDb = require("root/db/initiative_signatures_db")
-var concat = Array.prototype.concat.bind(Array.prototype)
 var next = require("co-next")
+var concat = Array.prototype.concat.bind(Array.prototype)
 
 exports.router = Router({mergeParams: true})
+
+exports.router.use(function(req, _res, next) {
+	if (req.user == null) throw new HttpError(401)
+	next()
+})
 
 exports.router.get("/", next(read))
 
@@ -38,17 +43,11 @@ exports.router.put("/", next(function*(req, res, next) {
 
 function* read(req, res) {
 	var user = req.user
-	if (user == null) throw new HttpError(401)
-
-	var path = "/api/users/self/topics?include[]=vote&include[]=event"
-	var initiatives = req.cosApi(path)
-	initiatives = yield initiatives.then(getRows)
-	initiatives = initiatives.map(parseCitizenInitiative)
 
 	var signatures = yield cosDb.query(sql`
 		SELECT
 			DISTINCT ON (tv."topicId")
-			tv."topicId" as initiative_id,
+			tv."topicId" as initiative_uuid,
 			signature."createdAt" as created_at,
 			opt.value AS support
 
@@ -69,32 +68,51 @@ function* read(req, res) {
 	var dbSignatures = _.indexBy(yield initiativeSignaturesDb.search(sql`
 		SELECT * FROM initiative_signatures
 		WHERE user_uuid = ${user.id}
-		AND initiative_uuid IN ${sql.in(signatures.map((s) => s.initiative_id))}
-	`, "initiative_uuid"))
+		AND initiative_uuid IN ${sql.in(signatures.map((s) => s.initiative_uuid))}
+	`), "initiative_uuid")
 
 	signatures = signatures.filter(function(sig) {
-		var dbSignature = dbSignatures[sig.initiative_id]
-		return !dbSignature || !dbSignature.hidden
+		var dbSignature = dbSignatures[sig.initiative_uuid]
+		return dbSignature == null || !dbSignature.hidden
 	})
 
-	var signedInitiatives = yield signatures.map(function(sig) {
-		var path = `/api/topics/${sig.initiative_id}`
-		path += "?include[]=vote&include[]=event"
-		return cosApi(path).then(getBody).then(parseCitizenInitiative)
-	})
+	var authoredTopics = yield searchInitiatives(sql`
+		"creatorId" = ${user.id}
+	`)
 
-	var uuids = concat(initiatives, signedInitiatives).map((i) => i.id)
-	var dbInitiatives = yield initiativesDb.search(uuids, {create: true})
-	dbInitiatives = _.indexBy(dbInitiatives, "uuid")
+	var authoredInitiatives = yield initiativesDb.search(sql`
+		SELECT * FROM initiatives
+		WHERE uuid IN ${sql.in(authoredTopics.map((t) => t.id))}
+	`)
+
+	var signedTopics = yield searchInitiatives(sql`
+		initiative.id IN ${sql.in(signatures.map((s) => s.initiative_uuid))}
+		AND initiative.visibility = 'public'
+	`)
+
+	var signedInitiatives = yield initiativesDb.search(sql`
+		SELECT * FROM initiatives
+		WHERE uuid IN ${sql.in(signedTopics.map((t) => t.id))}
+	`)
+
+	var topics = _.indexBy(concat(authoredTopics, signedTopics), "id")
+
+	function setInitiativeTitle(initiative) {
+		var topic = topics[initiative.uuid]
+		if (topic) initiative.title = topic.title
+	}
+
+	authoredInitiatives.forEach(setInitiativeTitle)
+	signedInitiatives.forEach(setInitiativeTitle)
+
+	var signatureCounts = yield countSignaturesByIds(_.keys(topics))
 
 	res.render("user/read_page.jsx", {
 		user: user,
-		initiatives: initiatives,
+		authoredInitiatives: authoredInitiatives,
 		signedInitiatives: signedInitiatives,
-		dbInitiatives: dbInitiatives,
+		topics: topics,
+		signatureCounts: signatureCounts,
 		userAttrs: O.create(user, res.locals.userAttrs)
 	})
 }
-
-function getBody(res) { return res.body.data }
-function getRows(res) { return res.body.data.rows }

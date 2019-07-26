@@ -3,7 +3,7 @@ var O = require("oolong")
 var Url = require("url")
 var Router = require("express").Router
 var HttpError = require("standard-http-error")
-var Initiative = require("root/lib/initiative")
+var Topic = require("root/lib/topic")
 var DateFns = require("date-fns")
 var Time = require("root/lib/time")
 var Config = require("root/config")
@@ -18,7 +18,7 @@ var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
 var filesDb = require("root/db/initiative_files_db")
 var commentsDb = require("root/db/comments_db")
-var countSignatures = Initiative.countSignatures.bind(null, "Yes")
+var countSignatures = Topic.countSignatures.bind(null, "Yes")
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
 var catch401 = require("root/lib/fetch").catch.bind(null, 401)
@@ -33,8 +33,8 @@ var sql = require("sqlate")
 var parseCitizenInitiative = cosApi.parseCitizenInitiative
 var encode = encodeURIComponent
 var translateCitizenError = require("root/lib/citizenos_api").translateError
-var hasMainPartnerId = Initiative.hasPartnerId.bind(null, Config.apiPartnerId)
 var searchInitiatives = require("root/lib/citizenos_db").searchInitiatives
+var countSignaturesByIds = require("root/lib/citizenos_db").countSignaturesByIds
 var concat = Array.prototype.concat.bind(Array.prototype)
 var decodeBase64 = require("root/lib/crypto").decodeBase64
 var trim = Function.call.bind(String.prototype.trim)
@@ -52,46 +52,43 @@ var RESPONSE_TYPES = [
 exports.router = Router({mergeParams: true})
 
 exports.router.get("/", next(function*(req, res) {
-	var initiatives = yield searchInitiatives()
-	var category = req.query.category
+	var initiatives = yield initiativesDb.search(sql`SELECT * FROM initiatives`)
 
-	if (category)
-		initiatives = initiatives.filter(hasCategory.bind(null, category))
+	var topics = _.indexBy(yield searchInitiatives(sql`
+		initiative.id IN ${sql.in(initiatives.map((i) => i.uuid))}
+		AND initiative.visibility = 'public'
+	`), "id")
 
-	var uuids = initiatives.map((i) => i.id)
-	var dbInitiatives = yield initiativesDb.search(uuids, {create: true})
-	dbInitiatives = _.indexBy(dbInitiatives, "uuid")
-
-	initiatives = _.groupBy(initiatives, "status")
-
-	var closed = _.groupBy(initiatives.closed || [], (initiative) => (
-		Initiative.getUnclosedStatus(initiative, dbInitiatives[initiative.id])
+	initiatives = initiatives.filter((initiative) => (
+		initiative.external ||
+		topics[initiative.uuid]
 	))
 
-	var votings = concat(
-		initiatives.voting || EMPTY_ARR,
-		closed.voting || EMPTY_ARR
-	)
+	initiatives = initiatives.filter((initiative) => (
+		!initiative.archived_at ||
+		initiative.phase != "edit" ||
+		initiative.external ||
+		topics[initiative.uuid].sourcePartnerId == Config.apiPartnerId
+	))
+
+	initiatives.forEach(function(initiative) {
+		var topic = topics[initiative.uuid]
+		if (topic) initiative.title = topic.title
+	})
+
+	var category = req.query.category
+
+	if (category) {
+		topics = _.filterValues(topics, hasCategory.bind(null, category))
+		initiatives = initiatives.filter((initiative) => topics[initiative.uuid])
+	}
+
+	var signatureCounts = yield countSignaturesByIds(_.keys(topics))
 
 	res.render("initiatives_page.jsx", {
-		discussions: concat(
-			sortByCreatedAt(initiatives.inProgress || [], "createdAt").reverse(),
-			sortByCreatedAt((closed.inProgress || []).filter(hasMainPartnerId))
-		),
-
-		votings: _.sortBy(votings, countSignatures).reverse(),
-
-		processes: _.sortBy(initiatives.followUp, function(initiative) {
-			var dbInitiative = dbInitiatives[initiative.id]
-			return dbInitiative.sent_to_parliament_at || initiative.vote.createdAt
-		}).reverse(),
-
-		processed: _.sortBy(closed.followUp || [], function(initiative) {
-			var dbInitiative = dbInitiatives[initiative.id]
-			return dbInitiative.finished_in_parliament_at || initiative.vote.createdAt
-		}).reverse(),
-
-		dbInitiatives: dbInitiatives
+		initiatives: initiatives,
+		topics: topics,
+		signatureCounts: signatureCounts
 	})
 }))
 
@@ -234,7 +231,7 @@ exports.read = next(function*(req, res) {
 		user_uuid: null,
 		hidden: false
 	}
-	else if (user && Initiative.hasVote("Yes", initiative)) signature = (
+	else if (user && Topic.hasVote("Yes", initiative)) signature = (
 		(yield signaturesDb.read(sql`
 			SELECT * FROM initiative_signatures
 			WHERE (initiative_uuid, user_uuid) = (${initiative.id}, ${user.id})
@@ -295,7 +292,7 @@ exports.router.put("/:id", next(function*(req, res) {
 		yield updateInitiativePhaseToParliament(req, res)
 	}
 	else if (isDbInitiativeUpdate(req.body)) {
-		if (!Initiative.canEdit(initiative)) throw new HttpError(401)
+		if (!Topic.canEdit(initiative)) throw new HttpError(401)
 		yield initiativesDb.update(initiative.id, parseInitiative(req.body))
 		res.flash("notice", req.t("INITIATIVE_INFO_UPDATED"))
 		res.redirect(303, req.headers.referer || req.baseUrl + req.url)
@@ -305,14 +302,14 @@ exports.router.put("/:id", next(function*(req, res) {
 
 exports.router.delete("/:id", next(function*(req, res) {
 	var initiative = req.initiative
-	if (!Initiative.canDelete(initiative)) throw new HttpError(405)
+	if (!Topic.canDelete(initiative)) throw new HttpError(405)
 	yield req.cosApi(`/api/users/self/topics/${initiative.id}`, {method: "DELETE"})
 	res.flash("notice", req.t("INITIATIVE_DELETED"))
 	res.redirect(302, req.baseUrl)
 }))
 
 exports.router.get("/:id/edit", function(req, res) {
-	if (!Initiative.canEdit(req.initiative)) throw new HttpError(401)
+	if (!Topic.canEdit(req.initiative)) throw new HttpError(401)
 	res.render("initiatives/update_page.jsx")
 })
 
@@ -413,7 +410,7 @@ exports.router.put("/:id/signature", next(function*(req, res) {
 	var initiative = req.initiative
 	if (user == null) throw new HttpError(401)
 
-	if (Initiative.hasVote("Yes", initiative)) {
+	if (Topic.hasVote("Yes", initiative)) {
 		var signature = yield signaturesDb.read(sql`
 			SELECT * FROM initiative_signatures
 			WHERE (initiative_uuid, user_uuid) = (${initiative.id}, ${user.id})
@@ -637,8 +634,8 @@ function* updateInitiativeToPublished(req, res) {
 	var tmpl = "initiatives/update_for_publish_page.jsx"
 
 	if (!(
-		Initiative.canPublish(initiative) ||
-		Initiative.canUpdateDiscussionDeadline(initiative)
+		Topic.canPublish(initiative) ||
+		Topic.canUpdateDiscussionDeadline(initiative)
 	)) throw new HttpError(401)
 
 	if (req.body.endsAt == null) return void res.render(tmpl, {
@@ -647,7 +644,7 @@ function* updateInitiativeToPublished(req, res) {
 
 	let endsAt = DateFns.endOfDay(Time.parseDate(req.body.endsAt))
 
-	if (!Initiative.isDeadlineOk(new Date, endsAt)) return void res.render(tmpl, {
+	if (!Topic.isDeadlineOk(new Date, endsAt)) return void res.render(tmpl, {
 		error: req.t("DEADLINE_ERR", {days: Config.minDeadlineDays}),
 		attrs: {endsAt: endsAt}
 	})
@@ -677,8 +674,8 @@ function* updateInitiativePhaseToSign(req, res) {
 	var tmpl = "initiatives/update_for_voting_page.jsx"
 
 	if (!(
-		Initiative.canPropose(new Date, initiative) ||
-		Initiative.canUpdateVoteDeadline(initiative)
+		Topic.canPropose(new Date, initiative) ||
+		Topic.canUpdateVoteDeadline(initiative)
 	)) throw new HttpError(401)
 
 	if (req.body.endsAt == null) return void res.render(tmpl, {
@@ -688,7 +685,7 @@ function* updateInitiativePhaseToSign(req, res) {
 	let endsAt = DateFns.endOfDay(Time.parseDate(req.body.endsAt))
 	var attrs = {endsAt: endsAt}
 
-	if (!Initiative.isDeadlineOk(new Date, endsAt))
+	if (!Topic.isDeadlineOk(new Date, endsAt))
 		return void res.render(tmpl, {
 			error: req.t("DEADLINE_ERR", {days: Config.minDeadlineDays}),
 			attrs: attrs
@@ -761,7 +758,7 @@ function* updateInitiativePhaseToParliament(req, res) {
 	var dbInitiative = req.dbInitiative
 	var tmpl = "initiatives/update_for_parliament_page.jsx"
 
-	if (!Initiative.canSendToParliament(initiative, dbInitiative))
+	if (!Topic.canSendToParliament(initiative, dbInitiative))
 		throw new HttpError(401)
 
 	var attrs = {
@@ -861,6 +858,5 @@ function parseMeeting(obj) {
 // NOTE: Use this only on JWTs from trusted sources as it does no validation.
 function parseJwt(jwt) { return JSON.parse(decodeBase64(jwt.split(".")[1])) }
 function getBody(res) { return res.body.data }
-function sortByCreatedAt(arr) { return _.sortBy(arr, "createdAt").reverse() }
 function isOrganizationPresent(org) { return org.name || org.url }
 function isMeetingPresent(org) { return org.date || org.url }

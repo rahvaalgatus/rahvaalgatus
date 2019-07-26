@@ -4,13 +4,13 @@ var O = require("oolong")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var Time = require("root/lib/time")
+var Css = require("root/lib/css")
 var DateFns = require("date-fns")
 var InitiativePage = require("./initiative_page")
 var Config = require("root/config")
 var I18n = require("root/lib/i18n")
 var Flash = require("../page").Flash
-var Initiative = require("root/lib/initiative")
-var ProgressView = require("./initiative_page").ProgressView
+var Topic = require("root/lib/topic")
 var Form = require("../page").Form
 var FormButton = require("../page").FormButton
 var DonateForm = require("../donations/create_page").DonateForm
@@ -20,10 +20,11 @@ var javascript = require("root/lib/jsx").javascript
 var confirm = require("root/lib/jsx").confirm
 var stringify = require("root/lib/json").stringify
 var linkify = require("root/lib/linkify")
+var formatDate = require("root/lib/i18n").formatDate
 var encode = encodeURIComponent
 var min = Math.min
 var diffInDays = DateFns.differenceInCalendarDays
-var PHASES = Initiative.PHASES
+var PHASES = require("root/lib/initiative").PHASES
 var HTTP_URL = /^https?:\/\//i
 var EMPTY_ARR = Array.prototype
 var EMPTY_ORG = {name: "", url: ""}
@@ -91,7 +92,7 @@ module.exports = function(attrs) {
 
 	var now = new Date
 	var opt = signature ? "No" : "Yes"
-	var optId = initiative.vote && Initiative.findOptionId(opt, initiative)
+	var optId = initiative.vote && Topic.findOptionId(opt, initiative)
 	var sentToParliamentAt = dbInitiative.sent_to_parliament_at
 
 	var signWithIdCardText = !signature
@@ -170,8 +171,8 @@ module.exports = function(attrs) {
 					switch ($value) {
 						case "inProgress":
 							if (
-								Initiative.isPublic(initiative) &&
-								!Initiative.hasDiscussionEnded(new Date, initiative)
+								Topic.isPublic(initiative) &&
+								!Topic.hasDiscussionEnded(new Date, initiative)
 							) return <div class="initiative-status">
 								<h1 class="status-header">
 									{t("INITIATIVE_IN_DISCUSSION")}
@@ -187,11 +188,11 @@ module.exports = function(attrs) {
 							else return null
 
 						case "voting":
-							if (Initiative.hasVoteEnded(now, initiative)) {
-								sigs = Initiative.countSignatures("Yes", initiative)
+							if (Topic.hasVoteEnded(now, initiative)) {
+								sigs = Topic.countSignatures("Yes", initiative)
 
 								return <div class="initiative-status">
-									{Initiative.isSuccessful(initiative, dbInitiative)? <Fragment>
+									{Topic.isSuccessful(initiative, dbInitiative)? <Fragment>
                     <h1 class="status-header">
                       {t("N_SIGNATURES_COLLECTED", {votes: sigs})}
                     </h1>
@@ -220,7 +221,7 @@ module.exports = function(attrs) {
 
 						case "closed":
 							if (
-								Initiative.isInParliament(initiative, dbInitiative) ||
+								Topic.isInParliament(initiative, dbInitiative) ||
 								sentToParliamentAt
 							) return <div class="initiative-status">
 									<h1 class="status-header">
@@ -234,7 +235,7 @@ module.exports = function(attrs) {
 									</h1>
 								</div>
 							else if (initiative.vote) {
-								sigs = Initiative.countSignatures("Yes", initiative)
+								sigs = Topic.countSignatures("Yes", initiative)
 
 								return <div class="initiative-status">
                   <h1 class="status-header">
@@ -263,7 +264,7 @@ module.exports = function(attrs) {
 					files={files}
 				/>
 
-				{Initiative.isVotable(now, initiative) ? <div id="initiative-vote">
+				{Topic.isVotable(now, initiative) ? <div id="initiative-vote">
 					<ProgressView
 						t={t}
 						initiative={initiative}
@@ -426,7 +427,7 @@ module.exports = function(attrs) {
 						signature={signature}
 					/>
 
-					{Initiative.isPublic(initiative) ? <Fragment>
+					{Topic.isPublic(initiative) ? <Fragment>
 						<h3 class="sidebar-subheader">Tahad aidata? Jaga algatust…</h3>
 
 						<a
@@ -503,9 +504,9 @@ function PhasesView(attrs) {
 	)
 
   var daysSinceCreated = diffInDays(new Date, createdAt)
-  var daysInEdit = Initiative.daysInDiscussion(initiative)
+  var daysInEdit = Topic.daysInDiscussion(initiative)
   var discussionDaysLeft = daysInEdit - daysSinceCreated
-  var sigs = vote ? Initiative.countSignatures("Yes", initiative) : 0
+  var sigs = vote ? Topic.countSignatures("Yes", initiative) : 0
 
 	var editProgress = isPhaseAfter("edit", phase)
 		? 1
@@ -515,7 +516,7 @@ function PhasesView(attrs) {
 	if (phase == "edit") {
 		if (initiative.visibility == "private")
 			editPhaseText = ""
-		else if (!Initiative.hasDiscussionEnded(new Date, initiative))
+		else if (!Topic.hasDiscussionEnded(new Date, initiative))
 			editPhaseText = t("TXT_DEADLINE_CALENDAR_DAYS_LEFT", {
 				numberOfDaysLeft: discussionDaysLeft
 			})
@@ -677,7 +678,7 @@ function SidebarAuthorView(attrs) {
 	var dbInitiative = attrs.dbInitiative
 
 	var actions = <Fragment>
-		{Initiative.canPublish(initiative) ? <FormButton
+		{Topic.canPublish(initiative) ? <FormButton
 			req={req}
 			action={"/initiatives/" + initiative.id}
 			name="visibility"
@@ -686,7 +687,7 @@ function SidebarAuthorView(attrs) {
 			{t("PUBLISH_TOPIC")}
 		</FormButton> : null}
 
-		{Initiative.canPropose(new Date, initiative) ? <FormButton
+		{Topic.canPropose(new Date, initiative) ? <FormButton
 			req={req}
 			action={"/initiatives/" + initiative.id}
 			name="status"
@@ -695,7 +696,7 @@ function SidebarAuthorView(attrs) {
 			{t("BTN_SEND_TO_VOTE")}
 		</FormButton> : null}
 
-		{Initiative.canSendToParliament(initiative, dbInitiative) ?
+		{Topic.canSendToParliament(initiative, dbInitiative) ?
 			<FormButton
 				req={req}
 				action={"/initiatives/" + initiative.id}
@@ -706,13 +707,13 @@ function SidebarAuthorView(attrs) {
 			</FormButton>
 		: null}
 
-		{Initiative.canEditBody(initiative) ? <a
+		{Topic.canEditBody(initiative) ? <a
 			href={"/initiatives/" + initiative.id + "/edit"}
 			class="link-button wide-button">
 			{t("EDIT_INITIATIVE_TEXT")}
 		</a> : null}
 
-		{Initiative.canUpdateDiscussionDeadline(initiative) ? <FormButton
+		{Topic.canUpdateDiscussionDeadline(initiative) ? <FormButton
 			req={req}
 			action={"/initiatives/" + initiative.id}
 			name="visibility"
@@ -721,7 +722,7 @@ function SidebarAuthorView(attrs) {
 			{t("RENEW_DEADLINE")}
 		</FormButton> : null}
 
-		{Initiative.canUpdateVoteDeadline(initiative) ? <FormButton
+		{Topic.canUpdateVoteDeadline(initiative) ? <FormButton
 			req={req}
 			action={"/initiatives/" + initiative.id}
 			name="status"
@@ -730,13 +731,13 @@ function SidebarAuthorView(attrs) {
 			{t("RENEW_DEADLINE")}
 		</FormButton> : null}
 
-		{Initiative.canInvite(initiative) ? <a
+		{Topic.canInvite(initiative) ? <a
 			href={"/initiatives/" + initiative.id + "/authors/new"}
 			class="link-button wide-button">
 			{t("INVITE_PEOPLE")}
 		</a> : null}
 
-		{Initiative.canDelete(initiative) ? <FormButton
+		{Topic.canDelete(initiative) ? <FormButton
 			req={req}
 			action={"/initiatives/" + initiative.id}
 			name="_method"
@@ -760,7 +761,7 @@ function SidebarInfoView(attrs) {
 	var t = req.t
 	var initiative = attrs.initiative
 	var dbInitiative = attrs.dbInitiative
-	var canEdit = Initiative.canEdit(initiative)
+	var canEdit = Topic.canEdit(initiative)
 	var phase = dbInitiative.phase
 	var authorUrl = dbInitiative.author_url
 	var communityUrl = dbInitiative.community_url
@@ -1067,10 +1068,10 @@ function EventsView(attrs) {
 	var events = attrs.events
 	var initiativePath = "/initiatives/" + dbInitiative.uuid
 
-	if (events.length > 0 || Initiative.canCreateEvents(initiative))
+	if (events.length > 0 || Topic.canCreateEvents(initiative))
 		return <section id="initiative-events" class="transparent-section"><center>
 			<article class="sheet">
-				{Initiative.canCreateEvents(initiative) ? <a
+				{Topic.canCreateEvents(initiative) ? <a
 					href={`/initiatives/${initiative.id}/events/new`}
 					class="create-event-button">
 					{t("CREATE_INITIATIVE_EVENT_BUTTON")}
@@ -1250,7 +1251,7 @@ function EventsView(attrs) {
 			</article>
 		</center></section>
 
-	else if (Initiative.isInParliament(initiative, dbInitiative))
+	else if (Topic.isInParliament(initiative, dbInitiative))
 		return <section id="initiative-events" class="transparent-section"><center>
 			<article><p class="text empty">{t("NO_GOVERNMENT_REPLY")}</p></article>
 		</center></section>
@@ -1291,7 +1292,7 @@ function SubscribeEmailView(attrs) {
 	var initiative = attrs.initiative
 	var count = attrs.count
 
-	if (!Initiative.isPublic(initiative)) return null
+	if (!Topic.isPublic(initiative)) return null
 
 	return <Form
 		req={req}
@@ -1312,6 +1313,98 @@ function SubscribeEmailView(attrs) {
 	</Form>
 }
 
+function ProgressView(attrs) {
+	var t = attrs.t
+	var initiative = attrs.initiative
+	var dbInitiative = attrs.dbInitiative
+	var unclosedStatus = Topic.getUnclosedStatus(initiative, dbInitiative)
+	var createdAt = initiative.createdAt
+
+	var klass = {
+		inProgress: "discussable",
+		voting: "votable",
+		followUp: "processable"
+	}[unclosedStatus]
+
+	switch (unclosedStatus) {
+		case "inProgress":
+			if (initiative.visibility == "private")
+				return <div class={"initiative-progress private " + klass}>
+					{t("TXT_TOPIC_VISIBILITY_PRIVATE")}
+				</div>
+
+			else if (!Topic.hasDiscussionEnded(new Date, initiative)) {
+				var passed = DateFns.differenceInCalendarDays(new Date, createdAt)
+				var total = Topic.daysInDiscussion(initiative)
+				var left = total - passed
+
+				return <div
+					style={Css.linearBackground("#ffb400", passed / total)}
+					class={"topic-progress " + klass}>
+					{t("TXT_DEADLINE_CALENDAR_DAYS_LEFT", {numberOfDaysLeft: left})}
+				</div>
+			}
+
+			else return <div class={"topic-progress completed " + klass}>
+				{t("DISCUSSION_FINISHED")}
+			</div>
+
+		case "voting":
+			var sigs = Topic.countSignatures("Yes", initiative)
+
+			if (Topic.isSuccessful(initiative, dbInitiative))
+				return <div class={"topic-progress completed " + klass}>
+					{t("N_SIGNATURES_COLLECTED", {votes: sigs})}
+				</div>
+
+			else if (!Topic.hasVoteEnded(new Date, initiative))
+				return <div
+					style={Css.linearBackground("#00cb81", sigs / Config.votesRequired)}
+					class={"topic-progress " + klass}>
+					{t("N_SIGNATURES", {votes: sigs})}
+				</div>
+
+			else return <div class={"topic-progress failed " + klass}>
+				{t("N_SIGNATURES_FAILED", {votes: sigs})}
+			</div>
+
+		case "followUp":
+			klass = initiative.status == "closed" ? "finished" : "processable"
+			sigs = Topic.countSignatures("Yes", initiative)
+
+			var date = dbInitiative == null
+				? null
+				: initiative.status == "closed"
+				? dbInitiative.finished_in_parliament_at
+				: (
+					dbInitiative.received_by_parliament_at ||
+					dbInitiative.sent_to_parliament_at
+				)
+
+			if (dbInitiative.external)
+				return <div class={"topic-progress completed " + klass}>
+					{t("N_SIGNATURES_EXTERNAL")}
+				</div>
+
+			return <div class={"topic-progress " + klass}>
+				{date && dbInitiative.external
+					? t("N_SIGNATURES_EXTERNAL_WITH_DATE", {
+						date: formatDate("numeric", date)
+					})
+
+					: date ? t("N_SIGNATURES_WITH_DATE", {
+						date: formatDate("numeric", date),
+						votes: sigs
+					})
+
+					: t("N_SIGNATURES", {votes: sigs})
+				}
+			</div>
+
+		default: return null
+	}
+}
+
 function ProgressTextView(attrs) {
 	var t = attrs.t
 	var initiative = attrs.initiative
@@ -1320,9 +1413,9 @@ function ProgressTextView(attrs) {
 	if (
 		initiative.status == "voting" ||
 		initiative.status == "closed" &&
-		initiative.vote && !Initiative.isInParliament(initiative, dbInitiative)
+		initiative.vote && !Topic.isInParliament(initiative, dbInitiative)
 	) {
-		var sigs = Initiative.countSignatures("Yes", initiative)
+		var sigs = Topic.countSignatures("Yes", initiative)
 		var missing = Config.votesRequired - sigs
 
 		return <p class="initiative-progress-text">
@@ -1362,7 +1455,7 @@ function QuicksignView(attrs) {
 	var initiative = attrs.initiative
 	var dbInitiative = attrs.dbInitiative
 	var signature = attrs.signature
-	if (!Initiative.isPublic(initiative)) return null
+	if (!Topic.isPublic(initiative)) return null
 
 	// There may be multiple QuicksignViews on the page.
 	var id = _.uniqueId("initiative-quicksign-")
@@ -1371,7 +1464,7 @@ function QuicksignView(attrs) {
 	return <div class="quicksign">
 		<ProgressView t={t} initiative={initiative} dbInitiative={dbInitiative} />
 
-		{Initiative.isVotable(now, initiative) && !signature ? <a
+		{Topic.isVotable(now, initiative) && !signature ? <a
 			href="#initiative-vote"
 			class="green-button wide-button sign-button">
 			{t("SIGN_THIS_DOCUMENT")}
@@ -1384,7 +1477,7 @@ function QuicksignView(attrs) {
 			t={t}
 		/>
 
-		{Initiative.isVotable(now, initiative) && signature ? <Fragment>
+		{Topic.isVotable(now, initiative) && signature ? <Fragment>
 			<h2>{t("THANKS_FOR_SIGNING")}</h2>
 
 			<a href="#initiative-vote" class="link-button revoke-button">

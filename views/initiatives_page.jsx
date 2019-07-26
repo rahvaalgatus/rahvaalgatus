@@ -6,6 +6,7 @@ var Page = require("./page")
 var ProgressView = require("./initiatives/initiative_page").ProgressView
 var Config = require("root/config")
 var I18n = require("root/lib/i18n")
+var EMPTY_ARR = Array.prototype
 exports = module.exports = InitiativesPage
 exports.InitiativesView = InitiativesView
 
@@ -13,12 +14,16 @@ function InitiativesPage(attrs) {
 	var t = attrs.t
 	var req = attrs.req
 	var flash = attrs.flash
+	var initiatives = attrs.initiatives
+	var topics = attrs.topics
+	var signatureCounts = attrs.signatureCounts
 
-	var discussions = attrs.discussions
-	var votings = attrs.votings
-	var processes = attrs.processes
-	var processed = attrs.processed
-	var dbInitiatives = attrs.dbInitiatives
+	var initiativesByPhase = _.groupBy(initiatives, "phase")
+	var inEdit = initiativesByPhase.edit || EMPTY_ARR
+	var inSign = initiativesByPhase.sign || EMPTY_ARR
+	var inParliament = initiativesByPhase.parliament || EMPTY_ARR
+	var inGovernment = initiativesByPhase.government || EMPTY_ARR
+	var inDone = initiativesByPhase.done || EMPTY_ARR
 
 	return <Page page="initiatives" req={req}>
 		{
@@ -30,39 +35,63 @@ function InitiativesPage(attrs) {
 
 		<section id="initiatives" class="secondary-section initiatives-section">
 			<center>
-				{discussions.length > 0 ? <Fragment>
-					<h2>{t("DISCUSSIONS_LIST")}</h2>
+				{inEdit.length > 0 ? <Fragment>
+					<h2>{t("EDIT_PHASE")}</h2>
+
 					<InitiativesView
 						t={t}
-						initiatives={discussions}
-						dbInitiatives={dbInitiatives}
+						phase="edit"
+						initiatives={inEdit}
+						topics={topics}
+						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
 
-				{votings.length > 0 ? <Fragment>
-					<h2>{t("INITIATIVE_LIST")}</h2>
+				{inSign.length > 0 ? <Fragment>
+					<h2>{t("SIGN_PHASE")}</h2>
+
 					<InitiativesView
 						t={t}
-						initiatives={votings}
-						dbInitiatives={dbInitiatives}
+						phase="sign"
+						initiatives={inSign}
+						topics={topics}
+						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
 
-				{processes.length > 0 ? <Fragment>
-					<h2>{t("IN_FOLLOW_UP_LIST")}</h2>
+				{inParliament.length > 0 ? <Fragment>
+					<h2>{t("PARLIAMENT_PHASE")}</h2>
+
 					<InitiativesView
 						t={t}
-						initiatives={processes}
-						dbInitiatives={dbInitiatives}
+						phase="parliament"
+						initiatives={inParliament}
+						topics={topics}
+						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
 
-				{processed.length > 0 ? <Fragment>
-					<h2>Menetletud</h2>
+				{inGovernment.length > 0 ? <Fragment>
+					<h2>{t("GOVERNMENT_PHASE")}</h2>
+
 					<InitiativesView
 						t={t}
-						initiatives={processed}
-						dbInitiatives={dbInitiatives}
+						phase="government"
+						initiatives={inGovernment}
+						topics={topics}
+						signatureCounts={signatureCounts}
+					/>
+				</Fragment> : null}
+
+				{inDone.length > 0 ? <Fragment>
+					<h2>{t("DONE_PHASE")}</h2>
+
+					<InitiativesView
+						t={t}
+						phase="done"
+						initiatives={inDone}
+						topics={topics}
+						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
 			</center>
@@ -72,30 +101,67 @@ function InitiativesPage(attrs) {
 
 function InitiativesView(attrs) {
 	var t = attrs.t
+	var phase = attrs.phase
 	var initiatives = attrs.initiatives
-	var dbInitiatives = attrs.dbInitiatives
+	var topics = attrs.topics
+	var signatureCounts = attrs.signatureCounts
+
+	switch (phase) {
+		case null:
+		case "edit":
+			initiatives = _.sortBy(initiatives, "created_at").reverse()
+			break
+
+		case "sign":
+			initiatives = _.sortBy(initiatives, (i) => signatureCounts[i.uuid] || 0)
+			initiatives = initiatives.reverse()
+			break
+
+		case "parliament":
+			initiatives = _.sortBy(initiatives, (i) => (
+				i.sent_to_parliament_at ||
+				topics[i.uuid] && topics[i.uuid].vote.createdAt
+			)).reverse()
+			break
+			
+		case "government":
+			initiatives = _.sortBy(initiatives, "sent_to_government_at")
+			break
+
+		case "done":
+			initiatives = _.sortBy(initiatives, (i) => (
+				i.finished_in_government_at || i.finished_in_parliament_at
+			)).reverse()
+			break
+
+		default: throw new RangeError("Invalid phase: " + phase)
+	}
 
 	return <ol class="initiatives">
 		{initiatives.map((initiative) => <InitiativeView
 			t={t}
 			initiative={initiative}
-			dbInitiative={dbInitiatives[initiative.id]}
+			topic={topics[initiative.uuid]}
+			signatureCount={signatureCounts[initiative.uuid] || 0}
 		/>)}
 	</ol>
 }
 
 function InitiativeView(attrs) {
 	var t = attrs.t
+	var topic = attrs.topic
 	var initiative = attrs.initiative
-	var dbInitiative = attrs.dbInitiative
+	var signatureCount = attrs.signatureCount
+	var createdAt = initiative.created_at || topic.createdAt
+	var authorName = initiative.author_name || topic && topic.creator.name
 
-	var createdAt = initiative.createdAt
-	var partner = Config.partners[initiative.sourcePartnerId]
-	var category = _.values(_.pick(Config.categories, initiative.categories))[0]
-	var badge = partner || category
+	var badge = topic && (
+		Config.partners[topic.sourcePartnerId] ||
+		_.values(_.pick(Config.categories, topic.categories))[0]
+	)
 
 	return <li class="initiative">
-		<a href={`/initiatives/${initiative.id}`}>
+		<a href={`/initiatives/${initiative.uuid}`}>
 			<time datetime={createdAt.toJSON()}>
 				{I18n.formatDate("numeric", createdAt)}
 			</time>
@@ -103,9 +169,14 @@ function InitiativeView(attrs) {
 			<h3 lang="et">{initiative.title}</h3>
 			{badge ? <img src={badge.icon} class="badge" /> : null}
 
-			<span class="author">{initiative.creator.name}</span>
+			<span class="author">{authorName}</span>
 
-			<ProgressView t={t} initiative={initiative} dbInitiative={dbInitiative} />
+			<ProgressView
+				t={t}
+				topic={topic}
+				initiative={initiative}
+				signatureCount={signatureCount}
+			/>
 		</a>
 	</li>
 }

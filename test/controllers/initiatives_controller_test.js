@@ -26,6 +26,7 @@ var createUser = require("root/test/citizenos_fixtures").createUser
 var createTopic = require("root/test/citizenos_fixtures").createTopic
 var createVote = require("root/test/citizenos_fixtures").createVote
 var createSignature = require("root/test/citizenos_fixtures").createSignature
+var createSignatures = require("root/test/citizenos_fixtures").createSignatures
 var createOptions = require("root/test/citizenos_fixtures").createOptions
 var concat = Array.prototype.concat.bind(Array.prototype)
 var encodeBase64 = require("root/lib/crypto").encodeBase64
@@ -143,19 +144,65 @@ describe("InitiativesController", function() {
 			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
 		})
 
-		it("must show initiatives in discussion", function*() {
-			var topic = yield createTopic(newTopic({
+		it("must show initiatives in edit phase", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "edit"
+			}))
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
 				creatorId: this.user.id,
-				sourcePartnerId: this.partner.id
+				sourcePartnerId: this.partner.id,
+				endsAt: DateFns.addSeconds(new Date, 1)
 			}))
 
 			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
-			res.body.must.include(topic.id)
+			res.body.must.include(initiative.uuid)
 		})
 
-		it("must show initiatives in signing", function*() {
+		it("must show initiatives in edit phase that have ended", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "edit"
+			}))
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				endsAt: new Date
+			}))
+
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+			res.body.must.include(initiative.uuid)
+		})
+
+		it("must show archived initiatives in edit phase", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "edit",
+				archived_at: new Date
+			}))
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				endsAt: DateFns.addSeconds(new Date, 1)
+			}))
+
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+			res.body.must.include(initiative.uuid)
+		})
+
+		it("must show initiatives in sign phase", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "sign"
+			}))
+
 			var topic = yield createTopic(newTopic({
+				id: initiative.uuid,
 				creatorId: this.user.id,
 				sourcePartnerId: this.partner.id,
 				status: "voting"
@@ -165,11 +212,55 @@ describe("InitiativesController", function() {
 
 			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
-			res.body.must.include(topic.id)
+			res.body.must.include(initiative.uuid)
 		})
 
-		it("must show initiatives in parliament", function*() {
+		it("must show initiatives in sign phase that failed", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "sign"
+			}))
+
 			var topic = yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				status: "voting"
+			}))
+
+			yield createVote(topic, newVote({endsAt: new Date}))
+
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+			res.body.must.include(initiative.uuid)
+		})
+
+		it("must show initiatives in sign phase that succeeded", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "sign"
+			}))
+
+			var topic = yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				status: "voting"
+			}))
+
+			var vote = yield createVote(topic, newVote({endsAt: new Date}))
+			yield createSignatures(vote, Config.votesRequired)
+
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+			res.body.must.include(initiative.uuid)
+		})
+
+		it("must show initiatives in parliament phase", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament"
+			}))
+
+			var topic = yield createTopic(newTopic({
+				id: initiative.uuid,
 				creatorId: this.user.id,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
@@ -179,72 +270,158 @@ describe("InitiativesController", function() {
 
 			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
-			res.body.must.include(topic.id)
+			res.body.must.include(initiative.uuid)
 		})
 
-		it("must show closed initiatives", function*() {
-			var topic = yield createTopic(newTopic({
-				creatorId: this.user.id,
-				sourcePartnerId: this.partner.id,
-				status: "closed"
+		it("must show external initiatives in parliament phase", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
+				external: true
 			}))
 
 			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
-			res.body.must.include(topic.id)
+			res.body.must.include(initiative.uuid)
+		})
+
+		it("must show initiatives in government phase", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "government"
+			}))
+
+			var topic = yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				status: "followUp"
+			}))
+
+			yield createVote(topic, newVote())
+
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+			res.body.must.include(initiative.uuid)
+		})
+
+		it("must show external initiatives in government phase", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "government",
+				external: true
+			}))
+
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+			res.body.must.include(initiative.uuid)
+		})
+
+		it("must show initiatives in done phase", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "done"
+			}))
+
+			var topic = yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				status: "followUp"
+			}))
+
+			yield createVote(topic, newVote())
+
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+			res.body.must.include(initiative.uuid)
+		})
+
+		it("must show external initiatives in done phase", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "done",
+				external: true
+			}))
+
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+			res.body.must.include(initiative.uuid)
+		})
+
+		it("must show archived external initiatives in done phase", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "done",
+				external: true,
+				archived_at: new Date
+			}))
+
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+			res.body.must.include(initiative.uuid)
 		})
 
 		_.each(Config.partners, function(partner, id) {
 			if (id == Config.apiPartnerId) return
 
-			it("must show initiatives for " + partner.name, function*() {
-				var partner = yield createPartner(newPartner({id: id}))
+			describe("given " + partner.name, function() {
+				it("must show initiatives", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative)
+					var partner = yield createPartner(newPartner({id: id}))
 
-				var topic = yield createTopic(newTopic({
-					creatorId: this.user.id,
-					sourcePartnerId: partner.id
-				}))
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: partner.id
+					}))
 
-				var res = yield this.request("/initiatives")
-				res.statusCode.must.equal(200)
-				res.body.must.include(topic.id)
-			})
+					var res = yield this.request("/initiatives")
+					res.statusCode.must.equal(200)
+					res.body.must.include(initiative.uuid)
+				})
 
-			it("must not show closed discussions for " + partner.name, function*() {
-				var partner = yield createPartner(newPartner({id: id}))
+				it("must not show archived initiatives in edit phase", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						archived_at: new Date
+					}))
 
-				var topic = yield createTopic(newTopic({
-					creatorId: this.user.id,
-					sourcePartnerId: partner.id,
-					status: "closed"
-				}))
+					var partner = yield createPartner(newPartner({id: id}))
 
-				var res = yield this.request("/initiatives")
-				res.statusCode.must.equal(200)
-				res.body.must.not.include(topic.id)
-			})
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: partner.id
+					}))
 
-			it("must not show closed initiatives for " + partner.name, function*() {
-				var partner = yield createPartner(newPartner({id: id}))
+					var res = yield this.request("/initiatives")
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(initiative.uuid)
+				})
 
-				var topic = yield createTopic(newTopic({
-					creatorId: this.user.id,
-					sourcePartnerId: partner.id,
-					status: "closed"
-				}))
+				it("must show archived initiatives in sign phase", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "sign",
+						archived_at: new Date
+					}))
 
-				yield createVote(topic, newVote())
+					var partner = yield createPartner(newPartner({id: id}))
 
-				var res = yield this.request("/initiatives")
-				res.statusCode.must.equal(200)
-				res.body.must.include(topic.id)
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: partner.id
+					}))
+
+					yield createVote(topic, newVote())
+
+					var res = yield this.request("/initiatives")
+					res.statusCode.must.equal(200)
+					res.body.must.include(initiative.uuid)
+				})
 			})
 		})
 
 		it("must not show initiatives from other partners", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative)
 			var partner = yield createPartner(newPartner())
 
 			var topic = yield createTopic(newTopic({
+				id: initiative.uuid,
 				creatorId: this.user.id,
 				sourcePartnerId: partner.id
 			}))
@@ -255,7 +432,10 @@ describe("InitiativesController", function() {
 		})
 
 		it("must not show private initiatives", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative)
+
 			var topic = yield createTopic(newTopic({
+				id: initiative.uuid,
 				creatorId: this.user.id,
 				sourcePartnerId: this.partner.id,
 				visibility: "private"
@@ -267,7 +447,10 @@ describe("InitiativesController", function() {
 		})
 
 		it("must not show deleted initiatives", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative)
+
 			var topic = yield createTopic(newTopic({
+				id: initiative.uuid,
 				creatorId: this.user.id,
 				sourcePartnerId: this.partner.id,
 				deletedAt: new Date
@@ -279,21 +462,26 @@ describe("InitiativesController", function() {
 		})
 
 		it("must show initiatives by category if given", function*() {
-			var topic = yield createTopic(newTopic({
+			var initiativeA = yield initiativesDb.create(new ValidInitiative)
+			var initiativeB = yield initiativesDb.create(new ValidInitiative)
+
+			yield createTopic(newTopic({
+				id: initiativeA.uuid,
 				creatorId: this.user.id,
 				sourcePartnerId: this.partner.id,
 				categories: ["uuseakus"]
 			}))
 
-			var other = yield createTopic(newTopic({
+			yield createTopic(newTopic({
+				id: initiativeB.uuid,
 				creatorId: this.user.id,
 				sourcePartnerId: this.partner.id
 			}))
 
 			var res = yield this.request("/initiatives?category=uuseakus")
 			res.statusCode.must.equal(200)
-			res.body.must.include(topic.id)
-			res.body.must.not.include(other.id)
+			res.body.must.include(initiativeA.uuid)
+			res.body.must.not.include(initiativeB.uuid)
 		})
 	})
 

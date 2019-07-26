@@ -7,14 +7,15 @@ var Flash = require("../page").Flash
 var InitiativesView = require("../initiatives_page").InitiativesView
 
 module.exports = function(attrs) {
+	var t = attrs.t
 	var req = attrs.req
 	var user = attrs.user
 	var error = attrs.error
-	var initiatives = attrs.initiatives
-	var dbInitiatives = attrs.dbInitiatives
+	var authoredInitiatives = attrs.authoredInitiatives
 	var signedInitiatives = attrs.signedInitiatives
+	var topics = attrs.topics
+	var signatureCounts = attrs.signatureCounts
 	var userAttrs = attrs.userAttrs
-	var t = req.t
 
 	return <Page page="user" title={user.name} req={req}>
 		<section id="user" class="primary-section text-section"><center>
@@ -48,19 +49,27 @@ module.exports = function(attrs) {
 
 		<section id="initiatives" class="secondary-section initiatives-section">
 			<center>
-				<h2>{t("MY_INITIATIVES")}</h2>
-				<InitiativesView
-					t={t}
-					initiatives={initiatives}
-					dbInitiatives={dbInitiatives}
-				/>
+				{authoredInitiatives.length > 0 ? <Fragment>
+					<h2>{t("MY_INITIATIVES")}</h2>
+
+					<InitiativesView
+						t={t}
+						phase={null}
+						initiatives={authoredInitiatives}
+						topics={topics}
+						signatureCounts={signatureCounts}
+					/>
+				</Fragment> : null}
 
 				{signedInitiatives.length > 0 ? <Fragment>
 					<h2>{t("SIGNED_INITIATIVES")}</h2>
+
 					<InitiativesView
 						t={t}
+						phase={null}
 						initiatives={signedInitiatives}
-						dbInitiatives={dbInitiatives}
+						topics={topics}
+						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
 			</center>

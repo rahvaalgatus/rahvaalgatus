@@ -566,6 +566,64 @@ button.inherited {
 }
 
 .initiative-progress {
+	$failed-color: #9a9a9a;
+
+	display: block;
+	padding-left: 2rem;
+	padding-right: 2rem;
+	font-size: 1.3rem;
+	font-family: $museo-sans;
+	font-weight: bold;
+	color: $progress-bar-color;
+
+	background-color: $progress-bar-background;
+	background-repeat: no-repeat;
+
+	&.edit-phase.private {
+		color: white;
+		background-color: $failed-color;
+	}
+
+	&.edit-phase.completed {
+		background-color: $edit-phase-color;
+		background-image: url(/assets/discussion-over.png);
+		background-position: 1rem center;
+		padding-left: 3.5rem;
+	}
+
+	&.sign-phase.completed {
+		color: white;
+		background-color: $sign-phase-color;
+		background-image: url(/assets/vote-success.png);
+		background-position: 1rem center;
+		padding-left: 3.5rem;
+	}
+
+	&.sign-phase.failed {
+		color: white;
+		background-color: $failed-color;
+		background-image: url(/assets/vote-failed.png);
+		background-position: 1rem center;
+		padding-left: 3.5rem;
+	}
+
+	&.parliament-phase,
+	&.government-phase {
+		color: $parliament-phase-color;
+		background-image: url(/assets/clock.png);
+		background-position: 1rem center;
+		padding-left: 3.5rem;
+	}
+
+	&.done-phase {
+		color: $done-phase-color;
+		background-image: url(/assets/discussion-over.png);
+		background-position: 1rem center;
+		padding-left: 3.5rem;
+	}
+}
+
+.topic-progress {
 	display: block;
 
 	padding-left: 2rem;
@@ -1395,7 +1453,7 @@ button.inherited {
 				padding: $sidebar-padding $article-padding;
 				border-bottom: 1px solid $light-background-border;
 
-				.initiative-progress { line-height: 3.2rem; border-radius: 0.4rem; }
+				.topic-progress { line-height: 3.2rem; border-radius: 0.4rem; }
 				.sign-button, { margin-top: 1rem; }
 
 				@include mobile-and-tablet { display: block; }
@@ -1560,7 +1618,7 @@ button.inherited {
 		.quicksign {
 			margin-bottom: 2rem;
 
-			.initiative-progress {
+			.topic-progress {
 				margin-top: -$sidebar-padding;
 				margin-left: -$sidebar-padding;
 				margin-right: -$sidebar-padding;
@@ -1639,7 +1697,7 @@ button.inherited {
 		// Don't use overflow to not cut off the blur around buttons.
 		&:after { display: block; clear: both; content: ""; }
 
-		.initiative-progress {
+		.topic-progress {
 			line-height: 3.2rem;
 			border-radius: 0.4rem;
 		}

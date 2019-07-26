@@ -4,10 +4,9 @@ var Jsx = require("j6pack")
 var Page = require("../page")
 var Config = require("root/config")
 var I18n = require("root/lib/i18n")
-var Initiative = require("root/lib/initiative")
 var Css = require("root/lib/css")
-var DateFns = require("date-fns")
 var formatDate = require("root/lib/i18n").formatDate
+var diffInDays = require("date-fns").differenceInCalendarDays
 exports = module.exports = InitiativePage
 exports.ProgressView = ProgressView
 	
@@ -59,79 +58,70 @@ function InitiativeBadge(initiative) {
 
 function ProgressView(attrs) {
 	var t = attrs.t
+	var topic = attrs.topic
 	var initiative = attrs.initiative
-	var dbInitiative = attrs.dbInitiative
-	var unclosedStatus = Initiative.getUnclosedStatus(initiative, dbInitiative)
-	var createdAt = initiative.createdAt
+	var sigs = attrs.signatureCount
+	var createdAt = initiative.created_at || topic.createdAt
+	var klass = "initiative-progress " + initiative.phase + "-phase"
+	var date
 
-	var klass = {
-		inProgress: "discussable",
-		voting: "votable",
-		followUp: "processable"
-	}[unclosedStatus]
+	switch (initiative.phase) {
+		case "edit":
+			if (initiative.external) return null
 
-	switch (unclosedStatus) {
-		case "inProgress":
-			if (initiative.visibility == "private")
-				return <div class={"initiative-progress private " + klass}>
+			if (topic.visibility == "private")
+				return <div class={`${klass} private`}>
 					{t("TXT_TOPIC_VISIBILITY_PRIVATE")}
 				</div>
 
-			else if (!Initiative.hasDiscussionEnded(new Date, initiative)) {
-				var passed = DateFns.differenceInCalendarDays(new Date, createdAt)
-				var total = Initiative.daysInDiscussion(initiative)
+			if (new Date < topic.endsAt) {
+				var passed = diffInDays(new Date, createdAt)
+				var total = diffInDays(topic.endsAt, topic.createdAt) + 1
 				var left = total - passed
 
 				return <div
 					style={Css.linearBackground("#ffb400", passed / total)}
-					class={"initiative-progress " + klass}>
+					class={klass}>
 					{t("TXT_DEADLINE_CALENDAR_DAYS_LEFT", {numberOfDaysLeft: left})}
 				</div>
 			}
 
-			else return <div class={"initiative-progress completed " + klass}>
+			return <div class={`${klass} completed`}>
 				{t("DISCUSSION_FINISHED")}
 			</div>
 
-		case "voting":
-			var sigs = Initiative.countSignatures("Yes", initiative)
+		case "sign":
+			if (initiative.external) return null
 
-			if (Initiative.isSuccessful(initiative, dbInitiative))
-				return <div class={"initiative-progress completed " + klass}>
+			if (sigs >= Config.votesRequired)
+				return <div class={`${klass} completed`}>
 					{t("N_SIGNATURES_COLLECTED", {votes: sigs})}
 				</div>
 
-			else if (!Initiative.hasVoteEnded(new Date, initiative))
+			else if (new Date < topic.vote.endsAt)
 				return <div
 					style={Css.linearBackground("#00cb81", sigs / Config.votesRequired)}
-					class={"initiative-progress " + klass}>
+					class={klass}>
 					{t("N_SIGNATURES", {votes: sigs})}
 				</div>
 
-			else return <div class={"initiative-progress failed " + klass}>
+			else return <div class={`${klass} failed`}>
 				{t("N_SIGNATURES_FAILED", {votes: sigs})}
 			</div>
 
-		case "followUp":
-			klass = initiative.status == "closed" ? "finished" : "processable"
-			sigs = Initiative.countSignatures("Yes", initiative)
+		case "parliament":
+			date = (
+				initiative.accepted_by_parliament ||
+				initiative.received_by_parliament_at ||
+				initiative.sent_to_parliament_at
+			)
 
-			var date = dbInitiative == null
-				? null
-				: initiative.status == "closed"
-				? dbInitiative.finished_in_parliament_at
-				: (
-					dbInitiative.received_by_parliament_at ||
-					dbInitiative.sent_to_parliament_at
-				)
+			if (initiative.external) return <div class={klass}>
+				{t("N_SIGNATURES_EXTERNAL")}
+			</div>
 
-			if (dbInitiative.external)
-				return <div class={"initiative-progress completed " + klass}>
-					{t("N_SIGNATURES_EXTERNAL")}
-				</div>
-
-			return <div class={"initiative-progress " + klass}>
-				{date && dbInitiative.external
+			return <div class={klass}>
+				{date && initiative.external
 					? t("N_SIGNATURES_EXTERNAL_WITH_DATE", {
 						date: formatDate("numeric", date)
 					})
@@ -145,6 +135,53 @@ function ProgressView(attrs) {
 				}
 			</div>
 
-		default: return null
+		case "government":
+			date = initiative.sent_to_government_at
+
+			if (initiative.external) return <div class={klass}>
+				{t("N_SIGNATURES_EXTERNAL")}
+			</div>
+
+			return <div class={klass}>
+				{date && initiative.external
+					? t("N_SIGNATURES_EXTERNAL_WITH_DATE", {
+						date: formatDate("numeric", date)
+					})
+
+					: date ? t("N_SIGNATURES_WITH_DATE", {
+						date: formatDate("numeric", date),
+						votes: sigs
+					})
+
+					: t("N_SIGNATURES", {votes: sigs})
+				}
+			</div>
+
+		case "done":
+			date = (
+				initiative.finished_in_government_at ||
+				initiative.finished_in_parliament_at
+			)
+
+			if (initiative.external) return <div class={klass}>
+				{t("N_SIGNATURES_EXTERNAL")}
+			</div>
+
+			return <div class={klass}>
+				{date && initiative.external
+					? t("N_SIGNATURES_EXTERNAL_WITH_DATE", {
+						date: formatDate("numeric", date)
+					})
+
+					: date ? t("N_SIGNATURES_WITH_DATE", {
+						date: formatDate("numeric", date),
+						votes: sigs
+					})
+
+					: t("N_SIGNATURES", {votes: sigs})
+				}
+			</div>
+
+		default: throw new RangeError("Invalid phase: " + initiative.phase)
 	}
 }

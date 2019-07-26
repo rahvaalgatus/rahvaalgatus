@@ -1,40 +1,48 @@
 var _ = require("root/lib/underscore")
 var Router = require("express").Router
-var Initiative = require("root/lib/initiative")
-var countVotes = Initiative.countSignatures.bind(null, "Yes")
+var Config = require("root/config")
 var next = require("co-next")
 var searchInitiatives = require("root/lib/citizenos_db").searchInitiatives
+var countSignaturesByIds = require("root/lib/citizenos_db").countSignaturesByIds
 var sql = require("sqlate")
 var initiativesDb = require("root/db/initiatives_db")
 
 exports.router = Router({mergeParams: true})
 
 exports.router.get("/", next(function*(_req, res) {
-	var initiatives = yield searchInitiatives(sql`
-		initiative.status IN ('inProgress', 'voting', 'followUp')
-		AND (initiative.status <> 'inProgress' OR initiative."endsAt" > ${new Date})
+	var initiatives = yield initiativesDb.search(sql`
+		SELECT * FROM initiatives WHERE archived_at IS NULL
 	`)
 
-	var uuids = initiatives.map((i) => i.id)
-	var dbInitiatives = yield initiativesDb.search(uuids, {create: true})
-	dbInitiatives = _.indexBy(dbInitiatives, "uuid")
+	var topics = _.indexBy(yield searchInitiatives(sql`
+		initiative.id IN ${sql.in(initiatives.map((i) => i.uuid))}
+		AND (initiative.status <> 'inProgress' OR initiative."endsAt" > ${new Date})
+		AND initiative.visibility = 'public'
+	`), "id")
 
-	initiatives = _.groupBy(initiatives, "status")
+	initiatives = initiatives.filter((initiative) => (
+		initiative.external ||
+		topics[initiative.uuid]
+	))
 
-	var votings = _.reject(initiatives.voting || [], (initiative) => (
-		Initiative.hasVoteFailed(new Date, initiative, dbInitiatives[initiative.id])
+	initiatives.forEach(function(initiative) {
+		var topic = topics[initiative.uuid]
+		if (topic) initiative.title = topic.title
+	})
+
+	var signatureCounts = yield countSignaturesByIds(_.keys(topics))
+
+	initiatives = initiatives.filter((initiative) => (
+		initiative.external ||
+		initiative.phase != "sign" ||
+		new Date < topics[initiative.uuid].vote.endsAt ||
+		signatureCounts[initiative.uuid] >= Config.votesRequired
 	))
 
 	res.render("home_page.jsx", {
-		discussions: _.sortBy(initiatives.inProgress || [], "createdAt").reverse(),
-		votings: _.sortBy(votings, countVotes).reverse(),
-
-		processes: _.sortBy(initiatives.followUp || [], function(initiative) {
-			var dbInitiative = dbInitiatives[initiative.id]
-			return dbInitiative.sent_to_parliament_at || initiative.vote.createdAt
-		}).reverse(),
-
-		dbInitiatives: dbInitiatives
+		initiatives: initiatives,
+		topics: topics,
+		signatureCounts: signatureCounts
 	})
 }))
 

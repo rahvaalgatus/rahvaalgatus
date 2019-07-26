@@ -3,7 +3,7 @@ var Config = require("root/config")
 var Router = require("express").Router
 var DateFns = require("date-fns")
 var HttpError = require("standard-http-error")
-var Initiative = require("root/lib/initiative")
+var Topic = require("root/lib/topic")
 var Subscription = require("root/lib/subscription")
 var next = require("co-next")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
@@ -89,9 +89,9 @@ exports.router.use(function(err, req, res, next) {
 function* assertAdmin(req, _res, next) {
 	if (req.user == null) throw new HttpError(401)
 
-	if (!Initiative.can("admin", req.initiative))
-		throw new HttpError(403, "Not an Initiative Admin")
-	if (!Initiative.canCreateEvents(req.initiative))
+	if (!Topic.can("admin", req.initiative))
+		throw new HttpError(403, "Not an Topic Admin")
+	if (!Topic.canCreateEvents(req.initiative))
 		throw new HttpError(403, "Cannot Create Events")
 
 	var until = yield rateLimit(req.user, req.initiative)

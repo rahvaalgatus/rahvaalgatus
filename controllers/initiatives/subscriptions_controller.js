@@ -1,7 +1,7 @@
 var _ = require("root/lib/underscore")
 var Path = require("path")
 var Router = require("express").Router
-var Initiative = require("root/lib/initiative")
+var Topic = require("root/lib/topic")
 var HttpError = require("standard-http-error")
 var Http = require("root/lib/http")
 var InitiativesController = require("../initiatives_controller")
@@ -18,8 +18,8 @@ exports.router = Router({mergeParams: true})
 exports.router.use("/", function(req, _res, next) {
 	var initiative = req.initiative
 
-	if (!Initiative.isPublic(initiative))
-		next(new HttpError(403, "Initiative Not Public"))
+	if (!Topic.isPublic(initiative))
+		next(new HttpError(403, "Topic Not Public"))
 	else
 		next()
 })

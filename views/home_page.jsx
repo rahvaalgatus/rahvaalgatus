@@ -1,4 +1,5 @@
 /** @jsx Jsx */
+var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var Page = require("./page")
@@ -6,15 +7,21 @@ var Config = require("root/config")
 var Flash = require("./page").Flash
 var Form = require("./page").Form
 var InitiativesView = require("./initiatives_page").InitiativesView
+var EMPTY_ARR = Array.prototype
 
 module.exports = function(attrs) {
+	var t = attrs.t
 	var req = attrs.req
-	var t = req.t
+	var initiatives = attrs.initiatives
+	var topics = attrs.topics
+	var signatureCounts = attrs.signatureCounts
 
-	var discussions = attrs.discussions
-	var votings = attrs.votings
-	var processes = attrs.processes
-	var dbInitiatives = attrs.dbInitiatives
+	var initiativesByPhase = _.groupBy(initiatives, "phase")
+	var inEdit = initiativesByPhase.edit || EMPTY_ARR
+	var inSign = initiativesByPhase.sign || EMPTY_ARR
+	var inParliament = initiativesByPhase.parliament || EMPTY_ARR
+	var inGovernment = initiativesByPhase.government || EMPTY_ARR
+	var inDone = initiativesByPhase.done || EMPTY_ARR
 
 	return <Page page="home" req={req}>
 		<section id="welcome" class="primary-section text-section"><center>
@@ -86,30 +93,63 @@ module.exports = function(attrs) {
 
 		<section id="initiatives" class="secondary-section initiatives-section">
 			<center>
-				{discussions.length > 0 ? <Fragment>
-					<h2>{t("DISCUSSIONS_LIST")}</h2>
+				{inEdit.length > 0 ? <Fragment>
+					<h2>{t("EDIT_PHASE")}</h2>
+
 					<InitiativesView
 						t={t}
-						initiatives={discussions}
-						dbInitiatives={dbInitiatives}
+						phase="edit"
+						initiatives={inEdit}
+						topics={topics}
+						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
 
-				{votings.length > 0 ? <Fragment>
-					<h2>{t("INITIATIVE_LIST")}</h2>
+				{inSign.length > 0 ? <Fragment>
+					<h2>{t("SIGN_PHASE")}</h2>
+
 					<InitiativesView
 						t={t}
-						initiatives={votings}
-						dbInitiatives={dbInitiatives}
+						phase="sign"
+						initiatives={inSign}
+						topics={topics}
+						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
 
-				{processes.length > 0 ? <Fragment>
-					<h2>{t("IN_FOLLOW_UP_LIST")}</h2>
+				{inParliament.length > 0 ? <Fragment>
+					<h2>{t("PARLIAMENT_PHASE")}</h2>
+
 					<InitiativesView
 						t={t}
-						initiatives={processes}
-						dbInitiatives={dbInitiatives}
+						phase="parliament"
+						initiatives={inParliament}
+						topics={topics}
+						signatureCounts={signatureCounts}
+					/>
+				</Fragment> : null}
+
+				{inGovernment.length > 0 ? <Fragment>
+					<h2>{t("GOVERNMENT_PHASE")}</h2>
+
+					<InitiativesView
+						t={t}
+						phase="government"
+						initiatives={inGovernment}
+						topics={topics}
+						signatureCounts={signatureCounts}
+					/>
+				</Fragment> : null}
+
+				{inDone.length > 0 ? <Fragment>
+					<h2>{t("DONE_PHASE")}</h2>
+
+					<InitiativesView
+						t={t}
+						phase="done"
+						initiatives={inDone}
+						topics={topics}
+						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
 			</center>

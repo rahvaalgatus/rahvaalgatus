@@ -76,6 +76,7 @@ exports.get("/initiatives", next(function*(_req, res) {
 
 	var topics = _.indexBy(yield searchInitiatives(sql`
 		initiative.id IN ${sql.in(initiatives.map((i) => i.uuid))}
+		AND initiative.visibility = 'public'
 	`), "id")
 
 	initiatives = initiatives.filter((initiative) => (

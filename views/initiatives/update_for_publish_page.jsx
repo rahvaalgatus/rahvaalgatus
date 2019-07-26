@@ -3,7 +3,7 @@ var Jsx = require("j6pack")
 var Form = require("../page").Form
 var DatePickerInput = require("../page").DatePickerInput
 var InitiativePage = require("./initiative_page")
-var Initiative = require("root/lib/initiative")
+var Topic = require("root/lib/topic")
 var formatIso = require("root/lib/i18n").formatDate.bind(null, "iso")
 
 module.exports = function(attributes) {
@@ -12,8 +12,8 @@ module.exports = function(attributes) {
 	var initiative = attributes.initiative
 	var error = attributes.error
 	var attrs = attributes.attrs
-	var min = Initiative.getMinDeadline(new Date)
-	var max = Initiative.getMaxDeadline(new Date)
+	var min = Topic.getMinDeadline(new Date)
+	var max = Topic.getMaxDeadline(new Date)
 
 	return <InitiativePage
 		page="initiative-publish"

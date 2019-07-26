@@ -2,7 +2,7 @@
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var InitiativePage = require("./initiative_page")
-var Initiative = require("root/lib/initiative")
+var Topic = require("root/lib/topic")
 var Flash = require("../page").Flash
 var javascript = require("root/lib/jsx").javascript
 
@@ -21,10 +21,10 @@ module.exports = function(attrs) {
 			<div id="initiative-sheet">
 				<Flash flash={flash} />
 
-				{Initiative.canEditBody(initiative) ? <Fragment>
+				{Topic.canEditBody(initiative) ? <Fragment>
 					<iframe
 						id="initiative-etherpad"
-						src={Initiative.getEtherpadUrl(initiative)}
+						src={Topic.getEtherpadUrl(initiative)}
 						frameborder="0"
 						scrolling="no"
 					/>
@@ -83,7 +83,7 @@ module.exports = function(attrs) {
 					<a
 						href={"/initiatives/" + initiative.id}
 						class="blue-button wide-button">
-						{Initiative.isDiscussion(initiative)
+						{Topic.isDiscussion(initiative)
 							? t("BACK_TO_DISCUSSION")
 							: t("BACK_TO_INITIATIVE")
 						}
