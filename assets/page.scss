@@ -1850,6 +1850,13 @@ button.inherited {
 				display: block;
 				font-size: 1.3rem;
 				color: $secondary-light-text;
+
+				a:hover { text-decoration: underline; }
+
+				a:focus {
+					color: $link-color;
+					text-decoration: underline;
+				}
 			}
 
 			.text {

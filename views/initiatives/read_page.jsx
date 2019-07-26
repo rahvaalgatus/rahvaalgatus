@@ -1205,7 +1205,9 @@ function EventsView(attrs) {
 						<h2>{title}</h2>
 
 						<time class="occurred-at" datetime={event.occurred_at.toJSON()}>
-							{I18n.formatDate("numeric", event.occurred_at)}
+							<a href={`#event-${event.id}`}>
+								{I18n.formatDate("numeric", event.occurred_at)}
+							</a>
 						</time>
 
 						{content}
