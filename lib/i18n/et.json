@@ -187,7 +187,7 @@
 	"PARLIAMENT_MEETING_DECISION_FORWARD": "Otsustati edastada ettepanek pädevale institutsioonile seisukoha võtmiseks ja lahendamiseks.",
 	"PARLIAMENT_MEETING_DECISION_REJECT": "Otsustati esitatud ettepanek tagasi lükata.",
 	"PARLIAMENT_MEETING_DECISION_SOLVE_DIFFERENTLY": "Otsustati lahendada pöördumises püstitatud probleem muul viisil.",
-	"PARLIAMENT_MEETING_INVITEES": "<strong>Kutsutud:</strong> {{invitees}}.",
+	"PARLIAMENT_MEETING_INVITEES": "Kutsutud",
 	"PARLIAMENT_PHASE": "Riigikogus",
 	"PARLIAMENT_PHASE_0_DAYS_LEFT": "tähtaeg täna",
 	"PARLIAMENT_PHASE_ACCEPTANCE_0_DAYS_LEFT": "tähtaeg täna",

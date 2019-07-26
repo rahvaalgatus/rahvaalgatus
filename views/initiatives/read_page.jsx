@@ -1103,6 +1103,9 @@ function EventsView(attrs) {
 
 						case "parliament-committee-meeting":
 							var meeting = event.content
+							var decision = meeting.decision
+							var invitees = meeting.invitees
+							summary = event.content.summary
 
 							title = meeting.committee
 								? t("PARLIAMENT_COMMITTEE_MEETING_BY", {
@@ -1110,28 +1113,31 @@ function EventsView(attrs) {
 								})
 								: t("PARLIAMENT_COMMITTEE_MEETING")
 
-							var decision = {
-								continue: t("PARLIAMENT_MEETING_DECISION_CONTINUE"),
-								reject: t("PARLIAMENT_MEETING_DECISION_REJECT"),
-								forward: t("PARLIAMENT_MEETING_DECISION_FORWARD"),
-
-								"solve-differently": t(
-									"PARLIAMENT_MEETING_DECISION_SOLVE_DIFFERENTLY"
-								)
-							}[meeting.decision]
-
 							content = <Fragment>
-								{meeting.summary ? <p class="text">
-										{Jsx.html(linkify(meeting.summary))}
-								</p> : null}
+								<table class="event-table">
+									{invitees ? <tr>
+										<th scope="row">{t("PARLIAMENT_MEETING_INVITEES")}</th>
+										<td><ul>{invitees.split(",").map((invitee) => (
+											<li>{invitee}</li>
+										))}</ul></td>
+									</tr> : null}
+								</table>
 
-								{decision ? <p class="text">{decision}</p> : null}
+								{summary ? <p class="text">
+									{Jsx.html(linkify(summary))}
+								</p> :
 
-								{meeting.invitees ? <p class="text">
-									{Jsx.html(t("PARLIAMENT_MEETING_INVITEES", {
-										invitees: _.escapeHtml(meeting.invitees)
-									}))}
-								</p> : null}
+								decision ? <p class="text">{
+									decision == "continue"
+									? t("PARLIAMENT_MEETING_DECISION_CONTINUE")
+									: decision == "reject"
+									? t("PARLIAMENT_MEETING_DECISION_REJECT")
+									: decision == "forward"
+									? t("PARLIAMENT_MEETING_DECISION_FORWARD")
+									: decision == "solve-differently"
+									? t("PARLIAMENT_MEETING_DECISION_SOLVE_DIFFERENTLY")
+									: null
+								}</p> : null}
 							</Fragment>
 							break
 
@@ -1144,7 +1150,7 @@ function EventsView(attrs) {
 								: t("PARLIAMENT_LETTER_OUTGOING")
 
 							content = <Fragment>
-								<table class="letterhead">
+								<table class="event-table">
 									<tr>
 										<th scope="row">{t("PARLIAMENT_LETTER_TITLE")}</th>
 										<td>{letter.title}</td>

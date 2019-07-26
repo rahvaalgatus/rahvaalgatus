@@ -1923,7 +1923,7 @@ button.inherited {
 			&.sign-phase { border-left-color: $sign-phase-color; }
 			&.parliament-phase { border-left-color: $parliament-phase-color; }
 
-			&.parliament-letter-event .letterhead {
+			.event-table {
 				margin-top: 1rem;
 				line-height: 1.5;
 				font-size: 1.3rem;
@@ -1932,9 +1932,8 @@ button.inherited {
 				th { font-weight: bold; text-align: right; &:after { content: ":"; }}
 				td { padding-left: 1rem; }
 
-				& + p {
-					margin-top: 1rem;
-				}
+				&:not(:empty) + p { margin-top: 1rem; }
+				&:empty { display: none; }
 			}
 
 			// Border-top doesn't fill the whole width because we're using the left
