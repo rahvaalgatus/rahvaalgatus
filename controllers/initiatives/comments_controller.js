@@ -209,7 +209,7 @@ function* renderComment(req, res) {
 	var usersById = _.indexBy(yield cosDb.query(sql`
 		SELECT id, name FROM "Users"
 		WHERE id IN ${
-			sql.tuple(concat(comment.user_uuid, replies.map((r) => r.user_uuid)))
+			sql.in(concat(comment.user_uuid, replies.map((r) => r.user_uuid)))
 		}
 	`), "id")
 

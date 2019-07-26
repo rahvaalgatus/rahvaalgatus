@@ -23,7 +23,7 @@ module.exports = function*() {
 		JOIN "Votes" AS vote ON vote.id = tv."voteId"
 		WHERE initiative.visibility = 'public'
 		AND initiative."deletedAt" IS NULL
-		AND initiative."sourcePartnerId" IN ${sql.tuple(PARTNER_IDS)}
+		AND initiative."sourcePartnerId" IN ${sql.in(PARTNER_IDS)}
 	`)
 
 	var uuids = topics.map((i) => i.id)

@@ -34,7 +34,7 @@ function* emailEndedDiscussions() {
 		AND initiative."endsAt" <= ${new Date}
 		AND initiative.visibility = 'public'
 		AND initiative."deletedAt" IS NULL
-		AND initiative."sourcePartnerId" IN ${sql.tuple(PARTNER_IDS)}
+		AND initiative."sourcePartnerId" IN ${sql.in(PARTNER_IDS)}
 		AND initiative.id NOT IN (${uuids.length ? sql.csv(uuids) : NO_UUIDS})
 		AND "user".email IS NOT NULL
 		AND "user"."emailIsVerified"
@@ -79,7 +79,7 @@ function* emailEndedInitiatives() {
 		AND vote."endsAt" <= ${new Date}
 		AND initiative.visibility = 'public'
 		AND initiative."deletedAt" IS NULL
-		AND initiative."sourcePartnerId" IN ${sql.tuple(PARTNER_IDS)}
+		AND initiative."sourcePartnerId" IN ${sql.in(PARTNER_IDS)}
 		AND initiative.id NOT IN (${uuids.length ? sql.csv(uuids) : NO_UUIDS})
 		AND "user".email IS NOT NULL
 		AND "user"."emailIsVerified"

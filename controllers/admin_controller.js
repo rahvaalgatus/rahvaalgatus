@@ -58,7 +58,7 @@ exports.get("/", next(function*(_req, res) {
 	var initiatives = _.indexBy(yield cosDb.query(sql`
 		SELECT id, title
 		FROM "Topics"
-		WHERE id IN ${sql.tuple(_.uniq(subs.map((s) => s.initiative_uuid)))}
+		WHERE id IN ${sql.in(_.uniq(subs.map((s) => s.initiative_uuid)))}
 	`), "id")
 
 	subs.forEach(function(subscription) {
@@ -75,7 +75,7 @@ exports.get("/initiatives", next(function*(_req, res) {
 	var initiatives = yield initiativesDb.search(sql`SELECT * FROM initiatives`)
 
 	var topics = _.indexBy(yield searchInitiatives(sql`
-		initiative.id IN ${sql.tuple(initiatives.map((i) => i.uuid))}
+		initiative.id IN ${sql.in(initiatives.map((i) => i.uuid))}
 	`), "id")
 
 	initiatives = initiatives.filter((initiative) => (
@@ -91,7 +91,7 @@ exports.get("/initiatives", next(function*(_req, res) {
 	var subscriberCounts = yield sqlite(sql`
 		SELECT initiative_uuid, COUNT(*) as count
 		FROM initiative_subscriptions
-		WHERE initiative_uuid IN ${sql.tuple(initiatives.map((i) => i.uuid))}
+		WHERE initiative_uuid IN ${sql.in(initiatives.map((i) => i.uuid))}
 		AND confirmed_at IS NOT NULL
 		GROUP BY initiative_uuid
 	`)
@@ -359,7 +359,7 @@ exports.get("/comments", next(function*(_req, res) {
 
 	var usersById = comments.length > 0 ? _.indexBy(yield cosDb.query(sql`
 		SELECT id, name, email FROM "Users"
-		WHERE id IN ${sql.tuple(comments.map((c) => c.user_uuid))}
+		WHERE id IN ${sql.in(comments.map((c) => c.user_uuid))}
 	`), "id") : EMPTY
 
 	comments.forEach((comment) => comment.user = usersById[comment.user_uuid])

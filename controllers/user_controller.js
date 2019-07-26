@@ -69,7 +69,7 @@ function* read(req, res) {
 	var dbSignatures = _.indexBy(yield initiativeSignaturesDb.search(sql`
 		SELECT * FROM initiative_signatures
 		WHERE user_uuid = ${user.id}
-		AND initiative_uuid IN ${sql.tuple(signatures.map((s) => s.initiative_id))}
+		AND initiative_uuid IN ${sql.in(signatures.map((s) => s.initiative_id))}
 	`, "initiative_uuid"))
 
 	signatures = signatures.filter(function(sig) {

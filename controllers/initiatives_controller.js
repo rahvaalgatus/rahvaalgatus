@@ -602,7 +602,7 @@ function* searchInitiativeComments(initiativeId) {
 
 	var usersById = comments.length > 0 ? _.indexBy(yield cosDb.query(sql`
 		SELECT id, name FROM "Users"
-		WHERE id IN ${sql.tuple(comments.map((c) => c.user_uuid))}
+		WHERE id IN ${sql.in(comments.map((c) => c.user_uuid))}
 	`), "id") : EMPTY
 
 	comments.forEach((comment) => comment.user = usersById[comment.user_uuid])
