@@ -66,6 +66,8 @@ exports.parse = function(attrs) {
 			new Date(attrs.accepted_by_parliament_at),
 		finished_in_parliament_at: attrs.finished_in_parliament_at &&
 			new Date(attrs.finished_in_parliament_at),
+		finished_in_government_at: attrs.finished_in_government_at &&
+			new Date(attrs.finished_in_government_at),
 		parliament_api_data: attrs.parliament_api_data &&
 			JSON.parse(attrs.parliament_api_data),
 		parliament_synced_at: attrs.parliament_synced_at &&

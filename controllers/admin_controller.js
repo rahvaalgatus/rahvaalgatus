@@ -423,6 +423,11 @@ function parseInitiative(obj) {
 			? Time.parseDate(obj.sentToGovernmentOn)
 			: null
 
+	if ("finishedInGovernmentOn" in obj)
+		attrs.finished_in_government_at = obj.finishedInGovernmentOn
+			? Time.parseDate(obj.finishedInGovernmentOn)
+			: null
+
 	return attrs
 }
 

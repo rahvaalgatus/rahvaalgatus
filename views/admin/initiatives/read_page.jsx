@@ -170,6 +170,18 @@ module.exports = function(attrs) {
 			</tr>
 
 			<tr>
+				<th scope="row">Finished in Government</th>
+				<td>
+					<DateInputForm
+						req={req}
+						action={initiativePath}
+						name={"finishedInGovernmentOn"}
+						value={dbInitiative.finished_in_government_at}
+					/>
+				</td>
+			</tr>
+
+			<tr>
 				<th scope="row">Has Paper Signatures</th>
 				<td>
 					<CheckboxForm
