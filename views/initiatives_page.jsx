@@ -152,8 +152,22 @@ function InitiativeView(attrs) {
 	var topic = attrs.topic
 	var initiative = attrs.initiative
 	var signatureCount = attrs.signatureCount
-	var createdAt = initiative.created_at || topic.createdAt
 	var authorName = initiative.author_name || topic && topic.creator.name
+
+	var time = (
+		initiative.phase == "edit" ? initiative.created_at || topic.createdAt :
+		initiative.phase == "sign" ? topic.vote.createdAt :
+		initiative.phase == "parliament" ? (
+			initiative.received_by_parliament_at ||
+			initiative.sent_to_parliament_at
+		) :
+		initiative.phase == "government" ? initiative.sent_to_government_at :
+		initiative.phase == "done" ? (
+			initiative.finished_in_government_at ||
+			initiative.finished_in_parliament_at
+		) :
+		null
+	)
 
 	var badge = topic && (
 		Config.partners[topic.sourcePartnerId] ||
@@ -162,9 +176,9 @@ function InitiativeView(attrs) {
 
 	return <li class="initiative">
 		<a href={`/initiatives/${initiative.uuid}`}>
-			<time datetime={createdAt.toJSON()}>
-				{I18n.formatDate("numeric", createdAt)}
-			</time>
+			{time ? <time datetime={time.toJSON()}>
+				{I18n.formatDate("numeric", time)}
+			</time> : null}
 
 			<h3 lang="et">{initiative.title}</h3>
 			{badge ? <img src={badge.icon} class="badge" /> : null}

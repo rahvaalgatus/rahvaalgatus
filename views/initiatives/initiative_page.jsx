@@ -5,7 +5,6 @@ var Page = require("../page")
 var Config = require("root/config")
 var I18n = require("root/lib/i18n")
 var Css = require("root/lib/css")
-var formatDate = require("root/lib/i18n").formatDate
 var diffInDays = require("date-fns").differenceInCalendarDays
 exports = module.exports = InitiativePage
 exports.ProgressView = ProgressView
@@ -63,7 +62,6 @@ function ProgressView(attrs) {
 	var sigs = attrs.signatureCount
 	var createdAt = initiative.created_at || topic.createdAt
 	var klass = "initiative-progress " + initiative.phase + "-phase"
-	var date
 
 	switch (initiative.phase) {
 		case "edit":
@@ -110,78 +108,14 @@ function ProgressView(attrs) {
 			</div>
 
 		case "parliament":
-			date = (
-				initiative.accepted_by_parliament ||
-				initiative.received_by_parliament_at ||
-				initiative.sent_to_parliament_at
-			)
-
-			if (initiative.external) return <div class={klass}>
-				{t("N_SIGNATURES_EXTERNAL")}
-			</div>
-
-			return <div class={klass}>
-				{date && initiative.external
-					? t("N_SIGNATURES_EXTERNAL_WITH_DATE", {
-						date: formatDate("numeric", date)
-					})
-
-					: date ? t("N_SIGNATURES_WITH_DATE", {
-						date: formatDate("numeric", date),
-						votes: sigs
-					})
-
-					: t("N_SIGNATURES", {votes: sigs})
-				}
-			</div>
-
 		case "government":
-			date = initiative.sent_to_government_at
-
-			if (initiative.external) return <div class={klass}>
-				{t("N_SIGNATURES_EXTERNAL")}
-			</div>
-
-			return <div class={klass}>
-				{date && initiative.external
-					? t("N_SIGNATURES_EXTERNAL_WITH_DATE", {
-						date: formatDate("numeric", date)
-					})
-
-					: date ? t("N_SIGNATURES_WITH_DATE", {
-						date: formatDate("numeric", date),
-						votes: sigs
-					})
-
-					: t("N_SIGNATURES", {votes: sigs})
-				}
-			</div>
-
 		case "done":
-			date = (
-				initiative.finished_in_government_at ||
-				initiative.finished_in_parliament_at
-			)
-
-			if (initiative.external) return <div class={klass}>
-				{t("N_SIGNATURES_EXTERNAL")}
-			</div>
-
-			return <div class={klass}>
-				{date && initiative.external
-					? t("N_SIGNATURES_EXTERNAL_WITH_DATE", {
-						date: formatDate("numeric", date)
-					})
-
-					: date ? t("N_SIGNATURES_WITH_DATE", {
-						date: formatDate("numeric", date),
-						votes: sigs
-					})
-
-					: t("N_SIGNATURES", {votes: sigs})
-				}
-			</div>
-
-		default: throw new RangeError("Invalid phase: " + initiative.phase)
+			return <div class={klass}>{
+				initiative.external
+				? t("N_SIGNATURES_EXTERNAL") :
+				initiative.has_paper_signatures
+				? t("N_SIGNATURES_WITH_PAPER", {votes: sigs})
+				: t("N_SIGNATURES", {votes: sigs})
+			}</div>
 	}
 }

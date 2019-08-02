@@ -30,6 +30,7 @@ var createSignatures = require("root/test/citizenos_fixtures").createSignatures
 var createOptions = require("root/test/citizenos_fixtures").createOptions
 var concat = Array.prototype.concat.bind(Array.prototype)
 var encodeBase64 = require("root/lib/crypto").encodeBase64
+var pseudoDateTime = require("root/lib/crypto").pseudoDateTime
 var parseCookies = Http.parseCookies
 var parseFlash = Http.parseFlash.bind(null, Config.cookieSecret)
 var serializeFlash = Http.serializeFlash.bind(null, Config.cookieSecret)
@@ -146,7 +147,8 @@ describe("InitiativesController", function() {
 
 		it("must show initiatives in edit phase", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
-				phase: "edit"
+				phase: "edit",
+				created_at: pseudoDateTime()
 			}))
 
 			yield createTopic(newTopic({
@@ -159,6 +161,11 @@ describe("InitiativesController", function() {
 			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
 			res.body.must.include(initiative.uuid)
+
+			var dom = parseDom(res.body)
+			dom.querySelector(".initiative time").textContent.must.equal(
+				I18n.formatDate("numeric", initiative.created_at)
+			)
 		})
 
 		it("must show initiatives in edit phase that have ended", function*() {
@@ -208,11 +215,20 @@ describe("InitiativesController", function() {
 				status: "voting"
 			}))
 
-			yield createVote(topic, newVote())
+			var vote = yield createVote(topic, newVote({
+				createdAt: pseudoDateTime()
+			}))
+
+			yield createSignatures(vote, Config.votesRequired / 2)
 
 			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
 			res.body.must.include(initiative.uuid)
+
+			var dom = parseDom(res.body)
+			dom.querySelector(".initiative time").textContent.must.equal(
+				I18n.formatDate("numeric", vote.createdAt)
+			)
 		})
 
 		it("must show initiatives in sign phase that failed", function*() {
@@ -256,7 +272,8 @@ describe("InitiativesController", function() {
 
 		it("must show initiatives in parliament phase", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
-				phase: "parliament"
+				phase: "parliament",
+				sent_to_parliament_at: pseudoDateTime()
 			}))
 
 			var topic = yield createTopic(newTopic({
@@ -271,22 +288,61 @@ describe("InitiativesController", function() {
 			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
 			res.body.must.include(initiative.uuid)
+
+			var dom = parseDom(res.body)
+			dom.querySelector(".initiative time").textContent.must.equal(
+				I18n.formatDate("numeric", initiative.sent_to_parliament_at)
+			)
+		})
+
+		it("must show initiatives in parliament phase received by parliament",
+			function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
+				sent_to_parliament_at: pseudoDateTime(),
+				received_by_parliament_at: pseudoDateTime()
+			}))
+
+			var topic = yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				status: "followUp"
+			}))
+
+			yield createVote(topic, newVote())
+
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+			res.body.must.include(initiative.uuid)
+
+			var dom = parseDom(res.body)
+			dom.querySelector(".initiative time").textContent.must.equal(
+				I18n.formatDate("numeric", initiative.received_by_parliament_at)
+			)
 		})
 
 		it("must show external initiatives in parliament phase", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
+				received_by_parliament_at: pseudoDateTime(),
 				external: true
 			}))
 
 			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
 			res.body.must.include(initiative.uuid)
+
+			var dom = parseDom(res.body)
+			dom.querySelector(".initiative time").textContent.must.equal(
+				I18n.formatDate("numeric", initiative.received_by_parliament_at)
+			)
 		})
 
 		it("must show initiatives in government phase", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
-				phase: "government"
+				phase: "government",
+				sent_to_government_at: pseudoDateTime()
 			}))
 
 			var topic = yield createTopic(newTopic({
@@ -301,6 +357,11 @@ describe("InitiativesController", function() {
 			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
 			res.body.must.include(initiative.uuid)
+
+			var dom = parseDom(res.body)
+			dom.querySelector(".initiative time").textContent.must.equal(
+				I18n.formatDate("numeric", initiative.sent_to_government_at)
+			)
 		})
 
 		it("must show external initiatives in government phase", function*() {
@@ -316,7 +377,9 @@ describe("InitiativesController", function() {
 
 		it("must show initiatives in done phase", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
-				phase: "done"
+				phase: "done",
+				finished_in_parliament_at: pseudoDateTime(),
+				finished_in_government_at: pseudoDateTime()
 			}))
 
 			var topic = yield createTopic(newTopic({
@@ -331,6 +394,37 @@ describe("InitiativesController", function() {
 			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
 			res.body.must.include(initiative.uuid)
+
+			var dom = parseDom(res.body)
+			dom.querySelector(".initiative time").textContent.must.equal(
+				I18n.formatDate("numeric", initiative.finished_in_government_at)
+			)
+		})
+
+		it("must show initiatives in done phase that never went to government",
+			function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "done",
+				finished_in_parliament_at: pseudoDateTime()
+			}))
+
+			var topic = yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				status: "followUp"
+			}))
+
+			yield createVote(topic, newVote())
+
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+			res.body.must.include(initiative.uuid)
+
+			var dom = parseDom(res.body)
+			dom.querySelector(".initiative time").textContent.must.equal(
+				I18n.formatDate("numeric", initiative.finished_in_parliament_at)
+			)
 		})
 
 		it("must show external initiatives in done phase", function*() {
