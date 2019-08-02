@@ -113,8 +113,13 @@ button.admin-link {
 	th {
 		background: white;
 		font-size: 1.5rem;
-		padding: 1rem 2rem;
+		padding: 0.5rem 2rem;
 		font-weight: bold;
+
+		small {
+			font-weight: normal;
+			font-size: 1.3rem;
+		}
 	}
 
   tbody {
@@ -125,6 +130,9 @@ button.admin-link {
   tbody td { padding: 0.5rem 2rem; }
   tbody tr:first-child td { padding-top: 1rem; }
   tbody tr + tr td { border-top: 1px solid white; }
+
+	tr:first-child th { padding-top: 1.5rem; }
+	tr:last-child th { padding-bottom: 1rem; }
 }
 
 .admin-table {
@@ -325,6 +333,14 @@ textarea.admin-input {
 }
 
 #dashboard-page {
+	.overview-form {
+		display: block;
+		margin-bottom: 0.5rem;
+
+		label { margin-right: 0.5rem; }
+		label ~ label { margin-left: 1rem; }
+	}
+
 	.subscriptions-table {
 		i { font-style: italic; }
 	}

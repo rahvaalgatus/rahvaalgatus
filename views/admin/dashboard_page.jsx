@@ -1,29 +1,129 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var Page = require("./page")
+var Form = Page.Form
+var Config = require("root/config")
+var formatDate = require("root/lib/i18n").formatDate
 var formatDateTime = require("root/lib/i18n").formatDateTime
 
 module.exports = function(attrs) {
 	var req = attrs.req
-	var subscriptions = attrs.subscriptions
+	var from = attrs.from
+	var to = attrs.to
+	var lastSubscriptions = attrs.lastSubscriptions
 
-	return <Page page="dashboard" title="Dashboard" req={attrs.req}>
+	return <Page page="dashboard" title="Dashboard" req={req}>
 		<h1 class="admin-heading">Dashboard</h1>
 
-		<h2 class="admin-subheading">Signatures</h2>
+		<h2 class="admin-subheading">Overview</h2>
+
+		<Form
+			method="get"
+			class="admin-inline-form overview-form"
+			req={req}
+		>
+			<label class="admin-label">From</label>
+			<input
+				type="date"
+				class="admin-input"
+				name="from"
+				value={from && formatDate("iso", from)}
+			/>
+
+			<label class="admin-label">To 00:00 of</label>
+			<input
+				type="date"
+				class="admin-input"
+				name="to"
+				value={to && formatDate("iso", to)}
+			/>
+
+			<button class="admin-submit">Limit</button>
+		</Form>
 
 		<table class="admin-horizontal-table">
-			<th scope="row">Unique signatures this month</th>
-			<td>{attrs.signatureCount}</td>
+			<tr>
+				<th scope="row">
+					Initiatives created<br />
+					<small>Created on Rahvaalgatus, published and not deleted.</small>
+				</th>
+				<td>{attrs.initiativesCount}</td>
+			</tr>
+
+			<tr>
+				<th scope="row">
+					Initiatives created on Riigikogu<br />
+
+					<small>
+						Imported from the parliament. Dated by Riigikogu. Excludes ours.
+					</small>
+				</th>
+
+				<td>{attrs.externalInitiativesCount}</td>
+			</tr>
+
+			<tr>
+				<th scope="row">
+					Initiatives sent to signing<br />
+
+					<small>
+						Sent to signing during given period, regardless of creation date.
+					</small>
+				</th>
+				<td>{attrs.voteCount}</td>
+			</tr>
+
+			<tr>
+				<th scope="row">
+					Initiatives passed {Config.votesRequired} signatures<br />
+					<small>Milestone reached, regardless of creation date.</small>
+				</th>
+
+				<td>{attrs.successfulCount}</td>
+			</tr>
+
+			<tr>
+				<th scope="row">
+					Signatures<br />
+
+					<small>
+						Counts initiative and user pairs.
+						Excluded if revoked in time.
+					</small>
+				</th>
+
+				<td>{attrs.signatureCount}</td>
+			</tr>
+
+			<tr>
+				<th scope="row">
+					Unique signers<br />
+
+					<small>
+						Unique signers for all initiatives.
+						Excluded if revoked in time.
+					</small>
+				</th>
+
+				<td>{attrs.signerCount}</td>
+			</tr>
+
+			<tr>
+				<th scope="row">
+					Unique subscriber count<br />
+					<small>Confirmed subscribers. Counts unique emails.</small>
+				</th>
+				<td>{attrs.subscriberCount}</td>
+			</tr>
 		</table>
 
 		<h2 class="admin-subheading">
 			Last Subscriptions
 			{" "}
-			<span class="admin-count">({subscriptions.length})</span>
+			<span class="admin-count">({lastSubscriptions.length})</span>
 		</h2>
 
-		<SubscriptionsView req={req} subscriptions={subscriptions} />
+		<SubscriptionsView req={req} subscriptions={lastSubscriptions} />
 	</Page>
 }
 

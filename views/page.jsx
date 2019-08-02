@@ -205,7 +205,9 @@ function Form(attrs, children) {
 			<input type="hidden" name="_method" value={method} />
 		: null}
 
-		<input type="hidden" name="_csrf_token" value={attrs.req.csrfToken} />
+		{method != "get" ?
+			<input type="hidden" name="_csrf_token" value={attrs.req.csrfToken} />
+		: null}
 
 		{children}
 	</form>
