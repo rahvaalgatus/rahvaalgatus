@@ -535,6 +535,8 @@ function parseInitiativeForCitizen(obj) {
 	if ("phase" in obj && _.contains(UPDATEABLE_PHASES, obj.phase))
 		attrs.status = PHASE_TO_STATUS[obj.phase]
 
+	if ("tags" in obj) attrs.categories = obj.tags.split(",")
+
 	return attrs
 }
 

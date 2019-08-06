@@ -17,6 +17,7 @@ var UPDATEABLE_PHASES = ["sign", "parliament", "government", "done"]
 
 module.exports = function(attrs) {
 	var req = attrs.req
+	var topic = attrs.initiative
 	var dbInitiative = attrs.dbInitiative
 	var subscriberCount = attrs.subscriberCount
 	var initiativePath = `${req.baseUrl}/initiatives/${dbInitiative.uuid}`
@@ -192,6 +193,18 @@ module.exports = function(attrs) {
 					/>
 				</td>
 			</tr>
+
+			{topic ? <tr>
+				<th scope="row">Tags</th>
+				<td>
+					<InputForm
+						req={req}
+						action={initiativePath}
+						name={"tags"}
+						value={topic.categories.join(", ")}
+					/>
+				</td>
+			</tr> : null}
 
 			<tr>
 				<th scope="row">Subscriber Count</th>
