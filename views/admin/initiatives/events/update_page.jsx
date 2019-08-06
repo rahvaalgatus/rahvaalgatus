@@ -6,24 +6,24 @@ var EventForm = require("./create_page").EventForm
 
 module.exports = function(attrs) {
 	var req = attrs.req
-	var dbInitiative = attrs.dbInitiative
+	var initiative = attrs.initiative
 	var event = attrs.event
 
 	return <Page
 		page="update-event"
-		title={"Edit Event of " + dbInitiative.title}
+		title={"Edit Event of " + initiative.title}
 		req={req}
 	>
 		<a href={req.baseUrl + "/initiatives"} class="admin-back-2">Initiatives</a>
 		<a
-			href={req.baseUrl + "/initiatives/" + dbInitiative.uuid}
+			href={req.baseUrl + "/initiatives/" + initiative.uuid}
 			class="admin-back"
 		>
-			{dbInitiative.title}
+			{initiative.title}
 		</a>
 
 		<h1 class="admin-heading">Edit Event</h1>
 		<Flash flash={req.flash} />
-		<EventForm dbInitiative={dbInitiative} event={event} req={req} />
+		<EventForm initiative={initiative} event={event} req={req} />
 	</Page>
 }

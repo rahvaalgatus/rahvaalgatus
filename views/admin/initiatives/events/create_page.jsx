@@ -12,21 +12,21 @@ exports.EventForm = EventForm
 
 function CreatePage(attrs) {
 	var req = attrs.req
-	var dbInitiative = attrs.dbInitiative
+	var initiative = attrs.initiative
 	var event = attrs.event
 	var message = attrs.message
 
 	return <Page
 		page="create-event"
-		title={"New Event for " + dbInitiative.title}
+		title={"New Event for " + initiative.title}
 		req={req}
 	>
 		<a href={req.baseUrl + "/initiatives"} class="admin-back-2">Initiatives</a>
 		<a
-			href={req.baseUrl + "/initiatives/" + dbInitiative.uuid}
+			href={req.baseUrl + "/initiatives/" + initiative.uuid}
 			class="admin-back"
 		>
-			{dbInitiative.title}
+			{initiative.title}
 		</a>
 
 		<h1 class="admin-heading">New Event</h1>
@@ -34,7 +34,7 @@ function CreatePage(attrs) {
 		{message ? <MessageView message={message} /> : null }
 
 		<EventForm
-			dbInitiative={dbInitiative}
+			initiative={initiative}
 			event={event}
 			req={req}
 			submit={message != null}>
@@ -47,11 +47,11 @@ function CreatePage(attrs) {
 
 function EventForm(attrs, children) {
 	var req = attrs.req
-	var dbInitiative = attrs.dbInitiative
+	var initiative = attrs.initiative
 	var event = attrs.event
 	var submit = attrs.submit
 
-	var path = `${req.baseUrl}/initiatives/${dbInitiative.uuid}/events`
+	var path = `${req.baseUrl}/initiatives/${initiative.uuid}/events`
 	if (event.id) path += "/" + event.id
 
 	return <Form

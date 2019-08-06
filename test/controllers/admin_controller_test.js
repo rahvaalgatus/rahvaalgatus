@@ -28,7 +28,11 @@ describe("AdminController", function() {
 
 		beforeEach(function*() {
 			this.topic = yield createTopic({creatorId: this.user.id})
-			this.initiative = yield initiativesDb.create({uuid: this.topic.id})
+
+			this.initiative = yield initiativesDb.create({
+				uuid: this.topic.id,
+				title: this.topic.title
+			})
 		})
 		
 		describe("with action=create", function() {

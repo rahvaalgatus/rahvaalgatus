@@ -17,22 +17,22 @@ var UPDATEABLE_PHASES = ["sign", "parliament", "government", "done"]
 
 module.exports = function(attrs) {
 	var req = attrs.req
-	var topic = attrs.initiative
-	var dbInitiative = attrs.dbInitiative
+	var topic = attrs.topic
+	var initiative = attrs.initiative
 	var subscriberCount = attrs.subscriberCount
-	var initiativePath = `${req.baseUrl}/initiatives/${dbInitiative.uuid}`
+	var initiativePath = `${req.baseUrl}/initiatives/${initiative.uuid}`
 	var events = attrs.events
 	var messages = attrs.messages
-	var phase = dbInitiative.phase
+	var phase = initiative.phase
 	var pendingSubscriberCount = subscriberCount.all - subscriberCount.confirmed
 
-	return <Page page="initiative" title={dbInitiative.title} req={req}>
+	return <Page page="initiative" title={initiative.title} req={req}>
 		<a href={req.baseUrl + "/initiatives"} class="admin-back">Initiatives</a>
-		<h1 class="admin-heading">{dbInitiative.title}</h1>
+		<h1 class="admin-heading">{initiative.title}</h1>
 
 		<a
 			id="production-link"
-			href={Config.url + "/initiatives/" + dbInitiative.uuid}
+			href={Config.url + "/initiatives/" + initiative.uuid}
 			class="admin-link"
 		>View on Rahvaalgatus</a>
 
@@ -76,12 +76,12 @@ module.exports = function(attrs) {
 						req={req}
 						action={initiativePath}
 						name="archived"
-						value={String(!dbInitiative.archived_at)}>
-						{dbInitiative.archived_at ? "Unarchive" : "Archive"}
+						value={String(!initiative.archived_at)}>
+						{initiative.archived_at ? "Unarchive" : "Archive"}
 					</FormButton>
 
-					{dbInitiative.archived_at ? <p>
-						Archived on {formatDate("iso", dbInitiative.archived_at)}.
+					{initiative.archived_at ? <p>
+						Archived on {formatDate("iso", initiative.archived_at)}.
 					</p> : null}
 				</td>
 			</tr>
@@ -93,7 +93,7 @@ module.exports = function(attrs) {
 						req={req}
 						action={initiativePath}
 						name={"sentToParliamentOn"}
-						value={dbInitiative.sent_to_parliament_at}
+						value={initiative.sent_to_parliament_at}
 					/>
 				</td>
 			</tr>
@@ -105,7 +105,7 @@ module.exports = function(attrs) {
 						req={req}
 						action={initiativePath}
 						name={"receivedByParliamentOn"}
-						value={dbInitiative.received_by_parliament_at}
+						value={initiative.received_by_parliament_at}
 					/>
 				</td>
 			</tr>
@@ -117,7 +117,7 @@ module.exports = function(attrs) {
 						req={req}
 						action={initiativePath}
 						name={"acceptedByParliamentOn"}
-						value={dbInitiative.accepted_by_parliament_at}
+						value={initiative.accepted_by_parliament_at}
 					/>
 				</td>
 			</tr>
@@ -129,7 +129,7 @@ module.exports = function(attrs) {
 						req={req}
 						action={initiativePath}
 						name={"parliamentCommittee"}
-						value={dbInitiative.parliament_committee}
+						value={initiative.parliament_committee}
 					/>
 				</td>
 			</tr>
@@ -141,7 +141,7 @@ module.exports = function(attrs) {
 						req={req}
 						action={initiativePath}
 						name={"finishedInParliamentOn"}
-						value={dbInitiative.finished_in_parliament_at}
+						value={initiative.finished_in_parliament_at}
 					/>
 				</td>
 			</tr>
@@ -153,7 +153,7 @@ module.exports = function(attrs) {
 						req={req}
 						action={initiativePath}
 						name={"sentToGovernmentOn"}
-						value={dbInitiative.sent_to_government_at}
+						value={initiative.sent_to_government_at}
 					/>
 				</td>
 			</tr>
@@ -165,7 +165,7 @@ module.exports = function(attrs) {
 						req={req}
 						action={initiativePath}
 						name={"governmentAgency"}
-						value={dbInitiative.government_agency}
+						value={initiative.government_agency}
 					/>
 				</td>
 			</tr>
@@ -177,7 +177,7 @@ module.exports = function(attrs) {
 						req={req}
 						action={initiativePath}
 						name={"finishedInGovernmentOn"}
-						value={dbInitiative.finished_in_government_at}
+						value={initiative.finished_in_government_at}
 					/>
 				</td>
 			</tr>
@@ -189,7 +189,7 @@ module.exports = function(attrs) {
 						req={req}
 						action={initiativePath}
 						name={"hasPaperSignatures"}
-						checked={dbInitiative.has_paper_signatures}
+						checked={initiative.has_paper_signatures}
 					/>
 				</td>
 			</tr>
