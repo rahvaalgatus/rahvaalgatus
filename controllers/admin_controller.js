@@ -5,7 +5,6 @@ var HttpError = require("standard-http-error")
 var DateFns = require("date-fns")
 var Subscription = require("root/lib/subscription")
 var Time = require("root/lib/time")
-var cosApi = require("root/lib/citizenos_api")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var commentsDb = require("root/db/comments_db")
 var next = require("co-next")
@@ -14,7 +13,6 @@ var initiativesDb = require("root/db/initiatives_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
 var cosDb = require("root").cosDb
-var parseCitizenInitiative = cosApi.parseCitizenInitiative
 var sqlite = require("root").sqlite
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
@@ -209,11 +207,9 @@ exports.use("/initiatives/:id", next(function*(req, res, next) {
 	var dbInitiative = yield initiativesDb.read(req.params.id)
 	if (dbInitiative == null) return void next(new HttpError(404))
 
-	var initiative = yield cosDb.query(sql`
-		SELECT * FROM "Topics" WHERE id = ${dbInitiative.uuid}
+	var initiative = yield searchInitiatives(sql`
+		initiative.id = ${dbInitiative.uuid} AND initiative.visibility = 'public'
 	`).then(_.first)
-
-	initiative = initiative && parseCitizenInitiative(initiative)
 
 	// Populate initiative's title from CitizenOS until we've found a way to sync
 	// them.
