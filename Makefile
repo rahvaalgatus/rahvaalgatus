@@ -11,6 +11,8 @@ TRANSLATIONS_URL = https://spreadsheets.google.com/feeds/list/1JKPUNp8Y_8Aigq7eG
 JQ_OPTS = --tab --sort-keys
 SHANGE = vendor/shange -f "config/$(ENV).sqlite3"
 PGHOST = $(shell ENV=$(ENV) node -e 'console.log(require("./config").citizenOsDatabase.host)')
+WEB_PORT = 3000
+ADM_PORT = $(shell expr $(WEB_PORT) + 1)
 LIVERELOAD_PORT = 35731
 
 APP_HOST = rahvaalgatus.ee
@@ -98,11 +100,11 @@ test/server: export TEST_TAGS = server
 test/server:
 	@$(NODE) $(NODE_OPTS) $(MOCHA) -R spec test/server/**/*_test.js
 
-web: PORT = 3000
+web: PORT = $(WEB_PORT)
 web:
 	@$(NODE) $(NODE_OPTS) ./bin/$@
 
-adm: PORT = 3001
+adm: PORT = $(ADM_PORT)
 adm:
 	@$(NODE) $(NODE_OPTS) ./bin/$@
 
