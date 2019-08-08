@@ -1054,6 +1054,8 @@ function SidebarSubscribeView(attrs) {
 	var subscriberCount = attrs.subscriberCount
 	var atomPath = req.baseUrl + req.url + ".atom"
 
+	if (!Topic.isPublic(initiative)) return null
+
 	return <div class="sidebar-section">
 		<h2 class="sidebar-header">{t("INITIATIVE_SIDEBAR_FOLLOW_HEADER")}</h2>
 
