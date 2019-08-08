@@ -18,7 +18,7 @@ module.exports = function(attrs) {
 		initiative={initiative}
 		req={req}>
 		<section id="initiative-section" class="transparent-section"><center>
-			<div id="initiative-sheet">
+			<div id="initiative-sheet" class="sheet">
 				<Flash flash={flash} />
 
 				{Topic.canEditBody(initiative) ? <Fragment>
