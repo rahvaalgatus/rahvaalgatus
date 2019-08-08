@@ -497,6 +497,8 @@ function PhasesView(attrs) {
 	var createdAt = initiative.createdAt
   var acceptedByParliamentAt = dbInitiative.accepted_by_parliament_at
 	var finishedInParliamentAt = dbInitiative.finished_in_parliament_at
+	var sentToGovernmentAt = dbInitiative.sent_to_government_at
+	var finishedInGovernmentAt = dbInitiative.finished_in_government_at
 
 	var receivedByParliamentAt = (
 		dbInitiative.received_by_parliament_at ||
@@ -595,10 +597,26 @@ function PhasesView(attrs) {
 			})
 	}
 
-	var governmentProgress = (
-		phase == "government" ||
-		dbInitiative.sent_to_government_at
-	) ? (isPhaseAfter("government", phase) ? 1 : 0) : null
+	var governmentProgress
+  var governmentPhaseText
+
+	if (
+		isPhaseAtLeast("government", phase) &&
+		(phase == "government" || sentToGovernmentAt)
+	) {
+		governmentProgress = (
+			isPhaseAfter("government", phase) ||
+			finishedInGovernmentAt
+		) ? 1 : 0
+
+		governmentPhaseText = finishedInGovernmentAt ? I18n.formatDateSpan(
+			"numeric",
+			sentToGovernmentAt,
+			finishedInGovernmentAt
+		) : sentToGovernmentAt
+			? I18n.formatDate("numeric", sentToGovernmentAt)
+			: ""
+	}
 
   return <section id="initiative-phases" class="transparent-section"><center>
     <ol>
@@ -628,7 +646,7 @@ function PhasesView(attrs) {
 				class={classifyPhase("government", phase)}
 			>
         <i>{t("GOVERNMENT_PHASE")}</i>
-				<ProgressView value={governmentProgress} />
+				<ProgressView value={governmentProgress} text={governmentPhaseText} />
       </li> : null}
 
 			{phase == "done" && dbInitiative.archived_at ? <li

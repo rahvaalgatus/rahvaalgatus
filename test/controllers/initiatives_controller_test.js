@@ -1083,6 +1083,46 @@ describe("InitiativesController", function() {
 					initiative.received_by_parliament_at,
 					initiative.finished_in_parliament_at
 				))
+
+				phases.government.text.must.equal(I18n.formatDate(
+					"numeric",
+					initiative.sent_to_government_at
+				))
+			})
+
+			it("must render initiative in government that's finished", function*() {
+				var initiative = yield initiativesDb.create({
+					uuid: UUID,
+					phase: "government",
+					sent_to_parliament_at: DateFns.addDays(new Date, -30),
+					received_by_parliament_at: DateFns.addDays(new Date, -25),
+					finished_in_parliament_at: DateFns.addDays(new Date, -20),
+					sent_to_government_at: DateFns.addDays(new Date, -10),
+					finished_in_government_at: DateFns.addDays(new Date, -5)
+				})
+
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(3)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.past.must.be.true()
+				phases.sign.past.must.be.true()
+				phases.parliament.past.must.be.true()
+				phases.government.current.must.be.true()
+
+				phases.government.text.must.equal(I18n.formatDateSpan(
+					"numeric",
+					initiative.sent_to_government_at,
+					initiative.finished_in_government_at
+				))
 			})
 
 			it("must render initiative in government with no sent time", function*() {
@@ -1144,7 +1184,8 @@ describe("InitiativesController", function() {
 					uuid: UUID,
 					phase: "done",
 					sent_to_parliament_at: new Date,
-					sent_to_government_at: new Date
+					sent_to_government_at: new Date,
+					finished_in_government_at: new Date
 				})
 
 				this.router.get(`/api/topics/${UUID}`,
