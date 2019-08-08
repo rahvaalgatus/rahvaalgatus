@@ -1209,10 +1209,15 @@ button.inherited {
 			position: relative;
 		}
 
+		li:nth-last-child(5),
+		li:nth-last-child(5) ~ li {
+			width: 25%;
+		}
+
 		li {
 			display: inline-block;
-			position: absolute;
-			width: 25%;
+			position: relative;
+			width: 33.333%;
 			font-weight: normal;
 
 			i {
@@ -1276,9 +1281,7 @@ button.inherited {
 				}
 			}
 
-			&:nth-child(1) {
-				left: 0;
-
+			&:first-child {
 				i { margin-left: $phase-icon-width / 2; }
 
 				.progress {
@@ -1288,28 +1291,26 @@ button.inherited {
 			}
 
 			&:nth-child(2) {
-				left: 25%;
-
 				i { margin-left: $phase-icon-width / 4; }
 
 				.progress {
 					left: $phase-icon-width / 2 + $phase-icon-width / 4;
+					right: $phase-icon-width / 2 + $phase-icon-width / 4;
+				}
+
+				&:nth-last-child(4) .progress {
 					right: $phase-icon-width / 2;
 				}
 			}
 
 			&:nth-child(3) {
-				left: 50%;
-
 				.progress {
 					left: $phase-icon-width / 2;
 					right: $phase-icon-width / 2 + $phase-icon-width / 4;
 				}
 			}
 
-			&:nth-child(4) {
-				left: 75%;
-
+			&:nth-last-child(2) {
 				i { margin-left: -$phase-icon-width / 4; }
 
 				.progress {
@@ -1318,7 +1319,8 @@ button.inherited {
 				}
 			}
 
-			&:nth-child(5) {
+			&:last-child {
+				position: absolute;
 				right: 0;
 
 				i { left: 50%; margin-left: -$phase-icon-width / 2; }
@@ -1363,6 +1365,10 @@ button.inherited {
 				progress { @include progress-bar-color($parliament-phase-color); }
 
 				&.past progress {
+					@include progress-bar-background-color($done-phase-color);
+				}
+
+				&.with-government.past progress {
 					@include progress-bar-background-color($government-phase-color);
 				}
 

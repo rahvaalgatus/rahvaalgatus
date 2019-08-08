@@ -595,7 +595,10 @@ function PhasesView(attrs) {
 			})
 	}
 
-	var governmentProgress = isPhaseAfter("government", phase) ? 1 : null
+	var governmentProgress = (
+		phase == "government" ||
+		dbInitiative.sent_to_government_at
+	) ? (isPhaseAfter("government", phase) ? 1 : 0) : null
 
   return <section id="initiative-phases" class="transparent-section"><center>
     <ol>
@@ -609,15 +612,24 @@ function PhasesView(attrs) {
 				<ProgressView value={signProgress} text={signPhaseText} />
       </li>
 
-			<li id="parliament-phase" class={classifyPhase("parliament", phase)}>
+			<li
+				id="parliament-phase"
+				class={
+					classifyPhase("parliament", phase) +
+					(governmentProgress != null ? " with-government" : "")
+				}
+			>
         <i>{t("PARLIAMENT_PHASE")}</i>
 				<ProgressView value={parliamentProgress} text={parliamentPhaseText} />
       </li>
 
-			<li id="government-phase" class={classifyPhase("government", phase)}>
+			{governmentProgress != null ? <li
+				id="government-phase"
+				class={classifyPhase("government", phase)}
+			>
         <i>{t("GOVERNMENT_PHASE")}</i>
 				<ProgressView value={governmentProgress} />
-      </li>
+      </li> : null}
 
 			{phase == "done" && dbInitiative.archived_at ? <li
 				id="archived-phase"

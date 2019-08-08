@@ -705,6 +705,7 @@ describe("InitiativesController", function() {
 				_.sum(_.map(phases, "past")).must.equal(0)
 				_.sum(_.map(phases, "current")).must.equal(1)
 				phases.edit.current.must.be.true()
+				phases.must.not.have.property("government")
 
 				phases.edit.text.must.equal(
 					t("TXT_DEADLINE_CALENDAR_DAYS_LEFT", {numberOfDaysLeft: 6})
@@ -763,6 +764,7 @@ describe("InitiativesController", function() {
 				_.sum(_.map(phases, "current")).must.equal(1)
 				phases.edit.past.must.be.true()
 				phases.sign.current.must.be.true()
+				phases.must.not.have.property("government")
 
 				phases.edit.text.must.equal(I18n.formatDateSpan(
 					"numeric",
@@ -794,6 +796,7 @@ describe("InitiativesController", function() {
 				phases.edit.past.must.be.true()
 				phases.sign.current.must.be.true()
 				phases.sign.text.must.equal(t("N_SIGNATURES", {votes: 10}))
+				phases.must.not.have.property("government")
 			})
 
 			it("must render initiative with paper signatures", function*() {
@@ -817,6 +820,7 @@ describe("InitiativesController", function() {
 				phases.edit.past.must.be.true()
 				phases.sign.current.must.be.true()
 				phases.sign.text.must.equal(t("N_SIGNATURES_WITH_PAPER", {votes: 1}))
+				phases.must.not.have.property("government")
 			})
 
 			it("must render initiative in parliament but not yet received",
@@ -842,6 +846,7 @@ describe("InitiativesController", function() {
 				phases.edit.past.must.be.true()
 				phases.sign.past.must.be.true()
 				phases.parliament.current.must.be.true()
+				phases.must.not.have.property("government")
 
 				phases.sign.text.must.equal(t("N_SIGNATURES", {
 					votes: Config.votesRequired
@@ -875,6 +880,7 @@ describe("InitiativesController", function() {
 				phases.edit.past.must.be.true()
 				phases.sign.past.must.be.true()
 				phases.parliament.current.must.be.true()
+				phases.must.not.have.property("government")
 
 				phases.sign.text.must.equal(t("N_SIGNATURES", {
 					votes: Config.votesRequired
@@ -1019,6 +1025,7 @@ describe("InitiativesController", function() {
 				phases.edit.past.must.be.true()
 				phases.sign.past.must.be.true()
 				phases.parliament.current.must.be.true()
+				phases.must.not.have.property("government")
 
 				phases.parliament.text.must.equal(I18n.formatDateSpan(
 					"numeric",
@@ -1046,7 +1053,8 @@ describe("InitiativesController", function() {
 					phase: "government",
 					sent_to_parliament_at: DateFns.addDays(new Date, -30),
 					received_by_parliament_at: DateFns.addDays(new Date, -25),
-					finished_in_parliament_at: DateFns.addDays(new Date, -5)
+					finished_in_parliament_at: DateFns.addDays(new Date, -5),
+					sent_to_government_at: new Date
 				})
 
 				this.router.get(`/api/topics/${UUID}`,
@@ -1077,11 +1085,66 @@ describe("InitiativesController", function() {
 				))
 			})
 
+			it("must render initiative in government with no sent time", function*() {
+				yield initiativesDb.create({
+					uuid: UUID,
+					phase: "government",
+					sent_to_parliament_at: DateFns.addDays(new Date, -30),
+					received_by_parliament_at: DateFns.addDays(new Date, -25),
+					finished_in_parliament_at: DateFns.addDays(new Date, -5)
+				})
+
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(3)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.past.must.be.true()
+				phases.sign.past.must.be.true()
+				phases.parliament.past.must.be.true()
+				phases.government.current.must.be.true()
+			})
+
 			it("must render done initiative", function*() {
 				yield initiativesDb.create({
 					uuid: UUID,
 					phase: "done",
 					sent_to_parliament_at: new Date
+				})
+
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(3)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.past.must.be.true()
+				phases.sign.past.must.be.true()
+				phases.parliament.past.must.be.true()
+				phases.must.not.have.property("government")
+				phases.done.current.must.be.true()
+				phases.must.not.have.property("archived")
+			})
+
+			it("must render done initiative that went to government", function*() {
+				yield initiativesDb.create({
+					uuid: UUID,
+					phase: "done",
+					sent_to_parliament_at: new Date,
+					sent_to_government_at: new Date
 				})
 
 				this.router.get(`/api/topics/${UUID}`,
@@ -1109,6 +1172,36 @@ describe("InitiativesController", function() {
 					uuid: UUID,
 					phase: "done",
 					sent_to_parliament_at: new Date,
+					archived_at: new Date
+				})
+
+				this.router.get(`/api/topics/${UUID}`,
+					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+
+				var res = yield this.request("/initiatives/" + UUID)
+				res.statusCode.must.equal(200)
+				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(3)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.past.must.be.true()
+				phases.sign.past.must.be.true()
+				phases.parliament.past.must.be.true()
+				phases.must.not.have.property("government")
+				phases.must.not.have.property("done")
+				phases.archived.current.must.be.true()
+			})
+
+			it("must render archived initiative that went to government",
+				function*() {
+				yield initiativesDb.create({
+					uuid: UUID,
+					phase: "done",
+					sent_to_parliament_at: new Date,
+					sent_to_government_at: new Date,
 					archived_at: new Date
 				})
 
