@@ -71,7 +71,7 @@ module.exports = function(attrs) {
 							</option>
 						</select>
 					</Form>
-					{" "}
+					{" or "}
 					<FormButton
 						req={req}
 						action={initiativePath}
