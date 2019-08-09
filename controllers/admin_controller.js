@@ -18,6 +18,7 @@ var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var concat = Array.prototype.concat.bind(Array.prototype)
+var trim = Function.call.bind(String.prototype.trim)
 var EMPTY = Object.prototype
 var UPDATEABLE_PHASES = ["sign", "parliament", "government", "done"]
 var PARTNER_IDS = concat(Config.apiPartnerId, _.keys(Config.partners))
@@ -531,7 +532,7 @@ function parseInitiativeForTopic(obj) {
 	if ("phase" in obj && _.contains(UPDATEABLE_PHASES, obj.phase))
 		attrs.status = PHASE_TO_STATUS[obj.phase]
 
-	if ("tags" in obj) attrs.categories = obj.tags.split(",")
+	if ("tags" in obj) attrs.categories = obj.tags.split(",").map(trim)
 
 	return attrs
 }
