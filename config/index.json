@@ -62,7 +62,8 @@
 	"categories": {
 		"arvamusfestival": {
 			"name": "Arvamusfestival",
-			"icon": "/assets/badges-arvamusfestival.png"
+			"icon": "/assets/badges-arvamusfestival.png",
+			"url": "https://www.arvamusfestival.ee"
 		},
 
 		"kestame": {
