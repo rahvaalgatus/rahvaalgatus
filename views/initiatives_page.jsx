@@ -181,7 +181,7 @@ function InitiativeView(attrs) {
 			</time> : null}
 
 			<h3 lang="et">{initiative.title}</h3>
-			{badge ? <img src={badge.icon} class="badge" /> : null}
+			{badge ? <img src={badge.icon} class="badge" title={badge.name} /> : null}
 
 			<span class="author">{authorName}</span>
 
