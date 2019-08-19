@@ -38,7 +38,7 @@ exports.router.get("/", next(function*(_req, res) {
 	initiatives = initiatives.filter((initiative) => (
 		initiative.external ||
 		initiative.phase != "sign" ||
-		new Date < topics[initiative.uuid].vote.endsAt ||
+		topics[initiative.uuid].vote.endsAt > cutoff ||
 		signatureCounts[initiative.uuid] >= Config.votesRequired
 	))
 

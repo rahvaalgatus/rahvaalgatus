@@ -117,6 +117,28 @@ describe("HomeController", function() {
 			res.body.must.include(initiative.uuid)
 		})
 
+		it("must show initiatives in sign phase that failed in less than 2w",
+			function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "sign"
+			}))
+
+			var topic = yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				status: "voting"
+			}))
+
+			yield createVote(topic, newVote({
+				endsAt: DateFns.addDays(DateFns.startOfDay(new Date), -13)
+			}))
+
+			var res = yield this.request("/")
+			res.statusCode.must.equal(200)
+			res.body.must.include(initiative.uuid)
+		})
+
 		it("must not show initiatives in sign phase that failed", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				phase: "sign"
@@ -129,7 +151,9 @@ describe("HomeController", function() {
 				status: "voting"
 			}))
 
-			yield createVote(topic, newVote({endsAt: new Date}))
+			yield createVote(topic, newVote({
+				endsAt: DateFns.addDays(DateFns.startOfDay(new Date), -14)
+			}))
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
@@ -148,7 +172,10 @@ describe("HomeController", function() {
 				status: "voting"
 			}))
 
-			var vote = yield createVote(topic, newVote({endsAt: new Date}))
+			var vote = yield createVote(topic, newVote({
+				endsAt: DateFns.addDays(DateFns.startOfDay(new Date), -14)
+			}))
+
 			yield createSignatures(vote, Config.votesRequired)
 
 			var res = yield this.request("/")
