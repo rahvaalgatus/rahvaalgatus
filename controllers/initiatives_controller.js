@@ -636,7 +636,7 @@ function* updateInitiativeToPublished(req, res) {
 	if (!(
 		Topic.canPublish(initiative) ||
 		Topic.canUpdateDiscussionDeadline(initiative)
-	)) throw new HttpError(401)
+	)) throw new HttpError(403)
 
 	if (req.body.endsAt == null) return void res.render(tmpl, {
 		attrs: {endsAt: initiative.endsAt && new Date(initiative.endsAt)}
@@ -644,10 +644,11 @@ function* updateInitiativeToPublished(req, res) {
 
 	let endsAt = DateFns.endOfDay(Time.parseDate(req.body.endsAt))
 
-	if (!Topic.isDeadlineOk(new Date, endsAt)) return void res.render(tmpl, {
-		error: req.t("DEADLINE_ERR", {days: Config.minDeadlineDays}),
-		attrs: {endsAt: endsAt}
-	})
+	if (!Topic.isDeadlineOk(new Date, endsAt))
+		return void res.status(422).render(tmpl, {
+			error: req.t("DEADLINE_ERR", {days: Config.minDeadlineDays}),
+			attrs: {endsAt: endsAt}
+		})
 
 	var attrs = {visibility: "public", endsAt: endsAt}
 
@@ -676,7 +677,7 @@ function* updateInitiativePhaseToSign(req, res) {
 	if (!(
 		Topic.canPropose(new Date, initiative) ||
 		Topic.canUpdateVoteDeadline(initiative)
-	)) throw new HttpError(401)
+	)) throw new HttpError(403)
 
 	if (req.body.endsAt == null) return void res.render(tmpl, {
 		attrs: {endsAt: initiative.vote ? new Date(initiative.vote.endsAt) : null}
@@ -686,7 +687,7 @@ function* updateInitiativePhaseToSign(req, res) {
 	var attrs = {endsAt: endsAt}
 
 	if (!Topic.isDeadlineOk(new Date, endsAt))
-		return void res.render(tmpl, {
+		return void res.status(422).render(tmpl, {
 			error: req.t("DEADLINE_ERR", {days: Config.minDeadlineDays}),
 			attrs: attrs
 		})
@@ -759,7 +760,7 @@ function* updateInitiativePhaseToParliament(req, res) {
 	var tmpl = "initiatives/update_for_parliament_page.jsx"
 
 	if (!Topic.canSendToParliament(initiative, dbInitiative))
-		throw new HttpError(401)
+		throw new HttpError(403)
 
 	var attrs = {
 		status: req.body.status,

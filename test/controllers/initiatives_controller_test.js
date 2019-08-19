@@ -1898,7 +1898,7 @@ describe("InitiativesController", function() {
 	})
 
 	describe("PUT /:id", function() {
-		require("root/test/time")(Date.UTC(2015, 5, 18))
+		require("root/test/time")(+new Date(2015, 5, 18))
 
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
@@ -1968,7 +1968,9 @@ describe("InitiativesController", function() {
 						form: {
 							_csrf_token: this.csrfToken,
 							visibility: "public",
-							endsAt: formatIsoDate(new Date)
+							endsAt: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays)
+							)
 						}
 					})
 
@@ -1978,6 +1980,30 @@ describe("InitiativesController", function() {
 						__proto__: initiative,
 						discussion_end_email_sent_at: null
 					})
+				})
+
+				it("must respond with 422 if setting a short deadline", function*() {
+					var initiative = yield initiativesDb.create({
+						uuid: UUID,
+						discussion_end_email_sent_at: new Date
+					})
+
+					this.router.get(`/api/users/self/topics/${UUID}`,
+						respond.bind(null, {data: EDITABLE_DISCUSSION}))
+
+					var res = yield this.request(`/initiatives/${UUID}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							visibility: "public",
+							endsAt: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays - 1)
+							)
+						}
+					})
+
+					res.statusCode.must.equal(422)
+					yield initiativesDb.read(initiative).must.then.eql(initiative)
 				})
 			})
 
@@ -2001,7 +2027,9 @@ describe("InitiativesController", function() {
 					var initiative = yield initiativesDb.create({uuid: UUID})
 
 					this.router.get(`/api/users/self/topics/${UUID}`,
-						respond.bind(null, {data: EDITABLE_DISCUSSION}))
+						respond.bind(null, {data: _.assign({}, EDITABLE_DISCUSSION, {
+						createdAt: DateFns.addDays(new Date, -Config.minDeadlineDays)
+						})}))
 
 					var endsAt = DateFns.endOfDay(DateFns.addDays(new Date, 30))
 
@@ -2043,6 +2071,50 @@ describe("InitiativesController", function() {
 					}])
 				})
 
+				it("must respond with 403 if less than 3 days passed", function*() {
+					var initiative = yield initiativesDb.create({uuid: UUID})
+
+					this.router.get(`/api/users/self/topics/${UUID}`,
+						respond.bind(null, {data: _.assign({}, EDITABLE_DISCUSSION, {
+						createdAt: DateFns.addDays(new Date, -Config.minDeadlineDays + 1)
+					})}))
+
+					var res = yield this.request(`/initiatives/${UUID}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "voting",
+							endsAt: formatIsoDate(DateFns.addDays(new Date, 30))
+						}
+					})
+
+					res.statusCode.must.equal(403)
+					yield initiativesDb.read(initiative).must.then.eql(initiative)
+				})
+
+				it("must respond with 422 if setting a short deadline", function*() {
+					var initiative = yield initiativesDb.create({uuid: UUID})
+
+					this.router.get(`/api/users/self/topics/${UUID}`,
+						respond.bind(null, {data: _.assign({}, EDITABLE_DISCUSSION, {
+						createdAt: DateFns.addDays(new Date, -Config.minDeadlineDays)
+					})}))
+
+					var res = yield this.request(`/initiatives/${UUID}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "voting",
+							endsAt: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays - 1)
+							)
+						}
+					})
+
+					res.statusCode.must.equal(422)
+					yield initiativesDb.read(initiative).must.then.eql(initiative)
+				})
+
 				it("must clear end email when setting signing end time", function*() {
 					var initiative = yield initiativesDb.create({
 						uuid: UUID,
@@ -2065,7 +2137,9 @@ describe("InitiativesController", function() {
 						form: {
 							_csrf_token: this.csrfToken,
 							status: "voting",
-							endsAt: formatIsoDate(new Date)
+							endsAt: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays)
+							)
 						}
 					})
 
@@ -2117,7 +2191,9 @@ describe("InitiativesController", function() {
 						form: {
 							_csrf_token: this.csrfToken,
 							status: "voting",
-							endsAt: formatIsoDate(new Date)
+							endsAt: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays)
+							)
 						}
 					})
 
@@ -2203,7 +2279,7 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(200)
 				})
 
-				it("must respond with 401 if initiative not successful", function*() {
+				it("must respond with 403 if initiative not successful", function*() {
 					yield initiativesDb.create({uuid: UUID, phase: "sign"})
 
 					this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
@@ -2217,7 +2293,7 @@ describe("InitiativesController", function() {
 						form: {_csrf_token: this.csrfToken, status: "followUp"}
 					})
 
-					res.statusCode.must.equal(401)
+					res.statusCode.must.equal(403)
 				})
 
 				it("must update initiative", function*() {
@@ -2523,7 +2599,7 @@ describe("InitiativesController", function() {
 	})
 
 	describe("GET /:id/signature", function() {
-		require("root/test/time")(Date.UTC(2015, 5, 18))
+		require("root/test/time")(+new Date(2015, 5, 18))
 		
 		beforeEach(function*() {
 			this.user = yield createUser(newUser({id: USER_ID}))
@@ -2693,7 +2769,7 @@ describe("InitiativesController", function() {
 	})
 
 	describe("POST /:id/signature", function() {
-		require("root/test/time")(Date.UTC(2015, 5, 18))
+		require("root/test/time")(+new Date(2015, 5, 18))
 
 		beforeEach(function*() {
 			this.user = yield createUser(newUser({id: USER_ID}))
@@ -3027,7 +3103,7 @@ describe("InitiativesController", function() {
 
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
-			require("root/test/time")(Date.UTC(2015, 5, 18))
+			require("root/test/time")(+new Date(2015, 5, 18))
 
 			it("must respond with 303 if hiding a non-existent signature",
 				function*() {

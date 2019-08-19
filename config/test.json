@@ -7,7 +7,7 @@
 
 	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
 	"votesRequired": 10,
-	"minDeadlineDays": 0,
+	"minDeadlineDays": 3,
 	"signatureMilestones": [5, 10],
 
 	"citizenOsDatabase": {
