@@ -171,6 +171,37 @@ module.exports = function(attrs) {
 			</tr>
 
 			<tr>
+				<th scope="row">
+					Government Contact<br />
+					<small>Person's name or job title</small>
+				</th>
+
+				<td>
+					<InputForm
+						req={req}
+						action={initiativePath}
+						name={"governmentContact"}
+						value={initiative.government_contact}
+					/>
+				</td>
+			</tr>
+
+			<tr>
+				<th scope="row">
+					Government Contact Details<br />
+					<small>Person's email, phone or other contact info.</small>
+				</th>
+				<td>
+					<InputForm
+						req={req}
+						action={initiativePath}
+						name={"governmentContactDetails"}
+						value={initiative.government_contact_details}
+					/>
+				</td>
+			</tr>
+
+			<tr>
 				<th scope="row">Finished in Government</th>
 				<td>
 					<DateInputForm
