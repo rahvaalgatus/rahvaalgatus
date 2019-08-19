@@ -43,6 +43,24 @@ describe("HomeController", function() {
 			res.body.must.include(initiative.uuid)
 		})
 
+		it("must show initiatives in edit phase that have ended less than 2w ago",
+			function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "edit"
+			}))
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				endsAt: DateFns.addDays(DateFns.startOfDay(new Date), -13)
+			}))
+
+			var res = yield this.request("/")
+			res.statusCode.must.equal(200)
+			res.body.must.include(initiative.uuid)
+		})
+
 		it("must not show initiatives in edit phase that have ended", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				phase: "edit"
@@ -52,7 +70,7 @@ describe("HomeController", function() {
 				id: initiative.uuid,
 				creatorId: this.user.id,
 				sourcePartnerId: this.partner.id,
-				endsAt: new Date
+				endsAt: DateFns.addDays(DateFns.startOfDay(new Date), -14)
 			}))
 
 			var res = yield this.request("/")

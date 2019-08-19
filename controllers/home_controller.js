@@ -1,4 +1,5 @@
 var _ = require("root/lib/underscore")
+var DateFns = require("date-fns")
 var Router = require("express").Router
 var Config = require("root/config")
 var next = require("co-next")
@@ -14,9 +15,11 @@ exports.router.get("/", next(function*(_req, res) {
 		SELECT * FROM initiatives WHERE archived_at IS NULL
 	`)
 
+	var cutoff = DateFns.addDays(DateFns.startOfDay(new Date), -14)
+
 	var topics = _.indexBy(yield searchInitiatives(sql`
 		initiative.id IN ${sql.in(initiatives.map((i) => i.uuid))}
-		AND (initiative.status <> 'inProgress' OR initiative."endsAt" > ${new Date})
+		AND (initiative.status <> 'inProgress' OR initiative."endsAt" > ${cutoff})
 		AND initiative.visibility = 'public'
 	`), "id")
 
