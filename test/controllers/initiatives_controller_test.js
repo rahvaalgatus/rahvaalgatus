@@ -2092,6 +2092,37 @@ describe("InitiativesController", function() {
 					yield initiativesDb.read(initiative).must.then.eql(initiative)
 				})
 
+				it("must update initiative if on fast-track", function*() {
+					var initiative = yield initiativesDb.create({uuid: UUID})
+
+					this.router.get(`/api/users/self/topics/${UUID}`,
+						respond.bind(null, {data: _.assign({}, EDITABLE_DISCUSSION, {
+						createdAt: new Date,
+						categories: ["fast-track"]
+					})}))
+
+					this.router.post(`/api/users/self/topics/${UUID}/votes`, endResponse)
+
+					var res = yield this.request(`/initiatives/${UUID}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "voting",
+							endsAt: formatIsoDate(DateFns.addDays(new Date, 30))
+						}
+					})
+
+					res.statusCode.must.equal(303)
+					res.headers.location.must.equal(`/initiatives/${UUID}`)
+
+					yield initiativesDb.search(sql`
+						SELECT * FROM initiatives
+					`).must.then.eql([{
+						__proto__: initiative,
+						phase: "sign"
+					}])
+				})
+
 				it("must respond with 422 if setting a short deadline", function*() {
 					var initiative = yield initiativesDb.create({uuid: UUID})
 
