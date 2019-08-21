@@ -99,8 +99,7 @@ describe("ParliamentSyncCli", function() {
 		})])
 	})
 
-	it("must create external initiative in done phase if MENETLUS_LOPETATUD",
-		function*() {
+	it("must create external initiative in parliament phase if MENETLUS_LOPETATUD", function*() {
 		this.router.get(INITIATIVES_URL, respond.bind(null, [{
 			uuid: INITIATIVE_UUID,
 			title: "Kollektiivne pöördumine elu paremaks tegemiseks",
@@ -119,7 +118,7 @@ describe("ParliamentSyncCli", function() {
 			external: true,
 			created_at: new Date(2019, 4, 29, 14, 35, 31, 246),
 			title: "elu paremaks tegemiseks",
-			phase: "done",
+			phase: "parliament",
 			finished_in_parliament_at: new Date(2019, 0, 29),
 			parliament_uuid: INITIATIVE_UUID,
 			parliament_api_data: initiative.parliament_api_data,
@@ -591,7 +590,7 @@ describe("ParliamentSyncCli", function() {
 				uuid: INITIATIVE_UUID,
 				parliament_uuid: INITIATIVE_UUID
 			})
-				
+
 			this.router.get(INITIATIVES_URL,	respond.bind(null, [
 				_.defaults({uuid: INITIATIVE_UUID}, api)
 			]))

@@ -178,12 +178,8 @@ function* updateInitiative(initiative, document) {
 		initiative.uuid = initiative.parliament_uuid
 		initiative = yield initiativesDb.create(_.assign(initiative, update))
 	}
-	else {
-		delete update.phase
-
-		if (diff(initiative, update))
-			initiative = yield initiativesDb.update(initiative, update)
-	}
+	else if (diff(initiative, update))
+		initiative = yield initiativesDb.update(initiative, update)
 
 	yield createFiles(initiative, document)
 
@@ -352,7 +348,6 @@ function newFile(initiative, eventId, document, file) {
 
 function attrsFrom(doc) {
 	return {
-		phase: "parliament",
 		parliament_uuid: doc.uuid,
 
 		parliament_committee:
@@ -378,7 +373,6 @@ function attrsFromStatus(status) {
 		}
 
 		case "MENETLUS_LOPETATUD": return {
-			phase: "done",
 			finished_in_parliament_at: Time.parseDate(status.date)
 		}
 
