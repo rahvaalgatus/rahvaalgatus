@@ -16,16 +16,19 @@ exports.parse = function(attrs) {
 }
 
 exports.serialize = function(event) {
-	return _.defaults({
+	var attrs = _.defaults({
 		content: serializeContent(event.type, event.content)
 	}, event)
+
+	delete attrs.files
+	return attrs
 }
 
 function parseContent(type, data) {
 	switch (type) {
 		case "parliament-received":
-		case "parliament-accepted":
 		case "parliament-finished": return null
+		case "parliament-accepted":
 		case "parliament-letter":
 		case "parliament-decision":
 		case "parliament-committee-meeting": return JSON.parse(data)
@@ -37,8 +40,8 @@ function parseContent(type, data) {
 function serializeContent(type, data) {
 	switch (type) {
 		case "parliament-received":
-		case "parliament-accepted":
 		case "parliament-finished": return null
+		case "parliament-accepted":
 		case "parliament-letter":
 		case "parliament-decision":
 		case "parliament-committee-meeting": return JSON.stringify(data)

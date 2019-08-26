@@ -14,7 +14,6 @@ var EMPTY_ARR = Array.prototype
 var PARLIAMENT_URL = "https://www.riigikogu.ee"
 var DOCUMENT_URL = PARLIAMENT_URL + "/tegevus/dokumendiregister/dokument"
 var FILE_URL = PARLIAMENT_URL + "/download"
-var LOCAL_DATE = /\b(\d?\d)\.(\d?\d)\.(\d\d\d\d)\b/
 var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
 
 var USAGE_TEXT = `
@@ -90,33 +89,7 @@ function* sync(opts) {
 
 	yield updated.map(function*(initiativeAndDocument) {
 		var initiative = initiativeAndDocument[0]
-		var doc = initiativeAndDocument[1]
-
-		// Note we need to fetch the document as the /collective-addresses
-		// response doesn't include documents' volumes.
-		//
-		// Don't then fetch all volumes for all documents as some of them include
-		// documents unrelated to the initiative. For example, an initiative
-		// acceptance decision (https://api.riigikogu.ee/api/documents/d655bc48-e5ec-43ad-9640-8cba05f78427)
-		// resides in a "All parliament decisions in 2019" volume.
-		doc.relatedDocuments = yield (doc.relatedDocuments || []).map((doc) => (
-			api("documents/" + doc.uuid).then(getBody)
-		))
-
-		doc.relatedVolumes = yield (doc.relatedVolumes || []).map(getUuid).map(
-			readParliamentVolumeWithDocuments.bind(null, api)
-		)
-
-		var meetingVolumeUuids = yield doc.relatedDocuments.filter(
-			isMeetingTopicDocument
-		).map((doc) => doc.volume.uuid)
-
-		var meetingVolumes = yield meetingVolumeUuids.map(
-			readParliamentVolumeWithDocuments.bind(null, api)
-		)
-
-		doc.missingVolumes = meetingVolumes
-
+		var doc = yield assignInitiativeDocuments(api, initiativeAndDocument[1])
 		initiative = yield updateInitiative(initiative, doc)
 
 		yield initiativesDb.update(initiative, {
@@ -138,8 +111,6 @@ function* readInitiative(doc) {
 		SELECT * FROM initiatives WHERE parliament_uuid = ${doc.uuid}
 	`)) return initiative
 
-	logger.log("Creating initiative %s (%s)…", doc.uuid, doc.title)
-
 	return {
 		parliament_uuid: doc.uuid,
 		external: true,
@@ -154,20 +125,45 @@ function* readInitiative(doc) {
 	}
 }
 
-function* updateInitiative(initiative, document) {
-	logger.log("Updating initiative %s (%s)…", initiative.uuid, document.title)
+function* assignInitiativeDocuments(api, doc) {
+	// Note we need to fetch the initiative as a document, too, as the
+	// /collective-addresses response doesn't include documents' volumes.
+	//
+	// Don't then fetch all volumes for all documents as some of them include
+	// documents unrelated to the initiative. For example, an initiative
+	// acceptance decision (https://api.riigikogu.ee/api/documents/d655bc48-e5ec-43ad-9640-8cba05f78427)
+	// resides in a "All parliament decisions in 2019" volume.
+	doc.relatedDocuments = yield (doc.relatedDocuments || []).map((doc) => (
+		api("documents/" + doc.uuid).then(getBody)
+	))
 
-	var volumes = concat(document.relatedVolumes, document.missingVolumes)
+	doc.relatedVolumes = yield (doc.relatedVolumes || []).map(getUuid).map(
+		readParliamentVolumeWithDocuments.bind(null, api)
+	)
+
+	var relatedVolumeUuids = new Set(doc.relatedVolumes.map(getUuid))
+
+	var missingVolumeUuids = yield doc.relatedDocuments.filter((doc) => (
+		(!doc.volume || !relatedVolumeUuids.has(doc.volume.uuid)) &&
+		isMeetingTopicDocument(doc)
+	)).map((doc) => doc.volume.uuid)
+
+	doc.missingVolumes = yield missingVolumeUuids.map(
+		readParliamentVolumeWithDocuments.bind(null, api)
+	)
+
+	return doc
+}
+
+function* updateInitiative(initiative, document) {
+	logger.log(
+		(initiative.uuid ? "Updating" : "Creating") + " initiative %s (%s)…",
+		initiative.uuid,
+		document.title
+	)
+
 	var statuses = sortStatuses(document.statuses || EMPTY_ARR)
 	var update = attrsFrom(document)
-
-	var volumeDocumentUuids = new Set(flatten(volumes.map((volume) => (
-		volume.documents.map(getUuid)
-	))))
-
-	var documents = document.relatedDocuments.filter((doc) => (
-		!volumeDocumentUuids.has(doc.uuid))
-	)
 
 	// Deriving initiative attributes from all statuses, not only semantically
 	// unique ones as events below. This works for all orderings of
@@ -181,8 +177,10 @@ function* updateInitiative(initiative, document) {
 	else if (diff(initiative, update))
 		initiative = yield initiativesDb.update(initiative, update)
 
-	yield createFiles(initiative, document)
+	yield replaceFiles(initiative, document)
 
+	var documents = document.relatedDocuments
+	var volumes = concat(document.relatedVolumes, document.missingVolumes)
 	var eventAttrs = []
 
 	// Unique drops later duplicates, which is what we prefer here.
@@ -192,24 +190,39 @@ function* updateInitiative(initiative, document) {
 	// days prior. Let's assume the earlier entry is canonical and of more
 	// interest to people, and the later MENETLUS_LOPETATUD status perhaps
 	// formality.
-	eventAttrs = concat(eventAttrs, _.uniqBy(statuses, eventIdFromStatus).map(
+	;[eventAttrs, documents] = _.map1st(concat.bind(null, eventAttrs), _.mapM(
+		_.uniqBy(statuses, eventIdFromStatus),
+		documents,
 		eventAttrsFromStatus.bind(null, document)
 	))
 
-	eventAttrs = concat(
-		eventAttrs,
-		volumes.map(eventAttrsFromVolume.bind(null, document)).filter(Boolean)
+	;[eventAttrs, documents] = _.map1st(
+		concat.bind(null, eventAttrs),
+		_.mapM(volumes, documents, eventAttrsFromVolume)
 	)
 
-	eventAttrs = concat(
-		eventAttrs,
-		documents.map(eventAttrsFromDocument).filter(Boolean)
+	;[eventAttrs, documents] = _.map1st(
+		concat.bind(null, eventAttrs),
+		_.partitionMap(documents, eventAttrsFromDocument)
 	)
 
-	eventAttrs = _.values(eventAttrs.reduce((obj, attrs) => (
+	eventAttrs = _.values(eventAttrs.filter(Boolean).reduce((obj, attrs) => (
 		(obj[attrs.external_id] = _.merge({}, obj[attrs.external_id], attrs)), obj
 	), {}))
 
+	yield replaceEvents(initiative, eventAttrs)
+
+	documents.forEach((document) => logger.warn(
+		"Ignored initiative %s document %s (%s)",
+		initiative.uuid,
+		document.uuid,
+		document.title
+	))
+
+	return initiative
+}
+
+function* replaceEvents(initiative, eventAttrs) {
 	var events = yield eventsDb.search(sql`
 		SELECT * FROM initiative_events
 		WHERE initiative_uuid = ${initiative.uuid}
@@ -217,12 +230,12 @@ function* updateInitiative(initiative, document) {
 	`)
 
 	var eventsByExternalId = _.indexBy(events, "external_id")
-
 	var createEvents = []
 	var updateEvents = []
+
 	eventAttrs.forEach(function(attrs) {
 		var event = eventsByExternalId[attrs.external_id]
-		if (event && !diff(event, attrs)) return
+		if (event && !diffEvent(event, attrs)) return
 
 		attrs.updated_at = new Date
 		if (event) return void updateEvents.push([event, mergeEvent(event, attrs)])
@@ -238,27 +251,12 @@ function* updateInitiative(initiative, document) {
 		yield updateEvents.map((eventAndAttrs) => eventsDb.update(...eventAndAttrs))
 	), (ev) => ev.id)
 
-	eventsByExternalId = _.indexBy(events, "external_id")
-
-	yield createEventFilesFromVolumes(initiative, events, volumes)
-
-	documents = yield createEventFilesFromRelatedDocuments(
-		initiative,
-		events,
-		documents
-	)
-
-	documents.forEach((document) => logger.warn(
-		"Ignored initiative %s document %s (%s)",
-		initiative.uuid,
-		document.uuid,
-		document.title
+	yield events.filter((ev) => ev.files && ev.files.length).map((event) => (
+		replaceEventFiles(event, event.files)
 	))
-
-	return initiative
 }
 
-function* createFiles(initiative, document) {
+function* replaceFiles(initiative, document) {
 	var files = document.files || EMPTY_ARR
 	files = files.filter(isPublicFile)
 	if (files.length == 0) return
@@ -271,76 +269,49 @@ function* createFiles(initiative, document) {
 	`).then((files) => files.map((file) => file.external_id)))
 
 	files = files.filter((file) => !existingUuids.has(file.uuid))
-	files = files.map(newFile.bind(null, initiative, null, document))
-	yield filesDb.create(yield files)
+	files = files.map(fileAttrsFrom.bind(null, document))
+
+	files = files.map((file) => ({
+		__proto__: file,
+		initiative_uuid: initiative.uuid
+	}))
+
+	yield filesDb.create(yield files.map(downloadFile))
 }
 
-function* createEventFilesFromRelatedDocuments(initiative, events, documents) {
-	var files = []
-
-	documents = _.reject(documents, function(document) {
-		var event = findEventFromDocument(events, document)
-		if (event) files.push(newEventFiles(initiative, event, document))
-		return Boolean(event)
-	})
-
-	yield filesDb.create(flatten(yield files))
-	return documents
-}
-
-function* createEventFilesFromVolumes(initiative, events, volumes) {
-	yield filesDb.create(flatten(yield volumes.map(function*(volume) {
-		var event = findEventFromVolume(events, volume)
-
-		if (event == null) {
-			logger.warn(
-				"Ignored initiative %s volume «%s»",
-				initiative.uuid,
-				volume.title
-			)
-
-			return EMPTY_ARR
-		}
-
-		return flatten(yield volume.documents.map(
-			newEventFiles.bind(null, initiative, event)
-		))
-	})))
-}
-
-function* newEventFiles(initiative, event, document) {
-	var files = document.files || EMPTY_ARR
-	files = files.filter(isPublicFile)
-	if (files.length == 0) return EMPTY_ARR
+function* replaceEventFiles(event, files) {
+	if (files.length == 0) return
 
 	var existingUuids = new Set(yield filesDb.search(sql`
 		SELECT external_id FROM initiative_files WHERE event_id = ${event.id}
 	`).then((files) => files.map((file) => file.external_id)))
 
-	files = files.filter((file) => !existingUuids.has(file.uuid))
-	files = files.map(newFile.bind(null, initiative, event.id, document))
-	return yield files
+	files = files.filter((file) => !existingUuids.has(file.external_id))
+
+	files = files.map((file) => ({
+		__proto__: file,
+		event_id: event.id,
+		initiative_uuid: event.initiative_uuid
+	}))
+
+	filesDb.create(yield files.map(downloadFile))
 }
 
-function newFile(initiative, eventId, document, file) {
+function newDocumentFiles(document, files) {
+	files = files.filter(isPublicFile)
+	files = files.map(fileAttrsFrom.bind(null, document))
+	return files
+}
+
+function downloadFile(file) {
 	logger.log(
 		"Downloading initiative %s file «%s»…",
-		initiative.uuid,
-		file.fileName
+		file.initiative_uuid,
+		file.name
 	)
 
-	var externalUrl = FILE_URL + "/" + file.uuid
-
-	return parliamentApi(externalUrl).then((res) => ({
-		initiative_uuid: initiative.uuid,
-		event_id: eventId,
-		external_id: file.uuid,
-		external_url: externalUrl,
-		created_at: new Date,
-		updated_at: new Date,
-		name: file.fileName,
-		title: file.fileTitle || document.title,
-		url: DOCUMENT_URL + "/" + document.uuid,
+	return parliamentApi(file.external_url).then((res) => ({
+		__proto__: file,
 		content: Buffer.from(res.body),
 		content_type: res.headers["content-type"]
 	}))
@@ -358,6 +329,9 @@ function attrsFrom(doc) {
 function attrsFromStatus(status) {
 	var code = status.status.code
 
+	// NOTE: The registered date indicates when the initiative was entered into
+	// the document database. It may be later than when the initiative was given
+	// to the parliament (submittingDate), such as with https://www.riigikogu.ee/tegevus/dokumendiregister/dokument/203ef927-065e-4a2c-bb85-2a41487644aa.
 	switch (code) {
 		case "REGISTREERITUD": return {
 			received_by_parliament_at: Time.parseDate(status.date)
@@ -392,78 +366,133 @@ function attrsFromStatus(status) {
 	}
 }
 
-function eventAttrsFromStatus(document, status) {
+function eventAttrsFromStatus(document, documents, status) {
+	var eventDate = Time.parseDate(status.date)
+	var eventDocuments = []
+
 	var attrs = {
 		type: eventTypeFromStatus(status),
 		origin: "parliament",
 		external_id: eventIdFromStatus(status),
-		occurred_at: Time.parseDate(status.date)
+		occurred_at: eventDate
 	}
 
 	switch (status.status.code) {
+		case "MENETLUSSE_VOETUD":
+			;[eventDocuments, documents] = _.partition(documents, function(doc) {
+				var documentTime
+
+				return (
+					isParliamentAcceptanceDocument(doc) ||
+					doc.documentType == "protokoll" &&
+					(documentTime = parseProtocolDateTime(doc)) &&
+					Time.isSameDate(eventDate, documentTime)
+				)
+			})
+			break
+
 		case "ARUTELU_KOMISJONIS":
+			;[eventDocuments, documents] = _.partition(documents, function(doc) {
+				var documentTime
+
+				// TODO: Ensure you don't find protocols of non-committee meetings.
+				return (
+					doc.documentType == "protokoll" &&
+					(documentTime = parseProtocolDateTime(doc)) &&
+					Time.isSameDate(eventDate, documentTime)
+				)
+			})
+			break
+
+		case "MENETLUS_LOPETATUD":
+			;[eventDocuments, documents] = _.partition(
+				documents,
+				isParliamentResponseDocument
+			)
+			break
+	}
+
+	attrs.files = flatten(eventDocuments.map((doc) => (
+		newDocumentFiles(doc, doc.files || EMPTY_ARR)
+	)))
+
+	switch (status.status.code) {
+		case "MENETLUSSE_VOETUD":
 			attrs.content = {
-				committee: document.responsibleCommittee
-					? document.responsibleCommittee.name
-					: null,
+				committee: (
+					document.responsibleCommittee && document.responsibleCommittee.name ||
+					null
+				)
+			}
+			break
+
+		case "ARUTELU_KOMISJONIS":
+			var protocol = eventDocuments[0]
+			var protocolTime = protocol && parseProtocolDateTime(protocol)
+			if (protocolTime) attrs.occurred_at = protocolTime
+
+			attrs.content = {
+				committee: (
+					protocol && parseProtocolCommittee(protocol) ||
+					document.responsibleCommittee && document.responsibleCommittee.name ||
+					null
+				),
 
 				decision: status.committeeDecision
 					? parseMeetingDecision(status.committeeDecision)
 					: undefined
 			}
-			break
 	}
 
-	return attrs
-}
-
-function eventAttrsFromVolume(document, volume) {
-	if (isMeetingVolume(volume)) {
-		// TODO: Parse the time as well.
-		var date = parseInlineDate(volume.title)
-		if (date == null) return null
-
-		var topic = document.relatedDocuments.find((doc) => (
-			isMeetingTopicDocument(doc) &&
-			doc.volume.uuid == volume.uuid
-		))
-
-		return {
-			type: "parliament-committee-meeting",
-			origin: "parliament",
-			external_id: eventIdFromVolume(volume),
-			occurred_at: date,
-
-			content: {
-				committee: document.responsibleCommittee
-					? document.responsibleCommittee.name
-				: null,
-
-				invitees: topic ? topic.invitees : undefined
-			}
-		}
-	}
-	else return null
+	return [attrs, documents]
 }
 
 function eventAttrsFromDocument(document) {
-	if (
-		document.documentType == "decisionDocument" &&
-		!isParliamentAcceptanceDocument(document)
-	) return {
+	// NOTE: We can't read the committee out out from a mere acceptance document
+	// as it contains no reference to it as is made by the parliament board.
+	if (isParliamentAcceptanceDocument(document)) return {
+		type: "parliament-accepted",
+		origin: "parliament",
+		external_id: "MENETLUSSE_VOETUD",
+		occurred_at: Time.parseDateTime(document.created),
+		title: null,
+		content: {date: document.decisionDate},
+		files: newDocumentFiles(document, document.files || EMPTY_ARR)
+	}
+
+	// NOTE: Decisions may not all come from committees. They could come
+	// mid-procesing from the parliament board, such as with https://www.riigikogu.ee/tegevus/dokumendiregister/dokument/4972a788-1f6a-4608-ba54-cb21871e0107.
+	if (document.documentType == "decisionDocument") return {
 		type: "parliament-decision",
 		origin: "parliament",
 		external_id: document.uuid,
 		occurred_at: Time.parseDateTime(document.created),
 		title: null,
-		content: {}
+		content: {date: document.decisionDate},
+		files: newDocumentFiles(document, document.files || EMPTY_ARR)
 	}
-	else if (
-		document.documentType == "letterDocument" &&
-		!isParliamentResponseDocument(document)
-	) {
+
+	if (isParliamentResponseDocument(document)) return {
+		type: "parliament-finished",
+		origin: "parliament",
+		external_id: "MENETLUS_LOPETATUD",
+		occurred_at: Time.parseDateTime(document.created),
+		title: null,
+		content: {},
+		files: newDocumentFiles(document, document.files || EMPTY_ARR)
+	}
+
+	if (document.documentType == "letterDocument") {
 		var direction = parseLetterDirection(document.direction)
 
+		// Not all letters have any files that are public. For example:
+		// https://api.riigikogu.ee/api/documents/a117fc50-cceb-409f-b2c5-316f175ba480
+		var files = newDocumentFiles(document, document.files || EMPTY_ARR)
+		if (files.length == 0) return null
+
+		// NOTE: The creation time of the letter document does not correspond to
+		// the time it was received. The document may have been created later, as
+		// with https://www.riigikogu.ee/tegevus/dokumendiregister/dokument/e6ff7d42-1696-4b41-a87e-b2a91a0ad78e.
 		return {
 			type: "parliament-letter",
 			origin: "parliament",
@@ -477,56 +506,72 @@ function eventAttrsFromDocument(document) {
 				title: document.title,
 				date: document.authorDate,
 				[direction == "incoming" ? "from" : "to"]: document.author
-			}
+			},
+
+			files: files
 		}
 	}
-	else return null
-}
-
-function findEventFromDocument(events, document) {
-	// NOTE: There's also "decisionDate" which could be used to confirm the
-	// document against the MENETLUSSE_VOETUD status's date.
-	if (isParliamentAcceptanceDocument(document))
-		return events.find((ev) => ev.type == "parliament-accepted")
 
 	if (document.documentType == "protokoll") {
-		var date = (
-			parseInlineDate(document.title) ||
-			document.volume && parseInlineDate(document.volume.title)
-		)
+		var time = parseProtocolDateTime(document)
+		var committee = parseProtocolCommittee(document)
+		if (time == null || committee == null) return null
 
-		return date && events.find((ev) => (
-			Time.isSameDate(ev.occurred_at, date) && (
-				ev.type == "parliament-accepted" ||
-				ev.type == "parliament-committee-meeting"
-			)
+		return {
+			type: "parliament-committee-meeting",
+			origin: "parliament",
+			external_id: "ARUTELU_KOMISJONIS/" + formatIsoDate(time),
+			occurred_at: time,
+			title: null,
+			content: {committee: committee},
+			files: newDocumentFiles(document, document.files || EMPTY_ARR)
+		}
+	}
+
+	return null
+}
+
+function eventAttrsFromVolume(documents, volume) {
+	if (isCommitteeMeetingVolume(volume)) {
+		var time = parseInlineDateWithMaybeTime(volume.title)
+		if (time == null) return null
+
+		var topic = documents.find((doc) => (
+			isMeetingTopicDocument(doc) && doc.volume.uuid == volume.uuid
 		))
+
+		documents = _.reject(documents, (doc) => doc.volume.uuid == volume.uuid)
+
+		return [{
+			type: "parliament-committee-meeting",
+			origin: "parliament",
+			external_id: "ARUTELU_KOMISJONIS/" + formatIsoDate(time),
+			occurred_at: time,
+
+			content: {
+				committee: parseCommitteeReference(volume.reference),
+				invitees: topic ? topic.invitees : undefined
+			},
+
+			files: flatten(volume.documents.map((doc) => (
+				newDocumentFiles(doc, doc.files || EMPTY_ARR)
+			)))
+		}, documents]
 	}
 
-	if (isParliamentResponseDocument(document))
-		return events.find((ev) => ev.type == "parliament-finished")
-
-	if (
-		document.documentType == "letterDocument" ||
-		document.documentType == "decisionDocument"
-	) return events.find((ev) => ev.external_id == document.uuid)
-
-	return null
+	return [null, documents]
 }
 
-function findEventFromVolume(events, volume) {
-	var id = eventIdFromVolume(volume)
-	return id && events.find((ev) => ev.external_id == id)
-}
-
-function eventIdFromVolume(volume) {
-	if (isMeetingVolume(volume)) {
-		var date = parseInlineDate(volume.title)
-		if (date == null) return null
-		return "ARUTELU_KOMISJONIS/" + formatIsoDate(date)
+function fileAttrsFrom(document, file) {
+	return {
+		external_id: file.uuid,
+		external_url: FILE_URL + "/" + file.uuid,
+		created_at: new Date,
+		updated_at: new Date,
+		name: file.fileName,
+		title: file.fileTitle || document.title,
+		url: DOCUMENT_URL + "/" + document.uuid
 	}
-
-	return null
 }
 
 function eventIdFromStatus(obj) {
@@ -565,15 +610,24 @@ function parseMeetingDecision(obj) {
 	}
 }
 
-function parseInlineDate(str) {
-	var parts = LOCAL_DATE.exec(str)
-	return parts && new Date(+parts[3], +parts[2] - 1, +parts[1])
+function parseInlineDateWithMaybeTime(str) {
+	var parts =
+		/\b(\d?\d)\.(\d?\d)\.(\d\d\d\d)(?: (?:kell )?(\d?\d):(\d\d))?\b/.exec(str)
+
+	return parts && new Date(
+		+parts[3],
+		+parts[2] - 1,
+		+parts[1],
+		+parts[4] || 0,
+		parts[5] || 0
+	)
 }
 
 function parseTitle(title) {
-	title = title.replace(/^Kollektiivne pöördumine\s+/i, "")
-	title = title.replace(/^"(.*)"$/, "$1")
-	return title
+	title = title.replace(/^Kollektiivne pöördumine\b\s*/i, "")
+	title = title.replace(/^\s*-\s*/, "")
+	title = title.replace(/^[„"](.*)["”]$/, "$1")
+	return _.capitalize(title)
 }
 
 function normalizeParliamentDocumentForDiff(document) {
@@ -623,8 +677,11 @@ function sortStatuses(statuses) {
 	])
 }
 
-function isMeetingVolume(volume) {
-	return volume.volumeType == "unitSittingVolume"
+function isCommitteeMeetingVolume(volume) {
+	return (
+		volume.volumeType == "unitSittingVolume" &&
+		volume.reference && parseCommitteeReference(volume.reference)
+	)
 }
 
 function isMeetingTopicDocument(doc) {
@@ -647,25 +704,73 @@ function isParliamentResponseDocument(document) {
 }
 
 function mergeEvent(event, attrs) {
-	if (event.type == "parliament-committee-meeting")
-		attrs.content = _.assign({}, event.content, attrs.content, {
-			committee: event.content.committee
-		})
-	else if (event.type == "parliament-decision")
-		attrs.content = _.assign({}, event.content, attrs.content)
+	switch (event.type) {
+		case "parliament-acceptance":
+		case "parliament-committee-meeting":
+			attrs.content = _.assign({}, event.content, attrs.content, {
+				committee: event.content.committee
+			})
+			break
+
+		case "parliament-decision":
+			attrs.content = _.assign({}, event.content, attrs.content)
+	}
 
 	return attrs
 }
 
+function parseProtocolDateTime(document) {
+	return (
+		document.volume && parseInlineDateWithMaybeTime(document.volume.title) ||
+		parseInlineDateWithMaybeTime(document.title)
+	)
+}
+
+// https://www.riigikogu.ee/riigikogu/koosseis/muudatused-koosseisus/
+var COMMITTEES = {
+	ELAK: "Euroopa Liidu asjade komisjon",
+	KEKK: "Keskkonnakomisjon",
+	KULK: "Kultuurikomisjon",
+	MAEK: "Maaelukomisjon",
+	MAJK: "Majanduskomisjon",
+	PÕSK: "Põhiseaduskomisjon",
+	RAHK: "Rahanduskomisjon",
+	RIKK: "Riigikaitsekomisjon",
+	SOTK: "Sotsiaalkomisjon",
+	VÄLK: "Väliskomisjon",
+	ÕIGK: "Õiguskomisjon"
+}
+
+function parseCommitteeReference(reference) {
+	return COMMITTEES[reference.split("/")[1]] || null
+}
+
+function parseProtocolCommittee(document) {
+	return document.volume && document.volume.reference
+		? parseCommitteeReference(document.volume.reference)
+		: null
+}
+
 function parseLetterDirection(direction) {
-	if (direction.code == "SISSE") return "incoming"
-	else if (direction.code == "VALJA") return "outgoing"
-	else throw new RangeError("Invalid direction: " + direction.code)
+	switch (direction.code) {
+		case "SISSE": return "incoming"
+		case "VALJA": return "outgoing"
+		case "SISEMINE": return "outgoing"
+		default: throw new RangeError("Invalid direction: " + direction.code)	
+	}
 }
 
 function parseLetterMedium(medium) {
-	if (medium.code == "E_POST") return "email"
-	else throw new RangeError("Invalid medium: " + medium.code)
+	switch (medium.code) {
+		case "E_POST": return "email"
+		case "KASIPOST": return "post"
+		case "DVK": return "dokumendivahetuskeskus"
+		default: throw new RangeError("Invalid medium: " + medium.code)
+	}
+}
+
+function diffEvent(a, b) {
+	return diff({__proto__: a, files: null}, {__proto__: b, files: null})
 }
 
 function getBody(res) { return res.body }

@@ -5,7 +5,6 @@ describe("InitiativeEventsDb", function() {
 	describe(".prototype.create", function() {
 		;[
 			"parliament-received",
-			"parliament-accepted",
 			"parliament-finished",
 		].forEach(function(type) {
 			it(`must not serialize content for ${type}`, function*() {
@@ -28,6 +27,9 @@ describe("InitiativeEventsDb", function() {
 		})
 
 		;[
+			"parliament-accepted",
+			"parliament-letter",
+			"parliament-decision",
 			"parliament-committee-meeting"
 		].forEach(function(type) {
 			it(`must serialize ${type} content as JSON`, function*() {
