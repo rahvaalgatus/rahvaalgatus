@@ -18,21 +18,22 @@ var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
 
 var USAGE_TEXT = `
 Usage: cli parliament-sync (-h | --help)
-       cli parliament-sync [options]
+       cli parliament-sync [options] [<uuid>]
 
 Options:
     -h, --help           Display this help and exit.
     --force              Refreshing initiatives from the parliament API.
     --cached             Do not refresh initiatives from the parliament API.
-    --uuid=UUID          Refresh a single initiative.
 `
 
 module.exports = function*(argv) {
   var args = Neodoc.run(USAGE_TEXT, {argv: argv || ["parliament-sync"]})
   if (args["--help"]) return void process.stdout.write(USAGE_TEXT.trimLeft())
-	var uuid = args["--uuid"]
 	var cached = args["--cached"]
 	var force = args["--force"]
+
+	var uuid = args["<uuid>"]
+	if (uuid == "") throw new Error("Invalid UUID: " + uuid)
 
 	if (cached) {
 		var initiatives = yield initiativesDb.search(sql`
