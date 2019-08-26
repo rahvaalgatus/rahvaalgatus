@@ -15,6 +15,13 @@ var PARLIAMENT_URL = "https://www.riigikogu.ee"
 var DOCUMENT_URL = PARLIAMENT_URL + "/tegevus/dokumendiregister/dokument"
 var FILE_URL = PARLIAMENT_URL + "/download"
 var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
+exports = module.exports = cli
+exports.parseTitle = parseTitle
+exports.replaceFiles = replaceFiles
+exports.replaceEvents = replaceEvents
+exports.eventAttrsFromDocument = eventAttrsFromDocument
+exports.eventAttrsFromVolume = eventAttrsFromVolume
+exports.assignInitiativeDocuments = assignInitiativeDocuments
 
 var USAGE_TEXT = `
 Usage: cli parliament-sync (-h | --help)
@@ -26,7 +33,7 @@ Options:
     --cached             Do not refresh initiatives from the parliament API.
 `
 
-module.exports = function*(argv) {
+function* cli(argv) {
   var args = Neodoc.run(USAGE_TEXT, {argv: argv || ["parliament-sync"]})
   if (args["--help"]) return void process.stdout.write(USAGE_TEXT.trimLeft())
 	var cached = args["--cached"]

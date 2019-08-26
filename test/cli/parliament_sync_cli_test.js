@@ -22,10 +22,6 @@ var PARLIAMENT_URL = "https://www.riigikogu.ee"
 var DOCUMENT_URL = PARLIAMENT_URL + "/tegevus/dokumendiregister/dokument"
 var EXAMPLE_BUFFER = Buffer.from("\x0d\x25")
 
-// Must.js doesn't support comparing buffers' contents out of the box, so let's
-// fix Buffer to help with that.
-Buffer.prototype.valueOf = Buffer.prototype.toJSON
-
 describe("ParliamentSyncCli", function() {
 	require("root/test/mitm")()
 	require("root/test/db")()

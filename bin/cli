@@ -10,6 +10,7 @@ Options:
 
 Commands:
     parliament-sync       Sync initiatives against the parliament API.
+    parliament-web-sync   Sync initiatives against the parliament web page.
     initiative-end-email  Sends emails to authors for initiative deadlines.
     initiative-signature-milestones  Records initiative signature milestones.
 
@@ -27,6 +28,8 @@ var co = require("co")
 var CLIS = {
   "parliament-sync":
     require.resolve("root/cli/parliament_sync_cli"),
+  "parliament-web-sync":
+    require.resolve("root/cli/parliament_web_sync_cli"),
   "initiative-end-email":
     require.resolve("root/cli/initiative_end_email_cli"),
   "initiative-signature-milestones":

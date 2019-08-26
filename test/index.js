@@ -5,6 +5,10 @@ var CACHE = require.cache
 
 process.on("unhandledRejection", function() {})
 
+// Must.js doesn't support comparing buffers' contents out of the box, so let's
+// fix Buffer to help with that.
+Buffer.prototype.valueOf = Buffer.prototype.toJSON
+
 Mocha.prototype.loadFiles = _.wrap(Mocha.prototype.loadFiles, function(orig) {
 	orig.apply(this, slice(arguments, 1))
 

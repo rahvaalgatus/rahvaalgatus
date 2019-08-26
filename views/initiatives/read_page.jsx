@@ -50,6 +50,7 @@ var FILE_TYPE_ICONS = {
 	"application/vnd.ms-powerpoint": "ra-icon-ppt",
 	"application/vnd.etsi.asic-e+zip": "ra-icon-ddoc",
 	"application/digidoc": "ra-icon-ddoc",
+	"application/msword": "ra-icon-doc",
 
 	"application/vnd.openxmlformats-officedocument.wordprocessingml.document":
 		"ra-icon-doc",
@@ -62,6 +63,7 @@ var FILE_TYPE_NAMES = {
 	"application/pdf": "PDF",
 	"application/vnd.etsi.asic-e+zip": "Digidoc",
 	"application/vnd.ms-powerpoint": "Microsoft PowerPoint",
+	"application/msword": "Microsoft Word",
 
 	"application/vnd.openxmlformats-officedocument.wordprocessingml.document":
 		"Microsoft Word",

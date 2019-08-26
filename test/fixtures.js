@@ -1,3 +1,4 @@
+var Html = require("j6pack").Html
 var Config = require("root/config")
 var newUser = require("root/test/citizenos_fixtures").newUser
 var createUser = require("root/test/citizenos_fixtures").createUser
@@ -35,7 +36,11 @@ exports.user = function(attrs) {
 
 exports.respond = respond
 
-function respond(json, _req, res) {
-	res.writeHead(res.statusCode, {"Content-Type": "application/json"})
-	res.end(JSON.stringify(json))
+function respond(body, _req, res) {
+	var type = typeof body == "string" || body instanceof Html
+		? "text/html"
+		: "application/json"
+
+	res.writeHead(res.statusCode, {"Content-Type": type})
+	res.end(type == "text/html" ? String(body) : JSON.stringify(body))
 }

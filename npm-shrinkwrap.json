@@ -4227,6 +4227,11 @@
         }
       }
     },
+    "promise-defer": {
+      "version": "1.0.0",
+      "from": "https://registry.npmjs.org/promise-defer/-/promise-defer-1.0.0.tgz",
+      "resolved": "https://registry.npmjs.org/promise-defer/-/promise-defer-1.0.0.tgz"
+    },
     "qs": {
       "version": "6.7.0",
       "from": "qs@6.7.0",
