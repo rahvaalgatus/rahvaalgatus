@@ -3,6 +3,7 @@ var Fs = require("fs")
 var Neodoc = require("neodoc")
 var Url = require("url")
 var Time = require("root/lib/time")
+var FetchError = require("fetch-error")
 var diff = require("root/lib/diff")
 var parseDom = require("root/lib/dom").parse
 var parliamentApi = require("root/lib/parliament_api")
@@ -85,9 +86,18 @@ function* syncInitiative(row) {
 		OR uuid = ${row.authorUrl && parseRahvaalgatusUuidFromUrl(row.authorUrl)}
 	`)
 
-	var doc = yield api("documents/" + row.uuid).then(getBody)
-	doc = yield assignInitiativeDocuments(api, doc)
+	var doc
+	try { doc = yield api("documents/" + row.uuid).then(getBody) }
+	catch (ex) {
+		if (isParliament404(ex)) return void logger.warn(
+			"Ignored initiative %s (%s) because it's not in the API.",
+			row.uuid,
+			row.title
+		)
+		else throw ex
+	}
 
+	doc = yield assignInitiativeDocuments(api, doc)
 	var relatedDocumentUuids = new Set(doc.relatedDocuments.map(getUuid))
 
 	var htmlDocumentUuids = row.links.map(function(titleAndUrl) {
@@ -99,8 +109,8 @@ function* syncInitiative(row) {
 		if (url.startsWith(DRAFTS_URL + "/")) return null
 
 		if (uuid == null) logger.warn(
-			"Ignored initiative %s link %s (%s)",
-			initiative.uuid,
+			"Ignored initiative %s link «%s» (%s)",
+			row.uuid,
 			titleAndUrl[0],
 			titleAndUrl[1]
 		)
@@ -287,6 +297,15 @@ function parseDate(date) {
 	var match = LOCAL_DATE.exec(date)
 	if (match == null) throw new SyntaxError("Invalid Date: " + date)
 	return new Date(+match[3], +match[2] - 1, +match[1])
+}
+
+function isParliament404(err) {
+	return (
+		err instanceof FetchError &&
+		err.code == 500 &&
+		err.response.body &&
+		/^Document not found with UUID:/.test(err.response.body.message)
+	)
 }
 
 function getBody(res) { return res.body }

@@ -934,6 +934,48 @@ describe("ParliamentSyncCli", function() {
 			SELECT * FROM initiative_files
 		`).must.then.empty()
 	})
+
+	it("must ignore not found documents", function*() {
+		this.router.get(WEB_INITIATIVES_PATH, respond.bind(null, <Page>
+			<tr>
+				<td>18.06.2015</td>
+				<td>Kollektiivne pöördumine<br />„Teeme elu paremaks”</td>
+				<td />
+				<td />
+
+				<td><ul>
+					<li><a href={`${DOCUMENT_REGISTRY_URL}/${INITIATIVE_UUID}`}>
+						Kollektiivne pöördumine
+					</a></li>
+				</ul></td>
+
+				<td />
+			</tr>
+		</Page>))
+
+		this.router.get(API_INITIATIVES_PATH, respond.bind(null, []))
+
+		this.router.get(`/api/documents/${INITIATIVE_UUID}`, function(_req, res) {
+			// 500 Internal Server Error is used for 404s...
+			// https://github.com/riigikogu-kantselei/api/issues/20
+			res.setHeader("Content-Type", "application/json")
+			res.statusCode = 500
+
+			res.end(JSON.stringify({
+				timestamp: "2015-06-18T13:37:42+0000",
+				status: 500,
+				error: "Internal Server Error",
+				message: `Document not found with UUID: ${INITIATIVE_UUID}`,
+				path: `/api/documents/${INITIATIVE_UUID}`
+			}))
+		})
+
+		yield job()
+
+		yield initiativesDb.search(sql`
+			SELECT * FROM initiative_events
+		`).must.then.be.empty()
+	})
 })
 
 function Page(_attrs, children) {
