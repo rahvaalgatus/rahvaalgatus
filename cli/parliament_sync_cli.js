@@ -444,12 +444,11 @@ function eventAttrsFromStatus(document, documents, status) {
 					protocol && parseProtocolCommittee(protocol) ||
 					document.responsibleCommittee && document.responsibleCommittee.name ||
 					null
-				),
-
-				decision: status.committeeDecision
-					? parseMeetingDecision(status.committeeDecision)
-					: undefined
+				)
 			}
+
+			if (status.committeeDecision)
+				attrs.content.decision = parseMeetingDecision(status.committeeDecision)
 	}
 
 	return [attrs, documents]
@@ -486,7 +485,7 @@ function eventAttrsFromDocument(document) {
 		external_id: "MENETLUS_LOPETATUD",
 		occurred_at: Time.parseDateTime(document.created),
 		title: null,
-		content: {},
+		content: null,
 		files: newDocumentFiles(document, document.files || EMPTY_ARR)
 	}
 

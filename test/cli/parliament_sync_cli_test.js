@@ -757,6 +757,41 @@ describe("ParliamentSyncCli", function() {
 			})
 		})
 
+		;[
+			"REGISTREERITUD",
+			"MENETLUSSE_VOETUD",
+			"ARUTELU_KOMISJONIS",
+			"MENETLUS_LOPETATUD"
+		].forEach(function(code) {
+			it("must not update event if not changed given " + code, function*() {
+				this.router.get(INITIATIVES_URL, respond.bind(null, [{
+					uuid: INITIATIVE_UUID,
+					statuses: [{date: "2015-06-18", status: {code:code}}]
+				}]))
+
+				this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+				yield job()
+
+				var initiative = yield initiativesDb.read(sql`
+					SELECT * FROM initiatives
+				`)
+
+				var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
+				events.length.must.equal(1)
+
+				this.time.tick(1000)
+				yield job(["parliament-sync", "--force"])
+
+				;(yield initiativesDb.read(sql`
+					SELECT * FROM initiatives
+				`)).parliament_synced_at.must.not.eql(initiative.parliament_synced_at)
+
+				yield eventsDb.search(sql`
+					SELECT * FROM initiative_events
+				`).must.then.eql(events)
+			})
+		})
+
 		// While supposedly a data error and fixed in the parliament APi response as
 		// of Jul 12, 2019, keep the test around to ensure proper handling of future
 		// duplicates.
