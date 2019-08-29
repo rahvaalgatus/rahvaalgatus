@@ -900,8 +900,8 @@ describe("ParliamentSyncCli", function() {
 			<tr>
 				<td>18.06.2015</td>
 				<td>Kollektiivne pöördumine<br />„Teeme elu paremaks”</td>
-				<td><a href="http://example.com/john">John Smith</a></td>
-				<td><a href="http://example.com/committee">Keskkonnakomisjon</a></td>
+				<td />
+				<td />
 
 				<td><ul>
 					<li><a href={`${DOCUMENT_REGISTRY_URL}/${INITIATIVE_UUID}`}>
