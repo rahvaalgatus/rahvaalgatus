@@ -772,6 +772,7 @@ function parseLetterMedium(medium) {
 		case "E_POST": return "email"
 		case "KASIPOST": return "post"
 		case "DVK": return "dokumendivahetuskeskus"
+		case "DHX": return "dhx"
 		default: throw new RangeError("Invalid medium: " + medium.code)
 	}
 }
