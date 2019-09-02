@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS "initiative_subscriptions" (
   author_interest INTEGER NOT NULL DEFAULT 1, comment_interest INTEGER NOT NULL DEFAULT 0,
 
 	PRIMARY KEY (initiative_uuid, email),
-	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
+	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE,
 
 	CONSTRAINT iniative_subscriptions_email_length
 	CHECK (length(email) > 0),
@@ -204,4 +204,5 @@ INSERT INTO migrations VALUES('20190726112230');
 INSERT INTO migrations VALUES('20190819103432');
 INSERT INTO migrations VALUES('20190825222200');
 INSERT INTO migrations VALUES('20190902090222');
+INSERT INTO migrations VALUES('20190902091043');
 COMMIT;
