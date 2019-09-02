@@ -174,7 +174,7 @@ function* assignInitiativeDocuments(api, doc) {
 function* updateInitiative(initiative, document) {
 	logger.log(
 		(initiative.uuid ? "Updating" : "Creating") + " initiative %s (%s)…",
-		initiative.uuid,
+		initiative.uuid || document.uuid,
 		document.title
 	)
 
