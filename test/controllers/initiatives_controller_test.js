@@ -985,7 +985,7 @@ describe("InitiativesController", function() {
 					phase: "parliament",
 					sent_to_parliament_at: DateFns.addMonths(new Date, -7),
 					accepted_by_parliament_at:
-						DateFns.addDays(DateFns.addMonths(new Date, -6), -5)
+						DateFns.addMonths(DateFns.addDays(new Date, -5), -6)
 				})
 
 				this.router.get(`/api/topics/${UUID}`,
