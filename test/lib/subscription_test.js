@@ -1,10 +1,11 @@
 var _ = require("root/lib/underscore")
 var Subscription = require("root/lib/subscription")
+var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSubscription = require("root/test/valid_subscription")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var sql = require("sqlate")
+var initiativesDb = require("root/db/initiatives_db")
 var messagesDb = require("root/db/initiative_messages_db")
-var UUID = "50943870-0bee-44ea-a65f-4e5024381ee6"
 
 describe("Subscription", function() {
 	require("root/test/db")()
@@ -13,8 +14,10 @@ describe("Subscription", function() {
 
 	describe(".send", function() {
 		it("must batch by 1000 recipients", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative)
+
 			var message = yield messagesDb.create({
-				initiative_uuid: UUID,
+				initiative_uuid: initiative.uuid,
 				origin: "message",
 				title: "Initiative was updated",
 				text: "That's good.",
@@ -23,7 +26,7 @@ describe("Subscription", function() {
 			})
 
 			var subscriptions = _.times(1337, (i) => new ValidSubscription({
-				initiative_uuid: message.initiative_uuid,
+				initiative_uuid: initiative.uuid,
 				email: `${i}@example.com`,
 				confirmed_at: new Date,
 				confirmation_token: String(i)

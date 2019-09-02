@@ -6,7 +6,7 @@ module.exports = function(attrs) {
 
 	return _.assign({
 		uuid: null,
-		initiative_uuid: newUuid(),
+		initiative_uuid: null,
 		created_at: createdAt,
 		updated_at: createdAt,
 		parent_id: null,

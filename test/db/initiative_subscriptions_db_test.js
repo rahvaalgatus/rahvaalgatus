@@ -1,15 +1,20 @@
-var db = require("root/db/initiative_subscriptions_db")
 var ValidSubscription = require("root/test/valid_subscription")
+var ValidInitiative = require("root/test/valid_db_initiative")
+var initiativeDb = require("root/db/initiatives_db")
+var db = require("root/db/initiative_subscriptions_db")
 var sql = require("sqlate")
 
 describe("InitiativeSubscriptionsDb", function() {
 	require("root/test/db")()
 
+	beforeEach(function*() {
+		this.initiative = yield initiativeDb.create(new ValidInitiative)
+	})
+
 	describe(".prototype.create", function() {
 		it("must create different subscriptions for different emails", function*() {
-			var uuid = "d3ce1227-8ac8-41cf-b7ef-e454e2781347"
-			var a = new ValidSubscription({initiative_uuid: uuid})
-			var b = new ValidSubscription({initiative_uuid: uuid})
+			var a = new ValidSubscription({initiative_uuid: this.initiative.uuid})
+			var b = new ValidSubscription({initiative_uuid: this.initiative.uuid})
 			a = yield db.create(a)
 			b = yield db.create(b)
 
@@ -19,7 +24,7 @@ describe("InitiativeSubscriptionsDb", function() {
 
 		it("must have a unique constraint on case-insensitive email", function*() {
 			var subscription = yield db.create(new ValidSubscription({
-				initiative_uuid: "22999590-d52d-411c-9402-df9641c93d9c",
+				initiative_uuid: this.initiative.uuid,
 				email: "user@example.com"
 			}))
 
@@ -37,7 +42,7 @@ describe("InitiativeSubscriptionsDb", function() {
 
 		it("must have a unique constraint on initiative_uuid", function*() {
 			var subscription = yield db.create(new ValidSubscription({
-				initiative_uuid: "22999590-d52d-411c-9402-df9641c93d9c"
+				initiative_uuid: this.initiative.uuid
 			}))
 
 			var other = new ValidSubscription({
@@ -54,7 +59,7 @@ describe("InitiativeSubscriptionsDb", function() {
 
 		it("must have a unique constraint on NULL initiative_uuid", function*() {
 			var subscription = yield db.create(new ValidSubscription({
-				initiative_uuid: null,
+				initiative_uuid: null
 			}))
 
 			var other = new ValidSubscription({

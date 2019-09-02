@@ -1,5 +1,6 @@
 var _ = require("root/lib/underscore")
 var Config = require("root/config")
+var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidEvent = require("root/test/valid_db_initiative_event")
 var sql = require("sqlate")
@@ -260,8 +261,10 @@ describe("AdminController", function() {
 			})
 
 			it("must not email subscribers of other initiatives", function*() {
+				var other = yield initiativesDb.create(new ValidInitiative)
+
 				yield subscriptionsDb.create({
-					initiative_uuid: "20a431ac-d7fa-4469-af6f-0b914a76c9c7",
+					initiative_uuid: other.uuid,
 					email: "user@example.com",
 					confirmed_at: new Date
 				})

@@ -1,10 +1,10 @@
 var _ = require("root/lib/underscore")
 var Config = require("root/config")
+var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidComment = require("root/test/valid_comment")
 var ValidSubscription = require("root/test/valid_subscription")
 var createUser = require("root/test/citizenos_fixtures").createUser
 var newUser = require("root/test/citizenos_fixtures").newUser
-var newUuid = require("uuid/v4")
 var respond = require("root/test/fixtures").respond
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
@@ -535,7 +535,7 @@ describe("InitiativeCommentsController", function() {
 		})
 
 		it("must include UUID anchors", function*() {
-			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+			var initiative = yield initiativesDb.create({uuid: UUID, phase: "sign"})
 
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
@@ -544,14 +544,14 @@ describe("InitiativeCommentsController", function() {
 			var replier = yield createUser(newUser())
 
 			var comment = yield commentsDb.create(new ValidComment({
-				uuid: newUuid(),
-				initiative_uuid: UUID,
+				uuid: "f80ebc50-8f96-4482-8211-602b7376f204",
+				initiative_uuid: initiative.uuid,
 				user_uuid: author.id
 			}))
 
 			var reply = yield commentsDb.create(new ValidComment({
-				uuid: newUuid(),
-				initiative_uuid: UUID,
+				uuid: "c3e1f67c-41b0-4db7-8467-79bc0b80cfb7",
+				initiative_uuid: initiative.uuid,
 				user_uuid: replier.id,
 				parent_id: comment.id
 			}))
@@ -572,7 +572,7 @@ describe("InitiativeCommentsController", function() {
 				respond.bind(null, {data: INITIATIVE}))
 
 			var comment = yield commentsDb.create(new ValidComment({
-				uuid: newUuid(),
+				uuid: "30898eb8-4177-4040-8fc0-d3402ecb14c7",
 				initiative_uuid: UUID
 			}))
 
@@ -599,16 +599,19 @@ describe("InitiativeCommentsController", function() {
 			this.router.get(`/api/topics/${UUID}`,
 				respond.bind(null, {data: INITIATIVE}))
 
+			var parent = yield commentsDb.create(new ValidComment({
+				initiative_uuid: UUID
+			}))
+
 			var comment = yield commentsDb.create(new ValidComment({
-				uuid: newUuid(),
 				initiative_uuid: UUID,
-				parent_id: 42
+				parent_id: parent.id
 			}))
 
 			var path = `/initiatives/${UUID}/comments`
 			var res = yield this.request(path + "/" + comment.id)
 			res.statusCode.must.equal(302)
-			res.headers.location.must.equal(path + "/42")
+			res.headers.location.must.equal(path + "/" + parent.id)
 		})
 
 		it("must show 404 given a comment id of another initiative", function*() {
@@ -618,7 +621,12 @@ describe("InitiativeCommentsController", function() {
 				data: INITIATIVE
 			}))
 
-			var comment = yield commentsDb.create(new ValidComment)
+			var other = yield initiativesDb.create(new ValidInitiative)
+
+			var comment = yield commentsDb.create(new ValidComment({
+				initiative_uuid: other.uuid
+			}))
+
 			var path = `/initiatives/${UUID}/comments/${comment.id}`
 			var res = yield this.request(path)
 			res.statusCode.must.equal(404)
@@ -810,10 +818,13 @@ describe("InitiativeCommentsController", function() {
 				this.router.get(`/api/users/self/topics/${UUID}`,
 					respond.bind(null, {data: INITIATIVE}))
 
+				var parent = yield commentsDb.create(new ValidComment({
+					initiative_uuid: UUID
+				}))
+
 				var comment = yield commentsDb.create(new ValidComment({
-					uuid: newUuid(),
 					initiative_uuid: UUID,
-					parent_id: 42
+					parent_id: parent.id
 				}))
 
 				var path = `/initiatives/${UUID}/comments/${comment.id}/replies`

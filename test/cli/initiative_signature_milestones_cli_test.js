@@ -172,9 +172,11 @@ describe("InitiativeSignatureMilestonesCli", function() {
 			)
 		})))
 
+		var initiative = yield db.create({uuid: topic.id})
+
 		yield subscriptionsDb.create([
 			new ValidSubscription({
-				initiative_uuid: topic.id,
+				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date
 			}),
 
@@ -207,9 +209,11 @@ describe("InitiativeSignatureMilestonesCli", function() {
 				DateFns.addHours(DateFns.addMinutes(new Date, -users.length + i), -24)
 		})))
 
+		var initiative = yield db.create({uuid: topic.id})
+
 		yield subscriptionsDb.create([
 			new ValidSubscription({
-				initiative_uuid: topic.id,
+				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date
 			}),
 
@@ -293,9 +297,11 @@ describe("InitiativeSignatureMilestonesCli", function() {
 			var vote = yield createVote(topic, newVote())
 			yield createSignatures(vote, MILESTONES[0])
 
+			var initiative = yield db.create({uuid: topic.id})
+
 			yield subscriptionsDb.create([
 				new ValidSubscription({
-					initiative_uuid: topic.id,
+					initiative_uuid: initiative.uuid,
 					confirmed_at: new Date
 				}),
 

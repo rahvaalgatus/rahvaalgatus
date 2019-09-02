@@ -1365,7 +1365,12 @@ describe("InitiativesController", function() {
 				this.router.get(`/api/topics/${UUID}`,
 					respond.bind(null, {data: DISCUSSION}))
 
-				var comment = yield commentsDb.create(new ValidComment)
+				var other = yield initiativesDb.create(new ValidInitiative)
+
+				var comment = yield commentsDb.create(new ValidComment({
+					initiative_uuid: other.uuid
+				}))
+
 				var res = yield this.request("/initiatives/" + UUID)
 				res.statusCode.must.equal(200)
 
@@ -2780,8 +2785,10 @@ describe("InitiativesController", function() {
 					}))
 				}))
 
+				var other = yield initiativesDb.create(new ValidInitiative)
+
 				var signature = yield signaturesDb.create({
-					initiative_uuid: "5a1f604a-fedc-496c-9e21-ef0b9e971861",
+					initiative_uuid: other.uuid,
 					user_uuid: this.user.id,
 					hidden: true
 				})
@@ -2969,8 +2976,10 @@ describe("InitiativesController", function() {
 					}))
 				}))
 
+				var other = yield initiativesDb.create(new ValidInitiative)
+
 				var signature = yield signaturesDb.create({
-					initiative_uuid: "5a1f604a-fedc-496c-9e21-ef0b9e971861",
+					initiative_uuid: other.uuid,
 					user_uuid: this.user.id,
 					hidden: true
 				})

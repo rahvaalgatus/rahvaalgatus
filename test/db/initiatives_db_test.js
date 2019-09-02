@@ -1,9 +1,11 @@
 var _ = require("root/lib/underscore")
 var ValidInitiative = require("root/test/valid_db_initiative")
+var ValidEvent = require("root/test/valid_db_initiative_event")
 var insert = require("heaven-sqlite").insert
 var sqlite = require("root").sqlite
 var sql = require("sqlate")
 var db = require("root/db/initiatives_db")
+var eventsDb = require("root/db/initiative_events_db")
 var serialize = db.serialize
 
 describe("InitiativesDb", function() {
@@ -106,6 +108,26 @@ describe("InitiativesDb", function() {
 				yield db.search(sql`SELECT * FROM initiatives`).must.then.eql([
 					initiative
 				])
+			})
+		})
+	})
+
+	describe(".delete", function() {
+		describe("given a model ", function() {
+			it("must delete related events", function*() {
+				var initiative = yield db.create(new ValidInitiative)
+
+				yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiative.uuid
+				}))
+
+				yield db.delete(initiative)
+
+				yield db.search(sql`SELECT * FROM initiatives`).must.then.be.empty()
+
+				yield eventsDb.search(sql`
+					SELECT * FROM initiative_events
+				`).must.then.be.empty()
 			})
 		})
 	})

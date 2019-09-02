@@ -13,11 +13,11 @@ exports.delete = function*() {
 	yield cosDb.query(sql`DELETE FROM "TopicVotes"`)
 	yield cosDb.query(sql`DELETE FROM "Votes"`)
 
-	yield sqlite(sql`DELETE FROM initiatives`)
 	yield sqlite(sql`DELETE FROM initiative_subscriptions`)
 	yield sqlite(sql`DELETE FROM initiative_signatures`)
 	yield sqlite(sql`DELETE FROM initiative_messages`)
 	yield sqlite(sql`DELETE FROM initiative_events`)
 	yield sqlite(sql`DELETE FROM initiative_files`)
 	yield sqlite(sql`DELETE FROM comments`)
+	yield sqlite(sql`DELETE FROM initiatives`)
 }
