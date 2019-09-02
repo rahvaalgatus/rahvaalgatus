@@ -90,8 +90,8 @@ CREATE TABLE comments (
 	title TEXT NOT NULL DEFAULT '',
 	"text" TEXT NOT NULL DEFAULT '',
 
-	FOREIGN KEY (parent_id) REFERENCES comments (id),
-	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
+	FOREIGN KEY (parent_id) REFERENCES comments (id) ON DELETE CASCADE,
+	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE,
 
 	CONSTRAINT comments_title_present
 	CHECK (
@@ -203,4 +203,5 @@ INSERT INTO migrations VALUES('20190724225535');
 INSERT INTO migrations VALUES('20190726112230');
 INSERT INTO migrations VALUES('20190819103432');
 INSERT INTO migrations VALUES('20190825222200');
+INSERT INTO migrations VALUES('20190902090222');
 COMMIT;
