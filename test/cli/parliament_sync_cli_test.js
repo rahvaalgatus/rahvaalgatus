@@ -42,6 +42,7 @@ describe("ParliamentSyncCli", function() {
 			uuid: INITIATIVE_UUID,
 			title: "Kollektiivne pöördumine elu paremaks tegemiseks",
 			created: "2015-06-18T13:37:42.666",
+			submittingDate: "2015-06-17",
 			sender: "John Smith",
 			responsibleCommittee: {name: "Sotsiaalkomisjon"}
 		}]))
@@ -65,7 +66,7 @@ describe("ParliamentSyncCli", function() {
 		initiatives.must.eql([new ValidInitiative({
 			uuid: INITIATIVE_UUID,
 			external: true,
-			created_at: new Date(2015, 5, 18, 13, 37, 42, 666),
+			created_at: new Date(2015, 5, 17),
 			title: "Elu paremaks tegemiseks",
 			author_name: "John Smith",
 			phase: "parliament",
@@ -99,7 +100,7 @@ describe("ParliamentSyncCli", function() {
 		this.router.get(INITIATIVES_URL, respond.bind(null, [{
 			uuid: INITIATIVE_UUID,
 			title: "Kollektiivne pöördumine elu Tallinnas paremaks tegemiseks",
-			created: "2015-06-18T13:37:42.666",
+			submittingDate: "2015-06-18",
 			statuses: [{date: "2015-06-20", status: {code: "MENETLUS_LOPETATUD"}}]
 		}]))
 
@@ -112,7 +113,7 @@ describe("ParliamentSyncCli", function() {
 		initiative.must.eql(new ValidInitiative({
 			uuid: INITIATIVE_UUID,
 			external: true,
-			created_at: new Date(2015, 5, 18, 13, 37, 42, 666),
+			created_at: new Date(2015, 5, 18),
 			title: "Elu Tallinnas paremaks tegemiseks",
 			phase: "parliament",
 			finished_in_parliament_at: new Date(2015, 5, 20),
