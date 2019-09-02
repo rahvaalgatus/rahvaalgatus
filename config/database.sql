@@ -27,7 +27,7 @@ CREATE TABLE initiative_messages (
 	sent_at TEXT,
 	sent_to TEXT NOT NULL DEFAULT '[]', origin TEXT NOT NULL DEFAULT 'message',
 
-	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
+	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE,
 
 	CONSTRAINT initiative_messages_title_length
 	CHECK (length(title) > 0),
@@ -205,4 +205,5 @@ INSERT INTO migrations VALUES('20190819103432');
 INSERT INTO migrations VALUES('20190825222200');
 INSERT INTO migrations VALUES('20190902090222');
 INSERT INTO migrations VALUES('20190902091043');
+INSERT INTO migrations VALUES('20190902091235');
 COMMIT;
