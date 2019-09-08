@@ -8,14 +8,22 @@ exports.newPartner = newPartner
 exports.newUser = newUser
 exports.newTopic = newTopic
 exports.newVote = newVote
+exports.newPermission = newPermission
 exports.newSignature = newSignature
 exports.createPartner = createPartner
 exports.createUser = createUser
 exports.createTopic = createTopic
 exports.createVote = createVote
+exports.createPermission = createPermission
 exports.createOptions = createOptions
 exports.createSignature = createSignature
 exports.createSignatures = createSignatures
+
+var VISIBILITY_FROM_STATUS = {
+	voting: "public",
+	followUp: "public",
+	closed: "public"
+}
 
 function newUser(attrs) {
 	return _.assign({
@@ -35,7 +43,7 @@ function newTopic(attrs) {
 		title: "For the win",
 		description: "<body>Please sign.</body>",
 		status: "inProgress",
-		visibility: "public",
+		visibility: VISIBILITY_FROM_STATUS[attrs.status] || "private",
 		createdAt: new Date,
 		updatedAt: new Date,
 		tokenJoin: pseudoHex(4),
@@ -62,6 +70,13 @@ function newPartner(attrs) {
 	}, attrs)
 }
 
+function newPermission(attrs) {
+	return _.assign({
+		createdAt: new Date,
+		updatedAt: new Date
+	}, attrs)
+}
+
 function createUser(user) {
 	return cosDb("Users").insert(user).returning("*").then(_.first)
 }
@@ -72,6 +87,10 @@ function createPartner(partner) {
 
 function createTopic(topic) {
 	return cosDb("Topics").insert(topic).returning("*").then(_.first)
+}
+
+function createPermission(perm) {
+	return cosDb("TopicMemberUsers").insert(perm).returning("*").then(_.first)
 }
 
 function* createVote(topic, attrs) {

@@ -50,6 +50,7 @@
 	"INITIATIVE_DELETED": "Initiative has been deleted.",
 	"INITIATIVE_INFO_UPDATED": "Info saved",
 	"INITIATIVE_IN_DISCUSSION": "Initiative is in public discussion.",
+	"INITIATIVE_IN_GOVERNMENT": "Initiative is in the government",
 	"INITIATIVE_IN_PARLIAMENT": "Initiative is in the parliament",
 	"INITIATIVE_LIST": "In voting",
 	"INITIATIVE_PROCESSED": "Initiative proceedings have finished.",

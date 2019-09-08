@@ -10,6 +10,7 @@ module.exports = function(attributes) {
 	var req = attributes.req
 	var t = attributes.t
 	var initiative = attributes.initiative
+	var topic = attributes.topic
 	var error = attributes.error
 	var attrs = attributes.attrs
 	var min = Topic.getMinDeadline(new Date)
@@ -19,6 +20,7 @@ module.exports = function(attributes) {
 		page="initiative-publish"
 		title={initiative.title}
 		initiative={initiative}
+		topic={topic}
 		req={req}>
 		<script src="/assets/inputs.js" />
 
@@ -31,7 +33,7 @@ module.exports = function(attributes) {
 			<Form
 				req={req}
 				method="put"
-				action={"/initiatives/" + initiative.id}
+				action={"/initiatives/" + initiative.uuid}
 				class="form">
 				<DatePickerInput
 					type="date"

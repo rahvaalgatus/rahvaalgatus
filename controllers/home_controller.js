@@ -3,7 +3,7 @@ var DateFns = require("date-fns")
 var Router = require("express").Router
 var Config = require("root/config")
 var next = require("co-next")
-var searchInitiatives = require("root/lib/citizenos_db").searchInitiatives
+var searchTopics = require("root/lib/citizenos_db").searchTopics
 var countSignaturesByIds = require("root/lib/citizenos_db").countSignaturesByIds
 var sql = require("sqlate")
 var initiativesDb = require("root/db/initiatives_db")
@@ -17,10 +17,10 @@ exports.router.get("/", next(function*(_req, res) {
 
 	var cutoff = DateFns.addDays(DateFns.startOfDay(new Date), -14)
 
-	var topics = _.indexBy(yield searchInitiatives(sql`
-		initiative.id IN ${sql.in(initiatives.map((i) => i.uuid))}
-		AND (initiative.status <> 'inProgress' OR initiative."endsAt" > ${cutoff})
-		AND initiative.visibility = 'public'
+	var topics = _.indexBy(yield searchTopics(sql`
+		topic.id IN ${sql.in(initiatives.map((i) => i.uuid))}
+		AND (topic.status <> 'inProgress' OR topic."endsAt" > ${cutoff})
+		AND topic.visibility = 'public'
 	`), "id")
 
 	initiatives = initiatives.filter((initiative) => (

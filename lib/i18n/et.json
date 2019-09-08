@@ -107,6 +107,7 @@
 	"INITIATIVE_EVENT_TITLE_INPUT": "Pealkiri",
 	"INITIATIVE_INFO_UPDATED": "Lisainfo salvestatud",
 	"INITIATIVE_IN_DISCUSSION": "Algatus on arutelufaasis.",
+	"INITIATIVE_IN_GOVERNMENT": "Algatus on valitsusasutuses.",
 	"INITIATIVE_IN_PARLIAMENT": "Algatus on Riigikogus.",
 	"INITIATIVE_LIST": "Hääletamisel",
 	"INITIATIVE_PROCESSED": "Algatuse menetlus Riigikogus on lõppenud.",

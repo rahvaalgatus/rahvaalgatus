@@ -152,7 +152,7 @@ function SubscriptionsView(attrs) {
 
 				<td>{initiative ?
 					<a
-						href={`${req.baseUrl}/initiatives/${initiative.id}`}
+						href={`${req.baseUrl}/initiatives/${initiative.uuid}`}
 						class="admin-link">
 						{initiative.title}
 					</a>

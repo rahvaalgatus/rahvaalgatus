@@ -21,6 +21,7 @@ var newUser = require("root/test/citizenos_fixtures").newUser
 var newTopic = require("root/test/citizenos_fixtures").newTopic
 var newVote = require("root/test/citizenos_fixtures").newVote
 var newSignature = require("root/test/citizenos_fixtures").newSignature
+var newPermission = require("root/test/citizenos_fixtures").newPermission
 var createPartner = require("root/test/citizenos_fixtures").createPartner
 var createUser = require("root/test/citizenos_fixtures").createUser
 var createTopic = require("root/test/citizenos_fixtures").createTopic
@@ -28,12 +29,14 @@ var createVote = require("root/test/citizenos_fixtures").createVote
 var createSignature = require("root/test/citizenos_fixtures").createSignature
 var createSignatures = require("root/test/citizenos_fixtures").createSignatures
 var createOptions = require("root/test/citizenos_fixtures").createOptions
+var createPermission = require("root/test/citizenos_fixtures").createPermission
 var concat = Array.prototype.concat.bind(Array.prototype)
 var encodeBase64 = require("root/lib/crypto").encodeBase64
 var pseudoDateTime = require("root/lib/crypto").pseudoDateTime
 var parseCookies = Http.parseCookies
 var parseFlash = Http.parseFlash.bind(null, Config.cookieSecret)
 var serializeFlash = Http.serializeFlash.bind(null, Config.cookieSecret)
+var readVoteOptions = require("root/lib/citizenos_db").readVoteOptions
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var eventsDb = require("root/db/initiative_events_db")
@@ -42,94 +45,12 @@ var signaturesDb = require("root/db/initiative_signatures_db")
 var commentsDb = require("root/db/comments_db")
 var encodeMime = require("nodemailer/lib/mime-funcs").encodeWord
 var parseDom = require("root/lib/dom").parse
-var newUuid = require("uuid/v4")
 var next = require("co-next")
-var UUID = "5f9a82a5-e815-440b-abe9-d17311b0b366"
-var VOTE_UUID = "396b0e5b-cca7-4255-9238-19b464e60b65"
 var INITIATIVE_TYPE = "application/vnd.rahvaalgatus.initiative+json; v=1"
 var ATOM_TYPE = "application/atom+xml"
 var AUTH_TOKEN = "deadbeef"
 var SIGN_TOKEN = "feedfed"
-var USER_ID = "bb7abca5-dac0-47c2-86c2-88dbd4850b7a"
-var BDOC_URL = "http://example.com/api/users/self/topics/" + UUID
-BDOC_URL += `/votes/${VOTE_UUID}/downloads/bdocs/user`
-BDOC_URL += "?token=" + fakeJwt({userId: USER_ID})
-
-var DISCUSSION = {
-	id: UUID,
-	createdAt: new Date(2000, 0, 1),
-	updatedAt: new Date(2000, 0, 2),
-	sourcePartnerId: Config.apiPartnerId,
-	status: "inProgress",
-	title: "My future thoughts",
-	description: "<body><h1>My future thoughts</h1></body>",
-	creator: {name: "John"},
-	visibility: "public",
-	permission: {level: "read"}
-}
-
-var PRIVATE_DISCUSSION = O.merge({}, DISCUSSION, {
-	visibility: "private",
-	permission: {level: "admin"}
-})
-
-var EDITABLE_DISCUSSION = O.merge({}, DISCUSSION, {
-	permission: {level: "admin"}
-})
-
-var CLOSED_DISCUSSION = O.merge({}, DISCUSSION, {
-	status: "closed"
-})
-
-var INITIATIVE = {
-	id: UUID,
-	createdAt: new Date(2000, 0, 1),
-	updatedAt: new Date(2000, 0, 2),
-	sourcePartnerId: Config.apiPartnerId,
-	status: "voting",
-	title: "My thoughts",
-	description: "<body><h1>My thoughts</h1></body>",
-	creator: {name: "John"},
-	visibility: "public",
-	permission: {level: "read"},
-
-	vote: {
-		id: VOTE_UUID,
-		createdAt: new Date(2999, 11, 15),
-		endsAt: new Date(3000, 0, 1),
-		options: {rows: [{value: "Yes", voteCount: 0}]}
-	}
-}
-
-var SIGNED_INITIATIVE = O.merge({}, INITIATIVE, {
-	vote: {options: {rows: [{value: "Yes", voteCount: 1, selected: true}]}}
-})
-
-var SUCCESSFUL_INITIATIVE = O.merge({}, INITIATIVE, {
-	vote: {
-		endsAt: new Date(Date.now() - 3600 * 1000),
-		options: {rows: [{value: "Yes", voteCount: Config.votesRequired}]}
-	}
-})
-
-var FAILED_INITIATIVE = O.merge({}, INITIATIVE, {
-	vote: {
-		endsAt: new Date(Date.now() - 3600 * 1000),
-		options: {rows: [{value: "Yes", voteCount: Config.votesRequired / 2}]}
-	}
-})
-
-var PROCEEDING_INITIATIVE = O.merge({}, SUCCESSFUL_INITIATIVE, {
-	status: "followUp"
-})
-
-var PROCESSED_FAILED_INITIATIVE = O.merge({}, FAILED_INITIATIVE, {
-	status: "closed"
-})
-
-var PROCESSED_SUCCESSFUL_INITIATIVE = O.merge({}, SUCCESSFUL_INITIATIVE, {
-	status: "closed"
-})
+var EVENTABLE_PHASES = ["sign", "parliament", "government", "done"]
 
 describe("InitiativesController", function() {
 	require("root/test/web")()
@@ -141,7 +62,6 @@ describe("InitiativesController", function() {
 
 	describe("GET /", function() {
 		beforeEach(function*() {
-			this.user = yield createUser(newUser())
 			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
 		})
 
@@ -153,8 +73,9 @@ describe("InitiativesController", function() {
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: (yield createUser(newUser())).id,
 				sourcePartnerId: this.partner.id,
+				visibility: "public",
 				endsAt: DateFns.addSeconds(new Date, 1)
 			}))
 
@@ -175,8 +96,9 @@ describe("InitiativesController", function() {
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: (yield createUser(newUser())).id,
 				sourcePartnerId: this.partner.id,
+				visibility: "public",
 				endsAt: new Date
 			}))
 
@@ -193,8 +115,9 @@ describe("InitiativesController", function() {
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: (yield createUser(newUser())).id,
 				sourcePartnerId: this.partner.id,
+				visibility: "public",
 				endsAt: DateFns.addSeconds(new Date, 1)
 			}))
 
@@ -210,15 +133,12 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: (yield createUser(newUser())).id,
 				sourcePartnerId: this.partner.id,
 				status: "voting"
 			}))
 
-			var vote = yield createVote(topic, newVote({
-				createdAt: pseudoDateTime()
-			}))
-
+			var vote = yield createVote(topic, newVote({createdAt: pseudoDateTime()}))
 			yield createSignatures(vote, Config.votesRequired / 2)
 
 			var res = yield this.request("/initiatives")
@@ -238,7 +158,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: (yield createUser(newUser())).id,
 				sourcePartnerId: this.partner.id,
 				status: "voting"
 			}))
@@ -257,7 +177,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: (yield createUser(newUser())).id,
 				sourcePartnerId: this.partner.id,
 				status: "voting"
 			}))
@@ -278,7 +198,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: (yield createUser(newUser())).id,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
 			}))
@@ -305,7 +225,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: (yield createUser(newUser())).id,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
 			}))
@@ -347,7 +267,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: (yield createUser(newUser())).id,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
 			}))
@@ -384,7 +304,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: (yield createUser(newUser())).id,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
 			}))
@@ -410,7 +330,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: (yield createUser(newUser())).id,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
 			}))
@@ -460,8 +380,9 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
-						sourcePartnerId: partner.id
+						creatorId: (yield createUser(newUser())).id,
+						sourcePartnerId: partner.id,
+						visibility: "public"
 					}))
 
 					var res = yield this.request("/initiatives")
@@ -478,8 +399,9 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
-						sourcePartnerId: partner.id
+						creatorId: (yield createUser(newUser())).id,
+						sourcePartnerId: partner.id,
+						visibility: "public"
 					}))
 
 					var res = yield this.request("/initiatives")
@@ -497,8 +419,9 @@ describe("InitiativesController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
-						sourcePartnerId: partner.id
+						creatorId: (yield createUser(newUser())).id,
+						sourcePartnerId: partner.id,
+						visibility: "public"
 					}))
 
 					yield createVote(topic, newVote())
@@ -516,8 +439,9 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
-				sourcePartnerId: partner.id
+				creatorId: (yield createUser(newUser())).id,
+				sourcePartnerId: partner.id,
+				visibility: "public"
 			}))
 
 			var res = yield this.request("/initiatives")
@@ -530,7 +454,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: (yield createUser(newUser())).id,
 				sourcePartnerId: this.partner.id,
 				visibility: "private"
 			}))
@@ -545,8 +469,9 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: (yield createUser(newUser())).id,
 				sourcePartnerId: this.partner.id,
+				visibility: "public",
 				deletedAt: new Date
 			}))
 
@@ -561,15 +486,17 @@ describe("InitiativesController", function() {
 
 			yield createTopic(newTopic({
 				id: initiativeA.uuid,
-				creatorId: this.user.id,
+				creatorId: (yield createUser(newUser())).id,
 				sourcePartnerId: this.partner.id,
+				visibility: "public",
 				categories: ["uuseakus"]
 			}))
 
 			yield createTopic(newTopic({
 				id: initiativeB.uuid,
-				creatorId: this.user.id,
-				sourcePartnerId: this.partner.id
+				creatorId: (yield createUser(newUser())).id,
+				sourcePartnerId: this.partner.id,
+				visibility: "public"
 			}))
 
 			var res = yield this.request("/initiatives?category=uuseakus")
@@ -597,9 +524,10 @@ describe("InitiativesController", function() {
 
 			it("must create initiative", function*() {
 				var created = 0
+				var uuid = "5f9a82a5-e815-440b-abe9-d17311b0b366"
 				this.router.post("/api/users/self/topics", function(req, res) {
 					++created
-					req.headers.authorization.must.exist(0)
+					req.headers.authorization.must.exist()
 
 					req.body.visibility.must.equal("private")
 
@@ -607,7 +535,7 @@ describe("InitiativesController", function() {
 						title: "Hello!"
 					}))
 
-					respond({data: {id: UUID}}, req, res)
+					respond({data: {id: uuid}}, req, res)
 				})
 
 				var res = yield this.request("/initiatives", {
@@ -620,15 +548,17 @@ describe("InitiativesController", function() {
 				})
 
 				res.statusCode.must.equal(303)
-				res.headers.location.must.equal("/initiatives/" + UUID + "/edit")
+				res.headers.location.must.equal("/initiatives/" + uuid + "/edit")
 				created.must.equal(1)
 
 				yield initiativesDb.search(sql`
 					SELECT * FROM initiatives
-				`).must.then.eql([new ValidInitiative({uuid: UUID})])
+				`).must.then.eql([new ValidInitiative({uuid: uuid})])
 			})
 
 			it("must escape title", function*() {
+				var uuid = "5f9a82a5-e815-440b-abe9-d17311b0b366"
+
 				this.router.post("/api/users/self/topics", function(req, res) {
 					req.headers.authorization.must.exist(0)
 
@@ -636,7 +566,7 @@ describe("InitiativesController", function() {
 						title: "Hello &lt;mike&gt;!"
 					}))
 
-					respond({data: {id: UUID}}, req, res)
+					respond({data: {id: uuid}}, req, res)
 				})
 
 				var res = yield this.request("/initiatives", {
@@ -654,28 +584,53 @@ describe("InitiativesController", function() {
 	})
 
 	describe("GET /:id", function() {
+		beforeEach(function*() {
+			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
+		})
+
 		describe("when not logged in", function() {
-			it("must request initiative", function*() {
-				yield initiativesDb.create({uuid: UUID})
+			it("must respond with 403 for a private initiative", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative)
 
-				this.router.get(`/api/topics/${UUID}`, function(req, res) {
-					var query = Url.parse(req.url, true).query
-					query["include[]"].must.be.a.permutationOf(["vote", "event"])
-					respond({data: DISCUSSION}, req, res)
-				})
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					visibility: "private"
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
-				res.statusCode.must.equal(200)
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(403)
+				res.statusMessage.must.match(/public/i)
+			})
+
+			it("must respond with 404 for a deleted initiative", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative)
+
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					visibility: "public",
+					deletedAt: new Date
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(404)
 			})
 
 			it("must show done phase by default", function*() {
-				yield initiativesDb.create({uuid: UUID})
+				var initiative = yield initiativesDb.create(new ValidInitiative)
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: DISCUSSION})
-				)
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					visibility: "public",
+					endsAt: DateFns.addDays(new Date, 5)
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
 				var dom = parseDom(res.body)
@@ -684,16 +639,18 @@ describe("InitiativesController", function() {
 				phases.must.not.have.property("archived")
 			})
 
-			it("must render discussion", function*() {
-				yield initiativesDb.create({uuid: UUID})
+			it("must render initiative in edit phase", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative)
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: _.merge({}, DISCUSSION, {
-						endsAt: DateFns.addDays(new Date, 5)
-					})})
-				)
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					visibility: "public",
+					endsAt: DateFns.addDays(new Date, 5)
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
 				res.body.must.include(tHtml("INITIATIVE_IN_DISCUSSION"))
@@ -712,28 +669,60 @@ describe("InitiativesController", function() {
 				)
 			})
 
-			it("must respond with 404 given a private discussion", function*() {
-				yield initiativesDb.create({uuid: UUID})
+			it("must render archived initiative in edit phase", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "edit",
+					archived_at: new Date
+				}))
 
-				this.router.get(`/api/topics/${UUID}`, function(_req, res) {
-					res.statusCode = 403
-					res.end()
-				})
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					visibility: "public"
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
-				res.statusCode.must.equal(404)
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+				res.body.must.not.include(tHtml("INITIATIVE_IN_DISCUSSION"))
 			})
 
-			it("must render discussion over its deadline", function*() {
-				yield initiativesDb.create({uuid: UUID})
+			// This was a bug on Dec 13, 2018 where the code checking to display vote
+			// results assumed a closed initiative had been voted on.
+			//
+			// This test should soon be unnecessary as the topic's status will be
+			// entirely ignored.
+			it("must render archived initiative in edit phase whose topic is closed",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "edit",
+					archived_at: new Date
+				}))
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: _.merge({}, DISCUSSION, {
-						endsAt: DateFns.addDays(new Date, -5)
-					})})
-				)
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "closed"
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+				res.body.must.not.include(tHtml("INITIATIVE_IN_DISCUSSION"))
+			})
+
+			it("must render initiative in edit phase that have ended", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative)
+
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					visibility: "public",
+					endsAt: new Date
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
 				var dom = parseDom(res.body)
@@ -742,20 +731,35 @@ describe("InitiativesController", function() {
 				phases.edit.text.must.equal(t("DISCUSSION_FINISHED"))
 			})
 
-			it("must render initiative in signing", function*() {
-				yield initiativesDb.create({
-					uuid: UUID,
+			it("must render initiative in sign phase", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "sign"
-				})
+				}))
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: SIGNED_INITIATIVE}))
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					createdAt: DateFns.addDays(new Date, -3),
+					status: "voting"
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var vote = yield createVote(topic, newVote({
+					createdAt: DateFns.addDays(new Date, -1),
+					endsAt: DateFns.addDays(new Date, 1)
+				}))
+
+				yield createSignatures(vote, Config.votesRequired / 2)
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 				res.body.must.not.include(tHtml("INITIATIVE_IN_DISCUSSION"))
 				res.body.must.not.include(tHtml("VOTING_SUCCEEDED"))
 				res.body.must.not.include(tHtml("VOTING_FAILED"))
+
+				var options = yield readVoteOptions(vote.id)
+				res.body.must.include(options.Yes)
+				res.body.must.not.include(options.No)
 
 				var dom = parseDom(res.body)
 				var phases = queryPhases(dom)
@@ -768,23 +772,129 @@ describe("InitiativesController", function() {
 
 				phases.edit.text.must.equal(I18n.formatDateSpan(
 					"numeric",
-					INITIATIVE.createdAt,
-					INITIATIVE.vote.createdAt
+					topic.createdAt,
+					vote.createdAt
 				))
 
-				phases.sign.text.must.equal(t("N_SIGNATURES", {votes: 1}))
+				phases.sign.text.must.equal(t("N_SIGNATURES", {
+					votes: Config.votesRequired / 2
+				}))
 			})
 
-			it("must render successful initiative", function*() {
-				yield initiativesDb.create({
-					uuid: UUID,
+			it("must render initiative in sign phase that failed", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "sign"
-				})
+				}))
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: SUCCESSFUL_INITIATIVE}))
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "voting"
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var vote = yield createVote(topic, newVote({endsAt: new Date}))
+				var signatureCount = Config.votesRequired - 1
+				yield createSignatures(vote, signatureCount)
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+				res.body.must.include(tHtml("VOTING_FAILED"))
+				res.body.must.include(t("N_SIGNATURES_FAILED", {votes: signatureCount}))
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(1)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.past.must.be.true()
+				phases.sign.current.must.be.true()
+				phases.sign.text.must.equal(t("N_SIGNATURES", {votes: signatureCount}))
+			})
+
+			it("must render archived initiative in sign phase that failed",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "sign",
+					archived_at: new Date
+				}))
+
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "voting"
+				}))
+
+				var vote = yield createVote(topic, newVote({endsAt: new Date}))
+				var signatureCount = Config.votesRequired - 1
+				yield createSignatures(vote, signatureCount)
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+				res.body.must.include(tHtml("VOTING_FAILED"))
+				res.body.must.include(t("N_SIGNATURES_FAILED", {votes: signatureCount}))
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(1)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.past.must.be.true()
+				phases.sign.current.must.be.true()
+				phases.sign.text.must.equal(t("N_SIGNATURES", {votes: signatureCount}))
+			})
+
+			// This test should soon be unnecessary as the topic's status will be
+			// entirely ignored.
+			it("must render archived initiative in sign phase that failed whose topic is closed", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "sign",
+					archived_at: new Date
+				}))
+
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "closed"
+				}))
+
+				var vote = yield createVote(topic, newVote({endsAt: new Date}))
+				var signatureCount = Config.votesRequired - 1
+				yield createSignatures(vote, signatureCount)
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+				res.body.must.include(tHtml("VOTING_FAILED"))
+				res.body.must.include(t("N_SIGNATURES_FAILED", {votes: signatureCount}))
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(1)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.past.must.be.true()
+				phases.sign.current.must.be.true()
+				phases.sign.text.must.equal(t("N_SIGNATURES", {votes: signatureCount}))
+			})
+
+			it("must render initiative in sign phase that succeeded", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "sign"
+				}))
+
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "voting"
+				}))
+
+				var vote = yield createVote(topic, newVote({endsAt: new Date}))
+				yield createSignatures(vote, Config.votesRequired)
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("VOTING_SUCCEEDED"))
 
@@ -795,21 +905,35 @@ describe("InitiativesController", function() {
 				_.sum(_.map(phases, "current")).must.equal(1)
 				phases.edit.past.must.be.true()
 				phases.sign.current.must.be.true()
-				phases.sign.text.must.equal(t("N_SIGNATURES", {votes: 10}))
+
+				phases.sign.text.must.equal(t("N_SIGNATURES", {
+					votes: Config.votesRequired
+				}))
+
 				phases.must.not.have.property("government")
 			})
 
-			it("must render initiative with paper signatures", function*() {
-				yield initiativesDb.create({
-					uuid: UUID,
+			it("must render initiative in sign phase with paper signatures",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "sign",
 					has_paper_signatures: true
-				})
+				}))
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: SIGNED_INITIATIVE}))
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "voting"
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var vote = yield createVote(topic, newVote({
+					endsAt: DateFns.addDays(new Date, 1)
+				}))
+
+				yield createSignatures(vote, 1)
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
 				var dom = parseDom(res.body)
@@ -823,18 +947,24 @@ describe("InitiativesController", function() {
 				phases.must.not.have.property("government")
 			})
 
-			it("must render initiative in parliament but not yet received",
+			it("must render initiative in parliament phase and not received",
 				function*() {
-				yield initiativesDb.create({
-					uuid: UUID,
+				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "parliament",
 					sent_to_parliament_at: DateFns.addDays(new Date, -5)
-				})
+				}))
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "followUp"
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var vote = yield createVote(topic, newVote())
+				yield createSignatures(vote, Config.votesRequired)
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
 
@@ -857,18 +987,25 @@ describe("InitiativesController", function() {
 				)
 			})
 
-			it("must render initiative in parliament and also received", function*() {
-				yield initiativesDb.create({
-					uuid: UUID,
+			it("must render initiative in parliament phase and received",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "parliament",
 					sent_to_parliament_at: DateFns.addDays(new Date, -6),
 					received_by_parliament_at: DateFns.addDays(new Date, -5)
-				})
+				}))
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "followUp"
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var vote = yield createVote(topic, newVote())
+				yield createSignatures(vote, Config.votesRequired)
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
 
@@ -891,18 +1028,23 @@ describe("InitiativesController", function() {
 				)
 			})
 
-			it("must render initiative in parliament with acceptance deadline today",
-				function*() {
-				yield initiativesDb.create({
-					uuid: UUID,
+			it("must render initiative in parliament phase with acceptance deadline today", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "parliament",
 					sent_to_parliament_at: DateFns.addDays(new Date, -30)
-				})
+				}))
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "followUp"
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var vote = yield createVote(topic, newVote())
+				yield createSignatures(vote, Config.votesRequired)
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
 				var dom = parseDom(res.body)
@@ -913,18 +1055,23 @@ describe("InitiativesController", function() {
 				)
 			})
 
-			it("must render initiative in parliament with acceptance deadline past",
-				function*() {
-				yield initiativesDb.create({
-					uuid: UUID,
+			it("must render initiative in parliament phase with acceptance deadline past", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "parliament",
 					sent_to_parliament_at: DateFns.addDays(new Date, -35)
-				})
+				}))
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "followUp"
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var vote = yield createVote(topic, newVote())
+				yield createSignatures(vote, Config.votesRequired)
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
 				var dom = parseDom(res.body)
@@ -936,17 +1083,23 @@ describe("InitiativesController", function() {
 			})
 
 			it("must render initiative in parliament with proceedings deadline in the future", function*() {
-				yield initiativesDb.create({
-					uuid: UUID,
+				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "parliament",
 					sent_to_parliament_at: DateFns.addDays(new Date, -35),
 					accepted_by_parliament_at: DateFns.addDays(new Date, -5)
-				})
+				}))
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "followUp"
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var vote = yield createVote(topic, newVote())
+				yield createSignatures(vote, Config.votesRequired)
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
 				var dom = parseDom(res.body)
@@ -961,17 +1114,20 @@ describe("InitiativesController", function() {
 			})
 
 			it("must render initiative in parliament with proceedings deadline today", function*() {
-				yield initiativesDb.create({
-					uuid: UUID,
+				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "parliament",
 					sent_to_parliament_at: DateFns.addMonths(new Date, -7),
 					accepted_by_parliament_at: DateFns.addMonths(new Date, -6)
-				})
+				}))
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "followUp"
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
 				var dom = parseDom(res.body)
@@ -980,18 +1136,21 @@ describe("InitiativesController", function() {
 			})
 
 			it("must render initiative in parliament with proceedings deadline past", function*() {
-				yield initiativesDb.create({
-					uuid: UUID,
+				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "parliament",
 					sent_to_parliament_at: DateFns.addMonths(new Date, -7),
 					accepted_by_parliament_at:
 						DateFns.addMonths(DateFns.addDays(new Date, -5), -6)
-				})
+				}))
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "followUp"
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
 				var dom = parseDom(res.body)
@@ -1002,18 +1161,21 @@ describe("InitiativesController", function() {
 			})
 
 			it("must render initiative in parliament that's finished", function*() {
-				var initiative = yield initiativesDb.create({
-					uuid: UUID,
+				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "parliament",
 					sent_to_parliament_at: DateFns.addDays(new Date, -30),
 					received_by_parliament_at: DateFns.addDays(new Date, -25),
 					finished_in_parliament_at: DateFns.addDays(new Date, -5)
-				})
+				}))
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "followUp"
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
 
@@ -1035,12 +1197,11 @@ describe("InitiativesController", function() {
 			})
 
 			it("must render external initiative in parliament", function*() {
-				var initiative = yield initiativesDb.create({
-					uuid: newUuid(),
+				var initiative = yield initiativesDb.create(new ValidInitiative({
 					external: true,
 					phase: "parliament",
 					received_by_parliament_at: new Date
-				})
+				}))
 
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
@@ -1048,21 +1209,27 @@ describe("InitiativesController", function() {
 			})
 
 			it("must render initiative in government", function*() {
-				var initiative = yield initiativesDb.create({
-					uuid: UUID,
+				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "government",
 					sent_to_parliament_at: DateFns.addDays(new Date, -30),
 					received_by_parliament_at: DateFns.addDays(new Date, -25),
 					finished_in_parliament_at: DateFns.addDays(new Date, -5),
 					sent_to_government_at: new Date
-				})
+				}))
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "followUp"
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var vote = yield createVote(topic, newVote())
+				yield createSignatures(vote, Config.votesRequired)
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
-				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
+				res.body.must.include(tHtml("INITIATIVE_IN_GOVERNMENT"))
 
 				var dom = parseDom(res.body)
 				var phases = queryPhases(dom)
@@ -1091,22 +1258,25 @@ describe("InitiativesController", function() {
 			})
 
 			it("must render initiative in government that's finished", function*() {
-				var initiative = yield initiativesDb.create({
-					uuid: UUID,
+				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "government",
 					sent_to_parliament_at: DateFns.addDays(new Date, -30),
 					received_by_parliament_at: DateFns.addDays(new Date, -25),
 					finished_in_parliament_at: DateFns.addDays(new Date, -20),
 					sent_to_government_at: DateFns.addDays(new Date, -10),
 					finished_in_government_at: DateFns.addDays(new Date, -5)
-				})
+				}))
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "followUp"
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
-				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
+				res.body.must.include(tHtml("INITIATIVE_IN_GOVERNMENT"))
 
 				var dom = parseDom(res.body)
 				var phases = queryPhases(dom)
@@ -1126,20 +1296,23 @@ describe("InitiativesController", function() {
 			})
 
 			it("must render initiative in government with no sent time", function*() {
-				yield initiativesDb.create({
-					uuid: UUID,
+				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "government",
 					sent_to_parliament_at: DateFns.addDays(new Date, -30),
 					received_by_parliament_at: DateFns.addDays(new Date, -25),
 					finished_in_parliament_at: DateFns.addDays(new Date, -5)
-				})
+				}))
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "followUp"
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
-				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
+				res.body.must.include(tHtml("INITIATIVE_IN_GOVERNMENT"))
 
 				var dom = parseDom(res.body)
 				var phases = queryPhases(dom)
@@ -1152,19 +1325,22 @@ describe("InitiativesController", function() {
 				phases.government.current.must.be.true()
 			})
 
-			it("must render done initiative", function*() {
-				yield initiativesDb.create({
-					uuid: UUID,
+			it("must render initiative in done phase", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "done",
 					sent_to_parliament_at: new Date
-				})
+				}))
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "followUp"
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
-				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
+				res.body.must.include(tHtml("INITIATIVE_PROCESSED"))
 
 				var dom = parseDom(res.body)
 				var phases = queryPhases(dom)
@@ -1179,21 +1355,25 @@ describe("InitiativesController", function() {
 				phases.must.not.have.property("archived")
 			})
 
-			it("must render done initiative that went to government", function*() {
-				yield initiativesDb.create({
-					uuid: UUID,
+			it("must render initiative in done phase that went to government",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "done",
 					sent_to_parliament_at: new Date,
 					sent_to_government_at: new Date,
 					finished_in_government_at: new Date
-				})
+				}))
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "followUp"
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
-				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
+				res.body.must.include(tHtml("INITIATIVE_PROCESSED"))
 
 				var dom = parseDom(res.body)
 				var phases = queryPhases(dom)
@@ -1208,20 +1388,26 @@ describe("InitiativesController", function() {
 				phases.must.not.have.property("archived")
 			})
 
-			it("must render archived initiative", function*() {
-				yield initiativesDb.create({
-					uuid: UUID,
+			it("must render archived initiative in done phase that was sent to the parliament", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "done",
 					sent_to_parliament_at: new Date,
 					archived_at: new Date
-				})
+				}))
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "followUp"
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
-				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
+				res.body.must.include(tHtml("INITIATIVE_PROCESSED"))
+				res.body.must.not.include(tHtml("VOTING_SUCCEEDED"))
+				res.body.must.not.include(tHtml("VOTING_FAILED"))
+				res.body.must.not.include(tHtml("VOTING_DEADLINE"))
 
 				var dom = parseDom(res.body)
 				var phases = queryPhases(dom)
@@ -1236,22 +1422,24 @@ describe("InitiativesController", function() {
 				phases.archived.current.must.be.true()
 			})
 
-			it("must render archived initiative that went to government",
-				function*() {
-				yield initiativesDb.create({
-					uuid: UUID,
+			it("must render archived initiative in done phase that went to government", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "done",
 					sent_to_parliament_at: new Date,
 					sent_to_government_at: new Date,
 					archived_at: new Date
-				})
+				}))
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: PROCEEDING_INITIATIVE}))
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "followUp"
+				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
-				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
+				res.body.must.include(tHtml("INITIATIVE_PROCESSED"))
 
 				var dom = parseDom(res.body)
 				var phases = queryPhases(dom)
@@ -1266,88 +1454,31 @@ describe("InitiativesController", function() {
 				phases.archived.current.must.be.true()
 			})
 
-			it("must render failed initiative", function*() {
-				yield initiativesDb.create({uuid: UUID, phase: "sign"})
-
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: FAILED_INITIATIVE}))
-
-				var res = yield this.request("/initiatives/" + UUID)
-				res.statusCode.must.equal(200)
-				res.body.must.include(tHtml("VOTING_FAILED"))
-			})
-
-			// This was a bug on Dec 13, 2018 where the code checking to display vote
-			// results assumed a closed initiative had been voted on.
-			it("must render closed discussion", function*() {
-				yield initiativesDb.create({
-					uuid: UUID,
-					phase: "edit",
-					archived_at: new Date
-				})
-
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: CLOSED_DISCUSSION}))
-
-				var res = yield this.request("/initiatives/" + UUID)
-				res.statusCode.must.equal(200)
-				res.body.must.not.include(tHtml("INITIATIVE_IN_DISCUSSION"))
-			})
-
-			it("must render processed failed initiative", function*() {
-				yield initiativesDb.create({
-					uuid: UUID,
-					phase: "sign",
-					sent_to_parliament_at: new Date,
-					archived_at: new Date
-				})
-
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: PROCESSED_FAILED_INITIATIVE}))
-
-				var res = yield this.request("/initiatives/" + UUID)
-				res.statusCode.must.equal(200)
-				res.body.must.include(tHtml("INITIATIVE_PROCESSED"))
-				res.body.must.not.include(tHtml("VOTING_SUCCEEDED"))
-				res.body.must.not.include(tHtml("VOTING_FAILED"))
-				res.body.must.not.include(tHtml("VOTING_DEADLINE"))
-			})
-
-			it("must render processed successful initiative", function*() {
-				yield initiativesDb.create({uuid: UUID, phase: "done"})
-
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: PROCESSED_SUCCESSFUL_INITIATIVE}))
-
-				var res = yield this.request("/initiatives/" + UUID)
-				res.statusCode.must.equal(200)
-				res.body.must.include(tHtml("INITIATIVE_PROCESSED"))
-				res.body.must.not.include(tHtml("VOTING_SUCCEEDED"))
-				res.body.must.not.include(tHtml("VOTING_FAILED"))
-				res.body.must.not.include(tHtml("VOTING_DEADLINE"))
-			})
-
 			it("must render initiative comments", function*() {
-				yield initiativesDb.create({uuid: UUID})
+				var initiative = yield initiativesDb.create(new ValidInitiative)
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: DISCUSSION}))
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					visibility: "public"
+				}))
 
 				var author = yield createUser(newUser({name: "Johnny Lang"}))
 				var replier = yield createUser(newUser({name: "Kenny Loggins"}))
 
 				var comment = yield commentsDb.create(new ValidComment({
-					initiative_uuid: UUID,
+					initiative_uuid: initiative.uuid,
 					user_uuid: author.id
 				}))
 
 				var reply = yield commentsDb.create(new ValidComment({
-					initiative_uuid: UUID,
+					initiative_uuid: initiative.uuid,
 					user_uuid: replier.id,
 					parent_id: comment.id
 				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
 				var dom = parseDom(res.body)
@@ -1360,10 +1491,14 @@ describe("InitiativesController", function() {
 			})
 
 			it("must not render comments from other initiatives", function*() {
-				yield initiativesDb.create({uuid: UUID})
+				var initiative = yield initiativesDb.create(new ValidInitiative)
 
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: DISCUSSION}))
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					visibility: "public"
+				}))
 
 				var other = yield initiativesDb.create(new ValidInitiative)
 
@@ -1371,7 +1506,7 @@ describe("InitiativesController", function() {
 					initiative_uuid: other.uuid
 				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
 				var dom = parseDom(res.body)
@@ -1379,78 +1514,63 @@ describe("InitiativesController", function() {
 				commentsEl.textContent.must.not.include(comment.text)
 			})
 
-			it("must respond with 404 when API responds 403 Forbidden", function*() {
-				this.router.get(`/api/topics/${UUID}`, function(_req, res) {
-					res.statusCode = 403
-					res.end()
-				})
-
-				var res = yield this.request("/initiatives/" + UUID)
-				res.statusCode.must.equal(404)
-			})
-
-			it("must respond with 404 when API responds 404 Not Found", function*() {
-				this.router.get(`/api/topics/${UUID}`, function(_req, res) {
-					res.statusCode = 404
-					res.end()
-				})
-
-				var res = yield this.request("/initiatives/" + UUID)
-				res.statusCode.must.equal(404)
-			})
-
 			// This was a bug noticed on Mar 24, 2017 where the UI translation strings
 			// were not rendered on the page. They were used only for ID-card errors.
 			it("must render UI strings when voting", function*() {
-				yield initiativesDb.create({uuid: UUID, phase: "sign"})
-
-				this.router.get(`/api/topics/${UUID}`, respond.bind(null, {
-					data: INITIATIVE
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "sign"
 				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "voting"
+				}))
+
+				yield createVote(topic, newVote({endsAt: DateFns.addDays(new Date, 1)}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 				res.body.must.include("MSG_ERROR_HWCRYPTO_NO_CERTIFICATES")
 			})
 
 			describe("after signing", function() {
 				beforeEach(function*() {
-					this.user = yield createUser(newUser({id: USER_ID}))
-
-					this.partner = yield createPartner(newPartner({
-						id: Config.apiPartnerId
+					this.initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "sign"
 					}))
 
 					this.topic = yield createTopic(newTopic({
-						id: UUID,
-						creatorId: this.user.id,
+						id: this.initiative.uuid,
+						creatorId: (yield createUser(newUser())).id,
 						sourcePartnerId: this.partner.id,
 						status: "voting"
 					}))
 
-					yield initiativesDb.create({uuid: this.topic.id, phase: "sign"})
-
-					this.vote = yield createVote(this.topic, newVote({id: VOTE_UUID}))
-					this.yesAndNo = yield createOptions(this.vote)
-
-					this.router.get(`/api/topics/${UUID}`, respond.bind(null, {
-						data: _.merge({}, INITIATIVE, {
-							vote: {options: {rows: [
-								{id: this.yesAndNo[0], value: "Yes", voteCount: 0},
-								{id: this.yesAndNo[1], value: "No", voteCount: 0},
-							]}}
-						})
+					this.vote = yield createVote(this.topic, newVote({
+						endsAt: DateFns.addDays(new Date, 1)
 					}))
+
+					this.yesAndNo = yield createOptions(this.vote)
 				})
 
-				it("must show thanks and revoke form", function*() {
+				it("must not show thanks if not signed", function*() {
+					var res = yield this.request("/initiatives/" + this.initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(t("THANKS_FOR_SIGNING"))
+					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+					res.body.must.not.include("donate-form")
+				})
+
+				it("must show thanks, donate form and revoke button", function*() {
 					var signature = yield createSignature(newSignature({
-						userId: this.user.id,
+						userId: (yield createUser(newUser())).id,
 						voteId: this.vote.id,
 						optionId: this.yesAndNo[0]
 					}))
 
-					var res = yield this.request("/initiatives/" + UUID, {
+					var res = yield this.request("/initiatives/" + this.initiative.uuid, {
 						cookies: {flash: serializeFlash({signatureId: signature.id})}
 					})
 
@@ -1463,12 +1583,12 @@ describe("InitiativesController", function() {
 
 				it("must confirm signature deletion", function*() {
 					var signature = yield createSignature(newSignature({
-						userId: this.user.id,
+						userId: (yield createUser(newUser())).id,
 						voteId: this.vote.id,
 						optionId: this.yesAndNo[1]
 					}))
 
-					var res = yield this.request("/initiatives/" + UUID, {
+					var res = yield this.request("/initiatives/" + this.initiative.uuid, {
 						cookies: {flash: serializeFlash({signatureId: signature.id})}
 					})
 
@@ -1481,23 +1601,24 @@ describe("InitiativesController", function() {
 				})
 
 				it("must show thanks when signing twice", function*() {
+					var user = yield createUser(newUser())
 					var signatures = yield createSignature([
 						newSignature({
-							userId: this.user.id,
+							userId: user.id,
 							voteId: this.vote.id,
 							optionId: this.yesAndNo[0],
 							createdAt: DateFns.addMinutes(new Date, -2)
 						}),
 
 						newSignature({
-							userId: this.user.id,
+							userId: user.id,
 							voteId: this.vote.id,
 							optionId: this.yesAndNo[0],
 							createdAt: DateFns.addMinutes(new Date, -1)
 						}),
 					])
 
-					var res = yield this.request("/initiatives/" + UUID, {
+					var res = yield this.request("/initiatives/" + this.initiative.uuid, {
 						cookies: {flash: serializeFlash({signatureId: signatures[1].id})}
 					})
 
@@ -1509,23 +1630,25 @@ describe("InitiativesController", function() {
 				})
 
 				it("must show thanks when signing after revoking", function*() {
+					var user = yield createUser(newUser())
+
 					var signatures = yield createSignature([
 						newSignature({
-							userId: this.user.id,
+							userId: user.id,
 							voteId: this.vote.id,
 							optionId: this.yesAndNo[1],
 							createdAt: DateFns.addMinutes(new Date, -2)
 						}),
 
 						newSignature({
-							userId: this.user.id,
+							userId: user.id,
 							voteId: this.vote.id,
 							optionId: this.yesAndNo[0],
 							createdAt: DateFns.addMinutes(new Date, -1)
 						}),
 					])
 
-					var res = yield this.request("/initiatives/" + UUID, {
+					var res = yield this.request("/initiatives/" + this.initiative.uuid, {
 						cookies: {flash: serializeFlash({signatureId: signatures[1].id})}
 					})
 
@@ -1539,31 +1662,38 @@ describe("InitiativesController", function() {
 
 				it("must show thanks when signing after signing on another initiative",
 					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "sign"
+					}))
+
 					var topic = yield createTopic(newTopic({
-						creatorId: this.user.id,
+						id: initiative.uuid,
+						creatorId: (yield createUser(newUser())).id,
 						sourcePartnerId: this.partner.id,
 						status: "voting"
 					}))
 
 					var vote = yield createVote(topic, newVote())
 
+					var user = yield createUser(newUser())
+
 					var signatures = yield createSignature([
 						newSignature({
-							userId: this.user.id,
+							userId: user.id,
 							voteId: vote.id,
 							optionId: this.yesAndNo[0],
 							createdAt: DateFns.addMinutes(new Date, -2)
 						}),
 
 						newSignature({
-							userId: this.user.id,
+							userId: user.id,
 							voteId: this.vote.id,
 							optionId: this.yesAndNo[0],
 							createdAt: DateFns.addMinutes(new Date, -1)
 						}),
 					])
 
-					var res = yield this.request("/initiatives/" + UUID, {
+					var res = yield this.request("/initiatives/" + this.initiative.uuid, {
 						cookies: {flash: serializeFlash({signatureId: signatures[1].id})}
 					})
 
@@ -1573,25 +1703,23 @@ describe("InitiativesController", function() {
 
 				it("must show thanks when signing after another user signed",
 					function*() {
-					var user = yield createUser(newUser())
-
 					var signatures = yield createSignature([
 						newSignature({
-							userId: user.id,
+							userId: (yield createUser(newUser())).id,
 							voteId: this.vote.id,
 							optionId: this.yesAndNo[0],
 							createdAt: DateFns.addMinutes(new Date, -2)
 						}),
 
 						newSignature({
-							userId: this.user.id,
+							userId: (yield createUser(newUser())).id,
 							voteId: this.vote.id,
 							optionId: this.yesAndNo[0],
 							createdAt: DateFns.addMinutes(new Date, -1)
 						}),
 					])
 
-					var res = yield this.request("/initiatives/" + UUID, {
+					var res = yield this.request("/initiatives/" + this.initiative.uuid, {
 						cookies: {flash: serializeFlash({signatureId: signatures[1].id})}
 					})
 
@@ -1604,25 +1732,74 @@ describe("InitiativesController", function() {
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
 
-			it("must render discussion", function*() {
-				yield initiativesDb.create({uuid: UUID})
+			it("must render private initiative if creator", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative)
 
-				this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
-					data: DISCUSSION
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: this.user.id,
+					sourcePartnerId: this.partner.id,
+					visibility: "private"
 				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 			})
 
-			it("must render private discussion", function*() {
-				yield initiativesDb.create({uuid: UUID})
+			;["admin", "edit"].forEach(function(perm) {
+				it("must render private initiative if admin permission", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative)
 
-				this.router.get(`/api/users/self/topics/${UUID}`,
-					respond.bind(null, {data: PRIVATE_DISCUSSION}))
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: (yield createUser(newUser())).id,
+						sourcePartnerId: this.partner.id,
+						visibility: "private"
+					}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+					yield createPermission(newPermission({
+						userId: this.user.id,
+						topicId: initiative.uuid,
+						level: perm
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+				})
+			})
+
+			it("must respond with 403 for private discussion of other user",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative)
+
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					visibility: "private"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(403)
+				res.statusMessage.must.match(/public/i)
+			})
+
+			it("must render initiative in edit phase", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative)
+
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					visibility: "public",
+					endsAt: DateFns.addDays(new Date, 5)
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
+
+				res.body.must.include(tHtml("INITIATIVE_IN_DISCUSSION"))
+				res.body.must.include(t("DISCUSSION_DEADLINE"))
 
 				var dom = parseDom(res.body)
 				var phases = queryPhases(dom)
@@ -1630,54 +1807,24 @@ describe("InitiativesController", function() {
 				_.sum(_.map(phases, "past")).must.equal(0)
 				_.sum(_.map(phases, "current")).must.equal(1)
 				phases.edit.current.must.be.true()
-				phases.edit.text.must.equal("")
-			})
+				phases.must.not.have.property("government")
 
-			it("must render signed initiative", function*() {
-				yield initiativesDb.create({uuid: UUID, phase: "sign"})
-
-				this.router.get(`/api/users/self/topics/${UUID}`,
-					respond.bind(null, {data: SIGNED_INITIATIVE}))
-
-				var res = yield this.request("/initiatives/" + UUID)
-				res.statusCode.must.equal(200)
-				res.body.must.include(t("THANKS_FOR_SIGNING"))
-				res.body.must.not.include("donate-form")
-			})
-
-			it("must render signed initiative with hidden signature", function*() {
-				yield initiativesDb.create({uuid: UUID, phase: "sign"})
-
-				this.router.get(`/api/users/self/topics/${UUID}`,
-					respond.bind(null, {data: O.merge({}, INITIATIVE, {
-						vote: {
-							id: "396b0e5b-cca7-4255-9238-19b464e60b65",
-							endsAt: new Date(3000, 0, 1),
-							options: {rows: [{value: "Yes", voteCount: 1, selected: true}]}
-						}
-					})})
+				phases.edit.text.must.equal(
+					t("TXT_DEADLINE_CALENDAR_DAYS_LEFT", {numberOfDaysLeft: 6})
 				)
-
-				yield signaturesDb.create({
-					initiative_uuid: UUID,
-					user_uuid: this.user.id,
-					hidden: true
-				})
-
-				var res = yield this.request("/initiatives/" + UUID)
-				res.statusCode.must.equal(200)
-				res.body.must.not.include(t("THANKS_FOR_SIGNING"))
-				res.body.must.not.include("donate-form")
 			})
 
 			it("must render comment form", function*() {
-				yield initiativesDb.create({uuid: UUID})
+				var initiative = yield initiativesDb.create(new ValidInitiative)
 
-				this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
-					data: DISCUSSION
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					visibility: "public"
 				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
 				var dom = parseDom(res.body)
@@ -1688,20 +1835,47 @@ describe("InitiativesController", function() {
 
 			it("must render subscribe checkbox if subscribed to initiative comments",
 				function*() {
-				yield initiativesDb.create({uuid: UUID})
+				var initiative = yield initiativesDb.create(new ValidInitiative)
+
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					visibility: "public"
+				}))
 
 				yield subscriptionsDb.create(new ValidSubscription({
-					initiative_uuid: UUID,
+					initiative_uuid: initiative.uuid,
 					email: this.user.email,
 					confirmed_at: new Date,
 					comment_interest: true
 				}))
 					
-				this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
-					data: DISCUSSION
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var form = dom.getElementById("comment-form")
+				var check = form.querySelector("input[type=checkbox][name=subscribe]")
+				check.checked.must.be.true()
+			})
+
+			// This was an unreleased bug in a query that still depended on the
+			// CitizenOS topic existing.
+			it("must render subscribe checkbox if subscribed to initiative comments given an external initiative", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					external: true,
+					phase: "parliament"
 				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				yield subscriptionsDb.create(new ValidSubscription({
+					initiative_uuid: initiative.uuid,
+					email: this.user.email,
+					confirmed_at: new Date,
+					comment_interest: true
+				}))
+					
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
 				var dom = parseDom(res.body)
@@ -1711,20 +1885,23 @@ describe("InitiativesController", function() {
 			})
 
 			it("must render subscribe checkbox if subscribed to initiative, but not to comments", function*() {
-				yield initiativesDb.create({uuid: UUID})
+				var initiative = yield initiativesDb.create(new ValidInitiative)
+
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					visibility: "public"
+				}))
 
 				yield subscriptionsDb.create(new ValidSubscription({
-					initiative_uuid: UUID,
+					initiative_uuid: initiative.uuid,
 					email: this.user.email,
 					confirmed_at: new Date,
 					comment_interest: false
 				}))
 					
-				this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
-					data: DISCUSSION
-				}))
-
-				var res = yield this.request("/initiatives/" + UUID)
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
 				var dom = parseDom(res.body)
@@ -1734,19 +1911,22 @@ describe("InitiativesController", function() {
 			})
 
 			it("must render subscribe checkbox if subscribed to initiatives' comments", function*() {
-				yield initiativesDb.create({uuid: UUID})
+				var initiative = yield initiativesDb.create(new ValidInitiative)
+
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					visibility: "public"
+				}))
 
 				yield subscriptionsDb.create(new ValidSubscription({
 					email: this.user.email,
 					confirmed_at: new Date,
 					comment_interest: true
 				}))
-					
-				this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
-					data: DISCUSSION
-				}))
 
-				var res = yield this.request("/initiatives/" + UUID)
+				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
 				var dom = parseDom(res.body)
@@ -1754,18 +1934,329 @@ describe("InitiativesController", function() {
 				var check = form.querySelector("input[type=checkbox][name=subscribe]")
 				check.checked.must.be.false()
 			})
+
+			it("must not render send to parliament button if not enough signatures",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "sign"
+				}))
+
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: this.user.id,
+					sourcePartnerId: this.partner.id,
+					status: "voting"
+				}))
+
+				var vote = yield createVote(topic, newVote())
+				yield createSignatures(vote, Config.votesRequired - 1)
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+				res.body.must.not.include(t("SEND_TO_PARLIAMENT"))
+			})
+
+			it("must render send to parliament button if enough signatures",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "sign"
+				}))
+
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: this.user.id,
+					sourcePartnerId: this.partner.id,
+					status: "voting"
+				}))
+
+				var vote = yield createVote(topic, newVote())
+				yield createSignatures(vote, Config.votesRequired)
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("SEND_TO_PARLIAMENT"))
+			})
+
+			it("must render send to parliament button if has paper signatures",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "sign",
+					has_paper_signatures: true
+				}))
+
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: this.user.id,
+					sourcePartnerId: this.partner.id,
+					status: "voting"
+				}))
+
+				var vote = yield createVote(topic, newVote())
+				yield createSignatures(vote, 1)
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("SEND_TO_PARLIAMENT"))
+			})
+
+			it("must not render send to parliament button if only has paper signatures", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "sign",
+					has_paper_signatures: true
+				}))
+
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: this.user.id,
+					sourcePartnerId: this.partner.id,
+					status: "voting"
+				}))
+
+				yield createVote(topic, newVote())
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+				res.body.must.not.include(t("SEND_TO_PARLIAMENT"))
+			})
+
+			it("must not show event creation button if in edit phase", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "edit"
+				}))
+
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: this.user.id,
+					sourcePartnerId: this.partner.id,
+					visibility: "public"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+				res.body.must.not.include(t("CREATE_INITIATIVE_EVENT_BUTTON"))
+			})
+
+			EVENTABLE_PHASES.forEach(function(phase) {
+				it(`must show event creation button if in ${phase} phase`, function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: phase
+					}))
+
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
+
+					yield createVote(topic, newVote())
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("CREATE_INITIATIVE_EVENT_BUTTON"))
+				})
+			})
+
+			it("must not show event creation button if lacking permission",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "sign"
+				}))
+
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "voting"
+				}))
+
+				yield createVote(topic, newVote())
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+				res.body.must.not.include(t("CREATE_INITIATIVE_EVENT_BUTTON"))
+			})
+
+			describe("when signed", function() {
+				beforeEach(function*() {
+					this.initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "sign"
+					}))
+
+					this.topic = yield createTopic(newTopic({
+						id: this.initiative.uuid,
+						creatorId: (yield createUser(newUser())).id,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
+
+					this.vote = yield createVote(this.topic, newVote({
+						endsAt: DateFns.addDays(new Date, 1)
+					}))
+
+					this.yesAndNo = yield createOptions(this.vote)
+				})
+
+				it("must not show thanks if not signed", function*() {
+					var res = yield this.request("/initiatives/" + this.initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(t("THANKS_FOR_SIGNING"))
+					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+				})
+
+				it("must show thanks without donate form", function*() {
+					yield createSignature(newSignature({
+						userId: this.user.id,
+						voteId: this.vote.id,
+						optionId: this.yesAndNo[0]
+					}))
+
+					var res = yield this.request("/initiatives/" + this.initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("THANKS_FOR_SIGNING"))
+					res.body.must.not.include("donate-form")
+				})
+
+				it("must not show thanks if signed another initiative", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "sign"
+					}))
+
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.topic.creatorId,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
+
+					var vote = yield createVote(topic, newVote({
+						endsAt: DateFns.addDays(new Date, 1)
+					}))
+
+					var yesAndNo = yield createOptions(this.vote)
+
+					yield createSignature(newSignature({
+						userId: this.user.id,
+						voteId: vote.id,
+						optionId: yesAndNo[0]
+					}))
+
+					var res = yield this.request("/initiatives/" + this.initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(t("THANKS_FOR_SIGNING"))
+					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+				})
+
+				it("must not show thanks if another user signed", function*() {
+					yield createSignature(newSignature({
+						userId: (yield createUser(newUser())).id,
+						voteId: this.vote.id,
+						optionId: this.yesAndNo[0]
+					}))
+
+					var res = yield this.request("/initiatives/" + this.initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(t("THANKS_FOR_SIGNING"))
+					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+				})
+
+				it("must not show thanks if hidden", function*() {
+					yield createSignature(newSignature({
+						userId: this.user.id,
+						voteId: this.vote.id,
+						optionId: this.yesAndNo[0]
+					}))
+
+					yield signaturesDb.create({
+						initiative_uuid: this.initiative.uuid,
+						user_uuid: this.user.id,
+						hidden: true
+					})
+
+					var res = yield this.request("/initiatives/" + this.initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(t("THANKS_FOR_SIGNING"))
+					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+				})
+
+				it("must not show thanks if signed and then revoked", function*() {
+					yield createSignature(newSignature({
+						userId: this.user.id,
+						voteId: this.vote.id,
+						optionId: this.yesAndNo[0],
+						createdAt: DateFns.addMinutes(new Date, -1)
+					}))
+
+					yield createSignature(newSignature({
+						userId: this.user.id,
+						voteId: this.vote.id,
+						optionId: this.yesAndNo[1],
+						createdAt: new Date
+					}))
+
+					var res = yield this.request("/initiatives/" + this.initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(t("THANKS_FOR_SIGNING"))
+					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+				})
+			})
 		})
 	})
 
 	describe(`GET /:id with ${INITIATIVE_TYPE}`, function() {
-		it("must respond with JSON", function*() {
-			yield initiativesDb.create({uuid: UUID, phase: "sign"})
+		beforeEach(function*() {
+			this.user = yield createUser(newUser())
+			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
+		})
 
-			this.router.get(`/api/topics/${UUID}`, respond.bind(null, {
-				data: INITIATIVE
+		it("must respond with 403 for a private initiative", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative)
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				visibility: "private"
 			}))
 
-			var res = yield this.request("/initiatives/" + UUID, {
+			var res = yield this.request("/initiatives/" + initiative.uuid, {
+				headers: {Accept: INITIATIVE_TYPE}
+			})
+
+			res.statusCode.must.equal(403)
+			res.statusMessage.must.match(/public/i)
+		})
+
+		it("must respond with 404 for a deleted initiative", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative)
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				visibility: "public",
+				deletedAt: new Date
+			}))
+
+			var res = yield this.request("/initiatives/" + initiative.uuid, {
+				headers: {Accept: INITIATIVE_TYPE}
+			})
+
+			res.statusCode.must.equal(404)
+		})
+
+		it("must respond with JSON", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative)
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				title: "Better life for everyone.",
+				creatorId: (yield createUser(newUser())).id,
+				sourcePartnerId: this.partner.id,
+				visibility: "public"
+			}))
+
+			var res = yield this.request("/initiatives/" + initiative.uuid, {
 				headers: {Accept: INITIATIVE_TYPE}
 			})
 
@@ -1774,37 +2265,92 @@ describe("InitiativesController", function() {
 			res.headers["access-control-allow-origin"].must.equal("*")
 
 			res.body.must.eql({
-				title: INITIATIVE.title,
+				title: "Better life for everyone.",
 				signatureCount: 0
+			})
+		})
+
+		it("must respond with JSON for external initiative", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				title: "Better life for everyone.",
+				external: true
+			}))
+
+			var res = yield this.request("/initiatives/" + initiative.uuid, {
+				headers: {Accept: INITIATIVE_TYPE}
+			})
+
+			res.statusCode.must.equal(200)
+
+			res.body.must.eql({
+				title: "Better life for everyone.",
+				signatureCount: 0
+			})
+		})
+
+		it("must respond with signature count", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "sign"
+			}))
+
+			var topic = yield createTopic(newTopic({
+				id: initiative.uuid,
+				title: "Better life for everyone.",
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				status: "voting"
+			}))
+
+			var vote = yield createVote(topic, newVote({endsAt: new Date}))
+			yield createSignatures(vote, 5)
+
+			var res = yield this.request("/initiatives/" + initiative.uuid, {
+				headers: {Accept: INITIATIVE_TYPE}
+			})
+
+			res.statusCode.must.equal(200)
+
+			res.body.must.eql({
+				title: "Better life for everyone.",
+				signatureCount: 5
 			})
 		})
 	})
 
 	describe(`GET /:id with ${ATOM_TYPE}`, function() {
-		it("must respond with Atom feed", function*() {
-			yield initiativesDb.create({uuid: UUID})
+		beforeEach(function*() {
+			this.user = yield createUser(newUser())
+			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
+		})
 
-			this.router.get(`/api/topics/${UUID}`, respond.bind(null, {
-				data: INITIATIVE
+		it("must respond with Atom feed", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative)
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				title: "Better life for everyone.",
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				visibility: "public"
 			}))
 
 			var events = yield eventsDb.create([new ValidEvent({
-				initiative_uuid: UUID,
-				title: "We sent it.",
+				initiative_uuid: initiative.uuid,
+				title: "We sent xit.",
 				content: "To somewhere.",
 				created_at: new Date(2015, 5, 18),
 				updated_at: new Date(2015, 5, 19),
 				occurred_at: new Date(2015, 5, 20)
 			}), new ValidEvent({
-				initiative_uuid: UUID,
-				title: "They got it.",
+				initiative_uuid: initiative.uuid,
+				title: "They got xit.",
 				content: "From somewhere.",
 				created_at: new Date(2015, 5, 21),
 				updated_at: new Date(2015, 5, 22),
 				occurred_at: new Date(2015, 5, 22)
 			})])
 
-			var path = `/initiatives/${UUID}.atom`
+			var path = `/initiatives/${initiative.uuid}.atom`
 			var res = yield this.request(path)
 			res.statusCode.must.equal(200)
 			res.headers["content-type"].must.equal(ATOM_TYPE)
@@ -1814,7 +2360,7 @@ describe("InitiativesController", function() {
 			feed.updated.$.must.equal(events[1].updated_at.toJSON())
 
 			feed.title.$.must.equal(t("ATOM_INITIATIVE_FEED_TITLE", {
-				title: INITIATIVE.title
+				title: "Better life for everyone.",
 			}))
 
 			var links = _.indexBy(feed.link, (link) => link.rel)
@@ -1826,7 +2372,8 @@ describe("InitiativesController", function() {
 
 			feed.entry.forEach(function(entry, i) {
 				var event = events[i]
-				var url = `${Config.url}/initiatives/${UUID}/events/${event.id}`
+				var url = `${Config.url}/initiatives`
+				url += `/${initiative.uuid}/events/${event.id}`
 				entry.id.$.must.equal(url)
 				entry.updated.$.must.equal(event.updated_at.toJSON())
 				entry.published.$.must.equal(event.occurred_at.toJSON())
@@ -1836,32 +2383,58 @@ describe("InitiativesController", function() {
 			})
 		})
 
-		it("must use initiative updated time if no events", function*() {
-			yield initiativesDb.create({uuid: UUID})
-
-			this.router.get(`/api/topics/${UUID}`, respond.bind(null, {
-				data: INITIATIVE
+		it("must respond given an external initiative with no events", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				external: true,
+				title: "Better life for everyone."
 			}))
 
-			var res = yield this.request(`/initiatives/${UUID}.atom`)
+			var path = `/initiatives/${initiative.uuid}.atom`
+			var res = yield this.request(path)
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(ATOM_TYPE)
+
+			var feed = Atom.parse(res.body).feed
+			feed.updated.$.must.equal(initiative.created_at.toJSON())
+
+			feed.title.$.must.equal(t("ATOM_INITIATIVE_FEED_TITLE", {
+				title: "Better life for everyone."
+			}))
+		})
+
+		it("must use initiative updated time if no events", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative)
+
+			var topic = yield createTopic(newTopic({
+				id: initiative.uuid,
+				title: "Better life for everyone.",
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				visibility: "public"
+			}))
+
+			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 			var feed = Atom.parse(res.body).feed
-			feed.updated.$.must.equal(INITIATIVE.updatedAt.toJSON())
+			feed.updated.$.must.equal(topic.updatedAt.toJSON())
 		})
 
 		it("must include generated parliament events", function*() {
 			var sentAt = new Date(2015, 5, 17)
 			var finishedAt = new Date(2015, 5, 21)
 
-			yield initiativesDb.create({
-				uuid: UUID,
-				phase: "done",
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
 				sent_to_parliament_at: sentAt,
 				finished_in_parliament_at: finishedAt
-			})
+			}))
 
-			this.router.get(`/api/topics/${UUID}`, respond.bind(null, {
-				data: PROCESSED_SUCCESSFUL_INITIATIVE
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				title: "Better life for everyone.",
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				status: "followUp"
 			}))
 
 			var events = concat({
@@ -1871,7 +2444,7 @@ describe("InitiativesController", function() {
 				updated_at: sentAt,
 				occurred_at: sentAt
 			}, yield eventsDb.create(new ValidEvent({
-				initiative_uuid: UUID,
+				initiative_uuid: initiative.uuid,
 				title: "We sent it.",
 				content: "To somewhere.",
 				created_at: new Date(2015, 5, 18),
@@ -1884,14 +2457,15 @@ describe("InitiativesController", function() {
 				occurred_at: finishedAt
 			})
 
-			var res = yield this.request(`/initiatives/${UUID}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 			var feed = Atom.parse(res.body).feed
 			feed.updated.$.must.equal(finishedAt.toJSON())
 
 			feed.entry.forEach(function(entry, i) {
 				var event = events[i]
-				var url = `${Config.url}/initiatives/${UUID}/events/${event.id}`
+				var url = `${Config.url}/initiatives`
+				url += `/${initiative.uuid}/events/${event.id}`
 				entry.id.$.must.equal(url)
 				entry.updated.$.must.equal(event.updated_at.toJSON())
 				entry.published.$.must.equal(event.occurred_at.toJSON())
@@ -1905,41 +2479,56 @@ describe("InitiativesController", function() {
 	describe("PUT /:id", function() {
 		require("root/test/time")(+new Date(2015, 5, 18))
 
+		beforeEach(function*() {
+			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
+		})
+
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
 
 			describe("given visibility=public", function() {
 				it("must render update visibility page", function*() {
-					yield initiativesDb.create({uuid: UUID})
+					var initiative = yield initiativesDb.create(new ValidInitiative)
 
-					this.router.get(`/api/users/self/topics/${UUID}`,
-						respond.bind(null, {data: PRIVATE_DISCUSSION}))
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						visibility: "private"
+					}))
 
-					var res = yield this.request("/initiatives/" + UUID, {
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
 						method: "PUT",
 						form: {_csrf_token: this.csrfToken, visibility: "public"}
 					})
 
 					res.statusCode.must.equal(200)
+					res.body.must.include(t("DEADLINE_EXPLANATION"))
+					res.body.must.include(t("PUBLISH_TOPIC"))
 				})
 
 				it("must update initiative", function*() {
-					yield initiativesDb.create({uuid: UUID})
+					var initiative = yield initiativesDb.create(new ValidInitiative)
 
-					this.router.get(`/api/users/self/topics/${UUID}`,
-						respond.bind(null, {data: PRIVATE_DISCUSSION}))
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						visibility: "private"
+					}))
 
 					var today = DateFns.startOfDay(new Date)
 					var endsAt = DateFns.endOfDay(DateFns.addDays(today, 5))
 
 					var updated = 0
-					this.router.put(`/api/users/self/topics/${UUID}`, function(req, res) {
+					this.router.put(`/api/users/self/topics/${topic.id}`,
+						function(req, res) {
 						++updated
 						req.body.must.eql({visibility: "public", endsAt: endsAt.toJSON()})
 						res.end()
 					})
 
-					var res = yield this.request(`/initiatives/${UUID}`, {
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
 							_csrf_token: this.csrfToken,
@@ -1950,7 +2539,7 @@ describe("InitiativesController", function() {
 
 					updated.must.equal(1)
 					res.statusCode.must.equal(303)
-					res.headers.location.must.equal(`/initiatives/${UUID}`)
+					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
 					var flash = parseFlashFromCookies(res.headers["set-cookie"])
 					flash.notice.must.equal(t("PUBLISHED_INITIATIVE"))
@@ -1958,17 +2547,20 @@ describe("InitiativesController", function() {
 
 				it("must clear end email when setting discussion end time",
 					function*() {
-					var initiative = yield initiativesDb.create({
-						uuid: UUID,
+					var initiative = yield initiativesDb.create(new ValidInitiative({
 						discussion_end_email_sent_at: new Date
-					})
+					}))
 
-					this.router.get(`/api/users/self/topics/${UUID}`,
-						respond.bind(null, {data: EDITABLE_DISCUSSION}))
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						visibility: "public"
+					}))
 
-					this.router.put(`/api/users/self/topics/${UUID}`, endResponse)
+					this.router.put(`/api/users/self/topics/${topic.id}`, endResponse)
 
-					var res = yield this.request(`/initiatives/${UUID}`, {
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
 							_csrf_token: this.csrfToken,
@@ -1988,15 +2580,18 @@ describe("InitiativesController", function() {
 				})
 
 				it("must respond with 422 if setting a short deadline", function*() {
-					var initiative = yield initiativesDb.create({
-						uuid: UUID,
+					var initiative = yield initiativesDb.create(new ValidInitiative({
 						discussion_end_email_sent_at: new Date
-					})
+					}))
 
-					this.router.get(`/api/users/self/topics/${UUID}`,
-						respond.bind(null, {data: EDITABLE_DISCUSSION}))
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						visibility: "public"
+					}))
 
-					var res = yield this.request(`/initiatives/${UUID}`, {
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
 							_csrf_token: this.csrfToken,
@@ -2008,18 +2603,24 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(422)
+					res.statusMessage.must.match(/deadline/i)
 					yield initiativesDb.read(initiative).must.then.eql(initiative)
 				})
 			})
 
 			describe("given status=voting", function() {
 				it("must render update status for voting page", function*() {
-					yield initiativesDb.create({uuid: UUID})
+					var initiative = yield initiativesDb.create(new ValidInitiative)
 
-					this.router.get(`/api/users/self/topics/${UUID}`,
-						respond.bind(null, {data: EDITABLE_DISCUSSION}))
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						createdAt: DateFns.addDays(new Date, -Config.minDeadlineDays),
+						visibility: "public"
+					}))
 
-					var res = yield this.request("/initiatives/" + UUID, {
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
 						method: "PUT",
 						form: {_csrf_token: this.csrfToken, status: "voting"}
 					})
@@ -2029,31 +2630,32 @@ describe("InitiativesController", function() {
 				})
 
 				it("must update initiative", function*() {
-					var initiative = yield initiativesDb.create({uuid: UUID})
+					var initiative = yield initiativesDb.create(new ValidInitiative)
 
-					this.router.get(`/api/users/self/topics/${UUID}`,
-						respond.bind(null, {data: _.assign({}, EDITABLE_DISCUSSION, {
-						createdAt: DateFns.addDays(new Date, -Config.minDeadlineDays)
-						})}))
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						createdAt: DateFns.addDays(new Date, -Config.minDeadlineDays),
+						visibility: "public"
+					}))
 
 					var endsAt = DateFns.endOfDay(DateFns.addDays(new Date, 30))
 
-					this.router.post(
-						`/api/users/self/topics/${UUID}/votes`,
+					this.router.post(`/api/users/self/topics/${topic.id}/votes`,
 						function(req, res) {
-							req.body.must.eql({
-								endsAt: endsAt.toJSON(),
-								authType: "hard",
-								voteType: "regular",
-								delegationIsAllowed: false,
-								options: [{value: "Yes"}, {value: "No"}]
-							})
+						req.body.must.eql({
+							endsAt: endsAt.toJSON(),
+							authType: "hard",
+							voteType: "regular",
+							delegationIsAllowed: false,
+							options: [{value: "Yes"}, {value: "No"}]
+						})
 
-							res.end()
-						}
-					)
+						res.end()
+					})
 
-					var res = yield this.request(`/initiatives/${UUID}`, {
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
 							_csrf_token: this.csrfToken,
@@ -2063,7 +2665,7 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(303)
-					res.headers.location.must.equal(`/initiatives/${UUID}`)
+					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
 					var flash = parseFlashFromCookies(res.headers["set-cookie"])
 					flash.notice.must.equal(t("INITIATIVE_SIGN_PHASE_UPDATED"))
@@ -2077,14 +2679,17 @@ describe("InitiativesController", function() {
 				})
 
 				it("must respond with 403 if less than 3 days passed", function*() {
-					var initiative = yield initiativesDb.create({uuid: UUID})
+					var initiative = yield initiativesDb.create(new ValidInitiative)
 
-					this.router.get(`/api/users/self/topics/${UUID}`,
-						respond.bind(null, {data: _.assign({}, EDITABLE_DISCUSSION, {
-						createdAt: DateFns.addDays(new Date, -Config.minDeadlineDays + 1)
-					})}))
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						createdAt: DateFns.addDays(new Date, -Config.minDeadlineDays + 1),
+						visibility: "public"
+					}))
 
-					var res = yield this.request(`/initiatives/${UUID}`, {
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
 							_csrf_token: this.csrfToken,
@@ -2094,21 +2699,26 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(403)
+					res.statusMessage.must.match(/sign phase/i)
 					yield initiativesDb.read(initiative).must.then.eql(initiative)
 				})
 
 				it("must update initiative if on fast-track", function*() {
-					var initiative = yield initiativesDb.create({uuid: UUID})
+					var initiative = yield initiativesDb.create(new ValidInitiative)
 
-					this.router.get(`/api/users/self/topics/${UUID}`,
-						respond.bind(null, {data: _.assign({}, EDITABLE_DISCUSSION, {
-						createdAt: new Date,
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						createdAt: DateFns.addDays(new Date, -Config.minDeadlineDays + 1),
+						visibility: "public",
 						categories: ["fast-track"]
-					})}))
+					}))
 
-					this.router.post(`/api/users/self/topics/${UUID}/votes`, endResponse)
+					this.router.post(`/api/users/self/topics/${topic.id}/votes`,
+						endResponse)
 
-					var res = yield this.request(`/initiatives/${UUID}`, {
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
 							_csrf_token: this.csrfToken,
@@ -2118,7 +2728,7 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(303)
-					res.headers.location.must.equal(`/initiatives/${UUID}`)
+					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
 					yield initiativesDb.search(sql`
 						SELECT * FROM initiatives
@@ -2129,14 +2739,17 @@ describe("InitiativesController", function() {
 				})
 
 				it("must respond with 422 if setting a short deadline", function*() {
-					var initiative = yield initiativesDb.create({uuid: UUID})
+					var initiative = yield initiativesDb.create(new ValidInitiative)
 
-					this.router.get(`/api/users/self/topics/${UUID}`,
-						respond.bind(null, {data: _.assign({}, EDITABLE_DISCUSSION, {
-						createdAt: DateFns.addDays(new Date, -Config.minDeadlineDays)
-					})}))
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						createdAt: DateFns.addDays(new Date, -Config.minDeadlineDays),
+						visibility: "public"
+					}))
 
-					var res = yield this.request(`/initiatives/${UUID}`, {
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
 							_csrf_token: this.csrfToken,
@@ -2148,27 +2761,32 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(422)
+					res.statusMessage.must.match(/deadline/i)
 					yield initiativesDb.read(initiative).must.then.eql(initiative)
 				})
 
 				it("must clear end email when setting signing end time", function*() {
-					var initiative = yield initiativesDb.create({
-						uuid: UUID,
+					var initiative = yield initiativesDb.create(new ValidInitiative({
 						phase: "sign",
 						discussion_end_email_sent_at: new Date,
 						signing_end_email_sent_at: new Date
-					})
-
-					this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
-						data: _.assign({}, INITIATIVE, {permission: {level: "admin"}})
 					}))
 
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
+
+					var vote = yield createVote(topic, newVote())
+
 					this.router.put(
-						`/api/users/self/topics/${UUID}/votes/${VOTE_UUID}`,
+						`/api/users/self/topics/${topic.id}/votes/${vote.id}`,
 						endResponse
 					)
 
-					var res = yield this.request(`/initiatives/${UUID}`, {
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
 							_csrf_token: this.csrfToken,
@@ -2190,17 +2808,25 @@ describe("InitiativesController", function() {
 				})
 
 				it("must email subscribers", function*() {
-					yield initiativesDb.create({uuid: UUID})
+					var initiative = yield initiativesDb.create(new ValidInitiative)
 
-					this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
-						data: _.assign({}, DISCUSSION, {permission: {level: "admin"}})
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						title: "Better life.",
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						createdAt: DateFns.addDays(new Date, -Config.minDeadlineDays),
+						visibility: "public"
 					}))
 
-					this.router.post(`/api/users/self/topics/${UUID}/votes`, endResponse)
+					this.router.post(
+						`/api/users/self/topics/${topic.id}/votes`,
+						endResponse
+					)
 
 					var subscriptions = yield subscriptionsDb.create([
 						new ValidSubscription({
-							initiative_uuid: UUID,
+							initiative_uuid: initiative.uuid,
 							confirmed_at: new Date,
 							official_interest: false
 						}),
@@ -2212,7 +2838,7 @@ describe("InitiativesController", function() {
 						}),
 
 						new ValidSubscription({
-							initiative_uuid: UUID,
+							initiative_uuid: initiative.uuid,
 							confirmed_at: new Date
 						}),
 
@@ -2222,7 +2848,7 @@ describe("InitiativesController", function() {
 						})
 					])
 
-					var res = yield this.request(`/initiatives/${UUID}`, {
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
 							_csrf_token: this.csrfToken,
@@ -2244,18 +2870,18 @@ describe("InitiativesController", function() {
 
 					messages.must.eql([{
 						id: message.id,
-						initiative_uuid: UUID,
+						initiative_uuid: initiative.uuid,
 						created_at: new Date,
 						updated_at: new Date,
 						origin: "status",
 
 						title: t("SENT_TO_SIGNING_MESSAGE_TITLE", {
-							initiativeTitle: DISCUSSION.title
+							initiativeTitle: topic.title
 						}),
 
 						text: renderEmail("SENT_TO_SIGNING_MESSAGE_BODY", {
-							initiativeTitle: DISCUSSION.title,
-							initiativeUrl: `${Config.url}/initiatives/${UUID}`,
+							initiativeTitle: topic.title,
+							initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 						}),
 
 						sent_at: new Date,
@@ -2276,15 +2902,21 @@ describe("InitiativesController", function() {
 
 			describe("given status=followUp", function() {
 				it("must render update status for parliament page", function*() {
-					yield initiativesDb.create({uuid: UUID, phase: "sign"})
-
-					this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
-						data: _.merge({}, SUCCESSFUL_INITIATIVE, {
-							permission: {level: "admin"}
-						})
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "sign"
 					}))
 
-					var res = yield this.request("/initiatives/" + UUID, {
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
+
+					var vote = yield createVote(topic, newVote())
+					yield createSignatures(vote, Config.votesRequired)
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
 						method: "PUT",
 						form: {_csrf_token: this.csrfToken, status: "followUp"}
 					})
@@ -2294,20 +2926,23 @@ describe("InitiativesController", function() {
 					res.body.must.include(t("SEND_TO_PARLIAMENT_TEXT"))
 				})
 
-				it("must render update status for parliament page if with paper signatures", function*() {
-					yield initiativesDb.create({
-						uuid: UUID,
+				it("must render update status for parliament page if has paper signatures", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
 						phase: "sign",
 						has_paper_signatures: true
-					})
-
-					this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
-						data: _.merge({}, FAILED_INITIATIVE, {
-							permission: {level: "admin"}
-						})
 					}))
 
-					var res = yield this.request("/initiatives/" + UUID, {
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
+
+					var vote = yield createVote(topic, newVote())
+					yield createSignatures(vote, 1)
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
 						method: "PUT",
 						form: {_csrf_token: this.csrfToken, status: "followUp"}
 					})
@@ -2316,33 +2951,71 @@ describe("InitiativesController", function() {
 				})
 
 				it("must respond with 403 if initiative not successful", function*() {
-					yield initiativesDb.create({uuid: UUID, phase: "sign"})
-
-					this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
-						data: _.merge({}, FAILED_INITIATIVE, {
-							permission: {level: "admin"}
-						})
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "sign"
 					}))
 
-					var res = yield this.request("/initiatives/" + UUID, {
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
+
+					var vote = yield createVote(topic, newVote())
+					yield createSignatures(vote, Config.votesRequired - 1)
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
 						method: "PUT",
 						form: {_csrf_token: this.csrfToken, status: "followUp"}
 					})
 
 					res.statusCode.must.equal(403)
+					res.statusMessage.must.match(/parliament/i)
+				})
+
+				it("must respond with 403 if only has paper signatures", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "sign",
+						has_paper_signatures: true
+					}))
+
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
+
+					yield createVote(topic, newVote())
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, status: "followUp"}
+					})
+
+					res.statusCode.must.equal(403)
+					res.statusMessage.must.match(/parliament/i)
 				})
 
 				it("must update initiative", function*() {
-					var initiative = yield initiativesDb.create({uuid: UUID})
-
-					this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
-						data: _.merge({}, SUCCESSFUL_INITIATIVE, {
-							permission: {level: "admin"}
-						})
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "sign"
 					}))
 
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
+
+					var vote = yield createVote(topic, newVote())
+					yield createSignatures(vote, Config.votesRequired)
+
 					var updated = 0
-					this.router.put(`/api/users/self/topics/${UUID}`, function(req, res) {
+					this.router.put(`/api/users/self/topics/${topic.id}`,
+						function(req, res) {
 						++updated
 						req.body.must.eql({
 							status: "followUp",
@@ -2352,7 +3025,7 @@ describe("InitiativesController", function() {
 						res.end()
 					})
 
-					var res = yield this.request(`/initiatives/${UUID}`, {
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
 							_csrf_token: this.csrfToken,
@@ -2365,7 +3038,7 @@ describe("InitiativesController", function() {
 
 					updated.must.equal(1)
 					res.statusCode.must.equal(303)
-					res.headers.location.must.equal(`/initiatives/${UUID}`)
+					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
 					var flash = parseFlashFromCookies(res.headers["set-cookie"])
 					flash.notice.must.equal(t("SENT_TO_PARLIAMENT_CONTENT"))
@@ -2380,19 +3053,26 @@ describe("InitiativesController", function() {
 				})
 
 				it("must email subscribers", function*() {
-					yield initiativesDb.create({uuid: UUID, phase: "sign"})
-
-					this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
-						data: _.assign({}, SUCCESSFUL_INITIATIVE, {
-							permission: {level: "admin"}
-						})
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "sign"
 					}))
 
-					this.router.put(`/api/users/self/topics/${UUID}`, endResponse)
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						title: "Better life for everyone.",
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
+
+					var vote = yield createVote(topic, newVote())
+					yield createSignatures(vote, Config.votesRequired)
+
+					this.router.put(`/api/users/self/topics/${topic.id}`, endResponse)
 
 					var subscriptions = yield subscriptionsDb.create([
 						new ValidSubscription({
-							initiative_uuid: UUID,
+							initiative_uuid: initiative.uuid,
 							confirmed_at: new Date,
 							official_interest: false
 						}),
@@ -2404,7 +3084,7 @@ describe("InitiativesController", function() {
 						}),
 
 						new ValidSubscription({
-							initiative_uuid: UUID,
+							initiative_uuid: initiative.uuid,
 							confirmed_at: new Date
 						}),
 
@@ -2414,7 +3094,7 @@ describe("InitiativesController", function() {
 						})
 					])
 
-					var res = yield this.request(`/initiatives/${UUID}`, {
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
 							_csrf_token: this.csrfToken,
@@ -2435,19 +3115,19 @@ describe("InitiativesController", function() {
 
 					messages.must.eql([{
 						id: messages[0].id,
-						initiative_uuid: UUID,
+						initiative_uuid: initiative.uuid,
 						created_at: new Date,
 						updated_at: new Date,
 						origin: "status",
 
 						title: t("SENT_TO_PARLIAMENT_MESSAGE_TITLE", {
-							initiativeTitle: INITIATIVE.title
+							initiativeTitle: topic.title
 						}),
 
 						text: renderEmail("SENT_TO_PARLIAMENT_MESSAGE_BODY", {
 							authorName: "John",
-							initiativeTitle: INITIATIVE.title,
-							initiativeUrl: `${Config.url}/initiatives/${UUID}`,
+							initiativeTitle: topic.title,
+							initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 							signatureCount: Config.votesRequired
 						}),
 
@@ -2458,7 +3138,7 @@ describe("InitiativesController", function() {
 					this.emails.length.must.equal(1)
 					this.emails[0].envelope.to.must.eql(emails)
 					var msg = String(this.emails[0].message)
-					msg.match(/^Subject: .*/m)[0].must.include(INITIATIVE.title)
+					msg.match(/^Subject: .*/m)[0].must.include(topic.title)
 
 					subscriptions.slice(2).forEach((s) => (
 						msg.must.include(s.update_token)
@@ -2468,12 +3148,15 @@ describe("InitiativesController", function() {
 
 			describe("given local info", function() {
 				it("must update attributes", function*() {
-					var initiative = yield initiativesDb.create({uuid: UUID})
+					var initiative = yield initiativesDb.create(new ValidInitiative)
 
-					this.router.get(`/api/users/self/topics/${UUID}`,
-						respond.bind(null, {data: PRIVATE_DISCUSSION}))
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id
+					}))
 
-					var res = yield this.request(`/initiatives/${UUID}`, {
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
 							_csrf_token: this.csrfToken,
@@ -2500,11 +3183,11 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(303)
-					res.headers.location.must.equal(`/initiatives/${UUID}`)
+					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
 					yield initiativesDb.read(initiative).must.then.eql({
 						__proto__: initiative,
-						uuid: UUID,
+						uuid: initiative.uuid,
 						author_url: "http://example.com/author",
 						community_url: "http://example.com/community",
 						url: "http://example.com/initiative",
@@ -2539,13 +3222,17 @@ describe("InitiativesController", function() {
 				})
 
 				it("must not update other initiatives", function*() {
-					var initiative = yield initiativesDb.create({uuid: UUID})
+					var initiative = yield initiativesDb.create(new ValidInitiative)
+
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id
+					}))
+
 					var other = yield initiativesDb.create(new ValidInitiative)
 
-					this.router.get(`/api/users/self/topics/${UUID}`,
-						respond.bind(null, {data: PRIVATE_DISCUSSION}))
-
-					var res = yield this.request(`/initiatives/${UUID}`, {
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {_csrf_token: this.csrfToken, notes: "Hello, world"}
 					})
@@ -2560,18 +3247,23 @@ describe("InitiativesController", function() {
 					])
 				})
 
-				it("must throw 401 when not permitted to edit", function*() {
-					var initiative = yield initiativesDb.create({uuid: UUID})
+				it("must throw 403 when not permitted to edit", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative)
 
-					this.router.get(`/api/users/self/topics/${UUID}`,
-						respond.bind(null, {data: DISCUSSION}))
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: (yield createUser(newUser())).id,
+						sourcePartnerId: this.partner.id,
+						visibility: "public"
+					}))
 
-					var res = yield this.request(`/initiatives/${UUID}`, {
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {_csrf_token: this.csrfToken, notes: "Hello, world"}
 					})
 
-					res.statusCode.must.equal(401)
+					res.statusCode.must.equal(403)
+					res.statusMessage.must.match(/permission to edit/i)
 					yield initiativesDb.read(initiative).must.then.eql(initiative)
 				})
 			})
@@ -2579,18 +3271,28 @@ describe("InitiativesController", function() {
 	})
 
 	describe("DELETE /:id", function() {
+		beforeEach(function*() {
+			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
+		})
+
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
 
-			it("must delete initiative", function*() {
-				yield initiativesDb.create({uuid: UUID})
+			it("must delete private initiative in edit phase", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative)
 
-				this.router.get(`/api/users/self/topics/${UUID}`,
-					respond.bind(null, {data: EDITABLE_DISCUSSION}))
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: this.user.id,
+					sourcePartnerId: this.partner.id
+				}))
 
-				this.router.delete(`/api/users/self/topics/${UUID}`, endResponse)
+				this.router.delete(
+					`/api/users/self/topics/${topic.id}`,
+					endResponse
+				)
 
-				var res = yield this.request("/initiatives/" + UUID, {
+				var res = yield this.request("/initiatives/" + initiative.uuid, {
 					method: "POST",
 					form: {_csrf_token: this.csrfToken, _method: "delete"}
 				})
@@ -2602,34 +3304,70 @@ describe("InitiativesController", function() {
 				flash.notice.must.equal(t("INITIATIVE_DELETED"))
 			})
 
-			it("must respond with 405 given initiative in signing", function*() {
-				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+			it("must delete initiative in edit phase", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative)
 
-				this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
-					data: _.assign({}, INITIATIVE, {permission: {level: "admin"}})
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: this.user.id,
+					sourcePartnerId: this.partner.id,
+					visibility: "public"
 				}))
 
-				var res = yield this.request("/initiatives/" + UUID, {
+				this.router.delete(`/api/users/self/topics/${topic.id}`, endResponse)
+
+				var res = yield this.request("/initiatives/" + initiative.uuid, {
 					method: "POST",
 					form: {_csrf_token: this.csrfToken, _method: "delete"}
 				})
 
-				res.statusCode.must.equal(405)
+				res.statusCode.must.equal(302)
+				res.headers.location.must.equal(`/initiatives`)
+
+				var flash = parseFlashFromCookies(res.headers["set-cookie"])
+				flash.notice.must.equal(t("INITIATIVE_DELETED"))
 			})
 
-			it("must respond with 405 given non-editable discussion", function*() {
-				yield initiativesDb.create({uuid: UUID})
-
-				this.router.get(`/api/users/self/topics/${UUID}`, respond.bind(null, {
-					data: DISCUSSION
+			it("must respond with 405 given initiative in sign phase", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "sign"
 				}))
 
-				var res = yield this.request("/initiatives/" + UUID, {
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: this.user.id,
+					sourcePartnerId: this.partner.id,
+					status: "voting"
+				}))
+
+				yield createVote(topic, newVote())
+
+				var res = yield this.request("/initiatives/" + initiative.uuid, {
 					method: "POST",
 					form: {_csrf_token: this.csrfToken, _method: "delete"}
 				})
 
 				res.statusCode.must.equal(405)
+				res.statusMessage.must.match(/discussion/i)
+			})
+
+			it("must respond with 405 given other user's initiative", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative)
+
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					visibility: "public"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid, {
+					method: "POST",
+					form: {_csrf_token: this.csrfToken, _method: "delete"}
+				})
+
+				res.statusCode.must.equal(405)
+				res.statusMessage.must.match(/discussion/i)
 			})
 		})
 	})
@@ -2638,83 +3376,80 @@ describe("InitiativesController", function() {
 		require("root/test/time")(+new Date(2015, 5, 18))
 		
 		beforeEach(function*() {
-			this.user = yield createUser(newUser({id: USER_ID}))
 			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
 
+			this.initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "sign"
+			}))
+
 			this.topic = yield createTopic(newTopic({
-				id: UUID,
-				creatorId: this.user.id,
+				id: this.initiative.uuid,
+				creatorId: (yield createUser(newUser())).id,
 				sourcePartnerId: this.partner.id,
 				status: "voting"
 			}))
 
-			this.vote = yield createVote(this.topic, newVote({id: VOTE_UUID}))
+			this.vote = yield createVote(this.topic, newVote())
 			this.yesAndNo = yield createOptions(this.vote)
 		})
 
 		describe("when signing via Mobile-Id", function() {
 			it("must redirect to initiative page", function*() {
-				yield initiativesDb.create({uuid: UUID, phase: "sign"})
-
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: INITIATIVE}))
-
 				var self = this
+				var user = yield createUser(newUser())
 				var signature
 
 				this.router.get(
-					`/api/topics/${UUID}/votes/${VOTE_UUID}/status`,
+					`/api/topics/${this.topic.id}/votes/${this.vote.id}/status`,
 					next(function*(req, res) {
 					var query = Url.parse(req.url, true).query
 					query.token.must.equal(SIGN_TOKEN)
-					respond({status: {code: 20000}, data: {bdocUri: BDOC_URL}}, req, res)
+					var bdocUrl = newBdocUrl(self.topic, self.vote, user)
+					respond({status: {code: 20000}, data: {bdocUri: bdocUrl}}, req, res)
 
 					signature = yield createSignature(newSignature({
-						userId: self.user.id,
+						userId: user.id,
 						voteId: self.vote.id,
 						optionId: self.yesAndNo[0]
 					}))
 				}))
 
 				var res = yield this.request(
-					`/initiatives/${UUID}/signature?token=${SIGN_TOKEN}`
+					`/initiatives/${this.initiative.uuid}/signature?token=${SIGN_TOKEN}`
 				)
 
 				res.statusCode.must.equal(303)
-				res.headers.location.must.equal(`/initiatives/${UUID}`)
+				res.headers.location.must.equal(`/initiatives/${this.initiative.uuid}`)
 
 				var flash = parseFlashFromCookies(res.headers["set-cookie"])
 				flash.signatureId.must.equal(signature.id)
 			})
 
 			it("must unhide signature", function*() {
-				yield initiativesDb.create({uuid: UUID, phase: "sign"})
-
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: INITIATIVE}))
-
 				var self = this
+				var user = yield createUser(newUser())
 
 				this.router.get(
-					`/api/topics/${UUID}/votes/${VOTE_UUID}/status`,
+					`/api/topics/${this.topic.id}/votes/${this.vote.id}/status`,
 					next(function*(req, res) {
-					respond({status: {code: 20000}, data: {bdocUri: BDOC_URL}}, req, res)
+					var bdocUrl = newBdocUrl(self.topic, self.vote, user)
+					respond({status: {code: 20000}, data: {bdocUri: bdocUrl}}, req, res)
 
 					yield createSignature(newSignature({
-						userId: self.user.id,
+						userId: user.id,
 						voteId: self.vote.id,
 						optionId: self.yesAndNo[0]
 					}))
 				}))
 
 				var signature = yield signaturesDb.create({
-					initiative_uuid: this.topic.id,
-					user_uuid: this.user.id,
+					initiative_uuid: this.initiative.uuid,
+					user_uuid: user.id,
 					hidden: true
 				})
 
 				var res = yield this.request(
-					`/initiatives/${UUID}/signature?token=${SIGN_TOKEN}`
+					`/initiatives/${this.initiative.uuid}/signature?token=${SIGN_TOKEN}`
 				)
 
 				res.statusCode.must.equal(303)
@@ -2729,20 +3464,17 @@ describe("InitiativesController", function() {
 			})
 
 			it("must not unhide other initiative's signature", function*() {
-				yield initiativesDb.create({uuid: UUID, phase: "sign"})
-
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: INITIATIVE}))
-
 				var self = this
+				var user = yield createUser(newUser())
 
 				this.router.get(
-					`/api/topics/${UUID}/votes/${VOTE_UUID}/status`,
+					`/api/topics/${this.topic.id}/votes/${this.vote.id}/status`,
 					next(function*(req, res) {
-					respond({status: {code: 20000}, data: {bdocUri: BDOC_URL}}, req, res)
+					var bdocUrl = newBdocUrl(self.topic, self.vote, user)
+					respond({status: {code: 20000}, data: {bdocUri: bdocUrl}}, req, res)
 
 					yield createSignature(newSignature({
-						userId: self.user.id,
+						userId: user.id,
 						voteId: self.vote.id,
 						optionId: self.yesAndNo[0]
 					}))
@@ -2755,7 +3487,7 @@ describe("InitiativesController", function() {
 				})
 
 				var res = yield this.request(
-					`/initiatives/${UUID}/signature?token=${SIGN_TOKEN}`
+					`/initiatives/${this.initiative.uuid}/signature?token=${SIGN_TOKEN}`
 				)
 
 				res.statusCode.must.equal(303)
@@ -2766,35 +3498,33 @@ describe("InitiativesController", function() {
 			})
 
 			it("must not unhide other user's signature", function*() {
-				yield initiativesDb.create({uuid: UUID, phase: "sign"})
-
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: INITIATIVE}))
-
 				var self = this
+				var user = yield createUser(newUser())
 
 				this.router.get(
-					`/api/topics/${UUID}/votes/${VOTE_UUID}/status`,
+					`/api/topics/${this.topic.id}/votes/${this.vote.id}/status`,
 					next(function*(req, res) {
-					respond({status: {code: 20000}, data: {bdocUri: BDOC_URL}}, req, res)
+					var bdocUrl = newBdocUrl(self.topic, self.vote, user)
+					respond({status: {code: 20000}, data: {bdocUri: bdocUrl}}, req, res)
 
 					yield createSignature(newSignature({
-						userId: self.user.id,
+						userId: user.id,
 						voteId: self.vote.id,
 						optionId: self.yesAndNo[0]
 					}))
 				}))
 
-				var other = yield initiativesDb.create(new ValidInitiative)
+				var otherUser = yield createUser(newUser())
+				var otherInitiative = yield initiativesDb.create(new ValidInitiative)
 
 				var signature = yield signaturesDb.create({
-					initiative_uuid: other.uuid,
-					user_uuid: this.user.id,
+					initiative_uuid: otherInitiative.uuid,
+					user_uuid: otherUser.id,
 					hidden: true
 				})
 
 				var res = yield this.request(
-					`/initiatives/${UUID}/signature?token=${SIGN_TOKEN}`
+					`/initiatives/${this.initiative.uuid}/signature?token=${SIGN_TOKEN}`
 				)
 
 				res.statusCode.must.equal(303)
@@ -2810,45 +3540,47 @@ describe("InitiativesController", function() {
 		require("root/test/time")(+new Date(2015, 5, 18))
 
 		beforeEach(function*() {
-			this.user = yield createUser(newUser({id: USER_ID}))
 			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
 
+			this.initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "sign"
+			}))
+
 			this.topic = yield createTopic(newTopic({
-				id: UUID,
-				creatorId: this.user.id,
+				id: this.initiative.uuid,
+				creatorId: (yield createUser(newUser())).id,
 				sourcePartnerId: this.partner.id,
 				status: "voting"
 			}))
 
-			this.vote = yield createVote(this.topic, newVote({id: VOTE_UUID}))
+			this.vote = yield createVote(this.topic, newVote())
 			this.yesAndNo = yield createOptions(this.vote)
 		})
 
 		describe("when signing via Id-Card", function() {
 			it("must send signature to CitizenOS", function*() {
-				yield initiativesDb.create({uuid: UUID, phase: "sign"})
-
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: INITIATIVE}))
-
 				var self = this
+				var user = yield createUser(newUser())
 				var created = 0
 				var signature
 
-				this.router.post(`/api/topics/${UUID}/votes/${this.vote.id}/sign`,
+				var path = `/api/topics/${this.topic.id}/votes/${this.vote.id}/sign`
+				this.router.post(path,
 					next(function*(req, res) {
 					++created
 					req.body.must.eql({token: AUTH_TOKEN, signatureValue: SIGN_TOKEN})
-					respond({data: {bdocUri: BDOC_URL}}, req, res)
+					var bdocUrl = newBdocUrl(self.topic, self.vote, user)
+					respond({data: {bdocUri: bdocUrl}}, req, res)
 
 					signature = yield createSignature(newSignature({
-						userId: self.user.id,
+						userId: user.id,
 						voteId: self.vote.id,
 						optionId: self.yesAndNo[0]
 					}))
 				}))
 
-				var res = yield this.request(`/initiatives/${UUID}/signature`, {
+				path = `/initiatives/${this.initiative.uuid}/signature`
+				var res = yield this.request(path, {
 					method: "POST",
 					form: {
 						_csrf_token: this.csrfToken,
@@ -2858,43 +3590,42 @@ describe("InitiativesController", function() {
 					}
 				})
 
-				created.must.equal(1)
 				res.statusCode.must.equal(303)
-				res.headers.location.must.equal(`/initiatives/${UUID}`)
+				res.headers.location.must.equal(`/initiatives/${this.initiative.uuid}`)
+				created.must.equal(1)
 
 				var flash = parseFlashFromCookies(res.headers["set-cookie"])
 				flash.signatureId.must.equal(signature.id)
 			})
 
 			it("must send signature deletion to CitizenOS", function*() {
-				yield initiativesDb.create({uuid: UUID, phase: "sign"})
-
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: INITIATIVE}))
+				var self = this
+				var user = yield createUser(newUser())
+				var signature
 
 				yield createSignature(newSignature({
-					userId: this.user.id,
+					userId: user.id,
 					voteId: this.vote.id,
 					optionId: this.yesAndNo[0],
 					createdAt: DateFns.addMinutes(new Date, -1)
 				}))
 
-				var self = this
-				var signature
-
-				this.router.post(`/api/topics/${UUID}/votes/${this.vote.id}/sign`,
+				var path = `/api/topics/${this.topic.id}/votes/${this.vote.id}/sign`
+				this.router.post(path,
 					next(function*(req, res) {
 					req.body.must.eql({token: AUTH_TOKEN, signatureValue: SIGN_TOKEN})
-					respond({data: {bdocUri: BDOC_URL}}, req, res)
+					var bdocUrl = newBdocUrl(self.topic, self.vote, user)
+					respond({data: {bdocUri: bdocUrl}}, req, res)
 
 					signature = yield createSignature(newSignature({
-						userId: self.user.id,
+						userId: user.id,
 						voteId: self.vote.id,
 						optionId: self.yesAndNo[1]
 					}))
 				}))
 
-				var res = yield this.request(`/initiatives/${UUID}/signature`, {
+				path = `/initiatives/${this.initiative.uuid}/signature`
+				var res = yield this.request(path, {
 					method: "POST",
 					form: {
 						_csrf_token: this.csrfToken,
@@ -2905,26 +3636,24 @@ describe("InitiativesController", function() {
 				})
 
 				res.statusCode.must.equal(303)
-				res.headers.location.must.equal(`/initiatives/${UUID}`)
+				res.headers.location.must.equal(`/initiatives/${this.initiative.uuid}`)
 
 				var flash = parseFlashFromCookies(res.headers["set-cookie"])
 				flash.signatureId.must.equal(signature.id)
 			})
 
 			it("must unhide signature", function*() {
-				yield initiativesDb.create({uuid: UUID, phase: "sign"})
-
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: INITIATIVE}))
-
 				var self = this
+				var user = yield createUser(newUser())
 
-				this.router.post(`/api/topics/${UUID}/votes/${VOTE_UUID}/sign`,
+				var path = `/api/topics/${this.topic.id}/votes/${this.vote.id}/sign`
+				this.router.post(path,
 					next(function*(req, res) {
-					respond({data: {bdocUri: BDOC_URL}}, req, res)
+					var bdocUrl = newBdocUrl(self.topic, self.vote, user)
+					respond({data: {bdocUri: bdocUrl}}, req, res)
 
 					yield createSignature(newSignature({
-						userId: self.user.id,
+						userId: user.id,
 						voteId: self.vote.id,
 						optionId: self.yesAndNo[0]
 					}))
@@ -2932,11 +3661,12 @@ describe("InitiativesController", function() {
 
 				var signature = yield signaturesDb.create({
 					initiative_uuid: this.topic.id,
-					user_uuid: this.user.id,
+					user_uuid: user.id,
 					hidden: true
 				})
 
-				var res = yield this.request(`/initiatives/${UUID}/signature`, {
+				path = `/initiatives/${this.initiative.uuid}/signature`
+				var res = yield this.request(path, {
 					method: "POST",
 					form: {
 						_csrf_token: this.csrfToken,
@@ -2958,19 +3688,17 @@ describe("InitiativesController", function() {
 			})
 
 			it("must not unhide other initiative's signature", function*() {
-				yield initiativesDb.create({uuid: UUID, phase: "sign"})
-
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: INITIATIVE}))
-
 				var self = this
+				var user = yield createUser(newUser())
 
-				this.router.post(`/api/topics/${UUID}/votes/${VOTE_UUID}/sign`,
+				var path = `/api/topics/${this.topic.id}/votes/${this.vote.id}/sign`
+				this.router.post(path,
 					next(function*(req, res) {
-					respond({data: {bdocUri: BDOC_URL}}, req, res)
+					var bdocUrl = newBdocUrl(self.topic, self.vote, user)
+					respond({data: {bdocUri: bdocUrl}}, req, res)
 
 					yield createSignature(newSignature({
-						userId: self.user.id,
+						userId: user.id,
 						voteId: self.vote.id,
 						optionId: self.yesAndNo[0]
 					}))
@@ -2980,11 +3708,12 @@ describe("InitiativesController", function() {
 
 				var signature = yield signaturesDb.create({
 					initiative_uuid: other.uuid,
-					user_uuid: this.user.id,
+					user_uuid: user.id,
 					hidden: true
 				})
 
-				var res = yield this.request(`/initiatives/${UUID}/signature`, {
+				path = `/initiatives/${this.initiative.uuid}/signature`
+				var res = yield this.request(path, {
 					method: "POST",
 					form: {
 						_csrf_token: this.csrfToken,
@@ -3002,19 +3731,17 @@ describe("InitiativesController", function() {
 			})
 
 			it("must not unhide other user's signature", function*() {
-				yield initiativesDb.create({uuid: UUID, phase: "sign"})
-
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: INITIATIVE}))
-
 				var self = this
+				var user = yield createUser(newUser())
 
-				this.router.post(`/api/topics/${UUID}/votes/${VOTE_UUID}/sign`,
+				var path = `/api/topics/${this.topic.id}/votes/${this.vote.id}/sign`
+				this.router.post(path,
 					next(function*(req, res) {
-					respond({data: {bdocUri: BDOC_URL}}, req, res)
+					var bdocUrl = newBdocUrl(self.topic, self.vote, user)
+					respond({data: {bdocUri: bdocUrl}}, req, res)
 
 					yield createSignature(newSignature({
-						userId: self.user.id,
+						userId: user.id,
 						voteId: self.vote.id,
 						optionId: self.yesAndNo[0]
 					}))
@@ -3026,7 +3753,8 @@ describe("InitiativesController", function() {
 					hidden: true
 				})
 
-				var res = yield this.request(`/initiatives/${UUID}/signature`, {
+				path = `/initiatives/${this.initiative.uuid}/signature`
+				var res = yield this.request(path, {
 					method: "POST",
 					form: {
 						_csrf_token: this.csrfToken,
@@ -3046,13 +3774,8 @@ describe("InitiativesController", function() {
 
 		describe("when signing via Mobile-Id", function() {
 			it("must send mobile-id signature to CitizenOS", function*() {
-				yield initiativesDb.create({uuid: UUID, phase: "sign"})
-
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: INITIATIVE}))
-
 				var created = 0
-				this.router.post(`/api/topics/${UUID}/votes/${VOTE_UUID}`,
+				this.router.post(`/api/topics/${this.topic.id}/votes/${this.vote.id}`,
 					function(req, res) {
 					++created
 					req.body.must.eql({
@@ -3064,7 +3787,7 @@ describe("InitiativesController", function() {
 					respond({data: {challengeID: "1337", token: "abcdef"}}, req, res)
 				})
 
-				var res = yield this.request(`/initiatives/${UUID}/signature`, {
+				var res = yield this.request(`/initiatives/${this.initiative.uuid}/signature`, {
 					method: "POST",
 					form: {
 						_csrf_token: this.csrfToken,
@@ -3088,13 +3811,8 @@ describe("InitiativesController", function() {
 				"+37200000766": "+37200000766"
 			}, function(long, short) {
 				it(`must transform mobile-id number ${short} to ${long}`, function*() {
-					yield initiativesDb.create({uuid: UUID, phase: "sign"})
-
-					this.router.get(`/api/topics/${UUID}`,
-						respond.bind(null, {data: INITIATIVE}))
-
 					var created = 0
-					this.router.post(`/api/topics/${UUID}/votes/${VOTE_UUID}`,
+					this.router.post(`/api/topics/${this.topic.id}/votes/${this.vote.id}`,
 						function(req, res) {
 						++created
 						req.body.must.eql({
@@ -3106,7 +3824,8 @@ describe("InitiativesController", function() {
 						respond({data: {challengeID: "1337", token: "abcdef"}}, req, res)
 					})
 
-					var res = yield this.request(`/initiatives/${UUID}/signature`, {
+					var path = `/initiatives/${this.topic.id}/signature`
+					var res = yield this.request(path, {
 						method: "POST",
 						form: {
 							_csrf_token: this.csrfToken,
@@ -3125,14 +3844,28 @@ describe("InitiativesController", function() {
 	})
 
 	describe("PUT /:id/signature", function() {
+		beforeEach(function*() {
+			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
+
+			this.initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "sign"
+			}))
+
+			this.topic = yield createTopic(newTopic({
+				id: this.initiative.uuid,
+				creatorId: (yield createUser(newUser())).id,
+				sourcePartnerId: this.partner.id,
+				status: "voting"
+			}))
+
+			this.vote = yield createVote(this.topic, newVote())
+			this.yesAndNo = yield createOptions(this.vote)
+		})
+
 		describe("when not logged in", function() {
 			it("must respond with 401 if not logged in", function*() {
-				yield initiativesDb.create({uuid: UUID, phase: "sign"})
-
-				this.router.get(`/api/topics/${UUID}`,
-					respond.bind(null, {data: INITIATIVE}))
-
-				var res = yield this.request(`/initiatives/${UUID}/signature`, {
+				var path = `/initiatives/${this.initiative.uuid}/signature`
+				var res = yield this.request(path, {
 					method: "PUT",
 					form: {_csrf_token: this.csrfToken, hidden: true}
 				})
@@ -3147,12 +3880,8 @@ describe("InitiativesController", function() {
 
 			it("must respond with 303 if hiding a non-existent signature",
 				function*() {
-				yield initiativesDb.create({uuid: UUID, phase: "sign"})
-
-				this.router.get(`/api/users/self/topics/${UUID}`,
-					respond.bind(null, {data: INITIATIVE}))
-
-				var res = yield this.request(`/initiatives/${UUID}/signature`, {
+				var path = `/initiatives/${this.initiative.uuid}/signature`
+				var res = yield this.request(path, {
 					method: "PUT",
 					form: {_csrf_token: this.csrfToken, hidden: true}
 				})
@@ -3162,18 +3891,18 @@ describe("InitiativesController", function() {
 				`).must.then.be.empty()
 
 				res.statusCode.must.equal(303)
-				res.headers.location.must.equal(`/initiatives/${UUID}`)
+				res.headers.location.must.equal(`/initiatives/${this.initiative.uuid}`)
 			})
 
 			it("must hide signature", function*() {
-				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+				yield createSignature(newSignature({
+					userId: this.user.id,
+					voteId: this.vote.id,
+					optionId: this.yesAndNo[0]
+				}))
 
-				this.router.get(`/api/users/self/topics/${UUID}`,
-					respond.bind(null, {data: SIGNED_INITIATIVE}))
-
-				var user = this.user
-
-				var res = yield this.request(`/initiatives/${UUID}/signature`, {
+				var path = `/initiatives/${this.initiative.uuid}/signature`
+				var res = yield this.request(path, {
 					method: "PUT",
 					form: {_csrf_token: this.csrfToken, hidden: true}
 				})
@@ -3181,31 +3910,31 @@ describe("InitiativesController", function() {
 				yield signaturesDb.search(sql`
 					SELECT * FROM initiative_signatures
 				`).must.then.eql([{
-					initiative_uuid: UUID,
-					user_uuid: user.id,
+					initiative_uuid: this.initiative.uuid,
+					user_uuid: this.user.id,
 					hidden: true,
 					updated_at: new Date
 				}])
 
 				res.statusCode.must.equal(303)
-				res.headers.location.must.equal(`/initiatives/${UUID}`)
+				res.headers.location.must.equal(`/initiatives/${this.initiative.uuid}`)
 			})
 
 			it("must hide signature that was previously made visible", function*() {
-				yield initiativesDb.create({uuid: UUID, phase: "sign"})
-
-				this.router.get(`/api/users/self/topics/${UUID}`,
-					respond.bind(null, {data: SIGNED_INITIATIVE}))
-
-				var user = this.user
+				yield createSignature(newSignature({
+					userId: this.user.id,
+					voteId: this.vote.id,
+					optionId: this.yesAndNo[0]
+				}))
 
 				var signature = yield signaturesDb.create({
-					initiative_uuid: UUID,
-					user_uuid: user.id,
+					initiative_uuid: this.initiative.uuid,
+					user_uuid: this.user.id,
 					hidden: false
 				})
 
-				var res = yield this.request(`/initiatives/${UUID}/signature`, {
+				var path = `/initiatives/${this.initiative.uuid}/signature`
+				var res = yield this.request(path, {
 					method: "PUT",
 					form: {_csrf_token: this.csrfToken, hidden: true}
 				})
@@ -3219,34 +3948,33 @@ describe("InitiativesController", function() {
 				}])
 
 				res.statusCode.must.equal(303)
-				res.headers.location.must.equal(`/initiatives/${UUID}`)
+				res.headers.location.must.equal(`/initiatives/${this.initiative.uuid}`)
 			})
 
 			it("must hide an already hidden signature", function*() {
-				yield initiativesDb.create({uuid: UUID, phase: "sign"})
+				yield createSignature(newSignature({
+					userId: this.user.id,
+					voteId: this.vote.id,
+					optionId: this.yesAndNo[0]
+				}))
 
-				this.router.get(`/api/users/self/topics/${UUID}`,
-					respond.bind(null, {data: SIGNED_INITIATIVE}))
-
-				var user = this.user
-
-				yield signaturesDb.create({
-					initiative_uuid: UUID,
-					user_uuid: user.id,
+				var signature = yield signaturesDb.create({
+					initiative_uuid: this.initiative.uuid,
+					user_uuid: this.user.id,
 					hidden: true
 				})
 
-				var res = yield this.request(`/initiatives/${UUID}/signature`, {
+				var path = `/initiatives/${this.initiative.uuid}/signature`
+				var res = yield this.request(path, {
 					method: "PUT",
 					form: {_csrf_token: this.csrfToken, hidden: true}
 				})
 
 				res.statusCode.must.equal(303)
-				res.headers.location.must.equal(`/initiatives/${UUID}`)
+				res.headers.location.must.equal(`/initiatives/${this.initiative.uuid}`)
 
-				var signature = yield signaturesDb.read(sql`
+				signature = yield signaturesDb.read(sql`
 					SELECT * FROM initiative_signatures
-					WHERE (initiative_uuid, user_uuid) = (${INITIATIVE.id}, ${user.id})
 				`)
 
 				signature.hidden.must.be.true()
@@ -3263,6 +3991,13 @@ function fakeJwt(obj) {
 
 function parseFlashFromCookies(cookies) {
 	return parseFlash(parseCookies(cookies).flash.value)
+}
+
+function newBdocUrl(topic, vote, user) {
+	var url = "http://example.com/api/users/self/topics/" + topic.id
+	url += `/votes/${vote.id}/downloads/bdocs/user`
+	url += "?token=" + fakeJwt({userId: user.id})
+	return url
 }
 
 function queryPhases(html) {

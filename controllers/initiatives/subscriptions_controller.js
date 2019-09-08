@@ -1,8 +1,6 @@
 var _ = require("root/lib/underscore")
 var Path = require("path")
 var Router = require("express").Router
-var Topic = require("root/lib/topic")
-var HttpError = require("standard-http-error")
 var Http = require("root/lib/http")
 var InitiativesController = require("../initiatives_controller")
 var SqliteError = require("root/lib/sqlite_error")
@@ -15,16 +13,8 @@ var parseSubscription = require("../subscriptions_controller").parse
 
 exports.router = Router({mergeParams: true})
 
-exports.router.use("/", function(req, _res, next) {
-	var initiative = req.initiative
-
-	if (!Topic.isPublic(initiative))
-		next(new HttpError(403, "Topic Not Public"))
-	else
-		next()
-})
-
 exports.router.post("/", next(function*(req, res) {
+	var topic = req.topic
 	var initiative = req.initiative
 	var email = req.body.email
 
@@ -36,7 +26,7 @@ exports.router.post("/", next(function*(req, res) {
 	var subscription
 	try {
 		subscription = yield subscriptionsDb.create({
-			initiative_uuid: initiative.id,
+			initiative_uuid: initiative.uuid,
 			email: email,
 			created_at: new Date,
 			created_ip: req.ip,
@@ -47,7 +37,7 @@ exports.router.post("/", next(function*(req, res) {
 		if (err instanceof SqliteError && err.type == "unique")
 			subscription = yield subscriptionsDb.read(sql`
 				SELECT * FROM initiative_subscriptions
-				WHERE (initiative_uuid, email) = (${initiative.id}, ${email})
+				WHERE (initiative_uuid, email) = (${initiative.uuid}, ${email})
 			`)
 
 		else throw err
@@ -60,18 +50,19 @@ exports.router.post("/", next(function*(req, res) {
 		var initiativeUrl = Http.link(req, Path.dirname(req.baseUrl))
 		var subscriptionsUrl = Http.link(req, req.baseUrl)
 		var token = subscription.update_token
+		var title = topic ? topic.title : initiative.title
 
 		if (subscription.confirmed_at) {
 			yield sendEmail({
 				to: email,
 
 				subject: req.t("ALREADY_SUBSCRIBED_TO_INITIATIVE_TITLE", {
-					initiativeTitle: initiative.title
+					initiativeTitle: title
 				}),
 
 				text: renderEmail(req.lang, "ALREADY_SUBSCRIBED_TO_INITIATIVE_BODY", {
 					url: subscriptionsUrl + "/" + token,
-					initiativeTitle: initiative.title,
+					initiativeTitle: title,
 					initiativeUrl: initiativeUrl
 				})
 			})
@@ -80,12 +71,12 @@ exports.router.post("/", next(function*(req, res) {
 			to: email,
 
 			subject: req.t("CONFIRM_INITIATIVE_SUBSCRIPTION_TITLE", {
-				initiativeTitle: initiative.title
+				initiativeTitle: title
 			}),
 
 			text: renderEmail(req.lang, "CONFIRM_INITIATIVE_SUBSCRIPTION_BODY", {
 				url: subscriptionsUrl + "/new?confirmation_token=" + token,
-				initiativeTitle: initiative.title,
+				initiativeTitle: title,
 				initiativeUrl: initiativeUrl
 			})
 		})
@@ -105,7 +96,7 @@ exports.router.get("/new", next(function*(req, res, next) {
 
 	var subscription = yield subscriptionsDb.read(sql`
 		SELECT * FROM initiative_subscriptions
-		WHERE initiative_uuid = ${initiative.id}
+		WHERE initiative_uuid = ${initiative.uuid}
 		AND update_token = ${req.query.confirmation_token}
 		LIMIT 1
 	`)
@@ -132,9 +123,11 @@ exports.router.get("/new", next(function*(req, res, next) {
 }))
 
 exports.router.use("/:token", next(function*(req, res, next) {
+	var initiative = req.initiative
+
 	req.subscription = yield subscriptionsDb.read(sql`
 		SELECT * FROM initiative_subscriptions
-		WHERE initiative_uuid = ${req.initiative.id}
+		WHERE initiative_uuid = ${initiative.uuid}
 		AND update_token = ${req.params.token}
 		LIMIT 1
 	`)
@@ -171,7 +164,7 @@ exports.router.delete("/:token", next(function*(req, res) {
 
 	yield subscriptionsDb.execute(sql`
 		DELETE FROM initiative_subscriptions
-		WHERE initiative_uuid = ${initiative.id}
+		WHERE initiative_uuid = ${initiative.uuid}
 		AND update_token = ${subscription.update_token}
 	`)
 

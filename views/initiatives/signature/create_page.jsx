@@ -8,6 +8,7 @@ module.exports = function(attrs) {
 	var req = attrs.req
 	var t = req.t
 	var initiative = attrs.initiative
+	var topic = attrs.topic
 	var error = attrs.error
 	var method = attrs.method
 	var code = attrs.code
@@ -17,6 +18,7 @@ module.exports = function(attrs) {
 		page="initiative-signature"
 		title={initiative.title}
 		initiative={initiative}
+		topic={topic}
 		req={req}>
 		<section id="initiative-signature" class="text-section primary-section">
 			<center>

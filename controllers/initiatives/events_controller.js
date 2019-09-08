@@ -16,10 +16,10 @@ var EMPTY_EVENT = {title: "", content: ""}
 exports.router = Router({mergeParams: true})
 
 exports.router.get("/new", next(assertAdmin), next(function*(req, res) {
-	var initiative = req.initiative
+	var topic = req.topic
 
 	var subscriberCount =
-		yield subscriptionsDb.countConfirmedByInitiativeIdForAuthor(initiative.id)
+		yield subscriptionsDb.countConfirmedByInitiativeIdForAuthor(topic.id)
 
 	res.render("initiatives/events/create_page.jsx", {
 		attrs: EMPTY_EVENT,
@@ -29,10 +29,11 @@ exports.router.get("/new", next(assertAdmin), next(function*(req, res) {
 
 exports.router.post("/", next(assertAdmin), next(function*(req, res) {
 	var initiative = req.initiative
+	var topic = req.topic
 
 	var event = yield eventsDb.create({
 		__proto__: parseEvent(req.body),
-		initiative_uuid: initiative.id,
+		initiative_uuid: initiative.uuid,
 		created_at: new Date,
 		occurred_at: new Date,
 		updated_at: new Date,
@@ -41,19 +42,19 @@ exports.router.post("/", next(assertAdmin), next(function*(req, res) {
 	})
 
 	var message = yield messagesDb.create({
-		initiative_uuid: initiative.id,
+		initiative_uuid: initiative.uuid,
 		origin: "event",
 		created_at: new Date,
 		updated_at: new Date,
 
 		title: req.t("EMAIL_INITIATIVE_AUTHOR_EVENT_TITLE", {
 			title: event.title,
-			initiativeTitle: initiative.title,
+			initiativeTitle: topic.title,
 		}),
 
 		text: renderEmail("EMAIL_INITIATIVE_AUTHOR_EVENT_BODY", {
-			initiativeTitle: initiative.title,
-			initiativeUrl: `${Config.url}/initiatives/${initiative.id}`,
+			initiativeTitle: topic.title,
+			initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 			title: event.title,
 			text: _.quoteEmail(event.content)
 		})
@@ -61,11 +62,13 @@ exports.router.post("/", next(assertAdmin), next(function*(req, res) {
 
 	yield Subscription.send(
 		message,
-		yield subscriptionsDb.searchConfirmedByInitiativeIdForAuthor(initiative.id)
+		yield subscriptionsDb.searchConfirmedByInitiativeIdForAuthor(
+			initiative.uuid
+		)
 	)
 
 	res.flash("notice", req.t("INITIATIVE_EVENT_BY_AUTHOR_CREATED"))
-	res.redirect("/initiatives/" + initiative.id)
+	res.redirect("/initiatives/" + initiative.uuid)
 }))
 
 exports.router.use(function(err, req, res, next) {
@@ -89,9 +92,9 @@ exports.router.use(function(err, req, res, next) {
 function* assertAdmin(req, _res, next) {
 	if (req.user == null) throw new HttpError(401)
 
-	if (!Topic.can("admin", req.initiative))
-		throw new HttpError(403, "Not an Topic Admin")
-	if (!Topic.canCreateEvents(req.initiative))
+	if (!Topic.can("admin", req.topic))
+		throw new HttpError(403, "No Edit Permission")
+	if (!Topic.canCreateEvents(req.topic))
 		throw new HttpError(403, "Cannot Create Events")
 
 	var until = yield rateLimit(req.user, req.initiative)
@@ -111,7 +114,7 @@ function parseEvent(obj) {
 function* rateLimit(user, initiative) {
 	var events = yield eventsDb.search(sql`
 		SELECT created_at FROM initiative_events
-		WHERE initiative_uuid = ${initiative.id}
+		WHERE initiative_uuid = ${initiative.uuid}
 		AND created_by = ${user.id}
 		AND created_at > ${DateFns.addMinutes(new Date, -15)}
 		ORDER BY created_at ASC

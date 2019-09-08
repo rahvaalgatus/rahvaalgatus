@@ -623,62 +623,6 @@ button.inherited {
 	}
 }
 
-.topic-progress {
-	display: block;
-
-	padding-left: 2rem;
-	padding-right: 2rem;
-	font-size: 1.3rem;
-	font-family: $museo-sans;
-	font-weight: bold;
-	color: $progress-bar-color;
-
-	background-color: $progress-bar-background;
-	background-repeat: no-repeat;
-
-	&.private {
-		color: white;
-		background-color: #9a9a9a;
-	}
-
-	&.discussable.completed {
-		background-color: $discussion-color;
-		background-image: url(/assets/discussion-over.png);
-		background-position: 1rem center;
-		padding-left: 3.5rem;
-	}
-
-	&.votable.completed {
-		color: white;
-		background-color: $voting-color;
-		background-image: url(/assets/vote-success.png);
-		background-position: 1rem center;
-		padding-left: 3.5rem;
-	}
-
-	&.processable {
-		color: $parliament-color;
-		background-image: url(/assets/clock.png);
-		background-position: 1rem center;
-		padding-left: 3.5rem;
-	}
-
-	&.finished {
-		color: $parliament-color;
-		background-image: url(/assets/discussion-over.png);
-		background-position: 1rem center;
-		padding-left: 3.5rem;
-	}
-
-	&.failed {
-		color: white;
-		background-color: #9a9a9a;
-		background-image: url(/assets/vote-failed.png);
-		background-position: 1rem center;
-		padding-left: 3.5rem;
-	}
-}
-
 .donate-form {
 	margin-top: 2rem;
 
@@ -1459,7 +1403,7 @@ button.inherited {
 				padding: $sidebar-padding $article-padding;
 				border-bottom: 1px solid $light-background-border;
 
-				.topic-progress { line-height: 3.2rem; border-radius: 0.4rem; }
+				.initiative-progress { line-height: 3.2rem; border-radius: 0.4rem; }
 				.sign-button, { margin-top: 1rem; }
 
 				@include mobile-and-tablet { display: block; }
@@ -1624,7 +1568,7 @@ button.inherited {
 		.quicksign {
 			margin-bottom: 2rem;
 
-			.topic-progress {
+			.initiative-progress {
 				margin-top: -$sidebar-padding;
 				margin-left: -$sidebar-padding;
 				margin-right: -$sidebar-padding;
@@ -1703,7 +1647,7 @@ button.inherited {
 		// Don't use overflow to not cut off the blur around buttons.
 		&:after { display: block; clear: both; content: ""; }
 
-		.topic-progress {
+		.initiative-progress {
 			line-height: 3.2rem;
 			border-radius: 0.4rem;
 		}

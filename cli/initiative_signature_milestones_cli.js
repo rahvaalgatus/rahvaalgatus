@@ -17,13 +17,13 @@ var MILESTONES = _.sort(_.subtract, Config.signatureMilestones)
 
 module.exports = function*() {
 	var topics = yield cosDb.query(sql`
-		SELECT initiative.id, initiative.title, initiative.status
-		FROM "Topics" AS initiative
-		JOIN "TopicVotes" AS tv ON tv."topicId" = initiative.id
+		SELECT topic.id, topic.title, topic.status
+		FROM "Topics" AS topic
+		JOIN "TopicVotes" AS tv ON tv."topicId" = topic.id
 		JOIN "Votes" AS vote ON vote.id = tv."voteId"
-		WHERE initiative.visibility = 'public'
-		AND initiative."deletedAt" IS NULL
-		AND initiative."sourcePartnerId" IN ${sql.in(PARTNER_IDS)}
+		WHERE topic.visibility = 'public'
+		AND topic."deletedAt" IS NULL
+		AND topic."sourcePartnerId" IN ${sql.in(PARTNER_IDS)}
 	`)
 
 	var uuids = topics.map((i) => i.id)
@@ -54,13 +54,13 @@ function* updateMilestones(topic, initiative, signatureCount) {
 				signature."createdAt" AS created_at,
 				opt.value AS support
 
-			FROM "Topics" as initiative
-			JOIN "TopicVotes" AS tv ON tv."topicId" = initiative.id
+			FROM "Topics" as topic
+			JOIN "TopicVotes" AS tv ON tv."topicId" = topic.id
 			JOIN "Votes" AS vote ON vote.id = tv."voteId"
 			JOIN "VoteLists" AS signature ON vote.id = signature."voteId"
 			JOIN "VoteOptions" AS opt ON opt.id = signature."optionId"
 
-			WHERE initiative.id = ${topic.id}
+			WHERE topic.id = ${topic.id}
 			AND vote.id IS NOT NULL
 			ORDER BY signature."userId", signature."createdAt" DESC
 		)

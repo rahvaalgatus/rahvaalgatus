@@ -18,11 +18,9 @@ var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
 var filesDb = require("root/db/initiative_files_db")
 var commentsDb = require("root/db/comments_db")
-var countSignatures = Topic.countSignatures.bind(null, "Yes")
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
 var catch401 = require("root/lib/fetch").catch.bind(null, 401)
-var isFetchError = require("root/lib/fetch").is
 var next = require("co-next")
 var sleep = require("root/lib/promise").sleep
 var cosDb = require("root").cosDb
@@ -30,11 +28,11 @@ var cosApi = require("root/lib/citizenos_api")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var renderEmail = require("root/lib/i18n").email
 var sql = require("sqlate")
-var parseCitizenInitiative = cosApi.parseCitizenInitiative
-var encode = encodeURIComponent
 var translateCitizenError = require("root/lib/citizenos_api").translateError
-var searchInitiatives = require("root/lib/citizenos_db").searchInitiatives
+var searchTopics = require("root/lib/citizenos_db").searchTopics
+var countSignaturesById = require("root/lib/citizenos_db").countSignaturesById
 var countSignaturesByIds = require("root/lib/citizenos_db").countSignaturesByIds
+var readVoteOptions = require("root/lib/citizenos_db").readVoteOptions
 var concat = Array.prototype.concat.bind(Array.prototype)
 var decodeBase64 = require("root/lib/crypto").decodeBase64
 var trim = Function.call.bind(String.prototype.trim)
@@ -54,9 +52,9 @@ exports.router = Router({mergeParams: true})
 exports.router.get("/", next(function*(req, res) {
 	var initiatives = yield initiativesDb.search(sql`SELECT * FROM initiatives`)
 
-	var topics = _.indexBy(yield searchInitiatives(sql`
-		initiative.id IN ${sql.in(initiatives.map((i) => i.uuid))}
-		AND initiative.visibility = 'public'
+	var topics = _.indexBy(yield searchTopics(sql`
+		topic.id IN ${sql.in(initiatives.map((i) => i.uuid))}
+		AND topic.visibility = 'public'
 	`), "id")
 
 	initiatives = initiatives.filter((initiative) => (
@@ -135,46 +133,31 @@ exports.router.get("/new", function(_req, res) {
 })
 
 exports.router.use("/:id", next(function*(req, res, next) {
-	var initiative
-	var dbInitiative = yield initiativesDb.read(req.params.id)
-	if (dbInitiative == null) throw new HttpError(404)
+	var initiative = yield initiativesDb.read(req.params.id)
+	if (initiative == null) throw new HttpError(404)
 
-	if (dbInitiative.external) initiative = {
-		id: dbInitiative.uuid,
-		title: dbInitiative.title,
-		creator: {name: dbInitiative.author_name},
-		createdAt: dbInitiative.created_at,
-		permission: {level: "read"},
-		visibility: "public",
-		status: "followUp",
+	var user = req.user
+	var topic
+	if (!initiative.external) {
+		topic = yield searchTopics(sql`topic.id = ${initiative.uuid}`).then(_.first)
+		if (topic == null) throw new HttpError(404)
 
-		vote: {
-			createdAt: dbInitiative.created_at,
-			options: {rows: [{value: "Yes", voteCount: Config.votesRequired}]}
-		}
-	}
-	else {
-		try {
-			var path = `/api/topics/${encode(req.params.id)}`
-			path += "?include[]=vote&include[]=event"
-			if (req.user) path = "/api/users/self" + path.slice(4)
+		var permission = yield readTopicPermission(user, topic)
 
-			initiative = yield req.cosApi(path).then(getBody).
-				then(parseCitizenInitiative)
-		}
-		catch (ex) {
-			// CitizenOS throws 500 for invalid UUIDs. Workaround that.
-			if (isFetchError(403, ex)) throw new HttpError(404)
-			if (isFetchError(404, ex)) throw new HttpError(404)
-			if (isFetchError(500, ex)) throw new HttpError(404)
-			throw ex
-		}
+		if (!(
+			topic.visibility == "public" ||
+			permission == "admin" ||
+			permission == "edit"
+		)) throw new HttpError(403, "Initiative Not Public")
+
+		topic.permission = {level: permission}
+		initiative.title = topic.title
 	}
 
+	req.topic = topic
 	req.initiative = initiative
-	req.dbInitiative = dbInitiative
-	res.locals.initiative = req.initiative
-	res.locals.dbInitiative = req.dbInitiative
+	res.locals.topic = topic
+	res.locals.initiative = initiative
 	next()
 }))
 
@@ -182,21 +165,17 @@ exports.router.get("/:id",
 	new ResponseTypeMiddeware(RESPONSE_TYPES.map(MediaType)),
 	next(function*(req, res, next) {
 	var initiative = req.initiative
-	var dbInitiative = req.dbInitiative
 
 	switch (res.contentType.name) {
 		case "application/vnd.rahvaalgatus.initiative+json":
 			res.setHeader("Content-Type", res.contentType)
 			res.setHeader("Access-Control-Allow-Origin", "*")
-
-			res.send({
-				title: initiative.title,
-				signatureCount: initiative.vote ? countSignatures(initiative) : 0
-			})
+			var sigs = yield countSignaturesById(initiative.uuid)
+			res.send({title: initiative.title, signatureCount: sigs})
 			break
 
 		case "application/atom+xml":
-			var events = yield searchInitiativeEvents(dbInitiative)
+			var events = yield searchInitiativeEvents(initiative)
 			res.setHeader("Content-Type", res.contentType)
 			res.render("initiatives/atom.jsx", {events: events})
 			break
@@ -207,54 +186,63 @@ exports.router.get("/:id",
 
 exports.read = next(function*(req, res) {
 	var user = req.user
+	var topic = req.topic
 	var initiative = req.initiative
-	var dbInitiative = req.dbInitiative
-	var voteId = req.flash("signatureId")
-
-	var votes = voteId ? yield cosDb.query(sql`
-		SELECT signature.*, opt.value AS support
-		FROM "VoteLists" AS signature
-		JOIN "VoteLists" AS signed
-		ON signed."voteId" = signature."voteId"
-		AND signed."userId" = signature."userId"
-		JOIN "VoteOptions" AS opt ON opt.id = signature."optionId"
-		WHERE signed.id = ${voteId}
-		ORDER BY "createdAt" DESC
-		LIMIT 2
-	`) : EMPTY_ARR
-
-	var vote = votes[0]
-
+	var newSignatureId = req.flash("signatureId")
+	var thank = false
+	var thankAgain = false
 	var signature
-	if (user == null && vote && vote.support == "Yes") signature = {
-		initiative_uuid: initiative.id,
-		user_uuid: null,
-		hidden: false
-	}
-	else if (user && Topic.hasVote("Yes", initiative)) signature = (
-		(yield signaturesDb.read(sql`
-			SELECT * FROM initiative_signatures
-			WHERE (initiative_uuid, user_uuid) = (${initiative.id}, ${user.id})
-		`)) || {
-			initiative_uuid: initiative.id,
-			user_uuid: user.id,
-			hidden: false
-		})
-	else if (vote && vote.support == "No")
-		res.flash("notice", req.t("SIGNATURE_REVOKED"))
 
-	if (signature && signature.hidden) signature = null
+	if (initiative.phase == "sign" && newSignatureId) {
+		var cosSignatures = yield cosDb.query(sql`
+			SELECT signature.*, opt.value AS support
+			FROM "VoteLists" AS signature
+
+			JOIN "VoteLists" AS signed
+			ON signed."voteId" = signature."voteId"
+			AND signed."userId" = signature."userId"
+
+			JOIN "VoteOptions" AS opt ON opt.id = signature."optionId"
+			WHERE signed.id = ${newSignatureId}
+			ORDER BY "createdAt" DESC
+			LIMIT 2
+		`)
+
+		// This could assign a newer signature as the one redirected with, but
+		// that's unlikely to be a big problem.
+		let cosSignature = cosSignatures[0]
+		thank = cosSignature.support == "Yes"
+		if (!thank) res.flash("notice", req.t("SIGNATURE_REVOKED"))
+
+		// Currently checking for old signatures even if they were hidden — that's
+		// because by the time we land here, the signature in SQLite has been
+		// marked unhidden.
+		thankAgain = cosSignatures.length > 1 && cosSignatures[1].support == "Yes"
+
+		signature = cosSignature.support == "No" ? null : {
+			initiative_uuid: initiative.uuid,
+			user_uuid: null,
+			hidden: false
+		}
+	}
+	else if (initiative.phase == "sign" && user) {
+		let cosSignature = yield readCitizenSignature(topic, user.id)
+
+		signature = cosSignature && cosSignature.support == "Yes"
+			? yield readSignatureWithDefault(initiative.uuid, user.id)
+			: null
+	}
 
 	var subscriberCount =
-		yield subscriptionsDb.countConfirmedByInitiativeId(initiative.id)
+		yield subscriptionsDb.countConfirmedByInitiativeId(initiative.uuid)
 
-	var comments = yield searchInitiativeComments(initiative.id)
-	var events = _.reverse(yield searchInitiativeEvents(dbInitiative))
+	var comments = yield searchInitiativeComments(initiative.uuid)
+	var events = _.reverse(yield searchInitiativeEvents(initiative))
 
 	var subscription = user && user.emailIsVerified
 		? yield subscriptionsDb.read(sql`
 			SELECT * FROM initiative_subscriptions
-			WHERE initiative_uuid = ${initiative.id}
+			WHERE initiative_uuid = ${initiative.uuid}
 			AND email = ${user.email}
 			LIMIT 1
 		`)
@@ -263,16 +251,24 @@ exports.read = next(function*(req, res) {
 	var files = yield filesDb.search(sql`
 		SELECT id, name, title, content_type, length(content) AS size
 		FROM initiative_files
-		WHERE initiative_uuid = ${dbInitiative.uuid}
+		WHERE initiative_uuid = ${initiative.uuid}
 		AND event_id IS NULL
 	`)
 
+	var signatureCount = yield countSignaturesById(initiative.uuid)
+
+	var voteOptions = initiative.phase == "sign"
+		? yield readVoteOptions(topic.vote.id)
+		: null
+
 	res.render("initiatives/read_page.jsx", {
-		thank: vote && vote.support == "Yes",
-		thankAgain: votes.length > 1 && votes[1].support == "Yes",
-		signature: signature,
+		thank: thank,
+		thankAgain: thankAgain,
+		signature: !signature || signature.hidden ? null : signature,
 		subscription: subscription,
 		subscriberCount: subscriberCount,
+		signatureCount: signatureCount,
+		voteOptions: voteOptions,
 		files: files,
 		comments: comments,
 		events: events
@@ -280,8 +276,6 @@ exports.read = next(function*(req, res) {
 })
 
 exports.router.put("/:id", next(function*(req, res) {
-	var initiative = req.initiative
-
 	if (req.body.visibility === "public") {
 		yield updateInitiativeToPublished(req, res)
 	}
@@ -291,9 +285,10 @@ exports.router.put("/:id", next(function*(req, res) {
 	else if (req.body.status === "followUp") {
 		yield updateInitiativePhaseToParliament(req, res)
 	}
-	else if (isDbInitiativeUpdate(req.body)) {
-		if (!Topic.canEdit(initiative)) throw new HttpError(401)
-		yield initiativesDb.update(initiative.id, parseInitiative(req.body))
+	else if (isInitiativeUpdate(req.body)) {
+		var topic = req.topic
+		if (!Topic.canEdit(topic)) throw new HttpError(403, "No Permission To Edit")
+		yield initiativesDb.update(topic.id, parseInitiative(req.body))
 		res.flash("notice", req.t("INITIATIVE_INFO_UPDATED"))
 		res.redirect(303, req.headers.referer || req.baseUrl + req.url)
 	}
@@ -301,15 +296,18 @@ exports.router.put("/:id", next(function*(req, res) {
 }))
 
 exports.router.delete("/:id", next(function*(req, res) {
-	var initiative = req.initiative
-	if (!Topic.canDelete(initiative)) throw new HttpError(405)
-	yield req.cosApi(`/api/users/self/topics/${initiative.id}`, {method: "DELETE"})
+	var topic = req.topic
+
+	if (!Topic.canDelete(topic))
+		throw new HttpError(405, "Can Only Delete Discussions")
+
+	yield req.cosApi(`/api/users/self/topics/${topic.id}`, {method: "DELETE"})
 	res.flash("notice", req.t("INITIATIVE_DELETED"))
 	res.redirect(302, req.baseUrl)
 }))
 
 exports.router.get("/:id/edit", function(req, res) {
-	if (!Topic.canEdit(req.initiative)) throw new HttpError(401)
+	if (!Topic.canEdit(req.topic)) throw new HttpError(401)
 	res.render("initiatives/update_page.jsx")
 })
 
@@ -325,12 +323,12 @@ exports.router.use("/:id/subscriptions",
 	require("./initiatives/subscriptions_controller").router)
 
 exports.router.get("/:id/signable", next(function*(req, res) {
-	var initiative = req.initiative
-	var vote = initiative.vote
+	var topic = req.topic
+	var vote = topic.vote
 
 	// NOTE: Do not send signing requests through the current user. See below for
 	// an explanation.
-	var signable = yield cosApi(`/api/topics/${initiative.id}/votes/${vote.id}`, {
+	var signable = yield cosApi(`/api/topics/${topic.id}/votes/${vote.id}`, {
 		method: "POST",
 
 		json: {
@@ -351,8 +349,8 @@ exports.router.get("/:id/signable", next(function*(req, res) {
 
 exports.router.post("/:id/signature", next(function*(req, res) {
 	var path
-	var initiative = req.initiative
-	var vote = initiative.vote
+	var topic = req.topic
+	var vote = topic.vote
 
 	res.locals.method = req.body.method
 
@@ -361,7 +359,7 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 	// a requirement we don't need to enforce.
 	switch (req.body.method) {
 		case "id-card":
-			path = `/api/topics/${initiative.id}/votes/${vote.id}/sign`
+			path = `/api/topics/${topic.id}/votes/${vote.id}/sign`
 			var signed = yield cosApi(path, {
 				method: "POST",
 				json: {token: req.body.token, signatureValue: req.body.signature}
@@ -369,10 +367,10 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 
 			if (isOk(signed)) {
 				var userId = parseUserIdFromBdocUrl(signed.body.data.bdocUri)
-				var sig = yield searchCitizenSignature(initiative.id, userId)
-				yield unhideSignature(initiative.id, userId)
+				var sig = yield readCitizenSignature(topic, userId)
+				yield unhideSignature(topic.id, userId)
 				res.flash("signatureId", sig.id)
-				res.redirect(303, req.baseUrl + "/" + initiative.id)
+				res.redirect(303, req.baseUrl + "/" + topic.id)
 			}
 			else res.status(422).render("initiatives/signature/create_page.jsx", {
 				error: translateCitizenError(req.t, signed.body)
@@ -380,7 +378,7 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 			break
 
 		case "mobile-id":
-			path = `/api/topics/${initiative.id}/votes/${vote.id}`
+			path = `/api/topics/${topic.id}/votes/${vote.id}`
 			var signing = yield cosApi(path, {
 				method: "POST",
 				json: {
@@ -407,17 +405,24 @@ exports.router.post("/:id/signature", next(function*(req, res) {
 
 exports.router.put("/:id/signature", next(function*(req, res) {
 	var user = req.user
-	var initiative = req.initiative
 	if (user == null) throw new HttpError(401)
 
-	if (Topic.hasVote("Yes", initiative)) {
+	var initiative = req.initiative
+	var topic = req.topic
+
+	// NOTE: Do not answer differently if there was no signature or it was already
+	// hidden — that'd permit detecting its visibility without actually
+	// re-signing.
+	var cosSignature = yield readCitizenSignature(topic, user.id)
+
+	if (cosSignature && cosSignature.support == "Yes") {
 		var signature = yield signaturesDb.read(sql`
 			SELECT * FROM initiative_signatures
-			WHERE (initiative_uuid, user_uuid) = (${initiative.id}, ${user.id})
+			WHERE (initiative_uuid, user_uuid) = (${initiative.uuid}, ${user.id})
 		`)
 
 		if (!signature) yield signaturesDb.create({
-			initiative_uuid: initiative.id,
+			initiative_uuid: initiative.uuid,
 			user_uuid: user.id,
 			hidden: true,
 			updated_at: new Date
@@ -425,28 +430,25 @@ exports.router.put("/:id/signature", next(function*(req, res) {
 		else if (!signature.hidden) yield signaturesDb.execute(sql`
 			UPDATE initiative_signatures
 			SET hidden = 1, updated_at = ${new Date}
-			WHERE (initiative_uuid, user_uuid) = (${initiative.id}, ${user.id})
+			WHERE (initiative_uuid, user_uuid) = (${topic.id}, ${user.id})
 		`)
 	}
 
-	// NOTE: Do not answer differently if there was no signature or it was already
-	// hidden — that'd permit detecting its visibility without actually
-	// re-signing.
 	res.flash("notice", req.t("SIGNATURE_HIDDEN"))
-	res.redirect(303, req.baseUrl + "/" + initiative.id)
+	res.redirect(303, req.baseUrl + "/" + initiative.uuid)
 }))
 
 exports.router.get("/:id/signature", next(function*(req, res) {
 	var token = req.query.token
 	if (token == null) throw new HttpError(400, "Missing Token")
-	var initiative = req.initiative
-	var signature = yield readSignature(initiative, token)
+	var topic = req.topic
+	var signature = yield readCitizenSignatureWithToken(topic, token)
 
 	switch (signature.statusCode) {
 		case 200:
 			var userId = parseUserIdFromBdocUrl(signature.body.data.bdocUri)
-			var sig = yield searchCitizenSignature(initiative.id, userId)
-			yield unhideSignature(initiative.id, userId)
+			var sig = yield readCitizenSignature(topic, userId)
+			yield unhideSignature(topic.id, userId)
 			res.flash("signatureId", sig.id)
 			break
 
@@ -455,7 +457,7 @@ exports.router.get("/:id/signature", next(function*(req, res) {
 			break
 	}
 
-	res.redirect(303, req.baseUrl + "/" + initiative.id)
+	res.redirect(303, req.baseUrl + "/" + topic.id)
 }))
 
 exports.router.use(function(err, req, res, next) {
@@ -470,9 +472,9 @@ exports.router.use(function(err, req, res, next) {
 	else next(err)
 })
 
-function* readSignature(initiative, token) {
-	var vote = initiative.vote
-	var path = `/api/topics/${initiative.id}/votes/${vote.id}/status`
+function* readCitizenSignatureWithToken(topic, token) {
+	var vote = topic.vote
+	var path = `/api/topics/${topic.id}/votes/${vote.id}/status`
 	path += "?token=" + encodeURIComponent(token)
 
 	RETRY: for (var i = 0; i < 60; ++i) {
@@ -503,8 +505,8 @@ function ensureAreaCode(number) {
 	return "+372" + number
 }
 
-function hasCategory(category, initiative) {
-	return _.contains(initiative.categories, category)
+function hasCategory(category, topic) {
+	return _.contains(topic.categories, category)
 }
 
 function parseUserIdFromBdocUrl(url) {
@@ -512,11 +514,11 @@ function parseUserIdFromBdocUrl(url) {
 	return parseJwt(url.query.token).userId
 }
 
-function unhideSignature(initiativeId, userId) {
+function unhideSignature(initiativeUuid, userId) {
 	return signaturesDb.execute(sql`
 		UPDATE initiative_signatures
 		SET hidden = 0, updated_at = ${new Date}
-		WHERE (initiative_uuid, user_uuid) = (${initiativeId}, ${userId})
+		WHERE (initiative_uuid, user_uuid) = (${initiativeUuid}, ${userId})
 	`)
 }
 
@@ -578,22 +580,45 @@ function* searchInitiativeEvents(initiative) {
 	), "occurred_at")
 }
 
-function searchCitizenSignature(topicId, userId) {
+function readCitizenSignature(topic, userUuid) {
 	return cosDb.query(sql`
-		SELECT signature.*
+		SELECT signature.*, opt.value AS support
 		FROM "VoteLists" AS signature
-		JOIN "TopicVotes" AS tv ON tv."topicId" = ${topicId}
-		WHERE signature."userId" = ${userId}
-		AND signature."voteId" = tv."voteId"
+		JOIN "VoteOptions" AS opt ON opt.id = signature."optionId"
+		WHERE signature."userId" = ${userUuid}
+		AND signature."voteId" = ${topic.vote.id}
 		ORDER BY signature."createdAt" DESC
 		LIMIT 1
 	`).then(_.first)
 }
 
-function* searchInitiativeComments(initiativeId) {
+function readSignatureWithDefault(initiativeUuid, userUuid) {
+	return signaturesDb.read(sql`
+		SELECT * FROM initiative_signatures
+		WHERE (initiative_uuid, user_uuid) = (${initiativeUuid}, ${userUuid})
+	`).then((signature) => (signature || {
+		initiative_uuid: initiativeUuid,
+		user_uuid: userUuid,
+		hidden: false
+	}))
+}
+
+function readTopicPermission(user, topic) {
+	if (user == null) return Promise.resolve("read")
+	if (topic.creatorId == user.id) return Promise.resolve("admin")
+
+	return cosDb.query(sql`
+		SELECT level FROM "TopicMemberUsers"
+		WHERE "topicId" = ${topic.id}
+		AND "userId" = ${user.id}
+		AND "deletedAt" IS NULL
+	`).then(_.first).then((perm) => perm ? perm.level : null)
+}
+
+function* searchInitiativeComments(initiativeUuid) {
 	var comments = yield commentsDb.search(sql`
 		SELECT * FROM comments
-		WHERE initiative_uuid = ${initiativeId}
+		WHERE initiative_uuid = ${initiativeUuid}
 		ORDER BY created_at
 	`)
 
@@ -615,7 +640,7 @@ function* searchInitiativeComments(initiativeId) {
 	return parentsAndReplies[0]
 }
 
-function isDbInitiativeUpdate(obj) {
+function isInitiativeUpdate(obj) {
 	return (
 		"author_url" in obj ||
 		"url" in obj ||
@@ -630,29 +655,33 @@ function isDbInitiativeUpdate(obj) {
 }
 
 function* updateInitiativeToPublished(req, res) {
-	var initiative = req.initiative
+	var topic = req.topic
 	var tmpl = "initiatives/update_for_publish_page.jsx"
 
 	if (!(
-		Topic.canPublish(initiative) ||
-		Topic.canUpdateDiscussionDeadline(initiative)
+		Topic.canPublish(topic) ||
+		Topic.canUpdateDiscussionDeadline(topic)
 	)) throw new HttpError(403)
 
 	if (req.body.endsAt == null) return void res.render(tmpl, {
-		attrs: {endsAt: initiative.endsAt && new Date(initiative.endsAt)}
+		attrs: {endsAt: topic.endsAt && new Date(topic.endsAt)}
 	})
 
 	let endsAt = DateFns.endOfDay(Time.parseDate(req.body.endsAt))
 
-	if (!Topic.isDeadlineOk(new Date, endsAt))
-		return void res.status(422).render(tmpl, {
+	if (!Topic.isDeadlineOk(new Date, endsAt)) {
+		res.statusCode = 422
+		res.statusMessage = "Deadline Too Near or Too Far"
+
+		return void res.render(tmpl, {
 			error: req.t("DEADLINE_ERR", {days: Config.minDeadlineDays}),
 			attrs: {endsAt: endsAt}
 		})
+	}
 
 	var attrs = {visibility: "public", endsAt: endsAt}
 
-	var updated = yield req.cosApi(`/api/users/self/topics/${initiative.id}`, {
+	var updated = yield req.cosApi(`/api/users/self/topics/${topic.id}`, {
 		method: "PUT",
 		json: attrs
 	}).catch(catch400)
@@ -662,41 +691,43 @@ function* updateInitiativeToPublished(req, res) {
 		attrs: attrs
 	})
 
-	yield initiativesDb.update(initiative.id, {
-		discussion_end_email_sent_at: null
-	})
+	yield initiativesDb.update(topic.id, {discussion_end_email_sent_at: null})
 
 	res.flash("notice", req.t("PUBLISHED_INITIATIVE"))
-	res.redirect(303, req.baseUrl + "/" + initiative.id)
+	res.redirect(303, req.baseUrl + "/" + topic.id)
 }
 
 function* updateInitiativePhaseToSign(req, res) {
-	var initiative = req.initiative
+	var topic = req.topic
 	var tmpl = "initiatives/update_for_voting_page.jsx"
 
 	if (!(
-		Topic.canPropose(new Date, initiative) ||
-		Topic.canUpdateVoteDeadline(initiative)
-	)) throw new HttpError(403)
+		Topic.canPropose(new Date, topic) ||
+		Topic.canUpdateVoteDeadline(topic)
+	)) throw new HttpError(403, "Cannot Update to Sign Phase")
 
 	if (req.body.endsAt == null) return void res.render(tmpl, {
-		attrs: {endsAt: initiative.vote ? new Date(initiative.vote.endsAt) : null}
+		attrs: {endsAt: topic.vote ? new Date(topic.vote.endsAt) : null}
 	})
 
 	let endsAt = DateFns.endOfDay(Time.parseDate(req.body.endsAt))
 	var attrs = {endsAt: endsAt}
 
-	if (!Topic.isDeadlineOk(new Date, endsAt))
-		return void res.status(422).render(tmpl, {
+	if (!Topic.isDeadlineOk(new Date, endsAt)) {
+		res.statusCode = 422
+		res.statusMessage = "Deadline Too Near or Too Far"
+
+		return void res.render(tmpl, {
 			error: req.t("DEADLINE_ERR", {days: Config.minDeadlineDays}),
 			attrs: attrs
 		})
+	}
 
 	var updated
-	var path = `/api/users/self/topics/${initiative.id}`
+	var path = `/api/users/self/topics/${topic.id}`
 
-	if (initiative.vote)
-		updated = req.cosApi(`${path}/votes/${initiative.vote.id}`, {
+	if (topic.vote)
+		updated = req.cosApi(`${path}/votes/${topic.vote.id}`, {
 			method: "PUT",
 			json: {endsAt: endsAt}
 		})
@@ -719,25 +750,25 @@ function* updateInitiativePhaseToSign(req, res) {
 		attrs: attrs
 	})
 
-	yield initiativesDb.update(initiative.id, {
+	yield initiativesDb.update(topic.id, {
 		phase: "sign",
 		signing_end_email_sent_at: null
 	})
 
-	if (initiative.vote == null) {
+	if (topic.vote == null) {
 		var message = yield messagesDb.create({
-			initiative_uuid: initiative.id,
+			initiative_uuid: topic.id,
 			origin: "status",
 			created_at: new Date,
 			updated_at: new Date,
 
 			title: t("SENT_TO_SIGNING_MESSAGE_TITLE", {
-				initiativeTitle: initiative.title
+				initiativeTitle: topic.title
 			}),
 
 			text: renderEmail("et", "SENT_TO_SIGNING_MESSAGE_BODY", {
-				initiativeTitle: initiative.title,
-				initiativeUrl: `${Config.url}/initiatives/${initiative.id}`,
+				initiativeTitle: topic.title,
+				initiativeUrl: `${Config.url}/initiatives/${topic.id}`,
 			})
 		})
 
@@ -745,22 +776,23 @@ function* updateInitiativePhaseToSign(req, res) {
 			message,
 
 			yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(
-				initiative.id
+				topic.id
 			)
 		)
 	}
 
 	res.flash("notice", req.t("INITIATIVE_SIGN_PHASE_UPDATED"))
-	res.redirect(303, req.baseUrl + "/" + initiative.id)
+	res.redirect(303, req.baseUrl + "/" + topic.id)
 }
 
 function* updateInitiativePhaseToParliament(req, res) {
+	var topic = req.topic
 	var initiative = req.initiative
-	var dbInitiative = req.dbInitiative
+	var signatureCount = yield countSignaturesById(initiative.uuid)
 	var tmpl = "initiatives/update_for_parliament_page.jsx"
 
-	if (!Topic.canSendToParliament(initiative, dbInitiative))
-		throw new HttpError(403)
+	if (!Topic.canSendToParliament(topic, initiative, signatureCount))
+		throw new HttpError(403, "Cannot Send to Parliament")
 
 	var attrs = {
 		status: req.body.status,
@@ -769,7 +801,7 @@ function* updateInitiativePhaseToParliament(req, res) {
 
 	if (req.body.contact == null) return void res.render(tmpl, {attrs: attrs})
 
-	var updated = yield req.cosApi(`/api/users/self/topics/${initiative.id}`, {
+	var updated = yield req.cosApi(`/api/users/self/topics/${topic.id}`, {
 		method: "PUT",
 		json: attrs
 	}).catch(catch400)
@@ -779,26 +811,26 @@ function* updateInitiativePhaseToParliament(req, res) {
 		attrs: attrs
 	})
 
-	yield initiativesDb.update(initiative.id, {
+	yield initiativesDb.update(topic.id, {
 		phase: "parliament",
 		sent_to_parliament_at: new Date
 	})
 
 	var message = yield messagesDb.create({
-		initiative_uuid: initiative.id,
+		initiative_uuid: topic.id,
 		origin: "status",
 		created_at: new Date,
 		updated_at: new Date,
 
 		title: t("SENT_TO_PARLIAMENT_MESSAGE_TITLE", {
-			initiativeTitle: initiative.title
+			initiativeTitle: topic.title
 		}),
 
 		text: renderEmail("et", "SENT_TO_PARLIAMENT_MESSAGE_BODY", {
 			authorName: attrs.contact.name,
-			initiativeTitle: initiative.title,
-			initiativeUrl: `${Config.url}/initiatives/${initiative.id}`,
-			signatureCount: countSignatures(initiative)
+			initiativeTitle: topic.title,
+			initiativeUrl: `${Config.url}/initiatives/${topic.id}`,
+			signatureCount: signatureCount
 		})
 	})
 
@@ -806,12 +838,12 @@ function* updateInitiativePhaseToParliament(req, res) {
 		message,
 
 		yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(
-			initiative.id
+			topic.id
 		)
 	)
 
 	res.flash("notice", req.t("SENT_TO_PARLIAMENT_CONTENT"))
-	res.redirect(303, req.baseUrl + "/" + initiative.id)
+	res.redirect(303, req.baseUrl + "/" + topic.id)
 }
 
 function parseInitiative(obj) {
@@ -858,6 +890,5 @@ function parseMeeting(obj) {
 
 // NOTE: Use this only on JWTs from trusted sources as it does no validation.
 function parseJwt(jwt) { return JSON.parse(decodeBase64(jwt.split(".")[1])) }
-function getBody(res) { return res.body.data }
 function isOrganizationPresent(org) { return org.name || org.url }
 function isMeetingPresent(org) { return org.date || org.url }

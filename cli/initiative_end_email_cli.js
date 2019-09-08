@@ -26,16 +26,16 @@ function* emailEndedDiscussions() {
 	`)).map((initiative) => initiative.uuid)
 
 	var discussions = yield cosDb.query(sql`
-		SELECT initiative.id, initiative.title, "user".email AS user_email
-		FROM "Topics" AS initiative
-		JOIN "Users" AS "user" ON "user".id = initiative."creatorId"
-		WHERE initiative.status = 'inProgress'
-		AND initiative."endsAt" >= ${DateFns.addMonths(new Date, -6)}
-		AND initiative."endsAt" <= ${new Date}
-		AND initiative.visibility = 'public'
-		AND initiative."deletedAt" IS NULL
-		AND initiative."sourcePartnerId" IN ${sql.in(PARTNER_IDS)}
-		AND initiative.id NOT IN (${uuids.length ? sql.csv(uuids) : NO_UUIDS})
+		SELECT topic.id, topic.title, "user".email AS user_email
+		FROM "Topics" AS topic
+		JOIN "Users" AS "user" ON "user".id = topic."creatorId"
+		WHERE topic.status = 'inProgress'
+		AND topic."endsAt" >= ${DateFns.addMonths(new Date, -6)}
+		AND topic."endsAt" <= ${new Date}
+		AND topic.visibility = 'public'
+		AND topic."deletedAt" IS NULL
+		AND topic."sourcePartnerId" IN ${sql.in(PARTNER_IDS)}
+		AND topic.id NOT IN (${uuids.length ? sql.csv(uuids) : NO_UUIDS})
 		AND "user".email IS NOT NULL
 		AND "user"."emailIsVerified"
 	`)
@@ -68,50 +68,48 @@ function* emailEndedInitiatives() {
 		SELECT uuid FROM initiatives WHERE signing_end_email_sent_at IS NOT NULL
 	`)).map((initiative) => initiative.uuid)
 
-	var initiatives = yield cosDb.query(sql`
-		SELECT initiative.id, initiative.title, "user".email AS user_email
-		FROM "Topics" AS initiative
-		JOIN "Users" AS "user" ON "user".id = initiative."creatorId"
-		JOIN "TopicVotes" AS tv ON tv."topicId" = initiative.id
+	var topics = yield cosDb.query(sql`
+		SELECT topic.id, topic.title, "user".email AS user_email
+		FROM "Topics" AS topic
+		JOIN "Users" AS "user" ON "user".id = topic."creatorId"
+		JOIN "TopicVotes" AS tv ON tv."topicId" = topic.id
 		JOIN "Votes" AS vote ON vote.id = tv."voteId"
-		WHERE initiative.status = 'voting'
+		WHERE topic.status = 'voting'
 		AND vote."endsAt" >= ${DateFns.addMonths(new Date, -6)}
 		AND vote."endsAt" <= ${new Date}
-		AND initiative.visibility = 'public'
-		AND initiative."deletedAt" IS NULL
-		AND initiative."sourcePartnerId" IN ${sql.in(PARTNER_IDS)}
-		AND initiative.id NOT IN (${uuids.length ? sql.csv(uuids) : NO_UUIDS})
+		AND topic.visibility = 'public'
+		AND topic."deletedAt" IS NULL
+		AND topic."sourcePartnerId" IN ${sql.in(PARTNER_IDS)}
+		AND topic.id NOT IN (${uuids.length ? sql.csv(uuids) : NO_UUIDS})
 		AND "user".email IS NOT NULL
 		AND "user"."emailIsVerified"
 	`)
 
-	var signatureCounts = yield countSignaturesByIds(initiatives.map((i) => i.id))
+	var signatureCounts = yield countSignaturesByIds(topics.map((i) => i.id))
 
-	yield initiatives.map(function*(initiative) {
+	yield topics.map(function*(topic) {
 		logger.info(
 			"Notifying %s of initiative %s signing end…",
-			initiative.user_email,
-			initiative.id
+			topic.user_email,
+			topic.id
 		)
 
 		yield sendEmail({
-			to: initiative.user_email,
-			subject: signatureCounts[initiative.id] >= SIGS_REQUIRED
+			to: topic.user_email,
+			subject: signatureCounts[topic.id] >= SIGS_REQUIRED
 				? t("SIGNING_END_COMPLETE_EMAIL_SUBJECT")
 				: t("SIGNING_END_INCOMPLETE_EMAIL_SUBJECT"),
 
-			text: renderEmail(signatureCounts[initiative.id] >= SIGS_REQUIRED
+			text: renderEmail(signatureCounts[topic.id] >= SIGS_REQUIRED
 				? "SIGNING_END_COMPLETE_EMAIL_BODY"
 				: "SIGNING_END_INCOMPLETE_EMAIL_BODY", {
-				initiativeTitle: initiative.title,
-				initiativeUrl: `${Config.url}/initiatives/${initiative.id}`,
-				initiativeEditUrl: `${Config.url}/initiatives/${initiative.id}`
+				initiativeTitle: topic.title,
+				initiativeUrl: `${Config.url}/initiatives/${topic.id}`,
+				initiativeEditUrl: `${Config.url}/initiatives/${topic.id}`
 			})
 		})
 
-		yield replaceInitiative(initiative.id, {
-			signing_end_email_sent_at: new Date
-		})
+		yield replaceInitiative(topic.id, {signing_end_email_sent_at: new Date})
 	})
 }
 

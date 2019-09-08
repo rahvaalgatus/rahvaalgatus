@@ -5,7 +5,7 @@ var HttpError = require("standard-http-error")
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
 var translateCitizenError = require("root/lib/citizenos_api").translateError
-var searchInitiatives = require("root/lib/citizenos_db").searchInitiatives
+var searchTopics = require("root/lib/citizenos_db").searchTopics
 var countSignaturesByIds = require("root/lib/citizenos_db").countSignaturesByIds
 var sql = require("sqlate")
 var cosDb = require("root").cosDb
@@ -76,8 +76,8 @@ function* read(req, res) {
 		return dbSignature == null || !dbSignature.hidden
 	})
 
-	var authoredTopics = yield searchInitiatives(sql`
-		"creatorId" = ${user.id}
+	var authoredTopics = yield searchTopics(sql`
+		topic."creatorId" = ${user.id}
 	`)
 
 	var authoredInitiatives = yield initiativesDb.search(sql`
@@ -85,9 +85,9 @@ function* read(req, res) {
 		WHERE uuid IN ${sql.in(authoredTopics.map((t) => t.id))}
 	`)
 
-	var signedTopics = yield searchInitiatives(sql`
-		initiative.id IN ${sql.in(signatures.map((s) => s.initiative_uuid))}
-		AND initiative.visibility = 'public'
+	var signedTopics = yield searchTopics(sql`
+		topic.id IN ${sql.in(signatures.map((s) => s.initiative_uuid))}
+		AND topic.visibility = 'public'
 	`)
 
 	var signedInitiatives = yield initiativesDb.search(sql`

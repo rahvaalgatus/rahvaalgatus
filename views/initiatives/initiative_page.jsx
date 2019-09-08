@@ -12,8 +12,10 @@ exports.ProgressView = ProgressView
 function InitiativePage(attrs, children) {
 	var req = attrs.req
 	var initiative = attrs.initiative
-	var path = "/initiatives/" + initiative.id
-	var createdAt = initiative.createdAt
+	var topic = attrs.topic
+	var path = "/initiatives/" + initiative.uuid
+	var createdAt = initiative.created_at || topic.createdAt
+	var authorName = initiative.author_name || topic && topic.creator.name
 
 	return <Page class={"initiative-page " + (attrs.class || "")} {...attrs}>
 		<header id="initiative-header">
@@ -23,10 +25,10 @@ function InitiativePage(attrs, children) {
 						<a href={path}>{initiative.title}</a>
 					: initiative.title}
 
-					{InitiativeBadge(initiative)}
+					{topic ? InitiativeBadge(topic) : null}
 				</h1>
 
-				<span class="author">{initiative.creator.name}</span>
+				<span class="author">{authorName}</span>
 				{", "}
 				<time datetime={createdAt.toJSON()}>
 					{I18n.formatDate("numeric", createdAt)}
@@ -38,9 +40,9 @@ function InitiativePage(attrs, children) {
 	</Page>
 }
 
-function InitiativeBadge(initiative) {
-	var partner = Config.partners[initiative.sourcePartnerId]
-	var category = _.values(_.pick(Config.categories, initiative.categories))[0]
+function InitiativeBadge(topic) {
+	var partner = Config.partners[topic.sourcePartnerId]
+	var category = _.values(_.pick(Config.categories, topic.categories))[0]
 	var badge = partner || category
 
 	if (badge) {

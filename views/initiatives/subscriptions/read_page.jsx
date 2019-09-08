@@ -8,12 +8,14 @@ module.exports = function(attrs) {
 	var req = attrs.req
 	var t = req.t
 	var initiative = attrs.initiative
+	var topic = attrs.topic
 	var subscription = attrs.subscription
 
 	return <InitiativePage
 		page="initiative-subscription"
 		title={initiative.title}
 		initiative={initiative}
+		topic={topic}
 		req={req}>
 		<section class="primary-section text-section"><center>
 			<h2>{t("SUBSCRIPTION_UPDATE_TITLE")}</h2>

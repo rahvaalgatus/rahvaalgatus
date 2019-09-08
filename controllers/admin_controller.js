@@ -8,7 +8,7 @@ var Time = require("root/lib/time")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var commentsDb = require("root/db/comments_db")
 var next = require("co-next")
-var searchInitiatives = require("root/lib/citizenos_db").searchInitiatives
+var searchTopics = require("root/lib/citizenos_db").searchTopics
 var initiativesDb = require("root/db/initiatives_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
@@ -170,9 +170,9 @@ exports.get("/", next(function*(req, res) {
 exports.get("/initiatives", next(function*(_req, res) {
 	var initiatives = yield initiativesDb.search(sql`SELECT * FROM initiatives`)
 
-	var topics = _.indexBy(yield searchInitiatives(sql`
-		initiative.id IN ${sql.in(initiatives.map((i) => i.uuid))}
-		AND initiative.visibility = 'public'
+	var topics = _.indexBy(yield searchTopics(sql`
+		topic.id IN ${sql.in(initiatives.map((i) => i.uuid))}
+		AND topic.visibility = 'public'
 	`), "id")
 
 	initiatives = initiatives.filter((initiative) => (
@@ -208,8 +208,8 @@ exports.use("/initiatives/:id", next(function*(req, res, next) {
 	var initiative = yield initiativesDb.read(req.params.id)
 	if (initiative == null) return void next(new HttpError(404))
 
-	var topic = yield searchInitiatives(sql`
-		initiative.id = ${initiative.uuid} AND initiative.visibility = 'public'
+	var topic = yield searchTopics(sql`
+		topic.id = ${initiative.uuid} AND topic.visibility = 'public'
 	`).then(_.first)
 
 	// Populate initiative's title from CitizenOS until we've found a way to sync

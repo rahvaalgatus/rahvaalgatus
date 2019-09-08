@@ -7,6 +7,7 @@ module.exports = function(attributes) {
 	var req = attributes.req
 	var t = req.t
 	var initiative = attributes.initiative
+	var topic = attributes.topic
 	var error = attributes.error
 	var attrs = attributes.attrs
 	var subscriberCount = attributes.subscriberCount
@@ -15,6 +16,7 @@ module.exports = function(attributes) {
 		page="create-initiative-event"
 		title={initiative.title}
 		initiative={initiative}
+		topic={topic}
 		req={req}>
 		<section class="primary-section text-section">
 			<center>
@@ -26,7 +28,7 @@ module.exports = function(attributes) {
 				<Form
 					req={req}
 					method="post"
-					action={"/initiatives/" + initiative.id + "/events"}
+					action={"/initiatives/" + initiative.uuid + "/events"}
 					class="form">
 					<label class="form-label">{t("INITIATIVE_EVENT_TITLE_INPUT")}</label>
 					<input

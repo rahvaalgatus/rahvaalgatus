@@ -15,7 +15,7 @@ function CreatePage(attrs) {
 	var initiative = attrs.initiative
 	var message = attrs.message
 	var subscriptions = attrs.subscriptions
-	var path = `${req.baseUrl}/initiatives/${initiative.id}/messages`
+	var path = `${req.baseUrl}/initiatives/${initiative.uuid}/messages`
 	var preview = attrs.preview
 
 	return <Page
@@ -24,7 +24,7 @@ function CreatePage(attrs) {
 		req={req}
 	>
 		<a href={req.baseUrl + "/initiatives"} class="admin-back-2">Initiatives</a>
-		<a href={req.baseUrl + "/initiatives/" + initiative.id} class="admin-back">
+		<a href={req.baseUrl + "/initiatives/" + initiative.uuid} class="admin-back">
 			{initiative.title}
 		</a>
 

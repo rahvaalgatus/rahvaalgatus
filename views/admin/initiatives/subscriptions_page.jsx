@@ -17,7 +17,7 @@ module.exports = function(attrs) {
 		req={req}
 	>
 		<a href={req.baseUrl + "/initiatives"} class="admin-back-2">Initiatives</a>
-		<a href={req.baseUrl + "/initiatives/" + initiative.id} class="admin-back">
+		<a href={req.baseUrl + "/initiatives/" + initiative.uuid} class="admin-back">
 			{initiative.title}
 		</a>
 

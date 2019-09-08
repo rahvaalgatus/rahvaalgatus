@@ -57,16 +57,36 @@ module.exports = function(attrs) {
 							<option value="edit" selected={phase == "edit"} disabled>
 								Edit
 							</option>
-							<option value="sign" selected={phase == "sign"}>
+
+							<option
+								value="sign"
+								selected={phase == "sign"}
+								disabled={initiative.external || topic && topic.vote == null}
+							>
 								Sign
 							</option>
-							<option value="parliament" selected={phase == "parliament"}>
+
+							<option
+								value="parliament"
+								selected={phase == "parliament"}
+								disabled={topic && topic.vote == null}
+							>
 								Parliament
 							</option>
-							<option value="government" selected={phase == "government"}>
+
+							<option
+								value="government"
+								selected={phase == "government"}
+								disabled={topic && topic.vote == null}
+							>
 								Government
 							</option>
-							<option value="done" selected={phase == "done"}>
+
+							<option
+								value="done"
+								selected={phase == "done"}
+								disabled={topic && topic.vote == null}
+							>
 								Follow-Up
 							</option>
 						</select>

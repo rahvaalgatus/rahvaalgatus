@@ -9,6 +9,7 @@ var javascript = require("root/lib/jsx").javascript
 module.exports = function(attrs) {
 	var req = attrs.req
 	var initiative = attrs.initiative
+	var topic = attrs.topic
 	var flash = attrs.flash
 	var t = attrs.t
 
@@ -16,15 +17,16 @@ module.exports = function(attrs) {
 		page="edit-initiative"
 		title={initiative.title}
 		initiative={initiative}
+		topic={topic}
 		req={req}>
 		<section id="initiative-section" class="transparent-section"><center>
 			<div id="initiative-sheet" class="sheet">
 				<Flash flash={flash} />
 
-				{Topic.canEditBody(initiative) ? <Fragment>
+				{Topic.canEditBody(topic) ? <Fragment>
 					<iframe
 						id="initiative-etherpad"
-						src={Topic.getEtherpadUrl(initiative)}
+						src={Topic.getEtherpadUrl(topic)}
 						frameborder="0"
 						scrolling="no"
 					/>
@@ -74,16 +76,16 @@ module.exports = function(attrs) {
 						<h1>{t("CANNOT_EDIT_INITIATIVE_TEXT")}</h1>
 					</div>
 
-					<article class="text">{Jsx.html(initiative.html)}</article>
+					<article class="text">{Jsx.html(topic.html)}</article>
 				</Fragment>}
 			</div>
 
 			<aside id="initiative-sidebar">
 				<div class="sidebar-section">
 					<a
-						href={"/initiatives/" + initiative.id}
+						href={"/initiatives/" + initiative.uuid}
 						class="blue-button wide-button">
-						{Topic.isDiscussion(initiative)
+						{initiative.phase == "edit"
 							? t("BACK_TO_DISCUSSION")
 							: t("BACK_TO_INITIATIVE")
 						}

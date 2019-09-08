@@ -32,18 +32,23 @@ var CONSTRAINT_ERRORS = {
 	]
 }
 
-exports.router.get("/new", function(_req, res) {
+exports.router.get("/new", function(req, res) {
+	var user = req.user
+	if (user == null) throw new HttpError(401)
+
 	res.render("initiatives/comments/create_page.jsx")
 })
 
 exports.router.post("/", next(function*(req, res) {
 	var user = req.user
-	var initiative = req.initiative
 	if (user == null) throw new HttpError(401)
+
+	var initiative = req.initiative
+	var topic = req.topic
 	var userEmail = user.emailIsVerified ? user.email : ""
 
 	var attrs = _.assign(parseComment(req.body), {
-		initiative_uuid: initiative.id,
+		initiative_uuid: initiative.uuid,
 		user_uuid: user.id,
 		created_at: new Date,
 		updated_at: new Date
@@ -51,13 +56,13 @@ exports.router.post("/", next(function*(req, res) {
 
 	try {
 		var comment = yield commentsDb.create(attrs)
-		var initiativeUrl = `${Config.url}/initiatives/${initiative.id}`
+		var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 		var subscribe = _.parseTrilean(req.body.subscribe)
 
 		if (subscribe != null && user.emailIsVerified) {
 			var subscription = yield subscriptionsDb.read(sql`
 				SELECT * FROM initiative_subscriptions
-				WHERE (initiative_uuid, email) = (${initiative.id}, ${userEmail})
+				WHERE (initiative_uuid, email) = (${initiative.uuid}, ${userEmail})
 			`)
 
 			if (subscription) yield subscriptionsDb.update(subscription, {
@@ -67,7 +72,7 @@ exports.router.post("/", next(function*(req, res) {
 			})
 			else if (subscribe) yield subscriptionsDb.create({
 				email: user.email,
-				initiative_uuid: initiative.id,
+				initiative_uuid: initiative.uuid,
 				official_interest: false,
 				author_interest: false,
 				comment_interest: true,
@@ -79,17 +84,19 @@ exports.router.post("/", next(function*(req, res) {
 		}
 
 		var subscriptions = yield subscriptionsDb.searchConfirmedByInitiativeIdWith(
-			initiative.id,
+			initiative.uuid,
 			sql`comment_interest AND email != ${userEmail}`
 		)
 
+		var title = topic ? topic.title : initiative.title
+
 		yield Subscription.send({
 			title: req.t("EMAIL_INITIATIVE_COMMENT_TITLE", {
-				initiativeTitle: initiative.title,
+				initiativeTitle: title,
 			}),
 
 			text: renderEmail("EMAIL_INITIATIVE_COMMENT_BODY", {
-				initiativeTitle: initiative.title,
+				initiativeTitle: title,
 				initiativeUrl: initiativeUrl,
 				userName: user.name,
 				commentTitle: comment.title.replace(/\r?\n/g, " "),
@@ -124,7 +131,7 @@ exports.router.use("/:commentId", next(function*(req, res, next) {
 	var comment = yield commentsDb.read(sql`
 		SELECT * FROM comments
 		WHERE (id = ${id} OR uuid = ${id})
-		AND initiative_uuid = ${initiative.id}
+		AND initiative_uuid = ${initiative.uuid}
 	`)
 
 	if (comment == null)
@@ -147,9 +154,11 @@ exports.router.get("/:commentId", next(function*(req, res) {
 
 exports.router.post("/:commentId/replies", next(function*(req, res) {
 	var user = req.user
+	if (user == null) throw new HttpError(401)
+
+	var topic = req.topic
 	var initiative = req.initiative
 	var comment = req.comment
-	if (user == null) throw new HttpError(401)
 	if (comment.parent_id) throw new HttpError(405)
 
 	var attrs = _.assign(parseComment(req.body), {
@@ -163,21 +172,23 @@ exports.router.post("/:commentId/replies", next(function*(req, res) {
 
 	try {
 		var reply = yield commentsDb.create(attrs)
-		var initiativeUrl = `${Config.url}/initiatives/${initiative.id}`
+		var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 		var userEmail = user.emailIsVerified ? user.email : ""
 
 		var subscriptions = yield subscriptionsDb.searchConfirmedByInitiativeIdWith(
-			initiative.id,
+			initiative.uuid,
 			sql`comment_interest AND email != ${userEmail}`
 		)
+		
+		var title = topic ? topic.title : initiative.title
 
 		yield Subscription.send({
 			title: req.t("EMAIL_INITIATIVE_COMMENT_REPLY_TITLE", {
-				initiativeTitle: initiative.title,
+				initiativeTitle: title,
 			}),
 
 			text: renderEmail("EMAIL_INITIATIVE_COMMENT_REPLY_BODY", {
-				initiativeTitle: initiative.title,
+				initiativeTitle: title,
 				initiativeUrl: initiativeUrl,
 				userName: user.name,
 				commentText: _.quoteEmail(reply.text),

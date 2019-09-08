@@ -12,6 +12,8 @@ var createTopic = require("root/test/citizenos_fixtures").createTopic
 var createVote = require("root/test/citizenos_fixtures").createVote
 var createOptions = require("root/test/citizenos_fixtures").createOptions
 var createSignature = require("root/test/citizenos_fixtures").createSignature
+var parseTopic = require("root/lib/citizenos_db").parseTopic
+var outdent = require("root/lib/outdent")
 
 describe("CitizenosDb", function() {
 	require("root/test/db")()
@@ -112,4 +114,188 @@ describe("CitizenosDb", function() {
 			)))
 		})
 	})
+
+	describe(".parseTopic", function() {
+		// Initiative with id 1f821c9e-1b93-4ef5-947f-fe0be45855c5 has the main
+		// title with <h2>, not <h1>.
+		forEachHeader(function(tagName) {
+			it(`must parse title from first <${tagName}>`, function() {
+				var html = outdent`
+					<!DOCTYPE HTML>
+					<html>
+						<body>
+							<${tagName}>Vote for Peace</${tagName}>
+							<p>Rest in peace!</p>
+						</body>
+					</html>
+				`
+				parseTopic({
+					description: html
+				}).must.eql({
+					title: "Vote for Peace",
+					html: "<p>Rest in peace!</p>"
+				})
+			})
+		})
+
+		it("must parse title from HTML if on multiple lines", function() {
+			var html = outdent`
+				<!DOCTYPE HTML>
+				<html>
+					<body>
+						<h1>
+							Vote for Peace
+						</h1>
+						<p>Rest in peace!</p>
+					</body>
+				</html>
+			`
+			parseTopic({
+				description: html
+			}).must.eql({
+				title: "Vote for Peace",
+				html: "<p>Rest in peace!</p>"
+			})
+		})
+
+		it("must decode HTML entities in title", function() {
+			var html = outdent`
+				<!DOCTYPE HTML>
+				<html>
+					<body>
+						<h1>Vote&#x3a; War &amp; Peace</h1>
+						<p>Rest in peace!</p>
+					</body>
+				</html>
+			`
+			parseTopic({
+				description: html
+			}).must.eql({
+				title: "Vote: War & Peace",
+				html: "<p>Rest in peace!</p>"
+			})
+		})
+
+		it("must parse a single title from HTML with multiple <h1>s", function() {
+			var html = outdent`
+				<!DOCTYPE HTML>
+				<html>
+					<body>
+						<h1>Vote for Peace</h1>
+						<h1>Vote for Terror</h1>
+						<p>Rest in peace!</p>
+					</body>
+				</html>
+			`
+			parseTopic({
+				description: html
+			}).must.eql({
+				title: "Vote for Peace",
+				html: outdent`
+					<h1>Vote for Terror</h1>
+					\t\t<p>Rest in peace!</p>
+				`
+			})
+		})
+
+		// An initiative with id a2089bf7-9768-42a8-9fd8-e8139b14da47 has one empty
+		// <h1></h1> preceding and one following the actual title.
+		it("must parse title from HTML with multiple empty and blank <h1>s",
+			function() {
+			var html = outdent`
+				<!DOCTYPE HTML>
+				<html>
+					<body>
+						<h1></h1>
+						<h1> </h1>
+						<h1>Vote for Peace</h1>
+						<p>Rest in peace!</p>
+					</body>
+				</html>
+			`
+			parseTopic({
+				description: html
+			}).must.eql({
+				title: "Vote for Peace",
+				html: "<p>Rest in peace!</p>"
+			})
+		})
+
+		it("must parse title from HTML with multiple empty and blank <h1>s",
+			function() {
+			var html = outdent`
+				<!DOCTYPE HTML>
+				<html>
+					<body>
+						<h2></h2>
+						<h2> </h2>
+						<h2>Vote for Peace</h2>
+						<p>Rest in peace!</p>
+					</body>
+				</html>
+			`
+			parseTopic({
+				description: html
+			}).must.eql({
+				title: "Vote for Peace",
+				html: "<p>Rest in peace!</p>"
+			})
+		})
+
+		it("must strip leading and trailing <br>s", function() {
+			var html = outdent`
+				<!DOCTYPE HTML>
+				<html>
+					<body>
+						<br>
+						<br>
+						<h1>Vote for Peace</h1>
+						<br>
+						<br>
+						<p>Rest in peace!</p>
+						<br>
+						<br>
+					</body>
+				</html>
+			`
+			parseTopic({
+				description: html
+			}).must.eql({
+				title: "Vote for Peace",
+				html: "<p>Rest in peace!</p>"
+			})
+		})
+
+		forEachHeader(function(tagName) {
+			it(`must strip <br>s around <${tagName}>s`, function() {
+				var html = outdent`
+					<!DOCTYPE HTML>
+					<html>
+						<body>
+							<h1>Vote for Peace</h1>
+							<p>Indeed</p>
+							<br>
+							<br>
+							<${tagName}>Reasons</${tagName}>
+							<br>
+							<br>
+							<p>Because.</p>
+						</body>
+					</html>
+				`
+				parseTopic({
+					description: html
+				}).must.eql({
+					title: "Vote for Peace",
+					html: outdent`
+						<p>Indeed</p>
+						\t\t<${tagName}>Reasons</${tagName}>
+						\t\t<p>Because.</p>
+					`
+				})
+			})
+		})
+	})
 })
+
+function forEachHeader(fn) { _.times(6, (i) => fn(`h${i + 1}`)) }

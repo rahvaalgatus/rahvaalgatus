@@ -16,6 +16,7 @@ function ReadPage(attrs) {
 	var req = attrs.req
 	var t = req.t
 	var initiative = attrs.initiative
+	var topic = attrs.topic
 	var comment = attrs.comment
 	var newComment = attrs.newComment
 
@@ -23,6 +24,7 @@ function ReadPage(attrs) {
 		page="initiative-comment"
 		title={initiative.title}
 		initiative={initiative}
+		topic={topic}
 		req={req}>
 		<section id="initiative-comment" class="primary-section">
 			<center>
@@ -47,7 +49,7 @@ function CommentView(attrs) {
 	var t = req.t
 	var initiative = attrs.initiative
 	var comment = attrs.comment
-	var commentUrl = `/initiatives/${initiative.id}/comments/${comment.id}`
+	var commentUrl = `/initiatives/${initiative.uuid}/comments/${comment.id}`
 	var newComment = attrs.newComment
 
 	return <Fragment>

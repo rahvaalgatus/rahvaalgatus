@@ -35,7 +35,8 @@ describe("HomeController", function() {
 				id: initiative.uuid,
 				creatorId: this.user.id,
 				sourcePartnerId: this.partner.id,
-				endsAt: DateFns.addSeconds(new Date, 1)
+				endsAt: DateFns.addSeconds(new Date, 1),
+				visibility: "public"
 			}))
 
 			var res = yield this.request("/")
@@ -53,6 +54,7 @@ describe("HomeController", function() {
 				id: initiative.uuid,
 				creatorId: this.user.id,
 				sourcePartnerId: this.partner.id,
+				visibility: "public",
 				endsAt: DateFns.addDays(DateFns.startOfDay(new Date), -13)
 			}))
 
@@ -70,6 +72,7 @@ describe("HomeController", function() {
 				id: initiative.uuid,
 				creatorId: this.user.id,
 				sourcePartnerId: this.partner.id,
+				visibility: "public",
 				endsAt: DateFns.addDays(DateFns.startOfDay(new Date), -14)
 			}))
 
@@ -88,6 +91,7 @@ describe("HomeController", function() {
 				id: initiative.uuid,
 				creatorId: this.user.id,
 				sourcePartnerId: this.partner.id,
+				visibility: "public",
 				endsAt: DateFns.addSeconds(new Date, 1)
 			}))
 
@@ -298,6 +302,7 @@ describe("HomeController", function() {
 						id: initiative.uuid,
 						creatorId: this.user.id,
 						sourcePartnerId: partner.id,
+						visibility: "public",
 						endsAt: DateFns.addSeconds(new Date, 1)
 					}))
 
@@ -316,6 +321,7 @@ describe("HomeController", function() {
 				id: initiative.uuid,
 				creatorId: this.user.id,
 				sourcePartnerId: partner.id,
+				visibility: "public",
 				endsAt: DateFns.addSeconds(new Date, 1)
 			}))
 
@@ -347,6 +353,7 @@ describe("HomeController", function() {
 				id: initiative.uuid,
 				creatorId: this.user.id,
 				sourcePartnerId: this.partner.id,
+				visibility: "public",
 				endsAt: DateFns.addSeconds(new Date, 1),
 				deletedAt: new Date
 			}))
