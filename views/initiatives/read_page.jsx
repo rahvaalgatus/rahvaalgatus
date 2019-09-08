@@ -1137,6 +1137,13 @@ function EventsView(attrs) {
 
 						case "parliament-accepted":
 							title = t("PARLIAMENT_ACCEPTED")
+							var committee =event.content.committee
+
+							if (committee) content = <p class="text">
+								{t("PARLIAMENT_ACCEPTED_SENT_TO_COMMITTEE", {
+									committee: committee
+								})}
+							</p>
 							break
 
 						case "parliament-committee-meeting":

@@ -173,6 +173,7 @@
 	"N_SIGNATURES_FAILED": "Peatatud: {{votes}} allkirja",
 	"N_SIGNATURES_WITH_PAPER": "{{votes}}+ allkirja",
 	"PARLIAMENT_ACCEPTED": "Algatus menetlusse võetud",
+	"PARLIAMENT_ACCEPTED_SENT_TO_COMMITTEE": "Algatus on edastatud menetlemiseks {{committee}}-ile.",
 	"PARLIAMENT_COMMITTEE_MEETING": "Arutelu komisjonis",
 	"PARLIAMENT_COMMITTEE_MEETING_BY": "Arutelu {{committee}}-is",
 	"PARLIAMENT_DECISION": "Otsus",
