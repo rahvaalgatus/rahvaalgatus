@@ -55,15 +55,18 @@ function CommentView(attrs) {
 	return <Fragment>
 		{comment.uuid ? <a id={"comment-" + comment.uuid} /> : null}
 
-		<span class="author">{comment.user.name}</span>
-		{" "}
-		<time datetime={comment.created_at}>
-			<a href={commentUrl}>
-				{I18n.formatDateTime("numeric", comment.created_at)}
-			</a>
-		</time>
-
 		<h3 class="title"><a href={commentUrl}>{comment.title}</a></h3>
+
+		<div class="metadata">
+			<span class="author">{comment.user.name}</span>
+			{", "}
+			<time datetime={comment.created_at.toJSON()}>
+				<a href={commentUrl}>
+					{I18n.formatDateTime("numeric", comment.created_at)}
+				</a>
+			</time>
+		</div>
+
 		<p class="text">{Jsx.html(Comment.htmlify(comment.text))}</p>
 
 		{req.user ? <a
@@ -77,13 +80,16 @@ function CommentView(attrs) {
 			class={"comment-reply" + (isCommentShort(reply) ? " short" : "")}>
 
 			{reply.uuid ? <a id={"comment-" + reply.uuid} /> : null}
-			<span class="author">{reply.user.name}</span>
-			{" "}
-			<time datetime={reply.created_at}>
-				<a href={commentUrl + `#comment-${reply.id}`}>
-					{I18n.formatDateTime("numeric", reply.created_at)}
-				</a>
-			</time>
+
+			<div class="metadata">
+				<span class="author">{reply.user.name}</span>
+				{", "}
+				<time datetime={reply.created_at}>
+					<a href={commentUrl + `#comment-${reply.id}`}>
+						{I18n.formatDateTime("numeric", reply.created_at)}
+					</a>
+				</time>
+			</div>
 
 			<p class="text">{Jsx.html(Comment.htmlify(reply.text))}</p>
 		</li>)}</ol>
