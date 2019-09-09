@@ -1415,7 +1415,7 @@ function QuicksignView(attrs) {
 	var signature = attrs.signature
 	var signatureCount = attrs.signatureCount
 
-	if (!(topic && Topic.isPublic(topic))) return null
+	if (!(initiative.external || topic && Topic.isPublic(topic))) return null
 
 	// There may be multiple QuicksignViews on the page.
 	var id = _.uniqueId("initiative-quicksign-")
@@ -1428,7 +1428,7 @@ function QuicksignView(attrs) {
 			signatureCount={signatureCount}
 		/>
 
-		{isSignable(initiative, topic) && !signature ? <a
+		{topic && isSignable(initiative, topic) && !signature ? <a
 			href="#initiative-vote"
 			class="green-button wide-button sign-button">
 			{t("SIGN_THIS_DOCUMENT")}
@@ -1442,7 +1442,7 @@ function QuicksignView(attrs) {
 			signatureCount={signatureCount}
 		/>
 
-		{isSignable(initiative, topic) && signature ? <Fragment>
+		{topic && isSignable(initiative, topic) && signature ? <Fragment>
 			<h2>{t("THANKS_FOR_SIGNING")}</h2>
 
 			<a href="#initiative-vote" class="link-button revoke-button">
