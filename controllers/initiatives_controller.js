@@ -238,6 +238,7 @@ exports.read = next(function*(req, res) {
 
 	var comments = yield searchInitiativeComments(initiative.uuid)
 	var events = _.reverse(yield searchInitiativeEvents(initiative))
+	yield populateEventUsers(events)
 
 	var subscription = user && user.emailIsVerified
 		? yield subscriptionsDb.read(sql`
@@ -524,14 +525,17 @@ function unhideSignature(initiativeUuid, userId) {
 
 function* searchInitiativeEvents(initiative) {
 	var events = yield eventsDb.search(sql`
-		SELECT event.*, json_group_array(json_object(
-			'id', file.id,
-			'name', file.name,
-			'title', file.title,
-			'url', file.url,
-			'content_type', file.content_type,
-			'size', length(file.content)
-		)) AS files
+		SELECT
+			event.*,
+
+			json_group_array(json_object(
+				'id', file.id,
+				'name', file.name,
+				'title', file.title,
+				'url', file.url,
+				'content_type', file.content_type,
+				'size', length(file.content)
+			)) AS files
 
 		FROM initiative_events AS event
 		LEFT JOIN initiative_files AS file on file.event_id = event.id
@@ -872,6 +876,17 @@ function parseInitiative(obj) {
 		obj.public_change_urls.map(String).map(trim).filter(Boolean)
 
 	return attrs
+}
+
+function* populateEventUsers(events) {
+	var eventsFromAuthor = events.filter((ev) => ev.origin == "author")
+
+	var users = _.indexBy(yield cosDb.query(sql`
+		SELECT id, name FROM "Users"
+		WHERE id IN ${sql.in(eventsFromAuthor.map((ev) => ev.created_by))}
+	`), "id")
+
+	eventsFromAuthor.forEach((ev) => ev.user = users[ev.created_by])
 }
 
 function parseOrganization(obj) {

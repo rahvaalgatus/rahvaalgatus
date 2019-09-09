@@ -1116,11 +1116,13 @@ function EventsView(attrs) {
 
         <ol class="events">{events.map(function(event) {
 					var title
+					var author
 					var content
 					var summary
 					var klass = `event ${event.type}-event`
 					var phase = initiativePhaseFromEvent(event)
 					if (phase) klass += ` ${phase}-phase`
+					if (event.origin == "author") klass += " author-event"
 
 					switch (event.type) {
 						case "sent-to-parliament":
@@ -1237,6 +1239,7 @@ function EventsView(attrs) {
 
 						case "text":
 							title = event.title
+							author = event.origin == "author" ? event.user : null
 							content = <p class="text">{Jsx.html(linkify(event.content))}</p>
 							break
 
@@ -1255,11 +1258,18 @@ function EventsView(attrs) {
 					return <li id={"event-" + event.id} class={klass}>
 						<h2>{title}</h2>
 
-						<time class="occurred-at" datetime={event.occurred_at.toJSON()}>
-							<a href={`#event-${event.id}`}>
-								{I18n.formatDate("numeric", event.occurred_at)}
-							</a>
-						</time>
+						<div class="metadata">
+							<time class="occurred-at" datetime={event.occurred_at.toJSON()}>
+								<a href={`#event-${event.id}`}>
+									{I18n.formatDate("numeric", event.occurred_at)}
+								</a>
+							</time>
+
+							{author ? <Fragment>
+								{", "}
+								<span class="author">{author.name}</span>
+							</Fragment> : null}
+						</div>
 
 						{content}
 

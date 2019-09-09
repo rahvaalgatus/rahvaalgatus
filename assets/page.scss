@@ -1854,17 +1854,12 @@ button.inherited {
 				color: $title-text;
 			}
 
-			.occurred-at {
-				display: block;
+			.metadata {
 				font-size: 1.3rem;
 				color: $secondary-light-text;
 
 				a:hover { text-decoration: underline; }
-
-				a:focus {
-					color: $link-color;
-					text-decoration: underline;
-				}
+				a:focus { color: $link-color; text-decoration: underline; }
 			}
 
 			.text {
@@ -1928,6 +1923,7 @@ button.inherited {
 				}
 			}
 
+			&.author-event h2 { color: $black; }
 			&.sign-phase { border-left-color: $sign-phase-color; }
 			&.parliament-phase { border-left-color: $parliament-phase-color; }
 
