@@ -65,6 +65,6 @@ function DonateForm(attrs) {
 
 		<button class="form-submit secondary-button">{t("SUPPORT_BUTTON")}</button>
 
-		<p class="text">{t("SUPPORT_REDIRECT")}</p>
+		<p class="text">{Jsx.html(t("SUPPORT_REDIRECT"))}</p>
 	</Form>
 }

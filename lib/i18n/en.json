@@ -140,7 +140,7 @@
 	"SUBSCRIBE_TO_INITIATIVES_TITLE": "Subscribe to Initiatives",
 	"SUPPORT_BUTTON": "SUPPORT ",
 	"SUPPORT_LABEL": "Donation in euros",
-	"SUPPORT_REDIRECT": "To make a donation, you will be directed to Maksekeskus (Payment Centre), where you can make the transfer via your internet bank.",
+	"SUPPORT_REDIRECT": "To make a donation, you will be directed to Maksekeskus (Payment Centre), where you can make the transfer via your internet bank.\nYour donation will be made to the <a href=\"https://kogu.ee\">Estonian Cooperation Assembly</a>, who'll use the funds for maintentance of Rahvaalgatus.ee.",
 	"SUPPORT_US_TITLE": "Support",
 	"THANKS_FOR_SIGNING": "Thanks for signing!",
 	"THANKS_FOR_SIGNING_AGAIN": "Thanks, though you've already signed the initiative.",

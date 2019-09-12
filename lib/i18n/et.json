@@ -250,7 +250,7 @@
 	"SUPPORT_BUTTON": "TOETA   ",
 	"SUPPORT_LABEL": "Toetus eurodes ",
 	"SUPPORT_PERSONAL_CODE": "Isikukood, kui soovid tulumaksu tagasi",
-	"SUPPORT_REDIRECT": "Annetuse tegemiseks suuname su Maksekeskusesse, kus saad teha ülekande oma netipangas.\nAnnetuse saaja on SA Eesti Koostöö Kogu, kes kasutab kogutud summat Rahvaalgatus.ee ülalpidamiseks.",
+	"SUPPORT_REDIRECT": "Annetuse tegemiseks suuname su Maksekeskusesse, kus saad teha ülekande oma netipangas.\nAnnetuse saaja on <a href=\"https://kogu.ee\">SA Eesti Koostöö Kogu</a>, kes kasutab kogutud summat Rahvaalgatus.ee ülalpidamiseks. Rahvaalgatus.ee on liitunud <a href=\"https://heakodanik.ee/annetuste-kogumise-hea-tava/\">annetuste kogumise hea tavaga</a>.",
 	"SUPPORT_US_TITLE": "Toeta",
 	"THANKS_FOR_SIGNING": "Aitäh allkirja eest!  ",
 	"THANKS_FOR_SIGNING_AGAIN": "Aitäh, kuigi olid algatust juba varem allkirjastanud.",
