@@ -155,6 +155,14 @@ module.exports = function(attrs) {
 			</tr>
 
 			<tr>
+				<th scope="row">
+					Parliament Decision<br />
+					<small>Imported from the Riigikogu API.</small>
+				</th>
+				<td>{initiative.parliament_decision}</td>
+			</tr>
+
+			<tr>
 				<th scope="row">Finished in Parliament</th>
 				<td>
 					<DateInputForm
