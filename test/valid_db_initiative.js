@@ -17,6 +17,7 @@ module.exports = function(attrs) {
 		government_agency: null,
 		government_contact: null,
 		government_contact_details: null,
+		government_decision: null,
 		sent_to_government_at: null,
 		finished_in_government_at: null,
 		government_change_urls: [],

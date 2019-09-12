@@ -230,6 +230,18 @@ module.exports = function(attrs) {
 			</tr>
 
 			<tr>
+				<th scope="row">Government Decision</th>
+				<td>
+					<InputForm
+						req={req}
+						action={initiativePath}
+						name={"governmentDecision"}
+						value={initiative.government_decision}
+					/>
+				</td>
+			</tr>
+
+			<tr>
 				<th scope="row">Finished in Government</th>
 				<td>
 					<DateInputForm

@@ -499,6 +499,9 @@ function parseInitiative(obj) {
 	if ("governmentContactDetails" in obj)
 		attrs.government_contact_details = obj.governmentContactDetails
 
+	if ("governmentDecision" in obj)
+		attrs.government_decision = obj.governmentDecision
+
 	if ("sentToParliamentOn" in obj)
 		attrs.sent_to_parliament_at = obj.sentToParliamentOn
 			? Time.parseDate(obj.sentToParliamentOn)
