@@ -11,6 +11,7 @@ module.exports = function(attrs) {
 	var initiative = attrs.initiative
 	var topic = attrs.topic
 	var flash = attrs.flash
+	var etherpadUrl = attrs.etherpadUrl
 	var t = attrs.t
 
 	return <InitiativePage
@@ -26,7 +27,7 @@ module.exports = function(attrs) {
 				{Topic.canEditBody(topic) ? <Fragment>
 					<iframe
 						id="initiative-etherpad"
-						src={Topic.getEtherpadUrl(topic)}
+						src={etherpadUrl}
 						frameborder="0"
 						scrolling="no"
 					/>

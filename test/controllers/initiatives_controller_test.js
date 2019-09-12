@@ -3372,6 +3372,59 @@ describe("InitiativesController", function() {
 		})
 	})
 
+	describe("GET /:id/edit", function() {
+		require("root/test/fixtures").user()
+
+		beforeEach(function*() {
+			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
+		})
+
+		it("must get Etherpad URL path from CitizenOS API and append theme",
+			function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative)
+
+			var topic = yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id
+			}))
+
+			var path = `/api/users/self/topics/${topic.id}`
+			this.router.get(path, respond.bind(null, {data: {
+				padUrl: "http://badpad.example.com/edit?token=1234"
+			}}))
+
+			var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
+			res.statusCode.must.equal(200)
+
+			var dom = parseDom(res.body)
+			var url = Config.etherpadUrl + "/edit?token=1234&theme=test"
+			dom.querySelector("iframe#initiative-etherpad").src.must.equal(url)
+		})
+
+		it("must append theme to Etherpad URL if no query params", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative)
+
+			var topic = yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id
+			}))
+
+			var path = `/api/users/self/topics/${topic.id}`
+			this.router.get(path, respond.bind(null, {data: {
+				padUrl: "http://badpad.example.com/1234"
+			}}))
+
+			var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
+			res.statusCode.must.equal(200)
+
+			var dom = parseDom(res.body)
+			var url = Config.etherpadUrl + "/1234?theme=test"
+			dom.querySelector("iframe#initiative-etherpad").src.must.equal(url)
+		})
+	})
+
 	describe("GET /:id/signature", function() {
 		require("root/test/time")(+new Date(2015, 5, 18))
 		

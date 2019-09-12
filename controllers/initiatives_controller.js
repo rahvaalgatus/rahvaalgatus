@@ -36,6 +36,7 @@ var readVoteOptions = require("root/lib/citizenos_db").readVoteOptions
 var concat = Array.prototype.concat.bind(Array.prototype)
 var decodeBase64 = require("root/lib/crypto").decodeBase64
 var trim = Function.call.bind(String.prototype.trim)
+var ENV = process.env.ENV
 var EMPTY = Object.prototype
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: ""}
@@ -307,10 +308,17 @@ exports.router.delete("/:id", next(function*(req, res) {
 	res.redirect(302, req.baseUrl)
 }))
 
-exports.router.get("/:id/edit", function(req, res) {
-	if (!Topic.canEdit(req.topic)) throw new HttpError(401)
-	res.render("initiatives/update_page.jsx")
-})
+exports.router.get("/:id/edit", next(function*(req, res) {
+	var topic = req.topic
+	if (!Topic.canEdit(topic)) throw new HttpError(401)
+
+	var path = `/api/users/self/topics/${topic.id}`
+	var etherpadUrl = yield req.cosApi(path).then((res) => res.body.data.padUrl)
+
+	res.render("initiatives/update_page.jsx", {
+		etherpadUrl: serializeEtherpadUrl(etherpadUrl)
+	})
+}))
 
 exports.router.use("/:id/comments",
 	require("./initiatives/comments_controller").router)
@@ -901,6 +909,11 @@ function parseMeeting(obj) {
 		date: String(obj.date || "").trim(),
 		url: String(obj.url || "").trim()
 	}
+}
+
+function serializeEtherpadUrl(url) {
+	if (Config.etherpadUrl) url = Config.etherpadUrl + Url.parse(url).path
+	return url + (url.indexOf("?") >= 0 ? "&" : "?") + "theme=" + ENV
 }
 
 // NOTE: Use this only on JWTs from trusted sources as it does no validation.
