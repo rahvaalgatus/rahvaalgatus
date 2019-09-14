@@ -195,30 +195,36 @@ exports.read = next(function*(req, res) {
 	var signature
 
 	if (initiative.phase == "sign" && newSignatureId) {
-		var cosSignatures = yield cosDb.query(sql`
+		var cosSignature = yield cosDb.query(sql`
 			SELECT signature.*, opt.value AS support
 			FROM "VoteLists" AS signature
-
-			JOIN "VoteLists" AS signed
-			ON signed."voteId" = signature."voteId"
-			AND signed."userId" = signature."userId"
-
 			JOIN "VoteOptions" AS opt ON opt.id = signature."optionId"
-			WHERE signed.id = ${newSignatureId}
+			WHERE signature.id = ${newSignatureId}
+		`).then(_.first)
+
+		var cosPrevSignature = yield cosDb.query(sql`
+			SELECT signature.*, opt.value AS support
+			FROM "VoteLists" AS signature
+			JOIN "VoteOptions" AS opt ON opt.id = signature."optionId"
+
+			WHERE signature."voteId" = ${cosSignature.voteId}
+			AND signature."userId" = ${cosSignature.userId}
+			AND signature."createdAt" <= ${
+				DateFns.addSeconds(cosSignature.createdAt, -15)
+			}
 			ORDER BY "createdAt" DESC
-			LIMIT 2
-		`)
+			LIMIT 1
+		`).then(_.first)
 
 		// This could assign a newer signature as the one redirected with, but
 		// that's unlikely to be a big problem.
-		let cosSignature = cosSignatures[0]
 		thank = cosSignature.support == "Yes"
 		if (!thank) res.flash("notice", req.t("SIGNATURE_REVOKED"))
 
 		// Currently checking for old signatures even if they were hidden — that's
 		// because by the time we land here, the signature in SQLite has been
 		// marked unhidden.
-		thankAgain = cosSignatures.length > 1 && cosSignatures[1].support == "Yes"
+		thankAgain = cosPrevSignature && cosPrevSignature.support == "Yes"
 
 		signature = cosSignature.support == "No" ? null : {
 			initiative_uuid: initiative.uuid,

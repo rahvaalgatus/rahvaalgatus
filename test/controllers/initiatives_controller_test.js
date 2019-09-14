@@ -51,6 +51,7 @@ var ATOM_TYPE = "application/atom+xml"
 var AUTH_TOKEN = "deadbeef"
 var SIGN_TOKEN = "feedfed"
 var EVENTABLE_PHASES = ["sign", "parliament", "government", "done"]
+var NEW_SIG_TRESHOLD = 15
 
 describe("InitiativesController", function() {
 	require("root/test/web")()
@@ -1576,6 +1577,7 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(200)
 					res.body.must.include(t("THANKS_FOR_SIGNING"))
+					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
 					res.body.must.include("donate-form")
 					res.body.must.not.include(this.yesAndNo[0])
 					res.body.must.include(this.yesAndNo[1])
@@ -1598,6 +1600,36 @@ describe("InitiativesController", function() {
 					res.body.must.not.include("donate-form")
 					res.body.must.include(this.yesAndNo[0])
 					res.body.must.not.include(this.yesAndNo[1])
+				})
+
+				it("must show thanks even after duplicate votes", function*() {
+					var user = yield createUser(newUser())
+					var signatures = yield createSignature([
+						newSignature({
+							userId: user.id,
+							voteId: this.vote.id,
+							optionId: this.yesAndNo[0],
+							createdAt: DateFns.addSeconds(new Date, -NEW_SIG_TRESHOLD + 1)
+						}),
+
+						newSignature({
+							userId: user.id,
+							voteId: this.vote.id,
+							optionId: this.yesAndNo[0],
+							createdAt: new Date
+						}),
+					])
+
+					var res = yield this.request("/initiatives/" + this.initiative.uuid, {
+						cookies: {flash: serializeFlash({signatureId: signatures[1].id})}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("THANKS_FOR_SIGNING"))
+					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+					res.body.must.include("donate-form")
+					res.body.must.not.include(this.yesAndNo[0])
+					res.body.must.include(this.yesAndNo[1])
 				})
 
 				it("must show thanks when signing twice", function*() {
@@ -1629,6 +1661,43 @@ describe("InitiativesController", function() {
 					res.body.must.include(this.yesAndNo[1])
 				})
 
+				it("must show thanks when signing twice with duplicate votes",
+					function*() {
+					var user = yield createUser(newUser())
+					var signatures = yield createSignature([
+						newSignature({
+							userId: user.id,
+							voteId: this.vote.id,
+							optionId: this.yesAndNo[0],
+							createdAt: DateFns.addSeconds(new Date, -NEW_SIG_TRESHOLD)
+						}),
+
+						newSignature({
+							userId: user.id,
+							voteId: this.vote.id,
+							optionId: this.yesAndNo[0],
+							createdAt: DateFns.addSeconds(new Date, -NEW_SIG_TRESHOLD + 1)
+						}),
+
+						newSignature({
+							userId: user.id,
+							voteId: this.vote.id,
+							optionId: this.yesAndNo[0],
+							createdAt: new Date
+						})
+					])
+
+					var res = yield this.request("/initiatives/" + this.initiative.uuid, {
+						cookies: {flash: serializeFlash({signatureId: signatures[2].id})}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("THANKS_FOR_SIGNING_AGAIN"))
+					res.body.must.include("donate-form")
+					res.body.must.not.include(this.yesAndNo[0])
+					res.body.must.include(this.yesAndNo[1])
+				})
+
 				it("must show thanks when signing after revoking", function*() {
 					var user = yield createUser(newUser())
 
@@ -1636,20 +1705,73 @@ describe("InitiativesController", function() {
 						newSignature({
 							userId: user.id,
 							voteId: this.vote.id,
+							optionId: this.yesAndNo[0],
+							createdAt: DateFns.addSeconds(new Date, -NEW_SIG_TRESHOLD * 2)
+						}),
+
+						newSignature({
+							userId: user.id,
+							voteId: this.vote.id,
 							optionId: this.yesAndNo[1],
-							createdAt: DateFns.addMinutes(new Date, -2)
+							createdAt: DateFns.addSeconds(new Date, -NEW_SIG_TRESHOLD)
 						}),
 
 						newSignature({
 							userId: user.id,
 							voteId: this.vote.id,
 							optionId: this.yesAndNo[0],
-							createdAt: DateFns.addMinutes(new Date, -1)
+							createdAt: new Date
 						}),
 					])
 
 					var res = yield this.request("/initiatives/" + this.initiative.uuid, {
-						cookies: {flash: serializeFlash({signatureId: signatures[1].id})}
+						cookies: {flash: serializeFlash({signatureId: signatures[2].id})}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("THANKS_FOR_SIGNING"))
+					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+					res.body.must.include("donate-form")
+					res.body.must.not.include(this.yesAndNo[0])
+					res.body.must.include(this.yesAndNo[1])
+				})
+
+				it("must show thanks when signing after revoking with duplicate votes",
+					function*() {
+					var user = yield createUser(newUser())
+
+					var signatures = yield createSignature([
+						newSignature({
+							userId: user.id,
+							voteId: this.vote.id,
+							optionId: this.yesAndNo[0],
+							createdAt: DateFns.addSeconds(new Date, -NEW_SIG_TRESHOLD * 2)
+						}),
+
+						newSignature({
+							userId: user.id,
+							voteId: this.vote.id,
+							optionId: this.yesAndNo[1],
+							createdAt: DateFns.addSeconds(new Date, -NEW_SIG_TRESHOLD)
+						}),
+
+						newSignature({
+							userId: user.id,
+							voteId: this.vote.id,
+							optionId: this.yesAndNo[0],
+							createdAt: DateFns.addSeconds(new Date, -NEW_SIG_TRESHOLD + 1)
+						}),
+
+						newSignature({
+							userId: user.id,
+							voteId: this.vote.id,
+							optionId: this.yesAndNo[0],
+							createdAt: new Date
+						}),
+					])
+
+					var res = yield this.request("/initiatives/" + this.initiative.uuid, {
+						cookies: {flash: serializeFlash({signatureId: signatures[3].id})}
 					})
 
 					res.statusCode.must.equal(200)
@@ -1682,15 +1804,15 @@ describe("InitiativesController", function() {
 							userId: user.id,
 							voteId: vote.id,
 							optionId: this.yesAndNo[0],
-							createdAt: DateFns.addMinutes(new Date, -2)
+							createdAt: DateFns.addSeconds(new Date, -NEW_SIG_TRESHOLD)
 						}),
 
 						newSignature({
 							userId: user.id,
 							voteId: this.vote.id,
 							optionId: this.yesAndNo[0],
-							createdAt: DateFns.addMinutes(new Date, -1)
-						}),
+							createdAt: new Date
+						})
 					])
 
 					var res = yield this.request("/initiatives/" + this.initiative.uuid, {
@@ -1708,14 +1830,14 @@ describe("InitiativesController", function() {
 							userId: (yield createUser(newUser())).id,
 							voteId: this.vote.id,
 							optionId: this.yesAndNo[0],
-							createdAt: DateFns.addMinutes(new Date, -2)
+							createdAt: DateFns.addSeconds(new Date, -NEW_SIG_TRESHOLD)
 						}),
 
 						newSignature({
 							userId: (yield createUser(newUser())).id,
 							voteId: this.vote.id,
 							optionId: this.yesAndNo[0],
-							createdAt: DateFns.addMinutes(new Date, -1)
+							createdAt: new Date
 						}),
 					])
 
