@@ -993,7 +993,8 @@ describe("InitiativesController", function() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "parliament",
 					sent_to_parliament_at: DateFns.addDays(new Date, -6),
-					received_by_parliament_at: DateFns.addDays(new Date, -5)
+					received_by_parliament_at: DateFns.addDays(new Date, -5),
+					parliament_committee: "Keskkonnakomisjon"
 				}))
 
 				var topic = yield createTopic(newTopic({
@@ -1025,6 +1026,7 @@ describe("InitiativesController", function() {
 				}))
 
 				phases.parliament.text.must.equal(
+					"Keskkonnakomisjon" +
 					t("PARLIAMENT_PHASE_ACCEPTANCE_N_DAYS_LEFT", {days: 25})
 				)
 			})
@@ -1215,7 +1217,8 @@ describe("InitiativesController", function() {
 					sent_to_parliament_at: DateFns.addDays(new Date, -30),
 					received_by_parliament_at: DateFns.addDays(new Date, -25),
 					finished_in_parliament_at: DateFns.addDays(new Date, -5),
-					sent_to_government_at: new Date
+					sent_to_government_at: new Date,
+					government_agency: "Sidususministeerium"
 				}))
 
 				var topic = yield createTopic(newTopic({
@@ -1252,10 +1255,10 @@ describe("InitiativesController", function() {
 					initiative.finished_in_parliament_at
 				))
 
-				phases.government.text.must.equal(I18n.formatDate(
-					"numeric",
-					initiative.sent_to_government_at
-				))
+				phases.government.text.must.equal(
+					"Sidususministeerium" +
+					I18n.formatDate("numeric", initiative.sent_to_government_at)
+				)
 			})
 
 			it("must render initiative in government that's finished", function*() {
@@ -4179,11 +4182,15 @@ function queryPhases(html) {
 	var phases = html.querySelectorAll("#initiative-phases li")
 	var phasesById = _.indexBy(phases, (phase) => phase.id.match(/^\w+/)[0])
 
-	return _.mapValues(phasesById, (phase) => ({
-		current: phase.classList.contains("current"),
-		past: phase.classList.contains("past"),
-		text: (phase.querySelector(".progress") || Object).textContent
-	}))
+	return _.mapValues(phasesById, function(phase) {
+		var progressElement = phase.querySelector(".progress")
+
+		return {
+			current: phase.classList.contains("current"),
+			past: phase.classList.contains("past"),
+			text: progressElement ? progressElement.textContent.trim() : ""
+		}
+	})
 }
 
 function endResponse(_req, res) { res.end() }

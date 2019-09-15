@@ -639,7 +639,11 @@ function PhasesView(attrs) {
 				}
 			>
         <i>{t("PARLIAMENT_PHASE")}</i>
-				<ProgressView value={parliamentProgress} text={parliamentPhaseText} />
+				<ProgressView
+					before={initiative.parliament_committee}
+					value={parliamentProgress}
+					text={parliamentPhaseText}
+				/>
       </li>
 
 			{governmentProgress != null ? <li
@@ -647,7 +651,11 @@ function PhasesView(attrs) {
 				class={classifyPhase("government", phase)}
 			>
         <i>{t("GOVERNMENT_PHASE")}</i>
-				<ProgressView value={governmentProgress} text={governmentPhaseText} />
+				<ProgressView
+					before={initiative.government_agency}
+					value={governmentProgress}
+					text={governmentPhaseText}
+				/>
       </li> : null}
 
 			{phase == "done" && initiative.archived_at ? <li
@@ -664,10 +672,13 @@ function PhasesView(attrs) {
 
 	function ProgressView(attrs) {
 		var value = attrs && attrs.value
+		var before = attrs && attrs.before
 		var text = attrs && attrs.text
 
+		// Linebreaks are for alignment _and_ rendering without CSS.
 		return <label class="progress">
-			<progress value={value == null ? null : min(1, value)} />
+			{before}<br />
+			<progress value={value == null ? null : min(1, value)} /><br />
 			{text}
 		</label>
 	}

@@ -1188,8 +1188,15 @@ button.inherited {
 			}
 
 			.progress {
+				$progress-line-height: 1.3rem;
+
 				position: absolute;
-				top: ($phase-icon-width - $progress-height) / 2;
+
+				top:
+					($phase-icon-width - $progress-height) / 2 -
+					$progress-line-height -
+					0.2rem;
+
 				height: $progress-height;
 				left: 0;
 				right: 0;
@@ -1198,7 +1205,7 @@ button.inherited {
 
 				text-align: center;
 				font-size: 1.1rem;
-				line-height: 1.2;
+				line-height: $progress-line-height;
 				color: $grey;
 			}
 
@@ -1208,7 +1215,7 @@ button.inherited {
 				width: 100%;
 				height: $progress-height;
 				z-index: 1;
-				margin-bottom: .2rem;
+				margin: .2rem 0;
 				padding-right: .7rem;
 
 				@include progress-bar {
