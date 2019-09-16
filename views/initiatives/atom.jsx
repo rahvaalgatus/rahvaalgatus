@@ -53,6 +53,27 @@ module.exports = function(attrs) {
 					})
 					break
 
+				case "sent-to-government":
+					title = !initiative.government_agency
+						? t("EVENT_SENT_TO_GOVERNMENT_TITLE")
+						: t("EVENT_SENT_TO_GOVERNMENT_TITLE_WITH_AGENCY", {
+							agency: initiative.government_agency
+						})
+					break
+
+				case "finished-in-government":
+					title = !initiative.government_agency
+						? t("EVENT_FINISHED_IN_GOVERNMENT_TITLE")
+						: t("EVENT_FINISHED_IN_GOVERNMENT_TITLE_WITH_AGENCY", {
+							agency: initiative.government_agency
+						})
+
+					if (initiative.government_decision) content =
+						t("EVENT_FINISHED_IN_GOVERNMENT_CONTENT", {
+							decision: initiative.government_decision
+						})
+					break
+
 				case "text":
 					title = event.title
 					content = event.content

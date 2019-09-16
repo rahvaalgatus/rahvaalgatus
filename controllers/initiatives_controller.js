@@ -564,6 +564,8 @@ function* searchInitiativeEvents(initiative) {
 
 	var sentToParliamentAt = initiative.sent_to_parliament_at
 	var finishedInParliamentAt = initiative.finished_in_parliament_at
+	var sentToGovernmentAt = initiative.sent_to_government_at
+	var finishedInGovernmentAt = initiative.finished_in_government_at
 
 	return _.sortBy(concat(
 		sentToParliamentAt ? {
@@ -589,10 +591,26 @@ function* searchInitiativeEvents(initiative) {
 			finishedInParliamentAt &&
 			!events.some((ev) => ev.type == "parliament-finished")
 		) ? {
-			id: "finished-in-parliament",
+			id: "parliament-finished",
 			updated_at: finishedInParliamentAt,
 			occurred_at: finishedInParliamentAt,
 			type: "parliament-finished",
+			origin: "system"
+		} : EMPTY_ARR,
+
+		sentToGovernmentAt ? {
+			id: "sent-to-government",
+			type: "sent-to-government",
+			updated_at: sentToGovernmentAt,
+			occurred_at: sentToGovernmentAt,
+			origin: "system"
+		} : EMPTY_ARR,
+
+		finishedInGovernmentAt ? {
+			id: "finished-in-government",
+			updated_at: finishedInGovernmentAt,
+			occurred_at: finishedInGovernmentAt,
+			type: "finished-in-government",
 			origin: "system"
 		} : EMPTY_ARR
 	), "occurred_at")

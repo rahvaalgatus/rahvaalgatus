@@ -1931,6 +1931,7 @@ button.inherited {
 			&.author-event h2 { color: $black; }
 			&.sign-phase { border-left-color: $sign-phase-color; }
 			&.parliament-phase { border-left-color: $parliament-phase-color; }
+			&.government-phase { border-left-color: $government-phase-color; }
 
 			.event-table {
 				margin-top: 1rem;

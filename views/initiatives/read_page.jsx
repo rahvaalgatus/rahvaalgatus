@@ -1254,6 +1254,28 @@ function EventsView(attrs) {
 							content = <p class="text">{Jsx.html(linkify(event.content))}</p>
 							break
 
+						case "sent-to-government":
+							title = !initiative.government_agency
+								? t("EVENT_SENT_TO_GOVERNMENT_TITLE")
+								: t("EVENT_SENT_TO_GOVERNMENT_TITLE_WITH_AGENCY", {
+									agency: initiative.government_agency
+								})
+							break
+
+						case "finished-in-government":
+							title = !initiative.government_agency
+								? t("EVENT_FINISHED_IN_GOVERNMENT_TITLE")
+								: t("EVENT_FINISHED_IN_GOVERNMENT_TITLE_WITH_AGENCY", {
+									agency: initiative.government_agency
+								})
+
+							if (initiative.government_decision) content = <p class="text">
+								{t("EVENT_FINISHED_IN_GOVERNMENT_CONTENT", {
+									decision: initiative.government_decision
+								})}
+							</p>
+							break
+
 						default:
 							throw new RangeError("Unsupported event type: " + event.type)
 					}
@@ -1611,6 +1633,8 @@ function initiativePhaseFromEvent(event) {
 		case "parliament-decision":
 		case "parliament-finished":
 		case "parliament-committee-meeting": return "parliament"
+		case "sent-to-government": return "government"
+		case "finished-in-government": return "government"
 		case "text": return null
 		default: throw new RangeError("Unsupported event type: " + event.type)
 	}

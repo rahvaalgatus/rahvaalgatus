@@ -986,6 +986,12 @@ describe("InitiativesController", function() {
 				phases.parliament.text.must.equal(
 					t("PARLIAMENT_PHASE_ACCEPTANCE_N_DAYS_LEFT", {days: 25})
 				)
+
+				var events = queryEvents(dom)
+				events.length.must.equal(1)
+				events[0].id.must.equal("sent-to-parliament")
+				events[0].at.must.eql(initiative.sent_to_parliament_at)
+				events[0].title.must.equal(t("INITIATIVE_SENT_TO_PARLIAMENT_TITLE"))
 			})
 
 			it("must render initiative in parliament phase and received",
@@ -1259,6 +1265,19 @@ describe("InitiativesController", function() {
 					"Sidususministeerium" +
 					I18n.formatDate("numeric", initiative.sent_to_government_at)
 				)
+
+				var events = queryEvents(dom)
+				events.length.must.equal(3)
+				events[0].id.must.equal("sent-to-parliament")
+				events[1].id.must.equal("parliament-finished")
+				events[2].id.must.equal("sent-to-government")
+				events[2].at.must.eql(initiative.sent_to_government_at)
+
+				events[2].title.must.equal(
+					t("EVENT_SENT_TO_GOVERNMENT_TITLE_WITH_AGENCY", {
+						agency: "Sidususministeerium"
+					})
+				)
 			})
 
 			it("must render initiative in government that's finished", function*() {
@@ -1268,7 +1287,9 @@ describe("InitiativesController", function() {
 					received_by_parliament_at: DateFns.addDays(new Date, -25),
 					finished_in_parliament_at: DateFns.addDays(new Date, -20),
 					sent_to_government_at: DateFns.addDays(new Date, -10),
-					finished_in_government_at: DateFns.addDays(new Date, -5)
+					government_agency: "Sidususministeerium",
+					finished_in_government_at: DateFns.addDays(new Date, -5),
+					government_decision: "Anda alla."
 				}))
 
 				yield createTopic(newTopic({
@@ -1292,11 +1313,31 @@ describe("InitiativesController", function() {
 				phases.parliament.past.must.be.true()
 				phases.government.current.must.be.true()
 
-				phases.government.text.must.equal(I18n.formatDateSpan(
-					"numeric",
-					initiative.sent_to_government_at,
-					initiative.finished_in_government_at
-				))
+				phases.government.text.must.equal(
+					"Sidususministeerium" + I18n.formatDateSpan(
+						"numeric",
+						initiative.sent_to_government_at,
+						initiative.finished_in_government_at
+					)
+				)
+
+				var events = queryEvents(dom)
+				events.length.must.equal(4)
+				events[0].id.must.equal("sent-to-parliament")
+				events[1].id.must.equal("parliament-finished")
+				events[2].id.must.equal("sent-to-government")
+				events[3].id.must.equal("finished-in-government")
+				events[3].at.must.eql(initiative.finished_in_government_at)
+
+				events[3].title.must.equal(
+					t("EVENT_FINISHED_IN_GOVERNMENT_TITLE_WITH_AGENCY", {
+						agency: "Sidususministeerium"
+					})
+				)
+
+				events[3].content[0].textContent.must.equal(
+					t("EVENT_FINISHED_IN_GOVERNMENT_CONTENT", {decision: "Anda alla."})
+				)
 			})
 
 			it("must render initiative in government with no sent time", function*() {
@@ -2544,14 +2585,16 @@ describe("InitiativesController", function() {
 			feed.updated.$.must.equal(topic.updatedAt.toJSON())
 		})
 
-		it("must include generated parliament events", function*() {
-			var sentAt = new Date(2015, 5, 17)
-			var finishedAt = new Date(2015, 5, 21)
-
+		it("must include generated events", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
-				sent_to_parliament_at: sentAt,
-				finished_in_parliament_at: finishedAt
+				sent_to_parliament_at: new Date(2015, 5, 1),
+				parliament_committee: "Keskkonnakomisjon",
+				finished_in_parliament_at: new Date(2015, 5, 3),
+				sent_to_government_at: new Date(2015, 5, 4),
+				government_agency: "Sidususministeerium",
+				finished_in_government_at: new Date(2015, 5, 5),
+				government_decision: "Anda alla."
 			}))
 
 			yield createTopic(newTopic({
@@ -2564,28 +2607,51 @@ describe("InitiativesController", function() {
 
 			var events = concat({
 				id: "sent-to-parliament",
+				updated_at: initiative.sent_to_parliament_at,
+				occurred_at: initiative.sent_to_parliament_at,
+
 				title: t("INITIATIVE_SENT_TO_PARLIAMENT_TITLE"),
-				content: t("INITIATIVE_SENT_TO_PARLIAMENT_BODY"),
-				updated_at: sentAt,
-				occurred_at: sentAt
+				content: t("INITIATIVE_SENT_TO_PARLIAMENT_BODY")
 			}, yield eventsDb.create(new ValidEvent({
 				initiative_uuid: initiative.uuid,
+				created_at: new Date(2015, 5, 2),
+				updated_at: new Date(2015, 5, 2),
+				occurred_at: new Date(2015, 5, 2),
+
 				title: "We sent it.",
 				content: "To somewhere.",
-				created_at: new Date(2015, 5, 18),
-				updated_at: new Date(2015, 5, 19),
-				occurred_at: new Date(2015, 5, 20)
 			})), {
-				id: "finished-in-parliament",
-				title: t("PARLIAMENT_FINISHED"),
-				updated_at: finishedAt,
-				occurred_at: finishedAt
+				id: "parliament-finished",
+				updated_at: initiative.finished_in_parliament_at,
+				occurred_at: initiative.finished_in_parliament_at,
+
+				title: t("PARLIAMENT_FINISHED")
+			}, {
+				id: "sent-to-government",
+				updated_at: initiative.sent_to_government_at,
+				occurred_at: initiative.sent_to_government_at,
+
+				title: t("EVENT_SENT_TO_GOVERNMENT_TITLE_WITH_AGENCY", {
+					agency: initiative.government_agency
+				})
+			}, {
+				id: "finished-in-government",
+				updated_at: initiative.finished_in_government_at,
+				occurred_at: initiative.finished_in_government_at,
+
+				title: t("EVENT_FINISHED_IN_GOVERNMENT_TITLE_WITH_AGENCY", {
+					agency: initiative.government_agency
+				}),
+
+				content: t("EVENT_FINISHED_IN_GOVERNMENT_CONTENT", {
+					decision: initiative.government_decision
+				})
 			})
 
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 			var feed = Atom.parse(res.body).feed
-			feed.updated.$.must.equal(finishedAt.toJSON())
+			feed.updated.$.must.equal(initiative.finished_in_government_at.toJSON())
 
 			feed.entry.forEach(function(entry, i) {
 				var event = events[i]
@@ -4191,6 +4257,19 @@ function queryPhases(html) {
 			text: progressElement ? progressElement.textContent.trim() : ""
 		}
 	})
+}
+
+function queryEvents(html) {
+	var events = html.querySelectorAll("#initiative-events li.event")
+
+	return _.map(events, function(event) {
+		return {
+			id: event.id.replace(/^event-/, ""),
+			title: event.querySelector("h2").textContent,
+			at: new Date(event.querySelector(".metadata time").dateTime),
+			content: event.querySelectorAll(".metadata + *:not(.files)")
+		}
+	}).reverse()
 }
 
 function endResponse(_req, res) { res.end() }
