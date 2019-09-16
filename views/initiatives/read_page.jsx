@@ -1130,12 +1130,19 @@ function EventsView(attrs) {
 					var author
 					var content
 					var summary
+					var decision
 					var klass = `event ${event.type}-event`
 					var phase = initiativePhaseFromEvent(event)
 					if (phase) klass += ` ${phase}-phase`
 					if (event.origin == "author") klass += " author-event"
 
 					switch (event.type) {
+						case "text":
+							title = event.title
+							author = event.origin == "author" ? event.user : null
+							content = <p class="text">{Jsx.html(linkify(event.content))}</p>
+							break
+
 						case "sent-to-parliament":
 							title = t("INITIATIVE_SENT_TO_PARLIAMENT_TITLE")
 
@@ -1161,7 +1168,7 @@ function EventsView(attrs) {
 
 						case "parliament-committee-meeting":
 							var meeting = event.content
-							var decision = meeting.decision
+							decision = meeting.decision
 							var invitees = meeting.invitees
 							summary = event.content.summary
 
@@ -1239,19 +1246,24 @@ function EventsView(attrs) {
 							break
 
 						case "parliament-finished":
+							decision = initiative.parliament_decision
 							title = t("PARLIAMENT_FINISHED")
+
+							if (decision) content = <p class="text">{
+								decision == "reject"
+								? t("PARLIAMENT_DECISION_REJECT")
+								: decision == "forward"
+								? t("PARLIAMENT_DECISION_FORWARD")
+								: decision == "solve-differently"
+								? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
+								: null
+								}</p>
 							break
 
 						case "signature-milestone":
 							title = t("SIGNATURE_MILESTONE_EVENT_TITLE", {
 								milestone: event.content
 							})
-							break
-
-						case "text":
-							title = event.title
-							author = event.origin == "author" ? event.user : null
-							content = <p class="text">{Jsx.html(linkify(event.content))}</p>
 							break
 
 						case "sent-to-government":

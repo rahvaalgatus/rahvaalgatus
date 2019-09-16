@@ -367,6 +367,8 @@ function attrsFromStatus(status) {
 		}
 
 		case "ARUTELU_KOMISJONIS":
+			// Ignoring the "continue" decision as that's not applicable as the final
+			// initiative decision.
 			switch (status.committeeDecision && status.committeeDecision.code) {
 				case "LAHENDADA_MUUL_VIISIL":
 					return {parliament_decision: "solve-differently"}

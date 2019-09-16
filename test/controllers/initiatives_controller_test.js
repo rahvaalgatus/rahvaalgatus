@@ -52,6 +52,7 @@ var AUTH_TOKEN = "deadbeef"
 var SIGN_TOKEN = "feedfed"
 var EVENTABLE_PHASES = ["sign", "parliament", "government", "done"]
 var NEW_SIG_TRESHOLD = 15
+var PARLIAMENT_DECISIONS = ["reject", "forward", "solve-differently"]
 
 describe("InitiativesController", function() {
 	require("root/test/web")()
@@ -1203,6 +1204,47 @@ describe("InitiativesController", function() {
 					initiative.received_by_parliament_at,
 					initiative.finished_in_parliament_at
 				))
+			})
+
+			PARLIAMENT_DECISIONS.forEach(function(decision) {
+				it(`must render initiative in parliament with ${decision} decision`,
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "parliament",
+						sent_to_parliament_at: DateFns.addDays(new Date, -30),
+						parliament_decision: decision,
+						finished_in_parliament_at: DateFns.addDays(new Date, -5)
+					}))
+
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: (yield createUser(newUser())).id,
+						sourcePartnerId: this.partner.id,
+						status: "followUp"
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
+
+					var dom = parseDom(res.body)
+					var events = queryEvents(dom)
+					events.length.must.equal(2)
+					events[0].id.must.equal("sent-to-parliament")
+					events[1].id.must.equal("parliament-finished")
+					events[1].at.must.eql(initiative.finished_in_parliament_at)
+					events[1].title.must.equal(t("PARLIAMENT_FINISHED"))
+
+					events[1].content[0].textContent.must.equal(
+						decision == "reject"
+						? t("PARLIAMENT_DECISION_REJECT")
+						: decision == "forward"
+						? t("PARLIAMENT_DECISION_FORWARD")
+						: decision == "solve-differently"
+						? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
+						: null
+					)
+				})
 			})
 
 			it("must render external initiative in parliament", function*() {
@@ -2650,10 +2692,8 @@ describe("InitiativesController", function() {
 
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
-			var feed = Atom.parse(res.body).feed
-			feed.updated.$.must.equal(initiative.finished_in_government_at.toJSON())
 
-			feed.entry.forEach(function(entry, i) {
+			Atom.parse(res.body).feed.entry.forEach(function(entry, i) {
 				var event = events[i]
 				var url = `${Config.url}/initiatives`
 				url += `/${initiative.uuid}/events/${event.id}`
@@ -2663,6 +2703,64 @@ describe("InitiativesController", function() {
 				entry.title.$.must.equal(event.title)
 				if (event.content == null) entry.must.not.have.property("content")
 				else entry.content.$.must.equal(event.content)
+			})
+		})
+
+		PARLIAMENT_DECISIONS.forEach(function(decision) {
+			it(`must respond if initiative in parliament phase with ${decision} decision`, function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					sent_to_parliament_at: new Date(2015, 5, 1),
+					parliament_committee: "Keskkonnakomisjon",
+					parliament_decision: decision,
+					finished_in_parliament_at: new Date(2015, 5, 3)
+				}))
+
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					title: "Better life for everyone.",
+					creatorId: this.user.id,
+					sourcePartnerId: this.partner.id,
+					status: "followUp"
+				}))
+
+				var events = concat({
+					id: "sent-to-parliament",
+					updated_at: initiative.sent_to_parliament_at,
+					occurred_at: initiative.sent_to_parliament_at,
+
+					title: t("INITIATIVE_SENT_TO_PARLIAMENT_TITLE"),
+					content: t("INITIATIVE_SENT_TO_PARLIAMENT_BODY")
+				}, {
+					id: "parliament-finished",
+					updated_at: initiative.finished_in_parliament_at,
+					occurred_at: initiative.finished_in_parliament_at,
+
+					title: t("PARLIAMENT_FINISHED"),
+					content:
+						decision == "reject"
+						? t("PARLIAMENT_DECISION_REJECT")
+						: decision == "forward"
+						? t("PARLIAMENT_DECISION_FORWARD")
+						: decision == "solve-differently"
+						? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
+						: null
+				})
+
+				var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+				res.statusCode.must.equal(200)
+
+				Atom.parse(res.body).feed.entry.forEach(function(entry, i) {
+					var event = events[i]
+					var url = `${Config.url}/initiatives`
+					url += `/${initiative.uuid}/events/${event.id}`
+					entry.id.$.must.equal(url)
+					entry.updated.$.must.equal(event.updated_at.toJSON())
+					entry.published.$.must.equal(event.occurred_at.toJSON())
+					entry.title.$.must.equal(event.title)
+					if (event.content == null) entry.must.not.have.property("content")
+					else entry.content.$.must.equal(event.content)
+				})
 			})
 		})
 	})

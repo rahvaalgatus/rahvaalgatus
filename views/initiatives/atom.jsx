@@ -38,19 +38,16 @@ module.exports = function(attrs) {
 			var category = CATEGORIES[event.origin]
 
 			switch (event.type) {
-				case "sent-to-parliament":
-					title = t("INITIATIVE_SENT_TO_PARLIAMENT_TITLE")
-					content = t("INITIATIVE_SENT_TO_PARLIAMENT_BODY")
-					break
-
-				case "parliament-finished":
-					title = t("PARLIAMENT_FINISHED")
-					break
 
 				case "signature-milestone":
 					title = t("SIGNATURE_MILESTONE_EVENT_TITLE", {
 						milestone: event.content
 					})
+					break
+
+				case "sent-to-parliament":
+					title = t("INITIATIVE_SENT_TO_PARLIAMENT_TITLE")
+					content = t("INITIATIVE_SENT_TO_PARLIAMENT_BODY")
 					break
 
 				case "sent-to-government":
@@ -59,6 +56,20 @@ module.exports = function(attrs) {
 						: t("EVENT_SENT_TO_GOVERNMENT_TITLE_WITH_AGENCY", {
 							agency: initiative.government_agency
 						})
+					break
+
+				case "parliament-finished":
+					var decision = initiative.parliament_decision
+					title = t("PARLIAMENT_FINISHED")
+
+					if (decision) content =
+						decision == "reject"
+						? t("PARLIAMENT_DECISION_REJECT")
+						: decision == "forward"
+						? t("PARLIAMENT_DECISION_FORWARD")
+						: decision == "solve-differently"
+						? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
+						: null
 					break
 
 				case "finished-in-government":
