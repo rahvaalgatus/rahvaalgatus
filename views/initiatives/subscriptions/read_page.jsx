@@ -1,6 +1,7 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var Form = require("../../page").Form
+var FormCheckbox = require("../../page").FormCheckbox
 var Flash = require("../../page").Flash
 var InitiativePage = require("../initiative_page")
 
@@ -27,8 +28,7 @@ module.exports = function(attrs) {
 				</p>
 
 				<label class="form-checkbox">
-					<input
-						type="checkbox"
+					<FormCheckbox
 						name="official_interest"
 						checked={subscription.official_interest}
 					/>
@@ -37,8 +37,7 @@ module.exports = function(attrs) {
 				</label>
 
 				<label class="form-checkbox">
-					<input
-						type="checkbox"
+					<FormCheckbox
 						name="author_interest"
 						checked={subscription.author_interest}
 					/>
@@ -47,8 +46,7 @@ module.exports = function(attrs) {
 				</label>
 
 				<label class="form-checkbox">
-					<input
-						type="checkbox"
+					<FormCheckbox
 						name="comment_interest"
 						checked={subscription.comment_interest}
 					/>

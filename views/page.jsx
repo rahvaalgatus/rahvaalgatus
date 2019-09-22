@@ -15,6 +15,7 @@ exports = module.exports = Page
 exports.Flash = Flash
 exports.Form = Form
 exports.FormButton = FormButton
+exports.FormCheckbox = FormCheckbox
 exports.DatePickerInput = DatePickerInput
 exports.LiveReload = LiveReload
 
@@ -228,6 +229,13 @@ function FormButton(attrs, children) {
 			onclick={attrs.onclick}
 		>{children}</button>
 	</Form>
+}
+
+function FormCheckbox(attrs) {
+	return <Fragment>
+		<input type="hidden" name={attrs.name} />
+		<input type="checkbox" {...attrs} />
+	</Fragment>
 }
 	
 function Sentry(attrs) {
