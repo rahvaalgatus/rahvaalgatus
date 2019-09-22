@@ -11,5 +11,8 @@ before_script:
 
 script: make test PGHOST=localhost PGUSER=postgres
 
+cache:
+  npm: false
+
 notifications:
   email: ["andri@dot.ee"]
