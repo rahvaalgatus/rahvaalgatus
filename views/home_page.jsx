@@ -14,6 +14,7 @@ module.exports = function(attrs) {
 	var req = attrs.req
 	var initiatives = attrs.initiatives
 	var topics = attrs.topics
+	var stats = attrs.statistics
 	var signatureCounts = attrs.signatureCounts
 
 	var initiativesByPhase = _.groupBy(initiatives, "phase")
@@ -91,6 +92,50 @@ module.exports = function(attrs) {
 			</div>
 		</center></section>
 
+		<section id="statistics" class="primary-section">
+			<center>
+				<StatisticsView
+					id="discussions-statistic"
+					title={t("HOME_PAGE_STATISTICS_DISCUSSIONS")}
+					count={stats.all.discussionsCount}
+				>
+					{Jsx.html(t("HOME_PAGE_STATISTICS_N_IN_LAST_30_DAYS", {
+						count: stats[30].discussionsCount
+					}))}
+				</StatisticsView>
+
+				<StatisticsView
+					id="initiatives-statistic"
+					title={t("HOME_PAGE_STATISTICS_INITIATIVES")}
+					count={stats.all.initiativesCount}
+				>
+					{Jsx.html(t("HOME_PAGE_STATISTICS_N_IN_LAST_30_DAYS", {
+						count: stats[30].initiativesCount
+					}))}
+				</StatisticsView>
+
+				<StatisticsView
+					id="signatures-statistic"
+					title={t("HOME_PAGE_STATISTICS_SIGNATURES")}
+					count={stats.all.signatureCount}
+				>
+					{Jsx.html(t("HOME_PAGE_STATISTICS_N_IN_LAST_30_DAYS", {
+						count: stats[30].signatureCount
+					}))}
+				</StatisticsView>
+
+				<StatisticsView
+					id="parliament-statistic"
+					title={t("HOME_PAGE_STATISTICS_PARLIAMENT")}
+					count={stats.all.parliamentCount}
+				>
+					{Jsx.html(t("HOME_PAGE_STATISTICS_N_IN_LAST_30_DAYS", {
+						count: stats[30].parliamentCount
+					}))}
+				</StatisticsView>
+			</center>
+		</section>
+
 		<section id="initiatives" class="secondary-section initiatives-section">
 			<center>
 				{inEdit.length > 0 ? <Fragment>
@@ -155,4 +200,15 @@ module.exports = function(attrs) {
 			</center>
 		</section>
 	</Page>
+}
+
+function StatisticsView(attrs, children) {
+	var title = attrs.title
+	var count = attrs.count
+
+	return <div id={attrs.id} class="statistic">
+		<h2>{title}</h2>
+		<span class="count">{count}</span>
+		<p>{children}</p>
+	</div>
 }
