@@ -22,8 +22,18 @@ function CreatePage(attrs) {
 			<center><DonateForm req={req} t={t} amount={amount} /></center>
 		</section>
 
-		<section class="secondary-section text-section"><center>
-			<p>{Jsx.html(I18n.markdown(lang, "donators"))}</p>
+		<section id="logo-section" class="secondary-section text-section"><center>
+			<a href="https://heakodanik.ee/annetuste-kogumise-hea-tava/">
+				<img src="/assets/hea-annetuse-koguja.png" alt="Hea Kodanik — Annetuste kogumise hea tava" />
+			</a>
+
+			<a href="https://www.teemeara.ee">
+				<img src="/assets/teeme-ära.png" alt="Teeme Ära SA" />
+			</a>
+
+			<a href="https://www.kysk.ee/">
+				<img src="/assets/kysk.png" alt="Kodanikuühiskonna Sihtkapital SA" />
+			</a>
 		</center></section>
 	</Page>
 }

@@ -2237,8 +2237,24 @@ button.inherited {
 	section center { max-width: 64rem; }
 }
 
-#donate-page section {
-	font-size: 1.6rem;
+#donate-page {
+	background: $secondary-background;
+
+	section {
+		font-size: 1.6rem;
+	}
+
+	#logo-section {
+		img {
+			vertical-align: middle;
+			max-width: 22rem;
+			max-height: 9rem;
+		}
+
+		a + a {
+			margin-left: 2rem;
+		}
+	}
 }
 
 #user-page {
