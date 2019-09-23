@@ -9,7 +9,6 @@ var next = require("co-next")
 var sql = require("sqlate")
 var sendEmail = require("root").sendEmail
 var renderEmail = require("root/lib/i18n").email
-var parseSubscription = require("../subscriptions_controller").parse
 
 exports.router = Router({mergeParams: true})
 
@@ -129,7 +128,6 @@ exports.router.use("/:token", next(function*(req, res, next) {
 		SELECT * FROM initiative_subscriptions
 		WHERE initiative_uuid = ${initiative.uuid}
 		AND update_token = ${req.params.token}
-		LIMIT 1
 	`)
 
 	if (req.subscription) return void next()
@@ -143,31 +141,10 @@ exports.router.use("/:token", next(function*(req, res, next) {
 }))
 
 exports.router.get("/:token", function(req, res) {
-	res.render("initiatives/subscriptions/read_page.jsx", {
-		subscription: req.subscription
-	})
-})
-
-exports.router.put("/:token", next(function*(req, res) {
-	yield subscriptionsDb.update(req.subscription, {
-		__proto__: parseSubscription(req.body),
-		updated_at: new Date
-	})
-
-	res.flash("notice", req.t("INITIATIVE_SUBSCRIPTION_UPDATED"))
-	res.redirect(303, req.baseUrl + req.url)
-}))
-
-exports.router.delete("/:token", next(function*(req, res) {
-	var initiative = req.initiative
 	var subscription = req.subscription
-
-	yield subscriptionsDb.execute(sql`
-		DELETE FROM initiative_subscriptions
-		WHERE initiative_uuid = ${initiative.uuid}
-		AND update_token = ${subscription.update_token}
-	`)
-
-	res.flash("notice", req.t("INITIATIVE_SUBSCRIPTION_DELETED"))
-	res.redirect(303, Path.dirname(req.baseUrl))
-}))
+	var path = "/subscriptions"
+	path += "?initiative=" + subscription.initiative_uuid
+	path += "&update-token=" + subscription.update_token
+	path += "#subscription-" + subscription.initiative_uuid
+	res.redirect(302, path)
+})

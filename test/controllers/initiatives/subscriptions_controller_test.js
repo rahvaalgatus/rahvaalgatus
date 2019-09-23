@@ -352,40 +352,45 @@ describe("InitiativeSubscriptionsController", function() {
 	describe("GET /:token", function() {
 		require("root/test/fixtures").csrf()
 
-		it("must show subscription page", function*() {
-			var subscription = new ValidSubscription({
+		it("must redirect to subscriptions page", function*() {
+			var subscription = yield subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: this.initiative.uuid,
 				confirmed_at: new Date
-			})
-
-			yield subscriptionsDb.create(subscription)
+			}))
 
 			var res = yield this.request(
 				`/initiatives/${this.initiative.uuid}/subscriptions/${subscription.update_token}`
 			)
 
-			res.statusCode.must.equal(200)
-			res.body.must.include(t("SUBSCRIPTION_UPDATE_TITLE"))
+			res.statusCode.must.equal(302)
+			var path = "/subscriptions"
+			path += "?initiative=" + subscription.initiative_uuid
+			path += "&update-token=" + subscription.update_token
+			path += "#subscription-" + subscription.initiative_uuid
+			res.headers.location.must.equal(path)
 		})
 
-		it("must show subscription page given an external initiative", function*() {
+		it("must redirect to subscriptions page given an external initiative",
+			function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				external: true
 			}))
 
-			var subscription = new ValidSubscription({
+			var subscription = yield subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date
-			})
-
-			yield subscriptionsDb.create(subscription)
+			}))
 
 			var res = yield this.request(
 				`/initiatives/${initiative.uuid}/subscriptions/${subscription.update_token}`
 			)
 
-			res.statusCode.must.equal(200)
-			res.body.must.include(t("SUBSCRIPTION_UPDATE_TITLE"))
+			res.statusCode.must.equal(302)
+			var path = "/subscriptions"
+			path += "?initiative=" + subscription.initiative_uuid
+			path += "&update-token=" + subscription.update_token
+			path += "#subscription-" + subscription.initiative_uuid
+			res.headers.location.must.equal(path)
 		})
 
 		it("must respond with 404 given invalid update token", function*() {
@@ -398,212 +403,6 @@ describe("InitiativeSubscriptionsController", function() {
 			var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions/beef`)
 			res.statusCode.must.equal(404)
 			res.body.must.include(t("SUBSCRIPTION_NOT_FOUND_TITLE"))
-		})
-	})
-
-	describe("PUT /:token", function() {
-		require("root/test/fixtures").csrf()
-		require("root/test/time")()
-
-		it("must update subscription", function*() {
-			var sub = yield subscriptionsDb.create(new ValidSubscription({
-				initiative_uuid: this.initiative.uuid,
-				confirmed_at: new Date
-			}))
-
-			var path = `/initiatives/${this.initiative.uuid}/subscriptions/${sub.update_token}`
-			var res = yield this.request(path, {
-				method: "POST",
-					form: {
-						_method: "put",
-						_csrf_token: this.csrfToken,
-						official_interest: !sub.official_interest,
-						author_interest: !sub.author_interest,
-						comment_interest: !sub.comment_interest
-					}
-			})
-
-			res.statusCode.must.equal(303)
-			res.headers.location.must.equal(path)
-
-			yield subscriptionsDb.read(sub).must.then.eql({
-				__proto__: sub,
-				updated_at: new Date,
-				official_interest: !sub.official_interest,
-				author_interest: !sub.author_interest,
-				comment_interest: !sub.comment_interest
-			})
-		})
-
-		it("must update subscription given an external initiative", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				external: true
-			}))
-
-			var sub = yield subscriptionsDb.create(new ValidSubscription({
-				initiative_uuid: initiative.uuid,
-				confirmed_at: new Date
-			}))
-
-			var path = `/initiatives/${initiative.uuid}/subscriptions/${sub.update_token}`
-			var res = yield this.request(path, {
-				method: "POST",
-					form: {
-						_method: "put",
-						_csrf_token: this.csrfToken,
-						official_interest: !sub.official_interest
-					}
-			})
-
-			res.statusCode.must.equal(303)
-			res.headers.location.must.equal(path)
-
-			yield subscriptionsDb.read(sub).must.then.eql({
-				__proto__: sub,
-				updated_at: new Date,
-				official_interest: !sub.official_interest
-			})
-		})
-
-		it("must not update email", function*() {
-			var sub = yield subscriptionsDb.create(new ValidSubscription({
-				initiative_uuid: this.initiative.uuid,
-				confirmed_at: new Date
-			}))
-
-			var path = `/initiatives/${this.initiative.uuid}/subscriptions/${sub.update_token}`
-			var res = yield this.request(path, {
-				method: "POST",
-					form: {
-						_method: "put",
-						_csrf_token: this.csrfToken,
-						email: "root@example.com"
-					}
-			})
-
-			res.statusCode.must.equal(303)
-
-			yield subscriptionsDb.read(sub).must.then.eql({
-				__proto__: sub,
-				updated_at: new Date
-			})
-		})
-
-		it("must respond with 404 given invalid update token", function*() {
-			// Still have a single subscription to ensure it's not picking randomly.
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
-				initiative_uuid: this.initiative.uuid,
-				confirmed_at: new Date
-			}))
-
-			var res = yield this.request(
-				`/initiatives/${this.initiative.uuid}/subscriptions/deadbeef`, {
-				method: "POST",
-				form: {_method: "put", _csrf_token: this.csrfToken}
-			})
-
-			res.statusCode.must.equal(404)
-			res.body.must.include(t("SUBSCRIPTION_NOT_FOUND_TITLE"))
-
-			yield subscriptionsDb.search(sql`
-				SELECT * FROM initiative_subscriptions
-			`).must.then.eql([subscription])
-		})
-	})
-
-	describe("DELETE /:token", function() {
-		require("root/test/fixtures").csrf()
-
-		it("must delete subscription", function*() {
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
-				initiative_uuid: this.initiative.uuid,
-				confirmed_at: new Date
-			}))
-
-			var res = yield this.request(
-				`/initiatives/${this.initiative.uuid}/subscriptions/${subscription.update_token}`, {
-				method: "POST",
-				form: {_method: "delete", _csrf_token: this.csrfToken}
-			})
-
-			res.statusCode.must.equal(303)
-			res.headers.location.must.equal("/initiatives/" + this.initiative.uuid)
-
-			yield subscriptionsDb.search(sql`
-				SELECT * FROM initiative_subscriptions
-			`).must.then.be.empty()
-		})
-
-		it("must delete subscription given an external initiative", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				external: true
-			}))
-
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
-				initiative_uuid: initiative.uuid,
-				confirmed_at: new Date
-			}))
-
-			var res = yield this.request(
-				`/initiatives/${initiative.uuid}/subscriptions/${subscription.update_token}`, {
-				method: "POST",
-				form: {_method: "delete", _csrf_token: this.csrfToken}
-			})
-
-			res.statusCode.must.equal(303)
-			res.headers.location.must.equal("/initiatives/" + initiative.uuid)
-
-			yield subscriptionsDb.search(sql`
-				SELECT * FROM initiative_subscriptions
-			`).must.then.be.empty()
-		})
-
-		it("must respond with 404 given invalid update token", function*() {
-			// Still have a single subscription to ensure it's not picking randomly.
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
-				initiative_uuid: this.initiative.uuid,
-				confirmed_at: new Date
-			}))
-
-			var res = yield this.request(
-				`/initiatives/${this.initiative.uuid}/subscriptions/deadbeef`, {
-				method: "POST",
-				form: {_method: "delete", _csrf_token: this.csrfToken}
-			})
-
-			res.statusCode.must.equal(404)
-			res.body.must.include(t("SUBSCRIPTION_NOT_FOUND_TITLE"))
-
-			yield subscriptionsDb.search(sql`
-				SELECT * FROM initiative_subscriptions
-			`).must.then.eql([subscription])
-		})
-
-		it("must not delete other subscription on same initiative", function*() {
-			var other = new ValidSubscription({
-				initiative_uuid: this.initiative.uuid,
-				confirmed_at: new Date
-			})
-
-			var subscription = new ValidSubscription({
-				initiative_uuid: this.initiative.uuid,
-				confirmed_at: new Date,
-			})
-
-			yield subscriptionsDb.create([other, subscription])
-
-			var res = yield this.request(
-				`/initiatives/${this.initiative.uuid}/subscriptions/${subscription.update_token}`, {
-				method: "POST",
-				form: {_method: "delete", _csrf_token: this.csrfToken}
-			})
-
-			res.statusCode.must.equal(303)
-			res.headers.location.must.equal("/initiatives/" + this.initiative.uuid)
-
-			yield subscriptionsDb.search(sql`
-				SELECT * FROM initiative_subscriptions
-			`).must.then.eql([other])
 		})
 	})
 })
