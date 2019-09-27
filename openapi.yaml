@@ -1,0 +1,122 @@
+openapi: "3.0.0"
+
+info:
+  title: Rahvaalgatus
+  version: "1"
+  description: |
+    The public API of <https://rahvaalgatus.ee>.  
+    Source code available at <https://github.com/rahvaalgatus/rahvaalgatus>.
+
+    Don't forget to set the `Accept` header as otherwise you'll be getting HTML
+    back.  
+    You can also do client-side requests with JavaScript as the API responses
+    have a `Access-Control-Allow-Origin: *` header.
+
+servers:
+  - url: "https://rahvaalgatus.ee"
+
+tags:
+  - name: Statistics
+  - name: Initiatives
+
+paths:
+  /statistics:
+    get:
+      tags: [Statistics]
+      summary: Get general statistics about Rahvaalgatus.
+      description: |
+        Note that the returned initiative counts do not at this time include
+        external initiatives. External initiatives were the ones sent to the
+        parliament through means other than Rahvaalgatus, and were imported to
+        Rahvaalgatus via the Parliament API.
+
+      responses:
+        200:
+          description: OK
+          content:
+            application/vnd.rahvaalgatus.statistics+json; v=1:
+              schema: {$ref: "#/components/schemas/Statistics"}
+
+  /initiatives/{initiativeUuid}:
+    get:
+      tags: [Initiatives]
+      summary: Get the initiative's data.
+
+      parameters:
+        - name: initiativeUuid
+          in: path
+          description: Initiative's UUID
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "92cc16ee-107e-4208-b92c-2ffed24d4f4b"
+
+      responses:
+        200:
+          description: OK
+          content:
+            application/vnd.rahvaalgatus.initiative+json; v=1:
+              schema: {$ref: "#/components/schemas/Initiative"}
+
+        404: {description: "Initiative not found."}
+
+components:
+  schemas:
+    Statistics:
+      type: object
+
+      properties:
+        initiativeCountsByPhase:
+          type: object
+          description: The count of initiatives by phase.
+
+          properties:
+            edit:
+              type: integer
+              example: 3
+              description: |
+                The number of initiatives in the edit phase.  
+                These are shown as discussions on the web.
+
+            sign:
+              type: integer
+              example: 1
+              description: |
+                The number of initiatives in the sign phase.  
+                These are shown as being signable on the web.
+
+            parliament:
+              type: integer
+              example: 3
+              description: The number of initiatives in the parliament phase.
+
+            government:
+              type: integer
+              example: 3
+              description: The number of initiatives in the government phase.
+
+            done:
+              type: integer
+              example: 7
+              description: The number of initiatives in the government phase.
+
+        signatureCount:
+          type: integer
+          example: 1336
+          description: |
+            The total number of digital signatures on all initiatives.
+
+    Initiative:
+      type: object
+
+      properties:
+        title:
+          type: string
+          description: The initiative's title.
+          example: Teeme elu paremaks!
+
+        signatureCount:
+          type: integer
+          description: The digital signature count for the initiative.
+          example: 1336

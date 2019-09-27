@@ -105,6 +105,21 @@ make autotest
 [mitm]: https://github.com/moll/node-mitm
 
 
+API
+---
+Rahvaalgatus also has a public API available that's usable both from the server side and via client-side JavaScript, if you wish to embed a signature counter on your initiative's marketing page, for example.
+
+An example of getting the number of signatures on an initiative:
+
+```sh
+curl https://rahvaalgatus.ee/initiatives/92cc16ee-107e-4208-b92c-2ffed24d4f4b -H "Accept:application/vnd.rahvaalgatus.initiative+json; v=1"
+```
+
+See the full API documentation on [SwaggerHub](https://app.swaggerhub.com/apis-docs/rahvaalgatus/rahvaalgatus) or in a machine-readable OpenAPI v3 format from the [`openapi.yaml`](openapi.yaml) file from this repository.
+
+We're open to adding more structured data to the public API, so feel free to [create an issue on GitHub][issues] if you find something's missing.
+
+
 License
 -------
 Rahvaalgatus is released under the *GNU Affero General Public License*, which in

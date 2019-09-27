@@ -157,6 +157,9 @@ staging: deploy
 production: APP_PATH = /var/www/rahvaalgatus
 production: deploy
 
+api/publish: openapi.yaml
+	http --session-read-only=rahvaalgatus post https://api.swaggerhub.com/apis/rahvaalgatus/rahvaalgatus Content-Type:application/yaml oas==3.0.0 < "$<"
+
 translations: lib/i18n/en.json
 translations: lib/i18n/et.json
 translations: lib/i18n/ru.json
