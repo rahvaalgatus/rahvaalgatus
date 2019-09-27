@@ -12,6 +12,27 @@ var createTopic = require("root/test/citizenos_fixtures").createTopic
 var createVote = require("root/test/citizenos_fixtures").createVote
 var createSignatures = require("root/test/citizenos_fixtures").createSignatures
 var initiativesDb = require("root/db/initiatives_db")
+var STATISTICS_TYPE = "application/vnd.rahvaalgatus.statistics+json; v=1"
+var PHASES = require("root/lib/initiative").PHASES
+
+var PHASE_TO_STATUS = {
+	sign: "voting",
+	parliament: "followUp",
+	government: "followUp",
+	done: "followUp"
+}
+
+var EMPTY_STATISTICS = {
+	initiativeCountsByPhase: {
+		edit: 0,
+		sign: 0,
+		parliament: 0,
+		government: 0,
+		done: 0
+	},
+
+	signatureCount: 0
+}
 
 describe("HomeController", function() {
 	require("root/test/web")()
@@ -20,12 +41,12 @@ describe("HomeController", function() {
 	require("root/test/time")()
 	beforeEach(require("root/test/mitm").router)
 
-	describe("/", function() {
-		beforeEach(function*() {
-			this.user = yield createUser(newUser())
-			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
-		})
+	beforeEach(function*() {
+		this.user = yield createUser(newUser())
+		this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
+	})
 
+	describe("GET /", function() {
 		it("must show initiatives in edit phase", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				phase: "edit"
@@ -361,6 +382,117 @@ describe("HomeController", function() {
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
 			res.body.must.not.include(topic.id)
+		})
+	})
+
+	describe(`GET /statistics with ${STATISTICS_TYPE}`, function() {
+		it("must respond with JSON", function*() {
+			var res = yield this.request("/statistics", {
+				headers: {Accept: STATISTICS_TYPE}
+			})
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(STATISTICS_TYPE)
+			res.headers["access-control-allow-origin"].must.equal("*")
+			res.body.must.eql(EMPTY_STATISTICS)
+		})
+
+		it("must respond with signature count", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "sign"
+			}))
+
+			var topic = yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				status: "voting"
+			}))
+
+			var vote = yield createVote(topic, newVote({endsAt: new Date}))
+			yield createSignatures(vote, 5)
+
+			var res = yield this.request("/statistics", {
+				headers: {Accept: STATISTICS_TYPE}
+			})
+
+			res.statusCode.must.equal(200)
+			res.body.signatureCount.must.equal(5)
+		})
+
+		PHASES.forEach(function(phase) {
+			it(`must count initiatives in ${phase}`, function*() {
+				var initiatives = yield initiativesDb.create(_.times(3, () => (
+					new ValidInitiative({phase: phase}
+				))))
+
+				yield createTopic(initiatives.map((i) => newTopic({
+					id: i.uuid,
+					creatorId: this.user.id,
+					sourcePartnerId: this.partner.id,
+					visibility: "public",
+					status: PHASE_TO_STATUS[phase]
+				})))
+
+				var res = yield this.request("/statistics", {
+					headers: {Accept: STATISTICS_TYPE}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.initiativeCountsByPhase[phase].must.equal(3)
+			})
+		})
+
+		it("must not count external initiatives", function*() {
+			yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
+				external: true
+			}))
+
+			var res = yield this.request("/statistics", {
+				headers: {Accept: STATISTICS_TYPE}
+			})
+
+			res.statusCode.must.equal(200)
+			res.body.must.eql(EMPTY_STATISTICS)
+		})
+
+		it("must not count private topics", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative)
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				status: "inProgress"
+			}))
+
+			var res = yield this.request("/statistics", {
+				headers: {Accept: STATISTICS_TYPE}
+			})
+
+			res.statusCode.must.equal(200)
+			res.body.must.eql(EMPTY_STATISTICS)
+		})
+
+		it("must not count deleted topics", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative)
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				visibility: "public",
+				status: "inProgress",
+				deletedAt: new Date
+			}))
+
+			var res = yield this.request("/statistics", {
+				headers: {Accept: STATISTICS_TYPE}
+			})
+
+			res.statusCode.must.equal(200)
+			res.body.must.eql(EMPTY_STATISTICS)
 		})
 	})
 })

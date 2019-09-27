@@ -2,6 +2,9 @@ var _ = require("root/lib/underscore")
 var DateFns = require("date-fns")
 var Router = require("express").Router
 var Config = require("root/config")
+var MediaType = require("medium-type")
+var ResponseTypeMiddeware =
+	require("root/lib/middleware/response_type_middleware")
 var next = require("co-next")
 var searchTopics = require("root/lib/citizenos_db").searchTopics
 var cosDb = require("root").cosDb
@@ -11,6 +14,8 @@ var sql = require("sqlate")
 var initiativesDb = require("root/db/initiatives_db")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var PARTNER_IDS = concat(Config.apiPartnerId, _.keys(Config.partners))
+var PHASES = require("root/lib/initiative").PHASES
+var ZERO_COUNTS = _.fromEntries(PHASES.map((name) => [name, 0]))
 
 exports.router = Router({mergeParams: true})
 
@@ -64,6 +69,37 @@ exports.router.get("/credits", render.bind(null, "home/credits_page.jsx"))
 exports.router.get("/donate", alias.bind(null, "/donations/new"))
 exports.router.get("/donated", alias.bind(null, "/donations/created"))
 
+exports.router.get("/statistics",
+	new ResponseTypeMiddeware([
+		new MediaType("application/vnd.rahvaalgatus.statistics+json; v=1")
+	]),
+	next(function*(_req, res) {
+	res.setHeader("Content-Type", res.contentType)
+	res.setHeader("Access-Control-Allow-Origin", "*")
+
+	var countsByPhase = _.defaults(_.fromEntries(yield sqlite(sql`
+		SELECT phase, COUNT(*) as count
+		FROM initiatives
+		WHERE phase <> 'edit'
+		AND NOT external
+		GROUP BY phase
+	`).then((rows) => rows.map((row) => [row.phase, row.count]))), ZERO_COUNTS)
+
+	countsByPhase.edit = yield cosDb.query(sql`
+		SELECT COUNT(*)
+		FROM "Topics"
+		WHERE "sourcePartnerId" IN ${sql.in(PARTNER_IDS)}
+		AND "deletedAt" IS NULL
+		AND visibility = 'public'
+		AND status = 'inProgress'
+	`).then(_.first).then((res) => Number(res.count))
+
+	res.send({
+		initiativeCountsByPhase: countsByPhase,
+		signatureCount: yield readSignatureCount(new Date(0))
+	})
+}))
+
 function* readStatistics(from, to) {
 	var discussionsCount = yield cosDb.query(sql`
 		SELECT COUNT(*)
@@ -87,19 +123,7 @@ function* readStatistics(from, to) {
 		AND topic."sourcePartnerId" IN ${sql.in(PARTNER_IDS)}
 	`).then(_.first).then((res) => res.count)
 
-	var signatureCount = yield cosDb.query(sql`
-		WITH signatures AS (
-			SELECT DISTINCT ON (sig."voteId", sig."userId") opt.value AS support
-			FROM "VoteLists" AS sig
-			JOIN "VoteOptions" AS opt ON opt.id = sig."optionId"
-			WHERE sig."createdAt" >= ${from}
-			${to ? sql`AND sig."createdAt" < ${to}` : sql``}
-			ORDER BY sig."voteId", sig."userId", sig."createdAt" DESC
-		)
-
-		SELECT COUNT(*) as count FROM signatures
-		WHERE support = 'Yes'
-	`).then(_.first).then((res) => res.count)
+	var signatureCount = yield readSignatureCount(from, to)
 
 	var parliamentCount = yield sqlite(sql`
 		SELECT COUNT(*) as count
@@ -116,6 +140,22 @@ function* readStatistics(from, to) {
 		signatureCount: signatureCount,
 		parliamentCount: parliamentCount
 	}
+}
+
+function readSignatureCount(from, to) {
+	return cosDb.query(sql`
+		WITH signatures AS (
+			SELECT DISTINCT ON (sig."voteId", sig."userId") opt.value AS support
+			FROM "VoteLists" AS sig
+			JOIN "VoteOptions" AS opt ON opt.id = sig."optionId"
+			WHERE sig."createdAt" >= ${from}
+			${to ? sql`AND sig."createdAt" < ${to}` : sql``}
+			ORDER BY sig."voteId", sig."userId", sig."createdAt" DESC
+		)
+
+		SELECT COUNT(*) as count FROM signatures
+		WHERE support = 'Yes'
+	`).then(_.first).then((res) => Number(res.count))
 }
 
 function alias(url, req, _res, next) { req.url = url; next() }
