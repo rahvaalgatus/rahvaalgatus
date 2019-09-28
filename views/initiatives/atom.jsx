@@ -38,7 +38,6 @@ module.exports = function(attrs) {
 			var category = CATEGORIES[event.origin]
 
 			switch (event.type) {
-
 				case "signature-milestone":
 					title = t("SIGNATURE_MILESTONE_EVENT_TITLE", {
 						milestone: event.content

@@ -783,6 +783,45 @@ describe("InitiativesController", function() {
 				}))
 			})
 
+			it("must render initiative in sign phase with signature milestones",
+				function*() {
+				var milestones = [1, Config.votesRequired / 2, Config.votesRequired]
+
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "sign",
+					signature_milestones: {
+						[milestones[0]]: DateFns.addDays(new Date, -5),
+						[milestones[1]]: DateFns.addDays(new Date, -3),
+						[milestones[2]]: DateFns.addDays(new Date, -1)
+					}
+				}))
+
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "voting"
+				}))
+
+				var vote = yield createVote(topic, newVote())
+				yield createSignatures(vote, Config.votesRequired)
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var events = queryEvents(parseDom(res.body))
+				events.length.must.equal(3)
+
+				milestones.forEach(function(count, i) {
+					events[i].id.must.equal(`milestone-${count}`)
+					events[i].phase.must.equal("sign")
+					events[i].at.must.eql(initiative.signature_milestones[count])
+					events[i].title.must.equal(
+						t("SIGNATURE_MILESTONE_EVENT_TITLE", {milestone: count})
+					)
+				})
+			})
+
 			it("must render initiative in sign phase that failed", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "sign"
@@ -991,6 +1030,7 @@ describe("InitiativesController", function() {
 				var events = queryEvents(dom)
 				events.length.must.equal(1)
 				events[0].id.must.equal("sent-to-parliament")
+				events[0].phase.must.equal("parliament")
 				events[0].at.must.eql(initiative.sent_to_parliament_at)
 				events[0].title.must.equal(t("INITIATIVE_SENT_TO_PARLIAMENT_TITLE"))
 			})
@@ -1232,6 +1272,7 @@ describe("InitiativesController", function() {
 					events.length.must.equal(2)
 					events[0].id.must.equal("sent-to-parliament")
 					events[1].id.must.equal("parliament-finished")
+					events[1].phase.must.equal("parliament")
 					events[1].at.must.eql(initiative.finished_in_parliament_at)
 					events[1].title.must.equal(t("PARLIAMENT_FINISHED"))
 
@@ -1313,6 +1354,7 @@ describe("InitiativesController", function() {
 				events[0].id.must.equal("sent-to-parliament")
 				events[1].id.must.equal("parliament-finished")
 				events[2].id.must.equal("sent-to-government")
+				events[2].phase.must.equal("government")
 				events[2].at.must.eql(initiative.sent_to_government_at)
 
 				events[2].title.must.equal(
@@ -1369,6 +1411,7 @@ describe("InitiativesController", function() {
 				events[1].id.must.equal("parliament-finished")
 				events[2].id.must.equal("sent-to-government")
 				events[3].id.must.equal("finished-in-government")
+				events[3].phase.must.equal("government")
 				events[3].at.must.eql(initiative.finished_in_government_at)
 
 				events[3].title.must.equal(
@@ -2627,7 +2670,51 @@ describe("InitiativesController", function() {
 			feed.updated.$.must.equal(topic.updatedAt.toJSON())
 		})
 
-		it("must include generated events", function*() {
+		it("must render initiative in sign phase with signature milestones",
+			function*() {
+			var milestones = [1, Config.votesRequired / 2, Config.votesRequired]
+
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "sign",
+				signature_milestones: {
+					[milestones[0]]: DateFns.addDays(new Date, -5),
+					[milestones[1]]: DateFns.addDays(new Date, -3),
+					[milestones[2]]: DateFns.addDays(new Date, -1)
+				}
+			}))
+
+			var topic = yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: (yield createUser(newUser())).id,
+				sourcePartnerId: this.partner.id,
+				status: "voting"
+			}))
+
+			var vote = yield createVote(topic, newVote())
+			yield createSignatures(vote, Config.votesRequired)
+
+			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			res.statusCode.must.equal(200)
+
+			var events = milestones.map((count) => ({
+				id: "milestone-" + count,
+				occurred_at: initiative.signature_milestones[count],
+				title: t("SIGNATURE_MILESTONE_EVENT_TITLE", {milestone: count})
+			}))
+
+			Atom.parse(res.body).feed.entry.forEach(function(entry, i) {
+				var event = events[i]
+				var url = `${Config.url}/initiatives`
+				url += `/${initiative.uuid}/events/${event.id}`
+				entry.id.$.must.equal(url)
+				entry.updated.$.must.equal(event.occurred_at.toJSON())
+				entry.published.$.must.equal(event.occurred_at.toJSON())
+				entry.title.$.must.equal(event.title)
+				entry.must.not.have.property("content")
+			})
+		})
+
+		it("must render generated events", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
 				sent_to_parliament_at: new Date(2015, 5, 1),
@@ -4365,7 +4452,8 @@ function queryEvents(html) {
 			id: event.id.replace(/^event-/, ""),
 			title: event.querySelector("h2").textContent,
 			at: new Date(event.querySelector(".metadata time").dateTime),
-			content: event.querySelectorAll(".metadata + *:not(.files)")
+			content: event.querySelectorAll(".metadata + *:not(.files)"),
+			phase: event.className.match(/\b(\w+)-phase\b/)[1]
 		}
 	}).reverse()
 }
