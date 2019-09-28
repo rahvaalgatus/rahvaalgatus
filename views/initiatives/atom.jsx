@@ -36,6 +36,7 @@ module.exports = function(attrs) {
 			var title
 			var content
 			var category = CATEGORIES[event.origin]
+			var author
 
 			switch (event.type) {
 				case "signature-milestone":
@@ -87,6 +88,7 @@ module.exports = function(attrs) {
 				case "text":
 					title = event.title
 					content = event.content
+					author = event.origin == "author" ? event.user : null
 					break
 
 				default:
@@ -100,7 +102,8 @@ module.exports = function(attrs) {
 				<updated>{event.updated_at.toJSON()}</updated>
 				{category ? <category term={category} /> : null}
 				{content ? <content type="text">{content}</content> : null}
-				</entry>
+				{author ? <author><name>{author.name}</name></author> : null}
+			</entry>
 		})}
 	</feed>
 }

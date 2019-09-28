@@ -245,7 +245,6 @@ exports.read = next(function*(req, res) {
 
 	var comments = yield searchInitiativeComments(initiative.uuid)
 	var events = _.reverse(yield searchInitiativeEvents(initiative))
-	yield populateEventUsers(events)
 
 	var subscription = user && user.emailIsVerified
 		? yield subscriptionsDb.read(sql`
@@ -567,7 +566,7 @@ function* searchInitiativeEvents(initiative) {
 	var sentToGovernmentAt = initiative.sent_to_government_at
 	var finishedInGovernmentAt = initiative.finished_in_government_at
 
-	return _.sortBy(concat(
+	events = _.sortBy(concat(
 		sentToParliamentAt ? {
 			id: "sent-to-parliament",
 			type: "sent-to-parliament",
@@ -614,6 +613,17 @@ function* searchInitiativeEvents(initiative) {
 			origin: "system"
 		} : EMPTY_ARR
 	), "occurred_at")
+
+	var eventsFromAuthor = events.filter((ev) => ev.origin == "author")
+
+	var users = _.indexBy(yield cosDb.query(sql`
+		SELECT id, name FROM "Users"
+		WHERE id IN ${sql.in(eventsFromAuthor.map((ev) => ev.created_by))}
+	`), "id")
+
+	eventsFromAuthor.forEach((ev) => ev.user = users[ev.created_by])
+
+	return events
 }
 
 function readCitizenSignature(topic, userUuid) {
@@ -908,17 +918,6 @@ function parseInitiative(obj) {
 		obj.public_change_urls.map(String).map(trim).filter(Boolean)
 
 	return attrs
-}
-
-function* populateEventUsers(events) {
-	var eventsFromAuthor = events.filter((ev) => ev.origin == "author")
-
-	var users = _.indexBy(yield cosDb.query(sql`
-		SELECT id, name FROM "Users"
-		WHERE id IN ${sql.in(eventsFromAuthor.map((ev) => ev.created_by))}
-	`), "id")
-
-	eventsFromAuthor.forEach((ev) => ev.user = users[ev.created_by])
 }
 
 function parseOrganization(obj) {

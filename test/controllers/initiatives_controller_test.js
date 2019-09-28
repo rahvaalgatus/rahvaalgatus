@@ -1584,6 +1584,41 @@ describe("InitiativesController", function() {
 				phases.archived.current.must.be.true()
 			})
 
+			it("must render initiative with text event", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative)
+
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					visibility: "public"
+				}))
+
+				var author = yield createUser(newUser({name: "Johnny Lang"}))
+
+				var event = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiative.uuid,
+					created_by: author.id,
+					title: "This just in.",
+					content: "Everything is fine!",
+					created_at: pseudoDateTime(),
+					occurred_at: pseudoDateTime()
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var events = queryEvents(parseDom(res.body))
+				events.length.must.equal(1)
+
+				events[0].id.must.equal(String(event.id))
+				events[0].must.have.property("phase", null)
+				events[0].author.must.equal(author.name)
+				events[0].at.must.eql(event.occurred_at)
+				events[0].title.must.equal("This just in.")
+				events[0].content[0].textContent.must.equal("Everything is fine!")
+			})
+
 			it("must render initiative comments", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative)
 
@@ -2577,29 +2612,13 @@ describe("InitiativesController", function() {
 		it("must respond with Atom feed", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative)
 
-			yield createTopic(newTopic({
+			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
 				title: "Better life for everyone.",
 				creatorId: this.user.id,
 				sourcePartnerId: this.partner.id,
 				visibility: "public"
 			}))
-
-			var events = yield eventsDb.create([new ValidEvent({
-				initiative_uuid: initiative.uuid,
-				title: "We sent xit.",
-				content: "To somewhere.",
-				created_at: new Date(2015, 5, 18),
-				updated_at: new Date(2015, 5, 19),
-				occurred_at: new Date(2015, 5, 20)
-			}), new ValidEvent({
-				initiative_uuid: initiative.uuid,
-				title: "They got xit.",
-				content: "From somewhere.",
-				created_at: new Date(2015, 5, 21),
-				updated_at: new Date(2015, 5, 22),
-				occurred_at: new Date(2015, 5, 22)
-			})])
 
 			var path = `/initiatives/${initiative.uuid}.atom`
 			var res = yield this.request(path)
@@ -2608,7 +2627,7 @@ describe("InitiativesController", function() {
 
 			var feed = Atom.parse(res.body).feed
 			feed.id.$.must.equal(Config.url + path)
-			feed.updated.$.must.equal(events[1].updated_at.toJSON())
+			feed.updated.$.must.equal(topic.updatedAt.toJSON())
 
 			feed.title.$.must.equal(t("ATOM_INITIATIVE_FEED_TITLE", {
 				title: "Better life for everyone.",
@@ -2620,21 +2639,9 @@ describe("InitiativesController", function() {
 
 			feed.author.name.$.must.equal(Config.title)
 			feed.author.uri.$.must.equal(Config.url)
-
-			feed.entry.forEach(function(entry, i) {
-				var event = events[i]
-				var url = `${Config.url}/initiatives`
-				url += `/${initiative.uuid}/events/${event.id}`
-				entry.id.$.must.equal(url)
-				entry.updated.$.must.equal(event.updated_at.toJSON())
-				entry.published.$.must.equal(event.occurred_at.toJSON())
-				entry.title.$.must.equal(event.title)
-				entry.content.type.must.equal("text")
-				entry.content.$.must.equal(event.content)
-			})
 		})
 
-		it("must respond given an external initiative with no events", function*() {
+		it("must respond given an external initiative", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				external: true,
 				title: "Better life for everyone."
@@ -2651,6 +2658,45 @@ describe("InitiativesController", function() {
 			feed.title.$.must.equal(t("ATOM_INITIATIVE_FEED_TITLE", {
 				title: "Better life for everyone."
 			}))
+		})
+
+		it("must use last event's time for feed update", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative)
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				title: "Better life for everyone.",
+				creatorId: this.user.id,
+				sourcePartnerId: this.partner.id,
+				visibility: "public"
+			}))
+
+			var author = yield createUser(newUser({name: "Johnny Lang"}))
+
+			var events = yield eventsDb.create([new ValidEvent({
+				initiative_uuid: initiative.uuid,
+				created_by: author.id,
+				title: "We sent xit.",
+				content: "To somewhere.",
+				created_at: new Date(2015, 5, 18),
+				updated_at: new Date(2015, 5, 19),
+				occurred_at: new Date(2015, 5, 20)
+			}), new ValidEvent({
+				initiative_uuid: initiative.uuid,
+				created_by: author.id,
+				title: "They got xit.",
+				content: "From somewhere.",
+				created_at: new Date(2015, 5, 21),
+				updated_at: new Date(2015, 5, 22),
+				occurred_at: new Date(2015, 5, 22)
+			})])
+
+			var path = `/initiatives/${initiative.uuid}.atom`
+			var res = yield this.request(path)
+			res.statusCode.must.equal(200)
+
+			var feed = Atom.parse(res.body).feed
+			feed.updated.$.must.equal(events[1].updated_at.toJSON())
 		})
 
 		it("must use initiative updated time if no events", function*() {
@@ -2849,6 +2895,42 @@ describe("InitiativesController", function() {
 					else entry.content.$.must.equal(event.content)
 				})
 			})
+		})
+
+		it("must render initiative with text event", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative)
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: (yield createUser(newUser())).id,
+				sourcePartnerId: this.partner.id,
+				visibility: "public"
+			}))
+
+			var author = yield createUser(newUser({name: "Johnny Lang"}))
+
+			var event = yield eventsDb.create(new ValidEvent({
+				initiative_uuid: initiative.uuid,
+				created_by: author.id,
+				title: "This just in.",
+				content: "Everything is fine!",
+				created_at: pseudoDateTime(),
+				occurred_at: pseudoDateTime()
+			}))
+
+			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			res.statusCode.must.equal(200)
+
+			var entry = Atom.parse(res.body).feed.entry
+			var url = `${Config.url}/initiatives`
+			url += `/${initiative.uuid}/events/${event.id}`
+			entry.id.$.must.equal(url)
+			entry.updated.$.must.equal(event.updated_at.toJSON())
+			entry.published.$.must.equal(event.occurred_at.toJSON())
+			entry.title.$.must.equal(event.title)
+			entry.content.type.must.equal("text")
+			entry.content.$.must.equal(event.content)
+			entry.author.name.$.must.equal(author.name)
 		})
 	})
 
@@ -4448,12 +4530,16 @@ function queryEvents(html) {
 	var events = html.querySelectorAll("#initiative-events li.event")
 
 	return _.map(events, function(event) {
+		var phase = event.className.match(/\b(\w+)-phase\b/)
+		var author = event.querySelector(".author")
+
 		return {
 			id: event.id.replace(/^event-/, ""),
 			title: event.querySelector("h2").textContent,
 			at: new Date(event.querySelector(".metadata time").dateTime),
+			author: author && author.textContent,
 			content: event.querySelectorAll(".metadata + *:not(.files)"),
-			phase: event.className.match(/\b(\w+)-phase\b/)[1]
+			phase: phase ? phase[1] : null
 		}
 	}).reverse()
 }
