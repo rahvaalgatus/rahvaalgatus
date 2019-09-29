@@ -1137,10 +1137,10 @@ function EventsView(attrs) {
 					if (event.origin == "author") klass += " author-event"
 
 					switch (event.type) {
-						case "text":
-							title = event.title
-							author = event.origin == "author" ? event.user : null
-							content = <p class="text">{Jsx.html(linkify(event.content))}</p>
+						case "signature-milestone":
+							title = t("SIGNATURE_MILESTONE_EVENT_TITLE", {
+								milestone: event.content
+							})
 							break
 
 						case "sent-to-parliament":
@@ -1157,8 +1157,8 @@ function EventsView(attrs) {
 
 						case "parliament-accepted":
 							title = t("PARLIAMENT_ACCEPTED")
-							var committee =event.content.committee
 
+							var committee = event.content.committee
 							if (committee) content = <p class="text">
 								{t("PARLIAMENT_ACCEPTED_SENT_TO_COMMITTEE", {
 									committee: committee
@@ -1170,7 +1170,7 @@ function EventsView(attrs) {
 							var meeting = event.content
 							decision = meeting.decision
 							var invitees = meeting.invitees
-							summary = event.content.summary
+							summary = meeting.summary
 
 							title = meeting.committee
 								? t("PARLIAMENT_COMMITTEE_MEETING_BY", {
@@ -1179,14 +1179,14 @@ function EventsView(attrs) {
 								: t("PARLIAMENT_COMMITTEE_MEETING")
 
 							content = <Fragment>
-								<table class="event-table">
-									{invitees ? <tr>
+								{invitees ? <table class="event-table">
+									<tr>
 										<th scope="row">{t("PARLIAMENT_MEETING_INVITEES")}</th>
 										<td><ul>{invitees.split(",").map((invitee) => (
 											<li>{invitee}</li>
 										))}</ul></td>
-									</tr> : null}
-								</table>
+									</tr>
+								</table> : null}
 
 								{summary ? <p class="text">
 									{Jsx.html(linkify(summary))}
@@ -1206,9 +1206,17 @@ function EventsView(attrs) {
 							</Fragment>
 							break
 
+						case "parliament-decision":
+							title = t("PARLIAMENT_DECISION")
+
+							summary = event.content.summary
+							if (summary)
+								content = <p class="text">{Jsx.html(linkify(summary))}</p>
+							break
+
 						case "parliament-letter":
 							var letter = event.content
-							summary = event.content.summary
+							summary = letter.summary
 
 							title = letter.direction == "incoming"
 								? t("PARLIAMENT_LETTER_INCOMING")
@@ -1237,14 +1245,6 @@ function EventsView(attrs) {
 							</Fragment>
 							break
 
-						case "parliament-decision":
-							title = t("PARLIAMENT_DECISION")
-
-							summary = event.content.summary
-							if (summary)
-								content = <p class="text">{Jsx.html(linkify(summary))}</p>
-							break
-
 						case "parliament-finished":
 							decision = initiative.parliament_decision
 							title = t("PARLIAMENT_FINISHED")
@@ -1258,12 +1258,6 @@ function EventsView(attrs) {
 								? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
 								: null
 								}</p>
-							break
-
-						case "signature-milestone":
-							title = t("SIGNATURE_MILESTONE_EVENT_TITLE", {
-								milestone: event.content
-							})
 							break
 
 						case "sent-to-government":
@@ -1286,6 +1280,12 @@ function EventsView(attrs) {
 									decision: initiative.government_decision
 								})}
 							</p>
+							break
+
+						case "text":
+							title = event.title
+							author = event.origin == "author" ? event.user : null
+							content = <p class="text">{Jsx.html(linkify(event.content))}</p>
 							break
 
 						default:

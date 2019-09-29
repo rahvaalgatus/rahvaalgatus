@@ -4,6 +4,7 @@ var Url = require("url")
 var Atom = require("root/lib/atom")
 var DateFns = require("date-fns")
 var Config = require("root/config")
+var Initiative = require("root/lib/initiative")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidComment = require("root/test/valid_comment")
@@ -30,7 +31,6 @@ var createSignature = require("root/test/citizenos_fixtures").createSignature
 var createSignatures = require("root/test/citizenos_fixtures").createSignatures
 var createOptions = require("root/test/citizenos_fixtures").createOptions
 var createPermission = require("root/test/citizenos_fixtures").createPermission
-var concat = Array.prototype.concat.bind(Array.prototype)
 var encodeBase64 = require("root/lib/crypto").encodeBase64
 var pseudoDateTime = require("root/lib/crypto").pseudoDateTime
 var parseCookies = Http.parseCookies
@@ -46,13 +46,15 @@ var commentsDb = require("root/db/comments_db")
 var encodeMime = require("nodemailer/lib/mime-funcs").encodeWord
 var parseDom = require("root/lib/dom").parse
 var next = require("co-next")
+var outdent = require("root/lib/outdent")
 var INITIATIVE_TYPE = "application/vnd.rahvaalgatus.initiative+json; v=1"
 var ATOM_TYPE = "application/atom+xml"
 var AUTH_TOKEN = "deadbeef"
 var SIGN_TOKEN = "feedfed"
-var EVENTABLE_PHASES = ["sign", "parliament", "government", "done"]
 var NEW_SIG_TRESHOLD = 15
-var PARLIAMENT_DECISIONS = ["reject", "forward", "solve-differently"]
+var EVENTABLE_PHASES = _.without(Initiative.PHASES, "edit")
+var PARLIAMENT_DECISIONS = Initiative.PARLIAMENT_DECISIONS
+var COMMITTEE_MEETING_DECISIONS = Initiative.COMMITTEE_MEETING_DECISIONS
 
 describe("InitiativesController", function() {
 	require("root/test/web")()
@@ -192,7 +194,7 @@ describe("InitiativesController", function() {
 			res.body.must.include(initiative.uuid)
 		})
 
-		it("must show initiatives in parliament phase", function*() {
+		it("must show initiatives in parliament", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
 				sent_to_parliament_at: pseudoDateTime()
@@ -217,7 +219,7 @@ describe("InitiativesController", function() {
 			)
 		})
 
-		it("must show initiatives in parliament phase received by parliament",
+		it("must show initiatives in parliament received by parliament",
 			function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
@@ -244,7 +246,7 @@ describe("InitiativesController", function() {
 			)
 		})
 
-		it("must show external initiatives in parliament phase", function*() {
+		it("must show external initiatives in parliament", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
 				received_by_parliament_at: pseudoDateTime(),
@@ -261,7 +263,7 @@ describe("InitiativesController", function() {
 			)
 		})
 
-		it("must show initiatives in government phase", function*() {
+		it("must show initiatives in government", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				phase: "government",
 				sent_to_government_at: pseudoDateTime()
@@ -286,7 +288,7 @@ describe("InitiativesController", function() {
 			)
 		})
 
-		it("must show external initiatives in government phase", function*() {
+		it("must show external initiatives in government", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				phase: "government",
 				external: true
@@ -988,8 +990,7 @@ describe("InitiativesController", function() {
 				phases.must.not.have.property("government")
 			})
 
-			it("must render initiative in parliament phase and not received",
-				function*() {
+			it("must render initiative in parliament and not received", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "parliament",
 					sent_to_parliament_at: DateFns.addDays(new Date, -5)
@@ -1035,8 +1036,7 @@ describe("InitiativesController", function() {
 				events[0].title.must.equal(t("INITIATIVE_SENT_TO_PARLIAMENT_TITLE"))
 			})
 
-			it("must render initiative in parliament phase and received",
-				function*() {
+			it("must render initiative in parliament and received", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "parliament",
 					sent_to_parliament_at: DateFns.addDays(new Date, -6),
@@ -1078,7 +1078,278 @@ describe("InitiativesController", function() {
 				)
 			})
 
-			it("must render initiative in parliament phase with acceptance deadline today", function*() {
+			it("must render initiative in parliament and received event",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					external: true
+				}))
+
+				var event = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiative.uuid,
+					created_at: pseudoDateTime(),
+					updated_at: pseudoDateTime(),
+					occurred_at: pseudoDateTime(),
+					type: "parliament-received",
+					origin: "parliament"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var events = queryEvents(parseDom(res.body))
+				events.length.must.equal(1)
+
+				events[0].id.must.equal(String(event.id))
+				events[0].phase.must.equal("parliament")
+				events[0].at.must.eql(event.occurred_at)
+				events[0].title.must.equal(t("PARLIAMENT_RECEIVED"))
+				events[0].content.length.must.equal(0)
+			})
+
+			it("must render initiative in parliament and accepted event",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					external: true
+				}))
+
+				var event = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiative.uuid,
+					created_at: pseudoDateTime(),
+					updated_at: pseudoDateTime(),
+					occurred_at: pseudoDateTime(),
+					type: "parliament-accepted",
+					content: {committee: "Keskkonnakomisjon"},
+					origin: "parliament"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var events = queryEvents(parseDom(res.body))
+				events.length.must.equal(1)
+
+				events[0].id.must.equal(String(event.id))
+				events[0].phase.must.equal("parliament")
+				events[0].at.must.eql(event.occurred_at)
+				events[0].title.must.equal(t("PARLIAMENT_ACCEPTED"))
+
+				events[0].content[0].textContent.must.equal(
+					t("PARLIAMENT_ACCEPTED_SENT_TO_COMMITTEE", {
+						committee: "Keskkonnakomisjon"
+					})
+				)
+			})
+
+			it("must render initiative in parliament and committee meeting event", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					external: true
+				}))
+
+				var event = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiative.uuid,
+					created_at: pseudoDateTime(),
+					updated_at: pseudoDateTime(),
+					occurred_at: pseudoDateTime(),
+					type: "parliament-committee-meeting",
+					content: {committee: "Keskkonnakomisjon"},
+					origin: "parliament"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var events = queryEvents(parseDom(res.body))
+				events.length.must.equal(1)
+
+				events[0].id.must.equal(String(event.id))
+				events[0].phase.must.equal("parliament")
+				events[0].at.must.eql(event.occurred_at)
+
+				events[0].title.must.equal(t("PARLIAMENT_COMMITTEE_MEETING_BY", {
+					committee: "Keskkonnakomisjon"
+				}))
+
+				events[0].content.length.must.equal(0)
+			})
+
+			COMMITTEE_MEETING_DECISIONS.forEach(function(decision) {
+				it(`must render initiative in parliament and committee meeting event with ${decision} decision`, function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "parliament",
+						external: true
+					}))
+
+					var event = yield eventsDb.create(new ValidEvent({
+						initiative_uuid: initiative.uuid,
+						created_at: pseudoDateTime(),
+						updated_at: pseudoDateTime(),
+						occurred_at: pseudoDateTime(),
+						type: "parliament-committee-meeting",
+						content: {committee: "Keskkonnakomisjon", decision: decision},
+						origin: "parliament"
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+
+					var events = queryEvents(parseDom(res.body))
+					events.length.must.equal(1)
+
+					events[0].id.must.equal(String(event.id))
+					events[0].phase.must.equal("parliament")
+					events[0].at.must.eql(event.occurred_at)
+
+					events[0].title.must.equal(t("PARLIAMENT_COMMITTEE_MEETING_BY", {
+						committee: "Keskkonnakomisjon"
+					}))
+
+					events[0].content[0].textContent.must.equal(
+						decision == "continue"
+						? t("PARLIAMENT_MEETING_DECISION_CONTINUE")
+						: decision == "reject"
+						? t("PARLIAMENT_MEETING_DECISION_REJECT")
+						: decision == "forward"
+						? t("PARLIAMENT_MEETING_DECISION_FORWARD")
+						: decision == "solve-differently"
+						? t("PARLIAMENT_MEETING_DECISION_SOLVE_DIFFERENTLY")
+						: null
+					)
+				})
+			})
+
+			it("must render initiative in parliament and committee meeting event with summary", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					external: true
+				}))
+
+				var event = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiative.uuid,
+					created_at: pseudoDateTime(),
+					updated_at: pseudoDateTime(),
+					occurred_at: pseudoDateTime(),
+					type: "parliament-committee-meeting",
+					content: {committee: "Keskkonnakomisjon", summary: "Talks happened."},
+					origin: "parliament"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var events = queryEvents(parseDom(res.body))
+				events.length.must.equal(1)
+
+				events[0].id.must.equal(String(event.id))
+				events[0].phase.must.equal("parliament")
+				events[0].at.must.eql(event.occurred_at)
+
+				events[0].title.must.equal(t("PARLIAMENT_COMMITTEE_MEETING_BY", {
+					committee: "Keskkonnakomisjon"
+				}))
+
+				events[0].content[0].textContent.must.equal("Talks happened.")
+			})
+
+			it("must render initiative in parliament and decision event",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					external: true
+				}))
+
+				var event = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiative.uuid,
+					created_at: pseudoDateTime(),
+					updated_at: pseudoDateTime(),
+					occurred_at: pseudoDateTime(),
+					type: "parliament-decision",
+					content: {},
+					origin: "parliament"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var events = queryEvents(parseDom(res.body))
+				events.length.must.equal(1)
+
+				events[0].id.must.equal(String(event.id))
+				events[0].phase.must.equal("parliament")
+				events[0].at.must.eql(event.occurred_at)
+				events[0].title.must.equal(t("PARLIAMENT_DECISION"))
+				events[0].content.length.must.equal(0)
+			})
+
+			it("must render initiative in parliament and decision event with summary", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					external: true
+				}))
+
+				var event = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiative.uuid,
+					created_at: pseudoDateTime(),
+					updated_at: pseudoDateTime(),
+					occurred_at: pseudoDateTime(),
+					type: "parliament-decision",
+					content: {summary: "Talks happened."},
+					origin: "parliament"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var events = queryEvents(parseDom(res.body))
+				events.length.must.equal(1)
+
+				events[0].id.must.equal(String(event.id))
+				events[0].phase.must.equal("parliament")
+				events[0].at.must.eql(event.occurred_at)
+				events[0].title.must.equal(t("PARLIAMENT_DECISION"))
+				events[0].content[0].textContent.must.equal("Talks happened.")
+			})
+
+			it("must render initiative in parliament and letter event", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					external: true
+				}))
+
+				var event = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiative.uuid,
+					created_at: pseudoDateTime(),
+					updated_at: pseudoDateTime(),
+					occurred_at: pseudoDateTime(),
+					origin: "parliament",
+					type: "parliament-letter",
+
+					content: {
+						medium: "email",
+						from: "John Wick",
+						direction: "incoming",
+						title: "Important Question",
+						summary: "What to do next?"
+					}
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var events = queryEvents(parseDom(res.body))
+				events.length.must.equal(1)
+
+				events[0].id.must.equal(String(event.id))
+				events[0].phase.must.equal("parliament")
+				events[0].at.must.eql(event.occurred_at)
+				events[0].title.must.equal(t("PARLIAMENT_LETTER_INCOMING"))
+				events[0].content[0].textContent.must.include("Important Question")
+				events[0].content[1].textContent.must.include("What to do next?")
+			})
+
+			it("must render initiative in parliament with acceptance deadline today", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "parliament",
 					sent_to_parliament_at: DateFns.addDays(new Date, -30)
@@ -1105,7 +1376,7 @@ describe("InitiativesController", function() {
 				)
 			})
 
-			it("must render initiative in parliament phase with acceptance deadline past", function*() {
+			it("must render initiative in parliament with acceptance deadline past", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "parliament",
 					sent_to_parliament_at: DateFns.addDays(new Date, -35)
@@ -1247,8 +1518,7 @@ describe("InitiativesController", function() {
 			})
 
 			PARLIAMENT_DECISIONS.forEach(function(decision) {
-				it(`must render initiative in parliament with ${decision} decision`,
-					function*() {
+				it(`must render initiative in parliament and finished with ${decision} decision`, function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						phase: "parliament",
 						sent_to_parliament_at: DateFns.addDays(new Date, -30),
@@ -1274,6 +1544,53 @@ describe("InitiativesController", function() {
 					events[1].id.must.equal("parliament-finished")
 					events[1].phase.must.equal("parliament")
 					events[1].at.must.eql(initiative.finished_in_parliament_at)
+					events[1].title.must.equal(t("PARLIAMENT_FINISHED"))
+
+					events[1].content[0].textContent.must.equal(
+						decision == "reject"
+						? t("PARLIAMENT_DECISION_REJECT")
+						: decision == "forward"
+						? t("PARLIAMENT_DECISION_FORWARD")
+						: decision == "solve-differently"
+						? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
+						: null
+					)
+				})
+
+				it(`must render initiative in parliament and finished event with ${decision} decision`, function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "parliament",
+						sent_to_parliament_at: DateFns.addDays(new Date, -30),
+						parliament_decision: decision,
+						finished_in_parliament_at: DateFns.addDays(new Date, -5)
+					}))
+
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: (yield createUser(newUser())).id,
+						sourcePartnerId: this.partner.id,
+						status: "followUp"
+					}))
+
+					var event = yield eventsDb.create(new ValidEvent({
+						initiative_uuid: initiative.uuid,
+						occurred_at: DateFns.addDays(new Date, -3),
+						type: "parliament-finished",
+						content: null,
+						origin: "parliament"
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
+
+					var dom = parseDom(res.body)
+					var events = queryEvents(dom)
+					events.length.must.equal(2)
+					events[0].id.must.equal("sent-to-parliament")
+					events[1].id.must.equal(String(event.id))
+					events[1].phase.must.equal("parliament")
+					events[1].at.must.eql(event.occurred_at)
 					events[1].title.must.equal(t("PARLIAMENT_FINISHED"))
 
 					events[1].content[0].textContent.must.equal(
@@ -1585,13 +1902,9 @@ describe("InitiativesController", function() {
 			})
 
 			it("must render initiative with text event", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative)
-
-				yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
-					sourcePartnerId: this.partner.id,
-					visibility: "public"
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					external: true
 				}))
 
 				var author = yield createUser(newUser({name: "Johnny Lang"}))
@@ -2750,103 +3063,342 @@ describe("InitiativesController", function() {
 
 			Atom.parse(res.body).feed.entry.forEach(function(entry, i) {
 				var event = events[i]
-				var url = `${Config.url}/initiatives`
-				url += `/${initiative.uuid}/events/${event.id}`
-				entry.id.$.must.equal(url)
-				entry.updated.$.must.equal(event.occurred_at.toJSON())
-				entry.published.$.must.equal(event.occurred_at.toJSON())
-				entry.title.$.must.equal(event.title)
-				entry.must.not.have.property("content")
+				var id = `${Config.url}/initiatives`
+				id += `/${initiative.uuid}/events/${event.id}`
+
+				entry.must.eql({
+					id: {$: id},
+					updated: {$: event.occurred_at.toJSON()},
+					published: {$: event.occurred_at.toJSON()},
+					title: {$: event.title}
+				})
 			})
 		})
 
-		it("must render generated events", function*() {
+		it("must render initiative in parliament", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
-				sent_to_parliament_at: new Date(2015, 5, 1),
-				parliament_committee: "Keskkonnakomisjon",
-				finished_in_parliament_at: new Date(2015, 5, 3),
-				sent_to_government_at: new Date(2015, 5, 4),
-				government_agency: "Sidususministeerium",
-				finished_in_government_at: new Date(2015, 5, 5),
-				government_decision: "Anda alla."
+				external: true,
+				sent_to_parliament_at: new Date(2015, 5, 1)
 			}))
-
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				title: "Better life for everyone.",
-				creatorId: this.user.id,
-				sourcePartnerId: this.partner.id,
-				status: "followUp"
-			}))
-
-			var events = concat({
-				id: "sent-to-parliament",
-				updated_at: initiative.sent_to_parliament_at,
-				occurred_at: initiative.sent_to_parliament_at,
-
-				title: t("INITIATIVE_SENT_TO_PARLIAMENT_TITLE"),
-				content: t("INITIATIVE_SENT_TO_PARLIAMENT_BODY")
-			}, yield eventsDb.create(new ValidEvent({
-				initiative_uuid: initiative.uuid,
-				created_at: new Date(2015, 5, 2),
-				updated_at: new Date(2015, 5, 2),
-				occurred_at: new Date(2015, 5, 2),
-
-				title: "We sent it.",
-				content: "To somewhere.",
-			})), {
-				id: "parliament-finished",
-				updated_at: initiative.finished_in_parliament_at,
-				occurred_at: initiative.finished_in_parliament_at,
-
-				title: t("PARLIAMENT_FINISHED")
-			}, {
-				id: "sent-to-government",
-				updated_at: initiative.sent_to_government_at,
-				occurred_at: initiative.sent_to_government_at,
-
-				title: t("EVENT_SENT_TO_GOVERNMENT_TITLE_WITH_AGENCY", {
-					agency: initiative.government_agency
-				})
-			}, {
-				id: "finished-in-government",
-				updated_at: initiative.finished_in_government_at,
-				occurred_at: initiative.finished_in_government_at,
-
-				title: t("EVENT_FINISHED_IN_GOVERNMENT_TITLE_WITH_AGENCY", {
-					agency: initiative.government_agency
-				}),
-
-				content: t("EVENT_FINISHED_IN_GOVERNMENT_CONTENT", {
-					decision: initiative.government_decision
-				})
-			})
 
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 
-			Atom.parse(res.body).feed.entry.forEach(function(entry, i) {
-				var event = events[i]
-				var url = `${Config.url}/initiatives`
-				url += `/${initiative.uuid}/events/${event.id}`
-				entry.id.$.must.equal(url)
-				entry.updated.$.must.equal(event.updated_at.toJSON())
-				entry.published.$.must.equal(event.occurred_at.toJSON())
-				entry.title.$.must.equal(event.title)
-				if (event.content == null) entry.must.not.have.property("content")
-				else entry.content.$.must.equal(event.content)
+			var entry = Atom.parse(res.body).feed.entry
+			var id = `${Config.url}/initiatives`
+			id += `/${initiative.uuid}/events/sent-to-parliament`
+
+			entry.must.eql({
+				id: {$: id},
+				updated: {$: initiative.sent_to_parliament_at.toJSON()},
+				published: {$: initiative.sent_to_parliament_at.toJSON()},
+				title: {$: t("INITIATIVE_SENT_TO_PARLIAMENT_TITLE")},
+				content: {type: "text", $: t("INITIATIVE_SENT_TO_PARLIAMENT_BODY")}
+			})
+		})
+
+		it("must render initiative in parliament and received event", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
+				external: true
+			}))
+
+			var event = yield eventsDb.create(new ValidEvent({
+				initiative_uuid: initiative.uuid,
+				created_at: pseudoDateTime(),
+				updated_at: pseudoDateTime(),
+				occurred_at: pseudoDateTime(),
+				type: "parliament-received",
+				origin: "parliament"
+			}))
+
+			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			res.statusCode.must.equal(200)
+
+			var entry = Atom.parse(res.body).feed.entry
+			var id = `${Config.url}/initiatives`
+			id += `/${initiative.uuid}/events/${event.id}`
+
+			entry.must.eql({
+				id: {$: id},
+				updated: {$: event.updated_at.toJSON()},
+				published: {$: event.occurred_at.toJSON()},
+				title: {$: t("PARLIAMENT_RECEIVED")}
+			})
+		})
+
+		it("must render initiative in parliament and accepted event", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
+				external: true
+			}))
+
+			var event = yield eventsDb.create(new ValidEvent({
+				initiative_uuid: initiative.uuid,
+				created_at: pseudoDateTime(),
+				updated_at: pseudoDateTime(),
+				occurred_at: pseudoDateTime(),
+				type: "parliament-accepted",
+				content: {committee: "Keskkonnakomisjon"},
+				origin: "parliament"
+			}))
+
+			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			res.statusCode.must.equal(200)
+
+			var entry = Atom.parse(res.body).feed.entry
+			var id = `${Config.url}/initiatives`
+			id += `/${initiative.uuid}/events/${event.id}`
+
+			entry.must.eql({
+				id: {$: id},
+				updated: {$: event.updated_at.toJSON()},
+				published: {$: event.occurred_at.toJSON()},
+				title: {$: t("PARLIAMENT_ACCEPTED")},
+				content: {
+					type: "text",
+					$: t("PARLIAMENT_ACCEPTED_SENT_TO_COMMITTEE", {
+						committee: "Keskkonnakomisjon"
+					})
+				}
+			})
+		})
+
+		it("must render initiative in parliament and committee meeting event",
+			function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
+				external: true
+			}))
+
+			var event = yield eventsDb.create(new ValidEvent({
+				initiative_uuid: initiative.uuid,
+				created_at: pseudoDateTime(),
+				updated_at: pseudoDateTime(),
+				occurred_at: pseudoDateTime(),
+				type: "parliament-committee-meeting",
+				content: {committee: "Keskkonnakomisjon"},
+				origin: "parliament"
+			}))
+
+			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			res.statusCode.must.equal(200)
+
+			var entry = Atom.parse(res.body).feed.entry
+			var id = `${Config.url}/initiatives`
+			id += `/${initiative.uuid}/events/${event.id}`
+
+			entry.must.eql({
+				id: {$: id},
+				updated: {$: event.updated_at.toJSON()},
+				published: {$: event.occurred_at.toJSON()},
+
+				title: {$: t("PARLIAMENT_COMMITTEE_MEETING_BY", {
+					committee: "Keskkonnakomisjon"
+				})}
+			})
+		})
+
+		COMMITTEE_MEETING_DECISIONS.forEach(function(decision) {
+			it(`must render initiative in parliament and committee meeting event with ${decision} decision`, function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					external: true
+				}))
+
+				var event = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiative.uuid,
+					created_at: pseudoDateTime(),
+					updated_at: pseudoDateTime(),
+					occurred_at: pseudoDateTime(),
+					type: "parliament-committee-meeting",
+					content: {committee: "Keskkonnakomisjon", decision: decision},
+					origin: "parliament"
+				}))
+
+				var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+				res.statusCode.must.equal(200)
+
+				var entry = Atom.parse(res.body).feed.entry
+				var id = `${Config.url}/initiatives`
+				id += `/${initiative.uuid}/events/${event.id}`
+
+				entry.must.eql({
+					id: {$: id},
+					updated: {$: event.updated_at.toJSON()},
+					published: {$: event.occurred_at.toJSON()},
+
+					title: {$: t("PARLIAMENT_COMMITTEE_MEETING_BY", {
+						committee: "Keskkonnakomisjon"
+					})},
+
+					content: {type: "text", $:
+						decision == "continue"
+						? t("PARLIAMENT_MEETING_DECISION_CONTINUE")
+						: decision == "reject"
+						? t("PARLIAMENT_MEETING_DECISION_REJECT")
+						: decision == "forward"
+						? t("PARLIAMENT_MEETING_DECISION_FORWARD")
+						: decision == "solve-differently"
+						? t("PARLIAMENT_MEETING_DECISION_SOLVE_DIFFERENTLY")
+						: null
+					}
+				})
+			})
+		})
+
+		it("must render initiative in parliament and committee meeting event with summary", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
+				external: true
+			}))
+
+			var event = yield eventsDb.create(new ValidEvent({
+				initiative_uuid: initiative.uuid,
+				created_at: pseudoDateTime(),
+				updated_at: pseudoDateTime(),
+				occurred_at: pseudoDateTime(),
+				type: "parliament-committee-meeting",
+				content: {committee: "Keskkonnakomisjon", summary: "Talking happened."},
+				origin: "parliament"
+			}))
+
+			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			res.statusCode.must.equal(200)
+
+			var entry = Atom.parse(res.body).feed.entry
+			var id = `${Config.url}/initiatives`
+			id += `/${initiative.uuid}/events/${event.id}`
+
+			entry.must.eql({
+				id: {$: id},
+				updated: {$: event.updated_at.toJSON()},
+				published: {$: event.occurred_at.toJSON()},
+
+				title: {$: t("PARLIAMENT_COMMITTEE_MEETING_BY", {
+					committee: "Keskkonnakomisjon"
+				})},
+
+				content: {type: "text", $: "Talking happened."}
+			})
+		})
+
+		it("must render initiative in parliament and decision event", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
+				external: true
+			}))
+
+			var event = yield eventsDb.create(new ValidEvent({
+				initiative_uuid: initiative.uuid,
+				created_at: pseudoDateTime(),
+				updated_at: pseudoDateTime(),
+				occurred_at: pseudoDateTime(),
+				type: "parliament-decision",
+				content: {},
+				origin: "parliament"
+			}))
+
+			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			res.statusCode.must.equal(200)
+
+			var entry = Atom.parse(res.body).feed.entry
+			var id = `${Config.url}/initiatives`
+			id += `/${initiative.uuid}/events/${event.id}`
+
+			entry.must.eql({
+				id: {$: id},
+				updated: {$: event.updated_at.toJSON()},
+				published: {$: event.occurred_at.toJSON()},
+				title: {$: t("PARLIAMENT_DECISION")}
+			})
+		})
+
+		it("must render initiative in parliament and decision event with summary", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
+				external: true
+			}))
+
+			var event = yield eventsDb.create(new ValidEvent({
+				initiative_uuid: initiative.uuid,
+				created_at: pseudoDateTime(),
+				updated_at: pseudoDateTime(),
+				occurred_at: pseudoDateTime(),
+				type: "parliament-decision",
+				content: {summary: "Talking happened."},
+				origin: "parliament"
+			}))
+
+			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			res.statusCode.must.equal(200)
+
+			var entry = Atom.parse(res.body).feed.entry
+			var id = `${Config.url}/initiatives`
+			id += `/${initiative.uuid}/events/${event.id}`
+
+			entry.must.eql({
+				id: {$: id},
+				updated: {$: event.updated_at.toJSON()},
+				published: {$: event.occurred_at.toJSON()},
+				title: {$: t("PARLIAMENT_DECISION")},
+				content: {type: "text", $: "Talking happened."}
+			})
+		})
+
+		it("must render initiative in parliament and letter event", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
+				external: true
+			}))
+
+			var event = yield eventsDb.create(new ValidEvent({
+				initiative_uuid: initiative.uuid,
+				created_at: pseudoDateTime(),
+				updated_at: pseudoDateTime(),
+				occurred_at: pseudoDateTime(),
+				origin: "parliament",
+				type: "parliament-letter",
+
+				content: {
+					medium: "email",
+					from: "John Wick",
+					direction: "incoming",
+					title: "Important Question",
+					summary: "What to do next?"
+				}
+			}))
+
+			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			res.statusCode.must.equal(200)
+
+			var entry = Atom.parse(res.body).feed.entry
+			var id = `${Config.url}/initiatives`
+			id += `/${initiative.uuid}/events/${event.id}`
+
+			entry.must.eql({
+				id: {$: id},
+				updated: {$: event.updated_at.toJSON()},
+				published: {$: event.occurred_at.toJSON()},
+				title: {$: t("PARLIAMENT_LETTER_INCOMING")},
+
+				content: {type: "text", $: outdent`
+					${t("PARLIAMENT_LETTER_TITLE")}: Important Question
+					${t("PARLIAMENT_LETTER_FROM")}: John Wick
+
+					What to do next?
+				`}
 			})
 		})
 
 		PARLIAMENT_DECISIONS.forEach(function(decision) {
-			it(`must respond if initiative in parliament phase with ${decision} decision`, function*() {
+			it(`must respond if initiative in parliament and finished with ${decision} decision`, function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "parliament",
-					sent_to_parliament_at: new Date(2015, 5, 1),
-					parliament_committee: "Keskkonnakomisjon",
+					sent_to_parliament_at: DateFns.addDays(new Date, -30),
 					parliament_decision: decision,
-					finished_in_parliament_at: new Date(2015, 5, 3)
+					finished_in_parliament_at: DateFns.addDays(new Date, -5)
 				}))
 
 				yield createTopic(newTopic({
@@ -2857,20 +3409,23 @@ describe("InitiativesController", function() {
 					status: "followUp"
 				}))
 
-				var events = concat({
-					id: "sent-to-parliament",
-					updated_at: initiative.sent_to_parliament_at,
-					occurred_at: initiative.sent_to_parliament_at,
+				var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+				res.statusCode.must.equal(200)
 
-					title: t("INITIATIVE_SENT_TO_PARLIAMENT_TITLE"),
-					content: t("INITIATIVE_SENT_TO_PARLIAMENT_BODY")
-				}, {
-					id: "parliament-finished",
-					updated_at: initiative.finished_in_parliament_at,
-					occurred_at: initiative.finished_in_parliament_at,
+				var entries = Atom.parse(res.body).feed.entry
+				entries.length.must.equal(2)
+				entries[0].id.$.must.match(/\/sent-to-parliament$/)
 
-					title: t("PARLIAMENT_FINISHED"),
-					content:
+				var id = `${Config.url}/initiatives`
+				id += `/${initiative.uuid}/events/parliament-finished`
+
+				entries[1].must.eql({
+					id: {$: id},
+					updated: {$: initiative.finished_in_parliament_at.toJSON()},
+					published: {$: initiative.finished_in_parliament_at.toJSON()},
+					title: {$: t("PARLIAMENT_FINISHED")},
+
+					content: {type: "text", $:
 						decision == "reject"
 						? t("PARLIAMENT_DECISION_REJECT")
 						: decision == "forward"
@@ -2878,33 +3433,128 @@ describe("InitiativesController", function() {
 						: decision == "solve-differently"
 						? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
 						: null
+					}
 				})
+			})
+
+			it(`must respond if initiative in parliament and finished event with ${decision} decision`, function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					sent_to_parliament_at: DateFns.addDays(new Date, -30),
+					parliament_decision: decision,
+					finished_in_parliament_at: DateFns.addDays(new Date, -5)
+				}))
+
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					title: "Better life for everyone.",
+					creatorId: this.user.id,
+					sourcePartnerId: this.partner.id,
+					status: "followUp"
+				}))
+
+				var event = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiative.uuid,
+					occurred_at: DateFns.addDays(new Date, -3),
+					type: "parliament-finished",
+					content: null,
+					origin: "parliament"
+				}))
 
 				var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 				res.statusCode.must.equal(200)
 
-				Atom.parse(res.body).feed.entry.forEach(function(entry, i) {
-					var event = events[i]
-					var url = `${Config.url}/initiatives`
-					url += `/${initiative.uuid}/events/${event.id}`
-					entry.id.$.must.equal(url)
-					entry.updated.$.must.equal(event.updated_at.toJSON())
-					entry.published.$.must.equal(event.occurred_at.toJSON())
-					entry.title.$.must.equal(event.title)
-					if (event.content == null) entry.must.not.have.property("content")
-					else entry.content.$.must.equal(event.content)
+				var entries = Atom.parse(res.body).feed.entry
+				entries.length.must.equal(2)
+				entries[0].id.$.must.match(/\/sent-to-parliament$/)
+
+				var id = `${Config.url}/initiatives`
+				id += `/${initiative.uuid}/events/${event.id}`
+
+				entries[1].must.eql({
+					id: {$: id},
+					updated: {$: event.updated_at.toJSON()},
+					published: {$: event.occurred_at.toJSON()},
+					title: {$: t("PARLIAMENT_FINISHED")},
+
+					content: {type: "text", $:
+						decision == "reject"
+						? t("PARLIAMENT_DECISION_REJECT")
+						: decision == "forward"
+						? t("PARLIAMENT_DECISION_FORWARD")
+						: decision == "solve-differently"
+						? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
+						: null
+					}
 				})
 			})
 		})
 
-		it("must render initiative with text event", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative)
+		it("must render initiative in government", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
+				external: true,
+				sent_to_government_at: new Date(2015, 5, 1),
+				government_agency: "Sidususministeerium"
+			}))
 
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
-				sourcePartnerId: this.partner.id,
-				visibility: "public"
+			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			res.statusCode.must.equal(200)
+
+			var entry = Atom.parse(res.body).feed.entry
+			var id = `${Config.url}/initiatives`
+			id += `/${initiative.uuid}/events/sent-to-government`
+
+			entry.must.eql({
+				id: {$: id},
+				updated: {$: initiative.sent_to_government_at.toJSON()},
+				published: {$: initiative.sent_to_government_at.toJSON()},
+
+				title: {$: t("EVENT_SENT_TO_GOVERNMENT_TITLE_WITH_AGENCY", {
+					agency: initiative.government_agency
+				})}
+			})
+		})
+
+		it("must render initiative in government that's finished", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
+				external: true,
+				sent_to_government_at: new Date(2015, 5, 1),
+				government_agency: "Sidususministeerium",
+				finished_in_government_at: new Date(2015, 5, 5),
+				government_decision: "Anda alla."
+			}))
+
+			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			res.statusCode.must.equal(200)
+
+			var entries = Atom.parse(res.body).feed.entry
+			entries.length.must.equal(2)
+			entries[0].id.$.must.match(/\/sent-to-government$/)
+
+			var id = `${Config.url}/initiatives`
+			id += `/${initiative.uuid}/events/finished-in-government`
+
+			entries[1].must.eql({
+				id: {$: id},
+				updated: {$: initiative.finished_in_government_at.toJSON()},
+				published: {$: initiative.finished_in_government_at.toJSON()},
+
+				title: {$: t("EVENT_FINISHED_IN_GOVERNMENT_TITLE_WITH_AGENCY", {
+					agency: initiative.government_agency
+				})},
+
+				content: {type: "text", $: t("EVENT_FINISHED_IN_GOVERNMENT_CONTENT", {
+					decision: initiative.government_decision
+				})}
+			})
+		})
+
+		it("must render initiative with text event", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
+				external: true
 			}))
 
 			var author = yield createUser(newUser({name: "Johnny Lang"}))
@@ -2921,16 +3571,18 @@ describe("InitiativesController", function() {
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 
-			var entry = Atom.parse(res.body).feed.entry
-			var url = `${Config.url}/initiatives`
-			url += `/${initiative.uuid}/events/${event.id}`
-			entry.id.$.must.equal(url)
-			entry.updated.$.must.equal(event.updated_at.toJSON())
-			entry.published.$.must.equal(event.occurred_at.toJSON())
-			entry.title.$.must.equal(event.title)
-			entry.content.type.must.equal("text")
-			entry.content.$.must.equal(event.content)
-			entry.author.name.$.must.equal(author.name)
+			var id = `${Config.url}/initiatives`
+			id += `/${initiative.uuid}/events/${event.id}`
+
+			Atom.parse(res.body).feed.entry.must.eql({
+				id: {$: id},
+				category: {term: "initiator"},
+				updated: {$: event.updated_at.toJSON()},
+				published: {$: event.occurred_at.toJSON()},
+				title: {$: event.title},
+				content: {type: "text", $: event.content},
+				author: {name: {$: author.name}}
+			})
 		})
 	})
 
@@ -4538,7 +5190,7 @@ function queryEvents(html) {
 			title: event.querySelector("h2").textContent,
 			at: new Date(event.querySelector(".metadata time").dateTime),
 			author: author && author.textContent,
-			content: event.querySelectorAll(".metadata + *:not(.files)"),
+			content: event.querySelectorAll(".metadata ~ *:not(.files)"),
 			phase: phase ? phase[1] : null
 		}
 	}).reverse()

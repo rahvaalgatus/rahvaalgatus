@@ -3,6 +3,8 @@ var _ = require("root/lib/underscore")
 var Jsx = require("j6pack/xml")
 var Config = require("root/config")
 var t = require("root/lib/i18n").t.bind(null, "et")
+var concat = Array.prototype.concat.bind(Array.prototype)
+var EMPTY_ARR = Array.prototype
 
 var CATEGORIES = {
 	admin: "official",
@@ -32,11 +34,12 @@ module.exports = function(attrs) {
 			<uri>{Config.url}</uri>
 		</author>
 
-		{_.reject(events, isParliamentEvent).map(function(event) {
+		{events.map(function(event) {
 			var title
 			var content
 			var category = CATEGORIES[event.origin]
 			var author
+			var decision
 
 			switch (event.type) {
 				case "signature-milestone":
@@ -50,16 +53,72 @@ module.exports = function(attrs) {
 					content = t("INITIATIVE_SENT_TO_PARLIAMENT_BODY")
 					break
 
-				case "sent-to-government":
-					title = !initiative.government_agency
-						? t("EVENT_SENT_TO_GOVERNMENT_TITLE")
-						: t("EVENT_SENT_TO_GOVERNMENT_TITLE_WITH_AGENCY", {
-							agency: initiative.government_agency
+				case "parliament-received":
+					title = t("PARLIAMENT_RECEIVED")
+					break
+
+				case "parliament-accepted":
+					title = t("PARLIAMENT_ACCEPTED")
+
+					var committee = event.content.committee
+					if (committee) content = t("PARLIAMENT_ACCEPTED_SENT_TO_COMMITTEE", {
+						committee: committee
+					})
+					break
+
+				case "parliament-committee-meeting":
+					var meeting = event.content
+					decision = meeting.decision
+
+					title = meeting.committee
+						? t("PARLIAMENT_COMMITTEE_MEETING_BY", {
+							committee: meeting.committee
 						})
+						: t("PARLIAMENT_COMMITTEE_MEETING")
+
+					content = concat(
+						meeting.summary || EMPTY_ARR,
+
+						decision == "continue"
+						? t("PARLIAMENT_MEETING_DECISION_CONTINUE")
+						: decision == "reject"
+						? t("PARLIAMENT_MEETING_DECISION_REJECT")
+						: decision == "forward"
+						? t("PARLIAMENT_MEETING_DECISION_FORWARD")
+						: decision == "solve-differently"
+						? t("PARLIAMENT_MEETING_DECISION_SOLVE_DIFFERENTLY")
+						: EMPTY_ARR
+					).join("\n\n")
+					break
+
+				case "parliament-decision":
+					title = t("PARLIAMENT_DECISION")
+					if (event.content.summary) content = event.content.summary
+					break
+
+				case "parliament-letter":
+					var letter = event.content
+
+					title = letter.direction == "incoming"
+						? t("PARLIAMENT_LETTER_INCOMING")
+						: t("PARLIAMENT_LETTER_OUTGOING")
+
+					var header = [
+						t("PARLIAMENT_LETTER_TITLE") + ": " + letter.title,
+
+						letter.direction == "incoming"
+						? t("PARLIAMENT_LETTER_FROM") + ": " + letter.from
+						: t("PARLIAMENT_LETTER_TO") + ": " + letter.to
+					].join("\n")
+
+					content = concat(
+						header,
+						letter.summary || EMPTY_ARR
+					).join("\n\n")
 					break
 
 				case "parliament-finished":
-					var decision = initiative.parliament_decision
+					decision = initiative.parliament_decision
 					title = t("PARLIAMENT_FINISHED")
 
 					if (decision) content =
@@ -70,6 +129,14 @@ module.exports = function(attrs) {
 						: decision == "solve-differently"
 						? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
 						: null
+					break
+
+				case "sent-to-government":
+					title = !initiative.government_agency
+						? t("EVENT_SENT_TO_GOVERNMENT_TITLE")
+						: t("EVENT_SENT_TO_GOVERNMENT_TITLE_WITH_AGENCY", {
+							agency: initiative.government_agency
+						})
 					break
 
 				case "finished-in-government":
@@ -107,5 +174,3 @@ module.exports = function(attrs) {
 		})}
 	</feed>
 }
-
-function isParliamentEvent(event) { return event.origin == "parliament" }
