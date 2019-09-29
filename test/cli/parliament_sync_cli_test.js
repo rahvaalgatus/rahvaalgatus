@@ -641,7 +641,7 @@ describe("ParliamentSyncCli", function() {
 				else respond([{
 					uuid: INITIATIVE_UUID,
 					responsibleCommittee: {name: "Majanduskomisjon"},
-					statuses: [{date: "2015-06-18", status: {code: "REGISTREERITUD"}}]
+					statuses: [{date: "2015-06-18", status: {code: "MENETLUSSE_VOETUD"}}]
 				}], req, res)
 			})
 

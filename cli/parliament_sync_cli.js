@@ -722,7 +722,7 @@ function isParliamentResponseDocument(document) {
 
 function mergeEvent(event, attrs) {
 	switch (event.type) {
-		case "parliament-acceptance":
+		case "parliament-accepted":
 		case "parliament-committee-meeting":
 			attrs.content = _.assign({}, event.content, attrs.content, {
 				committee: event.content.committee
