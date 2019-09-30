@@ -1758,6 +1758,12 @@ button.inherited {
 			.initiative-progress-text span { display: block; }
 		}
 
+		#initiative-location {
+			margin-bottom: 2rem;
+
+			a:link { @extend .link-button; }
+		}
+
 		#initiative-author-options {
 			h2 ~ * { margin-top: 0.5rem; }
 		}

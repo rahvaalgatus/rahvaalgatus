@@ -427,6 +427,8 @@ module.exports = function(attrs) {
 						signatureCount={signatureCount}
 					/>
 
+					<InitiativeLocationView t={t} initiative={initiative} />
+
 					{initiative.external || topic && Topic.isPublic(topic) ? <Fragment>
 						<h3 class="sidebar-subheader">Tahad aidata? Jaga algatust…</h3>
 
@@ -1522,6 +1524,37 @@ function QuicksignView(attrs) {
 			</Fragment> : "."}
 		</Fragment> : null}
 	</div>
+}
+
+function InitiativeLocationView(attrs) {
+	var t = attrs.t
+	var initiative = attrs.initiative
+
+	var content
+	if (initiative.phase == "parliament" && initiative.parliament_committee) {
+		content = <Fragment>
+			{Jsx.html(t("INITIATIVE_IS_IN_PARLIAMENT_COMMITTEE", {
+				committee: _.escapeHtml(initiative.parliament_committee)
+			}))}
+		</Fragment>
+	}
+	else if (initiative.phase == "government" && initiative.government_agency) {
+		content = <Fragment>
+			{Jsx.html(t("INITIATIVE_IS_IN_GOVERNMENT_AGENCY", {
+				agency: _.escapeHtml(initiative.government_agency)
+			}))}<br />
+
+			{initiative.government_contact ? <Fragment>
+				<br />
+				<strong>{t("GOVERNMENT_AGENCY_CONTACT")}</strong>:<br />
+				{initiative.government_contact}<br />
+				{Jsx.html(linkify(initiative.government_contact_details))}
+			</Fragment> : null}
+		</Fragment>
+	}
+
+	if (content == null) return null
+	else return <p id="initiative-location">{content}</p>
 }
 
 function InitiativeAttribute(attrs, children) {

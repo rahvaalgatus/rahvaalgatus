@@ -67,4 +67,17 @@ describe("linkify", function() {
 			`)
 		})
 	})
+
+	describe("given email address", function() {
+		;[
+			"user@example.com",
+			"user-name@example-domain.com"
+		].forEach(function(email) {
+			it("must link " + email, function() {
+				linkify(`Hello ${email}!`).must.equal(outdent`
+					Hello <a href="mailto:${email}" class="link">${email}</a>!
+				`)
+			})
+		})
+	})
 })
