@@ -14,6 +14,7 @@ function InitiativesPage(attrs) {
 	var t = attrs.t
 	var req = attrs.req
 	var flash = attrs.flash
+	var recentInitiatives = attrs.recentInitiatives
 	var initiatives = attrs.initiatives
 	var topics = attrs.topics
 	var signatureCounts = attrs.signatureCounts
@@ -31,6 +32,20 @@ function InitiativesPage(attrs) {
 		}
 		{flash("notice") ? <section class="secondary-section"><center>
 			<p class="flash notice">{flash("notice")}</p>
+		</center></section> : null}
+
+		{recentInitiatives.length > 0 ? <section
+			id="recent-initiatives"
+			class="primary-section initiatives-section"
+		><center>
+			<h2>{t("RECENT_INITIATIVES")}</h2>
+
+			<InitiativesView
+				t={t}
+				initiatives={recentInitiatives}
+				topics={topics}
+				signatureCounts={signatureCounts}
+			/>
 		</center></section> : null}
 
 		<section id="initiatives" class="secondary-section initiatives-section">
@@ -107,7 +122,8 @@ function InitiativesView(attrs) {
 	var signatureCounts = attrs.signatureCounts
 
 	switch (phase) {
-		case null:
+		case undefined: break
+
 		case "edit":
 			initiatives = _.sortBy(initiatives, "created_at").reverse()
 			break
@@ -176,9 +192,9 @@ function InitiativeView(attrs) {
 
 	return <li class="initiative">
 		<a href={`/initiatives/${initiative.uuid}`}>
-			{time ? <time datetime={time.toJSON()}>
-				{I18n.formatDate("numeric", time)}
-			</time> : null}
+			<time datetime={time && time.toJSON()}>
+				{time ? I18n.formatDate("numeric", time) : " "}
+			</time>
 
 			<h3 lang="et">{initiative.title}</h3>
 			{badge ? <img src={badge.icon} class="badge" title={badge.name} /> : null}

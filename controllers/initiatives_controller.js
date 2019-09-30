@@ -28,12 +28,14 @@ var cosApi = require("root/lib/citizenos_api")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var renderEmail = require("root/lib/i18n").email
 var sql = require("sqlate")
+var sqlite = require("root").sqlite
 var translateCitizenError = require("root/lib/citizenos_api").translateError
 var searchTopics = require("root/lib/citizenos_db").searchTopics
 var countSignaturesById = require("root/lib/citizenos_db").countSignaturesById
 var countSignaturesByIds = require("root/lib/citizenos_db").countSignaturesByIds
 var readVoteOptions = require("root/lib/citizenos_db").readVoteOptions
 var concat = Array.prototype.concat.bind(Array.prototype)
+var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var decodeBase64 = require("root/lib/crypto").decodeBase64
 var trim = Function.call.bind(String.prototype.trim)
 var ENV = process.env.ENV
@@ -84,8 +86,13 @@ exports.router.get("/", next(function*(req, res) {
 
 	var signatureCounts = yield countSignaturesByIds(_.keys(topics))
 
+	var recentInitiatives = category
+		? EMPTY_ARR
+		: yield searchRecentInitiatives(initiatives)
+
 	res.render("initiatives_page.jsx", {
 		initiatives: initiatives,
+		recentInitiatives: recentInitiatives,
 		topics: topics,
 		signatureCounts: signatureCounts
 	})
@@ -485,6 +492,33 @@ exports.router.use(function(err, req, res, next) {
 	}
 	else next(err)
 })
+
+function* searchRecentInitiatives(initiatives) {
+	var recentUuids = _.uniq(_.reverse(_.sortBy(flatten(yield [
+		sqlite(sql`
+			SELECT initiative_uuid AS uuid, max(created_at) AS at
+			FROM comments
+			GROUP BY initiative_uuid
+			ORDER BY at DESC
+			LIMIT 6
+		`).then((rows) => rows.map(function(row) {
+				row.at = new Date(row.at)
+				return row
+		})),
+
+		cosDb.query(sql`
+			SELECT tv."topicId" AS uuid, max(signature."createdAt") AS at
+			FROM "VoteLists" AS signature
+			JOIN "TopicVotes" AS tv ON tv."voteId" = signature."voteId"
+			GROUP BY tv."topicId"
+			ORDER BY at DESC
+			LIMIT 6
+		`)
+	]), "at")).map((row) => row.uuid)).slice(0, 6)
+
+	var initiativesByUuid = _.indexBy(initiatives, "uuid")
+	return recentUuids.map((uuid) => initiativesByUuid[uuid]).filter(Boolean)
+}
 
 function* readCitizenSignatureWithToken(topic, token) {
 	var vote = topic.vote

@@ -1,4 +1,5 @@
 /** @jsx Jsx */
+var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var Page = require("../page")
@@ -54,8 +55,7 @@ module.exports = function(attrs) {
 
 					<InitiativesView
 						t={t}
-						phase={null}
-						initiatives={authoredInitiatives}
+						initiatives={_.sortBy(authoredInitiatives, "created_at").reverse()}
 						topics={topics}
 						signatureCounts={signatureCounts}
 					/>
@@ -66,7 +66,6 @@ module.exports = function(attrs) {
 
 					<InitiativesView
 						t={t}
-						phase={null}
 						initiatives={signedInitiatives}
 						topics={topics}
 						signatureCounts={signatureCounts}
