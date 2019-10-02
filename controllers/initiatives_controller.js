@@ -247,8 +247,11 @@ exports.read = next(function*(req, res) {
 			: null
 	}
 
-	var subscriberCount =
-		yield subscriptionsDb.countConfirmedByInitiativeId(initiative.uuid)
+	var subscriberCount = yield sqlite(sql`
+		SELECT COUNT(*) AS count
+		FROM initiative_subscriptions
+		WHERE initiative_uuid = ${initiative.uuid} AND confirmed_at IS NOT NULL
+	`).then(_.first).then((row) => row.count)
 
 	var comments = yield searchInitiativeComments(initiative.uuid)
 	var events = _.reverse(yield searchInitiativeEvents(initiative))

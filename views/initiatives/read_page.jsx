@@ -1412,7 +1412,10 @@ function SubscribeEmailView(attrs) {
     />
 
     <button type="submit" class="secondary-button">{t("BTN_SUBSCRIBE")}</button>
-		<p>{Jsx.html(t("INITIATIVE_SUBSCRIBER_COUNT", {count: count}))}</p>
+
+		{count > 0 ? <p>
+			{Jsx.html(t("INITIATIVE_SUBSCRIBER_COUNT", {count: count}))}
+		</p> : null}
 	</Form>
 }
 
