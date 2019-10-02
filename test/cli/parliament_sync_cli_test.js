@@ -903,6 +903,45 @@ describe("ParliamentSyncCli", function() {
 				content_type: new MediaType("application/octet-stream")
 			}]],
 
+			"board meeting protocol with date": [{
+				relatedDocuments: [{uuid: DOCUMENT_UUID}]
+			}, {
+				[DOCUMENT_UUID]: {
+					uuid: DOCUMENT_UUID,
+					title: "18.06.2015 juhatuse istungi protokoll",
+					documentType: "protokoll",
+
+					volume: {
+						uuid: VOLUME_UUID,
+						title: "Juhatuse istungite protokollid 2015",
+						volumeType: "dokumenditoimik",
+					},
+
+					files: [{
+						uuid: FILE_UUID,
+						fileName: "Protokoll.pdf",
+						accessRestrictionType: "PUBLIC"
+					}]
+				}
+			}, {
+				occurred_at: new Date(2015, 5, 18),
+				origin: "parliament",
+				external_id: DOCUMENT_UUID,
+				type: "parliament-board-meeting",
+				title: null,
+				content: {}
+			}, [{
+				id: 1,
+				event_id: 1,
+				initiative_uuid: INITIATIVE_UUID,
+				external_id: FILE_UUID,
+				name: "Protokoll.pdf",
+				title: "18.06.2015 juhatuse istungi protokoll",
+				url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
+				content: EXAMPLE_BUFFER,
+				content_type: new MediaType("application/octet-stream")
+			}]],
+
 			// Not all committee meeting protocols have a time in their title.
 			// For example: https://api.riigikogu.ee/api/documents/e1fe09a3-f62c-44f5-8018-a4800f8ab7d9.
 			"committee meeting protocol with date": [{
@@ -1797,13 +1836,12 @@ describe("ParliamentSyncCli", function() {
 
 			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
 				uuid: DOCUMENT_UUID,
-				title: "18.06.2015 juhatuse istungi protokoll",
+				title: "Secret meeting",
 				documentType: "protokoll",
 
 				volume: {
 					uuid: VOLUME_UUID,
-					reference: `1-3/3-7`,
-					title: "Juhatuse istungite protokollid 2015",
+					title: "Secret meetings 2015",
 					volumeType: "unitSittingVolume",
 				},
 

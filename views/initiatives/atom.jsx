@@ -66,6 +66,10 @@ module.exports = function(attrs) {
 					})
 					break
 
+				case "parliament-board-meeting":
+					title = t("PARLIAMENT_BOARD_MEETING")
+					break
+
 				case "parliament-committee-meeting":
 					var meeting = event.content
 					decision = meeting.decision

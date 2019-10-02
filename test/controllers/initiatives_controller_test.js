@@ -1142,6 +1142,36 @@ describe("InitiativesController", function() {
 				)
 			})
 
+			it("must render initiative in parliament and board meeting event",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					external: true
+				}))
+
+				var event = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiative.uuid,
+					created_at: pseudoDateTime(),
+					updated_at: pseudoDateTime(),
+					occurred_at: pseudoDateTime(),
+					type: "parliament-board-meeting",
+					content: {},
+					origin: "parliament"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var events = queryEvents(parseDom(res.body))
+				events.length.must.equal(1)
+
+				events[0].id.must.equal(String(event.id))
+				events[0].phase.must.equal("parliament")
+				events[0].at.must.eql(event.occurred_at)
+				events[0].title.must.equal(t("PARLIAMENT_BOARD_MEETING"))
+				events[0].content.length.must.equal(0)
+			})
+
 			it("must render initiative in parliament and committee meeting event", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "parliament",
@@ -3162,6 +3192,38 @@ describe("InitiativesController", function() {
 						committee: "Keskkonnakomisjon"
 					})
 				}
+			})
+		})
+
+		it("must render initiative in parliament and board meeting event",
+			function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
+				external: true
+			}))
+
+			var event = yield eventsDb.create(new ValidEvent({
+				initiative_uuid: initiative.uuid,
+				created_at: pseudoDateTime(),
+				updated_at: pseudoDateTime(),
+				occurred_at: pseudoDateTime(),
+				type: "parliament-board-meeting",
+				content: {},
+				origin: "parliament"
+			}))
+
+			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			res.statusCode.must.equal(200)
+
+			var entry = Atom.parse(res.body).feed.entry
+			var id = `${Config.url}/initiatives`
+			id += `/${initiative.uuid}/events/${event.id}`
+
+			entry.must.eql({
+				id: {$: id},
+				updated: {$: event.updated_at.toJSON()},
+				published: {$: event.occurred_at.toJSON()},
+				title: {$: t("PARLIAMENT_BOARD_MEETING")}
 			})
 		})
 

@@ -529,8 +529,22 @@ function eventAttrsFromDocument(document) {
 		}
 	}
 
-	if (document.documentType == "protokoll") {
-		var time = parseProtocolDateTime(document)
+	if (isParliamentBoardMeeting(document)) {
+		let time = parseInlineDateWithMaybeTime(document.title)
+
+		return {
+			type: "parliament-board-meeting",
+			origin: "parliament",
+			external_id: document.uuid,
+			occurred_at: time,
+			title: null,
+			content: {},
+			files: newDocumentFiles(document, document.files || EMPTY_ARR)
+		}
+	}
+
+	if (isParliamentCommitteeMeeting(document)) {
+		let time = parseProtocolDateTime(document)
 		var committee = parseProtocolCommittee(document)
 		if (time == null || committee == null) return null
 
@@ -709,6 +723,20 @@ function isParliamentAcceptanceDocument(document) {
 	return (
 		document.documentType == "decisionDocument" &&
 		document.title == "Kollektiivse pöördumise menetlusse võtmine"
+	)
+}
+
+function isParliamentCommitteeMeeting(document) {
+	return (
+		document.documentType == "protokoll" &&
+		parseProtocolCommittee(document) != null
+	)
+}
+
+function isParliamentBoardMeeting(document) {
+	return (
+		document.documentType == "protokoll" &&
+		document.title.match(/\bjuhatuse\b/)
 	)
 }
 

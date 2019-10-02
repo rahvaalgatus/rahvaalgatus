@@ -1168,6 +1168,10 @@ function EventsView(attrs) {
 							</p>
 							break
 
+						case "parliament-board-meeting":
+							title = t("PARLIAMENT_BOARD_MEETING")
+							break
+
 						case "parliament-committee-meeting":
 							var meeting = event.content
 							decision = meeting.decision
@@ -1677,6 +1681,7 @@ function initiativePhaseFromEvent(event) {
 		case "parliament-letter":
 		case "parliament-decision":
 		case "parliament-finished":
+		case "parliament-board-meeting": return "parliament"
 		case "parliament-committee-meeting": return "parliament"
 		case "sent-to-government": return "government"
 		case "finished-in-government": return "government"

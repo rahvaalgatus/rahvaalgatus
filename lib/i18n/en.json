@@ -118,6 +118,7 @@
 	"N_SIGNATURES_EXTERNAL": "1000+ signatures",
 	"N_SIGNATURES_FAILED": "Halted: {{votes}} signatures",
 	"N_SIGNATURES_WITH_PAPER": "{{votes}}+ signatures",
+	"PARLIAMENT_BOARD_MEETING": "Parliament board meeting",
 	"PARLIAMENT_DECISION": "Decision",
 	"PARLIAMENT_FINISHED": "Initiative proceedings have finished",
 	"PARLIAMENT_LETTER_FROM": "From",
