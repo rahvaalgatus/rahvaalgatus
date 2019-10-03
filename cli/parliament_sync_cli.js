@@ -17,10 +17,7 @@ var FILE_URL = PARLIAMENT_URL + "/download"
 var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
 exports = module.exports = cli
 exports.parseTitle = parseTitle
-exports.replaceFiles = replaceFiles
-exports.replaceEvents = replaceEvents
-exports.eventAttrsFromDocument = eventAttrsFromDocument
-exports.eventAttrsFromVolume = eventAttrsFromVolume
+exports.replaceInitiative = replaceInitiative
 exports.assignInitiativeDocuments = assignInitiativeDocuments
 
 var USAGE_TEXT = `
@@ -36,22 +33,20 @@ Options:
 function* cli(argv) {
   var args = Neodoc.run(USAGE_TEXT, {argv: argv || ["parliament-sync"]})
   if (args["--help"]) return void process.stdout.write(USAGE_TEXT.trimLeft())
-	var cached = args["--cached"]
-	var force = args["--force"]
 
 	var uuid = args["<uuid>"]
 	if (uuid == "") throw new Error("Invalid UUID: " + uuid)
 
-	if (cached) {
+	if (args["--cached"]) {
 		var initiatives = yield initiativesDb.search(sql`
 			SELECT * FROM initiatives
 			WHERE parliament_api_data IS NOT NULL
 			${uuid ? sql`AND uuid = ${uuid}` : sql``}
 		`)
 
-		yield initiatives.map((i) => updateInitiative(i, i.parliament_api_data))
+		yield initiatives.map((i) => replaceInitiative(i, i.parliament_api_data))
 	}
-	else yield sync({uuid: uuid, force: force})
+	else yield sync({uuid: uuid, force: args["--force"]})
 }
 
 function* sync(opts) {
@@ -98,7 +93,7 @@ function* sync(opts) {
 	yield updated.map(function*(initiativeAndDocument) {
 		var initiative = initiativeAndDocument[0]
 		var doc = yield assignInitiativeDocuments(api, initiativeAndDocument[1])
-		initiative = yield updateInitiative(initiative, doc)
+		initiative = yield replaceInitiative(initiative, doc)
 
 		yield initiativesDb.update(initiative, {
 			parliament_api_data: doc,
@@ -171,7 +166,7 @@ function* assignInitiativeDocuments(api, doc) {
 	return doc
 }
 
-function* updateInitiative(initiative, document) {
+function* replaceInitiative(initiative, document) {
 	logger.log(
 		(initiative.uuid ? "Updating" : "Creating") + " initiative %s (%s)…",
 		initiative.uuid || document.uuid,
@@ -334,12 +329,12 @@ function downloadFile(file) {
 }
 
 function attrsFrom(doc) {
-	return {
-		parliament_uuid: doc.uuid,
+	var attrs = {parliament_uuid: doc.uuid}
 
-		parliament_committee:
-			doc.responsibleCommittee && doc.responsibleCommittee.name
-	}
+	if (doc.responsibleCommittee)
+		attrs.parliament_committee = doc.responsibleCommittee.name
+
+	return attrs
 }
 
 function attrsFromStatus(status) {

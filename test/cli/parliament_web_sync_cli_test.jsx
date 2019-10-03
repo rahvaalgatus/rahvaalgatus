@@ -17,10 +17,10 @@ var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var WEB_INITIATIVES_PATH = "/tutvustus-ja-ajalugu/raakige-kaasa/esitage-kollektiivne-poordumine/riigikogule-esitatud-kollektiivsed-poordumised"
 var PARLIAMENT_URL = "https://www.riigikogu.ee"
+var DOCUMENT_URL = PARLIAMENT_URL + "/tegevus/dokumendiregister/dokument"
 var WEB_INITIATIVES_URL = PARLIAMENT_URL + WEB_INITIATIVES_PATH
 var API_INITIATIVES_PATH = "/api/documents/collective-addresses"
 var API_INITIATIVES_URL = "https://api.riigikogu.ee" + API_INITIATIVES_PATH
-var DOCUMENT_REGISTRY_URL = "https://www.riigikogu.ee/tegevus/dokumendiregister/dokument"
 var INITIATIVE_UUID = "c5c91e62-124b-41a4-9f37-6f80f8cab5ab"
 var DOCUMENT_UUID = "e519fd6f-584a-4f0e-9434-6d7c6dfe4865"
 var FILE_UUID = "a8dd7913-0816-4e46-9b5a-c661a2eb97de"
@@ -59,7 +59,7 @@ describe("ParliamentSyncCli", function() {
 				<td><a href="http://example.com/committee">Keskkonnakomisjon</a></td>
 
 				<td><ul>
-					<li><a href={`${DOCUMENT_REGISTRY_URL}/${INITIATIVE_UUID}`}>
+					<li><a href={`${DOCUMENT_URL}/${INITIATIVE_UUID}`}>
 						Kollektiivne pöördumine
 					</a></li>
 				</ul></td>
@@ -135,7 +135,7 @@ describe("ParliamentSyncCli", function() {
 				<td><a href="http://example.com/committee">Keskkonnakomisjon</a></td>
 
 				<td><ul>
-					<li><a href={`${DOCUMENT_REGISTRY_URL}/${INITIATIVE_UUID}`}>
+					<li><a href={`${DOCUMENT_URL}/${INITIATIVE_UUID}`}>
 						Kollektiivne pöördumine
 					</a></li>
 				</ul></td>
@@ -195,7 +195,7 @@ describe("ParliamentSyncCli", function() {
 				<td><a href="http://example.com/committee">Keskkonnakomisjon</a></td>
 
 				<td><ul>
-					<li><a href={`${DOCUMENT_REGISTRY_URL}/${INITIATIVE_UUID}`}>
+					<li><a href={`${DOCUMENT_URL}/${INITIATIVE_UUID}`}>
 						Kollektiivne pöördumine
 					</a></li>
 				</ul></td>
@@ -233,7 +233,7 @@ describe("ParliamentSyncCli", function() {
 				<td><a href="http://example.com/committee">Keskkonnakomisjon</a></td>
 
 				<td><ul>
-					<li><a href={`${DOCUMENT_REGISTRY_URL}/${DOCUMENT_UUID}`}>
+					<li><a href={`${DOCUMENT_URL}/${DOCUMENT_UUID}`}>
 						Kollektiivne pöördumine
 					</a></li>
 				</ul></td>
@@ -318,7 +318,7 @@ describe("ParliamentSyncCli", function() {
 					<td />
 
 					<td><ul>
-						<li><a href={`${DOCUMENT_REGISTRY_URL}/${DOCUMENT_UUID}`}>
+						<li><a href={`${DOCUMENT_URL}/${DOCUMENT_UUID}`}>
 							Kollektiivne pöördumine
 						</a></li>
 					</ul></td>
@@ -354,7 +354,8 @@ describe("ParliamentSyncCli", function() {
 		})
 	})
 
-	it("must ignore initiative available via Parliament API", function*() {
+	it("must not create initiatives that are in the Parliament API",
+		function*() {
 		this.router.get(WEB_INITIATIVES_PATH, respond.bind(null, <Page>
 			<tr>
 				<td>17.06.2015</td>
@@ -363,7 +364,7 @@ describe("ParliamentSyncCli", function() {
 				<td />
 
 				<td><ul>
-					<li><a href={`${DOCUMENT_REGISTRY_URL}/${INITIATIVE_UUID}`}>
+					<li><a href={`${DOCUMENT_URL}/${INITIATIVE_UUID}`}>
 						Kollektiivne pöördumine
 					</a></li>
 				</ul></td>
@@ -422,7 +423,7 @@ describe("ParliamentSyncCli", function() {
 			external_id: FILE_UUID,
 			name: "70_17.06.2019_pöördumine.pdf",
 			title: "Kollektiivse pöördumise menetlusse võtmine",
-			url: DOCUMENT_REGISTRY_URL + "/" + DOCUMENT_UUID,
+			url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
 			content: EXAMPLE_BUFFER,
 			content_type: new MediaType("application/octet-stream")
 		}]],
@@ -465,12 +466,12 @@ describe("ParliamentSyncCli", function() {
 			external_id: FILE_UUID,
 			name: "ÕIGK_11062019.pdf",
 			title: "ÕIGK vastuskiri - Kollektiivne pöördumine X",
-			url: DOCUMENT_REGISTRY_URL + "/" + DOCUMENT_UUID,
+			url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
 			content: EXAMPLE_BUFFER,
 			content_type: new MediaType("application/octet-stream")
 		}]],
 
-		"meeting protocol": [{
+		"committee meeting protocol": [{
 			uuid: INITIATIVE_UUID,
 			created: "2015-06-16T13:37:42",
 			relatedDocuments: [{uuid: DOCUMENT_UUID}]
@@ -514,7 +515,7 @@ describe("ParliamentSyncCli", function() {
 			external_id: FILE_UUID,
 			name: "Protokoll.pdf",
 			title: "Protokoll",
-			url: DOCUMENT_REGISTRY_URL + "/" + DOCUMENT_UUID,
+			url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
 			content: EXAMPLE_BUFFER,
 			content_type: new MediaType("application/octet-stream")
 		}]]
@@ -540,7 +541,7 @@ describe("ParliamentSyncCli", function() {
 					<td />
 
 					<td><ul>
-						<li><a href={`${DOCUMENT_REGISTRY_URL}/${INITIATIVE_UUID}`}>
+						<li><a href={`${DOCUMENT_URL}/${INITIATIVE_UUID}`}>
 							Kollektiivne pöördumine
 						</a></li>
 					</ul></td>
@@ -605,11 +606,11 @@ describe("ParliamentSyncCli", function() {
 				<td />
 
 				<td><ul>
-					<li><a href={`${DOCUMENT_REGISTRY_URL}/${INITIATIVE_UUID}`}>
+					<li><a href={`${DOCUMENT_URL}/${INITIATIVE_UUID}`}>
 						Kollektiivne pöördumine
 					</a></li>
 
-					<li><a href={`${DOCUMENT_REGISTRY_URL}/${DOCUMENT_UUID}`}>
+					<li><a href={`${DOCUMENT_URL}/${DOCUMENT_UUID}`}>
 						Kollektiivse pöördumise menetlusse võtmine
 					</a></li>
 				</ul></td>
@@ -681,7 +682,7 @@ describe("ParliamentSyncCli", function() {
 			external_url: PARLIAMENT_URL + "/download/" + FILE_UUID,
 			name: "70_17.06.2019_pöördumine.pdf",
 			title: "Kollektiivse pöördumise menetlusse võtmine",
-			url: DOCUMENT_REGISTRY_URL + "/" + DOCUMENT_UUID,
+			url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
 			content: EXAMPLE_BUFFER,
 			content_type: new MediaType("application/octet-stream")
 		})])
@@ -696,7 +697,7 @@ describe("ParliamentSyncCli", function() {
 				<td />
 
 				<td><ul>
-					<li><a href={`${DOCUMENT_REGISTRY_URL}/${INITIATIVE_UUID}`}>
+					<li><a href={`${DOCUMENT_URL}/${INITIATIVE_UUID}`}>
 						Kollektiivne pöördumine
 					</a></li>
 				</ul></td>
@@ -806,7 +807,7 @@ describe("ParliamentSyncCli", function() {
 				<td />
 
 				<td><ul>
-					<li><a href={`${DOCUMENT_REGISTRY_URL}/${INITIATIVE_UUID}`}>
+					<li><a href={`${DOCUMENT_URL}/${INITIATIVE_UUID}`}>
 						Kollektiivne pöördumine
 					</a></li>
 				</ul></td>
@@ -904,7 +905,7 @@ describe("ParliamentSyncCli", function() {
 				<td />
 
 				<td><ul>
-					<li><a href={`${DOCUMENT_REGISTRY_URL}/${INITIATIVE_UUID}`}>
+					<li><a href={`${DOCUMENT_URL}/${INITIATIVE_UUID}`}>
 						Kollektiivne pöördumine
 					</a></li>
 
@@ -944,7 +945,7 @@ describe("ParliamentSyncCli", function() {
 				<td />
 
 				<td><ul>
-					<li><a href={`${DOCUMENT_REGISTRY_URL}/${INITIATIVE_UUID}`}>
+					<li><a href={`${DOCUMENT_URL}/${INITIATIVE_UUID}`}>
 						Kollektiivne pöördumine
 					</a></li>
 				</ul></td>

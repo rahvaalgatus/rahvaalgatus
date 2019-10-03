@@ -14,11 +14,8 @@ var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var sql = require("sqlate")
 var {parseTitle} = require("./parliament_sync_cli")
-var {replaceFiles} = require("./parliament_sync_cli")
-var {replaceEvents} = require("./parliament_sync_cli")
+var replaceApiInitiative = require("./parliament_sync_cli").replaceInitiative
 var {assignInitiativeDocuments} = require("./parliament_sync_cli")
-var {eventAttrsFromVolume} = require("./parliament_sync_cli")
-var {eventAttrsFromDocument} = require("./parliament_sync_cli")
 var initiativesDb = require("root/db/initiatives_db")
 var logger = require("root").logger
 var WEB_URL = "https://www.riigikogu.ee/tutvustus-ja-ajalugu/raakige-kaasa/esitage-kollektiivne-poordumine/riigikogule-esitatud-kollektiivsed-poordumised"
@@ -33,6 +30,7 @@ Usage: cli parliament-web-sync (-h | --help)
 
 Options:
     -h, --help           Display this help and exit.
+    --all                Also sync initiatives that are in the parliament API.
     --cached             Do not refresh initiatives from the parliament API.
     --web-file=FILE      Use given HTML for Riigikogu's initiatives page.
     --api-file=FILE      Use given JSON for Riigikogu's collective-addresses.
@@ -47,37 +45,44 @@ module.exports = function*(argv) {
 
 	var docsPath = args["--api-file"]
 	var docs = yield (docsPath == null ? readApi(API_URL) : readJson(docsPath))
-	var apiUuids = new Set(docs.map(getUuid))
+	var docsByUuid = _.indexBy(docs, "uuid")
 
 	var dom = parseDom(html)
 	var article = dom.querySelector("article.content")
 	var tables = article.querySelectorAll("table")
 	var rows = flatten(map(tables, parseInitiatives))
-	rows = rows.filter((row) => !apiUuids.has(row.uuid))
 
 	var uuid = args["<uuid>"]
 	if (uuid == "") throw new Error("Invalid UUID: " + uuid)
+
 	if (uuid) rows = rows.filter((row) => row.uuid === uuid)
+	else if (!args["--all"]) rows = rows.filter((row) => !docsByUuid[row.uuid])
 
-	var uuids = rows.map(getUuid)
-	var cached = args["--cached"]
-
-	if (cached) {
+	if (args["--cached"]) {
 		var initiatives = _.indexBy(yield initiativesDb.search(sql`
 			SELECT * FROM initiatives
 			WHERE parliament_api_data IS NOT NULL
-			AND ${uuid ? sql`uuid = ${uuid}` : sql`uuid IN ${sql.in(uuids)}`}
-		`), getUuid)
+			AND ${uuid
+				? sql`uuid = ${uuid}`
+				: sql`uuid IN ${sql.in(rows.map(getUuid))}`
+			}
+		`), "uuid")
 
 		yield rows.map(function(row) {
 			var initiative = initiatives[row.uuid]
-			return replaceInitiative(initiative, initiative.parliament_api_data, row)
+			if (initiative.webDocuments == null) return null
+
+			return replaceWebInitiative(
+				initiative,
+				initiative.parliament_api_data,
+				row
+			)
 		})
 	}
-	else yield rows.map(syncInitiative)
+	else yield rows.map((row) => syncInitiative(row, docsByUuid[row.uuid]))
 }
 
-function* syncInitiative(row) {
+function* syncInitiative(row, collectiveAddressDocument) {
 	var api = _.memoize(parliamentApi)
 
 	var initiative = yield initiativesDb.read(sql`
@@ -85,6 +90,12 @@ function* syncInitiative(row) {
 		WHERE parliament_uuid = ${row.uuid}
 		OR uuid = ${row.authorUrl && parseRahvaalgatusUuidFromUrl(row.authorUrl)}
 	`)
+
+	if (initiative == null && collectiveAddressDocument) return void logger.warn(
+		"Ignoring initiative %s (%s) until it's first synced from the API.",
+		row.uuid,
+		row.title
+	)
 
 	var doc
 	try { doc = yield api("documents/" + row.uuid).then(getBody) }
@@ -97,7 +108,13 @@ function* syncInitiative(row) {
 		else throw ex
 	}
 
+	if (collectiveAddressDocument) {
+		collectiveAddressDocument.files = doc.files
+		doc = collectiveAddressDocument
+	}
+
 	doc = yield assignInitiativeDocuments(api, doc)
+
 	var relatedDocumentUuids = new Set(doc.relatedDocuments.map(getUuid))
 
 	var htmlDocumentUuids = row.links.map(function(titleAndUrl) {
@@ -122,7 +139,7 @@ function* syncInitiative(row) {
 		api("documents/" + uuid).then(getBody)
 	))
 
-	initiative = yield replaceInitiative(initiative, doc, row)
+	initiative = yield replaceWebInitiative(initiative, doc, row)
 
 	initiativesDb.update(initiative, {
 		parliament_api_data: doc,
@@ -130,7 +147,7 @@ function* syncInitiative(row) {
 	})
 }
 
-function* replaceInitiative(initiative, document, row) {
+function* replaceWebInitiative(initiative, document, row) {
 	logger.log(
 		(initiative ? "Updating" : "Creating") + " initiative %s (%s)…",
 		row.uuid,
@@ -139,9 +156,8 @@ function* replaceInitiative(initiative, document, row) {
 
 	var attrs = attrsFrom(row, document)
 
-	if (initiative == null) initiative = yield initiativesDb.create({
+	if (initiative == null) initiative = {
 		__proto__: attrs,
-		uuid: document.uuid,
 		title: document.title ? parseTitle(document.title) : "",
 		phase: row.finishedOn ? "done" : "parliament",
 		archived_at: row.finishedOn && new Date,
@@ -153,35 +169,19 @@ function* replaceInitiative(initiative, document, row) {
 		created_at: document.created
 			? Time.parseDateTime(document.created)
 			: new Date
-	})
+	}
 	else if (diff(initiative, attrs))
 		initiative = yield initiativesDb.update(initiative, attrs)
 
-	yield replaceFiles(initiative, document)
-
-	var documents = concat(document.relatedDocuments, document.webDocuments)
-	var volumes = concat(document.relatedVolumes, document.missingVolumes)
-
-	var eventAttrs = []
-
-	;[eventAttrs, documents] = _.map1st(
-		concat.bind(null, eventAttrs),
-		_.mapM(volumes, documents, eventAttrsFromVolume)
+	var relatedDocuments = _.uniqBy(
+		concat(document.relatedDocuments, document.webDocuments),
+		"uuid"
 	)
 
-	;[eventAttrs, documents] = _.map1st(
-		concat.bind(null, eventAttrs),
-		_.partitionMap(documents, eventAttrsFromDocument)
-	)
-
-	yield replaceEvents(initiative, eventAttrs)
-
-	documents.forEach((document) => logger.warn(
-		"Ignored initiative %s document %s (%s)",
-		initiative.uuid,
-		document.uuid,
-		document.title
-	))
+	yield replaceApiInitiative(initiative, {
+		__proto__: document,
+		relatedDocuments: relatedDocuments
+	})
 
 	return initiative
 }
