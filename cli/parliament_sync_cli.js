@@ -468,7 +468,9 @@ function eventAttrsFromStatus(document, documents, status) {
 					protocol && parseProtocolCommittee(protocol) ||
 					document.responsibleCommittee && document.responsibleCommittee.name ||
 					null
-				)
+				),
+
+				invitees: null
 			}
 
 			if (status.committeeDecision)
@@ -568,7 +570,7 @@ function eventAttrsFromDocument(document) {
 			external_id: "ARUTELU_KOMISJONIS/" + formatIsoDate(time),
 			occurred_at: time,
 			title: null,
-			content: {committee: committee},
+			content: {committee: committee, invitees: null},
 			files: newDocumentFiles(document, document.files || EMPTY_ARR)
 		}
 	}
@@ -595,7 +597,7 @@ function eventAttrsFromVolume(documents, volume) {
 
 			content: {
 				committee: parseCommitteeReference(volume.reference),
-				invitees: topic ? topic.invitees : undefined
+				invitees: topic && topic.invitees || null
 			},
 
 			files: flatten(volume.documents.map((doc) => (

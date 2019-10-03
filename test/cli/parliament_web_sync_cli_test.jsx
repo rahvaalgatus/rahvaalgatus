@@ -508,7 +508,7 @@ describe("ParliamentSyncCli", function() {
 			external_id: "ARUTELU_KOMISJONIS/2015-06-18",
 			type: "parliament-committee-meeting",
 			title: null,
-			content: {committee: "Keskkonnakomisjon"}
+			content: {committee: "Keskkonnakomisjon", invitees: null}
 		}, [{
 			id: 1,
 			event_id: 1,
@@ -987,7 +987,7 @@ describe("ParliamentSyncCli", function() {
 			external_id: "ARUTELU_KOMISJONIS/2015-06-18",
 			type: "parliament-committee-meeting",
 			title: null,
-			content: {committee: "Keskkonnakomisjon"}
+			content: {committee: "Keskkonnakomisjon", invitees: null}
 		})])
 
 		yield filesDb.search(sql`
