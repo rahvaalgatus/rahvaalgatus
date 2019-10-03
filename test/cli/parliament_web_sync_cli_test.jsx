@@ -18,6 +18,7 @@ var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var WEB_INITIATIVES_PATH = "/tutvustus-ja-ajalugu/raakige-kaasa/esitage-kollektiivne-poordumine/riigikogule-esitatud-kollektiivsed-poordumised"
 var PARLIAMENT_URL = "https://www.riigikogu.ee"
 var DOCUMENT_URL = PARLIAMENT_URL + "/tegevus/dokumendiregister/dokument"
+var VOLUME_URL = PARLIAMENT_URL + "/tegevus/dokumendiregister/toimikud"
 var WEB_INITIATIVES_URL = PARLIAMENT_URL + WEB_INITIATIVES_PATH
 var API_INITIATIVES_PATH = "/api/documents/collective-addresses"
 var API_INITIATIVES_URL = "https://api.riigikogu.ee" + API_INITIATIVES_PATH
@@ -688,6 +689,121 @@ describe("ParliamentSyncCli", function() {
 		})])
 	})
 
+	it("must consider volumes from HTML along with API's", function*() {
+		var initiative = yield initiativesDb.create({
+			uuid: INITIATIVE_UUID,
+			parliament_uuid: INITIATIVE_UUID,
+			phase: "parliament"
+		})
+
+		// NOTE: Note the path component after VOLUME_UUID. This is the case for
+		// the oldest initiative "Lõpetada erakondade ületoitmine" on
+		// https://www.riigikogu.ee/tutvustus-ja-ajalugu/raakige-kaasa/esitage-kollektiivne-poordumine/riigikogule-esitatud-kollektiivsed-poordumised/.
+		this.router.get(WEB_INITIATIVES_PATH, respond.bind(null, <Page>
+			<tr>
+				<td>18.06.2015</td>
+				<td />
+				<td />
+				<td />
+
+				<td><ul>
+					<li><a href={`${DOCUMENT_URL}/${INITIATIVE_UUID}`}>
+						Kollektiivne pöördumine
+					</a></li>
+
+					<li><a href={`${VOLUME_URL}/${VOLUME_UUID}/Kollektiivse kohta`}>
+						Arupärimine 18.06.2015
+					</a></li>
+				</ul></td>
+
+				<td />
+			</tr>
+		</Page>))
+
+		this.router.get(API_INITIATIVES_PATH, respond.bind(null, []))
+
+		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {
+			uuid: INITIATIVE_UUID,
+			created: "2015-06-16T13:37:42"
+		}))
+
+		this.router.get(`/api/volumes/${VOLUME_UUID}`, respond.bind(null, {
+			uuid: VOLUME_UUID,
+			title: "Kollektiivse pöördumise \"Elu paremaks!\" kohta",
+			volumeType: "interpellationsVolume",
+			created: "2015-06-18T13:37:42.666",
+
+			documents: [
+				{uuid: DOCUMENT_UUID, documentType: "interpellationsDocument"}
+			]
+		}))
+
+		this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
+			uuid: DOCUMENT_UUID,
+			title: "Kollektiivse pöördumise \"Elu paremaks!\" kohta",
+			documentType: "interpellationsDocument",
+
+			submittingDate: "2016-04-11",
+			answerDeadline: "2016-05-31",
+			addressee: {value: "justiitsminister John Smith"},
+
+			files: [{
+				uuid: FILE_UUID,
+				fileName: "Question.pdf",
+				accessRestrictionType: "PUBLIC"
+			}]
+		}))
+
+		this.router.get(`/download/${FILE_UUID}`,
+			respondWithRiigikoguDownload.bind(null, "application/pdf", "PDF")
+		)
+
+		yield job()
+
+		var updated = yield initiativesDb.read(sql`SELECT * FROM initiatives`)
+
+		updated.must.eql({
+			__proto__: initiative,
+			received_by_parliament_at: new Date(2015, 5, 16, 13, 37, 42),
+			accepted_by_parliament_at: new Date(2015, 5, 18),
+			parliament_api_data: updated.parliament_api_data,
+			parliament_synced_at: new Date
+		})
+
+		yield eventsDb.search(sql`
+			SELECT * FROM initiative_events
+		`).must.then.eql([new ValidEvent({
+			id: 1,
+			initiative_uuid: INITIATIVE_UUID,
+			occurred_at: new Date(2015, 5, 18, 13, 37, 42, 666),
+			origin: "parliament",
+			external_id: VOLUME_UUID,
+			type: "parliament-interpellation",
+			title: null,
+
+			content: {
+				to: "justiitsminister John Smith",
+				date: "2016-04-11",
+				deadline: "2016-05-31"
+			}
+		})])
+
+		yield filesDb.search(sql`
+			SELECT * FROM initiative_files
+		`).must.then.eql([new ValidFile({
+			id: 1,
+			initiative_uuid: INITIATIVE_UUID,
+			event_id: 1,
+			external_id: FILE_UUID,
+			external_url: `https://www.riigikogu.ee/download/${FILE_UUID}`,
+			name: "Question.pdf",
+			title: "Kollektiivse pöördumise \"Elu paremaks!\" kohta",
+			url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
+			content: Buffer.from("PDF"),
+			content_type: new MediaType("application/pdf")
+		})])
+	})
+
 	it("must create event for committee meeting agenda item without related volume", function*() {
 		this.router.get(WEB_INITIATIVES_PATH, respond.bind(null, <Page>
 			<tr>
@@ -934,6 +1050,75 @@ describe("ParliamentSyncCli", function() {
 		yield filesDb.search(sql`
 			SELECT * FROM initiative_files
 		`).must.then.empty()
+	})
+
+	// The parliament page refers to a volume (https://www.riigikogu.ee/tegevus/dokumendiregister/toimikud/65154711-c8f8-4394-8643-7037adedb3ae) that in turn
+	// refers to the initiative.
+	it("must ignore volumes containing the initiative document ", function*() {
+		var initiative = yield initiativesDb.create({
+			uuid: INITIATIVE_UUID,
+			parliament_uuid: INITIATIVE_UUID,
+			phase: "parliament"
+		})
+
+		this.router.get(WEB_INITIATIVES_PATH, respond.bind(null, <Page>
+			<tr>
+				<td>18.06.2015</td>
+				<td />
+				<td />
+				<td />
+
+				<td><ul>
+					<li><a href={`${DOCUMENT_URL}/${INITIATIVE_UUID}`}>
+						Kollektiivne pöördumine
+					</a></li>
+
+					<li><a href={`${VOLUME_URL}/${VOLUME_UUID}`}>
+						Vastuskiri
+					</a></li>
+				</ul></td>
+
+				<td />
+			</tr>
+		</Page>))
+
+		this.router.get(API_INITIATIVES_PATH, respond.bind(null, []))
+
+		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {
+			uuid: INITIATIVE_UUID,
+			created: "2015-06-16T13:37:42"
+		}))
+
+		this.router.get(`/api/volumes/${VOLUME_UUID}`, respond.bind(null, {
+			uuid: VOLUME_UUID,
+			title: "Kollektiivne pöördumine Elu paremaks!",
+			volumeType: "letterVolume",
+			created: "2015-06-18T13:37:42.666",
+
+			documents: [
+				{uuid: INITIATIVE_UUID, documentType: "letterDocument"}
+			]
+		}))
+
+		yield job()
+
+		var updated = yield initiativesDb.read(sql`SELECT * FROM initiatives`)
+
+		updated.must.eql({
+			__proto__: initiative,
+			received_by_parliament_at: new Date(2015, 5, 16, 13, 37, 42),
+			accepted_by_parliament_at: new Date(2015, 5, 18),
+			parliament_api_data: updated.parliament_api_data,
+			parliament_synced_at: new Date
+		})
+
+		yield eventsDb.search(sql`
+			SELECT * FROM initiative_events
+		`).must.then.be.empty()
+
+		yield filesDb.search(sql`
+			SELECT * FROM initiative_files
+		`).must.then.be.empty()
 	})
 
 	it("must ignore not found documents", function*() {

@@ -31,6 +31,7 @@ function parseContent(type, data) {
 		case "parliament-accepted":
 		case "parliament-letter":
 		case "parliament-decision":
+		case "parliament-interpellation":
 		case "parliament-board-meeting":
 		case "parliament-committee-meeting": return JSON.parse(data)
 		case "text": return data
@@ -45,6 +46,7 @@ function serializeContent(type, data) {
 		case "parliament-accepted":
 		case "parliament-letter":
 		case "parliament-decision":
+		case "parliament-interpellation":
 		case "parliament-board-meeting":
 		case "parliament-committee-meeting": return JSON.stringify(data)
 		case "text": return data

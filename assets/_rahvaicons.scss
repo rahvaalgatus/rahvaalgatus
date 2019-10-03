@@ -3,17 +3,18 @@
   font-weight: normal;
   font-style: normal;
 
-  src: url("/assets/Rahvaicons_769608938923d5ceeff773e9635f1fcd.eot");
-  src: url("/assets/Rahvaicons_769608938923d5ceeff773e9635f1fcd.eot?#iefix") format("embedded-opentype"),
-       url("/assets/Rahvaicons_769608938923d5ceeff773e9635f1fcd.woff") format("woff"),
-       url("/assets/Rahvaicons_769608938923d5ceeff773e9635f1fcd.woff2") format("woff2"),
-       url("/assets/Rahvaicons_769608938923d5ceeff773e9635f1fcd.ttf") format("truetype");
+  src: url("/assets/Rahvaicons_68f020245278570a3350ff2214850ee2.eot");
+  src: url("/assets/Rahvaicons_68f020245278570a3350ff2214850ee2.eot?#iefix") format("embedded-opentype"),
+       url("/assets/Rahvaicons_68f020245278570a3350ff2214850ee2.woff") format("woff"),
+       url("/assets/Rahvaicons_68f020245278570a3350ff2214850ee2.woff2") format("woff2"),
+       url("/assets/Rahvaicons_68f020245278570a3350ff2214850ee2.ttf") format("truetype");
 }
 
 .ra-icon-ddoc:before,
 .ra-icon-doc:before,
 .ra-icon-facebook-logo:before,
 .ra-icon-html:before,
+.ra-icon-msg:before,
 .ra-icon-pdf:before,
 .ra-icon-ppt:before,
 .ra-icon-rss:before,
@@ -33,6 +34,7 @@
 .ra-icon-doc:before { content: "" !important; }
 .ra-icon-facebook-logo:before { content: "" !important; }
 .ra-icon-html:before { content: "" !important; }
+.ra-icon-msg:before { content: "" !important; }
 .ra-icon-pdf:before { content: "" !important; }
 .ra-icon-ppt:before { content: "" !important; }
 .ra-icon-rss:before { content: "" !important; }

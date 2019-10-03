@@ -19,6 +19,7 @@ exports = module.exports = cli
 exports.parseTitle = parseTitle
 exports.replaceInitiative = replaceInitiative
 exports.assignInitiativeDocuments = assignInitiativeDocuments
+exports.readParliamentVolumeWithDocuments = readParliamentVolumeWithDocuments
 
 var USAGE_TEXT = `
 Usage: cli parliament-sync (-h | --help)
@@ -577,6 +578,32 @@ function eventAttrsFromVolume(documents, volume) {
 			content: {
 				committee: parseCommitteeReference(volume.reference),
 				invitees: topic ? topic.invitees : undefined
+			},
+
+			files: flatten(volume.documents.map((doc) => (
+				newDocumentFiles(doc, doc.files || EMPTY_ARR)
+			)))
+		}, documents]
+	}
+
+	if (volume.volumeType == "interpellationsVolume") {
+		var question = volume.documents.find((doc) => (
+			doc.documentType == "interpellationsDocument"
+		))
+
+		if (question == null)
+			throw new Error("Interpellation volume without document: " + volume.uuid)
+
+		return [{
+			type: "parliament-interpellation",
+			origin: "parliament",
+			external_id: volume.uuid,
+			occurred_at: Time.parseDateTime(volume.created),
+
+			content: {
+				to: question.addressee.value,
+				date: question.submittingDate,
+				deadline: question.answerDeadline
 			},
 
 			files: flatten(volume.documents.map((doc) => (

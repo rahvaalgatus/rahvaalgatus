@@ -2248,6 +2248,114 @@ describe("ParliamentSyncCli", function() {
 				content_type: new MediaType("application/pdf")
 			})])
 		})
+
+		it("must create event given a volume of an interpellation", function*() {
+			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+				uuid: INITIATIVE_UUID,
+				relatedVolumes: [{uuid: VOLUME_UUID}]
+			}]))
+
+			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+
+			var aDocumentUuid = newUuid()
+			var bDocumentUuid = newUuid()
+			var aFileUuid = newUuid()
+			var bFileUuid = newUuid()
+
+			this.router.get(`/api/volumes/${VOLUME_UUID}`, respond.bind(null, {
+				uuid: VOLUME_UUID,
+				title: "Kollektiivse pöördumise \"Elu paremaks!\" kohta",
+				volumeType: "interpellationsVolume",
+				created: "2015-06-18T13:37:42.666",
+
+				documents: [
+					{uuid: aDocumentUuid, documentType: "interpellationsDocument"},
+					{uuid: bDocumentUuid, documentType: "interpellationsAnswerDocument"}
+				]
+			}))
+
+			this.router.get(`/api/documents/${aDocumentUuid}`, respond.bind(null, {
+				uuid: aDocumentUuid,
+				title: "Kollektiivse pöördumise \"Elu paremaks!\" kohta",
+				documentType: "interpellationsDocument",
+
+				submittingDate: "2016-04-11",
+				answerDeadline: "2016-05-31",
+				addressee: {value: "justiitsminister John Smith"},
+
+				files: [{
+					uuid: aFileUuid,
+					fileName: "Question.pdf",
+					accessRestrictionType: "PUBLIC"
+				}]
+			}))
+
+			this.router.get(`/api/documents/${bDocumentUuid}`, respond.bind(null, {
+				uuid: bDocumentUuid,
+				title: "Kollektiivse pöördumise \"Elu paremaks!\" kohta",
+				documentType: "interpellationsAnswerDocument",
+
+				files: [{
+					uuid: bFileUuid,
+					fileName: "Answer.pdf",
+					accessRestrictionType: "PUBLIC"
+				}]
+			}))
+
+			this.router.get(`/download/${aFileUuid}`,
+				respondWithRiigikoguDownload.bind(null, "application/pdf", "PDF A")
+			)
+
+			this.router.get(`/download/${bFileUuid}`,
+				respondWithRiigikoguDownload.bind(null, "application/pdf", "PDF B")
+			)
+
+			yield job()
+
+			var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
+
+			events.must.eql([new ValidEvent({
+				id: 1,
+				initiative_uuid: INITIATIVE_UUID,
+				occurred_at: new Date(2015, 5, 18, 13, 37, 42, 666),
+				origin: "parliament",
+				external_id: VOLUME_UUID,
+				type: "parliament-interpellation",
+				title: null,
+
+				content: {
+					to: "justiitsminister John Smith",
+					date: "2016-04-11",
+					deadline: "2016-05-31"
+				}
+			})])
+
+			yield filesDb.search(sql`
+				SELECT * FROM initiative_files
+			`).must.then.eql([new ValidFile({
+				id: 1,
+				initiative_uuid: INITIATIVE_UUID,
+				event_id: 1,
+				external_id: aFileUuid,
+				external_url: `https://www.riigikogu.ee/download/${aFileUuid}`,
+				name: "Question.pdf",
+				title: "Kollektiivse pöördumise \"Elu paremaks!\" kohta",
+				url: DOCUMENT_URL + "/" + aDocumentUuid,
+				content: Buffer.from("PDF A"),
+				content_type: new MediaType("application/pdf")
+			}), new ValidFile({
+				id: 2,
+				initiative_uuid: INITIATIVE_UUID,
+				event_id: 1,
+				external_id: bFileUuid,
+				external_url: `https://www.riigikogu.ee/download/${bFileUuid}`,
+				name: "Answer.pdf",
+				title: "Kollektiivse pöördumise \"Elu paremaks!\" kohta",
+				url: DOCUMENT_URL + "/" + bDocumentUuid,
+				content: Buffer.from("PDF B"),
+				content_type: new MediaType("application/pdf")
+			})])
+		})
 	})
 })
 

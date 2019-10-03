@@ -16,10 +16,12 @@ var sql = require("sqlate")
 var {parseTitle} = require("./parliament_sync_cli")
 var replaceApiInitiative = require("./parliament_sync_cli").replaceInitiative
 var {assignInitiativeDocuments} = require("./parliament_sync_cli")
+var {readParliamentVolumeWithDocuments} = require("./parliament_sync_cli")
 var initiativesDb = require("root/db/initiatives_db")
 var logger = require("root").logger
 var WEB_URL = "https://www.riigikogu.ee/tutvustus-ja-ajalugu/raakige-kaasa/esitage-kollektiivne-poordumine/riigikogule-esitatud-kollektiivsed-poordumised"
-var DOCUMENT_REGISTRY_URL = "https://www.riigikogu.ee/tegevus/dokumendiregister/dokument"
+var DOCUMENT_URL = "https://www.riigikogu.ee/tegevus/dokumendiregister/dokument"
+var VOLUME_URL = "https://www.riigikogu.ee/tegevus/dokumendiregister/toimikud"
 var DRAFTS_URL = "https://www.riigikogu.ee/tegevus/eelnoud"
 var API_URL = "documents/collective-addresses"
 var LOCAL_DATE = /^(\d?\d).(\d\d).(\d\d\d\d)$/
@@ -115,29 +117,38 @@ function* syncInitiative(row, collectiveAddressDocument) {
 
 	doc = yield assignInitiativeDocuments(api, doc)
 
-	var relatedDocumentUuids = new Set(doc.relatedDocuments.map(getUuid))
-
-	var htmlDocumentUuids = row.links.map(function(titleAndUrl) {
+	var uuids = row.links.map(function(titleAndUrl) {
 		var url = titleAndUrl[1]
-		var uuid = parseDocumentUuidFromUrl(titleAndUrl[0], url)
+		var typeAndUrl = parseLink(url)
+		if (typeAndUrl !== undefined) return typeAndUrl
 
-		if (uuid === doc.uuid) return null
-		if (relatedDocumentUuids.has(uuid)) return null
-		if (url.startsWith(DRAFTS_URL + "/")) return null
-
-		if (uuid == null) logger.warn(
+		logger.warn(
 			"Ignored initiative %s link «%s» (%s)",
 			row.uuid,
 			titleAndUrl[0],
 			titleAndUrl[1]
 		)
 
-		return uuid
+		return null
 	}).filter(Boolean)
 
-	doc.webDocuments = yield htmlDocumentUuids.map((uuid) => (
+	var webDocumentUuids = uuids.filter((p) => p[0] == "document").map(_.second)
+	var webVolumeUuids = uuids.filter((p) => p[0] == "volume").map(_.second)
+
+	doc.webDocuments = yield webDocumentUuids.map((uuid) => (
 		api("documents/" + uuid).then(getBody)
 	))
+
+	doc.webVolumes = yield webVolumeUuids.map(
+		readParliamentVolumeWithDocuments.bind(null, api)
+	)
+
+	// Some initiative rows on the parliament page have links to the volume that
+	// contains themselves. This will cause a cycle and fail at saving the
+	// cache.
+	doc.webVolumes.forEach(function(volume) {
+		volume.documents = _.without(volume.documents, doc)
+	})
 
 	initiative = yield replaceWebInitiative(initiative, doc, row)
 
@@ -178,9 +189,15 @@ function* replaceWebInitiative(initiative, document, row) {
 		"uuid"
 	)
 
+	var relatedVolumes = _.uniqBy(
+		concat(document.relatedVolumes, document.webVolumes || []),
+		"uuid"
+	)
+
 	yield replaceApiInitiative(initiative, {
 		__proto__: document,
-		relatedDocuments: relatedDocuments
+		relatedDocuments: relatedDocuments,
+		relatedVolumes: relatedVolumes
 	})
 
 	return initiative
@@ -210,12 +227,12 @@ function parseInitiatives(table) {
 			[el.textContent.trim(), el.href]
 		))
 
-		var linksElement = els["Seotud dokumendid"]
-		var links = map(linksElement.querySelectorAll("li"), (el) => (
+		var links = map(els["Seotud dokumendid"].querySelectorAll("li"), (el) => (
 			[el.firstElementChild.textContent.trim(), el.firstElementChild.href]
 		))
 
-		var doc = links.find((link) => link[0] == "Kollektiivne pöördumine")
+		var doc
+		[[doc], links] = _.partition(links, ([t]) => t == "Kollektiivne pöördumine")
 		if (doc == null) throw new RangeError("No initiative document: " + title)
 
 		var uuid = parseUuidFromUrl(doc[1])
@@ -237,14 +254,22 @@ function parseInitiatives(table) {
 	})
 }
 
-function parseDocumentUuidFromUrl(_title, url) {
-	if (url.startsWith(DOCUMENT_REGISTRY_URL + "/")) {
-		var uuid = parseUuidFromUrl(url)
+function parseLink(url) {
+	/* eslint consistent-return: 0 */
+	if (url.startsWith(DOCUMENT_URL + "/")) {
+		let uuid = url.slice(DOCUMENT_URL.length + 1).split("/")[0]
 		if (uuid == null) throw new RangeError("No UUID in " + url)
-		return uuid
+		return ["document", uuid]
 	}
 
-	return null
+	if (url.startsWith(VOLUME_URL + "/")) {
+		let uuid = url.slice(VOLUME_URL.length + 1).split("/")[0]
+		if (uuid == null) throw new RangeError("No UUID in " + url)
+		return ["volume", uuid]
+	}
+
+	if (url.startsWith(DRAFTS_URL + "/")) return null
+	return undefined
 }
 
 function parseRahvaalgatusUuidFromUrl(url) {

@@ -121,6 +121,18 @@ module.exports = function(attrs) {
 					).join("\n\n")
 					break
 
+				case "parliament-interpellation":
+					title = t("PARLIAMENT_INTERPELLATION")
+					var interpellation = event.content
+
+					content = [
+						t("PARLIAMENT_INTERPELLATION_TO") + ": " +
+							interpellation.to,
+						t("PARLIAMENT_INTERPELLATION_DEADLINE") + ": " +
+							interpellation.deadline
+					].join("\n")
+					break
+
 				case "parliament-finished":
 					decision = initiative.parliament_decision
 					title = t("PARLIAMENT_FINISHED")

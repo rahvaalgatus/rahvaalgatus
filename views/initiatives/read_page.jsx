@@ -47,6 +47,7 @@ var FILE_TYPE_ICONS = {
 	"text/html": "ra-icon-html",
 	"application/pdf": "ra-icon-pdf",
 	"application/vnd.ms-powerpoint": "ra-icon-ppt",
+	"application/vnd.ms-outlook": "ra-icon-msg",
 	"application/vnd.etsi.asic-e+zip": "ra-icon-ddoc",
 	"application/digidoc": "ra-icon-ddoc",
 	"application/msword": "ra-icon-doc",
@@ -62,6 +63,7 @@ var FILE_TYPE_NAMES = {
 	"application/pdf": "PDF",
 	"application/vnd.etsi.asic-e+zip": "Digidoc",
 	"application/vnd.ms-powerpoint": "Microsoft PowerPoint",
+	"application/vnd.ms-outlook": "Microsoft Outlook Email",
 	"application/msword": "Microsoft Word",
 
 	"application/vnd.openxmlformats-officedocument.wordprocessingml.document":
@@ -1251,6 +1253,28 @@ function EventsView(attrs) {
 							</Fragment>
 							break
 
+						case "parliament-interpellation":
+							title = t("PARLIAMENT_INTERPELLATION")
+							var interpellation = event.content
+							var deadline = Time.parseDate(interpellation.deadline)
+
+							content = <Fragment>
+								<table class="event-table">
+									<tr>
+										<th scope="row">{t("PARLIAMENT_INTERPELLATION_TO")}</th>
+										<td>{interpellation.to}</td>
+									</tr>
+									<tr>
+										<th scope="row">
+											{t("PARLIAMENT_INTERPELLATION_DEADLINE")}
+										</th>
+
+										<td>{I18n.formatDate("numeric", deadline)}</td>
+									</tr>
+								</table>
+							</Fragment>
+							break
+
 						case "parliament-finished":
 							decision = initiative.parliament_decision
 							title = t("PARLIAMENT_FINISHED")
@@ -1682,10 +1706,11 @@ function initiativePhaseFromEvent(event) {
 		case "parliament-received":
 		case "parliament-accepted":
 		case "parliament-letter":
+		case "parliament-interpellation":
+		case "parliament-board-meeting":
+		case "parliament-committee-meeting":
 		case "parliament-decision":
-		case "parliament-finished":
-		case "parliament-board-meeting": return "parliament"
-		case "parliament-committee-meeting": return "parliament"
+		case "parliament-finished": return "parliament"
 		case "sent-to-government": return "government"
 		case "finished-in-government": return "government"
 		case "text": return null
