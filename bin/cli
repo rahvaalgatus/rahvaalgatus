@@ -48,7 +48,7 @@ co(function*() {
 }).catch(handleError)
 
 function handleError(err) {
-	console.error(err)
+	require("root/lib/console_error_reporter")(err)
 	console.error(err.stack.replace(/^[^\n]+\n/, ""))
 	process.exitCode = 1
 }
