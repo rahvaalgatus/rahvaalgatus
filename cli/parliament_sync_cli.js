@@ -18,7 +18,7 @@ var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
 exports = module.exports = cli
 exports.parseTitle = parseTitle
 exports.replaceInitiative = replaceInitiative
-exports.assignInitiativeDocuments = assignInitiativeDocuments
+exports.syncInitiativeDocuments = syncInitiativeDocuments
 exports.readParliamentVolumeWithDocuments = readParliamentVolumeWithDocuments
 
 var USAGE_TEXT = `
@@ -93,7 +93,7 @@ function* sync(opts) {
 
 	yield updated.map(function*(initiativeAndDocument) {
 		var initiative = initiativeAndDocument[0]
-		var doc = yield assignInitiativeDocuments(api, initiativeAndDocument[1])
+		var doc = yield syncInitiativeDocuments(api, initiativeAndDocument[1])
 		initiative = yield replaceInitiative(initiative, doc)
 
 		yield initiativesDb.update(initiative, {
@@ -137,7 +137,7 @@ function* readInitiative(doc) {
 	}
 }
 
-function* assignInitiativeDocuments(api, doc) {
+function* syncInitiativeDocuments(api, doc) {
 	// Note we need to fetch the initiative as a document, too, as the
 	// /collective-addresses response doesn't include documents' volumes.
 	//
@@ -156,7 +156,8 @@ function* assignInitiativeDocuments(api, doc) {
 	var relatedVolumeUuids = new Set(doc.relatedVolumes.map(getUuid))
 
 	var missingVolumeUuids = yield doc.relatedDocuments.filter((doc) => (
-		(!doc.volume || !relatedVolumeUuids.has(doc.volume.uuid)) &&
+		doc.volume &&
+		!relatedVolumeUuids.has(doc.volume.uuid) &&
 		isMeetingTopicDocument(doc)
 	)).map((doc) => doc.volume.uuid)
 
@@ -247,10 +248,11 @@ function* replaceEvents(initiative, eventAttrs) {
 
 	eventAttrs.forEach(function(attrs) {
 		var event = eventsByExternalId[attrs.external_id]
+		if (event) attrs = mergeEvent(event, attrs)
 		if (event && !diffEvent(event, attrs)) return
 
 		attrs.updated_at = new Date
-		if (event) return void updateEvents.push([event, mergeEvent(event, attrs)])
+		if (event) return void updateEvents.push([event, attrs])
 
 		attrs.created_at = new Date
 		attrs.initiative_uuid = initiative.uuid
@@ -794,13 +796,16 @@ function mergeEvent(event, attrs) {
 	switch (event.type) {
 		case "parliament-accepted":
 		case "parliament-committee-meeting":
-			attrs.content = _.assign({}, event.content, attrs.content, {
-				committee: event.content.committee
-			})
+			attrs.content = _.assign({}, event.content, attrs.content)
+
+			if (event.content.committee)
+				attrs.content.committee = event.content.committee
+
 			break
 
 		case "parliament-decision":
 			attrs.content = _.assign({}, event.content, attrs.content)
+			break
 	}
 
 	return attrs

@@ -15,7 +15,7 @@ var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var sql = require("sqlate")
 var {parseTitle} = require("./parliament_sync_cli")
 var replaceApiInitiative = require("./parliament_sync_cli").replaceInitiative
-var {assignInitiativeDocuments} = require("./parliament_sync_cli")
+var {syncInitiativeDocuments} = require("./parliament_sync_cli")
 var {readParliamentVolumeWithDocuments} = require("./parliament_sync_cli")
 var initiativesDb = require("root/db/initiatives_db")
 var logger = require("root").logger
@@ -117,7 +117,7 @@ function* syncInitiative(row, collectiveAddressDocument) {
 		doc = collectiveAddressDocument
 	}
 
-	doc = yield assignInitiativeDocuments(api, doc)
+	doc = yield syncInitiativeDocuments(api, doc)
 
 	var uuids = row.links.map(function(titleAndUrl) {
 		var url = titleAndUrl[1]
