@@ -257,6 +257,19 @@ function* replaceEvents(initiative, eventAttrs) {
 		createEvents.push(attrs)
 	})
 
+	createEvents.forEach((ev) => logger.log(
+		"Creating event (%s) for initiative %s…",
+		ev.type,
+		initiative.uuid
+	))
+
+	updateEvents.forEach(([ev, _attrs]) => logger.log(
+		"Updating event %d (%s) for initiative %s…",
+		ev.id,
+		ev.type,
+		initiative.uuid
+	))
+
 	events = _.lastUniqBy(concat(
 		events,
 		yield eventsDb.create(createEvents),
@@ -316,7 +329,12 @@ function newDocumentFiles(document, files) {
 }
 
 function downloadFile(file) {
-	logger.log(
+	if (file.event_id) logger.log(
+		"Downloading event %d file «%s»…",
+		file.event_id,
+		file.name
+	)
+	else logger.log(
 		"Downloading initiative %s file «%s»…",
 		file.initiative_uuid,
 		file.name

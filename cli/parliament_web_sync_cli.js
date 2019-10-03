@@ -99,6 +99,8 @@ function* syncInitiative(row, collectiveAddressDocument) {
 		row.title
 	)
 
+	logger.log("Syncing initiative %s (%s)…", row.uuid, row.title)
+
 	var doc
 	try { doc = yield api("documents/" + row.uuid).then(getBody) }
 	catch (ex) {
@@ -159,12 +161,6 @@ function* syncInitiative(row, collectiveAddressDocument) {
 }
 
 function* replaceWebInitiative(initiative, document, row) {
-	logger.log(
-		(initiative ? "Updating" : "Creating") + " initiative %s (%s)…",
-		row.uuid,
-		row.title
-	)
-
 	var attrs = attrsFrom(row, document)
 
 	if (initiative == null) initiative = {
