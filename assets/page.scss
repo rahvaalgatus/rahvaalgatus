@@ -1761,7 +1761,7 @@ button.inherited {
 		#initiative-location {
 			margin-bottom: 2rem;
 
-			a:link { @extend .link-button; }
+			a[href] { @extend .link-button; }
 		}
 
 		#initiative-author-options {
