@@ -1275,6 +1275,10 @@ function EventsView(attrs) {
 							</Fragment>
 							break
 
+						case "parliament-national-matter":
+							title = t("PARLIAMENT_NATIONAL_MATTER")
+							break
+
 						case "parliament-finished":
 							decision = initiative.parliament_decision
 							title = t("PARLIAMENT_FINISHED")
@@ -1707,6 +1711,7 @@ function initiativePhaseFromEvent(event) {
 		case "parliament-accepted":
 		case "parliament-letter":
 		case "parliament-interpellation":
+		case "parliament-national-matter":
 		case "parliament-board-meeting":
 		case "parliament-committee-meeting":
 		case "parliament-decision":

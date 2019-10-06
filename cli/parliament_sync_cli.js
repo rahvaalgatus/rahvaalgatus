@@ -547,7 +547,7 @@ function eventAttrsFromDocument(document) {
 		}
 	}
 
-	if (isParliamentBoardMeeting(document)) {
+	if (isParliamentBoardMeetingDocument(document)) {
 		let time = parseInlineDateWithMaybeTime(document.title)
 
 		return {
@@ -561,7 +561,7 @@ function eventAttrsFromDocument(document) {
 		}
 	}
 
-	if (isParliamentCommitteeMeeting(document)) {
+	if (isParliamentCommitteeMeetingDocument(document)) {
 		let time = parseProtocolDateTime(document)
 		var committee = parseProtocolCommittee(document)
 		if (time == null || committee == null) return null
@@ -575,6 +575,16 @@ function eventAttrsFromDocument(document) {
 			content: {committee: committee, invitees: null},
 			files: newDocumentFiles(document, document.files || EMPTY_ARR)
 		}
+	}
+
+	if (isParliamentNationalMatterDocument(document)) return {
+		type: "parliament-national-matter",
+		origin: "parliament",
+		external_id: document.uuid,
+		occurred_at: Time.parseDateTime(document.created),
+		title: null,
+		content: {},
+		files: newDocumentFiles(document, document.files || EMPTY_ARR)
 	}
 
 	return null
@@ -770,14 +780,14 @@ function isParliamentAcceptanceDocument(document) {
 	)
 }
 
-function isParliamentCommitteeMeeting(document) {
+function isParliamentCommitteeMeetingDocument(document) {
 	return (
 		document.documentType == "protokoll" &&
 		parseProtocolCommittee(document) != null
 	)
 }
 
-function isParliamentBoardMeeting(document) {
+function isParliamentBoardMeetingDocument(document) {
 	return (
 		document.documentType == "protokoll" &&
 		document.title.match(/\bjuhatuse\b/)
@@ -789,6 +799,14 @@ function isParliamentResponseDocument(document) {
 		document.documentType == "letterDocument" &&
 		document.title.match(/\bvastuskiri\b/i) &&
 		document.direction.code == "VALJA"
+	)
+}
+
+function isParliamentNationalMatterDocument(document) {
+	return (
+		document.documentType == "otherQuestionDocument" &&
+		document.subType &&
+		document.subType.code == "OLULISE_TAHTSUSEGA_RIIKLIK_KUSIMUS"
 	)
 }
 

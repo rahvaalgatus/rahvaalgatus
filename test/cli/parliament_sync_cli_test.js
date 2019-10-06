@@ -2001,6 +2001,63 @@ describe("ParliamentSyncCli", function() {
 				content_type: new MediaType("application/pdf")
 			})])
 		})
+
+		it("must create event given a document of national matter", function*() {
+			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+				uuid: INITIATIVE_UUID,
+				relatedDocuments: [{uuid: DOCUMENT_UUID}]
+			}]))
+
+			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+
+			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
+				uuid: DOCUMENT_UUID,
+				title: "OTRK: Important",
+				created: "2015-06-18T13:37:42.666",
+				documentType: "otherQuestionDocument",
+				subType: {code: "OLULISE_TAHTSUSEGA_RIIKLIK_KUSIMUS"},
+
+				files: [{
+					uuid: FILE_UUID,
+					fileName: "Slides.pdf",
+					accessRestrictionType: "PUBLIC"
+				}]
+			}))
+
+			this.router.get(`/download/${FILE_UUID}`,
+				respondWithRiigikoguDownload.bind(null, "application/pdf", "PDF")
+			)
+
+			yield job()
+
+			var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
+
+			events.must.eql([new ValidEvent({
+				id: 1,
+				initiative_uuid: INITIATIVE_UUID,
+				occurred_at: new Date(2015, 5, 18, 13, 37, 42, 666),
+				origin: "parliament",
+				external_id: DOCUMENT_UUID,
+				type: "parliament-national-matter",
+				title: null,
+				content: {}
+			})])
+
+			yield filesDb.search(sql`
+				SELECT * FROM initiative_files
+			`).must.then.eql([new ValidFile({
+				id: 1,
+				initiative_uuid: INITIATIVE_UUID,
+				event_id: 1,
+				external_id: FILE_UUID,
+				external_url: `https://www.riigikogu.ee/download/${FILE_UUID}`,
+				name: "Slides.pdf",
+				title: "OTRK: Important",
+				url: `https://www.riigikogu.ee/tegevus/dokumendiregister/dokument/${DOCUMENT_UUID}`,
+				content: Buffer.from("PDF"),
+				content_type: new MediaType("application/pdf")
+			})])
+		})
 	})
 
 	describe("given related volumes", function() {

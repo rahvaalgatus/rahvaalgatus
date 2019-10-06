@@ -133,6 +133,10 @@ module.exports = function(attrs) {
 					].join("\n")
 					break
 
+				case "parliament-national-matter":
+					title = t("PARLIAMENT_NATIONAL_MATTER")
+					break
+
 				case "parliament-finished":
 					decision = initiative.parliament_decision
 					title = t("PARLIAMENT_FINISHED")
