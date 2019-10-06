@@ -46,6 +46,7 @@ var UI_TRANSLATIONS = O.map(I18n.STRINGS, function(lang) {
 var FILE_TYPE_ICONS = {
 	"text/html": "ra-icon-html",
 	"application/pdf": "ra-icon-pdf",
+	"image/jpeg": "ra-icon-jpeg",
 	"application/vnd.ms-powerpoint": "ra-icon-ppt",
 	"application/vnd.ms-outlook": "ra-icon-msg",
 	"application/vnd.etsi.asic-e+zip": "ra-icon-ddoc",
@@ -61,6 +62,7 @@ var FILE_TYPE_ICONS = {
 var FILE_TYPE_NAMES = {
 	"text/html": "HTML",
 	"application/pdf": "PDF",
+	"image/jpeg": "JPEG",
 	"application/vnd.etsi.asic-e+zip": "Digidoc",
 	"application/vnd.ms-powerpoint": "Microsoft PowerPoint",
 	"application/vnd.ms-outlook": "Microsoft Outlook Email",

@@ -1,14 +1,14 @@
 {
   "checksum": {
-    "previous": "68f020245278570a3350ff2214850ee22f14d54a1e7e1239b06d8f60c2d72dc9",
-    "current": "68f020245278570a3350ff2214850ee22f14d54a1e7e1239b06d8f60c2d72dc9"
+    "previous": "e5e52fc58507bb9539e82235d884c8b66944a6940461f958d3d3fcc7b547bc38",
+    "current": "e5e52fc58507bb9539e82235d884c8b66944a6940461f958d3d3fcc7b547bc38"
   },
   "fonts": [
-    "public/assets/Rahvaicons_68f020245278570a3350ff2214850ee2.ttf",
-    "public/assets/Rahvaicons_68f020245278570a3350ff2214850ee2.svg",
-    "public/assets/Rahvaicons_68f020245278570a3350ff2214850ee2.woff",
-    "public/assets/Rahvaicons_68f020245278570a3350ff2214850ee2.eot",
-    "public/assets/Rahvaicons_68f020245278570a3350ff2214850ee2.woff2"
+    "public/assets/Rahvaicons_e5e52fc58507bb9539e82235d884c8b6.ttf",
+    "public/assets/Rahvaicons_e5e52fc58507bb9539e82235d884c8b6.svg",
+    "public/assets/Rahvaicons_e5e52fc58507bb9539e82235d884c8b6.woff",
+    "public/assets/Rahvaicons_e5e52fc58507bb9539e82235d884c8b6.eot",
+    "public/assets/Rahvaicons_e5e52fc58507bb9539e82235d884c8b6.woff2"
   ],
   "glyphs": {
     "ddoc": {
@@ -26,6 +26,10 @@
     "html": {
       "codepoint": 61702,
       "source": "assets/icons/html.svg"
+    },
+    "jpeg": {
+      "codepoint": 61707,
+      "source": "assets/icons/jpeg.svg"
     },
     "msg": {
       "codepoint": 61705,
