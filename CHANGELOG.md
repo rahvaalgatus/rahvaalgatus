@@ -1,5 +1,6 @@
 ## Oct 6, 2019
 - Adds support for matters of significant national importance events.
+- Adds support for emailing subscribers when new initiative events were created via syncing.
 
 ## Oct 3, 2019
 - Adds support for parliament board events.

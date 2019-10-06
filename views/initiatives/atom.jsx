@@ -4,6 +4,7 @@ var Jsx = require("j6pack/xml")
 var Config = require("root/config")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var concat = Array.prototype.concat.bind(Array.prototype)
+var renderEventTitle = require("root/lib/event").renderEventTitle
 var EMPTY_ARR = Array.prototype
 
 var CATEGORIES = {
@@ -54,12 +55,11 @@ module.exports = function(attrs) {
 					break
 
 				case "parliament-received":
-					title = t("PARLIAMENT_RECEIVED")
+					title = renderEventTitle(event)
 					break
 
 				case "parliament-accepted":
-					title = t("PARLIAMENT_ACCEPTED")
-
+					title = renderEventTitle(event)
 					var committee = event.content.committee
 					if (committee) content = t("PARLIAMENT_ACCEPTED_SENT_TO_COMMITTEE", {
 						committee: committee
@@ -67,18 +67,13 @@ module.exports = function(attrs) {
 					break
 
 				case "parliament-board-meeting":
-					title = t("PARLIAMENT_BOARD_MEETING")
+					title = renderEventTitle(event)
 					break
 
 				case "parliament-committee-meeting":
+					title = renderEventTitle(event)
 					var meeting = event.content
 					decision = meeting.decision
-
-					title = meeting.committee
-						? t("PARLIAMENT_COMMITTEE_MEETING_BY", {
-							committee: meeting.committee
-						})
-						: t("PARLIAMENT_COMMITTEE_MEETING")
 
 					content = concat(
 						meeting.summary || EMPTY_ARR,
@@ -96,16 +91,13 @@ module.exports = function(attrs) {
 					break
 
 				case "parliament-decision":
-					title = t("PARLIAMENT_DECISION")
+					title = renderEventTitle(event)
 					if (event.content.summary) content = event.content.summary
 					break
 
 				case "parliament-letter":
+					title = renderEventTitle(event)
 					var letter = event.content
-
-					title = letter.direction == "incoming"
-						? t("PARLIAMENT_LETTER_INCOMING")
-						: t("PARLIAMENT_LETTER_OUTGOING")
 
 					var header = [
 						t("PARLIAMENT_LETTER_TITLE") + ": " + letter.title,
@@ -122,7 +114,7 @@ module.exports = function(attrs) {
 					break
 
 				case "parliament-interpellation":
-					title = t("PARLIAMENT_INTERPELLATION")
+					title = renderEventTitle(event)
 					var interpellation = event.content
 
 					content = [
@@ -134,12 +126,12 @@ module.exports = function(attrs) {
 					break
 
 				case "parliament-national-matter":
-					title = t("PARLIAMENT_NATIONAL_MATTER")
+					title = renderEventTitle(event)
 					break
 
 				case "parliament-finished":
+					title = renderEventTitle(event)
 					decision = initiative.parliament_decision
-					title = t("PARLIAMENT_FINISHED")
 
 					if (decision) content =
 						decision == "reject"

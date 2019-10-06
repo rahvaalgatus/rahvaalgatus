@@ -1,15 +1,23 @@
 var _ = require("root/lib/underscore")
 var Neodoc = require("neodoc")
 var Time = require("root/lib/time")
+var Config = require("root/config")
+var Subscription = require("root/lib/subscription")
 var parliamentApi = require("root/lib/parliament_api")
 var diff = require("root/lib/diff")
 var sql = require("sqlate")
 var initiativesDb = require("root/db/initiatives_db")
+var cosDb = require("root").cosDb
 var eventsDb = require("root/db/initiative_events_db")
 var filesDb = require("root/db/initiative_files_db")
+var messagesDb = require("root/db/initiative_messages_db")
+var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var logger = require("root").logger
+var renderEmail = require("root/lib/i18n").email.bind(null, "et")
+var renderEventTitle = require("root/lib/event").renderEventTitle
+var t = require("root/lib/i18n").t.bind(null, "et")
 var EMPTY_ARR = Array.prototype
 var PARLIAMENT_URL = "https://www.riigikogu.ee"
 var DOCUMENT_URL = PARLIAMENT_URL + "/tegevus/dokumendiregister/dokument"
@@ -272,15 +280,20 @@ function* replaceEvents(initiative, eventAttrs) {
 		initiative.uuid
 	))
 
+	var createdEvents = yield eventsDb.create(createEvents)
+
 	events = _.lastUniqBy(concat(
 		events,
-		yield eventsDb.create(createEvents),
+		createdEvents,
 		yield updateEvents.map((eventAndAttrs) => eventsDb.update(...eventAndAttrs))
 	), (ev) => ev.id)
 
 	yield events.filter((ev) => ev.files && ev.files.length).map((event) => (
 		replaceEventFiles(event, event.files)
 	))
+
+	if (createdEvents.length > 0)
+		yield sendParliamentEventEmail(initiative, createdEvents)
 }
 
 function* replaceFiles(initiative, document) {
@@ -827,6 +840,40 @@ function mergeEvent(event, attrs) {
 	}
 
 	return attrs
+}
+
+function* sendParliamentEventEmail(initiative, events) {
+	var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+	var eventTitles = events.map(renderEventTitle)
+
+	var initiativeTitle = initiative.title || (yield cosDb.query(sql`
+		SELECT title FROM "Topics" WHERE id = ${initiative.uuid}
+	`).then(_.first).then((row) => row && row.title))
+
+	var message = yield messagesDb.create({
+		initiative_uuid: initiative.uuid,
+		origin: "event",
+		created_at: new Date,
+		updated_at: new Date,
+
+		title: t("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_TITLE", {
+			initiativeTitle: initiativeTitle
+		}),
+
+		text: renderEmail("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_BODY", {
+			initiativeTitle: initiativeTitle,
+			initiativeUrl: initiativeUrl,
+			eventsUrl: `${initiativeUrl}#events`,
+			eventTitles: eventTitles.map((t) => "- " + t).join("\n")
+		})
+	})
+
+	yield Subscription.send(
+		message,
+		yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(
+			initiative.uuid
+		)
+	)
 }
 
 function parseProtocolDateTime(document) {

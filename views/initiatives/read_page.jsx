@@ -1124,6 +1124,8 @@ function EventsView(attrs) {
 
 	if (events.length > 0 || topic && Topic.canCreateEvents(topic))
 		return <section id="initiative-events" class="transparent-section"><center>
+			<a name="events" />
+
 			<article class="sheet">
 				{topic && Topic.canCreateEvents(topic) ? <a
 					href={`/initiatives/${topic.id}/events/new`}

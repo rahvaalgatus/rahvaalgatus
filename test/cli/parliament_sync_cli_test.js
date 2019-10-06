@@ -1,18 +1,31 @@
 var _ = require("root/lib/underscore")
+var Config = require("root/config")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidEvent = require("root/test/valid_db_initiative_event")
 var ValidFile = require("root/test/valid_event_file")
+var ValidSubscription = require("root/test/valid_subscription")
 var MediaType = require("medium-type")
 var initiativesDb = require("root/db/initiatives_db")
+var subscriptionsDb = require("root/db/initiative_subscriptions_db")
+var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
 var filesDb = require("root/db/initiative_files_db")
 var respond = require("root/test/fixtures").respond
 var newUuid = require("uuid/v4")
+var newPartner = require("root/test/citizenos_fixtures").newPartner
+var newUser = require("root/test/citizenos_fixtures").newUser
+var newTopic = require("root/test/citizenos_fixtures").newTopic
+var createPartner = require("root/test/citizenos_fixtures").createPartner
+var createUser = require("root/test/citizenos_fixtures").createUser
+var createTopic = require("root/test/citizenos_fixtures").createTopic
 var job = require("root/cli/parliament_sync_cli")
 var sql = require("sqlate")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var respondWithEmpty = respond.bind(null, {})
+var outdent = require("root/lib/outdent")
+var t = require("root/lib/i18n").t.bind(null, "et")
+var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var INITIATIVES_URL = "/api/documents/collective-addresses"
 var INITIATIVE_UUID = "c5c91e62-124b-41a4-9f37-6f80f8cab5ab"
 var DOCUMENT_UUID = "e519fd6f-584a-4f0e-9434-6d7c6dfe4865"
@@ -26,6 +39,7 @@ describe("ParliamentSyncCli", function() {
 	require("root/test/mitm")()
 	require("root/test/db")()
 	require("root/test/time")()
+	require("root/test/email")()
 	beforeEach(require("root/test/mitm").router)
 
 	it("must request from parliament", function*() {
@@ -338,6 +352,176 @@ describe("ParliamentSyncCli", function() {
 		yield job()
 		initiative = yield initiativesDb.read(initiative)
 		initiative.parliament_synced_at.must.eql(syncedAt)
+	})
+
+	it("must email subscribers interested in official events ", function*() {
+		var initiative = yield initiativesDb.create({
+			uuid: INITIATIVE_UUID,
+			parliament_uuid: INITIATIVE_UUID,
+			title: "Teeme elu paremaks!",
+			external: true
+		})
+
+		var subscriptions = yield subscriptionsDb.create([
+			new ValidSubscription({
+				initiative_uuid: initiative.uuid,
+				confirmed_at: new Date,
+				official_interest: false
+			}),
+
+			new ValidSubscription({
+				initiative_uuid: null,
+				confirmed_at: new Date,
+				official_interest: false
+			}),
+
+			new ValidSubscription({
+				initiative_uuid: initiative.uuid,
+				confirmed_at: new Date
+			}),
+
+			new ValidSubscription({
+				initiative_uuid: null,
+				confirmed_at: new Date
+			})
+		])
+
+		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			uuid: INITIATIVE_UUID,
+
+			statuses: [
+				{date: "2018-10-23", status: {code: "REGISTREERITUD"}},
+				{date: "2018-10-24", status: {code: "MENETLUSSE_VOETUD"}},
+				{date: "2018-10-25", status: {code: "MENETLUS_LOPETATUD"}}
+			]
+		}]))
+
+		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+
+		yield job()
+
+		var messages = yield messagesDb.search(sql`
+			SELECT * FROM initiative_messages
+		`)
+
+		var emails = subscriptions.slice(2).map((s) => s.email).sort()
+
+		messages.must.eql([{
+			id: messages[0].id,
+			initiative_uuid: initiative.uuid,
+			created_at: new Date,
+			updated_at: new Date,
+			origin: "event",
+
+			title: t("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_TITLE", {
+				initiativeTitle: initiative.title
+			}),
+
+			text: renderEmail("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_BODY", {
+				initiativeTitle: initiative.title,
+				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+				eventsUrl: `${Config.url}/initiatives/${initiative.uuid}#events`,
+				unsubscribeUrl: "{{unsubscribeUrl}}",
+
+				eventTitles: outdent`
+					- ${t("PARLIAMENT_RECEIVED")}
+					- ${t("PARLIAMENT_ACCEPTED")}
+					- ${t("PARLIAMENT_FINISHED")}
+				`
+			}),
+
+			sent_at: new Date,
+			sent_to: emails
+		}])
+
+		this.emails.length.must.equal(1)
+		this.emails[0].envelope.to.must.eql(emails)
+		var msg = String(this.emails[0].message)
+		msg.match(/^Subject: .*/m)[0].must.include(initiative.title)
+		subscriptions.slice(2).forEach((s) => msg.must.include(s.update_token))
+	})
+
+	it("must email subscribers with title from topic", function*() {
+		var initiative = yield initiativesDb.create({
+			uuid: INITIATIVE_UUID,
+			parliament_uuid: INITIATIVE_UUID
+		})
+
+		var partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
+
+		var topic = yield createTopic(newTopic({
+			id: initiative.uuid,
+			title: "Teeme elu paremaks!",
+			creatorId: (yield createUser(newUser())).id,
+			sourcePartnerId: partner.id,
+			status: "followUp"
+		}))
+
+		var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			initiative_uuid: null,
+			confirmed_at: new Date
+		}))
+
+		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			uuid: INITIATIVE_UUID,
+			statuses: [{date: "2018-10-23", status: {code: "REGISTREERITUD"}}]
+		}]))
+
+		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+
+		yield job()
+
+		var message = yield messagesDb.read(sql`SELECT * FROM initiative_messages`)
+
+		message.title.must.equal(
+			t("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_TITLE", {
+				initiativeTitle: topic.title
+			})
+		)
+
+		message.text.must.equal(
+			renderEmail("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_BODY", {
+				initiativeTitle: topic.title,
+				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+				eventsUrl: `${Config.url}/initiatives/${initiative.uuid}#events`,
+				unsubscribeUrl: "{{unsubscribeUrl}}",
+				eventTitles: `- ${t("PARLIAMENT_RECEIVED")}`
+			})
+		)
+
+		this.emails.length.must.equal(1)
+		this.emails[0].envelope.to.must.eql([subscription.email])
+		var msg = String(this.emails[0].message)
+		msg.match(/^Subject: .*/m)[0].must.include(topic.title)
+	})
+
+	it("must not email subscribers if no events created", function*() {
+		var initiative = yield initiativesDb.create({
+			uuid: INITIATIVE_UUID,
+			parliament_uuid: INITIATIVE_UUID,
+			external: true
+		})
+
+		yield eventsDb.create(new ValidEvent({
+			initiative_uuid: initiative.uuid,
+			external_id: "REGISTREERITUD",
+			origin: "parliament",
+			type: "parliament-received"
+		}))
+
+		yield subscriptionsDb.create(new ValidSubscription({
+			confirmed_at: new Date
+		}))
+
+		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			uuid: INITIATIVE_UUID,
+			statuses: [{date: "2018-10-23", status: {code: "REGISTREERITUD"}}]
+		}]))
+
+		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+
+		yield job()
+		this.emails.length.must.equal(0)
 	})
 
 	describe("given statuses", function() {
