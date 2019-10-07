@@ -84,6 +84,15 @@ module.exports = function(attrs) {
 
 			<tr>
 				<th scope="row">
+					Initiatives sent to Riigikogu<br />
+					<small>Initiatives sent from Rahvaalgatus.</small>
+				</th>
+
+				<td>{attrs.sentToParliamentCount}</td>
+			</tr>
+
+			<tr>
+				<th scope="row">
 					Signatures<br />
 
 					<small>

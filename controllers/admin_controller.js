@@ -122,6 +122,15 @@ exports.get("/", next(function*(req, res) {
 		AND topic."sourcePartnerId" IN ${sql.in(PARTNER_IDS)}
 	`).then(_.first).then((res) => res.count)
 
+	var sentToParliamentCount = yield sqlite(sql`
+		SELECT COUNT(*) as count
+		FROM initiatives
+		WHERE phase IN ('parliament', 'government', 'done')
+		AND NOT external
+		AND sent_to_parliament_at >= ${from}
+		${to ? sql`AND sent_to_parliament_at < ${to}` : sql``}
+	`).then(_.first).then((res) => res.count)
+
 	var subscriberCount = yield subscriptionsDb.search(sql`
 		WITH emails AS (
 			SELECT DISTINCT email
@@ -163,6 +172,7 @@ exports.get("/", next(function*(req, res) {
 		initiativesCount: topicCount,
 		externalInitiativesCount: externalInitiativesCount,
 		voteCount: voteCount,
+		sentToParliamentCount: sentToParliamentCount,
 		signerCount: signerCount
 	})
 }))
