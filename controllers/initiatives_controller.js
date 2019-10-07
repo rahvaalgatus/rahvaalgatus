@@ -603,7 +603,7 @@ function* searchInitiativeEvents(initiative) {
 	var sentToGovernmentAt = initiative.sent_to_government_at
 	var finishedInGovernmentAt = initiative.finished_in_government_at
 
-	events = _.sortBy(concat(
+	events = concat(
 		sentToParliamentAt ? {
 			id: "sent-to-parliament",
 			type: "sent-to-parliament",
@@ -649,7 +649,7 @@ function* searchInitiativeEvents(initiative) {
 			type: "finished-in-government",
 			origin: "system"
 		} : EMPTY_ARR
-	), "occurred_at")
+	).sort(compareEvent)
 
 	var eventsFromAuthor = events.filter((ev) => ev.origin == "author")
 
@@ -969,6 +969,24 @@ function parseMeeting(obj) {
 		date: String(obj.date || "").trim(),
 		url: String(obj.url || "").trim()
 	}
+}
+
+var EVENT_ORDER = [
+	"sent-to-parliament",
+	"parliament-received",
+	"parliament-accepted",
+	"parliament-finished",
+	"sent-to-government",
+	"finished-in-government"
+]
+
+// This comparison function is not transitive, but works with
+// Array.prototype.sort's implementation.
+function compareEvent(a, b) {
+	if (EVENT_ORDER.includes(a.type) && EVENT_ORDER.includes(b.type))
+		return EVENT_ORDER.indexOf(a.type) - EVENT_ORDER.indexOf(b.type)
+	else
+		return +a.occurred_at - +b.occurred_at
 }
 
 function serializeEtherpadUrl(url) {

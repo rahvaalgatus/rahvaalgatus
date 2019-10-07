@@ -2023,6 +2023,53 @@ describe("InitiativesController", function() {
 				events[0].content[0].textContent.must.equal("Everything is fine!")
 			})
 
+			it("must render initiative events in logical order", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "government",
+					external: true,
+					sent_to_parliament_at: new Date(2015, 5, 18, 13, 37),
+					received_by_parliament_at: new Date(2015, 5, 18),
+					finished_in_parliament_at: new Date(2015, 5, 16),
+					sent_to_government_at: new Date(2015, 5, 15),
+					finished_in_government_at: new Date(2015, 5, 14),
+				}))
+
+				var events = yield eventsDb.create([
+					new ValidEvent({
+						initiative_uuid: initiative.uuid,
+						occurred_at: new Date(2015, 5, 18),
+						type: "parliament-received",
+						origin: "parliament"
+					}),
+
+					new ValidEvent({
+						initiative_uuid: initiative.uuid,
+						occurred_at: new Date(2015, 5, 17),
+						type: "parliament-accepted",
+						origin: "parliament"
+					}),
+
+					new ValidEvent({
+						initiative_uuid: initiative.uuid,
+						occurred_at: new Date(2015, 5, 16),
+						type: "parliament-finished",
+						origin: "parliament"
+					})
+				])
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				queryEvents(parseDom(res.body)).map((ev) => ev.id).must.eql([
+					"sent-to-parliament",
+					String(events[0].id),
+					String(events[1].id),
+					String(events[2].id),
+					"sent-to-government",
+					"finished-in-government"
+				])
+			})
+
 			it("must render initiative comments", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative)
 
