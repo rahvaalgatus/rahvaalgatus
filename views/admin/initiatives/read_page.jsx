@@ -320,12 +320,6 @@ module.exports = function(attrs) {
 						var content
 
 						switch (event.type) {
-							case "sent": break
-							case "parliament-received": break
-							case "parliament-accepted": break
-							case "parliament-finished": break
-							case "signature-milestone": break
-
 							case "text":
 								content = <p class="text">{Jsx.html(linkify(event.content))}</p>
 								break
@@ -397,9 +391,6 @@ module.exports = function(attrs) {
 								if (summary)
 									content = <p class="text">{Jsx.html(linkify(summary))}</p>
 								break
-
-							default:
-								throw new RangeError("Unsupported event type: " + event.type)
 						}
 
 						return <tr class="event">
