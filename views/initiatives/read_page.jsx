@@ -1242,12 +1242,12 @@ function EventsView(attrs) {
 									</tr>
 									{letter.direction == "incoming" ? <tr>
 										<th scope="row">{t("PARLIAMENT_LETTER_FROM")}</th>
-										<td><ul>{letter.from.split(",").map((from) => (
+										<td><ul>{splitRecipients(letter.from).map((from) => (
 											<li>{from}</li>
 										))}</ul></td>
 									</tr> : <tr>
 										<th scope="row">{t("PARLIAMENT_LETTER_TO")}</th>
-										<td><ul>{letter.to.split(",").map((to) => (
+										<td><ul>{splitRecipients(letter.to).map((to) => (
 											<li>{to}</li>
 										))}</ul></td>
 									</tr>}
@@ -1726,3 +1726,5 @@ function initiativePhaseFromEvent(event) {
 		default: throw new RangeError("Unsupported event type: " + event.type)
 	}
 }
+
+function splitRecipients(recipients) { return recipients.split(/[;,]/) }
