@@ -22,6 +22,7 @@ var EMPTY_ARR = Array.prototype
 var PARLIAMENT_URL = "https://www.riigikogu.ee"
 var DOCUMENT_URL = PARLIAMENT_URL + "/tegevus/dokumendiregister/dokument"
 var FILE_URL = PARLIAMENT_URL + "/download"
+var formatDate = require("root/lib/i18n").formatDate.bind(null, "numeric")
 var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
 exports = module.exports = cli
 exports.parseTitle = parseTitle
@@ -878,11 +879,12 @@ function mergeEvent(event, attrs) {
 
 function* sendParliamentEventEmail(initiative, events) {
 	var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-	var eventTitles = events.map(renderEventTitle)
 
 	var initiativeTitle = initiative.title || (yield cosDb.query(sql`
 		SELECT title FROM "Topics" WHERE id = ${initiative.uuid}
 	`).then(_.first).then((row) => row && row.title))
+
+	events = _.sortBy(events, "occurred_at")
 
 	var message = yield messagesDb.create({
 		initiative_uuid: initiative.uuid,
@@ -891,14 +893,18 @@ function* sendParliamentEventEmail(initiative, events) {
 		updated_at: new Date,
 
 		title: t("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_TITLE", {
-			initiativeTitle: initiativeTitle
+			initiativeTitle: initiativeTitle,
+			eventDate: formatDate(_.last(events).occurred_at)
 		}),
 
 		text: renderEmail("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_BODY", {
 			initiativeTitle: initiativeTitle,
 			initiativeUrl: initiativeUrl,
 			eventsUrl: `${initiativeUrl}#events`,
-			eventTitles: eventTitles.map((t) => "- " + t).join("\n")
+
+			eventTitles: events.map((ev) => (
+				`${formatDate(ev.occurred_at)} — ${renderEventTitle(ev)}`
+			)).join("\n")
 		})
 	})
 

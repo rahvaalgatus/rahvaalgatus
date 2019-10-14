@@ -414,7 +414,8 @@ describe("ParliamentSyncCli", function() {
 			origin: "event",
 
 			title: t("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_TITLE", {
-				initiativeTitle: initiative.title
+				initiativeTitle: initiative.title,
+				eventDate: "25.10.2018"
 			}),
 
 			text: renderEmail("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_BODY", {
@@ -424,9 +425,9 @@ describe("ParliamentSyncCli", function() {
 				unsubscribeUrl: "{{unsubscribeUrl}}",
 
 				eventTitles: outdent`
-					- ${t("PARLIAMENT_RECEIVED")}
-					- ${t("PARLIAMENT_ACCEPTED")}
-					- ${t("PARLIAMENT_FINISHED")}
+					23.10.2018 — ${t("PARLIAMENT_RECEIVED")}
+					24.10.2018 — ${t("PARLIAMENT_ACCEPTED")}
+					25.10.2018 — ${t("PARLIAMENT_FINISHED")}
 				`
 			}),
 
@@ -437,7 +438,7 @@ describe("ParliamentSyncCli", function() {
 		this.emails.length.must.equal(1)
 		this.emails[0].envelope.to.must.eql(emails)
 		var msg = String(this.emails[0].message)
-		msg.match(/^Subject: .*/m)[0].must.include(initiative.title)
+		msg.match(/^Subject: .*/m)[0].must.include("Teeme_elu_paremaks!")
 		subscriptions.slice(2).forEach((s) => msg.must.include(s.update_token))
 	})
 
@@ -475,7 +476,8 @@ describe("ParliamentSyncCli", function() {
 
 		message.title.must.equal(
 			t("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_TITLE", {
-				initiativeTitle: topic.title
+				initiativeTitle: topic.title,
+				eventDate: "23.10.2018"
 			})
 		)
 
@@ -485,14 +487,14 @@ describe("ParliamentSyncCli", function() {
 				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 				eventsUrl: `${Config.url}/initiatives/${initiative.uuid}#events`,
 				unsubscribeUrl: "{{unsubscribeUrl}}",
-				eventTitles: `- ${t("PARLIAMENT_RECEIVED")}`
+				eventTitles: `23.10.2018 — ${t("PARLIAMENT_RECEIVED")}`
 			})
 		)
 
 		this.emails.length.must.equal(1)
 		this.emails[0].envelope.to.must.eql([subscription.email])
 		var msg = String(this.emails[0].message)
-		msg.match(/^Subject: .*/m)[0].must.include(topic.title)
+		msg.match(/^Subject: .*/m)[0].must.include("Teeme_elu_paremaks!")
 	})
 
 	it("must not email subscribers if no events created", function*() {
