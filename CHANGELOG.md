@@ -1,3 +1,6 @@
+## Oct 14, 2019
+- Syncs documents in the parliament volume of the initiative.
+
 ## Oct 7, 2019
 - Ensures events that were logically before or after others are displayed as such.  
   For example, "Sent to Parliament" should always come before "Parliament Received Initiative", even if the latter has its occurrance set to the midnight.

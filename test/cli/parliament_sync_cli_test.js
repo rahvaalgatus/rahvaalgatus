@@ -1020,11 +1020,91 @@ describe("ParliamentSyncCli", function() {
 		})
 	})
 
-		// NOTE: Don't set properties that are only available under
-		// /collective-addresses for tests that don't refer to statuses. This
-		// ensures the functions behave correctly when given older initiatives,
-		// too.
-		describe("given related documents", function() {
+	describe("given volume", function() {
+		it("must create events when in a volume of letters", function*() {
+			// NOTE: Initiative volume is missing on the collective-addresses
+			// collection response.
+			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+				uuid: INITIATIVE_UUID
+			}]))
+
+			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {
+				uuid: INITIATIVE_UUID,
+				volume: {uuid: VOLUME_UUID}
+			}))
+
+			this.router.get(`/api/volumes/${VOLUME_UUID}`, respond.bind(null, {
+				uuid: VOLUME_UUID,
+				title: "Kollektiivne pöördumine Elu paremaks!",
+				volumeType: "letterVolume",
+				documents: [{uuid: INITIATIVE_UUID}, {uuid: DOCUMENT_UUID}]
+			}))
+
+			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
+				uuid: DOCUMENT_UUID,
+				title: "Linnujahi korraldamine",
+				documentType: "letterDocument",
+				created: "2015-06-18T13:37:42.666",
+				author: "Jahimeeste Selts",
+				authorDate: "2015-06-17",
+				direction: {code: "SISSE"},
+				receiveType: {code: "E_POST"},
+
+				files: [{
+					uuid: FILE_UUID,
+					fileName: "Kiri.pdf",
+					accessRestrictionType: "PUBLIC"
+				}]
+			}))
+
+			this.router.get(`/download/${FILE_UUID}`,
+				respondWithRiigikoguDownload.bind(null, "application/pdf", "PDF")
+			)
+
+			yield job()
+
+			var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
+
+			events.must.eql([new ValidEvent({
+				id: 1,
+				initiative_uuid: INITIATIVE_UUID,
+				occurred_at: new Date(2015, 5, 18, 13, 37, 42, 666),
+				origin: "parliament",
+				external_id: DOCUMENT_UUID,
+				type: "parliament-letter",
+				title: null,
+
+				content: {
+					medium: "email",
+					direction: "incoming",
+					title: "Linnujahi korraldamine",
+					from: "Jahimeeste Selts",
+					date: "2015-06-17"
+				}
+			})])
+
+			yield filesDb.search(sql`
+				SELECT * FROM initiative_files
+			`).must.then.eql([new ValidFile({
+				id: 1,
+				initiative_uuid: INITIATIVE_UUID,
+				event_id: 1,
+				external_id: FILE_UUID,
+				external_url: `https://www.riigikogu.ee/download/${FILE_UUID}`,
+				name: "Kiri.pdf",
+				title: "Linnujahi korraldamine",
+				url: `https://www.riigikogu.ee/tegevus/dokumendiregister/dokument/${DOCUMENT_UUID}`,
+				content: Buffer.from("PDF"),
+				content_type: new MediaType("application/pdf")
+			})])
+		})
+	})
+
+	// NOTE: Don't set properties that are only available under
+	// /collective-addresses for tests that don't refer to statuses. This
+	// ensures the functions behave correctly when given older initiatives,
+	// too.
+	describe("given related documents", function() {
 		_.each({
 			"acceptance decision": [{
 				relatedDocuments: [{uuid: DOCUMENT_UUID}]

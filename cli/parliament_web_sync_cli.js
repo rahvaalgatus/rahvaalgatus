@@ -52,7 +52,7 @@ module.exports = function*(argv) {
 	var dom = parseDom(html)
 	var article = dom.querySelector("article.content")
 	var tables = article.querySelectorAll("table")
-	var rows = flatten(map(tables, parseInitiatives))
+	var rows = yield flatten(map(tables, parseInitiatives))
 
 	var uuid = args["<uuid>"]
 	if (uuid == "") throw new Error("Invalid UUID: " + uuid)
@@ -113,6 +113,7 @@ function* syncInitiative(row, collectiveAddressDocument) {
 	}
 
 	if (collectiveAddressDocument) {
+		collectiveAddressDocument.volume = doc.volume
 		collectiveAddressDocument.files = doc.files
 		doc = collectiveAddressDocument
 	}
@@ -206,7 +207,7 @@ function parseInitiatives(table) {
 		_.object(header, (_key, i) => el.cells[i])
 	))
 
-	return initiativeElements.map(function(els) {
+	return initiativeElements.map(function*(els) {
 		// TODO: Ensure time parsing is always in Europe/Tallinn and don't depend
 		// on TZ being set.
 		// https://github.com/riigikogu-kantselei/api/issues/11
@@ -231,7 +232,11 @@ function parseInitiatives(table) {
 		[[doc], links] = _.partition(links, ([t]) => t == "Kollektiivne pöördumine")
 		if (doc == null) throw new RangeError("No initiative document: " + title)
 
-		var uuid = parseUuidFromUrl(doc[1])
+		var [docType, uuid] = parseLink(doc[1]) || []
+		if (docType == "document");
+		else if (docType == "volume")
+			uuid = yield readApi(`volumes/${uuid}`).then(readInitiativeUuidFromVolume)
+
 		if (uuid == null) throw new RangeError("No UUID in " + doc[1])
 
 		var finishedOn = els["Menetlus lõpetatud"].textContent.trim()
@@ -251,6 +256,8 @@ function parseInitiatives(table) {
 }
 
 function parseLink(url) {
+	url = url.replace(/\/$/, "")
+
 	/* eslint consistent-return: 0 */
 	if (url.startsWith(DOCUMENT_URL + "/")) {
 		let uuid = url.slice(DOCUMENT_URL.length + 1).split("/")[0]
@@ -285,9 +292,13 @@ function parseRahvaalgatusUuidFromUrl(url) {
 	else throw new RangeError("Unrecognized Rahvaalgatus URL: " + url)
 }
 
-function parseUuidFromUrl(url) {
-	var r = /\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\/?$/
-	return (r.exec(url) || Object)[1]
+function readInitiativeUuidFromVolume(volume) {
+	var doc = volume.documents.find((document) => (
+		document.documentType == "letterDocument" &&
+		/^Kollektiivne pöördumine /.test(document.title)
+	))
+
+	return doc && doc.uuid
 }
 
 function attrsFrom(row, doc) {

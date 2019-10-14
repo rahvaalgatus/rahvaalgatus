@@ -79,12 +79,15 @@ function* sync(opts) {
 		// the assumption that no new files will appear after creation.
 		//
 		// https://github.com/riigikogu-kantselei/api/issues/14
-		if (initiative.parliament_api_data == null || force)
-			document.files = yield api("documents/" + document.uuid).then((res) => (
-				res.body.files || EMPTY_ARR
-			))
-		else
+		if (initiative.parliament_api_data == null || force) {
+			var doc = yield api("documents/" + document.uuid).then(getBody)
+			document.volume = doc.volume || null
+			document.files = doc.files || null
+		}
+		else {
+			document.volume = initiative.parliament_api_data.volume
 			document.files = initiative.parliament_api_data.files
+		}
 
 		return initiativeAndDocument
 	})
@@ -146,6 +149,17 @@ function* readInitiative(doc) {
 }
 
 function* syncInitiativeDocuments(api, doc) {
+	if (doc.volume) {
+		doc.volume = yield readParliamentVolumeWithDocuments(api, doc.volume.uuid)
+
+		// The document we're syncing could either be one from
+		// /documents/collective-addresses or from /documents, so
+		// _.without(volume.documents, doc) won't cut it.
+		doc.volume.documents = _.reject(doc.volume.documents, (d) => (
+			d.uuid == doc.uuid
+		))
+	}
+
 	// Note we need to fetch the initiative as a document, too, as the
 	// /collective-addresses response doesn't include documents' volumes.
 	//
@@ -200,8 +214,13 @@ function* replaceInitiative(initiative, document) {
 
 	yield replaceFiles(initiative, document)
 
+	var volumes = concat(
+		document.volume || EMPTY_ARR,
+		document.relatedVolumes,
+		document.missingVolumes
+	)
+
 	var documents = document.relatedDocuments
-	var volumes = concat(document.relatedVolumes, document.missingVolumes)
 	var eventAttrs = []
 
 	// Unique drops later duplicates, which is what we prefer here.
@@ -219,7 +238,7 @@ function* replaceInitiative(initiative, document) {
 
 	;[eventAttrs, documents] = _.map1st(
 		concat.bind(null, eventAttrs),
-		_.mapM(volumes, documents, eventAttrsFromVolume)
+		_.mapM(volumes, documents, eventAttrsFromVolume.bind(null, initiative))
 	)
 
 	;[eventAttrs, documents] = _.map1st(
@@ -603,7 +622,7 @@ function eventAttrsFromDocument(document) {
 	return null
 }
 
-function eventAttrsFromVolume(documents, volume) {
+function eventAttrsFromVolume(initiative, documents, volume) {
 	if (isCommitteeMeetingVolume(volume)) {
 		var time = parseInlineDateWithMaybeTime(volume.title)
 		if (time == null) return null
@@ -656,6 +675,16 @@ function eventAttrsFromVolume(documents, volume) {
 			)))
 		}, documents]
 	}
+
+	if (volume.volumeType == "letterVolume")
+		return [null, concat(documents, volume.documents)]
+
+	logger.warn(
+		"Ignored initiative %s volume %s (%s)",
+		initiative.uuid,
+		volume.uuid,
+		volume.title
+	)
 
 	return [null, documents]
 }
@@ -751,8 +780,13 @@ function normalizeParliamentDocumentForDiff(document) {
 		return {uuid: doc.uuid, title: doc.title, documentType: doc.documentType}
 	}
 
-	function normalizeVolume(doc) {
-		return {uuid: doc.uuid, title: doc.title, volumeType: doc.volumeType}
+	function normalizeVolume(volume) {
+		return {
+			uuid: volume.uuid,
+			title: volume.title,
+			volumeType: volume.volumeType,
+			documents: (volume.documents || EMPTY_ARR).map(normalizeDocument)
+		}
 	}
 }
 

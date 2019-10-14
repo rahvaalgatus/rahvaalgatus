@@ -689,6 +689,141 @@ describe("ParliamentSyncCli", function() {
 		})])
 	})
 
+	it("must consider volume containing the initiative document", function*() {
+		// NOTE: The trailing path separator is intentional, as that's what
+		// "Glüfosaadi kasutamine tuleb Eestis keelata"'s volume has on
+		// https://www.riigikogu.ee/tutvustus-ja-ajalugu/raakige-kaasa/esitage-kollektiivne-poordumine/riigikogule-esitatud-kollektiivsed-poordumised/.
+		this.router.get(WEB_INITIATIVES_PATH, respond.bind(null, <Page>
+			<tr>
+				<td>18.06.2015</td>
+				<td />
+				<td />
+				<td />
+
+				<td><ul>
+					<li><a href={`${VOLUME_URL}/${VOLUME_UUID}/`}>
+						Kollektiivne pöördumine
+					</a></li>
+				</ul></td>
+
+				<td />
+			</tr>
+		</Page>))
+
+		this.router.get(API_INITIATIVES_PATH, respond.bind(null, []))
+
+		var responseUuid = newUuid()
+		var responseFileUuid = newUuid()
+
+		this.router.get(`/api/volumes/${VOLUME_UUID}`, respond.bind(null, {
+			uuid: VOLUME_UUID,
+			title: "Kollektiivne pöördumine Elu paremaks!",
+			volumeType: "letterVolume",
+			created: "2015-06-18T13:37:42.666",
+
+			documents: [{
+				uuid: INITIATIVE_UUID,
+				title: "Kollektiivne pöördumine Elu paremaks!",
+				documentType: "letterDocument"
+			}, {
+				uuid: responseUuid
+			}]
+		}))
+
+		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {
+			uuid: INITIATIVE_UUID,
+			created: "2015-06-16T13:37:42",
+			title: "Kollektiivne pöördumine Elu paremaks!",
+			volume: {uuid: VOLUME_UUID},
+			documentType: "letterDocument",
+
+			files: [{
+				uuid: FILE_UUID,
+				fileName: "algatus.pdf",
+				accessRestrictionType: "PUBLIC",
+				created: "2015-06-18T13:37:42.666",
+			}]
+		}))
+
+		this.router.get(`/api/documents/${responseUuid}`, respond.bind(null, {
+			uuid: responseUuid,
+			created: "2015-06-19T13:37:42",
+			title: "Vastuskiri kollektiivsele pöördumisele - Elu paremaks!",
+			documentType: "letterDocument",
+			direction: {code: "VALJA"},
+
+			files: [{
+				uuid: responseFileUuid,
+				fileName: "vastuskiri.pdf",
+				accessRestrictionType: "PUBLIC",
+				created: "2015-06-19T13:37:42.666",
+			}]
+		}))
+
+		this.router.get(`/download/${FILE_UUID}`,
+			respondWithRiigikoguDownload.bind(null, "application/pdf", "INITIATIVE")
+		)
+
+		this.router.get(`/download/${responseFileUuid}`,
+			respondWithRiigikoguDownload.bind(null, "application/pdf", "RESPONSE")
+		)
+
+		yield job()
+
+		var initiatives = yield initiativesDb.search(sql`SELECT * FROM initiatives`)
+
+		initiatives.must.eql([new ValidInitiative({
+			uuid: INITIATIVE_UUID,
+			external: true,
+			created_at: new Date(2015, 5, 16, 13, 37, 42),
+			title: "Elu paremaks!",
+			phase: "parliament",
+			received_by_parliament_at: new Date(2015, 5, 16, 13, 37, 42),
+			accepted_by_parliament_at: new Date(2015, 5, 18),
+			parliament_uuid: INITIATIVE_UUID,
+			parliament_api_data: initiatives[0].parliament_api_data,
+			parliament_synced_at: new Date
+		})])
+
+		var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
+
+		events.must.eql([new ValidEvent({
+			id: 1,
+			initiative_uuid: INITIATIVE_UUID,
+			occurred_at: new Date(2015, 5, 19, 13, 37, 42),
+			origin: "parliament",
+			external_id: "MENETLUS_LOPETATUD",
+			type: "parliament-finished",
+			title: null,
+			content: null
+		})])
+
+		yield filesDb.search(sql`
+			SELECT * FROM initiative_files
+		`).must.then.eql([new ValidFile({
+			id: 1,
+			initiative_uuid: INITIATIVE_UUID,
+			external_id: FILE_UUID,
+			external_url: `https://www.riigikogu.ee/download/${FILE_UUID}`,
+			name: "algatus.pdf",
+			title: "Kollektiivne pöördumine Elu paremaks!",
+			url: `https://www.riigikogu.ee/tegevus/dokumendiregister/dokument/${INITIATIVE_UUID}`,
+			content: Buffer.from("INITIATIVE"),
+			content_type: new MediaType("application/pdf")
+		}), new ValidFile({
+			id: 2,
+			event_id: 1,
+			initiative_uuid: INITIATIVE_UUID,
+			external_id: responseFileUuid,
+			external_url: `https://www.riigikogu.ee/download/${responseFileUuid}`,
+			name: "vastuskiri.pdf",
+			title: "Vastuskiri kollektiivsele pöördumisele - Elu paremaks!",
+			url: `https://www.riigikogu.ee/tegevus/dokumendiregister/dokument/${responseUuid}`,
+			content: Buffer.from("RESPONSE"),
+			content_type: new MediaType("application/pdf")
+		})])
+	})
+
 	it("must consider volumes from HTML along with API's", function*() {
 		var initiative = yield initiativesDb.create({
 			uuid: INITIATIVE_UUID,
