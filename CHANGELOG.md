@@ -3,7 +3,7 @@
 
 ## Oct 7, 2019
 - Ensures events that were logically before or after others are displayed as such.  
-  For example, "Sent to Parliament" should always come before "Parliament Received Initiative", even if the latter has its occurrance set to the midnight.
+  For example, "Sent to Parliament" should always come before "Parliament Received Initiative", even if the latter has its occurrence set to the midnight.
 
 ## Oct 6, 2019
 - Adds support for matters of significant national importance events.
