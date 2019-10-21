@@ -30,14 +30,14 @@ function Page(attrs, children) {
 				<nav>
 					<ul>
 						<li>
-							<a href={req.baseUrl || "/"} class={selected("/", req.path)}>
+							<a href={req.rootUrl || "/"} class={selected("/", req.path)}>
 								Dashboard
 							</a>
 						</li>
 
 						<li>
 							<a
-								href={req.baseUrl + "/initiatives"}
+								href={req.rootUrl + "/initiatives"}
 								class={prefixed("/initiatives", req.path)}>
 								Initiatives
 							</a>
@@ -45,7 +45,7 @@ function Page(attrs, children) {
 
 						<li>
 							<a
-								href={req.baseUrl + "/comments"}
+								href={req.rootUrl + "/comments"}
 								class={prefixed("/comments", req.path)}>
 								Comments
 							</a>
@@ -53,7 +53,7 @@ function Page(attrs, children) {
 
 						<li>
 							<a
-								href={req.baseUrl + "/subscriptions"}
+								href={req.rootUrl + "/subscriptions"}
 								class={prefixed("/subscriptions", req.path)}
 							>Subscriptions</a>
 						</li>

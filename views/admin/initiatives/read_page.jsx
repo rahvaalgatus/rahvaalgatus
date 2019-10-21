@@ -7,8 +7,7 @@ var Page = require("../page")
 var Form = Page.Form
 var FormButton = Page.FormButton
 var Flash = Page.Flash
-var AdminController = require("root/controllers/admin_controller")
-var isEditableEvent = AdminController.isEditableEvent
+var {isEditableEvent} = require("root/controllers/admin/initiatives_controller")
 var formatDate = require("root/lib/i18n").formatDate
 var formatDateTime = require("root/lib/i18n").formatDateTime
 var confirm = require("root/lib/jsx").confirm
@@ -20,14 +19,14 @@ module.exports = function(attrs) {
 	var topic = attrs.topic
 	var initiative = attrs.initiative
 	var subscriberCount = attrs.subscriberCount
-	var initiativePath = `${req.baseUrl}/initiatives/${initiative.uuid}`
+	var initiativePath = `${req.baseUrl}/${initiative.uuid}`
 	var events = attrs.events
 	var messages = attrs.messages
 	var phase = initiative.phase
 	var pendingSubscriberCount = subscriberCount.all - subscriberCount.confirmed
 
 	return <Page page="initiative" title={initiative.title} req={req}>
-		<a href={req.baseUrl + "/initiatives"} class="admin-back">Initiatives</a>
+		<a href={req.baseUrl} class="admin-back">Initiatives</a>
 		<h1 class="admin-heading">{initiative.title}</h1>
 
 		<a

@@ -104,7 +104,8 @@ function InitiativesView(attrs) {
 
 		<tbody>
 			{initiatives.map(function(initiative) {
-				var initiativePath = `${req.baseUrl}/initiatives/${initiative.uuid}`
+				var initiativePath = `${req.baseUrl}/${initiative.uuid}`
+
 				return <tr>
 					{showSentTo ? <td>{initiative.sent_to_parliament_at
 						? formatDate("iso", initiative.sent_to_parliament_at)
