@@ -43,6 +43,8 @@
 		"raven": "",
 		"uuid": "",
 		"morgan": "",
+		"multer": "",
+		"sharp": "",
 		"method-override": "",
 		"medium-type": "",
 		"mime": "",

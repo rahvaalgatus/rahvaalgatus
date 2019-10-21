@@ -200,6 +200,7 @@ function Form(attrs, children) {
 		class={attrs.class}
 		action={attrs.action}
 		hidden={attrs.hidden}
+		enctype={attrs.enctype}
 		method={method == "get" ? method : "post"}
 	>
 		{method && !(method == "get" || method == "post") ?

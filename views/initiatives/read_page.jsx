@@ -17,6 +17,7 @@ var CommentView = require("./comments/read_page").CommentView
 var CommentForm = require("./comments/create_page").CommentForm
 var ProgressView = require("./initiative_page").ProgressView
 var javascript = require("root/lib/jsx").javascript
+var serializeImageUrl = require("root/lib/initiative").imageUrl
 var confirm = require("root/lib/jsx").confirm
 var stringify = require("root/lib/json").stringify
 var linkify = require("root/lib/linkify")
@@ -96,8 +97,10 @@ module.exports = function(attrs) {
 	var subscriberCount = attrs.subscriberCount
 	var signatureCount = attrs.signatureCount
 	var voteOptions = attrs.voteOptions
+	var image = attrs.image
 	var title = topic ? topic.title : initiative.title
 	var optId = voteOptions && voteOptions[signature ? "No" : "Yes"]
+	var initiativeUrl =`${Config.url}/initiatives/${initiative.uuid}`
 
 	var signWithIdCardText = !signature
 		? t("BTN_VOTE_SIGN_WITH_ID_CARD")
@@ -108,8 +111,7 @@ module.exports = function(attrs) {
 		? t("BTN_VOTE_SIGN_WITH_MOBILE_ID")
 		: t("BTN_VOTE_REVOKE_WITH_MOBILE_ID")
 
-	var shareUrl = `${Config.url}/initiatives/${initiative.uuid}`
-	var shareText = `${title} ${shareUrl}`
+	var shareText = `${title} ${initiativeUrl}`
 	var atomPath = req.baseUrl + req.url + ".atom"
 
 	return <InitiativePage
@@ -118,10 +120,11 @@ module.exports = function(attrs) {
 		initiative={initiative}
 		topic={topic}
 
-		meta={{
+		meta={_.filterValues({
 			"og:title": title,
-			"og:url": `${Config.url}/initiatives/${initiative.uuid}`
-		}}
+			"og:url": initiativeUrl,
+			"og:image": image && serializeImageUrl(image)
+		}, Boolean)}
 
 		links={[{
 			rel: "alternate",
@@ -437,7 +440,7 @@ module.exports = function(attrs) {
 						<h3 class="sidebar-subheader">Tahad aidata? Jaga algatust…</h3>
 
 						<a
-							href={"https://facebook.com/sharer/sharer.php?u=" + encode(shareUrl)}
+							href={"https://facebook.com/sharer/sharer.php?u=" + encode(initiativeUrl)}
 							target="_blank"
 							class="grey-button ra-icon-facebook-logo share-button">
 							{t("SHARE_ON_FACEBOOK")}

@@ -16,6 +16,7 @@ var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
+var imagesDb = require("root/db/initiative_images_db")
 var filesDb = require("root/db/initiative_files_db")
 var commentsDb = require("root/db/comments_db")
 var isOk = require("root/lib/http").isOk
@@ -48,7 +49,9 @@ var RESPONSE_TYPES = [
 	"text/html",
 	"application/vnd.rahvaalgatus.initiative+json; v=1",
 	"application/atom+xml"
-]
+].map(MediaType)
+
+var RESPONSE_PATTERNS = ["image/*"].map(MediaType)
 
 exports.router = Router({mergeParams: true})
 
@@ -170,13 +173,28 @@ exports.router.use("/:id", next(function*(req, res, next) {
 }))
 
 exports.router.get("/:id",
-	new ResponseTypeMiddeware(RESPONSE_TYPES.map(MediaType)),
+	new ResponseTypeMiddeware(RESPONSE_TYPES, RESPONSE_PATTERNS),
 	next(function*(req, res, next) {
+	var type = res.contentType
 	var initiative = req.initiative
 
-	switch (res.contentType.name) {
+	if (type.type == "image") {
+		var image = yield imagesDb.read(sql`
+			SELECT type, preview
+			FROM initiative_images
+			WHERE initiative_uuid = ${initiative.uuid}
+		`)
+
+		if (!image) throw new HttpError(406)
+		if (!image.type.match(type)) throw new HttpError(406)
+
+		res.setHeader("Content-Type", image.type)
+		res.setHeader("Content-Length", image.preview.length)
+		res.end(image.preview)
+	}
+	else switch (type.name) {
 		case "application/vnd.rahvaalgatus.initiative+json":
-			res.setHeader("Content-Type", res.contentType)
+			res.setHeader("Content-Type", type)
 			res.setHeader("Access-Control-Allow-Origin", "*")
 			var sigs = yield countSignaturesById(initiative.uuid)
 			res.send({title: initiative.title, signatureCount: sigs})
@@ -184,7 +202,7 @@ exports.router.get("/:id",
 
 		case "application/atom+xml":
 			var events = yield searchInitiativeEvents(initiative)
-			res.setHeader("Content-Type", res.contentType)
+			res.setHeader("Content-Type", type)
 			res.render("initiatives/atom.jsx", {events: events})
 			break
 
@@ -278,6 +296,12 @@ exports.read = next(function*(req, res) {
 		? yield readVoteOptions(topic.vote.id)
 		: null
 
+	var image = yield imagesDb.read(sql`
+		SELECT initiative_uuid, type
+		FROM initiative_images
+		WHERE initiative_uuid = ${initiative.uuid}
+	`)
+
 	res.render("initiatives/read_page.jsx", {
 		thank: thank,
 		thankAgain: thankAgain,
@@ -286,6 +310,7 @@ exports.read = next(function*(req, res) {
 		subscriberCount: subscriberCount,
 		signatureCount: signatureCount,
 		voteOptions: voteOptions,
+		image: image,
 		files: files,
 		comments: comments,
 		events: events

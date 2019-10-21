@@ -42,6 +42,7 @@ RSYNC_OPTS = \
 	--exclude "/node_modules/must/***" \
 	--exclude "/node_modules/node-sass/***" \
 	--exclude "/node_modules/sqlite3/***" \
+	--exclude "/node_modules/sharp/***" \
 	--exclude "/tmp/***"
 
 export PORT
@@ -120,6 +121,7 @@ shrinkwrap:
 rebuild:
 	$(NPM_REBUILD) node-sass --sass-binary-site=http://localhost:0
 	$(NPM_REBUILD) sqlite3
+	$(NPM_REBUILD) sharp --sharp-dist-base-url=http://localhost:0
 
 config/database.sql:
 	@$(SHANGE) schema > config/database.sql

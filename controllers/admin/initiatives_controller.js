@@ -4,8 +4,10 @@ var Config = require("root/config")
 var Subscription = require("root/lib/subscription")
 var HttpError = require("standard-http-error")
 var Time = require("root/lib/time")
+var Image = require("root/lib/image")
 var searchTopics = require("root/lib/citizenos_db").searchTopics
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
+var imagesDb = require("root/db/initiative_images_db")
 var initiativesDb = require("root/db/initiatives_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
@@ -17,6 +19,7 @@ var trim = Function.call.bind(String.prototype.trim)
 var next = require("co-next")
 var sqlite = require("root").sqlite
 var UPDATEABLE_PHASES = ["sign", "parliament", "government", "done"]
+var MEGABYTE = Math.pow(2, 20)
 exports.isEditableEvent = isEditableEvent
 
 var PHASE_TO_STATUS = {
@@ -109,7 +112,14 @@ exports.router.get("/:id", next(function*(req, res) {
 		ORDER BY created_at DESC
 	`)
 
+	var image = yield imagesDb.read(sql`
+		SELECT initiative_uuid, type
+		FROM initiative_images
+		WHERE initiative_uuid = ${initiative.uuid}
+	`)
+
 	res.render("admin/initiatives/read_page.jsx", {
+		image: image,
 		events: events,
 		subscriberCount: subscriberCount,
 		messages: messages
@@ -156,6 +166,39 @@ exports.router.put("/:id", next(function*(req, res) {
 		yield cosDb("Topics").where("id", initiative.uuid).update(topicAttrs)
 
 	res.flash("notice", "Initiative updated.")
+	res.redirect(req.baseUrl + "/" + initiative.uuid)
+}))
+
+exports.router.put("/:id/image", next(function*(req, res) {
+	var initiative = req.initiative
+	var image = req.files.image
+  if (image == null) throw new HttpError(422, "Image Missing")
+
+	if (image.size > 3 * MEGABYTE)
+		throw new HttpError(422, "Image Larger Than 3MiB")
+
+	if (
+		!isValidImageType(image.mimetype) ||
+		!isValidImageType(Image.identify(image.buffer))
+	) throw new HttpError(422, "Invalid Image Format")
+
+	yield imagesDb.delete(initiative.uuid)
+
+	yield imagesDb.create({
+		initiative_uuid: initiative.uuid,
+		data: image.buffer,
+		type: image.mimetype,
+		preview: yield Image.resize(1200, 675, image.buffer)
+	})
+
+	res.flash("notice", "Image uploaded.")
+	res.redirect(req.baseUrl + "/" + initiative.uuid)
+}))
+
+exports.router.delete("/:id/image", next(function*(req, res) {
+	var initiative = req.initiative
+	yield imagesDb.delete(initiative.uuid)
+	res.flash("notice", "Image deleted.")
 	res.redirect(req.baseUrl + "/" + initiative.uuid)
 }))
 
@@ -424,4 +467,12 @@ function isEditableEvent(event) {
 		event.type == "parliament-letter" ||
 		event.type == "text"
 	)
+}
+
+function isValidImageType(type) {
+  switch (type) {
+    case "image/png":
+    case "image/jpeg": return true
+    default: return false
+  }
 }

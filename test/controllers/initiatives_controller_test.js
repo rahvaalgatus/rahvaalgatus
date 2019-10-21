@@ -39,6 +39,7 @@ var serializeFlash = Http.serializeFlash.bind(null, Config.cookieSecret)
 var readVoteOptions = require("root/lib/citizenos_db").readVoteOptions
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
+var imagesDb = require("root/db/initiative_images_db")
 var eventsDb = require("root/db/initiative_events_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
@@ -55,6 +56,8 @@ var NEW_SIG_TRESHOLD = 15
 var EVENTABLE_PHASES = _.without(Initiative.PHASES, "edit")
 var PARLIAMENT_DECISIONS = Initiative.PARLIAMENT_DECISIONS
 var COMMITTEE_MEETING_DECISIONS = Initiative.COMMITTEE_MEETING_DECISIONS
+var PNG = new Buffer("89504e470d0a1a0a1337", "hex")
+var PNG_PREVIEW = new Buffer("89504e470d0a1a0a4269", "hex")
 
 describe("InitiativesController", function() {
 	require("root/test/web")()
@@ -621,6 +624,36 @@ describe("InitiativesController", function() {
 
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(404)
+			})
+
+			it("must include Open Graph tags", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative)
+
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					visibility: "public"
+				}))
+
+				yield imagesDb.create({
+					initiative_uuid: initiative.uuid,
+					data: PNG,
+					type: "image/png",
+					preview: PNG_PREVIEW
+				})
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var metas = dom.head.querySelectorAll("meta")
+				var props = _.indexBy(metas, (el) => el.getAttribute("property"))
+
+				var url = `${Config.url}/initiatives/${initiative.uuid}`
+				props["og:title"].content.must.equal(topic.title)
+				props["og:url"].content.must.equal(url)
+				props["og:image"].content.must.equal(url + ".png")
 			})
 
 			it("must show done phase by default", function*() {
@@ -2937,6 +2970,108 @@ describe("InitiativesController", function() {
 					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
 				})
 			})
+		})
+	})
+
+	describe(`GET /:id with image/*`, function() {
+		beforeEach(function*() {
+			this.user = yield createUser(newUser())
+			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
+
+			this.initiative = yield initiativesDb.create(new ValidInitiative)
+
+			yield createTopic(newTopic({
+				id: this.initiative.uuid,
+				creatorId: (yield createUser(newUser())).id,
+				sourcePartnerId: this.partner.id,
+				visibility: "public"
+			}))
+		})
+
+		it("must respond with image if Accept is image/*", function*() {
+			yield imagesDb.create({
+				initiative_uuid: this.initiative.uuid,
+				data: PNG,
+				type: "image/png",
+				preview: PNG_PREVIEW
+			})
+
+			var res = yield this.request("/initiatives/" + this.initiative.uuid, {
+				headers: {Accept: "image/*"}
+			})
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal("image/png")
+			res.headers["content-length"].must.equal(String(PNG.length))
+			new Buffer(res.body).equals(PNG_PREVIEW).must.be.true()
+		})
+
+		it("must respond with image if Accept matches", function*() {
+			yield imagesDb.create({
+				initiative_uuid: this.initiative.uuid,
+				data: PNG,
+				type: "image/png",
+				preview: PNG_PREVIEW
+			})
+
+			var res = yield this.request("/initiatives/" + this.initiative.uuid, {
+				headers: {Accept: "image/png"}
+			})
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal("image/png")
+			res.headers["content-length"].must.equal(String(PNG.length))
+			new Buffer(res.body).equals(PNG_PREVIEW).must.be.true()
+		})
+
+		it("must respond with image if extension matches type", function*() {
+			yield imagesDb.create({
+				initiative_uuid: this.initiative.uuid,
+				data: PNG,
+				type: "image/png",
+				preview: PNG_PREVIEW
+			})
+
+			var res = yield this.request(`/initiatives/${this.initiative.uuid}.png`)
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal("image/png")
+			res.headers["content-length"].must.equal(String(PNG.length))
+			new Buffer(res.body).equals(PNG_PREVIEW).must.be.true()
+		})
+
+		it("must respond with 406 if no image", function*() {
+			var res = yield this.request("/initiatives/" + this.initiative.uuid, {
+				headers: {Accept: "image/*"}
+			})
+
+			res.statusCode.must.equal(406)
+		})
+
+		it("must respond with 406 if type doesn't match", function*() {
+			yield imagesDb.create({
+				initiative_uuid: this.initiative.uuid,
+				data: PNG,
+				type: "image/png",
+				preview: PNG_PREVIEW
+			})
+
+			var res = yield this.request("/initiatives/" + this.initiative.uuid, {
+				headers: {Accept: "image/jpeg"}
+			})
+
+			res.statusCode.must.equal(406)
+		})
+
+		it("must respond 406 if extension doesn't match type", function*() {
+			yield imagesDb.create({
+				initiative_uuid: this.initiative.uuid,
+				data: PNG,
+				type: "image/png",
+				preview: PNG_PREVIEW
+			})
+
+			var res = yield this.request(`/initiatives/${this.initiative.uuid}.jpeg`)
+			res.statusCode.must.equal(406)
 		})
 	})
 

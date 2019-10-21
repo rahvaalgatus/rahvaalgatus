@@ -40,7 +40,7 @@ function newUser(attrs) {
 function newTopic(attrs) {
 	return _.assign({
 		id: newUuid(),
-		title: "For the win",
+		title: "For the win " + _.uniqueId(),
 		description: "<body>Please sign.</body>",
 		status: "inProgress",
 		visibility: VISIBILITY_FROM_STATUS[attrs.status] || "private",

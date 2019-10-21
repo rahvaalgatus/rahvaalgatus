@@ -1,3 +1,7 @@
+## Oct 21, 2019
+- Adds a link-preview image to initiatives that social networks and messaging apps can then use for shared link previews.  
+  It's uploadable from the admin interface.
+
 ## Oct 14, 2019
 - Syncs documents in the parliament volume of the initiative.
 

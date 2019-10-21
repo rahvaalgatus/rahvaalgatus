@@ -7,6 +7,7 @@ var Page = require("../page")
 var Form = Page.Form
 var FormButton = Page.FormButton
 var Flash = Page.Flash
+var serializeImageUrl = require("root/lib/initiative").imageUrl
 var {isEditableEvent} = require("root/controllers/admin/initiatives_controller")
 var formatDate = require("root/lib/i18n").formatDate
 var formatDateTime = require("root/lib/i18n").formatDateTime
@@ -18,6 +19,7 @@ module.exports = function(attrs) {
 	var req = attrs.req
 	var topic = attrs.topic
 	var initiative = attrs.initiative
+	var image = attrs.image
 	var subscriberCount = attrs.subscriberCount
 	var initiativePath = `${req.baseUrl}/${initiative.uuid}`
 	var events = attrs.events
@@ -288,6 +290,18 @@ module.exports = function(attrs) {
 					{pendingSubscriberCount > 0 ?
 						" and " + pendingSubscriberCount + " pending"
 					: null}
+				</td>
+			</tr>
+
+			<tr>
+				<th scope="row">Image</th>
+				<td>
+					<ImageForm
+						req={req}
+						name="image"
+						action={initiativePath + "/image"}
+						value={image ? serializeImageUrl(image) : null}
+					/>
 				</td>
 			</tr>
 		</table>
@@ -564,4 +578,58 @@ function DateInputForm(attrs) {
 		label="Set Date"
 		value={attrs.value && formatDate("iso", attrs.value)}
 	/>
+}
+
+function ImageForm(attrs) {
+	var req = attrs.req
+	var action = attrs.action
+	var name = attrs.name
+	var value = attrs.value
+	var toggle = "show-" + name
+
+	return <Fragment>
+		{value ? <Fragment>
+			<img width="300" src={value} />
+			<br />
+		</Fragment> : null}
+
+		<input id={toggle} hidden type="checkbox" class="form-toggle" />
+
+		<span class="form-toggle-buttons">
+			{value ? <Fragment>
+				<label for={toggle} class="admin-link">Replace</label>
+				&nbsp;or&nbsp;
+
+				<FormButton
+					req={req}
+					action={action}
+					name="_method"
+					value="delete"
+					onclick={confirm("Sure?")}
+					class="admin-link">Remove</FormButton>
+			</Fragment> : <label for={toggle} class="admin-link">Upload</label>}
+		</span>
+
+		<Form
+			req={req}
+			action={action}
+			method="put"
+			enctype="multipart/form-data"
+			class="form-toggle-form admin-inline-form"
+		>
+			<input
+				type="file"
+				name={name}
+				value={value}
+				required
+				class="admin-input"
+			/>
+
+			<button class="admin-submit">Upload</button>
+			&nbsp;or&nbsp;
+			<label for={toggle} class="admin-link">Cancel</label>
+			<br />
+			<small>Aim for a JPEG or PNG with a size of 1200x675px or larger.</small>
+		</Form>
+	</Fragment>
 }

@@ -155,6 +155,14 @@ CREATE INDEX index_initiative_files_on_event_id
 ON initiative_files (event_id);
 CREATE UNIQUE INDEX index_initiative_files_on_event_id_and_external_id
 ON initiative_files (event_id, external_id);
+CREATE TABLE initiative_images (
+	initiative_uuid TEXT PRIMARY KEY NOT NULL,
+	data BLOB NOT NULL,
+	type TEXT NOT NULL,
+	preview BLOB NOT NULL,
+
+	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE
+);
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -207,4 +215,5 @@ INSERT INTO migrations VALUES('20190902090222');
 INSERT INTO migrations VALUES('20190902091043');
 INSERT INTO migrations VALUES('20190902091235');
 INSERT INTO migrations VALUES('20190912160618');
+INSERT INTO migrations VALUES('20191021102603');
 COMMIT;
