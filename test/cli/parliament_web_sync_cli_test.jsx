@@ -28,7 +28,7 @@ var FILE_UUID = "a8dd7913-0816-4e46-9b5a-c661a2eb97de"
 var VOLUME_UUID = "ca9c364f-25b2-4162-a9af-d4e6932d502f"
 var EXAMPLE_BUFFER = Buffer.from("\x0d\x25")
 
-describe("ParliamentSyncCli", function() {
+describe("ParliamentWebSyncCli", function() {
 	require("root/test/mitm")()
 	require("root/test/db")()
 	require("root/test/time")()
