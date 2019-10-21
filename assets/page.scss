@@ -357,11 +357,11 @@ button.inherited {
 	cursor: pointer;
 
 	input[type=checkbox] {
-		margin: 0;
-		width: 2rem;
-		height: 2rem;
+		margin-right: 0.7rem;
+		height: 1.5rem;
+		width: 1.5rem;
 		display: inline-block;
-		vertical-align: middle;
+		vertical-align: sub;
 	}
 
 	a {

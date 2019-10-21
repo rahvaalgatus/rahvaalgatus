@@ -261,6 +261,7 @@ button.admin-link {
 	background: white;
 	color: #4a555d;
 	border-radius: $button-radius;
+	vertical-align: top;
 
 	&:disabled {
 		background-color: $secondary-background;
