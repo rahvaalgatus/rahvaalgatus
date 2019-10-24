@@ -3221,6 +3221,7 @@ describe("InitiativesController", function() {
 
 			var links = _.indexBy(feed.link, (link) => link.rel)
 			links.self.href.must.equal(Config.url + path + ".atom")
+			links.self.type.must.equal(ATOM_TYPE)
 			links.alternate.href.must.equal(Config.url + path)
 			links.alternate.type.must.equal("text/html")
 
@@ -3243,6 +3244,7 @@ describe("InitiativesController", function() {
 
 			var links = _.indexBy(feed.link, (link) => link.rel)
 			links.self.href.must.equal(Config.url + path + ".atom")
+			links.self.type.must.equal(ATOM_TYPE)
 			links.alternate.href.must.equal(Config.url + path)
 			links.alternate.type.must.equal("text/html")
 		})

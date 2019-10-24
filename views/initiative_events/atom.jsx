@@ -17,8 +17,8 @@ module.exports = function(attrs) {
 	return <feed xmlns="http://www.w3.org/2005/Atom">
 		<id>{url}</id>
 		<title>{t("ATOM_INITIATIVE_EVENTS_FEED_TITLE")}</title>
-		<link rel="alternate" href={Config.url} />
-		<link rel="self" href={url + ".atom"} />
+		<link rel="self" type="application/atom+xml" href={url + ".atom"} />
+		<link rel="alternate" type="text/html" href={Config.url} />
 		<updated>{updatedAt.toJSON()}</updated>
 
 		<author>

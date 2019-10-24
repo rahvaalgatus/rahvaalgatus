@@ -28,7 +28,7 @@ function AtomView(attrs) {
 	return <feed xmlns="http://www.w3.org/2005/Atom">
 		<id>{url}</id>
 		<title>{t("ATOM_INITIATIVE_FEED_TITLE", {title: initiative.title})}</title>
-		<link rel="self" href={url + ".atom"} />
+		<link rel="self" type="application/atom+xml" href={url + ".atom"} />
 		<link rel="alternate" type="text/html" href={url} />
 		<updated>{updatedAt.toJSON()}</updated>
 

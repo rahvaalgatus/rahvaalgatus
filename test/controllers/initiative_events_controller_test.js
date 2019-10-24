@@ -88,7 +88,9 @@ describe("InitiativeEventsController", function() {
 
 			var links = _.indexBy(feed.link, (link) => link.rel)
 			links.self.href.must.equal(Config.url + path + ".atom")
+			links.self.type.must.equal(ATOM_TYPE)
 			links.alternate.href.must.equal(Config.url)
+			links.alternate.type.must.equal("text/html")
 
 			feed.author.name.$.must.equal(Config.title)
 			feed.author.uri.$.must.equal(Config.url)
@@ -128,7 +130,9 @@ describe("InitiativeEventsController", function() {
 
 			var links = _.indexBy(feed.link, (link) => link.rel)
 			links.self.href.must.equal(Config.url + path + ".atom")
+			links.self.type.must.equal(ATOM_TYPE)
 			links.alternate.href.must.equal(Config.url)
+			links.alternate.type.must.equal("text/html")
 		})
 	})
 })
