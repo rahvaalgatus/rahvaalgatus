@@ -3216,7 +3216,7 @@ describe("InitiativesController", function() {
 			feed.updated.$.must.equal(topic.updatedAt.toJSON())
 
 			feed.title.$.must.equal(t("ATOM_INITIATIVE_FEED_TITLE", {
-				title: "Better life for everyone.",
+				title: "Better life for everyone."
 			}))
 
 			var links = _.indexBy(feed.link, (link) => link.rel)
@@ -3274,7 +3274,7 @@ describe("InitiativesController", function() {
 				content: "From somewhere.",
 				created_at: new Date(2015, 5, 21),
 				updated_at: new Date(2015, 5, 22),
-				occurred_at: new Date(2015, 5, 22)
+				occurred_at: new Date(2015, 5, 23)
 			})])
 
 			var path = `/initiatives/${initiative.uuid}.atom`

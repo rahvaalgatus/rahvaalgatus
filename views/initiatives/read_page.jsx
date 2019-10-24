@@ -1122,7 +1122,7 @@ function EventsView(attrs) {
 	var t = attrs.t
 	var topic = attrs.topic
 	var initiative = attrs.initiative
-	var events = attrs.events
+	var events = attrs.events.sort(compareEvent).reverse()
 	var initiativePath = "/initiatives/" + initiative.uuid
 
 	if (events.length > 0 || topic && Topic.canCreateEvents(topic))
@@ -1728,6 +1728,24 @@ function initiativePhaseFromEvent(event) {
 		case "text": return null
 		default: throw new RangeError("Unsupported event type: " + event.type)
 	}
+}
+
+var EVENT_ORDER = [
+	"sent-to-parliament",
+	"parliament-received",
+	"parliament-accepted",
+	"parliament-finished",
+	"sent-to-government",
+	"finished-in-government"
+]
+
+// This comparison function is not transitive, but works with
+// Array.prototype.sort's implementation.
+function compareEvent(a, b) {
+	if (EVENT_ORDER.includes(a.type) && EVENT_ORDER.includes(b.type))
+		return EVENT_ORDER.indexOf(a.type) - EVENT_ORDER.indexOf(b.type)
+	else
+		return +a.occurred_at - +b.occurred_at
 }
 
 function splitRecipients(recipients) { return recipients.split(/[;,]/) }

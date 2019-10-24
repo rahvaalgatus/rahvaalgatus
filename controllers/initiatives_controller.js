@@ -39,6 +39,7 @@ var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var decodeBase64 = require("root/lib/crypto").decodeBase64
 var trim = Function.call.bind(String.prototype.trim)
+var searchInitiativeEvents = _.compose(searchInitiativesEvents, concat)
 var ENV = process.env.ENV
 var EMPTY = Object.prototype
 var EMPTY_ARR = Array.prototype
@@ -272,7 +273,7 @@ exports.read = next(function*(req, res) {
 	`).then(_.first).then((row) => row.count)
 
 	var comments = yield searchInitiativeComments(initiative.uuid)
-	var events = _.reverse(yield searchInitiativeEvents(initiative))
+	var events = yield searchInitiativeEvents(initiative)
 
 	var subscription = user && user.emailIsVerified
 		? yield subscriptionsDb.read(sql`
@@ -598,7 +599,7 @@ function unhideSignature(initiativeUuid, userId) {
 	`)
 }
 
-function* searchInitiativeEvents(initiative) {
+function* searchInitiativesEvents(initiatives) {
 	var events = yield eventsDb.search(sql`
 		SELECT
 			event.*,
@@ -614,7 +615,7 @@ function* searchInitiativeEvents(initiative) {
 
 		FROM initiative_events AS event
 		LEFT JOIN initiative_files AS file on file.event_id = event.id
-		WHERE event.initiative_uuid = ${initiative.uuid}
+		WHERE event.initiative_uuid IN ${sql.in(initiatives.map((i) => i.uuid))}
 		GROUP BY event.id
 		ORDER BY "occurred_at" ASC
 	`)
@@ -623,69 +624,77 @@ function* searchInitiativeEvents(initiative) {
 		ev.files = JSON.parse(ev.files).filter((f) => f.id).map(filesDb.parse)
 	})
 
-	var sentToParliamentAt = initiative.sent_to_parliament_at
-	var finishedInParliamentAt = initiative.finished_in_parliament_at
-	var sentToGovernmentAt = initiative.sent_to_government_at
-	var finishedInGovernmentAt = initiative.finished_in_government_at
-
-	events = concat(
-		sentToParliamentAt ? {
-			id: "sent-to-parliament",
-			type: "sent-to-parliament",
-			updated_at: sentToParliamentAt,
-			occurred_at: sentToParliamentAt,
-			origin: "system"
-		} : EMPTY_ARR,
-
-		_.map(initiative.signature_milestones, (at, milestone) => ({
-			id: "milestone-" + milestone,
-			type: "signature-milestone",
-			content: milestone,
-			updated_at: at,
-			occurred_at: at,
-			origin: "system"
-		})),
-
-		events,
-
-		(
-			finishedInParliamentAt &&
-			!events.some((ev) => ev.type == "parliament-finished")
-		) ? {
-			id: "parliament-finished",
-			updated_at: finishedInParliamentAt,
-			occurred_at: finishedInParliamentAt,
-			type: "parliament-finished",
-			origin: "system"
-		} : EMPTY_ARR,
-
-		sentToGovernmentAt ? {
-			id: "sent-to-government",
-			type: "sent-to-government",
-			updated_at: sentToGovernmentAt,
-			occurred_at: sentToGovernmentAt,
-			origin: "system"
-		} : EMPTY_ARR,
-
-		finishedInGovernmentAt ? {
-			id: "finished-in-government",
-			updated_at: finishedInGovernmentAt,
-			occurred_at: finishedInGovernmentAt,
-			type: "finished-in-government",
-			origin: "system"
-		} : EMPTY_ARR
-	).sort(compareEvent)
-
 	var eventsFromAuthor = events.filter((ev) => ev.origin == "author")
 
 	var users = _.indexBy(yield cosDb.query(sql`
 		SELECT id, name FROM "Users"
-		WHERE id IN ${sql.in(eventsFromAuthor.map((ev) => ev.created_by))}
+		WHERE id IN ${sql.in(_.uniq(eventsFromAuthor.map((ev) => ev.created_by)))}
 	`), "id")
 
 	eventsFromAuthor.forEach((ev) => ev.user = users[ev.created_by])
 
-	return events
+	var eventsByInitiativeUuid = _.groupBy(events, "initiative_uuid")
+
+	return flatten(initiatives.map(function(initiative) {
+		var events = eventsByInitiativeUuid[initiative.uuid] || EMPTY_ARR
+		var sentToParliamentAt = initiative.sent_to_parliament_at
+		var finishedInParliamentAt = initiative.finished_in_parliament_at
+		var sentToGovernmentAt = initiative.sent_to_government_at
+		var finishedInGovernmentAt = initiative.finished_in_government_at
+
+		return concat(
+			sentToParliamentAt ? {
+				id: "sent-to-parliament",
+				initiative_uuid: initiative.uuid,
+				type: "sent-to-parliament",
+				updated_at: sentToParliamentAt,
+				occurred_at: sentToParliamentAt,
+				origin: "system"
+			} : EMPTY_ARR,
+
+			_.map(initiative.signature_milestones, (at, milestone) => ({
+				id: "milestone-" + milestone,
+				initiative_uuid: initiative.uuid,
+				type: "signature-milestone",
+				content: milestone,
+				updated_at: at,
+				occurred_at: at,
+				origin: "system"
+			})),
+
+			events,
+
+			(
+				finishedInParliamentAt &&
+				!events.some((ev) => ev.type == "parliament-finished")
+			) ? {
+				id: "parliament-finished",
+				initiative_uuid: initiative.uuid,
+				updated_at: finishedInParliamentAt,
+				occurred_at: finishedInParliamentAt,
+				type: "parliament-finished",
+				origin: "system"
+			} : EMPTY_ARR,
+
+			sentToGovernmentAt ? {
+				id: "sent-to-government",
+				initiative_uuid: initiative.uuid,
+				type: "sent-to-government",
+				updated_at: sentToGovernmentAt,
+				occurred_at: sentToGovernmentAt,
+				origin: "system"
+			} : EMPTY_ARR,
+
+			finishedInGovernmentAt ? {
+				id: "finished-in-government",
+				initiative_uuid: initiative.uuid,
+				updated_at: finishedInGovernmentAt,
+				occurred_at: finishedInGovernmentAt,
+				type: "finished-in-government",
+				origin: "system"
+			} : EMPTY_ARR
+		)
+	}))
 }
 
 function readCitizenSignature(topic, userUuid) {
@@ -994,24 +1003,6 @@ function parseMeeting(obj) {
 		date: String(obj.date || "").trim(),
 		url: String(obj.url || "").trim()
 	}
-}
-
-var EVENT_ORDER = [
-	"sent-to-parliament",
-	"parliament-received",
-	"parliament-accepted",
-	"parliament-finished",
-	"sent-to-government",
-	"finished-in-government"
-]
-
-// This comparison function is not transitive, but works with
-// Array.prototype.sort's implementation.
-function compareEvent(a, b) {
-	if (EVENT_ORDER.includes(a.type) && EVENT_ORDER.includes(b.type))
-		return EVENT_ORDER.indexOf(a.type) - EVENT_ORDER.indexOf(b.type)
-	else
-		return +a.occurred_at - +b.occurred_at
 }
 
 function serializeEtherpadUrl(url) {
