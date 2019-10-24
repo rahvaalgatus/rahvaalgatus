@@ -30,10 +30,10 @@ module.exports = function(attrs) {
 			var initiative = initiativesByUuid[event.initiative_uuid]
 
 			return <EventEntryView
-				initiativeUrl={Config.url + "/initiatives/" + initiative.uuid}
 				initiative={initiative}
-				titlePrefix={`${initiative.title}: `}
+				initiativeUrl={Config.url + "/initiatives/" + initiative.uuid}
 				event={event}
+				sourced
 			/>
 		})}
 	</feed>

@@ -38,8 +38,8 @@ function AtomView(attrs) {
 		</author>
 
 		{events.map((event) => <EventEntryView
-			initiativeUrl={url}
 			initiative={initiative}
+			initiativeUrl={url}
 			event={event}
 		/>)}
 	</feed>
@@ -50,7 +50,7 @@ function EventEntryView(attrs) {
 	var initiativeUrl = attrs.initiativeUrl
 	var event = attrs.event
 	var eventUrl = initiativeUrl + "#event-" + event.id
-	var titlePrefix = attrs.titlePrefix || ""
+	var sourced = attrs.sourced
 
 	var title
 	var content
@@ -193,11 +193,27 @@ function EventEntryView(attrs) {
 	return <entry>
 		<id>{initiativeUrl + "/events/" + event.id}</id>
 		<link rel="alternate" type="text/html" href={eventUrl} />
-		<title>{titlePrefix + title}</title>
+		<title>{(sourced ? `${initiative.title}: ` : "") + title}</title>
 		<published>{event.occurred_at.toJSON()}</published>
 		<updated>{event.updated_at.toJSON()}</updated>
 		{category ? <category term={category} /> : null}
 		{content ? <content type="text">{content}</content> : null}
 		{author ? <author><name>{author.name}</name></author> : null}
+
+		{sourced ? <source>
+			<id>{initiativeUrl}</id>
+
+			<title>
+				{t("ATOM_INITIATIVE_FEED_TITLE", {title: initiative.title})}
+			</title>
+
+			<link
+				rel="self"
+				type="application/atom+xml"
+				href={initiativeUrl + ".atom"}
+			/>
+
+			<link rel="alternate" type="text/html" href={initiativeUrl} />
+		</source> : null}
 	</entry>
 }

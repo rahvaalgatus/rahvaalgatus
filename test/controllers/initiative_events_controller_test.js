@@ -33,6 +33,7 @@ describe("InitiativeEventsController", function() {
 				phase: "edit",
 				created_at: pseudoDateTime()
 			}), new ValidInitiative({
+				title: "Better life.",
 				phase: "parliament",
 				external: true,
 				created_at: pseudoDateTime()
@@ -114,7 +115,25 @@ describe("InitiativeEventsController", function() {
 					author: {name: {$: author.name}},
 					category: {term: "initiator"},
 					content: {type: "text", $: event.content},
-					title: {$: initiative.title + ": " + event.title}
+					title: {$: initiative.title + ": " + event.title},
+
+					source: {
+						id: {$: initiativeUrl},
+
+						title: {
+							$: t("ATOM_INITIATIVE_FEED_TITLE", {title: initiative.title})
+						},
+
+						link: [{
+							rel: "self",
+							type: "application/atom+xml",
+							href: initiativeUrl + ".atom"
+						}, {
+							rel: "alternate",
+							type: "text/html",
+							href: initiativeUrl
+						}]
+					}
 				})
 			})
 		})
