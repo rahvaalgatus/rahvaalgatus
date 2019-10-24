@@ -48,8 +48,9 @@ function AtomView(attrs) {
 function EventEntryView(attrs) {
 	var initiative = attrs.initiative
 	var initiativeUrl = attrs.initiativeUrl
-	var titlePrefix = attrs.titlePrefix || ""
 	var event = attrs.event
+	var eventUrl = initiativeUrl + "#event-" + event.id
+	var titlePrefix = attrs.titlePrefix || ""
 
 	var title
 	var content
@@ -191,6 +192,7 @@ function EventEntryView(attrs) {
 
 	return <entry>
 		<id>{initiativeUrl + "/events/" + event.id}</id>
+		<link rel="alternate" type="text/html" href={eventUrl} />
 		<title>{titlePrefix + title}</title>
 		<published>{event.occurred_at.toJSON()}</published>
 		<updated>{event.updated_at.toJSON()}</updated>

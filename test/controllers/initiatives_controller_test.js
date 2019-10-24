@@ -3352,11 +3352,12 @@ describe("InitiativesController", function() {
 
 			Atom.parse(res.body).feed.entry.forEach(function(entry, i) {
 				var event = events[i]
-				var id = `${Config.url}/initiatives`
-				id += `/${initiative.uuid}/events/${event.id}`
+				var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+				var eventUrl = `${initiativeUrl}#event-${event.id}`
 
 				entry.must.eql({
-					id: {$: id},
+					id: {$: `${initiativeUrl}/events/${event.id}`},
+					link: {rel: "alternate", type: "text/html", href: eventUrl},
 					updated: {$: event.occurred_at.toJSON()},
 					published: {$: event.occurred_at.toJSON()},
 					title: {$: event.title}
@@ -3375,11 +3376,12 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 
 			var entry = Atom.parse(res.body).feed.entry
-			var id = `${Config.url}/initiatives`
-			id += `/${initiative.uuid}/events/sent-to-parliament`
+			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+			var eventUrl = `${initiativeUrl}#event-sent-to-parliament`
 
 			entry.must.eql({
-				id: {$: id},
+				id: {$: `${initiativeUrl}/events/sent-to-parliament`},
+				link: {rel: "alternate", type: "text/html", href: eventUrl},
 				updated: {$: initiative.sent_to_parliament_at.toJSON()},
 				published: {$: initiative.sent_to_parliament_at.toJSON()},
 				title: {$: t("INITIATIVE_SENT_TO_PARLIAMENT_TITLE")},
@@ -3406,11 +3408,12 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 
 			var entry = Atom.parse(res.body).feed.entry
-			var id = `${Config.url}/initiatives`
-			id += `/${initiative.uuid}/events/${event.id}`
+			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
 			entry.must.eql({
-				id: {$: id},
+				id: {$: `${initiativeUrl}/events/${event.id}`},
+				link: {rel: "alternate", type: "text/html", href: eventUrl},
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 				title: {$: t("PARLIAMENT_RECEIVED")}
@@ -3437,11 +3440,12 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 
 			var entry = Atom.parse(res.body).feed.entry
-			var id = `${Config.url}/initiatives`
-			id += `/${initiative.uuid}/events/${event.id}`
+			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
 			entry.must.eql({
-				id: {$: id},
+				id: {$: `${initiativeUrl}/events/${event.id}`},
+				link: {rel: "alternate", type: "text/html", href: eventUrl},
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 				title: {$: t("PARLIAMENT_ACCEPTED")},
@@ -3475,11 +3479,12 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 
 			var entry = Atom.parse(res.body).feed.entry
-			var id = `${Config.url}/initiatives`
-			id += `/${initiative.uuid}/events/${event.id}`
+			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
 			entry.must.eql({
-				id: {$: id},
+				id: {$: `${initiativeUrl}/events/${event.id}`},
+				link: {rel: "alternate", type: "text/html", href: eventUrl},
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 				title: {$: t("PARLIAMENT_BOARD_MEETING")}
@@ -3507,11 +3512,12 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 
 			var entry = Atom.parse(res.body).feed.entry
-			var id = `${Config.url}/initiatives`
-			id += `/${initiative.uuid}/events/${event.id}`
+			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
 			entry.must.eql({
-				id: {$: id},
+				id: {$: `${initiativeUrl}/events/${event.id}`},
+				link: {rel: "alternate", type: "text/html", href: eventUrl},
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 
@@ -3542,11 +3548,12 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 
 				var entry = Atom.parse(res.body).feed.entry
-				var id = `${Config.url}/initiatives`
-				id += `/${initiative.uuid}/events/${event.id}`
+				var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+				var eventUrl = `${initiativeUrl}#event-${event.id}`
 
 				entry.must.eql({
-					id: {$: id},
+					id: {$: `${initiativeUrl}/events/${event.id}`},
+					link: {rel: "alternate", type: "text/html", href: eventUrl},
 					updated: {$: event.updated_at.toJSON()},
 					published: {$: event.occurred_at.toJSON()},
 
@@ -3589,11 +3596,12 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 
 			var entry = Atom.parse(res.body).feed.entry
-			var id = `${Config.url}/initiatives`
-			id += `/${initiative.uuid}/events/${event.id}`
+			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
 			entry.must.eql({
-				id: {$: id},
+				id: {$: `${initiativeUrl}/events/${event.id}`},
+				link: {rel: "alternate", type: "text/html", href: eventUrl},
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 
@@ -3625,11 +3633,12 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 
 			var entry = Atom.parse(res.body).feed.entry
-			var id = `${Config.url}/initiatives`
-			id += `/${initiative.uuid}/events/${event.id}`
+			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
 			entry.must.eql({
-				id: {$: id},
+				id: {$: `${initiativeUrl}/events/${event.id}`},
+				link: {rel: "alternate", type: "text/html", href: eventUrl},
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 				title: {$: t("PARLIAMENT_DECISION")}
@@ -3656,11 +3665,12 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 
 			var entry = Atom.parse(res.body).feed.entry
-			var id = `${Config.url}/initiatives`
-			id += `/${initiative.uuid}/events/${event.id}`
+			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
 			entry.must.eql({
-				id: {$: id},
+				id: {$: `${initiativeUrl}/events/${event.id}`},
+				link: {rel: "alternate", type: "text/html", href: eventUrl},
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 				title: {$: t("PARLIAMENT_DECISION")},
@@ -3695,11 +3705,12 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 
 			var entry = Atom.parse(res.body).feed.entry
-			var id = `${Config.url}/initiatives`
-			id += `/${initiative.uuid}/events/${event.id}`
+			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
 			entry.must.eql({
-				id: {$: id},
+				id: {$: `${initiativeUrl}/events/${event.id}`},
+				link: {rel: "alternate", type: "text/html", href: eventUrl},
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 				title: {$: t("PARLIAMENT_LETTER_INCOMING")},
@@ -3734,11 +3745,12 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 
 			var entry = Atom.parse(res.body).feed.entry
-			var id = `${Config.url}/initiatives`
-			id += `/${initiative.uuid}/events/${event.id}`
+			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
 			entry.must.eql({
-				id: {$: id},
+				id: {$: `${initiativeUrl}/events/${event.id}`},
+				link: {rel: "alternate", type: "text/html", href: eventUrl},
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 				title: {$: t("PARLIAMENT_INTERPELLATION")},
@@ -3771,11 +3783,12 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 
 			var entry = Atom.parse(res.body).feed.entry
-			var id = `${Config.url}/initiatives`
-			id += `/${initiative.uuid}/events/${event.id}`
+			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
 			entry.must.eql({
-				id: {$: id},
+				id: {$: `${initiativeUrl}/events/${event.id}`},
+				link: {rel: "alternate", type: "text/html", href: eventUrl},
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 				title: {$: t("PARLIAMENT_NATIONAL_MATTER")}
@@ -3806,11 +3819,12 @@ describe("InitiativesController", function() {
 				entries.length.must.equal(2)
 				entries[0].id.$.must.match(/\/sent-to-parliament$/)
 
-				var id = `${Config.url}/initiatives`
-				id += `/${initiative.uuid}/events/parliament-finished`
+				var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+				var eventUrl = `${initiativeUrl}#event-parliament-finished`
 
 				entries[1].must.eql({
-					id: {$: id},
+					id: {$: `${initiativeUrl}/events/parliament-finished`},
+					link: {rel: "alternate", type: "text/html", href: eventUrl},
 					updated: {$: initiative.finished_in_parliament_at.toJSON()},
 					published: {$: initiative.finished_in_parliament_at.toJSON()},
 					title: {$: t("PARLIAMENT_FINISHED")},
@@ -3858,11 +3872,12 @@ describe("InitiativesController", function() {
 				entries.length.must.equal(2)
 				entries[0].id.$.must.match(/\/sent-to-parliament$/)
 
-				var id = `${Config.url}/initiatives`
-				id += `/${initiative.uuid}/events/${event.id}`
+				var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+				var eventUrl = `${initiativeUrl}#event-${event.id}`
 
 				entries[1].must.eql({
-					id: {$: id},
+					id: {$: `${initiativeUrl}/events/${event.id}`},
+					link: {rel: "alternate", type: "text/html", href: eventUrl},
 					updated: {$: event.updated_at.toJSON()},
 					published: {$: event.occurred_at.toJSON()},
 					title: {$: t("PARLIAMENT_FINISHED")},
@@ -3892,11 +3907,12 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 
 			var entry = Atom.parse(res.body).feed.entry
-			var id = `${Config.url}/initiatives`
-			id += `/${initiative.uuid}/events/sent-to-government`
+			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+			var eventUrl = `${initiativeUrl}#event-sent-to-government`
 
 			entry.must.eql({
-				id: {$: id},
+				id: {$: `${initiativeUrl}/events/sent-to-government`},
+				link: {rel: "alternate", type: "text/html", href: eventUrl},
 				updated: {$: initiative.sent_to_government_at.toJSON()},
 				published: {$: initiative.sent_to_government_at.toJSON()},
 
@@ -3923,11 +3939,12 @@ describe("InitiativesController", function() {
 			entries.length.must.equal(2)
 			entries[0].id.$.must.match(/\/sent-to-government$/)
 
-			var id = `${Config.url}/initiatives`
-			id += `/${initiative.uuid}/events/finished-in-government`
+			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+			var eventUrl = `${initiativeUrl}#event-finished-in-government`
 
 			entries[1].must.eql({
-				id: {$: id},
+				id: {$: `${initiativeUrl}/events/finished-in-government`},
+				link: {rel: "alternate", type: "text/html", href: eventUrl},
 				updated: {$: initiative.finished_in_government_at.toJSON()},
 				published: {$: initiative.finished_in_government_at.toJSON()},
 
@@ -3961,11 +3978,12 @@ describe("InitiativesController", function() {
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 
-			var id = `${Config.url}/initiatives`
-			id += `/${initiative.uuid}/events/${event.id}`
+			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
 			Atom.parse(res.body).feed.entry.must.eql({
-				id: {$: id},
+				id: {$: `${initiativeUrl}/events/${event.id}`},
+				link: {rel: "alternate", type: "text/html", href: eventUrl},
 				category: {term: "initiator"},
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},

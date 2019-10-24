@@ -101,11 +101,12 @@ describe("InitiativeEventsController", function() {
 				var initiative = initiativesByUuid[event.initiative_uuid]
 				var author = authorsById[event.created_by]
 
-				var id = `${Config.url}/initiatives`
-				id += `/${initiative.uuid}/events/${event.id}`
+				var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+				var eventUrl = `${initiativeUrl}#event-${event.id}`
 
 				entry.must.eql({
-					id: {$: id},
+					id: {$: `${initiativeUrl}/events/${event.id}`},
+					link: {rel: "alternate", type: "text/html", href: eventUrl},
 					updated: {$: event.updated_at.toJSON()},
 					published: {$: event.occurred_at.toJSON()},
 					author: {name: {$: author.name}},
