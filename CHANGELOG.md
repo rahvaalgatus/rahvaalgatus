@@ -1,3 +1,6 @@
+## Oct 24, 2019
+- Adds a combined Atom feed for all initiatives and their events.
+
 ## Oct 21, 2019
 - Adds a link-preview image to initiatives that social networks and messaging apps can then use for shared link previews.  
   It's uploadable from the admin interface.

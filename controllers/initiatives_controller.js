@@ -45,6 +45,7 @@ var EMPTY = Object.prototype
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: ""}
 var EMPTY_CONTACT = {name: "", email: "", phone: ""}
+exports.searchInitiativesEvents = searchInitiativesEvents
 
 var RESPONSE_TYPES = [
 	"text/html",

@@ -54,6 +54,9 @@ O.each({
 	"/subscriptions": require("root/controllers/subscriptions_controller").router,
 	"/session": require("root/controllers/session_controller").router,
 	"/user": require("root/controllers/user_controller").router,
+
+	"/initiative-events":
+		require("root/controllers/initiative_events_controller").router
 }, (router, path) => app.use(path, router))
 
 if (ENV == "development" || ENV == "staging") {

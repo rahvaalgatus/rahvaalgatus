@@ -6,13 +6,15 @@ var t = require("root/lib/i18n").t.bind(null, "et")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var renderEventTitle = require("root/lib/event").renderEventTitle
 var EMPTY_ARR = Array.prototype
+exports = module.exports = AtomView
+exports.EventEntryView = EventEntryView
 
 var CATEGORIES = {
 	admin: "official",
 	author: "initiator"
 }
 
-module.exports = function(attrs) {
+function AtomView(attrs) {
 	var req = attrs.req
 	var initiative = attrs.initiative
 	var topic = attrs.topic
@@ -35,154 +37,165 @@ module.exports = function(attrs) {
 			<uri>{Config.url}</uri>
 		</author>
 
-		{events.map(function(event) {
-			var title
-			var content
-			var category = CATEGORIES[event.origin]
-			var author
-			var decision
-
-			switch (event.type) {
-				case "signature-milestone":
-					title = t("SIGNATURE_MILESTONE_EVENT_TITLE", {
-						milestone: event.content
-					})
-					break
-
-				case "sent-to-parliament":
-					title = t("INITIATIVE_SENT_TO_PARLIAMENT_TITLE")
-					content = t("INITIATIVE_SENT_TO_PARLIAMENT_BODY")
-					break
-
-				case "parliament-received":
-					title = renderEventTitle(event)
-					break
-
-				case "parliament-accepted":
-					title = renderEventTitle(event)
-					var committee = event.content.committee
-					if (committee) content = t("PARLIAMENT_ACCEPTED_SENT_TO_COMMITTEE", {
-						committee: committee
-					})
-					break
-
-				case "parliament-board-meeting":
-					title = renderEventTitle(event)
-					break
-
-				case "parliament-committee-meeting":
-					title = renderEventTitle(event)
-					var meeting = event.content
-					decision = meeting.decision
-
-					content = concat(
-						meeting.summary || EMPTY_ARR,
-
-						decision == "continue"
-						? t("PARLIAMENT_MEETING_DECISION_CONTINUE")
-						: decision == "reject"
-						? t("PARLIAMENT_MEETING_DECISION_REJECT")
-						: decision == "forward"
-						? t("PARLIAMENT_MEETING_DECISION_FORWARD")
-						: decision == "solve-differently"
-						? t("PARLIAMENT_MEETING_DECISION_SOLVE_DIFFERENTLY")
-						: EMPTY_ARR
-					).join("\n\n")
-					break
-
-				case "parliament-decision":
-					title = renderEventTitle(event)
-					if (event.content.summary) content = event.content.summary
-					break
-
-				case "parliament-letter":
-					title = renderEventTitle(event)
-					var letter = event.content
-
-					var header = [
-						t("PARLIAMENT_LETTER_TITLE") + ": " + letter.title,
-
-						letter.direction == "incoming"
-						? t("PARLIAMENT_LETTER_FROM") + ": " + letter.from
-						: t("PARLIAMENT_LETTER_TO") + ": " + letter.to
-					].join("\n")
-
-					content = concat(
-						header,
-						letter.summary || EMPTY_ARR
-					).join("\n\n")
-					break
-
-				case "parliament-interpellation":
-					title = renderEventTitle(event)
-					var interpellation = event.content
-
-					content = [
-						t("PARLIAMENT_INTERPELLATION_TO") + ": " +
-							interpellation.to,
-						t("PARLIAMENT_INTERPELLATION_DEADLINE") + ": " +
-							interpellation.deadline
-					].join("\n")
-					break
-
-				case "parliament-national-matter":
-					title = renderEventTitle(event)
-					break
-
-				case "parliament-finished":
-					title = renderEventTitle(event)
-					decision = initiative.parliament_decision
-
-					if (decision) content =
-						decision == "reject"
-						? t("PARLIAMENT_DECISION_REJECT")
-						: decision == "forward"
-						? t("PARLIAMENT_DECISION_FORWARD")
-						: decision == "solve-differently"
-						? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
-						: null
-					break
-
-				case "sent-to-government":
-					title = !initiative.government_agency
-						? t("EVENT_SENT_TO_GOVERNMENT_TITLE")
-						: t("EVENT_SENT_TO_GOVERNMENT_TITLE_WITH_AGENCY", {
-							agency: initiative.government_agency
-						})
-					break
-
-				case "finished-in-government":
-					title = !initiative.government_agency
-						? t("EVENT_FINISHED_IN_GOVERNMENT_TITLE")
-						: t("EVENT_FINISHED_IN_GOVERNMENT_TITLE_WITH_AGENCY", {
-							agency: initiative.government_agency
-						})
-
-					if (initiative.government_decision) content =
-						t("EVENT_FINISHED_IN_GOVERNMENT_CONTENT", {
-							decision: initiative.government_decision
-						})
-					break
-
-				case "text":
-					title = event.title
-					content = event.content
-					author = event.origin == "author" ? event.user : null
-					break
-
-				default:
-					throw new RangeError("Unsupported event type: " + event.type)
-			}
-
-			return <entry>
-				<id>{url + "/events/" + event.id}</id>
-				<title>{title}</title>
-				<published>{event.occurred_at.toJSON()}</published>
-				<updated>{event.updated_at.toJSON()}</updated>
-				{category ? <category term={category} /> : null}
-				{content ? <content type="text">{content}</content> : null}
-				{author ? <author><name>{author.name}</name></author> : null}
-			</entry>
-		})}
+		{events.map((event) => <EventEntryView
+			initiativeUrl={url}
+			initiative={initiative}
+			event={event}
+		/>)}
 	</feed>
+}
+
+function EventEntryView(attrs) {
+	var initiative = attrs.initiative
+	var initiativeUrl = attrs.initiativeUrl
+	var titlePrefix = attrs.titlePrefix || ""
+	var event = attrs.event
+
+	var title
+	var content
+	var category = CATEGORIES[event.origin]
+	var author
+	var decision
+
+	switch (event.type) {
+		case "signature-milestone":
+			title = t("SIGNATURE_MILESTONE_EVENT_TITLE", {
+				milestone: event.content
+			})
+			break
+
+		case "sent-to-parliament":
+			title = t("INITIATIVE_SENT_TO_PARLIAMENT_TITLE")
+			content = t("INITIATIVE_SENT_TO_PARLIAMENT_BODY")
+			break
+
+		case "parliament-received":
+			title = renderEventTitle(event)
+			break
+
+		case "parliament-accepted":
+			title = renderEventTitle(event)
+			var committee = event.content.committee
+			if (committee) content = t("PARLIAMENT_ACCEPTED_SENT_TO_COMMITTEE", {
+				committee: committee
+			})
+			break
+
+		case "parliament-board-meeting":
+			title = renderEventTitle(event)
+			break
+
+		case "parliament-committee-meeting":
+			title = renderEventTitle(event)
+			var meeting = event.content
+			decision = meeting.decision
+
+			content = concat(
+				meeting.summary || EMPTY_ARR,
+
+				decision == "continue"
+				? t("PARLIAMENT_MEETING_DECISION_CONTINUE")
+				: decision == "reject"
+				? t("PARLIAMENT_MEETING_DECISION_REJECT")
+				: decision == "forward"
+				? t("PARLIAMENT_MEETING_DECISION_FORWARD")
+				: decision == "solve-differently"
+				? t("PARLIAMENT_MEETING_DECISION_SOLVE_DIFFERENTLY")
+				: EMPTY_ARR
+			).join("\n\n")
+			break
+
+		case "parliament-decision":
+			title = renderEventTitle(event)
+			if (event.content.summary) content = event.content.summary
+			break
+
+		case "parliament-letter":
+			title = renderEventTitle(event)
+			var letter = event.content
+
+			var header = [
+				t("PARLIAMENT_LETTER_TITLE") + ": " + letter.title,
+
+				letter.direction == "incoming"
+				? t("PARLIAMENT_LETTER_FROM") + ": " + letter.from
+				: t("PARLIAMENT_LETTER_TO") + ": " + letter.to
+			].join("\n")
+
+			content = concat(
+				header,
+				letter.summary || EMPTY_ARR
+			).join("\n\n")
+			break
+
+		case "parliament-interpellation":
+			title = renderEventTitle(event)
+			var interpellation = event.content
+
+			content = [
+				t("PARLIAMENT_INTERPELLATION_TO") + ": " +
+					interpellation.to,
+				t("PARLIAMENT_INTERPELLATION_DEADLINE") + ": " +
+					interpellation.deadline
+			].join("\n")
+			break
+
+		case "parliament-national-matter":
+			title = renderEventTitle(event)
+			break
+
+		case "parliament-finished":
+			title = renderEventTitle(event)
+			decision = initiative.parliament_decision
+
+			if (decision) content =
+				decision == "reject"
+				? t("PARLIAMENT_DECISION_REJECT")
+				: decision == "forward"
+				? t("PARLIAMENT_DECISION_FORWARD")
+				: decision == "solve-differently"
+				? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
+				: null
+			break
+
+		case "sent-to-government":
+			title = !initiative.government_agency
+				? t("EVENT_SENT_TO_GOVERNMENT_TITLE")
+				: t("EVENT_SENT_TO_GOVERNMENT_TITLE_WITH_AGENCY", {
+					agency: initiative.government_agency
+				})
+			break
+
+		case "finished-in-government":
+			title = !initiative.government_agency
+				? t("EVENT_FINISHED_IN_GOVERNMENT_TITLE")
+				: t("EVENT_FINISHED_IN_GOVERNMENT_TITLE_WITH_AGENCY", {
+					agency: initiative.government_agency
+				})
+
+			if (initiative.government_decision) content =
+				t("EVENT_FINISHED_IN_GOVERNMENT_CONTENT", {
+					decision: initiative.government_decision
+				})
+			break
+
+		case "text":
+			title = event.title
+			content = event.content
+			author = event.origin == "author" ? event.user : null
+			break
+
+		default:
+			throw new RangeError("Unsupported event type: " + event.type)
+	}
+
+	return <entry>
+		<id>{initiativeUrl + "/events/" + event.id}</id>
+		<title>{titlePrefix + title}</title>
+		<published>{event.occurred_at.toJSON()}</published>
+		<updated>{event.updated_at.toJSON()}</updated>
+		{category ? <category term={category} /> : null}
+		{content ? <content type="text">{content}</content> : null}
+		{author ? <author><name>{author.name}</name></author> : null}
+	</entry>
 }
