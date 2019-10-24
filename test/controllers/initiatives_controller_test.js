@@ -3221,7 +3221,8 @@ describe("InitiativesController", function() {
 
 			var links = _.indexBy(feed.link, (link) => link.rel)
 			links.self.href.must.equal(Config.url + path + ".atom")
-			links.alternate.href.must.equal(Config.url)
+			links.alternate.href.must.equal(Config.url + path)
+			links.alternate.type.must.equal("text/html")
 
 			feed.author.name.$.must.equal(Config.title)
 			feed.author.uri.$.must.equal(Config.url)
@@ -3242,7 +3243,8 @@ describe("InitiativesController", function() {
 
 			var links = _.indexBy(feed.link, (link) => link.rel)
 			links.self.href.must.equal(Config.url + path + ".atom")
-			links.alternate.href.must.equal(Config.url)
+			links.alternate.href.must.equal(Config.url + path)
+			links.alternate.type.must.equal("text/html")
 		})
 
 		it("must respond given an external initiative", function*() {
