@@ -26,7 +26,7 @@ function AtomView(attrs) {
 		: topic && topic.updatedAt || initiative.created_at
 
 	return <feed xmlns="http://www.w3.org/2005/Atom">
-		<id>{url + ".atom"}</id>
+		<id>{url}</id>
 		<title>{t("ATOM_INITIATIVE_FEED_TITLE", {title: initiative.title})}</title>
 		<link rel="alternate" href={Config.url} />
 		<link rel="self" href={url + ".atom"} />

@@ -3206,8 +3206,8 @@ describe("InitiativesController", function() {
 				visibility: "public"
 			}))
 
-			var path = `/initiatives/${initiative.uuid}.atom`
-			var res = yield this.request(path)
+			var path = `/initiatives/${initiative.uuid}`
+			var res = yield this.request(path, {headers: {Accept: ATOM_TYPE}})
 			res.statusCode.must.equal(200)
 			res.headers["content-type"].must.equal(ATOM_TYPE)
 
@@ -3220,11 +3220,29 @@ describe("InitiativesController", function() {
 			}))
 
 			var links = _.indexBy(feed.link, (link) => link.rel)
-			links.self.href.must.equal(Config.url + path)
+			links.self.href.must.equal(Config.url + path + ".atom")
 			links.alternate.href.must.equal(Config.url)
 
 			feed.author.name.$.must.equal(Config.title)
 			feed.author.uri.$.must.equal(Config.url)
+		})
+
+		it("must respond with correct feed id given .atom extension", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				external: true
+			}))
+
+			var path = `/initiatives/${initiative.uuid}`
+			var res = yield this.request(path + ".atom")
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(ATOM_TYPE)
+
+			var feed = Atom.parse(res.body).feed
+			feed.id.$.must.equal(Config.url + path)
+
+			var links = _.indexBy(feed.link, (link) => link.rel)
+			links.self.href.must.equal(Config.url + path + ".atom")
+			links.alternate.href.must.equal(Config.url)
 		})
 
 		it("must respond given an external initiative", function*() {
@@ -3233,8 +3251,7 @@ describe("InitiativesController", function() {
 				title: "Better life for everyone."
 			}))
 
-			var path = `/initiatives/${initiative.uuid}.atom`
-			var res = yield this.request(path)
+			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 			res.headers["content-type"].must.equal(ATOM_TYPE)
 
@@ -3277,8 +3294,7 @@ describe("InitiativesController", function() {
 				occurred_at: new Date(2015, 5, 23)
 			})])
 
-			var path = `/initiatives/${initiative.uuid}.atom`
-			var res = yield this.request(path)
+			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 
 			var feed = Atom.parse(res.body).feed
