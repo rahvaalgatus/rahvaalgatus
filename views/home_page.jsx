@@ -24,7 +24,17 @@ module.exports = function(attrs) {
 	var inGovernment = initiativesByPhase.government || EMPTY_ARR
 	var inDone = initiativesByPhase.done || EMPTY_ARR
 
-	return <Page page="home" req={req}>
+	return <Page
+		page="home"
+		req={req}
+
+		links={[{
+			rel: "alternate",
+			type: "application/atom+xml",
+			title: t("ATOM_INITIATIVE_EVENTS_FEED_TITLE"),
+			href: "/initiative-events.atom"
+		}]}
+	>
 		<section id="welcome" class="primary-section text-section"><center>
 			<Flash flash={req.flash} />
 

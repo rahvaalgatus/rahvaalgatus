@@ -26,7 +26,17 @@ function InitiativesPage(attrs) {
 	var inGovernment = initiativesByPhase.government || EMPTY_ARR
 	var inDone = initiativesByPhase.done || EMPTY_ARR
 
-	return <Page page="initiatives" req={req}>
+	return <Page
+		page="initiatives"
+		req={req}
+
+		links={[{
+			rel: "alternate",
+			type: "application/atom+xml",
+			title: t("ATOM_INITIATIVE_EVENTS_FEED_TITLE"),
+			href: "/initiative-events.atom"
+		}]}
+	>
 		{
 			// When deleting an initiative, people get redirected here.
 		}
