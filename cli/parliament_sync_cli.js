@@ -192,12 +192,6 @@ function* syncInitiativeDocuments(api, doc) {
 }
 
 function* replaceInitiative(initiative, document) {
-	logger.log(
-		(initiative.uuid ? "Updating" : "Creating") + " initiative %s (%s)…",
-		initiative.uuid || document.uuid,
-		document.title
-	)
-
 	var statuses = sortStatuses(document.statuses || EMPTY_ARR)
 	var update = attrsFrom(document)
 
@@ -207,11 +201,14 @@ function* replaceInitiative(initiative, document) {
 	statuses.forEach((document) => _.merge(update, attrsFromStatus(document)))
 
 	if (initiative.uuid == null) {
+		logger.log("Creating initiative %s (%s)…", document.uuid, document.title)
 		initiative.uuid = initiative.parliament_uuid
 		initiative = yield initiativesDb.create(_.assign(initiative, update))
 	}
-	else if (diff(initiative, update))
+	else if (diff(initiative, update)) {
+		logger.log("Updating initiative %s (%s)…", initiative.uuid, document.title)
 		initiative = yield initiativesDb.update(initiative, update)
+	}
 
 	yield replaceFiles(initiative, document)
 
