@@ -1,3 +1,6 @@
+## Oct 28, 2019
+- Adds support for `TAVAPOST` letter medium when syncing with the Riigikogu API.
+
 ## Oct 24, 2019
 - Adds a combined Atom feed for all initiatives and their events.
 

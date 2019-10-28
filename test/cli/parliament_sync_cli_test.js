@@ -1375,6 +1375,52 @@ describe("ParliamentSyncCli", function() {
 				content_type: new MediaType("application/octet-stream")
 			}]],
 
+			"outgoing post document": [{
+				relatedDocuments: [{uuid: DOCUMENT_UUID}]
+			}, {
+				[DOCUMENT_UUID]: {
+					uuid: DOCUMENT_UUID,
+					title: "Linnujahi korraldamine",
+					documentType: "letterDocument",
+					created: "2015-06-18T13:37:42.666",
+					author: "Jahimeeste Selts",
+					authorDate: "2015-06-17",
+					direction: {code: "VALJA"},
+					receiveType: {code: "TAVAPOST"},
+
+					files: [{
+						uuid: FILE_UUID,
+						fileName: "Kiri.pdf",
+						accessRestrictionType: "PUBLIC"
+					}]
+				}
+			}, {
+				initiative_uuid: INITIATIVE_UUID,
+				occurred_at: new Date(2015, 5, 18, 13, 37, 42, 666),
+				origin: "parliament",
+				external_id: DOCUMENT_UUID,
+				type: "parliament-letter",
+				title: null,
+
+				content: {
+					medium: "post",
+					direction: "outgoing",
+					title: "Linnujahi korraldamine",
+					to: "Jahimeeste Selts",
+					date: "2015-06-17"
+				}
+			}, [{
+				id: 1,
+				event_id: 1,
+				initiative_uuid: INITIATIVE_UUID,
+				external_id: FILE_UUID,
+				name: "Kiri.pdf",
+				title: "Linnujahi korraldamine",
+				url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
+				content: EXAMPLE_BUFFER,
+				content_type: new MediaType("application/octet-stream")
+			}]],
+
 			"outgoing email document": [{
 				relatedDocuments: [{uuid: DOCUMENT_UUID}]
 			}, {

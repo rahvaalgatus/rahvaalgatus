@@ -957,6 +957,7 @@ function parseLetterDirection(direction) {
 function parseLetterMedium(medium) {
 	switch (medium.code) {
 		case "E_POST": return "email"
+		case "TAVAPOST": return "post"
 		case "KASIPOST": return "post"
 		case "DVK": return "dokumendivahetuskeskus"
 		case "DHX": return "dhx"
