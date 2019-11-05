@@ -121,6 +121,7 @@ module.exports = function(attrs) {
 		topic={topic}
 
 		meta={_.filterValues({
+			"twitter:card": "summary_large_image",
 			"og:title": title,
 			"og:url": initiativeUrl,
 			"og:image": image && serializeImageUrl(image)

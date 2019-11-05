@@ -12,6 +12,7 @@ var createTopic = require("root/test/citizenos_fixtures").createTopic
 var createVote = require("root/test/citizenos_fixtures").createVote
 var createSignatures = require("root/test/citizenos_fixtures").createSignatures
 var initiativesDb = require("root/db/initiatives_db")
+var parseDom = require("root/lib/dom").parse
 var STATISTICS_TYPE = "application/vnd.rahvaalgatus.statistics+json; v=1"
 var PHASES = require("root/lib/initiative").PHASES
 
@@ -382,6 +383,23 @@ describe("HomeController", function() {
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
 			res.body.must.not.include(topic.id)
+		})
+
+		it("must include social media tags", function*() {
+			var res = yield this.request("/")
+			res.statusCode.must.equal(200)
+
+			var dom = parseDom(res.body)
+			var metas = dom.head.querySelectorAll("meta")
+			var metasByName = _.indexBy(metas, (el) => el.getAttribute("name"))
+			var metasByProp = _.indexBy(metas, (el) => el.getAttribute("property"))
+
+			metasByName["twitter:site"].content.must.equal("rahvaalgatus")
+			metasByName["twitter:card"].content.must.equal("summary")
+
+			metasByProp["og:title"].content.must.equal("Rahvaalgatus")
+			var imageUrl = `${Config.url}/assets/rahvaalgatus-description.png`
+			metasByProp["og:image"].content.must.equal(imageUrl)
 		})
 	})
 

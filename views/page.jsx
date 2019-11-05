@@ -20,6 +20,9 @@ exports.DatePickerInput = DatePickerInput
 exports.LiveReload = LiveReload
 
 var DEFAULT_META = {
+	// Using twitter:card=summary_large_image explicitly where desired.
+	"twitter:card": "summary",
+	"twitter:site": "rahvaalgatus",
 	"og:image": Config.url + "/assets/rahvaalgatus-description.png"
 }
 
@@ -28,9 +31,14 @@ function Page(attrs, children) {
 	var t = req.t
 	var page = attrs.page
 	var title = attrs.title
-	var meta = _.assign({}, DEFAULT_META, attrs.meta)
 	var links = attrs.links || EMPTY_ARR
 	var translatable = req.lang === "xx" || "translatable" in req.query
+
+	var meta = _.assign({
+		// Twitter doesn't read the page title from <title>. Set "og:title" for it.
+		// https://cards-dev.twitter.com/validator
+		"og:title": title || SITE_TITLE
+	}, DEFAULT_META, attrs.meta)
 
 	var assemblyLogo = "/assets/esstikoostoo_logo.png"
 	if (req.lang !== "et") assemblyLogo = "/assets/esstikoostoo_logo_en.png"
@@ -41,7 +49,12 @@ function Page(attrs, children) {
 			<meta name="viewport" content="width=device-width" />
 			<link rel="stylesheet" href="/assets/page.css" type="text/css" />
 			<title>{title == null ? "" : title + " - "} {SITE_TITLE}</title>
-			{_.map(meta, (value, name) => <meta property={name} content={value} />)}
+
+			{_.map(meta, (value, name) => name.startsWith("og:")
+				? <meta property={name} content={value} />
+				: <meta name={name} content={value} />)
+			}
+
 			{links.map((link) => <link {...link} />)}
 
 			{ENV === "staging" || ENV === "production" ?

@@ -511,6 +511,23 @@ describe("InitiativesController", function() {
 			res.body.must.include(initiativeA.uuid)
 			res.body.must.not.include(initiativeB.uuid)
 		})
+
+		it("must include social media tags", function*() {
+			var res = yield this.request("/initiatives?category=uuseakus")
+			res.statusCode.must.equal(200)
+			
+			var dom = parseDom(res.body)
+			var metas = dom.head.querySelectorAll("meta")
+			var metasByName = _.indexBy(metas, (el) => el.getAttribute("name"))
+			var metasByProp = _.indexBy(metas, (el) => el.getAttribute("property"))
+
+			metasByName["twitter:site"].content.must.equal("rahvaalgatus")
+			metasByName["twitter:card"].content.must.equal("summary")
+
+			metasByProp["og:title"].content.must.equal("Rahvaalgatus")
+			var imageUrl = `${Config.url}/assets/rahvaalgatus-description.png`
+			metasByProp["og:image"].content.must.equal(imageUrl)
+		})
 	})
 
 	describe("GET /new", function() {
@@ -626,7 +643,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(404)
 			})
 
-			it("must include Open Graph tags", function*() {
+			it("must include social media tags", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative)
 
 				var topic = yield createTopic(newTopic({
@@ -648,12 +665,16 @@ describe("InitiativesController", function() {
 
 				var dom = parseDom(res.body)
 				var metas = dom.head.querySelectorAll("meta")
-				var props = _.indexBy(metas, (el) => el.getAttribute("property"))
+				var metasByName = _.indexBy(metas, (el) => el.getAttribute("name"))
+				var metasByProp = _.indexBy(metas, (el) => el.getAttribute("property"))
+
+				metasByName["twitter:site"].content.must.equal("rahvaalgatus")
+				metasByName["twitter:card"].content.must.equal("summary_large_image")
 
 				var url = `${Config.url}/initiatives/${initiative.uuid}`
-				props["og:title"].content.must.equal(topic.title)
-				props["og:url"].content.must.equal(url)
-				props["og:image"].content.must.equal(url + ".png")
+				metasByProp["og:title"].content.must.equal(topic.title)
+				metasByProp["og:url"].content.must.equal(url)
+				metasByProp["og:image"].content.must.equal(url + ".png")
 			})
 
 			it("must show done phase by default", function*() {
