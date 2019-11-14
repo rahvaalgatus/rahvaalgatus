@@ -66,7 +66,6 @@ make server ENV=production
 The few client-side JavaScript files of Rahvaalgatus, however, are not dependent on the environment.
 
 ### Accounts
-
 To sign in during development, use one of the [Mobile-Id test phone numbers](http://www.id.ee/?lang=en&id=36381):
 
 Phone        | Personal id | Name
