@@ -87,7 +87,7 @@
 	"EVENT_SENT_TO_GOVERNMENT_TITLE_WITH_AGENCY": "Algatus edastati {{agency}}-le",
 	"EXPLANATION": "Algatuse loomine",
 	"EXPLANATION_CONTENT": "Head algatused sünnivad arutelude tulemusel. Seepärast on loodud algatus vaikimisi kolmepäevases arutelu-olekus, mis tähendab, et kõige varem kolm päeva pärast algatuse sisestamist saab algatusele hakata digiallkirju koguma. Kasuta seda võimalust, et koos mõttekaaslastega teema sõnastada ja kui aeg küps, avalikusta oma algatus, et tekitada laiem arutelu, ühisloomes viimistleda algatuse teksti ning koguda algatusele toetusallkirju. \n\nAlgatuse loomine ja Riigikogule saatmine on tasuta, kuid annetused platvormi kvaliteedi tagamiseks on teretulnud.",
-	"FOOTER_ADDRESS": "Tõnismägi 3a, Tallinn",
+	"FOOTER_ADDRESS": "A.Weizenbergi 30, 15050 Tallinn",
 	"FOOTER_EMAIL": "Email: <a href=\"mailto:info@rahvaalgatus.ee\">info@rahvaalgatus.ee</a>",
 	"FOOTER_PHONE": "Telefon: <a href=\"tel:+37255645216\">+372 55 64 52 16</a>",
 	"FORM_OR": "või",
