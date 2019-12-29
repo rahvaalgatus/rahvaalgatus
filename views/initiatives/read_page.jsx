@@ -1619,7 +1619,7 @@ function InitiativeLocationView(attrs) {
 				<br />
 				<strong>{t("GOVERNMENT_AGENCY_CONTACT")}</strong>:<br />
 				{initiative.government_contact}<br />
-				{Jsx.html(linkify(initiative.government_contact_details))}
+				{Jsx.html(linkify(initiative.government_contact_details || ""))}
 			</Fragment> : null}
 		</Fragment>
 	}

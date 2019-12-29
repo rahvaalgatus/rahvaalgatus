@@ -1784,6 +1784,10 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_IN_GOVERNMENT"))
 
+				res.body.must.include(t("INITIATIVE_IS_IN_GOVERNMENT_AGENCY", {
+					agency: "Sidususministeerium"
+				}))
+
 				var dom = parseDom(res.body)
 				var phases = queryPhases(dom)
 
@@ -1822,6 +1826,35 @@ describe("InitiativesController", function() {
 						agency: "Sidususministeerium"
 					})
 				)
+			})
+
+			it("must render initiative in government with a contact", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "government",
+					sent_to_parliament_at: DateFns.addDays(new Date, -30),
+					received_by_parliament_at: DateFns.addDays(new Date, -25),
+					finished_in_parliament_at: DateFns.addDays(new Date, -5),
+					sent_to_government_at: new Date,
+					government_agency: "Sidususministeerium",
+					government_contact: "John Smith",
+					government_contact_details: "john@example.com"
+				}))
+
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser(newUser())).id,
+					sourcePartnerId: this.partner.id,
+					status: "followUp"
+				}))
+
+				var vote = yield createVote(topic, newVote())
+				yield createCitizenSignatures(vote, Config.votesRequired)
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("GOVERNMENT_AGENCY_CONTACT"))
+				res.body.must.include("John Smith")
+				res.body.must.include("john@example.com")
 			})
 
 			it("must render initiative in government that's finished", function*() {
