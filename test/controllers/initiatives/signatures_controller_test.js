@@ -99,6 +99,24 @@ var MOBILE_ID_CERTIFICATE = new Certificate(newCertificate({
 	publicKey: JOHN_RSA_KEYS.publicKey
 }))
 
+var PHONE_NUMBER_TRANSFORMS = {
+	"0001337": "+3720001337",
+	"5031337": "+3725031337",
+	"500 1337": "+3725001337",
+	"3580031337": "+3580031337",
+	"3700031337": "+3700031337",
+	"3710031337": "+3710031337",
+	"3720031337": "+3720031337",
+	"+3580031337": "+3580031337",
+	"+3700031337": "+3700031337",
+	"+3710031337": "+3710031337",
+	"+3720031337": "+3720031337",
+	"(+372) 5031337": "+3725031337",
+	"(372) 5031337": "+3725031337",
+	"[372] 5031337": "+3725031337",
+	"372-500-1337": "+3725001337"
+}
+
 describe("SignaturesController", function() {
 	require("root/test/web")()
 	require("root/test/mitm")()
@@ -1419,14 +1437,7 @@ describe("SignaturesController", function() {
 					})
 				})
 
-				_.each({
-					"00000766": "+37200000766",
-					"37000000766": "37000000766",
-					"37200000766": "37200000766",
-					"37100000766": "37100000766",
-					"+37000000766": "+37000000766",
-					"+37200000766": "+37200000766"
-				}, function(long, short) {
+				_.each(PHONE_NUMBER_TRANSFORMS, function(long, short) {
 					it(`must transform mobile-id number ${short} to ${long}`,
 						function*() {
 						var created = 0
@@ -2243,14 +2254,7 @@ describe("SignaturesController", function() {
 
 				mustSign(signWithMobileIdViaCitizen)
 
-				_.each({
-					"00000766": "+37200000766",
-					"37000000766": "37000000766",
-					"37200000766": "37200000766",
-					"37100000766": "37100000766",
-					"+37000000766": "+37000000766",
-					"+37200000766": "+37200000766"
-				}, function(long, short) {
+				_.each(PHONE_NUMBER_TRANSFORMS, function(long, short) {
 					it(`must transform mobile-id number ${short} to ${long}`,
 						function*() {
 						var created = 0

@@ -670,10 +670,13 @@ function* waitForCitizenMobileIdSignature(topic, token) {
 }
 
 function ensureAreaCode(number) {
-	// Numbers without a leading "+" but with a suitable area code, like
-	// 37200000766, seem to work.
-	if (/^\+/.exec(number)) return number
-	if (/^37[012]/.exec(number)) return number
+	number = number.replace(/[-()[\] ]/g, "")
+
+	// As of Dec, 2019, numbers without a leading "+", even if otherwise prefixed
+	// with a suitable area code (~372), don't work. They used to with the
+	// Digidoc Service API.
+	if (/^\+/.test(number)) return number
+	if (/^3[567][0-9]/.test(number)) return "+" + number
 	return "+372" + number
 }
 
