@@ -18,6 +18,8 @@ var CommentForm = require("./comments/create_page").CommentForm
 var ProgressView = require("./initiative_page").ProgressView
 var javascript = require("root/lib/jsx").javascript
 var serializeImageUrl = require("root/lib/initiative").imageUrl
+var {pathToSignature} =
+	require("root/controllers/initiatives/signatures_controller")
 var confirm = require("root/lib/jsx").confirm
 var stringify = require("root/lib/json").stringify
 var linkify = require("root/lib/linkify")
@@ -29,13 +31,18 @@ var HTTP_URL = /^https?:\/\//i
 var EMPTY_ARR = Array.prototype
 var EMPTY_ORG = {name: "", url: ""}
 var EVENT_NOTIFICATIONS_SINCE = new Date(Config.eventNotificationsSince)
+var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
+var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
 
-// Kollektiivse pöördumise (edaspidi käesolevas peatükis pöördumine) menetlusse võtmise otsustab Riigikogu juhatus 30 kalendripäeva jooksul kollektiivse pöördumise esitamisest arvates.
+// Kollektiivse pöördumise (edaspidi käesolevas peatükis pöördumine) menetlusse
+// võtmise otsustab Riigikogu juhatus 30 kalendripäeva jooksul kollektiivse
+// pöördumise esitamisest arvates.
 //
 // https://www.riigiteataja.ee/akt/122122014013?leiaKehtiv#para152b9
 var PARLIAMENT_ACCEPTANCE_DEADLINE_IN_DAYS = 30
 
-// Komisjon arutab pöördumist kolme kuu jooksul ning teeb otsuse pöördumise kohta kuue kuu jooksul pöördumise menetlusse võtmisest arvates.
+// Komisjon arutab pöördumist kolme kuu jooksul ning teeb otsuse pöördumise
+// kohta kuue kuu jooksul pöördumise menetlusse võtmisest arvates.
 //
 // https://www.riigiteataja.ee/akt/122122014013?leiaKehtiv#para152b12
 var PARLIAMENT_PROCEEDINGS_DEADLINE_IN_MONTHS = 6
@@ -61,6 +68,7 @@ var FILE_TYPE_ICONS = {
 }
 
 var FILE_TYPE_NAMES = {
+	"text/plain": "Text",
 	"text/html": "HTML",
 	"application/pdf": "PDF",
 	"image/jpeg": "JPEG",
@@ -94,6 +102,7 @@ module.exports = function(attrs) {
 	var events = attrs.events
 	var topic = attrs.topic
 	var initiative = attrs.initiative
+	var initiativePath = "/initiatives/" + initiative.uuid
 	var subscriberCount = attrs.subscriberCount
 	var signatureCount = attrs.signatureCount
 	var voteOptions = attrs.voteOptions
@@ -292,135 +301,178 @@ module.exports = function(attrs) {
 						<p>{t("HEADING_VOTE_REQUIRE_HARD_ID")}</p>
 					</Fragment>}
 
-					<Form
-						req={req}
-						id="id-card-form"
-						method="post"
-						action={"/initiatives/" + topic.id + "/signature"}>
-						<input type="hidden" name="optionId" value={optId} />
-						<input type="hidden" name="certificate" value="" />
-						<input type="hidden" name="signature" value="" />
-						<input type="hidden" name="token" value="" />
-						<input type="hidden" name="method" value="id-card" />
+					{(
+						signature &&
+						signature.xades &&
+						initiative.undersignable
+					) ? <DeleteSignatureButton req={req} signature={signature}>
+						{t("REVOKE_SIGNATURE")}
+					</DeleteSignatureButton> : <Fragment>
+						<Form
+							req={req}
+							id="id-card-form"
+							method="post"
+							action={initiativePath + "/signatures"}>
+							<button class="inherited-button">
+								<img
+									src="/assets/id-kaart-button.png"
+									title={signWithIdCardText}
+									alt={signWithIdCardText}
+								/>
+							</button>
+						</Form>
+
+						<Form
+							req={req}
+							id="mobile-id-form"
+							method="post"
+							action={initiativePath + "/signatures"}>
+							<input
+								id="mobile-id-form-toggle"
+								type="checkbox"
+								style="display: none"
+								onchange="this.form.phoneNumber.focus()"
+							/>
+
+							<label for="mobile-id-form-toggle" class="inherited-button">
+								<img
+									src="/assets/mobile-id-button.png"
+									title={signWithMobileText}
+									alt={signWithMobileText}
+								/>
+							</label>
+
+							<input type="hidden" name="optionId" value={optId} />
+
+							<input
+								type="tel"
+								name="phoneNumber"
+								placeholder={t("PLACEHOLDER_PHONE_NUMBER")}
+								required
+								class="form-input"
+							/>
+
+							<input
+								type="tel"
+								name="pid"
+								placeholder={t("PLACEHOLDER_PERSONAL_IDENTIFICATION_CODE")}
+								required
+								class="form-input"
+							/>
+
+							<button
+								name="method"
+								value="mobile-id"
+								class={["button", signWithMobileClass].join(" ")}>
+								{signWithMobileText}
+							</button>
+						</Form>
 
 						{
-							// The Id-card form will be submitted async therefore no button
-							// value.
+							// This flash is for the the Id-card JavaScript code below.
 						}
-						<button class="inherited-button">
-							<img
-								src="/assets/id-kaart-button.png"
-								title={signWithIdCardText}
-								alt={signWithIdCardText}
-							/>
-						</button>
-					</Form>
+						<p id="initiative-vote-flash" class="flash error" />
 
-					<Form
-						req={req}
-						id="mobile-id-form"
-						method="post"
-						action={"/initiatives/" + topic.id + "/signature"}>
-						<input
-							id="mobile-id-form-toggle"
-							type="checkbox"
-							style="display: none"
-							onchange="this.form.phoneNumber.focus()"
-						/>
+						<script>{javascript`
+							var Hwcrypto = require("@rahvaalgatus/hwcrypto")
+							var TRANSLATIONS = ${stringify(UI_TRANSLATIONS[req.lang])}
+							var form = document.getElementById("id-card-form")
+							var flash = document.getElementById("initiative-vote-flash")
+							var all = Promise.all.bind(Promise)
+							var csrfToken = ${stringify(req.csrfToken)}
 
-						<label for="mobile-id-form-toggle" class="inherited-button">
-							<img
-								src="/assets/mobile-id-button.png"
-								title={signWithMobileText}
-								alt={signWithMobileText}
-							/>
-						</label>
+							form.addEventListener("submit", function(ev) {
+								ev.preventDefault()
+								notice("")
 
-						<input type="hidden" name="optionId" value={optId} />
+								var certificate = Hwcrypto.certificate()
 
-						<input
-							type="tel"
-							name="phoneNumber"
-							placeholder={t("PLACEHOLDER_PHONE_NUMBER")}
-							required
-							class="form-input"
-						/>
+								var signable = certificate.then(function(certificate) {
+									var path = "/initiatives/${initiative.uuid}/signatures"
+									path += "?optionId=${optId}"
 
-						<input
-							type="tel"
-							name="pid"
-							placeholder={t("PLACEHOLDER_PERSONAL_IDENTIFICATION_CODE")}
-							required
-							class="form-input"
-						/>
+									return fetch(path, {
+										method: "POST",
+										credentials: "same-origin",
 
-						<button
-							name="method"
-							value="mobile-id"
-							class={["button", signWithMobileClass].join(" ")}>
-							{signWithMobileText}
-						</button>
-					</Form>
+										headers: {
+											"X-CSRF-Token": csrfToken,
+											"Content-Type": "application/pkix-cert",
+											Accept: "${SIGNABLE_TYPE}, ${ERR_TYPE}"
+										},
 
-					{
-						// This flash is for the the Id-card JavaScript code below.
-					}
-					<p id="initiative-vote-flash" class="flash error" />
-
-					<script>{javascript`
-						var Hwcrypto = require("@rahvaalgatus/hwcrypto")
-						var TRANSLATIONS = ${stringify(UI_TRANSLATIONS[req.lang])}
-						var form = document.getElementById("id-card-form")
-						var flash = document.getElementById("initiative-vote-flash")
-						var all = Promise.all.bind(Promise)
-
-						form.addEventListener("submit", function(ev) {
-							notice("")
-							if (form.elements.signature.value === "") ev.preventDefault()
-
-							var certificate = Hwcrypto.authenticate()
-
-							var token = certificate.then(function(certificate) {
-								var query = ""
-								query += "certificate=" + encodeURIComponent(certificate)
-								query += "&"
-								query += "optionId=${optId}"
-								return fetch("/initiatives/${topic.id}/signable?" + query, {
-									credentials: "same-origin"
+										body: certificate.toDer()
+									}).then(assertOk).then(function(res) {
+										return res.arrayBuffer().then(function(signable) {
+											return [
+												res.headers.get("location"),
+												new Uint8Array(signable)
+											]
+										})
+									})
 								})
+
+								var signature = all([certificate, signable]).then(function(all) {
+									var certificate = all[0]
+									var signable = all[1][1]
+									return Hwcrypto.sign(certificate, "SHA-256", signable)
+								})
+
+								var done = all([signable, signature]).then(function(all) {
+									var url = all[0][0]
+									var signature = all[1]
+
+									return fetch(url, {
+										method: "PUT",
+										credentials: "same-origin",
+										redirect: "manual",
+
+										headers: {
+											"X-CSRF-Token": csrfToken,
+											"Content-Type": "application/vnd.rahvaalgatus.signature",
+
+											// Fetch polyfill doesn't support manual redirect, so use
+											// x-empty.
+											Accept: "application/x-empty, ${ERR_TYPE}"
+										},
+
+										body: signature
+									}).then(assertOk).then(function(res) {
+										window.location.assign(res.headers.get("location"))
+									})
+								})
+
+								done.catch(noticeError)
+								done.catch(raise)
 							})
 
-							token = token.then(read).then(function(res) {
-								if (!res.ok) throw res.json
-								else return res.json
-							})
+							function noticeError(err) {
+								notice(
+									err.code && TRANSLATIONS[err.code] ||
+									err.description ||
+									err.message
+								)
+							}
 
-							var sig = all([certificate, token]).then(function(all) {
-								return Hwcrypto.sign(all[0], all[1].hash, all[1].digest)
-							})
+							function assertOk(res) {
+								if (res.status >= 200 && res.status < 400) return res
 
-							var done = all([certificate, token, sig]).then(function(all) {
-								form.elements.certificate.value = all[0]
-								form.elements.token.value = all[1].token
-								form.elements.signature.value = all[2]
-								form.submit()
-							})
+								var err = new Error(res.statusText)
+								err.code = res.status
 
-							done.catch(noticeError)
-							done.catch(raise)
-						})
+								var type = res.headers.get("content-type")
+								if (type == "${ERR_TYPE}")
+									return res.json().then(function(body) {
+										err.description = body.description
+										throw err
+									})
+								else throw err
+							}
 
-						function noticeError(err) {
-							notice(err.code ? TRANSLATIONS[err.code] : err.message)
-						}
-
-						function read(res) {
-							return res.json().then(function(v) { return res.json = v, res })
-						}
-
-						function notice(msg) { flash.textContent = msg }
-						function raise(err) { setTimeout(function() { throw err }) }
-					`}</script>
+							function notice(msg) { flash.textContent = msg }
+							function raise(err) { setTimeout(function() { throw err }) }
+						`}</script>
+					</Fragment>}
 				</div> : null}
 			</div>
 
@@ -1507,9 +1559,6 @@ function QuicksignView(attrs) {
 
 	if (!(initiative.external || topic && Topic.isPublic(topic))) return null
 
-	// There may be multiple QuicksignViews on the page.
-	var id = _.uniqueId("initiative-quicksign-")
-
 	return <div class="quicksign">
 		<ProgressView
 			t={t}
@@ -1535,36 +1584,15 @@ function QuicksignView(attrs) {
 		{topic && isSignable(initiative, topic) && signature ? <Fragment>
 			<h2>{t("THANKS_FOR_SIGNING")}</h2>
 
-			<a href="#initiative-vote" class="link-button revoke-button">
-				{t("REVOKE_SIGNATURE")}
-			</a>
+			{signature.xades
+				? <DeleteSignatureButton req={req} signature={signature}>
+					{t("REVOKE_SIGNATURE")}
+				</DeleteSignatureButton>
+				: <a href="#initiative-vote" class="link-button revoke-button">
+					{t("REVOKE_SIGNATURE")}
+				</a>
+			}
 
-			{signature.user_uuid ? <Fragment>
-				{" "}või vaid <FormButton
-					req={req}
-					class="link-button hide-button"
-					action={"/initiatives/" + topic.id + "/signature"}
-					onclick={confirm(t("HIDE_SIGNATURE_CONFIRMATION"))}
-					name="hidden"
-					value="true">
-					peida kontolt
-				</FormButton>.{" "}
-
-				<input
-					type="checkbox"
-					class="hiding-description-toggle"
-					id={"hiding-description-toggle-" + id}
-					hidden
-				/>
-
-				<label
-					class="link-button"
-					for={"hiding-description-toggle-" + id}>
-					(?)
-				</label>
-
-				<p class="hiding-description">{t("HIDE_SIGNATURE_DESCRIPTION")}</p>
-			</Fragment> : "."}
 		</Fragment> : null}
 	</div>
 }
@@ -1696,6 +1724,22 @@ function AddInitiativeInfoButton(attrs) {
 		for="initiative-info-form-toggle">
 		{t("ADD_INITIATIVE_INFO")}
 	</label>
+}
+
+function DeleteSignatureButton(attrs, children) {
+	var req = attrs.req
+	var signature = attrs.signature
+	var initiativePath = "/initiatives/" + signature.initiative_uuid
+
+	return <FormButton
+		req={req}
+		class="link-button revoke-button"
+		action={initiativePath + "/signatures/" + pathToSignature(signature)}
+		onclick={confirm(req.t("REVOKE_SIGNATURE_CONFIRMATION"))}
+		name="_method"
+		value="delete">
+		{children}
+	</FormButton>
 }
 
 function isPhaseAtLeast(than, phase) {

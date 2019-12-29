@@ -1,4 +1,5 @@
 /** @jsx Jsx */
+var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var InitiativePage = require("../initiative_page")
@@ -20,27 +21,32 @@ module.exports = function(attrs) {
 		initiative={initiative}
 		topic={topic}
 		req={req}>
+		<script src="/assets/html5.js" />
+
 		<section id="initiative-signature" class="text-section primary-section">
 			<center>
 				{error
 					? <p class="flash error">{error}</p>
 					: method == "mobile-id" ? <Fragment>
 						<p>
-							<strong>{t("CONTROL_CODE", {code: code})}</strong>
+							<strong>
+								{t("CONTROL_CODE", {code: _.padLeft(code, 4, 0)})}
+							</strong>
 							<br />
 							{t("MAKE_SURE_CONTROL_CODE")}
 						</p>
 
 						<script>{javascript`
 							fetch("${poll}", {
+								credentials: "same-origin",
+
+								// Fetch polyfill doesn't support manual redirect, so use
+								// x-empty.
 								redirect: "manual",
-								credentials: "same-origin"
+								headers: {Accept: "application/x-empty"}
 							}).then(function(res) {
-								if (res.status >= 302 && res.status <= 303)
-									window.location.assign(res.headers.get("location"))
-								else
-									// WhatWG-Fetch polyfill lacks res.url.
-									window.location.assign("${poll}")
+								// WhatWG-Fetch polyfill lacks res.url.
+								window.location.assign(res.headers.get("Location") || "${poll}")
 							})
 						`}</script>
 				</Fragment> : null}

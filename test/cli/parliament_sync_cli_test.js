@@ -164,10 +164,9 @@ describe("ParliamentSyncCli", function() {
 	})
 
 	it("must update local initiative with events and files", function*() {
-		var initiative = yield initiativesDb.create({
-			uuid: newUuid(),
+		var initiative = yield initiativesDb.create(new ValidInitiative({
 			phase: "government"
-		})
+		}))
 
 		this.router.get(INITIATIVES_URL, respond.bind(null, [{
 			uuid: INITIATIVE_UUID,

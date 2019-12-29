@@ -4,6 +4,7 @@ var Express = require("root/lib/express")
 var Config = require("root/config")
 var HttpError = require("standard-http-error")
 var I18n = require("root/lib/i18n")
+var MediaType = require("medium-type")
 var runServer = require("root/lib/http").runServer
 var redirect = require("root/lib/redirect")
 var ENV = process.env.ENV
@@ -20,6 +21,7 @@ app.use(require("body-parser").urlencoded({extended: true}))
 app.use(require("root/lib/middleware/multipart_form_middleware"))
 app.use(require("root/lib/middleware/method_override_middleware"))
 app.use(require("root/lib/middleware/accept_middleware"))
+app.use(require("root/lib/middleware/request_type_middleware"))
 app.use(require("root/lib/middleware/extension_middleware"))
 app.use(require("root/lib/middleware/i18n_middleware"))
 app.use(require("root/lib/middleware/csrf_middleware"))
@@ -71,16 +73,45 @@ app.use(require("root/lib/middleware/error_handler_middleware").bind(null,
 	// The error could've originated from middleware before req.t is set.
 	var t = req.t || I18n.t.bind(null, "et")
 
-	// Eventually when we're in control of signin, we should show the signin form
-	// for 401s.
-	if (err instanceof HttpError) res.render("error_page.jsx", {
-		title: t(err.code + "_TITLE") || err.name,
-		body: t(err.code + "_BODY") || err.message
-	})
-	else res.render("error_page.jsx", {
-		title: t("500_TITLE"),
-		body: t("500_BODY")
-	})
+	var type = accepts([
+		new MediaType("text/html"),
+		new MediaType("application/vnd.rahvaalgatus.error+json"),
+		new MediaType("application/json")
+	])
+
+	switch (type && type.name) {
+		case "application/vnd.rahvaalgatus.error+json":
+		case "application/json":
+			res.setHeader("Content-Type", type)
+
+			if (err instanceof HttpError) res.end(JSON.stringify(err))
+			else JSON.stringify({
+				code: 500,
+				message: t("500_TITLE"),
+				description: t("500_BODY")
+			})
+			break
+
+		default:
+			// Eventually when we're in control of signin, we should show the signin
+			// form for 401s.
+			if (err instanceof HttpError) res.render("error_page.jsx", {
+				title: t(err.code + "_TITLE") || "",
+				body: err.description || t(err.code + "_BODY") || err.message
+			})
+			else res.render("error_page.jsx", {
+				title: t("500_TITLE"),
+				body: t("500_BODY")
+			})
+	}
+
+	function accepts(types) {
+		if (req.accept) for (var i = 0; i < types.length; ++i) {
+			if (req.accept.some(types[i].match.bind(types[i]))) return types[i]
+		}
+
+		return null
+	}
 }))
 
 if (module.parent) return

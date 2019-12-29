@@ -10,7 +10,6 @@ var countSignaturesByIds = require("root/lib/citizenos_db").countSignaturesByIds
 var sql = require("sqlate")
 var cosDb = require("root").cosDb
 var initiativesDb = require("root/db/initiatives_db")
-var initiativeSignaturesDb = require("root/db/initiative_signatures_db")
 var next = require("co-next")
 var concat = Array.prototype.concat.bind(Array.prototype)
 
@@ -64,17 +63,6 @@ function* read(req, res) {
 	`)
 
 	signatures = signatures.filter((sig) => sig.support == "Yes")
-
-	var dbSignatures = _.indexBy(yield initiativeSignaturesDb.search(sql`
-		SELECT * FROM initiative_signatures
-		WHERE user_uuid = ${user.id}
-		AND initiative_uuid IN ${sql.in(signatures.map((s) => s.initiative_uuid))}
-	`), "initiative_uuid")
-
-	signatures = signatures.filter(function(sig) {
-		var dbSignature = dbSignatures[sig.initiative_uuid]
-		return dbSignature == null || !dbSignature.hidden
-	})
 
 	var authoredTopics = yield searchTopics(sql`
 		topic."creatorId" = ${user.id}

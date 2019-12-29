@@ -1,7 +1,18 @@
 var _ = require("root/lib/underscore")
+var MediaType = require("medium-type")
 var newUuid = require("uuid/v4")
+var outdent = require("root/lib/outdent")
+var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
+var HTML_TYPE = new MediaType("text/html")
 
 module.exports = function(attrs) {
+	var phase = attrs && attrs.phase || "edit"
+	var external = attrs && attrs.external
+
+	var text = outdent`<body>
+		Make the world a better place for ${_.uniqueId} people.
+	</body>`
+
 	return _.assign({
 		uuid: newUuid(),
 		title: "",
@@ -10,8 +21,11 @@ module.exports = function(attrs) {
 		created_at: new Date,
 		community_url: "",
 		url: "",
-		phase: "edit",
+		phase: phase,
 		organizations: [],
+		text: phase != "edit" && !external ? text : null,
+		text_type: phase != "edit" && !external ? HTML_TYPE : null,
+		text_sha256: phase != "edit" && !external ? sha256(text) : null,
 		meetings: [],
 		media_urls: [],
 		government_agency: null,
@@ -25,10 +39,12 @@ module.exports = function(attrs) {
 		signature_milestones: {},
 		notes: "",
 		has_paper_signatures: false,
+		undersignable: false,
 		mailchimp_interest_id: null,
 		external: false,
 		parliament_api_data: null,
 		parliament_synced_at: null,
+		parliament_token: null,
 		sent_to_parliament_at: null,
 		received_by_parliament_at: null,
 		accepted_by_parliament_at: null,

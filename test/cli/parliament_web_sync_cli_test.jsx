@@ -219,10 +219,9 @@ describe("ParliamentWebSyncCli", function() {
 	})
 
 	it("must update local initiative with events and files", function*() {
-		var initiative = yield initiativesDb.create({
-			uuid: newUuid(),
+		var initiative = yield initiativesDb.create(new ValidInitiative({
 			phase: "government"
-		})
+		}))
 
 		this.router.get(WEB_INITIATIVES_PATH, respond.bind(null, <Page>
 			<tr>
@@ -306,10 +305,9 @@ describe("ParliamentWebSyncCli", function() {
 	}, function(url, title) {
 		it("must update local initiative if URL in the style of " + title,
 			function*() {
-			var initiative = yield initiativesDb.create({
-				uuid: newUuid(),
+			var initiative = yield initiativesDb.create(new ValidInitiative({
 				phase: "government"
-			})
+			}))
 
 			this.router.get(WEB_INITIATIVES_PATH, respond.bind(null, <Page>
 				<tr>
@@ -528,11 +526,11 @@ describe("ParliamentWebSyncCli", function() {
 		var files = test[4]
 
 		it("must create events and files given " + title, function*() {
-			var initiative = yield initiativesDb.create({
+			var initiative = yield initiativesDb.create(new ValidInitiative({
 				uuid: INITIATIVE_UUID,
 				parliament_uuid: INITIATIVE_UUID,
 				phase: "parliament"
-			})
+			}))
 
 			this.router.get(WEB_INITIATIVES_PATH, respond.bind(null, <Page>
 				<tr>
@@ -593,11 +591,11 @@ describe("ParliamentWebSyncCli", function() {
 	})
 
 	it("must consider documents from HTML along with API's", function*() {
-		var initiative = yield initiativesDb.create({
+		var initiative = yield initiativesDb.create(new ValidInitiative({
 			uuid: INITIATIVE_UUID,
 			parliament_uuid: INITIATIVE_UUID,
 			phase: "parliament"
-		})
+		}))
 
 		this.router.get(WEB_INITIATIVES_PATH, respond.bind(null, <Page>
 			<tr>
@@ -825,11 +823,11 @@ describe("ParliamentWebSyncCli", function() {
 	})
 
 	it("must consider volumes from HTML along with API's", function*() {
-		var initiative = yield initiativesDb.create({
+		var initiative = yield initiativesDb.create(new ValidInitiative({
 			uuid: INITIATIVE_UUID,
 			parliament_uuid: INITIATIVE_UUID,
 			phase: "parliament"
-		})
+		}))
 
 		// NOTE: Note the path component after VOLUME_UUID. This is the case for
 		// the oldest initiative "Lõpetada erakondade ületoitmine" on
@@ -1142,11 +1140,11 @@ describe("ParliamentWebSyncCli", function() {
 	})
 
 	it("must ignore specific unsupported documents", function*() {
-		yield initiativesDb.create({
+		yield initiativesDb.create(new ValidInitiative({
 			uuid: INITIATIVE_UUID,
 			parliament_uuid: INITIATIVE_UUID,
 			phase: "parliament"
-		})
+		}))
 
 		this.router.get(WEB_INITIATIVES_PATH, respond.bind(null, <Page>
 			<tr>
@@ -1190,11 +1188,11 @@ describe("ParliamentWebSyncCli", function() {
 	// The parliament page refers to a volume (https://www.riigikogu.ee/tegevus/dokumendiregister/toimikud/65154711-c8f8-4394-8643-7037adedb3ae) that in turn
 	// refers to the initiative.
 	it("must ignore volumes containing the initiative document ", function*() {
-		var initiative = yield initiativesDb.create({
+		var initiative = yield initiativesDb.create(new ValidInitiative({
 			uuid: INITIATIVE_UUID,
 			parliament_uuid: INITIATIVE_UUID,
 			phase: "parliament"
-		})
+		}))
 
 		this.router.get(WEB_INITIATIVES_PATH, respond.bind(null, <Page>
 			<tr>

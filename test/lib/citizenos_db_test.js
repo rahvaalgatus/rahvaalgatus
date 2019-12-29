@@ -133,6 +133,7 @@ describe("CitizenosDb", function() {
 					description: html
 				}).must.eql({
 					title: "Vote for Peace",
+					description: html,
 					html: "<p>Rest in peace!</p>"
 				})
 			})
@@ -154,6 +155,7 @@ describe("CitizenosDb", function() {
 				description: html
 			}).must.eql({
 				title: "Vote for Peace",
+				description: html,
 				html: "<p>Rest in peace!</p>"
 			})
 		})
@@ -172,6 +174,7 @@ describe("CitizenosDb", function() {
 				description: html
 			}).must.eql({
 				title: "Vote: War & Peace",
+				description: html,
 				html: "<p>Rest in peace!</p>"
 			})
 		})
@@ -191,6 +194,7 @@ describe("CitizenosDb", function() {
 				description: html
 			}).must.eql({
 				title: "Vote for Peace",
+				description: html,
 				html: outdent`
 					<h1>Vote for Terror</h1>
 					\t\t<p>Rest in peace!</p>
@@ -217,6 +221,7 @@ describe("CitizenosDb", function() {
 				description: html
 			}).must.eql({
 				title: "Vote for Peace",
+				description: html,
 				html: "<p>Rest in peace!</p>"
 			})
 		})
@@ -238,6 +243,7 @@ describe("CitizenosDb", function() {
 				description: html
 			}).must.eql({
 				title: "Vote for Peace",
+				description: html,
 				html: "<p>Rest in peace!</p>"
 			})
 		})
@@ -262,6 +268,7 @@ describe("CitizenosDb", function() {
 				description: html
 			}).must.eql({
 				title: "Vote for Peace",
+				description: html,
 				html: "<p>Rest in peace!</p>"
 			})
 		})
@@ -287,6 +294,8 @@ describe("CitizenosDb", function() {
 					description: html
 				}).must.eql({
 					title: "Vote for Peace",
+					description: html,
+
 					html: outdent`
 						<p>Indeed</p>
 						\t\t<${tagName}>Reasons</${tagName}>

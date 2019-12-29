@@ -1,12 +1,16 @@
 var _ = require("root/lib/underscore")
+var MediaType = require("medium-type")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidEvent = require("root/test/valid_db_initiative_event")
+var SqliteError = require("root/lib/sqlite_error")
+var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var insert = require("heaven-sqlite").insert
 var sqlite = require("root").sqlite
 var sql = require("sqlate")
 var db = require("root/db/initiatives_db")
 var eventsDb = require("root/db/initiative_events_db")
 var serialize = db.serialize
+var PHASES = require("root/lib/initiative").PHASES
 
 describe("InitiativesDb", function() {
 	require("root/test/db")()
@@ -108,6 +112,119 @@ describe("InitiativesDb", function() {
 				yield db.search(sql`SELECT * FROM initiatives`).must.then.eql([
 					initiative
 				])
+			})
+		})
+
+		describe("text", function() {
+			it("must not be allowed in edit phase", function*() {
+				var initiative = new ValidInitiative({
+					phase: "edit",
+					text: "<h1>Hello, world!</h1>",
+					text_type: null,
+					text_sha256: null
+				})
+
+				var err
+				try { yield db.create(initiative) } catch (ex) { err = ex }
+				err.must.be.an.error(SqliteError)
+				err.constraint.must.equal("initiatives_text_not_null")
+			})
+
+			_.without(PHASES, "edit").forEach(function(phase) {
+				it(`must be allowed in ${phase}`, function*() {
+					var initiative = new ValidInitiative({
+						phase: phase,
+						text: "<h1>Hello, world!</h1>",
+						text_type: new MediaType("text/html"),
+						text_sha256: sha256("<h1>Hello, world!</h1>")
+					})
+
+					yield db.read(yield db.create(initiative)).must.then.eql(initiative)
+				})
+
+				it(`must be allowed empty on external initiatives in ${phase}`,
+					function*() {
+					var initiative = new ValidInitiative({
+						phase: phase,
+						external: true,
+						text: null,
+						text_type: null,
+						text_sha256: null
+					})
+
+					yield db.read(yield db.create(initiative)).must.then.eql(initiative)
+				})
+			})
+		})
+
+		describe("text_type", function() {
+			it("must be parsed", function*() {
+				var initiative = new ValidInitiative({
+					phase: "sign",
+					text: "<h1>Hello, world!</h1>",
+					text_type: new MediaType("text/html"),
+					text_sha256: sha256("<h1>Hello, world!</h1>")
+				})
+
+				yield db.read(yield db.create(initiative)).must.then.eql(initiative)
+			})
+
+			it("must be required if text present", function*() {
+				var initiative = new ValidInitiative({
+					phase: "sign",
+					text: "<h1>Hello, world!</h1>",
+					text_type: null,
+					text_sha256: sha256("<h1>Hello, world!</h1>")
+				})
+
+				var err
+				try { yield db.create(initiative) } catch (ex) { err = ex }
+				err.must.be.an.error(SqliteError)
+				err.constraint.must.equal("initiatives_text_type_not_null")
+			})
+
+			it("must not be empty", function*() {
+				var initiative = new ValidInitiative({
+					phase: "sign",
+					text: "<h1>Hello, world!</h1>",
+					text_type: "",
+					text_sha256: sha256("<h1>Hello, world!</h1>")
+				})
+
+				var err
+				try { yield db.create(initiative) } catch (ex) { err = ex }
+				err.must.be.an.error(SqliteError)
+				err.constraint.must.equal("initiatives_text_type_length")
+			})
+		})
+
+		describe("text_sha256", function() {
+			it("must be required if text present", function*() {
+				var initiative = new ValidInitiative({
+					phase: "sign",
+					text: "<h1>Hello, world!</h1>",
+					text_type: new MediaType("text/html"),
+					text_sha256: null
+				})
+
+				var err
+				try { yield db.create(initiative) } catch (ex) { err = ex }
+				err.must.be.an.error(SqliteError)
+				err.constraint.must.equal("initiatives_text_sha256_not_null")
+			})
+
+			it("must have SHA256 length", function*() {
+				var initiative = new ValidInitiative({
+					phase: "sign",
+					text: "<h1>Hello, world!</h1>",
+					text_type: new MediaType("text/html"),
+					text_sha256: sha256("<h1>Hello, world!</h1>").slice(0, -1)
+				})
+
+				var err
+				try { yield db.create(initiative) } catch (ex) { err = ex }
+				err.must.be.an.error(SqliteError)
+				err.constraint.must.equal("initiatives_text_sha256_length")
 			})
 		})
 	})

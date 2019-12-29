@@ -9,6 +9,12 @@
 	"minDeadlineDays": 3,
 	"signatureMilestones": [5, 10],
 
+	"mobileIdUser": "Rahvaalgatus",
+	"mobileIdPassword": "f2066bec-dbe6-44b8-ab3b-a343bcc7c286",
+	"timemarkUrl": "http://demo.sk.ee/ocsp",
+	"timestampUrl": "http://demo.sk.ee/tsa",
+	"parliamentEmail": "riigikogu@example.com",
+
 	"citizenOsDatabase": {
 		"host": "/tmp",
 		"database": "citizenos_test",

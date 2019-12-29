@@ -1,21 +1,28 @@
 CREATE TABLE initiatives (
 	uuid TEXT PRIMARY KEY NOT NULL,
-	mailchimp_interest_id TEXT NULL UNIQUE, notes TEXT NOT NULL DEFAULT "", parliament_api_data TEXT NULL, sent_to_parliament_at TEXT NULL, finished_in_parliament_at TEXT NULL, discussion_end_email_sent_at TEXT NULL, signing_end_email_sent_at TEXT NULL, author_url TEXT NOT NULL DEFAULT "", community_url TEXT NOT NULL DEFAULT "", organizations TEXT NOT NULL DEFAULT "[]", meetings TEXT NOT NULL DEFAULT "[]", url TEXT NOT NULL DEFAULT "", media_urls TEXT NOT NULL DEFAULT "[]", signature_milestones TEXT NOT NULL DEFAULT "{}", phase TEXT NOT NULL DEFAULT "edit", government_change_urls TEXT NOT NULL DEFAULT "[]", public_change_urls TEXT NOT NULL DEFAULT "[]", has_paper_signatures INTEGER NOT NULL DEFAULT 0, received_by_parliament_at TEXT, accepted_by_parliament_at TEXT, archived_at TEXT, parliament_decision TEXT, parliament_committee TEXT, parliament_uuid TEXT, external INTEGER NOT NULL DEFAULT 0, title TEXT NOT NULL DEFAULT '', author_name TEXT NOT NULL DEFAULT '', created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')), parliament_synced_at TEXT, government_agency TEXT, sent_to_government_at TEXT, finished_in_government_at TEXT, government_contact TEXT, government_contact_details TEXT, government_decision TEXT,
+	mailchimp_interest_id TEXT NULL UNIQUE, notes TEXT NOT NULL DEFAULT "", parliament_api_data TEXT NULL, sent_to_parliament_at TEXT NULL, finished_in_parliament_at TEXT NULL, discussion_end_email_sent_at TEXT NULL, signing_end_email_sent_at TEXT NULL, author_url TEXT NOT NULL DEFAULT "", community_url TEXT NOT NULL DEFAULT "", organizations TEXT NOT NULL DEFAULT "[]", meetings TEXT NOT NULL DEFAULT "[]", url TEXT NOT NULL DEFAULT "", media_urls TEXT NOT NULL DEFAULT "[]", signature_milestones TEXT NOT NULL DEFAULT "{}", phase TEXT NOT NULL DEFAULT "edit", government_change_urls TEXT NOT NULL DEFAULT "[]", public_change_urls TEXT NOT NULL DEFAULT "[]", has_paper_signatures INTEGER NOT NULL DEFAULT 0, received_by_parliament_at TEXT, accepted_by_parliament_at TEXT, archived_at TEXT, parliament_decision TEXT, parliament_committee TEXT, parliament_uuid TEXT, external INTEGER NOT NULL DEFAULT 0, title TEXT NOT NULL DEFAULT '', author_name TEXT NOT NULL DEFAULT '', created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')), parliament_synced_at TEXT, government_agency TEXT, sent_to_government_at TEXT, finished_in_government_at TEXT, government_contact TEXT, government_contact_details TEXT, government_decision TEXT, text TEXT, text_type TEXT, text_sha256 BLOB, undersignable INTEGER NOT NULL DEFAULT 0, parliament_token BLOB,
 
 	CONSTRAINT initiatives_uuid_length
 	CHECK (length(uuid) == 36),
 
 	CONSTRAINT initiatives_mailchimp_interest_id
-	CHECK (length(mailchimp_interest_id) > 0)
-);
-CREATE TABLE initiative_signatures (
-	initiative_uuid TEXT NOT NULL,
-	user_uuid TEXT NOT NULL,
-	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
-	hidden INTEGER NOT NULL DEFAULT 0,
+	CHECK (length(mailchimp_interest_id) > 0),
 
-	PRIMARY KEY (initiative_uuid, user_uuid),
-	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid)
+	CONSTRAINT initiatives_text_not_null
+	CHECK (external OR (text IS NULL) = (phase = 'edit')),
+
+	CONSTRAINT initiatives_text_type_not_null
+	CHECK ((text IS NULL) = (text_type IS NULL)),
+
+	CONSTRAINT initiatives_text_type_length CHECK (length(text_type) > 0),
+
+	CONSTRAINT initiatives_text_sha256_not_null
+	CHECK ((text IS NULL) = (text_sha256 IS NULL)),
+
+	CONSTRAINT initiatives_text_sha256_length CHECK (length(text_sha256) = 32),
+
+	CONSTRAINT initiatives_undersignable_and_text
+	CHECK (NOT undersignable OR phase = 'edit' OR text IS NOT NULL)
 );
 CREATE TABLE initiative_messages (
 	id INTEGER PRIMARY KEY NOT NULL,
@@ -163,6 +170,54 @@ CREATE TABLE initiative_images (
 
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE
 );
+CREATE TABLE initiative_signables (
+	initiative_uuid TEXT NOT NULL,
+	country TEXT NOT NULL,
+	personal_id TEXT NOT NULL,
+  token BLOB UNIQUE NOT NULL DEFAULT (randomblob(12)),
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	xades TEXT NOT NULL,
+	signed INTEGER NOT NULL DEFAULT 0,
+	timestamped INTEGER NOT NULL DEFAULT 0,
+	error TEXT,
+
+	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE,
+
+	CONSTRAINT initiative_signables_country_length CHECK (length(country) = 2),
+
+	CONSTRAINT initiative_signables_personal_id_length
+	CHECK (length(personal_id) > 0),
+
+	CONSTRAINT initiative_signables_token_length CHECK (length(token) > 0),
+	CONSTRAINT initiative_signables_xades_length CHECK (length(xades) > 0)
+);
+CREATE INDEX index_signables_on_initiative_uuid
+ON initiative_signables (initiative_uuid);
+CREATE TABLE initiative_signatures (
+	initiative_uuid TEXT NOT NULL,
+	country TEXT NOT NULL,
+	personal_id TEXT NOT NULL,
+	token BLOB UNIQUE NOT NULL DEFAULT (randomblob(12)),
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+	xades TEXT NOT NULL,
+	hidden INTEGER NOT NULL DEFAULT 0,
+	oversigned INTEGER NOT NULL DEFAULT 0,
+
+	PRIMARY KEY (initiative_uuid, country, personal_id),
+	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid)
+
+	CONSTRAINT initiative_signatures_country_length CHECK (length(country) = 2),
+
+	CONSTRAINT initiative_signatures_personal_id_length
+	CHECK (length(personal_id) > 0),
+
+	CONSTRAINT initiative_signatures_token_length CHECK (length(token) > 0),
+	CONSTRAINT initiative_signatures_xades_length CHECK (length(xades) > 0)
+);
+CREATE INDEX index_signatures_on_country_and_personal_id
+ON initiative_signatures (country, personal_id);
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -216,4 +271,9 @@ INSERT INTO migrations VALUES('20190902091043');
 INSERT INTO migrations VALUES('20190902091235');
 INSERT INTO migrations VALUES('20190912160618');
 INSERT INTO migrations VALUES('20191021102603');
+INSERT INTO migrations VALUES('20191118142601');
+INSERT INTO migrations VALUES('20191118184000');
+INSERT INTO migrations VALUES('20191118184010');
+INSERT INTO migrations VALUES('20191118184020');
+INSERT INTO migrations VALUES('20191118184030');
 COMMIT;

@@ -13,8 +13,35 @@
 		"d80fad3a-1f0b-41a1-a708-7222c5826f25"
 	],
 
+	"undersignable": true,
+	"timemarkUrl": "http://demo.sk.ee/ocsp",
+	"timestampUrl": "http://demo.sk.ee/tsa",
+	"parliamentEmail": "dev@rahvaalgatus.ee",
+
 	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
 	"cookieDomain": null,
 	"votesRequired": 2,
-	"minDeadlineDays": 0
+	"minDeadlineDays": 0,
+
+	"issuers": [[
+		"C=EE",
+		"O=AS Sertifitseerimiskeskus",
+		"CN=ESTEID-SK 2011",
+		"1.2.840.113549.1.9.1=#1609706b6940736b2e6565"
+	], [
+		"C=EE",
+		"O=AS Sertifitseerimiskeskus",
+		"2.5.4.97=#0c0e4e545245452d3130373437303133",
+		"CN=ESTEID-SK 2015"
+	], [
+		"C=EE",
+		"O=SK ID Solutions AS",
+		"2.5.4.97=#0c0e4e545245452d3130373437303133",
+		"CN=ESTEID2018"
+	], [
+		"C=EE",
+		"O=AS Sertifitseerimiskeskus",
+		"2.5.4.97=#0c0e4e545245452d3130373437303133",
+		"CN=TEST of ESTEID-SK 2015"
+	]]
 }

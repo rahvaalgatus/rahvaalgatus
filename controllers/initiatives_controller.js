@@ -1,5 +1,6 @@
 var _ = require("root/lib/underscore")
 var O = require("oolong")
+var Qs = require("querystring")
 var Url = require("url")
 var Router = require("express").Router
 var HttpError = require("standard-http-error")
@@ -7,10 +8,12 @@ var Topic = require("root/lib/topic")
 var DateFns = require("date-fns")
 var Time = require("root/lib/time")
 var Config = require("root/config")
+var Crypto = require("crypto")
 var MediaType = require("medium-type")
 var Subscription = require("root/lib/subscription")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
+var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
@@ -21,31 +24,30 @@ var filesDb = require("root/db/initiative_files_db")
 var commentsDb = require("root/db/comments_db")
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
-var catch401 = require("root/lib/fetch").catch.bind(null, 401)
 var next = require("co-next")
-var sleep = require("root/lib/promise").sleep
 var cosDb = require("root").cosDb
-var cosApi = require("root/lib/citizenos_api")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var renderEmail = require("root/lib/i18n").email
 var sql = require("sqlate")
 var sqlite = require("root").sqlite
 var translateCitizenError = require("root/lib/citizenos_api").translateError
 var searchTopics = require("root/lib/citizenos_db").searchTopics
-var countSignaturesById = require("root/lib/citizenos_db").countSignaturesById
-var countSignaturesByIds = require("root/lib/citizenos_db").countSignaturesByIds
+var countCitizenSignaturesByIds =
+	require("root/lib/citizenos_db").countSignaturesByIds
 var readVoteOptions = require("root/lib/citizenos_db").readVoteOptions
 var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
-var decodeBase64 = require("root/lib/crypto").decodeBase64
 var trim = Function.call.bind(String.prototype.trim)
+var sendEmail = require("root").sendEmail
 var searchInitiativeEvents = _.compose(searchInitiativesEvents, concat)
 var ENV = process.env.ENV
 var EMPTY = Object.prototype
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: ""}
 var EMPTY_CONTACT = {name: "", email: "", phone: ""}
+var EMPTY_PROMISE = Promise.resolve({})
 exports.searchInitiativesEvents = searchInitiativesEvents
+exports.readCitizenSignature = readCitizenSignature
 
 var RESPONSE_TYPES = [
 	"text/html",
@@ -135,7 +137,8 @@ exports.router.post("/", next(function*(req, res) {
 
 	yield initiativesDb.create({
 		uuid: topic.id,
-		created_at: new Date
+		created_at: new Date,
+		undersignable: Config.undersignable
 	})
 
 	res.redirect(303, req.baseUrl + "/" + topic.id + "/edit")
@@ -217,11 +220,22 @@ exports.read = next(function*(req, res) {
 	var topic = req.topic
 	var initiative = req.initiative
 	var newSignatureId = req.flash("signatureId")
+	var newSignatureToken = req.flash("signatureToken")
 	var thank = false
 	var thankAgain = false
 	var signature
 
-	if (initiative.phase == "sign" && newSignatureId) {
+	if (initiative.phase == "sign" && newSignatureToken) {
+		signature = yield signaturesDb.read(sql`
+			SELECT * FROM initiative_signatures
+			WHERE initiative_uuid = ${initiative.uuid}
+			AND token = ${Buffer.from(newSignatureToken, "hex")}
+		`)
+
+		thank = !!signature
+		thankAgain = signature && signature.oversigned > 0
+	}
+	else if (initiative.phase == "sign" && newSignatureId) {
 		var cosSignature = yield cosDb.query(sql`
 			SELECT signature.*, opt.value AS support
 			FROM "VoteLists" AS signature
@@ -255,16 +269,8 @@ exports.read = next(function*(req, res) {
 
 		signature = cosSignature.support == "No" ? null : {
 			initiative_uuid: initiative.uuid,
-			user_uuid: null,
 			hidden: false
 		}
-	}
-	else if (initiative.phase == "sign" && user) {
-		let cosSignature = yield readCitizenSignature(topic, user.id)
-
-		signature = cosSignature && cosSignature.support == "Yes"
-			? yield readSignatureWithDefault(initiative.uuid, user.id)
-			: null
 	}
 
 	var subscriberCount = yield sqlite(sql`
@@ -372,148 +378,13 @@ exports.router.use("/:id/events",
 	require("./initiatives/events_controller").router)
 exports.router.use("/:id/subscriptions",
 	require("./initiatives/subscriptions_controller").router)
-
-exports.router.get("/:id/signable", next(function*(req, res) {
-	var topic = req.topic
-	var vote = topic.vote
-
-	// NOTE: Do not send signing requests through the current user. See below for
-	// an explanation.
-	var signable = yield cosApi(`/api/topics/${topic.id}/votes/${vote.id}`, {
-		method: "POST",
-
-		json: {
-			options: [{optionId: req.query.optionId}],
-			certificate: req.query.certificate
-		}
-	}).catch(catch400)
-
-	if (isOk(signable)) res.json({
-		token: signable.body.data.token,
-		digest: signable.body.data.signedInfoDigest,
-		hash: signable.body.data.signedInfoHashType
-	})
-	else res.status(422).json({
-		error: translateCitizenError(req.t, signable.body)
-	})
-}))
-
-exports.router.post("/:id/signature", next(function*(req, res) {
-	var path
-	var topic = req.topic
-	var vote = topic.vote
-
-	res.locals.method = req.body.method
-
-	// NOTE: Do not send signing requests through the current user. CitizenOS API
-	// limits signing with one personal id number to a single account,
-	// a requirement we don't need to enforce.
-	switch (req.body.method) {
-		case "id-card":
-			path = `/api/topics/${topic.id}/votes/${vote.id}/sign`
-			var signed = yield cosApi(path, {
-				method: "POST",
-				json: {token: req.body.token, signatureValue: req.body.signature}
-			}).catch(catch400)
-
-			if (isOk(signed)) {
-				var userId = parseUserIdFromBdocUrl(signed.body.data.bdocUri)
-				var sig = yield readCitizenSignature(topic, userId)
-				yield unhideSignature(topic.id, userId)
-				res.flash("signatureId", sig.id)
-				res.redirect(303, req.baseUrl + "/" + topic.id)
-			}
-			else res.status(422).render("initiatives/signature/create_page.jsx", {
-				error: translateCitizenError(req.t, signed.body)
-			})
-			break
-
-		case "mobile-id":
-			path = `/api/topics/${topic.id}/votes/${vote.id}`
-			var signing = yield cosApi(path, {
-				method: "POST",
-				json: {
-					options: [{optionId: req.body.optionId}],
-					pid: req.body.pid,
-					phoneNumber: ensureAreaCode(req.body.phoneNumber),
-				}
-			}).catch(catch400)
-
-			if (isOk(signing)) {
-				res.render("initiatives/signature/create_page.jsx", {
-					code: signing.body.data.challengeID,
-					poll: req.baseUrl + req.path + "?token=" + signing.body.data.token
-				})
-			}
-			else res.status(422).render("initiatives/signature/create_page.jsx", {
-				error: translateCitizenError(req.t, signing.body)
-			})
-			break
-
-		default: throw new HttpError(422, "Unknown Signing Method")
-	}
-}))
-
-exports.router.put("/:id/signature", next(function*(req, res) {
-	var user = req.user
-	if (user == null) throw new HttpError(401)
-
-	var initiative = req.initiative
-	var topic = req.topic
-
-	// NOTE: Do not answer differently if there was no signature or it was already
-	// hidden — that'd permit detecting its visibility without actually
-	// re-signing.
-	var cosSignature = yield readCitizenSignature(topic, user.id)
-
-	if (cosSignature && cosSignature.support == "Yes") {
-		var signature = yield signaturesDb.read(sql`
-			SELECT * FROM initiative_signatures
-			WHERE (initiative_uuid, user_uuid) = (${initiative.uuid}, ${user.id})
-		`)
-
-		if (!signature) yield signaturesDb.create({
-			initiative_uuid: initiative.uuid,
-			user_uuid: user.id,
-			hidden: true,
-			updated_at: new Date
-		})
-		else if (!signature.hidden) yield signaturesDb.execute(sql`
-			UPDATE initiative_signatures
-			SET hidden = 1, updated_at = ${new Date}
-			WHERE (initiative_uuid, user_uuid) = (${topic.id}, ${user.id})
-		`)
-	}
-
-	res.flash("notice", req.t("SIGNATURE_HIDDEN"))
-	res.redirect(303, req.baseUrl + "/" + initiative.uuid)
-}))
-
-exports.router.get("/:id/signature", next(function*(req, res) {
-	var token = req.query.token
-	if (token == null) throw new HttpError(400, "Missing Token")
-	var topic = req.topic
-	var signature = yield readCitizenSignatureWithToken(topic, token)
-
-	switch (signature.statusCode) {
-		case 200:
-			var userId = parseUserIdFromBdocUrl(signature.body.data.bdocUri)
-			var sig = yield readCitizenSignature(topic, userId)
-			yield unhideSignature(topic.id, userId)
-			res.flash("signatureId", sig.id)
-			break
-
-		default:
-			res.flash("error", translateCitizenError(req.t, signature.body))
-			break
-	}
-
-	res.redirect(303, req.baseUrl + "/" + topic.id)
-}))
+exports.router.use("/:id/signatures",
+	require("./initiatives/signatures_controller").router)
 
 exports.router.use(function(err, req, res, next) {
 	if (err instanceof HttpError && err.code === 404) {
 		res.statusCode = err.code
+		res.statusMessage = err.message
 
 		res.render("error_page.jsx", {
 			title: req.t("INITIATIVE_404_TITLE"),
@@ -550,54 +421,8 @@ function* searchRecentInitiatives(initiatives) {
 	return recentUuids.map((uuid) => initiativesByUuid[uuid]).filter(Boolean)
 }
 
-function* readCitizenSignatureWithToken(topic, token) {
-	var vote = topic.vote
-	var path = `/api/topics/${topic.id}/votes/${vote.id}/status`
-	path += "?token=" + encodeURIComponent(token)
-
-	RETRY: for (var i = 0; i < 60; ++i) {
-		// The signature endpoint is valid only for a limited amount of time.
-		// If that time passes, 401 is thrown.
-		var res = yield cosApi(path).catch(catch400).catch(catch401)
-
-		switch (res.statusCode) {
-			case 200:
-				if (res.body.status.code === 20001) {
-					yield sleep(2500);
-					continue RETRY;
-				}
-				// Fall through.
-
-			default: return res
-		}
-	}
-
-	throw new HttpError(500, "Mobile-Id Took Too Long")
-}
-
-function ensureAreaCode(number) {
-	// Numbers without a leading "+" but with a suitable area code, like
-	// 37200000766, seem to work.
-	if (/^\+/.exec(number)) return number
-	if (/^37[012]/.exec(number)) return number
-	return "+372" + number
-}
-
 function hasCategory(category, topic) {
 	return _.contains(topic.categories, category)
-}
-
-function parseUserIdFromBdocUrl(url) {
-	url = Url.parse(url, true)
-	return parseJwt(url.query.token).userId
-}
-
-function unhideSignature(initiativeUuid, userId) {
-	return signaturesDb.execute(sql`
-		UPDATE initiative_signatures
-		SET hidden = 0, updated_at = ${new Date}
-		WHERE (initiative_uuid, user_uuid) = (${initiativeUuid}, ${userId})
-	`)
 }
 
 function* searchInitiativesEvents(initiatives) {
@@ -710,17 +535,6 @@ function readCitizenSignature(topic, userUuid) {
 	`).then(_.first)
 }
 
-function readSignatureWithDefault(initiativeUuid, userUuid) {
-	return signaturesDb.read(sql`
-		SELECT * FROM initiative_signatures
-		WHERE (initiative_uuid, user_uuid) = (${initiativeUuid}, ${userUuid})
-	`).then((signature) => (signature || {
-		initiative_uuid: initiativeUuid,
-		user_uuid: userUuid,
-		hidden: false
-	}))
-}
-
 function readTopicPermission(user, topic) {
 	if (user == null) return Promise.resolve("read")
 	if (topic.creatorId == user.id) return Promise.resolve("admin")
@@ -816,6 +630,7 @@ function* updateInitiativeToPublished(req, res) {
 }
 
 function* updateInitiativePhaseToSign(req, res) {
+	var initiative = req.initiative
 	var topic = req.topic
 	var tmpl = "initiatives/update_for_voting_page.jsx"
 
@@ -868,9 +683,15 @@ function* updateInitiativePhaseToSign(req, res) {
 		attrs: attrs
 	})
 
-	yield initiativesDb.update(topic.id, {
+	yield initiativesDb.update(initiative, {
 		phase: "sign",
-		signing_end_email_sent_at: null
+		signing_end_email_sent_at: null,
+
+		// Is there a chance for a race condition as Etherpad may not have saved
+		// the latest state to the CitizenOS datbase?
+		text: topic.description,
+		text_type: new MediaType("text/html"),
+		text_sha256: sha256(topic.description)
 	})
 
 	if (topic.vote == null) {
@@ -929,9 +750,39 @@ function* updateInitiativePhaseToParliament(req, res) {
 		attrs: attrs
 	})
 
-	yield initiativesDb.update(topic.id, {
+	initiative = yield initiativesDb.update(initiative, {
 		phase: "parliament",
-		sent_to_parliament_at: new Date
+		sent_to_parliament_at: new Date,
+		parliament_token: Crypto.randomBytes(12)
+	})
+
+	var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+	var signaturesUrl = `${initiativeUrl}/signatures.asice?` + Qs.stringify({
+		"parliament-token": initiative.parliament_token.toString("hex")
+	})
+
+	var uuid = initiative.uuid
+	var undersignedSignatureCount = yield countUndersignedSignaturesById(uuid)
+
+	if (undersignedSignatureCount > 0) yield sendEmail({
+		to: Config.parliamentEmail,
+
+		subject: t("EMAIL_INITIATIVE_TO_PARLIAMENT_TITLE", {
+			initiativeTitle: topic.title
+		}),
+
+		text: renderEmail("et", "EMAIL_INITIATIVE_TO_PARLIAMENT_BODY", {
+			initiativeTitle: topic.title,
+			initiativeUrl: initiativeUrl,
+			initiativeUuid: initiative.uuid,
+
+			signatureCount: undersignedSignatureCount,
+			signaturesUrl: signaturesUrl,
+
+			authorName: attrs.contact.name,
+			authorEmail: attrs.contact.email,
+			authorPhone: attrs.contact.phone,
+		})
 	})
 
 	var message = yield messagesDb.create({
@@ -1011,7 +862,39 @@ function serializeEtherpadUrl(url) {
 	return url + (url.indexOf("?") >= 0 ? "&" : "?") + "theme=" + ENV
 }
 
-// NOTE: Use this only on JWTs from trusted sources as it does no validation.
-function parseJwt(jwt) { return JSON.parse(decodeBase64(jwt.split(".")[1])) }
+function countSignaturesById(uuid) {
+	return countSignaturesByIds([uuid]).then((counts) => (
+		uuid in counts ? counts[uuid] : null
+	))
+}
+
+function countSignaturesByIds(uuids) {
+	if (uuids.length == 0) return EMPTY_PROMISE
+
+	return Promise.all([
+		countCitizenSignaturesByIds(uuids),
+		countUndersignedSignaturesByIds(uuids)
+	]).then(([a, b]) => _.mergeWith(a, b, _.add))
+}
+
+function countUndersignedSignaturesById(uuid) {
+	return countUndersignedSignaturesByIds([uuid]).then((counts) => (
+		uuid in counts ? counts[uuid] : null
+	))
+}
+
+function countUndersignedSignaturesByIds(uuids) {
+	return sqlite(sql`
+		SELECT initiative_uuid AS uuid, COUNT(*) AS count
+		FROM initiative_signatures
+		WHERE initiative_uuid IN ${sql.in(uuids)}
+		AND xades IS NOT NULL
+		GROUP BY initiative_uuid
+	`).then(function(rows) {
+		var counts = _.indexBy(rows, "uuid")
+		return _.object(uuids, (uuid) => uuid in counts ? +counts[uuid].count : 0)
+	})
+}
+
 function isOrganizationPresent(org) { return org.name || org.url }
 function isMeetingPresent(org) { return org.date || org.url }

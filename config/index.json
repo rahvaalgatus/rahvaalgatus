@@ -23,6 +23,13 @@
 	"minDeadlineDays": 3,
 	"maxDeadlineDays": 366,
 
+	"undersignable": false,
+	"mobileIdUser": null,
+	"mobileIdPassword": null,
+	"timemarkUrl": null,
+	"timestampUrl": null,
+	"parliamentEmail": null,
+
 	"googleAnalyticsAccount": "UA-74848422-1",
 	"userVoiceApiKey": "X2tNuk059z6CD4Em5Q65KQ",
 	"maksekeskusUrl": "https://payment.maksekeskus.ee/pay/1/link.html",
@@ -70,5 +77,22 @@
 			"icon": "/assets/badges-kestame.png",
 			"url": "https://kestame.rahvaalgatus.ee"
 		}
-	}
+	},
+
+	"issuers": [[
+		"C=EE",
+		"O=AS Sertifitseerimiskeskus",
+		"CN=ESTEID-SK 2011",
+		"1.2.840.113549.1.9.1=#1609706b6940736b2e6565"
+	], [
+		"C=EE",
+		"O=AS Sertifitseerimiskeskus",
+		"2.5.4.97=#0c0e4e545245452d3130373437303133",
+		"CN=ESTEID-SK 2015"
+	], [
+		"C=EE",
+		"O=SK ID Solutions AS",
+		"2.5.4.97=#0c0e4e545245452d3130373437303133",
+		"CN=ESTEID2018"
+	]]
 }

@@ -12,7 +12,6 @@ var createVote = require("root/test/citizenos_fixtures").createVote
 var createSignature = require("root/test/citizenos_fixtures").createSignature
 var createOptions = require("root/test/citizenos_fixtures").createOptions
 var initiativesDb = require("root/db/initiatives_db")
-var signaturesDb = require("root/db/initiative_signatures_db")
 
 describe("UserController", function() {
 	require("root/test/db")()
@@ -74,93 +73,62 @@ describe("UserController", function() {
 				res.body.must.not.include(initiative.uuid)
 			})
 
-			it("must show signed initiatives", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					phase: "sign"
-				}))
+			describe("when CitizenOS-signable", function() {
+				it("must show signed initiatives", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "sign"
+					}))
 
-				var author = yield createUser(newUser())
-				var topic = yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: author.id,
-					sourcePartnerId: this.partner.id,
-					status: "voting"
-				}))
+					var author = yield createUser(newUser())
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: author.id,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
 
-				var vote = yield createVote(topic, newVote({endsAt: new Date}))
-				var yesAndNo = yield createOptions(vote)
+					var vote = yield createVote(topic, newVote({endsAt: new Date}))
+					var yesAndNo = yield createOptions(vote)
 
-				yield createSignature(newSignature({
-					userId: this.user.id,
-					voteId: vote.id,
-					optionId: yesAndNo[0]
-				}))
+					yield createSignature(newSignature({
+						userId: this.user.id,
+						voteId: vote.id,
+						optionId: yesAndNo[0]
+					}))
 
-				var res = yield this.request("/user")
-				res.statusCode.must.equal(200)
-				res.body.must.include(initiative.uuid)
-			})
-
-			it("must not show signed initiatives if signature hidden", function*() {	
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					phase: "sign"
-				}))
-
-				var author = yield createUser(newUser())
-				var topic = yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: author.id,
-					sourcePartnerId: this.partner.id,
-					status: "voting"
-				}))
-
-				var vote = yield createVote(topic, newVote({endsAt: new Date}))
-				var yesAndNo = yield createOptions(vote)
-
-				yield createSignature(newSignature({
-					userId: this.user.id,
-					voteId: vote.id,
-					optionId: yesAndNo[0]
-				}))
-
-				yield signaturesDb.create({
-					initiative_uuid: initiative.uuid,
-					user_uuid: this.user.id,
-					hidden: true
+					var res = yield this.request("/user")
+					res.statusCode.must.equal(200)
+					res.body.must.include(initiative.uuid)
 				})
 
-				var res = yield this.request("/user")
-				res.statusCode.must.equal(200)
-				res.body.must.not.include(initiative.uuid)
-			})
+				it("must not show other user's signed initiatives", function*() {	
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "sign"
+					}))
 
-			it("must not show other user's signed initiatives", function*() {	
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					phase: "sign"
-				}))
+					var author = yield createUser(newUser())
+					var user = yield createUser(newUser())
 
-				var author = yield createUser(newUser())
-				var user = yield createUser(newUser())
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: author.id,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
 
-				var topic = yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: author.id,
-					sourcePartnerId: this.partner.id,
-					status: "voting"
-				}))
+					var vote = yield createVote(topic, newVote({endsAt: new Date}))
+					var yesAndNo = yield createOptions(vote)
 
-				var vote = yield createVote(topic, newVote({endsAt: new Date}))
-				var yesAndNo = yield createOptions(vote)
+					yield createSignature(newSignature({
+						userId: user.id,
+						voteId: vote.id,
+						optionId: yesAndNo[0]
+					}))
 
-				yield createSignature(newSignature({
-					userId: user.id,
-					voteId: vote.id,
-					optionId: yesAndNo[0]
-				}))
-
-				var res = yield this.request("/user")
-				res.statusCode.must.equal(200)
-				res.body.must.not.include(initiative.uuid)
+					var res = yield this.request("/user")
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(initiative.uuid)
+				})
 			})
 		})
 	})

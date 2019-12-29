@@ -1,6 +1,7 @@
+var SqliteError = require("root/lib/sqlite_error")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidInitiative = require("root/test/valid_db_initiative")
-var initiativeDb = require("root/db/initiatives_db")
+var initiativesDb = require("root/db/initiatives_db")
 var db = require("root/db/initiative_subscriptions_db")
 var sql = require("sqlate")
 
@@ -8,7 +9,7 @@ describe("InitiativeSubscriptionsDb", function() {
 	require("root/test/db")()
 
 	beforeEach(function*() {
-		this.initiative = yield initiativeDb.create(new ValidInitiative)
+		this.initiative = yield initiativesDb.create(new ValidInitiative)
 	})
 
 	describe(".prototype.create", function() {
@@ -35,9 +36,12 @@ describe("InitiativeSubscriptionsDb", function() {
 
 			var err
 			try { yield db.create(other) } catch (ex) { err = ex }
-			err.must.be.an.error(/UNIQUE.*initiative_uuid_and_email/)
+			err.must.be.an.error(SqliteError)
 			err.code.must.equal("constraint")
 			err.type.must.equal("unique")
+			err.index.must.equal(
+				"index_initiative_subscriptions_initiative_uuid_and_email"
+			)
 		})
 
 		it("must have a unique constraint on initiative_uuid", function*() {
@@ -52,9 +56,12 @@ describe("InitiativeSubscriptionsDb", function() {
 
 			var err
 			try { yield db.create(other) } catch (ex) { err = ex }
-			err.must.be.an.error(/UNIQUE.*initiative_uuid_and_email/)
+			err.must.be.an.error(SqliteError)
 			err.code.must.equal("constraint")
 			err.type.must.equal("unique")
+			err.index.must.equal(
+				"index_initiative_subscriptions_initiative_uuid_and_email"
+			)
 		})
 
 		it("must have a unique constraint on NULL initiative_uuid", function*() {
@@ -69,9 +76,11 @@ describe("InitiativeSubscriptionsDb", function() {
 
 			var err
 			try { yield db.create(other) } catch (ex) { err = ex }
-			err.must.be.an.error(/UNIQUE.*initiative_uuid_and_email/)
+			err.must.be.an.error(SqliteError)
 			err.code.must.equal("constraint")
-			err.type.must.equal("unique")
+			err.index.must.equal(
+				"index_initiative_subscriptions_initiative_uuid_and_email"
+			)
 		})
 	})
 })

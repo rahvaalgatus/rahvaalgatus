@@ -1,6 +1,7 @@
 var _ = require("root/lib/underscore")
 var O = require("oolong")
 var Db = require("root/lib/db")
+var MediaType = require("medium-type")
 var sqlite = require("root").sqlite
 var concat = Array.prototype.concat.bind(Array.prototype)
 
@@ -49,12 +50,14 @@ exports._read = function(query, opts) {
 exports.parse = function(attrs) {
 	return O.defaults({
 		external: !!attrs.external,
+		undersignable: !!attrs.undersignable,
 		has_paper_signatures: !!attrs.has_paper_signatures,
 		organizations: attrs.organizations && JSON.parse(attrs.organizations),
 		media_urls: attrs.media_urls && JSON.parse(attrs.media_urls),
 		meetings: attrs.meetings && JSON.parse(attrs.meetings),
 		created_at: attrs.created_at && new Date(attrs.created_at),
 		archived_at: attrs.archived_at && new Date(attrs.archived_at),
+		text_type: attrs.text_type && MediaType.parse(attrs.text_type),
 
 		sent_to_parliament_at: attrs.sent_to_parliament_at &&
 			new Date(attrs.sent_to_parliament_at),

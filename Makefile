@@ -43,6 +43,9 @@ RSYNC_OPTS = \
 	--exclude "/node_modules/node-sass/***" \
 	--exclude "/node_modules/sqlite3/***" \
 	--exclude "/node_modules/sharp/***" \
+	--exclude "/node_modules/emailjs-mime-parser/***" \
+	--exclude "/node_modules/yauzl/***" \
+	--exclude "/node_modules/sinon/***" \
 	--exclude "/tmp/***"
 
 export PORT
@@ -184,6 +187,34 @@ lib/i18n/et.json: tmp/translations.json
 lib/i18n/ru.json: tmp/translations.json
 	jq $(JQ_OPTS) -f scripts/translation.jq --arg lang russian "$<" > "$@"
 
+config/tsl: config/tsl/ee.xml
+config/tsl: config/tsl/ee_test.xml
+
+config/tsl/ee.xml:
+	wget "https://sr.riik.ee/tsl/estonian-tsl.xml" -O "$@"
+
+config/tsl/ee_test.xml:
+	wget "https://open-eid.github.io/test-TL/EE_T.xml" -O "$@"
+
+test/fixtures: test/fixtures/john_ecdsa.pub
+test/fixtures: test/fixtures/john_rsa.pub
+test/fixtures: test/fixtures/eid_2007_rsa.pub
+test/fixtures: test/fixtures/esteid_2011_rsa.pub
+test/fixtures: test/fixtures/esteid_2015_rsa.pub
+test/fixtures: test/fixtures/esteid_2018_ecdsa.pub
+
+test/fixtures/%_rsa.key:
+	openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out "$@"
+
+test/fixtures/%_rsa.pub: test/fixtures/%_rsa.key
+	openssl rsa -pubout -in "$<" -out "$@"
+
+test/fixtures/%_ecdsa.key:
+	openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:prime256v1 -out "$@"
+
+test/fixtures/%_ecdsa.pub: test/fixtures/%_ecdsa.key
+	openssl ec -in "$<" -pubout -out "$@"
+
 .PHONY: love
 .PHONY: compile autocompile
 .PHONY: javascripts autojavascripts
@@ -196,3 +227,7 @@ lib/i18n/ru.json: tmp/translations.json
 .PHONY: deploy staging production
 .PHONY: db/create db/test db/status db/migrate db/migration
 .PHONY: translations
+.PHONY: config/tsl
+
+.PRECIOUS: test/fixtures/%_rsa.key
+.PRECIOUS: test/fixtures/%_ecdsa.key

@@ -1,17 +1,30 @@
 var ERR_PREFIX = "MSG_ERROR_HWCRYPTO_"
 void require("./vendor/hwcrypto-legacy.js")
 var Hwcrypto = require("./vendor/hwcrypto.js")
+exports.Certificate = Certificate
 
-exports.authenticate = function() {
+function Certificate(cert) {
+	this.obj = cert
+}
+
+Certificate.prototype.toDer = function() {
+	return this.obj.encoded
+}
+
+Certificate.prototype.toHwcrypto = function() {
+	return this.obj
+}
+
+exports.certificate = function() {
 	var cert = Hwcrypto.getCertificate({})
-	cert = cert.then(function(cert) { return cert.hex })
+	cert = cert.then(function(cert) { return new Certificate(cert) })
 	cert = cert.catch(errorify)
 	return cert
 }
 
-exports.sign = function(cert, hash, data) {
-	var sig = Hwcrypto.sign({hex: cert}, {hex: data, type: hash}, {})
-	sig = sig.then(function(sig) { return sig.hex })
+exports.sign = function(cert, hashName, hash) {
+	var sig = Hwcrypto.sign(cert.toHwcrypto(), {value: hash, type: hashName}, {})
+	sig = sig.then(function(sig) { return sig.value })
 	sig = sig.catch(errorify)
 	return sig
 }
@@ -31,7 +44,6 @@ function identifyError(err) {
 
 		case Hwcrypto.INVALID_ARGUMENT:
 		case Hwcrypto.TECHNICAL_ERROR:
-		default:
-			return ERR_PREFIX + "TECHNICAL_ERROR"
+		default: return ERR_PREFIX + "TECHNICAL_ERROR"
 	}
-};
+}

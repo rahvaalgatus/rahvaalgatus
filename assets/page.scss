@@ -1851,12 +1851,19 @@ button.inherited {
 			line-height: 1.5;
 		}
 
-		form {
+		#id-card-form,
+		#mobile-id-form {
 			padding: 0 1rem;
 			display: inline-block;
 			width: 50%;
 			margin-top: 1rem;
 			vertical-align: top;
+		}
+
+		.revoke-button {
+			display: block;
+			font-weight: 600;
+			margin: 0 auto;
 		}
 
 		#id-card-form { text-align: right; }
@@ -1888,6 +1895,12 @@ button.inherited {
 		}
 
 		#mobile-id-form {
+			// Internet Explorer v11 won't activate the label if clicked on an image.
+			#mobile-id-form-toggle + label {
+				display: inline-block;
+				img { pointer-events: none; }
+			}
+
 			#mobile-id-form-toggle:not(:checked) {
 				& ~ input,
 				& ~ button { display: none; }
