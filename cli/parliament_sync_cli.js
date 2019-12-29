@@ -14,16 +14,17 @@ var messagesDb = require("root/db/initiative_messages_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
-var logger = require("root").logger
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var renderEventTitle = require("root/lib/event").renderEventTitle
 var t = require("root/lib/i18n").t.bind(null, "et")
+var formatDate = require("root/lib/i18n").formatDate.bind(null, "numeric")
+var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
+var ENV = process.env.ENV
+var logger = ENV == "test" ? require("root/lib/null_logger") : console
 var EMPTY_ARR = Array.prototype
 var PARLIAMENT_URL = "https://www.riigikogu.ee"
 var DOCUMENT_URL = PARLIAMENT_URL + "/tegevus/dokumendiregister/dokument"
 var FILE_URL = PARLIAMENT_URL + "/download"
-var formatDate = require("root/lib/i18n").formatDate.bind(null, "numeric")
-var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
 exports = module.exports = cli
 exports.parseTitle = parseTitle
 exports.replaceInitiative = replaceInitiative

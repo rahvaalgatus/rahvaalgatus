@@ -48,6 +48,7 @@
 		"method-override": "",
 		"medium-type": "",
 		"mime": "",
+		"syslogh": "",
 		"hugml": "",
 		"undersign": "git+https://github.com/moll/js-undersign.git#27c2bdab5968140ee38852c68a6cf82d62a86366",
 		"jsdom": ">= 9 < 10"

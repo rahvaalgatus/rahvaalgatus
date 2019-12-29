@@ -43,6 +43,7 @@ RSYNC_OPTS = \
 	--exclude "/node_modules/node-sass/***" \
 	--exclude "/node_modules/sqlite3/***" \
 	--exclude "/node_modules/sharp/***" \
+	--exclude "/node_modules/syslogh/***" \
 	--exclude "/node_modules/emailjs-mime-parser/***" \
 	--exclude "/node_modules/yauzl/***" \
 	--exclude "/node_modules/sinon/***" \
@@ -122,6 +123,7 @@ shrinkwrap:
 	npm shrinkwrap --dev
 
 rebuild:
+	$(NPM_REBUILD) syslogh
 	$(NPM_REBUILD) node-sass --sass-binary-site=http://localhost:0
 	$(NPM_REBUILD) sqlite3
 	$(NPM_REBUILD) sharp --sharp-dist-base-url=http://localhost:0

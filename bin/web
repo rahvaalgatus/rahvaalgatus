@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+process.title = "rahvaalgatus/web"
+
 var O = require("oolong")
 var Express = require("root/lib/express")
 var Config = require("root/config")

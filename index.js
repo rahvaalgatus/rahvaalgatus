@@ -66,6 +66,11 @@ lazy(exports, "sendEmail", function() {
 lazy(exports, "logger", function() {
   switch (ENV) {
 		case "test": return require("root/lib/null_logger")
+
+		case "production":
+			var SyslogLogger = require("root/lib/syslog_logger")
+			return new SyslogLogger(process.title)
+
 		default: return console
   }
 })

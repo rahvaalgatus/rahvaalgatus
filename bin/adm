@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+process.title = "rahvaalgatus/adm"
+
 var Express = require("root/lib/express")
 var Config = require("root/config")
 var HttpError = require("standard-http-error")
