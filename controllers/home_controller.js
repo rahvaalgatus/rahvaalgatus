@@ -125,20 +125,19 @@ function* readStatistics(from, to) {
 
 	var signatureCount = yield readSignatureCount(from, to)
 
-	var parliamentCount = yield sqlite(sql`
-		SELECT COUNT(*) as count
+	var parliamentCounts = yield sqlite(sql`
+		SELECT SUM(NOT external) AS sent, SUM(external) AS external
 		FROM initiatives
 		WHERE phase IN ('parliament', 'government', 'done')
-		AND NOT external
-		AND sent_to_parliament_at >= ${from}
+		AND (sent_to_parliament_at >= ${from} OR external)
 		${to ? sql`AND sent_to_parliament_at < ${to}` : sql``}
-	`).then(_.first).then((res) => res.count)
+	`).then(_.first).then((res) => res)
 
 	return {
 		discussionsCount: discussionsCount,
 		initiativesCount: initiativesCount,
 		signatureCount: signatureCount,
-		parliamentCount: parliamentCount
+		parliamentCounts: parliamentCounts
 	}
 }
 

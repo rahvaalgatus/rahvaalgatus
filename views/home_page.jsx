@@ -137,10 +137,14 @@ module.exports = function(attrs) {
 				<StatisticsView
 					id="parliament-statistic"
 					title={t("HOME_PAGE_STATISTICS_PARLIAMENT")}
-					count={stats.all.parliamentCount}
+					count={[
+						stats.all.parliamentCounts.sent,
+						stats.all.parliamentCounts.external
+					].join("+")}
 				>
-					{Jsx.html(t("HOME_PAGE_STATISTICS_N_IN_LAST_30_DAYS", {
-						count: stats[30].parliamentCount
+					{Jsx.html(t("HOME_PAGE_STATISTICS_N_SENT_IN_LAST_30_DAYS", {
+						sent: stats[30].parliamentCounts.sent,
+						external: stats.all.parliamentCounts.external,
 					}))}
 				</StatisticsView>
 			</center>
