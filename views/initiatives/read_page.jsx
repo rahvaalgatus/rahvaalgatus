@@ -207,7 +207,7 @@ module.exports = function(attrs) {
 							else return null
 
 						case "sign":
-							if (topic.vote.endsAt < new Date) {
+							if (topic.vote.endsAt <= new Date) {
 								return <div class="initiative-status">
 									{signatureCount >= Config.votesRequired ? <Fragment>
                     <h1 class="status-header">

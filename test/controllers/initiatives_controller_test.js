@@ -611,6 +611,8 @@ describe("InitiativesController", function() {
 		})
 
 		describe("when not logged in", function() {
+			require("root/test/time")(new Date(2015, 5, 18, 13, 37, 42))
+
 			it("must respond with 403 for a private initiative", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative)
 
