@@ -2833,10 +2833,8 @@ describe("InitiativesController", function() {
 			var vote = yield createVote(topic, newVote({endsAt: new Date}))
 			yield createCitizenSignatures(vote, 5)
 
-			yield signaturesDb.create(_.times(3, (i) => new ValidSignature({
-				initiative_uuid: initiative.uuid,
-				country: "LT",
-				personal_id: `6000101990${i}`
+			yield signaturesDb.create(_.times(3, () => new ValidSignature({
+				initiative_uuid: initiative.uuid
 			})))
 
 			var res = yield this.request("/initiatives/" + initiative.uuid, {
@@ -4109,12 +4107,8 @@ describe("InitiativesController", function() {
 
 						yield createVote(topic, newVote())
 
-						yield signaturesDb.create(_.times(Config.votesRequired, (i) => (
-							new ValidSignature({
-								initiative_uuid: initiative.uuid,
-								country: "EE",
-								personal_id: `6000101990${i}`
-							})
+						yield signaturesDb.create(_.times(Config.votesRequired, () => (
+							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
 						var res = yield this.request("/initiatives/" + initiative.uuid, {
@@ -4143,12 +4137,8 @@ describe("InitiativesController", function() {
 
 						yield createVote(topic, newVote())
 
-						yield signaturesDb.create(_.times(Config.votesRequired, (i) => (
-							new ValidSignature({
-								initiative_uuid: initiative.uuid,
-								country: "EE",
-								personal_id: `6000101990${i}`
-							})
+						yield signaturesDb.create(_.times(Config.votesRequired, () => (
+							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
 						var res = yield this.request("/initiatives/" + initiative.uuid, {
@@ -4174,12 +4164,8 @@ describe("InitiativesController", function() {
 
 						yield createVote(topic, newVote())
 
-						yield signaturesDb.create(_.times(Config.votesRequired - 1, (i) => (
-							new ValidSignature({
-								initiative_uuid: initiative.uuid,
-								country: "EE",
-								personal_id: `6000101990${i}`
-							})
+						yield signaturesDb.create(_.times(Config.votesRequired - 1, () => (
+							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
 						var res = yield this.request("/initiatives/" + initiative.uuid, {
@@ -4332,12 +4318,8 @@ describe("InitiativesController", function() {
 
 					yield createCitizenSignatures(vote, Config.votesRequired / 2)
 
-					yield signaturesDb.create(_.times(Config.votesRequired / 2, (i) => (
-						new ValidSignature({
-							initiative_uuid: initiative.uuid,
-							country: "EE",
-							personal_id: `6000101990${i}`
-						})
+					yield signaturesDb.create(_.times(Config.votesRequired / 2, () => (
+						new ValidSignature({initiative_uuid: initiative.uuid})
 					)))
 
 					var updated = 0
@@ -4398,12 +4380,8 @@ describe("InitiativesController", function() {
 					var vote = yield createVote(topic, newVote())
 					yield createCitizenSignatures(vote, Config.votesRequired / 2)
 
-					yield signaturesDb.create(_.times(Config.votesRequired / 2, (i) => (
-						new ValidSignature({
-							initiative_uuid: initiative.uuid,
-							country: "EE",
-							personal_id: `6000101990${i}`
-						})
+					yield signaturesDb.create(_.times(Config.votesRequired / 2, () => (
+						new ValidSignature({initiative_uuid: initiative.uuid})
 					)))
 
 					this.router.put(`/api/users/self/topics/${topic.id}`, endResponse)
