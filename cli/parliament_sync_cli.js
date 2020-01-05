@@ -36,9 +36,9 @@ Usage: cli parliament-sync (-h | --help)
        cli parliament-sync [options] [<uuid>]
 
 Options:
-    -h, --help           Display this help and exit.
-    --force              Refreshing initiatives from the parliament API.
-    --cached             Do not refresh initiatives from the parliament API.
+    -h, --help   Display this help and exit.
+    --force      Force refreshing initiatives from the parliament API.
+    --cached     Do not refresh initiatives from the parliament API.
 `
 
 function* cli(argv) {
