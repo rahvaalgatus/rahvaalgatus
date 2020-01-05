@@ -2,6 +2,7 @@ var _ = require("root/lib/underscore")
 var Config = require("root/config")
 var DateFns = require("date-fns")
 var ValidInitiative = require("root/test/valid_db_initiative")
+var ValidSignature = require("root/test/valid_signature")
 var newPartner = require("root/test/citizenos_fixtures").newPartner
 var newUser = require("root/test/citizenos_fixtures").newUser
 var newTopic = require("root/test/citizenos_fixtures").newTopic
@@ -12,6 +13,7 @@ var createTopic = require("root/test/citizenos_fixtures").createTopic
 var createVote = require("root/test/citizenos_fixtures").createVote
 var createSignatures = require("root/test/citizenos_fixtures").createSignatures
 var initiativesDb = require("root/db/initiatives_db")
+var signaturesDb = require("root/db/initiative_signatures_db")
 var parseDom = require("root/lib/dom").parse
 var STATISTICS_TYPE = "application/vnd.rahvaalgatus.statistics+json; v=1"
 var PHASES = require("root/lib/initiative").PHASES
@@ -401,6 +403,39 @@ describe("HomeController", function() {
 			var imageUrl = `${Config.url}/assets/rahvaalgatus-description.png`
 			metasByProp["og:image"].content.must.equal(imageUrl)
 		})
+
+		describe("statistics", function() {
+			it("must show signature count", function*() {
+				var initiativeA = yield initiativesDb.create(new ValidInitiative({
+					phase: "sign"
+				}))
+
+				var topic = yield createTopic(newTopic({
+					id: initiativeA.uuid,
+					creatorId: this.user.id,
+					sourcePartnerId: this.partner.id,
+					status: "voting"
+				}))
+
+				var vote = yield createVote(topic, newVote({endsAt: new Date}))
+				yield createSignatures(vote, 5)
+
+				var initiativeB = yield initiativesDb.create(new ValidInitiative({
+					phase: "sign"
+				}))
+
+				yield signaturesDb.create(_.times(3, () => new ValidSignature({
+					initiative_uuid: initiativeB.uuid
+				})))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var el = dom.querySelector("#signatures-statistic .count")
+				el.textContent.must.equal("8")
+			})
+		})
 	})
 
 	describe(`GET /statistics with ${STATISTICS_TYPE}`, function() {
@@ -416,12 +451,12 @@ describe("HomeController", function() {
 		})
 
 		it("must respond with signature count", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiativeA = yield initiativesDb.create(new ValidInitiative({
 				phase: "sign"
 			}))
 
 			var topic = yield createTopic(newTopic({
-				id: initiative.uuid,
+				id: initiativeA.uuid,
 				creatorId: this.user.id,
 				sourcePartnerId: this.partner.id,
 				status: "voting"
@@ -430,12 +465,20 @@ describe("HomeController", function() {
 			var vote = yield createVote(topic, newVote({endsAt: new Date}))
 			yield createSignatures(vote, 5)
 
+			var initiativeB = yield initiativesDb.create(new ValidInitiative({
+				phase: "sign"
+			}))
+
+			yield signaturesDb.create(_.times(3, () => new ValidSignature({
+				initiative_uuid: initiativeB.uuid
+			})))
+
 			var res = yield this.request("/statistics", {
 				headers: {Accept: STATISTICS_TYPE}
 			})
 
 			res.statusCode.must.equal(200)
-			res.body.signatureCount.must.equal(5)
+			res.body.signatureCount.must.equal(8)
 		})
 
 		PHASES.forEach(function(phase) {

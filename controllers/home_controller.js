@@ -142,7 +142,7 @@ function* readStatistics(from, to) {
 }
 
 function readSignatureCount(from, to) {
-	return cosDb.query(sql`
+	var citizenSignatureCount = cosDb.query(sql`
 		WITH signatures AS (
 			SELECT DISTINCT ON (sig."voteId", sig."userId") opt.value AS support
 			FROM "VoteLists" AS sig
@@ -155,6 +155,14 @@ function readSignatureCount(from, to) {
 		SELECT COUNT(*) as count FROM signatures
 		WHERE support = 'Yes'
 	`).then(_.first).then((res) => Number(res.count))
+
+	var signatureCount = sqlite(sql`
+		SELECT COUNT(*) as count FROM initiative_signatures
+		WHERE created_at >= ${from}
+		${to ? sql`AND created_at < ${to}` : sql``}
+	`).then(_.first).then((res) => Number(res.count))
+
+	return Promise.all([citizenSignatureCount, signatureCount]).then(_.sum)
 }
 
 function alias(url, req, _res, next) { req.url = url; next() }
