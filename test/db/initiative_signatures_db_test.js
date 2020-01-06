@@ -2,6 +2,7 @@ var _ = require("root/lib/underscore")
 var Crypto = require("crypto")
 var SqliteError = require("root/lib/sqlite_error")
 var ValidInitiative = require("root/test/valid_db_initiative")
+var ValidSignature = require("root/test/valid_signature")
 var initiativesDb = require("root/db/initiatives_db")
 var db = require("root/db/initiative_signatures_db")
 
@@ -14,13 +15,7 @@ describe("InitiativeSignaturesDb", function() {
 	
 	describe(".create", function() {
 		it("must throw given duplicate country and personal ids", function*() {
-			var attrs = {
-				initiative_uuid: this.initiative.uuid,
-				country: "EE",
-				personal_id: "60001019906",
-				xades: "<XAdESSignatures />"
-			}
-
+			var attrs = new ValidSignature({initiative_uuid: this.initiative.uuid})
 			yield db.create(attrs)
 
 			var err
@@ -32,12 +27,7 @@ describe("InitiativeSignaturesDb", function() {
 		})
 
 		it("must throw given duplicate tokens", function*() {
-			var attrs = {
-				country: "EE",
-				personal_id: "60001019906",
-				token: Crypto.randomBytes(12),
-				xades: "<XAdESSignatures />"
-			}
+			var attrs = new ValidSignature({token: Crypto.randomBytes(12)})
 
 			yield db.create(_.defaults({
 				initiative_uuid: this.initiative.uuid

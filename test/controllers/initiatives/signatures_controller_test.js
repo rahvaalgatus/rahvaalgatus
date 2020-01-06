@@ -472,7 +472,7 @@ describe("SignaturesController", function() {
 					})
 
 					it("must create a signature and thank after signing if previously hidden", function*() {
-						var oldSignature = yield signaturesDb.create({
+						var oldSignature = yield signaturesDb.create(new ValidSignature({
 							initiative_uuid: this.initiative.uuid,
 							country: "EE",
 							personal_id: PERSONAL_ID,
@@ -483,7 +483,7 @@ describe("SignaturesController", function() {
 								type: this.initiative.text_type,
 								hash: this.initiative.text_sha256
 							}])
-						})
+						}))
 
 						var signed = yield sign(
 							this.router,
@@ -661,6 +661,7 @@ describe("SignaturesController", function() {
 					signables[0].initiative_uuid.must.equal(this.initiative.uuid)
 					signables[0].country.must.equal("EE")
 					signables[0].personal_id.must.equal("60001019906")
+					signables[0].method.must.equal("id-card")
 					signables[0].xades.toString().must.equal(String(xades))
 					signables[0].signed.must.be.false()
 					signables[0].timestamped.must.be.false()
@@ -706,6 +707,7 @@ describe("SignaturesController", function() {
 						token: signables[0].token,
 						country: "EE",
 						personal_id: "60001019906",
+						method: "id-card",
 						xades: String(xades)
 					})])
 				})
@@ -1067,6 +1069,7 @@ describe("SignaturesController", function() {
 					signables[0].initiative_uuid.must.equal(this.initiative.uuid)
 					signables[0].country.must.equal("EE")
 					signables[0].personal_id.must.equal("60001019906")
+					signables[0].method.must.equal("mobile-id")
 					signables[0].xades.toString().must.equal(String(xades))
 					signables[0].signed.must.be.true()
 					signables[0].timestamped.must.be.true()
@@ -1079,6 +1082,7 @@ describe("SignaturesController", function() {
 						token: signables[0].token,
 						country: "EE",
 						personal_id: "60001019906",
+						method: "mobile-id",
 						xades: String(xades)
 					})])
 				})

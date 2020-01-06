@@ -11,6 +11,7 @@ module.exports = function(attrs) {
 		updated_at: createdAt,
 		country: country,
 		personal_id: personalId,
+		method: "id-card",
 		hidden: false,
 		oversigned: 0,
 		xades: `<XAdESSignatures>${country}${personalId}</XAdESSignatures>`

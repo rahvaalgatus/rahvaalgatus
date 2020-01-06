@@ -133,6 +133,7 @@ exports.router.post("/", next(function*(req, res, next) {
 				initiative_uuid: initiative.uuid,
 				country: country,
 				personal_id: pid,
+				method: "id-card",
 				xades: xades
 			})
 
@@ -168,6 +169,7 @@ exports.router.post("/", next(function*(req, res, next) {
 				initiative_uuid: initiative.uuid,
 				country: country,
 				personal_id: pid,
+				method: "mobile-id",
 				xades: xades
 			})
 
@@ -722,6 +724,7 @@ function* replaceSignature(signable) {
 		initiative_uuid: signable.initiative_uuid,
 		country: signable.country,
 		personal_id: signable.personal_id,
+		method: signable.method,
 		token: signable.token,
 		xades: signable.xades,
 		oversigned: signature && !signature.hidden && signature.oversigned + 1 || 0,
