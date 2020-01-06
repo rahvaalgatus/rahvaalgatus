@@ -46,9 +46,9 @@
 	},
 
 	"helpUrls": {
-		"et": "http://help.rahvaalgatus.ee/abi/tagged/juhend",
-		"en": "http://help.rahvaalgatus.ee/help/tagged/guide",
-		"ru": "http://help.rahvaalgatus.ee/pomosh/tagged/Руководство"
+		"et": "http://help.rahvaalgatus.ee/abi",
+		"en": "http://help.rahvaalgatus.ee/help",
+		"ru": "http://help.rahvaalgatus.ee/pomosh"
 	},
 
 	"videoUrls": {
