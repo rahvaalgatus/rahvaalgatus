@@ -29,13 +29,16 @@ var signaturesDb = require("root/db/initiative_signatures_db")
 var signablesDb = require("root/db/initiative_signables_db")
 var cosApi = require("root/lib/citizenos_api")
 var decodeBase64 = require("root/lib/crypto").decodeBase64
-var {readCitizenSignature} = require("../initiatives_controller")
 var translateCitizenError = require("root/lib/citizenos_api").translateError
 var constantTimeEqual = require("root/lib/crypto").constantTimeEqual
 var ENV = process.env.NODE_ENV
 var tsl = require("root").tsl
 var logger = require("root").logger
+exports.router = Router({mergeParams: true})
 exports.pathToSignature = pathToSignature
+
+// Circular dependency.
+var {readCitizenSignature} = require("../initiatives_controller")
 
 var VALID_ISSUERS = Config.issuers.map((p) => p.join(","))
 VALID_ISSUERS = VALID_ISSUERS.map(tsl.getBySubjectName.bind(tsl))
@@ -79,7 +82,6 @@ var MOBILE_ID_ERROR_TEXTS = {
 	SIM_ERROR: "MOBILE_ID_ERROR_SIM_ERROR"
 }
 
-exports.router = Router({mergeParams: true})
 exports.router.use(parseBody({type: hasSignatureType}))
 
 exports.router.get("/", next(function*(req, res) {

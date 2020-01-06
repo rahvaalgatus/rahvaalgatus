@@ -26,6 +26,7 @@ module.exports = function(attrs) {
 		text: phase != "edit" && !external ? text : null,
 		text_type: phase != "edit" && !external ? HTML_TYPE : null,
 		text_sha256: phase != "edit" && !external ? sha256(text) : null,
+		destination: phase != "edit" ? "parliament" : null,
 		meetings: [],
 		media_urls: [],
 		government_agency: null,

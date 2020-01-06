@@ -19,9 +19,15 @@ var ZERO_COUNTS = _.fromEntries(PHASES.map((name) => [name, 0]))
 
 exports.router = Router({mergeParams: true})
 
-exports.router.get("/", next(function*(_req, res) {
+exports.router.get("/", next(function*(req, res) {
+	var gov = req.government
+
 	var initiatives = yield initiativesDb.search(sql`
-		SELECT * FROM initiatives WHERE archived_at IS NULL
+		SELECT * FROM initiatives
+		WHERE archived_at IS NULL AND (
+			destination IS NULL OR
+			destination ${gov == "parliament" ? sql`==` : sql`!=`} "parliament"
+		)
 	`)
 
 	var cutoff = DateFns.addDays(DateFns.startOfDay(new Date), -14)
@@ -51,17 +57,24 @@ exports.router.get("/", next(function*(_req, res) {
 		signatureCounts[initiative.uuid] >= Config.votesRequired
 	))
 
-	var statistics = yield {
-		all: readStatistics(new Date(0)),
-		30: readStatistics(DateFns.addDays(new Date, -30)),
-	}
-
-	res.render("home_page.jsx", {
+	if (gov == "local") res.render("home/local_page.jsx", {
 		initiatives: initiatives,
 		topics: topics,
-		statistics: statistics,
 		signatureCounts: signatureCounts
 	})
+	else {
+		var statistics = yield {
+			all: readStatistics(new Date(0)),
+			30: readStatistics(DateFns.addDays(new Date, -30)),
+		}
+
+		res.render("home_page.jsx", {
+			initiatives: initiatives,
+			topics: topics,
+			statistics: statistics,
+			signatureCounts: signatureCounts
+		})
+	}
 }))
 
 exports.router.get("/about", render.bind(null, "home/about_page.jsx"))

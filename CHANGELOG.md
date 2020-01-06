@@ -1,3 +1,7 @@
+## Jan 7, 2019
+- Adds support for creating initiatives intended for the local government.
+- Adds <https://kohalik.rahvaalgatus.ee> for local government initiatives.
+
 ## Oct 28, 2019
 - Adds support for `TAVAPOST` letter medium when syncing with the Riigikogu API.
 

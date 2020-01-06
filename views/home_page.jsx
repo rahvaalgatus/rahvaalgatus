@@ -50,7 +50,7 @@ module.exports = function(attrs) {
 				/>
 			</div>
 
-			<p class="welcome-paragraph">{Jsx.html(t("HOME_WELCOME"))}</p>
+			<p class="welcome-paragraph">{t("HOME_WELCOME")}</p>
 
 			<a href="/initiatives/new" class="button large-button secondary-button">
 				{t("BTN_NEW_TOPIC")}

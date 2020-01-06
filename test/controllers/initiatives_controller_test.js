@@ -1,4 +1,5 @@
 var _ = require("root/lib/underscore")
+var Url = require("url")
 var Atom = require("root/lib/atom")
 var DateFns = require("date-fns")
 var Config = require("root/config")
@@ -44,13 +45,18 @@ var encodeMime = require("nodemailer/lib/mime-funcs").encodeWord
 var parseDom = require("root/lib/dom").parse
 var outdent = require("root/lib/outdent")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
+var concat = Array.prototype.concat.bind(Array.prototype)
 var INITIATIVE_TYPE = "application/vnd.rahvaalgatus.initiative+json; v=1"
 var ATOM_TYPE = "application/atom+xml"
-var EVENTABLE_PHASES = _.without(Initiative.PHASES, "edit")
+var PHASES = require("root/lib/initiative").PHASES
+var EVENTABLE_PHASES = _.without(PHASES, "edit")
 var PARLIAMENT_DECISIONS = Initiative.PARLIAMENT_DECISIONS
 var COMMITTEE_MEETING_DECISIONS = Initiative.COMMITTEE_MEETING_DECISIONS
+var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.url).hostname
+var LOCAL_SITE_HOSTNAME = Url.parse(Config.localUrl).hostname
 var PNG = new Buffer("89504e470d0a1a0a1337", "hex")
 var PNG_PREVIEW = new Buffer("89504e470d0a1a0a4269", "hex")
+var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 
 describe("InitiativesController", function() {
 	require("root/test/web")()
@@ -91,7 +97,8 @@ describe("InitiativesController", function() {
 
 		it("must show initiatives in edit phase that have ended", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
-				phase: "edit"
+				phase: "edit",
+				destination: "parliament"
 			}))
 
 			yield createTopic(newTopic({
@@ -110,6 +117,7 @@ describe("InitiativesController", function() {
 		it("must show archived initiatives in edit phase", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				phase: "edit",
+				destination: "parliament",
 				archived_at: new Date
 			}))
 
@@ -379,6 +387,116 @@ describe("InitiativesController", function() {
 			res.body.must.include(initiative.uuid)
 		})
 
+		function mustShowInitiativesInPhases(host, dest) {
+			describe("as a shared site", function() {
+				it("must show initiatives in edit phase with no destination",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "edit",
+						destination: null
+					}))
+
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: (yield createUser(newUser())).id,
+						sourcePartnerId: this.partner.id,
+						status: "inProgress",
+						visibility: "public"
+					}))
+
+					var res = yield this.request("/initiatives", {headers: {Host: host}})
+					res.statusCode.must.equal(200)
+					res.body.must.include(initiative.uuid)
+				})
+
+				PHASES.forEach(function(phase) {
+					it(`must show initiatives in ${phase} phase destined to ${dest}`,
+						function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							phase: phase,
+							destination: dest
+						}))
+
+						var topic = yield createTopic(newTopic({
+							id: initiative.uuid,
+							creatorId: (yield createUser(newUser())).id,
+							sourcePartnerId: this.partner.id,
+							status: phase == "edit" ? "inProgress" : "voting",
+							visibility: "public"
+						}))
+
+						if (phase != "edit") yield createVote(topic, newVote())
+
+						var res = yield this.request("/initiatives", {
+							headers: {Host: host}
+						})
+
+						res.statusCode.must.equal(200)
+						res.body.must.include(initiative.uuid)
+					})
+
+					it(`must not show initiatives in ${phase} not destined to ${dest}`,
+						function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							phase: phase,
+							destination: dest == "parliament" ? "muhu-vald" : "parliament"
+						}))
+
+						var topic = yield createTopic(newTopic({
+							id: initiative.uuid,
+							creatorId: (yield createUser(newUser())).id,
+							sourcePartnerId: this.partner.id,
+							status: phase == "edit" ? "inProgress" : "voting",
+							visibility: "public"
+						}))
+
+						if (phase != "edit") yield createVote(topic, newVote())
+
+						var res = yield this.request("/initiatives", {
+							headers: {Host: host}
+						})
+
+						res.statusCode.must.equal(200)
+						res.body.must.not.include(initiative.uuid)
+					})
+				})
+			})
+		}
+
+		describe(`on ${PARLIAMENT_SITE_HOSTNAME}`, function() {
+			mustShowInitiativesInPhases(PARLIAMENT_SITE_HOSTNAME, "parliament")
+		})
+
+		describe(`on ${LOCAL_SITE_HOSTNAME}`, function() {
+			Object.keys(LOCAL_GOVERNMENTS).forEach(function(dest) {
+				it(`must show initiatives destined to ${dest}`, function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "sign",
+						destination: dest
+					}))
+
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: (yield createUser(newUser())).id,
+						sourcePartnerId: this.partner.id,
+						status: "voting",
+						visibility: "public"
+					}))
+
+					yield createVote(topic, newVote())
+
+					var res = yield this.request("/initiatives", {
+						headers: {Host: LOCAL_SITE_HOSTNAME}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(initiative.uuid)
+				})
+			})
+
+			mustShowInitiativesInPhases(LOCAL_SITE_HOSTNAME, "muhu-vald")
+		})
+
 		_.each(Config.partners, function(partner, id) {
 			if (id == Config.apiPartnerId) return
 
@@ -583,7 +701,8 @@ describe("InitiativesController", function() {
 
 				initiatives.must.eql([new ValidInitiative({
 					uuid: uuid,
-					parliament_token: initiatives[0].parliament_token
+					parliament_token: initiatives[0].parliament_token,
+					destination: null
 				})])
 			})
 
@@ -687,7 +806,9 @@ describe("InitiativesController", function() {
 			})
 
 			it("must show done phase by default", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative)
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					destination: "parliament"
+				}))
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
@@ -707,7 +828,9 @@ describe("InitiativesController", function() {
 			})
 
 			it("must render initiative in edit phase", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative)
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					destination: "parliament"
+				}))
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
@@ -779,7 +902,9 @@ describe("InitiativesController", function() {
 			})
 
 			it("must render initiative in edit phase that have ended", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative)
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					destination: "parliament"
+				}))
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
@@ -2268,6 +2393,125 @@ describe("InitiativesController", function() {
 				res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
 				res.body.must.not.include("donate-form")
 			})
+
+			describe(`on ${PARLIAMENT_SITE_HOSTNAME}`, function() {
+				it("must render initiative without destination", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "edit",
+						destination: null
+					}))
+
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: (yield createUser(newUser())).id,
+						sourcePartnerId: this.partner.id,
+						status: "inProgress",
+						visibility: "public"
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						headers: {Host: PARLIAMENT_SITE_HOSTNAME}
+					})
+
+					res.statusCode.must.equal(200)
+				})
+
+				it(`must redirect initiative destined to local to ${LOCAL_SITE_HOSTNAME}`, function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "edit",
+						destination: "muhu-vald"
+					}))
+
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: (yield createUser(newUser())).id,
+						sourcePartnerId: this.partner.id,
+						status: "inProgress",
+						visibility: "public"
+					}))
+
+					var path = "/initiatives/" + initiative.uuid + "?foo=bar"
+					var res = yield this.request(path, {
+						headers: {Host: PARLIAMENT_SITE_HOSTNAME}
+					})
+
+					res.statusCode.must.equal(301)
+					res.headers.location.must.equal(Config.localUrl + path)
+				})
+			})
+
+			describe(`on ${LOCAL_SITE_HOSTNAME}`, function() {
+				Object.keys(LOCAL_GOVERNMENTS).forEach(function(dest) {
+					it(`must render initiative destined to ${dest}`, function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							phase: "sign",
+							destination: dest
+						}))
+
+						var topic = yield createTopic(newTopic({
+							id: initiative.uuid,
+							creatorId: (yield createUser(newUser())).id,
+							sourcePartnerId: this.partner.id,
+							status: "voting",
+							visibility: "public"
+						}))
+
+						yield createVote(topic, newVote())
+
+						var res = yield this.request("/initiatives/" + initiative.uuid, {
+							headers: {Host: LOCAL_SITE_HOSTNAME}
+						})
+
+						res.statusCode.must.equal(200)
+					})
+				})
+
+				it(`must redirect initiative without destination to ${PARLIAMENT_SITE_HOSTNAME}`, function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "edit",
+						destination: null
+					}))
+
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: (yield createUser(newUser())).id,
+						sourcePartnerId: this.partner.id,
+						status: "inProgress",
+						visibility: "public"
+					}))
+
+					var path = "/initiatives/" + initiative.uuid + "?foo=bar"
+					var res = yield this.request(path, {
+						headers: {Host: LOCAL_SITE_HOSTNAME}
+					})
+
+					res.statusCode.must.equal(301)
+					res.headers.location.must.equal(Config.url + path)
+				})
+
+				it(`must redirect initiative destined to parliament to ${PARLIAMENT_SITE_HOSTNAME}`, function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "edit",
+						destination: "parliament"
+					}))
+
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: (yield createUser(newUser())).id,
+						sourcePartnerId: this.partner.id,
+						status: "inProgress",
+						visibility: "public"
+					}))
+
+					var path = "/initiatives/" + initiative.uuid + "?foo=bar"
+					var res = yield this.request(path, {
+						headers: {Host: LOCAL_SITE_HOSTNAME}
+					})
+
+					res.statusCode.must.equal(301)
+					res.headers.location.must.equal(Config.url + path)
+				})
+			})
 		})
 
 		describe("when logged in", function() {
@@ -2326,7 +2570,9 @@ describe("InitiativesController", function() {
 			})
 
 			it("must render initiative in edit phase", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative)
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					destination: "parliament"
+				}))
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
@@ -2476,90 +2722,6 @@ describe("InitiativesController", function() {
 				check.checked.must.be.false()
 			})
 
-			it("must not render send to parliament button if not enough signatures",
-				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					phase: "sign"
-				}))
-
-				var topic = yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.user.id,
-					sourcePartnerId: this.partner.id,
-					status: "voting"
-				}))
-
-				var vote = yield createVote(topic, newVote())
-				yield createCitizenSignatures(vote, Config.votesRequired - 1)
-
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
-				res.body.must.not.include(t("SEND_TO_PARLIAMENT"))
-			})
-
-			it("must render send to parliament button if enough signatures",
-				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					phase: "sign"
-				}))
-
-				var topic = yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.user.id,
-					sourcePartnerId: this.partner.id,
-					status: "voting"
-				}))
-
-				var vote = yield createVote(topic, newVote())
-				yield createCitizenSignatures(vote, Config.votesRequired)
-
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
-				res.body.must.include(t("SEND_TO_PARLIAMENT"))
-			})
-
-			it("must render send to parliament button if has paper signatures",
-				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					phase: "sign",
-					has_paper_signatures: true
-				}))
-
-				var topic = yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.user.id,
-					sourcePartnerId: this.partner.id,
-					status: "voting"
-				}))
-
-				var vote = yield createVote(topic, newVote())
-				yield createCitizenSignatures(vote, 1)
-
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
-				res.body.must.include(t("SEND_TO_PARLIAMENT"))
-			})
-
-			it("must not render send to parliament button if only has paper signatures", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					phase: "sign",
-					has_paper_signatures: true
-				}))
-
-				var topic = yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.user.id,
-					sourcePartnerId: this.partner.id,
-					status: "voting"
-				}))
-
-				yield createVote(topic, newVote())
-
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
-				res.body.must.not.include(t("SEND_TO_PARLIAMENT"))
-			})
-
 			it("must not show event creation button if in edit phase", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "edit"
@@ -2637,6 +2799,146 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.not.include(t("THANKS_FOR_SIGNING"))
 				res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+			})
+
+			describe(`on ${PARLIAMENT_SITE_HOSTNAME}`, function() {
+				it("must not render send to parliament button if not enough signatures",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "sign"
+					}))
+
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
+
+					var vote = yield createVote(topic, newVote())
+					yield createCitizenSignatures(vote, Config.votesRequired - 1)
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(t("SEND_TO_PARLIAMENT"))
+				})
+
+				it("must render send to parliament button if enough signatures",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "sign"
+					}))
+
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
+
+					var vote = yield createVote(topic, newVote())
+					yield createCitizenSignatures(vote, Config.votesRequired)
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("SEND_TO_PARLIAMENT"))
+				})
+
+				it("must render send to parliament button if has paper signatures",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "sign",
+						has_paper_signatures: true
+					}))
+
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
+
+					var vote = yield createVote(topic, newVote())
+					yield createCitizenSignatures(vote, 1)
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("SEND_TO_PARLIAMENT"))
+				})
+
+				it("must not render send to parliament button if only has paper signatures", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "sign",
+						has_paper_signatures: true
+					}))
+
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
+
+					yield createVote(topic, newVote())
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(t("SEND_TO_PARLIAMENT"))
+				})
+			})
+
+			describe(`on ${LOCAL_SITE_HOSTNAME}`, function() {
+				it("must not render send to government button if not enough signatures",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "sign",
+						destination: "muhu-vald"
+					}))
+
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
+
+					var vote = yield createVote(topic, newVote())
+					var threshold = LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
+					yield createCitizenSignatures(vote, Math.round(threshold) - 1)
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						headers: {Host: LOCAL_SITE_HOSTNAME}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(t("SEND_TO_PARLIAMENT"))
+				})
+
+				it("must not render send to government button if enough signatures",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "sign",
+						destination: "muhu-vald"
+					}))
+
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
+
+					var vote = yield createVote(topic, newVote())
+					var threshold = LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
+					yield createCitizenSignatures(vote, Math.round(threshold))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						headers: {Host: LOCAL_SITE_HOSTNAME}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(t("SEND_TO_PARLIAMENT"))
+				})
 			})
 		})
 	})
@@ -3680,6 +3982,104 @@ describe("InitiativesController", function() {
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
 
+			describe("given destination", function() {
+				it("must set destination to null given empty string", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						destination: "tallinn"
+					}))
+
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, destination: ""}
+					})
+
+					res.statusCode.must.equal(303)
+					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+					yield initiativesDb.read(initiative).must.then.eql({
+						__proto__: initiative,
+						destination: null
+					})
+				})
+
+				concat(
+					"parliament",
+					Object.keys(LOCAL_GOVERNMENTS)
+				).forEach(function(dest) {
+					it(`must update destination to ${dest}`, function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative)
+
+						yield createTopic(newTopic({
+							id: initiative.uuid,
+							creatorId: this.user.id,
+							sourcePartnerId: this.partner.id
+						}))
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							form: {_csrf_token: this.csrfToken, destination: dest}
+						})
+
+						res.statusCode.must.equal(303)
+						res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+						yield initiativesDb.read(initiative).must.then.eql({
+							__proto__: initiative,
+							destination: dest
+						})
+					})
+				})
+
+				it("must respond with 422 given invalid destination", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative)
+
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, destination: "foo"}
+					})
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Destination Invalid")
+					yield initiativesDb.read(initiative).must.then.eql(initiative)
+				})
+
+				it("must not update initiative destination after edit phase",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "sign"
+					}))
+
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id
+					}))
+
+					yield createVote(topic, newVote())
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, destination: "muhu-vald"}
+					})
+
+					res.statusCode.must.equal(303)
+					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+					yield initiativesDb.read(initiative).must.then.eql(initiative)
+				})
+			})
+
 			describe("given visibility=public", function() {
 				it("must render update visibility page", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative)
@@ -3804,7 +4204,9 @@ describe("InitiativesController", function() {
 
 			describe("given status=voting", function() {
 				it("must render update status for voting page", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative)
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						destination: "parliament"
+					}))
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
@@ -3824,7 +4226,9 @@ describe("InitiativesController", function() {
 				})
 
 				it("must update initiative", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative)
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						destination: "parliament"
+					}))
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
@@ -3876,7 +4280,9 @@ describe("InitiativesController", function() {
 				})
 
 				it("must respond with 403 if less than 3 days passed", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative)
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						destination: "parliament"
+					}))
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
@@ -3901,7 +4307,9 @@ describe("InitiativesController", function() {
 				})
 
 				it("must update initiative if on fast-track", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative)
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						destination: "parliament"
+					}))
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
@@ -4009,7 +4417,9 @@ describe("InitiativesController", function() {
 				})
 
 				it("must email subscribers", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative)
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						destination: "parliament"
+					}))
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
@@ -4102,6 +4512,40 @@ describe("InitiativesController", function() {
 			})
 
 			describe("given status=followUp", function() {
+				it("must respond with 403 given initiative destined to local",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "sign",
+						destination: "muhu-vald",
+						undersignable: true
+					}))
+
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.id,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
+
+					yield createVote(topic, newVote())
+
+					var threshold = LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
+					yield signaturesDb.create(_.times(Math.round(threshold), () => (
+						new ValidSignature({initiative_uuid: initiative.uuid})
+					)))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, status: "followUp"}
+					})
+
+					res.statusCode.must.equal(403)
+
+					res.statusMessage.must.equal(
+						"Cannot Send Local Initiative to Parliament"
+					)
+				})
+
 				describe("when undersignable", function() {
 					it("must render update page", function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
@@ -4635,7 +5079,6 @@ describe("InitiativesController", function() {
 
 					yield initiativesDb.read(initiative).must.then.eql({
 						__proto__: initiative,
-						uuid: initiative.uuid,
 						author_url: "http://example.com/author",
 						community_url: "http://example.com/community",
 						url: "http://example.com/initiative",

@@ -132,6 +132,7 @@ function* readInitiative(doc) {
 		parliament_uuid: doc.uuid,
 		external: true,
 		phase: "parliament",
+		destination: "parliament",
 		title: doc.title ? parseTitle(doc.title) : "",
 		author_name: doc.sender || "",
 

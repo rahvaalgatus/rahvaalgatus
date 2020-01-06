@@ -257,7 +257,8 @@ describe("ParliamentSyncCli", function() {
 
 			// NOTE: Ensure phase of an existing external initiative isn't updated as
 			// it is set on the initial import.
-			phase: "government"
+			phase: "government",
+			destination: "parliament"
 		})
 
 		this.router.get(INITIATIVES_URL, respond.bind(null, [{

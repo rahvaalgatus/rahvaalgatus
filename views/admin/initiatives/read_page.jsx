@@ -9,6 +9,8 @@ var FormButton = Page.FormButton
 var Flash = Page.Flash
 var serializeImageUrl = require("root/lib/initiative").imageUrl
 var {isEditableEvent} = require("root/controllers/admin/initiatives_controller")
+var {InitiativeDestinationSelectView} =
+	require("root/views/initiatives/read_page")
 var formatDate = require("root/lib/i18n").formatDate
 var formatDateTime = require("root/lib/i18n").formatDateTime
 var confirm = require("root/lib/jsx").confirm
@@ -40,6 +42,25 @@ module.exports = function(attrs) {
 		<Flash flash={req.flash} />
 
 		<table id="initiative-table" class="admin-horizontal-table">
+			<tr>
+				<th scope="row">Destination</th>
+				<td>
+					<Form
+						req={req}
+						id="phase-form"
+						action={initiativePath}
+						method="put"
+						class="admin-inline-form"
+					>
+						<InitiativeDestinationSelectView
+							name="destination"
+							initiative={initiative}
+							onchange="this.form.submit()"
+						/>
+					</Form>
+				</td>
+			</tr>
+
 			<tr>
 				<th scope="row">Phase</th>
 				<td>

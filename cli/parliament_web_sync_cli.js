@@ -168,6 +168,7 @@ function* replaceWebInitiative(initiative, document, row) {
 		__proto__: attrs,
 		title: document.title ? parseTitle(document.title) : "",
 		phase: row.finishedOn ? "done" : "parliament",
+		destination: "parliament",
 		archived_at: row.finishedOn && new Date,
 		external: true,
 

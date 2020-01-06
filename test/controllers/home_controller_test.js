@@ -1,4 +1,5 @@
 var _ = require("root/lib/underscore")
+var Url = require("url")
 var Config = require("root/config")
 var DateFns = require("date-fns")
 var ValidInitiative = require("root/test/valid_db_initiative")
@@ -17,6 +18,8 @@ var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var parseDom = require("root/lib/dom").parse
 var t = require("root/lib/i18n").t.bind(null, Config.language)
+var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.url).hostname
+var LOCAL_SITE_HOSTNAME = Url.parse(Config.localUrl).hostname
 var STATISTICS_TYPE = "application/vnd.rahvaalgatus.statistics+json; v=1"
 var PHASES = require("root/lib/initiative").PHASES
 
@@ -444,6 +447,104 @@ describe("HomeController", function() {
 				var el = dom.querySelector("#signatures-statistic .count")
 				el.textContent.must.equal("8")
 			})
+
+			it(`must show statistics on ${PARLIAMENT_SITE_HOSTNAME}`, function*() {
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+				var dom = parseDom(res.body)
+				dom.querySelector("#statistics").must.exist()
+			})
+
+			it(`must not show statistics on ${LOCAL_SITE_HOSTNAME}`, function*() {
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+				var dom = parseDom(res.body)
+				dom.querySelector("#statistics").must.exist()
+			})
+		})
+
+		function mustShowInitiativesInPhases(host, dest) {
+			describe("as a shared site", function() {
+				it("must show initiatives in edit phase with no destination",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						phase: "edit",
+						destination: null
+					}))
+
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: (yield createUser(newUser())).id,
+						sourcePartnerId: this.partner.id,
+						status: "inProgress",
+						endsAt: DateFns.addSeconds(new Date, 1),
+						visibility: "public"
+					}))
+
+					var res = yield this.request("/", {headers: {Host: host}})
+					res.statusCode.must.equal(200)
+					res.body.must.include(initiative.uuid)
+				})
+
+				;["edit", "sign"].forEach(function(phase) {
+					it(`must show initiatives in ${phase} phase destined to ${dest}`,
+						function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							phase: phase,
+							destination: dest
+						}))
+
+						var topic = yield createTopic(newTopic({
+							id: initiative.uuid,
+							creatorId: (yield createUser(newUser())).id,
+							sourcePartnerId: this.partner.id,
+							status: phase == "edit" ? "inProgress" : "voting",
+							endsAt: DateFns.addSeconds(new Date, 1),
+							visibility: "public"
+						}))
+
+						if (phase != "edit") yield createVote(topic, newVote({
+							endsAt: DateFns.addSeconds(new Date, 1)
+						}))
+
+						var res = yield this.request("/", {headers: {Host: host}})
+						res.statusCode.must.equal(200)
+						res.body.must.include(initiative.uuid)
+					})
+
+					it(`must not show initiatives in ${phase} not destined to ${dest}`,
+						function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							phase: phase,
+							destination: dest == "parliament" ? "muhu-vald" : "parliament"
+						}))
+
+						var topic = yield createTopic(newTopic({
+							id: initiative.uuid,
+							creatorId: (yield createUser(newUser())).id,
+							sourcePartnerId: this.partner.id,
+							status: phase == "edit" ? "inProgress" : "voting",
+							visibility: "public"
+						}))
+
+						if (phase != "edit") yield createVote(topic, newVote({
+							endsAt: DateFns.addSeconds(new Date, 1)
+						}))
+
+						var res = yield this.request("/", {headers: {Host: host}})
+						res.statusCode.must.equal(200)
+						res.body.must.not.include(initiative.uuid)
+					})
+				})
+			})
+		}
+
+		describe(`on ${PARLIAMENT_SITE_HOSTNAME}`, function() {
+			mustShowInitiativesInPhases(PARLIAMENT_SITE_HOSTNAME, "parliament")
+		})
+
+		describe(`on ${LOCAL_SITE_HOSTNAME}`, function() {
+			mustShowInitiativesInPhases(LOCAL_SITE_HOSTNAME, "muhu-vald")
 		})
 	})
 

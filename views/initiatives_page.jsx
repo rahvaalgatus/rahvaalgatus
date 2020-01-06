@@ -200,11 +200,17 @@ function InitiativeView(attrs) {
 		_.values(_.pick(Config.categories, topic.categories))[0]
 	)
 
-	return <li class="initiative">
+	return <li
+		class={"initiative" + (initiative.destination ? " with-destination" : "")}
+	>
 		<a href={`/initiatives/${initiative.uuid}`}>
 			<time datetime={time && time.toJSON()}>
 				{time ? I18n.formatDate("numeric", time) : " "}
-			</time>
+			</time>{" "}
+
+			{initiative.destination ? <span class="destination">
+				{t("DESTINATION_" + initiative.destination)}
+			</span> : null}
 
 			<h3 lang="et">{initiative.title}</h3>
 			{badge ? <img src={badge.icon} class="badge" title={badge.name} /> : null}

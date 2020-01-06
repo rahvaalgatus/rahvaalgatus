@@ -1,10 +1,12 @@
 {
 	"title": "Rahvaalgatus",
 	"url": "https://rahvaalgatus.ee",
+	"localUrl": "https://kohalik.rahvaalgatus.ee",
 	"adminUrl": "https://admin.rahvaalgatus.ee",
 	"apiUrl": "https://cos.rahvaalgatus.ee",
 	"twitterUrl": "https://twitter.com/rahvaalgatus",
 	"facebookUrl": "https://facebook.com/rahvaalgatus",
+	"helpEmail": "abi@rahvaalgatus.ee",
 	"apiPartnerId": "b563ee8c-ba8e-4cd6-b592-fbcd4e8f22bb",
 	"apiAuthorizeUrl": "https://cos.rahvaalgatus.ee/api/auth/openid/authorize",
 	"etherpadUrl": "https://cos.rahvaalgatus.ee/etherpad",

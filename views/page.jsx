@@ -241,6 +241,7 @@ function FormButton(attrs, children) {
 			name={attrs.name}
 			value={attrs.value}
 			onclick={attrs.onclick}
+			disabled={attrs.disabled}
 		>{children}</button>
 	</Form>
 }

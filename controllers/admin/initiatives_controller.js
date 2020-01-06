@@ -353,6 +353,9 @@ function parseInitiative(obj) {
 	if ("undersignable" in obj)
 		attrs.undersignable = _.parseBoolean(obj.undersignable)
 
+	if ("destination" in obj)
+		attrs.destination = obj.destination || null
+
 	if ("hasPaperSignatures" in obj)
 		attrs.has_paper_signatures = _.parseBoolean(obj.hasPaperSignatures)
 

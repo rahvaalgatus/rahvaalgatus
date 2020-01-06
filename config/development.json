@@ -1,6 +1,7 @@
 {
 	"url": "http://rahvaalgatus.test:3000",
 	"adminUrl": "http://rahvaalgatus.test:3001",
+	"localUrl": "http://kohalik.rahvaalgatus.test:3000",
 	"apiUrl": "https://citizenos-citizenos-api-test.herokuapp.com",
 	"apiPartnerId": "8d89302e-2317-4b1e-b65d-61c6fbe53e0c",
 	"apiAuthorizeUrl": "https://citizenos-citizenos-api-test.herokuapp.com/api/auth/openid/authorize",
@@ -19,7 +20,7 @@
 	"parliamentEmail": "dev@rahvaalgatus.ee",
 
 	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
-	"cookieDomain": null,
+	"cookieDomain": "rahvaalgatus.test",
 	"votesRequired": 2,
 	"minDeadlineDays": 0,
 

@@ -1,6 +1,6 @@
 CREATE TABLE initiatives (
 	uuid TEXT PRIMARY KEY NOT NULL,
-	mailchimp_interest_id TEXT NULL UNIQUE, notes TEXT NOT NULL DEFAULT "", parliament_api_data TEXT NULL, sent_to_parliament_at TEXT NULL, finished_in_parliament_at TEXT NULL, discussion_end_email_sent_at TEXT NULL, signing_end_email_sent_at TEXT NULL, author_url TEXT NOT NULL DEFAULT "", community_url TEXT NOT NULL DEFAULT "", organizations TEXT NOT NULL DEFAULT "[]", meetings TEXT NOT NULL DEFAULT "[]", url TEXT NOT NULL DEFAULT "", media_urls TEXT NOT NULL DEFAULT "[]", signature_milestones TEXT NOT NULL DEFAULT "{}", phase TEXT NOT NULL DEFAULT "edit", government_change_urls TEXT NOT NULL DEFAULT "[]", public_change_urls TEXT NOT NULL DEFAULT "[]", has_paper_signatures INTEGER NOT NULL DEFAULT 0, received_by_parliament_at TEXT, accepted_by_parliament_at TEXT, archived_at TEXT, parliament_decision TEXT, parliament_committee TEXT, parliament_uuid TEXT, external INTEGER NOT NULL DEFAULT 0, title TEXT NOT NULL DEFAULT '', author_name TEXT NOT NULL DEFAULT '', created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')), parliament_synced_at TEXT, government_agency TEXT, sent_to_government_at TEXT, finished_in_government_at TEXT, government_contact TEXT, government_contact_details TEXT, government_decision TEXT, text TEXT, text_type TEXT, text_sha256 BLOB, undersignable INTEGER NOT NULL DEFAULT 0, parliament_token BLOB,
+	mailchimp_interest_id TEXT NULL UNIQUE, notes TEXT NOT NULL DEFAULT "", parliament_api_data TEXT NULL, sent_to_parliament_at TEXT NULL, finished_in_parliament_at TEXT NULL, discussion_end_email_sent_at TEXT NULL, signing_end_email_sent_at TEXT NULL, author_url TEXT NOT NULL DEFAULT "", community_url TEXT NOT NULL DEFAULT "", organizations TEXT NOT NULL DEFAULT "[]", meetings TEXT NOT NULL DEFAULT "[]", url TEXT NOT NULL DEFAULT "", media_urls TEXT NOT NULL DEFAULT "[]", signature_milestones TEXT NOT NULL DEFAULT "{}", phase TEXT NOT NULL DEFAULT "edit", government_change_urls TEXT NOT NULL DEFAULT "[]", public_change_urls TEXT NOT NULL DEFAULT "[]", has_paper_signatures INTEGER NOT NULL DEFAULT 0, received_by_parliament_at TEXT, accepted_by_parliament_at TEXT, archived_at TEXT, parliament_decision TEXT, parliament_committee TEXT, parliament_uuid TEXT, external INTEGER NOT NULL DEFAULT 0, title TEXT NOT NULL DEFAULT '', author_name TEXT NOT NULL DEFAULT '', created_at TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')), parliament_synced_at TEXT, government_agency TEXT, sent_to_government_at TEXT, finished_in_government_at TEXT, government_contact TEXT, government_contact_details TEXT, government_decision TEXT, text TEXT, text_type TEXT, text_sha256 BLOB, undersignable INTEGER NOT NULL DEFAULT 0, parliament_token BLOB, destination TEXT,
 
 	CONSTRAINT initiatives_uuid_length
 	CHECK (length(uuid) == 36),
@@ -22,7 +22,10 @@ CREATE TABLE initiatives (
 	CONSTRAINT initiatives_text_sha256_length CHECK (length(text_sha256) = 32),
 
 	CONSTRAINT initiatives_undersignable_and_text
-	CHECK (NOT undersignable OR phase = 'edit' OR text IS NOT NULL)
+	CHECK (NOT undersignable OR phase = 'edit' OR text IS NOT NULL),
+
+	CONSTRAINT initiatives_destination
+	CHECK (destination IS NOT NULL OR phase = 'edit')
 );
 CREATE TABLE initiative_messages (
 	id INTEGER PRIMARY KEY NOT NULL,
@@ -277,5 +280,6 @@ INSERT INTO migrations VALUES('20191118184010');
 INSERT INTO migrations VALUES('20191118184020');
 INSERT INTO migrations VALUES('20191118184030');
 INSERT INTO migrations VALUES('20200106000042');
+INSERT INTO migrations VALUES('20200106000100');
 INSERT INTO migrations VALUES('20200106000105');
 COMMIT;

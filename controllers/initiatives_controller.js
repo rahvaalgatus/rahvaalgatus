@@ -46,6 +46,7 @@ var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: ""}
 var EMPTY_CONTACT = {name: "", email: "", phone: ""}
 var EMPTY_PROMISE = Promise.resolve({})
+var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 exports.searchInitiativesEvents = searchInitiativesEvents
 exports.readCitizenSignature = readCitizenSignature
 exports.countSignaturesByIds = countSignaturesByIds
@@ -61,7 +62,13 @@ var RESPONSE_PATTERNS = ["image/*"].map(MediaType)
 exports.router = Router({mergeParams: true})
 
 exports.router.get("/", next(function*(req, res) {
-	var initiatives = yield initiativesDb.search(sql`SELECT * FROM initiatives`)
+	var gov = req.government
+
+	var initiatives = yield initiativesDb.search(sql`
+		SELECT * FROM initiatives
+		WHERE destination IS NULL AND phase = 'edit'
+		OR destination ${gov == "parliament" ? sql`==` : sql`!=`} "parliament"
+	`)
 
 	var topics = _.indexBy(yield searchTopics(sql`
 		topic.id IN ${sql.in(initiatives.map((i) => i.uuid))}
@@ -169,6 +176,20 @@ exports.router.use("/:id", next(function*(req, res, next) {
 
 		topic.permission = {level: permission}
 		initiative.title = topic.title
+	}
+
+	if (req.method == "HEAD" || req.method == "GET") {
+		var isLocalInitiative = (
+			initiative.destination &&
+			initiative.destination != "parliament"
+		)
+
+		var path = req.baseUrl + req.url.replace(/^\/\?/, "?")
+
+		if (req.government == "parliament" && isLocalInitiative)
+			return void res.redirect(301, Config.localUrl + path)
+		else if (req.government == "local" && !isLocalInitiative)
+			return void res.redirect(301, Config.url + path)
 	}
 
 	req.topic = topic
@@ -337,9 +358,10 @@ exports.router.put("/:id", next(function*(req, res) {
 		yield updateInitiativePhaseToParliament(req, res)
 	}
 	else if (isInitiativeUpdate(req.body)) {
+		var initiative = req.initiative
 		var topic = req.topic
 		if (!Topic.canEdit(topic)) throw new HttpError(403, "No Permission To Edit")
-		yield initiativesDb.update(topic.id, parseInitiative(req.body))
+		yield initiativesDb.update(topic.id, parseInitiative(initiative, req.body))
 		res.flash("notice", req.t("INITIATIVE_INFO_UPDATED"))
 		res.redirect(303, req.headers.referer || req.baseUrl + req.url)
 	}
@@ -575,6 +597,7 @@ function* searchInitiativeComments(initiativeUuid) {
 
 function isInitiativeUpdate(obj) {
 	return (
+		"destination" in obj ||
 		"author_url" in obj ||
 		"url" in obj ||
 		"community_url" in obj ||
@@ -731,6 +754,9 @@ function* updateInitiativePhaseToParliament(req, res) {
 	var signatureCount = yield countSignaturesById(initiative.uuid)
 	var tmpl = "initiatives/update_for_parliament_page.jsx"
 
+	if (initiative.destination != "parliament")
+		throw new HttpError(403, "Cannot Send Local Initiative to Parliament")
+
 	if (!Topic.canSendToParliament(topic, initiative, signatureCount))
 		throw new HttpError(403, "Cannot Send to Parliament")
 
@@ -806,18 +832,24 @@ function* updateInitiativePhaseToParliament(req, res) {
 
 	yield Subscription.send(
 		message,
-
-		yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(
-			topic.id
-		)
+		yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(topic.id)
 	)
 
 	res.flash("notice", req.t("SENT_TO_PARLIAMENT_CONTENT"))
 	res.redirect(303, req.baseUrl + "/" + topic.id)
 }
 
-function parseInitiative(obj) {
+function parseInitiative(initiative, obj) {
 	var attrs = {}
+
+	if ("destination" in obj && initiative.phase == "edit") {
+		var dest = obj.destination || null
+
+		if (!(dest == null || dest == "parliament" || dest in LOCAL_GOVERNMENTS))
+			throw new HttpError(422, "Destination Invalid")
+
+		attrs.destination = dest
+	}
 
 	if ("author_url" in obj) attrs.author_url = String(obj.author_url).trim()
 	if ("url" in obj) attrs.url = String(obj.url).trim()

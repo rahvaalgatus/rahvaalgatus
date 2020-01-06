@@ -312,7 +312,8 @@ button.inherited {
 }
 
 .form-input,
-.form-textarea {
+.form-textarea,
+.form-select {
 	display: block;
 
 	& + p { margin-top: 0.5rem; }
@@ -331,6 +332,12 @@ button.inherited {
 	// Some browsers have a clear-field button on the right that gets pushed too
 	// far.
 	&[type=date] { padding-right: 0.5rem; }
+}
+
+.form-select {
+	height: 3rem;
+	padding-left: 0.5rem;
+	padding-right: 0.5rem;
 }
 
 .form-textarea {
@@ -511,10 +518,17 @@ button.inherited {
 		}
 
 		time,
-		.author {
+		.author,
+		.destination {
 			font-size: 1.4rem;
 			font-family: $tisa-pro;
 			color: $secondary-light-text;
+			line-height: 1.4;
+		}
+
+		&.with-destination time {
+			float: right;
+			height: 100%;
 		}
 
 		.author {
@@ -1767,6 +1781,11 @@ button.inherited {
 
 		#initiative-author-options {
 			h2 ~ * { margin-top: 0.5rem; }
+
+			#initiative-destination-form {
+				select { width: 100%; }
+				margin-bottom: 1rem;
+			}
 		}
 
 		#initiative-info {

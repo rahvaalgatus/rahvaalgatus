@@ -16,6 +16,7 @@ var DonateForm = require("../donations/create_page").DonateForm
 var CommentView = require("./comments/read_page").CommentView
 var CommentForm = require("./comments/create_page").CommentForm
 var ProgressView = require("./initiative_page").ProgressView
+var {getRequiredSignatureCount} = require("root/lib/initiative")
 var javascript = require("root/lib/jsx").javascript
 var serializeImageUrl = require("root/lib/initiative").imageUrl
 var {pathToSignature} =
@@ -33,6 +34,17 @@ var EMPTY_ORG = {name: "", url: ""}
 var EVENT_NOTIFICATIONS_SINCE = new Date(Config.eventNotificationsSince)
 var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
+var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
+exports = module.exports = ReadPage
+exports.InitiativeDestinationSelectView = InitiativeDestinationSelectView
+
+var LOCAL_GOVERNMENTS_BY_COUNTY = _.mapValues(_.groupBy(
+	_.toEntries(LOCAL_GOVERNMENTS),
+	([_id, gov]) => gov.county
+), (govs) => _.sortBy(govs, ([_id, gov]) => gov.name).map(([id, gov]) => [
+	id,
+	gov.name
+]))
 
 // Kollektiivse pöördumise (edaspidi käesolevas peatükis pöördumine) menetlusse
 // võtmise otsustab Riigikogu juhatus 30 kalendripäeva jooksul kollektiivse
@@ -88,7 +100,7 @@ var FILE_TYPE_NAMES = {
 	"application/digidoc": "Digidoc"
 }
 
-module.exports = function(attrs) {
+function ReadPage(attrs) {
 	var req = attrs.req
 	var t = attrs.t
   var lang = req.lang
@@ -147,12 +159,12 @@ module.exports = function(attrs) {
 		<script src="/assets/html5.js" />
 		<script src="/assets/hwcrypto.js" />
 
-    <PhasesView
+		{initiative.destination == "parliament" ? <PhasesView
       t={t}
       topic={topic}
       initiative={initiative}
 			signatureCount={signatureCount}
-    />
+    /> : null}
 
 		<section id="initiative-section" class="transparent-section"><center>
 			<div id="initiative-sheet" class="sheet">
@@ -207,9 +219,11 @@ module.exports = function(attrs) {
 							else return null
 
 						case "sign":
+							var signatureThreshold = getRequiredSignatureCount(initiative)
+
 							if (topic.vote.endsAt <= new Date) {
 								return <div class="initiative-status">
-									{signatureCount >= Config.votesRequired ? <Fragment>
+									{signatureCount >= signatureThreshold ? <Fragment>
                     <h1 class="status-header">
                       {t("N_SIGNATURES_COLLECTED", {votes: signatureCount})}
                     </h1>
@@ -594,7 +608,7 @@ function PhasesView(attrs) {
 
 	var signProgress = isPhaseAfter("sign", phase)
 		? 1
-		: sigs / Config.votesRequired
+		: sigs / getRequiredSignatureCount(initiative)
 
   var signPhaseText
 
@@ -785,6 +799,32 @@ function SidebarAuthorView(attrs) {
 	if (topic == null) return null
 
 	var actions = <Fragment>
+		{Topic.canEdit(topic) && initiative.phase == "edit" ? <Fragment>
+			<Form
+				req={req}
+				id="initiative-destination-form"
+				method="put"
+				action={"/initiatives/" + topic.id}
+			>
+				<h3 class="sidebar-subheader">Algatuse saaja</h3>
+
+				<InitiativeDestinationSelectView
+					name="destination"
+					initiative={initiative}
+					placeholder="Vali Riigikogu või omavalitsus…"
+					class="form-select"
+					onchange="this.form.submit()"
+				/>
+
+				<p>
+					Algatuse saajat saad muuta, kuniks alustad allkirjade kogumist. Kui
+					sa ei ole kindel, kellele algatus suunata, <a
+					class="link-button" href={"mailto:" + Config.helpEmail}>võta meiega
+					ühendust</a>.
+				</p>
+			</Form>
+		</Fragment> : null}
+
 		{Topic.canPublish(topic) ? <FormButton
 			req={req}
 			action={"/initiatives/" + topic.id}
@@ -794,14 +834,21 @@ function SidebarAuthorView(attrs) {
 			{t("PUBLISH_TOPIC")}
 		</FormButton> : null}
 
-		{Topic.canPropose(new Date, topic) ? <FormButton
-			req={req}
-			action={"/initiatives/" + topic.id}
-			name="status"
-			value="voting"
-			class="green-button wide-button">
-			{t("BTN_SEND_TO_VOTE")}
-		</FormButton> : null}
+		{Topic.canPropose(new Date, topic) ? <Fragment>
+			<FormButton
+				req={req}
+				action={"/initiatives/" + topic.id}
+				name="status"
+				value="voting"
+				disabled={initiative.destination == null}
+				class="green-button wide-button">
+				{t("BTN_SEND_TO_VOTE")}
+			</FormButton>
+
+			{initiative.destination == null ? <p>
+				Allkirjastamisele saatmiseks on vaja enne valida algatuse saaja.
+			</p> : null}
+		</Fragment> : null}
 
 		{Topic.canSendToParliament(topic, initiative, signatureCount) ?
 			<FormButton
@@ -1526,13 +1573,16 @@ function ProgressTextView(attrs) {
 			</p>
 
 		case "sign":
-			var missing = Config.votesRequired - signatureCount
+			var signatureThreshold = getRequiredSignatureCount(initiative)
+			var missing = signatureThreshold - signatureCount
 
 			return <p class="initiative-progress-text">
 				<span>
-					{signatureCount >= Config.votesRequired
-						? Jsx.html(t("SIGNATURES_COLLECTED"))
-						: Jsx.html(t("MISSING_N_SIGNATURES", {signatures: missing}))
+					{signatureCount >= signatureThreshold
+						? Jsx.html(t("SIGNATURES_COLLECTED_FOR_" + initiative.destination))
+						: Jsx.html(t("MISSING_N_SIGNATURES_FOR_" + initiative.destination, {
+							signatures: missing
+						}))
 					}
 				</span>
 				{" "}
@@ -1595,6 +1645,34 @@ function QuicksignView(attrs) {
 
 		</Fragment> : null}
 	</div>
+}
+
+function InitiativeDestinationSelectView(attrs) {
+	var initiative = attrs.initiative
+	var dest = initiative.destination
+	var placeholder = attrs.placeholder
+
+	return <select
+		name={attrs.name}
+		class={attrs.class}
+		onchange={attrs.onchange}
+	>
+		<option value="" selected={dest == null}>{placeholder}</option>
+
+		<optgroup label="Riiklik">
+			<option value="parliament" selected={dest == "parliament"}>
+				Riigikogu
+			</option>
+		</optgroup>
+
+		{_.map(LOCAL_GOVERNMENTS_BY_COUNTY, (govs, county) => (
+			<optgroup label={county + " maakond"}>{govs.map(([id, name]) => (
+				<option value={id} selected={dest == id}>
+					{name}
+				</option>
+			))}</optgroup>
+		))}
+	</select>
 }
 
 function InitiativeLocationView(attrs) {
