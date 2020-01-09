@@ -176,7 +176,7 @@ exports.router.post("/", next(function*(req, res, next) {
 			signatureUrl = req.baseUrl + "/" + pathToSignature(signable)
 			res.setHeader("Location", signatureUrl)
 
-			res.status(202).render("initiatives/signatures/create_page.jsx", {
+			res.status(202).render("initiatives/signatures/creating_page.jsx", {
 				code: MobileId.confirmation(xades.signableHash),
 				poll: signatureUrl
 			})
@@ -320,12 +320,12 @@ exports.router.post("/",
 				var signatureUrl = req.baseUrl + "/" + encodeURIComponent(token)
 				res.setHeader("Location", signatureUrl)
 
-				res.status(202).render("initiatives/signatures/create_page.jsx", {
+				res.status(202).render("initiatives/signatures/creating_page.jsx", {
 					code: signing.body.data.challengeID,
 					poll: signatureUrl
 				})
 			}
-			else res.status(422).render("initiatives/signatures/create_page.jsx", {
+			else res.status(422).render("initiatives/signatures/creating_page.jsx", {
 				error: translateCitizenError(req.t, signing.body)
 			})
 			break
@@ -346,7 +346,7 @@ exports.router.use("/", next(function(err, req, res, next) {
 			{error: err}
 		)
 
-		res.render("initiatives/signatures/create_page.jsx", {
+		res.render("initiatives/signatures/creating_page.jsx", {
 			error: req.t(MOBILE_ID_ERROR_TEXTS[code]) || err.message
 		})
 	}
