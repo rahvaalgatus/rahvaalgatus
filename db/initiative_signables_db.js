@@ -10,7 +10,7 @@ exports.idColumn = "token"
 exports.parse = function(attrs) {
 	return _.defaults({
 		created_at: attrs.created_at && new Date(attrs.created_at),
-		updated_at: attrs.created_at && new Date(attrs.created_at),
+		updated_at: attrs.updated_at && new Date(attrs.updated_at),
 		xades: attrs.xades && Xades.parse(attrs.xades),
 		signed: !!attrs.signed,
 		timestamped: !!attrs.timestamped,

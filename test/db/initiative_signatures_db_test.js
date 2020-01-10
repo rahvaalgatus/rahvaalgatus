@@ -12,7 +12,7 @@ describe("InitiativeSignaturesDb", function() {
 	beforeEach(function*() {
 		this.initiative = yield initiativesDb.create(new ValidInitiative)
 	})
-	
+
 	describe(".create", function() {
 		it("must throw given duplicate country and personal ids", function*() {
 			var attrs = new ValidSignature({initiative_uuid: this.initiative.uuid})
@@ -42,6 +42,19 @@ describe("InitiativeSignaturesDb", function() {
 			err.code.must.equal("constraint")
 			err.type.must.equal("unique")
 			err.columns.must.eql(["token"])
+		})
+	})
+
+	describe(".read", function() {
+		it("must parse a signature", function*() {
+			var signature = new ValidSignature({
+				initiative_uuid: this.initiative.uuid,
+				token: Crypto.randomBytes(12),
+				created_at: new Date(2015, 5, 18, 13, 37, 42, 666),
+				updated_at: new Date(2015, 5, 18, 14, 37, 42, 666)
+			})
+
+			yield db.read(yield db.create(signature)).must.then.eql(signature)
 		})
 	})
 })
