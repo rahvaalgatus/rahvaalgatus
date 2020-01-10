@@ -206,7 +206,7 @@ CREATE TABLE initiative_signatures (
 	oversigned INTEGER NOT NULL DEFAULT 0, method TEXT NOT NULL,
 
 	PRIMARY KEY (initiative_uuid, country, personal_id),
-	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid)
+	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE,
 
 	CONSTRAINT initiative_signatures_country_length CHECK (length(country) = 2),
 
@@ -277,4 +277,5 @@ INSERT INTO migrations VALUES('20191118184010');
 INSERT INTO migrations VALUES('20191118184020');
 INSERT INTO migrations VALUES('20191118184030');
 INSERT INTO migrations VALUES('20200106000042');
+INSERT INTO migrations VALUES('20200106000105');
 COMMIT;

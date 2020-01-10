@@ -2,6 +2,8 @@ var _ = require("root/lib/underscore")
 var MediaType = require("medium-type")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidEvent = require("root/test/valid_db_initiative_event")
+var ValidSignable = require("root/test/valid_signable")
+var ValidSignature = require("root/test/valid_signature")
 var SqliteError = require("root/lib/sqlite_error")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var insert = require("heaven-sqlite").insert
@@ -9,6 +11,8 @@ var sqlite = require("root").sqlite
 var sql = require("sqlate")
 var db = require("root/db/initiatives_db")
 var eventsDb = require("root/db/initiative_events_db")
+var signablesDb = require("root/db/initiative_signables_db")
+var signaturesDb = require("root/db/initiative_signatures_db")
 var serialize = db.serialize
 var PHASES = require("root/lib/initiative").PHASES
 
@@ -231,6 +235,12 @@ describe("InitiativesDb", function() {
 
 	describe(".delete", function() {
 		describe("given a model ", function() {
+			it("must delete the initiative", function*() {
+				var initiative = yield db.create(new ValidInitiative)
+				yield db.delete(initiative)
+				yield db.search(sql`SELECT * FROM initiatives`).must.then.be.empty()
+			})
+
 			it("must delete related events", function*() {
 				var initiative = yield db.create(new ValidInitiative)
 
@@ -244,6 +254,28 @@ describe("InitiativesDb", function() {
 
 				yield eventsDb.search(sql`
 					SELECT * FROM initiative_events
+				`).must.then.be.empty()
+			})
+
+			it("must delete related signables and signatures", function*() {
+				var initiative = yield db.create(new ValidInitiative)
+
+				yield signablesDb.create(new ValidSignable({
+					initiative_uuid: initiative.uuid
+				}))
+
+				yield signaturesDb.create(new ValidSignature({
+					initiative_uuid: initiative.uuid
+				}))
+
+				yield db.delete(initiative)
+
+				yield signablesDb.search(sql`
+					SELECT * FROM initiative_signables
+				`).must.then.be.empty()
+
+				yield signaturesDb.search(sql`
+					SELECT * FROM initiative_signatures
 				`).must.then.be.empty()
 			})
 		})
