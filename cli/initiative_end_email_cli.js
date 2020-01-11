@@ -4,8 +4,7 @@ var DateFns = require("date-fns")
 var sql = require("sqlate")
 var sendEmail = require("root").sendEmail
 var concat = Array.prototype.concat.bind(Array.prototype)
-var ENV = process.env.ENV
-var logger = ENV == "test" ? require("root/lib/null_logger") : console
+var logger = require("root").logger
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var sqlite = require("root").sqlite
 var cosDb = require("root").cosDb

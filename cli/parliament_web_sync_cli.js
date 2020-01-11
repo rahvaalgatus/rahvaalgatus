@@ -13,8 +13,7 @@ var map = Function.call.bind(Array.prototype.map)
 var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var sql = require("sqlate")
-var ENV = process.env.ENV
-var logger = ENV == "test" ? require("root/lib/null_logger") : console
+var logger = require("root").logger
 var {parseTitle} = require("./parliament_sync_cli")
 var replaceApiInitiative = require("./parliament_sync_cli").replaceInitiative
 var {syncInitiativeDocuments} = require("./parliament_sync_cli")

@@ -11,8 +11,7 @@ var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var renderEmail = require("root/lib/i18n").email.bind(null, Config.language)
 var concat = Array.prototype.concat.bind(Array.prototype)
-var ENV = process.env.ENV
-var logger = ENV == "test" ? require("root/lib/null_logger") : console
+var logger = require("root/lib/null_logger")
 var PARTNER_IDS = concat(Config.apiPartnerId, _.keys(Config.partners))
 var MILESTONES = _.sort(_.subtract, Config.signatureMilestones)
 

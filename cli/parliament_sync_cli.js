@@ -19,8 +19,7 @@ var renderEventTitle = require("root/lib/event").renderEventTitle
 var t = require("root/lib/i18n").t.bind(null, "et")
 var formatDate = require("root/lib/i18n").formatDate.bind(null, "numeric")
 var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
-var ENV = process.env.ENV
-var logger = ENV == "test" ? require("root/lib/null_logger") : console
+var logger = require("root/lib/null_logger")
 var EMPTY_ARR = Array.prototype
 var PARLIAMENT_URL = "https://www.riigikogu.ee"
 var DOCUMENT_URL = PARLIAMENT_URL + "/tegevus/dokumendiregister/dokument"

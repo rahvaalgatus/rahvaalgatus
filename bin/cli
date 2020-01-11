@@ -39,6 +39,9 @@ var CLIS = {
 var cmdPath = CLIS[cmd]
 if (cmdPath == null) return void die("No such command: %s", cmd)
 
+var Config = require("root/config")
+Config.logger = console
+
 co(function*() {
 	var cli = require(cmdPath)
 	var cosDb = require("root").cosDb
