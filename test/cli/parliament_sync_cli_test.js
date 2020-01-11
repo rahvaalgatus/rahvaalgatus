@@ -1177,6 +1177,54 @@ describe("ParliamentSyncCli", function() {
 				content_type: new MediaType("application/octet-stream")
 			}]],
 
+			// A response letter _not_ indicating the end of processing:
+			// https://www.riigikogu.ee/tegevus/dokumendiregister/dokument/122177be-552e-4757-9828-77ee1e9630c7
+			"response letter for clarification": [{
+				relatedDocuments: [{uuid: DOCUMENT_UUID}]
+			}, {
+				[DOCUMENT_UUID]: {
+					uuid: DOCUMENT_UUID,
+					title: "Vastuskiri - Kollektiivse pöördumisega seotud selgitustaotlus",
+					created: "2015-06-18T13:37:42.666",
+					documentType: "letterDocument",
+					direction: {code: "VALJA"},
+					receiveType: {code: "E_POST"},
+					author: "Jahimeeste Selts",
+					authorDate: "2015-06-17",
+
+					files: [{
+						uuid: "811eac10-a47e-468f-bec9-56c790157f08",
+						fileName: "Vastuskiri.pdf",
+						accessRestrictionType: "PUBLIC"
+					}]
+				}
+			}, {
+				occurred_at: new Date(2015, 5, 18, 13, 37, 42, 666),
+				origin: "parliament",
+				external_id: DOCUMENT_UUID,
+				type: "parliament-letter",
+				title: null,
+
+				content: {
+					medium: "email",
+					direction: "outgoing",
+					title:
+						"Vastuskiri - Kollektiivse pöördumisega seotud selgitustaotlus",
+					to: "Jahimeeste Selts",
+					date: "2015-06-17"
+				}
+			}, [{
+				id: 1,
+				event_id: 1,
+				initiative_uuid: INITIATIVE_UUID,
+				external_id: "811eac10-a47e-468f-bec9-56c790157f08",
+				name: "Vastuskiri.pdf",
+				title: "Vastuskiri - Kollektiivse pöördumisega seotud selgitustaotlus",
+				url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
+				content: EXAMPLE_BUFFER,
+				content_type: new MediaType("application/octet-stream")
+			}]],
+
 			"board meeting protocol with date": [{
 				relatedDocuments: [{uuid: DOCUMENT_UUID}]
 			}, {

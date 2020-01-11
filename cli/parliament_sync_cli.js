@@ -843,6 +843,7 @@ function isParliamentResponseDocument(document) {
 	return (
 		document.documentType == "letterDocument" &&
 		document.title.match(/\bvastuskiri\b/i) &&
+		!document.title.match(/selgitus/i) &&
 		document.direction.code == "VALJA"
 	)
 }
