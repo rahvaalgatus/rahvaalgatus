@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+process.title = "rahvaalgatus/cli"
+
 var Neodoc = require("neodoc")
 var concat = Array.prototype.concat.bind(Array.prototype)
 
