@@ -642,7 +642,7 @@ function* waitForMobileIdSignature(signable, sessionId) {
 			MOBILE_ID_ERROR_STATUS_CODES[getNormalizedMobileIdErrorCode(ex)] < 500
 		)) reportError(ex)
 
-		yield signablesDb.update(signable, {error: ex})
+		yield signablesDb.update(signable, {error: ex, updated_at: new Date})
 	}
 }
 
