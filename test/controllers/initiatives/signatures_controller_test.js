@@ -37,8 +37,6 @@ var next = require("co-next")
 var encodeBase64 = require("root/lib/crypto").encodeBase64
 var tsl = require("root").tsl
 var ASICE_TYPE = "application/vnd.etsi.asic-e+zip"
-var AUTH_TOKEN = "deadbeef"
-var SIGN_TOKEN = "feedfed"
 var MOBILE_ID_URL = Url.parse("https://mid.sk.ee/mid-api/")
 var TIMEMARK_URL = Url.parse(Config.timemarkUrl)
 var CERTIFICATE_TYPE = "application/pkix-cert"
@@ -49,6 +47,12 @@ var NEW_SIG_TRESHOLD = 15
 var PERSONAL_ID = "60001019906"
 var JOHN_RSA_KEYS = require("root/test/fixtures").JOHN_RSA_KEYS
 var JOHN_ECDSA_KEYS = require("root/test/fixtures").JOHN_ECDSA_KEYS
+
+// Appending a JWT signature containing only alphanumeric characters checks for
+// a bug noticed on Jan 12, 2020, which interpreted the suffix as a MIME
+// extension and removed it in favor of setting the Accept header.
+var AUTH_TOKEN = "deadbeef.uSdEdl6xvAD0DmFDLnX2xIAsTWWquvsRm1NNg32pcVg"
+var SIGN_TOKEN = "feedfed.uSdEdl6xvAD0DmFDLnX2xIAsTWWquvsRm1NNg32pcVg"
 
 // EID-SK 2007 expired 2016-08-26T14:23:01.000Z,
 // ESTEID-SK 2007 expired 2016-08-26T14:23:01.000Z.
