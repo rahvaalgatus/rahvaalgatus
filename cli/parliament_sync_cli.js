@@ -3,6 +3,7 @@ var Neodoc = require("neodoc")
 var Time = require("root/lib/time")
 var Config = require("root/config")
 var Subscription = require("root/lib/subscription")
+var FetchError = require("fetch-error")
 var parliamentApi = require("root/lib/parliament_api")
 var diff = require("root/lib/diff")
 var sql = require("sqlate")
@@ -168,9 +169,9 @@ function* syncInitiativeDocuments(api, doc) {
 	// documents unrelated to the initiative. For example, an initiative
 	// acceptance decision (https://api.riigikogu.ee/api/documents/d655bc48-e5ec-43ad-9640-8cba05f78427)
 	// resides in a "All parliament decisions in 2019" volume.
-	doc.relatedDocuments = yield (doc.relatedDocuments || []).map((doc) => (
-		api("documents/" + doc.uuid).then(getBody)
-	))
+	doc.relatedDocuments = (yield (doc.relatedDocuments || []).map((doc) => (
+		api("documents/" + doc.uuid).then(getBody, raiseForDocument.bind(null, doc))
+	))).filter(Boolean)
 
 	doc.relatedVolumes = yield (doc.relatedVolumes || []).map(getUuid).map(
 		readParliamentVolumeWithDocuments.bind(null, api)
@@ -968,6 +969,36 @@ function parseLetterMedium(medium) {
 
 function diffEvent(a, b) {
 	return diff({__proto__: a, files: null}, {__proto__: b, files: null})
+}
+
+// From December 2020 to at least Jan 11, 2020, today, there are references in
+// the API that return 500s (ie. the API's idea of 404).
+//
+// https://github.com/riigikogu-kantselei/api/issues/28
+function raiseForDocument(doc, err) {
+	// Silently ignore only agenda items. Let's continue to be notified of the
+	// rest.
+	if (is404(err) && doc.documentType == "unitAgendaItemDocument") return null
+	throw err
+}
+
+function is404(err) {
+	return (
+		err instanceof FetchError && (
+			err.code == 404 ||
+
+			// Out of the chain of people involved, from rank and file developers to
+			// analysts and architecture astronauts, none seemed to have realized
+			// that 500 Internal Server Error might _not_ be suitable for
+			// document-not-found…
+			//
+			// https://github.com/riigikogu-kantselei/api/issues/20
+			err.code == 500 &&
+			err.response &&
+			err.response.body &&
+			/^Document not found\b/.test(err.response.body.message)
+		)
+	)
 }
 
 function getBody(res) { return res.body }

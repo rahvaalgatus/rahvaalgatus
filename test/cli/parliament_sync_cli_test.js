@@ -5,6 +5,7 @@ var ValidEvent = require("root/test/valid_db_initiative_event")
 var ValidFile = require("root/test/valid_event_file")
 var ValidSubscription = require("root/test/valid_subscription")
 var MediaType = require("medium-type")
+var FetchError = require("fetch-error")
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var messagesDb = require("root/db/initiative_messages_db")
@@ -2416,6 +2417,59 @@ describe("ParliamentSyncCli", function() {
 				content: Buffer.from("PDF"),
 				content_type: new MediaType("application/pdf")
 			})])
+		})
+
+		// https://github.com/riigikogu-kantselei/api/issues/28
+		it("must ignore unavailable agenda documents", function*() {
+			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+				uuid: INITIATIVE_UUID,
+
+				relatedDocuments: [{
+					uuid: DOCUMENT_UUID,
+					documentType: "unitAgendaItemDocument"
+				}]
+			}]))
+
+			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+
+			this.router.get(`/api/documents/${DOCUMENT_UUID}`, function(_req, res) {
+				res.statusCode = 500
+				res.setHeader("Content-Type", "application/json")
+
+				res.end(JSON.stringify({
+					error: "Internal Server Error",
+					message: `Document not found with UUID: ${DOCUMENT_UUID}`,
+					status: 500
+				}))
+			})
+
+			yield job()
+		})
+
+		it("must not ignore unavailable other documents", function*() {
+			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+				uuid: INITIATIVE_UUID,
+
+				relatedDocuments: [{
+					uuid: DOCUMENT_UUID,
+					documentType: "decisionDocument"
+				}]
+			}]))
+
+			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+
+			this.router.get(`/api/documents/${DOCUMENT_UUID}`, function(_req, res) {
+				res.statusCode = 500
+				res.end(JSON.stringify({
+					error: "Internal Server Error",
+					message: `Document not found with UUID: ${DOCUMENT_UUID}`,
+					status: 500
+				}))
+			})
+
+			var err
+			try { yield job() } catch (ex) { err = ex }
+			err.must.be.an.error(FetchError)
 		})
 	})
 
