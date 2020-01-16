@@ -11,10 +11,12 @@ var createPartner = require("root/test/citizenos_fixtures").createPartner
 var createUser = require("root/test/citizenos_fixtures").createUser
 var createTopic = require("root/test/citizenos_fixtures").createTopic
 var createVote = require("root/test/citizenos_fixtures").createVote
-var createSignatures = require("root/test/citizenos_fixtures").createSignatures
+var createCitizenSignatures =
+	require("root/test/citizenos_fixtures").createSignatures
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var parseDom = require("root/lib/dom").parse
+var t = require("root/lib/i18n").t.bind(null, Config.language)
 var STATISTICS_TYPE = "application/vnd.rahvaalgatus.statistics+json; v=1"
 var PHASES = require("root/lib/initiative").PHASES
 
@@ -136,13 +138,20 @@ describe("HomeController", function() {
 				status: "voting"
 			}))
 
-			yield createVote(topic, newVote({
-				endsAt: DateFns.addSeconds(new Date, 1)
+			var vote = yield createVote(topic, newVote({
+				endsAt: DateFns.addDays(new Date, 1)
 			}))
+
+			yield createCitizenSignatures(vote, 5)
+
+			yield signaturesDb.create(_.times(3, () => new ValidSignature({
+				initiative_uuid: initiative.uuid
+			})))
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
 			res.body.must.include(initiative.uuid)
+			res.body.must.include(t("N_SIGNATURES", {votes: 8}))
 		})
 
 		it("must show initiatives in sign phase that failed in less than 2w",
@@ -204,7 +213,7 @@ describe("HomeController", function() {
 				endsAt: DateFns.addDays(DateFns.startOfDay(new Date), -14)
 			}))
 
-			yield createSignatures(vote, Config.votesRequired)
+			yield createCitizenSignatures(vote, Config.votesRequired)
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
@@ -418,7 +427,7 @@ describe("HomeController", function() {
 				}))
 
 				var vote = yield createVote(topic, newVote({endsAt: new Date}))
-				yield createSignatures(vote, 5)
+				yield createCitizenSignatures(vote, 5)
 
 				var initiativeB = yield initiativesDb.create(new ValidInitiative({
 					phase: "sign"
@@ -463,7 +472,7 @@ describe("HomeController", function() {
 			}))
 
 			var vote = yield createVote(topic, newVote({endsAt: new Date}))
-			yield createSignatures(vote, 5)
+			yield createCitizenSignatures(vote, 5)
 
 			var initiativeB = yield initiativesDb.create(new ValidInitiative({
 				phase: "sign"

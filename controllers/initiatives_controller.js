@@ -48,6 +48,7 @@ var EMPTY_CONTACT = {name: "", email: "", phone: ""}
 var EMPTY_PROMISE = Promise.resolve({})
 exports.searchInitiativesEvents = searchInitiativesEvents
 exports.readCitizenSignature = readCitizenSignature
+exports.countSignaturesByIds = countSignaturesByIds
 
 var RESPONSE_TYPES = [
 	"text/html",

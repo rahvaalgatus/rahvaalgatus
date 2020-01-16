@@ -138,12 +138,21 @@ describe("InitiativesController", function() {
 				status: "voting"
 			}))
 
-			var vote = yield createVote(topic, newVote({createdAt: pseudoDateTime()}))
-			yield createCitizenSignatures(vote, Config.votesRequired / 2)
+			var vote = yield createVote(topic, newVote({
+				createdAt: pseudoDateTime(),
+				endsAt: DateFns.addDays(new Date, 1)
+			}))
+
+			yield createCitizenSignatures(vote, 5)
+
+			yield signaturesDb.create(_.times(3, () => new ValidSignature({
+				initiative_uuid: initiative.uuid
+			})))
 
 			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
 			res.body.must.include(initiative.uuid)
+			res.body.must.include(t("N_SIGNATURES", {votes: 8}))
 
 			var dom = parseDom(res.body)
 			dom.querySelector(".initiative time").textContent.must.equal(
