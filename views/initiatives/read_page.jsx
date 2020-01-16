@@ -925,7 +925,7 @@ function SidebarInfoView(attrs) {
 		{communityUrl || canEdit ? <InitiativeAttribute
 			t={t}
 			editable={canEdit}
-			title="Virtuaalse arutelu kese"
+			title="Kus toimub online arutelu?"
 			help="Sotsiaalmeedia gruppide asemel võib lisada ka teemaviite (#hashtag-i)."
 			name="community_url"
 			placeholder="https://"
