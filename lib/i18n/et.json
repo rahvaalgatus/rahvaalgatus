@@ -122,6 +122,8 @@
 	"INITIATIVE_EVENT_RATE_LIMIT_TITLE": "Vabandust! Palun proovi {{minutes}} minuti pärast uuesti",
 	"INITIATIVE_EVENT_TEXT_INPUT": "Sisu",
 	"INITIATIVE_EVENT_TITLE_INPUT": "Pealkiri",
+	"INITIATIVE_INFO_COMMUNITY_URL_DESCRIPTION": "Sotsiaalmeedia gruppide asemel võib lisada ka teemaviite (#hashtag-i).",
+	"INITIATIVE_INFO_COMMUNITY_URL_TITLE": "Kus toimub online arutelu?",
 	"INITIATIVE_INFO_UPDATED": "Lisainfo salvestatud",
 	"INITIATIVE_IN_DISCUSSION": "Algatus on arutelufaasis.",
 	"INITIATIVE_IN_GOVERNMENT": "Algatus on valitsusasutuses.",
