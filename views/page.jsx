@@ -267,7 +267,11 @@ function Sentry(attrs) {
 				ignoreErrors: [
 					"no_implementation",
 					"user_cancel",
-					"no_certificates"
+					"no_certificates",
+
+					// The Facebook in-app browser uses JavaScript not supported by all
+					// phones. Such is the case with the Freedom X1 phone, for example.
+					"SyntaxError: Unexpected token =>"
 				]
 			}).install()
 		`}</script>
