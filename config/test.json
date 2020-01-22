@@ -2,8 +2,7 @@
 	"apiUrl": "https://citizenos-citizenos-api-test.herokuapp.com",
 	"apiPartnerId": "8d89302e-2317-4b1e-b65d-61c6fbe53e0c",
 	"apiAuthorizeUrl": "https://citizenos-citizenos-api-test.herokuapp.com/api/auth/openid/authorize",
-	"adminUserIds": ["6507839c-bb17-4fcc-81b3-644dac711961"],
-
+	"adminPersonalIds": ["EE60001019906"],
 	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
 	"votesRequired": 10,
 	"minDeadlineDays": 3,
@@ -19,5 +18,10 @@
 		"host": "/tmp",
 		"database": "citizenos_test",
 		"pool": 1
+	},
+
+	"citizenSession": {
+		"jwtAlgorithm": "HS256",
+		"jwtSecret": "EMoGLAhnnxMdW7XP9SEMhMNXphxe05jY"
 	}
 }

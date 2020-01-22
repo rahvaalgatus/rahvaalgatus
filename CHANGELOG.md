@@ -1,3 +1,7 @@
+## Unreleased
+- Adds local user accounts with email confirmations.
+- Temporarily removes initiative coauthor adding as its invitation mechanism relied on CitizenOS accounts.
+
 ## Jan 7, 2019
 - Adds support for creating initiatives intended for the local government.
 - Adds <https://kohalik.rahvaalgatus.ee> for local government initiatives.

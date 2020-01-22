@@ -45,11 +45,11 @@ exports.router.post("/", next(function*(req, res) {
 
 	var initiative = req.initiative
 	var topic = req.topic
-	var userEmail = user.emailIsVerified ? user.email : ""
+	var userEmail = user.email || ""
 
 	var attrs = _.assign(parseComment(req.body), {
 		initiative_uuid: initiative.uuid,
-		user_uuid: user.id,
+		user_uuid: _.serializeUuid(user.uuid),
 		created_at: new Date,
 		updated_at: new Date
 	})
@@ -59,7 +59,7 @@ exports.router.post("/", next(function*(req, res) {
 		var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 		var subscribe = _.parseTrilean(req.body.subscribe)
 
-		if (subscribe != null && user.emailIsVerified) {
+		if (subscribe != null && user.email) {
 			var subscription = yield subscriptionsDb.read(sql`
 				SELECT * FROM initiative_subscriptions
 				WHERE (initiative_uuid, email) = (${initiative.uuid}, ${userEmail})
@@ -164,7 +164,7 @@ exports.router.post("/:commentId/replies", next(function*(req, res) {
 	var attrs = _.assign(parseComment(req.body), {
 		initiative_uuid: comment.initiative_uuid,
 		parent_id: comment.id,
-		user_uuid: user.id,
+		user_uuid: _.serializeUuid(user.uuid),
 		created_at: new Date,
 		updated_at: new Date,
 		title: ""
@@ -173,7 +173,7 @@ exports.router.post("/:commentId/replies", next(function*(req, res) {
 	try {
 		var reply = yield commentsDb.create(attrs)
 		var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-		var userEmail = user.emailIsVerified ? user.email : ""
+		var userEmail = user.email || ""
 
 		var subscriptions = yield subscriptionsDb.searchConfirmedByInitiativeIdWith(
 			initiative.uuid,

@@ -1,7 +1,6 @@
 var _ = require("root/lib/underscore")
 var DateFns = require("date-fns")
 var cosDb = require("root").cosDb
-var newUuid = require("uuid/v4")
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var isArray = Array.isArray
 exports.newPartner = newPartner
@@ -27,10 +26,10 @@ var VISIBILITY_FROM_STATUS = {
 
 function newUser(attrs) {
 	return _.assign({
-		id: newUuid(),
+		id: _.serializeUuid(_.uuidV4()),
 		email: _.uniqueId("user") + "@example.com",
 		emailIsVerified: true,
-		emailVerificationCode: newUuid(),
+		emailVerificationCode: _.serializeUuid(_.uuidV4()),
 		createdAt: new Date,
 		updatedAt: new Date,
 		source: "citizenos"
@@ -39,7 +38,7 @@ function newUser(attrs) {
 
 function newTopic(attrs) {
 	return _.assign({
-		id: newUuid(),
+		id: _.serializeUuid(_.uuidV4()),
 		title: "For the win " + _.uniqueId(),
 		description: "<body>Please sign.</body>",
 		status: "inProgress",
@@ -53,7 +52,7 @@ function newTopic(attrs) {
 
 function newVote(attrs) {
 	return _.assign({
-		id: newUuid(),
+		id: _.serializeUuid(_.uuidV4()),
 		createdAt: new Date(2015, 0, 1),
 		updatedAt: new Date(2015, 0, 1),
 		authType: "hard"
@@ -62,7 +61,7 @@ function newVote(attrs) {
 
 function newPartner(attrs) {
 	return _.assign({
-		id: newUuid(),
+		id: _.serializeUuid(_.uuidV4()),
 		website: "http://example.com",
 		redirectUriRegexp: "",
 		createdAt: new Date,
@@ -108,7 +107,7 @@ function* createVote(topic, attrs) {
 
 function* createOptions(vote) {
 	var yes = yield cosDb("VoteOptions").insert({
-		id: newUuid(),
+		id: _.serializeUuid(_.uuidV4()),
 		voteId: vote.id,
 		value: "Yes",
 		createdAt: new Date(2015, 0, 1),
@@ -116,7 +115,7 @@ function* createOptions(vote) {
 	}).returning("id").then(_.first)
 
 	var no = yield cosDb("VoteOptions").insert({
-		id: newUuid(),
+		id: _.serializeUuid(_.uuidV4()),
 		voteId: vote.id,
 		value: "No",
 		createdAt: new Date(2015, 0, 1),

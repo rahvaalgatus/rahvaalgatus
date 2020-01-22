@@ -6,6 +6,7 @@ var Fragment = Jsx.Fragment
 var stringify = require("root/lib/json").stringify
 var selected = require("root/lib/css").selected
 var javascript = require("root/lib/jsx").javascript
+var {isAdmin} = require("root/lib/user")
 var EMPTY_ARR = Array.prototype
 var SITE_TITLE = Config.title
 var LANGS = Config.languages
@@ -32,7 +33,12 @@ function Page(attrs, children) {
 	var page = attrs.page
 	var title = attrs.title
 	var links = attrs.links || EMPTY_ARR
-	var translatable = req.lang === "xx" || "translatable" in req.query
+
+	var translatable = (
+		req.lang === "xx" ||
+		"translatable" in req.query ||
+		req.user && isAdmin(req.user)
+	)
 
 	var meta = _.assign({
 		// Twitter doesn't read the page title from <title>. Set "og:title" for it.
@@ -67,7 +73,7 @@ function Page(attrs, children) {
 		<body id={page + "-page"}>
 			<header id="header"><center>
 				<menu>
-					<Form action="/session" method="put" class="languages" req={req}>
+					<Form action="/user" method="put" class="languages" req={req}>
 						{LANGS.map((lang) => <button
 							name="language"
 							value={lang}
@@ -79,19 +85,24 @@ function Page(attrs, children) {
 							name="language"
 							value="xx"
 							disabled={req.lang === "xx"}
-							class="inherited">Translate
+							class="inherited">dev
 						</button> : null}
 					</Form>
 
 					{req.user ? <div class="right">
 						<a href="/user" class="user">{req.user.name}</a>
 
-						<Form action="/session" method="post" class="signout" req={req}>
+						<Form
+							req={req}
+							action={"/sessions/" + req.session.id}
+							method="post"
+							class="signout"
+						>
 							<button name="_method" value="delete" class="inherited">
 								{t("BTN_LOG_OFF")}
 							</button>
 						</Form>
-					</div> : <a href="/session/new" class="right" >
+					</div> : <a href="/sessions/new" class="right" >
 						{t("BTN_LOG_IN_REGISTER")}
 					</a>}
 				</menu>
@@ -357,7 +368,6 @@ function serializeUser(user) {
 	return {
 		id: user.id,
 		name: user.name,
-		email: user.email,
-		language: user.language
+		email: user.email
 	}
 }

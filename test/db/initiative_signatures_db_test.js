@@ -14,12 +14,18 @@ describe("InitiativeSignaturesDb", function() {
 	})
 
 	describe(".create", function() {
-		it("must throw given duplicate country and personal ids", function*() {
-			var attrs = new ValidSignature({initiative_uuid: this.initiative.uuid})
-			yield db.create(attrs)
+		it("must throw given duplicate country and personal ids",
+			function*() {
+			var attrs = {
+				initiative_uuid: this.initiative.uuid,
+				country: "EE",
+				personal_id: "38706181337"
+			}
+
+			yield db.create(new ValidSignature(attrs))
 
 			var err
-			try { yield db.create(attrs) } catch (ex) { err = ex }
+			try { yield db.create(new ValidSignature(attrs)) } catch (ex) { err = ex }
 			err.must.be.an.error(SqliteError)
 			err.code.must.equal("constraint")
 			err.type.must.equal("unique")

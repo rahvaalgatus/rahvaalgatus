@@ -4,7 +4,6 @@ var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidEvent = require("root/test/valid_db_initiative_event")
 var sql = require("sqlate")
-var newUuid = require("uuid/v4")
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var pseudoInt = require("root/lib/crypto").pseudoInt
 var initiativesDb = require("root/db/initiatives_db")
@@ -25,10 +24,13 @@ describe("AdminController", function() {
 	beforeEach(require("root/test/mitm").router)
 
 	describe("POST /initiatives/:id/events", function() {
-		require("root/test/fixtures").user({id: Config.adminUserIds[0]})
+		require("root/test/fixtures").user({
+			country: Config.adminPersonalIds[0].slice(0, 2),
+			personal_id: Config.adminPersonalIds[0].slice(2)
+		})
 
 		beforeEach(function*() {
-			this.topic = yield createTopic({creatorId: this.user.id})
+			this.topic = yield createTopic({creatorId: this.user.uuid})
 
 			this.initiative = yield initiativesDb.create({
 				uuid: this.topic.id,
@@ -63,7 +65,7 @@ describe("AdminController", function() {
 					created_at: new Date,
 					updated_at: new Date,
 					occurred_at: new Date(2020, 0, 2, 13, 37),
-					created_by: this.user.id,
+					created_by: this.user.uuid,
 					origin: "admin",
 					title: "Initiative was handled",
 					content: "All good."
@@ -150,10 +152,13 @@ describe("AdminController", function() {
 	})
 
 	describe("POST /initiatives/:id/messages", function() {
-		require("root/test/fixtures").user({id: Config.adminUserIds[0]})
+		require("root/test/fixtures").user({
+			country: Config.adminPersonalIds[0].slice(0, 2),
+			personal_id: Config.adminPersonalIds[0].slice(2)
+		})
 
 		beforeEach(function*() {
-			this.topic = yield createTopic({creatorId: this.user.id})
+			this.topic = yield createTopic({creatorId: this.user.uuid})
 			this.initiative = yield initiativesDb.create({uuid: this.topic.id})
 		})
 
@@ -298,7 +303,7 @@ describe("AdminController", function() {
 
 function createTopic(attrs) {
 	return cosDb("Topics").insert(_.assign({
-		id: newUuid(),
+		id: _.serializeUuid(_.uuidV4()),
 		title: "Initiative #" + pseudoInt(100),
 		status: "inProgress",
 		visibility: "public",

@@ -8,10 +8,15 @@ var OcspAsn = require("undersign/lib/ocsp_asn")
 var Certificate = require("undersign/lib/certificate")
 var Config = require("root/config")
 var LdapAttributes = require("undersign/lib/ldap_attributes")
-var newUser = require("root/test/citizenos_fixtures").newUser
-var createUser = require("root/test/citizenos_fixtures").createUser
+var ValidUser = require("root/test/valid_user")
+var ValidSession = require("root/test/valid_session")
+var newCitizenUser = require("root/test/citizenos_fixtures").newUser
+var createCitizenUser = require("root/test/citizenos_fixtures").createUser
+var usersDb = require("root/db/users_db")
+var sessionsDb = require("root/db/sessions_db")
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var sha1 = require("root/lib/crypto").hash.bind(null, "sha1")
+var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var fetchDefaults = require("fetch-defaults")
 var EMPTY_BUFFER = new Buffer(0)
 var NO_PARAMS = Buffer.from("0500", "hex")
@@ -37,6 +42,105 @@ exports.ISSUER_KEYS = _.mapValues({
 	__dirname + `/fixtures/${path}.pub`
 ))
 
+exports.PHONE_NUMBER_TRANSFORMS = {
+	"0001337": "+3720001337",
+	"5031337": "+3725031337",
+	"500 1337": "+3725001337",
+	"3580031337": "+3580031337",
+	"3700031337": "+3700031337",
+	"3710031337": "+3710031337",
+	"3720031337": "+3720031337",
+	"+3580031337": "+3580031337",
+	"+3700031337": "+3700031337",
+	"+3710031337": "+3710031337",
+	"+3720031337": "+3720031337",
+	"(+372) 5031337": "+3725031337",
+	"(372) 5031337": "+3725031337",
+	"[372] 5031337": "+3725031337",
+	"372-500-1337": "+3725001337"
+}
+
+exports.MOBILE_ID_CREATE_ERRORS = {
+	NOT_FOUND: [
+		422,
+		"Not a Mobile-Id User or Personal Id Mismatch",
+		"MOBILE_ID_ERROR_NOT_FOUND"
+	],
+
+	NOT_ACTIVE: [
+		422,
+		"Mobile-Id Certificates Not Activated",
+		"MOBILE_ID_ERROR_NOT_ACTIVE"
+	]
+}
+
+exports.MOBILE_ID_SESSION_ERRORS = {
+	TIMEOUT: [
+		410,
+		"Mobile-Id Timeout",
+		"MOBILE_ID_ERROR_TIMEOUT"
+	],
+
+	NOT_MID_CLIENT: [
+		410,
+		"Mobile-Id Certificates Not Activated",
+		"MOBILE_ID_ERROR_NOT_ACTIVE"
+	],
+
+	USER_CANCELLED: [
+		410,
+		"Mobile-Id Cancelled",
+		"MOBILE_ID_ERROR_USER_CANCELLED"
+	],
+
+	SIGNATURE_HASH_MISMATCH: [
+		410,
+		"Mobile-Id Signature Hash Mismatch",
+		"MOBILE_ID_ERROR_SIGNATURE_HASH_MISMATCH"
+	],
+
+	PHONE_ABSENT: [
+		410,
+		"Mobile-Id Phone Absent",
+		"MOBILE_ID_ERROR_PHONE_ABSENT"
+	],
+
+	DELIVERY_ERROR: [
+		410,
+		"Mobile-Id Delivery Error",
+		"MOBILE_ID_ERROR_DELIVERY_ERROR"
+	],
+
+	SIM_ERROR: [
+		410,
+		"Mobile-Id SIM Application Error",
+		"MOBILE_ID_ERROR_SIM_ERROR"
+	],
+}
+
+// Load TSL only after setting ISSUER_KEYS as they're used for setting the
+// public keys.
+var tsl = require("root").tsl
+
+// EID-SK 2007 expired 2016-08-26T14:23:01.000Z,
+// ESTEID-SK 2007 expired 2016-08-26T14:23:01.000Z.
+exports.VALID_ISSUERS = [[
+	"C=EE",
+	"O=AS Sertifitseerimiskeskus",
+	"CN=ESTEID-SK 2011",
+	"1.2.840.113549.1.9.1=#1609706b6940736b2e6565"
+], [
+	"C=EE",
+	"O=AS Sertifitseerimiskeskus",
+	"2.5.4.97=#0c0e4e545245452d3130373437303133",
+	"CN=ESTEID-SK 2015"
+], [
+	"C=EE",
+	"O=SK ID Solutions AS",
+	"2.5.4.97=#0c0e4e545245452d3130373437303133",
+	"CN=ESTEID2018"
+]].map((parts) => parts.join(",")).map(tsl.getBySubjectName.bind(tsl))
+
 // TODO: Add the CSRF token to the header by default.
 exports.csrf = function() {
 	beforeEach(function() {
@@ -59,22 +163,34 @@ exports.csrfRequest = function() {
 	})
 }
 
+exports.createUser = function*(attrs) {
+	var user = yield usersDb.create(new ValidUser(attrs))
+
+	yield createCitizenUser(newCitizenUser({
+		id: user.uuid.toString("hex"),
+		name: user.name
+	}))
+
+	return user
+}
+
 exports.user = function(attrs) {
 	beforeEach(function*() {
+		var user = yield exports.createUser(attrs)
+		var token = Crypto.randomBytes(12)
+		this.user = user
+
+		this.session = yield sessionsDb.create(new ValidSession({
+			user_id: user.id,
+			token_sha256: sha256(token)
+		}))
+
 		// https://github.com/mochajs/mocha/issues/2014:
 		delete this.request
 
-		this.user = yield createUser(newUser(attrs))
-
 		this.request = fetchDefaults(this.request, {
-			cookies: {[Config.cookieName]: pseudoHex(16)}
+			cookies: {[Config.sessionCookieName]: token.toString("hex")}
 		})
-
-		this.router.get("/api/auth/status", respond.bind(null, {data: {
-			id: this.user.id,
-			name: this.user.name,
-			email: this.user.email
-		}}))
 	})
 }
 

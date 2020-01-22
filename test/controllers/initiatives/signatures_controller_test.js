@@ -45,33 +45,18 @@ var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
 var SIGNATURE_TYPE = "application/vnd.rahvaalgatus.signature"
 var NEW_SIG_TRESHOLD = 15
 var PERSONAL_ID = "60001019906"
+var VALID_ISSUERS = require("root/test/fixtures").VALID_ISSUERS
 var JOHN_RSA_KEYS = require("root/test/fixtures").JOHN_RSA_KEYS
 var JOHN_ECDSA_KEYS = require("root/test/fixtures").JOHN_ECDSA_KEYS
+var {PHONE_NUMBER_TRANSFORMS} = require("root/test/fixtures")
+var {MOBILE_ID_CREATE_ERRORS} = require("root/test/fixtures")
+var {MOBILE_ID_SESSION_ERRORS} = require("root/test/fixtures")
 
 // Appending a JWT signature containing only alphanumeric characters checks for
 // a bug noticed on Jan 12, 2020, which interpreted the suffix as a MIME
 // extension and removed it in favor of setting the Accept header.
 var AUTH_TOKEN = "deadbeef.uSdEdl6xvAD0DmFDLnX2xIAsTWWquvsRm1NNg32pcVg"
 var SIGN_TOKEN = "feedfed.uSdEdl6xvAD0DmFDLnX2xIAsTWWquvsRm1NNg32pcVg"
-
-// EID-SK 2007 expired 2016-08-26T14:23:01.000Z,
-// ESTEID-SK 2007 expired 2016-08-26T14:23:01.000Z.
-var VALID_ISSUERS = [[
-	"C=EE",
-	"O=AS Sertifitseerimiskeskus",
-	"CN=ESTEID-SK 2011",
-	"1.2.840.113549.1.9.1=#1609706b6940736b2e6565"
-], [
-	"C=EE",
-	"O=AS Sertifitseerimiskeskus",
-	"2.5.4.97=#0c0e4e545245452d3130373437303133",
-	"CN=ESTEID-SK 2015"
-], [
-	"C=EE",
-	"O=SK ID Solutions AS",
-	"2.5.4.97=#0c0e4e545245452d3130373437303133",
-	"CN=ESTEID2018"
-]].map((parts) => parts.join(",")).map(tsl.getBySubjectName.bind(tsl))
 
 var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
 	subject: {
@@ -102,24 +87,6 @@ var MOBILE_ID_CERTIFICATE = new Certificate(newCertificate({
 	issuer: VALID_ISSUERS[0],
 	publicKey: JOHN_RSA_KEYS.publicKey
 }))
-
-var PHONE_NUMBER_TRANSFORMS = {
-	"0001337": "+3720001337",
-	"5031337": "+3725031337",
-	"500 1337": "+3725001337",
-	"3580031337": "+3580031337",
-	"3700031337": "+3700031337",
-	"3710031337": "+3710031337",
-	"3720031337": "+3720031337",
-	"+3580031337": "+3580031337",
-	"+3700031337": "+3700031337",
-	"+3710031337": "+3710031337",
-	"+3720031337": "+3720031337",
-	"(+372) 5031337": "+3725031337",
-	"(372) 5031337": "+3725031337",
-	"[372] 5031337": "+3725031337",
-	"372-500-1337": "+3725001337"
-}
 
 describe("SignaturesController", function() {
 	require("root/test/web")()
@@ -618,6 +585,8 @@ describe("SignaturesController", function() {
 			}
 
 			describe("when signing via Id-Card", function() {
+				mustSign(signWithIdCard, ID_CARD_CERTIFICATE)
+
 				it("must create a signature", function*() {
 					var cert = new Certificate(newCertificate({
 						subject: {
@@ -637,12 +606,7 @@ describe("SignaturesController", function() {
 					var path = `/initiatives/${this.initiative.uuid}`
 					var signing = yield this.request(path + "/signatures", {
 						method: "POST",
-
-						headers: {
-							"Accept": SIGNABLE_TYPE,
-							"Content-Type": CERTIFICATE_TYPE
-						},
-
+						headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
 						body: cert.toBuffer()
 					})
 
@@ -715,8 +679,6 @@ describe("SignaturesController", function() {
 						xades: String(xades)
 					})])
 				})
-
-				mustSign(signWithIdCard, ID_CARD_CERTIFICATE)
 
 				it("must respond with 422 given certificate from untrusted issuer",
 					function*() {
@@ -851,8 +813,8 @@ describe("SignaturesController", function() {
 				_.each({
 					RSA: [JOHN_RSA_KEYS, signWithRsa],
 					ECDSA: [JOHN_ECDSA_KEYS, signWithEcdsa]
-				}, function([keys, sign], name) {
-					it(`must create a signature given an ${name} signature`, function*() {
+				}, function([keys, sign], algo) {
+					it(`must create a signature given an ${algo} signature`, function*() {
 						var cert = new Certificate(newCertificate({
 							subject: {
 								countryName: "EE",
@@ -873,7 +835,7 @@ describe("SignaturesController", function() {
 							method: "POST",
 
 							headers: {
-								"Accept": SIGNABLE_TYPE,
+								Accept: SIGNABLE_TYPE,
 								"Content-Type": CERTIFICATE_TYPE
 							},
 
@@ -896,14 +858,19 @@ describe("SignaturesController", function() {
 
 						var signed = yield this.request(signing.headers.location, {
 							method: "PUT",
-							headers: {"Content-Type": SIGNATURE_TYPE},
+
+							headers: {
+								Accept: `application/x-empty, ${ERR_TYPE}`,
+								"Content-Type": SIGNATURE_TYPE
+							},
+
 							body: sign(keys.privateKey, xades.signable)
 						})
 
-						signed.statusCode.must.equal(303)
+						signed.statusCode.must.equal(204)
 					})
 
-					it(`must respond with 409 given an invalid ${name} signature`,
+					it(`must respond with 409 given an invalid ${algo} signature`,
 						function*() {
 						var cert = new Certificate(newCertificate({
 							subject: {
@@ -925,7 +892,7 @@ describe("SignaturesController", function() {
 							method: "POST",
 
 							headers: {
-								"Accept": SIGNABLE_TYPE,
+								Accept: SIGNABLE_TYPE,
 								"Content-Type": CERTIFICATE_TYPE
 							},
 
@@ -963,6 +930,8 @@ describe("SignaturesController", function() {
 			})
 
 			describe("when signing via Mobile-Id", function() {
+				mustSign(signWithMobileId, MOBILE_ID_CERTIFICATE)
+
 				it("must create a signature", function*() {
 					var cert = new Certificate(newCertificate({
 						subject: {
@@ -1050,7 +1019,7 @@ describe("SignaturesController", function() {
 					})
 
 					var initiativePath = `/initiatives/${this.initiative.uuid}`
-					var res = yield this.request(initiativePath + "/signatures", {
+					var signing = yield this.request(initiativePath + "/signatures", {
 						method: "POST",
 						form: {
 							method: "mobile-id",
@@ -1059,10 +1028,13 @@ describe("SignaturesController", function() {
 						}
 					})
 
-					res.statusCode.must.equal(202)
+					signing.statusCode.must.equal(202)
 
-					var signed = yield this.request(res.headers.location)
-					signed.statusCode.must.equal(303)
+					var signed = yield this.request(signing.headers.location, {
+						headers: {Accept: `application/x-empty, ${ERR_TYPE}`}
+					})
+
+					signed.statusCode.must.equal(204)
 					signed.headers.location.must.equal(initiativePath)
 
 					var signables = yield signablesDb.search(sql`
@@ -1273,8 +1245,11 @@ describe("SignaturesController", function() {
 
 					signing.statusCode.must.equal(202)
 
-					var signed = yield this.request(signing.headers.location)
-					signed.statusCode.must.equal(303)
+					var signed = yield this.request(signing.headers.location, {
+						headers: {Accept: `application/x-empty, ${ERR_TYPE}`}
+					})
+
+					signed.statusCode.must.equal(204)
 
 					yield signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
@@ -1289,13 +1264,11 @@ describe("SignaturesController", function() {
 					res.body.must.include(t("THANKS_FOR_SIGNING"))
 				})
 
-				mustSign(signWithMobileId, MOBILE_ID_CERTIFICATE)
-
 				_.each({
 					RSA: [JOHN_RSA_KEYS, signWithRsa],
 					ECDSA: [JOHN_ECDSA_KEYS, signWithEcdsa]
-				}, function([keys, sign], name) {
-					it(`must create a signature given an ${name} signature`, function*() {
+				}, function([keys, sign], algo) {
+					it(`must create a signature given an ${algo} signature`, function*() {
 						var cert = new Certificate(newCertificate({
 							subject: {
 								countryName: "EE",
@@ -1364,11 +1337,14 @@ describe("SignaturesController", function() {
 
 						signing.statusCode.must.equal(202)
 
-						var signed = yield this.request(signing.headers.location)
-						signed.statusCode.must.equal(303)
+						var signed = yield this.request(signing.headers.location, {
+							headers: {Accept: `application/x-empty, ${ERR_TYPE}`}
+						})
+
+						signed.statusCode.must.equal(204)
 					})
 
-					it(`must respond with error given an invalid ${name} signature`,
+					it(`must respond with error given an invalid ${algo} signature`,
 						function*() {
 						var cert = new Certificate(newCertificate({
 							subject: {
@@ -1422,7 +1398,7 @@ describe("SignaturesController", function() {
 						signing.statusCode.must.equal(202)
 
 						var errored = yield this.request(signing.headers.location, {
-							headers: {Accept: "application/x-empty"}
+							headers: {Accept: `application/x-empty, ${ERR_TYPE}`}
 						})
 
 						errored.statusCode.must.equal(410)
@@ -1473,7 +1449,7 @@ describe("SignaturesController", function() {
 							"Not a Mobile-Id User or Personal Id Mismatch"
 						)
 
-						res.body.must.match(t("MOBILE_ID_ERROR_NOT_FOUND"))
+						res.body.must.include(t("MOBILE_ID_ERROR_NOT_FOUND"))
 
 						yield signablesDb.search(sql`
 							SELECT * FROM initiative_signables
@@ -1481,19 +1457,8 @@ describe("SignaturesController", function() {
 					})
 				})
 
-				_.each({
-					NOT_FOUND: [
-						422,
-						"Not a Mobile-Id User or Personal Id Mismatch",
-						"MOBILE_ID_ERROR_NOT_FOUND"
-					],
-
-					NOT_ACTIVE: [
-						422,
-						"Mobile-Id Certificates Not Activated",
-						"MOBILE_ID_ERROR_NOT_ACTIVE"
-					]
-				}, function([statusCode, statusMessage, error], code) {
+				_.each(MOBILE_ID_CREATE_ERRORS,
+					function([statusCode, statusMessage, error], code) {
 					it(`must respond with error given ${code}`, function*() {
 						this.router.post(`${MOBILE_ID_URL.path}certificate`,
 							function(req, res) {
@@ -1512,7 +1477,7 @@ describe("SignaturesController", function() {
 
 						res.statusCode.must.equal(statusCode)
 						res.statusMessage.must.equal(statusMessage)
-						res.body.must.match(t(error))
+						res.body.must.include(t(error))
 
 						yield signablesDb.search(sql`
 							SELECT * FROM initiative_signables
@@ -1545,7 +1510,7 @@ describe("SignaturesController", function() {
 						"Not a Mobile-Id User or Personal Id Mismatch"
 					)
 
-					res.body.must.match(t("MOBILE_ID_ERROR_NOT_FOUND"))
+					res.body.must.include(t("MOBILE_ID_ERROR_NOT_FOUND"))
 
 					yield signablesDb.search(sql`
 						SELECT * FROM initiative_signables
@@ -1577,7 +1542,7 @@ describe("SignaturesController", function() {
 						"Not a Mobile-Id User or Personal Id Mismatch"
 					)
 
-					res.body.must.match(t("MOBILE_ID_ERROR_NOT_FOUND"))
+					res.body.must.include(t("MOBILE_ID_ERROR_NOT_FOUND"))
 
 					yield signablesDb.search(sql`
 						SELECT * FROM initiative_signables
@@ -1610,49 +1575,8 @@ describe("SignaturesController", function() {
 					`).must.then.be.empty()
 				})
 
-				_.each({
-					TIMEOUT: [
-						410,
-						"Mobile-Id Timeout",
-						"MOBILE_ID_ERROR_TIMEOUT"
-					],
-
-					NOT_MID_CLIENT: [
-						410,
-						"Mobile-Id Certificates Not Activated",
-						"MOBILE_ID_ERROR_NOT_ACTIVE"
-					],
-
-					USER_CANCELLED: [
-						410,
-						"Mobile-Id Cancelled",
-						"MOBILE_ID_ERROR_USER_CANCELLED"
-					],
-
-					SIGNATURE_HASH_MISMATCH: [
-						410,
-						"Mobile-Id Signature Hash Mismatch",
-						"MOBILE_ID_ERROR_SIGNATURE_HASH_MISMATCH"
-					],
-
-					PHONE_ABSENT: [
-						410,
-						"Mobile-Id Phone Absent",
-						"MOBILE_ID_ERROR_PHONE_ABSENT"
-					],
-
-					DELIVERY_ERROR: [
-						410,
-						"Mobile-Id Delivery Error",
-						"MOBILE_ID_ERROR_DELIVERY_ERROR"
-					],
-
-					SIM_ERROR: [
-						410,
-						"Mobile-Id SIM Application Error",
-						"MOBILE_ID_ERROR_SIM_ERROR"
-					],
-				}, function([statusCode, statusMessage, error], code) {
+				_.each(MOBILE_ID_SESSION_ERRORS,
+					function([statusCode, statusMessage, error], code) {
 					it(`must respond with error given ${code} while signing`,
 						function*() {
 						this.router.post(`${MOBILE_ID_URL.path}certificate`,
@@ -1688,7 +1612,7 @@ describe("SignaturesController", function() {
 						signing.statusCode.must.equal(202)
 
 						var errored = yield this.request(signing.headers.location, {
-							headers: {Accept: "application/x-empty"}
+							headers: {Accept: `application/x-empty, ${ERR_TYPE}`}
 						})
 
 						errored.statusCode.must.equal(statusCode)
@@ -1749,7 +1673,7 @@ describe("SignaturesController", function() {
 					signing.statusCode.must.equal(202)
 
 					var errored = yield this.request(signing.headers.location, {
-						headers: {Accept: "application/x-empty"}
+						headers: {Accept: `application/x-empty, ${ERR_TYPE}`}
 					})
 
 					errored.statusCode.must.equal(410)
@@ -2152,7 +2076,7 @@ describe("SignaturesController", function() {
 						method: "POST",
 
 						headers: {
-							"Accept": SIGNABLE_TYPE,
+							Accept: SIGNABLE_TYPE,
 							"Content-Type": CERTIFICATE_TYPE
 						},
 
@@ -2251,8 +2175,11 @@ describe("SignaturesController", function() {
 						}))
 					}))
 
-					var poll = yield this.request(res.headers.location)
-					poll.statusCode.must.equal(303)
+					var poll = yield this.request(res.headers.location, {
+						headers: {Accept: `application/x-empty, ${ERR_TYPE}`}
+					})
+
+					poll.statusCode.must.equal(204)
 					poll.headers.location.must.equal(path)
 
 					yield signaturesDb.search(sql`
@@ -2610,12 +2537,7 @@ describe("SignaturesController", function() {
 function* signWithIdCard(router, request, initiative, cert) {
 	var signing = yield request(`/initiatives/${initiative.uuid}/signatures`, {
 		method: "POST",
-
-		headers: {
-			"Accept": SIGNABLE_TYPE,
-			"Content-Type": CERTIFICATE_TYPE
-		},
-
+		headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
 		body: cert.toBuffer()
 	})
 
@@ -2657,7 +2579,7 @@ function* signWithMobileId(router, request, initiative, cert) {
 		res.writeHead(200)
 
 		var xades = yield signablesDb.read(sql`
-			SELECT * FROM initiative_signables
+			SELECT xades FROM initiative_signables
 			ORDER BY created_at DESC
 			LIMIT 1
 		`).then((row) => row.xades)
@@ -2684,11 +2606,7 @@ function* signWithMobileId(router, request, initiative, cert) {
 
 	var signing = yield request(`/initiatives/${initiative.uuid}/signatures`, {
 		method: "POST",
-		form: {
-			method: "mobile-id",
-			pid: "60001019906",
-			phoneNumber: "+37200000766"
-		}
+		form: {method: "mobile-id", pid: "60001019906", phoneNumber: "+37200000766"}
 	})
 
 	signing.statusCode.must.equal(202)
@@ -2721,7 +2639,7 @@ function* signWithIdCardViaCitizen(router, request, topic, vote, optId, user) {
 	var path = initiativePath + "/signatures?optionId=" + optId
 	var res = yield request(path, {
 		method: "POST",
-		headers: {"Accept": SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
+		headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
 		body: cert.toBuffer()
 	})
 

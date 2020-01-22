@@ -10,12 +10,12 @@
 	"apiPartnerId": "b563ee8c-ba8e-4cd6-b592-fbcd4e8f22bb",
 	"apiAuthorizeUrl": "https://cos.rahvaalgatus.ee/api/auth/openid/authorize",
 	"etherpadUrl": "https://cos.rahvaalgatus.ee/etherpad",
-	"cookieName": "citizenos_token",
+	"sessionCookieName": "session_token",
 	"cookieSecret": null,
 	"cookieDomain": "rahvaalgatus.ee",
 	"userAgent": "Rahvaalgatus (+https://rahvaalgatus.ee)",
 	"maintenance": false,
-	"adminUserIds": [],
+	"adminPersonalIds": [],
 	"eventNotificationsSince": "1970-01-01T00:00:00Z",
 	"signatureMilestones": [100, 1000],
 
@@ -38,6 +38,7 @@
 	"maksekeskusId": "62c9e4f7-beea-4120-a08d-3dbafda55c9a",
 
 	"citizenOsDatabase": {},
+	"citizenSession": null,
 
 	"email": {
 		"from": "Rahvaalgatus <abi@rahvaalgatus.ee>",

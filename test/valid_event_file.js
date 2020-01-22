@@ -1,11 +1,10 @@
 var _ = require("root/lib/underscore")
-var newUuid = require("uuid/v4")
 
 module.exports = function(attrs) {
 	var createdAt = new Date
 
 	return _.assign({
-		initiative_uuid: newUuid(),
+		initiative_uuid: _.serializeUuid(_.uuidV4()),
 		event_id: null,
 		external_id: null,
 		name: _.uniqueId("document_") + ".pdf",

@@ -221,6 +221,97 @@ CREATE TABLE initiative_signatures (
 );
 CREATE INDEX index_signatures_on_country_and_personal_id
 ON initiative_signatures (country, personal_id);
+CREATE TABLE users (
+	id INTEGER PRIMARY KEY NOT NULL,
+	uuid BLOB UNIQUE NOT NULL,
+	country TEXT NOT NULL,
+	personal_id TEXT NOT NULL,
+	name TEXT NOT NULL,
+	official_name TEXT NOT NULL,
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	email TEXT UNIQUE COLLATE NOCASE,
+	email_confirmed_at TEXT,
+	unconfirmed_email TEXT COLLATE NOCASE,
+	email_confirmation_token BLOB UNIQUE,
+	email_confirmation_sent_at TEXT,
+	language TEXT NOT NULL DEFAULT 'et',
+
+	CONSTRAINT users_uuid_length CHECK (length(uuid) == 16),
+	CONSTRAINT users_country_length CHECK (length(country) == 2),
+	CONSTRAINT users_personal_id_length CHECK (length(personal_id) > 0),
+	CONSTRAINT users_name_length CHECK (length(name) > 0),
+	CONSTRAINT users_official_name_length CHECK (length(official_name) > 0),
+	CONSTRAINT users_email_length CHECK (length(email) >= 3),
+	CONSTRAINT users_language_length CHECK (length(language) == 2),
+	CONSTRAINT users_country_uppercase CHECK (country == upper(country)),
+	CONSTRAINT users_language_lowercase CHECK (language == lower(language)),
+
+	CONSTRAINT users_unconfirmed_email_length
+	CHECK (length(unconfirmed_email) >= 3),
+
+	CONSTRAINT users_email_format CHECK (email GLOB '*?@?*'),
+
+	CONSTRAINT users_unconfirmed_email_format
+	CHECK (unconfirmed_email GLOB '*?@?*'),
+
+	CONSTRAINT users_email_confirmation_token
+	CHECK (length(email_confirmation_token) > 0),
+
+	CONSTRAINT users_email_confirmed
+	CHECK ((email IS NULL) = (email_confirmed_at IS NULL)),
+
+	CONSTRAINT users_unconfirmed_email_token
+	CHECK ((unconfirmed_email IS NULL) = (email_confirmation_token IS NULL)),
+
+	CONSTRAINT users_email_and_unconfirmed_email_different
+	CHECK (email <> unconfirmed_email)
+);
+CREATE UNIQUE INDEX index_users_on_country_and_personal_id
+ON users (country, personal_id);
+CREATE TABLE authentications (
+	id INTEGER PRIMARY KEY NOT NULL,
+	country TEXT NOT NULL,
+	personal_id TEXT NOT NULL,
+	method TEXT NOT NULL,
+	certificate BLOB,
+  token BLOB UNIQUE NOT NULL,
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	created_ip TEXT,
+	created_user_agent TEXT,
+	authenticated INTEGER NOT NULL DEFAULT 0,
+	error TEXT,
+
+	CONSTRAINT authentications_country_length CHECK (length(country) = 2),
+	CONSTRAINT authentications_personal_id_length
+	CHECK (length(personal_id) > 0),
+
+	CONSTRAINT authentications_certificate_length CHECK (length(certificate) > 0),
+	CONSTRAINT authentications_token_sha256_length CHECK (length(token) > 0),
+
+	CONSTRAINT authentications_country_uppercase
+	CHECK (country == upper(country))
+);
+CREATE TABLE sessions (
+	id INTEGER PRIMARY KEY NOT NULL,
+	user_id INTEGER NOT NULL,
+  token_sha256 BLOB UNIQUE NOT NULL,
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	authentication_id INTEGER UNIQUE,
+	method TEXT NOT NULL,
+	created_ip TEXT,
+	created_user_agent TEXT,
+	deleted_at TEXT,
+
+	FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+
+	FOREIGN KEY (authentication_id) REFERENCES authentications (id)
+	ON DELETE SET NULL,
+
+	CONSTRAINT sessions_token_sha256_length CHECK (length(token_sha256) == 32)
+);
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -282,4 +373,6 @@ INSERT INTO migrations VALUES('20191118184030');
 INSERT INTO migrations VALUES('20200106000042');
 INSERT INTO migrations VALUES('20200106000100');
 INSERT INTO migrations VALUES('20200106000105');
+INSERT INTO migrations VALUES('20200106000110');
+INSERT INTO migrations VALUES('20200106000120');
 COMMIT;

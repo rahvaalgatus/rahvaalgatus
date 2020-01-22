@@ -304,7 +304,7 @@ exports.read = next(function*(req, res) {
 	var comments = yield searchInitiativeComments(initiative.uuid)
 	var events = yield searchInitiativeEvents(initiative)
 
-	var subscription = user && user.emailIsVerified
+	var subscription = user && user.email && user.email_confirmed_at
 		? yield subscriptionsDb.read(sql`
 			SELECT * FROM initiative_subscriptions
 			WHERE initiative_uuid = ${initiative.uuid}
@@ -393,8 +393,6 @@ exports.router.get("/:id/edit", next(function*(req, res) {
 
 exports.router.use("/:id/comments",
 	require("./initiatives/comments_controller").router)
-exports.router.use("/:id/authors",
-	require("./initiatives/authors_controller").router)
 exports.router.use("/:id/files",
 	require("./initiatives/files_controller").router)
 exports.router.use("/:id/events",
@@ -560,21 +558,28 @@ function readCitizenSignature(topic, userUuid) {
 
 function readTopicPermission(user, topic) {
 	if (user == null) return Promise.resolve("read")
-	if (topic.creatorId == user.id) return Promise.resolve("admin")
+
+	var userUuid = _.serializeUuid(user.uuid)
+	if (topic.creatorId == userUuid) return Promise.resolve("admin")
 
 	return cosDb.query(sql`
 		SELECT level FROM "TopicMemberUsers"
 		WHERE "topicId" = ${topic.id}
-		AND "userId" = ${user.id}
+		AND "userId" = ${userUuid}
 		AND "deletedAt" IS NULL
 	`).then(_.first).then((perm) => perm ? perm.level : null)
 }
 
 function* searchInitiativeComments(initiativeUuid) {
+	// The inefficient JOIN against the users table is temporary until all users
+	// have been imported and UUIDs switched for integer ids.
 	var comments = yield commentsDb.search(sql`
-		SELECT * FROM comments
-		WHERE initiative_uuid = ${initiativeUuid}
-		ORDER BY created_at
+		SELECT comment.*, user.name AS user_name
+		FROM comments AS comment
+		LEFT JOIN users AS user
+		ON lower(hex(user.uuid)) = replace(comment.user_uuid, '-', '')
+		WHERE comment.initiative_uuid = ${initiativeUuid}
+		ORDER BY comment.created_at
 	`)
 
 	var usersById = comments.length > 0 ? _.indexBy(yield cosDb.query(sql`
@@ -582,7 +587,10 @@ function* searchInitiativeComments(initiativeUuid) {
 		WHERE id IN ${sql.in(comments.map((c) => c.user_uuid))}
 	`), "id") : EMPTY
 
-	comments.forEach((comment) => comment.user = usersById[comment.user_uuid])
+	comments.forEach(function(comment) {
+		comment.user = usersById[comment.user_uuid]
+		if (comment.user_name) comment.user.name = comment.user_name
+	})
 
 	var parentsAndReplies = _.partition(comments, (c) => c.parent_id == null)
 	var parentsById = _.indexBy(parentsAndReplies[0], "id")

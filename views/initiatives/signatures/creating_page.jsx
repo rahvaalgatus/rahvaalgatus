@@ -4,6 +4,7 @@ var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var InitiativePage = require("../initiative_page")
 var javascript = require("root/lib/jsx").javascript
+var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
 
 module.exports = function(attrs) {
 	var req = attrs.req
@@ -39,11 +40,11 @@ module.exports = function(attrs) {
 						<script>{javascript`
 							fetch("${poll}", {
 								credentials: "same-origin",
+								headers: {Accept: "application/x-empty, ${ERR_TYPE}"},
 
 								// Fetch polyfill doesn't support manual redirect, so use
 								// x-empty.
-								redirect: "manual",
-								headers: {Accept: "application/x-empty"}
+								redirect: "manual"
 							}).then(function(res) {
 								// WhatWG-Fetch polyfill lacks res.url.
 								window.location.assign(res.headers.get("Location") || "${poll}")

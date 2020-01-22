@@ -2,6 +2,7 @@ var ERR_PREFIX = "MSG_ERROR_HWCRYPTO_"
 void require("./vendor/hwcrypto-legacy.js")
 var Hwcrypto = require("./vendor/hwcrypto.js")
 exports.Certificate = Certificate
+exports.Hwcrypto = Hwcrypto // Export for testing.
 
 function Certificate(cert) {
 	this.obj = cert
@@ -15,8 +16,9 @@ Certificate.prototype.toHwcrypto = function() {
 	return this.obj
 }
 
-exports.certificate = function() {
-	var cert = Hwcrypto.getCertificate({})
+exports.certificate = function(type) {
+	// https://github.com/open-eid/chrome-token-signing/blob/0fc224ce43540d2f4198b2e5315e9d37ad7bbe00/host-windows/chrome-token-signing.cpp
+	var cert = Hwcrypto.getCertificate({filter: type && type.toUpperCase()})
 	cert = cert.then(function(cert) { return new Certificate(cert) })
 	cert = cert.catch(errorify)
 	return cert

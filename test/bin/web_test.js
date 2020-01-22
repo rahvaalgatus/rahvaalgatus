@@ -20,6 +20,7 @@ describe("Web", function() {
 		"/discussions": "/",
 		"/goodpractice": "/about",
 		"/support_us": "/donate",
+		"/session/new": "/sessions/new",
 
 		"/initiatives/42/events/create?token=42":
 			"/initiatives/42/events/new?token=42",

@@ -3,6 +3,7 @@ var Url = require("url")
 var Atom = require("root/lib/atom")
 var DateFns = require("date-fns")
 var Config = require("root/config")
+var Crypto = require("crypto")
 var MediaType = require("medium-type")
 var Initiative = require("root/lib/initiative")
 var ValidInitiative = require("root/test/valid_db_initiative")
@@ -19,12 +20,11 @@ var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var tHtml = _.compose(_.escapeHtml, t)
 var respond = require("root/test/fixtures").respond
 var newPartner = require("root/test/citizenos_fixtures").newPartner
-var newUser = require("root/test/citizenos_fixtures").newUser
 var newTopic = require("root/test/citizenos_fixtures").newTopic
 var newVote = require("root/test/citizenos_fixtures").newVote
 var newPermission = require("root/test/citizenos_fixtures").newPermission
 var createPartner = require("root/test/citizenos_fixtures").createPartner
-var createUser = require("root/test/citizenos_fixtures").createUser
+var createUser = require("root/test/fixtures").createUser
 var createTopic = require("root/test/citizenos_fixtures").createTopic
 var createVote = require("root/test/citizenos_fixtures").createVote
 var createCitizenSignatures =
@@ -34,6 +34,7 @@ var pseudoDateTime = require("root/lib/crypto").pseudoDateTime
 var parseCookies = Http.parseCookies
 var parseFlash = Http.parseFlash.bind(null, Config.cookieSecret)
 var readVoteOptions = require("root/lib/citizenos_db").readVoteOptions
+var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var imagesDb = require("root/db/initiative_images_db")
@@ -46,6 +47,7 @@ var parseDom = require("root/lib/dom").parse
 var outdent = require("root/lib/outdent")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var concat = Array.prototype.concat.bind(Array.prototype)
+var cosDb = require("root").cosDb
 var INITIATIVE_TYPE = "application/vnd.rahvaalgatus.initiative+json; v=1"
 var ATOM_TYPE = "application/atom+xml"
 var PHASES = require("root/lib/initiative").PHASES
@@ -79,7 +81,7 @@ describe("InitiativesController", function() {
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: (yield createUser()).uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "public",
 				endsAt: DateFns.addSeconds(new Date, 1)
@@ -103,7 +105,7 @@ describe("InitiativesController", function() {
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: (yield createUser()).uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "public",
 				endsAt: new Date
@@ -123,7 +125,7 @@ describe("InitiativesController", function() {
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: (yield createUser()).uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "public",
 				endsAt: DateFns.addSeconds(new Date, 1)
@@ -141,7 +143,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: (yield createUser()).uuid,
 				sourcePartnerId: this.partner.id,
 				status: "voting"
 			}))
@@ -175,7 +177,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: (yield createUser()).uuid,
 				sourcePartnerId: this.partner.id,
 				status: "voting"
 			}))
@@ -194,7 +196,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: (yield createUser()).uuid,
 				sourcePartnerId: this.partner.id,
 				status: "voting"
 			}))
@@ -215,7 +217,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: (yield createUser()).uuid,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
 			}))
@@ -242,7 +244,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: (yield createUser()).uuid,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
 			}))
@@ -284,7 +286,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: (yield createUser()).uuid,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
 			}))
@@ -321,7 +323,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: (yield createUser()).uuid,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
 			}))
@@ -347,7 +349,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: (yield createUser()).uuid,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
 			}))
@@ -398,7 +400,7 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: (yield createUser(newUser())).id,
+						creatorId: (yield createUser()).uuid,
 						sourcePartnerId: this.partner.id,
 						status: "inProgress",
 						visibility: "public"
@@ -419,7 +421,7 @@ describe("InitiativesController", function() {
 
 						var topic = yield createTopic(newTopic({
 							id: initiative.uuid,
-							creatorId: (yield createUser(newUser())).id,
+							creatorId: (yield createUser()).uuid,
 							sourcePartnerId: this.partner.id,
 							status: phase == "edit" ? "inProgress" : "voting",
 							visibility: "public"
@@ -444,7 +446,7 @@ describe("InitiativesController", function() {
 
 						var topic = yield createTopic(newTopic({
 							id: initiative.uuid,
-							creatorId: (yield createUser(newUser())).id,
+							creatorId: (yield createUser()).uuid,
 							sourcePartnerId: this.partner.id,
 							status: phase == "edit" ? "inProgress" : "voting",
 							visibility: "public"
@@ -477,7 +479,7 @@ describe("InitiativesController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: (yield createUser(newUser())).id,
+						creatorId: (yield createUser()).uuid,
 						sourcePartnerId: this.partner.id,
 						status: "voting",
 						visibility: "public"
@@ -507,7 +509,7 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: (yield createUser(newUser())).id,
+						creatorId: (yield createUser()).uuid,
 						sourcePartnerId: partner.id,
 						visibility: "public"
 					}))
@@ -526,7 +528,7 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: (yield createUser(newUser())).id,
+						creatorId: (yield createUser()).uuid,
 						sourcePartnerId: partner.id,
 						visibility: "public"
 					}))
@@ -546,7 +548,7 @@ describe("InitiativesController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: (yield createUser(newUser())).id,
+						creatorId: (yield createUser()).uuid,
 						sourcePartnerId: partner.id,
 						visibility: "public"
 					}))
@@ -566,7 +568,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: (yield createUser()).uuid,
 				sourcePartnerId: partner.id,
 				visibility: "public"
 			}))
@@ -581,7 +583,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: (yield createUser()).uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "private"
 			}))
@@ -596,7 +598,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: (yield createUser()).uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "public",
 				deletedAt: new Date
@@ -613,7 +615,7 @@ describe("InitiativesController", function() {
 
 			yield createTopic(newTopic({
 				id: initiativeA.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: (yield createUser()).uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "public",
 				categories: ["uuseakus"]
@@ -621,7 +623,7 @@ describe("InitiativesController", function() {
 
 			yield createTopic(newTopic({
 				id: initiativeB.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: (yield createUser()).uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "public"
 			}))
@@ -746,7 +748,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "private"
 				}))
@@ -761,7 +763,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public",
 					deletedAt: new Date
@@ -776,7 +778,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public"
 				}))
@@ -812,7 +814,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public",
 					endsAt: DateFns.addDays(new Date, 5)
@@ -834,7 +836,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public",
 					endsAt: DateFns.addDays(new Date, 5)
@@ -867,7 +869,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public"
 				}))
@@ -891,7 +893,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "closed"
 				}))
@@ -908,7 +910,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public",
 					endsAt: new Date
@@ -930,7 +932,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					createdAt: DateFns.addDays(new Date, -3),
 					status: "voting"
@@ -988,7 +990,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "voting"
 				}))
@@ -1019,7 +1021,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "voting"
 				}))
@@ -1052,7 +1054,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "voting"
 				}))
@@ -1086,7 +1088,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "closed"
 				}))
@@ -1117,7 +1119,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "voting"
 				}))
@@ -1153,7 +1155,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "voting"
 				}))
@@ -1186,7 +1188,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "followUp"
 				}))
@@ -1234,7 +1236,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "followUp"
 				}))
@@ -1636,7 +1638,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "followUp"
 				}))
@@ -1663,7 +1665,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "followUp"
 				}))
@@ -1691,7 +1693,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "followUp"
 				}))
@@ -1722,7 +1724,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "followUp"
 				}))
@@ -1745,7 +1747,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "followUp"
 				}))
@@ -1770,7 +1772,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "followUp"
 				}))
@@ -1807,7 +1809,7 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: (yield createUser(newUser())).id,
+						creatorId: (yield createUser()).uuid,
 						sourcePartnerId: this.partner.id,
 						status: "followUp"
 					}))
@@ -1846,7 +1848,7 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: (yield createUser(newUser())).id,
+						creatorId: (yield createUser()).uuid,
 						sourcePartnerId: this.partner.id,
 						status: "followUp"
 					}))
@@ -1908,7 +1910,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "followUp"
 				}))
@@ -1978,7 +1980,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "followUp"
 				}))
@@ -2007,7 +2009,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "followUp"
 				}))
@@ -2064,7 +2066,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "followUp"
 				}))
@@ -2092,7 +2094,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "followUp"
 				}))
@@ -2125,7 +2127,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "followUp"
 				}))
@@ -2156,7 +2158,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "followUp"
 				}))
@@ -2191,7 +2193,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "followUp"
 				}))
@@ -2219,11 +2221,11 @@ describe("InitiativesController", function() {
 					external: true
 				}))
 
-				var author = yield createUser(newUser({name: "Johnny Lang"}))
+				var author = yield createUser({name: "Johnny Lang"})
 
 				var event = yield eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid,
-					created_by: author.id,
+					created_by: _.serializeUuid(author.uuid),
 					title: "This just in.",
 					content: "Everything is fine!",
 					created_at: pseudoDateTime(),
@@ -2296,22 +2298,60 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public"
 				}))
 
-				var author = yield createUser(newUser({name: "Johnny Lang"}))
-				var replier = yield createUser(newUser({name: "Kenny Loggins"}))
+				var author = yield createUser({name: "Johnny Lang"})
+				var replier = yield createUser({name: "Kenny Loggins"})
 
 				var comment = yield commentsDb.create(new ValidComment({
 					initiative_uuid: initiative.uuid,
-					user_uuid: author.id
+					user_uuid: _.serializeUuid(author.uuid)
 				}))
 
 				var reply = yield commentsDb.create(new ValidComment({
 					initiative_uuid: initiative.uuid,
-					user_uuid: replier.id,
+					user_uuid: _.serializeUuid(replier.uuid),
+					parent_id: comment.id
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var commentsEl = dom.getElementById("initiative-comments")
+				commentsEl.textContent.must.include(author.name)
+				commentsEl.textContent.must.include(comment.title)
+				commentsEl.textContent.must.include(comment.text)
+				commentsEl.textContent.must.include(replier.name)
+				commentsEl.textContent.must.include(reply.text)
+			})
+
+			it("must render initiative comments with names from local database",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative)
+
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser()).uuid,
+					sourcePartnerId: this.partner.id,
+					visibility: "public"
+				}))
+
+				var author = yield createUser({name: "Johnny Lang"})
+				var replier = yield createUser({name: "Kenny Loggins"})
+				yield cosDb.query(sql`UPDATE "Users" SET name = ''`)
+
+				var comment = yield commentsDb.create(new ValidComment({
+					initiative_uuid: initiative.uuid,
+					user_uuid: _.serializeUuid(author.uuid)
+				}))
+
+				var reply = yield commentsDb.create(new ValidComment({
+					initiative_uuid: initiative.uuid,
+					user_uuid: _.serializeUuid(replier.uuid),
 					parent_id: comment.id
 				}))
 
@@ -2332,7 +2372,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public"
 				}))
@@ -2360,7 +2400,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "voting"
 				}))
@@ -2380,7 +2420,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "voting"
 				}))
@@ -2403,7 +2443,7 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: (yield createUser(newUser())).id,
+						creatorId: (yield createUser()).uuid,
 						sourcePartnerId: this.partner.id,
 						status: "inProgress",
 						visibility: "public"
@@ -2424,7 +2464,7 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: (yield createUser(newUser())).id,
+						creatorId: (yield createUser()).uuid,
 						sourcePartnerId: this.partner.id,
 						status: "inProgress",
 						visibility: "public"
@@ -2450,7 +2490,7 @@ describe("InitiativesController", function() {
 
 						var topic = yield createTopic(newTopic({
 							id: initiative.uuid,
-							creatorId: (yield createUser(newUser())).id,
+							creatorId: (yield createUser()).uuid,
 							sourcePartnerId: this.partner.id,
 							status: "voting",
 							visibility: "public"
@@ -2474,7 +2514,7 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: (yield createUser(newUser())).id,
+						creatorId: (yield createUser()).uuid,
 						sourcePartnerId: this.partner.id,
 						status: "inProgress",
 						visibility: "public"
@@ -2497,7 +2537,7 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: (yield createUser(newUser())).id,
+						creatorId: (yield createUser()).uuid,
 						sourcePartnerId: this.partner.id,
 						status: "inProgress",
 						visibility: "public"
@@ -2522,7 +2562,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: this.user.id,
+					creatorId: this.user.uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "private"
 				}))
@@ -2537,13 +2577,13 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: (yield createUser(newUser())).id,
+						creatorId: (yield createUser()).uuid,
 						sourcePartnerId: this.partner.id,
 						visibility: "private"
 					}))
 
 					yield createPermission(newPermission({
-						userId: this.user.id,
+						userId: this.user.uuid,
 						topicId: initiative.uuid,
 						level: perm
 					}))
@@ -2559,7 +2599,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "private"
 				}))
@@ -2576,7 +2616,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public",
 					endsAt: DateFns.addDays(new Date, 5)
@@ -2601,12 +2641,12 @@ describe("InitiativesController", function() {
 				)
 			})
 
-			it("must render comment form", function*() {
+			it("must render comment form mentioning missing email", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative)
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public"
 				}))
@@ -2618,6 +2658,71 @@ describe("InitiativesController", function() {
 				var form = dom.getElementById("comment-form")
 				var check = form.querySelector("input[type=checkbox][name=subscribe]")
 				check.checked.must.be.false()
+				check.disabled.must.be.true()
+
+				form.innerHTML.must.include(t("SUBSCRIBE_TO_COMMENTS_SET_EMAIL", {
+					userUrl: "/user"
+				}))
+			})
+
+			it("must render comment form mentioning unconfirmed email",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative)
+
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser()).uuid,
+					sourcePartnerId: this.partner.id,
+					visibility: "public"
+				}))
+
+				yield usersDb.update(this.user, {
+					unconfirmed_email: "user@example.com",
+					email_confirmation_token: Crypto.randomBytes(12)
+				})
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var form = dom.getElementById("comment-form")
+				var check = form.querySelector("input[type=checkbox][name=subscribe]")
+				check.checked.must.be.false()
+				check.disabled.must.be.true()
+
+				form.textContent.must.include(
+					t("SUBSCRIBE_TO_COMMENTS_CONFIRM_EMAIL")
+				)
+			})
+
+			it("must render comment form if user has confirmed email", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative)
+
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: (yield createUser()).uuid,
+					sourcePartnerId: this.partner.id,
+					visibility: "public"
+				}))
+
+				yield usersDb.update(this.user, {
+					email: "user@example.com",
+					email_confirmed_at: new Date
+				})
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var form = dom.getElementById("comment-form")
+				var check = form.querySelector("input[type=checkbox][name=subscribe]")
+				check.checked.must.be.false()
+
+				form.textContent.must.not.include(t("SUBSCRIBE_TO_COMMENTS_SET_EMAIL"))
+
+				form.textContent.must.not.include(
+					t("SUBSCRIBE_TO_COMMENTS_CONFIRM_EMAIL")
+				)
 			})
 
 			it("must render subscribe checkbox if subscribed to initiative comments",
@@ -2626,14 +2731,19 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public"
 				}))
 
+				yield usersDb.update(this.user, {
+					email: "user@example.com",
+					email_confirmed_at: new Date
+				})
+
 				yield subscriptionsDb.create(new ValidSubscription({
 					initiative_uuid: initiative.uuid,
-					email: this.user.email,
+					email: "user@example.com",
 					confirmed_at: new Date,
 					comment_interest: true
 				}))
@@ -2655,9 +2765,14 @@ describe("InitiativesController", function() {
 					phase: "parliament"
 				}))
 
+				yield usersDb.update(this.user, {
+					email: "user@example.com",
+					email_confirmed_at: new Date
+				})
+
 				yield subscriptionsDb.create(new ValidSubscription({
 					initiative_uuid: initiative.uuid,
-					email: this.user.email,
+					email: "user@example.com",
 					confirmed_at: new Date,
 					comment_interest: true
 				}))
@@ -2676,14 +2791,19 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public"
 				}))
 
+				yield usersDb.update(this.user, {
+					email: "user@example.com",
+					email_confirmed_at: new Date
+				})
+
 				yield subscriptionsDb.create(new ValidSubscription({
 					initiative_uuid: initiative.uuid,
-					email: this.user.email,
+					email: "user@example.com",
 					confirmed_at: new Date,
 					comment_interest: false
 				}))
@@ -2702,13 +2822,18 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public"
-				}))
+				}))	
+
+				yield usersDb.update(this.user, {
+					email: "user@example.com",
+					email_confirmed_at: new Date
+				})
 
 				yield subscriptionsDb.create(new ValidSubscription({
-					email: this.user.email,
+					email: "user@example.com",
 					confirmed_at: new Date,
 					comment_interest: true
 				}))
@@ -2729,7 +2854,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: this.user.id,
+					creatorId: this.user.uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public"
 				}))
@@ -2747,7 +2872,7 @@ describe("InitiativesController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						status: "voting"
 					}))
@@ -2768,7 +2893,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "voting"
 				}))
@@ -2788,7 +2913,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					status: "voting"
 				}))
@@ -2810,7 +2935,7 @@ describe("InitiativesController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						status: "voting"
 					}))
@@ -2831,7 +2956,7 @@ describe("InitiativesController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						status: "voting"
 					}))
@@ -2853,7 +2978,7 @@ describe("InitiativesController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						status: "voting"
 					}))
@@ -2874,7 +2999,7 @@ describe("InitiativesController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						status: "voting"
 					}))
@@ -2897,7 +3022,7 @@ describe("InitiativesController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						status: "voting"
 					}))
@@ -2923,7 +3048,7 @@ describe("InitiativesController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						status: "voting"
 					}))
@@ -2945,14 +3070,14 @@ describe("InitiativesController", function() {
 
 	describe(`GET /:id for image/*`, function() {
 		beforeEach(function*() {
-			this.user = yield createUser(newUser())
+			this.user = yield createUser()
 			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
 
 			this.initiative = yield initiativesDb.create(new ValidInitiative)
 
 			yield createTopic(newTopic({
 				id: this.initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: (yield createUser()).uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "public"
 			}))
@@ -3047,7 +3172,7 @@ describe("InitiativesController", function() {
 
 	describe(`GET /:id for ${INITIATIVE_TYPE}`, function() {
 		beforeEach(function*() {
-			this.user = yield createUser(newUser())
+			this.user = yield createUser()
 			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
 		})
 
@@ -3056,7 +3181,7 @@ describe("InitiativesController", function() {
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: this.user.uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "private"
 			}))
@@ -3074,7 +3199,7 @@ describe("InitiativesController", function() {
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: this.user.uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "public",
 				deletedAt: new Date
@@ -3093,7 +3218,7 @@ describe("InitiativesController", function() {
 			yield createTopic(newTopic({
 				id: initiative.uuid,
 				title: "Better life for everyone.",
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: (yield createUser()).uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "public"
 			}))
@@ -3138,7 +3263,7 @@ describe("InitiativesController", function() {
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
 				title: "Better life for everyone.",
-				creatorId: this.user.id,
+				creatorId: this.user.uuid,
 				sourcePartnerId: this.partner.id,
 				status: "voting"
 			}))
@@ -3165,7 +3290,7 @@ describe("InitiativesController", function() {
 
 	describe(`GET /:id for ${ATOM_TYPE}`, function() {
 		beforeEach(function*() {
-			this.user = yield createUser(newUser())
+			this.user = yield createUser()
 			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
 		})
 
@@ -3175,7 +3300,7 @@ describe("InitiativesController", function() {
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
 				title: "Better life for everyone.",
-				creatorId: this.user.id,
+				creatorId: this.user.uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "public"
 			}))
@@ -3247,16 +3372,16 @@ describe("InitiativesController", function() {
 			yield createTopic(newTopic({
 				id: initiative.uuid,
 				title: "Better life for everyone.",
-				creatorId: this.user.id,
+				creatorId: this.user.uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "public"
 			}))
 
-			var author = yield createUser(newUser({name: "Johnny Lang"}))
+			var author = yield createUser({name: "Johnny Lang"})
 
 			var events = yield eventsDb.create([new ValidEvent({
 				initiative_uuid: initiative.uuid,
-				created_by: author.id,
+				created_by: author.uuid,
 				title: "We sent it.",
 				content: "To somewhere.",
 				created_at: new Date(2015, 5, 18),
@@ -3264,7 +3389,7 @@ describe("InitiativesController", function() {
 				occurred_at: new Date(2015, 5, 20)
 			}), new ValidEvent({
 				initiative_uuid: initiative.uuid,
-				created_by: author.id,
+				created_by: author.uuid,
 				title: "They got it.",
 				content: "From somewhere.",
 				created_at: new Date(2015, 5, 21),
@@ -3285,7 +3410,7 @@ describe("InitiativesController", function() {
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
 				title: "Better life for everyone.",
-				creatorId: this.user.id,
+				creatorId: this.user.uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "public"
 			}))
@@ -3311,7 +3436,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: (yield createUser()).uuid,
 				sourcePartnerId: this.partner.id,
 				status: "voting"
 			}))
@@ -3785,7 +3910,7 @@ describe("InitiativesController", function() {
 				yield createTopic(newTopic({
 					id: initiative.uuid,
 					title: "Better life for everyone.",
-					creatorId: this.user.id,
+					creatorId: this.user.uuid,
 					sourcePartnerId: this.partner.id,
 					status: "followUp"
 				}))
@@ -3830,7 +3955,7 @@ describe("InitiativesController", function() {
 				yield createTopic(newTopic({
 					id: initiative.uuid,
 					title: "Better life for everyone.",
-					creatorId: this.user.id,
+					creatorId: this.user.uuid,
 					sourcePartnerId: this.partner.id,
 					status: "followUp"
 				}))
@@ -3942,11 +4067,11 @@ describe("InitiativesController", function() {
 				external: true
 			}))
 
-			var author = yield createUser(newUser({name: "Johnny Lang"}))
+			var author = yield createUser({name: "Johnny Lang"})
 
 			var event = yield eventsDb.create(new ValidEvent({
 				initiative_uuid: initiative.uuid,
-				created_by: author.id,
+				created_by: _.serializeUuid(author.uuid),
 				title: "This just in.",
 				content: "Everything is fine!",
 				created_at: pseudoDateTime(),
@@ -3990,7 +4115,7 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id
 					}))
 
@@ -4017,7 +4142,7 @@ describe("InitiativesController", function() {
 
 						yield createTopic(newTopic({
 							id: initiative.uuid,
-							creatorId: this.user.id,
+							creatorId: this.user.uuid,
 							sourcePartnerId: this.partner.id
 						}))
 
@@ -4041,7 +4166,7 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id
 					}))
 
@@ -4063,7 +4188,7 @@ describe("InitiativesController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id
 					}))
 
@@ -4086,7 +4211,7 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						visibility: "private"
 					}))
@@ -4106,7 +4231,7 @@ describe("InitiativesController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						visibility: "private"
 					}))
@@ -4147,7 +4272,7 @@ describe("InitiativesController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						visibility: "public"
 					}))
@@ -4180,7 +4305,7 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						visibility: "public"
 					}))
@@ -4210,7 +4335,7 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						createdAt: DateFns.addDays(new Date, -Config.minDeadlineDays),
 						visibility: "public"
@@ -4232,7 +4357,7 @@ describe("InitiativesController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						createdAt: DateFns.addDays(new Date, -Config.minDeadlineDays),
 						visibility: "public"
@@ -4286,7 +4411,7 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						createdAt: DateFns.addDays(new Date, -Config.minDeadlineDays + 1),
 						visibility: "public"
@@ -4313,7 +4438,7 @@ describe("InitiativesController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						createdAt: DateFns.addDays(new Date, -Config.minDeadlineDays + 1),
 						visibility: "public",
@@ -4351,7 +4476,7 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						createdAt: DateFns.addDays(new Date, -Config.minDeadlineDays),
 						visibility: "public"
@@ -4382,7 +4507,7 @@ describe("InitiativesController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						status: "voting",
 						description: initiative.text
@@ -4424,7 +4549,7 @@ describe("InitiativesController", function() {
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
 						title: "Better life.",
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						createdAt: DateFns.addDays(new Date, -Config.minDeadlineDays),
 						visibility: "public"
@@ -4522,7 +4647,7 @@ describe("InitiativesController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						status: "voting"
 					}))
@@ -4555,7 +4680,7 @@ describe("InitiativesController", function() {
 
 						var topic = yield createTopic(newTopic({
 							id: initiative.uuid,
-							creatorId: this.user.id,
+							creatorId: this.user.uuid,
 							sourcePartnerId: this.partner.id,
 							status: "voting"
 						}))
@@ -4585,7 +4710,7 @@ describe("InitiativesController", function() {
 
 						var topic = yield createTopic(newTopic({
 							id: initiative.uuid,
-							creatorId: this.user.id,
+							creatorId: this.user.uuid,
 							sourcePartnerId: this.partner.id,
 							status: "voting"
 						}))
@@ -4612,7 +4737,7 @@ describe("InitiativesController", function() {
 
 						var topic = yield createTopic(newTopic({
 							id: initiative.uuid,
-							creatorId: this.user.id,
+							creatorId: this.user.uuid,
 							sourcePartnerId: this.partner.id,
 							status: "voting"
 						}))
@@ -4641,7 +4766,7 @@ describe("InitiativesController", function() {
 
 						var topic = yield createTopic(newTopic({
 							id: initiative.uuid,
-							creatorId: this.user.id,
+							creatorId: this.user.uuid,
 							sourcePartnerId: this.partner.id,
 							status: "voting"
 						}))
@@ -4666,7 +4791,7 @@ describe("InitiativesController", function() {
 
 						var topic = yield createTopic(newTopic({
 							id: initiative.uuid,
-							creatorId: this.user.id,
+							creatorId: this.user.uuid,
 							sourcePartnerId: this.partner.id,
 							status: "voting"
 						}))
@@ -4692,7 +4817,7 @@ describe("InitiativesController", function() {
 
 						var topic = yield createTopic(newTopic({
 							id: initiative.uuid,
-							creatorId: this.user.id,
+							creatorId: this.user.uuid,
 							sourcePartnerId: this.partner.id,
 							status: "voting"
 						}))
@@ -4715,7 +4840,7 @@ describe("InitiativesController", function() {
 
 						var topic = yield createTopic(newTopic({
 							id: initiative.uuid,
-							creatorId: this.user.id,
+							creatorId: this.user.uuid,
 							sourcePartnerId: this.partner.id,
 							status: "voting"
 						}))
@@ -4740,7 +4865,7 @@ describe("InitiativesController", function() {
 
 						var topic = yield createTopic(newTopic({
 							id: initiative.uuid,
-							creatorId: this.user.id,
+							creatorId: this.user.uuid,
 							sourcePartnerId: this.partner.id,
 							status: "voting"
 						}))
@@ -4764,7 +4889,7 @@ describe("InitiativesController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						status: "voting"
 					}))
@@ -4827,7 +4952,7 @@ describe("InitiativesController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						status: "voting"
 					}))
@@ -4895,7 +5020,7 @@ describe("InitiativesController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						status: "voting"
 					}))
@@ -4929,7 +5054,7 @@ describe("InitiativesController", function() {
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
 						title: "Better life for everyone.",
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						status: "voting"
 					}))
@@ -5044,7 +5169,7 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id
 					}))
 
@@ -5117,7 +5242,7 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id
 					}))
 
@@ -5143,7 +5268,7 @@ describe("InitiativesController", function() {
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: (yield createUser(newUser())).id,
+						creatorId: (yield createUser()).uuid,
 						sourcePartnerId: this.partner.id,
 						visibility: "public"
 					}))
@@ -5174,7 +5299,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: this.user.id,
+					creatorId: this.user.uuid,
 					sourcePartnerId: this.partner.id
 				}))
 
@@ -5200,7 +5325,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: this.user.id,
+					creatorId: this.user.uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public"
 				}))
@@ -5226,7 +5351,7 @@ describe("InitiativesController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: this.user.id,
+					creatorId: this.user.uuid,
 					sourcePartnerId: this.partner.id,
 					status: "voting"
 				}))
@@ -5247,7 +5372,7 @@ describe("InitiativesController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public"
 				}))
@@ -5276,7 +5401,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: this.user.uuid,
 				sourcePartnerId: this.partner.id
 			}))
 
@@ -5298,7 +5423,7 @@ describe("InitiativesController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: this.user.uuid,
 				sourcePartnerId: this.partner.id
 			}))
 

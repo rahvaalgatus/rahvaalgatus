@@ -218,7 +218,7 @@ exports.router.post("/:id/events", next(function*(req, res) {
 		initiative_uuid: initiative.uuid,
 		created_at: new Date,
 		updated_at: new Date,
-		created_by: req.user.id
+		created_by: req.user.uuid
 	})
 
 	switch (req.body.action) {

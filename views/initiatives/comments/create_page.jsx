@@ -89,15 +89,22 @@ function CommentForm(attrs) {
 			<input
 				type="checkbox"
 				name="subscribe"
+				disabled={user.email_confirmed_at == null}
 				checked={subscription && subscription.comment_interest}
 			/>
 
 			{t("SUBSCRIBE_TO_COMMENTS_WHEN_COMMENTING")}
+
+			{" "}{user.email == null && user.unconfirmed_email == null ?
+				Jsx.html(t("SUBSCRIBE_TO_COMMENTS_SET_EMAIL", {userUrl: "/user"}))
+			: user.email_confirmed_at == null ?
+				t("SUBSCRIBE_TO_COMMENTS_CONFIRM_EMAIL")
+			: null}
 		</label> : null}
 
 		{!user ? <span class="text signin-to-act">
 			{Jsx.html(t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE", {
-				url: "/session/new"
+				url: "/sessions/new"
 			}))}
 		</span> : null}
 	</Form>

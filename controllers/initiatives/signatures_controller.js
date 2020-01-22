@@ -4,7 +4,6 @@ var Url = require("url")
 var Mime = require("mime")
 var Asic = require("undersign/lib/asic")
 var Path = require("path")
-var Config = require("root/config")
 var MobileId = require("undersign/lib/mobile_id")
 var MediaType = require("medium-type")
 var Router = require("express").Router
@@ -28,59 +27,24 @@ var parseBody = require("body-parser").raw
 var signaturesDb = require("root/db/initiative_signatures_db")
 var signablesDb = require("root/db/initiative_signables_db")
 var cosApi = require("root/lib/citizenos_api")
+var {ensureAreaCode} = require("root/lib/mobile_id")
 var decodeBase64 = require("root/lib/crypto").decodeBase64
 var translateCitizenError = require("root/lib/citizenos_api").translateError
 var constantTimeEqual = require("root/lib/crypto").constantTimeEqual
+var {getCertificatePersonalId} = require("root/lib/certificate")
 var ENV = process.env.NODE_ENV
-var tsl = require("root").tsl
 var logger = require("root").logger
+var {validateCertificate} = require("root/lib/certificate")
+var getNormalizedMobileIdErrorCode =
+	require("root/lib/mobile_id").getNormalizedErrorCode
+var {MOBILE_ID_ERROR_STATUS_CODES} = require("root/lib/mobile_id")
+var {MOBILE_ID_ERROR_STATUS_MESSAGES} = require("root/lib/mobile_id")
+var {MOBILE_ID_ERROR_TEXTS} = require("root/lib/mobile_id")
 exports.router = Router({mergeParams: true})
 exports.pathToSignature = pathToSignature
 
 // Circular dependency.
 var {readCitizenSignature} = require("../initiatives_controller")
-
-var VALID_ISSUERS = Config.issuers.map((p) => p.join(","))
-VALID_ISSUERS = VALID_ISSUERS.map(tsl.getBySubjectName.bind(tsl))
-
-var MOBILE_ID_ERROR_STATUS_CODES = {
-	NOT_FOUND: 422,
-	NOT_ACTIVE: 422,
-	TIMEOUT: 410,
-	INVALID_SIGNATURE: 410,
-	NOT_MID_CLIENT: 410,
-	USER_CANCELLED: 410,
-	SIGNATURE_HASH_MISMATCH: 410,
-	PHONE_ABSENT: 410,
-	DELIVERY_ERROR: 410,
-	SIM_ERROR: 410,
-}
-
-var MOBILE_ID_ERROR_STATUS_MESSAGES = {
-	NOT_FOUND: "Not a Mobile-Id User or Personal Id Mismatch",
-	NOT_ACTIVE: "Mobile-Id Certificates Not Activated",
-	TIMEOUT: "Mobile-Id Timeout",
-	INVALID_SIGNATURE: "Invalid Mobile-Id Signature",
-	NOT_MID_CLIENT: "Mobile-Id Certificates Not Activated",
-	USER_CANCELLED: "Mobile-Id Cancelled",
-	SIGNATURE_HASH_MISMATCH: "Mobile-Id Signature Hash Mismatch",
-	PHONE_ABSENT: "Mobile-Id Phone Absent",
-	DELIVERY_ERROR: "Mobile-Id Delivery Error",
-	SIM_ERROR: "Mobile-Id SIM Application Error"
-}
-
-var MOBILE_ID_ERROR_TEXTS = {
-	NOT_FOUND: "MOBILE_ID_ERROR_NOT_FOUND",
-	NOT_ACTIVE: "MOBILE_ID_ERROR_NOT_ACTIVE",
-	TIMEOUT: "MOBILE_ID_ERROR_TIMEOUT",
-	INVALID_SIGNATURE: "MOBILE_ID_ERROR_INVALID_SIGNATURE",
-	NOT_MID_CLIENT: "MOBILE_ID_ERROR_NOT_ACTIVE",
-	USER_CANCELLED: "MOBILE_ID_ERROR_USER_CANCELLED",
-	SIGNATURE_HASH_MISMATCH: "MOBILE_ID_ERROR_SIGNATURE_HASH_MISMATCH",
-	PHONE_ABSENT: "MOBILE_ID_ERROR_PHONE_ABSENT",
-	DELIVERY_ERROR: "MOBILE_ID_ERROR_DELIVERY_ERROR",
-	SIM_ERROR: "MOBILE_ID_ERROR_SIM_ERROR"
-}
 
 exports.router.use(parseBody({type: hasSignatureType}))
 
@@ -126,7 +90,7 @@ exports.router.post("/", next(function*(req, res, next) {
 	switch (method) {
 		case "id-card":
 			cert = Certificate.parse(req.body)
-			if (err = validateCertificate(cert)) throw err
+			if (err = validateCertificate(req.t, cert)) throw err
 
 			;[country, pid] = getCertificatePersonalId(cert)
 			xades = newXades(initiative)
@@ -142,8 +106,7 @@ exports.router.post("/", next(function*(req, res, next) {
 			signatureUrl = req.baseUrl + "/" + pathToSignature(signable)
 			res.setHeader("Location", signatureUrl)
 			res.setHeader("Content-Type", "application/vnd.rahvaalgatus.signable")
-			res.status(202)
-			res.end(xades.signableHash)
+			res.status(202).end(xades.signableHash)
 			break
 
 		case "mobile-id":
@@ -157,7 +120,7 @@ exports.router.post("/", next(function*(req, res, next) {
 			)
 
 			cert = yield mobileId.readCertificate(phoneNumber, req.body.pid)
-			if (err = validateCertificate(cert)) throw err
+			if (err = validateCertificate(req.t, cert)) throw err
 
 			;[country, pid] = getCertificatePersonalId(cert)
 			xades = newXades(initiative)
@@ -166,7 +129,7 @@ exports.router.post("/", next(function*(req, res, next) {
 			// queried, not when signing is initiated.
 			logger.info("Signing via Mobile-Id for %s and %s.", phoneNumber, pid)
 			var sessionId = yield mobileId.sign(phoneNumber, pid, xades.signableHash)
-			
+
 			signable = yield signablesDb.create({
 				initiative_uuid: initiative.uuid,
 				country: country,
@@ -195,29 +158,6 @@ exports.router.post("/", next(function*(req, res, next) {
 			type: initiative.text_type,
 			hash: initiative.text_sha256
 		}], {policy: "bdoc"})
-	}
-
-	function validateCertificate(cert) {
-		// Undersign's Certificates.prototype.getIssuer confirms the cert was also
-		// signed by the issuer.
-		var issuer = tsl.getIssuer(cert)
-
-		if (!VALID_ISSUERS.includes(issuer))
-			return new HttpError(422, "Invalid Issuer", {
-				description: req.t("INVALID_CERTIFICATE_ISSUER")
-			})
-
-		if (cert.validFrom > new Date)
-			return new HttpError(422, "Certificate Not Yet Valid", {
-				description: req.t("CERTIFICATE_NOT_YET_VALID")
-			})
-
-		if (cert.validUntil <= new Date)
-			return new HttpError(422, "Certificate Expired", {
-				description: req.t("CERTIFICATE_EXPIRED")
-			})
-
-		return null
 	}
 }))
 
@@ -673,17 +613,6 @@ function* waitForCitizenMobileIdSignature(topic, token) {
 	throw new HttpError(500, "Mobile-Id Took Too Long")
 }
 
-function ensureAreaCode(number) {
-	number = number.replace(/[-()[\] ]/g, "")
-
-	// As of Dec, 2019, numbers without a leading "+", even if otherwise prefixed
-	// with a suitable area code (~372), don't work. They used to with the
-	// Digidoc Service API.
-	if (/^\+/.test(number)) return number
-	if (/^3[567][0-9]/.test(number)) return "+" + number
-	return "+372" + number
-}
-
 function parseUserIdFromBdocUrl(url) {
 	url = Url.parse(url, true)
 	return parseJwt(url.query.token).userId
@@ -733,37 +662,6 @@ function* replaceSignature(signable) {
 		created_at: new Date,
 		updated_at: new Date
 	})
-}
-
-function getNormalizedMobileIdErrorCode(err) {
-	return (
-		isMobileIdPersonalIdError(err) ? "NOT_FOUND" :
-		isMobileIdPhoneNumberError(err) ? "NOT_FOUND"
-		: err.code
-	)
-
-	function isMobileIdPersonalIdError(err) {
-		return (
-			err.code == "BAD_REQUEST" &&
-			err.message.match(/\bnationalIdentityNumber\b/)
-		)
-	}
-
-	function isMobileIdPhoneNumberError(err) {
-		return (
-			err.code == "BAD_REQUEST" &&
-			err.message.match(/\bphoneNumber\b/)
-		)
-	}
-}
-
-function getCertificatePersonalId(cert) {
-	var obj = _.assign({}, ...cert.subject), pno
-
-	if (pno = /^PNO([A-Z][A-Z])-(\d+)$/.exec(obj.serialNumber))
-		return [pno[1], pno[2]]
-	else
-		return [obj.countryName, obj.serialNumber]
 }
 
 // NOTE: Use this only on JWTs from trusted sources as it does no validation.

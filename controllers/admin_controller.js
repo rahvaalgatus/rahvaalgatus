@@ -4,6 +4,7 @@ var Config = require("root/config")
 var HttpError = require("standard-http-error")
 var DateFns = require("date-fns")
 var Time = require("root/lib/time")
+var {isAdmin} = require("root/lib/user")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var commentsDb = require("root/db/comments_db")
 var next = require("co-next")
@@ -17,7 +18,7 @@ var PARTNER_IDS = concat(Config.apiPartnerId, _.keys(Config.partners))
 exports = module.exports = Router()
 
 exports.use(function(req, _res, next) {
-	if (req.user && _.contains(Config.adminUserIds, req.user.id)) next()
+	if (req.user && isAdmin(req.user)) next()
 	else next(new HttpError(401, "Not an Admin"))
 })
 

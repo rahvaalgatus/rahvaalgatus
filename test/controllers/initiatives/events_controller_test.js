@@ -5,11 +5,10 @@ var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidEvent = require("root/test/valid_db_initiative_event")
 var newPartner = require("root/test/citizenos_fixtures").newPartner
-var newUser = require("root/test/citizenos_fixtures").newUser
 var newTopic = require("root/test/citizenos_fixtures").newTopic
 var newVote = require("root/test/citizenos_fixtures").newVote
 var createPartner = require("root/test/citizenos_fixtures").createPartner
-var createUser = require("root/test/citizenos_fixtures").createUser
+var createUser = require("root/test/fixtures").createUser
 var createTopic = require("root/test/citizenos_fixtures").createTopic
 var createVote = require("root/test/citizenos_fixtures").createVote
 var initiativesDb = require("root/db/initiatives_db")
@@ -42,7 +41,7 @@ describe("InitiativeEventsController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public"
 				}))
@@ -65,7 +64,7 @@ describe("InitiativeEventsController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: this.user.id,
+					creatorId: this.user.uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public"
 				}))
@@ -84,7 +83,7 @@ describe("InitiativeEventsController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						status: "voting"
 					}))
@@ -102,7 +101,7 @@ describe("InitiativeEventsController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public"
 				}))
@@ -135,7 +134,7 @@ describe("InitiativeEventsController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: this.user.id,
+					creatorId: this.user.uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public"
 				}))
@@ -157,7 +156,7 @@ describe("InitiativeEventsController", function() {
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.user.uuid,
 						sourcePartnerId: this.partner.id,
 						status: "voting"
 					}))
@@ -184,7 +183,7 @@ describe("InitiativeEventsController", function() {
 					events.must.eql([new ValidEvent({
 						id: events[0].id,
 						initiative_uuid: initiative.uuid,
-						created_by: this.user.id,
+						created_by: _.serializeUuid(this.user.uuid),
 						origin: "author",
 						title: "Something happened",
 						content: "You shouldn't miss it."
@@ -199,7 +198,7 @@ describe("InitiativeEventsController", function() {
 
 				var topic = yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: this.user.id,
+					creatorId: this.user.uuid,
 					sourcePartnerId: this.partner.id,
 					status: "voting"
 				}))
@@ -283,7 +282,7 @@ describe("InitiativeEventsController", function() {
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: (yield createUser()).uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public"
 				}))
@@ -309,7 +308,7 @@ function mustRateLimit(request) {
 
 			this.topic = yield createTopic(newTopic({
 				id: this.initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: this.user.uuid,
 				sourcePartnerId: this.partner.id,
 				status: "voting"
 			}))
@@ -322,7 +321,7 @@ function mustRateLimit(request) {
 			yield eventsDb.create(_.times(EVENT_RATE, (_i) => new ValidEvent({
 				initiative_uuid: this.initiative.uuid,
 				created_at: DateFns.addSeconds(DateFns.addMinutes(new Date, -15), 1),
-				created_by: this.user.id
+				created_by: _.serializeUuid(this.user.uuid)
 			})))
 
 			var res = yield request.call(this)
@@ -333,7 +332,7 @@ function mustRateLimit(request) {
 			yield eventsDb.create(_.times(EVENT_RATE - 1, (_i) => new ValidEvent({
 				initiative_uuid: this.initiative.uuid,
 				created_at: DateFns.addSeconds(DateFns.addMinutes(new Date, -15), 1),
-				created_by: this.user.id,
+				created_by: _.serializeUuid(this.user.uuid)
 			})))
 
 			var res = yield request.call(this)
@@ -344,7 +343,7 @@ function mustRateLimit(request) {
 			yield eventsDb.create(_.times(EVENT_RATE, (_i) => new ValidEvent({
 				initiative_uuid: this.initiative.uuid,
 				created_at: DateFns.addMinutes(new Date, -15),
-				created_by: this.user.id,
+				created_by: _.serializeUuid(this.user.uuid)
 			})))
 
 			var res = yield request.call(this)

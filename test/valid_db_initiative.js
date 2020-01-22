@@ -1,6 +1,5 @@
 var _ = require("root/lib/underscore")
 var MediaType = require("medium-type")
-var newUuid = require("uuid/v4")
 var outdent = require("root/lib/outdent")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var HTML_TYPE = new MediaType("text/html")
@@ -10,11 +9,11 @@ module.exports = function(attrs) {
 	var external = attrs && attrs.external
 
 	var text = outdent`<body>
-		Make the world a better place for ${_.uniqueId} people.
+		Make the world a better place for ${_.uniqueId()} people.
 	</body>`
 
 	return _.assign({
-		uuid: newUuid(),
+		uuid: _.serializeUuid(_.uuidV4()),
 		title: "",
 		author_name: "",
 		author_url: "",

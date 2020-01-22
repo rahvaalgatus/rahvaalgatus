@@ -57,6 +57,7 @@ O.each({
 	"/initiatives/:id/vote": "/initiatives/:id",
 	"/initiatives/:id/events": "/initiatives/:id",
 	"/support_us": "/donate",
+	"/session/new": "/sessions/new"
 }, (to, from) => app.get(from, redirect(302, to)))
 
 O.each({
@@ -64,7 +65,7 @@ O.each({
 	"/donations": require("root/controllers/donations_controller").router,
 	"/initiatives": require("root/controllers/initiatives_controller").router,
 	"/subscriptions": require("root/controllers/subscriptions_controller").router,
-	"/session": require("root/controllers/session_controller").router,
+	"/sessions": require("root/controllers/sessions_controller").router,
 	"/user": require("root/controllers/user_controller").router,
 
 	"/initiative-events":
@@ -105,10 +106,16 @@ app.use(require("root/lib/middleware/error_handler_middleware").bind(null,
 		default:
 			// Eventually when we're in control of signin, we should show the signin
 			// form for 401s.
-			if (err instanceof HttpError) res.render("error_page.jsx", {
-				title: t(err.code + "_TITLE") || "",
-				body: err.description || t(err.code + "_BODY") || err.message
-			})
+			if (err instanceof HttpError) {
+				if (err.code == 401) {
+					res.flash("error", t("401_TITLE"))
+					res.render("sessions/create_page.jsx")
+				}
+				else res.render("error_page.jsx", {
+					title: t(err.code + "_TITLE") || "",
+					body: err.description || t(err.code + "_BODY") || err.message
+				})
+			}
 			else res.render("error_page.jsx", {
 				title: t("500_TITLE"),
 				body: t("500_BODY")

@@ -1,6 +1,5 @@
 /** @jsx Jsx */
 var _ = require("root/lib/underscore")
-var O = require("oolong")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var Time = require("root/lib/time")
@@ -17,6 +16,7 @@ var CommentView = require("./comments/read_page").CommentView
 var CommentForm = require("./comments/create_page").CommentForm
 var ProgressView = require("./initiative_page").ProgressView
 var {getRequiredSignatureCount} = require("root/lib/initiative")
+var {isAdmin} = require("root/lib/user")
 var javascript = require("root/lib/jsx").javascript
 var serializeImageUrl = require("root/lib/initiative").imageUrl
 var {pathToSignature} =
@@ -59,8 +59,8 @@ var PARLIAMENT_ACCEPTANCE_DEADLINE_IN_DAYS = 30
 // https://www.riigiteataja.ee/akt/122122014013?leiaKehtiv#para152b12
 var PARLIAMENT_PROCEEDINGS_DEADLINE_IN_MONTHS = 6
 
-var UI_TRANSLATIONS = O.map(I18n.STRINGS, function(lang) {
-	return O.filter(lang, (_value, key) => key.indexOf("HWCRYPTO") >= 0)
+var UI_TRANSLATIONS = _.mapValues(I18n.STRINGS, function(lang) {
+	return _.filterValues(lang, (_value, key) => key.indexOf("HWCRYPTO") >= 0)
 })
 
 var FILE_TYPE_ICONS = {
@@ -393,13 +393,12 @@ function ReadPage(attrs) {
 							var form = document.getElementById("id-card-form")
 							var flash = document.getElementById("initiative-vote-flash")
 							var all = Promise.all.bind(Promise)
-							var csrfToken = ${stringify(req.csrfToken)}
 
 							form.addEventListener("submit", function(ev) {
 								ev.preventDefault()
 								notice("")
 
-								var certificate = Hwcrypto.certificate()
+								var certificate = Hwcrypto.certificate("sign")
 
 								var signable = certificate.then(function(certificate) {
 									var path = "/initiatives/${initiative.uuid}/signatures"
@@ -410,7 +409,7 @@ function ReadPage(attrs) {
 										credentials: "same-origin",
 
 										headers: {
-											"X-CSRF-Token": csrfToken,
+											"X-CSRF-Token": ${stringify(req.csrfToken)},
 											"Content-Type": "application/pkix-cert",
 											Accept: "${SIGNABLE_TYPE}, ${ERR_TYPE}"
 										},
@@ -442,7 +441,7 @@ function ReadPage(attrs) {
 										redirect: "manual",
 
 										headers: {
-											"X-CSRF-Token": csrfToken,
+											"X-CSRF-Token": ${stringify(req.csrfToken)},
 											"Content-Type": "application/vnd.rahvaalgatus.signature",
 
 											// Fetch polyfill doesn't support manual redirect, so use
@@ -885,12 +884,6 @@ function SidebarAuthorView(attrs) {
 			{t("RENEW_DEADLINE")}
 		</FormButton> : null}
 
-		{Topic.canInvite(topic) ? <a
-			href={"/initiatives/" + topic.id + "/authors/new"}
-			class="link-button wide-button">
-			{t("INVITE_PEOPLE")}
-		</a> : null}
-
 		{Topic.canDelete(topic) ? <FormButton
 			req={req}
 			action={"/initiatives/" + topic.id}
@@ -1205,8 +1198,7 @@ function SidebarAdminView(attrs) {
 	var req = attrs.req
 	var initiative = attrs.initiative
 
-	var isAdmin = req.user && _.contains(Config.adminUserIds, req.user.id)
-	if (!isAdmin) return null
+	if (!(req.user && isAdmin(req.user))) return null
 
 	return <div class="sidebar-section">
 		<h2 class="sidebar-header">Administraatorile</h2>

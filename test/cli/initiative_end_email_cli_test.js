@@ -2,7 +2,6 @@ var _ = require("root/lib/underscore")
 var DateFns = require("date-fns")
 var Config = require("root/config")
 var cli = require("root/cli/initiative_end_email_cli")
-var newUuid = require("uuid/v4")
 var newPartner = require("root/test/citizenos_fixtures").newPartner
 var newUser = require("root/test/citizenos_fixtures").newUser
 var newVote = require("root/test/citizenos_fixtures").newVote
@@ -266,7 +265,7 @@ describe("InitiativeEndEmailCli", function() {
 
 function createTopic(attrs) {
 	return cosDb("Topics").insert(_.assign({
-		id: newUuid(),
+		id: _.serializeUuid(_.uuidV4()),
 		title: "For the win",
 		description: "Please sign.",
 		status: "inProgress",

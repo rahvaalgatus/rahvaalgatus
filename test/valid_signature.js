@@ -1,4 +1,5 @@
 var _ = require("root/lib/underscore")
+var {randomPersonalId} = require("./valid_user")
 
 module.exports = function(attrs) {
 	var createdAt = new Date
@@ -16,8 +17,4 @@ module.exports = function(attrs) {
 		oversigned: 0,
 		xades: `<XAdESSignatures>${country}${personalId}</XAdESSignatures>`
 	}, attrs)
-}
-
-function randomPersonalId() {
-	return _.padLeft(String(Math.floor(Math.random() * 1e11)), 11, "1")
 }

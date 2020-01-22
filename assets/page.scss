@@ -291,6 +291,10 @@ button.inherited {
 	&:disabled {
 		background-color: $secondary-background;
 	}
+
+	&.error {
+		border-color: $red;
+	}
 }
 
 .form-input ~ .form-submit,
@@ -369,6 +373,8 @@ button.inherited {
 		width: 1.5rem;
 		display: inline-block;
 		vertical-align: sub;
+
+		&:disabled { opacity: 0.5; }
 	}
 
 	a {
@@ -446,6 +452,11 @@ button.inherited {
 
 .form-or {
 	margin: 0 0.5rem;
+}
+
+.form-input-error {
+	color: $red;
+	font-weight: 500;
 }
 
 .flash {
@@ -704,7 +715,6 @@ button.inherited {
 		margin-bottom: 1.5rem;
 		overflow: hidden;
 		font-size: 1.2rem;
-		text-transform: uppercase;
 		font-family: $museo-sans;
 		font-weight: normal;
 
@@ -1065,6 +1075,69 @@ button.inherited {
 
 				&:before,
 				&:not(:last-child):after { display: none; }
+			}
+		}
+	}
+}
+
+#create-session-page #main {
+	$form-padding: 2.5rem;
+
+	background: $light-background;
+
+	center {
+		max-width: 80rem;
+	}
+
+	#signin-forms {
+		margin-top: 2rem;
+		background: white;
+		box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.15);
+		padding: 3rem $form-padding 2rem;
+	}
+
+	.form-label {
+		font-size: 1.3rem;
+	}
+
+	form {
+		h2 img {
+			max-height: 3rem;
+			vertical-align: sub;
+			margin-right: 1rem;
+		}
+
+		input {
+			max-width: 30rem;
+		}
+
+		& + form {
+			margin: 2rem (-$form-padding) 0;
+			border-top: 1px solid #eee;
+			padding: 2rem $form-padding 0;
+		}
+	}
+
+	#id-card-form {
+		#id-card-flash {
+			margin-top: 0.5rem;
+		}
+	}
+
+	#mobile-id-form {
+		h2 {
+			margin-bottom: 1rem;
+		}
+
+		.form-label {
+			margin-top: 0;
+			margin-right: 0.5rem;
+			margin-bottom: 0.5rem;
+		}
+
+		@media only screen and (max-width: 669px) {
+			.form-label {
+				display: block;
 			}
 		}
 	}
@@ -2252,7 +2325,7 @@ button.inherited {
 		.comments:empty + .comment-form { margin-top: 0; }
 
 		.comment-form {
-			input:disabled,
+			input[type=text]:disabled,
 			textarea:disabled {
 				display: none;
 			}

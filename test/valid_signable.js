@@ -3,6 +3,7 @@ var Crypto = require("crypto")
 var Xades = require("undersign/xades")
 var Certificate = require("undersign/lib/certificate")
 var newCertificate = require("root/test/fixtures").newCertificate
+var {randomPersonalId} = require("./valid_user")
 
 var xades = Xades.parse(String(new Xades(new Certificate(newCertificate({
 	subject: {countryName: "EE"},
@@ -29,8 +30,4 @@ module.exports = function(attrs) {
 		xades: xades,
 		error: null
 	}, attrs)
-}
-
-function randomPersonalId() {
-	return _.padLeft(String(Math.floor(Math.random() * 1e11)), 11, "1")
 }

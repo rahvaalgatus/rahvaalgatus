@@ -5812,8 +5812,8 @@
     },
     "undersign": {
       "version": "0.0.0",
-      "from": "git+https://github.com/moll/js-undersign.git#27c2bdab5968140ee38852c68a6cf82d62a86366",
-      "resolved": "git+https://github.com/moll/js-undersign.git#27c2bdab5968140ee38852c68a6cf82d62a86366",
+      "from": "git+https://github.com/moll/js-undersign.git#6d602a17b7d8d965b796a8ecaf21c388b7720323",
+      "resolved": "git+https://github.com/moll/js-undersign.git#6d602a17b7d8d965b796a8ecaf21c388b7720323",
       "dependencies": {
         "yazl": {
           "version": "2.5.1",
@@ -5908,21 +5908,26 @@
           }
         },
         "asn1.js": {
-          "version": "5.2.0",
+          "version": "5.3.0",
           "from": "asn1.js@>=5.0.0 <6.0.0",
-          "resolved": "https://registry.npmjs.org/asn1.js/-/asn1.js-5.2.0.tgz",
+          "resolved": "https://registry.npmjs.org/asn1.js/-/asn1.js-5.3.0.tgz",
           "dependencies": {
             "minimalistic-assert": {
               "version": "1.0.1",
               "from": "minimalistic-assert@>=1.0.0 <2.0.0",
               "resolved": "https://registry.npmjs.org/minimalistic-assert/-/minimalistic-assert-1.0.1.tgz"
+            },
+            "safer-buffer": {
+              "version": "2.1.2",
+              "from": "safer-buffer@>=2.1.0 <3.0.0",
+              "resolved": "https://registry.npmjs.org/safer-buffer/-/safer-buffer-2.1.2.tgz"
             }
           }
         },
         "asn1.js-rfc2560": {
-          "version": "5.0.0",
+          "version": "5.0.1",
           "from": "asn1.js-rfc2560@>=5.0.0 <6.0.0",
-          "resolved": "https://registry.npmjs.org/asn1.js-rfc2560/-/asn1.js-rfc2560-5.0.0.tgz"
+          "resolved": "https://registry.npmjs.org/asn1.js-rfc2560/-/asn1.js-rfc2560-5.0.1.tgz"
         },
         "asn1.js-rfc5280": {
           "version": "3.0.0",

@@ -1,5 +1,4 @@
 var _ = require("root/lib/underscore")
-var newUuid = require("uuid/v4")
 var countSignaturesById = require("root/lib/citizenos_db").countSignaturesById
 var countSignaturesByIds = require("root/lib/citizenos_db").countSignaturesByIds
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
@@ -31,7 +30,7 @@ describe("CitizenosDb", function() {
 		})
 
 		it("must return null for non-existing initiative", function*() {
-			yield countSignaturesById(newUuid()).must.then.equal(0)
+			yield countSignaturesById(_.serializeUuid(_.uuidV4())).must.then.equal(0)
 		})
 
 		it("must count only Yes signatures", function*() {
@@ -91,7 +90,7 @@ describe("CitizenosDb", function() {
 		})
 
 		it("must return 0s for non-existing initiatives", function*() {
-			var ids = _.times(3, newUuid)
+			var ids = _.times(3, _.compose(_.serializeUuid, _.uuidV4))
 			yield countSignaturesByIds(ids).must.then.eql(_.object(ids, () => 0))
 		})
 
