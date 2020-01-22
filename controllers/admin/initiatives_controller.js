@@ -73,8 +73,11 @@ exports.router.use("/:id", next(function*(req, res, next) {
 	if (initiative == null) return void next(new HttpError(404))
 
 	var topic = yield searchTopics(sql`
-		topic.id = ${initiative.uuid} AND topic.visibility = 'public'
+		topic.id = ${initiative.uuid}
 	`).then(_.first)
+
+	if (initiative && topic && topic.visibility != "public")
+		return void next(new HttpError(403, "Private Initiative"))
 
 	// Populate initiative's title from CitizenOS until we've found a way to sync
 	// them.
