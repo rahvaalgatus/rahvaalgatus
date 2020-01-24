@@ -703,6 +703,7 @@ describe("InitiativesController", function() {
 
 				initiatives.must.eql([new ValidInitiative({
 					uuid: uuid,
+					user_id: this.user.id,
 					parliament_token: initiatives[0].parliament_token,
 					destination: null
 				})])

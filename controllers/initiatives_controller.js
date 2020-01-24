@@ -113,6 +113,9 @@ exports.router.get("/", next(function*(req, res) {
 }))
 
 exports.router.post("/", next(function*(req, res) {
+	var user = req.user
+	if (user == null) throw new HttpError(401)
+
 	var title = _.escapeHtml(req.body.title)
 	var attrs = O.assign({}, EMPTY_INITIATIVE, {
 		title: req.body.title,
@@ -144,6 +147,7 @@ exports.router.post("/", next(function*(req, res) {
 
 	yield initiativesDb.create({
 		uuid: topic.id,
+		user_id: user.id,
 		created_at: new Date,
 		undersignable: Config.undersignable
 	})

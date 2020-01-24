@@ -14,6 +14,7 @@ module.exports = function(attrs) {
 
 	return _.assign({
 		uuid: _.serializeUuid(_.uuidV4()),
+		user_id: null,
 		title: "",
 		author_name: "",
 		author_url: "",
