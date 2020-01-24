@@ -190,8 +190,10 @@ function* read(req, res) {
 	`)
 
 	var authoredInitiatives = yield initiativesDb.search(sql`
-		SELECT * FROM initiatives
-		WHERE uuid IN ${sql.in(authoredTopics.map((t) => t.id))}
+		SELECT initiative.*, user.name AS user_name
+		FROM initiatives AS initiative
+		LEFT JOIN users AS user ON initiative.user_id = user.id
+		WHERE initiative.uuid IN ${sql.in(authoredTopics.map((t) => t.id))}
 	`)
 
 	var signedInitiativeUuids = concat(
@@ -205,8 +207,10 @@ function* read(req, res) {
 	`)
 
 	var signedInitiatives = yield initiativesDb.search(sql`
-		SELECT * FROM initiatives
-		WHERE uuid IN ${sql.in(signedTopics.map((t) => t.id))}
+		SELECT initiative.*, user.name AS user_name
+		FROM initiatives AS initiative
+		LEFT JOIN users AS user ON initiative.user_id = user.id
+		WHERE initiative.uuid IN ${sql.in(signedTopics.map((t) => t.id))}
 	`)
 
 	var topics = _.indexBy(concat(authoredTopics, signedTopics), "id")

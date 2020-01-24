@@ -27,8 +27,7 @@ module.exports = function*() {
 	`)
 
 	var uuids = topics.map((i) => i.id)
-	var initiatives = yield initiativesDb.search(uuids, {create: true})
-	initiatives = _.indexBy(initiatives, "uuid")
+	var initiatives = _.indexBy(yield initiativesDb.search(uuids), "uuid")
 
 	var signatureCounts = yield countSignaturesByIds(uuids)
 

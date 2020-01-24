@@ -1,5 +1,7 @@
+var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSignable = require("root/test/valid_signable")
+var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var db = require("root/db/initiative_signables_db")
 
@@ -7,7 +9,9 @@ describe("InitiativeSignablesDb", function() {
 	require("root/test/db")()
 
 	beforeEach(function*() {
-		this.initiative = yield initiativesDb.create(new ValidInitiative)
+		this.initiative = yield initiativesDb.create(new ValidInitiative({
+			user_id: (yield usersDb.create(new ValidUser)).id
+		}))
 	})
 
 	describe(".read", function() {

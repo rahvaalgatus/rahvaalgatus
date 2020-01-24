@@ -1,16 +1,20 @@
 var _ = require("root/lib/underscore")
 var Crypto = require("crypto")
 var SqliteError = require("root/lib/sqlite_error")
+var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSignature = require("root/test/valid_signature")
 var initiativesDb = require("root/db/initiatives_db")
+var usersDb = require("root/db/users_db")
 var db = require("root/db/initiative_signatures_db")
 
 describe("InitiativeSignaturesDb", function() {
 	require("root/test/db")()
 
 	beforeEach(function*() {
-		this.initiative = yield initiativesDb.create(new ValidInitiative)
+		this.initiative = yield initiativesDb.create(new ValidInitiative({
+			user_id: (yield usersDb.create(new ValidUser)).id
+		}))
 	})
 
 	describe(".create", function() {
@@ -39,10 +43,16 @@ describe("InitiativeSignaturesDb", function() {
 				initiative_uuid: this.initiative.uuid
 			}, attrs))
 
+			var otherInitiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.initiative.user_id
+			}))
+
 			var err
-			try { yield db.create(_.defaults({
-				initiative_uuid: (yield initiativesDb.create(new ValidInitiative)).uuid
-			}, attrs)) }
+			try {
+				yield db.create(_.defaults({
+					initiative_uuid: otherInitiative.uuid
+				}, attrs))
+			}
 			catch (ex) { err = ex }
 			err.must.be.an.error(SqliteError)
 			err.code.must.equal("constraint")

@@ -23,8 +23,11 @@ exports.router.get("/", next(function*(req, res) {
 	var gov = req.government
 
 	var initiatives = yield initiativesDb.search(sql`
-		SELECT * FROM initiatives
-		WHERE archived_at IS NULL AND (
+		SELECT initiative.*, user.name AS user_name
+		FROM initiatives AS initiative
+		LEFT JOIN users AS user ON initiative.user_id = user.id
+
+		WHERE initiative.archived_at IS NULL AND (
 			destination IS NULL OR
 			destination ${gov == "parliament" ? sql`==` : sql`!=`} "parliament"
 		)

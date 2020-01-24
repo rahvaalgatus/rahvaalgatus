@@ -33,11 +33,15 @@ describe("InitiativeCommentsController", function() {
 
 	beforeEach(function*() {
 		this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
-		this.initiative = yield initiativesDb.create(new ValidInitiative)
+		this.author = yield createUser()
+
+		this.initiative = yield initiativesDb.create(new ValidInitiative({
+			user_id: this.author.id
+		}))
 
 		this.topic = yield createTopic(newTopic({
 			id: this.initiative.uuid,
-			creatorId: (yield createUser()).uuid,
+			creatorId: this.author.uuid,
 			sourcePartnerId: this.partner.id,
 			visibility: "public"
 		}))
@@ -678,7 +682,9 @@ describe("InitiativeCommentsController", function() {
 		})
 
 		it("must show 404 given a comment id of another initiative", function*() {
-			var other = yield initiativesDb.create(new ValidInitiative)
+			var other = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
 
 			var author = yield createUser()
 

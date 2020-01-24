@@ -5,11 +5,10 @@ var DateFns = require("date-fns")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSignature = require("root/test/valid_signature")
 var newPartner = require("root/test/citizenos_fixtures").newPartner
-var newUser = require("root/test/citizenos_fixtures").newUser
 var newTopic = require("root/test/citizenos_fixtures").newTopic
 var newVote = require("root/test/citizenos_fixtures").newVote
 var createPartner = require("root/test/citizenos_fixtures").createPartner
-var createUser = require("root/test/citizenos_fixtures").createUser
+var createUser = require("root/test/fixtures").createUser
 var createTopic = require("root/test/citizenos_fixtures").createTopic
 var createVote = require("root/test/citizenos_fixtures").createVote
 var createCitizenSignatures =
@@ -50,19 +49,40 @@ describe("HomeController", function() {
 	beforeEach(require("root/test/mitm").router)
 
 	beforeEach(function*() {
-		this.user = yield createUser(newUser())
 		this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
+		this.author = yield createUser()
 	})
 
 	describe("GET /", function() {
-		it("must show initiatives in edit phase", function*() {
+		it("must show initiatives", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
 				phase: "edit"
 			}))
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: this.author.uuid,
+				sourcePartnerId: this.partner.id,
+				endsAt: DateFns.addSeconds(new Date, 1),
+				visibility: "public"
+			}))
+
+			var res = yield this.request("/")
+			res.statusCode.must.equal(200)
+			res.body.must.include(initiative.uuid)
+			res.body.must.include(this.author.name)
+		})
+
+		it("must show initiatives in edit phase", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "edit"
+			}))
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				endsAt: DateFns.addSeconds(new Date, 1),
 				visibility: "public"
@@ -76,12 +96,13 @@ describe("HomeController", function() {
 		it("must show initiatives in edit phase that have ended less than 2w ago",
 			function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
 				phase: "edit"
 			}))
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "public",
 				endsAt: DateFns.addDays(DateFns.startOfDay(new Date), -13)
@@ -94,12 +115,13 @@ describe("HomeController", function() {
 
 		it("must not show initiatives in edit phase that have ended", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
 				phase: "edit"
 			}))
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "public",
 				endsAt: DateFns.addDays(DateFns.startOfDay(new Date), -14)
@@ -112,13 +134,14 @@ describe("HomeController", function() {
 
 		it("must not show archived initiatives in edit phase", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
 				phase: "edit",
 				archived_at: new Date
 			}))
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "public",
 				endsAt: DateFns.addSeconds(new Date, 1)
@@ -131,12 +154,13 @@ describe("HomeController", function() {
 
 		it("must show initiatives in sign phase", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
 				phase: "sign"
 			}))
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				status: "voting"
 			}))
@@ -160,12 +184,13 @@ describe("HomeController", function() {
 		it("must show initiatives in sign phase that failed in less than 2w",
 			function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
 				phase: "sign"
 			}))
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				status: "voting"
 			}))
@@ -181,12 +206,13 @@ describe("HomeController", function() {
 
 		it("must not show initiatives in sign phase that failed", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
 				phase: "sign"
 			}))
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				status: "voting"
 			}))
@@ -202,12 +228,13 @@ describe("HomeController", function() {
 
 		it("must show initiatives in sign phase that succeeded", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
 				phase: "sign"
 			}))
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				status: "voting"
 			}))
@@ -225,12 +252,13 @@ describe("HomeController", function() {
 
 		it("must show initiatives in parliament phase", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
 				phase: "parliament"
 			}))
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
 			}))
@@ -255,12 +283,13 @@ describe("HomeController", function() {
 
 		it("must show initiatives in government phase", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
 				phase: "government"
 			}))
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
 			}))
@@ -285,12 +314,13 @@ describe("HomeController", function() {
 
 		it("must show initiatives in done phase", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
 				phase: "done"
 			}))
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
 			}))
@@ -331,12 +361,15 @@ describe("HomeController", function() {
 
 			describe("given " + partner.name, function() {
 				it("must show initiatives", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative)
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id
+					}))
+
 					var partner = yield createPartner(newPartner({id: id}))
 
 					var topic = yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: this.user.id,
+						creatorId: this.author.uuid,
 						sourcePartnerId: partner.id,
 						visibility: "public",
 						endsAt: DateFns.addSeconds(new Date, 1)
@@ -350,12 +383,15 @@ describe("HomeController", function() {
 		})
 
 		it("must not show initiatives from other partners", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative)
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
+
 			var partner = yield createPartner(newPartner())
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: partner.id,
 				visibility: "public",
 				endsAt: DateFns.addSeconds(new Date, 1)
@@ -367,11 +403,13 @@ describe("HomeController", function() {
 		})
 
 		it("must not show private initiatives", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative)
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				endsAt: DateFns.addSeconds(new Date, 1),
 				visibility: "private"
@@ -383,11 +421,13 @@ describe("HomeController", function() {
 		})
 
 		it("must not show deleted initiatives", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative)
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "public",
 				endsAt: DateFns.addSeconds(new Date, 1),
@@ -419,12 +459,13 @@ describe("HomeController", function() {
 		describe("statistics", function() {
 			it("must show signature count", function*() {
 				var initiativeA = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
 					phase: "sign"
 				}))
 
 				var topic = yield createTopic(newTopic({
 					id: initiativeA.uuid,
-					creatorId: this.user.id,
+					creatorId: this.author.uuid,
 					sourcePartnerId: this.partner.id,
 					status: "voting"
 				}))
@@ -433,6 +474,7 @@ describe("HomeController", function() {
 				yield createCitizenSignatures(vote, 5)
 
 				var initiativeB = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
 					phase: "sign"
 				}))
 
@@ -468,13 +510,14 @@ describe("HomeController", function() {
 				it("must show initiatives in edit phase with no destination",
 					function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
 						phase: "edit",
 						destination: null
 					}))
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
-						creatorId: (yield createUser(newUser())).id,
+						creatorId: (yield createUser()).uuid,
 						sourcePartnerId: this.partner.id,
 						status: "inProgress",
 						endsAt: DateFns.addSeconds(new Date, 1),
@@ -490,13 +533,14 @@ describe("HomeController", function() {
 					it(`must show initiatives in ${phase} phase destined to ${dest}`,
 						function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.author.id,
 							phase: phase,
 							destination: dest
 						}))
 
 						var topic = yield createTopic(newTopic({
 							id: initiative.uuid,
-							creatorId: (yield createUser(newUser())).id,
+							creatorId: (yield createUser()).uuid,
 							sourcePartnerId: this.partner.id,
 							status: phase == "edit" ? "inProgress" : "voting",
 							endsAt: DateFns.addSeconds(new Date, 1),
@@ -515,13 +559,14 @@ describe("HomeController", function() {
 					it(`must not show initiatives in ${phase} not destined to ${dest}`,
 						function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.author.id,
 							phase: phase,
 							destination: dest == "parliament" ? "muhu-vald" : "parliament"
 						}))
 
 						var topic = yield createTopic(newTopic({
 							id: initiative.uuid,
-							creatorId: (yield createUser(newUser())).id,
+							creatorId: (yield createUser()).uuid,
 							sourcePartnerId: this.partner.id,
 							status: phase == "edit" ? "inProgress" : "voting",
 							visibility: "public"
@@ -562,12 +607,13 @@ describe("HomeController", function() {
 
 		it("must respond with signature count", function*() {
 			var initiativeA = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
 				phase: "sign"
 			}))
 
 			var topic = yield createTopic(newTopic({
 				id: initiativeA.uuid,
-				creatorId: this.user.id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				status: "voting"
 			}))
@@ -576,6 +622,7 @@ describe("HomeController", function() {
 			yield createCitizenSignatures(vote, 5)
 
 			var initiativeB = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
 				phase: "sign"
 			}))
 
@@ -594,12 +641,12 @@ describe("HomeController", function() {
 		PHASES.forEach(function(phase) {
 			it(`must count initiatives in ${phase}`, function*() {
 				var initiatives = yield initiativesDb.create(_.times(3, () => (
-					new ValidInitiative({phase: phase}
+					new ValidInitiative({user_id: this.author.id, phase: phase}
 				))))
 
 				yield createTopic(initiatives.map((i) => newTopic({
 					id: i.uuid,
-					creatorId: this.user.id,
+					creatorId: this.author.uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public",
 					status: PHASE_TO_STATUS[phase]
@@ -629,11 +676,13 @@ describe("HomeController", function() {
 		})
 
 		it("must not count private topics", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative)
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				status: "inProgress"
 			}))
@@ -647,11 +696,13 @@ describe("HomeController", function() {
 		})
 
 		it("must not count deleted topics", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative)
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: this.user.id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "public",
 				status: "inProgress",

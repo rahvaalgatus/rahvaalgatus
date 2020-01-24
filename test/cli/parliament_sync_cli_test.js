@@ -13,10 +13,9 @@ var eventsDb = require("root/db/initiative_events_db")
 var filesDb = require("root/db/initiative_files_db")
 var respond = require("root/test/fixtures").respond
 var newPartner = require("root/test/citizenos_fixtures").newPartner
-var newUser = require("root/test/citizenos_fixtures").newUser
 var newTopic = require("root/test/citizenos_fixtures").newTopic
 var createPartner = require("root/test/citizenos_fixtures").createPartner
-var createUser = require("root/test/citizenos_fixtures").createUser
+var createUser = require("root/test/fixtures").createUser
 var createTopic = require("root/test/citizenos_fixtures").createTopic
 var newUuid = _.compose(_.serializeUuid, _.uuidV4)
 var job = require("root/cli/parliament_sync_cli")
@@ -165,7 +164,10 @@ describe("ParliamentSyncCli", function() {
 	})
 
 	it("must update local initiative with events and files", function*() {
+		var author = yield createUser()
+
 		var initiative = yield initiativesDb.create(new ValidInitiative({
+			user_id: author.id,
 			phase: "government"
 		}))
 
@@ -444,7 +446,10 @@ describe("ParliamentSyncCli", function() {
 	})
 
 	it("must email subscribers with title from topic", function*() {
+		var author = yield createUser()
+
 		var initiative = yield initiativesDb.create({
+			user_id: author.id,
 			uuid: INITIATIVE_UUID,
 			parliament_uuid: INITIATIVE_UUID
 		})
@@ -454,7 +459,7 @@ describe("ParliamentSyncCli", function() {
 		var topic = yield createTopic(newTopic({
 			id: initiative.uuid,
 			title: "Teeme elu paremaks!",
-			creatorId: (yield createUser(newUser())).id,
+			creatorId: (yield createUser()).uuid,
 			sourcePartnerId: partner.id,
 			status: "followUp"
 		}))
@@ -796,10 +801,13 @@ describe("ParliamentSyncCli", function() {
 			var eventAttrs = test[2]
 
 			it(`must create events given ${title}`, function*() {
-				var initiative = yield initiativesDb.create({
+				var author = yield createUser()
+
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: author.id,
 					uuid: INITIATIVE_UUID,
 					parliament_uuid: INITIATIVE_UUID
-				})
+				}))
 
 				this.router.get(INITIATIVES_URL,	respond.bind(null, [
 					_.defaults({uuid: INITIATIVE_UUID}, api)
@@ -1961,10 +1969,13 @@ describe("ParliamentSyncCli", function() {
 
 			it(`must create events and files given ${title}`,
 				function*() {
-				var initiative = yield initiativesDb.create({
+				var author = yield createUser()
+
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: author.id,
 					uuid: INITIATIVE_UUID,
 					parliament_uuid: INITIATIVE_UUID
-				})
+				}))
 
 				this.router.get(INITIATIVES_URL, respond.bind(null, [
 					_.defaults({uuid: INITIATIVE_UUID}, api)

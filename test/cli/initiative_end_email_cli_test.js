@@ -1,16 +1,20 @@
 var _ = require("root/lib/underscore")
 var DateFns = require("date-fns")
 var Config = require("root/config")
+var ValidUser = require("root/test/valid_user")
+var ValidInitiative = require("root/test/valid_db_initiative")
 var cli = require("root/cli/initiative_end_email_cli")
 var newPartner = require("root/test/citizenos_fixtures").newPartner
-var newUser = require("root/test/citizenos_fixtures").newUser
 var newVote = require("root/test/citizenos_fixtures").newVote
 var createPartner = require("root/test/citizenos_fixtures").createPartner
-var createUser = require("root/test/citizenos_fixtures").createUser
 var createVote = require("root/test/citizenos_fixtures").createVote
 var createSignatures = require("root/test/citizenos_fixtures").createSignatures
+var newCitizenUser = require("root/test/citizenos_fixtures").newUser
+var createCitizenUser = require("root/test/citizenos_fixtures").createUser
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var cosDb = require("root").cosDb
+var usersDb = require("root/db/users_db")
+var db = require("root/db/initiatives_db")
 var sql = require("sqlate")
 
 describe("InitiativeEndEmailCli", function() {
@@ -20,13 +24,31 @@ describe("InitiativeEndEmailCli", function() {
 	require("root/test/time")(new Date(2015, 5, 18, 13, 37, 42))
 
 	beforeEach(function*() {
-		this.user = yield createUser(newUser())
+		this.user = yield usersDb.create(new ValidUser({
+			email: "john@example.com",
+			email_confirmed_at: new Date
+		}))
+
+		yield createCitizenUser(newCitizenUser({
+			id: this.user.uuid,
+			email: "john@example.com",
+		}))
+
 		this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
 	})
 	
 	describe("when in discussion", function() {
 		it("must email when discussion has ended", function*() {
-			yield createTopic({creatorId: this.user.id, endsAt: new Date})
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id
+			}))
+
+			yield createTopic({
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
+				endsAt: new Date
+			})
+
 			yield cli()
 			this.emails.length.must.equal(1)
 			this.emails[0].envelope.to.must.eql([this.user.email])
@@ -35,8 +57,13 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must email when discussion ended 6 months ago", function*() {
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id
+			}))
+
 			yield createTopic({
-				creatorId: this.user.id,
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
 				endsAt: DateFns.addMonths(new Date, -6)
 			})
 
@@ -46,8 +73,13 @@ describe("InitiativeEndEmailCli", function() {
 
 		it("must not email when discussion ended more than 6 months ago",
 			function*() {
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id
+			}))
+
 			yield createTopic({
-				creatorId: this.user.id,
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
 				endsAt: DateFns.addSeconds(DateFns.addMonths(new Date, -6), -1)
 			})
 
@@ -56,8 +88,13 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email when discussion not ended", function*() {
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id
+			}))
+
 			yield createTopic({
-				creatorId: this.user.id,
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
 				endsAt: DateFns.addSeconds(new Date, 1)
 			})
 
@@ -67,21 +104,46 @@ describe("InitiativeEndEmailCli", function() {
 
 		it("must not email if user email not set", function*() {
 			yield cosDb.query(sql`UPDATE "Users" SET email = NULL`)
-			yield createTopic({creatorId: this.user.id, endsAt: new Date})
+
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id
+			}))
+
+			yield createTopic({
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
+				endsAt: new Date
+			})
+
 			yield cli()
 			this.emails.must.be.empty()
 		})
 
 		it("must not email if user email not verified", function*() {
 			yield cosDb.query(sql`UPDATE "Users" SET "emailIsVerified" = false`)
-			yield createTopic({creatorId: this.user.id, endsAt: new Date})
+
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id
+			}))
+
+			yield createTopic({
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
+				endsAt: new Date
+			})
+
 			yield cli()
 			this.emails.must.be.empty()
 		})
 
 		it("must not email if not public", function*() {
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id
+			}))
+
 			yield createTopic({
-				creatorId: this.user.id,
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
 				endsAt: new Date,
 				visibility: "private"
 			})
@@ -91,8 +153,13 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must email when discussion deleted", function*() {
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id
+			}))
+
 			yield createTopic({
-				creatorId: this.user.id,
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
 				endsAt: new Date,
 				deletedAt: new Date
 			})
@@ -102,8 +169,14 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email if vote already created", function*() {
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id,
+				phase: "sign"
+			}))
+
 			yield createTopic({
-				creatorId: this.user.id,
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
 				endsAt: new Date,
 				status: "voting"
 			})
@@ -116,8 +189,13 @@ describe("InitiativeEndEmailCli", function() {
 		it("must not email about other partners", function*() {
 			var partner = yield createPartner(newPartner())
 
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id
+			}))
+
 			yield createTopic({
-				creatorId: this.user.id,
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
 				sourcePartnerId: partner.id,
 				endsAt: new Date
 			})
@@ -127,7 +205,15 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email twice", function*() {
-			yield createTopic({creatorId: this.user.id, endsAt: new Date})
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id
+			}))
+
+			yield createTopic({
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
+				endsAt: new Date
+			})
 
 			yield cli()
 			this.emails.length.must.equal(1)
@@ -140,7 +226,17 @@ describe("InitiativeEndEmailCli", function() {
 	describe("when in signing", function() {
 		it("must email when signing has ended and initiative successful",
 			function*() {
-			var topic = yield createTopic({creatorId: this.user.id, status: "voting"})
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id,
+				phase: "sign"
+			}))
+
+			var topic = yield createTopic({
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
+				status: "voting"
+			})
+
 			var vote = yield createVote(topic, newVote({endsAt: new Date}))
 			yield createSignatures(vote, Config.votesRequired)
 
@@ -153,7 +249,17 @@ describe("InitiativeEndEmailCli", function() {
 
 		it("must email when signing has ended and initiative incomplete",
 			function*() {
-			var topic = yield createTopic({creatorId: this.user.id, status: "voting"})
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id,
+				phase: "sign"
+			}))
+
+			var topic = yield createTopic({
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
+				status: "voting"
+			})
+
 			var vote = yield createVote(topic, newVote({endsAt: new Date}))
 			yield createSignatures(vote, Config.votesRequired - 1)
 
@@ -165,7 +271,16 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must email when signing ended 6 months ago", function*() {
-			var topic = yield createTopic({creatorId: this.user.id, status: "voting"})
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id,
+				phase: "sign"
+			}))
+
+			var topic = yield createTopic({
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
+				status: "voting"
+			})
 
 			var vote = yield createVote(topic, newVote({
 				endsAt: DateFns.addMonths(new Date, -6)
@@ -177,7 +292,16 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email when signing ended more than 6 months ago", function*() {
-			var topic = yield createTopic({creatorId: this.user.id, status: "voting"})
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id,
+				phase: "sign"
+			}))
+
+			var topic = yield createTopic({
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
+				status: "voting"
+			})
 
 			var vote = yield createVote(topic, newVote({
 				endsAt: DateFns.addSeconds(DateFns.addMonths(new Date, -6), -1)
@@ -189,15 +313,39 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email when signing not ended", function*() {
-			var topic = yield createTopic({creatorId: this.user.id, status: "voting"})
-			yield createVote(topic, newVote({endsAt: DateFns.addSeconds(new Date, 1)}))
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id,
+				phase: "sign"
+			}))
+
+			var topic = yield createTopic({
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
+				status: "voting"
+			})
+
+			yield createVote(topic, newVote({
+				endsAt: DateFns.addSeconds(new Date, 1)
+			}))
+
 			yield cli()
 			this.emails.must.be.empty()
 		})
 
 		it("must not email if user email not set", function*() {
 			yield cosDb.query(sql`UPDATE "Users" SET email = NULL`)
-			var topic = yield createTopic({creatorId: this.user.id, status: "voting"})
+
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id,
+				phase: "sign"
+			}))
+
+			var topic = yield createTopic({
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
+				status: "voting"
+			})
+
 			yield createVote(topic, newVote({endsAt: new Date}))
 			yield cli()
 			this.emails.must.be.empty()
@@ -205,15 +353,32 @@ describe("InitiativeEndEmailCli", function() {
 
 		it("must not email if user email not verified", function*() {
 			yield cosDb.query(sql`UPDATE "Users" SET "emailIsVerified" = false`)
-			var topic = yield createTopic({creatorId: this.user.id, status: "voting"})
+
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id,
+				phase: "sign"
+			}))
+
+			var topic = yield createTopic({
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
+				status: "voting"
+			})
+
 			yield createVote(topic, newVote({endsAt: new Date}))
 			yield cli()
 			this.emails.must.be.empty()
 		})
 
 		it("must not email if not public", function*() {
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id,
+				phase: "sign"
+			}))
+
 			var topic = yield createTopic({
-				creatorId: this.user.id,
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
 				visibility: "private",
 				status: "voting"
 			})
@@ -224,8 +389,14 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email if not public", function*() {
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id,
+				phase: "sign"
+			}))
+
 			var topic = yield createTopic({
-				creatorId: this.user.id,
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
 				deletedAt: new Date,
 				status: "voting"
 			})
@@ -239,8 +410,14 @@ describe("InitiativeEndEmailCli", function() {
 		it("must not email about other partners", function*() {
 			var partner = yield createPartner(newPartner())
 
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id,
+				phase: "sign"
+			}))
+
 			var topic = yield createTopic({
-				creatorId: this.user.id,
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
 				sourcePartnerId: partner.id,
 				status: "voting"
 			})
@@ -251,7 +428,17 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email twice", function*() {
-			var topic = yield createTopic({creatorId: this.user.id, status: "voting"})
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id,
+				phase: "sign"
+			}))
+
+			var topic = yield createTopic({
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
+				status: "voting"
+			})
+
 			yield createVote(topic, newVote({endsAt: new Date}))
 
 			yield cli()

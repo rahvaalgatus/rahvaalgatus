@@ -6,10 +6,11 @@ var ValidEvent = require("root/test/valid_db_initiative_event")
 var DateFns = require("date-fns")
 var pseudoDateTime = require("root/lib/crypto").pseudoDateTime
 var newPartner = require("root/test/citizenos_fixtures").newPartner
-var newUser = require("root/test/citizenos_fixtures").newUser
 var newTopic = require("root/test/citizenos_fixtures").newTopic
 var createPartner = require("root/test/citizenos_fixtures").createPartner
-var createUser = require("root/test/citizenos_fixtures").createUser
+var createUser = require("root/test/fixtures").createUser
+var createCitizenUser = require("root/test/citizenos_fixtures").createUser
+var newCitizenUser = require("root/test/citizenos_fixtures").newUser
 var createTopic = require("root/test/citizenos_fixtures").createTopic
 var initiativesDb = require("root/db/initiatives_db")
 var eventsDb = require("root/db/initiative_events_db")
@@ -26,10 +27,12 @@ describe("InitiativeEventsController", function() {
 	describe(`GET / with ${ATOM_TYPE}`, function() {
 		beforeEach(function*() {
 			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
+			this.author = yield createUser()
 		})
 
 		it("must respond with Atom feed", function*() {
 			var initiatives = yield initiativesDb.create([new ValidInitiative({
+				user_id: this.author.id,
 				phase: "edit",
 				created_at: pseudoDateTime()
 			}), new ValidInitiative({
@@ -41,7 +44,7 @@ describe("InitiativeEventsController", function() {
 
 			var topic = yield createTopic(newTopic({
 				id: initiatives[0].uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "public",
 				endsAt: DateFns.addSeconds(new Date, 1)
@@ -50,8 +53,8 @@ describe("InitiativeEventsController", function() {
 			initiatives[0].title = topic.title
 
 			var authors = yield [
-				createUser(newUser({name: "Johnny Lang"})),
-				createUser(newUser({name: "Kim Mitchell"}))
+				createCitizenUser(newCitizenUser({name: "Johnny Lang"})),
+				createCitizenUser(newCitizenUser({name: "Kim Mitchell"}))
 			]
 
 			var events = yield eventsDb.create([new ValidEvent({

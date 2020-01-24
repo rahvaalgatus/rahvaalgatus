@@ -178,7 +178,6 @@ function InitiativeView(attrs) {
 	var topic = attrs.topic
 	var initiative = attrs.initiative
 	var signatureCount = attrs.signatureCount
-	var authorName = initiative.author_name || topic && topic.creator.name
 
 	var time = (
 		initiative.phase == "edit" ? initiative.created_at || topic.createdAt :
@@ -215,7 +214,9 @@ function InitiativeView(attrs) {
 			<h3 lang="et">{initiative.title}</h3>
 			{badge ? <img src={badge.icon} class="badge" title={badge.name} /> : null}
 
-			<span class="author">{authorName}</span>
+			<span class="author">
+				{initiative.user_name || initiative.author_name}
+			</span>
 
 			<ProgressView
 				t={t}

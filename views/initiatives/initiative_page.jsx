@@ -15,7 +15,6 @@ function InitiativePage(attrs, children) {
 	var topic = attrs.topic
 	var path = "/initiatives/" + initiative.uuid
 	var createdAt = initiative.created_at || topic.createdAt
-	var authorName = initiative.author_name || topic && topic.creator.name
 
 	return <Page class={"initiative-page " + (attrs.class || "")} {...attrs}>
 		<header id="initiative-header">
@@ -28,7 +27,9 @@ function InitiativePage(attrs, children) {
 					{topic ? InitiativeBadge(topic) : null}
 				</h1>
 
-				<span class="author">{authorName}</span>
+				<span class="author">
+					{initiative.user_name || initiative.author_name}
+				</span>
 				{", "}
 				<time datetime={createdAt.toJSON()}>
 					{I18n.formatDate("numeric", createdAt)}

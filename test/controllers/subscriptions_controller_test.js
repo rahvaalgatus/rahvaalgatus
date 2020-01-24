@@ -4,10 +4,9 @@ var ValidInitiative = require("root/test/valid_db_initiative")
 var Config = require("root/config")
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var newPartner = require("root/test/citizenos_fixtures").newPartner
-var newUser = require("root/test/citizenos_fixtures").newUser
 var newTopic = require("root/test/citizenos_fixtures").newTopic
 var createPartner = require("root/test/citizenos_fixtures").createPartner
-var createUser = require("root/test/citizenos_fixtures").createUser
+var createUser = require("root/test/fixtures").createUser
 var createTopic = require("root/test/citizenos_fixtures").createTopic
 var sql = require("sqlate")
 var db = require("root/db/initiative_subscriptions_db")
@@ -22,6 +21,7 @@ describe("SubscriptionsController", function() {
 	beforeEach(require("root/test/mitm").router)
 
 	beforeEach(function*() {
+		this.author = yield createUser()
 		this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
 	})
 
@@ -45,7 +45,9 @@ describe("SubscriptionsController", function() {
 		})	
 
 		it("must not show unconfirmed subscription to initiatives", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative)
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
 
 			var subscription = yield db.create(new ValidSubscription({
 				initiative_uuid: initiative.uuid,
@@ -69,13 +71,13 @@ describe("SubscriptionsController", function() {
 
 		it("must show page given subscription to initiative", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
-				external: true
+				user_id: this.author.id
 			}))
 
 			var topic = yield createTopic(newTopic({
 				id: initiative.uuid,
 				title: "Better life for everyone.",
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "public"
 			}))
@@ -403,12 +405,12 @@ describe("SubscriptionsController", function() {
 
 		it("must update subscription to initiative", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
-				external: true
+				user_id: this.author.id
 			}))
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "public"
 			}))
@@ -485,7 +487,9 @@ describe("SubscriptionsController", function() {
 				confirmed_at: new Date
 			}))
 
-			var initiative = yield initiativesDb.create(new ValidInitiative)
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
 
 			var other = yield db.create(new ValidSubscription({
 				email: subscription.email,
@@ -517,7 +521,9 @@ describe("SubscriptionsController", function() {
 				confirmed_at: new Date
 			}))
 
-			var initiative = yield initiativesDb.create(new ValidInitiative)
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
 
 			var other = yield db.create(new ValidSubscription({
 				initiative_uuid: initiative.uuid,
@@ -589,6 +595,44 @@ describe("SubscriptionsController", function() {
 			`).must.then.be.empty()
 		})
 
+		it("must delete subscription to initiative", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				title: "Better life for everyone.",
+				creatorId: this.author.uuid,
+				sourcePartnerId: this.partner.id,
+				visibility: "public"
+			}))
+
+			var subscription = yield db.create(new ValidSubscription({
+				initiative_uuid: initiative.uuid,
+				confirmed_at: new Date
+			}))
+
+			var path = `/subscriptions`
+			path += `?initiative=${subscription.initiative_uuid}`
+			path += `&update-token=${subscription.update_token}`
+			var res = yield this.request(path, {
+				method: "POST",
+				form: {
+					_method: "put",
+					[subscription.initiative_uuid + "[delete]"]: true,
+					_csrf_token: this.csrfToken
+				}
+			})
+
+			res.statusCode.must.equal(303)
+			res.headers.location.must.equal("/")
+
+			yield db.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`).must.then.be.empty()
+		})
+
 		it("must delete subscription to external initiative", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				external: true
@@ -620,7 +664,9 @@ describe("SubscriptionsController", function() {
 		})
 
 		it("must not delete unconfirmed subscription to initiatives", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative)
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				external: true
+			}))
 
 			var subscription = yield db.create(new ValidSubscription({
 				initiative_uuid: initiative.uuid,
@@ -656,7 +702,9 @@ describe("SubscriptionsController", function() {
 				confirmed_at: new Date
 			}))
 
-			var initiative = yield initiativesDb.create(new ValidInitiative)
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
 
 			var other = yield db.create(new ValidSubscription({
 				email: subscription.email,
@@ -684,7 +732,9 @@ describe("SubscriptionsController", function() {
 
 		it("must redirect to subscription to initiatives if deleting given",
 			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative)
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
 
 			var subscription = yield db.create(new ValidSubscription({
 				initiative_uuid: initiative.uuid,
@@ -723,7 +773,9 @@ describe("SubscriptionsController", function() {
 				confirmed_at: new Date
 			}))
 
-			var initiative = yield initiativesDb.create(new ValidInitiative)
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
 
 			var other = yield db.create(new ValidSubscription({
 				email: subscription.email,
@@ -753,14 +805,18 @@ describe("SubscriptionsController", function() {
 		})
 
 		it("must not delete other subscriptions of the same email", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative)
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
 
 			var subscription = yield db.create(new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date
 			}))
 
-			var otherInitiative = yield initiativesDb.create(new ValidInitiative)
+			var otherInitiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
 
 			var others = yield db.create([
 				new ValidSubscription({
@@ -798,7 +854,9 @@ describe("SubscriptionsController", function() {
 
 		it("must not delete other subscriptions on the same initiative",
 			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative)
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
 
 			var others = yield db.create([
 				new ValidSubscription({confirmed_at: new Date}),
@@ -1054,7 +1112,9 @@ function mustRequireToken(request) {
 		})
 
 		it("must respond with 404 given an update token of a subscription to initiative", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative)
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				external: true
+			}))
 
 			var subscription = yield db.create(new ValidSubscription({
 				initiative_uuid: initiative.uuid,
@@ -1070,7 +1130,9 @@ function mustRequireToken(request) {
 		})
 
 		it("must respond with 404 given an update token of an unconfirmed subscription to initiative", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative)
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				external: true
+			}))
 
 			var subscription = yield db.create(new ValidSubscription({
 				initiative_uuid: initiative.uuid
@@ -1085,7 +1147,9 @@ function mustRequireToken(request) {
 		})
 
 		it("must respond with 404 given an initiative uuid and update token of a subscription without initiative", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative)
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				external: true
+			}))
 
 			var subscription = yield db.create(new ValidSubscription({
 				confirmed_at: new Date
@@ -1100,7 +1164,9 @@ function mustRequireToken(request) {
 		})
 
 		it("must respond with 404 given an initiative uuid and invalid update token", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative)
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				external: true
+			}))
 
 			yield db.create(new ValidSubscription({
 				initiative_uuid: initiative.uuid,

@@ -7,6 +7,7 @@ var sql = require("sqlate")
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var pseudoInt = require("root/lib/crypto").pseudoInt
 var initiativesDb = require("root/db/initiatives_db")
+var createUser = require("root/test/fixtures").createUser
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
@@ -30,11 +31,16 @@ describe("AdminController", function() {
 		})
 
 		beforeEach(function*() {
-			this.topic = yield createTopic({creatorId: this.user.uuid})
+			this.author = yield createUser()
 
-			this.initiative = yield initiativesDb.create({
-				uuid: this.topic.id,
-				title: this.topic.title
+			this.initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
+
+			this.topic = yield createTopic({
+				id: this.initiative.uuid,
+				creatorId: this.author.uuid,
+				title: this.initiative.title
 			})
 		})
 		
@@ -158,8 +164,16 @@ describe("AdminController", function() {
 		})
 
 		beforeEach(function*() {
-			this.topic = yield createTopic({creatorId: this.user.uuid})
-			this.initiative = yield initiativesDb.create({uuid: this.topic.id})
+			this.author = yield createUser()
+
+			this.initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
+
+			this.topic = yield createTopic({
+				id: this.initiative.uuid,
+				creatorId: this.author.uuid,
+			})
 		})
 
 		describe("with action=send", function() {
@@ -266,7 +280,9 @@ describe("AdminController", function() {
 			})
 
 			it("must not email subscribers of other initiatives", function*() {
-				var other = yield initiativesDb.create(new ValidInitiative)
+				var other = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id
+				}))
 
 				yield subscriptionsDb.create({
 					initiative_uuid: other.uuid,

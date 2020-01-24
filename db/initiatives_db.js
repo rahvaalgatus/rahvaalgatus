@@ -3,49 +3,10 @@ var O = require("oolong")
 var Db = require("root/lib/db")
 var MediaType = require("medium-type")
 var sqlite = require("root").sqlite
-var concat = Array.prototype.concat.bind(Array.prototype)
 
 exports = module.exports = new Db(Object, sqlite, "initiatives")
 exports.idAttribute = "uuid"
 exports.idColumn = "uuid"
-
-exports._search = function(query, opts) {
-	return Db.prototype._search.call(this, query).then((models) => {
-		var created
-
-		// Until Rahvaalgatus consolidates to a single database, it's convenient to
-		// autovivify initiatives in the auxiliary database.
-		if (opts && opts.create) switch (this.typeof(query)) {
-			case "string":
-				if (models.length > 0) break
-				created = this.create(newAttrs(query)).then(this.serialize.bind(this))
-				return created.then(concat)
-
-			case "array":
-				if (query.length == models.length) break
-				if (!query.every(isString)) break
-
-				var uuids = _.difference(query, models.map((m) => m.uuid))
-				created = this.create(uuids.map(newAttrs))
-				created = created.then((arr) => arr.map(this.serialize.bind(this)))
-				return created.then(concat.bind(null, models))
-		}
-
-		return models
-	})
-}
-
-exports._read = function(query, opts) {
-	return Db.prototype._read.call(this, query).then((model) => {
-		if (opts && opts.create) switch (this.typeof(query)) {
-			case "string":
-				if (model) break
-				return this.create(newAttrs(query)).then(this.serialize.bind(this))
-		}
-
-		return model
-	})
-}
 
 exports.parse = function(attrs) {
 	return O.defaults({
@@ -103,6 +64,4 @@ exports.serialize = function(attrs) {
 	return obj
 }
 
-function newAttrs(uuid) { return {uuid: uuid, created_at: new Date} }
-function isString(value) { return typeof value == "string" }
 function parseDateTime(string) { return new Date(string) }

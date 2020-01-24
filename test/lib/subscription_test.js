@@ -1,9 +1,11 @@
 var _ = require("root/lib/underscore")
 var Subscription = require("root/lib/subscription")
+var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSubscription = require("root/test/valid_subscription")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var sql = require("sqlate")
+var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var messagesDb = require("root/db/initiative_messages_db")
 
@@ -12,9 +14,13 @@ describe("Subscription", function() {
 	require("root/test/time")()
 	require("root/test/email")()
 
+	beforeEach(function*() { this.user = yield usersDb.create(new ValidUser) })
+
 	describe(".send", function() {
 		it("must batch by 1000 recipients", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative)
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.user.id
+			}))
 
 			var message = yield messagesDb.create({
 				initiative_uuid: initiative.uuid,

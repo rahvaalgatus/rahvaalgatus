@@ -165,12 +165,7 @@ exports.csrfRequest = function() {
 
 exports.createUser = function*(attrs) {
 	var user = yield usersDb.create(new ValidUser(attrs))
-
-	yield createCitizenUser(newCitizenUser({
-		id: user.uuid.toString("hex"),
-		name: user.name
-	}))
-
+	yield createCitizenUser(newCitizenUser({id: user.uuid}))
 	return user
 }
 

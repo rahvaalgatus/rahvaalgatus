@@ -64,7 +64,9 @@ exports.router.get("/", next(function*(req, res) {
 	var gov = req.government
 
 	var initiatives = yield initiativesDb.search(sql`
-		SELECT * FROM initiatives
+		SELECT initiative.*, user.name AS user_name
+		FROM initiatives AS initiative
+		LEFT JOIN users AS user ON initiative.user_id = user.id
 		WHERE destination IS NULL AND phase = 'edit'
 		OR destination ${gov == "parliament" ? sql`==` : sql`!=`} "parliament"
 	`)
@@ -160,7 +162,13 @@ exports.router.get("/new", function(_req, res) {
 })
 
 exports.router.use("/:id", next(function*(req, res, next) {
-	var initiative = yield initiativesDb.read(req.params.id)
+	var initiative = yield initiativesDb.read(sql`
+		SELECT initiative.*, user.name AS user_name
+		FROM initiatives AS initiative
+		LEFT JOIN users AS user ON initiative.user_id = user.id
+		WHERE initiative.uuid = ${req.params.id}
+	`)
+
 	if (initiative == null) throw new HttpError(404)
 
 	var user = req.user

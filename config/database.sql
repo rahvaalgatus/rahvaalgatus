@@ -7,6 +7,9 @@ CREATE TABLE initiatives (
 	CONSTRAINT initiatives_uuid_length
 	CHECK (length(uuid) == 36),
 
+	CONSTRAINT initiatives_user_id_or_external
+	CHECK ((user_id IS NULL) = external),
+
 	CONSTRAINT initiatives_mailchimp_interest_id
 	CHECK (length(mailchimp_interest_id) > 0),
 
@@ -396,4 +399,5 @@ INSERT INTO migrations VALUES('20200106000130');
 INSERT INTO migrations VALUES('20200124094227');
 INSERT INTO migrations VALUES('20200124101632');
 INSERT INTO migrations VALUES('20200124121145');
+INSERT INTO migrations VALUES('20200124131836');
 COMMIT;

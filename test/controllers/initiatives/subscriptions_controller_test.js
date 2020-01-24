@@ -3,10 +3,9 @@ var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSubscription = require("root/test/valid_subscription")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var newPartner = require("root/test/citizenos_fixtures").newPartner
-var newUser = require("root/test/citizenos_fixtures").newUser
 var newTopic = require("root/test/citizenos_fixtures").newTopic
 var createPartner = require("root/test/citizenos_fixtures").createPartner
-var createUser = require("root/test/citizenos_fixtures").createUser
+var createUser = require("root/test/fixtures").createUser
 var createTopic = require("root/test/citizenos_fixtures").createTopic
 var sql = require("sqlate")
 var pseudoHex = require("root/lib/crypto").pseudoHex
@@ -22,11 +21,15 @@ describe("InitiativeSubscriptionsController", function() {
 
 	beforeEach(function*() {
 		this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
-		this.initiative = yield initiativesDb.create(new ValidInitiative)
+		this.author = yield createUser()
+
+		this.initiative = yield initiativesDb.create(new ValidInitiative({
+			user_id: this.author.id
+		}))
 
 		this.topic = yield createTopic(newTopic({
 			id: this.initiative.uuid,
-			creatorId: (yield createUser(newUser())).id,
+			creatorId: this.author.uuid,
 			sourcePartnerId: this.partner.id,
 			visibility: "public"
 		}))
@@ -202,11 +205,13 @@ describe("InitiativeSubscriptionsController", function() {
 		})
 
 		it("must respond with 403 Forbidden if discussion not public", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative)
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				visibility: "private"
 			}))

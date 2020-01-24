@@ -8,7 +8,7 @@ var logger = require("root").logger
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var sqlite = require("root").sqlite
 var cosDb = require("root").cosDb
-var initiativesDb = require("root/db/initiatives_db")
+var db = require("root/db/initiatives_db")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var countSignaturesByIds = require("root/lib/citizenos_db").countSignaturesByIds
 var SIGS_REQUIRED = Config.votesRequired
@@ -57,9 +57,7 @@ function* emailEndedDiscussions() {
 			})
 		})
 
-		yield replaceInitiative(discussion.id, {
-			discussion_end_email_sent_at: new Date
-		})
+		yield db.update(discussion.id, {discussion_end_email_sent_at: new Date})
 	})
 }
 
@@ -109,12 +107,6 @@ function* emailEndedInitiatives() {
 			})
 		})
 
-		yield replaceInitiative(topic.id, {signing_end_email_sent_at: new Date})
+		yield db.update(topic.id, {signing_end_email_sent_at: new Date})
 	})
-}
-
-function* replaceInitiative(uuid, attrs) {
-	// Ensure an initiative exists.
-	var initiative = yield initiativesDb.read(uuid, {create: true})
-	yield initiativesDb.update(initiative, attrs)
 }

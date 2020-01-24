@@ -1,5 +1,6 @@
 var _ = require("root/lib/underscore")
 var MediaType = require("medium-type")
+var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidEvent = require("root/test/valid_db_initiative_event")
 var ValidSignable = require("root/test/valid_signable")
@@ -10,6 +11,7 @@ var insert = require("heaven-sqlite").insert
 var sqlite = require("root").sqlite
 var sql = require("sqlate")
 var db = require("root/db/initiatives_db")
+var usersDb = require("root/db/users_db")
 var eventsDb = require("root/db/initiative_events_db")
 var signablesDb = require("root/db/initiative_signables_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
@@ -20,42 +22,26 @@ describe("InitiativesDb", function() {
 	require("root/test/db")()
 	require("root/test/time")()
 
+	beforeEach(function*() { this.user = yield usersDb.create(new ValidUser) })
+
 	describe(".search", function() {
 		describe("given a uuid", function() {
 			it("must return initiative", function*() {
-				var initiative = new ValidInitiative
+				var initiative = new ValidInitiative({user_id: this.user.id})
 				yield sqlite(insert("initiatives", serialize(initiative)))
 				yield db.search(initiative.uuid).must.then.eql([initiative])
 			})
 
-			it("must return null if not found", function*() {
+			it("must return empty array if not found", function*() {
 				yield db.search("deadbeef").must.then.eql([])
 				yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([])
-			})
-
-			it("must return existing initiative when creating", function*() {
-				var a = new ValidInitiative
-				yield sqlite(insert("initiatives", serialize(a)))
-				var b = yield db.search(a.uuid, {create: true})
-				b.must.eql([a])
-				yield db.search(sql`SELECT * FROM initiatives`).must.then.eql([a])
-			})
-
-			it("must create and return a new initiative when creating", function*() {
-				var uuid = "133ec861-b719-4d46-8483-4ba59d1d2412"
-				var initiatives = yield db.search(uuid, {create: true})
-				initiatives.must.eql([new ValidInitiative({uuid: uuid})])
-
-				yield db.search(sql`SELECT * FROM initiatives`).must.then.eql(
-					initiatives
-				)
 			})
 		})
 
 		describe("given an array of uuids", function() {
 			it("must return initiatives", function*() {
-				var a = new ValidInitiative
-				var b = new ValidInitiative
+				var a = new ValidInitiative({user_id: this.user.id})
+				var b = new ValidInitiative({user_id: this.user.id})
 				yield sqlite(insert("initiatives", serialize(a)))
 				yield sqlite(insert("initiatives", serialize(b)))
 				var initiatives = yield db.search([a.uuid, b.uuid])
@@ -63,26 +49,12 @@ describe("InitiativesDb", function() {
 			})
 
 			it("must return only found initiatives", function*() {
-				var a = new ValidInitiative
-				var b = new ValidInitiative
+				var a = new ValidInitiative({user_id: this.user.id})
+				var b = new ValidInitiative({user_id: this.user.id})
 				yield sqlite(insert("initiatives", serialize(a)))
 
 				yield db.search([a.uuid, b.uuid]).must.then.eql([a])
 				yield db.search(sql`SELECT * FROM initiatives`).must.then.eql([a])
-			})
-
-			it("must return and create initiatives when creating", function*() {
-				var a = new ValidInitiative({notes: "A"})
-				var b = new ValidInitiative
-				var c = new ValidInitiative({notes: "C"})
-				yield sqlite(insert("initiatives", serialize(a)))
-				yield sqlite(insert("initiatives", serialize(c)))
-
-				var initiatives = yield db.search([a.uuid, b.uuid, c.uuid], {
-					create: true
-				})
-
-				_.sortBy(initiatives, "uuid").must.eql(_.sortBy([a, c, b], "uuid"))
 			})
 		})
 	})
@@ -90,7 +62,7 @@ describe("InitiativesDb", function() {
 	describe(".read", function() {
 		describe("given a uuid", function() {
 			it("must return initiative", function*() {
-				var initiative = new ValidInitiative
+				var initiative = new ValidInitiative({user_id: this.user.id})
 				yield sqlite(insert("initiatives", serialize(initiative)))
 				yield db.read(initiative.uuid).must.then.eql(initiative)
 			})
@@ -99,29 +71,12 @@ describe("InitiativesDb", function() {
 				yield db.read("deadbeef").must.then.be.null()
 				yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([])
 			})
-
-			it("must return existing initiative when creating", function*() {
-				var a = new ValidInitiative
-				yield sqlite(insert("initiatives", serialize(a)))
-				var b = yield db.read(a.uuid, {create: true})
-				b.must.eql(a)
-				yield db.search(sql`SELECT * FROM initiatives`).must.then.eql([a])
-			})
-
-			it("must create and return a new initiative when creating", function*() {
-				var uuid = "133ec861-b719-4d46-8483-4ba59d1d2412"
-				var initiative = yield db.read(uuid, {create: true})
-				initiative.must.eql(new ValidInitiative({uuid: uuid}))
-
-				yield db.search(sql`SELECT * FROM initiatives`).must.then.eql([
-					initiative
-				])
-			})
 		})
 
 		describe("text", function() {
 			it("must not be allowed in edit phase", function*() {
 				var initiative = new ValidInitiative({
+					user_id: this.user.id,
 					phase: "edit",
 					text: "<h1>Hello, world!</h1>",
 					text_type: null,
@@ -137,6 +92,7 @@ describe("InitiativesDb", function() {
 			_.without(PHASES, "edit").forEach(function(phase) {
 				it(`must be allowed in ${phase}`, function*() {
 					var initiative = new ValidInitiative({
+						user_id: this.user.id,
 						phase: phase,
 						text: "<h1>Hello, world!</h1>",
 						text_type: new MediaType("text/html"),
@@ -164,6 +120,7 @@ describe("InitiativesDb", function() {
 		describe("text_type", function() {
 			it("must be parsed", function*() {
 				var initiative = new ValidInitiative({
+					user_id: this.user.id,
 					phase: "sign",
 					text: "<h1>Hello, world!</h1>",
 					text_type: new MediaType("text/html"),
@@ -175,6 +132,7 @@ describe("InitiativesDb", function() {
 
 			it("must be required if text present", function*() {
 				var initiative = new ValidInitiative({
+					user_id: this.user.id,
 					phase: "sign",
 					text: "<h1>Hello, world!</h1>",
 					text_type: null,
@@ -189,6 +147,7 @@ describe("InitiativesDb", function() {
 
 			it("must not be empty", function*() {
 				var initiative = new ValidInitiative({
+					user_id: this.user.id,
 					phase: "sign",
 					text: "<h1>Hello, world!</h1>",
 					text_type: "",
@@ -205,6 +164,7 @@ describe("InitiativesDb", function() {
 		describe("text_sha256", function() {
 			it("must be required if text present", function*() {
 				var initiative = new ValidInitiative({
+					user_id: this.user.id,
 					phase: "sign",
 					text: "<h1>Hello, world!</h1>",
 					text_type: new MediaType("text/html"),
@@ -219,6 +179,7 @@ describe("InitiativesDb", function() {
 
 			it("must have SHA256 length", function*() {
 				var initiative = new ValidInitiative({
+					user_id: this.user.id,
 					phase: "sign",
 					text: "<h1>Hello, world!</h1>",
 					text_type: new MediaType("text/html"),
@@ -233,16 +194,55 @@ describe("InitiativesDb", function() {
 		})
 	})
 
+	describe(".create", function() {
+		it("must throw given duplicate uuids", function*() {
+			var attrs = {
+				user_id: this.user.id,
+				uuid: "457628aa-42cd-45d8-bb74-94c4866c670c"
+			}
+
+			yield db.create(new ValidInitiative(attrs))
+
+			var err
+			try { yield db.create(new ValidInitiative(attrs)) }
+			catch (ex) { err = ex }
+			err.must.be.an.error(SqliteError)
+			err.code.must.equal("constraint")
+			err.type.must.equal("unique")
+			err.columns.must.eql(["uuid"])
+		})
+
+		it("must throw given no user_id nor external", function*() {
+			var err
+			try {
+				yield db.create(new ValidInitiative({
+					user_id: null,
+					external: false
+				}))
+			}
+			catch (ex) { err = ex }
+			err.must.be.an.error(SqliteError)
+			err.code.must.equal("constraint")
+			err.type.must.equal("check")
+			err.constraint.must.equal("initiatives_user_id_or_external")
+		})
+	})
+
 	describe(".delete", function() {
 		describe("given a model ", function() {
 			it("must delete the initiative", function*() {
-				var initiative = yield db.create(new ValidInitiative)
+				var initiative = yield db.create(new ValidInitiative({
+					user_id: this.user.id
+				}))
+
 				yield db.delete(initiative)
 				yield db.search(sql`SELECT * FROM initiatives`).must.then.be.empty()
 			})
 
 			it("must not delete related events", function*() {
-				var initiative = yield db.create(new ValidInitiative)
+				var initiative = yield db.create(new ValidInitiative({
+					user_id: this.user.id
+				}))
 
 				var event = yield eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid
@@ -262,7 +262,9 @@ describe("InitiativesDb", function() {
 			})
 
 			it("must delete signables", function*() {
-				var initiative = yield db.create(new ValidInitiative)
+				var initiative = yield db.create(new ValidInitiative({
+					user_id: this.user.id
+				}))
 
 				yield signablesDb.create(new ValidSignable({
 					initiative_uuid: initiative.uuid
@@ -276,7 +278,9 @@ describe("InitiativesDb", function() {
 			})
 
 			it("must not delete signatures", function*() {
-				var initiative = yield db.create(new ValidInitiative)
+				var initiative = yield db.create(new ValidInitiative({
+					user_id: this.user.id
+				}))
 
 				// Ensure the signable doesn't get deleted even if signature didn't.
 				var signable = yield signablesDb.create(new ValidSignable({

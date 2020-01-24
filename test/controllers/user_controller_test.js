@@ -155,8 +155,31 @@ describe("UserController", function() {
 			})
 
 			describe("initiatives", function() {
+				it("must show initiatives", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "edit"
+					}))
+
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						title: "My thoughts",
+						creatorId: this.user.uuid,
+						sourcePartnerId: this.partner.id
+					}))
+
+					var res = yield this.request("/user")
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var el = dom.querySelector("li.initiative")
+					el.innerHTML.must.include(initiative.uuid)
+					el.textContent.must.include(this.user.name)
+				})
+
 				it("must show initiative in edit phase", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
 						phase: "edit"
 					}))
 
@@ -175,6 +198,7 @@ describe("UserController", function() {
 
 				it("must show initiative in sign phase", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
 						phase: "sign"
 					}))
 
@@ -204,14 +228,17 @@ describe("UserController", function() {
 				})
 
 				it("must not show initiatives from other users", function*() {
+					var author = yield createUser()
+
 					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: author.id,
 						phase: "edit"
 					}))
 
 					yield createTopic(newTopic({
 						id: initiative.uuid,
 						title: "My thoughts",
-						creatorId: (yield createUser()).uuid,
+						creatorId: author.uuid,
 						sourcePartnerId: this.partner.id
 					}))
 
@@ -221,15 +248,18 @@ describe("UserController", function() {
 				})
 
 				describe("when undersignable", function() {
+					beforeEach(function*() { this.author = yield createUser() })
+
 					it("must show signed initiatives", function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.author.id,
 							phase: "sign",
 							undersignable: true
 						}))
 
 						var topic = yield createTopic(newTopic({
 							id: initiative.uuid,
-							creatorId: (yield createUser()).uuid,
+							creatorId: this.author.uuid,
 							sourcePartnerId: this.partner.id,
 							status: "voting"
 						}))
@@ -244,19 +274,24 @@ describe("UserController", function() {
 
 						var res = yield this.request("/user")
 						res.statusCode.must.equal(200)
-						res.body.must.include(initiative.uuid)
+
+						var dom = parseDom(res.body)
+						var el = dom.querySelector("li.initiative")
+						el.innerHTML.must.include(initiative.uuid)
+						el.textContent.must.include(this.author.name)
 					})
 
 					it("must not show signed initiatives by other countries",
 						function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.author.id,
 							phase: "sign",
 							undersignable: true
 						}))
 
 						var topic = yield createTopic(newTopic({
 							id: initiative.uuid,
-							creatorId: (yield createUser()).uuid,
+							creatorId: this.author.uuid,
 							sourcePartnerId: this.partner.id,
 							status: "voting"
 						}))
@@ -277,13 +312,14 @@ describe("UserController", function() {
 					it("must not show signed initiatives by other personal ids",
 						function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.author.id,
 							phase: "sign",
 							undersignable: true
 						}))
 
 						var topic = yield createTopic(newTopic({
 							id: initiative.uuid,
-							creatorId: (yield createUser()).uuid,
+							creatorId: this.author.uuid,
 							sourcePartnerId: this.partner.id,
 							status: "voting"
 						}))
@@ -303,8 +339,11 @@ describe("UserController", function() {
 				})
 
 				describe("when CitizenOS-signable", function() {
+					beforeEach(function*() { this.author = yield createUser() })
+
 					it("must show signed initiatives", function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.author.id,
 							phase: "sign",
 							undersignable: false
 						}))
@@ -327,18 +366,23 @@ describe("UserController", function() {
 
 						var res = yield this.request("/user")
 						res.statusCode.must.equal(200)
-						res.body.must.include(initiative.uuid)
+
+						var dom = parseDom(res.body)
+						var el = dom.querySelector("li.initiative")
+						el.innerHTML.must.include(initiative.uuid)
+						el.textContent.must.include(this.author.name)
 					})
 
 					it("must not show other user's signed initiatives", function*() {	
 						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.author.id,
 							phase: "sign",
 							undersignable: false
 						}))
 
 						var topic = yield createTopic(newTopic({
 							id: initiative.uuid,
-							creatorId: (yield createUser()).uuid,
+							creatorId: this.author.uuid,
 							sourcePartnerId: this.partner.id,
 							status: "voting"
 						}))

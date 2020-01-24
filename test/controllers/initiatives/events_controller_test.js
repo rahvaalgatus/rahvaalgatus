@@ -37,11 +37,15 @@ describe("InitiativeEventsController", function() {
 	describe("GET /new", function() {
 		describe("when not logged in", function() {
 			it("must respond with 401", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative)
+				var author = yield createUser()
+
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: author.id
+				}))
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser()).uuid,
+					creatorId: author.uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public"
 				}))
@@ -60,7 +64,9 @@ describe("InitiativeEventsController", function() {
 			})
 
 			it("must respond with 403 if in edit phase", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative)
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id
+				}))
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
@@ -78,6 +84,7 @@ describe("InitiativeEventsController", function() {
 			EVENTABLE_PHASES.forEach(function(phase) {
 				it(`must render if in ${phase} phase`, function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
 						phase: phase
 					}))
 
@@ -97,11 +104,15 @@ describe("InitiativeEventsController", function() {
 			})
 
 			it("must respond with 403 if lacking permissions", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative)
+				var author = yield createUser()
+
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: author.id
+				}))
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser()).uuid,
+					creatorId: author.uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public"
 				}))
@@ -130,7 +141,9 @@ describe("InitiativeEventsController", function() {
 			})
 
 			it("must respond with 403 if in edit phase", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative)
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id
+				}))
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
@@ -151,6 +164,7 @@ describe("InitiativeEventsController", function() {
 			EVENTABLE_PHASES.forEach(function(phase) {
 				it(`must create event if in ${phase} phase`, function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
 						phase: phase
 					}))
 
@@ -193,6 +207,7 @@ describe("InitiativeEventsController", function() {
 
 			it("must email subscribers interested in author events", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id,
 					phase: "sign"
 				}))
 
@@ -278,11 +293,15 @@ describe("InitiativeEventsController", function() {
 			})
 
 			it("must respond with 403 if not an admin", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative)
+				var author = yield createUser()
+
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: author.id
+				}))
 
 				yield createTopic(newTopic({
 					id: initiative.uuid,
-					creatorId: (yield createUser()).uuid,
+					creatorId: author.uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public"
 				}))
@@ -303,6 +322,7 @@ function mustRateLimit(request) {
 	describe("as a rate limited endpoint", function() {
 		beforeEach(function*() {
 			this.initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.user.id,
 				phase: "sign"
 			}))
 

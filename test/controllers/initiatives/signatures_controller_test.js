@@ -17,12 +17,11 @@ var slurp = require("root/lib/stream").slurp
 var newCertificate = require("root/test/fixtures").newCertificate
 var newOcspResponse = require("root/test/fixtures").newOcspResponse
 var newPartner = require("root/test/citizenos_fixtures").newPartner
-var newUser = require("root/test/citizenos_fixtures").newUser
 var newTopic = require("root/test/citizenos_fixtures").newTopic
 var newVote = require("root/test/citizenos_fixtures").newVote
 var newSignature = require("root/test/citizenos_fixtures").newSignature
 var createPartner = require("root/test/citizenos_fixtures").createPartner
-var createUser = require("root/test/citizenos_fixtures").createUser
+var createUser = require("root/test/fixtures").createUser
 var createTopic = require("root/test/citizenos_fixtures").createTopic
 var createVote = require("root/test/citizenos_fixtures").createVote
 var createCitizenSignature
@@ -101,18 +100,20 @@ describe("SignaturesController", function() {
 
 		beforeEach(function*() {
 			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
+			this.author = yield createUser()
 		})
 
 		it("must respond with signature ASIC-E given parliament token",
 			function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
 			}))
@@ -143,13 +144,14 @@ describe("SignaturesController", function() {
 
 		it("must respond if no signatures", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
 			}))
@@ -171,13 +173,14 @@ describe("SignaturesController", function() {
 		it("must respond with 403 Forbidden if no token on initiative",
 			function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: null
 			}))
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
 			}))
@@ -191,13 +194,14 @@ describe("SignaturesController", function() {
 
 		it("must respond with 403 Forbidden given no token", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
 			}))
@@ -210,13 +214,14 @@ describe("SignaturesController", function() {
 
 		it("must respond with 403 Forbidden given empty token", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
 			}))
@@ -230,13 +235,14 @@ describe("SignaturesController", function() {
 
 		it("must respond with 403 Forbidden given invalid token", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
 			}))
@@ -249,13 +255,14 @@ describe("SignaturesController", function() {
 
 		it("must respond with 403 Forbidden given non-hex token", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
 			}))
@@ -269,6 +276,7 @@ describe("SignaturesController", function() {
 		it("must respond with 423 Locked if initiative received by parliament",
 			function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12),
 				received_by_parliament_at: new Date
@@ -276,7 +284,7 @@ describe("SignaturesController", function() {
 
 			yield createTopic(newTopic({
 				id: initiative.uuid,
-				creatorId: (yield createUser(newUser())).id,
+				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
 				status: "followUp"
 			}))
@@ -298,14 +306,17 @@ describe("SignaturesController", function() {
 					id: Config.apiPartnerId
 				}))
 
+				this.author = yield createUser()
+
 				this.initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
 					phase: "sign",
 					undersignable: true
 				}))
 
 				this.topic = yield createTopic(newTopic({
 					id: this.initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: this.author.uuid,
 					sourcePartnerId: this.partner.id,
 					status: "voting"
 				}))
@@ -487,7 +498,7 @@ describe("SignaturesController", function() {
 
 					it("must not affect signature on another initiative", function*() {
 						var otherInitiative = yield initiativesDb.create(
-							new ValidInitiative({phase: "sign"})
+							new ValidInitiative({user_id: this.author.id, phase: "sign"})
 						)
 
 						yield signaturesDb.create(new ValidSignature({
@@ -1704,13 +1715,16 @@ describe("SignaturesController", function() {
 					id: Config.apiPartnerId
 				}))
 
+				this.author = yield createUser()
+
 				this.initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
 					phase: "sign"
 				}))
 
 				this.topic = yield createTopic(newTopic({
 					id: this.initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: this.author.uuid,
 					sourcePartnerId: this.partner.id,
 					status: "voting"
 				}))
@@ -1748,10 +1762,10 @@ describe("SignaturesController", function() {
 					})
 
 					it("must thank after signing again", function*() {
-						var user = yield createUser(newUser())
+						var user = yield createUser()
 
 						yield createCitizenSignature(newSignature({
-							userId: user.id,
+							userId: user.uuid,
 							voteId: this.vote.id,
 							optionId: this.yesAndNo[0],
 							createdAt: DateFns.addSeconds(new Date, -NEW_SIG_TRESHOLD)
@@ -1784,10 +1798,10 @@ describe("SignaturesController", function() {
 					// status endpoint of CitizenOS has the side-effect of creating the
 					// signature and that could be called multiple times.
 					it("must thank after signing with duplicate signatures", function*() {
-						var user = yield createUser(newUser())
+						var user = yield createUser()
 
 						yield createCitizenSignature(newSignature({
-							userId: user.id,
+							userId: user.uuid,
 							voteId: this.vote.id,
 							optionId: this.yesAndNo[0],
 							createdAt: DateFns.addSeconds(new Date, -NEW_SIG_TRESHOLD + 1)
@@ -1818,18 +1832,18 @@ describe("SignaturesController", function() {
 
 					it("must thank after signing again with duplicate signatures",
 						function*() {
-						var user = yield createUser(newUser())
+						var user = yield createUser()
 
 						yield createCitizenSignature([
 							newSignature({
-								userId: user.id,
+								userId: user.uuid,
 								voteId: this.vote.id,
 								optionId: this.yesAndNo[0],
 								createdAt: DateFns.addSeconds(new Date, -NEW_SIG_TRESHOLD)
 							}),
 
 							newSignature({
-								userId: user.id,
+								userId: user.uuid,
 								voteId: this.vote.id,
 								optionId: this.yesAndNo[0],
 								createdAt: DateFns.addSeconds(new Date, -NEW_SIG_TRESHOLD + 1)
@@ -1860,18 +1874,18 @@ describe("SignaturesController", function() {
 					})
 
 					it("must thank after signing after revoking earlier", function*() {
-						var user = yield createUser(newUser())
+						var user = yield createUser()
 
 						yield createCitizenSignature([
 							newSignature({
-								userId: user.id,
+								userId: user.uuid,
 								voteId: this.vote.id,
 								optionId: this.yesAndNo[0],
 								createdAt: DateFns.addSeconds(new Date, -NEW_SIG_TRESHOLD * 2)
 							}),
 
 							newSignature({
-								userId: user.id,
+								userId: user.uuid,
 								voteId: this.vote.id,
 								optionId: this.yesAndNo[1],
 								createdAt: DateFns.addSeconds(new Date, -NEW_SIG_TRESHOLD)
@@ -1901,25 +1915,25 @@ describe("SignaturesController", function() {
 					})
 
 					it("must thank after signing with duplicate signatures after revoking earlier", function*() {
-						var user = yield createUser(newUser())
+						var user = yield createUser()
 
 						yield createCitizenSignature([
 							newSignature({
-								userId: user.id,
+								userId: user.uuid,
 								voteId: this.vote.id,
 								optionId: this.yesAndNo[0],
 								createdAt: DateFns.addSeconds(new Date, -NEW_SIG_TRESHOLD * 2)
 							}),
 
 							newSignature({
-								userId: user.id,
+								userId: user.uuid,
 								voteId: this.vote.id,
 								optionId: this.yesAndNo[1],
 								createdAt: DateFns.addSeconds(new Date, -NEW_SIG_TRESHOLD)
 							}),
 
 							newSignature({
-								userId: user.id,
+								userId: user.uuid,
 								voteId: this.vote.id,
 								optionId: this.yesAndNo[0],
 								createdAt: DateFns.addSeconds(new Date, -NEW_SIG_TRESHOLD + 1)
@@ -1950,15 +1964,15 @@ describe("SignaturesController", function() {
 
 					it("must thank after signing having signed another initiative",
 						function*() {
-						var user = yield createUser(newUser())
+						var user = yield createUser()
 
 						var otherInitiative = yield initiativesDb.create(
-							new ValidInitiative({phase: "sign"})
+							new ValidInitiative({user_id: this.author.id, phase: "sign"})
 						)
 
 						var otherTopic = yield createTopic(newTopic({
 							id: otherInitiative.uuid,
-							creatorId: (yield createUser(newUser())).id,
+							creatorId: this.author.uuid,
 							sourcePartnerId: this.partner.id,
 							status: "voting"
 						}))
@@ -1966,7 +1980,7 @@ describe("SignaturesController", function() {
 						var otherVote = yield createVote(otherTopic, newVote())
 
 						yield createCitizenSignature(newSignature({
-							userId: user.id,
+							userId: user.uuid,
 							voteId: otherVote.id,
 							optionId: this.yesAndNo[0],
 							createdAt: DateFns.addSeconds(new Date, -NEW_SIG_TRESHOLD)
@@ -1995,10 +2009,10 @@ describe("SignaturesController", function() {
 					})
 
 					it("must thank after signing with another user signed", function*() {
-						var user = yield createUser(newUser())
+						var user = yield createUser()
 
 						yield createCitizenSignature(newSignature({
-							userId: (yield createUser(newUser())).id,
+							userId: this.author.uuid,
 							voteId: this.vote.id,
 							optionId: this.yesAndNo[0],
 							createdAt: DateFns.addSeconds(new Date, -NEW_SIG_TRESHOLD)
@@ -2053,7 +2067,7 @@ describe("SignaturesController", function() {
 			describe("when signing via Id-Card", function() {
 				it("must send signature to CitizenOS", function*() {
 					var self = this
-					var user = yield createUser(newUser())
+					var user = yield createUser()
 					var signableHash = Crypto.randomBytes(32)
 
 					this.router.post(`/api/topics/${this.topic.id}/votes/${this.vote.id}`,
@@ -2100,7 +2114,7 @@ describe("SignaturesController", function() {
 						respond({data: {bdocUri: bdocUrl}}, req, res)
 
 						yield createCitizenSignature(newSignature({
-							userId: user.id,
+							userId: user.uuid,
 							voteId: self.vote.id,
 							optionId: self.yesAndNo[0]
 						}))
@@ -2158,7 +2172,7 @@ describe("SignaturesController", function() {
 					created.must.equal(1)
 
 					var self = this
-					var user = yield createUser(newUser())
+					var user = yield createUser()
 
 					this.router.get(
 						`/api/topics/${this.topic.id}/votes/${this.vote.id}/status`,
@@ -2169,7 +2183,7 @@ describe("SignaturesController", function() {
 						respond({status: {code: 20000}, data: {bdocUri: bdocUrl}}, req, res)
 
 						yield createCitizenSignature(newSignature({
-							userId: user.id,
+							userId: user.uuid,
 							voteId: self.vote.id,
 							optionId: self.yesAndNo[0]
 						}))
@@ -2234,14 +2248,17 @@ describe("SignaturesController", function() {
 					id: Config.apiPartnerId
 				}))
 
+				this.author = yield createUser()
+
 				this.initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
 					phase: "sign",
 					undersignable: true
 				}))
 
 				this.topic = yield createTopic(newTopic({
 					id: this.initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: this.author.uuid,
 					sourcePartnerId: this.partner.id,
 					status: "voting"
 				}))
@@ -2343,13 +2360,16 @@ describe("SignaturesController", function() {
 					id: Config.apiPartnerId
 				}))
 
+				this.author = yield createUser()
+
 				this.initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
 					phase: "sign"
 				}))
 
 				this.topic = yield createTopic(newTopic({
 					id: this.initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: this.author.uuid,
 					sourcePartnerId: this.partner.id,
 					status: "voting"
 				}))
@@ -2377,14 +2397,17 @@ describe("SignaturesController", function() {
 					id: Config.apiPartnerId
 				}))
 
+				this.author = yield createUser()
+
 				this.initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
 					phase: "sign",
 					undersignable: true
 				}))
 
 				this.topic = yield createTopic(newTopic({
 					id: this.initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: this.author.uuid,
 					sourcePartnerId: this.partner.id,
 					status: "voting"
 				}))
@@ -2456,7 +2479,9 @@ describe("SignaturesController", function() {
 					personal_id: "60001019906"
 				}))
 
-				var otherInitiative = yield initiativesDb.create(new ValidInitiative)
+				var otherInitiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id
+				}))
 
 				var otherSignature = yield signaturesDb.create(new ValidSignature({
 					initiative_uuid: otherInitiative.uuid,
@@ -2506,13 +2531,16 @@ describe("SignaturesController", function() {
 					id: Config.apiPartnerId
 				}))
 
+				this.author = yield createUser()
+
 				this.initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
 					phase: "sign"
 				}))
 
 				this.topic = yield createTopic(newTopic({
 					id: this.initiative.uuid,
-					creatorId: (yield createUser(newUser())).id,
+					creatorId: this.author.uuid,
 					sourcePartnerId: this.partner.id,
 					status: "voting"
 				}))
@@ -2617,7 +2645,7 @@ function* signWithMobileId(router, request, initiative, cert) {
 }
 
 function* signWithIdCardViaCitizen(router, request, topic, vote, optId, user) {
-	if (user == null) user = yield createUser(newUser())
+	if (user == null) user = yield createUser()
 	var cert = ID_CARD_CERTIFICATE
 
 	var signableHash = Crypto.randomBytes(32)
@@ -2651,7 +2679,7 @@ function* signWithIdCardViaCitizen(router, request, topic, vote, optId, user) {
 		respond({data: {bdocUri: newBdocUrl(topic, vote, user)}}, req, res)
 
 		yield createCitizenSignature(newSignature({
-			userId: user.id,
+			userId: user.uuid,
 			voteId: vote.id,
 			optionId: optId
 		}))
@@ -2675,7 +2703,7 @@ function* signWithMobileIdViaCitizen(
 	optId,
 	user
 ) {
-	if (user == null) user = yield createUser(newUser())
+	if (user == null) user = yield createUser()
 
 	router.post(`/api/topics/${topic.id}/votes/${vote.id}`,
 		function(req, res) {
@@ -2701,7 +2729,7 @@ function* signWithMobileIdViaCitizen(
 
 		yield createCitizenSignature(newSignature({
 			createdAt: new Date,
-			userId: user.id,
+			userId: user.uuid,
 			voteId: vote.id,
 			optionId: optId
 		}))
@@ -2715,7 +2743,7 @@ function* signWithMobileIdViaCitizen(
 function newBdocUrl(topic, vote, user) {
 	var url = "http://example.com/api/users/self/topics/" + topic.id
 	url += `/votes/${vote.id}/downloads/bdocs/user`
-	url += "?token=" + fakeJwt({userId: user.id})
+	url += "?token=" + fakeJwt({userId: _.serializeUuid(user.uuid)})
 	return url
 }
 

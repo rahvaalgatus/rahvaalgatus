@@ -13,6 +13,7 @@ var eventsDb = require("root/db/initiative_events_db")
 var filesDb = require("root/db/initiative_files_db")
 var sql = require("sqlate")
 var newUuid = _.compose(_.serializeUuid, _.uuidV4)
+var createUser = require("root/test/fixtures").createUser
 var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var WEB_INITIATIVES_PATH = "/tutvustus-ja-ajalugu/raakige-kaasa/esitage-kollektiivne-poordumine/riigikogule-esitatud-kollektiivsed-poordumised"
@@ -219,7 +220,10 @@ describe("ParliamentWebSyncCli", function() {
 	})
 
 	it("must update local initiative with events and files", function*() {
+		var author = yield createUser()
+
 		var initiative = yield initiativesDb.create(new ValidInitiative({
+			user_id: author.id,
 			phase: "government"
 		}))
 
@@ -305,7 +309,10 @@ describe("ParliamentWebSyncCli", function() {
 	}, function(url, title) {
 		it("must update local initiative if URL in the style of " + title,
 			function*() {
+			var author = yield createUser()
+
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: author.id,
 				phase: "government"
 			}))
 
@@ -526,7 +533,10 @@ describe("ParliamentWebSyncCli", function() {
 		var files = test[4]
 
 		it("must create events and files given " + title, function*() {
+			var author = yield createUser()
+
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: author.id,
 				uuid: INITIATIVE_UUID,
 				parliament_uuid: INITIATIVE_UUID,
 				phase: "parliament"
@@ -591,7 +601,10 @@ describe("ParliamentWebSyncCli", function() {
 	})
 
 	it("must consider documents from HTML along with API's", function*() {
+		var author = yield createUser()
+
 		var initiative = yield initiativesDb.create(new ValidInitiative({
+			user_id: author.id,
 			uuid: INITIATIVE_UUID,
 			parliament_uuid: INITIATIVE_UUID,
 			phase: "parliament"
@@ -823,7 +836,10 @@ describe("ParliamentWebSyncCli", function() {
 	})
 
 	it("must consider volumes from HTML along with API's", function*() {
+		var author = yield createUser()
+
 		var initiative = yield initiativesDb.create(new ValidInitiative({
+			user_id: author.id,
 			uuid: INITIATIVE_UUID,
 			parliament_uuid: INITIATIVE_UUID,
 			phase: "parliament"
@@ -1140,7 +1156,10 @@ describe("ParliamentWebSyncCli", function() {
 	})
 
 	it("must ignore specific unsupported documents", function*() {
+		var author = yield createUser()
+
 		yield initiativesDb.create(new ValidInitiative({
+			user_id: author.id,
 			uuid: INITIATIVE_UUID,
 			parliament_uuid: INITIATIVE_UUID,
 			phase: "parliament"
@@ -1188,7 +1207,10 @@ describe("ParliamentWebSyncCli", function() {
 	// The parliament page refers to a volume (https://www.riigikogu.ee/tegevus/dokumendiregister/toimikud/65154711-c8f8-4394-8643-7037adedb3ae) that in turn
 	// refers to the initiative.
 	it("must ignore volumes containing the initiative document ", function*() {
+		var author = yield createUser()
+
 		var initiative = yield initiativesDb.create(new ValidInitiative({
+			user_id: author.id,
 			uuid: INITIATIVE_UUID,
 			parliament_uuid: INITIATIVE_UUID,
 			phase: "parliament"
