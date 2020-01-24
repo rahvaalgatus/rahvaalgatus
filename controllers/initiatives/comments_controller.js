@@ -128,7 +128,7 @@ exports.router.use("/:commentId", next(function*(req, res, next) {
 	var baseUrl = Path.dirname(req.baseUrl)
 
 	var comment = yield commentsDb.read(sql`
-		SELECT comment.*, json_object('name', user.name) AS user
+		SELECT comment.*, user.name AS user_name
 		FROM comments AS comment
 		JOIN users AS user ON comment.user_id = user.id
 		WHERE (comment.id = ${id} OR comment.uuid = ${id})
@@ -140,7 +140,6 @@ exports.router.use("/:commentId", next(function*(req, res, next) {
 	if (comment.uuid == id)
 		return void res.redirect(308, baseUrl + "/" + comment.id)
 
-	comment.user = JSON.parse(comment.user)
 	req.comment = comment
 	next()
 }))
@@ -217,13 +216,11 @@ function* renderComment(req, res) {
 	var comment = req.comment
 
 	comment.replies = yield commentsDb.search(sql`
-		SELECT comment.*, json_object('name', user.name) AS user
+		SELECT comment.*, user.name AS user_name
 		FROM comments AS comment
 		JOIN users AS user ON comment.user_id = user.id
 		WHERE parent_id = ${comment.id}
 	`)
-
-	comment.replies.forEach((reply) => reply.user = JSON.parse(reply.user))
 
 	res.render("initiatives/comments/read_page.jsx", {comment: comment})
 }

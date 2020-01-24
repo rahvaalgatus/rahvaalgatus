@@ -575,14 +575,12 @@ function readTopicPermission(user, topic) {
 
 function* searchInitiativeComments(initiativeUuid) {
 	var comments = yield commentsDb.search(sql`
-		SELECT comment.*, json_object('name', user.name) AS user
+		SELECT comment.*, user.name AS user_name
 		FROM comments AS comment
 		JOIN users AS user ON comment.user_id = user.id
 		WHERE comment.initiative_uuid = ${initiativeUuid}
 		ORDER BY comment.created_at
 	`)
-
-	comments.forEach((comment) => comment.user = JSON.parse(comment.user))
 
 	var parentsAndReplies = _.partition(comments, (c) => c.parent_id == null)
 	var parentsById = _.indexBy(parentsAndReplies[0], "id")

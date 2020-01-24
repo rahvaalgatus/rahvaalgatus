@@ -58,7 +58,7 @@ function CommentView(attrs) {
 		<h3 class="title"><a href={commentUrl}>{comment.title}</a></h3>
 
 		<div class="metadata">
-			<span class="author">{comment.user.name}</span>
+			<span class="author">{comment.user_name}</span>
 			{", "}
 			<time datetime={comment.created_at.toJSON()}>
 				<a href={commentUrl}>
@@ -82,7 +82,7 @@ function CommentView(attrs) {
 			{reply.uuid ? <a id={"comment-" + reply.uuid} /> : null}
 
 			<div class="metadata">
-				<span class="author">{reply.user.name}</span>
+				<span class="author">{reply.user_name}</span>
 				{", "}
 				<time datetime={reply.created_at}>
 					<a href={commentUrl + `#comment-${reply.id}`}>
@@ -107,7 +107,7 @@ function CommentView(attrs) {
 				name="text"
 				maxlength={MAX_COMMENT_TEXT_LENGTH}
 				required
-				placeholder={t("PLACEHOLDER_ADD_YOUR_REPLY", {name: comment.user.name})}
+				placeholder={t("PLACEHOLDER_ADD_YOUR_REPLY", {name: comment.user_name})}
 				class="form-textarea"
 			>
 				{newComment && newComment.text}
