@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS "initiative_events" (
 	title TEXT,
 	content TEXT, origin TEXT NOT NULL DEFAULT 'admin', external_id TEXT, type TEXT NOT NULL DEFAULT 'text',
 
-	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE,
+	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
 
 	CONSTRAINT initiative_events_title_length
 	CHECK (length(title) > 0),
@@ -100,8 +100,8 @@ CREATE TABLE comments (
 	title TEXT NOT NULL DEFAULT '',
 	"text" TEXT NOT NULL DEFAULT '',
 
-	FOREIGN KEY (parent_id) REFERENCES comments (id) ON DELETE CASCADE,
-	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE,
+	FOREIGN KEY (parent_id) REFERENCES comments (id),
+	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
 
 	CONSTRAINT comments_title_present
 	CHECK (
@@ -135,7 +135,7 @@ CREATE TABLE IF NOT EXISTS "initiative_files" (
 	content BLOB NOT NULL,
 	content_type TEXT NOT NULL,
 
-	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE,
+	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
 	FOREIGN KEY (event_id) REFERENCES initiative_events (id) ON DELETE CASCADE,
 
 	CONSTRAINT initiative_files_external_id_length
@@ -209,7 +209,7 @@ CREATE TABLE initiative_signatures (
 	oversigned INTEGER NOT NULL DEFAULT 0, method TEXT NOT NULL,
 
 	PRIMARY KEY (initiative_uuid, country, personal_id),
-	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE,
+	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
 
 	CONSTRAINT initiative_signatures_country_length CHECK (length(country) = 2),
 
@@ -389,4 +389,5 @@ INSERT INTO migrations VALUES('20200106000105');
 INSERT INTO migrations VALUES('20200106000110');
 INSERT INTO migrations VALUES('20200106000120');
 INSERT INTO migrations VALUES('20200106000130');
+INSERT INTO migrations VALUES('20200124094227');
 COMMIT;

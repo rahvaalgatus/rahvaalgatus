@@ -2,6 +2,16 @@ var SqliteError = require("root/lib/sqlite_error")
 
 describe("SqliteError", function() {
 	describe("new", function() {
+		it("must parse SQLITE_CONSTRAINT with FOREIGN KEY", function() {
+			var msg = "SQLITE_CONSTRAINT: FOREIGN KEY constraint failed"
+			var sqlite = new Error(msg)
+			sqlite.code = "SQLITE_CONSTRAINT"
+			sqlite.errno = 19
+
+			var err = new SqliteError(sqlite)
+			err.code.must.equal("constraint")
+			err.type.must.equal("foreign_key")
+		})
 		it("must parse SQLITE_CONSTRAINT with CHECK", function() {
 			var msg = "SQLITE_CONSTRAINT: CHECK constraint failed: comments_title"
 			var sqlite = new Error(msg)

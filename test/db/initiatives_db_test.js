@@ -241,30 +241,30 @@ describe("InitiativesDb", function() {
 				yield db.search(sql`SELECT * FROM initiatives`).must.then.be.empty()
 			})
 
-			it("must delete related events", function*() {
+			it("must not delete related events", function*() {
 				var initiative = yield db.create(new ValidInitiative)
 
-				yield eventsDb.create(new ValidEvent({
+				var event = yield eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid
 				}))
 
-				yield db.delete(initiative)
+				var err
+				try { yield db.delete(initiative) } catch (ex) { err = ex }
+				err.must.be.an.error(SqliteError)
+				err.code.must.equal("constraint")
+				err.type.must.equal("foreign_key")
 
-				yield db.search(sql`SELECT * FROM initiatives`).must.then.be.empty()
+				yield db.read(sql`SELECT * FROM initiatives`).must.then.eql(initiative)
 
-				yield eventsDb.search(sql`
+				yield eventsDb.read(sql`
 					SELECT * FROM initiative_events
-				`).must.then.be.empty()
+				`).must.then.eql(event)
 			})
 
-			it("must delete related signables and signatures", function*() {
+			it("must delete signables", function*() {
 				var initiative = yield db.create(new ValidInitiative)
 
 				yield signablesDb.create(new ValidSignable({
-					initiative_uuid: initiative.uuid
-				}))
-
-				yield signaturesDb.create(new ValidSignature({
 					initiative_uuid: initiative.uuid
 				}))
 
@@ -273,10 +273,33 @@ describe("InitiativesDb", function() {
 				yield signablesDb.search(sql`
 					SELECT * FROM initiative_signables
 				`).must.then.be.empty()
+			})
 
-				yield signaturesDb.search(sql`
+			it("must not delete signatures", function*() {
+				var initiative = yield db.create(new ValidInitiative)
+
+				// Ensure the signable doesn't get deleted even if signature didn't.
+				var signable = yield signablesDb.create(new ValidSignable({
+					initiative_uuid: initiative.uuid
+				}))
+
+				var signature = yield signaturesDb.create(new ValidSignature({
+					initiative_uuid: initiative.uuid
+				}))
+
+				var err
+				try { yield db.delete(initiative) } catch (ex) { err = ex }
+				err.must.be.an.error(SqliteError)
+				err.code.must.equal("constraint")
+				err.type.must.equal("foreign_key")
+
+				yield signablesDb.read(sql`
+					SELECT * FROM initiative_signables
+				`).must.then.eql(signable)
+
+				yield signaturesDb.read(sql`
 					SELECT * FROM initiative_signatures
-				`).must.then.be.empty()
+				`).must.then.eql(signature)
 			})
 		})
 	})
