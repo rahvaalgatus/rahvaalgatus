@@ -61,6 +61,102 @@ describe("UsersDb", function() {
 			err.constraint.must.equal("users_personal_id_length")
 		})
 
+		it("must throw given country without personal_id", function*() {
+			var err
+			try {
+				yield db.create(new ValidUser({
+					country: "EE",
+					personal_id: null
+				}))
+			} catch (ex) { err = ex }
+			err.must.be.an.error(SqliteError)
+			err.code.must.equal("constraint")
+			err.type.must.equal("check")
+			err.constraint.must.equal("users_country_and_personal_id")
+		})
+
+		it("must throw given personal_id without country", function*() {
+			var err
+			try {
+				yield db.create(new ValidUser({
+					country: null,
+					personal_id: "38706181337"
+				}))
+			} catch (ex) { err = ex }
+			err.must.be.an.error(SqliteError)
+			err.code.must.equal("constraint")
+			err.type.must.equal("check")
+			err.constraint.must.equal("users_country_and_personal_id")
+		})
+
+		it("must create user without country and personal_id but email",
+			function*() {
+			yield db.create(new ValidUser({
+				country: null,
+				personal_id: null,
+				email: "user@example.com",
+				email_confirmed_at: new Date,
+				unconfirmed_email: null
+			}))
+		})
+
+		it("must create user without country and personal_id but unconfirmed_email",
+			function*() {
+			yield db.create(new ValidUser({
+				country: null,
+				personal_id: null,
+				email: null,
+				unconfirmed_email: "user@example.com",
+				email_confirmation_token: Crypto.randomBytes(12)
+			}))
+		})
+
+		it("must throw given no personal_id nor email", function*() {
+			var err
+			try {
+				yield db.create(new ValidUser({
+					country: null,
+					personal_id: null,
+					email: null,
+					unconfirmed_email: null
+				}))
+			} catch (ex) { err = ex }
+			err.must.be.an.error(SqliteError)
+			err.code.must.equal("constraint")
+			err.type.must.equal("check")
+			err.constraint.must.equal("users_personal_id_or_email")
+		})
+
+		it("must throw given personal_id without official_name", function*() {
+			var err
+			try {
+				yield db.create(new ValidUser({
+					country: "EE",
+					personal_id: "38706181337",
+					official_name: null
+				}))
+			} catch (ex) { err = ex }
+			err.must.be.an.error(SqliteError)
+			err.code.must.equal("constraint")
+			err.type.must.equal("check")
+			err.constraint.must.equal("users_personal_id_and_official_name")
+		})
+
+		it("must throw given official_name without personal_id", function*() {
+			var err
+			try {
+				yield db.create(new ValidUser({
+					country: null,
+					personal_id: null,
+					official_name: "John Smith"
+				}))
+			} catch (ex) { err = ex }
+			err.must.be.an.error(SqliteError)
+			err.code.must.equal("constraint")
+			err.type.must.equal("check")
+			err.constraint.must.equal("users_personal_id_and_official_name")
+		})
+
 		it("must throw given empty name", function*() {
 			var err
 			try { yield db.create(new ValidUser({name: ""})) }
