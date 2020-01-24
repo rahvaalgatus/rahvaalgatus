@@ -7,10 +7,8 @@ var SqliteError = require("root/lib/sqlite_error")
 var Subscription = require("root/lib/subscription")
 var next = require("co-next")
 var sql = require("sqlate")
-var cosDb = require("root").cosDb
 var commentsDb = require("root/db/comments_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
-var concat = Array.prototype.concat.bind(Array.prototype)
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var MAX_TITLE_LENGTH = 140
 var MAX_TEXT_LENGTH = 3000
@@ -49,6 +47,7 @@ exports.router.post("/", next(function*(req, res) {
 
 	var attrs = _.assign(parseComment(req.body), {
 		initiative_uuid: initiative.uuid,
+		user_id: user.id,
 		user_uuid: _.serializeUuid(user.uuid),
 		created_at: new Date,
 		updated_at: new Date
@@ -129,16 +128,19 @@ exports.router.use("/:commentId", next(function*(req, res, next) {
 	var baseUrl = Path.dirname(req.baseUrl)
 
 	var comment = yield commentsDb.read(sql`
-		SELECT * FROM comments
-		WHERE (id = ${id} OR uuid = ${id})
-		AND initiative_uuid = ${initiative.uuid}
+		SELECT comment.*, json_object('name', user.name) AS user
+		FROM comments AS comment
+		JOIN users AS user ON comment.user_id = user.id
+		WHERE (comment.id = ${id} OR comment.uuid = ${id})
+		AND comment.initiative_uuid = ${initiative.uuid}
 	`)
 
 	if (comment == null)
 		throw new HttpError(404)
 	if (comment.uuid == id)
 		return void res.redirect(308, baseUrl + "/" + comment.id)
-	
+
+	comment.user = JSON.parse(comment.user)
 	req.comment = comment
 	next()
 }))
@@ -164,6 +166,7 @@ exports.router.post("/:commentId/replies", next(function*(req, res) {
 	var attrs = _.assign(parseComment(req.body), {
 		initiative_uuid: comment.initiative_uuid,
 		parent_id: comment.id,
+		user_id: user.id,
 		user_uuid: _.serializeUuid(user.uuid),
 		created_at: new Date,
 		updated_at: new Date,
@@ -213,19 +216,15 @@ exports.router.post("/:commentId/replies", next(function*(req, res) {
 function* renderComment(req, res) {
 	var comment = req.comment
 
-	var replies = comment.replies = yield commentsDb.search(sql`
-		SELECT * FROM comments WHERE parent_id = ${comment.id}
+	comment.replies = yield commentsDb.search(sql`
+		SELECT comment.*, json_object('name', user.name) AS user
+		FROM comments AS comment
+		JOIN users AS user ON comment.user_id = user.id
+		WHERE parent_id = ${comment.id}
 	`)
 
-	var usersById = _.indexBy(yield cosDb.query(sql`
-		SELECT id, name FROM "Users"
-		WHERE id IN ${
-			sql.in(concat(comment.user_uuid, replies.map((r) => r.user_uuid)))
-		}
-	`), "id")
+	comment.replies.forEach((reply) => reply.user = JSON.parse(reply.user))
 
-	comment.user = usersById[comment.user_uuid]
-	replies.forEach((reply) => reply.user = usersById[reply.user_uuid])
 	res.render("initiatives/comments/read_page.jsx", {comment: comment})
 }
 

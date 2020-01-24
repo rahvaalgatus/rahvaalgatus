@@ -98,8 +98,9 @@ CREATE TABLE comments (
 	user_uuid TEXT NOT NULL,
 	parent_id INTEGER,
 	title TEXT NOT NULL DEFAULT '',
-	"text" TEXT NOT NULL DEFAULT '',
+	"text" TEXT NOT NULL DEFAULT '', user_id INTEGER NOT NULL,
 
+	FOREIGN KEY (user_id) REFERENCES users (id),
 	FOREIGN KEY (parent_id) REFERENCES comments (id),
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
 
@@ -390,4 +391,5 @@ INSERT INTO migrations VALUES('20200106000110');
 INSERT INTO migrations VALUES('20200106000120');
 INSERT INTO migrations VALUES('20200106000130');
 INSERT INTO migrations VALUES('20200124094227');
+INSERT INTO migrations VALUES('20200124101632');
 COMMIT;

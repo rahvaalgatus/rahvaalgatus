@@ -76,6 +76,7 @@ describe("InitiativeCommentsController", function() {
 				var comment = new ValidComment({
 					id: 1,
 					initiative_uuid: this.initiative.uuid,
+					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid),
 					title: "I've some thoughts.",
 					text: "But I forgot them."
@@ -113,6 +114,7 @@ describe("InitiativeCommentsController", function() {
 				var comment = new ValidComment({
 					id: 1,
 					initiative_uuid: initiative.uuid,
+					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid),
 					title: "I've some thoughts.",
 					text: "But I forgot them."
@@ -523,11 +525,13 @@ describe("InitiativeCommentsController", function() {
 
 			var comment = yield commentsDb.create(new ValidComment({
 				initiative_uuid: this.initiative.uuid,
+				user_id: author.id,
 				user_uuid: _.serializeUuid(author.uuid)
 			}))
 
 			var reply = yield commentsDb.create(new ValidComment({
 				initiative_uuid: this.initiative.uuid,
+				user_id: replier.id,
 				user_uuid: _.serializeUuid(replier.uuid),
 				parent_id: comment.id
 			}))
@@ -557,6 +561,7 @@ describe("InitiativeCommentsController", function() {
 
 			var comment = yield commentsDb.create(new ValidComment({
 				initiative_uuid: initiative.uuid,
+				user_id: author.id,
 				user_uuid: _.serializeUuid(author.uuid)
 			}))
 
@@ -576,16 +581,19 @@ describe("InitiativeCommentsController", function() {
 
 			var comment = yield commentsDb.create(new ValidComment({
 				initiative_uuid: this.initiative.uuid,
+				user_id: author.id,
 				user_uuid: _.serializeUuid(author.uuid)
 			}))
 
 			var other = yield commentsDb.create(new ValidComment({
 				initiative_uuid: this.initiative.uuid,
+				user_id: author.id,
 				user_uuid: _.serializeUuid(author.uuid)
 			}))
 
 			var reply = yield commentsDb.create(new ValidComment({
 				initiative_uuid: this.initiative.uuid,
+				user_id: author.id,
 				user_uuid: _.serializeUuid(author.uuid),
 				parent_id: other.id
 			}))
@@ -603,12 +611,14 @@ describe("InitiativeCommentsController", function() {
 			var comment = yield commentsDb.create(new ValidComment({
 				uuid: "f80ebc50-8f96-4482-8211-602b7376f204",
 				initiative_uuid: this.initiative.uuid,
-				user_uuid: _.serializeUuid(author.uuid)
+				user_id: author.id,
+				user_uuid: _.serializeUuid(replier.uuid)
 			}))
 
 			var reply = yield commentsDb.create(new ValidComment({
 				uuid: "c3e1f67c-41b0-4db7-8467-79bc0b80cfb7",
 				initiative_uuid: this.initiative.uuid,
+				user_id: author.id,
 				user_uuid: _.serializeUuid(replier.uuid),
 				parent_id: comment.id
 			}))
@@ -624,9 +634,13 @@ describe("InitiativeCommentsController", function() {
 		})
 
 		it("must redirect UUID to id", function*() {
+			var author = yield createUser()
+
 			var comment = yield commentsDb.create(new ValidComment({
 				uuid: "30898eb8-4177-4040-8fc0-d3402ecb14c7",
-				initiative_uuid: this.initiative.uuid
+				initiative_uuid: this.initiative.uuid,
+				user_id: author.id,
+				user_uuid: _.serializeUuid(author.uuid)
 			}))
 
 			var path = `/initiatives/${this.initiative.uuid}/comments`
@@ -642,12 +656,18 @@ describe("InitiativeCommentsController", function() {
 		})
 
 		it("must redirect given a reply", function*() {
+			var author = yield createUser()
+
 			var parent = yield commentsDb.create(new ValidComment({
-				initiative_uuid: this.initiative.uuid
+				initiative_uuid: this.initiative.uuid,
+				user_id: author.id,
+				user_uuid: _.serializeUuid(author.uuid)
 			}))
 
 			var comment = yield commentsDb.create(new ValidComment({
 				initiative_uuid: this.initiative.uuid,
+				user_id: author.id,
+				user_uuid: _.serializeUuid(author.uuid),
 				parent_id: parent.id
 			}))
 
@@ -660,8 +680,12 @@ describe("InitiativeCommentsController", function() {
 		it("must show 404 given a comment id of another initiative", function*() {
 			var other = yield initiativesDb.create(new ValidInitiative)
 
+			var author = yield createUser()
+
 			var comment = yield commentsDb.create(new ValidComment({
-				initiative_uuid: other.uuid
+				initiative_uuid: other.uuid,
+				user_id: author.id,
+				user_uuid: _.serializeUuid(author.uuid)
 			}))
 
 			var path = `/initiatives/${this.initiative.uuid}`
@@ -674,8 +698,12 @@ describe("InitiativeCommentsController", function() {
 	describe("POST /:id/replies", function() {
 		describe("when not logged in", function() {
 			it("must respond with 401 when not logged in", function*() {
+				var author = yield createUser()
+
 				var comment = yield commentsDb.create(new ValidComment({
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid)
 				}))
 
 				var path = `/initiatives/${this.initiative.uuid}`
@@ -693,7 +721,11 @@ describe("InitiativeCommentsController", function() {
 			require("root/test/fixtures").user()
 
 			it("must create reply", function*() {
+				var author = yield createUser()
+
 				var comment = yield commentsDb.create(new ValidComment({
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
 					initiative_uuid: this.initiative.uuid
 				}))
 
@@ -713,6 +745,7 @@ describe("InitiativeCommentsController", function() {
 				var reply = new ValidComment({
 					id: comment.id + 1,
 					initiative_uuid: this.initiative.uuid,
+					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid),
 					parent_id: comment.id,
 					text: "But I forgot them."
@@ -730,7 +763,11 @@ describe("InitiativeCommentsController", function() {
 					external: true
 				}))
 
+				var author = yield createUser()
+
 				var comment = yield commentsDb.create(new ValidComment({
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
 					initiative_uuid: initiative.uuid
 				}))
 
@@ -749,6 +786,7 @@ describe("InitiativeCommentsController", function() {
 				var reply = new ValidComment({
 					id: comment.id + 1,
 					initiative_uuid: initiative.uuid,
+					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid),
 					parent_id: comment.id,
 					text: "But I forgot them."
@@ -762,7 +800,11 @@ describe("InitiativeCommentsController", function() {
 			})
 
 			it("must redirect to referrer", function*() {
+				var author = yield createUser()
+
 				var comment = yield commentsDb.create(new ValidComment({
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
 					initiative_uuid: this.initiative.uuid
 				}))
 
@@ -781,7 +823,11 @@ describe("InitiativeCommentsController", function() {
 			})
 
 			it("must email subscribers interested in comments", function*() {
+				var author = yield createUser()
+
 				var comment = yield commentsDb.create(new ValidComment({
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
 					initiative_uuid: this.initiative.uuid
 				}))
 
@@ -841,7 +887,11 @@ describe("InitiativeCommentsController", function() {
 					email_confirmed_at: new Date
 				})
 
+				var author = yield createUser()
+
 				var comment = yield commentsDb.create(new ValidComment({
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
 					initiative_uuid: this.initiative.uuid
 				}))
 
@@ -874,12 +924,18 @@ describe("InitiativeCommentsController", function() {
 			})
 
 			it("must respond with 405 given a reply", function*() {
+				var author = yield createUser()
+
 				var parent = yield commentsDb.create(new ValidComment({
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid)
 				}))
 
 				var comment = yield commentsDb.create(new ValidComment({
 					initiative_uuid: this.initiative.uuid,
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
 					parent_id: parent.id
 				}))
 
@@ -912,6 +968,7 @@ describe("InitiativeCommentsController", function() {
 
 					var comment = yield commentsDb.create(new ValidComment({
 						initiative_uuid: this.initiative.uuid,
+						user_id: author.id,
 						user_uuid: _.serializeUuid(author.uuid)
 					}))
 

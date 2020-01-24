@@ -9,7 +9,6 @@ module.exports = function(attrs) {
 		created_at: createdAt,
 		updated_at: createdAt,
 		parent_id: null,
-		user_uuid: _.serializeUuid(_.uuidV4()),
 		title: attrs && attrs.parent_id ? "" : _.uniqueId("Title "),
 		text: _.uniqueId("Comment ")
 	}, attrs)

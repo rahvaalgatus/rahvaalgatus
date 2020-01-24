@@ -1,5 +1,8 @@
+var _ = require("root/lib/underscore")
 var SqliteError = require("root/lib/sqlite_error")
 var ValidInitiative = require("root/test/valid_db_initiative")
+var ValidComment = require("root/test/valid_comment")
+var createUser = require("root/test/fixtures").createUser
 var initiativesDb = require("root/db/initiatives_db")
 var db = require("root/db/comments_db")
 
@@ -12,18 +15,25 @@ describe("CommentsDb", function() {
 	
 	describe(".create", function() {
 		it("must throw given duplicate UUIDs", function*() {
-			var attrs = {
-				initiative_uuid: this.initiative.uuid,
-				uuid: "245e3e1f-9d64-48bb-b008-817448e79c79",
-				user_uuid: "49a506c8-1a2e-4995-bd2e-75bf0c722a19",
-				title: "Hello, world!",
-				text: "How are you?"
-			}
+			var author = yield createUser()
 
-			yield db.create(attrs)
+			var comment = yield db.create(new ValidComment({
+				uuid: "245e3e1f-9d64-48bb-b008-817448e79c79",
+				initiative_uuid: this.initiative.uuid,
+				user_id: author.id,
+				user_uuid: _.serializeUuid(author.uuid)
+			}))
 
 			var err
-			try { yield db.create(attrs) } catch (ex) { err = ex }
+			try {
+				yield db.create(new ValidComment({
+					uuid: comment.uuid,
+					initiative_uuid: comment.initiative_uuid,
+					user_id: comment.user_id,
+					user_uuid: comment.user_uuid
+				}))
+			}
+			catch (ex) { err = ex }
 			err.must.be.an.error(SqliteError)
 			err.code.must.equal("constraint")
 			err.type.must.equal("unique")

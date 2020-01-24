@@ -2308,11 +2308,13 @@ describe("InitiativesController", function() {
 
 				var comment = yield commentsDb.create(new ValidComment({
 					initiative_uuid: initiative.uuid,
+					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid)
 				}))
 
 				var reply = yield commentsDb.create(new ValidComment({
 					initiative_uuid: initiative.uuid,
+					user_id: replier.id,
 					user_uuid: _.serializeUuid(replier.uuid),
 					parent_id: comment.id
 				}))
@@ -2346,11 +2348,13 @@ describe("InitiativesController", function() {
 
 				var comment = yield commentsDb.create(new ValidComment({
 					initiative_uuid: initiative.uuid,
+					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid)
 				}))
 
 				var reply = yield commentsDb.create(new ValidComment({
 					initiative_uuid: initiative.uuid,
+					user_id: replier.id,
 					user_uuid: _.serializeUuid(replier.uuid),
 					parent_id: comment.id
 				}))
@@ -2378,9 +2382,12 @@ describe("InitiativesController", function() {
 				}))
 
 				var other = yield initiativesDb.create(new ValidInitiative)
+				var author = yield createUser()
 
 				var comment = yield commentsDb.create(new ValidComment({
-					initiative_uuid: other.uuid
+					initiative_uuid: other.uuid,
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid)
 				}))
 
 				var res = yield this.request("/initiatives/" + initiative.uuid)

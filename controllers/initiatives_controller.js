@@ -41,7 +41,6 @@ var trim = Function.call.bind(String.prototype.trim)
 var sendEmail = require("root").sendEmail
 var searchInitiativeEvents = _.compose(searchInitiativesEvents, concat)
 var ENV = process.env.ENV
-var EMPTY = Object.prototype
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: ""}
 var EMPTY_CONTACT = {name: "", email: "", phone: ""}
@@ -571,26 +570,15 @@ function readTopicPermission(user, topic) {
 }
 
 function* searchInitiativeComments(initiativeUuid) {
-	// The inefficient JOIN against the users table is temporary until all users
-	// have been imported and UUIDs switched for integer ids.
 	var comments = yield commentsDb.search(sql`
-		SELECT comment.*, user.name AS user_name
+		SELECT comment.*, json_object('name', user.name) AS user
 		FROM comments AS comment
-		LEFT JOIN users AS user
-		ON lower(hex(user.uuid)) = replace(comment.user_uuid, '-', '')
+		JOIN users AS user ON comment.user_id = user.id
 		WHERE comment.initiative_uuid = ${initiativeUuid}
 		ORDER BY comment.created_at
 	`)
 
-	var usersById = comments.length > 0 ? _.indexBy(yield cosDb.query(sql`
-		SELECT id, name FROM "Users"
-		WHERE id IN ${sql.in(comments.map((c) => c.user_uuid))}
-	`), "id") : EMPTY
-
-	comments.forEach(function(comment) {
-		comment.user = usersById[comment.user_uuid]
-		if (comment.user_name) comment.user.name = comment.user_name
-	})
+	comments.forEach((comment) => comment.user = JSON.parse(comment.user))
 
 	var parentsAndReplies = _.partition(comments, (c) => c.parent_id == null)
 	var parentsById = _.indexBy(parentsAndReplies[0], "id")
