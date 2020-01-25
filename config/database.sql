@@ -242,7 +242,9 @@ CREATE TABLE users (
 	unconfirmed_email TEXT COLLATE NOCASE,
 	email_confirmation_token BLOB UNIQUE,
 	email_confirmation_sent_at TEXT,
-	language TEXT NOT NULL DEFAULT 'et',
+	language TEXT NOT NULL DEFAULT 'et', merged_with_id INTEGER,
+
+	FOREIGN KEY (merged_with_id) REFERENCES users (id),
 
 	CONSTRAINT users_uuid_length CHECK (length(uuid) == 16),
 	CONSTRAINT users_country_length CHECK (length(country) == 2),
@@ -334,6 +336,8 @@ CREATE TABLE sessions (
 );
 CREATE INDEX index_initiatives_on_user_id ON initiatives (user_id);
 CREATE INDEX index_initiative_events_on_user_id ON initiative_events (user_id);
+CREATE INDEX index_users_on_merged_with_id ON users (merged_with_id)
+WHERE merged_with_id IS NOT NULL;
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -403,4 +407,5 @@ INSERT INTO migrations VALUES('20200124101632');
 INSERT INTO migrations VALUES('20200124121145');
 INSERT INTO migrations VALUES('20200124131836');
 INSERT INTO migrations VALUES('20200125071216');
+INSERT INTO migrations VALUES('20200125122607');
 COMMIT;

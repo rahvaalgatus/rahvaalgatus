@@ -26,7 +26,8 @@ function newValidUser(attrs) {
 		personal_id: personalId,
 		language: "et",
 		name: name,
-		official_name: personalId == null ? null : name
+		official_name: personalId == null ? null : name,
+		merged_with_id: null
 	}, attrs)
 }
 

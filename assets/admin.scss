@@ -364,6 +364,11 @@ textarea.admin-input {
 	#comments {
 		.reply { font-style: italic; }
 	}
+
+	#merge-form {
+		p { margin-bottom: 0.5rem; }
+		button { margin-left: 0.5rem; }
+	}
 }
 
 #initiative-page {

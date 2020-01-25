@@ -1,6 +1,8 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var Page = require("../page")
+var Form = Page.Form
+var Flash = Page.Flash
 var Config = require("root/config")
 var Fragment = Jsx.Fragment
 var formatDateTime = require("root/lib/i18n").formatDateTime
@@ -14,6 +16,8 @@ module.exports = function(attrs) {
 	return <Page page="user" title={"User - " + user.name} req={req}>
 		<a href={req.baseUrl} class="admin-back">Users</a>
 		<h1 class="admin-heading">{user.name}</h1>
+
+		<Flash flash={req.flash} />
 
 		<table id="initiative-table" class="admin-horizontal-table">
 			<tr>
@@ -152,5 +156,35 @@ module.exports = function(attrs) {
 				})}
 			</tbody>
 		</table>
+
+		<h2 class="admin-subheading">Merge Users</h2>
+		{user.merged_with_id ? <p>
+			This user was already merged with <a
+			class="admin-link"
+			href={req.baseUrl + "/" + user.merged_with_id}
+			>{user.merged_with_name}</a>.
+		</p> : user.personal_id == null ? <Form
+			req={req}
+			id="merge-form"
+			method="put"
+			action={req.baseUrl + "/" + user.id}
+			>
+			<p>
+				Merge this account with another by specifying its <strong>personal
+				id</strong>. Every initiative and comment made by the current account
+				will be assigned to the new one.
+			</p>
+
+			<input
+				class="admin-input"
+				required
+				name="mergedWithPersonalId"
+				placeholder="Personal Id"
+			/>
+			<button class="admin-submit">Merge</button>
+		</Form> : <p>
+			This user already has a related personal id. You can't merge such
+			accounts.
+		</p>}
 	</Page>
 }
