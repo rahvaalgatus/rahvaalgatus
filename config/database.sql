@@ -58,9 +58,10 @@ CREATE TABLE IF NOT EXISTS "initiative_events" (
 	occurred_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
 	created_by TEXT,
 	title TEXT,
-	content TEXT, origin TEXT NOT NULL DEFAULT 'admin', external_id TEXT, type TEXT NOT NULL DEFAULT 'text',
+	content TEXT, origin TEXT NOT NULL DEFAULT 'admin', external_id TEXT, type TEXT NOT NULL DEFAULT 'text', user_id INTEGER,
 
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
+	FOREIGN KEY (user_id) REFERENCES users (id),
 
 	CONSTRAINT initiative_events_title_length
 	CHECK (length(title) > 0),
@@ -332,6 +333,7 @@ CREATE TABLE sessions (
 	CONSTRAINT sessions_token_sha256_length CHECK (length(token_sha256) == 32)
 );
 CREATE INDEX index_initiatives_on_user_id ON initiatives (user_id);
+CREATE INDEX index_initiative_events_on_user_id ON initiative_events (user_id);
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -400,4 +402,5 @@ INSERT INTO migrations VALUES('20200124094227');
 INSERT INTO migrations VALUES('20200124101632');
 INSERT INTO migrations VALUES('20200124121145');
 INSERT INTO migrations VALUES('20200124131836');
+INSERT INTO migrations VALUES('20200125071216');
 COMMIT;

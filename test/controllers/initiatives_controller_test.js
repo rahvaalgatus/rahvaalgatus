@@ -6,6 +6,7 @@ var Config = require("root/config")
 var Crypto = require("crypto")
 var MediaType = require("medium-type")
 var Initiative = require("root/lib/initiative")
+var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidSignature = require("root/test/valid_signature")
@@ -23,12 +24,10 @@ var newPartner = require("root/test/citizenos_fixtures").newPartner
 var newTopic = require("root/test/citizenos_fixtures").newTopic
 var newVote = require("root/test/citizenos_fixtures").newVote
 var newPermission = require("root/test/citizenos_fixtures").newPermission
-var newCitizenUser = require("root/test/citizenos_fixtures").newUser
 var createPartner = require("root/test/citizenos_fixtures").createPartner
 var createUser = require("root/test/fixtures").createUser
 var createTopic = require("root/test/citizenos_fixtures").createTopic
 var createVote = require("root/test/citizenos_fixtures").createVote
-var createCitizenUser = require("root/test/citizenos_fixtures").createUser
 var createCitizenSignatures =
 	require("root/test/citizenos_fixtures").createSignatures
 var createPermission = require("root/test/citizenos_fixtures").createPermission
@@ -2332,13 +2331,11 @@ describe("InitiativesController", function() {
 					external: true
 				}))
 
-				var author = yield createCitizenUser(newCitizenUser({
-					name: "Johnny Lang"
-				}))
+				var author = yield usersDb.create(new ValidUser({name: "Johnny Lang"}))
 
 				var event = yield eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid,
-					created_by: author.id,
+					user_id: author.id,
 					title: "This just in.",
 					content: "Everything is fine!",
 					created_at: pseudoDateTime(),
@@ -3554,11 +3551,11 @@ describe("InitiativesController", function() {
 				visibility: "public"
 			}))
 
-			var author = yield createUser({name: "Johnny Lang"})
+			var author = yield usersDb.create(new ValidUser({name: "Johnny Lang"}))
 
 			var events = yield eventsDb.create([new ValidEvent({
 				initiative_uuid: initiative.uuid,
-				created_by: author.uuid,
+				user_id: author.id,
 				title: "We sent it.",
 				content: "To somewhere.",
 				created_at: new Date(2015, 5, 18),
@@ -3566,7 +3563,7 @@ describe("InitiativesController", function() {
 				occurred_at: new Date(2015, 5, 20)
 			}), new ValidEvent({
 				initiative_uuid: initiative.uuid,
-				created_by: author.uuid,
+				user_id: author.id,
 				title: "They got it.",
 				content: "From somewhere.",
 				created_at: new Date(2015, 5, 21),
@@ -4249,13 +4246,11 @@ describe("InitiativesController", function() {
 				external: true
 			}))
 
-			var author = yield createCitizenUser(newCitizenUser({
-				name: "Johnny Lang"
-			}))
+			var author = yield usersDb.create(new ValidUser({name: "Johnny Lang"}))
 
 			var event = yield eventsDb.create(new ValidEvent({
 				initiative_uuid: initiative.uuid,
-				created_by: author.id,
+				user_id: author.id,
 				title: "This just in.",
 				content: "Everything is fine!",
 				created_at: pseudoDateTime(),

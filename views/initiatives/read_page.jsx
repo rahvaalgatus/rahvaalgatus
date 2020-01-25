@@ -1230,7 +1230,7 @@ function EventsView(attrs) {
 
         <ol class="events">{events.map(function(event) {
 					var title
-					var author
+					var authorName
 					var content
 					var summary
 					var decision
@@ -1417,7 +1417,7 @@ function EventsView(attrs) {
 
 						case "text":
 							title = event.title
-							author = event.origin == "author" ? event.user : null
+							authorName = event.origin == "author" ? event.user_name : null
 							content = <p class="text">{Jsx.html(linkify(event.content))}</p>
 							break
 
@@ -1443,9 +1443,9 @@ function EventsView(attrs) {
 								</a>
 							</time>
 
-							{author ? <Fragment>
+							{authorName ? <Fragment>
 								{", "}
-								<span class="author">{author.name}</span>
+								<span class="author">{authorName}</span>
 							</Fragment> : null}
 						</div>
 

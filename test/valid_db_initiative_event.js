@@ -9,6 +9,7 @@ module.exports = function(attrs) {
 		updated_at: createdAt,
 		occurred_at: createdAt,
 		created_by: null,
+		user_id: null,
 		origin: "author",
 		external_id: null,
 		type: "text",

@@ -461,6 +461,7 @@ function* searchInitiativesEvents(initiatives) {
 	var events = yield eventsDb.search(sql`
 		SELECT
 			event.*,
+			user.name AS user_name,
 
 			json_group_array(json_object(
 				'id', file.id,
@@ -473,6 +474,7 @@ function* searchInitiativesEvents(initiatives) {
 
 		FROM initiative_events AS event
 		LEFT JOIN initiative_files AS file on file.event_id = event.id
+		LEFT JOIN users AS user ON event.user_id = user.id
 		WHERE event.initiative_uuid IN ${sql.in(initiatives.map((i) => i.uuid))}
 		GROUP BY event.id
 		ORDER BY "occurred_at" ASC
@@ -481,15 +483,6 @@ function* searchInitiativesEvents(initiatives) {
 	events.forEach(function(ev) {
 		ev.files = JSON.parse(ev.files).filter((f) => f.id).map(filesDb.parse)
 	})
-
-	var eventsFromAuthor = events.filter((ev) => ev.origin == "author")
-
-	var users = _.indexBy(yield cosDb.query(sql`
-		SELECT id, name FROM "Users"
-		WHERE id IN ${sql.in(_.uniq(eventsFromAuthor.map((ev) => ev.created_by)))}
-	`), "id")
-
-	eventsFromAuthor.forEach((ev) => ev.user = users[ev.created_by])
 
 	var eventsByInitiativeUuid = _.groupBy(events, "initiative_uuid")
 

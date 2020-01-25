@@ -37,7 +37,7 @@ exports.router.post("/", next(assertAdmin), next(function*(req, res) {
 		created_at: new Date,
 		occurred_at: new Date,
 		updated_at: new Date,
-		created_by: _.serializeUuid(req.user.uuid),
+		user_id: req.user.id,
 		origin: "author"
 	})
 
@@ -115,7 +115,7 @@ function* rateLimit(user, initiative) {
 	var events = yield eventsDb.search(sql`
 		SELECT created_at FROM initiative_events
 		WHERE initiative_uuid = ${initiative.uuid}
-		AND created_by = ${_.serializeUuid(user.uuid)}
+		AND user_id = ${user.id}
 		AND created_at > ${DateFns.addMinutes(new Date, -15)}
 		ORDER BY created_at ASC
 		LIMIT 3

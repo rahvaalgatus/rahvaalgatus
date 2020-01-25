@@ -216,9 +216,9 @@ exports.router.post("/:id/events", next(function*(req, res) {
 
 	var attrs = _.assign(parseEvent(null, req.body), {
 		initiative_uuid: initiative.uuid,
+		user_id: req.user.id,
 		created_at: new Date,
-		updated_at: new Date,
-		created_by: req.user.uuid
+		updated_at: new Date
 	})
 
 	switch (req.body.action) {

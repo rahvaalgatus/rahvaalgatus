@@ -197,7 +197,7 @@ describe("InitiativeEventsController", function() {
 					events.must.eql([new ValidEvent({
 						id: events[0].id,
 						initiative_uuid: initiative.uuid,
-						created_by: _.serializeUuid(this.user.uuid),
+						user_id: this.user.id,
 						origin: "author",
 						title: "Something happened",
 						content: "You shouldn't miss it."
@@ -341,7 +341,7 @@ function mustRateLimit(request) {
 			yield eventsDb.create(_.times(EVENT_RATE, (_i) => new ValidEvent({
 				initiative_uuid: this.initiative.uuid,
 				created_at: DateFns.addSeconds(DateFns.addMinutes(new Date, -15), 1),
-				created_by: _.serializeUuid(this.user.uuid)
+				user_id: this.user.id
 			})))
 
 			var res = yield request.call(this)
@@ -352,7 +352,7 @@ function mustRateLimit(request) {
 			yield eventsDb.create(_.times(EVENT_RATE - 1, (_i) => new ValidEvent({
 				initiative_uuid: this.initiative.uuid,
 				created_at: DateFns.addSeconds(DateFns.addMinutes(new Date, -15), 1),
-				created_by: _.serializeUuid(this.user.uuid)
+				user_id: this.user.id
 			})))
 
 			var res = yield request.call(this)
@@ -363,7 +363,7 @@ function mustRateLimit(request) {
 			yield eventsDb.create(_.times(EVENT_RATE, (_i) => new ValidEvent({
 				initiative_uuid: this.initiative.uuid,
 				created_at: DateFns.addMinutes(new Date, -15),
-				created_by: _.serializeUuid(this.user.uuid)
+				user_id: this.user.id
 			})))
 
 			var res = yield request.call(this)

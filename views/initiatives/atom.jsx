@@ -55,7 +55,7 @@ function EventEntryView(attrs) {
 	var title
 	var content
 	var category = CATEGORIES[event.origin]
-	var author
+	var authorName
 	var decision
 
 	switch (event.type) {
@@ -183,7 +183,7 @@ function EventEntryView(attrs) {
 		case "text":
 			title = event.title
 			content = event.content
-			author = event.origin == "author" ? event.user : null
+			authorName = event.origin == "author" ? event.user_name : null
 			break
 
 		default:
@@ -198,7 +198,7 @@ function EventEntryView(attrs) {
 		<updated>{event.updated_at.toJSON()}</updated>
 		{category ? <category term={category} /> : null}
 		{content ? <content type="text">{content}</content> : null}
-		{author ? <author><name>{author.name}</name></author> : null}
+		{authorName ? <author><name>{authorName}</name></author> : null}
 
 		{sourced ? <source>
 			<id>{initiativeUrl}</id>
