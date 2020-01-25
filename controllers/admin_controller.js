@@ -8,6 +8,7 @@ var {isAdmin} = require("root/lib/user")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var commentsDb = require("root/db/comments_db")
 var next = require("co-next")
+var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var cosDb = require("root").cosDb
 var sqlite = require("root").sqlite
@@ -166,11 +167,30 @@ exports.get("/", next(function*(req, res) {
 	})
 }))
 
+exports.get("/users", next(function*(_req, res) {
+	var users = yield usersDb.search(sql`
+		SELECT * FROM users
+		ORDER BY created_at DESC
+	`)
+
+	res.render("admin/users/index_page.jsx", {users: users})
+}))
+
+exports.get("/users/:id", next(function*(req, res) {
+	var user = yield usersDb.read(sql`
+		SELECT * FROM users WHERE id = ${req.params.id}
+	`)
+
+	if (user == null) throw new HttpError(404)
+
+	res.render("admin/users/read_page.jsx", {user: user})
+}))
+
 exports.use("/initiatives", require("./admin/initiatives_controller").router)
 
 exports.get("/comments", next(function*(_req, res) {
 	var comments = yield commentsDb.search(sql`
-		SELECT comment.*, user.name AS user_name
+		SELECT comment.*, user.id AS user_id, user.name AS user_name
 		FROM comments AS comment
 		JOIN users AS user ON comment.user_id = user.id
 		ORDER BY created_at DESC

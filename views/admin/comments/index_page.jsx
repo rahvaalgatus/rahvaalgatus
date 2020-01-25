@@ -6,9 +6,10 @@ var Comment = require("root/lib/comment")
 var formatDateTime = require("root/lib/i18n").formatDateTime
 
 module.exports = function(attrs) {
+	var req = attrs.req
 	var comments = attrs.comments
 
-	return <Page page="comments" title="Comments" req={attrs.req}>
+	return <Page page="comments" title="Comments" req={req}>
 		<h1 class="admin-heading">Comments</h1>
 		<h2 class="admin-subheading">Latest 15 Comments</h2>
 
@@ -25,7 +26,13 @@ module.exports = function(attrs) {
 				return <tr>
 					<td>
 						{formatDateTime("numeric", comment.created_at)}<br />
-						{comment.user_name}
+
+						<a
+							class="admin-link"
+							href={req.baseUrl + "/users/" + comment.user_id}
+						>
+							{comment.user_name}
+						</a>
 					</td>
 
 					<td>

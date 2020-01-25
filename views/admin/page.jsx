@@ -37,6 +37,14 @@ function Page(attrs, children) {
 
 						<li>
 							<a
+								href={req.rootUrl + "/users"}
+								class={prefixed("/users", req.path)}>
+								Users
+							</a>
+						</li>
+
+						<li>
+							<a
 								href={req.rootUrl + "/initiatives"}
 								class={prefixed("/initiatives", req.path)}>
 								Initiatives
