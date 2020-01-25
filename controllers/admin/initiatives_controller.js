@@ -6,6 +6,7 @@ var HttpError = require("standard-http-error")
 var Time = require("root/lib/time")
 var Image = require("root/lib/image")
 var searchTopics = require("root/lib/citizenos_db").searchTopics
+var usersDb = require("root/db/users_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var imagesDb = require("root/db/initiative_images_db")
 var initiativesDb = require("root/db/initiatives_db")
@@ -93,6 +94,10 @@ exports.router.use("/:id", next(function*(req, res, next) {
 exports.router.get("/:id", next(function*(req, res) {
 	var initiative = req.initiative
 
+	var author = yield usersDb.read(sql`
+		SELECT * FROM users WHERE id = ${initiative.user_id}
+	`)
+
 	var events = yield eventsDb.search(sql`
 		SELECT * FROM initiative_events
 		WHERE initiative_uuid = ${initiative.uuid}
@@ -122,6 +127,7 @@ exports.router.get("/:id", next(function*(req, res) {
 	`)
 
 	res.render("admin/initiatives/read_page.jsx", {
+		author: author,
 		image: image,
 		events: events,
 		subscriberCount: subscriberCount,

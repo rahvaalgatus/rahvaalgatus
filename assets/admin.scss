@@ -347,6 +347,25 @@ textarea.admin-input {
 	}
 }
 
+#user-page {
+	h1 ~ h2 {
+		margin-top: 4rem;
+	}
+
+	#initiatives,
+	#comments {
+		h3 { font-weight: bold; }
+	}
+
+	#initiatives {
+		.unpublished { font-style: italic; }
+	}
+
+	#comments {
+		.reply { font-style: italic; }
+	}
+}
+
 #initiative-page {
 	#production-link {
 		display: block;

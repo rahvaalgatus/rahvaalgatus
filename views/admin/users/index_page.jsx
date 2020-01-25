@@ -21,7 +21,7 @@ module.exports = function(attrs) {
 			</thead>
 
 			<tbody>{users.map(function(user) {
-				var url = req.baseUrl + "/users/" + user.id
+				var url = req.baseUrl + "/" + user.id
 
 				return <tr>
 					<td>

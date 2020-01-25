@@ -21,6 +21,7 @@ module.exports = function(attrs) {
 	var req = attrs.req
 	var topic = attrs.topic
 	var initiative = attrs.initiative
+	var author = attrs.author
 	var image = attrs.image
 	var subscriberCount = attrs.subscriberCount
 	var initiativePath = `${req.baseUrl}/${initiative.uuid}`
@@ -160,6 +161,15 @@ module.exports = function(attrs) {
 						checked={initiative.has_paper_signatures}
 					/>
 				</td>
+			</tr>
+
+			<tr>
+				<th scope="row">Author</th>
+				<td>{author ? <a
+					href={req.rootUrl + "/users/" + author.id}
+					class="admin-link"
+				>{author.name}
+				</a> : null}</td>
 			</tr>
 
 			<tr>
