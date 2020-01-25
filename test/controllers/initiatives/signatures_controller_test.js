@@ -1034,7 +1034,7 @@ describe("SignaturesController", function() {
 						method: "POST",
 						form: {
 							method: "mobile-id",
-							pid: "60001019906",
+							personalId: "60001019906",
 							phoneNumber: "+37200000766"
 						}
 					})
@@ -1108,7 +1108,7 @@ describe("SignaturesController", function() {
 						method: "POST",
 						form: {
 							method: "mobile-id",
-							pid: PERSONAL_ID,
+							personalId: PERSONAL_ID,
 							phoneNumber: "+37200000766"
 						}
 					})
@@ -1146,7 +1146,7 @@ describe("SignaturesController", function() {
 						method: "POST",
 						form: {
 							method: "mobile-id",
-							pid: PERSONAL_ID,
+							personalId: PERSONAL_ID,
 							phoneNumber: "+37200000766"
 						}
 					})
@@ -1184,7 +1184,7 @@ describe("SignaturesController", function() {
 						method: "POST",
 						form: {
 							method: "mobile-id",
-							pid: PERSONAL_ID,
+							personalId: PERSONAL_ID,
 							phoneNumber: "+37200000766"
 						}
 					})
@@ -1249,7 +1249,7 @@ describe("SignaturesController", function() {
 						method: "POST",
 						form: {
 							method: "mobile-id",
-							pid: PERSONAL_ID,
+							personalId: PERSONAL_ID,
 							phoneNumber: "+37200000766"
 						}
 					})
@@ -1341,7 +1341,7 @@ describe("SignaturesController", function() {
 							method: "POST",
 							form: {
 								method: "mobile-id",
-								pid: "60001019906",
+								personalId: "60001019906",
 								phoneNumber: "+37200000766"
 							}
 						})
@@ -1401,7 +1401,7 @@ describe("SignaturesController", function() {
 							method: "POST",
 							form: {
 								method: "mobile-id",
-								pid: "60001019906",
+								personalId: "60001019906",
 								phoneNumber: "+37200000766"
 							}
 						})
@@ -1448,7 +1448,7 @@ describe("SignaturesController", function() {
 							method: "POST",
 							form: {
 								method: "mobile-id",
-								pid: PERSONAL_ID,
+								personalId: PERSONAL_ID,
 								phoneNumber: short
 							}
 						})
@@ -1481,7 +1481,7 @@ describe("SignaturesController", function() {
 							method: "POST",
 							form: {
 								method: "mobile-id",
-								pid: PERSONAL_ID,
+								personalId: PERSONAL_ID,
 								phoneNumber: "+37200000766"
 							}
 						})
@@ -1511,7 +1511,7 @@ describe("SignaturesController", function() {
 						method: "POST",
 						form: {
 							method: "mobile-id",
-							pid: "60001010",
+							personalId: "60001010",
 							phoneNumber: "+37200000766"
 						}
 					})
@@ -1543,7 +1543,7 @@ describe("SignaturesController", function() {
 						method: "POST",
 						form: {
 							method: "mobile-id",
-							pid: "60001010",
+							personalId: "60001010",
 							phoneNumber: "+37200000766"
 						}
 					})
@@ -1572,7 +1572,7 @@ describe("SignaturesController", function() {
 						method: "POST",
 						form: {
 							method: "mobile-id",
-							pid: "60001010",
+							personalId: "60001010",
 							phoneNumber: "+37200000766"
 						}
 					})
@@ -1615,7 +1615,7 @@ describe("SignaturesController", function() {
 							method: "POST",
 							form: {
 								method: "mobile-id",
-								pid: PERSONAL_ID,
+								personalId: PERSONAL_ID,
 								phoneNumber: "+37200000766"
 							}
 						})
@@ -1676,7 +1676,7 @@ describe("SignaturesController", function() {
 						method: "POST",
 						form: {
 							method: "mobile-id",
-							pid: PERSONAL_ID,
+							personalId: PERSONAL_ID,
 							phoneNumber: "+37200000766"
 						}
 					})
@@ -2163,7 +2163,7 @@ describe("SignaturesController", function() {
 						form: {
 							method: "mobile-id",
 							optionId: "0bf34d36-59cd-438f-afd1-9a3a779b78b0",
-							pid: "11412090004",
+							personalId: "11412090004",
 							phoneNumber: "+37200000766"
 						}
 					})
@@ -2226,7 +2226,7 @@ describe("SignaturesController", function() {
 							form: {
 								method: "mobile-id",
 								optionId: "0bf34d36-59cd-438f-afd1-9a3a779b78b0",
-								pid: "11412090004",
+								personalId: "11412090004",
 								phoneNumber: short
 							}
 						})
@@ -2634,7 +2634,11 @@ function* signWithMobileId(router, request, initiative, cert) {
 
 	var signing = yield request(`/initiatives/${initiative.uuid}/signatures`, {
 		method: "POST",
-		form: {method: "mobile-id", pid: "60001019906", phoneNumber: "+37200000766"}
+		form: {
+			method: "mobile-id",
+			personalId: "60001019906",
+			phoneNumber: "+37200000766"
+		}
 	})
 
 	signing.statusCode.must.equal(202)
@@ -2715,7 +2719,7 @@ function* signWithMobileIdViaCitizen(
 		form: {
 			method: "mobile-id",
 			optionId: optId,
-			pid: "11412090004",
+			personalId: "11412090004",
 			phoneNumber: "+37200000766"
 		}
 	})

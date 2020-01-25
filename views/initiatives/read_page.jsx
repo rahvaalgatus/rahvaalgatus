@@ -368,7 +368,7 @@ function ReadPage(attrs) {
 
 							<input
 								type="tel"
-								name="pid"
+								name="personalId"
 								placeholder={t("PLACEHOLDER_PERSONAL_IDENTIFICATION_CODE")}
 								required
 								class="form-input"

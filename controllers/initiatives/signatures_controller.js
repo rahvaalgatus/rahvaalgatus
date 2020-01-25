@@ -85,20 +85,20 @@ exports.router.post("/", next(function*(req, res, next) {
 	if (!initiative.undersignable) return void next()
 
 	var method = res.locals.method = getSigningMethod(req)
-	var cert, err, country, pid, xades, signable, signatureUrl
+	var cert, err, country, personalId, xades, signable, signatureUrl
 
 	switch (method) {
 		case "id-card":
 			cert = Certificate.parse(req.body)
 			if (err = validateCertificate(req.t, cert)) throw err
 
-			;[country, pid] = getCertificatePersonalId(cert)
+			;[country, personalId] = getCertificatePersonalId(cert)
 			xades = newXades(initiative)
 
 			signable = yield signablesDb.create({
 				initiative_uuid: initiative.uuid,
 				country: country,
-				personal_id: pid,
+				personal_id: personalId,
 				method: "id-card",
 				xades: xades
 			})
@@ -116,24 +116,33 @@ exports.router.post("/", next(function*(req, res, next) {
 			logger.info(
 				"Requesting Mobile-Id certificate for %s and %s.",
 				phoneNumber,
-				req.body.pid
+				req.body.personalId
 			)
 
-			cert = yield mobileId.readCertificate(phoneNumber, req.body.pid)
+			cert = yield mobileId.readCertificate(phoneNumber, req.body.personalId)
 			if (err = validateCertificate(req.t, cert)) throw err
 
-			;[country, pid] = getCertificatePersonalId(cert)
+			;[country, personalId] = getCertificatePersonalId(cert)
 			xades = newXades(initiative)
 
 			// The Mobile-Id API returns any signing errors only when its status is
 			// queried, not when signing is initiated.
-			logger.info("Signing via Mobile-Id for %s and %s.", phoneNumber, pid)
-			var sessionId = yield mobileId.sign(phoneNumber, pid, xades.signableHash)
+			logger.info(
+				"Signing via Mobile-Id for %s and %s.",
+				phoneNumber,
+				personalId
+			)
+
+			var sessionId = yield mobileId.sign(
+				phoneNumber,
+				personalId,
+				xades.signableHash
+			)
 
 			signable = yield signablesDb.create({
 				initiative_uuid: initiative.uuid,
 				country: country,
-				personal_id: pid,
+				personal_id: personalId,
 				method: "mobile-id",
 				xades: xades
 			})
@@ -252,7 +261,7 @@ exports.router.post("/",
 				method: "POST",
 				json: {
 					options: [{optionId: req.body.optionId}],
-					pid: req.body.pid,
+					pid: req.body.personalId,
 					phoneNumber: ensureAreaCode(req.body.phoneNumber),
 				}
 			}).catch(catch400)

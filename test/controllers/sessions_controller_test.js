@@ -1031,7 +1031,7 @@ describe("SessionsController", function() {
 					method: "POST",
 					form: {
 						method: "mobile-id",
-						pid: PERSONAL_ID,
+						personalId: PERSONAL_ID,
 						phoneNumber: "+37200000766"
 					}
 				})
@@ -1068,7 +1068,7 @@ describe("SessionsController", function() {
 					method: "POST",
 					form: {
 						method: "mobile-id",
-						pid: PERSONAL_ID,
+						personalId: PERSONAL_ID,
 						phoneNumber: "+37200000766"
 					}
 				})
@@ -1105,7 +1105,7 @@ describe("SessionsController", function() {
 					method: "POST",
 					form: {
 						method: "mobile-id",
-						pid: PERSONAL_ID,
+						personalId: PERSONAL_ID,
 						phoneNumber: "+37200000766"
 					}
 				})
@@ -1163,7 +1163,7 @@ describe("SessionsController", function() {
 					method: "POST",
 					form: {
 						method: "mobile-id",
-						pid: PERSONAL_ID,
+						personalId: PERSONAL_ID,
 						phoneNumber: "+37200000766"
 					}
 				})
@@ -1245,7 +1245,7 @@ describe("SessionsController", function() {
 						method: "POST",
 						form: {
 							method: "mobile-id",
-							pid: "60001019906",
+							personalId: "60001019906",
 							phoneNumber: "+37200000766"
 						}
 					})
@@ -1315,7 +1315,7 @@ describe("SessionsController", function() {
 						method: "POST",
 						form: {
 							method: "mobile-id",
-							pid: "60001019906",
+							personalId: "60001019906",
 							phoneNumber: "+37200000766"
 						}
 					})
@@ -1397,7 +1397,7 @@ describe("SessionsController", function() {
 						method: "POST",
 						form: {
 							method: "mobile-id",
-							pid: PERSONAL_ID,
+							personalId: PERSONAL_ID,
 							phoneNumber: "+37200000766"
 						}
 					})
@@ -1428,7 +1428,7 @@ describe("SessionsController", function() {
 					method: "POST",
 					form: {
 						method: "mobile-id",
-						pid: "60001010",
+						personalId: "60001010",
 						phoneNumber: "+37200000766"
 					}
 				})
@@ -1461,7 +1461,7 @@ describe("SessionsController", function() {
 					method: "POST",
 					form: {
 						method: "mobile-id",
-						pid: "60001010",
+						personalId: "60001010",
 						phoneNumber: "+37200000766"
 					}
 				})
@@ -1491,7 +1491,7 @@ describe("SessionsController", function() {
 					method: "POST",
 					form: {
 						method: "mobile-id",
-						pid: "60001010",
+						personalId: "60001010",
 						phoneNumber: "+37200000766"
 					}
 				})
@@ -1535,7 +1535,7 @@ describe("SessionsController", function() {
 						method: "POST",
 						form: {
 							method: "mobile-id",
-							pid: PERSONAL_ID,
+							personalId: PERSONAL_ID,
 							phoneNumber: "+37200000766"
 						}
 					})
@@ -1596,7 +1596,7 @@ describe("SessionsController", function() {
 					method: "POST",
 					form: {
 						method: "mobile-id",
-						pid: PERSONAL_ID,
+						personalId: PERSONAL_ID,
 						phoneNumber: "+37200000766"
 					}
 				})
@@ -1826,7 +1826,11 @@ function* signInWithMobileId(router, request, cert, headers) {
 	var authenticating = yield request("/sessions", {
 		method: "POST",
 		headers: headers || {},
-		form: {method: "mobile-id", pid: "60001019906", phoneNumber: "+37200000766"}
+		form: {
+			method: "mobile-id",
+			personalId: "60001019906",
+			phoneNumber: "+37200000766"
+		}
 	})
 
 	authenticating.statusCode.must.equal(202)
