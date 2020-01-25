@@ -426,12 +426,12 @@ describe("UserController", function() {
 				it("must update language to " + lang, function*() {
 					var res = yield this.request("/user", {
 						method: "PUT",
-						headers: {Referer: "/initiatives"},
+						headers: {Referer: this.url + "/initiatives"},
 						form: {language: lang}
 					})
 
 					res.statusCode.must.equal(303)
-					res.headers.location.must.equal("/initiatives")
+					res.headers.location.must.equal(this.url + "/initiatives")
 
 					var cookies = parseCookies(res.headers["set-cookie"])
 					cookies.language.value.must.equal(lang)
@@ -509,12 +509,12 @@ describe("UserController", function() {
 				it("must update language to " + lang, function*() {
 					var res = yield this.request("/user", {
 						method: "PUT",
-						headers: {Referer: "/initiatives"},
+						headers: {Referer: this.url + "/initiatives"},
 						form: {language: lang}
 					})
 
 					res.statusCode.must.equal(303)
-					res.headers.location.must.equal("/initiatives")
+					res.headers.location.must.equal(this.url + "/initiatives")
 
 					var cookies = parseCookies(res.headers["set-cookie"])
 					cookies.language.value.must.equal(lang)
