@@ -1340,6 +1340,12 @@ describe("SessionsController", function() {
 					res.statusCode.must.equal(200)
 					res.body.must.include(t("MOBILE_ID_ERROR_INVALID_SIGNATURE"))
 
+					var authentication = yield authenticationsDb.read(sql`
+						SELECT * FROM authentications
+					`)
+
+					authentication.certificate.must.eql(cert)
+
 					yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
 
 					yield sessionsDb.search(sql`

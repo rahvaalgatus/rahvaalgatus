@@ -341,12 +341,16 @@ function* waitForMobileIdAuthentication(authentication, sessionId) {
 		// authentication certificates details.
 		var [cert, signature] = authCertAndHash
 
+		yield authenticationsDb.update(authentication, {
+			certificate: cert,
+			updated_at: new Date
+		})
+
 		if (!cert.hasSigned(authentication.token, signature))
 			throw new MobileIdError("INVALID_SIGNATURE")
 
 		yield authenticationsDb.update(authentication, {
 			authenticated: true,
-			certificate: cert,
 			updated_at: new Date
 		})
 	}
