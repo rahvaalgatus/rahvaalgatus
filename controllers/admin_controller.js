@@ -13,7 +13,6 @@ var cosDb = require("root").cosDb
 var sqlite = require("root").sqlite
 var sql = require("sqlate")
 var concat = Array.prototype.concat.bind(Array.prototype)
-var EMPTY = Object.prototype
 var PARTNER_IDS = concat(Config.apiPartnerId, _.keys(Config.partners))
 exports = module.exports = Router()
 
@@ -171,18 +170,12 @@ exports.use("/initiatives", require("./admin/initiatives_controller").router)
 
 exports.get("/comments", next(function*(_req, res) {
 	var comments = yield commentsDb.search(sql`
-		SELECT *
-		FROM comments
+		SELECT comment.*, user.name AS user_name
+		FROM comments AS comment
+		JOIN users AS user ON comment.user_id = user.id
 		ORDER BY created_at DESC
 		LIMIT 15
 	`)
-
-	var usersById = comments.length > 0 ? _.indexBy(yield cosDb.query(sql`
-		SELECT id, name, email FROM "Users"
-		WHERE id IN ${sql.in(comments.map((c) => c.user_uuid))}
-	`), "id") : EMPTY
-
-	comments.forEach((comment) => comment.user = usersById[comment.user_uuid])
 
 	res.render("admin/comments/index_page.jsx", {comments: comments})
 }))

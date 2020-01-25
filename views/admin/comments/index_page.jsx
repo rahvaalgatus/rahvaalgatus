@@ -25,10 +25,7 @@ module.exports = function(attrs) {
 				return <tr>
 					<td>
 						{formatDateTime("numeric", comment.created_at)}<br />
-
-						<a class="admin-link" href={"mailto:" + comment.user.email}>
-							{comment.user.name}
-						</a>
+						{comment.user_name}
 					</td>
 
 					<td>
