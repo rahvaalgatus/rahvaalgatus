@@ -2464,6 +2464,7 @@ button.inherited {
 	background: $secondary-background;
 
 	#user {
+		padding-bottom: 2rem;
 		text-align: center;
 
 		h1 {
@@ -2481,6 +2482,10 @@ button.inherited {
 			margin-right: auto;
 			max-width: 24rem;
 		}
+	}
+
+	#import-initiatives-from-other-accounts-info {
+		margin-top: 4rem;
 	}
 }
 

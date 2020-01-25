@@ -2,6 +2,7 @@
 var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
+var Config = require("root/config")
 var Page = require("../page")
 var Form = require("../page").Form
 var Flash = require("../page").Flash
@@ -69,6 +70,12 @@ module.exports = function(attrs) {
 
 				<button class="form-submit primary-button">{t("BTN_SAVE")}</button>
 			</Form>
+
+			<p id="import-initiatives-from-other-accounts-info">
+				{Jsx.html(t("USER_PAGE_OLD_ACCOUNTS_INFO", {
+					email: _.escapeHtml(Config.helpEmail)
+				}))}
+			</p>
 		</center></section>
 
 		<section id="initiatives" class="secondary-section initiatives-section">

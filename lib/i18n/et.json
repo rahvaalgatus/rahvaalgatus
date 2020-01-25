@@ -563,6 +563,7 @@
 	"USER_EMAIL_RESEND_CONFIRMATION": "Saada kinnitusmeil uuesti",
 	"USER_PAGE_EMAIL_UNCONFIRMED": "Meiliaadress on veel kinnitamata. Saatsime selleks su meilile ühe lingi.\n",
 	"USER_PAGE_EMAIL_UNCONFIRMED_USING_OLD": "Uus meiliaadress on veel kinnitamata. Saatsime selleks su meilile kinnituslingi.\nSeni kasutame edasi eelmist {{email}} aadressi.",
+	"USER_PAGE_OLD_ACCOUNTS_INFO": "<strong>Otsid oma vanu algatusi?</strong>\nKui olid varem kasutanud parooliga või Google/Facebooki kontoga sisselogimist, tuleb kontod siduda su isikukoodiga. Palun võta selleks meiega ühendust aadressil <a href=\"mailto:{{email}}\">{{email}}</a>.",
 	"USER_UPDATED": "Muudatused salvestatud.",
 	"USER_UPDATED_WITH_EMAIL": "Muudatused salvestatud.\nÜks samm veel — palun kinnita oma meiliaadress. Saatsime selleks su meilile ühe lingi.",
 	"VOTE_DEADLINE_EXPLANATION": "Uuenda tähtaega ja kinnita tekst. Algatus hakkab esitatud vormis koguma toetusallkirju just selle kuupäevani.",
