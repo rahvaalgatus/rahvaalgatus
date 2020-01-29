@@ -1049,8 +1049,8 @@ describe("SessionsController", function() {
 					`).then((row) => row.token)
 
 					respond({
-						result: "OK",
 						state: "COMPLETE",
+						result: "OK",
 						cert: cert.toString("base64"),
 
 						signature: {
@@ -1472,8 +1472,8 @@ describe("SessionsController", function() {
 						`).then((row) => row.token)
 
 						respond({
-							result: "OK",
 							state: "COMPLETE",
+							result: "OK",
 							cert: MOBILE_ID_AUTH_CERTIFICATE.toString("base64"),
 
 							signature: {
@@ -1532,8 +1532,8 @@ describe("SessionsController", function() {
 							`).then((row) => row.token)
 
 							respond({
-								result: "OK",
 								state: "COMPLETE",
+								result: "OK",
 								cert: cert.toString("base64"),
 
 								signature: {
@@ -1577,8 +1577,8 @@ describe("SessionsController", function() {
 						this.request,
 						MOBILE_ID_SIGN_CERTIFICATE,
 						respond.bind(null, {
-							result: "OK",
 							state: "COMPLETE",
+							result: "OK",
 							cert: cert.toString("base64"),
 
 							signature: {
@@ -2570,8 +2570,8 @@ function* signInWithMobileId(router, request, signCert, authCert, headers) {
 			`).then((row) => row.token)
 
 			respond({
-				result: "OK",
 				state: "COMPLETE",
+				result: "OK",
 				cert: authCert.toString("base64"),
 
 				signature: {

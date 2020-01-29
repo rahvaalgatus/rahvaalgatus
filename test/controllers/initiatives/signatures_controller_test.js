@@ -1078,8 +1078,8 @@ describe("SignaturesController", function() {
 						req.params.token.must.equal(sessionId)
 
 						respond({
-							result: "OK",
 							state: "COMPLETE",
+							result: "OK",
 
 							signature: {
 								algorithm: "sha256WithRSAEncryption",
@@ -1284,8 +1284,8 @@ describe("SignaturesController", function() {
 							`).then((row) => row.xades)
 
 							respond({
-								result: "OK",
 								state: "COMPLETE",
+								result: "OK",
 
 								signature: {
 									algorithm: "sha256WithRSAEncryption",
@@ -1348,8 +1348,8 @@ describe("SignaturesController", function() {
 								`).then((row) => row.xades)
 
 								respond({
-									result: "OK",
 									state: "COMPLETE",
+									result: "OK",
 
 									signature: {
 										algorithm: "sha256WithRSAEncryption",
@@ -1392,8 +1392,8 @@ describe("SignaturesController", function() {
 							this.initiative,
 							cert,
 							respond.bind(null, {
-								result: "OK",
 								state: "COMPLETE",
+								result: "OK",
 
 								signature: {
 									algorithm: "sha256WithRSAEncryption",
@@ -1586,7 +1586,7 @@ describe("SignaturesController", function() {
 							this.request,
 							this.initiative,
 							MOBILE_ID_CERTIFICATE,
-							respond.bind(null, {result: code, state: "COMPLETE"})
+							respond.bind(null, {state: "COMPLETE", result: code})
 						)
 
 						errored.statusCode.must.equal(statusCode)
@@ -2554,8 +2554,8 @@ function* signWithMobileId(router, request, initiative, cert, res) {
 			`).then((row) => row.xades)
 
 			respond({
-				result: "OK",
 				state: "COMPLETE",
+				result: "OK",
 
 				signature: {
 					algorithm: "sha256WithRSAEncryption",
