@@ -36,9 +36,71 @@ var usersDb = require("root/db/users_db")
 var authenticationsDb = require("root/db/authentications_db")
 var SESSION_COOKIE_NAME = Config.sessionCookieName
 var ENV = process.env.ENV
-var {MOBILE_ID_ERROR_STATUS_CODES} = require("root/lib/mobile_id")
-var {MOBILE_ID_ERROR_STATUS_MESSAGES} = require("root/lib/mobile_id")
-var {MOBILE_ID_ERROR_TEXTS} = require("root/lib/mobile_id")
+
+var MOBILE_ID_ERRORS = {
+	// Initiation responses:
+	NOT_FOUND: [
+		422,
+		"Not a Mobile-Id User or Personal Id Mismatch",
+		"MOBILE_ID_ERROR_NOT_FOUND"
+	],
+
+	NOT_ACTIVE: [
+		422,
+		"Mobile-Id Certificates Not Activated",
+		"MOBILE_ID_ERROR_NOT_ACTIVE"
+	],
+
+	// Session responses;
+	TIMEOUT: [
+		410,
+		"Mobile-Id Timeout",
+		"MOBILE_ID_ERROR_TIMEOUT"
+	],
+
+	NOT_MID_CLIENT: [
+		410,
+		"Mobile-Id Certificates Not Activated",
+		"MOBILE_ID_ERROR_NOT_ACTIVE"
+	],
+
+	USER_CANCELLED: [
+		410,
+		"Mobile-Id Cancelled",
+		"MOBILE_ID_ERROR_USER_CANCELLED"
+	],
+
+	SIGNATURE_HASH_MISMATCH: [
+		410,
+		"Mobile-Id Signature Hash Mismatch",
+		"MOBILE_ID_ERROR_SIGNATURE_HASH_MISMATCH"
+	],
+
+	PHONE_ABSENT: [
+		410,
+		"Mobile-Id Phone Absent",
+		"MOBILE_ID_ERROR_PHONE_ABSENT"
+	],
+
+	DELIVERY_ERROR: [
+		410,
+		"Mobile-Id Delivery Error",
+		"MOBILE_ID_ERROR_DELIVERY_ERROR"
+	],
+
+	SIM_ERROR: [
+		410,
+		"Mobile-Id SIM Application Error",
+		"MOBILE_ID_ERROR_SIM_ERROR"
+	],
+
+	// Custom responses:
+	INVALID_SIGNATURE: [
+		410,
+		"Invalid Mobile-Id Signature",
+		"MOBILE_ID_ERROR_INVALID_SIGNATURE"
+	]
+}
 
 var SMART_ID_ERRORS = {
 	// Initiation responses:
@@ -172,7 +234,7 @@ exports.router.post("/", next(function*(req, res, next) {
 				tokenHash
 			)
 
-			co(waitForMobileIdAuthentication(authentication, sessionId))
+			co(waitForMobileIdAuthentication(req.t, authentication, sessionId))
 
 			authUrl = req.baseUrl + "/?" + Qs.stringify({
 				"authentication-token": authentication.token.toString("hex"),
@@ -282,17 +344,22 @@ exports.router.post("/",
 			if (authentication.error) {
 				let err = authentication.error
 
-				if (err.name == "MobileIdError") {
-					res.statusCode = MOBILE_ID_ERROR_STATUS_CODES[err.code] || 500
-
-					res.statusMessage = (
-						MOBILE_ID_ERROR_STATUS_MESSAGES[err.code] ||
-						"Unknown Mobile-Id Error"
-					)
-
-					res.flash("error", (
-						req.t(MOBILE_ID_ERROR_TEXTS[err.code]) || req.t("500_BODY")
-					))
+				if (err.name == "HttpError") {
+					res.statusCode = err.code
+					res.statusMessage = err.message
+					res.flash("error", err.description || err.message)
+				}
+				else if (err.name == "MobileIdError") {
+					if (err.code in MOBILE_ID_ERRORS) {
+						res.statusCode = MOBILE_ID_ERRORS[err.code][0]
+						res.statusMessage = MOBILE_ID_ERRORS[err.code][1]
+						res.flash("error", req.t(MOBILE_ID_ERRORS[err.code][2]))
+					}
+					else {
+						res.statusCode = 500
+						res.statusMessage = "Unknown Mobile-Id Error"
+						res.flash("error", req.t("500_BODY"))
+					}
 				}
 				else {
 					res.statusCode = 500
@@ -397,18 +464,16 @@ exports.router.post("/",
 exports.router.use("/", function(err, req, res, next) {
 	if (err instanceof MobileIdError) {
 		var code = getNormalizedMobileIdErrorCode(err)
-		res.statusCode = MOBILE_ID_ERROR_STATUS_CODES[code] || 500
-		res.statusMessage = MOBILE_ID_ERROR_STATUS_MESSAGES[code]
 
-		if (res.statusCode >= 500) throw new HttpError(
-			500,
-			res.statusMessage || "Unknown Mobile-Id Error",
-			{error: err}
-		)
+		if (code in MOBILE_ID_ERRORS) {
+			res.statusCode = MOBILE_ID_ERRORS[code][0]
+			res.statusMessage = MOBILE_ID_ERRORS[code][1]
 
-		res.render("sessions/creating_page.jsx", {
-			error: req.t(MOBILE_ID_ERROR_TEXTS[code]) || err.message
-		})
+			res.render("sessions/creating_page.jsx", {
+				error: req.t(MOBILE_ID_ERRORS[code][2])
+			})
+		}
+		else throw new HttpError(500, "Unknown Mobile-Id Error", {error: err})
 	}
 	else if (err instanceof SmartIdError) {
 		if (err.code in SMART_ID_ERRORS) {
@@ -467,9 +532,9 @@ exports.router.delete("/:id", next(function*(req, res) {
 	res.redirect(303, to)
 }))
 
-function* waitForMobileIdAuthentication(authentication, sessionId) {
+function* waitForMobileIdAuthentication(t, authentication, sessionId) {
 	try {
-		var authCertAndHash
+		var authCertAndHash, err
 
 		for (
 			var started = new Date;
@@ -477,9 +542,14 @@ function* waitForMobileIdAuthentication(authentication, sessionId) {
 		) authCertAndHash = yield mobileId.waitForAuthentication(sessionId, 30)
 		if (authCertAndHash == null) throw new MobileIdError("TIMEOUT")
 
-		// TODO: Compare authentication's country and personalId to the
-		// authentication certificates details.
 		var [cert, signature] = authCertAndHash
+		var [country, personalId] = getCertificatePersonalId(cert)
+		if (err = validateCertificate(t, cert)) throw err
+
+		if (
+			authentication.country != country ||
+			authentication.personal_id != personalId
+		) throw new HttpError(409, "Authentication Certificate Doesn't Match")
 
 		yield authenticationsDb.update(authentication, {
 			certificate: cert,
@@ -496,8 +566,9 @@ function* waitForMobileIdAuthentication(authentication, sessionId) {
 	}
 	catch (ex) {
 		if (!(
+			ex instanceof HttpError ||
 			ex instanceof MobileIdError &&
-			MOBILE_ID_ERROR_STATUS_CODES[getNormalizedMobileIdErrorCode(ex)] < 500
+			getNormalizedMobileIdErrorCode(ex) in MOBILE_ID_ERRORS
 		)) reportError(ex)
 
 		yield authenticationsDb.update(authentication, {

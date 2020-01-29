@@ -36,8 +36,6 @@ var JOHN_ECDSA_KEYS = require("root/test/fixtures").JOHN_ECDSA_KEYS
 var VALID_ISSUERS = require("root/test/fixtures").VALID_ISSUERS
 var JOHN_RSA_KEYS = require("root/test/fixtures").JOHN_RSA_KEYS
 var {PHONE_NUMBER_TRANSFORMS} = require("root/test/fixtures")
-var {MOBILE_ID_CREATE_ERRORS} = require("root/test/fixtures")
-var {MOBILE_ID_SESSION_ERRORS} = require("root/test/fixtures")
 var PERSONAL_ID = "60001019906"
 var SESSION_ID = "7c8bdd56-6772-4264-ba27-bf7a9ef72a11"
 
@@ -56,11 +54,26 @@ var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
 	publicKey: JOHN_RSA_KEYS.publicKey
 }))
 
-var MOBILE_ID_CERTIFICATE = new Certificate(newCertificate({
+var MOBILE_ID_AUTH_CERTIFICATE = new Certificate(newCertificate({
 	subject: {
 		countryName: "EE",
 		organizationName: "ESTEID (MOBIIL-ID)",
 		organizationalUnitName: "authentication",
+		commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+		surname: "SMITH",
+		givenName: "JOHN",
+		serialNumber: PERSONAL_ID
+	},
+
+	issuer: VALID_ISSUERS[0],
+	publicKey: JOHN_RSA_KEYS.publicKey
+}))
+
+var MOBILE_ID_SIGN_CERTIFICATE = new Certificate(newCertificate({
+	subject: {
+		countryName: "EE",
+		organizationName: "ESTEID (MOBIIL-ID)",
+		organizationalUnitName: "digital signature",
 		commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 		surname: "SMITH",
 		givenName: "JOHN",
@@ -84,6 +97,64 @@ var SMART_ID_CERTIFICATE = new Certificate(newCertificate({
 	issuer: VALID_ISSUERS[0],
 	publicKey: JOHN_RSA_KEYS.publicKey
 }))
+
+var MOBILE_ID_CREATE_ERRORS = {
+	NOT_FOUND: [
+		422,
+		"Not a Mobile-Id User or Personal Id Mismatch",
+		"MOBILE_ID_ERROR_NOT_FOUND"
+	],
+
+	NOT_ACTIVE: [
+		422,
+		"Mobile-Id Certificates Not Activated",
+		"MOBILE_ID_ERROR_NOT_ACTIVE"
+	]
+}
+
+var MOBILE_ID_SESSION_ERRORS = {
+	TIMEOUT: [
+		410,
+		"Mobile-Id Timeout",
+		"MOBILE_ID_ERROR_TIMEOUT"
+	],
+
+	NOT_MID_CLIENT: [
+		410,
+		"Mobile-Id Certificates Not Activated",
+		"MOBILE_ID_ERROR_NOT_ACTIVE"
+	],
+
+	USER_CANCELLED: [
+		410,
+		"Mobile-Id Cancelled",
+		"MOBILE_ID_ERROR_USER_CANCELLED"
+	],
+
+	SIGNATURE_HASH_MISMATCH: [
+		410,
+		"Mobile-Id Signature Hash Mismatch",
+		"MOBILE_ID_ERROR_SIGNATURE_HASH_MISMATCH"
+	],
+
+	PHONE_ABSENT: [
+		410,
+		"Mobile-Id Phone Absent",
+		"MOBILE_ID_ERROR_PHONE_ABSENT"
+	],
+
+	DELIVERY_ERROR: [
+		410,
+		"Mobile-Id Delivery Error",
+		"MOBILE_ID_ERROR_DELIVERY_ERROR"
+	],
+
+	SIM_ERROR: [
+		410,
+		"Mobile-Id SIM Application Error",
+		"MOBILE_ID_ERROR_SIM_ERROR"
+	],
+}
 
 var SMART_ID_SESSION_ERRORS = {
 	USER_REFUSED: [
@@ -902,7 +973,17 @@ describe("SessionsController", function() {
 		})
 
 		describe("when authenticating via Mobile-Id", function() {
-			mustSignIn(signInWithMobileId, MOBILE_ID_CERTIFICATE)
+			mustSignIn(
+				(router, request, authCert, headers) => signInWithMobileId(
+					router,
+					request,
+					MOBILE_ID_SIGN_CERTIFICATE,
+					authCert,
+					headers
+				),
+
+				MOBILE_ID_SIGN_CERTIFICATE
+			)
 
 			it("must create user and session", function*() {
 				var cert = new Certificate(newCertificate({
@@ -1052,55 +1133,61 @@ describe("SessionsController", function() {
 				})])
 			})
 
-			it("must respond with 422 given certificate from untrusted issuer",
+			it("must respond with 409 given different auth and sign certificates",
+				function*() {
+				var authCert = new Certificate(newCertificate({
+					subject: {
+						countryName: "EE",
+						organizationName: "ESTEID (MOBIIL-ID)",
+						organizationalUnitName: "authentication",
+						commonName: "SMITH,JOHN,38706181337",
+						surname: "SMITH",
+						givenName: "JOHN",
+						serialNumber: "38706181337"
+					},
+
+					issuer: VALID_ISSUERS[0],
+					publicKey: JOHN_RSA_KEYS.publicKey
+				}))
+
+				var signCert = new Certificate(newCertificate({
+					subject: {
+						countryName: "EE",
+						organizationName: "ESTEID (MOBIIL-ID)",
+						organizationalUnitName: "digital signature",
+						commonName: "SMITH,JOHN,38706181338",
+						surname: "SMITH",
+						givenName: "JOHN",
+						serialNumber: "38706181338"
+					},
+
+					issuer: VALID_ISSUERS[0],
+					publicKey: JOHN_RSA_KEYS.publicKey
+				}))
+
+				var res = yield signInWithMobileId(
+					this.router,
+					this.request,
+					signCert,
+					authCert
+				)
+
+				res.statusCode.must.equal(409)
+				res.statusMessage.must.equal("Authentication Certificate Doesn't Match")
+				res.headers.location.must.equal("/sessions/new")
+
+				var cookies = parseCookies(res.headers["set-cookie"])
+				var flash = parseFlash(cookies.flash.value)
+				flash.error.must.equal("Authentication Certificate Doesn't Match")
+			})
+
+			it("must respond with 422 given non-Estonian's certificate",
 				function*() {
 				var cert = new Certificate(newCertificate({
 					subject: {
 						countryName: "EE",
 						organizationName: "ESTEID (MOBIIL-ID)",
-						organizationalUnitName: "authentication",
-						commonName: `SMITH,JOHN,${PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: PERSONAL_ID
-					},
-
-					issuer: tsl.getBySubjectName([
-						"C=EE",
-						"O=AS Sertifitseerimiskeskus",
-						"OU=Sertifitseerimisteenused",
-						"CN=EID-SK 2007",
-					].join(",")),
-
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
-
-				this.router.post(`${MOBILE_ID_URL.path}certificate`,
-					function(req, res) {
-					respond({result: "OK", cert: cert.toString("base64")}, req, res)
-				})
-
-				var res = yield this.request("/sessions", {
-					method: "POST",
-					form: {
-						method: "mobile-id",
-						personalId: PERSONAL_ID,
-						phoneNumber: "+37200000766"
-					}
-				})
-
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Invalid Issuer")
-				res.headers["content-type"].must.equal("text/html; charset=utf-8")
-				res.body.must.include(t("INVALID_CERTIFICATE_ISSUER"))
-			})
-
-			it("must respond with 422 given non-Estonian's certificate", function*() {
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationName: "ESTEID (MOBIIL-ID)",
-						organizationalUnitName: "authentication",
+						organizationalUnitName: "digital signature",
 						commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 						surname: "SMITH",
 						givenName: "JOHN",
@@ -1129,140 +1216,274 @@ describe("SessionsController", function() {
 				res.statusMessage.must.equal("Estonian Users Only")
 			})
 
-			it("must respond with 422 given future certificate", function*() {
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationName: "ESTEID (MOBIIL-ID)",
-						organizationalUnitName: "authentication",
-						commonName: `SMITH,JOHN,${PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: PERSONAL_ID
-					},
+			describe("for sign certificate", function() {
+				it("must respond with 422 given certificate from untrusted issuer",
+					function*() {
+					var cert = new Certificate(newCertificate({
+						subject: {
+							countryName: "EE",
+							organizationName: "ESTEID (MOBIIL-ID)",
+							organizationalUnitName: "digital signature",
+							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+							surname: "SMITH",
+							givenName: "JOHN",
+							serialNumber: PERSONAL_ID
+						},
 
-					validFrom: DateFns.addSeconds(new Date, 1),
-					issuer: VALID_ISSUERS[0],
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
+						issuer: tsl.getBySubjectName([
+							"C=EE",
+							"O=AS Sertifitseerimiskeskus",
+							"OU=Sertifitseerimisteenused",
+							"CN=EID-SK 2007",
+						].join(",")),
 
-				this.router.post(`${MOBILE_ID_URL.path}certificate`,
-					function(req, res) {
-					respond({result: "OK", cert: cert.toString("base64")}, req, res)
+						publicKey: JOHN_RSA_KEYS.publicKey
+					}))
+
+					this.router.post(`${MOBILE_ID_URL.path}certificate`,
+						function(req, res) {
+						respond({result: "OK", cert: cert.toString("base64")}, req, res)
+					})
+
+					var res = yield this.request("/sessions", {
+						method: "POST",
+						form: {
+							method: "mobile-id",
+							personalId: PERSONAL_ID,
+							phoneNumber: "+37200000766"
+						}
+					})
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Invalid Issuer")
+					res.headers["content-type"].must.equal("text/html; charset=utf-8")
+					res.body.must.include(t("INVALID_CERTIFICATE_ISSUER"))
 				})
 
-				var res = yield this.request("/sessions", {
-					method: "POST",
-					form: {
-						method: "mobile-id",
-						personalId: PERSONAL_ID,
-						phoneNumber: "+37200000766"
-					}
+				it("must respond with 422 given future certificate", function*() {
+					var cert = new Certificate(newCertificate({
+						subject: {
+							countryName: "EE",
+							organizationName: "ESTEID (MOBIIL-ID)",
+							organizationalUnitName: "digital signature",
+							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+							surname: "SMITH",
+							givenName: "JOHN",
+							serialNumber: PERSONAL_ID
+						},
+
+						validFrom: DateFns.addSeconds(new Date, 1),
+						issuer: VALID_ISSUERS[0],
+						publicKey: JOHN_RSA_KEYS.publicKey
+					}))
+
+					this.router.post(`${MOBILE_ID_URL.path}certificate`,
+						function(req, res) {
+						respond({result: "OK", cert: cert.toString("base64")}, req, res)
+					})
+
+					var res = yield this.request("/sessions", {
+						method: "POST",
+						form: {
+							method: "mobile-id",
+							personalId: PERSONAL_ID,
+							phoneNumber: "+37200000766"
+						}
+					})
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Certificate Not Yet Valid")
+					res.headers["content-type"].must.equal("text/html; charset=utf-8")
+					res.body.must.include(t("CERTIFICATE_NOT_YET_VALID"))
 				})
 
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Certificate Not Yet Valid")
-				res.headers["content-type"].must.equal("text/html; charset=utf-8")
-				res.body.must.include(t("CERTIFICATE_NOT_YET_VALID"))
+				it("must respond with 422 given past certificate", function*() {
+					var cert = new Certificate(newCertificate({
+						subject: {
+							countryName: "EE",
+							organizationName: "ESTEID (MOBIIL-ID)",
+							organizationalUnitName: "digital signature",
+							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+							surname: "SMITH",
+							givenName: "JOHN",
+							serialNumber: PERSONAL_ID
+						},
+
+						validUntil: new Date,
+						issuer: VALID_ISSUERS[0],
+						publicKey: JOHN_RSA_KEYS.publicKey
+					}))
+
+					this.router.post(`${MOBILE_ID_URL.path}certificate`,
+						function(req, res) {
+						respond({result: "OK", cert: cert.toString("base64")}, req, res)
+					})
+
+					var res = yield this.request("/sessions", {
+						method: "POST",
+						form: {
+							method: "mobile-id",
+							personalId: PERSONAL_ID,
+							phoneNumber: "+37200000766"
+						}
+					})
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Certificate Expired")
+					res.headers["content-type"].must.equal("text/html; charset=utf-8")
+					res.body.must.include(t("CERTIFICATE_EXPIRED"))
+				})
 			})
 
-			it("must respond with 422 given past certificate", function*() {
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationName: "ESTEID (MOBIIL-ID)",
-						organizationalUnitName: "authentication",
-						commonName: `SMITH,JOHN,${PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: PERSONAL_ID
-					},
+			describe("for auth certificate", function() {
+				it("must respond with 422 given certificate from untrusted issuer",
+					function*() {
+					var cert = new Certificate(newCertificate({
+						subject: {
+							countryName: "EE",
+							organizationName: "ESTEID (MOBIIL-ID)",
+							organizationalUnitName: "authentication",
+							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+							surname: "SMITH",
+							givenName: "JOHN",
+							serialNumber: PERSONAL_ID
+						},
 
-					validUntil: new Date,
-					issuer: VALID_ISSUERS[0],
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
+						issuer: tsl.getBySubjectName([
+							"C=EE",
+							"O=AS Sertifitseerimiskeskus",
+							"OU=Sertifitseerimisteenused",
+							"CN=EID-SK 2007",
+						].join(",")),
 
-				this.router.post(`${MOBILE_ID_URL.path}certificate`,
-					function(req, res) {
-					respond({result: "OK", cert: cert.toString("base64")}, req, res)
+						publicKey: JOHN_RSA_KEYS.publicKey
+					}))
+
+					var res = yield signInWithMobileId(
+						this.router,
+						this.request,
+						MOBILE_ID_SIGN_CERTIFICATE,
+						cert
+					)
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Invalid Issuer")
+
+					var cookies = Http.parseCookies(res.headers["set-cookie"])
+					res = yield this.request(res.headers.location, {
+						headers: {Cookie: Http.serializeCookies(cookies)}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("INVALID_CERTIFICATE_ISSUER"))
 				})
 
-				var res = yield this.request("/sessions", {
-					method: "POST",
-					form: {
-						method: "mobile-id",
-						personalId: PERSONAL_ID,
-						phoneNumber: "+37200000766"
-					}
+				it("must respond with 422 given future certificate", function*() {
+					var cert = new Certificate(newCertificate({
+						subject: {
+							countryName: "EE",
+							organizationName: "ESTEID (MOBIIL-ID)",
+							organizationalUnitName: "authentication",
+							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+							surname: "SMITH",
+							givenName: "JOHN",
+							serialNumber: PERSONAL_ID
+						},
+
+						validFrom: DateFns.addSeconds(new Date, 1),
+						issuer: VALID_ISSUERS[0],
+						publicKey: JOHN_RSA_KEYS.publicKey
+					}))
+
+					var res = yield signInWithMobileId(
+						this.router,
+						this.request,
+						MOBILE_ID_SIGN_CERTIFICATE,
+						cert
+					)
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Certificate Not Yet Valid")
+
+					var cookies = Http.parseCookies(res.headers["set-cookie"])
+					res = yield this.request(res.headers.location, {
+						headers: {Cookie: Http.serializeCookies(cookies)}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("CERTIFICATE_NOT_YET_VALID"))
 				})
 
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Certificate Expired")
-				res.headers["content-type"].must.equal("text/html; charset=utf-8")
-				res.body.must.include(t("CERTIFICATE_EXPIRED"))
+				it("must respond with 422 given past certificate", function*() {
+					var cert = new Certificate(newCertificate({
+						subject: {
+							countryName: "EE",
+							organizationName: "ESTEID (MOBIIL-ID)",
+							organizationalUnitName: "authentication",
+							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+							surname: "SMITH",
+							givenName: "JOHN",
+							serialNumber: PERSONAL_ID
+						},
+
+						validUntil: new Date,
+						issuer: VALID_ISSUERS[0],
+						publicKey: JOHN_RSA_KEYS.publicKey
+					}))
+
+					var res = yield signInWithMobileId(
+						this.router,
+						this.request,
+						MOBILE_ID_SIGN_CERTIFICATE,
+						cert
+					)
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Certificate Expired")
+
+					var cookies = Http.parseCookies(res.headers["set-cookie"])
+					res = yield this.request(res.headers.location, {
+						headers: {Cookie: Http.serializeCookies(cookies)}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("CERTIFICATE_EXPIRED"))
+				})
 			})
 
 			it("must create session if Mobile-Id session running", function*() {
-				this.router.post(`${MOBILE_ID_URL.path}certificate`,
-					function(req, res) {
-					respond({
-						result: "OK",
-						cert: MOBILE_ID_CERTIFICATE.toString("base64")
-					}, req, res)
-				})
+				var waited = 0
+				var res = yield signInWithMobileId(
+					this.router,
+					this.request,
+					MOBILE_ID_SIGN_CERTIFICATE,
+					next(function*(req, res) {
+						if (waited++ < 2) return void respond({state: "RUNNING"}, req, res)
+						res.writeHead(200)
 
-				this.router.post(
-					`${MOBILE_ID_URL.path}authentication`,
-					respond.bind(null, {sessionID: SESSION_ID})
+						var token = yield authenticationsDb.read(sql`
+							SELECT token FROM authentications
+							ORDER BY created_at DESC
+							LIMIT 1
+						`).then((row) => row.token)
+
+						respond({
+							result: "OK",
+							state: "COMPLETE",
+							cert: MOBILE_ID_AUTH_CERTIFICATE.toString("base64"),
+
+							signature: {
+								algorithm: "sha256WithRSAEncryption",
+								value: signWithRsa(
+									JOHN_RSA_KEYS.privateKey,
+									token
+								).toString("base64")
+							}
+						}, req, res)
+					})
 				)
 
-				var waited = 0
-				this.router.get(`${MOBILE_ID_URL.path}authentication/session/:token`,
-					next(function*(req, res) {
-					if (waited++ < 2) return void respond({state: "RUNNING"}, req, res)
-					res.writeHead(200)
-
-					var token = yield authenticationsDb.read(sql`
-						SELECT token FROM authentications
-						ORDER BY created_at DESC
-						LIMIT 1
-					`).then((row) => row.token)
-
-					respond({
-						result: "OK",
-						state: "COMPLETE",
-						cert: MOBILE_ID_CERTIFICATE.toString("base64"),
-
-						signature: {
-							algorithm: "sha256WithRSAEncryption",
-							value: signWithRsa(
-								JOHN_RSA_KEYS.privateKey,
-								token
-							).toString("base64")
-						}
-					}, req, res)
-				}))
-
-				var authenticating = yield this.request("/sessions", {
-					method: "POST",
-					form: {
-						method: "mobile-id",
-						personalId: PERSONAL_ID,
-						phoneNumber: "+37200000766"
-					}
-				})
-
-				authenticating.statusCode.must.equal(202)
-
-				var location = authenticating.headers.location
-				var authenticated = yield this.request(location, {
-					method: "POST",
-					headers: {Accept: `application/x-empty, ${ERR_TYPE}`},
-					form: {method: "mobile-id"}
-				})
-
-				authenticated.statusCode.must.equal(204)
+				res.statusCode.must.equal(204)
 
 				yield usersDb.search(sql`
 					SELECT * FROM users
@@ -1293,54 +1514,31 @@ describe("SessionsController", function() {
 						publicKey: keys.publicKey
 					}))
 
-					this.router.post(`${MOBILE_ID_URL.path}certificate`,
-						function(req, res) {
-						respond({result: "OK", cert: cert.toString("base64")}, req, res)
-					})
-
-					this.router.post(
-						`${MOBILE_ID_URL.path}authentication`,
-						respond.bind(null, {sessionID: SESSION_ID})
-					)
-
-					this.router.get(`${MOBILE_ID_URL.path}authentication/session/:token`,
+					var res = yield signInWithMobileId(
+						this.router,
+						this.request,
+						MOBILE_ID_SIGN_CERTIFICATE,
 						next(function*(req, res) {
-						res.writeHead(200)
+							res.writeHead(200)
 
-						var token = yield authenticationsDb.read(sql`
-							SELECT token FROM authentications
-							ORDER BY created_at DESC
-							LIMIT 1
-						`).then((row) => row.token)
+							var token = yield authenticationsDb.read(sql`
+								SELECT token FROM authentications
+								ORDER BY created_at DESC
+								LIMIT 1
+							`).then((row) => row.token)
 
-						respond({
-							result: "OK",
-							state: "COMPLETE",
-							cert: cert.toString("base64"),
+							respond({
+								result: "OK",
+								state: "COMPLETE",
+								cert: cert.toString("base64"),
 
-							signature: {
-								algorithm: "sha256WithRSAEncryption",
-								value: sign(keys.privateKey, token).toString("base64")
-							}
-						}, req, res)
-					}))
-
-					var authenticating = yield this.request("/sessions", {
-						method: "POST",
-						form: {
-							method: "mobile-id",
-							personalId: "60001019906",
-							phoneNumber: "+37200000766"
-						}
-					})
-
-					authenticating.statusCode.must.equal(202)
-
-					var res = yield this.request(authenticating.headers.location, {
-						method: "POST",
-						headers: {Accept: `application/x-empty, ${ERR_TYPE}`},
-						form: {method: "mobile-id"}
-					})
+								signature: {
+									algorithm: "sha256WithRSAEncryption",
+									value: sign(keys.privateKey, token).toString("base64")
+								}
+							}, req, res)
+						})
+					)
 
 					res.statusCode.must.equal(204)
 
@@ -1370,19 +1568,11 @@ describe("SessionsController", function() {
 						publicKey: keys.publicKey
 					}))
 
-					this.router.post(`${MOBILE_ID_URL.path}certificate`,
-						function(req, res) {
-						respond({result: "OK", cert: cert.toString("base64")}, req, res)
-					})
-
-					this.router.post(
-						`${MOBILE_ID_URL.path}authentication`,
-						respond.bind(null, {sessionID: SESSION_ID})
-					)
-
-					this.router.get(`${MOBILE_ID_URL.path}authentication/session/:token`,
-						function(req, res) {
-						respond({
+					var errored = yield signInWithMobileId(
+						this.router,
+						this.request,
+						MOBILE_ID_SIGN_CERTIFICATE,
+						respond.bind(null, {
 							result: "OK",
 							state: "COMPLETE",
 							cert: cert.toString("base64"),
@@ -1391,25 +1581,8 @@ describe("SessionsController", function() {
 								algorithm: "sha256WithRSAEncryption",
 								value: Crypto.randomBytes(64).toString("base64")
 							}
-						}, req, res)
-					})
-
-					var authenticating = yield this.request("/sessions", {
-						method: "POST",
-						form: {
-							method: "mobile-id",
-							personalId: "60001019906",
-							phoneNumber: "+37200000766"
-						}
-					})
-
-					authenticating.statusCode.must.equal(202)
-
-					var errored = yield this.request(authenticating.headers.location, {
-						method: "POST",
-						headers: {Accept: `application/x-empty, ${ERR_TYPE}`},
-						form: {method: "mobile-id"}
-					})
+						})
+					)
 
 					errored.statusCode.must.equal(410)
 					errored.statusMessage.must.equal("Invalid Mobile-Id Signature")
@@ -1599,40 +1772,12 @@ describe("SessionsController", function() {
 			_.each(MOBILE_ID_SESSION_ERRORS,
 				function([statusCode, statusMessage, error], code) {
 				it(`must respond with error given ${code} while signing`, function*() {
-					this.router.post(`${MOBILE_ID_URL.path}certificate`,
-						function(req, res) {
-						respond({
-							result: "OK",
-							cert: MOBILE_ID_CERTIFICATE.toString("base64")
-						}, req, res)
-					})
-
-					this.router.post(
-						`${MOBILE_ID_URL.path}authentication`,
-						respond.bind(null, {sessionID: SESSION_ID})
+					var errored = yield signInWithMobileId(
+						this.router,
+						this.request,
+						MOBILE_ID_SIGN_CERTIFICATE,
+						respond.bind(null, {state: "COMPLETE", result: code})
 					)
-
-					this.router.get(`${MOBILE_ID_URL.path}authentication/session/:token`,
-						function(req, res) {
-						respond({state: "COMPLETE", result: code}, req, res)
-					})
-
-					var authenticating = yield this.request("/sessions", {
-						method: "POST",
-						form: {
-							method: "mobile-id",
-							personalId: PERSONAL_ID,
-							phoneNumber: "+37200000766"
-						}
-					})
-
-					authenticating.statusCode.must.equal(202)
-
-					var errored = yield this.request(authenticating.headers.location, {
-						method: "POST",
-						headers: {Accept: `application/x-empty, ${ERR_TYPE}`},
-						form: {method: "mobile-id"}
-					})
 
 					errored.statusCode.must.equal(statusCode)
 					errored.statusMessage.must.equal(statusMessage)
@@ -1655,44 +1800,18 @@ describe("SessionsController", function() {
 			})
 
 			it("must time out after 2 minutes", function*() {
-				this.router.post(`${MOBILE_ID_URL.path}certificate`,
-					function(req, res) {
-					respond({
-						result: "OK",
-						cert: MOBILE_ID_CERTIFICATE.toString("base64")
-					}, req, res)
-				})
-
-				this.router.post(
-					`${MOBILE_ID_URL.path}authentication`,
-					respond.bind(null, {sessionID: SESSION_ID})
-				)
-
 				var waited = 0
-				this.router.get(`${MOBILE_ID_URL.path}authentication/session/:token`,
+				var errored = yield signInWithMobileId(
+					this.router,
+					this.request,
+					MOBILE_ID_AUTH_CERTIFICATE,
 					(req, res) => {
-					Url.parse(req.url, true).query.timeoutMs.must.equal("30000")
-					if (waited++ == 0) this.time.tick(119 * 1000)
-					else this.time.tick(1000)
-					respond({state: "RUNNING"}, req, res)
-				})
-
-				var authenticating = yield this.request("/sessions", {
-					method: "POST",
-					form: {
-						method: "mobile-id",
-						personalId: PERSONAL_ID,
-						phoneNumber: "+37200000766"
+						Url.parse(req.url, true).query.timeoutMs.must.equal("30000")
+						if (waited++ == 0) this.time.tick(119 * 1000)
+						else this.time.tick(1000)
+						respond({state: "RUNNING"}, req, res)
 					}
-				})
-
-				authenticating.statusCode.must.equal(202)
-
-				var errored = yield this.request(authenticating.headers.location, {
-					method: "POST",
-					headers: {Accept: `application/x-empty, ${ERR_TYPE}`},
-					form: {method: "mobile-id"}
-				})
+				)
 
 				errored.statusCode.must.equal(410)
 				errored.statusMessage.must.equal("Mobile-Id Timeout")
@@ -2401,9 +2520,9 @@ function* signInWithIdCard(_router, request, cert, headers) {
 	})
 }
 
-function* signInWithMobileId(router, request, cert, headers) {
+function* signInWithMobileId(router, request, signCert, authCert, headers) {
 	router.post(`${MOBILE_ID_URL.path}certificate`, function(req, res) {
-		respond({result: "OK", cert: cert.toString("base64")}, req, res)
+		respond({result: "OK", cert: signCert.toString("base64")}, req, res)
 	})
 
 	router.post(
@@ -2411,27 +2530,29 @@ function* signInWithMobileId(router, request, cert, headers) {
 		respond.bind(null, {sessionID: SESSION_ID})
 	)
 
-	router.get(`${MOBILE_ID_URL.path}authentication/session/:token`,
-		next(function*(req, res) {
-		res.writeHead(200)
+	router.get(
+		`${MOBILE_ID_URL.path}authentication/session/:token`,
+		typeof authCert == "function" ? authCert : next(function*(req, res) {
+			res.writeHead(200)
 
-		var token = yield authenticationsDb.read(sql`
-			SELECT token FROM authentications
-			ORDER BY created_at DESC
-			LIMIT 1
-		`).then((row) => row.token)
+			var token = yield authenticationsDb.read(sql`
+				SELECT token FROM authentications
+				ORDER BY created_at DESC
+				LIMIT 1
+			`).then((row) => row.token)
 
-		respond({
-			result: "OK",
-			state: "COMPLETE",
-			cert: cert.toString("base64"),
+			respond({
+				result: "OK",
+				state: "COMPLETE",
+				cert: authCert.toString("base64"),
 
-			signature: {
-				algorithm: "sha256WithRSAEncryption",
-				value: signWithRsa(JOHN_RSA_KEYS.privateKey, token).toString("base64")
-			}
-		}, req, res)
-	}))
+				signature: {
+					algorithm: "sha256WithRSAEncryption",
+					value: signWithRsa(JOHN_RSA_KEYS.privateKey, token).toString("base64")
+				}
+			}, req, res)
+		})
+	)
 
 	var authenticating = yield request("/sessions", {
 		method: "POST",
