@@ -1654,10 +1654,10 @@ describe("SessionsController", function() {
 			_.each(MOBILE_ID_CREATE_ERRORS,
 				function([statusCode, statusMessage, error], code) {
 				it(`must respond with error given ${code}`, function*() {
-					this.router.post(`${MOBILE_ID_URL.path}certificate`,
-						function(req, res) {
-						respond({result: code}, req, res)
-					})
+					this.router.post(
+						`${MOBILE_ID_URL.path}certificate`,
+						respond.bind(null, {result: code})
+					)
 
 					var res = yield this.request("/sessions", {
 						method: "POST",

@@ -61,64 +61,6 @@ exports.PHONE_NUMBER_TRANSFORMS = {
 	"372-500-1337": "+3725001337"
 }
 
-exports.MOBILE_ID_CREATE_ERRORS = {
-	NOT_FOUND: [
-		422,
-		"Not a Mobile-Id User or Personal Id Mismatch",
-		"MOBILE_ID_ERROR_NOT_FOUND"
-	],
-
-	NOT_ACTIVE: [
-		422,
-		"Mobile-Id Certificates Not Activated",
-		"MOBILE_ID_ERROR_NOT_ACTIVE"
-	]
-}
-
-exports.MOBILE_ID_SESSION_ERRORS = {
-	TIMEOUT: [
-		410,
-		"Mobile-Id Timeout",
-		"MOBILE_ID_ERROR_TIMEOUT"
-	],
-
-	NOT_MID_CLIENT: [
-		410,
-		"Mobile-Id Certificates Not Activated",
-		"MOBILE_ID_ERROR_NOT_ACTIVE"
-	],
-
-	USER_CANCELLED: [
-		410,
-		"Mobile-Id Cancelled",
-		"MOBILE_ID_ERROR_USER_CANCELLED"
-	],
-
-	SIGNATURE_HASH_MISMATCH: [
-		410,
-		"Mobile-Id Signature Hash Mismatch",
-		"MOBILE_ID_ERROR_SIGNATURE_HASH_MISMATCH"
-	],
-
-	PHONE_ABSENT: [
-		410,
-		"Mobile-Id Phone Absent",
-		"MOBILE_ID_ERROR_PHONE_ABSENT"
-	],
-
-	DELIVERY_ERROR: [
-		410,
-		"Mobile-Id Delivery Error",
-		"MOBILE_ID_ERROR_DELIVERY_ERROR"
-	],
-
-	SIM_ERROR: [
-		410,
-		"Mobile-Id SIM Application Error",
-		"MOBILE_ID_ERROR_SIM_ERROR"
-	],
-}
-
 // Load TSL only after setting ISSUER_KEYS as they're used for setting the
 // public keys.
 var tsl = require("root").tsl
