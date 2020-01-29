@@ -14,7 +14,6 @@ var createUser = require("root/test/fixtures").createUser
 var newCitizenUser = require("root/test/citizenos_fixtures").newUser
 var createCitizenUser = require("root/test/citizenos_fixtures").createUser
 var parseCookies = Http.parseCookies
-var parseFlash = Http.parseFlash.bind(null, Config.cookieSecret)
 var newCertificate = require("root/test/fixtures").newCertificate
 var usersDb = require("root/db/users_db")
 var authenticationsDb = require("root/db/authentications_db")
@@ -1177,8 +1176,12 @@ describe("SessionsController", function() {
 				res.headers.location.must.equal("/sessions/new")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
-				flash.error.must.equal("Authentication Certificate Doesn't Match")
+				res = yield this.request(res.headers.location, {
+					headers: {Cookie: Http.serializeCookies(cookies)}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include("Authentication Certificate Doesn't Match")
 			})
 
 			it("must respond with 422 given non-Estonian's certificate",
@@ -2003,8 +2006,12 @@ describe("SessionsController", function() {
 				res.headers.location.must.equal("/sessions/new")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
-				flash.error.must.equal(t("INVALID_CERTIFICATE_ISSUER"))
+				res = yield this.request(res.headers.location, {
+					headers: {Cookie: Http.serializeCookies(cookies)}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("INVALID_CERTIFICATE_ISSUER"))
 			})
 
 			it("must respond with 409 given non-Estonian's certificate", function*() {
@@ -2029,8 +2036,12 @@ describe("SessionsController", function() {
 				res.headers.location.must.equal("/sessions/new")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
-				flash.error.must.equal("Authentication Certificate Doesn't Match")
+				res = yield this.request(res.headers.location, {
+					headers: {Cookie: Http.serializeCookies(cookies)}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include("Authentication Certificate Doesn't Match")
 			})
 
 			it("must respond with 422 given future certificate", function*() {
@@ -2056,8 +2067,12 @@ describe("SessionsController", function() {
 				res.headers.location.must.equal("/sessions/new")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
-				flash.error.must.equal(t("CERTIFICATE_NOT_YET_VALID"))
+				res = yield this.request(res.headers.location, {
+					headers: {Cookie: Http.serializeCookies(cookies)}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("CERTIFICATE_NOT_YET_VALID"))
 			})
 
 			it("must respond with 422 given past certificate", function*() {
@@ -2083,8 +2098,12 @@ describe("SessionsController", function() {
 				res.headers.location.must.equal("/sessions/new")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
-				flash.error.must.equal(t("CERTIFICATE_EXPIRED"))
+				res = yield this.request(res.headers.location, {
+					headers: {Cookie: Http.serializeCookies(cookies)}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("CERTIFICATE_EXPIRED"))
 			})
 
 			it("must create session if Smart-Id session running", function*() {
@@ -2371,8 +2390,12 @@ describe("SessionsController", function() {
 			var cookies = parseCookies(res.headers["set-cookie"])
 			cookies[SESSION_COOKIE_NAME].expires.must.be.lte(new Date)
 
-			var flash = parseFlash(cookies.flash.value)
-			flash.notice.must.equal(t("CURRENT_SESSION_DELETED"))
+			res = yield this.request(res.headers.location, {
+				headers: {Cookie: Http.serializeCookies(cookies)}
+			})
+
+			res.statusCode.must.equal(200)
+			res.body.must.include(t("CURRENT_SESSION_DELETED"))
 
 			yield sessionsDb.read(this.session).must.then.eql({
 				__proto__: this.session,
@@ -2396,8 +2419,12 @@ describe("SessionsController", function() {
 			var cookies = parseCookies(res.headers["set-cookie"])
 			cookies.must.not.have.property(SESSION_COOKIE_NAME)
 
-			var flash = parseFlash(cookies.flash.value)
-			flash.notice.must.equal(t("SESSION_DELETED"))
+			res = yield this.request(res.headers.location, {
+				headers: {Cookie: Http.serializeCookies(cookies)}
+			})
+
+			res.statusCode.must.equal(200)
+			res.body.must.include(t("SESSION_DELETED"))
 
 			yield sessionsDb.read(this.session).must.then.eql(this.session)
 
