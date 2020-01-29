@@ -1182,7 +1182,7 @@ describe("SessionsController", function() {
 				})
 
 				res.statusCode.must.equal(200)
-				res.body.must.include("Authentication Certificate Doesn't Match")
+				res.body.must.include(t("MOBILE_ID_ERROR_AUTH_CERTIFICATE_MISMATCH"))
 			})
 
 			it("must respond with 422 given non-Estonian's certificate",
@@ -2042,7 +2042,7 @@ describe("SessionsController", function() {
 				})
 
 				res.statusCode.must.equal(200)
-				res.body.must.include("Authentication Certificate Doesn't Match")
+				res.body.must.include(t("SMART_ID_ERROR_AUTH_CERTIFICATE_MISMATCH"))
 			})
 
 			it("must respond with 422 given future certificate", function*() {

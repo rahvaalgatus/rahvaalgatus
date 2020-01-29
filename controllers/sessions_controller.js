@@ -95,6 +95,12 @@ var MOBILE_ID_ERRORS = {
 	],
 
 	// Custom responses:
+	CERTIFICATE_MISMATCH: [
+		409,
+		"Authentication Certificate Doesn't Match",
+		"MOBILE_ID_ERROR_AUTH_CERTIFICATE_MISMATCH"
+	],
+
 	INVALID_SIGNATURE: [
 		410,
 		"Invalid Mobile-Id Signature",
@@ -136,6 +142,12 @@ var SMART_ID_ERRORS = {
 	],
 
 	// Custom responses:
+	CERTIFICATE_MISMATCH: [
+		409,
+		"Authentication Certificate Doesn't Match",
+		"SMART_ID_ERROR_AUTH_CERTIFICATE_MISMATCH"
+	],
+
 	INVALID_SIGNATURE: [
 		410,
 		"Invalid Smart-Id Signature",
@@ -549,7 +561,7 @@ function* waitForMobileIdAuthentication(t, authentication, sessionId) {
 		if (
 			authentication.country != country ||
 			authentication.personal_id != personalId
-		) throw new HttpError(409, "Authentication Certificate Doesn't Match")
+		) throw new MobileIdError("CERTIFICATE_MISMATCH")
 
 		yield authenticationsDb.update(authentication, {
 			certificate: cert,
@@ -596,7 +608,7 @@ function* waitForSmartIdAuthentication(t, authentication, session) {
 		if (
 			authentication.country != country ||
 			authentication.personal_id != personalId
-		) throw new HttpError(409, "Authentication Certificate Doesn't Match")
+		) throw new SmartIdError("CERTIFICATE_MISMATCH")
 
 		yield authenticationsDb.update(authentication, {
 			certificate: cert,
