@@ -87,6 +87,18 @@ lazy(exports, "mobileId", function() {
   }
 })
 
+lazy(exports, "smartId", function() {
+	var SmartId = require("undersign/lib/smart_id")
+	var user = Config.smartIdUser
+	var password = Config.smartIdPassword
+
+  switch (ENV) {
+		case "development":
+		case "staging": return SmartId.demo
+		default: return new SmartId({user: user, password: password})
+  }
+})
+
 lazy(exports, "tsl", function() {
 	var Tsl = require("undersign/lib/tsl")
 	var estonia = Tsl.parse(Fs.readFileSync(__dirname + "/config/tsl/ee.xml"))

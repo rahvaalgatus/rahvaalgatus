@@ -5812,8 +5812,8 @@
     },
     "undersign": {
       "version": "0.0.0",
-      "from": "git+https://github.com/moll/js-undersign.git#6d602a17b7d8d965b796a8ecaf21c388b7720323",
-      "resolved": "git+https://github.com/moll/js-undersign.git#6d602a17b7d8d965b796a8ecaf21c388b7720323",
+      "from": "git+https://github.com/moll/js-undersign.git#f5d3d1c177dfc9dc3ce675560addf9997521004a",
+      "resolved": "git+https://github.com/moll/js-undersign.git#f5d3d1c177dfc9dc3ce675560addf9997521004a",
       "dependencies": {
         "yazl": {
           "version": "2.5.1",

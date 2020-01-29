@@ -27,6 +27,7 @@ var next = require("co-next")
 var tsl = require("root").tsl
 var SESSION_COOKIE_NAME = Config.sessionCookieName
 var MOBILE_ID_URL = Url.parse("https://mid.sk.ee/mid-api/")
+var SMART_ID_URL = Url.parse("https://rp-api.smart-id.com/v1/")
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
 var CERTIFICATE_TYPE = "application/pkix-cert"
 var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
@@ -38,6 +39,7 @@ var {PHONE_NUMBER_TRANSFORMS} = require("root/test/fixtures")
 var {MOBILE_ID_CREATE_ERRORS} = require("root/test/fixtures")
 var {MOBILE_ID_SESSION_ERRORS} = require("root/test/fixtures")
 var PERSONAL_ID = "60001019906"
+var SESSION_ID = "7c8bdd56-6772-4264-ba27-bf7a9ef72a11"
 
 var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
 	subject: {
@@ -68,6 +70,46 @@ var MOBILE_ID_CERTIFICATE = new Certificate(newCertificate({
 	issuer: VALID_ISSUERS[0],
 	publicKey: JOHN_RSA_KEYS.publicKey
 }))
+
+var SMART_ID_CERTIFICATE = new Certificate(newCertificate({
+	subject: {
+		countryName: "EE",
+		organizationalUnitName: "AUTHENTICATION",
+		commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+		surname: "SMITH",
+		givenName: "JOHN",
+		serialNumber: `PNOEE-${PERSONAL_ID}`
+	},
+
+	issuer: VALID_ISSUERS[0],
+	publicKey: JOHN_RSA_KEYS.publicKey
+}))
+
+var SMART_ID_SESSION_ERRORS = {
+	USER_REFUSED: [
+		410,
+		"Smart-Id Cancelled",
+		"SMART_ID_ERROR_USER_REFUSED_AUTH"
+	],
+
+	TIMEOUT: [
+		410,
+		"Smart-Id Timeout",
+		"SMART_ID_ERROR_TIMEOUT_AUTH"
+	],
+
+	DOCUMENT_UNUSABLE: [
+		410,
+		"Smart-Id Certificate Unusable",
+		"SMART_ID_ERROR_DOCUMENT_UNUSABLE"
+	],
+
+	WRONG_VC: [
+		410,
+		"Wrong Smart-Id Verification Code Chosen",
+		"SMART_ID_ERROR_WRONG_VERIFICATION_CODE"
+	]
+}
 
 describe("SessionsController", function() {
 	require("root/test/db")()
@@ -150,7 +192,7 @@ describe("SessionsController", function() {
 			describe("as sign-in-able", function() {
 				it("must set session cookie", function*() {
 					var res = yield signIn(this.router, this.request, cert)
-					res.statusCode.must.equal(303)
+					res.statusCode.must.equal(204)
 
 					var cookies = parseCookies(res.headers["set-cookie"])
 					cookies.session_token.path.must.equal("/")
@@ -164,7 +206,7 @@ describe("SessionsController", function() {
 
 				it("must redirect back to user profile", function*() {
 					var res = yield signIn(this.router, this.request, cert)
-					res.statusCode.must.equal(303)
+					res.statusCode.must.equal(204)
 					res.headers.location.must.equal("/user")
 				})
 
@@ -173,7 +215,7 @@ describe("SessionsController", function() {
 						Referer: this.url + "/sessions/new"
 					})
 
-					res.statusCode.must.equal(303)
+					res.statusCode.must.equal(204)
 					res.headers.location.must.equal("/user")
 				})
 
@@ -182,7 +224,7 @@ describe("SessionsController", function() {
 						Referer: this.url + "/initiatives"
 					})
 
-					res.statusCode.must.equal(303)
+					res.statusCode.must.equal(204)
 					res.headers.location.must.equal(this.url + "/initiatives")
 				})
 
@@ -191,13 +233,13 @@ describe("SessionsController", function() {
 						Referer: "http://example.com/evil"
 					})
 
-					res.statusCode.must.equal(303)
+					res.statusCode.must.equal(204)
 					res.headers.location.must.equal("/user")
 				})
 
 				it("must reset the CSRF token", function*() {
 					var res = yield signIn(this.router, this.request, cert)
-					res.statusCode.must.equal(303)
+					res.statusCode.must.equal(204)
 
 					var cookies = parseCookies(res.headers["set-cookie"])
 					cookies.csrf_token.value.must.not.equal(this.csrfToken)
@@ -208,7 +250,7 @@ describe("SessionsController", function() {
 						"User-Agent": "Mozilla"
 					})
 
-					res.statusCode.must.equal(303)
+					res.statusCode.must.equal(204)
 					res.headers.location.must.equal("/user")
 
 					var session = yield sessionsDb.read(sql`SELECT * FROM sessions`)
@@ -233,7 +275,7 @@ describe("SessionsController", function() {
 					}))
 
 					var res = yield signIn(this.router, this.request, cert)
-					res.statusCode.must.equal(303)
+					res.statusCode.must.equal(204)
 
 					var user = yield usersDb.read(sql`SELECT * FROM users`)
 					user.country.must.equal("EE")
@@ -290,7 +332,7 @@ describe("SessionsController", function() {
 					})
 
 					var res = yield signIn(this.router, this.request, cert)
-					res.statusCode.must.equal(303)
+					res.statusCode.must.equal(204)
 
 					var user = yield usersDb.read(sql`SELECT * FROM users`)
 
@@ -338,7 +380,7 @@ describe("SessionsController", function() {
 					})
 
 					var res = yield signIn(this.router, this.request, cert)
-					res.statusCode.must.equal(303)
+					res.statusCode.must.equal(204)
 
 					var user = yield usersDb.read(sql`SELECT * FROM users`)
 
@@ -352,29 +394,6 @@ describe("SessionsController", function() {
 						created_at: cosUser.createdAt,
 						updated_at: cosUser.updatedAt
 					}))
-				})
-
-				it("must not create users for other countries", function*() {
-					var cert = new Certificate(newCertificate({
-						subject: {
-							countryName: "EE",
-							organizationName: "ESTEID",
-							organizationalUnitName: "authentication",
-							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
-							surname: "SMITH",
-							givenName: "JOHN",
-							serialNumber: `PNOLT-${PERSONAL_ID}`
-						},
-
-						issuer: VALID_ISSUERS[0],
-						publicKey: JOHN_RSA_KEYS.publicKey
-					}))
-
-					var res = yield signIn(this.router, this.request, cert)
-					res.statusCode.must.equal(501)
-					res.statusMessage.must.equal("Estonian Users Only")
-
-					yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
 				})
 
 				it("must not re-use other users", function*() {
@@ -404,7 +423,7 @@ describe("SessionsController", function() {
 					})
 
 					var res = yield signIn(this.router, this.request, cert)
-					res.statusCode.must.equal(303)
+					res.statusCode.must.equal(204)
 
 					var cosUsers = yield cosDb.query(sql`
 						SELECT * FROM "Users"
@@ -442,7 +461,7 @@ describe("SessionsController", function() {
 					})
 
 					var res = yield signIn(this.router, this.request, cert)
-					res.statusCode.must.equal(303)
+					res.statusCode.must.equal(204)
 
 					var user = yield usersDb.read(sql`SELECT * FROM users`)
 					user.name.must.equal("Johnny Foursmith")
@@ -466,7 +485,7 @@ describe("SessionsController", function() {
 					}))
 
 					var res = yield signIn(this.router, this.request, cert)
-					res.statusCode.must.equal(303)
+					res.statusCode.must.equal(204)
 
 					var user = yield usersDb.read(sql`SELECT * FROM users`)
 					user.country.must.equal("EE")
@@ -498,7 +517,7 @@ describe("SessionsController", function() {
 						}))
 
 						var res = yield signIn(this.router, this.request, cert)
-						res.statusCode.must.equal(303)
+						res.statusCode.must.equal(204)
 
 						yield usersDb.search(sql`
 							SELECT * FROM users
@@ -612,13 +631,6 @@ describe("SessionsController", function() {
 
 			it("must respond with 422 given certificate from untrusted issuer",
 				function*() {
-				var issuer = tsl.getBySubjectName([
-					"C=EE",
-					"O=AS Sertifitseerimiskeskus",
-					"OU=Sertifitseerimisteenused",
-					"CN=EID-SK 2007",
-				].join(","))
-
 				var cert = new Certificate(newCertificate({
 					subject: {
 						countryName: "EE",
@@ -630,7 +642,13 @@ describe("SessionsController", function() {
 						serialNumber: PERSONAL_ID
 					},
 
-					issuer: issuer,
+					issuer: tsl.getBySubjectName([
+						"C=EE",
+						"O=AS Sertifitseerimiskeskus",
+						"OU=Sertifitseerimisteenused",
+						"CN=EID-SK 2007",
+					].join(",")),
+
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
 
@@ -654,6 +672,44 @@ describe("SessionsController", function() {
 					message: "Invalid Issuer",
 					name: "HttpError",
 					description: t("INVALID_CERTIFICATE_ISSUER")
+				})
+			})
+
+			it("must respond with 422 given non-Estonian's certificate", function*() {
+				var cert = new Certificate(newCertificate({
+					subject: {
+						countryName: "EE",
+						organizationName: "ESTEID",
+						organizationalUnitName: "authentication",
+						commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+						surname: "SMITH",
+						givenName: "JOHN",
+						serialNumber: `PNOLT-${PERSONAL_ID}`
+					},
+
+					issuer: VALID_ISSUERS[0],
+					publicKey: JOHN_RSA_KEYS.publicKey
+				}))
+
+				var res = yield this.request("/sessions", {
+					method: "POST",
+
+					headers: {
+						Accept: `${SIGNABLE_TYPE}, ${ERR_TYPE}`,
+						"Content-Type": CERTIFICATE_TYPE
+					},
+
+					body: cert.toBuffer()
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Estonian Users Only")
+				res.headers["content-type"].must.equal(ERR_TYPE)
+
+				res.body.must.eql({
+					code: 422,
+					message: "Estonian Users Only",
+					name: "HttpError"
 				})
 			})
 
@@ -864,8 +920,6 @@ describe("SessionsController", function() {
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
 
-				var sessionId = "04a630e9-77fa-4dfc-ac5c-7d50b455906e"
-
 				this.router.post(`${MOBILE_ID_URL.path}certificate`,
 					function(req, res) {
 					req.headers.host.must.equal(MOBILE_ID_URL.host)
@@ -898,14 +952,14 @@ describe("SessionsController", function() {
 
 					Buffer.from(req.body.hash, "base64").must.eql(sha256(token))
 
-					respond({sessionID: sessionId}, req, res)
+					respond({sessionID: SESSION_ID}, req, res)
 				}))
 
 				this.router.get(`${MOBILE_ID_URL.path}authentication/session/:token`,
 					next(function*(req, res) {
 					res.writeHead(200)
 					req.headers.host.must.equal(MOBILE_ID_URL.host)
-					req.params.token.must.equal(sessionId)
+					req.params.token.must.equal(SESSION_ID)
 
 					var token = yield authenticationsDb.read(sql`
 						SELECT token FROM authentications
@@ -1000,13 +1054,6 @@ describe("SessionsController", function() {
 
 			it("must respond with 422 given certificate from untrusted issuer",
 				function*() {
-				var issuer = tsl.getBySubjectName([
-					"C=EE",
-					"O=AS Sertifitseerimiskeskus",
-					"OU=Sertifitseerimisteenused",
-					"CN=EID-SK 2007",
-				].join(","))
-
 				var cert = new Certificate(newCertificate({
 					subject: {
 						countryName: "EE",
@@ -1018,7 +1065,13 @@ describe("SessionsController", function() {
 						serialNumber: PERSONAL_ID
 					},
 
-					issuer: issuer,
+					issuer: tsl.getBySubjectName([
+						"C=EE",
+						"O=AS Sertifitseerimiskeskus",
+						"OU=Sertifitseerimisteenused",
+						"CN=EID-SK 2007",
+					].join(",")),
+
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
 
@@ -1040,6 +1093,40 @@ describe("SessionsController", function() {
 				res.statusMessage.must.equal("Invalid Issuer")
 				res.headers["content-type"].must.equal("text/html; charset=utf-8")
 				res.body.must.include(t("INVALID_CERTIFICATE_ISSUER"))
+			})
+
+			it("must respond with 422 given non-Estonian's certificate", function*() {
+				var cert = new Certificate(newCertificate({
+					subject: {
+						countryName: "EE",
+						organizationName: "ESTEID (MOBIIL-ID)",
+						organizationalUnitName: "authentication",
+						commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+						surname: "SMITH",
+						givenName: "JOHN",
+						serialNumber: `PNOLT-${PERSONAL_ID}`
+					},
+
+					issuer: VALID_ISSUERS[0],
+					publicKey: JOHN_RSA_KEYS.publicKey
+				}))
+
+				this.router.post(`${MOBILE_ID_URL.path}certificate`,
+					function(req, res) {
+					respond({result: "OK", cert: cert.toString("base64")}, req, res)
+				})
+
+				var res = yield this.request("/sessions", {
+					method: "POST",
+					form: {
+						method: "mobile-id",
+						personalId: PERSONAL_ID,
+						phoneNumber: "+37200000766"
+					}
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Estonian Users Only")
 			})
 
 			it("must respond with 422 given future certificate", function*() {
@@ -1116,7 +1203,7 @@ describe("SessionsController", function() {
 				res.body.must.include(t("CERTIFICATE_EXPIRED"))
 			})
 
-			it("must create session if session returned early", function*() {
+			it("must create session if Mobile-Id session running", function*() {
 				this.router.post(`${MOBILE_ID_URL.path}certificate`,
 					function(req, res) {
 					respond({
@@ -1125,12 +1212,10 @@ describe("SessionsController", function() {
 					}, req, res)
 				})
 
-				this.router.post(`${MOBILE_ID_URL.path}authentication`,
-					function(req, res) {
-					respond({
-						sessionID: "04a630e9-77fa-4dfc-ac5c-7d50b455906e"
-					}, req, res)
-				})
+				this.router.post(
+					`${MOBILE_ID_URL.path}authentication`,
+					respond.bind(null, {sessionID: SESSION_ID})
+				)
 
 				var waited = 0
 				this.router.get(`${MOBILE_ID_URL.path}authentication/session/:token`,
@@ -1213,10 +1298,9 @@ describe("SessionsController", function() {
 						respond({result: "OK", cert: cert.toString("base64")}, req, res)
 					})
 
-					this.router.post(`${MOBILE_ID_URL.path}authentication`,
-						(req, res) => respond({
-							sessionID: "7c8bdd56-6772-4264-ba27-bf7a9ef72a11"
-						}, req, res)
+					this.router.post(
+						`${MOBILE_ID_URL.path}authentication`,
+						respond.bind(null, {sessionID: SESSION_ID})
 					)
 
 					this.router.get(`${MOBILE_ID_URL.path}authentication/session/:token`,
@@ -1291,10 +1375,9 @@ describe("SessionsController", function() {
 						respond({result: "OK", cert: cert.toString("base64")}, req, res)
 					})
 
-					this.router.post(`${MOBILE_ID_URL.path}authentication`,
-						(req, res) => respond({
-							sessionID: "7c8bdd56-6772-4264-ba27-bf7a9ef72a11"
-						}, req, res)
+					this.router.post(
+						`${MOBILE_ID_URL.path}authentication`,
+						respond.bind(null, {sessionID: SESSION_ID})
 					)
 
 					this.router.get(`${MOBILE_ID_URL.path}authentication/session/:token`,
@@ -1515,8 +1598,7 @@ describe("SessionsController", function() {
 
 			_.each(MOBILE_ID_SESSION_ERRORS,
 				function([statusCode, statusMessage, error], code) {
-				it(`must respond with error given ${code} while signing`,
-					function*() {
+				it(`must respond with error given ${code} while signing`, function*() {
 					this.router.post(`${MOBILE_ID_URL.path}certificate`,
 						function(req, res) {
 						respond({
@@ -1525,16 +1607,14 @@ describe("SessionsController", function() {
 						}, req, res)
 					})
 
-					this.router.post(`${MOBILE_ID_URL.path}authentication`,
-						function(req, res) {
-						respond({
-							sessionID: "04a630e9-77fa-4dfc-ac5c-7d50b455906e"
-						}, req, res)
-					})
+					this.router.post(
+						`${MOBILE_ID_URL.path}authentication`,
+						respond.bind(null, {sessionID: SESSION_ID})
+					)
 
 					this.router.get(`${MOBILE_ID_URL.path}authentication/session/:token`,
 						function(req, res) {
-						respond({result: code, state: "COMPLETE"}, req, res)
+						respond({state: "COMPLETE", result: code}, req, res)
 					})
 
 					var authenticating = yield this.request("/sessions", {
@@ -1583,11 +1663,10 @@ describe("SessionsController", function() {
 					}, req, res)
 				})
 
-				this.router.post(`${MOBILE_ID_URL.path}authentication`, (req, res) => {
-					respond({
-						sessionID: "04a630e9-77fa-4dfc-ac5c-7d50b455906e"
-					}, req, res)
-				})
+				this.router.post(
+					`${MOBILE_ID_URL.path}authentication`,
+					respond.bind(null, {sessionID: SESSION_ID})
+				)
 
 				var waited = 0
 				this.router.get(`${MOBILE_ID_URL.path}authentication/session/:token`,
@@ -1627,6 +1706,525 @@ describe("SessionsController", function() {
 
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("MOBILE_ID_ERROR_TIMEOUT"))
+
+				yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
+
+				yield sessionsDb.search(sql`
+					SELECT * FROM sessions
+				`).must.then.be.empty()
+			})
+		})
+
+		describe("when authenticating via Smart-Id", function() {
+			mustSignIn(signInWithSmartId, SMART_ID_CERTIFICATE)
+			
+			it("must create user and session", function*() {
+				var cert = new Certificate(newCertificate({
+					subject: {
+						countryName: "EE",
+						organizationalUnitName: "AUTHENTICATION",
+						commonName: "SMITH,JOHN,PNOEE-60001019906",
+						surname: "SMITH",
+						givenName: "JOHN",
+						serialNumber: "PNOEE-60001019906"
+					},
+
+					issuer: VALID_ISSUERS[0],
+					publicKey: JOHN_RSA_KEYS.publicKey
+				}))
+
+				var tokenHash
+
+				this.router.post(
+					`${SMART_ID_URL.path}authentication/etsi/PNOEE-60001019906`,
+					function(req, res) {
+					res.writeHead(200)
+					req.headers.host.must.equal(SMART_ID_URL.host)
+
+					req.body.relyingPartyName.must.equal(Config.smartIdUser)
+					req.body.relyingPartyUUID.must.equal(Config.smartIdPassword)
+					req.body.hashType.must.equal("SHA256")
+
+					// The token hash has to be tested later when an authentication has
+					// been created.
+					tokenHash = Buffer.from(req.body.hash, "base64")
+
+					respond({sessionID: SESSION_ID}, req, res)
+				})
+
+				this.router.get(`${SMART_ID_URL.path}session/:token`,
+					next(function*(req, res) {
+					res.writeHead(200)
+					req.headers.host.must.equal(SMART_ID_URL.host)
+					req.params.token.must.equal(SESSION_ID)
+
+					var token = yield authenticationsDb.read(sql`
+						SELECT token FROM authentications
+						ORDER BY created_at DESC
+						LIMIT 1
+					`).then((row) => row.token)
+
+					respond({
+						state: "COMPLETE",
+						result: {endResult: "OK"},
+
+						cert: {
+							certificateLevel: "QUALIFIED",
+							value: cert.toString("base64"),
+						},
+
+						signature: {
+							algorithm: "sha256WithRSAEncryption",
+							value: signWithRsa(
+								JOHN_RSA_KEYS.privateKey,
+								token
+							).toString("base64")
+						}
+					}, req, res)
+				}))
+
+				var authenticating = yield this.request("/sessions", {
+					method: "POST",
+					form: {method: "smart-id", personalId: "60001019906"}
+				})
+
+				authenticating.statusCode.must.equal(202)
+
+				tokenHash.must.eql(sha256(yield authenticationsDb.read(sql`
+					SELECT token FROM authentications
+					ORDER BY created_at DESC
+					LIMIT 1
+				`).then((row) => row.token)))
+
+				var location = authenticating.headers.location
+				var authenticated = yield this.request(location, {
+					method: "POST",
+					headers: {Accept: `application/x-empty, ${ERR_TYPE}`},
+					form: {method: "smart-id"}
+				})
+
+				authenticated.statusCode.must.equal(204)
+				authenticated.headers.location.must.equal("/user")
+
+				var cookies = parseCookies(authenticated.headers["set-cookie"])
+				var sessionToken = Buffer.from(cookies.session_token.value, "hex")
+
+				var authentications = yield authenticationsDb.search(sql`
+					SELECT * FROM authentications
+				`)
+
+				authentications.must.eql([new ValidAuthentication({
+					id: authentications[0].id,
+					authenticated: true,
+					country: "EE",
+					personal_id: "60001019906",
+					method: "smart-id",
+					certificate: authentications[0].certificate,
+					created_ip: "127.0.0.1",
+					created_at: authentications[0].created_at,
+					updated_at: authentications[0].updated_at,
+					token: authentications[0].token
+				})])
+
+				authentications[0].token.must.not.eql(sessionToken)
+
+				var users = yield usersDb.search(sql`SELECT * FROM users`)
+
+				users.must.eql([new ValidUser({
+					id: users[0].id,
+					uuid: users[0].uuid,
+					country: "EE",
+					personal_id: "60001019906",
+					name: "John Smith",
+					language: "et",
+					created_at: users[0].created_at,
+					updated_at: users[0].updated_at
+				})])
+
+				var sessions = yield sessionsDb.search(sql`SELECT * FROM sessions`)
+
+				sessions.must.eql([new ValidSession({
+					id: sessions[0].id,
+					user_id: users[0].id,
+					method: "smart-id",
+					token_sha256: sha256(sessionToken),
+					created_ip: "127.0.0.1",
+					authentication_id: authentications[0].id,
+					created_at: sessions[0].created_at,
+					updated_at: sessions[0].updated_at
+				})])
+			})
+
+			it("must respond with 422 given certificate from untrusted issuer",
+				function*() {
+				var cert = new Certificate(newCertificate({
+					subject: {
+						countryName: "EE",
+						organizationalUnitName: "AUTHENTICATION",
+						commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+						surname: "SMITH",
+						givenName: "JOHN",
+						serialNumber: `PNOEE-${PERSONAL_ID}`
+					},
+
+					issuer: tsl.getBySubjectName([
+						"C=EE",
+						"O=AS Sertifitseerimiskeskus",
+						"OU=Sertifitseerimisteenused",
+						"CN=EID-SK 2007",
+					].join(",")),
+
+					publicKey: JOHN_RSA_KEYS.publicKey
+				}))
+
+				var res = yield signInWithSmartId(this.router, this.request, cert)
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Invalid Issuer")
+				res.headers.location.must.equal("/sessions/new")
+
+				var cookies = parseCookies(res.headers["set-cookie"])
+				var flash = parseFlash(cookies.flash.value)
+				flash.error.must.equal(t("INVALID_CERTIFICATE_ISSUER"))
+			})
+
+			it("must respond with 409 given non-Estonian's certificate", function*() {
+				var cert = new Certificate(newCertificate({
+					subject: {
+						countryName: "EE",
+						organizationalUnitName: "AUTHENTICATION",
+						commonName: `SMITH,JOHN,PNOLT-${PERSONAL_ID}`,
+						surname: "SMITH",
+						givenName: "JOHN",
+						serialNumber: `PNOLT-${PERSONAL_ID}`
+					},
+
+					issuer: VALID_ISSUERS[0],
+					publicKey: JOHN_RSA_KEYS.publicKey
+				}))
+
+				var res = yield signInWithSmartId(this.router, this.request, cert)
+
+				res.statusCode.must.equal(409)
+				res.statusMessage.must.equal("Authentication Certificate Doesn't Match")
+				res.headers.location.must.equal("/sessions/new")
+
+				var cookies = parseCookies(res.headers["set-cookie"])
+				var flash = parseFlash(cookies.flash.value)
+				flash.error.must.equal("Authentication Certificate Doesn't Match")
+			})
+
+			it("must respond with 422 given future certificate", function*() {
+				var cert = new Certificate(newCertificate({
+					subject: {
+						countryName: "EE",
+						organizationalUnitName: "AUTHENTICATION",
+						commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+						surname: "SMITH",
+						givenName: "JOHN",
+						serialNumber: `PNOEE-${PERSONAL_ID}`
+					},
+
+					validFrom: DateFns.addSeconds(new Date, 1),
+					issuer: VALID_ISSUERS[0],
+					publicKey: JOHN_RSA_KEYS.publicKey
+				}))
+
+				var res = yield signInWithSmartId(this.router, this.request, cert)
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Certificate Not Yet Valid")
+				res.headers.location.must.equal("/sessions/new")
+
+				var cookies = parseCookies(res.headers["set-cookie"])
+				var flash = parseFlash(cookies.flash.value)
+				flash.error.must.equal(t("CERTIFICATE_NOT_YET_VALID"))
+			})
+
+			it("must respond with 422 given past certificate", function*() {
+				var cert = new Certificate(newCertificate({
+					subject: {
+						countryName: "EE",
+						organizationalUnitName: "AUTHENTICATION",
+						commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+						surname: "SMITH",
+						givenName: "JOHN",
+						serialNumber: `PNOEE-${PERSONAL_ID}`
+					},
+
+					validUntil: new Date,
+					issuer: VALID_ISSUERS[0],
+					publicKey: JOHN_RSA_KEYS.publicKey
+				}))
+
+				var res = yield signInWithSmartId(this.router, this.request, cert)
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Certificate Expired")
+				res.headers.location.must.equal("/sessions/new")
+
+				var cookies = parseCookies(res.headers["set-cookie"])
+				var flash = parseFlash(cookies.flash.value)
+				flash.error.must.equal(t("CERTIFICATE_EXPIRED"))
+			})
+
+			it("must create session if Smart-Id session running", function*() {
+				var waited = 0
+				var res = yield signInWithSmartId(
+					this.router,
+					this.request,
+					next(function*(req, res) {
+						if (waited++ < 2) return void respond({state: "RUNNING"}, req, res)
+						res.writeHead(200)
+
+						var token = yield authenticationsDb.read(sql`
+							SELECT token FROM authentications
+							ORDER BY created_at DESC
+							LIMIT 1
+						`).then((row) => row.token)
+
+						respond({
+							state: "COMPLETE",
+							result: {endResult: "OK"},
+
+							cert: {
+								certificateLevel: "QUALIFIED",
+								value: SMART_ID_CERTIFICATE.toString("base64")
+							},
+
+							signature: {
+								algorithm: "sha256WithRSAEncryption",
+								value: signWithRsa(
+									JOHN_RSA_KEYS.privateKey,
+									token
+								).toString("base64")
+							}
+						}, req, res)
+					})
+				)
+
+				res.statusCode.must.equal(204)
+
+				yield usersDb.search(sql`
+					SELECT * FROM users
+				`).must.then.not.be.empty()
+
+				yield sessionsDb.search(sql`
+					SELECT * FROM sessions
+				`).must.then.not.be.empty()
+			})
+
+			_.each({
+				RSA: [JOHN_RSA_KEYS, signWithRsa],
+				ECDSA: [JOHN_ECDSA_KEYS, signWithEcdsa]
+			}, function([keys, sign], algo) {
+				it(`must create a session given an ${algo} signature`, function*() {
+					var cert = new Certificate(newCertificate({
+						subject: {
+							countryName: "EE",
+							organizationalUnitName: "AUTHENTICATION",
+							commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+							surname: "SMITH",
+							givenName: "JOHN",
+							serialNumber: `PNOEE-${PERSONAL_ID}`
+						},
+
+						issuer: VALID_ISSUERS[0],
+						publicKey: keys.publicKey
+					}))
+
+					var res = yield signInWithSmartId(
+						this.router,
+						this.request,
+						next(function*(req, res) {
+							res.writeHead(200)
+
+							var token = yield authenticationsDb.read(sql`
+								SELECT token FROM authentications
+								ORDER BY created_at DESC
+								LIMIT 1
+							`).then((row) => row.token)
+
+							respond({
+								state: "COMPLETE",
+								result: {endResult: "OK"},
+								cert: {value: cert.toString("base64")},
+
+								signature: {
+									algorithm: "sha256WithRSAEncryption",
+									value: sign(keys.privateKey, token).toString("base64")
+								}
+							}, req, res)
+						})
+					)
+
+					res.statusCode.must.equal(204)
+
+					yield usersDb.search(sql`
+						SELECT * FROM users
+					`).must.then.not.be.empty()
+
+					yield sessionsDb.search(sql`
+						SELECT * FROM sessions
+					`).must.then.not.be.empty()
+				})
+
+				it(`must respond with error given an invalid ${algo} signature`,
+					function*() {
+					var cert = new Certificate(newCertificate({
+						subject: {
+							countryName: "EE",
+							organizationalUnitName: "AUTHENTICATION",
+							commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+							surname: "SMITH",
+							givenName: "JOHN",
+							serialNumber: `PNOEE-${PERSONAL_ID}`
+						},
+
+						issuer: VALID_ISSUERS[0],
+						publicKey: keys.publicKey
+					}))
+
+					var errored = yield signInWithSmartId(
+						this.router,
+						this.request,
+						respond.bind(null, {
+							state: "COMPLETE",
+							result: {endResult: "OK"},
+							cert: {value: cert.toString("base64")},
+
+							signature: {
+								algorithm: "sha256WithRSAEncryption",
+								value: Crypto.randomBytes(64).toString("base64")
+							}
+						})
+					)
+
+					errored.statusCode.must.equal(410)
+					errored.statusMessage.must.equal("Invalid Smart-Id Signature")
+					errored.headers.location.must.equal("/sessions/new")
+
+					var cookies = Http.parseCookies(errored.headers["set-cookie"])
+					var res = yield this.request(errored.headers.location, {
+						headers: {Cookie: Http.serializeCookies(cookies)}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("SMART_ID_ERROR_INVALID_SIGNATURE"))
+
+					var authentication = yield authenticationsDb.read(sql`
+						SELECT * FROM authentications
+					`)
+
+					authentication.certificate.must.eql(cert)
+
+					yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
+
+					yield sessionsDb.search(sql`
+						SELECT * FROM sessions
+					`).must.then.be.empty()
+				})
+			})
+
+			it("must respond with 422 given invalid personal id", function*() {
+				this.router.post(`${SMART_ID_URL.path}authentication/etsi/:id`,
+					function(req, res) {
+					res.statusCode = 404
+					respond({code: 404, message: "Not Found"}, req, res)
+				})
+
+				var res = yield this.request("/sessions", {
+					method: "POST",
+					form: {method: "smart-id", personalId: "60001011337"}
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Not a Smart-Id User")
+				res.body.must.include(t("SMART_ID_ERROR_NOT_FOUND"))
+
+				yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
+
+				yield sessionsDb.search(sql`
+					SELECT * FROM sessions
+				`).must.then.be.empty()
+			})
+
+			it("must respond with 500 given Bad Request", function*() {
+				this.router.post(`${SMART_ID_URL.path}authentication/etsi/:id`,
+					function(req, res) {
+					res.statusCode = 400
+					respond({code: 400, message: "Bad Request"}, req, res)
+				})
+
+				var res = yield this.request("/sessions", {
+					method: "POST",
+					form: {method: "smart-id", personalId: "60001011337"}
+				})
+
+				res.statusCode.must.equal(500)
+				res.statusMessage.must.equal("Unknown Smart-Id Error")
+				res.body.must.not.include("FOOLANG")
+
+				yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
+
+				yield sessionsDb.search(sql`
+					SELECT * FROM sessions
+				`).must.then.be.empty()
+			})
+
+			_.each(SMART_ID_SESSION_ERRORS,
+				function([statusCode, statusMessage, error], code) {
+				it(`must respond with error given ${code} while signing`, function*() {
+					var errored = yield signInWithSmartId(
+						this.router,
+						this.request,
+						respond.bind(null, {state: "COMPLETE", result: {endResult: code}})
+					)
+
+					errored.statusCode.must.equal(statusCode)
+					errored.statusMessage.must.equal(statusMessage)
+					errored.headers.location.must.equal("/sessions/new")
+
+					var cookies = Http.parseCookies(errored.headers["set-cookie"])
+					var res = yield this.request(errored.headers.location, {
+						headers: {Cookie: Http.serializeCookies(cookies)}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t(error))
+
+					yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
+
+					yield sessionsDb.search(sql`
+						SELECT * FROM sessions
+					`).must.then.be.empty()
+				})
+			})
+
+			it("must time out after 2 minutes", function*() {
+				var waited = 0
+				var errored = yield signInWithSmartId(
+					this.router,
+					this.request,
+					(req, res) => {
+						if (waited++ == 0) this.time.tick(119 * 1000)
+						else this.time.tick(1000)
+						respond({state: "RUNNING"}, req, res)
+					}
+				)
+
+				errored.statusCode.must.equal(410)
+				errored.statusMessage.must.equal("Smart-Id Timeout")
+				errored.headers.location.must.equal("/sessions/new")
+				waited.must.equal(2)
+
+				var cookies = Http.parseCookies(errored.headers["set-cookie"])
+				var res = yield this.request(errored.headers.location, {
+					headers: {Cookie: Http.serializeCookies(cookies)}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("SMART_ID_ERROR_TIMEOUT_AUTH"))
 
 				yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
 
@@ -1793,7 +2391,12 @@ function* signInWithIdCard(_router, request, cert, headers) {
 
 	return request(authenticating.headers.location, {
 		method: "POST",
-		headers: {"Content-Type": SIGNATURE_TYPE},
+
+		headers: {
+			Accept: `application/x-empty, ${ERR_TYPE}`,
+			"Content-Type": SIGNATURE_TYPE
+		},
+
 		body: signWithRsa(JOHN_RSA_KEYS.privateKey, authentication.token)
 	})
 }
@@ -1803,9 +2406,10 @@ function* signInWithMobileId(router, request, cert, headers) {
 		respond({result: "OK", cert: cert.toString("base64")}, req, res)
 	})
 
-	router.post(`${MOBILE_ID_URL.path}authentication`, function(req, res) {
-		respond({sessionID: "7c8bdd56-6772-4264-ba27-bf7a9ef72a11"}, req, res)
-	})
+	router.post(
+		`${MOBILE_ID_URL.path}authentication`,
+		respond.bind(null, {sessionID: SESSION_ID})
+	)
 
 	router.get(`${MOBILE_ID_URL.path}authentication/session/:token`,
 		next(function*(req, res) {
@@ -1843,7 +2447,56 @@ function* signInWithMobileId(router, request, cert, headers) {
 
 	return request(authenticating.headers.location, {
 		method: "POST",
+		headers: {Accept: `application/x-empty, ${ERR_TYPE}`},
 		form: {method: "mobile-id"}
+	})
+}
+
+function* signInWithSmartId(router, request, cert, headers) {
+	router.post(
+		`${SMART_ID_URL.path}authentication/etsi/:id`,
+		respond.bind(null, {sessionID: SESSION_ID})
+	)
+
+	router.get(
+		`${SMART_ID_URL.path}session/:token`,
+		typeof cert == "function" ? cert : next(function*(req, res) {
+			res.writeHead(200)
+
+			var token = yield authenticationsDb.read(sql`
+				SELECT token FROM authentications
+				ORDER BY created_at DESC
+				LIMIT 1
+			`).then((row) => row.token)
+
+			respond({
+				state: "COMPLETE",
+				result: {endResult: "OK"},
+				cert: {
+					certificateLevel: "QUALIFIED",
+					value: cert.toString("base64")
+				},
+
+				signature: {
+					algorithm: "sha256WithRSAEncryption",
+					value: signWithRsa(JOHN_RSA_KEYS.privateKey, token).toString("base64")
+				}
+			}, req, res)
+		})
+	)
+
+	var authenticating = yield request("/sessions", {
+		method: "POST",
+		headers: headers || {},
+		form: {method: "smart-id", personalId: "60001019906"}
+	})
+
+	authenticating.statusCode.must.equal(202)
+
+	return request(authenticating.headers.location, {
+		method: "POST",
+		headers: {Accept: `application/x-empty, ${ERR_TYPE}`},
+		form: {method: "smart-id"}
 	})
 }
 

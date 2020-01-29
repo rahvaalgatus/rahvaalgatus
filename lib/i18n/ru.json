@@ -103,6 +103,7 @@
 	"SHARE_ON_FACEBOOK": "Facebook",
 	"SHARE_ON_TWITTER": "Twitter",
 	"SIGN_THIS_DOCUMENT": "ПОДПИСАТЬ ДОКУМЕНТ",
+	"SMART_ID_ERROR_TIMEOUT_AUTH": "Процесс подписания занял слишком много времени и голос остался не засчитан. Пожалуйста, начните сначала.",
 	"START_DISCUSSION": "СОЗДАЙТЕ ОБРАЩЕНИЕ",
 	"SUPPORT_BUTTON": "ПОДДЕРЖАТЬ",
 	"SUPPORT_LABEL": "Сумма пожертвования в евро",

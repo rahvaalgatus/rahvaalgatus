@@ -399,6 +399,7 @@
 	"SIGNED_INITIATIVES": "Signed",
 	"SIGNIN_PAGE_TITLE": "Log In or Register",
 	"SIGN_THIS_DOCUMENT": "SIGN INITIATIVE",
+	"SMART_ID_ERROR_TIMEOUT_AUTH": "The signing request has expired. To vote, please start over.",
 	"START_DISCUSSION": "CREATE AN INITIATIVE ",
 	"SUBSCRIBE_TO_COMMENTS_WHEN_COMMENTING": "Subscribe to new comments.",
 	"SUBSCRIBE_TO_INITIATIVES_BUTTON": "Subscribe to Initiatives",

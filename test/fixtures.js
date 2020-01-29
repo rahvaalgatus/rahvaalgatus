@@ -36,7 +36,8 @@ exports.ISSUER_KEYS = _.mapValues({
 	"EID-SK 2007": "eid_2007_rsa",
 	"ESTEID-SK 2011": "esteid_2011_rsa",
 	"ESTEID-SK 2015": "esteid_2015_rsa",
-	"ESTEID2018": "esteid_2018_ecdsa"
+	"ESTEID2018": "esteid_2018_ecdsa",
+	"EID-SK 2016": "eid_2016_rsa"
 }, (path) => readKeyPairSync(
 	__dirname + `/fixtures/${path}.key`,
 	__dirname + `/fixtures/${path}.pub`
@@ -139,6 +140,11 @@ exports.VALID_ISSUERS = [[
 	"O=SK ID Solutions AS",
 	"2.5.4.97=#0c0e4e545245452d3130373437303133",
 	"CN=ESTEID2018"
+], [
+	"C=EE",
+	"O=AS Sertifitseerimiskeskus",
+	"2.5.4.97=#0c0e4e545245452d3130373437303133",
+	"CN=EID-SK 2016"
 ]].map((parts) => parts.join(",")).map(tsl.getBySubjectName.bind(tsl))
 
 // TODO: Add the CSRF token to the header by default.

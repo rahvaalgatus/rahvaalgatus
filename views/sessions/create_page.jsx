@@ -4,6 +4,7 @@ var Jsx = require("j6pack")
 var Page = require("../page")
 var Form = require("../page").Form
 var Flash = require("../page").Flash
+var Config = require("root/config")
 var I18n = require("root/lib/i18n")
 var javascript = require("root/lib/jsx").javascript
 var stringify = require("root/lib/json").stringify
@@ -85,6 +86,37 @@ module.exports = function(attrs) {
 						Logi sisse Mobiil-Id-ga
 					</button>
 				</Form>
+
+				{Config.smartId ? <Form
+					req={req}
+					id="smart-id-form"
+					method="post"
+					action="/sessions"
+				>
+					<h2>
+						<img src="/assets/smart-id.svg" />
+						Smart-Id
+					</h2>
+
+					<label class="form-label">
+						Isikukood
+
+						<input
+							type="tel"
+							name="personalId"
+							placeholder={t("PLACEHOLDER_PERSONAL_IDENTIFICATION_CODE")}
+							required
+							class="form-input"
+						/>
+					</label>
+
+					<button
+						name="method"
+						value="smart-id"
+						class="secondary-button">
+						Logi sisse Smart-Id-ga
+					</button>
+				</Form> : null}
 			</div>
 
 			<script>{javascript`

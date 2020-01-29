@@ -41,5 +41,10 @@
 		"O=AS Sertifitseerimiskeskus",
 		"2.5.4.97=#0c0e4e545245452d3130373437303133",
 		"CN=TEST of ESTEID-SK 2015"
+	], [
+		"C=EE",
+		"O=AS Sertifitseerimiskeskus",
+		"2.5.4.97=#0c0e4e545245452d3130373437303133",
+		"CN=TEST of EID-SK 2016"
 	]]
 }

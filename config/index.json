@@ -28,6 +28,9 @@
 	"undersignable": false,
 	"mobileIdUser": null,
 	"mobileIdPassword": null,
+	"smartId": true,
+	"smartIdUser": null,
+	"smartIdPassword": null,
 	"timemarkUrl": null,
 	"timestampUrl": null,
 	"parliamentEmail": null,
@@ -97,5 +100,10 @@
 		"O=SK ID Solutions AS",
 		"2.5.4.97=#0c0e4e545245452d3130373437303133",
 		"CN=ESTEID2018"
+	], [
+		"C=EE",
+		"O=AS Sertifitseerimiskeskus",
+		"2.5.4.97=#0c0e4e545245452d3130373437303133",
+		"CN=EID-SK 2016"
 	]]
 }
