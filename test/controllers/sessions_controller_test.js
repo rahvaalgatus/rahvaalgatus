@@ -46,7 +46,7 @@ var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
 		commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 		surname: "SMITH",
 		givenName: "JOHN",
-		serialNumber: PERSONAL_ID
+		serialNumber: `PNOEE-${PERSONAL_ID}`
 	},
 
 	issuer: VALID_ISSUERS[0],
@@ -61,7 +61,7 @@ var MOBILE_ID_AUTH_CERTIFICATE = new Certificate(newCertificate({
 		commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 		surname: "SMITH",
 		givenName: "JOHN",
-		serialNumber: PERSONAL_ID
+		serialNumber: `PNOEE-${PERSONAL_ID}`
 	},
 
 	issuer: VALID_ISSUERS[0],
@@ -76,7 +76,7 @@ var MOBILE_ID_SIGN_CERTIFICATE = new Certificate(newCertificate({
 		commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 		surname: "SMITH",
 		givenName: "JOHN",
-		serialNumber: PERSONAL_ID
+		serialNumber: `PNOEE-${PERSONAL_ID}`
 	},
 
 	issuer: VALID_ISSUERS[0],
@@ -337,7 +337,7 @@ describe("SessionsController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						issuer: VALID_ISSUERS[0],
@@ -379,7 +379,7 @@ describe("SessionsController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						issuer: VALID_ISSUERS[0],
@@ -429,7 +429,7 @@ describe("SessionsController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						issuer: VALID_ISSUERS[0],
@@ -475,7 +475,7 @@ describe("SessionsController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						issuer: VALID_ISSUERS[0],
@@ -511,7 +511,7 @@ describe("SessionsController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						issuer: VALID_ISSUERS[0],
@@ -538,7 +538,8 @@ describe("SessionsController", function() {
 					user.official_name.must.equal("John Smith")
 				})
 
-				it("must create a session given a PNO certificate", function*() {
+				it("must create a session given a non-ETSI semantic personal id",
+					function*() {
 					var cert = new Certificate(newCertificate({
 						subject: {
 							countryName: "EE",
@@ -547,7 +548,7 @@ describe("SessionsController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: `PNOEE-${PERSONAL_ID}`
+							serialNumber: PERSONAL_ID
 						},
 
 						issuer: VALID_ISSUERS[0],
@@ -579,7 +580,7 @@ describe("SessionsController", function() {
 								commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 								surname: "SMITH",
 								givenName: "JOHN",
-								serialNumber: PERSONAL_ID
+								serialNumber: `PNOEE-${PERSONAL_ID}`
 							},
 
 							issuer: issuer,
@@ -610,10 +611,10 @@ describe("SessionsController", function() {
 						countryName: "EE",
 						organizationName: "ESTEID",
 						organizationalUnitName: "authentication",
-						commonName: "SMITH,JOHN,60001019906",
+						commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 						surname: "SMITH",
 						givenName: "JOHN",
-						serialNumber: "60001019906"
+						serialNumber: `PNOEE-${PERSONAL_ID}`
 					},
 
 					issuer: VALID_ISSUERS[0],
@@ -661,7 +662,7 @@ describe("SessionsController", function() {
 					id: authentications[0].id,
 					authenticated: true,
 					country: "EE",
-					personal_id: "60001019906",
+					personal_id: PERSONAL_ID,
 					method: "id-card",
 					certificate: authentications[0].certificate,
 					created_ip: "127.0.0.1",
@@ -709,7 +710,7 @@ describe("SessionsController", function() {
 						commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 						surname: "SMITH",
 						givenName: "JOHN",
-						serialNumber: PERSONAL_ID
+						serialNumber: `PNOEE-${PERSONAL_ID}`
 					},
 
 					issuer: tsl.getBySubjectName([
@@ -792,7 +793,7 @@ describe("SessionsController", function() {
 						commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 						surname: "SMITH",
 						givenName: "JOHN",
-						serialNumber: PERSONAL_ID
+						serialNumber: `PNOEE-${PERSONAL_ID}`
 					},
 
 					validFrom: DateFns.addSeconds(new Date, 1),
@@ -832,7 +833,7 @@ describe("SessionsController", function() {
 						commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 						surname: "SMITH",
 						givenName: "JOHN",
-						serialNumber: PERSONAL_ID
+						serialNumber: `PNOEE-${PERSONAL_ID}`
 					},
 
 					validUntil: new Date,
@@ -876,7 +877,7 @@ describe("SessionsController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						issuer: VALID_ISSUERS[0],
@@ -926,7 +927,7 @@ describe("SessionsController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						issuer: VALID_ISSUERS[0],
@@ -990,10 +991,10 @@ describe("SessionsController", function() {
 						countryName: "EE",
 						organizationName: "ESTEID (MOBIIL-ID)",
 						organizationalUnitName: "authentication",
-						commonName: "SMITH,JOHN,60001019906",
+						commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 						surname: "SMITH",
 						givenName: "JOHN",
-						serialNumber: "60001019906"
+						serialNumber: `PNOEE-${PERSONAL_ID}`
 					},
 
 					issuer: VALID_ISSUERS[0],
@@ -1142,7 +1143,7 @@ describe("SessionsController", function() {
 						commonName: "SMITH,JOHN,38706181337",
 						surname: "SMITH",
 						givenName: "JOHN",
-						serialNumber: "38706181337"
+						serialNumber: "PNOEE-38706181337"
 					},
 
 					issuer: VALID_ISSUERS[0],
@@ -1157,7 +1158,7 @@ describe("SessionsController", function() {
 						commonName: "SMITH,JOHN,38706181338",
 						surname: "SMITH",
 						givenName: "JOHN",
-						serialNumber: "38706181338"
+						serialNumber: "PNOEE-38706181338"
 					},
 
 					issuer: VALID_ISSUERS[0],
@@ -1230,7 +1231,7 @@ describe("SessionsController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						issuer: tsl.getBySubjectName([
@@ -1272,7 +1273,7 @@ describe("SessionsController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						validFrom: DateFns.addSeconds(new Date, 1),
@@ -1309,7 +1310,7 @@ describe("SessionsController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						validUntil: new Date,
@@ -1349,7 +1350,7 @@ describe("SessionsController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						issuer: tsl.getBySubjectName([
@@ -1390,7 +1391,7 @@ describe("SessionsController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						validFrom: DateFns.addSeconds(new Date, 1),
@@ -1426,7 +1427,7 @@ describe("SessionsController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						validUntil: new Date,
@@ -1510,7 +1511,7 @@ describe("SessionsController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						issuer: VALID_ISSUERS[0],
@@ -1564,7 +1565,7 @@ describe("SessionsController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						issuer: VALID_ISSUERS[0],
@@ -1845,10 +1846,10 @@ describe("SessionsController", function() {
 					subject: {
 						countryName: "EE",
 						organizationalUnitName: "AUTHENTICATION",
-						commonName: "SMITH,JOHN,PNOEE-60001019906",
+						commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
 						surname: "SMITH",
 						givenName: "JOHN",
-						serialNumber: "PNOEE-60001019906"
+						serialNumber: `PNOEE-${PERSONAL_ID}`
 					},
 
 					issuer: VALID_ISSUERS[0],
