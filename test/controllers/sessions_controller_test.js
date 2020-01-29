@@ -35,7 +35,7 @@ var JOHN_ECDSA_KEYS = require("root/test/fixtures").JOHN_ECDSA_KEYS
 var VALID_ISSUERS = require("root/test/fixtures").VALID_ISSUERS
 var JOHN_RSA_KEYS = require("root/test/fixtures").JOHN_RSA_KEYS
 var {PHONE_NUMBER_TRANSFORMS} = require("root/test/fixtures")
-var PERSONAL_ID = "60001019906"
+var PERSONAL_ID = "38706181337"
 var SESSION_ID = "7c8bdd56-6772-4264-ba27-bf7a9ef72a11"
 
 var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
@@ -472,10 +472,10 @@ describe("SessionsController", function() {
 							countryName: "EE",
 							organizationName: "ESTEID",
 							organizationalUnitName: "authentication",
-							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+							commonName: `SMITH,JOHN,38706181337`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: `PNOEE-${PERSONAL_ID}`
+							serialNumber: `PNOEE-38706181337`
 						},
 
 						issuer: VALID_ISSUERS[0],
@@ -487,7 +487,7 @@ describe("SessionsController", function() {
 					yield cosDb("UserConnections").insert({
 						userId: cosUser.id,
 						connectionId: "esteid",
-						connectionUserId: "38706181337",
+						connectionUserId: "38706181338",
 						createdAt: new Date,
 						updatedAt: new Date
 					})
@@ -679,7 +679,7 @@ describe("SessionsController", function() {
 					id: users[0].id,
 					uuid: users[0].uuid,
 					country: "EE",
-					personal_id: "60001019906",
+					personal_id: PERSONAL_ID,
 					name: "John Smith",
 					language: "et",
 					created_at: users[0].created_at,
@@ -1008,7 +1008,7 @@ describe("SessionsController", function() {
 					req.body.relyingPartyName.must.equal(Config.mobileIdUser)
 					req.body.relyingPartyUUID.must.equal(Config.mobileIdPassword)
 					req.body.phoneNumber.must.equal("+37200000766")
-					req.body.nationalIdentityNumber.must.equal("60001019906")
+					req.body.nationalIdentityNumber.must.equal(PERSONAL_ID)
 
 					respond({result: "OK", cert: cert.toString("base64")}, req, res)
 				})
@@ -1021,7 +1021,7 @@ describe("SessionsController", function() {
 					req.body.relyingPartyName.must.equal(Config.mobileIdUser)
 					req.body.relyingPartyUUID.must.equal(Config.mobileIdPassword)
 					req.body.phoneNumber.must.equal("+37200000766")
-					req.body.nationalIdentityNumber.must.equal("60001019906")
+					req.body.nationalIdentityNumber.must.equal(PERSONAL_ID)
 					req.body.hashType.must.equal("SHA256")
 					req.body.language.must.equal("EST")
 
@@ -1067,7 +1067,7 @@ describe("SessionsController", function() {
 					method: "POST",
 					form: {
 						method: "mobile-id",
-						personalId: "60001019906",
+						personalId: PERSONAL_ID,
 						phoneNumber: "+37200000766"
 					}
 				})
@@ -1095,7 +1095,7 @@ describe("SessionsController", function() {
 					id: authentications[0].id,
 					authenticated: true,
 					country: "EE",
-					personal_id: "60001019906",
+					personal_id: PERSONAL_ID,
 					method: "mobile-id",
 					certificate: authentications[0].certificate,
 					created_ip: "127.0.0.1",
@@ -1112,7 +1112,7 @@ describe("SessionsController", function() {
 					id: users[0].id,
 					uuid: users[0].uuid,
 					country: "EE",
-					personal_id: "60001019906",
+					personal_id: PERSONAL_ID,
 					name: "John Smith",
 					language: "et",
 					created_at: users[0].created_at,
@@ -1859,7 +1859,7 @@ describe("SessionsController", function() {
 				var tokenHash
 
 				this.router.post(
-					`${SMART_ID_URL.path}authentication/etsi/PNOEE-60001019906`,
+					`${SMART_ID_URL.path}authentication/etsi/PNOEE-${PERSONAL_ID}`,
 					function(req, res) {
 					res.writeHead(200)
 					req.headers.host.must.equal(SMART_ID_URL.host)
@@ -1908,7 +1908,7 @@ describe("SessionsController", function() {
 
 				var authenticating = yield this.request("/sessions", {
 					method: "POST",
-					form: {method: "smart-id", personalId: "60001019906"}
+					form: {method: "smart-id", personalId: PERSONAL_ID}
 				})
 
 				authenticating.statusCode.must.equal(202)
@@ -1940,7 +1940,7 @@ describe("SessionsController", function() {
 					id: authentications[0].id,
 					authenticated: true,
 					country: "EE",
-					personal_id: "60001019906",
+					personal_id: PERSONAL_ID,
 					method: "smart-id",
 					certificate: authentications[0].certificate,
 					created_ip: "127.0.0.1",
@@ -1957,7 +1957,7 @@ describe("SessionsController", function() {
 					id: users[0].id,
 					uuid: users[0].uuid,
 					country: "EE",
-					personal_id: "60001019906",
+					personal_id: PERSONAL_ID,
 					name: "John Smith",
 					language: "et",
 					created_at: users[0].created_at,
@@ -2587,7 +2587,7 @@ function* signInWithMobileId(router, request, signCert, authCert, headers) {
 		headers: headers || {},
 		form: {
 			method: "mobile-id",
-			personalId: "60001019906",
+			personalId: PERSONAL_ID,
 			phoneNumber: "+37200000766"
 		}
 	})
@@ -2637,7 +2637,7 @@ function* signInWithSmartId(router, request, cert, headers) {
 	var authenticating = yield request("/sessions", {
 		method: "POST",
 		headers: headers || {},
-		form: {method: "smart-id", personalId: "60001019906"}
+		form: {method: "smart-id", personalId: PERSONAL_ID}
 	})
 
 	authenticating.statusCode.must.equal(202)

@@ -43,7 +43,7 @@ var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
 var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
 var SIGNATURE_TYPE = "application/vnd.rahvaalgatus.signature"
 var NEW_SIG_TRESHOLD = 15
-var PERSONAL_ID = "60001019906"
+var PERSONAL_ID = "38706181337"
 var VALID_ISSUERS = require("root/test/fixtures").VALID_ISSUERS
 var JOHN_RSA_KEYS = require("root/test/fixtures").JOHN_RSA_KEYS
 var JOHN_ECDSA_KEYS = require("root/test/fixtures").JOHN_ECDSA_KEYS
@@ -63,7 +63,7 @@ var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
 		commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 		surname: "SMITH",
 		givenName: "JOHN",
-		serialNumber: PERSONAL_ID
+		serialNumber: `PNOEE-${PERSONAL_ID}`
 	},
 
 	issuer: VALID_ISSUERS[0],
@@ -78,7 +78,7 @@ var MOBILE_ID_CERTIFICATE = new Certificate(newCertificate({
 		commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 		surname: "SMITH",
 		givenName: "JOHN",
-		serialNumber: PERSONAL_ID
+		serialNumber: `PNOEE-${PERSONAL_ID}`
 	},
 
 	issuer: VALID_ISSUERS[0],
@@ -386,7 +386,8 @@ describe("SignaturesController", function() {
 
 			function mustSign(sign, certificate) {
 				describe("as signable", function() {
-					it("must create a signature given a PNO certificate", function*() {
+					it("must create a signature given a non-ETSI semantic personal id",
+						function*() {
 						var cert = new Certificate(newCertificate({
 							subject: {
 								countryName: "EE",
@@ -395,7 +396,7 @@ describe("SignaturesController", function() {
 								commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 								surname: "SMITH",
 								givenName: "JOHN",
-								serialNumber: `PNOEE-${PERSONAL_ID}`
+								serialNumber: PERSONAL_ID
 							},
 
 							issuer: VALID_ISSUERS[0],
@@ -432,7 +433,7 @@ describe("SignaturesController", function() {
 									commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 									surname: "SMITH",
 									givenName: "JOHN",
-									serialNumber: PERSONAL_ID
+									serialNumber: `PNOEE-${PERSONAL_ID}`
 								},
 
 								issuer: issuer,
@@ -672,10 +673,10 @@ describe("SignaturesController", function() {
 							countryName: "EE",
 							organizationName: "ESTEID",
 							organizationalUnitName: "digital signature",
-							commonName: "SMITH,JOHN,60001019906",
+							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: "60001019906"
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						issuer: VALID_ISSUERS[0],
@@ -707,7 +708,7 @@ describe("SignaturesController", function() {
 					signables.length.must.equal(1)
 					signables[0].initiative_uuid.must.equal(this.initiative.uuid)
 					signables[0].country.must.equal("EE")
-					signables[0].personal_id.must.equal("60001019906")
+					signables[0].personal_id.must.equal(PERSONAL_ID)
 					signables[0].method.must.equal("id-card")
 					signables[0].xades.toString().must.equal(String(xades))
 					signables[0].signed.must.be.false()
@@ -753,7 +754,7 @@ describe("SignaturesController", function() {
 						initiative_uuid: this.initiative.uuid,
 						token: signables[0].token,
 						country: "EE",
-						personal_id: "60001019906",
+						personal_id: PERSONAL_ID,
 						method: "id-card",
 						xades: String(xades)
 					})])
@@ -776,7 +777,7 @@ describe("SignaturesController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						issuer: issuer,
@@ -816,7 +817,7 @@ describe("SignaturesController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						validFrom: DateFns.addSeconds(new Date, 1),
@@ -857,7 +858,7 @@ describe("SignaturesController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						validUntil: new Date,
@@ -902,7 +903,7 @@ describe("SignaturesController", function() {
 								commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 								surname: "SMITH",
 								givenName: "JOHN",
-								serialNumber: PERSONAL_ID
+								serialNumber: `PNOEE-${PERSONAL_ID}`
 							},
 
 							issuer: VALID_ISSUERS[0],
@@ -959,7 +960,7 @@ describe("SignaturesController", function() {
 								commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 								surname: "SMITH",
 								givenName: "JOHN",
-								serialNumber: PERSONAL_ID
+								serialNumber: `PNOEE-${PERSONAL_ID}`
 							},
 
 							issuer: VALID_ISSUERS[0],
@@ -1017,10 +1018,10 @@ describe("SignaturesController", function() {
 							countryName: "EE",
 							organizationName: "ESTEID (MOBIIL-ID)",
 							organizationalUnitName: "digital signature",
-							commonName: "SMITH,JOHN,60001019906",
+							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: "60001019906"
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						issuer: VALID_ISSUERS[0],
@@ -1051,7 +1052,7 @@ describe("SignaturesController", function() {
 						req.body.relyingPartyName.must.equal(Config.mobileIdUser)
 						req.body.relyingPartyUUID.must.equal(Config.mobileIdPassword)
 						req.body.phoneNumber.must.equal("+37200000766")
-						req.body.nationalIdentityNumber.must.equal("60001019906")
+						req.body.nationalIdentityNumber.must.equal(PERSONAL_ID)
 
 						respond({result: "OK", cert: cert.toString("base64")}, req, res)
 					})
@@ -1063,7 +1064,7 @@ describe("SignaturesController", function() {
 						req.body.relyingPartyName.must.equal(Config.mobileIdUser)
 						req.body.relyingPartyUUID.must.equal(Config.mobileIdPassword)
 						req.body.phoneNumber.must.equal("+37200000766")
-						req.body.nationalIdentityNumber.must.equal("60001019906")
+						req.body.nationalIdentityNumber.must.equal(PERSONAL_ID)
 						req.body.hashType.must.equal("SHA256")
 						req.body.hash.must.equal(xades.signableHash.toString("base64"))
 						req.body.language.must.equal("EST")
@@ -1102,7 +1103,7 @@ describe("SignaturesController", function() {
 						method: "POST",
 						form: {
 							method: "mobile-id",
-							personalId: "60001019906",
+							personalId: PERSONAL_ID,
 							phoneNumber: "+37200000766"
 						}
 					})
@@ -1123,7 +1124,7 @@ describe("SignaturesController", function() {
 					signables.length.must.equal(1)
 					signables[0].initiative_uuid.must.equal(this.initiative.uuid)
 					signables[0].country.must.equal("EE")
-					signables[0].personal_id.must.equal("60001019906")
+					signables[0].personal_id.must.equal(PERSONAL_ID)
 					signables[0].method.must.equal("mobile-id")
 					signables[0].xades.toString().must.equal(String(xades))
 					signables[0].signed.must.be.true()
@@ -1136,7 +1137,7 @@ describe("SignaturesController", function() {
 						initiative_uuid: this.initiative.uuid,
 						token: signables[0].token,
 						country: "EE",
-						personal_id: "60001019906",
+						personal_id: PERSONAL_ID,
 						method: "mobile-id",
 						xades: String(xades)
 					})])
@@ -1159,7 +1160,7 @@ describe("SignaturesController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						issuer: issuer,
@@ -1196,7 +1197,7 @@ describe("SignaturesController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						validFrom: DateFns.addSeconds(new Date, 1),
@@ -1234,7 +1235,7 @@ describe("SignaturesController", function() {
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
 						validUntil: new Date,
@@ -1325,7 +1326,7 @@ describe("SignaturesController", function() {
 								commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 								surname: "SMITH",
 								givenName: "JOHN",
-								serialNumber: PERSONAL_ID
+								serialNumber: `PNOEE-${PERSONAL_ID}`
 							},
 
 							issuer: VALID_ISSUERS[0],
@@ -1378,7 +1379,7 @@ describe("SignaturesController", function() {
 								commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 								surname: "SMITH",
 								givenName: "JOHN",
-								serialNumber: PERSONAL_ID
+								serialNumber: `PNOEE-${PERSONAL_ID}`
 							},
 
 							issuer: VALID_ISSUERS[0],
@@ -2212,11 +2213,11 @@ describe("SignaturesController", function() {
 				var signature = yield signaturesDb.create(new ValidSignature({
 					initiative_uuid: this.initiative.uuid,
 					country: "EE",
-					personal_id: "60001019906"
+					personal_id: "38706181337"
 				}))
 
 				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var path = initiativePath + "/signatures/EE60001019906"
+				var path = initiativePath + "/signatures/EE38706181337"
 				path += "?token=" + signature.token.toString("hex")
 				var updated = yield this.request(path, {
 					method: "PUT",
@@ -2245,7 +2246,7 @@ describe("SignaturesController", function() {
 
 			it("must respond with 404 if no signature", function*() {
 				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var path = initiativePath + "/signatures/EE60001019906?token=aabbccddee"
+				var path = initiativePath + "/signatures/EE38706181337?token=aabbccddee"
 				var res = yield this.request(path, {
 					method: "PUT",
 					form: {hidden: true}
@@ -2258,11 +2259,11 @@ describe("SignaturesController", function() {
 				var signature = yield signaturesDb.create(new ValidSignature({
 					initiative_uuid: this.initiative.uuid,
 					country: "EE",
-					personal_id: "60001019906"
+					personal_id: "38706181337"
 				}))
 
 				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var path = initiativePath + "/signatures/EE60001019906?token=aabbccddee"
+				var path = initiativePath + "/signatures/EE38706181337?token=aabbccddee"
 				var res = yield this.request(path, {
 					method: "PUT",
 					form: {hidden: true}
@@ -2276,11 +2277,11 @@ describe("SignaturesController", function() {
 				var signature = yield signaturesDb.create(new ValidSignature({
 					initiative_uuid: this.initiative.uuid,
 					country: "EE",
-					personal_id: "60001019906"
+					personal_id: "38706181337"
 				}))
 
 				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var path = initiativePath + "/signatures/EE60001019906"
+				var path = initiativePath + "/signatures/EE38706181337"
 				path += "?token=" + signature.token.toString("hex")
 				var updated = yield this.request(path, {
 					method: "PUT",
@@ -2321,7 +2322,7 @@ describe("SignaturesController", function() {
 
 			it("must respond with 405 Method Not Allowed", function*() {
 				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var path = initiativePath + "/signatures/EE60001019906"
+				var path = initiativePath + "/signatures/EE38706181337"
 				var res = yield this.request(path, {method: "PUT"})
 				res.statusCode.must.equal(405)
 			})
@@ -2361,11 +2362,11 @@ describe("SignaturesController", function() {
 				var signature = yield signaturesDb.create(new ValidSignature({
 					initiative_uuid: this.initiative.uuid,
 					country: "EE",
-					personal_id: "60001019906"
+					personal_id: "38706181337"
 				}))
 
 				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var path = initiativePath + "/signatures/EE60001019906"
+				var path = initiativePath + "/signatures/EE38706181337"
 				path += "?token=" + signature.token.toString("hex")
 				var deleted = yield this.request(path, {method: "DELETE"})
 				deleted.statusCode.must.equal(303)
@@ -2390,7 +2391,7 @@ describe("SignaturesController", function() {
 
 			it("must respond with 404 if no signature", function*() {
 				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var path = initiativePath + "/signatures/EE60001019906?token=aabbccddee"
+				var path = initiativePath + "/signatures/EE38706181337?token=aabbccddee"
 				var res = yield this.request(path, {method: "DELETE"})
 				res.statusCode.must.equal(404)
 			})
@@ -2399,11 +2400,11 @@ describe("SignaturesController", function() {
 				var signature = yield signaturesDb.create(new ValidSignature({
 					initiative_uuid: this.initiative.uuid,
 					country: "EE",
-					personal_id: "60001019906"
+					personal_id: "38706181337"
 				}))
 
 				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var path = initiativePath + "/signatures/EE60001019906?token=aabbccddee"
+				var path = initiativePath + "/signatures/EE38706181337?token=aabbccddee"
 				var res = yield this.request(path, {method: "DELETE"})
 
 				res.statusCode.must.equal(404)
@@ -2414,7 +2415,7 @@ describe("SignaturesController", function() {
 				var signature = yield signaturesDb.create(new ValidSignature({
 					initiative_uuid: this.initiative.uuid,
 					country: "EE",
-					personal_id: "60001019906"
+					personal_id: "38706181337"
 				}))
 
 				var otherInitiative = yield initiativesDb.create(new ValidInitiative({
@@ -2424,11 +2425,11 @@ describe("SignaturesController", function() {
 				var otherSignature = yield signaturesDb.create(new ValidSignature({
 					initiative_uuid: otherInitiative.uuid,
 					country: "EE",
-					personal_id: "60001019906"
+					personal_id: "38706181337"
 				}))
 
 				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var path = initiativePath + "/signatures/EE60001019906"
+				var path = initiativePath + "/signatures/EE38706181337"
 				path += "?token=" + signature.token.toString("hex")
 				var res = yield this.request(path, {method: "DELETE"})
 				res.statusCode.must.equal(303)
@@ -2442,7 +2443,7 @@ describe("SignaturesController", function() {
 				var signature = yield signaturesDb.create(new ValidSignature({
 					initiative_uuid: this.initiative.uuid,
 					country: "EE",
-					personal_id: "60001019906"
+					personal_id: "38706181337"
 				}))
 
 				var otherSignature = yield signaturesDb.create(new ValidSignature({
@@ -2452,7 +2453,7 @@ describe("SignaturesController", function() {
 				}))
 
 				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var path = initiativePath + "/signatures/EE60001019906"
+				var path = initiativePath + "/signatures/EE38706181337"
 				path += "?token=" + signature.token.toString("hex")
 				var res = yield this.request(path, {method: "DELETE"})
 				res.statusCode.must.equal(303)
@@ -2492,7 +2493,7 @@ describe("SignaturesController", function() {
 
 			it("must respond with 405 Method Not Allowed", function*() {
 				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var path = initiativePath + "/signatures/EE60001019906"
+				var path = initiativePath + "/signatures/EE38706181337"
 				var res = yield this.request(path, {method: "DELETE"})
 				res.statusCode.must.equal(405)
 			})
@@ -2577,7 +2578,7 @@ function* signWithMobileId(router, request, initiative, cert, res) {
 		method: "POST",
 		form: {
 			method: "mobile-id",
-			personalId: "60001019906",
+			personalId: PERSONAL_ID,
 			phoneNumber: "+37200000766"
 		}
 	})
