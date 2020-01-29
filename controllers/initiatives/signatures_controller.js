@@ -37,9 +37,6 @@ var logger = require("root").logger
 var {validateCertificate} = require("root/lib/certificate")
 var getNormalizedMobileIdErrorCode =
 	require("root/lib/mobile_id").getNormalizedErrorCode
-var {MOBILE_ID_ERROR_STATUS_CODES} = require("root/lib/mobile_id")
-var {MOBILE_ID_ERROR_STATUS_MESSAGES} = require("root/lib/mobile_id")
-var {MOBILE_ID_ERROR_TEXTS} = require("root/lib/mobile_id")
 exports.router = Router({mergeParams: true})
 exports.pathToSignature = pathToSignature
 
@@ -47,6 +44,71 @@ exports.pathToSignature = pathToSignature
 var {readCitizenSignature} = require("../initiatives_controller")
 
 exports.router.use(parseBody({type: hasSignatureType}))
+
+var MOBILE_ID_ERRORS = {
+	// Initiation responses:
+	NOT_FOUND: [
+		422,
+		"Not a Mobile-Id User or Personal Id Mismatch",
+		"MOBILE_ID_ERROR_NOT_FOUND"
+	],
+
+	NOT_ACTIVE: [
+		422,
+		"Mobile-Id Certificates Not Activated",
+		"MOBILE_ID_ERROR_NOT_ACTIVE"
+	],
+
+	// Session responses;
+	TIMEOUT: [
+		410,
+		"Mobile-Id Timeout",
+		"MOBILE_ID_ERROR_TIMEOUT"
+	],
+
+	NOT_MID_CLIENT: [
+		410,
+		"Mobile-Id Certificates Not Activated",
+		"MOBILE_ID_ERROR_NOT_ACTIVE"
+	],
+
+	USER_CANCELLED: [
+		410,
+		"Mobile-Id Cancelled",
+		"MOBILE_ID_ERROR_USER_CANCELLED"
+	],
+
+	SIGNATURE_HASH_MISMATCH: [
+		410,
+		"Mobile-Id Signature Hash Mismatch",
+		"MOBILE_ID_ERROR_SIGNATURE_HASH_MISMATCH"
+	],
+
+	PHONE_ABSENT: [
+		410,
+		"Mobile-Id Phone Absent",
+		"MOBILE_ID_ERROR_PHONE_ABSENT"
+	],
+
+	DELIVERY_ERROR: [
+		410,
+		"Mobile-Id Delivery Error",
+		"MOBILE_ID_ERROR_DELIVERY_ERROR"
+	],
+
+	SIM_ERROR: [
+		410,
+		"Mobile-Id SIM Application Error",
+		"MOBILE_ID_ERROR_SIM_ERROR"
+	],
+
+	// Custom responses:
+	INVALID_SIGNATURE: [
+		410,
+		"Invalid Mobile-Id Signature",
+		"MOBILE_ID_ERROR_INVALID_SIGNATURE"
+	]
+}
 
 exports.router.get("/", next(function*(req, res) {
 	var initiative = req.initiative
@@ -288,18 +350,16 @@ exports.router.post("/",
 exports.router.use("/", next(function(err, req, res, next) {
 	if (err instanceof MobileIdError) {
 		var code = getNormalizedMobileIdErrorCode(err)
-		res.statusCode = MOBILE_ID_ERROR_STATUS_CODES[code] || 500
-		res.statusMessage = MOBILE_ID_ERROR_STATUS_MESSAGES[code]
 
-		if (res.statusCode >= 500) throw new HttpError(
-			500,
-			res.statusMessage || "Unknown Mobile-Id Error",
-			{error: err}
-		)
+		if (code in MOBILE_ID_ERRORS) {
+			res.statusCode = MOBILE_ID_ERRORS[code][0]
+			res.statusMessage = MOBILE_ID_ERRORS[code][1]
 
-		res.render("initiatives/signatures/creating_page.jsx", {
-			error: req.t(MOBILE_ID_ERROR_TEXTS[code]) || err.message
-		})
+			res.render("initiatives/signatures/creating_page.jsx", {
+				error: req.t(MOBILE_ID_ERRORS[code][2])
+			})
+		}
+		else throw new HttpError(500, "Unknown Mobile-Id Error", {error: err})
 	}
 	else next(err)
 }))
@@ -391,19 +451,16 @@ exports.router.get("/:id",
 				var err = signable.error
 
 				if (err.name == "MobileIdError") {
-					res.statusCode = MOBILE_ID_ERROR_STATUS_CODES[err.code] || 500
-
-					res.statusMessage = (
-						MOBILE_ID_ERROR_STATUS_MESSAGES[err.code] ||
-						"Unknown Mobile-Id Error"
-					)
-
-					res.flash("error", (
-						req.t(MOBILE_ID_ERROR_TEXTS[err.code]) || req.t("500_BODY")
-					))
-
-					// No need to throw a 500 as this error's been already reported by
-					// the async process that set signable.error
+					if (err.code in MOBILE_ID_ERRORS) {
+						res.statusCode = MOBILE_ID_ERRORS[err.code][0]
+						res.statusMessage = MOBILE_ID_ERRORS[err.code][1]
+						res.flash("error", req.t(MOBILE_ID_ERRORS[err.code][2]))
+					}
+					else {
+						res.statusCode = 500
+						res.statusMessage = "Unknown Mobile-Id Error"
+						res.flash("error", req.t("500_BODY"))
+					}
 				}
 				else {
 					res.statusCode = 500
@@ -590,7 +647,7 @@ function* waitForMobileIdSignature(signable, sessionId) {
 	catch (ex) {
 		if (!(
 			ex instanceof MobileIdError &&
-			MOBILE_ID_ERROR_STATUS_CODES[getNormalizedMobileIdErrorCode(ex)] < 500
+			getNormalizedMobileIdErrorCode(ex) in MOBILE_ID_ERRORS
 		)) reportError(ex)
 
 		yield signablesDb.update(signable, {error: ex, updated_at: new Date})
