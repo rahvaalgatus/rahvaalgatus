@@ -116,7 +116,7 @@ var MOBILE_ID_SESSION_ERRORS = {
 	TIMEOUT: [
 		410,
 		"Mobile-Id Timeout",
-		"MOBILE_ID_ERROR_TIMEOUT"
+		"MOBILE_ID_ERROR_TIMEOUT_AUTH"
 	],
 
 	NOT_MID_CLIENT: [
@@ -128,25 +128,25 @@ var MOBILE_ID_SESSION_ERRORS = {
 	USER_CANCELLED: [
 		410,
 		"Mobile-Id Cancelled",
-		"MOBILE_ID_ERROR_USER_CANCELLED"
+		"MOBILE_ID_ERROR_USER_CANCELLED_AUTH"
 	],
 
 	SIGNATURE_HASH_MISMATCH: [
 		410,
 		"Mobile-Id Signature Hash Mismatch",
-		"MOBILE_ID_ERROR_SIGNATURE_HASH_MISMATCH"
+		"MOBILE_ID_ERROR_SIGNATURE_HASH_MISMATCH_AUTH"
 	],
 
 	PHONE_ABSENT: [
 		410,
 		"Mobile-Id Phone Absent",
-		"MOBILE_ID_ERROR_PHONE_ABSENT"
+		"MOBILE_ID_ERROR_PHONE_ABSENT_AUTH"
 	],
 
 	DELIVERY_ERROR: [
 		410,
 		"Mobile-Id Delivery Error",
-		"MOBILE_ID_ERROR_DELIVERY_ERROR"
+		"MOBILE_ID_ERROR_DELIVERY_ERROR_AUTH"
 	],
 
 	SIM_ERROR: [
@@ -1594,7 +1594,7 @@ describe("SessionsController", function() {
 					})
 
 					res.statusCode.must.equal(200)
-					res.body.must.include(t("MOBILE_ID_ERROR_INVALID_SIGNATURE"))
+					res.body.must.include(t("MOBILE_ID_ERROR_INVALID_SIGNATURE_AUTH"))
 
 					var authentication = yield authenticationsDb.read(sql`
 						SELECT * FROM authentications
@@ -1824,7 +1824,7 @@ describe("SessionsController", function() {
 				})
 
 				res.statusCode.must.equal(200)
-				res.body.must.include(t("MOBILE_ID_ERROR_TIMEOUT"))
+				res.body.must.include(t("MOBILE_ID_ERROR_TIMEOUT_AUTH"))
 
 				yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
 
