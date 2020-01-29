@@ -33,7 +33,6 @@ var createCitizenSignatures =
 var createPermission = require("root/test/citizenos_fixtures").createPermission
 var pseudoDateTime = require("root/lib/crypto").pseudoDateTime
 var parseCookies = Http.parseCookies
-var parseFlash = Http.parseFlash.bind(null, Config.cookieSecret)
 var readVoteOptions = require("root/lib/citizenos_db").readVoteOptions
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
@@ -48,6 +47,8 @@ var parseDom = require("root/lib/dom").parse
 var outdent = require("root/lib/outdent")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var concat = Array.prototype.concat.bind(Array.prototype)
+var next = require("co-next")
+var cosDb = require("root").cosDb
 var INITIATIVE_TYPE = "application/vnd.rahvaalgatus.initiative+json; v=1"
 var ATOM_TYPE = "application/atom+xml"
 var PHASES = require("root/lib/initiative").PHASES
@@ -4430,11 +4431,15 @@ describe("InitiativesController", function() {
 
 					var updated = 0
 					this.router.put(`/api/users/self/topics/${topic.id}`,
-						function(req, res) {
+						next(function*(req, res) {
 						++updated
 						req.body.must.eql({visibility: "public", endsAt: endsAt.toJSON()})
 						res.end()
-					})
+
+						yield cosDb("Topics").where("id", topic.id).update({
+							visibility: "public"
+						})
+					}))
 
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
@@ -4449,8 +4454,13 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(303)
 					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
-					var flash = parseFlashFromCookies(res.headers["set-cookie"])
-					flash.notice.must.equal(t("PUBLISHED_INITIATIVE"))
+					var cookies = parseCookies(res.headers["set-cookie"])
+					res = yield this.request(res.headers.location, {
+						headers: {Cookie: Http.serializeCookies(cookies)}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("PUBLISHED_INITIATIVE"))
 				})
 
 				it("must clear end email when setting discussion end time",
@@ -4559,7 +4569,7 @@ describe("InitiativesController", function() {
 					var endsAt = DateFns.endOfDay(DateFns.addDays(new Date, 30))
 
 					this.router.post(`/api/users/self/topics/${topic.id}/votes`,
-						function(req, res) {
+						next(function*(req, res) {
 						req.body.must.eql({
 							endsAt: endsAt.toJSON(),
 							authType: "hard",
@@ -4569,7 +4579,9 @@ describe("InitiativesController", function() {
 						})
 
 						res.end()
-					})
+
+						yield createVote(topic, newVote())
+					}))
 
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
@@ -4583,8 +4595,13 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(303)
 					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
-					var flash = parseFlashFromCookies(res.headers["set-cookie"])
-					flash.notice.must.equal(t("INITIATIVE_SIGN_PHASE_UPDATED"))
+					var cookies = parseCookies(res.headers["set-cookie"])
+					res = yield this.request(res.headers.location, {
+						headers: {Cookie: Http.serializeCookies(cookies)}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("INITIATIVE_SIGN_PHASE_UPDATED"))
 
 					yield initiativesDb.search(sql`
 						SELECT * FROM initiatives
@@ -5138,8 +5155,13 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(303)
 					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
-					var flash = parseFlashFromCookies(res.headers["set-cookie"])
-					flash.notice.must.equal(t("SENT_TO_PARLIAMENT_CONTENT"))
+					var cookies = parseCookies(res.headers["set-cookie"])
+					res = yield this.request(res.headers.location, {
+						headers: {Cookie: Http.serializeCookies(cookies)}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("SENT_TO_PARLIAMENT_CONTENT"))
 
 					var updatedInitiative = yield initiativesDb.read(initiative)
 
@@ -5540,8 +5562,13 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(302)
 				res.headers.location.must.equal(`/initiatives`)
 
-				var flash = parseFlashFromCookies(res.headers["set-cookie"])
-				flash.notice.must.equal(t("INITIATIVE_DELETED"))
+				var cookies = parseCookies(res.headers["set-cookie"])
+				res = yield this.request(res.headers.location, {
+					headers: {Cookie: Http.serializeCookies(cookies)}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("INITIATIVE_DELETED"))
 			})
 
 			it("must delete initiative in edit phase", function*() {
@@ -5566,8 +5593,13 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(302)
 				res.headers.location.must.equal(`/initiatives`)
 
-				var flash = parseFlashFromCookies(res.headers["set-cookie"])
-				flash.notice.must.equal(t("INITIATIVE_DELETED"))
+				var cookies = parseCookies(res.headers["set-cookie"])
+				res = yield this.request(res.headers.location, {
+					headers: {Cookie: Http.serializeCookies(cookies)}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("INITIATIVE_DELETED"))
 			})
 
 			it("must respond with 405 given initiative in sign phase", function*() {
@@ -5676,10 +5708,6 @@ describe("InitiativesController", function() {
 		})
 	})
 })
-
-function parseFlashFromCookies(cookies) {
-	return parseFlash(parseCookies(cookies).flash.value)
-}
 
 function queryPhases(html) {
 	var phases = html.querySelectorAll("#initiative-phases li")

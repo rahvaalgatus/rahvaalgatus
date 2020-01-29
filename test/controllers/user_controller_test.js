@@ -6,7 +6,6 @@ var Config = require("root/config")
 var Crypto = require("crypto")
 var Http = require("root/lib/http")
 var parseCookies = Http.parseCookies
-var parseFlash = Http.parseFlash.bind(null, Config.cookieSecret)
 var newPartner = require("root/test/citizenos_fixtures").newPartner
 var newTopic = require("root/test/citizenos_fixtures").newTopic
 var newVote = require("root/test/citizenos_fixtures").newVote
@@ -466,8 +465,12 @@ describe("UserController", function() {
 				res.headers.location.must.equal("/user")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
-				flash.notice.must.equal(t("USER_UPDATED"))
+				res = yield this.request(res.headers.location, {
+					cookies: _.mapValues(cookies, (c) => c.value)
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("USER_UPDATED"))
 
 				yield usersDb.read(this.user).must.then.eql({
 					__proto__: this.user,
@@ -548,8 +551,12 @@ describe("UserController", function() {
 				res.statusCode.must.equal(303)
 
 				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
-				flash.notice.must.equal(t("USER_UPDATED_WITH_EMAIL"))
+				res = yield this.request(res.headers.location, {
+					cookies: _.mapValues(cookies, (c) => c.value)
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("USER_UPDATED_WITH_EMAIL"))
 
 				var user = yield usersDb.read(this.user)
 
@@ -634,8 +641,12 @@ describe("UserController", function() {
 				res.statusCode.must.equal(303)
 
 				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
-				flash.notice.must.equal(t("USER_UPDATED_WITH_EMAIL"))
+				res = yield this.request(res.headers.location, {
+					cookies: _.mapValues(cookies, (c) => c.value)
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("USER_UPDATED_WITH_EMAIL"))
 
 				var user = yield usersDb.read(this.user)
 
@@ -723,8 +734,12 @@ describe("UserController", function() {
 				res.statusCode.must.equal(303)
 
 				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
-				flash.notice.must.equal(t("USER_UPDATED"))
+				res = yield this.request(res.headers.location, {
+					cookies: _.mapValues(cookies, (c) => c.value)
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("USER_UPDATED"))
 
 				var user = yield usersDb.read(this.user)
 				user.must.eql({__proto__: this.user, updated_at: new Date})
@@ -746,8 +761,12 @@ describe("UserController", function() {
 				res.statusCode.must.equal(303)
 
 				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
-				flash.notice.must.equal(t("USER_UPDATED"))
+				res = yield this.request(res.headers.location, {
+					cookies: _.mapValues(cookies, (c) => c.value)
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("USER_UPDATED"))
 
 				var user = yield usersDb.read(this.user)
 				user.must.eql({__proto__: this.user, updated_at: new Date})
@@ -771,8 +790,12 @@ describe("UserController", function() {
 				res.statusCode.must.equal(303)
 
 				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
-				flash.notice.must.equal(t("USER_UPDATED"))
+				res = yield this.request(res.headers.location, {
+					cookies: _.mapValues(cookies, (c) => c.value)
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("USER_UPDATED"))
 
 				var user = yield usersDb.read(this.user)
 				user.must.eql({__proto__: this.user, updated_at: new Date})
@@ -796,8 +819,12 @@ describe("UserController", function() {
 				res.statusCode.must.equal(303)
 
 				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
-				flash.notice.must.equal(t("USER_UPDATED"))
+				res = yield this.request(res.headers.location, {
+					cookies: _.mapValues(cookies, (c) => c.value)
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("USER_UPDATED"))
 
 				var user = yield usersDb.read(this.user)
 
@@ -825,8 +852,12 @@ describe("UserController", function() {
 				res.statusCode.must.equal(303)
 
 				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
-				flash.notice.must.equal(t("USER_UPDATED"))
+				res = yield this.request(res.headers.location, {
+					cookies: _.mapValues(cookies, (c) => c.value)
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("USER_UPDATED"))
 
 				var user = yield usersDb.read(this.user)
 
@@ -856,8 +887,12 @@ describe("UserController", function() {
 				res.statusCode.must.equal(303)
 
 				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
-				flash.notice.must.equal(t("USER_UPDATED"))
+				res = yield this.request(res.headers.location, {
+					cookies: _.mapValues(cookies, (c) => c.value)
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("USER_UPDATED"))
 
 				var user = yield usersDb.read(this.user)
 
@@ -908,8 +943,12 @@ describe("UserController", function() {
 				res.headers.location.must.equal("/user")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
-				flash.notice.must.equal(t("USER_UPDATED_WITH_EMAIL"))
+				res = yield this.request(res.headers.location, {
+					cookies: _.mapValues(cookies, (c) => c.value)
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("USER_UPDATED_WITH_EMAIL"))
 
 				var user = yield usersDb.read(this.user)
 
@@ -936,8 +975,12 @@ describe("UserController", function() {
 				res.headers.location.must.equal("/user")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
-				flash.notice.must.equal(t("USER_UPDATED"))
+				res = yield this.request(res.headers.location, {
+					cookies: _.mapValues(cookies, (c) => c.value)
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("USER_UPDATED"))
 
 				yield usersDb.read(this.user).must.then.eql(this.user)
 				this.emails.length.must.equal(0)
@@ -958,8 +1001,12 @@ describe("UserController", function() {
 				res.headers.location.must.equal("/user")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
-				flash.notice.must.equal(t("USER_UPDATED_WITH_EMAIL"))
+				res = yield this.request(res.headers.location, {
+					cookies: _.mapValues(cookies, (c) => c.value)
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("USER_UPDATED_WITH_EMAIL"))
 
 				yield usersDb.read(this.user).must.then.eql({
 					__proto__: this.user,
@@ -987,8 +1034,12 @@ describe("UserController", function() {
 				res.headers.location.must.equal("/user")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
-				flash.notice.must.equal(t("USER_UPDATED"))
+				res = yield this.request(res.headers.location, {
+					cookies: _.mapValues(cookies, (c) => c.value)
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("USER_UPDATED"))
 
 				yield usersDb.read(this.user).must.then.eql(this.user)
 				this.emails.length.must.equal(0)
@@ -1062,8 +1113,12 @@ describe("UserController", function() {
 				res.headers.location.must.equal("/user")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
-				flash.notice.must.equal(t("USER_EMAIL_ALREADY_CONFIRMED"))
+				res = yield this.request(res.headers.location, {
+					cookies: _.mapValues(cookies, (c) => c.value)
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("USER_EMAIL_ALREADY_CONFIRMED"))
 
 				yield usersDb.read(this.user).must.then.eql(this.user)
 			})
@@ -1082,8 +1137,12 @@ describe("UserController", function() {
 				res.headers.location.must.equal("/user")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
-				var flash = parseFlash(cookies.flash.value)
-				flash.notice.must.equal(t("USER_EMAIL_CONFIRMED"))
+				res = yield this.request(res.headers.location, {
+					cookies: _.mapValues(cookies, (c) => c.value)
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("USER_EMAIL_CONFIRMED"))
 
 				yield usersDb.read(this.user).must.then.eql({
 					__proto__: this.user,
