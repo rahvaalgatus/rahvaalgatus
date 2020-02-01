@@ -138,17 +138,17 @@ exports.get("/", next(function*(req, res) {
 		LIMIT 15
 	`)
 
-	var initiatives = _.indexBy(yield cosDb.query(sql`
-		SELECT id, title
+	var subscriptionInitiatives = _.indexBy(yield cosDb.query(sql`
+		SELECT id AS uuid, title
 		FROM "Topics"
 
 		WHERE id IN ${sql.in(_.uniq(lastSubscriptions.map((s) => (
 			s.initiative_uuid)
 		)))}
-	`), "id")
+	`), "uuid")
 
-	lastSubscriptions.forEach(function(subscription) {
-		subscription.initiative = initiatives[subscription.initiative_uuid]
+	lastSubscriptions.forEach(function(sub) {
+		sub.initiative = subscriptionInitiatives[sub.initiative_uuid]
 	})
 
 	res.render("admin/dashboard_page.jsx", {
