@@ -477,7 +477,7 @@ CREATE TABLE public."TopicVotes" (
 
 CREATE TABLE public."Topics" (
     id uuid NOT NULL,
-    title character varying(100),
+    title character varying(1000),
     description text,
     status public."enum_Topics_status" DEFAULT 'inProgress'::public."enum_Topics_status" NOT NULL,
     visibility public."enum_Topics_visibility" DEFAULT 'private'::public."enum_Topics_visibility" NOT NULL,
@@ -1437,4 +1437,5 @@ ALTER TABLE ONLY public."VoteUserContainers"
 
 COPY public."SequelizeMeta" (name) FROM stdin;
 20181213213857-create-topic-favourite.js
+20190131123024-alter-topic-title-limit.js
 \.
