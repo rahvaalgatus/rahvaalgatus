@@ -42,10 +42,7 @@ function MobileIdView(attrs) {
 
 	return <Fragment>
 		<p>
-			<strong>
-				{t("CONTROL_CODE", {code: _.padLeft(code, 4, 0)})}
-			</strong>
-			<br />
+			<strong>{t("CONTROL_CODE", {code: _.padLeft(code, 4, 0)})}</strong><br />
 
 			{method == "mobile-id"
 				? t("MOBILE_ID_CONFIRMATION_CODE_FOR_AUTHENTICATION")

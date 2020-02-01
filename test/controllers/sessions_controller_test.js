@@ -2062,7 +2062,6 @@ describe("SessionsController", function() {
 				}))
 
 				var res = yield signInWithSmartId(this.router, this.request, cert)
-
 				res.statusCode.must.equal(422)
 				res.statusMessage.must.equal("Certificate Not Yet Valid")
 				res.headers.location.must.equal("/sessions/new")
@@ -2093,7 +2092,6 @@ describe("SessionsController", function() {
 				}))
 
 				var res = yield signInWithSmartId(this.router, this.request, cert)
-
 				res.statusCode.must.equal(422)
 				res.statusMessage.must.equal("Certificate Expired")
 				res.headers.location.must.equal("/sessions/new")

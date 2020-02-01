@@ -37,6 +37,7 @@ var encodeBase64 = require("root/lib/crypto").encodeBase64
 var tsl = require("root").tsl
 var ASICE_TYPE = "application/vnd.etsi.asic-e+zip"
 var MOBILE_ID_URL = Url.parse("https://mid.sk.ee/mid-api/")
+var SMART_ID_URL = Url.parse("https://rp-api.smart-id.com/v1/")
 var TIMEMARK_URL = Url.parse(Config.timemarkUrl)
 var CERTIFICATE_TYPE = "application/pkix-cert"
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
@@ -47,7 +48,9 @@ var PERSONAL_ID = "38706181337"
 var VALID_ISSUERS = require("root/test/fixtures").VALID_ISSUERS
 var JOHN_RSA_KEYS = require("root/test/fixtures").JOHN_RSA_KEYS
 var JOHN_ECDSA_KEYS = require("root/test/fixtures").JOHN_ECDSA_KEYS
+var SESSION_ID = "7c8bdd56-6772-4264-ba27-bf7a9ef72a11"
 var {PHONE_NUMBER_TRANSFORMS} = require("root/test/fixtures")
+var SMART_ID = "PNOEE-" + PERSONAL_ID + "-R2D2-Q"
 
 // Appending a JWT signature containing only alphanumeric characters checks for
 // a bug noticed on Jan 12, 2020, which interpreted the suffix as a MIME
@@ -76,6 +79,20 @@ var MOBILE_ID_CERTIFICATE = new Certificate(newCertificate({
 		organizationName: "ESTEID (MOBIIL-ID)",
 		organizationalUnitName: "digital signature",
 		commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+		surname: "SMITH",
+		givenName: "JOHN",
+		serialNumber: `PNOEE-${PERSONAL_ID}`
+	},
+
+	issuer: VALID_ISSUERS[0],
+	publicKey: JOHN_RSA_KEYS.publicKey
+}))
+
+var SMART_ID_CERTIFICATE = new Certificate(newCertificate({
+	subject: {
+		countryName: "EE",
+		organizationalUnitName: "SIGNATURE",
+		commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
 		surname: "SMITH",
 		givenName: "JOHN",
 		serialNumber: `PNOEE-${PERSONAL_ID}`
@@ -141,6 +158,32 @@ var MOBILE_ID_SESSION_ERRORS = {
 		"Mobile-Id SIM Application Error",
 		"MOBILE_ID_ERROR_SIM_ERROR"
 	],
+}
+
+var SMART_ID_SESSION_ERRORS = {
+	USER_REFUSED: [
+		410,
+		"Smart-Id Cancelled",
+		"SMART_ID_ERROR_USER_REFUSED_SIGN"
+	],
+
+	TIMEOUT: [
+		410,
+		"Smart-Id Timeout",
+		"SMART_ID_ERROR_TIMEOUT_SIGN"
+	],
+
+	DOCUMENT_UNUSABLE: [
+		410,
+		"Smart-Id Certificate Unusable",
+		"SMART_ID_ERROR_DOCUMENT_UNUSABLE"
+	],
+
+	WRONG_VC: [
+		410,
+		"Wrong Smart-Id Verification Code Chosen",
+		"SMART_ID_ERROR_WRONG_VERIFICATION_CODE"
+	]
 }
 
 describe("SignaturesController", function() {
@@ -1028,8 +1071,6 @@ describe("SignaturesController", function() {
 						publicKey: JOHN_RSA_KEYS.publicKey
 					}))
 
-					var sessionId = "04a630e9-77fa-4dfc-ac5c-7d50b455906e"
-
 					var xades = hades.new(cert, [{
 						path: "initiative.html",
 						type: "text/html",
@@ -1069,13 +1110,13 @@ describe("SignaturesController", function() {
 						req.body.hash.must.equal(xades.signableHash.toString("base64"))
 						req.body.language.must.equal("EST")
 
-						respond({sessionID: sessionId}, req, res)
+						respond({sessionID: SESSION_ID}, req, res)
 					})
 
 					this.router.get(`${MOBILE_ID_URL.path}signature/session/:token`,
 						function(req, res) {
 						req.headers.host.must.equal(MOBILE_ID_URL.host)
-						req.params.token.must.equal(sessionId)
+						req.params.token.must.equal(SESSION_ID)
 
 						respond({
 							state: "COMPLETE",
@@ -1264,7 +1305,7 @@ describe("SignaturesController", function() {
 					res.body.must.include(t("CERTIFICATE_EXPIRED"))
 				})
 
-				it("must create signature if session returned early", function*() {
+				it("must create signature if Mobile-Id session running", function*() {
 					var waited = 0
 					var signed = yield signWithMobileId(
 						this.router,
@@ -1644,6 +1685,554 @@ describe("SignaturesController", function() {
 					res.body.must.not.include(t("THANKS_FOR_SIGNING"))
 					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
 					res.body.must.include(t("MOBILE_ID_ERROR_TIMEOUT"))
+				})
+			})
+
+			describe("when signing via Smart-Id", function() {
+				mustSign(signWithSmartId, SMART_ID_CERTIFICATE)
+
+				it("must create a signature", function*() {
+					var cert = new Certificate(newCertificate({
+						subject: {
+							countryName: "EE",
+							organizationalUnitName: "SIGNATURE",
+							commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+							surname: "SMITH",
+							givenName: "JOHN",
+							serialNumber: `PNOEE-${PERSONAL_ID}`
+						},
+
+						issuer: VALID_ISSUERS[0],
+						publicKey: JOHN_RSA_KEYS.publicKey
+					}))
+
+					var xades = hades.new(cert, [{
+						path: "initiative.html",
+						type: "text/html",
+						hash: this.initiative.text_sha256
+					}], {policy: "bdoc"})
+
+					var signatureBytes = signWithRsa(
+						JOHN_RSA_KEYS.privateKey,
+						xades.signable
+					)
+
+					xades.setSignature(signatureBytes)
+					var ocspResponse = Ocsp.parse(newOcspResponse(cert))
+					xades.setOcspResponse(ocspResponse)
+
+					var certSession = "3befb011-37bf-4e57-b041-e4cba1496766"
+					var signSession = "21e55f06-d6cb-40b7-9638-75dc0b131851"
+
+					this.router.post(
+						`${SMART_ID_URL.path}certificatechoice/etsi/PNOEE-${PERSONAL_ID}`,
+						function(req, res) {
+						req.headers.host.must.equal(SMART_ID_URL.host)
+
+						req.body.relyingPartyName.must.equal(Config.smartIdUser)
+						req.body.relyingPartyUUID.must.equal(Config.smartIdPassword)
+
+						respond({sessionID: certSession}, req, res)
+					})
+
+					this.router.get(
+						`${SMART_ID_URL.path}session/${certSession}`,
+						function(req, res) {
+						res.writeHead(200)
+						req.headers.host.must.equal(SMART_ID_URL.host)
+
+						respond({
+							state: "COMPLETE",
+							result: {endResult: "OK", documentNumber: SMART_ID},
+
+							cert: {
+								certificateLevel: "QUALIFIED",
+								value: cert.toString("base64"),
+							}
+						}, req, res)
+					})
+
+					this.router.post(
+						`${SMART_ID_URL.path}signature/document/${SMART_ID}`,
+						function(req, res) {
+						res.writeHead(200)
+						req.headers.host.must.equal(SMART_ID_URL.host)
+
+						req.body.relyingPartyName.must.equal(Config.smartIdUser)
+						req.body.relyingPartyUUID.must.equal(Config.smartIdPassword)
+						req.body.hashType.must.equal("SHA256")
+						req.body.hash.must.equal(xades.signableHash.toString("base64"))
+
+						respond({sessionID: signSession}, req, res)
+					})
+
+					this.router.get(`${SMART_ID_URL.path}session/${signSession}`,
+						function(req, res) {
+						res.writeHead(200)
+						req.headers.host.must.equal(SMART_ID_URL.host)
+
+						respond({
+							state: "COMPLETE",
+							result: {endResult: "OK"},
+
+							cert: {
+								certificateLevel: "QUALIFIED",
+								value: cert.toString("base64"),
+							},
+
+							signature: {
+								algorithm: "sha256WithRSAEncryption",
+								value: signatureBytes.toString("base64")
+							}
+						}, req, res)
+					})
+
+					this.router.post(TIMEMARK_URL.path, function(req, res) {
+						req.headers.host.must.equal(TIMEMARK_URL.host)
+						res.setHeader("Content-Type", "application/ocsp-response")
+						res.flushHeaders()
+
+						// NOTE: Respond with a little delay to ensure signature
+						// polling later works as expected.
+						setTimeout(() => res.end(ocspResponse.toBuffer()), 100)
+					})
+
+					var initiativePath = `/initiatives/${this.initiative.uuid}`
+					var signing = yield this.request(initiativePath + "/signatures", {
+						method: "POST",
+						form: {method: "smart-id", personalId: PERSONAL_ID}
+					})
+
+					signing.statusCode.must.equal(202)
+
+					var signed = yield this.request(signing.headers.location, {
+						headers: {Accept: `application/x-empty, ${ERR_TYPE}`}
+					})
+
+					signed.statusCode.must.equal(204)
+					signed.headers.location.must.equal(initiativePath)
+
+					var signables = yield signablesDb.search(sql`
+						SELECT * FROM initiative_signables
+					`)
+
+					signables.length.must.equal(1)
+					signables[0].initiative_uuid.must.equal(this.initiative.uuid)
+					signables[0].country.must.equal("EE")
+					signables[0].personal_id.must.equal(PERSONAL_ID)
+					signables[0].method.must.equal("smart-id")
+					signables[0].xades.toString().must.equal(String(xades))
+					signables[0].signed.must.be.true()
+					signables[0].timestamped.must.be.true()
+					demand(signables[0].error).be.null()
+
+					yield signaturesDb.search(sql`
+						SELECT * FROM initiative_signatures
+					`).must.then.eql([new ValidSignature({
+						initiative_uuid: this.initiative.uuid,
+						token: signables[0].token,
+						country: "EE",
+						personal_id: PERSONAL_ID,
+						method: "smart-id",
+						xades: String(xades)
+					})])
+				})
+
+				it("must respond with 422 given certificate from untrusted issuer",
+					function*() {
+					var issuer = tsl.getBySubjectName([
+						"C=EE",
+						"O=AS Sertifitseerimiskeskus",
+						"OU=Sertifitseerimisteenused",
+						"CN=EID-SK 2007",
+					].join(","))
+
+					var cert = new Certificate(newCertificate({
+						subject: {
+							countryName: "EE",
+							organizationalUnitName: "SIGNATURE",
+							commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+							surname: "SMITH",
+							givenName: "JOHN",
+							serialNumber: `PNOEE-${PERSONAL_ID}`
+						},
+
+						issuer: issuer,
+						publicKey: JOHN_RSA_KEYS.publicKey
+					}))
+
+					var res = yield certWithSmartId(
+						this.router,
+						this.request,
+						this.initiative,
+						cert
+					)
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Invalid Issuer")
+					res.headers["content-type"].must.equal("text/html; charset=utf-8")
+					res.body.must.include(t("INVALID_CERTIFICATE_ISSUER"))
+				})
+
+				it("must respond with 422 given future certificate", function*() {
+					var cert = new Certificate(newCertificate({
+						subject: {
+							countryName: "EE",
+							organizationalUnitName: "SIGNATURE",
+							commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+							surname: "SMITH",
+							givenName: "JOHN",
+							serialNumber: `PNOEE-${PERSONAL_ID}`
+						},
+
+						validFrom: DateFns.addSeconds(new Date, 1),
+						issuer: VALID_ISSUERS[0],
+						publicKey: JOHN_RSA_KEYS.publicKey
+					}))
+
+					var res = yield certWithSmartId(
+						this.router,
+						this.request,
+						this.initiative,
+						cert
+					)
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Certificate Not Yet Valid")
+					res.headers["content-type"].must.equal("text/html; charset=utf-8")
+					res.body.must.include(t("CERTIFICATE_NOT_YET_VALID"))
+				})
+
+				it("must respond with 422 given past certificate", function*() {
+					var cert = new Certificate(newCertificate({
+						subject: {
+							countryName: "EE",
+							organizationalUnitName: "SIGNATURE",
+							commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+							surname: "SMITH",
+							givenName: "JOHN",
+							serialNumber: `PNOEE-${PERSONAL_ID}`
+						},
+
+						validUntil: new Date,
+						issuer: VALID_ISSUERS[0],
+						publicKey: JOHN_RSA_KEYS.publicKey
+					}))
+
+					var res = yield certWithSmartId(
+						this.router,
+						this.request,
+						this.initiative,
+						cert
+					)
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Certificate Expired")
+					res.headers["content-type"].must.equal("text/html; charset=utf-8")
+					res.body.must.include(t("CERTIFICATE_EXPIRED"))
+				})
+
+				it("must create signature if Smart-Id session running", function*() {
+					var waited = 0
+					var signed = yield signWithSmartId(
+						this.router,
+						this.request,
+						this.initiative,
+						SMART_ID_CERTIFICATE,
+						next(function*(req, res) {
+							if (waited++ < 2)
+								return void respond({state: "RUNNING"}, req, res)
+
+							res.writeHead(200)
+
+							var xades = yield signablesDb.read(sql`
+								SELECT * FROM initiative_signables
+								ORDER BY created_at DESC
+								LIMIT 1
+							`).then((row) => row.xades)
+
+							respond({
+								state: "COMPLETE",
+								result: {endResult: "OK"},
+
+								cert: {
+									certificateLevel: "QUALIFIED",
+									value: SMART_ID_CERTIFICATE.toString("base64")
+								},
+
+								signature: {
+									algorithm: "sha256WithRSAEncryption",
+									value: signWithRsa(
+										JOHN_RSA_KEYS.privateKey,
+										xades.signable
+									).toString("base64")
+								}
+							}, req, res)
+						})
+					)
+
+					signed.statusCode.must.equal(204)
+
+					yield signaturesDb.search(sql`
+						SELECT * FROM initiative_signatures
+					`).must.then.not.be.empty()
+
+					var cookies = Http.parseCookies(signed.headers["set-cookie"])
+					var res = yield this.request(signed.headers.location, {
+						headers: {Cookie: Http.serializeCookies(cookies)}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("THANKS_FOR_SIGNING"))
+				})
+
+				_.each({
+					RSA: [JOHN_RSA_KEYS, signWithRsa],
+					ECDSA: [JOHN_ECDSA_KEYS, signWithEcdsa]
+				}, function([keys, sign], algo) {
+					it(`must create a signature given an ${algo} signature`, function*() {
+						var cert = new Certificate(newCertificate({
+							subject: {
+								countryName: "EE",
+								organizationalUnitName: "SIGNATURE",
+								commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+								surname: "SMITH",
+								givenName: "JOHN",
+								serialNumber: `PNOEE-${PERSONAL_ID}`
+							},
+
+							issuer: VALID_ISSUERS[0],
+							publicKey: keys.publicKey
+						}))
+
+						var signed = yield signWithSmartId(
+							this.router,
+							this.request,
+							this.initiative,
+							cert,
+							next(function*(req, res) {
+								res.writeHead(200)
+
+								var xades = yield signablesDb.read(sql`
+									SELECT * FROM initiative_signables
+									ORDER BY created_at DESC
+									LIMIT 1
+								`).then((row) => row.xades)
+
+								respond({
+									state: "COMPLETE",
+									result: {endResult: "OK"},
+
+									cert: {
+										certificateLevel: "QUALIFIED",
+										value: SMART_ID_CERTIFICATE.toString("base64")
+									},
+
+									signature: {
+										algorithm: "sha256WithRSAEncryption",
+										value: sign(
+											keys.privateKey,
+											xades.signable
+										).toString("base64")
+									}
+								}, req, res)
+							})
+						)
+
+						signed.statusCode.must.equal(204)
+
+						yield signaturesDb.search(sql`
+							SELECT * FROM initiative_signatures
+						`).must.then.not.be.empty()
+					})
+
+					it(`must respond with error given an invalid ${algo} signature`,
+						function*() {
+						var cert = new Certificate(newCertificate({
+							subject: {
+								countryName: "EE",
+								organizationalUnitName: "SIGNATURE",
+								commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+								surname: "SMITH",
+								givenName: "JOHN",
+								serialNumber: `PNOEE-${PERSONAL_ID}`
+							},
+
+							issuer: VALID_ISSUERS[0],
+							publicKey: keys.publicKey
+						}))
+
+						var errored = yield signWithSmartId(
+							this.router,
+							this.request,
+							this.initiative,
+							cert,
+							respond.bind(null, {
+								state: "COMPLETE",
+								result: {endResult: "OK"},
+
+								cert: {
+									certificateLevel: "QUALIFIED",
+									value: SMART_ID_CERTIFICATE.toString("base64")
+								},
+
+								signature: {
+									algorithm: "sha256WithRSAEncryption",
+									value: Crypto.randomBytes(64).toString("base64")
+								}
+							})
+						)
+
+						errored.statusCode.must.equal(410)
+						errored.statusMessage.must.equal("Invalid Smart-Id Signature")
+						var initiativePath = `/initiatives/${this.initiative.uuid}`
+						errored.headers.location.must.equal(initiativePath)
+
+						var cookies = Http.parseCookies(errored.headers["set-cookie"])
+						var res = yield this.request(errored.headers.location, {
+							headers: {Cookie: Http.serializeCookies(cookies)}
+						})
+
+						res.statusCode.must.equal(200)
+						res.body.must.not.include(t("THANKS_FOR_SIGNING"))
+						res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+						res.body.must.include(t("SMART_ID_ERROR_INVALID_SIGNATURE"))
+
+						yield signaturesDb.search(sql`
+							SELECT * FROM initiative_signatures
+						`).must.then.be.empty()
+					})
+				})
+
+				it("must respond with 422 given invalid personal id", function*() {
+					this.router.post(`${SMART_ID_URL.path}certificatechoice/etsi/:id`,
+						function(req, res) {
+						res.statusCode = 404
+						respond({code: 404, message: "Not Found"}, req, res)
+					})
+
+					var initiativePath = `/initiatives/${this.initiative.uuid}`
+					var res = yield this.request(initiativePath + "/signatures", {
+						method: "POST",
+						form: {method: "smart-id", personalId: "60001011337"}
+					})
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Not a Smart-Id User")
+					res.body.must.include(t("SMART_ID_ERROR_NOT_FOUND"))
+
+					yield signablesDb.search(sql`
+						SELECT * FROM initiative_signables
+					`).must.then.be.empty()
+				})
+
+				it("must respond with 500 given Bad Request", function*() {
+					this.router.post(`${SMART_ID_URL.path}certificatechoice/etsi/:id`,
+						function(req, res) {
+						res.statusCode = 400
+						respond({code: 400, message: "Bad Request"}, req, res)
+					})
+
+					var initiativePath = `/initiatives/${this.initiative.uuid}`
+					var res = yield this.request(initiativePath + "/signatures", {
+						method: "POST",
+						form: {method: "smart-id", personalId: "60001011337"}
+					})
+
+					res.statusCode.must.equal(500)
+					res.statusMessage.must.equal("Unknown Smart-Id Error")
+					res.body.must.not.include("FOOLANG")
+
+					yield signablesDb.search(sql`
+						SELECT * FROM initiative_signables
+					`).must.then.be.empty()
+				})
+
+				_.each(SMART_ID_SESSION_ERRORS,
+					function([statusCode, statusMessage, error], code) {
+					it(`must respond with error given ${code} while fetching certificate`,
+						function*() {
+						var errored = yield certWithSmartId(
+							this.router,
+							this.request,
+							this.initiative,
+							respond.bind(null, {state: "COMPLETE", result: {endResult: code}})
+						)
+
+						errored.statusCode.must.equal(statusCode)
+						errored.statusMessage.must.equal(statusMessage)
+						errored.body.must.include(t(error))
+
+						yield signaturesDb.search(sql`
+							SELECT * FROM initiative_signatures
+						`).must.then.be.empty()
+					})
+
+					it(`must respond with error given ${code} while signing`,
+						function*() {
+						var errored = yield signWithSmartId(
+							this.router,
+							this.request,
+							this.initiative,
+							SMART_ID_CERTIFICATE,
+							respond.bind(null, {state: "COMPLETE", result: {endResult: code}})
+						)
+
+						errored.statusCode.must.equal(statusCode)
+						errored.statusMessage.must.equal(statusMessage)
+						var initiativePath = `/initiatives/${this.initiative.uuid}`
+						errored.headers.location.must.equal(initiativePath)
+
+						yield signaturesDb.search(sql`
+							SELECT * FROM initiative_signatures
+						`).must.then.be.empty()
+
+						var cookies = Http.parseCookies(errored.headers["set-cookie"])
+						var res = yield this.request(errored.headers.location, {
+							headers: {Cookie: Http.serializeCookies(cookies)}
+						})
+
+						res.statusCode.must.equal(200)
+						res.body.must.not.include(t("THANKS_FOR_SIGNING"))
+						res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+						res.body.must.include(t(error))
+					})
+				})
+
+				it("must time out after 2 minutes", function*() {
+					var waited = 0
+					var errored = yield signWithSmartId(
+						this.router,
+						this.request,
+						this.initiative,
+						SMART_ID_CERTIFICATE,
+						(req, res) => {
+							Url.parse(req.url, true).query.timeoutMs.must.equal("30000")
+							if (waited++ == 0) this.time.tick(119 * 1000)
+							else this.time.tick(1000)
+							respond({state: "RUNNING"}, req, res)
+						}
+					)
+
+					errored.statusCode.must.equal(410)
+					errored.statusMessage.must.equal("Smart-Id Timeout")
+					var initiativePath = `/initiatives/${this.initiative.uuid}`
+					errored.headers.location.must.equal(initiativePath)
+					waited.must.equal(2)
+
+					yield signaturesDb.search(sql`
+						SELECT * FROM initiative_signatures
+					`).must.then.be.empty()
+
+					var cookies = Http.parseCookies(errored.headers["set-cookie"])
+					var res = yield this.request(errored.headers.location, {
+						headers: {Cookie: Http.serializeCookies(cookies)}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(t("THANKS_FOR_SIGNING"))
+					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+					res.body.must.include(t("SMART_ID_ERROR_TIMEOUT_SIGN"))
 				})
 			})
 		})
@@ -2583,6 +3172,78 @@ function* signWithMobileId(router, request, initiative, cert, res) {
 		}
 	})
 
+	signing.statusCode.must.equal(202)
+
+	return request(signing.headers.location, {
+		headers: {Accept: `application/x-empty, ${ERR_TYPE}`}
+	})
+}
+
+function certWithSmartId(router, request, initiative, cert) {
+	var certSession = "3befb011-37bf-4e57-b041-e4cba1496766"
+
+	router.post(
+		`${SMART_ID_URL.path}certificatechoice/etsi/:id`,
+		respond.bind(null, {sessionID: certSession})
+	)
+
+	router.get(
+		`${SMART_ID_URL.path}session/${certSession}`,
+		typeof cert == "function" ? cert : respond.bind(null, {
+			state: "COMPLETE",
+			result: {endResult: "OK", documentNumber: SMART_ID},
+			cert: {certificateLevel: "QUALIFIED", value: cert.toString("base64")}
+		})
+	)
+
+	return request(`/initiatives/${initiative.uuid}/signatures`, {
+		method: "POST",
+		form: {method: "smart-id", personalId: PERSONAL_ID}
+	})
+}
+
+function* signWithSmartId(router, request, initiative, cert, res) {
+	var signSession = "21e55f06-d6cb-40b7-9638-75dc0b131851"
+
+	router.post(
+		`${SMART_ID_URL.path}signature/document/${SMART_ID}`,
+		respond.bind(null, {sessionID: signSession})
+	)
+
+	router.get(
+		`${SMART_ID_URL.path}session/${signSession}`,
+		typeof res == "function" ? res : next(function*(req, res) {
+			res.writeHead(200)
+
+			var xades = yield signablesDb.read(sql`
+				SELECT xades FROM initiative_signables
+				ORDER BY created_at DESC
+				LIMIT 1
+			`).then((row) => row.xades)
+
+			respond({
+				state: "COMPLETE",
+				result: {endResult: "OK"},
+				cert: {certificateLevel: "QUALIFIED", value: cert.toString("base64")},
+
+				signature: {
+					algorithm: "sha256WithRSAEncryption",
+					value: signWithRsa(
+						JOHN_RSA_KEYS.privateKey,
+						xades.signable
+					).toString("base64")
+				}
+			}, req, res)
+		})
+	)
+
+	router.post(TIMEMARK_URL.path, function(req, res) {
+		req.headers.host.must.equal(TIMEMARK_URL.host)
+		res.setHeader("Content-Type", "application/ocsp-response")
+		res.end(Ocsp.parse(newOcspResponse(cert)).toBuffer())
+	})
+
+	var signing = yield certWithSmartId(router, request, initiative, cert)
 	signing.statusCode.must.equal(202)
 
 	return request(signing.headers.location, {

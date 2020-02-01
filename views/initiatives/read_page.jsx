@@ -322,33 +322,47 @@ function ReadPage(attrs) {
 					) ? <DeleteSignatureButton req={req} signature={signature}>
 						{t("REVOKE_SIGNATURE")}
 					</DeleteSignatureButton> : <Fragment>
-						<Form
-							req={req}
-							id="id-card-form"
-							method="post"
-							action={initiativePath + "/signatures"}>
-							<button class="inherited-button">
+						<input
+							type="radio"
+							id="signature-method-tab-id-card"
+							name="signature-method-tab"
+							value="id-card"
+							style="display: none"
+						/>
+
+						<input
+							type="radio"
+							name="signature-method-tab"
+							id="signature-method-tab-mobile-id"
+							value="mobile-id"
+							style="display: none"
+						/>
+
+						<input
+							type="radio"
+							name="signature-method-tab"
+							id="signature-method-tab-smart-id"
+							value="smart-id"
+							style="display: none"
+						/>
+
+						<div id="signature-methods">
+							<label
+								id="id-card-button"
+								for="signature-method-tab-id-card"
+								class="inherited-button"
+							>
 								<img
 									src="/assets/id-kaart-button.png"
 									title={signWithIdCardText}
 									alt={signWithIdCardText}
 								/>
-							</button>
-						</Form>
+							</label>
 
-						<Form
-							req={req}
-							id="mobile-id-form"
-							method="post"
-							action={initiativePath + "/signatures"}>
-							<input
-								id="mobile-id-form-toggle"
-								type="checkbox"
-								style="display: none"
-								onchange="this.form.phoneNumber.focus()"
-							/>
-
-							<label for="mobile-id-form-toggle" class="inherited-button">
+							<label
+								for="signature-method-tab-mobile-id"
+								class="inherited-button"
+							>
 								<img
 									src="/assets/mobile-id-button.png"
 									title={signWithMobileText}
@@ -356,23 +370,61 @@ function ReadPage(attrs) {
 								/>
 							</label>
 
+							{Config.smartId && initiative.undersignable ? <label
+								for="signature-method-tab-smart-id"
+								class="inherited-button"
+							>
+								<img
+									src="/assets/smart-id-button.svg"
+									title={t("BTN_VOTE_SIGN_WITH_SMART_ID")}
+									alt={t("BTN_VOTE_SIGN_WITH_SMART_ID")}
+								/>
+							</label> : null}
+						</div>
+
+						<Form
+							req={req}
+							id="id-card-form"
+							class="signature-form"
+							method="post"
+							action={initiativePath + "/signatures"}>
+							<p id="id-card-flash" class="flash error" />
+						</Form>
+
+						<Form
+							req={req}
+							id="mobile-id-form"
+							class="signature-form"
+							method="post"
+							action={initiativePath + "/signatures"}>
+
 							<input type="hidden" name="optionId" value={optId} />
 
-							<input
-								type="tel"
-								name="phoneNumber"
-								placeholder={t("PLACEHOLDER_PHONE_NUMBER")}
-								required
-								class="form-input"
-							/>
+							<label class="form-label">
+								{t("LABEL_PHONE_NUMBER")}
 
-							<input
-								type="tel"
-								name="personalId"
-								placeholder={t("PLACEHOLDER_PERSONAL_IDENTIFICATION_CODE")}
-								required
-								class="form-input"
-							/>
+								<input
+									type="tel"
+									name="phoneNumber"
+									placeholder={t("PLACEHOLDER_PHONE_NUMBER")}
+									required
+									class="form-input"
+								/>
+							</label>
+
+							<label class="form-label">
+								{t("LABEL_PERSONAL_ID")}
+
+								<input
+									type="text"
+									pattern="[0-9]*"
+									inputmode="numeric"
+									name="personalId"
+									placeholder={t("PLACEHOLDER_PERSONAL_ID")}
+									required
+									class="form-input"
+								/>
+							</label>
 
 							<button
 								name="method"
@@ -382,29 +434,70 @@ function ReadPage(attrs) {
 							</button>
 						</Form>
 
-						{
-							// This flash is for the the Id-card JavaScript code below.
-						}
-						<p id="initiative-vote-flash" class="flash error" />
+						{Config.smartId && initiative.undersignable ? <Form
+							req={req}
+							id="smart-id-form"
+							class="signature-form"
+							method="post"
+							action={initiativePath + "/signatures"}>
+							<label class="form-label">
+								{t("LABEL_PERSONAL_ID")}
+
+								<input
+									type="text"
+									pattern="[0-9]*"
+									inputmode="numeric"
+									name="personalId"
+									placeholder={t("PLACEHOLDER_PERSONAL_ID")}
+									required
+									class="form-input"
+								/>
+							</label>
+
+							<button
+								name="method"
+								value="smart-id"
+								class="green-button">
+								{t("BTN_VOTE_SIGN_WITH_SMART_ID")}
+							</button>
+						</Form> : null}
+
+						<script>{javascript`
+							var el = document.getElementById("initiative-vote")
+							var inputs = el.querySelectorAll("input[name=personalId]")
+							var each = Function.call.bind(Array.prototype.forEach)
+
+							each(inputs, function(from) {
+								from.addEventListener("change", function(ev) {
+									 each(inputs, function(to) {
+									 	if (to != from) to.value = ev.target.value
+									 })
+								})
+							})	
+						`}</script>
 
 						<script>{javascript`
 							var Hwcrypto = require("@rahvaalgatus/hwcrypto")
 							var TRANSLATIONS = ${stringify(UI_TRANSLATIONS[req.lang])}
+							var button = document.getElementById("id-card-button")
 							var form = document.getElementById("id-card-form")
-							var flash = document.getElementById("initiative-vote-flash")
+							var flash = document.getElementById("id-card-flash")
 							var all = Promise.all.bind(Promise)
+
+							button.addEventListener("click", sign)
 
 							form.addEventListener("submit", function(ev) {
 								ev.preventDefault()
+								sign()
+							})
+
+							function sign() {
 								notice("")
 
 								var certificate = Hwcrypto.certificate("sign")
 
 								var signable = certificate.then(function(certificate) {
-									var path = "/initiatives/${initiative.uuid}/signatures"
-									path += "?optionId=${optId}"
-
-									return fetch(path, {
+									return fetch(form.action + "?optionId=${optId}", {
 										method: "POST",
 										credentials: "same-origin",
 
@@ -457,7 +550,7 @@ function ReadPage(attrs) {
 
 								done.catch(noticeError)
 								done.catch(raise)
-							})
+							}
 
 							function noticeError(err) {
 								notice(

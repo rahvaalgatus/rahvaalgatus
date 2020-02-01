@@ -546,15 +546,15 @@ exports.router.delete("/:id", next(function*(req, res) {
 
 function* waitForMobileIdAuthentication(t, authentication, sessionId) {
 	try {
-		var authCertAndHash, err
+		var certAndSignatureHash, err
 
 		for (
 			var started = new Date;
-			authCertAndHash == null && new Date - started < 120 * 1000;
-		) authCertAndHash = yield mobileId.waitForAuthentication(sessionId, 30)
-		if (authCertAndHash == null) throw new MobileIdError("TIMEOUT")
+			certAndSignatureHash == null && new Date - started < 120 * 1000;
+		) certAndSignatureHash = yield mobileId.waitForAuthentication(sessionId, 30)
+		if (certAndSignatureHash == null) throw new MobileIdError("TIMEOUT")
 
-		var [cert, signature] = authCertAndHash
+		var [cert, signatureHash] = certAndSignatureHash
 		var [country, personalId] = getCertificatePersonalId(cert)
 		if (err = validateCertificate(t, cert)) throw err
 
@@ -568,7 +568,7 @@ function* waitForMobileIdAuthentication(t, authentication, sessionId) {
 			updated_at: new Date
 		})
 
-		if (!cert.hasSigned(authentication.token, signature))
+		if (!cert.hasSigned(authentication.token, signatureHash))
 			throw new MobileIdError("INVALID_SIGNATURE")
 
 		yield authenticationsDb.update(authentication, {

@@ -56,7 +56,7 @@ module.exports = function(attrs) {
 					</h2>
 
 					<label class="form-label">
-						Telefoninumber
+						{t("LABEL_PHONE_NUMBER")}
 
 						<input
 							type="tel"
@@ -68,12 +68,14 @@ module.exports = function(attrs) {
 					</label>
 
 					<label class="form-label">
-						Isikukood
+						{t("LABEL_PERSONAL_ID")}
 
 						<input
-							type="tel"
+							type="text"
+							pattern="[0-9]*"
+							inputmode="numeric"
 							name="personalId"
-							placeholder={t("PLACEHOLDER_PERSONAL_IDENTIFICATION_CODE")}
+							placeholder={t("PLACEHOLDER_PERSONAL_ID")}
 							required
 							class="form-input"
 						/>
@@ -102,9 +104,11 @@ module.exports = function(attrs) {
 						Isikukood
 
 						<input
-							type="tel"
+							type="text"
+							pattern="[0-9]*"
+							inputmode="numeric"
 							name="personalId"
-							placeholder={t("PLACEHOLDER_PERSONAL_IDENTIFICATION_CODE")}
+							placeholder={t("PLACEHOLDER_PERSONAL_ID")}
 							required
 							class="form-input"
 						/>

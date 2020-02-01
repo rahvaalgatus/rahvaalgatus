@@ -1133,7 +1133,11 @@ button.inherited {
 		.form-label {
 			margin-top: 0;
 			margin-right: 0.5rem;
+		}
+
+		.form-label, button {
 			margin-bottom: 0.5rem;
+			vertical-align: bottom;
 		}
 
 		@media only screen and (max-width: 669px) {
@@ -1913,6 +1917,8 @@ button.inherited {
 	}
 
 	#initiative-vote {
+		$methods: (id-card, mobile-id, smart-id);
+
 		border-top: 1px solid $light-background-border;
 		background-color: $light-background;
 
@@ -1945,13 +1951,31 @@ button.inherited {
 			line-height: 1.5;
 		}
 
-		#id-card-form,
-		#mobile-id-form {
-			padding: 0 1rem;
-			display: inline-block;
-			width: 50%;
+		#signature-methods {
 			margin-top: 1rem;
-			vertical-align: top;
+			text-align: center;
+
+			form,
+			label {
+				display: inline-block;
+
+				& + * { margin-left: 1rem; }
+			}
+
+			form button,
+			label {
+				display: inline-block;
+				width: 8.8rem;
+				height: 3.1rem;
+
+				img	{
+					width: 100%;
+
+					// Internet Explorer v11 won't activate the label if clicked on an
+					// image.
+					img { pointer-events: none; }
+				}
+			}
 		}
 
 		.revoke-button {
@@ -1960,47 +1984,35 @@ button.inherited {
 			margin: 0 auto;
 		}
 
-		#id-card-form { text-align: right; }
-		input { margin-bottom: 0.5rem; }
-		.flash { margin-top: 1rem; }
+		.signature-form {
+			text-align: center;
+			margin-top: 1rem;
+			display: none;
 
-		@include mobile-and-tablet {
-			form {
-				width: auto;
-				display: block;
-				text-align: center;
-				padding: 0;
+			.form-label {
+				text-align: left;
+				margin-right: 0.5rem;
 			}
 
-			input,
-			button {
-				margin-left: auto;
-				margin-right: auto;
+			.form-label, button {
+				margin-top: 0;
+				margin-bottom: 0.5rem;
+				vertical-align: bottom;
 			}
 
-			#id-card-form { text-align: center; }
-		}
+			@include mobile {
+				.form-label {
+					width: 100%;
 
-		@include mobile {
-			input, .button {
-				display: block;
-				width: 100%;
+					input { width: 100%; }
+				}
 			}
 		}
 
-		#mobile-id-form {
-			// Internet Explorer v11 won't activate the label if clicked on an image.
-			#mobile-id-form-toggle + label {
-				display: inline-block;
-				img { pointer-events: none; }
+		@each $method in $methods {
+			#signature-method-tab-#{$method}:checked ~ ##{$method}-form {
+				display: block;
 			}
-
-			#mobile-id-form-toggle:not(:checked) {
-				& ~ input,
-				& ~ button { display: none; }
-			}
-
-			#mobile-id-form-toggle:checked + label { display: none; }
 		}
 	}
 

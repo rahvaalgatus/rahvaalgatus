@@ -5,10 +5,12 @@ var Mime = require("mime")
 var Asic = require("undersign/lib/asic")
 var Path = require("path")
 var MobileId = require("undersign/lib/mobile_id")
+var SmartId = require("undersign/lib/smart_id")
 var MediaType = require("medium-type")
 var Router = require("express").Router
 var HttpError = require("standard-http-error")
 var MobileIdError = require("undersign/lib/mobile_id").MobileIdError
+var SmartIdError = require("undersign/lib/smart_id").SmartIdError
 var Certificate = require("undersign/lib/certificate")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
@@ -22,6 +24,7 @@ var isOk = require("root/lib/http").isOk
 var reportError = require("root").errorReporter
 var sleep = require("root/lib/promise").sleep
 var mobileId = require("root").mobileId
+var smartId = require("root").smartId
 var hades = require("root").hades
 var parseBody = require("body-parser").raw
 var signaturesDb = require("root/db/initiative_signatures_db")
@@ -110,6 +113,47 @@ var MOBILE_ID_ERRORS = {
 	]
 }
 
+var SMART_ID_ERRORS = {
+	// Initiation responses:
+	ACCOUNT_NOT_FOUND: [
+		422,
+		"Not a Smart-Id User",
+		"SMART_ID_ERROR_NOT_FOUND"
+	],
+
+	// Session responses:
+	USER_REFUSED: [
+		410,
+		"Smart-Id Cancelled",
+		"SMART_ID_ERROR_USER_REFUSED_SIGN"
+	],
+
+	TIMEOUT: [
+		410,
+		"Smart-Id Timeout",
+		"SMART_ID_ERROR_TIMEOUT_SIGN"
+	],
+
+	DOCUMENT_UNUSABLE: [
+		410,
+		"Smart-Id Certificate Unusable",
+		"SMART_ID_ERROR_DOCUMENT_UNUSABLE"
+	],
+
+	WRONG_VC: [
+		410,
+		"Wrong Smart-Id Verification Code Chosen",
+		"SMART_ID_ERROR_WRONG_VERIFICATION_CODE"
+	],
+
+	// Custom responses:
+	INVALID_SIGNATURE: [
+		410,
+		"Invalid Smart-Id Signature",
+		"SMART_ID_ERROR_INVALID_SIGNATURE"
+	]
+}
+
 exports.router.get("/", next(function*(req, res) {
 	var initiative = req.initiative
 	var token = Buffer.from(req.query["parliament-token"] || "", "hex")
@@ -173,15 +217,16 @@ exports.router.post("/", next(function*(req, res, next) {
 
 		case "mobile-id":
 			var phoneNumber = ensureAreaCode(req.body.phoneNumber)
+			personalId = req.body.personalId
 
 			// Log Mobile-Id requests to confirm SK's billing.
 			logger.info(
 				"Requesting Mobile-Id certificate for %s and %s.",
 				phoneNumber,
-				req.body.personalId
+				personalId
 			)
 
-			cert = yield mobileId.readCertificate(phoneNumber, req.body.personalId)
+			cert = yield mobileId.readCertificate(phoneNumber, personalId)
 			if (err = validateCertificate(req.t, cert)) throw err
 
 			;[country, personalId] = getCertificatePersonalId(cert)
@@ -218,6 +263,44 @@ exports.router.post("/", next(function*(req, res, next) {
 			})
 
 			co(waitForMobileIdSignature(signable, sessionId))
+			break
+
+		case "smart-id":
+			personalId = req.body.personalId
+
+			// Log Smart-Id requests to confirm SK's billing.
+			logger.info("Requesting Smart-Id certificate for %s.", personalId)
+
+			cert = yield smartId.certificate("PNOEE-" + personalId)
+			cert = yield smartId.wait(cert, 90)
+			if (err = validateCertificate(req.t, cert)) throw err
+
+			;[country, personalId] = getCertificatePersonalId(cert)
+			xades = newXades(initiative)
+
+			// The Smart-Id API returns any signing errors only when its status is
+			// queried, not when signing is initiated.
+			logger.info("Signing via Smart-Id for %s.", personalId)
+
+			var signSession = yield smartId.sign(cert, xades.signableHash)
+
+			signable = yield signablesDb.create({
+				initiative_uuid: initiative.uuid,
+				country: country,
+				personal_id: personalId,
+				method: "smart-id",
+				xades: xades
+			})
+
+			signatureUrl = req.baseUrl + "/" + pathToSignature(signable)
+			res.setHeader("Location", signatureUrl)
+
+			res.status(202).render("initiatives/signatures/creating_page.jsx", {
+				code: SmartId.verification(xades.signableHash),
+				poll: signatureUrl
+			})
+
+			co(waitForSmartIdSignature(signable, signSession))
 			break
 
 		default: throw new HttpError(422, "Unknown Signing Method")
@@ -361,6 +444,17 @@ exports.router.use("/", next(function(err, req, res, next) {
 		}
 		else throw new HttpError(500, "Unknown Mobile-Id Error", {error: err})
 	}
+	else if (err instanceof SmartIdError) {
+		if (err.code in SMART_ID_ERRORS) {
+			res.statusCode = SMART_ID_ERRORS[err.code][0]
+			res.statusMessage = SMART_ID_ERRORS[err.code][1]
+
+			res.render("initiatives/signatures/creating_page.jsx", {
+				error: req.t(SMART_ID_ERRORS[err.code][2])
+			})
+		}
+		else throw new HttpError(500, "Unknown Smart-Id Error", {error: err})
+	}
 	else next(err)
 }))
 
@@ -462,12 +556,27 @@ exports.router.get("/:id",
 						res.flash("error", req.t("500_BODY"))
 					}
 				}
+				else if (err.name == "SmartIdError") {
+					if (err.code in SMART_ID_ERRORS) {
+						res.statusCode = SMART_ID_ERRORS[err.code][0]
+						res.statusMessage = SMART_ID_ERRORS[err.code][1]
+						res.flash("error", req.t(SMART_ID_ERRORS[err.code][2]))
+					}
+					else {
+						res.statusCode = 500
+						res.statusMessage = "Unknown Smart-Id Error"
+						res.flash("error", req.t("500_BODY"))
+					}
+				}
 				else {
 					res.statusCode = 500
 					res.flash("error", req.t("500_BODY"))
 				}
 			}
-			else res.flash("error", req.t("MOBILE_ID_ERROR_TIMEOUT"))
+			else if (signable.method == "mobile-id")
+				res.flash("error", req.t("MOBILE_ID_ERROR_TIMEOUT"))
+			else
+				res.flash("error", req.t("SMART_ID_ERROR_TIMEOUT_SIGN"))
 
 			switch (res.contentType.name) {
 				case "application/x-empty": return void res.end()
@@ -649,6 +758,53 @@ function* waitForMobileIdSignature(signable, sessionId) {
 			ex instanceof MobileIdError &&
 			getNormalizedMobileIdErrorCode(ex) in MOBILE_ID_ERRORS
 		)) reportError(ex)
+
+		yield signablesDb.update(signable, {error: ex, updated_at: new Date})
+	}
+}
+
+function* waitForSmartIdSignature(signable, session) {
+	try {
+		var xades = signable.xades
+		var certAndSignatureHash
+
+		for (
+			var started = new Date;
+			certAndSignatureHash == null && new Date - started < 120 * 1000;
+		) certAndSignatureHash = yield smartId.wait(session, 30)
+		if (certAndSignatureHash == null) throw new SmartIdError("TIMEOUT")
+
+		var [_cert, signatureHash] = certAndSignatureHash
+		if (!xades.certificate.hasSigned(xades.signable, signatureHash))
+			throw new SmartIdError("INVALID_SIGNATURE")
+
+		xades.setSignature(signatureHash)
+
+		yield signablesDb.update(signable, {
+			xades: xades,
+			signed: true,
+			updated_at: new Date
+		})
+
+		logger.info(
+			"Requesting timemark for signable %s%s.",
+			signable.country,
+			signable.personal_id
+		)
+
+		xades.setOcspResponse(yield hades.timemark(xades))
+
+		yield signablesDb.update(signable, {
+			xades: xades,
+			timestamped: true,
+			updated_at: new Date
+		})
+
+		yield replaceSignature(signable)
+	}
+	catch (ex) {
+		if (!(ex instanceof SmartIdError && ex.code in SMART_ID_ERRORS))
+			reportError(ex)
 
 		yield signablesDb.update(signable, {error: ex, updated_at: new Date})
 	}
