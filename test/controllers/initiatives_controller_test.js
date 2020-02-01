@@ -1530,6 +1530,8 @@ describe("InitiativesController", function() {
 						? t("PARLIAMENT_MEETING_DECISION_FORWARD")
 						: decision == "solve-differently"
 						? t("PARLIAMENT_MEETING_DECISION_SOLVE_DIFFERENTLY")
+						: decision == "draft-act-or-national-matter"
+						? t("PARLIAMENT_MEETING_DECISION_DRAFT_ACT_OR_NATIONAL_MATTER")
 						: null
 					)
 				})
@@ -1936,6 +1938,8 @@ describe("InitiativesController", function() {
 						? t("PARLIAMENT_DECISION_FORWARD")
 						: decision == "solve-differently"
 						? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
+						: decision == "draft-act-or-national-matter"
+						? t("PARLIAMENT_DECISION_DRAFT_ACT_OR_NATIONAL_MATTER")
 						: null
 					)
 				})
@@ -1984,6 +1988,8 @@ describe("InitiativesController", function() {
 						? t("PARLIAMENT_DECISION_FORWARD")
 						: decision == "solve-differently"
 						? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
+						: decision == "draft-act-or-national-matter"
+						? t("PARLIAMENT_DECISION_DRAFT_ACT_OR_NATIONAL_MATTER")
 						: null
 					)
 				})
@@ -3851,6 +3857,8 @@ describe("InitiativesController", function() {
 						? t("PARLIAMENT_MEETING_DECISION_FORWARD")
 						: decision == "solve-differently"
 						? t("PARLIAMENT_MEETING_DECISION_SOLVE_DIFFERENTLY")
+						: decision == "draft-act-or-national-matter"
+						? t("PARLIAMENT_MEETING_DECISION_DRAFT_ACT_OR_NATIONAL_MATTER")
 						: null
 					}
 				})
@@ -4118,6 +4126,8 @@ describe("InitiativesController", function() {
 						? t("PARLIAMENT_DECISION_FORWARD")
 						: decision == "solve-differently"
 						? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
+						: decision == "draft-act-or-national-matter"
+						? t("PARLIAMENT_DECISION_DRAFT_ACT_OR_NATIONAL_MATTER")
 						: null
 					}
 				})
@@ -4172,6 +4182,8 @@ describe("InitiativesController", function() {
 						? t("PARLIAMENT_DECISION_FORWARD")
 						: decision == "solve-differently"
 						? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
+						: decision == "draft-act-or-national-matter"
+						? t("PARLIAMENT_DECISION_DRAFT_ACT_OR_NATIONAL_MATTER")
 						: null
 					}
 				})

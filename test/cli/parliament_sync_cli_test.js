@@ -649,6 +649,27 @@ describe("ParliamentSyncCli", function() {
 				content: {committee: null, decision: "forward", invitees: null}
 			}],
 
+			"ARUTELU_KOMISJONIS status with ALGATADA_EELNOU_VOI_OTRK decision": [{
+				statuses: [{
+					date: "2018-10-24",
+					status: {code: "ARUTELU_KOMISJONIS"},
+					committeeDecision: {code: "ALGATADA_EELNOU_VOI_OTRK"}
+				}]
+			}, {
+				parliament_decision: "draft-act-or-national-matter",
+			}, {
+				occurred_at: new Date(2018, 9, 24),
+				origin: "parliament",
+				external_id: "ARUTELU_KOMISJONIS/2018-10-24",
+				type: "parliament-committee-meeting",
+				title: null,
+				content: {
+					committee: null,
+					decision: "draft-act-or-national-matter",
+					invitees: null
+				}
+			}],
+
 			"MENETLUS_LOPETATUD status": [{
 				statuses: [{date: "2018-10-24", status: {code: "MENETLUS_LOPETATUD"}}]
 			}, {
