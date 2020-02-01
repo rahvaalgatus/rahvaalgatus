@@ -93,7 +93,71 @@ module.exports = function(attrs) {
 
 			<tr>
 				<th scope="row">
+					Authentications<br />
+					<small>Includes logged out sessions.</small>
+				</th>
+
+				<td>
+					{attrs.authenticationsCount.all}
+
+					<ul>
+						<li>{attrs.authenticationsCount.id_card} with Id-card.</li>
+						<li>{attrs.authenticationsCount.mobile_id} with Mobile-Id.</li>
+						<li>{attrs.authenticationsCount.smart_id} with Smart-Id.</li>
+					</ul>
+				</td>
+			</tr>
+
+			<tr>
+				<th scope="row">
 					Signatures<br />
+
+					<small>
+						Counts initiative and user pairs.
+						Excluded if deleted or revoked in time.
+					</small>
+				</th>
+
+				<td>{attrs.signatureCount.all + attrs.citizenSignatureCount}</td>
+			</tr>
+
+			<tr>
+				<th scope="row">
+					Signatures via Undersign.js<br />
+
+					<small>
+						Counts initiative and user pairs.
+						Excluded if deleted.
+					</small>
+				</th>
+
+				<td>
+					{attrs.signatureCount.all}
+
+					<ul>
+						<li>{attrs.signatureCount.id_card} with Id-card.</li>
+						<li>{attrs.signatureCount.mobile_id} with Mobile-Id.</li>
+						<li>{attrs.signatureCount.smart_id} with Smart-Id.</li>
+					</ul>
+				</td>
+			</tr>
+
+			<tr>
+				<th scope="row">
+					Unique signers via Undersign.js<br />
+
+					<small>
+						Unique signers for all initiatives.
+						Excluded if deleted.
+					</small>
+				</th>
+
+				<td>{attrs.signerCount}</td>
+			</tr>
+
+			<tr>
+				<th scope="row">
+					Signatures via CitizenOS<br />
 
 					<small>
 						Counts initiative and user pairs.
@@ -101,12 +165,12 @@ module.exports = function(attrs) {
 					</small>
 				</th>
 
-				<td>{attrs.signatureCount}</td>
+				<td>{attrs.citizenSignatureCount}</td>
 			</tr>
 
 			<tr>
 				<th scope="row">
-					Unique signers<br />
+					Unique signers via CitizenOS<br />
 
 					<small>
 						Unique signers for all initiatives.
@@ -114,7 +178,7 @@ module.exports = function(attrs) {
 					</small>
 				</th>
 
-				<td>{attrs.signerCount}</td>
+				<td>{attrs.citizenSignerCount}</td>
 			</tr>
 
 			<tr>
