@@ -432,7 +432,7 @@
 	"TITLE_FIELD": "Insert the topic of your initiative (you can change it later)",
 	"TXT_ALL_DISCUSSIONS_AND_VOTES_DELETED": "All discussions and votes will be deleted.",
 	"TXT_DEADLINE_CALENDAR_DAYS_LEFT": "{{numberOfDaysLeft}} days left",
-	"TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE": "You need to <a href=\"{{url}}\">log in</a> to participate.",
+	"TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE": "Please <a href=\"{{url}}\">log in</a> to comment.",
 	"TXT_TOPIC_VISIBILITY_PRIVATE": "Private discussion",
 	"UPDATE_INITIATIVE_INFO": "Update",
 	"VOTE_DEADLINE_EXPLANATION": "Renew deadline and confirm text. Your initiative will be sent to voting in this form until the selected date.",

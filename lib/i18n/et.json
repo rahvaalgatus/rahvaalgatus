@@ -575,7 +575,7 @@
 	"TITLE_FIELD": "Sisesta oma algatuse teema (seda saad hiljem muuta)",
 	"TXT_ALL_DISCUSSIONS_AND_VOTES_DELETED": "Kõik arutelud ja hääled kustutatakse.",
 	"TXT_DEADLINE_CALENDAR_DAYS_LEFT": "{{numberOfDaysLeft}} päeva jäänud",
-	"TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE": "Osalemiseks pead <a href=\"{{url}}\">sisse logima</a>.",
+	"TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE": "Kommenteerimiseks pead <a href=\"{{url}}\">sisse logima</a>.",
 	"TXT_TOPIC_VISIBILITY_PRIVATE": "Privaatne arutelu",
 	"UPDATE_INITIATIVE_INFO": "Salvesta",
 	"USER_EMAIL_ALREADY_CONFIRMED": "Meiliaadress on juba kinnitatud.",
