@@ -7,7 +7,7 @@ var sendEmail = require("root").sendEmail
 var renderEmail = require("root/lib/i18n").email
 var searchTopics = require("root/lib/citizenos_db").searchTopics
 var next = require("co-next")
-var db = require("root/db/initiative_subscriptions_db")
+var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var initiativesDb = require("root/db/initiatives_db")
 var sql = require("sqlate")
 exports.parse = parse
@@ -21,7 +21,7 @@ var readSubscriptionFromQuery = next(withSubscription.bind(null, (req) => [
 exports.router.get("/", readSubscriptionFromQuery, next(function*(req, res) {
 	var subscription = req.subscription
 
-	var subscriptions = yield db.search(sql`
+	var subscriptions = yield subscriptionsDb.search(sql`
 		SELECT * FROM initiative_subscriptions
 		WHERE email = ${subscription.email}
 		AND confirmed_at IS NOT NULL
@@ -51,6 +51,7 @@ exports.router.get("/", readSubscriptionFromQuery, next(function*(req, res) {
 }))
 
 exports.router.post("/", next(function*(req, res) {
+	var user = req.user
 	var email = req.body.email
 
 	if (!_.isValidEmail(email))
@@ -60,7 +61,7 @@ exports.router.post("/", next(function*(req, res) {
 
 	var subscription
 	try {
-		subscription = yield db.create({
+		subscription = yield subscriptionsDb.create({
 			email: email,
 			created_at: new Date,
 			created_ip: req.ip,
@@ -69,7 +70,7 @@ exports.router.post("/", next(function*(req, res) {
 	}
 	catch (err) {
 		if (err instanceof SqliteError && err.type == "unique")
-			subscription = yield db.read(sql`
+			subscription = yield subscriptionsDb.read(sql`
 				SELECT * FROM initiative_subscriptions
 				WHERE initiative_uuid IS NULL AND email = ${email}
 			`)
@@ -78,6 +79,18 @@ exports.router.post("/", next(function*(req, res) {
 	}
 
 	if (
+		user &&
+		user.email &&
+		_.caseSensitiveEquals(user.email, subscription.email)
+	) {
+		yield subscriptionsDb.update(subscription, {
+			confirmed_at: new Date,
+			updated_at: new Date
+		})
+
+		res.flash("notice", req.t("CONFIRMED_INITIATIVES_SUBSCRIPTION"))
+	}
+	else if (
 		subscription.confirmation_sent_at == null ||
 		new Date - subscription.confirmation_sent_at >= 3600 * 1000
 	) {
@@ -85,7 +98,7 @@ exports.router.post("/", next(function*(req, res) {
 
 		if (subscription.confirmed_at) {
 			yield sendEmail({
-				to: email,
+				to: subscription.email,
 				subject: req.t("ALREADY_SUBSCRIBED_TO_INITIATIVES_TITLE"),
 				text: renderEmail(req.lang, "ALREADY_SUBSCRIBED_TO_INITIATIVES_BODY", {
 					url: Http.link(req, req.baseUrl + "/" + token)
@@ -93,20 +106,22 @@ exports.router.post("/", next(function*(req, res) {
 			})
 		}
 		else yield sendEmail({
-			to: email,
+			to: subscription.email,
 			subject: req.t("CONFIRM_INITIATIVES_SUBSCRIPTION_TITLE"),
 			text: renderEmail(req.lang, "CONFIRM_INITIATIVES_SUBSCRIPTION_BODY", {
 				url: Http.link(req, req.baseUrl + "/new?confirmation_token=" + token)
 			})
 		})
 
-		yield db.update(subscription, {
+		yield subscriptionsDb.update(subscription, {
 			confirmation_sent_at: new Date,
 			updated_at: new Date
 		})
-	}
 
-	res.flash("notice", req.t("CONFIRM_INITIATIVES_SUBSCRIPTION"))
+		res.flash("notice", req.t("CONFIRM_INITIATIVES_SUBSCRIPTION"))
+	}
+	else res.flash("notice", req.t("CONFIRM_INITIATIVES_SUBSCRIPTION"))
+
 	res.redirect(303, "/")
 }))
 
@@ -118,7 +133,7 @@ exports.router.put("/", readSubscriptionFromQuery, next(function*(req, res) {
 	)), parse)
 
 	// Get all subscriptions for redirecting later.
-	var subscriptions = yield db.search(sql`
+	var subscriptions = yield subscriptionsDb.search(sql`
 		SELECT * FROM initiative_subscriptions
 		WHERE email = ${subscription.email}
 		AND confirmed_at IS NOT NULL
@@ -127,8 +142,12 @@ exports.router.put("/", readSubscriptionFromQuery, next(function*(req, res) {
 	subscriptions = (yield subscriptions.map(function(subscription) {
 		var attrs = attrsByInitiativeUuid[subscription.initiative_uuid]
 		if (attrs == null) return Promise.resolve(subscription)
-		if (attrs.delete) return db.delete(subscription)
-		return db.update(subscription, {__proto__: attrs, updated_at: new Date})
+		if (attrs.delete) return subscriptionsDb.delete(subscription)
+
+		return subscriptionsDb.update(subscription, {
+			__proto__: attrs,
+			updated_at: new Date
+		})
 	})).filter(Boolean)
 
 	res.flash("notice", req.t("INITIATIVE_SUBSCRIPTIONS_UPDATED"))
@@ -143,7 +162,7 @@ exports.router.put("/", readSubscriptionFromQuery, next(function*(req, res) {
 exports.router.delete("/", readSubscriptionFromQuery, next(function*(req, res) {
 	var subscription = req.subscription
 
-	yield db.execute(sql`
+	yield subscriptionsDb.execute(sql`
 		DELETE FROM initiative_subscriptions
 		WHERE email = ${subscription.email}
 		AND confirmed_at IS NOT NULL
@@ -154,7 +173,7 @@ exports.router.delete("/", readSubscriptionFromQuery, next(function*(req, res) {
 }))
 
 exports.router.get("/new", next(function*(req, res) {
-	var subscription = yield db.read(sql`
+	var subscription = yield subscriptionsDb.read(sql`
 		SELECT * FROM initiative_subscriptions
 		WHERE initiative_uuid IS NULL
 		AND update_token = ${req.query.confirmation_token}
@@ -163,7 +182,7 @@ exports.router.get("/new", next(function*(req, res) {
 
 	if (subscription) {
 		if (!subscription.confirmed_at)
-			yield db.update(subscription, {
+			yield subscriptionsDb.update(subscription, {
 				confirmed_at: new Date,
 				updated_at: new Date
 			})
@@ -207,7 +226,7 @@ function parse(obj) {
 function* withSubscription(get, req, res, next) {
 	var [uuid, token] = get(req)
 
-	req.subscription = yield db.read(sql`
+	req.subscription = yield subscriptionsDb.read(sql`
 		SELECT * FROM initiative_subscriptions
 		WHERE initiative_uuid ${uuid ? sql`= ${uuid}` : sql`IS NULL`}
 		AND update_token = ${token}

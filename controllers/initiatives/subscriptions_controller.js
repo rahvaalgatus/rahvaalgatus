@@ -13,6 +13,7 @@ var renderEmail = require("root/lib/i18n").email
 exports.router = Router({mergeParams: true})
 
 exports.router.post("/", next(function*(req, res) {
+	var user = req.user
 	var topic = req.topic
 	var initiative = req.initiative
 	var email = req.body.email
@@ -43,6 +44,18 @@ exports.router.post("/", next(function*(req, res) {
 	}
 
 	if (
+		user &&
+		user.email &&
+		_.caseSensitiveEquals(user.email, subscription.email)
+	) {
+		yield subscriptionsDb.update(subscription, {
+			confirmed_at: new Date,
+			updated_at: new Date
+		})
+
+		res.flash("notice", req.t("CONFIRMED_INITIATIVE_SUBSCRIPTION"))
+	}
+	else if (
 		subscription.confirmation_sent_at == null ||
 		new Date - subscription.confirmation_sent_at >= 3600 * 1000
 	) {
@@ -84,9 +97,11 @@ exports.router.post("/", next(function*(req, res) {
 			confirmation_sent_at: new Date,
 			updated_at: new Date
 		})
-	}
 
-	res.flash("notice", req.t("CONFIRM_INITIATIVE_SUBSCRIPTION"))
+		res.flash("notice", req.t("CONFIRM_INITIATIVE_SUBSCRIPTION"))
+	}
+	else res.flash("notice", req.t("CONFIRM_INITIATIVE_SUBSCRIPTION"))
+
 	res.redirect(303, Path.dirname(req.baseUrl))
 }))
 

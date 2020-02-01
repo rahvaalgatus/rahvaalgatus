@@ -1618,6 +1618,7 @@ function CommentsView(attrs) {
 function SubscribeEmailView(attrs) {
 	var t = attrs.t
 	var req = attrs.req
+	var user = req.user
 	var initiative = attrs.initiative
 	var count = attrs.count
 
@@ -1630,6 +1631,7 @@ function SubscribeEmailView(attrs) {
       id="initiative-subscribe-email"
       name="email"
       type="email"
+			value={user && (user.email || user.unconfirmed_email)}
       required
       placeholder={t("LBL_EMAIL")}
       class="form-input"

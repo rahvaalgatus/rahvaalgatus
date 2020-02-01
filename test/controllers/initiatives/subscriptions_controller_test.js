@@ -1,3 +1,4 @@
+var Crypto = require("crypto")
 var Config = require("root/config")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSubscription = require("root/test/valid_subscription")
@@ -8,7 +9,10 @@ var createPartner = require("root/test/citizenos_fixtures").createPartner
 var createUser = require("root/test/fixtures").createUser
 var createTopic = require("root/test/citizenos_fixtures").createTopic
 var sql = require("sqlate")
+var {parseCookies} = require("root/lib/http")
+var {serializeCookies} = require("root/lib/http")
 var pseudoHex = require("root/lib/crypto").pseudoHex
+var usersDb = require("root/db/users_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var initiativesDb = require("root/db/initiatives_db")
 
@@ -36,7 +40,7 @@ describe("InitiativeSubscriptionsController", function() {
 	})
 
 	describe("POST /", function() {
-		require("root/test/fixtures").csrf()
+		require("root/test/fixtures").csrfRequest()
 		require("root/test/email")()
 		require("root/test/time")(Date.UTC(2015, 5, 18))
 
@@ -44,7 +48,7 @@ describe("InitiativeSubscriptionsController", function() {
 			var path = `/initiatives/${this.initiative.uuid}/subscriptions`
 			var res = yield this.request(path, {
 				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: "user@example.com"}
+				form: {email: "user@example.com"}
 			})
 
 			res.statusCode.must.equal(303)
@@ -60,9 +64,7 @@ describe("InitiativeSubscriptionsController", function() {
 			subscription.must.eql(new ValidSubscription({
 				initiative_uuid: this.initiative.uuid,
 				email: "user@example.com",
-				created_at: new Date,
 				created_ip: "127.0.0.1",
-				updated_at: new Date,
 				confirmation_sent_at: new Date,
 				update_token: subscription.update_token
 			}))
@@ -84,7 +86,7 @@ describe("InitiativeSubscriptionsController", function() {
 			var path = `/initiatives/${initiative.uuid}/subscriptions`
 			var res = yield this.request(path, {
 				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: "user@example.com"}
+				form: {email: "user@example.com"}
 			})
 
 			res.statusCode.must.equal(303)
@@ -103,6 +105,159 @@ describe("InitiativeSubscriptionsController", function() {
 			body.match(/^Subject: .*/m)[0].must.include(initiative.title)
 		})
 
+		describe("when logged in", function() {
+			require("root/test/fixtures").user()
+
+			it("must subscribe with confirmed email", function*() {
+				yield usersDb.update(this.user, {
+					email: "user@example.com",
+					email_confirmed_at: new Date
+				})
+
+				var path = `/initiatives/${this.initiative.uuid}/subscriptions`
+				var res = yield this.request(path, {
+					method: "POST",
+					form: {email: "user@example.com"}
+				})
+
+				res.statusCode.must.equal(303)
+
+				var subscription = yield subscriptionsDb.read(sql`
+					SELECT * FROM initiative_subscriptions
+				`)
+
+				subscription.must.eql(new ValidSubscription({
+					initiative_uuid: this.initiative.uuid,
+					email: "user@example.com",
+					created_ip: "127.0.0.1",
+					confirmed_at: new Date,
+					update_token: subscription.update_token
+				}))
+
+				this.emails.length.must.equal(0)
+
+				var cookies = parseCookies(res.headers["set-cookie"])
+				res = yield this.request(res.headers.location, {
+					headers: {Cookie: serializeCookies(cookies)}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("CONFIRMED_INITIATIVE_SUBSCRIPTION"))
+			})
+
+			it("must subscribe with confirmed email case-sensitively", function*() {
+				yield usersDb.update(this.user, {
+					email: "USer@EXAMple.com",
+					email_confirmed_at: new Date
+				})
+
+				var path = `/initiatives/${this.initiative.uuid}/subscriptions`
+				var res = yield this.request(path, {
+					method: "POST",
+					form: {email: "usER@examPLE.com"}
+				})
+
+				res.statusCode.must.equal(303)
+
+				var subscription = yield subscriptionsDb.read(sql`
+					SELECT * FROM initiative_subscriptions
+				`)
+
+				subscription.must.eql(new ValidSubscription({
+					initiative_uuid: this.initiative.uuid,
+					email: "usER@examPLE.com",
+					created_ip: "127.0.0.1",
+					confirmed_at: new Date,
+					update_token: subscription.update_token
+				}))
+
+				this.emails.length.must.equal(0)
+
+				var cookies = parseCookies(res.headers["set-cookie"])
+				res = yield this.request(res.headers.location, {
+					headers: {Cookie: serializeCookies(cookies)}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("CONFIRMED_INITIATIVE_SUBSCRIPTION"))
+			})
+
+			it("must subscribe with unconfirmed email", function*() {
+				yield usersDb.update(this.user, {
+					unconfirmed_email: "user@example.com",
+					email_confirmation_token: Crypto.randomBytes(12)
+				})
+
+				var path = `/initiatives/${this.initiative.uuid}/subscriptions`
+				var res = yield this.request(path, {
+					method: "POST",
+					form: {email: "user@example.com"}
+				})
+
+				res.statusCode.must.equal(303)
+
+				var subscription = yield subscriptionsDb.read(sql`
+					SELECT * FROM initiative_subscriptions
+				`)
+
+				subscription.must.eql(new ValidSubscription({
+					initiative_uuid: this.initiative.uuid,
+					email: "user@example.com",
+					created_ip: "127.0.0.1",
+					confirmation_sent_at: new Date,
+					update_token: subscription.update_token
+				}))
+
+				this.emails.length.must.equal(1)
+
+				var cookies = parseCookies(res.headers["set-cookie"])
+				res = yield this.request(res.headers.location, {
+					headers: {Cookie: serializeCookies(cookies)}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("CONFIRM_INITIATIVE_SUBSCRIPTION"))
+			})
+
+			it("must confirm if already subscribed", function*() {
+				var subscription = yield subscriptionsDb.create(new ValidSubscription({
+					initiative_uuid: this.initiative.uuid,
+					confirmed_at: new Date
+				}))
+
+				yield usersDb.update(this.user, {
+					email: subscription.email,
+					email_confirmed_at: new Date
+				})
+				
+				var path = `/initiatives/${this.initiative.uuid}/subscriptions`
+				var res = yield this.request(path, {
+					method: "POST",
+					form: {email: subscription.email}
+				})
+
+				res.statusCode.must.equal(303)
+
+				yield subscriptionsDb.read(sql`
+					SELECT * FROM initiative_subscriptions
+				`).must.then.eql({
+					__proto__: subscription,
+					confirmed_at: new Date,
+					updated_at: new Date
+				})
+
+				this.emails.length.must.equal(0)
+
+				var cookies = parseCookies(res.headers["set-cookie"])
+				res = yield this.request(res.headers.location, {
+					headers: {Cookie: serializeCookies(cookies)}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("CONFIRMED_INITIATIVE_SUBSCRIPTION"))
+			})
+		})
+
 		it(`must subscribe case-insensitively`, function*() {
 			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
 			var email = "user@example.com"
@@ -118,7 +273,7 @@ describe("InitiativeSubscriptionsController", function() {
 
 			var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions`, {
 				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: email.toUpperCase()}
+				form: {email: email.toUpperCase()}
 			})
 
 			res.statusCode.must.equal(303)
@@ -141,7 +296,7 @@ describe("InitiativeSubscriptionsController", function() {
 			this.time.tick(3599 * 1000)
 			var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions`, {
 				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: subscription.email}
+				form: {email: subscription.email}
 			})
 
 			res.statusCode.must.equal(303)
@@ -162,7 +317,7 @@ describe("InitiativeSubscriptionsController", function() {
 			this.time.tick(3600 * 1000)
 			var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions`, {
 				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: subscription.email}
+				form: {email: subscription.email}
 			})
 
 			res.statusCode.must.equal(303)
@@ -188,7 +343,7 @@ describe("InitiativeSubscriptionsController", function() {
 			this.time.tick(3600 * 1000)
 			var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions`, {
 				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: subscription.email}
+				form: {email: subscription.email}
 			})
 
 			res.statusCode.must.equal(303)
@@ -219,7 +374,7 @@ describe("InitiativeSubscriptionsController", function() {
 			var path = `/initiatives/${initiative.uuid}/subscriptions`
 			var res = yield this.request(path, {
 				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: "user@example.com"}
+				form: {email: "user@example.com"}
 			})
 
 			res.statusCode.must.equal(403)
@@ -229,7 +384,7 @@ describe("InitiativeSubscriptionsController", function() {
 		it("must respond with 422 given missing email", function*() {
 			var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions`, {
 				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: ""}
+				form: {email: ""}
 			})
 
 			res.statusCode.must.equal(422)
@@ -238,7 +393,7 @@ describe("InitiativeSubscriptionsController", function() {
 		it("must respond with 422 given invalid email", function*() {
 			var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions`, {
 				method: "POST",
-				form: {_csrf_token: this.csrfToken, email: "fubar"}
+				form: {email: "fubar"}
 			})
 
 			res.statusCode.must.equal(422)
@@ -246,7 +401,7 @@ describe("InitiativeSubscriptionsController", function() {
 	})
 
 	describe("GET /new", function() {
-		require("root/test/fixtures").csrf()
+		require("root/test/fixtures").csrfRequest()
 		require("root/test/time")(Date.UTC(2015, 5, 18))
 
 		it("must confirm given a confirmation token", function*() {
@@ -355,7 +510,7 @@ describe("InitiativeSubscriptionsController", function() {
 	})
 
 	describe("GET /:token", function() {
-		require("root/test/fixtures").csrf()
+		require("root/test/fixtures").csrfRequest()
 
 		it("must redirect to subscriptions page", function*() {
 			var subscription = yield subscriptionsDb.create(new ValidSubscription({

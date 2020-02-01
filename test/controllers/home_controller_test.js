@@ -1,6 +1,7 @@
 var _ = require("root/lib/underscore")
 var Url = require("url")
 var Config = require("root/config")
+var Crypto = require("crypto")
 var DateFns = require("date-fns")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSignature = require("root/test/valid_signature")
@@ -13,6 +14,7 @@ var createTopic = require("root/test/citizenos_fixtures").createTopic
 var createVote = require("root/test/citizenos_fixtures").createVote
 var createCitizenSignatures =
 	require("root/test/citizenos_fixtures").createSignatures
+var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var parseDom = require("root/lib/dom").parse
@@ -590,6 +592,52 @@ describe("HomeController", function() {
 
 		describe(`on ${LOCAL_SITE_HOSTNAME}`, function() {
 			mustShowInitiativesInPhases(LOCAL_SITE_HOSTNAME, "muhu-vald")
+		})
+
+		describe("when logged in", function() {
+			require("root/test/fixtures").user()
+
+			it("must render subscription form without email if person lacks one",
+				function*() {
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var form = dom.querySelector("#initiatives-subscribe")
+				form.querySelector("input[name=email]").value.must.equal("")
+			})
+			
+			it("must render subscription form with person's confirmed email",
+				function*() {
+				yield usersDb.update(this.user, {
+					email: "user@example.com",
+					email_confirmed_at: new Date
+				})
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var form = dom.querySelector("#initiatives-subscribe")
+				var input = form.querySelector("input[name=email]")
+				input.value.must.equal("user@example.com")
+			})
+
+			it("must render subscription form with person's unconfirmed email",
+				function*() {
+				yield usersDb.update(this.user, {
+					unconfirmed_email: "user@example.com",
+					email_confirmation_token: Crypto.randomBytes(12)
+				})
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var form = dom.querySelector("#initiatives-subscribe")
+				var input = form.querySelector("input[name=email]")
+				input.value.must.equal("user@example.com")
+			})
 		})
 	})
 

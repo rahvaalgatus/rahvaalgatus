@@ -12,6 +12,7 @@ var EMPTY_ARR = Array.prototype
 module.exports = function(attrs) {
 	var t = attrs.t
 	var req = attrs.req
+	var user = req.user
 	var initiatives = attrs.initiatives
 	var topics = attrs.topics
 	var stats = attrs.statistics
@@ -83,6 +84,7 @@ module.exports = function(attrs) {
 					type="email"
 					required
 					placeholder={t("LBL_EMAIL")}
+					value={user && (user.email || user.unconfirmed_email)}
 					class="form-input"
 				/>
 

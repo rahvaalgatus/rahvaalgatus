@@ -2787,6 +2787,81 @@ describe("InitiativesController", function() {
 				)
 			})
 
+			it("must render subscription form without email if person lacks one",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id
+				}))
+
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: this.author.uuid,
+					sourcePartnerId: this.partner.id,
+					visibility: "public"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var form = dom.querySelector(".initiative-subscribe-form")
+				form.querySelector("input[name=email]").value.must.equal("")
+			})
+
+			it("must render subscription form with person's confirmed email",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id
+				}))
+
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: this.author.uuid,
+					sourcePartnerId: this.partner.id,
+					visibility: "public"
+				}))
+
+				yield usersDb.update(this.user, {
+					email: "user@example.com",
+					email_confirmed_at: new Date
+				})
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var form = dom.querySelector(".initiative-subscribe-form")
+				var input = form.querySelector("input[name=email]")
+				input.value.must.equal("user@example.com")
+			})
+
+			it("must render subscription form with person's unconfirmed email",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id
+				}))
+
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: this.author.uuid,
+					sourcePartnerId: this.partner.id,
+					visibility: "public"
+				}))
+
+				yield usersDb.update(this.user, {
+					unconfirmed_email: "user@example.com",
+					email_confirmation_token: Crypto.randomBytes(12)
+				})
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var form = dom.querySelector(".initiative-subscribe-form")
+				var input = form.querySelector("input[name=email]")
+				input.value.must.equal("user@example.com")
+			})
+
 			it("must render comment form mentioning missing email", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id
