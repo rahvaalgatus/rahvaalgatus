@@ -1102,7 +1102,10 @@ button.inherited {
 
 	form {
 		h2 img {
+			// Without max-width in rems in addition to max-height, Chrome has the
+			// image take up 100% width.
 			max-height: 3rem;
+			max-width: 4rem;
 			vertical-align: sub;
 			margin-right: 1rem;
 		}
