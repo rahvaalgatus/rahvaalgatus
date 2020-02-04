@@ -25,7 +25,7 @@
 	"minDeadlineDays": 3,
 	"maxDeadlineDays": 366,
 
-	"undersignable": false,
+	"undersignable": true,
 	"mobileIdUser": null,
 	"mobileIdPassword": null,
 	"smartId": true,

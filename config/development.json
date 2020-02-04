@@ -11,7 +11,6 @@
 	"signatureMilestones": [1, 2],
 	"adminPersonalIds": ["EE60001019906", "EE60001018800", "EE10101010005"],
 
-	"undersignable": true,
 	"timemarkUrl": "http://demo.sk.ee/ocsp",
 	"timestampUrl": "http://demo.sk.ee/tsa",
 	"parliamentEmail": "dev@rahvaalgatus.ee",
