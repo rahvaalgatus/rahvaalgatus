@@ -3,10 +3,11 @@ var Config = require("root/config")
 var Subscription = require("root/lib/subscription")
 var DateFns = require("date-fns")
 var initiativesDb = require("root/db/initiatives_db")
-var countSignaturesByIds = require("root/lib/citizenos_db").countSignaturesByIds
+var {countSignaturesByIds} = require("root/lib/initiative")
 var cosDb = require("root").cosDb
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var messagesDb = require("root/db/initiative_messages_db")
+var signaturesDb = require("root/db/initiative_signatures_db")
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var renderEmail = require("root/lib/i18n").email.bind(null, Config.language)
@@ -46,7 +47,7 @@ module.exports = function*() {
 function* updateMilestones(topic, initiative, signatureCount) {
 	var largest = _.findLast(MILESTONES, (n) => signatureCount >= n)
 
-	var signatures = yield cosDb.query(sql`
+	var citizenSignatures = yield cosDb.query(sql`
 		WITH initiative_signatures AS (
 			SELECT
 				DISTINCT ON (signature."userId")
@@ -64,12 +65,26 @@ function* updateMilestones(topic, initiative, signatureCount) {
 			ORDER BY signature."userId", signature."createdAt" DESC
 		)
 
-		SELECT *
+		SELECT created_at
 		FROM initiative_signatures
 		WHERE support = 'Yes'
 		ORDER BY created_at ASC
 		LIMIT ${largest}
 	`)
+
+	// Presuming that once an initiative starts using Undersign.js, it never
+	// converts back.
+	var signatures = yield signaturesDb.search(sql`
+		SELECT created_at
+		FROM initiative_signatures
+		WHERE initiative_uuid = ${initiative.uuid}
+		ORDER BY created_at ASC
+		LIMIT ${largest - citizenSignatures.length}
+	`)
+
+	// Sorting just in case some initiatives did briefly switch back to CitizenOS
+	// signing.
+	signatures = _.sortBy(concat(citizenSignatures, signatures), "created_at")
 
 	var milestones = MILESTONES.reduce(function(times, milestone) {
 		if (signatures.length >= milestone && !(milestone in times))

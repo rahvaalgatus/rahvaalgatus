@@ -32,23 +32,22 @@ var sql = require("sqlate")
 var sqlite = require("root").sqlite
 var translateCitizenError = require("root/lib/citizenos_api").translateError
 var searchTopics = require("root/lib/citizenos_db").searchTopics
-var countCitizenSignaturesByIds =
-	require("root/lib/citizenos_db").countSignaturesByIds
 var readVoteOptions = require("root/lib/citizenos_db").readVoteOptions
 var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var trim = Function.call.bind(String.prototype.trim)
 var sendEmail = require("root").sendEmail
 var searchInitiativeEvents = _.compose(searchInitiativesEvents, concat)
+var {countSignaturesById} = require("root/lib/initiative")
+var {countSignaturesByIds} = require("root/lib/initiative")
+var {countUndersignedSignaturesById} = require("root/lib/initiative")
 var ENV = process.env.ENV
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: ""}
 var EMPTY_CONTACT = {name: "", email: "", phone: ""}
-var EMPTY_PROMISE = Promise.resolve({})
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 exports.searchInitiativesEvents = searchInitiativesEvents
 exports.readCitizenSignature = readCitizenSignature
-exports.countSignaturesByIds = countSignaturesByIds
 
 var RESPONSE_TYPES = [
 	"text/html",
@@ -892,40 +891,6 @@ function parseMeeting(obj) {
 function serializeEtherpadUrl(url) {
 	if (Config.etherpadUrl) url = Config.etherpadUrl + Url.parse(url).path
 	return url + (url.indexOf("?") >= 0 ? "&" : "?") + "theme=" + ENV
-}
-
-function countSignaturesById(uuid) {
-	return countSignaturesByIds([uuid]).then((counts) => (
-		uuid in counts ? counts[uuid] : null
-	))
-}
-
-function countSignaturesByIds(uuids) {
-	if (uuids.length == 0) return EMPTY_PROMISE
-
-	return Promise.all([
-		countCitizenSignaturesByIds(uuids),
-		countUndersignedSignaturesByIds(uuids)
-	]).then(([a, b]) => _.mergeWith(a, b, _.add))
-}
-
-function countUndersignedSignaturesById(uuid) {
-	return countUndersignedSignaturesByIds([uuid]).then((counts) => (
-		uuid in counts ? counts[uuid] : null
-	))
-}
-
-function countUndersignedSignaturesByIds(uuids) {
-	return sqlite(sql`
-		SELECT initiative_uuid AS uuid, COUNT(*) AS count
-		FROM initiative_signatures
-		WHERE initiative_uuid IN ${sql.in(uuids)}
-		AND xades IS NOT NULL
-		GROUP BY initiative_uuid
-	`).then(function(rows) {
-		var counts = _.indexBy(rows, "uuid")
-		return _.object(uuids, (uuid) => uuid in counts ? +counts[uuid].count : 0)
-	})
 }
 
 function isOrganizationPresent(org) { return org.name || org.url }
