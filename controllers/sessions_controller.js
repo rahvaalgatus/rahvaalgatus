@@ -555,18 +555,19 @@ function* waitForMobileIdAuthentication(t, authentication, sessionId) {
 		if (certAndSignatureHash == null) throw new MobileIdError("TIMEOUT")
 
 		var [cert, signatureHash] = certAndSignatureHash
-		var [country, personalId] = getCertificatePersonalId(cert)
-		if (err = validateCertificate(t, cert)) throw err
-
-		if (
-			authentication.country != country ||
-			authentication.personal_id != personalId
-		) throw new MobileIdError("CERTIFICATE_MISMATCH")
 
 		yield authenticationsDb.update(authentication, {
 			certificate: cert,
 			updated_at: new Date
 		})
+
+		if (err = validateCertificate(t, cert)) throw err
+
+		var [country, personalId] = getCertificatePersonalId(cert)
+		if (
+			authentication.country != country ||
+			authentication.personal_id != personalId
+		) throw new MobileIdError("CERTIFICATE_MISMATCH")
 
 		if (!cert.hasSigned(authentication.token, signatureHash))
 			throw new MobileIdError("INVALID_SIGNATURE")
@@ -601,19 +602,19 @@ function* waitForSmartIdAuthentication(t, authentication, session) {
 		if (authCertAndSignature == null) throw new SmartIdError("TIMEOUT")
 
 		var [cert, signature] = authCertAndSignature
-		if (err = validateCertificate(t, cert)) throw err
-
-		var [country, personalId] = getCertificatePersonalId(cert)
-
-		if (
-			authentication.country != country ||
-			authentication.personal_id != personalId
-		) throw new SmartIdError("CERTIFICATE_MISMATCH")
 
 		yield authenticationsDb.update(authentication, {
 			certificate: cert,
 			updated_at: new Date
 		})
+
+		if (err = validateCertificate(t, cert)) throw err
+
+		var [country, personalId] = getCertificatePersonalId(cert)
+		if (
+			authentication.country != country ||
+			authentication.personal_id != personalId
+		) throw new SmartIdError("CERTIFICATE_MISMATCH")
 
 		if (!cert.hasSigned(authentication.token, signature))
 			throw new SmartIdError("INVALID_SIGNATURE")
