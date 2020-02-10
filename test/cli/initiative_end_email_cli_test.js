@@ -3,6 +3,7 @@ var DateFns = require("date-fns")
 var Config = require("root/config")
 var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_db_initiative")
+var ValidSignature = require("root/test/valid_signature")
 var cli = require("root/cli/initiative_end_email_cli")
 var newPartner = require("root/test/citizenos_fixtures").newPartner
 var newVote = require("root/test/citizenos_fixtures").newVote
@@ -14,8 +15,10 @@ var createCitizenUser = require("root/test/citizenos_fixtures").createUser
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var cosDb = require("root").cosDb
 var usersDb = require("root/db/users_db")
+var signaturesDb = require("root/db/initiative_signatures_db")
 var db = require("root/db/initiatives_db")
 var sql = require("sqlate")
+var t = require("root/lib/i18n").t.bind(null, Config.language)
 
 describe("InitiativeEndEmailCli", function() {
 	require("root/test/mitm")()
@@ -43,7 +46,7 @@ describe("InitiativeEndEmailCli", function() {
 				user_id: this.user.id
 			}))
 
-			yield createTopic({
+			var topic = yield createTopic({
 				id: initiative.uuid,
 				creatorId: this.user.uuid,
 				endsAt: new Date
@@ -51,9 +54,19 @@ describe("InitiativeEndEmailCli", function() {
 
 			yield cli()
 			this.emails.length.must.equal(1)
-			this.emails[0].envelope.to.must.eql([this.user.email])
-			var body = String(this.emails[0].message)
-			body.must.not.include("undefined")
+
+			var email = this.emails[0]
+			email.envelope.to.must.eql([this.user.email])
+			email.headers.subject.must.equal(t("DISCUSSION_END_EMAIL_SUBJECT"))
+
+			email.body.must.equal(t("DISCUSSION_END_EMAIL_BODY", {
+				initiativeTitle: topic.title,
+				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+				initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+				siteUrl: Config.url,
+				facebookUrl: Config.facebookUrl,
+				twitterUrl: Config.twitterUrl
+			}))
 		})
 
 		it("must email when discussion ended 6 months ago", function*() {
@@ -242,9 +255,56 @@ describe("InitiativeEndEmailCli", function() {
 
 			yield cli()
 			this.emails.length.must.equal(1)
-			this.emails[0].envelope.to.must.eql([this.user.email])
-			var body = String(this.emails[0].message)
-			body.must.not.include("undefined")
+
+			var email = this.emails[0]
+			email.envelope.to.must.eql([this.user.email])
+			email.headers.subject.must.equal(t("SIGNING_END_COMPLETE_EMAIL_SUBJECT"))
+
+			email.body.must.equal(t("SIGNING_END_COMPLETE_EMAIL_BODY", {
+				initiativeTitle: topic.title,
+				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+				initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+				siteUrl: Config.url,
+				facebookUrl: Config.facebookUrl,
+				twitterUrl: Config.twitterUrl
+			}))
+		})
+
+		it("must email when signing has ended and initiative successful with undersigned signatures", function*() {
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id,
+				phase: "sign"
+			}))
+
+			var topic = yield createTopic({
+				id: initiative.uuid,
+				creatorId: this.user.uuid,
+				status: "voting"
+			})
+
+			var vote = yield createVote(topic, newVote({endsAt: new Date}))
+			var half = Config.votesRequired / 2
+			yield createSignatures(vote, half)
+
+			yield signaturesDb.create(_.times(half, () => (
+				new ValidSignature({initiative_uuid: initiative.uuid})
+			)))
+
+			yield cli()
+			this.emails.length.must.equal(1)
+
+			var email = this.emails[0]
+			email.envelope.to.must.eql([this.user.email])
+			email.headers.subject.must.equal(t("SIGNING_END_COMPLETE_EMAIL_SUBJECT"))
+
+			email.body.must.equal(t("SIGNING_END_COMPLETE_EMAIL_BODY", {
+				initiativeTitle: topic.title,
+				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+				initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+				siteUrl: Config.url,
+				facebookUrl: Config.facebookUrl,
+				twitterUrl: Config.twitterUrl
+			}))
 		})
 
 		it("must email when signing has ended and initiative incomplete",
@@ -265,9 +325,22 @@ describe("InitiativeEndEmailCli", function() {
 
 			yield cli()
 			this.emails.length.must.equal(1)
-			this.emails[0].envelope.to.must.eql([this.user.email])
-			var body = String(this.emails[0].message)
-			body.must.not.include("undefined")
+
+			var email = this.emails[0]
+			email.envelope.to.must.eql([this.user.email])
+
+			email.headers.subject.must.equal(
+				t("SIGNING_END_INCOMPLETE_EMAIL_SUBJECT")
+			)
+
+			email.body.must.equal(t("SIGNING_END_INCOMPLETE_EMAIL_BODY", {
+				initiativeTitle: topic.title,
+				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+				initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+				siteUrl: Config.url,
+				facebookUrl: Config.facebookUrl,
+				twitterUrl: Config.twitterUrl
+			}))
 		})
 
 		it("must email when signing ended 6 months ago", function*() {
