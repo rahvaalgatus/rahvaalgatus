@@ -1,6 +1,7 @@
 var _ = require("root/lib/underscore")
 var DateFns = require("date-fns")
 var Config = require("root/config")
+var Crypto = require("crypto")
 var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSignature = require("root/test/valid_signature")
@@ -17,7 +18,6 @@ var cosDb = require("root").cosDb
 var usersDb = require("root/db/users_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var db = require("root/db/initiatives_db")
-var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 
 describe("InitiativeEndEmailCli", function() {
@@ -32,11 +32,7 @@ describe("InitiativeEndEmailCli", function() {
 			email_confirmed_at: new Date
 		}))
 
-		yield createCitizenUser(newCitizenUser({
-			id: this.user.uuid,
-			email: "john@example.com",
-		}))
-
+		yield createCitizenUser(newCitizenUser({id: this.user.uuid}))
 		this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
 	})
 	
@@ -116,7 +112,7 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email if user email not set", function*() {
-			yield cosDb.query(sql`UPDATE "Users" SET email = NULL`)
+			yield usersDb.update(this.user, {email: null, email_confirmed_at: null})
 
 			var initiative = yield db.create(new ValidInitiative({
 				user_id: this.user.id
@@ -133,7 +129,12 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email if user email not verified", function*() {
-			yield cosDb.query(sql`UPDATE "Users" SET "emailIsVerified" = false`)
+			yield usersDb.update(this.user, {
+				email: null,
+				email_confirmed_at: null,
+				unconfirmed_email: this.user.email,
+				email_confirmation_token: Crypto.randomBytes(12)
+			})
 
 			var initiative = yield db.create(new ValidInitiative({
 				user_id: this.user.id
@@ -406,7 +407,7 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email if user email not set", function*() {
-			yield cosDb.query(sql`UPDATE "Users" SET email = NULL`)
+			yield usersDb.update(this.user, {email: null, email_confirmed_at: null})
 
 			var initiative = yield db.create(new ValidInitiative({
 				user_id: this.user.id,
@@ -425,7 +426,12 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email if user email not verified", function*() {
-			yield cosDb.query(sql`UPDATE "Users" SET "emailIsVerified" = false`)
+			yield usersDb.update(this.user, {
+				email: null,
+				email_confirmed_at: null,
+				unconfirmed_email: this.user.email,
+				email_confirmation_token: Crypto.randomBytes(12)
+			})
 
 			var initiative = yield db.create(new ValidInitiative({
 				user_id: this.user.id,
