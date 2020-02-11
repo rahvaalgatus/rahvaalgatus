@@ -126,7 +126,7 @@
 	"FORM_OR": "or",
 	"GOVERNMENT_AGENCY_CONTACT": "Contact",
 	"HEADING_CAST_YOUR_VOTE": "Cast your vote to this initiative! ",
-	"HEADING_VOTE_REQUIRE_HARD_ID": "You can sign with the help of an ID card or mobile ID. You cannot sign without identifying yourself. ",
+	"HEADING_VOTE_REQUIRE_HARD_ID": "You can sign with the help of an ID card, mobile ID or Smart ID. You cannot sign without identifying yourself. ",
 	"HOME_PAGE_STATISTICS_DISCUSSIONS": "Discussions",
 	"HOME_PAGE_STATISTICS_INITIATIVES": "Initiatives",
 	"HOME_PAGE_STATISTICS_N_IN_LAST_30_DAYS": "<b>{{count}}</b> in the last 30 days",
