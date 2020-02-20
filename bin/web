@@ -13,6 +13,7 @@ var redirect = require("root/lib/redirect")
 var ENV = process.env.ENV
 var PORT = process.env.PORT || 3000
 var LOCAL_SITE_HOSTNAME = Url.parse(Config.localUrl).hostname
+var ERROR_TYPE = new MediaType("application/vnd.rahvaalgatus.error+json")
 var app = module.exports = Express.new()
 
 if (ENV == "development") {
@@ -90,9 +91,15 @@ app.use(require("root/lib/middleware/error_handler_middleware").bind(null,
 
 	var type = accepts([
 		new MediaType("text/html"),
-		new MediaType("application/vnd.rahvaalgatus.error+json"),
+		ERROR_TYPE,
 		new MediaType("application/json")
 	])
+
+	// If the client accepts JSON, for now, give it an error type back. Responding
+	// with 406 Not Acceptable could be more _to spec_, but that could be
+	// misleading given it's the error response we're having trouble with, not
+	// the original request.
+	if (type == null && isJsony(res.getHeader("Content-Type"))) type = ERROR_TYPE
 
 	switch (type && type.name) {
 		case "application/vnd.rahvaalgatus.error+json":
@@ -108,6 +115,8 @@ app.use(require("root/lib/middleware/error_handler_middleware").bind(null,
 			break
 
 		default:
+			res.setHeader("Content-Type", "text/html")
+
 			// Eventually when we're in control of signin, we should show the signin
 			// form for 401s.
 			if (err instanceof HttpError) {
@@ -132,6 +141,12 @@ app.use(require("root/lib/middleware/error_handler_middleware").bind(null,
 		}
 
 		return null
+	}
+
+	function isJsony(type) {
+		if (type == null) return false
+		type = new MediaType(type)
+		return type.name == "application/json" || type.suffix == "json"
 	}
 }))
 

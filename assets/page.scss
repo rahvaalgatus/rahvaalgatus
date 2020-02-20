@@ -2582,9 +2582,21 @@ button.inherited {
 
 	.example {
 		border-radius: 0.5rem;
+		border: 1px solid #eee;
 		padding: 3rem 2rem;
 		background: #fbf8f8;
-		color: $dark-blue
+		color: $dark-blue;
+
+		h3 {
+			margin: 0;
+			font-size: 2rem;
+			font-weight: bold;
+			text-align: center;
+		}
+
+		h3 ~ h3 { margin-top: 2rem; }
+		h3 + p { margin-top: 1rem; }
+		p { text-align: center; }
 	}
 
 	#example-initiative {

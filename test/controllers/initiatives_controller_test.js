@@ -706,6 +706,420 @@ describe("InitiativesController", function() {
 		})
 	})
 
+	describe(`GET / for ${INITIATIVE_TYPE}`, function() {
+		beforeEach(function*() {
+			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
+			this.author = yield createUser()
+		})
+
+		it("must not respond with initiatives from other partners", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
+
+			var partner = yield createPartner(newPartner())
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.author.uuid,
+				sourcePartnerId: partner.id,
+				visibility: "public"
+			}))
+
+			var res = yield this.request("/initiatives", {
+				headers: {Accept: INITIATIVE_TYPE}
+			})
+
+			res.statusCode.must.equal(200)
+			res.body.must.eql([])
+		})
+
+		it("must not respond with private initiatives", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.author.uuid,
+				sourcePartnerId: this.partner.id,
+				visibility: "private"
+			}))
+
+			var res = yield this.request("/initiatives", {
+				headers: {Accept: INITIATIVE_TYPE}
+			})
+
+			res.statusCode.must.equal(200)
+			res.body.must.eql([])
+		})
+
+		it("must not respond with deleted initiatives", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.author.uuid,
+				sourcePartnerId: this.partner.id,
+				visibility: "public",
+				deletedAt: new Date
+			}))
+
+			var res = yield this.request("/initiatives", {
+				headers: {Accept: INITIATIVE_TYPE}
+			})
+
+			res.statusCode.must.equal(200)
+			res.body.must.eql([])
+		})
+
+		it("must respond with initiatives", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "edit"
+			}))
+
+			var topic = yield createTopic(newTopic({
+				id: initiative.uuid,
+				title: "Better life for everyone.",
+				creatorId: this.author.uuid,
+				sourcePartnerId: this.partner.id,
+				visibility: "public",
+				endsAt: DateFns.addSeconds(new Date, 1)
+			}))
+
+			var res = yield this.request("/initiatives", {
+				headers: {Accept: INITIATIVE_TYPE}
+			})
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(INITIATIVE_TYPE)
+			res.headers["access-control-allow-origin"].must.equal("*")
+
+			res.body.must.eql([{
+				id: initiative.uuid,
+				title: topic.title,
+				phase: "edit",
+				signatureCount: 0
+			}])
+		})
+
+		it("must respond with external initiatives in parliament", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
+				received_by_parliament_at: pseudoDateTime(),
+				external: true
+			}))
+
+			var res = yield this.request("/initiatives", {
+				headers: {Accept: INITIATIVE_TYPE}
+			})
+
+			res.statusCode.must.equal(200)
+
+			res.body.must.eql([{
+				id: initiative.uuid,
+				title: initiative.title,
+				phase: "parliament",
+				signatureCount: null
+			}])
+		})
+
+		it("must respond with signature count", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "sign"
+			}))
+
+			var topic = yield createTopic(newTopic({
+				id: initiative.uuid,
+				title: "Better life for everyone.",
+				creatorId: this.author.uuid,
+				sourcePartnerId: this.partner.id,
+				status: "voting"
+			}))
+
+			var vote = yield createVote(topic, newVote({endsAt: new Date}))
+			yield createCitizenSignatures(vote, 5)
+
+			yield signaturesDb.create(_.times(3, () => new ValidSignature({
+				initiative_uuid: initiative.uuid
+			})))
+
+			var res = yield this.request("/initiatives", {
+				headers: {Accept: INITIATIVE_TYPE}
+			})
+
+			res.statusCode.must.equal(200)
+
+			res.body.must.eql([{
+				id: initiative.uuid,
+				title: topic.title,
+				phase: "sign",
+				signatureCount: 8
+			}])
+		})
+
+		describe("given signedSince", function() {
+			it("must return signature count since given date", function*() {
+				var self = this
+
+				var initiatives = yield _.times(10, function*(i) {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: self.author.id
+					}))
+
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: self.author.uuid,
+						sourcePartnerId: self.partner.id,
+						status: "voting"
+					}))
+
+					yield signaturesDb.create(_.times(i, () => new ValidSignature({
+						initiative_uuid: initiative.uuid,
+						created_at: new Date(2015, 5, 18 + i, 13, 37, 42)
+					})))
+
+					return initiative
+				})
+
+				var res = yield this.request("/initiatives?signedSince=2015-06-23", {
+					headers: {Accept: INITIATIVE_TYPE}
+				})
+
+				res.statusCode.must.equal(200)
+				_.map(res.body, "id").must.eql(_.map(initiatives.slice(5), "uuid"))
+				_.map(res.body, "signaturesSinceCount").must.eql([5, 6, 7, 8, 9])
+			})
+		})
+
+		describe("given phase", function() {
+			it("must respond with 400 given invalid phase", function*() {
+				var res = yield this.request("/initiatives?phase=foo", {
+					headers: {Accept: INITIATIVE_TYPE}
+				})
+
+				res.statusCode.must.equal(400)
+				res.statusMessage.must.equal("Invalid Phase")
+
+				res.body.must.eql({
+					code: 400,
+					message: "Invalid Phase",
+					name: "HttpError"
+				})
+			})
+
+			PHASES.forEach(function(phase, i) {
+				function* createInitiative(partner, user, attrs) {
+					var initiative = yield initiativesDb.create(
+						new ValidInitiative(_.assign({user_id: user.id}, attrs))
+					)
+
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: user.uuid,
+						sourcePartnerId: partner.id,
+						status: initiative.phase == "edit" ? "inProgress" : "voting",
+						visibility: "public"
+					}))
+
+					if (initiative.phase != "edit") yield createVote(topic, newVote())
+
+					return [initiative, topic]
+				}
+
+				it(`must respond with ${phase} initiatives if requested`, function*() {
+					var [initiative, topic] = yield createInitiative(
+						this.partner,
+						this.author,
+						{phase: phase}
+					)
+
+					var nextPhase = PHASES[(i + 1) % PHASES.length]
+					yield createInitiative(this.partner, this.author, {phase: nextPhase})
+
+					var res = yield this.request("/initiatives?phase=" + phase, {
+						headers: {Accept: INITIATIVE_TYPE}
+					})
+
+					res.statusCode.must.equal(200)
+
+					res.body.must.eql([{
+						id: initiative.uuid,
+						title: topic.title,
+						phase: phase,
+						signatureCount: 0
+					}])
+				})
+			})
+		})
+
+		describe("given order", function() {
+			it("must respond with 400 given invalid order", function*() {
+				var res = yield this.request("/initiatives?order=foo", {
+					headers: {Accept: INITIATIVE_TYPE}
+				})
+
+				res.statusCode.must.equal(400)
+				res.statusMessage.must.equal("Invalid Order")
+
+				res.body.must.eql({
+					code: 400,
+					message: "Invalid Order",
+					name: "HttpError"
+				})
+			})
+
+			_.each({
+				"signatureCount": _.id,
+				"+signatureCount": _.id,
+				"-signatureCount": _.reverse,
+			}, function(sort, order) {
+				it(`must sort by ${order}`, function*() {
+					var self = this
+
+					var initiatives = yield _.times(5, function*(i) {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: self.author.id
+						}))
+
+						yield createTopic(newTopic({
+							id: initiative.uuid,
+							creatorId: self.author.uuid,
+							sourcePartnerId: self.partner.id,
+							status: "voting"
+						}))
+
+						// Create signatures in descending order to ensure their default
+						// order doesn't match initiative creation order.
+						yield signaturesDb.create(_.times(4 - i, () => new ValidSignature({
+							initiative_uuid: initiative.uuid
+						})))
+
+						return initiative
+					})
+
+					var path = "/initiatives?order=" + encodeURIComponent(order)
+					var res = yield this.request(path, {
+						headers: {Accept: INITIATIVE_TYPE}
+					})
+
+					res.statusCode.must.equal(200)
+					var uuids = _.map(initiatives, "uuid").reverse()
+					_.map(res.body, "id").must.eql(sort(uuids))
+				})
+			})
+
+			_.each({
+				"signaturesSinceCount": _.id,
+				"+signaturesSinceCount": _.id,
+				"-signaturesSinceCount": _.reverse,
+			}, function(sort, order) {
+				it("must return signature count since given date", function*() {
+					var self = this
+
+					var initiatives = yield _.times(10, function*(i) {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: self.author.id
+						}))
+
+						yield createTopic(newTopic({
+							id: initiative.uuid,
+							creatorId: self.author.uuid,
+							sourcePartnerId: self.partner.id,
+							status: "voting"
+						}))
+
+						// Create signatures in descending order to ensure their default
+						// order doesn't match initiative creation order.
+						yield signaturesDb.create(_.times(9 - i, () => new ValidSignature({
+							initiative_uuid: initiative.uuid,
+							created_at: new Date(2015, 5, 27 - i, 13, 37, 42)
+						})))
+
+						return initiative
+					})
+
+					var path = "/initiatives?signedSince=2015-06-23"
+					path += "&order=" + encodeURIComponent(order)
+					var res = yield this.request(path, {
+						headers: {Accept: INITIATIVE_TYPE}
+					})
+
+					res.statusCode.must.equal(200)
+					var uuids = _.map(initiatives.slice(0, 5).reverse(), "uuid")
+					_.map(res.body, "id").must.eql(sort(uuids))
+					var counts = sort([5, 6, 7, 8, 9])
+					_.map(res.body, "signaturesSinceCount").must.eql(counts)
+				})
+			})
+		})
+
+		describe("given limit", function() {
+			it("must limit initiatives", function*() {
+				var self = this
+
+				var initiatives = yield _.times(10, function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: self.author.id
+					}))
+
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: self.author.uuid,
+						sourcePartnerId: self.partner.id,
+						status: "voting"
+					}))
+
+					return initiative
+				})
+
+				var res = yield this.request("/initiatives?limit=5", {
+					headers: {Accept: INITIATIVE_TYPE}
+				})
+
+				res.statusCode.must.equal(200)
+				_.map(res.body, "id").must.eql(_.map(initiatives.slice(0, 5), "uuid"))
+			})
+
+			it("must limit initiatives after sorting", function*() {
+				var self = this
+
+				var initiatives = yield _.times(10, function*(i) {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: self.author.id
+					}))
+
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: self.author.uuid,
+						sourcePartnerId: self.partner.id,
+						status: "inProgress",
+						visibility: "public"
+					}))
+
+					yield signaturesDb.create(_.times(i, () => new ValidSignature({
+						initiative_uuid: initiative.uuid
+					})))
+
+					return initiative
+				})
+
+				var path = "/initiatives?order=-signatureCount&limit=5"
+				var res = yield this.request(path, {
+					headers: {Accept: INITIATIVE_TYPE}
+				})
+
+				res.statusCode.must.equal(200)
+				var last5 = _.map(initiatives.slice(5), "uuid")
+				_.map(res.body, "id").must.eql(last5.reverse())
+			})
+		})
+	})
+
 	describe("GET /new", function() {
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
@@ -3462,7 +3876,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(404)
 		})
 
-		it("must respond with JSON", function*() {
+		it("must respond with initiative", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id
 			}))
@@ -3491,7 +3905,7 @@ describe("InitiativesController", function() {
 			})
 		})
 
-		it("must respond with JSON for external initiative", function*() {
+		it("must respond with external initiative", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				title: "Better life for everyone.",
 				external: true,

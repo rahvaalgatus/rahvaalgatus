@@ -37,6 +37,74 @@ paths:
             application/vnd.rahvaalgatus.statistics+json; v=1:
               schema: {$ref: "#/components/schemas/Statistics"}
 
+  /initiatives:
+    get:
+      tags: [Initiatives]
+      summary: Get a list of initiatives matching your filter.
+
+      parameters:
+        - name: phase
+          in: query
+          description: Filter initiatives by phase.
+          schema:
+            type: string
+            example: "sign"
+            enum: [edit, sign, parliament, government, done]
+
+        - name: signedSince
+          in: query
+          description: |
+            Limit returned initiatives to those that were signed since the
+            given date.
+
+            The date is interpreted to be in the "Europe/Tallinn" time zone. If
+            you specify a full time and date with an offset, that will be
+            honored.
+
+          schema:
+            type: string
+            format: date
+            example: "2020-01-01"
+
+        - name: order
+          in: query
+          description: |
+            Order initiatives. Ascending by default. Use the "-" prefix
+            to request a descending sort.
+
+          schema:
+            type: string
+            example: "-signatureCount"
+            enum:
+              - "signatureCount"
+              - "-signatureCount"
+              - "signaturesSinceCount"
+              - "-signaturesSinceCount"
+
+        - name: limit
+          in: query
+          description: Limit returned initiatives.
+          schema:
+            type: integer
+            example: 5
+
+      responses:
+        200:
+          description: OK
+          content:
+            application/vnd.rahvaalgatus.initiative+json; v=1:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Initiative"
+
+        400:
+          description: |
+            Invalid request
+
+            It could be because of an invalid phase or an invalid order query
+            parameter.
+
   /initiatives/{initiativeUuid}:
     get:
       tags: [Initiatives]
@@ -116,9 +184,8 @@ components:
           format: uuid
           example: 92cc16ee-107e-4208-b92c-2ffed24d4f4b
           description: |
-            The initiative's id.
-
-            This is an UUID as of Feb 20, 2020, but will become an integer in
+            The initiative's id.  
+            This is a UUID as of Feb 20, 2020, but will become an integer in
             the next few months.
 
         title:
@@ -137,7 +204,15 @@ components:
           nullable: true
           example: 1336
           description: |
-            The digital signature count for the initiative.
-
+            The digital signature count for the initiative.  
             Note that for external initiatives (those not originated from
             Rahvaalgatus) this may be null, indicating we don't know the count.
+
+        signaturesSinceCount:
+          type: integer
+          nullable: true
+          example: 5
+          description: |
+            The digital signature count for the initiative since the given date
+            _if_ `signedSince` was specified in the query.  
+            Will be missing if no `signedSince` is present.

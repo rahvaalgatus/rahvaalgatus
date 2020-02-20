@@ -48,18 +48,14 @@ var EMPTY_CONTACT = {name: "", email: "", phone: ""}
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 exports.searchInitiativesEvents = searchInitiativesEvents
 exports.readCitizenSignature = readCitizenSignature
-
-var RESPONSE_TYPES = [
-	"text/html",
-	"application/vnd.rahvaalgatus.initiative+json; v=1",
-	"application/atom+xml"
-].map(MediaType)
-
-var RESPONSE_PATTERNS = ["image/*"].map(MediaType)
-
 exports.router = Router({mergeParams: true})
 
-exports.router.get("/", next(function*(req, res) {
+exports.router.get("/",
+	new ResponseTypeMiddeware([
+		"text/html",
+		"application/vnd.rahvaalgatus.initiative+json; v=1",
+	].map(MediaType)),
+	next(function*(req, res) {
 	var gov = req.government
 
 	var initiatives = yield initiativesDb.search(sql`
@@ -99,18 +95,91 @@ exports.router.get("/", next(function*(req, res) {
 		initiatives = initiatives.filter((initiative) => topics[initiative.uuid])
 	}
 
-	var signatureCounts = yield countSignaturesByIds(_.keys(topics))
+	var topicUuids = _.keys(topics)
+	var signatureCounts = yield countSignaturesByIds(topicUuids)
 
-	var recentInitiatives = category
-		? EMPTY_ARR
-		: yield searchRecentInitiatives(initiatives)
+	var type = res.contentType
+	switch (type.name) {
+		case "application/vnd.rahvaalgatus.initiative+json":
+			res.setHeader("Content-Type", type)
+			res.setHeader("Access-Control-Allow-Origin", "*")
 
-	res.render("initiatives_page.jsx", {
-		initiatives: initiatives,
-		recentInitiatives: recentInitiatives,
-		topics: topics,
-		signatureCounts: signatureCounts
-	})
+			switch (req.query.phase || undefined) {
+				case "edit":
+				case "sign":
+				case "parliament":
+				case "government":
+				case "done":
+					initiatives = initiatives.filter((initiative) => (
+						initiative.phase == req.query.phase
+					))
+					break
+
+				case undefined: break
+				default: throw new HttpError(400, "Invalid Phase")
+			}
+
+			var signaturesSinceCounts = null
+			if (req.query.signedSince)
+				signaturesSinceCounts = yield countSignaturesByIdsAndTime(
+					topicUuids,
+					DateFns.parse(req.query.signedSince)
+				)
+
+			var apiInitiatives = initiatives.map(function(initiative) {
+				if (
+					signaturesSinceCounts &&
+					(initiative.external || !signaturesSinceCounts[initiative.uuid])
+				) return null
+
+				var obj = serializeApiInitiative(
+					initiative,
+					initiative.external ? null : signatureCounts[initiative.uuid]
+				)
+
+				if (signaturesSinceCounts)
+					obj.signaturesSinceCount = signaturesSinceCounts[initiative.uuid]
+
+				return obj
+			}).filter(Boolean)
+
+			var order = req.query.order
+			switch (order || undefined) {
+				case "signatureCount":
+				case "+signatureCount":
+				case "-signatureCount":
+				case "signaturesSinceCount":
+				case "+signaturesSinceCount":
+				case "-signaturesSinceCount":
+					apiInitiatives = _.sortBy(apiInitiatives, order.replace(/^[-+ ]/, ""))
+					if (order[0] == "-") apiInitiatives = _.reverse(apiInitiatives)
+					break
+
+				case undefined: break
+				default: throw new HttpError(400, "Invalid Order")
+			}
+
+			var limit = req.query.limit
+			switch (limit || undefined) {
+				case undefined: break
+				default: apiInitiatives = apiInitiatives.slice(0, Number(limit))
+			}
+
+			res.send(apiInitiatives)
+			break
+
+		default:
+			var recentInitiatives = category
+				? EMPTY_ARR
+				: yield searchRecentInitiatives(initiatives)
+
+			res.render("initiatives_page.jsx", {
+				initiatives: initiatives,
+				recentInitiatives: recentInitiatives,
+				topics: topics,
+				signatureCounts: signatureCounts
+			})
+	}
 }))
 
 exports.router.post("/", next(function*(req, res) {
@@ -210,7 +279,13 @@ exports.router.use("/:id", next(function*(req, res, next) {
 }))
 
 exports.router.get("/:id",
-	new ResponseTypeMiddeware(RESPONSE_TYPES, RESPONSE_PATTERNS),
+	new ResponseTypeMiddeware([
+		"text/html",
+		"application/vnd.rahvaalgatus.initiative+json; v=1",
+		"application/atom+xml"
+	].map(MediaType), [
+		"image/*"
+	].map(MediaType)),
 	next(function*(req, res, next) {
 	var type = res.contentType
 	var initiative = req.initiative
@@ -875,6 +950,16 @@ function parseInitiative(initiative, obj) {
 		obj.public_change_urls.map(String).map(trim).filter(Boolean)
 
 	return attrs
+}
+
+function* countSignaturesByIdsAndTime(uuids, from) {
+	return _.mapValues(_.indexBy(yield sqlite(sql`
+		SELECT initiative_uuid AS uuid, COUNT(*) as count
+		FROM initiative_signatures
+		WHERE created_at >= ${from}
+		AND initiative_uuid IN ${sql.in(uuids)}
+		GROUP BY initiative_uuid
+	`), "uuid"), _.property("count"))
 }
 
 function serializeApiInitiative(initiative, signatureCount) {
