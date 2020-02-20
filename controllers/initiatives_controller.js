@@ -233,8 +233,12 @@ exports.router.get("/:id",
 		case "application/vnd.rahvaalgatus.initiative+json":
 			res.setHeader("Content-Type", type)
 			res.setHeader("Access-Control-Allow-Origin", "*")
-			var sigs = yield countSignaturesById(initiative.uuid)
-			res.send({title: initiative.title, signatureCount: sigs})
+
+			res.send({
+				title: initiative.title,
+				phase: initiative.phase,
+				signatureCount: yield countSignaturesById(initiative.uuid)
+			})
 			break
 
 		case "application/atom+xml":

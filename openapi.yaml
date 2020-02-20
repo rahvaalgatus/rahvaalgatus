@@ -116,6 +116,12 @@ components:
           description: The initiative's title.
           example: Teeme elu paremaks!
 
+        phase:
+          type: string
+          enum: [edit, sign, parliament, government, done]
+          description: The phase of the initiative.
+          example: "sign"
+
         signatureCount:
           type: integer
           description: The digital signature count for the initiative.

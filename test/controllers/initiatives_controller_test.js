@@ -3485,6 +3485,7 @@ describe("InitiativesController", function() {
 
 			res.body.must.eql({
 				title: "Better life for everyone.",
+				phase: "edit",
 				signatureCount: 0
 			})
 		})
@@ -3492,7 +3493,8 @@ describe("InitiativesController", function() {
 		it("must respond with JSON for external initiative", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				title: "Better life for everyone.",
-				external: true
+				external: true,
+				phase: "parliament"
 			}))
 
 			var res = yield this.request("/initiatives/" + initiative.uuid, {
@@ -3503,6 +3505,7 @@ describe("InitiativesController", function() {
 
 			res.body.must.eql({
 				title: "Better life for everyone.",
+				phase: "parliament",
 				signatureCount: 0
 			})
 		})
@@ -3536,6 +3539,7 @@ describe("InitiativesController", function() {
 
 			res.body.must.eql({
 				title: "Better life for everyone.",
+				phase: "sign",
 				signatureCount: 8
 			})
 		})
