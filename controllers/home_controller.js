@@ -84,6 +84,7 @@ exports.router.get("/about", render.bind(null, "home/about_page.jsx"))
 exports.router.get("/credits", render.bind(null, "home/credits_page.jsx"))
 exports.router.get("/donate", alias.bind(null, "/donations/new"))
 exports.router.get("/donated", alias.bind(null, "/donations/created"))
+exports.router.get("/api", render.bind(null, "home/api_page.jsx"))
 
 exports.router.get("/statistics",
 	new ResponseTypeMiddeware([

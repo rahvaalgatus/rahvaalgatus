@@ -117,7 +117,7 @@ An example of getting the number of signatures on an initiative:
 curl https://rahvaalgatus.ee/initiatives/92cc16ee-107e-4208-b92c-2ffed24d4f4b -H "Accept:application/vnd.rahvaalgatus.initiative+json; v=1"
 ```
 
-See the full API documentation on [SwaggerHub](https://app.swaggerhub.com/apis-docs/rahvaalgatus/rahvaalgatus) or in a machine-readable OpenAPI v3 format from the [`openapi.yaml`](openapi.yaml) file from this repository.
+See the full API documentation on [SwaggerHub](https://app.swaggerhub.com/apis-docs/rahvaalgatus/rahvaalgatus) or in a machine-readable OpenAPI v3 format from the [`openapi.yaml`](openapi.yaml) file from this repository. There are a few examples of use in Estonian also on <https://rahvaalgatus.ee/api>.
 
 We're open to adding more structured data to the public API, so feel free to [create an issue on GitHub][issues] if you find something's missing.
 

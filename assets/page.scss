@@ -2470,7 +2470,8 @@ button.inherited {
 
 #about-page,
 #donate-page,
-#donated-page {
+#donated-page,
+#api-page {
 	section center { max-width: 64rem; }
 }
 
@@ -2546,6 +2547,60 @@ button.inherited {
 		color: $dark-blue;
 
 		img { display: none; }
+	}
+}
+
+#api-page {
+	h2 { margin-top: 4rem; }
+
+	p + .example,
+	.example + p {
+		margin-top: 2rem;
+	}
+
+	p + pre,
+	pre + p,
+	pre + pre {
+		margin-top: 1rem;
+	}
+
+	p code {
+		font-family: $monospace;
+		font-size: 0.8em;
+		background: #eee;
+		display: inline-block;
+		padding: 0 0.5em;
+	}
+	
+	pre {
+		font-family: $monospace;
+		font-size: 0.8em;
+		background: #eee;
+		padding: 1em;
+		white-space: pre-wrap;
+	}
+
+	.example {
+		border-radius: 0.5rem;
+		padding: 3rem 2rem;
+		background: #fbf8f8;
+		color: $dark-blue
+	}
+
+	#example-initiative {
+		text-align: center;
+		font-weight: bold;
+
+		output {
+			margin: 1rem 0;
+			display: inline-block;
+			border-radius: 50%;
+			border: 0.3rem solid $dark-blue;
+			height: 10rem;
+			width: 10rem;
+			line-height: 10rem;
+			font-size: 3rem;
+		}
 	}
 }
 
