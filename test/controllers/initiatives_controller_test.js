@@ -3484,6 +3484,7 @@ describe("InitiativesController", function() {
 			res.headers["access-control-allow-origin"].must.equal("*")
 
 			res.body.must.eql({
+				id: initiative.uuid,
 				title: "Better life for everyone.",
 				phase: "edit",
 				signatureCount: 0
@@ -3504,6 +3505,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 
 			res.body.must.eql({
+				id: initiative.uuid,
 				title: "Better life for everyone.",
 				phase: "parliament",
 				signatureCount: null
@@ -3538,6 +3540,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 
 			res.body.must.eql({
+				id: initiative.uuid,
 				title: "Better life for everyone.",
 				phase: "sign",
 				signatureCount: 8

@@ -879,6 +879,7 @@ function parseInitiative(initiative, obj) {
 
 function serializeApiInitiative(initiative, signatureCount) {
 	return {
+		id: initiative.uuid,
 		title: initiative.title,
 		phase: initiative.phase,
 		signatureCount: signatureCount

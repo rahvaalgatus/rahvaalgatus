@@ -111,6 +111,16 @@ components:
       type: object
 
       properties:
+        id:
+          type: string
+          format: uuid
+          example: 92cc16ee-107e-4208-b92c-2ffed24d4f4b
+          description: |
+            The initiative's id.
+
+            This is an UUID as of Feb 20, 2020, but will become an integer in
+            the next few months.
+
         title:
           type: string
           description: The initiative's title.
