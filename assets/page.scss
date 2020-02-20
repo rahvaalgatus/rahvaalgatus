@@ -708,8 +708,13 @@ button.inherited {
 #header {
 	background: $header-background;
 	padding-top: 1.5rem;
-	padding-bottom: 1rem;
 	color: white;
+
+	&:after {
+		content: "";
+		display: block;
+		clear: both;
+	}
 
 	menu {
 		margin-bottom: 1.5rem;
@@ -743,6 +748,7 @@ button.inherited {
 		width: 18rem;
 		height: inherit;
 		margin-right: 2rem;
+		margin-bottom: 1rem;
 
 		img { width: 100%; }
 	}
@@ -769,6 +775,10 @@ button.inherited {
 		.hea-annetus { display: none; }
 	}
 
+	nav {
+		padding-bottom: 1rem;
+	}
+
 	nav li {
 		display: inline;
 
@@ -790,8 +800,16 @@ button.inherited {
 	}
 
   @media only screen and (max-width: 999px) {
-		menu { margin-bottom: 1rem; }
-		.logo { float: none; }
+		padding-bottom: 1rem;
+
+		.logo {
+			float: none;
+			margin-bottom: 0;
+		}
+
+		nav {
+			padding-bottom: 0;
+		}
 
 		nav li {
 			margin-right: 0.5rem;
@@ -2531,11 +2549,92 @@ button.inherited {
 	}
 }
 
+#demo-signatures-page {
+	section center { max-width: 64rem; }
+
+	#demo-signatures {
+		h1 {
+			margin-bottom: 2rem;
+		}
+
+		iframe {
+			width: 100%;
+			height: 35rem;
+		}
+
+		.video {
+			margin-bottom: 2rem;
+		}
+	}
+
+	#sign {
+		$methods: (id-card, mobile-id, smart-id);
+
+		#signature-methods {
+			margin-top: 1rem;
+			text-align: center;
+
+			form,
+			label {
+				display: inline-block;
+
+				& + * { margin-left: 1rem; }
+			}
+
+			form button,
+			label {
+				display: inline-block;
+				width: 8.8rem;
+				height: 3.1rem;
+
+				img	{
+					width: 100%;
+
+					// Internet Explorer v11 won't activate the label if clicked on an
+					// image.
+					img { pointer-events: none; }
+				}
+			}
+		}
+
+		.signature-form {
+			text-align: center;
+			margin-top: 1rem;
+			display: none;
+
+			.form-label {
+				text-align: left;
+				margin-right: 0.5rem;
+			}
+
+			.form-label, button {
+				margin-top: 0;
+				margin-bottom: 0.5rem;
+				vertical-align: bottom;
+			}
+
+			@include mobile {
+				.form-label {
+					width: 100%;
+
+					input { width: 100%; }
+				}
+			}
+		}
+
+		@each $method in $methods {
+			#signature-method-tab-#{$method}:checked ~ ##{$method}-form {
+				display: block;
+			}
+		}
+	}
+}
+
 #footer {
 	position: relative;
 	min-height: $footer-height;
 	padding-top: 2rem;
-	padding-bottom: 2rem;
+	padding-bottom: 1rem;
 	overflow: hidden;
 
 	background: $header-background;

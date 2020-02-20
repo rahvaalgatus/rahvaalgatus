@@ -33,6 +33,7 @@ function Page(attrs, children) {
 	var page = attrs.page
 	var title = attrs.title
 	var links = attrs.links || EMPTY_ARR
+	var withNav = !attrs.navless
 
 	var translatable = (
 		req.lang === "xx" ||
@@ -89,7 +90,7 @@ function Page(attrs, children) {
 						</button> : null}
 					</Form>
 
-					{req.user ? <div class="right">
+					{withNav ? (req.user ? <div class="right">
 						<a href="/user" class="user">{req.user.name}</a>
 
 						<Form
@@ -104,38 +105,40 @@ function Page(attrs, children) {
 						</Form>
 					</div> : <a href="/sessions/new" class="right" >
 						{t("BTN_LOG_IN_REGISTER")}
-					</a>}
+					</a>) : null}
 				</menu>
 
-				<a
-					href="https://heakodanik.ee/annetuste-kogumise-hea-tava/"
-					title="Hea annetuse koguja"
-					class="hea-annetus"
-				>
-					<img src="/assets/hea-annetus.png" alt="Hea annetuse koguja" />
-				</a>
+				{withNav ? <Fragment>
+					<a
+						href="https://heakodanik.ee/annetuste-kogumise-hea-tava/"
+						title="Hea annetuse koguja"
+						class="hea-annetus"
+					>
+						<img src="/assets/hea-annetus.png" alt="Hea annetuse koguja" />
+					</a>
 
-				<a
-					href="https://uuseakus.rahvaalgatus.ee"
-					title="Uue eakuse rahvakogu"
-					class="uuseakus"
-				>
-					<img src="/assets/uuseakus.png" alt="Uue eakuse rahvakogu" />
-				</a>
+					<a
+						href="https://uuseakus.rahvaalgatus.ee"
+						title="Uue eakuse rahvakogu"
+						class="uuseakus"
+					>
+						<img src="/assets/uuseakus.png" alt="Uue eakuse rahvakogu" />
+					</a>
 
-				<a
-					href="https://kestame.rahvaalgatus.ee"
-					title="#kuidasmekestame"
-					class="kestame"
-				>
-					<img src="/assets/kestame.png" alt="#kuidasmekestame" />
-				</a>
+					<a
+						href="https://kestame.rahvaalgatus.ee"
+						title="#kuidasmekestame"
+						class="kestame"
+					>
+						<img src="/assets/kestame.png" alt="#kuidasmekestame" />
+					</a>
+				</Fragment> : null}
 
 				<a href="/" class="logo">
 					<img src="/assets/rahvaalgatus.png" alt={SITE_TITLE} />
 				</a>
 
-				<nav>
+				{withNav ? <nav>
 					<ul>
 						<li>
 							<a
@@ -159,7 +162,7 @@ function Page(attrs, children) {
 							{t("LNK_SUPPORT")}
 						</a></li>
 					</ul>
-				</nav>
+				</nav> : null}
 			</center></header>
 
 			<main id="main">{children}</main>

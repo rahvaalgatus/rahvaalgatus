@@ -60,6 +60,8 @@ O.each({
 	"/session/new": "/sessions/new"
 }, (to, from) => app.get(from, redirect(302, to)))
 
+app.get("/digiallkiri", usePath.bind(null, "/demo-signatures"))
+
 O.each({
 	"/": require("root/controllers/home_controller").router,
 	"/donations": require("root/controllers/donations_controller").router,
@@ -69,7 +71,9 @@ O.each({
 	"/user": require("root/controllers/user_controller").router,
 
 	"/initiative-events":
-		require("root/controllers/initiative_events_controller").router
+		require("root/controllers/initiative_events_controller").router,
+	"/demo-signatures":
+		require("root/controllers/demo_signatures_controller").router
 }, (router, path) => app.use(path, router))
 
 if (ENV == "development" || ENV == "staging") {
@@ -133,3 +137,8 @@ app.use(require("root/lib/middleware/error_handler_middleware").bind(null,
 
 if (module.parent) return
 runServer(app, PORT)
+
+function usePath(path, req, _res, next) {
+	req.url = path + req.url.replace(/^[^?]+/, "")
+	next()
+}
