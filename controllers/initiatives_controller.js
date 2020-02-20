@@ -234,11 +234,10 @@ exports.router.get("/:id",
 			res.setHeader("Content-Type", type)
 			res.setHeader("Access-Control-Allow-Origin", "*")
 
-			res.send({
-				title: initiative.title,
-				phase: initiative.phase,
-				signatureCount: yield countSignaturesById(initiative.uuid)
-			})
+			res.send(serializeApiInitiative(
+				initiative,
+				initiative.external ? null : yield countSignaturesById(initiative.uuid)
+			))
 			break
 
 		case "application/atom+xml":
@@ -876,6 +875,14 @@ function parseInitiative(initiative, obj) {
 		obj.public_change_urls.map(String).map(trim).filter(Boolean)
 
 	return attrs
+}
+
+function serializeApiInitiative(initiative, signatureCount) {
+	return {
+		title: initiative.title,
+		phase: initiative.phase,
+		signatureCount: signatureCount
+	}
 }
 
 function parseOrganization(obj) {

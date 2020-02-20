@@ -124,5 +124,10 @@ components:
 
         signatureCount:
           type: integer
-          description: The digital signature count for the initiative.
+          nullable: true
           example: 1336
+          description: |
+            The digital signature count for the initiative.
+
+            Note that for external initiatives (those not originated from
+            Rahvaalgatus) this may be null, indicating we don't know the count.

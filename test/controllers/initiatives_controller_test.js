@@ -3506,7 +3506,7 @@ describe("InitiativesController", function() {
 			res.body.must.eql({
 				title: "Better life for everyone.",
 				phase: "parliament",
-				signatureCount: 0
+				signatureCount: null
 			})
 		})
 
