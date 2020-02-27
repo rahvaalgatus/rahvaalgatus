@@ -158,12 +158,12 @@ exports.router.get("/", next(function*(req, res) {
 	var initiative = req.initiative
 	var token = Buffer.from(req.query["parliament-token"] || "", "hex")
 
-	if (initiative.received_by_parliament_at)
-		throw new HttpError(423, "Signatures Already In Parliament")
 	if (!initiative.parliament_token)
 		throw new HttpError(403, "Signatures Not Available")
 	if (!constantTimeEqual(initiative.parliament_token, token))
 		throw new HttpError(403, "Invalid Token")
+	if (initiative.received_by_parliament_at)
+		throw new HttpError(423, "Signatures Already In Parliament")
 
 	var asic = new Asic
 	res.setHeader("Content-Type", asic.type)

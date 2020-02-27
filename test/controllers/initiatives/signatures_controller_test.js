@@ -288,7 +288,7 @@ describe("SignaturesController", function() {
 			path += "?parliament-token="
 			var res = yield this.request(path)
 			res.statusCode.must.equal(403)
-			res.statusMessage.must.match(/not available/i)
+			res.statusMessage.must.equal("Signatures Not Available")
 		})
 
 		it("must respond with 403 Forbidden given no token", function*() {
@@ -308,7 +308,7 @@ describe("SignaturesController", function() {
 			var path = `/initiatives/${initiative.uuid}/signatures.asice`
 			var res = yield this.request(path)
 			res.statusCode.must.equal(403)
-			res.statusMessage.must.match(/invalid token/i)
+			res.statusMessage.must.equal("Invalid Token")
 		})
 
 		it("must respond with 403 Forbidden given empty token", function*() {
@@ -329,7 +329,7 @@ describe("SignaturesController", function() {
 			path += "?parliament-token="
 			var res = yield this.request(path)
 			res.statusCode.must.equal(403)
-			res.statusMessage.must.match(/invalid token/i)
+			res.statusMessage.must.equal("Invalid Token")
 		})
 
 		it("must respond with 403 Forbidden given invalid token", function*() {
@@ -347,9 +347,10 @@ describe("SignaturesController", function() {
 			}))
 
 			var path = `/initiatives/${initiative.uuid}/signatures.asice`
-			var res = yield this.request(path + "?parliament-token=deadbeef")
+			var token = Crypto.randomBytes(12).toString("hex")
+			var res = yield this.request(path + "?parliament-token=" + token)
 			res.statusCode.must.equal(403)
-			res.statusMessage.must.match(/invalid token/i)
+			res.statusMessage.must.equal("Invalid Token")
 		})
 
 		it("must respond with 403 Forbidden given non-hex token", function*() {
@@ -369,7 +370,7 @@ describe("SignaturesController", function() {
 			var path = `/initiatives/${initiative.uuid}/signatures.asice`
 			var res = yield this.request(path + "?parliament-token=foobar")
 			res.statusCode.must.equal(403)
-			res.statusMessage.must.match(/invalid token/i)
+			res.statusMessage.must.equal("Invalid Token")
 		})
 
 		it("must respond with 423 Locked if initiative received by parliament",
@@ -392,7 +393,7 @@ describe("SignaturesController", function() {
 			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
 			var res = yield this.request(path)
 			res.statusCode.must.equal(423)
-			res.statusMessage.must.match(/already in parliament/i)
+			res.statusMessage.must.equal("Signatures Already In Parliament")
 		})
 	})
 
