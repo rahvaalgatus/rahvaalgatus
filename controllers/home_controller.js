@@ -95,7 +95,7 @@ exports.router.get("/statistics",
 	res.setHeader("Access-Control-Allow-Origin", "*")
 
 	var countsByPhase = _.defaults(_.fromEntries(yield sqlite(sql`
-		SELECT phase, COUNT(*) as count
+		SELECT phase, COUNT(*) AS count
 		FROM initiatives
 		WHERE phase <> 'edit'
 		AND NOT external
@@ -103,7 +103,7 @@ exports.router.get("/statistics",
 	`).then((rows) => rows.map((row) => [row.phase, row.count]))), ZERO_COUNTS)
 
 	countsByPhase.edit = yield cosDb.query(sql`
-		SELECT COUNT(*)
+		SELECT COUNT(*) AS count
 		FROM "Topics"
 		WHERE "sourcePartnerId" IN ${sql.in(PARTNER_IDS)}
 		AND "deletedAt" IS NULL
@@ -111,33 +111,62 @@ exports.router.get("/statistics",
 		AND status = 'inProgress'
 	`).then(_.first).then((res) => Number(res.count))
 
+	var activeCountsByPhase = yield {
+		edit: cosDb.query(sql`
+			SELECT COUNT(*) AS count
+			FROM "Topics"
+			WHERE "sourcePartnerId" IN ${sql.in(PARTNER_IDS)}
+			AND "deletedAt" IS NULL
+			AND visibility = 'public'
+			AND status = 'inProgress'
+			AND "endsAt" > ${new Date}
+		`).then(_.first).then((res) => Number(res.count)),
+
+		sign: cosDb.query(sql`
+			SELECT COUNT(*) AS count
+			FROM "Topics" AS topic
+			JOIN "TopicVotes" AS tv ON tv."topicId" = topic.id
+			JOIN "Votes" AS vote ON vote.id = tv."voteId"
+			WHERE topic."sourcePartnerId" IN ${sql.in(PARTNER_IDS)}
+			AND topic."deletedAt" IS NULL
+			AND topic."visibility" = 'public'
+			AND status = 'voting'
+			AND vote."endsAt" > ${new Date}
+		`).then(_.first).then((res) => Number(res.count)),
+	}
+
 	res.send({
 		initiativeCountsByPhase: countsByPhase,
+		activeInitiativeCountsByPhase: activeCountsByPhase,
 		signatureCount: yield readSignatureCount(new Date(0))
 	})
 }))
 
 function* readStatistics(from, to) {
+	// The discussion counter on the home page is really the total initiatives
+	// counter. Worth renaming in code, too, perhaps.
+	//
+	// https://github.com/rahvaalgatus/rahvaalgatus/issues/176#issuecomment-531594684.
 	var discussionsCount = yield cosDb.query(sql`
-		SELECT COUNT(*)
+		SELECT COUNT(*) AS count
 		FROM "Topics"
-		WHERE "createdAt" >= ${from}
+		WHERE "sourcePartnerId" IN ${sql.in(PARTNER_IDS)}
+		AND "createdAt" >= ${from}
 		${to ? sql`AND "createdAt" < ${to}` : sql``}
 		AND "deletedAt" IS NULL
 		AND "visibility" = 'public'
-		AND "sourcePartnerId" IN ${sql.in(PARTNER_IDS)}
 	`).then(_.first).then((res) => res.count)
 
 	var initiativesCount = yield cosDb.query(sql`
-		SELECT COUNT(*)
+		SELECT COUNT(*) AS count
 		FROM "Topics" AS topic
 		JOIN "TopicVotes" AS tv ON tv."topicId" = topic.id
 		JOIN "Votes" AS vote ON vote.id = tv."voteId"
-		WHERE vote."createdAt" >= ${from}
+		WHERE topic."sourcePartnerId" IN ${sql.in(PARTNER_IDS)}
+		AND vote."createdAt" >= ${from}
 		${to ? sql`AND vote."createdAt" < ${to}` : sql``}
 		AND topic."deletedAt" IS NULL
 		AND topic."visibility" = 'public'
-		AND topic."sourcePartnerId" IN ${sql.in(PARTNER_IDS)}
 	`).then(_.first).then((res) => res.count)
 
 	var signatureCount = yield readSignatureCount(from, to)

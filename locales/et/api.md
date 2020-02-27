@@ -37,9 +37,9 @@ Kombineerides erinevaid API päringuid saad enda lehel kuvada näiteks koondvaat
       headers: {Accept: "application/vnd.rahvaalgatus.statistics+json; v=1"}
     }).then(getJson).then(function(stats) {
       el.querySelector(".edit-count").textContent =
-        stats.initiativeCountsByPhase.edit
+        stats.activeInitiativeCountsByPhase.edit
       el.querySelector(".sign-count").textContent =
-        stats.initiativeCountsByPhase.sign
+        stats.activeInitiativeCountsByPhase.sign
     })
 
     var since = new Date
@@ -114,14 +114,14 @@ Kui soovid veebilehele lisada kõikide algatuste koondarvu, saad selle info [`ht
       headers: {Accept: "application/vnd.rahvaalgatus.statistics+json; v=1"}
     }).then(getJson).then(function(stats) {
       el.querySelector(".edit-count").textContent =
-        stats.initiativeCountsByPhase.edit
+        stats.activeInitiativeCountsByPhase.edit
       el.querySelector(".sign-count").textContent =
-        stats.initiativeCountsByPhase.sign
+        stats.activeInitiativeCountsByPhase.sign
     })
   }()</script>
 </div>
 
-Statistikapäringuga saad teada algatuste arvu faaside lõikes ning allkirjade summa. Ülemise näite saad teha selliselt:
+Statistikapäringuga saad teada aktiivsete algatuste (need, mis pole tähtaega ületanud) arvu faaside lõikes ning allkirjade summa. Ülemise näite saad teha selliselt:
 
 ```html
 Arutelu käib <strong id="edit-count">…</strong> idee üle ja
@@ -133,9 +133,9 @@ fetch("https://rahvaalgatus.ee/statistics", {
   headers: {Accept: "application/vnd.rahvaalgatus.statistics+json; v=1"}
 }).then(function(res) { return res.json() }).then(function(stats) {
   document.getElementById("edit-count").textContent =
-    stats.initiativeCountsByPhase.edit
+    stats.activeInitiativeCountsByPhase.edit
   document.getElementById("sign-count").textContent =
-    stats.initiativeCountsByPhase.sign
+    stats.activeInitiativeCountsByPhase.sign
 })
 ```
 

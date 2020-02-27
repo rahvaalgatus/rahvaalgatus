@@ -40,6 +40,11 @@ var EMPTY_STATISTICS = {
 		done: 0
 	},
 
+	activeInitiativeCountsByPhase: {
+		edit: 0,
+		sign: 0
+	},
+
 	signatureCount: 0
 }
 
@@ -717,6 +722,71 @@ describe("HomeController", function() {
 			})
 		})
 
+		it("must count active initiatives in edit phase", function*() {
+			var self = this
+
+			yield _.times(5, function*(i) {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: self.author.id
+				}))
+
+				yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: self.author.uuid,
+					sourcePartnerId: self.partner.id,
+					status: "inProgress",
+					visibility: "public",
+					endsAt: DateFns.addSeconds(new Date, 2 - i)
+				}))
+			})
+
+			var res = yield this.request("/statistics", {
+				headers: {Accept: STATISTICS_TYPE}
+			})
+
+			res.statusCode.must.equal(200)
+
+			res.body.must.eql(_.merge({}, EMPTY_STATISTICS, {
+				initiativeCountsByPhase: {edit: 5},
+				activeInitiativeCountsByPhase: {edit: 2}
+			}))
+		})
+
+		it("must count active initiatives in sign phase", function*() {
+			var self = this
+
+			yield _.times(5, function*(i) {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: self.author.id,
+					phase: "sign"
+				}))
+
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: self.author.uuid,
+					sourcePartnerId: self.partner.id,
+					status: "voting",
+					visibility: "public",
+					endsAt: new Date
+				}))
+				
+				yield createVote(topic, newVote({
+					endsAt: DateFns.addSeconds(new Date, 2 - i)
+				}))
+			})
+
+			var res = yield this.request("/statistics", {
+				headers: {Accept: STATISTICS_TYPE}
+			})
+
+			res.statusCode.must.equal(200)
+
+			res.body.must.eql(_.merge({}, EMPTY_STATISTICS, {
+				initiativeCountsByPhase: {sign: 5},
+				activeInitiativeCountsByPhase: {sign: 2}
+			}))
+		})
+
 		it("must not count external initiatives", function*() {
 			yield initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
@@ -740,7 +810,8 @@ describe("HomeController", function() {
 				id: initiative.uuid,
 				creatorId: this.author.uuid,
 				sourcePartnerId: this.partner.id,
-				status: "inProgress"
+				status: "inProgress",
+				endsAt: DateFns.addSeconds(new Date, 1)
 			}))
 
 			var res = yield this.request("/statistics", {
@@ -762,6 +833,7 @@ describe("HomeController", function() {
 				sourcePartnerId: this.partner.id,
 				visibility: "public",
 				status: "inProgress",
+				endsAt: DateFns.addSeconds(new Date, 1),
 				deletedAt: new Date
 			}))
 

@@ -222,6 +222,32 @@ components:
               example: 7
               description: The number of initiatives in the government phase.
 
+        activeInitiativeCountsByPhase:
+          type: object
+          description: |
+            The count of initiatives by phase that haven't passed their
+            deadline yet.
+
+            Note that due to initiatives in the parliament and government
+            phase having multiple deadlines, these are not included here.
+
+          properties:
+            edit:
+              type: integer
+              example: 3
+              description: |
+                The number of initiatives in the edit phase that haven't passed
+                their deadline yet.  
+                These are shown as discussions on the web.
+
+            sign:
+              type: integer
+              example: 1
+              description: |
+                The number of initiatives in the sign phase that haven't passed
+                their deadline yet.  
+                These are shown as being signable on the web.
+
         signatureCount:
           type: integer
           example: 1336
