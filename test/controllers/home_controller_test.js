@@ -683,7 +683,11 @@ describe("HomeController", function() {
 			})
 
 			res.statusCode.must.equal(200)
-			res.body.signatureCount.must.equal(8)
+
+			res.body.must.eql(_.merge({}, EMPTY_STATISTICS, {
+				initiativeCountsByPhase: {sign: 2},
+				signatureCount: 8
+			}))
 		})
 
 		PHASES.forEach(function(phase) {
@@ -697,7 +701,8 @@ describe("HomeController", function() {
 					creatorId: this.author.uuid,
 					sourcePartnerId: this.partner.id,
 					visibility: "public",
-					status: PHASE_TO_STATUS[phase]
+					status: PHASE_TO_STATUS[phase],
+					endsAt: new Date
 				})))
 
 				var res = yield this.request("/statistics", {
@@ -705,7 +710,10 @@ describe("HomeController", function() {
 				})
 
 				res.statusCode.must.equal(200)
-				res.body.initiativeCountsByPhase[phase].must.equal(3)
+
+				res.body.must.eql(_.merge({}, EMPTY_STATISTICS, {
+					initiativeCountsByPhase: {[phase]: 3}
+				}))
 			})
 		})
 
