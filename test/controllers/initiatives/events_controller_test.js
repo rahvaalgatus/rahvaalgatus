@@ -125,6 +125,39 @@ describe("InitiativeEventsController", function() {
 		})
 	})
 
+	describe("GET /:id", function() {
+		it("must redirect to initiative page given event id", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				external: true
+			}))
+			
+			var event = yield eventsDb.create(new ValidEvent({
+				initiative_uuid: initiative.uuid,
+				title: "We sent it.",
+				content: "To somewhere."
+			}))
+
+			var path = `/initiatives/${initiative.uuid}/events/${event.id}`
+			var res = yield this.request(path)
+			res.statusCode.must.equal(302)
+			path = `/initiatives/${initiative.uuid}#event-${event.id}`
+			res.headers.location.must.equal(path)
+		})
+
+		it("must redirect to initiative page given virtual event id",
+			function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				external: true
+			}))
+
+			var path = `/initiatives/${initiative.uuid}/events/finished-in-government`
+			var res = yield this.request(path)
+			res.statusCode.must.equal(302)
+			path = `/initiatives/${initiative.uuid}#event-finished-in-government`
+			res.headers.location.must.equal(path)
+		})
+	})
+
 	describe("POST /", function() {
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()

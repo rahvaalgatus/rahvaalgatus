@@ -60,22 +60,20 @@ function EventEntryView(attrs) {
 
 	switch (event.type) {
 		case "signature-milestone":
-			title = t("SIGNATURE_MILESTONE_EVENT_TITLE", {
-				milestone: event.content
-			})
+			title = renderEventTitle(initiative, event)
 			break
 
 		case "sent-to-parliament":
-			title = t("INITIATIVE_SENT_TO_PARLIAMENT_TITLE")
+			title = renderEventTitle(initiative, event)
 			content = t("INITIATIVE_SENT_TO_PARLIAMENT_BODY")
 			break
 
 		case "parliament-received":
-			title = renderEventTitle(event)
+			title = renderEventTitle(initiative, event)
 			break
 
 		case "parliament-accepted":
-			title = renderEventTitle(event)
+			title = renderEventTitle(initiative, event)
 			var committee = event.content.committee
 			if (committee) content = t("PARLIAMENT_ACCEPTED_SENT_TO_COMMITTEE", {
 				committee: committee
@@ -83,11 +81,11 @@ function EventEntryView(attrs) {
 			break
 
 		case "parliament-board-meeting":
-			title = renderEventTitle(event)
+			title = renderEventTitle(initiative, event)
 			break
 
 		case "parliament-committee-meeting":
-			title = renderEventTitle(event)
+			title = renderEventTitle(initiative, event)
 			var meeting = event.content
 			decision = meeting.decision
 
@@ -109,12 +107,12 @@ function EventEntryView(attrs) {
 			break
 
 		case "parliament-decision":
-			title = renderEventTitle(event)
+			title = renderEventTitle(initiative, event)
 			if (event.content.summary) content = event.content.summary
 			break
 
 		case "parliament-letter":
-			title = renderEventTitle(event)
+			title = renderEventTitle(initiative, event)
 			var letter = event.content
 
 			var header = [
@@ -132,7 +130,7 @@ function EventEntryView(attrs) {
 			break
 
 		case "parliament-interpellation":
-			title = renderEventTitle(event)
+			title = renderEventTitle(initiative, event)
 			var interpellation = event.content
 
 			content = [
@@ -144,11 +142,11 @@ function EventEntryView(attrs) {
 			break
 
 		case "parliament-national-matter":
-			title = renderEventTitle(event)
+			title = renderEventTitle(initiative, event)
 			break
 
 		case "parliament-finished":
-			title = renderEventTitle(event)
+			title = renderEventTitle(initiative, event)
 			decision = initiative.parliament_decision
 
 			if (decision) content =
@@ -164,19 +162,11 @@ function EventEntryView(attrs) {
 			break
 
 		case "sent-to-government":
-			title = !initiative.government_agency
-				? t("EVENT_SENT_TO_GOVERNMENT_TITLE")
-				: t("EVENT_SENT_TO_GOVERNMENT_TITLE_WITH_AGENCY", {
-					agency: initiative.government_agency
-				})
+			title = renderEventTitle(initiative, event)
 			break
 
 		case "finished-in-government":
-			title = !initiative.government_agency
-				? t("EVENT_FINISHED_IN_GOVERNMENT_TITLE")
-				: t("EVENT_FINISHED_IN_GOVERNMENT_TITLE_WITH_AGENCY", {
-					agency: initiative.government_agency
-				})
+			title = renderEventTitle(initiative, event)
 
 			if (initiative.government_decision) content =
 				t("EVENT_FINISHED_IN_GOVERNMENT_CONTENT", {
@@ -185,7 +175,7 @@ function EventEntryView(attrs) {
 			break
 
 		case "text":
-			title = event.title
+			title = renderEventTitle(initiative, event)
 			content = event.content
 			authorName = event.origin == "author" ? event.user_name : null
 			break

@@ -48,6 +48,7 @@ var EMPTY_CONTACT = {name: "", email: "", phone: ""}
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 exports.searchInitiativesEvents = searchInitiativesEvents
 exports.readCitizenSignature = readCitizenSignature
+exports.serializeApiInitiative = serializeApiInitiative
 exports.router = Router({mergeParams: true})
 
 exports.router.get("/",

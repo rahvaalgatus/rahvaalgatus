@@ -27,6 +27,11 @@ exports.router.get("/new", next(assertAdmin), next(function*(req, res) {
 	})
 }))
 
+exports.router.get("/:id", function(req, res) {
+	var initiative = req.initiative
+	res.redirect("/initiatives/" + initiative.uuid + "#event-" + req.params.id)
+})
+
 exports.router.post("/", next(assertAdmin), next(function*(req, res) {
 	var initiative = req.initiative
 	var topic = req.topic

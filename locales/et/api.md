@@ -17,6 +17,15 @@ Kombineerides erinevaid API päringuid saad enda lehel kuvada näiteks koondvaat
     <li>…</li>
   </ol>
 
+  <h3>Uus info</h3>
+  <ol class="events">
+    <li>…</li>
+    <li>…</li>
+    <li>…</li>
+    <li>…</li>
+    <li>…</li>
+  </ol>
+
   <script>
     function getJson(res) { return res.json() }
   </script>
@@ -58,6 +67,25 @@ Kombineerides erinevaid API päringuid saad enda lehel kuvada näiteks koondvaat
         var total = initiative.signatureCount
         var t = " (+" + added + " allkirja, " + total + " kokku)"
         li.appendChild(document.createTextNode(t))
+      })
+    })
+
+    fetch("/initiative-events?include=initiative&order=-occurredAt&limit=5", {
+      headers: {
+        Accept: "application/vnd.rahvaalgatus.initiative-event+json; v=1"
+      }
+    }).then(getJson).then(function(events) {
+      var ol = el.querySelector(".events")
+
+      events.forEach(function(event, i) {
+        var li = ol.children[i]
+        while (li.lastChild) li.removeChild(li.lastChild)
+
+        var a = document.createElement("a")
+        a.href = "/initiatives/" + event.initiativeId + "/events/" + event.id
+        a.textContent = event.initiative.title
+        li.appendChild(a)
+        li.appendChild(document.createTextNode(": " + event.title))
       })
     })
   }()</script>
@@ -262,5 +290,85 @@ fetch(URL + "/initiatives/d400bf12-f212-4df0-88a5-174a113c443a", {
 ```
 
 Oluline on teha päring `Accept: application/vnd.rahvaalgatus.initiative+json; v=1` päisega. Ilma selleta ei tea server, et soovid teha API päringu, ja tagastab sulle hoopis HTMLi. `v=1` aga määrab API versiooni. See garanteerib, et API muudatuste puhul jääb su leht õigesti tööle.
+
+Kui tahaksid ligipääsu infole, mida me hetkel APIs ei väljasta, palun [anna meile sellest GitHubi kaudu teada](https://github.com/rahvaalgatus/rahvaalgatus/issues).
+
+
+Algatuste menetlusinfo
+----------------------
+Igal algatusega on seotud ka menetlusinfot, kus kajastuvad sündmused allkirjastamisest ning käekäigust Riigikogus ja valitsusasutustes. Menetlusinfot saab pärida kõikide algatuste kohta [`https://rahvaalgatus.ee/initiative-events`](https://app.swaggerhub.com/apis-docs/rahvaalgatus/rahvaalgatus/1#/Initiatives/get_initiative_events) aadressilt.
+
+Viie viimati uuendatud menetlusinfoga algatuse kuvamine võib välja näha selliselt:
+
+<div id="example-initiative-events" class="example">
+  <h3>Värske menetlusinfoga algatused</h3>
+  <ol>
+    <li>…</li>
+    <li>…</li>
+    <li>…</li>
+    <li>…</li>
+    <li>…</li>
+  </ol>
+
+  <script>!function() {
+    fetch("/initiative-events?include=initiative&order=-occurredAt&limit=5", {
+      headers: {
+        Accept: "application/vnd.rahvaalgatus.initiative-event+json; v=1"
+      }
+    }).then(getJson).then(function(events) {
+      var el = document.getElementById("example-initiative-events")
+      var ol = el.querySelector("ol")
+
+      events.forEach(function(event, i) {
+        var li = ol.children[i]
+        while (li.lastChild) li.removeChild(li.lastChild)
+
+        var a = document.createElement("a")
+        a.href = "/initiatives/" + event.initiativeId
+        a.textContent = event.initiative.title
+        li.appendChild(a)
+
+        li.appendChild(document.createTextNode(": "))
+
+        a = document.createElement("a")
+        a.href = "/initiatives/" + event.initiativeId + "/events/" + event.id
+        a.textContent = event.title
+        li.appendChild(a)
+      })
+    })
+  }()</script>
+</div>
+
+Kõigepealt teeme päringu `https://rahvaalgatus.ee/initiative-events` aadressile, küsides algatuste sündmusi toimumise järjekorras (`order=-occurredAt`). Piirdume viie tagastatud sündmusega (`limit=5`) ja selleks, et kuvada menetlusinfo pealkirja kõrval ka algatuse pealkirja, palume lisada ka algatuse info (`include=initiative`).
+
+```html
+<ol id="initiative-events"></ol>
+```
+
+```javascript
+var URL = "https://rahvaalgatus.ee"
+
+fetch(URL + "/initiative-events?include=initiative&order=-occurredAt&limit=5", {
+  headers: {
+    Accept: "application/vnd.rahvaalgatus.initiative-event+json; v=1"
+  }
+}).then(getJson).then(function(events) {
+  var ol = document.getElementById("initiative-events")
+
+  events.forEach(function(event, i) {
+    var li = document.createElement("li")
+
+    var a = document.createElement("a")
+    a.href = URL + "/initiatives/" + event.initiativeId + "/events/" + event.id
+    a.textContent = event.initiative.title
+    li.appendChild(a)
+    li.appendChild(document.createTextNode(": " + event.title))
+
+    ol.appendChild(li)
+  })
+})
+```
+
+Oluline on teha päring `Accept: application/vnd.rahvaalgatus.initiative-event+json; v=1` päisega. Ilma selleta ei tea server, et soovid teha API päringu, ja tagastab sulle hoopis HTMLi. `v=1` aga määrab API versiooni. See garanteerib, et API muudatuste puhul jääb su leht õigesti tööle.
 
 Kui tahaksid ligipääsu infole, mida me hetkel APIs ei väljasta, palun [anna meile sellest GitHubi kaudu teada](https://github.com/rahvaalgatus/rahvaalgatus/issues).

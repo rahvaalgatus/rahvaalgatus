@@ -105,6 +105,48 @@ paths:
             It could be because of an invalid phase or an invalid order query
             parameter.
 
+  /initiative-events:
+    get:
+      tags: [Initiatives]
+      summary: Get a list of initiative events matching your filter.
+
+      parameters:
+        - name: order
+          in: query
+          description: |
+            Order initiative events. Ascending by default. Use the "-" prefix
+            to request a descending sort.
+
+          schema:
+            type: string
+            example: "-occurredAt"
+            enum:
+              - "occurredAt"
+              - "-occurredAt"
+
+        - name: limit
+          in: query
+          description: Limit returned initiative events.
+          schema:
+            type: integer
+            example: 5
+
+      responses:
+        200:
+          description: OK
+          content:
+            application/vnd.rahvaalgatus.initiative-event+json; v=1:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Initiative Event"
+
+        400:
+          description: |
+            Invalid request
+
+            It could be because of an invalid order query parameter.
+
   /initiatives/{initiativeUuid}:
     get:
       tags: [Initiatives]
@@ -216,3 +258,43 @@ components:
             The digital signature count for the initiative since the given date
             _if_ `signedSince` was specified in the query.  
             Will be missing if no `signedSince` is present.
+
+    Initiative Event:
+      type: object
+
+      properties:
+        id:
+          type: integer
+          example: 1
+          description: |
+            The event's id.  
+            Note that for some events the id is a string. Such is the case for
+            the "sent-to-parliament" event, for example.
+
+        initiativeId:
+          type: string
+          format: uuid
+          example: 92cc16ee-107e-4208-b92c-2ffed24d4f4b
+          description: |
+            The event's initiative's id.  
+            This is a UUID as of Feb 20, 2020, but will become an integer in
+            the next few months.
+
+        title:
+          type: string
+          example: "Algatus jõudis Riigikokku"
+          description: |
+            The title of the event.  
+            These will only be in Estonian at the moment, but localization is
+            theoretically possible.
+
+        occurredAt:
+          type: string
+          format: date-time
+          example: "2015-06-18T13:37:42.666Z"
+          description: |
+            The time the event happened.  
+            Note that this doesn't necessarily mean the event entered the
+            Rahvaalgatus' database at that time. Rahvaalgatus is unfortunately
+            often notified of parliamentary events days later, when they reach
+            the [Riigikogu's API](https://api.riigikogu.ee).

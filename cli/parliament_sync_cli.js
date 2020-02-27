@@ -906,7 +906,7 @@ function* sendParliamentEventEmail(initiative, events) {
 			eventsUrl: `${initiativeUrl}#events`,
 
 			eventTitles: events.map((ev) => (
-				`${formatDate(ev.occurred_at)} — ${renderEventTitle(ev)}`
+				`${formatDate(ev.occurred_at)} — ${renderEventTitle(initiative, ev)}`
 			)).join("\n")
 		})
 	})
