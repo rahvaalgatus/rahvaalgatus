@@ -34,8 +34,7 @@ describe("InitiativeEventsController", function() {
 
 		it("must respond with initiative events", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id,
-				phase: "edit"
+				user_id: this.author.id
 			}))
 
 			yield createTopic(newTopic({
@@ -73,8 +72,7 @@ describe("InitiativeEventsController", function() {
 		describe("given include", function() {
 			it("must respond with initiative if requested", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "edit"
+					user_id: this.author.id
 				}))
 
 				var topic = yield createTopic(newTopic({
@@ -116,6 +114,147 @@ describe("InitiativeEventsController", function() {
 			})
 		})
 
+		describe("given distinct", function() {
+			it("must respond with 400 given invalid distinct", function*() {
+				var res = yield this.request("/initiative-events?distinct=foo", {
+					headers: {Accept: INITIATIVE_EVENT_TYPE}
+				})
+
+				res.statusCode.must.equal(400)
+				res.statusMessage.must.equal("Invalid Distinct")
+
+				res.body.must.eql({
+					code: 400,
+					message: "Invalid Distinct",
+					name: "HttpError"
+				})
+			})
+
+			it("must keep only the first row", function*() {
+				var initiatives = yield initiativesDb.create(
+					_.times(2, () => new ValidInitiative({user_id: this.author.id}))
+				)
+
+				var author = yield usersDb.create(new ValidUser)
+
+				yield initiatives.map((initiative) => createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: this.author.uuid,
+					sourcePartnerId: this.partner.id,
+					status: "voting"
+				})))
+
+				var a = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiatives[0].uuid,
+					user_id: author.id,
+					occurred_at: new Date(2015, 5, 18, 1)
+				}))
+
+				var _b = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiatives[0].uuid,
+					user_id: author.id,
+					occurred_at: new Date(2015, 5, 18, 2)
+				}))
+
+				var c = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiatives[1].uuid,
+					user_id: author.id,
+					occurred_at: new Date(2015, 5, 18, 3)
+				}))
+
+				var path = "/initiative-events?distinct=initiativeId"
+				var res = yield this.request(path, {
+					headers: {Accept: INITIATIVE_EVENT_TYPE}
+				})
+
+				res.statusCode.must.equal(200)
+				_.map(res.body, "id").must.eql([a.id, c.id])
+			})
+
+			it("must apply distinct after order", function*() {
+				var initiatives = yield initiativesDb.create(
+					_.times(2, () => new ValidInitiative({user_id: this.author.id}))
+				)
+
+				var author = yield usersDb.create(new ValidUser)
+
+				yield initiatives.map((initiative) => createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: this.author.uuid,
+					sourcePartnerId: this.partner.id,
+					status: "voting"
+				})))
+
+				var _a = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiatives[0].uuid,
+					user_id: author.id,
+					occurred_at: new Date(2015, 5, 18, 1)
+				}))
+
+				var b = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiatives[0].uuid,
+					user_id: author.id,
+					occurred_at: new Date(2015, 5, 18, 2)
+				}))
+
+				var c = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiatives[1].uuid,
+					user_id: author.id,
+					occurred_at: new Date(2015, 5, 18, 3)
+				}))
+
+				var path = "/initiative-events?distinct=initiativeId&order=-occurredAt"
+				var res = yield this.request(path, {
+					headers: {Accept: INITIATIVE_EVENT_TYPE}
+				})
+
+				res.statusCode.must.equal(200)
+				_.map(res.body, "id").must.eql([c.id, b.id])
+			})
+
+			it("must apply distinct before limit", function*() {
+				var initiatives = yield initiativesDb.create(
+					_.times(3, () => new ValidInitiative({user_id: this.author.id}))
+				)
+
+				var author = yield usersDb.create(new ValidUser)
+
+				yield initiatives.map((initiative) => createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: this.author.uuid,
+					sourcePartnerId: this.partner.id,
+					status: "voting"
+				})))
+
+				var a = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiatives[0].uuid,
+					user_id: author.id,
+					occurred_at: new Date(2015, 5, 18, 0)
+				}))
+
+				var events = yield eventsDb.create(_.times(5, (i) => new ValidEvent({
+					initiative_uuid: initiatives[1].uuid,
+					user_id: author.id,
+					occurred_at: new Date(2015, 5, 18, 1 + i)
+				})))
+
+				var c = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiatives[2].uuid,
+					user_id: author.id,
+					occurred_at: new Date(2015, 5, 18, 6)
+				}))
+
+				var path = "/initiative-events?distinct=initiativeId"
+				path += "&order=-occurredAt&limit=3"
+				var res = yield this.request(path, {
+					headers: {Accept: INITIATIVE_EVENT_TYPE}
+				})
+
+				res.statusCode.must.equal(200)
+				_.map(res.body, "id").must.eql([c.id, _.last(events).id, a.id])
+			})
+		})
+
 		describe("given order", function() {
 			it("must respond with 400 given invalid order", function*() {
 				var res = yield this.request("/initiative-events?order=foo", {
@@ -139,8 +278,7 @@ describe("InitiativeEventsController", function() {
 			}, function(sort, order) {
 				it(`must sort by ${order}`, function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						phase: "parliament"
+						user_id: this.author.id
 					}))
 
 					var author = yield usersDb.create(new ValidUser)
@@ -149,13 +287,13 @@ describe("InitiativeEventsController", function() {
 						id: initiative.uuid,
 						creatorId: this.author.uuid,
 						sourcePartnerId: this.partner.id,
-						status: "voting"
+						visibility: "public"
 					}))
 
 					var events = yield eventsDb.create(_.times(5, (i) => new ValidEvent({
 						initiative_uuid: initiative.uuid,
 						user_id: author.id,
-						occurred_at: new Date(2015, 5, 18 - i)
+						occurred_at: new Date(2015, 5, 18, -i)
 					})))
 
 					var path = "/initiative-events?order=" + encodeURIComponent(order)
@@ -172,8 +310,7 @@ describe("InitiativeEventsController", function() {
 		describe("given limit", function() {
 			it("must limit initiative events", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "edit"
+					user_id: this.author.id
 				}))
 
 				yield createTopic(newTopic({
@@ -188,7 +325,7 @@ describe("InitiativeEventsController", function() {
 				var events = yield eventsDb.create(_.times(10, (i) => new ValidEvent({
 					initiative_uuid: initiative.uuid,
 					user_id: author.id,
-					occurred_at: new Date(2015, 5, 20, i)
+					occurred_at: new Date(2015, 5, 18, i)
 				})))
 
 				var res = yield this.request("/initiative-events?limit=5", {
@@ -204,8 +341,7 @@ describe("InitiativeEventsController", function() {
 
 			it("must limit initiative events after sorting", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "edit"
+					user_id: this.author.id
 				}))
 
 				yield createTopic(newTopic({
@@ -220,7 +356,7 @@ describe("InitiativeEventsController", function() {
 				var events = yield eventsDb.create(_.times(10, (i) => new ValidEvent({
 					initiative_uuid: initiative.uuid,
 					user_id: author.id,
-					occurred_at: new Date(2015, 5, 20, i)
+					occurred_at: new Date(2015, 5, 18, i)
 				})))
 
 				var res = yield this.request("/initiative-events?limit=5", {
@@ -245,7 +381,6 @@ describe("InitiativeEventsController", function() {
 		it("must respond with Atom feed", function*() {
 			var initiatives = yield initiativesDb.create([new ValidInitiative({
 				user_id: this.author.id,
-				phase: "edit",
 				created_at: pseudoDateTime()
 			}), new ValidInitiative({
 				title: "Better life.",

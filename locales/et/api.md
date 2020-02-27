@@ -70,7 +70,12 @@ Kombineerides erinevaid API päringuid saad enda lehel kuvada näiteks koondvaat
       })
     })
 
-    fetch("/initiative-events?include=initiative&order=-occurredAt&limit=5", {
+    var path = "/initiative-events"
+    path += "?include=initiative"
+    path += "&distinct=initiativeId"
+    path += "&order=-occurredAt"
+    path += "&limit=5"
+    fetch(path, {
       headers: {
         Accept: "application/vnd.rahvaalgatus.initiative-event+json; v=1"
       }
@@ -311,7 +316,12 @@ Viie viimati uuendatud menetlusinfoga algatuse kuvamine võib välja näha selli
   </ol>
 
   <script>!function() {
-    fetch("/initiative-events?include=initiative&order=-occurredAt&limit=5", {
+    var path = "/initiative-events"
+    path += "?include=initiative"
+    path += "&distinct=initiativeId"
+    path += "&order=-occurredAt"
+    path += "&limit=5"
+    fetch(path, {
       headers: {
         Accept: "application/vnd.rahvaalgatus.initiative-event+json; v=1"
       }
@@ -339,7 +349,7 @@ Viie viimati uuendatud menetlusinfoga algatuse kuvamine võib välja näha selli
   }()</script>
 </div>
 
-Kõigepealt teeme päringu `https://rahvaalgatus.ee/initiative-events` aadressile, küsides algatuste sündmusi toimumise järjekorras (`order=-occurredAt`). Piirdume viie tagastatud sündmusega (`limit=5`) ja selleks, et kuvada menetlusinfo pealkirja kõrval ka algatuse pealkirja, palume lisada ka algatuse info (`include=initiative`).
+Kõigepealt teeme päringu `https://rahvaalgatus.ee/initiative-events` aadressile, küsides algatuste sündmusi toimumise järjekorras (`order=-occurredAt`). Piirdume viie tagastatud sündmusega (`limit=5`) ja selleks, et kuvada menetlusinfo pealkirja kõrval ka algatuse pealkirja, palume lisada ka algatuse info (`include=initiative`). Et mitte kuvada sama algatust nimekirjas kaks korda, lisame ka `distinct=initiativeId`, mis eemaldab duplikaadid peale sorteerimist.
 
 ```html
 <ol id="initiative-events"></ol>
@@ -348,7 +358,12 @@ Kõigepealt teeme päringu `https://rahvaalgatus.ee/initiative-events` aadressil
 ```javascript
 var URL = "https://rahvaalgatus.ee"
 
-fetch(URL + "/initiative-events?include=initiative&order=-occurredAt&limit=5", {
+var path = "/initiative-events"
+path += "?include=initiative"
+path += "&distinct=initiativeId"
+path += "&order=-occurredAt"
+path += "&limit=5"
+fetch(URL + path, {
   headers: {
     Accept: "application/vnd.rahvaalgatus.initiative-event+json; v=1"
   }

@@ -124,6 +124,17 @@ paths:
               - "occurredAt"
               - "-occurredAt"
 
+        - name: distinct
+          in: query
+          description: |
+            Remove duplicates based on the given attribute and keep the first
+            instance.
+
+          schema:
+            type: string
+            enum:
+              - "initiativeId"
+
         - name: limit
           in: query
           description: Limit returned initiative events.

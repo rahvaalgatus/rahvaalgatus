@@ -77,6 +77,16 @@ exports.router.get("/",
 				default: throw new HttpError(400, "Invalid Order")
 			}
 
+			var distinct = req.query.distinct
+			switch (distinct || undefined) {
+				case "initiativeId":
+					apiEvents = _.uniqBy(apiEvents, "initiativeId")
+					break
+
+				case undefined: break
+				default: throw new HttpError(400, "Invalid Distinct")
+			}
+
 			var limit = req.query.limit
 			switch (limit || undefined) {
 				case undefined: break
