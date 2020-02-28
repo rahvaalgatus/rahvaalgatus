@@ -215,7 +215,10 @@ function InitiativeView(attrs) {
 			{badge ? <img src={badge.icon} class="badge" title={badge.name} /> : null}
 
 			<span class="author">
-				{initiative.user_name || initiative.author_name}
+				{[
+					initiative.author_name,
+					initiative.user_name
+				].filter(Boolean).join(", ")}
 			</span>
 
 			<ProgressView

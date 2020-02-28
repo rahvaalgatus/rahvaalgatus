@@ -1896,14 +1896,26 @@ button.inherited {
 			p + .form-list { margin-top: 0.5rem; }
 			ul.form-output { line-height: 1.5; }
 
+			.form-header {
+				color: black;
+				margin-bottom: 0.5rem;
+
+				&:after { content: ":"; }
+			}
+
 			[name=notes] { min-height: 12rem; }
 
 			.text { white-space: pre-wrap; }
 			[type=submit] { margin-top: 0.5rem; }
 			input[type=date] { flex-shrink: 0; }
 
+			.form-fields + .form-fields {
+				margin-top: 1rem;
+			}
+
 			#initiative-info-form-toggle {
-				&:not(:checked) ~ textarea,
+				&:not(:checked) ~ .form-header,
+				&:not(:checked) ~ .form-textarea,
 				&:not(:checked) ~ .form-fields,
 				&:not(:checked) ~ .form-buttons,
 				&:checked + h2 .edit-button,

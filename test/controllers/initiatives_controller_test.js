@@ -5922,6 +5922,7 @@ describe("InitiativesController", function() {
 						method: "PUT",
 						form: {
 							_csrf_token: this.csrfToken,
+							author_name: "John Smith",
 							author_url: "http://example.com/author",
 							community_url: "http://example.com/community",
 							url: "http://example.com/initiative",
@@ -5949,6 +5950,7 @@ describe("InitiativesController", function() {
 
 					yield initiativesDb.read(initiative).must.then.eql({
 						__proto__: initiative,
+						author_name: "John Smith",
 						author_url: "http://example.com/author",
 						community_url: "http://example.com/community",
 						url: "http://example.com/initiative",

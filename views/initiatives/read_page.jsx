@@ -1003,6 +1003,7 @@ function SidebarInfoView(attrs) {
 	var initiative = attrs.initiative
 	var canEdit = topic && Topic.canEdit(topic)
 	var phase = initiative.phase
+	var authorName = initiative.author_name
 	var authorUrl = initiative.author_url
 	var communityUrl = initiative.community_url
 	var externalUrl = initiative.url
@@ -1015,6 +1016,7 @@ function SidebarInfoView(attrs) {
 
 	if (!(
 		canEdit ||
+		authorName ||
 		authorUrl ||
 		communityUrl ||
 		organizations.length > 0 ||
@@ -1029,7 +1031,7 @@ function SidebarInfoView(attrs) {
 		id="initiative-info"
 		class="sidebar-section"
 		method="put"
-		action={"/initiatives/" + topic.id}>
+		action={"/initiatives/" + initiative.uuid}>
 		<input type="checkbox" id="initiative-info-form-toggle" hidden />
 
 		<h2 class="sidebar-header">
@@ -1042,18 +1044,44 @@ function SidebarInfoView(attrs) {
 			Lisainfo
 		</h2>
 
-		{authorUrl || canEdit ? <InitiativeAttribute
-			t={t}
-			editable={canEdit}
-			title="Algatajast"
-			help="Ametliku veebilehe asemel sobib viidata ka lehele sotsiaalmeedias."
-			name="author_url"
-			type="url"
-			placeholder="https://"
-			value={authorUrl}
-		>
-			<UntrustedLink class="form-output" href={authorUrl} />
-		</InitiativeAttribute> : null}
+		{authorName || authorUrl || canEdit ? <Fragment>
+			<h3 class="sidebar-subheader">{t("INITIATIVE_INFO_AUTHOR_TITLE")}</h3>
+
+			{authorName || authorUrl ?
+				<UntrustedLink class="form-output" href={authorUrl}>
+					{authorName || null}
+				</UntrustedLink>
+			: null}
+
+			{canEdit ? <div class="form-fields">
+				<h4 class="form-header">{t("INITIATIVE_INFO_AUTHOR_NAME_TITLE")}</h4>
+
+				<input
+					name="author_name"
+					type="name"
+					class="form-input"
+					value={authorName}
+				/>
+
+				<p>{t("INITIATIVE_INFO_AUTHOR_NAME_DESCRIPTION")}</p>
+			</div> : null}
+
+			{canEdit ? <div class="form-fields">
+				<h4 class="form-header">{t("INITIATIVE_INFO_AUTHOR_URL_TITLE")}</h4>
+
+				<input
+					name="author_url"
+					type="url"
+					class="form-input"
+					placeholder="https://"
+					value={authorUrl}
+				/>
+
+				<p>{t("INITIATIVE_INFO_AUTHOR_URL_DESCRIPTION")}</p>
+			</div> : null}
+
+			{authorName || authorUrl ? null : <AddInitiativeInfoButton t={t} /> }
+		</Fragment> : null}
 
 		{communityUrl || canEdit ? <InitiativeAttribute
 			t={t}
@@ -1878,11 +1906,13 @@ function InitiativeAttributeList(attrs, children) {
 function UntrustedLink(attrs, children) {
 	var href = attrs.href
 	var klass = attrs.class || ""
+	children = children ? children.filter(Boolean) : EMPTY_ARR
+	var text = children.length ? children : href
 
 	if (HTTP_URL.test(href)) return <a {...attrs} class={klass + " link-button"}>
-		{children || href}
+		{text}
 	</a>
-	else return <span class={klass}>{children || href}</span>
+	else return <span class={klass}>{text}</span>
 }
 
 function AddInitiativeInfoButton(attrs) {

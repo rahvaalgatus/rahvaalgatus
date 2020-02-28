@@ -675,6 +675,7 @@ function* searchInitiativeComments(initiativeUuid) {
 function isInitiativeUpdate(obj) {
 	return (
 		"destination" in obj ||
+		"author_name" in obj ||
 		"author_url" in obj ||
 		"url" in obj ||
 		"community_url" in obj ||
@@ -928,6 +929,7 @@ function parseInitiative(initiative, obj) {
 		attrs.destination = dest
 	}
 
+	if ("author_name" in obj) attrs.author_name = String(obj.author_name).trim()
 	if ("author_url" in obj) attrs.author_url = String(obj.author_url).trim()
 	if ("url" in obj) attrs.url = String(obj.url).trim()
 	if ("notes" in obj) attrs.notes = String(obj.notes).trim()

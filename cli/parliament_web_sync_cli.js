@@ -170,6 +170,7 @@ function* replaceWebInitiative(initiative, document, row) {
 		phase: row.finishedOn ? "done" : "parliament",
 		destination: "parliament",
 		archived_at: row.finishedOn && new Date,
+		author_name: row.authorName,
 		external: true,
 
 		// TODO: Ensure time parsing is always in Europe/Tallinn and don't depend
@@ -308,8 +309,7 @@ function attrsFrom(row, doc) {
 		parliament_committee: row.committees[0] && row.committees[0][0],
 		received_by_parliament_at: doc.created && Time.parseDateTime(doc.created),
 		accepted_by_parliament_at: row.acceptedOn,
-		finished_in_parliament_at: row.finishedOn,
-		author_name: row.authorName,
+		finished_in_parliament_at: row.finishedOn
 	}
 }
 

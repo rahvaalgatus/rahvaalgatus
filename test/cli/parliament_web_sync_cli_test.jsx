@@ -224,6 +224,7 @@ describe("ParliamentWebSyncCli", function() {
 
 		var initiative = yield initiativesDb.create(new ValidInitiative({
 			user_id: author.id,
+			author_name: "John Smith",
 			phase: "government"
 		}))
 
@@ -232,7 +233,7 @@ describe("ParliamentWebSyncCli", function() {
 				<td>18.06.2015</td>
 				<td>Kollektiivne pöördumine<br />„Teeme elu paremaks”</td>
 				<td><a href={`https://rahvaalgatus.ee/initiatives/${initiative.uuid}`}>
-					John Smith
+					Mike Smith
 				</a></td>
 				<td><a href="http://example.com/committee">Keskkonnakomisjon</a></td>
 
@@ -350,7 +351,6 @@ describe("ParliamentWebSyncCli", function() {
 			initiatives.must.eql([{
 				// NOTE: Phase isn't updated for existing initiatives.
 				__proto__: initiative,
-				author_name: "John",
 				received_by_parliament_at: new Date(2015, 5, 16, 13, 37, 42),
 				accepted_by_parliament_at: new Date(2015, 5, 18),
 				parliament_uuid: DOCUMENT_UUID,

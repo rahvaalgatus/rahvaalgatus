@@ -168,12 +168,14 @@ describe("ParliamentSyncCli", function() {
 
 		var initiative = yield initiativesDb.create(new ValidInitiative({
 			user_id: author.id,
+			author_name: "John Smith",
 			phase: "government"
 		}))
 
 		this.router.get(INITIATIVES_URL, respond.bind(null, [{
 			uuid: INITIATIVE_UUID,
 			title: "Kollektiivne pöördumine elu Tallinnas paremaks tegemiseks",
+			sender: "Mike Smith",
 			senderReference: initiative.uuid,
 			responsibleCommittee: {name: "Sotsiaalkomisjon"},
 
@@ -202,6 +204,7 @@ describe("ParliamentSyncCli", function() {
 
 		initiatives.must.eql([{
 			// NOTE: Phase isn't updated for existing initiatives.
+			// Neither is the author_name.
 			__proto__: initiative,
 			parliament_uuid: INITIATIVE_UUID,
 			parliament_committee: "Sotsiaalkomisjon",
