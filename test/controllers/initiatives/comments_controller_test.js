@@ -16,6 +16,7 @@ var commentsDb = require("root/db/comments_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var parseDom = require("root/lib/dom").parse
 var sql = require("sqlate")
+var cosDb = require("root").cosDb
 var t = require("root/lib/i18n").t.bind(null, "et")
 var MAX_TITLE_LENGTH = 140
 var MAX_TEXT_LENGTH = 3000
@@ -410,6 +411,47 @@ describe("InitiativeCommentsController", function() {
 				var msg = String(this.emails[0].message)
 				msg.match(/^Subject: .*/m)[0].must.include(this.topic.title)
 				subscriptions.slice(2).forEach((s) => msg.must.include(s.update_token))
+			})
+
+			it("must not email subscribers if private", function*() {
+				yield initiativesDb.update(this.initiative, {user_id: this.user.id})
+
+				yield cosDb.query(sql`
+					UPDATE "Topics" SET
+						visibility = 'private',
+						"creatorId" = ${this.user.uuid}
+
+					WHERE id = ${this.topic.id}
+				`)
+
+				yield subscriptionsDb.create([
+					new ValidSubscription({
+						email: "user@example.com",
+						initiative_uuid: this.initiative.uuid,
+						confirmed_at: new Date,
+						comment_interest: true
+					}),
+
+					new ValidSubscription({
+						email: "user@example.com",
+						initiative_uuid: null,
+						confirmed_at: new Date,
+						comment_interest: true
+					})
+				])
+
+				var path = `/initiatives/${this.initiative.uuid}`
+				var res = yield this.request(path + `/comments`, {
+					method: "POST",
+					form: {
+						__proto__: VALID_ATTRS,
+						_csrf_token: this.csrfToken,
+						referrer: path
+					}
+				})
+
+				res.statusCode.must.equal(303)
+				this.emails.must.be.empty()
 			})
 
 			it("must not email commentator if subscribed", function*() {
@@ -885,6 +927,51 @@ describe("InitiativeCommentsController", function() {
 				subscriptions.slice(2).forEach((s) => (
 					msg.must.include(s.update_token))
 				)
+			})
+
+			it("must not email subscribers if private", function*() {
+				yield initiativesDb.update(this.initiative, {user_id: this.user.id})
+
+				yield cosDb.query(sql`
+					UPDATE "Topics" SET
+						visibility = 'private',
+						"creatorId" = ${this.user.uuid}
+
+					WHERE id = ${this.topic.id}
+				`)
+
+				var author = yield createUser()
+
+				var comment = yield commentsDb.create(new ValidComment({
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
+					initiative_uuid: this.initiative.uuid
+				}))
+
+				yield subscriptionsDb.create([
+					new ValidSubscription({
+						initiative_uuid: this.initiative.uuid,
+						confirmed_at: new Date,
+						comment_interest: true
+					}),
+
+					new ValidSubscription({
+						initiative_uuid: null,
+						confirmed_at: new Date,
+						comment_interest: true
+					})
+				])
+
+				var path = `/initiatives/${this.initiative.uuid}`
+				path += `/comments/${comment.id}`
+
+				var res = yield this.request(path + `/replies`, {
+					method: "POST",
+					form: {__proto__: VALID_REPLY_ATTRS, _csrf_token: this.csrfToken}
+				})
+
+				res.statusCode.must.equal(303)
+				this.emails.must.be.empty()
 			})
 
 			it("must not email commentator if subscribed", function*() {

@@ -82,27 +82,29 @@ exports.router.post("/", next(function*(req, res) {
 			})
 		}
 
-		var subscriptions = yield subscriptionsDb.searchConfirmedByInitiativeIdWith(
-			initiative.uuid,
-			sql`comment_interest AND email != ${userEmail}`
-		)
+		if (topic == null || topic.visibility == "public") {
+			var subs = yield subscriptionsDb.searchConfirmedByInitiativeIdWith(
+				initiative.uuid,
+				sql`comment_interest AND email != ${userEmail}`
+			)
 
-		var title = topic ? topic.title : initiative.title
+			var title = topic ? topic.title : initiative.title
 
-		yield Subscription.send({
-			title: req.t("EMAIL_INITIATIVE_COMMENT_TITLE", {
-				initiativeTitle: title,
-			}),
+			yield Subscription.send({
+				title: req.t("EMAIL_INITIATIVE_COMMENT_TITLE", {
+					initiativeTitle: title,
+				}),
 
-			text: renderEmail("EMAIL_INITIATIVE_COMMENT_BODY", {
-				initiativeTitle: title,
-				initiativeUrl: initiativeUrl,
-				userName: user.name,
-				commentTitle: comment.title.replace(/\r?\n/g, " "),
-				commentText: _.quoteEmail(comment.text),
-				commentUrl: initiativeUrl + "#comment-" + comment.id
-			})
-		}, subscriptions)
+				text: renderEmail("EMAIL_INITIATIVE_COMMENT_BODY", {
+					initiativeTitle: title,
+					initiativeUrl: initiativeUrl,
+					userName: user.name,
+					commentTitle: comment.title.replace(/\r?\n/g, " "),
+					commentText: _.quoteEmail(comment.text),
+					commentUrl: initiativeUrl + "#comment-" + comment.id
+				})
+			}, subs)
+		}
 
 		var url = req.baseUrl + "/" + comment.id
 		if (req.body.referrer) url = req.body.referrer + "#comment-" + comment.id
@@ -177,26 +179,28 @@ exports.router.post("/:commentId/replies", next(function*(req, res) {
 		var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 		var userEmail = user.email || ""
 
-		var subscriptions = yield subscriptionsDb.searchConfirmedByInitiativeIdWith(
-			initiative.uuid,
-			sql`comment_interest AND email != ${userEmail}`
-		)
-		
-		var title = topic ? topic.title : initiative.title
+		if (topic == null || topic.visibility == "public") {
+			var subs = yield subscriptionsDb.searchConfirmedByInitiativeIdWith(
+				initiative.uuid,
+				sql`comment_interest AND email != ${userEmail}`
+			)
+			
+			var title = topic ? topic.title : initiative.title
 
-		yield Subscription.send({
-			title: req.t("EMAIL_INITIATIVE_COMMENT_REPLY_TITLE", {
-				initiativeTitle: title,
-			}),
+			yield Subscription.send({
+				title: req.t("EMAIL_INITIATIVE_COMMENT_REPLY_TITLE", {
+					initiativeTitle: title,
+				}),
 
-			text: renderEmail("EMAIL_INITIATIVE_COMMENT_REPLY_BODY", {
-				initiativeTitle: title,
-				initiativeUrl: initiativeUrl,
-				userName: user.name,
-				commentText: _.quoteEmail(reply.text),
-				commentUrl: initiativeUrl + "#comment-" + reply.id
-			})
-		}, subscriptions)
+				text: renderEmail("EMAIL_INITIATIVE_COMMENT_REPLY_BODY", {
+					initiativeTitle: title,
+					initiativeUrl: initiativeUrl,
+					userName: user.name,
+					commentText: _.quoteEmail(reply.text),
+					commentUrl: initiativeUrl + "#comment-" + reply.id
+				})
+			}, subs)
+		}
 
 		var url = req.body.referrer || req.baseUrl + "/" + comment.id
 		res.redirect(303, url + "#comment-" + reply.id)
