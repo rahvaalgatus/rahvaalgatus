@@ -338,6 +338,8 @@ CREATE INDEX index_initiatives_on_user_id ON initiatives (user_id);
 CREATE INDEX index_initiative_events_on_user_id ON initiative_events (user_id);
 CREATE INDEX index_users_on_merged_with_id ON users (merged_with_id)
 WHERE merged_with_id IS NOT NULL;
+CREATE INDEX index_initiative_signatures_on_initiative_uuid_and_created_at
+ON initiative_signatures (initiative_uuid, created_at);
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -408,4 +410,5 @@ INSERT INTO migrations VALUES('20200124121145');
 INSERT INTO migrations VALUES('20200124131836');
 INSERT INTO migrations VALUES('20200125071216');
 INSERT INTO migrations VALUES('20200125122607');
+INSERT INTO migrations VALUES('20200302142858');
 COMMIT;

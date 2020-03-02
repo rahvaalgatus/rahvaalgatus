@@ -1,0 +1,2 @@
+CREATE INDEX index_initiative_signatures_on_initiative_uuid_and_created_at
+ON initiative_signatures (initiative_uuid, created_at);

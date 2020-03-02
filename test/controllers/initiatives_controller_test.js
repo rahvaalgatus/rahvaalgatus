@@ -28,6 +28,10 @@ var createPartner = require("root/test/citizenos_fixtures").createPartner
 var createUser = require("root/test/fixtures").createUser
 var createTopic = require("root/test/citizenos_fixtures").createTopic
 var createVote = require("root/test/citizenos_fixtures").createVote
+var createOptions = require("root/test/citizenos_fixtures").createOptions
+var newCitizenSignature = require("root/test/citizenos_fixtures").newSignature
+var createCitizenSignature =
+	require("root/test/citizenos_fixtures").createSignature
 var createCitizenSignatures =
 	require("root/test/citizenos_fixtures").createSignatures
 var createPermission = require("root/test/citizenos_fixtures").createPermission
@@ -703,6 +707,56 @@ describe("InitiativesController", function() {
 			metasByProp["og:title"].content.must.equal("Rahvaalgatus")
 			var imageUrl = `${Config.url}/assets/rahvaalgatus-description.png`
 			metasByProp["og:image"].content.must.equal(imageUrl)
+		})
+
+		describe("recent initiatives", function() {
+			it("must show initiatives last signed", function*() {
+				var self = this
+
+				var initiatives = yield _.times(10, function*(i) {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: self.author.id,
+						phase: "sign"
+					}))
+
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						title: "Better life for everyone.",
+						creatorId: self.author.uuid,
+						sourcePartnerId: self.partner.id,
+						status: "voting"
+					}))
+
+					var vote = yield createVote(topic, newVote({endsAt: new Date}))
+
+					if (i % 2 == 0) yield signaturesDb.create(new ValidSignature({
+						initiative_uuid: initiative.uuid,
+						created_at: DateFns.addMinutes(new Date, i * 2),
+					}))
+					else {
+						var user = yield createUser()
+						var yesAndNo = yield createOptions(vote)
+
+						yield createCitizenSignature(newCitizenSignature({
+							userId: user.uuid,
+							optionId: yesAndNo[0],
+							createdAt: DateFns.addMinutes(new Date, i * 2),
+							voteId: vote.id
+						}))
+					}
+
+					return initiative
+				})
+
+				var res = yield this.request("/initiatives")
+				res.statusCode.must.equal(200)
+				
+				var dom = parseDom(res.body)
+				var els = dom.querySelectorAll("#recent-initiatives ol li")
+				els.length.must.equal(6)
+				initiatives = _.reverse(initiatives)
+				els.forEach((el, i) => el.innerHTML.must.include(initiatives[i].uuid))
+			})
 		})
 	})
 

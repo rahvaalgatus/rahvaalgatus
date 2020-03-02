@@ -506,6 +506,8 @@ exports.router.use(function(err, req, res, next) {
 
 function* searchRecentInitiatives(initiatives) {
 	var recentUuids = _.uniq(_.reverse(_.sortBy(flatten(yield [
+		// TODO: Filter out comments on private initiatives once published_at lives
+		// on local initiatives.
 		sqlite(sql`
 			SELECT initiative_uuid AS uuid, max(created_at) AS at
 			FROM comments
@@ -513,8 +515,19 @@ function* searchRecentInitiatives(initiatives) {
 			ORDER BY at DESC
 			LIMIT 6
 		`).then((rows) => rows.map(function(row) {
-				row.at = new Date(row.at)
-				return row
+			row.at = new Date(row.at)
+			return row
+		})),
+
+		sqlite(sql`
+			SELECT initiative_uuid AS uuid, max(created_at) AS at
+			FROM initiative_signatures
+			GROUP BY initiative_uuid
+			ORDER BY at DESC
+			LIMIT 6
+		`).then((rows) => rows.map(function(row) {
+			row.at = new Date(row.at)
+			return row
 		})),
 
 		cosDb.query(sql`
@@ -525,10 +538,13 @@ function* searchRecentInitiatives(initiatives) {
 			ORDER BY at DESC
 			LIMIT 6
 		`)
-	]), "at")).map((row) => row.uuid)).slice(0, 6)
+	]), "at")).map((row) => row.uuid))
 
+	// There could be comments on private initiatives that we can't yet filter out
+	// during querying.
 	var initiativesByUuid = _.indexBy(initiatives, "uuid")
-	return recentUuids.map((uuid) => initiativesByUuid[uuid]).filter(Boolean)
+	var recents = recentUuids.map((uuid) => initiativesByUuid[uuid])
+	return recents.filter(Boolean).slice(0, 6)
 }
 
 function hasCategory(category, topic) {
