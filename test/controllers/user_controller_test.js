@@ -246,14 +246,13 @@ describe("UserController", function() {
 					res.body.must.not.include(initiative.uuid)
 				})
 
-				describe("when undersignable", function() {
+				describe("when undersigned", function() {
 					beforeEach(function*() { this.author = yield createUser() })
 
 					it("must show signed initiatives", function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
-							phase: "sign",
-							undersignable: true
+							phase: "sign"
 						}))
 
 						var topic = yield createTopic(newTopic({
@@ -284,8 +283,7 @@ describe("UserController", function() {
 						function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
-							phase: "sign",
-							undersignable: true
+							phase: "sign"
 						}))
 
 						var topic = yield createTopic(newTopic({
@@ -312,8 +310,7 @@ describe("UserController", function() {
 						function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
-							phase: "sign",
-							undersignable: true
+							phase: "sign"
 						}))
 
 						var topic = yield createTopic(newTopic({
@@ -337,14 +334,13 @@ describe("UserController", function() {
 					})
 				})
 
-				describe("when CitizenOS-signable", function() {
+				describe("when CitizenOS-signed", function() {
 					beforeEach(function*() { this.author = yield createUser() })
 
 					it("must show signed initiatives", function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
-							phase: "sign",
-							undersignable: false
+							phase: "sign"
 						}))
 
 						var topic = yield createTopic(newTopic({
@@ -375,8 +371,7 @@ describe("UserController", function() {
 					it("must not show other user's signed initiatives", function*() {	
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
-							phase: "sign",
-							undersignable: false
+							phase: "sign"
 						}))
 
 						var topic = yield createTopic(newTopic({

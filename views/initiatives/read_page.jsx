@@ -117,21 +117,9 @@ function ReadPage(attrs) {
 	var initiativePath = "/initiatives/" + initiative.uuid
 	var subscriberCount = attrs.subscriberCount
 	var signatureCount = attrs.signatureCount
-	var voteOptions = attrs.voteOptions
 	var image = attrs.image
 	var title = topic ? topic.title : initiative.title
-	var optId = voteOptions && voteOptions[signature ? "No" : "Yes"]
 	var initiativeUrl =`${Config.url}/initiatives/${initiative.uuid}`
-
-	var signWithIdCardText = !signature
-		? t("BTN_VOTE_SIGN_WITH_ID_CARD")
-		: t("BTN_VOTE_REVOKE_WITH_ID_CARD")
-
-	var signWithMobileClass = signature ? "white-button" : "green-button"
-	var signWithMobileText = !signature
-		? t("BTN_VOTE_SIGN_WITH_MOBILE_ID")
-		: t("BTN_VOTE_REVOKE_WITH_MOBILE_ID")
-
 	var shareText = `${title} ${initiativeUrl}`
 	var atomPath = req.baseUrl + req.url + ".atom"
 
@@ -315,11 +303,7 @@ function ReadPage(attrs) {
 						<p>{t("HEADING_VOTE_REQUIRE_HARD_ID")}</p>
 					</Fragment>}
 
-					{(
-						signature &&
-						signature.xades &&
-						initiative.undersignable
-					) ? <DeleteSignatureButton req={req} signature={signature}>
+					{signature ? <DeleteSignatureButton req={req} signature={signature}>
 						{t("REVOKE_SIGNATURE")}
 					</DeleteSignatureButton> : <Fragment>
 						<input
@@ -354,8 +338,8 @@ function ReadPage(attrs) {
 							>
 								<img
 									src="/assets/id-kaart-button.png"
-									title={signWithIdCardText}
-									alt={signWithIdCardText}
+									title={t("BTN_VOTE_SIGN_WITH_ID_CARD")}
+									alt={t("BTN_VOTE_SIGN_WITH_ID_CARD")}
 								/>
 							</label>
 
@@ -365,12 +349,12 @@ function ReadPage(attrs) {
 							>
 								<img
 									src="/assets/mobile-id-button.png"
-									title={signWithMobileText}
-									alt={signWithMobileText}
+									title={t("BTN_VOTE_SIGN_WITH_MOBILE_ID")}
+									alt={t("BTN_VOTE_SIGN_WITH_MOBILE_ID")}
 								/>
 							</label>
 
-							{Config.smartId && initiative.undersignable ? <label
+							{Config.smartId ? <label
 								for="signature-method-tab-smart-id"
 								class="inherited-button"
 							>
@@ -397,8 +381,6 @@ function ReadPage(attrs) {
 							class="signature-form"
 							method="post"
 							action={initiativePath + "/signatures"}>
-
-							<input type="hidden" name="optionId" value={optId} />
 
 							<label class="form-label">
 								{t("LABEL_PHONE_NUMBER")}
@@ -429,12 +411,12 @@ function ReadPage(attrs) {
 							<button
 								name="method"
 								value="mobile-id"
-								class={["button", signWithMobileClass].join(" ")}>
-								{signWithMobileText}
+								class="button green-button">
+								{t("BTN_VOTE_SIGN_WITH_MOBILE_ID")}
 							</button>
 						</Form>
 
-						{Config.smartId && initiative.undersignable ? <Form
+						{Config.smartId ? <Form
 							req={req}
 							id="smart-id-form"
 							class="signature-form"
@@ -497,7 +479,7 @@ function ReadPage(attrs) {
 								var certificate = Hwcrypto.certificate("sign")
 
 								var signable = certificate.then(function(certificate) {
-									return fetch(form.action + "?optionId=${optId}", {
+									return fetch(form.action, {
 										method: "POST",
 										credentials: "same-origin",
 
@@ -1752,16 +1734,9 @@ function QuicksignView(attrs) {
 
 		{topic && isSignable(initiative, topic) && signature ? <Fragment>
 			<h2>{t("THANKS_FOR_SIGNING")}</h2>
-
-			{signature.xades
-				? <DeleteSignatureButton req={req} signature={signature}>
-					{t("REVOKE_SIGNATURE")}
-				</DeleteSignatureButton>
-				: <a href="#initiative-vote" class="link-button revoke-button">
-					{t("REVOKE_SIGNATURE")}
-				</a>
-			}
-
+			<DeleteSignatureButton req={req} signature={signature}>
+				{t("REVOKE_SIGNATURE")}
+			</DeleteSignatureButton>
 		</Fragment> : null}
 	</div>
 }

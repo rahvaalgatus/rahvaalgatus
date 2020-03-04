@@ -1,6 +1,4 @@
 var _ = require("root/lib/underscore")
-var Qs = require("querystring")
-var Url = require("url")
 var Mime = require("mime")
 var Asic = require("undersign/lib/asic")
 var Path = require("path")
@@ -16,11 +14,8 @@ var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
 var next = require("co-next")
 var co = require("co")
-var catch400 = require("root/lib/fetch").catch.bind(null, 400)
-var catch401 = require("root/lib/fetch").catch.bind(null, 401)
 var sql = require("sqlate")
 var dispose = require("content-disposition")
-var isOk = require("root/lib/http").isOk
 var reportError = require("root").errorReporter
 var sleep = require("root/lib/promise").sleep
 var mobileId = require("root").mobileId
@@ -29,10 +24,7 @@ var hades = require("root").hades
 var parseBody = require("body-parser").raw
 var signaturesDb = require("root/db/initiative_signatures_db")
 var signablesDb = require("root/db/initiative_signables_db")
-var cosApi = require("root/lib/citizenos_api")
 var {ensureAreaCode} = require("root/lib/mobile_id")
-var decodeBase64 = require("root/lib/crypto").decodeBase64
-var translateCitizenError = require("root/lib/citizenos_api").translateError
 var constantTimeEqual = require("root/lib/crypto").constantTimeEqual
 var {getCertificatePersonalId} = require("root/lib/certificate")
 var ENV = process.env.NODE_ENV
@@ -42,10 +34,6 @@ var getNormalizedMobileIdErrorCode =
 	require("root/lib/mobile_id").getNormalizedErrorCode
 exports.router = Router({mergeParams: true})
 exports.pathToSignature = pathToSignature
-
-// Circular dependency.
-var {readCitizenSignature} = require("../initiatives_controller")
-
 exports.router.use(parseBody({type: hasSignatureType}))
 
 var MOBILE_ID_ERRORS = {
@@ -186,10 +174,8 @@ exports.router.get("/", next(function*(req, res) {
 	asic.end()
 }))
 
-exports.router.post("/", next(function*(req, res, next) {
+exports.router.post("/", next(function*(req, res) {
 	var initiative = req.initiative
-	if (!initiative.undersignable) return void next()
-
 	var method = res.locals.method = getSigningMethod(req)
 	var cert, err, country, personalId, xades, signable, signatureUrl
 
@@ -315,121 +301,6 @@ exports.router.post("/", next(function*(req, res, next) {
 	}
 }))
 
-// Undersignable initiatives PUT their signatures, but the old implementation
-// for CitizenOS took the signature via POST.
-exports.router.put("/", function(req, _res, next) {
-	var initiative = req.initiative
-	if (initiative.undersignable) return void next()
-	req.method = "post"
-	next()
-})
-
-exports.router.post("/",
-	new ResponseTypeMiddeware([
-		"text/html",
-		"application/vnd.rahvaalgatus.signable",
-		"application/x-empty"
-	].map(MediaType.parse)),
-	next(function*(req, res, next) {
-	var initiative = req.initiative
-	if (initiative.undersignable) return void next()
-
-	var path
-	var topic = req.topic
-	var vote = topic.vote
-	var method = res.locals.method = getSigningMethod(req)
-
-	// NOTE: Do not send signing requests through the current user. CitizenOS API
-	// limits signing with one personal id number to a single account,
-	// a requirement we don't need to enforce.
-	switch (method) {
-		case "id-card":
-			if (req.query.token) {
-				path = `/api/topics/${topic.id}/votes/${vote.id}/sign`
-				var signed = yield cosApi(path, {
-					method: "POST",
-					json: {
-						token: req.query.token,
-						signatureValue: req.body.toString("hex")
-					}
-				}).catch(catch400)
-
-				if (isOk(signed)) {
-					var userId = parseUserIdFromBdocUrl(signed.body.data.bdocUri)
-					var sig = yield readCitizenSignature(topic, userId)
-					res.flash("signatureId", sig.id)
-					res.setHeader("Location", Path.dirname(req.baseUrl))
-
-					switch (res.contentType.name) {
-						case "application/x-empty": return void res.status(204).end()
-						default: return void res.status(303).end()
-					}
-				}
-				else throw new HttpError(422, {
-					description: translateCitizenError(req.t, signed.body)
-				})
-			}
-			else {
-				path = `/api/topics/${topic.id}/votes/${vote.id}`
-				var signable = yield cosApi(path, {
-					method: "POST",
-
-					json: {
-						options: [{optionId: req.query.optionId}],
-						certificate: req.body.toString("hex")
-					}
-				}).catch(catch400)
-
-				if (isOk(signable)) {
-					var hashName = signable.body.data.signedInfoHashType
-					if (hashName != "SHA-256")
-						throw new Error("Unsupported Signable Hash: " + hashName)
-
-					res.setHeader("Location", req.baseUrl + "?" + Qs.stringify({
-						optionId: req.query.optionId,
-						token: signable.body.data.token
-					}))
-
-					res.setHeader("Content-Type", "application/vnd.rahvaalgatus.signable")
-					res.status(202)
-					res.end(Buffer.from(signable.body.data.signedInfoDigest, "hex"))
-				}
-				else res.status(422).json({
-					description: translateCitizenError(req.t, signable.body)
-				})
-			}
-			break
-
-		case "mobile-id":
-			path = `/api/topics/${topic.id}/votes/${vote.id}`
-			var signing = yield cosApi(path, {
-				method: "POST",
-				json: {
-					options: [{optionId: req.body.optionId}],
-					pid: req.body.personalId,
-					phoneNumber: ensureAreaCode(req.body.phoneNumber),
-				}
-			}).catch(catch400)
-
-			if (isOk(signing)) {
-				var token = signing.body.data.token
-				var signatureUrl = req.baseUrl + "/" + encodeURIComponent(token)
-				res.setHeader("Location", signatureUrl)
-
-				res.status(202).render("initiatives/signatures/creating_page.jsx", {
-					code: signing.body.data.challengeID,
-					poll: signatureUrl
-				})
-			}
-			else res.status(422).render("initiatives/signatures/creating_page.jsx", {
-				error: translateCitizenError(req.t, signing.body)
-			})
-			break
-
-		default: throw new HttpError(422, "Unknown Signing Method")
-	}
-}))
-
 exports.router.use("/", next(function(err, req, res, next) {
 	if (err instanceof MobileIdError) {
 		var code = getNormalizedMobileIdErrorCode(err)
@@ -460,8 +331,6 @@ exports.router.use("/", next(function(err, req, res, next) {
 
 exports.router.use("/:id", next(function*(req, _res, next) {
 	var initiative = req.initiative
-	if (!initiative.undersignable) return void next()
-
 	var [country, personalId] = parseSignatureId(req.params.id)
 	var token = req.token = Buffer.from(req.query.token || "", "hex")
 	req.country = country
@@ -487,10 +356,8 @@ exports.router.get("/:id",
 		"application/vnd.etsi.asic-e+zip",
 		"application/x-empty"
 	].map(MediaType)),
-	next(function*(req, res, next) {
+	next(function*(req, res) {
 	var initiative = req.initiative
-	if (!initiative.undersignable) return void next()
-
 	var signature = req.signature
 	var signable
 
@@ -587,40 +454,6 @@ exports.router.get("/:id",
 	}
 }))
 
-exports.router.get("/:token",
-	new ResponseTypeMiddeware([
-		"text/html",
-		"application/x-empty"
-	].map(MediaType)),
-	next(function*(req, res, next) {
-	var initiative = req.initiative
-	if (initiative.undersignable) return void next()
-
-	var token = req.params.token
-	if (token == null) throw new HttpError(400, "Missing Token")
-	var topic = req.topic
-	var signature = yield waitForCitizenMobileIdSignature(topic, token)
-
-	switch (signature.statusCode) {
-		case 200:
-			var userId = parseUserIdFromBdocUrl(signature.body.data.bdocUri)
-			var sig = yield readCitizenSignature(topic, userId)
-			res.flash("signatureId", sig.id)
-			break
-
-		default:
-			res.flash("error", translateCitizenError(req.t, signature.body))
-			break
-	}
-
-	res.setHeader("Location", Path.dirname(req.baseUrl))
-
-	switch (res.contentType.name) {
-		case "application/x-empty": res.status(204).end(); break
-		default: res.status(303).end()
-	}
-}))
-
 exports.router.put("/:id",
 	new ResponseTypeMiddeware([
 		"text/html",
@@ -628,8 +461,6 @@ exports.router.put("/:id",
 	].map(MediaType)),
 	next(function*(req, res) {
 	var initiative = req.initiative
-	if (!initiative.undersignable) throw new HttpError(405)
-
 	var signature = req.signature
 
 	// Responding to a hidden signature if you know its token is not a privacy
@@ -704,9 +535,6 @@ exports.router.put("/:id",
 }))
 
 exports.router.delete("/:id", next(function*(req, res) {
-	var initiative = req.initiative
-	if (!initiative.undersignable) throw new HttpError(405)
-
 	var signature = req.signature
 	if (signature == null) throw new HttpError(404)
 
@@ -810,36 +638,6 @@ function* waitForSmartIdSignature(signable, session) {
 	}
 }
 
-function* waitForCitizenMobileIdSignature(topic, token) {
-	var vote = topic.vote
-	var path = `/api/topics/${topic.id}/votes/${vote.id}/status`
-	path += "?token=" + encodeURIComponent(token)
-
-	RETRY: for (var i = 0; i < 60; ++i) {
-		// The signature endpoint is valid only for a limited amount of time.
-		// If that time passes, 401 is thrown.
-		var res = yield cosApi(path).catch(catch400).catch(catch401)
-
-		switch (res.statusCode) {
-			case 200:
-				if (res.body.status.code === 20001) {
-					yield sleep(2500);
-					continue RETRY;
-				}
-				// Fall through.
-
-			default: return res
-		}
-	}
-
-	throw new HttpError(500, "Mobile-Id Took Too Long")
-}
-
-function parseUserIdFromBdocUrl(url) {
-	url = Url.parse(url, true)
-	return parseJwt(url.query.token).userId
-}
-
 function pathToSignature(signatureOrSignable) {
 	var path = signatureOrSignable.country + signatureOrSignable.personal_id
 	return path + "?token=" + signatureOrSignable.token.toString("hex")
@@ -886,6 +684,4 @@ function* replaceSignature(signable) {
 	})
 }
 
-// NOTE: Use this only on JWTs from trusted sources as it does no validation.
-function parseJwt(jwt) { return JSON.parse(decodeBase64(jwt.split(".")[1])) }
 function parseSignatureId(id) { return [id.slice(0, 2), id.slice(2)] }

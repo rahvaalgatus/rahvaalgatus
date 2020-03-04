@@ -138,8 +138,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 		function*() {
 		var initiative = yield db.create(new ValidInitiative({
 			user_id: this.user.id,
-			phase: "sign",
-			undersignable: true
+			phase: "sign"
 		}))
 
 		var topic = yield createTopic(newTopic({
@@ -615,8 +614,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 		yield _.times(3, function*(i) {
 			var initiative = yield db.create(new ValidInitiative({
 				user_id: self.user.id,
-				phase: "sign",
-				undersignable: true
+				phase: "sign"
 			}))
 
 			var topic = yield createTopic(newTopic({

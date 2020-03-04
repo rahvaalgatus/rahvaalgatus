@@ -359,9 +359,6 @@ exports.router.post("/:id/messages", next(function*(req, res) {
 function parseInitiative(obj) {
 	var attrs = {}
 
-	if ("undersignable" in obj)
-		attrs.undersignable = _.parseBoolean(obj.undersignable)
-
 	if ("destination" in obj)
 		attrs.destination = obj.destination || null
 

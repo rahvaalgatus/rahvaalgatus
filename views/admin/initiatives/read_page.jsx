@@ -130,28 +130,6 @@ module.exports = function(attrs) {
 			</tr>
 
 			<tr>
-				<th scope="row">
-					New HTML Signing<br />
-
-					<small>
-						Using <a
-						class="admin-link"
-						href="https://github.com/moll/js-undersign">Undersign.js</a> instead
-						of CitizenOS and DigidocService.
-					</small>
-				</th>
-
-				<td>
-					<CheckboxForm
-						req={req}
-						action={initiativePath}
-						name={"undersignable"}
-						checked={initiative.undersignable}
-					/>
-				</td>
-			</tr>
-
-			<tr>
 				<th scope="row">Has Paper Signatures</th>
 				<td>
 					<CheckboxForm

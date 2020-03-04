@@ -32,7 +32,6 @@ var sql = require("sqlate")
 var sqlite = require("root").sqlite
 var translateCitizenError = require("root/lib/citizenos_api").translateError
 var searchTopics = require("root/lib/citizenos_db").searchTopics
-var readVoteOptions = require("root/lib/citizenos_db").readVoteOptions
 var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var trim = Function.call.bind(String.prototype.trim)
@@ -47,7 +46,6 @@ var EMPTY_INITIATIVE = {title: ""}
 var EMPTY_CONTACT = {name: "", email: "", phone: ""}
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 exports.searchInitiativesEvents = searchInitiativesEvents
-exports.readCitizenSignature = readCitizenSignature
 exports.serializeApiInitiative = serializeApiInitiative
 exports.router = Router({mergeParams: true})
 
@@ -220,7 +218,7 @@ exports.router.post("/", next(function*(req, res) {
 		uuid: topic.id,
 		user_id: user.id,
 		created_at: new Date,
-		undersignable: Config.undersignable
+		undersignable: true
 	})
 
 	res.redirect(303, req.baseUrl + "/" + topic.id + "/edit")
@@ -328,13 +326,11 @@ exports.router.get("/:id",
 
 exports.read = next(function*(req, res) {
 	var user = req.user
-	var topic = req.topic
 	var initiative = req.initiative
-	var newSignatureId = req.flash("signatureId")
-	var newSignatureToken = req.flash("signatureToken")
 	var thank = false
 	var thankAgain = false
 	var signature
+	var newSignatureToken = req.flash("signatureToken")
 
 	if (initiative.phase == "sign" && newSignatureToken) {
 		signature = yield signaturesDb.read(sql`
@@ -345,43 +341,6 @@ exports.read = next(function*(req, res) {
 
 		thank = !!signature
 		thankAgain = signature && signature.oversigned > 0
-	}
-	else if (initiative.phase == "sign" && newSignatureId) {
-		var cosSignature = yield cosDb.query(sql`
-			SELECT signature.*, opt.value AS support
-			FROM "VoteLists" AS signature
-			JOIN "VoteOptions" AS opt ON opt.id = signature."optionId"
-			WHERE signature.id = ${newSignatureId}
-		`).then(_.first)
-
-		var cosPrevSignature = yield cosDb.query(sql`
-			SELECT signature.*, opt.value AS support
-			FROM "VoteLists" AS signature
-			JOIN "VoteOptions" AS opt ON opt.id = signature."optionId"
-
-			WHERE signature."voteId" = ${cosSignature.voteId}
-			AND signature."userId" = ${cosSignature.userId}
-			AND signature."createdAt" <= ${
-				DateFns.addSeconds(cosSignature.createdAt, -15)
-			}
-			ORDER BY "createdAt" DESC
-			LIMIT 1
-		`).then(_.first)
-
-		// This could assign a newer signature as the one redirected with, but
-		// that's unlikely to be a big problem.
-		thank = cosSignature.support == "Yes"
-		if (!thank) res.flash("notice", req.t("SIGNATURE_REVOKED"))
-
-		// Currently checking for old signatures even if they were hidden — that's
-		// because by the time we land here, the signature in SQLite has been
-		// marked unhidden.
-		thankAgain = cosPrevSignature && cosPrevSignature.support == "Yes"
-
-		signature = cosSignature.support == "No" ? null : {
-			initiative_uuid: initiative.uuid,
-			hidden: false
-		}
 	}
 
 	var subscriberCount = yield sqlite(sql`
@@ -411,10 +370,6 @@ exports.read = next(function*(req, res) {
 
 	var signatureCount = yield countSignaturesById(initiative.uuid)
 
-	var voteOptions = initiative.phase == "sign"
-		? yield readVoteOptions(topic.vote.id)
-		: null
-
 	var image = yield imagesDb.read(sql`
 		SELECT initiative_uuid, type
 		FROM initiative_images
@@ -428,7 +383,6 @@ exports.read = next(function*(req, res) {
 		subscription: subscription,
 		subscriberCount: subscriberCount,
 		signatureCount: signatureCount,
-		voteOptions: voteOptions,
 		image: image,
 		files: files,
 		comments: comments,
@@ -640,18 +594,6 @@ function* searchInitiativesEvents(initiatives) {
 			} : EMPTY_ARR
 		)
 	}))
-}
-
-function readCitizenSignature(topic, userUuid) {
-	return cosDb.query(sql`
-		SELECT signature.*, opt.value AS support
-		FROM "VoteLists" AS signature
-		JOIN "VoteOptions" AS opt ON opt.id = signature."optionId"
-		WHERE signature."userId" = ${userUuid}
-		AND signature."voteId" = ${topic.vote.id}
-		ORDER BY signature."createdAt" DESC
-		LIMIT 1
-	`).then(_.first)
 }
 
 function readTopicPermission(user, topic) {

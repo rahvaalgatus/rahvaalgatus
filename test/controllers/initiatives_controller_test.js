@@ -37,7 +37,6 @@ var createCitizenSignatures =
 var createPermission = require("root/test/citizenos_fixtures").createPermission
 var pseudoDateTime = require("root/lib/crypto").pseudoDateTime
 var parseCookies = Http.parseCookies
-var readVoteOptions = require("root/lib/citizenos_db").readVoteOptions
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
@@ -1226,7 +1225,6 @@ describe("InitiativesController", function() {
 				initiatives.must.eql([new ValidInitiative({
 					uuid: uuid,
 					user_id: this.user.id,
-					undersignable: true,
 					parliament_token: initiatives[0].parliament_token,
 					destination: null
 				})])
@@ -1506,10 +1504,6 @@ describe("InitiativesController", function() {
 				res.body.must.not.include(tHtml("INITIATIVE_IN_DISCUSSION"))
 				res.body.must.not.include(tHtml("VOTING_SUCCEEDED"))
 				res.body.must.not.include(tHtml("VOTING_FAILED"))
-
-				var options = yield readVoteOptions(vote.id)
-				res.body.must.include(options.Yes)
-				res.body.must.not.include(options.No)
 
 				var dom = parseDom(res.body)
 				var phases = queryPhases(dom)
@@ -3017,8 +3011,7 @@ describe("InitiativesController", function() {
 			it("must not show thanks if not signed", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
-					phase: "sign",
-					undersignable: true
+					phase: "sign"
 				}))
 
 				var topic = yield createTopic(newTopic({
@@ -3613,8 +3606,7 @@ describe("InitiativesController", function() {
 			it("must not show thanks if not signed", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
-					phase: "sign",
-					undersignable: true
+					phase: "sign"
 				}))
 
 				var topic = yield createTopic(newTopic({
@@ -5421,8 +5413,7 @@ describe("InitiativesController", function() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: "sign",
-						destination: "muhu-vald",
-						undersignable: true
+						destination: "muhu-vald"
 					}))
 
 					var topic = yield createTopic(newTopic({
@@ -5451,223 +5442,115 @@ describe("InitiativesController", function() {
 					)
 				})
 
-				describe("when undersignable", function() {
-					it("must render update page", function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id,
-							phase: "sign",
-							undersignable: true
-						}))
+				it("must render update page", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "sign"
+					}))
 
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: this.user.uuid,
-							sourcePartnerId: this.partner.id,
-							status: "voting"
-						}))
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.uuid,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
 
-						yield createVote(topic, newVote())
+					var vote = yield createVote(topic, newVote())
+					yield createCitizenSignatures(vote, Config.votesRequired / 2)
 
-						yield signaturesDb.create(_.times(Config.votesRequired, () => (
-							new ValidSignature({initiative_uuid: initiative.uuid})
-						)))
+					yield signaturesDb.create(_.times(Config.votesRequired / 2, () => (
+						new ValidSignature({initiative_uuid: initiative.uuid})
+					)))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
-							method: "PUT",
-							form: {_csrf_token: this.csrfToken, status: "followUp"}
-						})
-
-						res.statusCode.must.equal(200)
-						res.body.must.include(t("SEND_TO_PARLIAMENT_HEADER"))
-						res.body.must.include(t("SEND_TO_PARLIAMENT_TEXT"))
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, status: "followUp"}
 					})
 
-					it("must render update page if has paper signatures", function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id,
-							phase: "sign",
-							undersignable: true,
-							has_paper_signatures: true
-						}))
-
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: this.user.uuid,
-							sourcePartnerId: this.partner.id,
-							status: "voting"
-						}))
-
-						yield createVote(topic, newVote())
-
-						yield signaturesDb.create(_.times(Config.votesRequired, () => (
-							new ValidSignature({initiative_uuid: initiative.uuid})
-						)))
-
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
-							method: "PUT",
-							form: {_csrf_token: this.csrfToken, status: "followUp"}
-						})
-
-						res.statusCode.must.equal(200)
-					})
-
-					it("must respond with 403 if initiative not successful", function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id,
-							phase: "sign",
-							undersignable: true,
-						}))
-
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: this.user.uuid,
-							sourcePartnerId: this.partner.id,
-							status: "voting"
-						}))
-
-						yield createVote(topic, newVote())
-
-						yield signaturesDb.create(_.times(Config.votesRequired - 1, () => (
-							new ValidSignature({initiative_uuid: initiative.uuid})
-						)))
-
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
-							method: "PUT",
-							form: {_csrf_token: this.csrfToken, status: "followUp"}
-						})
-
-						res.statusCode.must.equal(403)
-						res.statusMessage.must.match(/parliament/i)
-					})
-
-					it("must respond with 403 if only has paper signatures", function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id,
-							phase: "sign",
-							undersignable: true,
-							has_paper_signatures: true
-						}))
-
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: this.user.uuid,
-							sourcePartnerId: this.partner.id,
-							status: "voting"
-						}))
-
-						yield createVote(topic, newVote())
-
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
-							method: "PUT",
-							form: {_csrf_token: this.csrfToken, status: "followUp"}
-						})
-
-						res.statusCode.must.equal(403)
-						res.statusMessage.must.match(/parliament/i)
-					})
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("SEND_TO_PARLIAMENT_HEADER"))
+					res.body.must.include(t("SEND_TO_PARLIAMENT_TEXT"))
 				})
 
-				describe("when CitizenOS-signable", function() {
-					it("must render update page", function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id,
-							phase: "sign"
-						}))
+				it("must render update page if has paper signatures", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "sign",
+						has_paper_signatures: true
+					}))
 
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: this.user.uuid,
-							sourcePartnerId: this.partner.id,
-							status: "voting"
-						}))
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.uuid,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
 
-						var vote = yield createVote(topic, newVote())
-						yield createCitizenSignatures(vote, Config.votesRequired)
+					yield createVote(topic, newVote())
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
-							method: "PUT",
-							form: {_csrf_token: this.csrfToken, status: "followUp"}
-						})
+					yield signaturesDb.create(_.times(Config.votesRequired, () => (
+						new ValidSignature({initiative_uuid: initiative.uuid})
+					)))
 
-						res.statusCode.must.equal(200)
-						res.body.must.include(t("SEND_TO_PARLIAMENT_HEADER"))
-						res.body.must.include(t("SEND_TO_PARLIAMENT_TEXT"))
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, status: "followUp"}
 					})
 
-					it("must render update page if has paper signatures", function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id,
-							phase: "sign",
-							has_paper_signatures: true
-						}))
+					res.statusCode.must.equal(200)
+				})
 
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: this.user.uuid,
-							sourcePartnerId: this.partner.id,
-							status: "voting"
-						}))
+				it("must respond with 403 if initiative not successful", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "sign"
+					}))
 
-						var vote = yield createVote(topic, newVote())
-						yield createCitizenSignatures(vote, 1)
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.uuid,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
-							method: "PUT",
-							form: {_csrf_token: this.csrfToken, status: "followUp"}
-						})
+					yield createVote(topic, newVote())
 
-						res.statusCode.must.equal(200)
+					yield signaturesDb.create(_.times(Config.votesRequired - 1, () => (
+						new ValidSignature({initiative_uuid: initiative.uuid})
+					)))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, status: "followUp"}
 					})
 
-					it("must respond with 403 if initiative not successful", function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id,
-							phase: "sign"
-						}))
+					res.statusCode.must.equal(403)
+					res.statusMessage.must.match(/parliament/i)
+				})
 
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: this.user.uuid,
-							sourcePartnerId: this.partner.id,
-							status: "voting"
-						}))
+				it("must respond with 403 if only has paper signatures", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "sign",
+						has_paper_signatures: true
+					}))
 
-						var vote = yield createVote(topic, newVote())
-						yield createCitizenSignatures(vote, Config.votesRequired - 1)
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.uuid,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
-							method: "PUT",
-							form: {_csrf_token: this.csrfToken, status: "followUp"}
-						})
+					yield createVote(topic, newVote())
 
-						res.statusCode.must.equal(403)
-						res.statusMessage.must.match(/parliament/i)
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, status: "followUp"}
 					})
 
-					it("must respond with 403 if only has paper signatures", function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id,
-							phase: "sign",
-							has_paper_signatures: true
-						}))
-
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: this.user.uuid,
-							sourcePartnerId: this.partner.id,
-							status: "voting"
-						}))
-
-						yield createVote(topic, newVote())
-
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
-							method: "PUT",
-							form: {_csrf_token: this.csrfToken, status: "followUp"}
-						})
-
-						res.statusCode.must.equal(403)
-						res.statusMessage.must.match(/parliament/i)
-					})
+					res.statusCode.must.equal(403)
+					res.statusMessage.must.match(/parliament/i)
 				})
 
 				it("must update initiative", function*() {
@@ -5741,8 +5624,7 @@ describe("InitiativesController", function() {
 				it("must email parliament", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
-						phase: "sign",
-						undersignable: true
+						phase: "sign"
 					}))
 
 					var topic = yield createTopic(newTopic({
@@ -5810,8 +5692,7 @@ describe("InitiativesController", function() {
 					function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
-						phase: "sign",
-						undersignable: true
+						phase: "sign"
 					}))
 
 					var topic = yield createTopic(newTopic({

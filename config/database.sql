@@ -26,9 +26,6 @@ CREATE TABLE initiatives (
 
 	CONSTRAINT initiatives_text_sha256_length CHECK (length(text_sha256) = 32),
 
-	CONSTRAINT initiatives_undersignable_and_text
-	CHECK (NOT undersignable OR phase = 'edit' OR text IS NOT NULL),
-
 	CONSTRAINT initiatives_destination
 	CHECK (destination IS NOT NULL OR phase = 'edit')
 );
@@ -411,4 +408,5 @@ INSERT INTO migrations VALUES('20200124131836');
 INSERT INTO migrations VALUES('20200125071216');
 INSERT INTO migrations VALUES('20200125122607');
 INSERT INTO migrations VALUES('20200302142858');
+INSERT INTO migrations VALUES('20200304155422');
 COMMIT;

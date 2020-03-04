@@ -40,7 +40,7 @@ module.exports = function(attrs) {
 		signature_milestones: {},
 		notes: "",
 		has_paper_signatures: false,
-		undersignable: false,
+		undersignable: true,
 		mailchimp_interest_id: null,
 		external: false,
 		parliament_api_data: null,
