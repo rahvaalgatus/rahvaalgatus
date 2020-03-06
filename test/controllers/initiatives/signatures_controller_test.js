@@ -1,6 +1,5 @@
 var _ = require("root/lib/underscore")
 var Url = require("url")
-var Yauzl = require("yauzl")
 var DateFns = require("date-fns")
 var Config = require("root/config")
 var ValidInitiative = require("root/test/valid_db_initiative")
@@ -10,10 +9,10 @@ var X509Asn = require("undersign/lib/x509_asn")
 var Ocsp = require("undersign/lib/ocsp")
 var Http = require("root/lib/http")
 var Crypto = require("crypto")
+var Zip = require("root/lib/zip")
 var respond = require("root/test/fixtures").respond
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
-var slurp = require("root/lib/stream").slurp
 var newCertificate = require("root/test/fixtures").newCertificate
 var newOcspResponse = require("root/test/fixtures").newOcspResponse
 var newPartner = require("root/test/citizenos_fixtures").newPartner
@@ -183,8 +182,6 @@ describe("SignaturesController", function() {
 	beforeEach(require("root/test/mitm").router)
 
 	describe(`GET / for ${ASICE_TYPE}`, function() {
-		require("root/test/time")(new Date(2015, 5, 18))
-
 		beforeEach(function*() {
 			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
 			this.author = yield createUser()
@@ -216,16 +213,16 @@ describe("SignaturesController", function() {
 
 			res.statusCode.must.equal(200)
 			res.headers["content-type"].must.equal(ASICE_TYPE)
-			var zip = yield parseZip(Buffer.from(res.body))
-			var entries = yield parseZipEntries(zip)
+			var zip = yield Zip.parse(Buffer.from(res.body))
+			var entries = yield Zip.parseEntries(zip)
 			Object.keys(entries).length.must.equal(5)
 
 			var body = initiative.text
-			yield readZipEntry(zip, entries["initiative.html"]).must.then.equal(body)
+			yield Zip.readEntry(zip, entries["initiative.html"]).must.then.equal(body)
 
 			yield Promise.all([
-				readZipEntry(zip, entries["META-INF/signatures-1.xml"]),
-				readZipEntry(zip, entries["META-INF/signatures-2.xml"]),
+				Zip.readEntry(zip, entries["META-INF/signatures-1.xml"]),
+				Zip.readEntry(zip, entries["META-INF/signatures-2.xml"]),
 			]).must.then.eql(_.map(signatures, "xades"))
 		})
 
@@ -249,12 +246,12 @@ describe("SignaturesController", function() {
 
 			res.statusCode.must.equal(200)
 			res.headers["content-type"].must.equal(ASICE_TYPE)
-			var zip = yield parseZip(Buffer.from(res.body))
-			var entries = yield parseZipEntries(zip)
+			var zip = yield Zip.parse(Buffer.from(res.body))
+			var entries = yield Zip.parseEntries(zip)
 			Object.keys(entries).length.must.equal(3)
 
 			var body = initiative.text
-			yield readZipEntry(zip, entries["initiative.html"]).must.then.equal(body)
+			yield Zip.readEntry(zip, entries["initiative.html"]).must.then.equal(body)
 		})
 
 		it("must respond with 403 Forbidden if no token on initiative",
@@ -586,7 +583,7 @@ describe("SignaturesController", function() {
 						new ValidInitiative({user_id: this.author.id, phase: "sign"})
 					)
 
-					yield signaturesDb.create(new ValidSignature({
+					var signature = yield signaturesDb.create(new ValidSignature({
 						initiative_uuid: otherInitiative.uuid,
 						country: "EE",
 						personal_id: PERSONAL_ID
@@ -616,10 +613,11 @@ describe("SignaturesController", function() {
 					`)
 
 					signatures.length.must.equal(2)
+					signatures[0].must.eql(signature)
 				})
 
 				it("must not affect signature of another user", function*() {
-					yield signaturesDb.create(new ValidSignature({
+					var signature = yield signaturesDb.create(new ValidSignature({
 						initiative_uuid: this.initiative.uuid,
 						country: "EE",
 						personal_id: "70001019906"
@@ -649,10 +647,11 @@ describe("SignaturesController", function() {
 					`)
 
 					signatures.length.must.equal(2)
+					signatures[0].must.eql(signature)
 				})
 
 				it("must not affect signature of another country", function*() {
-					yield signaturesDb.create(new ValidSignature({
+					var signature = yield signaturesDb.create(new ValidSignature({
 						initiative_uuid: this.initiative.uuid,
 						country: "LT",
 						personal_id: PERSONAL_ID
@@ -682,6 +681,7 @@ describe("SignaturesController", function() {
 					`)
 
 					signatures.length.must.equal(2)
+					signatures[0].must.eql(signature)
 				})
 			})
 		}
@@ -1050,20 +1050,7 @@ describe("SignaturesController", function() {
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
 
-				var xades = hades.new(cert, [{
-					path: "initiative.html",
-					type: "text/html",
-					hash: this.initiative.text_sha256
-				}], {policy: "bdoc"})
-
-				var signatureBytes = signWithRsa(
-					JOHN_RSA_KEYS.privateKey,
-					xades.signable
-				)
-
-				xades.setSignature(signatureBytes)
-				var ocspResponse = Ocsp.parse(newOcspResponse(cert))
-				xades.setOcspResponse(ocspResponse)
+				var [xades, ocspResponse] = newXades(this.initiative, cert)
 
 				this.router.post(`${MOBILE_ID_URL.path}certificate`,
 					function(req, res) {
@@ -1103,7 +1090,7 @@ describe("SignaturesController", function() {
 
 						signature: {
 							algorithm: "sha256WithRSAEncryption",
-							value: signatureBytes.toString("base64")
+							value: xades.signature.toString("base64")
 						}
 					}, req, res)
 				})
@@ -1685,21 +1672,7 @@ describe("SignaturesController", function() {
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
 
-				var xades = hades.new(cert, [{
-					path: "initiative.html",
-					type: "text/html",
-					hash: this.initiative.text_sha256
-				}], {policy: "bdoc"})
-
-				var signatureBytes = signWithRsa(
-					JOHN_RSA_KEYS.privateKey,
-					xades.signable
-				)
-
-				xades.setSignature(signatureBytes)
-				var ocspResponse = Ocsp.parse(newOcspResponse(cert))
-				xades.setOcspResponse(ocspResponse)
-
+				var [xades, ocspResponse] = newXades(this.initiative, cert)
 				var certSession = "3befb011-37bf-4e57-b041-e4cba1496766"
 				var signSession = "21e55f06-d6cb-40b7-9638-75dc0b131851"
 
@@ -1761,7 +1734,7 @@ describe("SignaturesController", function() {
 
 						signature: {
 							algorithm: "sha256WithRSAEncryption",
-							value: signatureBytes.toString("base64")
+							value: xades.signature.toString("base64")
 						}
 					}, req, res)
 				})
@@ -2216,7 +2189,79 @@ describe("SignaturesController", function() {
 		})
 	})
 
-	describe("PUT /:id", function() {
+	describe(`GET /:personalid for ${ASICE_TYPE}`, function() {
+		beforeEach(function*() {
+			this.partner = yield createPartner(newPartner({
+				id: Config.apiPartnerId
+			}))
+
+			this.author = yield createUser()
+
+			this.initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "sign"
+			}))
+
+			this.topic = yield createTopic(newTopic({
+				id: this.initiative.uuid,
+				creatorId: this.author.uuid,
+				sourcePartnerId: this.partner.id,
+				status: "voting"
+			}))
+
+			yield createVote(this.topic, newVote({
+				endsAt: DateFns.addDays(new Date, 1)
+			}))
+		})
+
+		it("must respond with signature ASIC-E", function*() {
+			var signature = yield signaturesDb.create(new ValidSignature({
+				initiative_uuid: this.initiative.uuid,
+				country: "EE",
+				personal_id: "38706181337"
+			}))
+
+			var initiativePath = `/initiatives/${this.initiative.uuid}`
+			var path = initiativePath + "/signatures/EE38706181337.asice"
+			path += "?token=" + signature.token.toString("hex")
+			var res = yield this.request(path)
+			res.headers["content-type"].must.equal(ASICE_TYPE)
+
+			var zip = yield Zip.parse(Buffer.from(res.body))
+			var entries = yield Zip.parseEntries(zip)
+			Object.keys(entries).length.must.equal(4)
+
+			var xades = yield Zip.readEntry(zip, entries["META-INF/signatures-1.xml"])
+			xades.must.equal(String(signature.xades))
+
+			var text = yield Zip.readEntry(zip, entries["initiative.html"])
+			text.must.equal(this.initiative.text)
+		})
+
+		it("must respond with 404 if no signature", function*() {
+			var initiativePath = `/initiatives/${this.initiative.uuid}`
+			var path = initiativePath + "/signatures/EE38706181337.asice"
+			path += "?token=aabbccddee"
+			var res = yield this.request(path)
+			res.statusCode.must.equal(404)
+		})
+
+		it("must respond with 404 if invalid token", function*() {
+			yield signaturesDb.create(new ValidSignature({
+				initiative_uuid: this.initiative.uuid,
+				country: "EE",
+				personal_id: "38706181337"
+			}))
+
+			var initiativePath = `/initiatives/${this.initiative.uuid}`
+			var path = initiativePath + "/signatures/EE38706181337.asice"
+			path += "?token=aabbccddee"
+			var res = yield this.request(path)
+			res.statusCode.must.equal(404)
+		})
+	})
+
+	describe("PUT /:personalId", function() {
 		require("root/test/time")()
 
 		beforeEach(function*() {
@@ -2327,7 +2372,7 @@ describe("SignaturesController", function() {
 		})
 	})
 
-	describe("DELETE /:id", function() {
+	describe("DELETE /:personalId", function() {
 		beforeEach(function*() {
 			this.partner = yield createPartner(newPartner({
 				id: Config.apiPartnerId
@@ -2467,9 +2512,7 @@ function* signWithIdCard(router, request, initiative, cert) {
 	signing.statusCode.must.equal(202)
 
 	var xades = yield signablesDb.read(sql`
-		SELECT * FROM initiative_signables
-		ORDER BY created_at DESC
-		LIMIT 1
+		SELECT * FROM initiative_signables ORDER BY created_at DESC LIMIT 1
 	`).then((row) => row.xades)
 
 	router.post(TIMEMARK_URL.path, function(req, res) {
@@ -2504,9 +2547,7 @@ function* signWithMobileId(router, request, initiative, cert, res) {
 			res.writeHead(200)
 
 			var xades = yield signablesDb.read(sql`
-				SELECT xades FROM initiative_signables
-				ORDER BY created_at DESC
-				LIMIT 1
+				SELECT xades FROM initiative_signables ORDER BY created_at DESC LIMIT 1
 			`).then((row) => row.xades)
 
 			respond({
@@ -2583,9 +2624,7 @@ function* signWithSmartId(router, request, initiative, cert, res) {
 			res.writeHead(200)
 
 			var xades = yield signablesDb.read(sql`
-				SELECT xades FROM initiative_signables
-				ORDER BY created_at DESC
-				LIMIT 1
+				SELECT xades FROM initiative_signables ORDER BY created_at DESC LIMIT 1
 			`).then((row) => row.xades)
 
 			respond({
@@ -2618,22 +2657,22 @@ function* signWithSmartId(router, request, initiative, cert, res) {
 	})
 }
 
-function parseZipEntries(zip) {
-	var entries = {}
-	zip.on("entry", (entry) => (entries[entry.fileName] = entry))
+function newXades(initiative, cert) {
+	var xades = hades.new(cert, [{
+		path: "initiative.html",
+		type: "text/html",
+		hash: initiative.text_sha256
+	}], {policy: "bdoc"})
 
-	return new Promise(function(resolve, reject) {
-		zip.on("error", reject)
-		zip.on("end", resolve.bind(null, entries))
-	})
-}
+	var signatureBytes = signWithRsa(
+		JOHN_RSA_KEYS.privateKey,
+		xades.signable
+	)
 
-function readZipEntry(zip, entry) {
-	return new Promise(function(resolve, reject) {
-		zip.openReadStream(entry, (err, stream) => (
-			err ? reject(err) : resolve(slurp(stream, "utf8"))
-		))
-	})
+	xades.setSignature(signatureBytes)
+	var ocspResponse = Ocsp.parse(newOcspResponse(cert))
+	xades.setOcspResponse(ocspResponse)
+	return [xades, ocspResponse]
 }
 
 function signWithRsa(key, signable) {
@@ -2649,5 +2688,3 @@ function signWithEcdsa(key, signable) {
 		signatureAsn.s.toBuffer("be", 32)
 	])
 }
-
-function* parseZip(buffer) { return yield Yauzl.fromBuffer.bind(null, buffer) }

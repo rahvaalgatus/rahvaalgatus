@@ -264,10 +264,10 @@ exports.router.post("/", next(function*(req, res) {
 			;[country, personalId] = getCertificatePersonalId(cert)
 			xades = newXades(initiative)
 
-			// The Smart-Id API returns any signing errors only when its status is
-			// queried, not when signing is initiated.
 			logger.info("Signing via Smart-Id for %s.", personalId)
 
+			// The Smart-Id API returns any signing errors only when its status is
+			// queried, not when signing is initiated.
 			var signSession = yield smartId.sign(cert, xades.signableHash)
 
 			signable = yield signablesDb.create({
@@ -329,9 +329,9 @@ exports.router.use("/", next(function(err, req, res, next) {
 	else next(err)
 }))
 
-exports.router.use("/:id", next(function*(req, _res, next) {
+exports.router.use("/:personalId", next(function*(req, _res, next) {
 	var initiative = req.initiative
-	var [country, personalId] = parseSignatureId(req.params.id)
+	var [country, personalId] = parseSignatureId(req.params.personalId)
 	var token = req.token = Buffer.from(req.query.token || "", "hex")
 	req.country = country
 	req.personalId = personalId
@@ -350,7 +350,7 @@ exports.router.use("/:id", next(function*(req, _res, next) {
 	next()
 }))
 
-exports.router.get("/:id",
+exports.router.get("/:personalId",
 	new ResponseTypeMiddeware([
 		"text/html",
 		"application/vnd.etsi.asic-e+zip",
@@ -359,54 +359,35 @@ exports.router.get("/:id",
 	next(function*(req, res) {
 	var initiative = req.initiative
 	var signature = req.signature
-	var signable
-
-	if (!signature) for (
-		var end = Date.now() + 120 * 1000;
-		Date.now() < end;
-		yield sleep(ENV == "test" ? 50 : 500)
-	) {
-		signable = yield signablesDb.read(sql`
-			SELECT signed, timestamped, error
-			FROM initiative_signables
-			WHERE initiative_uuid = ${initiative.uuid}
-			AND country = ${req.country}
-			AND personal_id = ${req.personalId}
-			AND token = ${req.token}
-		`)
-
-		if (signable == null) throw new HttpError(404, "Signature Not Found")
-		// Wait until not only signing, but timestamping finishes, to have the
-		// signature count on the initiative page increment after the redirect.
-		if (signable.timestamped || signable.error) break
-	}
 
 	switch (res.contentType.name) {
-		case "application/vnd.etsi.asic-e+zip":
-			if (signature == null) throw new HttpError(404)
-			if (signature.xades == null) throw new HttpError(404)
-
-			var asic = new Asic
-			res.setHeader("Content-Type", asic.type)
-			res.setHeader("Content-Disposition",
-				dispose("signature.asice", "attachment"))
-			asic.pipe(res)
-
-			asic.addSignature(signature.xades)
-			var extension = Mime.extension(String(initiative.text_type))
-			asic.add(`initiative.${extension}`, initiative.text, initiative.text_type)
-			asic.end()
-			break
-
 		case "text/html":
 		case "application/x-empty":
-			res.setHeader("Location", Path.dirname(req.baseUrl))
+			var signable
 
-			var tokenHex = req.token.toString("hex")
+			if (!signature) for (
+				var end = Date.now() + 120 * 1000;
+				Date.now() < end;
+				yield sleep(ENV == "test" ? 50 : 500)
+			) {
+				signable = yield signablesDb.read(sql`
+					SELECT signed, timestamped, error
+					FROM initiative_signables
+					WHERE initiative_uuid = ${initiative.uuid}
+					AND country = ${req.country}
+					AND personal_id = ${req.personalId}
+					AND token = ${req.token}
+				`)
+
+				if (signable == null) throw new HttpError(404, "Signature Not Found")
+				// Wait until not only signing, but timestamping finishes, to have the
+				// signature count on the initiative page increment after the redirect.
+				if (signable.timestamped || signable.error) break
+			}
 
 			if (signature || signable.signed) {
 				res.statusCode = 204
-				res.flash("signatureToken", tokenHex)
+				res.flash("signatureToken", req.token.toString("hex"))
 			}
 			else if (signable.error) {
 				var err = signable.error
@@ -440,21 +421,41 @@ exports.router.get("/:id",
 					res.flash("error", req.t("500_BODY"))
 				}
 			}
-			else if (signable.method == "mobile-id")
+			else if (signable.method == "mobile-id") {
+				res.statusCode = 408
 				res.flash("error", req.t("MOBILE_ID_ERROR_TIMEOUT"))
-			else
+			}
+			else {
+				res.statusCode = 408
 				res.flash("error", req.t("SMART_ID_ERROR_TIMEOUT_SIGN"))
+			}
 
+			res.setHeader("Location", Path.dirname(req.baseUrl))
 			switch (res.contentType.name) {
 				case "application/x-empty": return void res.end()
 				default: return void res.status(303).end()
 			}
 			
+		case "application/vnd.etsi.asic-e+zip":
+			if (signature == null) throw new HttpError(404)
+
+			var asic = new Asic
+			res.setHeader("Content-Type", asic.type)
+			res.setHeader("Content-Disposition",
+				dispose("signature.asice", "attachment"))
+			asic.pipe(res)
+
+			asic.addSignature(signature.xades)
+			var extension = Mime.extension(String(initiative.text_type))
+			asic.add(`initiative.${extension}`, initiative.text, initiative.text_type)
+			asic.end()
+			break
+
 		default: throw new HttpError(406)
 	}
 }))
 
-exports.router.put("/:id",
+exports.router.put("/:personalId",
 	new ResponseTypeMiddeware([
 		"text/html",
 		"application/x-empty"
@@ -534,7 +535,7 @@ exports.router.put("/:id",
 	}
 }))
 
-exports.router.delete("/:id", next(function*(req, res) {
+exports.router.delete("/:personalId", next(function*(req, res) {
 	var signature = req.signature
 	if (signature == null) throw new HttpError(404)
 
