@@ -2,7 +2,7 @@
 var Jsx = require("j6pack")
 var Page = require("../page")
 var Config = require("root/config")
-var Form = require("../page").Form
+var {SigningView} = require("root/views/initiatives/read_page")
 
 module.exports = function(attrs) {
 	var req = attrs.req
@@ -10,12 +10,18 @@ module.exports = function(attrs) {
 
 	return <Page
 		page="demo-signatures"
+		class="demo-signatures-page"
 		title={t("DEMO_SIGNATURES_TITLE")}
 		navless
 		req={req}>
-		<section id="demo-signatures" class="primary-section text-section"><center>
-			<h1>{t("DEMO_SIGNATURES_HEADER")}</h1>
+		<script src="/assets/html5.js" />
+		<script src="/assets/hwcrypto.js" />
 
+		<header class="header-section text-header"><center>
+			<h1>{t("DEMO_SIGNATURES_HEADER")}</h1>
+		</center></header>
+
+		<section id="intro" class="primary-section text-section"><center>
 			<div class="video">
 				<iframe
 					width="480"
@@ -26,136 +32,24 @@ module.exports = function(attrs) {
 				/>
 			</div>
 
-			{t("DEMO_SIGNATURES_BODY_TEXT")}
+			<p>{t("DEMO_SIGNATURES_BODY_TEXT")}</p>
 
-			<div id="sign">
-				<input
-					type="radio"
-					id="signature-method-tab-id-card"
-					name="signature-method-tab"
-					value="id-card"
-					style="display: none"
-				/>
+			<p>Nam nec consequat mi. Aenean vitae orci elit. Sed non finibus risus. Ut feugiat enim nec dolor scelerisque venenatis. Donec urna felis, tristique sit amet libero sed, ultricies ullamcorper dolor. Pellentesque sed ullamcorper nisi. Phasellus pretium tristique nunc eget tempus. Donec eget magna lacinia, iaculis purus nec, accumsan quam. Pellentesque consectetur magna ut pretium tempus. Aenean iaculis justo erat, a viverra diam pulvinar non. Donec ac urna purus. Vestibulum nec nulla efficitur, molestie leo in, aliquet orci. Donec facilisis porta sapien quis viverra. Maecenas at eros et urna ultricies suscipit in blandit ex.</p>
 
-				<input
-					type="radio"
-					name="signature-method-tab"
-					id="signature-method-tab-mobile-id"
-					value="mobile-id"
-					style="display: none"
-				/>
+			<p>Praesent convallis quam ac nisi facilisis hendrerit. Donec consectetur, tellus ac mattis dignissim, ipsum purus vehicula diam, at venenatis felis ante vel turpis. Donec interdum imperdiet nisi, in posuere nulla finibus at. Duis ut tortor faucibus, pulvinar lorem quis, imperdiet dolor. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Sed eget nisl ac mauris malesuada pellentesque vel posuere dolor. Etiam rutrum volutpat nulla vitae posuere. Proin nec aliquam sem. Proin dictum sollicitudin risus, dictum elementum ligula pulvinar nec. In iaculis auctor mi, ut pharetra odio egestas sed. Sed aliquet velit fringilla lectus ultrices, vel laoreet risus pulvinar. Proin tempus fringilla ligula et sodales. Mauris aliquet lacus et urna porta porttitor.</p>
+		</center></section>
 
-				<input
-					type="radio"
-					name="signature-method-tab"
-					id="signature-method-tab-smart-id"
-					value="smart-id"
-					style="display: none"
-				/>
+		<section id="sign" class="secondary-section text-section"><center>
+			<h2 class="subheading">Allkirjasta</h2>
 
-				<div id="signature-methods">
-					<label
-						id="id-card-button"
-						for="signature-method-tab-id-card"
-						class="inherited-button"
-					>
-						<img
-							src="/assets/id-kaart-button.png"
-							title={t("BTN_VOTE_SIGN_WITH_ID_CARD")}
-							alt={t("BTN_VOTE_SIGN_WITH_ID_CARD")}
-						/>
-					</label>
+			<p>Nam nec consequat mi. Aenean vitae orci elit. Sed non finibus risus. Ut feugiat enim nec dolor scelerisque venenatis. Donec urna felis, tristique sit amet libero sed, ultricies ullamcorper dolor.</p>
 
-					<label
-						for="signature-method-tab-mobile-id"
-						class="inherited-button"
-					>
-						<img
-							src="/assets/mobile-id-button.png"
-							title={t("BTN_VOTE_SIGN_WITH_MOBILE_ID")}
-							alt={t("BTN_VOTE_SIGN_WITH_MOBILE_ID")}
-						/>
-					</label>
-
-					{Config.smartId ? <label
-						for="signature-method-tab-smart-id"
-						class="inherited-button"
-					>
-						<img
-							src="/assets/smart-id-button.svg"
-							title={t("BTN_VOTE_SIGN_WITH_SMART_ID")}
-							alt={t("BTN_VOTE_SIGN_WITH_SMART_ID")}
-						/>
-					</label> : null}
-				</div>
-
-				<Form
+			<div id="sign-form">
+				<SigningView
 					req={req}
-					id="mobile-id-form"
-					class="signature-form"
-					method="post"
-					action="/demo-signatures">
-					<label class="form-label">
-						{t("LABEL_PHONE_NUMBER")}
-
-						<input
-							type="tel"
-							name="phoneNumber"
-							placeholder={t("PLACEHOLDER_PHONE_NUMBER")}
-							required
-							class="form-input"
-						/>
-					</label>
-
-					<label class="form-label">
-						{t("LABEL_PERSONAL_ID")}
-
-						<input
-							type="text"
-							pattern="[0-9]*"
-							inputmode="numeric"
-							name="personalId"
-							placeholder={t("PLACEHOLDER_PERSONAL_ID")}
-							required
-							class="form-input"
-						/>
-					</label>
-
-					<button
-						name="method"
-						value="mobile-id"
-						class="button green-button">
-						{t("BTN_VOTE_SIGN_WITH_MOBILE_ID")}
-					</button>
-				</Form>
-
-				{Config.smartId ? <Form
-					req={req}
-					id="smart-id-form"
-					class="signature-form"
-					method="post"
-					action="/demo-signatures">
-					<label class="form-label">
-						{t("LABEL_PERSONAL_ID")}
-
-						<input
-							type="text"
-							pattern="[0-9]*"
-							inputmode="numeric"
-							name="personalId"
-							placeholder={t("PLACEHOLDER_PERSONAL_ID")}
-							required
-							class="form-input"
-						/>
-					</label>
-
-					<button
-						name="method"
-						value="smart-id"
-						class="green-button">
-						{t("BTN_VOTE_SIGN_WITH_SMART_ID")}
-					</button>
-				</Form> : null}
+					t={t}
+					action="/demo-signatures"
+				/>
 			</div>
 		</center></section>
 	</Page>

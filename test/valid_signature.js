@@ -3,7 +3,6 @@ var {randomPersonalId} = require("./valid_user")
 
 module.exports = function(attrs) {
 	var createdAt = new Date
-
 	var country = attrs && attrs.country || "EE"
 	var personalId = attrs && attrs.personal_id || randomPersonalId()
 

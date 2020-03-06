@@ -1,3 +1,4 @@
+var _ = require("root/lib/underscore")
 var Config = require("root/config")
 var Router = require("express").Router
 var encode = encodeURIComponent
@@ -20,7 +21,11 @@ exports.router.post("/", function(req, res) {
 	url += "?shopId=" + encode(Config.maksekeskusId)
 	url += "&donate=true"
 	url += "&amount=" + Number(req.body.amount)
-	url += "&paymentId=" + encode(`default=${def} person=${encode(person)}`)
+
+	var id = {default: def, person: person}
+	if (req.body.for) id.for = req.body.for
+	id = _.map(id, (v, k) => `${k}=${encode(v)}`).join(" ")
+	url += "&paymentId=" + encode(id)
 	res.redirect(url)
 })
 

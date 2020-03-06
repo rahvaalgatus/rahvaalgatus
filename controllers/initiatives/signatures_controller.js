@@ -35,8 +35,10 @@ var getNormalizedMobileIdErrorCode =
 exports.router = Router({mergeParams: true})
 exports.pathToSignature = pathToSignature
 exports.router.use(parseBody({type: hasSignatureType}))
+exports.getSigningMethod = getSigningMethod
+exports.hasSignatureType = hasSignatureType
 
-var MOBILE_ID_ERRORS = {
+var MOBILE_ID_ERRORS = exports.MOBILE_ID_ERRORS = {
 	// Initiation responses:
 	NOT_FOUND: [
 		422,
@@ -101,7 +103,7 @@ var MOBILE_ID_ERRORS = {
 	]
 }
 
-var SMART_ID_ERRORS = {
+var SMART_ID_ERRORS = exports.SMART_ID_ERRORS = {
 	// Initiation responses:
 	ACCOUNT_NOT_FOUND: [
 		422,

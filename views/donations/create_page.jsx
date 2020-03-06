@@ -52,6 +52,7 @@ function DonateForm(attrs) {
     class="form donate-form"
   >
 		<input type="hidden" name="default" value={def} />
+		{attrs.for ? <input type="hidden" name="for" value={attrs.for} /> : null}
 
     <label class="form-fields">
       <span class="form-label">{t("SUPPORT_LABEL")}</span>

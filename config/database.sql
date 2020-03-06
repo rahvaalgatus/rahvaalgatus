@@ -337,6 +337,27 @@ CREATE INDEX index_users_on_merged_with_id ON users (merged_with_id)
 WHERE merged_with_id IS NOT NULL;
 CREATE INDEX index_initiative_signatures_on_initiative_uuid_and_created_at
 ON initiative_signatures (initiative_uuid, created_at);
+CREATE TABLE demo_signatures (
+  id INTEGER PRIMARY KEY NOT NULL,
+	country TEXT NOT NULL,
+	personal_id TEXT NOT NULL,
+	method TEXT NOT NULL,
+	signed INTEGER NOT NULL DEFAULT 0,
+	timestamped INTEGER NOT NULL DEFAULT 0,
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  token BLOB NOT NULL DEFAULT (randomblob(16)),
+	xades TEXT,
+	error TEXT,
+
+	CONSTRAINT initiative_signables_country_length CHECK (length(country) = 2),
+
+	CONSTRAINT initiative_signables_personal_id_length
+	CHECK (length(personal_id) > 0),
+
+	CONSTRAINT initiative_signables_token_length CHECK (length(token) > 0),
+	CONSTRAINT initiative_signables_xades_length CHECK (length(xades) > 0)
+);
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -409,4 +430,5 @@ INSERT INTO migrations VALUES('20200125071216');
 INSERT INTO migrations VALUES('20200125122607');
 INSERT INTO migrations VALUES('20200302142858');
 INSERT INTO migrations VALUES('20200304155422');
+INSERT INTO migrations VALUES('20200304172142');
 COMMIT;

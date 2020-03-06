@@ -37,6 +37,7 @@ var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 exports = module.exports = ReadPage
 exports.InitiativeDestinationSelectView = InitiativeDestinationSelectView
+exports.SigningView = SigningView
 
 var LOCAL_GOVERNMENTS_BY_COUNTY = _.mapValues(_.groupBy(
 	_.toEntries(LOCAL_GOVERNMENTS),
@@ -305,262 +306,11 @@ function ReadPage(attrs) {
 
 					{signature ? <DeleteSignatureButton req={req} signature={signature}>
 						{t("REVOKE_SIGNATURE")}
-					</DeleteSignatureButton> : <Fragment>
-						<input
-							type="radio"
-							id="signature-method-tab-id-card"
-							name="signature-method-tab"
-							value="id-card"
-							style="display: none"
-						/>
-
-						<input
-							type="radio"
-							name="signature-method-tab"
-							id="signature-method-tab-mobile-id"
-							value="mobile-id"
-							style="display: none"
-						/>
-
-						<input
-							type="radio"
-							name="signature-method-tab"
-							id="signature-method-tab-smart-id"
-							value="smart-id"
-							style="display: none"
-						/>
-
-						<div id="signature-methods">
-							<label
-								id="id-card-button"
-								for="signature-method-tab-id-card"
-								class="inherited-button"
-							>
-								<img
-									src="/assets/id-kaart-button.png"
-									title={t("BTN_VOTE_SIGN_WITH_ID_CARD")}
-									alt={t("BTN_VOTE_SIGN_WITH_ID_CARD")}
-								/>
-							</label>
-
-							<label
-								for="signature-method-tab-mobile-id"
-								class="inherited-button"
-							>
-								<img
-									src="/assets/mobile-id-button.png"
-									title={t("BTN_VOTE_SIGN_WITH_MOBILE_ID")}
-									alt={t("BTN_VOTE_SIGN_WITH_MOBILE_ID")}
-								/>
-							</label>
-
-							{Config.smartId ? <label
-								for="signature-method-tab-smart-id"
-								class="inherited-button"
-							>
-								<img
-									src="/assets/smart-id-button.svg"
-									title={t("BTN_VOTE_SIGN_WITH_SMART_ID")}
-									alt={t("BTN_VOTE_SIGN_WITH_SMART_ID")}
-								/>
-							</label> : null}
-						</div>
-
-						<Form
-							req={req}
-							id="id-card-form"
-							class="signature-form"
-							method="post"
-							action={initiativePath + "/signatures"}>
-							<p id="id-card-flash" class="flash error" />
-						</Form>
-
-						<Form
-							req={req}
-							id="mobile-id-form"
-							class="signature-form"
-							method="post"
-							action={initiativePath + "/signatures"}>
-
-							<label class="form-label">
-								{t("LABEL_PHONE_NUMBER")}
-
-								<input
-									type="tel"
-									name="phoneNumber"
-									placeholder={t("PLACEHOLDER_PHONE_NUMBER")}
-									required
-									class="form-input"
-								/>
-							</label>
-
-							<label class="form-label">
-								{t("LABEL_PERSONAL_ID")}
-
-								<input
-									type="text"
-									pattern="[0-9]*"
-									inputmode="numeric"
-									name="personalId"
-									placeholder={t("PLACEHOLDER_PERSONAL_ID")}
-									required
-									class="form-input"
-								/>
-							</label>
-
-							<button
-								name="method"
-								value="mobile-id"
-								class="button green-button">
-								{t("BTN_VOTE_SIGN_WITH_MOBILE_ID")}
-							</button>
-						</Form>
-
-						{Config.smartId ? <Form
-							req={req}
-							id="smart-id-form"
-							class="signature-form"
-							method="post"
-							action={initiativePath + "/signatures"}>
-							<label class="form-label">
-								{t("LABEL_PERSONAL_ID")}
-
-								<input
-									type="text"
-									pattern="[0-9]*"
-									inputmode="numeric"
-									name="personalId"
-									placeholder={t("PLACEHOLDER_PERSONAL_ID")}
-									required
-									class="form-input"
-								/>
-							</label>
-
-							<button
-								name="method"
-								value="smart-id"
-								class="green-button">
-								{t("BTN_VOTE_SIGN_WITH_SMART_ID")}
-							</button>
-						</Form> : null}
-
-						<script>{javascript`
-							var el = document.getElementById("initiative-vote")
-							var inputs = el.querySelectorAll("input[name=personalId]")
-							var each = Function.call.bind(Array.prototype.forEach)
-
-							each(inputs, function(from) {
-								from.addEventListener("change", function(ev) {
-									 each(inputs, function(to) {
-									 	if (to != from) to.value = ev.target.value
-									 })
-								})
-							})	
-						`}</script>
-
-						<script>{javascript`
-							var Hwcrypto = require("@rahvaalgatus/hwcrypto")
-							var TRANSLATIONS = ${stringify(UI_TRANSLATIONS[req.lang])}
-							var button = document.getElementById("id-card-button")
-							var form = document.getElementById("id-card-form")
-							var flash = document.getElementById("id-card-flash")
-							var all = Promise.all.bind(Promise)
-
-							button.addEventListener("click", sign)
-
-							form.addEventListener("submit", function(ev) {
-								ev.preventDefault()
-								sign()
-							})
-
-							function sign() {
-								notice("")
-
-								var certificate = Hwcrypto.certificate("sign")
-
-								var signable = certificate.then(function(certificate) {
-									return fetch(form.action, {
-										method: "POST",
-										credentials: "same-origin",
-
-										headers: {
-											"X-CSRF-Token": ${stringify(req.csrfToken)},
-											"Content-Type": "application/pkix-cert",
-											Accept: "${SIGNABLE_TYPE}, ${ERR_TYPE}"
-										},
-
-										body: certificate.toDer()
-									}).then(assertOk).then(function(res) {
-										return res.arrayBuffer().then(function(signable) {
-											return [
-												res.headers.get("location"),
-												new Uint8Array(signable)
-											]
-										})
-									})
-								})
-
-								var signature = all([certificate, signable]).then(function(all) {
-									var certificate = all[0]
-									var signable = all[1][1]
-									return Hwcrypto.sign(certificate, "SHA-256", signable)
-								})
-
-								var done = all([signable, signature]).then(function(all) {
-									var url = all[0][0]
-									var signature = all[1]
-
-									return fetch(url, {
-										method: "PUT",
-										credentials: "same-origin",
-										redirect: "manual",
-
-										headers: {
-											"X-CSRF-Token": ${stringify(req.csrfToken)},
-											"Content-Type": "application/vnd.rahvaalgatus.signature",
-
-											// Fetch polyfill doesn't support manual redirect, so use
-											// x-empty.
-											Accept: "application/x-empty, ${ERR_TYPE}"
-										},
-
-										body: signature
-									}).then(assertOk).then(function(res) {
-										window.location.assign(res.headers.get("location"))
-									})
-								})
-
-								done.catch(noticeError)
-								done.catch(raise)
-							}
-
-							function noticeError(err) {
-								notice(
-									err.code && TRANSLATIONS[err.code] ||
-									err.description ||
-									err.message
-								)
-							}
-
-							function assertOk(res) {
-								if (res.status >= 200 && res.status < 400) return res
-
-								var err = new Error(res.statusText)
-								err.code = res.status
-
-								var type = res.headers.get("content-type")
-								if (type == "${ERR_TYPE}")
-									return res.json().then(function(body) {
-										err.description = body.description
-										throw err
-									})
-								else throw err
-							}
-
-							function notice(msg) { flash.textContent = msg }
-							function raise(err) { setTimeout(function() { throw err }) }
-						`}</script>
-					</Fragment>}
+					</DeleteSignatureButton> : <SigningView
+						req={req}
+						t={t}
+						action={initiativePath + "/signatures"}
+					/>}
 				</div> : null}
 			</div>
 
@@ -1311,6 +1061,272 @@ function SidebarAdminView(attrs) {
 			Administreeri algatust
 		</a>
 	</div>
+}
+
+function SigningView(attrs) {
+	var t = attrs.t
+	var req = attrs.req
+	var action = attrs.action
+
+	return <Fragment>
+		<input
+			type="radio"
+			id="signature-method-tab-id-card"
+			name="signature-method-tab"
+			value="id-card"
+			style="display: none"
+		/>
+
+		<input
+			type="radio"
+			name="signature-method-tab"
+			id="signature-method-tab-mobile-id"
+			value="mobile-id"
+			style="display: none"
+		/>
+
+		<input
+			type="radio"
+			name="signature-method-tab"
+			id="signature-method-tab-smart-id"
+			value="smart-id"
+			style="display: none"
+		/>
+
+		<div id="signature-methods">
+			<label
+				id="id-card-button"
+				for="signature-method-tab-id-card"
+				class="inherited-button"
+			>
+				<img
+					src="/assets/id-kaart-button.png"
+					title={t("BTN_VOTE_SIGN_WITH_ID_CARD")}
+					alt={t("BTN_VOTE_SIGN_WITH_ID_CARD")}
+				/>
+			</label>
+
+			<label
+				for="signature-method-tab-mobile-id"
+				class="inherited-button"
+			>
+				<img
+					src="/assets/mobile-id-button.png"
+					title={t("BTN_VOTE_SIGN_WITH_MOBILE_ID")}
+					alt={t("BTN_VOTE_SIGN_WITH_MOBILE_ID")}
+				/>
+			</label>
+
+			{Config.smartId ? <label
+				for="signature-method-tab-smart-id"
+				class="inherited-button"
+			>
+				<img
+					src="/assets/smart-id-button.svg"
+					title={t("BTN_VOTE_SIGN_WITH_SMART_ID")}
+					alt={t("BTN_VOTE_SIGN_WITH_SMART_ID")}
+				/>
+			</label> : null}
+		</div>
+
+		<Form
+			req={req}
+			id="id-card-form"
+			class="signature-form"
+			method="post"
+			action={action}>
+			<p id="id-card-flash" class="flash error" />
+		</Form>
+
+		<Form
+			req={req}
+			id="mobile-id-form"
+			class="signature-form"
+			method="post"
+			action={action}>
+
+			<label class="form-label">
+				{t("LABEL_PHONE_NUMBER")}
+
+				<input
+					type="tel"
+					name="phoneNumber"
+					placeholder={t("PLACEHOLDER_PHONE_NUMBER")}
+					required
+					class="form-input"
+				/>
+			</label>
+
+			<label class="form-label">
+				{t("LABEL_PERSONAL_ID")}
+
+				<input
+					type="text"
+					pattern="[0-9]*"
+					inputmode="numeric"
+					name="personalId"
+					placeholder={t("PLACEHOLDER_PERSONAL_ID")}
+					required
+					class="form-input"
+				/>
+			</label>
+
+			<button
+				name="method"
+				value="mobile-id"
+				class="button green-button">
+				{t("BTN_VOTE_SIGN_WITH_MOBILE_ID")}
+			</button>
+		</Form>
+
+		{Config.smartId ? <Form
+			req={req}
+			id="smart-id-form"
+			class="signature-form"
+			method="post"
+			action={action}>
+			<label class="form-label">
+				{t("LABEL_PERSONAL_ID")}
+
+				<input
+					type="text"
+					pattern="[0-9]*"
+					inputmode="numeric"
+					name="personalId"
+					placeholder={t("PLACEHOLDER_PERSONAL_ID")}
+					required
+					class="form-input"
+				/>
+			</label>
+
+			<button
+				name="method"
+				value="smart-id"
+				class="green-button">
+				{t("BTN_VOTE_SIGN_WITH_SMART_ID")}
+			</button>
+		</Form> : null}
+
+		<script>{javascript`
+			var each = Function.call.bind(Array.prototype.forEach)
+
+			var inputs = [
+				document.querySelector("#mobile-id-form input[name=personalId]"),
+				document.querySelector("#smart-id-form input[name=personalId]")
+			]
+
+			inputs.forEach(function(from) {
+				from.addEventListener("change", function(ev) {
+					each(inputs, function(to) {
+						if (to != from) to.value = ev.target.value
+					})
+				})
+			})	
+		`}</script>
+
+		<script>{javascript`
+			var Hwcrypto = require("@rahvaalgatus/hwcrypto")
+			var TRANSLATIONS = ${stringify(UI_TRANSLATIONS[req.lang])}
+			var button = document.getElementById("id-card-button")
+			var form = document.getElementById("id-card-form")
+			var flash = document.getElementById("id-card-flash")
+			var all = Promise.all.bind(Promise)
+
+			button.addEventListener("click", sign)
+
+			form.addEventListener("submit", function(ev) {
+				ev.preventDefault()
+				sign()
+			})
+
+			function sign() {
+				notice("")
+
+				var certificate = Hwcrypto.certificate("sign")
+
+				var signable = certificate.then(function(certificate) {
+					return fetch(form.action, {
+						method: "POST",
+						credentials: "same-origin",
+
+						headers: {
+							"X-CSRF-Token": ${stringify(req.csrfToken)},
+							"Content-Type": "application/pkix-cert",
+							Accept: "${SIGNABLE_TYPE}, ${ERR_TYPE}"
+						},
+
+						body: certificate.toDer()
+					}).then(assertOk).then(function(res) {
+						return res.arrayBuffer().then(function(signable) {
+							return [
+								res.headers.get("location"),
+								new Uint8Array(signable)
+							]
+						})
+					})
+				})
+
+				var signature = all([certificate, signable]).then(function(all) {
+					var certificate = all[0]
+					var signable = all[1][1]
+					return Hwcrypto.sign(certificate, "SHA-256", signable)
+				})
+
+				var done = all([signable, signature]).then(function(all) {
+					var url = all[0][0]
+					var signature = all[1]
+
+					return fetch(url, {
+						method: "PUT",
+						credentials: "same-origin",
+						redirect: "manual",
+
+						headers: {
+							"X-CSRF-Token": ${stringify(req.csrfToken)},
+							"Content-Type": "application/vnd.rahvaalgatus.signature",
+
+							// Fetch polyfill doesn't support manual redirect, so use
+							// x-empty.
+							Accept: "application/x-empty, ${ERR_TYPE}"
+						},
+
+						body: signature
+					}).then(assertOk).then(function(res) {
+						window.location.assign(res.headers.get("location"))
+					})
+				})
+
+				done.catch(noticeError)
+				done.catch(raise)
+			}
+
+			function noticeError(err) {
+				notice(
+					err.code && TRANSLATIONS[err.code] ||
+					err.description ||
+					err.message
+				)
+			}
+
+			function assertOk(res) {
+				if (res.status >= 200 && res.status < 400) return res
+
+				var err = new Error(res.statusText)
+				err.code = res.status
+
+				var type = res.headers.get("content-type")
+				if (type == "${ERR_TYPE}")
+					return res.json().then(function(body) {
+						err.description = body.description
+						throw err
+					})
+				else throw err
+			}
+
+			function notice(msg) { flash.textContent = msg }
+			function raise(err) { setTimeout(function() { throw err }) }
+		`}</script>
+	</Fragment>
 }
 
 function EventsView(attrs) {

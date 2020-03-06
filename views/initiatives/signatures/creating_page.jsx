@@ -5,8 +5,10 @@ var Fragment = Jsx.Fragment
 var InitiativePage = require("../initiative_page")
 var javascript = require("root/lib/jsx").javascript
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
+exports = module.exports = CreatingPage
+exports.MobileIdView = MobileIdView
 
-module.exports = function(attrs) {
+function CreatingPage(attrs) {
 	var req = attrs.req
 	var t = req.t
 	var initiative = attrs.initiative
