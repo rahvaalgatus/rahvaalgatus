@@ -50,7 +50,7 @@
 		"mime": "",
 		"syslogh": "",
 		"hugml": "",
-		"undersign": "git+https://github.com/moll/js-undersign.git#27c2bdab5968140ee38852c68a6cf82d62a86366",
+		"undersign": "git+https://github.com/moll/js-undersign.git#50e1399049ac7e2dc8ba8f2ad6af60a381c605e2",
 		"jsdom": ">= 9 < 10"
 	},
 
