@@ -1,6 +1,8 @@
+var _ = require("root/lib/underscore")
 var Asic = require("undersign/lib/asic")
 var Config = require("root/config")
 var Router = require("express").Router
+var DateFns = require("date-fns")
 var MobileId = require("undersign/lib/mobile_id")
 var SmartId = require("undersign/lib/smart_id")
 var MobileIdError = require("undersign/lib/mobile_id").MobileIdError
@@ -32,6 +34,7 @@ var getNormalizedMobileIdErrorCode =
 var co = require("co")
 var sql = require("sqlate")
 var sleep = require("root/lib/promise").sleep
+var sqlite = require("root").sqlite
 var ENV = process.env.ENV
 var {hasSignatureType} = require("./initiatives/signatures_controller")
 var {MOBILE_ID_ERRORS} = require("./initiatives/signatures_controller")
@@ -40,9 +43,18 @@ var {SMART_ID_ERRORS} = require("./initiatives/signatures_controller")
 exports.router = Router({mergeParams: true})
 exports.router.use(parseBody({type: hasSignatureType}))
 
-exports.router.get("/", function(_req, res) {
-	res.render("demo_signatures/index_page.jsx")
-})
+exports.router.get("/", next(function*(_req, res) {
+	var signatureCounts = _.mapValues(_.indexBy(yield sqlite(sql`
+		SELECT date(datetime(created_at, 'localtime')) AS date, COUNT(*) AS count
+		FROM demo_signatures
+		WHERE created_at >= ${DateFns.addDays(new Date, -7)}
+		GROUP BY date(datetime(created_at, 'localtime'))
+	`), "date"), (row) => row.count)
+
+	res.render("demo_signatures/index_page.jsx", {
+		signatureCounts: signatureCounts
+	})
+}))
 
 exports.router.post("/", next(function*(req, res) {
 	var method = res.locals.method = getSigningMethod(req)
@@ -127,7 +139,10 @@ exports.router.post("/", next(function*(req, res) {
 			sanitizedPersonalId = sanitizePersonalId(personalId)
 
 			// Log Smart-Id requests to confirm SK's billing.
-			logger.info("Requesting Smart-Id certificate for %s.", sanitizePersonalId)
+			logger.info(
+				"Requesting Smart-Id certificate for %s.",
+				sanitizedPersonalId
+			)
 
 			cert = yield smartId.certificate("PNOEE-" + personalId)
 			cert = yield smartId.wait(cert, 90)

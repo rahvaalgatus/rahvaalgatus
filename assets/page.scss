@@ -2641,6 +2641,14 @@ button.inherited {
 		margin-bottom: 3rem;
 	}
 
+	.subsubheading {
+		font-family: $aino-headline;
+		font-size: 2.4rem;
+		font-weight: bold;
+		color: $dark-blue;
+		margin-bottom: 2rem;
+	}
+
 	.header-section {
 		font-family: $aino-headline;
 		background: $dark-blue;
@@ -2730,6 +2738,32 @@ button.inherited {
 		@each $method in $methods {
 			#signature-method-tab-#{$method}:checked ~ ##{$method}-form {
 				display: block;
+			}
+		}
+	}
+
+	#statistics {
+		h3 { margin-top: 4rem; }
+
+		svg {
+			.day {
+				font-family: "Aino";
+				font-size: 13px;
+
+				.count {
+					font-size: 14px;
+					fill: #979797;
+					font-weight: bold;
+				}
+
+				.date {
+					fill: #555;
+				}
+
+				.bar { fill: #dbdbdb; }
+
+				&.today .bar,
+				&.today text { fill: $dark-blue; }
 			}
 		}
 	}
