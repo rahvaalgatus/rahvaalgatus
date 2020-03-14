@@ -1625,7 +1625,8 @@ describe("SignaturesController", function() {
 					this.initiative,
 					MOBILE_ID_CERTIFICATE,
 					(req, res) => {
-						Url.parse(req.url, true).query.timeoutMs.must.equal("30000")
+						var timeoutMs = Url.parse(req.url, true).query.timeoutMs
+						timeoutMs.must.equal(waited == 0 ? "120000" : "1000")
 						if (waited++ == 0) this.time.tick(119 * 1000)
 						else this.time.tick(1000)
 						respond({state: "RUNNING"}, req, res)

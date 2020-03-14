@@ -37,7 +37,11 @@ exports.pathToSignature = pathToSignature
 exports.router.use(parseBody({type: hasSignatureType}))
 exports.getSigningMethod = getSigningMethod
 exports.hasSignatureType = hasSignatureType
-exports.waitForSmartIdSession = waitForSmartIdSession
+
+var waitForMobileIdSession = exports.waitForMobileIdSession =
+	waitForSession.bind(null, mobileId.waitForSignature.bind(mobileId))
+var waitForSmartIdSession = exports.waitForSmartIdSession =
+	waitForSession.bind(null, smartId.wait.bind(smartId))
 
 var MOBILE_ID_ERRORS = exports.MOBILE_ID_ERRORS = {
 	// Initiation responses:
@@ -548,15 +552,20 @@ exports.router.delete("/:personalId", next(function*(req, res) {
 	res.redirect(303, Path.dirname(req.baseUrl))
 }))
 
+function* waitForSession(wait, timeout, session) {
+	var res
+	for (
+		var started = Date.now() / 1000, elapsed = 0;
+		res == null && elapsed < timeout;
+		elapsed = Date.now() / 1000 - started
+	) res = yield wait(session, timeout - elapsed)
+	return res
+}
+
 function* waitForMobileIdSignature(signable, sessionId) {
 	try {
 		var xades = signable.xades
-		var signatureHash
-
-		for (
-			var started = new Date;
-			signatureHash == null && new Date - started < 120 * 1000;
-		) signatureHash = yield mobileId.waitForSignature(sessionId, 30)
+		var signatureHash = yield waitForMobileIdSession(120, sessionId)
 		if (signatureHash == null) throw new MobileIdError("TIMEOUT")
 
 		if (!xades.certificate.hasSigned(xades.signable, signatureHash))
@@ -594,16 +603,6 @@ function* waitForMobileIdSignature(signable, sessionId) {
 
 		yield signablesDb.update(signable, {error: ex, updated_at: new Date})
 	}
-}
-
-function* waitForSmartIdSession(timeout, session) {
-	var res
-	for (
-		var started = Date.now() / 1000, elapsed = 0;
-		res == null && elapsed < timeout;
-		elapsed = Date.now() / 1000 - started
-	) res = yield smartId.wait(session, timeout - elapsed)
-	return res
 }
 
 function* waitForSmartIdSignature(signable, session) {

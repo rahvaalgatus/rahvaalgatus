@@ -37,6 +37,7 @@ var sleep = require("root/lib/promise").sleep
 var sqlite = require("root").sqlite
 var ENV = process.env.ENV
 var {hasSignatureType} = require("./initiatives/signatures_controller")
+var {waitForMobileIdSession} = require("./initiatives/signatures_controller")
 var {waitForSmartIdSession} = require("./initiatives/signatures_controller")
 var {MOBILE_ID_ERRORS} = require("./initiatives/signatures_controller")
 var {SMART_ID_ERRORS} = require("./initiatives/signatures_controller")
@@ -383,12 +384,7 @@ exports.router.put("/:token",
 function* waitForMobileIdSignature(signature, sessionId) {
 	try {
 		var xades = signature.xades
-		var signatureHash
-
-		for (
-			var started = new Date;
-			signatureHash == null && new Date - started < 120 * 1000;
-		) signatureHash = yield mobileId.waitForSignature(sessionId, 30)
+		var signatureHash = yield waitForMobileIdSession(120, sessionId)
 		if (signatureHash == null) throw new MobileIdError("TIMEOUT")
 
 		if (!xades.certificate.hasSigned(xades.signable, signatureHash))
