@@ -1884,6 +1884,90 @@ describe("SignaturesController", function() {
 				res.body.must.include(t("CERTIFICATE_EXPIRED"))
 			})
 
+			it("must get certificate if request running", function*() {
+				var cert = new Certificate(newCertificate({
+					subject: {
+						countryName: "EE",
+						organizationalUnitName: "SIGNATURE",
+						commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+						surname: "SMITH",
+						givenName: "JOHN",
+						serialNumber: `PNOEE-${PERSONAL_ID}`
+					},
+
+					validUntil: new Date,
+					issuer: VALID_ISSUERS[0],
+					publicKey: JOHN_RSA_KEYS.publicKey
+				}))
+
+				var certSession = "3befb011-37bf-4e57-b041-e4cba1496766"
+
+				this.router.post(
+					`${SMART_ID_URL.path}certificatechoice/etsi/:id`,
+					respond.bind(null, {sessionID: certSession})
+				)
+
+				var waited = 0
+				this.router.get(
+					`${SMART_ID_URL.path}session/${certSession}`,
+					function(req, res) {
+						if (waited++ < 2) return void respond({state: "RUNNING"}, req, res)
+
+						respond({
+							state: "COMPLETE",
+							result: {endResult: "OK", documentNumber: SMART_ID},
+							cert: {
+								certificateLevel: "QUALIFIED",
+								value: cert.toString("base64")
+							}
+						}, req, res)
+					}
+				)
+
+				var path = `/initiatives/${this.initiative.uuid}/signatures`
+				var res = yield this.request(path, {
+					method: "POST",
+					form: {method: "smart-id", personalId: PERSONAL_ID}
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Certificate Expired")
+				res.headers["content-type"].must.equal("text/html; charset=utf-8")
+				res.body.must.include(t("CERTIFICATE_EXPIRED"))
+			})
+
+			it("must time out after 90s of waiting for certificate", function*() {
+				var certSession = "3befb011-37bf-4e57-b041-e4cba1496766"
+
+				this.router.post(
+					`${SMART_ID_URL.path}certificatechoice/etsi/:id`,
+					respond.bind(null, {sessionID: certSession})
+				)
+
+				var waited = 0
+				this.router.get(
+					`${SMART_ID_URL.path}session/${certSession}`,
+					(req, res) => {
+						var timeoutMs = Url.parse(req.url, true).query.timeoutMs
+						timeoutMs.must.equal(waited == 0 ? "90000" : "1000")
+						if (waited++ == 0) this.time.tick(89 * 1000)
+						else this.time.tick(1000)
+						respond({state: "RUNNING"}, req, res)
+					}
+				)
+
+				var path = `/initiatives/${this.initiative.uuid}/signatures`
+				var res = yield this.request(path, {
+					method: "POST",
+					form: {method: "smart-id", personalId: PERSONAL_ID}
+				})
+
+				res.statusCode.must.equal(410)
+				res.statusMessage.must.equal("Smart-Id Timeout")
+				res.headers["content-type"].must.equal("text/html; charset=utf-8")
+				res.body.must.include(t("SMART_ID_ERROR_TIMEOUT_SIGN"))
+			})
+
 			it("must create signature if Smart-Id session running", function*() {
 				var waited = 0
 				var signed = yield signWithSmartId(
@@ -2159,7 +2243,8 @@ describe("SignaturesController", function() {
 					this.initiative,
 					SMART_ID_CERTIFICATE,
 					(req, res) => {
-						Url.parse(req.url, true).query.timeoutMs.must.equal("30000")
+						var timeoutMs = Url.parse(req.url, true).query.timeoutMs
+						timeoutMs.must.equal(waited == 0 ? "120000" : "1000")
 						if (waited++ == 0) this.time.tick(119 * 1000)
 						else this.time.tick(1000)
 						respond({state: "RUNNING"}, req, res)

@@ -37,6 +37,7 @@ exports.pathToSignature = pathToSignature
 exports.router.use(parseBody({type: hasSignatureType}))
 exports.getSigningMethod = getSigningMethod
 exports.hasSignatureType = hasSignatureType
+exports.waitForSmartIdSession = waitForSmartIdSession
 
 var MOBILE_ID_ERRORS = exports.MOBILE_ID_ERRORS = {
 	// Initiation responses:
@@ -260,7 +261,8 @@ exports.router.post("/", next(function*(req, res) {
 			logger.info("Requesting Smart-Id certificate for %s.", personalId)
 
 			cert = yield smartId.certificate("PNOEE-" + personalId)
-			cert = yield smartId.wait(cert, 90)
+			cert = yield waitForSmartIdSession(90, cert)
+			if (cert == null) throw new SmartIdError("TIMEOUT")
 			if (err = validateCertificate(req.t, cert)) throw err
 
 			;[country, personalId] = getCertificatePersonalId(cert)
@@ -594,15 +596,20 @@ function* waitForMobileIdSignature(signable, sessionId) {
 	}
 }
 
+function* waitForSmartIdSession(timeout, session) {
+	var res
+	for (
+		var started = Date.now() / 1000, elapsed = 0;
+		res == null && elapsed < timeout;
+		elapsed = Date.now() / 1000 - started
+	) res = yield smartId.wait(session, timeout - elapsed)
+	return res
+}
+
 function* waitForSmartIdSignature(signable, session) {
 	try {
 		var xades = signable.xades
-		var certAndSignatureHash
-
-		for (
-			var started = new Date;
-			certAndSignatureHash == null && new Date - started < 120 * 1000;
-		) certAndSignatureHash = yield smartId.wait(session, 30)
+		var certAndSignatureHash = yield waitForSmartIdSession(120, session)
 		if (certAndSignatureHash == null) throw new SmartIdError("TIMEOUT")
 
 		var [_cert, signatureHash] = certAndSignatureHash

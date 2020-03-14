@@ -37,6 +37,7 @@ var sleep = require("root/lib/promise").sleep
 var sqlite = require("root").sqlite
 var ENV = process.env.ENV
 var {hasSignatureType} = require("./initiatives/signatures_controller")
+var {waitForSmartIdSession} = require("./initiatives/signatures_controller")
 var {MOBILE_ID_ERRORS} = require("./initiatives/signatures_controller")
 var {SMART_ID_ERRORS} = require("./initiatives/signatures_controller")
 
@@ -145,7 +146,8 @@ exports.router.post("/", next(function*(req, res) {
 			)
 
 			cert = yield smartId.certificate("PNOEE-" + personalId)
-			cert = yield smartId.wait(cert, 90)
+			cert = yield waitForSmartIdSession(90, cert)
+			if (cert == null) throw new SmartIdError("TIMEOUT")
 			if (err = validateCertificate(req.t, cert)) throw err
 
 			;[country, personalId] = getCertificatePersonalId(cert)
@@ -421,12 +423,7 @@ function* waitForMobileIdSignature(signature, sessionId) {
 function* waitForSmartIdSignature(signature, session) {
 	try {
 		var xades = signature.xades
-		var certAndSignatureHash
-
-		for (
-			var started = new Date;
-			certAndSignatureHash == null && new Date - started < 120 * 1000;
-		) certAndSignatureHash = yield smartId.wait(session, 30)
+		var certAndSignatureHash = yield waitForSmartIdSession(120, session)
 		if (certAndSignatureHash == null) throw new SmartIdError("TIMEOUT")
 
 		var [_cert, signatureHash] = certAndSignatureHash
