@@ -2,6 +2,7 @@ var _ = require("root/lib/underscore")
 var Qs = require("qs")
 var Http = require("root/lib/http")
 var Router = require("express").Router
+var HttpError = require("standard-http-error")
 var SqliteError = require("root/lib/sqlite_error")
 var sendEmail = require("root").sendEmail
 var renderEmail = require("root/lib/i18n").email
@@ -51,6 +52,8 @@ exports.router.get("/", readSubscriptionFromQuery, next(function*(req, res) {
 }))
 
 exports.router.post("/", next(function*(req, res) {
+	if (req.body["e-mail"]) throw new HttpError(403, "Suspicion of Automation")
+
 	var user = req.user
 	var email = req.body.email
 

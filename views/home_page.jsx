@@ -78,6 +78,9 @@ module.exports = function(attrs) {
 				<h2>{t("SUBSCRIBE_TO_INITIATIVES_TITLE")}</h2>
 				<p>{t("SUBSCRIBE_TO_INITIATIVES_EXPLANATION")}</p>
 
+				{/* Catch naive bots */}
+				<input name="e-mail" type="email" hidden />
+
 				<input
 					id="subscriptions-form-email"
 					name="email"
