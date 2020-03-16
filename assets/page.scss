@@ -2760,14 +2760,16 @@ button.inherited {
 		svg {
 			display: block;
 			max-width: 100%;
+		}
 
+		svg.signatures-by-date {
 			.day {
 				font-family: "Aino";
 				font-size: 13px;
 
 				.count {
 					font-size: 14px;
-					fill: #979797;
+					fill: #666;
 					font-weight: bold;
 				}
 
@@ -2779,6 +2781,26 @@ button.inherited {
 
 				&.today .bar,
 				&.today text { fill: $dark-blue; }
+			}
+		}
+
+		svg.signatures-by-age {
+			.month {
+				font-family: "Aino";
+				font-size: 13px;
+
+				.count {
+					fill: #555;
+					font-weight: bold;
+				}
+
+				.age {
+					fill: #555;
+					font-weight: bold;
+				}
+
+				.bar { fill: #dbdbdb; }
+				&.full-year .bar { fill: #777; }
 			}
 		}
 	}

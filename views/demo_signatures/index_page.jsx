@@ -11,7 +11,8 @@ module.exports = function(attrs) {
 	var req = attrs.req
 	var t = req.t
 	var lang = req.lang
-	var signatureCounts = attrs.signatureCounts
+	var signatureCountsByDate = attrs.signatureCountsByDate
+	var signatureCountsByAge = attrs.signatureCountsByAge
 
 	return <Page
 		page="demo-signatures"
@@ -55,19 +56,27 @@ module.exports = function(attrs) {
 
 			<div id="statistics">
 				<h3 class="subsubheading">Allkirjade ajalugu</h3>
-				<StatisticsView signatureCounts={signatureCounts} />
+
+				<StatisticsViewByDate
+					signatureCountsByDate={signatureCountsByDate}
+				/>
+
+				<StatisticsViewByAge
+					signatureCountsByAge={signatureCountsByAge}
+				/>
 			</div>
 		</center></section>
 	</Page>
 }
 
-function StatisticsView(attrs) {
+function StatisticsViewByDate(attrs) {
 	var today = new Date
-	var signatureCounts = attrs.signatureCounts
-	var maxSignatures = _.max(_.values(signatureCounts)) || 0
+	var signatureCountsByDate = attrs.signatureCountsByDate
+	var maxSignatures = _.max(_.values(signatureCountsByDate)) || 0
 	var week = _.reverse(_.times(7, (i) => DateFns.addDays(today, -i)))
 
 	return <svg
+		class="signatures-by-date"
 		xmlns="http://www.w3.org/2000/svg"
 		version="1.1"
 		width="300"
@@ -76,12 +85,12 @@ function StatisticsView(attrs) {
 	>
 		<g transform="translate(10 10)">{week.map(function(date, i) {
 			var maxHeight = 80
-			var signatureCount = signatureCounts[formatIsoDate(date)] || 0
-			var height = Math.max(maxHeight * signatureCount / maxSignatures, 5)
+			var signatureCount = signatureCountsByDate[formatIsoDate(date)] || 0
+			var height = Math.max(maxHeight * signatureCount / maxSignatures || 0, 5)
 
 			return <g
 				transform={`translate(${40 * i} 0)`}
-				class={"day " + (DateFns.isSameDay(today, date) ? "today" : "")}
+				class={"day" + (DateFns.isSameDay(today, date) ? " today" : "")}
 			>
 				<text
 					x="10"
@@ -102,16 +111,12 @@ function StatisticsView(attrs) {
 					width="20"
 					height={height}
 					ry="5"
-					stroke-width=".22914"
 				/>
 
 				<text
 					class="date"
 					x="10"
 					y={10 + maxHeight + 20}
-					stroke-width=".26458"
-					word-spacing="0px"
-					style="line-height:1.25"
 				>
 					<tspan
 						text-align="center"
@@ -119,6 +124,69 @@ function StatisticsView(attrs) {
 					>{I18n.formatDate("date-month", date)}
 					</tspan>
 				</text>
+			</g>
+		})}</g>
+	</svg>
+}
+
+function StatisticsViewByAge(attrs) {
+	var signatureCountsByAge = attrs.signatureCountsByAge
+
+	var monthCount = 12 * 4 + 1
+	var monthWidth = 580 / monthCount
+	var monthPadding = 3
+	var maxSignatures = _.max(_.values(signatureCountsByAge)) || 0
+
+	return <svg
+		class="signatures-by-age"
+		xmlns="http://www.w3.org/2000/svg"
+		version="1.1"
+		width="600"
+		height="150"
+		viewBox="0 0 600 150"
+	>
+		<g transform="translate(10 10)">{_.times(monthCount, function(i) {
+			var age = 16 * 12 + i
+			var signatureCount = signatureCountsByAge[age] || 0
+			var maxHeight = 80
+			var height = Math.max(maxHeight * signatureCount / maxSignatures || 0, 5)
+
+			return <g
+				transform={`translate(${monthWidth * i} 0)`}
+				class={"month" + (age % 12 == 0 ? " full-year" : "")}
+				data-age-in-months={age}
+			>
+				{signatureCount > 0 ? <text
+					x={(monthWidth - monthPadding) / 2}
+					y={maxHeight - height}
+					class="count"
+				>
+					<tspan
+						text-align="center"
+						text-anchor="middle"
+						dominant-baseline="middle"
+					>{signatureCount}</tspan>
+				</text> : null}
+
+				<rect
+					x="0"
+					y={10 + maxHeight - height}
+					class="bar"
+					width={monthWidth - monthPadding}
+					height={height}
+					ry="0"
+				/>
+
+				{age % 12 == 0 ? <text
+					class="age"
+					x={(monthWidth - monthPadding) / 2}
+					y={10 + maxHeight + 20}
+				>
+					<tspan
+						text-align="center"
+						text-anchor="middle"
+					>{age / 12}</tspan>
+				</text> : null}
 			</g>
 		})}</g>
 	</svg>

@@ -1,6 +1,8 @@
+var _ = require("root/lib/underscore")
 var Url = require("url")
 var Path = require("path")
 var Config = require("root/config")
+var DateFns = require("date-fns")
 var ValidDemoSignature = require("root/test/valid_demo_signature")
 var Certificate = require("undersign/lib/certificate")
 var Ocsp = require("undersign/lib/ocsp")
@@ -16,6 +18,8 @@ var signablesDb = require("root/db/initiative_signables_db")
 var hades = require("root").hades
 var next = require("co-next")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
+var parseDom = require("root/lib/dom").parse
+var demand = require("must")
 var ASICE_TYPE = "application/vnd.etsi.asic-e+zip"
 var MOBILE_ID_URL = Url.parse("https://mid.sk.ee/mid-api/")
 var SMART_ID_URL = Url.parse("https://rp-api.smart-id.com/v1/")
@@ -97,6 +101,60 @@ describe("DemoSignaturesController", function() {
 			var res = yield this.request("/digiallkiri")
 			res.statusCode.must.equal(200)
 			res.body.must.include("MSG_ERROR_HWCRYPTO_NO_CERTIFICATES")
+		})
+
+		it("must render age statistics", function*() {
+			var createdAt = new Date(2019, 5, 18, 13, 37, 42, 666)
+			var oldestBirth = DateFns.addYears(createdAt, -20)
+			var youngestBirth = DateFns.addYears(createdAt, -16)
+			oldestBirth.getFullYear().must.be.lt(2000)
+			youngestBirth.getFullYear().must.be.gt(2000)
+
+			yield demoSignaturesDb.create([
+				new ValidDemoSignature({
+					personal_id: formatPersonId(DateFns.addMonths(oldestBirth, -1)),
+					signed: true,
+					timestamped: true,
+					updated_at: createdAt
+				}),
+
+				new ValidDemoSignature({
+					personal_id: formatPersonId(oldestBirth),
+					signed: true,
+					timestamped: true,
+					updated_at: createdAt
+				}),
+
+				new ValidDemoSignature({
+					personal_id: formatPersonId(youngestBirth),
+					signed: true,
+					timestamped: true,
+					updated_at: createdAt
+				}),
+
+				new ValidDemoSignature({
+					personal_id: formatPersonId(DateFns.addMonths(youngestBirth, 1)),
+					signed: true,
+					timestamped: true,
+					updated_at: createdAt
+				})
+			])
+
+			var res = yield this.request("/digiallkiri")
+			res.statusCode.must.equal(200)
+
+			var dom = parseDom(res.body)
+			var svg = dom.querySelector("svg.signatures-by-age")
+
+			var youngestEl = svg.querySelector(`[data-age-in-months="${16 * 12}"]`)
+			youngestEl.querySelector(".age").textContent.must.equal("16")
+			youngestEl.querySelector(".count").textContent.must.equal("1")
+			demand(youngestEl.previousElementSibling).be.null()
+
+			var oldestEl = svg.querySelector(`[data-age-in-months="${20 * 12}"]`)
+			oldestEl.querySelector(".age").textContent.must.equal("20")
+			oldestEl.querySelector(".count").textContent.must.equal("1")
+			demand(oldestEl.nextElementSibling).be.null()
 		})
 	})
 	
@@ -441,6 +499,13 @@ function newXades(cert) {
 	var ocspResponse = Ocsp.parse(newOcspResponse(cert))
 	xades.setOcspResponse(ocspResponse)
 	return xades
+}
+
+function formatPersonId(date) {
+	var sexCentury = date.getFullYear() < 2000 ? "3" : "5"
+	var year = String(date.getFullYear()).slice(-2)
+	var month = _.padLeft(String(date.getMonth() + 1), 2, "0")
+	return sexCentury + year + month
 }
 
 function signWithRsa(key, signable) {

@@ -1,4 +1,8 @@
-## Unreleased
+## Mar 30, 2020
+- Adds a dedicated page for students and others to try digital signatures.
+- Adds a graph for plotting the number of 16–20 year-olds that have tried digital signing on that dedicated page.
+
+## Jan 22, 2020
 - Adds local user accounts with email confirmations.
 - Temporarily removes initiative coauthor adding as its invitation mechanism relied on CitizenOS accounts.
 
