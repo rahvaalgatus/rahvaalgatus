@@ -142,7 +142,7 @@ exports.router.use("/:token", next(function*(req, res, next) {
 	req.subscription = yield subscriptionsDb.read(sql`
 		SELECT * FROM initiative_subscriptions
 		WHERE initiative_uuid = ${initiative.uuid}
-		AND update_token = ${req.params.token}
+		AND update_token = ${req.params.token.replace(/\.+$/, "")}
 	`)
 
 	if (req.subscription) return void next()

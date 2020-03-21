@@ -530,6 +530,24 @@ describe("InitiativeSubscriptionsController", function() {
 			res.headers.location.must.equal(path)
 		})
 
+		it("must redirect to subscriptions page if ends with period", function*() {
+			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+				initiative_uuid: this.initiative.uuid,
+				confirmed_at: new Date
+			}))
+
+			var res = yield this.request(
+				`/initiatives/${this.initiative.uuid}/subscriptions/${subscription.update_token}.`
+			)
+
+			res.statusCode.must.equal(302)
+			var path = "/subscriptions"
+			path += "?initiative=" + subscription.initiative_uuid
+			path += "&update-token=" + subscription.update_token
+			path += "#subscription-" + subscription.initiative_uuid
+			res.headers.location.must.equal(path)
+		})
+
 		it("must redirect to subscriptions page given an external initiative",
 			function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({

@@ -204,7 +204,10 @@ exports.router.get("/new", next(function*(req, res) {
 }))
 
 exports.router.use("/:token",
-	next(withSubscription.bind(null, (req) => [null, req.params.token])))
+	next(withSubscription.bind(null, (req) => [
+		null,
+		req.params.token.replace(/\.+$/, "")
+	])))
 
 exports.router.get("/:token", function(req, res) {
 	var subscription = req.subscription

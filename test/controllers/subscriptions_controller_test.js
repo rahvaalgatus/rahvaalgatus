@@ -1199,6 +1199,20 @@ describe("SubscriptionsController", function() {
 			res.headers.location.must.equal(path)
 		})
 
+		it("must redirect to subscriptions page if ends with period", function*() {
+			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+				confirmed_at: new Date
+			}))
+
+			var res = yield this.request(
+				`/subscriptions/${subscription.update_token}.`
+			)
+
+			res.statusCode.must.equal(302)
+			var path = "/subscriptions?update-token=" + subscription.update_token
+			res.headers.location.must.equal(path)
+		})
+
 		it("must respond with 404 given invalid update token", function*() {
 			// Still have a single subscription to ensure it's not picking randomly.
 			yield subscriptionsDb.create(new ValidSubscription({confirmed_at: new Date}))
