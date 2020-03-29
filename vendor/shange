@@ -51,7 +51,7 @@ sqlite_migrations() {
 
 local_migrations() {
 	pat="[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_*"
-	find "$MIGRATIONS_DIR" -name "$pat" 2>/dev/null | while read -r file; do
+	find "$MIGRATIONS_DIR" -name "$pat.sql" 2>/dev/null | while read -r file; do
 		file=$(basename "$file")
 		file=${file%%_*}
 		echo "$file"
@@ -131,7 +131,7 @@ case "$cmd" in
 
 			if [ -n "$mis" ]; then red "miss  $mis\\n"
 			elif [ -n "$new" ]; then yellow "down  $new  $(name_migration "$new")\\n"
-			else green "up    $old  $(name_migration "$old")\\n"
+			elif [ -n "$old" ]; then green "up    $old  $(name_migration "$old")\\n"
 			fi
 		done
 		;;
@@ -158,7 +158,12 @@ case "$cmd" in
 	schema)
 		[ $# -ne 0 ] && warn "$(usage schema)" && exit 1
 
-		sqlite .schema | grep -v "^CREATE TABLE migrations (.*);$"
+		# SQLite3 cannot import a dump that includes the sqlite_sequence table:
+		# "object name reserved for internal use: sqlite_sequence"
+		sqlite .schema |
+			grep -v "^CREATE TABLE migrations (.*);$" |
+			grep -v "^CREATE TABLE sqlite_sequence(.*);$"
+
 		echo
 		sqlite ".dump migrations"
 		;;
