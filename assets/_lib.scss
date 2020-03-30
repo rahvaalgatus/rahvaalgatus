@@ -57,7 +57,7 @@ $archived-phase-color: $dark-blue;
 }
 
 @mixin mobile {
-  @media only screen and (max-width: 350px) { @content }
+  @media only screen and (max-width: 375px) { @content }
 }
 
 @mixin mobile-and-tablet {
