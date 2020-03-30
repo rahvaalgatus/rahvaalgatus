@@ -28,7 +28,7 @@ var PERSONAL_ID = "38706181337"
 var VALID_ISSUERS = require("root/test/fixtures").VALID_ISSUERS
 var JOHN_RSA_KEYS = require("root/test/fixtures").JOHN_RSA_KEYS
 var SMART_ID = "PNOEE-" + PERSONAL_ID + "-R2D2-Q"
-var SIGNABLE_TEXT = t("DEMO_SIGNATURES_HEADER")
+var SIGNABLE_TEXT = t("DEMO_SIGNATURES_SIGNABLE")
 var SIGNABLE_TEXT_SHA256 = sha256(SIGNABLE_TEXT)
 
 var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
@@ -111,7 +111,7 @@ describe("DemoSignaturesController", function() {
 
 					var res = yield this.request(signed.headers.location)
 					res.statusCode.must.equal(200)
-					res.body.must.include(t("THANKS_FOR_SIGNING"))
+					res.body.must.include(t("DEMO_SIGNATURES_SIGNED_TEXT"))
 				})
 			})
 		}

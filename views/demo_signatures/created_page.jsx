@@ -22,9 +22,8 @@ module.exports = function(attrs) {
 		</center></header>
 
 		<section class="primary-section text-section"><center>
-			<h2 class="subheading">{t("THANKS_FOR_SIGNING")}</h2>
-
-			<p>Nam nec consequat mi. Aenean vitae orci elit. Sed non finibus risus. Ut feugiat enim nec dolor scelerisque venenatis. Donec urna felis, tristique sit amet libero sed, ultricies ullamcorper dolor. Pellentesque sed ullamcorper nisi. Phasellus pretium tristique nunc eget tempus. Donec eget magna lacinia, iaculis purus nec, accumsan quam. Pellentesque consectetur magna ut pretium tempus. Aenean iaculis justo erat, a viverra diam pulvinar non. Donec ac urna purus. Vestibulum nec nulla efficitur, molestie leo in, aliquet orci. Donec facilisis porta sapien quis viverra. Maecenas at eros et urna ultricies suscipit in blandit ex.</p>
+			<h2 class="subheading">{t("DEMO_SIGNATURES_SIGNED_HEADER")}</h2>
+			<p>{t("DEMO_SIGNATURES_SIGNED_TEXT")}</p>
 
 			<a class="button blue-button" href={signatureUrl + ".asice"}>
 				Lae allkiri alla
