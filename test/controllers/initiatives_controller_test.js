@@ -3603,7 +3603,7 @@ describe("InitiativesController", function() {
 				res.body.must.not.include(t("CREATE_INITIATIVE_EVENT_BUTTON"))
 			})
 
-			it("must not show thanks if not signed", function*() {
+			it("must not show thanks if signed another initiative", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign"
@@ -3618,10 +3618,111 @@ describe("InitiativesController", function() {
 
 				yield createVote(topic, newVote({endsAt: DateFns.addDays(new Date, 1)}))
 
+				var other = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id
+				}))
+
+				yield signaturesDb.create(new ValidSignature({
+					initiative_uuid: other.uuid,
+					country: this.user.country,
+					personal_id: this.user.personal_id
+				}))
+
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
+				res.body.must.not.include(t("REVOKE_SIGNATURE"))
 				res.body.must.not.include(t("THANKS_FOR_SIGNING"))
 				res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+				res.body.must.not.include("donate-form")
+			})
+
+			it("must not show thanks if someone from different country signed",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign"
+				}))
+
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: this.author.uuid,
+					sourcePartnerId: this.partner.id,
+					status: "voting"
+				}))
+
+				yield createVote(topic, newVote({endsAt: DateFns.addDays(new Date, 1)}))
+
+				yield signaturesDb.create(new ValidSignature({
+					initiative_uuid: initiative.uuid,
+					country: "LT",
+					personal_id: this.user.personal_id
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+				res.body.must.not.include(t("REVOKE_SIGNATURE"))
+				res.body.must.not.include(t("THANKS_FOR_SIGNING"))
+				res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+				res.body.must.not.include("donate-form")
+			})
+
+			it("must not show thanks if someone with different personal id signed",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign"
+				}))
+
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: this.author.uuid,
+					sourcePartnerId: this.partner.id,
+					status: "voting"
+				}))
+
+				yield createVote(topic, newVote({endsAt: DateFns.addDays(new Date, 1)}))
+
+				yield signaturesDb.create(new ValidSignature({
+					initiative_uuid: initiative.uuid,
+					country: this.user.country,
+					personal_id: "38706181337"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+				res.body.must.not.include(t("REVOKE_SIGNATURE"))
+				res.body.must.not.include(t("THANKS_FOR_SIGNING"))
+				res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+				res.body.must.not.include("donate-form")
+			})
+
+			it("must show delete button if signed", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign"
+				}))
+
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: this.author.uuid,
+					sourcePartnerId: this.partner.id,
+					status: "voting"
+				}))
+
+				yield createVote(topic, newVote({endsAt: DateFns.addDays(new Date, 1)}))
+
+				yield signaturesDb.create(new ValidSignature({
+					initiative_uuid: initiative.uuid,
+					country: this.user.country,
+					personal_id: this.user.personal_id
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("REVOKE_SIGNATURE"))
+				res.body.must.include(t("THANKS_FOR_SIGNING"))
+				res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+				res.body.must.not.include("donate-form")
 			})
 
 			describe(`on ${PARLIAMENT_SITE_HOSTNAME}`, function() {

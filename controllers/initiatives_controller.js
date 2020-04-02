@@ -332,7 +332,7 @@ exports.read = next(function*(req, res) {
 	var signature
 	var newSignatureToken = req.flash("signatureToken")
 
-	if (initiative.phase == "sign" && newSignatureToken) {
+	if (initiative.phase == "sign") if (newSignatureToken) {
 		signature = yield signaturesDb.read(sql`
 			SELECT * FROM initiative_signatures
 			WHERE initiative_uuid = ${initiative.uuid}
@@ -342,6 +342,12 @@ exports.read = next(function*(req, res) {
 		thank = !!signature
 		thankAgain = signature && signature.oversigned > 0
 	}
+	else if (user) signature = yield signaturesDb.read(sql`
+		SELECT * FROM initiative_signatures
+		WHERE initiative_uuid = ${initiative.uuid}
+		AND country = ${user.country}
+		AND personal_id = ${user.personal_id}
+	`)
 
 	var subscriberCount = yield sqlite(sql`
 		SELECT COUNT(*) AS count
