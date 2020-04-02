@@ -14,7 +14,6 @@ var t = require("root/lib/i18n").t.bind(null, Config.language)
 var newCertificate = require("root/test/fixtures").newCertificate
 var newOcspResponse = require("root/test/fixtures").newOcspResponse
 var demoSignaturesDb = require("root/db/demo_signatures_db")
-var signablesDb = require("root/db/initiative_signables_db")
 var hades = require("root").hades
 var next = require("co-next")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
@@ -34,6 +33,7 @@ var JOHN_RSA_KEYS = require("root/test/fixtures").JOHN_RSA_KEYS
 var SMART_ID = "PNOEE-" + PERSONAL_ID + "-R2D2-Q"
 var SIGNABLE_TEXT = t("DEMO_SIGNATURES_SIGNABLE")
 var SIGNABLE_TEXT_SHA256 = sha256(SIGNABLE_TEXT)
+var EXPIRATION = Config.demoSignaturesExpirationSeconds
 
 var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
 	subject: {
@@ -159,7 +159,7 @@ describe("DemoSignaturesController", function() {
 	})
 	
 	describe("POST /", function() {
-		require("root/test/time")(new Date(2015, 5, 18))
+		require("root/test/time")()
 
 		function mustSign(sign, certificate) {
 			describe("as signable", function() {
@@ -269,10 +269,13 @@ describe("DemoSignaturesController", function() {
 	})
 
 	describe(`GET /:token for ${ASICE_TYPE}`, function() {
+		require("root/test/time")()
+
 		it("must respond with signature ASIC-E", function*() {
 			var signature = yield demoSignaturesDb.create(new ValidDemoSignature({
 				signed: true,
-				timestamped: true
+				timestamped: true,
+				updated_at: DateFns.addSeconds(new Date, -EXPIRATION + 1)
 			}))
 
 			var path = `/demo-signatures/${signature.token.toString("hex")}.asice`
@@ -322,6 +325,32 @@ describe("DemoSignaturesController", function() {
 			res.statusCode.must.equal(410)
 			res.statusMessage.must.equal("Gone")
 		})
+
+		it("must respond with signature if younger than expiration", function*() {
+			var signature = yield demoSignaturesDb.create(new ValidDemoSignature({
+				signed: true,
+				timestamped: true,
+				updated_at: DateFns.addSeconds(new Date, -EXPIRATION + 1)
+			}))
+
+			var path = `/demo-signatures/${signature.token.toString("hex")}.asice`
+			var res = yield this.request(path)
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(ASICE_TYPE)
+		})
+
+		it("must respond with 410 if older than expiration", function*() {
+			var signature = yield demoSignaturesDb.create(new ValidDemoSignature({
+				signed: true,
+				timestamped: true,
+				updated_at: DateFns.addSeconds(new Date, -EXPIRATION)
+			}))
+
+			var path = `/demo-signatures/${signature.token.toString("hex")}.asice`
+			var res = yield this.request(path)
+			res.statusCode.must.equal(410)
+			res.statusMessage.must.equal("Gone")
+		})
 	})
 })
 
@@ -357,7 +386,7 @@ function* signWithIdCard(router, request, cert) {
 
 	signing.statusCode.must.equal(202)
 
-	var xades = yield signablesDb.read(sql`
+	var xades = yield demoSignaturesDb.read(sql`
 		SELECT * FROM demo_signatures ORDER BY created_at DESC LIMIT 1
 	`).then((row) => row.xades)
 
@@ -392,7 +421,7 @@ function* signWithMobileId(router, request, cert, res) {
 		typeof res == "function" ? res : next(function*(req, res) {
 			res.writeHead(200)
 
-			var xades = yield signablesDb.read(sql`
+			var xades = yield demoSignaturesDb.read(sql`
 				SELECT xades FROM demo_signatures ORDER BY created_at DESC LIMIT 1
 			`).then((row) => row.xades)
 
@@ -446,7 +475,7 @@ function* signWithSmartId(router, request, cert, res) {
 		typeof res == "function" ? res : next(function*(req, res) {
 			res.writeHead(200)
 
-			var xades = yield signablesDb.read(sql`
+			var xades = yield demoSignaturesDb.read(sql`
 				SELECT xades FROM demo_signatures ORDER BY created_at DESC LIMIT 1
 			`).then((row) => row.xades)
 

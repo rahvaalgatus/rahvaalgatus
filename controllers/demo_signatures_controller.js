@@ -41,6 +41,7 @@ var {waitForMobileIdSession} = require("./initiatives/signatures_controller")
 var {waitForSmartIdSession} = require("./initiatives/signatures_controller")
 var {MOBILE_ID_ERRORS} = require("./initiatives/signatures_controller")
 var {SMART_ID_ERRORS} = require("./initiatives/signatures_controller")
+var EXPIRATION = Config.demoSignaturesExpirationSeconds
 
 exports.router = Router({mergeParams: true})
 exports.router.use(parseBody({type: hasSignatureType}))
@@ -346,7 +347,11 @@ exports.router.get("/:token",
 
 		case "application/vnd.etsi.asic-e+zip":
 			if (!signature.timestamped) throw new HttpError(425, "Not Signed Yet")
-			if (signature.xades == null) throw new HttpError(410)
+
+			if (signature.xades == null)
+				throw new HttpError(410)
+			if (new Date >= DateFns.addSeconds(signature.updated_at, EXPIRATION))
+				throw new HttpError(410)
 
 			var asic = new Asic
 			res.setHeader("Content-Type", asic.type)
