@@ -716,7 +716,18 @@ button.inherited {
 		clear: both;
 	}
 
-	menu {
+	.logo {
+		display: block;
+		float: left;
+		width: 18rem;
+		height: inherit;
+		margin-right: 2rem;
+		margin-bottom: 1rem;
+
+		img { width: 100%; }
+	}
+
+	.languages-and-user {
 		margin-bottom: 1.5rem;
 		overflow: hidden;
 		font-size: 1.2rem;
@@ -742,50 +753,23 @@ button.inherited {
 		}
 	}
 
-	.logo {
-		display: block;
-		float: left;
-		width: 18rem;
+	.secondary-links {
 		height: inherit;
-		margin-right: 2rem;
-		margin-bottom: 1rem;
-
-		img { width: 100%; }
-	}
-
-	.uuseakus,
-	.kestame,
-	.hea-annetus {
-		display: block;
 		float: right;
-		height: inherit;
-		margin-left: 2rem;
-		margin-top: -0.5rem;
-
-		img { width: 100%; }
-	}
-
-	.uuseakus { width: 10rem; }
-	.kestame { width: 15rem; }
-	.hea-annetus { width: 3.6rem; }
-
-	@include tablet {
-		.uuseakus,
-		.kestame,
-		.hea-annetus { display: none; }
+		margin-left: 1rem;
 	}
 
 	nav {
 		padding-bottom: 1rem;
+
+		li {
+			display: inline;
+
+			& + li { margin-left: 1rem; }
+		}
 	}
 
-	nav li {
-		display: inline;
-
-		& + li { margin-left: 1rem; }
-	}
-
-	nav a {
+	.nav-button {
 		display: inline-block;
 		font-size: 1.6rem;
 		padding: 0.5rem 1rem;
@@ -799,7 +783,11 @@ button.inherited {
 		}
 	}
 
-  @media only screen and (max-width: 999px) {
+	.demo-signatures-button {
+		float: right;
+	}
+
+  @media only screen and (max-width: 819px) {
 		padding-bottom: 1rem;
 
 		.logo {
@@ -809,23 +797,26 @@ button.inherited {
 
 		nav {
 			padding-bottom: 0;
+
+			li {
+				margin-right: 0.5rem;
+				& + li { margin-left: 0; }
+			}
 		}
 
-		nav li {
-			margin-right: 0.5rem;
-			& + li { margin-left: 0; }
-		}
-
-		nav a {
+		.nav-button {
 			font-size: 1.5rem;
 			line-height: 1;
 			padding: 0.5rem 0.7rem;
 		}
 	}
 
+  @media only screen and (max-width: 549px) {
+		.demo-signatures-button { float: none; }
+	}
+
 	@include mobile {
 		.logo { max-width: 16rem; }
-		nav { clear: both; }
 	}
 }
 
@@ -2829,27 +2820,35 @@ button.inherited {
 
 	.contact {
 		float: left;
-	}
+		padding-right: 2rem;
 
-	.contact img,
-	.logos img {
-		margin-bottom: 1rem;
+		img { margin-bottom: 1rem; }
 	}
 
 	.logos {
 		text-align: right;
-		float: right;
 
-		img {
-			margin-top: 1rem;
-			height: 2rem;
+		a {
+			display: inline-block;
+			margin-bottom: 1rem;
+			margin-right: 2rem;
+			vertical-align: middle;
+
+			img { width: 100%; }
 		}
+
+		.uuseakus { width: 10rem; }
+		.kestame { width: 15rem; }
+		.hea-annetus { width: 3.6rem; }
+		.github { width: 7rem; }
 	}
 
-	@include mobile {
-		.contact,
-		.logos {
+	@media only screen and (max-width: 449px) {
+		.contact {
 			float: none;
+		}
+
+		.logos {
 			text-align: left;
 		}
 

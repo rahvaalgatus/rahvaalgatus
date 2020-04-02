@@ -73,7 +73,7 @@ function Page(attrs, children) {
 
 		<body id={page + "-page"}>
 			<header id="header"><center>
-				<menu>
+				<menu class="languages-and-user">
 					<Form action="/user" method="put" class="languages" req={req}>
 						{LANGS.map((lang) => <button
 							name="language"
@@ -108,32 +108,6 @@ function Page(attrs, children) {
 					</a>) : null}
 				</menu>
 
-				{withNav ? <Fragment>
-					<a
-						href="https://heakodanik.ee/annetuste-kogumise-hea-tava/"
-						title="Hea annetuse koguja"
-						class="hea-annetus"
-					>
-						<img src="/assets/hea-annetus.png" alt="Hea annetuse koguja" />
-					</a>
-
-					<a
-						href="https://uuseakus.rahvaalgatus.ee"
-						title="Uue eakuse rahvakogu"
-						class="uuseakus"
-					>
-						<img src="/assets/uuseakus.png" alt="Uue eakuse rahvakogu" />
-					</a>
-
-					<a
-						href="https://kestame.rahvaalgatus.ee"
-						title="#kuidasmekestame"
-						class="kestame"
-					>
-						<img src="/assets/kestame.png" alt="#kuidasmekestame" />
-					</a>
-				</Fragment> : null}
-
 				<a href="/" class="logo">
 					<img src="/assets/rahvaalgatus.png" alt={SITE_TITLE} />
 				</a>
@@ -143,24 +117,39 @@ function Page(attrs, children) {
 						<li>
 							<a
 								href="/initiatives"
-								class={
-									selected(page, "initiatives") || selected(page, "initiative")
-								}>
+								class={"nav-button " + (
+									selected(page, "initiatives") ||
+									selected(page, "initiative")
+								)}>
 								{t("LINK_VOTING")}
 							</a>
 						</li>
 
-						<li><a href={Config.helpUrls[req.lang]}>
+						<li><a class="nav-button " href={Config.helpUrls[req.lang]}>
 							{t("LINK_HELP")}
 						</a></li>
 
-						<li><a href="/about" class={selected(page, "about")}>
-							{t("LNK_ABOUT")}
-						</a></li>
+						<li>
+							<a href="/about" class={"nav-button " + selected(page, "about")}>
+								{t("LNK_ABOUT")}
+							</a>
+						</li>
 
-						<li><a href="/donate" class={selected(page, "donate")}>
+						<li>
+							<a
+								href="/donate"
+								class={"nav-button " + selected(page, "donate")}
+							>
 							{t("LNK_SUPPORT")}
-						</a></li>
+							</a>
+
+							<a
+								href="/digiallkiri"
+								class="nav-button demo-signatures-button"
+							>
+								{t("NAV_DEMO_SIGNATURES")}
+							</a>
+						</li>
 					</ul>
 				</nav> : null}
 			</center></header>
@@ -187,11 +176,37 @@ function Page(attrs, children) {
 						Twitter: <a href={Config.twitterUrl}>@rahvaalgatus</a>
 					</p>
 				</div>
+
 				<div class="logos">
 					<p>
 						<a
+							href="https://kestame.rahvaalgatus.ee"
+							title="#kuidasmekestame"
+							class="kestame"
+						>
+							<img src="/assets/kestame.png" alt="#kuidasmekestame" />
+						</a>
+						{" "}
+						<a
+							href="https://uuseakus.rahvaalgatus.ee"
+							title="Uue eakuse rahvakogu"
+							class="uuseakus"
+						>
+							<img src="/assets/uuseakus.png" alt="Uue eakuse rahvakogu" />
+						</a>
+						{" "}
+						<a
+							href="https://heakodanik.ee/annetuste-kogumise-hea-tava/"
+							title="Hea annetuse koguja"
+							class="hea-annetus"
+						>
+							<img src="/assets/hea-annetus.png" alt="Hea annetuse koguja" />
+						</a>
+						{" "}
+						<a
 							href="https://github.com/rahvaalgatus/rahvaalgatus"
 							title={t("GITHUB_LOGO_TITLE")}
+							class="github"
 						>
 							<img src="/assets/github-logo.svg" alt="GitHub" />
 						</a>
