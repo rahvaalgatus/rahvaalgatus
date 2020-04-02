@@ -2622,8 +2622,15 @@ button.inherited {
 .demo-signatures-page body {
 	font-family: $aino;
 
+	.text-section {
+		padding-top: 5rem;
+		padding-bottom: 5rem;
+	}
+
 	.text-header center,
-	.text-section center { max-width: 80rem; }
+	.text-section center {
+		max-width: 80rem;
+	}
 
 	.subheading {
 		font-family: $aino-headline;
@@ -2647,7 +2654,7 @@ button.inherited {
 		padding: 2rem 0 5rem;
 
 		h1 {
-			font-size: 4.8rem;
+			font-size: 4.6rem;
 		}
 
 		@include mobile-and-tablet {
@@ -2662,18 +2669,18 @@ button.inherited {
 }
 
 #demo-signatures-page {
-	#intro {
-		iframe {
-			width: 100%;
-			height: 45rem;
+	.video {
+		margin-top: 5rem;
+		margin-bottom: -5rem;
+	}
 
-			@include mobile {
-				height: 20rem;
-			}
-		}
+	.video iframe {
+		width: 100%;
+		height: 45rem;
+		display: block;
 
-		.video {
-			margin-bottom: 2rem;
+		@include mobile {
+			height: 20rem;
 		}
 	}
 

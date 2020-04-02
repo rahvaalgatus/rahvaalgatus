@@ -25,9 +25,7 @@ module.exports = function(attrs) {
 
 		<header class="header-section text-header"><center>
 			<h1>{t("DEMO_SIGNATURES_HEADER")}</h1>
-		</center></header>
 
-		<section id="intro" class="primary-section text-section"><center>
 			<div class="video">
 				<iframe
 					width="480"
@@ -37,6 +35,9 @@ module.exports = function(attrs) {
 					allowfullscreen
 				/>
 			</div>
+		</center></header>
+
+		<section id="intro" class="primary-section text-section"><center>
 
 			{Jsx.html(I18n.markdown(lang, "demo_signatures"))}
 		</center></section>
