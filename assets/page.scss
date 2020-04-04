@@ -2632,14 +2632,20 @@ button.inherited {
 		max-width: 80rem;
 	}
 
-	.subheading {
+	.subheading,
+	.text-section h2 {
 		font-family: $aino-headline;
 		font-size: 3.6rem;
 		color: $dark-blue;
 		margin-bottom: 3rem;
+
 	}
 
-	.subsubheading {
+	 .subheading ~ .subheading,
+	 .text-section h2 ~ h2 { margin-top: 4rem; }
+
+	.subsubheading,
+	.text-section h3 {
 		font-family: $aino-headline;
 		font-size: 2.4rem;
 		font-weight: bold;

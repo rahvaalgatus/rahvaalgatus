@@ -38,13 +38,10 @@ module.exports = function(attrs) {
 		</center></header>
 
 		<section id="intro" class="primary-section text-section"><center>
-
-			{Jsx.html(I18n.markdown(lang, "demo_signatures"))}
+			{Jsx.html(I18n.markdown(lang, "demo_signatures_prologue"))}
 		</center></section>
 
 		<section id="sign" class="secondary-section text-section"><center>
-			<h2 class="subheading">Allkirjasta</h2>
-
 			{Jsx.html(I18n.markdown(lang, "demo_signatures_sign"))}
 
 			<div id="sign-form">
@@ -66,6 +63,10 @@ module.exports = function(attrs) {
 					signatureCountsByAge={signatureCountsByAge}
 				/>
 			</div>
+		</center></section>
+
+		<section id="intro" class="primary-section text-section"><center>
+			{Jsx.html(I18n.markdown(lang, "demo_signatures_epilogue"))}
 		</center></section>
 	</Page>
 }

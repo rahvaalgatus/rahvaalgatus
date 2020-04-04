@@ -1,3 +1,5 @@
+## Allkirjasta
+
 Järgnevalt saad sa valida omale sobiva lahenduse digiallkirjastamise proovimiseks, aga miks mitte proovida läbi ka kõik võimalused.
 
 - **ID-kaardiga** allkirjastamise proovimiseks sisesta kaart kaardilugejasse. Veendu, et kaart on õigetpidi ning vajuta nuppu **ID-kaart**. Avanev aken küsib sinult **digiallkirja ehk PIN2**.
