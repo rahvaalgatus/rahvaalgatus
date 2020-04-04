@@ -2677,13 +2677,16 @@ button.inherited {
 		}
 	}
 
-	.video iframe {
-		width: 100%;
-		height: 45rem;
-		display: block;
+	.video {
+		padding-bottom: 56.25%;
+		position: relative;
 
-		@include mobile {
-			height: 20rem;
+		iframe {
+			position: absolute;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			display: block;
 		}
 	}
 
