@@ -5654,7 +5654,7 @@ describe("InitiativesController", function() {
 					res.statusMessage.must.match(/parliament/i)
 				})
 
-				it("must update initiative", function*() {
+				it("must update initiative if has both CitizenOS and undersigned signatures", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: "sign"
@@ -5720,6 +5720,121 @@ describe("InitiativesController", function() {
 					})
 
 					updatedInitiative.parliament_token.must.exist()
+				})
+
+				it("must update initiative if only undersigned signatures",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "sign"
+					}))
+
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.uuid,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
+
+					yield createVote(topic, newVote())
+
+					yield signaturesDb.create(_.times(Config.votesRequired, () => (
+						new ValidSignature({initiative_uuid: initiative.uuid})
+					)))
+
+					// Just in case respond how CitizenOS would respond.
+					this.router.put(`/api/users/self/topics/${topic.id}`,
+						function(_req, res) {
+						res.statusCode = 400
+						res.setHeader("Content-Type", "application/json")
+						res.end(JSON.stringify({
+							code: 40010,
+							message: "Not enough votes to send to Parliament. Votes required - 10"
+						}))
+					})
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "followUp",
+							"contact[name]": "John",
+							"contact[email]": "john@example.com",
+							"contact[phone]": "42"
+						}
+					})
+
+					res.statusCode.must.equal(303)
+					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+					var cookies = parseCookies(res.headers["set-cookie"])
+					res = yield this.request(res.headers.location, {
+						headers: {Cookie: Http.serializeCookies(cookies)}
+					})
+
+					res.statusCode.must.equal(200)
+
+					yield cosDb.query(sql`
+						SELECT * FROM "Topics"
+					`).then(_.first).then(_.clone).must.then.eql(_.clone({
+						__proto__: topic,
+						status: "followUp"
+					}))
+
+					var updatedInitiative = yield initiativesDb.read(initiative)
+
+					updatedInitiative.must.eql({
+						__proto__: initiative,
+						phase: "parliament",
+						sent_to_parliament_at: new Date,
+						parliament_token: updatedInitiative.parliament_token
+					})
+
+					updatedInitiative.parliament_token.must.exist()
+				})
+
+				it("must not update other topics if only undersigned signatures",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "sign"
+					}))
+
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.uuid,
+						sourcePartnerId: this.partner.id,
+						status: "voting"
+					}))
+
+					yield createVote(topic, newVote())
+
+					yield signaturesDb.create(_.times(Config.votesRequired, () => (
+						new ValidSignature({initiative_uuid: initiative.uuid})
+					)))
+
+					var other = yield createTopic(newTopic({
+						creatorId: this.user.uuid,
+						sourcePartnerId: this.partner.id,
+						status: "inProgress"
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "followUp",
+							"contact[name]": "John",
+							"contact[email]": "john@example.com",
+							"contact[phone]": "42"
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					yield cosDb.query(sql`
+						SELECT * FROM "Topics" WHERE id = ${other.id}
+					`).then(_.first).then(_.clone).must.then.eql(_.clone(other))
 				})
 
 				it("must email parliament", function*() {

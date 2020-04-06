@@ -40,6 +40,8 @@ var searchInitiativeEvents = _.compose(searchInitiativesEvents, concat)
 var {countSignaturesById} = require("root/lib/initiative")
 var {countSignaturesByIds} = require("root/lib/initiative")
 var {countUndersignedSignaturesById} = require("root/lib/initiative")
+var countCitizenSignaturesById =
+	require("root/lib/citizenos_db").countSignaturesById
 var ENV = process.env.ENV
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: ""}
@@ -809,15 +811,20 @@ function* updateInitiativePhaseToParliament(req, res) {
 
 	if (req.body.contact == null) return void res.render(tmpl, {attrs: attrs})
 
-	var updated = yield req.cosApi(`/api/users/self/topics/${topic.id}`, {
-		method: "PUT",
-		json: attrs
-	}).catch(catch400)
+	if (yield countCitizenSignaturesById(initiative.uuid)) {
+		var updated = yield req.cosApi(`/api/users/self/topics/${topic.id}`, {
+			method: "PUT",
+			json: attrs
+		}).catch(catch400)
 
-	if (!isOk(updated)) return void res.status(422).render(tmpl, {
-		error: translateCitizenError(req.t, updated.body),
-		attrs: attrs
-	})
+		if (!isOk(updated)) return void res.status(422).render(tmpl, {
+			error: translateCitizenError(req.t, updated.body),
+			attrs: attrs
+		})
+	}
+	else yield cosDb.query(sql`
+		UPDATE "Topics" SET status = 'followUp' WHERE id = ${topic.id}
+	`)
 
 	initiative = yield initiativesDb.update(initiative, {
 		phase: "parliament",
