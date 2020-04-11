@@ -68,7 +68,7 @@ exports.router.get("/", next(function*(req, res) {
 	else {
 		var statistics = yield {
 			all: readStatistics(new Date(0)),
-			30: readStatistics(DateFns.addDays(new Date, -30)),
+			30: readStatistics(DateFns.addDays(DateFns.startOfDay(new Date), -30)),
 		}
 
 		res.render("home_page.jsx", {
