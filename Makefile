@@ -45,7 +45,6 @@ RSYNC_OPTS = \
 	--exclude "/node_modules/sharp/***" \
 	--exclude "/node_modules/syslogh/***" \
 	--exclude "/node_modules/emailjs-mime-parser/***" \
-	--exclude "/node_modules/yauzl/***" \
 	--exclude "/node_modules/sinon/***" \
 	--exclude "/tmp/***"
 

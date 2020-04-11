@@ -5815,18 +5815,6 @@
       "from": "git+https://github.com/moll/js-undersign.git#50e1399049ac7e2dc8ba8f2ad6af60a381c605e2",
       "resolved": "git+https://github.com/moll/js-undersign.git#50e1399049ac7e2dc8ba8f2ad6af60a381c605e2",
       "dependencies": {
-        "yazl": {
-          "version": "2.5.1",
-          "from": "yazl@>=2.1.0 <3.0.0",
-          "resolved": "https://registry.npmjs.org/yazl/-/yazl-2.5.1.tgz",
-          "dependencies": {
-            "buffer-crc32": {
-              "version": "0.2.13",
-              "from": "buffer-crc32@>=0.2.3 <0.3.0",
-              "resolved": "https://registry.npmjs.org/buffer-crc32/-/buffer-crc32-0.2.13.tgz"
-            }
-          }
-        },
         "lodash.flowright": {
           "version": "3.5.0",
           "from": "lodash.flowright@>=3.0.0 <4.0.0",
@@ -5963,6 +5951,18 @@
             }
           }
         },
+        "buffer-crc32": {
+          "version": "0.2.13",
+          "from": "buffer-crc32@>=0.2.3 <0.3.0",
+          "resolved": "https://registry.npmjs.org/buffer-crc32/-/buffer-crc32-0.2.13.tgz"
+        }
+      }
+    },
+    "yazl": {
+      "version": "2.5.1",
+      "from": "yazl@>=2.1.0 <3.0.0",
+      "resolved": "https://registry.npmjs.org/yazl/-/yazl-2.5.1.tgz",
+      "dependencies": {
         "buffer-crc32": {
           "version": "0.2.13",
           "from": "buffer-crc32@>=0.2.3 <0.3.0",

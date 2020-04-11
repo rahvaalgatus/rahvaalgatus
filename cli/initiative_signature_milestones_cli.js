@@ -47,44 +47,20 @@ module.exports = function*() {
 function* updateMilestones(topic, initiative, signatureCount) {
 	var largest = _.findLast(MILESTONES, (n) => signatureCount >= n)
 
-	var citizenSignatures = yield cosDb.query(sql`
-		WITH initiative_signatures AS (
-			SELECT
-				DISTINCT ON (signature."userId")
-				signature."createdAt" AS created_at,
-				opt.value AS support
-
-			FROM "Topics" as topic
-			JOIN "TopicVotes" AS tv ON tv."topicId" = topic.id
-			JOIN "Votes" AS vote ON vote.id = tv."voteId"
-			JOIN "VoteLists" AS signature ON vote.id = signature."voteId"
-			JOIN "VoteOptions" AS opt ON opt.id = signature."optionId"
-
-			WHERE topic.id = ${topic.id}
-			AND vote.id IS NOT NULL
-			ORDER BY signature."userId", signature."createdAt" DESC
-		)
-
-		SELECT created_at
-		FROM initiative_signatures
-		WHERE support = 'Yes'
-		ORDER BY created_at ASC
-		LIMIT ${largest}
-	`)
-
 	// Presuming that once an initiative starts using Undersign.js, it never
 	// converts back.
 	var signatures = yield signaturesDb.search(sql`
 		SELECT created_at
+		FROM initiative_citizenos_signatures
+		WHERE initiative_uuid = ${initiative.uuid}
+
+		UNION SELECT created_at
 		FROM initiative_signatures
 		WHERE initiative_uuid = ${initiative.uuid}
-		ORDER BY created_at ASC
-		LIMIT ${largest - citizenSignatures.length}
-	`)
 
-	// Sorting just in case some initiatives did briefly switch back to CitizenOS
-	// signing.
-	signatures = _.sortBy(concat(citizenSignatures, signatures), "created_at")
+		ORDER BY created_at ASC
+		LIMIT ${largest}
+	`)
 
 	var milestones = MILESTONES.reduce(function(times, milestone) {
 		if (signatures.length >= milestone && !(milestone in times))

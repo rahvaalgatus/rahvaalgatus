@@ -114,7 +114,7 @@ module.exports = function(attrs) {
 
 					<small>
 						Counts initiative and user pairs.
-						Excluded if deleted or revoked in time.
+						Excluded if deleted.
 					</small>
 				</th>
 
@@ -161,7 +161,7 @@ module.exports = function(attrs) {
 
 					<small>
 						Counts initiative and user pairs.
-						Excluded if revoked in time.
+						Excluded if revoked.
 					</small>
 				</th>
 
@@ -174,7 +174,7 @@ module.exports = function(attrs) {
 
 					<small>
 						Unique signers for all initiatives.
-						Excluded if revoked in time.
+						Excluded if revoked.
 					</small>
 				</th>
 

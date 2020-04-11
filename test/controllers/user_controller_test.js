@@ -2,6 +2,7 @@ var _ = require("root/lib/underscore")
 var DateFns = require("date-fns")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSignature = require("root/test/valid_signature")
+var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
 var Config = require("root/config")
 var Crypto = require("crypto")
 var Http = require("root/lib/http")
@@ -9,19 +10,16 @@ var parseCookies = Http.parseCookies
 var newPartner = require("root/test/citizenos_fixtures").newPartner
 var newTopic = require("root/test/citizenos_fixtures").newTopic
 var newVote = require("root/test/citizenos_fixtures").newVote
-var newSignature = require("root/test/citizenos_fixtures").newSignature
-var createCitizenSignatures =
-	require("root/test/citizenos_fixtures").createSignatures
 var createPartner = require("root/test/citizenos_fixtures").createPartner
 var createUser = require("root/test/fixtures").createUser
 var createTopic = require("root/test/citizenos_fixtures").createTopic
 var createVote = require("root/test/citizenos_fixtures").createVote
-var createSignature = require("root/test/citizenos_fixtures").createSignature
-var createOptions = require("root/test/citizenos_fixtures").createOptions
 var parseDom = require("root/lib/dom").parse
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
+var citizenosSignaturesDb =
+	require("root/db/initiative_citizenos_signatures_db")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 
 describe("UserController", function() {
@@ -209,11 +207,13 @@ describe("UserController", function() {
 						status: "voting"
 					}))
 
-					var vote = yield createVote(topic, newVote({
+					yield createVote(topic, newVote({
 						endsAt: DateFns.addDays(new Date, 1)
 					}))
 
-					yield createCitizenSignatures(vote, 5)
+					yield citizenosSignaturesDb.create(_.times(5, () => (
+						new ValidCitizenosSignature({initiative_uuid: initiative.uuid})
+					)))
 
 					yield signaturesDb.create(_.times(3, () => new ValidSignature({
 						initiative_uuid: initiative.uuid
@@ -350,13 +350,12 @@ describe("UserController", function() {
 							status: "voting"
 						}))
 
-						var vote = yield createVote(topic, newVote({endsAt: new Date}))
-						var yesAndNo = yield createOptions(vote)
+						yield createVote(topic, newVote({endsAt: new Date}))
 
-						yield createSignature(newSignature({
-							userId: this.user.uuid,
-							voteId: vote.id,
-							optionId: yesAndNo[0]
+						yield citizenosSignaturesDb.create(new ValidCitizenosSignature({
+							initiative_uuid: initiative.uuid,
+							country: this.user.country,
+							personal_id: this.user.personal_id
 						}))
 
 						var res = yield this.request("/user")
@@ -368,7 +367,8 @@ describe("UserController", function() {
 						el.textContent.must.include(this.author.name)
 					})
 
-					it("must not show other user's signed initiatives", function*() {	
+					it("must not show signed initiatives by other countries",
+						function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: "sign"
@@ -381,13 +381,39 @@ describe("UserController", function() {
 							status: "voting"
 						}))
 
-						var vote = yield createVote(topic, newVote({endsAt: new Date}))
-						var yesAndNo = yield createOptions(vote)
+						yield createVote(topic, newVote({endsAt: new Date}))
 
-						yield createSignature(newSignature({
-							userId: (yield createUser()).uuid,
-							voteId: vote.id,
-							optionId: yesAndNo[0]
+						yield citizenosSignaturesDb.create(new ValidCitizenosSignature({
+							initiative_uuid: initiative.uuid,
+							country: "LT",
+							personal_id: this.user.personal_id
+						}))
+
+						var res = yield this.request("/user")
+						res.statusCode.must.equal(200)
+						res.body.must.not.include(initiative.uuid)
+					})
+
+					it("must not show signed initiatives by other personal ids",
+						function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.author.id,
+							phase: "sign"
+						}))
+
+						var topic = yield createTopic(newTopic({
+							id: initiative.uuid,
+							creatorId: this.author.uuid,
+							sourcePartnerId: this.partner.id,
+							status: "voting"
+						}))
+
+						yield createVote(topic, newVote({endsAt: new Date}))
+
+						yield citizenosSignaturesDb.create(new ValidCitizenosSignature({
+							initiative_uuid: initiative.uuid,
+							country: this.user.country,
+							personal_id: "38706181337"
 						}))
 
 						var res = yield this.request("/user")

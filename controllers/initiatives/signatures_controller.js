@@ -1,5 +1,6 @@
 var _ = require("root/lib/underscore")
 var Mime = require("mime")
+var Zip = require("root/lib/zip")
 var Asic = require("undersign/lib/asic")
 var Path = require("path")
 var MobileId = require("undersign/lib/mobile_id")
@@ -24,6 +25,8 @@ var hades = require("root").hades
 var parseBody = require("body-parser").raw
 var signaturesDb = require("root/db/initiative_signatures_db")
 var signablesDb = require("root/db/initiative_signables_db")
+var citizenosSignaturesDb =
+	require("root/db/initiative_citizenos_signatures_db")
 var {ensureAreaCode} = require("root/lib/mobile_id")
 var constantTimeEqual = require("root/lib/crypto").constantTimeEqual
 var {getCertificatePersonalId} = require("root/lib/certificate")
@@ -160,25 +163,53 @@ exports.router.get("/", next(function*(req, res) {
 	if (initiative.received_by_parliament_at)
 		throw new HttpError(423, "Signatures Already In Parliament")
 
-	var asic = new Asic
-	res.setHeader("Content-Type", asic.type)
-	res.setHeader("Content-Disposition",
-		dispose("signatures.asice", "attachment"))
-	asic.pipe(res)
+	switch (req.query.type) {
+		case undefined:
+			var asic = new Asic
+			res.setHeader("Content-Type", asic.type)
+			res.setHeader("Content-Disposition",
+				dispose("signatures.asice", "attachment"))
+			asic.pipe(res)
 
-	var extension = Mime.extension(String(initiative.text_type))
-	asic.add(`initiative.${extension}`, initiative.text, initiative.text_type)
+			var extension = Mime.extension(String(initiative.text_type))
+			asic.add(`initiative.${extension}`, initiative.text, initiative.text_type)
 
-	var signatures = yield signaturesDb.search(sql`
-		SELECT * FROM initiative_signatures
-		WHERE initiative_uuid = ${initiative.uuid}
-		AND xades IS NOT NULL
-		ORDER BY country ASC, personal_id ASC
-	`)
+			var signatures = yield signaturesDb.search(sql`
+				SELECT * FROM initiative_signatures
+				WHERE initiative_uuid = ${initiative.uuid}
+				AND xades IS NOT NULL
+				ORDER BY country ASC, personal_id ASC
+			`)
 
-	_.map(signatures, "xades").forEach(asic.addSignature, asic)
+			_.map(signatures, "xades").forEach(asic.addSignature, asic)
 
-	asic.end()
+			asic.end()
+			break
+
+		case "citizenos":
+			var zip = new Zip
+			res.setHeader("Content-Type", zip.type)
+			res.setHeader("Content-Disposition",
+				dispose("citizenos-signatures.zip", "attachment"))
+			zip.pipe(res)
+
+			var citizenosSignatures = yield citizenosSignaturesDb.search(sql`
+				SELECT * FROM initiative_citizenos_signatures
+				WHERE initiative_uuid = ${initiative.uuid}
+				AND asic IS NOT NULL
+				ORDER BY country ASC, personal_id ASC
+			`)
+
+			citizenosSignatures.forEach(function(signature) {
+				var name = signature.country + signature.personal_id + ".asice"
+				zip.add(name, signature.asic)
+			})
+
+			zip.end()
+			break
+
+		default: throw new HttpError(400, "Unknown Signatures Type")
+	}
 }))
 
 exports.router.post("/", next(function*(req, res) {

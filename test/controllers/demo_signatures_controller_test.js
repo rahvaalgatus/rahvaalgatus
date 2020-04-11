@@ -288,10 +288,10 @@ describe("DemoSignaturesController", function() {
 			Object.keys(entries).length.must.equal(4)
 
 			var xades = yield Zip.readEntry(zip, entries["META-INF/signatures-1.xml"])
-			xades.must.equal(String(signature.xades))
+			String(xades).must.equal(String(signature.xades))
 
 			var text = yield Zip.readEntry(zip, entries["dokument.txt"])
-			text.must.equal(SIGNABLE_TEXT)
+			String(text).must.equal(SIGNABLE_TEXT)
 		})
 
 		it("must respond with 404 if no signature", function*() {

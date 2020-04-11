@@ -1,22 +1,16 @@
 var _ = require("root/lib/underscore")
-var DateFns = require("date-fns")
 var cosDb = require("root").cosDb
 var pseudoHex = require("root/lib/crypto").pseudoHex
-var isArray = Array.isArray
 exports.newPartner = newPartner
 exports.newUser = newUser
 exports.newTopic = newTopic
 exports.newVote = newVote
 exports.newPermission = newPermission
-exports.newSignature = newSignature
 exports.createPartner = createPartner
 exports.createUser = createUser
 exports.createTopic = createTopic
 exports.createVote = createVote
 exports.createPermission = createPermission
-exports.createOptions = createOptions
-exports.createSignature = createSignature
-exports.createSignatures = createSignatures
 
 var VISIBILITY_FROM_STATUS = {
 	voting: "public",
@@ -103,49 +97,4 @@ function* createVote(topic, attrs) {
 	})
 
 	return vote
-}
-
-function* createOptions(vote) {
-	var yes = yield cosDb("VoteOptions").insert({
-		id: _.serializeUuid(_.uuidV4()),
-		voteId: vote.id,
-		value: "Yes",
-		createdAt: new Date(2015, 0, 1),
-		updatedAt: new Date(2015, 0, 1),
-	}).returning("id").then(_.first)
-
-	var no = yield cosDb("VoteOptions").insert({
-		id: _.serializeUuid(_.uuidV4()),
-		voteId: vote.id,
-		value: "No",
-		createdAt: new Date(2015, 0, 1),
-		updatedAt: new Date(2015, 0, 1),
-	}).returning("id").then(_.first)
-
-	return [yes, no]
-}
-
-function newSignature(attrs) {
-	return _.assign({
-		optionGroupId: pseudoHex(4),
-		createdAt: new Date,
-		updatedAt: new Date
-	}, attrs)
-}
-
-function createSignature(signature) {
-	var get = isArray(signature) ? _.id : _.first
-	return cosDb("VoteLists").insert(signature).returning("*").then(get)
-}
-
-function* createSignatures(vote, n) {
-	var yesAndNo = yield createOptions(vote)
-	var users = yield _.times(n, _.compose(createUser, newUser))
-
-	return createSignature(users.map((user, i) => newSignature({
-		userId: user.id,
-		voteId: vote.id,
-		optionId: yesAndNo[0],
-		createdAt: DateFns.addMinutes(new Date, -n + i)
-	})))
 }

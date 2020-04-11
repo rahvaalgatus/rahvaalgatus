@@ -8,7 +8,6 @@ var SqliteError = require("root/lib/sqlite_error")
 var searchTopics = require("root/lib/citizenos_db").searchTopics
 var sql = require("sqlate")
 var {countSignaturesByIds} = require("root/lib/initiative")
-var cosDb = require("root").cosDb
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
@@ -162,28 +161,12 @@ function* read(req, res) {
 		FROM initiative_signatures
 		WHERE country = ${user.country}
 		AND personal_id = ${user.personal_id}
+
+		UNION SELECT initiative_uuid
+		FROM initiative_citizenos_signatures
+		WHERE country = ${user.country}
+		AND personal_id = ${user.personal_id}
 	`)
-
-	var citizenSignatures = yield cosDb.query(sql`
-		SELECT
-			DISTINCT ON (tv."topicId")
-			tv."topicId" as initiative_uuid,
-			signature."createdAt" as created_at,
-			opt.value AS support
-
-		FROM "VoteLists" AS signature
-		JOIN "Votes" AS vote ON vote.id = signature."voteId"
-		JOIN "TopicVotes" AS tv ON tv."voteId" = vote.id
-		JOIN "VoteOptions" AS opt ON opt."voteId" = vote.id
-
-		WHERE signature."userId" = ${user.uuid}
-		AND vote.id IS NOT NULL
-		AND signature."optionId" = opt.id
-
-		ORDER BY tv."topicId", signature."createdAt" DESC
-	`)
-
-	citizenSignatures = citizenSignatures.filter((sig) => sig.support == "Yes")
 
 	var authoredTopics = yield searchTopics(sql`
 		topic."creatorId" = ${user.uuid}
@@ -196,13 +179,8 @@ function* read(req, res) {
 		WHERE initiative.uuid IN ${sql.in(authoredTopics.map((t) => t.id))}
 	`)
 
-	var signedInitiativeUuids = concat(
-		signatures.map((s) => s.initiative_uuid),
-		citizenSignatures.map((s) => s.initiative_uuid)
-	)
-
 	var signedTopics = yield searchTopics(sql`
-		topic.id IN ${sql.in(signedInitiativeUuids)}
+		topic.id IN ${sql.in(signatures.map((s) => s.initiative_uuid))}
 		AND topic.visibility = 'public'
 	`)
 

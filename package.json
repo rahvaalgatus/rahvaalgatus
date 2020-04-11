@@ -45,6 +45,8 @@
 		"morgan": "",
 		"multer": "",
 		"sharp": "",
+		"yazl": "",
+		"yauzl": "",
 		"method-override": "",
 		"medium-type": "",
 		"mime": "",
@@ -63,7 +65,6 @@
 		"sinon": ">= 1 < 2",
 		"tough-cookie": ">= 2 < 3",
 		"cookie-signature": ">= 1 < 2",
-		"yauzl": "^2.10",
 		"emailjs-mime-parser": "^2.0.7",
 
 		"node-sass": "~4"

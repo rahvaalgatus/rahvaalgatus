@@ -1,9 +1,11 @@
 var _ = require("root/lib/underscore")
 var Url = require("url")
 var DateFns = require("date-fns")
+var Asic = require("undersign/lib/asic")
 var Config = require("root/config")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSignature = require("root/test/valid_signature")
+var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
 var Certificate = require("undersign/lib/certificate")
 var X509Asn = require("undersign/lib/x509_asn")
 var Ocsp = require("undersign/lib/ocsp")
@@ -25,11 +27,14 @@ var createVote = require("root/test/citizenos_fixtures").createVote
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var signablesDb = require("root/db/initiative_signables_db")
+var citizenosSignaturesDb =
+	require("root/db/initiative_citizenos_signatures_db")
 var hades = require("root").hades
 var demand = require("must")
 var next = require("co-next")
 var tsl = require("root").tsl
 var ASICE_TYPE = "application/vnd.etsi.asic-e+zip"
+var ZIP_TYPE = "application/zip"
 var MOBILE_ID_URL = Url.parse("https://mid.sk.ee/mid-api/")
 var SMART_ID_URL = Url.parse("https://rp-api.smart-id.com/v1/")
 var TIMEMARK_URL = Url.parse(Config.timemarkUrl)
@@ -181,11 +186,141 @@ describe("SignaturesController", function() {
 	require("root/test/fixtures").csrfRequest()
 	beforeEach(require("root/test/mitm").router)
 
+	function mustRespondWithSignatures(request) {
+		it("must respond with 403 Forbidden if no token on initiative",
+			function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament",
+				parliament_token: null
+			}))
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.author.uuid,
+				sourcePartnerId: this.partner.id,
+				status: "followUp"
+			}))
+
+			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			path += "?parliament-token="
+			var res = yield request.call(this, path)
+			res.statusCode.must.equal(403)
+			res.statusMessage.must.equal("Signatures Not Available")
+		})
+
+		it("must respond with 403 Forbidden given no token", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament",
+				parliament_token: Crypto.randomBytes(12)
+			}))
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.author.uuid,
+				sourcePartnerId: this.partner.id,
+				status: "followUp"
+			}))
+
+			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			var res = yield request.call(this, path)
+			res.statusCode.must.equal(403)
+			res.statusMessage.must.equal("Invalid Token")
+		})
+
+		it("must respond with 403 Forbidden given empty token", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament",
+				parliament_token: Crypto.randomBytes(12)
+			}))
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.author.uuid,
+				sourcePartnerId: this.partner.id,
+				status: "followUp"
+			}))
+
+			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			var res = yield request.call(this, path + "?parliament-token=")
+			res.statusCode.must.equal(403)
+			res.statusMessage.must.equal("Invalid Token")
+		})
+
+		it("must respond with 403 Forbidden given invalid token", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament",
+				parliament_token: Crypto.randomBytes(12)
+			}))
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.author.uuid,
+				sourcePartnerId: this.partner.id,
+				status: "followUp"
+			}))
+
+			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			var token = Crypto.randomBytes(12).toString("hex")
+			var res = yield request.call(this, path + "?parliament-token=" + token)
+			res.statusCode.must.equal(403)
+			res.statusMessage.must.equal("Invalid Token")
+		})
+
+		it("must respond with 403 Forbidden given non-hex token", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament",
+				parliament_token: Crypto.randomBytes(12)
+			}))
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.author.uuid,
+				sourcePartnerId: this.partner.id,
+				status: "followUp"
+			}))
+
+			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			var res = yield request.call(this, path + "?parliament-token=foobar")
+			res.statusCode.must.equal(403)
+			res.statusMessage.must.equal("Invalid Token")
+		})
+
+		it("must respond with 423 Locked if initiative received by parliament",
+			function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament",
+				parliament_token: Crypto.randomBytes(12),
+				received_by_parliament_at: new Date
+			}))
+
+			yield createTopic(newTopic({
+				id: initiative.uuid,
+				creatorId: this.author.uuid,
+				sourcePartnerId: this.partner.id,
+				status: "followUp"
+			}))
+
+			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
+			var res = yield request.call(this, path)
+			res.statusCode.must.equal(423)
+			res.statusMessage.must.equal("Signatures Already In Parliament")
+		})
+	}
+
 	describe(`GET / for ${ASICE_TYPE}`, function() {
 		beforeEach(function*() {
 			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
 			this.author = yield createUser()
 		})
+
+		mustRespondWithSignatures(function(url) { return this.request(url) })
 
 		it("must respond with signature ASIC-E given parliament token",
 			function*() {
@@ -213,17 +348,21 @@ describe("SignaturesController", function() {
 
 			res.statusCode.must.equal(200)
 			res.headers["content-type"].must.equal(ASICE_TYPE)
+			res.headers["content-disposition"].must.equal(
+				"attachment; filename=\"signatures.asice\""
+			)
+
 			var zip = yield Zip.parse(Buffer.from(res.body))
 			var entries = yield Zip.parseEntries(zip)
 			Object.keys(entries).length.must.equal(5)
 
-			var body = initiative.text
-			yield Zip.readEntry(zip, entries["initiative.html"]).must.then.equal(body)
+			var entry = yield Zip.readEntry(zip, entries["initiative.html"])
+			String(entry).must.equal(initiative.text)
 
-			yield Promise.all([
+			;(yield Promise.all([
 				Zip.readEntry(zip, entries["META-INF/signatures-1.xml"]),
 				Zip.readEntry(zip, entries["META-INF/signatures-2.xml"]),
-			]).must.then.eql(_.map(signatures, "xades"))
+			])).map(String).must.eql(_.map(signatures, "xades"))
 		})
 
 		it("must respond if no signatures", function*() {
@@ -250,16 +389,28 @@ describe("SignaturesController", function() {
 			var entries = yield Zip.parseEntries(zip)
 			Object.keys(entries).length.must.equal(3)
 
-			var body = initiative.text
-			yield Zip.readEntry(zip, entries["initiative.html"]).must.then.equal(body)
+			var entry = yield Zip.readEntry(zip, entries["initiative.html"])
+			String(entry).must.equal(initiative.text)
+		})
+	})
+
+	describe(`GET /?type=citizenos for ${ZIP_TYPE}`, function() {
+		beforeEach(function*() {
+			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
+			this.author = yield createUser()
 		})
 
-		it("must respond with 403 Forbidden if no token on initiative",
+		mustRespondWithSignatures(function(url) {
+			url += (url.indexOf("?") >= 0 ? "&" : "?") + "type=citizenos"
+			return this.request(url)
+		})
+
+		it("must respond with signaturez in Zip given parliament token",
 			function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
-				parliament_token: null
+				parliament_token: Crypto.randomBytes(12)
 			}))
 
 			yield createTopic(newTopic({
@@ -269,14 +420,53 @@ describe("SignaturesController", function() {
 				status: "followUp"
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/signatures.asice`
-			path += "?parliament-token="
+			var aAsic = new Asic
+			aAsic.add("initiative.html", initiative.text)
+			aAsic.end()
+			aAsic = yield aAsic.toBuffer()
+
+			var bAsic = new Asic
+			bAsic.add("initiative.html", initiative.text)
+			bAsic.end()
+			bAsic = yield bAsic.toBuffer()
+
+			var signatures = _.sortBy(yield citizenosSignaturesDb.create([
+				new ValidCitizenosSignature({
+					initiative_uuid: initiative.uuid,
+					asic: aAsic
+				}),
+
+				new ValidCitizenosSignature({
+					initiative_uuid: initiative.uuid,
+					asic: bAsic
+				})
+			]), "personal_id")
+
+			var path = `/initiatives/${initiative.uuid}/signatures.zip?type=citizenos`
+			path += "&parliament-token=" + initiative.parliament_token.toString("hex")
 			var res = yield this.request(path)
-			res.statusCode.must.equal(403)
-			res.statusMessage.must.equal("Signatures Not Available")
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(ZIP_TYPE)
+			res.headers["content-disposition"].must.equal(
+				"attachment; filename=\"citizenos-signatures.zip\""
+			)
+
+			var zip = yield Zip.parse(Buffer.from(res.body))
+			var entries = yield Zip.parseEntries(zip)
+			Object.keys(entries).length.must.equal(2)
+
+			yield Promise.all([
+				Zip.readEntry(zip, entries[nameSignatureFile(signatures[0])]),
+				Zip.readEntry(zip, entries[nameSignatureFile(signatures[1])]),
+			]).must.then.eql(yield [aAsic, bAsic])
+
+			function nameSignatureFile(signature) {
+				return signature.country + signature.personal_id + ".asice"
+			}
 		})
 
-		it("must respond with 403 Forbidden given no token", function*() {
+		it("must respond if no signatures", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
@@ -290,13 +480,17 @@ describe("SignaturesController", function() {
 				status: "followUp"
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			var path = `/initiatives/${initiative.uuid}/signatures.zip?type=citizenos`
+			path += "&parliament-token=" + initiative.parliament_token.toString("hex")
 			var res = yield this.request(path)
-			res.statusCode.must.equal(403)
-			res.statusMessage.must.equal("Invalid Token")
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(ZIP_TYPE)
+			var zip = yield Zip.parse(Buffer.from(res.body))
+			yield Zip.parseEntries(zip).must.then.be.empty()
 		})
 
-		it("must respond with 403 Forbidden given empty token", function*() {
+		it("must not respond with deleted signatures", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
@@ -310,75 +504,21 @@ describe("SignaturesController", function() {
 				status: "followUp"
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/signatures.asice`
-			path += "?parliament-token="
+			_.sortBy(yield citizenosSignaturesDb.create([
+				new ValidCitizenosSignature({
+					initiative_uuid: initiative.uuid,
+					asic: null
+				})
+			]), "personal_id")
+
+			var path = `/initiatives/${initiative.uuid}/signatures.zip?type=citizenos`
+			path += "&parliament-token=" + initiative.parliament_token.toString("hex")
 			var res = yield this.request(path)
-			res.statusCode.must.equal(403)
-			res.statusMessage.must.equal("Invalid Token")
-		})
 
-		it("must respond with 403 Forbidden given invalid token", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id,
-				phase: "parliament",
-				parliament_token: Crypto.randomBytes(12)
-			}))
-
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "followUp"
-			}))
-
-			var path = `/initiatives/${initiative.uuid}/signatures.asice`
-			var token = Crypto.randomBytes(12).toString("hex")
-			var res = yield this.request(path + "?parliament-token=" + token)
-			res.statusCode.must.equal(403)
-			res.statusMessage.must.equal("Invalid Token")
-		})
-
-		it("must respond with 403 Forbidden given non-hex token", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id,
-				phase: "parliament",
-				parliament_token: Crypto.randomBytes(12)
-			}))
-
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "followUp"
-			}))
-
-			var path = `/initiatives/${initiative.uuid}/signatures.asice`
-			var res = yield this.request(path + "?parliament-token=foobar")
-			res.statusCode.must.equal(403)
-			res.statusMessage.must.equal("Invalid Token")
-		})
-
-		it("must respond with 423 Locked if initiative received by parliament",
-			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id,
-				phase: "parliament",
-				parliament_token: Crypto.randomBytes(12),
-				received_by_parliament_at: new Date
-			}))
-
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "followUp"
-			}))
-
-			var path = `/initiatives/${initiative.uuid}/signatures.asice`
-			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
-			var res = yield this.request(path)
-			res.statusCode.must.equal(423)
-			res.statusMessage.must.equal("Signatures Already In Parliament")
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(ZIP_TYPE)
+			var zip = yield Zip.parse(Buffer.from(res.body))
+			yield Zip.parseEntries(zip).must.then.be.empty()
 		})
 	})
 
@@ -2318,10 +2458,10 @@ describe("SignaturesController", function() {
 			Object.keys(entries).length.must.equal(4)
 
 			var xades = yield Zip.readEntry(zip, entries["META-INF/signatures-1.xml"])
-			xades.must.equal(String(signature.xades))
+			String(xades).must.equal(String(signature.xades))
 
 			var text = yield Zip.readEntry(zip, entries["initiative.html"])
-			text.must.equal(this.initiative.text)
+			String(text).must.equal(this.initiative.text)
 		})
 
 		it("must respond with 404 if no signature", function*() {

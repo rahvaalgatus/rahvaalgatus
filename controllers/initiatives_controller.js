@@ -467,6 +467,8 @@ exports.router.use(function(err, req, res, next) {
 })
 
 function* searchRecentInitiatives(initiatives) {
+	// Intentionally ignoring imported CitizenOS signatures as those originate
+	// from Feb 2020 and earlier.
 	var recentUuids = _.uniq(_.reverse(_.sortBy(flatten(yield [
 		// TODO: Filter out comments on private initiatives once published_at lives
 		// on local initiatives.
@@ -490,16 +492,7 @@ function* searchRecentInitiatives(initiatives) {
 		`).then((rows) => rows.map(function(row) {
 			row.at = new Date(row.at)
 			return row
-		})),
-
-		cosDb.query(sql`
-			SELECT tv."topicId" AS uuid, max(signature."createdAt") AS at
-			FROM "VoteLists" AS signature
-			JOIN "TopicVotes" AS tv ON tv."voteId" = signature."voteId"
-			GROUP BY tv."topicId"
-			ORDER BY at DESC
-			LIMIT 6
-		`)
+		}))
 	]), "at")).map((row) => row.uuid))
 
 	// There could be comments on private initiatives that we can't yet filter out
@@ -795,7 +788,10 @@ function* updateInitiativePhaseToSign(req, res) {
 function* updateInitiativePhaseToParliament(req, res) {
 	var topic = req.topic
 	var initiative = req.initiative
-	var signatureCount = yield countSignaturesById(initiative.uuid)
+	var uuid = initiative.uuid
+	var citizenosSignatureCount = yield countCitizenSignaturesById(uuid)
+	var undersignedSignatureCount = yield countUndersignedSignaturesById(uuid)
+	var signatureCount = citizenosSignatureCount + undersignedSignatureCount
 	var tmpl = "initiatives/update_for_parliament_page.jsx"
 
 	if (initiative.destination != "parliament")
@@ -811,19 +807,10 @@ function* updateInitiativePhaseToParliament(req, res) {
 
 	if (req.body.contact == null) return void res.render(tmpl, {attrs: attrs})
 
-	if (yield countCitizenSignaturesById(initiative.uuid)) {
-		var updated = yield req.cosApi(`/api/users/self/topics/${topic.id}`, {
-			method: "PUT",
-			json: attrs
-		}).catch(catch400)
-
-		if (!isOk(updated)) return void res.status(422).render(tmpl, {
-			error: translateCitizenError(req.t, updated.body),
-			attrs: attrs
-		})
-	}
-	else yield cosDb.query(sql`
-		UPDATE "Topics" SET status = 'followUp' WHERE id = ${topic.id}
+	yield cosDb.query(sql`
+		UPDATE "Topics"
+		SET status = 'followUp', "updatedAt" = ${new Date}
+		WHERE id = ${topic.id}
 	`)
 
 	initiative = yield initiativesDb.update(initiative, {
@@ -833,27 +820,35 @@ function* updateInitiativePhaseToParliament(req, res) {
 	})
 
 	var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-	var signaturesUrl = `${initiativeUrl}/signatures.asice?` + Qs.stringify({
-		"parliament-token": initiative.parliament_token.toString("hex")
-	})
+	var parliamentToken = initiative.parliament_token.toString("hex")
 
-	var uuid = initiative.uuid
-	var undersignedSignatureCount = yield countUndersignedSignaturesById(uuid)
+	var undersignedSignaturesUrl =
+		`${initiativeUrl}/signatures.asice?` +
+		Qs.stringify({"parliament-token": parliamentToken})
 
-	if (undersignedSignatureCount > 0) yield sendEmail({
+	var citizenosSignaturesUrl =
+		`${initiativeUrl}/signatures.zip?` +
+		Qs.stringify({type: "citizenos", "parliament-token": parliamentToken})
+
+	yield sendEmail({
 		to: Config.parliamentEmail,
 
 		subject: t("EMAIL_INITIATIVE_TO_PARLIAMENT_TITLE", {
 			initiativeTitle: topic.title
 		}),
 
-		text: renderEmail("et", "EMAIL_INITIATIVE_TO_PARLIAMENT_BODY", {
+		text: renderEmail(
+			"et",
+			citizenosSignatureCount > 0
+			? "EMAIL_INITIATIVE_TO_PARLIAMENT_WITH_CITIZENOS_SIGNATURES_BODY"
+			: "EMAIL_INITIATIVE_TO_PARLIAMENT_BODY", {
 			initiativeTitle: topic.title,
 			initiativeUrl: initiativeUrl,
 			initiativeUuid: initiative.uuid,
 
-			signatureCount: undersignedSignatureCount,
-			signaturesUrl: signaturesUrl,
+			signatureCount: signatureCount,
+			undersignedSignaturesUrl: undersignedSignaturesUrl,
+			citizenosSignaturesUrl: citizenosSignaturesUrl,
 
 			authorName: attrs.contact.name,
 			authorEmail: attrs.contact.email,

@@ -68,37 +68,19 @@ exports.get("/", next(function*(req, res) {
 		SELECT COUNT(*) AS count FROM signers
 	`).then(_.first).then((res) => Number(res.count))
 
-	var citizenSignatureCount = yield cosDb.query(sql`
-		WITH signatures AS (
-			SELECT DISTINCT ON (sig."voteId", sig."userId") opt.value AS support
-			FROM "VoteLists" AS sig
-			JOIN "VoteOptions" AS opt ON opt.id = sig."optionId"
-			WHERE sig."createdAt" >= ${from}
-			${to ? sql`AND sig."createdAt" < ${to}` : sql``}
-			ORDER BY sig."voteId", sig."userId", sig."createdAt" DESC
-		)
-
-		SELECT COUNT(*) as count FROM signatures
-		WHERE support = 'Yes'
+	var citizenSignatureCount = yield sqlite(sql`
+		SELECT COUNT(*) AS count
+		FROM initiative_citizenos_signatures
+		WHERE created_at >= ${from}
+		${to ? sql`AND created_at < ${to}` : sql``}
 	`).then(_.first).then((res) => Number(res.count))
 
-	var citizenSignerCount = yield cosDb.query(sql`
-		WITH signatures AS (
-			SELECT DISTINCT ON (sig."voteId", sig."userId")
-				sig."userId",
-				opt.value AS support
-
-			FROM "VoteLists" AS sig
-			JOIN "VoteOptions" AS opt ON opt.id = sig."optionId"
-			WHERE sig."createdAt" >= ${from}
-			${to ? sql`AND sig."createdAt" < ${to}` : sql``}
-			ORDER BY sig."voteId", sig."userId", sig."createdAt" DESC
-		),
-
-		signers AS (
-			SELECT DISTINCT ON ("userId") *
-			FROM signatures
-			WHERE support = 'Yes'
+	var citizenSignerCount = yield sqlite(sql`
+		WITH signers AS (
+			SELECT DISTINCT personal_id
+			FROM initiative_citizenos_signatures
+			WHERE created_at >= ${from}
+			${to ? sql`AND created_at < ${to}` : sql``}
 		)
 
 		SELECT COUNT(*) AS count FROM signers

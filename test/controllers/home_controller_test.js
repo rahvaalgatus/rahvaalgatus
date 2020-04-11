@@ -5,6 +5,7 @@ var Crypto = require("crypto")
 var DateFns = require("date-fns")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSignature = require("root/test/valid_signature")
+var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
 var newPartner = require("root/test/citizenos_fixtures").newPartner
 var newTopic = require("root/test/citizenos_fixtures").newTopic
 var newVote = require("root/test/citizenos_fixtures").newVote
@@ -12,11 +13,11 @@ var createPartner = require("root/test/citizenos_fixtures").createPartner
 var createUser = require("root/test/fixtures").createUser
 var createTopic = require("root/test/citizenos_fixtures").createTopic
 var createVote = require("root/test/citizenos_fixtures").createVote
-var createCitizenSignatures =
-	require("root/test/citizenos_fixtures").createSignatures
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
+var citizenosSignaturesDb =
+	require("root/db/initiative_citizenos_signatures_db")
 var parseDom = require("root/lib/dom").parse
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.url).hostname
@@ -172,11 +173,13 @@ describe("HomeController", function() {
 				status: "voting"
 			}))
 
-			var vote = yield createVote(topic, newVote({
+			yield createVote(topic, newVote({
 				endsAt: DateFns.addDays(new Date, 1)
 			}))
 
-			yield createCitizenSignatures(vote, 5)
+			yield citizenosSignaturesDb.create(_.times(5, () => (
+				new ValidCitizenosSignature({initiative_uuid: initiative.uuid})
+			)))
 
 			yield signaturesDb.create(_.times(3, () => new ValidSignature({
 				initiative_uuid: initiative.uuid
@@ -246,11 +249,19 @@ describe("HomeController", function() {
 				status: "voting"
 			}))
 
-			var vote = yield createVote(topic, newVote({
+			yield createVote(topic, newVote({
 				endsAt: DateFns.addDays(DateFns.startOfDay(new Date), -14)
 			}))
 
-			yield createCitizenSignatures(vote, Config.votesRequired)
+			yield citizenosSignaturesDb.create(_.times(
+				Config.votesRequired / 2,
+				() => new ValidCitizenosSignature({initiative_uuid: initiative.uuid})
+			))
+
+			yield signaturesDb.create(_.times(
+				Config.votesRequired / 2,
+				() => new ValidSignature({initiative_uuid: initiative.uuid})
+			))
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
@@ -477,8 +488,11 @@ describe("HomeController", function() {
 					status: "voting"
 				}))
 
-				var vote = yield createVote(topic, newVote({endsAt: new Date}))
-				yield createCitizenSignatures(vote, 5)
+				yield createVote(topic, newVote({endsAt: new Date}))
+
+				yield citizenosSignaturesDb.create(_.times(5, () => (
+					new ValidCitizenosSignature({initiative_uuid: initiativeA.uuid})
+				)))
 
 				var initiativeB = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
@@ -671,8 +685,11 @@ describe("HomeController", function() {
 				status: "voting"
 			}))
 
-			var vote = yield createVote(topic, newVote({endsAt: new Date}))
-			yield createCitizenSignatures(vote, 5)
+			yield createVote(topic, newVote({endsAt: new Date}))
+
+			yield citizenosSignaturesDb.create(_.times(5, () => (
+				new ValidCitizenosSignature({initiative_uuid: initiativeA.uuid})
+			)))
 
 			var initiativeB = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
