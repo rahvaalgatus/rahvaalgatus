@@ -2978,117 +2978,119 @@ describe("InitiativesController", function() {
 				])
 			})
 
-			it("must render initiative comments", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id
-				}))
+			describe("comments", function() {
+				it("must render initiative comments", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id
+					}))
 
-				yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.author.uuid,
-					sourcePartnerId: this.partner.id,
-					visibility: "public"
-				}))
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.author.uuid,
+						sourcePartnerId: this.partner.id,
+						visibility: "public"
+					}))
 
-				var author = yield createUser({name: "Johnny Lang"})
-				var replier = yield createUser({name: "Kenny Loggins"})
+					var author = yield createUser({name: "Johnny Lang"})
+					var replier = yield createUser({name: "Kenny Loggins"})
 
-				var comment = yield commentsDb.create(new ValidComment({
-					initiative_uuid: initiative.uuid,
-					user_id: author.id,
-					user_uuid: _.serializeUuid(author.uuid)
-				}))
+					var comment = yield commentsDb.create(new ValidComment({
+						initiative_uuid: initiative.uuid,
+						user_id: author.id,
+						user_uuid: _.serializeUuid(author.uuid)
+					}))
 
-				var reply = yield commentsDb.create(new ValidComment({
-					initiative_uuid: initiative.uuid,
-					user_id: replier.id,
-					user_uuid: _.serializeUuid(replier.uuid),
-					parent_id: comment.id
-				}))
+					var reply = yield commentsDb.create(new ValidComment({
+						initiative_uuid: initiative.uuid,
+						user_id: replier.id,
+						user_uuid: _.serializeUuid(replier.uuid),
+						parent_id: comment.id
+					}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
-				var commentsEl = dom.getElementById("initiative-comments")
-				commentsEl.textContent.must.include(author.name)
-				commentsEl.textContent.must.include(comment.title)
-				commentsEl.textContent.must.include(comment.text)
-				commentsEl.textContent.must.include(replier.name)
-				commentsEl.textContent.must.include(reply.text)
-			})
+					var dom = parseDom(res.body)
+					var commentsEl = dom.getElementById("initiative-comments")
+					commentsEl.textContent.must.include(author.name)
+					commentsEl.textContent.must.include(comment.title)
+					commentsEl.textContent.must.include(comment.text)
+					commentsEl.textContent.must.include(replier.name)
+					commentsEl.textContent.must.include(reply.text)
+				})
 
-			it("must render initiative comments with names from local database",
-				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id
-				}))
+				it("must render initiative comments with names from local database",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id
+					}))
 
-				yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.author.uuid,
-					sourcePartnerId: this.partner.id,
-					visibility: "public"
-				}))
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.author.uuid,
+						sourcePartnerId: this.partner.id,
+						visibility: "public"
+					}))
 
-				var author = yield createUser({name: "Johnny Lang"})
-				var replier = yield createUser({name: "Kenny Loggins"})
+					var author = yield createUser({name: "Johnny Lang"})
+					var replier = yield createUser({name: "Kenny Loggins"})
 
-				var comment = yield commentsDb.create(new ValidComment({
-					initiative_uuid: initiative.uuid,
-					user_id: author.id,
-					user_uuid: _.serializeUuid(author.uuid)
-				}))
+					var comment = yield commentsDb.create(new ValidComment({
+						initiative_uuid: initiative.uuid,
+						user_id: author.id,
+						user_uuid: _.serializeUuid(author.uuid)
+					}))
 
-				var reply = yield commentsDb.create(new ValidComment({
-					initiative_uuid: initiative.uuid,
-					user_id: replier.id,
-					user_uuid: _.serializeUuid(replier.uuid),
-					parent_id: comment.id
-				}))
+					var reply = yield commentsDb.create(new ValidComment({
+						initiative_uuid: initiative.uuid,
+						user_id: replier.id,
+						user_uuid: _.serializeUuid(replier.uuid),
+						parent_id: comment.id
+					}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
-				var commentsEl = dom.getElementById("initiative-comments")
-				commentsEl.textContent.must.include(author.name)
-				commentsEl.textContent.must.include(comment.title)
-				commentsEl.textContent.must.include(comment.text)
-				commentsEl.textContent.must.include(replier.name)
-				commentsEl.textContent.must.include(reply.text)
-			})
+					var dom = parseDom(res.body)
+					var commentsEl = dom.getElementById("initiative-comments")
+					commentsEl.textContent.must.include(author.name)
+					commentsEl.textContent.must.include(comment.title)
+					commentsEl.textContent.must.include(comment.text)
+					commentsEl.textContent.must.include(replier.name)
+					commentsEl.textContent.must.include(reply.text)
+				})
 
-			it("must not render comments from other initiatives", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id
-				}))
+				it("must not render comments from other initiatives", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id
+					}))
 
-				yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.author.uuid,
-					sourcePartnerId: this.partner.id,
-					visibility: "public"
-				}))
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.author.uuid,
+						sourcePartnerId: this.partner.id,
+						visibility: "public"
+					}))
 
-				var other = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id
-				}))
+					var other = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id
+					}))
 
-				var author = yield createUser()
+					var author = yield createUser()
 
-				var comment = yield commentsDb.create(new ValidComment({
-					initiative_uuid: other.uuid,
-					user_id: author.id,
-					user_uuid: _.serializeUuid(author.uuid)
-				}))
+					var comment = yield commentsDb.create(new ValidComment({
+						initiative_uuid: other.uuid,
+						user_id: author.id,
+						user_uuid: _.serializeUuid(author.uuid)
+					}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
-				var commentsEl = dom.getElementById("initiative-comments")
-				commentsEl.textContent.must.not.include(comment.text)
+					var dom = parseDom(res.body)
+					var commentsEl = dom.getElementById("initiative-comments")
+					commentsEl.textContent.must.not.include(comment.text)
+				})
 			})
 
 			// This was a bug noticed on Mar 24, 2017 where the UI translation strings
@@ -3354,297 +3356,302 @@ describe("InitiativesController", function() {
 				)
 			})
 
-			it("must render subscription form without email if person lacks one",
-				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id
-				}))
+			describe("subscription form", function() {
+				it("must render subscription form without email if person lacks one",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id
+					}))
 
-				yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.author.uuid,
-					sourcePartnerId: this.partner.id,
-					visibility: "public"
-				}))
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.author.uuid,
+						sourcePartnerId: this.partner.id,
+						visibility: "public"
+					}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
-				var form = dom.querySelector(".initiative-subscribe-form")
-				form.querySelector("input[name=email]").value.must.equal("")
-			})
-
-			it("must render subscription form with person's confirmed email",
-				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id
-				}))
-
-				yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.author.uuid,
-					sourcePartnerId: this.partner.id,
-					visibility: "public"
-				}))
-
-				yield usersDb.update(this.user, {
-					email: "user@example.com",
-					email_confirmed_at: new Date
+					var dom = parseDom(res.body)
+					var form = dom.querySelector(".initiative-subscribe-form")
+					form.querySelector("input[name=email]").value.must.equal("")
 				})
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
+				it("must render subscription form with person's confirmed email",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id
+					}))
 
-				var dom = parseDom(res.body)
-				var form = dom.querySelector(".initiative-subscribe-form")
-				var input = form.querySelector("input[name=email]")
-				input.value.must.equal("user@example.com")
-			})
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.author.uuid,
+						sourcePartnerId: this.partner.id,
+						visibility: "public"
+					}))
 
-			it("must render subscription form with person's unconfirmed email",
-				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id
-				}))
+					yield usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
 
-				yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.author.uuid,
-					sourcePartnerId: this.partner.id,
-					visibility: "public"
-				}))
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
 
-				yield usersDb.update(this.user, {
-					unconfirmed_email: "user@example.com",
-					email_confirmation_token: Crypto.randomBytes(12)
+					var dom = parseDom(res.body)
+					var form = dom.querySelector(".initiative-subscribe-form")
+					var input = form.querySelector("input[name=email]")
+					input.value.must.equal("user@example.com")
 				})
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
+				it("must render subscription form with person's unconfirmed email",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id
+					}))
 
-				var dom = parseDom(res.body)
-				var form = dom.querySelector(".initiative-subscribe-form")
-				var input = form.querySelector("input[name=email]")
-				input.value.must.equal("user@example.com")
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.author.uuid,
+						sourcePartnerId: this.partner.id,
+						visibility: "public"
+					}))
+
+					yield usersDb.update(this.user, {
+						unconfirmed_email: "user@example.com",
+						email_confirmation_token: Crypto.randomBytes(12)
+					})
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var form = dom.querySelector(".initiative-subscribe-form")
+					var input = form.querySelector("input[name=email]")
+					input.value.must.equal("user@example.com")
+				})
 			})
 
-			it("must render comment form mentioning missing email", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id
-				}))
+			describe("comment form", function() {
+				it("must render comment form mentioning missing email", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id
+					}))
 
-				yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.author.uuid,
-					sourcePartnerId: this.partner.id,
-					visibility: "public"
-				}))
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.author.uuid,
+						sourcePartnerId: this.partner.id,
+						visibility: "public"
+					}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
-				var form = dom.getElementById("comment-form")
-				var check = form.querySelector("input[type=checkbox][name=subscribe]")
-				check.checked.must.be.false()
-				check.disabled.must.be.true()
+					var dom = parseDom(res.body)
+					var form = dom.getElementById("comment-form")
+					var check = form.querySelector("input[type=checkbox][name=subscribe]")
+					check.checked.must.be.false()
+					check.disabled.must.be.true()
 
-				form.innerHTML.must.include(t("SUBSCRIBE_TO_COMMENTS_SET_EMAIL", {
-					userUrl: "/user"
-				}))
-			})
-
-			it("must render comment form mentioning unconfirmed email",
-				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id
-				}))
-
-				yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.author.uuid,
-					sourcePartnerId: this.partner.id,
-					visibility: "public"
-				}))
-
-				yield usersDb.update(this.user, {
-					unconfirmed_email: "user@example.com",
-					email_confirmation_token: Crypto.randomBytes(12)
+					form.innerHTML.must.include(t("SUBSCRIBE_TO_COMMENTS_SET_EMAIL", {
+						userUrl: "/user"
+					}))
 				})
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
+				it("must render comment form mentioning unconfirmed email",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id
+					}))
 
-				var dom = parseDom(res.body)
-				var form = dom.getElementById("comment-form")
-				var check = form.querySelector("input[type=checkbox][name=subscribe]")
-				check.checked.must.be.false()
-				check.disabled.must.be.true()
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.author.uuid,
+						sourcePartnerId: this.partner.id,
+						visibility: "public"
+					}))
 
-				form.textContent.must.include(
-					t("SUBSCRIBE_TO_COMMENTS_CONFIRM_EMAIL")
-				)
-			})
+					yield usersDb.update(this.user, {
+						unconfirmed_email: "user@example.com",
+						email_confirmation_token: Crypto.randomBytes(12)
+					})
 
-			it("must render comment form if user has confirmed email", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id
-				}))
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
 
-				yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.author.uuid,
-					sourcePartnerId: this.partner.id,
-					visibility: "public"
-				}))
+					var dom = parseDom(res.body)
+					var form = dom.getElementById("comment-form")
+					var check = form.querySelector("input[type=checkbox][name=subscribe]")
+					check.checked.must.be.false()
+					check.disabled.must.be.true()
 
-				yield usersDb.update(this.user, {
-					email: "user@example.com",
-					email_confirmed_at: new Date
+					form.textContent.must.include(
+						t("SUBSCRIBE_TO_COMMENTS_CONFIRM_EMAIL")
+					)
 				})
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
+				it("must render comment form if user has confirmed email", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id
+					}))
 
-				var dom = parseDom(res.body)
-				var form = dom.getElementById("comment-form")
-				var check = form.querySelector("input[type=checkbox][name=subscribe]")
-				check.checked.must.be.false()
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.author.uuid,
+						sourcePartnerId: this.partner.id,
+						visibility: "public"
+					}))
 
-				form.textContent.must.not.include(t("SUBSCRIBE_TO_COMMENTS_SET_EMAIL"))
+					yield usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
 
-				form.textContent.must.not.include(
-					t("SUBSCRIBE_TO_COMMENTS_CONFIRM_EMAIL")
-				)
-			})
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
 
-			it("must render subscribe checkbox if subscribed to initiative comments",
-				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id
-				}))
+					var dom = parseDom(res.body)
+					var form = dom.getElementById("comment-form")
+					var check = form.querySelector("input[type=checkbox][name=subscribe]")
+					check.checked.must.be.false()
 
-				yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.author.uuid,
-					sourcePartnerId: this.partner.id,
-					visibility: "public"
-				}))
+					form.textContent.must.not.include(
+						t("SUBSCRIBE_TO_COMMENTS_SET_EMAIL")
+					)
 
-				yield usersDb.update(this.user, {
-					email: "user@example.com",
-					email_confirmed_at: new Date
+					form.textContent.must.not.include(
+						t("SUBSCRIBE_TO_COMMENTS_CONFIRM_EMAIL")
+					)
 				})
 
-				yield subscriptionsDb.create(new ValidSubscription({
-					initiative_uuid: initiative.uuid,
-					email: "user@example.com",
-					confirmed_at: new Date,
-					comment_interest: true
-				}))
-					
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
+				it("must render subscribe checkbox if subscribed to initiative comments", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id
+					}))
 
-				var dom = parseDom(res.body)
-				var form = dom.getElementById("comment-form")
-				var check = form.querySelector("input[type=checkbox][name=subscribe]")
-				check.checked.must.be.true()
-			})
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.author.uuid,
+						sourcePartnerId: this.partner.id,
+						visibility: "public"
+					}))
 
-			// This was an unreleased bug in a query that still depended on the
-			// CitizenOS topic existing.
-			it("must render subscribe checkbox if subscribed to initiative comments given an external initiative", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					external: true,
-					phase: "parliament"
-				}))
+					yield usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
 
-				yield usersDb.update(this.user, {
-					email: "user@example.com",
-					email_confirmed_at: new Date
+					yield subscriptionsDb.create(new ValidSubscription({
+						initiative_uuid: initiative.uuid,
+						email: "user@example.com",
+						confirmed_at: new Date,
+						comment_interest: true
+					}))
+						
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var form = dom.getElementById("comment-form")
+					var check = form.querySelector("input[type=checkbox][name=subscribe]")
+					check.checked.must.be.true()
 				})
 
-				yield subscriptionsDb.create(new ValidSubscription({
-					initiative_uuid: initiative.uuid,
-					email: "user@example.com",
-					confirmed_at: new Date,
-					comment_interest: true
-				}))
-					
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
+				// This was an unreleased bug in a query that still depended on the
+				// CitizenOS topic existing.
+				it("must render subscribe checkbox if subscribed to initiative comments given an external initiative", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						external: true,
+						phase: "parliament"
+					}))
 
-				var dom = parseDom(res.body)
-				var form = dom.getElementById("comment-form")
-				var check = form.querySelector("input[type=checkbox][name=subscribe]")
-				check.checked.must.be.true()
-			})
+					yield usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
 
-			it("must render subscribe checkbox if subscribed to initiative, but not to comments", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id
-				}))
+					yield subscriptionsDb.create(new ValidSubscription({
+						initiative_uuid: initiative.uuid,
+						email: "user@example.com",
+						confirmed_at: new Date,
+						comment_interest: true
+					}))
+						
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
 
-				yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.author.uuid,
-					sourcePartnerId: this.partner.id,
-					visibility: "public"
-				}))
-
-				yield usersDb.update(this.user, {
-					email: "user@example.com",
-					email_confirmed_at: new Date
+					var dom = parseDom(res.body)
+					var form = dom.getElementById("comment-form")
+					var check = form.querySelector("input[type=checkbox][name=subscribe]")
+					check.checked.must.be.true()
 				})
 
-				yield subscriptionsDb.create(new ValidSubscription({
-					initiative_uuid: initiative.uuid,
-					email: "user@example.com",
-					confirmed_at: new Date,
-					comment_interest: false
-				}))
-					
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
+				it("must render subscribe checkbox if subscribed to initiative, but not to comments", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id
+					}))
 
-				var dom = parseDom(res.body)
-				var form = dom.getElementById("comment-form")
-				var check = form.querySelector("input[type=checkbox][name=subscribe]")
-				check.checked.must.be.false()
-			})
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.author.uuid,
+						sourcePartnerId: this.partner.id,
+						visibility: "public"
+					}))
 
-			it("must render subscribe checkbox if subscribed to initiatives' comments", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id
-				}))
+					yield usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
 
-				yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.author.uuid,
-					sourcePartnerId: this.partner.id,
-					visibility: "public"
-				}))	
+					yield subscriptionsDb.create(new ValidSubscription({
+						initiative_uuid: initiative.uuid,
+						email: "user@example.com",
+						confirmed_at: new Date,
+						comment_interest: false
+					}))
+						
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
 
-				yield usersDb.update(this.user, {
-					email: "user@example.com",
-					email_confirmed_at: new Date
+					var dom = parseDom(res.body)
+					var form = dom.getElementById("comment-form")
+					var check = form.querySelector("input[type=checkbox][name=subscribe]")
+					check.checked.must.be.false()
 				})
 
-				yield subscriptionsDb.create(new ValidSubscription({
-					email: "user@example.com",
-					confirmed_at: new Date,
-					comment_interest: true
-				}))
+				it("must render subscribe checkbox if subscribed to initiatives' comments", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id
+					}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.author.uuid,
+						sourcePartnerId: this.partner.id,
+						visibility: "public"
+					}))	
 
-				var dom = parseDom(res.body)
-				var form = dom.getElementById("comment-form")
-				var check = form.querySelector("input[type=checkbox][name=subscribe]")
-				check.checked.must.be.false()
+					yield usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
+
+					yield subscriptionsDb.create(new ValidSubscription({
+						email: "user@example.com",
+						confirmed_at: new Date,
+						comment_interest: true
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var form = dom.getElementById("comment-form")
+					var check = form.querySelector("input[type=checkbox][name=subscribe]")
+					check.checked.must.be.false()
+				})
 			})
 
 			it("must not show event creation button if in edit phase", function*() {
