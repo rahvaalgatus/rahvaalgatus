@@ -74,7 +74,7 @@
 	"DEMO_SIGNATURES_SIGNATURES_BY_AGE": "Allkirjastanute jaotus vanuse lõikes",
 	"DEMO_SIGNATURES_SIGNATURES_BY_DATE": "Allkirjade arv päevade lõikes",
 	"DEMO_SIGNATURES_SIGNED_HEADER": "Allkirjastamine õnnestus!",
-	"DEMO_SIGNATURES_SIGNED_TEXT": "Oled edukalt läbinud digiallkirjastamise proovi. Järgnevalt saad sa oma digiallkirjastatud faili alla laadida ning avada. Failist näed sa allkirjastamise aega, allkirja kehtivust ning muid allkirjastamisega seotud andmeid. Privaatsuse tagamiseks kustutatakse fail süsteemist automaatselt veerand tunni pärast.",
+	"DEMO_SIGNATURES_SIGNED_TEXT": "Oled edukalt läbinud digiallkirjastamise proovi. Järgnevalt saad sa oma digiallkirjastatud faili alla laadida ning avada. Failist näed sa allkirjastamise aega, allkirja kehtivust ning muid allkirjastamisega seotud andmeid. Privaatsuse tagamiseks kustutatakse fail ja seos sinuga süsteemist automaatselt 15 minuti pärast. Statistika kuvamiseks jääb alles vaid su sugu, sünniaasta ja -kuu ning allkirjastamise kellaaeg.",
 	"DEMO_SIGNATURES_TITLE": "Digiallkiri",
 	"DESTINATION_alutaguse-vald": "Alutaguse vallale",
 	"DESTINATION_anija-vald": "Anija vallale",
