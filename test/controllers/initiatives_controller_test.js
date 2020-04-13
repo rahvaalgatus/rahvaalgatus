@@ -48,6 +48,7 @@ var outdent = require("root/lib/outdent")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var next = require("co-next")
+var demand = require("must")
 var cosDb = require("root").cosDb
 var INITIATIVE_TYPE = "application/vnd.rahvaalgatus.initiative+json; v=1"
 var ATOM_TYPE = "application/atom+xml"
@@ -2976,6 +2977,118 @@ describe("InitiativesController", function() {
 					"sent-to-government",
 					"finished-in-government"
 				])
+			})
+
+			describe("subscription form", function() {
+				it("must render initiative subscriber count", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id
+					}))
+
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.author.uuid,
+						sourcePartnerId: this.partner.id,
+						visibility: "public"
+					}))
+
+					yield subscriptionsDb.create(_.times(3, () => new ValidSubscription({
+						initiative_uuid: initiative.uuid,
+						confirmed_at: new Date
+					})))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var form = dom.querySelector(".initiative-subscribe-form")
+
+					form.querySelector("p").innerHTML.must.equal(
+						t("INITIATIVE_SUBSCRIBER_COUNT", {count: 3})
+					)
+				})
+
+				it("must render initiatives subscriber count", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id
+					}))
+
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.author.uuid,
+						sourcePartnerId: this.partner.id,
+						visibility: "public"
+					}))
+
+					yield subscriptionsDb.create(_.times(3, () => new ValidSubscription({
+						initiative_uuid: null,
+						confirmed_at: new Date
+					})))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var form = dom.querySelector(".initiative-subscribe-form")
+
+					form.querySelector("p").innerHTML.must.equal(
+						t("INITIATIVE_SUBSCRIBER_COUNT_ALL", {allCount: 3})
+					)
+				})
+
+				it("must render initiative and initiatives subscriber count",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id
+					}))
+
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.author.uuid,
+						sourcePartnerId: this.partner.id,
+						visibility: "public"
+					}))
+
+					yield subscriptionsDb.create(_.times(3, () => new ValidSubscription({
+						initiative_uuid: initiative.uuid,
+						confirmed_at: new Date
+					})))
+
+					yield subscriptionsDb.create(_.times(5, () => new ValidSubscription({
+						initiative_uuid: null,
+						confirmed_at: new Date
+					})))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var form = dom.querySelector(".initiative-subscribe-form")
+
+					form.querySelector("p").innerHTML.must.equal(
+						t("INITIATIVE_SUBSCRIBER_COUNT_BOTH", {count: 3, allCount: 5})
+					)
+				})
+
+				it("must not render subscriber counts if none", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id
+					}))
+
+					yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.author.uuid,
+						sourcePartnerId: this.partner.id,
+						visibility: "public"
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var form = dom.querySelector(".initiative-subscribe-form")
+					demand(form.querySelector("p")).be.null()
+				})
 			})
 
 			describe("comments", function() {

@@ -351,11 +351,17 @@ exports.read = next(function*(req, res) {
 		AND personal_id = ${user.personal_id}
 	`)
 
-	var subscriberCount = yield sqlite(sql`
-		SELECT COUNT(*) AS count
+	var subscriberCounts = yield sqlite(sql`
+		SELECT
+			SUM(initiative_uuid IS NULL) AS "all",
+			SUM(initiative_uuid IS NOT NULL) AS initiative
+
 		FROM initiative_subscriptions
-		WHERE initiative_uuid = ${initiative.uuid} AND confirmed_at IS NOT NULL
-	`).then(_.first).then((row) => row.count)
+		WHERE confirmed_at IS NOT NULL AND (
+			initiative_uuid IS NULL OR
+			initiative_uuid = ${initiative.uuid}
+		)
+	`).then(_.first)
 
 	var comments = yield searchInitiativeComments(initiative.uuid)
 	var events = yield searchInitiativeEvents(initiative)
@@ -389,7 +395,7 @@ exports.read = next(function*(req, res) {
 		thankAgain: thankAgain,
 		signature: !signature || signature.hidden ? null : signature,
 		subscription: subscription,
-		subscriberCount: subscriberCount,
+		subscriberCounts: subscriberCounts,
 		signatureCount: signatureCount,
 		image: image,
 		files: files,

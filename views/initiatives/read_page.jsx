@@ -116,7 +116,7 @@ function ReadPage(attrs) {
 	var topic = attrs.topic
 	var initiative = attrs.initiative
 	var initiativePath = "/initiatives/" + initiative.uuid
-	var subscriberCount = attrs.subscriberCount
+	var subscriberCounts = attrs.subscriberCounts
 	var signatureCount = attrs.signatureCount
 	var image = attrs.image
 	var title = topic ? topic.title : initiative.title
@@ -181,7 +181,8 @@ function ReadPage(attrs) {
 						<SubscribeEmailView
 							req={req}
 							initiative={initiative}
-							count={subscriberCount}
+							count={subscriberCounts.initiative}
+							allCount={subscriberCounts.all}
 							t={t}
 						/>
 					: null}
@@ -363,7 +364,7 @@ function ReadPage(attrs) {
 					req={req}
 					topic={topic}
 					initiative={initiative}
-					subscriberCount={subscriberCount}
+					subscriberCounts={subscriberCounts}
 				/>
 
 				<SidebarAdminView
@@ -1022,7 +1023,7 @@ function SidebarSubscribeView(attrs) {
 	var t = req.t
 	var topic = attrs.topic
 	var initiative = attrs.initiative
-	var subscriberCount = attrs.subscriberCount
+	var subscriberCounts = attrs.subscriberCounts
 	var atomPath = req.baseUrl + req.url + ".atom"
 
 	if (!(initiative.external || topic && Topic.isPublic(topic))) return null
@@ -1035,7 +1036,8 @@ function SidebarSubscribeView(attrs) {
 		<SubscribeEmailView
 			req={req}
 			initiative={initiative}
-			count={subscriberCount}
+			count={subscriberCounts.initiative}
+			allCount={subscriberCounts.all}
 			t={t}
 		/>
 
@@ -1647,6 +1649,8 @@ function SubscribeEmailView(attrs) {
 	var user = req.user
 	var initiative = attrs.initiative
 	var count = attrs.count
+	var allCount = attrs.allCount
+	var counts = {count: count, allCount: allCount}
 
 	return <Form
 		req={req}
@@ -1665,8 +1669,13 @@ function SubscribeEmailView(attrs) {
 
     <button type="submit" class="secondary-button">{t("BTN_SUBSCRIBE")}</button>
 
-		{count > 0 ? <p>
-			{Jsx.html(t("INITIATIVE_SUBSCRIBER_COUNT", {count: count}))}
+		{count || allCount ? <p>
+			{Jsx.html(
+				count && allCount ? t("INITIATIVE_SUBSCRIBER_COUNT_BOTH", counts) :
+				count > 0 ? t("INITIATIVE_SUBSCRIBER_COUNT", counts) :
+				allCount > 0 ? t("INITIATIVE_SUBSCRIBER_COUNT_ALL", counts) :
+				null
+			)}
 		</p> : null}
 	</Form>
 }

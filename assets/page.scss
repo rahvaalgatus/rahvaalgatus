@@ -1747,8 +1747,6 @@ button.inherited {
 		.initiative-subscribe-form {
 			font-family: $museo-sans;
 
-			p { color: $grey; }
-
 			input {
 				display: inline-block;
 				margin-right: 1rem;
@@ -1763,6 +1761,8 @@ button.inherited {
 
 				@include mobile { width: 100%; }
 			}
+
+			p { color: $grey; }
 		}
 
 		.quicksign {
