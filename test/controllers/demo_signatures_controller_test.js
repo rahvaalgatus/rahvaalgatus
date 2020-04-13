@@ -144,7 +144,7 @@ describe("DemoSignaturesController", function() {
 			res.statusCode.must.equal(200)
 
 			var dom = parseDom(res.body)
-			var svg = dom.querySelector("svg.signatures-by-age")
+			var svg = dom.querySelector("#signatures-by-age svg")
 
 			var youngestEl = svg.querySelector(`[data-age-in-months="${16 * 12}"]`)
 			youngestEl.querySelector(".age").textContent.must.equal("16")

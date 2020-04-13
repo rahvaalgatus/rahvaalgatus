@@ -2765,43 +2765,64 @@ button.inherited {
 	}
 
 	#statistics {
-		h3 { margin-top: 4rem; }
+		margin-top: 3rem;
 
 		svg {
 			display: block;
 			max-width: 100%;
 		}
 
-		svg.signatures-by-date {
+		#signature-count {
+			text-align: center;
+
+			big {
+				display: block;
+				font-size: 6rem;
+				color: $dark-blue;
+				font-family: $aino-headline;
+			}
+		}
+
+		figure {
+			margin-top: 2rem;
+
+			svg { margin: 0 auto; }
+
+			figcaption {
+				margin-top: 0.5rem;
+				text-align: center;
+			}
+		}
+
+		#signatures-by-date svg {
 			.day {
 				font-family: "Aino";
 				font-size: 13px;
 
 				.count {
 					font-size: 14px;
-					fill: #666;
+					fill: $dark-blue;
 					font-weight: bold;
+
+					& + .bar,
+					& ~ .date { fill: $dark-blue; }
 				}
 
-				.date {
-					fill: #555;
-				}
-
+				.date { fill: #555; }
 				.bar { fill: #dbdbdb; }
-
-				&.today .bar,
-				&.today text { fill: $dark-blue; }
 			}
 		}
 
-		svg.signatures-by-age {
+		#signatures-by-age svg {
 			.month {
 				font-family: "Aino";
 				font-size: 13px;
 
 				.count {
-					fill: #555;
+					fill: $dark-blue;
 					font-weight: bold;
+
+					& + .bar { fill: $dark-blue; }
 				}
 
 				.age {
@@ -2810,7 +2831,6 @@ button.inherited {
 				}
 
 				.bar { fill: #dbdbdb; }
-				&.full-year .bar { fill: #777; }
 			}
 		}
 	}

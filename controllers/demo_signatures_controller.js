@@ -49,6 +49,10 @@ exports.router.use(parseBody({type: hasSignatureType}))
 exports.router.get("/", next(function*(_req, res) {
 	var today = new Date
 
+	var signatureCount = yield sqlite(sql`
+		SELECT COUNT(*) AS count FROM demo_signatures
+	`).then(_.first).then((row) => row.count)
+
 	var signatureCountsByDate = _.mapValues(_.indexBy(yield sqlite(sql`
 		SELECT date(datetime(created_at, 'localtime')) AS date, COUNT(*) AS count
 		FROM demo_signatures
@@ -82,6 +86,7 @@ exports.router.get("/", next(function*(_req, res) {
 	`), "age_in_months"), (row) => row.count)
 
 	res.render("demo_signatures/index_page.jsx", {
+		signatureCount: signatureCount,
 		signatureCountsByDate: signatureCountsByDate,
 		signatureCountsByAge: signatureCountsByAge
 	})
