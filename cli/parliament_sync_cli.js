@@ -801,11 +801,14 @@ function normalizeParliamentDocumentForDiff(document) {
 function* readParliamentVolumeWithDocuments(api, uuid) {
 	var volume = yield api("volumes/" + uuid).then(getBody)
 
-	volume.documents = yield (volume.documents || EMPTY_ARR).map((doc) => (
-		isMeetingTopicDocument(doc)
-			? Promise.resolve(doc)
-			: api("documents/" + doc.uuid).then(getBody)
-	))
+	// Don't recurse into draft act documents for now as we're not sure what to
+	// make of them yet.
+	if (volume.volumeType != "eelnou")
+		volume.documents = yield (volume.documents || EMPTY_ARR).map((doc) => (
+			isMeetingTopicDocument(doc)
+				? Promise.resolve(doc)
+				: api("documents/" + doc.uuid).then(getBody)
+		))
 
 	return volume
 }

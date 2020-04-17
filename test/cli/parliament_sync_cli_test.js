@@ -2905,6 +2905,44 @@ describe("ParliamentSyncCli", function() {
 				content_type: new MediaType("application/pdf")
 			})])
 		})
+
+		// https://github.com/riigikogu-kantselei/api/issues/28
+		it("must ignore draft act volumes", function*() {
+			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+				uuid: INITIATIVE_UUID,
+
+				relatedVolumes: [{
+					uuid: VOLUME_UUID,
+					volumeType: "eelnou",
+					documentType: "unitAgendaItemDocument"
+				}]
+			}]))
+
+			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+
+			var opionUuid = newUuid()
+
+			this.router.get(`/api/volumes/${VOLUME_UUID}`, respond.bind(null, {
+				uuid: VOLUME_UUID,
+				title: "Seaduse muutmise seaduse muutmise seadus",
+				volumeType: "eelnou",
+				created: "2015-06-18T13:37:42.666",
+				documents: [{uuid: opionUuid, documentType: "opinionDocument"}]
+			}))
+
+			this.router.get(`/api/documents/${opionUuid}`, function(_req, res) {
+				res.statusCode = 500
+				res.setHeader("Content-Type", "application/json")
+
+				res.end(JSON.stringify({
+					error: "Internal Server Error",
+					message: `Document not found with UUID: ${DOCUMENT_UUID}`,
+					status: 500
+				}))
+			})
+
+			yield job()
+		})
 	})
 })
 
