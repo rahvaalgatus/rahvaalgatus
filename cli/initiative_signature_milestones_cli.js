@@ -47,8 +47,6 @@ module.exports = function*() {
 function* updateMilestones(topic, initiative, signatureCount) {
 	var largest = _.findLast(MILESTONES, (n) => signatureCount >= n)
 
-	// Presuming that once an initiative starts using Undersign.js, it never
-	// converts back.
 	var signatures = yield signaturesDb.search(sql`
 		SELECT created_at
 		FROM initiative_citizenos_signatures
