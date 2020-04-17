@@ -236,24 +236,36 @@ describe("ParliamentSyncCli", function() {
 		})])
 	})
 
-	it("must not download non-public files", function*() {
-		this.router.get(INITIATIVES_URL, respond.bind(null, [{
-			uuid: INITIATIVE_UUID
-		}]))
+	it("must update local initiative if reference matches old parliament UUID",
+		function*() {
+		var author = yield createUser()
 
-		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {
-			files: [{
-				uuid: FILE_UUID,
-				fileName: "Pöördumise allkirjade register _30_10_2018.xlsx",
-				accessRestrictionType: "FOR_USE_WITHIN_ESTABLISHMENT",
-			}]
+		var initiative = yield initiativesDb.create(new ValidInitiative({
+			user_id: author.id,
+			phase: "government",
+			parliament_uuid: "83ecffc8-621a-4277-b388-39b1e626d1fa"
 		}))
 
+		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			uuid: INITIATIVE_UUID,
+			title: "Kollektiivne pöördumine elu Tallinnas paremaks tegemiseks",
+			senderReference: initiative.parliament_uuid,
+			responsibleCommittee: {name: "Sotsiaalkomisjon"}
+		}]))
+
+		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {}))
 		yield job()
 
-		yield filesDb.search(sql`
-			SELECT * FROM initiative_files
-		`).must.then.be.empty()
+		var initiatives = yield initiativesDb.search(sql`SELECT * FROM initiatives`)
+
+		initiatives.must.eql([{
+			// NOTE: The previous parliament UUID gets updated, too.
+			__proto__: initiative,
+			parliament_uuid: INITIATIVE_UUID,
+			parliament_committee: "Sotsiaalkomisjon",
+			parliament_api_data: initiatives[0].parliament_api_data,
+			parliament_synced_at: new Date
+		}])
 	})
 
 	it("must update external initiative", function*() {
@@ -294,6 +306,26 @@ describe("ParliamentSyncCli", function() {
 			accepted_by_parliament_at: new Date(2018, 9, 24),
 			finished_in_parliament_at: new Date(2018, 9, 25)
 		}])
+	})
+
+	it("must not download non-public files", function*() {
+		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			uuid: INITIATIVE_UUID
+		}]))
+
+		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {
+			files: [{
+				uuid: FILE_UUID,
+				fileName: "Pöördumise allkirjade register _30_10_2018.xlsx",
+				accessRestrictionType: "FOR_USE_WITHIN_ESTABLISHMENT",
+			}]
+		}))
+
+		yield job()
+
+		yield filesDb.search(sql`
+			SELECT * FROM initiative_files
+		`).must.then.be.empty()
 	})
 
 	it("must ignore if API response not updated", function*() {

@@ -119,13 +119,18 @@ function* sync(opts) {
 function* readInitiative(doc) {
 	var initiative
 
-	if (
-		doc.senderReference &&
-		(initiative = yield initiativesDb.read(doc.senderReference))
-	) return initiative
-
+	// Around April 2020 old initiatives in the parliament API were recreated and
+	// their old UUIDs were assigned to the `senderReference` field.
+	// Unfortunately prevoius Rahvaalgatus' UUIDs (in `senderReference`) were
+	// therefore overwritten  from `senderReference` making it impossible to
+	// identify sent initiatives if you already don't have the previous parliament
+	// UUID. Waiting for an update on that as of Apr 17, 2020.
 	if (initiative = yield initiativesDb.read(sql`
-		SELECT * FROM initiatives WHERE parliament_uuid = ${doc.uuid}
+		SELECT * FROM initiatives
+		WHERE uuid = ${doc.senderReference}
+		OR parliament_uuid = ${doc.uuid}
+		OR parliament_uuid = ${doc.senderReference}
+		LIMIT 1
 	`)) return initiative
 
 	return {
