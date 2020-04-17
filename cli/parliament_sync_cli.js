@@ -1,6 +1,7 @@
 var _ = require("root/lib/underscore")
 var Neodoc = require("neodoc")
 var Time = require("root/lib/time")
+var DateFns = require("date-fns")
 var Config = require("root/config")
 var Subscription = require("root/lib/subscription")
 var FetchError = require("fetch-error")
@@ -316,8 +317,18 @@ function* replaceEvents(initiative, eventAttrs) {
 		replaceEventFiles(event, event.files)
 	))
 
-	if (createdEvents.length > 0)
-		yield sendParliamentEventEmail(initiative, createdEvents)
+	// Ignoring older events protects against situations where old initiatives in
+	// the parliament API get documents recreated. That happened in March
+	// 2020 when a few dozen old initiatives got new UUIDs, which in turn fired
+	// out hundreds of notification emails for new events.
+	var relevantFrom = DateFns.addMonths(DateFns.startOfDay(new Date), -3)
+
+	var relevantEvents = createdEvents.filter((ev) => (
+		ev.occurred_at >= relevantFrom
+	))
+
+	if (relevantEvents.length > 0)
+		yield sendParliamentEventEmail(initiative, relevantEvents)
 }
 
 function* replaceFiles(initiative, document) {

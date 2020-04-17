@@ -1,5 +1,6 @@
 var _ = require("root/lib/underscore")
 var Config = require("root/config")
+var DateFns = require("date-fns")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidEvent = require("root/test/valid_db_initiative_event")
 var ValidFile = require("root/test/valid_event_file")
@@ -18,6 +19,7 @@ var createPartner = require("root/test/citizenos_fixtures").createPartner
 var createUser = require("root/test/fixtures").createUser
 var createTopic = require("root/test/citizenos_fixtures").createTopic
 var newUuid = _.compose(_.serializeUuid, _.uuidV4)
+var formatDate = require("root/lib/i18n").formatDate
 var job = require("root/cli/parliament_sync_cli")
 var sql = require("sqlate")
 var concat = Array.prototype.concat.bind(Array.prototype)
@@ -166,10 +168,8 @@ describe("ParliamentSyncCli", function() {
 	})
 
 	it("must update local initiative with events and files", function*() {
-		var author = yield createUser()
-
 		var initiative = yield initiativesDb.create(new ValidInitiative({
-			user_id: author.id,
+			user_id: (yield createUser()).id,
 			author_name: "John Smith",
 			phase: "government"
 		}))
@@ -238,10 +238,8 @@ describe("ParliamentSyncCli", function() {
 
 	it("must update local initiative if reference matches old parliament UUID",
 		function*() {
-		var author = yield createUser()
-
 		var initiative = yield initiativesDb.create(new ValidInitiative({
-			user_id: author.id,
+			user_id: (yield createUser()).id,
 			phase: "government",
 			parliament_uuid: "83ecffc8-621a-4277-b388-39b1e626d1fa"
 		}))
@@ -394,7 +392,7 @@ describe("ParliamentSyncCli", function() {
 		initiative.parliament_synced_at.must.eql(syncedAt)
 	})
 
-	it("must email subscribers interested in official events ", function*() {
+	it("must email subscribers interested in official events", function*() {
 		var initiative = yield initiativesDb.create({
 			uuid: INITIATIVE_UUID,
 			parliament_uuid: INITIATIVE_UUID,
@@ -426,14 +424,21 @@ describe("ParliamentSyncCli", function() {
 			})
 		])
 
+		var eventDates = _.times(3, (i) => DateFns.addDays(new Date, i + -5))
+
 		this.router.get(INITIATIVES_URL, respond.bind(null, [{
 			uuid: INITIATIVE_UUID,
 
-			statuses: [
-				{date: "2018-10-23", status: {code: "REGISTREERITUD"}},
-				{date: "2018-10-24", status: {code: "MENETLUSSE_VOETUD"}},
-				{date: "2018-10-25", status: {code: "MENETLUS_LOPETATUD"}}
-			]
+			statuses: [{
+				date: formatDate("iso", eventDates[0]),
+				status: {code: "REGISTREERITUD"}
+			}, {
+				date: formatDate("iso", eventDates[1]),
+				status: {code: "MENETLUSSE_VOETUD"}
+			}, {
+				date: formatDate("iso", eventDates[2]),
+				status: {code: "MENETLUS_LOPETATUD"}
+			}]
 		}]))
 
 		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
@@ -455,7 +460,7 @@ describe("ParliamentSyncCli", function() {
 
 			title: t("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_TITLE", {
 				initiativeTitle: initiative.title,
-				eventDate: "25.10.2018"
+				eventDate: formatDate("numeric", eventDates[2])
 			}),
 
 			text: renderEmail("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_BODY", {
@@ -465,9 +470,9 @@ describe("ParliamentSyncCli", function() {
 				unsubscribeUrl: "{{unsubscribeUrl}}",
 
 				eventTitles: outdent`
-					23.10.2018 — ${t("PARLIAMENT_RECEIVED")}
-					24.10.2018 — ${t("PARLIAMENT_ACCEPTED")}
-					25.10.2018 — ${t("PARLIAMENT_FINISHED")}
+					${formatDate("numeric", eventDates[0])} — ${t("PARLIAMENT_RECEIVED")}
+					${formatDate("numeric", eventDates[1])} — ${t("PARLIAMENT_ACCEPTED")}
+					${formatDate("numeric", eventDates[2])} — ${t("PARLIAMENT_FINISHED")}
 				`
 			}),
 
@@ -483,10 +488,8 @@ describe("ParliamentSyncCli", function() {
 	})
 
 	it("must email subscribers with title from topic", function*() {
-		var author = yield createUser()
-
 		var initiative = yield initiativesDb.create({
-			user_id: author.id,
+			user_id: (yield createUser()).id,
 			uuid: INITIATIVE_UUID,
 			parliament_uuid: INITIATIVE_UUID
 		})
@@ -508,7 +511,10 @@ describe("ParliamentSyncCli", function() {
 
 		this.router.get(INITIATIVES_URL, respond.bind(null, [{
 			uuid: INITIATIVE_UUID,
-			statuses: [{date: "2018-10-23", status: {code: "REGISTREERITUD"}}]
+			statuses: [{
+				date: formatDate("iso", new Date),
+				status: {code: "REGISTREERITUD"}
+			}]
 		}]))
 
 		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
@@ -520,7 +526,7 @@ describe("ParliamentSyncCli", function() {
 		message.title.must.equal(
 			t("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_TITLE", {
 				initiativeTitle: topic.title,
-				eventDate: "23.10.2018"
+				eventDate: formatDate("numeric", new Date)
 			})
 		)
 
@@ -530,7 +536,9 @@ describe("ParliamentSyncCli", function() {
 				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 				eventsUrl: `${Config.url}/initiatives/${initiative.uuid}#events`,
 				unsubscribeUrl: "{{unsubscribeUrl}}",
-				eventTitles: `23.10.2018 — ${t("PARLIAMENT_RECEIVED")}`
+				eventTitles: outdent`
+					${formatDate("numeric", new Date)} — ${t("PARLIAMENT_RECEIVED")}
+				`
 			})
 		)
 
@@ -538,6 +546,69 @@ describe("ParliamentSyncCli", function() {
 		this.emails[0].envelope.to.must.eql([subscription.email])
 		var msg = String(this.emails[0].message)
 		msg.match(/^Subject: .*/m)[0].must.include("Teeme_elu_paremaks!")
+	})
+
+	it("must not email subscribers if event occurred earlier than 3 months",
+		function*() {
+		var initiative = yield initiativesDb.create({
+			title: "Teeme elu paremaks!",
+			uuid: INITIATIVE_UUID,
+			parliament_uuid: INITIATIVE_UUID,
+			external: true
+		})
+
+		var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			initiative_uuid: null,
+			confirmed_at: new Date
+		}))
+
+		var threshold = DateFns.addMonths(new Date, -3)
+
+		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			uuid: INITIATIVE_UUID,
+			statuses: [{
+				date: formatDate("iso", DateFns.addDays(threshold, -1)),
+				status: {code: "MENETLUSSE_VOETUD"}
+			}, {
+				date: formatDate("iso", threshold),
+				status: {code: "MENETLUS_LOPETATUD"}
+			}]
+		}]))
+
+		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+
+		yield job()
+
+		var message = yield messagesDb.read(sql`SELECT * FROM initiative_messages`)
+
+		message.must.eql({
+			id: message.id,
+			initiative_uuid: initiative.uuid,
+			created_at: new Date,
+			updated_at: new Date,
+			origin: "event",
+
+			title: t("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_TITLE", {
+				initiativeTitle: initiative.title,
+				eventDate: formatDate("numeric", threshold)
+			}),
+
+			text: renderEmail("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_BODY", {
+				initiativeTitle: initiative.title,
+				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+				eventsUrl: `${Config.url}/initiatives/${initiative.uuid}#events`,
+				unsubscribeUrl: "{{unsubscribeUrl}}",
+
+				eventTitles: outdent`
+					${formatDate("numeric", threshold)} — ${t("PARLIAMENT_FINISHED")}
+				`
+			}),
+
+			sent_at: new Date,
+			sent_to: [subscription.email]
+		})
+
+		this.emails.length.must.equal(1)
 	})
 
 	it("must not email subscribers if no events created", function*() {
@@ -859,10 +930,8 @@ describe("ParliamentSyncCli", function() {
 			var eventAttrs = test[2]
 
 			it(`must create events given ${title}`, function*() {
-				var author = yield createUser()
-
 				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: author.id,
+					user_id: (yield createUser()).id,
 					uuid: INITIATIVE_UUID,
 					parliament_uuid: INITIATIVE_UUID
 				}))
@@ -2027,10 +2096,8 @@ describe("ParliamentSyncCli", function() {
 
 			it(`must create events and files given ${title}`,
 				function*() {
-				var author = yield createUser()
-
 				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: author.id,
+					user_id: (yield createUser()).id,
 					uuid: INITIATIVE_UUID,
 					parliament_uuid: INITIATIVE_UUID
 				}))
@@ -2910,12 +2977,7 @@ describe("ParliamentSyncCli", function() {
 		it("must ignore draft act volumes", function*() {
 			this.router.get(INITIATIVES_URL, respond.bind(null, [{
 				uuid: INITIATIVE_UUID,
-
-				relatedVolumes: [{
-					uuid: VOLUME_UUID,
-					volumeType: "eelnou",
-					documentType: "unitAgendaItemDocument"
-				}]
+				relatedVolumes: [{uuid: VOLUME_UUID, volumeType: "eelnou"}]
 			}]))
 
 			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
