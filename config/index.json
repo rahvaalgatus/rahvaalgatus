@@ -19,6 +19,7 @@
 	"eventNotificationsSince": "1970-01-01T00:00:00Z",
 	"signatureMilestones": [100, 1000],
 	"demoSignaturesExpirationSeconds": 900,
+	"importInitiativesFromParliament": true,
 
 	"language": "et",
 	"languages": ["et", "en", "ru"],

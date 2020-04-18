@@ -72,6 +72,7 @@ function* sync(opts) {
 	)
 
 	var pairs = _.zip(yield docs.map(readInitiative), docs)
+	pairs = pairs.filter(_.compose(Boolean, _.first))
 
 	pairs = yield pairs.map(function*(initiativeAndDocument) {
 		var initiative = initiativeAndDocument[0]
@@ -134,7 +135,11 @@ function* readInitiative(doc) {
 		LIMIT 1
 	`)) return initiative
 
-	return {
+	if (!Config.importInitiativesFromParliament) {
+		logger.log("Ignoring new initiative %s (%s)…", doc.uuid, doc.title)
+		return null
+	}
+	else return {
 		parliament_uuid: doc.uuid,
 		external: true,
 		phase: "parliament",
