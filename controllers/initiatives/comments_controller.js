@@ -82,7 +82,7 @@ exports.router.post("/", next(function*(req, res) {
 			})
 		}
 
-		if (topic == null || topic.visibility == "public") {
+		if (initiative.published_at) {
 			var subs = yield subscriptionsDb.searchConfirmedByInitiativeIdWith(
 				initiative.uuid,
 				sql`comment_interest AND email != ${userEmail}`
@@ -179,7 +179,7 @@ exports.router.post("/:commentId/replies", next(function*(req, res) {
 		var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 		var userEmail = user.email || ""
 
-		if (topic == null || topic.visibility == "public") {
+		if (initiative.published_at) {
 			var subs = yield subscriptionsDb.searchConfirmedByInitiativeIdWith(
 				initiative.uuid,
 				sql`comment_interest AND email != ${userEmail}`

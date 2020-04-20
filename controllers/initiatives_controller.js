@@ -4,6 +4,7 @@ var Qs = require("querystring")
 var Url = require("url")
 var Router = require("express").Router
 var HttpError = require("standard-http-error")
+var SqliteError = require("root/lib/sqlite_error")
 var Topic = require("root/lib/topic")
 var DateFns = require("date-fns")
 var Time = require("root/lib/time")
@@ -231,6 +232,8 @@ exports.router.get("/new", function(_req, res) {
 })
 
 exports.router.use("/:id", next(function*(req, res, next) {
+	var user = req.user
+
 	var initiative = yield initiativesDb.read(sql`
 		SELECT initiative.*, user.name AS user_name
 		FROM initiatives AS initiative
@@ -240,21 +243,17 @@ exports.router.use("/:id", next(function*(req, res, next) {
 
 	if (initiative == null) throw new HttpError(404)
 
-	var user = req.user
+	if (!(
+		initiative.published_at ||
+		user && initiative.user_id == user.id
+	)) throw new HttpError(403, "Initiative Not Public")
+
 	var topic
-	if (!initiative.external) {
+	TOPIC: if (!initiative.external) {
 		topic = yield searchTopics(sql`topic.id = ${initiative.uuid}`).then(_.first)
-		if (topic == null) throw new HttpError(404)
+		if (topic == null) break TOPIC
 
-		var permission = yield readTopicPermission(user, topic)
-
-		if (!(
-			topic.visibility == "public" ||
-			permission == "admin" ||
-			permission == "edit"
-		)) throw new HttpError(403, "Initiative Not Public")
-
-		topic.permission = {level: permission}
+		topic.permission = {level: yield readTopicPermission(user, topic)}
 		initiative.title = topic.title
 	}
 
@@ -417,7 +416,7 @@ exports.router.put("/:id", next(function*(req, res) {
 	else if (isInitiativeUpdate(req.body)) {
 		var initiative = req.initiative
 		var topic = req.topic
-		if (!Topic.canEdit(topic)) throw new HttpError(403, "No Permission To Edit")
+		if (!Topic.canEdit(topic)) throw new HttpError(403, "No Permission to Edit")
 		yield initiativesDb.update(topic.id, parseInitiative(initiative, req.body))
 		res.flash("notice", req.t("INITIATIVE_INFO_UPDATED"))
 		res.redirect(303, req.headers.referer || req.baseUrl + req.url)
@@ -426,25 +425,58 @@ exports.router.put("/:id", next(function*(req, res) {
 }))
 
 exports.router.delete("/:id", next(function*(req, res) {
+	var user = req.user
+	if (user == null) throw new HttpError(401)
+
+	var initiative = req.initiative
 	var topic = req.topic
 
-	if (!Topic.canDelete(topic))
+	if (initiative.user_id != user.id)
+		throw new HttpError(403, "No Permission to Delete")
+	if (initiative.phase != "edit")
 		throw new HttpError(405, "Can Only Delete Discussions")
 
-	yield req.cosApi(`/api/users/self/topics/${topic.id}`, {method: "DELETE"})
+	if (!initiative.published_at) yield commentsDb.execute(sql`
+		DELETE FROM comments
+		WHERE initiative_uuid = ${initiative.uuid}
+	`)
+
+	try { yield initiativesDb.delete(initiative.uuid) }
+	catch (ex) {
+		if (ex instanceof SqliteError && ex.code == "constraint") {
+			res.flash("notice", req.t("INITIATIVE_CANNOT_BE_DELETED_HAS_COMMENTS"))
+			res.redirect(302, req.baseUrl + req.path)
+			return
+		}
+		else throw ex
+	}
+
+	if (topic)
+		yield req.cosApi(`/api/users/self/topics/${topic.id}`, {method: "DELETE"})
+
 	res.flash("notice", req.t("INITIATIVE_DELETED"))
 	res.redirect(302, req.baseUrl)
 }))
 
 exports.router.get("/:id/edit", next(function*(req, res) {
-	var topic = req.topic
-	if (!Topic.canEdit(topic)) throw new HttpError(401)
+	var user = req.user
+	if (user == null) throw new HttpError(401)
 
-	var path = `/api/users/self/topics/${topic.id}`
-	var etherpadUrl = yield req.cosApi(path).then((res) => res.body.data.padUrl)
+	var initiative = req.initiative
+	var topic = req.topic
+
+	if (!(
+		user && initiative.user_id == user.id ||
+		topic && Topic.canEdit(topic)
+	)) throw new HttpError(403, "No Permission to Edit")
+
+	var etherpadUrl
+	if (topic) etherpadUrl = serializeEtherpadUrl(yield req.cosApi(
+		`/api/users/self/topics/${topic.id}`
+	).then((res) => res.body.data.padUrl))
 
 	res.render("initiatives/update_page.jsx", {
-		etherpadUrl: serializeEtherpadUrl(etherpadUrl)
+		etherpadUrl: etherpadUrl
 	})
 }))
 
@@ -654,6 +686,7 @@ function isInitiativeUpdate(obj) {
 }
 
 function* updateInitiativeToPublished(req, res) {
+	var initiative = req.initiative
 	var topic = req.topic
 	var tmpl = "initiatives/update_for_publish_page.jsx"
 
@@ -690,7 +723,10 @@ function* updateInitiativeToPublished(req, res) {
 		attrs: attrs
 	})
 
-	yield initiativesDb.update(topic.id, {discussion_end_email_sent_at: null})
+	yield initiativesDb.update(initiative.uuid, {
+		discussion_end_email_sent_at: null,
+		published_at: initiative.published_at || new Date
+	})
 
 	res.flash("notice", req.t("PUBLISHED_INITIATIVE"))
 	res.redirect(303, req.baseUrl + "/" + topic.id)

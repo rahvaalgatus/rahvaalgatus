@@ -2,6 +2,7 @@ var _ = require("root/lib/underscore")
 var MediaType = require("medium-type")
 var outdent = require("root/lib/outdent")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
+var pseudoDateTime = require("root/lib/crypto").pseudoDateTime
 var HTML_TYPE = new MediaType("text/html")
 
 module.exports = function(attrs) {
@@ -18,9 +19,10 @@ module.exports = function(attrs) {
 		title: "",
 		author_name: "",
 		author_url: "",
-		created_at: new Date,
+		created_at: pseudoDateTime(),
 		community_url: "",
 		url: "",
+		published_at: phase != "edit" || external ? pseudoDateTime() : null,
 		phase: phase,
 		organizations: [],
 		text: phase != "edit" && !external ? text : null,

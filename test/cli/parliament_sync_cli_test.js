@@ -83,6 +83,7 @@ describe("ParliamentSyncCli", function() {
 			uuid: INITIATIVE_UUID,
 			external: true,
 			created_at: new Date(2015, 5, 17),
+			published_at: new Date(2015, 5, 17),
 			title: "Elu paremaks tegemiseks",
 			author_name: "John Smith",
 			phase: "parliament",
@@ -131,6 +132,7 @@ describe("ParliamentSyncCli", function() {
 			uuid: INITIATIVE_UUID,
 			external: true,
 			created_at: new Date(2015, 5, 18),
+			published_at: new Date(2015, 5, 18),
 			title: "Elu Tallinnas paremaks tegemiseks",
 			phase: "parliament",
 			undersignable: false,
@@ -267,7 +269,7 @@ describe("ParliamentSyncCli", function() {
 	})
 
 	it("must update external initiative", function*() {
-		var initiative = yield initiativesDb.create({
+		var initiative = yield initiativesDb.create(new ValidInitiative({
 			uuid: INITIATIVE_UUID,
 			parliament_uuid: INITIATIVE_UUID,
 			external: true,
@@ -276,7 +278,7 @@ describe("ParliamentSyncCli", function() {
 			// it is set on the initial import.
 			phase: "government",
 			destination: "parliament"
-		})
+		}))
 
 		this.router.get(INITIATIVES_URL, respond.bind(null, [{
 			uuid: INITIATIVE_UUID,
@@ -393,12 +395,12 @@ describe("ParliamentSyncCli", function() {
 	})
 
 	it("must email subscribers interested in official events", function*() {
-		var initiative = yield initiativesDb.create({
+		var initiative = yield initiativesDb.create(new ValidInitiative({
 			uuid: INITIATIVE_UUID,
 			parliament_uuid: INITIATIVE_UUID,
 			title: "Teeme elu paremaks!",
 			external: true
-		})
+		}))
 
 		var subscriptions = yield subscriptionsDb.create([
 			new ValidSubscription({
@@ -550,12 +552,12 @@ describe("ParliamentSyncCli", function() {
 
 	it("must not email subscribers if event occurred earlier than 3 months",
 		function*() {
-		var initiative = yield initiativesDb.create({
+		var initiative = yield initiativesDb.create(new ValidInitiative({
 			title: "Teeme elu paremaks!",
 			uuid: INITIATIVE_UUID,
 			parliament_uuid: INITIATIVE_UUID,
 			external: true
-		})
+		}))
 
 		var subscription = yield subscriptionsDb.create(new ValidSubscription({
 			initiative_uuid: null,
@@ -612,11 +614,11 @@ describe("ParliamentSyncCli", function() {
 	})
 
 	it("must not email subscribers if no events created", function*() {
-		var initiative = yield initiativesDb.create({
+		var initiative = yield initiativesDb.create(new ValidInitiative({
 			uuid: INITIATIVE_UUID,
 			parliament_uuid: INITIATIVE_UUID,
 			external: true
-		})
+		}))
 
 		yield eventsDb.create(new ValidEvent({
 			initiative_uuid: initiative.uuid,

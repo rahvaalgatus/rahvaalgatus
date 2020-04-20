@@ -98,7 +98,7 @@ function* assertAdmin(req, _res, next) {
 	if (req.user == null) throw new HttpError(401)
 
 	if (!Topic.can("admin", req.topic))
-		throw new HttpError(403, "No Edit Permission")
+		throw new HttpError(403, "No Permission to Edit")
 	if (!Topic.canCreateEvents(req.topic))
 		throw new HttpError(403, "Cannot Create Events")
 

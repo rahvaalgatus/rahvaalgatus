@@ -177,7 +177,7 @@ function ReadPage(attrs) {
             {t("INITIATIVE_SIDEBAR_SUBSCRIBE")}
           </h3>
 
-					{initiative.external || topic && Topic.isPublic(topic) ?
+					{initiative.published_at ?
 						<SubscribeEmailView
 							req={req}
 							initiative={initiative}
@@ -192,8 +192,8 @@ function ReadPage(attrs) {
 					switch (phase) {
 						case "edit":
 							if (
-								Topic.isPublic(topic) &&
-								!Topic.hasDiscussionEnded(new Date, topic)
+								initiative.published_at &&
+								topic && !Topic.hasDiscussionEnded(new Date, topic)
 							) return <div class="initiative-status">
 								<h1 class="status-header">
 									{t("INITIATIVE_IN_DISCUSSION")}
@@ -328,7 +328,7 @@ function ReadPage(attrs) {
 
 					<InitiativeLocationView t={t} initiative={initiative} />
 
-					{initiative.external || topic && Topic.isPublic(topic) ? <Fragment>
+					{initiative.published_at ? <Fragment>
 						<h3 class="sidebar-subheader">Tahad aidata? Jaga algatust…</h3>
 
 						<a
@@ -362,7 +362,6 @@ function ReadPage(attrs) {
 
 				<SidebarSubscribeView
 					req={req}
-					topic={topic}
 					initiative={initiative}
 					subscriberCounts={subscriberCounts}
 				/>
@@ -1021,12 +1020,11 @@ function SidebarInfoView(attrs) {
 function SidebarSubscribeView(attrs) {
 	var req = attrs.req
 	var t = req.t
-	var topic = attrs.topic
 	var initiative = attrs.initiative
 	var subscriberCounts = attrs.subscriberCounts
 	var atomPath = req.baseUrl + req.url + ".atom"
 
-	if (!(initiative.external || topic && Topic.isPublic(topic))) return null
+	if (!initiative.published_at) return null
 
 	return <div class="sidebar-section">
 		<h2 class="sidebar-header">{t("INITIATIVE_SIDEBAR_FOLLOW_HEADER")}</h2>

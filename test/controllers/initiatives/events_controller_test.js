@@ -40,7 +40,8 @@ describe("InitiativeEventsController", function() {
 				var author = yield createUser()
 
 				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: author.id
+					user_id: author.id,
+					published_at: new Date
 				}))
 
 				yield createTopic(newTopic({
@@ -107,7 +108,8 @@ describe("InitiativeEventsController", function() {
 				var author = yield createUser()
 
 				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: author.id
+					user_id: author.id,
+					published_at: new Date
 				}))
 
 				yield createTopic(newTopic({
@@ -120,7 +122,7 @@ describe("InitiativeEventsController", function() {
 				var path = `/initiatives/${initiative.uuid}/events/new`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(403)
-				res.statusMessage.must.match(/edit permission/i)
+				res.statusMessage.must.equal("No Permission to Edit")
 			})
 		})
 	})
@@ -329,7 +331,8 @@ describe("InitiativeEventsController", function() {
 				var author = yield createUser()
 
 				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: author.id
+					user_id: author.id,
+					published_at: new Date
 				}))
 
 				yield createTopic(newTopic({
@@ -345,7 +348,7 @@ describe("InitiativeEventsController", function() {
 				})
 
 				res.statusCode.must.equal(403)
-				res.statusMessage.must.match(/edit permission/i)
+				res.statusMessage.must.equal("No Permission to Edit")
 			})
 		})
 	})

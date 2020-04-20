@@ -135,6 +135,20 @@ function* readInitiative(doc) {
 		LIMIT 1
 	`)) return initiative
 
+
+	// Use submittedDate as some initiatives documents were recreated
+	// 5 years after the actual submitting date. Example:
+	// https://api.riigikogu.ee/api/documents/collective-addresses/b9a5b10c-3744-49bc-b4f4-cecf34721b1f
+	//
+	// TODO: Ensure time parsing is always in Europe/Tallinn and don't depend
+	// on TZ being set.
+	// https://github.com/riigikogu-kantselei/api/issues/11
+	var createdAt = (
+		doc.submittingDate && Time.parseDate(doc.submittingDate) ||
+		doc.created && Time.parseDateTime(doc.created) ||
+		new Date
+	)
+
 	if (!Config.importInitiativesFromParliament) {
 		logger.log("Ignoring new initiative %s (%s)…", doc.uuid, doc.title)
 		return null
@@ -146,19 +160,8 @@ function* readInitiative(doc) {
 		destination: "parliament",
 		title: doc.title ? parseTitle(doc.title) : "",
 		author_name: doc.sender || "",
-
-		// Use submittedDate as some initiatives documents were recreated
-		// 5 years after the actual submitting date. Example:
-		// https://api.riigikogu.ee/api/documents/collective-addresses/b9a5b10c-3744-49bc-b4f4-cecf34721b1f
-		//
-		// TODO: Ensure time parsing is always in Europe/Tallinn and don't depend
-		// on TZ being set.
-		// https://github.com/riigikogu-kantselei/api/issues/11
-		created_at: (
-			doc.submittingDate && Time.parseDate(doc.submittingDate) ||
-			doc.created && Time.parseDateTime(doc.created) ||
-			new Date
-		)
+		created_at: createdAt,
+		published_at: createdAt
 	}
 }
 

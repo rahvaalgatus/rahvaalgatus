@@ -164,6 +164,13 @@ function* syncInitiative(row, collectiveAddressDocument) {
 function* replaceWebInitiative(initiative, document, row) {
 	var attrs = attrsFrom(row, document)
 
+	// TODO: Ensure time parsing is always in Europe/Tallinn and don't depend
+	// on TZ being set.
+	// https://github.com/riigikogu-kantselei/api/issues/11
+	var createdAt = document.created
+		? Time.parseDateTime(document.created)
+		: new Date
+
 	if (initiative == null) initiative = {
 		__proto__: attrs,
 		title: document.title ? parseTitle(document.title) : "",
@@ -172,13 +179,8 @@ function* replaceWebInitiative(initiative, document, row) {
 		archived_at: row.finishedOn && new Date,
 		author_name: row.authorName,
 		external: true,
-
-		// TODO: Ensure time parsing is always in Europe/Tallinn and don't depend
-		// on TZ being set.
-		// https://github.com/riigikogu-kantselei/api/issues/11
-		created_at: document.created
-			? Time.parseDateTime(document.created)
-			: new Date
+		created_at: createdAt,
+		published_at: createdAt
 	}
 	else if (diff(initiative, attrs))
 		initiative = yield initiativesDb.update(initiative, attrs)

@@ -28,7 +28,8 @@ describe("InitiativeSubscriptionsController", function() {
 		this.author = yield createUser()
 
 		this.initiative = yield initiativesDb.create(new ValidInitiative({
-			user_id: this.author.id
+			user_id: this.author.id,
+			published_at: new Date
 		}))
 
 		this.topic = yield createTopic(newTopic({
@@ -378,7 +379,7 @@ describe("InitiativeSubscriptionsController", function() {
 			})
 
 			res.statusCode.must.equal(403)
-			res.statusMessage.must.match(/public/i)
+			res.statusMessage.must.equal("Initiative Not Public")
 		})
 
 		it("must respond with 422 given missing email", function*() {

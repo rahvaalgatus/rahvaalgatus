@@ -18,6 +18,7 @@ exports.parse = function(attrs) {
 		meetings: attrs.meetings && JSON.parse(attrs.meetings),
 		created_at: attrs.created_at && new Date(attrs.created_at),
 		archived_at: attrs.archived_at && new Date(attrs.archived_at),
+		published_at: attrs.published_at && new Date(attrs.published_at),
 		text_type: attrs.text_type && MediaType.parse(attrs.text_type),
 
 		sent_to_parliament_at: attrs.sent_to_parliament_at &&

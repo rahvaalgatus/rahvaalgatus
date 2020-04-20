@@ -16,7 +16,6 @@ var commentsDb = require("root/db/comments_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var parseDom = require("root/lib/dom").parse
 var sql = require("sqlate")
-var cosDb = require("root").cosDb
 var t = require("root/lib/i18n").t.bind(null, "et")
 var MAX_TITLE_LENGTH = 140
 var MAX_TEXT_LENGTH = 3000
@@ -37,7 +36,8 @@ describe("InitiativeCommentsController", function() {
 		this.author = yield createUser()
 
 		this.initiative = yield initiativesDb.create(new ValidInitiative({
-			user_id: this.author.id
+			user_id: this.author.id,
+			published_at: new Date
 		}))
 
 		this.topic = yield createTopic(newTopic({
@@ -149,6 +149,39 @@ describe("InitiativeCommentsController", function() {
 
 				res.statusCode.must.equal(303)
 				res.headers.location.must.equal(path + "#comment-" + 1)
+			})
+
+			it("must not create comment if initiative unpublished", function*() {
+				yield initiativesDb.update(this.initiative, {published_at: null})
+
+				var path = `/initiatives/${this.initiative.uuid}`
+				var res = yield this.request(path + `/comments`, {
+					method: "POST",
+					form: {__proto__: VALID_ATTRS, _csrf_token: this.csrfToken}
+				})
+
+				res.statusCode.must.equal(403)
+				res.statusMessage.must.equal("Initiative Not Public")
+
+				yield commentsDb.search(sql`
+					SELECT * FROM comments
+				`).must.then.be.empty()
+			})
+
+			it("must create comment as author if initiative unpublished",
+				function*() {
+				yield initiativesDb.update(this.initiative, {
+					user_id: this.user.id,
+					published_at: null
+				})
+
+				var path = `/initiatives/${this.initiative.uuid}`
+				var res = yield this.request(path + `/comments`, {
+					method: "POST",
+					form: {__proto__: VALID_ATTRS, _csrf_token: this.csrfToken}
+				})
+
+				res.statusCode.must.equal(303)
 			})
 
 			describe("when subscribing", function() {
@@ -414,15 +447,10 @@ describe("InitiativeCommentsController", function() {
 			})
 
 			it("must not email subscribers if private", function*() {
-				yield initiativesDb.update(this.initiative, {user_id: this.user.id})
-
-				yield cosDb.query(sql`
-					UPDATE "Topics" SET
-						visibility = 'private',
-						"creatorId" = ${this.user.uuid}
-
-					WHERE id = ${this.topic.id}
-				`)
+				yield initiativesDb.update(this.initiative, {
+					user_id: this.user.id,
+					published_at: null
+				})
 
 				yield subscriptionsDb.create([
 					new ValidSubscription({
@@ -930,15 +958,10 @@ describe("InitiativeCommentsController", function() {
 			})
 
 			it("must not email subscribers if private", function*() {
-				yield initiativesDb.update(this.initiative, {user_id: this.user.id})
-
-				yield cosDb.query(sql`
-					UPDATE "Topics" SET
-						visibility = 'private',
-						"creatorId" = ${this.user.uuid}
-
-					WHERE id = ${this.topic.id}
-				`)
+				yield initiativesDb.update(this.initiative, {
+					user_id: this.user.id,
+					published_at: null
+				})
 
 				var author = yield createUser()
 
@@ -1080,6 +1103,54 @@ describe("InitiativeCommentsController", function() {
 					var form = dom.querySelector(`#comment-${comment.id}-reply`)
 					form.elements.text.value.must.equal(attrs.text)
 				})
+			})
+
+			it("must not create reply if initiative unpublished", function*() {
+				yield initiativesDb.update(this.initiative, {published_at: null})
+
+				var author = yield createUser()
+				var comment = yield commentsDb.create(new ValidComment({
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
+					initiative_uuid: this.initiative.uuid
+				}))
+
+				var path = `/initiatives/${this.initiative.uuid}`
+				path += `/comments/${comment.id}`
+				var res = yield this.request(path + `/replies`, {
+					method: "POST",
+					form: {__proto__: VALID_REPLY_ATTRS, _csrf_token: this.csrfToken}
+				})
+
+				res.statusCode.must.equal(403)
+				res.statusMessage.must.equal("Initiative Not Public")
+
+				yield commentsDb.search(sql`
+					SELECT * FROM comments
+				`).must.then.eql([comment])
+			})
+
+			it("must create reply as author if initiative unpublished", function*() {
+				yield initiativesDb.update(this.initiative, {
+					user_id: this.user.id,
+					published_at: null
+				})
+
+				var author = yield createUser()
+				var comment = yield commentsDb.create(new ValidComment({
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
+					initiative_uuid: this.initiative.uuid
+				}))
+
+				var path = `/initiatives/${this.initiative.uuid}`
+				path += `/comments/${comment.id}`
+				var res = yield this.request(path + `/replies`, {
+					method: "POST",
+					form: {__proto__: VALID_REPLY_ATTRS, _csrf_token: this.csrfToken}
+				})
+
+				res.statusCode.must.equal(303)
 			})
 		})
 	})
