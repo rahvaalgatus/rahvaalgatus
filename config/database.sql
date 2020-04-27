@@ -38,8 +38,8 @@ CREATE TABLE initiatives (
 CREATE TABLE initiative_messages (
 	id INTEGER PRIMARY KEY NOT NULL,
 	initiative_uuid TEXT NOT NULL,
-	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
-	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
 	title TEXT NOT NULL,
 	"text" TEXT NOT NULL,
 	sent_at TEXT,
@@ -56,9 +56,9 @@ CREATE TABLE initiative_messages (
 CREATE TABLE IF NOT EXISTS "initiative_events" (
 	id INTEGER PRIMARY KEY NOT NULL,
 	initiative_uuid TEXT NOT NULL,
-	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
-	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
-	occurred_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	occurred_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
 	created_by TEXT,
 	title TEXT,
 	content TEXT, origin TEXT NOT NULL DEFAULT 'admin', external_id TEXT, type TEXT NOT NULL DEFAULT 'text', user_id INTEGER,
@@ -77,8 +77,8 @@ ON initiative_events (initiative_uuid);
 CREATE TABLE IF NOT EXISTS "initiative_subscriptions" (
 	initiative_uuid TEXT NULL,
 	email TEXT COLLATE NOCASE NOT NULL,
-	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
-	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
 	confirmed_at TEXT,
 	confirmation_sent_at TEXT,
   update_token TEXT UNIQUE NOT NULL DEFAULT (lower(hex(randomblob(8)))),
@@ -212,8 +212,8 @@ CREATE TABLE initiative_signatures (
 	country TEXT NOT NULL,
 	personal_id TEXT NOT NULL,
 	token BLOB UNIQUE NOT NULL DEFAULT (randomblob(12)),
-	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
-	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
 	xades TEXT NOT NULL,
 	hidden INTEGER NOT NULL DEFAULT 0,
 	oversigned INTEGER NOT NULL DEFAULT 0, method TEXT NOT NULL,
@@ -459,4 +459,5 @@ INSERT INTO migrations VALUES('20200304172142');
 INSERT INTO migrations VALUES('20200327163241');
 INSERT INTO migrations VALUES('20200418144000');
 INSERT INTO migrations VALUES('20200418144010');
+INSERT INTO migrations VALUES('20200418144020');
 COMMIT;
