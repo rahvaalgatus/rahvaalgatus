@@ -6,7 +6,7 @@ var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
 var {searchInitiativesEvents} = require("./initiatives_controller")
 var {serializeApiInitiative} = require("./initiatives_controller")
-var {searchTopics} = require("root/lib/citizenos_db")
+var {setTitlesFromTopics} = require("root/lib/citizenos_db")
 var next = require("co-next")
 var initiativesDb = require("root/db/initiatives_db")
 var renderEventTitle = require("root/lib/event").renderEventTitle
@@ -20,22 +20,16 @@ exports.router.get("/",
 		"application/vnd.rahvaalgatus.initiative-event+json; v=1",
 	].map(MediaType)),
 	next(function*(req, res) {
-	var initiatives = yield initiativesDb.search(sql`SELECT * FROM initiatives`)
+	var initiatives = yield initiativesDb.search(sql`
+		SELECT *
+		FROM initiatives AS initiative
+		WHERE published_at IS NOT NULL
+		AND phase != 'edit'
+		GROUP BY uuid
+		ORDER BY ROWID
+	`)
 
-	var topics = _.indexBy(yield searchTopics(sql`
-		topic.id IN ${sql.in(initiatives.map((i) => i.uuid))}
-		AND topic.visibility = 'public'
-	`), "id")
-
-	initiatives = initiatives.filter((initiative) => (
-		initiative.external ||
-		topics[initiative.uuid]
-	))
-
-	initiatives.forEach(function(initiative) {
-		var topic = topics[initiative.uuid]
-		if (topic) initiative.title = topic.title
-	})
+	yield setTitlesFromTopics(initiatives)
 
 	var events = yield searchInitiativesEvents(initiatives)
 

@@ -10,20 +10,27 @@ module.exports = function(attrs) {
 	var external = attrs && attrs.external
 
 	var text = outdent`<body>
-		Make the world a better place for ${_.uniqueId()} people.
+		<p>Make the world a better place for ${_.uniqueId()} people.</p>
 	</body>`
 
 	return _.assign({
 		uuid: _.serializeUuid(_.uuidV4()),
 		user_id: null,
-		title: "",
+		title: "Local initiative #" + _.uniqueId(),
 		author_name: "",
 		author_url: "",
 		created_at: pseudoDateTime(),
 		community_url: "",
 		url: "",
-		published_at: phase != "edit" || external ? pseudoDateTime() : null,
 		phase: phase,
+		signing_started_at: phase == "sign" ? pseudoDateTime() : null,
+		signing_ends_at: phase == "sign" ? pseudoDateTime() : null,
+		published_at: phase != "edit" || external ? pseudoDateTime() : null,
+
+		discussion_ends_at: (
+			phase == "edit" && attrs && attrs.published_at ? pseudoDateTime() : null
+		),
+
 		organizations: [],
 		text: phase != "edit" && !external ? text : null,
 		text_type: phase != "edit" && !external ? HTML_TYPE : null,

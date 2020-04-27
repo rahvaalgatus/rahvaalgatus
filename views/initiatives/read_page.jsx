@@ -10,6 +10,7 @@ var I18n = require("root/lib/i18n")
 var Flash = require("../page").Flash
 var Topic = require("root/lib/topic")
 var Form = require("../page").Form
+var Initiative = require("root/lib/initiative")
 var FormButton = require("../page").FormButton
 var DonateForm = require("../donations/create_page").DonateForm
 var CommentView = require("./comments/read_page").CommentView
@@ -104,6 +105,7 @@ var FILE_TYPE_NAMES = {
 function ReadPage(attrs) {
 	var req = attrs.req
 	var t = attrs.t
+	var user = req.user
   var lang = req.lang
 	var thank = attrs.thank
 	var thankAgain = attrs.thankAgain
@@ -150,7 +152,6 @@ function ReadPage(attrs) {
 
 		{initiative.destination == "parliament" ? <PhasesView
       t={t}
-      topic={topic}
       initiative={initiative}
 			signatureCount={signatureCount}
     /> : null}
@@ -193,7 +194,7 @@ function ReadPage(attrs) {
 						case "edit":
 							if (
 								initiative.published_at &&
-								topic && !Topic.hasDiscussionEnded(new Date, topic)
+								new Date < initiative.discussion_ends_at
 							) return <div class="initiative-status">
 								<h1 class="status-header">
 									{t("INITIATIVE_IN_DISCUSSION")}
@@ -211,7 +212,7 @@ function ReadPage(attrs) {
 						case "sign":
 							var signatureThreshold = getRequiredSignatureCount(initiative)
 
-							if (topic.vote.endsAt <= new Date) {
+							if (initiative.signing_ends_at <= new Date) {
 								return <div class="initiative-status">
 									{signatureCount >= signatureThreshold ? <Fragment>
                     <h1 class="status-header">
@@ -270,7 +271,6 @@ function ReadPage(attrs) {
 				<QuicksignView
 					req={req}
 					t={t}
-					topic={topic}
 					initiative={initiative}
 					signature={signature}
 					signatureCount={signatureCount}
@@ -282,17 +282,15 @@ function ReadPage(attrs) {
 					files={files}
 				/>
 
-				{isSignable(initiative, topic) ? <div id="initiative-vote">
+				{isSignable(initiative) ? <div id="initiative-vote">
 					<ProgressView
 						t={t}
-						topic={topic}
 						initiative={initiative}
 						signatureCount={signatureCount}
 					/>
 
 					<ProgressTextView
 						t={t}
-						topic={topic}
 						initiative={initiative}
 						signatureCount={signatureCount}
 					/>
@@ -320,7 +318,6 @@ function ReadPage(attrs) {
 					<QuicksignView
 						req={req}
 						t={t}
-						topic={topic}
 						initiative={initiative}
 						signature={signature}
 						signatureCount={signatureCount}
@@ -351,6 +348,7 @@ function ReadPage(attrs) {
 					req={req}
 					topic={topic}
 					initiative={initiative}
+					hasComments={comments.length > 0}
 					signatureCount={signatureCount}
 				/>
 
@@ -375,7 +373,7 @@ function ReadPage(attrs) {
 
 		<EventsView
 			t={t}
-			topic={topic}
+			user={user}
 			initiative={initiative}
 			events={events}
 		/>
@@ -392,7 +390,6 @@ function ReadPage(attrs) {
 
 function PhasesView(attrs) {
   var t = attrs.t
-  var topic = attrs.topic
   var initiative = attrs.initiative
   var sigs = attrs.signatureCount
 	var phase = initiative.phase
@@ -407,8 +404,11 @@ function PhasesView(attrs) {
 	)
 
   var daysSinceCreated = diffInDays(new Date, initiative.created_at)
-  var daysInEdit = topic ? Topic.daysInDiscussion(topic) : 0
-  var discussionDaysLeft = daysInEdit - daysSinceCreated
+
+  var daysInEdit = initiative.discussion_ends_at ? diffInDays(
+		initiative.discussion_ends_at,
+		initiative.created_at
+	) + 1 : 0
 
 	var editProgress = isPhaseAfter("edit", phase)
 		? 1
@@ -416,18 +416,23 @@ function PhasesView(attrs) {
 
 	var editPhaseText
 	if (phase == "edit") {
-		if (topic.visibility == "private")
+		if (!initiative.published_at)
 			editPhaseText = ""
-		else if (!Topic.hasDiscussionEnded(new Date, topic))
+		else if (new Date < initiative.discussion_ends_at)
 			editPhaseText = t("TXT_DEADLINE_CALENDAR_DAYS_LEFT", {
-				numberOfDaysLeft: discussionDaysLeft
+				numberOfDaysLeft: daysInEdit - daysSinceCreated
 			})
 		else editPhaseText = t("DISCUSSION_FINISHED")
 	}
 	else if (initiative.external)
 		editPhaseText = ""
-	else if (topic && topic.vote) editPhaseText =
-		I18n.formatDateSpan("numeric", initiative.created_at, topic.vote.createdAt)
+	// TODO: Use initiative.published_at here once old CitizenOS initiatives have
+	// it adjusted from the imported 1970-01-01 time.
+	else if (initiative.signing_started_at) editPhaseText = I18n.formatDateSpan(
+		"numeric",
+		initiative.created_at,
+		initiative.signing_started_at
+	)
 
 	var signProgress = isPhaseAfter("sign", phase)
 		? 1
@@ -615,19 +620,22 @@ function InitiativeContentView(attrs) {
 function SidebarAuthorView(attrs) {
 	var req = attrs.req
 	var t = req.t
+	var user = req.user
 	var topic = attrs.topic
 	var initiative = attrs.initiative
 	var signatureCount = attrs.signatureCount
+	var hasComments = attrs.hasComments
 
-	if (topic == null) return null
+	var isAuthor = user && initiative.user_id == user.id
+	if (!isAuthor) return null
 
 	var actions = <Fragment>
-		{Topic.canEdit(topic) && initiative.phase == "edit" ? <Fragment>
+		{initiative.phase == "edit" ? <Fragment>
 			<Form
 				req={req}
 				id="initiative-destination-form"
 				method="put"
-				action={"/initiatives/" + topic.id}
+				action={"/initiatives/" + initiative.uuid}
 			>
 				<h3 class="sidebar-subheader">Algatuse saaja</h3>
 
@@ -648,19 +656,19 @@ function SidebarAuthorView(attrs) {
 			</Form>
 		</Fragment> : null}
 
-		{Topic.canPublish(topic) ? <FormButton
+		{!initiative.published_at ? <FormButton
 			req={req}
-			action={"/initiatives/" + topic.id}
+			action={"/initiatives/" + initiative.uuid}
 			name="visibility"
 			value="public"
 			class="green-button wide-button">
 			{t("PUBLISH_TOPIC")}
 		</FormButton> : null}
 
-		{Topic.canPropose(new Date, topic) ? <Fragment>
+		{Initiative.canPropose(new Date, initiative, topic, user) ? <Fragment>
 			<FormButton
 				req={req}
-				action={"/initiatives/" + topic.id}
+				action={"/initiatives/" + initiative.uuid}
 				name="status"
 				value="voting"
 				disabled={initiative.destination == null}
@@ -673,10 +681,10 @@ function SidebarAuthorView(attrs) {
 			</p> : null}
 		</Fragment> : null}
 
-		{Topic.canSendToParliament(topic, initiative, signatureCount) ?
+		{Initiative.canSendToParliament(initiative, user, signatureCount) ?
 			<FormButton
 				req={req}
-				action={"/initiatives/" + topic.id}
+				action={"/initiatives/" + initiative.uuid}
 				name="status"
 				value="followUp"
 				class="green-button wide-button">
@@ -684,33 +692,36 @@ function SidebarAuthorView(attrs) {
 			</FormButton>
 		: null}
 
-		{Topic.canEditBody(topic) ? <a
-			href={"/initiatives/" + topic.id + "/edit"}
+		{initiative.phase == "edit" ? <a
+			href={"/initiatives/" + initiative.uuid + "/edit"}
 			class="link-button wide-button">
 			{t("EDIT_INITIATIVE_TEXT")}
 		</a> : null}
 
-		{Topic.canUpdateDiscussionDeadline(topic) ? <FormButton
+		{initiative.phase == "edit" && initiative.published_at ? <FormButton
 			req={req}
-			action={"/initiatives/" + topic.id}
+			action={"/initiatives/" + initiative.uuid}
 			name="visibility"
 			value="public"
 			class="link-button wide-button">
 			{t("RENEW_DEADLINE")}
 		</FormButton> : null}
 
-		{Topic.canUpdateVoteDeadline(topic) ? <FormButton
+		{Initiative.canUpdateSignDeadline(initiative, user) ? <FormButton
 			req={req}
-			action={"/initiatives/" + topic.id}
+			action={"/initiatives/" + initiative.uuid}
 			name="status"
 			value="voting"
 			class="link-button wide-button">
 			{t("RENEW_DEADLINE")}
 		</FormButton> : null}
 
-		{Topic.canDelete(topic) ? <FormButton
+		{(
+			initiative.phase == "edit" &&
+			(!hasComments || !initiative.published_at)
+		) ? <FormButton
 			req={req}
-			action={"/initiatives/" + topic.id}
+			action={"/initiatives/" + initiative.uuid}
 			name="_method"
 			value="delete"
 			onclick={confirm(t("TXT_ALL_DISCUSSIONS_AND_VOTES_DELETED"))}
@@ -1330,18 +1341,19 @@ function SigningView(attrs) {
 
 function EventsView(attrs) {
 	var t = attrs.t
-	var topic = attrs.topic
+	var user = attrs.user
 	var initiative = attrs.initiative
 	var events = attrs.events.sort(compareEvent).reverse()
 	var initiativePath = "/initiatives/" + initiative.uuid
+	var canCreateEvents = user && initiative.user_id == user.id
 
-	if (events.length > 0 || topic && Topic.canCreateEvents(topic))
+	if (events.length > 0 || canCreateEvents)
 		return <section id="initiative-events" class="transparent-section"><center>
 			<a name="events" />
 
 			<article class="sheet">
-				{topic && Topic.canCreateEvents(topic) ? <a
-					href={`/initiatives/${topic.id}/events/new`}
+				{canCreateEvents ? <a
+					href={`/initiatives/${initiative.uuid}/events/new`}
 					class="create-event-button">
 					{t("CREATE_INITIATIVE_EVENT_BUTTON")}
 				</a> : null}
@@ -1679,7 +1691,6 @@ function SubscribeEmailView(attrs) {
 
 function ProgressTextView(attrs) {
 	var t = attrs.t
-	var topic = attrs.topic
 	var initiative = attrs.initiative
 	var signatureCount = attrs.signatureCount
 
@@ -1689,8 +1700,8 @@ function ProgressTextView(attrs) {
 				<span>
 					{t("DISCUSSION_DEADLINE")}
 					{": "}
-					<time datetime={topic.endsAt}>
-						{I18n.formatDateTime("numeric", topic.endsAt)}
+					<time datetime={initiative.discussion_ends_at}>
+						{I18n.formatDateTime("numeric", initiative.discussion_ends_at)}
 					</time>
 				</span>
 			</p>
@@ -1712,8 +1723,8 @@ function ProgressTextView(attrs) {
 				<span>
 					{t("VOTING_DEADLINE")}
 					{": "}
-					<time datetime={topic.vote.endsAt} class="deadline">
-						{I18n.formatDateTime("numeric", topic.vote.endsAt)}
+					<time datetime={initiative.signing_ends_at} class="deadline">
+						{I18n.formatDateTime("numeric", initiative.signing_ends_at)}
 					</time>.
 				</span>
 			</p>
@@ -1725,22 +1736,20 @@ function ProgressTextView(attrs) {
 function QuicksignView(attrs) {
 	var t = attrs.t
 	var req = attrs.req
-	var topic = attrs.topic
 	var initiative = attrs.initiative
 	var signature = attrs.signature
 	var signatureCount = attrs.signatureCount
 
-	if (!(initiative.external || topic && Topic.isPublic(topic))) return null
+	if (!initiative.published_at) return null
 
 	return <div class="quicksign">
 		<ProgressView
 			t={t}
-			topic={topic}
 			initiative={initiative}
 			signatureCount={signatureCount}
 		/>
 
-		{topic && isSignable(initiative, topic) && !signature ? <a
+		{isSignable(initiative) && !signature ? <a
 			href="#initiative-vote"
 			class="green-button wide-button sign-button">
 			{t("SIGN_THIS_DOCUMENT")}
@@ -1749,12 +1758,11 @@ function QuicksignView(attrs) {
 
 		<ProgressTextView
 			t={t}
-			topic={topic}
 			initiative={initiative}
 			signatureCount={signatureCount}
 		/>
 
-		{topic && isSignable(initiative, topic) && signature ? <Fragment>
+		{isSignable(initiative) && signature ? <Fragment>
 			<h2>{t("THANKS_FOR_SIGNING")}</h2>
 			<DeleteSignatureButton req={req} signature={signature}>
 				{t("REVOKE_SIGNATURE")}
@@ -1947,8 +1955,8 @@ function isPhaseAfter(than, phase) {
 }
 
 
-function isSignable(initiative, topic) {
-	return initiative.phase == "sign" && new Date < topic.vote.endsAt
+function isSignable(initiative) {
+	return initiative.phase == "sign" && new Date < initiative.signing_ends_at
 }
 
 function initiativePhaseFromEvent(event) {

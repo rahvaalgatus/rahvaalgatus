@@ -13,7 +13,6 @@ var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var commentsDb = require("root/db/comments_db")
-var messagesDb = require("root/db/initiative_messages_db")
 var parseDom = require("root/lib/dom").parse
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
@@ -32,19 +31,11 @@ describe("InitiativeCommentsController", function() {
 	beforeEach(require("root/test/mitm").router)
 
 	beforeEach(function*() {
-		this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
 		this.author = yield createUser()
 
 		this.initiative = yield initiativesDb.create(new ValidInitiative({
 			user_id: this.author.id,
 			published_at: new Date
-		}))
-
-		this.topic = yield createTopic(newTopic({
-			id: this.initiative.uuid,
-			creatorId: this.author.uuid,
-			sourcePartnerId: this.partner.id,
-			visibility: "public"
 		}))
 	})
 
@@ -58,6 +49,7 @@ describe("InitiativeCommentsController", function() {
 				})
 
 				res.statusCode.must.equal(401)
+				res.statusMessage.must.equal("Unauthorized")
 			})
 		})
 
@@ -100,6 +92,7 @@ describe("InitiativeCommentsController", function() {
 
 			it("must create comment given external initiative", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
 					external: true
 				}))
 
@@ -433,17 +426,52 @@ describe("InitiativeCommentsController", function() {
 
 				res.statusCode.must.equal(303)
 
-				yield messagesDb.search(sql`
-					SELECT * FROM initiative_messages
-				`).must.then.be.empty()
-
 				var emails = subscriptions.slice(2).map((s) => s.email).sort()
 
 				this.emails.length.must.equal(1)
 				this.emails[0].envelope.to.must.eql(emails)
 				var msg = String(this.emails[0].message)
-				msg.match(/^Subject: .*/m)[0].must.include(this.topic.title)
+				msg.match(/^Subject: .*/m)[0].must.include(this.initiative.title)
 				subscriptions.slice(2).forEach((s) => msg.must.include(s.update_token))
+			})
+
+			describe("when CitizenOS initiative", function() {
+				it("must email subscribers with CitizenOS title", function*() {
+					var partner = yield createPartner(newPartner({
+						id: Config.apiPartnerId
+					}))
+
+					var topic = yield createTopic(newTopic({
+						id: this.initiative.uuid,
+						creatorId: this.user.uuid,
+						sourcePartnerId: partner.id
+					}))
+
+					var subscription = yield subscriptionsDb.create(
+						new ValidSubscription({
+							initiative_uuid: this.initiative.uuid,
+							confirmed_at: new Date,
+							comment_interest: true
+						})
+					)
+
+					var path = `/initiatives/${this.initiative.uuid}`
+					var res = yield this.request(path + `/comments`, {
+						method: "POST",
+						form: {
+							__proto__: VALID_ATTRS,
+							_csrf_token: this.csrfToken,
+							referrer: path
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					this.emails.length.must.equal(1)
+					this.emails[0].envelope.to.must.eql([subscription.email])
+					var msg = String(this.emails[0].message)
+					msg.match(/^Subject: .*/m)[0].must.include(topic.title)
+				})
 			})
 
 			it("must not email subscribers if private", function*() {
@@ -580,6 +608,7 @@ describe("InitiativeCommentsController", function() {
 
 			it("must render new comment page given external initiative", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
 					external: true
 				}))
 				
@@ -628,6 +657,7 @@ describe("InitiativeCommentsController", function() {
 
 		it("must show comment page given external initiative", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
 				external: true
 			}))
 
@@ -836,6 +866,7 @@ describe("InitiativeCommentsController", function() {
 
 			it("must create reply given external initiative", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
 					external: true
 				}))
 
@@ -941,20 +972,59 @@ describe("InitiativeCommentsController", function() {
 
 				res.statusCode.must.equal(303)
 
-				yield messagesDb.search(sql`
-					SELECT * FROM initiative_messages
-				`).must.then.be.empty()
-
 				var emails = subscriptions.slice(2).map((s) => s.email).sort()
 
 				this.emails.length.must.equal(1)
 				this.emails[0].envelope.to.must.eql(emails)
 				var msg = String(this.emails[0].message)
-				msg.match(/^Subject: .*/m)[0].must.include(this.topic.title)
+				msg.match(/^Subject: .*/m)[0].must.include(this.initiative.title)
 
 				subscriptions.slice(2).forEach((s) => (
 					msg.must.include(s.update_token))
 				)
+			})
+
+			describe("when CitizenOS initiative", function() {
+				it("must email subscribers interested in comments", function*() {
+					var partner = yield createPartner(newPartner({
+						id: Config.apiPartnerId
+					}))
+
+					var topic = yield createTopic(newTopic({
+						id: this.initiative.uuid,
+						creatorId: this.user.uuid,
+						sourcePartnerId: partner.id
+					}))
+
+					var author = yield createUser()
+
+					var comment = yield commentsDb.create(new ValidComment({
+						user_id: author.id,
+						user_uuid: _.serializeUuid(author.uuid),
+						initiative_uuid: this.initiative.uuid
+					}))
+
+					var subscription = yield subscriptionsDb.create(
+						new ValidSubscription({
+							initiative_uuid: this.initiative.uuid,
+							confirmed_at: new Date,
+							comment_interest: true
+						})
+					)
+
+					var path = `/initiatives/${this.initiative.uuid}`
+					var res = yield this.request(path + `/comments/${comment.id}/replies`, {
+						method: "POST",
+						form: {__proto__: VALID_REPLY_ATTRS, _csrf_token: this.csrfToken}
+					})
+
+					res.statusCode.must.equal(303)
+
+					this.emails.length.must.equal(1)
+					this.emails[0].envelope.to.must.eql([subscription.email])
+					var msg = String(this.emails[0].message)
+					msg.match(/^Subject: .*/m)[0].must.include(topic.title)
+				})
 			})
 
 			it("must not email subscribers if private", function*() {

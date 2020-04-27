@@ -62,7 +62,6 @@ function InitiativeBadge(topic) {
 
 function ProgressView(attrs) {
 	var t = attrs.t
-	var topic = attrs.topic
 	var initiative = attrs.initiative
 	var sigs = attrs.signatureCount
 	var klass = "initiative-progress " + initiative.phase + "-phase"
@@ -71,14 +70,20 @@ function ProgressView(attrs) {
 		case "edit":
 			if (initiative.external) return null
 
-			if (topic.visibility == "private")
+			if (!initiative.published_at)
 				return <div class={`${klass} private`}>
 					{t("TXT_TOPIC_VISIBILITY_PRIVATE")}
 				</div>
 
-			if (new Date < topic.endsAt) {
+			if (new Date < initiative.discussion_ends_at) {
 				var passed = diffInDays(new Date, initiative.created_at)
-				var total = diffInDays(topic.endsAt, initiative.created_at) + 1
+
+				var total = diffInDays(
+					initiative.discussion_ends_at,
+					// TODO: Use published_at for measuring discussion phase time.
+					initiative.created_at
+				) + 1
+
 				var left = total - passed
 
 				return <div
@@ -100,7 +105,7 @@ function ProgressView(attrs) {
 					{t("N_SIGNATURES_COLLECTED", {votes: sigs})}
 				</div>
 
-			else if (new Date < topic.vote.endsAt)
+			else if (new Date < initiative.signing_ends_at)
 				return <div
 					style={Css.linearBackground("#00cb81", sigs / Config.votesRequired)}
 					class={klass}>

@@ -145,8 +145,7 @@ function InitiativesView(attrs) {
 
 		case "parliament":
 			initiatives = _.sortBy(initiatives, (i) => (
-				i.sent_to_parliament_at ||
-				topics[i.uuid] && topics[i.uuid].vote.createdAt
+				i.sent_to_parliament_at || i.signing_started_at
 			)).reverse()
 			break
 			
@@ -181,7 +180,7 @@ function InitiativeView(attrs) {
 
 	var time = (
 		initiative.phase == "edit" ? initiative.created_at :
-		initiative.phase == "sign" ? topic.vote.createdAt :
+		initiative.phase == "sign" ? initiative.signing_started_at :
 		initiative.phase == "parliament" ? (
 			initiative.received_by_parliament_at ||
 			initiative.sent_to_parliament_at
@@ -223,7 +222,6 @@ function InitiativeView(attrs) {
 
 			<ProgressView
 				t={t}
-				topic={topic}
 				initiative={initiative}
 				signatureCount={signatureCount}
 			/>

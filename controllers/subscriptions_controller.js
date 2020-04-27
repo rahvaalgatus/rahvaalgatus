@@ -6,11 +6,11 @@ var HttpError = require("standard-http-error")
 var SqliteError = require("root/lib/sqlite_error")
 var sendEmail = require("root").sendEmail
 var renderEmail = require("root/lib/i18n").email
-var searchTopics = require("root/lib/citizenos_db").searchTopics
 var next = require("co-next")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var initiativesDb = require("root/db/initiatives_db")
 var sql = require("sqlate")
+var {setTitlesFromTopics} = require("root/lib/citizenos_db")
 exports.parse = parse
 exports.router = Router({mergeParams: true})
 
@@ -34,15 +34,7 @@ exports.router.get("/", readSubscriptionFromQuery, next(function*(req, res) {
 		WHERE uuid IN ${sql.in(subscriptions.map((s) => s.initiative_uuid))}
 	`)
 
-	var topics = _.indexBy(yield searchTopics(sql`
-		topic.id IN ${sql.in(initiatives.map((i) => i.uuid))}
-		AND topic.visibility = 'public'
-	`), "id")
-
-	initiatives.forEach(function(initiative) {
-		var topic = topics[initiative.uuid]
-		if (topic) initiative.title = topic.title
-	})
+	yield setTitlesFromTopics(initiatives)
 
 	res.render("subscriptions/index_page.jsx", {
 		subscription: subscription,

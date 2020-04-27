@@ -45,9 +45,17 @@ module.exports = function(attrs) {
 			<tr>
 				<th scope="row">
 					Initiatives created<br />
-					<small>Created on Rahvaalgatus, published and not deleted.</small>
+					<small>Created on Rahvaalgatus and not deleted. May be private.</small>
 				</th>
 				<td>{attrs.initiativesCount}</td>
+			</tr>
+
+			<tr>
+				<th scope="row">
+					Initiatives published<br />
+					<small>Created on Rahvaalgatus, published and not deleted.</small>
+				</th>
+				<td>{attrs.publishedInitiativesCount}</td>
 			</tr>
 
 			<tr>
@@ -70,7 +78,7 @@ module.exports = function(attrs) {
 						Sent to signing during given period, regardless of creation date.
 					</small>
 				</th>
-				<td>{attrs.voteCount}</td>
+				<td>{attrs.signingStartedCount}</td>
 			</tr>
 
 			<tr>

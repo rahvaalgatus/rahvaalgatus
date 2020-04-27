@@ -1,19 +1,16 @@
 var _ = require("root/lib/underscore")
 var Router = require("express").Router
-var Config = require("root/config")
 var HttpError = require("standard-http-error")
 var DateFns = require("date-fns")
 var Time = require("root/lib/time")
 var {isAdmin} = require("root/lib/user")
+var {setTitlesFromTopics} = require("root/lib/citizenos_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var commentsDb = require("root/db/comments_db")
 var next = require("co-next")
 var initiativesDb = require("root/db/initiatives_db")
-var cosDb = require("root").cosDb
 var sqlite = require("root").sqlite
 var sql = require("sqlate")
-var concat = Array.prototype.concat.bind(Array.prototype)
-var PARTNER_IDS = concat(Config.apiPartnerId, _.keys(Config.partners))
 exports = module.exports = Router()
 
 exports.use(function(req, _res, next) {
@@ -43,7 +40,7 @@ exports.get("/", next(function*(req, res) {
 		FROM sessions
 		WHERE created_at >= ${from}
 		${to ? sql`AND created_at < ${to}` : sql``}
-	`).then(_.first).then((res) => _.mapValues(res, Number))
+	`).then(_.first)
 
 	var signatureCount = yield sqlite(sql`
 		SELECT
@@ -55,7 +52,7 @@ exports.get("/", next(function*(req, res) {
 		FROM initiative_signatures
 		WHERE created_at >= ${from}
 		${to ? sql`AND created_at < ${to}` : sql``}
-	`).then(_.first).then((res) => _.mapValues(res, Number))
+	`).then(_.first)
 
 	var signerCount = yield sqlite(sql`
 		WITH signers AS (
@@ -66,14 +63,14 @@ exports.get("/", next(function*(req, res) {
 		)
 
 		SELECT COUNT(*) AS count FROM signers
-	`).then(_.first).then((res) => Number(res.count))
+	`).then(_.first).then((res) => res.count)
 
 	var citizenSignatureCount = yield sqlite(sql`
 		SELECT COUNT(*) AS count
 		FROM initiative_citizenos_signatures
 		WHERE created_at >= ${from}
 		${to ? sql`AND created_at < ${to}` : sql``}
-	`).then(_.first).then((res) => Number(res.count))
+	`).then(_.first).then((res) => res.count)
 
 	var citizenSignerCount = yield sqlite(sql`
 		WITH signers AS (
@@ -84,25 +81,30 @@ exports.get("/", next(function*(req, res) {
 		)
 
 		SELECT COUNT(*) AS count FROM signers
-	`).then(_.first).then((res) => Number(res.count))
+	`).then(_.first).then((res) => res.count)
 
-	var topicCount = yield cosDb.query(sql`
-		SELECT COUNT(*)
-		FROM "Topics"
-		WHERE "createdAt" >= ${from}
-		${to ? sql`AND "createdAt" < ${to}` : sql``}
-		AND "deletedAt" IS NULL
-		AND "visibility" = 'public'
-		AND "sourcePartnerId" IN ${sql.in(PARTNER_IDS)}
-	`).then(_.first).then((res) => Number(res.count))
+	var initiativesCount = yield sqlite(sql`
+		SELECT COUNT(*) AS count
+		FROM initiatives
+		WHERE created_at >= ${from}
+		${to ? sql`AND created_at < ${to}` : sql``}
+	`).then(_.first).then((res) => res.count)
 
-	var externalInitiativesCount = yield initiativesDb.select1(sql`
+	var publishedInitiativesCount = yield sqlite(sql`
+		SELECT COUNT(*) AS count
+		FROM initiatives
+		WHERE published_at >= ${from}
+		${to ? sql`AND published_at < ${to}` : sql``}
+		AND published_at IS NOT NULL
+	`).then(_.first).then((res) => res.count)
+
+	var externalInitiativesCount = yield sqlite(sql`
 		SELECT COUNT(*) AS count
 		FROM initiatives
 		WHERE external
 		AND "created_at" >= ${from}
 		${to ? sql`AND "created_at" < ${to}` : sql``}
-	`).then((res) => Number(res.count))
+	`).then(_.first).then((res) => res.count)
 
 	var milestones = yield initiativesDb.search(sql`
 		SELECT signature_milestones
@@ -116,17 +118,12 @@ exports.get("/", next(function*(req, res) {
 		milestones[1000] < to ? 1 : 0
 	)))
 
-	var voteCount = yield cosDb.query(sql`
-		SELECT COUNT(*)
-		FROM "Topics" AS topic
-		JOIN "TopicVotes" AS tv ON tv."topicId" = topic.id
-		JOIN "Votes" AS vote ON vote.id = tv."voteId"
-
-		WHERE vote."createdAt" >= ${from}
-		${to ? sql`AND vote."createdAt" < ${to}` : sql``}
-		AND topic."deletedAt" IS NULL
-		AND topic."sourcePartnerId" IN ${sql.in(PARTNER_IDS)}
-	`).then(_.first).then((res) => Number(res.count))
+	var signingStartedCount = yield sqlite(sql`
+		SELECT COUNT(*) AS count
+		FROM initiatives
+		WHERE signing_started_at >= ${from}
+		${to ? sql`AND signing_started_at < ${to}` : sql``}
+	`).then(_.first).then((res) => res.count)
 
 	var sentToParliamentCount = yield sqlite(sql`
 		SELECT COUNT(*) as count
@@ -135,9 +132,9 @@ exports.get("/", next(function*(req, res) {
 		AND NOT external
 		AND sent_to_parliament_at >= ${from}
 		${to ? sql`AND sent_to_parliament_at < ${to}` : sql``}
-	`).then(_.first).then((res) => Number(res.count))
+	`).then(_.first).then((res) => res.count)
 
-	var subscriberCount = yield subscriptionsDb.search(sql`
+	var subscriberCount = yield sqlite(sql`
 		WITH emails AS (
 			SELECT DISTINCT email
 			FROM initiative_subscriptions
@@ -145,8 +142,8 @@ exports.get("/", next(function*(req, res) {
 			${to ? sql`AND confirmed_at < ${to}` : sql``}
 		)
 
-		SELECT COUNT(*) as count FROM emails
-	`).then(_.first).then((res) => Number(res.count))
+		SELECT COUNT(*) AS count FROM emails
+	`).then(_.first).then((res) => res.count)
 
 	var lastSubscriptions = yield subscriptionsDb.search(sql`
 		SELECT *
@@ -155,15 +152,15 @@ exports.get("/", next(function*(req, res) {
 		LIMIT 15
 	`)
 
-	var subscriptionInitiatives = _.indexBy(yield cosDb.query(sql`
-		SELECT id AS uuid, title
-		FROM "Topics"
+	var subscriptionInitiatives = yield sqlite(sql`
+		SELECT uuid, title
+		FROM initiatives
+		WHERE uuid IN ${sql.in(_.uniq(_.map(lastSubscriptions, "initiative_uuid")))}
+	`)
 
-		WHERE id IN ${sql.in(_.uniq(lastSubscriptions.map((s) => (
-			s.initiative_uuid)
-		)))}
-	`), "uuid")
+	yield setTitlesFromTopics(subscriptionInitiatives)
 
+	subscriptionInitiatives = _.indexBy(subscriptionInitiatives, "uuid")
 	lastSubscriptions.forEach(function(sub) {
 		sub.initiative = subscriptionInitiatives[sub.initiative_uuid]
 	})
@@ -179,9 +176,10 @@ exports.get("/", next(function*(req, res) {
 		citizenSignerCount: citizenSignerCount,
 		subscriberCount: subscriberCount,
 		successfulCount: successfulCount,
-		initiativesCount: topicCount,
+		initiativesCount: initiativesCount,
+		publishedInitiativesCount: publishedInitiativesCount,
 		externalInitiativesCount: externalInitiativesCount,
-		voteCount: voteCount,
+		signingStartedCount: signingStartedCount,
 		sentToParliamentCount: sentToParliamentCount
 	})
 }))

@@ -21,6 +21,12 @@ exports.parse = function(attrs) {
 		published_at: attrs.published_at && new Date(attrs.published_at),
 		text_type: attrs.text_type && MediaType.parse(attrs.text_type),
 
+		discussion_ends_at: attrs.discussion_ends_at &&
+			new Date(attrs.discussion_ends_at),
+		signing_started_at: attrs.signing_started_at &&
+			new Date(attrs.signing_started_at),
+		signing_ends_at: attrs.signing_ends_at &&
+			new Date(attrs.signing_ends_at),
 		sent_to_parliament_at: attrs.sent_to_parliament_at &&
 			new Date(attrs.sent_to_parliament_at),
 		sent_to_government_at: attrs.sent_to_government_at &&

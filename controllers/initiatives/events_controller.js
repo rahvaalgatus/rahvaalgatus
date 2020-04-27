@@ -3,7 +3,6 @@ var Config = require("root/config")
 var Router = require("express").Router
 var DateFns = require("date-fns")
 var HttpError = require("standard-http-error")
-var Topic = require("root/lib/topic")
 var Subscription = require("root/lib/subscription")
 var next = require("co-next")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
@@ -16,10 +15,10 @@ var EMPTY_EVENT = {title: "", content: ""}
 exports.router = Router({mergeParams: true})
 
 exports.router.get("/new", next(assertAdmin), next(function*(req, res) {
-	var topic = req.topic
+	var initiative = req.initiative
 
 	var subscriberCount =
-		yield subscriptionsDb.countConfirmedByInitiativeIdForAuthor(topic.id)
+		yield subscriptionsDb.countConfirmedByInitiativeIdForAuthor(initiative.uuid)
 
 	res.render("initiatives/events/create_page.jsx", {
 		attrs: EMPTY_EVENT,
@@ -34,7 +33,6 @@ exports.router.get("/:id", function(req, res) {
 
 exports.router.post("/", next(assertAdmin), next(function*(req, res) {
 	var initiative = req.initiative
-	var topic = req.topic
 
 	var event = yield eventsDb.create({
 		__proto__: parseEvent(req.body),
@@ -54,11 +52,11 @@ exports.router.post("/", next(assertAdmin), next(function*(req, res) {
 
 		title: req.t("EMAIL_INITIATIVE_AUTHOR_EVENT_TITLE", {
 			title: event.title,
-			initiativeTitle: topic.title,
+			initiativeTitle: initiative.title,
 		}),
 
 		text: renderEmail("EMAIL_INITIATIVE_AUTHOR_EVENT_BODY", {
-			initiativeTitle: topic.title,
+			initiativeTitle: initiative.title,
 			initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 			title: event.title,
 			text: _.quoteEmail(event.content)
@@ -95,12 +93,18 @@ exports.router.use(function(err, req, res, next) {
 })
 
 function* assertAdmin(req, _res, next) {
-	if (req.user == null) throw new HttpError(401)
+	var user = req.user
+	var initiative = req.initiative
+	if (user == null) throw new HttpError(401)
 
-	if (!Topic.can("admin", req.topic))
+	if (initiative.user_id != user.id)
 		throw new HttpError(403, "No Permission to Edit")
-	if (!Topic.canCreateEvents(req.topic))
-		throw new HttpError(403, "Cannot Create Events")
+
+	if (!(
+		initiative.phase == "sign" ||
+		initiative.phase == "government" ||
+		initiative.phase == "parliament"
+	)) throw new HttpError(403, "Cannot Create Events")
 
 	var until = yield rateLimit(req.user, req.initiative)
 	if (until) throw new HttpError(429, "Too Many Events", {until: until})

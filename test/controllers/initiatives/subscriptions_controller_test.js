@@ -24,19 +24,11 @@ describe("InitiativeSubscriptionsController", function() {
 	beforeEach(require("root/test/mitm").router)
 
 	beforeEach(function*() {
-		this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
 		this.author = yield createUser()
 
 		this.initiative = yield initiativesDb.create(new ValidInitiative({
 			user_id: this.author.id,
 			published_at: new Date
-		}))
-
-		this.topic = yield createTopic(newTopic({
-			id: this.initiative.uuid,
-			creatorId: this.author.uuid,
-			sourcePartnerId: this.partner.id,
-			visibility: "public"
 		}))
 	})
 
@@ -75,12 +67,59 @@ describe("InitiativeSubscriptionsController", function() {
 			this.emails.length.must.equal(1)
 			this.emails[0].envelope.to.must.eql(["user@example.com"])
 			var body = String(this.emails[0].message)
-			body.match(/^Subject: .*/m)[0].must.include(this.topic.title)
+			body.match(/^Subject: .*/m)[0].must.include(this.initiative.title)
 			body.must.include(`confirmation_token=3D${subscription.update_token}`)
+		})
+
+		describe("given CitizenOS initiative", function() {
+			it("must subscribe", function*() {
+				var partner = yield createPartner(newPartner({
+					id: Config.apiPartnerId
+				}))
+
+				var topic = yield createTopic(newTopic({
+					id: this.initiative.uuid,
+					creatorId: this.author.uuid,
+					sourcePartnerId: partner.id,
+					visibility: "public"
+				}))
+
+				var path = `/initiatives/${this.initiative.uuid}/subscriptions`
+				var res = yield this.request(path, {
+					method: "POST",
+					form: {email: "user@example.com"}
+				})
+
+				res.statusCode.must.equal(303)
+				res.headers.location.must.equal("/initiatives/" + this.initiative.uuid)
+
+				var subscriptions = yield subscriptionsDb.search(sql`
+					SELECT * FROM initiative_subscriptions
+				`)
+
+				subscriptions.length.must.equal(1)
+				var subscription = subscriptions[0]
+
+				subscription.must.eql(new ValidSubscription({
+					initiative_uuid: this.initiative.uuid,
+					email: "user@example.com",
+					created_ip: "127.0.0.1",
+					confirmation_sent_at: new Date,
+					update_token: subscription.update_token
+				}))
+
+				subscription.update_token.must.exist()
+
+				this.emails.length.must.equal(1)
+				this.emails[0].envelope.to.must.eql(["user@example.com"])
+				var body = String(this.emails[0].message)
+				body.match(/^Subject: .*/m)[0].must.include(topic.title)
+			})
 		})
 
 		it("must subscribe given an external initiative", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
 				external: true
 			}))
 
@@ -365,13 +404,6 @@ describe("InitiativeSubscriptionsController", function() {
 				user_id: this.author.id
 			}))
 
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				visibility: "private"
-			}))
-
 			var path = `/initiatives/${initiative.uuid}/subscriptions`
 			var res = yield this.request(path, {
 				method: "POST",
@@ -436,6 +468,7 @@ describe("InitiativeSubscriptionsController", function() {
 		it("must confirm given a confirmation token and external initiative",
 			function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
 				external: true
 			}))
 
@@ -552,6 +585,7 @@ describe("InitiativeSubscriptionsController", function() {
 		it("must redirect to subscriptions page given an external initiative",
 			function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
 				external: true
 			}))
 

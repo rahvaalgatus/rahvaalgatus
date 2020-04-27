@@ -156,6 +156,13 @@ exports.router.get("/email", next(function*(req, res) {
 function* read(req, res) {
 	var user = req.user
 
+	var authoredInitiatives = yield initiativesDb.search(sql`
+		SELECT initiative.*, user.name AS user_name
+		FROM initiatives AS initiative
+		LEFT JOIN users AS user ON initiative.user_id = user.id
+		WHERE initiative.user_id = ${user.id}
+	`)
+
 	var signatures = yield signaturesDb.search(sql`
 		SELECT initiative_uuid
 		FROM initiative_signatures
@@ -168,30 +175,18 @@ function* read(req, res) {
 		AND personal_id = ${user.personal_id}
 	`)
 
-	var authoredTopics = yield searchTopics(sql`
-		topic."creatorId" = ${user.uuid}
-	`)
-
-	var authoredInitiatives = yield initiativesDb.search(sql`
-		SELECT initiative.*, user.name AS user_name
-		FROM initiatives AS initiative
-		LEFT JOIN users AS user ON initiative.user_id = user.id
-		WHERE initiative.uuid IN ${sql.in(authoredTopics.map((t) => t.id))}
-	`)
-
-	var signedTopics = yield searchTopics(sql`
-		topic.id IN ${sql.in(signatures.map((s) => s.initiative_uuid))}
-		AND topic.visibility = 'public'
-	`)
-
 	var signedInitiatives = yield initiativesDb.search(sql`
 		SELECT initiative.*, user.name AS user_name
 		FROM initiatives AS initiative
 		LEFT JOIN users AS user ON initiative.user_id = user.id
-		WHERE initiative.uuid IN ${sql.in(signedTopics.map((t) => t.id))}
+		WHERE initiative.uuid IN ${sql.in(signatures.map((s) => s.initiative_uuid))}
 	`)
 
-	var topics = _.indexBy(concat(authoredTopics, signedTopics), "id")
+	var uuids = _.map(concat(authoredInitiatives, signedInitiatives), "uuid")
+
+	var topics = _.indexBy(yield searchTopics(sql`
+		topic.id IN ${sql.in(uuids)}
+	`), "id")
 
 	function setInitiativeTitle(initiative) {
 		var topic = topics[initiative.uuid]
@@ -201,7 +196,7 @@ function* read(req, res) {
 	authoredInitiatives.forEach(setInitiativeTitle)
 	signedInitiatives.forEach(setInitiativeTitle)
 
-	var signatureCounts = yield countSignaturesByIds(_.keys(topics))
+	var signatureCounts = yield countSignaturesByIds(uuids)
 
 	res.render("user/read_page.jsx", {
 		user: user,

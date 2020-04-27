@@ -11,6 +11,7 @@ var Time = require("root/lib/time")
 var Config = require("root/config")
 var Crypto = require("crypto")
 var MediaType = require("medium-type")
+var Initiative = require("root/lib/initiative")
 var Subscription = require("root/lib/subscription")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
@@ -64,31 +65,30 @@ exports.router.get("/",
 		SELECT initiative.*, user.name AS user_name
 		FROM initiatives AS initiative
 		LEFT JOIN users AS user ON initiative.user_id = user.id
-		WHERE destination IS NULL AND phase = 'edit'
-		OR destination ${gov == "parliament" ? sql`==` : sql`!=`} "parliament"
+
+		WHERE published_at IS NOT NULL
+		AND (
+			destination IS NULL AND phase = 'edit'
+			OR destination ${gov == "parliament" ? sql`==` : sql`!=`} "parliament"
+		)
 	`)
 
 	var topics = _.indexBy(yield searchTopics(sql`
 		topic.id IN ${sql.in(initiatives.map((i) => i.uuid))}
-		AND topic.visibility = 'public'
 	`), "id")
-
-	initiatives = initiatives.filter((initiative) => (
-		initiative.external ||
-		topics[initiative.uuid]
-	))
-
-	initiatives = initiatives.filter((initiative) => (
-		!initiative.archived_at ||
-		initiative.phase != "edit" ||
-		initiative.external ||
-		topics[initiative.uuid].sourcePartnerId == Config.apiPartnerId
-	))
 
 	initiatives.forEach(function(initiative) {
 		var topic = topics[initiative.uuid]
 		if (topic) initiative.title = topic.title
 	})
+
+	initiatives = initiatives.filter((initiative) => (
+		!initiative.archived_at ||
+		initiative.phase != "edit" ||
+		initiative.external ||
+		topics[initiative.uuid] == null ||
+		topics[initiative.uuid].sourcePartnerId == Config.apiPartnerId
+	))
 
 	var category = req.query.category
 
@@ -97,8 +97,7 @@ exports.router.get("/",
 		initiatives = initiatives.filter((initiative) => topics[initiative.uuid])
 	}
 
-	var topicUuids = _.keys(topics)
-	var signatureCounts = yield countSignaturesByIds(topicUuids)
+	var signatureCounts = yield countSignaturesByIds(_.map(initiatives, "uuid"))
 
 	var type = res.contentType
 	switch (type.name) {
@@ -124,7 +123,7 @@ exports.router.get("/",
 			var signaturesSinceCounts = null
 			if (req.query.signedSince)
 				signaturesSinceCounts = yield countSignaturesByIdsAndTime(
-					topicUuids,
+					_.map(initiatives, "uuid"),
 					DateFns.parse(req.query.signedSince)
 				)
 
@@ -404,6 +403,9 @@ exports.read = next(function*(req, res) {
 })
 
 exports.router.put("/:id", next(function*(req, res) {
+	var user = req.user
+	if (user == null) throw new HttpError(401)
+
 	if (req.body.visibility === "public") {
 		yield updateInitiativeToPublished(req, res)
 	}
@@ -415,9 +417,12 @@ exports.router.put("/:id", next(function*(req, res) {
 	}
 	else if (isInitiativeUpdate(req.body)) {
 		var initiative = req.initiative
-		var topic = req.topic
-		if (!Topic.canEdit(topic)) throw new HttpError(403, "No Permission to Edit")
-		yield initiativesDb.update(topic.id, parseInitiative(initiative, req.body))
+
+		if (initiative.user_id != user.id)
+			throw new HttpError(403, "No Permission to Edit")
+
+		var attrs = parseInitiative(initiative, req.body)
+		yield initiativesDb.update(initiative.uuid, attrs)
 		res.flash("notice", req.t("INITIATIVE_INFO_UPDATED"))
 		res.redirect(303, req.headers.referer || req.baseUrl + req.url)
 	}
@@ -564,7 +569,7 @@ function* searchInitiativesEvents(initiatives) {
 		LEFT JOIN users AS user ON event.user_id = user.id
 		WHERE event.initiative_uuid IN ${sql.in(initiatives.map((i) => i.uuid))}
 		GROUP BY event.id
-		ORDER BY "occurred_at" ASC
+		ORDER BY event.occurred_at ASC
 	`)
 
 	events.forEach(function(ev) {
@@ -686,21 +691,22 @@ function isInitiativeUpdate(obj) {
 }
 
 function* updateInitiativeToPublished(req, res) {
+	var user = req.user
 	var initiative = req.initiative
 	var topic = req.topic
 	var tmpl = "initiatives/update_for_publish_page.jsx"
 
-	if (!(
-		Topic.canPublish(topic) ||
-		Topic.canUpdateDiscussionDeadline(topic)
-	)) throw new HttpError(403)
+	if (!(initiative.user_id == user.id && initiative.phase == "edit"))
+		throw new HttpError(403)
 
 	if (req.body.endsAt == null) return void res.render(tmpl, {
-		attrs: {endsAt: topic.endsAt && new Date(topic.endsAt)}
+		attrs: {endsAt: initiative.discussion_ends_at}
 	})
 
 	let endsAt = DateFns.endOfDay(Time.parseDate(req.body.endsAt))
 
+	// TODO: Require deadline to be 3 days in the future only if not published
+	// before.
 	if (!Topic.isDeadlineOk(new Date, endsAt)) {
 		res.statusCode = 422
 		res.statusMessage = "Deadline Too Near or Too Far"
@@ -711,35 +717,41 @@ function* updateInitiativeToPublished(req, res) {
 		})
 	}
 
-	var attrs = {visibility: "public", endsAt: endsAt}
+	if (topic) {
+		var attrs = {visibility: "public", endsAt: endsAt}
 
-	var updated = yield req.cosApi(`/api/users/self/topics/${topic.id}`, {
-		method: "PUT",
-		json: attrs
-	}).catch(catch400)
+		var updated = yield req.cosApi(`/api/users/self/topics/${topic.id}`, {
+			method: "PUT",
+			json: attrs
+		}).catch(catch400)
 
-	if (!isOk(updated)) return void res.status(422).render(tmpl, {
-		error: translateCitizenError(req.t, updated.body),
-		attrs: attrs
-	})
+		if (!isOk(updated)) return void res.status(422).render(tmpl, {
+			error: translateCitizenError(req.t, updated.body),
+			attrs: attrs
+		})
+	}
 
 	yield initiativesDb.update(initiative.uuid, {
-		discussion_end_email_sent_at: null,
-		published_at: initiative.published_at || new Date
+		published_at: initiative.published_at || new Date,
+		discussion_ends_at: endsAt,
+		discussion_end_email_sent_at: null
 	})
 
 	res.flash("notice", req.t("PUBLISHED_INITIATIVE"))
-	res.redirect(303, req.baseUrl + "/" + topic.id)
+	res.redirect(303, req.baseUrl + "/" + initiative.uuid)
 }
 
 function* updateInitiativePhaseToSign(req, res) {
+	var user = req.user
 	var initiative = req.initiative
 	var topic = req.topic
 	var tmpl = "initiatives/update_for_voting_page.jsx"
 
+	if (topic == null) throw new HttpError(403, "No Topic For Initiative")
+
 	if (!(
-		Topic.canPropose(new Date, topic) ||
-		Topic.canUpdateVoteDeadline(topic)
+		Initiative.canPropose(new Date, initiative, topic, user) ||
+		Initiative.canUpdateSignDeadline(initiative, user)
 	)) throw new HttpError(403, "Cannot Update to Sign Phase")
 
 	if (req.body.endsAt == null) return void res.render(tmpl, {
@@ -788,13 +800,15 @@ function* updateInitiativePhaseToSign(req, res) {
 
 	yield initiativesDb.update(initiative, {
 		phase: "sign",
+		signing_started_at: initiative.signing_started_at || new Date,
+		signing_ends_at: endsAt,
 		signing_end_email_sent_at: null,
 
 		// Is there a chance for a race condition as Etherpad may not have saved
 		// the latest state to the CitizenOS datbase?
-		text: topic.description,
-		text_type: new MediaType("text/html"),
-		text_sha256: sha256(topic.description)
+		text: initiative.text || topic.description,
+		text_type: initiative.text_type || new MediaType("text/html"),
+		text_sha256: initiative.text_sha256 || sha256(topic.description)
 	})
 
 	if (topic.vote == null) {
@@ -828,6 +842,7 @@ function* updateInitiativePhaseToSign(req, res) {
 }
 
 function* updateInitiativePhaseToParliament(req, res) {
+	var user = req.user
 	var topic = req.topic
 	var initiative = req.initiative
 	var uuid = initiative.uuid
@@ -839,7 +854,7 @@ function* updateInitiativePhaseToParliament(req, res) {
 	if (initiative.destination != "parliament")
 		throw new HttpError(403, "Cannot Send Local Initiative to Parliament")
 
-	if (!Topic.canSendToParliament(topic, initiative, signatureCount))
+	if (!Initiative.canSendToParliament(initiative, user, signatureCount))
 		throw new HttpError(403, "Cannot Send to Parliament")
 
 	var attrs = {
@@ -849,7 +864,7 @@ function* updateInitiativePhaseToParliament(req, res) {
 
 	if (req.body.contact == null) return void res.render(tmpl, {attrs: attrs})
 
-	yield cosDb.query(sql`
+	if (topic) yield cosDb.query(sql`
 		UPDATE "Topics"
 		SET status = 'followUp', "updatedAt" = ${new Date}
 		WHERE id = ${topic.id}
@@ -876,7 +891,7 @@ function* updateInitiativePhaseToParliament(req, res) {
 		to: Config.parliamentEmail,
 
 		subject: t("EMAIL_INITIATIVE_TO_PARLIAMENT_TITLE", {
-			initiativeTitle: topic.title
+			initiativeTitle: initiative.title
 		}),
 
 		text: renderEmail(
@@ -884,7 +899,7 @@ function* updateInitiativePhaseToParliament(req, res) {
 			citizenosSignatureCount > 0
 			? "EMAIL_INITIATIVE_TO_PARLIAMENT_WITH_CITIZENOS_SIGNATURES_BODY"
 			: "EMAIL_INITIATIVE_TO_PARLIAMENT_BODY", {
-			initiativeTitle: topic.title,
+			initiativeTitle: initiative.title,
 			initiativeUrl: initiativeUrl,
 			initiativeUuid: initiative.uuid,
 
@@ -899,30 +914,30 @@ function* updateInitiativePhaseToParliament(req, res) {
 	})
 
 	var message = yield messagesDb.create({
-		initiative_uuid: topic.id,
+		initiative_uuid: initiative.uuid,
 		origin: "status",
 		created_at: new Date,
 		updated_at: new Date,
 
 		title: t("SENT_TO_PARLIAMENT_MESSAGE_TITLE", {
-			initiativeTitle: topic.title
+			initiativeTitle: initiative.title
 		}),
 
 		text: renderEmail("et", "SENT_TO_PARLIAMENT_MESSAGE_BODY", {
 			authorName: attrs.contact.name,
-			initiativeTitle: topic.title,
-			initiativeUrl: `${Config.url}/initiatives/${topic.id}`,
+			initiativeTitle: initiative.title,
+			initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 			signatureCount: signatureCount
 		})
 	})
 
 	yield Subscription.send(
 		message,
-		yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(topic.id)
+		yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(initiative.uuid)
 	)
 
 	res.flash("notice", req.t("SENT_TO_PARLIAMENT_CONTENT"))
-	res.redirect(303, req.baseUrl + "/" + topic.id)
+	res.redirect(303, req.baseUrl + "/" + initiative.uuid)
 }
 
 function parseInitiative(initiative, obj) {

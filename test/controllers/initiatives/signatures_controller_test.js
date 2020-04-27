@@ -17,13 +17,7 @@ var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var newCertificate = require("root/test/fixtures").newCertificate
 var newOcspResponse = require("root/test/fixtures").newOcspResponse
-var newPartner = require("root/test/citizenos_fixtures").newPartner
-var newTopic = require("root/test/citizenos_fixtures").newTopic
-var newVote = require("root/test/citizenos_fixtures").newVote
-var createPartner = require("root/test/citizenos_fixtures").createPartner
 var createUser = require("root/test/fixtures").createUser
-var createTopic = require("root/test/citizenos_fixtures").createTopic
-var createVote = require("root/test/citizenos_fixtures").createVote
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var signablesDb = require("root/db/initiative_signables_db")
@@ -195,13 +189,6 @@ describe("SignaturesController", function() {
 				parliament_token: null
 			}))
 
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "followUp"
-			}))
-
 			var path = `/initiatives/${initiative.uuid}/signatures.asice`
 			path += "?parliament-token="
 			var res = yield request.call(this, path)
@@ -214,13 +201,6 @@ describe("SignaturesController", function() {
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
-			}))
-
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "followUp"
 			}))
 
 			var path = `/initiatives/${initiative.uuid}/signatures.asice`
@@ -236,13 +216,6 @@ describe("SignaturesController", function() {
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "followUp"
-			}))
-
 			var path = `/initiatives/${initiative.uuid}/signatures.asice`
 			var res = yield request.call(this, path + "?parliament-token=")
 			res.statusCode.must.equal(403)
@@ -254,13 +227,6 @@ describe("SignaturesController", function() {
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
-			}))
-
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "followUp"
 			}))
 
 			var path = `/initiatives/${initiative.uuid}/signatures.asice`
@@ -275,13 +241,6 @@ describe("SignaturesController", function() {
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
-			}))
-
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "followUp"
 			}))
 
 			var path = `/initiatives/${initiative.uuid}/signatures.asice`
@@ -299,13 +258,6 @@ describe("SignaturesController", function() {
 				received_by_parliament_at: new Date
 			}))
 
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "followUp"
-			}))
-
 			var path = `/initiatives/${initiative.uuid}/signatures.asice`
 			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
 			var res = yield request.call(this, path)
@@ -316,7 +268,6 @@ describe("SignaturesController", function() {
 
 	describe(`GET / for ${ASICE_TYPE}`, function() {
 		beforeEach(function*() {
-			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
 			this.author = yield createUser()
 		})
 
@@ -328,13 +279,6 @@ describe("SignaturesController", function() {
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
-			}))
-
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "followUp"
 			}))
 
 			var signatures = _.sortBy(yield signaturesDb.create([
@@ -372,13 +316,6 @@ describe("SignaturesController", function() {
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "followUp"
-			}))
-
 			var path = `/initiatives/${initiative.uuid}/signatures.asice`
 			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
 			var res = yield this.request(path)
@@ -396,7 +333,6 @@ describe("SignaturesController", function() {
 
 	describe(`GET /?type=citizenos for ${ZIP_TYPE}`, function() {
 		beforeEach(function*() {
-			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
 			this.author = yield createUser()
 		})
 
@@ -411,13 +347,6 @@ describe("SignaturesController", function() {
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
-			}))
-
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "followUp"
 			}))
 
 			var aAsic = new Asic
@@ -473,13 +402,6 @@ describe("SignaturesController", function() {
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "followUp"
-			}))
-
 			var path = `/initiatives/${initiative.uuid}/signatures.zip?type=citizenos`
 			path += "&parliament-token=" + initiative.parliament_token.toString("hex")
 			var res = yield this.request(path)
@@ -495,13 +417,6 @@ describe("SignaturesController", function() {
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
-			}))
-
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "followUp"
 			}))
 
 			_.sortBy(yield citizenosSignaturesDb.create([
@@ -526,26 +441,12 @@ describe("SignaturesController", function() {
 		require("root/test/time")(new Date(2015, 5, 18))
 
 		beforeEach(function*() {
-			this.partner = yield createPartner(newPartner({
-				id: Config.apiPartnerId
-			}))
-
 			this.author = yield createUser()
 
 			this.initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "sign"
-			}))
-
-			this.topic = yield createTopic(newTopic({
-				id: this.initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "voting"
-			}))
-
-			yield createVote(this.topic, newVote({
-				endsAt: DateFns.addDays(new Date, 1)
+				phase: "sign",
+				signing_ends_at: DateFns.addDays(new Date, 1)
 			}))
 		})
 
@@ -2417,26 +2318,12 @@ describe("SignaturesController", function() {
 
 	describe(`GET /:personalid for ${ASICE_TYPE}`, function() {
 		beforeEach(function*() {
-			this.partner = yield createPartner(newPartner({
-				id: Config.apiPartnerId
-			}))
-
 			this.author = yield createUser()
 
 			this.initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "sign"
-			}))
-
-			this.topic = yield createTopic(newTopic({
-				id: this.initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "voting"
-			}))
-
-			yield createVote(this.topic, newVote({
-				endsAt: DateFns.addDays(new Date, 1)
+				phase: "sign",
+				signing_ends_at: DateFns.addDays(new Date, 1)
 			}))
 		})
 
@@ -2491,26 +2378,12 @@ describe("SignaturesController", function() {
 		require("root/test/time")()
 
 		beforeEach(function*() {
-			this.partner = yield createPartner(newPartner({
-				id: Config.apiPartnerId
-			}))
-
 			this.author = yield createUser()
 
 			this.initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "sign"
-			}))
-
-			this.topic = yield createTopic(newTopic({
-				id: this.initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "voting"
-			}))
-
-			yield createVote(this.topic, newVote({
-				endsAt: DateFns.addDays(new Date, 1)
+				phase: "sign",
+				signing_ends_at: DateFns.addDays(new Date, 1)
 			}))
 		})
 
@@ -2600,26 +2473,12 @@ describe("SignaturesController", function() {
 
 	describe("DELETE /:personalId", function() {
 		beforeEach(function*() {
-			this.partner = yield createPartner(newPartner({
-				id: Config.apiPartnerId
-			}))
-
 			this.author = yield createUser()
 
 			this.initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "sign"
-			}))
-
-			this.topic = yield createTopic(newTopic({
-				id: this.initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "voting"
-			}))
-
-			yield createVote(this.topic, newVote({
-				endsAt: DateFns.addDays(new Date, 1)
+				phase: "sign",
+				signing_ends_at: DateFns.addDays(new Date, 1)
 			}))
 		})
 

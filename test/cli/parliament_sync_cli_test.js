@@ -397,6 +397,7 @@ describe("ParliamentSyncCli", function() {
 	it("must email subscribers interested in official events", function*() {
 		var initiative = yield initiativesDb.create(new ValidInitiative({
 			uuid: INITIATIVE_UUID,
+			phase: "parliament",
 			parliament_uuid: INITIATIVE_UUID,
 			title: "Teeme elu paremaks!",
 			external: true
@@ -555,6 +556,7 @@ describe("ParliamentSyncCli", function() {
 		var initiative = yield initiativesDb.create(new ValidInitiative({
 			title: "Teeme elu paremaks!",
 			uuid: INITIATIVE_UUID,
+			phase: "parliament",
 			parliament_uuid: INITIATIVE_UUID,
 			external: true
 		}))
@@ -617,6 +619,7 @@ describe("ParliamentSyncCli", function() {
 		var initiative = yield initiativesDb.create(new ValidInitiative({
 			uuid: INITIATIVE_UUID,
 			parliament_uuid: INITIATIVE_UUID,
+			phase: "parliament",
 			external: true
 		}))
 

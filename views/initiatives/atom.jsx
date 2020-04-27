@@ -17,13 +17,12 @@ var CATEGORIES = {
 function AtomView(attrs) {
 	var req = attrs.req
 	var initiative = attrs.initiative
-	var topic = attrs.topic
 	var events = attrs.events
 	var url = Config.url + req.baseUrl + req.url
 
 	var updatedAt = events.length
 		? _.last(events).updated_at
-		: topic && topic.updatedAt || initiative.created_at
+		: initiative.created_at
 
 	return <feed xmlns="http://www.w3.org/2005/Atom">
 		<id>{url}</id>

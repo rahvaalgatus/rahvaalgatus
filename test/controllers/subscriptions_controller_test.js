@@ -26,7 +26,6 @@ describe("SubscriptionsController", function() {
 
 	beforeEach(function*() {
 		this.author = yield createUser()
-		this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
 	})
 
 	describe("GET /", function() {
@@ -77,15 +76,8 @@ describe("SubscriptionsController", function() {
 
 		it("must show page given subscription to initiative", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id
-			}))
-
-			var topic = yield createTopic(newTopic({
-				id: initiative.uuid,
-				title: "Better life for everyone.",
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				visibility: "public"
+				user_id: this.author.id,
+				published_at: new Date
 			}))
 
 			var subscription = yield subscriptionsDb.create(new ValidSubscription({
@@ -99,12 +91,42 @@ describe("SubscriptionsController", function() {
 
 			res.statusCode.must.equal(200)
 			res.body.must.include(t("SUBSCRIPTIONS_UPDATE_TITLE"))
-			res.body.must.include(topic.title)
+			res.body.must.include(initiative.title)
+		})
+
+		describe("given CitizenOS initiative", function() {
+			it("must show page given subscription to initiative", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					published_at: new Date
+				}))
+
+				var partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
+				
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: this.author.uuid,
+					sourcePartnerId: partner.id
+				}))
+
+				var subscription = yield subscriptionsDb.create(new ValidSubscription({
+					initiative_uuid: initiative.uuid,
+					confirmed_at: new Date
+				}))
+
+				var res = yield this.request(
+					`/subscriptions?initiative=${initiative.uuid}&update-token=${subscription.update_token}`
+				)
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("SUBSCRIPTIONS_UPDATE_TITLE"))
+				res.body.must.include(topic.title)
+			})
 		})
 
 		it("must show page given subscription to external initiative", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
-				title: "Better life for everyone.",
+				phase: "parliament",
 				external: true
 			}))
 
@@ -128,6 +150,7 @@ describe("SubscriptionsController", function() {
 			}))
 
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
 				external: true
 			}))
 
@@ -149,8 +172,8 @@ describe("SubscriptionsController", function() {
 		})
 
 		it("must show all subscriptions for given email address", function*() {
-			var initiatives = yield _.times(3, (i) => initiativesDb.create(
-				new ValidInitiative({title: `Better life for ${i}s.`, external: true})
+			var initiatives = yield _.times(3, () => initiativesDb.create(
+				new ValidInitiative({phase: "parliament", external: true})
 			))
 
 			var subscriptions = yield initiatives.map((initiative) => subscriptionsDb.create(
@@ -174,7 +197,7 @@ describe("SubscriptionsController", function() {
 
 		it("must not show subscriptions for other email addresses", function*() {
 			var other = yield initiativesDb.create(new ValidInitiative({
-				title: "Better life for everyone.",
+				phase: "parliament",
 				external: true
 			}))
 
@@ -553,14 +576,8 @@ describe("SubscriptionsController", function() {
 
 		it("must update subscription to initiative", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id
-			}))
-
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				visibility: "public"
+				user_id: this.author.id,
+				published_at: new Date
 			}))
 
 			var subscription = yield subscriptionsDb.create(new ValidSubscription({
@@ -596,6 +613,7 @@ describe("SubscriptionsController", function() {
 
 		it("must update subscription to external initiative", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
 				external: true
 			}))
 
@@ -733,15 +751,8 @@ describe("SubscriptionsController", function() {
 
 		it("must delete subscription to initiative", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id
-			}))
-
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				title: "Better life for everyone.",
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				visibility: "public"
+				user_id: this.author.id,
+				published_at: new Date
 			}))
 
 			var subscription = yield subscriptionsDb.create(new ValidSubscription({
@@ -770,6 +781,7 @@ describe("SubscriptionsController", function() {
 
 		it("must delete subscription to external initiative", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
 				external: true
 			}))
 
@@ -799,6 +811,7 @@ describe("SubscriptionsController", function() {
 
 		it("must not delete unconfirmed subscription to initiatives", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
 				external: true
 			}))
 
@@ -1024,8 +1037,8 @@ describe("SubscriptionsController", function() {
 				confirmed_at: new Date
 			}))
 
-			var initiatives = yield _.times(3, (i) => initiativesDb.create(
-				new ValidInitiative({title: `Better life for ${i}s.`, external: true})
+			var initiatives = yield _.times(3, () => initiativesDb.create(
+				new ValidInitiative({phase: "parliament", external: true})
 			))
 
 			yield initiatives.map((initiative) => subscriptionsDb.create(new ValidSubscription({
@@ -1049,8 +1062,8 @@ describe("SubscriptionsController", function() {
 		})
 
 		it("must not delete unconfirmed subscriptions", function*() {
-			var initiatives = yield _.times(2, (i) => initiativesDb.create(
-				new ValidInitiative({title: `Better life for ${i}s.`, external: true})
+			var initiatives = yield _.times(2, () => initiativesDb.create(
+				new ValidInitiative({phase: "parliament", external: true})
 			))
 
 			var unconfirmed = yield subscriptionsDb.create(new ValidSubscription({
@@ -1082,6 +1095,7 @@ describe("SubscriptionsController", function() {
 
 		it("must not delete subscriptions by other emails", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
 				external: true
 			}))
 			
@@ -1243,6 +1257,7 @@ function mustRequireToken(request) {
 
 		it("must respond with 404 given an update token of a subscription to initiative", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
 				external: true
 			}))
 
@@ -1261,6 +1276,7 @@ function mustRequireToken(request) {
 
 		it("must respond with 404 given an update token of an unconfirmed subscription to initiative", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
 				external: true
 			}))
 
@@ -1278,6 +1294,7 @@ function mustRequireToken(request) {
 
 		it("must respond with 404 given an initiative uuid and update token of a subscription without initiative", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
 				external: true
 			}))
 
@@ -1295,6 +1312,7 @@ function mustRequireToken(request) {
 
 		it("must respond with 404 given an initiative uuid and invalid update token", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
 				external: true
 			}))
 

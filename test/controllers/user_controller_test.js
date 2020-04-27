@@ -9,11 +9,9 @@ var Http = require("root/lib/http")
 var parseCookies = Http.parseCookies
 var newPartner = require("root/test/citizenos_fixtures").newPartner
 var newTopic = require("root/test/citizenos_fixtures").newTopic
-var newVote = require("root/test/citizenos_fixtures").newVote
 var createPartner = require("root/test/citizenos_fixtures").createPartner
 var createUser = require("root/test/fixtures").createUser
 var createTopic = require("root/test/citizenos_fixtures").createTopic
-var createVote = require("root/test/citizenos_fixtures").createVote
 var parseDom = require("root/lib/dom").parse
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
@@ -38,12 +36,6 @@ describe("UserController", function() {
 
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
-
-			beforeEach(function*() {
-				this.partner = yield createPartner(newPartner({
-					id: Config.apiPartnerId
-				}))
-			})
 
 			it("must show name without email", function*() {
 				yield usersDb.update(this.user, _.assign(this.user, {
@@ -152,17 +144,10 @@ describe("UserController", function() {
 			})
 
 			describe("initiatives", function() {
-				it("must show initiatives", function*() {
+				it("must show initiative in edit phase", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: "edit"
-					}))
-
-					yield createTopic(newTopic({
-						id: initiative.uuid,
-						title: "My thoughts",
-						creatorId: this.user.uuid,
-						sourcePartnerId: this.partner.id
 					}))
 
 					var res = yield this.request("/user")
@@ -172,43 +157,42 @@ describe("UserController", function() {
 					var el = dom.querySelector("li.initiative")
 					el.innerHTML.must.include(initiative.uuid)
 					el.textContent.must.include(this.user.name)
+					el.textContent.must.include(initiative.title)
 				})
 
-				it("must show initiative in edit phase", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id,
-						phase: "edit"
-					}))
+				describe("given CitizenOS initiative", function() {
+					it("must show initiative in edit phase", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: "edit"
+						}))
 
-					var topic = yield createTopic(newTopic({
-						id: initiative.uuid,
-						title: "My thoughts",
-						creatorId: this.user.uuid,
-						sourcePartnerId: this.partner.id
-					}))
+						var partner = yield createPartner(newPartner({
+							id: Config.apiPartnerId
+						}))
 
-					var res = yield this.request("/user")
-					res.statusCode.must.equal(200)
-					res.body.must.include(initiative.uuid)
-					res.body.must.include(topic.title)
+						var topic = yield createTopic(newTopic({
+							id: initiative.uuid,
+							creatorId: this.user.uuid,
+							sourcePartnerId: partner.id
+						}))
+
+						var res = yield this.request("/user")
+						res.statusCode.must.equal(200)
+
+						var dom = parseDom(res.body)
+						var el = dom.querySelector("li.initiative")
+						el.innerHTML.must.include(initiative.uuid)
+						el.textContent.must.include(this.user.name)
+						el.textContent.must.include(topic.title)
+					})
 				})
 
 				it("must show initiative in sign phase", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
-						phase: "sign"
-					}))
-
-					var topic = yield createTopic(newTopic({
-						id: initiative.uuid,
-						title: "My thoughts",
-						creatorId: this.user.uuid,
-						sourcePartnerId: this.partner.id,
-						status: "voting"
-					}))
-
-					yield createVote(topic, newVote({
-						endsAt: DateFns.addDays(new Date, 1)
+						phase: "sign",
+						signing_ends_at: DateFns.addDays(new Date, 1)
 					}))
 
 					yield citizenosSignaturesDb.create(_.times(5, () => (
@@ -222,7 +206,7 @@ describe("UserController", function() {
 					var res = yield this.request("/user")
 					res.statusCode.must.equal(200)
 					res.body.must.include(initiative.uuid)
-					res.body.must.include(topic.title)
+					res.body.must.include(initiative.title)
 					res.body.must.include(t("N_SIGNATURES", {votes: 8}))
 				})
 
@@ -232,13 +216,6 @@ describe("UserController", function() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: author.id,
 						phase: "edit"
-					}))
-
-					yield createTopic(newTopic({
-						id: initiative.uuid,
-						title: "My thoughts",
-						creatorId: author.uuid,
-						sourcePartnerId: this.partner.id
 					}))
 
 					var res = yield this.request("/user")
@@ -254,15 +231,6 @@ describe("UserController", function() {
 							user_id: this.author.id,
 							phase: "sign"
 						}))
-
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: this.author.uuid,
-							sourcePartnerId: this.partner.id,
-							status: "voting"
-						}))
-
-						yield createVote(topic, newVote({endsAt: new Date}))
 
 						yield signaturesDb.create(new ValidSignature({
 							initiative_uuid: initiative.uuid,
@@ -286,15 +254,6 @@ describe("UserController", function() {
 							phase: "sign"
 						}))
 
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: this.author.uuid,
-							sourcePartnerId: this.partner.id,
-							status: "voting"
-						}))
-
-						yield createVote(topic, newVote({endsAt: new Date}))
-
 						yield signaturesDb.create(new ValidSignature({
 							initiative_uuid: initiative.uuid,
 							country: "LT",
@@ -312,15 +271,6 @@ describe("UserController", function() {
 							user_id: this.author.id,
 							phase: "sign"
 						}))
-
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: this.author.uuid,
-							sourcePartnerId: this.partner.id,
-							status: "voting"
-						}))
-
-						yield createVote(topic, newVote({endsAt: new Date}))
 
 						yield signaturesDb.create(new ValidSignature({
 							initiative_uuid: initiative.uuid,
@@ -343,15 +293,6 @@ describe("UserController", function() {
 							phase: "sign"
 						}))
 
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: (yield createUser()).uuid,
-							sourcePartnerId: this.partner.id,
-							status: "voting"
-						}))
-
-						yield createVote(topic, newVote({endsAt: new Date}))
-
 						yield citizenosSignaturesDb.create(new ValidCitizenosSignature({
 							initiative_uuid: initiative.uuid,
 							country: this.user.country,
@@ -374,15 +315,6 @@ describe("UserController", function() {
 							phase: "sign"
 						}))
 
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: this.author.uuid,
-							sourcePartnerId: this.partner.id,
-							status: "voting"
-						}))
-
-						yield createVote(topic, newVote({endsAt: new Date}))
-
 						yield citizenosSignaturesDb.create(new ValidCitizenosSignature({
 							initiative_uuid: initiative.uuid,
 							country: "LT",
@@ -400,15 +332,6 @@ describe("UserController", function() {
 							user_id: this.author.id,
 							phase: "sign"
 						}))
-
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: this.author.uuid,
-							sourcePartnerId: this.partner.id,
-							status: "voting"
-						}))
-
-						yield createVote(topic, newVote({endsAt: new Date}))
 
 						yield citizenosSignaturesDb.create(new ValidCitizenosSignature({
 							initiative_uuid: initiative.uuid,

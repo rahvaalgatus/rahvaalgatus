@@ -25,13 +25,6 @@ var LOCAL_SITE_HOSTNAME = Url.parse(Config.localUrl).hostname
 var STATISTICS_TYPE = "application/vnd.rahvaalgatus.statistics+json; v=1"
 var PHASES = require("root/lib/initiative").PHASES
 
-var PHASE_TO_STATUS = {
-	sign: "voting",
-	parliament: "followUp",
-	government: "followUp",
-	done: "followUp"
-}
-
 var EMPTY_STATISTICS = {
 	initiativeCountsByPhase: {
 		edit: 0,
@@ -57,7 +50,6 @@ describe("HomeController", function() {
 	beforeEach(require("root/test/mitm").router)
 
 	beforeEach(function*() {
-		this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
 		this.author = yield createUser()
 	})
 
@@ -65,35 +57,50 @@ describe("HomeController", function() {
 		it("must show initiatives", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "edit"
-			}))
-
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				endsAt: DateFns.addSeconds(new Date, 1),
-				visibility: "public"
+				phase: "edit",
+				published_at: new Date,
+				discussion_ends_at: DateFns.addSeconds(new Date, 1)
 			}))
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
 			res.body.must.include(initiative.uuid)
+			res.body.must.include(initiative.title)
 			res.body.must.include(this.author.name)
+		})
+
+		describe("when CitizenOS initiative", function() {
+			it("must show initiatives", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					published_at: new Date,
+					discussion_ends_at: DateFns.addSeconds(new Date, 1)
+				}))
+
+				var partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
+
+				var topic = yield createTopic(newTopic({
+					id: initiative.uuid,
+					creatorId: this.author.uuid,
+					sourcePartnerId: partner.id,
+					visibility: "public"
+				}))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+				res.body.must.include(initiative.uuid)
+				res.body.must.include(topic.title)
+				res.body.must.include(this.author.name)
+			})
 		})
 
 		it("must show initiatives in edit phase", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "edit"
-			}))
-
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				endsAt: DateFns.addSeconds(new Date, 1),
-				visibility: "public"
+				phase: "edit",
+				published_at: new Date,
+				discussion_ends_at: DateFns.addSeconds(new Date, 1)
 			}))
 
 			var res = yield this.request("/")
@@ -105,15 +112,9 @@ describe("HomeController", function() {
 			function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "edit"
-			}))
-
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				visibility: "public",
-				endsAt: DateFns.addDays(DateFns.startOfDay(new Date), -13)
+				phase: "edit",
+				published_at: new Date,
+				discussion_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -13)
 			}))
 
 			var res = yield this.request("/")
@@ -124,15 +125,9 @@ describe("HomeController", function() {
 		it("must not show initiatives in edit phase that have ended", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "edit"
-			}))
-
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				visibility: "public",
-				endsAt: DateFns.addDays(DateFns.startOfDay(new Date), -14)
+				phase: "edit",
+				published_at: new Date,
+				discussion_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -14)
 			}))
 
 			var res = yield this.request("/")
@@ -144,15 +139,9 @@ describe("HomeController", function() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "edit",
+				published_at: new Date,
+				discussion_ends_at: DateFns.addSeconds(new Date, 1),
 				archived_at: new Date
-			}))
-
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				visibility: "public",
-				endsAt: DateFns.addSeconds(new Date, 1)
 			}))
 
 			var res = yield this.request("/")
@@ -163,50 +152,26 @@ describe("HomeController", function() {
 		it("must show initiatives in sign phase", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "sign"
+				phase: "sign",
+				signing_ends_at: DateFns.addDays(new Date, 1)
 			}))
 
-			var topic = yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "voting"
-			}))
-
-			yield createVote(topic, newVote({
-				endsAt: DateFns.addDays(new Date, 1)
-			}))
-
-			yield citizenosSignaturesDb.create(_.times(5, () => (
-				new ValidCitizenosSignature({initiative_uuid: initiative.uuid})
-			)))
-
-			yield signaturesDb.create(_.times(3, () => new ValidSignature({
+			yield signaturesDb.create(_.times(5, () => new ValidSignature({
 				initiative_uuid: initiative.uuid
 			})))
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
 			res.body.must.include(initiative.uuid)
-			res.body.must.include(t("N_SIGNATURES", {votes: 8}))
+			res.body.must.include(t("N_SIGNATURES", {votes: 5}))
 		})
 
 		it("must show initiatives in sign phase that failed in less than 2w",
 			function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "sign"
-			}))
-
-			var topic = yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "voting"
-			}))
-
-			yield createVote(topic, newVote({
-				endsAt: DateFns.addDays(DateFns.startOfDay(new Date), -13)
+				phase: "sign",
+				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -13)
 			}))
 
 			var res = yield this.request("/")
@@ -217,18 +182,8 @@ describe("HomeController", function() {
 		it("must not show initiatives in sign phase that failed", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "sign"
-			}))
-
-			var topic = yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "voting"
-			}))
-
-			yield createVote(topic, newVote({
-				endsAt: DateFns.addDays(DateFns.startOfDay(new Date), -14)
+				phase: "sign",
+				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -14)
 			}))
 
 			var res = yield this.request("/")
@@ -239,29 +194,13 @@ describe("HomeController", function() {
 		it("must show initiatives in sign phase that succeeded", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "sign"
+				phase: "sign",
+				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -14)
 			}))
 
-			var topic = yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "voting"
-			}))
-
-			yield createVote(topic, newVote({
-				endsAt: DateFns.addDays(DateFns.startOfDay(new Date), -14)
-			}))
-
-			yield citizenosSignaturesDb.create(_.times(
-				Config.votesRequired / 2,
-				() => new ValidCitizenosSignature({initiative_uuid: initiative.uuid})
-			))
-
-			yield signaturesDb.create(_.times(
-				Config.votesRequired / 2,
-				() => new ValidSignature({initiative_uuid: initiative.uuid})
-			))
+			yield signaturesDb.create(_.times(Config.votesRequired, () => (
+				new ValidSignature({initiative_uuid: initiative.uuid})
+			)))
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
@@ -273,15 +212,6 @@ describe("HomeController", function() {
 				user_id: this.author.id,
 				phase: "parliament"
 			}))
-
-			var topic = yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "followUp"
-			}))
-
-			yield createVote(topic, newVote())
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
@@ -305,15 +235,6 @@ describe("HomeController", function() {
 				phase: "government"
 			}))
 
-			var topic = yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "followUp"
-			}))
-
-			yield createVote(topic, newVote())
-
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
 			res.body.must.include(initiative.uuid)
@@ -335,15 +256,6 @@ describe("HomeController", function() {
 				user_id: this.author.id,
 				phase: "done"
 			}))
-
-			var topic = yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "followUp"
-			}))
-
-			yield createVote(topic, newVote())
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
@@ -380,7 +292,9 @@ describe("HomeController", function() {
 			describe("given " + partner.name, function() {
 				it("must show initiatives", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id
+						user_id: this.author.id,
+						published_at: new Date,
+						discussion_ends_at: DateFns.addSeconds(new Date, 1)
 					}))
 
 					var partner = yield createPartner(newPartner({id: id}))
@@ -389,8 +303,7 @@ describe("HomeController", function() {
 						id: initiative.uuid,
 						creatorId: this.author.uuid,
 						sourcePartnerId: partner.id,
-						visibility: "public",
-						endsAt: DateFns.addSeconds(new Date, 1)
+						visibility: "public"
 					}))
 
 					var res = yield this.request("/")
@@ -400,61 +313,15 @@ describe("HomeController", function() {
 			})
 		})
 
-		it("must not show initiatives from other partners", function*() {
+		it("must not show unpublished initiatives", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id
-			}))
-
-			var partner = yield createPartner(newPartner())
-
-			var topic = yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: partner.id,
-				visibility: "public",
-				endsAt: DateFns.addSeconds(new Date, 1)
+				user_id: this.author.id,
+				discussion_ends_at: DateFns.addSeconds(new Date, 1)
 			}))
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
-			res.body.must.not.include(topic.id)
-		})
-
-		it("must not show private initiatives", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id
-			}))
-
-			var topic = yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				endsAt: DateFns.addSeconds(new Date, 1),
-				visibility: "private"
-			}))
-
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
-			res.body.must.not.include(topic.id)
-		})
-
-		it("must not show deleted initiatives", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id
-			}))
-
-			var topic = yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				visibility: "public",
-				endsAt: DateFns.addSeconds(new Date, 1),
-				deletedAt: new Date
-			}))
-
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
-			res.body.must.not.include(topic.id)
+			res.body.must.not.include(initiative.uuid)
 		})
 
 		it("must include social media tags", function*() {
@@ -475,16 +342,81 @@ describe("HomeController", function() {
 		})
 
 		describe("statistics", function() {
+			it("must show initiative count", function*() {
+				yield initiativesDb.create(PHASES.map((phase) => new ValidInitiative({
+					user_id: this.author.id,
+					phase: phase,
+					published_at: new Date
+				})))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var el = dom.querySelector("#discussions-statistic .count")
+				el.textContent.must.equal(String(PHASES.length))
+			})
+
+			it("must not consider unpublished initiatives", function*() {
+				yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit"
+				}))
+				
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var el = dom.querySelector("#discussions-statistic .count")
+				el.textContent.must.equal("0")
+			})
+
+			it("must not consider external initiatives", function*() {
+				yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					external: true
+				}))
+				
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body), el
+				el = dom.querySelector("#discussions-statistic .count")
+				el.textContent.must.equal("0")
+				el = dom.querySelector("#initiatives-statistic .count")
+				el.textContent.must.equal("0")
+			})
+
+			it("must show once-signable initiative count", function*() {
+				var phases = _.without(PHASES, "edit")
+
+				yield initiativesDb.create(phases.map((phase) => new ValidInitiative({
+					user_id: this.author.id,
+					phase: phase,
+					published_at: new Date
+				})))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var el = dom.querySelector("#discussions-statistic .count")
+				el.textContent.must.equal(String(phases.length))
+			})
+
 			it("must show signature count", function*() {
 				var initiativeA = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
-					phase: "sign"
+					phase: "sign",
+					signing_ends_at: new Date
 				}))
+
+				var partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
 
 				var topic = yield createTopic(newTopic({
 					id: initiativeA.uuid,
 					creatorId: this.author.uuid,
-					sourcePartnerId: this.partner.id,
+					sourcePartnerId: partner.id,
 					status: "voting"
 				}))
 
@@ -496,7 +428,8 @@ describe("HomeController", function() {
 
 				var initiativeB = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
-					phase: "sign"
+					phase: "sign",
+					signing_ends_at: new Date
 				}))
 
 				yield signaturesDb.create(_.times(3, () => new ValidSignature({
@@ -509,6 +442,51 @@ describe("HomeController", function() {
 				var dom = parseDom(res.body)
 				var el = dom.querySelector("#signatures-statistic .count")
 				el.textContent.must.equal("8")
+			})
+
+			it("must show zero if no initiatives in parliament", function*() {
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var count = dom.querySelector("#parliament-statistic .count")
+				count.textContent.must.equal("0")
+
+				dom.querySelector("#parliament-statistic p").innerHTML.must.equal(
+					t("HOME_PAGE_STATISTICS_N_SENT_IN_LAST_30_DAYS", {
+						sent: 0,
+						external: 0
+					})
+				)
+			})
+
+			it("must show initiatives been to parliament", function*() {
+				yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "parliament"
+				}))
+
+				yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "government"
+				}))
+
+				yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "done"
+				}))
+
+				yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					external: true
+				}))
+				
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var el = dom.querySelector("#parliament-statistic .count")
+				el.textContent.must.equal("3+1")
 			})
 
 			it(`must show statistics on ${PARLIAMENT_SITE_HOSTNAME}`, function*() {
@@ -533,16 +511,9 @@ describe("HomeController", function() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
 						phase: "edit",
-						destination: null
-					}))
-
-					yield createTopic(newTopic({
-						id: initiative.uuid,
-						creatorId: (yield createUser()).uuid,
-						sourcePartnerId: this.partner.id,
-						status: "inProgress",
-						endsAt: DateFns.addSeconds(new Date, 1),
-						visibility: "public"
+						published_at: new Date,
+						destination: null,
+						discussion_ends_at: DateFns.addSeconds(new Date, 1),
 					}))
 
 					var res = yield this.request("/", {headers: {Host: host}})
@@ -556,20 +527,13 @@ describe("HomeController", function() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: phase,
-							destination: dest
-						}))
+							destination: dest,
+							published_at: new Date,
+							discussion_ends_at: DateFns.addSeconds(new Date, 1),
 
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: (yield createUser()).uuid,
-							sourcePartnerId: this.partner.id,
-							status: phase == "edit" ? "inProgress" : "voting",
-							endsAt: DateFns.addSeconds(new Date, 1),
-							visibility: "public"
-						}))
-
-						if (phase != "edit") yield createVote(topic, newVote({
-							endsAt: DateFns.addSeconds(new Date, 1)
+							signing_ends_at: phase == "sign"
+								? DateFns.addSeconds(new Date, 1)
+								: null
 						}))
 
 						var res = yield this.request("/", {headers: {Host: host}})
@@ -582,19 +546,12 @@ describe("HomeController", function() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: phase,
-							destination: dest == "parliament" ? "muhu-vald" : "parliament"
-						}))
+							published_at: new Date,
+							destination: dest == "parliament" ? "muhu-vald" : "parliament",
 
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: (yield createUser()).uuid,
-							sourcePartnerId: this.partner.id,
-							status: phase == "edit" ? "inProgress" : "voting",
-							visibility: "public"
-						}))
-
-						if (phase != "edit") yield createVote(topic, newVote({
-							endsAt: DateFns.addSeconds(new Date, 1)
+							signing_ends_at: phase == "sign"
+								? DateFns.addSeconds(new Date, 1)
+								: null
 						}))
 
 						var res = yield this.request("/", {headers: {Host: host}})
@@ -678,10 +635,12 @@ describe("HomeController", function() {
 				phase: "sign"
 			}))
 
+			var partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
+
 			var topic = yield createTopic(newTopic({
 				id: initiativeA.uuid,
 				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
+				sourcePartnerId: partner.id,
 				status: "voting"
 			}))
 
@@ -714,17 +673,10 @@ describe("HomeController", function() {
 
 		PHASES.forEach(function(phase) {
 			it(`must count initiatives in ${phase}`, function*() {
-				var initiatives = yield initiativesDb.create(_.times(3, () => (
-					new ValidInitiative({user_id: this.author.id, phase: phase}
-				))))
-
-				yield createTopic(initiatives.map((i) => newTopic({
-					id: i.uuid,
-					creatorId: this.author.uuid,
-					sourcePartnerId: this.partner.id,
-					visibility: "public",
-					status: PHASE_TO_STATUS[phase],
-					endsAt: new Date
+				yield initiativesDb.create(_.times(3, () => new ValidInitiative({
+					user_id: this.author.id,
+					published_at: new Date,
+					phase: phase
 				})))
 
 				var res = yield this.request("/statistics", {
@@ -742,20 +694,11 @@ describe("HomeController", function() {
 		it("must count active initiatives in edit phase", function*() {
 			var self = this
 
-			yield _.times(5, function*(i) {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: self.author.id
-				}))
-
-				yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: self.author.uuid,
-					sourcePartnerId: self.partner.id,
-					status: "inProgress",
-					visibility: "public",
-					endsAt: DateFns.addSeconds(new Date, 2 - i)
-				}))
-			})
+			yield _.times(5, (i) => initiativesDb.create(new ValidInitiative({
+				user_id: self.author.id,
+				published_at: new Date,
+				discussion_ends_at: DateFns.addSeconds(new Date, 2 - i)
+			})))
 
 			var res = yield this.request("/statistics", {
 				headers: {Accept: STATISTICS_TYPE}
@@ -772,25 +715,11 @@ describe("HomeController", function() {
 		it("must count active initiatives in sign phase", function*() {
 			var self = this
 
-			yield _.times(5, function*(i) {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: self.author.id,
-					phase: "sign"
-				}))
-
-				var topic = yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: self.author.uuid,
-					sourcePartnerId: self.partner.id,
-					status: "voting",
-					visibility: "public",
-					endsAt: new Date
-				}))
-				
-				yield createVote(topic, newVote({
-					endsAt: DateFns.addSeconds(new Date, 2 - i)
-				}))
-			})
+			yield _.times(5, (i) => initiativesDb.create(new ValidInitiative({
+				user_id: self.author.id,
+				phase: "sign",
+				signing_ends_at: DateFns.addSeconds(new Date, 2 - i)
+			})))
 
 			var res = yield this.request("/statistics", {
 				headers: {Accept: STATISTICS_TYPE}
@@ -818,40 +747,10 @@ describe("HomeController", function() {
 			res.body.must.eql(EMPTY_STATISTICS)
 		})
 
-		it("must not count private topics", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id
-			}))
-
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "inProgress",
-				endsAt: DateFns.addSeconds(new Date, 1)
-			}))
-
-			var res = yield this.request("/statistics", {
-				headers: {Accept: STATISTICS_TYPE}
-			})
-
-			res.statusCode.must.equal(200)
-			res.body.must.eql(EMPTY_STATISTICS)
-		})
-
-		it("must not count deleted topics", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id
-			}))
-
-			yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: this.partner.id,
-				visibility: "public",
-				status: "inProgress",
-				endsAt: DateFns.addSeconds(new Date, 1),
-				deletedAt: new Date
+		it("must not count unpublished initiatives", function*() {
+			yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				discussion_ends_at: DateFns.addSeconds(new Date, 1),
 			}))
 
 			var res = yield this.request("/statistics", {

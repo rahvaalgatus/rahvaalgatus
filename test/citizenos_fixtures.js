@@ -1,6 +1,8 @@
 var _ = require("root/lib/underscore")
 var cosDb = require("root").cosDb
 var pseudoHex = require("root/lib/crypto").pseudoHex
+var pseudoDateTime = require("root/lib/crypto").pseudoDateTime
+var outdent = require("root/lib/outdent")
 exports.newPartner = newPartner
 exports.newUser = newUser
 exports.newTopic = newTopic
@@ -24,21 +26,27 @@ function newUser(attrs) {
 		email: _.uniqueId("user") + "@example.com",
 		emailIsVerified: true,
 		emailVerificationCode: _.serializeUuid(_.uuidV4()),
-		createdAt: new Date,
-		updatedAt: new Date,
+		createdAt: pseudoDateTime(),
+		updatedAt: pseudoDateTime(),
 		source: "citizenos"
 	}, attrs)
 }
 
 function newTopic(attrs) {
+	var title = "CitizenOS initiative #" + _.uniqueId()
+
+	var text = outdent`<body>
+		<p>Make the world a better place for ${_.uniqueId()} people.</p>
+	</body>`
+
 	return _.assign({
 		id: _.serializeUuid(_.uuidV4()),
-		title: "For the win " + _.uniqueId(),
-		description: "<body>Please sign.</body>",
+		title: title,
+		description: text,
 		status: "inProgress",
 		visibility: VISIBILITY_FROM_STATUS[attrs.status] || "private",
-		createdAt: new Date,
-		updatedAt: new Date,
+		createdAt: pseudoDateTime(),
+		updatedAt: pseudoDateTime(),
 		tokenJoin: pseudoHex(4),
 		padUrl: "/etherpad"
 	}, attrs)
@@ -47,8 +55,8 @@ function newTopic(attrs) {
 function newVote(attrs) {
 	return _.assign({
 		id: _.serializeUuid(_.uuidV4()),
-		createdAt: new Date(2015, 0, 1),
-		updatedAt: new Date(2015, 0, 1),
+		createdAt: pseudoDateTime(),
+		updatedAt: pseudoDateTime(),
 		authType: "hard"
 	}, attrs)
 }
@@ -58,15 +66,15 @@ function newPartner(attrs) {
 		id: _.serializeUuid(_.uuidV4()),
 		website: "http://example.com",
 		redirectUriRegexp: "",
-		createdAt: new Date,
-		updatedAt: new Date
+		createdAt: pseudoDateTime(),
+		updatedAt: pseudoDateTime()
 	}, attrs)
 }
 
 function newPermission(attrs) {
 	return _.assign({
-		createdAt: new Date,
-		updatedAt: new Date
+		createdAt: pseudoDateTime(),
+		updatedAt: pseudoDateTime()
 	}, attrs)
 }
 

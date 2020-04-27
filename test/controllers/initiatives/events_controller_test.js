@@ -4,6 +4,7 @@ var DateFns = require("date-fns")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidEvent = require("root/test/valid_db_initiative_event")
+var Initiative = require("root/lib/initiative")
 var newPartner = require("root/test/citizenos_fixtures").newPartner
 var newTopic = require("root/test/citizenos_fixtures").newTopic
 var newVote = require("root/test/citizenos_fixtures").newVote
@@ -19,7 +20,8 @@ var t = require("root/lib/i18n").t.bind(null, "et")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var sql = require("sqlate")
 var EVENT_RATE = 3
-var EVENTABLE_PHASES = ["sign", "parliament", "government", "done"]
+var EVENTABLE_PHASES = ["sign", "parliament", "government"]
+var NONEVENTABLE_PHASES = _.difference(Initiative.PHASES, EVENTABLE_PHASES)
 
 describe("InitiativeEventsController", function() {
 	require("root/test/web")()
@@ -30,10 +32,6 @@ describe("InitiativeEventsController", function() {
 	require("root/test/fixtures").csrf()
 	beforeEach(require("root/test/mitm").router)
 
-	beforeEach(function*() {
-		this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
-	})
-
 	describe("GET /new", function() {
 		describe("when not logged in", function() {
 			it("must respond with 401", function*() {
@@ -42,13 +40,6 @@ describe("InitiativeEventsController", function() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: author.id,
 					published_at: new Date
-				}))
-
-				yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: author.uuid,
-					sourcePartnerId: this.partner.id,
-					visibility: "public"
 				}))
 
 				var path = `/initiatives/${initiative.uuid}/events/new`
@@ -64,22 +55,19 @@ describe("InitiativeEventsController", function() {
 				return this.request(`/initiatives/${this.initiative.uuid}/events/new`)
 			})
 
-			it("must respond with 403 if in edit phase", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.user.id
-				}))
+			NONEVENTABLE_PHASES.forEach(function(phase) {
+				it(`must respond with 403 if in ${phase} phase`, function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: phase,
+						published_at: new Date
+					}))
 
-				yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.user.uuid,
-					sourcePartnerId: this.partner.id,
-					visibility: "public"
-				}))
-
-				var path = `/initiatives/${initiative.uuid}/events/new`
-				var res = yield this.request(path)
-				res.statusCode.must.equal(403)
-				res.statusMessage.must.match(/cannot create events/i)
+					var path = `/initiatives/${initiative.uuid}/events/new`
+					var res = yield this.request(path)
+					res.statusCode.must.equal(403)
+					res.statusMessage.must.equal("Cannot Create Events")
+				})
 			})
 
 			EVENTABLE_PHASES.forEach(function(phase) {
@@ -88,15 +76,6 @@ describe("InitiativeEventsController", function() {
 						user_id: this.user.id,
 						phase: phase
 					}))
-
-					var topic = yield createTopic(newTopic({
-						id: initiative.uuid,
-						creatorId: this.user.uuid,
-						sourcePartnerId: this.partner.id,
-						status: "voting"
-					}))
-
-					yield createVote(topic, newVote())
 
 					var path = `/initiatives/${initiative.uuid}/events/new`
 					var res = yield this.request(path)
@@ -112,13 +91,6 @@ describe("InitiativeEventsController", function() {
 					published_at: new Date
 				}))
 
-				yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: author.uuid,
-					sourcePartnerId: this.partner.id,
-					visibility: "public"
-				}))
-
 				var path = `/initiatives/${initiative.uuid}/events/new`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(403)
@@ -130,6 +102,7 @@ describe("InitiativeEventsController", function() {
 	describe("GET /:id", function() {
 		it("must redirect to initiative page given event id", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
 				external: true
 			}))
 			
@@ -149,6 +122,7 @@ describe("InitiativeEventsController", function() {
 		it("must redirect to initiative page given virtual event id",
 			function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
 				external: true
 			}))
 
@@ -175,25 +149,23 @@ describe("InitiativeEventsController", function() {
 				})
 			})
 
-			it("must respond with 403 if in edit phase", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.user.id
-				}))
+			NONEVENTABLE_PHASES.forEach(function(phase) {
+				it(`must respond with 403 if in ${phase} phase`, function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: phase,
+						published_at: new Date
+					}))
 
-				yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.user.uuid,
-					sourcePartnerId: this.partner.id,
-					visibility: "public"
-				}))
+					var path = `/initiatives/${initiative.uuid}/events`
+					var res = yield this.request(path, {
+						method: "POST",
+						form: {_csrf_token: this.csrfToken}
+					})
 
-				var res = yield this.request(`/initiatives/${initiative.uuid}/events`, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken}
+					res.statusCode.must.equal(403)
+					res.statusMessage.must.equal("Cannot Create Events")
 				})
-
-				res.statusCode.must.equal(403)
-				res.statusMessage.must.match(/cannot create events/i)
 			})
 
 			EVENTABLE_PHASES.forEach(function(phase) {
@@ -202,15 +174,6 @@ describe("InitiativeEventsController", function() {
 						user_id: this.user.id,
 						phase: phase
 					}))
-
-					var topic = yield createTopic(newTopic({
-						id: initiative.uuid,
-						creatorId: this.user.uuid,
-						sourcePartnerId: this.partner.id,
-						status: "voting"
-					}))
-
-					yield createVote(topic, newVote())
 
 					var path = `/initiatives/${initiative.uuid}/events`
 					var res = yield this.request(path, {
@@ -245,15 +208,6 @@ describe("InitiativeEventsController", function() {
 					user_id: this.user.id,
 					phase: "sign"
 				}))
-
-				var topic = yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.user.uuid,
-					sourcePartnerId: this.partner.id,
-					status: "voting"
-				}))
-
-				yield createVote(topic, newVote())
 
 				var subscriptions = yield subscriptionsDb.create([
 					new ValidSubscription({
@@ -305,11 +259,11 @@ describe("InitiativeEventsController", function() {
 
 					title: t("EMAIL_INITIATIVE_AUTHOR_EVENT_TITLE", {
 						title: "Something happened",
-						initiativeTitle: topic.title
+						initiativeTitle: initiative.title
 					}),
 
 					text: renderEmail("EMAIL_INITIATIVE_AUTHOR_EVENT_BODY", {
-						initiativeTitle: topic.title,
+						initiativeTitle: initiative.title,
 						initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 						title: "Something happened",
 						text: "> You shouldn't miss it.",
@@ -323,8 +277,82 @@ describe("InitiativeEventsController", function() {
 				this.emails.length.must.equal(1)
 				this.emails[0].envelope.to.must.eql(emails)
 				var msg = String(this.emails[0].message)
-				msg.match(/^Subject: .*/m)[0].must.include(topic.title)
+				msg.match(/^Subject: .*/m)[0].must.include(initiative.title)
 				subscriptions.slice(2).forEach((s) => msg.must.include(s.update_token))
+			})
+
+			describe("when CitizenOS initiative", function() {
+				it("must email subscribers interested in author events", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "sign"
+					}))
+
+					var partner = yield createPartner(newPartner({
+						id: Config.apiPartnerId
+					}))
+
+
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.uuid,
+						sourcePartnerId: partner.id,
+						status: "voting"
+					}))
+
+					yield createVote(topic, newVote())
+
+					var subscription = yield subscriptionsDb.create(
+						new ValidSubscription({
+							initiative_uuid: initiative.uuid,
+							confirmed_at: new Date
+						})
+					)
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}/events`, {
+						method: "POST",
+						form: {
+							_csrf_token: this.csrfToken,
+							title: "Something happened",
+							content: "You shouldn't miss it."
+						}
+					})
+
+					res.statusCode.must.equal(302)
+
+					var messages = yield messagesDb.search(sql`
+						SELECT * FROM initiative_messages
+					`)
+
+					messages.must.eql([{
+						id: messages[0].id,
+						initiative_uuid: initiative.uuid,
+						created_at: new Date,
+						updated_at: new Date,
+						origin: "event",
+
+						title: t("EMAIL_INITIATIVE_AUTHOR_EVENT_TITLE", {
+							title: "Something happened",
+							initiativeTitle: topic.title
+						}),
+
+						text: renderEmail("EMAIL_INITIATIVE_AUTHOR_EVENT_BODY", {
+							initiativeTitle: topic.title,
+							initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+							title: "Something happened",
+							text: "> You shouldn't miss it.",
+							unsubscribeUrl: "{{unsubscribeUrl}}"
+						}),
+
+						sent_at: new Date,
+						sent_to: [subscription.email]
+					}])
+
+					this.emails.length.must.equal(1)
+					this.emails[0].envelope.to.must.eql([subscription.email])
+					var msg = String(this.emails[0].message)
+					msg.match(/^Subject: .*/m)[0].must.include(topic.title)
+				})
 			})
 
 			it("must respond with 403 if not an admin", function*() {
@@ -333,13 +361,6 @@ describe("InitiativeEventsController", function() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: author.id,
 					published_at: new Date
-				}))
-
-				yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: author.uuid,
-					sourcePartnerId: this.partner.id,
-					visibility: "public"
 				}))
 
 				var res = yield this.request(`/initiatives/${initiative.uuid}/events`, {
@@ -361,15 +382,6 @@ function mustRateLimit(request) {
 				user_id: this.user.id,
 				phase: "sign"
 			}))
-
-			this.topic = yield createTopic(newTopic({
-				id: this.initiative.uuid,
-				creatorId: this.user.uuid,
-				sourcePartnerId: this.partner.id,
-				status: "voting"
-			}))
-
-			yield createVote(this.topic, newVote())
 		})
 
 		it(`must respond with 429 if created ${EVENT_RATE} events in the last 15m`,

@@ -42,7 +42,6 @@ exports.router.post("/", next(function*(req, res) {
 	if (user == null) throw new HttpError(401)
 
 	var initiative = req.initiative
-	var topic = req.topic
 	var userEmail = user.email || ""
 
 	var attrs = _.assign(parseComment(req.body), {
@@ -88,15 +87,13 @@ exports.router.post("/", next(function*(req, res) {
 				sql`comment_interest AND email != ${userEmail}`
 			)
 
-			var title = topic ? topic.title : initiative.title
-
 			yield Subscription.send({
 				title: req.t("EMAIL_INITIATIVE_COMMENT_TITLE", {
-					initiativeTitle: title,
+					initiativeTitle: initiative.title,
 				}),
 
 				text: renderEmail("EMAIL_INITIATIVE_COMMENT_BODY", {
-					initiativeTitle: title,
+					initiativeTitle: initiative.title,
 					initiativeUrl: initiativeUrl,
 					userName: user.name,
 					commentTitle: comment.title.replace(/\r?\n/g, " "),
@@ -159,7 +156,6 @@ exports.router.post("/:commentId/replies", next(function*(req, res) {
 	var user = req.user
 	if (user == null) throw new HttpError(401)
 
-	var topic = req.topic
 	var initiative = req.initiative
 	var comment = req.comment
 	if (comment.parent_id) throw new HttpError(405)
@@ -184,16 +180,14 @@ exports.router.post("/:commentId/replies", next(function*(req, res) {
 				initiative.uuid,
 				sql`comment_interest AND email != ${userEmail}`
 			)
-			
-			var title = topic ? topic.title : initiative.title
 
 			yield Subscription.send({
 				title: req.t("EMAIL_INITIATIVE_COMMENT_REPLY_TITLE", {
-					initiativeTitle: title,
+					initiativeTitle: initiative.title,
 				}),
 
 				text: renderEmail("EMAIL_INITIATIVE_COMMENT_REPLY_BODY", {
-					initiativeTitle: title,
+					initiativeTitle: initiative.title,
 					initiativeUrl: initiativeUrl,
 					userName: user.name,
 					commentText: _.quoteEmail(reply.text),
