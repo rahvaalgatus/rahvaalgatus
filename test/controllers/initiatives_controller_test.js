@@ -1394,6 +1394,7 @@ describe("InitiativesController", function() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					destination: "parliament",
+					created_at: new Date,
 					published_at: new Date
 				}))
 
@@ -1539,7 +1540,7 @@ describe("InitiativesController", function() {
 
 				phases.edit.text.must.equal(I18n.formatDateSpan(
 					"numeric",
-					topic.createdAt,
+					initiative.created_at,
 					vote.createdAt
 				))
 
@@ -3445,6 +3446,7 @@ describe("InitiativesController", function() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					destination: "parliament",
+					created_at: new Date,
 					published_at: new Date
 				}))
 

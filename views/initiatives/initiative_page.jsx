@@ -14,7 +14,6 @@ function InitiativePage(attrs, children) {
 	var initiative = attrs.initiative
 	var topic = attrs.topic
 	var path = "/initiatives/" + initiative.uuid
-	var createdAt = initiative.created_at || topic.createdAt
 
 	return <Page class={"initiative-page " + (attrs.class || "")} {...attrs}>
 		<header id="initiative-header">
@@ -34,8 +33,8 @@ function InitiativePage(attrs, children) {
 					].filter(Boolean).join(", ")}
 				</span>
 				{", "}
-				<time datetime={createdAt.toJSON()}>
-					{I18n.formatDate("numeric", createdAt)}
+				<time datetime={initiative.created_at.toJSON()}>
+					{I18n.formatDate("numeric", initiative.created_at)}
 				</time>
 			</center>
 		</header>
@@ -66,7 +65,6 @@ function ProgressView(attrs) {
 	var topic = attrs.topic
 	var initiative = attrs.initiative
 	var sigs = attrs.signatureCount
-	var createdAt = initiative.created_at || topic.createdAt
 	var klass = "initiative-progress " + initiative.phase + "-phase"
 
 	switch (initiative.phase) {
@@ -79,8 +77,8 @@ function ProgressView(attrs) {
 				</div>
 
 			if (new Date < topic.endsAt) {
-				var passed = diffInDays(new Date, createdAt)
-				var total = diffInDays(topic.endsAt, topic.createdAt) + 1
+				var passed = diffInDays(new Date, initiative.created_at)
+				var total = diffInDays(topic.endsAt, initiative.created_at) + 1
 				var left = total - passed
 
 				return <div

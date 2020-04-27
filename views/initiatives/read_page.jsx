@@ -396,7 +396,6 @@ function PhasesView(attrs) {
   var initiative = attrs.initiative
   var sigs = attrs.signatureCount
 	var phase = initiative.phase
-	var createdAt = initiative.createdAt || topic && topic.createdAt
   var acceptedByParliamentAt = initiative.accepted_by_parliament_at
 	var finishedInParliamentAt = initiative.finished_in_parliament_at
 	var sentToGovernmentAt = initiative.sent_to_government_at
@@ -407,7 +406,7 @@ function PhasesView(attrs) {
 		initiative.sent_to_parliament_at
 	)
 
-  var daysSinceCreated = diffInDays(new Date, createdAt)
+  var daysSinceCreated = diffInDays(new Date, initiative.created_at)
   var daysInEdit = topic ? Topic.daysInDiscussion(topic) : 0
   var discussionDaysLeft = daysInEdit - daysSinceCreated
 
@@ -428,7 +427,7 @@ function PhasesView(attrs) {
 	else if (initiative.external)
 		editPhaseText = ""
 	else if (topic && topic.vote) editPhaseText =
-		I18n.formatDateSpan("numeric", topic.createdAt, topic.vote.createdAt)
+		I18n.formatDateSpan("numeric", initiative.created_at, topic.vote.createdAt)
 
 	var signProgress = isPhaseAfter("sign", phase)
 		? 1

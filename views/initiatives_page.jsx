@@ -180,7 +180,7 @@ function InitiativeView(attrs) {
 	var signatureCount = attrs.signatureCount
 
 	var time = (
-		initiative.phase == "edit" ? initiative.created_at || topic.createdAt :
+		initiative.phase == "edit" ? initiative.created_at :
 		initiative.phase == "sign" ? topic.vote.createdAt :
 		initiative.phase == "parliament" ? (
 			initiative.received_by_parliament_at ||
