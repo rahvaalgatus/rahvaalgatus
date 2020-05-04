@@ -399,7 +399,7 @@ describe("InitiativeSubscriptionsController", function() {
 			this.emails.length.must.equal(1)
 		})
 
-		it("must respond with 403 Forbidden if discussion not public", function*() {
+		it("must respond with 401 if discussion not published", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id
 			}))
@@ -410,7 +410,7 @@ describe("InitiativeSubscriptionsController", function() {
 				form: {email: "user@example.com"}
 			})
 
-			res.statusCode.must.equal(403)
+			res.statusCode.must.equal(401)
 			res.statusMessage.must.equal("Initiative Not Public")
 		})
 

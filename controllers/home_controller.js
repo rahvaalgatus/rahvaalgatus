@@ -101,7 +101,7 @@ exports.router.get("/statistics",
 		GROUP BY phase
 	`).then((rows) => rows.map((row) => [row.phase, row.count]))), ZERO_COUNTS)
 
-	// TODO: These two active-initiatiev queries could be combined.
+	// TODO: These two active-initiative queries could be combined.
 	var activeCountsByPhase = yield {
 		edit: sqlite(sql`
 			SELECT COUNT(*) AS count

@@ -6,7 +6,8 @@
 	"dependencies": {
 		"pikaday": "",
 		"promise": "",
-		"whatwg-fetch": ""
+		"whatwg-fetch": "",
+		"trix": ""
 	},
 
 	"devDependencies": {

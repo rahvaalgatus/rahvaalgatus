@@ -45,6 +45,7 @@ describe("InitiativeEventsController", function() {
 				var path = `/initiatives/${initiative.uuid}/events/new`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(401)
+				res.statusMessage.must.equal("Unauthorized")
 			})
 		})
 

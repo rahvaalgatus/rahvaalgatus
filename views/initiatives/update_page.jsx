@@ -3,6 +3,7 @@ var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var InitiativePage = require("./initiative_page")
 var Topic = require("root/lib/topic")
+var Form = require("../page").Form
 var Flash = require("../page").Flash
 var javascript = require("root/lib/jsx").javascript
 
@@ -11,6 +12,7 @@ module.exports = function(attrs) {
 	var initiative = attrs.initiative
 	var topic = attrs.topic
 	var flash = attrs.flash
+	var text = attrs.text
 	var etherpadUrl = attrs.etherpadUrl
 	var t = attrs.t
 
@@ -20,11 +22,70 @@ module.exports = function(attrs) {
 		initiative={initiative}
 		topic={topic}
 		req={req}>
-		<section id="initiative-section" class="transparent-section"><center>
+		<Form
+			id="initiative-text-form"
+			method="post"
+			action={`/initiatives/${initiative.uuid}/texts`}
+			req={req}
+			class="initiative-section transparent-section"
+		><center>
 			<div id="initiative-sheet" class="sheet">
 				<Flash flash={flash} />
 
-				{Topic.canEditBody(topic) ? <Fragment>
+				{topic == null && initiative.phase == "edit" ? <Fragment>
+					<script src="/assets/html5.js" />
+					<script src="/assets/editor.js" />
+
+					<input type="hidden" name="basis-id" value={text && text.id} />
+
+					{
+						// Pass the text through an <input> to rely on the browser's form
+						// input restoration when navigating back. Otherwise the person
+						// would be shown the pre-edited text again.
+					}
+					<input
+						type="hidden"
+						name="content"
+						value={text && JSON.stringify(text.content)}
+					/>
+
+					<trix-editor id="editor" class="text trix-content" />
+
+					<script>{javascript`
+						var Trix = require("trix")
+						Trix.config.blockAttributes.heading1.tagName = "h2";
+
+						var form = document.getElementById("initiative-text-form")
+						// Don't get the "editor" property yet as it'll only exist after
+						// initialization.
+						var el = document.getElementById("editor")
+						var loadedDocument
+
+						el.addEventListener("trix-file-accept", function(ev) {
+							ev.preventDefault()
+						})
+
+						// Trix-initialize is likely to be triggered even when "back"-ing
+						// into this page. However, as we keep the serialized text in an
+						// <input> element, that's restored by the browser.
+						el.addEventListener("trix-initialize", function(ev) {
+							var json = form.elements.content.value
+
+							if (json) el.editor.loadJSON({
+								document: JSON.parse(json),
+								selectedRange: [0, 0]
+							})
+
+							loadedDocument = el.editor.getDocument()
+						})
+
+						window.onbeforeunload = function() {
+							if (loadedDocument == null) return undefined
+							if (loadedDocument === el.editor.getDocument()) return undefined
+							return ${JSON.stringify(t("INITIATIVE_TEXT_UNSAVED"))}
+						}
+					`}</script>
+				</Fragment> : topic && Topic.canEditBody(topic) ? <Fragment>
 					<iframe
 						id="initiative-etherpad"
 						src={etherpadUrl}
@@ -76,8 +137,6 @@ module.exports = function(attrs) {
 					<div class="initiative-status">
 						<h1>{t("CANNOT_EDIT_INITIATIVE_TEXT")}</h1>
 					</div>
-
-					<article class="text">{Jsx.html(topic.html)}</article>
 				</Fragment>}
 			</div>
 
@@ -91,8 +150,29 @@ module.exports = function(attrs) {
 							: t("BACK_TO_INITIATIVE")
 						}
 					</a>
+
+					{topic == null && initiative.phase == "edit" ? <Fragment>
+						<button
+							id="create-text-button"
+							type="submit"
+							href={"/initiatives/" + initiative.uuid}
+							class="green-button wide-button">
+							Salvesta tekst
+						</button>
+
+						<script>{javascript`
+							var form = document.getElementById("initiative-text-form")
+
+							form.addEventListener("submit", function() {
+								var editor = document.querySelector("trix-editor").editor
+								var json = JSON.stringify(editor.getDocument())
+								form.elements.content.value = json
+								window.onbeforeunload = null
+							})
+						`}</script>
+					</Fragment> : null}
 				</div>
 			</aside>
-		</center></section>
+		</center></Form>
 	</InitiativePage>
 }

@@ -592,6 +592,7 @@ describe("InitiativeCommentsController", function() {
 				var path = `/initiatives/${this.initiative.uuid}/comments/new`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(401)
+				res.statusMessage.must.equal("Unauthorized")
 			})
 		})
 
@@ -820,6 +821,7 @@ describe("InitiativeCommentsController", function() {
 				})
 
 				res.statusCode.must.equal(401)
+				res.statusMessage.must.equal("Unauthorized")
 			})
 		})
 

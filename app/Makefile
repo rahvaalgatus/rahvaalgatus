@@ -1,5 +1,5 @@
 NODE = node
-FILES = $(patsubst %, public/assets/%.js, html5 inputs hwcrypto)
+FILES = $(patsubst %, public/assets/%.js, html5 inputs hwcrypto editor)
 BROWSERIFY = ./node_modules/.bin/browserify
 WATCHIFY = ./node_modules/.bin/watchify --verbose
 UGLIFY = ./node_modules/.bin/uglifyjs
@@ -40,6 +40,13 @@ public/assets/hwcrypto.js:
 	@echo "Compiling $@…"
 	@$(BROWSERIFY) $(BROWSERIFY_OPTS) \
 		--require ./$(@F:%.js=%):@rahvaalgatus/$(@F:%.js=%) \
+		--outfile "$@"
+
+public/assets/editor.js:
+	@echo "Compiling $@…"
+	@$(BROWSERIFY) $(BROWSERIFY_OPTS) \
+		--entry ./$(@F:%.js=%) \
+		--require trix \
 		--outfile "$@"
 
 public/assets/%.max.js: public/assets/%.js

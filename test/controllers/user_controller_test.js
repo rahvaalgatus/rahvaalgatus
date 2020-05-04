@@ -31,6 +31,7 @@ describe("UserController", function() {
 			it("must respond with 401 Unauthorized", function*() {
 				var res = yield this.request("/user")
 				res.statusCode.must.equal(401)
+				res.statusMessage.must.equal("Unauthorized")
 			})
 		})
 
@@ -1015,6 +1016,7 @@ describe("UserController", function() {
 			it("must respond with 401 if not logged in", function*() {
 				var res = yield this.request("/user/email")
 				res.statusCode.must.equal(401)
+				res.statusMessage.must.equal("Unauthorized")
 			})
 		})
 

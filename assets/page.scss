@@ -3,6 +3,7 @@
 @import "_fonts";
 @import "_rahvaicons";
 @import "_rahvaicons_lib";
+@import "_editor";
 $article-padding: 3rem;
 $article-padding-mobile: 2rem;
 
@@ -99,6 +100,7 @@ strong {
 		color: $title-text;
 
 		& + * { margin-top: 1rem; }
+		& ~ h2 { margin-top: 4rem; }
 	}
 
 	h3 {
@@ -133,6 +135,23 @@ strong {
 
 	ul > li { list-style-type: disc; }
 	ol > li { list-style-type: decimal; }
+
+	blockquote {
+		margin: 2rem 0;
+		border-left: 0.5rem solid #eee;
+		padding-left: 2rem;
+		font-style: italic;
+	}
+
+	pre {
+		font-family: $monospace;
+		font-size: 1.2rem;
+		background: #eee;
+		margin-top: 2rem;
+		padding: 0.5rem 1em;
+
+		& + p { margin-top: 2rem; }
+	}
 
 	* + form { margin-top: 2rem; }
 }
@@ -1650,14 +1669,14 @@ button.inherited {
 		@include mobile-and-tablet { width: auto; }
 	}
 
-	#initiative-section center,
+	.initiative-section center,
 	#initiative-events center {
 		max-width: $page-width + $article-padding;
 		padding-left: 0;
 		padding-right: 0;
 	}
 
-	#initiative-section {
+	.initiative-section {
 		padding-top: 0;
 
 		center {
@@ -1707,26 +1726,28 @@ button.inherited {
 
 			@include mobile { padding: $article-padding-mobile; }
 
-			// Etherpad generates non-standard HTML by putting a nested <ol> directly
-			// under <ul>.
-			ol ol,
-			ul ul,
-			ol ul,
-			ul ol {
-				margin-left: 2rem;
+			&.citizenos-text {
+				// Initiative HTML often has <h2> following plain non-tagged text, so
+				// `* + h2` won't work.
+				h2 { margin-top: 4rem; margin-bottom: 1rem; }
+
+				// Etherpad generates non-standard HTML by putting a nested <ol>
+				// directly under <ul>.
+				ol ol,
+				ul ul,
+				ol ul,
+				ul ol {
+					margin-left: 2rem;
+				}
+
+				// Etherpad provides a fixed set of text colors.
+				.black { color: $text; }
+				.red { color: red; }
+				.green { color: #00cb81; }
+				.blue { color: #45a0e6; }
+				.yellow { color: yellow; }
+				.orange { color: #ffb400; }
 			}
-
-			// Initiative HTML often has <h2> following plain non-tagged text, so
-			// `* + h2` won't work.
-			h2 { margin-top: 4rem; margin-bottom: 1rem; }
-
-			// Etherpad provides a fixed set of text colors.
-			.black { color: $text; }
-			.red { color: red; }
-			.green { color: #00cb81; }
-			.blue { color: #45a0e6; }
-			.yellow { color: yellow; }
-			.orange { color: #ffb400; }
 		}
 
 		article.pdf {
@@ -1835,6 +1856,10 @@ button.inherited {
 
 		.wide-button {
 			width: 100%;
+
+			& + .wide-button {
+				margin-top: 0.5rem;
+			}
 		}
 
 		.share-button {
@@ -2370,6 +2395,36 @@ button.inherited {
 	}
 
 	.signin-to-act { margin-left: 1rem; }
+}
+
+#edit-initiative-page {
+	trix-toolbar {
+		padding: 1rem 1.5rem 0.5rem;
+		position: sticky;
+		top: 0;
+		background: $light-background;
+		border-bottom: 1px solid $light-background-border;
+
+		.trix-dialog {
+			background: $light-background;
+			border-bottom: 1px solid #ccc;
+		}
+	}
+
+	trix-editor {
+		@extend .text;
+
+		padding: $article-padding;
+		@include mobile { padding: $article-padding-mobile; }
+
+		// Trix doesn't really output semantic HTML, so it's likely people just add
+		// a separate blank line between the title and paragraph.
+		h2 + * { margin-top: 0; }
+
+		min-height: 20em;
+		font-size: 1.6rem;
+		font-family: $tisa-pro;
+	}
 }
 
 #initiative-publish-page,

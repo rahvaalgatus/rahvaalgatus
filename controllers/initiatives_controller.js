@@ -1,5 +1,4 @@
 var _ = require("root/lib/underscore")
-var O = require("oolong")
 var Qs = require("querystring")
 var Url = require("url")
 var Router = require("express").Router
@@ -23,6 +22,7 @@ var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
 var imagesDb = require("root/db/initiative_images_db")
 var filesDb = require("root/db/initiative_files_db")
+var textsDb = require("root/db/initiative_texts_db")
 var commentsDb = require("root/db/comments_db")
 var isOk = require("root/lib/http").isOk
 var catch400 = require("root/lib/fetch").catch.bind(null, 400)
@@ -187,43 +187,22 @@ exports.router.post("/", next(function*(req, res) {
 	var user = req.user
 	if (user == null) throw new HttpError(401)
 
-	var title = _.escapeHtml(req.body.title)
-	var attrs = O.assign({}, EMPTY_INITIATIVE, {
-		title: req.body.title,
-		visibility: "private",
-
-		// NOTE: CitizenOS or Etherpad saves all given whitespace as
-		// non-breaking-spaces, so make sure to not have any around <body> or other
-		// tags.
-		description: req.t("INITIATIVE_DEFAULT_HTML", {title: title}),
-	})
+	var title = req.body.title
 
 	if (!req.body["accept-tos"]) res.render("initiatives/create_page.jsx", {
 		error: req.t("CONFIRM_I_HAVE_READ"),
-		attrs: attrs
+		attrs: {title: title}
 	})
 
-	var created = yield req.cosApi("/api/users/self/topics", {
-		method: "POST",
-		json: attrs
-	}).catch(catch400)
-
-	if (!isOk(created))
-		return void res.status(422).render("initiatives/create_page.jsx", {
-			error: translateCitizenError(req.t, created.body),
-			attrs: attrs
-		})
-
-	var topic = created.body.data
-
-	yield initiativesDb.create({
-		uuid: topic.id,
+	var initiative = yield initiativesDb.create({
+		uuid: _.serializeUuid(_.uuidV4()),
 		user_id: user.id,
+		title: title,
 		created_at: new Date,
 		undersignable: true
 	})
 
-	res.redirect(303, req.baseUrl + "/" + topic.id + "/edit")
+	res.redirect(303, req.baseUrl + "/" + initiative.uuid + "/edit")
 }))
 
 exports.router.get("/new", function(_req, res) {
@@ -241,11 +220,10 @@ exports.router.use("/:id", next(function*(req, res, next) {
 	`)
 
 	if (initiative == null) throw new HttpError(404)
-
-	if (!(
-		initiative.published_at ||
-		user && initiative.user_id == user.id
-	)) throw new HttpError(403, "Initiative Not Public")
+	if (!initiative.published_at && !user)
+		throw new HttpError(401, "Initiative Not Public")
+	if (!initiative.published_at && initiative.user_id != user.id)
+		throw new HttpError(403, "Initiative Not Public")
 
 	var topic
 	TOPIC: if (!initiative.external) {
@@ -327,6 +305,7 @@ exports.router.get("/:id",
 exports.read = next(function*(req, res) {
 	var user = req.user
 	var initiative = req.initiative
+	var topic = req.topic
 	var thank = false
 	var thankAgain = false
 	var signature
@@ -388,6 +367,25 @@ exports.read = next(function*(req, res) {
 		WHERE initiative_uuid = ${initiative.uuid}
 	`)
 
+	var text = topic == null ? yield textsDb.read(sql`
+		SELECT * FROM initiative_texts
+		WHERE initiative_uuid = ${initiative.uuid}
+		ORDER BY created_at DESC
+		LIMIT 1
+	`) : null
+
+	if (req.originalUrl.endsWith(".html")) {
+		var html = (
+			initiative.text &&
+			Initiative.renderForParliament(initiative, initiative.text) ||
+			text && Initiative.renderForParliament(initiative, text) ||
+			topic && topic.description
+		)
+
+		if (html) return void res.send(html)
+		else throw new HttpError(404, "No Text Yet")
+	}
+
 	res.render("initiatives/read_page.jsx", {
 		thank: thank,
 		thankAgain: thankAgain,
@@ -395,6 +393,7 @@ exports.read = next(function*(req, res) {
 		subscription: subscription,
 		subscriberCounts: subscriberCounts,
 		signatureCount: signatureCount,
+		text: text,
 		image: image,
 		files: files,
 		comments: comments,
@@ -475,12 +474,22 @@ exports.router.get("/:id/edit", next(function*(req, res) {
 		topic && Topic.canEdit(topic)
 	)) throw new HttpError(403, "No Permission to Edit")
 
-	var etherpadUrl
+	var etherpadUrl, text
+
 	if (topic) etherpadUrl = serializeEtherpadUrl(yield req.cosApi(
 		`/api/users/self/topics/${topic.id}`
 	).then((res) => res.body.data.padUrl))
+	else {
+		text = yield textsDb.read(sql`
+			SELECT * FROM initiative_texts
+			WHERE initiative_uuid = ${initiative.uuid}
+			ORDER BY created_at DESC
+			LIMIT 1
+		`)
+	}
 
 	res.render("initiatives/update_page.jsx", {
+		text: text,
 		etherpadUrl: etherpadUrl
 	})
 }))
@@ -495,6 +504,8 @@ exports.router.use("/:id/subscriptions",
 	require("./initiatives/subscriptions_controller").router)
 exports.router.use("/:id/signatures",
 	require("./initiatives/signatures_controller").router)
+exports.router.use("/:id/texts",
+	require("./initiatives/texts_controller").router)
 
 exports.router.use(function(err, req, res, next) {
 	if (err instanceof HttpError && err.code === 404) {
@@ -697,7 +708,13 @@ function* updateInitiativeToPublished(req, res) {
 	var tmpl = "initiatives/update_for_publish_page.jsx"
 
 	if (!(initiative.user_id == user.id && initiative.phase == "edit"))
-		throw new HttpError(403)
+		throw new HttpError(403, "No Permission to Edit")
+
+	if (!(topic || (yield textsDb.read(sql`
+		SELECT id FROM initiative_texts
+		WHERE initiative_uuid = ${initiative.uuid}
+		LIMIT 1
+	`)))) throw new HttpError(422, "No Text")
 
 	if (req.body.endsAt == null) return void res.render(tmpl, {
 		attrs: {endsAt: initiative.discussion_ends_at}
@@ -747,7 +764,8 @@ function* updateInitiativePhaseToSign(req, res) {
 	var topic = req.topic
 	var tmpl = "initiatives/update_for_voting_page.jsx"
 
-	if (topic == null) throw new HttpError(403, "No Topic For Initiative")
+	if (initiative.user_id != user.id)
+		throw new HttpError(403, "No Permission to Edit")
 
 	if (!(
 		Initiative.canPropose(new Date, initiative, topic, user) ||
@@ -755,7 +773,7 @@ function* updateInitiativePhaseToSign(req, res) {
 	)) throw new HttpError(403, "Cannot Update to Sign Phase")
 
 	if (req.body.endsAt == null) return void res.render(tmpl, {
-		attrs: {endsAt: topic.vote ? new Date(topic.vote.endsAt) : null}
+		attrs: {endsAt: initiative.signing_started_at}
 	})
 
 	let endsAt = DateFns.endOfDay(Time.parseDate(req.body.endsAt))
@@ -771,60 +789,81 @@ function* updateInitiativePhaseToSign(req, res) {
 		})
 	}
 
-	var updated
-	var path = `/api/users/self/topics/${topic.id}`
+	if (topic) {
+		var updated
+		var path = `/api/users/self/topics/${topic.id}`
 
-	if (topic.vote)
-		updated = req.cosApi(`${path}/votes/${topic.vote.id}`, {
-			method: "PUT",
-			json: {endsAt: endsAt}
+		if (topic.vote)
+			updated = req.cosApi(`${path}/votes/${topic.vote.id}`, {
+				method: "PUT",
+				json: {endsAt: endsAt}
+			})
+		else
+			updated = req.cosApi(`${path}/votes`, {
+				method: "POST",
+				json: {
+					endsAt: endsAt,
+					authType: "hard",
+					voteType: "regular",
+					delegationIsAllowed: false,
+					options: [{value: "Yes"}, {value: "No"}]
+				}
+			})
+
+		updated = yield updated.catch(catch400)
+
+		if (!isOk(updated)) return void res.status(422).render(tmpl, {
+			error: translateCitizenError(req.t, updated.body),
+			attrs: attrs
 		})
-	else
-		updated = req.cosApi(`${path}/votes`, {
-			method: "POST",
-			json: {
-				endsAt: endsAt,
-				authType: "hard",
-				voteType: "regular",
-				delegationIsAllowed: false,
-				options: [{value: "Yes"}, {value: "No"}]
-			}
-		})
+	}
 
-	updated = yield updated.catch(catch400)
-
-	if (!isOk(updated)) return void res.status(422).render(tmpl, {
-		error: translateCitizenError(req.t, updated.body),
-		attrs: attrs
-	})
-
-	yield initiativesDb.update(initiative, {
+	attrs = {
 		phase: "sign",
 		signing_started_at: initiative.signing_started_at || new Date,
 		signing_ends_at: endsAt,
-		signing_end_email_sent_at: null,
+		signing_end_email_sent_at: null
+	}
 
-		// Is there a chance for a race condition as Etherpad may not have saved
-		// the latest state to the CitizenOS datbase?
-		text: initiative.text || topic.description,
-		text_type: initiative.text_type || new MediaType("text/html"),
-		text_sha256: initiative.text_sha256 || sha256(topic.description)
-	})
+	if (initiative.phase == "edit") {
+		if (topic) {
+			attrs.text = topic.description
+			attrs.text_type = new MediaType("text/html")
+			attrs.text_sha256 = sha256(topic.description)
+		}
+		else {
+			var text = yield textsDb.read(sql`
+				SELECT * FROM initiative_texts
+				WHERE initiative_uuid = ${initiative.uuid}
+				ORDER BY created_at DESC
+				LIMIT 1
+			`)
 
-	if (topic.vote == null) {
+			if (text == null) throw new HttpError(422, "No Text")
+			var html = Initiative.renderForParliament(initiative, text)
+
+			attrs.text = html
+			attrs.text_type = new MediaType("text/html")
+			attrs.text_sha256 = sha256(html)
+		}
+	}
+
+	yield initiativesDb.update(initiative, attrs)
+
+	if (initiative.phase == "edit") {
 		var message = yield messagesDb.create({
-			initiative_uuid: topic.id,
+			initiative_uuid: initiative.uuid,
 			origin: "status",
 			created_at: new Date,
 			updated_at: new Date,
 
 			title: t("SENT_TO_SIGNING_MESSAGE_TITLE", {
-				initiativeTitle: topic.title
+				initiativeTitle: initiative.title
 			}),
 
 			text: renderEmail("et", "SENT_TO_SIGNING_MESSAGE_BODY", {
-				initiativeTitle: topic.title,
-				initiativeUrl: `${Config.url}/initiatives/${topic.id}`,
+				initiativeTitle: initiative.title,
+				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 			})
 		})
 
@@ -832,13 +871,17 @@ function* updateInitiativePhaseToSign(req, res) {
 			message,
 
 			yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(
-				topic.id
+				initiative.uuid
 			)
 		)
 	}
 
-	res.flash("notice", req.t("INITIATIVE_SIGN_PHASE_UPDATED"))
-	res.redirect(303, req.baseUrl + "/" + topic.id)
+	res.flash("notice", initiative.phase == "edit"
+		? req.t("INITIATIVE_SIGN_PHASE_UPDATED")
+		: req.t("INITIATIVE_SIGNING_DEADLINE_UPDATED")
+	)
+
+	res.redirect(303, req.baseUrl + "/" + initiative.uuid)
 }
 
 function* updateInitiativePhaseToParliament(req, res) {
@@ -850,6 +893,9 @@ function* updateInitiativePhaseToParliament(req, res) {
 	var undersignedSignatureCount = yield countUndersignedSignaturesById(uuid)
 	var signatureCount = citizenosSignatureCount + undersignedSignatureCount
 	var tmpl = "initiatives/update_for_parliament_page.jsx"
+
+	if (initiative.user_id != user.id)
+		throw new HttpError(403, "No Permission to Edit")
 
 	if (initiative.destination != "parliament")
 		throw new HttpError(403, "Cannot Send Local Initiative to Parliament")

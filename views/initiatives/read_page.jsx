@@ -10,6 +10,7 @@ var I18n = require("root/lib/i18n")
 var Flash = require("../page").Flash
 var Topic = require("root/lib/topic")
 var Form = require("../page").Form
+var Trix = require("root/lib/trix")
 var Initiative = require("root/lib/initiative")
 var FormButton = require("../page").FormButton
 var DonateForm = require("../donations/create_page").DonateForm
@@ -120,6 +121,7 @@ function ReadPage(attrs) {
 	var initiativePath = "/initiatives/" + initiative.uuid
 	var subscriberCounts = attrs.subscriberCounts
 	var signatureCount = attrs.signatureCount
+	var text = attrs.text
 	var image = attrs.image
 	var title = topic ? topic.title : initiative.title
 	var initiativeUrl =`${Config.url}/initiatives/${initiative.uuid}`
@@ -156,7 +158,7 @@ function ReadPage(attrs) {
 			signatureCount={signatureCount}
     /> : null}
 
-		<section id="initiative-section" class="transparent-section"><center>
+		<section class="initiative-section transparent-section"><center>
 			<div id="initiative-sheet" class="sheet">
 				<Flash flash={flash} />
 
@@ -279,6 +281,7 @@ function ReadPage(attrs) {
 				<InitiativeContentView
 					topic={topic}
 					initiative={initiative}
+					text={text}
 					files={files}
 				/>
 
@@ -348,6 +351,7 @@ function ReadPage(attrs) {
 					req={req}
 					topic={topic}
 					initiative={initiative}
+					text={text}
 					hasComments={comments.length > 0}
 					signatureCount={signatureCount}
 				/>
@@ -596,13 +600,14 @@ function PhasesView(attrs) {
 function InitiativeContentView(attrs) {
 	var topic = attrs.topic
 	var initiative = attrs.initiative
+	var text = attrs.text
 	var initiativePath = "/initiatives/" + initiative.uuid
 	var files = attrs.files
 
 	if (topic && topic.html)
-		return <article class="text">{Jsx.html(topic.html)}</article>
+		return <article class="text citizenos-text">{Jsx.html(topic.html)}</article>
 	
-	else if (initiative.external) {
+	if (initiative.external) {
 		var pdf = files.find((file) => file.content_type == "application/pdf")
 		if (pdf == null) return null
 
@@ -614,6 +619,23 @@ function InitiativeContentView(attrs) {
 		</article>
 	}
 
+	if (text) switch (String(text.content_type)) {
+		case "application/vnd.basecamp.trix+json":
+			return <article class="text trix-text">
+				{Trix.render(text.content, {heading: "h2"})}
+			</article>
+
+		// Text/html is for old imported CitizenOS texts. Expecting it to be
+		// sanitized _before_ saved in the database.
+		case "text/html":
+			return <article class="text citizenos-text">
+				{Jsx.html(text.content)}
+			</article>
+
+		default:
+			throw new RangeError("Unsupported content type: " + text.content_type)
+	}
+
 	return null
 }
 
@@ -622,6 +644,7 @@ function SidebarAuthorView(attrs) {
 	var t = req.t
 	var user = req.user
 	var topic = attrs.topic
+	var text = attrs.text
 	var initiative = attrs.initiative
 	var signatureCount = attrs.signatureCount
 	var hasComments = attrs.hasComments
@@ -656,7 +679,7 @@ function SidebarAuthorView(attrs) {
 			</Form>
 		</Fragment> : null}
 
-		{!initiative.published_at ? <FormButton
+		{!initiative.published_at && text ? <FormButton
 			req={req}
 			action={"/initiatives/" + initiative.uuid}
 			name="visibility"

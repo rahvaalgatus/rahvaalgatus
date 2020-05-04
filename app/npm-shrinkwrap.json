@@ -953,6 +953,11 @@
         }
       }
     },
+    "trix": {
+      "version": "1.2.3",
+      "from": "trix@latest",
+      "resolved": "https://registry.npmjs.org/trix/-/trix-1.2.3.tgz"
+    },
     "uglify-js": {
       "version": "2.7.4",
       "from": "uglify-js@latest",

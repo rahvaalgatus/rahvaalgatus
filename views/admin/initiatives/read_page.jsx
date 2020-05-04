@@ -297,17 +297,19 @@ module.exports = function(attrs) {
 				</td>
 			</tr>
 
-			{topic ? <tr>
+			<tr>
 				<th scope="row">Tags</th>
 				<td>
-					<InputForm
+					{topic ? <InputForm
 						req={req}
 						action={initiativePath}
 						name={"tags"}
 						value={topic.categories.join(", ")}
-					/>
+					/> : <p>
+						Sorry, tags are not yet available on non-CitizenOS initaitives.
+					</p>}
 				</td>
-			</tr> : null}
+			</tr>
 
 			<tr>
 				<th scope="row">Subscriber Count</th>
