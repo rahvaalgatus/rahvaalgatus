@@ -6,7 +6,6 @@ var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
 var {searchInitiativesEvents} = require("./initiatives_controller")
 var {serializeApiInitiative} = require("./initiatives_controller")
-var {setTitlesFromTopics} = require("root/lib/citizenos_db")
 var next = require("co-next")
 var initiativesDb = require("root/db/initiatives_db")
 var renderEventTitle = require("root/lib/event").renderEventTitle
@@ -28,8 +27,6 @@ exports.router.get("/",
 		GROUP BY uuid
 		ORDER BY ROWID
 	`)
-
-	yield setTitlesFromTopics(initiatives)
 
 	var events = yield searchInitiativesEvents(initiatives)
 

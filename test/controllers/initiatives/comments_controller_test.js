@@ -435,45 +435,6 @@ describe("InitiativeCommentsController", function() {
 				subscriptions.slice(2).forEach((s) => msg.must.include(s.update_token))
 			})
 
-			describe("when CitizenOS initiative", function() {
-				it("must email subscribers with CitizenOS title", function*() {
-					var partner = yield createPartner(newPartner({
-						id: Config.apiPartnerId
-					}))
-
-					var topic = yield createTopic(newTopic({
-						id: this.initiative.uuid,
-						creatorId: this.user.uuid,
-						sourcePartnerId: partner.id
-					}))
-
-					var subscription = yield subscriptionsDb.create(
-						new ValidSubscription({
-							initiative_uuid: this.initiative.uuid,
-							confirmed_at: new Date,
-							comment_interest: true
-						})
-					)
-
-					var path = `/initiatives/${this.initiative.uuid}`
-					var res = yield this.request(path + `/comments`, {
-						method: "POST",
-						form: {
-							__proto__: VALID_ATTRS,
-							_csrf_token: this.csrfToken,
-							referrer: path
-						}
-					})
-
-					res.statusCode.must.equal(303)
-
-					this.emails.length.must.equal(1)
-					this.emails[0].envelope.to.must.eql([subscription.email])
-					var msg = String(this.emails[0].message)
-					msg.match(/^Subject: .*/m)[0].must.include(topic.title)
-				})
-			})
-
 			it("must not email subscribers if private", function*() {
 				yield initiativesDb.update(this.initiative, {
 					user_id: this.user.id,
@@ -984,49 +945,6 @@ describe("InitiativeCommentsController", function() {
 				subscriptions.slice(2).forEach((s) => (
 					msg.must.include(s.update_token))
 				)
-			})
-
-			describe("when CitizenOS initiative", function() {
-				it("must email subscribers interested in comments", function*() {
-					var partner = yield createPartner(newPartner({
-						id: Config.apiPartnerId
-					}))
-
-					var topic = yield createTopic(newTopic({
-						id: this.initiative.uuid,
-						creatorId: this.user.uuid,
-						sourcePartnerId: partner.id
-					}))
-
-					var author = yield createUser()
-
-					var comment = yield commentsDb.create(new ValidComment({
-						user_id: author.id,
-						user_uuid: _.serializeUuid(author.uuid),
-						initiative_uuid: this.initiative.uuid
-					}))
-
-					var subscription = yield subscriptionsDb.create(
-						new ValidSubscription({
-							initiative_uuid: this.initiative.uuid,
-							confirmed_at: new Date,
-							comment_interest: true
-						})
-					)
-
-					var path = `/initiatives/${this.initiative.uuid}`
-					var res = yield this.request(path + `/comments/${comment.id}/replies`, {
-						method: "POST",
-						form: {__proto__: VALID_REPLY_ATTRS, _csrf_token: this.csrfToken}
-					})
-
-					res.statusCode.must.equal(303)
-
-					this.emails.length.must.equal(1)
-					this.emails[0].envelope.to.must.eql([subscription.email])
-					var msg = String(this.emails[0].message)
-					msg.match(/^Subject: .*/m)[0].must.include(topic.title)
-				})
 			})
 
 			it("must not email subscribers if private", function*() {

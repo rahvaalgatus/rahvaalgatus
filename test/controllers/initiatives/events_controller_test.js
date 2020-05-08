@@ -5,13 +5,7 @@ var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidEvent = require("root/test/valid_db_initiative_event")
 var Initiative = require("root/lib/initiative")
-var newPartner = require("root/test/citizenos_fixtures").newPartner
-var newTopic = require("root/test/citizenos_fixtures").newTopic
-var newVote = require("root/test/citizenos_fixtures").newVote
-var createPartner = require("root/test/citizenos_fixtures").createPartner
 var createUser = require("root/test/fixtures").createUser
-var createTopic = require("root/test/citizenos_fixtures").createTopic
-var createVote = require("root/test/citizenos_fixtures").createVote
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var eventsDb = require("root/db/initiative_events_db")
@@ -280,80 +274,6 @@ describe("InitiativeEventsController", function() {
 				var msg = String(this.emails[0].message)
 				msg.match(/^Subject: .*/m)[0].must.include(initiative.title)
 				subscriptions.slice(2).forEach((s) => msg.must.include(s.update_token))
-			})
-
-			describe("when CitizenOS initiative", function() {
-				it("must email subscribers interested in author events", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id,
-						phase: "sign"
-					}))
-
-					var partner = yield createPartner(newPartner({
-						id: Config.apiPartnerId
-					}))
-
-
-					var topic = yield createTopic(newTopic({
-						id: initiative.uuid,
-						creatorId: this.user.uuid,
-						sourcePartnerId: partner.id,
-						status: "voting"
-					}))
-
-					yield createVote(topic, newVote())
-
-					var subscription = yield subscriptionsDb.create(
-						new ValidSubscription({
-							initiative_uuid: initiative.uuid,
-							confirmed_at: new Date
-						})
-					)
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}/events`, {
-						method: "POST",
-						form: {
-							_csrf_token: this.csrfToken,
-							title: "Something happened",
-							content: "You shouldn't miss it."
-						}
-					})
-
-					res.statusCode.must.equal(302)
-
-					var messages = yield messagesDb.search(sql`
-						SELECT * FROM initiative_messages
-					`)
-
-					messages.must.eql([{
-						id: messages[0].id,
-						initiative_uuid: initiative.uuid,
-						created_at: new Date,
-						updated_at: new Date,
-						origin: "event",
-
-						title: t("EMAIL_INITIATIVE_AUTHOR_EVENT_TITLE", {
-							title: "Something happened",
-							initiativeTitle: topic.title
-						}),
-
-						text: renderEmail("EMAIL_INITIATIVE_AUTHOR_EVENT_BODY", {
-							initiativeTitle: topic.title,
-							initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-							title: "Something happened",
-							text: "> You shouldn't miss it.",
-							unsubscribeUrl: "{{unsubscribeUrl}}"
-						}),
-
-						sent_at: new Date,
-						sent_to: [subscription.email]
-					}])
-
-					this.emails.length.must.equal(1)
-					this.emails[0].envelope.to.must.eql([subscription.email])
-					var msg = String(this.emails[0].message)
-					msg.match(/^Subject: .*/m)[0].must.include(topic.title)
-				})
 			})
 
 			it("must respond with 403 if not an admin", function*() {

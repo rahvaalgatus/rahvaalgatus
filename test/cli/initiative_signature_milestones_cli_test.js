@@ -6,11 +6,7 @@ var ValidSubscription = require("root/test/valid_subscription")
 var ValidSignature = require("root/test/valid_signature")
 var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
 var cli = require("root/cli/initiative_signature_milestones_cli")
-var newTopic = require("root/test/citizenos_fixtures").newTopic
-var newVote = require("root/test/citizenos_fixtures").newVote
 var createUser = require("root/test/fixtures").createUser
-var createTopic = require("root/test/citizenos_fixtures").createTopic
-var createVote = require("root/test/citizenos_fixtures").createVote
 var db = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var messagesDb = require("root/db/initiative_messages_db")
@@ -110,63 +106,6 @@ describe("InitiativeSignatureMilestonesCli", function() {
 		this.emails[0].envelope.to.must.eql(emails)
 		var msg = String(this.emails[0].message)
 		msg.match(/^Subject: .*/m)[0].must.include(message.title)
-	})
-
-	describe("when CitizenOS initiative", function() {
-		it("must notify given an initiative in signing", function*() {
-			var initiative = yield db.create(new ValidInitiative({
-				user_id: this.user.id,
-				phase: "sign"
-			}))
-
-			var topic = yield createTopic(newTopic({
-				id: initiative.uuid,
-				creatorId: this.user.uuid,
-				status: "voting"
-			}))
-
-			yield createVote(topic, newVote())
-
-			yield createSignatures(15, new Date, initiative)
-
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
-				initiative_uuid: initiative.uuid,
-				confirmed_at: new Date
-			}))
-
-			yield cli()
-
-			var messages = yield messagesDb.search(sql`
-				SELECT * FROM initiative_messages
-			`)
-
-			messages.must.eql([{
-				id: messages[0].id,
-				initiative_uuid: initiative.uuid,
-				created_at: new Date,
-				updated_at: new Date,
-				origin: "signature_milestone",
-
-				title: t("EMAIL_SIGNATURE_MILESTONE_N_SUBJECT", {
-					initiativeTitle: topic.title,
-					milestone: 10
-				}),
-
-				text: renderEmail("EMAIL_SIGNATURE_MILESTONE_N_BODY", {
-					initiativeTitle: topic.title,
-					initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-					milestone: 10
-				}),
-
-				sent_at: new Date,
-				sent_to: [subscription.email]
-			}])
-
-			this.emails.length.must.equal(1)
-			this.emails[0].envelope.to.must.eql([subscription.email])
-			var msg = String(this.emails[0].message)
-			msg.match(/^Subject: .*/m)[0].must.include(messages[0].title)
-		})
 	})
 
 	it("must update milestones when not all milestones reached", function*() {

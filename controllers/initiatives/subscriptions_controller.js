@@ -14,7 +14,6 @@ exports.router = Router({mergeParams: true})
 
 exports.router.post("/", next(function*(req, res) {
 	var user = req.user
-	var topic = req.topic
 	var initiative = req.initiative
 	var email = req.body.email
 
@@ -62,19 +61,18 @@ exports.router.post("/", next(function*(req, res) {
 		var initiativeUrl = Http.link(req, Path.dirname(req.baseUrl))
 		var subscriptionsUrl = Http.link(req, req.baseUrl)
 		var token = subscription.update_token
-		var title = topic ? topic.title : initiative.title
 
 		if (subscription.confirmed_at) {
 			yield sendEmail({
 				to: email,
 
 				subject: req.t("ALREADY_SUBSCRIBED_TO_INITIATIVE_TITLE", {
-					initiativeTitle: title
+					initiativeTitle: initiative.title
 				}),
 
 				text: renderEmail(req.lang, "ALREADY_SUBSCRIBED_TO_INITIATIVE_BODY", {
 					url: subscriptionsUrl + "/" + token,
-					initiativeTitle: title,
+					initiativeTitle: initiative.title,
 					initiativeUrl: initiativeUrl
 				})
 			})
@@ -83,12 +81,12 @@ exports.router.post("/", next(function*(req, res) {
 			to: email,
 
 			subject: req.t("CONFIRM_INITIATIVE_SUBSCRIPTION_TITLE", {
-				initiativeTitle: title
+				initiativeTitle: initiative.title
 			}),
 
 			text: renderEmail(req.lang, "CONFIRM_INITIATIVE_SUBSCRIPTION_BODY", {
 				url: subscriptionsUrl + "/new?confirmation_token=" + token,
-				initiativeTitle: title,
+				initiativeTitle: initiative.title,
 				initiativeUrl: initiativeUrl
 			})
 		})

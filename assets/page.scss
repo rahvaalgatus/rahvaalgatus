@@ -2417,9 +2417,7 @@ button.inherited {
 		padding: $article-padding;
 		@include mobile { padding: $article-padding-mobile; }
 
-		// Trix doesn't really output semantic HTML, so it's likely people just add
-		// a separate blank line between the title and paragraph.
-		h2 + * { margin-top: 0; }
+		div + h2 { margin-top: 4rem; }
 
 		min-height: 20em;
 		font-size: 1.6rem;

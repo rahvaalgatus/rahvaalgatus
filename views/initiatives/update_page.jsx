@@ -2,10 +2,10 @@
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var InitiativePage = require("./initiative_page")
-var Topic = require("root/lib/topic")
 var Form = require("../page").Form
 var Flash = require("../page").Flash
 var javascript = require("root/lib/jsx").javascript
+var {normalizeCitizenOsHtml} = require("root/lib/topic")
 
 module.exports = function(attrs) {
 	var req = attrs.req
@@ -13,7 +13,6 @@ module.exports = function(attrs) {
 	var topic = attrs.topic
 	var flash = attrs.flash
 	var text = attrs.text
-	var etherpadUrl = attrs.etherpadUrl
 	var t = attrs.t
 
 	return <InitiativePage
@@ -32,7 +31,7 @@ module.exports = function(attrs) {
 			<div id="initiative-sheet" class="sheet">
 				<Flash flash={flash} />
 
-				{topic == null && initiative.phase == "edit" ? <Fragment>
+				{initiative.phase == "edit" ? <Fragment>
 					<script src="/assets/html5.js" />
 					<script src="/assets/editor.js" />
 
@@ -46,7 +45,7 @@ module.exports = function(attrs) {
 					<input
 						type="hidden"
 						name="content"
-						value={text && JSON.stringify(text.content)}
+						value={text && JSON.stringify(serializeText(text))}
 					/>
 
 					<trix-editor id="editor" class="text trix-content" />
@@ -69,12 +68,13 @@ module.exports = function(attrs) {
 						// into this page. However, as we keep the serialized text in an
 						// <input> element, that's restored by the browser.
 						el.addEventListener("trix-initialize", function(ev) {
-							var json = form.elements.content.value
+							var content = form.elements.content.value
+							content = content ? JSON.parse(content) : null
 
-							if (json) el.editor.loadJSON({
-								document: JSON.parse(json),
-								selectedRange: [0, 0]
-							})
+							if (typeof content == "string")
+								el.editor.loadHTML(content)
+							else if (content)
+								el.editor.loadJSON({document: content, selectedRange: [0, 0]})
 
 							loadedDocument = el.editor.getDocument()
 						})
@@ -83,54 +83,6 @@ module.exports = function(attrs) {
 							if (loadedDocument == null) return undefined
 							if (loadedDocument === el.editor.getDocument()) return undefined
 							return ${JSON.stringify(t("INITIATIVE_TEXT_UNSAVED"))}
-						}
-					`}</script>
-				</Fragment> : topic && Topic.canEditBody(topic) ? <Fragment>
-					<iframe
-						id="initiative-etherpad"
-						src={etherpadUrl}
-						frameborder="0"
-						scrolling="no"
-					/>
-
-					<script>{javascript`
-						var el = document.getElementById("initiative-etherpad")
-
-						window.addEventListener("message", function(ev) {
-							switch (ev.data.name) {
-								case "ep_resize":
-									var height = ev.data.data.height
-									if (el.offsetHeight != height) el.style.height = height + "px"
-									break
-							}
-						})
-
-						var scrolled
-						window.addEventListener("scroll", function(ev) {
-							clearTimeout(scrolled)
-							scrolled = setTimeout(handleScroll, 100)
-						})
-
-						function handleScroll() {
-							el.contentWindow.postMessage({
-								name: "ep_embed_floating_toolbar_scroll",
-								data: {
-									scroll: {top: window.pageYOffset, left: window.pageXOffset},
-									frameOffset: offsetTopFrom(el)
-								}
-							}, "*")
-
-							function offsetTopFrom(el) {
-								var offsets = {left: 0, top: 0}
-
-								do {
-									offsets.top += el.offsetTop
-									offsets.left += el.offsetLeft
-									el = el.offsetParent
-								} while (el)
-
-								return offsets
-							}
 						}
 					`}</script>
 				</Fragment> : <Fragment>
@@ -151,7 +103,7 @@ module.exports = function(attrs) {
 						}
 					</a>
 
-					{topic == null && initiative.phase == "edit" ? <Fragment>
+					{initiative.phase == "edit" ? <Fragment>
 						<button
 							id="create-text-button"
 							type="submit"
@@ -175,4 +127,17 @@ module.exports = function(attrs) {
 			</aside>
 		</center></Form>
 	</InitiativePage>
+}
+
+function serializeText(text) {
+	switch (String(text.content_type)) {
+		case "text/html": return text.content
+		case "application/vnd.basecamp.trix+json": return text.content
+
+		case "application/vnd.citizenos.etherpad+html":
+			return normalizeCitizenOsHtml(text.content)
+
+		default:
+			throw new RangeError("Unsupported content type: " + text.content_type)
+	}
 }

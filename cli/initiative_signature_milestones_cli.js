@@ -7,7 +7,6 @@ var {countSignaturesByIds} = require("root/lib/initiative")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
-var {setTitlesFromTopics} = require("root/lib/citizenos_db")
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var renderEmail = require("root/lib/i18n").email.bind(null, Config.language)
@@ -19,8 +18,6 @@ module.exports = function*() {
 		SELECT * FROM initiatives
 		WHERE phase != 'edit'
 	`)
-
-	yield setTitlesFromTopics(initiatives)
 
 	var signatureCounts = yield countSignaturesByIds(_.map(initiatives, "uuid"))
 

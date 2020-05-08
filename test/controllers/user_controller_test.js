@@ -7,11 +7,7 @@ var Config = require("root/config")
 var Crypto = require("crypto")
 var Http = require("root/lib/http")
 var parseCookies = Http.parseCookies
-var newPartner = require("root/test/citizenos_fixtures").newPartner
-var newTopic = require("root/test/citizenos_fixtures").newTopic
-var createPartner = require("root/test/citizenos_fixtures").createPartner
 var createUser = require("root/test/fixtures").createUser
-var createTopic = require("root/test/citizenos_fixtures").createTopic
 var parseDom = require("root/lib/dom").parse
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
@@ -159,34 +155,6 @@ describe("UserController", function() {
 					el.innerHTML.must.include(initiative.uuid)
 					el.textContent.must.include(this.user.name)
 					el.textContent.must.include(initiative.title)
-				})
-
-				describe("given CitizenOS initiative", function() {
-					it("must show initiative in edit phase", function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id,
-							phase: "edit"
-						}))
-
-						var partner = yield createPartner(newPartner({
-							id: Config.apiPartnerId
-						}))
-
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: this.user.uuid,
-							sourcePartnerId: partner.id
-						}))
-
-						var res = yield this.request("/user")
-						res.statusCode.must.equal(200)
-
-						var dom = parseDom(res.body)
-						var el = dom.querySelector("li.initiative")
-						el.innerHTML.must.include(initiative.uuid)
-						el.textContent.must.include(this.user.name)
-						el.textContent.must.include(topic.title)
-					})
 				})
 
 				it("must show initiative in sign phase", function*() {

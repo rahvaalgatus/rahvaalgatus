@@ -13,6 +13,7 @@ var ValidSignature = require("root/test/valid_signature")
 var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
 var ValidComment = require("root/test/valid_comment")
 var ValidText = require("root/test/valid_initiative_text")
+var ValidFile = require("root/test/valid_event_file")
 var ValidEvent = require("root/test/valid_db_initiative_event")
 var Http = require("root/lib/http")
 var I18n = require("root/lib/i18n")
@@ -21,7 +22,6 @@ var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var tHtml = _.compose(_.escapeHtml, t)
-var respond = require("root/test/fixtures").respond
 var newPartner = require("root/test/citizenos_fixtures").newPartner
 var newTopic = require("root/test/citizenos_fixtures").newTopic
 var newVote = require("root/test/citizenos_fixtures").newVote
@@ -33,6 +33,7 @@ var pseudoDateTime = require("root/lib/crypto").pseudoDateTime
 var parseCookies = Http.parseCookies
 var usersDb = require("root/db/users_db")
 var textsDb = require("root/db/initiative_texts_db")
+var filesDb = require("root/db/initiative_files_db")
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var imagesDb = require("root/db/initiative_images_db")
@@ -79,31 +80,6 @@ describe("InitiativesController", function() {
 	describe("GET /", function() {
 		beforeEach(function*() {
 			this.author = yield createUser()
-		})
-
-		describe("when CitizenOS initiative", function() {
-			it("must show initiatives", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "edit",
-					published_at: new Date
-				}))
-
-				var partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
-
-				var topic = yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.author.uuid,
-					sourcePartnerId: partner.id,
-					visibility: "public"
-				}))
-
-				var res = yield this.request("/initiatives")
-				res.statusCode.must.equal(200)
-				res.body.must.include(initiative.uuid)
-				res.body.must.include(topic.title)
-				res.body.must.include(this.author.name)
-			})
 		})
 
 		it("must show initiatives in edit phase", function*() {
@@ -628,41 +604,6 @@ describe("InitiativesController", function() {
 			}])
 		})
 
-		describe("when CitizenOS initiative", function() {
-			it("must respond with initiatives", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "edit",
-					published_at: new Date
-				}))
-
-				var partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
-
-				var topic = yield createTopic(newTopic({
-					id: initiative.uuid,
-					title: "Better life for everyone.",
-					creatorId: this.author.uuid,
-					sourcePartnerId: partner.id,
-					visibility: "public"
-				}))
-
-				var res = yield this.request("/initiatives", {
-					headers: {Accept: INITIATIVE_TYPE}
-				})
-
-				res.statusCode.must.equal(200)
-				res.headers["content-type"].must.equal(INITIATIVE_TYPE)
-				res.headers["access-control-allow-origin"].must.equal("*")
-
-				res.body.must.eql([{
-					id: initiative.uuid,
-					title: topic.title,
-					phase: "edit",
-					signatureCount: 0
-				}])
-			})
-		})
-
 		it("must respond with external initiatives in parliament", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
@@ -965,31 +906,6 @@ describe("InitiativesController", function() {
 
 				res.headers.location.must.equal("/initiatives/" + uuid + "/edit")
 			})
-
-			it("must escape title", function*() {
-				var uuid = "5f9a82a5-e815-440b-abe9-d17311b0b366"
-
-				this.router.post("/api/users/self/topics", function(req, res) {
-					req.headers.authorization.must.exist(0)
-
-					req.body.description.must.equal(t("INITIATIVE_DEFAULT_HTML", {
-						title: "Hello &lt;mike&gt;!"
-					}))
-
-					respond({data: {id: uuid}}, req, res)
-				})
-
-				var res = yield this.request("/initiatives", {
-					method: "POST",
-					form: {
-						_csrf_token: this.csrfToken,
-						"accept-tos": true,
-						title: "Hello <mike>!"
-					}
-				})
-
-				res.statusCode.must.equal(303)
-			})
 		})
 	})
 
@@ -1063,62 +979,128 @@ describe("InitiativesController", function() {
 				phases.must.not.have.property("archived")
 			})
 
-			describe("when non-CitizenOS initiative", function() {
-				it("must render initiative with latest text", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						phase: "edit",
-						published_at: new Date
-					}))
+			it("must render initiative with Trix text", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					published_at: new Date
+				}))
 
-					var text = yield textsDb.create(new ValidText({
-						initiative_uuid: initiative.uuid,
-						user_id: this.author.id,
-						created_at: new Date(2015, 5, 18, 13, 37, 42),
-						content: "Latest and greatest.",
-						content_type: "text/html"
-					}))
+				yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: this.author.id,
+					content_type: "application/vnd.basecamp.trix+json",
 
-					yield textsDb.create(new ValidText({
-						initiative_uuid: initiative.uuid,
-						user_id: this.author.id,
-						created_at: new Date(2015, 5, 18, 13, 37, 41),
-						content: "Old and dusty.",
-						content_type: "text/html"
-					}))
+					content: [{
+						"text": [{
+							"type": "string",
+							"attributes": {},
+							"string": "Hello, world!"
+						}, BLOCK_BREAK],
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
-					res.statusCode.must.equal(200)
-					res.body.must.include(this.author.name)
-					res.body.must.include(initiative.title)
-					res.body.must.include(text.content)
-				})
+						"attributes": []
+					}]
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+				res.body.must.include(this.author.name)
+				res.body.must.include(initiative.title)
+				res.body.must.include("Hello, world!")
 			})
 
-			describe("when CitizenOS initiative", function() {
-				it("must render initiative", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						phase: "edit",
-						published_at: new Date
-					}))
+			it("must render initiative with CitizenOS HTML", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					published_at: new Date
+				}))
 
-					var partner = yield createPartner(newPartner({
-						id: Config.apiPartnerId
-					}))
+				yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: this.author.id,
+					content_type: "application/vnd.citizenos.etherpad+html",
+					content: outdent`
+						<!DOCTYPE HTML>
+						<html>
+							<body>
+								<h1>Vote for Peace</h1>
+								<p>Rest in peace!</p>
+							</body>
+						</html>
+					`
+				}))
 
-					var topic = yield createTopic(newTopic({
-						id: initiative.uuid,
-						creatorId: this.author.uuid,
-						sourcePartnerId: partner.id,
-						visibility: "public"
-					}))
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+				res.body.must.include(this.author.name)
+				res.body.must.include(initiative.title)
+				res.body.must.not.include("Vote for Peace")
+				res.body.must.include("Rest in peace!")
+			})
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
-					res.statusCode.must.equal(200)
-					res.body.must.include(this.author.name)
-					res.body.must.include(topic.title)
-				})
+			it("must render external initiative with latest PDF", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					external: true
+				}))
+
+				var file = yield filesDb.create(new ValidFile({
+					initiative_uuid: initiative.uuid,
+					content_type: "application/pdf"
+				}))
+
+				var path = "/initiatives/" + initiative.uuid
+				var res = yield this.request(path)
+				res.statusCode.must.equal(200)
+				res.body.must.include(initiative.title)
+
+				var dom = parseDom(res.body)
+				var object = dom.querySelector("object")
+				object.data.must.equal(path + "/files/" + file.id)
+				object.type.must.equal(String(file.content_type))
+			})
+
+			it("must render external initiative if it has no PDF", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					external: true
+				}))
+
+				var path = "/initiatives/" + initiative.uuid
+				var res = yield this.request(path)
+				res.statusCode.must.equal(200)
+				res.body.must.include(initiative.title)
+			})
+
+			it("must render initiative with latest text", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					published_at: new Date
+				}))
+
+				var text = yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: this.author.id,
+					created_at: new Date(2015, 5, 18, 13, 37, 42),
+					content: "Latest and greatest.",
+					content_type: "text/html"
+				}))
+
+				yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: this.author.id,
+					created_at: new Date(2015, 5, 18, 13, 37, 41),
+					content: "Old and dusty.",
+					content_type: "text/html"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+				res.body.must.include(this.author.name)
+				res.body.must.include(initiative.title)
+				res.body.must.include(text.content)
 			})
 
 			it("must render initiative in edit phase", function*() {
@@ -3583,39 +3565,6 @@ describe("InitiativesController", function() {
 			})
 		})
 
-		describe("when CitizenOS initiative", function() {
-			it("must respond with initiative", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					published_at: new Date
-				}))
-
-				var partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
-
-				var topic = yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.author.uuid,
-					sourcePartnerId: partner.id,
-					visibility: "public"
-				}))
-
-				var res = yield this.request("/initiatives/" + initiative.uuid, {
-					headers: {Accept: INITIATIVE_TYPE}
-				})
-
-				res.statusCode.must.equal(200)
-				res.headers["content-type"].must.equal(INITIATIVE_TYPE)
-				res.headers["access-control-allow-origin"].must.equal("*")
-
-				res.body.must.eql({
-					id: initiative.uuid,
-					title: topic.title,
-					phase: "edit",
-					signatureCount: 0
-				})
-			})
-		})
-
 		it("must respond with external initiative", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				title: "Better life for everyone.",
@@ -4806,364 +4755,325 @@ describe("InitiativesController", function() {
 					res.body.must.include(t("VOTE_DEADLINE_EXPLANATION"))
 				})
 
-				describe("when non-CitizenOS initiative", function() {
-					it("must update initiative given Trix text", function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id,
-							destination: "parliament",
-							created_at: DateFns.addDays(new Date, -Config.minDeadlineDays),
-							published_at: new Date
-						}))
+				it("must update initiative given Trix text", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						destination: "parliament",
+						created_at: DateFns.addDays(new Date, -Config.minDeadlineDays),
+						published_at: new Date
+					}))
 
-						var text = yield textsDb.create(new ValidText({
-							initiative_uuid: initiative.uuid,
-							user_id: this.user.id,
-							created_at: new Date(2015, 5, 18, 13, 37, 42),
+					var text = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+						content_type: "application/vnd.basecamp.trix+json",
 
-							content: [{
-								"text": [{
-									"type": "string",
-									"attributes": {},
-									"string": "Hello, world!"
-								}, BLOCK_BREAK],
+						content: [{
+							"text": [{
+								"type": "string",
+								"attributes": {},
+								"string": "Hello, world!"
+							}, BLOCK_BREAK],
 
-								"attributes": []
-							}],
+							"attributes": []
+						}]
+					}))
 
-							content_type: "application/vnd.basecamp.trix+json",
-						}))
+					var endsAt = DateFns.addDays(
+						DateFns.endOfDay(new Date),
+						Config.minDeadlineDays
+					)
 
-						var endsAt = DateFns.addDays(
-							DateFns.endOfDay(new Date),
-							Config.minDeadlineDays
-						)
-
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-							method: "PUT",
-							form: {
-								_csrf_token: this.csrfToken,
-								status: "voting",
-								endsAt: formatIsoDate(endsAt)
-							}
-						})
-
-						res.statusCode.must.equal(303)
-						res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
-
-						var cookies = parseCookies(res.headers["set-cookie"])
-						res = yield this.request(res.headers.location, {
-							headers: {Cookie: Http.serializeCookies(cookies)}
-						})
-
-						res.statusCode.must.equal(200)
-						res.body.must.include(t("INITIATIVE_SIGN_PHASE_UPDATED"))
-
-						var html = Initiative.renderForParliament(initiative, text)
-						html.must.include("Hello, world!")
-
-						yield initiativesDb.search(sql`
-							SELECT * FROM initiatives
-						`).must.then.eql([{
-							__proto__: initiative,
-							phase: "sign",
-							signing_started_at: new Date,
-							signing_ends_at: endsAt,
-							text: html,
-							text_type: new MediaType("text/html"),
-							text_sha256: sha256(html)
-						}])
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "voting",
+							endsAt: formatIsoDate(endsAt)
+						}
 					})
 
-					it("must use the latest text", function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id,
-							destination: "parliament",
-							created_at: DateFns.addDays(new Date, -Config.minDeadlineDays),
-							published_at: new Date
-						}))
+					res.statusCode.must.equal(303)
+					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
-						var text = yield textsDb.create(new ValidText({
-							initiative_uuid: initiative.uuid,
-							user_id: this.user.id,
-							created_at: new Date(2015, 5, 18, 13, 37, 42),
-							content: [],
-							content_type: "application/vnd.basecamp.trix+json",
-						}))
-
-						yield textsDb.create(new ValidText({
-							initiative_uuid: initiative.uuid,
-							user_id: this.user.id,
-							created_at: new Date(2015, 5, 18, 13, 37, 40),
-						}))
-
-						var endsAt = DateFns.addDays(DateFns.endOfDay(new Date), 30)
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-							method: "PUT",
-							form: {
-								_csrf_token: this.csrfToken,
-								status: "voting",
-								endsAt: formatIsoDate(endsAt)
-							}
-						})
-
-						res.statusCode.must.equal(303)
-						var html = Initiative.renderForParliament(initiative, text)
-
-						yield initiativesDb.search(sql`
-							SELECT * FROM initiatives
-						`).must.then.eql([{
-							__proto__: initiative,
-							phase: "sign",
-							signing_started_at: new Date,
-							signing_ends_at: endsAt,
-							text: html,
-							text_type: new MediaType("text/html"),
-							text_sha256: sha256(html)
-						}])
+					var cookies = parseCookies(res.headers["set-cookie"])
+					res = yield this.request(res.headers.location, {
+						headers: {Cookie: Http.serializeCookies(cookies)}
 					})
 
-					it("must update only deadline and clear end email if in sign phase",
-						function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id,
-							phase: "sign",
-							signing_started_at: pseudoDateTime(),
-							discussion_end_email_sent_at: new Date,
-							signing_end_email_sent_at: new Date
-						}))
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("INITIATIVE_SIGN_PHASE_UPDATED"))
 
-						var endsAt = DateFns.addDays(DateFns.endOfDay(new Date), 30)
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-							method: "PUT",
-							form: {
-								_csrf_token: this.csrfToken,
-								status: "voting",
-								endsAt: formatIsoDate(endsAt)
-							}
-						})
+					var html = Initiative.renderForParliament(initiative, text)
+					html.must.include("Hello, world!")
 
-						res.statusCode.must.equal(303)
-
-						var cookies = parseCookies(res.headers["set-cookie"])
-						res = yield this.request(res.headers.location, {
-							headers: {Cookie: Http.serializeCookies(cookies)}
-						})
-
-						res.statusCode.must.equal(200)
-						res.body.must.include(t("INITIATIVE_SIGNING_DEADLINE_UPDATED"))
-
-						yield initiativesDb.search(sql`
-							SELECT * FROM initiatives
-						`).must.then.eql([{
-							__proto__: initiative,
-							signing_ends_at: endsAt,
-							signing_end_email_sent_at: null
-						}])
-					})
-
-					it("must not update text if updating deadline", function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id,
-							phase: "sign",
-							signing_started_at: pseudoDateTime(),
-							text: "Hello, world!",
-							text_type: "text/plain",
-							text_sha256: sha256("Hello, world!")
-						}))
-
-						var endsAt = DateFns.addDays(
-							DateFns.endOfDay(new Date),
-							Config.minDeadlineDays
-						)
-
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-							method: "PUT",
-							form: {
-								_csrf_token: this.csrfToken,
-								status: "voting",
-								endsAt: formatIsoDate(endsAt)
-							}
-						})
-
-						res.statusCode.must.equal(303)
-
-						yield initiativesDb.search(sql`
-							SELECT * FROM initiatives
-						`).must.then.eql([{
-							__proto__: initiative,
-							signing_ends_at: endsAt,
-							signing_end_email_sent_at: null
-						}])
-					})
+					yield initiativesDb.search(sql`
+						SELECT * FROM initiatives
+					`).must.then.eql([{
+						__proto__: initiative,
+						phase: "sign",
+						signing_started_at: new Date,
+						signing_ends_at: endsAt,
+						text: html,
+						text_type: new MediaType("text/html"),
+						text_sha256: sha256(html)
+					}])
 				})
 
-				describe("when CitizenOS initiative", function() {
-					it("must update initiative", function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id,
-							destination: "parliament",
-							created_at: DateFns.addDays(new Date, -Config.minDeadlineDays),
-							published_at: new Date
-						}))
+				it("must update initiative given CitizenOS HTML", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						destination: "parliament",
+						created_at: DateFns.addDays(new Date, -Config.minDeadlineDays),
+						published_at: new Date
+					}))
 
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: this.user.uuid,
-							sourcePartnerId: this.partner.id,
-							visibility: "public"
-						}))
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.uuid,
+						sourcePartnerId: this.partner.id,
+						visibility: "public"
+					}))
 
-						var endsAt = DateFns.addDays(
-							DateFns.endOfDay(new Date),
-							Config.minDeadlineDays
-						)
+					var text = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+						content_type: "application/vnd.citizenos.etherpad+html",
+						content: outdent`
+							<!DOCTYPE HTML>
+							<html>
+								<body>
+									<h1>Vote for Peace</h1>
+									<p>Rest in peace!</p>
+								</body>
+							</html>
+						`
+					}))
 
-						var updated = 0
-						this.router.post(`/api/users/self/topics/${topic.id}/votes`,
-							next(function*(req, res) {
-							++updated
+					var endsAt = DateFns.addDays(
+						DateFns.endOfDay(new Date),
+						Config.minDeadlineDays
+					)
 
-							req.body.must.eql({
-								endsAt: endsAt.toJSON(),
-								authType: "hard",
-								voteType: "regular",
-								delegationIsAllowed: false,
-								options: [{value: "Yes"}, {value: "No"}]
-							})
+					var updated = 0
+					this.router.post(`/api/users/self/topics/${topic.id}/votes`,
+						next(function*(req, res) {
+						++updated
 
-							res.end()
-
-							yield createVote(topic, newVote())
-						}))
-
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-							method: "PUT",
-							form: {
-								_csrf_token: this.csrfToken,
-								status: "voting",
-								endsAt: formatIsoDate(endsAt)
-							}
+						req.body.must.eql({
+							endsAt: endsAt.toJSON(),
+							authType: "hard",
+							voteType: "regular",
+							delegationIsAllowed: false,
+							options: [{value: "Yes"}, {value: "No"}]
 						})
 
-						res.statusCode.must.equal(303)
-						res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+						res.end()
 
-						var cookies = parseCookies(res.headers["set-cookie"])
-						res = yield this.request(res.headers.location, {
-							headers: {Cookie: Http.serializeCookies(cookies)}
-						})
+						yield createVote(topic, newVote())
+					}))
 
-						res.statusCode.must.equal(200)
-						updated.must.equal(1)
-						res.body.must.include(t("INITIATIVE_SIGN_PHASE_UPDATED"))
-
-						yield initiativesDb.search(sql`
-							SELECT * FROM initiatives
-						`).must.then.eql([{
-							__proto__: initiative,
-							phase: "sign",
-							signing_started_at: new Date,
-							signing_ends_at: endsAt,
-							text: topic.description,
-							text_type: new MediaType("text/html"),
-							text_sha256: sha256(topic.description)
-						}])
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "voting",
+							endsAt: formatIsoDate(endsAt)
+						}
 					})
 
-					it("must update initiative if on fast-track", function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id,
-							destination: "parliament",
-							created_at: DateFns.addDays(new Date, 1 - Config.minDeadlineDays),
-							published_at: new Date
-						}))
+					res.statusCode.must.equal(303)
+					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+					updated.must.equal(1)
 
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: this.user.uuid,
-							sourcePartnerId: this.partner.id,
-							visibility: "public",
-							categories: ["fast-track"]
-						}))
-
-						var endsAt = DateFns.addDays(DateFns.endOfDay(new Date), 30)
-
-						this.router.post(`/api/users/self/topics/${topic.id}/votes`,
-							endResponse)
-
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-							method: "PUT",
-							form: {
-								_csrf_token: this.csrfToken,
-								status: "voting",
-								endsAt: formatIsoDate(endsAt)
-							}
-						})
-
-						res.statusCode.must.equal(303)
-						res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
-
-						yield initiativesDb.search(sql`
-							SELECT * FROM initiatives
-						`).must.then.eql([{
-							__proto__: initiative,
-							phase: "sign",
-							signing_started_at: new Date,
-							signing_ends_at: endsAt,
-							text: topic.description,
-							text_type: new MediaType("text/html"),
-							text_sha256: sha256(topic.description)
-						}])
+					var cookies = parseCookies(res.headers["set-cookie"])
+					res = yield this.request(res.headers.location, {
+						headers: {Cookie: Http.serializeCookies(cookies)}
 					})
 
-					it("must not update text if updating deadline", function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id,
-							phase: "sign",
-							signing_started_at: pseudoDateTime(),
-							text: "Hello, world!",
-							text_type: "text/plain",
-							text_sha256: sha256("Hello, world!")
-						}))
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("INITIATIVE_SIGN_PHASE_UPDATED"))
 
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: this.user.uuid,
-							sourcePartnerId: this.partner.id,
-							status: "voting"
-						}))
+					var html = Initiative.renderForParliament(initiative, text)
+					html.must.include("Rest in peace!")
 
-						var vote = yield createVote(topic, newVote())
+					yield initiativesDb.search(sql`
+						SELECT * FROM initiatives
+					`).must.then.eql([{
+						__proto__: initiative,
+						phase: "sign",
+						signing_started_at: new Date,
+						signing_ends_at: endsAt,
+						text: html,
+						text_type: new MediaType("text/html"),
+						text_sha256: sha256(html)
+					}])
+				})
 
-						this.router.put(
-							`/api/users/self/topics/${topic.id}/votes/${vote.id}`,
-							endResponse
-						)
+				it("must use the latest text", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						destination: "parliament",
+						created_at: DateFns.addDays(new Date, -Config.minDeadlineDays),
+						published_at: new Date
+					}))
 
-						var endsAt = DateFns.addDays(
-							DateFns.endOfDay(new Date),
-							Config.minDeadlineDays
-						)
+					var text = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+						created_at: new Date(2015, 5, 18, 13, 37, 42),
+						content_type: "application/vnd.basecamp.trix+json",
+						content: []
+					}))
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-							method: "PUT",
-							form: {
-								_csrf_token: this.csrfToken,
-								status: "voting",
-								endsAt: formatIsoDate(endsAt)
-							}
-						})
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+						created_at: new Date(2015, 5, 18, 13, 37, 40),
+					}))
 
-						res.statusCode.must.equal(303)
-
-						yield initiativesDb.search(sql`
-							SELECT * FROM initiatives
-						`).must.then.eql([{
-							__proto__: initiative,
-							signing_ends_at: endsAt,
-							signing_end_email_sent_at: null
-						}])
+					var endsAt = DateFns.addDays(DateFns.endOfDay(new Date), 30)
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "voting",
+							endsAt: formatIsoDate(endsAt)
+						}
 					})
+
+					res.statusCode.must.equal(303)
+					var html = Initiative.renderForParliament(initiative, text)
+
+					yield initiativesDb.search(sql`
+						SELECT * FROM initiatives
+					`).must.then.eql([{
+						__proto__: initiative,
+						phase: "sign",
+						signing_started_at: new Date,
+						signing_ends_at: endsAt,
+						text: html,
+						text_type: new MediaType("text/html"),
+						text_sha256: sha256(html)
+					}])
+				})
+
+				it("must update only deadline and clear end email if in sign phase",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "sign",
+						signing_started_at: pseudoDateTime(),
+						discussion_end_email_sent_at: new Date,
+						signing_end_email_sent_at: new Date
+					}))
+
+					var endsAt = DateFns.addDays(DateFns.endOfDay(new Date), 30)
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "voting",
+							endsAt: formatIsoDate(endsAt)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					var cookies = parseCookies(res.headers["set-cookie"])
+					res = yield this.request(res.headers.location, {
+						headers: {Cookie: Http.serializeCookies(cookies)}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("INITIATIVE_SIGNING_DEADLINE_UPDATED"))
+
+					yield initiativesDb.search(sql`
+						SELECT * FROM initiatives
+					`).must.then.eql([{
+						__proto__: initiative,
+						signing_ends_at: endsAt,
+						signing_end_email_sent_at: null
+					}])
+				})
+
+				it("must not update text if updating deadline", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "sign",
+						signing_started_at: pseudoDateTime(),
+						text: "Hello, world!",
+						text_type: "text/plain",
+						text_sha256: sha256("Hello, world!")
+					}))
+
+					var endsAt = DateFns.addDays(
+						DateFns.endOfDay(new Date),
+						Config.minDeadlineDays
+					)
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "voting",
+							endsAt: formatIsoDate(endsAt)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					yield initiativesDb.search(sql`
+						SELECT * FROM initiatives
+					`).must.then.eql([{
+						__proto__: initiative,
+						signing_ends_at: endsAt,
+						signing_end_email_sent_at: null
+					}])
+				})
+
+				it("must update initiative if on fast-track", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						destination: "parliament",
+						created_at: DateFns.addDays(new Date, 1 - Config.minDeadlineDays),
+						published_at: new Date
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+						content_type: "application/vnd.basecamp.trix+json",
+						content: []
+					}))
+
+					var topic = yield createTopic(newTopic({
+						id: initiative.uuid,
+						creatorId: this.user.uuid,
+						sourcePartnerId: this.partner.id,
+						visibility: "public",
+						categories: ["fast-track"]
+					}))
+
+					var endsAt = DateFns.addDays(DateFns.endOfDay(new Date), 30)
+
+					this.router.post(`/api/users/self/topics/${topic.id}/votes`,
+						endResponse)
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "voting",
+							endsAt: formatIsoDate(endsAt)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+					initiative = yield initiativesDb.read(initiative)
+					initiative.phase.must.equal("sign")
 				})
 
 				it("must respond with 403 if not author", function*() {
@@ -5240,19 +5150,12 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var topic = yield createTopic(newTopic({
-						id: initiative.uuid,
-						title: "Better life.",
-						creatorId: this.user.uuid,
-						sourcePartnerId: this.partner.id,
-						createdAt: DateFns.addDays(new Date, -Config.minDeadlineDays),
-						visibility: "public"
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+						content_type: "application/vnd.basecamp.trix+json",
+						content: []
 					}))
-
-					this.router.post(
-						`/api/users/self/topics/${topic.id}/votes`,
-						endResponse
-					)
 
 					var subscriptions = yield subscriptionsDb.create([
 						new ValidSubscription({
@@ -5306,11 +5209,11 @@ describe("InitiativesController", function() {
 						origin: "status",
 
 						title: t("SENT_TO_SIGNING_MESSAGE_TITLE", {
-							initiativeTitle: topic.title
+							initiativeTitle: initiative.title
 						}),
 
 						text: renderEmail("SENT_TO_SIGNING_MESSAGE_BODY", {
-							initiativeTitle: topic.title,
+							initiativeTitle: initiative.title,
 							initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 						}),
 
@@ -5530,250 +5433,6 @@ describe("InitiativesController", function() {
 						facebookUrl: Config.facebookUrl,
 						twitterUrl: Config.twitterUrl
 					}))
-				})
-
-				describe("when CitizenOS initiative", function() {
-					it("must update initiative and email parliament", function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id,
-							phase: "sign"
-						}))
-
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: this.user.uuid,
-							sourcePartnerId: this.partner.id,
-							status: "voting"
-						}))
-
-						yield createVote(topic, newVote())
-
-						yield signaturesDb.create(_.times(Config.votesRequired, () => (
-							new ValidSignature({initiative_uuid: initiative.uuid})
-						)))
-
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-							method: "PUT",
-							form: {
-								_csrf_token: this.csrfToken,
-								status: "followUp",
-								"contact[name]": "John",
-								"contact[email]": "john@example.com",
-								"contact[phone]": "42"
-							}
-						})
-
-						res.statusCode.must.equal(303)
-						res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
-
-						var cookies = parseCookies(res.headers["set-cookie"])
-						res = yield this.request(res.headers.location, {
-							headers: {Cookie: Http.serializeCookies(cookies)}
-						})
-
-						res.statusCode.must.equal(200)
-						res.body.must.include(t("SENT_TO_PARLIAMENT_CONTENT"))
-
-						yield cosDb.query(sql`
-							SELECT * FROM "Topics"
-						`).then(_.first).then(_.clone).must.then.eql(_.clone({
-							__proto__: topic,
-							status: "followUp",
-							updatedAt: new Date
-						}))
-
-						var updatedInitiative = yield initiativesDb.read(initiative)
-
-						updatedInitiative.must.eql({
-							__proto__: initiative,
-							phase: "parliament",
-							sent_to_parliament_at: new Date,
-							parliament_token: updatedInitiative.parliament_token
-						})
-
-						updatedInitiative.parliament_token.must.exist()
-
-						this.emails.length.must.equal(1)
-						var email = this.emails[0]
-						email.envelope.to.must.eql([Config.parliamentEmail])
-
-						email.headers.subject.must.equal(t(
-							"EMAIL_INITIATIVE_TO_PARLIAMENT_TITLE",
-							{initiativeTitle: topic.title}
-						))
-
-						var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-						var signaturesUrl = initiativeUrl + "/signatures.asice"
-						signaturesUrl += "?parliament-token="
-						signaturesUrl += updatedInitiative.parliament_token.toString("hex")
-
-						email.body.must.equal(t("EMAIL_INITIATIVE_TO_PARLIAMENT_BODY", {
-							initiativeUuid: initiative.uuid,
-							initiativeTitle: topic.title,
-							initiativeUrl: initiativeUrl,
-							signatureCount: Config.votesRequired,
-							undersignedSignaturesUrl: signaturesUrl,
-							authorName: "John",
-							authorEmail: "john@example.com",
-							authorPhone: "42",
-							siteUrl: Config.url,
-							facebookUrl: Config.facebookUrl,
-							twitterUrl: Config.twitterUrl
-						}))
-					})
-
-					it("must update initiative and email parliament if has both CitizenOS and undersigned signatures", function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id,
-							phase: "sign"
-						}))
-
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: this.user.uuid,
-							sourcePartnerId: this.partner.id,
-							status: "voting"
-						}))
-
-						yield createVote(topic, newVote())
-
-						yield citizenosSignaturesDb.create(_.times(
-							Config.votesRequired / 2,
-							() => new ValidCitizenosSignature({
-								initiative_uuid: initiative.uuid
-							})
-						))
-
-						yield signaturesDb.create(_.times(Config.votesRequired / 2, () => (
-							new ValidSignature({initiative_uuid: initiative.uuid})
-						)))
-
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-							method: "PUT",
-							form: {
-								_csrf_token: this.csrfToken,
-								status: "followUp",
-								"contact[name]": "John",
-								"contact[email]": "john@example.com",
-								"contact[phone]": "42"
-							}
-						})
-
-						res.statusCode.must.equal(303)
-						res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
-
-						var cookies = parseCookies(res.headers["set-cookie"])
-						res = yield this.request(res.headers.location, {
-							headers: {Cookie: Http.serializeCookies(cookies)}
-						})
-
-						res.statusCode.must.equal(200)
-						res.body.must.include(t("SENT_TO_PARLIAMENT_CONTENT"))
-
-						yield cosDb.query(sql`
-							SELECT * FROM "Topics"
-						`).then(_.first).then(_.clone).must.then.eql(_.clone({
-							__proto__: topic,
-							status: "followUp",
-							updatedAt: new Date
-						}))
-
-						var updatedInitiative = yield initiativesDb.read(initiative)
-
-						updatedInitiative.must.eql({
-							__proto__: initiative,
-							phase: "parliament",
-							sent_to_parliament_at: new Date,
-							parliament_token: updatedInitiative.parliament_token
-						})
-
-						updatedInitiative.parliament_token.must.exist()
-
-						this.emails.length.must.equal(1)
-						var email = this.emails[0]
-						email.envelope.to.must.eql([Config.parliamentEmail])
-
-						email.headers.subject.must.equal(t(
-							"EMAIL_INITIATIVE_TO_PARLIAMENT_TITLE",
-							{initiativeTitle: topic.title}
-						))
-
-						var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-						var signaturesUrl = initiativeUrl + "/signatures.asice"
-						signaturesUrl += "?parliament-token="
-						signaturesUrl += updatedInitiative.parliament_token.toString("hex")
-
-						var cosSignaturesUrl = initiativeUrl + "/signatures.zip"
-						cosSignaturesUrl += "?type=citizenos"
-						cosSignaturesUrl += "&parliament-token="
-						cosSignaturesUrl += updatedInitiative.parliament_token.toString("hex")
-
-						email.body.must.equal(t(
-							"EMAIL_INITIATIVE_TO_PARLIAMENT_WITH_CITIZENOS_SIGNATURES_BODY", {
-							initiativeUuid: initiative.uuid,
-							initiativeTitle: topic.title,
-							initiativeUrl: initiativeUrl,
-							signatureCount: Config.votesRequired,
-							undersignedSignaturesUrl: signaturesUrl,
-							citizenosSignaturesUrl: cosSignaturesUrl,
-							authorName: "John",
-							authorEmail: "john@example.com",
-							authorPhone: "42",
-							siteUrl: Config.url,
-							facebookUrl: Config.facebookUrl,
-							twitterUrl: Config.twitterUrl
-						}))
-					})
-
-					it("must not update other initiatives or topics", function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id,
-							phase: "sign"
-						}))
-
-						var topic = yield createTopic(newTopic({
-							id: initiative.uuid,
-							creatorId: this.user.uuid,
-							sourcePartnerId: this.partner.id,
-							status: "voting"
-						}))
-
-						yield createVote(topic, newVote())
-
-						yield signaturesDb.create(_.times(Config.votesRequired, () => (
-							new ValidSignature({initiative_uuid: initiative.uuid})
-						)))
-
-						var other = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id,
-							phase: "sign"
-						}))
-
-						var otherTopic = yield createTopic(newTopic({
-							creatorId: this.user.uuid,
-							sourcePartnerId: this.partner.id,
-							status: "inProgress"
-						}))
-
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-							method: "PUT",
-							form: {
-								_csrf_token: this.csrfToken,
-								status: "followUp",
-								"contact[name]": "John",
-								"contact[email]": "john@example.com",
-								"contact[phone]": "42"
-							}
-						})
-
-						res.statusCode.must.equal(303)
-
-						yield initiativesDb.read(other).must.then.eql(other)
-
-						yield cosDb.query(sql`
-							SELECT * FROM "Topics" WHERE id = ${otherTopic.id}
-						`).then(_.first).then(_.clone).must.then.eql(_.clone(otherTopic))
-					})
 				})
 
 				it("must email subscribers", function*() {
@@ -6327,173 +5986,343 @@ describe("InitiativesController", function() {
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
 
-			describe("when non-CitizenOS initiative", function() {
-				it("must respond with 403 if not the author", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: (yield usersDb.create(new ValidUser)).id,
-						published_at: new Date
-					}))
+			it("must respond with 403 if not the author", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: (yield usersDb.create(new ValidUser)).id,
+					published_at: new Date
+				}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
-					res.statusCode.must.equal(403)
-					res.statusMessage.must.equal("No Permission to Edit")
+				var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
+				res.statusCode.must.equal(403)
+				res.statusMessage.must.equal("No Permission to Edit")
+			})
+
+			it("must show error if no longer in edit phase", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id,
+					phase: "sign"
+				}))
+
+				var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("CANNOT_EDIT_INITIATIVE_TEXT"))
+			})
+
+			it("must render page if no existing texts", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id
+				}))
+				
+				var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
+				res.statusCode.must.equal(200)
+			})
+
+			it("must render page with latest text", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id
+				}))
+
+				var text = yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: this.user.id,
+					created_at: new Date(2015, 5, 18, 13, 37, 42),
+					content_type: "application/vnd.basecamp.trix+json",
+
+					content: [{
+						"text": [{
+							"type": "string",
+							"attributes": {},
+							"string": "Latest and greatest."
+						}, BLOCK_BREAK],
+
+						"attributes": []
+					}]
+				}))
+
+				yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: this.user.id,
+					created_at: new Date(2015, 5, 18, 13, 37, 41),
+					content: "Old and dusty.",
+					content_type: "text/html"
+				}))
+				
+				var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
+				res.statusCode.must.equal(200)
+				var dom = parseDom(res.body)
+				var input = dom.querySelector("input[name=content]")
+				input.value.must.equal(JSON.stringify(text.content))
+			})
+
+			describe("given CitizenOS HTML", function() {
+				function forEachHeader(fn) { _.times(6, (i) => fn(`h${i + 1}`)) }
+
+				// Initiative with id 1f821c9e-1b93-4ef5-947f-fe0be45855c5 has the main
+				// title with <h2>, not <h1>.
+				forEachHeader(function(tagName) {
+					it(`must remove title from first <${tagName}>`, function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id
+						}))
+
+						yield textsDb.create(new ValidText({
+							initiative_uuid: initiative.uuid,
+							user_id: this.user.id,
+							content_type: "application/vnd.citizenos.etherpad+html",
+							content: outdent`
+								<!DOCTYPE HTML>
+								<html>
+									<body>
+										<${tagName}>Vote for Peace</${tagName}>
+										<p>Rest in peace!</p>
+									</body>
+								</html>
+							`
+						}))
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
+						res.statusCode.must.equal(200)
+
+						var dom = parseDom(res.body)
+						var input = dom.querySelector("input[name=content]")
+
+						JSON.parse(input.value).must.equal(outdent`
+							<!DOCTYPE HTML>
+							<html>
+								<body><p>Rest in peace!</p></body>
+							</html>
+						`)
+					})
 				})
 
-				it("must show error if no longer in edit phase", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id,
-						phase: "sign"
-					}))
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
-					res.statusCode.must.equal(200)
-					res.body.must.include(t("CANNOT_EDIT_INITIATIVE_TEXT"))
-				})
-
-				it("must render page if no existing texts", function*() {
+				it("must remove title from multiline <h1>", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id
-					}))
-					
-					var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
-					res.statusCode.must.equal(200)
-				})
-
-				it("must render page with latest text", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id
-					}))
-
-					var text = yield textsDb.create(new ValidText({
-						initiative_uuid: initiative.uuid,
-						user_id: this.user.id,
-						created_at: new Date(2015, 5, 18, 13, 37, 42),
-
-						content: [{
-							"text": [{
-								"type": "string",
-								"attributes": {},
-								"string": "Latest and greatest."
-							}, BLOCK_BREAK],
-
-							"attributes": []
-						}],
-
-						content_type: "application/vnd.basecamp.trix+json",
 					}))
 
 					yield textsDb.create(new ValidText({
 						initiative_uuid: initiative.uuid,
 						user_id: this.user.id,
-						created_at: new Date(2015, 5, 18, 13, 37, 41),
-						content: "Old and dusty.",
-						content_type: "text/html"
+						content_type: "application/vnd.citizenos.etherpad+html",
+						content: outdent`
+							<!DOCTYPE HTML>
+							<html>
+								<body>
+									<h1>
+										Vote for Peace
+									</h1>
+									<p>Rest in peace!</p>
+								</body>
+							</html>
+						`
 					}))
-					
+
 					var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
 					res.statusCode.must.equal(200)
+
 					var dom = parseDom(res.body)
 					var input = dom.querySelector("input[name=content]")
-					input.value.must.equal(JSON.stringify(text.content))
-				})
-			})
 
-			describe("when CitizenOS initiative", function() {
-				it("must get Etherpad URL path from CitizenOS API and append theme",
+					JSON.parse(input.value).must.equal(outdent`
+						<!DOCTYPE HTML>
+						<html>
+							<body><p>Rest in peace!</p></body>
+						</html>
+					`)
+				})
+
+				it("must remove single title given multiple <h1>", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+						content_type: "application/vnd.citizenos.etherpad+html",
+						content: outdent`
+							<!DOCTYPE HTML>
+							<html>
+								<body>
+									<h1>Vote for Peace</h1>
+									<h1>Vote for Terror</h1>
+									<p>Rest in peace!</p>
+								</body>
+							</html>
+						`
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var input = dom.querySelector("input[name=content]")
+
+					JSON.parse(input.value).must.equal(outdent`
+						<!DOCTYPE HTML>
+						<html>
+							<body><h1>Vote for Terror</h1>
+							\t<p>Rest in peace!</p></body>
+						</html>
+					`)
+				})
+
+				it("must remove title given multiple empty and blank <h1>s",
 					function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id
 					}))
 
-					var topic = yield createTopic(newTopic({
-						id: initiative.uuid,
-						creatorId: this.user.uuid,
-						sourcePartnerId: this.partner.id
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+						content_type: "application/vnd.citizenos.etherpad+html",
+						content: outdent`
+							<!DOCTYPE HTML>
+							<html>
+								<body>
+									<h1></h1>
+									<h1> </h1>
+									<h1>Vote for Peace</h1>
+									<p>Rest in peace!</p>
+								</body>
+							</html>
+						`
 					}))
-
-					var path = `/api/users/self/topics/${topic.id}`
-					this.router.get(path, respond.bind(null, {data: {
-						padUrl: "http://badpad.example.com/edit?token=1234"
-					}}))
 
 					var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
 					res.statusCode.must.equal(200)
 
 					var dom = parseDom(res.body)
-					var url = Config.etherpadUrl + "/edit?token=1234&theme=test"
-					dom.querySelector("iframe#initiative-etherpad").src.must.equal(url)
+					var input = dom.querySelector("input[name=content]")
+
+					JSON.parse(input.value).must.equal(outdent`
+						<!DOCTYPE HTML>
+						<html>
+							<body><p>Rest in peace!</p></body>
+						</html>
+					`)
 				})
 
-				it("must append theme to Etherpad URL if no query params", function*() {
+				it("must remove title given multiple empty and blank <h2>s",
+					function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id
 					}))
 
-					var topic = yield createTopic(newTopic({
-						id: initiative.uuid,
-						creatorId: this.user.uuid,
-						sourcePartnerId: this.partner.id
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+						content_type: "application/vnd.citizenos.etherpad+html",
+						content: outdent`
+							<!DOCTYPE HTML>
+							<html>
+								<body>
+									<h2></h2>
+									<h2> </h2>
+									<h2>Vote for Peace</h2>
+									<p>Rest in peace!</p>
+								</body>
+							</html>
+						`
 					}))
-
-					var path = `/api/users/self/topics/${topic.id}`
-					this.router.get(path, respond.bind(null, {data: {
-						padUrl: "http://badpad.example.com/1234"
-					}}))
 
 					var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
 					res.statusCode.must.equal(200)
 
 					var dom = parseDom(res.body)
-					var url = Config.etherpadUrl + "/1234?theme=test"
-					dom.querySelector("iframe#initiative-etherpad").src.must.equal(url)
+					var input = dom.querySelector("input[name=content]")
+
+					JSON.parse(input.value).must.equal(outdent`
+						<!DOCTYPE HTML>
+						<html>
+							<body><p>Rest in peace!</p></body>
+						</html>
+					`)
 				})
 
-				it("must show error if not the author", function*() {
-					var other = yield createUser()
-
+				it("must strip leading and trailing <br>s", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: other.id,
-						published_at: new Date
+						user_id: this.user.id
 					}))
 
-					var topic = yield createTopic(newTopic({
-						id: initiative.uuid,
-						creatorId: other.uuid,
-						sourcePartnerId: this.partner.id,
-						visibility: "public"
-					}))
-
-					var path = `/api/users/self/topics/${topic.id}`
-					this.router.get(path, respond.bind(null, {data: {
-						padUrl: "http://badpad.example.com/edit?token=1234"
-					}}))
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
-					res.statusCode.must.equal(403)
-					res.statusMessage.must.equal("No Permission to Edit")
-				})
-
-				it("must show error if no longer in edit phase", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
 						user_id: this.user.id,
-						phase: "sign"
+						content_type: "application/vnd.citizenos.etherpad+html",
+						content: outdent`
+							<!DOCTYPE HTML>
+							<html>
+								<body>
+									<br>
+									<br>
+									<h1>Vote for Peace</h1>
+									<br>
+									<br>
+									<p>Rest in peace!</p>
+									<br>
+									<br>
+								</body>
+							</html>
+						`
 					}))
-
-					var topic = yield createTopic(newTopic({
-						id: initiative.uuid,
-						creatorId: this.user.uuid,
-						sourcePartnerId: this.partner.id,
-						status: "voting"
-					}))
-
-					var path = `/api/users/self/topics/${topic.id}`
-					this.router.get(path, respond.bind(null, {data: {
-						padUrl: "http://badpad.example.com/edit?token=1234"
-					}}))
 
 					var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
 					res.statusCode.must.equal(200)
-					res.body.must.include(t("CANNOT_EDIT_INITIATIVE_TEXT"))
+
+					var dom = parseDom(res.body)
+					var input = dom.querySelector("input[name=content]")
+
+					JSON.parse(input.value).must.equal(outdent`
+						<!DOCTYPE HTML>
+						<html>
+							<body><p>Rest in peace!</p></body>
+						</html>
+					`)
+				})
+
+				forEachHeader(function(tagName) {
+					it(`must strip <br>s around <${tagName}>s`, function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id
+						}))
+
+						yield textsDb.create(new ValidText({
+							initiative_uuid: initiative.uuid,
+							user_id: this.user.id,
+							content_type: "application/vnd.citizenos.etherpad+html",
+							content: outdent`
+								<!DOCTYPE HTML>
+								<html>
+									<body>
+										<h1>Vote for Peace</h1>
+										<p>Indeed</p>
+										<br>
+										<br>
+										<${tagName}>Reasons</${tagName}>
+										<br>
+										<br>
+										<p>Because.</p>
+									</body>
+								</html>
+							`
+						}))
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
+						res.statusCode.must.equal(200)
+
+						var dom = parseDom(res.body)
+						var input = dom.querySelector("input[name=content]")
+
+						JSON.parse(input.value).must.equal(outdent`
+							<!DOCTYPE HTML>
+							<html>
+								<body><p>Indeed</p>
+									<${tagName}>Reasons</${tagName}>
+									<p>Because.</p></body>
+							</html>
+						`)
+					})
 				})
 			})
 		})

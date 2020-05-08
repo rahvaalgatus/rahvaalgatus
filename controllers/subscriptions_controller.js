@@ -10,7 +10,6 @@ var next = require("co-next")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var initiativesDb = require("root/db/initiatives_db")
 var sql = require("sqlate")
-var {setTitlesFromTopics} = require("root/lib/citizenos_db")
 exports.parse = parse
 exports.router = Router({mergeParams: true})
 
@@ -33,8 +32,6 @@ exports.router.get("/", readSubscriptionFromQuery, next(function*(req, res) {
 		SELECT * FROM initiatives
 		WHERE uuid IN ${sql.in(subscriptions.map((s) => s.initiative_uuid))}
 	`)
-
-	yield setTitlesFromTopics(initiatives)
 
 	res.render("subscriptions/index_page.jsx", {
 		subscription: subscription,

@@ -69,32 +69,6 @@ describe("HomeController", function() {
 			res.body.must.include(this.author.name)
 		})
 
-		describe("when CitizenOS initiative", function() {
-			it("must show initiatives", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "edit",
-					published_at: new Date,
-					discussion_ends_at: DateFns.addSeconds(new Date, 1)
-				}))
-
-				var partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
-
-				var topic = yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.author.uuid,
-					sourcePartnerId: partner.id,
-					visibility: "public"
-				}))
-
-				var res = yield this.request("/")
-				res.statusCode.must.equal(200)
-				res.body.must.include(initiative.uuid)
-				res.body.must.include(topic.title)
-				res.body.must.include(this.author.name)
-			})
-		})
-
 		it("must show initiatives in edit phase", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,

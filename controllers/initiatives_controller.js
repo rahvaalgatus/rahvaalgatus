@@ -1,6 +1,5 @@
 var _ = require("root/lib/underscore")
 var Qs = require("querystring")
-var Url = require("url")
 var Router = require("express").Router
 var HttpError = require("standard-http-error")
 var SqliteError = require("root/lib/sqlite_error")
@@ -44,7 +43,6 @@ var {countSignaturesByIds} = require("root/lib/initiative")
 var {countUndersignedSignaturesById} = require("root/lib/initiative")
 var countCitizenSignaturesById =
 	require("root/lib/citizenos_db").countSignaturesById
-var ENV = process.env.ENV
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: ""}
 var EMPTY_CONTACT = {name: "", email: "", phone: ""}
@@ -76,11 +74,6 @@ exports.router.get("/",
 	var topics = _.indexBy(yield searchTopics(sql`
 		topic.id IN ${sql.in(initiatives.map((i) => i.uuid))}
 	`), "id")
-
-	initiatives.forEach(function(initiative) {
-		var topic = topics[initiative.uuid]
-		if (topic) initiative.title = topic.title
-	})
 
 	initiatives = initiatives.filter((initiative) => (
 		!initiative.archived_at ||
@@ -229,9 +222,7 @@ exports.router.use("/:id", next(function*(req, res, next) {
 	TOPIC: if (!initiative.external) {
 		topic = yield searchTopics(sql`topic.id = ${initiative.uuid}`).then(_.first)
 		if (topic == null) break TOPIC
-
 		topic.permission = {level: yield readTopicPermission(user, topic)}
-		initiative.title = topic.title
 	}
 
 	if (req.method == "HEAD" || req.method == "GET") {
@@ -305,7 +296,6 @@ exports.router.get("/:id",
 exports.read = next(function*(req, res) {
 	var user = req.user
 	var initiative = req.initiative
-	var topic = req.topic
 	var thank = false
 	var thankAgain = false
 	var signature
@@ -367,19 +357,18 @@ exports.read = next(function*(req, res) {
 		WHERE initiative_uuid = ${initiative.uuid}
 	`)
 
-	var text = topic == null ? yield textsDb.read(sql`
+	var text = yield textsDb.read(sql`
 		SELECT * FROM initiative_texts
 		WHERE initiative_uuid = ${initiative.uuid}
 		ORDER BY created_at DESC
 		LIMIT 1
-	`) : null
+	`)
 
 	if (req.originalUrl.endsWith(".html")) {
 		var html = (
 			initiative.text &&
 			Initiative.renderForParliament(initiative, initiative.text) ||
-			text && Initiative.renderForParliament(initiative, text) ||
-			topic && topic.description
+			text && Initiative.renderForParliament(initiative, text)
 		)
 
 		if (html) return void res.send(html)
@@ -467,31 +456,18 @@ exports.router.get("/:id/edit", next(function*(req, res) {
 	if (user == null) throw new HttpError(401)
 
 	var initiative = req.initiative
-	var topic = req.topic
 
-	if (!(
-		user && initiative.user_id == user.id ||
-		topic && Topic.canEdit(topic)
-	)) throw new HttpError(403, "No Permission to Edit")
+	if (!(user && initiative.user_id == user.id))
+		throw new HttpError(403, "No Permission to Edit")
 
-	var etherpadUrl, text
+	var text = yield textsDb.read(sql`
+		SELECT * FROM initiative_texts
+		WHERE initiative_uuid = ${initiative.uuid}
+		ORDER BY created_at DESC
+		LIMIT 1
+	`)
 
-	if (topic) etherpadUrl = serializeEtherpadUrl(yield req.cosApi(
-		`/api/users/self/topics/${topic.id}`
-	).then((res) => res.body.data.padUrl))
-	else {
-		text = yield textsDb.read(sql`
-			SELECT * FROM initiative_texts
-			WHERE initiative_uuid = ${initiative.uuid}
-			ORDER BY created_at DESC
-			LIMIT 1
-		`)
-	}
-
-	res.render("initiatives/update_page.jsx", {
-		text: text,
-		etherpadUrl: etherpadUrl
-	})
+	res.render("initiatives/update_page.jsx", {text: text})
 }))
 
 exports.router.use("/:id/comments",
@@ -826,26 +802,19 @@ function* updateInitiativePhaseToSign(req, res) {
 	}
 
 	if (initiative.phase == "edit") {
-		if (topic) {
-			attrs.text = topic.description
-			attrs.text_type = new MediaType("text/html")
-			attrs.text_sha256 = sha256(topic.description)
-		}
-		else {
-			var text = yield textsDb.read(sql`
-				SELECT * FROM initiative_texts
-				WHERE initiative_uuid = ${initiative.uuid}
-				ORDER BY created_at DESC
-				LIMIT 1
-			`)
+		var text = yield textsDb.read(sql`
+			SELECT * FROM initiative_texts
+			WHERE initiative_uuid = ${initiative.uuid}
+			ORDER BY created_at DESC
+			LIMIT 1
+		`)
 
-			if (text == null) throw new HttpError(422, "No Text")
-			var html = Initiative.renderForParliament(initiative, text)
+		if (text == null) throw new HttpError(422, "No Text")
+		var html = Initiative.renderForParliament(initiative, text)
 
-			attrs.text = html
-			attrs.text_type = new MediaType("text/html")
-			attrs.text_sha256 = sha256(html)
-		}
+		attrs.text = html
+		attrs.text_type = new MediaType("text/html")
+		attrs.text_sha256 = sha256(html)
 	}
 
 	yield initiativesDb.update(initiative, attrs)
@@ -1055,11 +1024,6 @@ function parseMeeting(obj) {
 		date: String(obj.date || "").trim(),
 		url: String(obj.url || "").trim()
 	}
-}
-
-function serializeEtherpadUrl(url) {
-	if (Config.etherpadUrl) url = Config.etherpadUrl + Url.parse(url).path
-	return url + (url.indexOf("?") >= 0 ? "&" : "?") + "theme=" + ENV
 }
 
 function isOrganizationPresent(org) { return org.name || org.url }

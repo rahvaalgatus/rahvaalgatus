@@ -9,7 +9,6 @@ var parliamentApi = require("root/lib/parliament_api")
 var diff = require("root/lib/diff")
 var sql = require("sqlate")
 var initiativesDb = require("root/db/initiatives_db")
-var cosDb = require("root").cosDb
 var eventsDb = require("root/db/initiative_events_db")
 var filesDb = require("root/db/initiative_files_db")
 var messagesDb = require("root/db/initiative_messages_db")
@@ -909,11 +908,6 @@ function mergeEvent(event, attrs) {
 
 function* sendParliamentEventEmail(initiative, events) {
 	var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-
-	var initiativeTitle = initiative.title || (yield cosDb.query(sql`
-		SELECT title FROM "Topics" WHERE id = ${initiative.uuid}
-	`).then(_.first).then((row) => row && row.title))
-
 	events = _.sortBy(events, "occurred_at")
 
 	var message = yield messagesDb.create({
@@ -923,12 +917,12 @@ function* sendParliamentEventEmail(initiative, events) {
 		updated_at: new Date,
 
 		title: t("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_TITLE", {
-			initiativeTitle: initiativeTitle,
+			initiativeTitle: initiative.title,
 			eventDate: formatDate(_.last(events).occurred_at)
 		}),
 
 		text: renderEmail("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_BODY", {
-			initiativeTitle: initiativeTitle,
+			initiativeTitle: initiative.title,
 			initiativeUrl: initiativeUrl,
 			eventsUrl: `${initiativeUrl}#events`,
 

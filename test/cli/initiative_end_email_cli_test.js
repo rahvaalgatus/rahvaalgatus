@@ -5,18 +5,9 @@ var Crypto = require("crypto")
 var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSignature = require("root/test/valid_signature")
-var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
 var cli = require("root/cli/initiative_end_email_cli")
-var newVote = require("root/test/citizenos_fixtures").newVote
-var createVote = require("root/test/citizenos_fixtures").createVote
-var newCitizenUser = require("root/test/citizenos_fixtures").newUser
-var createCitizenUser = require("root/test/citizenos_fixtures").createUser
-var createTopic = require("root/test/citizenos_fixtures").createTopic
-var newTopic = require("root/test/citizenos_fixtures").newTopic
 var usersDb = require("root/db/users_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
-var citizenosSignaturesDb =
-	require("root/db/initiative_citizenos_signatures_db")
 var db = require("root/db/initiatives_db")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 
@@ -56,39 +47,6 @@ describe("InitiativeEndEmailCli", function() {
 				facebookUrl: Config.facebookUrl,
 				twitterUrl: Config.twitterUrl
 			}))
-		})
-
-		describe("given CitizenOS initiative", function() {
-			it("must email when discussion has ended", function*() {
-				var initiative = yield db.create(new ValidInitiative({
-					user_id: this.user.id,
-					published_at: new Date,
-					discussion_ends_at: new Date
-				}))
-
-				yield createCitizenUser(newCitizenUser({id: this.user.uuid}))
-
-				var topic = yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.user.uuid
-				}))
-
-				yield cli()
-				this.emails.length.must.equal(1)
-
-				var email = this.emails[0]
-				email.envelope.to.must.eql([this.user.email])
-				email.headers.subject.must.equal(t("DISCUSSION_END_EMAIL_SUBJECT"))
-
-				email.body.must.equal(t("DISCUSSION_END_EMAIL_BODY", {
-					initiativeTitle: topic.title,
-					initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-					initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-					siteUrl: Config.url,
-					facebookUrl: Config.facebookUrl,
-					twitterUrl: Config.twitterUrl
-				}))
-			})
 		})
 
 		it("must email when discussion ended 6 months ago", function*() {
@@ -221,54 +179,6 @@ describe("InitiativeEndEmailCli", function() {
 				facebookUrl: Config.facebookUrl,
 				twitterUrl: Config.twitterUrl
 			}))
-		})
-
-		describe("given CitizenOS initiative", function() {
-			it("must email when signing has ended and initiative successful",
-				function*() {
-				var initiative = yield db.create(new ValidInitiative({
-					user_id: this.user.id,
-					phase: "sign",
-					signing_ends_at: new Date
-				}))
-
-				yield createCitizenUser(newCitizenUser({id: this.user.uuid}))
-
-				var topic = yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.user.uuid,
-					status: "voting"
-				}))
-
-				yield createVote(topic, newVote())
-
-				yield citizenosSignaturesDb.create(_.times(
-					Config.votesRequired / 2,
-					() => new ValidCitizenosSignature({initiative_uuid: initiative.uuid})
-				))
-
-				yield signaturesDb.create(_.times(Config.votesRequired / 2, () => (
-					new ValidSignature({initiative_uuid: initiative.uuid})
-				)))
-
-				yield cli()
-				this.emails.length.must.equal(1)
-
-				var email = this.emails[0]
-				email.envelope.to.must.eql([this.user.email])
-				email.headers.subject.must.equal(
-					t("SIGNING_END_COMPLETE_EMAIL_SUBJECT")
-				)
-
-				email.body.must.equal(t("SIGNING_END_COMPLETE_EMAIL_BODY", {
-					initiativeTitle: topic.title,
-					initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-					initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-					siteUrl: Config.url,
-					facebookUrl: Config.facebookUrl,
-					twitterUrl: Config.twitterUrl
-				}))
-			})
 		})
 
 		it("must email when signing has ended and initiative incomplete",

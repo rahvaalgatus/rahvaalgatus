@@ -1,14 +1,9 @@
 var _ = require("root/lib/underscore")
-var Config = require("root/config")
 var Crypto = require("crypto")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var pseudoHex = require("root/lib/crypto").pseudoHex
-var newPartner = require("root/test/citizenos_fixtures").newPartner
-var newTopic = require("root/test/citizenos_fixtures").newTopic
-var createPartner = require("root/test/citizenos_fixtures").createPartner
 var createUser = require("root/test/fixtures").createUser
-var createTopic = require("root/test/citizenos_fixtures").createTopic
 var sql = require("sqlate")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var usersDb = require("root/db/users_db")
@@ -92,36 +87,6 @@ describe("SubscriptionsController", function() {
 			res.statusCode.must.equal(200)
 			res.body.must.include(t("SUBSCRIPTIONS_UPDATE_TITLE"))
 			res.body.must.include(initiative.title)
-		})
-
-		describe("given CitizenOS initiative", function() {
-			it("must show page given subscription to initiative", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					published_at: new Date
-				}))
-
-				var partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
-				
-				var topic = yield createTopic(newTopic({
-					id: initiative.uuid,
-					creatorId: this.author.uuid,
-					sourcePartnerId: partner.id
-				}))
-
-				var subscription = yield subscriptionsDb.create(new ValidSubscription({
-					initiative_uuid: initiative.uuid,
-					confirmed_at: new Date
-				}))
-
-				var res = yield this.request(
-					`/subscriptions?initiative=${initiative.uuid}&update-token=${subscription.update_token}`
-				)
-
-				res.statusCode.must.equal(200)
-				res.body.must.include(t("SUBSCRIPTIONS_UPDATE_TITLE"))
-				res.body.must.include(topic.title)
-			})
 		})
 
 		it("must show page given subscription to external initiative", function*() {

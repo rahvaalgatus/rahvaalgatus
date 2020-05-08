@@ -25,6 +25,7 @@ function parseContent(type, data) {
 	switch (String(type)) {
 		case "text/html": return data
 		case "application/vnd.basecamp.trix+json": return JSON.parse(String(data))
+		case "application/vnd.citizenos.etherpad+html": return data
 		default: throw new RangeError("Unsupported content type: " + type)
 	}
 }
@@ -33,6 +34,7 @@ function serializeContent(type, data) {
 	switch (String(type)) {
 		case "text/html": return data
 		case "application/vnd.basecamp.trix+json": return JSON.stringify(data)
+		case "application/vnd.citizenos.etherpad+html": return data
 		default: throw new RangeError("Unsupported content type: " + type)
 	}
 }

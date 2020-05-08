@@ -8,7 +8,6 @@ var InitiativePage = require("./initiative_page")
 var Config = require("root/config")
 var I18n = require("root/lib/i18n")
 var Flash = require("../page").Flash
-var Topic = require("root/lib/topic")
 var Form = require("../page").Form
 var Trix = require("root/lib/trix")
 var Initiative = require("root/lib/initiative")
@@ -28,6 +27,7 @@ var stringify = require("root/lib/json").stringify
 var linkify = require("root/lib/linkify")
 var encode = encodeURIComponent
 var min = Math.min
+var {normalizeCitizenOsHtml} = require("root/lib/topic")
 var diffInDays = DateFns.differenceInCalendarDays
 var PHASES = require("root/lib/initiative").PHASES
 var HTTP_URL = /^https?:\/\//i
@@ -123,20 +123,19 @@ function ReadPage(attrs) {
 	var signatureCount = attrs.signatureCount
 	var text = attrs.text
 	var image = attrs.image
-	var title = topic ? topic.title : initiative.title
 	var initiativeUrl =`${Config.url}/initiatives/${initiative.uuid}`
-	var shareText = `${title} ${initiativeUrl}`
+	var shareText = `${initiative.title} ${initiativeUrl}`
 	var atomPath = req.baseUrl + req.url + ".atom"
 
 	return <InitiativePage
 		page="initiative"
-		title={title}
+		title={initiative.title}
 		initiative={initiative}
 		topic={topic}
 
 		meta={_.filterValues({
 			"twitter:card": "summary_large_image",
-			"og:title": title,
+			"og:title": initiative.title,
 			"og:url": initiativeUrl,
 			"og:image": image && serializeImageUrl(image)
 		}, Boolean)}
@@ -144,7 +143,7 @@ function ReadPage(attrs) {
 		links={[{
 			rel: "alternate",
 			type: "application/atom+xml",
-			title: t("ATOM_INITIATIVE_FEED_TITLE", {title: title}),
+			title: t("ATOM_INITIATIVE_FEED_TITLE", {title: initiative.title}),
 			href: atomPath
 		}]}
 
@@ -279,7 +278,6 @@ function ReadPage(attrs) {
 				/>
 
 				<InitiativeContentView
-					topic={topic}
 					initiative={initiative}
 					text={text}
 					files={files}
@@ -358,6 +356,7 @@ function ReadPage(attrs) {
 
 				<SidebarInfoView
 					req={req}
+					user={user}
 					topic={topic}
 					initiative={initiative}
 				/>
@@ -598,15 +597,11 @@ function PhasesView(attrs) {
 }
 
 function InitiativeContentView(attrs) {
-	var topic = attrs.topic
 	var initiative = attrs.initiative
 	var text = attrs.text
 	var initiativePath = "/initiatives/" + initiative.uuid
 	var files = attrs.files
 
-	if (topic && topic.html)
-		return <article class="text citizenos-text">{Jsx.html(topic.html)}</article>
-	
 	if (initiative.external) {
 		var pdf = files.find((file) => file.content_type == "application/pdf")
 		if (pdf == null) return null
@@ -620,17 +615,18 @@ function InitiativeContentView(attrs) {
 	}
 
 	if (text) switch (String(text.content_type)) {
+		case "text/html":
+			return <article class="text">{Jsx.html(text.content)}</article>
+
 		case "application/vnd.basecamp.trix+json":
 			return <article class="text trix-text">
 				{Trix.render(text.content, {heading: "h2"})}
 			</article>
 
-		// Text/html is for old imported CitizenOS texts. Expecting it to be
-		// sanitized _before_ saved in the database.
-		case "text/html":
-			return <article class="text citizenos-text">
-				{Jsx.html(text.content)}
-			</article>
+		case "application/vnd.citizenos.etherpad+html":
+			var html = normalizeCitizenOsHtml(text.content)
+			html = html.match(/<body>([^]*)<\/body>/m)[1]
+			return <article class="text citizenos-text">{Jsx.html(html)}</article>
 
 		default:
 			throw new RangeError("Unsupported content type: " + text.content_type)
@@ -764,9 +760,9 @@ function SidebarAuthorView(attrs) {
 function SidebarInfoView(attrs) {
 	var req = attrs.req
 	var t = req.t
-	var topic = attrs.topic
+	var user = attrs.user
 	var initiative = attrs.initiative
-	var canEdit = topic && Topic.canEdit(topic)
+	var canEdit = user && initiative.user_id == user.id
 	var phase = initiative.phase
 	var authorName = initiative.author_name
 	var authorUrl = initiative.author_url

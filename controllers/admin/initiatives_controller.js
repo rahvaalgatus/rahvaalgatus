@@ -33,22 +33,10 @@ var PHASE_TO_STATUS = {
 exports.router = Router({mergeParams: true})
 
 exports.router.get("/", next(function*(_req, res) {
-	var initiatives = yield initiativesDb.search(sql`SELECT * FROM initiatives`)
-
-	var topics = _.indexBy(yield searchTopics(sql`
-		topic.id IN ${sql.in(initiatives.map((i) => i.uuid))}
-		AND topic.visibility = 'public'
-	`), "id")
-
-	initiatives = initiatives.filter((initiative) => (
-		initiative.external ||
-		topics[initiative.uuid]
-	))
-
-	initiatives.forEach(function(initiative) {
-		var topic = topics[initiative.uuid]
-		if (topic) initiative.title = topic.title
-	})
+	var initiatives = yield initiativesDb.search(sql`
+		SELECT * FROM initiatives
+		WHERE published_at IS NOT NULL
+	`)
 
 	var subscriberCounts = yield sqlite(sql`
 		SELECT initiative_uuid, COUNT(*) as count
@@ -77,12 +65,8 @@ exports.router.use("/:id", next(function*(req, res, next) {
 		topic.id = ${initiative.uuid}
 	`).then(_.first)
 
-	if (initiative && topic && topic.visibility != "public")
+	if (!initiative.published_at)
 		return void next(new HttpError(403, "Private Initiative"))
-
-	// Populate initiative's title from CitizenOS until we've found a way to sync
-	// them.
-	if (topic) initiative.title = topic.title
 
 	req.topic = topic
 	req.initiative = initiative

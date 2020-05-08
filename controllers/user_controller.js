@@ -183,20 +183,11 @@ function* read(req, res) {
 	`)
 
 	var uuids = _.map(concat(authoredInitiatives, signedInitiatives), "uuid")
+	var signatureCounts = yield countSignaturesByIds(uuids)
 
 	var topics = _.indexBy(yield searchTopics(sql`
 		topic.id IN ${sql.in(uuids)}
 	`), "id")
-
-	function setInitiativeTitle(initiative) {
-		var topic = topics[initiative.uuid]
-		if (topic) initiative.title = topic.title
-	}
-
-	authoredInitiatives.forEach(setInitiativeTitle)
-	signedInitiatives.forEach(setInitiativeTitle)
-
-	var signatureCounts = yield countSignaturesByIds(uuids)
 
 	res.render("user/read_page.jsx", {
 		user: user,

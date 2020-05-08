@@ -41,11 +41,6 @@ exports.router.get("/", next(function*(req, res) {
 		topic.id IN ${sql.in(initiatives.map((i) => i.uuid))}
 	`), "id")
 
-	initiatives.forEach(function(initiative) {
-		var topic = topics[initiative.uuid]
-		if (topic) initiative.title = topic.title
-	})
-
 	var signatureCounts = yield countSignaturesByIds(_.map(initiatives, "uuid"))
 
 	initiatives = initiatives.filter((initiative) => (

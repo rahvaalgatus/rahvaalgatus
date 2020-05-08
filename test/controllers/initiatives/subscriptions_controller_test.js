@@ -1,13 +1,8 @@
 var Crypto = require("crypto")
-var Config = require("root/config")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSubscription = require("root/test/valid_subscription")
 var t = require("root/lib/i18n").t.bind(null, "et")
-var newPartner = require("root/test/citizenos_fixtures").newPartner
-var newTopic = require("root/test/citizenos_fixtures").newTopic
-var createPartner = require("root/test/citizenos_fixtures").createPartner
 var createUser = require("root/test/fixtures").createUser
-var createTopic = require("root/test/citizenos_fixtures").createTopic
 var sql = require("sqlate")
 var {parseCookies} = require("root/lib/http")
 var {serializeCookies} = require("root/lib/http")
@@ -69,52 +64,6 @@ describe("InitiativeSubscriptionsController", function() {
 			var body = String(this.emails[0].message)
 			body.match(/^Subject: .*/m)[0].must.include(this.initiative.title)
 			body.must.include(`confirmation_token=3D${subscription.update_token}`)
-		})
-
-		describe("given CitizenOS initiative", function() {
-			it("must subscribe", function*() {
-				var partner = yield createPartner(newPartner({
-					id: Config.apiPartnerId
-				}))
-
-				var topic = yield createTopic(newTopic({
-					id: this.initiative.uuid,
-					creatorId: this.author.uuid,
-					sourcePartnerId: partner.id,
-					visibility: "public"
-				}))
-
-				var path = `/initiatives/${this.initiative.uuid}/subscriptions`
-				var res = yield this.request(path, {
-					method: "POST",
-					form: {email: "user@example.com"}
-				})
-
-				res.statusCode.must.equal(303)
-				res.headers.location.must.equal("/initiatives/" + this.initiative.uuid)
-
-				var subscriptions = yield subscriptionsDb.search(sql`
-					SELECT * FROM initiative_subscriptions
-				`)
-
-				subscriptions.length.must.equal(1)
-				var subscription = subscriptions[0]
-
-				subscription.must.eql(new ValidSubscription({
-					initiative_uuid: this.initiative.uuid,
-					email: "user@example.com",
-					created_ip: "127.0.0.1",
-					confirmation_sent_at: new Date,
-					update_token: subscription.update_token
-				}))
-
-				subscription.update_token.must.exist()
-
-				this.emails.length.must.equal(1)
-				this.emails[0].envelope.to.must.eql(["user@example.com"])
-				var body = String(this.emails[0].message)
-				body.match(/^Subject: .*/m)[0].must.include(topic.title)
-			})
 		})
 
 		it("must subscribe given an external initiative", function*() {

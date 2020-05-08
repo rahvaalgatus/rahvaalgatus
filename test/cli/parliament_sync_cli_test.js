@@ -13,11 +13,7 @@ var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
 var filesDb = require("root/db/initiative_files_db")
 var respond = require("root/test/fixtures").respond
-var newPartner = require("root/test/citizenos_fixtures").newPartner
-var newTopic = require("root/test/citizenos_fixtures").newTopic
-var createPartner = require("root/test/citizenos_fixtures").createPartner
 var createUser = require("root/test/fixtures").createUser
-var createTopic = require("root/test/citizenos_fixtures").createTopic
 var newUuid = _.compose(_.serializeUuid, _.uuidV4)
 var formatDate = require("root/lib/i18n").formatDate
 var job = require("root/cli/parliament_sync_cli")
@@ -488,67 +484,6 @@ describe("ParliamentSyncCli", function() {
 		var msg = String(this.emails[0].message)
 		msg.match(/^Subject: .*/m)[0].must.include("Teeme_elu_paremaks!")
 		subscriptions.slice(2).forEach((s) => msg.must.include(s.update_token))
-	})
-
-	it("must email subscribers with title from topic", function*() {
-		var initiative = yield initiativesDb.create({
-			user_id: (yield createUser()).id,
-			uuid: INITIATIVE_UUID,
-			parliament_uuid: INITIATIVE_UUID
-		})
-
-		var partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
-
-		var topic = yield createTopic(newTopic({
-			id: initiative.uuid,
-			title: "Teeme elu paremaks!",
-			creatorId: (yield createUser()).uuid,
-			sourcePartnerId: partner.id,
-			status: "followUp"
-		}))
-
-		var subscription = yield subscriptionsDb.create(new ValidSubscription({
-			initiative_uuid: null,
-			confirmed_at: new Date
-		}))
-
-		this.router.get(INITIATIVES_URL, respond.bind(null, [{
-			uuid: INITIATIVE_UUID,
-			statuses: [{
-				date: formatDate("iso", new Date),
-				status: {code: "REGISTREERITUD"}
-			}]
-		}]))
-
-		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
-
-		yield job()
-
-		var message = yield messagesDb.read(sql`SELECT * FROM initiative_messages`)
-
-		message.title.must.equal(
-			t("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_TITLE", {
-				initiativeTitle: topic.title,
-				eventDate: formatDate("numeric", new Date)
-			})
-		)
-
-		message.text.must.equal(
-			renderEmail("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_BODY", {
-				initiativeTitle: topic.title,
-				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-				eventsUrl: `${Config.url}/initiatives/${initiative.uuid}#events`,
-				unsubscribeUrl: "{{unsubscribeUrl}}",
-				eventTitles: outdent`
-					${formatDate("numeric", new Date)} — ${t("PARLIAMENT_RECEIVED")}
-				`
-			})
-		)
-
-		this.emails.length.must.equal(1)
-		this.emails[0].envelope.to.must.eql([subscription.email])
-		var msg = String(this.emails[0].message)
-		msg.match(/^Subject: .*/m)[0].must.include("Teeme_elu_paremaks!")
 	})
 
 	it("must not email subscribers if event occurred earlier than 3 months",

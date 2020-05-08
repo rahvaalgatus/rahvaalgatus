@@ -10,7 +10,6 @@ var usersDb = require("root/db/users_db")
 var db = require("root/db/initiatives_db")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var {countSignaturesByIds} = require("root/lib/initiative")
-var {setTitlesFromTopics} = require("root/lib/citizenos_db")
 var SIGS_REQUIRED = Config.votesRequired
 
 module.exports = function*() {
@@ -28,8 +27,6 @@ function* emailEndedDiscussions() {
 		AND discussion_ends_at <= ${new Date}
 		AND discussion_end_email_sent_at IS NULL
 	`)
-
-	yield setTitlesFromTopics(discussions)
 
 	// TODO: This could be merged into the initiatives query.
 	var users = yield searchUsersByUuids(_.map(discussions, "uuid"))
@@ -67,8 +64,6 @@ function* emailEndedInitiatives() {
 		AND signing_ends_at <= ${new Date}
 		AND signing_end_email_sent_at IS NULL
 	`)
-
-	yield setTitlesFromTopics(initiatives)
 
 	// TODO: This could be merged into the initiatives query.
 	var users = yield searchUsersByUuids(_.map(initiatives, "uuid"))

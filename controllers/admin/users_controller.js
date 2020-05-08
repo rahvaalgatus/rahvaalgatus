@@ -41,24 +41,6 @@ exports.router.get("/:id", next(function*(req, res) {
 		SELECT * FROM initiatives WHERE user_id = ${user.id}
 	`)
 
-	var topics = _.indexBy(yield cosDb.query(sql`
-		SELECT *
-		FROM "Topics"
-		WHERE id IN ${sql.in(initiatives.map((i) => i.uuid))}
-	`), "id")
-
-	initiatives = initiatives.filter((initiative) => (
-		initiative.external || topics[initiative.uuid].deletedAt == null
-	))
-
-	initiatives.forEach(function(initiative) {
-		if (initiative.external) return
-
-		var topic = topics[initiative.uuid]
-		initiative.title = topic.title
-		initiative.published_at = topic.visibility == "public" ? new Date(0) : null
-	})
-
 	var comments = yield commentsDb.search(sql`
 		SELECT * FROM comments WHERE user_id = ${user.id}
 	`)

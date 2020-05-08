@@ -4,7 +4,6 @@ var HttpError = require("standard-http-error")
 var DateFns = require("date-fns")
 var Time = require("root/lib/time")
 var {isAdmin} = require("root/lib/user")
-var {setTitlesFromTopics} = require("root/lib/citizenos_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var commentsDb = require("root/db/comments_db")
 var next = require("co-next")
@@ -157,8 +156,6 @@ exports.get("/", next(function*(req, res) {
 		FROM initiatives
 		WHERE uuid IN ${sql.in(_.uniq(_.map(lastSubscriptions, "initiative_uuid")))}
 	`)
-
-	yield setTitlesFromTopics(subscriptionInitiatives)
 
 	subscriptionInitiatives = _.indexBy(subscriptionInitiatives, "uuid")
 	lastSubscriptions.forEach(function(sub) {

@@ -80,7 +80,7 @@ describe("AdminController", function() {
 				})
 
 				var perm = yield createPermission({
-					topicId: topic.id,
+					topicId: initiative.uuid,
 					userId: source.uuid,
 					level: "edit",
 					createdAt: new Date,
@@ -120,7 +120,7 @@ describe("AdminController", function() {
 				})
 
 				yield cosDb.query(sql`
-					SELECT * FROM "Topics" WHERE id = ${topic.id}
+					SELECT * FROM "Topics" WHERE id = ${initiative.uuid}
 				`).then(_.first).then(_.clone).must.then.eql(_.clone({
 					__proto__: topic,
 					creatorId: _.serializeUuid(target.uuid)
@@ -159,7 +159,7 @@ describe("AdminController", function() {
 				})
 
 				var sourcePerm = yield createPermission({
-					topicId: topic.id,
+					topicId: initiative.uuid,
 					userId: source.uuid,
 					level: "edit",
 					createdAt: new Date,
@@ -167,7 +167,7 @@ describe("AdminController", function() {
 				})
 
 				var targetPerm = yield createPermission({
-					topicId: topic.id,
+					topicId: initiative.uuid,
 					userId: target.uuid,
 					level: "admin",
 					createdAt: new Date,
@@ -182,7 +182,7 @@ describe("AdminController", function() {
 				res.statusCode.must.equal(303)
 
 				yield cosDb.query(sql`
-					SELECT * FROM "Topics" WHERE id = ${topic.id}
+					SELECT * FROM "Topics" WHERE id = ${initiative.uuid}
 				`).then(_.first).then(_.clone).must.then.eql(_.clone(topic))
 
 				;(yield cosDb.query(sql`
@@ -230,7 +230,7 @@ describe("AdminController", function() {
 				})
 
 				var perm = yield createPermission({
-					topicId: topic.id,
+					topicId: initiative.uuid,
 					userId: other.uuid,
 					level: "edit",
 					createdAt: new Date,
@@ -249,7 +249,7 @@ describe("AdminController", function() {
 				yield eventsDb.read(event).must.then.eql(event)
 
 				yield cosDb.query(sql`
-					SELECT * FROM "Topics" WHERE id = ${topic.id}
+					SELECT * FROM "Topics" WHERE id = ${initiative.uuid}
 				`).then(_.first).then(_.clone).must.then.eql(_.clone(topic))
 
 				yield cosDb.query(sql`
@@ -269,19 +269,14 @@ describe("AdminController", function() {
 			this.author = yield createUser()
 
 			this.initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id
+				user_id: this.author.id,
+				phase: "parliament"
 			}))
-
-			this.topic = yield createTopic({
-				id: this.initiative.uuid,
-				creatorId: this.author.uuid,
-				title: this.initiative.title
-			})
 		})
 		
 		describe("with action=create", function() {
 			it("must create event", function*() {
-				var res = yield this.request(`/initiatives/${this.topic.id}/events`, {
+				var res = yield this.request(`/initiatives/${this.initiative.uuid}/events`, {
 					method: "POST",
 
 					form: {
@@ -294,14 +289,14 @@ describe("AdminController", function() {
 				})
 
 				res.statusCode.must.equal(302)
-				res.headers.location.must.equal(`/initiatives/${this.topic.id}`)
+				res.headers.location.must.equal(`/initiatives/${this.initiative.uuid}`)
 
 				var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
 				events.length.must.equal(1)
 
 				events[0].must.eql(new ValidEvent({
 					id: events[0].id,
-					initiative_uuid: this.topic.id,
+					initiative_uuid: this.initiative.uuid,
 					created_at: new Date,
 					updated_at: new Date,
 					occurred_at: new Date(2020, 0, 2, 13, 37),
@@ -315,7 +310,7 @@ describe("AdminController", function() {
 			it("must email subscribers interested in official events", function*() {
 				var subscriptions = yield subscriptionsDb.create([
 					new ValidSubscription({
-						initiative_uuid: this.topic.id,
+						initiative_uuid: this.initiative.uuid,
 						confirmed_at: new Date,
 						official_interest: false
 					}),
@@ -327,7 +322,7 @@ describe("AdminController", function() {
 					}),
 
 					new ValidSubscription({
-						initiative_uuid: this.topic.id,
+						initiative_uuid: this.initiative.uuid,
 						confirmed_at: new Date
 					}),
 
@@ -337,7 +332,7 @@ describe("AdminController", function() {
 					})
 				])
 
-				var res = yield this.request(`/initiatives/${this.topic.id}/events`, {
+				var res = yield this.request(`/initiatives/${this.initiative.uuid}/events`, {
 					method: "POST",
 
 					form: {
@@ -359,19 +354,19 @@ describe("AdminController", function() {
 
 				messages.must.eql([{
 					id: messages[0].id,
-					initiative_uuid: this.topic.id,
+					initiative_uuid: this.initiative.uuid,
 					created_at: new Date,
 					updated_at: new Date,
 					origin: "event",
 
 					title: t("DEFAULT_INITIATIVE_EVENT_MESSAGE_TITLE", {
 						title: "Initiative was handled",
-						initiativeTitle: this.topic.title
+						initiativeTitle: this.initiative.title
 					}),
 
 					text: renderEmail("DEFAULT_INITIATIVE_EVENT_MESSAGE_BODY", {
-						initiativeTitle: this.topic.title,
-						initiativeUrl: `${Config.url}/initiatives/${this.topic.id}`,
+						initiativeTitle: this.initiative.title,
+						initiativeUrl: `${Config.url}/initiatives/${this.initiative.uuid}`,
 						title: "Initiative was handled",
 						text: "> All good.",
 						unsubscribeUrl: "{{unsubscribeUrl}}"
@@ -400,20 +395,16 @@ describe("AdminController", function() {
 			this.author = yield createUser()
 
 			this.initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id
+				user_id: this.author.id,
+				phase: "parliament"
 			}))
-
-			this.topic = yield createTopic({
-				id: this.initiative.uuid,
-				creatorId: this.author.uuid,
-			})
 		})
 
 		describe("with action=send", function() {
 			it("must email subscribers", function*() {
 				var subscriptions = yield subscriptionsDb.create([
 					new ValidSubscription({
-						initiative_uuid: this.topic.id,
+						initiative_uuid: this.initiative.uuid,
 						confirmed_at: new Date
 					}),
 
@@ -423,7 +414,7 @@ describe("AdminController", function() {
 					})
 				])
 
-				var res = yield this.request(`/initiatives/${this.topic.id}/messages`, {
+				var res = yield this.request(`/initiatives/${this.initiative.uuid}/messages`, {
 					method: "POST",
 
 					form: {
@@ -434,7 +425,7 @@ describe("AdminController", function() {
 				})
 
 				res.statusCode.must.equal(302)
-				res.headers.location.must.equal(`/initiatives/${this.topic.id}`)
+				res.headers.location.must.equal(`/initiatives/${this.initiative.uuid}`)
 
 				var messages = yield messagesDb.search(sql`
 					SELECT * FROM initiative_messages
@@ -444,7 +435,7 @@ describe("AdminController", function() {
 
 				messages.must.eql([{
 					id: messages[0].id,
-					initiative_uuid: this.topic.id,
+					initiative_uuid: this.initiative.uuid,
 					created_at: new Date,
 					updated_at: new Date,
 					origin: "message",
@@ -468,12 +459,12 @@ describe("AdminController", function() {
 				})
 
 				var specific = yield subscriptionsDb.create({
-					initiative_uuid: this.topic.id,
+					initiative_uuid: this.initiative.uuid,
 					email: "user@example.com",
 					confirmed_at: new Date
 				})
 
-				var res = yield this.request(`/initiatives/${this.topic.id}/messages`, {
+				var res = yield this.request(`/initiatives/${this.initiative.uuid}/messages`, {
 					method: "POST",
 
 					form: {
@@ -484,7 +475,7 @@ describe("AdminController", function() {
 				})
 
 				res.statusCode.must.equal(302)
-				res.headers.location.must.equal(`/initiatives/${this.topic.id}`)
+				res.headers.location.must.equal(`/initiatives/${this.initiative.uuid}`)
 
 				var messages = yield messagesDb.search(sql`
 					SELECT * FROM initiative_messages
@@ -492,7 +483,7 @@ describe("AdminController", function() {
 
 				messages.must.eql([{
 					id: messages[0].id,
-					initiative_uuid: this.topic.id,
+					initiative_uuid: this.initiative.uuid,
 					created_at: new Date,
 					updated_at: new Date,
 					origin: "message",
@@ -521,7 +512,7 @@ describe("AdminController", function() {
 					confirmed_at: new Date
 				})
 
-				var res = yield this.request(`/initiatives/${this.topic.id}/messages`, {
+				var res = yield this.request(`/initiatives/${this.initiative.uuid}/messages`, {
 					method: "POST",
 
 					form: {
@@ -532,7 +523,7 @@ describe("AdminController", function() {
 				})
 
 				res.statusCode.must.equal(302)
-				res.headers.location.must.equal(`/initiatives/${this.topic.id}`)
+				res.headers.location.must.equal(`/initiatives/${this.initiative.uuid}`)
 
 				var messages = yield messagesDb.search(sql`
 					SELECT * FROM initiative_messages
