@@ -277,11 +277,6 @@
         }
       }
     },
-    "ent": {
-      "version": "2.2.0",
-      "from": "ent@latest",
-      "resolved": "https://registry.npmjs.org/ent/-/ent-2.2.0.tgz"
-    },
     "express": {
       "version": "4.17.1",
       "from": "express@4.17.1",
