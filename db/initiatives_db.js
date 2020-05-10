@@ -20,6 +20,7 @@ exports.parse = function(attrs) {
 		archived_at: attrs.archived_at && new Date(attrs.archived_at),
 		published_at: attrs.published_at && new Date(attrs.published_at),
 		text_type: attrs.text_type && MediaType.parse(attrs.text_type),
+		tags: attrs.tags && JSON.parse(attrs.tags),
 
 		discussion_ends_at: attrs.discussion_ends_at &&
 			new Date(attrs.discussion_ends_at),
@@ -56,6 +57,7 @@ exports.serialize = function(attrs) {
 	var obj = O.clone(attrs)
 	if ("media_urls" in obj) obj.media_urls = JSON.stringify(obj.media_urls)
 	if ("meetings" in obj) obj.meetings = JSON.stringify(obj.meetings)
+	if ("tags" in obj) obj.tags = JSON.stringify(obj.tags)
 
 	if ("parliament_api_data" in obj)
 		obj.parliament_api_data = JSON.stringify(obj.parliament_api_data)

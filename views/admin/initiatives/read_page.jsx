@@ -300,14 +300,12 @@ module.exports = function(attrs) {
 			<tr>
 				<th scope="row">Tags</th>
 				<td>
-					{topic ? <InputForm
+					<InputForm
 						req={req}
 						action={initiativePath}
-						name={"tags"}
-						value={topic.categories.join(", ")}
-					/> : <p>
-						Sorry, tags are not yet available on non-CitizenOS initaitives.
-					</p>}
+						name="tags"
+						value={initiative.tags.join(", ")}
+					/>
 				</td>
 			</tr>
 

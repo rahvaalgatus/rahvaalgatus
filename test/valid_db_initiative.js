@@ -26,6 +26,7 @@ module.exports = function(attrs) {
 		signing_started_at: phase == "sign" ? pseudoDateTime() : null,
 		signing_ends_at: phase == "sign" ? pseudoDateTime() : null,
 		published_at: phase != "edit" || external ? pseudoDateTime() : null,
+		tags: [],
 
 		discussion_ends_at: (
 			phase == "edit" && attrs && attrs.published_at ? pseudoDateTime() : null

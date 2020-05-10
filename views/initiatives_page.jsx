@@ -16,7 +16,6 @@ function InitiativesPage(attrs) {
 	var flash = attrs.flash
 	var recentInitiatives = attrs.recentInitiatives
 	var initiatives = attrs.initiatives
-	var topics = attrs.topics
 	var signatureCounts = attrs.signatureCounts
 
 	var initiativesByPhase = _.groupBy(initiatives, "phase")
@@ -53,7 +52,6 @@ function InitiativesPage(attrs) {
 			<InitiativesView
 				t={t}
 				initiatives={recentInitiatives}
-				topics={topics}
 				signatureCounts={signatureCounts}
 			/>
 		</center></section> : null}
@@ -67,7 +65,6 @@ function InitiativesPage(attrs) {
 						t={t}
 						phase="edit"
 						initiatives={inEdit}
-						topics={topics}
 						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
@@ -79,7 +76,6 @@ function InitiativesPage(attrs) {
 						t={t}
 						phase="sign"
 						initiatives={inSign}
-						topics={topics}
 						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
@@ -91,7 +87,6 @@ function InitiativesPage(attrs) {
 						t={t}
 						phase="parliament"
 						initiatives={inParliament}
-						topics={topics}
 						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
@@ -103,7 +98,6 @@ function InitiativesPage(attrs) {
 						t={t}
 						phase="government"
 						initiatives={inGovernment}
-						topics={topics}
 						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
@@ -115,7 +109,6 @@ function InitiativesPage(attrs) {
 						t={t}
 						phase="done"
 						initiatives={inDone}
-						topics={topics}
 						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
@@ -128,7 +121,6 @@ function InitiativesView(attrs) {
 	var t = attrs.t
 	var phase = attrs.phase
 	var initiatives = attrs.initiatives
-	var topics = attrs.topics
 	var signatureCounts = attrs.signatureCounts
 
 	switch (phase) {
@@ -166,7 +158,6 @@ function InitiativesView(attrs) {
 		{initiatives.map((initiative) => <InitiativeView
 			t={t}
 			initiative={initiative}
-			topic={topics[initiative.uuid]}
 			signatureCount={signatureCounts[initiative.uuid] || 0}
 		/>)}
 	</ol>
@@ -174,7 +165,6 @@ function InitiativesView(attrs) {
 
 function InitiativeView(attrs) {
 	var t = attrs.t
-	var topic = attrs.topic
 	var initiative = attrs.initiative
 	var signatureCount = attrs.signatureCount
 
@@ -193,10 +183,7 @@ function InitiativeView(attrs) {
 		null
 	)
 
-	var badge = topic && (
-		Config.partners[topic.sourcePartnerId] ||
-		_.values(_.pick(Config.categories, topic.categories))[0]
-	)
+	var badge = _.find(Config.badges, (_b, tag) => initiative.tags.includes(tag))
 
 	return <li
 		class={"initiative" + (initiative.destination ? " with-destination" : "")}

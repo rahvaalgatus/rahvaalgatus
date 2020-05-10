@@ -10,7 +10,6 @@ var {normalizeCitizenOsHtml} = require("root/lib/topic")
 module.exports = function(attrs) {
 	var req = attrs.req
 	var initiative = attrs.initiative
-	var topic = attrs.topic
 	var flash = attrs.flash
 	var text = attrs.text
 	var t = attrs.t
@@ -19,7 +18,6 @@ module.exports = function(attrs) {
 		page="edit-initiative"
 		title={initiative.title}
 		initiative={initiative}
-		topic={topic}
 		req={req}>
 		<Form
 			id="initiative-text-form"

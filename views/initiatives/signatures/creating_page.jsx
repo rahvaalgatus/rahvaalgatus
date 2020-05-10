@@ -12,7 +12,6 @@ function CreatingPage(attrs) {
 	var req = attrs.req
 	var t = req.t
 	var initiative = attrs.initiative
-	var topic = attrs.topic
 	var error = attrs.error
 	var method = attrs.method
 	var code = attrs.code
@@ -22,7 +21,6 @@ function CreatingPage(attrs) {
 		page="initiative-signature"
 		title={initiative.title}
 		initiative={initiative}
-		topic={topic}
 		req={req}>
 		<script src="/assets/html5.js" />
 

@@ -15,7 +15,6 @@ module.exports = function(attrs) {
 	var error = attrs.error
 	var authoredInitiatives = attrs.authoredInitiatives
 	var signedInitiatives = attrs.signedInitiatives
-	var topics = attrs.topics
 	var signatureCounts = attrs.signatureCounts
 	var userAttrs = attrs.userAttrs
 	var userErrors = attrs.userErrors
@@ -86,7 +85,6 @@ module.exports = function(attrs) {
 					<InitiativesView
 						t={t}
 						initiatives={_.sortBy(authoredInitiatives, "created_at").reverse()}
-						topics={topics}
 						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
@@ -97,7 +95,6 @@ module.exports = function(attrs) {
 					<InitiativesView
 						t={t}
 						initiatives={signedInitiatives}
-						topics={topics}
 						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}

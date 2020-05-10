@@ -346,6 +346,8 @@ function parseInitiative(obj) {
 	if ("destination" in obj)
 		attrs.destination = obj.destination || null
 
+	if ("tags" in obj) attrs.tags = obj.tags.split(",").map(trim)
+
 	if ("hasPaperSignatures" in obj)
 		attrs.has_paper_signatures = _.parseBoolean(obj.hasPaperSignatures)
 
@@ -408,8 +410,6 @@ function parseInitiativeForTopic(obj) {
 
 	if ("phase" in obj && _.contains(UPDATEABLE_PHASES, obj.phase))
 		attrs.status = PHASE_TO_STATUS[obj.phase]
-
-	if ("tags" in obj) attrs.categories = obj.tags.split(",").map(trim)
 
 	return attrs
 }

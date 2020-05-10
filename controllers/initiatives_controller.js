@@ -71,24 +71,10 @@ exports.router.get("/",
 		)
 	`)
 
-	var topics = _.indexBy(yield searchTopics(sql`
-		topic.id IN ${sql.in(initiatives.map((i) => i.uuid))}
-	`), "id")
-
-	initiatives = initiatives.filter((initiative) => (
-		!initiative.archived_at ||
-		initiative.phase != "edit" ||
-		initiative.external ||
-		topics[initiative.uuid] == null ||
-		topics[initiative.uuid].sourcePartnerId == Config.apiPartnerId
-	))
-
-	var category = req.query.category
-
-	if (category) {
-		topics = _.filterValues(topics, hasCategory.bind(null, category))
-		initiatives = initiatives.filter((initiative) => topics[initiative.uuid])
-	}
+	// Perhaps it's worth changing the query parameter name to "tag". Remember
+	// backwards compatibility!
+	var tag = req.query.category
+	if (tag) initiatives = initiatives.filter((i) => i.tags.includes(tag))
 
 	var signatureCounts = yield countSignaturesByIds(_.map(initiatives, "uuid"))
 
@@ -163,14 +149,13 @@ exports.router.get("/",
 			break
 
 		default:
-			var recentInitiatives = category
+			var recentInitiatives = tag
 				? EMPTY_ARR
 				: yield searchRecentInitiatives(initiatives)
 
 			res.render("initiatives_page.jsx", {
 				initiatives: initiatives,
 				recentInitiatives: recentInitiatives,
-				topics: topics,
 				signatureCounts: signatureCounts
 			})
 	}
@@ -532,10 +517,6 @@ function* searchRecentInitiatives(initiatives) {
 	return recents.filter(Boolean).slice(0, 6)
 }
 
-function hasCategory(category, topic) {
-	return _.contains(topic.categories, category)
-}
-
 function* searchInitiativesEvents(initiatives) {
 	var events = yield eventsDb.search(sql`
 		SELECT
@@ -744,7 +725,7 @@ function* updateInitiativePhaseToSign(req, res) {
 		throw new HttpError(403, "No Permission to Edit")
 
 	if (!(
-		Initiative.canPropose(new Date, initiative, topic, user) ||
+		Initiative.canPropose(new Date, initiative, user) ||
 		Initiative.canUpdateSignDeadline(initiative, user)
 	)) throw new HttpError(403, "Cannot Update to Sign Phase")
 

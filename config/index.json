@@ -64,15 +64,13 @@
 		"ru": "https://www.youtube.com/embed/3tZpKl-ICjQ"
 	},
 
-	"partners": {
-		"a4cc118f-69f3-4708-8f84-d3f46ad1d63b": {
+	"badges": {
+		"uuseakus": {
 			"name": "Uus Eakus",
 			"icon": "/assets/badges-uuseakus.png",
 			"url": "https://uuseakus.rahvaalgatus.ee"
-		}
-	},
+		},
 
-	"categories": {
 		"arvamusfestival": {
 			"name": "Arvamusfestival",
 			"icon": "/assets/badges-arvamusfestival.png",

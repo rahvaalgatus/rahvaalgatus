@@ -5,7 +5,6 @@ var Router = require("express").Router
 var Crypto = require("crypto")
 var HttpError = require("standard-http-error")
 var SqliteError = require("root/lib/sqlite_error")
-var searchTopics = require("root/lib/citizenos_db").searchTopics
 var sql = require("sqlate")
 var {countSignaturesByIds} = require("root/lib/initiative")
 var usersDb = require("root/db/users_db")
@@ -185,15 +184,10 @@ function* read(req, res) {
 	var uuids = _.map(concat(authoredInitiatives, signedInitiatives), "uuid")
 	var signatureCounts = yield countSignaturesByIds(uuids)
 
-	var topics = _.indexBy(yield searchTopics(sql`
-		topic.id IN ${sql.in(uuids)}
-	`), "id")
-
 	res.render("user/read_page.jsx", {
 		user: user,
 		authoredInitiatives: authoredInitiatives,
 		signedInitiatives: signedInitiatives,
-		topics: topics,
 		signatureCounts: signatureCounts,
 		userAttrs: _.create(user, res.locals.userAttrs),
 		userErrors: res.locals.userErrors || EMPTY_OBJ

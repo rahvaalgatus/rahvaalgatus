@@ -1,0 +1,2 @@
+ALTER TABLE initiatives
+ADD COLUMN tags TEXT NOT NULL DEFAULT '[]';

@@ -12,7 +12,6 @@ exports.ProgressView = ProgressView
 function InitiativePage(attrs, children) {
 	var req = attrs.req
 	var initiative = attrs.initiative
-	var topic = attrs.topic
 	var path = "/initiatives/" + initiative.uuid
 
 	return <Page class={"initiative-page " + (attrs.class || "")} {...attrs}>
@@ -23,7 +22,7 @@ function InitiativePage(attrs, children) {
 						<a href={path}>{initiative.title}</a>
 					: initiative.title}
 
-					{topic ? InitiativeBadge(topic) : null}
+					<InitiativeBadgeView initiative={initiative} />
 				</h1>
 
 				<span class="author">
@@ -43,21 +42,20 @@ function InitiativePage(attrs, children) {
 	</Page>
 }
 
-function InitiativeBadge(topic) {
-	var partner = Config.partners[topic.sourcePartnerId]
-	var category = _.values(_.pick(Config.categories, topic.categories))[0]
-	var badge = partner || category
+function InitiativeBadgeView(attrs) {
+	var initiative = attrs.initiative
+	var badge = _.find(Config.badges, (_b, tag) => initiative.tags.includes(tag))
+	if (badge == null) return null
 
-	if (badge) {
-		if (badge.url) {
-			return <a href={badge.url} title={badge.name} class="badge">
-				<img src={badge.icon} alt={badge.name} class="badge" />
-			</a>
-		}
-		else
-			return <img src={badge.icon} alt={badge.name} title={badge.name} class="badge" />
-	}
-	else return null
+	if (badge.url) return <a href={badge.url} title={badge.name} class="badge">
+		<img src={badge.icon} alt={badge.name} class="badge" />
+	</a>
+	else return <img
+		src={badge.icon}
+		alt={badge.name}
+		title={badge.name}
+		class="badge"
+	/>
 }
 
 function ProgressView(attrs) {

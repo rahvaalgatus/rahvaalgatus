@@ -7,7 +7,6 @@ module.exports = function(attributes) {
 	var req = attributes.req
 	var t = attributes.t
 	var initiative = attributes.initiative
-	var topic = attributes.topic
 	var error = attributes.error
 	var attrs = attributes.attrs
 
@@ -15,7 +14,6 @@ module.exports = function(attributes) {
 		id="initiative-send-to-parliament"
 		title={initiative.title}
 		initiative={initiative}
-		topic={topic}
 		req={req}>
 		<section class="primary-section text-section"><center>
 			<h2>{t("SEND_TO_PARLIAMENT_HEADER")}</h2>

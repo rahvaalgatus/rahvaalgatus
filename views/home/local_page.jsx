@@ -11,7 +11,6 @@ module.exports = function(attrs) {
 	var t = attrs.t
 	var req = attrs.req
 	var initiatives = attrs.initiatives
-	var topics = attrs.topics
 	var signatureCounts = attrs.signatureCounts
 
 	var initiativesByPhase = _.groupBy(initiatives, "phase")
@@ -44,7 +43,6 @@ module.exports = function(attrs) {
 						t={t}
 						phase="edit"
 						initiatives={inEdit}
-						topics={topics}
 						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
@@ -56,7 +54,6 @@ module.exports = function(attrs) {
 						t={t}
 						phase="sign"
 						initiatives={inSign}
-						topics={topics}
 						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
@@ -68,7 +65,6 @@ module.exports = function(attrs) {
 						t={t}
 						phase="government"
 						initiatives={inGovernment}
-						topics={topics}
 						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
@@ -80,7 +76,6 @@ module.exports = function(attrs) {
 						t={t}
 						phase="done"
 						initiatives={inDone}
-						topics={topics}
 						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}

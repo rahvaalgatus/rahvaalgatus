@@ -14,7 +14,6 @@ function CreatePage(attrs) {
 	var req = attrs.req
 	var t = req.t
 	var initiative = attrs.initiative
-	var topic = attrs.topic
 	var referrer = attrs.referrer
 	var newComment = attrs.newComment
 
@@ -22,7 +21,6 @@ function CreatePage(attrs) {
 		page="initiative-comment"
 		title={initiative.title}
 		initiative={initiative}
-		topic={topic}
 		req={req}>
 		<section id="initiative-comment" class="primary-section">
 			<center>

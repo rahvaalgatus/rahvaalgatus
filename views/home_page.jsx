@@ -14,7 +14,6 @@ module.exports = function(attrs) {
 	var req = attrs.req
 	var user = req.user
 	var initiatives = attrs.initiatives
-	var topics = attrs.topics
 	var stats = attrs.statistics
 	var signatureCounts = attrs.signatureCounts
 
@@ -168,7 +167,6 @@ module.exports = function(attrs) {
 						t={t}
 						phase="edit"
 						initiatives={inEdit}
-						topics={topics}
 						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
@@ -180,7 +178,6 @@ module.exports = function(attrs) {
 						t={t}
 						phase="sign"
 						initiatives={inSign}
-						topics={topics}
 						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
@@ -192,7 +189,6 @@ module.exports = function(attrs) {
 						t={t}
 						phase="parliament"
 						initiatives={inParliament}
-						topics={topics}
 						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
@@ -204,7 +200,6 @@ module.exports = function(attrs) {
 						t={t}
 						phase="government"
 						initiatives={inGovernment}
-						topics={topics}
 						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
@@ -216,7 +211,6 @@ module.exports = function(attrs) {
 						t={t}
 						phase="done"
 						initiatives={inDone}
-						topics={topics}
 						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}

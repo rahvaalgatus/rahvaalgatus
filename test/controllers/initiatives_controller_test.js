@@ -410,77 +410,6 @@ describe("InitiativesController", function() {
 			mustShowInitiativesInPhases(LOCAL_SITE_HOSTNAME, "muhu-vald")
 		})
 
-		_.each(Config.partners, function(partner, id) {
-			if (id == Config.apiPartnerId) return
-
-			describe("given " + partner.name, function() {
-				it("must show initiatives", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						published_at: new Date
-					}))
-
-					var partner = yield createPartner(newPartner({id: id}))
-
-					yield createTopic(newTopic({
-						id: initiative.uuid,
-						creatorId: this.author.uuid,
-						sourcePartnerId: partner.id,
-						visibility: "public"
-					}))
-
-					var res = yield this.request("/initiatives")
-					res.statusCode.must.equal(200)
-					res.body.must.include(initiative.uuid)
-				})
-
-				it("must not show archived initiatives in edit phase", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						archived_at: new Date,
-						published_at: new Date
-					}))
-
-					var partner = yield createPartner(newPartner({id: id}))
-
-					yield createTopic(newTopic({
-						id: initiative.uuid,
-						creatorId: this.author.uuid,
-						sourcePartnerId: partner.id,
-						visibility: "public"
-					}))
-
-					var res = yield this.request("/initiatives")
-					res.statusCode.must.equal(200)
-					res.body.must.not.include(initiative.uuid)
-				})
-
-				it("must show archived initiatives in sign phase", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						phase: "sign",
-						archived_at: new Date,
-						published_at: new Date
-					}))
-
-					var partner = yield createPartner(newPartner({id: id}))
-
-					var topic = yield createTopic(newTopic({
-						id: initiative.uuid,
-						creatorId: this.author.uuid,
-						sourcePartnerId: partner.id,
-						visibility: "public"
-					}))
-
-					yield createVote(topic, newVote())
-
-					var res = yield this.request("/initiatives")
-					res.statusCode.must.equal(200)
-					res.body.must.include(initiative.uuid)
-				})
-			})
-		})
-
 		it("must not show unpublished initiatives", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id
@@ -491,25 +420,16 @@ describe("InitiativesController", function() {
 			res.body.must.not.include(initiative.uuid)
 		})
 
-		it("must show initiatives by category if given", function*() {
+		it("must show initiatives by tag if given", function*() {
 			var initiativeA = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				published_at: new Date
+				published_at: new Date,
+				tags: ["uuseakus"]
 			}))
 
 			var initiativeB = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				published_at: new Date
-			}))
-
-			var partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
-
-			yield createTopic(newTopic({
-				id: initiativeA.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: partner.id,
-				visibility: "public",
-				categories: ["uuseakus"]
 			}))
 
 			var res = yield this.request("/initiatives?category=uuseakus")
@@ -519,7 +439,7 @@ describe("InitiativesController", function() {
 		})
 
 		it("must include social media tags", function*() {
-			var res = yield this.request("/initiatives?category=uuseakus")
+			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
 			
 			var dom = parseDom(res.body)
@@ -5037,7 +4957,8 @@ describe("InitiativesController", function() {
 						user_id: this.user.id,
 						destination: "parliament",
 						created_at: DateFns.addDays(new Date, 1 - Config.minDeadlineDays),
-						published_at: new Date
+						published_at: new Date,
+						tags: ["fast-track"]
 					}))
 
 					yield textsDb.create(new ValidText({
@@ -5047,18 +4968,7 @@ describe("InitiativesController", function() {
 						content: []
 					}))
 
-					var topic = yield createTopic(newTopic({
-						id: initiative.uuid,
-						creatorId: this.user.uuid,
-						sourcePartnerId: this.partner.id,
-						visibility: "public",
-						categories: ["fast-track"]
-					}))
-
 					var endsAt = DateFns.addDays(DateFns.endOfDay(new Date), 30)
-
-					this.router.post(`/api/users/self/topics/${topic.id}/votes`,
-						endResponse)
 
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",

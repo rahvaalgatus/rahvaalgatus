@@ -116,7 +116,6 @@ function ReadPage(attrs) {
 	var subscription = attrs.subscription
 	var flash = attrs.flash
 	var events = attrs.events
-	var topic = attrs.topic
 	var initiative = attrs.initiative
 	var initiativePath = "/initiatives/" + initiative.uuid
 	var subscriberCounts = attrs.subscriberCounts
@@ -131,7 +130,6 @@ function ReadPage(attrs) {
 		page="initiative"
 		title={initiative.title}
 		initiative={initiative}
-		topic={topic}
 
 		meta={_.filterValues({
 			"twitter:card": "summary_large_image",
@@ -347,7 +345,6 @@ function ReadPage(attrs) {
 
 				<SidebarAuthorView
 					req={req}
-					topic={topic}
 					initiative={initiative}
 					text={text}
 					hasComments={comments.length > 0}
@@ -357,7 +354,6 @@ function ReadPage(attrs) {
 				<SidebarInfoView
 					req={req}
 					user={user}
-					topic={topic}
 					initiative={initiative}
 				/>
 
@@ -639,7 +635,6 @@ function SidebarAuthorView(attrs) {
 	var req = attrs.req
 	var t = req.t
 	var user = req.user
-	var topic = attrs.topic
 	var text = attrs.text
 	var initiative = attrs.initiative
 	var signatureCount = attrs.signatureCount
@@ -684,7 +679,7 @@ function SidebarAuthorView(attrs) {
 			{t("PUBLISH_TOPIC")}
 		</FormButton> : null}
 
-		{Initiative.canPropose(new Date, initiative, topic, user) ? <Fragment>
+		{Initiative.canPropose(new Date, initiative, user) ? <Fragment>
 			<FormButton
 				req={req}
 				action={"/initiatives/" + initiative.uuid}

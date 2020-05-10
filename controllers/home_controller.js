@@ -6,7 +6,6 @@ var MediaType = require("medium-type")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
 var next = require("co-next")
-var searchTopics = require("root/lib/citizenos_db").searchTopics
 var sqlite = require("root").sqlite
 var {countSignaturesByIds} = require("root/lib/initiative")
 var sql = require("sqlate")
@@ -37,10 +36,6 @@ exports.router.get("/", next(function*(req, res) {
 		)
 	`)
 
-	var topics = _.indexBy(yield searchTopics(sql`
-		topic.id IN ${sql.in(initiatives.map((i) => i.uuid))}
-	`), "id")
-
 	var signatureCounts = yield countSignaturesByIds(_.map(initiatives, "uuid"))
 
 	initiatives = initiatives.filter((initiative) => (
@@ -52,7 +47,6 @@ exports.router.get("/", next(function*(req, res) {
 
 	if (gov == "local") res.render("home/local_page.jsx", {
 		initiatives: initiatives,
-		topics: topics,
 		signatureCounts: signatureCounts
 	})
 	else {
@@ -67,7 +61,6 @@ exports.router.get("/", next(function*(req, res) {
 
 		res.render("home_page.jsx", {
 			initiatives: initiatives,
-			topics: topics,
 			statistics: statistics,
 			signatureCounts: signatureCounts
 		})
