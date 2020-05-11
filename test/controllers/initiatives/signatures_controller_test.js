@@ -6,6 +6,7 @@ var Config = require("root/config")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSignature = require("root/test/valid_signature")
 var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
+var ValidUser = require("root/test/valid_user")
 var Certificate = require("undersign/lib/certificate")
 var X509Asn = require("undersign/lib/x509_asn")
 var Ocsp = require("undersign/lib/ocsp")
@@ -17,7 +18,7 @@ var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var newCertificate = require("root/test/fixtures").newCertificate
 var newOcspResponse = require("root/test/fixtures").newOcspResponse
-var createUser = require("root/test/fixtures").createUser
+var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var signablesDb = require("root/db/initiative_signables_db")
@@ -268,7 +269,7 @@ describe("SignaturesController", function() {
 
 	describe(`GET / for ${ASICE_TYPE}`, function() {
 		beforeEach(function*() {
-			this.author = yield createUser()
+			this.author = yield usersDb.create(new ValidUser)
 		})
 
 		mustRespondWithSignatures(function(url) { return this.request(url) })
@@ -333,7 +334,7 @@ describe("SignaturesController", function() {
 
 	describe(`GET /?type=citizenos for ${ZIP_TYPE}`, function() {
 		beforeEach(function*() {
-			this.author = yield createUser()
+			this.author = yield usersDb.create(new ValidUser)
 		})
 
 		mustRespondWithSignatures(function(url) {
@@ -441,7 +442,7 @@ describe("SignaturesController", function() {
 		require("root/test/time")(new Date(2015, 5, 18))
 
 		beforeEach(function*() {
-			this.author = yield createUser()
+			this.author = yield usersDb.create(new ValidUser)
 
 			this.initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
@@ -2318,7 +2319,7 @@ describe("SignaturesController", function() {
 
 	describe(`GET /:personalid for ${ASICE_TYPE}`, function() {
 		beforeEach(function*() {
-			this.author = yield createUser()
+			this.author = yield usersDb.create(new ValidUser)
 
 			this.initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
@@ -2378,7 +2379,7 @@ describe("SignaturesController", function() {
 		require("root/test/time")()
 
 		beforeEach(function*() {
-			this.author = yield createUser()
+			this.author = yield usersDb.create(new ValidUser)
 
 			this.initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
@@ -2473,7 +2474,7 @@ describe("SignaturesController", function() {
 
 	describe("DELETE /:personalId", function() {
 		beforeEach(function*() {
-			this.author = yield createUser()
+			this.author = yield usersDb.create(new ValidUser)
 
 			this.initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,

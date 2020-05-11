@@ -2,8 +2,8 @@ var _ = require("root/lib/underscore")
 var Crypto = require("crypto")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidInitiative = require("root/test/valid_db_initiative")
+var ValidUser = require("root/test/valid_user")
 var pseudoHex = require("root/lib/crypto").pseudoHex
-var createUser = require("root/test/fixtures").createUser
 var sql = require("sqlate")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var usersDb = require("root/db/users_db")
@@ -20,7 +20,7 @@ describe("SubscriptionsController", function() {
 	beforeEach(require("root/test/mitm").router)
 
 	beforeEach(function*() {
-		this.author = yield createUser()
+		this.author = yield usersDb.create(new ValidUser)
 	})
 
 	describe("GET /", function() {

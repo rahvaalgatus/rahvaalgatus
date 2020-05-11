@@ -3,11 +3,11 @@ var DateFns = require("date-fns")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSignature = require("root/test/valid_signature")
 var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
+var ValidUser = require("root/test/valid_user")
 var Config = require("root/config")
 var Crypto = require("crypto")
 var Http = require("root/lib/http")
 var parseCookies = Http.parseCookies
-var createUser = require("root/test/fixtures").createUser
 var parseDom = require("root/lib/dom").parse
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
@@ -180,7 +180,7 @@ describe("UserController", function() {
 				})
 
 				it("must not show initiatives from other users", function*() {
-					var author = yield createUser()
+					var author = yield usersDb.create(new ValidUser)
 
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: author.id,
@@ -193,7 +193,9 @@ describe("UserController", function() {
 				})
 
 				describe("when undersigned", function() {
-					beforeEach(function*() { this.author = yield createUser() })
+					beforeEach(function*() {
+						this.author = yield usersDb.create(new ValidUser)
+					})
 
 					it("must show signed initiatives", function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
@@ -254,7 +256,9 @@ describe("UserController", function() {
 				})
 
 				describe("when CitizenOS-signed", function() {
-					beforeEach(function*() { this.author = yield createUser() })
+					beforeEach(function*() {
+						this.author = yield usersDb.create(new ValidUser)
+					})
 
 					it("must show signed initiatives", function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
@@ -322,7 +326,7 @@ describe("UserController", function() {
 
 		describe("when not logged in", function() {
 			it("must ignore names", function*() {
-				var user = yield createUser({name: "Mary Smith"})
+				var user = yield usersDb.create(new ValidUser({name: "Mary Smith"}))
 
 				var res = yield this.request("/user", {
 					method: "PUT",
@@ -410,7 +414,7 @@ describe("UserController", function() {
 			})
 
 			it("must not update name of another user", function*() {
-				var user = yield createUser({name: "Mary Smith"})
+				var user = yield usersDb.create(new ValidUser({name: "Mary Smith"}))
 				
 				var res = yield this.request("/user", {
 					method: "PUT",
@@ -1069,10 +1073,10 @@ describe("UserController", function() {
 			})
 
 			it("must show message if email already taken", function*() {
-				yield createUser({
+				yield usersDb.create(new ValidUser({
 					email: "john@example.com",
 					email_confirmed_at: new Date
-				})
+				}))
 
 				yield usersDb.update(this.user, _.assign(this.user, {
 					unconfirmed_email: "john@example.com",

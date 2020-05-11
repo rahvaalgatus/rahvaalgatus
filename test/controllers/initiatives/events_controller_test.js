@@ -4,11 +4,12 @@ var DateFns = require("date-fns")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidEvent = require("root/test/valid_db_initiative_event")
+var ValidUser = require("root/test/valid_user")
 var Initiative = require("root/lib/initiative")
-var createUser = require("root/test/fixtures").createUser
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var eventsDb = require("root/db/initiative_events_db")
+var usersDb = require("root/db/users_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
@@ -29,7 +30,7 @@ describe("InitiativeEventsController", function() {
 	describe("GET /new", function() {
 		describe("when not logged in", function() {
 			it("must respond with 401", function*() {
-				var author = yield createUser()
+				var author = yield usersDb.create(new ValidUser)
 
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: author.id,
@@ -79,7 +80,7 @@ describe("InitiativeEventsController", function() {
 			})
 
 			it("must respond with 403 if lacking permissions", function*() {
-				var author = yield createUser()
+				var author = yield usersDb.create(new ValidUser)
 
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: author.id,
@@ -277,7 +278,7 @@ describe("InitiativeEventsController", function() {
 			})
 
 			it("must respond with 403 if not an admin", function*() {
-				var author = yield createUser()
+				var author = yield usersDb.create(new ValidUser)
 
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: author.id,

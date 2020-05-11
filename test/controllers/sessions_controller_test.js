@@ -10,9 +10,6 @@ var Certificate = require("undersign/lib/certificate")
 var DateFns = require("date-fns")
 var X509Asn = require("undersign/lib/x509_asn")
 var respond = require("root/test/fixtures").respond
-var createUser = require("root/test/fixtures").createUser
-var newCitizenUser = require("root/test/citizenos_fixtures").newUser
-var createCitizenUser = require("root/test/citizenos_fixtures").createUser
 var parseCookies = Http.parseCookies
 var newCertificate = require("root/test/fixtures").newCertificate
 var usersDb = require("root/db/users_db")
@@ -20,7 +17,6 @@ var authenticationsDb = require("root/db/authentications_db")
 var sessionsDb = require("root/db/sessions_db")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var sql = require("sqlate")
-var cosDb = require("root").cosDb
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var next = require("co-next")
 var tsl = require("root").tsl
@@ -326,216 +322,6 @@ describe("SessionsController", function() {
 					var session = yield sessionsDb.read(sql`SELECT * FROM sessions`)
 					session.created_ip.must.equal("127.0.0.1")
 					session.created_user_agent.must.equal("Mozilla")
-				})
-
-				it("must create user in Citizen database", function*() {
-					var cert = new Certificate(newCertificate({
-						subject: {
-							countryName: "EE",
-							organizationName: "ESTEID",
-							organizationalUnitName: "authentication",
-							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
-							surname: "SMITH",
-							givenName: "JOHN",
-							serialNumber: `PNOEE-${PERSONAL_ID}`
-						},
-
-						issuer: VALID_ISSUERS[0],
-						publicKey: JOHN_RSA_KEYS.publicKey
-					}))
-
-					var res = yield signIn(this.router, this.request, cert)
-					res.statusCode.must.equal(204)
-
-					var user = yield usersDb.read(sql`SELECT * FROM users`)
-					user.country.must.equal("EE")
-					user.personal_id.must.equal(PERSONAL_ID)
-
-					var cosUsers = yield cosDb.query(sql`
-						SELECT * FROM "Users"
-					`)
-
-					cosUsers.length.must.equal(1)
-					cosUsers[0].id.must.equal(_.serializeUuid(user.uuid))
-					cosUsers[0].language.must.equal(Config.language)
-					cosUsers[0].source.must.equal("citizenos")
-
-					var cosConnections = yield cosDb.query(sql`
-						SELECT * FROM "UserConnections"
-					`)
-
-					cosConnections.length.must.equal(1)
-					cosConnections[0].userId.must.equal(cosUsers[0].id)
-					cosConnections[0].connectionId.must.equal("esteid")
-					cosConnections[0].connectionUserId.must.equal(PERSONAL_ID)
-				})
-
-				it("must create user from confirmed CitizenOS user", function*() {
-					var cert = new Certificate(newCertificate({
-						subject: {
-							countryName: "EE",
-							organizationName: "ESTEID",
-							organizationalUnitName: "authentication",
-							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
-							surname: "SMITH",
-							givenName: "JOHN",
-							serialNumber: `PNOEE-${PERSONAL_ID}`
-						},
-
-						issuer: VALID_ISSUERS[0],
-						publicKey: JOHN_RSA_KEYS.publicKey
-					}))
-
-					var cosUser = yield createCitizenUser(newCitizenUser({
-						name: "Johnny Foursmith",
-						email: "user@example.com",
-						emailIsVerified: true,
-						language: "ru"
-					}))
-
-					yield cosDb("UserConnections").insert({
-						userId: cosUser.id,
-						connectionId: "esteid",
-						connectionUserId: PERSONAL_ID,
-						createdAt: new Date,
-						updatedAt: new Date
-					})
-
-					var res = yield signIn(this.router, this.request, cert)
-					res.statusCode.must.equal(204)
-
-					var user = yield usersDb.read(sql`SELECT * FROM users`)
-
-					user.must.eql(new ValidUser({
-						id: user.id,
-						uuid: _.parseUuid(cosUser.id),
-						name: "Johnny Foursmith",
-						official_name: "John Smith",
-						personal_id: PERSONAL_ID,
-						email: "user@example.com",
-						email_confirmed_at: new Date(0),
-						language: "et",
-						created_at: cosUser.createdAt,
-						updated_at: cosUser.updatedAt
-					}))
-				})
-
-				it("must create user from unconfirmed CitizenOS user", function*() {
-					var cert = new Certificate(newCertificate({
-						subject: {
-							countryName: "EE",
-							organizationName: "ESTEID",
-							organizationalUnitName: "authentication",
-							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
-							surname: "SMITH",
-							givenName: "JOHN",
-							serialNumber: `PNOEE-${PERSONAL_ID}`
-						},
-
-						issuer: VALID_ISSUERS[0],
-						publicKey: JOHN_RSA_KEYS.publicKey
-					}))
-
-					var cosUser = yield createCitizenUser(newCitizenUser({
-						email: "user@example.com",
-						emailIsVerified: false
-					}))
-
-					yield cosDb("UserConnections").insert({
-						userId: cosUser.id,
-						connectionId: "esteid",
-						connectionUserId: PERSONAL_ID,
-						createdAt: new Date,
-						updatedAt: new Date
-					})
-
-					var res = yield signIn(this.router, this.request, cert)
-					res.statusCode.must.equal(204)
-
-					var user = yield usersDb.read(sql`SELECT * FROM users`)
-
-					user.must.eql(new ValidUser({
-						id: user.id,
-						name: "John Smith",
-						uuid: _.parseUuid(cosUser.id),
-						personal_id: PERSONAL_ID,
-						unconfirmed_email: "user@example.com",
-						email_confirmation_token: user.email_confirmation_token,
-						created_at: cosUser.createdAt,
-						updated_at: cosUser.updatedAt
-					}))
-				})
-
-				it("must not re-use other users", function*() {
-					var cert = new Certificate(newCertificate({
-						subject: {
-							countryName: "EE",
-							organizationName: "ESTEID",
-							organizationalUnitName: "authentication",
-							commonName: `SMITH,JOHN,38706181337`,
-							surname: "SMITH",
-							givenName: "JOHN",
-							serialNumber: `PNOEE-38706181337`
-						},
-
-						issuer: VALID_ISSUERS[0],
-						publicKey: JOHN_RSA_KEYS.publicKey
-					}))
-
-					var cosUser = yield createCitizenUser(newCitizenUser())
-
-					yield cosDb("UserConnections").insert({
-						userId: cosUser.id,
-						connectionId: "esteid",
-						connectionUserId: "38706181338",
-						createdAt: new Date,
-						updatedAt: new Date
-					})
-
-					var res = yield signIn(this.router, this.request, cert)
-					res.statusCode.must.equal(204)
-
-					var cosUsers = yield cosDb.query(sql`
-						SELECT * FROM "Users"
-					`)
-
-					cosUsers.length.must.equal(2)
-				})
-
-				it("must create user with person's real name", function*() {
-					var cert = new Certificate(newCertificate({
-						subject: {
-							countryName: "EE",
-							organizationName: "ESTEID",
-							organizationalUnitName: "authentication",
-							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
-							surname: "SMITH",
-							givenName: "JOHN",
-							serialNumber: `PNOEE-${PERSONAL_ID}`
-						},
-
-						issuer: VALID_ISSUERS[0],
-						publicKey: JOHN_RSA_KEYS.publicKey
-					}))
-
-					var cosUser = yield createCitizenUser(newCitizenUser({
-						name: "Johnny Foursmith"
-					}))
-
-					yield cosDb("UserConnections").insert({
-						userId: cosUser.id,
-						connectionId: "esteid",
-						connectionUserId: PERSONAL_ID,
-						createdAt: new Date,
-						updatedAt: new Date
-					})
-
-					var res = yield signIn(this.router, this.request, cert)
-					res.statusCode.must.equal(204)
-
-					var user = yield usersDb.read(sql`SELECT * FROM users`)
-					user.name.must.equal("Johnny Foursmith")
-					user.official_name.must.equal("John Smith")
 				})
 
 				it("must create a session given a non-ETSI semantic personal id",
@@ -2469,7 +2255,7 @@ describe("SessionsController", function() {
 		})
 
 		it("must respond with 404 given other user's session", function*() {
-			var user = yield createUser()
+			var user = yield usersDb.create(new ValidUser)
 			
 			var session = yield sessionsDb.create(new ValidSession({
 				user_id: user.id

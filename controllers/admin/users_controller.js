@@ -4,7 +4,6 @@ var HttpError = require("standard-http-error")
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var commentsDb = require("root/db/comments_db")
-var cosDb = require("root").cosDb
 var next = require("co-next")
 var sql = require("sqlate")
 var sqlite = require("root").sqlite
@@ -91,22 +90,6 @@ function* mergeUser(source, target) {
 			user_id = ${target.id},
 			created_by = ${_.serializeUuid(target.uuid)}
 		WHERE user_id = ${source.id}
-	`)
-
-	yield cosDb.query(sql`
-		UPDATE "Topics" SET "creatorId" = ${target.uuid}
-		WHERE "creatorId" = ${source.uuid}
-	`)
-
-	var existingPermTopicIds = (yield cosDb.query(sql`
-		SELECT "topicId" FROM "TopicMemberUsers"
-		WHERE "userId" = ${target.uuid}
-	`)).map((row) => row.topicId)
-
-	yield cosDb.query(sql`
-		UPDATE "TopicMemberUsers" SET "userId" = ${target.uuid}
-		WHERE "userId" = ${source.uuid}
-		AND COALESCE("topicId" NOT IN ${sql.in(existingPermTopicIds)}, true)
 	`)
 
 	yield usersDb.update(source, {merged_with_id: target.id})

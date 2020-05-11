@@ -19,7 +19,6 @@ var mobileId = require("root").mobileId
 var smartId = require("root").smartId
 var parseBody = require("body-parser").raw
 var csrf = require("root/lib/middleware/csrf_middleware")
-var cosDb = require("root").cosDb
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var {ensureAreaCode} = require("root/lib/mobile_id")
 var {getCertificatePersonalId} = require("root/lib/certificate")
@@ -647,59 +646,16 @@ function* readOrCreateUser(auth, lang) {
 	if (user) return user
 	if (auth.country != "EE") throw new HttpError(501, "Estonian Users Only")
 
-	// CitizenOS will have created user accounts for everyone that ever signed:
-	// https://github.com/citizenos/citizenos-api/blob/fd5a433acb4335a8018b732dfe54aa39fdd962f3/routes/api/topic.js#L6044
-	// Reuse their UUIDs to not create duplicates.
-	//
-	// No need to check for Smart-Id connectionIds as Smart-Id wasn't ever
-	// enabled on Rahvaalgatus through CitizenOS.
-	var citizenUser = yield cosDb.query(sql`
-		SELECT "user".*
-		FROM "Users" AS "user"
-		JOIN "UserConnections" AS conn ON conn."userId" = "user".id
-		WHERE conn."connectionId" = 'esteid'
-		AND conn."connectionUserId" = ${auth.personal_id}
-	`).then(_.first)
-
-	if (citizenUser == null) {
-		citizenUser = yield cosDb("Users").insert({
-			id: _.serializeUuid(_.uuidV4()),
-			emailVerificationCode: _.serializeUuid(_.uuidV4()),
-			createdAt: new Date,
-			updatedAt: new Date,
-			language: lang,
-			source: "citizenos"
-		}).returning("*").then(_.first)
-
-		yield cosDb("UserConnections").insert({
-			userId: citizenUser.id,
-			connectionId: "esteid",
-			connectionUserId: auth.personal_id,
-			createdAt: new Date,
-			updatedAt: new Date
-		})
-	}
-
 	var officialName = getCertificatePersonName(auth.certificate)
 
-	return yield usersDb.create({
-		uuid: _.parseUuid(citizenUser.id),
+	return usersDb.create({
+		uuid: _.uuidV4(),
 		country: auth.country,
 		personal_id: auth.personal_id,
-		name: citizenUser.name || officialName,
+		name: officialName,
 		official_name: officialName,
-		created_at: citizenUser.createdAt,
-		updated_at: citizenUser.updatedAt,
-
-		email: citizenUser.emailIsVerified ? citizenUser.email : null,
-		unconfirmed_email: citizenUser.emailIsVerified ? null : citizenUser.email,
-		email_confirmed_at: citizenUser.emailIsVerified ? new Date(0) : null,
-
-		email_confirmation_token: !citizenUser.emailIsVerified && citizenUser.email
-			? Crypto.randomBytes(12)
-			: null,
-
-		// Don't use CitizenOS language as that often defaulted to English.
+		created_at: new Date,
+		updated_at: new Date,
 		language: lang
 	})
 }

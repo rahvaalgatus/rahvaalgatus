@@ -2,12 +2,8 @@
 	"url": "http://rahvaalgatus.test:3000",
 	"adminUrl": "http://rahvaalgatus.test:3001",
 	"localUrl": "http://kohalik.rahvaalgatus.test:3000",
-	"apiUrl": "https://citizenos-citizenos-api-test.herokuapp.com",
-	"apiPartnerId": "8d89302e-2317-4b1e-b65d-61c6fbe53e0c",
-	"apiAuthorizeUrl": "https://citizenos-citizenos-api-test.herokuapp.com/api/auth/openid/authorize",
 	"maksekeskusUrl": "https://payment-test.maksekeskus.ee/pay/1/link.html",
 	"maksekeskusId": "45626d92-f1b2-45a5-832b-39588b192dae",
-	"etherpadUrl": null,
 	"signatureMilestones": [1, 2],
 	"adminPersonalIds": ["EE60001019906", "EE60001018800", "EE10101010005"],
 

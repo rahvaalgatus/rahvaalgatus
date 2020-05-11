@@ -5,14 +5,8 @@ var Crypto = require("crypto")
 var DateFns = require("date-fns")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSignature = require("root/test/valid_signature")
+var ValidUser = require("root/test/valid_user")
 var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
-var newPartner = require("root/test/citizenos_fixtures").newPartner
-var newTopic = require("root/test/citizenos_fixtures").newTopic
-var newVote = require("root/test/citizenos_fixtures").newVote
-var createPartner = require("root/test/citizenos_fixtures").createPartner
-var createUser = require("root/test/fixtures").createUser
-var createTopic = require("root/test/citizenos_fixtures").createTopic
-var createVote = require("root/test/citizenos_fixtures").createVote
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
@@ -50,7 +44,7 @@ describe("HomeController", function() {
 	beforeEach(require("root/test/mitm").router)
 
 	beforeEach(function*() {
-		this.author = yield createUser()
+		this.author = yield usersDb.create(new ValidUser)
 	})
 
 	describe("GET /", function() {
@@ -260,33 +254,6 @@ describe("HomeController", function() {
 			res.body.must.not.include(initiative.uuid)
 		})
 
-		_.each(Config.partners, function(partner, id) {
-			if (id == Config.apiPartnerId) return
-
-			describe("given " + partner.name, function() {
-				it("must show initiatives", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						published_at: new Date,
-						discussion_ends_at: DateFns.addSeconds(new Date, 1)
-					}))
-
-					var partner = yield createPartner(newPartner({id: id}))
-
-					var topic = yield createTopic(newTopic({
-						id: initiative.uuid,
-						creatorId: this.author.uuid,
-						sourcePartnerId: partner.id,
-						visibility: "public"
-					}))
-
-					var res = yield this.request("/")
-					res.statusCode.must.equal(200)
-					res.body.must.include(topic.id)
-				})
-			})
-		})
-
 		it("must not show unpublished initiatives", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
@@ -384,17 +351,6 @@ describe("HomeController", function() {
 					phase: "sign",
 					signing_ends_at: new Date
 				}))
-
-				var partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
-
-				var topic = yield createTopic(newTopic({
-					id: initiativeA.uuid,
-					creatorId: this.author.uuid,
-					sourcePartnerId: partner.id,
-					status: "voting"
-				}))
-
-				yield createVote(topic, newVote({endsAt: new Date}))
 
 				yield citizenosSignaturesDb.create(_.times(5, () => (
 					new ValidCitizenosSignature({initiative_uuid: initiativeA.uuid})
@@ -608,17 +564,6 @@ describe("HomeController", function() {
 				user_id: this.author.id,
 				phase: "sign"
 			}))
-
-			var partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
-
-			var topic = yield createTopic(newTopic({
-				id: initiativeA.uuid,
-				creatorId: this.author.uuid,
-				sourcePartnerId: partner.id,
-				status: "voting"
-			}))
-
-			yield createVote(topic, newVote({endsAt: new Date}))
 
 			yield citizenosSignaturesDb.create(_.times(5, () => (
 				new ValidCitizenosSignature({initiative_uuid: initiativeA.uuid})

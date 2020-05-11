@@ -3,13 +3,12 @@ var Qs = require("querystring")
 var Router = require("express").Router
 var HttpError = require("standard-http-error")
 var SqliteError = require("root/lib/sqlite_error")
-var Topic = require("root/lib/topic")
+var Initiative = require("root/lib/initiative")
 var DateFns = require("date-fns")
 var Time = require("root/lib/time")
 var Config = require("root/config")
 var Crypto = require("crypto")
 var MediaType = require("medium-type")
-var Initiative = require("root/lib/initiative")
 var Subscription = require("root/lib/subscription")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
@@ -23,16 +22,11 @@ var imagesDb = require("root/db/initiative_images_db")
 var filesDb = require("root/db/initiative_files_db")
 var textsDb = require("root/db/initiative_texts_db")
 var commentsDb = require("root/db/comments_db")
-var isOk = require("root/lib/http").isOk
-var catch400 = require("root/lib/fetch").catch.bind(null, 400)
 var next = require("co-next")
-var cosDb = require("root").cosDb
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var renderEmail = require("root/lib/i18n").email
 var sql = require("sqlate")
 var sqlite = require("root").sqlite
-var translateCitizenError = require("root/lib/citizenos_api").translateError
-var searchTopics = require("root/lib/citizenos_db").searchTopics
 var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var trim = Function.call.bind(String.prototype.trim)
@@ -41,8 +35,7 @@ var searchInitiativeEvents = _.compose(searchInitiativesEvents, concat)
 var {countSignaturesById} = require("root/lib/initiative")
 var {countSignaturesByIds} = require("root/lib/initiative")
 var {countUndersignedSignaturesById} = require("root/lib/initiative")
-var countCitizenSignaturesById =
-	require("root/lib/citizenos_db").countSignaturesById
+var {countCitizenOsSignaturesById} = require("root/lib/initiative")
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: ""}
 var EMPTY_CONTACT = {name: "", email: "", phone: ""}
@@ -203,13 +196,6 @@ exports.router.use("/:id", next(function*(req, res, next) {
 	if (!initiative.published_at && initiative.user_id != user.id)
 		throw new HttpError(403, "Initiative Not Public")
 
-	var topic
-	TOPIC: if (!initiative.external) {
-		topic = yield searchTopics(sql`topic.id = ${initiative.uuid}`).then(_.first)
-		if (topic == null) break TOPIC
-		topic.permission = {level: yield readTopicPermission(user, topic)}
-	}
-
 	if (req.method == "HEAD" || req.method == "GET") {
 		var isLocalInitiative = (
 			initiative.destination &&
@@ -224,9 +210,7 @@ exports.router.use("/:id", next(function*(req, res, next) {
 			return void res.redirect(301, Config.url + path)
 	}
 
-	req.topic = topic
 	req.initiative = initiative
-	res.locals.topic = topic
 	res.locals.initiative = initiative
 	next()
 }))
@@ -407,7 +391,6 @@ exports.router.delete("/:id", next(function*(req, res) {
 	if (user == null) throw new HttpError(401)
 
 	var initiative = req.initiative
-	var topic = req.topic
 
 	if (initiative.user_id != user.id)
 		throw new HttpError(403, "No Permission to Delete")
@@ -428,9 +411,6 @@ exports.router.delete("/:id", next(function*(req, res) {
 		}
 		else throw ex
 	}
-
-	if (topic)
-		yield req.cosApi(`/api/users/self/topics/${topic.id}`, {method: "DELETE"})
 
 	res.flash("notice", req.t("INITIATIVE_DELETED"))
 	res.redirect(302, req.baseUrl)
@@ -608,20 +588,6 @@ function* searchInitiativesEvents(initiatives) {
 	}))
 }
 
-function readTopicPermission(user, topic) {
-	if (user == null) return Promise.resolve("read")
-
-	var userUuid = _.serializeUuid(user.uuid)
-	if (topic.creatorId == userUuid) return Promise.resolve("admin")
-
-	return cosDb.query(sql`
-		SELECT level FROM "TopicMemberUsers"
-		WHERE "topicId" = ${topic.id}
-		AND "userId" = ${userUuid}
-		AND "deletedAt" IS NULL
-	`).then(_.first).then((perm) => perm ? perm.level : null)
-}
-
 function* searchInitiativeComments(initiativeUuid) {
 	var comments = yield commentsDb.search(sql`
 		SELECT comment.*, user.name AS user_name
@@ -661,17 +627,16 @@ function isInitiativeUpdate(obj) {
 function* updateInitiativeToPublished(req, res) {
 	var user = req.user
 	var initiative = req.initiative
-	var topic = req.topic
 	var tmpl = "initiatives/update_for_publish_page.jsx"
 
 	if (!(initiative.user_id == user.id && initiative.phase == "edit"))
 		throw new HttpError(403, "No Permission to Edit")
 
-	if (!(topic || (yield textsDb.read(sql`
+	if (!(yield textsDb.read(sql`
 		SELECT id FROM initiative_texts
 		WHERE initiative_uuid = ${initiative.uuid}
 		LIMIT 1
-	`)))) throw new HttpError(422, "No Text")
+	`))) throw new HttpError(422, "No Text")
 
 	if (req.body.endsAt == null) return void res.render(tmpl, {
 		attrs: {endsAt: initiative.discussion_ends_at}
@@ -681,27 +646,13 @@ function* updateInitiativeToPublished(req, res) {
 
 	// TODO: Require deadline to be 3 days in the future only if not published
 	// before.
-	if (!Topic.isDeadlineOk(new Date, endsAt)) {
+	if (!Initiative.isDeadlineOk(new Date, endsAt)) {
 		res.statusCode = 422
 		res.statusMessage = "Deadline Too Near or Too Far"
 
 		return void res.render(tmpl, {
 			error: req.t("DEADLINE_ERR", {days: Config.minDeadlineDays}),
 			attrs: {endsAt: endsAt}
-		})
-	}
-
-	if (topic) {
-		var attrs = {visibility: "public", endsAt: endsAt}
-
-		var updated = yield req.cosApi(`/api/users/self/topics/${topic.id}`, {
-			method: "PUT",
-			json: attrs
-		}).catch(catch400)
-
-		if (!isOk(updated)) return void res.status(422).render(tmpl, {
-			error: translateCitizenError(req.t, updated.body),
-			attrs: attrs
 		})
 	}
 
@@ -718,7 +669,6 @@ function* updateInitiativeToPublished(req, res) {
 function* updateInitiativePhaseToSign(req, res) {
 	var user = req.user
 	var initiative = req.initiative
-	var topic = req.topic
 	var tmpl = "initiatives/update_for_voting_page.jsx"
 
 	if (initiative.user_id != user.id)
@@ -736,41 +686,12 @@ function* updateInitiativePhaseToSign(req, res) {
 	let endsAt = DateFns.endOfDay(Time.parseDate(req.body.endsAt))
 	var attrs = {endsAt: endsAt}
 
-	if (!Topic.isDeadlineOk(new Date, endsAt)) {
+	if (!Initiative.isDeadlineOk(new Date, endsAt)) {
 		res.statusCode = 422
 		res.statusMessage = "Deadline Too Near or Too Far"
 
 		return void res.render(tmpl, {
 			error: req.t("DEADLINE_ERR", {days: Config.minDeadlineDays}),
-			attrs: attrs
-		})
-	}
-
-	if (topic) {
-		var updated
-		var path = `/api/users/self/topics/${topic.id}`
-
-		if (topic.vote)
-			updated = req.cosApi(`${path}/votes/${topic.vote.id}`, {
-				method: "PUT",
-				json: {endsAt: endsAt}
-			})
-		else
-			updated = req.cosApi(`${path}/votes`, {
-				method: "POST",
-				json: {
-					endsAt: endsAt,
-					authType: "hard",
-					voteType: "regular",
-					delegationIsAllowed: false,
-					options: [{value: "Yes"}, {value: "No"}]
-				}
-			})
-
-		updated = yield updated.catch(catch400)
-
-		if (!isOk(updated)) return void res.status(422).render(tmpl, {
-			error: translateCitizenError(req.t, updated.body),
 			attrs: attrs
 		})
 	}
@@ -836,10 +757,9 @@ function* updateInitiativePhaseToSign(req, res) {
 
 function* updateInitiativePhaseToParliament(req, res) {
 	var user = req.user
-	var topic = req.topic
 	var initiative = req.initiative
 	var uuid = initiative.uuid
-	var citizenosSignatureCount = yield countCitizenSignaturesById(uuid)
+	var citizenosSignatureCount = yield countCitizenOsSignaturesById(uuid)
 	var undersignedSignatureCount = yield countUndersignedSignaturesById(uuid)
 	var signatureCount = citizenosSignatureCount + undersignedSignatureCount
 	var tmpl = "initiatives/update_for_parliament_page.jsx"
@@ -859,12 +779,6 @@ function* updateInitiativePhaseToParliament(req, res) {
 	}
 
 	if (req.body.contact == null) return void res.render(tmpl, {attrs: attrs})
-
-	if (topic) yield cosDb.query(sql`
-		UPDATE "Topics"
-		SET status = 'followUp', "updatedAt" = ${new Date}
-		WHERE id = ${topic.id}
-	`)
 
 	initiative = yield initiativesDb.update(initiative, {
 		phase: "parliament",

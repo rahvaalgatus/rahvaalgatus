@@ -1,19 +1,20 @@
 var _ = require("root/lib/underscore")
 var Config = require("root/config")
 var DateFns = require("date-fns")
+var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidEvent = require("root/test/valid_db_initiative_event")
 var ValidFile = require("root/test/valid_event_file")
 var ValidSubscription = require("root/test/valid_subscription")
 var MediaType = require("medium-type")
 var FetchError = require("fetch-error")
+var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
 var filesDb = require("root/db/initiative_files_db")
 var respond = require("root/test/fixtures").respond
-var createUser = require("root/test/fixtures").createUser
 var newUuid = _.compose(_.serializeUuid, _.uuidV4)
 var formatDate = require("root/lib/i18n").formatDate
 var job = require("root/cli/parliament_sync_cli")
@@ -167,7 +168,7 @@ describe("ParliamentSyncCli", function() {
 
 	it("must update local initiative with events and files", function*() {
 		var initiative = yield initiativesDb.create(new ValidInitiative({
-			user_id: (yield createUser()).id,
+			user_id: (yield usersDb.create(new ValidUser)).id,
 			author_name: "John Smith",
 			phase: "government"
 		}))
@@ -237,7 +238,7 @@ describe("ParliamentSyncCli", function() {
 	it("must update local initiative if reference matches old parliament UUID",
 		function*() {
 		var initiative = yield initiativesDb.create(new ValidInitiative({
-			user_id: (yield createUser()).id,
+			user_id: (yield usersDb.create(new ValidUser)).id,
 			phase: "government",
 			parliament_uuid: "83ecffc8-621a-4277-b388-39b1e626d1fa"
 		}))
@@ -871,7 +872,7 @@ describe("ParliamentSyncCli", function() {
 
 			it(`must create events given ${title}`, function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: (yield createUser()).id,
+					user_id: (yield usersDb.create(new ValidUser)).id,
 					uuid: INITIATIVE_UUID,
 					parliament_uuid: INITIATIVE_UUID
 				}))
@@ -2037,7 +2038,7 @@ describe("ParliamentSyncCli", function() {
 			it(`must create events and files given ${title}`,
 				function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: (yield createUser()).id,
+					user_id: (yield usersDb.create(new ValidUser)).id,
 					uuid: INITIATIVE_UUID,
 					parliament_uuid: INITIATIVE_UUID
 				}))

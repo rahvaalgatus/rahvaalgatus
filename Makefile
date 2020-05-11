@@ -10,7 +10,6 @@ BUNDLE = bundle
 TRANSLATIONS_URL = https://spreadsheets.google.com/feeds/list/1JKPUNp8Y_8Aigq7eGJXtWT6nZFhd31k2Ht3AjC-i-Q8/1/public/full?alt=json
 JQ_OPTS = --tab --sort-keys
 SHANGE = vendor/shange -f "config/$(ENV).sqlite3"
-PGHOST = $(shell ENV=$(ENV) node -e 'console.log(require("./config").citizenOsDatabase.host)')
 WEB_PORT = 3000
 ADM_PORT = $(shell expr $(WEB_PORT) + 1)
 LIVERELOAD_PORT = 35731
@@ -51,7 +50,6 @@ RSYNC_OPTS = \
 export PORT
 export ENV
 export TEST
-export PGHOST
 export LIVERELOAD_PORT
 
 ifneq ($(filter test spec autotest autospec test/%, $(MAKECMDGOALS)),)
@@ -133,15 +131,7 @@ config/database.sql:
 config/%.sqlite3:
 	sqlite3 "$@" < config/database.sql
 
-config/citizenos_database.sql:
-	wget https://raw.githubusercontent.com/citizenos/citizenos-api/master/db/config/database.sql -O "$@"
-
 db/create: config/$(ENV).sqlite3
-
-db/test: ENV = test
-db/test:
-	-createdb -E utf8 -T template0 citizenos_test
-	psql -f config/citizenos_database.sql citizenos_test
 
 db/status:
 	@$(SHANGE) status
@@ -226,7 +216,7 @@ test/fixtures/%_ecdsa.pub: test/fixtures/%_ecdsa.key
 .PHONY: servers web adm
 .PHONY: shrinkwrap
 .PHONY: deploy staging production
-.PHONY: db/create db/test db/status db/migrate db/migration
+.PHONY: db/create db/status db/migrate db/migration
 .PHONY: translations
 .PHONY: config/tsl
 

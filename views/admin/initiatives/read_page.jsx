@@ -19,7 +19,6 @@ var UPDATEABLE_PHASES = ["sign", "parliament", "government", "done"]
 
 module.exports = function(attrs) {
 	var req = attrs.req
-	var topic = attrs.topic
 	var initiative = attrs.initiative
 	var author = attrs.author
 	var image = attrs.image
@@ -29,6 +28,10 @@ module.exports = function(attrs) {
 	var messages = attrs.messages
 	var phase = initiative.phase
 	var pendingSubscriberCount = subscriberCount.all - subscriberCount.confirmed
+
+	var beenToParliament = (
+		initiative.external || initiative.sent_to_parliament_at == null
+	)
 
 	return <Page page="initiative" title={initiative.title} req={req}>
 		<a href={req.baseUrl} class="admin-back">Initiatives</a>
@@ -81,18 +84,14 @@ module.exports = function(attrs) {
 								Edit
 							</option>
 
-							<option
-								value="sign"
-								selected={phase == "sign"}
-								disabled={initiative.external || topic && topic.vote == null}
-							>
+							<option value="sign" selected={phase == "sign"} disabled>
 								Sign
 							</option>
 
 							<option
 								value="parliament"
 								selected={phase == "parliament"}
-								disabled={topic && topic.vote == null}
+								disabled={!beenToParliament}
 							>
 								Parliament
 							</option>
@@ -100,7 +99,7 @@ module.exports = function(attrs) {
 							<option
 								value="government"
 								selected={phase == "government"}
-								disabled={topic && topic.vote == null}
+								disabled={!beenToParliament}
 							>
 								Government
 							</option>
@@ -108,7 +107,7 @@ module.exports = function(attrs) {
 							<option
 								value="done"
 								selected={phase == "done"}
-								disabled={topic && topic.vote == null}
+								disabled={!beenToParliament}
 							>
 								Follow-Up
 							</option>
@@ -147,7 +146,7 @@ module.exports = function(attrs) {
 					href={req.rootUrl + "/users/" + author.id}
 					class="admin-link"
 				>{author.name}
-				</a> : null}</td>
+				</a> : initiative.author_name}</td>
 			</tr>
 
 			<tr>

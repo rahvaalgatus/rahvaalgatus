@@ -1,7 +1,4 @@
 {
-	"apiUrl": "https://citizenos-citizenos-api-test.herokuapp.com",
-	"apiPartnerId": "8d89302e-2317-4b1e-b65d-61c6fbe53e0c",
-	"apiAuthorizeUrl": "https://citizenos-citizenos-api-test.herokuapp.com/api/auth/openid/authorize",
 	"adminPersonalIds": ["EE60001019906"],
 	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
 	"votesRequired": 10,
@@ -14,16 +11,5 @@
 	"smartIdPassword": "72e7219e-5a5f-4161-87f3-9fd6b6b620e5",
 	"timemarkUrl": "http://demo.sk.ee/ocsp",
 	"timestampUrl": "http://demo.sk.ee/tsa",
-	"parliamentEmail": "riigikogu@example.com",
-
-	"citizenOsDatabase": {
-		"host": "/tmp",
-		"database": "citizenos_test",
-		"pool": 1
-	},
-
-	"citizenSession": {
-		"jwtAlgorithm": "HS256",
-		"jwtSecret": "EMoGLAhnnxMdW7XP9SEMhMNXphxe05jY"
-	}
+	"parliamentEmail": "riigikogu@example.com"
 }

@@ -2,11 +2,8 @@ Rahvaalgatus
 ============
 [![Build status][travis-badge]](https://travis-ci.org/rahvaalgatus/rahvaalgatus)
 
-The website of <https://rahvaalgatus.ee> built with JavaScript on Node.js, [JSX](https://github.com/moll/js-j6pack/) for templates and [Sass](https://sass-lang.com/) for CSS.
+The website of <https://rahvaalgatus.ee> built with JavaScript on Node.js, [JSX](https://github.com/moll/js-j6pack/) for templates and [Sass](https://sass-lang.com/) for CSS. It uses SQLite for its database, which is bundled with the [Sqlite3](https://www.npmjs.com/package/sqlite3) Node.js package. No external database servers required.
 
-Rahvaalgatus is dependent on [CitizenOS][]'s [backend](https://github.com/citizenos/citizenos-api). While open sourced late March 2018, the full backend may be too much to run locally for development. Fortunately they provide an online test environment to develop against. Its tokens are embedded in Rahvaalgatus' source code, so no configuration necessary.
-
-[CitizenOS]: https://citizenos.com
 [travis-badge]: https://travis-ci.org/rahvaalgatus/rahvaalgatus.svg?branch=master
 
 
@@ -20,6 +17,8 @@ After installing a stable version of [Node.js](https://nodejs.org) (so far teste
    npm install
    cd app && npm install
    ```
+
+   Ensure NPM uses the included `npm-shrinkwrap.json` file to get the exact same versions Rahvaalgatus was developed with.
 
 2. Compile the client-side JavaScripts and stylesheets with Make:
 
@@ -39,7 +38,9 @@ After installing a stable version of [Node.js](https://nodejs.org) (so far teste
 
 4. Set up a <rahvaalgatus.test> domain.
 
-   CitizenOS's authentication and editor servers reply to cross-origin requests only if they come from `rahvalgatus.test`. Add such a subdomain to your `/etc/hosts` file for development:
+   While Rahvaalgatus works fine when accessed via <http://localhost>, its email confirmation and notification emails use the host from `Config.url` (`config/development.json` for the development environment). To be able to click on links in emails during development, update the configuration to use <localhost> or set up your preferred domain.
+
+   To use <rahvaalgatus.test>, add it to your `/etc/hosts` file:
 
    ```
    127.0.0.1 rahvaalgatus.test
@@ -48,7 +49,6 @@ After installing a stable version of [Node.js](https://nodejs.org) (so far teste
 5. Open your local domain (e.g. <http://rahvaalgatus.test:3000>) in your browser and proceed with typing code.
 
 ### Autocompiling
-
 To have the frontend JavaScripts and stylesheets be compiled automatically as you change files, use `autocompile`:
 
 ```sh
@@ -56,7 +56,6 @@ make autocompile
 ```
 
 ### Environments
-
 Environment specific configuration for the server is in `config/$ENV.js`. To run it in the production environment, for example, pass `ENV` to Make:
 
 ```sh
@@ -96,12 +95,12 @@ make test TEST=./test/bin/web_test.js
 ```
 
 ### Autotesting
-
 To have the tests run automatically as you change files, use `autotest`:
 
 ```sh
 make autotest
 ```
+
 [mocha]: https://mochajs.org/
 [must]: https://github.com/moll/js-must
 [mitm]: https://github.com/moll/node-mitm

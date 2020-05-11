@@ -48,11 +48,7 @@ var Config = require("root/config")
 Config.logger = console
 
 co(function*() {
-	var cli = require(cmdPath)
-	var cosDb = require("root").cosDb
-
-	try { yield cli(concat(cmd, args["<args>"])) }
-	finally { yield cosDb.destroy() }
+	yield require(cmdPath)(concat(cmd, args["<args>"]))
 }).catch(handleError)
 
 function handleError(err) {

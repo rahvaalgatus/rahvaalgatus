@@ -18,9 +18,8 @@ describe(URL, function() {
 	})
 
 	var CORS_PATHS = [
-		// Fonts are also used from both Etherpad and Voog.
+		// Fonts are also used from Voog.
 		"/assets/voog.css",
-		"/assets/etherpad.css",
 		"/assets/tisapro-regular-webfont.svg"
 	]
 	

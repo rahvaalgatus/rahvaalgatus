@@ -5,9 +5,10 @@ var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidSignature = require("root/test/valid_signature")
 var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
+var ValidUser = require("root/test/valid_user")
 var cli = require("root/cli/initiative_signature_milestones_cli")
-var createUser = require("root/test/fixtures").createUser
 var db = require("root/db/initiatives_db")
+var usersDb = require("root/db/users_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
@@ -26,7 +27,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 	require("root/test/time")(new Date(2015, 5, 18, 13, 37, 42))
 
 	beforeEach(function*() {
-		this.user = yield createUser()
+		this.user = yield usersDb.create(new ValidUser)
 	})
 
 	it("must update milestones and notify once given an initiative in signing",

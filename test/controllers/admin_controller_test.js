@@ -1,22 +1,18 @@
 var _ = require("root/lib/underscore")
 var Config = require("root/config")
+var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidComment = require("root/test/valid_comment")
 var ValidEvent = require("root/test/valid_db_initiative_event")
 var ValidSubscription = require("root/test/valid_subscription")
 var sql = require("sqlate")
-var pseudoHex = require("root/lib/crypto").pseudoHex
-var pseudoInt = require("root/lib/crypto").pseudoInt
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var commentsDb = require("root/db/comments_db")
 var eventsDb = require("root/db/initiative_events_db")
-var createUser = require("root/test/fixtures").createUser
-var createPermission = require("root/test/citizenos_fixtures").createPermission
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var messagesDb = require("root/db/initiative_messages_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
-var cosDb = require("root").cosDb
 var t = require("root/lib/i18n").t.bind(null, "et")
 
 describe("AdminController", function() {
@@ -46,17 +42,17 @@ describe("AdminController", function() {
 
 		describe("when merging", function() {
 			it("must merge initiatives, comments and more", function*() {
-				var source = yield createUser({
+				var source = yield usersDb.create(new ValidUser({
 					country: null,
 					personal_id: null,
 					email: "john@example.com",
 					email_confirmed_at: new Date
-				})
+				}))
 
-				var target = yield createUser({
+				var target = yield usersDb.create(new ValidUser({
 					country: "EE",
 					personal_id: "38706181337"
-				})
+				}))
 				
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: source.id
@@ -73,19 +69,6 @@ describe("AdminController", function() {
 					user_id: source.id,
 					created_by: _.serializeUuid(source.id)
 				}))
-
-				var topic = yield createTopic({
-					id: initiative.uuid,
-					creatorId: source.uuid
-				})
-
-				var perm = yield createPermission({
-					topicId: initiative.uuid,
-					userId: source.uuid,
-					level: "edit",
-					createdAt: new Date,
-					updatedAt: new Date
-				})
 
 				var res = yield this.request(`/users/${source.id}`, {
 					method: "PUT",
@@ -118,95 +101,22 @@ describe("AdminController", function() {
 					user_id: target.id,
 					created_by: _.serializeUuid(target.uuid)
 				})
-
-				yield cosDb.query(sql`
-					SELECT * FROM "Topics" WHERE id = ${initiative.uuid}
-				`).then(_.first).then(_.clone).must.then.eql(_.clone({
-					__proto__: topic,
-					creatorId: _.serializeUuid(target.uuid)
-				}))
-
-				yield cosDb.query(sql`
-					SELECT * FROM "TopicMemberUsers"
-				`).then(_.first).then(_.clone).must.then.eql(_.clone({
-					__proto__: perm,
-					userId: _.serializeUuid(target.uuid)
-				}))
-			})
-
-			it("must merge topic permissions even if duplicate", function*() {
-				var other = yield createUser()
-
-				var source = yield createUser({
-					country: null,
-					personal_id: null,
-					email: "john@example.com",
-					email_confirmed_at: new Date
-				})
-
-				var target = yield createUser({
-					country: "EE",
-					personal_id: "38706181337"
-				})
-
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: source.id
-				}))
-
-				var topic = yield createTopic({
-					id: initiative.uuid,
-					creatorId: other.uuid
-				})
-
-				var sourcePerm = yield createPermission({
-					topicId: initiative.uuid,
-					userId: source.uuid,
-					level: "edit",
-					createdAt: new Date,
-					updatedAt: new Date
-				})
-
-				var targetPerm = yield createPermission({
-					topicId: initiative.uuid,
-					userId: target.uuid,
-					level: "admin",
-					createdAt: new Date,
-					updatedAt: new Date
-				})
-
-				var res = yield this.request(`/users/${source.id}`, {
-					method: "PUT",
-					form: {mergedWithPersonalId: target.personal_id}
-				})
-
-				res.statusCode.must.equal(303)
-
-				yield cosDb.query(sql`
-					SELECT * FROM "Topics" WHERE id = ${initiative.uuid}
-				`).then(_.first).then(_.clone).must.then.eql(_.clone(topic))
-
-				;(yield cosDb.query(sql`
-					SELECT * FROM "TopicMemberUsers" ORDER BY "createdAt" ASC
-				`)).map(_.clone).must.eql([
-					sourcePerm,
-					targetPerm
-				].map(_.clone))
 			})
 
 			it("must not touch unrelated rows", function*() {
-				var other = yield createUser()
+				var other = yield usersDb.create(new ValidUser)
 
-				var source = yield createUser({
+				var source = yield usersDb.create(new ValidUser({
 					country: null,
 					personal_id: null,
 					email: "john@example.com",
 					email_confirmed_at: new Date
-				})
+				}))
 
-				var target = yield createUser({
+				var target = yield usersDb.create(new ValidUser({
 					country: "EE",
 					personal_id: "38706181337"
-				})
+				}))
 				
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: other.id
@@ -224,19 +134,6 @@ describe("AdminController", function() {
 					created_by: _.serializeUuid(other.id)
 				}))
 
-				var topic = yield createTopic({
-					id: initiative.uuid,
-					creatorId: other.uuid
-				})
-
-				var perm = yield createPermission({
-					topicId: initiative.uuid,
-					userId: other.uuid,
-					level: "edit",
-					createdAt: new Date,
-					updatedAt: new Date
-				})
-
 				var res = yield this.request(`/users/${source.id}`, {
 					method: "PUT",
 					form: {mergedWithPersonalId: target.personal_id}
@@ -247,14 +144,6 @@ describe("AdminController", function() {
 				yield initiativesDb.read(initiative).must.then.eql(initiative)
 				yield commentsDb.read(comment).must.then.eql(comment)
 				yield eventsDb.read(event).must.then.eql(event)
-
-				yield cosDb.query(sql`
-					SELECT * FROM "Topics" WHERE id = ${initiative.uuid}
-				`).then(_.first).then(_.clone).must.then.eql(_.clone(topic))
-
-				yield cosDb.query(sql`
-					SELECT * FROM "TopicMemberUsers"
-				`).then(_.first).then(_.clone).must.then.eql(_.clone(perm))
 			})
 		})
 	})
@@ -266,7 +155,7 @@ describe("AdminController", function() {
 		})
 
 		beforeEach(function*() {
-			this.author = yield createUser()
+			this.author = yield usersDb.create(new ValidUser)
 
 			this.initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
@@ -392,7 +281,7 @@ describe("AdminController", function() {
 		})
 
 		beforeEach(function*() {
-			this.author = yield createUser()
+			this.author = yield usersDb.create(new ValidUser)
 
 			this.initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
@@ -537,16 +426,3 @@ describe("AdminController", function() {
 		})
 	})
 })
-
-function createTopic(attrs) {
-	return cosDb("Topics").insert(_.assign({
-		id: _.serializeUuid(_.uuidV4()),
-		title: "Initiative #" + pseudoInt(100),
-		status: "inProgress",
-		visibility: "public",
-		createdAt: new Date,
-		updatedAt: new Date,
-		tokenJoin: pseudoHex(4),
-		padUrl: "/etherpad"
-	}, attrs)).returning("*").then(_.first)
-}

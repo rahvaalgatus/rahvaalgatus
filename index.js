@@ -31,31 +31,6 @@ lazy(exports, "sqlite", function() {
 	}
 })
 
-lazy(exports, "cosDb", function() {
-  var Knex = require("knex")
-  var config = Config.citizenOsDatabase
-
-  var knex = Knex({
-    client: "pg",
-    debug: false,
-
-    connection: _.defaults({
-			host: process.env.PGHOST || config.host,
-			port: process.env.PGPORT || config.port,
-			user: process.env.PGUSER || config.user,
-			password: process.env.PGPASSWORD || config.password,
-			database: process.env.PGDATABASE || config.database
-		}, config),
-
-    acquireConnectionTimeout: 20000,
-    pool: {min: 1, max: config.pool}
-  })
-
-	knex.query = require("root/lib/knex").query.bind(null, knex)
-
-	return knex
-})
-
 lazy(exports, "sendEmail", function() {
   switch (ENV) {
 		case "test": return require("root/lib/test_emailer")(Config.email)

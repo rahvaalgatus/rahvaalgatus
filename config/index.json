@@ -3,13 +3,9 @@
 	"url": "https://rahvaalgatus.ee",
 	"localUrl": "https://kohalik.rahvaalgatus.ee",
 	"adminUrl": "https://admin.rahvaalgatus.ee",
-	"apiUrl": "https://cos.rahvaalgatus.ee",
 	"twitterUrl": "https://twitter.com/rahvaalgatus",
 	"facebookUrl": "https://facebook.com/rahvaalgatus",
 	"helpEmail": "info@rahvaalgatus.ee",
-	"apiPartnerId": "b563ee8c-ba8e-4cd6-b592-fbcd4e8f22bb",
-	"apiAuthorizeUrl": "https://cos.rahvaalgatus.ee/api/auth/openid/authorize",
-	"etherpadUrl": "https://cos.rahvaalgatus.ee/etherpad",
 	"sessionCookieName": "session_token",
 	"cookieSecret": null,
 	"cookieDomain": "rahvaalgatus.ee",
@@ -40,9 +36,6 @@
 	"userVoiceApiKey": "X2tNuk059z6CD4Em5Q65KQ",
 	"maksekeskusUrl": "https://payment.maksekeskus.ee/pay/1/link.html",
 	"maksekeskusId": "62c9e4f7-beea-4120-a08d-3dbafda55c9a",
-
-	"citizenOsDatabase": {},
-	"citizenSession": null,
 
 	"email": {
 		"from": "Rahvaalgatus <info@rahvaalgatus.ee>",

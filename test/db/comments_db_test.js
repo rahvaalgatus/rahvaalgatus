@@ -3,10 +3,9 @@ var SqliteError = require("root/lib/sqlite_error")
 var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidComment = require("root/test/valid_comment")
-var createUser = require("root/test/fixtures").createUser
 var initiativesDb = require("root/db/initiatives_db")
-var db = require("root/db/comments_db")
 var usersDb = require("root/db/users_db")
+var db = require("root/db/comments_db")
 
 describe("CommentsDb", function() {
 	require("root/test/db")()
@@ -19,7 +18,7 @@ describe("CommentsDb", function() {
 	
 	describe(".create", function() {
 		it("must throw given duplicate UUIDs", function*() {
-			var author = yield createUser()
+			var author = yield usersDb.create(new ValidUser)
 
 			var comment = yield db.create(new ValidComment({
 				uuid: "245e3e1f-9d64-48bb-b008-817448e79c79",

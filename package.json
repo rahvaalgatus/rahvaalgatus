@@ -11,8 +11,6 @@
 		"egal": "",
 		"lodash": "",
 		"oolong": "",
-		"pg": "",
-		"knex": "",
 		"heaven-sqlite": "",
 		"moment": "",
 		"co": ">= 4 < 5",

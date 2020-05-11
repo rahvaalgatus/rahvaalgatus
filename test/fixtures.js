@@ -10,8 +10,6 @@ var Config = require("root/config")
 var LdapAttributes = require("undersign/lib/ldap_attributes")
 var ValidUser = require("root/test/valid_user")
 var ValidSession = require("root/test/valid_session")
-var newCitizenUser = require("root/test/citizenos_fixtures").newUser
-var createCitizenUser = require("root/test/citizenos_fixtures").createUser
 var usersDb = require("root/db/users_db")
 var sessionsDb = require("root/db/sessions_db")
 var pseudoHex = require("root/lib/crypto").pseudoHex
@@ -111,15 +109,9 @@ exports.csrfRequest = function() {
 	})
 }
 
-exports.createUser = function*(attrs) {
-	var user = yield usersDb.create(new ValidUser(attrs))
-	yield createCitizenUser(newCitizenUser({id: user.uuid}))
-	return user
-}
-
 exports.user = function(attrs) {
 	beforeEach(function*() {
-		var user = yield exports.createUser(attrs)
+		var user = yield usersDb.create(new ValidUser(attrs))
 		var token = Crypto.randomBytes(12)
 		this.user = user
 

@@ -5,7 +5,6 @@ var Subscription = require("root/lib/subscription")
 var HttpError = require("standard-http-error")
 var Time = require("root/lib/time")
 var Image = require("root/lib/image")
-var searchTopics = require("root/lib/citizenos_db").searchTopics
 var usersDb = require("root/db/users_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var imagesDb = require("root/db/initiative_images_db")
@@ -13,22 +12,13 @@ var initiativesDb = require("root/db/initiatives_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
 var t = require("root/lib/i18n").t.bind(null, "et")
-var cosDb = require("root").cosDb
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var sql = require("sqlate")
 var trim = Function.call.bind(String.prototype.trim)
 var next = require("co-next")
 var sqlite = require("root").sqlite
-var UPDATEABLE_PHASES = ["sign", "parliament", "government", "done"]
 var MEGABYTE = Math.pow(2, 20)
 exports.isEditableEvent = isEditableEvent
-
-var PHASE_TO_STATUS = {
-	sign: "voting",
-	parliament: "followUp",
-	government: "followUp",
-	done: "followUp"
-}
 
 exports.router = Router({mergeParams: true})
 
@@ -61,16 +51,10 @@ exports.router.use("/:id", next(function*(req, res, next) {
 	var initiative = yield initiativesDb.read(req.params.id)
 	if (initiative == null) return void next(new HttpError(404))
 
-	var topic = yield searchTopics(sql`
-		topic.id = ${initiative.uuid}
-	`).then(_.first)
-
 	if (!initiative.published_at)
 		return void next(new HttpError(403, "Private Initiative"))
 
-	req.topic = topic
 	req.initiative = initiative
-	res.locals.topic = topic
 	res.locals.initiative = initiative
 	next()
 }))
@@ -145,18 +129,9 @@ exports.router.get("/:id/subscriptions.:ext?", next(function*(req, res) {
 }))
 
 exports.router.put("/:id", next(function*(req, res) {
-	var topic = req.topic
 	var initiative = req.initiative
-	var attrs = parseInitiative(req.body)
-	var topicAttrs = parseInitiativeForTopic(req.body)
-
-	if (!_.isEmpty(attrs))
-		yield initiativesDb.update(initiative.uuid, parseInitiative(req.body))
-
-	// The "closed" status will eventually be brought over to SQLite to an
-	// "archived_at" column.
-	if (topic && topic.status != "closed" && !_.isEmpty(topicAttrs))
-		yield cosDb("Topics").where("id", initiative.uuid).update(topicAttrs)
+	var attrs = parseInitiative(initiative, req.body)
+	if (!_.isEmpty(attrs)) yield initiativesDb.update(initiative.uuid, attrs)
 
 	res.flash("notice", "Initiative updated.")
 	res.redirect(req.baseUrl + "/" + initiative.uuid)
@@ -340,7 +315,7 @@ exports.router.post("/:id/messages", next(function*(req, res) {
 	}
 }))
 
-function parseInitiative(obj) {
+function parseInitiative(initiative, obj) {
 	var attrs = {}
 
 	if ("destination" in obj)
@@ -354,8 +329,11 @@ function parseInitiative(obj) {
 	if ("archived" in obj)
 		attrs.archived_at = _.parseBoolean(obj.archived) ? new Date : null
 
-	if ("phase" in obj && _.contains(UPDATEABLE_PHASES, obj.phase))
-		attrs.phase = obj.phase
+	if (
+		"phase" in obj &&
+		(initiative.external || initiative.sent_to_parliament_at == null) &&
+		_.contains(["parliament", "government", "done"], obj.phase)
+	) attrs.phase = obj.phase
 
 	if ("parliamentCommittee" in obj)
 		attrs.parliament_committee = obj.parliamentCommittee
@@ -401,15 +379,6 @@ function parseInitiative(obj) {
 		attrs.finished_in_government_at = obj.finishedInGovernmentOn
 			? Time.parseDate(obj.finishedInGovernmentOn)
 			: null
-
-	return attrs
-}
-
-function parseInitiativeForTopic(obj) {
-	var attrs = {}
-
-	if ("phase" in obj && _.contains(UPDATEABLE_PHASES, obj.phase))
-		attrs.status = PHASE_TO_STATUS[obj.phase]
 
 	return attrs
 }

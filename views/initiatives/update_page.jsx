@@ -5,7 +5,7 @@ var InitiativePage = require("./initiative_page")
 var Form = require("../page").Form
 var Flash = require("../page").Flash
 var javascript = require("root/lib/jsx").javascript
-var {normalizeCitizenOsHtml} = require("root/lib/topic")
+var {normalizeCitizenOsHtml} = require("root/lib/initiative")
 
 module.exports = function(attrs) {
 	var req = attrs.req

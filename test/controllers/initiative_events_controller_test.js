@@ -6,9 +6,6 @@ var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidEvent = require("root/test/valid_db_initiative_event")
 var pseudoDateTime = require("root/lib/crypto").pseudoDateTime
-var newPartner = require("root/test/citizenos_fixtures").newPartner
-var createPartner = require("root/test/citizenos_fixtures").createPartner
-var createUser = require("root/test/fixtures").createUser
 var initiativesDb = require("root/db/initiatives_db")
 var usersDb = require("root/db/users_db")
 var eventsDb = require("root/db/initiative_events_db")
@@ -26,8 +23,7 @@ describe("InitiativeEventsController", function() {
 
 	describe(`GET / with ${INITIATIVE_EVENT_TYPE}`, function() {
 		beforeEach(function*() {
-			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
-			this.author = yield createUser()
+			this.author = yield usersDb.create(new ValidUser)
 		})
 
 		it("must respond with initiative events", function*() {
@@ -361,8 +357,7 @@ describe("InitiativeEventsController", function() {
 
 	describe(`GET / with ${ATOM_TYPE}`, function() {
 		beforeEach(function*() {
-			this.partner = yield createPartner(newPartner({id: Config.apiPartnerId}))
-			this.author = yield createUser()
+			this.author = yield usersDb.create(new ValidUser)
 		})
 
 		it("must respond with Atom feed", function*() {

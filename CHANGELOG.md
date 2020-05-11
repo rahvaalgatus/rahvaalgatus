@@ -1,3 +1,6 @@
+## May 11, 2020
+- Removes all dependencies on the CitizenOS PostgreSQL database.
+
 ## Mar 30, 2020
 - Adds a dedicated page for students and others to try digital signatures.
 - Adds a graph for plotting the number of 16–20 year-olds that have tried digital signing on that dedicated page.
