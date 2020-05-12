@@ -1680,6 +1680,9 @@ function SubscribeEmailView(attrs) {
 		class="initiative-subscribe-form"
 		method="post"
 		action={`/initiatives/${initiative.uuid}/subscriptions`}>
+		{/* Catch naive bots */}
+		<input name="e-mail" type="email" hidden />
+
     <input
       id="initiative-subscribe-email"
       name="email"

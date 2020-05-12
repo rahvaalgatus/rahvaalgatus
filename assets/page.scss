@@ -1768,7 +1768,7 @@ button.inherited {
 		.initiative-subscribe-form {
 			font-family: $museo-sans;
 
-			input {
+			input:not([hidden]) {
 				display: inline-block;
 				margin-right: 1rem;
 				margin-bottom: 0.5rem;
