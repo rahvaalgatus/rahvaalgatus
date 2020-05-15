@@ -2466,8 +2466,7 @@ describe("InitiativesController", function() {
 					commentsEl.textContent.must.include(reply.text)
 				})
 
-				it("must render initiative comments with names from local database",
-					function*() {
+				it("must not render author names for anonymized comments", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
 						published_at: new Date
@@ -2484,26 +2483,22 @@ describe("InitiativesController", function() {
 					var comment = yield commentsDb.create(new ValidComment({
 						initiative_uuid: initiative.uuid,
 						user_id: author.id,
-						user_uuid: _.serializeUuid(author.uuid)
+						user_uuid: _.serializeUuid(author.uuid),
+						anonymized_at: new Date
 					}))
 
-					var reply = yield commentsDb.create(new ValidComment({
+					yield commentsDb.create(new ValidComment({
 						initiative_uuid: initiative.uuid,
 						user_id: replier.id,
 						user_uuid: _.serializeUuid(replier.uuid),
-						parent_id: comment.id
+						parent_id: comment.id,
+						anonymized_at: new Date
 					}))
 
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
-
-					var dom = parseDom(res.body)
-					var commentsEl = dom.getElementById("initiative-comments")
-					commentsEl.textContent.must.include(author.name)
-					commentsEl.textContent.must.include(comment.title)
-					commentsEl.textContent.must.include(comment.text)
-					commentsEl.textContent.must.include(replier.name)
-					commentsEl.textContent.must.include(reply.text)
+					res.body.must.not.include(author.name)
+					res.body.must.not.include(replier.name)
 				})
 
 				it("must not render comments from other initiatives", function*() {

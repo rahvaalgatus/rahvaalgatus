@@ -49,6 +49,7 @@ function CommentView(attrs) {
 	var comment = attrs.comment
 	var commentUrl = `/initiatives/${initiative.uuid}/comments/${comment.id}`
 	var newComment = attrs.newComment
+	var anonymous = !!comment.anonymized_at
 
 	return <Fragment>
 		{comment.uuid ? <a id={"comment-" + comment.uuid} /> : null}
@@ -56,7 +57,9 @@ function CommentView(attrs) {
 		<h3 class="title"><a href={commentUrl}>{comment.title}</a></h3>
 
 		<div class="metadata">
-			<span class="author">{comment.user_name}</span>
+			<span class={"author" + (anonymous ? " anonymous" : "")}>
+				{anonymous ? t("COMMENT_AUTHOR_HIDDEN") : comment.user_name}
+			</span>
 			{", "}
 			<time datetime={comment.created_at.toJSON()}>
 				<a href={commentUrl}>
@@ -73,24 +76,30 @@ function CommentView(attrs) {
 			{t("REPLY")}
 		</a> : null}
 
-		<ol class="comment-replies">{(comment.replies || []).map((reply) => <li
-			id={`comment-${reply.id}`}
-			class={"comment-reply" + (isCommentShort(reply) ? " short" : "")}>
+		<ol class="comment-replies">{(comment.replies || []).map(function(reply) {
+			var anonymous = !!reply.anonymized_at
 
-			{reply.uuid ? <a id={"comment-" + reply.uuid} /> : null}
+			return <li
+				id={`comment-${reply.id}`}
+				class={"comment-reply" + (isCommentShort(reply) ? " short" : "")}>
 
-			<div class="metadata">
-				<span class="author">{reply.user_name}</span>
-				{", "}
-				<time datetime={reply.created_at}>
-					<a href={commentUrl + `#comment-${reply.id}`}>
-						{I18n.formatDateTime("numeric", reply.created_at)}
-					</a>
-				</time>
-			</div>
+				{reply.uuid ? <a id={"comment-" + reply.uuid} /> : null}
 
-			<p class="text">{Jsx.html(Comment.htmlify(reply.text))}</p>
-		</li>)}</ol>
+				<div class="metadata">
+					<span class={"author" + (anonymous ? " anonymous" : "")}>
+						{anonymous ? t("COMMENT_AUTHOR_HIDDEN") : reply.user_name}
+					</span>
+					{", "}
+					<time datetime={reply.created_at}>
+						<a href={commentUrl + `#comment-${reply.id}`}>
+							{I18n.formatDateTime("numeric", reply.created_at)}
+						</a>
+					</time>
+				</div>
+
+				<p class="text">{Jsx.html(Comment.htmlify(reply.text))}</p>
+			</li>
+		})}</ol>
 
 		{req.user ? <Form
 			req={req}

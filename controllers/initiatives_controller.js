@@ -592,7 +592,8 @@ function* searchInitiativeComments(initiativeUuid) {
 	var comments = yield commentsDb.search(sql`
 		SELECT comment.*, user.name AS user_name
 		FROM comments AS comment
-		JOIN users AS user ON comment.user_id = user.id
+		LEFT JOIN users AS user
+		ON comment.user_id = user.id AND comment.anonymized_at IS NULL
 		WHERE comment.initiative_uuid = ${initiativeUuid}
 		ORDER BY comment.created_at
 	`)

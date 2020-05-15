@@ -129,7 +129,8 @@ exports.router.use("/:commentId", next(function*(req, res, next) {
 	var comment = yield commentsDb.read(sql`
 		SELECT comment.*, user.name AS user_name
 		FROM comments AS comment
-		JOIN users AS user ON comment.user_id = user.id
+		LEFT JOIN users AS user
+		ON comment.user_id = user.id AND comment.anonymized_at IS NULL
 		WHERE (comment.id = ${id} OR comment.uuid = ${id})
 		AND comment.initiative_uuid = ${initiative.uuid}
 	`)
@@ -216,7 +217,8 @@ function* renderComment(req, res) {
 	comment.replies = yield commentsDb.search(sql`
 		SELECT comment.*, user.name AS user_name
 		FROM comments AS comment
-		JOIN users AS user ON comment.user_id = user.id
+		LEFT JOIN users AS user
+		ON comment.user_id = user.id AND comment.anonymized_at IS NULL
 		WHERE parent_id = ${comment.id}
 	`)
 

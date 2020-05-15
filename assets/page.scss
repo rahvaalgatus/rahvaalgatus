@@ -1292,6 +1292,8 @@ button.inherited {
 
 			// Anchor used for linking to comment itself via <time>.
 			time a:hover { text-decoration: underline; }
+
+			.author.anonymous { font-style: italic; }
 		}
 
 		p {

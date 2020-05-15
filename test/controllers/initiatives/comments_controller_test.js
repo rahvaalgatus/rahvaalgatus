@@ -603,13 +603,52 @@ describe("InitiativeCommentsController", function() {
 
 			var dom = parseDom(res.body)
 			var commentEl = dom.querySelector("#initiative-comment")
-			commentEl.textContent.must.include(author.name)
+			commentEl.querySelector(".author").textContent.must.equal(author.name)
 			commentEl.textContent.must.include(comment.title)
 			commentEl.textContent.must.include(comment.text)
 
 			var replyEl = dom.querySelector("#initiative-comment .comment-replies")
-			replyEl.textContent.must.include(replier.name)
+			replyEl.querySelector(".author").textContent.must.equal(replier.name)
 			replyEl.textContent.must.include(reply.text)
+		})
+
+		it("must not render author names for anonymized comments", function*() {
+			var author = yield usersDb.create(new ValidUser({name: "Johnny Lang"}))
+			var replier = yield usersDb.create(new ValidUser({name: "Kenny Loggins"}))
+
+			var comment = yield commentsDb.create(new ValidComment({
+				initiative_uuid: this.initiative.uuid,
+				user_id: author.id,
+				user_uuid: _.serializeUuid(author.uuid),
+				anonymized_at: new Date
+			}))
+
+			yield commentsDb.create(new ValidComment({
+				initiative_uuid: this.initiative.uuid,
+				user_id: replier.id,
+				user_uuid: _.serializeUuid(replier.uuid),
+				parent_id: comment.id,
+				anonymized_at: new Date
+			}))
+
+			var path = `/initiatives/${this.initiative.uuid}`
+			path += `/comments/${comment.id}`
+			var res = yield this.request(path)
+			res.statusCode.must.equal(200)
+
+			var dom = parseDom(res.body)
+			res.body.must.not.include(author.name)
+			res.body.must.not.include(replier.name)
+
+			var commentEl = dom.querySelector("#initiative-comment")
+			commentEl.querySelector(".author").textContent.must.equal(
+				t("COMMENT_AUTHOR_HIDDEN")
+			)
+
+			var replyEl = dom.querySelector("#initiative-comment .comment-replies")
+			replyEl.querySelector(".author").textContent.must.equal(
+				t("COMMENT_AUTHOR_HIDDEN")
+			)
 		})
 
 		it("must show comment page given external initiative", function*() {
@@ -632,7 +671,7 @@ describe("InitiativeCommentsController", function() {
 
 			var dom = parseDom(res.body)
 			var commentEl = dom.querySelector("#initiative-comment")
-			commentEl.textContent.must.include(author.name)
+			commentEl.querySelector(".author").textContent.must.equal(author.name)
 			commentEl.textContent.must.include(comment.title)
 			commentEl.textContent.must.include(comment.text)
 		})
