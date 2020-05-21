@@ -27,18 +27,27 @@ footer, header, hgroup, menu, nav, section {
 	display: block;
 }
 
-*	{
+* {
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
-	box-sizing: border-box
+	box-sizing: border-box;
 }
 
 html {
-  font-size: 62.5%;
+	font-size: 62.5%;
 
-  // Without an explicit text-align, Internet Explorer (9 at least) has no
-  // text-align value to inherit from.
-  text-align: left;
+	// Without an explicit text-align, Internet Explorer (9 at least) has no
+	// text-align value to inherit from.
+	text-align: left;
+}
+
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+th {
+	text-align: inherit;
 }
 
 li {
