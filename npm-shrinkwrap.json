@@ -2031,6 +2031,23 @@
       "from": "marked@latest",
       "resolved": "https://registry.npmjs.org/marked/-/marked-0.6.2.tgz"
     },
+    "maxmind": {
+      "version": "2.12.0",
+      "from": "maxmind@>=2.12.0 <2.13.0",
+      "resolved": "https://registry.npmjs.org/maxmind/-/maxmind-2.12.0.tgz",
+      "dependencies": {
+        "big-integer": {
+          "version": "1.6.48",
+          "from": "big-integer@>=1.6.31 <2.0.0",
+          "resolved": "https://registry.npmjs.org/big-integer/-/big-integer-1.6.48.tgz"
+        },
+        "tiny-lru": {
+          "version": "6.1.0",
+          "from": "tiny-lru@>=6.0.0 <7.0.0",
+          "resolved": "https://registry.npmjs.org/tiny-lru/-/tiny-lru-6.1.0.tgz"
+        }
+      }
+    },
     "medium-type": {
       "version": "1.0.0",
       "from": "medium-type@latest",

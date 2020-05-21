@@ -19,6 +19,7 @@ module.exports = function(attrs) {
 
 	return _.assign({
 		created_at: createdAt,
+		created_from: null,
 		updated_at: createdAt,
 		country: country,
 		personal_id: personalId,

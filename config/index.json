@@ -16,6 +16,7 @@
 	"signatureMilestones": [100, 1000],
 	"demoSignaturesExpirationSeconds": 900,
 	"importInitiativesFromParliament": true,
+	"geoIpCityPath": null,
 
 	"language": "et",
 	"languages": ["et", "en", "ru"],

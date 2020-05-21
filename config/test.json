@@ -4,6 +4,7 @@
 	"votesRequired": 10,
 	"minDeadlineDays": 3,
 	"signatureMilestones": [5, 10],
+	"geoIpCityPath": "../test/config/geoip2_city.mmdb",
 
 	"mobileIdUser": "Mobile Rahvaalgatus",
 	"mobileIdPassword": "f2066bec-dbe6-44b8-ab3b-a343bcc7c286",

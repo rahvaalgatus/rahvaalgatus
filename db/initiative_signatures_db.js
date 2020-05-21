@@ -13,12 +13,18 @@ exports.parse = function(attrs) {
 	return _.defaults({
 		created_at: attrs.created_at && new Date(attrs.created_at),
 		updated_at: attrs.updated_at && new Date(attrs.updated_at),
-		hidden: !!attrs.hidden
+		hidden: !!attrs.hidden,
+		created_from: attrs.created_from && JSON.parse(attrs.created_from)
 	}, attrs)
 }
 
 exports.serialize = function(model) {
 	var obj = _.clone(model)
 	if (model.xades instanceof Xades) obj.xades = String(model.xades)
+
+	if ("created_from" in model) obj.created_from = model.created_from
+		? JSON.stringify(model.created_from)
+		: null
+
 	return obj
 }

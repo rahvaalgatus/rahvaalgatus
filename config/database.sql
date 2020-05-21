@@ -206,7 +206,7 @@ CREATE TABLE initiative_signables (
 	xades TEXT NOT NULL,
 	signed INTEGER NOT NULL DEFAULT 0,
 	timestamped INTEGER NOT NULL DEFAULT 0,
-	error TEXT, method TEXT NOT NULL,
+	error TEXT, method TEXT NOT NULL, created_from TEXT,
 
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE,
 
@@ -229,7 +229,7 @@ CREATE TABLE initiative_signatures (
 	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
 	xades TEXT NOT NULL,
 	hidden INTEGER NOT NULL DEFAULT 0,
-	oversigned INTEGER NOT NULL DEFAULT 0, method TEXT NOT NULL,
+	oversigned INTEGER NOT NULL DEFAULT 0, method TEXT NOT NULL, created_from TEXT,
 
 	PRIMARY KEY (initiative_uuid, country, personal_id),
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
@@ -500,4 +500,5 @@ INSERT INTO migrations VALUES('20200418144030');
 INSERT INTO migrations VALUES('20200418144113');
 INSERT INTO migrations VALUES('20200509102953');
 INSERT INTO migrations VALUES('20200515145257');
+INSERT INTO migrations VALUES('20200521163812');
 COMMIT;

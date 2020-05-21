@@ -14,7 +14,8 @@ exports.parse = function(attrs) {
 		xades: attrs.xades && Xades.parse(attrs.xades),
 		signed: !!attrs.signed,
 		timestamped: !!attrs.timestamped,
-		error: attrs.error && JSON.parse(attrs.error)
+		error: attrs.error && JSON.parse(attrs.error),
+		created_from: attrs.created_from && JSON.parse(attrs.created_from)
 	}, attrs)
 }
 
@@ -22,6 +23,11 @@ exports.serialize = function(model) {
 	var obj = _.clone(model)
 	if (model.xades instanceof Xades) obj.xades = String(model.xades)
 	if ("error" in model) obj.error = model.error && stringifyError(model.error)
+
+	if ("created_from" in model) obj.created_from = model.created_from
+		? JSON.stringify(model.created_from)
+		: null
+
 	return obj
 }
 

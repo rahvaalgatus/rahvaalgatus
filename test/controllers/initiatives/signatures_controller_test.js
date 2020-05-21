@@ -45,6 +45,10 @@ var SESSION_ID = "7c8bdd56-6772-4264-ba27-bf7a9ef72a11"
 var {PHONE_NUMBER_TRANSFORMS} = require("root/test/fixtures")
 var SMART_ID = "PNOEE-" + PERSONAL_ID + "-R2D2-Q"
 
+// See https://github.com/maxmind/MaxMind-DB/blob/master/source-data for
+// available test IP addresses.
+var LONDON_FORWARDED_FOR = "81.2.69.160, 127.0.0.1"
+
 var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
 	subject: {
 		countryName: "EE",
@@ -171,6 +175,13 @@ var SMART_ID_SESSION_ERRORS = {
 		"Wrong Smart-Id Verification Code Chosen",
 		"SMART_ID_ERROR_WRONG_VERIFICATION_CODE"
 	]
+}
+
+var LONDON_GEO = {
+	country_code: "GB",
+	country_name: "United Kingdom",
+	subdivisions: [{code: "ENG", name: "England"}],
+	city_name: "London"
 }
 
 describe("SignaturesController", function() {
@@ -750,7 +761,13 @@ describe("SignaturesController", function() {
 				var path = `/initiatives/${this.initiative.uuid}`
 				var signing = yield this.request(path + "/signatures", {
 					method: "POST",
-					headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
+
+					headers: {
+						Accept: SIGNABLE_TYPE,
+						"Content-Type": CERTIFICATE_TYPE,
+						"X-Forwarded-For": LONDON_FORWARDED_FOR
+					},
+
 					body: cert.toBuffer()
 				})
 
@@ -777,6 +794,7 @@ describe("SignaturesController", function() {
 				signables[0].xades.toString().must.equal(String(xades))
 				signables[0].signed.must.be.false()
 				signables[0].timestamped.must.be.false()
+				signables[0].created_from.must.eql(LONDON_GEO)
 				demand(signables[0].error).be.null()
 
 				yield signaturesDb.search(sql`
@@ -820,7 +838,8 @@ describe("SignaturesController", function() {
 					country: "EE",
 					personal_id: PERSONAL_ID,
 					method: "id-card",
-					xades: String(xades)
+					xades: String(xades),
+					created_from: LONDON_GEO
 				})])
 			})
 
@@ -1150,6 +1169,8 @@ describe("SignaturesController", function() {
 				var initiativePath = `/initiatives/${this.initiative.uuid}`
 				var signing = yield this.request(initiativePath + "/signatures", {
 					method: "POST",
+					headers: {"X-Forwarded-For": LONDON_FORWARDED_FOR},
+
 					form: {
 						method: "mobile-id",
 						personalId: PERSONAL_ID,
@@ -1178,6 +1199,7 @@ describe("SignaturesController", function() {
 				signables[0].xades.toString().must.equal(String(xades))
 				signables[0].signed.must.be.true()
 				signables[0].timestamped.must.be.true()
+				signables[0].created_from.must.eql(LONDON_GEO)
 				demand(signables[0].error).be.null()
 
 				yield signaturesDb.search(sql`
@@ -1188,7 +1210,8 @@ describe("SignaturesController", function() {
 					country: "EE",
 					personal_id: PERSONAL_ID,
 					method: "mobile-id",
-					xades: String(xades)
+					xades: String(xades),
+					created_from: LONDON_GEO
 				})])
 			})
 
@@ -1795,6 +1818,7 @@ describe("SignaturesController", function() {
 				var initiativePath = `/initiatives/${this.initiative.uuid}`
 				var signing = yield this.request(initiativePath + "/signatures", {
 					method: "POST",
+					headers: {"X-Forwarded-For": LONDON_FORWARDED_FOR},
 					form: {method: "smart-id", personalId: PERSONAL_ID}
 				})
 
@@ -1819,6 +1843,7 @@ describe("SignaturesController", function() {
 				signables[0].xades.toString().must.equal(String(xades))
 				signables[0].signed.must.be.true()
 				signables[0].timestamped.must.be.true()
+				signables[0].created_from.must.eql(LONDON_GEO)
 				demand(signables[0].error).be.null()
 
 				yield signaturesDb.search(sql`
@@ -1829,7 +1854,8 @@ describe("SignaturesController", function() {
 					country: "EE",
 					personal_id: PERSONAL_ID,
 					method: "smart-id",
-					xades: String(xades)
+					xades: String(xades),
+					created_from: LONDON_GEO
 				})])
 			})
 

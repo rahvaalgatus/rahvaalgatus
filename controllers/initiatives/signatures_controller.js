@@ -21,6 +21,7 @@ var reportError = require("root").errorReporter
 var sleep = require("root/lib/promise").sleep
 var mobileId = require("root").mobileId
 var smartId = require("root").smartId
+var geoipPromise = require("root").geoip
 var hades = require("root").hades
 var parseBody = require("body-parser").raw
 var signaturesDb = require("root/db/initiative_signatures_db")
@@ -216,6 +217,7 @@ exports.router.post("/", next(function*(req, res) {
 	var initiative = req.initiative
 	var method = res.locals.method = getSigningMethod(req)
 	var cert, err, country, personalId, xades, signable, signatureUrl
+	var geo = yield lookupAndSerializeGeo(req.ip)
 
 	switch (method) {
 		case "id-card":
@@ -230,7 +232,8 @@ exports.router.post("/", next(function*(req, res) {
 				country: country,
 				personal_id: personalId,
 				method: "id-card",
-				xades: xades
+				xades: xades,
+				created_from: geo
 			})
 
 			signatureUrl = req.baseUrl + "/" + pathToSignature(signable)
@@ -275,7 +278,8 @@ exports.router.post("/", next(function*(req, res) {
 				country: country,
 				personal_id: personalId,
 				method: "mobile-id",
-				xades: xades
+				xades: xades,
+				created_from: geo
 			})
 
 			signatureUrl = req.baseUrl + "/" + pathToSignature(signable)
@@ -314,7 +318,8 @@ exports.router.post("/", next(function*(req, res) {
 				country: country,
 				personal_id: personalId,
 				method: "smart-id",
-				xades: xades
+				xades: xades,
+				created_from: geo
 			})
 
 			signatureUrl = req.baseUrl + "/" + pathToSignature(signable)
@@ -720,8 +725,30 @@ function* replaceSignature(signable) {
 		xades: signable.xades,
 		oversigned: signature && !signature.hidden && signature.oversigned + 1 || 0,
 		created_at: new Date,
+		created_from: signable.created_from,
 		updated_at: new Date
 	})
+}
+
+function lookupAndSerializeGeo(ip) {
+	return geoipPromise.then(function(geoip) {
+		var geo = geoip && geoip.get(ip)
+		return geo && serializeGeo(geo)
+	})
+}
+
+function serializeGeo(geo) {
+	return {
+		country_code: geo.country ? geo.country.iso_code : null,
+		country_name: geo.country ? geo.country.names.en : null,
+
+		subdivisions: geo.subdivisions ? geo.subdivisions.map((div) => ({
+			code: div.iso_code,
+			name: div.names.en
+		})) : null,
+
+		city_name: geo.city ? geo.city.names.en : null
+	}
 }
 
 function parseSignatureId(id) { return [id.slice(0, 2), id.slice(2)] }

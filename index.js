@@ -1,5 +1,6 @@
 var _ = require("root/lib/underscore")
 var Fs = require("fs")
+var Path = require("path")
 var Config = require("root/config")
 var lazy = require("lazy-object").defineLazyProperty
 var ENV = process.env.ENV
@@ -119,4 +120,18 @@ lazy(exports, "hades", function() {
 		timemarkUrl: Config.timemarkUrl,
 		timestampUrl: Config.timestampUrl
 	})
+})
+
+lazy(exports, "geoip", function() {
+	var Maxmind = require("maxmind")
+
+	var path = Config.geoIpCityPath
+	if (path == null) return Promise.resolve(null)
+	path = Path.resolve(__dirname, "config", path)
+
+	return new Promise((resolve, reject) => (
+		Maxmind.open(path, {cache: {max: 10}}, (err, db) => (
+			err ? reject(err) : resolve(db)
+		))
+	))
 })
