@@ -1728,6 +1728,10 @@ button.inherited {
 
 			@include mobile { padding: $article-padding-mobile; }
 
+			&.trix-text {
+				white-space: pre-wrap;
+			}
+
 			&.citizenos-text {
 				// Initiative HTML often has <h2> following plain non-tagged text, so
 				// `* + h2` won't work.
