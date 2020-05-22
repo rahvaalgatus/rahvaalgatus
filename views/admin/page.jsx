@@ -13,6 +13,8 @@ function Page(attrs, children) {
 	var req = attrs.req
 	var page = attrs.page
 	var title = attrs.title
+	var fullPath = req.baseUrl + req.path
+	var path = fullPath.slice(req.rootUrl.length)
 
 	return <html>
 		<head>
@@ -30,7 +32,10 @@ function Page(attrs, children) {
 				<nav>
 					<ul>
 						<li>
-							<a href={req.rootUrl || "/"} class={selected("/", req.path)}>
+							<a
+								href={req.rootUrl || "/"}
+								class={selected(req.rootUrl || "/", path)}
+							>
 								Dashboard
 							</a>
 						</li>
@@ -38,7 +43,7 @@ function Page(attrs, children) {
 						<li>
 							<a
 								href={req.rootUrl + "/users"}
-								class={prefixed("/users", req.path)}>
+								class={prefixed("/users/", path)}>
 								Users
 							</a>
 						</li>
@@ -46,7 +51,7 @@ function Page(attrs, children) {
 						<li>
 							<a
 								href={req.rootUrl + "/initiatives"}
-								class={prefixed("/initiatives", req.path)}>
+								class={prefixed("/initiatives/", path)}>
 								Initiatives
 							</a>
 						</li>
@@ -54,7 +59,7 @@ function Page(attrs, children) {
 						<li>
 							<a
 								href={req.rootUrl + "/comments"}
-								class={prefixed("/comments", req.path)}>
+								class={prefixed("/comments/", path)}>
 								Comments
 							</a>
 						</li>
@@ -62,7 +67,7 @@ function Page(attrs, children) {
 						<li>
 							<a
 								href={req.rootUrl + "/subscriptions"}
-								class={prefixed("/subscriptions", req.path)}
+								class={prefixed("/subscriptions/", path)}
 							>Subscriptions</a>
 						</li>
 					</ul>
