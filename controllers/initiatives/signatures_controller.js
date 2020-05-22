@@ -747,7 +747,11 @@ function serializeGeo(geo) {
 			name: div.names.en
 		})) : null,
 
-		city_name: geo.city ? geo.city.names.en : null
+		// Some city names are converted to ASCII (Jaervekuela instead of
+		// Järveküla), whereas Jõgeva correctly contains "õ". Go figure. The only
+		// available canonical identifier for a city is the GeoName id.
+		city_name: geo.city ? geo.city.names.en : null,
+		city_geoname_id: geo.city ? geo.city.geoname_id : null
 	}
 }
 

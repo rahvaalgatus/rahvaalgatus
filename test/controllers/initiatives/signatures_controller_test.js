@@ -181,7 +181,8 @@ var LONDON_GEO = {
 	country_code: "GB",
 	country_name: "United Kingdom",
 	subdivisions: [{code: "ENG", name: "England"}],
-	city_name: "London"
+	city_name: "London",
+	city_geoname_id: 2643743
 }
 
 describe("SignaturesController", function() {
