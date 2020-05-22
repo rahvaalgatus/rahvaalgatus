@@ -335,8 +335,7 @@ exports.read = next(function*(req, res) {
 
 	if (req.originalUrl.endsWith(".html")) {
 		var html = (
-			initiative.text &&
-			Initiative.renderForParliament(initiative, initiative.text) ||
+			initiative.text ||
 			text && Initiative.renderForParliament(initiative, text)
 		)
 
