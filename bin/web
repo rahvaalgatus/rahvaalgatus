@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 process.title = "rahvaalgatus/web"
 
-var O = require("oolong")
+var _ = require("root/lib/underscore")
 var Url = require("url")
 var Express = require("root/lib/express")
 var Config = require("root/config")
@@ -40,7 +40,7 @@ app.use(require("flash-fiction/express"))
 app.use(require("root/lib/middleware/maintenance_middleware"))
 app.use(require("root/lib/middleware/session_middleware"))
 
-O.each({
+_.each({
 	"/topics": "/",
 	"/topics/create1": "/initiatives/new",
 	"/votings": "/",
@@ -62,7 +62,7 @@ O.each({
 
 app.get("/digiallkiri", usePath.bind(null, "/demo-signatures"))
 
-O.each({
+_.each({
 	"/": require("root/controllers/home_controller").router,
 	"/donations": require("root/controllers/donations_controller").router,
 	"/initiatives": require("root/controllers/initiatives_controller").router,
