@@ -229,7 +229,7 @@ CREATE TABLE initiative_signatures (
 	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
 	xades TEXT NOT NULL,
 	hidden INTEGER NOT NULL DEFAULT 0,
-	oversigned INTEGER NOT NULL DEFAULT 0, method TEXT NOT NULL, created_from TEXT,
+	oversigned INTEGER NOT NULL DEFAULT 0, method TEXT NOT NULL, created_from TEXT, signer_id INTEGER,
 
 	PRIMARY KEY (initiative_uuid, country, personal_id),
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
@@ -382,10 +382,14 @@ CREATE TABLE initiative_citizenos_signatures (
 	country TEXT NOT NULL,
 	personal_id TEXT NOT NULL,
 	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	asic BLOB,
+	asic BLOB, signer_id INTEGER,
 
 	PRIMARY KEY (initiative_uuid, country, personal_id),
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
+	FOREIGN KEY (signer_id) REFERENCES signers (id),
+
+	CONSTRAINT signer_id_not_null
+	CHECK (signer_id IS NOT NULL OR personal_id IS NOT NULL),
 
 	CONSTRAINT country_length CHECK (length(country) = 2),
 	CONSTRAINT country_uppercase CHECK (country == upper(country)),
@@ -419,6 +423,44 @@ CREATE UNIQUE INDEX index_initiative_texts_on_initiative_uuid_and_id
 ON initiative_texts (initiative_uuid, id);
 CREATE INDEX index_initiative_texts_on_basis_id
 ON initiative_texts (basis_id);
+CREATE TABLE signers (
+	id INTEGER PRIMARY KEY NOT NULL,
+	country TEXT NOT NULL,
+	personal_id TEXT NOT NULL,
+	first_signed_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	last_signed_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+
+	CONSTRAINT country_length CHECK (length(country) = 2),
+	CONSTRAINT country_uppercase CHECK (country == upper(country)),
+	CONSTRAINT personal_id_length CHECK (length(personal_id) > 0)
+);
+CREATE UNIQUE INDEX index_signers_on_country_and_personal_id
+ON signers (country, personal_id)
+WHERE length(personal_id) > 7;
+CREATE INDEX index_initiative_signatures_on_signer_id
+ON initiative_signatures (signer_id)
+WHERE signer_id IS NOT NULL;
+CREATE TRIGGER create_signer_on_initiative_signature
+AFTER INSERT ON initiative_signatures FOR EACH ROW
+WHEN NEW.signer_id IS NULL
+BEGIN
+	INSERT INTO signers (country, personal_id, first_signed_at, last_signed_at)
+	VALUES (NEW.country, NEW.personal_id, NEW.created_at, NEW.created_at)
+	ON CONFLICT (country, personal_id)
+	WHERE length(personal_id) > 7
+	DO UPDATE SET
+		first_signed_at = min(first_signed_at, excluded.first_signed_at),
+		last_signed_at = max(last_signed_at, excluded.last_signed_at);
+
+	UPDATE initiative_signatures SET signer_id = (
+		SELECT id FROM signers
+		WHERE country = initiative_signatures.country
+		AND personal_id = initiative_signatures.personal_id
+	) WHERE rowid = NEW.rowid;
+END;
+CREATE INDEX index_initiative_citizenos_signatures_on_signer_id
+ON initiative_citizenos_signatures (signer_id)
+WHERE signer_id IS NOT NULL;
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -501,4 +543,8 @@ INSERT INTO migrations VALUES('20200418144113');
 INSERT INTO migrations VALUES('20200509102953');
 INSERT INTO migrations VALUES('20200515145257');
 INSERT INTO migrations VALUES('20200521163812');
+INSERT INTO migrations VALUES('20200522094931');
+INSERT INTO migrations VALUES('20200522100000');
+INSERT INTO migrations VALUES('20200522100010');
+INSERT INTO migrations VALUES('20200522100020');
 COMMIT;

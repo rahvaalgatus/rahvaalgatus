@@ -131,6 +131,19 @@ module.exports = function(attrs) {
 
 			<tr>
 				<th scope="row">
+					Unique signers<br />
+
+					<small>
+						Unique signers for all initiatives.
+						Excluded if deleted.
+					</small>
+				</th>
+
+				<td>{attrs.signerCount}</td>
+			</tr>
+
+			<tr>
+				<th scope="row">
 					Signatures via Undersign.js<br />
 
 					<small>
@@ -152,19 +165,6 @@ module.exports = function(attrs) {
 
 			<tr>
 				<th scope="row">
-					Unique signers via Undersign.js<br />
-
-					<small>
-						Unique signers for all initiatives.
-						Excluded if deleted.
-					</small>
-				</th>
-
-				<td>{attrs.signerCount}</td>
-			</tr>
-
-			<tr>
-				<th scope="row">
 					Signatures via CitizenOS<br />
 
 					<small>
@@ -174,19 +174,6 @@ module.exports = function(attrs) {
 				</th>
 
 				<td>{attrs.citizenSignatureCount}</td>
-			</tr>
-
-			<tr>
-				<th scope="row">
-					Unique signers via CitizenOS<br />
-
-					<small>
-						Unique signers for all initiatives.
-						Excluded if revoked.
-					</small>
-				</th>
-
-				<td>{attrs.citizenSignerCount}</td>
 			</tr>
 
 			<tr>

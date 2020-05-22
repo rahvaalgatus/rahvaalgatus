@@ -15,6 +15,7 @@ module.exports = function(attrs) {
 		method: "id-card",
 		hidden: false,
 		oversigned: 0,
-		xades: `<XAdESSignatures>${country}${personalId}</XAdESSignatures>`
+		xades: `<XAdESSignatures>${country}${personalId}</XAdESSignatures>`,
+		signer_id: null
 	}, attrs)
 }

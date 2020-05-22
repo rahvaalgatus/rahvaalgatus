@@ -413,6 +413,25 @@ textarea.admin-input {
 	}
 }
 
+#signatures-page {
+	.options-form {
+		display: block;
+		margin-bottom: 0.5rem;
+
+		input { vertical-align: middle; }
+
+		label { margin-right: 0.5rem; }
+		label ~ label { margin-left: 1rem; }
+
+		button { margin-top: 0.5rem; }
+		button + button { margin-left: 0.5rem; }
+	}
+
+	.admin-table {
+		margin-top: 2rem;
+	}
+}
+
 #comments-page {
 	.comments {
 		h3 {

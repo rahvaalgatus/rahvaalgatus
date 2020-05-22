@@ -55,8 +55,13 @@ exports.get("/", next(function*(req, res) {
 
 	var signerCount = yield sqlite(sql`
 		WITH signers AS (
-			SELECT DISTINCT personal_id
+			SELECT country, personal_id
 			FROM initiative_signatures
+			WHERE created_at >= ${from}
+			${to ? sql`AND created_at < ${to}` : sql``}
+
+			UNION SELECT country, personal_id
+			FROM initiative_citizenos_signatures
 			WHERE created_at >= ${from}
 			${to ? sql`AND created_at < ${to}` : sql``}
 		)
@@ -69,17 +74,6 @@ exports.get("/", next(function*(req, res) {
 		FROM initiative_citizenos_signatures
 		WHERE created_at >= ${from}
 		${to ? sql`AND created_at < ${to}` : sql``}
-	`).then(_.first).then((res) => res.count)
-
-	var citizenSignerCount = yield sqlite(sql`
-		WITH signers AS (
-			SELECT DISTINCT personal_id
-			FROM initiative_citizenos_signatures
-			WHERE created_at >= ${from}
-			${to ? sql`AND created_at < ${to}` : sql``}
-		)
-
-		SELECT COUNT(*) AS count FROM signers
 	`).then(_.first).then((res) => res.count)
 
 	var initiativesCount = yield sqlite(sql`
@@ -170,7 +164,6 @@ exports.get("/", next(function*(req, res) {
 		signatureCount: signatureCount,
 		signerCount: signerCount,
 		citizenSignatureCount: citizenSignatureCount,
-		citizenSignerCount: citizenSignerCount,
 		subscriberCount: subscriberCount,
 		successfulCount: successfulCount,
 		initiativesCount: initiativesCount,
@@ -181,8 +174,11 @@ exports.get("/", next(function*(req, res) {
 	})
 }))
 
-exports.use("/users", require("./admin/users_controller").router)
-exports.use("/initiatives", require("./admin/initiatives_controller").router)
+_.each({
+	"/users": require("./admin/users_controller").router,
+	"/initiatives": require("./admin/initiatives_controller").router,
+	"/signatures": require("./admin/initiative_signatures_controller").router
+}, (router, path) => exports.use(path, router))
 
 exports.get("/comments", next(function*(_req, res) {
 	var comments = yield commentsDb.search(sql`
