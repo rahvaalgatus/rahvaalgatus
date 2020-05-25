@@ -8,7 +8,8 @@ MOCHA = ./node_modules/.bin/_mocha
 SASS = ./node_modules/.bin/node-sass --recursive --indent-type tab --indent-width 1 --output-style expanded
 BUNDLE = bundle
 TRANSLATIONS_URL = https://spreadsheets.google.com/feeds/list/1JKPUNp8Y_8Aigq7eGJXtWT6nZFhd31k2Ht3AjC-i-Q8/1/public/full?alt=json
-JQ_OPTS = --tab --sort-keys
+LOCAL_GOVERNMENTS_URL = https://spreadsheets.google.com/feeds/list/1DynXZ8Um9TsiYPDaYW3-RTgaPy8hsdq9jj72G41yrVE/1/public/full?alt=json
+JQ_OPTS = --tab
 SHANGE = vendor/shange -f "config/$(ENV).sqlite3"
 WEB_PORT = 3000
 ADM_PORT = $(shell expr $(WEB_PORT) + 1)
@@ -169,14 +170,19 @@ tmp:
 tmp/translations.json: tmp
 	wget "$(TRANSLATIONS_URL)" -O "$@"
 
-lib/i18n/en.json: tmp/translations.json
-	jq $(JQ_OPTS) -f scripts/translation.jq --arg lang english "$<" > "$@"
+tmp/local_governments.json: tmp
+	wget "$(LOCAL_GOVERNMENTS_URL)" -O "$@"
 
-lib/i18n/et.json: tmp/translations.json
-	jq $(JQ_OPTS) -f scripts/translation.jq --arg lang estonian "$<" > "$@"
-	
+lib/i18n/en.json: JQ_OPTS += --sort-keys --arg lang english
+lib/i18n/et.json: JQ_OPTS += --sort-keys --arg lang estonian
+lib/i18n/ru.json: JQ_OPTS += --sort-keys --arg lang russian
+lib/i18n/en.json \
+lib/i18n/et.json \
 lib/i18n/ru.json: tmp/translations.json
-	jq $(JQ_OPTS) -f scripts/translation.jq --arg lang russian "$<" > "$@"
+	jq $(JQ_OPTS) -f scripts/translation.jq "$<" > "$@"
+
+lib/local_governments.json: tmp/local_governments.json
+	jq $(JQ_OPTS) -f scripts/local_governments.jq "$<" > "$@"
 
 config/tsl: config/tsl/ee.xml
 config/tsl: config/tsl/ee_test.xml
