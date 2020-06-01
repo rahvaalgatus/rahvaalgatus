@@ -1,5 +1,6 @@
 var Router = require("express").Router
 var HttpError = require("standard-http-error")
+var initiativesDb = require("root/db/initiatives_db")
 var textsDb = require("root/db/initiative_texts_db")
 var next = require("co-next")
 var sql = require("sqlate")
@@ -38,6 +39,9 @@ exports.router.post("/", next(function*(req, res) {
 		user_id: user.id,
 		created_at: new Date
 	})
+
+	if ("title" in req.body)
+		yield initiativesDb.update(initiative.uuid, {title: String(req.body.title)})
 
 	res.flash("notice", initiative.published_at
 		? req.t("INITIATIVE_TEXT_CREATED_IF_PUBLISHED")

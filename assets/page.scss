@@ -2398,12 +2398,30 @@ button.inherited {
 }
 
 #edit-initiative-page {
+	main {
+		padding-top: 6rem;
+
+		@media only screen and (max-width: $page-width + 2 * $page-padding) {
+			padding-top: 4rem;
+		}
+	}
+
+	input[name=title] {
+		@include appearance(none);
+		border: none;
+		padding: 1.5rem 3rem 1.5rem;
+		font-size: 3.4rem;
+		font-family: $tisa-pro;
+		color: $title-text;
+	}
+
 	trix-toolbar {
 		padding: 1rem 1.5rem 0.5rem;
 		position: sticky;
 		top: 0;
 		background: $light-background;
-		border-bottom: 1px solid $light-background-border;
+		border: 0 solid $light-background-border;
+		border-width: 1px 0;
 
 		.trix-dialog {
 			background: $light-background;

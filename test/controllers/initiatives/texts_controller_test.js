@@ -85,7 +85,7 @@ describe("InitiativeTextsController", function() {
 				res.statusMessage.must.must.equal("Can Only Edit Discussions")
 			})
 
-			it("must create new text", function*() {
+			it("must create new text and set title", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
@@ -94,11 +94,20 @@ describe("InitiativeTextsController", function() {
 				var initiativePath = "/initiatives/" + initiative.uuid
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
-					form: {_csrf_token: this.csrfToken, content: JSON.stringify(content)}
+					form: {
+						_csrf_token: this.csrfToken,
+						title: "Let it shine",
+						content: JSON.stringify(content)
+					}
 				})
 
 				res.statusCode.must.equal(302)
 				res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+				yield initiativesDb.read(initiative).must.then.eql({
+					__proto__: initiative,
+					title: "Let it shine"
+				})
 
 				yield textsDb.search(sql`
 					SELECT * FROM initiative_texts

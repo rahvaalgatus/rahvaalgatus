@@ -12,10 +12,11 @@ exports.ProgressView = ProgressView
 function InitiativePage(attrs, children) {
 	var req = attrs.req
 	var initiative = attrs.initiative
+	var headerless = attrs.headerless
 	var path = "/initiatives/" + initiative.uuid
 
 	return <Page class={"initiative-page " + (attrs.class || "")} {...attrs}>
-		<header id="initiative-header">
+		{!headerless ? <header id="initiative-header">
 			<center>
 				<h1>
 					{req.method != "GET" || req.baseUrl + req.path != path ?
@@ -36,7 +37,7 @@ function InitiativePage(attrs, children) {
 					{I18n.formatDate("numeric", initiative.created_at)}
 				</time>
 			</center>
-		</header>
+		</header> : null}
 
 		{children}
 	</Page>

@@ -18,9 +18,10 @@ module.exports = function(attrs) {
 		page="edit-initiative"
 		title={initiative.title}
 		initiative={initiative}
+		headerless
 		req={req}>
 		<Form
-			id="initiative-text-form"
+			id="initiative-form"
 			method="post"
 			action={`/initiatives/${initiative.uuid}/texts`}
 			req={req}
@@ -34,6 +35,14 @@ module.exports = function(attrs) {
 					<script src="/assets/editor.js" />
 
 					<input type="hidden" name="basis-id" value={text && text.id} />
+
+					<input
+						type="text"
+						name="title"
+						value={initiative.title}
+						required
+						maxlength="200"
+					/>
 
 					{
 						// Pass the text through an <input> to rely on the browser's form
@@ -52,7 +61,7 @@ module.exports = function(attrs) {
 						var Trix = require("trix")
 						Trix.config.blockAttributes.heading1.tagName = "h2";
 
-						var form = document.getElementById("initiative-text-form")
+						var form = document.getElementById("initiative-form")
 						// Don't get the "editor" property yet as it'll only exist after
 						// initialization.
 						var el = document.getElementById("editor")
@@ -82,6 +91,13 @@ module.exports = function(attrs) {
 							if (loadedDocument === el.editor.getDocument()) return undefined
 							return ${JSON.stringify(t("INITIATIVE_TEXT_UNSAVED"))}
 						}
+
+						form.addEventListener("submit", function() {
+							var editor = document.querySelector("trix-editor").editor
+							var json = JSON.stringify(editor.getDocument())
+							form.elements.content.value = json
+							window.onbeforeunload = null
+						})
 					`}</script>
 				</Fragment> : <Fragment>
 					<div class="initiative-status">
@@ -92,35 +108,21 @@ module.exports = function(attrs) {
 
 			<aside id="initiative-sidebar">
 				<div class="sidebar-section">
-					<a
-						href={"/initiatives/" + initiative.uuid}
-						class="blue-button wide-button">
-						{initiative.phase == "edit"
-							? t("BACK_TO_DISCUSSION")
-							: t("BACK_TO_INITIATIVE")
-						}
-					</a>
-
 					{initiative.phase == "edit" ? <Fragment>
 						<button
 							id="create-text-button"
 							type="submit"
 							href={"/initiatives/" + initiative.uuid}
 							class="green-button wide-button">
-							Salvesta tekst
+							{t("INITIATIVE_SAVE")}
 						</button>
-
-						<script>{javascript`
-							var form = document.getElementById("initiative-text-form")
-
-							form.addEventListener("submit", function() {
-								var editor = document.querySelector("trix-editor").editor
-								var json = JSON.stringify(editor.getDocument())
-								form.elements.content.value = json
-								window.onbeforeunload = null
-							})
-						`}</script>
 					</Fragment> : null}
+
+					<a
+						href={"/initiatives/" + initiative.uuid}
+						class="blue-button wide-button">
+						{t("INITIATIVE_CANCEL_UPDATE")}
+					</a>
 				</div>
 			</aside>
 		</center></Form>
