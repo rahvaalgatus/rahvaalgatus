@@ -39,7 +39,7 @@ module.exports = function(attrs) {
 					<input
 						type="text"
 						name="title"
-						value={initiative.title}
+						value={text && text.title || initiative.title}
 						required
 						maxlength="200"
 					/>

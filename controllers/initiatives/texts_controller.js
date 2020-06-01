@@ -33,15 +33,14 @@ exports.router.post("/", next(function*(req, res) {
 		AND id = ${attrs.basis_id}
 	`))) attrs.basis_id = null
 
-	yield textsDb.create({
+	var text = yield textsDb.create({
 		__proto__: attrs,
 		initiative_uuid: initiative.uuid,
 		user_id: user.id,
 		created_at: new Date
 	})
 
-	if ("title" in req.body)
-		yield initiativesDb.update(initiative.uuid, {title: String(req.body.title)})
+	yield initiativesDb.update(initiative.uuid, {title: text.title})
 
 	res.flash("notice", initiative.published_at
 		? req.t("INITIATIVE_TEXT_CREATED_IF_PUBLISHED")
@@ -53,6 +52,7 @@ exports.router.post("/", next(function*(req, res) {
 
 function parse(obj) {
 	return {
+		title: String(obj.title),
 		content: JSON.parse(obj.content),
 		content_type: "application/vnd.basecamp.trix+json",
 		basis_id: Number(obj["basis-id"]) || null

@@ -407,7 +407,7 @@ CREATE TABLE initiative_texts (
 	user_id INTEGER NOT NULL,
 	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
 	content BLOB NOT NULL,
-	content_type TEXT NOT NULL,
+	content_type TEXT NOT NULL, title TEXT NOT NULL,
 
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
 	FOREIGN KEY (user_id) REFERENCES users (id),
@@ -415,7 +415,8 @@ CREATE TABLE initiative_texts (
 	FOREIGN KEY (initiative_uuid, basis_id)
 	REFERENCES initiative_texts (initiative_uuid, id),
 
-	CONSTRAINT content_type CHECK (length(content_type) > 0)
+	CONSTRAINT content_type_length CHECK (length(content_type) > 0),
+	CONSTRAINT title_length CHECK (length(title) > 0)
 );
 CREATE INDEX index_initiative_texts_on_initiative_uuid_and_created_at
 ON initiative_texts (initiative_uuid, created_at);
@@ -547,4 +548,5 @@ INSERT INTO migrations VALUES('20200522094931');
 INSERT INTO migrations VALUES('20200522100000');
 INSERT INTO migrations VALUES('20200522100010');
 INSERT INTO migrations VALUES('20200522100020');
+INSERT INTO migrations VALUES('20200601090000');
 COMMIT;

@@ -117,6 +117,7 @@ describe("InitiativeTextsController", function() {
 					initiative_uuid: initiative.uuid,
 					user_id: this.user.id,
 					created_at: new Date,
+					title: "Let it shine",
 					content: content,
 					content_type: TRIX_TYPE
 				}])
@@ -138,6 +139,7 @@ describe("InitiativeTextsController", function() {
 				var basis = yield textsDb.create({
 					initiative_uuid: initiative.uuid,
 					user_id: this.user.id,
+					title: "Let it shine",
 					content: "<p>Hello, world!</p>",
 					content_type: "text/html"
 				})
@@ -150,6 +152,7 @@ describe("InitiativeTextsController", function() {
 					form: {
 						_csrf_token: this.csrfToken,
 						"basis-id": basis.id,
+						title: initiative.title,
 						content: JSON.stringify(content)
 					}
 				})
@@ -164,6 +167,7 @@ describe("InitiativeTextsController", function() {
 					initiative_uuid: initiative.uuid,
 					user_id: this.user.id,
 					created_at: new Date,
+					title: initiative.title,
 					content: content,
 					content_type: TRIX_TYPE
 				})
@@ -177,6 +181,7 @@ describe("InitiativeTextsController", function() {
 				var basis = yield textsDb.create({
 					initiative_uuid: other.uuid,
 					user_id: this.user.id,
+					title: other.title,
 					content: "<p>Hello, world!</p>",
 					content_type: "text/html"
 				})
@@ -191,6 +196,7 @@ describe("InitiativeTextsController", function() {
 					form: {
 						_csrf_token: this.csrfToken,
 						"basis-id": basis.id,
+						title: initiative.title,
 						content: "[]"
 					}
 				})
@@ -205,6 +211,7 @@ describe("InitiativeTextsController", function() {
 					initiative_uuid: initiative.uuid,
 					user_id: this.user.id,
 					created_at: new Date,
+					title: initiative.title,
 					content: [],
 					content_type: TRIX_TYPE
 				})
