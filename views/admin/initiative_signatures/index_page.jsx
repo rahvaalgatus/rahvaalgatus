@@ -100,6 +100,7 @@ module.exports = function(attrs) {
 					<th>{timeFormat == "date" ? "Date" : "Week (ISO)"}</th>
 					<th>Initiative</th>
 					<th>Signer Id</th>
+					<th>Signer Ordinal</th>
 					<th>Sex</th>
 					<th>Age Range</th>
 					{withLocation ? <th>From</th> : null}
@@ -126,6 +127,10 @@ module.exports = function(attrs) {
 
 						<td>
 							{sig.signer_id}
+						</td>
+
+						<td>
+							{sig.signer_ordinal}
 						</td>
 
 						<td>{getSexFromPersonalId(sig.personal_id)}</td>

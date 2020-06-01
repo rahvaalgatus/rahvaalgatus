@@ -35,15 +35,17 @@ exports.router.get("/(:format?)", next(function*(req, res) {
 				created_at,
 				country,
 				personal_id,
+				signer_id,
 				created_from
 
-			FROM initiative_signatures AS signature
+			FROM initiative_signatures
 
 			UNION SELECT
 				initiative_uuid,
 				created_at,
 				country,
 				personal_id,
+				signer_id,
 				NULL AS created_from
 
 			FROM initiative_citizenos_signatures
@@ -53,7 +55,14 @@ exports.router.get("/(:format?)", next(function*(req, res) {
 			signature.created_at,
 			signature.created_from,
 			signature.personal_id,
-			signer.id AS signer_id,
+			signature.signer_id,
+
+			(
+				SELECT COUNT(*) FROM signatures
+				WHERE signer_id = signature.signer_id
+				AND created_at <= signature.created_at
+			) AS signer_ordinal,
+
 			signature.initiative_uuid,
 			initiative.title AS initiative_title
 
@@ -61,10 +70,6 @@ exports.router.get("/(:format?)", next(function*(req, res) {
 
 		JOIN initiatives AS initiative
 		ON initiative.uuid = signature.initiative_uuid
-
-		LEFT JOIN signers AS signer
-		ON signer.country = signature.country
-		AND signer.personal_id = signature.personal_id
 
 		WHERE signature.country = 'EE'
 		AND signature.created_at >= ${from}
@@ -93,6 +98,7 @@ function serializeSignaturesAsCsv(timeFormat, withLocation, signatures) {
 		timeFormat == "date" ? "date" : "week",
 		"initiative_uuid",
 		"signer_id",
+		"signer_ordinal",
 		"sex",
 		"age_range",
 		withLocation && "location"
@@ -106,6 +112,7 @@ function serializeSignaturesAsCsv(timeFormat, withLocation, signatures) {
 
 		sig.initiative_uuid,
 		sig.signer_id,
+		sig.signer_ordinal,
 		getSexFromPersonalId(sig.personal_id),
 		getAgeRange(getBirthdateFromPersonalId(sig.personal_id), sig.created_at),
 
