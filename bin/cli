@@ -27,6 +27,7 @@ var cmd = args["<command>"]
 if (cmd == null) return void process.stdout.write(USAGE_TEXT.trimLeft())
 
 var co = require("co")
+require("root").logger = console
 
 var CLIS = {
   "parliament-sync":
@@ -43,9 +44,6 @@ var CLIS = {
 
 var cmdPath = CLIS[cmd]
 if (cmdPath == null) return void die("No such command: %s", cmd)
-
-var Config = require("root/config")
-Config.logger = console
 
 co(function*() {
 	yield require(cmdPath)(concat(cmd, args["<args>"]))
