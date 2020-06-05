@@ -329,6 +329,9 @@ function parseInitiative(initiative, obj) {
 	if ("archived" in obj)
 		attrs.archived_at = _.parseBoolean(obj.archived) ? new Date : null
 
+	if ("signing_expired" in obj) attrs.signing_expired_at =
+		_.parseBoolean(obj.signing_expired) ? new Date : null
+
 	if (
 		"phase" in obj &&
 		(initiative.external || initiative.sent_to_parliament_at == null) &&

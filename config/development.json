@@ -6,6 +6,8 @@
 	"maksekeskusId": "45626d92-f1b2-45a5-832b-39588b192dae",
 	"signatureMilestones": [1, 2],
 	"adminPersonalIds": ["EE60001019906", "EE60001018800", "EE10101010005"],
+	"expireSignaturesFrom": "2019-12-01",
+	"expireSignaturesInMonths": 6,
 
 	"timemarkUrl": "http://demo.sk.ee/ocsp",
 	"timestampUrl": "http://demo.sk.ee/tsa",

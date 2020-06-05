@@ -28,6 +28,10 @@ exports.parse = function(attrs) {
 			new Date(attrs.signing_started_at),
 		signing_ends_at: attrs.signing_ends_at &&
 			new Date(attrs.signing_ends_at),
+		signing_expired_at: attrs.signing_expired_at &&
+			new Date(attrs.signing_expired_at),
+		signing_expiration_email_sent_at: attrs.signing_expiration_email_sent_at &&
+			new Date(attrs.signing_expiration_email_sent_at),
 		sent_to_parliament_at: attrs.sent_to_parliament_at &&
 			new Date(attrs.sent_to_parliament_at),
 		sent_to_government_at: attrs.sent_to_government_at &&

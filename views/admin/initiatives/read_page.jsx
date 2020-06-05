@@ -2,11 +2,14 @@
 var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
+var DateFns = require("date-fns")
 var Config = require("root/config")
 var Page = require("../page")
+var I18n = require("root/lib/i18n")
 var Form = Page.Form
 var FormButton = Page.FormButton
 var Flash = Page.Flash
+var Initiative = require("root/lib/initiative")
 var serializeImageUrl = require("root/lib/initiative").imageUrl
 var {isEditableEvent} = require("root/controllers/admin/initiatives_controller")
 var {InitiativeDestinationSelectView} =
@@ -28,6 +31,10 @@ module.exports = function(attrs) {
 	var messages = attrs.messages
 	var phase = initiative.phase
 	var pendingSubscriberCount = subscriberCount.all - subscriberCount.confirmed
+
+	var expiresOn = initiative.phase == "sign"
+		? Initiative.getExpirationDate(initiative)
+		: null
 
 	var beenToParliament = (
 		initiative.external || initiative.sent_to_parliament_at == null
@@ -334,6 +341,34 @@ module.exports = function(attrs) {
 					/>
 				</td>
 			</tr>
+
+			{initiative.phase == "sign" ? <tr>
+				<th scope="row">Signing Expiration</th>
+				<td>{new Date >= expiresOn ? (initiative.signing_expired_at ? <Fragment>
+					Expired on {
+						I18n.formatDate("iso", DateFns.addDays(expiresOn, -1))
+					} and signatures deleted at {
+						I18n.formatDateTime("isoish", initiative.signing_expired_at)
+					}.
+					</Fragment> : <Fragment>
+						Expired on {
+							I18n.formatDate("iso", DateFns.addDays(expiresOn, -1))
+						}.<br />
+
+						<FormButton
+							req={req}
+							action={initiativePath}
+							name="signing_expired"
+							value="true">
+							Delete Signatures
+						</FormButton>
+					</Fragment>
+				) : <Fragment>
+					Will expire on {
+						I18n.formatDate("iso", DateFns.addDays(expiresOn, -1))
+					}.
+				</Fragment>}</td>
+			</tr> : null}
 		</table>
 
 		<div class="events">
