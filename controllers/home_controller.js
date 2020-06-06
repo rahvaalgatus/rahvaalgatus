@@ -86,8 +86,20 @@ exports.router.get("/", next(function*(req, res) {
 			break
 
 		case "local":
+			var initiativeCounts = _.mapValues(
+				_.indexBy(yield initiativesDb.search(sql`
+					SELECT destination, COUNT(*) AS count
+					FROM initiatives
+					WHERE destination IS NOT NULL AND destination != 'parliament'
+					AND published_at IS NOT NULL
+					GROUP BY destination
+				`), "destination"),
+				(row) => row.count
+			)
+
 			res.render("home/local_home_page.jsx", {
-				initiatives: initiatives
+				initiatives: initiatives,
+				initiativeCounts: initiativeCounts
 			})
 			break
 

@@ -1,11 +1,11 @@
 <?xml version="1.0" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" >
 <!--
-2020-7-16: Created with FontForge (http://fontforge.org)
+2020-8-7: Created with FontForge (http://fontforge.org)
 -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1">
 <metadata>
-Created by FontForge 20200314 at Thu Jul 16 23:15:00 2020
+Created by FontForge 20200314 at Fri Aug  7 14:17:08 2020
  By Andri M
 
 </metadata>
@@ -22,7 +22,7 @@ Created by FontForge 20200314 at Thu Jul 16 23:15:00 2020
     bbox="0 -0 1676.11 1536"
     underline-thickness="76.8"
     underline-position="-153.6"
-    unicode-range="U+0020-F10C"
+    unicode-range="U+0020-F10D"
   />
     <missing-glyph />
     <glyph glyph-name="space" unicode=" " horiz-adv-x="200" 
@@ -50,6 +50,8 @@ l97 -340c4 -14 17 -23 31 -23s27 9 31 23l128 448c5 17 -5 35 -22 40h-1c-17 5 -34 -
 h-608c-18 0 -32 14 -32 32s14 32 32 32h640c18 0 32 -14 32 -32v-1152c0 -18 -14 -32 -32 -32zM1376 1120h-512c-18 0 -32 14 -32 32s14 32 32 32h512c18 0 32 -14 32 -32s-14 -32 -32 -32zM1376 928h-512c-18 0 -32 14 -32 32s14 32 32 32h512c18 0 32 -14 32 -32
 s-14 -32 -32 -32zM1376 736h-512c-18 0 -32 14 -32 32s14 32 32 32h512c18 0 32 -14 32 -32s-14 -32 -32 -32zM1376 544h-512c-18 0 -32 14 -32 32s14 32 32 32h512c18 0 32 -14 32 -32s-14 -32 -32 -32zM1376 352h-512c-18 0 -32 14 -32 32s14 32 32 32h512
 c18 0 32 -14 32 -32s-14 -32 -32 -32z" />
+    <glyph glyph-name="external-link" unicode="&#xf10d;" horiz-adv-x="1152" 
+d="M128 1344h448v-128h-448v-896h896v448h128v-448c0 -70 -58 -128 -128 -128h-896c-70 0 -128 58 -128 128v896c0 70 58 128 128 128zM704 1344h448v-448h-128v230l-595 -595l-90 90l595 595h-230v128z" />
     <glyph glyph-name="facebook-logo" unicode="&#xf100;" 
 d="M1451 1536h-1366c-47 0 -85 -38 -85 -85v-1366c0 -47 38 -85 85 -85h735v595h-200v232h200v171c0 198 122 306 299 306c85 0 157 -6 178 -9v-207l-122 -1c-96 0 -115 -45 -115 -112v-148h229l-30 -232h-199v-595h391c47 0 85 38 85 85v1366c0 47 -38 85 -85 85z" />
     <glyph glyph-name="html" unicode="&#xf106;" horiz-adv-x="1392" 

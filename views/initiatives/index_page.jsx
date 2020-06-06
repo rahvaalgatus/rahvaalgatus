@@ -2,9 +2,10 @@
 var _ = require("lodash")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
-var Page = require("../page")
-var {ProgressView} = require("./initiative_page")
 var Config = require("root/config")
+var Page = require("../page")
+var {Section} = require("../page")
+var {ProgressView} = require("./initiative_page")
 var I18n = require("root/lib/i18n")
 var EMPTY_ARR = Array.prototype
 exports = module.exports = InitiativesPage
@@ -24,6 +25,9 @@ function InitiativesPage(attrs) {
 	var inGovernment = initiativesByPhase.government || EMPTY_ARR
 	var inDone = initiativesByPhase.done || EMPTY_ARR
 
+	var onlyDestinations = attrs.onlyDestinations
+	var isFiltered = onlyDestinations.length > 0
+
 	return <Page
 		page="initiatives"
 		req={req}
@@ -38,63 +42,67 @@ function InitiativesPage(attrs) {
 		{
 			// When deleting an initiative, people get redirected here.
 		}
-		{flash("notice") ? <section class="secondary-section"><center>
+		{flash("notice") ? <Section class="secondary-section">
 			<p class="flash notice">{flash("notice")}</p>
-		</center></section> : null}
+		</Section> : null}
 
-		<section id="initiatives" class="secondary-section initiative-list-section">
-			<center>
-				{inEdit.length > 0 ? <Fragment>
-					<h2 class="edit-phase">{t("EDIT_PHASE")}</h2>
+		{isFiltered ? <Section id="filter" class="primary-section">
+			<h1>
+				{onlyDestinations.map((dest) => t("DESTINATION_" + dest)).join(", ")}
+			</h1>
+		</Section> : null}
 
-					<InitiativeListView
-						t={t}
-						phase="edit"
-						initiatives={inEdit}
-					/>
-				</Fragment> : null}
+		<Section id="initiatives" class="secondary-section initiative-list-section">
+			{inEdit.length > 0 ? <Fragment>
+				<h2 class="edit-phase">{t("EDIT_PHASE")}</h2>
 
-				{inSign.length > 0 ? <Fragment>
-					<h2 class="sign-phase">{t("SIGN_PHASE")}</h2>
+				<InitiativeListView
+					t={t}
+					phase="edit"
+					initiatives={inEdit}
+				/>
+			</Fragment> : null}
 
-					<InitiativeListView
-						t={t}
-						phase="sign"
-						initiatives={inSign}
-					/>
-				</Fragment> : null}
+			{inSign.length > 0 ? <Fragment>
+				<h2 class="sign-phase">{t("SIGN_PHASE")}</h2>
 
-				{inParliament.length > 0 ? <Fragment>
-					<h2 class="parliament-phase">{t("PARLIAMENT_PHASE")}</h2>
+				<InitiativeListView
+					t={t}
+					phase="sign"
+					initiatives={inSign}
+				/>
+			</Fragment> : null}
 
-					<InitiativeListView
-						t={t}
-						phase="parliament"
-						initiatives={inParliament}
-					/>
-				</Fragment> : null}
+			{inParliament.length > 0 ? <Fragment>
+				<h2 class="parliament-phase">{t("PARLIAMENT_PHASE")}</h2>
 
-				{inGovernment.length > 0 ? <Fragment>
-					<h2 class="government-phase">{t("GOVERNMENT_PHASE")}</h2>
+				<InitiativeListView
+					t={t}
+					phase="parliament"
+					initiatives={inParliament}
+				/>
+			</Fragment> : null}
 
-					<InitiativeListView
-						t={t}
-						phase="government"
-						initiatives={inGovernment}
-					/>
-				</Fragment> : null}
+			{inGovernment.length > 0 ? <Fragment>
+				<h2 class="government-phase">{t("GOVERNMENT_PHASE")}</h2>
 
-				{inDone.length > 0 ? <Fragment>
-					<h2 class="done-phase">{t("DONE_PHASE")}</h2>
+				<InitiativeListView
+					t={t}
+					phase="government"
+					initiatives={inGovernment}
+				/>
+			</Fragment> : null}
 
-					<InitiativeListView
-						t={t}
-						phase="done"
-						initiatives={inDone}
-					/>
-				</Fragment> : null}
-			</center>
-		</section>
+			{inDone.length > 0 ? <Fragment>
+				<h2 class="done-phase">{t("DONE_PHASE")}</h2>
+
+				<InitiativeListView
+					t={t}
+					phase="done"
+					initiatives={inDone}
+				/>
+			</Fragment> : null}
+		</Section>
 	</Page>
 }
 

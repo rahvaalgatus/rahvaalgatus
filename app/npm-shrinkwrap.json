@@ -929,6 +929,11 @@
         }
       }
     },
+    "leaflet": {
+      "version": "1.6.0",
+      "from": "leaflet@latest",
+      "resolved": "https://registry.npmjs.org/leaflet/-/leaflet-1.6.0.tgz"
+    },
     "pikaday": {
       "version": "1.5.1",
       "from": "pikaday@latest",

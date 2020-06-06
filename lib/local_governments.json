@@ -1,476 +1,634 @@
 {
 	"anija-vald": {
+		"ehak": "0141",
 		"name": "Anija vald",
 		"county": "Harju",
 		"population": 6214,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"harku-vald": {
+		"ehak": "0198",
 		"name": "Harku vald",
 		"county": "Harju",
 		"population": 14820,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"jõelähtme-vald": {
+		"ehak": "0245",
 		"name": "Jõelähtme vald",
 		"county": "Harju",
 		"population": 6508,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"keila-linn": {
+		"ehak": "0296",
 		"name": "Keila linn",
 		"county": "Harju",
 		"population": 9975,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"kiili-vald": {
+		"ehak": "0305",
 		"name": "Kiili vald",
 		"county": "Harju",
 		"population": 5442,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"kose-vald": {
+		"ehak": "0338",
 		"name": "Kose vald",
 		"county": "Harju",
 		"population": 7123,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"kuusalu-vald": {
+		"ehak": "0353",
 		"name": "Kuusalu vald",
 		"county": "Harju",
 		"population": 6446,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"loksa-linn": {
+		"ehak": "0424",
 		"name": "Loksa linn",
 		"county": "Harju",
 		"population": 2636,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"lääne-harju-vald": {
+		"ehak": "0431",
 		"name": "Lääne-Harju vald",
 		"county": "Harju",
 		"population": 12578,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"maardu-linn": {
+		"ehak": "0446",
 		"name": "Maardu linn",
 		"county": "Harju",
 		"population": 15468,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"raasiku-vald": {
+		"ehak": "0651",
 		"name": "Raasiku vald",
 		"county": "Harju",
 		"population": 5022,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"rae-vald": {
+		"ehak": "0653",
 		"name": "Rae vald",
 		"county": "Harju",
 		"population": 18951,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"saku-vald": {
+		"ehak": "0719",
 		"name": "Saku vald",
 		"county": "Harju",
 		"population": 10127,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"saue-vald": {
+		"ehak": "0726",
 		"name": "Saue vald",
 		"county": "Harju",
 		"population": 22139,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"tallinn": {
+		"ehak": "0784",
 		"name": "Tallinn",
 		"county": "Harju",
 		"population": 438930,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"viimsi-vald": {
+		"ehak": "0890",
 		"name": "Viimsi vald",
 		"county": "Harju",
 		"population": 20142,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"hiiumaa-vald": {
+		"ehak": "0205",
 		"name": "Hiiumaa vald",
 		"county": "Hiiu",
 		"population": 9512,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"alutaguse-vald": {
+		"ehak": "0130",
 		"name": "Alutaguse vald",
 		"county": "Ida-Viru",
 		"population": 4766,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"jõhvi-vald": {
+		"ehak": "0251",
 		"name": "Jõhvi vald",
 		"county": "Ida-Viru",
 		"population": 11280,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"kohtla-järve-linn": {
+		"ehak": "0321",
 		"name": "Kohtla-Järve linn",
 		"county": "Ida-Viru",
 		"population": 33709,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"lüganuse-vald": {
+		"ehak": "0442",
 		"name": "Lüganuse vald",
 		"county": "Ida-Viru",
 		"population": 8631,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"narva-linn": {
+		"ehak": "0511",
 		"name": "Narva linn",
 		"county": "Ida-Viru",
 		"population": 56459,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
 	},
 	"narva-jõesuu-linn": {
+		"ehak": "0514",
 		"name": "Narva-Jõesuu linn",
 		"county": "Ida-Viru",
 		"population": 4601,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"sillamäe-linn": {
+		"ehak": "0735",
 		"name": "Sillamäe linn",
 		"county": "Ida-Viru",
 		"population": 12842,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"toila-vald": {
+		"ehak": "0803",
 		"name": "Toila vald",
 		"county": "Ida-Viru",
 		"population": 4779,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"jõgeva-vald": {
+		"ehak": "0247",
 		"name": "Jõgeva vald",
 		"county": "Jõgeva",
 		"population": 13523,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"mustvee-vald": {
+		"ehak": "0486",
 		"name": "Mustvee vald",
 		"county": "Jõgeva",
 		"population": 5546,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"põltsamaa-vald": {
+		"ehak": "0618",
 		"name": "Põltsamaa vald",
 		"county": "Jõgeva",
 		"population": 9756,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"järva-vald": {
+		"ehak": "0255",
 		"name": "Järva vald",
 		"county": "Järva",
 		"population": 8968,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"paide-linn": {
+		"ehak": "0567",
 		"name": "Paide linn",
 		"county": "Järva",
 		"population": 10513,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
 	},
 	"türi-vald": {
+		"ehak": "0834",
 		"name": "Türi vald",
 		"county": "Järva",
 		"population": 10808,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"haapsalu-linn": {
+		"ehak": "0184",
 		"name": "Haapsalu linn",
 		"county": "Lääne",
 		"population": 13193,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"lääne-nigula-vald": {
+		"ehak": "0441",
 		"name": "Lääne-Nigula vald",
 		"county": "Lääne",
 		"population": 7115,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"vormsi-vald": {
+		"ehak": "0907",
 		"name": "Vormsi vald",
 		"county": "Lääne",
 		"population": 400,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"haljala-vald": {
+		"ehak": "0191",
 		"name": "Haljala vald",
 		"county": "Lääne-Viru",
 		"population": 4361,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"kadrina-vald": {
+		"ehak": "0272",
 		"name": "Kadrina vald",
 		"county": "Lääne-Viru",
 		"population": 4875,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"rakvere-linn": {
+		"ehak": "0663",
 		"name": "Rakvere linn",
 		"county": "Lääne-Viru",
 		"population": 15092,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
 	},
 	"rakvere-vald": {
+		"ehak": "0661",
 		"name": "Rakvere vald",
 		"county": "Lääne-Viru",
 		"population": 5590,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"tapa-vald": {
+		"ehak": "0792",
 		"name": "Tapa vald",
 		"county": "Lääne-Viru",
 		"population": 10866,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"vinni-vald": {
+		"ehak": "0901",
 		"name": "Vinni vald",
 		"county": "Lääne-Viru",
 		"population": 6900,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"viru-nigula-vald": {
+		"ehak": "0903",
 		"name": "Viru-Nigula vald",
 		"county": "Lääne-Viru",
 		"population": 5859,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"väike-maarja-vald": {
+		"ehak": "0928",
 		"name": "Väike-Maarja vald",
 		"county": "Lääne-Viru",
 		"population": 5928,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"kanepi-vald": {
+		"ehak": "0284",
 		"name": "Kanepi vald",
 		"county": "Põlva",
 		"population": 4821,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"põlva-vald": {
+		"ehak": "0622",
 		"name": "Põlva vald",
 		"county": "Põlva",
 		"population": 13982,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"räpina-vald": {
+		"ehak": "0708",
 		"name": "Räpina vald",
 		"county": "Põlva",
 		"population": 6377,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"häädemeeste-vald": {
+		"ehak": "0214",
 		"name": "Häädemeeste vald",
 		"county": "Pärnu",
 		"population": 4906,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"kihnu-vald": {
+		"ehak": "0303",
 		"name": "Kihnu vald",
 		"county": "Pärnu",
 		"population": 701,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"lääneranna-vald": {
+		"ehak": "0430",
 		"name": "Lääneranna vald",
 		"county": "Pärnu",
 		"population": 5396,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"põhja-pärnumaa-vald": {
+		"ehak": "0638",
 		"name": "Põhja-Pärnumaa vald",
 		"county": "Pärnu",
 		"population": 8285,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"pärnu-linn": {
+		"ehak": "0624",
 		"name": "Pärnu linn",
 		"county": "Pärnu",
 		"population": 51271,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"saarde-vald": {
+		"ehak": "0712",
 		"name": "Saarde vald",
 		"county": "Pärnu",
 		"population": 4603,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"tori-vald": {
+		"ehak": "0809",
 		"name": "Tori vald",
 		"county": "Pärnu",
 		"population": 11699,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"kehtna-vald": {
+		"ehak": "0293",
 		"name": "Kehtna vald",
 		"county": "Rapla",
 		"population": 5464,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"kohila-vald": {
+		"ehak": "0317",
 		"name": "Kohila vald",
 		"county": "Rapla",
 		"population": 7215,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"märjamaa-vald": {
+		"ehak": "0503",
 		"name": "Märjamaa vald",
 		"county": "Rapla",
 		"population": 7558,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"rapla-vald": {
+		"ehak": "0668",
 		"name": "Rapla vald",
 		"county": "Rapla",
 		"population": 13179,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"muhu-vald": {
+		"ehak": "0478",
 		"name": "Muhu vald",
 		"county": "Saare",
 		"population": 1927,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"ruhnu-vald": {
+		"ehak": "0689",
 		"name": "Ruhnu vald",
 		"county": "Saare",
 		"population": 159,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"saaremaa-vald": {
+		"ehak": "0714",
 		"name": "Saaremaa vald",
 		"county": "Saare",
 		"population": 31453,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"elva-vald": {
+		"ehak": "0171",
 		"name": "Elva vald",
 		"county": "Tartu",
 		"population": 14583,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"kambja-vald": {
+		"ehak": "0283",
 		"name": "Kambja vald",
 		"county": "Tartu",
 		"population": 11040,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"kastre-vald": {
+		"ehak": "0291",
 		"name": "Kastre vald",
 		"county": "Tartu",
 		"population": 5212,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"luunja-vald": {
+		"ehak": "0432",
 		"name": "Luunja vald",
 		"county": "Tartu",
 		"population": 4734,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"nõo-vald": {
+		"ehak": "0528",
 		"name": "Nõo vald",
 		"county": "Tartu",
 		"population": 4311,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"peipsiääre-vald": {
+		"ehak": "0586",
 		"name": "Peipsiääre vald",
 		"county": "Tartu",
 		"population": 5587,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"tartu-linn": {
+		"ehak": "0793",
 		"name": "Tartu linn",
 		"county": "Tartu",
 		"population": 95334,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"tartu-vald": {
+		"ehak": "0796",
 		"name": "Tartu vald",
 		"county": "Tartu",
 		"population": 10846,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"otepää-vald": {
+		"ehak": "0557",
 		"name": "Otepää vald",
 		"county": "Valga",
 		"population": 6566,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"tõrva-vald": {
+		"ehak": "0824",
 		"name": "Tõrva vald",
 		"county": "Valga",
 		"population": 6162,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"valga-vald": {
+		"ehak": "0855",
 		"name": "Valga vald",
 		"county": "Valga",
 		"population": 15625,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"mulgi-vald": {
+		"ehak": "0480",
 		"name": "Mulgi vald",
 		"county": "Viljandi",
 		"population": 7525,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"põhja-sakala-vald": {
+		"ehak": "0615",
 		"name": "Põhja-Sakala vald",
 		"county": "Viljandi",
 		"population": 7984,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"viljandi-linn": {
+		"ehak": "0897",
 		"name": "Viljandi linn",
 		"county": "Viljandi",
 		"population": 17301,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"viljandi-vald": {
+		"ehak": "0899",
 		"name": "Viljandi vald",
 		"county": "Viljandi",
 		"population": 13635,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"antsla-vald": {
+		"ehak": "0142",
 		"name": "Antsla vald",
 		"county": "Võru",
 		"population": 4565,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"rõuge-vald": {
+		"ehak": "0698",
 		"name": "Rõuge vald",
 		"county": "Võru",
 		"population": 5482,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"setomaa-vald": {
+		"ehak": "0732",
 		"name": "Setomaa vald",
 		"county": "Võru",
 		"population": 3392,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"võru-linn": {
+		"ehak": "0919",
 		"name": "Võru linn",
 		"county": "Võru",
 		"population": 11829,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	},
 	"võru-vald": {
+		"ehak": "0917",
 		"name": "Võru vald",
 		"county": "Võru",
 		"population": 10844,
-		"initiativesEmail": null
+		"initiativesEmail": null,
+		"kompassUrl": null
 	}
 }

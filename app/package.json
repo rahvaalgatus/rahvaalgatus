@@ -7,7 +7,8 @@
 		"pikaday": "",
 		"promise": "",
 		"whatwg-fetch": "",
-		"trix": ""
+		"trix": "",
+		"leaflet": ""
 	},
 
 	"devDependencies": {

@@ -145,8 +145,10 @@ exports.router.get("/",
 				return obj
 			}))
 
-		default:
-			res.render("initiatives/index_page.jsx", {initiatives: initiatives})
+		default: res.render("initiatives/index_page.jsx", {
+			initiatives: initiatives,
+			onlyDestinations: onlyDestinations || EMPTY_ARR
+		})
 	}
 }))
 

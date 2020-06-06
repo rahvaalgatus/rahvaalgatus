@@ -7,12 +7,15 @@ var {Section} = require("../page")
 var {Flash} = require("../page")
 var {InitiativeBoxesView} = require("../initiatives/index_page")
 var {CallToActionsView} = require("../home_page")
+var javascript = require("root/lib/jsx").javascript
+var {stringify} = require("root/lib/json")
 var EMPTY_ARR = Array.prototype
 
 module.exports = function(attrs) {
 	var t = attrs.t
 	var req = attrs.req
 	var initiatives = attrs.initiatives
+	var initiativeCounts = attrs.initiativeCounts
 
 	var initiativesByPhase = _.groupBy(initiatives, "phase")
 	var inEdit = initiativesByPhase.edit || EMPTY_ARR
@@ -21,6 +24,8 @@ module.exports = function(attrs) {
 	var inDone = initiativesByPhase.done || EMPTY_ARR
 
 	return <Page page="local-home" req={req}>
+		<script src="/assets/local.js" />
+
 		<Section id="welcome" class="primary-section">
 			<Flash flash={req.flash} />
 
@@ -28,6 +33,29 @@ module.exports = function(attrs) {
 			<p class="welcome-paragraph">{t("LOCAL_HOME_PAGE_HEADER_TEXT")}</p>
 
 			<CallToActionsView req={req} t={t} />
+		</Section>
+
+		<Section id="map-section" class="secondary-section">
+			<div id="map" />
+
+			<ol id="map-legend">
+				<li class="initiatives-legend">
+					{t("LOCAL_HOME_PAGE_MAP_LEGEND_INITIATIVES")}
+				</li>
+
+				<li class="kompass-legend">
+					{t("LOCAL_HOME_PAGE_MAP_LEGEND_KOMPASS")}
+				</li>
+			</ol>
+
+			<script>{javascript`
+				var Local = require("@rahvaalgatus/local")
+
+				Local.newMap(
+					document.getElementById("map"),
+					${stringify(initiativeCounts)}
+				)
+			`}</script>
 		</Section>
 
 		<Section id="initiatives" class="secondary-section initiatives-section">

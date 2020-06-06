@@ -1,14 +1,14 @@
 {
   "checksum": {
-    "previous": "1fe9c6212b997adc8cee645f092e45135cd18ba48f0e473703f420f0d9729d84",
-    "current": "1fe9c6212b997adc8cee645f092e45135cd18ba48f0e473703f420f0d9729d84"
+    "previous": "6e779c5f19950ee201d1e93866b4a18efb076bae8845f28af3844eb41c9ca59d",
+    "current": "6e779c5f19950ee201d1e93866b4a18efb076bae8845f28af3844eb41c9ca59d"
   },
   "fonts": [
-    "public/assets/Rahvaicons_1fe9c6212b997adc8cee645f092e4513.ttf",
-    "public/assets/Rahvaicons_1fe9c6212b997adc8cee645f092e4513.svg",
-    "public/assets/Rahvaicons_1fe9c6212b997adc8cee645f092e4513.woff",
-    "public/assets/Rahvaicons_1fe9c6212b997adc8cee645f092e4513.eot",
-    "public/assets/Rahvaicons_1fe9c6212b997adc8cee645f092e4513.woff2"
+    "public/assets/Rahvaicons_6e779c5f19950ee201d1e93866b4a18e.ttf",
+    "public/assets/Rahvaicons_6e779c5f19950ee201d1e93866b4a18e.svg",
+    "public/assets/Rahvaicons_6e779c5f19950ee201d1e93866b4a18e.woff",
+    "public/assets/Rahvaicons_6e779c5f19950ee201d1e93866b4a18e.eot",
+    "public/assets/Rahvaicons_6e779c5f19950ee201d1e93866b4a18e.woff2"
   ],
   "glyphs": {
     "api": {
@@ -22,6 +22,10 @@
     "doc": {
       "codepoint": 61704,
       "source": "assets/icons/doc.svg"
+    },
+    "external-link": {
+      "codepoint": 61709,
+      "source": "assets/icons/external-link.svg"
     },
     "facebook-logo": {
       "codepoint": 61696,

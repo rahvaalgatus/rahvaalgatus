@@ -4,6 +4,7 @@
 @import "_rahvaicons";
 @import "_rahvaicons_lib";
 @import "_editor";
+@import "../app/node_modules/leaflet/dist/leaflet";
 $article-padding: 3rem;
 $article-padding-mobile: 2rem;
 $article-width-percentage: 70%;
@@ -1493,6 +1494,167 @@ button.inherited {
 			}
 		}
 	}
+
+	#map-section {
+		$initiatives-legend: $parliament-phase-color;
+		$kompass-legend: #e2bec6;
+
+		padding-top: 0;
+		padding-bottom: 0;
+		text-align: center;
+
+		center {
+			padding-left: 0;
+			padding-right: 0;
+		}
+
+		#map {
+			text-align: left;
+			height: 50rem;
+			background: $secondary-background;
+			font-family: $museo-sans;
+
+			.leaflet-control {
+				margin-left: 2rem;
+				margin-top: 4rem;
+			}
+
+			.gov-tooltip,
+			.gov-popup {
+				.has-initiatives:before { background-color: $initiatives-legend; }
+				.kompass:before { background-color: $kompass-legend; }
+			}
+
+			.gov-tooltip {
+				min-width: 20rem;
+				max-width: 30rem;
+				padding: 0.7rem 1.2rem;
+				white-space: pre-wrap;
+				font-size: 1.2rem;
+
+				&::before { height: 0; width: 0; }
+
+				h2 {
+					color: $title-text;
+					font-size: 1.6rem;
+				}
+
+				ul:not(:empty) {
+					margin-top: 0.5rem;
+				}
+
+				li:before {
+					content: "";
+					display: inline-block;
+					vertical-align: middle;
+					margin-right: 0.5rem;
+					width: 0.7rem;
+					height: 0.7rem;
+					border-radius: 50%;
+				}
+			}
+
+			.gov-popup .leaflet-popup-content-wrapper {
+				border-radius: 0.5rem;
+			}
+
+			.gov-popup .leaflet-popup-content {
+				min-width: 20rem;
+				max-width: 25rem;
+				margin: 1.3rem 1.5rem;
+				font-size: 1.3rem;
+
+				h2 {
+					color: $title-text;
+					font-size: 2rem;
+					margin-bottom: 0.5rem;
+				}
+
+				p {
+					margin: 0;
+				}
+
+				p + ul {
+					margin-top: 1rem;
+				}
+
+				li:before {
+					content: "";
+					display: inline-block;
+					vertical-align: baseline;
+					margin-right: 0.5rem;
+					width: 0.9rem;
+					height: 0.9rem;
+					border-radius: 50%;
+				}
+
+				li a {
+					text-decoration: underline;
+				}
+
+				menu {
+					margin-top: 1rem;
+
+					// Leaflet overrides <a> colors.
+					.blue-button { color: white; }
+					.new-initiative-button { margin-right: 0.5rem; }
+				}
+			}
+
+			.kompass-marker-below,
+			.kompass-marker-above {
+				opacity: 1;
+				fill-opacity: 1;
+			}
+
+			.kompass-marker-below {
+				fill: #fad5db;
+				stroke: #fbdee1;
+				stroke-width: 2;
+			}
+
+			.kompass-marker-above {
+				fill: #c7afb9;
+				stroke: #e2bec6;
+				stroke-width: 3;
+			}
+
+			@media only screen and (max-width: 599px) { height: 40rem; }
+			@media only screen and (max-width: 499px) { height: 30rem; }
+		}
+
+		#map-legend {
+			margin: 0 2rem;
+			padding: 1rem 2rem;
+			text-align: center;
+
+			@media only screen and (max-width: 539px) {
+				background: rgba(white, 0.3);
+			}
+
+			li {
+				margin-right: 2rem;
+				display: inline-block;
+
+				&:before {
+					content: "";
+					display: inline-block;
+					vertical-align: baseline;
+					margin-right: 0.5rem;
+					width: 0.9rem;
+					height: 0.9rem;
+					border-radius: 50%;
+				}
+			}
+
+			.initiatives-legend:before { background-color: $initiatives-legend; }
+			.kompass-legend:before { background-color: $kompass-legend; }
+		}
+	}
+
+	#initiatives {
+		margin-top: 4rem;
+	}
 }
 
 #create-session-page #main {
@@ -1593,6 +1755,15 @@ button.inherited {
 	$screen-width-for-boxes: 586px;
 
 	background-color: $secondary-background;
+
+	#filter {
+		h1 {
+			font-size: 3.4rem;
+			line-height: 1.2;
+			color: $title-text;
+			font-family: $museo-sans;
+		}
+	}
 
 	.initiative-list-section {
 		padding-top: 3rem; // Phase headers have extra top-padding.

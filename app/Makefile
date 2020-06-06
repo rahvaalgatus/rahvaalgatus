@@ -1,5 +1,5 @@
 NODE = node
-FILES = $(patsubst %, public/assets/%.js, html5 inputs hwcrypto editor)
+FILES = $(patsubst %, public/assets/%.js, html5 inputs hwcrypto editor local)
 BROWSERIFY = ./node_modules/.bin/browserify
 WATCHIFY = ./node_modules/.bin/watchify --verbose
 UGLIFY = ./node_modules/.bin/uglifyjs
@@ -13,7 +13,7 @@ UGLIFY_OPTS += --stats
 #UGLIFY_OPTS += --mangle
 
 love: public/assets
-	@$(MAKE) --always-make $(FILES)
+	@$(MAKE) $(FILES)
 
 compile: love
 
@@ -49,6 +49,13 @@ public/assets/editor.js:
 		--require trix \
 		--outfile "$@"
 
+public/assets/local.js: ../tmp/local_governments.geojson.json
+public/assets/local.js:
+	@echo "Compiling $@…"
+	@$(BROWSERIFY) $(BROWSERIFY_OPTS) \
+		--require ./$(@F:%.js=%):@rahvaalgatus/$(@F:%.js=%) \
+		--outfile "$@"
+
 public/assets/%.max.js: public/assets/%.js
 	@mv "$<" "$@"
 
@@ -56,12 +63,21 @@ public/assets/%.min.js: public/assets/%.max.js
 	@echo "Minifying $(@D)/$*.js…"
 	@$(UGLIFY) $(UGLIFY_OPTS) --output "$@" -- "$<"
 
+../tmp/local_governments.geojson.json: ../lib/local_governments.json
+../tmp/local_governments.geojson.json: ../lib/local_governments.geojson
+../tmp/local_governments.geojson.json: ../scripts/local_governments_geojson.jq
+	jq $(JQ_OPTS) -c -f ../scripts/local_governments_geojson.jq \
+		--argfile govs ../lib/local_governments.json \
+		../lib/local_governments.geojson \
+		> "$@"
+
 shrinkwrap:
 	npm shrinkwrap --dev
 
 .PHONY: love
 .PHONY: compile autocompile minify
 .PHONY: shrinkwrap
+.PHONY: $(FILES)
 
 # Precious stops Make from deleting files after exiting autocompiling.
 .PRECIOUS: $(FILES)
