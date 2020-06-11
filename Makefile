@@ -50,7 +50,6 @@ RSYNC_OPTS = \
 
 export PORT
 export ENV
-export TEST
 export LIVERELOAD_PORT
 
 ifneq ($(filter test spec autotest autospec test/%, $(MAKECMDGOALS)),)
