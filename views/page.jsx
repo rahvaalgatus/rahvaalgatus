@@ -9,7 +9,7 @@ var javascript = require("root/lib/jsx").javascript
 var {isAdmin} = require("root/lib/user")
 var EMPTY_ARR = Array.prototype
 var SITE_TITLE = Config.title
-var LANGS = Config.languages
+var LANGUAGES = Config.languages
 var ENV = process.env.ENV
 var LIVERELOAD_PORT = process.env.LIVERELOAD_PORT || 35729
 exports = module.exports = Page
@@ -75,7 +75,7 @@ function Page(attrs, children) {
 			<header id="header"><center>
 				<menu class="languages-and-user">
 					<Form action="/user" method="put" class="languages" req={req}>
-						{LANGS.map((lang) => <button
+						{LANGUAGES.map((lang) => <button
 							name="language"
 							value={lang}
 							disabled={req.lang === lang}
