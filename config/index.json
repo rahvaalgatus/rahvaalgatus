@@ -21,7 +21,7 @@
 	"expireSignaturesInMonths": null,
 
 	"language": "et",
-	"languages": ["et", "en", "ru"],
+	"languages": ["et", "ru", "en"],
 	"votesRequired": 1000,
 	"minDeadlineDays": 3,
 	"maxDeadlineDays": 366,
