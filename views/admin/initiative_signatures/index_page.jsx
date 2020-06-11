@@ -9,14 +9,25 @@ var {getSexFromPersonalId} = SignaturesController
 var {getBirthdateFromPersonalId} = SignaturesController
 var {getAgeRange} = SignaturesController
 var {serializeLocation} = SignaturesController
+var {COLUMNS} = SignaturesController
+
+var COLUMN_TITLES = {
+	created_on: "Date",
+	initiative_uuid: "Initiative",
+	signer_id: "Signer Id",
+	signer_ordinal: "Signer Ordinal",
+	sex: "Sex",
+	age_range: "Age Range",
+	location: "From"
+}
 
 module.exports = function(attrs) {
 	var req = attrs.req
 	var from = attrs.from
 	var to = attrs.to
-	var signatures = attrs.signatures
-	var withLocation = attrs.withLocation
+	var columns = attrs.columns
 	var timeFormat = attrs.timeFormat
+	var signatures = attrs.signatures
 
 	return <Page page="signatures" title="Signature" req={attrs.req}>
 		<h1 class="admin-heading">Signatures</h1>
@@ -26,7 +37,7 @@ module.exports = function(attrs) {
 			class="admin-inline-form options-form"
 			req={req}
 		>
-			<fieldset>
+			<fieldset class="date-range-fields">
 				<label class="admin-label">From</label>
 				<input
 					type="date"
@@ -44,44 +55,49 @@ module.exports = function(attrs) {
 				/>
 			</fieldset>
 
-			<fieldset>
-				<label>
-					<input type="hidden" name="with-location" value="false" />
+			<fieldset class="column-fields">
+				<h2>Columns:</h2>
 
-					<input
-						type="checkbox"
-						name="with-location"
-						value="true"
-						checked={withLocation}
-					/>
+				<ol>{COLUMNS.map(function(column) {
+					return <li>
+						<label class="column-checkbox">
+							<input
+								type="checkbox"
+								name="columns[]"
+								value={column}
+								checked={columns.includes(column)}
+							/>
 
-					Include location
-				</label>
-				<br />
+							{COLUMN_TITLES[column]}
+						</label>
 
-				Signing time as
+						{column == "created_on" ? <div>
+							Signing time as
 
-				<label>
-					<input
-						type="radio"
-						name="time-format"
-						value="date"
-						checked={timeFormat == "date"}
-					/>
+							<label>
+								<input
+									type="radio"
+									name="time-format"
+									value="date"
+									checked={timeFormat == "date"}
+								/>
 
-					Date
-				</label>
+								Date
+							</label>
+							{" or "}
+							<label>
+								<input
+									type="radio"
+									name="time-format"
+									value="week"
+									checked={timeFormat == "week"}
+								/>
 
-				<label>
-					<input
-						type="radio"
-						name="time-format"
-						value="week"
-						checked={timeFormat == "week"}
-					/>
-
-					Week
-				</label>
+								Week
+							</label>
+						</div> : null}
+					</li>
+				})}</ol>
 			</fieldset>
 
 			<button class="admin-submit">Filter</button>
@@ -96,15 +112,13 @@ module.exports = function(attrs) {
 
 		<table class="admin-table">
 			<thead>
-				<tr>
-					<th>{timeFormat == "date" ? "Date" : "Week (ISO)"}</th>
-					<th>Initiative</th>
-					<th>Signer Id</th>
-					<th>Signer Ordinal</th>
-					<th>Sex</th>
-					<th>Age Range</th>
-					{withLocation ? <th>From</th> : null}
-				</tr>
+				<tr>{columns.map((column) => { switch (column) {
+					case "created_on": return <th>
+						{timeFormat == "date" ? "Date" : "Week (ISO)"}
+					</th>
+
+					default: return <th>{COLUMN_TITLES[column]}</th>
+				}})}</tr>
 			</thead>
 
 			<tbody>
@@ -113,36 +127,33 @@ module.exports = function(attrs) {
 					var initiativePath = `${req.rootUrl}/initiatives/${initiativeUuid}`
 					var birthdate = getBirthdateFromPersonalId(sig.personal_id)
 
-					return <tr>
-						<td>{timeFormat == "date"
+					return <tr>{columns.map((column) => { switch (column) {
+						case "created_on": return <td>{timeFormat == "date"
 							? formatDate("iso", sig.created_at)
 							: formatDate("iso-week", sig.created_at)
 						}</td>
 
-						<td>
+						case "initiative_uuid": return <td>
 							<a href={initiativePath} class="admin-link">
 								{sig.initiative_title}
 							</a>
 						</td>
 
-						<td>
-							{sig.signer_id}
-						</td>
+						case "signer_id": return <td>{sig.signer_id}</td>
+						case "signer_ordinal": return <td>{sig.signer_ordinal}</td>
+						case "sex": return <td>{getSexFromPersonalId(sig.personal_id)}</td>
 
-						<td>
-							{sig.signer_ordinal}
-						</td>
-
-						<td>{getSexFromPersonalId(sig.personal_id)}</td>
-						<td>
+						case "age_range": return <td>
 							{getAgeRange(birthdate, sig.created_at)}
 						</td>
 
-						{withLocation ? <td>
+						case "location": return <td>
 							{sig.created_from && serializeLocation(sig.created_from)}
-						</td> : null}
-					</tr>
-				})}
+						</td>
+
+						default: throw new RangeError("Unknown column: " + column)
+					}})}
+				</tr>})}
 			</tbody>
 		</table>
 	</Page>

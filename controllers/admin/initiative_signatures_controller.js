@@ -1,4 +1,3 @@
-var _ = require("root/lib/underscore")
 var Router = require("express").Router
 var DateFns = require("date-fns")
 var Time = require("root/lib/time")
@@ -14,6 +13,18 @@ exports.getBirthdateFromPersonalId = getBirthdateFromPersonalId
 exports.getAgeRange = getAgeRange
 exports.serializeLocation = serializeLocation
 
+var COLUMNS = [
+	"created_on",
+	"initiative_uuid",
+	"signer_id",
+	"signer_ordinal",
+	"sex",
+	"age_range",
+	"location"
+]
+
+exports.COLUMNS = COLUMNS
+
 exports.router.get("/(:format?)", next(function*(req, res) {
 	var from = req.query.from
 		? Time.parseDate(req.query.from)
@@ -21,12 +32,11 @@ exports.router.get("/(:format?)", next(function*(req, res) {
 
 	var to = req.query.to ? Time.parseDate(req.query.to) : null
 
-	var timeFormat = req.query["time-format"] || "date"
+	var columns = req.query.columns
+		? req.query.columns.filter(COLUMNS.includes.bind(COLUMNS))
+		: COLUMNS
 
-	var withLocation = (
-		req.query["with-location"] == null ||
-		parseQueryBoolean(req.query["with-location"])
-	)
+	var timeFormat = req.query["time-format"] || "date"
 
 	var signatures = yield signaturesDb.search(sql`
 		WITH signatures AS (
@@ -80,46 +90,47 @@ exports.router.get("/(:format?)", next(function*(req, res) {
 	switch (req.accepts(["text/csv", "text/html"])) {
 		case "text/csv":
 			res.setHeader("Content-Type", "text/csv")
-			res.end(serializeSignaturesAsCsv(timeFormat, withLocation, signatures))
+			res.end(serializeSignaturesAsCsv(columns, timeFormat, signatures))
 			break
 
 		default: res.render("admin/initiative_signatures/index_page.jsx", {
 			from: from,
 			to: to,
+			columns: columns,
 			timeFormat: timeFormat,
-			withLocation: withLocation,
 			signatures: signatures
 		})
 	}
 }))
 
-function serializeSignaturesAsCsv(timeFormat, withLocation, signatures) {
-	var header = [
-		timeFormat == "date" ? "date" : "week",
-		"initiative_uuid",
-		"signer_id",
-		"signer_ordinal",
-		"sex",
-		"age_range",
-		withLocation && "location"
-	].filter(Boolean)
+function serializeSignaturesAsCsv(columns, timeFormat, signatures) {
+	var header = columns.map((column) => (
+		column == "created_on" ? (timeFormat == "date" ? "date" : "week") :
+		column
+	))
 
-	return concat([header], signatures.map((sig) => concat(
-		timeFormat == "date"
+	var rows = signatures.map((sig) => columns.map((column) => { switch (column) {
+		case "created_on": return timeFormat == "date"
 			? formatDate("iso", sig.created_at)
 			: formatDate("iso-week", sig.created_at)
-		,
 
-		sig.initiative_uuid,
-		sig.signer_id,
-		sig.signer_ordinal,
-		getSexFromPersonalId(sig.personal_id),
-		getAgeRange(getBirthdateFromPersonalId(sig.personal_id), sig.created_at),
+		case "initiative_uuid": return sig.initiative_uuid
+		case "signer_id": return sig.signer_id
+		case "signer_ordinal": return sig.signer_ordinal
+		case "sex": return getSexFromPersonalId(sig.personal_id)
+		case "age_range": return getAgeRange(
+			getBirthdateFromPersonalId(sig.personal_id),
+			sig.created_at
+		)
 
-		withLocation ? (
-			sig.created_from ? serializeLocation(sig.created_from) : ""
-		) : []
-	)).map(serializeCsv)).join("\n")
+		case "location": return sig.created_from
+			? serializeLocation(sig.created_from)
+			: ""
+
+		default: throw new RangeError("Unknown column: " + column)
+	}}))
+
+	return concat([header], rows).map(serializeCsv).join("\n")
 }
 
 function serializeCsv(tuple) {
@@ -171,9 +182,4 @@ function serializeLocation(from) {
 		(from.subdivisions || []).map((div) => div.name),
 		from.country_name
 	]).filter(Boolean).join(", ")
-}
-
-function parseQueryBoolean(value) {
-	if (value instanceof Array) value = _.last(value)
-	return _.parseBoolean(value)
 }

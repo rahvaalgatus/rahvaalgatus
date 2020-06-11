@@ -415,16 +415,47 @@ textarea.admin-input {
 
 #signatures-page {
 	.options-form {
-		display: block;
+		display: inline-block;
 		margin-bottom: 0.5rem;
+		background: white;
+		padding: 2rem;
+		border-radius: $button-radius;
 
 		input { vertical-align: middle; }
 
-		label { margin-right: 0.5rem; }
-		label ~ label { margin-left: 1rem; }
+		.date-range-fields {
+			label { margin-right: 0.5rem; }
+			label ~ label { margin-left: 1rem; }
+		}
 
-		button { margin-top: 0.5rem; }
-		button + button { margin-left: 0.5rem; }
+		.admin-submit { margin-top: 2rem; }
+		.admin-submit + .admin-submit { margin-left: 0.5rem; }
+
+		fieldset + fieldset {
+			margin-top: 2rem;
+		}
+
+		.column-fields {
+			h2 {
+				font-weight: bold;
+				margin-bottom: 0.5rem;
+			}
+
+			li {
+				margin-left: 1rem;
+
+				.column-checkbox input {
+					width: 3rem;
+					margin: 0;
+				}
+
+				.column-checkbox ~ * { margin-left: 3rem; }
+
+				& + li {
+					margin-top: 0.3rem;
+				}
+			}
+		}
 	}
 
 	.admin-table {
