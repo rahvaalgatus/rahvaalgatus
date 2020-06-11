@@ -84,7 +84,7 @@ exports.router.get("/(:format?)", next(function*(req, res) {
 		WHERE signature.country = 'EE'
 		AND signature.created_at >= ${from}
 		${to ? sql`AND signature.created_at < ${to}` : sql``}
-		ORDER BY signature.created_at DESC
+		ORDER BY RANDOM()
 	`)
 
 	switch (req.accepts(["text/csv", "text/html"])) {
