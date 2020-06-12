@@ -153,6 +153,21 @@ exports.router.get("/:commentId", next(function*(req, res) {
 	yield renderComment(req, res)
 }))
 
+exports.router.delete("/:commentId", next(function*(req, res) {
+	var user = req.user
+	if (user == null) throw new HttpError(401)
+
+	var comment = req.comment
+	if (comment.anonymized_at) throw new HttpError(405, "Already Anonymized")
+	if (comment.user_id != user.id) throw new HttpError(403, "Not Author")
+	if (comment.parent_id) throw new HttpError(405, "Cannot Delete Replies")
+
+	yield commentsDb.update(comment, {anonymized_at: new Date})
+
+	res.flash("notice", req.t("COMMENT_ANONYMIZED"))
+	res.redirect(303, req.baseUrl + "/" + comment.id)
+}))
+
 exports.router.post("/:commentId/replies", next(function*(req, res) {
 	var user = req.user
 	if (user == null) throw new HttpError(401)

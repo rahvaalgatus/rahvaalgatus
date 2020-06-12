@@ -5,9 +5,11 @@ var InitiativePage = require("../initiative_page")
 var Flash = require("../../page").Flash
 var I18n = require("root/lib/i18n")
 var Form = require("../../page").Form
+var FormButton = require("../../page").FormButton
 var Comment = require("root/lib/comment")
 var CommentsController =
 	require("root/controllers/initiatives/comments_controller")
+var confirm = require("root/lib/jsx").confirm
 var MAX_COMMENT_TEXT_LENGTH = CommentsController.MAX_TEXT_LENGTH
 exports = module.exports = ReadPage
 exports.CommentView = CommentView
@@ -70,11 +72,27 @@ function CommentView(attrs) {
 
 		<p class="text">{Jsx.html(Comment.htmlify(comment.text))}</p>
 
-		{req.user ? <a
-			href={`#comment-${comment.id}-reply`}
-			class="comment-reply-button white-button">
-			{t("REPLY")}
-		</a> : null}
+		{req.user ? <menu>
+			{(
+				req.user.id == comment.user_id &&
+				!comment.anonymized_at &&
+				new Date - comment.created_at >= 3600 * 1000
+			) ? <FormButton
+				req={req}
+				action={commentUrl}
+				name="_method"
+				value="delete"
+				onclick={confirm(t("ANONYMIZE_COMMENT_CONFIRMATION"))}
+				class="comment-delete-button link-button">
+				{t("ANONYMIZE_COMMENT")}
+			</FormButton> : null}
+
+			<a
+				href={`#comment-${comment.id}-reply`}
+				class="comment-reply-button link-button">
+				{t("REPLY")}
+			</a>
+		</menu> : null}
 
 		<ol class="comment-replies">{(comment.replies || []).map(function(reply) {
 			var anonymous = !!reply.anonymized_at

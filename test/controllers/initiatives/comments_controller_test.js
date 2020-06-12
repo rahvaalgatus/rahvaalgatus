@@ -4,6 +4,8 @@ var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidComment = require("root/test/valid_comment")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidUser = require("root/test/valid_user")
+var Http = require("root/lib/http")
+var parseCookies = Http.parseCookies
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
@@ -797,6 +799,131 @@ describe("InitiativeCommentsController", function() {
 		})
 	})
 
+	describe("DELETE /:id", function() {
+		describe("when not logged in", function() {
+			it("must respond with 401 when not logged in", function*() {
+				var author = yield usersDb.create(new ValidUser)
+
+				var comment = yield commentsDb.create(new ValidComment({
+					initiative_uuid: this.initiative.uuid,
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid)
+				}))
+
+				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var res = yield this.request(path, {
+					method: "POST",
+					form: {_csrf_token: this.csrfToken, _method: "DELETE"}
+				})
+
+				res.statusCode.must.equal(401)
+				res.statusMessage.must.equal("Unauthorized")
+			})
+		})
+
+		describe("when logged in", function() {
+			require("root/test/fixtures").user()
+
+			it("must respond with 403 if not author", function*() {
+				var author = yield usersDb.create(new ValidUser)
+
+				var comment = yield commentsDb.create(new ValidComment({
+					initiative_uuid: this.initiative.uuid,
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid)
+				}))
+
+				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var res = yield this.request(path, {
+					method: "POST",
+					form: {_csrf_token: this.csrfToken, _method: "DELETE"}
+				})
+
+				res.statusCode.must.equal(403)
+				res.statusMessage.must.equal("Not Author")
+				yield commentsDb.read(comment).must.then.eql(comment)
+			})
+
+			it("must respond with 405 given reply", function*() {
+				var comment = yield commentsDb.create(new ValidComment({
+					initiative_uuid: this.initiative.uuid,
+					user_id: this.user.id,
+					user_uuid: _.serializeUuid(this.user.uuid)
+				}))
+
+				var reply = yield commentsDb.create(new ValidComment({
+					initiative_uuid: this.initiative.uuid,
+					user_id: this.user.id,
+					user_uuid: _.serializeUuid(this.user.uuid),
+					parent_id: comment.id
+				}))
+
+				var path = `/initiatives/${this.initiative.uuid}/comments/${reply.id}`
+				var res = yield this.request(path, {
+					method: "POST",
+					form: {_csrf_token: this.csrfToken, _method: "DELETE"}
+				})
+
+				res.statusCode.must.equal(405)
+				res.statusMessage.must.equal("Cannot Delete Replies")
+				yield commentsDb.read(comment).must.then.eql(comment)
+			})
+
+			it("must respond with 405 given anonymized comment even if other's",
+				function*() {
+				var author = yield usersDb.create(new ValidUser)
+
+				var comment = yield commentsDb.create(new ValidComment({
+					initiative_uuid: this.initiative.uuid,
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
+					anonymized_at: new Date
+				}))
+
+				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var res = yield this.request(path, {
+					method: "POST",
+					form: {_csrf_token: this.csrfToken, _method: "DELETE"}
+				})
+
+				res.statusCode.must.equal(405)
+				res.statusMessage.must.equal("Already Anonymized")
+				yield commentsDb.read(comment).must.then.eql(comment)
+			})
+
+			it("must anonymize comment", function*() {
+				var comment = yield commentsDb.create(new ValidComment({
+					initiative_uuid: this.initiative.uuid,
+					user_id: this.user.id,
+					user_uuid: _.serializeUuid(this.user.uuid)
+				}))
+
+				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var res = yield this.request(path, {
+					method: "POST",
+					form: {_csrf_token: this.csrfToken, _method: "DELETE"}
+				})
+
+				res.statusCode.must.equal(303)
+				res.headers.location.must.equal(path)
+
+				yield commentsDb.read(comment).must.then.eql({
+					__proto__: comment,
+					anonymized_at: new Date
+				})
+
+				var cookies = parseCookies(res.headers["set-cookie"])
+				res = yield this.request(res.headers.location, {
+					headers: {Cookie: Http.serializeCookies(cookies)}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("COMMENT_ANONYMIZED"))
+				res.body.must.not.include(this.user.name)
+			})
+		})
+	})
+
 	describe("POST /:id/replies", function() {
 		describe("when not logged in", function() {
 			it("must respond with 401 when not logged in", function*() {
@@ -808,8 +935,7 @@ describe("InitiativeCommentsController", function() {
 					user_uuid: _.serializeUuid(author.uuid)
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}`
-				path += `/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
 				var res = yield this.request(path + "/replies", {
 					method: "POST",
 					form: {_csrf_token: this.csrfToken}
@@ -832,8 +958,7 @@ describe("InitiativeCommentsController", function() {
 					initiative_uuid: this.initiative.uuid
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}`
-				path += `/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
 				var res = yield this.request(path + "/replies", {
 					method: "POST",
 
@@ -912,8 +1037,8 @@ describe("InitiativeCommentsController", function() {
 					initiative_uuid: this.initiative.uuid
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}`
-				var res = yield this.request(path + `/comments/${comment.id}/replies`, {
+				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var res = yield this.request(path + `/replies`, {
 					method: "POST",
 					form: {
 						__proto__: VALID_REPLY_ATTRS,
@@ -961,8 +1086,8 @@ describe("InitiativeCommentsController", function() {
 					})
 				])
 
-				var path = `/initiatives/${this.initiative.uuid}`
-				var res = yield this.request(path + `/comments/${comment.id}/replies`, {
+				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var res = yield this.request(path + `/replies`, {
 					method: "POST",
 					form: {__proto__: VALID_REPLY_ATTRS, _csrf_token: this.csrfToken}
 				})
@@ -1009,9 +1134,7 @@ describe("InitiativeCommentsController", function() {
 					})
 				])
 
-				var path = `/initiatives/${this.initiative.uuid}`
-				path += `/comments/${comment.id}`
-
+				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
 				var res = yield this.request(path + `/replies`, {
 					method: "POST",
 					form: {__proto__: VALID_REPLY_ATTRS, _csrf_token: this.csrfToken}
@@ -1051,9 +1174,7 @@ describe("InitiativeCommentsController", function() {
 					})
 				])
 
-				var path = `/initiatives/${this.initiative.uuid}`
-				path += `/comments/${comment.id}`
-
+				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
 				var res = yield this.request(path + `/replies`, {
 					method: "POST",
 					form: {__proto__: VALID_REPLY_ATTRS, _csrf_token: this.csrfToken}
@@ -1079,9 +1200,7 @@ describe("InitiativeCommentsController", function() {
 					parent_id: parent.id
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}`
-				path += `/comments/${comment.id}`
-
+				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
 				var res = yield this.request(path + "/replies", {
 					method: "POST",
 					form: {_csrf_token: this.csrfToken}
@@ -1139,8 +1258,7 @@ describe("InitiativeCommentsController", function() {
 					initiative_uuid: this.initiative.uuid
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}`
-				path += `/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
 				var res = yield this.request(path + `/replies`, {
 					method: "POST",
 					form: {__proto__: VALID_REPLY_ATTRS, _csrf_token: this.csrfToken}
@@ -1167,8 +1285,7 @@ describe("InitiativeCommentsController", function() {
 					initiative_uuid: this.initiative.uuid
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}`
-				path += `/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
 				var res = yield this.request(path + `/replies`, {
 					method: "POST",
 					form: {__proto__: VALID_REPLY_ATTRS, _csrf_token: this.csrfToken}
