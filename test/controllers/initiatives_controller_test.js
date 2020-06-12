@@ -5472,7 +5472,7 @@ describe("InitiativesController", function() {
 					form: {_csrf_token: this.csrfToken, _method: "delete"}
 				})
 
-				res.statusCode.must.equal(302)
+				res.statusCode.must.equal(303)
 				res.headers.location.must.equal(`/initiatives`)
 
 				var cookies = parseCookies(res.headers["set-cookie"])
@@ -5499,7 +5499,7 @@ describe("InitiativesController", function() {
 					form: {_csrf_token: this.csrfToken, _method: "delete"}
 				})
 
-				res.statusCode.must.equal(302)
+				res.statusCode.must.equal(303)
 				res.headers.location.must.equal(`/initiatives`)
 
 				yield initiativesDb.search(sql`
@@ -5525,7 +5525,7 @@ describe("InitiativesController", function() {
 					form: {_csrf_token: this.csrfToken, _method: "delete"}
 				})
 
-				res.statusCode.must.equal(302)
+				res.statusCode.must.equal(303)
 				res.headers.location.must.equal(`/initiatives`)
 
 				yield initiativesDb.search(sql`
@@ -5552,7 +5552,7 @@ describe("InitiativesController", function() {
 					form: {_csrf_token: this.csrfToken, _method: "delete"}
 				})
 
-				res.statusCode.must.equal(302)
+				res.statusCode.must.equal(303)
 				res.headers.location.must.equal(path)
 
 				var cookies = parseCookies(res.headers["set-cookie"])
@@ -5583,7 +5583,7 @@ describe("InitiativesController", function() {
 					form: {_csrf_token: this.csrfToken, _method: "delete"}
 				})
 
-				res.statusCode.must.equal(302)
+				res.statusCode.must.equal(303)
 				res.headers.location.must.equal(`/initiatives`)
 
 				yield initiativesDb.search(sql`
@@ -5614,7 +5614,7 @@ describe("InitiativesController", function() {
 					form: {_csrf_token: this.csrfToken, _method: "delete"}
 				})
 
-				res.statusCode.must.equal(302)
+				res.statusCode.must.equal(303)
 				res.headers.location.must.equal(`/initiatives`)
 
 				yield initiativesDb.search(sql`

@@ -405,14 +405,14 @@ exports.router.delete("/:id", next(function*(req, res) {
 	catch (ex) {
 		if (ex instanceof SqliteError && ex.code == "constraint") {
 			res.flash("notice", req.t("INITIATIVE_CANNOT_BE_DELETED_HAS_COMMENTS"))
-			res.redirect(302, req.baseUrl + req.path)
+			res.redirect(303, req.baseUrl + req.path)
 			return
 		}
 		else throw ex
 	}
 
 	res.flash("notice", req.t("INITIATIVE_DELETED"))
-	res.redirect(302, req.baseUrl)
+	res.redirect(303, req.baseUrl)
 }))
 
 exports.router.get("/:id/edit", next(function*(req, res) {
