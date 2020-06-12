@@ -16,8 +16,7 @@ exports.serializeLocation = serializeLocation
 var COLUMNS = [
 	"created_on",
 	"initiative_uuid",
-	"signer_id",
-	"signer_ordinal",
+	"past_signatures",
 	"sex",
 	"age_range",
 	"location"
@@ -45,7 +44,6 @@ exports.router.get("/(:format?)", next(function*(req, res) {
 				created_at,
 				country,
 				personal_id,
-				signer_id,
 				created_from
 
 			FROM initiative_signatures
@@ -55,7 +53,6 @@ exports.router.get("/(:format?)", next(function*(req, res) {
 				created_at,
 				country,
 				personal_id,
-				signer_id,
 				NULL AS created_from
 
 			FROM initiative_citizenos_signatures
@@ -65,13 +62,15 @@ exports.router.get("/(:format?)", next(function*(req, res) {
 			signature.created_at,
 			signature.created_from,
 			signature.personal_id,
-			signature.signer_id,
 
 			(
 				SELECT COUNT(*) FROM signatures
-				WHERE signer_id = signature.signer_id
-				AND created_at <= signature.created_at
-			) AS signer_ordinal,
+				WHERE country = signature.country
+				AND personal_id = signature.personal_id
+				AND created_at < signature.created_at
+				AND datetime(created_at, 'localtime')
+				>= datetime(signature.created_at, 'localtime', '-25 months')
+			) AS past_signatures,
 
 			signature.initiative_uuid,
 			initiative.title AS initiative_title
@@ -115,8 +114,7 @@ function serializeSignaturesAsCsv(columns, timeFormat, signatures) {
 			: formatDate("iso-week", sig.created_at)
 
 		case "initiative_uuid": return sig.initiative_uuid
-		case "signer_id": return sig.signer_id
-		case "signer_ordinal": return sig.signer_ordinal
+		case "past_signatures": return sig.past_signatures
 		case "sex": return getSexFromPersonalId(sig.personal_id)
 		case "age_range": return getAgeRange(
 			getBirthdateFromPersonalId(sig.personal_id),

@@ -1,4 +1,5 @@
 /** @jsx Jsx */
+var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Page = require("../page")
 var Form = Page.Form
@@ -14,8 +15,7 @@ var {COLUMNS} = SignaturesController
 var COLUMN_TITLES = {
 	created_on: "Date",
 	initiative_uuid: "Initiative",
-	signer_id: "Signer Id",
-	signer_ordinal: "Signer Ordinal",
+	past_signatures: "Past Signatures (2y)",
 	sex: "Sex",
 	age_range: "Age Range",
 	location: "From"
@@ -122,7 +122,7 @@ module.exports = function(attrs) {
 			</thead>
 
 			<tbody>
-				{signatures.map(function(sig) {
+				{_.sortBy(signatures, "created_at").reverse().map(function(sig) {
 					var initiativeUuid = sig.initiative_uuid
 					var initiativePath = `${req.rootUrl}/initiatives/${initiativeUuid}`
 					var birthdate = getBirthdateFromPersonalId(sig.personal_id)
@@ -139,8 +139,7 @@ module.exports = function(attrs) {
 							</a>
 						</td>
 
-						case "signer_id": return <td>{sig.signer_id}</td>
-						case "signer_ordinal": return <td>{sig.signer_ordinal}</td>
+						case "past_signatures": return <td>{sig.past_signatures}</td>
 						case "sex": return <td>{getSexFromPersonalId(sig.personal_id)}</td>
 
 						case "age_range": return <td>
