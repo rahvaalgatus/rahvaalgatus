@@ -19,6 +19,7 @@ var ProgressView = require("./initiative_page").ProgressView
 var {getRequiredSignatureCount} = require("root/lib/initiative")
 var {isAdmin} = require("root/lib/user")
 var javascript = require("root/lib/jsx").javascript
+var serializeInitiativeUrl = require("root/lib/initiative").initiativeUrl
 var serializeImageUrl = require("root/lib/initiative").imageUrl
 var {pathToSignature} =
 	require("root/controllers/initiatives/signatures_controller")
@@ -122,7 +123,7 @@ function ReadPage(attrs) {
 	var signatureCount = attrs.signatureCount
 	var text = attrs.text
 	var image = attrs.image
-	var initiativeUrl =`${Config.url}/initiatives/${initiative.uuid}`
+	var initiativeUrl = serializeInitiativeUrl(initiative)
 	var shareText = `${initiative.title} ${initiativeUrl}`
 	var atomPath = req.baseUrl + req.url + ".atom"
 
@@ -135,7 +136,7 @@ function ReadPage(attrs) {
 			"twitter:card": "summary_large_image",
 			"og:title": initiative.title,
 			"og:url": initiativeUrl,
-			"og:image": image && serializeImageUrl(image)
+			"og:image": image && serializeImageUrl(initiative, image)
 		}, Boolean)}
 
 		links={[{

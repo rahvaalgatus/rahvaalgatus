@@ -337,7 +337,7 @@ module.exports = function(attrs) {
 						req={req}
 						name="image"
 						action={initiativePath + "/image"}
-						value={image ? serializeImageUrl(image) : null}
+						value={image ? serializeImageUrl(initiative, image) : null}
 					/>
 				</td>
 			</tr>

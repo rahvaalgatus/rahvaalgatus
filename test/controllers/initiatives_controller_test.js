@@ -2580,7 +2580,8 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var path = "/initiatives/" + initiative.uuid + "?foo=bar"
+					// Use a path with an extension that could get stripped by middleware.
+					var path = "/initiatives/" + initiative.uuid + ".jpeg?foo=bar"
 					var res = yield this.request(path, {
 						headers: {Host: PARLIAMENT_SITE_HOSTNAME}
 					})
@@ -3290,6 +3291,35 @@ describe("InitiativesController", function() {
 				})
 
 				describe(`on ${LOCAL_SITE_HOSTNAME}`, function() {
+					it("must include social media tags with local URLs", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.author.id,
+							destination: "muhu-vald",
+							published_at: new Date
+						}))
+
+						yield imagesDb.create({
+							initiative_uuid: initiative.uuid,
+							data: PNG,
+							type: "image/png",
+							preview: PNG_PREVIEW
+						})
+
+						var res = yield this.request("/initiatives/" + initiative.uuid, {
+							headers: {Host: LOCAL_SITE_HOSTNAME}
+						})
+
+						res.statusCode.must.equal(200)
+
+						var dom = parseDom(res.body)
+						var metas = dom.head.querySelectorAll("meta")
+						metas = _.indexBy(metas, (el) => el.getAttribute("property"))
+
+						var url = `${Config.localUrl}/initiatives/${initiative.uuid}`
+						metas["og:url"].content.must.equal(url)
+						metas["og:image"].content.must.equal(url + ".png")
+					})
+
 					it("must not render send to government button if not enough signatures",
 						function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({

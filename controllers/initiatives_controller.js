@@ -197,17 +197,12 @@ exports.router.use("/:id", next(function*(req, res, next) {
 		throw new HttpError(403, "Initiative Not Public")
 
 	if (req.method == "HEAD" || req.method == "GET") {
-		var isLocalInitiative = (
-			initiative.destination &&
-			initiative.destination != "parliament"
-		)
-
-		var path = req.baseUrl + req.url.replace(/^\/\?/, "?")
+		var isLocalInitiative = Initiative.isLocalInitiative(initiative)
 
 		if (req.government == "parliament" && isLocalInitiative)
-			return void res.redirect(301, Config.localUrl + path)
+			return void res.redirect(301, Config.localUrl + req.originalUrl)
 		else if (req.government == "local" && !isLocalInitiative)
-			return void res.redirect(301, Config.url + path)
+			return void res.redirect(301, Config.url + req.originalUrl)
 	}
 
 	req.initiative = initiative
