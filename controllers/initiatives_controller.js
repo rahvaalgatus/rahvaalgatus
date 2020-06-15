@@ -429,6 +429,8 @@ exports.router.get("/:id/edit", next(function*(req, res) {
 	res.render("initiatives/update_page.jsx", {text: text})
 }))
 
+exports.router.use("/:id/image",
+	require("./initiatives/image_controller").router)
 exports.router.use("/:id/comments",
 	require("./initiatives/comments_controller").router)
 exports.router.use("/:id/files",

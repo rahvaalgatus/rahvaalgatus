@@ -1894,7 +1894,7 @@ button.inherited {
 		}
 
 		.quicksign {
-			margin-bottom: 2rem;
+			margin-bottom: 1rem;
 
 			.initiative-progress {
 				margin-top: -$sidebar-padding;
@@ -1908,9 +1908,56 @@ button.inherited {
 		}
 
 		#initiative-location {
+			margin-top: 2rem;
 			margin-bottom: 2rem;
 
 			a[href] { @extend .link-button; }
+		}
+
+		#initiative-image {
+			margin-bottom: 1rem;
+
+			img {
+				display: block;
+				max-width: 100%;
+				border-radius: 0.5rem;
+			}
+
+			menu {
+				text-align: center;
+				margin-top: 1rem;
+
+				form {
+					display: inline-block;
+					font-weight: bold;
+
+					label { cursor: pointer; }
+				}
+			}
+		}
+
+		#initiative-image-form {
+			margin-bottom: 1rem;
+
+			label {
+				border-radius: 0.5rem;
+				text-align: center;
+				display: inline-block;
+				border: 1px solid #ddd;
+				cursor: pointer;
+				padding: 4rem 2rem;
+			}
+
+			a {
+				font-weight: bold;
+				color: $link-color;
+				display: block;
+				margin-bottom: 1rem;
+			}
+
+			&:hover {
+				a { text-decoration: underline; }
+			}
 		}
 
 		#initiative-author-options {

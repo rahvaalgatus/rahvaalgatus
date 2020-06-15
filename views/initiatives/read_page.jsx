@@ -127,6 +127,12 @@ function ReadPage(attrs) {
 	var shareText = `${initiative.title} ${initiativeUrl}`
 	var atomPath = req.baseUrl + req.url + ".atom"
 
+	var imageEditable = (
+		user && initiative.user_id == user.id &&
+		initiative.phase != "done" &&
+		!initiative.archived_at
+	)
+
 	return <InitiativePage
 		page="initiative"
 		title={initiative.title}
@@ -324,6 +330,40 @@ function ReadPage(attrs) {
 					/>
 
 					<InitiativeLocationView t={t} initiative={initiative} />
+
+					{image ? <div
+						id="initiative-image"
+						class={imageEditable ? "editable" : ""}
+					>
+						<img src={serializeImageUrl(initiative, image)} />
+
+						{imageEditable ? <menu>
+							<InitiativeImageUploadForm
+								req={req}
+								initiative={initiative}
+								class="link-button">
+								{t("INITIATIVE_IMAGE_REPLACE_IMAGE")}
+							</InitiativeImageUploadForm>
+
+							<span class="form-or">{t("FORM_OR")}</span>
+
+							<FormButton
+								req={req}
+								action={initiativePath + "/image"}
+								name="_method"
+								value="delete"
+								onclick={confirm(t("INITIATIVE_IMAGE_CONFIRM_REMOVAL"))}
+								class="link-button">
+								{t("INITIATIVE_IMAGE_REMOVE_IMAGE")}
+							</FormButton>
+						</menu> : null}
+					</div> : imageEditable ? <InitiativeImageUploadForm
+						id="initiative-image-form"
+						req={req}
+						initiative={initiative}>
+						<a>{t("INITIATIVE_IMAGE_ADD_IMAGE")}</a>
+						<p>{Jsx.html(t("INITIATIVE_IMAGE_ADD_IMAGE_DESCRIPTION"))}</p>
+					</InitiativeImageUploadForm> : null}
 
 					{initiative.published_at ? <Fragment>
 						<h3 class="sidebar-subheader">Tahad aidata? Jaga algatust…</h3>
@@ -1936,6 +1976,33 @@ function UntrustedLink(attrs, children) {
 		{text}
 	</a>
 	else return <span class={klass}>{text}</span>
+}
+
+function InitiativeImageUploadForm(attrs, children) {
+	var req = attrs.req
+	var initiative = attrs.initiative
+	var initiativePath = "/initiatives/" + initiative.uuid
+
+	return <Form
+		id={attrs.id}
+		class={attrs.class}
+		req={req}
+		action={initiativePath + "/image"}
+		method="put"
+		enctype="multipart/form-data"
+	>
+		<label>
+			<input
+				type="file"
+				name="image"
+				required
+				hidden
+				onchange="this.form.submit()"
+			/>
+
+			{children}
+		</label>
+	</Form>
 }
 
 function AddInitiativeInfoButton(attrs) {

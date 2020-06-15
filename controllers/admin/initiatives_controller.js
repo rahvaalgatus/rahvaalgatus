@@ -137,6 +137,10 @@ exports.router.put("/:id", next(function*(req, res) {
 	res.redirect(req.baseUrl + "/" + initiative.uuid)
 }))
 
+// NOTE: This is a duplicate of the InitiativeImageController endpoint
+// presented to initiative authors. Keeping this around for now, although it's
+// better long-term to either extract commonalities or remove the admin's
+// ability to edit images. They can't edit much else anyways.
 exports.router.put("/:id/image", next(function*(req, res) {
 	var initiative = req.initiative
 	var image = req.files.image

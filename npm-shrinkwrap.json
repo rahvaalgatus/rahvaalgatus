@@ -593,6 +593,42 @@
         }
       }
     },
+    "form-data": {
+      "version": "2.5.1",
+      "from": "form-data@>=2.0.0 <3.0.0",
+      "resolved": "https://registry.npmjs.org/form-data/-/form-data-2.5.1.tgz",
+      "dependencies": {
+        "asynckit": {
+          "version": "0.4.0",
+          "from": "asynckit@>=0.4.0 <0.5.0",
+          "resolved": "https://registry.npmjs.org/asynckit/-/asynckit-0.4.0.tgz"
+        },
+        "combined-stream": {
+          "version": "1.0.8",
+          "from": "combined-stream@>=1.0.6 <2.0.0",
+          "resolved": "https://registry.npmjs.org/combined-stream/-/combined-stream-1.0.8.tgz",
+          "dependencies": {
+            "delayed-stream": {
+              "version": "1.0.0",
+              "from": "delayed-stream@>=1.0.0 <1.1.0",
+              "resolved": "https://registry.npmjs.org/delayed-stream/-/delayed-stream-1.0.0.tgz"
+            }
+          }
+        },
+        "mime-types": {
+          "version": "2.1.27",
+          "from": "mime-types@>=2.1.12 <3.0.0",
+          "resolved": "https://registry.npmjs.org/mime-types/-/mime-types-2.1.27.tgz",
+          "dependencies": {
+            "mime-db": {
+              "version": "1.44.0",
+              "from": "mime-db@1.44.0",
+              "resolved": "https://registry.npmjs.org/mime-db/-/mime-db-1.44.0.tgz"
+            }
+          }
+        }
+      }
+    },
     "heaven": {
       "version": "0.11.0",
       "from": "heaven@>=0.11.0 <0.12.0",

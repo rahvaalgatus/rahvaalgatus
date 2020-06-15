@@ -26,6 +26,7 @@
 		"fetch-formify": "",
 		"fetch-parse": "",
 		"fetch-throw": "",
+		"form-data": "",
 		"flash-fiction": "",
 		"concat-stream": "",
 		"promise-defer": "",
