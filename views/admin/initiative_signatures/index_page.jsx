@@ -15,7 +15,7 @@ var {COLUMNS} = SignaturesController
 var COLUMN_TITLES = {
 	created_on: "Date",
 	initiative_uuid: "Initiative",
-	past_signatures: "Past Signatures (2y)",
+	past_signatures: "Past Signatures (25mo)",
 	sex: "Sex",
 	age_range: "Age Range",
 	location: "From"
