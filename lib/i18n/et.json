@@ -222,7 +222,7 @@
 	"INITIATIVE_EVENT_TEXT_INPUT": "Sisu",
 	"INITIATIVE_EVENT_TITLE_INPUT": "Pealkiri",
 	"INITIATIVE_IMAGE_ADD_IMAGE": "Lisa illustratiivne pilt",
-	"INITIATIVE_IMAGE_ADD_IMAGE_DESCRIPTION": "Vali <strong>JPEG</strong> või <strong>PNG</strong> formaadis pilt ideaalis suurusega <strong>1200x675px</strong> või suurem.\nPilti ilmub algatuse juurde näiteks sotsiaalmeedias.",
+	"INITIATIVE_IMAGE_ADD_IMAGE_DESCRIPTION": "Vali <strong>JPEG</strong> või <strong>PNG</strong> formaadis pilt ideaalis suurusega <strong>1200x675px</strong> või suurem.\nPilt ilmub algatuse juurde näiteks sotsiaalmeedias. Veendu, et sul on pildi levitamiseks autori luba.",
 	"INITIATIVE_IMAGE_CONFIRM_REMOVAL": "Kindel, et soovid pildi eemaldada?",
 	"INITIATIVE_IMAGE_ERROR_IMAGE_MISSING": "Pilt tundub puudu.",
 	"INITIATIVE_IMAGE_ERROR_IMAGE_TOO_LARGE": "Pilt on üle 3 megabaidi. Palun proovi väiksema pildiga.",
