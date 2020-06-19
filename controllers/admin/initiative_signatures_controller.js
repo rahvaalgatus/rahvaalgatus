@@ -36,6 +36,7 @@ exports.router.get("/(:format?)", next(function*(req, res) {
 		: COLUMNS
 
 	var timeFormat = req.query["time-format"] || "date"
+	var locationFormat = req.query["location-format"] || "text"
 
 	var signatures = yield signaturesDb.search(sql`
 		WITH signatures AS (
@@ -89,7 +90,13 @@ exports.router.get("/(:format?)", next(function*(req, res) {
 	switch (req.accepts(["text/csv", "text/html"])) {
 		case "text/csv":
 			res.setHeader("Content-Type", "text/csv")
-			res.end(serializeSignaturesAsCsv(columns, timeFormat, signatures))
+
+			res.end(serializeSignaturesAsCsv(
+				columns,
+				timeFormat,
+				locationFormat,
+				signatures
+			))
 			break
 
 		default: res.render("admin/initiative_signatures/index_page.jsx", {
@@ -97,15 +104,24 @@ exports.router.get("/(:format?)", next(function*(req, res) {
 			to: to,
 			columns: columns,
 			timeFormat: timeFormat,
+			locationFormat: locationFormat,
 			signatures: signatures
 		})
 	}
 }))
 
-function serializeSignaturesAsCsv(columns, timeFormat, signatures) {
+function serializeSignaturesAsCsv(
+	columns,
+	timeFormat,
+	locationFormat,
+	signatures
+) {
 	var header = columns.map((column) => (
-		column == "created_on" ? (timeFormat == "date" ? "date" : "week") :
-		column
+		column == "created_on"
+		? (timeFormat == "date" ? "date" : "week")
+		: column == "location"
+		? (locationFormat == "text" ? "location" : "geoname_id")
+		: column
 	))
 
 	var rows = signatures.map((sig) => columns.map((column) => { switch (column) {
@@ -122,8 +138,10 @@ function serializeSignaturesAsCsv(columns, timeFormat, signatures) {
 		)
 
 		case "location": return sig.created_from
-			? serializeLocation(sig.created_from)
-			: ""
+			? (locationFormat == "text"
+				? serializeLocation(sig.created_from)
+				: sig.created_from.city_geoname_id
+			) : ""
 
 		default: throw new RangeError("Unknown column: " + column)
 	}}))

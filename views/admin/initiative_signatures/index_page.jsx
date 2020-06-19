@@ -27,6 +27,7 @@ module.exports = function(attrs) {
 	var to = attrs.to
 	var columns = attrs.columns
 	var timeFormat = attrs.timeFormat
+	var locationFormat = attrs.locationFormat
 	var signatures = attrs.signatures
 
 	return <Page page="signatures" title="Signature" req={attrs.req}>
@@ -96,6 +97,32 @@ module.exports = function(attrs) {
 								Week
 							</label>
 						</div> : null}
+
+						{column == "location" ? <div>
+							Location as
+
+							<label>
+								<input
+									type="radio"
+									name="location-format"
+									value="text"
+									checked={locationFormat == "text"}
+								/>
+
+								Text
+							</label>
+							{" or "}
+							<label>
+								<input
+									type="radio"
+									name="location-format"
+									value="geoname"
+									checked={locationFormat == "geoname"}
+								/>
+
+								GeoNames Id
+							</label>
+						</div> : null}
 					</li>
 				})}</ol>
 			</fieldset>
@@ -115,6 +142,10 @@ module.exports = function(attrs) {
 				<tr>{columns.map((column) => { switch (column) {
 					case "created_on": return <th>
 						{timeFormat == "date" ? "Date" : "Week (ISO)"}
+					</th>
+
+					case "location": return <th>
+						{locationFormat == "text" ? "Location" : "GeoName Id"}
 					</th>
 
 					default: return <th>{COLUMN_TITLES[column]}</th>
@@ -147,7 +178,10 @@ module.exports = function(attrs) {
 						</td>
 
 						case "location": return <td>
-							{sig.created_from && serializeLocation(sig.created_from)}
+							{sig.created_from ? (locationFormat == "text"
+								? serializeLocation(sig.created_from)
+								: sig.created_from.city_geoname_id
+							) : null}
 						</td>
 
 						default: throw new RangeError("Unknown column: " + column)
