@@ -1,3 +1,4 @@
+var _ = require("root/lib/underscore")
 var Path = require("path")
 var Router = require("express").Router
 var HttpError = require("standard-http-error")
@@ -28,36 +29,46 @@ exports.router.use(next(function*(req, _res, next) {
 
 exports.router.put("/", next(function*(req, res) {
 	var initiative = req.initiative
-	var image = req.files.image
+	var image = req.image
+	var attrs = parse(req.body)
+	var imageFile = req.files.image
 
-  if (image == null) return void respondWithError(
+  if (image == null && imageFile == null) return void respondWithError(
 		"Image Missing",
 		req.t("INITIATIVE_IMAGE_ERROR_IMAGE_MISSING")
 	)
 
-	if (image.size > 3 * MEGABYTE) return void respondWithError(
+	if (imageFile && imageFile.size > 3 * MEGABYTE) return void respondWithError(
 		"Image Larger Than 3MiB",
 		req.t("INITIATIVE_IMAGE_ERROR_IMAGE_TOO_LARGE")
 	)
 
 	if (
-		!isValidImageType(image.mimetype) ||
-		!isValidImageType(Image.identify(image.buffer))
+		imageFile && (
+			!isValidImageType(imageFile.mimetype) ||
+			!isValidImageType(Image.identify(imageFile.buffer))
+		)
 	) return void respondWithError(
 		"Invalid Image Format",
 		req.t("INITIATIVE_IMAGE_ERROR_INVALID_FORMAT")
 	)
 
-	if (req.image) yield imagesDb.delete(req.image)
+	if (imageFile) {
+		attrs.data = imageFile.buffer
+		attrs.type = imageFile.mimetype
+		attrs.preview = yield Image.resize(1200, 675, imageFile.buffer)
+	}
 
-	yield imagesDb.create({
-		initiative_uuid: initiative.uuid,
-		data: image.buffer,
-		type: image.mimetype,
-		preview: yield Image.resize(1200, 675, image.buffer)
-	})
+	if (image) imagesDb.update(image, attrs)
+	else yield imagesDb.create(_.assign(attrs, {
+		initiative_uuid: initiative.uuid
+	}))
 
-	res.flash("notice", req.t("INITIATIVE_IMAGE_UPLOADED"))
+	res.flash("notice", imageFile
+		? req.t("INITIATIVE_IMAGE_UPLOADED")
+		: req.t("INITIATIVE_IMAGE_AUTHOR_UPDATED")
+	)
+
 	res.redirect(303, Path.dirname(req.baseUrl))
 
 	function respondWithError(statusMessage, err) {
@@ -84,4 +95,8 @@ function isValidImageType(type) {
     case "image/jpeg": return true
     default: return false
   }
+}
+
+function parse(obj) {
+	return _.pick(obj, ["author_name", "author_url"])
 }

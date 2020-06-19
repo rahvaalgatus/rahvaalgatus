@@ -195,7 +195,7 @@ CREATE TABLE initiative_images (
 	initiative_uuid TEXT PRIMARY KEY NOT NULL,
 	data BLOB NOT NULL,
 	type TEXT NOT NULL,
-	preview BLOB NOT NULL,
+	preview BLOB NOT NULL, author_name TEXT, author_url TEXT,
 
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE
 );
@@ -553,4 +553,5 @@ INSERT INTO migrations VALUES('20200522100010');
 INSERT INTO migrations VALUES('20200522100020');
 INSERT INTO migrations VALUES('20200601090000');
 INSERT INTO migrations VALUES('20200601101617');
+INSERT INTO migrations VALUES('20200618155253');
 COMMIT;

@@ -31,8 +31,7 @@ describe("ImageController", function() {
 					published_at: new Date
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/image`
-				var res = yield this.request(path, {
+				var res = yield this.request(`/initiatives/${initiative.uuid}/image`, {
 					method: "POST",
 					form: {_csrf_token: this.csrfToken, _method: "PUT"}
 				})
@@ -53,8 +52,7 @@ describe("ImageController", function() {
 					published_at: new Date
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/image`
-				var res = yield this.request(path, {
+				var res = yield this.request(`/initiatives/${initiative.uuid}/image`, {
 					method: "POST",
 					form: {_csrf_token: this.csrfToken, _method: "PUT"}
 				})
@@ -68,8 +66,7 @@ describe("ImageController", function() {
 					user_id: this.user.id
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/image`
-				var res = yield this.request(path, {
+				var res = yield this.request(`/initiatives/${initiative.uuid}/image`, {
 					method: "POST",
 					form: {_csrf_token: this.csrfToken, _method: "PUT"}
 				})
@@ -92,8 +89,7 @@ describe("ImageController", function() {
 					contentType: "image/png"
 				})
 
-				var path = `/initiatives/${initiative.uuid}/image`
-				var res = yield this.request(path, {
+				var res = yield this.request(`/initiatives/${initiative.uuid}/image`, {
 					method: "POST",
 					headers: form.getHeaders(),
 					body: form.getBuffer()
@@ -117,6 +113,46 @@ describe("ImageController", function() {
 
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("INITIATIVE_IMAGE_UPLOADED"))
+			})
+
+			it("must update author", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id
+				}))
+
+				var image = yield imagesDb.create({
+					initiative_uuid: initiative.uuid,
+					data: PNG,
+					preview: PNG,
+					type: "image/png"
+				})
+
+				var res = yield this.request(`/initiatives/${initiative.uuid}/image`, {
+					method: "POST",
+					form: {
+						_csrf_token: this.csrfToken,
+						_method: "PUT",
+						author_name: "John Smith",
+						author_url: "http://example.com"
+					}
+				})
+
+				res.statusCode.must.equal(303)
+				res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+				yield imagesDb.read(image).must.then.eql({
+					__proto__: image,
+					author_name: "John Smith",
+					author_url: "http://example.com"
+				})
+
+				var cookies = Http.parseCookies(res.headers["set-cookie"])
+				res = yield this.request(res.headers.location, {
+					cookies: _.mapValues(cookies, (c) => c.value)
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("INITIATIVE_IMAGE_AUTHOR_UPDATED"))
 			})
 		})
 	})

@@ -1923,16 +1923,42 @@ button.inherited {
 				border-radius: 0.5rem;
 			}
 
+			figcaption {
+				padding: 0 0.5rem;
+				text-align: center;
+				margin-top: 0.5rem;
+				font-size: 1.3rem;
+
+				&.empty { font-style: italic; }
+			}
+
 			menu {
 				text-align: center;
-				margin-top: 1rem;
+				margin-top: 0.5rem;
+
+				.link-button {
+					font-weight: bold;
+				}
 
 				form {
 					display: inline-block;
-					font-weight: bold;
 
 					label { cursor: pointer; }
 				}
+			}
+
+			#initiative-image-author-toggle {
+				&:not(:checked) ~ #initiative-image-author-form { display: none; }
+			}
+
+			#initiative-image-author-form {
+				margin-top: 1rem;
+
+				.form-header { color: black; margin-bottom: 0.3rem; }
+				.form-header ~ .form-header { margin-top: 0.5rem; }
+				input { width: 100%; }
+
+				.form-buttons { margin-top: 0.5rem; }
 			}
 		}
 

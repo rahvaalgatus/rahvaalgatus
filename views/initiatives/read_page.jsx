@@ -1,5 +1,6 @@
 /** @jsx Jsx */
 var _ = require("root/lib/underscore")
+var Url = require("url")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var Time = require("root/lib/time")
@@ -331,13 +332,46 @@ function ReadPage(attrs) {
 
 					<InitiativeLocationView t={t} initiative={initiative} />
 
-					{image ? <div
+					{image ? <figure
 						id="initiative-image"
 						class={imageEditable ? "editable" : ""}
 					>
 						<img src={serializeImageUrl(initiative, image)} />
 
+						{(
+							image.author_name ||
+							image.author_url ||
+							imageEditable
+						) ? <figcaption
+							class={image.author_name || image.author_url ? "" : "empty"}
+						>
+							{image.author_name || image.author_url ? <Fragment>
+								{t("INITIATIVE_IMAGE_AUTHOR_IS")}: {renderImageAuthor(image)}
+							</Fragment> : Jsx.html(t("INITIATIVE_IMAGE_AUTHOR_EMPTY"))}
+						</figcaption> : null}
+
+						{imageEditable ? <input
+							type="checkbox"
+							id="initiative-image-author-toggle"
+							hidden
+						/> : null}
+
 						{imageEditable ? <menu>
+							<input
+								type="checkbox"
+								id="initiative-image-author-toggle"
+								hidden
+							/>
+
+							{image.author_name || image.author_url ? <Fragment>
+								<label
+									class="link-button"
+									for="initiative-image-author-toggle">
+									{t("INITIATIVE_IMAGE_AUTHOR_EDIT")}
+								</label>
+								{", "}
+							</Fragment> : null}
+
 							<InitiativeImageUploadForm
 								req={req}
 								initiative={initiative}
@@ -357,7 +391,50 @@ function ReadPage(attrs) {
 								{t("INITIATIVE_IMAGE_REMOVE_IMAGE")}
 							</FormButton>
 						</menu> : null}
-					</div> : imageEditable ? <InitiativeImageUploadForm
+
+						{imageEditable ? <Form
+							req={req}
+							id="initiative-image-author-form"
+							method="put"
+							action={initiativePath + "/image"}>
+							<h4 class="form-header">
+								{t("INITIATIVE_IMAGE_AUTHOR_NAME_LABEL")}
+							</h4>
+
+							<input
+								name="author_name"
+								type="text"
+								class="form-input"
+								value={image.author_name}
+							/>
+
+							<h4 class="form-header">
+								{t("INITIATIVE_IMAGE_AUTHOR_URL_LABEL")}
+							</h4>
+
+							<input
+								name="author_url"
+								type="url"
+								class="form-input"
+								placeholder="https://"
+								value={image.author_url}
+							/>
+
+							<p>{t("INITIATIVE_IMAGE_AUTHOR_URL_DESCRIPTION")}</p>
+
+							<div class="form-buttons">
+								<button type="submit" class="green-button">
+									{t("INITIATIVE_IMAGE_AUTHOR_UPDATE")}
+								</button>
+
+								<span class="form-or">{t("FORM_OR")}</span>
+
+								<label class="link-button" for="initiative-image-author-toggle">
+									{t("INITIATIVE_IMAGE_AUTHOR_CANCEL")}
+								</label>
+							</div>
+						</Form> : null}
+					</figure> : imageEditable ? <InitiativeImageUploadForm
 						id="initiative-image-form"
 						req={req}
 						initiative={initiative}>
@@ -2080,6 +2157,26 @@ function compareEvent(a, b) {
 		return EVENT_ORDER.indexOf(a.type) - EVENT_ORDER.indexOf(b.type)
 	else
 		return +a.occurred_at - +b.occurred_at
+}
+
+function renderImageAuthor(image) {
+	var name = image.author_name, url = image.author_url
+	if (name && url) return <UntrustedLink class="author" href={url}>
+		{name || null}
+	</UntrustedLink>
+
+	if (name) return <span class="author">{name}</span>
+
+	if (url) return <UntrustedLink class="author" href={url}>
+		{getUrlHost(url)}
+	</UntrustedLink>
+
+	return null
+
+	function getUrlHost(url) {
+		try { return Url.parse(url).hostname }
+		catch (_ex) { return null }
+	}
 }
 
 function splitRecipients(recipients) { return recipients.split(/[;,]/) }

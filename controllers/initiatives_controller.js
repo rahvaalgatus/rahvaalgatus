@@ -316,7 +316,7 @@ exports.read = next(function*(req, res) {
 	var signatureCount = yield countSignaturesById(initiative.uuid)
 
 	var image = yield imagesDb.read(sql`
-		SELECT initiative_uuid, type
+		SELECT initiative_uuid, type, author_name, author_url
 		FROM initiative_images
 		WHERE initiative_uuid = ${initiative.uuid}
 	`)
