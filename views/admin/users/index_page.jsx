@@ -17,7 +17,11 @@ module.exports = function(attrs) {
 		<table class="admin-table users">
 			<thead>
 				<th>Created At</th>
-				<th>Name</th>
+				<th>
+					Name<br />
+					<small>Identity Code</small>
+				</th>
+				<th>Email</th>
 			</thead>
 
 			<tbody>{users.map(function(user) {
@@ -30,7 +34,23 @@ module.exports = function(attrs) {
 
 					<td>
 						<a href={url} class="admin-link">{user.name}</a>
+						<br />
+						{user.personal_id
+							? user.country + " " + user.personal_id
+							: <em>No personal id</em>
+						}
 					</td>
+
+					<td>{user.email ? <a href={"mailto:" + user.email} class="admin-link">
+						{user.email}
+					</a> : user.unconfirmed_email ? <span class="unconfirmed-email">
+						<a
+							href={"mailto:" + user.unconfirmed_email}
+							class="admin-link"
+						>
+							{user.unconfirmed_email}
+						</a> (Unconfirmed)
+					</span> : null}</td>
 				</tr>
 			})}</tbody>
 		</table>

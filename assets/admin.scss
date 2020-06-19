@@ -348,6 +348,16 @@ textarea.admin-input {
 	}
 }
 
+#users-page {
+	.users {
+		em { font-style: italic; }
+	}
+
+	.unconfirmed-email {
+		font-style: italic;
+	}
+}
+
 #user-page {
 	h1 ~ h2 {
 		margin-top: 4rem;
