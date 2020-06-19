@@ -366,7 +366,7 @@ function ReadPage(attrs) {
 					</InitiativeImageUploadForm> : null}
 
 					{initiative.published_at ? <Fragment>
-						<h3 class="sidebar-subheader">Tahad aidata? Jaga algatust…</h3>
+						<h3 class="sidebar-subheader">{t("SHARE_INITIATIVE")}</h3>
 
 						<a
 							href={"https://facebook.com/sharer/sharer.php?u=" + encode(initiativeUrl)}

@@ -475,6 +475,7 @@
 	"SENT_TO_SIGNING_MESSAGE_BODY": "Tere\n\nAlgatus \"{{initiativeTitle}}\" läks allkirjastamisele.\n\nKui soovid oma allkirja anda, saad seda teha Rahvaalgatuses: {{initiativeUrl}}.\n \n--\nRahvaalgatus\n{{siteUrl}}\n{{facebookUrl}}\n{{twitterUrl}}\n\nPS. Said selle kirja, sest tellisid algatuse kohta teavitusi. Kui neid enam ei soovi, saad nad peatada lehel {{unsubscribeUrl}}.",
 	"SENT_TO_SIGNING_MESSAGE_TITLE": "Algatus \"{{initiativeTitle}}\" läks allkirjastamisele",
 	"SESSION_DELETED": "Sessioon eemaldatud.",
+	"SHARE_INITIATIVE": "Tahad aidata? Jaga algatust…",
 	"SHARE_ON_FACEBOOK": "Facebookis",
 	"SHARE_ON_TWITTER": "Twitteris",
 	"SIGNATURES_COLLECTED_FOR_alutaguse-vald": "Alutaguse vallale saatmiseks allkirjad koos!",
