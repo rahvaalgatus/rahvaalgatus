@@ -28,7 +28,8 @@ module.exports = function(attrs) {
 	var columns = attrs.columns
 	var timeFormat = attrs.timeFormat
 	var locationFormat = attrs.locationFormat
-	var signatures = attrs.signatures
+	var groupBy = attrs.groupBy
+	var signatures = attrs.signatures || attrs.signers
 
 	return <Page page="signatures" title="Signature" req={attrs.req}>
 		<h1 class="admin-heading">Signatures</h1>
@@ -56,8 +57,34 @@ module.exports = function(attrs) {
 				/>
 			</fieldset>
 
+			<fieldset class="signatures-or-signers-fields">
+				<h2>Group By</h2>
+
+				<label>
+					<input
+						type="radio"
+						name="group-by"
+						value=""
+						checked={groupBy == ""}
+					/>
+
+					Signature
+				</label>
+				{" or "}
+				<label>
+					<input
+						type="radio"
+						name="group-by"
+						value="signer"
+						checked={groupBy == "signer"}
+					/>
+
+					Signer
+				</label>
+			</fieldset>
+
 			<fieldset class="column-fields">
-				<h2>Columns:</h2>
+				<h2>Columns</h2>
 
 				<ol>{COLUMNS.map(function(column) {
 					return <li>
@@ -147,6 +174,11 @@ module.exports = function(attrs) {
 					case "location": return <th>
 						{locationFormat == "text" ? "Location" : "GeoName Id"}
 					</th>
+
+					case "past_signatures": return <th>{groupBy == "signer"
+						? "Signatures within Timeframe"
+						: COLUMN_TITLES[column]
+					}</th>
 
 					default: return <th>{COLUMN_TITLES[column]}</th>
 				}})}</tr>

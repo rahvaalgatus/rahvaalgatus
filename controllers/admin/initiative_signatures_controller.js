@@ -1,3 +1,4 @@
+var _ = require("root/lib/underscore")
 var Router = require("express").Router
 var DateFns = require("date-fns")
 var Time = require("root/lib/time")
@@ -16,10 +17,10 @@ exports.serializeLocation = serializeLocation
 var COLUMNS = [
 	"created_on",
 	"initiative_uuid",
-	"past_signatures",
 	"sex",
 	"age_range",
-	"location"
+	"location",
+	"past_signatures"
 ]
 
 exports.COLUMNS = COLUMNS
@@ -30,68 +31,33 @@ exports.router.get("/(:format?)", next(function*(req, res) {
 		: DateFns.addDays(DateFns.startOfDay(new Date), -6)
 
 	var to = req.query.to ? Time.parseDate(req.query.to) : null
+	var groupBy = req.query["group-by"] || ""
+	var timeFormat = req.query["time-format"] || "date"
+	var locationFormat = req.query["location-format"] || "text"
 
 	var columns = req.query.columns
 		? req.query.columns.filter(COLUMNS.includes.bind(COLUMNS))
 		: COLUMNS
 
-	var timeFormat = req.query["time-format"] || "date"
-	var locationFormat = req.query["location-format"] || "text"
+	var signatures, signers
+	if (groupBy == "signer") signers = yield searchSigners(from, to)
+	else signatures = yield searchSignatures(from, to)
 
-	var signatures = yield signaturesDb.search(sql`
-		WITH signatures AS (
-			SELECT
-				initiative_uuid,
-				created_at,
-				country,
-				personal_id,
-				created_from
-
-			FROM initiative_signatures
-
-			UNION SELECT
-				initiative_uuid,
-				created_at,
-				country,
-				personal_id,
-				NULL AS created_from
-
-			FROM initiative_citizenos_signatures
-		)
-
-		SELECT
-			signature.created_at,
-			signature.created_from,
-			signature.personal_id,
-
-			(
-				SELECT COUNT(*) FROM signatures
-				WHERE country = signature.country
-				AND personal_id = signature.personal_id
-				AND created_at < signature.created_at
-				AND datetime(created_at, 'localtime')
-				>= datetime(signature.created_at, 'localtime', '-25 months')
-			) AS past_signatures,
-
-			signature.initiative_uuid,
-			initiative.title AS initiative_title
-
-		FROM signatures AS signature
-
-		JOIN initiatives AS initiative
-		ON initiative.uuid = signature.initiative_uuid
-
-		WHERE signature.country = 'EE'
-		AND signature.created_at >= ${from}
-		${to ? sql`AND signature.created_at < ${to}` : sql``}
-		ORDER BY RANDOM()
-	`)
+	if (groupBy == "signer") columns = _.difference(columns, [
+		"created_on",
+		"initiative_uuid"
+	])
 
 	switch (req.accepts(["text/csv", "text/html"])) {
 		case "text/csv":
 			res.setHeader("Content-Type", "text/csv")
 
-			res.end(serializeSignaturesAsCsv(
+			if (signers) res.end(serializeSignersAsCsv(
+				columns,
+				locationFormat,
+				signers
+			))
+			else res.end(serializeSignaturesAsCsv(
 				columns,
 				timeFormat,
 				locationFormat,
@@ -102,10 +68,12 @@ exports.router.get("/(:format?)", next(function*(req, res) {
 		default: res.render("admin/initiative_signatures/index_page.jsx", {
 			from: from,
 			to: to,
+			groupBy: groupBy,
 			columns: columns,
 			timeFormat: timeFormat,
 			locationFormat: locationFormat,
-			signatures: signatures
+			signatures: signatures,
+			signers: signers
 		})
 	}
 }))
@@ -130,7 +98,6 @@ function serializeSignaturesAsCsv(
 			: formatDate("iso-week", sig.created_at)
 
 		case "initiative_uuid": return sig.initiative_uuid
-		case "past_signatures": return sig.past_signatures
 		case "sex": return getSexFromPersonalId(sig.personal_id)
 		case "age_range": return getAgeRange(
 			getBirthdateFromPersonalId(sig.personal_id),
@@ -143,6 +110,34 @@ function serializeSignaturesAsCsv(
 				: sig.created_from.city_geoname_id
 			) : ""
 
+		case "past_signatures": return sig.past_signatures
+		default: throw new RangeError("Unknown column: " + column)
+	}}))
+
+	return concat([header], rows).map(serializeCsv).join("\n")
+}
+
+function serializeSignersAsCsv(columns, locationFormat, signers) {
+	var header = columns.map((column) => (
+		column == "location"
+		? (locationFormat == "text" ? "location" : "geoname_id")
+		: column
+	))
+
+	var rows = signers.map((sig) => columns.map((column) => { switch (column) {
+		case "sex": return getSexFromPersonalId(sig.personal_id)
+		case "age_range": return getAgeRange(
+			getBirthdateFromPersonalId(sig.personal_id),
+			sig.created_at
+		)
+
+		case "location": return sig.created_from
+			? (locationFormat == "text"
+				? serializeLocation(sig.created_from)
+				: sig.created_from.city_geoname_id
+			) : ""
+
+		case "past_signatures": return sig.past_signatures
 		default: throw new RangeError("Unknown column: " + column)
 	}}))
 
@@ -190,6 +185,92 @@ function getAgeRange(birthdate, at) {
 	else if (age < 65) return "55–64"
 	else if (age < 75) return "65–74"
   else return ">= 75"
+}
+
+function searchSignatures(from, to) {
+	return signaturesDb.search(sql`
+		WITH signatures AS (
+			SELECT
+				initiative_uuid,
+				created_at,
+				country,
+				personal_id,
+				created_from
+
+			FROM initiative_signatures
+
+			UNION SELECT
+				initiative_uuid,
+				created_at,
+				country,
+				personal_id,
+				NULL AS created_from
+
+			FROM initiative_citizenos_signatures
+		)
+
+		SELECT
+			signature.created_at,
+			signature.initiative_uuid,
+			initiative.title AS initiative_title,
+			signature.personal_id,
+			signature.created_from,
+
+			(
+				SELECT COUNT(*) FROM signatures
+				WHERE country = signature.country
+				AND personal_id = signature.personal_id
+				AND created_at < signature.created_at
+				AND datetime(created_at, 'localtime')
+				>= datetime(signature.created_at, 'localtime', '-25 months')
+			) AS past_signatures
+
+		FROM signatures AS signature
+
+		JOIN initiatives AS initiative
+		ON initiative.uuid = signature.initiative_uuid
+
+		WHERE signature.country = 'EE'
+		AND signature.created_at >= ${from}
+		${to ? sql`AND signature.created_at < ${to}` : sql``}
+		ORDER BY RANDOM()
+	`)
+}
+
+function searchSigners(from, to) {
+	return signaturesDb.search(sql`
+		WITH signatures AS (
+			SELECT
+				created_at,
+				country,
+				personal_id,
+				created_from
+
+			FROM initiative_signatures
+
+			UNION SELECT
+				created_at,
+				country,
+				personal_id,
+				NULL AS created_from
+
+			FROM initiative_citizenos_signatures
+		)
+
+		SELECT
+			signature.personal_id,
+			MAX(signature.created_at) AS created_at,
+			signature.created_from,
+			COUNT(*) AS past_signatures
+
+		FROM signatures AS signature
+
+		WHERE signature.country = 'EE'
+		AND signature.created_at >= ${from}
+		${to ? sql`AND signature.created_at < ${to}` : sql``}
+		GROUP BY signature.personal_id
+		ORDER BY RANDOM()
+	`).then(_.shuffle)
 }
 
 function serializeLocation(from) {
