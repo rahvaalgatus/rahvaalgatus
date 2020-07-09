@@ -28,6 +28,7 @@ function CreatePage(attrs) {
 				<Flash flash={req.flash} />
 
 				<CommentForm
+					id="comment-form"
 					req={req}
 					initiative={initiative}
 					referrer={referrer}
@@ -50,7 +51,7 @@ function CommentForm(attrs) {
 
 	return <Form
 		req={req}
-		id="comment-form"
+		id={attrs.id}
 		method="post"
 		action={commentsUrl}
 		class="comment-form">

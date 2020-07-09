@@ -207,7 +207,7 @@ function ReadPage(attrs) {
 									{t("INITIATIVE_IN_DISCUSSION")}
 									{" "}
 									<a
-										href="#initiative-comment-form"
+										href="#comment-form"
 										class="link-button wide-button">
 										{t("ADD_YOUR_COMMENT")}
 									</a>
@@ -1777,6 +1777,7 @@ function CommentsView(attrs) {
 
 		<CommentForm
 			req={req}
+			id="comment-form"
 			initiative={initiative}
 			subscription={subscription}
 			referrer={req.baseUrl + req.path}
