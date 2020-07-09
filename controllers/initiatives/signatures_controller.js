@@ -31,7 +31,7 @@ var citizenosSignaturesDb =
 var {ensureAreaCode} = require("root/lib/mobile_id")
 var constantTimeEqual = require("root/lib/crypto").constantTimeEqual
 var {getCertificatePersonalId} = require("root/lib/certificate")
-var ENV = process.env.NODE_ENV
+var ENV = process.env.ENV
 var logger = require("root").logger
 var {validateCertificate} = require("root/lib/certificate")
 var getNormalizedMobileIdErrorCode =
@@ -410,7 +410,7 @@ exports.router.get("/:personalId",
 			var signable
 
 			if (!signature) for (
-				var end = Date.now() + 120 * 1000;
+				let end = Date.now() + 120 * 1000;
 				Date.now() < end;
 				yield sleep(ENV == "test" ? 50 : 500)
 			) {
@@ -429,7 +429,23 @@ exports.router.get("/:personalId",
 				if (signable.timestamped || signable.error) break
 			}
 
-			if (signature || signable.signed) {
+			// Until we're using transactions for atomic signable and signature
+			// creation, reload the signature. Be sure to match on "token" to not
+			// select soon-to-be-deleted old signatures.
+			if (!signature && signable.timestamped) for (
+				let end = Date.now() + 5 * 1000;
+				!signature && Date.now() < end;
+				yield sleep(ENV == "test" ? 50 : 200)
+			) if (signature = yield signaturesDb.read(sql`
+				SELECT *
+				FROM initiative_signatures
+				WHERE initiative_uuid = ${initiative.uuid}
+				AND country = ${req.country}
+				AND personal_id = ${req.personalId}
+				AND token = ${req.token}
+			`)) break
+
+			if (signature) {
 				res.statusCode = 204
 				res.flash("signatureToken", req.token.toString("hex"))
 			}
@@ -707,14 +723,28 @@ function getSigningMethod(req) {
 }
 
 function* replaceSignature(signable) {
-	var signature = yield signaturesDb.read(sql`
+	var oldSignature = yield signaturesDb.read(sql`
 		SELECT * FROM initiative_signatures
 		WHERE initiative_uuid = ${signable.initiative_uuid}
 		AND country = ${signable.country}
 		AND personal_id = ${signable.personal_id}
 	`)
 	
-	if (signature) yield signaturesDb.delete(signature)
+	var oldCitizenosSignature = yield citizenosSignaturesDb.read(sql`
+		SELECT * FROM initiative_citizenos_signatures
+		WHERE initiative_uuid = ${signable.initiative_uuid}
+		AND country = ${signable.country}
+		AND personal_id = ${signable.personal_id}
+	`)
+
+	if (oldSignature) yield signaturesDb.delete(oldSignature)
+
+	if (oldCitizenosSignature) yield citizenosSignaturesDb.execute(sql`
+		DELETE FROM initiative_citizenos_signatures
+		WHERE initiative_uuid = ${signable.initiative_uuid}
+		AND country = ${signable.country}
+		AND personal_id = ${signable.personal_id}
+	`)
 
 	yield signaturesDb.create({
 		initiative_uuid: signable.initiative_uuid,
@@ -723,7 +753,13 @@ function* replaceSignature(signable) {
 		method: signable.method,
 		token: signable.token,
 		xades: signable.xades,
-		oversigned: signature && !signature.hidden && signature.oversigned + 1 || 0,
+
+		oversigned: (
+			oldSignature && !oldSignature.hidden && oldSignature.oversigned + 1 ||
+			oldCitizenosSignature && 1 ||
+			0
+		),
+
 		created_at: new Date,
 		created_from: signable.created_from,
 		updated_at: new Date

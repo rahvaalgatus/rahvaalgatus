@@ -589,6 +589,44 @@ describe("SignaturesController", function() {
 					`).must.then.not.eql([oldSignature])
 				})
 
+				it("must create a signature and thank after oversigning a CitizenOS signature", function*() {
+					yield citizenosSignaturesDb.create(
+						new ValidCitizenosSignature({
+							initiative_uuid: this.initiative.uuid,
+							country: "EE",
+							personal_id: PERSONAL_ID
+						})
+					)
+
+					var signed = yield sign(
+						this.router,
+						this.request,
+						this.initiative,
+						certificate
+					)
+
+					signed.statusCode.must.equal(204)
+
+					var cookies = Http.parseCookies(signed.headers["set-cookie"])
+					var res = yield this.request(signed.headers.location, {
+						headers: {Cookie: Http.serializeCookies(cookies)}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("THANKS_FOR_SIGNING"))
+					res.body.must.include(t("THANKS_FOR_SIGNING_AGAIN"))
+					res.body.must.include(t("REVOKE_SIGNATURE"))
+					res.body.must.include("donate-form")
+
+					yield citizenosSignaturesDb.search(sql`
+						SELECT * FROM initiative_citizenos_signatures
+					`).must.then.be.empty()
+
+					yield signaturesDb.search(sql`
+						SELECT * FROM initiative_signatures
+					`).must.then.not.be.empty()
+				})
+
 				it("must create a signature and thank after signing if previously hidden", function*() {
 					var oldSignature = yield signaturesDb.create(new ValidSignature({
 						initiative_uuid: this.initiative.uuid,
@@ -670,6 +708,48 @@ describe("SignaturesController", function() {
 					signatures[0].must.eql(signature)
 				})
 
+				it("must not affect CitizenOS signature on another initiative",
+					function*() {
+					var otherInitiative = yield initiativesDb.create(
+						new ValidInitiative({user_id: this.author.id, phase: "sign"})
+					)
+
+					var signature = yield citizenosSignaturesDb.create(
+						new ValidCitizenosSignature({
+							initiative_uuid: otherInitiative.uuid,
+							country: "EE",
+							personal_id: PERSONAL_ID
+						})
+					)
+
+					var signed = yield sign(
+						this.router,
+						this.request,
+						this.initiative,
+						certificate
+					)
+
+					signed.statusCode.must.equal(204)
+
+					var cookies = Http.parseCookies(signed.headers["set-cookie"])
+					var res = yield this.request(signed.headers.location, {
+						headers: {Cookie: Http.serializeCookies(cookies)}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("THANKS_FOR_SIGNING"))
+					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+
+					yield citizenosSignaturesDb.search(sql`
+						SELECT * FROM initiative_citizenos_signatures
+					`).must.then.eql([signature])
+
+					yield signaturesDb.search(sql`
+						SELECT * FROM initiative_signatures
+						ORDER BY created_at
+					`).must.then.not.be.empty()
+				})
+
 				it("must not affect signature of another user", function*() {
 					var signature = yield signaturesDb.create(new ValidSignature({
 						initiative_uuid: this.initiative.uuid,
@@ -704,6 +784,43 @@ describe("SignaturesController", function() {
 					signatures[0].must.eql(signature)
 				})
 
+				it("must not affect CitizenOS signature of another user", function*() {
+					var signature = yield citizenosSignaturesDb.create(
+						new ValidCitizenosSignature({
+							initiative_uuid: this.initiative.uuid,
+							country: "EE",
+							personal_id: "70001019906"
+						})
+					)
+
+					var signed = yield sign(
+						this.router,
+						this.request,
+						this.initiative,
+						certificate
+					)
+
+					signed.statusCode.must.equal(204)
+
+					var cookies = Http.parseCookies(signed.headers["set-cookie"])
+					var res = yield this.request(signed.headers.location, {
+						headers: {Cookie: Http.serializeCookies(cookies)}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("THANKS_FOR_SIGNING"))
+					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+
+					yield citizenosSignaturesDb.search(sql`
+						SELECT * FROM initiative_citizenos_signatures
+					`).must.then.eql([signature])
+
+					yield signaturesDb.search(sql`
+						SELECT * FROM initiative_signatures
+						ORDER BY created_at
+					`).must.then.not.be.empty()
+				})
+
 				it("must not affect signature of another country", function*() {
 					var signature = yield signaturesDb.create(new ValidSignature({
 						initiative_uuid: this.initiative.uuid,
@@ -736,6 +853,44 @@ describe("SignaturesController", function() {
 
 					signatures.length.must.equal(2)
 					signatures[0].must.eql(signature)
+				})
+
+				it("must not affect CitizenOS signature of another country",
+					function*() {
+					var signature = yield citizenosSignaturesDb.create(
+						new ValidCitizenosSignature({
+							initiative_uuid: this.initiative.uuid,
+							country: "LT",
+							personal_id: PERSONAL_ID
+						})
+					)
+
+					var signed = yield sign(
+						this.router,
+						this.request,
+						this.initiative,
+						certificate
+					)
+
+					signed.statusCode.must.equal(204)
+
+					var cookies = Http.parseCookies(signed.headers["set-cookie"])
+					var res = yield this.request(signed.headers.location, {
+						headers: {Cookie: Http.serializeCookies(cookies)}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("THANKS_FOR_SIGNING"))
+					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+
+					yield citizenosSignaturesDb.search(sql`
+						SELECT * FROM initiative_citizenos_signatures
+					`).must.then.eql([signature])
+
+					yield signaturesDb.search(sql`
+						SELECT * FROM initiative_signatures
+						ORDER BY created_at
+					`).must.then.not.be.empty()
 				})
 			})
 		}
