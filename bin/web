@@ -116,8 +116,6 @@ app.use(require("root/lib/middleware/error_handler_middleware").bind(null,
 		default:
 			res.setHeader("Content-Type", "text/html")
 
-			// Eventually when we're in control of signin, we should show the signin
-			// form for 401s.
 			if (err instanceof HttpError) {
 				if (err.code == 401) {
 					res.flash("error", t("401_TITLE"))
