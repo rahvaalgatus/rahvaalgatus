@@ -15,7 +15,7 @@ function InitiativePage(attrs, children) {
 	var headerless = attrs.headerless
 	var path = "/initiatives/" + initiative.uuid
 
-	return <Page class={"initiative-page " + (attrs.class || "")} {...attrs}>
+	return <Page {...attrs} class={"initiative-page " + (attrs.class || "")}>
 		{!headerless ? <header id="initiative-header">
 			<center>
 				<h1>
