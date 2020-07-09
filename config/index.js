@@ -1,8 +1,12 @@
-var O = require("oolong")
-var Fs = require("root/lib/fs")
+var _ = require("root/lib/underscore")
+var Fs = require("fs")
 var envPath = __dirname + "/" + process.env.ENV + ".json"
 
-module.exports = O.merge(
-	Fs.readJsonSync(__dirname + "/index.json"),
-	Fs.existsSync(envPath) && Fs.readJsonSync(envPath)
+module.exports = _.merge(
+	readJsonSync(__dirname + "/index.json"),
+	Fs.existsSync(envPath) && readJsonSync(envPath)
 )
+
+function readJsonSync(path, opts) {
+  return JSON.parse(Fs.readFileSync(path, opts))
+}
