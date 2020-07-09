@@ -1,6 +1,6 @@
 CREATE TABLE initiatives (
 	uuid TEXT PRIMARY KEY NOT NULL,
-	mailchimp_interest_id TEXT NULL UNIQUE, notes TEXT NOT NULL DEFAULT "", parliament_api_data TEXT NULL, sent_to_parliament_at TEXT NULL, finished_in_parliament_at TEXT NULL, discussion_end_email_sent_at TEXT NULL, signing_end_email_sent_at TEXT NULL, author_url TEXT NOT NULL DEFAULT "", community_url TEXT NOT NULL DEFAULT "", organizations TEXT NOT NULL DEFAULT "[]", meetings TEXT NOT NULL DEFAULT "[]", url TEXT NOT NULL DEFAULT "", media_urls TEXT NOT NULL DEFAULT "[]", signature_milestones TEXT NOT NULL DEFAULT "{}", phase TEXT NOT NULL DEFAULT "edit", government_change_urls TEXT NOT NULL DEFAULT "[]", public_change_urls TEXT NOT NULL DEFAULT "[]", has_paper_signatures INTEGER NOT NULL DEFAULT 0, received_by_parliament_at TEXT, accepted_by_parliament_at TEXT, archived_at TEXT, parliament_decision TEXT, parliament_committee TEXT, parliament_uuid TEXT, external INTEGER NOT NULL DEFAULT 0, title TEXT NOT NULL DEFAULT '', author_name TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')), parliament_synced_at TEXT, government_agency TEXT, sent_to_government_at TEXT, finished_in_government_at TEXT, government_contact TEXT, government_contact_details TEXT, government_decision TEXT, text TEXT, text_type TEXT, text_sha256 BLOB, undersignable INTEGER NOT NULL DEFAULT 0, parliament_token BLOB, destination TEXT, user_id INTEGER, published_at TEXT, discussion_ends_at TEXT, signing_started_at TEXT, signing_ends_at TEXT, tags TEXT NOT NULL DEFAULT '[]', signing_expired_at TEXT, signing_expiration_email_sent_at TEXT,
+	mailchimp_interest_id TEXT NULL UNIQUE, notes TEXT NOT NULL DEFAULT "", parliament_api_data TEXT NULL, sent_to_parliament_at TEXT NULL, finished_in_parliament_at TEXT NULL, discussion_end_email_sent_at TEXT NULL, signing_end_email_sent_at TEXT NULL, author_url TEXT NOT NULL DEFAULT "", community_url TEXT NOT NULL DEFAULT "", organizations TEXT NOT NULL DEFAULT "[]", meetings TEXT NOT NULL DEFAULT "[]", url TEXT NOT NULL DEFAULT "", media_urls TEXT NOT NULL DEFAULT "[]", signature_milestones TEXT NOT NULL DEFAULT "{}", phase TEXT NOT NULL DEFAULT "edit", government_change_urls TEXT NOT NULL DEFAULT "[]", public_change_urls TEXT NOT NULL DEFAULT "[]", has_paper_signatures INTEGER NOT NULL DEFAULT 0, received_by_parliament_at TEXT, accepted_by_parliament_at TEXT, archived_at TEXT, parliament_decision TEXT, parliament_committee TEXT, parliament_uuid TEXT, external INTEGER NOT NULL DEFAULT 0, title TEXT NOT NULL DEFAULT '', author_name TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')), parliament_synced_at TEXT, government_agency TEXT, sent_to_government_at TEXT, finished_in_government_at TEXT, government_contact TEXT, government_contact_details TEXT, government_decision TEXT, text TEXT, text_type TEXT, text_sha256 BLOB, undersignable INTEGER NOT NULL DEFAULT 0, parliament_token BLOB, destination TEXT, user_id INTEGER, published_at TEXT, discussion_ends_at TEXT, signing_started_at TEXT, signing_ends_at TEXT, tags TEXT NOT NULL DEFAULT '[]', signing_expired_at TEXT, signing_expiration_email_sent_at TEXT, language TEXT NOT NULL DEFAULT 'et',
 
 	FOREIGN KEY (user_id) REFERENCES users (id),
 
@@ -410,7 +410,7 @@ CREATE TABLE initiative_texts (
 	user_id INTEGER NOT NULL,
 	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
 	content BLOB NOT NULL,
-	content_type TEXT NOT NULL, title TEXT NOT NULL,
+	content_type TEXT NOT NULL, title TEXT NOT NULL, language TEXT NOT NULL DEFAULT 'et',
 
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
 	FOREIGN KEY (user_id) REFERENCES users (id),
@@ -465,6 +465,28 @@ END;
 CREATE INDEX index_initiative_citizenos_signatures_on_signer_id
 ON initiative_citizenos_signatures (signer_id)
 WHERE signer_id IS NOT NULL;
+CREATE TABLE initiative_text_signatures (
+  id INTEGER PRIMARY KEY NOT NULL,
+	text_id INTEGER NOT NULL,
+	country TEXT NOT NULL,
+	personal_id TEXT NOT NULL,
+	method TEXT NOT NULL,
+	signed INTEGER NOT NULL DEFAULT 0,
+	timestamped INTEGER NOT NULL DEFAULT 0,
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	signable BLOB NOT NULL,
+	signable_type TEXT NOT NULL,
+	xades TEXT,
+	error TEXT,
+
+	FOREIGN KEY (text_id) REFERENCES initiative_texts (id),
+
+	CONSTRAINT country_length CHECK (length(country) = 2),
+	CONSTRAINT personal_id_length CHECK (length(personal_id) > 0),
+	CONSTRAINT signable_length CHECK (length(signable) > 0),
+	CONSTRAINT xades_length CHECK (length(xades) > 0)
+);
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -554,5 +576,8 @@ INSERT INTO migrations VALUES('20200522100020');
 INSERT INTO migrations VALUES('20200601090000');
 INSERT INTO migrations VALUES('20200601101617');
 INSERT INTO migrations VALUES('20200618155253');
+INSERT INTO migrations VALUES('20200618155300');
+INSERT INTO migrations VALUES('20200618155310');
+INSERT INTO migrations VALUES('20200618155320');
 INSERT INTO migrations VALUES('20200709190642');
 COMMIT;

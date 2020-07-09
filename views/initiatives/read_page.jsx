@@ -19,6 +19,7 @@ var CommentForm = require("./comments/create_page").CommentForm
 var ProgressView = require("./initiative_page").ProgressView
 var {getRequiredSignatureCount} = require("root/lib/initiative")
 var {isAdmin} = require("root/lib/user")
+var {selected} = require("root/lib/css")
 var javascript = require("root/lib/jsx").javascript
 var serializeInitiativeUrl = require("root/lib/initiative").initiativeUrl
 var serializeImageUrl = require("root/lib/initiative").imageUrl
@@ -39,6 +40,7 @@ var EVENT_NOTIFICATIONS_SINCE = new Date(Config.eventNotificationsSince)
 var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
+var LANGUAGES = require("root/config").languages
 exports = module.exports = ReadPage
 exports.InitiativeDestinationSelectView = InitiativeDestinationSelectView
 exports.SigningView = SigningView
@@ -123,10 +125,14 @@ function ReadPage(attrs) {
 	var subscriberCounts = attrs.subscriberCounts
 	var signatureCount = attrs.signatureCount
 	var text = attrs.text
+	var textLanguage = attrs.textLanguage
+	var translations = attrs.translations
+	var signedTranslations = attrs.signedTranslations
 	var image = attrs.image
 	var initiativeUrl = serializeInitiativeUrl(initiative)
 	var shareText = `${initiative.title} ${initiativeUrl}`
 	var atomPath = req.baseUrl + req.url + ".atom"
+	var isAuthor = user && initiative.user_id == user.id
 
 	var imageEditable = (
 		user && initiative.user_id == user.id &&
@@ -164,7 +170,16 @@ function ReadPage(attrs) {
     /> : null}
 
 		<section class="initiative-section transparent-section"><center>
-			<div id="initiative-sheet" class="sheet">
+			{!thank ? <QuicksignView
+				req={req}
+				t={t}
+				class="mobile"
+				initiative={initiative}
+				signature={signature}
+				signatureCount={signatureCount}
+			/> : null}
+
+			<div id="initiative-sheet" class="initiative-sheet">
 				<Flash flash={flash} />
 
 				{thank ? <div class="initiative-status">
@@ -275,13 +290,69 @@ function ReadPage(attrs) {
 					}
 				}(initiative.phase)}
 
-				<QuicksignView
-					req={req}
-					t={t}
-					initiative={initiative}
-					signature={signature}
-					signatureCount={signatureCount}
-				/>
+				{(
+					!_.isEmpty(signedTranslations) ||
+					isAuthor && !_.isEmpty(translations)
+				) ? <menu id="language-tabs">
+					{LANGUAGES.map(function(lang) {
+						if (!(
+							initiative.language == lang ||
+							lang in signedTranslations ||
+							isAuthor && lang in translations
+						)) return null
+
+						var path = initiativePath
+						if (initiative.language != lang) path += "?language=" + lang
+
+						var klass = "tab " + selected(textLanguage, lang)
+
+						if (isAuthor && initiative.language != lang && (
+							signedTranslations[lang] == null ||
+							signedTranslations[lang].id !=
+							translations[lang].id
+						)) klass += " unsigned"
+
+						return <a href={path} class={klass}>{Jsx.html(
+							initiative.language != lang
+							? t("INITIATIVE_LANG_TAB_TRANSLATION_" + lang.toUpperCase())
+							: initiative.phase == "sign"
+							? t("INITIATIVE_LANG_TAB_SIGNABLE_" + lang.toUpperCase())
+							: t("INITIATIVE_LANG_TAB_" + lang.toUpperCase())
+						)}</a>
+					})}
+				</menu> : null}
+
+				{(
+					isAuthor &&
+					initiative.phase != "edit" &&
+					text &&
+					initiative.language != text.language && (
+						signedTranslations[text.language] == null ||
+						signedTranslations[text.language].id !=
+						translations[text.language].id
+					)
+				) ? <p class="initiative-translation-information-for-author">
+					{signedTranslations[text.language] == null
+						? t("INITIATIVE_TRANSLATION_PLEASE_SIGN")
+						: t("INITIATIVE_TRANSLATION_PLEASE_SIGN_AFTER_UPDATE")
+					}
+
+					<br />
+					<br />
+					<a
+						href={`${initiativePath}/texts/${text.id}/sign`}
+						class="sign-translation-button link-button"
+					>{t("INITIATIVE_TRANSLATION_SIGN")}</a>
+				</p> : null}
+
+				{(
+					isAuthor &&
+					text &&
+					initiative.language != text.language &&
+					initiative.phase == "edit"
+				) ? <p class="initiative-translation-information-for-author">
+					{t("INITIATIVE_TRANSLATION_HIDDEN_IN_EDIT_PHASE")}
+				</p> : null}
 
 				<InitiativeContentView
 					initiative={initiative}
@@ -304,19 +375,47 @@ function ReadPage(attrs) {
 
 					{signature ? <Fragment>
 						<h2>{t("THANKS_FOR_SIGNING")}</h2>
-						<p>Soovid allkirja tühistada?</p>
+
+						<p>
+							<DeleteSignatureButton req={req} signature={signature}>
+								{t("REVOKE_SIGNATURE")}
+							</DeleteSignatureButton>
+						</p>
 					</Fragment> : <Fragment>
 						<h2>{t("HEADING_CAST_YOUR_VOTE")}</h2>
-						<p>{t("HEADING_VOTE_REQUIRE_HARD_ID")}</p>
-					</Fragment>}
+						<p>
+							{(initiative.language != textLanguage) ? <Fragment>
+								{Jsx.html(t("INITIATIVE_SIGN_TRANSLATION_WARNING", {
+									language: t(
+										"INITIATIVE_SIGN_TRANSLATION_WARNING_TEXT_IN_" +
+										initiative.language.toUpperCase()
+									),
 
-					{signature ? <DeleteSignatureButton req={req} signature={signature}>
-						{t("REVOKE_SIGNATURE")}
-					</DeleteSignatureButton> : <SigningView
-						req={req}
-						t={t}
-						action={initiativePath + "/signatures"}
-					/>}
+									translation: t(
+										"INITIATIVE_SIGN_TRANSLATION_WARNING_TRANSLATION_IN_" +
+										textLanguage.toUpperCase()
+									)
+								}))}
+
+								{" "}
+
+								{Jsx.html(t(
+									"INITIATIVE_SIGN_TRANSLATION_WARNING_SIGN_IN_" +
+									initiative.language.toUpperCase()
+								))}
+
+								{" "}
+							</Fragment> : null}
+
+							{t("HEADING_VOTE_REQUIRE_HARD_ID")}
+							</p>
+
+							<SigningView
+								req={req}
+								t={t}
+								action={initiativePath + "/signatures"}
+							/>
+					</Fragment>}
 				</div> : null}
 			</div>
 
@@ -466,6 +565,8 @@ function ReadPage(attrs) {
 					initiative={initiative}
 					text={text}
 					hasComments={comments.length > 0}
+					translations={translations}
+					signedTranslations={signedTranslations}
 					signatureCount={signatureCount}
 				/>
 
@@ -730,17 +831,22 @@ function InitiativeContentView(attrs) {
 
 	if (text) switch (String(text.content_type)) {
 		case "text/html":
-			return <article class="text">{Jsx.html(text.content)}</article>
+			return <article class="text" lang={text.language}>
+				{Jsx.html(text.content)}
+				</article>
 
 		case "application/vnd.basecamp.trix+json":
-			return <article class="text trix-text">
+			return <article class="text trix-text" lang={text.language}>
 				{Trix.render(text.content, {heading: "h2"})}
 			</article>
 
 		case "application/vnd.citizenos.etherpad+html":
 			var html = normalizeCitizenOsHtml(text.content)
 			html = html.match(/<body>([^]*)<\/body>/m)[1]
-			return <article class="text citizenos-text">{Jsx.html(html)}</article>
+
+			return <article class="text citizenos-text" lang={text.language}>
+				{Jsx.html(html)}
+			</article>
 
 		default:
 			throw new RangeError("Unsupported content type: " + text.content_type)
@@ -751,15 +857,28 @@ function InitiativeContentView(attrs) {
 
 function SidebarAuthorView(attrs) {
 	var req = attrs.req
-	var t = req.t
 	var user = req.user
-	var text = attrs.text
 	var initiative = attrs.initiative
-	var signatureCount = attrs.signatureCount
-	var hasComments = attrs.hasComments
+	var translations = attrs.translations
+	var signedTranslations = attrs.signedTranslations
 
 	var isAuthor = user && initiative.user_id == user.id
 	if (!isAuthor) return null
+
+	var t = req.t
+	var text = attrs.text
+	var signatureCount = attrs.signatureCount
+	var hasComments = attrs.hasComments
+
+	var initiativePath = "/initiatives/" + initiative.uuid
+
+	var textEditPath = text && initiative.language != text.language
+		? initiativePath + "/edit?language=" + text.language
+		: initiativePath + "/edit"
+
+	var hasSignedEstonianText = (
+		initiative.language == "et" || signedTranslations.et
+	)
 
 	var actions = <Fragment>
 		{initiative.phase == "edit" ? <Fragment>
@@ -809,25 +928,44 @@ function SidebarAuthorView(attrs) {
 			</FormButton>
 
 			{initiative.destination == null ? <p>
-				Allkirjastamisele saatmiseks on vaja enne valida algatuse saaja.
+				{t("INITIATIVE_SEND_TO_SIGNING_NEEDS_DESTINATION")}
 			</p> : null}
 		</Fragment> : null}
 
 		{Initiative.canSendToParliament(initiative, user, signatureCount) ?
-			<FormButton
-				req={req}
-				action={"/initiatives/" + initiative.uuid}
-				name="status"
-				value="followUp"
-				class="green-button wide-button">
-				{t("SEND_TO_PARLIAMENT")}
-			</FormButton>
+			<Fragment>
+				<FormButton
+					req={req}
+					action={"/initiatives/" + initiative.uuid}
+					name="status"
+					value="followUp"
+					id="send-to-parliament-button"
+					disabled={!hasSignedEstonianText}
+					class="green-button wide-button">
+					{t("SEND_TO_PARLIAMENT")}
+				</FormButton>
+
+				{!hasSignedEstonianText ? <p>{Jsx.html(translations.et
+					? t("INITIATIVE_SEND_TO_SIGNING_NEEDS_SIGNED_ESTONIAN_TEXT", {
+						signTextUrl: `${initiativePath}/texts/${translations.et.id}/sign`
+					})
+					: t("INITIATIVE_SEND_TO_SIGNING_NEEDS_ESTONIAN_TEXT", {
+						newTextUrl: initiativePath + "/texts/new?language=et"
+					})
+				)}</p> : null}
+			</Fragment>
 		: null}
 
 		{initiative.phase == "edit" ? <a
-			href={"/initiatives/" + initiative.uuid + "/edit"}
+			href={textEditPath}
 			class="link-button wide-button">
 			{t("EDIT_INITIATIVE_TEXT")}
+		</a> : null}
+
+		{initiative.phase == "sign" ? <a
+			href={textEditPath}
+			class="link-button wide-button">
+			{t("EDIT_INITIATIVE_TRANSLATIONS")}
 		</a> : null}
 
 		{initiative.phase == "edit" && initiative.published_at ? <FormButton
@@ -1209,8 +1347,10 @@ function SigningView(attrs) {
 	var t = attrs.t
 	var req = attrs.req
 	var action = attrs.action
+	var personalId = attrs.personalId
+	var singlePage = attrs.singlePage
 
-	return <Fragment>
+	return <div class="signing-view">
 		<input
 			type="radio"
 			id="signature-method-tab-id-card"
@@ -1235,7 +1375,7 @@ function SigningView(attrs) {
 			style="display: none"
 		/>
 
-		<div id="signature-methods">
+		<div class="signature-methods">
 			<label
 				id="id-card-button"
 				for="signature-method-tab-id-card"
@@ -1308,6 +1448,7 @@ function SigningView(attrs) {
 					inputmode="numeric"
 					name="personalId"
 					placeholder={t("PLACEHOLDER_PERSONAL_ID")}
+					value={personalId}
 					required
 					class="form-input"
 				/>
@@ -1319,6 +1460,8 @@ function SigningView(attrs) {
 				class="button green-button">
 				{t("BTN_VOTE_SIGN_WITH_MOBILE_ID")}
 			</button>
+
+			<output />
 		</Form>
 
 		{Config.smartId ? <Form
@@ -1336,6 +1479,7 @@ function SigningView(attrs) {
 					inputmode="numeric"
 					name="personalId"
 					placeholder={t("PLACEHOLDER_PERSONAL_ID")}
+					value={personalId}
 					required
 					class="form-input"
 				/>
@@ -1347,6 +1491,8 @@ function SigningView(attrs) {
 				class="green-button">
 				{t("BTN_VOTE_SIGN_WITH_SMART_ID")}
 			</button>
+
+			<output />
 		</Form> : null}
 
 		<script>{javascript`
@@ -1355,7 +1501,7 @@ function SigningView(attrs) {
 			var inputs = [
 				document.querySelector("#mobile-id-form input[name=personalId]"),
 				document.querySelector("#smart-id-form input[name=personalId]")
-			]
+			].filter(Boolean)
 
 			inputs.forEach(function(from) {
 				from.addEventListener("change", function(ev) {
@@ -1468,7 +1614,77 @@ function SigningView(attrs) {
 			function notice(msg) { flash.textContent = msg }
 			function raise(err) { setTimeout(function() { throw err }) }
 		`}</script>
-	</Fragment>
+
+		{singlePage ? <script>{javascript`
+			var reduce = Function.call.bind(Array.prototype.reduce)
+
+			var forms = [
+				document.getElementById("mobile-id-form"),
+				document.getElementById("smart-id-form")
+			].filter(Boolean)
+
+			forms.forEach(function(form) {
+				form.addEventListener("submit", handleSubmit)
+			})
+
+			function handleSubmit(ev) {
+				var form = ev.target
+				var output = form.querySelector("output")
+				function notice(msg) { output.textContent = msg || "" }
+
+				ev.preventDefault()
+				notice("${t("SIGNING_VIEW_SIGNING")}")
+
+				fetch(form.action, {
+					method: "POST",
+					credentials: "same-origin",
+
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json, ${ERR_TYPE}"
+          },
+
+          body: JSON.stringify(serializeForm(form))
+        }).then(assertOk).then(function(res) {
+          var code = res.headers.get("X-Verification-Code")
+          notice("${t("VERIFICATION_CODE")}: " + code)
+
+          return res.json().then(function(obj) {
+						if (obj.code == "OK") window.location.assign(obj.location)
+						else notice(obj.description || obj.message)
+          })
+        }).catch(function(err) {
+          notice(err.description || err.message)
+        })
+			}
+
+			function serializeForm(form) {
+				return reduce(form.elements, function(obj, el) {
+					if (!(el.tagName == "INPUT" || el.tagName == "BUTTON")) return obj
+
+					obj[el.name] = el.value
+					return obj
+				}, {})
+			}
+
+      function assertOk(res) {
+        if (res.ok) return res
+
+        var err = new Error(res.statusText)
+        err.code = res.status
+
+				var type = res.headers.get("content-type")
+
+				if (type == "${ERR_TYPE}" || /^application\\/json(;|$)/.test(type))
+					return res.json().then(function(body) {
+						err.message = body.message
+						err.description = body.description
+						throw err
+					})
+        else throw err
+      }
+		`}</script> : null}
+	</div>
 }
 
 function EventsView(attrs) {
@@ -1483,7 +1699,7 @@ function EventsView(attrs) {
 		return <section id="initiative-events" class="transparent-section"><center>
 			<a name="events" />
 
-			<article class="sheet">
+			<article class="initiative-sheet">
 				{canCreateEvents ? <a
 					href={`/initiatives/${initiative.uuid}/events/new`}
 					class="create-event-button">
@@ -1878,7 +2094,7 @@ function QuicksignView(attrs) {
 
 	if (!initiative.published_at) return null
 
-	return <div class="quicksign">
+	return <div class={"quicksign " + (attrs.class || "")}>
 		<ProgressView
 			t={t}
 			initiative={initiative}

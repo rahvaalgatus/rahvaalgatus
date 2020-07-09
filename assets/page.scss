@@ -6,6 +6,7 @@
 @import "_editor";
 $article-padding: 3rem;
 $article-padding-mobile: 2rem;
+$article-width-percentage: 70%;
 
 html,
 body {
@@ -347,6 +348,7 @@ button.inherited {
 	height: $button-height;
 	padding-left: 1rem;
 	padding-right: 1rem;
+	font-family: $museo-sans;
 
 	background: white;
 	color: #4a555d;
@@ -402,9 +404,26 @@ button.inherited {
 	}
 }
 
+.form-radio {
+	cursor: pointer;
+
+	input[type=radio] {
+		margin-right: 0.7rem;
+		vertical-align: text-bottom;
+
+		&:disabled { opacity: 0.5; }
+	}
+}
+
 .form-date-picker {
 	font-family: $museo-sans;
 	max-width: 32rem;
+
+	input {
+		width: 100%;
+		text-align: center;
+		font-size: 1.4rem;
+	}
 
 	.pika-title {
 		text-align: center;
@@ -721,6 +740,73 @@ button.inherited {
 	p {
 		font-size: 1.4rem;
 		color: $grey;
+	}
+}
+
+.signing-view {
+	$methods: (id-card, mobile-id, smart-id);
+
+	.signature-methods {
+		margin-top: 1rem;
+		text-align: center;
+
+		form,
+		label {
+			display: inline-block;
+
+			& + * { margin-left: 1rem; }
+		}
+
+		form button,
+		label {
+			display: inline-block;
+			width: 8.8rem;
+			height: 3.1rem;
+
+			img	{
+				width: 100%;
+
+				// Internet Explorer v11 won't activate the label if clicked on an
+				// image.
+				img { pointer-events: none; }
+			}
+		}
+	}
+
+	.signature-form {
+		text-align: center;
+		margin-top: 1rem;
+		display: none;
+
+		.form-label {
+			text-align: left;
+			margin-right: 0.5rem;
+		}
+
+		.form-label, button {
+			margin-top: 0;
+			margin-bottom: 0.5rem;
+			vertical-align: bottom;
+		}
+
+		@include mobile {
+			.form-label {
+				width: 100%;
+
+				input { width: 100%; }
+			}
+		}
+	}
+
+	output {
+		display: block;
+		margin-top: 0.5rem;
+	}
+
+	@each $method in $methods {
+		#signature-method-tab-#{$method}:checked ~ ##{$method}-form {
+			display: block;
+		}
 	}
 }
 
@@ -1206,7 +1292,6 @@ button.inherited {
 	background-color: $secondary-background;
 }
 
-#initiative-page,
 .initiative-page {
 	background-color: $secondary-background;
 
@@ -1255,6 +1340,27 @@ button.inherited {
 			h1 { font-size: 3.2rem; }
 			a.badge { display: block; margin-left: 0; }
 			img.badge { margin-top: 1rem; margin-left: 0; }
+		}
+	}
+
+	.initiative-sheet {
+		background: white;
+		box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.15);
+		width: $article-width-percentage;
+
+		@include mobile-and-tablet { width: auto; }
+	}
+
+	.initiative-section {
+		padding-top: 0;
+
+		center {
+			display: flex;
+			padding-left: 0;
+			padding-right: 0;
+			max-width: $page-width + $article-padding;
+
+			@include mobile-and-tablet { display: block; }
 		}
 	}
 }
@@ -1428,11 +1534,10 @@ button.inherited {
 	}
 }
 
-#initiative-page,
-#edit-initiative-page {
+#initiative-page {
 	$article-width: 72rem;
-	$article-width-percentage: 70%;
 	$sidebar-padding: 2rem;
+	$tab-radius: 0.5rem;
 
 	#initiative-phases {
 		$phase-icon-width: 6rem;
@@ -1455,7 +1560,7 @@ button.inherited {
 
 		margin-top: -1rem;
 		padding-top: 0;
-		padding-bottom: 4rem;
+		padding-bottom: 2rem;
 		overflow: hidden;
 
 		ol {
@@ -1676,166 +1781,201 @@ button.inherited {
 		}
 	}
 
-	.sheet {
-		background: white;
-		box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.15);
-		width: $article-width-percentage;
+	.quicksign.mobile {
+		display: none;
+		background-color: $light-background;
+		padding: $sidebar-padding $article-padding;
+		border: 1px solid $light-background-border;
+		border-width: 1px 0;
+		margin-bottom: 1rem;
 
-		@include mobile-and-tablet { width: auto; }
-	}
+		.initiative-progress { line-height: 3.2rem; border-radius: 0.4rem; }
+		.sign-button, { margin-top: 1rem; }
 
-	.initiative-section center,
-	#initiative-events center {
-		max-width: $page-width + $article-padding;
-		padding-left: 0;
-		padding-right: 0;
-	}
+		@include mobile-and-tablet { display: block; }
 
-	.initiative-section {
-		padding-top: 0;
-
-		center {
-			display: flex;
-
-			@include mobile-and-tablet { display: block; }
+		@include mobile {
+			padding-left: $article-padding-mobile;
+			padding-right: $article-padding-mobile;
 		}
+	}
 
-		#initiative-sheet,
-		#initiative-sidebar {
+	#language-tabs {
+		background-color: $light-background;
+		border-bottom: 1px solid $light-background-border;
+
+		&:first-child { border-top-left-radius: $tab-radius; }
+
+		.tab {
 			display: inline-block;
-			vertical-align: top;
-
-			@include mobile-and-tablet { display: block; }
-		}
-
-		#initiative-sheet {
-			position: relative; // To have box-shadow be on top of <aside>.
-			display: flex;
-			flex-direction: column;
-
-			& > .flash { border-radius: 0; }
-
-			.quicksign {
-				display: none;
-				background-color: $light-background;
-				padding: $sidebar-padding $article-padding;
-				border-bottom: 1px solid $light-background-border;
-
-				.initiative-progress { line-height: 3.2rem; border-radius: 0.4rem; }
-				.sign-button, { margin-top: 1rem; }
-
-				@include mobile-and-tablet { display: block; }
-
-				@include mobile {
-					padding-left: $article-padding-mobile;
-					padding-right: $article-padding-mobile;
-				}
-			}
-		}
-
-		article.text {
-			flex-grow: 1;
+			border: 0.1rem solid $light-background-border;
+			border-bottom: 0;
+			padding: 1rem 2rem;
+			line-height: 1.2;
 			font-size: 1.6rem;
-			font-family: $tisa-pro;
-			padding: $article-padding;
-
-			@include mobile { padding: $article-padding-mobile; }
-
-			&.trix-text {
-				white-space: pre-wrap;
-			}
-
-			&.citizenos-text {
-				// Initiative HTML often has <h2> following plain non-tagged text, so
-				// `* + h2` won't work.
-				h2 { margin-top: 4rem; margin-bottom: 1rem; }
-
-				// Etherpad generates non-standard HTML by putting a nested <ol>
-				// directly under <ul>.
-				ol ol,
-				ul ul,
-				ol ul,
-				ul ol {
-					margin-left: 2rem;
-				}
-
-				// Etherpad provides a fixed set of text colors.
-				.black { color: $text; }
-				.red { color: red; }
-				.green { color: #00cb81; }
-				.blue { color: #45a0e6; }
-				.yellow { color: yellow; }
-				.orange { color: #ffb400; }
-			}
-		}
-
-		article.pdf {
-			// Whereas `height: 100%` on <object> works for Firefox, it doesn't on
-			// Chromium.  Use flex for backup.
-			display: flex;
-			flex-direction: column;
-
-			object {
-				display: block;
-				min-height: 60rem;
-				width: 100%;
-				height: 100%;
-				flex-grow: 1;
-			}
-		}
-
-		.initiative-subscribe-form {
-			font-family: $museo-sans;
-
-			input:not([hidden]) {
-				display: inline-block;
-				margin-right: 1rem;
-				margin-bottom: 0.5rem;
-				max-width: 18rem;
-
-				@include mobile { width: 100%; }
-			}
-
-			button {
-				margin-bottom: 0.5rem;
-
-				@include mobile { width: 100%; }
-			}
-
-			p { color: $grey; }
-		}
-
-		.quicksign {
+			margin-bottom: -0.1rem;
+			font-weight: 500;
+			color: #888;
 			text-align: center;
-			line-height: 1.5;
 
-			.link-button {
-				font-weight: bold;
+			& + .tab { margin-left: -0.1rem; }
+			&:first-child { border-left: none; }
+			&:first-child { border-top-left-radius: $tab-radius; }
+			&:last-child { border-top-right-radius: $tab-radius; }
+
+			&.selected { background: white; color: $text; }
+			&.unsigned { font-style: italic; }
+
+			@media only screen and (min-width: 769px) and (max-width: 875px) {
+				small { display: none; }
 			}
 
-			h2 {
-				margin-top: 1rem;
-				font-size: 1.6rem;
-				font-weight: bold;
+			@media only screen and (max-width: 619px) {
+				.abbr { display: none; }
 			}
 
-			form { display: inline; }
-
-			.hiding-description {
-				display: none;
+			@media only screen and (max-width: 459px) {
+				small { display: none; }
 			}
 
-			.hiding-description-toggle:checked {
-				& + label { display: none; }
-				& ~ .hiding-description { display: block; }
+			@media only screen and (max-width: 359px) {
+				padding-left: 1.5rem;
+				padding-right: 1.5rem;
 			}
 		}
+	}
 
-		.initiative-progress-text {
+	.initiative-translation-information-for-author {
+		margin: 2rem 2rem 0;
+		border-radius: 0.5rem;
+		background-color: lemonchiffon;
+		border: 1px solid moccasin;
+		padding: 1rem;
+
+		.link-button {
+			font-weight: 500;
+		}
+	}
+
+	#initiative-sheet,
+	#initiative-sidebar {
+		display: inline-block;
+		vertical-align: top;
+
+		@include mobile-and-tablet { display: block; }
+	}
+
+	#initiative-sheet {
+		position: relative; // To have box-shadow be on top of <aside>.
+		display: flex;
+		flex-direction: column;
+		border-top-left-radius: $tab-radius;
+
+		& > .flash { border-radius: 0; }
+	}
+
+	article.text {
+		flex-grow: 1;
+		font-size: 1.6rem;
+		font-family: $tisa-pro;
+		padding: $article-padding;
+
+		@include mobile { padding: $article-padding-mobile; }
+
+		&.trix-text {
+			white-space: pre-wrap;
+		}
+
+		&.citizenos-text {
+			// Initiative HTML often has <h2> following plain non-tagged text, so
+			// `* + h2` won't work.
+			h2 { margin-top: 4rem; margin-bottom: 1rem; }
+
+			// Etherpad generates non-standard HTML by putting a nested <ol>
+			// directly under <ul>.
+			ol ol,
+			ul ul,
+			ol ul,
+			ul ol {
+				margin-left: 2rem;
+			}
+
+			// Etherpad provides a fixed set of text colors.
+			.black { color: $text; }
+			.red { color: red; }
+			.green { color: #00cb81; }
+			.blue { color: #45a0e6; }
+			.yellow { color: yellow; }
+			.orange { color: #ffb400; }
+		}
+	}
+
+	article.pdf {
+		// Whereas `height: 100%` on <object> works for Firefox, it doesn't on
+		// Chromium.  Use flex for backup.
+		display: flex;
+		flex-direction: column;
+
+		object {
+			display: block;
+			min-height: 60rem;
+			width: 100%;
+			height: 100%;
+			flex-grow: 1;
+		}
+	}
+
+	.initiative-subscribe-form {
+		font-family: $museo-sans;
+
+		input:not([hidden]) {
+			display: inline-block;
+			margin-right: 1rem;
+			margin-bottom: 0.5rem;
+			max-width: 18rem;
+
+			@include mobile { width: 100%; }
+		}
+
+		button {
+			margin-bottom: 0.5rem;
+
+			@include mobile { width: 100%; }
+		}
+
+		p { color: $grey; }
+	}
+
+	.quicksign {
+		text-align: center;
+		line-height: 1.5;
+
+		.link-button {
+			font-weight: bold;
+		}
+
+		h2 {
 			margin-top: 1rem;
-
-			time { @extend strong; }
+			font-size: 1.6rem;
+			font-weight: bold;
 		}
+
+		form { display: inline; }
+
+		.hiding-description {
+			display: none;
+		}
+
+		.hiding-description-toggle:checked {
+			& + label { display: none; }
+			& ~ .hiding-description { display: block; }
+		}
+	}
+
+	.initiative-progress-text {
+		margin-top: 1rem;
+
+		time { @extend strong; }
 	}
 
 	#initiative-sidebar {
@@ -1993,6 +2133,13 @@ button.inherited {
 				select { width: 100%; }
 				margin-bottom: 1rem;
 			}
+
+			p {
+				a {
+					text-decoration: underline;
+					color: $link-color;
+				}
+			}
 		}
 
 		#initiative-info {
@@ -2092,68 +2239,10 @@ button.inherited {
 			line-height: 1.5;
 		}
 
-		#signature-methods {
-			margin-top: 1rem;
-			text-align: center;
-
-			form,
-			label {
-				display: inline-block;
-
-				& + * { margin-left: 1rem; }
-			}
-
-			form button,
-			label {
-				display: inline-block;
-				width: 8.8rem;
-				height: 3.1rem;
-
-				img	{
-					width: 100%;
-
-					// Internet Explorer v11 won't activate the label if clicked on an
-					// image.
-					img { pointer-events: none; }
-				}
-			}
-		}
-
 		.revoke-button {
 			display: block;
 			font-weight: 600;
 			margin: 0 auto;
-		}
-
-		.signature-form {
-			text-align: center;
-			margin-top: 1rem;
-			display: none;
-
-			.form-label {
-				text-align: left;
-				margin-right: 0.5rem;
-			}
-
-			.form-label, button {
-				margin-top: 0;
-				margin-bottom: 0.5rem;
-				vertical-align: bottom;
-			}
-
-			@include mobile {
-				.form-label {
-					width: 100%;
-
-					input { width: 100%; }
-				}
-			}
-		}
-
-		@each $method in $methods {
-			#signature-method-tab-#{$method}:checked ~ ##{$method}-form {
-				display: block;
-			}
 		}
 	}
 
@@ -2162,11 +2251,14 @@ button.inherited {
 
 		font-size: 1.4rem;
 		line-height: 1.5;
-		border-bottom: 1px solid $light-background-border;
 		font-family: $tisa-pro;
 		background: $light-background;
 		padding-top: $padding-vertical;
 		padding-bottom: $padding-vertical;
+
+		& + *:not(#language-tabs) {
+			border-top: 1px solid $light-background-border;
+		}
 
 		&,
 		.status-header {
@@ -2239,6 +2331,12 @@ button.inherited {
 	}
 
 	#initiative-events {
+		center {
+			max-width: $page-width + $article-padding;
+			padding-left: 0;
+			padding-right: 0;
+		}
+
 		.create-event-button {
 			display: block;
 
@@ -2482,11 +2580,48 @@ button.inherited {
 }
 
 #edit-initiative-page {
-	main {
-		padding-top: 6rem;
+	$tab-radius: 0.5rem;
 
-		@media only screen and (max-width: $page-width + 2 * $page-padding) {
-			padding-top: 4rem;
+	.new-initiative & #initiative-sheet {
+		margin-top: 4rem;
+	}
+
+	#initiative-sheet {
+		border-top-left-radius: $tab-radius;
+	}
+
+	#language-tabs {
+		background-color: $light-background;
+		border-bottom: 1px solid $light-background-border;
+
+		&:first-child { border-top-left-radius: $tab-radius; }
+
+		.tab {
+			display: inline-block;
+			border: 0.1rem solid $light-background-border;
+			border-bottom: 0;
+			line-height: 3.9rem;
+			padding: 0 2rem;
+			font-size: 1.6rem;
+			margin-bottom: -0.1rem;
+			font-weight: 500;
+			color: #888;
+
+			& + .tab { margin-left: -0.1rem; }
+			&:first-child { border-left: none; }
+			&:first-child { border-top-left-radius: $tab-radius; }
+			&:last-child { border-top-right-radius: $tab-radius; }
+
+			&.selected { background: white; color: $text; }
+
+			@media only screen and (max-width: 509px) {
+				.abbr { display: none; }
+			}
+
+			@media only screen and (max-width: 359px) {
+				padding-left: 1.5rem;
+				padding-right: 1.5rem;
+			}
 		}
 	}
 
@@ -2497,6 +2632,19 @@ button.inherited {
 		font-size: 3.4rem;
 		font-family: $tisa-pro;
 		color: $title-text;
+		width: 100%;
+
+		@include mobile { padding: $article-padding-mobile; }
+	}
+
+	input[name=content][readonly] ~ trix-toolbar { display: none; }
+
+	.read-only-warning {
+		padding: 1rem 1.5rem;
+		background: $light-background;
+		border: 0 solid $light-background-border;
+		border-width: 1px 0;
+		line-height: 1.4;
 	}
 
 	trix-toolbar {
@@ -2525,16 +2673,141 @@ button.inherited {
 		font-size: 1.6rem;
 		font-family: $tisa-pro;
 	}
+
+	.submit-inputs {
+		padding: 1.5rem 1.5rem 1.5rem;
+		background: $light-background;
+		border: 0 solid $light-background-border;
+		border-width: 1px 0;
+
+		.default-fields {
+			display: inline-block;
+			font-weight: 500;
+			margin-bottom: 0.5rem;
+		}
+
+		h3 {
+			font-weight: 500;
+			margin-bottom: 0.3rem;
+		}
+		
+		.language-fields {
+			margin-bottom: 1rem;
+		}
+
+		p {
+			margin-bottom: 1rem;
+
+			a { color: $link-color; text-decoration: underline; }
+		}
+
+		button[type=submit] {
+			padding: 0 2rem;
+		}
+	}
 }
 
-#initiative-publish-page,
-#initiative-send-to-voting-page,
+#sign-initiative-text-page {
+	.initiative-sheet {
+		padding: $article-padding;
+	}
+
+	h2 {
+		font-size: 2.4rem;
+		font-weight: 500;
+		color: $title-text;
+		margin-bottom: 1rem;
+	}
+
+	p {
+		line-height: 1.5;
+
+		a { color: $link-color; text-decoration: underline; }
+	}
+
+	.signing-view {
+		margin-top: 3rem;
+	}
+}
+
 #initiative-send-to-parliament-page {
 	.primary-section form {
 		input[type=date] {
 			max-width: 24rem;
 		}
 	}
+}
+
+#initiative-publish-page {
+	.initiative-sheet {
+		padding: $article-padding;
+	}
+
+	h2 {
+		font-size: 2.4rem;
+		font-weight: 500;
+		color: $title-text;
+		margin-bottom: 1rem;
+	}
+
+	p {
+		line-height: 1.4;
+	}
+
+	.form-date-picker {
+		margin: 2rem 0 1rem;
+	}
+
+	.accept-tos-input {
+		margin-bottom: 1rem;
+	}
+}
+
+#initiative-send-to-voting-page {
+	.initiative-sheet {
+		padding: $article-padding;
+	}
+
+	h2 {
+		font-size: 2.4rem;
+		font-weight: 500;
+		color: $title-text;
+		margin-bottom: 1rem;
+	}
+
+	h3 {
+		font-size: 1.6rem;
+		font-weight: 500;
+		color: $title-text;
+		margin-bottom: 1rem;
+	}
+
+	p {
+		line-height: 1.4;
+	}
+
+	.text-fields {
+		margin-bottom: 2rem;
+
+		a { color: $link-color; text-decoration: underline; }
+		p + .text-field { margin-top: 1rem; }
+	}
+
+	.text-field {
+		margin-top: 0.5rem;
+		display: block;
+		margin-bottom: 1rem;
+
+		input {
+			float: left;
+		}
+
+		p {
+			margin-left: 3rem;
+		}
+	}
+
+	.form-date-picker { margin: 2rem 0 1rem; }
 }
 
 #subscriptions-page main {
@@ -2852,71 +3125,13 @@ button.inherited {
 	}
 
 	#sign-form {
-		$methods: (id-card, mobile-id, smart-id);
 		$form-padding: 2.5rem;
 
 		margin-top: 3rem;
 		background: white;
 		box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.1);
 		padding: 3rem $form-padding;
-
-		#signature-methods {
-			margin-top: 1rem;
-			text-align: center;
-
-			form,
-			label {
-				display: inline-block;
-
-				& + * { margin-left: 1rem; }
-			}
-
-			form button,
-			label {
-				display: inline-block;
-				width: 8.8rem;
-				height: 3.1rem;
-
-				img	{
-					width: 100%;
-
-					// Internet Explorer v11 won't activate the label if clicked on an
-					// image.
-					img { pointer-events: none; }
-				}
-			}
-		}
-
-		.signature-form {
-			text-align: center;
-			margin-top: 1rem;
-			display: none;
-
-			.form-label {
-				text-align: left;
-				margin-right: 0.5rem;
-			}
-
-			.form-label, button {
-				margin-top: 0;
-				margin-bottom: 0.5rem;
-				vertical-align: bottom;
-			}
-
-			@include mobile {
-				.form-label {
-					width: 100%;
-
-					input { width: 100%; }
-				}
-			}
-		}
-
-		@each $method in $methods {
-			#signature-method-tab-#{$method}:checked ~ ##{$method}-form {
-				display: block;
-			}
-		}
+		font-size: 1.4rem;
 	}
 
 	#statistics {

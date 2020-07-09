@@ -357,29 +357,27 @@ function UserVoice(attrs) {
 }
 
 function DatePickerInput(attrs) {
-	var name = attrs.name
 	var id = _.uniqueId("date-picker-")
 
-	return <Fragment>
+	return <fieldset id={id} class="form-date-picker">
+		<div class="pikaday" />
 		<input {...attrs} />
 
-		<div id={id} class="form-date-picker">
-			<script>{javascript`
-				var Pikaday = require("pikaday")
-				var input = document.querySelector("input[name=${name}]")
+		<script>{javascript`
+			var Pikaday = require("pikaday")
+			var el = document.getElementById("${id}")
+			var input = el.childNodes[1]
 
-				new Pikaday({
-					firstDay: 1,
-					field: input,
-					minDate: input.min ? new Date(input.min) : null,
-					maxDate: input.max ? new Date(input.max) : null,
-					container: document.getElementById("${id}"),
-					bound: false,
-				})
-
-			`}</script>
-		</div>
-	</Fragment>
+			new Pikaday({
+				firstDay: 1,
+				field: input,
+				minDate: input.min ? new Date(input.min) : null,
+				maxDate: input.max ? new Date(input.max) : null,
+				container: el.firstChild,
+				bound: false,
+			})
+		`}</script>
+	</fieldset>
 }
 
 function serializeUser(user) {

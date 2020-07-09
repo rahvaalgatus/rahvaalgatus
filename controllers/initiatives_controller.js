@@ -32,12 +32,14 @@ var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var trim = Function.call.bind(String.prototype.trim)
 var sendEmail = require("root").sendEmail
 var searchInitiativeEvents = _.compose(searchInitiativesEvents, concat)
+var parseText = require("./initiatives/texts_controller").parse
 var {countSignaturesById} = require("root/lib/initiative")
 var {countSignaturesByIds} = require("root/lib/initiative")
 var {countUndersignedSignaturesById} = require("root/lib/initiative")
 var {countCitizenOsSignaturesById} = require("root/lib/initiative")
+var EMPTY = Object.prototype
 var EMPTY_ARR = Array.prototype
-var EMPTY_INITIATIVE = {title: ""}
+var EMPTY_INITIATIVE = {title: "", phase: "edit"}
 var EMPTY_CONTACT = {name: "", email: "", phone: ""}
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 exports.searchInitiativesEvents = searchInitiativesEvents
@@ -158,26 +160,32 @@ exports.router.post("/", next(function*(req, res) {
 	var user = req.user
 	if (user == null) throw new HttpError(401)
 
-	var title = req.body.title
-
-	if (!req.body["accept-tos"]) res.render("initiatives/create_page.jsx", {
-		error: req.t("CONFIRM_I_HAVE_READ"),
-		attrs: {title: title}
-	})
+	var attrs = parseText(req.body)
 
 	var initiative = yield initiativesDb.create({
 		uuid: _.serializeUuid(_.uuidV4()),
 		user_id: user.id,
-		title: title,
+		title: attrs.title,
+		language: attrs.language,
 		created_at: new Date,
 		undersignable: true
 	})
 
-	res.redirect(303, req.baseUrl + "/" + initiative.uuid + "/edit")
+	yield textsDb.create({
+		__proto__: attrs,
+		initiative_uuid: initiative.uuid,
+		user_id: user.id,
+		created_at: new Date
+	})
+
+	res.redirect(303, req.baseUrl + "/" + initiative.uuid)
 }))
 
 exports.router.get("/new", function(_req, res) {
-	res.render("initiatives/create_page.jsx", {attrs: EMPTY_INITIATIVE})
+	res.render("initiatives/update_page.jsx", {
+		initiative: EMPTY_INITIATIVE,
+		language: "et"
+	})
 })
 
 exports.router.use("/:id", next(function*(req, res, next) {
@@ -264,6 +272,13 @@ exports.read = next(function*(req, res) {
 	var thankAgain = false
 	var signature
 	var newSignatureToken = req.flash("signatureToken")
+	var isAuthor = user && initiative.user_id == user.id
+
+	var textLanguage = (
+		isAuthor && req.query.language ||
+		initiative.phase != "edit" && req.query.language ||
+		initiative.language
+	)
 
 	if (initiative.phase == "sign") if (newSignatureToken) {
 		signature = yield signaturesDb.read(sql`
@@ -322,21 +337,61 @@ exports.read = next(function*(req, res) {
 	`)
 
 	var text = yield textsDb.read(sql`
-		SELECT * FROM initiative_texts
-		WHERE initiative_uuid = ${initiative.uuid}
-		ORDER BY created_at DESC
+		SELECT text.* FROM initiative_texts AS text
+		LEFT JOIN initiative_text_signatures AS sig
+		ON sig.text_id = text.id AND sig.signed AND sig.timestamped
+		WHERE text.initiative_uuid = ${initiative.uuid}
+		AND text.language = ${textLanguage}
+
+		${isAuthor ? sql`` : sql`AND (
+			sig.id IS NOT NULL OR
+			text.language = ${initiative.language}
+		)`}
+
+		ORDER BY text.id DESC
 		LIMIT 1
 	`)
+
+	if (text == null && initiative.language != textLanguage && !isAuthor)
+		return void res.redirect(307, req.baseUrl + req.path)
+
+	if (text) initiative.title = text.title
 
 	if (req.originalUrl.endsWith(".html")) {
 		var html = (
 			initiative.text ||
-			text && Initiative.renderForParliament(initiative, text)
+			text && Initiative.renderForParliament(text)
 		)
 
 		if (html) return void res.send(html)
 		else throw new HttpError(404, "No Text Yet")
 	}
+
+	var translations = isAuthor ? _.indexBy(yield textsDb.search(sql`
+		SELECT language, id
+		FROM initiative_texts
+
+		WHERE id IN (
+			SELECT MAX(id) FROM initiative_texts
+			WHERE initiative_uuid = ${initiative.uuid}
+			AND language != ${initiative.language}
+			GROUP BY language
+		)
+	`), "language") : EMPTY
+
+	var signedTranslations = _.indexBy(yield textsDb.search(sql`
+		SELECT language, id
+		FROM initiative_texts
+
+		WHERE id IN (
+			SELECT MAX(text.id) FROM initiative_texts AS text
+			JOIN initiative_text_signatures AS sig
+			ON sig.text_id = text.id AND sig.signed AND sig.timestamped
+			WHERE text.initiative_uuid = ${initiative.uuid}
+			AND text.language != ${initiative.language}
+			GROUP BY text.language
+		)
+	`), "language")
 
 	res.render("initiatives/read_page.jsx", {
 		thank: thank,
@@ -346,6 +401,9 @@ exports.read = next(function*(req, res) {
 		subscriberCounts: subscriberCounts,
 		signatureCount: signatureCount,
 		text: text,
+		textLanguage: textLanguage,
+		translations: translations,
+		signedTranslations: signedTranslations,
 		image: image,
 		files: files,
 		comments: comments,
@@ -422,11 +480,14 @@ exports.router.get("/:id/edit", next(function*(req, res) {
 	var text = yield textsDb.read(sql`
 		SELECT * FROM initiative_texts
 		WHERE initiative_uuid = ${initiative.uuid}
+		AND language = ${req.query.language || initiative.language}
 		ORDER BY created_at DESC
 		LIMIT 1
 	`)
 
-	res.render("initiatives/update_page.jsx", {text: text})
+	var path = req.baseUrl + "/" + initiative.uuid + "/texts"
+	if (text) res.redirect(path + "/" + text.id)
+	else res.redirect(path + "/new?language=" + initiative.language)
 }))
 
 exports.router.use("/:id/image",
@@ -659,7 +720,11 @@ function* updateInitiativeToPublished(req, res) {
 		discussion_end_email_sent_at: null
 	})
 
-	res.flash("notice", req.t("PUBLISHED_INITIATIVE"))
+	res.flash("notice", initiative.published_at == null
+		? req.t("PUBLISHED_INITIATIVE")
+		: req.t("INITIATIVE_DISCUSSION_DEADLINE_UPDATED")
+	)
+
 	res.redirect(303, req.baseUrl + "/" + initiative.uuid)
 }
 
@@ -676,10 +741,21 @@ function* updateInitiativePhaseToSign(req, res) {
 		Initiative.canUpdateSignDeadline(initiative, user)
 	)) throw new HttpError(403, "Cannot Update to Sign Phase")
 
+	res.locals.texts = _.indexBy(yield textsDb.search(sql`
+		SELECT title, language, created_at
+		FROM initiative_texts
+		WHERE id IN (
+			SELECT MAX(id) FROM initiative_texts
+			WHERE initiative_uuid = ${initiative.uuid}
+			GROUP BY language
+		)
+	`), "language")
+
 	if (req.body.endsAt == null) return void res.render(tmpl, {
 		attrs: {endsAt: initiative.signing_started_at}
 	})
 
+	var lang = req.body.language
 	let endsAt = DateFns.endOfDay(Time.parseDate(req.body.endsAt))
 	var attrs = {endsAt: endsAt}
 
@@ -704,16 +780,19 @@ function* updateInitiativePhaseToSign(req, res) {
 		var text = yield textsDb.read(sql`
 			SELECT * FROM initiative_texts
 			WHERE initiative_uuid = ${initiative.uuid}
+			AND language = ${lang}
 			ORDER BY created_at DESC
 			LIMIT 1
 		`)
 
 		if (text == null) throw new HttpError(422, "No Text")
-		var html = Initiative.renderForParliament(initiative, text)
+		var html = Initiative.renderForParliament(text)
 
 		attrs.text = html
 		attrs.text_type = new MediaType("text/html")
 		attrs.text_sha256 = sha256(html)
+		attrs.title = text.title
+		attrs.language = lang
 	}
 
 	yield initiativesDb.update(initiative, attrs)
@@ -769,6 +848,22 @@ function* updateInitiativePhaseToParliament(req, res) {
 
 	if (!Initiative.canSendToParliament(initiative, user, signatureCount))
 		throw new HttpError(403, "Cannot Send to Parliament")
+
+	if (initiative.language != "et") {
+		var estonian = yield textsDb.read(sql`
+			SELECT text.id
+			FROM initiative_texts AS text
+			JOIN initiative_text_signatures AS sig
+			ON sig.text_id = text.id AND sig.signed AND sig.timestamped
+			WHERE text.initiative_uuid = ${initiative.uuid}
+			AND language = 'et'
+			ORDER BY text.id DESC
+			LIMIT 1
+		`)
+
+		if (estonian == null)
+			throw new HttpError(403, "No Signed Estonian Translation")
+	}
 
 	var attrs = {
 		status: req.body.status,

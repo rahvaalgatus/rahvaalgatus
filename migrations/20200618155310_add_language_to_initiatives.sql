@@ -1,0 +1,2 @@
+ALTER TABLE initiatives
+ADD COLUMN language TEXT NOT NULL DEFAULT 'et';

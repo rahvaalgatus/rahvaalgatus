@@ -6,6 +6,8 @@ var Form = require("../page").Form
 var Flash = require("../page").Flash
 var javascript = require("root/lib/jsx").javascript
 var {normalizeCitizenOsHtml} = require("root/lib/initiative")
+var selected = require("root/lib/css").selected
+var LANGUAGES = require("root/config").languages
 
 module.exports = function(attrs) {
 	var req = attrs.req
@@ -13,119 +15,185 @@ module.exports = function(attrs) {
 	var flash = attrs.flash
 	var text = attrs.text
 	var t = attrs.t
+	var textLanguage = text && text.language || attrs.language
+	var editUrl = req.baseUrl + "/new"
+
+	var editable = (
+		initiative.phase == "edit" ||
+		initiative.phase == "sign" && initiative.language != textLanguage
+	)
 
 	return <InitiativePage
 		page="edit-initiative"
+		class={initiative.uuid == null ? "new-initiative" : ""}
 		title={initiative.title}
 		initiative={initiative}
-		headerless
+		headerless={initiative.uuid == null}
 		req={req}>
 		<Form
 			id="initiative-form"
 			method="post"
-			action={`/initiatives/${initiative.uuid}/texts`}
 			req={req}
 			class="initiative-section transparent-section"
-		><center>
-			<div id="initiative-sheet" class="sheet">
-				<Flash flash={flash} />
 
-				{initiative.phase == "edit" ? <Fragment>
-					<script src="/assets/html5.js" />
-					<script src="/assets/editor.js" />
+			action={initiative.uuid
+				? `/initiatives/${initiative.uuid}/texts`
+				: "/initiatives"
+			}
+		><center><div id="initiative-sheet" class="initiative-sheet">
+			{initiative.uuid ? <menu id="language-tabs">
+				{LANGUAGES.map((lang) => <a
+					href={editUrl + "?language=" + lang}
+					class={"tab " + selected(textLanguage, lang)}
+				>{Jsx.html(initiative.language == lang
+					? t("INITIATIVE_LANG_TAB_" + lang.toUpperCase())
+					: t("INITIATIVE_LANG_TAB_TRANSLATION_" + lang.toUpperCase())
+				)}</a>)}
+			</menu> : null}
 
-					<input type="hidden" name="basis-id" value={text && text.id} />
+			<Flash flash={flash} />
 
-					<input
-						type="text"
-						name="title"
-						value={text && text.title || initiative.title}
-						required
-						maxlength="200"
-					/>
+			<script src="/assets/html5.js" />
+			<script src="/assets/editor.js" />
 
-					{
-						// Pass the text through an <input> to rely on the browser's form
-						// input restoration when navigating back. Otherwise the person
-						// would be shown the pre-edited text again.
-					}
-					<input
-						type="hidden"
-						name="content"
-						value={text && JSON.stringify(serializeText(text))}
-					/>
+			{text ?
+				<input type="hidden" name="basis-id" value={text.id} />
+			: null}
 
-					<trix-editor id="editor" class="text trix-content" />
+			{initiative.uuid ?
+				<input type="hidden" name="language" value={textLanguage} />
+			: null}
 
-					<script>{javascript`
-						var Trix = require("trix")
-						Trix.config.blockAttributes.heading1.tagName = "h2";
+			<input
+				type="text"
+				name="title"
+				placeholder={t("INITIATIVE_TITLE_PLACEHOLDER")}
+				value={text && text.title || initiative.title}
+				readonly={!editable}
+				required
+				maxlength="200"
+			/>
 
-						var form = document.getElementById("initiative-form")
-						// Don't get the "editor" property yet as it'll only exist after
-						// initialization.
-						var el = document.getElementById("editor")
-						var loadedDocument
+			{
+				// Pass the text through an <input> to rely on the browser's form
+				// input restoration when navigating back. Otherwise the person
+				// would be shown the pre-edited text again.
+			}
+			<input
+				type="hidden"
+				name="content"
+				readonly={!editable}
+				value={text && JSON.stringify(serializeText(text))}
+			/>
 
-						el.addEventListener("trix-file-accept", function(ev) {
-							ev.preventDefault()
-						})
+			{!editable ? <p class="read-only-warning">
+				{t("UPDATE_INITIATIVE_READONLY")}
+			</p> : null}
 
-						// Trix-initialize is likely to be triggered even when "back"-ing
-						// into this page. However, as we keep the serialized text in an
-						// <input> element, that's restored by the browser.
-						el.addEventListener("trix-initialize", function(ev) {
-							var content = form.elements.content.value
-							content = content ? JSON.parse(content) : null
+			<trix-editor
+				id="editor"
+				class="text trix-content"
+				readonly={!editable}
+			/>
 
-							if (typeof content == "string")
-								el.editor.loadHTML(content)
-							else if (content)
-								el.editor.loadJSON({document: content, selectedRange: [0, 0]})
+			<script>{javascript`
+				var Trix = require("trix")
+				Trix.config.blockAttributes.heading1.tagName = "h2";
 
-							loadedDocument = el.editor.getDocument()
-						})
+				var form = document.getElementById("initiative-form")
+				// Don't get the "editor" property yet as it'll only exist after
+				// initialization.
+				var el = document.getElementById("editor")
+				var loadedDocument
 
-						window.onbeforeunload = function() {
-							if (loadedDocument == null) return undefined
-							if (loadedDocument === el.editor.getDocument()) return undefined
-							return ${JSON.stringify(t("INITIATIVE_TEXT_UNSAVED"))}
-						}
+				el.addEventListener("trix-file-accept", function(ev) {
+					ev.preventDefault()
+				})
 
-						form.addEventListener("submit", function() {
-							var editor = document.querySelector("trix-editor").editor
-							var json = JSON.stringify(editor.getDocument())
-							form.elements.content.value = json
-							window.onbeforeunload = null
-						})
-					`}</script>
-				</Fragment> : <Fragment>
-					<div class="initiative-status">
-						<h1>{t("CANNOT_EDIT_INITIATIVE_TEXT")}</h1>
-					</div>
-				</Fragment>}
-			</div>
+				// Trix-initialize is likely to be triggered even when "back"-ing
+				// into this page. However, as we keep the serialized text in an
+				// <input> element, that's restored by the browser.
+				el.addEventListener("trix-initialize", function(ev) {
+					var content = form.elements.content.value
+					content = content ? JSON.parse(content) : null
 
-			<aside id="initiative-sidebar">
-				<div class="sidebar-section">
-					{initiative.phase == "edit" ? <Fragment>
-						<button
-							id="create-text-button"
-							type="submit"
-							href={"/initiatives/" + initiative.uuid}
-							class="green-button wide-button">
-							{t("INITIATIVE_SAVE")}
-						</button>
-					</Fragment> : null}
+					if (typeof content == "string")
+						el.editor.loadHTML(content)
+					else if (content)
+						el.editor.loadJSON({document: content, selectedRange: [0, 0]})
 
-					<a
-						href={"/initiatives/" + initiative.uuid}
-						class="blue-button wide-button">
-						{t("INITIATIVE_CANCEL_UPDATE")}
-					</a>
-				</div>
-			</aside>
-		</center></Form>
+					loadedDocument = el.editor.getDocument()
+
+					el.contentEditable = !el.hasAttribute("readonly")
+				})
+
+				window.onbeforeunload = function() {
+					if (loadedDocument == null) return undefined
+					if (loadedDocument === el.editor.getDocument()) return undefined
+					return ${JSON.stringify(t("INITIATIVE_TEXT_UNSAVED"))}
+				}
+
+				form.addEventListener("submit", function() {
+					var editor = document.querySelector("trix-editor").editor
+					var json = JSON.stringify(editor.getDocument())
+					form.elements.content.value = json
+					window.onbeforeunload = null
+				})
+			`}</script>
+
+			<fieldset class="submit-inputs">
+				{(
+					initiative.uuid == null &&
+					initiative.language == null
+				) ? <Fragment>
+					<h3>{t("NEW_INITIATIVE_LANGUAGE_LABEL")}</h3>
+
+					<fieldset class="language-fields">
+						{LANGUAGES.map((lang) => <label
+							class="language-field form-radio"
+						>
+							<input
+								type="radio"
+								name="language"
+								value={lang}
+								checked={textLanguage == lang}
+							/>
+
+							{t("IN_" + lang.toUpperCase())}
+						</label>)}
+					</fieldset>
+
+					<p>{Jsx.html(t("UPDATE_INITIATIVE_TO_LANG_DESCRIPTION"))}</p>
+				</Fragment> : null}
+
+				{(
+					initiative.uuid &&
+					initiative.phase == "edit" &&
+					initiative.language != textLanguage
+				) ? <Fragment>
+					<label class="default-fields form-checkbox">
+						<input type="checkbox" name="set-default" />
+						{t("UPDATE_INITIATIVE_TO_LANG_" + textLanguage.toUpperCase())}
+						{" "}
+						{Jsx.html(t("UPDATE_INITIATIVE_TO_LANG_CURRENTLY_" + initiative.language.toUpperCase()))}
+					</label>
+
+					<p>{Jsx.html(t("UPDATE_INITIATIVE_TO_LANG_DESCRIPTION"))}</p>
+				</Fragment> : null}
+
+				<button
+					id="create-text-button"
+					type="submit"
+					class="green-button"
+					disabled={!editable}
+				>{initiative.uuid == null
+					? t("INITIATIVE_CREATE_BUTTON")
+					: initiative.language != textLanguage
+					? t("INITIATIVE_UPDATE_TRANSLATION_BUTTON")
+					: t("INITIATIVE_SAVE_BUTTON")
+				}</button>
+			</fieldset>
+		</div></center></Form>
 	</InitiativePage>
 }
 

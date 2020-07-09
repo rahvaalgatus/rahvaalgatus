@@ -51,6 +51,7 @@ module.exports = function(attrs) {
 		public_change_urls: [],
 		signature_milestones: {},
 		notes: "",
+		language: "et",
 		has_paper_signatures: false,
 		undersignable: true,
 		mailchimp_interest_id: null,

@@ -3,7 +3,6 @@ var Db = require("root/lib/db")
 var Xades = require("undersign/xades")
 var sqlite = require("root").sqlite
 exports = module.exports = new Db(Object, sqlite, "initiative_signatures")
-
 exports.idAttribute = "token"
 exports.idColumn = "token"
 

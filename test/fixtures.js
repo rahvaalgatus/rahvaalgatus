@@ -223,6 +223,19 @@ exports.newOcspResponse = function(certificate) {
 	})
 }
 
+var BLOCK_BREAK = {
+	"type": "string",
+	"attributes": {"blockBreak": true},
+	"string": "\n"
+}
+
+exports.newTrixDocument = function(text) {
+	return [{
+		"text": [{"type": "string", "attributes": {}, "string": text}, BLOCK_BREAK],
+		"attributes": []
+	}]
+}
+
 function serializeSubjectName(names) {
 	if (names instanceof Certificate) return names.asn.tbsCertificate.subject
 	if (Buffer.isBuffer(names)) return X509Asn.Name.decode(names)

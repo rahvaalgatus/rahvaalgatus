@@ -10,6 +10,7 @@ var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidSignature = require("root/test/valid_signature")
+var ValidTextSignature = require("root/test/valid_initiative_text_signature")
 var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
 var ValidComment = require("root/test/valid_comment")
 var ValidText = require("root/test/valid_initiative_text")
@@ -33,15 +34,16 @@ var imagesDb = require("root/db/initiative_images_db")
 var eventsDb = require("root/db/initiative_events_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
+var textSignaturesDb = require("root/db/initiative_text_signatures_db")
 var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
 var commentsDb = require("root/db/comments_db")
-var encodeMime = require("nodemailer/lib/mime-funcs").encodeWord
 var parseDom = require("root/lib/dom").parse
 var outdent = require("root/lib/outdent")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var demand = require("must")
+var {newTrixDocument} = require("root/test/fixtures")
 var INITIATIVE_TYPE = "application/vnd.rahvaalgatus.initiative+json; v=1"
 var ATOM_TYPE = "application/atom+xml"
 var PHASES = require("root/lib/initiative").PHASES
@@ -53,12 +55,7 @@ var LOCAL_SITE_HOSTNAME = Url.parse(Config.localUrl).hostname
 var PNG = new Buffer("89504e470d0a1a0a1337", "hex")
 var PNG_PREVIEW = new Buffer("89504e470d0a1a0a4269", "hex")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
-
-var BLOCK_BREAK = {
-	"type": "string",
-	"attributes": {"blockBreak": true},
-	"string": "\n"
-}
+var TRIX_TYPE = new MediaType("application/vnd.basecamp.trix+json")
 
 describe("InitiativesController", function() {
 	require("root/test/web")()
@@ -787,13 +784,16 @@ describe("InitiativesController", function() {
 			require("root/test/fixtures").user()
 			require("root/test/time")()
 
-			it("must create initiative", function*() {
+			it("must create initiative with text", function*() {
+				var content = newTrixDocument("Hello, world")
+
 				var res = yield this.request("/initiatives", {
 					method: "POST",
 					form: {
 						_csrf_token: this.csrfToken,
-						"accept-tos": true,
-						title: "Hello, world!"
+						title: "Hello, world!",
+						content: JSON.stringify(content),
+						language: "en"
 					}
 				})
 
@@ -803,19 +803,32 @@ describe("InitiativesController", function() {
 					SELECT * FROM initiatives
 				`)
 
-				var uuid = initiatives[0].uuid
+				initiatives.length.must.equal(1)
+				var initiative = initiatives[0]
 
-				initiatives.must.eql([new ValidInitiative({
-					uuid: uuid,
+				initiative.must.eql(new ValidInitiative({
+					uuid: initiative.uuid,
 					user_id: this.user.id,
-					parliament_token: initiatives[0].parliament_token,
+					parliament_token: initiative.parliament_token,
 					title: "Hello, world!",
+					language: "en",
+					created_at: new Date
+				}))
+
+				yield textsDb.search(sql`
+					SELECT * FROM initiative_texts
+				`).must.then.eql([new ValidText({
+					id: 1,
+					initiative_uuid: initiative.uuid,
+					user_id: this.user.id,
 					created_at: new Date,
-					destination: null,
-					published_at: null
+					title: "Hello, world!",
+					language: "en",
+					content: content,
+					content_type: TRIX_TYPE
 				})])
 
-				res.headers.location.must.equal("/initiatives/" + uuid + "/edit")
+				res.headers.location.must.equal("/initiatives/" + initiative.uuid)
 			})
 		})
 	})
@@ -897,26 +910,17 @@ describe("InitiativesController", function() {
 					published_at: new Date
 				}))
 
-				yield textsDb.create(new ValidText({
+				var text = yield textsDb.create(new ValidText({
 					initiative_uuid: initiative.uuid,
 					user_id: this.author.id,
 					content_type: "application/vnd.basecamp.trix+json",
-
-					content: [{
-						"text": [{
-							"type": "string",
-							"attributes": {},
-							"string": "Hello, world!"
-						}, BLOCK_BREAK],
-
-						"attributes": []
-					}]
+					content: newTrixDocument("Hello, world!")
 				}))
 
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 				res.body.must.include(this.author.name)
-				res.body.must.include(initiative.title)
+				res.body.must.include(text.title)
 				res.body.must.include("Hello, world!")
 			})
 
@@ -927,7 +931,7 @@ describe("InitiativesController", function() {
 					published_at: new Date
 				}))
 
-				yield textsDb.create(new ValidText({
+				var text = yield textsDb.create(new ValidText({
 					initiative_uuid: initiative.uuid,
 					user_id: this.author.id,
 					content_type: "application/vnd.citizenos.etherpad+html",
@@ -945,7 +949,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 				res.body.must.include(this.author.name)
-				res.body.must.include(initiative.title)
+				res.body.must.include(text.title)
 				res.body.must.not.include("Vote for Peace")
 				res.body.must.include("Rest in peace!")
 			})
@@ -984,34 +988,82 @@ describe("InitiativesController", function() {
 				res.body.must.include(initiative.title)
 			})
 
-			it("must render initiative with latest text", function*() {
+			it("must render initiative with latest text in language", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "edit",
+					language: "en",
 					published_at: new Date
+				}))
+
+				var older = yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: this.author.id,
+					language: "en",
+					content: "Old and dusty.",
+					content_type: "text/html"
 				}))
 
 				var text = yield textsDb.create(new ValidText({
 					initiative_uuid: initiative.uuid,
 					user_id: this.author.id,
-					created_at: new Date(2015, 5, 18, 13, 37, 42),
+					language: "en",
 					content: "Latest and greatest.",
 					content_type: "text/html"
 				}))
 
-				yield textsDb.create(new ValidText({
+				var translation = yield textsDb.create(new ValidText({
 					initiative_uuid: initiative.uuid,
 					user_id: this.author.id,
-					created_at: new Date(2015, 5, 18, 13, 37, 41),
-					content: "Old and dusty.",
+					created_at: new Date(2015, 5, 18, 13, 37, 43),
+					language: "et",
+					content: "In translation.",
 					content_type: "text/html"
 				}))
 
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 				res.body.must.include(this.author.name)
-				res.body.must.include(initiative.title)
+				res.body.must.include(text.title)
 				res.body.must.include(text.content)
+				res.body.must.not.include(older.title)
+				res.body.must.not.include(older.content)
+				res.body.must.not.include(translation.title)
+				res.body.must.not.include(translation.content)
+			})
+
+			it("must render only in initiative's language if in edit phase",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					language: "et",
+					published_at: new Date
+				}))
+
+				var estonian = yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: this.author.id,
+					language: "et",
+					content: "Tere, maailm!",
+					content_type: "text/html"
+				}))
+
+				var english = yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: this.author.id,
+					language: "en",
+					content: "Hello, world!",
+					content_type: "text/html"
+				}))
+
+				var initiativePath = "/initiatives/" + initiative.uuid
+				var res = yield this.request(initiativePath + "?language=en")
+				res.statusCode.must.equal(200)
+				res.body.must.include(estonian.title)
+				res.body.must.include(estonian.content)
+				res.body.must.not.include(english.title)
+				res.body.must.not.include(english.content)
 			})
 
 			it("must render initiative in edit phase", function*() {
@@ -1114,6 +1166,151 @@ describe("InitiativesController", function() {
 				phases.sign.text.must.equal(t("N_SIGNATURES", {
 					votes: Config.votesRequired / 2
 				}))
+			})
+
+			it("must render signed translation if in sign phase", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					language: "et"
+				}))
+
+				yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: initiative.user_id,
+					language: "et"
+				}))
+
+				var english = yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: initiative.user_id,
+					language: "en",
+					content: "Hello, world!",
+					content_type: "text/html"
+				}))
+
+				yield textSignaturesDb.create(new ValidTextSignature({
+					text_id: english.id,
+					signed: true,
+					timestamped: true
+				}))
+
+				var initiativePath = "/initiatives/" + initiative.uuid
+				var res = yield this.request(initiativePath + "?language=en")
+				res.statusCode.must.equal(200)
+				res.body.must.include(english.title)
+				res.body.must.include(english.content)
+			})
+
+			it("must not render unsigned translation if in sign phase", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					language: "et"
+				}))
+
+				var english = yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: initiative.user_id,
+					language: "en",
+					content: "Hello, world!",
+					content_type: "text/html"
+				}))
+
+				yield textSignaturesDb.create(new ValidTextSignature({
+					text_id: english.id,
+					signed: true
+				}))
+
+				var initiativePath = "/initiatives/" + initiative.uuid
+				var res = yield this.request(initiativePath + "?language=en")
+				res.statusCode.must.equal(307)
+				res.headers.location.must.equal("/initiatives/" + initiative.uuid)
+			})
+
+			it("must render latest signed translation", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					language: "et"
+				}))
+
+				var unsignedA = yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: initiative.user_id,
+					language: "et",
+					content: "Good hello, world!",
+					content_type: "text/html"
+				}))
+
+				var signed = yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: initiative.user_id,
+					language: "en",
+					content: "Hello, world!",
+					content_type: "text/html"
+				}))
+
+				yield textSignaturesDb.create(new ValidTextSignature({
+					text_id: signed.id,
+					signed: true,
+					timestamped: true
+				}))
+
+				var unsignedB = yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: initiative.user_id,
+					language: "en",
+					content: "Good bye, world!",
+					content_type: "text/html"
+				}))
+
+				var initiativePath = "/initiatives/" + initiative.uuid
+				var res = yield this.request(initiativePath + "?language=en")
+				res.statusCode.must.equal(200)
+				res.body.must.not.include(unsignedA.title)
+				res.body.must.not.include(unsignedA.content)
+				res.body.must.include(signed.title)
+				res.body.must.include(signed.content)
+				res.body.must.not.include(unsignedB.title)
+				res.body.must.not.include(unsignedB.content)
+			})
+
+			it("must render warning if initiative in sign phase and translated",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					language: "et",
+					signing_ends_at: DateFns.addDays(new Date, 1)
+				}))
+
+				var english = yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: initiative.user_id,
+					language: "en"
+				}))
+
+				yield textSignaturesDb.create(new ValidTextSignature({
+					text_id: english.id,
+					signed: true,
+					timestamped: true
+				}))
+
+				var initiativePath = "/initiatives/" + initiative.uuid
+				var res = yield this.request(initiativePath + "?language=en")
+				res.statusCode.must.equal(200)
+
+				res.body.must.include(t("INITIATIVE_SIGN_TRANSLATION_WARNING", {
+					language:
+						t("INITIATIVE_SIGN_TRANSLATION_WARNING_TEXT_IN_ET"),
+					translation:
+						t("INITIATIVE_SIGN_TRANSLATION_WARNING_TRANSLATION_IN_EN")
+				}))
+
+				res.body.must.include(
+					t("INITIATIVE_SIGN_TRANSLATION_WARNING_SIGN_IN_ET")
+				)
 			})
 
 			it("must render initiative in sign phase with signature milestones",
@@ -2697,6 +2894,134 @@ describe("InitiativesController", function() {
 				)
 			})
 
+			it("must render unsigned translation if in sign phase if author",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id,
+					phase: "sign",
+					language: "et"
+				}))
+
+				var english = yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: initiative.user_id,
+					language: "en",
+					content: "Hello, world!",
+					content_type: "text/html"
+				}))
+
+				yield textSignaturesDb.create(new ValidTextSignature({
+					text_id: english.id,
+					signed: true
+				}))
+
+				var initiativePath = "/initiatives/" + initiative.uuid
+				var res = yield this.request(initiativePath + "?language=en")
+				res.statusCode.must.equal(200)
+				res.body.must.include(english.title)
+				res.body.must.include(english.content)
+				res.body.must.include(t("INITIATIVE_TRANSLATION_PLEASE_SIGN"))
+			})
+
+			it("must not render unsigned translation if in sign phase if not author", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					language: "et"
+				}))
+
+				var english = yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: initiative.user_id,
+					language: "en",
+					content: "Hello, world!",
+					content_type: "text/html"
+				}))
+
+				yield textSignaturesDb.create(new ValidTextSignature({
+					text_id: english.id,
+					signed: true
+				}))
+
+				var initiativePath = "/initiatives/" + initiative.uuid
+				var res = yield this.request(initiativePath + "?language=en")
+				res.statusCode.must.equal(307)
+				res.headers.location.must.equal("/initiatives/" + initiative.uuid)
+			})
+
+			it("must render latest unsigned translation if author", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id,
+					phase: "sign",
+					language: "et"
+				}))
+
+				var signed = yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: initiative.user_id,
+					language: "en",
+					content: "Hello, world!",
+					content_type: "text/html"
+				}))
+
+				yield textSignaturesDb.create(new ValidTextSignature({
+					text_id: signed.id,
+					signed: true,
+					timestamped: true
+				}))
+
+				var unsigned = yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: initiative.user_id,
+					language: "en",
+					content: "Good bye, world!",
+					content_type: "text/html"
+				}))
+
+				var initiativePath = "/initiatives/" + initiative.uuid
+				var res = yield this.request(initiativePath + "?language=en")
+				res.statusCode.must.equal(200)
+				res.body.must.not.include(signed.title)
+				res.body.must.not.include(signed.content)
+				res.body.must.include(unsigned.title)
+				res.body.must.include(unsigned.content)
+
+				res.body.must.include(
+					t("INITIATIVE_TRANSLATION_PLEASE_SIGN_AFTER_UPDATE")
+				)
+			})
+
+			it("must not sign text button if latest translation signed", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id,
+					phase: "sign",
+					language: "et"
+				}))
+
+				var english = yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: initiative.user_id,
+					language: "en",
+					content: "Hello, world!",
+					content_type: "text/html"
+				}))
+
+				yield textSignaturesDb.create(new ValidTextSignature({
+					text_id: english.id,
+					signed: true,
+					timestamped: true
+				}))
+
+				var initiativePath = "/initiatives/" + initiative.uuid
+				var res = yield this.request(initiativePath + "?language=en")
+				res.statusCode.must.equal(200)
+				res.body.must.not.include(t("INITIATIVE_TRANSLATION_PLEASE_SIGN"))
+
+				res.body.must.not.include(
+					t("INITIATIVE_TRANSLATION_PLEASE_SIGN_AFTER_UPDATE")
+				)
+			})
+
 			describe("subscription form", function() {
 				it("must render subscription form without email if person lacks one",
 					function*() {
@@ -3203,8 +3528,7 @@ describe("InitiativesController", function() {
 				})
 
 				describe(`on ${PARLIAMENT_SITE_HOSTNAME}`, function() {
-					it("must not render send to parliament button if not enough signatures",
-						function*() {
+					it("must not render send to parliament button if not enough signatures", function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
 							phase: "sign"
@@ -3220,7 +3544,9 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request("/initiatives/" + initiative.uuid)
 						res.statusCode.must.equal(200)
-						res.body.must.not.include(t("SEND_TO_PARLIAMENT"))
+
+						var dom = parseDom(res.body)
+						demand(dom.getElementById("send-to-parliament-button")).be.null()
 					})
 
 					it("must render send to parliament button if enough signatures",
@@ -3241,7 +3567,11 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request("/initiatives/" + initiative.uuid)
 						res.statusCode.must.equal(200)
-						res.body.must.include(t("SEND_TO_PARLIAMENT"))
+
+						var dom = parseDom(res.body)
+						var button = dom.getElementById("send-to-parliament-button")
+						button.disabled.must.be.false()
+						button.textContent.must.equal(t("SEND_TO_PARLIAMENT"))
 					})
 
 					it("must render send to parliament button if has paper signatures and only undersigned signatures",
@@ -3258,7 +3588,10 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request("/initiatives/" + initiative.uuid)
 						res.statusCode.must.equal(200)
-						res.body.must.include(t("SEND_TO_PARLIAMENT"))
+
+						var dom = parseDom(res.body)
+						var button = dom.getElementById("send-to-parliament-button")
+						button.disabled.must.be.false()
 					})
 
 					it("must render send to parliament button if has paper signatures and only CitizenOS signatures", function*() {
@@ -3274,7 +3607,82 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request("/initiatives/" + initiative.uuid)
 						res.statusCode.must.equal(200)
-						res.body.must.include(t("SEND_TO_PARLIAMENT"))
+
+						var dom = parseDom(res.body)
+						var button = dom.getElementById("send-to-parliament-button")
+						button.disabled.must.be.false()
+					})
+
+					it("must disable send to parliament button if Estonian translation missing", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: "sign",
+							language: "en"
+						}))
+
+						yield signaturesDb.create(_.times(Config.votesRequired, () => (
+							new ValidSignature({initiative_uuid: initiative.uuid})
+						)))
+
+						yield textsDb.create(new ValidText({
+							initiative_uuid: initiative.uuid,
+							user_id: this.user.id,
+							language: "en"
+						}))
+
+						var res = yield this.request("/initiatives/" + initiative.uuid)
+						res.statusCode.must.equal(200)
+
+						var dom = parseDom(res.body)
+						var button = dom.getElementById("send-to-parliament-button")
+						button.disabled.must.be.true()
+
+						var newTextUrl = "/initiatives/" + initiative.uuid
+						newTextUrl += "/texts/new?language=et"
+
+						res.body.must.include(
+							t("INITIATIVE_SEND_TO_SIGNING_NEEDS_ESTONIAN_TEXT", {newTextUrl})
+						)
+					})
+
+					it("must disable send to parliament button if Estonian translation unsigned", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: "sign",
+							language: "en"
+						}))
+
+						yield signaturesDb.create(_.times(Config.votesRequired, () => (
+							new ValidSignature({initiative_uuid: initiative.uuid})
+						)))
+
+						var estonian = yield textsDb.create(new ValidText({
+							initiative_uuid: initiative.uuid,
+							user_id: this.user.id,
+							language: "et"
+						}))
+
+						// Ensure both signed and timestamped properties are checked.
+						yield textSignaturesDb.create(new ValidTextSignature({
+							text_id: estonian.id,
+							signed: true
+						}))
+
+						var res = yield this.request("/initiatives/" + initiative.uuid)
+						res.statusCode.must.equal(200)
+
+						var dom = parseDom(res.body)
+						var button = dom.getElementById("send-to-parliament-button")
+						button.disabled.must.be.true()
+
+						var signTextUrl = "/initiatives/" + initiative.uuid
+						signTextUrl += `/texts/${estonian.id}/sign`
+
+						res.body.must.include(
+							t("INITIATIVE_SEND_TO_SIGNING_NEEDS_SIGNED_ESTONIAN_TEXT", {
+								signTextUrl
+							})
+						)
 					})
 
 					it("must not render send to parliament button if only has paper signatures", function*() {
@@ -3286,7 +3694,9 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request("/initiatives/" + initiative.uuid)
 						res.statusCode.must.equal(200)
-						res.body.must.not.include(t("SEND_TO_PARLIAMENT"))
+
+						var dom = parseDom(res.body)
+						demand(dom.getElementById("send-to-parliament-button")).be.null()
 					})
 				})
 
@@ -4502,6 +4912,49 @@ describe("InitiativesController", function() {
 					})
 				})
 
+				it("must update initiative if already published", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						published_at: new Date,
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+					}))
+
+					var endsAt = DateFns.addDays(
+						DateFns.endOfDay(new Date),
+						Config.minDeadlineDays
+					)
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							visibility: "public",
+							endsAt: formatIsoDate(endsAt)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+					var cookies = parseCookies(res.headers["set-cookie"])
+					res = yield this.request(res.headers.location, {
+						headers: {Cookie: Http.serializeCookies(cookies)}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("INITIATIVE_DISCUSSION_DEADLINE_UPDATED"))
+
+					yield initiativesDb.read(initiative).must.then.eql({
+						__proto__: initiative,
+						published_at: new Date,
+						discussion_ends_at: endsAt
+					})
+				})
+
 				it("must not update initiative if no text created", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id
@@ -4599,7 +5052,10 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(200)
-					res.body.must.include(t("VOTE_DEADLINE_EXPLANATION"))
+
+					res.body.must.include(
+						t("INITIATIVE_SEND_TO_SIGN_CHOOSE_LANGUAGE_DESCRIPTION")
+					)
 				})
 
 				it("must update initiative given Trix text", function*() {
@@ -4613,17 +5069,8 @@ describe("InitiativesController", function() {
 					var text = yield textsDb.create(new ValidText({
 						initiative_uuid: initiative.uuid,
 						user_id: this.user.id,
-						content_type: "application/vnd.basecamp.trix+json",
-
-						content: [{
-							"text": [{
-								"type": "string",
-								"attributes": {},
-								"string": "Hello, world!"
-							}, BLOCK_BREAK],
-
-							"attributes": []
-						}]
+						content: newTrixDocument("Hello, world!"),
+						content_type: TRIX_TYPE
 					}))
 
 					var endsAt = DateFns.addDays(
@@ -4636,6 +5083,7 @@ describe("InitiativesController", function() {
 						form: {
 							_csrf_token: this.csrfToken,
 							status: "voting",
+							language: text.language,
 							endsAt: formatIsoDate(endsAt)
 						}
 					})
@@ -4651,7 +5099,7 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(200)
 					res.body.must.include(t("INITIATIVE_SIGN_PHASE_UPDATED"))
 
-					var html = Initiative.renderForParliament(initiative, text)
+					var html = Initiative.renderForParliament(text)
 					html.must.include("Hello, world!")
 
 					yield initiativesDb.search(sql`
@@ -4661,6 +5109,7 @@ describe("InitiativesController", function() {
 						phase: "sign",
 						signing_started_at: new Date,
 						signing_ends_at: endsAt,
+						title: text.title,
 						text: html,
 						text_type: new MediaType("text/html"),
 						text_sha256: sha256(html)
@@ -4699,6 +5148,7 @@ describe("InitiativesController", function() {
 						method: "PUT",
 						form: {
 							_csrf_token: this.csrfToken,
+							language: text.language,
 							status: "voting",
 							endsAt: formatIsoDate(endsAt)
 						}
@@ -4715,7 +5165,7 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(200)
 					res.body.must.include(t("INITIATIVE_SIGN_PHASE_UPDATED"))
 
-					var html = Initiative.renderForParliament(initiative, text)
+					var html = Initiative.renderForParliament(text)
 					html.must.include("Rest in peace!")
 
 					yield initiativesDb.search(sql`
@@ -4725,32 +5175,37 @@ describe("InitiativesController", function() {
 						phase: "sign",
 						signing_started_at: new Date,
 						signing_ends_at: endsAt,
+						title: text.title,
 						text: html,
 						text_type: new MediaType("text/html"),
 						text_sha256: sha256(html)
 					}])
 				})
 
-				it("must use the latest text", function*() {
+				it("must update initiative if language updated", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						destination: "parliament",
 						created_at: DateFns.addDays(new Date, -Config.minDeadlineDays),
-						published_at: new Date
+						published_at: new Date,
+						title: "Estonian FTW",
+						language: "et"
 					}))
 
 					var text = yield textsDb.create(new ValidText({
 						initiative_uuid: initiative.uuid,
 						user_id: this.user.id,
-						created_at: new Date(2015, 5, 18, 13, 37, 42),
-						content_type: "application/vnd.basecamp.trix+json",
-						content: []
+						language: "en",
+						title: "English FTW",
+						created_at: new Date(2015, 5, 18, 13, 37, 41)
 					}))
 
 					yield textsDb.create(new ValidText({
 						initiative_uuid: initiative.uuid,
 						user_id: this.user.id,
-						created_at: new Date(2015, 5, 18, 13, 37, 40),
+						language: initiative.language,
+						title: "Estonian FTW",
+						created_at: new Date(2015, 5, 18, 13, 37, 42),
 					}))
 
 					var endsAt = DateFns.addDays(DateFns.endOfDay(new Date), 30)
@@ -4759,12 +5214,13 @@ describe("InitiativesController", function() {
 						form: {
 							_csrf_token: this.csrfToken,
 							status: "voting",
+							language: text.language,
 							endsAt: formatIsoDate(endsAt)
 						}
 					})
 
 					res.statusCode.must.equal(303)
-					var html = Initiative.renderForParliament(initiative, text)
+					var html = Initiative.renderForParliament(text)
 
 					yield initiativesDb.search(sql`
 						SELECT * FROM initiatives
@@ -4773,6 +5229,54 @@ describe("InitiativesController", function() {
 						phase: "sign",
 						signing_started_at: new Date,
 						signing_ends_at: endsAt,
+						title: text.title,
+						language: text.language,
+						text: html,
+						text_type: new MediaType("text/html"),
+						text_sha256: sha256(html)
+					}])
+				})
+
+				it("must use the latest text of given language", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						destination: "parliament",
+						created_at: DateFns.addDays(new Date, -Config.minDeadlineDays),
+						published_at: new Date
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id
+					}))
+
+					var b = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id
+					}))
+
+					var endsAt = DateFns.addDays(DateFns.endOfDay(new Date), 30)
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "voting",
+							language: b.language,
+							endsAt: formatIsoDate(endsAt)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+					var html = Initiative.renderForParliament(b)
+
+					yield initiativesDb.search(sql`
+						SELECT * FROM initiatives
+					`).must.then.eql([{
+						__proto__: initiative,
+						phase: "sign",
+						signing_started_at: new Date,
+						signing_ends_at: endsAt,
+						title: b.title,
 						text: html,
 						text_type: new MediaType("text/html"),
 						text_sha256: sha256(html)
@@ -4862,11 +5366,9 @@ describe("InitiativesController", function() {
 						tags: ["fast-track"]
 					}))
 
-					yield textsDb.create(new ValidText({
+					var text = yield textsDb.create(new ValidText({
 						initiative_uuid: initiative.uuid,
-						user_id: this.user.id,
-						content_type: "application/vnd.basecamp.trix+json",
-						content: []
+						user_id: this.user.id
 					}))
 
 					var endsAt = DateFns.addDays(DateFns.endOfDay(new Date), 30)
@@ -4876,6 +5378,7 @@ describe("InitiativesController", function() {
 						form: {
 							_csrf_token: this.csrfToken,
 							status: "voting",
+							language: text.language,
 							endsAt: formatIsoDate(endsAt)
 						}
 					})
@@ -4954,11 +5457,9 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					yield textsDb.create(new ValidText({
+					var text = yield textsDb.create(new ValidText({
 						initiative_uuid: initiative.uuid,
-						user_id: this.user.id,
-						content_type: "application/vnd.basecamp.trix+json",
-						content: []
+						user_id: this.user.id
 					}))
 
 					var subscriptions = yield subscriptionsDb.create([
@@ -4990,6 +5491,7 @@ describe("InitiativesController", function() {
 						form: {
 							_csrf_token: this.csrfToken,
 							status: "voting",
+							language: text.language,
 							endsAt: formatIsoDate(
 								DateFns.addDays(new Date, Config.minDeadlineDays)
 							)
@@ -5026,13 +5528,14 @@ describe("InitiativesController", function() {
 					}])
 
 					this.emails.length.must.equal(1)
-					this.emails[0].envelope.to.must.eql(emails)
-					var msg = String(this.emails[0].message)
-					var subject = encodeMime(message.title).slice(0, 50)
-					msg.match(/^Subject: .*/m)[0].must.include(subject)
+					var email = this.emails[0]
 
+					email.envelope.to.must.eql(emails)
+					email.headers.subject.must.equal(message.title)
+
+					var vars = email.headers["x-mailgun-recipient-variables"]
 					subscriptions.slice(2).forEach((s) => (
-						msg.must.include(s.update_token)
+						vars.must.include(s.update_token)
 					))
 				})
 			})
@@ -5150,6 +5653,66 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(403)
 					res.statusMessage.must.equal("Cannot Send to Parliament")
+				})
+
+				it("must respond with 403 if Estonian translation missing",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "sign",
+						language: "en",
+					}))
+
+					yield signaturesDb.create(_.times(Config.votesRequired, () => (
+						new ValidSignature({initiative_uuid: initiative.uuid})
+					)))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+						language: "en"
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, status: "followUp"}
+					})
+
+					res.statusCode.must.equal(403)
+					res.statusMessage.must.equal("No Signed Estonian Translation")
+				})
+
+				it("must respond with 403 if Estonian translation unsigned",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "sign",
+						language: "en",
+					}))
+
+					yield signaturesDb.create(_.times(Config.votesRequired, () => (
+						new ValidSignature({initiative_uuid: initiative.uuid})
+					)))
+
+					var estonian = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+						language: "et"
+					}))
+
+					// Ensure both signed and timestamped properties are checked.
+					yield textSignaturesDb.create(new ValidTextSignature({
+						text_id: estonian.id,
+						signed: true
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, status: "followUp"}
+					})
+
+					res.statusCode.must.equal(403)
+					res.statusMessage.must.equal("No Signed Estonian Translation")
 				})
 
 				it("must respond with 403 if not author", function*() {
@@ -5352,6 +5915,44 @@ describe("InitiativesController", function() {
 						facebookUrl: Config.facebookUrl,
 						twitterUrl: Config.twitterUrl
 					}))
+				})
+
+				it("must update initiative if newer Estonian translation unsigned",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "sign",
+						language: "en",
+					}))
+
+					yield signaturesDb.create(_.times(Config.votesRequired, () => (
+						new ValidSignature({initiative_uuid: initiative.uuid})
+					)))
+
+					var estonian = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+						language: "et"
+					}))
+
+					yield textSignaturesDb.create(new ValidTextSignature({
+						text_id: estonian.id,
+						signed: true,
+						timestamped: true
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+						language: "et"
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, status: "followUp"}
+					})
+
+					res.statusCode.must.equal(200)
 				})
 			})
 
@@ -5726,27 +6327,21 @@ describe("InitiativesController", function() {
 				res.statusMessage.must.equal("No Permission to Edit")
 			})
 
-			it("must show error if no longer in edit phase", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.user.id,
-					phase: "sign"
-				}))
-
-				var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
-				res.statusCode.must.equal(200)
-				res.body.must.include(t("CANNOT_EDIT_INITIATIVE_TEXT"))
-			})
-
-			it("must render page if no existing texts", function*() {
+			it("must redirect to /new if no existing texts", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
 				
-				var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
-				res.statusCode.must.equal(200)
+				var initiativePath = `/initiatives/${initiative.uuid}`
+				var res = yield this.request(initiativePath + "/edit")
+				res.statusCode.must.equal(302)
+
+				res.headers.location.must.equal(
+					initiativePath + "/texts/new?language=et"
+				)
 			})
 
-			it("must render page with latest text", function*() {
+			it("must redirect to latest text", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
@@ -5754,305 +6349,19 @@ describe("InitiativesController", function() {
 				var text = yield textsDb.create(new ValidText({
 					initiative_uuid: initiative.uuid,
 					user_id: this.user.id,
-					created_at: new Date(2015, 5, 18, 13, 37, 42),
-					content_type: "application/vnd.basecamp.trix+json",
-
-					content: [{
-						"text": [{
-							"type": "string",
-							"attributes": {},
-							"string": "Latest and greatest."
-						}, BLOCK_BREAK],
-
-						"attributes": []
-					}]
+					created_at: new Date(2015, 5, 18, 13, 37, 42)
 				}))
 
 				yield textsDb.create(new ValidText({
 					initiative_uuid: initiative.uuid,
 					user_id: this.user.id,
-					created_at: new Date(2015, 5, 18, 13, 37, 41),
-					content: "Old and dusty.",
-					content_type: "text/html"
+					created_at: new Date(2015, 5, 18, 13, 37, 41)
 				}))
 				
-				var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
-				res.statusCode.must.equal(200)
-				var dom = parseDom(res.body)
-				var input = dom.querySelector("input[name=content]")
-				input.value.must.equal(JSON.stringify(text.content))
-			})
-
-			describe("given CitizenOS HTML", function() {
-				function forEachHeader(fn) { _.times(6, (i) => fn(`h${i + 1}`)) }
-
-				// Initiative with id 1f821c9e-1b93-4ef5-947f-fe0be45855c5 has the main
-				// title with <h2>, not <h1>.
-				forEachHeader(function(tagName) {
-					it(`must remove title from first <${tagName}>`, function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id
-						}))
-
-						yield textsDb.create(new ValidText({
-							initiative_uuid: initiative.uuid,
-							user_id: this.user.id,
-							content_type: "application/vnd.citizenos.etherpad+html",
-							content: outdent`
-								<!DOCTYPE HTML>
-								<html>
-									<body>
-										<${tagName}>Vote for Peace</${tagName}>
-										<p>Rest in peace!</p>
-									</body>
-								</html>
-							`
-						}))
-
-						var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
-						res.statusCode.must.equal(200)
-
-						var dom = parseDom(res.body)
-						var input = dom.querySelector("input[name=content]")
-
-						JSON.parse(input.value).must.equal(outdent`
-							<!DOCTYPE HTML>
-							<html>
-								<body><p>Rest in peace!</p></body>
-							</html>
-						`)
-					})
-				})
-
-				it("must remove title from multiline <h1>", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id
-					}))
-
-					yield textsDb.create(new ValidText({
-						initiative_uuid: initiative.uuid,
-						user_id: this.user.id,
-						content_type: "application/vnd.citizenos.etherpad+html",
-						content: outdent`
-							<!DOCTYPE HTML>
-							<html>
-								<body>
-									<h1>
-										Vote for Peace
-									</h1>
-									<p>Rest in peace!</p>
-								</body>
-							</html>
-						`
-					}))
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
-					res.statusCode.must.equal(200)
-
-					var dom = parseDom(res.body)
-					var input = dom.querySelector("input[name=content]")
-
-					JSON.parse(input.value).must.equal(outdent`
-						<!DOCTYPE HTML>
-						<html>
-							<body><p>Rest in peace!</p></body>
-						</html>
-					`)
-				})
-
-				it("must remove single title given multiple <h1>", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id
-					}))
-
-					yield textsDb.create(new ValidText({
-						initiative_uuid: initiative.uuid,
-						user_id: this.user.id,
-						content_type: "application/vnd.citizenos.etherpad+html",
-						content: outdent`
-							<!DOCTYPE HTML>
-							<html>
-								<body>
-									<h1>Vote for Peace</h1>
-									<h1>Vote for Terror</h1>
-									<p>Rest in peace!</p>
-								</body>
-							</html>
-						`
-					}))
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
-					res.statusCode.must.equal(200)
-
-					var dom = parseDom(res.body)
-					var input = dom.querySelector("input[name=content]")
-
-					JSON.parse(input.value).must.equal(outdent`
-						<!DOCTYPE HTML>
-						<html>
-							<body><h1>Vote for Terror</h1>
-							\t<p>Rest in peace!</p></body>
-						</html>
-					`)
-				})
-
-				it("must remove title given multiple empty and blank <h1>s",
-					function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id
-					}))
-
-					yield textsDb.create(new ValidText({
-						initiative_uuid: initiative.uuid,
-						user_id: this.user.id,
-						content_type: "application/vnd.citizenos.etherpad+html",
-						content: outdent`
-							<!DOCTYPE HTML>
-							<html>
-								<body>
-									<h1></h1>
-									<h1> </h1>
-									<h1>Vote for Peace</h1>
-									<p>Rest in peace!</p>
-								</body>
-							</html>
-						`
-					}))
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
-					res.statusCode.must.equal(200)
-
-					var dom = parseDom(res.body)
-					var input = dom.querySelector("input[name=content]")
-
-					JSON.parse(input.value).must.equal(outdent`
-						<!DOCTYPE HTML>
-						<html>
-							<body><p>Rest in peace!</p></body>
-						</html>
-					`)
-				})
-
-				it("must remove title given multiple empty and blank <h2>s",
-					function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id
-					}))
-
-					yield textsDb.create(new ValidText({
-						initiative_uuid: initiative.uuid,
-						user_id: this.user.id,
-						content_type: "application/vnd.citizenos.etherpad+html",
-						content: outdent`
-							<!DOCTYPE HTML>
-							<html>
-								<body>
-									<h2></h2>
-									<h2> </h2>
-									<h2>Vote for Peace</h2>
-									<p>Rest in peace!</p>
-								</body>
-							</html>
-						`
-					}))
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
-					res.statusCode.must.equal(200)
-
-					var dom = parseDom(res.body)
-					var input = dom.querySelector("input[name=content]")
-
-					JSON.parse(input.value).must.equal(outdent`
-						<!DOCTYPE HTML>
-						<html>
-							<body><p>Rest in peace!</p></body>
-						</html>
-					`)
-				})
-
-				it("must strip leading and trailing <br>s", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id
-					}))
-
-					yield textsDb.create(new ValidText({
-						initiative_uuid: initiative.uuid,
-						user_id: this.user.id,
-						content_type: "application/vnd.citizenos.etherpad+html",
-						content: outdent`
-							<!DOCTYPE HTML>
-							<html>
-								<body>
-									<br>
-									<br>
-									<h1>Vote for Peace</h1>
-									<br>
-									<br>
-									<p>Rest in peace!</p>
-									<br>
-									<br>
-								</body>
-							</html>
-						`
-					}))
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
-					res.statusCode.must.equal(200)
-
-					var dom = parseDom(res.body)
-					var input = dom.querySelector("input[name=content]")
-
-					JSON.parse(input.value).must.equal(outdent`
-						<!DOCTYPE HTML>
-						<html>
-							<body><p>Rest in peace!</p></body>
-						</html>
-					`)
-				})
-
-				forEachHeader(function(tagName) {
-					it(`must strip <br>s around <${tagName}>s`, function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id
-						}))
-
-						yield textsDb.create(new ValidText({
-							initiative_uuid: initiative.uuid,
-							user_id: this.user.id,
-							content_type: "application/vnd.citizenos.etherpad+html",
-							content: outdent`
-								<!DOCTYPE HTML>
-								<html>
-									<body>
-										<h1>Vote for Peace</h1>
-										<p>Indeed</p>
-										<br>
-										<br>
-										<${tagName}>Reasons</${tagName}>
-										<br>
-										<br>
-										<p>Because.</p>
-									</body>
-								</html>
-							`
-						}))
-
-						var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
-						res.statusCode.must.equal(200)
-
-						var dom = parseDom(res.body)
-						var input = dom.querySelector("input[name=content]")
-
-						JSON.parse(input.value).must.equal(outdent`
-							<!DOCTYPE HTML>
-							<html>
-								<body><p>Indeed</p>
-									<${tagName}>Reasons</${tagName}>
-									<p>Because.</p></body>
-							</html>
-						`)
-					})
-				})
+				var initiativePath = `/initiatives/${initiative.uuid}`
+				var res = yield this.request(initiativePath + "/edit")
+				res.statusCode.must.equal(302)
+				res.headers.location.must.equal(initiativePath + "/texts/" + text.id)
 			})
 		})
 	})

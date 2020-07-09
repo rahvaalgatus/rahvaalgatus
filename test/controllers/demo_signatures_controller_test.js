@@ -407,7 +407,7 @@ function* signWithIdCard(router, request, cert) {
 	})
 }
 
-function* signWithMobileId(router, request, cert, res) {
+function* signWithMobileId(router, request, cert) {
 	router.post(`${MOBILE_ID_URL.path}certificate`, function(req, res) {
 		respond({result: "OK", cert: cert.toString("base64")}, req, res)
 	})
@@ -418,7 +418,7 @@ function* signWithMobileId(router, request, cert, res) {
 
 	router.get(
 		`${MOBILE_ID_URL.path}signature/session/:token`,
-		typeof res == "function" ? res : next(function*(req, res) {
+		next(function*(req, res) {
 			res.writeHead(200)
 
 			var xades = yield demoSignaturesDb.read(sql`
@@ -462,7 +462,7 @@ function* signWithMobileId(router, request, cert, res) {
 	})
 }
 
-function* signWithSmartId(router, request, cert, res) {
+function* signWithSmartId(router, request, cert) {
 	var signSession = "21e55f06-d6cb-40b7-9638-75dc0b131851"
 
 	router.post(
@@ -472,7 +472,7 @@ function* signWithSmartId(router, request, cert, res) {
 
 	router.get(
 		`${SMART_ID_URL.path}session/${signSession}`,
-		typeof res == "function" ? res : next(function*(req, res) {
+		next(function*(req, res) {
 			res.writeHead(200)
 
 			var xades = yield demoSignaturesDb.read(sql`

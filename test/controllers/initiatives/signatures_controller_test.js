@@ -7,7 +7,10 @@ var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSignature = require("root/test/valid_signature")
 var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
 var ValidUser = require("root/test/valid_user")
+var ValidText = require("root/test/valid_initiative_text")
+var ValidTextSignature = require("root/test/valid_initiative_text_signature")
 var Certificate = require("undersign/lib/certificate")
+var Initiative = require("root/lib/initiative")
 var X509Asn = require("undersign/lib/x509_asn")
 var Ocsp = require("undersign/lib/ocsp")
 var Http = require("root/lib/http")
@@ -22,6 +25,8 @@ var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var signablesDb = require("root/db/initiative_signables_db")
+var textsDb = require("root/db/initiative_texts_db")
+var textSignaturesDb = require("root/db/initiative_text_signatures_db")
 var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
 var hades = require("root").hades
@@ -341,6 +346,129 @@ describe("SignaturesController", function() {
 
 			var entry = yield Zip.readEntry(zip, entries["initiative.html"])
 			String(entry).must.equal(initiative.text)
+		})
+
+		it("must include Estonian translation if signed", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament",
+				parliament_token: Crypto.randomBytes(12),
+				language: "en"
+			}))
+
+			var estonian = yield textsDb.create(new ValidText({
+				initiative_uuid: initiative.uuid,
+				user_id: initiative.user_id,
+				language: "et"
+			}))
+
+			yield textSignaturesDb.create(new ValidTextSignature({
+				text_id: estonian.id,
+				signed: true,
+				timestamped: true
+			}))
+
+			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
+			var res = yield this.request(path)
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(ASICE_TYPE)
+			var zip = yield Zip.parse(Buffer.from(res.body))
+			var entries = yield Zip.parseEntries(zip)
+			Object.keys(entries).length.must.equal(4)
+
+			var translation = yield Zip.readEntry(zip, entries["estonian.html"])
+			String(translation).must.equal(Initiative.renderForParliament(estonian))
+		})
+
+		it("must not include Estonian if unsigned", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament",
+				parliament_token: Crypto.randomBytes(12),
+				language: "en"
+			}))
+
+			var estonian = yield textsDb.create(new ValidText({
+				initiative_uuid: initiative.uuid,
+				user_id: initiative.user_id,
+				language: "et"
+			}))
+
+			yield textSignaturesDb.create(new ValidTextSignature({
+				text_id: estonian.id,
+				signed: true,
+				timestamped: false
+			}))
+
+			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
+			var res = yield this.request(path)
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(ASICE_TYPE)
+			var zip = yield Zip.parse(Buffer.from(res.body))
+			var entries = yield Zip.parseEntries(zip)
+			Object.keys(entries).length.must.equal(3)
+		})
+
+		it("must include latest Estonian translation", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament",
+				parliament_token: Crypto.randomBytes(12),
+				language: "en"
+			}))
+
+			yield textsDb.create(new ValidText({
+				initiative_uuid: initiative.uuid,
+				user_id: initiative.user_id,
+				language: "et"
+			}))
+
+			var a = yield textsDb.create(new ValidText({
+				initiative_uuid: initiative.uuid,
+				user_id: initiative.user_id,
+				language: "et"
+			}))
+
+			yield textSignaturesDb.create(new ValidTextSignature({
+				text_id: a.id,
+				signed: true,
+				timestamped: true
+			}))
+
+			var b = yield textsDb.create(new ValidText({
+				initiative_uuid: initiative.uuid,
+				user_id: initiative.user_id,
+				language: "et"
+			}))
+
+			yield textSignaturesDb.create(new ValidTextSignature({
+				text_id: b.id,
+				signed: true,
+				timestamped: true
+			}))
+
+			yield textsDb.create(new ValidText({
+				initiative_uuid: initiative.uuid,
+				user_id: initiative.user_id,
+				language: "et"
+			}))
+
+			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
+			var res = yield this.request(path)
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(ASICE_TYPE)
+			var zip = yield Zip.parse(Buffer.from(res.body))
+			var entries = yield Zip.parseEntries(zip)
+			Object.keys(entries).length.must.equal(4)
+
+			var translation = yield Zip.readEntry(zip, entries["estonian.html"])
+			String(translation).must.equal(Initiative.renderForParliament(b))
 		})
 	})
 

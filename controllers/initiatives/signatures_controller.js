@@ -7,6 +7,7 @@ var MobileId = require("undersign/lib/mobile_id")
 var SmartId = require("undersign/lib/smart_id")
 var MediaType = require("medium-type")
 var Router = require("express").Router
+var Initiative = require("root/lib/initiative")
 var HttpError = require("standard-http-error")
 var MobileIdError = require("undersign/lib/mobile_id").MobileIdError
 var SmartIdError = require("undersign/lib/smart_id").SmartIdError
@@ -26,6 +27,7 @@ var hades = require("root").hades
 var parseBody = require("body-parser").raw
 var signaturesDb = require("root/db/initiative_signatures_db")
 var signablesDb = require("root/db/initiative_signables_db")
+var textsDb = require("root/db/initiative_texts_db")
 var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
 var {ensureAreaCode} = require("root/lib/mobile_id")
@@ -174,6 +176,23 @@ exports.router.get("/", next(function*(req, res) {
 
 			var extension = Mime.extension(String(initiative.text_type))
 			asic.add(`initiative.${extension}`, initiative.text, initiative.text_type)
+
+			ESTONIAN: if (initiative.language != "et") {
+				var estonian = yield textsDb.read(sql`
+					SELECT *
+					FROM initiative_texts AS text
+					JOIN initiative_text_signatures AS sig
+					ON sig.text_id = text.id AND sig.signed AND sig.timestamped
+					WHERE text.initiative_uuid = ${initiative.uuid}
+					AND language = 'et'
+					ORDER BY text.id DESC
+					LIMIT 1
+				`)
+
+				if (estonian == null) break ESTONIAN
+				var translationHtml = Initiative.renderForParliament(estonian)
+				asic.add("estonian.html", translationHtml, "text/html")
+			}
 
 			var signatures = yield signaturesDb.search(sql`
 				SELECT * FROM initiative_signatures
@@ -715,10 +734,11 @@ function getSigningMethod(req) {
 	var type = req.contentType.name
 
 	return (
-		type == "application/x-www-form-urlencoded" ? req.body.method
-		: type == "application/pkix-cert" ? "id-card"
-		: type == "application/vnd.rahvaalgatus.signature" ? "id-card"
-		: null
+		type == "application/x-www-form-urlencoded" ? req.body.method :
+		type == "application/json" ? req.body.method :
+		type == "application/pkix-cert" ? "id-card" :
+		type == "application/vnd.rahvaalgatus.signature" ? "id-card" :
+		null
 	)
 }
 

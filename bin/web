@@ -29,6 +29,7 @@ app.use("/", function(req, _res, next) {
 
 app.use(require("cookie-parser")(Config.cookieSecret))
 app.use(require("body-parser").urlencoded({extended: true}))
+app.use(require("body-parser").json())
 app.use(require("root/lib/middleware/multipart_form_middleware"))
 app.use(require("root/lib/middleware/method_override_middleware"))
 app.use(require("root/lib/middleware/accept_middleware"))
@@ -104,13 +105,11 @@ app.use(require("root/lib/middleware/error_handler_middleware").bind(null,
 		case "application/vnd.rahvaalgatus.error+json":
 		case "application/json":
 			res.setHeader("Content-Type", type)
-
-			if (err instanceof HttpError) res.end(JSON.stringify(err))
-			else JSON.stringify({
+			res.end(JSON.stringify(err instanceof HttpError ? err : {
 				code: 500,
 				message: t("500_TITLE"),
 				description: t("500_BODY")
-			})
+			}))
 			break
 
 		default:
