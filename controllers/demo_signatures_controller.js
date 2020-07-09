@@ -139,10 +139,7 @@ exports.router.post("/", next(function*(req, res) {
 
 			// The Mobile-Id API returns any signing errors only when its status is
 			// queried, not when signing is initiated.
-			logger.info(
-				"Signing via Mobile-Id for %s.",
-				sanitizedPersonalId
-			)
+			logger.info("Signing via Mobile-Id for %s.", sanitizedPersonalId)
 
 			var sessionId = yield mobileId.sign(
 				phoneNumber,
@@ -188,10 +185,7 @@ exports.router.post("/", next(function*(req, res) {
 			;[country, personalId] = getCertificatePersonalId(cert)
 			xades = newXades()
 
-			logger.info(
-				"Requesting Smart-Id certificate for %s.",
-				sanitizedPersonalId
-			)
+			logger.info("Signing via Smart-Id for %s.", sanitizedPersonalId)
 
 			// The Smart-Id API returns any signing errors only when its status is
 			// queried, not when signing is initiated.
@@ -216,11 +210,13 @@ exports.router.post("/", next(function*(req, res) {
 
 			co(waitForSmartIdSignature(signature, signSession))
 			break
+
+		default: throw new HttpError(422, "Unknown Signing Method")
 	}
 
 	function newXades() {
 		return hades.new(cert, [{
-			path: `dokument.txt`,
+			path: "dokument.txt",
 			type: "text/plain",
 			hash: SIGNABLE_TEXT_SHA256
 		}], {policy: "bdoc"})
@@ -454,6 +450,7 @@ function* waitForMobileIdSignature(signature, sessionId) {
 		yield demoSignaturesDb.update(signature, {error: ex, updated_at: new Date})
 	}
 }
+
 function* waitForSmartIdSignature(signature, session) {
 	try {
 		var xades = signature.xades
