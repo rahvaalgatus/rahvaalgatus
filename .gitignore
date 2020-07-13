@@ -1,9 +1,7 @@
 /node_modules/
 /public/assets/*.js
 /public/assets/*.css
-/public/app.html
-/public/templates/**/*.html
-/tmp/
 /config/staging.json
 /config/production.json
 /config/*.sqlite3
+/tmp/
