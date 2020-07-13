@@ -2075,6 +2075,7 @@ function InitiativeImageUploadForm(attrs, children) {
 				name="image"
 				required
 				hidden
+				accept="image/jpeg, image/png"
 				onchange="this.form.submit()"
 			/>
 
