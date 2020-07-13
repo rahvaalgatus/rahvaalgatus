@@ -270,7 +270,7 @@ function searchSigners(from, to) {
 		${to ? sql`AND signature.created_at < ${to}` : sql``}
 		GROUP BY signature.personal_id
 		ORDER BY RANDOM()
-	`).then(_.shuffle)
+	`)
 }
 
 function serializeLocation(from) {
