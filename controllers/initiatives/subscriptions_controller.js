@@ -30,6 +30,7 @@ exports.router.post("/", next(function*(req, res) {
 		subscription = yield subscriptionsDb.create({
 			initiative_uuid: initiative.uuid,
 			email: email,
+			comment_interest: true,
 			created_at: new Date,
 			created_ip: req.ip,
 			updated_at: new Date

@@ -54,7 +54,8 @@ describe("InitiativeSubscriptionsController", function() {
 				email: "user@example.com",
 				created_ip: "127.0.0.1",
 				confirmation_sent_at: new Date,
-				update_token: subscription.update_token
+				update_token: subscription.update_token,
+				comment_interest: true
 			}))
 
 			subscription.update_token.must.exist()
@@ -120,7 +121,8 @@ describe("InitiativeSubscriptionsController", function() {
 					email: "user@example.com",
 					created_ip: "127.0.0.1",
 					confirmed_at: new Date,
-					update_token: subscription.update_token
+					update_token: subscription.update_token,
+					comment_interest: true
 				}))
 
 				this.emails.length.must.equal(0)
@@ -157,7 +159,8 @@ describe("InitiativeSubscriptionsController", function() {
 					email: "usER@examPLE.com",
 					created_ip: "127.0.0.1",
 					confirmed_at: new Date,
-					update_token: subscription.update_token
+					update_token: subscription.update_token,
+					comment_interest: true
 				}))
 
 				this.emails.length.must.equal(0)
@@ -194,7 +197,8 @@ describe("InitiativeSubscriptionsController", function() {
 					email: "user@example.com",
 					created_ip: "127.0.0.1",
 					confirmation_sent_at: new Date,
-					update_token: subscription.update_token
+					update_token: subscription.update_token,
+					comment_interest: true
 				}))
 
 				this.emails.length.must.equal(1)
