@@ -3,13 +3,14 @@
   font-weight: normal;
   font-style: normal;
 
-  src: url("/assets/Rahvaicons_e5e52fc58507bb9539e82235d884c8b6.eot");
-  src: url("/assets/Rahvaicons_e5e52fc58507bb9539e82235d884c8b6.eot?#iefix") format("embedded-opentype"),
-       url("/assets/Rahvaicons_e5e52fc58507bb9539e82235d884c8b6.woff") format("woff"),
-       url("/assets/Rahvaicons_e5e52fc58507bb9539e82235d884c8b6.woff2") format("woff2"),
-       url("/assets/Rahvaicons_e5e52fc58507bb9539e82235d884c8b6.ttf") format("truetype");
+  src: url("/assets/Rahvaicons_1fe9c6212b997adc8cee645f092e4513.eot");
+  src: url("/assets/Rahvaicons_1fe9c6212b997adc8cee645f092e4513.eot?#iefix") format("embedded-opentype"),
+       url("/assets/Rahvaicons_1fe9c6212b997adc8cee645f092e4513.woff") format("woff"),
+       url("/assets/Rahvaicons_1fe9c6212b997adc8cee645f092e4513.woff2") format("woff2"),
+       url("/assets/Rahvaicons_1fe9c6212b997adc8cee645f092e4513.ttf") format("truetype");
 }
 
+.ra-icon-api:before,
 .ra-icon-ddoc:before,
 .ra-icon-doc:before,
 .ra-icon-facebook-logo:before,
@@ -31,6 +32,7 @@
 
 /* NOTE: iOS (at least 4.2) doesn't seem to support CSS Unicode escapes. */
 /* Use !important so we could provide fallback content in CSS. */
+.ra-icon-api:before { content: "" !important; }
 .ra-icon-ddoc:before { content: "" !important; }
 .ra-icon-doc:before { content: "" !important; }
 .ra-icon-facebook-logo:before { content: "" !important; }

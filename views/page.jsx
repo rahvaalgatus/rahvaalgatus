@@ -178,39 +178,44 @@ function Page(attrs, children) {
 				</div>
 
 				<div class="logos">
-					<p>
-						<a
-							href="https://kestame.rahvaalgatus.ee"
-							title="#kuidasmekestame"
-							class="kestame"
-						>
-							<img src="/assets/kestame.png" alt="#kuidasmekestame" />
-						</a>
-						{" "}
-						<a
-							href="https://uuseakus.rahvaalgatus.ee"
-							title="Uue eakuse rahvakogu"
-							class="uuseakus"
-						>
-							<img src="/assets/uuseakus.png" alt="Uue eakuse rahvakogu" />
-						</a>
-						{" "}
-						<a
-							href="https://heakodanik.ee/annetuste-kogumise-hea-tava/"
-							title="Hea annetuse koguja"
-							class="hea-annetus"
-						>
-							<img src="/assets/hea-annetus.png" alt="Hea annetuse koguja" />
-						</a>
-						{" "}
-						<a
-							href="https://github.com/rahvaalgatus/rahvaalgatus"
-							title={t("GITHUB_LOGO_TITLE")}
-							class="github"
-						>
-							<img src="/assets/github-logo.svg" alt="GitHub" />
-						</a>
-					</p>
+					<a
+						href="https://kestame.rahvaalgatus.ee"
+						title="#kuidasmekestame"
+						class="kestame"
+					>
+						<img src="/assets/kestame.png" alt="#kuidasmekestame" />
+					</a>
+					{" "}
+					<a
+						href="https://uuseakus.rahvaalgatus.ee"
+						title="Uue eakuse rahvakogu"
+						class="uuseakus"
+					>
+						<img src="/assets/uuseakus.png" alt="Uue eakuse rahvakogu" />
+					</a>
+					{" "}
+					<a
+						href="https://heakodanik.ee/annetuste-kogumise-hea-tava/"
+						title="Hea annetuse koguja"
+						class="hea-annetus"
+					>
+						<img src="/assets/hea-annetus.png" alt="Hea annetuse koguja" />
+					</a>
+					{" "}
+					<a
+						href="https://github.com/rahvaalgatus/rahvaalgatus"
+						title={t("GITHUB_LOGO_TITLE")}
+						class="github"
+					>
+						<img src="/assets/github-logo.svg" alt="GitHub" />
+					</a>
+					<a
+						href="/api"
+						title="API"
+						class="api ra-icon-api"
+					>
+						<span>API</span>
+					</a>
 				</div>
 			</center></footer>
 

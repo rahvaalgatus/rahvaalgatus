@@ -3225,16 +3225,16 @@ button.inherited {
 	line-height: 1.4;
 	font-size: 1.3rem;
 
-	a {
-		color: $footer-link;
-		&:hover { text-decoration: underline; }
-	}
-
 	.contact {
 		float: left;
 		padding-right: 2rem;
 
 		img { margin-bottom: 1rem; }
+
+		a {
+			color: $footer-link;
+			&:hover { text-decoration: underline; }
+		}
 	}
 
 	.logos {
@@ -3253,6 +3253,11 @@ button.inherited {
 		.kestame { width: 15rem; }
 		.hea-annetus { width: 3.6rem; }
 		.github { width: 7rem; }
+
+		.api {
+			&:before { font-size: 3.6rem; color: white; }
+			span { display: none; }
+		}
 	}
 
 	@media only screen and (max-width: 449px) {
