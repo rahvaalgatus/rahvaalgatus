@@ -718,8 +718,9 @@ function* waitForSmartIdSignature(signable, session) {
 	}
 }
 
-function pathToSignature(signatureOrSignable) {
+function pathToSignature(signatureOrSignable, extension) {
 	var path = signatureOrSignable.country + signatureOrSignable.personal_id
+	if (extension) path += "." + extension
 	return path + "?token=" + signatureOrSignable.token.toString("hex")
 }
 

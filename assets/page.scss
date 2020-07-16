@@ -2239,11 +2239,14 @@ button.inherited {
 			line-height: 1.5;
 		}
 
-		.revoke-button {
-			display: block;
-			font-weight: 600;
-			margin: 0 auto;
+		.signature-buttons {
+			margin-top: 1rem;
+			text-align: center;
 		}
+
+		.download-button,
+		.revoke-button { font-weight: 600; }
+		.revoke-button { display: inline-block; }
 	}
 
 	.initiative-status {

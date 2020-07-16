@@ -261,6 +261,7 @@ function FormButton(attrs, children) {
 	return <Form
 		req={attrs.req}
 		action={attrs.action}
+		class={attrs.formClass}
 		method={attrs.name == "_method" ? "post" : "put"}
 	>
 		<button

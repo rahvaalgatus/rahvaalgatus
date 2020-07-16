@@ -376,11 +376,17 @@ function ReadPage(attrs) {
 					{signature ? <Fragment>
 						<h2>{t("THANKS_FOR_SIGNING")}</h2>
 
-						<p>
+						<div class="signature-buttons">
+							<DownloadSignatureButton signature={signature}>
+								{t("DOWNLOAD_SIGNATURE")}
+							</DownloadSignatureButton>
+
+							<span class="form-or">{t("FORM_OR")}</span>
+
 							<DeleteSignatureButton req={req} signature={signature}>
 								{t("REVOKE_SIGNATURE")}
 							</DeleteSignatureButton>
-						</p>
+						</div>
 					</Fragment> : <Fragment>
 						<h2>{t("HEADING_CAST_YOUR_VOTE")}</h2>
 						<p>
@@ -2116,6 +2122,13 @@ function QuicksignView(attrs) {
 
 		{isSignable(initiative) && signature ? <Fragment>
 			<h2>{t("THANKS_FOR_SIGNING")}</h2>
+
+			<DownloadSignatureButton signature={signature}>
+				{t("DOWNLOAD_SIGNATURE")}
+			</DownloadSignatureButton>
+
+			<span class="form-or">{t("FORM_OR")}</span>
+
 			<DeleteSignatureButton req={req} signature={signature}>
 				{t("REVOKE_SIGNATURE")}
 			</DeleteSignatureButton>
@@ -2310,6 +2323,17 @@ function AddInitiativeInfoButton(attrs) {
 	</label>
 }
 
+function DownloadSignatureButton(attrs, children) {
+	var signature = attrs.signature
+	var initiativePath = "/initiatives/" + signature.initiative_uuid
+	var signaturePath = initiativePath + "/signatures/"
+	signaturePath += pathToSignature(signature, "asice")
+
+	return <a class="link-button download-button" href={signaturePath} download>
+		{children}
+	</a>
+}
+
 function DeleteSignatureButton(attrs, children) {
 	var req = attrs.req
 	var signature = attrs.signature
@@ -2317,7 +2341,8 @@ function DeleteSignatureButton(attrs, children) {
 
 	return <FormButton
 		req={req}
-		class="link-button revoke-button"
+		formClass="revoke-button"
+		class="link-button"
 		action={initiativePath + "/signatures/" + pathToSignature(signature)}
 		onclick={confirm(req.t("REVOKE_SIGNATURE_CONFIRMATION"))}
 		name="_method"
