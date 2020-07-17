@@ -702,22 +702,25 @@ function* updateInitiativeToPublished(req, res) {
 
 	let endsAt = DateFns.endOfDay(Time.parseDate(req.body.endsAt))
 
-	// TODO: Require deadline to be 3 days in the future only if not published
-	// before.
-	if (!Initiative.isDeadlineOk(new Date, endsAt)) {
+	if (!Initiative.isDeadlineOk(initiative.published_at || new Date, endsAt)) {
 		res.statusCode = 422
 		res.statusMessage = "Deadline Too Near or Too Far"
 
 		return void res.render(tmpl, {
-			error: req.t("DEADLINE_ERR", {days: Config.minDeadlineDays}),
+			error: req.t("INITIATIVE_DISCUSSION_DEADLINE_ERROR", {
+				days: Config.minDeadlineDays
+			}),
+
 			attrs: {endsAt: endsAt}
 		})
 	}
 
+	var emailSentAt = initiative.discussion_end_email_sent_at
+
 	yield initiativesDb.update(initiative.uuid, {
 		published_at: initiative.published_at || new Date,
 		discussion_ends_at: endsAt,
-		discussion_end_email_sent_at: null
+		discussion_end_email_sent_at: endsAt > new Date ? null : emailSentAt
 	})
 
 	res.flash("notice", initiative.published_at == null
@@ -759,21 +762,28 @@ function* updateInitiativePhaseToSign(req, res) {
 	let endsAt = DateFns.endOfDay(Time.parseDate(req.body.endsAt))
 	var attrs = {endsAt: endsAt}
 
-	if (!Initiative.isDeadlineOk(new Date, endsAt)) {
+	if (
+		!Initiative.isDeadlineOk(initiative.signing_started_at || new Date, endsAt)
+	) {
 		res.statusCode = 422
 		res.statusMessage = "Deadline Too Near or Too Far"
 
 		return void res.render(tmpl, {
-			error: req.t("DEADLINE_ERR", {days: Config.minDeadlineDays}),
+			error: req.t("INITIATIVE_SIGN_DEADLINE_ERROR", {
+				days: Config.minDeadlineDays
+			}),
+
 			attrs: attrs
 		})
 	}
+
+	var emailSentAt = initiative.signing_end_email_sent_at
 
 	attrs = {
 		phase: "sign",
 		signing_started_at: initiative.signing_started_at || new Date,
 		signing_ends_at: endsAt,
-		signing_end_email_sent_at: null
+		signing_end_email_sent_at: endsAt > new Date ? null : emailSentAt
 	}
 
 	if (initiative.phase == "edit") {

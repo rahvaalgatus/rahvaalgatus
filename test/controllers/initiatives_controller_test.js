@@ -4915,7 +4915,7 @@ describe("InitiativesController", function() {
 				it("must update initiative if already published", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
-						published_at: new Date,
+						published_at: DateFns.addDays(new Date, -1),
 					}))
 
 					yield textsDb.create(new ValidText({
@@ -4924,7 +4924,7 @@ describe("InitiativesController", function() {
 					}))
 
 					var endsAt = DateFns.addDays(
-						DateFns.endOfDay(new Date),
+						DateFns.endOfDay(initiative.published_at),
 						Config.minDeadlineDays
 					)
 
@@ -4950,7 +4950,6 @@ describe("InitiativesController", function() {
 
 					yield initiativesDb.read(initiative).must.then.eql({
 						__proto__: initiative,
-						published_at: new Date,
 						discussion_ends_at: endsAt
 					})
 				})
@@ -4980,7 +4979,7 @@ describe("InitiativesController", function() {
 					function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
-						published_at: pseudoDateTime(),
+						published_at: new Date,
 						discussion_end_email_sent_at: pseudoDateTime()
 					}))
 
@@ -5008,11 +5007,46 @@ describe("InitiativesController", function() {
 					})
 				})
 
+				it("must not clear end email when setting discussion end time to past",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						published_at: DateFns.addDays(new Date, -5),
+						discussion_end_email_sent_at: DateFns.addDays(new Date, -1),
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+					}))
+
+					var endsAt = DateFns.addDays(
+						DateFns.endOfDay(initiative.published_at),
+						Config.minDeadlineDays
+					)
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							visibility: "public",
+							endsAt: formatIsoDate(endsAt)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					yield initiativesDb.read(initiative).must.then.eql({
+						__proto__: initiative,
+						discussion_ends_at: endsAt
+					})
+				})
+
 				it("must respond with 422 if setting a short deadline", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						discussion_end_email_sent_at: new Date,
-						published_at: new Date
+						published_at: DateFns.addDays(new Date, -1),
 					}))
 
 					yield textsDb.create(new ValidText({
@@ -5025,9 +5059,10 @@ describe("InitiativesController", function() {
 						form: {
 							_csrf_token: this.csrfToken,
 							visibility: "public",
-							endsAt: formatIsoDate(
-								DateFns.addDays(new Date, Config.minDeadlineDays - 1)
-							)
+							endsAt: formatIsoDate(DateFns.addDays(
+								initiative.published_at,
+								Config.minDeadlineDays - 1
+							))
 						}
 					})
 
@@ -5042,8 +5077,7 @@ describe("InitiativesController", function() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						destination: "parliament",
-						created_at: DateFns.addDays(new Date, -Config.minDeadlineDays),
-						published_at: new Date
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
 					}))
 
 					var res = yield this.request("/initiatives/" + initiative.uuid, {
@@ -5062,8 +5096,7 @@ describe("InitiativesController", function() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						destination: "parliament",
-						created_at: DateFns.addDays(new Date, -Config.minDeadlineDays),
-						published_at: new Date
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
 					}))
 
 					var text = yield textsDb.create(new ValidText({
@@ -5120,8 +5153,7 @@ describe("InitiativesController", function() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						destination: "parliament",
-						created_at: DateFns.addDays(new Date, -Config.minDeadlineDays),
-						published_at: new Date
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
 					}))
 
 					var text = yield textsDb.create(new ValidText({
@@ -5186,8 +5218,7 @@ describe("InitiativesController", function() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						destination: "parliament",
-						created_at: DateFns.addDays(new Date, -Config.minDeadlineDays),
-						published_at: new Date,
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays),
 						title: "Estonian FTW",
 						language: "et"
 					}))
@@ -5222,9 +5253,7 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(303)
 					var html = Initiative.renderForParliament(text)
 
-					yield initiativesDb.search(sql`
-						SELECT * FROM initiatives
-					`).must.then.eql([{
+					yield initiativesDb.read(initiative).must.then.eql({
 						__proto__: initiative,
 						phase: "sign",
 						signing_started_at: new Date,
@@ -5234,15 +5263,14 @@ describe("InitiativesController", function() {
 						text: html,
 						text_type: new MediaType("text/html"),
 						text_sha256: sha256(html)
-					}])
+					})
 				})
 
 				it("must use the latest text of given language", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						destination: "parliament",
-						created_at: DateFns.addDays(new Date, -Config.minDeadlineDays),
-						published_at: new Date
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
 					}))
 
 					yield textsDb.create(new ValidText({
@@ -5269,9 +5297,7 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(303)
 					var html = Initiative.renderForParliament(b)
 
-					yield initiativesDb.search(sql`
-						SELECT * FROM initiatives
-					`).must.then.eql([{
+					yield initiativesDb.read(initiative).must.then.eql({
 						__proto__: initiative,
 						phase: "sign",
 						signing_started_at: new Date,
@@ -5280,20 +5306,21 @@ describe("InitiativesController", function() {
 						text: html,
 						text_type: new MediaType("text/html"),
 						text_sha256: sha256(html)
-					}])
+					})
 				})
 
-				it("must update only deadline and clear end email if in sign phase",
-					function*() {
+				it("must update only deadline in sign phase", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: "sign",
-						signing_started_at: pseudoDateTime(),
-						discussion_end_email_sent_at: new Date,
-						signing_end_email_sent_at: new Date
+						signing_started_at: DateFns.addDays(new Date, -1)
 					}))
 
-					var endsAt = DateFns.addDays(DateFns.endOfDay(new Date), 30)
+					var endsAt = DateFns.addDays(
+						DateFns.endOfDay(initiative.signing_started_at),
+						Config.minDeadlineDays
+					)
+
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
@@ -5313,27 +5340,23 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(200)
 					res.body.must.include(t("INITIATIVE_SIGNING_DEADLINE_UPDATED"))
 
-					yield initiativesDb.search(sql`
-						SELECT * FROM initiatives
-					`).must.then.eql([{
+					yield initiativesDb.read(initiative).must.then.eql({
 						__proto__: initiative,
-						signing_ends_at: endsAt,
-						signing_end_email_sent_at: null
-					}])
+						signing_ends_at: endsAt
+					})
 				})
 
-				it("must not update text if updating deadline", function*() {
+				it("must clear end email", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: "sign",
-						signing_started_at: pseudoDateTime(),
-						text: "Hello, world!",
-						text_type: "text/plain",
-						text_sha256: sha256("Hello, world!")
+						signing_started_at: new Date,
+						discussion_end_email_sent_at: new Date,
+						signing_end_email_sent_at: new Date
 					}))
 
 					var endsAt = DateFns.addDays(
-						DateFns.endOfDay(new Date),
+						DateFns.endOfDay(initiative.signing_started_at),
 						Config.minDeadlineDays
 					)
 
@@ -5348,13 +5371,84 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(303)
 
-					yield initiativesDb.search(sql`
-						SELECT * FROM initiatives
-					`).must.then.eql([{
+					yield initiativesDb.read(initiative).must.then.eql({
 						__proto__: initiative,
 						signing_ends_at: endsAt,
 						signing_end_email_sent_at: null
-					}])
+					})
+				})
+
+				it("must not clear end email when setting signing end time to past",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "sign",
+						signing_started_at: DateFns.addDays(new Date, -5),
+						discussion_end_email_sent_at: DateFns.addDays(new Date, -1),
+						signing_end_email_sent_at: new Date
+					}))
+
+					var endsAt = DateFns.addDays(
+						DateFns.endOfDay(initiative.signing_started_at),
+						Config.minDeadlineDays
+					)
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "voting",
+							endsAt: formatIsoDate(endsAt)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					var cookies = parseCookies(res.headers["set-cookie"])
+					res = yield this.request(res.headers.location, {
+						headers: {Cookie: Http.serializeCookies(cookies)}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("INITIATIVE_SIGNING_DEADLINE_UPDATED"))
+
+						yield initiativesDb.read(initiative).must.then.eql(_.clone({
+							__proto__: initiative,
+							signing_ends_at: endsAt
+						}))
+				})
+
+				it("must not update text if updating deadline", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "sign",
+						signing_started_at: pseudoDateTime(),
+						text: "Hello, world!",
+						text_type: "text/plain",
+						text_sha256: sha256("Hello, world!")
+					}))
+
+					var endsAt = DateFns.addDays(
+						DateFns.endOfDay(initiative.signing_started_at),
+						Config.minDeadlineDays
+					)
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "voting",
+							endsAt: formatIsoDate(endsAt)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					yield initiativesDb.read(initiative).must.then.eql({
+						__proto__: initiative,
+						signing_ends_at: endsAt,
+						signing_end_email_sent_at: null
+					})
 				})
 
 				it("must update initiative if on fast-track", function*() {
@@ -5405,12 +5499,16 @@ describe("InitiativesController", function() {
 					res.statusMessage.must.equal("No Permission to Edit")
 				})
 
-				it("must respond with 403 if less than 3 days passed", function*() {
+				it("must respond with 403 if less than 3 days passed since publish",
+					function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						destination: "parliament",
-						created_at: DateFns.addDays(new Date, -Config.minDeadlineDays + 1),
-						published_at: new Date
+
+						published_at: DateFns.addDays(
+							new Date,
+							-Config.minDeadlineDays + 1
+						)
 					}))
 
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
@@ -5430,8 +5528,7 @@ describe("InitiativesController", function() {
 				it("must respond with 422 if setting a short deadline", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
-						created_at: DateFns.addDays(new Date, -Config.minDeadlineDays),
-						published_at: new Date
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
 					}))
 
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
@@ -5454,7 +5551,7 @@ describe("InitiativesController", function() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						destination: "parliament",
-						published_at: new Date
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
 					}))
 
 					var text = yield textsDb.create(new ValidText({
