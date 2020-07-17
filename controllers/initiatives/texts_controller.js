@@ -102,11 +102,6 @@ exports.router.post("/", next(function*(req, res) {
 
 	if (!(
 		initiative.phase == "edit" ||
-		initiative.phase == "sign"
-	)) throw new HttpError(405, "Can Only Add Text in Edit or Sign Phase")
-
-	if (!(
-		initiative.phase == "edit" ||
 		initiative.phase == "sign" && initiative.language != attrs.language
 	)) throw new HttpError(405, "Can Only Add Translations")
 
