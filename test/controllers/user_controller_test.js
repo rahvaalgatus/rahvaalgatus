@@ -1,4 +1,5 @@
 var _ = require("root/lib/underscore")
+var Url = require("url")
 var DateFns = require("date-fns")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSignature = require("root/test/valid_signature")
@@ -15,6 +16,9 @@ var signaturesDb = require("root/db/initiative_signatures_db")
 var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
+var SITE_HOSTNAME = Url.parse(Config.url).hostname
+var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
+var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
 
 describe("UserController", function() {
 	require("root/test/db")()
@@ -28,6 +32,15 @@ describe("UserController", function() {
 				var res = yield this.request("/user")
 				res.statusCode.must.equal(401)
 				res.statusMessage.must.equal("Unauthorized")
+			})
+		})
+
+		;[PARLIAMENT_SITE_HOSTNAME, LOCAL_SITE_HOSTNAME].forEach(function(host) {
+			it(`must redirect to ${SITE_HOSTNAME} from ${host}`, function*() {
+				var path = "/user?foo=bar"
+				var res = yield this.request(path, {headers: {Host: host}})
+				res.statusCode.must.equal(301)
+				res.headers.location.must.equal(Config.url + path)
 			})
 		})
 
@@ -364,6 +377,23 @@ describe("UserController", function() {
 				res.statusCode.must.equal(303)
 				res.headers.location.must.equal("/")
 				res.headers.must.not.have.property("set-cookie")
+			})
+
+			;[PARLIAMENT_SITE_HOSTNAME, LOCAL_SITE_HOSTNAME].forEach(function(host) {
+				it(`must set cookie when on ${host}`, function*() {
+					var res = yield this.request("/user", {
+						method: "PUT",
+						headers: {Referer: this.url + "/initiatives", Host: host},
+						form: {language: "en"}
+					})
+
+					res.statusCode.must.equal(303)
+					res.headers.location.must.equal(this.url + "/initiatives")
+
+					var cookies = parseCookies(res.headers["set-cookie"])
+					cookies.language.value.must.equal("en")
+					cookies.must.not.have.property("flash")
+				})
 			})
 		})
 

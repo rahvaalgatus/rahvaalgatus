@@ -33,7 +33,9 @@ function Page(attrs, children) {
 	var page = attrs.page
 	var title = attrs.title
 	var links = attrs.links || EMPTY_ARR
+	var gov = req.government
 	var withNav = !attrs.navless
+	var siteUrl = req.government == null ? "" : Config.url
 
 	var translatable = (
 		req.lang === "xx" ||
@@ -54,7 +56,13 @@ function Page(attrs, children) {
 		<head>
 			<meta charset="utf-8" />
 			<meta name="viewport" content="width=device-width" />
-			<link rel="stylesheet" href="/assets/page.css" type="text/css" />
+
+			<link
+				rel="stylesheet"
+				href={siteUrl + "/assets/page.css"}
+				type="text/css"
+			/>
+
 			<title>{title == null ? "" : title + " - "} {SITE_TITLE}</title>
 
 			{_.map(meta, (value, name) => name.startsWith("og:")
@@ -91,7 +99,7 @@ function Page(attrs, children) {
 					</Form>
 
 					{withNav ? (req.user ? <div class="right">
-						<a href="/user" class="user">{req.user.name}</a>
+						<a href={siteUrl + "/user"} class="user">{req.user.name}</a>
 
 						<Form
 							req={req}
@@ -103,12 +111,12 @@ function Page(attrs, children) {
 								{t("BTN_LOG_OFF")}
 							</button>
 						</Form>
-					</div> : <a href="/sessions/new" class="right" >
+					</div> : <a href={siteUrl + "/sessions/new"} class="right" >
 						{t("BTN_LOG_IN_REGISTER")}
 					</a>) : null}
 				</menu>
 
-				<a href="/" class="logo">
+				<a href={siteUrl || "/"} class="logo">
 					<img src="/assets/rahvaalgatus.png" alt={SITE_TITLE} />
 				</a>
 
@@ -130,21 +138,24 @@ function Page(attrs, children) {
 						</a></li>
 
 						<li>
-							<a href="/about" class={"nav-button " + selected(page, "about")}>
+							<a
+								href={siteUrl + "/about"}
+								class={"nav-button " + selected(page, "about")}
+							>
 								{t("LNK_ABOUT")}
 							</a>
 						</li>
 
 						<li>
 							<a
-								href="/donate"
+								href={siteUrl + "/donate"}
 								class={"nav-button " + selected(page, "donate")}
 							>
 							{t("LNK_SUPPORT")}
 							</a>
 
 							<a
-								href="/digiallkiri"
+								href={siteUrl + "/digiallkiri"}
 								class="nav-button demo-signatures-button"
 							>
 								{t("NAV_DEMO_SIGNATURES")}
@@ -210,7 +221,7 @@ function Page(attrs, children) {
 						<img src="/assets/github-logo.svg" alt="GitHub" />
 					</a>
 					<a
-						href="/api"
+						href={siteUrl + "/api"}
 						title="API"
 						class="api ra-icon-api"
 					>

@@ -29,12 +29,16 @@ var getNormalizedMobileIdErrorCode =
 var logger = require("root").logger
 var sql = require("sqlate")
 var sleep = require("root/lib/promise").sleep
+var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
 var reportError = require("root").errorReporter
 var sessionsDb = require("root/db/sessions_db")
 var usersDb = require("root/db/users_db")
 var authenticationsDb = require("root/db/authentications_db")
 var SESSION_COOKIE_NAME = Config.sessionCookieName
 var ENV = process.env.ENV
+var SITE_HOSTNAME = Url.parse(Config.url).hostname
+var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
+var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
 
 var MOBILE_ID_ERRORS = {
 	// Initiation responses:
@@ -158,7 +162,7 @@ exports.router = Router({mergeParams: true})
 
 exports.router.use(parseBody({type: hasSignatureType}))
 
-exports.router.get("/new", function(req, res) {
+exports.router.get("/new", canonicalizeUrl, function(req, res) {
 	if (req.user)
 		res.redirect(302, referTo(req, req.headers.referer, "/user"))
 	else
@@ -679,7 +683,14 @@ function getAuthenticationMethod(req) {
 }
 
 function referTo(req, referrer, fallback) {
-	return referrer && Url.parse(referrer).hostname === req.hostname
-		? referrer
-		: fallback
+	if (referrer == null) return fallback
+
+	var referrerHost = Url.parse(referrer).hostname
+
+	return [
+		req.hostname,
+		SITE_HOSTNAME,
+		PARLIAMENT_SITE_HOSTNAME,
+		LOCAL_SITE_HOSTNAME
+	].some((host) => host == referrerHost) ? referrer : fallback
 }

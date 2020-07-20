@@ -34,6 +34,9 @@ var SMART_ID = "PNOEE-" + PERSONAL_ID + "-R2D2-Q"
 var SIGNABLE_TEXT = t("DEMO_SIGNATURES_SIGNABLE")
 var SIGNABLE_TEXT_SHA256 = sha256(SIGNABLE_TEXT)
 var EXPIRATION = Config.demoSignaturesExpirationSeconds
+var SITE_HOSTNAME = Url.parse(Config.url).hostname
+var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
+var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
 
 var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
 	subject: {
@@ -91,6 +94,15 @@ describe("DemoSignaturesController", function() {
 		it("must render", function*() {
 			var res = yield this.request("/digiallkiri")
 			res.statusCode.must.equal(200)
+		})
+
+		;[PARLIAMENT_SITE_HOSTNAME, LOCAL_SITE_HOSTNAME].forEach(function(host) {
+			it(`must redirect to ${SITE_HOSTNAME} from ${host}`, function*() {
+				var path = "/digiallkiri?foo=bar"
+				var res = yield this.request(path, {headers: {Host: host}})
+				res.statusCode.must.equal(301)
+				res.headers.location.must.equal(Config.url + path)
+			})
 		})
 
 		// Once upon a time, on Mar 24, 2017, there was a bug where the UI

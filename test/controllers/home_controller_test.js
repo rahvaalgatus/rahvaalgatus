@@ -14,8 +14,10 @@ var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
 var parseDom = require("root/lib/dom").parse
 var t = require("root/lib/i18n").t.bind(null, Config.language)
-var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.url).hostname
-var LOCAL_SITE_HOSTNAME = Url.parse(Config.localUrl).hostname
+var demand = require("must")
+var SITE_HOSTNAME = Url.parse(Config.url).hostname
+var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
+var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
 var STATISTICS_TYPE = "application/vnd.rahvaalgatus.statistics+json; v=1"
 var PHASES = require("root/lib/initiative").PHASES
 
@@ -419,23 +421,36 @@ describe("HomeController", function() {
 				el.textContent.must.equal("3+1")
 			})
 
-			it(`must show statistics on ${PARLIAMENT_SITE_HOSTNAME}`, function*() {
+			it(`must show statistics on ${SITE_HOSTNAME}`, function*() {
 				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+				var dom = parseDom(res.body)
+				dom.querySelector("#statistics").must.exist()
+			})
+
+			it(`must show statistics on ${PARLIAMENT_SITE_HOSTNAME}`, function*() {
+				var res = yield this.request("/", {
+					headers: {Host: PARLIAMENT_SITE_HOSTNAME}
+				})
+
 				res.statusCode.must.equal(200)
 				var dom = parseDom(res.body)
 				dom.querySelector("#statistics").must.exist()
 			})
 
 			it(`must not show statistics on ${LOCAL_SITE_HOSTNAME}`, function*() {
-				var res = yield this.request("/")
+				var res = yield this.request("/", {
+					headers: {Host: LOCAL_SITE_HOSTNAME}
+				})
+
 				res.statusCode.must.equal(200)
 				var dom = parseDom(res.body)
-				dom.querySelector("#statistics").must.exist()
+				demand(dom.querySelector("#statistics")).be.null()
 			})
 		})
 
 		function mustShowInitiativesInPhases(host, dest) {
-			describe("as a shared site", function() {
+			describe("as a filtered site", function() {
 				it("must show initiatives in edit phase with no destination",
 					function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
@@ -492,6 +507,46 @@ describe("HomeController", function() {
 			})
 		}
 
+		describe(`on ${SITE_HOSTNAME}`, function() {
+			it("must show initiatives in edit phase with no destination",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					published_at: new Date,
+					destination: null,
+					discussion_ends_at: DateFns.addSeconds(new Date, 1),
+				}))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+				res.body.must.include(initiative.uuid)
+			})
+
+			;["parliament", "muhu-vald"].forEach(function(dest) {
+				;["edit", "sign"].forEach(function(phase) {
+					it(`must show initiatives in ${phase} phase destined to ${dest}`,
+						function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.author.id,
+							phase: phase,
+							destination: dest,
+							published_at: new Date,
+							discussion_ends_at: DateFns.addSeconds(new Date, 1),
+
+							signing_ends_at: phase == "sign"
+								? DateFns.addSeconds(new Date, 1)
+								: null
+						}))
+
+						var res = yield this.request("/")
+						res.statusCode.must.equal(200)
+						res.body.must.include(initiative.uuid)
+					})
+				})
+			})
+		})
+
 		describe(`on ${PARLIAMENT_SITE_HOSTNAME}`, function() {
 			mustShowInitiativesInPhases(PARLIAMENT_SITE_HOSTNAME, "parliament")
 		})
@@ -512,7 +567,7 @@ describe("HomeController", function() {
 				var form = dom.querySelector("#initiatives-subscribe")
 				form.querySelector("input[name=email]").value.must.equal("")
 			})
-			
+
 			it("must render subscription form with person's confirmed email",
 				function*() {
 				yield usersDb.update(this.user, {
@@ -678,6 +733,29 @@ describe("HomeController", function() {
 
 			res.statusCode.must.equal(200)
 			res.body.must.eql(EMPTY_STATISTICS)
+		})
+	})
+
+	;[
+		"/about",
+		"/credits",
+		"/api",
+		"/statistics"
+	].forEach(function(path) {
+		describe(path, function() {
+			it("must render", function*() {
+				var res = yield this.request(path)
+				res.statusCode.must.equal(200)
+			})
+
+			;[PARLIAMENT_SITE_HOSTNAME, LOCAL_SITE_HOSTNAME].forEach(function(host) {
+				it(`must redirect to ${SITE_HOSTNAME} from ${host}`, function*() {
+					var query = "?foo=bar"
+					var res = yield this.request(path + query, {headers: {Host: host}})
+					res.statusCode.must.equal(301)
+					res.headers.location.must.equal(Config.url + path + query)
+				})
+			})
 		})
 	})
 })

@@ -10,6 +10,7 @@ var sqlite = require("root").sqlite
 var {countSignaturesByIds} = require("root/lib/initiative")
 var sql = require("sqlate")
 var initiativesDb = require("root/db/initiatives_db")
+var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
 var PHASES = require("root/lib/initiative").PHASES
 var ZERO_COUNTS = _.fromEntries(PHASES.map((name) => [name, 0]))
 
@@ -30,10 +31,10 @@ exports.router.get("/", next(function*(req, res) {
 			phase != 'edit' OR
 			discussion_ends_at > ${cutoff}
 		)
-		AND (
-			destination IS NULL OR
-			destination ${gov == "parliament" ? sql`==` : sql`!=`} "parliament"
-		)
+		AND (destination IS NULL OR destination ${
+			gov == null ? sql`IS NOT NULL` :
+			gov == "parliament" ? sql`= 'parliament'` : sql`!= 'parliament'`
+		})
 	`)
 
 	var signatureCounts = yield countSignaturesByIds(_.map(initiatives, "uuid"))
@@ -67,13 +68,16 @@ exports.router.get("/", next(function*(req, res) {
 	}
 }))
 
-exports.router.get("/about", render.bind(null, "home/about_page.jsx"))
-exports.router.get("/credits", render.bind(null, "home/credits_page.jsx"))
-exports.router.get("/donate", alias.bind(null, "/donations/new"))
-exports.router.get("/donated", alias.bind(null, "/donations/created"))
-exports.router.get("/api", render.bind(null, "home/api_page.jsx"))
+_.each({
+	"/about": "home/about_page.jsx",
+	"/credits": "home/credits_page.jsx",
+	"/api": "home/api_page.jsx"
+}, (page, path) => (
+	exports.router.get(path, canonicalizeUrl, (_req, res) => res.render(page))
+))
 
 exports.router.get("/statistics",
+	canonicalizeUrl,
 	new ResponseTypeMiddeware([
 		new MediaType("application/vnd.rahvaalgatus.statistics+json; v=1")
 	]),
@@ -187,6 +191,3 @@ function readSignatureCount(range) {
 		` : sql``}
 	`).then((rows) => _.sum(rows.map((row) => row.count)))
 }
-
-function alias(url, req, _res, next) { req.url = url; next() }
-function render(page, _req, res) { res.render(page) }

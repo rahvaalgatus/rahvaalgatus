@@ -50,8 +50,9 @@ var PHASES = require("root/lib/initiative").PHASES
 var EVENTABLE_PHASES = _.without(PHASES, "edit")
 var PARLIAMENT_DECISIONS = Initiative.PARLIAMENT_DECISIONS
 var COMMITTEE_MEETING_DECISIONS = Initiative.COMMITTEE_MEETING_DECISIONS
-var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.url).hostname
-var LOCAL_SITE_HOSTNAME = Url.parse(Config.localUrl).hostname
+var SITE_HOSTNAME = Url.parse(Config.url).hostname
+var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
+var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
 var PNG = new Buffer("89504e470d0a1a0a1337", "hex")
 var PNG_PREVIEW = new Buffer("89504e470d0a1a0a4269", "hex")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
@@ -319,7 +320,7 @@ describe("InitiativesController", function() {
 		})
 
 		function mustShowInitiativesInPhases(host, dest) {
-			describe("as a shared site", function() {
+			describe("as a filtered site", function() {
 				it("must show initiatives in edit phase with no destination",
 					function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
@@ -371,6 +372,40 @@ describe("InitiativesController", function() {
 				})
 			})
 		}
+
+		describe(`on ${SITE_HOSTNAME}`, function() {
+			it("must show initiatives in edit phase with no destination",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					destination: null,
+					published_at: new Date
+				}))
+
+				var res = yield this.request("/initiatives")
+				res.statusCode.must.equal(200)
+				res.body.must.include(initiative.uuid)
+			})
+
+			;["parliament", "muhu-vald"].forEach(function(dest) {
+				PHASES.forEach(function(phase) {
+					it(`must show initiatives in ${phase} phase destined to ${dest}`,
+						function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.author.id,
+							phase: phase,
+							destination: dest,
+							published_at: new Date
+						}))
+
+						var res = yield this.request("/initiatives")
+						res.statusCode.must.equal(200)
+						res.body.must.include(initiative.uuid)
+					})
+				})
+			})
+		})
 
 		describe(`on ${PARLIAMENT_SITE_HOSTNAME}`, function() {
 			mustShowInitiativesInPhases(PARLIAMENT_SITE_HOSTNAME, "parliament")
@@ -2753,7 +2788,7 @@ describe("InitiativesController", function() {
 				res.body.must.not.include("donate-form")
 			})
 
-			describe(`on ${PARLIAMENT_SITE_HOSTNAME}`, function() {
+			describe(`on ${SITE_HOSTNAME}`, function() {
 				it("must render initiative without destination", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
@@ -2762,11 +2797,71 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+				})
+
+				it("must render initiative destined to parliament", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "edit",
+						destination: null,
+						published_at: new Date
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+				})
+
+				it(`must redirect initiative destined to local to ${LOCAL_SITE_HOSTNAME}`, function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "edit",
+						destination: "muhu-vald",
+						published_at: new Date
+					}))
+
+					// Use a path with an extension that could get stripped by middleware.
+					var path = "/initiatives/" + initiative.uuid + ".jpeg?foo=bar"
+					var res = yield this.request(path)
+					res.statusCode.must.equal(301)
+					res.headers.location.must.equal(Config.localSiteUrl + path)
+				})
+			})
+
+			describe(`on ${PARLIAMENT_SITE_HOSTNAME}`, function() {
+				it(`must redirect initiative without destination to ${SITE_HOSTNAME}`, function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "edit",
+						destination: null,
+						published_at: new Date
+					}))
+
+					var path = "/initiatives/" + initiative.uuid + ".jpeg?foo=bar"
+					var res = yield this.request(path, {
 						headers: {Host: PARLIAMENT_SITE_HOSTNAME}
 					})
 
-					res.statusCode.must.equal(200)
+					res.statusCode.must.equal(301)
+					res.headers.location.must.equal(Config.url + path)
+				})
+
+				it(`must redirect initiative destined to parliament to ${SITE_HOSTNAME}`, function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "edit",
+						destination: "parliament",
+						published_at: new Date
+					}))
+
+					var path = "/initiatives/" + initiative.uuid + ".jpeg?foo=bar"
+					var res = yield this.request(path, {
+						headers: {Host: PARLIAMENT_SITE_HOSTNAME}
+					})
+
+					res.statusCode.must.equal(301)
+					res.headers.location.must.equal(Config.url + path)
 				})
 
 				it(`must redirect initiative destined to local to ${LOCAL_SITE_HOSTNAME}`, function*() {
@@ -2784,7 +2879,7 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(301)
-					res.headers.location.must.equal(Config.localUrl + path)
+					res.headers.location.must.equal(Config.localSiteUrl + path)
 				})
 			})
 
@@ -2806,7 +2901,7 @@ describe("InitiativesController", function() {
 					})
 				})
 
-				it(`must redirect initiative without destination to ${PARLIAMENT_SITE_HOSTNAME}`, function*() {
+				it(`must redirect initiative without destination to ${SITE_HOSTNAME}`, function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
 						phase: "edit",
@@ -2814,7 +2909,7 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var path = "/initiatives/" + initiative.uuid + "?foo=bar"
+					var path = "/initiatives/" + initiative.uuid + ".jpeg?foo=bar"
 					var res = yield this.request(path, {
 						headers: {Host: LOCAL_SITE_HOSTNAME}
 					})
@@ -2823,7 +2918,7 @@ describe("InitiativesController", function() {
 					res.headers.location.must.equal(Config.url + path)
 				})
 
-				it(`must redirect initiative destined to parliament to ${PARLIAMENT_SITE_HOSTNAME}`, function*() {
+				it(`must redirect initiative destined to parliament to ${SITE_HOSTNAME}`, function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
 						phase: "edit",
@@ -2831,7 +2926,7 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var path = "/initiatives/" + initiative.uuid + "?foo=bar"
+					var path = "/initiatives/" + initiative.uuid + ".jpeg?foo=bar"
 					var res = yield this.request(path, {
 						headers: {Host: LOCAL_SITE_HOSTNAME}
 					})
@@ -3725,7 +3820,7 @@ describe("InitiativesController", function() {
 						var metas = dom.head.querySelectorAll("meta")
 						metas = _.indexBy(metas, (el) => el.getAttribute("property"))
 
-						var url = `${Config.localUrl}/initiatives/${initiative.uuid}`
+						var url = `${Config.localSiteUrl}/initiatives/${initiative.uuid}`
 						metas["og:url"].content.must.equal(url)
 						metas["og:image"].content.must.equal(url + ".png")
 					})

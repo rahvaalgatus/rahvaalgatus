@@ -1,7 +1,8 @@
 {
 	"title": "Rahvaalgatus",
 	"url": "https://rahvaalgatus.ee",
-	"localUrl": "https://kohalik.rahvaalgatus.ee",
+	"parliamentSiteUrl": "https://riigikogu.rahvaalgatus.ee",
+	"localSiteUrl": "https://kohalik.rahvaalgatus.ee",
 	"adminUrl": "https://admin.rahvaalgatus.ee",
 	"twitterUrl": "https://twitter.com/rahvaalgatus",
 	"facebookUrl": "https://facebook.com/rahvaalgatus",

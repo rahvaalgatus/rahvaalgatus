@@ -15,6 +15,7 @@ var next = require("co-next")
 var sendEmail = require("root").sendEmail
 var renderEmail = require("root/lib/i18n").email
 var concat = Array.prototype.concat.bind(Array.prototype)
+var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
 var EMPTY_OBJ = Object.create(null)
 var LANGS = require("root/lib/i18n").STRINGS
 
@@ -27,6 +28,8 @@ exports.router.put("/", function(req, res, next) {
 	if (lang in LANGS) setLanguageCookie(req, res, lang)
 	res.redirect(303, req.headers.referer || "/")
 })
+
+exports.router.get("/", canonicalizeUrl)
 
 exports.router.use(function(req, _res, next) {
 	if (req.user == null) throw new HttpError(401)

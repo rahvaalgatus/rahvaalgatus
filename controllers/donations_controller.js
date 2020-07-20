@@ -2,10 +2,11 @@ var _ = require("root/lib/underscore")
 var Config = require("root/config")
 var Router = require("express").Router
 var encode = encodeURIComponent
+var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
 
 exports.router = Router({mergeParams: true})
 
-exports.router.get("/new", function(req, res) {
+exports.router.get("/new", canonicalizeUrl, function(req, res) {
 	var transaction = "json" in req.query ? parseJson(req.query.json) : null
 
 	res.render("donations/create_page.jsx", {
@@ -13,6 +14,8 @@ exports.router.get("/new", function(req, res) {
 	})
 })
 
+// NOTE: Don't canonicalize POST /donations as the donation form also sits on
+// local sites.
 exports.router.post("/", function(req, res) {
 	var person = (req.body.person || "").trim()
 	var def = Number(req.body.default)
@@ -29,7 +32,7 @@ exports.router.post("/", function(req, res) {
 	res.redirect(url)
 })
 
-exports.router.get("/created", (_req, res) => (
+exports.router.get("/created", canonicalizeUrl, (_req, res) => (
 	res.render("donations/created_page.jsx")
 ))
 

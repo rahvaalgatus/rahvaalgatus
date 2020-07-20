@@ -20,6 +20,9 @@ var sql = require("sqlate")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var next = require("co-next")
 var tsl = require("root").tsl
+var SITE_HOSTNAME = Url.parse(Config.url).hostname
+var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
+var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
 var SESSION_COOKIE_NAME = Config.sessionCookieName
 var MOBILE_ID_URL = Url.parse("https://mid.sk.ee/mid-api/")
 var SMART_ID_URL = Url.parse("https://rp-api.smart-id.com/v1/")
@@ -191,6 +194,15 @@ describe("SessionsController", function() {
 				res.body.must.include(t("SIGNIN_PAGE_TITLE"))
 			})
 
+			;[PARLIAMENT_SITE_HOSTNAME, LOCAL_SITE_HOSTNAME].forEach(function(host) {
+				it(`must redirect to ${SITE_HOSTNAME} from ${host}`, function*() {
+					var path = "/sessions/new?foo=bar"
+					var res = yield this.request(path, {headers: {Host: host}})
+					res.statusCode.must.equal(301)
+					res.headers.location.must.equal(Config.url + path)
+				})
+			})
+
 			// This was a bug noticed on Mar 24, 2017 with initiative signing where
 			// the UI translation strings were not rendered on the page. They were
 			// used only for ID-card errors.
@@ -210,13 +222,28 @@ describe("SessionsController", function() {
 				res.headers.location.must.equal("/user")
 			})
 
-			it("must redirect back to referrer", function*() {
+			it("must redirect back to referrer on same host", function*() {
 				var res = yield this.request("/sessions/new", {
 					headers: {Referer: this.url + "/initiatives"}
 				})
 
 				res.statusCode.must.equal(302)
 				res.headers.location.must.equal(this.url + "/initiatives")
+			})
+
+			;[
+				Config.url,
+				Config.parliamentSiteUrl,
+				Config.localSiteUrl
+			].forEach(function(url) {
+				it(`must redirect back to ${Url.parse(url).hostname}`, function*() {
+					var res = yield this.request("/sessions/new", {
+						headers: {Referer: url + "/initiatives"}
+					})
+
+					res.statusCode.must.equal(302)
+					res.headers.location.must.equal(url + "/initiatives")
+				})
 			})
 
 			it("must not redirect back to other hosts", function*() {
@@ -285,13 +312,28 @@ describe("SessionsController", function() {
 					res.headers.location.must.equal("/user")
 				})
 
-				it("must redirect back to referrer", function*() {
+				it("must redirect back to referrer on same host", function*() {
 					var res = yield signIn(this.router, this.request, cert, {
 						Referer: this.url + "/initiatives"
 					})
 
 					res.statusCode.must.equal(204)
 					res.headers.location.must.equal(this.url + "/initiatives")
+				})
+
+				;[
+					Config.url,
+					Config.parliamentSiteUrl,
+					Config.localSiteUrl
+				].forEach(function(url) {
+					it(`must redirect back to ${Url.parse(url).hostname}`, function*() {
+						var res = yield signIn(this.router, this.request, cert, {
+							Referer: url + "/initiatives"
+						})
+
+						res.statusCode.must.equal(204)
+						res.headers.location.must.equal(url + "/initiatives")
+					})
 				})
 
 				it("must not redirect to other hosts", function*() {

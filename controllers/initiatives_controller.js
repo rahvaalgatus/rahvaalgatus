@@ -60,10 +60,10 @@ exports.router.get("/",
 		LEFT JOIN users AS user ON initiative.user_id = user.id
 
 		WHERE published_at IS NOT NULL
-		AND (
-			destination IS NULL AND phase = 'edit'
-			OR destination ${gov == "parliament" ? sql`==` : sql`!=`} "parliament"
-		)
+		AND (destination IS NULL AND phase = 'edit' OR destination ${
+			gov == null ? sql`IS NOT NULL` :
+			gov == "parliament" ? sql`= 'parliament'` : sql`!= 'parliament'`
+		})
 	`)
 
 	// Perhaps it's worth changing the query parameter name to "tag". Remember
@@ -207,9 +207,9 @@ exports.router.use("/:id", next(function*(req, res, next) {
 	if (req.method == "HEAD" || req.method == "GET") {
 		var isLocalInitiative = Initiative.isLocalInitiative(initiative)
 
-		if (req.government == "parliament" && isLocalInitiative)
-			return void res.redirect(301, Config.localUrl + req.originalUrl)
-		else if (req.government == "local" && !isLocalInitiative)
+		if (req.government != "local" && isLocalInitiative)
+			return void res.redirect(301, Config.localSiteUrl + req.originalUrl)
+		else if (req.government != null && !isLocalInitiative)
 			return void res.redirect(301, Config.url + req.originalUrl)
 	}
 
