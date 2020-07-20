@@ -2,17 +2,15 @@
 var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
-var Page = require("./page")
+var Page = require("../page")
 var Config = require("root/config")
-var Flash = require("./page").Flash
-var Form = require("./page").Form
-var InitiativesView = require("./initiatives_page").InitiativesView
+var {Flash} = require("../page")
+var InitiativesView = require("../initiatives_page").InitiativesView
+var {InitiativesSubscriptionForm} = require("../home_page")
+var {StatisticsView} = require("../home_page")
 var EMPTY_ARR = Array.prototype
-exports = module.exports = HomePage
-exports.InitiativesSubscriptionForm = InitiativesSubscriptionForm
-exports.StatisticsView = StatisticsView
 
-function HomePage(attrs) {
+module.exports = function(attrs) {
 	var t = attrs.t
 	var req = attrs.req
 	var user = req.user
@@ -27,21 +25,11 @@ function HomePage(attrs) {
 	var inGovernment = initiativesByPhase.government || EMPTY_ARR
 	var inDone = initiativesByPhase.done || EMPTY_ARR
 
-	return <Page
-		page="home"
-		req={req}
-
-		links={[{
-			rel: "alternate",
-			type: "application/atom+xml",
-			title: t("ATOM_INITIATIVE_EVENTS_FEED_TITLE"),
-			href: "/initiative-events.atom"
-		}]}
-	>
+	return <Page page="parliament-home" req={req}>
 		<section id="welcome" class="primary-section text-section"><center>
 			<Flash flash={req.flash} />
 
-			<h1>{t("HOME_WELCOME_TITLE")}</h1>
+			<h1>{t("PARLIAMENT_HOME_WELCOME_TITLE")}</h1>
 
 			<div class="video">
 				<iframe
@@ -53,7 +41,7 @@ function HomePage(attrs) {
 				/>
 			</div>
 
-			<p class="welcome-paragraph">{t("HOME_WELCOME")}</p>
+			<p class="welcome-paragraph">{t("PARLIAMENT_HOME_WELCOME")}</p>
 
 			<a href="/initiatives/new" class="button large-button secondary-button">
 				{t("BTN_NEW_TOPIC")}
@@ -89,10 +77,8 @@ function HomePage(attrs) {
 					title={t("HOME_PAGE_STATISTICS_INITIATIVES")}
 					count={stats.all.initiativeCounts.all}
 				>
-					{Jsx.html(t("HOME_PAGE_STATISTICS_N_INITIATIVES_IN_LAST_30_DAYS", {
-						count: stats[30].initiativeCounts.all,
-						parliamentCount: stats[30].initiativeCounts.parliament,
-						localCount: stats[30].initiativeCounts.local
+					{Jsx.html(t("HOME_PAGE_STATISTICS_N_IN_LAST_30_DAYS", {
+						count: stats[30].initiativeCounts.all
 					}))}
 				</StatisticsView>
 
@@ -108,7 +94,7 @@ function HomePage(attrs) {
 
 				<StatisticsView
 					id="parliament-statistic"
-					title={t("HOME_PAGE_STATISTICS_GOVERNMENT")}
+					title={t("HOME_PAGE_STATISTICS_PARLIAMENT")}
 					count={
 						stats.all.governmentCounts.sent > 0 ||
 						stats.all.governmentCounts.external > 0 ? [
@@ -118,10 +104,8 @@ function HomePage(attrs) {
 						: 0
 					}
 				>
-					{Jsx.html(t("HOME_PAGE_STATISTICS_N_SENT_ALL_IN_LAST_30_DAYS", {
+					{Jsx.html(t("HOME_PAGE_STATISTICS_N_SENT_IN_LAST_30_DAYS", {
 						sent: stats[30].governmentCounts.sent,
-						sentToParliament: stats[30].governmentCounts.sent_parliament,
-						sentToLocal: stats[30].governmentCounts.sent_local,
 						external: stats.all.governmentCounts.external,
 					}))}
 				</StatisticsView>
@@ -187,64 +171,4 @@ function HomePage(attrs) {
 			</center>
 		</section>
 	</Page>
-}
-
-function StatisticsView(attrs, children) {
-	var title = attrs.title
-	var count = attrs.count
-
-	return <div id={attrs.id} class="statistic">
-		<h2>{title}</h2>
-		<span class="count">{count}</span>
-		<p>{children}</p>
-	</div>
-}
-
-
-function InitiativesSubscriptionForm(attrs) {
-	var req = attrs.req
-	var t = attrs.t
-	var user = attrs.user
-	var toggleId = _.uniqueId("subscriptions-form-toggle-")
-
-	return <Form
-		req={req}
-		id="initiatives-subscribe"
-		class="initiatives-subscription-form-view"
-		method="post"
-		action="/subscriptions">
-		<input
-			id={toggleId}
-			class="toggle"
-			type="checkbox"
-			style="display: none"
-			onchange="this.form.email.focus()"
-		/>
-
-		<label
-			for={toggleId}
-			class="large-button primary-button">
-			{t("SUBSCRIBE_TO_INITIATIVES_BUTTON")}
-		</label>
-
-		<h2>{t("SUBSCRIBE_TO_INITIATIVES_TITLE")}</h2>
-		<p>{t("SUBSCRIBE_TO_INITIATIVES_EXPLANATION")}</p>
-
-		{/* Catch naive bots */}
-		<input name="e-mail" type="email" hidden />
-
-		<input
-			id="subscriptions-form-email"
-			name="email"
-			type="email"
-			required
-			placeholder={t("LBL_EMAIL")}
-			value={user && (user.email || user.unconfirmed_email)}
-			class="form-input"
-		/>
-
-		<button type="submit" class="primary-button">
-			{t("SUBSCRIBE_TO_INITIATIVES_BUTTON")}
-		</button>
-	</Form>
 }

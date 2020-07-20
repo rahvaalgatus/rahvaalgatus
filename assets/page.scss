@@ -810,6 +810,25 @@ button.inherited {
 	}
 }
 
+.initiatives-subscription-form-view {
+	input[type=email] {
+		margin-top: 1rem;
+		max-width: 32rem;
+	}
+
+	button { margin-top: 0.7rem; }
+
+	.toggle:not(:checked) {
+		& ~ h2,
+		& ~ p,
+		& ~ input,
+		& ~ button { display: none; }
+	}
+
+	.toggle:checked + label { display: none; }
+	.toggle:checked ~ h2 { margin-top: 2rem; }
+}
+
 #header {
 	background: $header-background;
 	padding-top: 1.5rem;
@@ -932,92 +951,8 @@ button.inherited {
 	margin-bottom: -$footer-height;
 }
 
-#home-page {
-	$half-width: 50%;
-	background-color: $secondary-background;
-
-	.flash {
-		margin-bottom: 2rem;
-	}
-
-	#welcome {
-		h1 {
-			margin-top: 1rem;
-			margin-bottom: 3rem;
-		}
-
-		.welcome-paragraph {
-			font-size: 1.8rem;
-			line-height: 1.7;
-			margin-bottom: 2rem;
-			max-width: 50%;
-		}
-
-		.video {
-			float: right;
-			max-width: 50%;
-			margin-left: 4rem;
-
-			iframe {
-				max-width: 100%;
-				border-radius: 0.5rem;
-			}
-		}
-
-		.large-button {
-			font-size: 1.6rem;
-			line-height: 4rem;
-			height: 4rem;
-		}
-
-		#initiatives-subscribe {
-			margin-top: 1rem;
-			max-width: 50%;
-
-			input[type=email] {
-				margin-top: 1rem;
-				max-width: 32rem;
-			}
-
-			button { margin-top: 0.7rem; }
-
-			#subscriptions-form-toggle:not(:checked) {
-				& ~ h2,
-				& ~ p,
-				& ~ input,
-				& ~ button { display: none; }
-			}
-
-			#subscriptions-form-toggle:checked + label { display: none; }
-			#subscriptions-form-toggle:checked ~ h2 { margin-top: 2rem; }
-		}
-
-		.social-media-logos {
-			margin-top: 1rem;
-
-			a { vertical-align: middle; }
-			a + a { margin-left: 1rem; }
-			img { height: 3.6rem; }
-		}
-
-		@include mobile-and-tablet {
-			h1,
-			.welcome-paragraph,
-			#initiatives-subscribe { max-width: none; }
-
-			.video {
-				float: none;
-				max-width: none;
-				margin-left: 0;
-				margin-bottom: 2rem;
-			}
-		}
-
-		@include mobile {
-			.large-button, button { width: 100%; }
-		}
-	}
-
+#home-page,
+#parliament-home-page {
 	#statistics {
 		$icon-width: 6rem;
 		$line-height: 1.3rem;
@@ -1190,6 +1125,78 @@ button.inherited {
 				&:before,
 				&:not(:last-child):after { display: none; }
 			}
+		}
+	}
+}
+
+#home-page,
+#parliament-home-page,
+#local-home-page {
+	$half-width: 50%;
+	background-color: $secondary-background;
+
+	.flash {
+		margin-bottom: 2rem;
+	}
+
+	#welcome {
+		h1 {
+			margin-top: 1rem;
+			margin-bottom: 3rem;
+		}
+
+		.welcome-paragraph {
+			font-size: 1.8rem;
+			line-height: 1.7;
+			margin-bottom: 2rem;
+			max-width: 50%;
+		}
+
+		.video {
+			float: right;
+			max-width: 50%;
+			margin-left: 4rem;
+
+			iframe {
+				max-width: 100%;
+				border-radius: 0.5rem;
+			}
+		}
+
+		.large-button {
+			font-size: 1.6rem;
+			line-height: 4rem;
+			height: 4rem;
+		}
+
+		.initiatives-subscription-form-view {
+			margin-top: 1rem;
+			max-width: 50%;
+		}
+
+		.social-media-logos {
+			margin-top: 1rem;
+
+			a { vertical-align: middle; }
+			a + a { margin-left: 1rem; }
+			img { height: 3.6rem; }
+		}
+
+		@include mobile-and-tablet {
+			h1,
+			.welcome-paragraph,
+			.initiatives-subscription-form-view { max-width: none; }
+
+			.video {
+				float: none;
+				max-width: none;
+				margin-left: 0;
+				margin-bottom: 2rem;
+			}
+		}
+
+		@include mobile {
+			.large-button, button { width: 100%; }
 		}
 	}
 }

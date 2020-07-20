@@ -336,7 +336,7 @@ describe("InitiativesController", function() {
 				})
 
 				PHASES.forEach(function(phase) {
-					it(`must show initiatives in ${phase} phase destined to ${dest}`,
+					it(`must show initiatives in ${phase} phase destined for ${dest}`,
 						function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
@@ -353,7 +353,7 @@ describe("InitiativesController", function() {
 						res.body.must.include(initiative.uuid)
 					})
 
-					it(`must not show initiatives in ${phase} not destined to ${dest}`,
+					it(`must not show initiatives in ${phase} not destined for ${dest}`,
 						function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
@@ -390,7 +390,7 @@ describe("InitiativesController", function() {
 
 			;["parliament", "muhu-vald"].forEach(function(dest) {
 				PHASES.forEach(function(phase) {
-					it(`must show initiatives in ${phase} phase destined to ${dest}`,
+					it(`must show initiatives in ${phase} phase destined for ${dest}`,
 						function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
@@ -413,7 +413,7 @@ describe("InitiativesController", function() {
 
 		describe(`on ${LOCAL_SITE_HOSTNAME}`, function() {
 			Object.keys(LOCAL_GOVERNMENTS).forEach(function(dest) {
-				it(`must show initiatives destined to ${dest}`, function*() {
+				it(`must show initiatives destined for ${dest}`, function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
 						phase: "sign",
@@ -2801,7 +2801,7 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(200)
 				})
 
-				it("must render initiative destined to parliament", function*() {
+				it("must render initiative destined for parliament", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
 						phase: "edit",
@@ -2813,7 +2813,7 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(200)
 				})
 
-				it(`must redirect initiative destined to local to ${LOCAL_SITE_HOSTNAME}`, function*() {
+				it(`must redirect initiative destined for local to ${LOCAL_SITE_HOSTNAME}`, function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
 						phase: "edit",
@@ -2847,7 +2847,7 @@ describe("InitiativesController", function() {
 					res.headers.location.must.equal(Config.url + path)
 				})
 
-				it(`must redirect initiative destined to parliament to ${SITE_HOSTNAME}`, function*() {
+				it(`must redirect initiative destined for parliament to ${SITE_HOSTNAME}`, function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
 						phase: "edit",
@@ -2864,7 +2864,7 @@ describe("InitiativesController", function() {
 					res.headers.location.must.equal(Config.url + path)
 				})
 
-				it(`must redirect initiative destined to local to ${LOCAL_SITE_HOSTNAME}`, function*() {
+				it(`must redirect initiative destined for local to ${LOCAL_SITE_HOSTNAME}`, function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
 						phase: "edit",
@@ -2885,7 +2885,7 @@ describe("InitiativesController", function() {
 
 			describe(`on ${LOCAL_SITE_HOSTNAME}`, function() {
 				Object.keys(LOCAL_GOVERNMENTS).forEach(function(dest) {
-					it(`must render initiative destined to ${dest}`, function*() {
+					it(`must render initiative destined for ${dest}`, function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: "sign",
@@ -2918,7 +2918,7 @@ describe("InitiativesController", function() {
 					res.headers.location.must.equal(Config.url + path)
 				})
 
-				it(`must redirect initiative destined to parliament to ${SITE_HOSTNAME}`, function*() {
+				it(`must redirect initiative destined for parliament to ${SITE_HOSTNAME}`, function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
 						phase: "edit",
@@ -5733,7 +5733,7 @@ describe("InitiativesController", function() {
 			})
 
 			describe("given status=followUp", function() {
-				it("must respond with 403 given initiative destined to local",
+				it("must respond with 403 given initiative destined for local",
 					function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,

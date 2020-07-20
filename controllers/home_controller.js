@@ -46,25 +46,40 @@ exports.router.get("/", next(function*(req, res) {
 		signatureCounts[initiative.uuid] >= Config.votesRequired
 	))
 
-	if (gov == "local") res.render("home/local_page.jsx", {
-		initiatives: initiatives,
-		signatureCounts: signatureCounts
-	})
-	else {
-		var statistics = yield {
-			all: readStatistics(null),
+	var statistics = gov == null || gov == "parliament" ? yield {
+		all: readStatistics(gov, null),
 
-			30: readStatistics([
-				DateFns.addDays(DateFns.startOfDay(new Date), -30),
-				new Date
-			]),
-		}
+		30: readStatistics(gov, [
+			DateFns.addDays(DateFns.startOfDay(new Date), -30),
+			new Date
+		])
+	} : null
 
-		res.render("home_page.jsx", {
-			initiatives: initiatives,
-			statistics: statistics,
-			signatureCounts: signatureCounts
-		})
+	switch (gov) {
+		case null:
+			res.render("home_page.jsx", {
+				initiatives: initiatives,
+				statistics: statistics,
+				signatureCounts: signatureCounts
+			})
+			break
+
+		case "parliament":
+			res.render("home/parliament_home_page.jsx", {
+				initiatives: initiatives,
+				statistics: statistics,
+				signatureCounts: signatureCounts
+			})
+			break
+
+		case "local":
+			res.render("home/local_home_page.jsx", {
+				initiatives: initiatives,
+				signatureCounts: signatureCounts
+			})
+			break
+
+		default: throw new RangeError("Invalid government: " + gov)
 	}
 }))
 
@@ -115,13 +130,13 @@ exports.router.get("/statistics",
 	res.send({
 		initiativeCountsByPhase: countsByPhase,
 		activeInitiativeCountsByPhase: activeCountsByPhase,
-		signatureCount: yield readSignatureCount(null)
+		signatureCount: yield readSignatureCount(null, null)
 	})
 }))
 
-function* readStatistics(range) {
+function* readStatistics(gov, range) {
 	// The discussion counter on the home page is really the total initiatives
-	// counter. Worth renaming in code, too, perhaps.
+	// counter at the start of the funnel.
 	//
 	// https://github.com/rahvaalgatus/rahvaalgatus/issues/176#issuecomment-531594684.
 	var discussionsCount = yield sqlite(sql`
@@ -134,10 +149,20 @@ function* readStatistics(range) {
 			AND created_at >= ${range[0]}
 			AND created_at < ${range[1]}
 		` : sql``}
+
+		AND (destination IS NULL OR ${gov ? sql`destination = ${gov}` : sql`1 = 1`})
 	`).then(_.first).then((res) => res.count)
 
-	var initiativesCount = yield sqlite(sql`
-		SELECT COUNT(*) AS count
+	var initiativeCounts = yield sqlite(sql`
+		SELECT
+			COUNT(*) AS "all",
+			COALESCE(SUM(destination = 'parliament'), 0) AS parliament,
+
+			COALESCE(SUM(
+				destination IS NOT NULL
+				AND destination != 'parliament'
+			), 0) AS local
+
 		FROM initiatives
 		WHERE phase != 'edit'
 		AND NOT external
@@ -146,14 +171,29 @@ function* readStatistics(range) {
 			AND "signing_started_at" >= ${range[0]}
 			AND "signing_started_at" < ${range[1]}
 		` : sql``}
-	`).then(_.first).then((res) => res.count)
 
-	var signatureCount = yield readSignatureCount(range)
+		${gov ? sql`AND destination = ${gov}` : sql``}
+	`).then(_.first)
 
-	var parliamentCounts = yield sqlite(sql`
+	var signatureCount = yield readSignatureCount(gov, range)
+
+	var governmentCounts = yield sqlite(sql`
 		SELECT
 			COALESCE(SUM(NOT external), 0) AS sent,
+
+			COALESCE(SUM(
+				NOT external
+				AND destination = 'parliament'
+			), 0) AS sent_parliament,
+
+			COALESCE(SUM(
+				NOT external
+				AND destination NOT NULL
+				AND destination != 'parliament'
+			), 0) AS sent_local,
+
 			COALESCE(SUM(external), 0) AS external
+
 		FROM initiatives
 		WHERE phase IN ('parliament', 'government', 'done')
 
@@ -162,32 +202,38 @@ function* readStatistics(range) {
 			OR "sent_to_parliament_at" >= ${range[0]}
 			AND "sent_to_parliament_at" < ${range[1]}
 		)` : sql``}
-	`).then(_.first).then((res) => res)
+
+		${gov ? sql`AND destination = ${gov}` : sql``}
+	`).then(_.first)
 
 	return {
 		discussionsCount: discussionsCount,
-		initiativesCount: initiativesCount,
+		initiativeCounts: initiativeCounts,
 		signatureCount: signatureCount,
-		parliamentCounts: parliamentCounts
+		governmentCounts: governmentCounts
 	}
 }
 
-function readSignatureCount(range) {
+function readSignatureCount(gov, range) {
 	return sqlite(sql`
-		SELECT COUNT(*) AS count
-		FROM initiative_signatures
+		WITH signatures AS (
+			SELECT initiative_uuid, created_at
+			FROM initiative_signatures
+
+			UNION ALL SELECT initiative_uuid, created_at
+			FROM initiative_citizenos_signatures
+		)
+
+		SELECT COUNT(*) AS count FROM signatures AS signature
+		JOIN initiatives AS initiative
+		ON initiative.uuid = signature.initiative_uuid
+		WHERE 1 = 1
+
+		${gov ? sql`AND initiative.destination = ${gov}` : sql``}
 
 		${range ? sql`
-			WHERE created_at >= ${range[0]}
-			AND created_at < ${range[1]}
+			AND signature.created_at >= ${range[0]}
+			AND signature.created_at < ${range[1]}
 		` : sql``}
-
-		UNION SELECT COUNT(*) AS count
-		FROM initiative_citizenos_signatures
-
-		${range ? sql`
-			WHERE created_at >= ${range[0]}
-			AND created_at < ${range[1]}
-		` : sql``}
-	`).then((rows) => _.sum(rows.map((row) => row.count)))
+	`).then(_.first).then((row) => row.count)
 }

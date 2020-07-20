@@ -19,10 +19,7 @@ module.exports = function(attrs) {
 	var inGovernment = initiativesByPhase.government || EMPTY_ARR
 	var inDone = initiativesByPhase.done || EMPTY_ARR
 
-	return <Page
-		page="home"
-		req={req}
-	>
+	return <Page page="local-home" req={req}>
 		<section id="welcome" class="primary-section text-section"><center>
 			<Flash flash={req.flash} />
 

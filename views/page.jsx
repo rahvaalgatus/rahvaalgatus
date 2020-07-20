@@ -124,12 +124,22 @@ function Page(attrs, children) {
 					<ul>
 						<li>
 							<a
-								href="/initiatives"
-								class={"nav-button " + (
-									selected(page, "initiatives") ||
-									selected(page, "initiative")
-								)}>
-								{t("LINK_VOTING")}
+								href={gov == "parliament" ? "/" : Config.parliamentSiteUrl}
+								class={"nav-button" + (gov == "parliament" ? " selected" : "")}
+							>
+								{t("NAV_PARLIAMENT")}
+							</a>
+						</li>
+
+						<li>
+							<a
+								href={gov && gov != "parliament" ? "/" : Config.localSiteUrl}
+
+								class={
+									"nav-button" + (gov && gov != "parliament" ? " selected" : "")
+								}
+							>
+								{t("NAV_LOCAL")}
 							</a>
 						</li>
 
