@@ -477,35 +477,6 @@ describe("InitiativesController", function() {
 			var imageUrl = `${Config.url}/assets/rahvaalgatus-description.png`
 			metasByProp["og:image"].content.must.equal(imageUrl)
 		})
-
-		describe("recent initiatives", function() {
-			it("must show initiatives last signed", function*() {
-				var self = this
-
-				var initiatives = yield _.times(10, function*(i) {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: self.author.id,
-						phase: "sign"
-					}))
-
-					yield signaturesDb.create(new ValidSignature({
-						initiative_uuid: initiative.uuid,
-						created_at: DateFns.addMinutes(new Date, i * 2),
-					}))
-
-					return initiative
-				})
-
-				var res = yield this.request("/initiatives")
-				res.statusCode.must.equal(200)
-				
-				var dom = parseDom(res.body)
-				var els = dom.querySelectorAll("#recent-initiatives ol li")
-				els.length.must.equal(6)
-				initiatives = _.reverse(initiatives)
-				els.forEach((el, i) => el.innerHTML.must.include(initiatives[i].uuid))
-			})
-		})
 	})
 
 	describe(`GET / for ${INITIATIVE_TYPE}`, function() {

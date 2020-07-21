@@ -7,6 +7,7 @@ var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
 var next = require("co-next")
 var sqlite = require("root").sqlite
+var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var {countSignaturesByIds} = require("root/lib/initiative")
 var sql = require("sqlate")
 var initiativesDb = require("root/db/initiatives_db")
@@ -57,10 +58,13 @@ exports.router.get("/", next(function*(req, res) {
 
 	switch (gov) {
 		case null:
+			var recentInitiatives = yield searchRecentInitiatives(initiatives)
+
 			res.render("home_page.jsx", {
 				initiatives: initiatives,
 				statistics: statistics,
-				signatureCounts: signatureCounts
+				signatureCounts: signatureCounts,
+				recentInitiatives: recentInitiatives
 			})
 			break
 
@@ -219,8 +223,8 @@ function readSignatureCount(gov, range) {
 		WITH signatures AS (
 			SELECT initiative_uuid, created_at
 			FROM initiative_signatures
-
-			UNION ALL SELECT initiative_uuid, created_at
+			UNION ALL
+			SELECT initiative_uuid, created_at
 			FROM initiative_citizenos_signatures
 		)
 
@@ -236,4 +240,54 @@ function readSignatureCount(gov, range) {
 			AND signature.created_at < ${range[1]}
 		` : sql``}
 	`).then(_.first).then((row) => row.count)
+}
+
+function* searchRecentInitiatives() {
+	// Intentionally ignoring imported CitizenOS signatures as those originate
+	// from Feb 2020 and earlier.
+	var recentUuids = _.uniq(_.reverse(_.sortBy(flatten(yield [
+		sqlite(sql`
+			SELECT comment.initiative_uuid AS uuid, max(comment.created_at) AS at
+			FROM comments AS comment
+			JOIN initiatives AS initiative
+			ON initiative.uuid = comment.initiative_uuid
+			WHERE initiative.published_at IS NOT NULL
+			GROUP BY initiative_uuid
+			ORDER BY at DESC
+			LIMIT 6
+		`),
+
+		sqlite(sql`
+			SELECT initiative_uuid AS uuid, max(created_at) AS at
+			FROM initiative_signatures
+			GROUP BY initiative_uuid
+			ORDER BY at DESC
+			LIMIT 6
+		`)
+	]).map(function(row) {
+		row.at = new Date(row.at)
+		return row
+	}), "at")).map((row) => row.uuid)).slice(0, 6)
+
+	return _.sortBy(yield initiativesDb.search(sql`
+		WITH signatures AS (
+			SELECT initiative_uuid, created_at
+			FROM initiative_signatures
+			UNION ALL
+			SELECT initiative_uuid, created_at
+			FROM initiative_citizenos_signatures
+		)
+
+		SELECT
+			initiative.*,
+			user.name AS user_name,
+			COALESCE(SUM(signature.initiative_uuid IS NOT NULL), 0) AS signature_count
+
+		FROM initiatives AS initiative
+		LEFT JOIN users AS user ON initiative.user_id = user.id
+		LEFT JOIN signatures AS signature
+		ON signature.initiative_uuid = initiative.uuid
+		WHERE initiative.uuid IN ${sql.in(recentUuids)}
+		GROUP BY initiative.uuid
+	`), (i) => recentUuids.indexOf(i.uuid))
 }

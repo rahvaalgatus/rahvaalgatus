@@ -14,7 +14,6 @@ function InitiativesPage(attrs) {
 	var t = attrs.t
 	var req = attrs.req
 	var flash = attrs.flash
-	var recentInitiatives = attrs.recentInitiatives
 	var initiatives = attrs.initiatives
 	var signatureCounts = attrs.signatureCounts
 
@@ -41,19 +40,6 @@ function InitiativesPage(attrs) {
 		}
 		{flash("notice") ? <section class="secondary-section"><center>
 			<p class="flash notice">{flash("notice")}</p>
-		</center></section> : null}
-
-		{recentInitiatives.length > 0 ? <section
-			id="recent-initiatives"
-			class="primary-section initiatives-section"
-		><center>
-			<h2>{t("RECENT_INITIATIVES")}</h2>
-
-			<InitiativesView
-				t={t}
-				initiatives={recentInitiatives}
-				signatureCounts={signatureCounts}
-			/>
 		</center></section> : null}
 
 		<section id="initiatives" class="secondary-section initiatives-section">
@@ -131,8 +117,10 @@ function InitiativesView(attrs) {
 			break
 
 		case "sign":
-			initiatives = _.sortBy(initiatives, (i) => signatureCounts[i.uuid] || 0)
-			initiatives = initiatives.reverse()
+			initiatives = _.sortBy(initiatives, (i) => i.signature_count != null
+				? i.signature_count
+				: signatureCounts[i.uuid] || 0
+			).reverse()
 			break
 
 		case "parliament":
@@ -158,7 +146,11 @@ function InitiativesView(attrs) {
 		{initiatives.map((initiative) => <InitiativeView
 			t={t}
 			initiative={initiative}
-			signatureCount={signatureCounts[initiative.uuid] || 0}
+
+			signatureCount={initiative.signature_count != null
+				? initiative.signature_count
+				: signatureCounts[initiative.uuid] || 0
+			}
 		/>)}
 	</ol>
 }

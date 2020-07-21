@@ -13,6 +13,7 @@ var LANGUAGES = Config.languages
 var ENV = process.env.ENV
 var LIVERELOAD_PORT = process.env.LIVERELOAD_PORT || 35729
 exports = module.exports = Page
+exports.Section = Section
 exports.Flash = Flash
 exports.Form = Form
 exports.FormButton = FormButton
@@ -249,6 +250,12 @@ function Page(attrs, children) {
 			: null}
 		</body>
 	</html>
+}
+
+function Section(attrs, children) {
+	return <section id={attrs.id} class={attrs.class}>
+		<center>{children}</center>
+	</section>
 }
 
 function Flash(attrs) {

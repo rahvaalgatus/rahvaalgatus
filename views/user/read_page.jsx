@@ -4,9 +4,9 @@ var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var Config = require("root/config")
 var Page = require("../page")
-var Form = require("../page").Form
-var Flash = require("../page").Flash
-var InitiativesView = require("../initiatives_page").InitiativesView
+var {Form} = require("../page")
+var {Flash} = require("../page")
+var {InitiativesView} = require("../initiatives/index_page")
 
 module.exports = function(attrs) {
 	var t = attrs.t

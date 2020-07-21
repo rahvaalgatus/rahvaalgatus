@@ -144,13 +144,8 @@ exports.router.get("/",
 			break
 
 		default:
-			var recentInitiatives = tag
-				? EMPTY_ARR
-				: yield searchRecentInitiatives(initiatives)
-
 			res.render("initiatives/index_page.jsx", {
 				initiatives: initiatives,
-				recentInitiatives: recentInitiatives,
 				signatureCounts: signatureCounts
 			})
 	}
@@ -517,42 +512,6 @@ exports.router.use(function(err, req, res, next) {
 	}
 	else next(err)
 })
-
-function* searchRecentInitiatives(initiatives) {
-	// Intentionally ignoring imported CitizenOS signatures as those originate
-	// from Feb 2020 and earlier.
-	var recentUuids = _.uniq(_.reverse(_.sortBy(flatten(yield [
-		// TODO: Filter out comments on private initiatives once published_at lives
-		// on local initiatives.
-		sqlite(sql`
-			SELECT initiative_uuid AS uuid, max(created_at) AS at
-			FROM comments
-			GROUP BY initiative_uuid
-			ORDER BY at DESC
-			LIMIT 6
-		`).then((rows) => rows.map(function(row) {
-			row.at = new Date(row.at)
-			return row
-		})),
-
-		sqlite(sql`
-			SELECT initiative_uuid AS uuid, max(created_at) AS at
-			FROM initiative_signatures
-			GROUP BY initiative_uuid
-			ORDER BY at DESC
-			LIMIT 6
-		`).then((rows) => rows.map(function(row) {
-			row.at = new Date(row.at)
-			return row
-		}))
-	]), "at")).map((row) => row.uuid))
-
-	// There could be comments on private initiatives that we can't yet filter out
-	// during querying.
-	var initiativesByUuid = _.indexBy(initiatives, "uuid")
-	var recents = recentUuids.map((uuid) => initiativesByUuid[uuid])
-	return recents.filter(Boolean).slice(0, 6)
-}
 
 function* searchInitiativesEvents(initiatives) {
 	var events = yield eventsDb.search(sql`

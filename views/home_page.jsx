@@ -4,9 +4,11 @@ var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var Page = require("./page")
 var Config = require("root/config")
+var {Section} = require("./page")
 var {Flash} = require("./page")
 var {Form} = require("./page")
 var {InitiativesView} = require("./initiatives/index_page")
+var EMPTY = Object.prototype
 var EMPTY_ARR = Array.prototype
 exports = module.exports = HomePage
 exports.InitiativesSubscriptionForm = InitiativesSubscriptionForm
@@ -19,6 +21,7 @@ function HomePage(attrs) {
 	var initiatives = attrs.initiatives
 	var stats = attrs.statistics
 	var signatureCounts = attrs.signatureCounts
+	var recentInitiatives = attrs.recentInitiatives
 
 	var initiativesByPhase = _.groupBy(initiatives, "phase")
 	var inEdit = initiativesByPhase.edit || EMPTY_ARR
@@ -127,6 +130,19 @@ function HomePage(attrs) {
 				</StatisticsView>
 			</center>
 		</section>
+
+		{recentInitiatives.length > 0 ? <Section
+			id="recent-initiatives"
+			class="secondary-section initiatives-section"
+		>
+			<h2>{t("RECENT_INITIATIVES")}</h2>
+
+			<InitiativesView
+				t={t}
+				initiatives={recentInitiatives}
+				signatureCounts={EMPTY}
+			/>
+		</Section> : null}
 
 		<section id="initiatives" class="secondary-section initiatives-section">
 			<center>
