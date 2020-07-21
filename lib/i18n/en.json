@@ -135,7 +135,7 @@
 	"HOME_PAGE_STATISTICS_INITIATIVES": "Initiatives",
 	"HOME_PAGE_STATISTICS_N_INITIATIVES_IN_LAST_30_DAYS": "<b>{{count}}</b> in the last 30 days, of which\n<b>{{parliamentCount}}</b> to the parliament and <b>{{localCount}}</b> to local governments",
 	"HOME_PAGE_STATISTICS_N_IN_LAST_30_DAYS": "<b>{{count}}</b> in the last 30 days",
-	"HOME_PAGE_STATISTICS_N_SENT_ALL_IN_LAST_30_DAYS": "<b>{{sent}}</b> in the last 30 days, of which\n<b>{{sentToParliament}}</b> to the parliament and <b>{{sentToLocal}}</b> to local governments\n<b>{{external}}</b> sent on paper",
+	"HOME_PAGE_STATISTICS_N_SENT_ALL_IN_LAST_30_DAYS": "<b>{{sent}}</b> in the last 30 days, of which\n<b>{{sentToParliament}}</b> to the parliament and <b>{{sentToLocal}}</b> to local governments.\n<b>{{external}}</b> sent on paper",
 	"HOME_PAGE_STATISTICS_N_SENT_IN_LAST_30_DAYS": "<b>{{sent}}</b> in the last 30 days\n<b>{{external}}</b> sent on paper",
 	"HOME_PAGE_STATISTICS_PARLIAMENT": "In Parliament",
 	"HOME_PAGE_STATISTICS_SIGNATURES": "Signatures",
