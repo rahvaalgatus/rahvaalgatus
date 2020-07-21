@@ -148,7 +148,7 @@ exports.router.get("/",
 				? EMPTY_ARR
 				: yield searchRecentInitiatives(initiatives)
 
-			res.render("initiatives_page.jsx", {
+			res.render("initiatives/index_page.jsx", {
 				initiatives: initiatives,
 				recentInitiatives: recentInitiatives,
 				signatureCounts: signatureCounts

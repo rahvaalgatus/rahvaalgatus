@@ -3,8 +3,8 @@ var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var Page = require("../page")
-var Flash = require("../page").Flash
-var InitiativesView = require("../initiatives_page").InitiativesView
+var {Flash} = require("../page")
+var {InitiativesView} = require("../initiatives/index_page")
 var EMPTY_ARR = Array.prototype
 
 module.exports = function(attrs) {
