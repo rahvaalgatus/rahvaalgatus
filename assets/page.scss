@@ -1833,15 +1833,15 @@ button.inherited {
 			&.selected { background: white; color: $text; }
 			&.unsigned { font-style: italic; }
 
-			@media only screen and (min-width: 769px) and (max-width: 875px) {
+			@media only screen and (min-width: 769px) and (max-width: 920px) {
 				small { display: none; }
 			}
 
-			@media only screen and (max-width: 619px) {
+			@media only screen and (max-width: 659px) {
 				.abbr { display: none; }
 			}
 
-			@media only screen and (max-width: 459px) {
+			@media only screen and (max-width: 499px) {
 				small { display: none; }
 			}
 
@@ -2624,7 +2624,7 @@ button.inherited {
 
 			&.selected { background: white; color: $text; }
 
-			@media only screen and (max-width: 509px) {
+			@media only screen and (max-width: 529px) {
 				.abbr { display: none; }
 			}
 
