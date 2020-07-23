@@ -20,6 +20,7 @@
 	"geoIpCityPath": null,
 	"expireSignaturesFrom": "1970-01-01",
 	"expireSignaturesInMonths": null,
+	"googleSiteSearchId": "014950189983170776524:rqhs4alk_au",
 
 	"language": "et",
 	"languages": ["et", "ru", "en"],

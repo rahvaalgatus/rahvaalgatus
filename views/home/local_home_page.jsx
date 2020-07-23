@@ -3,6 +3,7 @@ var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var Page = require("../page")
+var {Section} = require("../page")
 var {Flash} = require("../page")
 var {InitiativesView} = require("../initiatives/index_page")
 var EMPTY_ARR = Array.prototype
@@ -20,7 +21,7 @@ module.exports = function(attrs) {
 	var inDone = initiativesByPhase.done || EMPTY_ARR
 
 	return <Page page="local-home" req={req}>
-		<section id="welcome" class="primary-section text-section"><center>
+		<Section id="welcome" class="primary-section text-section">
 			<Flash flash={req.flash} />
 
 			<h1>{t("LOCAL_HOME_WELCOME_TITLE")}</h1>
@@ -29,54 +30,56 @@ module.exports = function(attrs) {
 			<a href="/initiatives/new" class="button large-button secondary-button">
 				{t("BTN_NEW_TOPIC")}
 			</a>
-		</center></section>
+		</Section>
 
-		<section id="initiatives" class="secondary-section initiatives-section">
-			<center>
-				{inEdit.length > 0 ? <Fragment>
-					<h2>{t("EDIT_PHASE")}</h2>
+		<Section id="initiatives" class="secondary-section initiatives-section">
+			{inEdit.length > 0 ? <Fragment>
+				<h2>{t("EDIT_PHASE")}</h2>
 
-					<InitiativesView
-						t={t}
-						phase="edit"
-						initiatives={inEdit}
-						signatureCounts={signatureCounts}
-					/>
-				</Fragment> : null}
+				<InitiativesView
+					t={t}
+					phase="edit"
+					initiatives={inEdit}
+					signatureCounts={signatureCounts}
+				/>
+			</Fragment> : null}
 
-				{inSign.length > 0 ? <Fragment>
-					<h2>{t("SIGN_PHASE")}</h2>
+			{inSign.length > 0 ? <Fragment>
+				<h2>{t("SIGN_PHASE")}</h2>
 
-					<InitiativesView
-						t={t}
-						phase="sign"
-						initiatives={inSign}
-						signatureCounts={signatureCounts}
-					/>
-				</Fragment> : null}
+				<InitiativesView
+					t={t}
+					phase="sign"
+					initiatives={inSign}
+					signatureCounts={signatureCounts}
+				/>
+			</Fragment> : null}
 
-				{inGovernment.length > 0 ? <Fragment>
-					<h2>{t("GOVERNMENT_PHASE")}</h2>
+			{inGovernment.length > 0 ? <Fragment>
+				<h2>{t("GOVERNMENT_PHASE")}</h2>
 
-					<InitiativesView
-						t={t}
-						phase="government"
-						initiatives={inGovernment}
-						signatureCounts={signatureCounts}
-					/>
-				</Fragment> : null}
+				<InitiativesView
+					t={t}
+					phase="government"
+					initiatives={inGovernment}
+					signatureCounts={signatureCounts}
+				/>
+			</Fragment> : null}
 
-				{inDone.length > 0 ? <Fragment>
-					<h2>{t("DONE_PHASE")}</h2>
+			{inDone.length > 0 ? <Fragment>
+				<h2>{t("DONE_PHASE")}</h2>
 
-					<InitiativesView
-						t={t}
-						phase="done"
-						initiatives={inDone}
-						signatureCounts={signatureCounts}
-					/>
-				</Fragment> : null}
-			</center>
-		</section>
+				<InitiativesView
+					t={t}
+					phase="done"
+					initiatives={inDone}
+					signatureCounts={signatureCounts}
+				/>
+			</Fragment> : null}
+
+			<p id="see-archive">
+				{Jsx.html(t("HOME_PAGE_SEE_ARCHIVE", {url: "/initiatives"}))}
+			</p>
+		</Section>
 	</Page>
 }

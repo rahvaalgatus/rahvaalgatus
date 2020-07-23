@@ -41,7 +41,7 @@ function HomePage(attrs) {
 			href: "/initiative-events.atom"
 		}]}
 	>
-		<section id="welcome" class="primary-section text-section"><center>
+		<Section id="welcome" class="primary-section text-section">
 			<Flash flash={req.flash} />
 
 			<h1>{t("HOME_WELCOME_TITLE")}</h1>
@@ -73,63 +73,61 @@ function HomePage(attrs) {
 					<img src="/assets/twitter-logo.svg" />
 				</a>
 			</div>
-		</center></section>
+		</Section>
 
-		<section id="statistics" class="primary-section">
-			<center>
-				<StatisticsView
-					id="discussions-statistic"
-					title={t("HOME_PAGE_STATISTICS_DISCUSSIONS")}
-					count={stats.all.discussionsCount}
-				>
-					{Jsx.html(t("HOME_PAGE_STATISTICS_N_IN_LAST_30_DAYS", {
-						count: stats[30].discussionsCount
-					}))}
-				</StatisticsView>
+		<Section id="statistics" class="primary-section">
+			<StatisticsView
+				id="discussions-statistic"
+				title={t("HOME_PAGE_STATISTICS_DISCUSSIONS")}
+				count={stats.all.discussionsCount}
+			>
+				{Jsx.html(t("HOME_PAGE_STATISTICS_N_IN_LAST_30_DAYS", {
+					count: stats[30].discussionsCount
+				}))}
+			</StatisticsView>
 
-				<StatisticsView
-					id="initiatives-statistic"
-					title={t("HOME_PAGE_STATISTICS_INITIATIVES")}
-					count={stats.all.initiativeCounts.all}
-				>
-					{Jsx.html(t("HOME_PAGE_STATISTICS_N_INITIATIVES_IN_LAST_30_DAYS", {
-						count: stats[30].initiativeCounts.all,
-						parliamentCount: stats[30].initiativeCounts.parliament,
-						localCount: stats[30].initiativeCounts.local
-					}))}
-				</StatisticsView>
+			<StatisticsView
+				id="initiatives-statistic"
+				title={t("HOME_PAGE_STATISTICS_INITIATIVES")}
+				count={stats.all.initiativeCounts.all}
+			>
+				{Jsx.html(t("HOME_PAGE_STATISTICS_N_INITIATIVES_IN_LAST_30_DAYS", {
+					count: stats[30].initiativeCounts.all,
+					parliamentCount: stats[30].initiativeCounts.parliament,
+					localCount: stats[30].initiativeCounts.local
+				}))}
+			</StatisticsView>
 
-				<StatisticsView
-					id="signatures-statistic"
-					title={t("HOME_PAGE_STATISTICS_SIGNATURES")}
-					count={stats.all.signatureCount}
-				>
-					{Jsx.html(t("HOME_PAGE_STATISTICS_N_IN_LAST_30_DAYS", {
-						count: stats[30].signatureCount
-					}))}
-				</StatisticsView>
+			<StatisticsView
+				id="signatures-statistic"
+				title={t("HOME_PAGE_STATISTICS_SIGNATURES")}
+				count={stats.all.signatureCount}
+			>
+				{Jsx.html(t("HOME_PAGE_STATISTICS_N_IN_LAST_30_DAYS", {
+					count: stats[30].signatureCount
+				}))}
+			</StatisticsView>
 
-				<StatisticsView
-					id="parliament-statistic"
-					title={t("HOME_PAGE_STATISTICS_GOVERNMENT")}
-					count={
-						stats.all.governmentCounts.sent > 0 ||
-						stats.all.governmentCounts.external > 0 ? [
-							stats.all.governmentCounts.sent,
-							stats.all.governmentCounts.external
-						].join("+")
-						: 0
-					}
-				>
-					{Jsx.html(t("HOME_PAGE_STATISTICS_N_SENT_ALL_IN_LAST_30_DAYS", {
-						sent: stats[30].governmentCounts.sent,
-						sentToParliament: stats[30].governmentCounts.sent_parliament,
-						sentToLocal: stats[30].governmentCounts.sent_local,
-						external: stats.all.governmentCounts.external,
-					}))}
-				</StatisticsView>
-			</center>
-		</section>
+			<StatisticsView
+				id="parliament-statistic"
+				title={t("HOME_PAGE_STATISTICS_GOVERNMENT")}
+				count={
+					stats.all.governmentCounts.sent > 0 ||
+					stats.all.governmentCounts.external > 0 ? [
+						stats.all.governmentCounts.sent,
+						stats.all.governmentCounts.external
+					].join("+")
+					: 0
+				}
+			>
+				{Jsx.html(t("HOME_PAGE_STATISTICS_N_SENT_ALL_IN_LAST_30_DAYS", {
+					sent: stats[30].governmentCounts.sent,
+					sentToParliament: stats[30].governmentCounts.sent_parliament,
+					sentToLocal: stats[30].governmentCounts.sent_local,
+					external: stats.all.governmentCounts.external,
+				}))}
+			</StatisticsView>
+		</Section>
 
 		{recentInitiatives.length > 0 ? <Section
 			id="recent-initiatives"
@@ -144,64 +142,95 @@ function HomePage(attrs) {
 			/>
 		</Section> : null}
 
-		<section id="initiatives" class="secondary-section initiatives-section">
-			<center>
-				{inEdit.length > 0 ? <Fragment>
-					<h2>{t("EDIT_PHASE")}</h2>
+		<Section
+			id="search"
+			class="primary-section"
+		>
+			<form
+				method="get"
+				action="https://cse.google.com/cse"
+			>
+				<input type="hidden" name="cx" value={Config.googleSiteSearchId} />
 
-					<InitiativesView
-						t={t}
-						phase="edit"
-						initiatives={inEdit}
-						signatureCounts={signatureCounts}
-					/>
-				</Fragment> : null}
+				<input
+					type="search"
+					name="q"
+					class="form-input"
+					placeholder={t("HOME_PAGE_SEARCH_PLACEHOLDER")}
+				/>
 
-				{inSign.length > 0 ? <Fragment>
-					<h2>{t("SIGN_PHASE")}</h2>
+				<button class="blue-button">{t("HOME_PAGE_SEARCH_BUTTON")}</button>
+			</form>
 
-					<InitiativesView
-						t={t}
-						phase="sign"
-						initiatives={inSign}
-						signatureCounts={signatureCounts}
-					/>
-				</Fragment> : null}
+			<p>
+				{Jsx.html(t("HOME_PAGE_SEARCH_SEE_OTHER", {
+					parliamentSiteUrl: Config.parliamentSiteUrl,
+					localSiteUrl: Config.localSiteUrl,
+					archiveUrl: "/initiatives"
+				}))}
+			</p>
+		</Section>
 
-				{inParliament.length > 0 ? <Fragment>
-					<h2>{t("PARLIAMENT_PHASE")}</h2>
+		<Section id="initiatives" class="secondary-section initiatives-section">
+			{inEdit.length > 0 ? <Fragment>
+				<h2>{t("EDIT_PHASE")}</h2>
 
-					<InitiativesView
-						t={t}
-						phase="parliament"
-						initiatives={inParliament}
-						signatureCounts={signatureCounts}
-					/>
-				</Fragment> : null}
+				<InitiativesView
+					t={t}
+					phase="edit"
+					initiatives={inEdit}
+					signatureCounts={signatureCounts}
+				/>
+			</Fragment> : null}
 
-				{inGovernment.length > 0 ? <Fragment>
-					<h2>{t("GOVERNMENT_PHASE")}</h2>
+			{inSign.length > 0 ? <Fragment>
+				<h2>{t("SIGN_PHASE")}</h2>
 
-					<InitiativesView
-						t={t}
-						phase="government"
-						initiatives={inGovernment}
-						signatureCounts={signatureCounts}
-					/>
-				</Fragment> : null}
+				<InitiativesView
+					t={t}
+					phase="sign"
+					initiatives={inSign}
+					signatureCounts={signatureCounts}
+				/>
+			</Fragment> : null}
 
-				{inDone.length > 0 ? <Fragment>
-					<h2>{t("DONE_PHASE")}</h2>
+			{inParliament.length > 0 ? <Fragment>
+				<h2>{t("PARLIAMENT_PHASE")}</h2>
 
-					<InitiativesView
-						t={t}
-						phase="done"
-						initiatives={inDone}
-						signatureCounts={signatureCounts}
-					/>
-				</Fragment> : null}
-			</center>
-		</section>
+				<InitiativesView
+					t={t}
+					phase="parliament"
+					initiatives={inParliament}
+					signatureCounts={signatureCounts}
+				/>
+			</Fragment> : null}
+
+			{inGovernment.length > 0 ? <Fragment>
+				<h2>{t("GOVERNMENT_PHASE")}</h2>
+
+				<InitiativesView
+					t={t}
+					phase="government"
+					initiatives={inGovernment}
+					signatureCounts={signatureCounts}
+				/>
+			</Fragment> : null}
+
+			{inDone.length > 0 ? <Fragment>
+				<h2>{t("DONE_PHASE")}</h2>
+
+				<InitiativesView
+					t={t}
+					phase="done"
+					initiatives={inDone}
+					signatureCounts={signatureCounts}
+				/>
+			</Fragment> : null}
+
+			<p id="see-archive">
+				{Jsx.html(t("HOME_PAGE_SEE_ARCHIVE", {url: "/initiatives"}))}
+			</p>
+		</Section>
 	</Page>
 }
 
@@ -215,7 +244,6 @@ function StatisticsView(attrs, children) {
 		<p>{children}</p>
 	</div>
 }
-
 
 function InitiativesSubscriptionForm(attrs) {
 	var req = attrs.req

@@ -1199,6 +1199,53 @@ button.inherited {
 			.large-button, button { width: 100%; }
 		}
 	}
+
+	#see-archive {
+		margin-right: $page-mobile-padding;
+		margin-top: 3rem;
+		text-align: center;
+		font-size: 2rem;
+
+		a { color: $link-color; text-decoration: underline; }
+	}
+}
+
+#home-page #main {
+	#search {
+		form {
+			display: flex;
+			flex-direction: row;
+			max-width: 60rem;
+			margin: 0 auto;
+			text-align: center;
+
+			input[type=search] {
+				display: inline-block;
+				flex: 1;
+				margin-right: 0.5rem;
+				height: 4.2rem;
+				width: 40%;
+				font-size: 1.6rem;
+			}
+
+			button {
+				height: 4.2rem;
+			}
+		}
+
+		p {
+			margin: 1rem auto 0;
+			max-width: 60rem;
+			margin-top: 1rem;
+			text-align: center;
+			font-weight: 400;
+			font-size: 1.5rem;
+			line-height: 1.5;
+			white-space: pre-wrap;
+
+			a { color: $link-color; text-decoration: underline; }
+		}
+	}
 }
 
 #create-session-page #main {
