@@ -1440,7 +1440,7 @@ describe("InitiativesController", function() {
 
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
-				res.body.must.include(tHtml("VOTING_SUCCEEDED"))
+				res.body.must.include(t("VOTING_SUCCEEDED"))
 
 				var dom = parseDom(res.body)
 				var phases = queryPhases(dom)
