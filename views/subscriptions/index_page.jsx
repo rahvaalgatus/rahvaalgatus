@@ -25,7 +25,9 @@ module.exports = function(attrs) {
 			<Flash flash={req.flash} />
 
 			<p class="text">
-				{Jsx.html(t("SUBSCRIPTIONS_UPDATE_BODY", {email: sub.email}))}
+				{Jsx.html(t("SUBSCRIPTIONS_UPDATE_BODY", {
+					email: _.escapeHtml(sub.email)
+				}))}
 			</p>
 
 			<Form req={req} action={actionUrl}>
