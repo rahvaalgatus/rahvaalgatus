@@ -42,15 +42,14 @@ var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: "", phase: "edit"}
 var EMPTY_CONTACT = {name: "", email: "", phone: ""}
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
+var INITIATIVE_TYPE =
+	new MediaType("application/vnd.rahvaalgatus.initiative+json; v=1")
 exports.searchInitiativesEvents = searchInitiativesEvents
 exports.serializeApiInitiative = serializeApiInitiative
 exports.router = Router({mergeParams: true})
 
 exports.router.get("/",
-	new ResponseTypeMiddeware([
-		"text/html",
-		"application/vnd.rahvaalgatus.initiative+json; v=1",
-	].map(MediaType)),
+	new ResponseTypeMiddeware(["text/html", INITIATIVE_TYPE].map(MediaType)),
 	next(function*(req, res) {
 	var gov = req.government
 
@@ -75,7 +74,7 @@ exports.router.get("/",
 
 	var type = res.contentType
 	switch (type.name) {
-		case "application/vnd.rahvaalgatus.initiative+json":
+		case INITIATIVE_TYPE.name:
 			res.setHeader("Content-Type", type)
 			res.setHeader("Access-Control-Allow-Origin", "*")
 
@@ -199,7 +198,7 @@ exports.router.use("/:id", next(function*(req, res, next) {
 	if (!initiative.published_at && initiative.user_id != user.id)
 		throw new HttpError(403, "Initiative Not Public")
 
-	if (req.method == "HEAD" || req.method == "GET") {
+	if ((req.method == "HEAD" || req.method == "GET") && !isApiRequest(req)) {
 		var isLocalInitiative = Initiative.isLocalInitiative(initiative)
 
 		if (req.government != "local" && isLocalInitiative)
@@ -216,7 +215,7 @@ exports.router.use("/:id", next(function*(req, res, next) {
 exports.router.get("/:id",
 	new ResponseTypeMiddeware([
 		"text/html",
-		"application/vnd.rahvaalgatus.initiative+json; v=1",
+		INITIATIVE_TYPE,
 		"application/atom+xml"
 	].map(MediaType), [
 		"image/*"
@@ -240,7 +239,7 @@ exports.router.get("/:id",
 		res.end(image.preview)
 	}
 	else switch (type.name) {
-		case "application/vnd.rahvaalgatus.initiative+json":
+		case INITIATIVE_TYPE.name:
 			res.setHeader("Content-Type", type)
 			res.setHeader("Access-Control-Allow-Origin", "*")
 
@@ -962,6 +961,7 @@ function* countSignaturesByIdsAndTime(uuids, from) {
 function serializeApiInitiative(initiative, signatureCount) {
 	return {
 		id: initiative.uuid,
+		for: initiative.destination,
 		title: initiative.title,
 		phase: initiative.phase,
 		signatureCount: signatureCount
@@ -982,5 +982,6 @@ function parseMeeting(obj) {
 	}
 }
 
+function isApiRequest(req) { return req.accept[0].name == INITIATIVE_TYPE.name }
 function isOrganizationPresent(org) { return org.name || org.url }
 function isMeetingPresent(org) { return org.date || org.url }

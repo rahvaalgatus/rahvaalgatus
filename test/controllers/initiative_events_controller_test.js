@@ -14,6 +14,12 @@ var ATOM_TYPE = "application/atom+xml"
 var INITIATIVE_EVENT_TYPE =
 	"application/vnd.rahvaalgatus.initiative-event+json; v=1"
 
+var serializeApiInitiative = _.compose(
+	JSON.parse,
+	JSON.stringify,
+	require("root/controllers/initiatives_controller").serializeApiInitiative
+)
+
 describe("InitiativeEventsController", function() {
 	require("root/test/web")()
 	require("root/test/mitm")()
@@ -117,12 +123,7 @@ describe("InitiativeEventsController", function() {
 					initiativeId: initiative.uuid,
 					occurredAt: event.occurred_at.toJSON(),
 					title: event.title,
-
-					initiative: {
-						id: initiative.uuid,
-						title: initiative.title,
-						phase: initiative.phase
-					}
+					initiative: serializeApiInitiative(initiative)
 				}])
 			})
 		})

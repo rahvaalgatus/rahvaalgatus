@@ -495,7 +495,7 @@ describe("InitiativesController", function() {
 			res.body.must.eql([])
 		})
 
-		it("must respond with initiatives", function*() {
+		it("must respond with initiatives without destination", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "edit",
@@ -512,6 +512,53 @@ describe("InitiativesController", function() {
 
 			res.body.must.eql([{
 				id: initiative.uuid,
+				for: null,
+				title: initiative.title,
+				phase: "edit",
+				signatureCount: 0
+			}])
+		})
+
+		it("must respond with initiatives destined for parliament", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "edit",
+				destination: "parliament",
+				published_at: new Date
+			}))
+
+			var res = yield this.request("/initiatives", {
+				headers: {Accept: INITIATIVE_TYPE}
+			})
+
+			res.statusCode.must.equal(200)
+
+			res.body.must.eql([{
+				id: initiative.uuid,
+				for: "parliament",
+				title: initiative.title,
+				phase: "edit",
+				signatureCount: 0
+			}])
+		})
+
+		it("must respond with initiatives destined for local", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "edit",
+				destination: "muhu-vald",
+				published_at: new Date
+			}))
+
+			var res = yield this.request("/initiatives", {
+				headers: {Accept: INITIATIVE_TYPE}
+			})
+
+			res.statusCode.must.equal(200)
+
+			res.body.must.eql([{
+				id: initiative.uuid,
+				for: "muhu-vald",
 				title: initiative.title,
 				phase: "edit",
 				signatureCount: 0
@@ -533,6 +580,7 @@ describe("InitiativesController", function() {
 
 			res.body.must.eql([{
 				id: initiative.uuid,
+				for: "parliament",
 				title: initiative.title,
 				phase: "parliament",
 				signatureCount: null
@@ -561,6 +609,7 @@ describe("InitiativesController", function() {
 
 			res.body.must.eql([{
 				id: initiative.uuid,
+				for: "parliament",
 				title: initiative.title,
 				phase: "sign",
 				signatureCount: 8
@@ -615,6 +664,7 @@ describe("InitiativesController", function() {
 				it(`must respond with ${phase} initiatives if requested`, function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
+						destination: "parliament",
 						published_at: new Date,
 						phase: phase
 					}))
@@ -633,6 +683,7 @@ describe("InitiativesController", function() {
 
 					res.body.must.eql([{
 						id: initiative.uuid,
+						for: "parliament",
 						title: initiative.title,
 						phase: phase,
 						signatureCount: 0
@@ -3965,7 +4016,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(404)
 		})
 
-		it("must respond with initiative", function*() {
+		it("must respond with initiative without destination", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				published_at: new Date
@@ -3981,6 +4032,51 @@ describe("InitiativesController", function() {
 
 			res.body.must.eql({
 				id: initiative.uuid,
+				for: null,
+				title: initiative.title,
+				phase: "edit",
+				signatureCount: 0
+			})
+		})
+
+		it("must respond with initiative destined for parliament", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				destination: "parliament",
+				published_at: new Date
+			}))
+
+			var res = yield this.request("/initiatives/" + initiative.uuid, {
+				headers: {Accept: INITIATIVE_TYPE}
+			})
+
+			res.statusCode.must.equal(200)
+
+			res.body.must.eql({
+				id: initiative.uuid,
+				for: "parliament",
+				title: initiative.title,
+				phase: "edit",
+				signatureCount: 0
+			})
+		})
+
+		it("must respond with initiative destined for local", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				destination: "muhu-vald",
+				published_at: new Date
+			}))
+
+			var res = yield this.request("/initiatives/" + initiative.uuid, {
+				headers: {Accept: INITIATIVE_TYPE}
+			})
+
+			res.statusCode.must.equal(200)
+
+			res.body.must.eql({
+				id: initiative.uuid,
+				for: "muhu-vald",
 				title: initiative.title,
 				phase: "edit",
 				signatureCount: 0
@@ -4002,6 +4098,7 @@ describe("InitiativesController", function() {
 
 			res.body.must.eql({
 				id: initiative.uuid,
+				for: "parliament",
 				title: "Better life for everyone.",
 				phase: "parliament",
 				signatureCount: null
@@ -4030,6 +4127,7 @@ describe("InitiativesController", function() {
 
 			res.body.must.eql({
 				id: initiative.uuid,
+				for: "parliament",
 				title: initiative.title,
 				phase: "sign",
 				signatureCount: 8

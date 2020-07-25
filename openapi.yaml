@@ -267,6 +267,98 @@ components:
             This is a UUID as of Feb 20, 2020, but will become an integer in
             the next few months.
 
+        for:
+          type: string
+          example: parliament
+          nullable: true
+          description: |
+            The initiative's destination — either `parliament` or one of the 79
+            local governments in Estonia. It could also be `null` if the
+            destination isn't yet chosen.
+
+          enum:
+            - null
+            - "parliament"
+            - "alutaguse-vald"
+            - "anija-vald"
+            - "antsla-vald"
+            - "elva-vald"
+            - "haapsalu-linn"
+            - "haljala-vald"
+            - "harku-vald"
+            - "hiiumaa-vald"
+            - "häädemeeste-vald"
+            - "järva-vald"
+            - "jõelähtme-vald"
+            - "jõgeva-vald"
+            - "jõhvi-vald"
+            - "kadrina-vald"
+            - "kambja-vald"
+            - "kanepi-vald"
+            - "kastre-vald"
+            - "kehtna-vald"
+            - "keila-linn"
+            - "kihnu-vald"
+            - "kiili-vald"
+            - "kohila-vald"
+            - "kohtla-järve-linn"
+            - "kose-vald"
+            - "kuusalu-vald"
+            - "loksa-linn"
+            - "luunja-vald"
+            - "lääne-harju-vald"
+            - "lääne-nigula-vald"
+            - "lääneranna-vald"
+            - "lüganuse-vald"
+            - "maardu-linn"
+            - "muhu-vald"
+            - "mulgi-vald"
+            - "mustvee-vald"
+            - "märjamaa-vald"
+            - "narva-jõesuu-linn"
+            - "narva-linn"
+            - "nõo-vald"
+            - "otepää-vald"
+            - "paide-linn"
+            - "peipsiääre-vald"
+            - "pärnu-linn"
+            - "põhja-pärnumaa-vald"
+            - "põhja-sakala-vald"
+            - "põltsamaa-vald"
+            - "põlva-vald"
+            - "raasiku-vald"
+            - "rae-vald"
+            - "rakvere-linn"
+            - "rakvere-vald"
+            - "rapla-vald"
+            - "ruhnu-vald"
+            - "räpina-vald"
+            - "rõuge-vald"
+            - "saarde-vald"
+            - "saaremaa-vald"
+            - "saku-vald"
+            - "saue-vald"
+            - "setomaa-vald"
+            - "sillamäe-linn"
+            - "tallinn"
+            - "tapa-vald"
+            - "tartu-linn"
+            - "tartu-vald"
+            - "toila-vald"
+            - "tori-vald"
+            - "tõrva-vald"
+            - "türi-vald"
+            - "valga-vald"
+            - "viimsi-vald"
+            - "viljandi-linn"
+            - "viljandi-vald"
+            - "vinni-vald"
+            - "viru-nigula-vald"
+            - "vormsi-vald"
+            - "väike-maarja-vald"
+            - "võru-linn"
+            - "võru-vald"
+
         title:
           type: string
           description: The initiative's title.
