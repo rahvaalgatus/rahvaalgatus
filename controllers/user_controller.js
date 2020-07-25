@@ -10,14 +10,16 @@ var {countSignaturesByIds} = require("root/lib/initiative")
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
+var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var {constantTimeEqual} = require("root/lib/crypto")
 var next = require("co-next")
 var sendEmail = require("root").sendEmail
 var renderEmail = require("root/lib/i18n").email
-var concat = Array.prototype.concat.bind(Array.prototype)
 var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
+var {updateSubscriptions} = require("./subscriptions_controller")
 var EMPTY_OBJ = Object.create(null)
 var LANGS = require("root/lib/i18n").STRINGS
+var EMPTY_ARR = Array.prototype
 
 exports.router = Router({mergeParams: true})
 
@@ -108,6 +110,86 @@ exports.router.put("/", next(function*(req, res) {
 	res.redirect(303, req.headers.referer || req.baseUrl)
 }))
 
+exports.router.get("/signatures", next(function*(req, res) {
+	var user = req.user
+
+	var signatures = yield signaturesDb.search(sql`
+		WITH signatures AS (
+			SELECT initiative_uuid, country, personal_id, created_at, token
+			FROM initiative_signatures
+			WHERE country = ${user.country}
+			AND personal_id = ${user.personal_id}
+			AND NOT hidden
+
+			UNION
+			SELECT initiative_uuid, country, personal_id, created_at, NULL AS token
+			FROM initiative_citizenos_signatures
+			WHERE country = ${user.country}
+			AND personal_id = ${user.personal_id}
+		)
+
+		SELECT signature.*, initiative.title AS initiative_title
+		FROM signatures AS signature
+		JOIN initiatives AS initiative
+		ON initiative.uuid = signature.initiative_uuid
+		ORDER BY signature.created_at DESC
+	`)
+
+	res.render("user/signatures_page.jsx", {
+		user: user,
+		signatures: signatures
+	})
+}))
+
+exports.router.use("/subscriptions", next(function*(req, _res, next) {
+	var user = req.user
+
+	req.subscriptions = user.email ? (yield subscriptionsDb.search(sql`
+		SELECT subscription.*, initiative.title AS initiative_title
+		FROM initiative_subscriptions AS subscription
+		LEFT JOIN initiatives AS initiative
+		ON initiative.uuid = subscription.initiative_uuid
+		WHERE subscription.email = ${user.email}
+		AND subscription.confirmed_at IS NOT NULL
+		ORDER BY COALESCE(subscription.initiative_uuid, 0)
+	`)) : EMPTY_ARR
+
+	next()
+}))
+
+exports.router.get("/subscriptions", function(req, res) {
+	var user = req.user
+	var subscriptions = req.subscriptions
+
+	res.render("user/subscriptions_page.jsx", {
+		user: user,
+		subscriptions: subscriptions
+	})
+})
+
+exports.router.put("/subscriptions", next(function*(req, res) {
+	var user = req.user
+	if (user.email == null) throw new HttpError(403, "Email Unconfirmed")
+
+	yield updateSubscriptions(req.subscriptions, req.body)
+	res.flash("notice", req.t("INITIATIVE_SUBSCRIPTIONS_UPDATED"))
+	res.redirect(303, req.baseUrl + req.path)
+}))
+
+exports.router.delete("/subscriptions", next(function*(req, res) {
+	var user = req.user
+	if (user.email == null) throw new HttpError(403, "Email Unconfirmed")
+
+	yield subscriptionsDb.execute(sql`
+		DELETE FROM initiative_subscriptions
+		WHERE email = ${user.email}
+		AND confirmed_at IS NOT NULL
+	`)
+
+	res.flash("notice", req.t("INITIATIVES_SUBSCRIPTION_DELETED"))
+	res.redirect(303, req.baseUrl + req.path)
+}))
+
 exports.router.get("/email", next(function*(req, res) {
 	var user = req.user
 
@@ -158,39 +240,18 @@ exports.router.get("/email", next(function*(req, res) {
 function* read(req, res) {
 	var user = req.user
 
-	var authoredInitiatives = yield initiativesDb.search(sql`
+	var initiatives = yield initiativesDb.search(sql`
 		SELECT initiative.*, user.name AS user_name
 		FROM initiatives AS initiative
 		LEFT JOIN users AS user ON initiative.user_id = user.id
 		WHERE initiative.user_id = ${user.id}
 	`)
 
-	var signatures = yield signaturesDb.search(sql`
-		SELECT initiative_uuid
-		FROM initiative_signatures
-		WHERE country = ${user.country}
-		AND personal_id = ${user.personal_id}
-
-		UNION SELECT initiative_uuid
-		FROM initiative_citizenos_signatures
-		WHERE country = ${user.country}
-		AND personal_id = ${user.personal_id}
-	`)
-
-	var signedInitiatives = yield initiativesDb.search(sql`
-		SELECT initiative.*, user.name AS user_name
-		FROM initiatives AS initiative
-		LEFT JOIN users AS user ON initiative.user_id = user.id
-		WHERE initiative.uuid IN ${sql.in(signatures.map((s) => s.initiative_uuid))}
-	`)
-
-	var uuids = _.map(concat(authoredInitiatives, signedInitiatives), "uuid")
-	var signatureCounts = yield countSignaturesByIds(uuids)
+	var signatureCounts = yield countSignaturesByIds(_.map(initiatives, "uuid"))
 
 	res.render("user/read_page.jsx", {
 		user: user,
-		authoredInitiatives: authoredInitiatives,
-		signedInitiatives: signedInitiatives,
+		initiatives: initiatives,
 		signatureCounts: signatureCounts,
 		userAttrs: _.create(user, res.locals.userAttrs),
 		userErrors: res.locals.userErrors || EMPTY_OBJ

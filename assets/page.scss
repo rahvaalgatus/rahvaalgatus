@@ -7,6 +7,7 @@
 $article-padding: 3rem;
 $article-padding-mobile: 2rem;
 $article-width-percentage: 70%;
+$initiative-width: 22.5rem;
 
 html,
 body {
@@ -512,8 +513,6 @@ button.inherited {
 }
 
 .initiatives-section {
-	$initiative-width: 22.5rem;
-
 	center {
 		padding-right: 0;
 		@include mobile { padding-right: $page-mobile-padding; }
@@ -827,6 +826,70 @@ button.inherited {
 
 	.toggle:checked + label { display: none; }
 	.toggle:checked ~ h2 { margin-top: 2rem; }
+}
+
+.subscriptions-view {
+	$border-color: #dadada;
+
+	display: table;
+	background: white;
+	border: 1px solid $border-color;
+	border-radius: 0.5rem;
+	margin: 1.5rem 0;
+
+	ul {
+		display: table-row-group;
+	}
+
+	li {
+		display: table-row;
+		line-height: 1.5;
+
+		h3 {
+			font-weight: 500;
+			max-width: 40rem;
+		}
+
+		.deleted-phrase {
+			display: none;
+
+			span { font-style: italic; }
+		}
+
+		input[name$="[delete]"]:checked {
+			& ~ label.form-checkbox,
+			& ~ .delete-phrase { display: none; }
+
+			& ~ .deleted-phrase { display: block; }
+		}
+
+		& > * {
+			display: table-cell;
+			padding: 1.5rem 1rem;
+		}
+
+		&:target {
+			animation: highlight 1s ease;
+		}
+
+		& + li > * { border-top: 1px solid $border-color; }
+	}
+
+	@media only screen and (max-width: 570px) {
+		#subscriptions,
+		ul,
+		li,
+		li h3,
+		li > * { display: block; }
+		li > * { padding: 0; }
+
+		li { padding: 1.5rem; }
+		li + li > * { border: none; }
+		li + li { border-top: 1px solid $border-color; }
+
+		h3 { font-size: 1.6rem; max-width: none; }
+		.labels { margin-top: 1rem; }
+	}
 }
 
 #header {
@@ -2868,8 +2931,6 @@ button.inherited {
 }
 
 #subscriptions-page main {
-	$border-color: #dadada;
-
 	h2 {
 		font-size: 2.4rem;
 		font-weight: 500;
@@ -2886,68 +2947,6 @@ button.inherited {
 		font-size: 1.6rem;
 		white-space: pre-wrap;
 		line-height: 1.5;
-	}
-
-	#subscriptions {
-		display: table;
-		background: white;
-		border: 1px solid $border-color;
-		border-radius: 0.5rem;
-		margin: 1.5rem 0;
-	}
-
-	ul {
-		display: table-row-group;
-	}
-
-	li {
-		display: table-row;
-		line-height: 1.5;
-
-		h3 {
-			font-weight: 500;
-			max-width: 40rem;
-		}
-
-		.deleted-phrase {
-			display: none;
-
-			span { font-style: italic; }
-		}
-
-		input[name$="[delete]"]:checked {
-			& ~ label.form-checkbox,
-			& ~ .delete-phrase { display: none; }
-
-			& ~ .deleted-phrase { display: block; }
-		}
-
-		& > * {
-			display: table-cell;
-			padding: 1.5rem 1rem;
-		}
-
-		&:target {
-			animation: highlight 1s ease;
-		}
-
-		& + li > * { border-top: 1px solid $border-color; }
-	}
-
-	@media only screen and (max-width: 570px) {
-		#subscriptions,
-		ul,
-		li,
-		li h3,
-		li > * { display: block; }
-		li > * { padding: 0; }
-
-		li { padding: 1.5rem; }
-		li + li > * { border: none; }
-		li + li { border-top: 1px solid $border-color; }
-
-		h3 { font-size: 1.6rem; max-width: none; }
-		.labels { margin-top: 1rem; }
 	}
 }
 
@@ -2983,32 +2982,113 @@ button.inherited {
 	}
 }
 
-#user-page {
-	background: $secondary-background;
-
-	#user {
-		padding-bottom: 2rem;
-		text-align: center;
+.user-page {
+	#user-header {
+		padding-top: 4rem;
+		border-bottom: 1px solid $light-background-border;
+		background: $secondary-background;
 
 		h1 {
-			margin-bottom: 2rem;
+			font-family: $tisa-pro;
+			color: $title-text;
+			font-size: 4.2rem;
+			line-height: 1.2;
+			margin-bottom: 4rem;
 		}
 
-		.flash {
-			margin-left: auto;
-			margin-right: auto;
-			max-width: 48rem;
-		}
+		#tabs {
+			$tab-radius: 0.5rem;
 
+			&:first-child { border-top-left-radius: $tab-radius; }
+
+			a {
+				display: inline-block;
+				border: 0.1rem solid $light-background-border;
+				border-bottom: 0;
+				padding: 1rem 2rem;
+				line-height: 1.2;
+				font-size: 1.6rem;
+				margin-bottom: -0.1rem;
+				font-weight: 500;
+				color: #888;
+				text-align: center;
+
+				& + a { margin-left: -0.1rem; }
+				&:first-child { border-top-left-radius: $tab-radius; }
+				&:last-child { border-top-right-radius: $tab-radius; }
+
+				&.selected { background: white; color: $text; }
+
+				@media only screen and (max-width: 359px) {
+					padding-left: 1.5rem;
+					padding-right: 1.5rem;
+				}
+			}
+		}
+	}
+}
+
+#user-page main {
+	#user {
 		.form-input {
-			margin-left: auto;
-			margin-right: auto;
 			max-width: 24rem;
 		}
 	}
 
 	#import-initiatives-from-other-accounts-info {
-		margin-top: 4rem;
+		font-size: 1.5rem;
+		line-height: 1.4;
+
+		margin-right: 2rem;
+		margin-left: $initiative-width + 2rem;
+		@include tablet { margin-left: 0; }
+
+		a { color: $link-color; text-decoration: underline; }
+	}
+}
+
+#user-signatures-page {
+	background: white;
+}
+
+#user-signatures-page main {
+	background: white;
+
+	.no-signatures {
+		line-height: 1.5;
+		font-size: 1.6rem;
+		white-space: pre-wrap;
+	}
+
+	.signature {
+		line-height: 1.4;
+
+		h2 {
+			font-size: 1.7rem;
+			font-weight: 500;
+			color: $title-text;
+		}
+
+		a[download] { color: $link-color; text-decoration: underline; }
+
+		& + .signature {
+			margin-top: 1rem;
+		}
+	}
+}
+
+#user-subscriptions-page {
+	.flash {
+		margin-bottom: 2rem;
+	}
+
+	.unconfirmed-email-info,
+	.no-subscriptions {
+		line-height: 1.5;
+		font-size: 1.6rem;
+		white-space: pre-wrap;
+
+		a { color: $link-color; text-decoration: underline; }
 	}
 }
 

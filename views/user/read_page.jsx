@@ -3,7 +3,8 @@ var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var Config = require("root/config")
-var Page = require("../page")
+var UserPage = require("./user_page")
+var {Section} = require("../page")
 var {Form} = require("../page")
 var {Flash} = require("../page")
 var {InitiativesView} = require("../initiatives/index_page")
@@ -13,15 +14,13 @@ module.exports = function(attrs) {
 	var req = attrs.req
 	var user = attrs.user
 	var error = attrs.error
-	var authoredInitiatives = attrs.authoredInitiatives
-	var signedInitiatives = attrs.signedInitiatives
+	var initiatives = attrs.initiatives
 	var signatureCounts = attrs.signatureCounts
 	var userAttrs = attrs.userAttrs
 	var userErrors = attrs.userErrors
 
-	return <Page page="user" title={user.name} req={req}>
-		<section id="user" class="primary-section text-section"><center>
-			<h1>{user.name}</h1>
+	return <UserPage page="user" title={user.name} req={req} user={user}>
+		<Section id="user" class="primary-section text-section">
 			<Flash flash={req.flash} />
 
 			<Form method="put" action="/user" class="form" req={req}>
@@ -67,40 +66,28 @@ module.exports = function(attrs) {
 					</button></Fragment> : null}
 				</p> : null}
 
-				<button class="form-submit primary-button">{t("BTN_SAVE")}</button>
+				<button class="form-submit secondary-button">{t("BTN_SAVE")}</button>
 			</Form>
+		</Section>
+
+		<Section id="my-initiatives" class="secondary-section initiatives-section">
+			{initiatives.length > 0 ? <Fragment>
+				<h2>{t("MY_INITIATIVES")}</h2>
+
+				<InitiativesView
+					t={t}
+					initiatives={_.sortBy(initiatives, "created_at").reverse()}
+					signatureCounts={signatureCounts}
+				/>
+			</Fragment> : null}
 
 			<p id="import-initiatives-from-other-accounts-info">
 				{Jsx.html(t("USER_PAGE_OLD_ACCOUNTS_INFO", {
 					email: _.escapeHtml(Config.helpEmail)
 				}))}
 			</p>
-		</center></section>
-
-		<section id="initiatives" class="secondary-section initiatives-section">
-			<center>
-				{authoredInitiatives.length > 0 ? <Fragment>
-					<h2>{t("MY_INITIATIVES")}</h2>
-
-					<InitiativesView
-						t={t}
-						initiatives={_.sortBy(authoredInitiatives, "created_at").reverse()}
-						signatureCounts={signatureCounts}
-					/>
-				</Fragment> : null}
-
-				{signedInitiatives.length > 0 ? <Fragment>
-					<h2>{t("SIGNED_INITIATIVES")}</h2>
-
-					<InitiativesView
-						t={t}
-						initiatives={signedInitiatives}
-						signatureCounts={signatureCounts}
-					/>
-				</Fragment> : null}
-			</center>
-		</section>
-	</Page>
+		</Section>
+	</UserPage>
 }
 
 function InputError(attrs) {

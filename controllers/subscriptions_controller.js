@@ -8,10 +8,10 @@ var sendEmail = require("root").sendEmail
 var renderEmail = require("root/lib/i18n").email
 var next = require("co-next")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
-var initiativesDb = require("root/db/initiatives_db")
 var sql = require("sqlate")
-exports.parse = parse
 exports.router = Router({mergeParams: true})
+exports.parse = parse
+exports.updateSubscriptions = updateSubscriptions
 
 var readSubscriptionFromQuery = next(withSubscription.bind(null, (req) => [
 	req.query.initiative,
@@ -22,21 +22,18 @@ exports.router.get("/", readSubscriptionFromQuery, next(function*(req, res) {
 	var subscription = req.subscription
 
 	var subscriptions = yield subscriptionsDb.search(sql`
-		SELECT * FROM initiative_subscriptions
-		WHERE email = ${subscription.email}
-		AND confirmed_at IS NOT NULL
-		ORDER BY COALESCE(initiative_uuid, 0)
-	`)
-
-	var initiatives = yield initiativesDb.search(sql`
-		SELECT * FROM initiatives
-		WHERE uuid IN ${sql.in(subscriptions.map((s) => s.initiative_uuid))}
+		SELECT subscription.*, initiative.title AS initiative_title
+		FROM initiative_subscriptions AS subscription
+		LEFT JOIN initiatives AS initiative
+		ON initiative.uuid = subscription.initiative_uuid
+		WHERE subscription.email = ${subscription.email}
+		AND subscription.confirmed_at IS NOT NULL
+		ORDER BY COALESCE(subscription.initiative_uuid, 0)
 	`)
 
 	res.render("subscriptions/index_page.jsx", {
 		subscription: subscription,
-		subscriptions: subscriptions,
-		initiatives: initiatives
+		subscriptions: subscriptions
 	})
 }))
 
@@ -120,27 +117,13 @@ exports.router.post("/", next(function*(req, res) {
 exports.router.put("/", readSubscriptionFromQuery, next(function*(req, res) {
 	var subscription = req.subscription
 
-	var attrsByInitiativeUuid = _.mapValues(_.filterValues(req.body, (_a, id) => (
-		id == "null" || id.indexOf("-") >= 0
-	)), parse)
-
-	// Get all subscriptions for redirecting later.
 	var subscriptions = yield subscriptionsDb.search(sql`
 		SELECT * FROM initiative_subscriptions
 		WHERE email = ${subscription.email}
 		AND confirmed_at IS NOT NULL
 	`)
 
-	subscriptions = (yield subscriptions.map(function(subscription) {
-		var attrs = attrsByInitiativeUuid[subscription.initiative_uuid]
-		if (attrs == null) return Promise.resolve(subscription)
-		if (attrs.delete) return subscriptionsDb.delete(subscription)
-
-		return subscriptionsDb.update(subscription, {
-			__proto__: attrs,
-			updated_at: new Date
-		})
-	})).filter(Boolean)
+	subscriptions = yield updateSubscriptions(subscriptions, req.body)
 
 	res.flash("notice", req.t("INITIATIVE_SUBSCRIPTIONS_UPDATED"))
 
@@ -242,4 +225,21 @@ function tokenize(subscription) {
 		initiative: subscription.initiative_uuid || undefined,
 		"update-token": subscription.update_token,
 	})
+}
+
+function updateSubscriptions(subscriptions, form) {
+	var attrsByInitiativeUuid = _.mapValues(_.filterValues(form, (_a, id) => (
+		id == "null" || id.indexOf("-") >= 0
+	)), parse)
+
+	return Promise.all(subscriptions.map(function(subscription) {
+		var attrs = attrsByInitiativeUuid[subscription.initiative_uuid]
+		if (attrs == null) return Promise.resolve(subscription)
+		if (attrs.delete) return subscriptionsDb.delete(subscription)
+
+		return subscriptionsDb.update(subscription, {
+			__proto__: attrs,
+			updated_at: new Date
+		})
+	})).then((subs) => subs.filter(Boolean))
 }

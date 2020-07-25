@@ -141,23 +141,20 @@ describe("SubscriptionsController", function() {
 				new ValidInitiative({phase: "parliament", external: true})
 			))
 
-			var subscriptions = yield initiatives.map((initiative) => subscriptionsDb.create(
+			var subscriptions = yield subscriptionsDb.create(initiatives.map((i) => (
 				new ValidSubscription({
 					email: "user@example.com",
-					initiative_uuid: initiative.uuid,
+					initiative_uuid: i.uuid,
 					confirmed_at: new Date
 				})
-			))
+			)))
 
 			var res = yield this.request(
 				`/subscriptions?initiative=${initiatives[0].uuid}&update-token=${subscriptions[0].update_token}`
 			)
 
 			res.statusCode.must.equal(200)
-
-			initiatives.forEach((initiative) => (
-				res.body.must.include(initiative.title)
-			))
+			initiatives.forEach((i) => res.body.must.include(i.title))
 		})
 
 		it("must not show subscriptions for other email addresses", function*() {
@@ -518,25 +515,6 @@ describe("SubscriptionsController", function() {
 				author_interest: !subscription.author_interest,
 				comment_interest: !subscription.comment_interest
 			})
-		})
-
-		it("must delete subscription to initiatives", function*() {
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
-				confirmed_at: new Date
-			}))
-
-			var path = `/subscriptions?update-token=${subscription.update_token}`
-			var res = yield this.request(path, {
-				method: "POST",
-				form: {_method: "put", "null[delete]": true}
-			})
-
-			res.statusCode.must.equal(303)
-			res.headers.location.must.equal("/")
-
-			yield subscriptionsDb.search(sql`
-				SELECT * FROM initiative_subscriptions
-			`).must.then.be.empty()
 		})
 
 		it("must update subscription to initiative", function*() {
@@ -997,7 +975,7 @@ describe("SubscriptionsController", function() {
 			return this.request(url, {method: "POST", form: {_method: "delete"}})
 		})
 
-		it("must delete all subscriptions for a given email address", function*() {
+		it("must delete subscriptions for a given email address", function*() {
 			var subscription = yield subscriptionsDb.create(new ValidSubscription({
 				confirmed_at: new Date
 			}))
@@ -1006,11 +984,13 @@ describe("SubscriptionsController", function() {
 				new ValidInitiative({phase: "parliament", external: true})
 			))
 
-			yield initiatives.map((initiative) => subscriptionsDb.create(new ValidSubscription({
-				email: subscription.email,
-				initiative_uuid: initiative.uuid,
-				confirmed_at: new Date
-			})))
+			yield subscriptionsDb.create(initiatives.map((i) => (
+				new ValidSubscription({
+					email: subscription.email,
+					initiative_uuid: i.uuid,
+					confirmed_at: new Date
+				})
+			)))
 
 			var path = `/subscriptions?update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
