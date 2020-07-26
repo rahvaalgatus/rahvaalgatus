@@ -417,8 +417,7 @@ describe("InitiativesController", function() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
 						phase: "sign",
-						destination: dest,
-						published_at: new Date
+						destination: dest
 					}))
 
 					var res = yield this.request("/initiatives", {
@@ -689,6 +688,145 @@ describe("InitiativesController", function() {
 						signatureCount: 0
 					}])
 				})
+			})
+		})
+
+		describe("given for", function() {
+			it("must respond with 400 given invalid destination", function*() {
+				var res = yield this.request("/initiatives?for=foo", {
+					headers: {Accept: INITIATIVE_TYPE}
+				})
+
+				res.statusCode.must.equal(400)
+				res.statusMessage.must.equal("Invalid Destination")
+
+				res.body.must.eql({
+					code: 400,
+					message: "Invalid Destination",
+					name: "HttpError"
+				})
+			})
+
+			it("must filter initiatives destined for parliament", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "parliament"
+				}))
+
+				yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					destination: null,
+					published_at: new Date
+				}))
+
+				yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "muhu-vald"
+				}))
+
+				var res = yield this.request("/initiatives?for=parliament", {
+					headers: {Accept: INITIATIVE_TYPE}
+				})
+
+				res.statusCode.must.equal(200)
+				res.headers["content-type"].must.equal(INITIATIVE_TYPE)
+
+				res.body.must.eql([{
+					id: initiative.uuid,
+					for: "parliament",
+					title: initiative.title,
+					phase: "sign",
+					signatureCount: 0
+				}])
+			})
+
+			Object.keys(LOCAL_GOVERNMENTS).forEach(function(dest) {
+				it(`must filter initiatives destined for ${dest}`, function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+						destination: dest
+					}))
+
+					yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "edit",
+						destination: null,
+						published_at: new Date
+					}))
+
+					yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+						destination: "parliament"
+					}))
+
+					var res = yield this.request("/initiatives?for=" + dest, {
+						headers: {Accept: INITIATIVE_TYPE}
+					})
+
+					res.statusCode.must.equal(200)
+					res.headers["content-type"].must.equal(INITIATIVE_TYPE)
+
+					res.body.must.eql([{
+						id: initiative.uuid,
+						for: dest,
+						title: initiative.title,
+						phase: "sign",
+						signatureCount: 0
+					}])
+				})
+			})
+
+			it("must filter initiatives destined for multiple places", function*() {
+				yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "parliament"
+				}))
+
+				var a = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "muhu-vald"
+				}))
+
+				var b = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "tallinn"
+				}))
+
+				yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "pärnu-linn"
+				}))
+
+				var path = "/initiatives"
+				path += "?for[]=muhu-vald"
+				path += "&for[]=tallinn"
+				var res = yield this.request(path, {headers: {Accept: INITIATIVE_TYPE}})
+
+				res.statusCode.must.equal(200)
+				res.headers["content-type"].must.equal(INITIATIVE_TYPE)
+
+				res.body.must.eql([{
+					id: a.uuid,
+					for: "muhu-vald",
+					title: a.title,
+					phase: "sign",
+					signatureCount: 0
+				}, {
+					id: b.uuid,
+					for: "tallinn",
+					title: b.title,
+					phase: "sign",
+					signatureCount: 0
+				}])
 			})
 		})
 

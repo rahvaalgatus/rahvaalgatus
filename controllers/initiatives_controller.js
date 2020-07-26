@@ -75,8 +75,19 @@ exports.router.get("/",
 	var type = res.contentType
 	switch (type.name) {
 		case INITIATIVE_TYPE.name:
+			// TODO: API initiative filtering should be done in SQL for the most part.
 			res.setHeader("Content-Type", type)
 			res.setHeader("Access-Control-Allow-Origin", "*")
+
+			if (req.query.for !== undefined) {
+				var dests = _.asArray(req.query.for)
+
+				if (!dests.every(isValidDestination))
+					throw new HttpError(400, "Invalid Destination")
+
+				dests = new Set(dests)
+				initiatives = initiatives.filter((i) => dests.has(i.destination))
+			}
 
 			switch (req.query.phase || undefined) {
 				case "edit":
@@ -980,6 +991,10 @@ function parseMeeting(obj) {
 		date: String(obj.date || "").trim(),
 		url: String(obj.url || "").trim()
 	}
+}
+
+function isValidDestination(dest) {
+	return dest == "parliament" || dest in LOCAL_GOVERNMENTS
 }
 
 function isApiRequest(req) { return req.accept[0].name == INITIATIVE_TYPE.name }

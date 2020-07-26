@@ -98,9 +98,15 @@ Kombineerides erinevaid API päringuid saad enda lehel kuvada näiteks koondvaat
 
 Eelnev näide kasutab Rahvaalgatuse **statistika**, **algatuste** ja **menetlusinfo API**-sid. All leiad kõigi kolme kohta näiteid, viited dokumentatsioonile ning koodijuppe kasutuseks.
 
+- [Algatuste statistika](#statistics-api)
+- [Algatuste loetelu](#initiatives-api)
+  - [Kohalike algatuste loetelu](#local-initiatives-api)
+- [Algatuse allkirjade arv](#initiative-signatures-api)
+- [Algatuste menetlusinfo](#initiative-events-api)
 
-Algatuste statistika
---------------------
+
+<a name="statistics-api"></a> Algatuste statistika
+--------------------------------------------------
 Kui soovid veebilehele lisada kõikide algatuste koondarvu, saad selle info [`https://rahvaalgatus.ee/statistics`](https://app.swaggerhub.com/apis-docs/rahvaalgatus/rahvaalgatus/1#/Statistics/get_statistics) aadressilt.
 
 <div id="example-statistics" class="example">
@@ -141,11 +147,17 @@ fetch("https://rahvaalgatus.ee/statistics", {
 
 Oluline on teha päring `Accept: application/vnd.rahvaalgatus.statistics+json; v=1` päisega. Ilma selleta ei tea server, et soovid teha API päringu, ja tagastab sulle hoopis HTMLi. `v=1` aga määrab API versiooni. See garanteerib, et API muudatuste puhul jääb su leht õigesti tööle.
 
+Käsurealt `curl`-iga näeb statistikapärng välja selline:
+
+```sh
+curl -H "Accept: application/vnd.rahvaalgatus.statistics+json; v=1" "https://rahvaalgatus.ee/statistics"
+```
+
 Kui tahaksid ligipääsu statistikale, mida me hetkel ei väljasta, palun [anna meile sellest GitHubi kaudu teada](https://github.com/rahvaalgatus/rahvaalgatus/issues).
 
 
-Algatuste loetelu
------------------
+<a name="initiatives-api"></a> Algatuste loetelu
+------------------------------------------------
 Kui soovid veebilehele loetelu Rahvaalgatuses kajastuvatest algatustest, saad selle info [`https://rahvaalgatus.ee/initiatives`](https://app.swaggerhub.com/apis-docs/rahvaalgatus/rahvaalgatus/1#/Initiatives/get_initiatives) päringuga. Näiteks võid oma lehe küljeribal välja tuua viis aktiivset ja kõige rohkem allkirju kogunud algatust:
 
 <div id="example-initiatives" class="example">
@@ -187,7 +199,7 @@ Alustuseks piisab ühest loetelu (`<ol>`) elemendist.
 <ol id="initiatives"></ol>
 ```
 
-Algatusi pärides saad ka määrata, kuidas neid järjestada, filtreerida algatuse faasi järgi ning piirata tagastatud algatuste arvu. Määrame, et soovime ainult allkirjastamises olevaid algatusi (`phase=sign`), sorteerida nad allkirjade järgi kasvavas järjekorras (`order=-signatureCount`) ja ainult esimest viite (`limit=5`):
+Algatusi pärides saad ka määrata, kuidas neid järjestada, filtreerida algatuse faasi järgi ning piirata tagastatud algatuste arvu. Määrame, et soovime ainult allkirjastamises olevaid algatusi (`phase=sign`), sorteerida nad allkirjade järgi kahanevas järjekorras (`order=-signatureCount`) ja ainult esimest viite (`limit=5`):
 
 ```javascript
 var URL = "https://rahvaalgatus.ee"
@@ -252,11 +264,102 @@ fetch(url, {
 
 Oluline on teha päring `Accept: application/vnd.rahvaalgatus.initiative+json; v=1` päisega. Ilma selleta ei tea server, et soovid teha API päringu, ja tagastab sulle hoopis HTMLi. `v=1` aga määrab API versiooni. See garanteerib, et API muudatuste puhul jääb su leht õigesti tööle.
 
+Käsurealt `curl`-iga näeb algatustepäring koos filtri ja sorteerimise välja selline:
+
+```sh
+curl -H "Accept: application/vnd.rahvaalgatus.initiative+json; v=1" "https://rahvaalgatus.ee/initiatives?phase=sign&order=-signatureCount&limit=5"
+```
+
 Kui tahaksid ligipääsu infole, mida me hetkel APIs ei väljasta, palun [anna meile sellest GitHubi kaudu teada](https://github.com/rahvaalgatus/rahvaalgatus/issues).
 
+### <a name="local-initiatives-api"></a> Kohalike algatuste loetelu
+Rahvaalgatuses saab esitada algatusi nii Riigikogule kui ka kohalikele omavalitsustele. Kui tahaksid kuvada vaid oma rajooni või maakonna algatusi, saad päringule lisada soovitud omavalitsuste loendi.
 
-Algatuse allkirjade arv
------------------------
+<div id="example-local-initiatives" class="example">
+  <h3>Algatused Pärnu maakonnas</h3>
+
+  <ol id="example-local-initiatives-list"></ol>
+
+  <script>!function() {
+    var path = "/initiatives"
+    path += "?for[]=häädemeeste-vald"
+    path += "&for[]=kihnu-vald"
+    path += "&for[]=lääneranna-vald"
+    path += "&for[]=põhja-pärnumaa-vald"
+    path += "&for[]=pärnu-linn"
+    path += "&for[]=saarde-vald"
+    path += "&for[]=tori-vald"
+
+    fetch(path, {
+      headers: {Accept: "application/vnd.rahvaalgatus.initiative+json; v=1"}
+    }).then(getJson).then(function(initiatives) {
+      var ol = document.getElementById("example-local-initiatives-list")
+
+      initiatives.forEach(function(initiative, i) {
+        var li = document.createElement("li")
+
+        var a = document.createElement("a")
+        a.href = "/initiatives/" + initiative.id
+        a.textContent = initiative.title
+        li.appendChild(a)
+
+        ol.appendChild(li)
+      })
+    })
+  }()</script>
+</div>
+
+Sihtpunkti järgi filtreerimiseks lisa [`https://rahvaalgatus.ee/initiatives`](https://app.swaggerhub.com/apis-docs/rahvaalgatus/rahvaalgatus/1#/Initiatives/get_initiatives) päringule `for` parameeter.  Näiteks Läneranna valla algatuste jaoks `for=lääneranna-vald`. Riigikokku suunatud algatuste jaoks `for=parliament`. Eesti omavalitsuste identifikaatorid leiad [Rahvaalgatuse kohalike omavalitsuste JSON failist](https://github.com/rahvaalgatus/rahvaalgatus/blob/master/lib/local_governments.json).
+
+Vajadusel saad pärida ka mitme sihtkoha algatusi korraga. Kasuta selleks `for[]=lääneranna-vald&for[]=pärnu-linn` mustrit.
+
+Eelneva näite implementeerimiseks alustame taas loetelu elemendist:
+
+```html
+<ol id="initiatives"></ol>
+```
+
+Algatuste loeteluks filtreerimiseks lisa [`https://rahvaalgatus.ee/initiatives`](https://app.swaggerhub.com/apis-docs/rahvaalgatus/rahvaalgatus/1#/Initiatives/get_initiatives) päringule maakonna identifikaatorid `for` väljas. Kuna soovime kõikide Pärnu maakonna omavalitsuste algatusi, siis [Rahvaalgatuse kohalike omavalitsuste JSON failist](https://github.com/rahvaalgatus/rahvaalgatus/blob/master/lib/local_governments.json) otsime välja need omavalitsused, kus `county` on "Pärnu", ja lisame nad `for[]` parameetrisse:
+
+```javascript
+var URL = "https://rahvaalgatus.ee"
+var path = "/initiatives"
+path += "?for[]=häädemeeste-vald"
+path += "&for[]=kihnu-vald"
+path += "&for[]=lääneranna-vald"
+path += "&for[]=põhja-pärnumaa-vald"
+path += "&for[]=pärnu-linn"
+path += "&for[]=saarde-vald"
+path += "&for[]=tori-vald"
+
+fetch(URL + path, {
+  headers: {Accept: "application/vnd.rahvaalgatus.initiative+json; v=1"}
+}).then(function(res) { return res.json() }).then(function(body) {
+  var ol = document.getElementById("initiatives")
+
+  initiatives.forEach(function(initiative, i) {
+    var li = document.createElement("li")
+
+    var a = document.createElement("a")
+    a.href = URL + "/initiatives/" + initiative.id
+    a.textContent = initiative.title
+    li.appendChild(a)
+
+    ol.appendChild(li)
+  })
+})
+```
+
+
+Käsurealt `curl`-iga näeb kohalike algatuste päring välja selline:
+
+```sh
+curl -H "Accept: application/vnd.rahvaalgatus.initiative+json; v=1" "https://rahvaalgatus.ee/initiatives?for[]=häädemeeste-vald&for[]=kihnu-vald&for[]=lääneranna-vald&for[]=põhja-pärnumaa-vald&for[]=pärnu-linn&for[]=saarde-vald&for[]=tori-vald"
+```
+
+
+<a name="initiative-signatures-api"></a> Algatuse allkirjade arv
+----------------------------------------------------------------
 Ehk soovid oma algatuse reklaamlehel kuvada loendurit, mitu allkirja oled juba kogunud:
 
 <div id="example-initiative" class="example">
@@ -296,11 +399,17 @@ fetch(URL + "/initiatives/d400bf12-f212-4df0-88a5-174a113c443a", {
 
 Oluline on teha päring `Accept: application/vnd.rahvaalgatus.initiative+json; v=1` päisega. Ilma selleta ei tea server, et soovid teha API päringu, ja tagastab sulle hoopis HTMLi. `v=1` aga määrab API versiooni. See garanteerib, et API muudatuste puhul jääb su leht õigesti tööle.
 
+Käsurealt `curl`-iga näeb algatusepäring välja selline:
+
+```sh
+curl -H "Accept: application/vnd.rahvaalgatus.initiative+json; v=1" "https://rahvaalgatus.ee/initiatives/d400bf12-f212-4df0-88a5-174a113c443a"
+```
+
 Kui tahaksid ligipääsu infole, mida me hetkel APIs ei väljasta, palun [anna meile sellest GitHubi kaudu teada](https://github.com/rahvaalgatus/rahvaalgatus/issues).
 
 
-Algatuste menetlusinfo
-----------------------
+<a name="initiative-events-api"></a> Algatuste menetlusinfo
+-----------------------------------------------------------
 Igal algatusega on seotud ka menetlusinfot, kus kajastuvad sündmused allkirjastamisest ning käekäigust Riigikogus ja valitsusasutustes. Menetlusinfot saab pärida kõikide algatuste kohta [`https://rahvaalgatus.ee/initiative-events`](https://app.swaggerhub.com/apis-docs/rahvaalgatus/rahvaalgatus/1#/Initiatives/get_initiative_events) aadressilt.
 
 Viie viimati uuendatud menetlusinfoga algatuse kuvamine võib välja näha selliselt:
@@ -349,7 +458,7 @@ Viie viimati uuendatud menetlusinfoga algatuse kuvamine võib välja näha selli
   }()</script>
 </div>
 
-Kõigepealt teeme päringu `https://rahvaalgatus.ee/initiative-events` aadressile, küsides algatuste sündmusi toimumise järjekorras (`order=-occurredAt`). Piirdume viie tagastatud sündmusega (`limit=5`) ja selleks, et kuvada menetlusinfo pealkirja kõrval ka algatuse pealkirja, palume lisada ka algatuse info (`include=initiative`). Et mitte kuvada sama algatust nimekirjas kaks korda, lisame ka `distinct=initiativeId`, mis eemaldab duplikaadid peale sorteerimist.
+Kõigepealt teeme päringu `https://rahvaalgatus.ee/initiative-events` aadressile, küsides algatuste sündmusi toimumise järjekorras, uuemad enne (`order=-occurredAt`). Piirdume viie tagastatud sündmusega (`limit=5`) ja selleks, et kuvada menetlusinfo pealkirja kõrval ka algatuse pealkirja, palume lisada ka algatuse info (`include=initiative`). Et mitte kuvada sama algatust nimekirjas kaks korda, lisame ka `distinct=initiativeId`, mis eemaldab duplikaadid peale sorteerimist.
 
 ```html
 <ol id="initiative-events"></ol>
@@ -357,12 +466,12 @@ Kõigepealt teeme päringu `https://rahvaalgatus.ee/initiative-events` aadressil
 
 ```javascript
 var URL = "https://rahvaalgatus.ee"
-
 var path = "/initiative-events"
 path += "?include=initiative"
 path += "&distinct=initiativeId"
 path += "&order=-occurredAt"
 path += "&limit=5"
+
 fetch(URL + path, {
   headers: {
     Accept: "application/vnd.rahvaalgatus.initiative-event+json; v=1"
@@ -385,5 +494,11 @@ fetch(URL + path, {
 ```
 
 Oluline on teha päring `Accept: application/vnd.rahvaalgatus.initiative-event+json; v=1` päisega. Ilma selleta ei tea server, et soovid teha API päringu, ja tagastab sulle hoopis HTMLi. `v=1` aga määrab API versiooni. See garanteerib, et API muudatuste puhul jääb su leht õigesti tööle.
+
+Käsurealt `curl`-iga näeb menetlusinfopäring koos filtri ja sorteerimisega välja selline:
+
+```sh
+curl -H "Accept: application/vnd.rahvaalgatus.initiative-event+json; v=1" "https://rahvaalgatus.ee/initiative-events?include=initiative&&order=-occurredAt&limit=5"
+```
 
 Kui tahaksid ligipääsu infole, mida me hetkel APIs ei väljasta, palun [anna meile sellest GitHubi kaudu teada](https://github.com/rahvaalgatus/rahvaalgatus/issues).
