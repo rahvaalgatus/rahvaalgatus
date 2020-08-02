@@ -1,4 +1,3 @@
-var _ = require("root/lib/underscore")
 var Config = require("root/config")
 var DateFns = require("date-fns")
 var I18n = require("root/lib/i18n")
@@ -9,7 +8,6 @@ var sendEmail = require("root").sendEmail
 var initiativesDb = require("root/db/initiatives_db")
 var logger = require("root").logger
 var t = require("root/lib/i18n").t.bind(null, Config.language)
-var usersDb = require("root/db/users_db")
 var db = require("root/db/initiatives_db")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var {getRequiredSignatureCount} = require("root/lib/initiative")
@@ -23,30 +21,32 @@ module.exports = function*() {
 
 function* emailEndedDiscussions() {
 	var discussions = yield initiativesDb.search(sql`
-		SELECT uuid, title
-		FROM initiatives
-		WHERE phase = 'edit'
-		AND published_at IS NOT NULL
-		AND discussion_ends_at >= ${DateFns.addMonths(new Date, -6)}
-		AND discussion_ends_at <= ${new Date}
-		AND discussion_end_email_sent_at IS NULL
+		SELECT
+			initiative.*,
+			user.email AS user_email,
+			user.email_confirmed_at AS user_email_confirmed_at
+
+		FROM initiatives AS initiative
+		JOIN users AS user ON initiative.user_id = user.id
+
+		WHERE initiative.phase = 'edit'
+		AND initiative.published_at IS NOT NULL
+		AND initiative.discussion_ends_at >= ${DateFns.addMonths(new Date, -6)}
+		AND initiative.discussion_ends_at <= ${new Date}
+		AND initiative.discussion_end_email_sent_at IS NULL
 	`)
 
-	// TODO: This could be merged into the initiatives query.
-	var users = yield searchUsersByUuids(_.map(discussions, "uuid"))
-
 	yield discussions.map(function*(discussion) {
-		var user = users[discussion.uuid]
-		if (!(user.email && user.email_confirmed_at)) return
+		if (!(discussion.user_email && discussion.user_email_confirmed_at)) return
 
 		logger.info(
 			"Notifying %s of initiative %s discussion's end…",
-			user.email,
+			discussion.user_email,
 			discussion.uuid
 		)
 
 		yield sendEmail({
-			to: user.email,
+			to: discussion.user_email,
 			subject: t("DISCUSSION_END_EMAIL_SUBJECT"),
 			text: renderEmail("DISCUSSION_END_EMAIL_BODY", {
 				initiativeTitle: discussion.title,
@@ -202,17 +202,4 @@ function* emailExpiringInitiatives() {
 			signing_expiration_email_sent_at: new Date
 		})
 	})
-}
-
-function* searchUsersByUuids(uuids) {
-	return _.indexBy(yield usersDb.search(sql`
-		SELECT
-			initiative.uuid AS initiative_uuid,
-			user.email,
-			user.email_confirmed_at
-
-		FROM initiatives AS initiative
-		JOIN users AS user ON initiative.user_id = user.id
-		WHERE initiative.uuid IN ${sql.in(uuids)}
-	`), "initiative_uuid")
 }
