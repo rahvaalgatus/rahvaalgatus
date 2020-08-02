@@ -178,6 +178,7 @@ function InitiativeView(attrs) {
 	var badge = _.find(Config.badges, (_b, tag) => initiative.tags.includes(tag))
 
 	return <li
+		data-uuid={initiative.uuid}
 		class={"initiative" + (initiative.destination ? " with-destination" : "")}
 	>
 		<a href={`/initiatives/${initiative.uuid}`}>

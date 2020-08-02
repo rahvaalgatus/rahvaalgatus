@@ -48,6 +48,7 @@ var INITIATIVE_TYPE = "application/vnd.rahvaalgatus.initiative+json; v=1"
 var ATOM_TYPE = "application/atom+xml"
 var PHASES = require("root/lib/initiative").PHASES
 var EVENTABLE_PHASES = _.without(PHASES, "edit")
+var LOCAL_PHASES = _.without(PHASES, "parliament")
 var PARLIAMENT_DECISIONS = Initiative.PARLIAMENT_DECISIONS
 var COMMITTEE_MEETING_DECISIONS = Initiative.COMMITTEE_MEETING_DECISIONS
 var SITE_HOSTNAME = Url.parse(Config.url).hostname
@@ -335,7 +336,8 @@ describe("InitiativesController", function() {
 					res.body.must.include(initiative.uuid)
 				})
 
-				PHASES.forEach(function(phase) {
+				var phases = dest == "parliament" ? PHASES : LOCAL_PHASES
+				phases.forEach(function(phase) {
 					it(`must show initiatives in ${phase} phase destined for ${dest}`,
 						function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
@@ -353,22 +355,23 @@ describe("InitiativesController", function() {
 						res.body.must.include(initiative.uuid)
 					})
 
-					it(`must not show initiatives in ${phase} not destined for ${dest}`,
-						function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: this.author.id,
-							phase: phase,
-							destination: dest == "parliament" ? "muhu-vald" : "parliament",
-							published_at: new Date
-						}))
+					if (dest != "parliament" || phase != "parliament")
+						it(`must not show initiatives in ${phase} not destined for ${dest}`,
+							function*() {
+							var initiative = yield initiativesDb.create(new ValidInitiative({
+								user_id: this.author.id,
+								phase: phase,
+								destination: dest == "parliament" ? "muhu-vald" : "parliament",
+								published_at: new Date
+							}))
 
-						var res = yield this.request("/initiatives", {
-							headers: {Host: host}
+							var res = yield this.request("/initiatives", {
+								headers: {Host: host}
+							})
+
+							res.statusCode.must.equal(200)
+							res.body.must.not.include(initiative.uuid)
 						})
-
-						res.statusCode.must.equal(200)
-						res.body.must.not.include(initiative.uuid)
-					})
 				})
 			})
 		}
@@ -389,7 +392,8 @@ describe("InitiativesController", function() {
 			})
 
 			;["parliament", "muhu-vald"].forEach(function(dest) {
-				PHASES.forEach(function(phase) {
+				var phases = dest == "parliament" ? PHASES : LOCAL_PHASES
+				phases.forEach(function(phase) {
 					it(`must show initiatives in ${phase} phase destined for ${dest}`,
 						function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
@@ -1264,6 +1268,24 @@ describe("InitiativesController", function() {
 			it("must render initiative in edit phase", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
+					created_at: new Date,
+					published_at: new Date,
+					discussion_ends_at: DateFns.addDays(new Date, 5)
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				res.body.must.include(tHtml("INITIATIVE_IN_DISCUSSION"))
+				res.body.must.include(t("DISCUSSION_DEADLINE"))
+
+				var dom = parseDom(res.body)
+				demand(dom.querySelector("#initiative-phases")).be.null()
+			})
+
+			it("must render initiative for parliament in edit phase", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
 					destination: "parliament",
 					created_at: new Date,
 					published_at: new Date,
@@ -1283,6 +1305,38 @@ describe("InitiativesController", function() {
 				_.sum(_.map(phases, "current")).must.equal(1)
 				phases.edit.current.must.be.true()
 				phases.must.not.have.property("government")
+
+				phases.edit.text.must.equal(
+					t("TXT_DEADLINE_CALENDAR_DAYS_LEFT", {numberOfDaysLeft: 6})
+				)
+			})
+
+			it("must render initiative for local in edit phase", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					destination: "kihnu-vald",
+					created_at: new Date,
+					published_at: new Date,
+					discussion_ends_at: DateFns.addDays(new Date, 5)
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid, {
+					headers: {Host: LOCAL_SITE_HOSTNAME}
+				})
+
+				res.statusCode.must.equal(200)
+
+				res.body.must.include(tHtml("INITIATIVE_IN_DISCUSSION"))
+				res.body.must.include(t("DISCUSSION_DEADLINE"))
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(0)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.current.must.be.true()
+				phases.must.not.have.property("parliament")
+				phases.must.have.property("government")
 
 				phases.edit.text.must.equal(
 					t("TXT_DEADLINE_CALENDAR_DAYS_LEFT", {numberOfDaysLeft: 6})
@@ -1341,7 +1395,10 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.not.include(tHtml("INITIATIVE_IN_DISCUSSION"))
 				res.body.must.not.include(tHtml("VOTING_SUCCEEDED"))
-				res.body.must.not.include(tHtml("VOTING_FAILED"))
+
+				res.body.must.not.include(t("VOTING_FAILED", {
+					signatureCount: Config.votesRequired,
+				}))
 
 				var dom = parseDom(res.body)
 				var phases = queryPhases(dom)
@@ -1547,25 +1604,76 @@ describe("InitiativesController", function() {
 				})
 			})
 
-			it("must render initiative in sign phase that failed", function*() {
+			it("must render initiative for parliament in sign phase that failed",
+				function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign",
 					signing_ends_at: new Date
 				}))
 
+				var signatureCount = Config.votesRequired - 1
+
 				yield citizenosSignaturesDb.create(new ValidCitizenosSignature({
 					initiative_uuid: initiative.uuid
 				}))
 
-				var signatureCount = Config.votesRequired - 1
 				yield signaturesDb.create(_.times(signatureCount - 1, () => (
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
-				res.body.must.include(tHtml("VOTING_FAILED"))
+
+				res.body.must.include(t("VOTING_FAILED", {
+					signatureCount: Config.votesRequired
+				}))
+
+				res.body.must.include(t("N_SIGNATURES_FAILED", {votes: signatureCount}))
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(1)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.past.must.be.true()
+				phases.sign.current.must.be.true()
+				phases.sign.text.must.equal(t("N_SIGNATURES", {votes: signatureCount}))
+			})
+
+			it("must render initiative for local in sign phase that failed",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "kihnu-vald",
+					signing_ends_at: new Date
+				}))
+
+				var threshold = Math.round(
+					LOCAL_GOVERNMENTS["kihnu-vald"].population * 0.01
+				)
+
+				var signatureCount = threshold - 1
+
+				yield citizenosSignaturesDb.create(new ValidCitizenosSignature({
+					initiative_uuid: initiative.uuid
+				}))
+
+				yield signaturesDb.create(_.times(signatureCount - 1, () => (
+					new ValidSignature({initiative_uuid: initiative.uuid})
+				)))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid, {
+					headers: {Host: LOCAL_SITE_HOSTNAME}
+				})
+
+				res.statusCode.must.equal(200)
+
+				res.body.must.include(t("VOTING_FAILED", {
+					signatureCount: threshold
+				}))
+
 				res.body.must.include(t("N_SIGNATURES_FAILED", {votes: signatureCount}))
 
 				var dom = parseDom(res.body)
@@ -1598,7 +1706,11 @@ describe("InitiativesController", function() {
 
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
-				res.body.must.include(tHtml("VOTING_FAILED"))
+
+				res.body.must.include(t("VOTING_FAILED", {
+					signatureCount: Config.votesRequired
+				}))
+
 				res.body.must.include(t("N_SIGNATURES_FAILED", {votes: signatureCount}))
 
 				var dom = parseDom(res.body)
@@ -2371,7 +2483,7 @@ describe("InitiativesController", function() {
 				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
 			})
 
-			it("must render initiative in government", function*() {
+			it("must render initiative for parliament in government", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "government",
@@ -2435,6 +2547,64 @@ describe("InitiativesController", function() {
 				events[2].title.must.equal(
 					t("EVENT_SENT_TO_GOVERNMENT_TITLE_WITH_AGENCY", {
 						agency: "Sidususministeerium"
+					})
+				)
+			})
+
+			it("must render initiative for local in government", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "government",
+					destination: "kihnu-vald",
+					sent_to_government_at: new Date,
+					government_agency: "Kihnu Vallavalitsus"
+				}))
+
+				var threshold = Math.round(
+					LOCAL_GOVERNMENTS["kihnu-vald"].population * 0.01
+				)
+
+				yield signaturesDb.create(_.times(threshold, () => (
+					new ValidSignature({initiative_uuid: initiative.uuid})
+				)))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid, {
+					headers: {Host: LOCAL_SITE_HOSTNAME}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(tHtml("INITIATIVE_IN_GOVERNMENT"))
+
+				res.body.must.include(t("INITIATIVE_IS_IN_GOVERNMENT_AGENCY", {
+					agency: "Kihnu Vallavalitsus"
+				}))
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(2)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.past.must.be.true()
+				phases.sign.past.must.be.true()
+				phases.must.not.have.property("parliament")
+				phases.government.current.must.be.true()
+
+				phases.sign.text.must.equal(t("N_SIGNATURES", {votes: threshold}))
+
+				phases.government.text.must.equal(
+					"Kihnu Vallavalitsus" +
+					I18n.formatDate("numeric", initiative.sent_to_government_at)
+				)
+
+				var events = queryEvents(dom)
+				events.length.must.equal(1)
+				events[0].id.must.equal("sent-to-government")
+				events[0].phase.must.equal("government")
+				events[0].at.must.eql(initiative.sent_to_government_at)
+
+				events[0].title.must.equal(
+					t("EVENT_SENT_TO_GOVERNMENT_TITLE_WITH_AGENCY", {
+						agency: "Kihnu Vallavalitsus"
 					})
 				)
 			})
@@ -2610,7 +2780,11 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_PROCESSED"))
 				res.body.must.not.include(tHtml("VOTING_SUCCEEDED"))
-				res.body.must.not.include(tHtml("VOTING_FAILED"))
+
+				res.body.must.not.include(t("VOTING_FAILED", {
+					signatureCount: Config.votesRequired
+				}))
+
 				res.body.must.not.include(tHtml("VOTING_DEADLINE"))
 
 				var dom = parseDom(res.body)

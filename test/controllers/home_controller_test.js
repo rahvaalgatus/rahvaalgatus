@@ -20,7 +20,9 @@ var SITE_HOSTNAME = Url.parse(Config.url).hostname
 var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
 var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
 var STATISTICS_TYPE = "application/vnd.rahvaalgatus.statistics+json; v=1"
-var PHASES = require("root/lib/initiative").PHASES
+var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
+var {PHASES} = require("root/lib/initiative")
+var LOCAL_PHASES = _.without(PHASES, "parliament")
 
 var EMPTY_STATISTICS = {
 	initiativeCountsByPhase: {
@@ -61,9 +63,12 @@ describe("HomeController", function() {
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
-			res.body.must.include(initiative.uuid)
-			res.body.must.include(initiative.title)
-			res.body.must.include(this.author.name)
+
+			var dom = parseDom(res.body)
+			var el = dom.getElementById("initiatives")
+			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
+			el.textContent.must.include(initiative.title)
+			el.textContent.must.include(this.author.name)
 		})
 
 		it("must show initiatives in edit phase", function*() {
@@ -76,7 +81,11 @@ describe("HomeController", function() {
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
-			res.body.must.include(initiative.uuid)
+
+			var dom = parseDom(res.body)
+			var el = dom.getElementById("initiatives")
+			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
+			el.must.exist()
 		})
 
 		it("must show initiatives in edit phase that have ended less than 2w ago",
@@ -90,7 +99,11 @@ describe("HomeController", function() {
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
-			res.body.must.include(initiative.uuid)
+
+			var dom = parseDom(res.body)
+			var el = dom.getElementById("initiatives")
+			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
+			el.must.exist()
 		})
 
 		it("must not show initiatives in edit phase that have ended", function*() {
@@ -133,8 +146,11 @@ describe("HomeController", function() {
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
-			res.body.must.include(initiative.uuid)
-			res.body.must.include(t("N_SIGNATURES", {votes: 5}))
+
+			var dom = parseDom(res.body)
+			var el = dom.getElementById("initiatives")
+			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
+			el.textContent.must.include(t("N_SIGNATURES", {votes: 5}))
 		})
 
 		it("must show initiatives in sign phase that failed in less than 2w",
@@ -147,12 +163,32 @@ describe("HomeController", function() {
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
-			res.body.must.include(initiative.uuid)
+
+			var dom = parseDom(res.body)
+			var el = dom.getElementById("initiatives")
+			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
+			el.must.exist()
 		})
 
-		it("must not show initiatives in sign phase that failed", function*() {
+		it("must not show initiatives for parliament in sign phase that failed",
+			function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
+				phase: "sign",
+				destination: "parliament",
+				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -14)
+			}))
+
+			var res = yield this.request("/")
+			res.statusCode.must.equal(200)
+			res.body.must.not.include(initiative.uuid)
+		})
+
+		it("must not show initiatives for local in sign phase that failed",
+			function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				destination: "kihnu-vald",
 				phase: "sign",
 				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -14)
 			}))
@@ -162,10 +198,12 @@ describe("HomeController", function() {
 			res.body.must.not.include(initiative.uuid)
 		})
 
-		it("must show initiatives in sign phase that succeeded", function*() {
+		it("must show initiatives for parliament in sign phase that succeeded",
+			function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "sign",
+				destination: "parliament",
 				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -14)
 			}))
 
@@ -175,7 +213,37 @@ describe("HomeController", function() {
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
-			res.body.must.include(initiative.uuid)
+
+			var dom = parseDom(res.body)
+			var el = dom.getElementById("initiatives")
+			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
+			el.must.exist()
+		})
+
+		it("must show initiatives for local in sign phase that succeeded",
+			function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "sign",
+				destination: "kihnu-vald",
+				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -14)
+			}))
+
+			var threshold = Math.round(
+				LOCAL_GOVERNMENTS["kihnu-vald"].population * 0.01
+			)
+
+			yield signaturesDb.create(_.times(threshold, () => (
+				new ValidSignature({initiative_uuid: initiative.uuid})
+			)))
+
+			var res = yield this.request("/")
+			res.statusCode.must.equal(200)
+
+			var dom = parseDom(res.body)
+			var el = dom.getElementById("initiatives")
+			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
+			el.must.exist()
 		})
 
 		it("must show initiatives in parliament phase", function*() {
@@ -186,7 +254,11 @@ describe("HomeController", function() {
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
-			res.body.must.include(initiative.uuid)
+
+			var dom = parseDom(res.body)
+			var el = dom.getElementById("initiatives")
+			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
+			el.must.exist()
 		})
 
 		it("must show external initiatives in parliament phase", function*() {
@@ -197,7 +269,11 @@ describe("HomeController", function() {
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
-			res.body.must.include(initiative.uuid)
+
+			var dom = parseDom(res.body)
+			var el = dom.getElementById("initiatives")
+			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
+			el.must.exist()
 		})
 
 		it("must show initiatives in government phase", function*() {
@@ -208,7 +284,11 @@ describe("HomeController", function() {
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
-			res.body.must.include(initiative.uuid)
+
+			var dom = parseDom(res.body)
+			var el = dom.getElementById("initiatives")
+			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
+			el.must.exist()
 		})
 
 		it("must show external initiatives in government phase", function*() {
@@ -219,7 +299,11 @@ describe("HomeController", function() {
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
-			res.body.must.include(initiative.uuid)
+
+			var dom = parseDom(res.body)
+			var el = dom.getElementById("initiatives")
+			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
+			el.must.exist()
 		})
 
 		it("must show initiatives in done phase", function*() {
@@ -230,7 +314,11 @@ describe("HomeController", function() {
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
-			res.body.must.include(initiative.uuid)
+
+			var dom = parseDom(res.body)
+			var el = dom.getElementById("initiatives")
+			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
+			el.must.exist()
 		})
 
 		it("must show external initiatives in done phase", function*() {
@@ -241,7 +329,11 @@ describe("HomeController", function() {
 
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
-			res.body.must.include(initiative.uuid)
+
+			var dom = parseDom(res.body)
+			var el = dom.getElementById("initiatives")
+			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
+			el.must.exist()
 		})
 
 		it("must not show archived external initiatives in done phase",
@@ -299,7 +391,11 @@ describe("HomeController", function() {
 
 					var res = yield this.request("/", {headers: {Host: host}})
 					res.statusCode.must.equal(200)
-					res.body.must.include(initiative.uuid)
+
+					var dom = parseDom(res.body)
+					var el = dom.getElementById("initiatives")
+					el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
+					el.must.exist()
 				})
 
 				;["edit", "sign"].forEach(function(phase) {
@@ -319,7 +415,11 @@ describe("HomeController", function() {
 
 						var res = yield this.request("/", {headers: {Host: host}})
 						res.statusCode.must.equal(200)
-						res.body.must.include(initiative.uuid)
+
+						var dom = parseDom(res.body)
+						var el = dom.getElementById("initiatives")
+						el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
+						el.must.exist()
 					})
 
 					it(`must not show initiatives in ${phase} not destined for ${dest}`,
@@ -356,7 +456,11 @@ describe("HomeController", function() {
 
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
-				res.body.must.include(initiative.uuid)
+
+				var dom = parseDom(res.body)
+				var el = dom.getElementById("initiatives")
+				el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
+				el.must.exist()
 			})
 
 			;["parliament", "muhu-vald"].forEach(function(dest) {
@@ -377,7 +481,11 @@ describe("HomeController", function() {
 
 						var res = yield this.request("/")
 						res.statusCode.must.equal(200)
-						res.body.must.include(initiative.uuid)
+
+						var dom = parseDom(res.body)
+						var el = dom.getElementById("initiatives")
+						el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
+						el.must.exist()
 					})
 				})
 			})
@@ -401,22 +509,30 @@ describe("HomeController", function() {
 					})
 
 					it("must count initiatives", function*() {
-						yield initiativesDb.create(flatten([
-							"parliament",
-							"muhu-vald"
-						].map((dest) => PHASES.map((phase) => new ValidInitiative({
-							user_id: this.author.id,
-							phase: phase,
-							published_at: new Date,
-							destination: dest
-						})))))
+						yield initiativesDb.create(PHASES.map((phase) => (
+							new ValidInitiative({
+								user_id: this.author.id,
+								destination: "parliament",
+								phase: phase,
+								published_at: new Date
+							})
+						)))
+
+						yield initiativesDb.create(LOCAL_PHASES.map((phase) => (
+							new ValidInitiative({
+								user_id: this.author.id,
+								destination: "kihnu-vald",
+								phase: phase,
+								published_at: new Date
+							})
+						)))
 
 						var res = yield this.request("/")
 						res.statusCode.must.equal(200)
 
 						var dom = parseDom(res.body)
 						var el = dom.querySelector("#discussions-statistic .count")
-						el.textContent.must.equal(String(PHASES.length * 2))
+						el.textContent.must.equal(String(PHASES.length * 2 - 1))
 					})
 
 					it("must not count unpublished initiatives", function*() {
@@ -437,16 +553,24 @@ describe("HomeController", function() {
 				describe("initiatives", function() {
 					it("must count initiatives", function*() {
 						var phases = _.without(PHASES, "edit")
+						var localPhases = _.without(LOCAL_PHASES, "edit")
 
-						yield initiativesDb.create(flatten([
-							"parliament",
-							"muhu-vald"
-						].map((dest) => phases.map((phase) => new ValidInitiative({
+						yield initiativesDb.create(phases.map((phase) => (
+							new ValidInitiative({
 								user_id: this.author.id,
+								destination: "parliament",
 								phase: phase,
-								published_at: new Date,
-								destination: dest
-							}))
+								published_at: new Date
+							})
+						)))
+
+						yield initiativesDb.create(localPhases.map((phase) => (
+							new ValidInitiative({
+								user_id: this.author.id,
+								destination: "kihnu-vald",
+								phase: phase,
+								published_at: new Date
+							})
 						)))
 
 						var res = yield this.request("/")
@@ -454,7 +578,7 @@ describe("HomeController", function() {
 
 						var dom = parseDom(res.body)
 						var el = dom.querySelector("#initiatives-statistic .count")
-						el.textContent.must.equal(String(phases.length * 2))
+						el.textContent.must.equal(String(phases.length * 2 - 1))
 					})
 
 					it("must not count external initiatives", function*() {
@@ -554,11 +678,11 @@ describe("HomeController", function() {
 							"parliament",
 							"muhu-vald"
 						].map((dest) => [
-							new ValidInitiative({
+							dest == "parliament" ? new ValidInitiative({
 								user_id: this.author.id,
 								destination: dest,
 								phase: "parliament"
-							}),
+							}) : null,
 
 							new ValidInitiative({
 								user_id: this.author.id,
@@ -572,19 +696,25 @@ describe("HomeController", function() {
 								phase: "done"
 							}),
 
-							new ValidInitiative({
+							dest == "parliament" ? new ValidInitiative({
 								phase: "parliament",
 								destination: dest,
 								external: true
+							}) : null,
+
+							new ValidInitiative({
+								phase: "government",
+								destination: dest,
+								external: true
 							})
-						])))
+						].filter(Boolean))))
 
 						var res = yield this.request("/")
 						res.statusCode.must.equal(200)
 
 						var dom = parseDom(res.body)
 						var el = dom.querySelector("#parliament-statistic .count")
-						el.textContent.must.equal("6+2")
+						el.textContent.must.equal("5+3")
 					})
 				})
 			})
@@ -666,7 +796,7 @@ describe("HomeController", function() {
 
 					it("must not count local initiatives", function*() {
 						yield initiativesDb.create(
-							PHASES.map((phase) => new ValidInitiative({
+							LOCAL_PHASES.map((phase) => new ValidInitiative({
 								user_id: this.author.id,
 								phase: phase,
 								published_at: new Date,
@@ -728,7 +858,7 @@ describe("HomeController", function() {
 					})
 
 					it("must not count initiatives destined for local", function*() {
-						var phases = _.without(PHASES, "edit")
+						var phases = _.without(LOCAL_PHASES, "edit")
 
 						yield initiativesDb.create(
 							phases.map((phase) => new ValidInitiative({
@@ -899,12 +1029,6 @@ describe("HomeController", function() {
 						yield initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							destination: "muhu-vald",
-							phase: "parliament"
-						}))
-
-						yield initiativesDb.create(new ValidInitiative({
-							user_id: this.author.id,
-							destination: "muhu-vald",
 							phase: "government"
 						}))
 
@@ -916,7 +1040,7 @@ describe("HomeController", function() {
 
 						yield initiativesDb.create(new ValidInitiative({
 							destination: "muhu-vald",
-							phase: "parliament",
+							phase: "government",
 							external: true
 						}))
 

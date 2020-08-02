@@ -6,6 +6,7 @@ var Config = require("root/config")
 var I18n = require("root/lib/i18n")
 var Css = require("root/lib/css")
 var diffInDays = require("date-fns").differenceInCalendarDays
+var {getRequiredSignatureCount} = require("root/lib/initiative")
 exports = module.exports = InitiativePage
 exports.ProgressView = ProgressView
 	
@@ -99,14 +100,16 @@ function ProgressView(attrs) {
 		case "sign":
 			if (initiative.external) return null
 
-			if (sigs >= Config.votesRequired)
+			var signatureThreshold = getRequiredSignatureCount(initiative)
+
+			if (sigs >= signatureThreshold)
 				return <div class={`${klass} completed`}>
 					{t("N_SIGNATURES_COLLECTED", {votes: sigs})}
 				</div>
 
 			else if (new Date < initiative.signing_ends_at)
 				return <div
-					style={Css.linearBackground("#00cb81", sigs / Config.votesRequired)}
+					style={Css.linearBackground("#00cb81", sigs / signatureThreshold)}
 					class={klass}>
 					{t("N_SIGNATURES", {votes: sigs})}
 				</div>

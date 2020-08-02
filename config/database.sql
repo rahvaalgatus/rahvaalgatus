@@ -49,7 +49,10 @@ CREATE TABLE initiatives (
 	CHECK (signing_expired_at IS NULL OR phase == 'sign'),
 
 	CONSTRAINT initiatives_destination
-	CHECK (destination IS NOT NULL OR phase = 'edit')
+	CHECK (destination IS NOT NULL OR phase = 'edit'),
+
+	CONSTRAINT phase_not_parliament_when_local
+	CHECK (phase != 'parliament' OR destination == 'parliament')
 );
 CREATE TABLE initiative_messages (
 	id INTEGER PRIMARY KEY NOT NULL,
@@ -580,4 +583,5 @@ INSERT INTO migrations VALUES('20200618155300');
 INSERT INTO migrations VALUES('20200618155310');
 INSERT INTO migrations VALUES('20200618155320');
 INSERT INTO migrations VALUES('20200709190642');
+INSERT INTO migrations VALUES('20200727092343');
 COMMIT;

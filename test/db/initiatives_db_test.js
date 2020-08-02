@@ -73,6 +73,105 @@ describe("InitiativesDb", function() {
 			})
 		})
 
+
+		describe("text_type", function() {
+			it("must be parsed", function*() {
+				var initiative = new ValidInitiative({
+					user_id: this.user.id,
+					phase: "sign",
+					text: "<h1>Hello, world!</h1>",
+					text_type: new MediaType("text/html"),
+					text_sha256: sha256("<h1>Hello, world!</h1>")
+				})
+
+				yield db.read(yield db.create(initiative)).must.then.eql(initiative)
+			})
+		})
+	})
+
+	describe(".create", function() {
+		it("must throw given no user_id nor external", function*() {
+			var err
+			try {
+				yield db.create(new ValidInitiative({
+					user_id: null,
+					external: false
+				}))
+			}
+			catch (ex) { err = ex }
+			err.must.be.an.error(SqliteError)
+			err.code.must.equal("constraint")
+			err.type.must.equal("check")
+			err.constraint.must.equal("initiatives_user_id_or_external")
+		})
+
+		describe("phase", function() {
+			describe("given initiative for parliament", function() {
+				PHASES.forEach(function(phase) {
+					it(`must allow ${phase} phase`, function*() {
+						var initiative = new ValidInitiative({
+							phase: phase,
+							external: true,
+							destination: "parliament",
+							discussion_ends_at: new Date
+						})
+
+						yield db.read(yield db.create(initiative)).must.then.eql(initiative)
+					})
+				})
+			})
+
+			describe("given initiative for local", function() {
+				_.without(PHASES, "parliament").forEach(function(phase) {
+					it(`must allow ${phase} phase`, function*() {
+						var initiative = new ValidInitiative({
+							phase: phase,
+							external: true,
+							destination: "muhu-vald",
+							discussion_ends_at: new Date
+						})
+
+						yield db.read(yield db.create(initiative)).must.then.eql(initiative)
+					})
+				})
+				
+				it("must throw if parliament phase", function*() {
+					var err
+					try {
+						yield db.create(new ValidInitiative({
+							phase: "parliament",
+							external: true,
+							destination: "muhu-vald",
+						}))
+					}
+					catch (ex) { err = ex }
+					err.must.be.an.error(SqliteError)
+					err.code.must.equal("constraint")
+					err.type.must.equal("check")
+					err.constraint.must.equal("phase_not_parliament_when_local")
+				})
+			})
+		})
+
+		describe("uuid", function() {
+			it("must throw given duplicate uuids", function*() {
+				var attrs = {
+					user_id: this.user.id,
+					uuid: "457628aa-42cd-45d8-bb74-94c4866c670c"
+				}
+
+				yield db.create(new ValidInitiative(attrs))
+
+				var err
+				try { yield db.create(new ValidInitiative(attrs)) }
+				catch (ex) { err = ex }
+				err.must.be.an.error(SqliteError)
+				err.code.must.equal("constraint")
+				err.type.must.equal("unique")
+				err.columns.must.eql(["uuid"])
+			})
+		})
+
 		describe("text", function() {
 			it("must not be allowed in edit phase", function*() {
 				var initiative = new ValidInitiative({
@@ -118,18 +217,6 @@ describe("InitiativesDb", function() {
 		})
 
 		describe("text_type", function() {
-			it("must be parsed", function*() {
-				var initiative = new ValidInitiative({
-					user_id: this.user.id,
-					phase: "sign",
-					text: "<h1>Hello, world!</h1>",
-					text_type: new MediaType("text/html"),
-					text_sha256: sha256("<h1>Hello, world!</h1>")
-				})
-
-				yield db.read(yield db.create(initiative)).must.then.eql(initiative)
-			})
-
 			it("must be required if text present", function*() {
 				var initiative = new ValidInitiative({
 					user_id: this.user.id,
@@ -191,40 +278,6 @@ describe("InitiativesDb", function() {
 				err.must.be.an.error(SqliteError)
 				err.constraint.must.equal("initiatives_text_sha256_length")
 			})
-		})
-	})
-
-	describe(".create", function() {
-		it("must throw given duplicate uuids", function*() {
-			var attrs = {
-				user_id: this.user.id,
-				uuid: "457628aa-42cd-45d8-bb74-94c4866c670c"
-			}
-
-			yield db.create(new ValidInitiative(attrs))
-
-			var err
-			try { yield db.create(new ValidInitiative(attrs)) }
-			catch (ex) { err = ex }
-			err.must.be.an.error(SqliteError)
-			err.code.must.equal("constraint")
-			err.type.must.equal("unique")
-			err.columns.must.eql(["uuid"])
-		})
-
-		it("must throw given no user_id nor external", function*() {
-			var err
-			try {
-				yield db.create(new ValidInitiative({
-					user_id: null,
-					external: false
-				}))
-			}
-			catch (ex) { err = ex }
-			err.must.be.an.error(SqliteError)
-			err.code.must.equal("constraint")
-			err.type.must.equal("check")
-			err.constraint.must.equal("initiatives_user_id_or_external")
 		})
 	})
 

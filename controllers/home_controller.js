@@ -1,14 +1,13 @@
 var _ = require("root/lib/underscore")
 var DateFns = require("date-fns")
 var Router = require("express").Router
-var Config = require("root/config")
 var MediaType = require("medium-type")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
 var next = require("co-next")
 var sqlite = require("root").sqlite
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
-var {countSignaturesByIds} = require("root/lib/initiative")
+var {getRequiredSignatureCount} = require("root/lib/initiative")
 var sql = require("sqlate")
 var initiativesDb = require("root/db/initiatives_db")
 var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
@@ -22,9 +21,21 @@ exports.router.get("/", next(function*(req, res) {
 	var cutoff = DateFns.addDays(DateFns.startOfDay(new Date), -14)
 
 	var initiatives = yield initiativesDb.search(sql`
-		SELECT initiative.*, user.name AS user_name
+		WITH signatures AS (
+			SELECT initiative_uuid FROM initiative_signatures
+			UNION ALL
+			SELECT initiative_uuid FROM initiative_citizenos_signatures
+		)
+
+		SELECT
+			initiative.*,
+			user.name AS user_name,
+			COUNT(signature.initiative_uuid) AS signature_count
+
 		FROM initiatives AS initiative
 		LEFT JOIN users AS user ON initiative.user_id = user.id
+		LEFT JOIN signatures AS signature
+		ON signature.initiative_uuid = initiative.uuid
 
 		WHERE archived_at IS NULL
 		AND published_at IS NOT NULL
@@ -36,15 +47,15 @@ exports.router.get("/", next(function*(req, res) {
 			gov == null ? sql`IS NOT NULL` :
 			gov == "parliament" ? sql`= 'parliament'` : sql`!= 'parliament'`
 		})
-	`)
 
-	var signatureCounts = yield countSignaturesByIds(_.map(initiatives, "uuid"))
+		GROUP BY initiative.uuid
+	`)
 
 	initiatives = initiatives.filter((initiative) => (
 		initiative.external ||
 		initiative.phase != "sign" ||
 		initiative.signing_ends_at > cutoff ||
-		signatureCounts[initiative.uuid] >= Config.votesRequired
+		initiative.signature_count >= getRequiredSignatureCount(initiative)
 	))
 
 	var statistics = gov == null || gov == "parliament" ? yield {
@@ -63,7 +74,6 @@ exports.router.get("/", next(function*(req, res) {
 			res.render("home_page.jsx", {
 				initiatives: initiatives,
 				statistics: statistics,
-				signatureCounts: signatureCounts,
 				recentInitiatives: recentInitiatives
 			})
 			break
@@ -71,15 +81,13 @@ exports.router.get("/", next(function*(req, res) {
 		case "parliament":
 			res.render("home/parliament_home_page.jsx", {
 				initiatives: initiatives,
-				statistics: statistics,
-				signatureCounts: signatureCounts
+				statistics: statistics
 			})
 			break
 
 		case "local":
 			res.render("home/local_home_page.jsx", {
-				initiatives: initiatives,
-				signatureCounts: signatureCounts
+				initiatives: initiatives
 			})
 			break
 
@@ -221,11 +229,9 @@ function* readStatistics(gov, range) {
 function readSignatureCount(gov, range) {
 	return sqlite(sql`
 		WITH signatures AS (
-			SELECT initiative_uuid, created_at
-			FROM initiative_signatures
+			SELECT initiative_uuid, created_at FROM initiative_signatures
 			UNION ALL
-			SELECT initiative_uuid, created_at
-			FROM initiative_citizenos_signatures
+			SELECT initiative_uuid, created_at FROM initiative_citizenos_signatures
 		)
 
 		SELECT COUNT(*) AS count FROM signatures AS signature
@@ -271,17 +277,15 @@ function* searchRecentInitiatives() {
 
 	return _.sortBy(yield initiativesDb.search(sql`
 		WITH signatures AS (
-			SELECT initiative_uuid, created_at
-			FROM initiative_signatures
+			SELECT initiative_uuid FROM initiative_signatures
 			UNION ALL
-			SELECT initiative_uuid, created_at
-			FROM initiative_citizenos_signatures
+			SELECT initiative_uuid FROM initiative_citizenos_signatures
 		)
 
 		SELECT
 			initiative.*,
 			user.name AS user_name,
-			COALESCE(SUM(signature.initiative_uuid IS NOT NULL), 0) AS signature_count
+			COUNT(signature.initiative_uuid) AS signature_count
 
 		FROM initiatives AS initiative
 		LEFT JOIN users AS user ON initiative.user_id = user.id

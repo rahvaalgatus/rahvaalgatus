@@ -8,7 +8,6 @@ var {Section} = require("./page")
 var {Flash} = require("./page")
 var {Form} = require("./page")
 var {InitiativesView} = require("./initiatives/index_page")
-var EMPTY = Object.prototype
 var EMPTY_ARR = Array.prototype
 exports = module.exports = HomePage
 exports.InitiativesSubscriptionForm = InitiativesSubscriptionForm
@@ -20,7 +19,6 @@ function HomePage(attrs) {
 	var user = req.user
 	var initiatives = attrs.initiatives
 	var stats = attrs.statistics
-	var signatureCounts = attrs.signatureCounts
 	var recentInitiatives = attrs.recentInitiatives
 
 	var initiativesByPhase = _.groupBy(initiatives, "phase")
@@ -138,7 +136,6 @@ function HomePage(attrs) {
 			<InitiativesView
 				t={t}
 				initiatives={recentInitiatives}
-				signatureCounts={EMPTY}
 			/>
 		</Section> : null}
 
@@ -179,7 +176,6 @@ function HomePage(attrs) {
 					t={t}
 					phase="edit"
 					initiatives={inEdit}
-					signatureCounts={signatureCounts}
 				/>
 			</Fragment> : null}
 
@@ -190,7 +186,6 @@ function HomePage(attrs) {
 					t={t}
 					phase="sign"
 					initiatives={inSign}
-					signatureCounts={signatureCounts}
 				/>
 			</Fragment> : null}
 
@@ -201,7 +196,6 @@ function HomePage(attrs) {
 					t={t}
 					phase="parliament"
 					initiatives={inParliament}
-					signatureCounts={signatureCounts}
 				/>
 			</Fragment> : null}
 
@@ -212,7 +206,6 @@ function HomePage(attrs) {
 					t={t}
 					phase="government"
 					initiatives={inGovernment}
-					signatureCounts={signatureCounts}
 				/>
 			</Fragment> : null}
 
@@ -223,7 +216,6 @@ function HomePage(attrs) {
 					t={t}
 					phase="done"
 					initiatives={inDone}
-					signatureCounts={signatureCounts}
 				/>
 			</Fragment> : null}
 

@@ -163,7 +163,7 @@ function ReadPage(attrs) {
 		<script src="/assets/html5.js" />
 		<script src="/assets/hwcrypto.js" />
 
-		{initiative.destination == "parliament" ? <PhasesView
+		{initiative.destination ? <PhasesView
       t={t}
       initiative={initiative}
 			signatureCount={signatureCount}
@@ -247,7 +247,9 @@ function ReadPage(attrs) {
                       {t("N_SIGNATURES_FAILED", {votes: signatureCount})}
                     </h1>
 
-										<p>{t("VOTING_FAILED")}</p>
+										<p>
+											{t("VOTING_FAILED", {signatureCount: signatureThreshold})}
+										</p>
 									</Fragment>}
 								</div>
 							}
@@ -676,7 +678,8 @@ function PhasesView(attrs) {
 	var parliamentProgress
   var parliamentPhaseText
 
-	if (isPhaseAfter("parliament", phase) || finishedInParliamentAt) {
+	if (initiative.destination != "parliament");
+	else if (isPhaseAfter("parliament", phase) || finishedInParliamentAt) {
 		parliamentProgress = 1
 
 		parliamentPhaseText = finishedInParliamentAt ? I18n.formatDateSpan(
@@ -685,7 +688,6 @@ function PhasesView(attrs) {
 			finishedInParliamentAt
 		) : ""
 	}
-	else if (phase != "parliament");
 	else if (receivedByParliamentAt && !acceptedByParliamentAt) {
     var daysSinceSent = diffInDays(new Date, receivedByParliamentAt)
     let daysLeft = PARLIAMENT_ACCEPTANCE_DEADLINE_IN_DAYS - daysSinceSent
@@ -746,6 +748,10 @@ function PhasesView(attrs) {
 			? I18n.formatDate("numeric", sentToGovernmentAt)
 			: ""
 	}
+	else if (
+		initiative.destination != null &&
+		initiative.destination != "parliament"
+	) governmentProgress = 0
 
   return <section id="initiative-phases" class="transparent-section"><center>
     <ol>
@@ -759,7 +765,7 @@ function PhasesView(attrs) {
 				<ProgressView value={signProgress} text={signPhaseText} />
       </li>
 
-			<li
+			{parliamentProgress != null ? <li
 				id="parliament-phase"
 				class={
 					classifyPhase("parliament", phase) +
@@ -772,7 +778,7 @@ function PhasesView(attrs) {
 					value={parliamentProgress}
 					text={parliamentPhaseText}
 				/>
-      </li>
+      </li> : null}
 
 			{governmentProgress != null ? <li
 				id="government-phase"
