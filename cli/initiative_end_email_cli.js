@@ -12,8 +12,7 @@ var t = require("root/lib/i18n").t.bind(null, Config.language)
 var usersDb = require("root/db/users_db")
 var db = require("root/db/initiatives_db")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
-var {countSignaturesByIds} = require("root/lib/initiative")
-var SIGS_REQUIRED = Config.votesRequired
+var {getRequiredSignatureCount} = require("root/lib/initiative")
 var EXPIRATION_MONTHS = Config.expireSignaturesInMonths
 
 module.exports = function*() {
@@ -62,35 +61,50 @@ function* emailEndedDiscussions() {
 
 function* emailEndedInitiatives() {
 	var initiatives = yield initiativesDb.search(sql`
-		SELECT uuid, title
-		FROM initiatives
-		WHERE phase = 'sign'
-		AND signing_ends_at >= ${DateFns.addMonths(new Date, -6)}
-		AND signing_ends_at <= ${new Date}
-		AND signing_end_email_sent_at IS NULL
+		WITH signatures AS (
+			SELECT initiative_uuid FROM initiative_signatures
+			UNION ALL
+			SELECT initiative_uuid FROM initiative_citizenos_signatures
+		)
+
+		SELECT
+			initiative.*,
+			user.email AS user_email,
+			user.email_confirmed_at AS user_email_confirmed_at,
+			COUNT(signature.initiative_uuid) AS signature_count
+
+		FROM initiatives AS initiative
+		JOIN users AS user ON initiative.user_id = user.id
+		LEFT JOIN signatures AS signature
+		ON signature.initiative_uuid = initiative.uuid
+
+		WHERE initiative.phase = 'sign'
+		AND initiative.signing_ends_at >= ${DateFns.addMonths(new Date, -6)}
+		AND initiative.signing_ends_at <= ${new Date}
+		AND initiative.signing_end_email_sent_at IS NULL
+
+		GROUP BY initiative.uuid
 	`)
 
-	// TODO: This could be merged into the initiatives query.
-	var users = yield searchUsersByUuids(_.map(initiatives, "uuid"))
-	var signatureCounts = yield countSignaturesByIds(_.map(initiatives, "uuid"))
-
 	yield initiatives.map(function*(initiative) {
-		var user = users[initiative.uuid]
-		if (!(user.email && user.email_confirmed_at)) return
+		if (!(initiative.user_email && initiative.user_email_confirmed_at)) return
 
 		logger.info(
 			"Notifying %s of initiative %s signing end…",
-			user.email,
+			initiative.user_email,
 			initiative.uuid
 		)
 
+		var threshold = getRequiredSignatureCount(initiative)
+
 		yield sendEmail({
-			to: user.email,
-			subject: signatureCounts[initiative.uuid] >= SIGS_REQUIRED
+			to: initiative.user_email,
+
+			subject: initiative.signature_count >= threshold
 				? t("SIGNING_END_COMPLETE_EMAIL_SUBJECT")
 				: t("SIGNING_END_INCOMPLETE_EMAIL_SUBJECT"),
 
-			text: renderEmail(signatureCounts[initiative.uuid] >= SIGS_REQUIRED
+			text: renderEmail(initiative.signature_count >= threshold
 				? "SIGNING_END_COMPLETE_EMAIL_BODY"
 				: "SIGNING_END_INCOMPLETE_EMAIL_BODY", {
 				initiativeTitle: initiative.title,

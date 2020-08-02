@@ -12,6 +12,7 @@ var signaturesDb = require("root/db/initiative_signatures_db")
 var db = require("root/db/initiatives_db")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var EXPIRATION_MONTHS = Config.expireSignaturesInMonths
+var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 
 describe("InitiativeEndEmailCli", function() {
 	require("root/test/mitm")()
@@ -155,83 +156,175 @@ describe("InitiativeEndEmailCli", function() {
 	})
 
 	describe("when in signing", function() {
-		it("must email when signing has ended and initiative successful",
-			function*() {
-			var initiative = yield db.create(new ValidInitiative({
-				user_id: this.user.id,
-				phase: "sign",
-				signing_started_at: new Date,
-				signing_ends_at: new Date
-			}))
+		describe("when destined for parliament", function() {
+			it("must email when signing has ended and initiative successful",
+				function*() {
+				var initiative = yield db.create(new ValidInitiative({
+					user_id: this.user.id,
+					phase: "sign",
+					signing_started_at: new Date,
+					signing_ends_at: new Date
+				}))
 
-			yield signaturesDb.create(_.times(Config.votesRequired, () => (
-				new ValidSignature({initiative_uuid: initiative.uuid})
-			)))
+				yield signaturesDb.create(_.times(Config.votesRequired, () => (
+					new ValidSignature({initiative_uuid: initiative.uuid})
+				)))
 
-			yield cli()
-			this.emails.length.must.equal(1)
+				yield cli()
+				this.emails.length.must.equal(1)
 
-			var email = this.emails[0]
-			email.envelope.to.must.eql([this.user.email])
-			email.headers.subject.must.equal(t("SIGNING_END_COMPLETE_EMAIL_SUBJECT"))
+				var email = this.emails[0]
+				email.envelope.to.must.eql([this.user.email])
+				email.headers.subject.must.equal(t("SIGNING_END_COMPLETE_EMAIL_SUBJECT"))
 
-			email.body.must.equal(t("SIGNING_END_COMPLETE_EMAIL_BODY", {
-				initiativeTitle: initiative.title,
-				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-				initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-				siteUrl: Config.url,
-				facebookUrl: Config.facebookUrl,
-				twitterUrl: Config.twitterUrl
-			}))
+				email.body.must.equal(t("SIGNING_END_COMPLETE_EMAIL_BODY", {
+					initiativeTitle: initiative.title,
+					initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+					initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+					siteUrl: Config.url,
+					facebookUrl: Config.facebookUrl,
+					twitterUrl: Config.twitterUrl
+				}))
+			})
+
+			it("must email when signing has ended and initiative incomplete",
+				function*() {
+				var initiative = yield db.create(new ValidInitiative({
+					user_id: this.user.id,
+					phase: "sign",
+					signing_started_at: new Date,
+					signing_ends_at: new Date
+				}))
+
+				yield signaturesDb.create(_.times(Config.votesRequired - 1, () => (
+					new ValidSignature({initiative_uuid: initiative.uuid})
+				)))
+
+				yield cli()
+				this.emails.length.must.equal(1)
+
+				var email = this.emails[0]
+				email.envelope.to.must.eql([this.user.email])
+
+				email.headers.subject.must.equal(
+					t("SIGNING_END_INCOMPLETE_EMAIL_SUBJECT")
+				)
+
+				email.body.must.equal(t("SIGNING_END_INCOMPLETE_EMAIL_BODY", {
+					initiativeTitle: initiative.title,
+					initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+					initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+					siteUrl: Config.url,
+					facebookUrl: Config.facebookUrl,
+					twitterUrl: Config.twitterUrl
+				}))
+			})
+
+			it("must not email if already in parliament phase", function*() {
+				var initiative = yield db.create(new ValidInitiative({
+					user_id: this.user.id,
+					phase: "parliament",
+					signing_started_at: new Date,
+					signing_ends_at: new Date
+				}))
+
+				yield signaturesDb.create(_.times(Config.votesRequired, () => (
+					new ValidSignature({initiative_uuid: initiative.uuid})
+				)))
+
+				yield cli()
+				this.emails.must.be.empty()
+			})
 		})
 
-		it("must email when signing has ended and initiative incomplete",
-			function*() {
-			var initiative = yield db.create(new ValidInitiative({
-				user_id: this.user.id,
-				phase: "sign",
-				signing_started_at: new Date,
-				signing_ends_at: new Date
-			}))
+		describe("when destined for local", function() {
+			it("must email when signing has ended and initiative successful",
+				function*() {
+				var initiative = yield db.create(new ValidInitiative({
+					user_id: this.user.id,
+					phase: "sign",
+					destination: "kihnu-vald",
+					signing_started_at: new Date,
+					signing_ends_at: new Date
+				}))
 
-			yield signaturesDb.create(_.times(Config.votesRequired - 1, () => (
-				new ValidSignature({initiative_uuid: initiative.uuid})
-			)))
+				var threshold = Math.round(
+					LOCAL_GOVERNMENTS["kihnu-vald"].population * 0.01
+				)
 
-			yield cli()
-			this.emails.length.must.equal(1)
+				yield signaturesDb.create(_.times(threshold, () => (
+					new ValidSignature({initiative_uuid: initiative.uuid})
+				)))
 
-			var email = this.emails[0]
-			email.envelope.to.must.eql([this.user.email])
+				yield cli()
+				this.emails.length.must.equal(1)
 
-			email.headers.subject.must.equal(
-				t("SIGNING_END_INCOMPLETE_EMAIL_SUBJECT")
-			)
+				var email = this.emails[0]
+				email.envelope.to.must.eql([this.user.email])
+				email.headers.subject.must.equal(t("SIGNING_END_COMPLETE_EMAIL_SUBJECT"))
 
-			email.body.must.equal(t("SIGNING_END_INCOMPLETE_EMAIL_BODY", {
-				initiativeTitle: initiative.title,
-				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-				initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-				siteUrl: Config.url,
-				facebookUrl: Config.facebookUrl,
-				twitterUrl: Config.twitterUrl
-			}))
-		})
+				email.body.must.equal(t("SIGNING_END_COMPLETE_EMAIL_BODY", {
+					initiativeTitle: initiative.title,
+					initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+					initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+					siteUrl: Config.url,
+					facebookUrl: Config.facebookUrl,
+					twitterUrl: Config.twitterUrl
+				}))
+			})
 
-		it("must not email if already in parliament phase", function*() {
-			var initiative = yield db.create(new ValidInitiative({
-				user_id: this.user.id,
-				phase: "parliament",
-				signing_started_at: new Date,
-				signing_ends_at: new Date
-			}))
+			it("must email when signing has ended and initiative incomplete",
+				function*() {
+				var initiative = yield db.create(new ValidInitiative({
+					user_id: this.user.id,
+					phase: "sign",
+					signing_started_at: new Date,
+					signing_ends_at: new Date
+				}))
 
-			yield signaturesDb.create(_.times(Config.votesRequired, () => (
-				new ValidSignature({initiative_uuid: initiative.uuid})
-			)))
+				var threshold = Math.round(
+					LOCAL_GOVERNMENTS["kihnu-vald"].population * 0.01
+				)
 
-			yield cli()
-			this.emails.must.be.empty()
+				yield signaturesDb.create(_.times(threshold - 1, () => (
+					new ValidSignature({initiative_uuid: initiative.uuid})
+				)))
+
+				yield cli()
+				this.emails.length.must.equal(1)
+
+				var email = this.emails[0]
+				email.envelope.to.must.eql([this.user.email])
+
+				email.headers.subject.must.equal(
+					t("SIGNING_END_INCOMPLETE_EMAIL_SUBJECT")
+				)
+
+				email.body.must.equal(t("SIGNING_END_INCOMPLETE_EMAIL_BODY", {
+					initiativeTitle: initiative.title,
+					initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+					initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+					siteUrl: Config.url,
+					facebookUrl: Config.facebookUrl,
+					twitterUrl: Config.twitterUrl
+				}))
+			})
+
+			it("must not email if already in parliament phase", function*() {
+				var initiative = yield db.create(new ValidInitiative({
+					user_id: this.user.id,
+					phase: "parliament",
+					signing_started_at: new Date,
+					signing_ends_at: new Date
+				}))
+
+				yield signaturesDb.create(_.times(Config.votesRequired, () => (
+					new ValidSignature({initiative_uuid: initiative.uuid})
+				)))
+
+				yield cli()
+				this.emails.must.be.empty()
+			})
 		})
 
 		it("must email when signing ended 6 months ago", function*() {
@@ -334,7 +427,7 @@ describe("InitiativeEndEmailCli", function() {
 		})
 	})
 
-	describe("when in signing and expiring", function() {
+	describe("when in signing and signatures expiring", function() {
 		beforeEach(function() { Config.expireSignaturesFrom = "1970-01-01" })
 
 		it("must not email if already marked as expired", function*() {
