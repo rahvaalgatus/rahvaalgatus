@@ -3363,7 +3363,9 @@ button.inherited {
 		float: left;
 		padding-right: 2rem;
 
-		img { margin-bottom: 1rem; }
+		img {
+			max-width: 10rem;
+		}
 
 		a {
 			color: $footer-link;

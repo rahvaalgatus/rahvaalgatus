@@ -50,9 +50,6 @@ function Page(attrs, children) {
 		"og:title": title || SITE_TITLE
 	}, DEFAULT_META, attrs.meta)
 
-	var assemblyLogo = "/assets/esstikoostoo_logo.png"
-	if (req.lang !== "et") assemblyLogo = "/assets/esstikoostoo_logo_en.png"
-
 	return <html lang={req.lang} class={attrs.class}>
 		<head>
 			<meta charset="utf-8" />
@@ -181,7 +178,7 @@ function Page(attrs, children) {
 			<footer id="footer"><center>
 				<div class="contact">
 					<a href="https://kogu.ee">
-						<img width="200" src={assemblyLogo} alt={t("KOGU")} />
+						<img width="200" src={"/assets/kogu.png"} alt={t("KOGU")} />
 					</a>
 
 					<p>
