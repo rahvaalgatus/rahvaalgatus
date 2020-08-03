@@ -19,6 +19,7 @@ var sql = require("sqlate")
 var renderEmail = require("root/lib/i18n").email.bind(null, Config.language)
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var MILESTONES = _.sort(_.subtract, Config.signatureMilestones)
+var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 
 describe("InitiativeSignatureMilestonesCli", function() {
 	require("root/test/mitm")()
@@ -37,7 +38,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 			phase: "sign"
 		}))
 
-		var signatures = yield createSignatures(15, new Date, initiative)
+		var signatures = yield createSignatures(7, new Date, initiative)
 
 		var subscriptions = yield subscriptionsDb.create([
 			new ValidSubscription({
@@ -67,11 +68,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 		yield db.read(initiative).must.then.eql({
 			__proto__: initiative,
-
-			signature_milestones: {
-				5: signatures[4].created_at,
-				10: signatures[9].created_at
-			}
+			signature_milestones: {5: signatures[4].created_at}
 		})
 
 		var messages = yield messagesDb.search(sql`
@@ -90,13 +87,13 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 			title: t("EMAIL_SIGNATURE_MILESTONE_N_SUBJECT", {
 				initiativeTitle: initiative.title,
-				milestone: 10
+				milestone: 5
 			}),
 
 			text: renderEmail("EMAIL_SIGNATURE_MILESTONE_N_BODY", {
 				initiativeTitle: initiative.title,
 				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-				milestone: 10
+				milestone: 5
 			}),
 
 			sent_at: new Date,
@@ -105,8 +102,140 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 		this.emails.length.must.equal(1)
 		this.emails[0].envelope.to.must.eql(emails)
-		var msg = String(this.emails[0].message)
-		msg.match(/^Subject: .*/m)[0].must.include(message.title)
+		this.emails[0].headers.subject.must.equal(message.title)
+	})
+
+	describe("when destined for parliament", function() {
+		it("must update milestones and notify if successful", function*() {
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id,
+				phase: "sign"
+			}))
+
+			var milestone = Config.votesRequired
+
+			var signatures = yield createSignatures(
+				milestone + 2,
+				new Date,
+				initiative
+			)
+
+			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+				initiative_uuid: initiative.uuid,
+				confirmed_at: new Date
+			}))
+
+			yield cli()
+
+			yield db.read(initiative).must.then.eql({
+				__proto__: initiative,
+
+				signature_milestones: {
+					5: signatures[4].created_at,
+					[milestone]: signatures[milestone - 1].created_at
+				}
+			})
+
+			var messages = yield messagesDb.search(sql`
+				SELECT * FROM initiative_messages
+			`)
+
+			var message = messages[0]
+
+			messages.must.eql([{
+				id: message.id,
+				initiative_uuid: initiative.uuid,
+				created_at: new Date,
+				updated_at: new Date,
+				origin: "signature_milestone",
+
+				title: t("EMAIL_SIGNATURES_COLLECTED_SUBJECT", {
+					initiativeTitle: initiative.title,
+					milestone: milestone
+				}),
+
+				text: renderEmail("EMAIL_SIGNATURES_COLLECTED_BODY", {
+					initiativeTitle: initiative.title,
+					initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+					milestone: milestone
+				}),
+
+				sent_at: new Date,
+				sent_to: [subscription.email]
+			}])
+
+			this.emails.length.must.equal(1)
+			this.emails[0].envelope.to.must.eql([subscription.email])
+			this.emails[0].headers.subject.must.equal(message.title)
+		})
+	})
+
+	describe("when destined for local", function() {
+		it("must update milestones and notify if successful", function*() {
+			var initiative = yield db.create(new ValidInitiative({
+				user_id: this.user.id,
+				destination: "muhu-vald",
+				phase: "sign"
+			}))
+
+			var milestone = Math.round(
+				LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
+			)
+
+			var signatures = yield createSignatures(
+				milestone + 2,
+				new Date,
+				initiative
+			)
+
+			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+				initiative_uuid: initiative.uuid,
+				confirmed_at: new Date
+			}))
+
+			yield cli()
+
+			yield db.read(initiative).must.then.eql({
+				__proto__: initiative,
+
+				signature_milestones: {
+					5: signatures[4].created_at,
+					[milestone]: signatures[milestone - 1].created_at
+				}
+			})
+
+			var messages = yield messagesDb.search(sql`
+				SELECT * FROM initiative_messages
+			`)
+
+			var message = messages[0]
+
+			messages.must.eql([{
+				id: message.id,
+				initiative_uuid: initiative.uuid,
+				created_at: new Date,
+				updated_at: new Date,
+				origin: "signature_milestone",
+
+				title: t("EMAIL_SIGNATURES_COLLECTED_SUBJECT", {
+					initiativeTitle: initiative.title,
+					milestone: milestone
+				}),
+
+				text: renderEmail("EMAIL_SIGNATURES_COLLECTED_BODY", {
+					initiativeTitle: initiative.title,
+					initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+					milestone: milestone
+				}),
+
+				sent_at: new Date,
+				sent_to: [subscription.email]
+			}])
+
+			this.emails.length.must.equal(1)
+			this.emails[0].envelope.to.must.eql([subscription.email])
+			this.emails[0].headers.subject.must.equal(message.title)
+		})
 	})
 
 	it("must update milestones when not all milestones reached", function*() {

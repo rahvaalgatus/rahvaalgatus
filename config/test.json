@@ -3,7 +3,7 @@
 	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
 	"votesRequired": 10,
 	"minDeadlineDays": 3,
-	"signatureMilestones": [5, 10],
+	"signatureMilestones": [5],
 	"geoIpCityPath": "../test/config/geoip2_city.mmdb",
 	"expireSignaturesInMonths": 18,
 

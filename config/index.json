@@ -14,7 +14,7 @@
 	"maintenance": false,
 	"adminPersonalIds": [],
 	"eventNotificationsSince": "1970-01-01T00:00:00Z",
-	"signatureMilestones": [100, 1000],
+	"signatureMilestones": [100],
 	"demoSignaturesExpirationSeconds": 900,
 	"importInitiativesFromParliament": true,
 	"geoIpCityPath": null,
