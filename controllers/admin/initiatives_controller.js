@@ -82,12 +82,6 @@ exports.router.get("/:id", next(function*(req, res) {
 		WHERE initiative_uuid = ${initiative.uuid}
 	`).then(_.first)
 
-	var messages = yield messagesDb.search(sql`
-		SELECT * FROM initiative_messages
-		WHERE initiative_uuid = ${initiative.uuid}
-		ORDER BY created_at DESC
-	`)
-
 	var image = yield imagesDb.read(sql`
 		SELECT initiative_uuid, type
 		FROM initiative_images
@@ -98,8 +92,7 @@ exports.router.get("/:id", next(function*(req, res) {
 		author: author,
 		image: image,
 		events: events,
-		subscriberCount: subscriberCount,
-		messages: messages
+		subscriberCount: subscriberCount
 	})
 }))
 
@@ -250,73 +243,6 @@ exports.router.delete("/:id/events/:eventId", next(function*(req, res) {
 	yield eventsDb.delete(req.event.id)
 	res.flash("notice", "Event deleted.")
 	res.redirect(req.baseUrl + "/" + initiative.uuid)
-}))
-
-exports.router.get("/:id/messages/new", next(function*(req, res) {
-	var initiative = req.initiative
-
-	res.render("admin/initiatives/messages/create_page.jsx", {
-		message: {
-			title: t("DEFAULT_INITIATIVE_SUBSCRIPTION_MESSAGE_TITLE", {
-				initiativeTitle: initiative.title,
-			}),
-
-			text: renderEmail("DEFAULT_INITIATIVE_SUBSCRIPTION_MESSAGE_BODY", {
-				initiativeTitle: initiative.title,
-				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`
-			})
-		},
-
-		subscriptions: yield subscriptionsDb.searchConfirmedByInitiativeId(
-			initiative.uuid
-		)
-	})
-}))
-
-exports.router.post("/:id/messages", next(function*(req, res) {
-	var initiative = req.initiative
-	var attrs = req.body
-
-	switch (attrs.action) {
-		case "send":
-			var message = yield messagesDb.create({
-				initiative_uuid: initiative.uuid,
-				origin: "message",
-				title: attrs.title,
-				text: attrs.text,
-				created_at: new Date,
-				updated_at: new Date,
-			})
-
-			yield Subscription.send(
-				message,
-				yield subscriptionsDb.searchConfirmedByInitiativeId(initiative.uuid)
-			)
-
-			res.flash("notice", "Message sent.")
-			res.redirect(req.baseUrl + "/" + initiative.uuid)
-			break
-
-		case "preview":
-			res.render("admin/initiatives/messages/create_page.jsx", {
-				message: {
-					title: attrs.title,
-					text: attrs.text,
-				},
-
-				preview: {
-					title: attrs.title,
-					text: attrs.text
-				},
-
-				subscriptions: yield subscriptionsDb.searchConfirmedByInitiativeId(
-					initiative.uuid
-				)
-			})
-			break
-
-		default: throw new HttpError(422, "Invalid Action")
-	}
 }))
 
 function parseInitiative(initiative, obj) {

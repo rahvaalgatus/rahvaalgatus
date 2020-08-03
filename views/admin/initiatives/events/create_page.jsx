@@ -2,9 +2,10 @@
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var Page = require("../../page")
-var MessageView = require("../messages/create_page").MessageView
 var Form = Page.Form
 var Flash = Page.Flash
+var Config = require("root/config")
+var linkify = require("root/lib/linkify")
 var formatDate = require("root/lib/i18n").formatDate
 var formatTime = require("root/lib/i18n").formatTime
 exports = module.exports = CreatePage
@@ -21,9 +22,9 @@ function CreatePage(attrs) {
 		title={"New Event for " + initiative.title}
 		req={req}
 	>
-		<a href={req.baseUrl + "/initiatives"} class="admin-back-2">Initiatives</a>
+		<a href={req.baseUrl} class="admin-back-2">Initiatives</a>
 		<a
-			href={req.baseUrl + "/initiatives/" + initiative.uuid}
+			href={req.baseUrl + "/" + initiative.uuid}
 			class="admin-back"
 		>
 			{initiative.title}
@@ -31,6 +32,7 @@ function CreatePage(attrs) {
 
 		<h1 class="admin-heading">New Event</h1>
 		<Flash flash={req.flash} />
+
 		{message ? <MessageView message={message} /> : null }
 
 		<EventForm
@@ -51,7 +53,7 @@ function EventForm(attrs, children) {
 	var event = attrs.event
 	var submit = attrs.submit
 
-	var path = `${req.baseUrl}/initiatives/${initiative.uuid}/events`
+	var path = `${req.baseUrl}/${initiative.uuid}/events`
 	if (event.id) path += "/" + event.id
 
 	return <Form
@@ -126,4 +128,23 @@ function EventForm(attrs, children) {
 			{event.id ? "Update Event" : "Create New Event"}
 		</button> : null}
 	</Form>
+}
+
+function MessageView(attrs) {
+	var msg = attrs.message
+
+	return <article class="admin-message-preview">
+		<table>
+			<tr>
+				<th>From</th>
+				<td>{Config.email.from}</td>
+			</tr>
+			<tr>
+				<th>Subject</th>
+				<td>{msg.title}</td>
+			</tr>
+		</table>
+
+		<p>{Jsx.html(linkify(msg.text))}</p>
+	</article>
 }

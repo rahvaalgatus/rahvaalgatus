@@ -397,8 +397,7 @@ textarea.admin-input {
 		form ~ p { margin-top: 0.5rem; }
 	}
 
-	.events,
-	.messages {
+	.events {
 		margin-top: 4rem;
 
 		& > table > thead {
@@ -411,10 +410,6 @@ textarea.admin-input {
 		p { margin-top: 0.5rem; }
 
 		.link { @extend .admin-link; }
-	}
-
-	.events,
-	.messages {
 		.text-toggle:not(:checked) ~ :not(label),
 		.text-toggle:checked + label { display: none; }
 	}
