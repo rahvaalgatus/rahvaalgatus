@@ -53,6 +53,7 @@ function EventEntryView(attrs) {
 
 	var title
 	var content
+	var contentUrl
 	var category = CATEGORIES[event.origin]
 	var authorName
 	var decision
@@ -173,6 +174,12 @@ function EventEntryView(attrs) {
 				})
 			break
 
+		case "media-coverage":
+			title = renderEventTitle(initiative, event)
+			contentUrl = event.content.url
+			authorName = event.content.publisher
+			break
+
 		case "text":
 			title = renderEventTitle(initiative, event)
 			content = event.content
@@ -190,7 +197,13 @@ function EventEntryView(attrs) {
 		<published>{event.occurred_at.toJSON()}</published>
 		<updated>{event.updated_at.toJSON()}</updated>
 		{category ? <category term={category} /> : null}
-		{content ? <content type="text">{content}</content> : null}
+
+		{
+			content ? <content type="text">{content}</content> :
+			contentUrl ? <content type="text/html" src={contentUrl} /> :
+			null
+		}
+
 		{authorName ? <author><name>{authorName}</name></author> : null}
 
 		{sourced ? <source>

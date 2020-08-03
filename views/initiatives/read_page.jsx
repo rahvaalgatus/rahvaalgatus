@@ -1928,6 +1928,15 @@ function EventsView(attrs) {
 							</p>
 							break
 
+						case "media-coverage":
+							title = <UntrustedLink href={event.content.url}>
+								{event.title}
+							</UntrustedLink>
+
+							authorName = event.content.publisher
+							content = null
+							break
+
 						case "text":
 							title = event.title
 							authorName = event.origin == "author" ? event.user_name : null
@@ -2404,7 +2413,8 @@ function initiativePhaseFromEvent(event) {
 		case "parliament-finished": return "parliament"
 		case "sent-to-government": return "government"
 		case "finished-in-government": return "government"
-		case "text": return null
+		case "text":
+		case "media-coverage": return null
 		default: throw new RangeError("Unsupported event type: " + event.type)
 	}
 }

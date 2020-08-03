@@ -28,6 +28,7 @@ function parseContent(type, data) {
 	switch (type) {
 		case "parliament-received":
 		case "parliament-finished": return null
+		case "media-coverage":
 		case "parliament-accepted":
 		case "parliament-letter":
 		case "parliament-decision":
@@ -44,6 +45,7 @@ function serializeContent(type, data) {
 	switch (type) {
 		case "parliament-received":
 		case "parliament-finished": return null
+		case "media-coverage":
 		case "parliament-accepted":
 		case "parliament-letter":
 		case "parliament-decision":

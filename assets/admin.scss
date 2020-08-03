@@ -2,6 +2,7 @@
 @import "reset";
 $back-color: #bbb;
 $button-height: 3rem;
+$page-padding: 2rem;
 
 body {
 	font-family: $museo-sans;
@@ -66,7 +67,7 @@ strong { font-weight: bold; }
 }
 
 main {
-	padding: 3rem 2rem;
+	padding: 3rem $page-padding;
 }
 
 .admin-heading {
@@ -283,9 +284,11 @@ button.admin-link {
 .admin-message-preview {
 	background: white;
 	box-shadow: 0 1px 0.3rem 0 rgba(0, 0, 0, 0.2);
+	padding-top: 1.5rem;
 
 	table {
-		padding: 2rem;
+		margin: 0 2rem 1.5rem;
+		line-height: 1.5;
 
 		th {
 			font-weight: bold;
@@ -492,4 +495,43 @@ textarea.admin-input {
 	}
 
 	.admin-submit + button { margin-left: 1rem; }
+}
+
+#create-event-page {
+	#event-type-tabs {
+		$tab-radius: 0.5rem;
+
+		margin-top: 3rem;
+
+		&:first-child { border-top-left-radius: $tab-radius; }
+
+		a {
+			display: inline-block;
+			border: 0.1rem solid $light-background-border;
+			border-bottom: 0;
+			padding: 1rem 2rem;
+			line-height: 1.2;
+			font-size: 1.6rem;
+			margin-bottom: -0.1rem;
+			color: #888;
+			text-align: center;
+
+			& + a { margin-left: -0.1rem; }
+			&:first-child { border-top-left-radius: $tab-radius; }
+			&:last-child { border-top-right-radius: $tab-radius; }
+
+			&.selected { background: white; color: $text; }
+			&[disabled] { cursor: auto; }
+			&[disabled]:not(.selected) { color: transparent; }
+		}
+	}
+
+	#tab {
+		border-top: 0.1rem solid $light-background-border;
+		margin-top: 0;
+		margin-left: -$page-padding;
+		margin-right: -$page-padding;
+		padding: 2rem $page-padding;
+		background: white;
+	}
 }

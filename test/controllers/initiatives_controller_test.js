@@ -2811,6 +2811,35 @@ describe("InitiativesController", function() {
 				phases.archived.current.must.be.true()
 			})
 
+			it("must render initiative with media coverage event", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					external: true
+				}))
+
+				var event = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiative.uuid,
+					type: "media-coverage",
+					title: "News at 11",
+					content: {url: "http://example.com/article", publisher: "Newsbook"},
+					created_at: pseudoDateTime(),
+					occurred_at: pseudoDateTime()
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var events = queryEvents(parseDom(res.body))
+				events.length.must.equal(1)
+
+				events[0].id.must.equal(String(event.id))
+				events[0].must.have.property("phase", null)
+				events[0].author.must.equal("Newsbook")
+				events[0].at.must.eql(event.occurred_at)
+				events[0].title.must.equal("News at 11")
+				events[0].content.length.must.equal(0)
+			})
+
 			it("must render initiative with text event", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "parliament",
@@ -5238,6 +5267,39 @@ describe("InitiativesController", function() {
 				content: {type: "text", $: t("EVENT_FINISHED_IN_GOVERNMENT_CONTENT", {
 					decision: initiative.government_decision
 				})}
+			})
+		})
+
+		it("must render initiative with media coverage event", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament"
+			}))
+
+			var event = yield eventsDb.create(new ValidEvent({
+				initiative_uuid: initiative.uuid,
+				type: "media-coverage",
+				title: "News at 11",
+				content: {url: "http://example.com/article", publisher: "Newsbook"},
+				created_at: pseudoDateTime(),
+				occurred_at: pseudoDateTime()
+			}))
+
+			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			res.statusCode.must.equal(200)
+
+			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+			var eventUrl = `${initiativeUrl}#event-${event.id}`
+
+			Atom.parse(res.body).feed.entry.must.eql({
+				id: {$: `${initiativeUrl}/events/${event.id}`},
+				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				category: {term: "initiator"},
+				updated: {$: event.updated_at.toJSON()},
+				published: {$: event.occurred_at.toJSON()},
+				title: {$: event.title},
+				content: {type: "text/html", src: event.content.url},
+				author: {name: {$: "Newsbook"}}
 			})
 		})
 

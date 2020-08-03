@@ -1,8 +1,8 @@
 var _ = require("root/lib/underscore")
 var Router = require("express").Router
-var Config = require("root/config")
 var Subscription = require("root/lib/subscription")
 var HttpError = require("standard-http-error")
+var Initiative = require("root/lib/initiative")
 var Time = require("root/lib/time")
 var Image = require("root/lib/image")
 var usersDb = require("root/db/users_db")
@@ -167,9 +167,14 @@ exports.router.delete("/:id/image", next(function*(req, res) {
 	res.redirect(req.baseUrl + "/" + initiative.uuid)
 }))
 
-exports.router.get("/:id/events/new", function(_req, res) {
+exports.router.get("/:id/events/new", function(req, res) {
 	res.render("admin/initiatives/events/create_page.jsx", {
-		event: {occurred_at: new Date, title: "", type: "text", content: ""}
+		event: {
+			occurred_at: new Date,
+			type: req.query.type || "text",
+			title: "",
+			content: ""
+		}
 	})
 })
 
@@ -317,20 +322,24 @@ function parseInitiative(initiative, obj) {
 }
 
 function parseEvent(event, obj) {
-	switch (event ? event.type : "text") {
+	switch (event ? event.type : obj.type || "text") {
 		case "text": return {
 			type: "text",
 			title: obj.title,
 			content: obj.content,
-			occurred_at: Time.parseDateTime(
-				obj.occurredOn + "T" + obj.occurredAt + ":00"
-			)
+			occurred_at: parseOccurredAt(obj)
+		}
+
+		case "media-coverage": return {
+			type: "media-coverage",
+			title: obj.title,
+			content: {url: obj.url, publisher: obj.publisher},
+			occurred_at: parseOccurredAt(obj)
 		}
 
 		case "parliament-committee-meeting":
 		case "parliament-letter":
-		case "parliament-decision":
-			return {
+		case "parliament-decision": return {
 			type: event.type,
 
 			content: _.merge({}, event.content, {
@@ -340,21 +349,44 @@ function parseEvent(event, obj) {
 
 		default: throw new RangeError("Unsupported event type: " + event.type)
 	}
+
+	function parseOccurredAt(obj) {
+		return Time.parseDateTime(obj.occurredOn + "T" + obj.occurredAt + ":00")
+	}
 }
 
 function renderEventMessage(initiative, event) {
-	return {
-		title: t("DEFAULT_INITIATIVE_EVENT_MESSAGE_TITLE", {
-			title: event.title,
-			initiativeTitle: initiative.title,
-		}),
+	switch (event.type) {
+		case "text": return {
+			title: t("EMAIL_INITIATIVE_TEXT_EVENT_MESSAGE_TITLE", {
+				title: event.title,
+				initiativeTitle: initiative.title,
+			}),
 
-		text: renderEmail("DEFAULT_INITIATIVE_EVENT_MESSAGE_BODY", {
-			title: event.title,
-			text: _.quoteEmail(event.content),
-			initiativeTitle: initiative.title,
-			initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-		})
+			text: renderEmail("EMAIL_INITIATIVE_TEXT_EVENT_MESSAGE_BODY", {
+				title: event.title,
+				text: _.quoteEmail(event.content),
+				initiativeTitle: initiative.title,
+				initiativeUrl: Initiative.initiativeUrl(initiative)
+			})
+		}
+
+		case "media-coverage": return {
+			title: t("EMAIL_INITIATIVE_MEDIA_COVERAGE_EVENT_MESSAGE_TITLE", {
+				title: event.title,
+				initiativeTitle: initiative.title,
+			}),
+
+			text: renderEmail("EMAIL_INITIATIVE_MEDIA_COVERAGE_EVENT_MESSAGE_BODY", {
+				title: event.title,
+				url: event.content.url,
+				publisher: event.content.publisher,
+				initiativeTitle: initiative.title,
+				initiativeUrl: Initiative.initiativeUrl(initiative)
+			})
+		}
+	
+		default: throw new RangeError("Unsupported event type: " + event.type)
 	}
 }
 
