@@ -3,7 +3,6 @@ var Config = require("root/config")
 var Subscription = require("root/lib/subscription")
 var DateFns = require("date-fns")
 var initiativesDb = require("root/db/initiatives_db")
-var {countSignaturesByIds} = require("root/lib/initiative")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
@@ -15,26 +14,30 @@ var MILESTONES = _.sort(_.subtract, Config.signatureMilestones)
 
 module.exports = function*() {
 	var initiatives = yield initiativesDb.search(sql`
-		SELECT * FROM initiatives
-		WHERE phase != 'edit'
+		WITH signatures AS (
+			SELECT initiative_uuid FROM initiative_signatures
+			UNION ALL
+			SELECT initiative_uuid FROM initiative_citizenos_signatures
+		)
+
+		SELECT initiative.*, COUNT(signature.initiative_uuid) AS signature_count
+		FROM initiatives AS initiative
+		LEFT JOIN signatures AS signature
+		ON signature.initiative_uuid = initiative.uuid
+
+		WHERE initiative.phase != 'edit'
+		GROUP BY initiative.uuid
 	`)
 
-	var signatureCounts = yield countSignaturesByIds(_.map(initiatives, "uuid"))
-
-	var milestonees = initiatives.filter(function(initiative) {
-		var signatureCount = signatureCounts[initiative.uuid]
+	yield initiatives.filter(function(initiative) {
+		var signatureCount = initiative.signature_count
 		var passed = initiative.signature_milestones
 		return MILESTONES.some((n) => n <= signatureCount && !(n in passed))
-	})
-
-	yield milestonees.map(function(initiative) {
-		var signatureCount = signatureCounts[initiative.uuid]
-		return updateMilestones(initiative, signatureCount)
-	})
+	}).map(updateMilestones)
 }
 
-function* updateMilestones(initiative, signatureCount) {
-	var largest = _.findLast(MILESTONES, (n) => signatureCount >= n)
+function* updateMilestones(initiative) {
+	var largest = _.findLast(MILESTONES, (n) => initiative.signature_count >= n)
 
 	var signatures = yield signaturesDb.search(sql`
 		SELECT created_at
