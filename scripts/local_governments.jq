@@ -1,3 +1,5 @@
+def present: if . == "" then null else . end;
+
 .feed.entry |
 
 map({
@@ -5,7 +7,8 @@ map({
 		value: {
 		name: ."gsx$name"."$t",
 		county: ."gsx$county"."$t",
-		population: ."gsx$population"."$t" | tonumber
+		population: ."gsx$population"."$t" | tonumber,
+		initiativesEmail: ."gsx$initiativesemail"."$t" | present
 	}
 }) |
 

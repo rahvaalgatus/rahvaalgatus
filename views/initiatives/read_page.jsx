@@ -267,7 +267,10 @@ function ReadPage(attrs) {
 
 						case "government": return <div class="initiative-status">
 							<h1 class="status-header">
-								{t("INITIATIVE_IN_GOVERNMENT")}
+								{initiative.destination == "parliament"
+									? t("INITIATIVE_IN_GOVERNMENT")
+									: t("INITIATIVE_IN_LOCAL_GOVERNMENT")
+								}
 								{" "}
 								<a href="#initiative-events" class="link-button wide-button">
 									{t("LOOK_AT_EVENTS")}
@@ -784,7 +787,11 @@ function PhasesView(attrs) {
 				id="government-phase"
 				class={classifyPhase("government", phase)}
 			>
-        <i>{t("GOVERNMENT_PHASE")}</i>
+				<i>{initiative.destination == "parliament"
+					? t("GOVERNMENT_PHASE")
+					: t("LOCAL_GOVERNMENT_PHASE")
+				}</i>
+
 				<ProgressView
 					before={initiative.government_agency}
 					value={governmentProgress}
@@ -944,29 +951,39 @@ function SidebarAuthorView(attrs) {
 			</p> : null}
 		</Fragment> : null}
 
-		{Initiative.canSendToParliament(initiative, user, signatureCount) ?
-			<Fragment>
-				<FormButton
-					req={req}
-					action={"/initiatives/" + initiative.uuid}
-					name="status"
-					value="followUp"
-					id="send-to-parliament-button"
-					disabled={!hasSignedEstonianText}
-					class="green-button wide-button">
-					{t("SEND_TO_PARLIAMENT")}
-				</FormButton>
+		{(
+			Initiative.canSendToParliament(initiative, user, signatureCount) ||
+			Initiative.canSendToLocalGovernment(initiative, user, signatureCount)
+		) ? <Fragment>
+			<FormButton
+				req={req}
+				action={"/initiatives/" + initiative.uuid}
+				name="status"
+				value="followUp"
 
-				{!hasSignedEstonianText ? <p>{Jsx.html(translations.et
-					? t("INITIATIVE_SEND_TO_SIGNING_NEEDS_SIGNED_ESTONIAN_TEXT", {
-						signTextUrl: `${initiativePath}/texts/${translations.et.id}/sign`
-					})
-					: t("INITIATIVE_SEND_TO_SIGNING_NEEDS_ESTONIAN_TEXT", {
-						newTextUrl: initiativePath + "/texts/new?language=et"
-					})
-				)}</p> : null}
-			</Fragment>
-		: null}
+				id={initiative.destination == "parliament"
+					? "send-to-parliament-button"
+					: "send-to-local-government-button"
+				}
+
+				disabled={!hasSignedEstonianText}
+				class="green-button wide-button"
+			>
+				{initiative.destination == "parliament"
+					? t("SEND_TO_PARLIAMENT")
+					: t("SEND_TO_LOCAL_GOVERNMENT")
+				}
+			</FormButton>
+
+			{!hasSignedEstonianText ? <p>{Jsx.html(translations.et
+				? t("INITIATIVE_SEND_TO_PARLIAMENT_NEEDS_SIGNED_ESTONIAN_TEXT", {
+					signTextUrl: `${initiativePath}/texts/${translations.et.id}/sign`
+				})
+				: t("INITIATIVE_SEND_TO_PARLIAMENT_NEEDS_ESTONIAN_TEXT", {
+					newTextUrl: initiativePath + "/texts/new?language=et"
+				})
+			)}</p> : null}
+		</Fragment> : null}
 
 		{initiative.phase == "edit" ? <a
 			href={textEditPath}
@@ -1888,11 +1905,13 @@ function EventsView(attrs) {
 							break
 
 						case "sent-to-government":
-							title = !initiative.government_agency
-								? t("EVENT_SENT_TO_GOVERNMENT_TITLE")
-								: t("EVENT_SENT_TO_GOVERNMENT_TITLE_WITH_AGENCY", {
+							title = initiative.destination != "parliament"
+								? t("EVENT_SENT_TO_LOCAL_GOVERNMENT_TITLE")
+								: initiative.government_agency
+								? t("EVENT_SENT_TO_GOVERNMENT_TITLE_WITH_AGENCY", {
 									agency: initiative.government_agency
 								})
+								: t("EVENT_SENT_TO_GOVERNMENT_TITLE")
 							break
 
 						case "finished-in-government":

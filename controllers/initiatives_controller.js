@@ -822,11 +822,10 @@ function* updateInitiativePhaseToParliament(req, res) {
 	if (initiative.user_id != user.id)
 		throw new HttpError(403, "No Permission to Edit")
 
-	if (initiative.destination != "parliament")
-		throw new HttpError(403, "Cannot Send Local Initiative to Parliament")
-
-	if (!Initiative.canSendToParliament(initiative, user, signatureCount))
-		throw new HttpError(403, "Cannot Send to Parliament")
+	if (!(
+		Initiative.canSendToParliament(initiative, user, signatureCount) ||
+		Initiative.canSendToLocalGovernment(initiative, user, signatureCount)
+	)) throw new HttpError(403, "Cannot Send")
 
 	if (initiative.language != "et") {
 		var estonian = yield textsDb.read(sql`
@@ -851,13 +850,20 @@ function* updateInitiativePhaseToParliament(req, res) {
 
 	if (req.body.contact == null) return void res.render(tmpl, {attrs: attrs})
 
-	initiative = yield initiativesDb.update(initiative, {
-		phase: "parliament",
-		sent_to_parliament_at: new Date,
-		parliament_token: Crypto.randomBytes(12)
-	})
+	if (initiative.destination == "parliament")
+		initiative = yield initiativesDb.update(initiative, {
+			phase: "parliament",
+			sent_to_parliament_at: new Date,
+			parliament_token: Crypto.randomBytes(12)
+		})
+	else
+		initiative = yield initiativesDb.update(initiative, {
+			phase: "government",
+			sent_to_government_at: new Date,
+			parliament_token: Crypto.randomBytes(12)
+		})
 
-	var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+	var initiativeUrl = Initiative.initiativeUrl(initiative)
 	var parliamentToken = initiative.parliament_token.toString("hex")
 
 	var undersignedSignaturesUrl =
@@ -868,16 +874,25 @@ function* updateInitiativePhaseToParliament(req, res) {
 		`${initiativeUrl}/signatures.zip?` +
 		Qs.stringify({type: "citizenos", "parliament-token": parliamentToken})
 
-	yield sendEmail({
-		to: Config.parliamentEmail,
+	var parliamentEmail = initiative.destination == "parliament"
+		? Config.parliamentEmail
+		: LOCAL_GOVERNMENTS[initiative.destination].initiativesEmail
 
-		subject: t("EMAIL_INITIATIVE_TO_PARLIAMENT_TITLE", {
+	yield sendEmail({
+		to: parliamentEmail,
+
+		subject: t(initiative.destination == "parliament"
+			? "EMAIL_INITIATIVE_TO_PARLIAMENT_TITLE"
+			: "EMAIL_INITIATIVE_TO_LOCAL_GOVERNMENT_TITLE"
+			, {
 			initiativeTitle: initiative.title
 		}),
 
 		text: renderEmail(
 			"et",
-			citizenosSignatureCount > 0
+			initiative.destination != "parliament"
+			? "EMAIL_INITIATIVE_TO_LOCAL_GOVERNMENT_BODY"
+			: citizenosSignatureCount > 0
 			? "EMAIL_INITIATIVE_TO_PARLIAMENT_WITH_CITIZENOS_SIGNATURES_BODY"
 			: "EMAIL_INITIATIVE_TO_PARLIAMENT_BODY", {
 			initiativeTitle: initiative.title,
@@ -900,14 +915,19 @@ function* updateInitiativePhaseToParliament(req, res) {
 		created_at: new Date,
 		updated_at: new Date,
 
-		title: t("SENT_TO_PARLIAMENT_MESSAGE_TITLE", {
+		title: t(
+			initiative.destination == "parliament"
+			? "SENT_TO_PARLIAMENT_MESSAGE_TITLE"
+			: "SENT_TO_LOCAL_GOVERNMENT_MESSAGE_TITLE", {
 			initiativeTitle: initiative.title
 		}),
 
-		text: renderEmail("et", "SENT_TO_PARLIAMENT_MESSAGE_BODY", {
+		text: renderEmail("et", initiative.destination == "parliament"
+			? "SENT_TO_PARLIAMENT_MESSAGE_BODY"
+			: "SENT_TO_LOCAL_GOVERNMENT_MESSAGE_BODY", {
 			authorName: attrs.contact.name,
 			initiativeTitle: initiative.title,
-			initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+			initiativeUrl: initiativeUrl,
 			signatureCount: signatureCount
 		})
 	})
@@ -917,7 +937,11 @@ function* updateInitiativePhaseToParliament(req, res) {
 		yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(initiative.uuid)
 	)
 
-	res.flash("notice", req.t("SENT_TO_PARLIAMENT_CONTENT"))
+	res.flash("notice", initiative.destination == "parliament"
+		? req.t("SENT_TO_PARLIAMENT_CONTENT")
+		: req.t("SENT_TO_LOCAL_GOVERNMENT_CONTENT")
+	)
+
 	res.redirect(303, req.baseUrl + "/" + initiative.uuid)
 }
 

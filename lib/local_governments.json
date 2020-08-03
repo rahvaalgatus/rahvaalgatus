@@ -2,396 +2,475 @@
 	"anija-vald": {
 		"name": "Anija vald",
 		"county": "Harju",
-		"population": 6214
+		"population": 6214,
+		"initiativesEmail": null
 	},
 	"harku-vald": {
 		"name": "Harku vald",
 		"county": "Harju",
-		"population": 14820
+		"population": 14820,
+		"initiativesEmail": null
 	},
 	"jõelähtme-vald": {
 		"name": "Jõelähtme vald",
 		"county": "Harju",
-		"population": 6508
+		"population": 6508,
+		"initiativesEmail": null
 	},
 	"keila-linn": {
 		"name": "Keila linn",
 		"county": "Harju",
-		"population": 9975
+		"population": 9975,
+		"initiativesEmail": null
 	},
 	"kiili-vald": {
 		"name": "Kiili vald",
 		"county": "Harju",
-		"population": 5442
+		"population": 5442,
+		"initiativesEmail": null
 	},
 	"kose-vald": {
 		"name": "Kose vald",
 		"county": "Harju",
-		"population": 7123
+		"population": 7123,
+		"initiativesEmail": null
 	},
 	"kuusalu-vald": {
 		"name": "Kuusalu vald",
 		"county": "Harju",
-		"population": 6446
+		"population": 6446,
+		"initiativesEmail": null
 	},
 	"loksa-linn": {
 		"name": "Loksa linn",
 		"county": "Harju",
-		"population": 2636
+		"population": 2636,
+		"initiativesEmail": null
 	},
 	"lääne-harju-vald": {
 		"name": "Lääne-Harju vald",
 		"county": "Harju",
-		"population": 12578
+		"population": 12578,
+		"initiativesEmail": null
 	},
 	"maardu-linn": {
 		"name": "Maardu linn",
 		"county": "Harju",
-		"population": 15468
+		"population": 15468,
+		"initiativesEmail": null
 	},
 	"raasiku-vald": {
 		"name": "Raasiku vald",
 		"county": "Harju",
-		"population": 5022
+		"population": 5022,
+		"initiativesEmail": null
 	},
 	"rae-vald": {
 		"name": "Rae vald",
 		"county": "Harju",
-		"population": 18951
+		"population": 18951,
+		"initiativesEmail": null
 	},
 	"saku-vald": {
 		"name": "Saku vald",
 		"county": "Harju",
-		"population": 10127
+		"population": 10127,
+		"initiativesEmail": null
 	},
 	"saue-vald": {
 		"name": "Saue vald",
 		"county": "Harju",
-		"population": 22139
+		"population": 22139,
+		"initiativesEmail": null
 	},
 	"tallinn": {
 		"name": "Tallinn",
 		"county": "Harju",
-		"population": 438930
+		"population": 438930,
+		"initiativesEmail": null
 	},
 	"viimsi-vald": {
 		"name": "Viimsi vald",
 		"county": "Harju",
-		"population": 20142
+		"population": 20142,
+		"initiativesEmail": null
 	},
 	"hiiumaa-vald": {
 		"name": "Hiiumaa vald",
 		"county": "Hiiu",
-		"population": 9512
+		"population": 9512,
+		"initiativesEmail": null
 	},
 	"alutaguse-vald": {
 		"name": "Alutaguse vald",
 		"county": "Ida-Viru",
-		"population": 4766
+		"population": 4766,
+		"initiativesEmail": null
 	},
 	"jõhvi-vald": {
 		"name": "Jõhvi vald",
 		"county": "Ida-Viru",
-		"population": 11280
+		"population": 11280,
+		"initiativesEmail": null
 	},
 	"kohtla-järve-linn": {
 		"name": "Kohtla-Järve linn",
 		"county": "Ida-Viru",
-		"population": 33709
+		"population": 33709,
+		"initiativesEmail": null
 	},
 	"lüganuse-vald": {
 		"name": "Lüganuse vald",
 		"county": "Ida-Viru",
-		"population": 8631
+		"population": 8631,
+		"initiativesEmail": null
 	},
 	"narva-linn": {
 		"name": "Narva linn",
 		"county": "Ida-Viru",
-		"population": 56459
+		"population": 56459,
+		"initiativesEmail": null
 	},
 	"narva-jõesuu-linn": {
 		"name": "Narva-Jõesuu linn",
 		"county": "Ida-Viru",
-		"population": 4601
+		"population": 4601,
+		"initiativesEmail": null
 	},
 	"sillamäe-linn": {
 		"name": "Sillamäe linn",
 		"county": "Ida-Viru",
-		"population": 12842
+		"population": 12842,
+		"initiativesEmail": null
 	},
 	"toila-vald": {
 		"name": "Toila vald",
 		"county": "Ida-Viru",
-		"population": 4779
+		"population": 4779,
+		"initiativesEmail": null
 	},
 	"jõgeva-vald": {
 		"name": "Jõgeva vald",
 		"county": "Jõgeva",
-		"population": 13523
+		"population": 13523,
+		"initiativesEmail": null
 	},
 	"mustvee-vald": {
 		"name": "Mustvee vald",
 		"county": "Jõgeva",
-		"population": 5546
+		"population": 5546,
+		"initiativesEmail": null
 	},
 	"põltsamaa-vald": {
 		"name": "Põltsamaa vald",
 		"county": "Jõgeva",
-		"population": 9756
+		"population": 9756,
+		"initiativesEmail": null
 	},
 	"järva-vald": {
 		"name": "Järva vald",
 		"county": "Järva",
-		"population": 8968
+		"population": 8968,
+		"initiativesEmail": null
 	},
 	"paide-linn": {
 		"name": "Paide linn",
 		"county": "Järva",
-		"population": 10513
+		"population": 10513,
+		"initiativesEmail": null
 	},
 	"türi-vald": {
 		"name": "Türi vald",
 		"county": "Järva",
-		"population": 10808
+		"population": 10808,
+		"initiativesEmail": null
 	},
 	"haapsalu-linn": {
 		"name": "Haapsalu linn",
 		"county": "Lääne",
-		"population": 13193
+		"population": 13193,
+		"initiativesEmail": null
 	},
 	"lääne-nigula-vald": {
 		"name": "Lääne-Nigula vald",
 		"county": "Lääne",
-		"population": 7115
+		"population": 7115,
+		"initiativesEmail": null
 	},
 	"vormsi-vald": {
 		"name": "Vormsi vald",
 		"county": "Lääne",
-		"population": 400
+		"population": 400,
+		"initiativesEmail": null
 	},
 	"haljala-vald": {
 		"name": "Haljala vald",
 		"county": "Lääne-Viru",
-		"population": 4361
+		"population": 4361,
+		"initiativesEmail": null
 	},
 	"kadrina-vald": {
 		"name": "Kadrina vald",
 		"county": "Lääne-Viru",
-		"population": 4875
+		"population": 4875,
+		"initiativesEmail": null
 	},
 	"rakvere-linn": {
 		"name": "Rakvere linn",
 		"county": "Lääne-Viru",
-		"population": 15092
+		"population": 15092,
+		"initiativesEmail": null
 	},
 	"rakvere-vald": {
 		"name": "Rakvere vald",
 		"county": "Lääne-Viru",
-		"population": 5590
+		"population": 5590,
+		"initiativesEmail": null
 	},
 	"tapa-vald": {
 		"name": "Tapa vald",
 		"county": "Lääne-Viru",
-		"population": 10866
+		"population": 10866,
+		"initiativesEmail": null
 	},
 	"vinni-vald": {
 		"name": "Vinni vald",
 		"county": "Lääne-Viru",
-		"population": 6900
+		"population": 6900,
+		"initiativesEmail": null
 	},
 	"viru-nigula-vald": {
 		"name": "Viru-Nigula vald",
 		"county": "Lääne-Viru",
-		"population": 5859
+		"population": 5859,
+		"initiativesEmail": null
 	},
 	"väike-maarja-vald": {
 		"name": "Väike-Maarja vald",
 		"county": "Lääne-Viru",
-		"population": 5928
+		"population": 5928,
+		"initiativesEmail": null
 	},
 	"kanepi-vald": {
 		"name": "Kanepi vald",
 		"county": "Põlva",
-		"population": 4821
+		"population": 4821,
+		"initiativesEmail": null
 	},
 	"põlva-vald": {
 		"name": "Põlva vald",
 		"county": "Põlva",
-		"population": 13982
+		"population": 13982,
+		"initiativesEmail": null
 	},
 	"räpina-vald": {
 		"name": "Räpina vald",
 		"county": "Põlva",
-		"population": 6377
+		"population": 6377,
+		"initiativesEmail": null
 	},
 	"häädemeeste-vald": {
 		"name": "Häädemeeste vald",
 		"county": "Pärnu",
-		"population": 4906
+		"population": 4906,
+		"initiativesEmail": null
 	},
 	"kihnu-vald": {
 		"name": "Kihnu vald",
 		"county": "Pärnu",
-		"population": 701
+		"population": 701,
+		"initiativesEmail": null
 	},
 	"lääneranna-vald": {
 		"name": "Lääneranna vald",
 		"county": "Pärnu",
-		"population": 5396
+		"population": 5396,
+		"initiativesEmail": null
 	},
 	"põhja-pärnumaa-vald": {
 		"name": "Põhja-Pärnumaa vald",
 		"county": "Pärnu",
-		"population": 8285
+		"population": 8285,
+		"initiativesEmail": null
 	},
 	"pärnu-linn": {
 		"name": "Pärnu linn",
 		"county": "Pärnu",
-		"population": 51271
+		"population": 51271,
+		"initiativesEmail": null
 	},
 	"saarde-vald": {
 		"name": "Saarde vald",
 		"county": "Pärnu",
-		"population": 4603
+		"population": 4603,
+		"initiativesEmail": null
 	},
 	"tori-vald": {
 		"name": "Tori vald",
 		"county": "Pärnu",
-		"population": 11699
+		"population": 11699,
+		"initiativesEmail": null
 	},
 	"kehtna-vald": {
 		"name": "Kehtna vald",
 		"county": "Rapla",
-		"population": 5464
+		"population": 5464,
+		"initiativesEmail": null
 	},
 	"kohila-vald": {
 		"name": "Kohila vald",
 		"county": "Rapla",
-		"population": 7215
+		"population": 7215,
+		"initiativesEmail": null
 	},
 	"märjamaa-vald": {
 		"name": "Märjamaa vald",
 		"county": "Rapla",
-		"population": 7558
+		"population": 7558,
+		"initiativesEmail": null
 	},
 	"rapla-vald": {
 		"name": "Rapla vald",
 		"county": "Rapla",
-		"population": 13179
+		"population": 13179,
+		"initiativesEmail": null
 	},
 	"muhu-vald": {
 		"name": "Muhu vald",
 		"county": "Saare",
-		"population": 1927
+		"population": 1927,
+		"initiativesEmail": null
 	},
 	"ruhnu-vald": {
 		"name": "Ruhnu vald",
 		"county": "Saare",
-		"population": 159
+		"population": 159,
+		"initiativesEmail": null
 	},
 	"saaremaa-vald": {
 		"name": "Saaremaa vald",
 		"county": "Saare",
-		"population": 31453
+		"population": 31453,
+		"initiativesEmail": null
 	},
 	"elva-vald": {
 		"name": "Elva vald",
 		"county": "Tartu",
-		"population": 14583
+		"population": 14583,
+		"initiativesEmail": null
 	},
 	"kambja-vald": {
 		"name": "Kambja vald",
 		"county": "Tartu",
-		"population": 11040
+		"population": 11040,
+		"initiativesEmail": null
 	},
 	"kastre-vald": {
 		"name": "Kastre vald",
 		"county": "Tartu",
-		"population": 5212
+		"population": 5212,
+		"initiativesEmail": null
 	},
 	"luunja-vald": {
 		"name": "Luunja vald",
 		"county": "Tartu",
-		"population": 4734
+		"population": 4734,
+		"initiativesEmail": null
 	},
 	"nõo-vald": {
 		"name": "Nõo vald",
 		"county": "Tartu",
-		"population": 4311
+		"population": 4311,
+		"initiativesEmail": null
 	},
 	"peipsiääre-vald": {
 		"name": "Peipsiääre vald",
 		"county": "Tartu",
-		"population": 5587
+		"population": 5587,
+		"initiativesEmail": null
 	},
 	"tartu-linn": {
 		"name": "Tartu linn",
 		"county": "Tartu",
-		"population": 95334
+		"population": 95334,
+		"initiativesEmail": null
 	},
 	"tartu-vald": {
 		"name": "Tartu vald",
 		"county": "Tartu",
-		"population": 10846
+		"population": 10846,
+		"initiativesEmail": null
 	},
 	"otepää-vald": {
 		"name": "Otepää vald",
 		"county": "Valga",
-		"population": 6566
+		"population": 6566,
+		"initiativesEmail": null
 	},
 	"tõrva-vald": {
 		"name": "Tõrva vald",
 		"county": "Valga",
-		"population": 6162
+		"population": 6162,
+		"initiativesEmail": null
 	},
 	"valga-vald": {
 		"name": "Valga vald",
 		"county": "Valga",
-		"population": 15625
+		"population": 15625,
+		"initiativesEmail": null
 	},
 	"mulgi-vald": {
 		"name": "Mulgi vald",
 		"county": "Viljandi",
-		"population": 7525
+		"population": 7525,
+		"initiativesEmail": null
 	},
 	"põhja-sakala-vald": {
 		"name": "Põhja-Sakala vald",
 		"county": "Viljandi",
-		"population": 7984
+		"population": 7984,
+		"initiativesEmail": null
 	},
 	"viljandi-linn": {
 		"name": "Viljandi linn",
 		"county": "Viljandi",
-		"population": 17301
+		"population": 17301,
+		"initiativesEmail": null
 	},
 	"viljandi-vald": {
 		"name": "Viljandi vald",
 		"county": "Viljandi",
-		"population": 13635
+		"population": 13635,
+		"initiativesEmail": null
 	},
 	"antsla-vald": {
 		"name": "Antsla vald",
 		"county": "Võru",
-		"population": 4565
+		"population": 4565,
+		"initiativesEmail": null
 	},
 	"rõuge-vald": {
 		"name": "Rõuge vald",
 		"county": "Võru",
-		"population": 5482
+		"population": 5482,
+		"initiativesEmail": null
 	},
 	"setomaa-vald": {
 		"name": "Setomaa vald",
 		"county": "Võru",
-		"population": 3392
+		"population": 3392,
+		"initiativesEmail": null
 	},
 	"võru-linn": {
 		"name": "Võru linn",
 		"county": "Võru",
-		"population": 11829
+		"population": 11829,
+		"initiativesEmail": null
 	},
 	"võru-vald": {
 		"name": "Võru vald",
 		"county": "Võru",
-		"population": 10844
+		"population": 10844,
+		"initiativesEmail": null
 	}
 }

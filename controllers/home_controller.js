@@ -291,7 +291,9 @@ function* searchRecentInitiatives() {
 		LEFT JOIN users AS user ON initiative.user_id = user.id
 		LEFT JOIN signatures AS signature
 		ON signature.initiative_uuid = initiative.uuid
+
 		WHERE initiative.uuid IN ${sql.in(recentUuids)}
+
 		GROUP BY initiative.uuid
 	`), (i) => recentUuids.indexOf(i.uuid))
 }

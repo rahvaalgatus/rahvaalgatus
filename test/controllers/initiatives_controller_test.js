@@ -1669,11 +1669,7 @@ describe("InitiativesController", function() {
 				})
 
 				res.statusCode.must.equal(200)
-
-				res.body.must.include(t("VOTING_FAILED", {
-					signatureCount: threshold
-				}))
-
+				res.body.must.include(t("VOTING_FAILED", {signatureCount: threshold}))
 				res.body.must.include(t("N_SIGNATURES_FAILED", {votes: signatureCount}))
 
 				var dom = parseDom(res.body)
@@ -2556,15 +2552,14 @@ describe("InitiativesController", function() {
 					user_id: this.author.id,
 					phase: "government",
 					destination: "kihnu-vald",
-					sent_to_government_at: new Date,
-					government_agency: "Kihnu Vallavalitsus"
+					sent_to_government_at: new Date
 				}))
 
-				var threshold = Math.round(
+				var signatureCount = Math.round(
 					LOCAL_GOVERNMENTS["kihnu-vald"].population * 0.01
 				)
 
-				yield signaturesDb.create(_.times(threshold, () => (
+				yield signaturesDb.create(_.times(signatureCount, () => (
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
@@ -2573,11 +2568,7 @@ describe("InitiativesController", function() {
 				})
 
 				res.statusCode.must.equal(200)
-				res.body.must.include(tHtml("INITIATIVE_IN_GOVERNMENT"))
-
-				res.body.must.include(t("INITIATIVE_IS_IN_GOVERNMENT_AGENCY", {
-					agency: "Kihnu Vallavalitsus"
-				}))
+				res.body.must.include(tHtml("INITIATIVE_IN_LOCAL_GOVERNMENT"))
 
 				var dom = parseDom(res.body)
 				var phases = queryPhases(dom)
@@ -2589,10 +2580,9 @@ describe("InitiativesController", function() {
 				phases.must.not.have.property("parliament")
 				phases.government.current.must.be.true()
 
-				phases.sign.text.must.equal(t("N_SIGNATURES", {votes: threshold}))
+				phases.sign.text.must.equal(t("N_SIGNATURES", {votes: signatureCount}))
 
 				phases.government.text.must.equal(
-					"Kihnu Vallavalitsus" +
 					I18n.formatDate("numeric", initiative.sent_to_government_at)
 				)
 
@@ -2601,12 +2591,7 @@ describe("InitiativesController", function() {
 				events[0].id.must.equal("sent-to-government")
 				events[0].phase.must.equal("government")
 				events[0].at.must.eql(initiative.sent_to_government_at)
-
-				events[0].title.must.equal(
-					t("EVENT_SENT_TO_GOVERNMENT_TITLE_WITH_AGENCY", {
-						agency: "Kihnu Vallavalitsus"
-					})
-				)
+				events[0].title.must.equal(t("EVENT_SENT_TO_LOCAL_GOVERNMENT_TITLE"))
 			})
 
 			it("must render initiative in government with a contact", function*() {
@@ -4070,7 +4055,9 @@ describe("InitiativesController", function() {
 						newTextUrl += "/texts/new?language=et"
 
 						res.body.must.include(
-							t("INITIATIVE_SEND_TO_SIGNING_NEEDS_ESTONIAN_TEXT", {newTextUrl})
+							t("INITIATIVE_SEND_TO_PARLIAMENT_NEEDS_ESTONIAN_TEXT", {
+								newTextUrl
+							})
 						)
 					})
 
@@ -4108,7 +4095,7 @@ describe("InitiativesController", function() {
 						signTextUrl += `/texts/${estonian.id}/sign`
 
 						res.body.must.include(
-							t("INITIATIVE_SEND_TO_SIGNING_NEEDS_SIGNED_ESTONIAN_TEXT", {
+							t("INITIATIVE_SEND_TO_PARLIAMENT_NEEDS_SIGNED_ESTONIAN_TEXT", {
 								signTextUrl
 							})
 						)
@@ -4130,6 +4117,10 @@ describe("InitiativesController", function() {
 				})
 
 				describe(`on ${LOCAL_SITE_HOSTNAME}`, function() {
+					beforeEach(function() {
+						LOCAL_GOVERNMENTS["muhu-vald"].initiativesEmail = "muhu@example.org"
+					})
+
 					it("must include social media tags with local URLs", function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
@@ -4159,6 +4150,33 @@ describe("InitiativesController", function() {
 						metas["og:image"].content.must.equal(url + ".png")
 					})
 
+					it("must not render send to government button if email missing",
+						function*() {
+						LOCAL_GOVERNMENTS["muhu-vald"].initiativesEmail = null
+
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: "sign",
+							destination: "muhu-vald"
+						}))
+
+						var signatureCount = Math.round(
+							LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
+						)
+
+						yield signaturesDb.create(_.times(signatureCount, () => (
+							new ValidSignature({initiative_uuid: initiative.uuid})
+						)))
+
+						var res = yield this.request("/initiatives/" + initiative.uuid, {
+							headers: {Host: LOCAL_SITE_HOSTNAME}
+						})
+
+						res.statusCode.must.equal(200)
+						res.body.must.not.include(t("SEND_TO_PARLIAMENT"))
+						res.body.must.not.include(t("SEND_TO_LOCAL_GOVERNMENT"))
+					})
+
 					it("must not render send to government button if not enough signatures",
 						function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
@@ -4167,9 +4185,11 @@ describe("InitiativesController", function() {
 							destination: "muhu-vald"
 						}))
 
-						var threshold = LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
+						var threshold = Math.round(
+							LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
+						)
 
-						yield signaturesDb.create(_.times(Math.round(threshold) - 1, () => (
+						yield signaturesDb.create(_.times(threshold - 1, () => (
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
@@ -4179,9 +4199,10 @@ describe("InitiativesController", function() {
 
 						res.statusCode.must.equal(200)
 						res.body.must.not.include(t("SEND_TO_PARLIAMENT"))
+						res.body.must.not.include(t("SEND_TO_LOCAL_GOVERNMENT"))
 					})
 
-					it("must not render send to government button if enough signatures",
+					it("must render send to government button if enough signatures",
 						function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
@@ -4189,9 +4210,11 @@ describe("InitiativesController", function() {
 							destination: "muhu-vald"
 						}))
 
-						var threshold = LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
+						var signatureCount = Math.round(
+							LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
+						)
 
-						yield signaturesDb.create(_.times(Math.round(threshold), () => (
+						yield signaturesDb.create(_.times(signatureCount, () => (
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
@@ -4200,7 +4223,35 @@ describe("InitiativesController", function() {
 						})
 
 						res.statusCode.must.equal(200)
-						res.body.must.not.include(t("SEND_TO_PARLIAMENT"))
+
+						var dom = parseDom(res.body)
+						var button = dom.getElementById("send-to-local-government-button")
+						button.disabled.must.be.false()
+						button.textContent.must.equal(t("SEND_TO_LOCAL_GOVERNMENT"))
+					})
+
+					it("must render send to government button if has paper signatures and only undersigned signatures",
+						function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							destination: "muhu-vald",
+							phase: "sign",
+							has_paper_signatures: true
+						}))
+
+						yield signaturesDb.create(new ValidSignature({
+							initiative_uuid: initiative.uuid
+						}))
+
+						var res = yield this.request("/initiatives/" + initiative.uuid, {
+							headers: {Host: LOCAL_SITE_HOSTNAME}
+						})
+
+						res.statusCode.must.equal(200)
+
+						var dom = parseDom(res.body)
+						var button = dom.getElementById("send-to-local-government-button")
+						button.disabled.must.be.false()
 					})
 				})
 			})
@@ -6114,118 +6165,606 @@ describe("InitiativesController", function() {
 			})
 
 			describe("given status=followUp", function() {
-				it("must respond with 403 given initiative destined for local",
-					function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id,
-						phase: "sign",
-						destination: "muhu-vald"
-					}))
+				describe("when destined for parliament", function() {
+					it("must render update page", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: "sign"
+						}))
 
-					var threshold = LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
-					yield signaturesDb.create(_.times(Math.round(threshold), () => (
-						new ValidSignature({initiative_uuid: initiative.uuid})
-					)))
+						yield citizenosSignaturesDb.create(_.times(
+							Config.votesRequired / 2,
+							() => new ValidCitizenosSignature({
+								initiative_uuid: initiative.uuid
+							})
+						))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
-						method: "PUT",
-						form: {_csrf_token: this.csrfToken, status: "followUp"}
-					})
+						yield signaturesDb.create(_.times(Config.votesRequired / 2, () => (
+							new ValidSignature({initiative_uuid: initiative.uuid})
+						)))
 
-					res.statusCode.must.equal(403)
-
-					res.statusMessage.must.equal(
-						"Cannot Send Local Initiative to Parliament"
-					)
-				})
-
-				it("must render update page", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id,
-						phase: "sign"
-					}))
-
-					yield citizenosSignaturesDb.create(_.times(
-						Config.votesRequired / 2,
-						() => new ValidCitizenosSignature({
-							initiative_uuid: initiative.uuid
+						var res = yield this.request("/initiatives/" + initiative.uuid, {
+							method: "PUT",
+							form: {_csrf_token: this.csrfToken, status: "followUp"}
 						})
-					))
 
-					yield signaturesDb.create(_.times(Config.votesRequired / 2, () => (
-						new ValidSignature({initiative_uuid: initiative.uuid})
-					)))
-
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
-						method: "PUT",
-						form: {_csrf_token: this.csrfToken, status: "followUp"}
+						res.statusCode.must.equal(200)
+						res.body.must.include(t("SEND_TO_PARLIAMENT_HEADER"))
+						res.body.must.include(t("SEND_TO_PARLIAMENT_TEXT"))
 					})
 
-					res.statusCode.must.equal(200)
-					res.body.must.include(t("SEND_TO_PARLIAMENT_HEADER"))
-					res.body.must.include(t("SEND_TO_PARLIAMENT_TEXT"))
-				})
+					it("must render update page if has paper signatures", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: "sign",
+							has_paper_signatures: true
+						}))
 
-				it("must render update page if has paper signatures", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id,
-						phase: "sign",
-						has_paper_signatures: true
-					}))
-
-					yield signaturesDb.create(_.times(Config.votesRequired, () => (
-						new ValidSignature({initiative_uuid: initiative.uuid})
-					)))
-
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
-						method: "PUT",
-						form: {_csrf_token: this.csrfToken, status: "followUp"}
-					})
-
-					res.statusCode.must.equal(200)
-				})
-
-				it("must respond with 403 if initiative not successful", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id,
-						phase: "sign"
-					}))
-
-					yield citizenosSignaturesDb.create(_.times(
-						Config.votesRequired / 2 - 1,
-						() => new ValidCitizenosSignature({
+						yield signaturesDb.create(new ValidSignature({
 							initiative_uuid: initiative.uuid
+						}))
+
+						var res = yield this.request("/initiatives/" + initiative.uuid, {
+							method: "PUT",
+							form: {_csrf_token: this.csrfToken, status: "followUp"}
 						})
-					))
 
-					yield signaturesDb.create(_.times(
-						Config.votesRequired / 2 - 1,
-						() => new ValidSignature({initiative_uuid: initiative.uuid})
-					))
-
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
-						method: "PUT",
-						form: {_csrf_token: this.csrfToken, status: "followUp"}
+						res.statusCode.must.equal(200)
 					})
 
-					res.statusCode.must.equal(403)
-					res.statusMessage.must.equal("Cannot Send to Parliament")
+					it("must respond with 403 if initiative not successful", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: "sign"
+						}))
+
+						yield citizenosSignaturesDb.create(_.times(
+							Config.votesRequired / 2 - 1,
+							() => new ValidCitizenosSignature({
+								initiative_uuid: initiative.uuid
+							})
+						))
+
+						yield signaturesDb.create(_.times(
+							Config.votesRequired / 2 - 1,
+							() => new ValidSignature({initiative_uuid: initiative.uuid})
+						))
+
+						var res = yield this.request("/initiatives/" + initiative.uuid, {
+							method: "PUT",
+							form: {_csrf_token: this.csrfToken, status: "followUp"}
+						})
+
+						res.statusCode.must.equal(403)
+						res.statusMessage.must.equal("Cannot Send")
+					})
+
+					it("must respond with 403 if only has paper signatures", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: "sign",
+							has_paper_signatures: true
+						}))
+
+						var res = yield this.request("/initiatives/" + initiative.uuid, {
+							method: "PUT",
+							form: {_csrf_token: this.csrfToken, status: "followUp"}
+						})
+
+						res.statusCode.must.equal(403)
+						res.statusMessage.must.equal("Cannot Send")
+					})
+
+					it("must update initiative and email parliament", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: "sign"
+						}))
+
+						yield signaturesDb.create(_.times(Config.votesRequired, () => (
+							new ValidSignature({initiative_uuid: initiative.uuid})
+						)))
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							form: {
+								_csrf_token: this.csrfToken,
+								status: "followUp",
+								"contact[name]": "John",
+								"contact[email]": "john@example.com",
+								"contact[phone]": "42"
+							}
+						})
+
+						res.statusCode.must.equal(303)
+						res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+						var cookies = parseCookies(res.headers["set-cookie"])
+						res = yield this.request(res.headers.location, {
+							headers: {Cookie: Http.serializeCookies(cookies)}
+						})
+
+						res.statusCode.must.equal(200)
+						res.body.must.include(t("SENT_TO_PARLIAMENT_CONTENT"))
+
+						var updatedInitiative = yield initiativesDb.read(initiative)
+
+						updatedInitiative.must.eql({
+							__proto__: initiative,
+							phase: "parliament",
+							sent_to_parliament_at: new Date,
+							parliament_token: updatedInitiative.parliament_token
+						})
+
+						updatedInitiative.parliament_token.must.exist()
+
+						this.emails.length.must.equal(1)
+						var email = this.emails[0]
+						email.envelope.to.must.eql([Config.parliamentEmail])
+
+						email.headers.subject.must.equal(t(
+							"EMAIL_INITIATIVE_TO_PARLIAMENT_TITLE",
+							{initiativeTitle: initiative.title}
+						))
+
+						var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+						var signaturesUrl = initiativeUrl + "/signatures.asice"
+						signaturesUrl += "?parliament-token="
+						signaturesUrl += updatedInitiative.parliament_token.toString("hex")
+
+						email.body.must.equal(t("EMAIL_INITIATIVE_TO_PARLIAMENT_BODY", {
+							initiativeUuid: initiative.uuid,
+							initiativeTitle: initiative.title,
+							initiativeUrl: initiativeUrl,
+							signatureCount: Config.votesRequired,
+							undersignedSignaturesUrl: signaturesUrl,
+							authorName: "John",
+							authorEmail: "john@example.com",
+							authorPhone: "42",
+							siteUrl: Config.url,
+							facebookUrl: Config.facebookUrl,
+							twitterUrl: Config.twitterUrl
+						}))
+					})
+
+					it("must email subscribers", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: "sign"
+						}))
+
+						yield citizenosSignaturesDb.create(_.times(
+							Config.votesRequired / 2 + 3,
+							() => new ValidCitizenosSignature({
+								initiative_uuid: initiative.uuid
+							})
+						))
+
+						yield signaturesDb.create(_.times(Config.votesRequired / 2, () => (
+							new ValidSignature({initiative_uuid: initiative.uuid})
+						)))
+
+						var subscriptions = yield subscriptionsDb.create([
+							new ValidSubscription({
+								initiative_uuid: initiative.uuid,
+								confirmed_at: new Date,
+								official_interest: false
+							}),
+
+							new ValidSubscription({
+								initiative_uuid: null,
+								confirmed_at: new Date,
+								official_interest: false
+							}),
+
+							new ValidSubscription({
+								initiative_uuid: initiative.uuid,
+								confirmed_at: new Date
+							}),
+
+							new ValidSubscription({
+								initiative_uuid: null,
+								confirmed_at: new Date
+							})
+						])
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							form: {
+								_csrf_token: this.csrfToken,
+								status: "followUp",
+								"contact[name]": "John",
+								"contact[email]": "john@example.com",
+								"contact[phone]": "42"
+							}
+						})
+
+						res.statusCode.must.equal(303)
+
+						var messages = yield messagesDb.search(sql`
+							SELECT * FROM initiative_messages
+						`)
+
+						var emails = subscriptions.slice(2).map((s) => s.email).sort()
+
+						messages.must.eql([{
+							id: messages[0].id,
+							initiative_uuid: initiative.uuid,
+							created_at: new Date,
+							updated_at: new Date,
+							origin: "status",
+
+							title: t("SENT_TO_PARLIAMENT_MESSAGE_TITLE", {
+								initiativeTitle: initiative.title
+							}),
+
+							text: renderEmail("SENT_TO_PARLIAMENT_MESSAGE_BODY", {
+								authorName: "John",
+								initiativeTitle: initiative.title,
+								initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+								signatureCount: Config.votesRequired + 3
+							}),
+
+							sent_at: new Date,
+							sent_to: emails
+						}])
+
+						this.emails.length.must.equal(2)
+						var email = this.emails[1]
+						email.envelope.to.must.eql(emails)
+
+						email.headers.subject.must.equal(t(
+							"SENT_TO_PARLIAMENT_MESSAGE_TITLE",
+							{initiativeTitle: initiative.title}
+						))
+
+						var vars = JSON.parse(email.headers["x-mailgun-recipient-variables"])
+
+						vars.must.eql({
+							[subscriptions[2].email]: {
+								unsubscribeUrl: `/initiatives/${initiative.uuid}/subscriptions/${subscriptions[2].update_token}`
+							},
+
+							[subscriptions[3].email]: {
+								unsubscribeUrl: `/subscriptions/${subscriptions[3].update_token}`
+							}
+						})
+
+						email.body.must.equal(t("SENT_TO_PARLIAMENT_MESSAGE_BODY", {
+							initiativeTitle: initiative.title,
+							initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+							signatureCount: Config.votesRequired + 3,
+							authorName: "John",
+							unsubscribeUrl: `${Config.url}%recipient.unsubscribeUrl%`,
+							siteUrl: Config.url,
+							facebookUrl: Config.facebookUrl,
+							twitterUrl: Config.twitterUrl
+						}))
+					})
 				})
 
-				it("must respond with 403 if only has paper signatures", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id,
-						phase: "sign",
-						has_paper_signatures: true
-					}))
-
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
-						method: "PUT",
-						form: {_csrf_token: this.csrfToken, status: "followUp"}
+				describe("when destined for local", function() {
+					beforeEach(function() {
+						LOCAL_GOVERNMENTS["muhu-vald"].initiativesEmail = "muhu@example.org"
 					})
 
-					res.statusCode.must.equal(403)
-					res.statusMessage.must.equal("Cannot Send to Parliament")
+					it("must render update page", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							destination: "muhu-vald",
+							phase: "sign"
+						}))
+
+						var signatureCount = Math.round(
+							LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
+						)
+
+						yield signaturesDb.create(_.times(signatureCount, () => (
+							new ValidSignature({initiative_uuid: initiative.uuid})
+						)))
+
+						var res = yield this.request("/initiatives/" + initiative.uuid, {
+							method: "PUT",
+							headers: {Host: LOCAL_SITE_HOSTNAME},
+							form: {_csrf_token: this.csrfToken, status: "followUp"}
+						})
+
+						res.statusCode.must.equal(200)
+						res.body.must.include(t("SEND_TO_LOCAL_GOVERNMENT_HEADER"))
+						res.body.must.include(t("SEND_TO_LOCAL_GOVERNMENT_TEXT"))
+					})
+
+					it("must render update page if has paper signatures", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							destination: "muhu-vald",
+							phase: "sign",
+							has_paper_signatures: true
+						}))
+
+						yield signaturesDb.create(new ValidSignature({
+							initiative_uuid: initiative.uuid
+						}))
+
+						var res = yield this.request("/initiatives/" + initiative.uuid, {
+							method: "PUT",
+							headers: {Host: LOCAL_SITE_HOSTNAME},
+							form: {_csrf_token: this.csrfToken, status: "followUp"}
+						})
+
+						res.statusCode.must.equal(200)
+					})
+
+					it("must respond with 403 if local government email missing",
+						function*() {
+						LOCAL_GOVERNMENTS["muhu-vald"].initiativesEmail = null
+
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							destination: "muhu-vald",
+							phase: "sign"
+						}))
+
+						var signatureCount = Math.round(
+							LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
+						)
+
+						yield signaturesDb.create(_.times(signatureCount, () => (
+							new ValidSignature({initiative_uuid: initiative.uuid})
+						)))
+
+						var res = yield this.request("/initiatives/" + initiative.uuid, {
+							method: "PUT",
+							headers: {Host: LOCAL_SITE_HOSTNAME},
+							form: {_csrf_token: this.csrfToken, status: "followUp"}
+						})
+
+						res.statusCode.must.equal(403)
+						res.statusMessage.must.equal("Cannot Send")
+					})
+
+					it("must respond with 403 if initiative not successful", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							destination: "muhu-vald",
+							phase: "sign"
+						}))
+
+						var threshold = Math.round(
+							LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
+						)
+
+						yield signaturesDb.create(_.times(threshold - 1, () => (
+							new ValidSignature({initiative_uuid: initiative.uuid})
+						)))
+
+						var res = yield this.request("/initiatives/" + initiative.uuid, {
+							method: "PUT",
+							headers: {Host: LOCAL_SITE_HOSTNAME},
+							form: {_csrf_token: this.csrfToken, status: "followUp"}
+						})
+
+						res.statusCode.must.equal(403)
+						res.statusMessage.must.equal("Cannot Send")
+					})
+
+					it("must respond with 403 if only has paper signatures", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							destination: "muhu-vald",
+							phase: "sign",
+							has_paper_signatures: true
+						}))
+
+						var res = yield this.request("/initiatives/" + initiative.uuid, {
+							method: "PUT",
+							headers: {Host: LOCAL_SITE_HOSTNAME},
+							form: {_csrf_token: this.csrfToken, status: "followUp"}
+						})
+
+						res.statusCode.must.equal(403)
+						res.statusMessage.must.equal("Cannot Send")
+					})
+
+					it("must update initiative and email local government", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							destination: "muhu-vald",
+							phase: "sign"
+						}))
+
+						var signatureCount = Math.round(
+							LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
+						)
+
+						yield signaturesDb.create(_.times(signatureCount, () => (
+							new ValidSignature({initiative_uuid: initiative.uuid})
+						)))
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							headers: {Host: LOCAL_SITE_HOSTNAME},
+
+							form: {
+								_csrf_token: this.csrfToken,
+								status: "followUp",
+								"contact[name]": "John",
+								"contact[email]": "john@example.com",
+								"contact[phone]": "42"
+							}
+						})
+
+						res.statusCode.must.equal(303)
+						res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+						var cookies = parseCookies(res.headers["set-cookie"])
+						res = yield this.request(res.headers.location, {
+							headers: {
+								Host: LOCAL_SITE_HOSTNAME,
+								Cookie: Http.serializeCookies(cookies)
+							}
+						})
+
+						res.statusCode.must.equal(200)
+						res.body.must.include(t("SENT_TO_LOCAL_GOVERNMENT_CONTENT"))
+
+						var updatedInitiative = yield initiativesDb.read(initiative)
+
+						updatedInitiative.must.eql({
+							__proto__: initiative,
+							phase: "government",
+							sent_to_government_at: new Date,
+							parliament_token: updatedInitiative.parliament_token
+						})
+
+						updatedInitiative.parliament_token.must.exist()
+
+						this.emails.length.must.equal(1)
+						var email = this.emails[0]
+						email.envelope.to.must.eql(["muhu@example.org"])
+
+						email.headers.subject.must.equal(t(
+							"EMAIL_INITIATIVE_TO_LOCAL_GOVERNMENT_TITLE",
+							{initiativeTitle: initiative.title}
+						))
+
+						var initiativeUrl = `${Config.localSiteUrl}/initiatives`
+						initiativeUrl += `/${initiative.uuid}`
+						var signaturesUrl = initiativeUrl + "/signatures.asice"
+						signaturesUrl += "?parliament-token="
+						signaturesUrl += updatedInitiative.parliament_token.toString("hex")
+
+						email.body.must.equal(t("EMAIL_INITIATIVE_TO_LOCAL_GOVERNMENT_BODY", {
+							initiativeUuid: initiative.uuid,
+							initiativeTitle: initiative.title,
+							initiativeUrl: initiativeUrl,
+							signatureCount: signatureCount,
+							undersignedSignaturesUrl: signaturesUrl,
+							authorName: "John",
+							authorEmail: "john@example.com",
+							authorPhone: "42",
+							siteUrl: Config.url,
+							facebookUrl: Config.facebookUrl,
+							twitterUrl: Config.twitterUrl
+						}))
+					})
+
+					it("must email subscribers", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							destination: "muhu-vald",
+							phase: "sign"
+						}))
+
+						var signatureCount = Math.round(
+							LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
+						)
+
+						yield signaturesDb.create(_.times(signatureCount, () => (
+							new ValidSignature({initiative_uuid: initiative.uuid})
+						)))
+
+						var subscriptions = yield subscriptionsDb.create([
+							new ValidSubscription({
+								initiative_uuid: initiative.uuid,
+								confirmed_at: new Date,
+								official_interest: false
+							}),
+
+							new ValidSubscription({
+								initiative_uuid: null,
+								confirmed_at: new Date,
+								official_interest: false
+							}),
+
+							new ValidSubscription({
+								initiative_uuid: initiative.uuid,
+								confirmed_at: new Date
+							}),
+
+							new ValidSubscription({
+								initiative_uuid: null,
+								confirmed_at: new Date
+							})
+						])
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							headers: {Host: LOCAL_SITE_HOSTNAME},
+							form: {
+								_csrf_token: this.csrfToken,
+								status: "followUp",
+								"contact[name]": "John",
+								"contact[email]": "john@example.com",
+								"contact[phone]": "42"
+							}
+						})
+
+						res.statusCode.must.equal(303)
+
+						var messages = yield messagesDb.search(sql`
+							SELECT * FROM initiative_messages
+						`)
+
+						var emails = subscriptions.slice(2).map((s) => s.email).sort()
+
+						var initiativeUrl = `${Config.localSiteUrl}/initiatives`
+						initiativeUrl += `/${initiative.uuid}`
+
+						messages.must.eql([{
+							id: messages[0].id,
+							initiative_uuid: initiative.uuid,
+							created_at: new Date,
+							updated_at: new Date,
+							origin: "status",
+
+							title: t("SENT_TO_LOCAL_GOVERNMENT_MESSAGE_TITLE", {
+								initiativeTitle: initiative.title
+							}),
+
+							text: renderEmail("SENT_TO_LOCAL_GOVERNMENT_MESSAGE_BODY", {
+								authorName: "John",
+								initiativeTitle: initiative.title,
+								initiativeUrl: initiativeUrl,
+								signatureCount: signatureCount
+							}),
+
+							sent_at: new Date,
+							sent_to: emails
+						}])
+
+						this.emails.length.must.equal(2)
+						var email = this.emails[1]
+						email.envelope.to.must.eql(emails)
+
+						email.headers.subject.must.equal(t(
+							"SENT_TO_LOCAL_GOVERNMENT_MESSAGE_TITLE",
+							{initiativeTitle: initiative.title}
+						))
+
+						var vars = JSON.parse(email.headers["x-mailgun-recipient-variables"])
+
+						vars.must.eql({
+							[subscriptions[2].email]: {
+								unsubscribeUrl: `/initiatives/${initiative.uuid}/subscriptions/${subscriptions[2].update_token}`
+							},
+
+							[subscriptions[3].email]: {
+								unsubscribeUrl: `/subscriptions/${subscriptions[3].update_token}`
+							}
+						})
+
+						email.body.must.equal(t("SENT_TO_LOCAL_GOVERNMENT_MESSAGE_BODY", {
+							initiativeTitle: initiative.title,
+							initiativeUrl: initiativeUrl,
+							signatureCount: signatureCount,
+							authorName: "John",
+							unsubscribeUrl: `${Config.url}%recipient.unsubscribeUrl%`,
+							siteUrl: Config.url,
+							facebookUrl: Config.facebookUrl,
+							twitterUrl: Config.twitterUrl
+						}))
+					})
 				})
 
 				it("must respond with 403 if Estonian translation missing",
@@ -6301,193 +6840,6 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(403)
 					res.statusMessage.must.equal("No Permission to Edit")
-				})
-
-				it("must update initiative and email parliament", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id,
-						phase: "sign"
-					}))
-
-					yield signaturesDb.create(_.times(Config.votesRequired, () => (
-						new ValidSignature({initiative_uuid: initiative.uuid})
-					)))
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-						method: "PUT",
-						form: {
-							_csrf_token: this.csrfToken,
-							status: "followUp",
-							"contact[name]": "John",
-							"contact[email]": "john@example.com",
-							"contact[phone]": "42"
-						}
-					})
-
-					res.statusCode.must.equal(303)
-					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
-
-					var cookies = parseCookies(res.headers["set-cookie"])
-					res = yield this.request(res.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
-					})
-
-					res.statusCode.must.equal(200)
-					res.body.must.include(t("SENT_TO_PARLIAMENT_CONTENT"))
-
-					var updatedInitiative = yield initiativesDb.read(initiative)
-
-					updatedInitiative.must.eql({
-						__proto__: initiative,
-						phase: "parliament",
-						sent_to_parliament_at: new Date,
-						parliament_token: updatedInitiative.parliament_token
-					})
-
-					updatedInitiative.parliament_token.must.exist()
-
-					this.emails.length.must.equal(1)
-					var email = this.emails[0]
-					email.envelope.to.must.eql([Config.parliamentEmail])
-
-					email.headers.subject.must.equal(t(
-						"EMAIL_INITIATIVE_TO_PARLIAMENT_TITLE",
-						{initiativeTitle: initiative.title}
-					))
-
-					var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-					var signaturesUrl = initiativeUrl + "/signatures.asice"
-					signaturesUrl += "?parliament-token="
-					signaturesUrl += updatedInitiative.parliament_token.toString("hex")
-
-					email.body.must.equal(t("EMAIL_INITIATIVE_TO_PARLIAMENT_BODY", {
-						initiativeUuid: initiative.uuid,
-						initiativeTitle: initiative.title,
-						initiativeUrl: initiativeUrl,
-						signatureCount: Config.votesRequired,
-						undersignedSignaturesUrl: signaturesUrl,
-						authorName: "John",
-						authorEmail: "john@example.com",
-						authorPhone: "42",
-						siteUrl: Config.url,
-						facebookUrl: Config.facebookUrl,
-						twitterUrl: Config.twitterUrl
-					}))
-				})
-
-				it("must email subscribers", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id,
-						phase: "sign"
-					}))
-
-					yield citizenosSignaturesDb.create(_.times(
-						Config.votesRequired / 2 + 3,
-						() => new ValidCitizenosSignature({
-							initiative_uuid: initiative.uuid
-						})
-					))
-
-					yield signaturesDb.create(_.times(Config.votesRequired / 2, () => (
-						new ValidSignature({initiative_uuid: initiative.uuid})
-					)))
-
-					var subscriptions = yield subscriptionsDb.create([
-						new ValidSubscription({
-							initiative_uuid: initiative.uuid,
-							confirmed_at: new Date,
-							official_interest: false
-						}),
-
-						new ValidSubscription({
-							initiative_uuid: null,
-							confirmed_at: new Date,
-							official_interest: false
-						}),
-
-						new ValidSubscription({
-							initiative_uuid: initiative.uuid,
-							confirmed_at: new Date
-						}),
-
-						new ValidSubscription({
-							initiative_uuid: null,
-							confirmed_at: new Date
-						})
-					])
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-						method: "PUT",
-						form: {
-							_csrf_token: this.csrfToken,
-							status: "followUp",
-							"contact[name]": "John",
-							"contact[email]": "john@example.com",
-							"contact[phone]": "42"
-						}
-					})
-
-					res.statusCode.must.equal(303)
-
-					var messages = yield messagesDb.search(sql`
-						SELECT * FROM initiative_messages
-					`)
-
-					var emails = subscriptions.slice(2).map((s) => s.email).sort()
-
-					messages.must.eql([{
-						id: messages[0].id,
-						initiative_uuid: initiative.uuid,
-						created_at: new Date,
-						updated_at: new Date,
-						origin: "status",
-
-						title: t("SENT_TO_PARLIAMENT_MESSAGE_TITLE", {
-							initiativeTitle: initiative.title
-						}),
-
-						text: renderEmail("SENT_TO_PARLIAMENT_MESSAGE_BODY", {
-							authorName: "John",
-							initiativeTitle: initiative.title,
-							initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-							signatureCount: Config.votesRequired + 3
-						}),
-
-						sent_at: new Date,
-						sent_to: emails
-					}])
-
-					this.emails.length.must.equal(2)
-					var email = this.emails[1]
-					email.envelope.to.must.eql(emails)
-
-					email.headers.subject.must.equal(t(
-						"SENT_TO_PARLIAMENT_MESSAGE_TITLE",
-						{initiativeTitle: initiative.title}
-					))
-
-					var vars = JSON.parse(email.headers["x-mailgun-recipient-variables"])
-
-					vars.must.eql({
-						[subscriptions[2].email]: {
-							unsubscribeUrl: `/initiatives/${initiative.uuid}/subscriptions/${subscriptions[2].update_token}`
-						},
-
-						[subscriptions[3].email]: {
-							unsubscribeUrl: `/subscriptions/${subscriptions[3].update_token}`
-						}
-					})
-
-					email.body.must.equal(t("SENT_TO_PARLIAMENT_MESSAGE_BODY", {
-						initiativeTitle: initiative.title,
-						initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-						signatureCount: Config.votesRequired + 3,
-						authorName: "John",
-						unsubscribeUrl: `${Config.url}%recipient.unsubscribeUrl%`,
-						siteUrl: Config.url,
-						facebookUrl: Config.facebookUrl,
-						twitterUrl: Config.twitterUrl
-					}))
 				})
 
 				it("must update initiative if newer Estonian translation unsigned",

@@ -16,8 +16,15 @@ module.exports = function(attributes) {
 		initiative={initiative}
 		req={req}>
 		<section class="primary-section text-section"><center>
-			<h2>{t("SEND_TO_PARLIAMENT_HEADER")}</h2>
-			<p>{Jsx.html(t("SEND_TO_PARLIAMENT_TEXT"))}</p>
+			<h2>{initiative.destination == "parliament"
+				? t("SEND_TO_PARLIAMENT_HEADER")
+				: t("SEND_TO_LOCAL_GOVERNMENT_HEADER")
+			}</h2>
+
+			<p>{initiative.destination == "parliament"
+				? Jsx.html(t("SEND_TO_PARLIAMENT_TEXT"))
+				: Jsx.html(t("SEND_TO_LOCAL_GOVERNMENT_TEXT"))
+			}</p>
 
 			{error ? <p class="flash error">{error}</p> : null}
 
@@ -57,7 +64,10 @@ module.exports = function(attributes) {
 					name="status"
 					value="followUp"
 					class="form-submit primary-button">
-					{t("SEND_TO_PARLIAMENT")}
+					{initiative.destination == "parliament"
+						? t("SEND_TO_PARLIAMENT")
+						: t("SEND_TO_LOCAL_GOVERNMENT")
+					}
 				</button>
 			</Form>
 		</center></section>
