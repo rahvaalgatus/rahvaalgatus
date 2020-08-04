@@ -691,6 +691,7 @@ function PhasesView(attrs) {
 			finishedInParliamentAt
 		) : ""
 	}
+	else if (phase != "parliament");
 	else if (receivedByParliamentAt && !acceptedByParliamentAt) {
     var daysSinceSent = diffInDays(new Date, receivedByParliamentAt)
     let daysLeft = PARLIAMENT_ACCEPTANCE_DEADLINE_IN_DAYS - daysSinceSent
@@ -768,7 +769,7 @@ function PhasesView(attrs) {
 				<ProgressView value={signProgress} text={signPhaseText} />
       </li>
 
-			{parliamentProgress != null ? <li
+			{initiative.destination == "parliament" ? <li
 				id="parliament-phase"
 				class={
 					classifyPhase("parliament", phase) +
