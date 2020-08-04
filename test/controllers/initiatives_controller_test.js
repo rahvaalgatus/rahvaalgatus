@@ -5459,7 +5459,7 @@ describe("InitiativesController", function() {
 					res.statusMessage.must.equal("No Permission to Edit")
 				})
 
-				it("must update initiative", function*() {
+				it("must update initiative if setting a short deadline", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id
 					}))
@@ -5501,137 +5501,8 @@ describe("InitiativesController", function() {
 					})
 				})
 
-				it("must update initiative if already published", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id,
-						published_at: DateFns.addDays(new Date, -1),
-					}))
-
-					yield textsDb.create(new ValidText({
-						initiative_uuid: initiative.uuid,
-						user_id: this.user.id,
-					}))
-
-					var endsAt = DateFns.addDays(
-						DateFns.endOfDay(initiative.published_at),
-						Config.minDeadlineDays
-					)
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-						method: "PUT",
-						form: {
-							_csrf_token: this.csrfToken,
-							visibility: "public",
-							endsAt: formatIsoDate(endsAt)
-						}
-					})
-
-					res.statusCode.must.equal(303)
-					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
-
-					var cookies = parseCookies(res.headers["set-cookie"])
-					res = yield this.request(res.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
-					})
-
-					res.statusCode.must.equal(200)
-					res.body.must.include(t("INITIATIVE_DISCUSSION_DEADLINE_UPDATED"))
-
-					yield initiativesDb.read(initiative).must.then.eql({
-						__proto__: initiative,
-						discussion_ends_at: endsAt
-					})
-				})
-
-				it("must not update initiative if no text created", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id
-					}))
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-						method: "PUT",
-						form: {
-							_csrf_token: this.csrfToken,
-							visibility: "public",
-							endsAt: formatIsoDate(
-								DateFns.addDays(new Date, Config.minDeadlineDays)
-							)
-						}
-					})
-
-					res.statusCode.must.equal(422)
-					res.statusMessage.must.equal("No Text")
-					yield initiativesDb.read(initiative).must.then.eql(initiative)
-				})
-
-				it("must clear end email when setting discussion end time",
+				it("must respond with 422 if setting a too short deadline",
 					function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id,
-						published_at: new Date,
-						discussion_end_email_sent_at: pseudoDateTime()
-					}))
-
-					yield textsDb.create(new ValidText({
-						initiative_uuid: initiative.uuid,
-						user_id: this.user.id,
-					}))
-
-					var endsAt = DateFns.addDays(DateFns.endOfDay(new Date), 5)
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-						method: "PUT",
-						form: {
-							_csrf_token: this.csrfToken,
-							visibility: "public",
-							endsAt: formatIsoDate(endsAt)
-						}
-					})
-
-					res.statusCode.must.equal(303)
-
-					yield initiativesDb.read(initiative).must.then.eql({
-						__proto__: initiative,
-						discussion_ends_at: endsAt,
-						discussion_end_email_sent_at: null
-					})
-				})
-
-				it("must not clear end email when setting discussion end time to past",
-					function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id,
-						published_at: DateFns.addDays(new Date, -5),
-						discussion_end_email_sent_at: DateFns.addDays(new Date, -1),
-					}))
-
-					yield textsDb.create(new ValidText({
-						initiative_uuid: initiative.uuid,
-						user_id: this.user.id,
-					}))
-
-					var endsAt = DateFns.addDays(
-						DateFns.endOfDay(initiative.published_at),
-						Config.minDeadlineDays
-					)
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-						method: "PUT",
-						form: {
-							_csrf_token: this.csrfToken,
-							visibility: "public",
-							endsAt: formatIsoDate(endsAt)
-						}
-					})
-
-					res.statusCode.must.equal(303)
-
-					yield initiativesDb.read(initiative).must.then.eql({
-						__proto__: initiative,
-						discussion_ends_at: endsAt
-					})
-				})
-
-				it("must respond with 422 if setting a short deadline", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						discussion_end_email_sent_at: new Date,
@@ -5659,6 +5530,294 @@ describe("InitiativesController", function() {
 					res.statusMessage.must.equal("Deadline Too Near or Too Far")
 					yield initiativesDb.read(initiative).must.then.eql(initiative)
 				})
+
+				it("must update initiative if setting a long deadline", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+					}))
+
+					var endsAt = DateFns.addDays(
+						DateFns.endOfDay(new Date),
+						Config.maxDeadlineDays - 1
+					)
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							visibility: "public",
+							endsAt: formatIsoDate(endsAt)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					yield initiativesDb.read(initiative).must.then.eql({
+						__proto__: initiative,
+						published_at: new Date,
+						discussion_ends_at: endsAt
+					})
+				})
+
+				it("must respond with 422 if setting a too long deadline",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						discussion_end_email_sent_at: new Date,
+						published_at: DateFns.addDays(new Date, -90),
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							visibility: "public",
+							endsAt: formatIsoDate(DateFns.addDays(
+								DateFns.endOfDay(new Date),
+								Config.maxDeadlineDays
+							))
+						}
+					})
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Deadline Too Near or Too Far")
+					yield initiativesDb.read(initiative).must.then.eql(initiative)
+				})
+
+				it("must not update initiative if no text created", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							visibility: "public",
+							endsAt: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays)
+							)
+						}
+					})
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("No Text")
+					yield initiativesDb.read(initiative).must.then.eql(initiative)
+				})
+
+				describe("when already published", function() {
+					it("must update initiative if setting a short deadline", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							published_at: DateFns.addDays(new Date, -1),
+						}))
+
+						yield textsDb.create(new ValidText({
+							initiative_uuid: initiative.uuid,
+							user_id: this.user.id,
+						}))
+
+						var endsAt = DateFns.addDays(
+							DateFns.endOfDay(initiative.published_at),
+							Config.minDeadlineDays
+						)
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							form: {
+								_csrf_token: this.csrfToken,
+								visibility: "public",
+								endsAt: formatIsoDate(endsAt)
+							}
+						})
+
+						res.statusCode.must.equal(303)
+						res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+						var cookies = parseCookies(res.headers["set-cookie"])
+						res = yield this.request(res.headers.location, {
+							headers: {Cookie: Http.serializeCookies(cookies)}
+						})
+
+						res.statusCode.must.equal(200)
+						res.body.must.include(t("INITIATIVE_DISCUSSION_DEADLINE_UPDATED"))
+
+						yield initiativesDb.read(initiative).must.then.eql({
+							__proto__: initiative,
+							discussion_ends_at: endsAt
+						})
+					})
+
+					it("must respond with 422 if setting a too short deadline",
+						function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							discussion_end_email_sent_at: new Date,
+							published_at: DateFns.addDays(new Date, -1),
+						}))
+
+						yield textsDb.create(new ValidText({
+							initiative_uuid: initiative.uuid,
+							user_id: this.user.id,
+						}))
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							form: {
+								_csrf_token: this.csrfToken,
+								visibility: "public",
+								endsAt: formatIsoDate(DateFns.addDays(
+									initiative.published_at,
+									Config.minDeadlineDays - 1
+								))
+							}
+						})
+
+						res.statusCode.must.equal(422)
+						res.statusMessage.must.equal("Deadline Too Near or Too Far")
+						yield initiativesDb.read(initiative).must.then.eql(initiative)
+					})
+
+					it("must update initiative if setting a long deadline", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							published_at: DateFns.addDays(new Date, -90),
+						}))
+
+						yield textsDb.create(new ValidText({
+							initiative_uuid: initiative.uuid,
+							user_id: this.user.id,
+						}))
+
+						var endsAt = DateFns.addDays(
+							DateFns.endOfDay(new Date),
+							Config.maxDeadlineDays - 1
+						)
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							form: {
+								_csrf_token: this.csrfToken,
+								visibility: "public",
+								endsAt: formatIsoDate(endsAt)
+							}
+						})
+
+						res.statusCode.must.equal(303)
+
+						yield initiativesDb.read(initiative).must.then.eql({
+							__proto__: initiative,
+							discussion_ends_at: endsAt
+						})
+					})
+
+					it("must respond with 422 if setting a too long deadline",
+						function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							discussion_end_email_sent_at: new Date,
+							published_at: DateFns.addDays(new Date, -90),
+						}))
+
+						yield textsDb.create(new ValidText({
+							initiative_uuid: initiative.uuid,
+							user_id: this.user.id,
+						}))
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							form: {
+								_csrf_token: this.csrfToken,
+								visibility: "public",
+								endsAt: formatIsoDate(DateFns.addDays(
+									DateFns.endOfDay(new Date),
+									Config.maxDeadlineDays
+								))
+							}
+						})
+
+						res.statusCode.must.equal(422)
+						res.statusMessage.must.equal("Deadline Too Near or Too Far")
+						yield initiativesDb.read(initiative).must.then.eql(initiative)
+					})
+
+					it("must clear end email when setting discussion end time",
+						function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							published_at: new Date,
+							discussion_end_email_sent_at: pseudoDateTime()
+						}))
+
+						yield textsDb.create(new ValidText({
+							initiative_uuid: initiative.uuid,
+							user_id: this.user.id,
+						}))
+
+						var endsAt = DateFns.addDays(DateFns.endOfDay(new Date), 5)
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							form: {
+								_csrf_token: this.csrfToken,
+								visibility: "public",
+								endsAt: formatIsoDate(endsAt)
+							}
+						})
+
+						res.statusCode.must.equal(303)
+
+						yield initiativesDb.read(initiative).must.then.eql({
+							__proto__: initiative,
+							discussion_ends_at: endsAt,
+							discussion_end_email_sent_at: null
+						})
+					})
+
+					it("must not clear end email when setting discussion end time to past",
+						function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							published_at: DateFns.addDays(new Date, -5),
+							discussion_end_email_sent_at: DateFns.addDays(new Date, -1),
+						}))
+
+						yield textsDb.create(new ValidText({
+							initiative_uuid: initiative.uuid,
+							user_id: this.user.id,
+						}))
+
+						var endsAt = DateFns.addDays(
+							DateFns.endOfDay(initiative.published_at),
+							Config.minDeadlineDays
+						)
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							form: {
+								_csrf_token: this.csrfToken,
+								visibility: "public",
+								endsAt: formatIsoDate(endsAt)
+							}
+						})
+
+						res.statusCode.must.equal(303)
+
+						yield initiativesDb.read(initiative).must.then.eql({
+							__proto__: initiative,
+							discussion_ends_at: endsAt
+						})
+					})
+				})
 			})
 
 			describe("given status=voting", function() {
@@ -5681,7 +5840,8 @@ describe("InitiativesController", function() {
 					)
 				})
 
-				it("must update initiative given Trix text", function*() {
+				it("must update initiative given Trix text and short deadline",
+					function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						destination: "parliament",
@@ -5738,7 +5898,8 @@ describe("InitiativesController", function() {
 					}])
 				})
 
-				it("must update initiative given CitizenOS HTML", function*() {
+				it("must update initiative given CitizenOS HTML and short deadline",
+					function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						destination: "parliament",
@@ -5801,6 +5962,112 @@ describe("InitiativesController", function() {
 						text_type: new MediaType("text/html"),
 						text_sha256: sha256(html)
 					}])
+				})
+
+				it("must respond with 403 if less than 3 days passed since publish",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						destination: "parliament",
+
+						published_at: DateFns.addDays(
+							new Date,
+							-Config.minDeadlineDays + 1
+						)
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "voting",
+							endsAt: formatIsoDate(DateFns.addDays(new Date, 30))
+						}
+					})
+
+					res.statusCode.must.equal(403)
+					res.statusMessage.must.equal("Cannot Update to Sign Phase")
+					yield initiativesDb.read(initiative).must.then.eql(initiative)
+				})
+
+				it("must respond with 422 if setting a too short deadline",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "voting",
+							endsAt: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays - 1)
+							)
+						}
+					})
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Deadline Too Near or Too Far")
+					yield initiativesDb.read(initiative).must.then.eql(initiative)
+				})
+
+				it("must update initiative if setting a long deadline", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						destination: "parliament",
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
+					}))
+
+					var text = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id
+					}))
+
+					var endsAt = DateFns.addDays(
+						DateFns.endOfDay(new Date),
+						Config.maxDeadlineDays - 1
+					)
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "voting",
+							language: text.language,
+							endsAt: formatIsoDate(endsAt)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+					initiative = yield initiativesDb.read(initiative)
+					initiative.phase.must.equal("sign")
+					initiative.signing_ends_at.must.eql(endsAt)
+				})
+
+				it("must respond with 422 if setting a too long deadline", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "voting",
+							endsAt: formatIsoDate(
+								DateFns.addDays(new Date, Config.maxDeadlineDays)
+							)
+						}
+					})
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Deadline Too Near or Too Far")
+					yield initiativesDb.read(initiative).must.then.eql(initiative)
 				})
 
 				it("must update initiative if language updated", function*() {
@@ -5898,148 +6165,6 @@ describe("InitiativesController", function() {
 					})
 				})
 
-				it("must update only deadline in sign phase", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id,
-						phase: "sign",
-						signing_started_at: DateFns.addDays(new Date, -1)
-					}))
-
-					var endsAt = DateFns.addDays(
-						DateFns.endOfDay(initiative.signing_started_at),
-						Config.minDeadlineDays
-					)
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-						method: "PUT",
-						form: {
-							_csrf_token: this.csrfToken,
-							status: "voting",
-							endsAt: formatIsoDate(endsAt)
-						}
-					})
-
-					res.statusCode.must.equal(303)
-
-					var cookies = parseCookies(res.headers["set-cookie"])
-					res = yield this.request(res.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
-					})
-
-					res.statusCode.must.equal(200)
-					res.body.must.include(t("INITIATIVE_SIGNING_DEADLINE_UPDATED"))
-
-					yield initiativesDb.read(initiative).must.then.eql({
-						__proto__: initiative,
-						signing_ends_at: endsAt
-					})
-				})
-
-				it("must clear end email", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id,
-						phase: "sign",
-						signing_started_at: new Date,
-						discussion_end_email_sent_at: new Date,
-						signing_end_email_sent_at: new Date
-					}))
-
-					var endsAt = DateFns.addDays(
-						DateFns.endOfDay(initiative.signing_started_at),
-						Config.minDeadlineDays
-					)
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-						method: "PUT",
-						form: {
-							_csrf_token: this.csrfToken,
-							status: "voting",
-							endsAt: formatIsoDate(endsAt)
-						}
-					})
-
-					res.statusCode.must.equal(303)
-
-					yield initiativesDb.read(initiative).must.then.eql({
-						__proto__: initiative,
-						signing_ends_at: endsAt,
-						signing_end_email_sent_at: null
-					})
-				})
-
-				it("must not clear end email when setting signing end time to past",
-					function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id,
-						phase: "sign",
-						signing_started_at: DateFns.addDays(new Date, -5),
-						discussion_end_email_sent_at: DateFns.addDays(new Date, -1),
-						signing_end_email_sent_at: new Date
-					}))
-
-					var endsAt = DateFns.addDays(
-						DateFns.endOfDay(initiative.signing_started_at),
-						Config.minDeadlineDays
-					)
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-						method: "PUT",
-						form: {
-							_csrf_token: this.csrfToken,
-							status: "voting",
-							endsAt: formatIsoDate(endsAt)
-						}
-					})
-
-					res.statusCode.must.equal(303)
-
-					var cookies = parseCookies(res.headers["set-cookie"])
-					res = yield this.request(res.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
-					})
-
-					res.statusCode.must.equal(200)
-					res.body.must.include(t("INITIATIVE_SIGNING_DEADLINE_UPDATED"))
-
-						yield initiativesDb.read(initiative).must.then.eql(_.clone({
-							__proto__: initiative,
-							signing_ends_at: endsAt
-						}))
-				})
-
-				it("must not update text if updating deadline", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id,
-						phase: "sign",
-						signing_started_at: pseudoDateTime(),
-						text: "Hello, world!",
-						text_type: "text/plain",
-						text_sha256: sha256("Hello, world!")
-					}))
-
-					var endsAt = DateFns.addDays(
-						DateFns.endOfDay(initiative.signing_started_at),
-						Config.minDeadlineDays
-					)
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-						method: "PUT",
-						form: {
-							_csrf_token: this.csrfToken,
-							status: "voting",
-							endsAt: formatIsoDate(endsAt)
-						}
-					})
-
-					res.statusCode.must.equal(303)
-
-					yield initiativesDb.read(initiative).must.then.eql({
-						__proto__: initiative,
-						signing_ends_at: endsAt,
-						signing_end_email_sent_at: null
-					})
-				})
-
 				it("must update initiative if on fast-track", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
@@ -6071,6 +6196,7 @@ describe("InitiativesController", function() {
 
 					initiative = yield initiativesDb.read(initiative)
 					initiative.phase.must.equal("sign")
+					initiative.signing_ends_at.must.eql(endsAt)
 				})
 
 				it("must respond with 403 if not author", function*() {
@@ -6086,54 +6212,6 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(403)
 					res.statusMessage.must.equal("No Permission to Edit")
-				})
-
-				it("must respond with 403 if less than 3 days passed since publish",
-					function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id,
-						destination: "parliament",
-
-						published_at: DateFns.addDays(
-							new Date,
-							-Config.minDeadlineDays + 1
-						)
-					}))
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-						method: "PUT",
-						form: {
-							_csrf_token: this.csrfToken,
-							status: "voting",
-							endsAt: formatIsoDate(DateFns.addDays(new Date, 30))
-						}
-					})
-
-					res.statusCode.must.equal(403)
-					res.statusMessage.must.equal("Cannot Update to Sign Phase")
-					yield initiativesDb.read(initiative).must.then.eql(initiative)
-				})
-
-				it("must respond with 422 if setting a short deadline", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id,
-						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
-					}))
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-						method: "PUT",
-						form: {
-							_csrf_token: this.csrfToken,
-							status: "voting",
-							endsAt: formatIsoDate(
-								DateFns.addDays(new Date, Config.minDeadlineDays - 1)
-							)
-						}
-					})
-
-					res.statusCode.must.equal(422)
-					res.statusMessage.must.match(/deadline/i)
-					yield initiativesDb.read(initiative).must.then.eql(initiative)
 				})
 
 				it("must email subscribers", function*() {
@@ -6223,6 +6301,179 @@ describe("InitiativesController", function() {
 					subscriptions.slice(2).forEach((s) => (
 						vars.must.include(s.update_token)
 					))
+				})
+
+				describe("when already in sign phase", function() {
+					it("must update initiative if setting a short deadline", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: "sign",
+							signing_started_at: DateFns.addDays(new Date, -1)
+						}))
+
+						var endsAt = DateFns.addDays(
+							DateFns.endOfDay(initiative.signing_started_at),
+							Config.minDeadlineDays
+						)
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							form: {
+								_csrf_token: this.csrfToken,
+								status: "voting",
+								endsAt: formatIsoDate(endsAt)
+							}
+						})
+
+						res.statusCode.must.equal(303)
+
+						var cookies = parseCookies(res.headers["set-cookie"])
+						res = yield this.request(res.headers.location, {
+							headers: {Cookie: Http.serializeCookies(cookies)}
+						})
+
+						res.statusCode.must.equal(200)
+						res.body.must.include(t("INITIATIVE_SIGNING_DEADLINE_UPDATED"))
+
+						yield initiativesDb.read(initiative).must.then.eql({
+							__proto__: initiative,
+							signing_ends_at: endsAt
+						})
+					})
+
+					it("must update initiative if setting a long deadline", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: "sign",
+							signing_started_at: DateFns.addDays(new Date, -90)
+						}))
+
+						var endsAt = DateFns.addDays(
+							DateFns.endOfDay(new Date),
+							Config.maxDeadlineDays - 1
+						)
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							form: {
+								_csrf_token: this.csrfToken,
+								status: "voting",
+								endsAt: formatIsoDate(endsAt)
+							}
+						})
+
+						res.statusCode.must.equal(303)
+
+						yield initiativesDb.read(initiative).must.then.eql({
+							__proto__: initiative,
+							signing_ends_at: endsAt
+						})
+					})
+
+					it("must clear end email", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: "sign",
+							signing_started_at: new Date,
+							discussion_end_email_sent_at: new Date,
+							signing_end_email_sent_at: new Date
+						}))
+
+						var endsAt = DateFns.addDays(
+							DateFns.endOfDay(initiative.signing_started_at),
+							Config.minDeadlineDays
+						)
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							form: {
+								_csrf_token: this.csrfToken,
+								status: "voting",
+								endsAt: formatIsoDate(endsAt)
+							}
+						})
+
+						res.statusCode.must.equal(303)
+
+						yield initiativesDb.read(initiative).must.then.eql({
+							__proto__: initiative,
+							signing_ends_at: endsAt,
+							signing_end_email_sent_at: null
+						})
+					})
+
+					it("must not clear end email when setting signing end time to past",
+						function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: "sign",
+							signing_started_at: DateFns.addDays(new Date, -5),
+							discussion_end_email_sent_at: DateFns.addDays(new Date, -1),
+							signing_end_email_sent_at: new Date
+						}))
+
+						var endsAt = DateFns.addDays(
+							DateFns.endOfDay(initiative.signing_started_at),
+							Config.minDeadlineDays
+						)
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							form: {
+								_csrf_token: this.csrfToken,
+								status: "voting",
+								endsAt: formatIsoDate(endsAt)
+							}
+						})
+
+						res.statusCode.must.equal(303)
+
+						var cookies = parseCookies(res.headers["set-cookie"])
+						res = yield this.request(res.headers.location, {
+							headers: {Cookie: Http.serializeCookies(cookies)}
+						})
+
+						res.statusCode.must.equal(200)
+						res.body.must.include(t("INITIATIVE_SIGNING_DEADLINE_UPDATED"))
+
+						yield initiativesDb.read(initiative).must.then.eql(_.clone({
+							__proto__: initiative,
+							signing_ends_at: endsAt
+						}))
+					})
+
+					it("must not update text if updating deadline", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: "sign",
+							signing_started_at: pseudoDateTime(),
+							text: "Hello, world!",
+							text_type: "text/plain",
+							text_sha256: sha256("Hello, world!")
+						}))
+
+						var endsAt = DateFns.addDays(
+							DateFns.endOfDay(initiative.signing_started_at),
+							Config.minDeadlineDays
+						)
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							form: {
+								_csrf_token: this.csrfToken,
+								status: "voting",
+								endsAt: formatIsoDate(endsAt)
+							}
+						})
+
+						res.statusCode.must.equal(303)
+
+						yield initiativesDb.read(initiative).must.then.eql({
+							__proto__: initiative,
+							signing_ends_at: endsAt,
+							signing_end_email_sent_at: null
+						})
+					})
 				})
 			})
 

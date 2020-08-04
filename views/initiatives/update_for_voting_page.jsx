@@ -15,7 +15,7 @@ module.exports = function(attributes) {
 	var error = attributes.error
 	var attrs = attributes.attrs
 	var texts = attributes.texts
-	var min = Initiative.getMinDeadline(new Date)
+	var min = Initiative.getMinDeadline(initiative.signing_started_at || new Date)
 	var max = Initiative.getMaxDeadline(new Date)
 	var initiativePath = `/initiatives/${initiative.uuid}`
 

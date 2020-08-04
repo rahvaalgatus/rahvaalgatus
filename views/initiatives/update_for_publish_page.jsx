@@ -12,7 +12,7 @@ module.exports = function(attributes) {
 	var initiative = attributes.initiative
 	var error = attributes.error
 	var attrs = attributes.attrs
-	var min = Initiative.getMinDeadline(new Date)
+	var min = Initiative.getMinDeadline(initiative.published_at || new Date)
 	var max = Initiative.getMaxDeadline(new Date)
 
 	return <InitiativePage

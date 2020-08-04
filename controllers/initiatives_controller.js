@@ -671,7 +671,11 @@ function* updateInitiativeToPublished(req, res) {
 
 	let endsAt = DateFns.endOfDay(Time.parseDate(req.body.endsAt))
 
-	if (!Initiative.isDeadlineOk(initiative.published_at || new Date, endsAt)) {
+	if (!Initiative.isDeadlineOk(
+		initiative.published_at || new Date,
+		new Date,
+		endsAt
+	)) {
 		res.statusCode = 422
 		res.statusMessage = "Deadline Too Near or Too Far"
 
@@ -731,9 +735,11 @@ function* updateInitiativePhaseToSign(req, res) {
 	let endsAt = DateFns.endOfDay(Time.parseDate(req.body.endsAt))
 	var attrs = {endsAt: endsAt}
 
-	if (
-		!Initiative.isDeadlineOk(initiative.signing_started_at || new Date, endsAt)
-	) {
+	if (!Initiative.isDeadlineOk(
+		initiative.signing_started_at || new Date,
+		new Date,
+		endsAt
+	)) {
 		res.statusCode = 422
 		res.statusMessage = "Deadline Too Near or Too Far"
 
