@@ -251,9 +251,13 @@ function readSignatureCount(gov, range) {
 function* searchRecentInitiatives() {
 	// Intentionally ignoring imported CitizenOS signatures as those originate
 	// from Feb 2020 and earlier.
-	var recentUuids = _.uniq(_.reverse(_.sortBy(flatten(yield [
+	var recents = _.fromEntries(_.uniqBy(_.reverse(_.sortBy(flatten(yield [
 		sqlite(sql`
-			SELECT comment.initiative_uuid AS uuid, max(comment.created_at) AS at
+			SELECT
+				comment.initiative_uuid AS uuid,
+				max(comment.created_at) AS at,
+				'commented' AS reason
+
 			FROM comments AS comment
 			JOIN initiatives AS initiative
 			ON initiative.uuid = comment.initiative_uuid
@@ -264,7 +268,11 @@ function* searchRecentInitiatives() {
 		`),
 
 		sqlite(sql`
-			SELECT initiative_uuid AS uuid, max(created_at) AS at
+			SELECT
+				initiative_uuid AS uuid,
+				max(created_at) AS at,
+				'signed' AS reason
+
 			FROM initiative_signatures
 			GROUP BY initiative_uuid
 			ORDER BY at DESC
@@ -273,7 +281,10 @@ function* searchRecentInitiatives() {
 	]).map(function(row) {
 		row.at = new Date(row.at)
 		return row
-	}), "at")).map((row) => row.uuid)).slice(0, 6)
+	}), "at")), "uuid").slice(0, 6).map((r, i) => [
+		r.uuid,
+		_.assign(r, {position: i})
+	]))
 
 	return _.sortBy(yield initiativesDb.search(sql`
 		WITH signatures AS (
@@ -292,8 +303,11 @@ function* searchRecentInitiatives() {
 		LEFT JOIN signatures AS signature
 		ON signature.initiative_uuid = initiative.uuid
 
-		WHERE initiative.uuid IN ${sql.in(recentUuids)}
+		WHERE initiative.uuid IN ${sql.in(_.keys(recents))}
 
 		GROUP BY initiative.uuid
-	`), (i) => recentUuids.indexOf(i.uuid))
+	`), (i) => recents[i.uuid].position).map((i) => _.assign(
+		i,
+		{reason: recents[i.uuid].reason}
+	))
 }

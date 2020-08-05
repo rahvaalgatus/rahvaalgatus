@@ -550,9 +550,6 @@ button.inherited {
 	}
 
 	.initiative {
-		background: white;
-		box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
-
 		line-height: 1;
 		width: $initiative-width;
 		float: left;
@@ -561,8 +558,16 @@ button.inherited {
 		margin-right: 2rem;
 
 		a {
+			background: white;
+			box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
 			display: block;
 			padding: 1.5rem 2rem 0;
+
+			&:hover {
+				box-shadow: 0 1px 10px 0 rgba(0, 0, 0, 0.4);
+
+				h3 { color: $title-text; }
+			}
 		}
 
 		time,
@@ -610,9 +615,13 @@ button.inherited {
 			margin-left: 0.5rem;
 		}
 
-		&:hover {
-			box-shadow: 0 1px 10px 0 rgba(0, 0, 0, 0.4);
-			h3 { color: $title-text; }
+		.note {
+			text-align: center;
+			margin-top: 1rem;
+			color: #7e7e7e;
+			font-size: 1.3rem;
+			font-family: $museo-sans;
+			font-weight: 500;
 		}
 
 		.initiative-progress {

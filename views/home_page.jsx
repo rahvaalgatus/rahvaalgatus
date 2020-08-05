@@ -8,6 +8,7 @@ var {Section} = require("./page")
 var {Flash} = require("./page")
 var {Form} = require("./page")
 var {InitiativesView} = require("./initiatives/index_page")
+var {InitiativeView} = require("./initiatives/index_page")
 var EMPTY_ARR = Array.prototype
 exports = module.exports = HomePage
 exports.InitiativesSubscriptionForm = InitiativesSubscriptionForm
@@ -133,10 +134,21 @@ function HomePage(attrs) {
 		>
 			<h2>{t("RECENT_INITIATIVES")}</h2>
 
-			<InitiativesView
-				t={t}
-				initiatives={recentInitiatives}
-			/>
+			<ol class="initiatives">
+				{recentInitiatives.map((initiative) => <InitiativeView
+					t={t}
+					initiative={initiative}
+					signatureCount={initiative.signature_count}
+
+					note={
+						initiative.reason == "commented" ? t("RECENTLY_COMMENTED") :
+						initiative.reason == "signed" ? t("RECENTLY_SIGNED") :
+						null
+					}
+
+					dateless
+				/>)}
+			</ol>
 		</Section> : null}
 
 		<Section

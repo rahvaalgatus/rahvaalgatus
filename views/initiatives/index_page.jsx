@@ -9,6 +9,7 @@ var I18n = require("root/lib/i18n")
 var EMPTY_ARR = Array.prototype
 exports = module.exports = InitiativesPage
 exports.InitiativesView = InitiativesView
+exports.InitiativeView = InitiativeView
 
 function InitiativesPage(attrs) {
 	var t = attrs.t
@@ -182,15 +183,18 @@ function InitiativeView(attrs) {
 		class={"initiative" + (initiative.destination ? " with-destination" : "")}
 	>
 		<a href={`/initiatives/${initiative.uuid}`}>
-			<time datetime={time && time.toJSON()}>
+			{!attrs.dateless ? <time datetime={time && time.toJSON()}>
 				{time ? I18n.formatDate("numeric", time) : " "}
-			</time>{" "}
+			</time> : null}
+
+			{" "}
 
 			{initiative.destination ? <span class="destination">
 				{t("DESTINATION_" + initiative.destination)}
 			</span> : null}
 
 			<h3 lang="et">{initiative.title}</h3>
+
 			{badge ? <img src={badge.icon} class="badge" title={badge.name} /> : null}
 
 			<span class="author">
@@ -206,5 +210,9 @@ function InitiativeView(attrs) {
 				signatureCount={signatureCount}
 			/>
 		</a>
+
+		{attrs.note ? <div class="note">
+			{attrs.note}
+		</div> : null}
 	</li>
 }
