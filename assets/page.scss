@@ -1415,7 +1415,163 @@ button.inherited {
 }
 
 #initiatives-page {
+	$screen-width-for-boxes: 586px;
+
 	background-color: $secondary-background;
+
+	.initiative-list-section {
+		padding-top: 3rem; // Phase headers have extra top-padding.
+
+		h2 {
+			padding-top: 1rem; // A bit of space when a sticky header.
+			font-size: 2rem;
+			line-height: 3rem;
+			color: $title-text;
+			border-bottom: 1px solid transparent;
+			font-family: $museo-sans;
+			font-weight: 900;
+			text-transform: uppercase;
+
+			position: sticky;
+			top: 0;
+			background: $secondary-background;
+
+			&.edit-phase { border-bottom-color: $edit-phase-color; }
+			&.sign-phase { border-bottom-color: $sign-phase-color; }
+			&.parliament-phase { border-bottom-color: $parliament-phase-color; }
+			&.government-phase { border-bottom-color: $government-phase-color; }
+			&.done-phase { border-bottom-color: $done-phase-color; }
+
+			& ~ h2 { margin-top: 3rem; }
+
+			@media only screen and (max-width: $screen-width-for-boxes) {
+				// Edge-to-edge to hide the shadow of initiative boxes.
+				margin-left: -2rem;
+				margin-right: -2rem;
+				padding-left: 2rem;
+				padding-right: 2rem;
+				margin-bottom: 2rem;
+			}
+		}
+
+		.initiative {
+			$title-font-size: 1.7rem;
+			background: white;
+
+			a {
+				display: block;
+				padding: 1.2rem 2rem 1rem;
+
+				&:hover {
+					h3 { color: $title-text; }
+				}
+			}
+
+			.initiative-time,
+			.author,
+			.destination,
+			.status p {
+				font-size: 1.4rem;
+				font-family: $tisa-pro;
+				color: $secondary-light-text;
+				line-height: 1.4;
+			}
+
+			.initiative-time {
+				float: right;
+			}
+
+			h3 {
+				font-size: $title-font-size;
+				color: #4f4f4f;
+				line-height: 1.5 * $title-font-size;
+				margin-top: 0.5rem;
+				word-wrap: break-word;
+				overflow: hidden;
+
+				-webkit-hyphens: auto;
+				-moz-hyphens: auto;
+				hyphens: auto;
+			}
+
+			.status {
+				margin-top: 0.5rem;
+				text-align: right;
+				clear: right;
+				float: right;
+				margin-left: 2rem;
+
+				.initiative-progress {
+					display: inline-block;
+					border-radius: 3rem;
+					height: 1.5 * $title-font-size;
+					line-height: 1.5 * $title-font-size;
+					text-align: center;
+					width: $initiative-width;
+				}
+
+				p {
+					margin-top: 0.2rem;
+				}
+			}
+
+			.author {
+				display: block;
+				@include ellipsis;
+				margin-top: 0.2rem;
+				padding-bottom: 0.5rem; // For descenders like "j" and "g".
+			}
+
+			.badge {
+				float: left;
+				height: 2rem;
+				margin-top: 0.2rem;
+				margin-right: 1rem;
+			}
+
+			.narrow-initiative-progress { display: none; }
+
+			& + .initiative {
+				border-top: 1px solid $light-background-border;
+			}
+
+			@media only screen and (max-width: $screen-width-for-boxes) {
+				a {
+					box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+
+					&:hover {
+						box-shadow: 0 1px 10px 0 rgba(0, 0, 0, 0.4);
+					}
+				}
+
+				.author { margin-top: 0; }
+
+				.badge {
+					float: right;
+					height: 2rem;
+					margin-top: -0.2rem;
+					margin-right: -0.5rem;
+					margin-left: 0.5rem;
+				}
+
+				.status { display: none; }
+
+				.narrow-initiative-progress {
+					display: block;
+					border-radius: none;
+					margin: 0.5rem -2rem -1rem;
+					padding-top: 1rem;
+					padding-bottom: 0.9rem;
+					line-height: 1;
+				}
+
+				& + .initiative {
+					border-top: none;
+					margin-top: 2rem;
+				}
+			}
+		}
+	}
 }
 
 .initiative-page {

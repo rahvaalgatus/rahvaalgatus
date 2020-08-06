@@ -5,7 +5,7 @@ var Fragment = Jsx.Fragment
 var Page = require("../page")
 var {Section} = require("../page")
 var {Flash} = require("../page")
-var {InitiativesView} = require("../initiatives/index_page")
+var {InitiativeBoxesView} = require("../initiatives/index_page")
 var EMPTY_ARR = Array.prototype
 
 module.exports = function(attrs) {
@@ -35,7 +35,7 @@ module.exports = function(attrs) {
 			{inEdit.length > 0 ? <Fragment>
 				<h2>{t("EDIT_PHASE")}</h2>
 
-				<InitiativesView
+				<InitiativeBoxesView
 					t={t}
 					phase="edit"
 					initiatives={inEdit}
@@ -45,7 +45,7 @@ module.exports = function(attrs) {
 			{inSign.length > 0 ? <Fragment>
 				<h2>{t("SIGN_PHASE")}</h2>
 
-				<InitiativesView
+				<InitiativeBoxesView
 					t={t}
 					phase="sign"
 					initiatives={inSign}
@@ -55,7 +55,7 @@ module.exports = function(attrs) {
 			{inGovernment.length > 0 ? <Fragment>
 				<h2>{t("GOVERNMENT_PHASE")}</h2>
 
-				<InitiativesView
+				<InitiativeBoxesView
 					t={t}
 					phase="government"
 					initiatives={inGovernment}
@@ -65,7 +65,7 @@ module.exports = function(attrs) {
 			{inDone.length > 0 ? <Fragment>
 				<h2>{t("DONE_PHASE")}</h2>
 
-				<InitiativesView
+				<InitiativeBoxesView
 					t={t}
 					phase="done"
 					initiatives={inDone}

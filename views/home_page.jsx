@@ -7,8 +7,8 @@ var Config = require("root/config")
 var {Section} = require("./page")
 var {Flash} = require("./page")
 var {Form} = require("./page")
-var {InitiativesView} = require("./initiatives/index_page")
-var {InitiativeView} = require("./initiatives/index_page")
+var {InitiativeBoxesView} = require("./initiatives/index_page")
+var {InitiativeBoxView} = require("./initiatives/index_page")
 var EMPTY_ARR = Array.prototype
 exports = module.exports = HomePage
 exports.InitiativesSubscriptionForm = InitiativesSubscriptionForm
@@ -135,7 +135,7 @@ function HomePage(attrs) {
 			<h2>{t("RECENT_INITIATIVES")}</h2>
 
 			<ol class="initiatives">
-				{recentInitiatives.map((initiative) => <InitiativeView
+				{recentInitiatives.map((initiative) => <InitiativeBoxView
 					t={t}
 					initiative={initiative}
 					signatureCount={initiative.signature_count}
@@ -184,7 +184,7 @@ function HomePage(attrs) {
 			{inEdit.length > 0 ? <Fragment>
 				<h2>{t("EDIT_PHASE")}</h2>
 
-				<InitiativesView
+				<InitiativeBoxesView
 					t={t}
 					phase="edit"
 					initiatives={inEdit}
@@ -194,7 +194,7 @@ function HomePage(attrs) {
 			{inSign.length > 0 ? <Fragment>
 				<h2>{t("SIGN_PHASE")}</h2>
 
-				<InitiativesView
+				<InitiativeBoxesView
 					t={t}
 					phase="sign"
 					initiatives={inSign}
@@ -204,7 +204,7 @@ function HomePage(attrs) {
 			{inParliament.length > 0 ? <Fragment>
 				<h2>{t("PARLIAMENT_PHASE")}</h2>
 
-				<InitiativesView
+				<InitiativeBoxesView
 					t={t}
 					phase="parliament"
 					initiatives={inParliament}
@@ -214,7 +214,7 @@ function HomePage(attrs) {
 			{inGovernment.length > 0 ? <Fragment>
 				<h2>{t("GOVERNMENT_PHASE")}</h2>
 
-				<InitiativesView
+				<InitiativeBoxesView
 					t={t}
 					phase="government"
 					initiatives={inGovernment}
@@ -224,7 +224,7 @@ function HomePage(attrs) {
 			{inDone.length > 0 ? <Fragment>
 				<h2>{t("DONE_PHASE")}</h2>
 
-				<InitiativesView
+				<InitiativeBoxesView
 					t={t}
 					phase="done"
 					initiatives={inDone}

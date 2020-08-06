@@ -65,6 +65,7 @@ function ProgressView(attrs) {
 	var initiative = attrs.initiative
 	var sigs = attrs.signatureCount
 	var klass = "initiative-progress " + initiative.phase + "-phase"
+	if (attrs.class) klass += " " + attrs.class
 
 	switch (initiative.phase) {
 		case "edit":

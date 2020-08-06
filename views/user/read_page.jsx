@@ -7,7 +7,7 @@ var UserPage = require("./user_page")
 var {Section} = require("../page")
 var {Form} = require("../page")
 var {Flash} = require("../page")
-var {InitiativesView} = require("../initiatives/index_page")
+var {InitiativeBoxesView} = require("../initiatives/index_page")
 
 module.exports = function(attrs) {
 	var t = attrs.t
@@ -73,7 +73,7 @@ module.exports = function(attrs) {
 			{initiatives.length > 0 ? <Fragment>
 				<h2>{t("MY_INITIATIVES")}</h2>
 
-				<InitiativesView
+				<InitiativeBoxesView
 					t={t}
 					initiatives={_.sortBy(initiatives, "created_at").reverse()}
 				/>
