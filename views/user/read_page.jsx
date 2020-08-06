@@ -15,7 +15,6 @@ module.exports = function(attrs) {
 	var user = attrs.user
 	var error = attrs.error
 	var initiatives = attrs.initiatives
-	var signatureCounts = attrs.signatureCounts
 	var userAttrs = attrs.userAttrs
 	var userErrors = attrs.userErrors
 
@@ -77,7 +76,6 @@ module.exports = function(attrs) {
 				<InitiativesView
 					t={t}
 					initiatives={_.sortBy(initiatives, "created_at").reverse()}
-					signatureCounts={signatureCounts}
 				/>
 			</Fragment> : null}
 

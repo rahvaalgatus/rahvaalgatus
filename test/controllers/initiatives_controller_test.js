@@ -642,8 +642,10 @@ describe("InitiativesController", function() {
 				})
 
 				res.statusCode.must.equal(200)
-				_.map(res.body, "id").must.eql(_.map(initiatives.slice(5), "uuid"))
-				_.map(res.body, "signaturesSinceCount").must.eql([5, 6, 7, 8, 9])
+
+				var obj = _.sortBy(res.body, "signaturesSinceCount")
+				_.map(obj, "id").must.eql(_.map(initiatives.slice(5), "uuid"))
+				_.map(obj, "signaturesSinceCount").must.eql([5, 6, 7, 8, 9])
 			})
 		})
 
@@ -818,7 +820,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.headers["content-type"].must.equal(INITIATIVE_TYPE)
 
-				res.body.must.eql([{
+				_.sortBy(res.body, "for").must.eql([{
 					id: a.uuid,
 					for: "muhu-vald",
 					title: a.title,
@@ -936,7 +938,10 @@ describe("InitiativesController", function() {
 				})
 
 				res.statusCode.must.equal(200)
-				_.map(res.body, "id").must.eql(_.map(initiatives.slice(0, 5), "uuid"))
+				var existing = new Set(_.map(initiatives, "uuid"))
+				res.body.length.must.equal(5)
+				res.body.forEach((i) => existing.has(i.uuid))
+				_.map(res.body, "id").every(existing.has.bind(existing)).must.be.true()
 			})
 
 			it("must limit initiatives after sorting", function*() {

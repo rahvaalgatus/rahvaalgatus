@@ -123,7 +123,7 @@ function ReadPage(attrs) {
 	var initiative = attrs.initiative
 	var initiativePath = "/initiatives/" + initiative.uuid
 	var subscriberCounts = attrs.subscriberCounts
-	var signatureCount = attrs.signatureCount
+	var signatureCount = initiative.signature_count
 	var text = attrs.text
 	var textLanguage = attrs.textLanguage
 	var translations = attrs.translations
@@ -578,7 +578,6 @@ function ReadPage(attrs) {
 					hasComments={comments.length > 0}
 					translations={translations}
 					signedTranslations={signedTranslations}
-					signatureCount={signatureCount}
 				/>
 
 				<SidebarInfoView
@@ -887,7 +886,7 @@ function SidebarAuthorView(attrs) {
 
 	var t = req.t
 	var text = attrs.text
-	var signatureCount = attrs.signatureCount
+	var signatureCount = initiative.signature_count
 	var hasComments = attrs.hasComments
 
 	var initiativePath = "/initiatives/" + initiative.uuid

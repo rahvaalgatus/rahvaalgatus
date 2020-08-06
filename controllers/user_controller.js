@@ -6,7 +6,6 @@ var Crypto = require("crypto")
 var HttpError = require("standard-http-error")
 var SqliteError = require("root/lib/sqlite_error")
 var sql = require("sqlate")
-var {countSignaturesByIds} = require("root/lib/initiative")
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
@@ -241,18 +240,29 @@ function* read(req, res) {
 	var user = req.user
 
 	var initiatives = yield initiativesDb.search(sql`
-		SELECT initiative.*, user.name AS user_name
+		WITH signatures AS (
+			SELECT initiative_uuid FROM initiative_signatures
+			UNION ALL
+			SELECT initiative_uuid FROM initiative_citizenos_signatures
+		)
+
+		SELECT
+			initiative.*,
+			user.name AS user_name,
+			COUNT(signature.initiative_uuid) AS signature_count
+
 		FROM initiatives AS initiative
 		LEFT JOIN users AS user ON initiative.user_id = user.id
-		WHERE initiative.user_id = ${user.id}
-	`)
+		LEFT JOIN signatures AS signature
+		ON signature.initiative_uuid = initiative.uuid
 
-	var signatureCounts = yield countSignaturesByIds(_.map(initiatives, "uuid"))
+		WHERE initiative.user_id = ${user.id}
+		GROUP BY initiative.uuid
+	`)
 
 	res.render("user/read_page.jsx", {
 		user: user,
 		initiatives: initiatives,
-		signatureCounts: signatureCounts,
 		userAttrs: _.create(user, res.locals.userAttrs),
 		userErrors: res.locals.userErrors || EMPTY_OBJ
 	})

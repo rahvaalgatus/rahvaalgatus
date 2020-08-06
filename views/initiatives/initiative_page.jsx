@@ -9,7 +9,7 @@ var diffInDays = require("date-fns").differenceInCalendarDays
 var {getRequiredSignatureCount} = require("root/lib/initiative")
 exports = module.exports = InitiativePage
 exports.ProgressView = ProgressView
-	
+
 function InitiativePage(attrs, children) {
 	var req = attrs.req
 	var initiative = attrs.initiative

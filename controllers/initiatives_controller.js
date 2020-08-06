@@ -33,8 +33,6 @@ var trim = Function.call.bind(String.prototype.trim)
 var sendEmail = require("root").sendEmail
 var searchInitiativeEvents = _.compose(searchInitiativesEvents, concat)
 var parseText = require("./initiatives/texts_controller").parse
-var {countSignaturesById} = require("root/lib/initiative")
-var {countSignaturesByIds} = require("root/lib/initiative")
 var {countUndersignedSignaturesById} = require("root/lib/initiative")
 var {countCitizenOsSignaturesById} = require("root/lib/initiative")
 var EMPTY = Object.prototype
@@ -54,23 +52,35 @@ exports.router.get("/",
 	var gov = req.government
 
 	var initiatives = yield initiativesDb.search(sql`
-		SELECT initiative.*, user.name AS user_name
+		WITH signatures AS (
+			SELECT initiative_uuid FROM initiative_signatures
+			UNION ALL
+			SELECT initiative_uuid FROM initiative_citizenos_signatures
+		)
+
+		SELECT
+			initiative.*,
+			user.name AS user_name,
+			COUNT(signature.initiative_uuid) AS signature_count
+
 		FROM initiatives AS initiative
 		LEFT JOIN users AS user ON initiative.user_id = user.id
+		LEFT JOIN signatures AS signature
+		ON signature.initiative_uuid = initiative.uuid
 
-		WHERE published_at IS NOT NULL
+		WHERE initiative.published_at IS NOT NULL
 		AND (destination IS NULL AND phase = 'edit' OR destination ${
 			gov == null ? sql`IS NOT NULL` :
 			gov == "parliament" ? sql`= 'parliament'` : sql`!= 'parliament'`
 		})
+
+		GROUP BY initiative.uuid
 	`)
 
 	// Perhaps it's worth changing the query parameter name to "tag". Remember
 	// backwards compatibility!
 	var tag = req.query.category
 	if (tag) initiatives = initiatives.filter((i) => i.tags.includes(tag))
-
-	var signatureCounts = yield countSignaturesByIds(_.map(initiatives, "uuid"))
 
 	var type = res.contentType
 	switch (type.name) {
@@ -117,10 +127,7 @@ exports.router.get("/",
 					(initiative.external || !signaturesSinceCounts[initiative.uuid])
 				) return null
 
-				var obj = serializeApiInitiative(
-					initiative,
-					initiative.external ? null : signatureCounts[initiative.uuid]
-				)
+				var obj = serializeApiInitiative(initiative)
 
 				if (signaturesSinceCounts)
 					obj.signaturesSinceCount = signaturesSinceCounts[initiative.uuid]
@@ -154,10 +161,7 @@ exports.router.get("/",
 			break
 
 		default:
-			res.render("initiatives/index_page.jsx", {
-				initiatives: initiatives,
-				signatureCounts: signatureCounts
-			})
+			res.render("initiatives/index_page.jsx", {initiatives: initiatives})
 	}
 }))
 
@@ -197,10 +201,25 @@ exports.router.use("/:id", next(function*(req, res, next) {
 	var user = req.user
 
 	var initiative = yield initiativesDb.read(sql`
-		SELECT initiative.*, user.name AS user_name
+		WITH signatures AS (
+			SELECT initiative_uuid FROM initiative_signatures
+			UNION ALL
+			SELECT initiative_uuid FROM initiative_citizenos_signatures
+		)
+
+		SELECT
+			initiative.*,
+			user.name AS user_name,
+			COUNT(signature.initiative_uuid) AS signature_count
+
 		FROM initiatives AS initiative
 		LEFT JOIN users AS user ON initiative.user_id = user.id
+		LEFT JOIN signatures AS signature
+		ON signature.initiative_uuid = initiative.uuid
+
 		WHERE initiative.uuid = ${req.params.id}
+
+		GROUP BY initiative.uuid
 	`)
 
 	if (initiative == null) throw new HttpError(404)
@@ -253,11 +272,7 @@ exports.router.get("/:id",
 		case INITIATIVE_TYPE.name:
 			res.setHeader("Content-Type", type)
 			res.setHeader("Access-Control-Allow-Origin", "*")
-
-			res.send(serializeApiInitiative(
-				initiative,
-				initiative.external ? null : yield countSignaturesById(initiative.uuid)
-			))
+			res.send(serializeApiInitiative(initiative))
 			break
 
 		case "application/atom+xml":
@@ -333,8 +348,6 @@ exports.read = next(function*(req, res) {
 		AND event_id IS NULL
 	`)
 
-	var signatureCount = yield countSignaturesById(initiative.uuid)
-
 	var image = yield imagesDb.read(sql`
 		SELECT initiative_uuid, type, author_name, author_url
 		FROM initiative_images
@@ -404,7 +417,6 @@ exports.read = next(function*(req, res) {
 		signature: !signature || signature.hidden ? null : signature,
 		subscription: subscription,
 		subscriberCounts: subscriberCounts,
-		signatureCount: signatureCount,
 		text: text,
 		textLanguage: textLanguage,
 		translations: translations,
@@ -999,13 +1011,13 @@ function* countSignaturesByIdsAndTime(uuids, from) {
 	`), "uuid"), _.property("count"))
 }
 
-function serializeApiInitiative(initiative, signatureCount) {
+function serializeApiInitiative(initiative) {
 	return {
 		id: initiative.uuid,
 		for: initiative.destination,
 		title: initiative.title,
 		phase: initiative.phase,
-		signatureCount: signatureCount
+		signatureCount: initiative.external ? null : initiative.signature_count
 	}
 }
 

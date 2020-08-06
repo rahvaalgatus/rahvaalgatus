@@ -17,7 +17,6 @@ module.exports = function(attrs) {
 	var user = req.user
 	var initiatives = attrs.initiatives
 	var stats = attrs.statistics
-	var signatureCounts = attrs.signatureCounts
 
 	var initiativesByPhase = _.groupBy(initiatives, "phase")
 	var inEdit = initiativesByPhase.edit || EMPTY_ARR
@@ -119,7 +118,6 @@ module.exports = function(attrs) {
 					t={t}
 					phase="edit"
 					initiatives={inEdit}
-					signatureCounts={signatureCounts}
 				/>
 			</Fragment> : null}
 
@@ -130,7 +128,6 @@ module.exports = function(attrs) {
 					t={t}
 					phase="sign"
 					initiatives={inSign}
-					signatureCounts={signatureCounts}
 				/>
 			</Fragment> : null}
 
@@ -141,7 +138,6 @@ module.exports = function(attrs) {
 					t={t}
 					phase="parliament"
 					initiatives={inParliament}
-					signatureCounts={signatureCounts}
 				/>
 			</Fragment> : null}
 
@@ -152,7 +148,6 @@ module.exports = function(attrs) {
 					t={t}
 					phase="government"
 					initiatives={inGovernment}
-					signatureCounts={signatureCounts}
 				/>
 			</Fragment> : null}
 
@@ -163,7 +158,6 @@ module.exports = function(attrs) {
 					t={t}
 					phase="done"
 					initiatives={inDone}
-					signatureCounts={signatureCounts}
 				/>
 			</Fragment> : null}
 

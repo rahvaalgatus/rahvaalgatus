@@ -16,7 +16,6 @@ function InitiativesPage(attrs) {
 	var req = attrs.req
 	var flash = attrs.flash
 	var initiatives = attrs.initiatives
-	var signatureCounts = attrs.signatureCounts
 
 	var initiativesByPhase = _.groupBy(initiatives, "phase")
 	var inEdit = initiativesByPhase.edit || EMPTY_ARR
@@ -52,7 +51,6 @@ function InitiativesPage(attrs) {
 						t={t}
 						phase="edit"
 						initiatives={inEdit}
-						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
 
@@ -63,7 +61,6 @@ function InitiativesPage(attrs) {
 						t={t}
 						phase="sign"
 						initiatives={inSign}
-						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
 
@@ -74,7 +71,6 @@ function InitiativesPage(attrs) {
 						t={t}
 						phase="parliament"
 						initiatives={inParliament}
-						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
 
@@ -85,7 +81,6 @@ function InitiativesPage(attrs) {
 						t={t}
 						phase="government"
 						initiatives={inGovernment}
-						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
 
@@ -96,7 +91,6 @@ function InitiativesPage(attrs) {
 						t={t}
 						phase="done"
 						initiatives={inDone}
-						signatureCounts={signatureCounts}
 					/>
 				</Fragment> : null}
 			</center>
@@ -108,7 +102,6 @@ function InitiativesView(attrs) {
 	var t = attrs.t
 	var phase = attrs.phase
 	var initiatives = attrs.initiatives
-	var signatureCounts = attrs.signatureCounts
 
 	switch (phase) {
 		case undefined: break
@@ -118,10 +111,7 @@ function InitiativesView(attrs) {
 			break
 
 		case "sign":
-			initiatives = _.sortBy(initiatives, (i) => i.signature_count != null
-				? i.signature_count
-				: signatureCounts[i.uuid] || 0
-			).reverse()
+			initiatives = _.sortBy(initiatives, (i) => i.signature_count).reverse()
 			break
 
 		case "parliament":
@@ -147,11 +137,7 @@ function InitiativesView(attrs) {
 		{initiatives.map((initiative) => <InitiativeView
 			t={t}
 			initiative={initiative}
-
-			signatureCount={initiative.signature_count != null
-				? initiative.signature_count
-				: signatureCounts[initiative.uuid] || 0
-			}
+			signatureCount={initiative.signature_count}
 		/>)}
 	</ol>
 }
