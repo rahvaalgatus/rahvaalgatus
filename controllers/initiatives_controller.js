@@ -35,6 +35,7 @@ var searchInitiativeEvents = _.compose(searchInitiativesEvents, concat)
 var parseText = require("./initiatives/texts_controller").parse
 var {countUndersignedSignaturesById} = require("root/lib/initiative")
 var {countCitizenOsSignaturesById} = require("root/lib/initiative")
+var {PHASES} = require("root/lib/initiative")
 var EMPTY = Object.prototype
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: "", phase: "edit"}
@@ -49,116 +50,100 @@ exports.router = Router({mergeParams: true})
 exports.router.get("/",
 	new ResponseTypeMiddeware(["text/html", INITIATIVE_TYPE].map(MediaType)),
 	next(function*(req, res) {
+	if (res.contentType.name == INITIATIVE_TYPE.name) {
+		res.setHeader("Content-Type", INITIATIVE_TYPE)
+		res.setHeader("Access-Control-Allow-Origin", "*")
+	}
+
 	var gov = req.government
+	var onlyDestinations = req.query.for && parseDestinations(req.query.for)
+	var onlyPhase = req.query.phase && parsePhase(req.query.phase)
+
+	// Perhaps it's worth changing the query parameter name to "tag". Remember
+	// backwards compatibility!
+	var tag = req.query.category
+
+	var signedSince = (
+		req.query.signedSince &&
+		DateFns.parse(req.query.signedSince)
+	)
+
+	var [orderBy, orderDir] = req.query.order ? parseOrder(req.query.order) : []
+	var limit = req.query.limit ? parseLimit(req.query.limit) : null
 
 	var initiatives = yield initiativesDb.search(sql`
 		WITH signatures AS (
-			SELECT initiative_uuid FROM initiative_signatures
+			SELECT initiative_uuid, created_at FROM initiative_signatures
 			UNION ALL
-			SELECT initiative_uuid FROM initiative_citizenos_signatures
+			SELECT initiative_uuid, created_at FROM initiative_citizenos_signatures
 		)
+
+		${signedSince ? sql`
+			, recent_signatures AS (
+				SELECT initiative_uuid, COUNT(*) AS count
+				FROM signatures
+				WHERE created_at >= ${signedSince}
+				GROUP BY initiative_uuid
+			)
+		` : sql``}
 
 		SELECT
 			initiative.*,
 			user.name AS user_name,
 			COUNT(signature.initiative_uuid) AS signature_count
+			${signedSince ? sql`, recent.count AS recent_signature_count` : sql``}
 
 		FROM initiatives AS initiative
+		${tag ? sql`JOIN json_each(initiative.tags) AS tag` : sql``}
+
 		LEFT JOIN users AS user ON initiative.user_id = user.id
+
 		LEFT JOIN signatures AS signature
 		ON signature.initiative_uuid = initiative.uuid
 
+		${signedSince ? sql`
+			JOIN recent_signatures AS recent
+			ON recent.initiative_uuid = initiative.uuid
+		` : sql``}
+
 		WHERE initiative.published_at IS NOT NULL
+
 		AND (destination IS NULL AND phase = 'edit' OR destination ${
 			gov == null ? sql`IS NOT NULL` :
 			gov == "parliament" ? sql`= 'parliament'` : sql`!= 'parliament'`
 		})
 
+		${onlyDestinations
+			? sql`AND destination IN ${sql.in(onlyDestinations)}`
+			: sql``
+		}
+
+		${onlyPhase ? sql`AND phase = ${onlyPhase}` : sql``}
+		${tag ? sql`AND tag.value = ${tag}` : sql``}
+
 		GROUP BY initiative.uuid
+
+		${
+			orderBy == "signatureCount"
+			? sql`ORDER BY signature_count ${orderDir}`
+			: orderBy == "signaturesSinceCount"
+			? sql`ORDER BY recent_signature_count ${orderDir}`
+			: sql``
+		}
+
+		${limit != null ? sql`LIMIT ${limit}` : sql``}
 	`)
 
-	// Perhaps it's worth changing the query parameter name to "tag". Remember
-	// backwards compatibility!
-	var tag = req.query.category
-	if (tag) initiatives = initiatives.filter((i) => i.tags.includes(tag))
-
-	var type = res.contentType
-	switch (type.name) {
+	switch (res.contentType.name) {
 		case INITIATIVE_TYPE.name:
-			// TODO: API initiative filtering should be done in SQL for the most part.
-			res.setHeader("Content-Type", type)
-			res.setHeader("Access-Control-Allow-Origin", "*")
-
-			if (req.query.for !== undefined) {
-				var dests = _.asArray(req.query.for)
-
-				if (!dests.every(isValidDestination))
-					throw new HttpError(400, "Invalid Destination")
-
-				dests = new Set(dests)
-				initiatives = initiatives.filter((i) => dests.has(i.destination))
-			}
-
-			switch (req.query.phase || undefined) {
-				case "edit":
-				case "sign":
-				case "parliament":
-				case "government":
-				case "done":
-					initiatives = initiatives.filter((initiative) => (
-						initiative.phase == req.query.phase
-					))
-					break
-
-				case undefined: break
-				default: throw new HttpError(400, "Invalid Phase")
-			}
-
-			var signaturesSinceCounts = null
-			if (req.query.signedSince)
-				signaturesSinceCounts = yield countSignaturesByIdsAndTime(
-					_.map(initiatives, "uuid"),
-					DateFns.parse(req.query.signedSince)
-				)
-
-			var apiInitiatives = initiatives.map(function(initiative) {
-				if (
-					signaturesSinceCounts &&
-					(initiative.external || !signaturesSinceCounts[initiative.uuid])
-				) return null
-
+			return void res.send(initiatives.map(function(initiative) {
 				var obj = serializeApiInitiative(initiative)
 
-				if (signaturesSinceCounts)
-					obj.signaturesSinceCount = signaturesSinceCounts[initiative.uuid]
+				if (initiative.recent_signature_count)
+					obj.signaturesSinceCount = initiative.recent_signature_count
 
 				return obj
-			}).filter(Boolean)
-
-			var order = req.query.order
-			switch (order || undefined) {
-				case "signatureCount":
-				case "+signatureCount":
-				case "-signatureCount":
-				case "signaturesSinceCount":
-				case "+signaturesSinceCount":
-				case "-signaturesSinceCount":
-					apiInitiatives = _.sortBy(apiInitiatives, order.replace(/^[-+ ]/, ""))
-					if (order[0] == "-") apiInitiatives = _.reverse(apiInitiatives)
-					break
-
-				case undefined: break
-				default: throw new HttpError(400, "Invalid Order")
-			}
-
-			var limit = req.query.limit
-			switch (limit || undefined) {
-				case undefined: break
-				default: apiInitiatives = apiInitiatives.slice(0, Number(limit))
-			}
-
-			res.send(apiInitiatives)
-			break
+			}))
 
 		default:
 			res.render("initiatives/index_page.jsx", {initiatives: initiatives})
@@ -1001,16 +986,6 @@ function parseInitiative(initiative, obj) {
 	return attrs
 }
 
-function* countSignaturesByIdsAndTime(uuids, from) {
-	return _.mapValues(_.indexBy(yield sqlite(sql`
-		SELECT initiative_uuid AS uuid, COUNT(*) as count
-		FROM initiative_signatures
-		WHERE created_at >= ${from}
-		AND initiative_uuid IN ${sql.in(uuids)}
-		GROUP BY initiative_uuid
-	`), "uuid"), _.property("count"))
-}
-
 function serializeApiInitiative(initiative) {
 	return {
 		id: initiative.uuid,
@@ -1033,6 +1008,37 @@ function parseMeeting(obj) {
 		date: String(obj.date || "").trim(),
 		url: String(obj.url || "").trim()
 	}
+}
+
+function parseDestinations(dest) {
+	var dests = _.asArray(dest)
+
+	if (!dests.every(isValidDestination))
+		throw new HttpError(400, "Invalid Destination")
+
+	return dests
+}
+
+function parsePhase(phase) {
+	if (PHASES.includes(phase)) return phase
+	else throw new HttpError(400, "Invalid Phase")
+}
+
+function parseOrder(order) {
+	var by = order.replace(/^[-+]/, "")
+	order = order[0] == "-" ? sql`DESC` : sql`ASC`
+
+	switch (by) {
+		case "signatureCount":
+		case "signaturesSinceCount": return [by, order]
+		default: throw new HttpError(400, "Invalid Order")
+	}
+}
+
+function parseLimit(limit) {
+	limit = Number(limit)
+	if (Number.isFinite(limit) && limit >= 0) return limit
+	throw new HttpError(400, "Invalid Limit")
 }
 
 function isValidDestination(dest) {

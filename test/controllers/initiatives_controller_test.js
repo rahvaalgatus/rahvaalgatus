@@ -450,7 +450,7 @@ describe("InitiativesController", function() {
 			var initiativeA = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				published_at: new Date,
-				tags: ["uuseakus"]
+				tags: ["foo", "uuseakus", "bar"]
 			}))
 
 			var initiativeB = yield initiativesDb.create(new ValidInitiative({
@@ -927,10 +927,8 @@ describe("InitiativesController", function() {
 
 		describe("given limit", function() {
 			it("must limit initiatives", function*() {
-				var self = this
-
 				var initiatives = yield initiativesDb.create(_.times(10, () =>
-					new ValidInitiative({user_id: self.author.id, published_at: new Date})
+					new ValidInitiative({user_id: this.author.id, published_at: new Date})
 				))
 
 				var res = yield this.request("/initiatives?limit=5", {
@@ -968,6 +966,76 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				var last5 = _.map(initiatives.slice(5), "uuid")
 				_.map(res.body, "id").must.eql(last5.reverse())
+			})
+
+			it("must return nothing given zero", function*() {
+				yield initiativesDb.create(_.times(5, () =>
+					new ValidInitiative({user_id: this.author.id})
+				))
+
+				var res = yield this.request("/initiatives?limit=0", {
+					headers: {Accept: INITIATIVE_TYPE}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.be.empty()
+			})
+
+			it("must respond with 400 given non-number", function*() {
+				yield initiativesDb.create(_.times(5, () =>
+					new ValidInitiative({user_id: this.author.id})
+				))
+
+				var res = yield this.request("/initiatives?limit=foo", {
+					headers: {Accept: INITIATIVE_TYPE}
+				})
+
+				res.statusCode.must.equal(400)
+				res.statusMessage.must.equal("Invalid Limit")
+
+				res.body.must.eql({
+					code: 400,
+					message: "Invalid Limit",
+					name: "HttpError"
+				})
+			})
+
+			it("must respond with 400 given a negative number", function*() {
+				yield initiativesDb.create(_.times(5, () =>
+					new ValidInitiative({user_id: this.author.id})
+				))
+
+				var res = yield this.request("/initiatives?limit=-5", {
+					headers: {Accept: INITIATIVE_TYPE}
+				})
+
+				res.statusCode.must.equal(400)
+				res.statusMessage.must.equal("Invalid Limit")
+
+				res.body.must.eql({
+					code: 400,
+					message: "Invalid Limit",
+					name: "HttpError"
+				})
+			})
+
+			it("must respond with 400 given Infinity", function*() {
+				yield initiativesDb.create(_.times(5, () =>
+					new ValidInitiative({user_id: this.author.id})
+				))
+
+				var res = yield this.request("/initiatives?limit=Infinity", {
+					headers: {Accept: INITIATIVE_TYPE}
+				})
+
+				res.statusCode.must.equal(400)
+				res.statusMessage.must.equal("Invalid Limit")
+
+				res.body.must.eql({
+					code: 400,
+					message: "Invalid Limit",
+					name: "HttpError"
+				})
 			})
 		})
 	})
