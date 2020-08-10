@@ -11,13 +11,12 @@ var {InitiativeBoxesView} = require("./initiatives/index_page")
 var {InitiativeBoxView} = require("./initiatives/index_page")
 var EMPTY_ARR = Array.prototype
 exports = module.exports = HomePage
-exports.InitiativesSubscriptionForm = InitiativesSubscriptionForm
+exports.CallToActionsView = CallToActionsView
 exports.StatisticsView = StatisticsView
 
 function HomePage(attrs) {
 	var t = attrs.t
 	var req = attrs.req
-	var user = req.user
 	var initiatives = attrs.initiatives
 	var stats = attrs.statistics
 	var recentInitiatives = attrs.recentInitiatives
@@ -40,38 +39,25 @@ function HomePage(attrs) {
 			href: "/initiative-events.atom"
 		}]}
 	>
-		<Section id="welcome" class="primary-section text-section">
+		<Section id="welcome" class="primary-section">
 			<Flash flash={req.flash} />
 
-			<h1>{t("HOME_WELCOME_TITLE")}</h1>
+			<h1>
+				{t("HOME_PAGE_HEADER_TITLE")}<br />
+				<small>{t("HOME_PAGE_HEADER_TAGLINE")}</small>
+			</h1>
 
-			<div class="video">
-				<iframe
-					width="480"
-					height="270"
-					src={Config.videoUrls[req.lang]}
-					frameborder="0"
-					allowfullscreen
-				/>
+			<div class="parliament-level">
+				<h2>{t("HOME_PAGE_HEADER_PARLIAMENT_TITLE")}</h2>
+				<p>{Jsx.html(t("HOME_PAGE_HEADER_PARLIAMENT_TEXT"))}</p>
 			</div>
 
-			<p class="welcome-paragraph">{t("HOME_WELCOME")}</p>
-
-			<a href="/initiatives/new" class="button large-button secondary-button">
-				{t("BTN_NEW_TOPIC")}
-			</a>
-
-			<InitiativesSubscriptionForm req={req} t={t} user={user} />
-
-			<div class="social-media-logos">
-				<a href="https://www.facebook.com/rahvaalgatus" class="facebook-logo">
-					<img src="/assets/facebook-logo.png" />
-				</a>
-
-				<a href="https://www.facebook.com/rahvaalgatus" class="twitter-logo">
-					<img src="/assets/twitter-logo.svg" />
-				</a>
+			<div class="local-level">
+				<h2>{t("HOME_PAGE_HEADER_LOCAL_TITLE")}</h2>
+				<p>{Jsx.html(t("HOME_PAGE_HEADER_LOCAL_TEXT"))}</p>
 			</div>
+
+			<CallToActionsView req={req} t={t} />
 		</Section>
 
 		<Section id="statistics" class="primary-section">
@@ -238,6 +224,44 @@ function HomePage(attrs) {
 	</Page>
 }
 
+function CallToActionsView(attrs) {
+	var req = attrs.req
+	var user = req.user
+	var t = attrs.t
+
+	var [
+		subscriptionFormToggle,
+		subscriptionForm
+	] = <InitiativesSubscriptionForm req={req} t={t} user={user} />
+
+	return <div id="call-to-actions">
+		<a
+			href="/initiatives/new"
+			class="new-initiative-button primary-button"
+		>
+			{t("BTN_NEW_TOPIC")}
+		</a>
+
+		{subscriptionFormToggle}
+
+		<a
+			href={Config.facebookUrl}
+			class="facebook-logo social-media-button"
+		>
+			<img src="/assets/facebook-logo.png" />
+		</a>
+
+		<a
+			href={Config.twitterUrl}
+			class="twitter-logo social-media-button"
+		>
+			<img src="/assets/twitter-logo.svg" />
+		</a>
+
+		{subscriptionForm}
+	</div>
+}
+
 function StatisticsView(attrs, children) {
 	var title = attrs.title
 	var count = attrs.count
@@ -255,44 +279,48 @@ function InitiativesSubscriptionForm(attrs) {
 	var user = attrs.user
 	var toggleId = _.uniqueId("subscriptions-form-toggle-")
 
-	return <Form
-		req={req}
-		id="initiatives-subscribe"
-		class="initiatives-subscription-form-view"
-		method="post"
-		action="/subscriptions">
-		<input
-			id={toggleId}
-			class="toggle"
-			type="checkbox"
-			style="display: none"
-			onchange="this.form.email.focus()"
-		/>
+	return [
+		<Fragment>
+			<input
+				id={toggleId}
+				class="initiatives-subscription-form-toggle"
+				type="checkbox"
+				style="display: none"
+				onchange={`document.getElementById("initiatives-subscribe").email.focus()`}
+			/>
 
-		<label
-			for={toggleId}
-			class="large-button primary-button">
-			{t("SUBSCRIBE_TO_INITIATIVES_BUTTON")}
-		</label>
+			<label
+				for={toggleId}
+				class="open-subscription-form-button secondary-button">
+				{t("SUBSCRIBE_TO_INITIATIVES_BUTTON")}
+			</label>
+		</Fragment>,
 
-		<h2>{t("SUBSCRIBE_TO_INITIATIVES_TITLE")}</h2>
-		<p>{t("SUBSCRIBE_TO_INITIATIVES_EXPLANATION")}</p>
+		<Form
+			req={req}
+			id="initiatives-subscribe"
+			class="initiatives-subscription-form-view"
+			method="post"
+			action="/subscriptions">
 
-		{/* Catch naive bots */}
-		<input name="e-mail" type="email" hidden />
+			<p>{t("SUBSCRIBE_TO_INITIATIVES_EXPLANATION")}</p>
 
-		<input
-			id="subscriptions-form-email"
-			name="email"
-			type="email"
-			required
-			placeholder={t("LBL_EMAIL")}
-			value={user && (user.email || user.unconfirmed_email)}
-			class="form-input"
-		/>
+			{/* Catch naive bots */}
+			<input name="e-mail" type="email" hidden />
 
-		<button type="submit" class="primary-button">
-			{t("SUBSCRIBE_TO_INITIATIVES_BUTTON")}
-		</button>
-	</Form>
+			<input
+				id="subscriptions-form-email"
+				name="email"
+				type="email"
+				required
+				placeholder={t("LBL_EMAIL")}
+				value={user && (user.email || user.unconfirmed_email)}
+				class="form-input"
+			/>
+
+			<button type="submit" class="primary-button">
+				{t("SUBSCRIBE_TO_INITIATIVES_BUTTON")}
+			</button>
+		</Form>
+	]
 }

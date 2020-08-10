@@ -7,14 +7,13 @@ var Config = require("root/config")
 var {Section} = require("../page")
 var {Flash} = require("../page")
 var {InitiativeBoxesView} = require("../initiatives/index_page")
-var {InitiativesSubscriptionForm} = require("../home_page")
+var {CallToActionsView} = require("../home_page")
 var {StatisticsView} = require("../home_page")
 var EMPTY_ARR = Array.prototype
 
 module.exports = function(attrs) {
 	var t = attrs.t
 	var req = attrs.req
-	var user = req.user
 	var initiatives = attrs.initiatives
 	var stats = attrs.statistics
 
@@ -26,38 +25,25 @@ module.exports = function(attrs) {
 	var inDone = initiativesByPhase.done || EMPTY_ARR
 
 	return <Page page="parliament-home" req={req}>
-		<Section id="welcome" class="primary-section text-section">
+		<Section id="welcome" class="primary-section">
 			<Flash flash={req.flash} />
 
-			<h1>{t("PARLIAMENT_HOME_WELCOME_TITLE")}</h1>
+			<h1>{t("PARLIAMENT_HOME_PAGE_HEADER_TITLE")}</h1>
+			<p class="welcome-paragraph">{t("PARLIAMENT_HOME_PAGE_HEADER_TEXT")}</p>
 
 			<div class="video">
-				<iframe
-					width="480"
-					height="270"
-					src={Config.videoUrls[req.lang]}
-					frameborder="0"
-					allowfullscreen
-				/>
+				<div>
+					<iframe
+						width="480"
+						height="270"
+						src={Config.videoUrls[req.lang]}
+						frameborder="0"
+						allowfullscreen
+					/>
+				</div>
 			</div>
 
-			<p class="welcome-paragraph">{t("PARLIAMENT_HOME_WELCOME")}</p>
-
-			<a href="/initiatives/new" class="button large-button secondary-button">
-				{t("BTN_NEW_TOPIC")}
-			</a>
-
-			<InitiativesSubscriptionForm req={req} t={t} user={user} />
-
-			<div class="social-media-logos">
-				<a href="https://www.facebook.com/rahvaalgatus" class="facebook-logo">
-					<img src="/assets/facebook-logo.png" />
-				</a>
-
-				<a href="https://www.facebook.com/rahvaalgatus" class="twitter-logo">
-					<img src="/assets/twitter-logo.svg" />
-				</a>
-			</div>
+			<CallToActionsView req={req} t={t} />
 		</Section>
 
 		<Section id="statistics" class="primary-section">

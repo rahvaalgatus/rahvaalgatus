@@ -6,6 +6,7 @@ var Page = require("../page")
 var {Section} = require("../page")
 var {Flash} = require("../page")
 var {InitiativeBoxesView} = require("../initiatives/index_page")
+var {CallToActionsView} = require("../home_page")
 var EMPTY_ARR = Array.prototype
 
 module.exports = function(attrs) {
@@ -20,15 +21,13 @@ module.exports = function(attrs) {
 	var inDone = initiativesByPhase.done || EMPTY_ARR
 
 	return <Page page="local-home" req={req}>
-		<Section id="welcome" class="primary-section text-section">
+		<Section id="welcome" class="primary-section">
 			<Flash flash={req.flash} />
 
-			<h1>{t("LOCAL_HOME_WELCOME_TITLE")}</h1>
-			<p class="welcome-paragraph">{t("LOCAL_HOME_WELCOME")}</p>
+			<h1>{t("LOCAL_HOME_PAGE_WELCOME_TITLE")}</h1>
+			<p class="welcome-paragraph">{t("LOCAL_HOME_PAGE_HEADER_TEXT")}</p>
 
-			<a href="/initiatives/new" class="button large-button secondary-button">
-				{t("BTN_NEW_TOPIC")}
-			</a>
+			<CallToActionsView req={req} t={t} />
 		</Section>
 
 		<Section id="initiatives" class="secondary-section initiatives-section">
