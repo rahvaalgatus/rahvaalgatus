@@ -16,6 +16,7 @@ Commands:
     initiative-end-email  Sends emails to authors for initiative deadlines.
     initiative-signature-milestones  Records initiative signature milestones.
     expire-demo-signatures           Removes expired demo signatures.
+    news-sync             Sync Eesti Koostöö Kogu news.
 
 For more help or to give feedback, please see https://github.com/rahvaalgatus .
 `
@@ -39,7 +40,9 @@ var CLIS = {
   "initiative-signature-milestones":
     require.resolve("root/cli/initiative_signature_milestones_cli"),
   "expire-demo-signatures":
-    require.resolve("root/cli/expire_demo_signatures_cli")
+    require.resolve("root/cli/expire_demo_signatures_cli"),
+  "news-sync":
+    require.resolve("root/cli/news_sync_cli")
 }
 
 var cmdPath = CLIS[cmd]

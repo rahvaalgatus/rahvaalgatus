@@ -4,6 +4,7 @@ var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var Page = require("./page")
 var Config = require("root/config")
+var I18n = require("root/lib/i18n")
 var {Section} = require("./page")
 var {Flash} = require("./page")
 var {Form} = require("./page")
@@ -20,6 +21,7 @@ function HomePage(attrs) {
 	var initiatives = attrs.initiatives
 	var stats = attrs.statistics
 	var recentInitiatives = attrs.recentInitiatives
+	var news = attrs.news
 
 	var initiativesByPhase = _.groupBy(initiatives, "phase")
 	var inEdit = initiativesByPhase.edit || EMPTY_ARR
@@ -42,10 +44,7 @@ function HomePage(attrs) {
 		<Section id="welcome" class="primary-section">
 			<Flash flash={req.flash} />
 
-			<h1>
-				{t("HOME_PAGE_HEADER_TITLE")}<br />
-				<small>{t("HOME_PAGE_HEADER_TAGLINE")}</small>
-			</h1>
+			<h1>{t("HOME_PAGE_HEADER_TAGLINE")}</h1>
 
 			<div class="parliament-level">
 				<h2>{t("HOME_PAGE_HEADER_PARLIAMENT_TITLE")}</h2>
@@ -134,6 +133,26 @@ function HomePage(attrs) {
 
 					dateless
 				/>)}
+			</ol>
+		</Section> : null}
+
+		{news.length > 0 ? <Section
+			id="news"
+			class="secondary-section"
+		>
+			<h2 class="initiatives-section-phase-header">
+				{t("HOME_PAGE_NEWS_TITLE")}
+			</h2>
+
+			<ol>
+				{news.map((news) => <li><a href={news.url}>
+					<time class="initiative-time" datetime={news.published_at.toJSON()}>
+						{I18n.formatDate("numeric", news.published_at)}
+					</time>
+
+					<h3>{news.title}</h3>
+					<span class="author">{news.author_name}</span>
+				</a></li>)}
 			</ol>
 		</Section> : null}
 

@@ -89,6 +89,20 @@ $archived-phase-color: $dark-blue;
 	text-overflow: ellipsis;
 }
 
+@mixin multiline-ellipsis($lines) {
+	display: -webkit-box;
+	-webkit-line-clamp: $lines;
+	-webkit-box-orient: vertical;
+	line-clamp: $lines;
+	overflow: hidden;
+}
+
+@mixin hyphens($value) {
+	-webkit-hyphens: $value;
+	-moz-hyphens: $value;
+	hyphens: $value;
+}
+
 @mixin progress-bar-background-color($color) {
 	background-color: $color;
 	&::-webkit-progress-bar { background-color: $color; }

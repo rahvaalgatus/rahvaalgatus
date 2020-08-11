@@ -208,6 +208,7 @@
 	"HOME_PAGE_HEADER_PARLIAMENT_TITLE": "Riiklik tasand",
 	"HOME_PAGE_HEADER_TAGLINE": "Sul on mõte, kuidas ühiskonnaelu parandada?",
 	"HOME_PAGE_HEADER_TITLE": "Rahvaalgatus.ee",
+	"HOME_PAGE_NEWS_TITLE": "Uudised",
 	"HOME_PAGE_SEARCH_BUTTON": "Otsi",
 	"HOME_PAGE_SEARCH_PLACEHOLDER": "Otsi algatusi",
 	"HOME_PAGE_SEARCH_SEE_OTHER": "Vaata ainult <a href=\"{{parliamentSiteUrl}}\">Riigikogule</a> või <a href=\"{{localSiteUrl}}\">kohalikele omavalitsustele</a> suunatud algatusi.\nVanemad algatused leiad <a href=\"{{archiveUrl}}\">algatuste arhiivist</a>.\n",

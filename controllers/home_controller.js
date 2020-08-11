@@ -10,6 +10,7 @@ var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var {getRequiredSignatureCount} = require("root/lib/initiative")
 var sql = require("sqlate")
 var initiativesDb = require("root/db/initiatives_db")
+var newsDb = require("root/db/news_db")
 var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
 var PHASES = require("root/lib/initiative").PHASES
 var ZERO_COUNTS = _.fromEntries(PHASES.map((name) => [name, 0]))
@@ -71,10 +72,17 @@ exports.router.get("/", next(function*(req, res) {
 		case null:
 			var recentInitiatives = yield searchRecentInitiatives(initiatives)
 
+			var news = yield newsDb.search(sql`
+				SELECT * FROM news
+				ORDER BY published_at DESC
+				LIMIT 5
+			`)
+
 			res.render("home_page.jsx", {
 				initiatives: initiatives,
 				statistics: statistics,
-				recentInitiatives: recentInitiatives
+				recentInitiatives: recentInitiatives,
+				news: news
 			})
 			break
 

@@ -132,6 +132,7 @@
 	"HEADING_VOTE_REQUIRE_HARD_ID": "You can sign with the help of an ID card, mobile ID or Smart ID. You cannot sign without identifying yourself. ",
 	"HOME_PAGE_HEADER_TAGLINE": "Do you feel like some things could be done better in Estonia?",
 	"HOME_PAGE_HEADER_TITLE": "Rahvaalgatus.ee",
+	"HOME_PAGE_NEWS_TITLE": "News",
 	"HOME_PAGE_SEARCH_BUTTON": "Search",
 	"HOME_PAGE_SEARCH_PLACEHOLDER": "Search Initiatives",
 	"HOME_PAGE_SEARCH_SEE_OTHER": "View initiatives only for the <a href=\"{{parliamentSiteUrl}}\">parliament</a> or <a href=\"{{localSiteUrl}}\">local governments</a>.\nFor older initiatives, <a href=\"{{archiveUrl}}\">see the initiative archive<a>.\n",
