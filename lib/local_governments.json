@@ -133,7 +133,7 @@
 		"county": "Hiiu",
 		"population": 9512,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
 	},
 	"alutaguse-vald": {
 		"ehak": "0130",
@@ -149,7 +149,7 @@
 		"county": "Ida-Viru",
 		"population": 11280,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
 	},
 	"kohtla-järve-linn": {
 		"ehak": "0321",
@@ -253,7 +253,7 @@
 		"county": "Lääne",
 		"population": 13193,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
 	},
 	"lääne-nigula-vald": {
 		"ehak": "0441",
@@ -349,7 +349,7 @@
 		"county": "Põlva",
 		"population": 13982,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
 	},
 	"räpina-vald": {
 		"ehak": "0708",
@@ -445,7 +445,7 @@
 		"county": "Rapla",
 		"population": 13179,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
 	},
 	"muhu-vald": {
 		"ehak": "0478",
@@ -469,7 +469,7 @@
 		"county": "Saare",
 		"population": 31453,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
 	},
 	"elva-vald": {
 		"ehak": "0171",
@@ -557,7 +557,7 @@
 		"county": "Valga",
 		"population": 15625,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
 	},
 	"mulgi-vald": {
 		"ehak": "0480",
@@ -581,7 +581,7 @@
 		"county": "Viljandi",
 		"population": 17301,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
 	},
 	"viljandi-vald": {
 		"ehak": "0899",
@@ -621,7 +621,7 @@
 		"county": "Võru",
 		"population": 11829,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
 	},
 	"võru-vald": {
 		"ehak": "0917",
