@@ -1574,7 +1574,7 @@ button.inherited {
 
 	#map-section {
 		$initiatives-legend: $parliament-phase-color;
-		$kompass-legend: #e2bec6;
+		$kompass-legend: #eab1be;
 
 		padding-top: 0;
 		padding-bottom: 0;
@@ -1685,14 +1685,14 @@ button.inherited {
 			}
 
 			.kompass-marker-below {
-				fill: #fad5db;
-				stroke: #fbdee1;
+				fill: #ffcece;
+				stroke: #ffe6e9;
 				stroke-width: 2;
 			}
 
 			.kompass-marker-above {
-				fill: #c7afb9;
-				stroke: #e2bec6;
+				fill: #c69aac;
+				stroke: #eab1be;
 				stroke-width: 3;
 			}
 
