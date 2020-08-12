@@ -2,7 +2,6 @@ var _ = require("root/lib/underscore")
 var Qs = require("querystring")
 var Router = require("express").Router
 var HttpError = require("standard-http-error")
-var SqliteError = require("root/lib/sqlite_error")
 var Initiative = require("root/lib/initiative")
 var DateFns = require("date-fns")
 var Time = require("root/lib/time")
@@ -453,21 +452,26 @@ exports.router.delete("/:id", next(function*(req, res) {
 	if (initiative.phase != "edit")
 		throw new HttpError(405, "Can Only Delete Discussions")
 
-	if (!initiative.published_at) yield commentsDb.execute(sql`
+	if (initiative.published_at && (yield commentsDb.select1(sql`
+		SELECT COUNT(*) AS count FROM comments
+		WHERE initiative_uuid = ${initiative.uuid}
+	`).then((row) => row.count)) > 0) {
+		res.flash("notice", req.t("INITIATIVE_CANNOT_BE_DELETED_HAS_COMMENTS"))
+		res.redirect(303, req.baseUrl + req.path)
+		return
+	}
+
+	yield commentsDb.execute(sql`
 		DELETE FROM comments
 		WHERE initiative_uuid = ${initiative.uuid}
 	`)
 
-	try { yield initiativesDb.delete(initiative.uuid) }
-	catch (ex) {
-		if (ex instanceof SqliteError && ex.code == "constraint") {
-			res.flash("notice", req.t("INITIATIVE_CANNOT_BE_DELETED_HAS_COMMENTS"))
-			res.redirect(303, req.baseUrl + req.path)
-			return
-		}
-		else throw ex
-	}
+	yield textsDb.execute(sql`
+		DELETE FROM initiative_texts
+		WHERE initiative_uuid = ${initiative.uuid}
+	`)
 
+	yield initiativesDb.delete(initiative.uuid) 
 	res.flash("notice", req.t("INITIATIVE_DELETED"))
 	res.redirect(303, req.baseUrl)
 }))

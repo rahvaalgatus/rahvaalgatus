@@ -7409,6 +7409,11 @@ describe("InitiativesController", function() {
 					published_at: null
 				}))
 
+				yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: this.user.id
+				}))
+
 				var res = yield this.request("/initiatives/" + initiative.uuid, {
 					method: "POST",
 					form: {_csrf_token: this.csrfToken, _method: "delete"}
@@ -7428,12 +7433,21 @@ describe("InitiativesController", function() {
 				yield initiativesDb.search(sql`
 					SELECT * FROM initiatives
 				`).must.then.be.empty()
+
+				yield textsDb.search(sql`
+					SELECT * FROM initiative_texts
+				`).must.then.be.empty()
 			})
 
 			it("must delete published initiative in edit phase", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					published_at: new Date
+				}))
+
+				yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: this.user.id
 				}))
 
 				var res = yield this.request("/initiatives/" + initiative.uuid, {
@@ -7446,6 +7460,10 @@ describe("InitiativesController", function() {
 
 				yield initiativesDb.search(sql`
 					SELECT * FROM initiatives
+				`).must.then.be.empty()
+
+				yield textsDb.search(sql`
+					SELECT * FROM initiative_texts
 				`).must.then.be.empty()
 			})
 
@@ -7482,6 +7500,11 @@ describe("InitiativesController", function() {
 					published_at: new Date
 				}))
 
+				var text = yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: this.user.id
+				}))
+
 				yield commentsDb.create(new ValidComment({
 					initiative_uuid: initiative.uuid,
 					user_id: this.user.id,
@@ -7505,15 +7528,56 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("INITIATIVE_CANNOT_BE_DELETED_HAS_COMMENTS"))
 
-				yield initiativesDb.read(sql`
+				yield initiativesDb.read(initiative).must.then.eql(initiative)
+				yield textsDb.read(text).must.then.eql(text)
+			})
+
+			it("must not delete texts of other initiatives", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id,
+					published_at: null
+				}))
+
+				yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: this.user.id
+				}))
+
+				var other = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id
+				}))
+
+				var otherText = yield textsDb.create(new ValidText({
+					initiative_uuid: other.uuid,
+					user_id: this.user.id
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid, {
+					method: "POST",
+					form: {_csrf_token: this.csrfToken, _method: "delete"}
+				})
+
+				res.statusCode.must.equal(303)
+				res.headers.location.must.equal(`/initiatives`)
+
+				yield initiativesDb.search(sql`
 					SELECT * FROM initiatives
-				`).must.then.eql(initiative)
+				`).must.then.eql([other])
+
+				yield textsDb.search(sql`
+					SELECT * FROM initiative_texts
+				`).must.then.eql([otherText])
 			})
 
 			it("must delete subscribers of unpublished initiative", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					published_at: null
+				}))
+
+				yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: this.user.id
 				}))
 
 				yield subscriptionsDb.create(new ValidSubscription({
@@ -7532,6 +7596,10 @@ describe("InitiativesController", function() {
 					SELECT * FROM initiatives
 				`).must.then.be.empty()
 
+				yield textsDb.search(sql`
+					SELECT * FROM initiative_texts
+				`).must.then.be.empty()
+
 				yield subscriptionsDb.search(sql`
 					SELECT * FROM initiative_subscriptions
 				`).must.then.be.empty()
@@ -7541,6 +7609,11 @@ describe("InitiativesController", function() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					published_at: null
+				}))
+
+				yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: this.user.id
 				}))
 
 				var other = yield initiativesDb.create(new ValidInitiative({
