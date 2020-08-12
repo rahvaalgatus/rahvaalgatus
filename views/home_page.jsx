@@ -150,8 +150,11 @@ function HomePage(attrs) {
 						{I18n.formatDate("numeric", news.published_at)}
 					</time>
 
-					<h3>{news.title}</h3>
-					<span class="author">{news.author_name}</span>
+					<h3 title={news.title}>{news.title}</h3>
+
+					<span class="author" title={news.author_name}>
+						{news.author_name}
+					</span>
 				</a></li>)}
 			</ol>
 		</Section> : null}
