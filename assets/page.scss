@@ -586,6 +586,11 @@ button.inherited {
 			height: 100%;
 		}
 
+		.destination {
+			display: block;
+			@include ellipsis;
+		}
+
 		.author {
 			display: block;
 			@include ellipsis;

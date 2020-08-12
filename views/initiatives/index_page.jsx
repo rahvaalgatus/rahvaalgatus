@@ -275,6 +275,12 @@ function InitiativeBoxView(attrs) {
 	)
 
 	var badge = _.find(Config.badges, (_b, tag) => initiative.tags.includes(tag))
+	var destinationText = t("DESTINATION_" + initiative.destination)
+
+	var authorName = [
+		initiative.author_name,
+		initiative.user_name
+	].filter(Boolean).join(", ")
 
 	return <li
 		data-uuid={initiative.uuid}
@@ -287,20 +293,16 @@ function InitiativeBoxView(attrs) {
 
 			{" "}
 
-			{initiative.destination ? <span class="destination">
-				{t("DESTINATION_" + initiative.destination)}
+			{initiative.destination ? <span
+				class="destination"
+				title={destinationText}
+			>
+				{destinationText}
 			</span> : null}
 
-			<h3 lang="et">{initiative.title}</h3>
-
+			<h3 lang="et" title={initiative.title}>{initiative.title}</h3>
 			{badge ? <img src={badge.icon} class="badge" title={badge.name} /> : null}
-
-			<span class="author">
-				{[
-					initiative.author_name,
-					initiative.user_name
-				].filter(Boolean).join(", ")}
-			</span>
+			<span class="author" title={authorName}>{authorName}</span>
 
 			<ProgressView
 				t={t}
