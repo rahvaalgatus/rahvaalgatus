@@ -166,6 +166,11 @@ function InitiativeRowView(attrs) {
 
 	var badge = _.find(Config.badges, (_b, tag) => initiative.tags.includes(tag))
 
+	var authorName = [
+		initiative.author_name,
+		initiative.user_name
+	].filter(Boolean).join(", ")
+
 	return <li
 		data-uuid={initiative.uuid}
 		class={"initiative" + (initiative.destination ? " with-destination" : "")}
@@ -193,15 +198,8 @@ function InitiativeRowView(attrs) {
 			</div>
 
 			<h3 lang="et">{initiative.title}</h3>
-
 			{badge ? <img src={badge.icon} class="badge" title={badge.name} /> : null}
-
-			<span class="author">
-				{[
-					initiative.author_name,
-					initiative.user_name
-				].filter(Boolean).join(", ")}
-			</span>
+			<span class="author" title={authorName}>{authorName}</span>
 
 			<ProgressView
 				t={t}
