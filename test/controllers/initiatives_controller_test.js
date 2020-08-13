@@ -47,7 +47,7 @@ var {newTrixDocument} = require("root/test/fixtures")
 var INITIATIVE_TYPE = "application/vnd.rahvaalgatus.initiative+json; v=1"
 var ATOM_TYPE = "application/atom+xml"
 var PHASES = require("root/lib/initiative").PHASES
-var EVENTABLE_PHASES = _.without(PHASES, "edit")
+var EVENTABLE_PHASES = _.without(PHASES, "edit", "done")
 var LOCAL_PHASES = _.without(PHASES, "parliament")
 var PARLIAMENT_DECISIONS = Initiative.PARLIAMENT_DECISIONS
 var COMMITTEE_MEETING_DECISIONS = Initiative.COMMITTEE_MEETING_DECISIONS
@@ -3782,16 +3782,19 @@ describe("InitiativesController", function() {
 				})
 			})
 
-			it("must not show event creation button if in edit phase", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "edit",
-					published_at: new Date
-				}))
+			;["edit", "done"].forEach(function(phase) {
+				it(`must not show event creation button if in ${phase} phase`,
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: phase,
+						published_at: new Date
+					}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
-				res.body.must.not.include(t("CREATE_INITIATIVE_EVENT_BUTTON"))
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(t("CREATE_INITIATIVE_EVENT_BUTTON"))
+				})
 			})
 
 			EVENTABLE_PHASES.forEach(function(phase) {

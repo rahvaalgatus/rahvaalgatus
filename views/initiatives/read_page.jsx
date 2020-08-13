@@ -1722,7 +1722,13 @@ function EventsView(attrs) {
 	var initiative = attrs.initiative
 	var events = attrs.events.sort(compareEvent).reverse()
 	var initiativePath = "/initiatives/" + initiative.uuid
-	var canCreateEvents = user && initiative.user_id == user.id
+
+	var canCreateEvents = (
+		user && initiative.user_id == user.id && (
+		initiative.phase == "sign" ||
+		initiative.phase == "government" ||
+		initiative.phase == "parliament"
+	))
 
 	if (events.length > 0 || canCreateEvents)
 		return <section id="initiative-events" class="transparent-section"><center>
