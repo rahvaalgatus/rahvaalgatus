@@ -829,7 +829,7 @@ describe("SignaturesController", function() {
 
 					var signatures = yield signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
-						ORDER BY created_at
+						ORDER BY updated_at
 					`)
 
 					signatures.length.must.equal(2)
