@@ -12,6 +12,7 @@ var SITE_TITLE = Config.title
 var LANGUAGES = Config.languages
 var ENV = process.env.ENV
 var LIVERELOAD_PORT = process.env.LIVERELOAD_PORT || 35729
+var TWITTER_NAME = Config.twitterUrl.replace(/^.*\//, "")
 exports = module.exports = Page
 exports.Section = Section
 exports.Flash = Flash
@@ -24,7 +25,7 @@ exports.LiveReload = LiveReload
 var DEFAULT_META = {
 	// Using twitter:card=summary_large_image explicitly where desired.
 	"twitter:card": "summary",
-	"twitter:site": "rahvaalgatus",
+	"twitter:site": "@" + TWITTER_NAME,
 	"og:image": Config.url + "/assets/rahvaalgatus-description.png"
 }
 
@@ -192,7 +193,7 @@ function Page(attrs, children) {
 						Facebook: <a href={Config.facebookUrl}>fb.me/rahvaalgatus</a>
 
 						<br />
-						Twitter: <a href={Config.twitterUrl}>@rahvaalgatus</a>
+						Twitter: <a href={Config.twitterUrl}>@{TWITTER_NAME}</a>
 					</p>
 				</div>
 

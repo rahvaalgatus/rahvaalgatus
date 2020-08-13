@@ -23,6 +23,7 @@ var STATISTICS_TYPE = "application/vnd.rahvaalgatus.statistics+json; v=1"
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var {PHASES} = require("root/lib/initiative")
 var LOCAL_PHASES = _.without(PHASES, "parliament")
+var TWITTER_NAME = Config.twitterUrl.replace(/^.*\//, "")
 
 var EMPTY_STATISTICS = {
 	initiativeCountsByPhase: {
@@ -369,7 +370,7 @@ describe("HomeController", function() {
 			var metasByName = _.indexBy(metas, (el) => el.getAttribute("name"))
 			var metasByProp = _.indexBy(metas, (el) => el.getAttribute("property"))
 
-			metasByName["twitter:site"].content.must.equal("rahvaalgatus")
+			metasByName["twitter:site"].content.must.equal("@" + TWITTER_NAME)
 			metasByName["twitter:card"].content.must.equal("summary")
 
 			metasByProp["og:title"].content.must.equal("Rahvaalgatus")

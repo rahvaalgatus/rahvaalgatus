@@ -58,6 +58,7 @@ var PNG = new Buffer("89504e470d0a1a0a1337", "hex")
 var PNG_PREVIEW = new Buffer("89504e470d0a1a0a4269", "hex")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var TRIX_TYPE = new MediaType("application/vnd.basecamp.trix+json")
+var TWITTER_NAME = Config.twitterUrl.replace(/^.*\//, "")
 
 describe("InitiativesController", function() {
 	require("root/test/web")()
@@ -473,7 +474,7 @@ describe("InitiativesController", function() {
 			var metasByName = _.indexBy(metas, (el) => el.getAttribute("name"))
 			var metasByProp = _.indexBy(metas, (el) => el.getAttribute("property"))
 
-			metasByName["twitter:site"].content.must.equal("rahvaalgatus")
+			metasByName["twitter:site"].content.must.equal("@" + TWITTER_NAME)
 			metasByName["twitter:card"].content.must.equal("summary")
 
 			metasByProp["og:title"].content.must.equal("Rahvaalgatus")
@@ -1150,7 +1151,7 @@ describe("InitiativesController", function() {
 				var metasByName = _.indexBy(metas, (el) => el.getAttribute("name"))
 				var metasByProp = _.indexBy(metas, (el) => el.getAttribute("property"))
 
-				metasByName["twitter:site"].content.must.equal("rahvaalgatus")
+				metasByName["twitter:site"].content.must.equal("@" + TWITTER_NAME)
 				metasByName["twitter:card"].content.must.equal("summary_large_image")
 
 				var url = `${Config.url}/initiatives/${initiative.uuid}`
