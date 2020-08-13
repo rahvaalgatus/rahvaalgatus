@@ -507,6 +507,10 @@ CREATE UNIQUE INDEX index_news_on_source_and_external_id
 ON news (source, external_id);
 CREATE INDEX index_news_on_published_at
 ON news (published_at);
+CREATE INDEX index_initiative_signatures_on_created_at
+ON initiative_signatures (created_at, initiative_uuid);
+CREATE INDEX index_initiative_citizenos_signatures_on_created_at
+ON initiative_citizenos_signatures (created_at, initiative_uuid);
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -602,4 +606,5 @@ INSERT INTO migrations VALUES('20200618155320');
 INSERT INTO migrations VALUES('20200709190642');
 INSERT INTO migrations VALUES('20200727092343');
 INSERT INTO migrations VALUES('20200811130443');
+INSERT INTO migrations VALUES('20200813175316');
 COMMIT;

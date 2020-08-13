@@ -2,6 +2,7 @@ var _ = require("root/lib/underscore")
 var O = require("oolong")
 var Db = require("root/lib/db")
 var MediaType = require("medium-type")
+var sql = require("sqlate")
 var sqlite = require("root").sqlite
 
 exports = module.exports = new Db(Object, sqlite, "initiatives")
@@ -75,6 +76,16 @@ exports.serialize = function(attrs) {
 		obj.public_change_urls = JSON.stringify(obj.public_change_urls)
 
 	return obj
+}
+
+// Using a subquery is faster than common table expressions (CTEs) and table
+// views. SQLite seems to fail to use underlying indices when filtering either.
+exports.countSignatures = function(where) {
+	return sql`(
+		(SELECT COUNT(*) FROM initiative_signatures WHERE ${where})
+		+
+		(SELECT COUNT(*) FROM initiative_citizenos_signatures WHERE ${where})
+	)`
 }
 
 function parseDateTime(string) { return new Date(string) }

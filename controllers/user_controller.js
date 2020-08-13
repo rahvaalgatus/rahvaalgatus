@@ -240,24 +240,15 @@ function* read(req, res) {
 	var user = req.user
 
 	var initiatives = yield initiativesDb.search(sql`
-		WITH signatures AS (
-			SELECT initiative_uuid FROM initiative_signatures
-			UNION ALL
-			SELECT initiative_uuid FROM initiative_citizenos_signatures
-		)
-
 		SELECT
 			initiative.*,
 			user.name AS user_name,
-			COUNT(signature.initiative_uuid) AS signature_count
+			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
+			AS signature_count
 
 		FROM initiatives AS initiative
-		LEFT JOIN users AS user ON initiative.user_id = user.id
-		LEFT JOIN signatures AS signature
-		ON signature.initiative_uuid = initiative.uuid
-
+		JOIN users AS user ON initiative.user_id = user.id
 		WHERE initiative.user_id = ${user.id}
-		GROUP BY initiative.uuid
 	`)
 
 	res.render("user/read_page.jsx", {

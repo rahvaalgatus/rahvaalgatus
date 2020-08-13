@@ -22,21 +22,14 @@ exports.router.get("/", next(function*(req, res) {
 	var cutoff = DateFns.addDays(DateFns.startOfDay(new Date), -14)
 
 	var initiatives = yield initiativesDb.search(sql`
-		WITH signatures AS (
-			SELECT initiative_uuid FROM initiative_signatures
-			UNION ALL
-			SELECT initiative_uuid FROM initiative_citizenos_signatures
-		)
-
 		SELECT
 			initiative.*,
 			user.name AS user_name,
-			COUNT(signature.initiative_uuid) AS signature_count
+			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
+			AS signature_count
 
 		FROM initiatives AS initiative
 		LEFT JOIN users AS user ON initiative.user_id = user.id
-		LEFT JOIN signatures AS signature
-		ON signature.initiative_uuid = initiative.uuid
 
 		WHERE archived_at IS NULL
 		AND published_at IS NOT NULL
@@ -48,8 +41,6 @@ exports.router.get("/", next(function*(req, res) {
 			gov == null ? sql`IS NOT NULL` :
 			gov == "parliament" ? sql`= 'parliament'` : sql`!= 'parliament'`
 		})
-
-		GROUP BY initiative.uuid
 	`)
 
 	initiatives = initiatives.filter((initiative) => (
@@ -307,25 +298,15 @@ function* searchRecentInitiatives() {
 	]))
 
 	return _.sortBy(yield initiativesDb.search(sql`
-		WITH signatures AS (
-			SELECT initiative_uuid FROM initiative_signatures
-			UNION ALL
-			SELECT initiative_uuid FROM initiative_citizenos_signatures
-		)
-
 		SELECT
 			initiative.*,
 			user.name AS user_name,
-			COUNT(signature.initiative_uuid) AS signature_count
+			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
+			AS signature_count
 
 		FROM initiatives AS initiative
 		LEFT JOIN users AS user ON initiative.user_id = user.id
-		LEFT JOIN signatures AS signature
-		ON signature.initiative_uuid = initiative.uuid
-
 		WHERE initiative.uuid IN ${sql.in(_.keys(recents))}
-
-		GROUP BY initiative.uuid
 	`), (i) => recents[i.uuid].position).map((i) => _.assign(
 		i,
 		{reason: recents[i.uuid].reason}

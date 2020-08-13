@@ -14,19 +14,13 @@ var logger = require("root/lib/null_logger")
 
 module.exports = function*() {
 	var initiatives = yield initiativesDb.search(sql`
-		WITH signatures AS (
-			SELECT initiative_uuid FROM initiative_signatures
-			UNION ALL
-			SELECT initiative_uuid FROM initiative_citizenos_signatures
-		)
+		SELECT
+			initiative.*,
+			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
+			AS signature_count
 
-		SELECT initiative.*, COUNT(signature.initiative_uuid) AS signature_count
 		FROM initiatives AS initiative
-		LEFT JOIN signatures AS signature
-		ON signature.initiative_uuid = initiative.uuid
-
 		WHERE initiative.phase != 'edit'
-		GROUP BY initiative.uuid
 	`)
 
 	yield initiatives.map(function(initiative) {

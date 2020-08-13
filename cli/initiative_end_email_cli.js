@@ -61,29 +61,20 @@ function* emailEndedDiscussions() {
 
 function* emailEndedInitiatives() {
 	var initiatives = yield initiativesDb.search(sql`
-		WITH signatures AS (
-			SELECT initiative_uuid FROM initiative_signatures
-			UNION ALL
-			SELECT initiative_uuid FROM initiative_citizenos_signatures
-		)
-
 		SELECT
 			initiative.*,
 			user.email AS user_email,
 			user.email_confirmed_at AS user_email_confirmed_at,
-			COUNT(signature.initiative_uuid) AS signature_count
+			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
+			AS signature_count
 
 		FROM initiatives AS initiative
 		JOIN users AS user ON initiative.user_id = user.id
-		LEFT JOIN signatures AS signature
-		ON signature.initiative_uuid = initiative.uuid
 
 		WHERE initiative.phase = 'sign'
 		AND initiative.signing_ends_at >= ${DateFns.addMonths(new Date, -6)}
 		AND initiative.signing_ends_at <= ${new Date}
 		AND initiative.signing_end_email_sent_at IS NULL
-
-		GROUP BY initiative.uuid
 	`)
 
 	yield initiatives.map(function*(initiative) {

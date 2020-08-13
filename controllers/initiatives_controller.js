@@ -71,34 +71,30 @@ exports.router.get("/",
 	var limit = req.query.limit ? parseLimit(req.query.limit) : null
 
 	var initiatives = yield initiativesDb.search(sql`
-		WITH signatures AS (
-			SELECT initiative_uuid, created_at FROM initiative_signatures
-			UNION ALL
-			SELECT initiative_uuid, created_at FROM initiative_citizenos_signatures
-		)
-
 		${signedSince ? sql`
-			, recent_signatures AS (
-				SELECT initiative_uuid, COUNT(*) AS count
-				FROM signatures
+			WITH recent_signatures AS (
+				SELECT initiative_uuid FROM initiative_signatures
 				WHERE created_at >= ${signedSince}
-				GROUP BY initiative_uuid
+				UNION ALL
+				SELECT initiative_uuid FROM initiative_citizenos_signatures
+				WHERE created_at >= ${signedSince}
 			)
 		` : sql``}
 
 		SELECT
 			initiative.*,
 			user.name AS user_name,
-			COUNT(signature.initiative_uuid) AS signature_count
-			${signedSince ? sql`, recent.count AS recent_signature_count` : sql``}
+			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
+			AS signature_count
+
+			${signedSince ? sql`,
+				COUNT(recent.initiative_uuid) AS recent_signature_count
+			` : sql``}
 
 		FROM initiatives AS initiative
 		${tag ? sql`JOIN json_each(initiative.tags) AS tag` : sql``}
 
 		LEFT JOIN users AS user ON initiative.user_id = user.id
-
-		LEFT JOIN signatures AS signature
-		ON signature.initiative_uuid = initiative.uuid
 
 		${signedSince ? sql`
 			JOIN recent_signatures AS recent
@@ -187,25 +183,15 @@ exports.router.use("/:id", next(function*(req, res, next) {
 	var user = req.user
 
 	var initiative = yield initiativesDb.read(sql`
-		WITH signatures AS (
-			SELECT initiative_uuid FROM initiative_signatures
-			UNION ALL
-			SELECT initiative_uuid FROM initiative_citizenos_signatures
-		)
-
 		SELECT
 			initiative.*,
 			user.name AS user_name,
-			COUNT(signature.initiative_uuid) AS signature_count
+			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
+			AS signature_count
 
 		FROM initiatives AS initiative
 		LEFT JOIN users AS user ON initiative.user_id = user.id
-		LEFT JOIN signatures AS signature
-		ON signature.initiative_uuid = initiative.uuid
-
 		WHERE initiative.uuid = ${req.params.id}
-
-		GROUP BY initiative.uuid
 	`)
 
 	if (initiative == null) throw new HttpError(404)
