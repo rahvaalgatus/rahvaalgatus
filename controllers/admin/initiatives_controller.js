@@ -269,7 +269,7 @@ function parseInitiative(initiative, obj) {
 
 	if (
 		"phase" in obj &&
-		(initiative.external || initiative.sent_to_parliament_at == null) &&
+		(initiative.external || initiative.sent_to_parliament_at != null) &&
 		_.contains(["parliament", "government", "done"], obj.phase)
 	) attrs.phase = obj.phase
 

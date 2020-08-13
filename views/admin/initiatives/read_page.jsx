@@ -36,7 +36,7 @@ module.exports = function(attrs) {
 		: null
 
 	var beenToParliament = (
-		initiative.external || initiative.sent_to_parliament_at == null
+		initiative.external || initiative.sent_to_parliament_at != null
 	)
 
 	return <Page page="initiative" title={initiative.title} req={req}>
