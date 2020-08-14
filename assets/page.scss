@@ -513,35 +513,34 @@ button.inherited {
 	&:empty { display: none; }
 }
 
-.initiatives-section h2,
-.initiatives-section-phase-header {
-	font-size: 2rem;
-	line-height: 3rem;
-	color: $title-text;
-	border-bottom: 1px solid $initiatives-section-title-border;
-	text-align: right;
-	font-family: $museo-sans;
-	font-weight: 900;
-	text-transform: uppercase;
-	max-width: $initiative-width;
-	margin-bottom: -3rem;
-
-	& ~ h2 { margin-top: 4rem; }
-
-	@include tablet {
-		text-align: left;
-		margin-bottom: 2rem;
-	}
-
-	@include mobile {
-		max-width: none;
-	}
-}
-
 .initiatives-section {
 	center {
 		padding-right: 0;
 		@include mobile { padding-right: $page-mobile-padding; }
+	}
+
+	h2 {
+		font-size: 2rem;
+		line-height: 3rem;
+		color: $title-text;
+		border-bottom: 1px solid $initiatives-section-title-border;
+		text-align: right;
+		font-family: $museo-sans;
+		font-weight: 900;
+		text-transform: uppercase;
+		max-width: $initiative-width;
+		margin-bottom: -3rem;
+
+		& ~ h2 { margin-top: 4rem; }
+
+		@include tablet {
+			text-align: left;
+			margin-bottom: 2rem;
+		}
+
+		@include mobile {
+			max-width: none;
+		}
 	}
 
 	.initiatives {
@@ -1382,19 +1381,31 @@ button.inherited {
 	}
 
 	#news {
+		background-color: $light-background;
+		padding-top: 3rem;
+		padding-bottom: 3rem;
+
 		center {
-			padding-right: 1rem;
+			padding-right: 0;
+			@include mobile { padding-right: $page-mobile-padding; }
 		}
 
-		ol {
-			margin-left: $initiative-width + 2rem;
+		h2 {
+			margin-bottom: 2rem;
+			font-size: 3rem;
+			padding-left: 1.5rem;
 
-			@include tablet { margin-left: 0; }
+			font-size: 2rem;
+			font-family: $museo-sans;
+			font-weight: 700;
+			text-transform: uppercase;
+			color: $title-text;
+
+			img { max-width: 10rem; margin-right: 2rem; vertical-align: middle; }
 		}
 
 		li {
-			line-height: 1;
-			width: ((3 * $initiative-width + 2rem * 2) - 1rem * 3) / 4;
+			width: ($page-width - 2rem) / 3;
 			float: left;
 			margin-bottom: 1rem;
 			margin-left: 0;
@@ -1402,10 +1413,10 @@ button.inherited {
 			line-height: 1.5;
 
 			a {
-				background: white;
-				box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
 				display: block;
 				padding: 1rem 1.5rem 1rem;
+				background: white;
+				border-radius: 2px;
 
 				&:hover {
 					box-shadow: 0 1px 10px 0 rgba(0, 0, 0, 0.4);
@@ -1414,37 +1425,26 @@ button.inherited {
 				}
 			}
 
-			time,
-			.author {
+			.time-and-author {
+				display: block;
 				font-size: 1.4rem;
 				font-family: $tisa-pro;
 				color: $secondary-light-text;
+				@include ellipsis;
 			}
 
 			h3 {
 				$title-font-size: 1.5rem;
 				$title-line-height: 1.5 * $title-font-size;
 
+				color: #4F4F4F;
 				font-size: $title-font-size;
 				line-height: $title-line-height;
 				word-wrap: break-word;
-				height: 5 * $title-line-height;
 
-				color: #4F4F4F;
-
-				@include multiline-ellipsis(5);
+				height: 2 * $title-line-height;
+				@include multiline-ellipsis(2);
 				@include hyphens(auto);
-
-				@include mobile {
-					height: 2 * $title-line-height;
-					-webkit-line-clamp: 2;
-					line-clamp: 2;
-				}
-			}
-
-			.author {
-				display: block;
-				@include ellipsis;
 			}
 
 			@include mobile { width: 100%; }

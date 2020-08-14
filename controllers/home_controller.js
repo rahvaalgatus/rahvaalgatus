@@ -66,7 +66,7 @@ exports.router.get("/", next(function*(req, res) {
 			var news = yield newsDb.search(sql`
 				SELECT * FROM news
 				ORDER BY published_at DESC
-				LIMIT 5
+				LIMIT 3
 			`)
 
 			res.render("home_page.jsx", {
