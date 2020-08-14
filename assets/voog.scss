@@ -33,11 +33,14 @@ center {
 
 #header {
 	background: $header-background;
-	padding-left: 0;
-	padding-right: 0;
-	padding-top: 1.5rem;
-	padding-bottom: 1rem;
+	padding: 1.5rem 0 0;
 	color: white;
+
+	&:after {
+		content: "";
+		display: block;
+		clear: both;
+	}
 
 	nav, ol, ul, li {
 		margin: 0;
@@ -49,11 +52,12 @@ center {
 	}
 
 	.languages {
-		margin-bottom: 2rem;
+		margin-bottom: 1.5rem;
 		font-size: 1.2rem;
 		text-transform: uppercase;
 		display: block;
 		font-weight: bold;
+		line-height: 1;
 
 		li {
 			list-style-type: none;
@@ -69,36 +73,17 @@ center {
 		width: 18rem;
 		height: inherit;
 		margin-right: 2rem;
+		margin-bottom: 1rem;
 
 		img { width: 100%; }
-	}
-
-	.uuseakus,
-	.kestame,
-	.hea-annetus {
-		display: block;
-		float: right;
-		height: inherit;
-		margin-left: 2rem;
-		margin-top: -0.5rem;
-
-		img { width: 100%; }
-	}
-
-	.uuseakus { width: 10rem; }
-	.kestame { width: 15rem; }
-	.hea-annetus { width: 3.6rem; }
-
-	@include tablet {
-		.uuseakus,
-		.kestame,
-		.hea-annetus { display: none; }
 	}
 
 	nav li {
 		display: inline;
 
 		& + li { margin-left: 1rem; }
+
+		&:nth-child(6) { float: right; }
 	}
 
 	nav a {
@@ -107,12 +92,12 @@ center {
 		line-height: 2rem;
 		padding: 0.5rem 1rem;
 		border-radius: 2px;
-		transition: color ease 0.4s;
+		transition: color ease 0.1s;
 
 		&.active,
 		&:hover {
 			background-color: white;
-			color: #45A0E6;
+			color: $link-color;
 		}
 	}
 
@@ -136,6 +121,38 @@ center {
 		.logo { max-width: 16rem; }
 		nav { clear: both; }
 	}
+
+  @media only screen and (max-width: 889px) {
+		padding-bottom: 1rem;
+
+		.logo {
+			float: none;
+			margin-bottom: 0;
+		}
+
+		nav {
+			padding-bottom: 0;
+
+			li {
+				margin-right: 0.5rem;
+				& + li { margin-left: 0; }
+			}
+		}
+
+		nav a {
+			font-size: 1.5rem;
+			line-height: 1;
+			padding: 0.5rem 0.7rem;
+		}
+	}
+
+  @media only screen and (max-width: 599px) {
+		nav li:nth-child(6) { float: none; }
+	}
+
+	@include mobile {
+		.logo { max-width: 16rem; }
+	}
 }
 
 .menu-tags {
@@ -156,8 +173,6 @@ center {
 
 #footer {
 	margin-top: 4rem;
-
-	min-height: $footer-height;
 	padding-top: 2rem;
 	padding-bottom: 2rem;
 	overflow: hidden;
@@ -178,10 +193,31 @@ center {
 
 	.contact {
 		float: left;
+		padding-right: 2rem;
 	}
 
-	.powered-by {
+	.logos {
 		text-align: right;
 		float: right;
+
+		.image-container {
+			display: inline-block;
+			margin-bottom: 1rem;
+			margin-right: 2rem !important;
+			vertical-align: middle;
+
+			img { width: 100%; }
+		}
+	}
+
+	@media only screen and (max-width: 449px) {
+		.contact {
+			float: none;
+		}
+
+		.logos {
+			text-align: left;
+			margin-top: 1rem;
+		}
 	}
 }
