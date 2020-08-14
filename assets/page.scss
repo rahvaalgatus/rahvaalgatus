@@ -906,17 +906,6 @@ button.inherited {
 		clear: both;
 	}
 
-	.logo {
-		display: block;
-		float: left;
-		width: 18rem;
-		height: inherit;
-		margin-right: 2rem;
-		margin-bottom: 1rem;
-
-		img { width: 100%; }
-	}
-
 	.languages-and-user {
 		margin-bottom: 1.5rem;
 		overflow: hidden;
@@ -941,6 +930,17 @@ button.inherited {
 			display: inline;
 			&:before { margin: 0 1rem; content: "|"; }
 		}
+	}
+
+	.logo {
+		display: block;
+		float: left;
+		width: 18rem;
+		height: inherit;
+		margin-right: 2rem;
+		margin-bottom: 1rem;
+
+		img { width: 100%; }
 	}
 
 	.secondary-links {
@@ -977,7 +977,7 @@ button.inherited {
 		float: right;
 	}
 
-  @media only screen and (max-width: 819px) {
+  @media only screen and (max-width: 889px) {
 		padding-bottom: 1rem;
 
 		.logo {
@@ -1001,7 +1001,7 @@ button.inherited {
 		}
 	}
 
-  @media only screen and (max-width: 549px) {
+  @media only screen and (max-width: 599px) {
 		.demo-signatures-button { float: none; }
 	}
 
@@ -3944,7 +3944,7 @@ button.inherited {
 	position: relative;
 	min-height: $footer-height;
 	padding-top: 2rem;
-	padding-bottom: 1rem;
+	padding-bottom: 2rem;
 	overflow: hidden;
 
 	background: $header-background;
@@ -3996,8 +3996,7 @@ button.inherited {
 
 		.logos {
 			text-align: left;
+			margin-top: 1rem;
 		}
-
-		.logos { margin-top: 1rem; }
 	}
 }
