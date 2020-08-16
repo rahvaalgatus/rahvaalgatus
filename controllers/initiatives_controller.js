@@ -717,7 +717,7 @@ function* updateInitiativePhaseToSign(req, res) {
 	`), "language")
 
 	if (req.body.endsAt == null) return void res.render(tmpl, {
-		attrs: {endsAt: initiative.signing_started_at}
+		attrs: {endsAt: initiative.signing_ends_at}
 	})
 
 	var lang = req.body.language
