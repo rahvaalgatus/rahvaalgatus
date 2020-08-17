@@ -6,8 +6,10 @@ var DateFns = require("date-fns")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSignature = require("root/test/valid_signature")
 var ValidUser = require("root/test/valid_user")
+var ValidCoauthor = require("root/test/valid_initiative_coauthor")
 var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
 var usersDb = require("root/db/users_db")
+var coauthorsDb = require("root/db/initiative_coauthors_db")
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var citizenosSignaturesDb =
@@ -62,6 +64,14 @@ describe("HomeController", function() {
 				discussion_ends_at: DateFns.addSeconds(new Date, 1)
 			}))
 
+			var coauthor = yield usersDb.create(new ValidUser)
+
+			yield coauthorsDb.create(new ValidCoauthor({
+				initiative_uuid: initiative.uuid,
+				user: coauthor,
+				status: "accepted"
+			}))
+
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
 
@@ -70,6 +80,66 @@ describe("HomeController", function() {
 			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
 			el.textContent.must.include(initiative.title)
 			el.textContent.must.include(this.author.name)
+			el.textContent.must.include(coauthor.name)
+		})
+
+		it(`must not show coauthor name from another initiative`, function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "edit",
+				published_at: new Date,
+				discussion_ends_at: DateFns.addSeconds(new Date, 1)
+			}))
+
+			var other = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
+
+			var coauthor = yield usersDb.create(new ValidUser)
+
+			yield coauthorsDb.create(new ValidCoauthor({
+				initiative_uuid: other.uuid,
+				user: coauthor,
+				status: "accepted"
+			}))
+
+			var res = yield this.request("/")
+			res.statusCode.must.equal(200)
+
+			var dom = parseDom(res.body)
+			var el = dom.getElementById("initiatives")
+			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
+			el.textContent.must.include(this.author.name)
+			el.textContent.must.not.include(coauthor.name)
+		})
+
+		;["pending", "rejected"].forEach(function(status) {
+			it(`must not show ${status} coauthor name`, function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					published_at: new Date,
+					discussion_ends_at: DateFns.addSeconds(new Date, 1)
+				}))
+
+				var coauthor = yield usersDb.create(new ValidUser)
+
+				yield coauthorsDb.create(new ValidCoauthor({
+					initiative_uuid: initiative.uuid,
+					country: coauthor.country,
+					personal_id: coauthor.personal_id,
+					status: status
+				}))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var el = dom.getElementById("initiatives")
+				el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
+				el.textContent.must.include(this.author.name)
+				el.textContent.must.not.include(coauthor.name)
+			})
 		})
 
 		it("must show initiatives in edit phase", function*() {

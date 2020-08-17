@@ -7,6 +7,7 @@ var HttpError = require("standard-http-error")
 var SqliteError = require("root/lib/sqlite_error")
 var sql = require("sqlate")
 var usersDb = require("root/db/users_db")
+var coauthorsDb = require("root/db/initiative_coauthors_db")
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
@@ -243,17 +244,50 @@ function* read(req, res) {
 		SELECT
 			initiative.*,
 			user.name AS user_name,
+			json_group_array(coauthor_user.name) AS coauthor_names,
 			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
 			AS signature_count
 
 		FROM initiatives AS initiative
-		JOIN users AS user ON initiative.user_id = user.id
+
+		LEFT JOIN users AS user ON user.id = initiative.user_id
+
+		LEFT JOIN initiative_coauthors AS coauthor
+		ON coauthor.initiative_uuid = initiative.uuid
+		AND coauthor.status = 'accepted'
+
+		LEFT JOIN users AS coauthor_user ON coauthor_user.id = coauthor.user_id
+
+		LEFT JOIN initiative_coauthors AS user_as_coauthor
+		ON user_as_coauthor.initiative_uuid = initiative.uuid
+		AND user_as_coauthor.status = 'accepted'
+
 		WHERE initiative.user_id = ${user.id}
+		OR user_as_coauthor.user_id = ${user.id}
+
+		GROUP BY initiative.uuid
+	`)
+
+	var coauthorInvitations = yield coauthorsDb.search(sql`
+		SELECT
+			coauthor.*,
+			initiative.title AS initiative_title,
+			initiative.published_at AS initiative_published_at,
+			inviter.name AS inviter_name
+
+		FROM initiative_coauthors AS coauthor
+		JOIN initiatives AS initiative ON initiative.uuid = coauthor.initiative_uuid
+		JOIN users AS inviter ON inviter.id = initiative.user_id
+
+		WHERE coauthor.country = ${user.country}
+		AND coauthor.personal_id = ${user.personal_id}
+		AND coauthor.status = 'pending'
 	`)
 
 	res.render("user/read_page.jsx", {
 		user: user,
 		initiatives: initiatives,
+		coauthorInvitations,
 		userAttrs: _.create(user, res.locals.userAttrs),
 		userErrors: res.locals.userErrors || EMPTY_OBJ
 	})

@@ -21,6 +21,7 @@ var imagesDb = require("root/db/initiative_images_db")
 var filesDb = require("root/db/initiative_files_db")
 var textsDb = require("root/db/initiative_texts_db")
 var commentsDb = require("root/db/comments_db")
+var coauthorsDb = require("root/db/initiative_coauthors_db")
 var next = require("co-next")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var renderEmail = require("root/lib/i18n").email
@@ -84,6 +85,7 @@ exports.router.get("/",
 		SELECT
 			initiative.*,
 			user.name AS user_name,
+			json_group_array(coauthor_user.name) AS coauthor_names,
 			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
 			AS signature_count
 
@@ -94,7 +96,13 @@ exports.router.get("/",
 		FROM initiatives AS initiative
 		${tag ? sql`JOIN json_each(initiative.tags) AS tag` : sql``}
 
-		LEFT JOIN users AS user ON initiative.user_id = user.id
+		LEFT JOIN users AS user ON user.id = initiative.user_id
+
+		LEFT JOIN initiative_coauthors AS coauthor
+		ON coauthor.initiative_uuid = initiative.uuid
+		AND coauthor.status = 'accepted'
+
+		LEFT JOIN users AS coauthor_user ON coauthor_user.id = coauthor.user_id
 
 		${signedSince ? sql`
 			JOIN recent_signatures AS recent
@@ -172,7 +180,10 @@ exports.router.post("/", next(function*(req, res) {
 	res.redirect(303, req.baseUrl + "/" + initiative.uuid)
 }))
 
-exports.router.get("/new", function(_req, res) {
+exports.router.get("/new", function(req, res) {
+	var user = req.user
+	if (user == null) throw new HttpError(401)
+
 	res.render("initiatives/update_page.jsx", {
 		initiative: EMPTY_INITIATIVE,
 		language: "et"
@@ -190,14 +201,29 @@ exports.router.use("/:id", next(function*(req, res, next) {
 			AS signature_count
 
 		FROM initiatives AS initiative
-		LEFT JOIN users AS user ON initiative.user_id = user.id
+		LEFT JOIN users AS user ON user.id = initiative.user_id
 		WHERE initiative.uuid = ${req.params.id}
 	`)
 
 	if (initiative == null) throw new HttpError(404)
+
 	if (!initiative.published_at && !user)
 		throw new HttpError(401, "Initiative Not Public")
-	if (!initiative.published_at && initiative.user_id != user.id)
+
+	var coauthors = yield coauthorsDb.search(sql`
+		SELECT author.*, user.name AS user_name
+		FROM initiative_coauthors AS author
+		LEFT JOIN users AS user ON user.id = author.user_id
+		WHERE author.initiative_uuid = ${initiative.uuid}
+		AND status IN ('accepted', 'pending')
+	`)
+
+	var isAuthorOrPendingAuthor = user && (
+		initiative.user_id == user.id ||
+		_.find(coauthors, {country: user.country, personal_id: user.personal_id})
+	)
+
+	if (!(initiative.published_at || isAuthorOrPendingAuthor))
 		throw new HttpError(403, "Initiative Not Public")
 
 	if ((req.method == "HEAD" || req.method == "GET") && !isApiRequest(req)) {
@@ -209,10 +235,40 @@ exports.router.use("/:id", next(function*(req, res, next) {
 			return void res.redirect(301, Config.url + req.originalUrl)
 	}
 
+	initiative.coauthors = coauthors.filter((a) => a.status == "accepted")
+
 	req.initiative = initiative
 	res.locals.initiative = initiative
+	req.coauthorInvitations = coauthors.filter((a) => a.status == "pending")
+
 	next()
 }))
+
+exports.router.use("/:id/coauthors",
+	require("./initiatives/coauthors_controller").router)
+
+exports.router.use("/:id", function(req, res, next) {
+	var user = req.user
+	var initiative = req.initiative
+
+	var isAuthor = user && Initiative.isAuthor(user, initiative)
+	if (initiative.published_at || isAuthor) return void next()
+
+	var coauthorInvitation = user && _.find(req.coauthorInvitations, {
+		country: user.country,
+		personal_id: user.personal_id
+	})
+
+	if (coauthorInvitation) {
+		res.statusCode = 403
+		res.statusMessage = "Accept Invitation"
+		return void res.render("initiatives/coauthor_invitation_page.jsx", {
+			invitation: coauthorInvitation
+		})
+	}
+
+	throw new HttpError(403, "Initiative Not Public")
+})
 
 exports.router.get("/:id",
 	new ResponseTypeMiddeware([
@@ -264,7 +320,7 @@ exports.read = next(function*(req, res) {
 	var thankAgain = false
 	var signature
 	var newSignatureToken = req.flash("signatureToken")
-	var isAuthor = user && initiative.user_id == user.id
+	var isAuthor = user && Initiative.isAuthor(user, initiative)
 
 	var textLanguage = (
 		isAuthor && req.query.language ||
@@ -383,6 +439,11 @@ exports.read = next(function*(req, res) {
 		)
 	`), "language")
 
+	var coauthorInvitation = user && _.find(req.coauthorInvitations, {
+		country: user.country,
+		personal_id: user.personal_id
+	})
+
 	res.render("initiatives/read_page.jsx", {
 		thank: thank,
 		thankAgain: thankAgain,
@@ -393,6 +454,7 @@ exports.read = next(function*(req, res) {
 		textLanguage: textLanguage,
 		translations: translations,
 		signedTranslations: signedTranslations,
+		coauthorInvitation,
 		image: image,
 		files: files,
 		comments: comments,
@@ -404,6 +466,11 @@ exports.router.put("/:id", next(function*(req, res) {
 	var user = req.user
 	if (user == null) throw new HttpError(401)
 
+	var initiative = req.initiative
+
+	var isAuthor = Initiative.isAuthor(user, initiative)
+	if (!isAuthor) throw new HttpError(403, "No Permission to Edit")
+
 	if (req.body.visibility === "public") {
 		yield updateInitiativeToPublished(req, res)
 	}
@@ -414,11 +481,6 @@ exports.router.put("/:id", next(function*(req, res) {
 		yield updateInitiativePhaseToParliament(req, res)
 	}
 	else if (isInitiativeUpdate(req.body)) {
-		var initiative = req.initiative
-
-		if (initiative.user_id != user.id)
-			throw new HttpError(403, "No Permission to Edit")
-
 		var attrs = parseInitiative(initiative, req.body)
 		yield initiativesDb.update(initiative.uuid, attrs)
 		res.flash("notice", req.t("INITIATIVE_INFO_UPDATED"))
@@ -468,8 +530,8 @@ exports.router.get("/:id/edit", next(function*(req, res) {
 
 	var initiative = req.initiative
 
-	if (!(user && initiative.user_id == user.id))
-		throw new HttpError(403, "No Permission to Edit")
+	var isAuthor = user && Initiative.isAuthor(user, initiative)
+	if (!isAuthor) throw new HttpError(403, "No Permission to Edit")
 
 	var text = yield textsDb.read(sql`
 		SELECT * FROM initiative_texts
@@ -641,12 +703,10 @@ function isInitiativeUpdate(obj) {
 }
 
 function* updateInitiativeToPublished(req, res) {
-	var user = req.user
 	var initiative = req.initiative
-	var tmpl = "initiatives/update_for_publish_page.jsx"
+	if (initiative.phase != "edit") throw new HttpError(403, "Already Published")
 
-	if (!(initiative.user_id == user.id && initiative.phase == "edit"))
-		throw new HttpError(403, "No Permission to Edit")
+	var tmpl = "initiatives/update_for_publish_page.jsx"
 
 	if (!(yield textsDb.read(sql`
 		SELECT id FROM initiative_texts
@@ -697,9 +757,6 @@ function* updateInitiativePhaseToSign(req, res) {
 	var user = req.user
 	var initiative = req.initiative
 	var tmpl = "initiatives/update_for_voting_page.jsx"
-
-	if (initiative.user_id != user.id)
-		throw new HttpError(403, "No Permission to Edit")
 
 	if (!(
 		Initiative.canPropose(new Date, initiative, user) ||

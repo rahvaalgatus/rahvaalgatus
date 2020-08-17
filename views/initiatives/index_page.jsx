@@ -168,7 +168,8 @@ function InitiativeRowView(attrs) {
 
 	var authorName = [
 		initiative.author_name,
-		initiative.user_name
+		initiative.user_name,
+		...JSON.parse(initiative.coauthor_names)
 	].filter(Boolean).join(", ")
 
 	return <li
@@ -277,7 +278,8 @@ function InitiativeBoxView(attrs) {
 
 	var authorName = [
 		initiative.author_name,
-		initiative.user_name
+		initiative.user_name,
+		...JSON.parse(initiative.coauthor_names)
 	].filter(Boolean).join(", ")
 
 	return <li

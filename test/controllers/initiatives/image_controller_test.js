@@ -2,10 +2,12 @@ var _ = require("root/lib/underscore")
 var Fs = require("fs")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidUser = require("root/test/valid_user")
+var ValidCoauthor = require("root/test/valid_initiative_coauthor")
 var FormData = require("form-data")
 var Http = require("root/lib/http")
 var MediaType = require("medium-type")
 var usersDb = require("root/db/users_db")
+var coauthorsDb = require("root/db/initiative_coauthors_db")
 var initiativesDb = require("root/db/initiatives_db")
 var imagesDb = require("root/db/initiative_images_db")
 var sql = require("sqlate")
@@ -101,6 +103,7 @@ describe("ImageController", function() {
 				var images = yield imagesDb.search(sql`SELECT * FROM initiative_images`)
 				images.length.must.equal(1)
 				images[0].initiative_uuid.must.equal(initiative.uuid)
+				images[0].uploaded_by_id.must.equal(this.user.id)
 				images[0].type.must.eql(new MediaType("image/png"))
 				images[0].data.must.eql(PNG)
 				images[0].preview.must.be.an.instanceOf(Buffer)
@@ -115,13 +118,51 @@ describe("ImageController", function() {
 				res.body.must.include(t("INITIATIVE_IMAGE_UPLOADED"))
 			})
 
+			it("must create new initiative image if coauthor", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: (yield usersDb.create(new ValidUser)).id
+				}))
+
+				yield coauthorsDb.create(new ValidCoauthor({
+					initiative_uuid: initiative.uuid,
+					user: this.user,
+					status: "accepted"
+				}))
+
+				var form = new FormData
+				form.append("_csrf_token", this.csrfToken)
+				form.append("_method", "PUT")
+
+				form.append("image", PNG, {
+					filename: "image.png",
+					contentType: "image/png"
+				})
+
+				var res = yield this.request(`/initiatives/${initiative.uuid}/image`, {
+					method: "POST",
+					headers: form.getHeaders(),
+					body: form.getBuffer()
+				})
+
+				res.statusCode.must.equal(303)
+				res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+				var images = yield imagesDb.search(sql`SELECT * FROM initiative_images`)
+				images.length.must.equal(1)
+				images[0].initiative_uuid.must.equal(initiative.uuid)
+				images[0].uploaded_by_id.must.equal(this.user.id)
+			})
+
 			it("must update author", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
 
+				var otherUser = yield usersDb.create(new ValidUser)
+
 				var image = yield imagesDb.create({
 					initiative_uuid: initiative.uuid,
+					uploaded_by_id: otherUser.id,
 					data: PNG,
 					preview: PNG,
 					type: "image/png"

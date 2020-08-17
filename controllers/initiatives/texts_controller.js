@@ -3,6 +3,7 @@ var Jsx = require("j6pack")
 var Trix = require("root/lib/trix")
 var Router = require("express").Router
 var HttpError = require("standard-http-error")
+var Initiative = require("root/lib/initiative")
 var SmartId = require("undersign/lib/smart_id")
 var MobileId = require("undersign/lib/mobile_id")
 var Certificate = require("undersign/lib/certificate")
@@ -50,9 +51,9 @@ exports.router.use(function(req, _res, next) {
 	if (user == null) throw new HttpError(401)
 
 	var initiative = req.initiative
+	var isAuthor = user && Initiative.isAuthor(user, initiative)
 
-	if (!(user && initiative.user_id == user.id))
-		throw new HttpError(403, "No Permission to Edit")
+	if (!isAuthor) throw new HttpError(403, "No Permission to Edit")
 
 	if (!(initiative.phase == "edit" || initiative.phase == "sign"))
 		throw new HttpError(403, "Not Editable")

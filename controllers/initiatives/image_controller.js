@@ -2,6 +2,7 @@ var _ = require("root/lib/underscore")
 var Path = require("path")
 var Router = require("express").Router
 var HttpError = require("standard-http-error")
+var Initiative = require("root/lib/initiative")
 var Image = require("root/lib/image")
 var imagesDb = require("root/db/initiative_images_db")
 var next = require("co-next")
@@ -15,8 +16,9 @@ exports.router.use(next(function*(req, _res, next) {
 	if (user == null) throw new HttpError(401)
 
 	var initiative = req.initiative
-	if (user && initiative.user_id == user.id);
-	else throw new HttpError(403, "No Permission to Edit")
+
+	var isAuthor = user && Initiative.isAuthor(user, initiative)
+	if (!isAuthor) throw new HttpError(403, "No Permission to Edit")
 
 	req.image = yield imagesDb.read(sql`
 		SELECT initiative_uuid
@@ -28,6 +30,7 @@ exports.router.use(next(function*(req, _res, next) {
 }))
 
 exports.router.put("/", next(function*(req, res) {
+	var user = req.user
 	var initiative = req.initiative
 	var image = req.image
 	var attrs = parse(req.body)
@@ -61,7 +64,8 @@ exports.router.put("/", next(function*(req, res) {
 
 	if (image) imagesDb.update(image, attrs)
 	else yield imagesDb.create(_.assign(attrs, {
-		initiative_uuid: initiative.uuid
+		initiative_uuid: initiative.uuid,
+		uploaded_by_id: user.id
 	}))
 
 	res.flash("notice", imageFile

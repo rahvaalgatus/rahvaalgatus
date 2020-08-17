@@ -4,6 +4,7 @@ var Router = require("express").Router
 var DateFns = require("date-fns")
 var HttpError = require("standard-http-error")
 var Subscription = require("root/lib/subscription")
+var Initiative = require("root/lib/initiative")
 var next = require("co-next")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var messagesDb = require("root/db/initiative_messages_db")
@@ -14,7 +15,7 @@ var EMPTY_EVENT = {title: "", content: ""}
 
 exports.router = Router({mergeParams: true})
 
-exports.router.get("/new", next(assertCreator), next(function*(req, res) {
+exports.router.get("/new", next(assertAuthor), next(function*(req, res) {
 	var initiative = req.initiative
 
 	var subscriberCount =
@@ -31,7 +32,7 @@ exports.router.get("/:id", function(req, res) {
 	res.redirect("/initiatives/" + initiative.uuid + "#event-" + req.params.id)
 })
 
-exports.router.post("/", next(assertCreator), next(function*(req, res) {
+exports.router.post("/", next(assertAuthor), next(function*(req, res) {
 	var initiative = req.initiative
 
 	var event = yield eventsDb.create({
@@ -92,13 +93,13 @@ exports.router.use(function(err, req, res, next) {
 	else next(err)
 })
 
-function* assertCreator(req, _res, next) {
+function* assertAuthor(req, _res, next) {
 	var user = req.user
 	if (user == null) throw new HttpError(401)
 
 	var initiative = req.initiative
 
-	if (initiative.user_id != user.id)
+	if (!Initiative.isAuthor(user, initiative))
 		throw new HttpError(403, "No Permission to Edit")
 
 	if (!(

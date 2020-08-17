@@ -6,6 +6,7 @@ var ValidSignature = require("root/test/valid_signature")
 var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidUser = require("root/test/valid_user")
+var ValidCoauthor = require("root/test/valid_initiative_coauthor")
 var Config = require("root/config")
 var Crypto = require("crypto")
 var Http = require("root/lib/http")
@@ -14,11 +15,13 @@ var parseDom = require("root/lib/dom").parse
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
+var coauthorsDb = require("root/db/initiative_coauthors_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var sql = require("sqlate")
+var demand = require("must")
 var SITE_HOSTNAME = Url.parse(Config.url).hostname
 var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
 var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
@@ -163,6 +166,14 @@ describe("UserController", function() {
 						phase: "edit"
 					}))
 
+					var coauthor = yield usersDb.create(new ValidUser)
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						user: coauthor,
+						status: "accepted"
+					}))
+
 					var res = yield this.request("/user")
 					res.statusCode.must.equal(200)
 
@@ -170,6 +181,7 @@ describe("UserController", function() {
 					var el = dom.querySelector("li.initiative")
 					el.innerHTML.must.include(initiative.uuid)
 					el.textContent.must.include(this.user.name)
+					el.textContent.must.include(coauthor.name)
 					el.textContent.must.include(initiative.title)
 				})
 
@@ -195,6 +207,51 @@ describe("UserController", function() {
 					res.body.must.include(t("N_SIGNATURES", {votes: 8}))
 				})
 
+				it("must show initiatives where coauthor", function*() {
+					var author = yield usersDb.create(new ValidUser)
+
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: author.id,
+						phase: "edit"
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						user: this.user,
+						status: "accepted"
+					}))
+
+					var res = yield this.request("/user")
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var el = dom.querySelector("li.initiative")
+					el.innerHTML.must.include(initiative.uuid)
+					el.textContent.must.include(author.name)
+					el.textContent.must.include(this.user.name)
+				})
+
+				;["pending", "rejected"].forEach(function(status) {
+					it(`must not show initiatives where ${status} coauthor`, function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: (yield usersDb.create(new ValidUser)).id
+						}))
+
+						yield coauthorsDb.create(new ValidCoauthor({
+							initiative_uuid: initiative.uuid,
+							country: this.user.country,
+							personal_id: this.user.personal_id,
+							status: status
+						}))
+
+						var res = yield this.request("/user")
+						res.statusCode.must.equal(200)
+
+						var dom = parseDom(res.body)
+						demand(dom.querySelector("li.initiative")).be.null()
+					})
+				})
+
 				it("must not show initiatives from other users", function*() {
 					var author = yield usersDb.create(new ValidUser)
 
@@ -206,6 +263,168 @@ describe("UserController", function() {
 					var res = yield this.request("/user")
 					res.statusCode.must.equal(200)
 					res.body.must.not.include(initiative.uuid)
+				})
+
+				t("must not show coauthor name from another initiative", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "edit"
+					}))
+
+					var other = yield initiativesDb.create(new ValidInitiative({
+						user_id: (yield usersDb.create(new ValidUser)).id
+					}))
+
+					var coauthor = yield usersDb.create(new ValidUser)
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: other.uuid,
+						user: coauthor,
+						status: "accepted"
+					}))
+
+					var res = yield this.request("/user")
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var el = dom.querySelector("li.initiative")
+					el.innerHTML.must.include(initiative.uuid)
+					el.textContent.must.include(this.user.name)
+					el.textContent.must.not.include(coauthor.name)
+				})
+
+				;["pending", "rejected"].forEach(function(status) {
+					it(`must not show ${status} coauthor name`, function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: "edit"
+						}))
+
+						var coauthor = yield usersDb.create(new ValidUser)
+
+						yield coauthorsDb.create(new ValidCoauthor({
+							initiative_uuid: initiative.uuid,
+							country: coauthor.country,
+							personal_id: coauthor.personal_id,
+							status: status
+						}))
+
+						var res = yield this.request("/user")
+						res.statusCode.must.equal(200)
+
+						var dom = parseDom(res.body)
+						var el = dom.querySelector("li.initiative")
+						el.innerHTML.must.include(initiative.uuid)
+						el.textContent.must.include(this.user.name)
+						el.textContent.must.not.include(coauthor.name)
+					})
+				})
+			})
+
+			describe("coauthor invitations", function() {
+				it("must show pending invitation", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: (yield usersDb.create(new ValidUser)).id
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						country: this.user.country,
+						personal_id: this.user.personal_id,
+						status: "pending"
+					}))
+
+					var res = yield this.request("/user")
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var el = dom.getElementById("coauthor-invitations")
+					el.textContent.must.include(initiative.title)
+				})
+
+				it("must not show accepted invitation", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: (yield usersDb.create(new ValidUser)).id
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						user: this.user,
+						status: "accepted"
+					}))
+
+					var res = yield this.request("/user")
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					demand(dom.getElementById("coauthor-invitations")).be.null()
+				})
+
+				it("must not show rejected invitation", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: (yield usersDb.create(new ValidUser)).id
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						country: this.user.country,
+						personal_id: this.user.personal_id,
+						status: "rejected"
+					}))
+
+					var res = yield this.request("/user")
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					demand(dom.getElementById("coauthor-invitations")).be.null()
+					res.body.must.not.include(initiative.uuid)
+				})
+
+				it("must not show pending invitations from other users with same country", function*() {
+					var other = yield usersDb.create(new ValidUser({
+						country: this.user.country
+					}))
+
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: other.id
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						country: other.country,
+						personal_id: other.personal_id,
+						status: "pending"
+					}))
+
+					var res = yield this.request("/user")
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					demand(dom.getElementById("coauthor-invitations")).be.null()
+				})
+
+				it("must not show pending invitations from other users with same personal id", function*() {
+					var other = yield usersDb.create(new ValidUser({
+						country: "LT",
+						personal_id: this.user.personal_id
+					}))
+
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: other.id
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						country: other.country,
+						personal_id: other.personal_id,
+						status: "pending"
+					}))
+
+					var res = yield this.request("/user")
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					demand(dom.getElementById("coauthor-invitations")).be.null()
 				})
 			})
 		})

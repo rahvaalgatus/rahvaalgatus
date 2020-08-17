@@ -198,9 +198,10 @@ CREATE TABLE initiative_images (
 	initiative_uuid TEXT PRIMARY KEY NOT NULL,
 	data BLOB NOT NULL,
 	type TEXT NOT NULL,
-	preview BLOB NOT NULL, author_name TEXT, author_url TEXT,
+	preview BLOB NOT NULL, author_name TEXT, author_url TEXT, uploaded_by_id INTEGER,
 
-	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE
+	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE,
+	FOREIGN KEY (uploaded_by_id) REFERENCES users (id)
 );
 CREATE TABLE initiative_signables (
 	initiative_uuid TEXT NOT NULL,
@@ -511,6 +512,34 @@ CREATE INDEX index_initiative_signatures_on_created_at
 ON initiative_signatures (created_at, initiative_uuid);
 CREATE INDEX index_initiative_citizenos_signatures_on_created_at
 ON initiative_citizenos_signatures (created_at, initiative_uuid);
+CREATE TABLE initiative_coauthors (
+	initiative_uuid TEXT NOT NULL,
+	country TEXT NOT NULL,
+	personal_id TEXT NOT NULL,
+	user_id INTEGER,
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	status TEXT NOT NULL DEFAULT 'pending',
+	status_updated_at TEXT,
+
+	PRIMARY KEY (initiative_uuid, country, personal_id),
+	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE,
+
+	FOREIGN KEY (user_id, country, personal_id)
+	REFERENCES users (id, country, personal_id),
+
+	CONSTRAINT country_length CHECK (length(country) = 2),
+	CONSTRAINT country_uppercase CHECK (country == upper(country)),
+	CONSTRAINT personal_id_length CHECK (length(personal_id) > 0),
+
+	CONSTRAINT user_id_only_if_accepted
+	CHECK ((user_id IS NOT NULL) = (status = 'accepted'))
+);
+CREATE INDEX index_initiative_coauthors_on_country_and_personal_id
+ON initiative_coauthors (country, personal_id);
+CREATE INDEX index_initiative_coauthors_on_user_id
+ON initiative_coauthors (user_id);
+CREATE UNIQUE INDEX index_users_on_id_and_country_and_personal_id
+ON users (id, country, personal_id);
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -607,4 +636,6 @@ INSERT INTO migrations VALUES('20200709190642');
 INSERT INTO migrations VALUES('20200727092343');
 INSERT INTO migrations VALUES('20200811130443');
 INSERT INTO migrations VALUES('20200813175316');
+INSERT INTO migrations VALUES('20200815000000');
+INSERT INTO migrations VALUES('20200815000010');
 COMMIT;

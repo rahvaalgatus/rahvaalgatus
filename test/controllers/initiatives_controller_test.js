@@ -7,6 +7,7 @@ var Crypto = require("crypto")
 var MediaType = require("medium-type")
 var Initiative = require("root/lib/initiative")
 var ValidUser = require("root/test/valid_user")
+var ValidCoauthor = require("root/test/valid_initiative_coauthor")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidSignature = require("root/test/valid_signature")
@@ -26,6 +27,7 @@ var tHtml = _.compose(_.escapeHtml, t)
 var pseudoDateTime = require("root/lib/crypto").pseudoDateTime
 var parseCookies = Http.parseCookies
 var usersDb = require("root/db/users_db")
+var coauthorsDb = require("root/db/initiative_coauthors_db")
 var textsDb = require("root/db/initiative_texts_db")
 var filesDb = require("root/db/initiative_files_db")
 var initiativesDb = require("root/db/initiatives_db")
@@ -82,15 +84,83 @@ describe("InitiativesController", function() {
 				discussion_ends_at: DateFns.addSeconds(new Date, 1)
 			}))
 
+			var coauthor = yield usersDb.create(new ValidUser)
+
+			yield coauthorsDb.create(new ValidCoauthor({
+				initiative_uuid: initiative.uuid,
+				user: coauthor,
+				status: "accepted"
+			}))
+
 			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
 			res.body.must.include(initiative.uuid)
 			res.body.must.include(initiative.title)
 
 			var dom = parseDom(res.body)
-			dom.querySelector(".initiative time").textContent.must.equal(
+			var el = dom.querySelector(".initiative")
+
+			el.querySelector("time").textContent.must.equal(
 				I18n.formatDate("numeric", initiative.created_at)
 			)
+
+			el.querySelector(".author").textContent.must.include(this.author.name)
+			el.querySelector(".author").textContent.must.include(coauthor.name)
+		})
+
+		it(`must not show coauthor name from another initiative`, function*() {
+			yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "edit",
+				published_at: new Date
+			}))
+
+			var other = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
+
+			var coauthor = yield usersDb.create(new ValidUser)
+
+			yield coauthorsDb.create(new ValidCoauthor({
+				initiative_uuid: other.uuid,
+				user: coauthor,
+				status: "accepted"
+			}))
+
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+
+			var dom = parseDom(res.body)
+			var el = dom.querySelector(".initiative")
+			el.querySelector(".author").textContent.must.include(this.author.name)
+			el.querySelector(".author").textContent.must.not.include(coauthor.name)
+		})
+
+		;["pending", "rejected"].forEach(function(status) {
+			it(`must not show ${status} coauthor name`, function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					published_at: new Date
+				}))
+
+				var coauthor = yield usersDb.create(new ValidUser)
+
+				yield coauthorsDb.create(new ValidCoauthor({
+					initiative_uuid: initiative.uuid,
+					country: coauthor.country,
+					personal_id: coauthor.personal_id,
+					status: status
+				}))
+
+				var res = yield this.request("/initiatives")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var el = dom.querySelector(".initiative")
+				el.querySelector(".author").textContent.must.include(this.author.name)
+				el.querySelector(".author").textContent.must.not.include(coauthor.name)
+			})
 		})
 
 		it("must show initiatives in edit phase that have ended", function*() {
@@ -1042,6 +1112,13 @@ describe("InitiativesController", function() {
 	})
 
 	describe("GET /new", function() {
+		describe("when not logged in", function() {
+			it("must respond with 401", function*() {
+				var res = yield this.request("/initiatives/new")
+				res.statusCode.must.equal(401)
+			})
+		})
+
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
 
@@ -1053,6 +1130,24 @@ describe("InitiativesController", function() {
 	})
 
 	describe("POST /", function() {
+		describe("when not logged in", function() {
+			it("must respond with 401", function*() {
+				var content = newTrixDocument("Hello, world")
+
+				var res = yield this.request("/initiatives", {
+					method: "POST",
+					form: {
+						_csrf_token: this.csrfToken,
+						title: "Hello, world!",
+						content: JSON.stringify(content),
+						language: "en"
+					}
+				})
+
+				res.statusCode.must.equal(401)
+			})
+		})
+
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
 			require("root/test/time")()
@@ -1183,6 +1278,14 @@ describe("InitiativesController", function() {
 					published_at: new Date
 				}))
 
+				var coauthor = yield usersDb.create(new ValidUser)
+
+				yield coauthorsDb.create(new ValidCoauthor({
+					initiative_uuid: initiative.uuid,
+					user: coauthor,
+					status: "accepted"
+				}))
+
 				var text = yield textsDb.create(new ValidText({
 					initiative_uuid: initiative.uuid,
 					user_id: this.author.id,
@@ -1192,8 +1295,15 @@ describe("InitiativesController", function() {
 
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
-				res.body.must.include(this.author.name)
-				res.body.must.include(text.title)
+
+				var dom = parseDom(res.body)
+				var author = dom.querySelector("#initiative-header .author")
+				author.textContent.must.include(this.author.name)
+				author.textContent.must.include(coauthor.name)
+
+				var title = dom.querySelector("#initiative-header h1")
+				title.textContent.must.include(text.title)
+
 				res.body.must.include("Hello, world!")
 			})
 
@@ -1247,6 +1357,61 @@ describe("InitiativesController", function() {
 				var object = dom.querySelector("object")
 				object.data.must.equal(path + "/files/" + file.id)
 				object.type.must.equal(String(file.content_type))
+			})
+
+			it(`must not show coauthor name from another initiative`, function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					published_at: new Date
+				}))
+
+				var other = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id
+				}))
+
+				var coauthor = yield usersDb.create(new ValidUser)
+
+				yield coauthorsDb.create(new ValidCoauthor({
+					initiative_uuid: other.uuid,
+					user: coauthor,
+					status: "accepted"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var author = dom.querySelector("#initiative-header .author")
+				author.textContent.must.include(this.author.name)
+				author.textContent.must.not.include(coauthor.name)
+			})
+
+			;["pending", "rejected"].forEach(function(status) {
+				it(`must not show ${status} coauthor name`, function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "edit",
+						published_at: new Date
+					}))
+
+					var coauthor = yield usersDb.create(new ValidUser)
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						country: coauthor.country,
+						personal_id: coauthor.personal_id,
+						status: status
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var author = dom.querySelector("#initiative-header .author")
+					author.textContent.must.include(this.author.name)
+					author.textContent.must.not.include(coauthor.name)
+				})
 			})
 
 			it("must render external initiative if it has no PDF", function*() {
@@ -3371,6 +3536,21 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 			})
 
+			it("must render unpublished initiative if coauthor", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id
+				}))
+
+				yield coauthorsDb.create(new ValidCoauthor({
+					initiative_uuid: initiative.uuid,
+					user: this.user,
+					status: "accepted"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+			})
+
 			it("must respond with 403 for unpublished discussion of other user",
 				function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
@@ -3381,6 +3561,107 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(403)
 				res.statusMessage.must.equal("Initiative Not Public")
+			})
+
+			it(`must render invitation page for unpublished discussion if pending coauthor`, function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					published_at: null
+				}))
+
+				yield coauthorsDb.create(new ValidCoauthor({
+					initiative_uuid: initiative.uuid,
+					country: this.user.country,
+					personal_id: this.user.personal_id,
+					status: "pending"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(403)
+				res.statusMessage.must.equal("Accept Invitation")
+				res.body.must.include(t("USER_PAGE_COAUTHOR_INVITATION_DESCRIPTION"))
+			})
+
+			it(`must respond with 403 for unpublished discussion if rejected coauthor`, function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					published_at: null
+				}))
+
+				yield coauthorsDb.create(new ValidCoauthor({
+					initiative_uuid: initiative.uuid,
+					country: this.user.country,
+					personal_id: this.user.personal_id,
+					status: "rejected"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(403)
+				res.statusMessage.must.equal("Initiative Not Public")
+			})
+
+			it("must render coauthor invitation form if pending coauthor",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					published_at: new Date
+				}))
+
+				yield coauthorsDb.create(new ValidCoauthor({
+					initiative_uuid: initiative.uuid,
+					country: this.user.country,
+					personal_id: this.user.personal_id,
+					status: "pending"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var el = dom.getElementById("coauthor-invitation")
+
+				el.textContent.must.include(
+					t("INITIATIVE_COAUTHOR_INVITATION_PAGE_TITLE")
+				)
+
+				el.textContent.must.include(
+					t("USER_PAGE_COAUTHOR_INVITATION_DESCRIPTION")
+				)
+			})
+
+			it("must not render coauthor invitation form if accepted", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					published_at: null
+				}))
+
+				yield coauthorsDb.create(new ValidCoauthor({
+					initiative_uuid: initiative.uuid,
+					user: this.user,
+					status: "accepted"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var dom = parseDom(res.body)
+				demand(dom.getElementById("coauthor-invitation")).be.null()
+			})
+
+			it("must not render coauthor invitation form if rejected", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					published_at: null
+				}))
+
+				yield coauthorsDb.create(new ValidCoauthor({
+					initiative_uuid: initiative.uuid,
+					country: this.user.country,
+					personal_id: this.user.personal_id,
+					status: "rejected"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var dom = parseDom(res.body)
+				demand(dom.getElementById("coauthor-invitation")).be.null()
 			})
 
 			it("must render initiative in edit phase", function*() {
@@ -3440,6 +3721,41 @@ describe("InitiativesController", function() {
 				res.body.must.include(t("INITIATIVE_TRANSLATION_PLEASE_SIGN"))
 			})
 
+			it("must render unsigned translation if in sign phase if coauthor",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					language: "et"
+				}))
+
+				yield coauthorsDb.create(new ValidCoauthor({
+					initiative_uuid: initiative.uuid,
+					user: this.user,
+					status: "accepted"
+				}))
+
+				var english = yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: initiative.user_id,
+					language: "en",
+					content: "Hello, world!",
+					content_type: "text/html"
+				}))
+
+				yield textSignaturesDb.create(new ValidTextSignature({
+					text_id: english.id,
+					signed: true
+				}))
+
+				var initiativePath = "/initiatives/" + initiative.uuid
+				var res = yield this.request(initiativePath + "?language=en")
+				res.statusCode.must.equal(200)
+				res.body.must.include(english.title)
+				res.body.must.include(english.content)
+				res.body.must.include(t("INITIATIVE_TRANSLATION_PLEASE_SIGN"))
+			})
+
 			it("must not render unsigned translation if in sign phase if not author", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
@@ -3466,11 +3782,94 @@ describe("InitiativesController", function() {
 				res.headers.location.must.equal("/initiatives/" + initiative.uuid)
 			})
 
+			;["pending", "rejected"].forEach(function(status) {
+				it(`must not render unsigned translation if in sign phase if ${status} coauthor`, function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+						language: "et"
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						country: this.user.country,
+						personal_id: this.user.personal_id,
+						status: status
+					}))
+
+					var english = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: initiative.user_id,
+						language: "en",
+						content: "Hello, world!",
+						content_type: "text/html"
+					}))
+
+					yield textSignaturesDb.create(new ValidTextSignature({
+						text_id: english.id,
+						signed: true
+					}))
+
+					var initiativePath = "/initiatives/" + initiative.uuid
+					var res = yield this.request(initiativePath + "?language=en")
+					res.statusCode.must.equal(307)
+					res.headers.location.must.equal("/initiatives/" + initiative.uuid)
+				})
+			})
+
 			it("must render latest unsigned translation if author", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					phase: "sign",
 					language: "et"
+				}))
+
+				var signed = yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: initiative.user_id,
+					language: "en",
+					content: "Hello, world!",
+					content_type: "text/html"
+				}))
+
+				yield textSignaturesDb.create(new ValidTextSignature({
+					text_id: signed.id,
+					signed: true,
+					timestamped: true
+				}))
+
+				var unsigned = yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: initiative.user_id,
+					language: "en",
+					content: "Good bye, world!",
+					content_type: "text/html"
+				}))
+
+				var initiativePath = "/initiatives/" + initiative.uuid
+				var res = yield this.request(initiativePath + "?language=en")
+				res.statusCode.must.equal(200)
+				res.body.must.not.include(signed.title)
+				res.body.must.not.include(signed.content)
+				res.body.must.include(unsigned.title)
+				res.body.must.include(unsigned.content)
+
+				res.body.must.include(
+					t("INITIATIVE_TRANSLATION_PLEASE_SIGN_AFTER_UPDATE")
+				)
+			})
+
+			it("must render latest unsigned translation if coauthor", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					language: "et"
+				}))
+
+				yield coauthorsDb.create(new ValidCoauthor({
+					initiative_uuid: initiative.uuid,
+					user: this.user,
+					status: "accepted"
 				}))
 
 				var signed = yield textsDb.create(new ValidText({
@@ -3799,7 +4198,8 @@ describe("InitiativesController", function() {
 			})
 
 			EVENTABLE_PHASES.forEach(function(phase) {
-				it(`must show event creation button if in ${phase} phase`, function*() {
+				it(`must show event creation button if in ${phase} phase and author`,
+					function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: phase
@@ -3809,9 +4209,27 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(200)
 					res.body.must.include(t("CREATE_INITIATIVE_EVENT_BUTTON"))
 				})
+
+				it(`must show event creation button if in ${phase} phase and coauthor`,
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: phase
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						user: this.user,
+						status: "accepted"
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("CREATE_INITIATIVE_EVENT_BUTTON"))
+				})
 			})
 
-			it("must not show event creation button if lacking permission",
+			it("must not show event creation button if not author",
 				function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
@@ -3891,52 +4309,6 @@ describe("InitiativesController", function() {
 				res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
 				res.body.must.not.include("donate-form")
 			})
-
-			it("must show authoring controls if author", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.user.id
-				}))
-
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
-				res.body.must.include(t("EDIT_INITIATIVE_TEXT"))
-			})
-
-			it("must not show authoring controls if not author", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					published_at: new Date
-				}))
-
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
-				res.body.must.not.include(t("EDIT_INITIATIVE_TEXT"))
-			})
-
-			it("must show publish button if text exists", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.user.id
-				}))
-
-				yield textsDb.create(new ValidText({
-					initiative_uuid: initiative.uuid,
-					user_id: this.user.id
-				}))
-
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
-				res.body.must.include(t("PUBLISH_TOPIC"))
-			})
-
-			it("must not show publish button if text doesn't exist", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.user.id
-				}))
-
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
-				res.body.must.not.include(t("PUBLISH_TOPIC"))
-			})
 			
 			it("must show delete signature button if signed", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
@@ -3959,7 +4331,143 @@ describe("InitiativesController", function() {
 				res.body.must.not.include("donate-form")
 			})
 
-			describe("author buttons", function() {
+			describe("authoring controls", function() {
+				it("must show authoring controls if author", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("EDIT_INITIATIVE_TEXT"))
+
+					var dom = parseDom(res.body)
+					dom.getElementById("initiative-info").must.exist()
+				})
+
+				it("must show authoring controls if coauthor", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						user: this.user,
+						status: "accepted"
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("EDIT_INITIATIVE_TEXT"))
+
+					var dom = parseDom(res.body)
+					dom.getElementById("initiative-info").must.exist()
+				})
+
+				it("must not show authoring controls if not author", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						published_at: new Date
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(t("EDIT_INITIATIVE_TEXT"))
+				})
+
+				;["pending", "rejected"].forEach(function(status) {
+					it(`must not show authoring controls if ${status} author`,
+						function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.author.id,
+							published_at: new Date
+						}))
+
+						yield coauthorsDb.create(new ValidCoauthor({
+							initiative_uuid: initiative.uuid,
+							country: this.user.country,
+							personal_id: this.user.personal_id,
+							status: status
+						}))
+
+						var res = yield this.request("/initiatives/" + initiative.uuid)
+						res.statusCode.must.equal(200)
+						res.body.must.not.include(t("EDIT_INITIATIVE_TEXT"))
+					})
+				})
+
+				it("must show edit authors button if author", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("EDIT_INITIATIVE_AUTHORS"))
+				})
+
+				it("must show edit authors button if coauthor", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						user: this.user,
+						status: "accepted"
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(t("EDIT_INITIATIVE_AUTHORS"))
+				})
+
+				it("must show publish button if text exists and author", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("PUBLISH_TOPIC"))
+				})
+
+				it("must show publish button if text exists and coauthor", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						user: this.user,
+						status: "accepted"
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("PUBLISH_TOPIC"))
+				})
+
+				it("must not show publish button if text doesn't exist", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(t("PUBLISH_TOPIC"))
+				})
+
 				it("must not render delete initiative button if not initiative author",
 					function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
@@ -4033,6 +4541,23 @@ describe("InitiativesController", function() {
 					res.body.must.not.include(t("DELETE_DISCUSSION"))
 				})
 
+				it("must render delete initiative button if coauthor", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "edit"
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						user: this.user,
+						status: "accepted"
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(t("DELETE_DISCUSSION"))
+				})
+
 				_.without(PHASES, "edit").forEach(function(phase) {
 					it(`must not render delete initiative button if in ${phase} phase`,
 						function*() {
@@ -4069,8 +4594,7 @@ describe("InitiativesController", function() {
 						demand(dom.getElementById("send-to-parliament-button")).be.null()
 					})
 
-					it("must render send to parliament button if enough signatures",
-						function*() {
+					it("must render send to parliament button if enough signatures and author", function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
 							phase: "sign"
@@ -4131,6 +4655,30 @@ describe("InitiativesController", function() {
 						var dom = parseDom(res.body)
 						var button = dom.getElementById("send-to-parliament-button")
 						button.disabled.must.be.false()
+					})
+
+					it("must not render send to parliament button if coauthor",
+						function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.author.id,
+							phase: "sign"
+						}))
+
+						yield coauthorsDb.create(new ValidCoauthor({
+							initiative_uuid: initiative.uuid,
+							user: this.user,
+							status: "accepted"
+						}))
+
+						yield signaturesDb.create(_.times(Config.votesRequired, () => (
+							new ValidSignature({initiative_uuid: initiative.uuid})
+						)))
+
+						var res = yield this.request("/initiatives/" + initiative.uuid)
+						res.statusCode.must.equal(200)
+
+						var dom = parseDom(res.body)
+						demand(dom.getElementById("send-to-parliament-button")).be.null()
 					})
 
 					it("must disable send to parliament button if Estonian translation missing", function*() {
@@ -4308,8 +4856,7 @@ describe("InitiativesController", function() {
 						res.body.must.not.include(t("SEND_TO_LOCAL_GOVERNMENT"))
 					})
 
-					it("must render send to government button if enough signatures",
-						function*() {
+					it("must render send to government button if enough signatures and author", function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
 							phase: "sign",
@@ -4334,6 +4881,39 @@ describe("InitiativesController", function() {
 						var button = dom.getElementById("send-to-local-government-button")
 						button.disabled.must.be.false()
 						button.textContent.must.equal(t("SEND_TO_LOCAL_GOVERNMENT"))
+					})
+
+					it("must not render send to government button if coauthor",
+						function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.author.id,
+							phase: "sign",
+							destination: "muhu-vald"
+						}))
+
+						yield coauthorsDb.create(new ValidCoauthor({
+							initiative_uuid: initiative.uuid,
+							user: this.user,
+							status: "accepted"
+						}))
+
+						var signatureCount = Math.round(
+							LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
+						)
+
+						yield signaturesDb.create(_.times(signatureCount, () => (
+							new ValidSignature({initiative_uuid: initiative.uuid})
+						)))
+
+						var res = yield this.request("/initiatives/" + initiative.uuid, {
+							headers: {Host: LOCAL_SITE_HOSTNAME}
+						})
+
+						res.statusCode.must.equal(200)
+
+						var dom = parseDom(res.body)
+						var button = dom.getElementById("send-to-local-government-button")
+						demand(button).be.null()
 					})
 
 					it("must render send to government button if has paper signatures and only undersigned signatures",
@@ -5467,6 +6047,54 @@ describe("InitiativesController", function() {
 					})
 				})
 
+				it("must update destination if coauthor", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: (yield usersDb.create(new ValidUser)).id
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						user: this.user,
+						status: "accepted"
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, destination: "parliament"}
+					})
+
+					res.statusCode.must.equal(303)
+					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+					yield initiativesDb.read(initiative).must.then.eql({
+						__proto__: initiative,
+						destination: "parliament"
+					})
+				})
+
+			;["pending", "rejected"].forEach(function(status) {
+				it(`must respond with 403 if ${status} coauthor`, function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: (yield usersDb.create(new ValidUser)).id
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						country: this.user.country,
+						personal_id: this.user.personal_id,
+						status: status
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, destination: "parliament"}
+					})
+
+					res.statusCode.must.equal(403)
+					yield initiativesDb.read(initiative).must.then.eql(initiative)
+				})
+			})
+
 				it("must respond with 422 given invalid destination", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id
@@ -5500,8 +6128,121 @@ describe("InitiativesController", function() {
 				})
 			})
 
+			describe("given local info", function() {
+				it("must update attributes", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							author_name: "John Smith",
+							author_url: "http://example.com/author",
+							community_url: "http://example.com/community",
+							url: "http://example.com/initiative",
+
+							"organizations[0][name]": "Org A",
+							"organizations[0][url]": "http://example.com/org-a",
+							"organizations[1][name]": "Org B",
+							"organizations[1][url]": "http://example.com/org-b",
+							"meetings[0][date]": "2015-06-18",
+							"meetings[0][url]": "http://example.com/monday",
+							"meetings[1][date]": "2015-06-19",
+							"meetings[1][url]": "http://example.com/tuesday",
+							"media_urls[0]": "http://example.com/article1",
+							"media_urls[1]": "http://example.com/article2",
+							"government_change_urls[0]": "http://example.com/gov-change1",
+							"government_change_urls[1]": "http://example.com/gov-change2",
+							"public_change_urls[0]": "http://example.com/change1",
+							"public_change_urls[1]": "http://example.com/change2",
+							notes: "Hello, world"
+						}
+					})
+
+					res.statusCode.must.equal(303)
+					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+					yield initiativesDb.read(initiative).must.then.eql({
+						__proto__: initiative,
+						author_name: "John Smith",
+						author_url: "http://example.com/author",
+						community_url: "http://example.com/community",
+						url: "http://example.com/initiative",
+
+						organizations: [
+							{name: "Org A", url: "http://example.com/org-a"},
+							{name: "Org B", url: "http://example.com/org-b"}
+						],
+
+						meetings: [
+							{date: "2015-06-18", url: "http://example.com/monday"},
+							{date: "2015-06-19", url: "http://example.com/tuesday"}
+						],
+
+						media_urls: [
+							"http://example.com/article1",
+							"http://example.com/article2"
+						],
+
+						government_change_urls: [
+							"http://example.com/gov-change1",
+							"http://example.com/gov-change2"
+						],
+
+						public_change_urls: [
+							"http://example.com/change1",
+							"http://example.com/change2"
+						],
+
+						notes: "Hello, world"
+					})
+				})
+
+				it("must not update other initiatives", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					var other = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, notes: "Hello, world"}
+					})
+
+					res.statusCode.must.equal(303)
+
+					yield initiativesDb.search(sql`
+						SELECT * FROM initiatives
+					`).must.then.eql([
+						{__proto__: initiative, notes: "Hello, world"},
+						other,
+					])
+				})
+
+				it("must respond with 403 when not author", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: (yield usersDb.create(new ValidUser)).id,
+						published_at: new Date
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, notes: "Hello, world"}
+					})
+
+					res.statusCode.must.equal(403)
+					res.statusMessage.must.equal("No Permission to Edit")
+					yield initiativesDb.read(initiative).must.then.eql(initiative)
+				})
+			})
+
 			describe("given visibility=public", function() {
-				it("must render update visibility page", function*() {
+				it("must render update page if author", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id
 					}))
@@ -5521,6 +6262,30 @@ describe("InitiativesController", function() {
 					res.body.must.include(t("PUBLISH_TOPIC"))
 				})
 
+				it("must render update visibility page if coauthor", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: (yield usersDb.create(new ValidUser)).id
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						user: this.user,
+						status: "accepted"
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, visibility: "public"}
+					})
+
+					res.statusCode.must.equal(200)
+				})
+
 				it("must respond with 403 if not author", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: (yield usersDb.create(new ValidUser)).id,
@@ -5534,6 +6299,30 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(403)
 					res.statusMessage.must.equal("No Permission to Edit")
+				})
+
+				;["pending", "rejected"].forEach(function(status) {
+					it(`must respond with 403 if ${status} coauthor`, function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: (yield usersDb.create(new ValidUser)).id,
+							published_at: new Date
+						}))
+
+						yield coauthorsDb.create(new ValidCoauthor({
+							initiative_uuid: initiative.uuid,
+							country: this.user.country,
+							personal_id: this.user.personal_id,
+							status: status
+						}))
+
+						var res = yield this.request("/initiatives/" + initiative.uuid, {
+							method: "PUT",
+							form: {_csrf_token: this.csrfToken, visibility: "public"}
+						})
+
+						res.statusCode.must.equal(403)
+						res.statusMessage.must.equal("No Permission to Edit")
+					})
 				})
 
 				it("must update initiative if setting a short deadline", function*() {
@@ -5669,6 +6458,45 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(422)
 					res.statusMessage.must.equal("Deadline Too Near or Too Far")
 					yield initiativesDb.read(initiative).must.then.eql(initiative)
+				})
+
+				it("must update initiative if coauthor", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: (yield usersDb.create(new ValidUser)).id
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						user: this.user,
+						status: "accepted"
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+					}))
+
+					var endsAt = DateFns.addDays(
+						DateFns.endOfDay(new Date),
+						Config.minDeadlineDays
+					)
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							visibility: "public",
+							endsAt: formatIsoDate(endsAt)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					yield initiativesDb.read(initiative).must.then.eql({
+						__proto__: initiative,
+						published_at: new Date,
+						discussion_ends_at: endsAt
+					})
 				})
 
 				it("must not update initiative if no text created", function*() {
@@ -5860,8 +6688,7 @@ describe("InitiativesController", function() {
 						})
 					})
 
-					it("must not clear end email when setting discussion end time to past",
-						function*() {
+					it("must not clear end email when setting discussion end time to past", function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
 							published_at: DateFns.addDays(new Date, -5),
@@ -5894,11 +6721,39 @@ describe("InitiativesController", function() {
 							discussion_ends_at: endsAt
 						})
 					})
+
+					it("must respond with 403 if not in edit phase", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: "sign"
+						}))
+
+						yield textsDb.create(new ValidText({
+							initiative_uuid: initiative.uuid,
+							user_id: this.user.id
+						}))
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							form: {
+								_csrf_token: this.csrfToken,
+								visibility: "public",
+								endsAt: formatIsoDate(DateFns.addDays(
+									initiative.published_at,
+									Config.minDeadlineDays - 1
+								))
+							}
+						})
+
+						res.statusCode.must.equal(403)
+						res.statusMessage.must.equal("Already Published")
+						yield initiativesDb.read(initiative).must.then.eql(initiative)
+					})
 				})
 			})
 
 			describe("given status=voting", function() {
-				it("must render update status for voting page", function*() {
+				it("must render update page if author", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						destination: "parliament",
@@ -5915,6 +6770,66 @@ describe("InitiativesController", function() {
 					res.body.must.include(
 						t("INITIATIVE_SEND_TO_SIGN_CHOOSE_LANGUAGE_DESCRIPTION")
 					)
+				})
+
+				it("must render update page if coauthor", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: (yield usersDb.create(new ValidUser)).id,
+						destination: "parliament",
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						user: this.user,
+						status: "accepted"
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, status: "voting"}
+					})
+
+					res.statusCode.must.equal(200)
+				})
+
+				it("must respond with 403 if not author", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: (yield usersDb.create(new ValidUser)).id,
+						published_at: new Date
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "PUT",
+						form: {_csrf_token: this.csrfToken, status: "voting"}
+					})
+
+					res.statusCode.must.equal(403)
+					res.statusMessage.must.equal("No Permission to Edit")
+				})
+
+				;["pending", "rejected"].forEach(function(status) {
+					it(`must respond with 403 if ${status} coauthor`, function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: (yield usersDb.create(new ValidUser)).id,
+							published_at: new Date
+						}))
+
+						yield coauthorsDb.create(new ValidCoauthor({
+							initiative_uuid: initiative.uuid,
+							country: this.user.country,
+							personal_id: this.user.personal_id,
+							status: status
+						}))
+
+						var res = yield this.request("/initiatives/" + initiative.uuid, {
+							method: "PUT",
+							form: {_csrf_token: this.csrfToken, status: "voting"}
+						})
+
+						res.statusCode.must.equal(403)
+						res.statusMessage.must.equal("No Permission to Edit")
+					})
 				})
 
 				it("must update initiative given Trix text and short deadline",
@@ -6147,6 +7062,46 @@ describe("InitiativesController", function() {
 					yield initiativesDb.read(initiative).must.then.eql(initiative)
 				})
 
+				it("must update initiative if coauthor", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: (yield usersDb.create(new ValidUser)).id,
+						destination: "parliament",
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						user: this.user,
+						status: "accepted"
+					}))
+
+					var text = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id
+					}))
+
+					var endsAt = DateFns.addDays(
+						DateFns.endOfDay(new Date),
+						Config.minDeadlineDays
+					)
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "voting",
+							language: text.language,
+							endsAt: formatIsoDate(endsAt)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					initiative = yield initiativesDb.read(initiative)
+					initiative.phase.must.equal("sign")
+					initiative.signing_ends_at.must.eql(endsAt)
+				})
+
 				it("must update initiative if language updated", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
@@ -6274,21 +7229,6 @@ describe("InitiativesController", function() {
 					initiative = yield initiativesDb.read(initiative)
 					initiative.phase.must.equal("sign")
 					initiative.signing_ends_at.must.eql(endsAt)
-				})
-
-				it("must respond with 403 if not author", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: (yield usersDb.create(new ValidUser)).id,
-						published_at: new Date
-					}))
-
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
-						method: "PUT",
-						form: {_csrf_token: this.csrfToken, status: "voting"}
-					})
-
-					res.statusCode.must.equal(403)
-					res.statusMessage.must.equal("No Permission to Edit")
 				})
 
 				it("must email subscribers", function*() {
@@ -6447,6 +7387,41 @@ describe("InitiativesController", function() {
 						})
 					})
 
+					it("must update initiative if coauthor", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: (yield usersDb.create(new ValidUser)).id,
+							phase: "sign",
+							signing_started_at: DateFns.addDays(new Date, -90)
+						}))
+
+						yield coauthorsDb.create(new ValidCoauthor({
+							initiative_uuid: initiative.uuid,
+							user: this.user,
+							status: "accepted"
+						}))
+
+						var endsAt = DateFns.addDays(
+							DateFns.endOfDay(new Date),
+							Config.minDeadlineDays
+						)
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							form: {
+								_csrf_token: this.csrfToken,
+								status: "voting",
+								endsAt: formatIsoDate(endsAt)
+							}
+						})
+
+						res.statusCode.must.equal(303)
+
+						yield initiativesDb.read(initiative).must.then.eql({
+							__proto__: initiative,
+							signing_ends_at: endsAt
+						})
+					})
+
 					it("must clear end email", function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
@@ -6551,12 +7526,37 @@ describe("InitiativesController", function() {
 							signing_end_email_sent_at: null
 						})
 					})
+
+					it("must respond with 409 if not in sign phase", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: "parliament"
+						}))
+
+						var endsAt = DateFns.addDays(
+							DateFns.endOfDay(initiative.signing_started_at),
+							Config.minDeadlineDays
+						)
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							form: {
+								_csrf_token: this.csrfToken,
+								status: "voting",
+								endsAt: formatIsoDate(endsAt)
+							}
+						})
+
+						res.statusCode.must.equal(403)
+						res.statusMessage.must.equal("Cannot Update to Sign Phase")
+						yield initiativesDb.read(initiative).must.then.eql(initiative)
+					})
 				})
 			})
 
 			describe("given status=followUp", function() {
 				describe("when destined for parliament", function() {
-					it("must render update page", function*() {
+					it("must render update page if author", function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
 							phase: "sign"
@@ -6581,6 +7581,66 @@ describe("InitiativesController", function() {
 						res.statusCode.must.equal(200)
 						res.body.must.include(t("SEND_TO_PARLIAMENT_HEADER"))
 						res.body.must.include(t("SEND_TO_PARLIAMENT_TEXT"))
+					})
+
+					it("must respond with 403 if not author", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: (yield usersDb.create(new ValidUser)).id,
+							published_at: new Date
+						}))
+
+						var res = yield this.request("/initiatives/" + initiative.uuid, {
+							method: "PUT",
+							form: {_csrf_token: this.csrfToken, status: "followUp"}
+						})
+
+						res.statusCode.must.equal(403)
+						res.statusMessage.must.equal("No Permission to Edit")
+					})
+
+					it("must respond with 403 if coauthor", function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: (yield usersDb.create(new ValidUser)).id,
+							published_at: new Date
+						}))
+
+						yield coauthorsDb.create(new ValidCoauthor({
+							initiative_uuid: initiative.uuid,
+							user: this.user,
+							status: "accepted"
+						}))
+
+						var res = yield this.request("/initiatives/" + initiative.uuid, {
+							method: "PUT",
+							form: {_csrf_token: this.csrfToken, status: "followUp"}
+						})
+
+						res.statusCode.must.equal(403)
+						res.statusMessage.must.equal("No Permission to Edit")
+					})
+
+					;["pending", "rejected"].forEach(function(status) {
+						it(`must respond with 403 if ${status} coauthor`, function*() {
+							var initiative = yield initiativesDb.create(new ValidInitiative({
+								user_id: (yield usersDb.create(new ValidUser)).id,
+								published_at: new Date
+							}))
+
+							yield coauthorsDb.create(new ValidCoauthor({
+								initiative_uuid: initiative.uuid,
+								country: this.user.country,
+								personal_id: this.user.personal_id,
+								status: status
+							}))
+
+							var res = yield this.request("/initiatives/" + initiative.uuid, {
+								method: "PUT",
+								form: {_csrf_token: this.csrfToken, status: "followUp"}
+							})
+
+							res.statusCode.must.equal(403)
+							res.statusMessage.must.equal("No Permission to Edit")
+						})
 					})
 
 					it("must render update page if has paper signatures", function*() {
@@ -7217,21 +8277,6 @@ describe("InitiativesController", function() {
 					res.statusMessage.must.equal("No Signed Estonian Translation")
 				})
 
-				it("must respond with 403 if not author", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: (yield usersDb.create(new ValidUser)).id,
-						published_at: new Date
-					}))
-
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
-						method: "PUT",
-						form: {_csrf_token: this.csrfToken, status: "followUp"}
-					})
-
-					res.statusCode.must.equal(403)
-					res.statusMessage.must.equal("No Permission to Edit")
-				})
-
 				it("must update initiative if newer Estonian translation unsigned",
 					function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
@@ -7268,119 +8313,6 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(200)
-				})
-			})
-
-			describe("given local info", function() {
-				it("must update attributes", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id
-					}))
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-						method: "PUT",
-						form: {
-							_csrf_token: this.csrfToken,
-							author_name: "John Smith",
-							author_url: "http://example.com/author",
-							community_url: "http://example.com/community",
-							url: "http://example.com/initiative",
-
-							"organizations[0][name]": "Org A",
-							"organizations[0][url]": "http://example.com/org-a",
-							"organizations[1][name]": "Org B",
-							"organizations[1][url]": "http://example.com/org-b",
-							"meetings[0][date]": "2015-06-18",
-							"meetings[0][url]": "http://example.com/monday",
-							"meetings[1][date]": "2015-06-19",
-							"meetings[1][url]": "http://example.com/tuesday",
-							"media_urls[0]": "http://example.com/article1",
-							"media_urls[1]": "http://example.com/article2",
-							"government_change_urls[0]": "http://example.com/gov-change1",
-							"government_change_urls[1]": "http://example.com/gov-change2",
-							"public_change_urls[0]": "http://example.com/change1",
-							"public_change_urls[1]": "http://example.com/change2",
-							notes: "Hello, world"
-						}
-					})
-
-					res.statusCode.must.equal(303)
-					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
-
-					yield initiativesDb.read(initiative).must.then.eql({
-						__proto__: initiative,
-						author_name: "John Smith",
-						author_url: "http://example.com/author",
-						community_url: "http://example.com/community",
-						url: "http://example.com/initiative",
-
-						organizations: [
-							{name: "Org A", url: "http://example.com/org-a"},
-							{name: "Org B", url: "http://example.com/org-b"}
-						],
-
-						meetings: [
-							{date: "2015-06-18", url: "http://example.com/monday"},
-							{date: "2015-06-19", url: "http://example.com/tuesday"}
-						],
-
-						media_urls: [
-							"http://example.com/article1",
-							"http://example.com/article2"
-						],
-
-						government_change_urls: [
-							"http://example.com/gov-change1",
-							"http://example.com/gov-change2"
-						],
-
-						public_change_urls: [
-							"http://example.com/change1",
-							"http://example.com/change2"
-						],
-
-						notes: "Hello, world"
-					})
-				})
-
-				it("must not update other initiatives", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id
-					}))
-
-					var other = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id
-					}))
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-						method: "PUT",
-						form: {_csrf_token: this.csrfToken, notes: "Hello, world"}
-					})
-
-					res.statusCode.must.equal(303)
-
-					yield initiativesDb.search(sql`
-						SELECT * FROM initiatives
-					`).must.then.eql([
-						{__proto__: initiative, notes: "Hello, world"},
-						other,
-					])
-				})
-
-				it("must throw 403 when not author", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: (yield usersDb.create(new ValidUser)).id,
-						published_at: new Date
-					}))
-
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-						method: "PUT",
-						form: {_csrf_token: this.csrfToken, notes: "Hello, world"}
-					})
-
-					res.statusCode.must.equal(403)
-					res.statusMessage.must.equal("No Permission to Edit")
-					yield initiativesDb.read(initiative).must.then.eql(initiative)
 				})
 			})
 		})
@@ -7674,6 +8606,51 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(403)
 				res.statusMessage.must.must.equal("No Permission to Delete")
 			})
+
+			it("must respond with 405 if coauthor", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: (yield usersDb.create(new ValidUser)).id,
+					published_at: new Date
+				}))
+
+				yield coauthorsDb.create(new ValidCoauthor({
+					initiative_uuid: initiative.uuid,
+					user: this.user,
+					status: "accepted"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid, {
+					method: "POST",
+					form: {_csrf_token: this.csrfToken, _method: "delete"}
+				})
+
+				res.statusCode.must.equal(403)
+				res.statusMessage.must.must.equal("No Permission to Delete")
+			})
+
+			;["pending", "rejected"].forEach(function(status) {
+				it(`must respond with 405 if ${status} coauthor`, function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: (yield usersDb.create(new ValidUser)).id,
+						published_at: new Date
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						country: this.user.country,
+						personal_id: this.user.personal_id,
+						status: status
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "POST",
+						form: {_csrf_token: this.csrfToken, _method: "delete"}
+					})
+
+					res.statusCode.must.equal(403)
+					res.statusMessage.must.must.equal("No Permission to Delete")
+				})
+			})
 		})
 	})
 
@@ -7715,6 +8692,26 @@ describe("InitiativesController", function() {
 				res.statusMessage.must.equal("No Permission to Edit")
 			})
 
+			;["pending", "rejected"].forEach(function(status) {
+				it(`must respond with 403 if ${status} coauthor`, function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: (yield usersDb.create(new ValidUser)).id,
+						published_at: new Date
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						country: this.user.country,
+						personal_id: this.user.personal_id,
+						status: status
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
+					res.statusCode.must.equal(403)
+					res.statusMessage.must.equal("No Permission to Edit")
+				})
+			})
+
 			it("must redirect to /new if no existing texts", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
@@ -7750,6 +8747,26 @@ describe("InitiativesController", function() {
 				var res = yield this.request(initiativePath + "/edit")
 				res.statusCode.must.equal(302)
 				res.headers.location.must.equal(initiativePath + "/texts/" + text.id)
+			})
+
+			it("must redirect if coauthor", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: (yield usersDb.create(new ValidUser)).id
+				}))
+
+				yield coauthorsDb.create(new ValidCoauthor({
+					initiative_uuid: initiative.uuid,
+					user: this.user,
+					status: "accepted"
+				}))
+				
+				var initiativePath = `/initiatives/${initiative.uuid}`
+				var res = yield this.request(initiativePath + "/edit")
+				res.statusCode.must.equal(302)
+
+				res.headers.location.must.equal(
+					initiativePath + "/texts/new?language=et"
+				)
 			})
 		})
 	})

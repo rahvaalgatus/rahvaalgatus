@@ -2711,6 +2711,10 @@ button.inherited {
 			text-transform: uppercase;
 		}
 
+		.sidebar-section:first-child > .sidebar-header:first-child {
+			margin-top: -$sidebar-padding;
+		}
+
 		.sidebar-subheader {
 			color: $black;
 			font-size: 1.3rem;
@@ -3041,6 +3045,14 @@ button.inherited {
 		p { white-space: pre-wrap; }
 		a { color: $link-color; text-decoration: underline; }
 		p + ul { margin-top: 1rem; }
+	}
+
+	#coauthor-invitation {
+		menu {
+			margin-top: 1.5rem;
+			form { display: inline; }
+			.blue-button { margin-right: 0.5rem; }
+		}
 	}
 
 	#initiative-events {
@@ -3523,6 +3535,107 @@ button.inherited {
 	.form-date-picker { margin: 2rem 0 1rem; }
 }
 
+#initiative-coauthors-page {
+	.initiative-sheet {
+		padding: $article-padding;
+	}
+
+	.flash {
+		margin-bottom: 2rem;
+	}
+
+	h2 {
+		font-size: 2.4rem;
+		font-weight: 500;
+		color: $title-text;
+	}
+
+	p.description {
+		margin-top: 0.5rem;
+		line-height: 1.4;
+		font-size: 1.5rem;
+
+		a { @extend .link-button; }
+	}
+
+	table {
+		margin-top: 1rem;
+		width: 100%;
+		border-collapse: separate;
+		line-height: 1.5;
+
+		th {
+			font-weight: bold;
+		}
+
+		th, td {
+			padding: 0.5rem 1rem;
+		}
+
+		td {
+			border: 1px solid $light-background-border;
+
+			& + td { border-left: none; }
+		}
+
+		.add-row td {
+			text-align: center;
+
+			#new-coauthor-toggle:checked + label,
+			#new-coauthor-toggle:not(:checked) ~ form { display: none; }
+		}
+
+		.remove-column {
+			width: 10rem;
+			text-align: center;
+		}
+
+		tr + tr td { border-top: none; }
+		tr:first-child td:first-child { border-top-left-radius: 0.5rem; }
+		tr:first-child td:last-child { border-top-right-radius: 0.5rem; }
+		tr:last-child td:first-child { border-bottom-left-radius: 0.5rem; }
+		tr:last-child td:last-child { border-bottom-right-radius: 0.5rem; }
+	}
+
+	#new-coauthor-form {
+		padding-top: 0.5rem;
+		padding-bottom: 0.5rem;
+
+		input { margin-right: 0.5rem; }
+		button { vertical-align: middle; }
+	}
+
+	h3 {
+		margin-top: 2rem;
+		font-size: 2rem;
+		font-weight: 500;
+		color: $title-text;
+	}
+}
+
+#initiative-coauthor-invitation-page main {
+	#invitation-response {
+		h2 {
+			font-size: 2.4rem;
+			font-weight: 500;
+			color: $title-text;
+			margin-bottom: 1rem;
+		}
+
+		p {
+			font-size: 1.5rem;
+			max-width: 60rem;
+			line-height: 1.5;
+		}
+
+		menu {
+			margin-top: 2rem;
+			form { display: inline; vertical-align: middle; }
+			.blue-button { margin-right: 0.5rem; }
+		}
+	}
+}
+
 #subscriptions-page main {
 	h2 {
 		font-size: 2.4rem;
@@ -3625,6 +3738,61 @@ button.inherited {
 	#user {
 		.form-input {
 			max-width: 24rem;
+		}
+	}
+
+	#coauthor-invitations {
+		background-color: $light-background;
+
+		h2 {
+			font-size: 2rem;
+			line-height: 3rem;
+			color: $title-text;
+			font-family: $museo-sans;
+			font-weight: 900;
+			text-transform: uppercase;
+			margin-bottom: 1rem;
+		}
+
+		p {
+			max-width: 60rem;
+			font-size: 1.5rem;
+			line-height: 1.4;
+		}
+		
+		ul {
+			margin-top: 2rem;
+			border-radius: 2px;
+			background-color: white;
+		}
+
+		li {
+			padding: 2rem;
+			line-height: 1.5;
+
+			h3 {
+				font-size: 1.7rem;
+			}
+
+			a:hover {
+				color: $link-color;
+				text-decoration: underline;
+			}
+
+			.by {
+				font-size: 1.4rem;
+				font-family: $tisa-pro;
+			}
+
+			form {
+				float: right;
+				margin-left: 1rem;
+
+				form { display: inline; vertical-align: middle; }
+				.blue-button { margin-right: 0.5rem; }
+			}
+
+			& + li { border-top: 1px solid $light-background-border; }
 		}
 	}
 

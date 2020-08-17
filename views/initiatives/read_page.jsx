@@ -17,6 +17,7 @@ var DonateForm = require("../donations/create_page").DonateForm
 var CommentView = require("./comments/read_page").CommentView
 var CommentForm = require("./comments/create_page").CommentForm
 var ProgressView = require("./initiative_page").ProgressView
+var {CoauthorInvitationForm} = require("./coauthor_invitation_page")
 var {getRequiredSignatureCount} = require("root/lib/initiative")
 var {isAdmin} = require("root/lib/user")
 var {selected} = require("root/lib/css")
@@ -129,13 +130,14 @@ function ReadPage(attrs) {
 	var translations = attrs.translations
 	var signedTranslations = attrs.signedTranslations
 	var image = attrs.image
+	var coauthorInvitation = attrs.coauthorInvitation
 	var initiativeUrl = serializeInitiativeUrl(initiative)
 	var shareText = `${initiative.title} ${initiativeUrl}`
 	var atomPath = req.baseUrl + req.url + ".atom"
-	var isAuthor = user && initiative.user_id == user.id
+	var isAuthor = user && Initiative.isAuthor(user, initiative)
 
 	var imageEditable = (
-		user && initiative.user_id == user.id &&
+		isAuthor &&
 		initiative.phase != "done" &&
 		!initiative.archived_at
 	)
@@ -209,6 +211,18 @@ function ReadPage(attrs) {
 							t={t}
 						/>
 					: null}
+				</div> : null}
+
+				{coauthorInvitation ? <div
+					id="coauthor-invitation"
+					class="initiative-status"
+				>
+					<h2 class="status-serif-header">
+						{t("INITIATIVE_COAUTHOR_INVITATION_PAGE_TITLE")}
+					</h2>
+
+					<p>{t("USER_PAGE_COAUTHOR_INVITATION_DESCRIPTION")}</p>
+					<CoauthorInvitationForm req={req} invitation={coauthorInvitation} />
 				</div> : null}
 
 				{function(phase) {
@@ -880,8 +894,9 @@ function SidebarAuthorView(attrs) {
 	var initiative = attrs.initiative
 	var translations = attrs.translations
 	var signedTranslations = attrs.signedTranslations
+	var isCreator = user && initiative.user_id == user.id
 
-	var isAuthor = user && initiative.user_id == user.id
+	var isAuthor = user && Initiative.isAuthor(user, initiative)
 	if (!isAuthor) return null
 
 	var t = req.t
@@ -997,6 +1012,12 @@ function SidebarAuthorView(attrs) {
 			{t("EDIT_INITIATIVE_TRANSLATIONS")}
 		</a> : null}
 
+		{isCreator ? <a
+			href={initiativePath + "/coauthors"}
+			class="link-button wide-button">
+			{t("EDIT_INITIATIVE_AUTHORS")}
+		</a> : null}
+
 		{initiative.phase == "edit" && initiative.published_at ? <FormButton
 			req={req}
 			action={"/initiatives/" + initiative.uuid}
@@ -1016,6 +1037,7 @@ function SidebarAuthorView(attrs) {
 		</FormButton> : null}
 
 		{(
+			isCreator &&
 			initiative.phase == "edit" &&
 			(!hasComments || !initiative.published_at)
 		) ? <FormButton
@@ -1042,7 +1064,7 @@ function SidebarInfoView(attrs) {
 	var t = req.t
 	var user = attrs.user
 	var initiative = attrs.initiative
-	var canEdit = user && initiative.user_id == user.id
+	var canEdit = user && Initiative.isAuthor(user, initiative)
 	var phase = initiative.phase
 	var authorName = initiative.author_name
 	var authorUrl = initiative.author_url
@@ -1724,7 +1746,7 @@ function EventsView(attrs) {
 	var initiativePath = "/initiatives/" + initiative.uuid
 
 	var canCreateEvents = (
-		user && initiative.user_id == user.id && (
+		user && Initiative.isAuthor(user, initiative) && (
 		initiative.phase == "sign" ||
 		initiative.phase == "government" ||
 		initiative.phase == "parliament"

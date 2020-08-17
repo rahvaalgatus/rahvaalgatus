@@ -4,6 +4,7 @@ var Ocsp = require("undersign/lib/ocsp")
 var Config = require("root/config")
 var Crypto = require("crypto")
 var ValidUser = require("root/test/valid_user")
+var ValidCoauthor = require("root/test/valid_initiative_coauthor")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidText = require("root/test/valid_initiative_text")
 var ValidTextSignature = require("root/test/valid_initiative_text_signature")
@@ -11,6 +12,7 @@ var MediaType = require("medium-type")
 var Certificate = require("undersign/lib/certificate")
 var textsDb = require("root/db/initiative_texts_db")
 var usersDb = require("root/db/users_db")
+var coauthorsDb = require("root/db/initiative_coauthors_db")
 var initiativesDb = require("root/db/initiatives_db")
 var textSignaturesDb = require("root/db/initiative_text_signatures_db")
 var sql = require("sqlate")
@@ -314,6 +316,45 @@ describe("InitiativeTextsController", function() {
 				})])
 			})
 
+			it("must create new text if coauthor", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: (yield usersDb.create(new ValidUser)).id
+				}))
+
+				yield coauthorsDb.create(new ValidCoauthor({
+					initiative_uuid: initiative.uuid,
+					user: this.user,
+					status: "accepted"
+				}))
+
+				var content = newTrixDocument("How are you?")
+				var initiativePath = "/initiatives/" + initiative.uuid
+				var res = yield this.request(initiativePath + "/texts", {
+					method: "POST",
+
+					form: {
+						_csrf_token: this.csrfToken,
+						title: initiative.title,
+						content: JSON.stringify(content),
+						language: "et"
+					}
+				})
+
+				res.statusCode.must.equal(302)
+
+				yield textsDb.read(sql`
+					SELECT * FROM initiative_texts LIMIT 1
+				`).must.then.eql(new ValidText({
+					id: 1,
+					initiative_uuid: initiative.uuid,
+					user_id: this.user.id,
+					created_at: new Date,
+					title: initiative.title,
+					content: content,
+					content_type: TRIX_TYPE
+				}))
+			})
+
 			it("must create new text given basis", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
@@ -459,6 +500,22 @@ describe("InitiativeTextsController", function() {
 				var res = yield this.request(initiativePath + "/texts/new")
 				res.statusCode.must.equal(200)
 			})
+
+			it("must render page if coauthor", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: (yield usersDb.create(new ValidUser)).id
+				}))
+
+				yield coauthorsDb.create(new ValidCoauthor({
+					initiative_uuid: initiative.uuid,
+					user: this.user,
+					status: "accepted"
+				}))
+				
+				var initiativePath = `/initiatives/${initiative.uuid}`
+				var res = yield this.request(initiativePath + "/texts/new")
+				res.statusCode.must.equal(200)
+			})
 		})
 	})
 
@@ -564,6 +621,27 @@ describe("InitiativeTextsController", function() {
 				var res = yield this.request(initiativePath + "/texts/" + text.id)
 				res.statusCode.must.equal(200)
 				res.body.must.not.include(t("UPDATE_INITIATIVE_READONLY"))
+			})
+
+			it("must render if coauthor", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: (yield usersDb.create(new ValidUser)).id
+				}))
+
+				yield coauthorsDb.create(new ValidCoauthor({
+					initiative_uuid: initiative.uuid,
+					user: this.user,
+					status: "accepted"
+				}))
+				
+				var text = yield textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: initiative.user_id
+				}))
+
+				var initiativePath = `/initiatives/${initiative.uuid}`
+				var res = yield this.request(initiativePath + "/texts/" + text.id)
+				res.statusCode.must.equal(200)
 			})
 
 			describe("given CitizenOS HTML", function() {
@@ -864,6 +942,27 @@ describe("InitiativeTextsController", function() {
 			var res = yield this.request(`${initiativePath}/texts/${text.id}/sign`)
 			res.statusCode.must.equal(200)
 		})
+
+		it("must render signing page if coauthor", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: (yield usersDb.create(new ValidUser)).id
+			}))
+
+			yield coauthorsDb.create(new ValidCoauthor({
+				initiative_uuid: initiative.uuid,
+				user: this.user,
+				status: "accepted"
+			}))
+
+			var text = yield textsDb.create(new ValidText({
+				initiative_uuid: initiative.uuid,
+				user_id: initiative.user_id
+			}))
+
+			var initiativePath = "/initiatives/" + initiative.uuid
+			var res = yield this.request(`${initiativePath}/texts/${text.id}/sign`)
+			res.statusCode.must.equal(200)
+		})
 	})
 
 	describe("POST /:id/signatures", function() {
@@ -872,8 +971,8 @@ describe("InitiativeTextsController", function() {
 		require("root/test/fixtures").csrfRequest()
 		beforeEach(require("root/test/mitm").router)
 
-		beforeEach(function() {
-			return usersDb.update(this.user, {personal_id: PERSONAL_ID})
+		beforeEach(function*() {
+			this.user = yield usersDb.update(this.user, {personal_id: PERSONAL_ID})
 		})
 
 		function mustSign(sign) {
@@ -901,6 +1000,27 @@ describe("InitiativeTextsController", function() {
 						description: t("INITIATIVE_TEXT_SIGNER_NOT_AUTHOR"),
 						message: "Not Initiative Author"
 					})
+				})
+
+				it("must start signing if coauthor", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: (yield usersDb.create(new ValidUser)).id
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						user: this.user,
+						status: "accepted"
+					}))
+
+					var text = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: initiative.user_id,
+						language: "en"
+					}))
+
+					var signed = yield sign(this.router, this.request, text)
+					signed.statusCode.must.equal(202)
 				})
 			})
 		}

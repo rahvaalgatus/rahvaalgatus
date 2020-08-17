@@ -30,7 +30,8 @@ function InitiativePage(attrs, children) {
 				<span class="author">
 					{[
 						initiative.author_name,
-						initiative.user_name
+						initiative.user_name,
+						..._.map(initiative.coauthors, "user_name")
 					].filter(Boolean).join(", ")}
 				</span>
 				{", "}
