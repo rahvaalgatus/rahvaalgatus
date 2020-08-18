@@ -272,7 +272,7 @@
 	"INITIATIVE_IMAGE_REMOVE_IMAGE": "Eemalda",
 	"INITIATIVE_IMAGE_REPLACE_IMAGE": "Asenda pilt",
 	"INITIATIVE_IMAGE_UPLOADED": "Pilt lisatud.",
-	"INITIATIVE_INFO_AUTHOR_NAME_DESCRIPTION": "Kui esitad algatust organisatsiooni alt, lisa ta nimi. Sinu kui eraisiku nimi on alati nähtav. ",
+	"INITIATIVE_INFO_AUTHOR_NAME_DESCRIPTION": "Kui esitad algatust organisatsiooni alt, lisa ta nimi. Sinu kui eraisiku nimi on alati nähtav. Koosloomeks <a href=\"{{coauthorsUrl}}\">halda kaasautoreid</a>. ",
 	"INITIATIVE_INFO_AUTHOR_NAME_TITLE": "Algataja nimi",
 	"INITIATIVE_INFO_AUTHOR_TITLE": "Algatajast",
 	"INITIATIVE_INFO_AUTHOR_URL_DESCRIPTION": "Ametliku veebilehe asemel sobib viidata ka lehele sotsiaalmeedias.",

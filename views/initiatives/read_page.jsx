@@ -1067,6 +1067,7 @@ function SidebarInfoView(attrs) {
 	var canEdit = user && Initiative.isAuthor(user, initiative)
 	var phase = initiative.phase
 	var authorName = initiative.author_name
+	var coauthorNames = _.map(initiative.coauthors, "user_name")
 	var authorUrl = initiative.author_url
 	var communityUrl = initiative.community_url
 	var externalUrl = initiative.url
@@ -1076,10 +1077,12 @@ function SidebarInfoView(attrs) {
 	var notes = initiative.notes
 	var governmentChangeUrls = initiative.government_change_urls
 	var publicChangeUrls = initiative.public_change_urls
+	var initiativePath = "/initiatives/" + initiative.uuid
 
 	if (!(
 		canEdit ||
 		authorName ||
+		coauthorNames.length > 0 ||
 		authorUrl ||
 		communityUrl ||
 		organizations.length > 0 ||
@@ -1107,14 +1110,17 @@ function SidebarInfoView(attrs) {
 			Lisainfo
 		</h2>
 
-		{authorName || authorUrl || canEdit ? <Fragment>
+		{authorName || authorUrl || coauthorNames.length > 0 || canEdit ? <Fragment>
 			<h3 class="sidebar-subheader">{t("INITIATIVE_INFO_AUTHOR_TITLE")}</h3>
 
-			{authorName || authorUrl ?
-				<UntrustedLink class="form-output" href={authorUrl}>
-					{authorName || null}
-				</UntrustedLink>
-			: null}
+			<ul class="form-output">
+				{authorName || authorUrl ? <li>
+					<UntrustedLink href={authorUrl}>{authorName || null}</UntrustedLink>
+				</li> : null}
+
+				{authorName || authorUrl ? <li>{initiative.user_name}</li> : null}
+				{coauthorNames.map((name) => <li>{name}</li>)}
+			</ul>
 
 			{canEdit ? <div class="form-fields">
 				<h4 class="form-header">{t("INITIATIVE_INFO_AUTHOR_NAME_TITLE")}</h4>
@@ -1126,7 +1132,9 @@ function SidebarInfoView(attrs) {
 					value={authorName}
 				/>
 
-				<p>{t("INITIATIVE_INFO_AUTHOR_NAME_DESCRIPTION")}</p>
+				<p>{Jsx.html(t("INITIATIVE_INFO_AUTHOR_NAME_DESCRIPTION", {
+					coauthorsUrl: initiativePath + "/coauthors"
+				}))}</p>
 			</div> : null}
 
 			{canEdit ? <div class="form-fields">
@@ -1143,7 +1151,10 @@ function SidebarInfoView(attrs) {
 				<p>{t("INITIATIVE_INFO_AUTHOR_URL_DESCRIPTION")}</p>
 			</div> : null}
 
-			{authorName || authorUrl ? null : <AddInitiativeInfoButton t={t} /> }
+			{authorName || authorUrl || coauthorNames.length > 0
+				? null
+				: <AddInitiativeInfoButton t={t} />
+			}
 		</Fragment> : null}
 
 		{communityUrl || canEdit ? <InitiativeAttribute

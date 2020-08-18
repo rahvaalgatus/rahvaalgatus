@@ -27,13 +27,10 @@ function InitiativePage(attrs, children) {
 					<InitiativeBadgeView initiative={initiative} />
 				</h1>
 
-				<span class="author">
-					{[
-						initiative.author_name,
-						initiative.user_name,
-						..._.map(initiative.coauthors, "user_name")
-					].filter(Boolean).join(", ")}
-				</span>
+				<span class="author">{[
+					initiative.author_name,
+					initiative.user_name
+				].filter(Boolean).join(", ")}</span>
 				{", "}
 				<time datetime={initiative.created_at.toJSON()}>
 					{I18n.formatDate("numeric", initiative.created_at)}

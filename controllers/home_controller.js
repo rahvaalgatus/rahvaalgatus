@@ -25,19 +25,11 @@ exports.router.get("/", next(function*(req, res) {
 		SELECT
 			initiative.*,
 			user.name AS user_name,
-			json_group_array(coauthor_user.name) AS coauthor_names,
 			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
 			AS signature_count
 
 		FROM initiatives AS initiative
-
 		LEFT JOIN users AS user ON initiative.user_id = user.id
-
-		LEFT JOIN initiative_coauthors AS coauthor
-		ON coauthor.initiative_uuid = initiative.uuid
-		AND coauthor.status = 'accepted'
-
-		LEFT JOIN users AS coauthor_user ON coauthor_user.id = coauthor.user_id
 
 		WHERE initiative.archived_at IS NULL
 		AND initiative.published_at IS NOT NULL
@@ -49,8 +41,6 @@ exports.router.get("/", next(function*(req, res) {
 			gov == null ? sql`IS NOT NULL` :
 			gov == "parliament" ? sql`= 'parliament'` : sql`!= 'parliament'`
 		})
-
-		GROUP BY initiative.uuid
 	`)
 
 	initiatives = initiatives.filter((initiative) => (
@@ -311,23 +301,12 @@ function* searchRecentInitiatives() {
 		SELECT
 			initiative.*,
 			user.name AS user_name,
-			json_group_array(coauthor_user.name) AS coauthor_names,
 			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
 			AS signature_count
 
 		FROM initiatives AS initiative
-
 		LEFT JOIN users AS user ON user.id = initiative.user_id
-
-		LEFT JOIN initiative_coauthors AS coauthor
-		ON coauthor.initiative_uuid = initiative.uuid
-		AND coauthor.status = 'accepted'
-
-		LEFT JOIN users AS coauthor_user ON coauthor_user.id = coauthor.user_id
-
 		WHERE initiative.uuid IN ${sql.in(_.keys(recents))}
-
-		GROUP BY initiative.uuid
 	`), (i) => recents[i.uuid].position).map((i) => _.assign(
 		i,
 		{reason: recents[i.uuid].reason}

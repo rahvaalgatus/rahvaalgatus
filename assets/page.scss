@@ -2862,8 +2862,9 @@ button.inherited {
 			input,
 			textarea { width: 100%; }
 
+			p a { @extend .link-button; }
 			p + .form-list { margin-top: 0.5rem; }
-			ul.form-output { line-height: 1.5; }
+			.form-output { line-height: 1.5; }
 
 			.form-header {
 				color: black;

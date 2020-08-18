@@ -166,14 +166,6 @@ describe("UserController", function() {
 						phase: "edit"
 					}))
 
-					var coauthor = yield usersDb.create(new ValidUser)
-
-					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
-						user: coauthor,
-						status: "accepted"
-					}))
-
 					var res = yield this.request("/user")
 					res.statusCode.must.equal(200)
 
@@ -181,7 +173,6 @@ describe("UserController", function() {
 					var el = dom.querySelector("li.initiative")
 					el.innerHTML.must.include(initiative.uuid)
 					el.textContent.must.include(this.user.name)
-					el.textContent.must.include(coauthor.name)
 					el.textContent.must.include(initiative.title)
 				})
 
@@ -228,7 +219,30 @@ describe("UserController", function() {
 					var el = dom.querySelector("li.initiative")
 					el.innerHTML.must.include(initiative.uuid)
 					el.textContent.must.include(author.name)
+				})
+
+				it("must not show coauthor name", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "edit"
+					}))
+
+					var coauthor = yield usersDb.create(new ValidUser)
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						user: coauthor,
+						status: "accepted"
+					}))
+
+					var res = yield this.request("/user")
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var el = dom.querySelector("li.initiative")
+					el.innerHTML.must.include(initiative.uuid)
 					el.textContent.must.include(this.user.name)
+					el.textContent.must.not.include(coauthor.name)
 				})
 
 				;["pending", "rejected"].forEach(function(status) {

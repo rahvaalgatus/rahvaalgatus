@@ -85,7 +85,6 @@ exports.router.get("/",
 		SELECT
 			initiative.*,
 			user.name AS user_name,
-			json_group_array(coauthor_user.name) AS coauthor_names,
 			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
 			AS signature_count
 
@@ -97,12 +96,6 @@ exports.router.get("/",
 		${tag ? sql`JOIN json_each(initiative.tags) AS tag` : sql``}
 
 		LEFT JOIN users AS user ON user.id = initiative.user_id
-
-		LEFT JOIN initiative_coauthors AS coauthor
-		ON coauthor.initiative_uuid = initiative.uuid
-		AND coauthor.status = 'accepted'
-
-		LEFT JOIN users AS coauthor_user ON coauthor_user.id = coauthor.user_id
 
 		${signedSince ? sql`
 			JOIN recent_signatures AS recent

@@ -84,14 +84,6 @@ describe("InitiativesController", function() {
 				discussion_ends_at: DateFns.addSeconds(new Date, 1)
 			}))
 
-			var coauthor = yield usersDb.create(new ValidUser)
-
-			yield coauthorsDb.create(new ValidCoauthor({
-				initiative_uuid: initiative.uuid,
-				user: coauthor,
-				status: "accepted"
-			}))
-
 			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
 			res.body.must.include(initiative.uuid)
@@ -105,7 +97,6 @@ describe("InitiativesController", function() {
 			)
 
 			el.querySelector(".author").textContent.must.include(this.author.name)
-			el.querySelector(".author").textContent.must.include(coauthor.name)
 		})
 
 		it(`must not show coauthor name from another initiative`, function*() {
@@ -123,6 +114,30 @@ describe("InitiativesController", function() {
 
 			yield coauthorsDb.create(new ValidCoauthor({
 				initiative_uuid: other.uuid,
+				user: coauthor,
+				status: "accepted"
+			}))
+
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+
+			var dom = parseDom(res.body)
+			var el = dom.querySelector(".initiative")
+			el.querySelector(".author").textContent.must.include(this.author.name)
+			el.querySelector(".author").textContent.must.not.include(coauthor.name)
+		})
+
+		it("must not show coauthor name", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "edit",
+				published_at: new Date
+			}))
+
+			var coauthor = yield usersDb.create(new ValidUser)
+
+			yield coauthorsDb.create(new ValidCoauthor({
+				initiative_uuid: initiative.uuid,
 				user: coauthor,
 				status: "accepted"
 			}))
@@ -1278,14 +1293,6 @@ describe("InitiativesController", function() {
 					published_at: new Date
 				}))
 
-				var coauthor = yield usersDb.create(new ValidUser)
-
-				yield coauthorsDb.create(new ValidCoauthor({
-					initiative_uuid: initiative.uuid,
-					user: coauthor,
-					status: "accepted"
-				}))
-
 				var text = yield textsDb.create(new ValidText({
 					initiative_uuid: initiative.uuid,
 					user_id: this.author.id,
@@ -1299,7 +1306,6 @@ describe("InitiativesController", function() {
 				var dom = parseDom(res.body)
 				var author = dom.querySelector("#initiative-header .author")
 				author.textContent.must.include(this.author.name)
-				author.textContent.must.include(coauthor.name)
 
 				var title = dom.querySelector("#initiative-header h1")
 				title.textContent.must.include(text.title)

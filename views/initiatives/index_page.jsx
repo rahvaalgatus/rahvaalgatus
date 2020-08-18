@@ -165,12 +165,7 @@ function InitiativeRowView(attrs) {
 	)
 
 	var badge = _.find(Config.badges, (_b, tag) => initiative.tags.includes(tag))
-
-	var authorName = [
-		initiative.author_name,
-		initiative.user_name,
-		...JSON.parse(initiative.coauthor_names)
-	].filter(Boolean).join(", ")
+	var authorName = renderAuthorName(initiative)
 
 	return <li
 		data-uuid={initiative.uuid}
@@ -275,12 +270,7 @@ function InitiativeBoxView(attrs) {
 
 	var badge = _.find(Config.badges, (_b, tag) => initiative.tags.includes(tag))
 	var destinationText = t("DESTINATION_" + initiative.destination)
-
-	var authorName = [
-		initiative.author_name,
-		initiative.user_name,
-		...JSON.parse(initiative.coauthor_names)
-	].filter(Boolean).join(", ")
+	var authorName = renderAuthorName(initiative)
 
 	return <li
 		data-uuid={initiative.uuid}
@@ -315,4 +305,13 @@ function InitiativeBoxView(attrs) {
 			{attrs.note}
 		</div> : null}
 	</li>
+}
+
+function renderAuthorName(initiative) {
+	// Not showing coauthors as we're not distinguishing text editors and
+	// translators from content and philosophical coauthors.
+	return [
+		initiative.author_name,
+		initiative.user_name
+	].filter(Boolean).join(", ")
 }

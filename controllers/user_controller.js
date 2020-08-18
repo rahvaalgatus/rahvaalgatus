@@ -244,19 +244,11 @@ function* read(req, res) {
 		SELECT
 			initiative.*,
 			user.name AS user_name,
-			json_group_array(coauthor_user.name) AS coauthor_names,
 			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
 			AS signature_count
 
 		FROM initiatives AS initiative
-
 		LEFT JOIN users AS user ON user.id = initiative.user_id
-
-		LEFT JOIN initiative_coauthors AS coauthor
-		ON coauthor.initiative_uuid = initiative.uuid
-		AND coauthor.status = 'accepted'
-
-		LEFT JOIN users AS coauthor_user ON coauthor_user.id = coauthor.user_id
 
 		LEFT JOIN initiative_coauthors AS user_as_coauthor
 		ON user_as_coauthor.initiative_uuid = initiative.uuid
@@ -264,8 +256,6 @@ function* read(req, res) {
 
 		WHERE initiative.user_id = ${user.id}
 		OR user_as_coauthor.user_id = ${user.id}
-
-		GROUP BY initiative.uuid
 	`)
 
 	var coauthorInvitations = yield coauthorsDb.search(sql`
