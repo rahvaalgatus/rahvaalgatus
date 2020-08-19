@@ -210,11 +210,6 @@ function* replaceInitiative(initiative, document) {
 	var statuses = sortStatuses(document.statuses || EMPTY_ARR)
 	var update = attrsFrom(document)
 
-	// Deriving initiative attributes from all statuses, not only semantically
-	// unique ones as events below. This works for all orderings of
-	// MENETLUS_LOPETATUD is before TAGASI_LYKATUD.
-	statuses.forEach((document) => _.merge(update, attrsFromStatus(document)))
-
 	if (initiative.uuid == null) {
 		logger.log("Creating initiative %s (%s)…", document.uuid, document.title)
 		initiative.uuid = initiative.parliament_uuid
@@ -262,6 +257,16 @@ function* replaceInitiative(initiative, document) {
 	eventAttrs = _.values(eventAttrs.filter(Boolean).reduce((obj, attrs) => (
 		(obj[attrs.external_id] = _.merge({}, obj[attrs.external_id], attrs)), obj
 	), {}))
+
+	{
+		// Deriving initiative attributes from all statuses, not only semantically
+		// unique ones as events below. This works for all orderings of
+		// MENETLUS_LOPETATUD is before TAGASI_LYKATUD.
+		let update = {}
+		statuses.forEach((status) => _.merge(update, attrsFromStatus(status)))
+		eventAttrs.forEach((event) => _.merge(update, attrsFromEvent(event)))
+		initiative = yield initiativesDb.update(initiative, update)
+	}
 
 	yield replaceEvents(initiative, eventAttrs)
 
@@ -420,22 +425,10 @@ function attrsFromStatus(status) {
 	// the document database. It may be later than when the initiative was given
 	// to the parliament (submittingDate), such as with https://www.riigikogu.ee/tegevus/dokumendiregister/dokument/203ef927-065e-4a2c-bb85-2a41487644aa.
 	switch (code) {
-		case "REGISTREERITUD": return {
-			received_by_parliament_at: Time.parseDate(status.date)
-		}
-
-		case "MENETLUSSE_VOETUD": return {
-			accepted_by_parliament_at: Time.parseDate(status.date)
-		}
-
-		case "TAGASI_LYKATUD": return {
-			parliament_decision: "reject",
-			finished_in_parliament_at: Time.parseDate(status.date)
-		}
-
-		case "MENETLUS_LOPETATUD": return {
-			finished_in_parliament_at: Time.parseDate(status.date)
-		}
+		case "REGISTREERITUD": return null
+		case "MENETLUSSE_VOETUD": return null
+		case "TAGASI_LYKATUD": return {parliament_decision: "reject"}
+		case "MENETLUS_LOPETATUD": return null
 
 		case "ARUTELU_KOMISJONIS":
 			// Ignoring the "continue" decision as that's not applicable as the final
@@ -454,6 +447,30 @@ function attrsFromStatus(status) {
 			}
 
 		default: throw new RangeError("Unrecognized status: " + code)
+	}
+}
+
+function attrsFromEvent(event) {
+	switch (event.type) {
+		case "parliament-received": return {
+			received_by_parliament_at: event.occurred_at
+		}
+
+		case "parliament-accepted": return {
+			accepted_by_parliament_at: event.occurred_at
+		}
+
+		case "parliament-finished": return {
+			finished_in_parliament_at: event.occurred_at
+		}
+
+		case "parliament-committee-meeting": return null
+		case "parliament-interpellation": return null
+		case "parliament-letter": return null
+		case "parliament-decision": return null
+		case "parliament-board-meeting": return null
+		case "parliament-national-matter": return null
+		default: throw new RangeError("Unrecognized event type: " + event.type)
 	}
 }
 

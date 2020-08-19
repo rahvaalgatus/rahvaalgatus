@@ -752,7 +752,7 @@ describe("ParliamentSyncCli", function() {
 					{date: "2018-10-26", status: {code: "MENETLUS_LOPETATUD"}}
 				]
 			}, {
-				finished_in_parliament_at: new Date(2018, 9, 26),
+				finished_in_parliament_at: new Date(2018, 9, 24),
 				parliament_decision: "reject",
 			}, {
 				occurred_at: new Date(2018, 9, 24),
@@ -770,7 +770,7 @@ describe("ParliamentSyncCli", function() {
 					{date: "2018-10-24", status: {code: "TAGASI_LYKATUD"}}
 				]
 			}, {
-				finished_in_parliament_at: new Date(2018, 9, 26),
+				finished_in_parliament_at: new Date(2018, 9, 24),
 				parliament_decision: "reject",
 			}, {
 				occurred_at: new Date(2018, 9, 24),
@@ -1184,6 +1184,79 @@ describe("ParliamentSyncCli", function() {
 	// ensures the functions behave correctly when given older initiatives,
 	// too.
 	describe("given related documents", function() {
+		it(`must update initiative and create events and files given response letter`, function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: (yield usersDb.create(new ValidUser)).id,
+				uuid: INITIATIVE_UUID,
+				parliament_uuid: INITIATIVE_UUID
+			}))
+
+			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+				uuid: INITIATIVE_UUID,
+				relatedDocuments: [{uuid: DOCUMENT_UUID}]
+			}]))
+
+			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+
+			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
+				uuid: DOCUMENT_UUID,
+				title: "ÕIGK vastuskiri - Kollektiivne pöördumine X",
+				created: "2015-06-18T13:37:42.666",
+				documentType: "letterDocument",
+				direction: {code: "VALJA"},
+
+				files: [{
+					uuid: FILE_UUID,
+					fileName: "ÕIGK_11062019.pdf",
+					accessRestrictionType: "PUBLIC"
+				}]
+			}))
+
+			this.router.get(`/download/${FILE_UUID}`,
+				respondWithRiigikoguDownload.bind(null,
+					"application/octet-stream",
+					"\x0d\x25"
+				)
+			)
+
+			yield job()
+
+			var updatedInitiative = yield initiativesDb.read(initiative)
+			updatedInitiative.must.eql(_.assign({}, initiative, {
+				finished_in_parliament_at: new Date(2015, 5, 18, 13, 37, 42, 666),
+				parliament_api_data: updatedInitiative.parliament_api_data,
+				parliament_synced_at: new Date
+			}))
+
+			yield eventsDb.search(sql`
+				SELECT * FROM initiative_events
+			`).must.then.eql([new ValidEvent({
+				id: 1,
+				initiative_uuid: initiative.uuid,
+				occurred_at: new Date(2015, 5, 18, 13, 37, 42, 666),
+				origin: "parliament",
+				external_id: "MENETLUS_LOPETATUD",
+				type: "parliament-finished",
+				title: null,
+				content: null
+			})])
+
+			yield filesDb.search(sql`
+				SELECT * FROM initiative_files
+			`).must.then.eql([new ValidFile({
+				id: 1,
+				event_id: 1,
+				initiative_uuid: INITIATIVE_UUID,
+				external_id: FILE_UUID,
+				name: "ÕIGK_11062019.pdf",
+				title: "ÕIGK vastuskiri - Kollektiivne pöördumine X",
+				url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
+				content: EXAMPLE_BUFFER,
+				content_type: new MediaType("application/octet-stream"),
+				external_url: PARLIAMENT_URL + "/download/" + FILE_UUID
+			})])
+		})
+
 		_.each({
 			"acceptance decision": [{
 				relatedDocuments: [{uuid: DOCUMENT_UUID}]
@@ -1215,41 +1288,6 @@ describe("ParliamentSyncCli", function() {
 				external_id: FILE_UUID,
 				name: "Kollektiivse_pöördumise_menetlusse_võtmine.asice",
 				title: "Kollektiivse pöördumise menetlusse võtmine",
-				url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
-				content: EXAMPLE_BUFFER,
-				content_type: new MediaType("application/octet-stream")
-			}]],
-
-			"response letter": [{
-				relatedDocuments: [{uuid: DOCUMENT_UUID}]
-			}, {
-				[DOCUMENT_UUID]: {
-					uuid: DOCUMENT_UUID,
-					title: "ÕIGK vastuskiri - Kollektiivne pöördumine X",
-					created: "2015-06-18T13:37:42.666",
-					documentType: "letterDocument",
-					direction: {code: "VALJA"},
-
-					files: [{
-						uuid: "811eac10-a47e-468f-bec9-56c790157f08",
-						fileName: "ÕIGK_11062019.pdf",
-						accessRestrictionType: "PUBLIC"
-					}]
-				}
-			}, {
-				occurred_at: new Date(2015, 5, 18, 13, 37, 42, 666),
-				origin: "parliament",
-				external_id: "MENETLUS_LOPETATUD",
-				type: "parliament-finished",
-				title: null,
-				content: null
-			}, [{
-				id: 1,
-				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
-				external_id: "811eac10-a47e-468f-bec9-56c790157f08",
-				name: "ÕIGK_11062019.pdf",
-				title: "ÕIGK vastuskiri - Kollektiivne pöördumine X",
 				url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
 				content: EXAMPLE_BUFFER,
 				content_type: new MediaType("application/octet-stream")
