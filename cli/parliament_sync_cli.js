@@ -134,7 +134,6 @@ function* readInitiative(doc) {
 		LIMIT 1
 	`)) return initiative
 
-
 	// Use submittedDate as some initiatives documents were recreated
 	// 5 years after the actual submitting date. Example:
 	// https://api.riigikogu.ee/api/documents/collective-addresses/b9a5b10c-3744-49bc-b4f4-cecf34721b1f
@@ -411,10 +410,8 @@ function downloadFile(file) {
 
 function attrsFrom(doc) {
 	var attrs = {parliament_uuid: doc.uuid}
-
-	if (doc.responsibleCommittee)
-		attrs.parliament_committee = doc.responsibleCommittee.name
-
+	var committee = getLatestCommittee(doc)
+	if (committee) attrs.parliament_committee = committee.name
 	return attrs
 }
 
@@ -524,14 +521,12 @@ function eventAttrsFromStatus(document, documents, status) {
 		newDocumentFiles(doc, doc.files || EMPTY_ARR)
 	)))
 
+	var committee
+
 	switch (status.status.code) {
 		case "MENETLUSSE_VOETUD":
-			attrs.content = {
-				committee: (
-					document.responsibleCommittee && document.responsibleCommittee.name ||
-					null
-				)
-			}
+			committee = getLatestCommittee(document)
+			attrs.content = {committee: committee && committee.name || null}
 			break
 
 		case "ARUTELU_KOMISJONIS":
@@ -539,10 +534,12 @@ function eventAttrsFromStatus(document, documents, status) {
 			var protocolTime = protocol && parseProtocolDateTime(protocol)
 			if (protocolTime) attrs.occurred_at = protocolTime
 
+			committee = getLatestCommittee(document)
+
 			attrs.content = {
 				committee: (
 					protocol && parseProtocolCommittee(protocol) ||
-					document.responsibleCommittee && document.responsibleCommittee.name ||
+					committee && committee.name ||
 					null
 				),
 
@@ -1041,6 +1038,11 @@ function is404(err) {
 			/^Document not found\b/.test(err.response.body.message)
 		)
 	)
+}
+
+function getLatestCommittee(doc) {
+	var committees = doc.responsibleCommittee || EMPTY_ARR
+	return committees.find((com) => com.active) || _.last(committees) || null
 }
 
 function getBody(res) { return res.body }

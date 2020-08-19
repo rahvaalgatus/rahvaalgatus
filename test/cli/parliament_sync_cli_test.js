@@ -57,7 +57,7 @@ describe("ParliamentSyncCli", function() {
 			created: "2015-06-18T13:37:42.666",
 			submittingDate: "2015-06-17",
 			sender: "John Smith",
-			responsibleCommittee: {name: "Sotsiaalkomisjon"}
+			responsibleCommittee: [{name: "Sotsiaalkomisjon"}]
 		}]))
 
 		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {
@@ -178,7 +178,7 @@ describe("ParliamentSyncCli", function() {
 			title: "Kollektiivne pöördumine elu Tallinnas paremaks tegemiseks",
 			sender: "Mike Smith",
 			senderReference: initiative.uuid,
-			responsibleCommittee: {name: "Sotsiaalkomisjon"},
+			responsibleCommittee: [{name: "Sotsiaalkomisjon"}],
 
 			statuses: [
 				{date: "2018-10-23", status: {code: "REGISTREERITUD"}},
@@ -247,7 +247,7 @@ describe("ParliamentSyncCli", function() {
 			uuid: INITIATIVE_UUID,
 			title: "Kollektiivne pöördumine elu Tallinnas paremaks tegemiseks",
 			senderReference: initiative.parliament_uuid,
-			responsibleCommittee: {name: "Sotsiaalkomisjon"}
+			responsibleCommittee: [{name: "Sotsiaalkomisjon"}]
 		}]))
 
 		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {}))
@@ -581,6 +581,55 @@ describe("ParliamentSyncCli", function() {
 		this.emails.length.must.equal(0)
 	})
 
+	it("must update the initiative given multiple committees", function*() {
+		var initiative = yield initiativesDb.create(new ValidInitiative({
+			user_id: (yield usersDb.create(new ValidUser)).id,
+			parliament_uuid: INITIATIVE_UUID,
+			phase: "parliament"
+		}))
+
+		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			uuid: INITIATIVE_UUID,
+			responsibleCommittee: [
+				{name: "Kultuurikomisjon"},
+				{name: "Sotsiaalkomisjon", active: true},
+				{name: "Majanduskomisjon"}
+			]
+		}]))
+
+		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+
+		yield job()
+
+		initiative = yield initiativesDb.read(initiative)
+		initiative.parliament_committee.must.equal("Sotsiaalkomisjon")
+	})
+
+	it("must update the initiative given multiple committees with no active",
+		function*() {
+		var initiative = yield initiativesDb.create(new ValidInitiative({
+			user_id: (yield usersDb.create(new ValidUser)).id,
+			parliament_uuid: INITIATIVE_UUID,
+			phase: "parliament"
+		}))
+
+		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			uuid: INITIATIVE_UUID,
+			responsibleCommittee: [
+				{name: "Kultuurikomisjon"},
+				{name: "Sotsiaalkomisjon"},
+				{name: "Majanduskomisjon"}
+			]
+		}]))
+
+		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+
+		yield job()
+
+		initiative = yield initiativesDb.read(initiative)
+		initiative.parliament_committee.must.equal("Majanduskomisjon")
+	})
+
 	describe("given statuses", function() {
 		_.each({
 			"REGISTREERITUD status": [{
@@ -600,7 +649,7 @@ describe("ParliamentSyncCli", function() {
 			}],
 
 			"MENETLUSSE_VOETUD status": [{
-				responsibleCommittee: {name: "Sotsiaalkomisjon"},
+				responsibleCommittee: [{name: "Sotsiaalkomisjon"}],
 				statuses: [{date: "2018-10-24", status: {code: "MENETLUSSE_VOETUD"}}]
 			}, {
 				parliament_committee: "Sotsiaalkomisjon",
@@ -615,7 +664,7 @@ describe("ParliamentSyncCli", function() {
 			}],
 
 			"ARUTELU_KOMISJONIS status": [{
-				responsibleCommittee: {name: "Sotsiaalkomisjon"},
+				responsibleCommittee: [{name: "Sotsiaalkomisjon"}],
 				statuses: [{date: "2018-10-24", status: {code: "ARUTELU_KOMISJONIS"}}]
 			}, {
 				parliament_committee: "Sotsiaalkomisjon"
@@ -906,12 +955,12 @@ describe("ParliamentSyncCli", function() {
 			this.router.get(INITIATIVES_URL, function(req, res) {
 				if (requested++ == 0) respond([{
 					uuid: INITIATIVE_UUID,
-					responsibleCommittee: {name: "Sotsiaalkomisjon"},
+					responsibleCommittee: [{name: "Sotsiaalkomisjon"}],
 					statuses: [{date: "2015-06-18", status: {code: "MENETLUSSE_VOETUD"}}]
 				}], req, res)
 				else respond([{
 					uuid: INITIATIVE_UUID,
-					responsibleCommittee: {name: "Majanduskomisjon"},
+					responsibleCommittee: [{name: "Majanduskomisjon"}],
 					statuses: [{date: "2015-06-18", status: {code: "MENETLUSSE_VOETUD"}}]
 				}], req, res)
 			})
@@ -929,7 +978,7 @@ describe("ParliamentSyncCli", function() {
 			this.router.get(INITIATIVES_URL, function(req, res) {
 				if (requested++ == 0) respond([{
 					uuid: INITIATIVE_UUID,
-					responsibleCommittee: {name: "Sotsiaalkomisjon"},
+					responsibleCommittee: [{name: "Sotsiaalkomisjon"}],
 					statuses: [{
 						date: "2018-10-24",
 						status: {code: "ARUTELU_KOMISJONIS"},
@@ -938,7 +987,7 @@ describe("ParliamentSyncCli", function() {
 				}], req, res)
 				else respond([{
 					uuid: INITIATIVE_UUID,
-					responsibleCommittee: {name: "Majanduskomisjon"},
+					responsibleCommittee: [{name: "Majanduskomisjon"}],
 					statuses: [{
 						date: "2018-10-24",
 						status: {code: "ARUTELU_KOMISJONIS"},
@@ -1815,7 +1864,7 @@ describe("ParliamentSyncCli", function() {
 			}]],
 
 			"MENETLUSSE_VOETUD status and decision": [{
-				responsibleCommittee: {name: "Keskkonnakomisjon"},
+				responsibleCommittee: [{name: "Keskkonnakomisjon"}],
 				statuses: [{date: "2015-06-18", status: {code: "MENETLUSSE_VOETUD"}}],
 				relatedDocuments: [{uuid: DOCUMENT_UUID}]
 			}, {
@@ -1851,7 +1900,7 @@ describe("ParliamentSyncCli", function() {
 
 			// https://api.riigikogu.ee/api/documents/9eb9dfd0-2a2f-4eaf-bdf4-1552ed89a7ae
 			"MENETLUSSE_VOETUD status and board meeting protocol": [{
-				responsibleCommittee: {name: "Keskkonnakomisjon"},
+				responsibleCommittee: [{name: "Keskkonnakomisjon"}],
 				statuses: [{date: "2015-06-18", status: {code: "MENETLUSSE_VOETUD"}}],
 				relatedDocuments: [{uuid: DOCUMENT_UUID}]
 			}, {
@@ -1886,7 +1935,7 @@ describe("ParliamentSyncCli", function() {
 			}]],
 
 			"MENETLUSSE_VOETUD status and board meeting protocol with no leading zeroes": [{
-				responsibleCommittee: {name: "Keskkonnakomisjon"},
+				responsibleCommittee: [{name: "Keskkonnakomisjon"}],
 				statuses: [{date: "2015-06-01", status: {code: "MENETLUSSE_VOETUD"}}],
 				relatedDocuments: [{uuid: DOCUMENT_UUID}]
 			}, {
@@ -1923,7 +1972,7 @@ describe("ParliamentSyncCli", function() {
 			// Ensures the committee is overwritten from the protocol.
 			"ARUTELU_KOMISJONIS status and different committee meeting protocol": [{
 				statuses: [{date: "2015-06-18", status: {code: "ARUTELU_KOMISJONIS"}}],
-				responsibleCommittee: {name: "Rahanduskomisjon"},
+				responsibleCommittee: [{name: "Rahanduskomisjon"}],
 				relatedDocuments: [{uuid: DOCUMENT_UUID}]
 			}, {
 				[DOCUMENT_UUID]: {
