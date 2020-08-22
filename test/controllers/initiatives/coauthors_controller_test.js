@@ -276,6 +276,33 @@ describe("InitiativeAuthorsController", function() {
 				})])
 			})
 
+			it("must ignore given user's personal id", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id
+				}))
+
+				var path = `/initiatives/${initiative.uuid}/coauthors`
+				var res = yield this.request(path, {
+					method: "POST",
+					form: {_csrf_token: this.csrfToken, personalId: this.user.personal_id}
+				})
+
+				res.statusCode.must.equal(303)
+				res.headers.location.must.equal(path)
+
+				var cookies = parseCookies(res.headers["set-cookie"])
+				res = yield this.request(res.headers.location, {
+					cookies: _.mapValues(cookies, (c) => c.value)
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("COAUTHORS_PAGE_COAUTHOR_YOURSELF"))
+
+				yield coauthorsDb.search(sql`
+					SELECT * FROM initiative_coauthors
+				`).must.then.be.empty()
+			})
+
 			it("must ignore duplicate coauthor", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id

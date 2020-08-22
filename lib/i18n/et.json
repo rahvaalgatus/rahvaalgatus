@@ -44,6 +44,7 @@
 	"COAUTHORS_PAGE_COAUTHOR_ADDED": "Kaasautor lisatud.",
 	"COAUTHORS_PAGE_COAUTHOR_DELETED": "Kaasautor eemaldatud.",
 	"COAUTHORS_PAGE_COAUTHOR_DUPLICATE": "Sama isikukoodiga kaasautor on juba olemas.",
+	"COAUTHORS_PAGE_COAUTHOR_YOURSELF": "Sa oled juba algatuse autor.",
 	"COAUTHORS_PAGE_DESCRIPTION": "Kaasautorid saavad muuta algatuse tekste, tõlkeid ning tähtaegasid. Kaasautorid saavad algatust ka avalikuks teha või hiljem allkirjastamisele saata. Riigikogule või kohalikule omavalitsusele saad aga algatuse saata vaid sina. Kutse vastuvõtmisel ilmub kaasautori nimi teiste autorite juurde.",
 	"COAUTHORS_PAGE_NAME": "Nimi",
 	"COAUTHORS_PAGE_PERSONAL_ID": "Isikukood",

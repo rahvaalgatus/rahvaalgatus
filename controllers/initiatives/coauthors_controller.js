@@ -35,14 +35,21 @@ exports.router.get("/", assertCreator, next(function*(req, res) {
 }))
 
 exports.router.post("/", assertCreator, next(function*(req, res) {
+	var user = req.user
 	var initiative = req.initiative
+	var personalId = String(req.body.personalId)
+
+	if (personalId == user.personal_id) {
+		res.flash("error", req.t("COAUTHORS_PAGE_COAUTHOR_YOURSELF"))
+		return void res.redirect(303, req.baseUrl)
+	}
 
 	try {
 		yield coauthorsDb.create({
 			initiative_uuid: initiative.uuid,
 			user_id: null,
 			country: "EE",
-			personal_id: req.body.personalId,
+			personal_id: personalId,
 			created_at: new Date
 		})
 
