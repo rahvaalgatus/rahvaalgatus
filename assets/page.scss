@@ -935,11 +935,15 @@ button.inherited {
 		display: block;
 		float: left;
 		width: 18rem;
-		height: inherit;
+		height: 2.8rem;
+		line-height: 2.8rem;
 		margin-right: 2rem;
-		margin-bottom: 1rem;
 
-		img { width: 100%; }
+		img {
+			display: inline-block;
+			width: 100%;
+			vertical-align: middle;
+		}
 	}
 
 	.secondary-links {
@@ -985,6 +989,8 @@ button.inherited {
 		}
 
 		nav {
+			margin-left: -0.7rem;
+			margin-right: -0.7rem;
 			padding-bottom: 0;
 
 			li {
