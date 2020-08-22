@@ -2771,6 +2771,8 @@ button.inherited {
 		#initiative-image {
 			margin-bottom: 1rem;
 
+			.image-link { cursor: zoom-in; }
+
 			img {
 				display: block;
 				max-width: 100%;

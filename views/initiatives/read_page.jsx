@@ -460,7 +460,9 @@ function ReadPage(attrs) {
 						id="initiative-image"
 						class={imageEditable ? "editable" : ""}
 					>
-						<img src={serializeImageUrl(initiative, image)} />
+						<a href={serializeImageUrl(initiative, image)} class="image-link">
+							<img src={serializeImageUrl(initiative, image)} />
+						</a>
 
 						{(
 							image.author_name ||
