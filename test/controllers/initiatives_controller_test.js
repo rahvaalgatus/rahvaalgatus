@@ -4474,6 +4474,102 @@ describe("InitiativesController", function() {
 					res.body.must.not.include(t("PUBLISH_TOPIC"))
 				})
 
+				it("must render send to sign button if at deadline", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						destination: "parliament",
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var button = dom.getElementById("send-to-sign-button")
+					button.textContent.must.equal(t("BTN_SEND_TO_VOTE"))
+					button.disabled.must.be.false()
+				})
+
+				it("must render send to sign button if destination not chosen",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+
+					var button = dom.getElementById("send-to-sign-button")
+					button.textContent.must.equal(t("BTN_SEND_TO_VOTE"))
+					button.disabled.must.be.true()
+
+					var controls = dom.getElementById("initiative-author-options")
+
+					controls.textContent.must.include(
+						t("INITIATIVE_SEND_TO_SIGNING_NEEDS_DESTINATION")
+					)
+				})
+
+				it("must render send to sign button if before deadline", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						destination: "parliament",
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays + 1)
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+
+					var button = dom.getElementById("send-to-sign-button")
+					button.textContent.must.equal(t("BTN_SEND_TO_VOTE"))
+					button.disabled.must.be.true()
+
+					var controls = dom.getElementById("initiative-author-options")
+
+					controls.textContent.must.include(
+						t("INITIATIVE_SEND_TO_SIGNING_WAIT", {
+							daysInEdit: Config.minDeadlineDays,
+							daysLeft: 1
+						})
+					)
+
+					controls.textContent.must.not.include(
+						t("INITIATIVE_SEND_TO_SIGNING_NEEDS_DESTINATION")
+					)
+				})
+
+				it("must render send to sign button if before deadline but fast-tracked", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						destination: "parliament",
+						tags: ["fast-track"],
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays + 1)
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+
+					var button = dom.getElementById("send-to-sign-button")
+					button.textContent.must.equal(t("BTN_SEND_TO_VOTE"))
+					button.disabled.must.be.false()
+
+					var controls = dom.getElementById("initiative-author-options")
+
+					controls.textContent.must.not.include(
+						t("INITIATIVE_SEND_TO_SIGNING_WAIT", {
+							daysInEdit: Config.minDeadlineDays,
+							daysLeft: 1
+						})
+					)
+				})
+
 				it("must not render delete initiative button if not initiative author",
 					function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
@@ -6838,6 +6934,33 @@ describe("InitiativesController", function() {
 					})
 				})
 
+				it("must respond with 403 if no destination", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						destination: null,
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
+					}))
+
+					var text = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							_csrf_token: this.csrfToken,
+							status: "voting",
+							language: text.language,
+							endsAt: formatIsoDate(DateFns.addDays(new Date, 30))
+						}
+					})
+
+					res.statusCode.must.equal(403)
+					res.statusMessage.must.equal("Cannot Update to Sign Phase")
+					yield initiativesDb.read(initiative).must.then.eql(initiative)
+				})
+
 				it("must update initiative given Trix text and short deadline",
 					function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
@@ -6992,6 +7115,7 @@ describe("InitiativesController", function() {
 					function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
+						destination: "parliament",
 						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
 					}))
 
@@ -7049,6 +7173,7 @@ describe("InitiativesController", function() {
 				it("must respond with 422 if setting a too long deadline", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
+						destination: "parliament",
 						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
 					}))
 

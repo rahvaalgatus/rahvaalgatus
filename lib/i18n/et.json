@@ -304,6 +304,7 @@
 	"INITIATIVE_SEND_TO_PARLIAMENT_NEEDS_ESTONIAN_TEXT": "Algatuse edastamiseks <a href=\"{{newTextUrl}}\">lisa ja kinnita eestikeelne tõlge</a>.",
 	"INITIATIVE_SEND_TO_PARLIAMENT_NEEDS_SIGNED_ESTONIAN_TEXT": "Algatuse edastamiseks <a href=\"{{signTextUrl}}\">kinnita eestikeelne tõlge allkirjaga</a>.",
 	"INITIATIVE_SEND_TO_SIGNING_NEEDS_DESTINATION": "Allkirjastamisele saatmiseks on vaja enne valida algatuse saaja.\n",
+	"INITIATIVE_SEND_TO_SIGNING_WAIT": "Algatus peab olema vähemalt {{daysInEdit}} päeva ühisloomes, nii et {{daysLeft}} päeva pärast saad algatuse allkirjastamisele saata.",
 	"INITIATIVE_SEND_TO_SIGN_CHOOSE_LANGUAGE": "Allkirjastatav tekst",
 	"INITIATIVE_SEND_TO_SIGN_CHOOSE_LANGUAGE_DESCRIPTION": "Vali, millise keele teksti soovid allkirjastamisele saata. Tõlkeid saad lisada ka hiljem, kuid allkirju kogutakse vaid ühe keele tekstile. Kuigi <a href=\"https://www.riigiteataja.ee/akt/101042014003?leiaKehtiv\">Riigikogule tuleb algatus saata eesti keeles</a>, on seni lubatud allkirju koguda ka vene- või inglisekeelsetele tekstidele. Enne Riigikokku saatmist tuleb sel juhul aga lisada eestikeelne tõlge. <strong>Peale allkirjade kogumise alustamist ei saa muuta valitud tekstil enam ei pealkirja ega ka sisu.</strong> Vajadusel vaata tekst veel tähelepanelikult üle.",
 	"INITIATIVE_SEND_TO_SIGN_TITLE": "Kogu allkirju",

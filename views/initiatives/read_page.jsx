@@ -916,6 +916,8 @@ function SidebarAuthorView(attrs) {
 		initiative.language == "et" || signedTranslations.et
 	)
 
+	var canSendToSign = Initiative.canPropose(new Date, initiative, user)
+
 	var actions = <Fragment>
 		{initiative.phase == "edit" ? <Fragment>
 			<Form
@@ -952,16 +954,39 @@ function SidebarAuthorView(attrs) {
 			{t("PUBLISH_TOPIC")}
 		</FormButton> : null}
 
-		{Initiative.canPropose(new Date, initiative, user) ? <Fragment>
+		{initiative.phase == "edit" && initiative.published_at ? <Fragment>
 			<FormButton
 				req={req}
+				id="send-to-sign-button"
 				action={"/initiatives/" + initiative.uuid}
 				name="status"
 				value="voting"
-				disabled={initiative.destination == null}
+				disabled={!canSendToSign}
 				class="green-button wide-button">
 				{t("BTN_SEND_TO_VOTE")}
 			</FormButton>
+
+			{!(
+				new Date >= DateFns.addDays(
+					DateFns.startOfDay(initiative.published_at),
+					Config.minDeadlineDays
+				) ||
+
+				initiative.tags.includes("fast-track")
+			) ? <p>
+				{t("INITIATIVE_SEND_TO_SIGNING_WAIT", {
+					daysInEdit: Config.minDeadlineDays,
+
+					daysLeft: diffInDays(
+						DateFns.addDays(
+							DateFns.startOfDay(initiative.published_at),
+							Config.minDeadlineDays
+						),
+
+						new Date
+					)
+				})}
+			</p> : null}
 
 			{initiative.destination == null ? <p>
 				{t("INITIATIVE_SEND_TO_SIGNING_NEEDS_DESTINATION")}
