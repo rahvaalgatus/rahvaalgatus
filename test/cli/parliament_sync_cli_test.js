@@ -922,7 +922,6 @@ describe("ParliamentSyncCli", function() {
 			it(`must create events given ${title}`, function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: (yield usersDb.create(new ValidUser)).id,
-					uuid: INITIATIVE_UUID,
 					parliament_uuid: INITIATIVE_UUID
 				}))
 
@@ -1236,7 +1235,6 @@ describe("ParliamentSyncCli", function() {
 		it(`must update initiative and create events and files given response letter`, function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: (yield usersDb.create(new ValidUser)).id,
-				uuid: INITIATIVE_UUID,
 				parliament_uuid: INITIATIVE_UUID
 			}))
 
@@ -1295,7 +1293,7 @@ describe("ParliamentSyncCli", function() {
 			`).must.then.eql([new ValidFile({
 				id: 1,
 				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
+				initiative_uuid: initiative.uuid,
 				external_id: FILE_UUID,
 				name: "ÕIGK_11062019.pdf",
 				title: "ÕIGK vastuskiri - Kollektiivne pöördumine X",
@@ -1333,7 +1331,6 @@ describe("ParliamentSyncCli", function() {
 			}, [{
 				id: 1,
 				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
 				external_id: FILE_UUID,
 				name: "Kollektiivse_pöördumise_menetlusse_võtmine.asice",
 				title: "Kollektiivse pöördumise menetlusse võtmine",
@@ -1381,7 +1378,6 @@ describe("ParliamentSyncCli", function() {
 			}, [{
 				id: 1,
 				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
 				external_id: "811eac10-a47e-468f-bec9-56c790157f08",
 				name: "Vastuskiri.pdf",
 				title: "Vastuskiri - Kollektiivse pöördumisega seotud selgitustaotlus",
@@ -1420,7 +1416,6 @@ describe("ParliamentSyncCli", function() {
 			}, [{
 				id: 1,
 				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
 				external_id: FILE_UUID,
 				name: "Protokoll.pdf",
 				title: "18.06.2015 juhatuse istungi protokoll",
@@ -1462,7 +1457,6 @@ describe("ParliamentSyncCli", function() {
 			}, [{
 				id: 1,
 				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
 				external_id: FILE_UUID,
 				name: "Protokoll.pdf",
 				title: "Protokoll",
@@ -1502,7 +1496,6 @@ describe("ParliamentSyncCli", function() {
 			}, [{
 				id: 1,
 				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
 				external_id: FILE_UUID,
 				name: "Protokoll.pdf",
 				title: "Protokoll",
@@ -1542,7 +1535,6 @@ describe("ParliamentSyncCli", function() {
 			}, [{
 				id: 1,
 				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
 				external_id: FILE_UUID,
 				name: "Protokoll.pdf",
 				title: "Protokoll",
@@ -1568,7 +1560,6 @@ describe("ParliamentSyncCli", function() {
 					}]
 				}
 			}, {
-				initiative_uuid: INITIATIVE_UUID,
 				occurred_at: new Date(2015, 5, 18, 13, 37, 42, 666),
 				origin: "parliament",
 				external_id: DOCUMENT_UUID,
@@ -1578,7 +1569,6 @@ describe("ParliamentSyncCli", function() {
 			}, [{
 				id: 1,
 				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
 				external_id: FILE_UUID,
 				name: "Otsus.pdf",
 				title: "Otsuse muutmine",
@@ -1607,7 +1597,6 @@ describe("ParliamentSyncCli", function() {
 					}]
 				}
 			}, {
-				initiative_uuid: INITIATIVE_UUID,
 				occurred_at: new Date(2015, 5, 18, 13, 37, 42, 666),
 				origin: "parliament",
 				external_id: DOCUMENT_UUID,
@@ -1624,7 +1613,6 @@ describe("ParliamentSyncCli", function() {
 			}, [{
 				id: 1,
 				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
 				external_id: FILE_UUID,
 				name: "Kiri.pdf",
 				title: "Linnujahi korraldamine",
@@ -1653,7 +1641,6 @@ describe("ParliamentSyncCli", function() {
 					}]
 				}
 			}, {
-				initiative_uuid: INITIATIVE_UUID,
 				occurred_at: new Date(2015, 5, 18, 13, 37, 42, 666),
 				origin: "parliament",
 				external_id: DOCUMENT_UUID,
@@ -1670,7 +1657,6 @@ describe("ParliamentSyncCli", function() {
 			}, [{
 				id: 1,
 				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
 				external_id: FILE_UUID,
 				name: "Kiri.pdf",
 				title: "Linnujahi korraldamine",
@@ -1699,7 +1685,6 @@ describe("ParliamentSyncCli", function() {
 					}]
 				}
 			}, {
-				initiative_uuid: INITIATIVE_UUID,
 				occurred_at: new Date(2015, 5, 18, 13, 37, 42, 666),
 				origin: "parliament",
 				external_id: DOCUMENT_UUID,
@@ -1716,7 +1701,6 @@ describe("ParliamentSyncCli", function() {
 			}, [{
 				id: 1,
 				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
 				external_id: FILE_UUID,
 				name: "Kiri.pdf",
 				title: "Linnujahi korraldamine",
@@ -1745,7 +1729,6 @@ describe("ParliamentSyncCli", function() {
 					}]
 				}
 			}, {
-				initiative_uuid: INITIATIVE_UUID,
 				occurred_at: new Date(2015, 5, 18, 13, 37, 42, 666),
 				origin: "parliament",
 				external_id: DOCUMENT_UUID,
@@ -1762,7 +1745,6 @@ describe("ParliamentSyncCli", function() {
 			}, [{
 				id: 1,
 				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
 				external_id: FILE_UUID,
 				name: "Kiri.pdf",
 				title: "Linnujahi korraldamine",
@@ -1791,7 +1773,6 @@ describe("ParliamentSyncCli", function() {
 					}]
 				}
 			}, {
-				initiative_uuid: INITIATIVE_UUID,
 				occurred_at: new Date(2015, 5, 18, 13, 37, 42, 666),
 				origin: "parliament",
 				external_id: DOCUMENT_UUID,
@@ -1808,7 +1789,6 @@ describe("ParliamentSyncCli", function() {
 			}, [{
 				id: 1,
 				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
 				external_id: FILE_UUID,
 				name: "Kiri.pdf",
 				title: "Linnujahi korraldamine",
@@ -1837,7 +1817,6 @@ describe("ParliamentSyncCli", function() {
 					}]
 				}
 			}, {
-				initiative_uuid: INITIATIVE_UUID,
 				occurred_at: new Date(2015, 5, 18, 13, 37, 42, 666),
 				origin: "parliament",
 				external_id: DOCUMENT_UUID,
@@ -1854,7 +1833,6 @@ describe("ParliamentSyncCli", function() {
 			}, [{
 				id: 1,
 				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
 				external_id: FILE_UUID,
 				name: "Kiri.pdf",
 				title: "Linnujahi korraldamine",
@@ -1889,7 +1867,6 @@ describe("ParliamentSyncCli", function() {
 			}, [{
 				id: 1,
 				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
 				external_id: FILE_UUID,
 				name: "Kollektiivse_pöördumise_menetlusse_võtmine.asice",
 				title: "Kollektiivse pöördumise menetlusse võtmine",
@@ -1925,7 +1902,6 @@ describe("ParliamentSyncCli", function() {
 			}, [{
 				id: 1,
 				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
 				external_id: FILE_UUID,
 				name: "Protokoll.pdf",
 				title: "18.06.2015 juhatuse istungi protokoll",
@@ -1960,7 +1936,6 @@ describe("ParliamentSyncCli", function() {
 			}, [{
 				id: 1,
 				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
 				external_id: FILE_UUID,
 				name: "Protokoll.pdf",
 				title: "1.6.2015 juhatuse istungi protokoll",
@@ -2003,7 +1978,6 @@ describe("ParliamentSyncCli", function() {
 			}, [{
 				id: 1,
 				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
 				external_id: FILE_UUID,
 				name: "Protokoll.pdf",
 				title: "Protokoll",
@@ -2038,7 +2012,6 @@ describe("ParliamentSyncCli", function() {
 			}, [{
 				id: 1,
 				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
 				external_id: "811eac10-a47e-468f-bec9-56c790157f08",
 				name: "ÕIGK_11062019.pdf",
 				title: "ÕIGK vastuskiri - Kollektiivne pöördumine X",
@@ -2073,7 +2046,6 @@ describe("ParliamentSyncCli", function() {
 			}, [{
 				id: 1,
 				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
 				external_id: "811eac10-a47e-468f-bec9-56c790157f08",
 				name: "ÕIGK_11062019.pdf",
 				title: "Kollektiivne pöördumine X - ÕISK vastuskiri reformimiseks",
@@ -2108,7 +2080,6 @@ describe("ParliamentSyncCli", function() {
 			}, [{
 				id: 1,
 				event_id: 1,
-				initiative_uuid: INITIATIVE_UUID,
 				external_id: "811eac10-a47e-468f-bec9-56c790157f08",
 				name: "ÕIGK_11062019.pdf",
 				title: "Vastuskiri - Kollektiivne pöördumine X",
@@ -2126,7 +2097,6 @@ describe("ParliamentSyncCli", function() {
 				function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: (yield usersDb.create(new ValidUser)).id,
-					uuid: INITIATIVE_UUID,
 					parliament_uuid: INITIATIVE_UUID
 				}))
 
@@ -2164,6 +2134,7 @@ describe("ParliamentSyncCli", function() {
 					SELECT * FROM initiative_files
 				`).must.then.eql(files.map((file) => new ValidFile({
 					__proto__: file,
+					initiative_uuid: initiative.uuid,
 					external_url: PARLIAMENT_URL + "/download/" + file.external_id
 				})))
 			})
