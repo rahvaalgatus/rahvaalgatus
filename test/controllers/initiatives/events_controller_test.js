@@ -1,5 +1,4 @@
 var _ = require("root/lib/underscore")
-var Config = require("root/config")
 var DateFns = require("date-fns")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSubscription = require("root/test/valid_subscription")
@@ -156,6 +155,7 @@ describe("InitiativeEventsController", function() {
 					method: "POST",
 					form: {
 						_csrf_token: this.csrfToken,
+						type: "text",
 						title: "Something happened",
 						content: "You shouldn't miss it."
 					}
@@ -181,11 +181,151 @@ describe("InitiativeEventsController", function() {
 				})
 			})
 
-			EVENTABLE_PHASES.forEach(function(phase) {
-				it(`must create event if in ${phase} phase`, function*() {
+			it("must respond with 422 given invalid type", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id,
+					phase: "sign"
+				}))
+
+				var path = `/initiatives/${initiative.uuid}/events`
+				var res = yield this.request(path, {
+					method: "POST",
+					form: {_csrf_token: this.csrfToken, type: "parliament-finished"}
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Invalid Event Type")
+			})
+
+			describe("given text event", function() {
+				EVENTABLE_PHASES.forEach(function(phase) {
+					it(`must create event if in ${phase} phase`, function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: phase
+						}))
+
+						var path = `/initiatives/${initiative.uuid}/events`
+						var res = yield this.request(path, {
+							method: "POST",
+							form: {
+								_csrf_token: this.csrfToken,
+								type: "text",
+								title: "Something happened",
+								content: "You shouldn't miss it."
+							}
+						})
+
+						res.statusCode.must.equal(302)
+						res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+						var events = yield eventsDb.search(sql`
+							SELECT * FROM initiative_events
+						`)
+
+						events.must.eql([new ValidEvent({
+							id: events[0].id,
+							initiative_uuid: initiative.uuid,
+							user_id: this.user.id,
+							type: "text",
+							origin: "author",
+							title: "Something happened",
+							content: "You shouldn't miss it."
+						})])
+					})
+				})
+
+				it("must email subscribers interested in author events", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
-						phase: phase
+						phase: "sign"
+					}))
+
+					var subscriptions = yield subscriptionsDb.create([
+						new ValidSubscription({
+							initiative_uuid: initiative.uuid,
+							confirmed_at: new Date,
+							author_interest: false
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date,
+							author_interest: false
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: initiative.uuid,
+							confirmed_at: new Date
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date
+						})
+					])
+
+					var path = `/initiatives/${initiative.uuid}/events`
+					var res = yield this.request(path, {
+						method: "POST",
+						form: {
+							_csrf_token: this.csrfToken,
+							type: "text",
+							title: "Something happened",
+							content: "You shouldn't miss it."
+						}
+					})
+
+					res.statusCode.must.equal(302)
+
+					var messages = yield messagesDb.search(sql`
+						SELECT * FROM initiative_messages
+					`)
+
+					var emails = subscriptions.slice(2).map((s) => s.email).sort()
+
+					messages.must.eql([{
+						id: messages[0].id,
+						initiative_uuid: initiative.uuid,
+						created_at: new Date,
+						updated_at: new Date,
+						origin: "event",
+
+						title: t("EMAIL_INITIATIVE_AUTHOR_TEXT_EVENT_TITLE", {
+							title: "Something happened",
+							initiativeTitle: initiative.title
+						}),
+
+						text: renderEmail("EMAIL_INITIATIVE_AUTHOR_TEXT_EVENT_BODY", {
+							initiativeTitle: initiative.title,
+							initiativeUrl: Initiative.initiativeUrl(initiative),
+							title: "Something happened",
+							text: "> You shouldn't miss it.",
+							unsubscribeUrl: "{{unsubscribeUrl}}"
+						}),
+
+						sent_at: new Date,
+						sent_to: emails
+					}])
+
+					this.emails.length.must.equal(1)
+
+					var email = this.emails[0]
+					email.envelope.to.must.eql(emails)
+					email.headers.subject.must.equal(messages[0].title)
+
+					var vars = email.headers["x-mailgun-recipient-variables"]
+					subscriptions.slice(2).forEach((s) => (
+						vars.must.include(s.update_token)
+					))
+				})
+			})
+
+			describe("given media-coverage event", function() {
+				it("must create event", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "sign"
 					}))
 
 					var path = `/initiatives/${initiative.uuid}/events`
@@ -193,8 +333,10 @@ describe("InitiativeEventsController", function() {
 						method: "POST",
 						form: {
 							_csrf_token: this.csrfToken,
+							type: "media-coverage",
 							title: "Something happened",
-							content: "You shouldn't miss it."
+							publisher: "Old York Times",
+							url: "http://example.com/article"
 						}
 					})
 
@@ -210,9 +352,101 @@ describe("InitiativeEventsController", function() {
 						initiative_uuid: initiative.uuid,
 						user_id: this.user.id,
 						origin: "author",
+						type: "media-coverage",
 						title: "Something happened",
-						content: "You shouldn't miss it."
+
+						content: {
+							publisher: "Old York Times",
+							url: "http://example.com/article"
+						}
 					})])
+				})
+
+				it("must email subscribers interested in author events", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "sign"
+					}))
+
+					var subscriptions = yield subscriptionsDb.create([
+						new ValidSubscription({
+							initiative_uuid: initiative.uuid,
+							confirmed_at: new Date,
+							author_interest: false
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date,
+							author_interest: false
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: initiative.uuid,
+							confirmed_at: new Date
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date
+						})
+					])
+
+					var path = `/initiatives/${initiative.uuid}/events`
+					var res = yield this.request(path, {
+						method: "POST",
+						form: {
+							_csrf_token: this.csrfToken,
+							type: "media-coverage",
+							title: "Something happened",
+							publisher: "Old York Times",
+							url: "http://example.com/article"
+						}
+					})
+
+					res.statusCode.must.equal(302)
+
+					var messages = yield messagesDb.search(sql`
+						SELECT * FROM initiative_messages
+					`)
+
+					var emails = subscriptions.slice(2).map((s) => s.email).sort()
+
+					messages.must.eql([{
+						id: messages[0].id,
+						initiative_uuid: initiative.uuid,
+						created_at: new Date,
+						updated_at: new Date,
+						origin: "event",
+
+						title: t("EMAIL_INITIATIVE_AUTHOR_MEDIA_COVERAGE_EVENT_TITLE", {
+							initiativeTitle: initiative.title
+						}),
+
+						text: renderEmail(
+							"EMAIL_INITIATIVE_AUTHOR_MEDIA_COVERAGE_EVENT_BODY", {
+							initiativeTitle: initiative.title,
+							initiativeUrl: Initiative.initiativeUrl(initiative),
+							title: "Something happened",
+							publisher: "Old York Times",
+							url: "http://example.com/article",
+							unsubscribeUrl: "{{unsubscribeUrl}}"
+						}),
+
+						sent_at: new Date,
+						sent_to: emails
+					}])
+
+					this.emails.length.must.equal(1)
+
+					var email = this.emails[0]
+					email.envelope.to.must.eql(emails)
+					email.headers.subject.must.equal(messages[0].title)
+
+					var vars = email.headers["x-mailgun-recipient-variables"]
+					subscriptions.slice(2).forEach((s) => (
+						vars.must.include(s.update_token)
+					))
 				})
 			})
 
@@ -233,6 +467,7 @@ describe("InitiativeEventsController", function() {
 					method: "POST",
 					form: {
 						_csrf_token: this.csrfToken,
+						type: "text",
 						title: "Something happened",
 						content: "You shouldn't miss it."
 					}
@@ -253,84 +488,6 @@ describe("InitiativeEventsController", function() {
 					title: "Something happened",
 					content: "You shouldn't miss it."
 				})])
-			})
-
-			it("must email subscribers interested in author events", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.user.id,
-					phase: "sign"
-				}))
-
-				var subscriptions = yield subscriptionsDb.create([
-					new ValidSubscription({
-						initiative_uuid: initiative.uuid,
-						confirmed_at: new Date,
-						author_interest: false
-					}),
-
-					new ValidSubscription({
-						initiative_uuid: null,
-						confirmed_at: new Date,
-						author_interest: false
-					}),
-
-					new ValidSubscription({
-						initiative_uuid: initiative.uuid,
-						confirmed_at: new Date
-					}),
-
-					new ValidSubscription({
-						initiative_uuid: null,
-						confirmed_at: new Date
-					})
-				])
-
-				var res = yield this.request(`/initiatives/${initiative.uuid}/events`, {
-					method: "POST",
-					form: {
-						_csrf_token: this.csrfToken,
-						title: "Something happened",
-						content: "You shouldn't miss it."
-					}
-				})
-
-				res.statusCode.must.equal(302)
-
-				var messages = yield messagesDb.search(sql`
-					SELECT * FROM initiative_messages
-				`)
-
-				var emails = subscriptions.slice(2).map((s) => s.email).sort()
-
-				messages.must.eql([{
-					id: messages[0].id,
-					initiative_uuid: initiative.uuid,
-					created_at: new Date,
-					updated_at: new Date,
-					origin: "event",
-
-					title: t("EMAIL_INITIATIVE_AUTHOR_EVENT_TITLE", {
-						title: "Something happened",
-						initiativeTitle: initiative.title
-					}),
-
-					text: renderEmail("EMAIL_INITIATIVE_AUTHOR_EVENT_BODY", {
-						initiativeTitle: initiative.title,
-						initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-						title: "Something happened",
-						text: "> You shouldn't miss it.",
-						unsubscribeUrl: "{{unsubscribeUrl}}"
-					}),
-
-					sent_at: new Date,
-					sent_to: emails
-				}])
-
-				this.emails.length.must.equal(1)
-				this.emails[0].envelope.to.must.eql(emails)
-				var msg = String(this.emails[0].message)
-				msg.match(/^Subject: .*/m)[0].must.include(initiative.title)
-				subscriptions.slice(2).forEach((s) => msg.must.include(s.update_token))
 			})
 
 			it("must respond with 403 if not author", function*() {

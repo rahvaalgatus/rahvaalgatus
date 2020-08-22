@@ -1,5 +1,4 @@
 var _ = require("root/lib/underscore")
-var Config = require("root/config")
 var Router = require("express").Router
 var DateFns = require("date-fns")
 var HttpError = require("standard-http-error")
@@ -11,7 +10,7 @@ var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var sql = require("sqlate")
-var EMPTY_EVENT = {title: "", content: ""}
+var EVENT_TYPES = ["text", "media-coverage"]
 
 exports.router = Router({mergeParams: true})
 
@@ -21,8 +20,11 @@ exports.router.get("/new", next(assertAuthor), next(function*(req, res) {
 	var subscriberCount =
 		yield subscriptionsDb.countConfirmedByInitiativeIdForAuthor(initiative.uuid)
 
+	var type = req.query.type
+	type = EVENT_TYPES.includes(type) ? type : "text"
+
 	res.render("initiatives/events/create_page.jsx", {
-		attrs: EMPTY_EVENT,
+		event: {type: type},
 		subscriberCount: subscriberCount
 	})
 }))
@@ -34,6 +36,7 @@ exports.router.get("/:id", function(req, res) {
 
 exports.router.post("/", next(assertAuthor), next(function*(req, res) {
 	var initiative = req.initiative
+	var message
 
 	var event = yield eventsDb.create({
 		__proto__: parseEvent(req.body),
@@ -45,26 +48,47 @@ exports.router.post("/", next(assertAuthor), next(function*(req, res) {
 		origin: "author"
 	})
 
-	var message = yield messagesDb.create({
-		initiative_uuid: initiative.uuid,
-		origin: "event",
-		created_at: new Date,
-		updated_at: new Date,
+	switch (event.type) {
+		case "text": message = yield messagesDb.create({
+			initiative_uuid: initiative.uuid,
+			origin: "event",
+			created_at: new Date,
+			updated_at: new Date,
 
-		title: req.t("EMAIL_INITIATIVE_AUTHOR_EVENT_TITLE", {
-			title: event.title,
-			initiativeTitle: initiative.title,
-		}),
+			title: req.t("EMAIL_INITIATIVE_AUTHOR_TEXT_EVENT_TITLE", {
+				title: event.title,
+				initiativeTitle: initiative.title,
+			}),
 
-		text: renderEmail("EMAIL_INITIATIVE_AUTHOR_EVENT_BODY", {
-			initiativeTitle: initiative.title,
-			initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-			title: event.title,
-			text: _.quoteEmail(event.content)
-		})
-	})
+			text: renderEmail("EMAIL_INITIATIVE_AUTHOR_TEXT_EVENT_BODY", {
+				initiativeTitle: initiative.title,
+				initiativeUrl: Initiative.initiativeUrl(initiative),
+				title: event.title,
+				text: _.quoteEmail(event.content)
+			})
+		}); break
 
-	yield Subscription.send(
+		case "media-coverage": message = yield messagesDb.create({
+			initiative_uuid: initiative.uuid,
+			origin: "event",
+			created_at: new Date,
+			updated_at: new Date,
+
+			title: req.t("EMAIL_INITIATIVE_AUTHOR_MEDIA_COVERAGE_EVENT_TITLE", {
+				initiativeTitle: initiative.title,
+			}),
+
+			text: renderEmail("EMAIL_INITIATIVE_AUTHOR_MEDIA_COVERAGE_EVENT_BODY", {
+				initiativeTitle: initiative.title,
+				initiativeUrl: Initiative.initiativeUrl(initiative),
+				title: event.title,
+				publisher: event.content.publisher,
+				url: event.content.url
+			})
+		}); break
+	}
+
+	if (message) yield Subscription.send(
 		message,
 		yield subscriptionsDb.searchConfirmedByInitiativeIdForAuthor(
 			initiative.uuid
@@ -115,10 +139,20 @@ function* assertAuthor(req, _res, next) {
 }
 
 function parseEvent(obj) {
-	return {
-		title: obj.title,
-		type: "text",
-		content: obj.content
+	switch (obj.type) {
+		case "text": return {
+			title: obj.title,
+			type: "text",
+			content: String(obj.content)
+		}
+
+		case "media-coverage": return {
+			type: "media-coverage",
+			title: obj.title,
+			content: {url: String(obj.url), publisher: String(obj.publisher)}
+		}
+
+		default: throw new HttpError(422, "Invalid Event Type")
 	}
 }
 

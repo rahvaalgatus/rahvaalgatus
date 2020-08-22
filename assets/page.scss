@@ -3645,6 +3645,66 @@ button.inherited {
 	}
 }
 
+#create-initiative-event-page main {
+	h2 {
+		padding: 3rem 3rem 0;
+		font-family: $museo-sans;
+		line-height: 1.2;
+		font-size: 2.4rem;
+		font-weight: 500;
+		color: $title-text;
+	}
+
+	#event-type-tabs {
+		$tab-radius: 0.5rem;
+
+		padding: 0 3rem;
+		margin-top: 2rem;
+
+		a {
+			display: inline-block;
+			border: 0.1rem solid $light-background-border;
+			background-color: $light-background;
+			padding: 1rem 2rem;
+			line-height: 1.2;
+			font-size: 1.6rem;
+			margin-bottom: -0.1rem;
+			color: #888;
+			text-align: center;
+
+			& + a { margin-left: -0.1rem; }
+			&:first-child { border-top-left-radius: $tab-radius; }
+			&:last-child { border-top-right-radius: $tab-radius; }
+
+			&.selected {
+				background: white;
+				color: $text;
+				font-weight: 500;
+				border-bottom-color: white;
+			}
+
+			&[disabled] { cursor: auto; }
+			&[disabled]:not(.selected) { color: transparent; }
+		}
+	}
+
+	#tab {
+		border-top: 0.1rem solid $light-background-border;
+		padding: 3rem;
+	}
+
+	form {
+		input,
+		textarea {
+			width: 100%;
+		}
+
+		p {
+			margin-top: 1rem;
+		}
+	}
+}
+
 #subscriptions-page main {
 	h2 {
 		font-size: 2.4rem;
@@ -3973,7 +4033,6 @@ button.inherited {
 		font-size: 3.6rem;
 		color: $dark-blue;
 		margin-bottom: 3rem;
-
 	}
 
 	 .subheading ~ .subheading,
