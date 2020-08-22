@@ -73,26 +73,24 @@ function* sync(opts) {
 	var pairs = _.zip(yield docs.map(readInitiative), docs)
 	pairs = pairs.filter(_.compose(Boolean, _.first))
 
-	pairs = yield pairs.map(function*(initiativeAndDocument) {
-		var initiative = initiativeAndDocument[0]
-		var document = initiativeAndDocument[1]
-
+	pairs = yield pairs.map(function*([initiative, document]) {
 		// Because the collective-addresses endpoint doesn't return files,
 		// populate them on the first run, but use a cached response afterwards on
 		// the assumption that no new files will appear after creation.
 		//
-		// https://github.com/riigikogu-kantselei/api/issues/14
-		if (initiative.parliament_api_data == null || force) {
-			var doc = yield api("documents/" + document.uuid).then(getBody)
-			document.volume = doc.volume || null
-			document.files = doc.files || null
-		}
-		else {
-			document.volume = initiative.parliament_api_data.volume
-			document.files = initiative.parliament_api_data.files
-		}
+		// https://github.com/riigikogu-kantselei/api/issues/27
+		//
+		// A change made in the summer of 2020 broke all relatedDocuments in the
+		// collective-addresses response.
+		// https://github.com/riigikogu-kantselei/api/issues/33
+		var doc = yield api("documents/" + document.uuid).then(getBody)
 
-		return initiativeAndDocument
+		document.volume = doc.volume || null
+		document.files = doc.files || null
+		if (doc.relatedDocuments) document.relatedDocuments = doc.relatedDocuments
+		if (doc.relatedVolumes) document.relatedVolumes = doc.relatedVolumes
+
+		return [initiative, document]
 	})
 
 	var updated = pairs.filter(function(initiativeAndDocument) {
