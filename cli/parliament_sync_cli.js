@@ -277,6 +277,7 @@ function* replaceInitiative(initiative, document) {
 		let update = {}
 		statuses.forEach((status) => _.merge(update, attrsFromStatus(status)))
 		eventAttrs.forEach((event) => _.merge(update, attrsFromEvent(event)))
+		if (initiative.phase != "parliament") delete update.phase
 		initiative = yield initiativesDb.update(initiative, update)
 	}
 
@@ -471,6 +472,7 @@ function attrsFromEvent(event) {
 		}
 
 		case "parliament-finished": return {
+			phase: "done",
 			finished_in_parliament_at: event.occurred_at
 		}
 

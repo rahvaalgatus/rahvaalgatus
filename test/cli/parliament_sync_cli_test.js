@@ -131,7 +131,7 @@ describe("ParliamentSyncCli", function() {
 			created_at: new Date(2015, 5, 18),
 			published_at: new Date(2015, 5, 18),
 			title: "Elu Tallinnas paremaks tegemiseks",
-			phase: "parliament",
+			phase: "done",
 			undersignable: false,
 			finished_in_parliament_at: new Date(2015, 5, 20),
 			parliament_uuid: INITIATIVE_UUID,
@@ -204,7 +204,7 @@ describe("ParliamentSyncCli", function() {
 		var initiatives = yield initiativesDb.search(sql`SELECT * FROM initiatives`)
 
 		initiatives.must.eql([{
-			// NOTE: Phase isn't updated for existing initiatives.
+			// NOTE: Phase isn't updated if initiative not in the parliament phase.
 			// Neither is the author_name.
 			__proto__: initiative,
 			parliament_uuid: INITIATIVE_UUID,
@@ -263,6 +263,59 @@ describe("ParliamentSyncCli", function() {
 			parliament_api_data: initiatives[0].parliament_api_data,
 			parliament_synced_at: new Date
 		}])
+	})
+
+	it("must update local initiative phase to done if finished", function*() {
+		var initiative = yield initiativesDb.create(new ValidInitiative({
+			user_id: (yield usersDb.create(new ValidUser)).id,
+			phase: "parliament",
+			parliament_uuid: INITIATIVE_UUID
+		}))
+
+		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			uuid: INITIATIVE_UUID,
+			senderReference: initiative.uuid,
+			statuses: [{date: "2015-06-20", status: {code: "MENETLUS_LOPETATUD"}}]
+		}]))
+
+		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {}))
+		yield job()
+
+		var initiatives = yield initiativesDb.search(sql`SELECT * FROM initiatives`)
+
+		initiatives.must.eql([_.clone({
+			__proto__: initiative,
+			phase: "done",
+			finished_in_parliament_at: new Date(2015, 5, 20),
+			parliament_api_data: initiatives[0].parliament_api_data,
+			parliament_synced_at: new Date
+		})])
+	})
+
+	it("must not update local initiative phase to done if finished but not in parliament phase", function*() {
+		var initiative = yield initiativesDb.create(new ValidInitiative({
+			user_id: (yield usersDb.create(new ValidUser)).id,
+			phase: "government",
+			parliament_uuid: INITIATIVE_UUID
+		}))
+
+		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			uuid: INITIATIVE_UUID,
+			senderReference: initiative.uuid,
+			statuses: [{date: "2015-06-20", status: {code: "MENETLUS_LOPETATUD"}}]
+		}]))
+
+		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {}))
+		yield job()
+
+		var initiatives = yield initiativesDb.search(sql`SELECT * FROM initiatives`)
+
+		initiatives.must.eql([_.clone({
+			__proto__: initiative,
+			finished_in_parliament_at: new Date(2015, 5, 20),
+			parliament_api_data: initiatives[0].parliament_api_data,
+			parliament_synced_at: new Date
+		})])
 	})
 
 	it("must update external initiative", function*() {
