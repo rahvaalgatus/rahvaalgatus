@@ -182,9 +182,9 @@ function* syncInitiativeDocuments(api, doc) {
 	// documents unrelated to the initiative. For example, an initiative
 	// acceptance decision (https://api.riigikogu.ee/api/documents/d655bc48-e5ec-43ad-9640-8cba05f78427)
 	// resides in a "All parliament decisions in 2019" volume.
-	doc.relatedDocuments = (yield (doc.relatedDocuments || []).map((doc) => (
-		api("documents/" + doc.uuid).then(getBody, raiseForDocument.bind(null, doc))
-	))).filter(Boolean)
+	doc.relatedDocuments = (
+		yield (doc.relatedDocuments || []).map(readDocument)
+	).filter(Boolean)
 
 	doc.relatedVolumes = yield (doc.relatedVolumes || []).map(getUuid).map(
 		readParliamentVolumeWithDocuments.bind(null, api)
@@ -202,7 +202,20 @@ function* syncInitiativeDocuments(api, doc) {
 		readParliamentVolumeWithDocuments.bind(null, api)
 	)
 
+	doc.statuses = (yield (doc.statuses || []).map(function*(status) {
+		return _.assign({}, status, {
+			relatedDocuments: (
+				yield (status.relatedDocuments || []).map(readDocument)
+			).filter(Boolean)
+		})
+	}))
+
 	return doc
+
+	function readDocument(doc) {
+		var res = api("documents/" + doc.uuid)
+		return res.then(getBody, raiseForDocument.bind(null, doc))
+	}
 }
 
 function* replaceInitiative(initiative, document) {
@@ -516,6 +529,8 @@ function eventAttrsFromStatus(document, documents, status) {
 			)
 			break
 	}
+
+	eventDocuments = concat(status.relatedDocuments || EMPTY_ARR, eventDocuments)
 
 	attrs.files = flatten(eventDocuments.map((doc) => (
 		newDocumentFiles(doc, doc.files || EMPTY_ARR)

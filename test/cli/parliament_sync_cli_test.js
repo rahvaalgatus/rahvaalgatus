@@ -949,6 +949,82 @@ describe("ParliamentSyncCli", function() {
 			})
 		})
 
+		it("must create events given status with related documents", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: (yield usersDb.create(new ValidUser)).id,
+				parliament_uuid: INITIATIVE_UUID
+			}))
+
+			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+				uuid: INITIATIVE_UUID,
+
+				statuses: [{
+					date: "2015-06-17",
+					status: {code: "MENETLUSSE_VOETUD"},
+					relatedDocuments: [{uuid: DOCUMENT_UUID}]
+				}]
+			}]))
+
+			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+
+			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
+				uuid: DOCUMENT_UUID,
+				title: "Kollektiivse pöördumise menetlusse võtmine",
+				created: "2015-06-18T13:37:42.666",
+				documentType: "decisionDocument",
+
+				files: [{
+					uuid: FILE_UUID,
+					fileName: "Pöördumine.pdf",
+					accessRestrictionType: "PUBLIC"
+				}]
+			}))
+
+			this.router.get(`/download/${FILE_UUID}`,
+				respondWithRiigikoguDownload.bind(null,
+					"application/octet-stream",
+					"\x0d\x25"
+				)
+			)
+
+			yield job()
+
+			var updatedInitiative = yield initiativesDb.read(initiative)
+			updatedInitiative.must.eql(_.assign({}, initiative, {
+				accepted_by_parliament_at: new Date(2015, 5, 17),
+				parliament_api_data: updatedInitiative.parliament_api_data,
+				parliament_synced_at: new Date
+			}))
+
+			yield eventsDb.search(sql`
+				SELECT * FROM initiative_events
+			`).must.then.eql([new ValidEvent({
+				id: 1,
+				initiative_uuid: initiative.uuid,
+				occurred_at: new Date(2015, 5, 17),
+				origin: "parliament",
+				external_id: "MENETLUSSE_VOETUD",
+				type: "parliament-accepted",
+				title: null,
+				content: {committee: null}
+			})])
+
+			yield filesDb.search(sql`
+				SELECT * FROM initiative_files
+			`).must.then.eql([new ValidFile({
+				id: 1,
+				event_id: 1,
+				initiative_uuid: initiative.uuid,
+				external_id: FILE_UUID,
+				name: "Pöördumine.pdf",
+				title: "Kollektiivse pöördumise menetlusse võtmine",
+				url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
+				content: EXAMPLE_BUFFER,
+				content_type: new MediaType("application/octet-stream"),
+				external_url: PARLIAMENT_URL + "/download/" + FILE_UUID
+			})])
+		})
+
 		it("must update acceptance event", function*() {
 			var requested = 0
 			this.router.get(INITIATIVES_URL, function(req, res) {
