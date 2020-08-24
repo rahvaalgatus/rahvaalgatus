@@ -5,12 +5,14 @@ var Crypto = require("crypto")
 var DateFns = require("date-fns")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSignature = require("root/test/valid_signature")
+var ValidComment = require("root/test/valid_comment")
 var ValidUser = require("root/test/valid_user")
 var ValidCoauthor = require("root/test/valid_initiative_coauthor")
 var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
 var usersDb = require("root/db/users_db")
 var coauthorsDb = require("root/db/initiative_coauthors_db")
 var initiativesDb = require("root/db/initiatives_db")
+var commentsDb = require("root/db/comments_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
@@ -808,10 +810,10 @@ describe("HomeController", function() {
 			})
 
 			describe("recent initiatives", function() {
-				it("must show initiatives last signed", function*() {
+				it("must show initiatives with recent signatures", function*() {
 					var self = this
 
-					var initiatives = yield _.times(10, function*(i) {
+					var initiatives = _.reverse(yield _.times(10, function*(i) {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: self.author.id,
 							phase: "sign"
@@ -819,20 +821,57 @@ describe("HomeController", function() {
 
 						yield signaturesDb.create(new ValidSignature({
 							initiative_uuid: initiative.uuid,
-							created_at: DateFns.addMinutes(new Date, i * 2),
+							created_at: DateFns.addMinutes(new Date, i * 2)
 						}))
 
 						return initiative
-					})
+					}))
 
 					var res = yield this.request("/")
 					res.statusCode.must.equal(200)
 					
 					var dom = parseDom(res.body)
-					var els = dom.querySelectorAll("#recent-initiatives ol li")
-					els.length.must.equal(6)
-					initiatives = _.reverse(initiatives)
-					els.forEach((el, i) => el.innerHTML.must.include(initiatives[i].uuid))
+					var recents = dom.querySelector("#recent-initiatives ol")
+					recents.childNodes.length.must.equal(6)
+
+					recents.childNodes.forEach(function(el, i) {
+						el.innerHTML.must.include(initiatives[i].uuid)
+						var note = el.querySelector(".note").textContent
+						note.must.equal(t("RECENTLY_SIGNED"))
+					})
+				})
+
+				it("must show initiatives with recent comments", function*() {
+					var self = this
+
+					var initiatives = _.reverse(yield _.times(10, function*(i) {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: self.author.id,
+							phase: "sign"
+						}))
+
+						yield commentsDb.create(new ValidComment({
+							initiative_uuid: initiative.uuid,
+							user_id: self.author.id,
+							user_uuid: self.author.uuid,
+							created_at: DateFns.addMinutes(new Date, i * 2)
+						}))
+
+						return initiative
+					}))
+
+					var res = yield this.request("/")
+					res.statusCode.must.equal(200)
+					
+					var dom = parseDom(res.body)
+					var recents = dom.querySelector("#recent-initiatives ol")
+					recents.childNodes.length.must.equal(6)
+
+					recents.childNodes.forEach(function(el, i) {
+						el.innerHTML.must.include(initiatives[i].uuid)
+						var note = el.querySelector(".note").textContent
+						note.must.equal(t("RECENTLY_COMMENTED"))
+					})
 				})
 			})
 		})
