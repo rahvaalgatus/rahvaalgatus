@@ -6,7 +6,6 @@ var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
 var next = require("co-next")
 var sqlite = require("root").sqlite
-var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var {getRequiredSignatureCount} = require("root/lib/initiative")
 var sql = require("sqlate")
 var initiativesDb = require("root/db/initiatives_db")
@@ -262,44 +261,33 @@ function readSignatureCount(gov, range) {
 function* searchRecentInitiatives() {
 	// Intentionally ignoring imported CitizenOS signatures as those originate
 	// from Feb 2020 and earlier.
-	var recents = _.fromEntries(_.uniqBy(_.reverse(_.sortBy(flatten(yield [
-		sqlite(sql`
-			SELECT
-				comment.initiative_uuid AS uuid,
-				max(comment.created_at) AS at,
-				'commented' AS reason
+	var recents = _.fromEntries(_.uniqBy(yield sqlite(sql`
+		SELECT
+			comment.initiative_uuid AS uuid,
+			max(comment.created_at) AS at,
+			'commented' AS reason
 
-			FROM comments AS comment
-			JOIN initiatives AS initiative
-			ON initiative.uuid = comment.initiative_uuid
-			WHERE initiative.published_at IS NOT NULL
-			GROUP BY initiative_uuid
-			ORDER BY at DESC
-			LIMIT 6
-		`),
+		FROM comments AS comment
+		JOIN initiatives AS initiative
+		ON initiative.uuid = comment.initiative_uuid
+		WHERE initiative.published_at IS NOT NULL
+		GROUP BY initiative_uuid
 
-		sqlite(sql`
-			SELECT initiative_uuid AS uuid, max(created_at) AS at, 'signed' AS reason
-			FROM initiative_signatures
-			GROUP BY initiative_uuid
-			ORDER BY at DESC
-			LIMIT 6
-		`),
+		UNION ALL
 
-		sqlite(sql`
-			SELECT initiative_uuid AS uuid, max(created_at) AS at, 'event' AS reason
-			FROM initiative_events
-			GROUP BY initiative_uuid
-			ORDER BY at DESC
-			LIMIT 6
-		`)
-	]).map(function(row) {
-		row.at = new Date(row.at)
-		return row
-	}), "at")), "uuid").slice(0, 6).map((r, i) => [
-		r.uuid,
-		_.assign(r, {position: i})
-	]))
+		SELECT initiative_uuid AS uuid, max(created_at) AS at, 'signed' AS reason
+		FROM initiative_signatures
+		GROUP BY initiative_uuid
+
+		UNION ALL
+
+		SELECT initiative_uuid AS uuid, max(created_at) AS at, 'event' AS reason
+		FROM initiative_events
+		GROUP BY initiative_uuid
+
+		ORDER BY at DESC
+		LIMIT 6 * 3
+	`), "uuid").slice(0, 6).map((r, i) => [r.uuid, _.assign(r, {position: i})]))
 
 	return _.sortBy(yield initiativesDb.search(sql`
 		SELECT
