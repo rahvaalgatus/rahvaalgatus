@@ -1389,7 +1389,7 @@ button.inherited {
 	#news {
 		background-color: $light-background;
 		padding-top: 3rem;
-		padding-bottom: 3rem;
+		padding-bottom: 1rem;
 
 		center {
 			padding-right: 0;
@@ -1397,25 +1397,45 @@ button.inherited {
 		}
 
 		h2 {
-			margin-bottom: 2rem;
 			font-size: 3rem;
 			padding-left: 1.5rem;
+			float: left;
+			margin-bottom: 2rem;
 
 			font-size: 2rem;
 			font-family: $museo-sans;
 			font-weight: 700;
 			text-transform: uppercase;
 			color: $title-text;
+			margin-top: 1.8rem;
 
-			img { max-width: 10rem; margin-right: 2rem; vertical-align: middle; }
+			img {
+				width: 10rem;
+				display: block;
+				margin-bottom: 0.5rem;
+				margin-right: 2rem;
+			}
+
+			@include tablet {
+				float: none;
+				margin-top: 0;
+
+				img { display: inline; vertical-align: middle; margin-bottom: 0; }
+			}
+		}
+
+		ol {
+			margin-left: $initiative-width + 2rem;
+
+			@include tablet { margin-left: 0; }
 		}
 
 		li {
-			width: ($page-width - 2rem) / 3;
+			width: ($initiative-width * 3) / 3;
 			float: left;
-			margin-bottom: 1rem;
+			margin-bottom: 2rem;
 			margin-left: 0;
-			margin-right: 1rem;
+			margin-right: 2rem;
 			line-height: 1.5;
 
 			a {
@@ -1443,13 +1463,14 @@ button.inherited {
 				$title-font-size: 1.5rem;
 				$title-line-height: 1.5 * $title-font-size;
 
+				margin-top: 0.3rem;
 				color: #4F4F4F;
 				font-size: $title-font-size;
 				line-height: $title-line-height;
 				word-wrap: break-word;
 
-				height: 2 * $title-line-height;
-				@include multiline-ellipsis(2);
+				height: 3 * $title-line-height;
+				@include multiline-ellipsis(3);
 				@include hyphens(auto);
 			}
 

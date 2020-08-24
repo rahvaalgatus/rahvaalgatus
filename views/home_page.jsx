@@ -143,7 +143,7 @@ function HomePage(attrs) {
 		>
 			<h2>
 				<a href="https://kogu.ee">
-					<img width="200" src={"/assets/kogu-blue.svg"} alt={t("KOGU")} />
+					<img src={"/assets/kogu-blue.svg"} alt={t("KOGU")} />
 				</a>
 
 				<span>{t("HOME_PAGE_NEWS_TITLE")}</span>
