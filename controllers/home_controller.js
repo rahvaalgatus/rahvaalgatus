@@ -279,12 +279,16 @@ function* searchRecentInitiatives() {
 		`),
 
 		sqlite(sql`
-			SELECT
-				initiative_uuid AS uuid,
-				max(created_at) AS at,
-				'signed' AS reason
-
+			SELECT initiative_uuid AS uuid, max(created_at) AS at, 'signed' AS reason
 			FROM initiative_signatures
+			GROUP BY initiative_uuid
+			ORDER BY at DESC
+			LIMIT 6
+		`),
+
+		sqlite(sql`
+			SELECT initiative_uuid AS uuid, max(created_at) AS at, 'event' AS reason
+			FROM initiative_events
 			GROUP BY initiative_uuid
 			ORDER BY at DESC
 			LIMIT 6

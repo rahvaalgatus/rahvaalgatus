@@ -6,6 +6,7 @@ var DateFns = require("date-fns")
 var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSignature = require("root/test/valid_signature")
 var ValidComment = require("root/test/valid_comment")
+var ValidEvent = require("root/test/valid_db_initiative_event")
 var ValidUser = require("root/test/valid_user")
 var ValidCoauthor = require("root/test/valid_initiative_coauthor")
 var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
@@ -13,6 +14,7 @@ var usersDb = require("root/db/users_db")
 var coauthorsDb = require("root/db/initiative_coauthors_db")
 var initiativesDb = require("root/db/initiatives_db")
 var commentsDb = require("root/db/comments_db")
+var eventsDb = require("root/db/initiative_events_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
@@ -871,6 +873,76 @@ describe("HomeController", function() {
 						el.innerHTML.must.include(initiatives[i].uuid)
 						var note = el.querySelector(".note").textContent
 						note.must.equal(t("RECENTLY_COMMENTED"))
+					})
+				})
+
+				it("must show initiatives with recent events", function*() {
+					var self = this
+
+					var initiatives = _.reverse(yield _.times(10, function*(i) {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: self.author.id,
+							phase: "sign"
+						}))
+
+						yield eventsDb.create(new ValidEvent({
+							initiative_uuid: initiative.uuid,
+							created_at: DateFns.addMinutes(new Date, i * 2)
+						}))
+
+						return initiative
+					}))
+
+					var res = yield this.request("/")
+					res.statusCode.must.equal(200)
+					
+					var dom = parseDom(res.body)
+					var recents = dom.querySelector("#recent-initiatives ol")
+					recents.childNodes.length.must.equal(6)
+
+					recents.childNodes.forEach(function(el, i) {
+						el.innerHTML.must.include(initiatives[i].uuid)
+						var note = el.querySelector(".note").textContent
+						note.must.equal(t("RECENTLY_EVENTED"))
+					})
+				})
+
+				it("must order based on last update", function*() {
+					var initiatives = _.shuffle(
+						yield initiativesDb.create(_.times(3, () => new ValidInitiative({
+							user_id: this.author.id,
+							phase: "sign"
+						})))
+					)
+
+					yield _.shuffle([
+						(initiative, i) => eventsDb.create(new ValidEvent({
+							initiative_uuid: initiative.uuid,
+							created_at: DateFns.addMinutes(new Date, -i)
+						})),
+
+						(initiative, i) => commentsDb.create(new ValidComment({
+							initiative_uuid: initiative.uuid,
+							user_id: this.author.id,
+							user_uuid: this.author.uuid,
+							created_at: DateFns.addMinutes(new Date, -i)
+						})),
+
+						(initiative, i) => signaturesDb.create(new ValidSignature({
+							initiative_uuid: initiative.uuid,
+							created_at: DateFns.addMinutes(new Date, -i)
+						}))
+					]).map((fn, i) => fn(initiatives[i], i))
+
+					var res = yield this.request("/")
+					res.statusCode.must.equal(200)
+					
+					var dom = parseDom(res.body)
+					var recents = dom.querySelector("#recent-initiatives ol")
+					recents.childNodes.length.must.equal(3)
+
+					recents.childNodes.forEach(function(el, i) {
+						el.innerHTML.must.include(initiatives[i].uuid)
 					})
 				})
 			})

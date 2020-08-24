@@ -128,6 +128,7 @@ function HomePage(attrs) {
 					note={
 						initiative.reason == "commented" ? t("RECENTLY_COMMENTED") :
 						initiative.reason == "signed" ? t("RECENTLY_SIGNED") :
+						initiative.reason == "event" ? t("RECENTLY_EVENTED") :
 						null
 					}
 
