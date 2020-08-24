@@ -6,10 +6,7 @@ var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSignature = require("root/test/valid_signature")
 var initiativesDb = require("root/db/initiatives_db")
 var usersDb = require("root/db/users_db")
-var signersDb = require("root/db/signers_db")
 var db = require("root/db/initiative_signatures_db")
-var sql = require("sqlate")
-var concat = Array.prototype.concat.bind(Array.prototype)
 
 describe("InitiativeSignaturesDb", function() {
 	require("root/test/db")()
@@ -61,82 +58,6 @@ describe("InitiativeSignaturesDb", function() {
 			err.type.must.equal("unique")
 			err.columns.must.eql(["token"])
 		})
-
-		it("must create signer and update signature", function*() {
-			var signature = yield db.create(new ValidSignature({
-				initiative_uuid: this.initiative.uuid
-			}))
-
-			yield signersDb.search(sql`SELECT * FROM signers`).must.then.eql([{
-				id: 1,
-				country: signature.country,
-				personal_id: signature.personal_id,
-				first_signed_at: signature.created_at,
-				last_signed_at: signature.created_at
-			}])
-
-			signature.signer_id.must.equal(1)
-		})
-
-		it("must update signer and update signature", function*() {
-			var a = yield db.create(new ValidSignature({
-				initiative_uuid: this.initiative.uuid,
-				created_at: new Date(2015, 5, 18, 13, 37, 42, 666)
-			}))
-
-			var signer = yield signersDb.read(sql`SELECT * FROM signers`)
-
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.initiative.user_id
-			}))
-
-			var b = yield db.create(new ValidSignature({
-				initiative_uuid: initiative.uuid,
-				country: a.country,
-				personal_id: a.personal_id
-			}))
-
-			b.signer_id.must.equal(1)
-
-			yield signersDb.read(sql`SELECT * FROM signers`).must.then.eql({
-				__proto__: signer,
-				last_signed_at: b.created_at
-			})
-		})
-
-		// Ensures the trigger selects the correct signer and updates the correct
-		// initiative.
-		it("must create signer and update signatures given multiple signatures ",
-			function*() {
-			var signatures = yield db.create(_.times(3, () => new ValidSignature({
-				initiative_uuid: this.initiative.uuid
-			})))
-
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.initiative.user_id
-			}))
-
-			var signature = yield db.create(new ValidSignature({
-				initiative_uuid: initiative.uuid,
-				country: signatures[1].country,
-				personal_id: signatures[1].personal_id
-			}))
-
-			signature.signer_id.must.equal(2)
-
-			var signers = yield signersDb.search(sql`SELECT * FROM signers`)
-			signers.must.eql(signatures.map((sig, i) => ({
-				id: i + 1,
-				country: sig.country,
-				personal_id: sig.personal_id,
-				first_signed_at: sig.created_at,
-				last_signed_at: i == 1 ? signature.created_at : sig.created_at
-			})))
-
-			yield db.search(sql`SELECT * FROM initiative_signatures`).must.then.eql(
-				concat(signatures, signature)
-			)
-		})
 	})
 
 	describe(".read", function() {
@@ -148,10 +69,7 @@ describe("InitiativeSignaturesDb", function() {
 				updated_at: new Date(2015, 5, 18, 14, 37, 42, 666)
 			})
 
-			yield db.read(yield db.create(signature)).must.then.eql({
-				__proto__: signature,
-				signer_id: 1
-			})
+			yield db.read(yield db.create(signature)).must.then.eql(signature)
 		})
 	})
 })

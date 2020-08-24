@@ -1123,8 +1123,7 @@ describe("SignaturesController", function() {
 					personal_id: PERSONAL_ID,
 					method: "id-card",
 					xades: String(xades),
-					created_from: LONDON_GEO,
-					signer_id: 1
+					created_from: LONDON_GEO
 				})])
 			})
 
@@ -1496,8 +1495,7 @@ describe("SignaturesController", function() {
 					personal_id: PERSONAL_ID,
 					method: "mobile-id",
 					xades: String(xades),
-					created_from: LONDON_GEO,
-					signer_id: 1
+					created_from: LONDON_GEO
 				})])
 			})
 
@@ -2141,8 +2139,7 @@ describe("SignaturesController", function() {
 					personal_id: PERSONAL_ID,
 					method: "smart-id",
 					xades: String(xades),
-					created_from: LONDON_GEO,
-					signer_id: 1
+					created_from: LONDON_GEO
 				})])
 			})
 

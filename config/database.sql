@@ -393,11 +393,7 @@ CREATE TABLE initiative_citizenos_signatures (
 
 	PRIMARY KEY (initiative_uuid, country, personal_id),
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
-	FOREIGN KEY (signer_id) REFERENCES signers (id),
-
-	CONSTRAINT signer_id_not_null
-	CHECK (signer_id IS NOT NULL OR personal_id IS NOT NULL),
-
+	
 	CONSTRAINT country_length CHECK (length(country) = 2),
 	CONSTRAINT country_uppercase CHECK (country == upper(country)),
 	CONSTRAINT personal_id_length CHECK (length(personal_id) > 0),
@@ -431,44 +427,6 @@ CREATE UNIQUE INDEX index_initiative_texts_on_initiative_uuid_and_id
 ON initiative_texts (initiative_uuid, id);
 CREATE INDEX index_initiative_texts_on_basis_id
 ON initiative_texts (basis_id);
-CREATE TABLE signers (
-	id INTEGER PRIMARY KEY NOT NULL,
-	country TEXT NOT NULL,
-	personal_id TEXT NOT NULL,
-	first_signed_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	last_signed_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-
-	CONSTRAINT country_length CHECK (length(country) = 2),
-	CONSTRAINT country_uppercase CHECK (country == upper(country)),
-	CONSTRAINT personal_id_length CHECK (length(personal_id) > 0)
-);
-CREATE UNIQUE INDEX index_signers_on_country_and_personal_id
-ON signers (country, personal_id)
-WHERE length(personal_id) > 7;
-CREATE INDEX index_initiative_signatures_on_signer_id
-ON initiative_signatures (signer_id)
-WHERE signer_id IS NOT NULL;
-CREATE TRIGGER create_signer_on_initiative_signature
-AFTER INSERT ON initiative_signatures FOR EACH ROW
-WHEN NEW.signer_id IS NULL
-BEGIN
-	INSERT INTO signers (country, personal_id, first_signed_at, last_signed_at)
-	VALUES (NEW.country, NEW.personal_id, NEW.created_at, NEW.created_at)
-	ON CONFLICT (country, personal_id)
-	WHERE length(personal_id) > 7
-	DO UPDATE SET
-		first_signed_at = min(first_signed_at, excluded.first_signed_at),
-		last_signed_at = max(last_signed_at, excluded.last_signed_at);
-
-	UPDATE initiative_signatures SET signer_id = (
-		SELECT id FROM signers
-		WHERE country = initiative_signatures.country
-		AND personal_id = initiative_signatures.personal_id
-	) WHERE rowid = NEW.rowid;
-END;
-CREATE INDEX index_initiative_citizenos_signatures_on_signer_id
-ON initiative_citizenos_signatures (signer_id)
-WHERE signer_id IS NOT NULL;
 CREATE TABLE initiative_text_signatures (
   id INTEGER PRIMARY KEY NOT NULL,
 	text_id INTEGER NOT NULL,
@@ -638,4 +596,5 @@ INSERT INTO migrations VALUES('20200811130443');
 INSERT INTO migrations VALUES('20200813175316');
 INSERT INTO migrations VALUES('20200815000000');
 INSERT INTO migrations VALUES('20200815000010');
+INSERT INTO migrations VALUES('20200822170508');
 COMMIT;
