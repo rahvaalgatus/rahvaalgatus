@@ -10,7 +10,8 @@ map({
 		county: ."gsx$county"."$t",
 		population: ."gsx$population"."$t" | tonumber,
 		initiativesEmail: ."gsx$initiativesemail"."$t" | present,
-		kompassUrl: ."gsx$kompassurl"."$t" | present
+		kompassUrl: ."gsx$kompassurl"."$t" | present,
+		rahandusministeeriumUrl: ."gsx$rahandusministeerium"."$t" | present
 	}
 }) |
 

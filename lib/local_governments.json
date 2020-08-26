@@ -5,7 +5,8 @@
 		"county": "Harju",
 		"population": 6214,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/anija-vald"
 	},
 	"harku-vald": {
 		"ehak": "0198",
@@ -13,7 +14,8 @@
 		"county": "Harju",
 		"population": 14820,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/harku-vald"
 	},
 	"jõelähtme-vald": {
 		"ehak": "0245",
@@ -21,7 +23,8 @@
 		"county": "Harju",
 		"population": 6508,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/joelahtme-vald"
 	},
 	"keila-linn": {
 		"ehak": "0296",
@@ -29,7 +32,8 @@
 		"county": "Harju",
 		"population": 9975,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/keila-linn"
 	},
 	"kiili-vald": {
 		"ehak": "0305",
@@ -37,7 +41,8 @@
 		"county": "Harju",
 		"population": 5442,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kiili-vald"
 	},
 	"kose-vald": {
 		"ehak": "0338",
@@ -45,7 +50,8 @@
 		"county": "Harju",
 		"population": 7123,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kose-vald"
 	},
 	"kuusalu-vald": {
 		"ehak": "0353",
@@ -53,7 +59,8 @@
 		"county": "Harju",
 		"population": 6446,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kuusalu-vald"
 	},
 	"loksa-linn": {
 		"ehak": "0424",
@@ -61,7 +68,8 @@
 		"county": "Harju",
 		"population": 2636,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/loksa-linn"
 	},
 	"lääne-harju-vald": {
 		"ehak": "0431",
@@ -69,7 +77,8 @@
 		"county": "Harju",
 		"population": 12578,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/laane-harju-vald"
 	},
 	"maardu-linn": {
 		"ehak": "0446",
@@ -77,7 +86,8 @@
 		"county": "Harju",
 		"population": 15468,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/maardu-linn"
 	},
 	"raasiku-vald": {
 		"ehak": "0651",
@@ -85,7 +95,8 @@
 		"county": "Harju",
 		"population": 5022,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/raasiku-vald"
 	},
 	"rae-vald": {
 		"ehak": "0653",
@@ -93,7 +104,8 @@
 		"county": "Harju",
 		"population": 18951,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/rae-vald"
 	},
 	"saku-vald": {
 		"ehak": "0719",
@@ -101,7 +113,8 @@
 		"county": "Harju",
 		"population": 10127,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/saku-vald"
 	},
 	"saue-vald": {
 		"ehak": "0726",
@@ -109,7 +122,8 @@
 		"county": "Harju",
 		"population": 22139,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/saue-vald"
 	},
 	"tallinn": {
 		"ehak": "0784",
@@ -117,7 +131,8 @@
 		"county": "Harju",
 		"population": 438930,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/tallinna-linn"
 	},
 	"viimsi-vald": {
 		"ehak": "0890",
@@ -125,7 +140,8 @@
 		"county": "Harju",
 		"population": 20142,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/viimsi-vald"
 	},
 	"hiiumaa-vald": {
 		"ehak": "0205",
@@ -133,7 +149,8 @@
 		"county": "Hiiu",
 		"population": 9512,
 		"initiativesEmail": null,
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/hiiumaa-vald"
 	},
 	"alutaguse-vald": {
 		"ehak": "0130",
@@ -141,7 +158,8 @@
 		"county": "Ida-Viru",
 		"population": 4766,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/alutaguse-vald"
 	},
 	"jõhvi-vald": {
 		"ehak": "0251",
@@ -149,7 +167,8 @@
 		"county": "Ida-Viru",
 		"population": 11280,
 		"initiativesEmail": null,
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/johvi-vald"
 	},
 	"kohtla-järve-linn": {
 		"ehak": "0321",
@@ -157,7 +176,8 @@
 		"county": "Ida-Viru",
 		"population": 33709,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kohtla-jarve-linn"
 	},
 	"lüganuse-vald": {
 		"ehak": "0442",
@@ -165,7 +185,8 @@
 		"county": "Ida-Viru",
 		"population": 8631,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/luganuse-vald"
 	},
 	"narva-linn": {
 		"ehak": "0511",
@@ -173,7 +194,8 @@
 		"county": "Ida-Viru",
 		"population": 56459,
 		"initiativesEmail": null,
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/narva-linn"
 	},
 	"narva-jõesuu-linn": {
 		"ehak": "0514",
@@ -181,7 +203,8 @@
 		"county": "Ida-Viru",
 		"population": 4601,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/narva-joesuu-linn"
 	},
 	"sillamäe-linn": {
 		"ehak": "0735",
@@ -189,7 +212,8 @@
 		"county": "Ida-Viru",
 		"population": 12842,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/sillamae-linn"
 	},
 	"toila-vald": {
 		"ehak": "0803",
@@ -197,7 +221,8 @@
 		"county": "Ida-Viru",
 		"population": 4779,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/toila-vald"
 	},
 	"jõgeva-vald": {
 		"ehak": "0247",
@@ -205,7 +230,8 @@
 		"county": "Jõgeva",
 		"population": 13523,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/jogeva-vald"
 	},
 	"mustvee-vald": {
 		"ehak": "0486",
@@ -213,7 +239,8 @@
 		"county": "Jõgeva",
 		"population": 5546,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/mustvee-vald"
 	},
 	"põltsamaa-vald": {
 		"ehak": "0618",
@@ -221,7 +248,8 @@
 		"county": "Jõgeva",
 		"population": 9756,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/poltsamaa-vald"
 	},
 	"järva-vald": {
 		"ehak": "0255",
@@ -229,7 +257,8 @@
 		"county": "Järva",
 		"population": 8968,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/jarva-vald"
 	},
 	"paide-linn": {
 		"ehak": "0567",
@@ -237,7 +266,8 @@
 		"county": "Järva",
 		"population": 10513,
 		"initiativesEmail": null,
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/paide-linn"
 	},
 	"türi-vald": {
 		"ehak": "0834",
@@ -245,7 +275,8 @@
 		"county": "Järva",
 		"population": 10808,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/turi-vald"
 	},
 	"haapsalu-linn": {
 		"ehak": "0184",
@@ -253,7 +284,8 @@
 		"county": "Lääne",
 		"population": 13193,
 		"initiativesEmail": null,
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/haapsalu-linn"
 	},
 	"lääne-nigula-vald": {
 		"ehak": "0441",
@@ -261,7 +293,8 @@
 		"county": "Lääne",
 		"population": 7115,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/laane-nigula-vald"
 	},
 	"vormsi-vald": {
 		"ehak": "0907",
@@ -269,7 +302,8 @@
 		"county": "Lääne",
 		"population": 400,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/vormsi-vald"
 	},
 	"haljala-vald": {
 		"ehak": "0191",
@@ -277,7 +311,8 @@
 		"county": "Lääne-Viru",
 		"population": 4361,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/haljala-vald"
 	},
 	"kadrina-vald": {
 		"ehak": "0272",
@@ -285,7 +320,8 @@
 		"county": "Lääne-Viru",
 		"population": 4875,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kadrina-vald"
 	},
 	"rakvere-linn": {
 		"ehak": "0663",
@@ -293,7 +329,8 @@
 		"county": "Lääne-Viru",
 		"population": 15092,
 		"initiativesEmail": null,
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/rakvere-linn"
 	},
 	"rakvere-vald": {
 		"ehak": "0661",
@@ -301,7 +338,8 @@
 		"county": "Lääne-Viru",
 		"population": 5590,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/rakvere-vald"
 	},
 	"tapa-vald": {
 		"ehak": "0792",
@@ -309,7 +347,8 @@
 		"county": "Lääne-Viru",
 		"population": 10866,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/tapa-vald"
 	},
 	"vinni-vald": {
 		"ehak": "0901",
@@ -317,7 +356,8 @@
 		"county": "Lääne-Viru",
 		"population": 6900,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/vinni-vald"
 	},
 	"viru-nigula-vald": {
 		"ehak": "0903",
@@ -325,7 +365,8 @@
 		"county": "Lääne-Viru",
 		"population": 5859,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/viru-nigula-vald"
 	},
 	"väike-maarja-vald": {
 		"ehak": "0928",
@@ -333,7 +374,8 @@
 		"county": "Lääne-Viru",
 		"population": 5928,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/vaike-maarja-vald"
 	},
 	"kanepi-vald": {
 		"ehak": "0284",
@@ -341,7 +383,8 @@
 		"county": "Põlva",
 		"population": 4821,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kanepi-vald"
 	},
 	"põlva-vald": {
 		"ehak": "0622",
@@ -349,7 +392,8 @@
 		"county": "Põlva",
 		"population": 13982,
 		"initiativesEmail": null,
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/polva-vald"
 	},
 	"räpina-vald": {
 		"ehak": "0708",
@@ -357,7 +401,8 @@
 		"county": "Põlva",
 		"population": 6377,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/rapina-vald"
 	},
 	"häädemeeste-vald": {
 		"ehak": "0214",
@@ -365,7 +410,8 @@
 		"county": "Pärnu",
 		"population": 4906,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/haademeeste-vald"
 	},
 	"kihnu-vald": {
 		"ehak": "0303",
@@ -373,7 +419,8 @@
 		"county": "Pärnu",
 		"population": 701,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kihnu-vald"
 	},
 	"lääneranna-vald": {
 		"ehak": "0430",
@@ -381,7 +428,8 @@
 		"county": "Pärnu",
 		"population": 5396,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/laaneranna-vald"
 	},
 	"põhja-pärnumaa-vald": {
 		"ehak": "0638",
@@ -389,7 +437,8 @@
 		"county": "Pärnu",
 		"population": 8285,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/pohja-parnumaa-vald"
 	},
 	"pärnu-linn": {
 		"ehak": "0624",
@@ -397,7 +446,8 @@
 		"county": "Pärnu",
 		"population": 51271,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/parnu-linn"
 	},
 	"saarde-vald": {
 		"ehak": "0712",
@@ -405,7 +455,8 @@
 		"county": "Pärnu",
 		"population": 4603,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/saarde-vald"
 	},
 	"tori-vald": {
 		"ehak": "0809",
@@ -413,7 +464,8 @@
 		"county": "Pärnu",
 		"population": 11699,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/tori-vald"
 	},
 	"kehtna-vald": {
 		"ehak": "0293",
@@ -421,7 +473,8 @@
 		"county": "Rapla",
 		"population": 5464,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kehtna-vald"
 	},
 	"kohila-vald": {
 		"ehak": "0317",
@@ -429,7 +482,8 @@
 		"county": "Rapla",
 		"population": 7215,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kohila-vald"
 	},
 	"märjamaa-vald": {
 		"ehak": "0503",
@@ -437,7 +491,8 @@
 		"county": "Rapla",
 		"population": 7558,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/marjamaa-vald"
 	},
 	"rapla-vald": {
 		"ehak": "0668",
@@ -445,7 +500,8 @@
 		"county": "Rapla",
 		"population": 13179,
 		"initiativesEmail": null,
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/rapla-vald"
 	},
 	"muhu-vald": {
 		"ehak": "0478",
@@ -453,7 +509,8 @@
 		"county": "Saare",
 		"population": 1927,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/muhu-vald"
 	},
 	"ruhnu-vald": {
 		"ehak": "0689",
@@ -461,7 +518,8 @@
 		"county": "Saare",
 		"population": 159,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/ruhnu-vald"
 	},
 	"saaremaa-vald": {
 		"ehak": "0714",
@@ -469,7 +527,8 @@
 		"county": "Saare",
 		"population": 31453,
 		"initiativesEmail": null,
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/saaremaa-vald"
 	},
 	"elva-vald": {
 		"ehak": "0171",
@@ -477,7 +536,8 @@
 		"county": "Tartu",
 		"population": 14583,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/elva-vald"
 	},
 	"kambja-vald": {
 		"ehak": "0283",
@@ -485,7 +545,8 @@
 		"county": "Tartu",
 		"population": 11040,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kambja-vald"
 	},
 	"kastre-vald": {
 		"ehak": "0291",
@@ -493,7 +554,8 @@
 		"county": "Tartu",
 		"population": 5212,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kastre-vald"
 	},
 	"luunja-vald": {
 		"ehak": "0432",
@@ -501,7 +563,8 @@
 		"county": "Tartu",
 		"population": 4734,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/luunja-vald"
 	},
 	"nõo-vald": {
 		"ehak": "0528",
@@ -509,7 +572,8 @@
 		"county": "Tartu",
 		"population": 4311,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/noo-vald"
 	},
 	"peipsiääre-vald": {
 		"ehak": "0586",
@@ -517,7 +581,8 @@
 		"county": "Tartu",
 		"population": 5587,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/peipsiaare-vald"
 	},
 	"tartu-linn": {
 		"ehak": "0793",
@@ -525,7 +590,8 @@
 		"county": "Tartu",
 		"population": 95334,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/tartu-linn"
 	},
 	"tartu-vald": {
 		"ehak": "0796",
@@ -533,7 +599,8 @@
 		"county": "Tartu",
 		"population": 10846,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/tartu-vald"
 	},
 	"otepää-vald": {
 		"ehak": "0557",
@@ -541,7 +608,8 @@
 		"county": "Valga",
 		"population": 6566,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/otepaa-vald"
 	},
 	"tõrva-vald": {
 		"ehak": "0824",
@@ -549,7 +617,8 @@
 		"county": "Valga",
 		"population": 6162,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/torva-vald"
 	},
 	"valga-vald": {
 		"ehak": "0855",
@@ -557,7 +626,8 @@
 		"county": "Valga",
 		"population": 15625,
 		"initiativesEmail": null,
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/valga-vald"
 	},
 	"mulgi-vald": {
 		"ehak": "0480",
@@ -565,7 +635,8 @@
 		"county": "Viljandi",
 		"population": 7525,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/mulgi-vald"
 	},
 	"põhja-sakala-vald": {
 		"ehak": "0615",
@@ -573,7 +644,8 @@
 		"county": "Viljandi",
 		"population": 7984,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/pohja-sakala-vald"
 	},
 	"viljandi-linn": {
 		"ehak": "0897",
@@ -581,7 +653,8 @@
 		"county": "Viljandi",
 		"population": 17301,
 		"initiativesEmail": null,
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/viljandi-linn"
 	},
 	"viljandi-vald": {
 		"ehak": "0899",
@@ -589,7 +662,8 @@
 		"county": "Viljandi",
 		"population": 13635,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/viljandi-vald"
 	},
 	"antsla-vald": {
 		"ehak": "0142",
@@ -597,7 +671,8 @@
 		"county": "Võru",
 		"population": 4565,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/antsla-vald"
 	},
 	"rõuge-vald": {
 		"ehak": "0698",
@@ -605,7 +680,8 @@
 		"county": "Võru",
 		"population": 5482,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/rouge-vald"
 	},
 	"setomaa-vald": {
 		"ehak": "0732",
@@ -613,7 +689,8 @@
 		"county": "Võru",
 		"population": 3392,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/setomaa-vald"
 	},
 	"võru-linn": {
 		"ehak": "0919",
@@ -621,7 +698,8 @@
 		"county": "Võru",
 		"population": 11829,
 		"initiativesEmail": null,
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/"
+		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/voru-linn"
 	},
 	"võru-vald": {
 		"ehak": "0917",
@@ -629,6 +707,7 @@
 		"county": "Võru",
 		"population": 10844,
 		"initiativesEmail": null,
-		"kompassUrl": null
+		"kompassUrl": null,
+		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/voru-vald"
 	}
 }

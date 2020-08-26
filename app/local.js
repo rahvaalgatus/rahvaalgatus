@@ -95,7 +95,13 @@ exports.newMap = function(el, initiativeCounts) {
 				if (gov.kompassUrl) html += [
 					"<li class=\"kompass\"><a href=\"",
 					gov.kompassUrl,
-					"\"</a>Rändnäitus \"Kodukoha kompass\"</a></li>"
+					"\">Rändnäitus \"Kodukoha kompass\"</a></li>"
+				].join("")
+
+				if (gov.rahandusministeeriumUrl) html += [
+					"<li class=\"rahandusministeerium\"><a href=\"",
+					gov.rahandusministeeriumUrl,
+					"\">Ülevaade teenuste tasemetest</a></li>"
 				].join("")
 
 				html += "</ul>"
