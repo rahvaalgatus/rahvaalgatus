@@ -67,6 +67,12 @@ exports.newMap = function(el, initiativeCounts) {
 				if (gov.kompassUrl)
 					html += "<li class=\"kompass\">Rändnäitus \"Kodukoha kompass\"</li>"
 
+				if (gov.rahandusministeeriumUrl) html += [
+					"<li class=\"rahandusministeerium\">",
+					"Ülevaade teenuste tasemetest",
+					"</li>"
+				].join("")
+
 				html += "</ul>"
 
 				layer.bindTooltip(html, {
