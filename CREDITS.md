@@ -16,5 +16,6 @@ Images
 - <i class="ra-icon-msg">![public/assets/icons/msg.svg](public/assets/icons/msg.svg)</i> — [Icon54](https://icon54.com)
 - <i class="ra-icon-ddoc">![public/assets/icons/ddoc.svg](public/assets/icons/ddoc.svg)</i> — [RIA & Tank OÜ](https://www.ria.ee/et/riigi-infosusteem/elektrooniline-identiteet-eid/sumboolika.html)
 - <i class="ra-icon-html">![public/assets/icons/html.svg](public/assets/icons/html.svg)</i> — [Freepik](https://www.freepik.com)
+- <i class="ra-icon-txt">![public/assets/icons/txt.svg](public/assets/icons/txt.svg)</i> — [Freepik](https://www.freepik.com)
 - <i class="ra-icon-jpeg">![public/assets/icons/jpeg.svg](public/assets/icons/jpeg.svg)</i> — [Smashicons](https://smashicons.com)
 - <i class="ra-icon-api">![public/assets/icons/api.svg](public/assets/icons/api.svg)</i> — [Smashicons](https://smashicons.com)

@@ -1,14 +1,14 @@
 {
   "checksum": {
-    "previous": "6e779c5f19950ee201d1e93866b4a18efb076bae8845f28af3844eb41c9ca59d",
-    "current": "6e779c5f19950ee201d1e93866b4a18efb076bae8845f28af3844eb41c9ca59d"
+    "previous": "9e6162492b40231a57a49b6e671d5cd674fe7f3244da591e867699cd37dff8e7",
+    "current": "9e6162492b40231a57a49b6e671d5cd674fe7f3244da591e867699cd37dff8e7"
   },
   "fonts": [
-    "public/assets/Rahvaicons_6e779c5f19950ee201d1e93866b4a18e.ttf",
-    "public/assets/Rahvaicons_6e779c5f19950ee201d1e93866b4a18e.svg",
-    "public/assets/Rahvaicons_6e779c5f19950ee201d1e93866b4a18e.woff",
-    "public/assets/Rahvaicons_6e779c5f19950ee201d1e93866b4a18e.eot",
-    "public/assets/Rahvaicons_6e779c5f19950ee201d1e93866b4a18e.woff2"
+    "public/assets/Rahvaicons_9e6162492b40231a57a49b6e671d5cd6.ttf",
+    "public/assets/Rahvaicons_9e6162492b40231a57a49b6e671d5cd6.svg",
+    "public/assets/Rahvaicons_9e6162492b40231a57a49b6e671d5cd6.woff",
+    "public/assets/Rahvaicons_9e6162492b40231a57a49b6e671d5cd6.eot",
+    "public/assets/Rahvaicons_9e6162492b40231a57a49b6e671d5cd6.woff2"
   ],
   "glyphs": {
     "api": {
@@ -58,6 +58,10 @@
     "twitter-logo": {
       "codepoint": 61697,
       "source": "assets/icons/twitter-logo.svg"
+    },
+    "txt": {
+      "codepoint": 61710,
+      "source": "assets/icons/txt.svg"
     }
   },
   "options": {

@@ -74,6 +74,7 @@ var UI_TRANSLATIONS = _.mapValues(I18n.STRINGS, function(lang) {
 var FILE_TYPE_ICONS = {
 	"text/html": "ra-icon-html",
 	"application/pdf": "ra-icon-pdf",
+	"text/plain": "ra-icon-txt",
 	"image/jpeg": "ra-icon-jpeg",
 	"application/vnd.ms-powerpoint": "ra-icon-ppt",
 	"application/vnd.ms-outlook": "ra-icon-msg",

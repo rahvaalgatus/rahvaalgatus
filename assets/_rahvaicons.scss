@@ -3,11 +3,11 @@
   font-weight: normal;
   font-style: normal;
 
-  src: url("/assets/Rahvaicons_6e779c5f19950ee201d1e93866b4a18e.eot");
-  src: url("/assets/Rahvaicons_6e779c5f19950ee201d1e93866b4a18e.eot?#iefix") format("embedded-opentype"),
-       url("/assets/Rahvaicons_6e779c5f19950ee201d1e93866b4a18e.woff") format("woff"),
-       url("/assets/Rahvaicons_6e779c5f19950ee201d1e93866b4a18e.woff2") format("woff2"),
-       url("/assets/Rahvaicons_6e779c5f19950ee201d1e93866b4a18e.ttf") format("truetype");
+  src: url("/assets/Rahvaicons_9e6162492b40231a57a49b6e671d5cd6.eot");
+  src: url("/assets/Rahvaicons_9e6162492b40231a57a49b6e671d5cd6.eot?#iefix") format("embedded-opentype"),
+       url("/assets/Rahvaicons_9e6162492b40231a57a49b6e671d5cd6.woff") format("woff"),
+       url("/assets/Rahvaicons_9e6162492b40231a57a49b6e671d5cd6.woff2") format("woff2"),
+       url("/assets/Rahvaicons_9e6162492b40231a57a49b6e671d5cd6.ttf") format("truetype");
 }
 
 .ra-icon-api:before,
@@ -21,7 +21,8 @@
 .ra-icon-pdf:before,
 .ra-icon-ppt:before,
 .ra-icon-rss:before,
-.ra-icon-twitter-logo:before {
+.ra-icon-twitter-logo:before,
+.ra-icon-txt:before {
   font-family: "Rahvaicons";
   font-style: normal;
   font-weight: normal;
@@ -45,5 +46,6 @@
 .ra-icon-ppt:before { content: "" !important; }
 .ra-icon-rss:before { content: "" !important; }
 .ra-icon-twitter-logo:before { content: "" !important; }
+.ra-icon-txt:before { content: "" !important; }
 
 /* vim: set ft=eruby.css :*/
