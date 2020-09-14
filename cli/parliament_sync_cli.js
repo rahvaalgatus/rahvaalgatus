@@ -786,6 +786,7 @@ function eventTypeFromStatus(obj) {
 function parseMeetingDecision(obj) {
 	switch (obj.code) {
 		case "JATKATA_ARUTELU": return "continue"
+		case "AVALIK_ISTUNG": return "hold-public-hearing"
 		case "LAHENDADA_MUUL_VIISIL": return "solve-differently"
 		case "ETTEPANEK_TAGASI_LYKATA": return "reject"
 		case "ETTEPANEK_INSTITUTSIOONILE": return "forward"

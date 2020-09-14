@@ -745,6 +745,25 @@ describe("ParliamentSyncCli", function() {
 				content: {committee: null, decision: "continue", invitees: null},
 			}],
 
+			"ARUTELU_KOMISJONIS status with AVALIK_ISTUNG decision": [{
+				statuses: [{
+					date: "2018-10-24",
+					status: {code: "ARUTELU_KOMISJONIS"},
+					committeeDecision: {code: "AVALIK_ISTUNG"}
+				}]
+			}, null, {
+				occurred_at: new Date(2018, 9, 24),
+				origin: "parliament",
+				external_id: "ARUTELU_KOMISJONIS/2018-10-24",
+				type: "parliament-committee-meeting",
+				title: null,
+				content: {
+					committee: null,
+					decision: "hold-public-hearing",
+					invitees: null
+				},
+			}],
+
 			"ARUTELU_KOMISJONIS status with LAHENDADA_MUUL_VIISIL decision": [{
 				statuses: [{
 					date: "2018-10-24",

@@ -546,6 +546,7 @@
 	"PARLIAMENT_MEETING_DECISION_DRAFT_ACT_OR_NATIONAL_MATTER": "Otsustati algatada eelnõu või olulise tähtsusega riikliku küsimuse arutelu.",
 	"PARLIAMENT_MEETING_DECISION_FORWARD": "Otsustati edastada ettepanek pädevale institutsioonile seisukoha võtmiseks ja lahendamiseks.",
 	"PARLIAMENT_MEETING_DECISION_FORWARD_TO_GOVERNMENT": "Otsustati edastada ettepanek Vabariigi Valitsusele seisukoha kujundamiseks ja pöördumisele vastamiseks.",
+	"PARLIAMENT_MEETING_DECISION_HOLD_PUBLIC_HEARING": "Otsustati korraldada avalik istung.",
 	"PARLIAMENT_MEETING_DECISION_REJECT": "Otsustati esitatud ettepanek tagasi lükata.",
 	"PARLIAMENT_MEETING_DECISION_SOLVE_DIFFERENTLY": "Otsustati lahendada pöördumises püstitatud probleem muul viisil.",
 	"PARLIAMENT_MEETING_INVITEES": "Kutsutud",

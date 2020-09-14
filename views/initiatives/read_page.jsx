@@ -1875,6 +1875,8 @@ function EventsView(attrs) {
 								decision ? <p class="text">{
 									decision == "continue"
 									? t("PARLIAMENT_MEETING_DECISION_CONTINUE")
+									: decision == "hold-public-hearing"
+									? t("PARLIAMENT_MEETING_DECISION_HOLD_PUBLIC_HEARING")
 									: decision == "reject"
 									? t("PARLIAMENT_MEETING_DECISION_REJECT")
 									: decision == "forward"
