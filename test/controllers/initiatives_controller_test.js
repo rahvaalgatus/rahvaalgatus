@@ -62,6 +62,30 @@ var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var TRIX_TYPE = new MediaType("application/vnd.basecamp.trix+json")
 var TWITTER_NAME = Config.twitterUrl.replace(/^.*\//, "")
 
+var PARLIAMENT_MEETING_DECISION_TEXTS = {
+	"continue": t("PARLIAMENT_MEETING_DECISION_CONTINUE"),
+	"reject": t("PARLIAMENT_MEETING_DECISION_REJECT"),
+	"forward": t("PARLIAMENT_MEETING_DECISION_FORWARD"),
+
+	"forward-to-government":
+		t("PARLIAMENT_MEETING_DECISION_FORWARD_TO_GOVERNMENT"),
+	"solve-differently":
+		t("PARLIAMENT_MEETING_DECISION_SOLVE_DIFFERENTLY"),
+	"draft-act-or-national-matter":
+		t("PARLIAMENT_MEETING_DECISION_DRAFT_ACT_OR_NATIONAL_MATTER"),
+}
+
+var PARLIAMENT_DECISION_TEXTS = {
+	"continue": t("PARLIAMENT_DECISION_CONTINUE"),
+	"reject": t("PARLIAMENT_DECISION_REJECT"),
+	"forward": t("PARLIAMENT_DECISION_FORWARD"),
+	"forward-to-government": t("PARLIAMENT_DECISION_FORWARD_TO_GOVERNMENT"),
+	"solve-differently": t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY"),
+
+	"draft-act-or-national-matter":
+		t("PARLIAMENT_DECISION_DRAFT_ACT_OR_NATIONAL_MATTER"),
+}
+
 describe("InitiativesController", function() {
 	require("root/test/web")()
 	require("root/test/mitm")()
@@ -2277,17 +2301,7 @@ describe("InitiativesController", function() {
 					}))
 
 					events[0].content[0].textContent.must.equal(
-						decision == "continue"
-						? t("PARLIAMENT_MEETING_DECISION_CONTINUE")
-						: decision == "reject"
-						? t("PARLIAMENT_MEETING_DECISION_REJECT")
-						: decision == "forward"
-						? t("PARLIAMENT_MEETING_DECISION_FORWARD")
-						: decision == "solve-differently"
-						? t("PARLIAMENT_MEETING_DECISION_SOLVE_DIFFERENTLY")
-						: decision == "draft-act-or-national-matter"
-						? t("PARLIAMENT_MEETING_DECISION_DRAFT_ACT_OR_NATIONAL_MATTER")
-						: null
+						PARLIAMENT_MEETING_DECISION_TEXTS[decision] || null
 					)
 				})
 			})
@@ -2656,15 +2670,7 @@ describe("InitiativesController", function() {
 					events[1].title.must.equal(t("PARLIAMENT_FINISHED"))
 
 					events[1].content[0].textContent.must.equal(
-						decision == "reject"
-						? t("PARLIAMENT_DECISION_REJECT")
-						: decision == "forward"
-						? t("PARLIAMENT_DECISION_FORWARD")
-						: decision == "solve-differently"
-						? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
-						: decision == "draft-act-or-national-matter"
-						? t("PARLIAMENT_DECISION_DRAFT_ACT_OR_NATIONAL_MATTER")
-						: null
+						PARLIAMENT_DECISION_TEXTS[decision] || null
 					)
 				})
 
@@ -2699,15 +2705,7 @@ describe("InitiativesController", function() {
 					events[1].title.must.equal(t("PARLIAMENT_FINISHED"))
 
 					events[1].content[0].textContent.must.equal(
-						decision == "reject"
-						? t("PARLIAMENT_DECISION_REJECT")
-						: decision == "forward"
-						? t("PARLIAMENT_DECISION_FORWARD")
-						: decision == "solve-differently"
-						? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
-						: decision == "draft-act-or-national-matter"
-						? t("PARLIAMENT_DECISION_DRAFT_ACT_OR_NATIONAL_MATTER")
-						: null
+						PARLIAMENT_DECISION_TEXTS[decision] || null
 					)
 				})
 			})
@@ -5641,17 +5639,7 @@ describe("InitiativesController", function() {
 					})},
 
 					content: {type: "text", $:
-						decision == "continue"
-						? t("PARLIAMENT_MEETING_DECISION_CONTINUE")
-						: decision == "reject"
-						? t("PARLIAMENT_MEETING_DECISION_REJECT")
-						: decision == "forward"
-						? t("PARLIAMENT_MEETING_DECISION_FORWARD")
-						: decision == "solve-differently"
-						? t("PARLIAMENT_MEETING_DECISION_SOLVE_DIFFERENTLY")
-						: decision == "draft-act-or-national-matter"
-						? t("PARLIAMENT_MEETING_DECISION_DRAFT_ACT_OR_NATIONAL_MATTER")
-						: null
+						PARLIAMENT_MEETING_DECISION_TEXTS[decision] || null
 					}
 				})
 			})
@@ -5903,16 +5891,9 @@ describe("InitiativesController", function() {
 					published: {$: initiative.finished_in_parliament_at.toJSON()},
 					title: {$: t("PARLIAMENT_FINISHED")},
 
-					content: {type: "text", $:
-						decision == "reject"
-						? t("PARLIAMENT_DECISION_REJECT")
-						: decision == "forward"
-						? t("PARLIAMENT_DECISION_FORWARD")
-						: decision == "solve-differently"
-						? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
-						: decision == "draft-act-or-national-matter"
-						? t("PARLIAMENT_DECISION_DRAFT_ACT_OR_NATIONAL_MATTER")
-						: null
+					content: {
+						type: "text",
+						$: PARLIAMENT_DECISION_TEXTS[decision] || null
 					}
 				})
 			})
@@ -5951,16 +5932,9 @@ describe("InitiativesController", function() {
 					published: {$: event.occurred_at.toJSON()},
 					title: {$: t("PARLIAMENT_FINISHED")},
 
-					content: {type: "text", $:
-						decision == "reject"
-						? t("PARLIAMENT_DECISION_REJECT")
-						: decision == "forward"
-						? t("PARLIAMENT_DECISION_FORWARD")
-						: decision == "solve-differently"
-						? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
-						: decision == "draft-act-or-national-matter"
-						? t("PARLIAMENT_DECISION_DRAFT_ACT_OR_NATIONAL_MATTER")
-						: null
+					content: {
+						type: "text",
+						$: PARLIAMENT_DECISION_TEXTS[decision] || null
 					}
 				})
 			})

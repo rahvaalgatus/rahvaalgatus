@@ -766,6 +766,27 @@ describe("ParliamentSyncCli", function() {
 				}
 			}],
 
+			"ARUTELU_KOMISJONIS status with ETTEPANEK_VALITSUSELE decision": [{
+				statuses: [{
+					date: "2018-10-24",
+					status: {code: "ARUTELU_KOMISJONIS"},
+					committeeDecision: {code: "ETTEPANEK_VALITSUSELE"}
+				}]
+			}, {
+				parliament_decision: "forward-to-government",
+			}, {
+				occurred_at: new Date(2018, 9, 24),
+				origin: "parliament",
+				external_id: "ARUTELU_KOMISJONIS/2018-10-24",
+				type: "parliament-committee-meeting",
+				title: null,
+				content: {
+					committee: null,
+					decision: "forward-to-government",
+					invitees: null
+				}
+			}],
+
 			"ARUTELU_KOMISJONIS status with ETTEPANEK_TAGASI_LYKATA decision": [{
 				statuses: [{
 					date: "2018-10-24",

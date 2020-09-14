@@ -449,6 +449,8 @@ function attrsFromStatus(status) {
 					return {parliament_decision: "reject"}
 				case "ETTEPANEK_INSTITUTSIOONILE":
 					return {parliament_decision: "forward"}
+				case "ETTEPANEK_VALITSUSELE":
+					return {parliament_decision: "forward-to-government"}
 				case "ALGATADA_EELNOU_VOI_OTRK":
 					return {parliament_decision: "draft-act-or-national-matter"}
 
@@ -787,6 +789,7 @@ function parseMeetingDecision(obj) {
 		case "LAHENDADA_MUUL_VIISIL": return "solve-differently"
 		case "ETTEPANEK_TAGASI_LYKATA": return "reject"
 		case "ETTEPANEK_INSTITUTSIOONILE": return "forward"
+		case "ETTEPANEK_VALITSUSELE": return "forward-to-government"
 		case "ALGATADA_EELNOU_VOI_OTRK": return "draft-act-or-national-matter"
 		default: throw new RangeError("Unrecognized decision: " + obj.code)
 	}

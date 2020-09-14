@@ -1879,6 +1879,8 @@ function EventsView(attrs) {
 									? t("PARLIAMENT_MEETING_DECISION_REJECT")
 									: decision == "forward"
 									? t("PARLIAMENT_MEETING_DECISION_FORWARD")
+									: decision == "forward-to-government"
+									? t("PARLIAMENT_MEETING_DECISION_FORWARD_TO_GOVERNMENT")
 									: decision == "solve-differently"
 									? t("PARLIAMENT_MEETING_DECISION_SOLVE_DIFFERENTLY")
 									: decision == "draft-act-or-national-matter"
@@ -1962,6 +1964,8 @@ function EventsView(attrs) {
 								? t("PARLIAMENT_DECISION_REJECT")
 								: decision == "forward"
 								? t("PARLIAMENT_DECISION_FORWARD")
+								: decision == "forward-to-government"
+								? t("PARLIAMENT_DECISION_FORWARD_TO_GOVERNMENT")
 								: decision == "solve-differently"
 								? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
 								: decision == "draft-act-or-national-matter"
