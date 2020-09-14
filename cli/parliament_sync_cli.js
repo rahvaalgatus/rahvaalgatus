@@ -29,7 +29,7 @@ exports = module.exports = cli
 exports.parseTitle = parseTitle
 exports.replaceInitiative = replaceInitiative
 exports.syncInitiativeDocuments = syncInitiativeDocuments
-exports.readParliamentVolumeWithDocuments = readParliamentVolumeWithDocuments
+exports.readVolumeWithDocuments = readVolumeWithDocuments
 
 var USAGE_TEXT = `
 Usage: cli parliament-sync (-h | --help)
@@ -73,24 +73,28 @@ function* sync(opts) {
 	var pairs = _.zip(yield docs.map(readInitiative), docs)
 	pairs = pairs.filter(_.compose(Boolean, _.first))
 
-	pairs = yield pairs.map(function*([initiative, document]) {
-		// Because the collective-addresses endpoint doesn't return files,
-		// populate them on the first run, but use a cached response afterwards on
-		// the assumption that no new files will appear after creation.
+	pairs = yield pairs.map(function*([initiative, initiativeDoc]) {
+		// Because the collective-addresses/:id endpoint doesn't return files
+		// (https://github.com/riigikogu-kantselei/api/issues/27), we used to
+		// populate files only on the first run and later switched to use
+		// a cached response on the assumption that no new files will appear after
+		// creation.
 		//
-		// https://github.com/riigikogu-kantselei/api/issues/27
-		//
-		// A change made in the summer of 2020 broke all relatedDocuments in the
-		// collective-addresses response.
+		// A change made in the summer of 2020, however, broke the relatedDocuments
+		// attribute in the collective-addresses response, making it necessary to
+		// always load the parent document.
 		// https://github.com/riigikogu-kantselei/api/issues/33
-		var doc = yield api("documents/" + document.uuid).then(getBody)
+		var doc = yield api("documents/" + initiativeDoc.uuid).then(getBody)
 
-		document.volume = doc.volume || null
-		document.files = doc.files || null
-		if (doc.relatedDocuments) document.relatedDocuments = doc.relatedDocuments
-		if (doc.relatedVolumes) document.relatedVolumes = doc.relatedVolumes
+		initiativeDoc.volume = doc.volume || null
+		initiativeDoc.files = doc.files || null
 
-		return [initiative, document]
+		if (doc.relatedDocuments)
+			initiativeDoc.relatedDocuments = doc.relatedDocuments
+		if (doc.relatedVolumes)
+			initiativeDoc.relatedVolumes = doc.relatedVolumes
+
+		return [initiative, initiativeDoc]
 	})
 
 	var updated = pairs.filter(function(initiativeAndDocument) {
@@ -105,6 +109,7 @@ function* sync(opts) {
 
 	yield updated.map(function*(initiativeAndDocument) {
 		var initiative = initiativeAndDocument[0]
+
 		var doc = yield syncInitiativeDocuments(api, initiativeAndDocument[1])
 		initiative = yield replaceInitiative(initiative, doc)
 
@@ -163,7 +168,7 @@ function* readInitiative(doc) {
 
 function* syncInitiativeDocuments(api, doc) {
 	if (doc.volume) {
-		doc.volume = yield readParliamentVolumeWithDocuments(api, doc.volume.uuid)
+		doc.volume = yield readVolumeWithDocuments(api, doc.volume.uuid)
 
 		// The document we're syncing could either be one from
 		// /documents/collective-addresses or from /documents, so
@@ -185,7 +190,7 @@ function* syncInitiativeDocuments(api, doc) {
 	).filter(Boolean)
 
 	doc.relatedVolumes = yield (doc.relatedVolumes || []).map(getUuid).map(
-		readParliamentVolumeWithDocuments.bind(null, api)
+		readVolumeWithDocuments.bind(null, api)
 	)
 
 	var relatedVolumeUuids = new Set(doc.relatedVolumes.map(getUuid))
@@ -197,7 +202,7 @@ function* syncInitiativeDocuments(api, doc) {
 	)).map((doc) => doc.volume.uuid)
 
 	doc.missingVolumes = yield missingVolumeUuids.map(
-		readParliamentVolumeWithDocuments.bind(null, api)
+		readVolumeWithDocuments.bind(null, api)
 	)
 
 	doc.statuses = (yield (doc.statuses || []).map(function*(status) {
@@ -849,7 +854,7 @@ function normalizeParliamentDocumentForDiff(document) {
 	}
 }
 
-function* readParliamentVolumeWithDocuments(api, uuid) {
+function* readVolumeWithDocuments(api, uuid) {
 	var volume = yield api("volumes/" + uuid).then(getBody)
 
 	// Don't recurse into draft act documents for now as we're not sure what to

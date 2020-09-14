@@ -17,7 +17,7 @@ var logger = require("root").logger
 var {parseTitle} = require("./parliament_sync_cli")
 var replaceApiInitiative = require("./parliament_sync_cli").replaceInitiative
 var {syncInitiativeDocuments} = require("./parliament_sync_cli")
-var {readParliamentVolumeWithDocuments} = require("./parliament_sync_cli")
+var {readVolumeWithDocuments} = require("./parliament_sync_cli")
 var initiativesDb = require("root/db/initiatives_db")
 var WEB_URL = "https://www.riigikogu.ee/tutvustus-ja-ajalugu/raakige-kaasa/esitage-kollektiivne-poordumine/riigikogule-esitatud-kollektiivsed-poordumised"
 var DOCUMENT_URL = "https://www.riigikogu.ee/tegevus/dokumendiregister/dokument"
@@ -143,7 +143,7 @@ function* syncInitiative(row, collectiveAddressDocument) {
 	))
 
 	doc.webVolumes = yield webVolumeUuids.map(
-		readParliamentVolumeWithDocuments.bind(null, api)
+		readVolumeWithDocuments.bind(null, api)
 	)
 
 	// Some initiative rows on the parliament page have links to the volume that
