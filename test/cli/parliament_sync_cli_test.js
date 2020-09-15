@@ -1118,6 +1118,101 @@ describe("ParliamentSyncCli", function() {
 			})])
 		})
 
+		it("must create separate events given status with related incoming letter documents", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: (yield usersDb.create(new ValidUser)).id,
+				parliament_uuid: INITIATIVE_UUID
+			}))
+
+			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+				uuid: INITIATIVE_UUID,
+
+				statuses: [{
+					date: "2015-06-20",
+					status: {code: "ARUTELU_KOMISJONIS"},
+					relatedDocuments: [{uuid: DOCUMENT_UUID}]
+				}]
+			}]))
+
+			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+
+			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
+				uuid: DOCUMENT_UUID,
+				title: "Linnujahi korraldamine",
+				documentType: "letterDocument",
+				created: "2015-06-18T13:37:42.666",
+				author: "Jahimeeste Selts",
+				authorDate: "2015-06-17",
+				direction: {code: "SISSE"},
+				receiveType: {code: "E_POST"},
+
+				files: [{
+					uuid: FILE_UUID,
+					fileName: "Kiri.pdf",
+					accessRestrictionType: "PUBLIC"
+				}]
+			}))
+
+			this.router.get(`/download/${FILE_UUID}`,
+				respondWithRiigikoguDownload.bind(null,
+					"application/octet-stream",
+					"\x0d\x25"
+				)
+			)
+
+			yield job()
+
+			var updatedInitiative = yield initiativesDb.read(initiative)
+			updatedInitiative.must.eql(_.assign({}, initiative, {
+				parliament_api_data: updatedInitiative.parliament_api_data,
+				parliament_synced_at: new Date
+			}))
+
+			yield eventsDb.search(sql`
+				SELECT * FROM initiative_events
+			`).must.then.eql([new ValidEvent({
+				id: 1,
+				initiative_uuid: initiative.uuid,
+				occurred_at: new Date(2015, 5, 20),
+				origin: "parliament",
+				external_id: "ARUTELU_KOMISJONIS/2015-06-20",
+				type: "parliament-committee-meeting",
+				title: null,
+				content: {committee: null, invitees: null},
+			}), new ValidEvent({
+				id: 2,
+				initiative_uuid: initiative.uuid,
+				occurred_at: new Date(2015, 5, 18, 13, 37, 42, 666),
+				origin: "parliament",
+				external_id: DOCUMENT_UUID,
+				type: "parliament-letter",
+				title: null,
+
+				content: {
+					medium: "email",
+					direction: "incoming",
+					title: "Linnujahi korraldamine",
+					from: "Jahimeeste Selts",
+					date: "2015-06-17"
+				}
+			})])
+
+			yield filesDb.search(sql`
+				SELECT * FROM initiative_files
+			`).must.then.eql([new ValidFile({
+				id: 1,
+				event_id: 2,
+				initiative_uuid: initiative.uuid,
+				external_id: FILE_UUID,
+				name: "Kiri.pdf",
+				title: "Linnujahi korraldamine",
+				url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
+				content: EXAMPLE_BUFFER,
+				content_type: new MediaType("application/octet-stream"),
+				external_url: PARLIAMENT_URL + "/download/" + FILE_UUID
+			})])
+		})
+
 		it("must update acceptance event", function*() {
 			var requested = 0
 			this.router.get(INITIATIVES_URL, function(req, res) {

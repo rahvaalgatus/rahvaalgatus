@@ -539,6 +539,17 @@ function eventAttrsFromStatus(document, documents, status) {
 
 	eventDocuments = concat(status.relatedDocuments || EMPTY_ARR, eventDocuments)
 
+	// Create separate events for incoming letters. Outgoing letters on the other
+	// hand may be due to the event, as is with parliament-finished event's final
+	// reply.
+	var letterDocuments
+	;[letterDocuments, eventDocuments] = _.partition(eventDocuments, (doc) => (
+		doc.documentType == "letterDocument" &&
+		parseLetterDirection(doc.direction) == "incoming"
+	))
+
+	documents = documents.concat(letterDocuments)
+
 	attrs.files = flatten(eventDocuments.map((doc) => (
 		newDocumentFiles(doc, doc.files || EMPTY_ARR)
 	)))
