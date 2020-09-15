@@ -195,7 +195,7 @@ function* replaceWebInitiative(initiative, document, row) {
 		"uuid"
 	)
 
-	yield replaceApiInitiative(initiative, {
+	yield replaceApiInitiative({}, initiative, {
 		__proto__: document,
 		relatedDocuments: relatedDocuments,
 		relatedVolumes: relatedVolumes

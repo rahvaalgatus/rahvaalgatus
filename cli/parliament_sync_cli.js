@@ -39,6 +39,7 @@ Options:
     -h, --help   Display this help and exit.
     --force      Force refreshing initiatives from the parliament API.
     --cached     Do not refresh initiatives from the parliament API.
+    --quiet      Do not report ignored initiatives and documents.
 `
 
 function* cli(argv) {
@@ -48,6 +49,8 @@ function* cli(argv) {
 	var uuid = args["<uuid>"]
 	if (uuid == "") throw new Error("Invalid UUID: " + uuid)
 
+	var opts = {quiet: args["--quiet"]}
+
 	if (args["--cached"]) {
 		var initiatives = yield initiativesDb.search(sql`
 			SELECT * FROM initiatives
@@ -55,22 +58,23 @@ function* cli(argv) {
 			${uuid ? sql`AND uuid = ${uuid}` : sql``}
 		`)
 
-		yield initiatives.map((i) => replaceInitiative(i, i.parliament_api_data))
+		yield initiatives.map((i) => (
+			replaceInitiative(opts, i, i.parliament_api_data)
+		))
 	}
-	else yield sync({uuid: uuid, force: args["--force"]})
+	else yield sync(_.defaults({force: args["--force"]}, opts), uuid)
 }
 
-function* sync(opts) {
+function* sync(opts, uuid) {
 	var api = _.memoize(parliamentApi)
-	var uuid = opts && opts.uuid
-	var force = opts && opts.force
+	var force = opts.force
 
 	var docs = yield (uuid == null
 		? api("documents/collective-addresses").then(getBody)
 		: api(`documents/collective-addresses/${uuid}`).then(getBody).then(concat)
 	)
 
-	var pairs = _.zip(yield docs.map(readInitiative), docs)
+	var pairs = _.zip(yield docs.map(readInitiative.bind(null, opts)), docs)
 	pairs = pairs.filter(_.compose(Boolean, _.first))
 
 	pairs = yield pairs.map(function*([initiative, initiativeDoc]) {
@@ -111,7 +115,7 @@ function* sync(opts) {
 		var initiative = initiativeAndDocument[0]
 
 		var doc = yield syncInitiativeDocuments(api, initiativeAndDocument[1])
-		initiative = yield replaceInitiative(initiative, doc)
+		initiative = yield replaceInitiative(opts, initiative, doc)
 
 		yield initiativesDb.update(initiative, {
 			parliament_api_data: doc,
@@ -120,7 +124,7 @@ function* sync(opts) {
 	})
 }
 
-function* readInitiative(doc) {
+function* readInitiative(opts, doc) {
 	var initiative
 
 	// Around April 2020 old initiatives in the parliament API were recreated and
@@ -151,7 +155,9 @@ function* readInitiative(doc) {
 	)
 
 	if (!Config.importInitiativesFromParliament) {
-		logger.log("Ignoring new initiative %s (%s)…", doc.uuid, doc.title)
+		if (!opts.quiet)
+			logger.log("Ignoring new initiative %s (%s)…", doc.uuid, doc.title)
+
 		return null
 	}
 	else return {
@@ -221,7 +227,7 @@ function* syncInitiativeDocuments(api, doc) {
 	}
 }
 
-function* replaceInitiative(initiative, document) {
+function* replaceInitiative(opts, initiative, document) {
 	var statuses = sortStatuses(document.statuses || EMPTY_ARR)
 	var update = attrsFrom(document)
 
@@ -259,10 +265,11 @@ function* replaceInitiative(initiative, document) {
 		eventAttrsFromStatus.bind(null, document)
 	))
 
-	;[eventAttrs, documents] = _.map1st(
-		concat.bind(null, eventAttrs),
-		_.mapM(volumes, documents, eventAttrsFromVolume.bind(null, initiative))
-	)
+	;[eventAttrs, documents] = _.map1st(concat.bind(null, eventAttrs), _.mapM(
+		volumes,
+		documents,
+		eventAttrsFromVolume.bind(null, opts, initiative)
+	))
 
 	;[eventAttrs, documents] = _.map1st(
 		concat.bind(null, eventAttrs),
@@ -286,7 +293,7 @@ function* replaceInitiative(initiative, document) {
 
 	yield replaceEvents(initiative, eventAttrs)
 
-	documents.forEach((document) => logger.warn(
+	if (!opts.quiet) documents.forEach((document) => logger.warn(
 		"Ignored initiative %s document %s (%s)",
 		initiative.uuid,
 		document.uuid,
@@ -694,7 +701,7 @@ function eventAttrsFromDocument(document) {
 	return null
 }
 
-function eventAttrsFromVolume(initiative, documents, volume) {
+function eventAttrsFromVolume(opts, initiative, documents, volume) {
 	if (isCommitteeMeetingVolume(volume)) {
 		var time = parseInlineDateWithMaybeTime(volume.title)
 		if (time == null) return null
@@ -751,7 +758,7 @@ function eventAttrsFromVolume(initiative, documents, volume) {
 	if (volume.volumeType == "letterVolume")
 		return [null, concat(documents, volume.documents)]
 
-	logger.warn(
+	if (!opts.quiet) logger.warn(
 		"Ignored initiative %s volume %s (%s)",
 		initiative.uuid,
 		volume.uuid,
