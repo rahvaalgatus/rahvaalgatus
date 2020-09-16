@@ -65,17 +65,29 @@ make server ENV=production
 The few client-side JavaScript files of Rahvaalgatus, however, are not dependent on the environment.
 
 ### Accounts
-To test Mobile-Id signing, use one of the Mobile-Id test phone numbers:
+
+#### Mobile-Id
+To test signing in or signing initiatives with Mobile-Id, use one of the Mobile-Id test phone numbers:
 
 Phone        | Personal id | Name
 -------------|-------------|-----
-+37200000766 | 60001019906 | Estonian Mary
-+37200000566 | 60001018800 | Estonian Mary (PNOEE-certificate)
-+37060000666 | 50001018865 | Lithuanian Mary (PNOLT-certificate)
++37200000766 | 60001019906 | Mary Änn O’Connež-Šuslik Testnumber
++37200000566 | 60001018800 | Mary Änn O’Connež-Šuslik Testnumber (PNOEE-certificate)
 
 For more info and test numbers, see the [SK ID Solutions wiki][mobile-id-test]. You can also [register your own phone number](https://demo.sk.ee/MIDCertsReg/index.php) for use in the demo environment.
 
+
+#### Smart-Id
+To test signing in or signing initiatives with Smart-Id, use the following test personal id:
+
+Personal id | Name
+------------|-----
+10101010005 | Demo Smart-Id
+
+For more test ids, see the [Smart-Id documentation wiki][smart-id-test].
+
 [mobile-id-test]: https://github.com/SK-EID/MID/wiki/Test-number-for-automated-testing-in-DEMO
+[smart-id-test]: https://github.com/SK-EID/smart-id-documentation/wiki/Environment-technical-parameters#test-accounts-for-automated-testing
 
 
 Testing
