@@ -56,6 +56,7 @@ function parse(entry) {
 		title: entry.title.$,
 		author_name: entry.author.name.$,
 		published_at: new Date(entry.published.$),
-		url: alt.href
+		url: alt.href,
+		categories: _.map(_.asArray(entry.category), "term")
 	}
 }

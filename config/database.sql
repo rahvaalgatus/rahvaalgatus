@@ -456,7 +456,7 @@ CREATE TABLE news (
 	url TEXT NOT NULL,
 	external_id TEXT NOT NULL,
 	author_name TEXT,
-	published_at TEXT NOT NULL,
+	published_at TEXT NOT NULL, categories TEXT DEFAULT '[]',
 
 	CONSTRAINT title_length CHECK (length(title) > 0),
 	CONSTRAINT url_length CHECK (length(url) > 0),
@@ -597,4 +597,5 @@ INSERT INTO migrations VALUES('20200813175316');
 INSERT INTO migrations VALUES('20200815000000');
 INSERT INTO migrations VALUES('20200815000010');
 INSERT INTO migrations VALUES('20200822170508');
+INSERT INTO migrations VALUES('20200923141919');
 COMMIT;

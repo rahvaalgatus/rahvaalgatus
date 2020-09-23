@@ -63,7 +63,8 @@ exports.router.get("/", next(function*(req, res) {
 			var recentInitiatives = yield searchRecentInitiatives(initiatives)
 
 			var news = yield newsDb.search(sql`
-				SELECT * FROM news
+				SELECT * FROM news, json_each(news.categories) AS category
+				WHERE category.value= 'Rahvaalgatusveeb'
 				ORDER BY published_at DESC
 				LIMIT 3
 			`)
