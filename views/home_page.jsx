@@ -137,35 +137,6 @@ function HomePage(attrs) {
 			</ol>
 		</Section> : null}
 
-		{news.length > 0 ? <Section
-			id="news"
-			class="transparent-section"
-		>
-			<h2>
-				<a href="https://kogu.ee">
-					<img src={"/assets/kogu-blue.svg"} alt={t("KOGU")} />
-				</a>
-
-				<span>{t("HOME_PAGE_NEWS_TITLE")}</span>
-			</h2>
-
-			<ol>{news.map((news) => <li><a href={news.url}>
-				<div class="time-and-author">
-					<time datetime={news.published_at.toJSON()}>
-						{I18n.formatDate("numeric", news.published_at)}
-					</time>
-
-					{", "}
-
-					<span class="author" title={news.author_name}>
-						{news.author_name}
-					</span>
-				</div>
-
-				<h3 title={news.title}>{news.title}</h3>
-			</a></li>)}</ol>
-		</Section> : null}
-
 		<Section
 			id="search"
 			class="primary-section"
@@ -250,6 +221,35 @@ function HomePage(attrs) {
 				{Jsx.html(t("HOME_PAGE_SEE_ARCHIVE", {url: "/initiatives"}))}
 			</p>
 		</Section>
+
+		{news.length > 0 ? <Section
+			id="news"
+			class="transparent-section"
+		>
+			<h2>
+				<a href="https://kogu.ee">
+					<img src={"/assets/kogu-blue.svg"} alt={t("KOGU")} />
+				</a>
+
+				<span>{t("HOME_PAGE_NEWS_TITLE")}</span>
+			</h2>
+
+			<ol>{news.map((news) => <li><a href={news.url}>
+				<div class="time-and-author">
+					<time datetime={news.published_at.toJSON()}>
+						{I18n.formatDate("numeric", news.published_at)}
+					</time>
+
+					{", "}
+
+					<span class="author" title={news.author_name}>
+						{news.author_name}
+					</span>
+				</div>
+
+				<h3 title={news.title}>{news.title}</h3>
+			</a></li>)}</ol>
+		</Section> : null}
 	</Page>
 }
 
