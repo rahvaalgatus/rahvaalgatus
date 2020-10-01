@@ -211,7 +211,6 @@ function* readStatistics(gov, range) {
 
 			COALESCE(SUM(
 				NOT external
-				AND destination NOT NULL
 				AND destination != 'parliament'
 			), 0) AS sent_local,
 
@@ -222,8 +221,14 @@ function* readStatistics(gov, range) {
 
 		${range ? sql`AND (
 			external
-			OR "sent_to_parliament_at" >= ${range[0]}
+
+			OR destination = 'parliament'
+			AND "sent_to_parliament_at" >= ${range[0]}
 			AND "sent_to_parliament_at" < ${range[1]}
+
+			OR destination != 'parliament'
+			AND "sent_to_government_at" >= ${range[0]}
+			AND "sent_to_government_at" < ${range[1]}
 		)` : sql``}
 
 		${gov ? sql`AND destination = ${gov}` : sql``}
