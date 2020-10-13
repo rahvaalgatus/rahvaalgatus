@@ -30,6 +30,7 @@ var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var {PHASES} = require("root/lib/initiative")
 var LOCAL_PHASES = _.without(PHASES, "parliament")
 var TWITTER_NAME = Config.twitterUrl.replace(/^.*\//, "")
+var CUTOFF = 14 // days
 
 var EMPTY_STATISTICS = {
 	initiativeCountsByPhase: {
@@ -203,7 +204,8 @@ describe("HomeController", function() {
 				user_id: this.author.id,
 				phase: "edit",
 				published_at: new Date,
-				discussion_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -14)
+				discussion_ends_at:
+					DateFns.addDays(DateFns.startOfDay(new Date), -CUTOFF)
 			}))
 
 			var res = yield this.request("/")
@@ -268,7 +270,7 @@ describe("HomeController", function() {
 				user_id: this.author.id,
 				phase: "sign",
 				destination: "parliament",
-				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -14)
+				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -CUTOFF)
 			}))
 
 			var res = yield this.request("/")
@@ -282,7 +284,7 @@ describe("HomeController", function() {
 				user_id: this.author.id,
 				destination: "kihnu-vald",
 				phase: "sign",
-				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -14)
+				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -CUTOFF)
 			}))
 
 			var res = yield this.request("/")
@@ -296,7 +298,7 @@ describe("HomeController", function() {
 				user_id: this.author.id,
 				phase: "sign",
 				destination: "parliament",
-				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -14)
+				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -CUTOFF)
 			}))
 
 			yield signaturesDb.create(_.times(Config.votesRequired, () => (
@@ -318,7 +320,7 @@ describe("HomeController", function() {
 				user_id: this.author.id,
 				phase: "sign",
 				destination: "kihnu-vald",
-				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -14)
+				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -CUTOFF)
 			}))
 
 			var threshold = Math.round(
