@@ -26,7 +26,12 @@ After installing a stable version of [Node.js](https://nodejs.org) (so far teste
    make
    ```
 
-3. Run the server:
+3. Initialize the database:
+   ```sh
+   make db/create
+   ```
+
+4. Run the server:
    ```sh
    make web
    ```
@@ -36,17 +41,19 @@ After installing a stable version of [Node.js](https://nodejs.org) (so far teste
    make web PORT=8888
    ```
 
-4. Set up a <rahvaalgatus.test> domain.
+5. Set up the <rahvaalgatus.test> domains.
 
-   While Rahvaalgatus works fine when accessed via <http://localhost>, its email confirmation and notification emails use the host from `Config.url` (`config/development.json` for the development environment). To be able to click on links in emails during development, update the configuration to use <localhost> or set up your preferred domain.
+   While Rahvaalgatus home page works fine when accessed via <http://localhost>, its parliament and local government sites link to specific subdomains. Email confirmation and notification emails also use the host from `Config.url` (`config/development.json` for the development environment). To be able to click on links in emails during development, update the configuration to use <localhost> or set up your preferred domain.
 
    To use <rahvaalgatus.test>, add it to your `/etc/hosts` file:
 
    ```
    127.0.0.1 rahvaalgatus.test
+   127.0.0.1 riigikogu.rahvaalgatus.test
+   127.0.0.1 kohalik.rahvaalgatus.test
    ```
 
-5. Open your local domain (e.g. <http://rahvaalgatus.test:3000>) in your browser and proceed with typing code.
+6. Open your local domain (e.g. <http://rahvaalgatus.test:3000>) in your browser and proceed with typing code.
 
 ### Autocompiling
 To have the frontend JavaScripts and stylesheets be compiled automatically as you change files, use `autocompile`:
@@ -59,7 +66,7 @@ make autocompile
 Environment specific configuration for the server is in `config/$ENV.js`. To run it in the production environment, for example, pass `ENV` to Make:
 
 ```sh
-make server ENV=production
+make web ENV=production
 ```
 
 The few client-side JavaScript files of Rahvaalgatus, however, are not dependent on the environment.
