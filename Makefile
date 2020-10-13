@@ -29,6 +29,7 @@ RSYNC_OPTS = \
 	--prune-empty-dirs \
 	--exclude ".*" \
 	--exclude "/app/***" \
+	--exclude "/config/development.json" \
 	--exclude "/config/staging.json" \
 	--exclude "/config/production.json" \
 	--exclude "/config/*.sqlite3" \
