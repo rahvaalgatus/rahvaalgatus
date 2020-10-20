@@ -92,11 +92,18 @@ module.exports = function(attrs) {
 
 			<tr>
 				<th scope="row">
-					Initiatives sent to Riigikogu<br />
+					Initiatives sent<br />
 					<small>Initiatives sent from Rahvaalgatus.</small>
 				</th>
 
-				<td>{attrs.sentToParliamentCount}</td>
+				<td>
+					{attrs.sentCount.all}
+
+					<ul>
+						<li>{attrs.sentCount.parliament} to Riigikogu.</li>
+						<li>{attrs.sentCount.local} to Local Governments.</li>
+					</ul>
+				</td>
 			</tr>
 
 			<tr>

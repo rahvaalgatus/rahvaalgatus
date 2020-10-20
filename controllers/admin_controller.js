@@ -118,14 +118,26 @@ exports.get("/", next(function*(req, res) {
 		${to ? sql`AND signing_started_at < ${to}` : sql``}
 	`).then(_.first).then((res) => res.count)
 
-	var sentToParliamentCount = yield sqlite(sql`
-		SELECT COUNT(*) as count
+	var sentCount = yield sqlite(sql`
+		SELECT
+			COUNT(*) AS "all",
+			COALESCE(SUM(destination = 'parliament'), 0) AS parliament,
+			COALESCE(SUM(destination != 'parliament'), 0) AS local
+
 		FROM initiatives
 		WHERE phase IN ('parliament', 'government', 'done')
 		AND NOT external
-		AND sent_to_parliament_at >= ${from}
-		${to ? sql`AND sent_to_parliament_at < ${to}` : sql``}
-	`).then(_.first).then((res) => res.count)
+
+		AND (
+			destination = 'parliament'
+			AND sent_to_parliament_at >= ${from}
+			${to ? sql`AND sent_to_parliament_at < ${to}` : sql``}
+			OR
+			destination != 'parliament'
+			AND sent_to_government_at >= ${from}
+			${to ? sql`AND sent_to_government_at < ${to}` : sql``}
+		)
+	`).then(_.first)
 
 	var subscriberCount = yield sqlite(sql`
 		WITH emails AS (
@@ -170,7 +182,7 @@ exports.get("/", next(function*(req, res) {
 		publishedInitiativesCount: publishedInitiativesCount,
 		externalInitiativesCount: externalInitiativesCount,
 		signingStartedCount: signingStartedCount,
-		sentToParliamentCount: sentToParliamentCount
+		sentCount: sentCount
 	})
 }))
 
