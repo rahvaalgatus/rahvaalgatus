@@ -773,7 +773,8 @@
 	"VERIFICATION_CODE": "Kontrollkood",
 	"VOTING_DEADLINE": "Allkirjastamise tähtaeg",
 	"VOTING_FAILED": "Allkirjade kogumine on lõppenud, enam ei saa digiallkirja anda. Kuna algatus ei kogunud seatud tähtajaks vajalikku miinimumi ({{signatureCount}} allkirja), on see praegu autorite poolt peatatud. Rahvaalgatus.ee säilitab kogutud allkirjad ühe aasta jooksul juhuks, kui algatus taasavatakse digiallkirjade kogumiseks. ",
-	"VOTING_SUCCEEDED": "Allkirjade kogumine on lõppenud, enam ei saa digiallkirja anda. Järgmise sammuna saadavad algatuse loojad pöördumise koos kogutud allkirjadega Riigikogule. Kuna algatuse vastuvõtmine ja menetlemine parlamendis võib kesta mõnda aega, soovitame tellida meiliteavituse selle algatuse järgmiste etappide kohta, klikkides nupul \"Telli teavitus\". ",
+	"VOTING_SUCCEEDED": "Allkirjade kogumine on lõppenud, enam ei saa digiallkirja anda. Järgmise sammuna saadavad algatuse loojad pöördumise koos kogutud allkirjadega Riigikogule. Kuna algatuse vastuvõtmine ja menetlemine võib kesta mõnda aega, soovitame tellida meiliteavituse selle algatuse järgmiste etappide kohta, klikkides nupul \"Telli teavitus\". ",
+	"VOTING_SUCCEEDED_ON_LOCAL_LEVEL": "Allkirjade kogumine on lõppenud, enam ei saa digiallkirja anda. Järgmise sammuna saadavad algatuse loojad pöördumise koos kogutud allkirjadega kohalikule omavalitsusele. Kuna algatuse vastuvõtmine ja menetlemine võib kesta mõnda aega, soovitame tellida meiliteavituse selle algatuse järgmiste etappide kohta, klikkides nupul \"Telli teavitus\". ",
 	"en": "eng",
 	"et": "est",
 	"ru": "rus"

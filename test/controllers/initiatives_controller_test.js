@@ -1665,6 +1665,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.not.include(tHtml("INITIATIVE_IN_DISCUSSION"))
 				res.body.must.not.include(tHtml("VOTING_SUCCEEDED"))
+				res.body.must.not.include(tHtml("VOTING_SUCCEEDED_ON_LOCAL_LEVEL"))
 
 				res.body.must.not.include(t("VOTING_FAILED", {
 					signatureCount: Config.votesRequired,
@@ -1989,9 +1990,11 @@ describe("InitiativesController", function() {
 				phases.sign.text.must.equal(t("N_SIGNATURES", {votes: signatureCount}))
 			})
 
-			it("must render initiative in sign phase that succeeded", function*() {
+			it("must render initiative for parliament in sign phase that succeeded",
+				function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
+					destination: "parliament",
 					phase: "sign",
 					signing_ends_at: new Date
 				}))
@@ -2022,6 +2025,41 @@ describe("InitiativesController", function() {
 				}))
 
 				phases.must.not.have.property("government")
+			})
+
+			it("must render initiative for local government in sign phase that succeeded",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					destination: "muhu-vald",
+					phase: "sign",
+					signing_ends_at: new Date
+				}))
+
+				var signatureCount = Math.round(
+					LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
+				)
+
+				yield signaturesDb.create(_.times(signatureCount, () => (
+					new ValidSignature({initiative_uuid: initiative.uuid})
+				)))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid, {
+					headers: {Host: LOCAL_SITE_HOSTNAME}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("VOTING_SUCCEEDED_ON_LOCAL_LEVEL"))
+
+				var dom = parseDom(res.body)
+				var phases = queryPhases(dom)
+
+				_.sum(_.map(phases, "past")).must.equal(1)
+				_.sum(_.map(phases, "current")).must.equal(1)
+				phases.edit.past.must.be.true()
+				phases.sign.current.must.be.true()
+				phases.sign.text.must.equal(t("N_SIGNATURES", {votes: signatureCount}))
+				phases.must.have.property("government")
 			})
 
 			it("must render initiative in sign phase with paper signatures",
@@ -3009,6 +3047,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_PROCESSED"))
 				res.body.must.not.include(tHtml("VOTING_SUCCEEDED"))
+				res.body.must.not.include(tHtml("VOTING_SUCCEEDED_ON_LOCAL_LEVEL"))
 
 				res.body.must.not.include(t("VOTING_FAILED", {
 					signatureCount: Config.votesRequired

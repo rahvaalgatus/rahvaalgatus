@@ -256,7 +256,10 @@ function ReadPage(attrs) {
                       {t("N_SIGNATURES_COLLECTED", {votes: signatureCount})}
                     </h1>
 
-										<p>{t("VOTING_SUCCEEDED")}</p>
+										<p>{initiative.destination == "parliament"
+											? t("VOTING_SUCCEEDED")
+											: t("VOTING_SUCCEEDED_ON_LOCAL_LEVEL")
+										}</p>
 									</Fragment> : <Fragment>
                     <h1 class="status-header">
                       {t("N_SIGNATURES_FAILED", {votes: signatureCount})}

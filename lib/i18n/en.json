@@ -534,7 +534,8 @@
 	"VERIFICATION_CODE": "Verification code",
 	"VOTING_DEADLINE": "Signing deadline",
 	"VOTING_FAILED": "Collecting signatures has ended. You cannot sign this initiatives anymore. Since the initiative did not get the necessary minimum amount ({{signatureCount}} signatures) by the set deadline, the initiative is stopped by authors. Rahvaalgatus.ee keeps the collected signatures for one year in case the initiative will be re-opened for signing.     ",
-	"VOTING_SUCCEEDED": "Collecting signatures has ended successfully! You cannot sign this initiative anymore. \nAs a next thing, the authors of the initiative will send the initiative along with collected signatures to the Parliament of Estonia. \nSince the parliament can process the initiative for a while, we recommend you to order notifications for this initiative \"Keep me informed\". ",
+	"VOTING_SUCCEEDED": "Collecting signatures has ended successfully! You cannot sign this initiative anymore. \nAs the next thing, the authors of the initiative will send the initiative along with collected signatures to the Parliament of Estonia. \nSince processing the initiative can take some time, we recommend you to order notifications for this initiative by clicking \"Keep me informed\". ",
+	"VOTING_SUCCEEDED_ON_LOCAL_LEVEL": "Collecting signatures has ended successfully! You cannot sign this initiative anymore. \nAs the next thing, the authors of the initiative will send the initiative along with collected signatures to the local government unit. \nSince processing the initiative can take some time, we recommend you to order notifications for this initiative by clicking \"Keep me informed\". ",
 	"en": "eng",
 	"et": "est",
 	"ru": "rus"
