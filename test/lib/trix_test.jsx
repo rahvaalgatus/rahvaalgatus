@@ -713,5 +713,47 @@ describe("Trix", function() {
 				</ul>
 			])
 		})
+
+		it("must ignore attachments", function() {
+			Trix.render([{
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Hello, "},
+
+					{
+						"type": "attachment",
+						"attributes": {},
+						"attachment": {
+							contentType: "image",
+							height: 800,
+							width: 600,
+							url: "http://example.com/image.jpg"
+						}
+					},
+
+					{"type": "string", "attributes": {}, "string": "world!"},
+					BLOCK_BREAK
+				],
+
+				"attributes": []
+			}]).must.eql([
+				<p>Hello, world!</p>
+			])
+		})
+
+		it("must throw given unknown inline type", function() {
+			var err
+			try {
+				Trix.render([{
+					"text": [
+						{"type": "foo", "attributes": {}, "foo": "Hello, world!"},
+						BLOCK_BREAK
+					],
+
+					"attributes": []
+				}])
+			}
+			catch (ex) { err = ex }
+			err.must.be.an.error(TypeError, "Invalid inline type: foo")
+		})
 	})
 })
