@@ -3,6 +3,7 @@ var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Config = require("root/config")
 var Fragment = Jsx.Fragment
+var I18n = require("root/lib/i18n")
 var stringify = require("root/lib/json").stringify
 var selected = require("root/lib/css").selected
 var javascript = require("root/lib/jsx").javascript
@@ -31,13 +32,15 @@ var DEFAULT_META = {
 
 function Page(attrs, children) {
 	var req = attrs.req
-	var t = req.t
 	var page = attrs.page
 	var title = attrs.title
 	var links = attrs.links || EMPTY_ARR
 	var gov = req.government
 	var withNav = !attrs.navless
 	var siteUrl = req.government == null ? "" : Config.url
+
+	// We could be rendering an error page before req.t is set.
+	var t = req.t || I18n.t.bind(null, "et")
 
 	var translatable = (
 		req.lang === "xx" ||
