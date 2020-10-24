@@ -111,7 +111,8 @@ button.admin-link {
 .admin-horizontal-table {
   border-collapse: collapse;
 
-	th {
+	& > thead > tr > th,
+	& > tbody > tr > th {
 		background: white;
 		font-size: 1.5rem;
 		padding: 0.5rem 2rem;
@@ -124,17 +125,20 @@ button.admin-link {
 		}
 	}
 
-  tbody {
+  & > tbody {
     background: $light-background;
     line-height: 1.5;
   }
 
-  tbody td { padding: 0.5rem 2rem; }
-  tbody tr:first-child td { padding-top: 1rem; }
-  tbody tr + tr td { border-top: 1px solid white; }
+  & > tbody > tr > td { padding: 0.5rem 2rem; }
+  & > tbody > tr:first-child > td { padding-top: 1rem; }
+  & > tbody > tr + tr td { border-top: 1px solid white; }
 
-	tr:first-child th { padding-top: 1.5rem; }
-	tr:last-child th { padding-bottom: 1rem; }
+	& > thead > tr:first-child > th,
+	& > tbody > tr:first-child > th { padding-top: 1.5rem; }
+
+	& > thead > tr:last-child > th,
+	& > tbody > tr:last-child > th { padding-bottom: 1rem; }
 }
 
 .admin-table {
@@ -344,6 +348,12 @@ textarea.admin-input {
 
 		label { margin-right: 0.5rem; }
 		label ~ label { margin-left: 1rem; }
+	}
+
+	.signature-counts-table {
+		small {
+			font-size: 1.3rem;
+		}
 	}
 
 	.subscriptions-table {

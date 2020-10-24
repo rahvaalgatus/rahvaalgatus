@@ -32,9 +32,9 @@ exports.get("/", next(function*(req, res) {
 	var authenticationsCount = yield sqlite(sql`
 		SELECT
 			COUNT(*) AS "all",
-			SUM(method == 'id-card') AS id_card,
-			SUM(method == 'mobile-id') AS mobile_id,
-			SUM(method == 'smart-id') AS smart_id
+			COALESCE(SUM(method == 'id-card'), 0) AS id_card,
+			COALESCE(SUM(method == 'mobile-id'), 0) AS mobile_id,
+			COALESCE(SUM(method == 'smart-id'), 0) AS smart_id
 
 		FROM sessions
 		WHERE created_at >= ${from}
@@ -44,9 +44,9 @@ exports.get("/", next(function*(req, res) {
 	var signatureCount = yield sqlite(sql`
 		SELECT
 			COUNT(*) AS "all",
-			SUM(method == 'id-card') AS id_card,
-			SUM(method == 'mobile-id') AS mobile_id,
-			SUM(method == 'smart-id') AS smart_id
+			COALESCE(SUM(method == 'id-card'), 0) AS id_card,
+			COALESCE(SUM(method == 'mobile-id'), 0) AS mobile_id,
+			COALESCE(SUM(method == 'smart-id'), 0) AS smart_id
 
 		FROM initiative_signatures
 		WHERE created_at >= ${from}

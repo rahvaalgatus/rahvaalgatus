@@ -41,7 +41,7 @@ module.exports = function(attrs) {
 			<button class="admin-submit">Limit</button>
 		</Form>
 
-		<table class="admin-horizontal-table">
+		<table class="admin-horizontal-table"><tbody>
 			<tr>
 				<th scope="row">
 					Initiatives created<br />
@@ -160,13 +160,7 @@ module.exports = function(attrs) {
 				</th>
 
 				<td>
-					{attrs.signatureCount.all}
-
-					<ul>
-						<li>{attrs.signatureCount.id_card} with Id-card.</li>
-						<li>{attrs.signatureCount.mobile_id} with Mobile-Id.</li>
-						<li>{attrs.signatureCount.smart_id} with Smart-Id.</li>
-					</ul>
+					<SignatureCountsView counts={attrs.signatureCount} />
 				</td>
 			</tr>
 
@@ -190,7 +184,7 @@ module.exports = function(attrs) {
 				</th>
 				<td>{attrs.subscriberCount}</td>
 			</tr>
-		</table>
+		</tbody></table>
 
 		<h2 class="admin-subheading">
 			Last Subscriptions
@@ -242,5 +236,91 @@ function SubscriptionsView(attrs) {
 				</td>
 			</tr>
 		})}</tbody>
+	</table>
+}
+
+function SignatureCountsView({counts}) {
+	var idCardCosts = 0
+	var mobileIdCosts = counts.mobile_id * Config.mobileIdCost
+	var smartIdCosts = counts.smart_id * Config.smartIdCost
+	var methodCosts = idCardCosts + mobileIdCosts + smartIdCosts
+
+	var timestampCost = Config.timemarkCost
+	var timestampCosts = counts.all * timestampCost
+
+	return <table class="signature-counts-table admin-table">
+		<thead>
+			<tr>
+				<th />
+				<th>Count</th>
+				<th>Costs</th>
+				<th>Timestamp Costs</th>
+				<th>Total</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			<tr>
+				<th>Total</th>
+				<td>{counts.all}</td>
+				<td>€{methodCosts.toFixed(2)}</td>
+				<td>€{timestampCosts.toFixed(2)}</td>
+				<td>€{(methodCosts + timestampCosts).toFixed(2)}</td>
+			</tr>
+
+			<tr>
+				<th>Id-card</th>
+				<td>{counts.id_card}</td>
+				<td>€{idCardCosts.toFixed(2)}</td>
+
+				<td>
+					€{(counts.id_card * timestampCost).toFixed(2)}
+					<br />
+					<small>€{timestampCost}/sig</small>
+				</td>
+
+				<td>€{(idCardCosts + counts.id_card * timestampCost).toFixed(2)}</td>
+			</tr>
+
+			<tr>
+				<th>Mobile-Id</th>
+				<td>{counts.mobile_id}</td>
+
+				<td>
+					€{mobileIdCosts.toFixed(2)}
+					<br />
+					<small>€{Config.mobileIdCost}/sig</small>
+				</td>
+
+				<td>
+					€{(counts.mobile_id * timestampCost).toFixed(2)}
+					<br />
+					<small>€{timestampCost}/sig</small>
+				</td>
+
+				<td>
+					€{(mobileIdCosts + counts.mobile_id * timestampCost).toFixed(2)}
+				</td>
+			</tr>
+
+			<tr>
+				<th>Smart-Id</th>
+				<td>{counts.smart_id}</td>
+
+				<td>
+					€{smartIdCosts.toFixed(2)}
+					<br />
+					<small>€{Config.smartIdCost}/sig</small>
+				</td>
+
+				<td>
+					€{(counts.smart_id * timestampCost).toFixed(2)}
+					<br />
+					<small>€{timestampCost}/sig</small>
+				</td>
+
+				<td>€{(smartIdCosts + counts.smart_id * timestampCost).toFixed(2)}</td>
+			</tr>
+		</tbody>
 	</table>
 }
