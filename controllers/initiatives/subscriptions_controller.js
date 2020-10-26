@@ -27,10 +27,15 @@ exports.router.post("/", next(function*(req, res) {
 
 	var subscription
 	try {
+		// Not subscribing to comments by default as we presume people want to
+		// follow the initiative's progress rather than comments. Some popular or
+		// controversial initiatives have had a lot of comment activity that
+		// doesn't seem to interest most followers, as can be seen from
+		// unsubscriptions or explicit subscription tweaking following comment
+		// surges.
 		subscription = yield subscriptionsDb.create({
 			initiative_uuid: initiative.uuid,
 			email: email,
-			comment_interest: true,
 			created_at: new Date,
 			created_ip: req.ip,
 			updated_at: new Date
