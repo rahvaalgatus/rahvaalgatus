@@ -1,9 +1,21 @@
-var O = require("oolong")
+var _ = require("root/lib/underscore")
 
 describe("Web", function() {
 	require("root/test/web")()
 
-	O.each({
+	describe("/", function() {
+		it("must respond with cache headers", function*() {
+			var res = yield this.request("/")
+			res.statusCode.must.equal(200)
+
+			res.headers["cache-control"].must.equal("no-cache")
+			res.headers.must.have.property("etag")
+			res.headers.must.not.have.property("last-modified")
+			res.headers.must.not.have.property("expires")
+		})
+	})
+
+	_.each({
 		"/votings": "/",
 		"/topics": "/",
 		"/topics/": "/",

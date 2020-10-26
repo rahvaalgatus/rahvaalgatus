@@ -15,6 +15,23 @@ describe(URL, function() {
 		it("must respond with 200 OK", function() {
 			this.res.statusCode.must.equal(200)
 		})
+
+		it("must have a Cache-Control header", function() {
+			var control = this.res.headers["cache-control"]
+			control.must.equal("no-cache")
+		})
+
+		it("must have an ETag header", function() {
+			this.res.headers.must.have.property("etag")
+		})
+
+		it("must not have a Last-Modified header", function() {
+			this.res.headers.must.not.have.property("last-modified")
+		})
+
+		it("must not have an Expires header", function() {
+			this.res.headers.must.not.have.property("expires")
+		})
 	})
 
 	var CORS_PATHS = [
@@ -42,16 +59,16 @@ describe(URL, function() {
 				control.must.equal("max-age=0, public, must-revalidate")
 			})
 
-			it("must not have an Expires header", function() {
-				this.res.headers.must.not.have.property("expires")
-			})
-
 			it("must have an ETag header", function() {
 				this.res.headers.must.have.property("etag")
 			})
 
 			it("must not have a Last-Modified header", function() {
 				this.res.headers.must.not.have.property("last-modified")
+			})
+
+			it("must not have an Expires header", function() {
+				this.res.headers.must.not.have.property("expires")
 			})
 
 			// Zone's Apache has an issue that if the content is encoded with gzip,
