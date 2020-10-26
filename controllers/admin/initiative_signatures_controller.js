@@ -28,7 +28,7 @@ exports.COLUMNS = COLUMNS
 exports.router.get("/(:format?)", next(function*(req, res) {
 	var from = req.query.from
 		? Time.parseDate(req.query.from)
-		: DateFns.addDays(DateFns.startOfDay(new Date), -6)
+		: DateFns.startOfDay(new Date)
 
 	var to = req.query.to ? Time.parseDate(req.query.to) : null
 	var groupBy = req.query["group-by"] || ""
