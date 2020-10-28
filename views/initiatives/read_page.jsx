@@ -583,7 +583,7 @@ function ReadPage(attrs) {
 						</a>
 
 						<a
-							href={"https://twitter.com/intent/tweet?status=" + encode(shareText)}
+							href={"https://twitter.com/intent/tweet?text=" + encode(shareText)}
 							target="_blank"
 							class="grey-button ra-icon-twitter-logo share-button">
 							{t("SHARE_ON_TWITTER")}
