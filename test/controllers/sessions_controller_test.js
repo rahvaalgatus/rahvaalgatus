@@ -1638,9 +1638,15 @@ describe("SessionsController", function() {
 					this.request,
 					MOBILE_ID_AUTH_CERTIFICATE,
 					(req, res) => {
-						Url.parse(req.url, true).query.timeoutMs.must.equal("30000")
-						if (waited++ == 0) this.time.tick(119 * 1000)
-						else this.time.tick(1000)
+						if (waited++ == 0) {
+							Url.parse(req.url, true).query.timeoutMs.must.equal("120000")
+							this.time.tick(119 * 1000)
+						}
+						else {
+							Url.parse(req.url, true).query.timeoutMs.must.equal("1000")
+							this.time.tick(1000)
+						}
+
 						respond({state: "RUNNING"}, req, res)
 					}
 				)

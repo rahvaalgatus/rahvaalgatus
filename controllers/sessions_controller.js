@@ -40,6 +40,11 @@ var SITE_HOSTNAME = Url.parse(Config.url).hostname
 var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
 var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
 
+var waitForMobileIdSession =
+	waitForSession.bind(null, mobileId.waitForAuthentication.bind(mobileId))
+var waitForSmartIdSession =
+	waitForSession.bind(null, smartId.wait.bind(smartId))
+
 var MOBILE_ID_ERRORS = {
 	// Initiation responses:
 	NOT_FOUND: [
@@ -549,12 +554,7 @@ exports.router.delete("/:id", next(function*(req, res) {
 
 function* waitForMobileIdAuthentication(t, authentication, sessionId) {
 	try {
-		var certAndSignatureHash, err
-
-		for (
-			var started = new Date;
-			certAndSignatureHash == null && new Date - started < 120 * 1000;
-		) certAndSignatureHash = yield mobileId.waitForAuthentication(sessionId, 30)
+		var certAndSignatureHash = yield waitForMobileIdSession(120, sessionId)
 		if (certAndSignatureHash == null) throw new MobileIdError("TIMEOUT")
 
 		var [cert, signatureHash] = certAndSignatureHash
@@ -564,6 +564,7 @@ function* waitForMobileIdAuthentication(t, authentication, sessionId) {
 			updated_at: new Date
 		})
 
+		var err
 		if (err = validateCertificate(t, cert)) throw err
 
 		var [country, personalId] = getCertificatePersonalId(cert)
@@ -596,12 +597,7 @@ function* waitForMobileIdAuthentication(t, authentication, sessionId) {
 
 function* waitForSmartIdAuthentication(t, authentication, session) {
 	try {
-		var authCertAndSignature, err
-
-		for (
-			var started = new Date;
-			authCertAndSignature == null && new Date - started < 120 * 1000;
-		) authCertAndSignature = yield smartId.wait(session, 30)
+		var authCertAndSignature = yield waitForSmartIdSession(120, session)
 		if (authCertAndSignature == null) throw new SmartIdError("TIMEOUT")
 
 		var [cert, signature] = authCertAndSignature
@@ -611,6 +607,7 @@ function* waitForSmartIdAuthentication(t, authentication, session) {
 			updated_at: new Date
 		})
 
+		var err
 		if (err = validateCertificate(t, cert)) throw err
 
 		var [country, personalId] = getCertificatePersonalId(cert)
@@ -693,4 +690,14 @@ function referTo(req, referrer, fallback) {
 		PARLIAMENT_SITE_HOSTNAME,
 		LOCAL_SITE_HOSTNAME
 	].some((host) => host == referrerHost) ? referrer : fallback
+}
+
+function* waitForSession(wait, timeout, session) {
+	var res
+	for (
+		var started = Date.now() / 1000, elapsed = 0;
+		res == null && elapsed < timeout;
+		elapsed = Date.now() / 1000 - started
+	) res = yield wait(session, timeout - elapsed)
+	return res
 }
