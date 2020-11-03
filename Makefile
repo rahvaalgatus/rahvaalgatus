@@ -29,9 +29,9 @@ RSYNC_OPTS = \
 	--prune-empty-dirs \
 	--exclude ".*" \
 	--exclude "/app/***" \
-	--exclude "/config/development.json" \
-	--exclude "/config/staging.json" \
-	--exclude "/config/production.json" \
+	--exclude "/config/development.*" \
+	--exclude "/config/staging.*" \
+	--exclude "/config/production.*" \
 	--exclude "/config/*.sqlite3" \
 	--exclude "/assets/***" \
 	--exclude "/test/***" \
