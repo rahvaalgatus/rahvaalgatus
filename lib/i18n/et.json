@@ -4,7 +4,7 @@
 	"403_BODY": "Kui tegu on algatuse alamlehega, siis võib näiteks olla, et sa pole algatuse autor.",
 	"403_TITLE": "Kahjuks pole sul õigusi selle lehe vaatamiseks.",
 	"404_TITLE": "Lehekülge ei leitud",
-	"412_BODY": "Palun proovi uuesti. Kui probleem kordub, palun võta meiega ühendust.",
+	"412_BODY": "Palun mine eelmisele lehele ja proovi peale lehe värskendamist uuesti. Viga võib ka esineda siis, kui sul on veebilehitsejas küpsised (cookies) keelatud. Kui probleem kordub, palun võta meiega ühendust.",
 	"412_TITLE": "Andestust! Päring ebaõnnestus turvalisuse põhjustel.",
 	"500_BODY": "Andestust, aga midagi meie süsteemis ei toiminud. Proovi palun uuesti. Kui viga kordub, võta ühendust kasutajatoega.",
 	"500_TITLE": "Andestust!",
