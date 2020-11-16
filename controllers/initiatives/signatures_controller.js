@@ -38,6 +38,7 @@ var logger = require("root").logger
 var {validateCertificate} = require("root/lib/certificate")
 var getNormalizedMobileIdErrorCode =
 	require("root/lib/mobile_id").getNormalizedErrorCode
+var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 exports.router = Router({mergeParams: true})
 exports.pathToSignature = pathToSignature
 exports.router.use(parseBody({type: hasSignatureType}))
@@ -156,6 +157,7 @@ var SMART_ID_ERRORS = exports.SMART_ID_ERRORS = {
 }
 
 exports.router.get("/", next(function*(req, res) {
+	var user = req.user
 	var initiative = req.initiative
 	var token = Buffer.from(req.query["parliament-token"] || "", "hex")
 
@@ -165,6 +167,16 @@ exports.router.get("/", next(function*(req, res) {
 		throw new HttpError(403, "Invalid Token")
 	if (initiative.received_by_parliament_at)
 		throw new HttpError(423, "Signatures Already In Parliament")
+
+	if (initiative.destination != "parliament") {
+		if (user == null) throw new HttpError(401)
+
+		var government = LOCAL_GOVERNMENTS[initiative.destination]
+		var downloaders = government.signatureDownloadPersonalIds
+
+		if (!downloaders.includes(user.personal_id))
+			throw new HttpError(403, "Not a Permitted Downloader")
+	}
 
 	switch (req.query.type) {
 		case undefined:

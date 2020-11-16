@@ -7,6 +7,7 @@ var ValidInitiative = require("root/test/valid_db_initiative")
 var ValidSignature = require("root/test/valid_signature")
 var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
 var ValidUser = require("root/test/valid_user")
+var ValidSession = require("root/test/valid_session")
 var ValidText = require("root/test/valid_initiative_text")
 var ValidTextSignature = require("root/test/valid_initiative_text_signature")
 var Certificate = require("undersign/lib/certificate")
@@ -22,6 +23,7 @@ var t = require("root/lib/i18n").t.bind(null, Config.language)
 var newCertificate = require("root/test/fixtures").newCertificate
 var newOcspResponse = require("root/test/fixtures").newOcspResponse
 var usersDb = require("root/db/users_db")
+var sessionsDb = require("root/db/sessions_db")
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var signablesDb = require("root/db/initiative_signables_db")
@@ -49,6 +51,8 @@ var JOHN_ECDSA_KEYS = require("root/test/fixtures").JOHN_ECDSA_KEYS
 var SESSION_ID = "7c8bdd56-6772-4264-ba27-bf7a9ef72a11"
 var {PHONE_NUMBER_TRANSFORMS} = require("root/test/fixtures")
 var SMART_ID = "PNOEE-" + PERSONAL_ID + "-R2D2-Q"
+var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
+var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 
 // See https://github.com/maxmind/MaxMind-DB/blob/master/source-data for
 // available test IP addresses.
@@ -346,6 +350,92 @@ describe("SignaturesController", function() {
 
 			var entry = yield Zip.readEntry(zip, entries["initiative.html"])
 			String(entry).must.equal(initiative.text)
+		})
+
+		describe("when destined for local", function() {
+			beforeEach(function*() {
+				this.user = yield usersDb.create(new ValidUser)
+
+				var session = new ValidSession({user_id: this.user.id})
+
+				this.session = _.assign(yield sessionsDb.create(session), {
+					token: session.token
+				})
+
+				this.initiative = yield initiativesDb.create(new ValidInitiative({
+					destination: "muhu-vald",
+					user_id: this.author.id,
+					phase: "government",
+					parliament_token: Crypto.randomBytes(12)
+				}))
+			})
+
+			it("must respond with 401 Unauthenticated if not logged in", function*() {
+				var path = `/initiatives/${this.initiative.uuid}/signatures.asice`
+				var token = this.initiative.parliament_token.toString("hex")
+				path += "?parliament-token=" + token
+
+				var res = yield this.request(path, {
+					headers: {Host: LOCAL_SITE_HOSTNAME}
+				})
+
+				res.statusCode.must.equal(401)
+			})
+
+			it("must respond with 403 Forbidden if no personal ids set", function*() {
+				LOCAL_GOVERNMENTS["muhu-vald"].signatureDownloadPersonalIds = []
+
+				var path = `/initiatives/${this.initiative.uuid}/signatures.asice`
+				var token = this.initiative.parliament_token.toString("hex")
+				path += "?parliament-token=" + token
+
+				var res = yield this.request(path, {
+					headers: {Host: LOCAL_SITE_HOSTNAME},
+					session: this.session
+				})
+
+				res.statusCode.must.equal(403)
+				res.statusMessage.must.equal("Not a Permitted Downloader")
+			})
+
+			it("must respond with 403 Forbidden if not permitted downloader",
+				function*() {
+				LOCAL_GOVERNMENTS["muhu-vald"].signatureDownloadPersonalIds = [
+					"38706181337"
+				]
+
+				var path = `/initiatives/${this.initiative.uuid}/signatures.asice`
+				var token = this.initiative.parliament_token.toString("hex")
+				path += "?parliament-token=" + token
+
+				var res = yield this.request(path, {
+					headers: {Host: LOCAL_SITE_HOSTNAME},
+					session: this.session
+				})
+
+				res.statusCode.must.equal(403)
+				res.statusMessage.must.equal("Not a Permitted Downloader")
+			})
+
+			it("must respond with signatures if permitted downloader", function*() {
+				LOCAL_GOVERNMENTS["muhu-vald"].signatureDownloadPersonalIds = [
+					"38706181337",
+					this.user.personal_id,
+					"38706181338"
+				]
+
+				var path = `/initiatives/${this.initiative.uuid}/signatures.asice`
+				var token = this.initiative.parliament_token.toString("hex")
+				path += "?parliament-token=" + token
+
+				var res = yield this.request(path, {
+					headers: {Host: LOCAL_SITE_HOSTNAME},
+					session: this.session
+				})
+
+				res.statusCode.must.equal(200)
+				res.headers["content-type"].must.equal(ASICE_TYPE)
+			})
 		})
 
 		it("must include Estonian translation if signed", function*() {

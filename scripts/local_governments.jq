@@ -1,4 +1,5 @@
 def present: if . == "" then null else . end;
+def lines: sub("\\s+$"; "") | split("\n");
 
 .feed.entry |
 
@@ -9,9 +10,10 @@ map({
 		name: ."gsx$name"."$t",
 		county: ."gsx$county"."$t",
 		population: ."gsx$population"."$t" | tonumber,
+		initiativesEmails: ."gsx$initiativesemails"."$t" | lines,
 
-		initiativesEmails: (
-			."gsx$initiativesemails"."$t" | sub("\\s+$"; "") | split("\n")
+		signatureDownloadPersonalIds: (
+			."gsx$signaturedownloadpersonalids"."$t" | lines
 		),
 
 		kompassUrl: ."gsx$kompassurl"."$t" | present,

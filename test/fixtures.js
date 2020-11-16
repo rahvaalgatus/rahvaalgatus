@@ -131,6 +131,19 @@ exports.user = function(attrs) {
 
 exports.respond = respond
 
+exports.fetchSession = function(fetch) {
+	return _.assign(function(url, opts) {
+		var session = opts && opts.session
+
+		if (session) {
+			if (opts.cookies == null) opts.cookies = {}
+			opts.cookies[Config.sessionCookieName] = session.token.toString("hex")
+		}
+
+		return fetch(url, opts)
+	}, fetch)
+}
+
 exports.newCertificate = function(opts) {
 	var issuer = opts && opts.issuer
 
