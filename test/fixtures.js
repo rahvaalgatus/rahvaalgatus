@@ -87,6 +87,24 @@ exports.VALID_ISSUERS = [[
 	"CN=EID-SK 2016"
 ]].map((parts) => parts.join(",")).map(tsl.getBySubjectName.bind(tsl))
 
+var request = require("root/lib/fetch")
+request = require("root/lib/fetch/fetch_cook")(request)
+request = fetchSession(request)
+
+request = require("fetch-parse")(request, {
+	"text/html": true,
+	"text/plain": true,
+	"image/*": parseBuffer,
+	"application/zip": parseBuffer,
+	"application/vnd.etsi.asic-e+zip": parseBuffer,
+	"application/vnd.rahvaalgatus.signable": parseBuffer,
+	json: true,
+	xml: true
+})
+
+request = require("root/lib/fetch/fetch_nodeify")(request)
+exports.request = request
+
 // TODO: Add the CSRF token to the header by default.
 exports.csrf = function() {
 	beforeEach(function() {
@@ -130,19 +148,6 @@ exports.user = function(attrs) {
 }
 
 exports.respond = respond
-
-exports.fetchSession = function(fetch) {
-	return _.assign(function(url, opts) {
-		var session = opts && opts.session
-
-		if (session) {
-			if (opts.cookies == null) opts.cookies = {}
-			opts.cookies[Config.sessionCookieName] = session.token.toString("hex")
-		}
-
-		return fetch(url, opts)
-	}, fetch)
-}
 
 exports.newCertificate = function(opts) {
 	var issuer = opts && opts.issuer
@@ -287,3 +292,18 @@ function hashAlgorithm(algorithm) {
 	else throw new RangeError("Unsupported algorithm: " + oid.join("."))
 	return {algorithm: oidWithHash, parameters: algorithm.parameters}
 }
+
+function fetchSession(fetch) {
+	return _.assign(function(url, opts) {
+		var session = opts && opts.session
+
+		if (session) {
+			if (opts.cookies == null) opts.cookies = {}
+			opts.cookies[Config.sessionCookieName] = session.token.toString("hex")
+		}
+
+		return fetch(url, opts)
+	}, fetch)
+}
+
+function parseBuffer(res) { return res.arrayBuffer().then(Buffer.from) }

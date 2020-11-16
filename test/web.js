@@ -1,8 +1,7 @@
 var Http = require("http")
 var Web = require("root/bin/web")
-var request = require("root/lib/request")
+var {request} = require("./fixtures")
 var fetchDefaults = require("fetch-defaults")
-var {fetchSession} = require("./fixtures")
 var {wait} = require("root/lib/promise")
 
 exports = module.exports = function() {
@@ -16,11 +15,7 @@ exports.listen = function*() {
 
 	yield wait(this.server, "listening")
 	this.url = "http://localhost:" + this.server.address().port
-
-	var webRequest = request
-	webRequest = fetchDefaults(webRequest, this.url)
-	webRequest = fetchSession(webRequest)
-	this.request = webRequest
+	this.request = fetchDefaults(request, this.url)
 }
 
 exports.close = function(done) {

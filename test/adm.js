@@ -1,6 +1,6 @@
 var Http = require("http")
 var Adm = require("root/bin/adm")
-var request = require("root/lib/request")
+var {request} = require("./fixtures")
 var fetchDefaults = require("fetch-defaults")
 var wait = require("root/lib/promise").wait
 
