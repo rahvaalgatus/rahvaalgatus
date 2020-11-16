@@ -206,14 +206,19 @@ exports.router.get("/", next(function*(req, res) {
 				asic.add("estonian.html", translationHtml, "text/html")
 			}
 
-			var signatures = yield signaturesDb.search(sql`
-				SELECT * FROM initiative_signatures
+			var signatures, added = 0
+
+			while ((signatures = yield signaturesDb.search(sql`
+				SELECT xades FROM initiative_signatures
 				WHERE initiative_uuid = ${initiative.uuid}
 				AND xades IS NOT NULL
 				ORDER BY country ASC, personal_id ASC
-			`)
-
-			_.map(signatures, "xades").forEach(asic.addSignature, asic)
+				LIMIT ${ENV == "test" ? 1 : 100}
+				OFFSET ${added}
+			`)).length > 0) {
+				_.map(signatures, "xades").forEach(asic.addSignature, asic)
+				added += signatures.length
+			}
 
 			asic.end()
 			break
