@@ -445,7 +445,7 @@ describe("UserController", function() {
 	})
 
 	describe("PUT /", function() {
-		require("root/test/fixtures").csrfRequest()
+		require("root/test/fixtures").csrf()
 
 		describe("when not logged in", function() {
 			it("must ignore names", function*() {
@@ -1455,7 +1455,7 @@ describe("UserController", function() {
 			email_confirmed_at: new Date
 		})
 
-		require("root/test/fixtures").csrfRequest()
+		require("root/test/fixtures").csrf()
 
 		beforeEach(function*() {
 			this.author = yield usersDb.create(new ValidUser)
@@ -1468,9 +1468,8 @@ describe("UserController", function() {
 			}))
 
 			var res = yield this.request("/user/subscriptions", {
-				method: "POST",
+				method: "PUT",
 				form: {
-					_method: "put",
 					"null[official_interest]": !subscription.official_interest,
 					"null[author_interest]": !subscription.author_interest,
 					"null[comment_interest]": !subscription.comment_interest
@@ -1503,13 +1502,12 @@ describe("UserController", function() {
 
 			var uuid = initiative.uuid
 			var res = yield this.request("/user/subscriptions", {
-				method: "POST",
-					form: {
-						_method: "put",
-						[uuid + "[official_interest]"]: !subscription.official_interest,
-						[uuid + "[author_interest]"]: !subscription.author_interest,
-						[uuid + "[comment_interest]"]: !subscription.comment_interest
-					}
+				method: "PUT",
+				form: {
+					[uuid + "[official_interest]"]: !subscription.official_interest,
+					[uuid + "[author_interest]"]: !subscription.author_interest,
+					[uuid + "[comment_interest]"]: !subscription.comment_interest
+				}
 			})
 
 			res.statusCode.must.equal(303)
@@ -1538,13 +1536,12 @@ describe("UserController", function() {
 
 			var uuid = initiative.uuid
 			var res = yield this.request("/user/subscriptions", {
-				method: "POST",
-					form: {
-						_method: "put",
-						[uuid + "[official_interest]"]: !subscription.official_interest,
-						[uuid + "[author_interest]"]: !subscription.author_interest,
-						[uuid + "[comment_interest]"]: !subscription.comment_interest
-					}
+				method: "PUT",
+				form: {
+					[uuid + "[official_interest]"]: !subscription.official_interest,
+					[uuid + "[author_interest]"]: !subscription.author_interest,
+					[uuid + "[comment_interest]"]: !subscription.comment_interest
+				}
 			})
 
 			res.statusCode.must.equal(303)
@@ -1576,11 +1573,8 @@ describe("UserController", function() {
 
 			var uuid = initiative.uuid
 			var res = yield this.request("/user/subscriptions", {
-				method: "POST",
-					form: {
-						_method: "put",
-						[uuid + "[official_interest]"]: !subscription.official_interest
-					}
+				method: "PUT",
+				form: {[uuid + "[official_interest]"]: !subscription.official_interest}
 			})
 
 			res.statusCode.must.equal(303)
@@ -1608,11 +1602,8 @@ describe("UserController", function() {
 
 			var uuid = initiative.uuid
 			var res = yield this.request("/user/subscriptions", {
-				method: "POST",
-					form: {
-						_method: "put",
-						[uuid + "[official_interest]"]: !subscription.official_interest
-					}
+				method: "PUT",
+				form: {[uuid + "[official_interest]"]: !subscription.official_interest}
 			})
 
 			res.statusCode.must.equal(303)
@@ -1630,8 +1621,8 @@ describe("UserController", function() {
 			}))
 
 			var res = yield this.request("/user/subscriptions", {
-				method: "POST",
-				form: {_method: "put", "null[email]": "root@example.com"}
+				method: "PUT",
+				form: {"null[email]": "root@example.com"}
 			})
 
 			res.statusCode.must.equal(303)
@@ -1649,8 +1640,8 @@ describe("UserController", function() {
 			}))
 
 			var res = yield this.request("/user/subscriptions", {
-				method: "POST",
-				form: {_method: "put", "null[delete]": true}
+				method: "PUT",
+				form: {"null[delete]": true}
 			})
 
 			res.statusCode.must.equal(303)
@@ -1674,11 +1665,8 @@ describe("UserController", function() {
 			}))
 
 			var res = yield this.request("/user/subscriptions", {
-				method: "POST",
-				form: {
-					_method: "put",
-					[subscription.initiative_uuid + "[delete]"]: true
-				}
+				method: "PUT",
+				form: {[subscription.initiative_uuid + "[delete]"]: true}
 			})
 
 			res.statusCode.must.equal(303)
@@ -1702,11 +1690,8 @@ describe("UserController", function() {
 			}))
 
 			var res = yield this.request("/user/subscriptions", {
-				method: "POST",
-				form: {
-					_method: "put",
-					[subscription.initiative_uuid + "[delete]"]: true
-				}
+				method: "PUT",
+				form: {[subscription.initiative_uuid + "[delete]"]: true}
 			})
 
 			res.statusCode.must.equal(303)
@@ -1734,8 +1719,8 @@ describe("UserController", function() {
 			}))
 
 			var res = yield this.request("/user/subscriptions", {
-				method: "POST",
-				form: {_method: "put", "null[delete]": true}
+				method: "PUT",
+				form: {"null[delete]": true}
 			})
 
 			res.statusCode.must.equal(303)
@@ -1775,11 +1760,8 @@ describe("UserController", function() {
 			])
 
 			var res = yield this.request("/user/subscriptions", {
-				method: "POST",
-				form: {
-					_method: "put",
-					[subscription.initiative_uuid + "[delete]"]: true,
-				}
+				method: "PUT",
+				form: {[subscription.initiative_uuid + "[delete]"]: true}
 			})
 
 			res.statusCode.must.equal(303)
@@ -1812,11 +1794,8 @@ describe("UserController", function() {
 			}))
 
 			var res = yield this.request("/user/subscriptions", {
-				method: "POST",
-				form: {
-					_method: "put",
-					[subscription.initiative_uuid + "[delete]"]: true
-				}
+				method: "PUT",
+				form: {[subscription.initiative_uuid + "[delete]"]: true}
 			})
 
 			res.statusCode.must.equal(303)
@@ -1839,9 +1818,8 @@ describe("UserController", function() {
 			}))
 
 			var res = yield this.request("/user/subscriptions", {
-				method: "POST",
+				method: "PUT",
 				form: {
-					_method: "put",
 					"null[official_interest]": !subscription.official_interest,
 					"null[author_interest]": !subscription.author_interest,
 					"null[comment_interest]": !subscription.comment_interest
@@ -1862,7 +1840,7 @@ describe("UserController", function() {
 			email_confirmed_at: new Date
 		})
 
-		require("root/test/fixtures").csrfRequest()
+		require("root/test/fixtures").csrf()
 
 		beforeEach(function*() {
 			this.author = yield usersDb.create(new ValidUser)
@@ -1886,11 +1864,7 @@ describe("UserController", function() {
 				})
 			)))
 
-			var res = yield this.request("/user/subscriptions", {
-				method: "POST",
-				form: {_method: "delete"}
-			})
-
+			var res = yield this.request("/user/subscriptions", {method: "DELETE"})
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/user/subscriptions")
 
@@ -1915,11 +1889,7 @@ describe("UserController", function() {
 				confirmed_at: new Date
 			}))
 
-			var res = yield this.request("/user/subscriptions", {
-				method: "POST",
-				form: {_method: "delete"}
-			})
-
+			var res = yield this.request("/user/subscriptions", {method: "DELETE"})
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/user/subscriptions")
 
@@ -1950,11 +1920,7 @@ describe("UserController", function() {
 				confirmed_at: new Date
 			}))
 
-			var res = yield this.request("/user/subscriptions", {
-				method: "POST",
-				form: {_method: "delete"}
-			})
-
+			var res = yield this.request("/user/subscriptions", {method: "DELETE"})
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/user/subscriptions")
 
@@ -1975,11 +1941,7 @@ describe("UserController", function() {
 				confirmed_at: new Date
 			}))
 
-			var res = yield this.request("/user/subscriptions", {
-				method: "POST",
-				form: {_method: "delete"}
-			})
-
+			var res = yield this.request("/user/subscriptions", {method: "DELETE"})
 			res.statusCode.must.equal(403)
 			res.statusMessage.must.equal("Email Unconfirmed")
 			yield subscriptionsDb.read(subscription).must.then.eql(subscription)

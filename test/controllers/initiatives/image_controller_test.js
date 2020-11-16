@@ -34,8 +34,7 @@ describe("ImageController", function() {
 				}))
 
 				var res = yield this.request(`/initiatives/${initiative.uuid}/image`, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "PUT"}
+					method: "PUT"
 				})
 
 				res.statusCode.must.equal(401)
@@ -55,8 +54,7 @@ describe("ImageController", function() {
 				}))
 
 				var res = yield this.request(`/initiatives/${initiative.uuid}/image`, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "PUT"}
+					method: "PUT"
 				})
 
 				res.statusCode.must.equal(403)
@@ -69,8 +67,7 @@ describe("ImageController", function() {
 				}))
 
 				var res = yield this.request(`/initiatives/${initiative.uuid}/image`, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "PUT"}
+					method: "PUT"
 				})
 
 				res.statusCode.must.equal(422)
@@ -83,8 +80,6 @@ describe("ImageController", function() {
 				}))
 
 				var form = new FormData
-				form.append("_csrf_token", this.csrfToken)
-				form.append("_method", "PUT")
 
 				form.append("image", PNG, {
 					filename: "image.png",
@@ -92,7 +87,7 @@ describe("ImageController", function() {
 				})
 
 				var res = yield this.request(`/initiatives/${initiative.uuid}/image`, {
-					method: "POST",
+					method: "PUT",
 					headers: form.getHeaders(),
 					body: form.getBuffer()
 				})
@@ -130,8 +125,6 @@ describe("ImageController", function() {
 				}))
 
 				var form = new FormData
-				form.append("_csrf_token", this.csrfToken)
-				form.append("_method", "PUT")
 
 				form.append("image", PNG, {
 					filename: "image.png",
@@ -139,7 +132,7 @@ describe("ImageController", function() {
 				})
 
 				var res = yield this.request(`/initiatives/${initiative.uuid}/image`, {
-					method: "POST",
+					method: "PUT",
 					headers: form.getHeaders(),
 					body: form.getBuffer()
 				})
@@ -169,10 +162,8 @@ describe("ImageController", function() {
 				})
 
 				var res = yield this.request(`/initiatives/${initiative.uuid}/image`, {
-					method: "POST",
+					method: "PUT",
 					form: {
-						_csrf_token: this.csrfToken,
-						_method: "PUT",
 						author_name: "John Smith",
 						author_url: "http://example.com"
 					}

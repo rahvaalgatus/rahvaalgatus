@@ -28,7 +28,7 @@ describe("InitiativeSubscriptionsController", function() {
 	})
 
 	describe("POST /", function() {
-		require("root/test/fixtures").csrfRequest()
+		require("root/test/fixtures").csrf()
 		require("root/test/email")()
 		require("root/test/time")(Date.UTC(2015, 5, 18))
 
@@ -383,7 +383,7 @@ describe("InitiativeSubscriptionsController", function() {
 	})
 
 	describe("GET /new", function() {
-		require("root/test/fixtures").csrfRequest()
+		require("root/test/fixtures").csrf()
 		require("root/test/time")(Date.UTC(2015, 5, 18))
 
 		it("must confirm given a confirmation token", function*() {
@@ -493,7 +493,7 @@ describe("InitiativeSubscriptionsController", function() {
 	})
 
 	describe("GET /:token", function() {
-		require("root/test/fixtures").csrfRequest()
+		require("root/test/fixtures").csrf()
 
 		it("must redirect to subscriptions page", function*() {
 			var subscription = yield subscriptionsDb.create(new ValidSubscription({

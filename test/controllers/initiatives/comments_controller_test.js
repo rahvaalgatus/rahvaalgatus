@@ -40,11 +40,7 @@ describe("InitiativeCommentsController", function() {
 		describe("when not logged in", function() {
 			it("must respond with 401 when not logged in", function*() {
 				var path = `/initiatives/${this.initiative.uuid}/comments`
-				var res = yield this.request(path, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken}
-				})
-
+				var res = yield this.request(path, {method: "POST"})
 				res.statusCode.must.equal(401)
 				res.statusMessage.must.equal("Unauthorized")
 			})
@@ -59,7 +55,6 @@ describe("InitiativeCommentsController", function() {
 					method: "POST",
 
 					form: {
-						_csrf_token: this.csrfToken,
 						title: "I've some thoughts.",
 						text: "But I forgot them."
 					}
@@ -98,7 +93,6 @@ describe("InitiativeCommentsController", function() {
 					method: "POST",
 
 					form: {
-						_csrf_token: this.csrfToken,
 						title: "I've some thoughts.",
 						text: "But I forgot them."
 					}
@@ -130,11 +124,7 @@ describe("InitiativeCommentsController", function() {
 				var path = `/initiatives/${this.initiative.uuid}`
 				var res = yield this.request(path + `/comments`, {
 					method: "POST",
-					form: {
-						__proto__: VALID_ATTRS,
-						_csrf_token: this.csrfToken,
-						referrer: path
-					}
+					form: {__proto__: VALID_ATTRS, referrer: path}
 				})
 
 				res.statusCode.must.equal(303)
@@ -147,7 +137,7 @@ describe("InitiativeCommentsController", function() {
 				var path = `/initiatives/${this.initiative.uuid}`
 				var res = yield this.request(path + `/comments`, {
 					method: "POST",
-					form: {__proto__: VALID_ATTRS, _csrf_token: this.csrfToken}
+					form: VALID_ATTRS
 				})
 
 				res.statusCode.must.equal(403)
@@ -168,7 +158,7 @@ describe("InitiativeCommentsController", function() {
 				var path = `/initiatives/${this.initiative.uuid}`
 				var res = yield this.request(path + `/comments`, {
 					method: "POST",
-					form: {__proto__: VALID_ATTRS, _csrf_token: this.csrfToken}
+					form: VALID_ATTRS
 				})
 
 				res.statusCode.must.equal(303)
@@ -184,12 +174,7 @@ describe("InitiativeCommentsController", function() {
 					var path = `/initiatives/${this.initiative.uuid}/comments`
 					var res = yield this.request(path, {
 						method: "POST",
-
-						form: {
-							__proto__: VALID_ATTRS,
-							_csrf_token: this.csrfToken,
-							subscribe: true
-						}
+						form: {__proto__: VALID_ATTRS, subscribe: true}
 					})
 
 					res.statusCode.must.equal(303)
@@ -230,12 +215,7 @@ describe("InitiativeCommentsController", function() {
 					var path = `/initiatives/${this.initiative.uuid}/comments`
 					var res = yield this.request(path, {
 						method: "POST",
-
-						form: {
-							__proto__: VALID_ATTRS,
-							_csrf_token: this.csrfToken,
-							subscribe: true
-						}
+						form: {__proto__: VALID_ATTRS, subscribe: true}
 					})
 
 					res.statusCode.must.equal(303)
@@ -267,12 +247,7 @@ describe("InitiativeCommentsController", function() {
 					var path = `/initiatives/${this.initiative.uuid}/comments`
 					var res = yield this.request(path, {
 						method: "POST",
-
-						form: {
-							__proto__: VALID_ATTRS,
-							_csrf_token: this.csrfToken,
-							subscribe: true
-						}
+						form: {__proto__: VALID_ATTRS, subscribe: true}
 					})
 
 					res.statusCode.must.equal(303)
@@ -304,12 +279,7 @@ describe("InitiativeCommentsController", function() {
 					var path = `/initiatives/${this.initiative.uuid}/comments`
 					var res = yield this.request(path, {
 						method: "POST",
-
-						form: {
-							__proto__: VALID_ATTRS,
-							_csrf_token: this.csrfToken,
-							subscribe: true
-						}
+						form: {__proto__: VALID_ATTRS, subscribe: true}
 					})
 
 					res.statusCode.must.equal(303)
@@ -335,12 +305,7 @@ describe("InitiativeCommentsController", function() {
 					var path = `/initiatives/${this.initiative.uuid}/comments`
 					var res = yield this.request(path, {
 						method: "POST",
-
-						form: {
-							__proto__: VALID_ATTRS,
-							_csrf_token: this.csrfToken,
-							subscribe: false
-						}
+						form: {__proto__: VALID_ATTRS, subscribe: false}
 					})
 
 					res.statusCode.must.equal(303)
@@ -368,12 +333,7 @@ describe("InitiativeCommentsController", function() {
 
 					var res = yield this.request(`/initiatives/${this.initiative.uuid}/comments`, {
 						method: "POST",
-
-						form: {
-							__proto__: VALID_ATTRS,
-							_csrf_token: this.csrfToken,
-							subscribe: false
-						}
+						form: {__proto__: VALID_ATTRS, subscribe: false}
 					})
 
 					res.statusCode.must.equal(303)
@@ -414,11 +374,7 @@ describe("InitiativeCommentsController", function() {
 				var path = `/initiatives/${this.initiative.uuid}`
 				var res = yield this.request(path + `/comments`, {
 					method: "POST",
-					form: {
-						__proto__: VALID_ATTRS,
-						_csrf_token: this.csrfToken,
-						referrer: path
-					}
+					form: {__proto__: VALID_ATTRS, referrer: path}
 				})
 
 				res.statusCode.must.equal(303)
@@ -457,11 +413,7 @@ describe("InitiativeCommentsController", function() {
 				var path = `/initiatives/${this.initiative.uuid}`
 				var res = yield this.request(path + `/comments`, {
 					method: "POST",
-					form: {
-						__proto__: VALID_ATTRS,
-						_csrf_token: this.csrfToken,
-						referrer: path
-					}
+					form: {__proto__: VALID_ATTRS, referrer: path}
 				})
 
 				res.statusCode.must.equal(303)
@@ -493,11 +445,7 @@ describe("InitiativeCommentsController", function() {
 				var path = `/initiatives/${this.initiative.uuid}`
 				var res = yield this.request(path + `/comments`, {
 					method: "POST",
-					form: {
-						__proto__: VALID_ATTRS,
-						_csrf_token: this.csrfToken,
-						referrer: path
-					}
+					form: {__proto__: VALID_ATTRS, referrer: path}
 				})
 
 				res.statusCode.must.equal(303)
@@ -527,10 +475,7 @@ describe("InitiativeCommentsController", function() {
 
 				it(`must show error if ${description}`, function*() {
 					var path = `/initiatives/${this.initiative.uuid}/comments`
-					var res = yield this.request(path, {
-						method: "POST",
-						form: {__proto__: attrs, _csrf_token: this.csrfToken}
-					})
+					var res = yield this.request(path, {method: "POST", form: attrs})
 
 					res.statusCode.must.equal(422)
 					var dom = parseDom(res.body)
@@ -811,11 +756,7 @@ describe("InitiativeCommentsController", function() {
 				}))
 
 				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
-				var res = yield this.request(path, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "DELETE"}
-				})
-
+				var res = yield this.request(path, {method: "DELETE"})
 				res.statusCode.must.equal(401)
 				res.statusMessage.must.equal("Unauthorized")
 			})
@@ -834,10 +775,7 @@ describe("InitiativeCommentsController", function() {
 				}))
 
 				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
-				var res = yield this.request(path, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "DELETE"}
-				})
+				var res = yield this.request(path, {method: "DELETE"})
 
 				res.statusCode.must.equal(403)
 				res.statusMessage.must.equal("Not Author")
@@ -859,10 +797,7 @@ describe("InitiativeCommentsController", function() {
 				}))
 
 				var path = `/initiatives/${this.initiative.uuid}/comments/${reply.id}`
-				var res = yield this.request(path, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "DELETE"}
-				})
+				var res = yield this.request(path, {method: "DELETE"})
 
 				res.statusCode.must.equal(405)
 				res.statusMessage.must.equal("Cannot Delete Replies")
@@ -881,10 +816,7 @@ describe("InitiativeCommentsController", function() {
 				}))
 
 				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
-				var res = yield this.request(path, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "DELETE"}
-				})
+				var res = yield this.request(path, {method: "DELETE"})
 
 				res.statusCode.must.equal(405)
 				res.statusMessage.must.equal("Already Anonymized")
@@ -899,10 +831,7 @@ describe("InitiativeCommentsController", function() {
 				}))
 
 				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
-				var res = yield this.request(path, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "DELETE"}
-				})
+				var res = yield this.request(path, {method: "DELETE"})
 
 				res.statusCode.must.equal(303)
 				res.headers.location.must.equal(path)
@@ -936,11 +865,7 @@ describe("InitiativeCommentsController", function() {
 				}))
 
 				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
-				var res = yield this.request(path + "/replies", {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken}
-				})
-
+				var res = yield this.request(path + "/replies", {method: "POST"})
 				res.statusCode.must.equal(401)
 				res.statusMessage.must.equal("Unauthorized")
 			})
@@ -961,11 +886,7 @@ describe("InitiativeCommentsController", function() {
 				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
 				var res = yield this.request(path + "/replies", {
 					method: "POST",
-
-					form: {
-						_csrf_token: this.csrfToken,
-						text: "But I forgot them."
-					}
+					form: {text: "But I forgot them."}
 				})
 
 				res.statusCode.must.equal(303)
@@ -1003,11 +924,7 @@ describe("InitiativeCommentsController", function() {
 				var path = `/initiatives/${initiative.uuid}/comments/${comment.id}`
 				var res = yield this.request(path + "/replies", {
 					method: "POST",
-
-					form: {
-						_csrf_token: this.csrfToken,
-						text: "But I forgot them."
-					}
+					form: {text: "But I forgot them."}
 				})
 
 				res.statusCode.must.equal(303)
@@ -1040,11 +957,7 @@ describe("InitiativeCommentsController", function() {
 				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
 				var res = yield this.request(path + `/replies`, {
 					method: "POST",
-					form: {
-						__proto__: VALID_REPLY_ATTRS,
-						_csrf_token: this.csrfToken,
-						referrer: path
-					}
+					form: {__proto__: VALID_REPLY_ATTRS, referrer: path}
 				})
 
 				res.statusCode.must.equal(303)
@@ -1089,7 +1002,7 @@ describe("InitiativeCommentsController", function() {
 				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
 				var res = yield this.request(path + `/replies`, {
 					method: "POST",
-					form: {__proto__: VALID_REPLY_ATTRS, _csrf_token: this.csrfToken}
+					form: VALID_REPLY_ATTRS
 				})
 
 				res.statusCode.must.equal(303)
@@ -1137,7 +1050,7 @@ describe("InitiativeCommentsController", function() {
 				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
 				var res = yield this.request(path + `/replies`, {
 					method: "POST",
-					form: {__proto__: VALID_REPLY_ATTRS, _csrf_token: this.csrfToken}
+					form: VALID_REPLY_ATTRS
 				})
 
 				res.statusCode.must.equal(303)
@@ -1177,7 +1090,7 @@ describe("InitiativeCommentsController", function() {
 				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
 				var res = yield this.request(path + `/replies`, {
 					method: "POST",
-					form: {__proto__: VALID_REPLY_ATTRS, _csrf_token: this.csrfToken}
+					form: VALID_REPLY_ATTRS
 				})
 
 				res.statusCode.must.equal(303)
@@ -1201,11 +1114,7 @@ describe("InitiativeCommentsController", function() {
 				}))
 
 				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
-				var res = yield this.request(path + "/replies", {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken}
-				})
-
+				var res = yield this.request(path + "/replies", {method: "POST"})
 				res.statusCode.must.equal(405)
 			})
 
@@ -1236,7 +1145,7 @@ describe("InitiativeCommentsController", function() {
 
 					var res = yield this.request(path + "/replies", {
 						method: "POST",
-						form: {__proto__: attrs, _csrf_token: this.csrfToken}
+						form: attrs
 					})
 
 					res.statusCode.must.equal(422)
@@ -1261,7 +1170,7 @@ describe("InitiativeCommentsController", function() {
 				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
 				var res = yield this.request(path + `/replies`, {
 					method: "POST",
-					form: {__proto__: VALID_REPLY_ATTRS, _csrf_token: this.csrfToken}
+					form: VALID_REPLY_ATTRS
 				})
 
 				res.statusCode.must.equal(403)
@@ -1288,7 +1197,7 @@ describe("InitiativeCommentsController", function() {
 				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
 				var res = yield this.request(path + `/replies`, {
 					method: "POST",
-					form: {__proto__: VALID_REPLY_ATTRS, _csrf_token: this.csrfToken}
+					form: VALID_REPLY_ATTRS
 				})
 
 				res.statusCode.must.equal(303)

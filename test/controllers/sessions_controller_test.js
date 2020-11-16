@@ -278,7 +278,7 @@ describe("SessionsController", function() {
 	})
 
 	describe("POST /", function() {
-		require("root/test/fixtures").csrfRequest()
+		require("root/test/fixtures").csrf()
 		require("root/test/time")()
 
 		function mustSignIn(signIn, cert) {
@@ -2208,13 +2208,12 @@ describe("SessionsController", function() {
 
 	describe("DELETE /:id", function() {
 		require("root/test/fixtures").user()
-		require("root/test/fixtures").csrfRequest()
+		require("root/test/fixtures").csrf()
 		require("root/test/time")(new Date(2015, 5, 18, 13, 37, 42))
 
 		it("must delete session and delete cookie if current session", function*() {
 			var res = yield this.request("/sessions/" + this.session.id, {
-				method: "POST",
-				form: {_method: "delete"}
+				method: "DELETE"
 			})
 
 			res.statusCode.must.equal(303)
@@ -2243,8 +2242,7 @@ describe("SessionsController", function() {
 			}))
 
 			var res = yield this.request("/sessions/" + session.id, {
-				method: "POST",
-				form: {_method: "delete"}
+				method: "DELETE"
 			})
 
 			res.statusCode.must.equal(303)
@@ -2270,9 +2268,8 @@ describe("SessionsController", function() {
 
 		it("must redirect back to referrer", function*() {
 			var res = yield this.request("/sessions/" + this.session.id, {
-				method: "POST",
-				headers: {Referer: this.url + "/initiatives"},
-				form: {_method: "delete"}
+				method: "DELETE",
+				headers: {Referer: this.url + "/initiatives"}
 			})
 
 			res.statusCode.must.equal(303)
@@ -2281,9 +2278,8 @@ describe("SessionsController", function() {
 
 		it("must redirect to home page if on /user", function*() {
 			var res = yield this.request("/sessions/" + this.session.id, {
-				method: "POST",
-				headers: {Referer: this.url + "/user"},
-				form: {_method: "delete"}
+				method: "DELETE",
+				headers: {Referer: this.url + "/user"}
 			})
 
 			res.statusCode.must.equal(303)
@@ -2292,8 +2288,7 @@ describe("SessionsController", function() {
 
 		it("must not reset CSRF token", function*() {
 			var res = yield this.request("/sessions/" + this.session.id, {
-				method: "POST",
-				form: {_method: "delete"}
+				method: "DELETE"
 			})
 
 			res.statusCode.must.equal(303)
@@ -2310,8 +2305,7 @@ describe("SessionsController", function() {
 			}))
 
 			var res = yield this.request("/sessions/" + session.id, {
-				method: "POST",
-				form: {_method: "delete"}
+				method: "DELETE"
 			})
 
 			res.statusCode.must.equal(404)
@@ -2322,8 +2316,7 @@ describe("SessionsController", function() {
 
 		it("must respond with 404 given non-existent session", function*() {
 			var res = yield this.request("/sessions/" + this.session.id + 1, {
-				method: "POST",
-				form: {_method: "delete"}
+				method: "DELETE"
 			})
 
 			res.statusCode.must.equal(404)
@@ -2338,8 +2331,7 @@ describe("SessionsController", function() {
 			}))
 
 			var res = yield this.request("/sessions/" + session.id, {
-				method: "POST",
-				form: {_method: "delete"}
+				method: "DELETE"
 			})
 
 			res.statusCode.must.equal(410)

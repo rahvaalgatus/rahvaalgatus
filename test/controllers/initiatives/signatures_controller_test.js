@@ -199,7 +199,7 @@ describe("SignaturesController", function() {
 	require("root/test/mitm")()
 	require("root/test/db")()
 	require("root/test/email")()
-	require("root/test/fixtures").csrfRequest()
+	require("root/test/fixtures").csrf()
 	beforeEach(require("root/test/mitm").router)
 
 	function mustRespondWithSignatures(request) {

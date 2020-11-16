@@ -104,18 +104,7 @@ request = require("fetch-parse")(request, {
 request = require("root/lib/fetch/fetch_nodeify")(request)
 exports.request = request
 
-// TODO: Add the CSRF token to the header by default.
 exports.csrf = function() {
-	beforeEach(function() {
-		this.csrfToken = pseudoHex(16)
-
-		this.request = fetchDefaults(this.request, {
-			cookies: {csrf_token: this.csrfToken}
-		})
-	})
-}
-
-exports.csrfRequest = function() {
 	beforeEach(function() {
 		this.csrfToken = pseudoHex(16)
 

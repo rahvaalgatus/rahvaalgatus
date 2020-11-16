@@ -102,7 +102,7 @@ describe("InitiativeTextsController", function() {
 				var initiativePath = "/initiatives/" + initiative.uuid
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
-					form: {_csrf_token: this.csrfToken, content: "[]"}
+					form: {content: "[]"}
 				})
 
 				res.statusCode.must.equal(401)
@@ -118,7 +118,7 @@ describe("InitiativeTextsController", function() {
 				var initiativePath = "/initiatives/" + initiative.uuid
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
-					form: {_csrf_token: this.csrfToken, content: "[]"}
+					form: {content: "[]"}
 				})
 
 				res.statusCode.must.equal(401)
@@ -138,7 +138,7 @@ describe("InitiativeTextsController", function() {
 				var initiativePath = "/initiatives/" + initiative.uuid
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
-					form: {_csrf_token: this.csrfToken, content: "[]"}
+					form: {content: "[]"}
 				})
 
 				res.statusCode.must.equal(403)
@@ -155,7 +155,7 @@ describe("InitiativeTextsController", function() {
 				var initiativePath = "/initiatives/" + initiative.uuid
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
-					form: {_csrf_token: this.csrfToken, content: "[]"}
+					form: {content: "[]"}
 				})
 
 				res.statusCode.must.equal(403)
@@ -172,7 +172,7 @@ describe("InitiativeTextsController", function() {
 				var initiativePath = "/initiatives/" + initiative.uuid
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
-					form: {_csrf_token: this.csrfToken, content: "[]"}
+					form: {content: "[]"}
 				})
 
 				res.statusCode.must.equal(405)
@@ -190,7 +190,7 @@ describe("InitiativeTextsController", function() {
 				var initiativePath = "/initiatives/" + initiative.uuid
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
-					form: {_csrf_token: this.csrfToken, content: "[]", language: "en"}
+					form: {content: "[]", language: "en"}
 				})
 
 				res.statusCode.must.equal(405)
@@ -208,7 +208,6 @@ describe("InitiativeTextsController", function() {
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					form: {
-						_csrf_token: this.csrfToken,
 						title: "Let it shine",
 						content: JSON.stringify(content),
 						language: "en"
@@ -255,7 +254,6 @@ describe("InitiativeTextsController", function() {
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					form: {
-						_csrf_token: this.csrfToken,
 						title: "Let it shine",
 						content: JSON.stringify(content),
 						language: "en"
@@ -291,7 +289,6 @@ describe("InitiativeTextsController", function() {
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					form: {
-						_csrf_token: this.csrfToken,
 						title: "Let it shine",
 						content: JSON.stringify(content),
 						language: "en"
@@ -333,7 +330,6 @@ describe("InitiativeTextsController", function() {
 					method: "POST",
 
 					form: {
-						_csrf_token: this.csrfToken,
 						title: initiative.title,
 						content: JSON.stringify(content),
 						language: "et"
@@ -371,7 +367,6 @@ describe("InitiativeTextsController", function() {
 					method: "POST",
 
 					form: {
-						_csrf_token: this.csrfToken,
 						"basis-id": basis.id,
 						title: initiative.title,
 						content: JSON.stringify(content),
@@ -414,7 +409,6 @@ describe("InitiativeTextsController", function() {
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					form: {
-						_csrf_token: this.csrfToken,
 						"basis-id": basis.id,
 						language: basis.language,
 						title: initiative.title,
@@ -446,13 +440,7 @@ describe("InitiativeTextsController", function() {
 				var initiativePath = "/initiatives/" + initiative.uuid
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
-
-					form: {
-						_csrf_token: this.csrfToken,
-						"basis-id": "",
-						language: "et",
-						content: "[]"
-					}
+					form: {"basis-id": "", language: "et", content: "[]"}
 				})
 
 				res.statusCode.must.equal(302)
@@ -467,11 +455,7 @@ describe("InitiativeTextsController", function() {
 				var initiativePath = "/initiatives/" + initiative.uuid
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
-					form: {
-						_csrf_token: this.csrfToken,
-						language: "et",
-						content: "[]"
-					}
+					form: {language: "et", content: "[]"}
 				})
 
 				res.statusCode.must.equal(302)
@@ -968,7 +952,7 @@ describe("InitiativeTextsController", function() {
 	describe("POST /:id/signatures", function() {
 		require("root/test/mitm")()
 		require("root/test/fixtures").user()
-		require("root/test/fixtures").csrfRequest()
+		require("root/test/fixtures").csrf()
 		beforeEach(require("root/test/mitm").router)
 
 		beforeEach(function*() {

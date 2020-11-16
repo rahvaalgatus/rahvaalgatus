@@ -39,13 +39,7 @@ describe("DonationsController", function() {
 		it("must redirect", function*() {
 			var res = yield this.request("/donations", {
 				method: "POST",
-
-				form: {
-					_csrf_token: this.csrfToken,
-					default: 5,
-					amount: 10,
-					person: "11412090004"
-				}
+				form: {default: 5, amount: 10, person: "11412090004"}
 			})
 
 			res.statusCode.must.equal(302)

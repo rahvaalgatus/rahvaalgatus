@@ -182,7 +182,7 @@ describe("SubscriptionsController", function() {
 	})
 
 	describe("POST /", function() {
-		require("root/test/fixtures").csrfRequest()
+		require("root/test/fixtures").csrf()
 		require("root/test/email")()
 		require("root/test/time")(Date.UTC(2015, 5, 18))
 
@@ -482,11 +482,11 @@ describe("SubscriptionsController", function() {
 	})
 
 	describe("PUT /", function() {
-		require("root/test/fixtures").csrfRequest()
+		require("root/test/fixtures").csrf()
 		require("root/test/time")()
 
 		mustRequireToken(function(url) {
-			return this.request(url, {method: "POST", form: {_method: "put"}})
+			return this.request(url, {method: "PUT"})
 		})
 
 		it("must update subscriptions to initiatives", function*() {
@@ -496,9 +496,8 @@ describe("SubscriptionsController", function() {
 
 			var path = `/subscriptions?update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
-				method: "POST",
+				method: "PUT",
 				form: {
-					_method: "put",
 					"null[official_interest]": !subscription.official_interest,
 					"null[author_interest]": !subscription.author_interest,
 					"null[comment_interest]": !subscription.comment_interest
@@ -533,13 +532,12 @@ describe("SubscriptionsController", function() {
 			path += `?initiative=${subscription.initiative_uuid}`
 			path += `&update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
-				method: "POST",
-					form: {
-						_method: "put",
-						[uuid + "[official_interest]"]: !subscription.official_interest,
-						[uuid + "[author_interest]"]: !subscription.author_interest,
-						[uuid + "[comment_interest]"]: !subscription.comment_interest
-					}
+				method: "PUT",
+				form: {
+					[uuid + "[official_interest]"]: !subscription.official_interest,
+					[uuid + "[author_interest]"]: !subscription.author_interest,
+					[uuid + "[comment_interest]"]: !subscription.comment_interest
+				}
 			})
 
 			res.statusCode.must.equal(303)
@@ -568,13 +566,12 @@ describe("SubscriptionsController", function() {
 			var uuid = initiative.uuid
 			var path = `/subscriptions?initiative=${uuid}&update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
-				method: "POST",
-					form: {
-						_method: "put",
-						[uuid + "[official_interest]"]: !subscription.official_interest,
-						[uuid + "[author_interest]"]: !subscription.author_interest,
-						[uuid + "[comment_interest]"]: !subscription.comment_interest
-					}
+				method: "PUT",
+				form: {
+					[uuid + "[official_interest]"]: !subscription.official_interest,
+					[uuid + "[author_interest]"]: !subscription.author_interest,
+					[uuid + "[comment_interest]"]: !subscription.comment_interest
+				}
 			})
 
 			res.statusCode.must.equal(303)
@@ -606,11 +603,8 @@ describe("SubscriptionsController", function() {
 			var uuid = initiative.uuid
 			var path = `/subscriptions?update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
-				method: "POST",
-					form: {
-						_method: "put",
-						[uuid + "[official_interest]"]: !subscription.official_interest
-					}
+				method: "PUT",
+				form: {[uuid + "[official_interest]"]: !subscription.official_interest}
 			})
 
 			res.statusCode.must.equal(303)
@@ -639,11 +633,8 @@ describe("SubscriptionsController", function() {
 			var uuid = initiative.uuid
 			var path = `/subscriptions?update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
-				method: "POST",
-					form: {
-						_method: "put",
-						[uuid + "[official_interest]"]: !subscription.official_interest
-					}
+				method: "PUT",
+				form: {[uuid + "[official_interest]"]: !subscription.official_interest}
 			})
 
 			res.statusCode.must.equal(303)
@@ -661,8 +652,8 @@ describe("SubscriptionsController", function() {
 
 			var path = `/subscriptions?update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
-				method: "POST",
-				form: {_method: "put", "null[email]": "root@example.com"}
+				method: "PUT",
+				form: {"null[email]": "root@example.com"}
 			})
 
 			res.statusCode.must.equal(303)
@@ -680,8 +671,8 @@ describe("SubscriptionsController", function() {
 
 			var path = `/subscriptions?update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
-				method: "POST",
-				form: {_method: "put", "null[delete]": true}
+				method: "PUT",
+				form: {"null[delete]": true}
 			})
 
 			res.statusCode.must.equal(303)
@@ -707,11 +698,8 @@ describe("SubscriptionsController", function() {
 			path += `?initiative=${subscription.initiative_uuid}`
 			path += `&update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
-				method: "POST",
-				form: {
-					_method: "put",
-					[subscription.initiative_uuid + "[delete]"]: true
-				}
+				method: "PUT",
+				form: {[subscription.initiative_uuid + "[delete]"]: true}
 			})
 
 			res.statusCode.must.equal(303)
@@ -737,11 +725,8 @@ describe("SubscriptionsController", function() {
 			path += `?initiative=${subscription.initiative_uuid}`
 			path += `&update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
-				method: "POST",
-				form: {
-					_method: "put",
-					[subscription.initiative_uuid + "[delete]"]: true
-				}
+				method: "PUT",
+				form: {[subscription.initiative_uuid + "[delete]"]: true}
 			})
 
 			res.statusCode.must.equal(303)
@@ -771,8 +756,8 @@ describe("SubscriptionsController", function() {
 			path += `?initiative=${subscription.initiative_uuid}`
 			path += `&update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
-				method: "POST",
-				form: {_method: "put", "null[delete]": true}
+				method: "PUT",
+				form: {"null[delete]": true}
 			})
 
 			res.statusCode.must.equal(303)
@@ -800,8 +785,8 @@ describe("SubscriptionsController", function() {
 
 			var path = `/subscriptions?update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
-				method: "POST",
-				form: {_method: "put", [other.initiative_uuid + "[delete]"]: true}
+				method: "PUT",
+				form: {[other.initiative_uuid + "[delete]"]: true}
 			})
 
 			res.statusCode.must.equal(303)
@@ -832,11 +817,8 @@ describe("SubscriptionsController", function() {
 			path += `?initiative=${subscription.initiative_uuid}`
 			path += `&update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
-				method: "POST",
-				form: {
-					_method: "put",
-					[subscription.initiative_uuid + "[delete]"]: true
-				}
+				method: "PUT",
+				form: {[subscription.initiative_uuid + "[delete]"]: true}
 			})
 
 			res.statusCode.must.equal(303)
@@ -866,8 +848,8 @@ describe("SubscriptionsController", function() {
 
 				var path = `/subscriptions?update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
-				method: "POST",
-				form: {_method: "put", "null[delete]": true}
+				method: "PUT",
+				form: {"null[delete]": true}
 			})
 
 			res.statusCode.must.equal(303)
@@ -912,11 +894,8 @@ describe("SubscriptionsController", function() {
 			path += `?initiative=${subscription.initiative_uuid}`
 			path += `&update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
-				method: "POST",
-				form: {
-					_method: "put",
-					[subscription.initiative_uuid + "[delete]"]: true,
-				}
+				method: "PUT",
+				form: {[subscription.initiative_uuid + "[delete]"]: true}
 			})
 
 			res.statusCode.must.equal(303)
@@ -952,11 +931,8 @@ describe("SubscriptionsController", function() {
 			path += `?initiative=${subscription.initiative_uuid}`
 			path += `&update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
-				method: "POST",
-				form: {
-					_method: "put",
-					[subscription.initiative_uuid + "[delete]"]: true
-				}
+				method: "PUT",
+				form: {[subscription.initiative_uuid + "[delete]"]: true}
 			})
 
 			res.statusCode.must.equal(303)
@@ -969,10 +945,10 @@ describe("SubscriptionsController", function() {
 	})
 
 	describe("DELETE /", function() {
-		require("root/test/fixtures").csrfRequest()
+		require("root/test/fixtures").csrf()
 
 		mustRequireToken(function(url) {
-			return this.request(url, {method: "POST", form: {_method: "delete"}})
+			return this.request(url, {method: "DELETE"})
 		})
 
 		it("must delete subscriptions for a given email address", function*() {
@@ -993,11 +969,7 @@ describe("SubscriptionsController", function() {
 			)))
 
 			var path = `/subscriptions?update-token=${subscription.update_token}`
-			var res = yield this.request(path, {
-				method: "POST",
-				form: {_method: "delete"}
-			})
-
+			var res = yield this.request(path, {method: "DELETE"})
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/")
 
@@ -1025,11 +997,7 @@ describe("SubscriptionsController", function() {
 			var path = "/subscriptions"
 			path += `?initiative=${subscription.initiative_uuid}`
 			path += `&update-token=${subscription.update_token}`
-			var res = yield this.request(path, {
-				method: "POST",
-				form: {_method: "delete"}
-			})
-
+			var res = yield this.request(path, {method: "DELETE"})
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/")
 
@@ -1060,10 +1028,8 @@ describe("SubscriptionsController", function() {
 			}))
 
 			var res = yield this.request(
-				`/subscriptions?update-token=${subscription.update_token}`, {
-					method: "POST",
-					form: {_method: "delete"}
-				}
+				`/subscriptions?update-token=${subscription.update_token}`,
+				{method: "DELETE"}
 			)
 
 			res.statusCode.must.equal(303)
@@ -1076,7 +1042,7 @@ describe("SubscriptionsController", function() {
 	})
 
 	describe("GET /new", function() {
-		require("root/test/fixtures").csrfRequest()
+		require("root/test/fixtures").csrf()
 		require("root/test/email")()
 		require("root/test/time")(Date.UTC(2015, 5, 18))
 		
@@ -1142,7 +1108,7 @@ describe("SubscriptionsController", function() {
 	})
 
 	describe("GET /:token", function() {
-		require("root/test/fixtures").csrfRequest()
+		require("root/test/fixtures").csrf()
 
 		it("must redirect to subscriptions page", function*() {
 			var subscription = yield subscriptionsDb.create(new ValidSubscription({

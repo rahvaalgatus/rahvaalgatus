@@ -21,7 +21,7 @@ describe("AdminController", function() {
 	require("root/test/db")()
 	require("root/test/time")()
 	require("root/test/email")()
-	require("root/test/fixtures").csrfRequest()
+	require("root/test/fixtures").csrf()
 	beforeEach(require("root/test/mitm").router)
 
 	describe("/", function() {

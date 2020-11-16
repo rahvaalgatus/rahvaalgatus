@@ -154,7 +154,6 @@ describe("InitiativeEventsController", function() {
 				return this.request(`/initiatives/${this.initiative.uuid}/events`, {
 					method: "POST",
 					form: {
-						_csrf_token: this.csrfToken,
 						type: "text",
 						title: "Something happened",
 						content: "You shouldn't miss it."
@@ -171,10 +170,7 @@ describe("InitiativeEventsController", function() {
 					}))
 
 					var path = `/initiatives/${initiative.uuid}/events`
-					var res = yield this.request(path, {
-						method: "POST",
-						form: {_csrf_token: this.csrfToken}
-					})
+					var res = yield this.request(path, {method: "POST"})
 
 					res.statusCode.must.equal(403)
 					res.statusMessage.must.equal("Cannot Create Events")
@@ -190,7 +186,7 @@ describe("InitiativeEventsController", function() {
 				var path = `/initiatives/${initiative.uuid}/events`
 				var res = yield this.request(path, {
 					method: "POST",
-					form: {_csrf_token: this.csrfToken, type: "parliament-finished"}
+					form: {type: "parliament-finished"}
 				})
 
 				res.statusCode.must.equal(422)
@@ -209,7 +205,6 @@ describe("InitiativeEventsController", function() {
 						var res = yield this.request(path, {
 							method: "POST",
 							form: {
-								_csrf_token: this.csrfToken,
 								type: "text",
 								title: "Something happened",
 								content: "You shouldn't miss it."
@@ -269,7 +264,6 @@ describe("InitiativeEventsController", function() {
 					var res = yield this.request(path, {
 						method: "POST",
 						form: {
-							_csrf_token: this.csrfToken,
 							type: "text",
 							title: "Something happened",
 							content: "You shouldn't miss it."
@@ -333,7 +327,6 @@ describe("InitiativeEventsController", function() {
 					var res = yield this.request(path, {
 						method: "POST",
 						form: {
-							_csrf_token: this.csrfToken,
 							type: "media-coverage",
 							title: "Something happened",
 							publisher: "Old York Times",
@@ -397,7 +390,6 @@ describe("InitiativeEventsController", function() {
 					var res = yield this.request(path, {
 						method: "POST",
 						form: {
-							_csrf_token: this.csrfToken,
 							type: "media-coverage",
 							title: "Something happened",
 							publisher: "Old York Times",
@@ -468,7 +460,6 @@ describe("InitiativeEventsController", function() {
 				var res = yield this.request(path, {
 					method: "POST",
 					form: {
-						_csrf_token: this.csrfToken,
 						type: "text",
 						title: "Something happened",
 						content: "You shouldn't miss it."
@@ -499,8 +490,7 @@ describe("InitiativeEventsController", function() {
 				}))
 
 				var res = yield this.request(`/initiatives/${initiative.uuid}/events`, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken}
+					method: "POST"
 				})
 
 				res.statusCode.must.equal(403)

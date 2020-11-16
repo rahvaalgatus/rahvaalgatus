@@ -217,12 +217,9 @@ describe("InitiativeAuthorsController", function() {
 				}))
 
 				var path = `/initiatives/${initiative.uuid}/coauthors`
-				var res = yield this.request(path, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken}
-				})
-
+				var res = yield this.request(path, {method: "POST"})
 				res.statusCode.must.equal(403)
+				res.statusMessage.must.equal("No Permission to Edit Coauthors")
 			})
 
 			it("must respond with 403 if coauthor", function*() {
@@ -238,12 +235,9 @@ describe("InitiativeAuthorsController", function() {
 				}))
 
 				var path = `/initiatives/${initiative.uuid}/coauthors`
-				var res = yield this.request(path, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken}
-				})
-
+				var res = yield this.request(path, {method: "POST"})
 				res.statusCode.must.equal(403)
+				res.statusMessage.must.equal("No Permission to Edit Coauthors")
 			})
 
 			it("must create a new pending coauthor", function*() {
@@ -254,7 +248,7 @@ describe("InitiativeAuthorsController", function() {
 				var path = `/initiatives/${initiative.uuid}/coauthors`
 				var res = yield this.request(path, {
 					method: "POST",
-					form: {_csrf_token: this.csrfToken, personalId: "38706181337"}
+					form: {personalId: "38706181337"}
 				})
 
 				res.statusCode.must.equal(303)
@@ -284,7 +278,7 @@ describe("InitiativeAuthorsController", function() {
 				var path = `/initiatives/${initiative.uuid}/coauthors`
 				var res = yield this.request(path, {
 					method: "POST",
-					form: {_csrf_token: this.csrfToken, personalId: this.user.personal_id}
+					form: {personalId: this.user.personal_id}
 				})
 
 				res.statusCode.must.equal(303)
@@ -317,7 +311,7 @@ describe("InitiativeAuthorsController", function() {
 				var path = `/initiatives/${initiative.uuid}/coauthors`
 				var res = yield this.request(path, {
 					method: "POST",
-					form: {_csrf_token: this.csrfToken, personalId: "38706181337"}
+					form: {personalId: "38706181337"}
 				})
 
 				res.statusCode.must.equal(303)
@@ -353,7 +347,7 @@ describe("InitiativeAuthorsController", function() {
 				path += "/LV" + this.user.personal_id
 				var res = yield this.request(path, {
 					method: "PUT",
-					form: {_csrf_token: this.csrfToken, status: "accepted"}
+					form: {status: "accepted"}
 				})
 
 				res.statusCode.must.equal(403)
@@ -371,7 +365,7 @@ describe("InitiativeAuthorsController", function() {
 				path += "/" + this.user.country + "40001011337"
 				var res = yield this.request(path, {
 					method: "PUT",
-					form: {_csrf_token: this.csrfToken, status: "accepted"}
+					form: {status: "accepted"}
 				})
 
 				res.statusCode.must.equal(403)
@@ -386,7 +380,7 @@ describe("InitiativeAuthorsController", function() {
 
 				var res = yield this.request(pathToCoauthor(initiative, this.user), {
 					method: "PUT",
-					form: {_csrf_token: this.csrfToken, status: "accepted"}
+					form: {status: "accepted"}
 				})
 
 				res.statusCode.must.equal(404)
@@ -413,7 +407,7 @@ describe("InitiativeAuthorsController", function() {
 
 				var res = yield this.request(pathToCoauthor(initiative, this.user), {
 					method: "PUT",
-					form: {_csrf_token: this.csrfToken, status: "accepted"}
+					form: {status: "accepted"}
 				})
 
 				res.statusCode.must.equal(404)
@@ -439,7 +433,7 @@ describe("InitiativeAuthorsController", function() {
 
 				var res = yield this.request(pathToCoauthor(initiative, this.user), {
 					method: "PUT",
-					form: {_csrf_token: this.csrfToken, status: "accepted"}
+					form: {status: "accepted"}
 				})
 
 				res.statusCode.must.equal(404)
@@ -465,7 +459,7 @@ describe("InitiativeAuthorsController", function() {
 
 				var res = yield this.request(pathToCoauthor(initiative, this.user), {
 					method: "PUT",
-					form: {_csrf_token: this.csrfToken, status: "accepted"}
+					form: {status: "accepted"}
 				})
 
 				res.statusCode.must.equal(404)
@@ -493,7 +487,7 @@ describe("InitiativeAuthorsController", function() {
 
 					var res = yield this.request(pathToCoauthor(initiative, this.user), {
 						method: "PUT",
-						form: {_csrf_token: this.csrfToken, status: "accepted"}
+						form: {status: "accepted"}
 					})
 
 					res.statusCode.must.equal(405)
@@ -515,7 +509,7 @@ describe("InitiativeAuthorsController", function() {
 
 				var res = yield this.request(pathToCoauthor(initiative, this.user), {
 					method: "PUT",
-					form: {_csrf_token: this.csrfToken, status: "accepted"}
+					form: {status: "accepted"}
 				})
 
 				res.statusCode.must.equal(303)
@@ -554,7 +548,7 @@ describe("InitiativeAuthorsController", function() {
 
 				var res = yield this.request(pathToCoauthor(initiative, this.user), {
 					method: "PUT",
-					form: {_csrf_token: this.csrfToken, status: "accepted"}
+					form: {status: "accepted"}
 				})
 
 				res.statusCode.must.equal(303)
@@ -576,7 +570,7 @@ describe("InitiativeAuthorsController", function() {
 
 				var res = yield this.request(pathToCoauthor(initiative, this.user), {
 					method: "PUT",
-					form: {_csrf_token: this.csrfToken, status: "rejected"}
+					form: {status: "rejected"}
 				})
 
 				res.statusCode.must.equal(303)
@@ -606,7 +600,7 @@ describe("InitiativeAuthorsController", function() {
 
 				var res = yield this.request(pathToCoauthor(initiative, this.user), {
 					method: "PUT",
-					form: {_csrf_token: this.csrfToken, status: "foobar"}
+					form: {status: "foobar"}
 				})
 
 				res.statusCode.must.equal(422)
@@ -633,7 +627,7 @@ describe("InitiativeAuthorsController", function() {
 				var res = yield this.request(pathToCoauthor(initiative, this.user), {
 					method: "PUT",
 					headers: {Referer: this.url + "/foo"},
-					form: {_csrf_token: this.csrfToken, status: "accepted"}
+					form: {status: "accepted"}
 				})
 
 				res.statusCode.must.equal(303)
@@ -656,12 +650,7 @@ describe("InitiativeAuthorsController", function() {
 				var res = yield this.request(pathToCoauthor(initiative, this.user), {
 					method: "PUT",
 					headers: {Referer: this.url + "/foo"},
-
-					form: {
-						_csrf_token: this.csrfToken,
-						referrer: this.url + "/bar",
-						status: "accepted"
-					}
+					form: {referrer: this.url + "/bar", status: "accepted"}
 				})
 
 				res.statusCode.must.equal(303)
@@ -687,8 +676,7 @@ describe("InitiativeAuthorsController", function() {
 				}))
 
 				var res = yield this.request(pathToCoauthor(initiative, coauthor), {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "delete"}
+					method: "DELETE"
 				})
 
 				res.statusCode.must.equal(403)
@@ -707,8 +695,7 @@ describe("InitiativeAuthorsController", function() {
 				}))
 
 				var res = yield this.request(pathToCoauthor(initiative, coauthor), {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "delete"}
+					method: "DELETE"
 				})
 
 				res.statusCode.must.equal(403)
@@ -727,8 +714,7 @@ describe("InitiativeAuthorsController", function() {
 				}))
 
 				var res = yield this.request(pathToCoauthor(initiative, coauthor), {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "delete"}
+					method: "DELETE"
 				})
 
 				res.statusCode.must.equal(303)
@@ -776,8 +762,7 @@ describe("InitiativeAuthorsController", function() {
 				}))
 
 				var res = yield this.request(pathToCoauthor(initiative, coauthorA), {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "delete"}
+					method: "DELETE"
 				})
 
 				res.statusCode.must.equal(303)
@@ -813,8 +798,7 @@ describe("InitiativeAuthorsController", function() {
 				}))
 
 				var res = yield this.request(pathToCoauthor(initiative, coauthorA), {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "delete"}
+					method: "DELETE"
 				})
 
 				res.statusCode.must.equal(303)
@@ -849,8 +833,7 @@ describe("InitiativeAuthorsController", function() {
 				}))
 
 				var res = yield this.request(pathToCoauthor(initiative, coauthorA), {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "delete"}
+					method: "DELETE"
 				})
 
 				res.statusCode.must.equal(303)
@@ -877,8 +860,7 @@ describe("InitiativeAuthorsController", function() {
 					}))
 
 					var res = yield this.request(pathToCoauthor(initiative, coauthor), {
-						method: "POST",
-						form: {_csrf_token: this.csrfToken, _method: "delete"}
+						method: "DELETE"
 					})
 
 					res.statusCode.must.equal(303)

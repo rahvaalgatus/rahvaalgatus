@@ -1177,7 +1177,6 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives", {
 					method: "POST",
 					form: {
-						_csrf_token: this.csrfToken,
 						title: "Hello, world!",
 						content: JSON.stringify(content),
 						language: "en"
@@ -1198,7 +1197,6 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives", {
 					method: "POST",
 					form: {
-						_csrf_token: this.csrfToken,
 						title: "Hello, world!",
 						content: JSON.stringify(content),
 						language: "en"
@@ -6130,7 +6128,7 @@ describe("InitiativesController", function() {
 
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
-						form: {_csrf_token: this.csrfToken, destination: ""}
+						form: {destination: ""}
 					})
 
 					res.statusCode.must.equal(303)
@@ -6153,7 +6151,7 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {_csrf_token: this.csrfToken, destination: dest}
+							form: {destination: dest}
 						})
 
 						res.statusCode.must.equal(303)
@@ -6179,7 +6177,7 @@ describe("InitiativesController", function() {
 
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
-						form: {_csrf_token: this.csrfToken, destination: "parliament"}
+						form: {destination: "parliament"}
 					})
 
 					res.statusCode.must.equal(303)
@@ -6206,7 +6204,7 @@ describe("InitiativesController", function() {
 
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
-						form: {_csrf_token: this.csrfToken, destination: "parliament"}
+						form: {destination: "parliament"}
 					})
 
 					res.statusCode.must.equal(403)
@@ -6221,7 +6219,7 @@ describe("InitiativesController", function() {
 
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
-						form: {_csrf_token: this.csrfToken, destination: "foo"}
+						form: {destination: "foo"}
 					})
 
 					res.statusCode.must.equal(422)
@@ -6238,7 +6236,7 @@ describe("InitiativesController", function() {
 
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
-						form: {_csrf_token: this.csrfToken, destination: "muhu-vald"}
+						form: {destination: "muhu-vald"}
 					})
 
 					res.statusCode.must.equal(303)
@@ -6256,7 +6254,6 @@ describe("InitiativesController", function() {
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
-							_csrf_token: this.csrfToken,
 							author_name: "John Smith",
 							author_url: "http://example.com/author",
 							community_url: "http://example.com/community",
@@ -6330,7 +6327,7 @@ describe("InitiativesController", function() {
 
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
-						form: {_csrf_token: this.csrfToken, notes: "Hello, world"}
+						form: {notes: "Hello, world"}
 					})
 
 					res.statusCode.must.equal(303)
@@ -6351,7 +6348,7 @@ describe("InitiativesController", function() {
 
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
-						form: {_csrf_token: this.csrfToken, notes: "Hello, world"}
+						form: {notes: "Hello, world"}
 					})
 
 					res.statusCode.must.equal(403)
@@ -6373,7 +6370,7 @@ describe("InitiativesController", function() {
 
 					var res = yield this.request("/initiatives/" + initiative.uuid, {
 						method: "PUT",
-						form: {_csrf_token: this.csrfToken, visibility: "public"}
+						form: {visibility: "public"}
 					})
 
 					res.statusCode.must.equal(200)
@@ -6399,7 +6396,7 @@ describe("InitiativesController", function() {
 
 					var res = yield this.request("/initiatives/" + initiative.uuid, {
 						method: "PUT",
-						form: {_csrf_token: this.csrfToken, visibility: "public"}
+						form: {visibility: "public"}
 					})
 
 					res.statusCode.must.equal(200)
@@ -6413,7 +6410,7 @@ describe("InitiativesController", function() {
 
 					var res = yield this.request("/initiatives/" + initiative.uuid, {
 						method: "PUT",
-						form: {_csrf_token: this.csrfToken, visibility: "public"}
+						form: {visibility: "public"}
 					})
 
 					res.statusCode.must.equal(403)
@@ -6436,7 +6433,7 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request("/initiatives/" + initiative.uuid, {
 							method: "PUT",
-							form: {_csrf_token: this.csrfToken, visibility: "public"}
+							form: {visibility: "public"}
 						})
 
 						res.statusCode.must.equal(403)
@@ -6462,7 +6459,6 @@ describe("InitiativesController", function() {
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
-							_csrf_token: this.csrfToken,
 							visibility: "public",
 							endsAt: formatIsoDate(endsAt)
 						}
@@ -6502,7 +6498,6 @@ describe("InitiativesController", function() {
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
-							_csrf_token: this.csrfToken,
 							visibility: "public",
 							endsAt: formatIsoDate(DateFns.addDays(
 								initiative.published_at,
@@ -6534,7 +6529,6 @@ describe("InitiativesController", function() {
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
-							_csrf_token: this.csrfToken,
 							visibility: "public",
 							endsAt: formatIsoDate(endsAt)
 						}
@@ -6565,7 +6559,6 @@ describe("InitiativesController", function() {
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
-							_csrf_token: this.csrfToken,
 							visibility: "public",
 							endsAt: formatIsoDate(DateFns.addDays(
 								DateFns.endOfDay(new Date),
@@ -6602,11 +6595,7 @@ describe("InitiativesController", function() {
 
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
-						form: {
-							_csrf_token: this.csrfToken,
-							visibility: "public",
-							endsAt: formatIsoDate(endsAt)
-						}
+						form: {visibility: "public", endsAt: formatIsoDate(endsAt)}
 					})
 
 					res.statusCode.must.equal(303)
@@ -6626,7 +6615,6 @@ describe("InitiativesController", function() {
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
-							_csrf_token: this.csrfToken,
 							visibility: "public",
 							endsAt: formatIsoDate(
 								DateFns.addDays(new Date, Config.minDeadlineDays)
@@ -6658,11 +6646,7 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {
-								_csrf_token: this.csrfToken,
-								visibility: "public",
-								endsAt: formatIsoDate(endsAt)
-							}
+							form: {visibility: "public", endsAt: formatIsoDate(endsAt)}
 						})
 
 						res.statusCode.must.equal(303)
@@ -6698,7 +6682,6 @@ describe("InitiativesController", function() {
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
 							form: {
-								_csrf_token: this.csrfToken,
 								visibility: "public",
 								endsAt: formatIsoDate(DateFns.addDays(
 									initiative.published_at,
@@ -6730,11 +6713,7 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {
-								_csrf_token: this.csrfToken,
-								visibility: "public",
-								endsAt: formatIsoDate(endsAt)
-							}
+							form: {visibility: "public", endsAt: formatIsoDate(endsAt)}
 						})
 
 						res.statusCode.must.equal(303)
@@ -6761,7 +6740,6 @@ describe("InitiativesController", function() {
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
 							form: {
-								_csrf_token: this.csrfToken,
 								visibility: "public",
 								endsAt: formatIsoDate(DateFns.addDays(
 									DateFns.endOfDay(new Date),
@@ -6791,11 +6769,7 @@ describe("InitiativesController", function() {
 						var endsAt = DateFns.addDays(DateFns.endOfDay(new Date), 5)
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {
-								_csrf_token: this.csrfToken,
-								visibility: "public",
-								endsAt: formatIsoDate(endsAt)
-							}
+							form: {visibility: "public", endsAt: formatIsoDate(endsAt)}
 						})
 
 						res.statusCode.must.equal(303)
@@ -6826,11 +6800,7 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {
-								_csrf_token: this.csrfToken,
-								visibility: "public",
-								endsAt: formatIsoDate(endsAt)
-							}
+							form: {visibility: "public", endsAt: formatIsoDate(endsAt)}
 						})
 
 						res.statusCode.must.equal(303)
@@ -6855,7 +6825,6 @@ describe("InitiativesController", function() {
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
 							form: {
-								_csrf_token: this.csrfToken,
 								visibility: "public",
 								endsAt: formatIsoDate(DateFns.addDays(
 									initiative.published_at,
@@ -6881,7 +6850,7 @@ describe("InitiativesController", function() {
 
 					var res = yield this.request("/initiatives/" + initiative.uuid, {
 						method: "PUT",
-						form: {_csrf_token: this.csrfToken, status: "voting"}
+						form: {status: "voting"}
 					})
 
 					res.statusCode.must.equal(200)
@@ -6906,7 +6875,7 @@ describe("InitiativesController", function() {
 
 					var res = yield this.request("/initiatives/" + initiative.uuid, {
 						method: "PUT",
-						form: {_csrf_token: this.csrfToken, status: "voting"}
+						form: {status: "voting"}
 					})
 
 					res.statusCode.must.equal(200)
@@ -6920,7 +6889,7 @@ describe("InitiativesController", function() {
 
 					var res = yield this.request("/initiatives/" + initiative.uuid, {
 						method: "PUT",
-						form: {_csrf_token: this.csrfToken, status: "voting"}
+						form: {status: "voting"}
 					})
 
 					res.statusCode.must.equal(403)
@@ -6943,7 +6912,7 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request("/initiatives/" + initiative.uuid, {
 							method: "PUT",
-							form: {_csrf_token: this.csrfToken, status: "voting"}
+							form: {status: "voting"}
 						})
 
 						res.statusCode.must.equal(403)
@@ -6966,7 +6935,6 @@ describe("InitiativesController", function() {
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
-							_csrf_token: this.csrfToken,
 							status: "voting",
 							language: text.language,
 							endsAt: formatIsoDate(DateFns.addDays(new Date, 30))
@@ -7001,7 +6969,6 @@ describe("InitiativesController", function() {
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
-							_csrf_token: this.csrfToken,
 							status: "voting",
 							language: text.language,
 							endsAt: formatIsoDate(endsAt)
@@ -7067,7 +7034,6 @@ describe("InitiativesController", function() {
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
-							_csrf_token: this.csrfToken,
 							language: text.language,
 							status: "voting",
 							endsAt: formatIsoDate(endsAt)
@@ -7117,7 +7083,6 @@ describe("InitiativesController", function() {
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
-							_csrf_token: this.csrfToken,
 							status: "voting",
 							endsAt: formatIsoDate(DateFns.addDays(new Date, 30))
 						}
@@ -7139,7 +7104,6 @@ describe("InitiativesController", function() {
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
-							_csrf_token: this.csrfToken,
 							status: "voting",
 							endsAt: formatIsoDate(
 								DateFns.addDays(new Date, Config.minDeadlineDays - 1)
@@ -7172,7 +7136,6 @@ describe("InitiativesController", function() {
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
-							_csrf_token: this.csrfToken,
 							status: "voting",
 							language: text.language,
 							endsAt: formatIsoDate(endsAt)
@@ -7197,7 +7160,6 @@ describe("InitiativesController", function() {
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
-							_csrf_token: this.csrfToken,
 							status: "voting",
 							endsAt: formatIsoDate(
 								DateFns.addDays(new Date, Config.maxDeadlineDays)
@@ -7236,7 +7198,6 @@ describe("InitiativesController", function() {
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
-							_csrf_token: this.csrfToken,
 							status: "voting",
 							language: text.language,
 							endsAt: formatIsoDate(endsAt)
@@ -7279,7 +7240,6 @@ describe("InitiativesController", function() {
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
-							_csrf_token: this.csrfToken,
 							status: "voting",
 							language: text.language,
 							endsAt: formatIsoDate(endsAt)
@@ -7323,7 +7283,6 @@ describe("InitiativesController", function() {
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
-							_csrf_token: this.csrfToken,
 							status: "voting",
 							language: b.language,
 							endsAt: formatIsoDate(endsAt)
@@ -7364,7 +7323,6 @@ describe("InitiativesController", function() {
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
-							_csrf_token: this.csrfToken,
 							status: "voting",
 							language: text.language,
 							endsAt: formatIsoDate(endsAt)
@@ -7418,7 +7376,6 @@ describe("InitiativesController", function() {
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
-							_csrf_token: this.csrfToken,
 							status: "voting",
 							language: text.language,
 							endsAt: formatIsoDate(
@@ -7484,11 +7441,7 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {
-								_csrf_token: this.csrfToken,
-								status: "voting",
-								endsAt: formatIsoDate(endsAt)
-							}
+							form: {status: "voting", endsAt: formatIsoDate(endsAt)}
 						})
 
 						res.statusCode.must.equal(303)
@@ -7521,11 +7474,7 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {
-								_csrf_token: this.csrfToken,
-								status: "voting",
-								endsAt: formatIsoDate(endsAt)
-							}
+							form: {status: "voting", endsAt: formatIsoDate(endsAt)}
 						})
 
 						res.statusCode.must.equal(303)
@@ -7556,11 +7505,7 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {
-								_csrf_token: this.csrfToken,
-								status: "voting",
-								endsAt: formatIsoDate(endsAt)
-							}
+							form: {status: "voting", endsAt: formatIsoDate(endsAt)}
 						})
 
 						res.statusCode.must.equal(303)
@@ -7587,11 +7532,7 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {
-								_csrf_token: this.csrfToken,
-								status: "voting",
-								endsAt: formatIsoDate(endsAt)
-							}
+							form: {status: "voting", endsAt: formatIsoDate(endsAt)}
 						})
 
 						res.statusCode.must.equal(303)
@@ -7620,11 +7561,7 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {
-								_csrf_token: this.csrfToken,
-								status: "voting",
-								endsAt: formatIsoDate(endsAt)
-							}
+							form: {status: "voting", endsAt: formatIsoDate(endsAt)}
 						})
 
 						res.statusCode.must.equal(303)
@@ -7660,11 +7597,7 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {
-								_csrf_token: this.csrfToken,
-								status: "voting",
-								endsAt: formatIsoDate(endsAt)
-							}
+							form: {status: "voting", endsAt: formatIsoDate(endsAt)}
 						})
 
 						res.statusCode.must.equal(303)
@@ -7689,11 +7622,7 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {
-								_csrf_token: this.csrfToken,
-								status: "voting",
-								endsAt: formatIsoDate(endsAt)
-							}
+							form: {status: "voting", endsAt: formatIsoDate(endsAt)}
 						})
 
 						res.statusCode.must.equal(403)
@@ -7724,7 +7653,7 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request("/initiatives/" + initiative.uuid, {
 							method: "PUT",
-							form: {_csrf_token: this.csrfToken, status: "followUp"}
+							form: {status: "followUp"}
 						})
 
 						res.statusCode.must.equal(200)
@@ -7740,7 +7669,7 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request("/initiatives/" + initiative.uuid, {
 							method: "PUT",
-							form: {_csrf_token: this.csrfToken, status: "followUp"}
+							form: {status: "followUp"}
 						})
 
 						res.statusCode.must.equal(403)
@@ -7761,7 +7690,7 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request("/initiatives/" + initiative.uuid, {
 							method: "PUT",
-							form: {_csrf_token: this.csrfToken, status: "followUp"}
+							form: {status: "followUp"}
 						})
 
 						res.statusCode.must.equal(403)
@@ -7784,7 +7713,7 @@ describe("InitiativesController", function() {
 
 							var res = yield this.request("/initiatives/" + initiative.uuid, {
 								method: "PUT",
-								form: {_csrf_token: this.csrfToken, status: "followUp"}
+								form: {status: "followUp"}
 							})
 
 							res.statusCode.must.equal(403)
@@ -7805,7 +7734,7 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request("/initiatives/" + initiative.uuid, {
 							method: "PUT",
-							form: {_csrf_token: this.csrfToken, status: "followUp"}
+							form: {status: "followUp"}
 						})
 
 						res.statusCode.must.equal(200)
@@ -7831,7 +7760,7 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request("/initiatives/" + initiative.uuid, {
 							method: "PUT",
-							form: {_csrf_token: this.csrfToken, status: "followUp"}
+							form: {status: "followUp"}
 						})
 
 						res.statusCode.must.equal(403)
@@ -7847,7 +7776,7 @@ describe("InitiativesController", function() {
 
 						var res = yield this.request("/initiatives/" + initiative.uuid, {
 							method: "PUT",
-							form: {_csrf_token: this.csrfToken, status: "followUp"}
+							form: {status: "followUp"}
 						})
 
 						res.statusCode.must.equal(403)
@@ -7867,7 +7796,6 @@ describe("InitiativesController", function() {
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
 							form: {
-								_csrf_token: this.csrfToken,
 								status: "followUp",
 								"contact[name]": "John",
 								"contact[email]": "john@example.com",
@@ -7973,7 +7901,6 @@ describe("InitiativesController", function() {
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
 							form: {
-								_csrf_token: this.csrfToken,
 								status: "followUp",
 								"contact[name]": "John",
 								"contact[email]": "john@example.com",
@@ -8071,7 +7998,7 @@ describe("InitiativesController", function() {
 						var res = yield this.request("/initiatives/" + initiative.uuid, {
 							method: "PUT",
 							headers: {Host: LOCAL_SITE_HOSTNAME},
-							form: {_csrf_token: this.csrfToken, status: "followUp"}
+							form: {status: "followUp"}
 						})
 
 						res.statusCode.must.equal(200)
@@ -8094,7 +8021,7 @@ describe("InitiativesController", function() {
 						var res = yield this.request("/initiatives/" + initiative.uuid, {
 							method: "PUT",
 							headers: {Host: LOCAL_SITE_HOSTNAME},
-							form: {_csrf_token: this.csrfToken, status: "followUp"}
+							form: {status: "followUp"}
 						})
 
 						res.statusCode.must.equal(200)
@@ -8121,7 +8048,7 @@ describe("InitiativesController", function() {
 						var res = yield this.request("/initiatives/" + initiative.uuid, {
 							method: "PUT",
 							headers: {Host: LOCAL_SITE_HOSTNAME},
-							form: {_csrf_token: this.csrfToken, status: "followUp"}
+							form: {status: "followUp"}
 						})
 
 						res.statusCode.must.equal(403)
@@ -8146,7 +8073,7 @@ describe("InitiativesController", function() {
 						var res = yield this.request("/initiatives/" + initiative.uuid, {
 							method: "PUT",
 							headers: {Host: LOCAL_SITE_HOSTNAME},
-							form: {_csrf_token: this.csrfToken, status: "followUp"}
+							form: {status: "followUp"}
 						})
 
 						res.statusCode.must.equal(403)
@@ -8164,7 +8091,7 @@ describe("InitiativesController", function() {
 						var res = yield this.request("/initiatives/" + initiative.uuid, {
 							method: "PUT",
 							headers: {Host: LOCAL_SITE_HOSTNAME},
-							form: {_csrf_token: this.csrfToken, status: "followUp"}
+							form: {status: "followUp"}
 						})
 
 						res.statusCode.must.equal(403)
@@ -8191,7 +8118,6 @@ describe("InitiativesController", function() {
 							headers: {Host: LOCAL_SITE_HOSTNAME},
 
 							form: {
-								_csrf_token: this.csrfToken,
 								status: "followUp",
 								"contact[name]": "John",
 								"contact[email]": "john@example.com",
@@ -8308,7 +8234,6 @@ describe("InitiativesController", function() {
 							method: "PUT",
 							headers: {Host: LOCAL_SITE_HOSTNAME},
 							form: {
-								_csrf_token: this.csrfToken,
 								status: "followUp",
 								"contact[name]": "John",
 								"contact[email]": "john@example.com",
@@ -8403,7 +8328,7 @@ describe("InitiativesController", function() {
 
 					var res = yield this.request("/initiatives/" + initiative.uuid, {
 						method: "PUT",
-						form: {_csrf_token: this.csrfToken, status: "followUp"}
+						form: {status: "followUp"}
 					})
 
 					res.statusCode.must.equal(403)
@@ -8436,7 +8361,7 @@ describe("InitiativesController", function() {
 
 					var res = yield this.request("/initiatives/" + initiative.uuid, {
 						method: "PUT",
-						form: {_csrf_token: this.csrfToken, status: "followUp"}
+						form: {status: "followUp"}
 					})
 
 					res.statusCode.must.equal(403)
@@ -8475,7 +8400,7 @@ describe("InitiativesController", function() {
 
 					var res = yield this.request("/initiatives/" + initiative.uuid, {
 						method: "PUT",
-						form: {_csrf_token: this.csrfToken, status: "followUp"}
+						form: {status: "followUp"}
 					})
 
 					res.statusCode.must.equal(200)
@@ -8493,8 +8418,7 @@ describe("InitiativesController", function() {
 				}))
 
 				var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "delete"}
+					method: "DELETE"
 				})
 
 				res.statusCode.must.equal(401)
@@ -8517,8 +8441,7 @@ describe("InitiativesController", function() {
 				}))
 
 				var res = yield this.request("/initiatives/" + initiative.uuid, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "delete"}
+					method: "DELETE"
 				})
 
 				res.statusCode.must.equal(303)
@@ -8553,8 +8476,7 @@ describe("InitiativesController", function() {
 				}))
 
 				var res = yield this.request("/initiatives/" + initiative.uuid, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "delete"}
+					method: "DELETE"
 				})
 
 				res.statusCode.must.equal(303)
@@ -8583,8 +8505,7 @@ describe("InitiativesController", function() {
 				}))
 
 				var res = yield this.request("/initiatives/" + initiative.uuid, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "delete"}
+					method: "DELETE"
 				})
 
 				res.statusCode.must.equal(303)
@@ -8614,10 +8535,7 @@ describe("InitiativesController", function() {
 				}))
 
 				var path = "/initiatives/" + initiative.uuid
-				var res = yield this.request(path, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "delete"}
-				})
+				var res = yield this.request(path, {method: "DELETE"})
 
 				res.statusCode.must.equal(303)
 				res.headers.location.must.equal(path)
@@ -8655,8 +8573,7 @@ describe("InitiativesController", function() {
 				}))
 
 				var res = yield this.request("/initiatives/" + initiative.uuid, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "delete"}
+					method: "DELETE"
 				})
 
 				res.statusCode.must.equal(303)
@@ -8687,8 +8604,7 @@ describe("InitiativesController", function() {
 				}))
 
 				var res = yield this.request("/initiatives/" + initiative.uuid, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "delete"}
+					method: "DELETE"
 				})
 
 				res.statusCode.must.equal(303)
@@ -8727,8 +8643,7 @@ describe("InitiativesController", function() {
 				}))
 
 				var res = yield this.request("/initiatives/" + initiative.uuid, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "delete"}
+					method: "DELETE"
 				})
 
 				res.statusCode.must.equal(303)
@@ -8750,8 +8665,7 @@ describe("InitiativesController", function() {
 				}))
 
 				var res = yield this.request("/initiatives/" + initiative.uuid, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "delete"}
+					method: "DELETE"
 				})
 
 				res.statusCode.must.equal(405)
@@ -8765,8 +8679,7 @@ describe("InitiativesController", function() {
 				}))
 
 				var res = yield this.request("/initiatives/" + initiative.uuid, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "delete"}
+					method: "DELETE"
 				})
 
 				res.statusCode.must.equal(403)
@@ -8786,8 +8699,7 @@ describe("InitiativesController", function() {
 				}))
 
 				var res = yield this.request("/initiatives/" + initiative.uuid, {
-					method: "POST",
-					form: {_csrf_token: this.csrfToken, _method: "delete"}
+					method: "DELETE"
 				})
 
 				res.statusCode.must.equal(403)
@@ -8809,8 +8721,7 @@ describe("InitiativesController", function() {
 					}))
 
 					var res = yield this.request("/initiatives/" + initiative.uuid, {
-						method: "POST",
-						form: {_csrf_token: this.csrfToken, _method: "delete"}
+						method: "DELETE"
 					})
 
 					res.statusCode.must.equal(403)
