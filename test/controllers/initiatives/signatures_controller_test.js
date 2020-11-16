@@ -380,6 +380,7 @@ describe("SignaturesController", function() {
 				})
 
 				res.statusCode.must.equal(401)
+				res.statusMessage.must.equal("Unauthorized")
 			})
 
 			it("must respond with 403 Forbidden if no personal ids set", function*() {
