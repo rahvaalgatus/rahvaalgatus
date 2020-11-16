@@ -12,6 +12,7 @@ describe("SqliteError", function() {
 			err.code.must.equal("constraint")
 			err.type.must.equal("foreign_key")
 		})
+
 		it("must parse SQLITE_CONSTRAINT with CHECK", function() {
 			var msg = "SQLITE_CONSTRAINT: CHECK constraint failed: comments_title"
 			var sqlite = new Error(msg)
