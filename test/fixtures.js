@@ -14,7 +14,6 @@ var usersDb = require("root/db/users_db")
 var sessionsDb = require("root/db/sessions_db")
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var sha1 = require("root/lib/crypto").hash.bind(null, "sha1")
-var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var fetchDefaults = require("fetch-defaults")
 var EMPTY_BUFFER = new Buffer(0)
 var NO_PARAMS = Buffer.from("0500", "hex")
@@ -130,20 +129,15 @@ exports.csrfRequest = function() {
 exports.user = function(attrs) {
 	beforeEach(function*() {
 		var user = yield usersDb.create(new ValidUser(attrs))
-		var token = Crypto.randomBytes(12)
-		this.user = user
+		var session = new ValidSession({user_id: user.id})
+		session = _.assign(yield sessionsDb.create(session), {token: session.token})
 
-		this.session = yield sessionsDb.create(new ValidSession({
-			user_id: user.id,
-			token_sha256: sha256(token)
-		}))
+		this.user = user
+		this.session = session
 
 		// https://github.com/mochajs/mocha/issues/2014:
 		delete this.request
-
-		this.request = fetchDefaults(this.request, {
-			cookies: {[Config.sessionCookieName]: token.toString("hex")}
-		})
+		this.request = fetchDefaults(this.request, {session: session})
 	})
 }
 
