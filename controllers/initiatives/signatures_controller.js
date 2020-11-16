@@ -278,14 +278,14 @@ exports.router.post("/", next(function*(req, res) {
 			;[country, personalId] = getCertificatePersonalId(cert)
 			xades = newXades(initiative)
 
-			// The Mobile-Id API returns any signing errors only when its status is
-			// queried, not when signing is initiated.
 			logger.info(
 				"Signing via Mobile-Id for %s and %s.",
 				phoneNumber,
 				personalId
 			)
 
+			// The Mobile-Id API returns any signing errors only when its status is
+			// queried, not when signing is initiated.
 			var sessionId = yield mobileId.sign(
 				phoneNumber,
 				personalId,
