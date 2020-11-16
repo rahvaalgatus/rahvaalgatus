@@ -9,7 +9,11 @@ map({
 		name: ."gsx$name"."$t",
 		county: ."gsx$county"."$t",
 		population: ."gsx$population"."$t" | tonumber,
-		initiativesEmail: ."gsx$initiativesemail"."$t" | present,
+
+		initiativesEmails: (
+			."gsx$initiativesemails"."$t" | sub("\\s+$"; "") | split("\n")
+		),
+
 		kompassUrl: ."gsx$kompassurl"."$t" | present,
 		rahandusministeeriumUrl: ."gsx$rahandusministeerium"."$t" | present
 	}

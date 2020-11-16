@@ -4912,7 +4912,10 @@ describe("InitiativesController", function() {
 
 				describe(`on ${LOCAL_SITE_HOSTNAME}`, function() {
 					beforeEach(function() {
-						LOCAL_GOVERNMENTS["muhu-vald"].initiativesEmail = "muhu@example.org"
+						LOCAL_GOVERNMENTS["muhu-vald"].initiativesEmails = [
+							"muhu@example.org",
+							"muhu-cc@example.org"
+						]
 					})
 
 					it("must include social media tags with local URLs", function*() {
@@ -4944,9 +4947,9 @@ describe("InitiativesController", function() {
 						metas["og:image"].content.must.equal(url + ".png")
 					})
 
-					it("must not render send to government button if email missing",
+					it("must not render send to government button if emails empty",
 						function*() {
-						LOCAL_GOVERNMENTS["muhu-vald"].initiativesEmail = null
+						LOCAL_GOVERNMENTS["muhu-vald"].initiativesEmails = []
 
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
@@ -7460,6 +7463,7 @@ describe("InitiativesController", function() {
 					email.headers.subject.must.equal(message.title)
 
 					var vars = email.headers["x-mailgun-recipient-variables"]
+
 					subscriptions.slice(2).forEach((s) => (
 						vars.must.include(s.update_token)
 					))
@@ -7897,6 +7901,9 @@ describe("InitiativesController", function() {
 						var email = this.emails[0]
 						email.envelope.to.must.eql([Config.parliamentEmail])
 
+						var vars = email.headers["x-mailgun-recipient-variables"]
+						JSON.parse(vars).must.eql({[Config.parliamentEmail]: {}})
+
 						email.headers.subject.must.equal(t(
 							"EMAIL_INITIATIVE_TO_PARLIAMENT_TITLE",
 							{initiativeTitle: initiative.title}
@@ -8013,9 +8020,9 @@ describe("InitiativesController", function() {
 							{initiativeTitle: initiative.title}
 						))
 
-						var vars = JSON.parse(email.headers["x-mailgun-recipient-variables"])
+						var vars = email.headers["x-mailgun-recipient-variables"]
 
-						vars.must.eql({
+						JSON.parse(vars).must.eql({
 							[subscriptions[2].email]: {
 								unsubscribeUrl: `/initiatives/${initiative.uuid}/subscriptions/${subscriptions[2].update_token}`
 							},
@@ -8040,7 +8047,10 @@ describe("InitiativesController", function() {
 
 				describe("when destined for local", function() {
 					beforeEach(function() {
-						LOCAL_GOVERNMENTS["muhu-vald"].initiativesEmail = "muhu@example.org"
+						LOCAL_GOVERNMENTS["muhu-vald"].initiativesEmails = [
+							"muhu@example.org",
+							"muhu-cc@example.org"
+						]
 					})
 
 					it("must render update page", function*() {
@@ -8090,9 +8100,9 @@ describe("InitiativesController", function() {
 						res.statusCode.must.equal(200)
 					})
 
-					it("must respond with 403 if local government email missing",
+					it("must respond with 403 if local government emails empty",
 						function*() {
-						LOCAL_GOVERNMENTS["muhu-vald"].initiativesEmail = null
+						LOCAL_GOVERNMENTS["muhu-vald"].initiativesEmails = []
 
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
@@ -8216,7 +8226,18 @@ describe("InitiativesController", function() {
 
 						this.emails.length.must.equal(1)
 						var email = this.emails[0]
-						email.envelope.to.must.eql(["muhu@example.org"])
+
+						email.envelope.to.must.eql([
+							"muhu@example.org",
+							"muhu-cc@example.org",
+						])
+
+						var vars = email.headers["x-mailgun-recipient-variables"]
+
+						JSON.parse(vars).must.eql({
+							"muhu@example.org": {},
+							"muhu-cc@example.org": {}
+						})
 
 						email.headers.subject.must.equal(t(
 							"EMAIL_INITIATIVE_TO_LOCAL_GOVERNMENT_TITLE",
@@ -8337,9 +8358,9 @@ describe("InitiativesController", function() {
 							{initiativeTitle: initiative.title}
 						))
 
-						var vars = JSON.parse(email.headers["x-mailgun-recipient-variables"])
+						var vars = email.headers["x-mailgun-recipient-variables"]
 
-						vars.must.eql({
+						JSON.parse(vars).must.eql({
 							[subscriptions[2].email]: {
 								unsubscribeUrl: `/initiatives/${initiative.uuid}/subscriptions/${subscriptions[2].update_token}`
 							},

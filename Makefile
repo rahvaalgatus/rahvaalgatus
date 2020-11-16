@@ -181,6 +181,7 @@ lib/i18n/et.json \
 lib/i18n/ru.json: tmp/translations.json
 	jq $(JQ_OPTS) -f scripts/translation.jq "$<" > "$@"
 
+lib/local_governments.json: scripts/local_governments.jq
 lib/local_governments.json: tmp/local_governments.json
 	jq $(JQ_OPTS) -f scripts/local_governments.jq "$<" > "$@"
 

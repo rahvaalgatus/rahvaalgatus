@@ -919,12 +919,19 @@ function* updateInitiativePhaseToParliament(req, res) {
 		`${initiativeUrl}/signatures.zip?` +
 		Qs.stringify({type: "citizenos", "parliament-token": parliamentToken})
 
-	var parliamentEmail = initiative.destination == "parliament"
-		? Config.parliamentEmail
-		: LOCAL_GOVERNMENTS[initiative.destination].initiativesEmail
+	var emails = initiative.destination == "parliament"
+		? [Config.parliamentEmail]
+		: LOCAL_GOVERNMENTS[initiative.destination].initiativesEmails
 
 	yield sendEmail({
-		to: parliamentEmail,
+		envelope: {to: emails},
+		to: {name: "", address: "%recipient%"},
+
+		headers: {
+			"X-Mailgun-Recipient-Variables": JSON.stringify(
+				_.object(emails, _.const({}))
+			)
+		},
 
 		subject: t(initiative.destination == "parliament"
 			? "EMAIL_INITIATIVE_TO_PARLIAMENT_TITLE"

@@ -315,6 +315,7 @@ describe("InitiativeEventsController", function() {
 					email.headers.subject.must.equal(messages[0].title)
 
 					var vars = email.headers["x-mailgun-recipient-variables"]
+
 					subscriptions.slice(2).forEach((s) => (
 						vars.must.include(s.update_token)
 					))
@@ -444,6 +445,7 @@ describe("InitiativeEventsController", function() {
 					email.headers.subject.must.equal(messages[0].title)
 
 					var vars = email.headers["x-mailgun-recipient-variables"]
+
 					subscriptions.slice(2).forEach((s) => (
 						vars.must.include(s.update_token)
 					))
