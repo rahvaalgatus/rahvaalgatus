@@ -160,7 +160,7 @@ exports.router.get("/", next(function*(req, res) {
 	var t = req.t
 	var user = req.user
 	var initiative = req.initiative
-	var token = Buffer.from(req.query["parliament-token"] || "", "hex")
+	var token = parseToken(req.query["parliament-token"] || "")
 
 	if (!initiative.parliament_token)
 		throw new HttpError(403, "Signatures Not Available")
@@ -836,6 +836,12 @@ function serializeGeo(geo) {
 		city_name: geo.city ? geo.city.names.en : null,
 		city_geoname_id: geo.city ? geo.city.geoname_id : null
 	}
+}
+
+function parseToken(token) {
+	// Some email clients include trailing punctuation in links.
+	try { return Buffer.from(token.replace(/[^A-Fa-f0-9]/g, ""), "hex") }
+	catch (ex) { if (ex instanceof TypeError) return new Buffer(0); throw ex }
 }
 
 function parseSignatureId(id) { return [id.slice(0, 2), id.slice(2)] }

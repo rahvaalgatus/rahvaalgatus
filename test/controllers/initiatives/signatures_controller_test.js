@@ -261,7 +261,7 @@ describe("SignaturesController", function() {
 			res.body.must.include(t("INITIATIVE_SIGNATURES_INVALID_TOKEN"))
 		})
 
-		it("must respond with 403 Forbidden given non-hex token", function*() {
+		it("must respond with 403 Forbidden given non-ascii token", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
@@ -269,7 +269,7 @@ describe("SignaturesController", function() {
 			}))
 
 			var path = `/initiatives/${initiative.uuid}/signatures.asice`
-			var res = yield request.call(this, path + "?parliament-token=foobar")
+			var res = yield request.call(this, path + "?parliament-token=foo.bar")
 			res.statusCode.must.equal(403)
 			res.statusMessage.must.equal("Invalid Token")
 		})
@@ -356,6 +356,27 @@ describe("SignaturesController", function() {
 
 			var entry = yield Zip.readEntry(zip, entries["initiative.html"])
 			String(entry).must.equal(initiative.text)
+		})
+
+		_.each({
+			period: ".",
+			exclamation: "!"
+		}, function(punctuation, name) {
+			it(`must respond with signatures given trailing ${name}`, function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "parliament",
+					parliament_token: Crypto.randomBytes(12)
+				}))
+
+				var path = `/initiatives/${initiative.uuid}/signatures.asice`
+				path += "?parliament-token="
+				path += initiative.parliament_token.toString("hex")
+
+				var res = yield this.request(path + punctuation)
+				res.statusCode.must.equal(200)
+				res.headers["content-type"].must.equal(ASICE_TYPE)
+			})
 		})
 
 		describe("when destined for local", function() {
