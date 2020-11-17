@@ -157,16 +157,23 @@ var SMART_ID_ERRORS = exports.SMART_ID_ERRORS = {
 }
 
 exports.router.get("/", next(function*(req, res) {
+	var t = req.t
 	var user = req.user
 	var initiative = req.initiative
 	var token = Buffer.from(req.query["parliament-token"] || "", "hex")
 
 	if (!initiative.parliament_token)
 		throw new HttpError(403, "Signatures Not Available")
+
 	if (!constantTimeEqual(initiative.parliament_token, token))
-		throw new HttpError(403, "Invalid Token")
+		throw new HttpError(403, "Invalid Token", {
+			description: t("INITIATIVE_SIGNATURES_INVALID_TOKEN")
+		})
+
 	if (initiative.received_by_parliament_at)
-		throw new HttpError(423, "Signatures Already In Parliament")
+		throw new HttpError(423, "Signatures Already In Parliament", {
+			description: t("INITIATIVE_SIGNATURES_NO_LONGER_AVAILABLE")
+		})
 
 	if (initiative.destination != "parliament") {
 		if (user == null) throw new HttpError(401)
@@ -175,7 +182,9 @@ exports.router.get("/", next(function*(req, res) {
 		var downloaders = government.signatureDownloadPersonalIds
 
 		if (!downloaders.includes(user.personal_id))
-			throw new HttpError(403, "Not a Permitted Downloader")
+			throw new HttpError(403, "Not a Permitted Downloader", {
+				description: t("INITIATIVE_SIGNATURES_NOT_PERMITTED_DOWNLOADER")
+			})
 	}
 
 	switch (req.query.type) {

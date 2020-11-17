@@ -256,6 +256,9 @@ describe("SignaturesController", function() {
 			var res = yield request.call(this, path + "?parliament-token=" + token)
 			res.statusCode.must.equal(403)
 			res.statusMessage.must.equal("Invalid Token")
+
+			res.headers["content-type"].must.equal("text/html; charset=utf-8")
+			res.body.must.include(t("INITIATIVE_SIGNATURES_INVALID_TOKEN"))
 		})
 
 		it("must respond with 403 Forbidden given non-hex token", function*() {
@@ -285,6 +288,9 @@ describe("SignaturesController", function() {
 			var res = yield request.call(this, path)
 			res.statusCode.must.equal(423)
 			res.statusMessage.must.equal("Signatures Already In Parliament")
+
+			res.headers["content-type"].must.equal("text/html; charset=utf-8")
+			res.body.must.include(t("INITIATIVE_SIGNATURES_NO_LONGER_AVAILABLE"))
 		})
 	}
 
@@ -416,6 +422,11 @@ describe("SignaturesController", function() {
 
 				res.statusCode.must.equal(403)
 				res.statusMessage.must.equal("Not a Permitted Downloader")
+				res.headers["content-type"].must.equal("text/html; charset=utf-8")
+
+				res.body.must.include(
+					t("INITIATIVE_SIGNATURES_NOT_PERMITTED_DOWNLOADER")
+				)
 			})
 
 			it("must respond with signatures if permitted downloader", function*() {
