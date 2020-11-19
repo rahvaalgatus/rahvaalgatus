@@ -35,7 +35,7 @@ Rahvaalgatus.ee-d kasutades pean meeles järgmist:
 5. kaasan teisi inimesi arutellu ja arvestan nende argumentidega lõpliku pöördumise (algatuse) koostamisel;
 6. kasutan platvormi juhul, kui mul puuduvad teised kanalid ettepanekute ja seadusemuudatuste esitamiseks.
 
-Rahvaalgatus.ee-s pole  teretulnud vihakõne ega muud solvavad ütlemised, samamoodi pole see platvorm loodud parlamendis esindatud erakondadele.
+Rahvaalgatus.ee-s pole teretulnud vihakõne, samamoodi pole see platvorm loodud parlamendis esindatud erakondadele.
 
 Rahvaalgatus.ee-d haldaval Eesti Koostöö Kogul on õigus eemaldada hea tava vastu eksivad postitused (vihakõne, isiklikud solvamised jms) ilma põhjendusteta.
 
