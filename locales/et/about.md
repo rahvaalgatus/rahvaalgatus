@@ -1,8 +1,8 @@
 # Rahvaalgatus.ee platvormist
 
-Rahvaalgatus.ee on arutelude pidamise ja ettepanekute koostamise platvorm, mille kaudu saab Riigikogule kollektiivseid pöördumisi (ehk algatusi) esitada. Rahvaalgatus.ee võimaldab igaühel teha ettepaneku, kuidas ühiskonnaelu parandada või mõnda seadust muuta. Pärast ettepaneku kirjapanemist saab kutsuda teisi kaasa arutlema, arutelu tulemusel pöördumise (ehk algatuse) ühiselt koostada, vähemalt 16aastastelt Eesti elanikelt digiallkirju koguda ning pöördumine ühe klikiga Riigikogule esitada. Platvormis saab jälgida, mida parlamendi komisjon(id) ettepaneku kohta arvavad ja selle võimalikku seaduseelnõuks kujunemist.
+Rahvaalgatus.ee on arutelude pidamise ja ettepanekute koostamise platvorm, mille kaudu saab Riigikogule ja kohalikele omavalitsustele esitada kollektiivseid pöördumisi (ehk algatusi). Rahvaalgatus.ee võimaldab igaühel teha ettepaneku, kuidas muuta kehtivat regulatsiooni või ühiskonnaelu paremini korraldada. Pärast ettepaneku kirjapanemist saab kutsuda teisi kaasa arutlema, arutelu tulemusel pöördumise ühiselt koostada, vähemalt 16aastastelt Eesti elanikelt digiallkirju koguda ning pöördumine ühe klikiga Riigikogule või kohalikule omavalitsusele esitada. Platvormi vahendusel saab jälgida, mis algatusest edasi saab, mida parlamendi komisjon(id) ettepaneku kohta arvavad ja mil viisil ettepanekus välja toodu lahendatakse. 
 
-Rahvaalgatus.ee võimaldab mugavalt ja läbipaistvalt kasutada õigust esitada Riigikogule kollektiivseid pöördumisi. Nimelt uuendati Rahvakogu ettepanekute tulemusel 2014. aasta kevadel Riigikogu töö- ja kodukorra seadust, mille kohaselt Riigikogu peab menetlema vähemalt 1000 allkirjaga pöördumist, mis on tehtud kehtiva regulatsiooni muutmiseks või ühiskonnaelu paremaks korraldamiseks. Seisuga märts 2018 on parlamendile esitatud 16 pöördumist, neist kaks on ka seaduseks saanud.
+Rahvakogu ettepanekute tulemusel uuendati 2014. aasta kevadel Riigikogu töö- ja kodukorra seadust, mille alusel peab Riigikogu menetlema vähemalt 1000 allkirjaga pöördumist, mis on tehtud kehtiva regulatsiooni muutmiseks või ühiskonnaelu paremaks korraldamiseks. Rahvaalgatus.ee võimaldab alates 2016. aasta kevadest mugavalt ja läbipaistvalt Riigikogule kollektiivsete pöördumiste esitamise õigust kasutada. Alates 2020. aasta augustist on Rahvaalgatus.ee vahendusel võimalik teha pöördumisi ka kohalikele omavalitsustele.  
 
 Kellele on rahvaalgatus.ee mõeldud?
 
@@ -15,27 +15,27 @@ Kes saavad rahvaalgatus.ee-st veel kasu?
 
 - Riigikogu saadikud ja teised poliitikud, et olla kursis, milliseid arutelusid kodanikud tõstatavad
 - ministeeriumide esindajad, et olla kursis valdkondlike ettepanekutega
-- ajakirjanikud, et noppida üles avalikku tähelepanu pälvivad arutelud ja pöördumised, jälgida pöördumiste saatust
+- kohalikud poliitikud, et olla teadlikud teemadest ja probleemidest, mis kohalikku kogukonda kõnetavad
+- ajakirjanikud, et noppida üles avalikku tähelepanu pälvivad arutelud ja pöördumised, jälgida pöördumiste menetlust
 
 Rahvaalgatus.ee platvormi on püsti pannud ja seda haldab SA Eesti Koostöö Kogu tihedas koostöös Riigikogu Kantseleiga.
-Rahvaalgatus.ee on ehitatud sihtasutuse Teeme Ära! loodud kogukondliku otsustamise vabavara CitizenOS.com-i peale. Rahvaalgatusveeb on ka riikliku kohustusena Riigikantselei kureeritavas avatud valitsemise partnerluse tegevuskavas 2016-2018.
+
+Rahvaalgatus.ee platvorm on ka riikliku kohustusena Riigikantselei kureeritavas avatud valitsemise partnerluse tegevuskavas 2016-2018.
 
 ## <a id="tos"></a> Rahvaalgatus.ee kasutamise hea tava
-Rahvaalgatus.ee kaudu saab Riigikogule koostada kollektiivseid pöördumisi (algatusi) ühiskonnaelu paremaks korraldamiseks või seaduste muutmiseks.
 
-Platvormi kasutamise hea tava on koostatud uskumuses, et argumenteeritud arutelud aitavad luua häid algatusi, mis omakorda parandada elu Eestis.
+Platvormi kasutamise hea tava on koostatud uskumuses, et argumenteeritud arutelud aitavad luua häid algatusi, mis soodustavad omakorda Eestis eluolu parandamist.
 
 Rahvaalgatus.ee-d kasutades pean meeles järgmist:
 
 1. minu ettepanek või algatus on kooskõlas Eesti Vabariigi põhiseaduse aluspõhimõtetega;
 2. pakutud lahendus peab olema tõestatud ning tõestus omakorda kontrollitav;
 3. ettepaneku või algatuse sisestamisel pakun ka struktureeritud selgitusi, et niimoodi kaasamõtlejaid ja arutajaid juurde meelitada;
-4. olen veendunud, et Riigikogu on minu ettepaneku õige adressaat;
-5. kritiseerin ideid, mitte inimesi. Kriitikas keskendun lahendustele, mitte probleemidele;
-6. kaasan teisi inimesi arutellu ja arvestan nende argumentidega lõpliku pöördumise (algatuse) koostamisel;
-7. kasutan platvormi juhul, kui mul puuduvad teised kanalid ettepanekute ja seadusemuudatuste esitamiseks.
+4. kritiseerin ideid, mitte inimesi. Kriitikas keskendun lahendustele, mitte probleemidele;
+5. kaasan teisi inimesi arutellu ja arvestan nende argumentidega lõpliku pöördumise (algatuse) koostamisel;
+6. kasutan platvormi juhul, kui mul puuduvad teised kanalid ettepanekute ja seadusemuudatuste esitamiseks.
 
-Rahvaalgatus.ee-s pole seega teretulnud vihakõne ega muud solvavad ütlemised, samamoodi pole see platvorm loodud parlamendis esindatud erakondadele.
+Rahvaalgatus.ee-s pole  teretulnud vihakõne ega muud solvavad ütlemised, samamoodi pole see platvorm loodud parlamendis esindatud erakondadele.
 
 Rahvaalgatus.ee-d haldaval Eesti Koostöö Kogul on õigus eemaldada hea tava vastu eksivad postitused (vihakõne, isiklikud solvamised jms) ilma põhjendusteta.
 
@@ -48,11 +48,13 @@ Isikuandmed on rahvaalgatus.ee platvormil sisestatud kasutaja kohta käivad andm
 
 Kasutajakonto on vaja luua algatuse loomiseks ja kommentaaride andmiseks.
 
-Toetusallkirja andmise jaoks ei ole vaja endale kasutajakontot luua. Toetusallkirja andmisel salvestatakse nimi ja isikukood.  Andmeid töödeldakse üksnes kollektiivse pöördumise esitamiseks ning töötlemine toimub märgukirjale ja selgitustaotlusele vastamise ning kollektiivse pöördumise esitamise seaduse 3. peatüki regulatsiooni alusel.
+Toetusallkirja andmise jaoks ei ole vaja endale kasutajakontot luua. Toetusallkirja andmisel salvestatakse nimi ja isikukood. Andmeid töödeldakse üksnes kollektiivse pöördumise esitamiseks ning töötlemine toimub üldiste isikuandmete töötlemise nõuetest lähtuvalt ning märgukirjale ja selgitustaotlusele vastamise ning kollektiivse pöördumise esitamise seaduse 3. peatüki regulatsiooni alusel.
 
-Toetusallkirja andnute nimekiri on nähtav Riigikogu Kantselei vastutavale töötajale, kes kontrollib rahvastikuregistrist, et digiallkirjad on andnud vähemalt 16 aastased Eesti alalised elanikud.
+Riigikogule esitatud pöördumisele toetusallkirja andnute nimekiri on nähtav Riigikogu Kantselei vastutavale töötajale, kes kontrollib rahvastikuregistrist, et digiallkirjad on andnud vähemalt 16aastased Eesti alalised elanikud. 
 
-Andmeid hoitakse konfidentsiaalsena ning kõiki isikuid, kellel on õigus isikandmeid töödelda, on teavitatud isikuandmete konfidentsiaalsest olemusest. Toetusallkirja andjaid rahvaalgatus.ee  avalikult ei kuva,  kuid selline tehniline arendus on avatuse nimel plaanis. Kui tehniline arendus valmib, siis tagasiulatuvalt seda ei rakendata ning kasutajal on võimalik ise määrata, kas ta toetus on avalik või mitte.
+Kohalikule omavalitsusele esitatud pöördumisele toetusallkirja andnute nimekiri on nähtav omavalitsuse registripidajale, kes kontrollib rahvastikuregistrist, et digiallkirjad on andnud vähemalt 16aastased vastava kohaliku omavalitsuse elanikud. 
+
+Andmeid hoitakse konfidentsiaalsena ning kõiki isikuid, kellel on õigus isikandmeid töödelda, on teavitatud isikuandmete konfidentsiaalsest olemusest. Toetusallkirja andjaid Rahvaalgatus.ee avalikult ei kuva. 
 
 Kui isik leiab, et tema õigusi on põhjendamatult piiratud või rikutud, on tal õigus pöörduda Andmekaitse Inspektsiooni või kohtusse.
 
@@ -63,4 +65,4 @@ Teavitame rikkumisest Andmekaitse Inspektsiooni põhjendamatu viivituseta ja võ
 
 - kollektiivsete pöördumiste esitamisest [Riigikogu kodulehel](https://www.riigikogu.ee/tutvustus-ja-ajalugu/raakige-kaasa/esitage-kollektiivne-poordumine/)
 - Riigikogule alates 2014. aastast esitatud [kollektiivsed pöördumised](https://www.riigikogu.ee/tutvustus-ja-ajalugu/raakige-kaasa/esitage-kollektiivne-poordumine/riigikogule-esitatud-kollektiivsed-poordumised/)
-- arutamise, otsustamise ja otsuste digiallkirjastamise platvorm CitizenOS.com (mille peale rahvaalgatus.ee on ehitatud)
+
