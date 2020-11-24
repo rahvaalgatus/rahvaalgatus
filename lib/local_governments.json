@@ -214,7 +214,9 @@
 		"name": "Narva linn",
 		"county": "Ida-Viru",
 		"population": 56459,
-		"initiativesEmails": [],
+		"initiativesEmails": [
+			"narvalv@narva.ee"
+		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/narva-linn"
@@ -482,7 +484,7 @@
 		"population": 5396,
 		"initiativesEmails": [
 			"vallavalitsus@laaneranna.ee",
-			"margus.kalle@laaneranna.ee"
+			"arno.peksar@laaneranna.ee"
 		],
 		"signatureDownloadPersonalIds": [
 			"47105264719"
