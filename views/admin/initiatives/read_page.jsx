@@ -19,6 +19,7 @@ var formatDateTime = require("root/lib/i18n").formatDateTime
 var confirm = require("root/lib/jsx").confirm
 var linkify = require("root/lib/linkify")
 var UPDATEABLE_PHASES = ["sign", "parliament", "government", "done"]
+var EXPIRATION_MONTHS = Config.expireSignaturesInMonths
 
 module.exports = function(attrs) {
 	var req = attrs.req
@@ -341,7 +342,7 @@ module.exports = function(attrs) {
 				</td>
 			</tr>
 
-			{initiative.phase == "sign" ? <tr>
+			{initiative.phase == "sign" && EXPIRATION_MONTHS > 0 ? <tr>
 				<th scope="row">Signing Expiration</th>
 				<td>{new Date >= expiresOn ? (initiative.signing_expired_at ? <Fragment>
 					Expired on {
