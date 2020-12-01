@@ -7,7 +7,6 @@ var formatDate = require("root/lib/i18n").formatDate
 var SignaturesController =
 	require("root/controllers/admin/initiative_signatures_controller")
 var {getSexFromPersonalId} = SignaturesController
-var {getBirthdateFromPersonalId} = SignaturesController
 var {getAgeRange} = SignaturesController
 var {serializeLocation} = SignaturesController
 var {COLUMNS} = SignaturesController
@@ -188,7 +187,7 @@ module.exports = function(attrs) {
 				{_.sortBy(signatures, "created_at").reverse().map(function(sig) {
 					var initiativeUuid = sig.initiative_uuid
 					var initiativePath = `${req.rootUrl}/initiatives/${initiativeUuid}`
-					var birthdate = getBirthdateFromPersonalId(sig.personal_id)
+					var birthdate = _.getBirthdateFromPersonalId(sig.personal_id)
 
 					return <tr>{columns.map((column) => { switch (column) {
 						case "created_on": return <td>{timeFormat == "date"

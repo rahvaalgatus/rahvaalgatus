@@ -10,7 +10,6 @@ var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 exports.router = Router({mergeParams: true})
 exports.getSexFromPersonalId = getSexFromPersonalId
-exports.getBirthdateFromPersonalId = getBirthdateFromPersonalId
 exports.getAgeRange = getAgeRange
 exports.serializeLocation = serializeLocation
 
@@ -100,7 +99,7 @@ function serializeSignaturesAsCsv(
 		case "initiative_uuid": return sig.initiative_uuid
 		case "sex": return getSexFromPersonalId(sig.personal_id)
 		case "age_range": return getAgeRange(
-			getBirthdateFromPersonalId(sig.personal_id),
+			_.getBirthdateFromPersonalId(sig.personal_id),
 			sig.created_at
 		)
 
@@ -127,7 +126,7 @@ function serializeSignersAsCsv(columns, locationFormat, signers) {
 	var rows = signers.map((sig) => columns.map((column) => { switch (column) {
 		case "sex": return getSexFromPersonalId(sig.personal_id)
 		case "age_range": return getAgeRange(
-			getBirthdateFromPersonalId(sig.personal_id),
+			_.getBirthdateFromPersonalId(sig.personal_id),
 			sig.created_at
 		)
 
@@ -161,16 +160,6 @@ function getSexFromPersonalId(personalId) {
 		case "6": return "female"
 		default: throw new RangeError("Time traveller prefix: " + personalId[0])
 	}
-}
-
-function getBirthdateFromPersonalId(personalId) {
-	var [_m, cent, year, month, day] = /^(\d)(\d\d)(\d\d)(\d\d)/.exec(personalId)
-
-	return new Date(
-		{1: 1800, 2: 1800, 3: 1900, 4: 1900, 5: 2000, 6: 2000}[cent] + Number(year),
-		Number(month) - 1,
-		Number(day)
-	)
 }
 
 function getAgeRange(birthdate, at) {

@@ -3,6 +3,7 @@ var Mime = require("mime")
 var Zip = require("root/lib/zip")
 var Asic = require("undersign/lib/asic")
 var Path = require("path")
+var DateFns = require("date-fns")
 var MobileId = require("undersign/lib/mobile_id")
 var SmartId = require("undersign/lib/smart_id")
 var MediaType = require("medium-type")
@@ -270,6 +271,8 @@ exports.router.post("/", next(function*(req, res) {
 			if (err = validateCertificate(req.t, cert)) throw err
 
 			;[country, personalId] = getCertificatePersonalId(cert)
+			if (err = validatePersonalId(req.t, personalId)) throw err
+
 			xades = newXades(initiative)
 
 			signable = yield signablesDb.create({
@@ -289,7 +292,8 @@ exports.router.post("/", next(function*(req, res) {
 
 		case "mobile-id":
 			var phoneNumber = ensureAreaCode(req.body.phoneNumber)
-			personalId = req.body.personalId
+			personalId = parsePersonalId(req.t, req.body.personalId)
+			if (err = validatePersonalId(req.t, personalId)) throw err
 
 			// Log Mobile-Id requests to confirm SK's billing.
 			logger.info(
@@ -339,7 +343,8 @@ exports.router.post("/", next(function*(req, res) {
 			break
 
 		case "smart-id":
-			personalId = req.body.personalId
+			personalId = parsePersonalId(req.t, req.body.personalId)
+			if (err = validatePersonalId(req.t, personalId)) throw err
 
 			// Log Smart-Id requests to confirm SK's billing.
 			logger.info("Requesting Smart-Id certificate for %s.", personalId)
@@ -767,6 +772,27 @@ function getSigningMethod(req) {
 		type == "application/vnd.rahvaalgatus.signature" ? "id-card" :
 		null
 	)
+}
+
+function parsePersonalId(t, id) {
+	id = id.replace(/[^0-9]/g, "")
+
+	if (id.length != 11) throw new HttpError(422, "Invalid Personal Id", {
+		description: t("SIGN_ERROR_PERSONAL_ID_INVALID")
+	})
+
+	return id
+}
+
+function validatePersonalId(t, id) {
+	var birthdate = _.getBirthdateFromPersonalId(id)
+
+	if (birthdate > DateFns.addYears(new Date, -16))
+		return new HttpError(422, "Too Young", {
+			description: t("SIGN_ERROR_TOO_YOUNG")
+		})
+
+	return null
 }
 
 function* replaceSignature(signable) {

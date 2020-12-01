@@ -44,13 +44,17 @@ var CERTIFICATE_TYPE = "application/pkix-cert"
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
 var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
 var SIGNATURE_TYPE = "application/vnd.rahvaalgatus.signature"
-var PERSONAL_ID = "38706181337"
 var VALID_ISSUERS = require("root/test/fixtures").VALID_ISSUERS
 var JOHN_RSA_KEYS = require("root/test/fixtures").JOHN_RSA_KEYS
 var JOHN_ECDSA_KEYS = require("root/test/fixtures").JOHN_ECDSA_KEYS
 var SESSION_ID = "7c8bdd56-6772-4264-ba27-bf7a9ef72a11"
 var {PHONE_NUMBER_TRANSFORMS} = require("root/test/fixtures")
-var SMART_ID = "PNOEE-" + PERSONAL_ID + "-R2D2-Q"
+var TODAY = new Date(2015, 5, 18)
+var ADULT_BIRTHDATE = DateFns.addYears(TODAY, -16)
+var CHILD_BIRTHDATE = DateFns.addDays(ADULT_BIRTHDATE, 1)
+var ADULT_PERSONAL_ID = formatPersonalId(ADULT_BIRTHDATE) + "1337"
+var CHILD_PERSONAL_ID = formatPersonalId(CHILD_BIRTHDATE) + "1337"
+var SMART_ID = "PNOEE-" + ADULT_PERSONAL_ID + "-R2D2-Q"
 var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 
@@ -63,10 +67,10 @@ var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
 		countryName: "EE",
 		organizationName: "ESTEID",
 		organizationalUnitName: "digital signature",
-		commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+		commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
 		surname: "SMITH",
 		givenName: "JOHN",
-		serialNumber: `PNOEE-${PERSONAL_ID}`
+		serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 	},
 
 	issuer: VALID_ISSUERS[0],
@@ -78,10 +82,10 @@ var MOBILE_ID_CERTIFICATE = new Certificate(newCertificate({
 		countryName: "EE",
 		organizationName: "ESTEID (MOBIIL-ID)",
 		organizationalUnitName: "digital signature",
-		commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+		commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
 		surname: "SMITH",
 		givenName: "JOHN",
-		serialNumber: `PNOEE-${PERSONAL_ID}`
+		serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 	},
 
 	issuer: VALID_ISSUERS[0],
@@ -92,10 +96,10 @@ var SMART_ID_CERTIFICATE = new Certificate(newCertificate({
 	subject: {
 		countryName: "EE",
 		organizationalUnitName: "SIGNATURE",
-		commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+		commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
 		surname: "SMITH",
 		givenName: "JOHN",
-		serialNumber: `PNOEE-${PERSONAL_ID}`
+		serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 	},
 
 	issuer: VALID_ISSUERS[0],
@@ -702,7 +706,7 @@ describe("SignaturesController", function() {
 	})
 
 	describe("POST /", function() {
-		require("root/test/time")(new Date(2015, 5, 18))
+		require("root/test/time")(TODAY)
 
 		beforeEach(function*() {
 			this.author = yield usersDb.create(new ValidUser)
@@ -723,10 +727,10 @@ describe("SignaturesController", function() {
 							countryName: "EE",
 							organizationName: "ESTEID",
 							organizationalUnitName: "digital signature",
-							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+							commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: PERSONAL_ID
+							serialNumber: ADULT_PERSONAL_ID
 						},
 
 						issuer: VALID_ISSUERS[0],
@@ -747,7 +751,7 @@ describe("SignaturesController", function() {
 					`)
 
 					signature.country.must.equal("EE")
-					signature.personal_id.must.equal(PERSONAL_ID)
+					signature.personal_id.must.equal(ADULT_PERSONAL_ID)
 				})
 
 				VALID_ISSUERS.forEach(function(issuer) {
@@ -760,10 +764,10 @@ describe("SignaturesController", function() {
 								countryName: "EE",
 								organizationName: "ESTEID",
 								organizationalUnitName: "digital signature",
-								commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+								commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
 								surname: "SMITH",
 								givenName: "JOHN",
-								serialNumber: `PNOEE-${PERSONAL_ID}`
+								serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 							},
 
 							issuer: issuer,
@@ -812,7 +816,7 @@ describe("SignaturesController", function() {
 					var oldSignature = yield signaturesDb.create(new ValidSignature({
 						initiative_uuid: this.initiative.uuid,
 						country: "EE",
-						personal_id: PERSONAL_ID
+						personal_id: ADULT_PERSONAL_ID
 					}))
 
 					var signed = yield sign(
@@ -845,7 +849,7 @@ describe("SignaturesController", function() {
 						new ValidCitizenosSignature({
 							initiative_uuid: this.initiative.uuid,
 							country: "EE",
-							personal_id: PERSONAL_ID
+							personal_id: ADULT_PERSONAL_ID
 						})
 					)
 
@@ -882,7 +886,7 @@ describe("SignaturesController", function() {
 					var oldSignature = yield signaturesDb.create(new ValidSignature({
 						initiative_uuid: this.initiative.uuid,
 						country: "EE",
-						personal_id: PERSONAL_ID,
+						personal_id: ADULT_PERSONAL_ID,
 						hidden: true,
 
 						xades: hades.new(MOBILE_ID_CERTIFICATE, [{
@@ -929,7 +933,7 @@ describe("SignaturesController", function() {
 					var signature = yield signaturesDb.create(new ValidSignature({
 						initiative_uuid: otherInitiative.uuid,
 						country: "EE",
-						personal_id: PERSONAL_ID
+						personal_id: ADULT_PERSONAL_ID
 					}))
 
 					var signed = yield sign(
@@ -969,7 +973,7 @@ describe("SignaturesController", function() {
 						new ValidCitizenosSignature({
 							initiative_uuid: otherInitiative.uuid,
 							country: "EE",
-							personal_id: PERSONAL_ID
+							personal_id: ADULT_PERSONAL_ID
 						})
 					)
 
@@ -1076,7 +1080,7 @@ describe("SignaturesController", function() {
 					var signature = yield signaturesDb.create(new ValidSignature({
 						initiative_uuid: this.initiative.uuid,
 						country: "LT",
-						personal_id: PERSONAL_ID
+						personal_id: ADULT_PERSONAL_ID
 					}))
 
 					var signed = yield sign(
@@ -1112,7 +1116,7 @@ describe("SignaturesController", function() {
 						new ValidCitizenosSignature({
 							initiative_uuid: this.initiative.uuid,
 							country: "LT",
-							personal_id: PERSONAL_ID
+							personal_id: ADULT_PERSONAL_ID
 						})
 					)
 
@@ -1155,10 +1159,10 @@ describe("SignaturesController", function() {
 						countryName: "EE",
 						organizationName: "ESTEID",
 						organizationalUnitName: "digital signature",
-						commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
 						surname: "SMITH",
 						givenName: "JOHN",
-						serialNumber: `PNOEE-${PERSONAL_ID}`
+						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
 					issuer: VALID_ISSUERS[0],
@@ -1196,7 +1200,7 @@ describe("SignaturesController", function() {
 				signables.length.must.equal(1)
 				signables[0].initiative_uuid.must.equal(this.initiative.uuid)
 				signables[0].country.must.equal("EE")
-				signables[0].personal_id.must.equal(PERSONAL_ID)
+				signables[0].personal_id.must.equal(ADULT_PERSONAL_ID)
 				signables[0].method.must.equal("id-card")
 				signables[0].xades.toString().must.equal(String(xades))
 				signables[0].signed.must.be.false()
@@ -1243,7 +1247,7 @@ describe("SignaturesController", function() {
 					initiative_uuid: this.initiative.uuid,
 					token: signables[0].token,
 					country: "EE",
-					personal_id: PERSONAL_ID,
+					personal_id: ADULT_PERSONAL_ID,
 					method: "id-card",
 					xades: String(xades),
 					created_from: LONDON_GEO
@@ -1264,10 +1268,10 @@ describe("SignaturesController", function() {
 						countryName: "EE",
 						organizationName: "ESTEID",
 						organizationalUnitName: "digital signature",
-						commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
 						surname: "SMITH",
 						givenName: "JOHN",
-						serialNumber: `PNOEE-${PERSONAL_ID}`
+						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
 					issuer: issuer,
@@ -1304,10 +1308,10 @@ describe("SignaturesController", function() {
 						countryName: "EE",
 						organizationName: "ESTEID",
 						organizationalUnitName: "digital signature",
-						commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
 						surname: "SMITH",
 						givenName: "JOHN",
-						serialNumber: `PNOEE-${PERSONAL_ID}`
+						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
 					validFrom: DateFns.addSeconds(new Date, 1),
@@ -1345,10 +1349,10 @@ describe("SignaturesController", function() {
 						countryName: "EE",
 						organizationName: "ESTEID",
 						organizationalUnitName: "digital signature",
-						commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
 						surname: "SMITH",
 						givenName: "JOHN",
-						serialNumber: `PNOEE-${PERSONAL_ID}`
+						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
 					validUntil: new Date,
@@ -1380,6 +1384,46 @@ describe("SignaturesController", function() {
 				})
 			})
 
+			it("must respond with 422 given underage signer", function*() {
+				var cert = new Certificate(newCertificate({
+					subject: {
+						countryName: "EE",
+						organizationName: "ESTEID",
+						organizationalUnitName: "digital signature",
+						commonName: `SMITH,JOHN,${CHILD_PERSONAL_ID}`,
+						surname: "SMITH",
+						givenName: "JOHN",
+						serialNumber: `PNOEE-${CHILD_PERSONAL_ID}`
+					},
+
+					issuer: VALID_ISSUERS[0],
+					publicKey: JOHN_RSA_KEYS.publicKey
+				}))
+
+				var initiativePath = `/initiatives/${this.initiative.uuid}`
+				var res = yield this.request(`${initiativePath}/signatures`, {
+					method: "POST",
+
+					headers: {
+						Accept: `${SIGNABLE_TYPE}, ${ERR_TYPE}`,
+						"Content-Type": CERTIFICATE_TYPE
+					},
+
+					body: cert.toBuffer()
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Too Young")
+				res.headers["content-type"].must.equal(ERR_TYPE)
+
+				res.body.must.eql({
+					code: 422,
+					message: "Too Young",
+					name: "HttpError",
+					description: t("SIGN_ERROR_TOO_YOUNG")
+				})
+			})
+
 			_.each({
 				RSA: [JOHN_RSA_KEYS, signWithRsa],
 				ECDSA: [JOHN_ECDSA_KEYS, signWithEcdsa]
@@ -1390,10 +1434,10 @@ describe("SignaturesController", function() {
 							countryName: "EE",
 							organizationName: "ESTEID",
 							organizationalUnitName: "digital signature",
-							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+							commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: `PNOEE-${PERSONAL_ID}`
+							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 						},
 
 						issuer: VALID_ISSUERS[0],
@@ -1447,10 +1491,10 @@ describe("SignaturesController", function() {
 							countryName: "EE",
 							organizationName: "ESTEID",
 							organizationalUnitName: "digital signature",
-							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+							commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: `PNOEE-${PERSONAL_ID}`
+							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 						},
 
 						issuer: VALID_ISSUERS[0],
@@ -1508,10 +1552,10 @@ describe("SignaturesController", function() {
 						countryName: "EE",
 						organizationName: "ESTEID (MOBIIL-ID)",
 						organizationalUnitName: "digital signature",
-						commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
 						surname: "SMITH",
 						givenName: "JOHN",
-						serialNumber: `PNOEE-${PERSONAL_ID}`
+						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
 					issuer: VALID_ISSUERS[0],
@@ -1527,7 +1571,7 @@ describe("SignaturesController", function() {
 					req.body.relyingPartyName.must.equal(Config.mobileIdUser)
 					req.body.relyingPartyUUID.must.equal(Config.mobileIdPassword)
 					req.body.phoneNumber.must.equal("+37200000766")
-					req.body.nationalIdentityNumber.must.equal(PERSONAL_ID)
+					req.body.nationalIdentityNumber.must.equal(ADULT_PERSONAL_ID)
 
 					respond({result: "OK", cert: cert.toString("base64")}, req, res)
 				})
@@ -1539,7 +1583,7 @@ describe("SignaturesController", function() {
 					req.body.relyingPartyName.must.equal(Config.mobileIdUser)
 					req.body.relyingPartyUUID.must.equal(Config.mobileIdPassword)
 					req.body.phoneNumber.must.equal("+37200000766")
-					req.body.nationalIdentityNumber.must.equal(PERSONAL_ID)
+					req.body.nationalIdentityNumber.must.equal(ADULT_PERSONAL_ID)
 					req.body.hashType.must.equal("SHA256")
 					req.body.hash.must.equal(xades.signableHash.toString("base64"))
 					req.body.language.must.equal("EST")
@@ -1580,7 +1624,7 @@ describe("SignaturesController", function() {
 
 					form: {
 						method: "mobile-id",
-						personalId: PERSONAL_ID,
+						personalId: ADULT_PERSONAL_ID,
 						phoneNumber: "+37200000766"
 					}
 				})
@@ -1601,7 +1645,7 @@ describe("SignaturesController", function() {
 				signables.length.must.equal(1)
 				signables[0].initiative_uuid.must.equal(this.initiative.uuid)
 				signables[0].country.must.equal("EE")
-				signables[0].personal_id.must.equal(PERSONAL_ID)
+				signables[0].personal_id.must.equal(ADULT_PERSONAL_ID)
 				signables[0].method.must.equal("mobile-id")
 				signables[0].xades.toString().must.equal(String(xades))
 				signables[0].signed.must.be.true()
@@ -1615,7 +1659,7 @@ describe("SignaturesController", function() {
 					initiative_uuid: this.initiative.uuid,
 					token: signables[0].token,
 					country: "EE",
-					personal_id: PERSONAL_ID,
+					personal_id: ADULT_PERSONAL_ID,
 					method: "mobile-id",
 					xades: String(xades),
 					created_from: LONDON_GEO
@@ -1636,10 +1680,10 @@ describe("SignaturesController", function() {
 						countryName: "EE",
 						organizationName: "ESTEID (MOBIIL-ID)",
 						organizationalUnitName: "digital signature",
-						commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
 						surname: "SMITH",
 						givenName: "JOHN",
-						serialNumber: `PNOEE-${PERSONAL_ID}`
+						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
 					issuer: issuer,
@@ -1656,7 +1700,7 @@ describe("SignaturesController", function() {
 					method: "POST",
 					form: {
 						method: "mobile-id",
-						personalId: PERSONAL_ID,
+						personalId: ADULT_PERSONAL_ID,
 						phoneNumber: "+37200000766"
 					}
 				})
@@ -1673,10 +1717,10 @@ describe("SignaturesController", function() {
 						countryName: "EE",
 						organizationName: "ESTEID (MOBIIL-ID)",
 						organizationalUnitName: "digital signature",
-						commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
 						surname: "SMITH",
 						givenName: "JOHN",
-						serialNumber: `PNOEE-${PERSONAL_ID}`
+						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
 					validFrom: DateFns.addSeconds(new Date, 1),
@@ -1694,7 +1738,7 @@ describe("SignaturesController", function() {
 					method: "POST",
 					form: {
 						method: "mobile-id",
-						personalId: PERSONAL_ID,
+						personalId: ADULT_PERSONAL_ID,
 						phoneNumber: "+37200000766"
 					}
 				})
@@ -1711,10 +1755,10 @@ describe("SignaturesController", function() {
 						countryName: "EE",
 						organizationName: "ESTEID (MOBIIL-ID)",
 						organizationalUnitName: "digital signature",
-						commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
 						surname: "SMITH",
 						givenName: "JOHN",
-						serialNumber: `PNOEE-${PERSONAL_ID}`
+						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
 					validUntil: new Date,
@@ -1732,7 +1776,7 @@ describe("SignaturesController", function() {
 					method: "POST",
 					form: {
 						method: "mobile-id",
-						personalId: PERSONAL_ID,
+						personalId: ADULT_PERSONAL_ID,
 						phoneNumber: "+37200000766"
 					}
 				})
@@ -1741,6 +1785,23 @@ describe("SignaturesController", function() {
 				res.statusMessage.must.equal("Certificate Expired")
 				res.headers["content-type"].must.equal("text/html; charset=utf-8")
 				res.body.must.include(t("CERTIFICATE_EXPIRED"))
+			})
+
+			it("must respond with 422 given underage signer", function*() {
+				var initiativePath = `/initiatives/${this.initiative.uuid}`
+				var res = yield this.request(initiativePath + "/signatures", {
+					method: "POST",
+					form: {
+						method: "mobile-id",
+						personalId: CHILD_PERSONAL_ID,
+						phoneNumber: "+37200000766"
+					}
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Too Young")
+				res.headers["content-type"].must.equal("text/html; charset=utf-8")
+				res.body.must.include(t("SIGN_ERROR_TOO_YOUNG"))
 			})
 
 			it("must create signature if Mobile-Id session running", function*() {
@@ -1802,10 +1863,10 @@ describe("SignaturesController", function() {
 							countryName: "EE",
 							organizationName: "ESTEID (MOBIIL-ID)",
 							organizationalUnitName: "digital signature",
-							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+							commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: `PNOEE-${PERSONAL_ID}`
+							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 						},
 
 						issuer: VALID_ISSUERS[0],
@@ -1855,10 +1916,10 @@ describe("SignaturesController", function() {
 							countryName: "EE",
 							organizationName: "ESTEID (MOBIIL-ID)",
 							organizationalUnitName: "digital signature",
-							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+							commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: `PNOEE-${PERSONAL_ID}`
+							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 						},
 
 						issuer: VALID_ISSUERS[0],
@@ -1909,7 +1970,7 @@ describe("SignaturesController", function() {
 					this.router.post(`${MOBILE_ID_URL.path}certificate`, (req, res) => {
 						++created
 						req.body.phoneNumber.must.equal(long)
-						req.body.nationalIdentityNumber.must.equal(PERSONAL_ID)
+						req.body.nationalIdentityNumber.must.equal(ADULT_PERSONAL_ID)
 						respond({result: "NOT_FOUND"}, req, res)
 					})
 
@@ -1918,7 +1979,7 @@ describe("SignaturesController", function() {
 						method: "POST",
 						form: {
 							method: "mobile-id",
-							personalId: PERSONAL_ID,
+							personalId: ADULT_PERSONAL_ID,
 							phoneNumber: short
 						}
 					})
@@ -1951,7 +2012,7 @@ describe("SignaturesController", function() {
 						method: "POST",
 						form: {
 							method: "mobile-id",
-							personalId: PERSONAL_ID,
+							personalId: ADULT_PERSONAL_ID,
 							phoneNumber: "+37200000766"
 						}
 					})
@@ -1967,6 +2028,22 @@ describe("SignaturesController", function() {
 			})
 
 			it("must respond with 422 given invalid personal id", function*() {
+				var path = `/initiatives/${this.initiative.uuid}`
+				var res = yield this.request(path + "/signatures", {
+					method: "POST",
+					form: {
+						method: "mobile-id",
+						personalId: "60001010",
+						phoneNumber: "+37200000766"
+					}
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Invalid Personal Id")
+				res.body.must.include(t("SIGN_ERROR_PERSONAL_ID_INVALID"))
+			})
+
+			it("must respond with 422 given invalid personal id error", function*() {
 				this.router.post(`${MOBILE_ID_URL.path}certificate`,
 					function(req, res) {
 					res.statusCode = 400
@@ -1981,7 +2058,7 @@ describe("SignaturesController", function() {
 					method: "POST",
 					form: {
 						method: "mobile-id",
-						personalId: "60001010",
+						personalId: ADULT_PERSONAL_ID,
 						phoneNumber: "+37200000766"
 					}
 				})
@@ -1998,7 +2075,7 @@ describe("SignaturesController", function() {
 				`).must.then.be.empty()
 			})
 
-			it("must respond with 422 given invalid phone number", function*() {
+			it("must respond with 422 given invalid phone number error", function*() {
 				this.router.post(`${MOBILE_ID_URL.path}certificate`,
 					function(req, res) {
 					res.statusCode = 400
@@ -2013,7 +2090,7 @@ describe("SignaturesController", function() {
 					method: "POST",
 					form: {
 						method: "mobile-id",
-						personalId: "60001010",
+						personalId: ADULT_PERSONAL_ID,
 						phoneNumber: "+37200000766"
 					}
 				})
@@ -2042,7 +2119,7 @@ describe("SignaturesController", function() {
 					method: "POST",
 					form: {
 						method: "mobile-id",
-						personalId: "60001010",
+						personalId: ADULT_PERSONAL_ID,
 						phoneNumber: "+37200000766"
 					}
 				})
@@ -2135,10 +2212,10 @@ describe("SignaturesController", function() {
 					subject: {
 						countryName: "EE",
 						organizationalUnitName: "SIGNATURE",
-						commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+						commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
 						surname: "SMITH",
 						givenName: "JOHN",
-						serialNumber: `PNOEE-${PERSONAL_ID}`
+						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
 					issuer: VALID_ISSUERS[0],
@@ -2150,7 +2227,7 @@ describe("SignaturesController", function() {
 				var signSession = "21e55f06-d6cb-40b7-9638-75dc0b131851"
 
 				this.router.post(
-					`${SMART_ID_URL.path}certificatechoice/etsi/PNOEE-${PERSONAL_ID}`,
+					`${SMART_ID_URL.path}certificatechoice/etsi/PNOEE-${ADULT_PERSONAL_ID}`,
 					function(req, res) {
 					req.headers.host.must.equal(SMART_ID_URL.host)
 
@@ -2226,7 +2303,7 @@ describe("SignaturesController", function() {
 				var signing = yield this.request(initiativePath + "/signatures", {
 					method: "POST",
 					headers: {"X-Forwarded-For": LONDON_FORWARDED_FOR},
-					form: {method: "smart-id", personalId: PERSONAL_ID}
+					form: {method: "smart-id", personalId: ADULT_PERSONAL_ID}
 				})
 
 				signing.statusCode.must.equal(202)
@@ -2245,7 +2322,7 @@ describe("SignaturesController", function() {
 				signables.length.must.equal(1)
 				signables[0].initiative_uuid.must.equal(this.initiative.uuid)
 				signables[0].country.must.equal("EE")
-				signables[0].personal_id.must.equal(PERSONAL_ID)
+				signables[0].personal_id.must.equal(ADULT_PERSONAL_ID)
 				signables[0].method.must.equal("smart-id")
 				signables[0].xades.toString().must.equal(String(xades))
 				signables[0].signed.must.be.true()
@@ -2259,7 +2336,7 @@ describe("SignaturesController", function() {
 					initiative_uuid: this.initiative.uuid,
 					token: signables[0].token,
 					country: "EE",
-					personal_id: PERSONAL_ID,
+					personal_id: ADULT_PERSONAL_ID,
 					method: "smart-id",
 					xades: String(xades),
 					created_from: LONDON_GEO
@@ -2279,10 +2356,10 @@ describe("SignaturesController", function() {
 					subject: {
 						countryName: "EE",
 						organizationalUnitName: "SIGNATURE",
-						commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+						commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
 						surname: "SMITH",
 						givenName: "JOHN",
-						serialNumber: `PNOEE-${PERSONAL_ID}`
+						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
 					issuer: issuer,
@@ -2307,10 +2384,10 @@ describe("SignaturesController", function() {
 					subject: {
 						countryName: "EE",
 						organizationalUnitName: "SIGNATURE",
-						commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+						commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
 						surname: "SMITH",
 						givenName: "JOHN",
-						serialNumber: `PNOEE-${PERSONAL_ID}`
+						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
 					validFrom: DateFns.addSeconds(new Date, 1),
@@ -2336,10 +2413,10 @@ describe("SignaturesController", function() {
 					subject: {
 						countryName: "EE",
 						organizationalUnitName: "SIGNATURE",
-						commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+						commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
 						surname: "SMITH",
 						givenName: "JOHN",
-						serialNumber: `PNOEE-${PERSONAL_ID}`
+						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
 					validUntil: new Date,
@@ -2360,15 +2437,28 @@ describe("SignaturesController", function() {
 				res.body.must.include(t("CERTIFICATE_EXPIRED"))
 			})
 
+			it("must respond with 422 given underage signer", function*() {
+				var path = `/initiatives/${this.initiative.uuid}/signatures`
+				var res = yield this.request(path, {
+					method: "POST",
+					form: {method: "smart-id", personalId: CHILD_PERSONAL_ID}
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Too Young")
+				res.headers["content-type"].must.equal("text/html; charset=utf-8")
+				res.body.must.include(t("SIGN_ERROR_TOO_YOUNG"))
+			})
+
 			it("must get certificate if request running", function*() {
 				var cert = new Certificate(newCertificate({
 					subject: {
 						countryName: "EE",
 						organizationalUnitName: "SIGNATURE",
-						commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+						commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
 						surname: "SMITH",
 						givenName: "JOHN",
-						serialNumber: `PNOEE-${PERSONAL_ID}`
+						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
 					validUntil: new Date,
@@ -2403,7 +2493,7 @@ describe("SignaturesController", function() {
 				var path = `/initiatives/${this.initiative.uuid}/signatures`
 				var res = yield this.request(path, {
 					method: "POST",
-					form: {method: "smart-id", personalId: PERSONAL_ID}
+					form: {method: "smart-id", personalId: ADULT_PERSONAL_ID}
 				})
 
 				res.statusCode.must.equal(422)
@@ -2435,7 +2525,7 @@ describe("SignaturesController", function() {
 				var path = `/initiatives/${this.initiative.uuid}/signatures`
 				var res = yield this.request(path, {
 					method: "POST",
-					form: {method: "smart-id", personalId: PERSONAL_ID}
+					form: {method: "smart-id", personalId: ADULT_PERSONAL_ID}
 				})
 
 				res.statusCode.must.equal(410)
@@ -2507,10 +2597,10 @@ describe("SignaturesController", function() {
 						subject: {
 							countryName: "EE",
 							organizationalUnitName: "SIGNATURE",
-							commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+							commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: `PNOEE-${PERSONAL_ID}`
+							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 						},
 
 						issuer: VALID_ISSUERS[0],
@@ -2564,10 +2654,10 @@ describe("SignaturesController", function() {
 						subject: {
 							countryName: "EE",
 							organizationalUnitName: "SIGNATURE",
-							commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+							commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
-							serialNumber: `PNOEE-${PERSONAL_ID}`
+							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 						},
 
 						issuer: VALID_ISSUERS[0],
@@ -2626,7 +2716,25 @@ describe("SignaturesController", function() {
 				var initiativePath = `/initiatives/${this.initiative.uuid}`
 				var res = yield this.request(initiativePath + "/signatures", {
 					method: "POST",
-					form: {method: "smart-id", personalId: "60001011337"}
+					form: {method: "smart-id", personalId: "60001010"}
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Invalid Personal Id")
+				res.body.must.include(t("SIGN_ERROR_PERSONAL_ID_INVALID"))
+			})
+
+			it("must respond with 422 given invalid personal id error", function*() {
+				this.router.post(`${SMART_ID_URL.path}certificatechoice/etsi/:id`,
+					function(req, res) {
+					res.statusCode = 404
+					respond({code: 404, message: "Not Found"}, req, res)
+				})
+
+				var initiativePath = `/initiatives/${this.initiative.uuid}`
+				var res = yield this.request(initiativePath + "/signatures", {
+					method: "POST",
+					form: {method: "smart-id", personalId: ADULT_PERSONAL_ID}
 				})
 
 				res.statusCode.must.equal(422)
@@ -2648,7 +2756,7 @@ describe("SignaturesController", function() {
 				var initiativePath = `/initiatives/${this.initiative.uuid}`
 				var res = yield this.request(initiativePath + "/signatures", {
 					method: "POST",
-					form: {method: "smart-id", personalId: "60001011337"}
+					form: {method: "smart-id", personalId: ADULT_PERSONAL_ID}
 				})
 
 				res.statusCode.must.equal(500)
@@ -3094,7 +3202,7 @@ function* signWithMobileId(router, request, initiative, cert, res) {
 		method: "POST",
 		form: {
 			method: "mobile-id",
-			personalId: PERSONAL_ID,
+			personalId: ADULT_PERSONAL_ID,
 			phoneNumber: "+37200000766"
 		}
 	})
@@ -3125,7 +3233,7 @@ function certWithSmartId(router, request, initiative, cert) {
 
 	return request(`/initiatives/${initiative.uuid}/signatures`, {
 		method: "POST",
-		form: {method: "smart-id", personalId: PERSONAL_ID}
+		form: {method: "smart-id", personalId: ADULT_PERSONAL_ID}
 	})
 }
 
@@ -3206,4 +3314,12 @@ function signWithEcdsa(key, signable) {
 		signatureAsn.r.toBuffer("be", 32),
 		signatureAsn.s.toBuffer("be", 32)
 	])
+}
+
+function formatPersonalId(date) {
+	var sexCentury = date.getFullYear() < 2000 ? "3" : "5"
+	var year = String(date.getFullYear()).slice(-2)
+	var month = _.padLeft(String(date.getMonth() + 1), 2, "0")
+	var day = _.padLeft(String(date.getDate()), 2, "0")
+	return sexCentury + year + month + day
 }
