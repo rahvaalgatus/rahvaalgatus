@@ -144,7 +144,10 @@
 		"name": "Tallinn",
 		"county": "Harju",
 		"population": 438930,
-		"initiativesEmails": [],
+		"initiativesEmails": [
+			"lvpost@tallinnlv.ee",
+			"linnapea@tallinnlv.ee"
+		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/tallinna-linn"
@@ -154,7 +157,10 @@
 		"name": "Viimsi vald",
 		"county": "Harju",
 		"population": 20142,
-		"initiativesEmails": [],
+		"initiativesEmails": [
+			"info@viimsivv.ee ",
+			"illar.lemetti@viimsivv.ee"
+		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/viimsi-vald"
@@ -667,7 +673,10 @@
 		"name": "Tartu linn",
 		"county": "Tartu",
 		"population": 95334,
-		"initiativesEmails": [],
+		"initiativesEmails": [
+			"lv@tartulv.ee",
+			"Urmas.Klaas@raad.tartu.ee"
+		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/tartu-linn"
@@ -677,7 +686,10 @@
 		"name": "Tartu vald",
 		"county": "Tartu",
 		"population": 10846,
-		"initiativesEmails": [],
+		"initiativesEmails": [
+			"tartuvald@tartuvald.ee",
+			"jarno.laur@tartuvald.ee"
+		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/tartu-vald"
@@ -687,7 +699,10 @@
 		"name": "Otepää vald",
 		"county": "Valga",
 		"population": 6566,
-		"initiativesEmails": [],
+		"initiativesEmails": [
+			"vald@otepaa.ee",
+			"Jaanus.Barkala@otepaa.ee"
+		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/otepaa-vald"
@@ -697,7 +712,10 @@
 		"name": "Tõrva vald",
 		"county": "Valga",
 		"population": 6162,
-		"initiativesEmails": [],
+		"initiativesEmails": [
+			"torva@torva.ee",
+			"maido@torva.ee"
+		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/torva-vald"
