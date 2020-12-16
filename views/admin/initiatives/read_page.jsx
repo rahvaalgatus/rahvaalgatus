@@ -36,10 +36,6 @@ module.exports = function(attrs) {
 		? Initiative.getExpirationDate(initiative)
 		: null
 
-	var beenToParliament = (
-		initiative.external || initiative.sent_to_parliament_at != null
-	)
-
 	return <Page page="initiative" title={initiative.title} req={req}>
 		<a href={req.baseUrl} class="admin-back">Initiatives</a>
 		<h1 class="admin-heading">{initiative.title}</h1>
@@ -91,14 +87,18 @@ module.exports = function(attrs) {
 								Edit
 							</option>
 
-							<option value="sign" selected={phase == "sign"} disabled>
+							<option
+								value="sign"
+								selected={phase == "sign"}
+								disabled={phase == "edit"}
+							>
 								Sign
 							</option>
 
 							<option
 								value="parliament"
 								selected={phase == "parliament"}
-								disabled={!beenToParliament}
+								disabled={phase == "edit"}
 							>
 								Parliament
 							</option>
@@ -106,7 +106,7 @@ module.exports = function(attrs) {
 							<option
 								value="government"
 								selected={phase == "government"}
-								disabled={!beenToParliament}
+								disabled={phase == "edit"}
 							>
 								Government
 							</option>
@@ -114,7 +114,7 @@ module.exports = function(attrs) {
 							<option
 								value="done"
 								selected={phase == "done"}
-								disabled={!beenToParliament}
+								disabled={phase == "edit"}
 							>
 								Follow-Up
 							</option>
