@@ -161,7 +161,9 @@
 			"info@viimsivv.ee ",
 			"illar.lemetti@viimsivv.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"46311080297"
+		],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/viimsi-vald"
 	},
