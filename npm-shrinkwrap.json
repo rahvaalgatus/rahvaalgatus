@@ -939,8 +939,8 @@
       "resolved": "https://registry.npmjs.org/inherits/-/inherits-2.0.1.tgz"
     },
     "j6pack": {
-      "version": "1.0.0",
-      "from": "j6pack@>=1.0.0 <2.0.0",
+      "version": "1.1.0",
+      "from": "j6pack@>=1.1.0 <1.2.0",
       "dependencies": {
         "jsx-transform": {
           "version": "2.4.0",
