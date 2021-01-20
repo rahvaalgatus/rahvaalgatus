@@ -40,9 +40,7 @@ var {validateCertificate} = require("root/lib/certificate")
 var getNormalizedMobileIdErrorCode =
 	require("root/lib/mobile_id").getNormalizedErrorCode
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
-exports.router = Router({mergeParams: true})
 exports.pathToSignature = pathToSignature
-exports.router.use(parseBody({type: hasSignatureType}))
 exports.getSigningMethod = getSigningMethod
 exports.hasSignatureType = hasSignatureType
 
@@ -156,6 +154,9 @@ var SMART_ID_ERRORS = exports.SMART_ID_ERRORS = {
 		"SMART_ID_ERROR_INVALID_SIGNATURE"
 	]
 }
+
+exports.router = Router({mergeParams: true})
+exports.router.use(parseBody({type: hasSignatureType}))
 
 exports.router.get("/", next(function*(req, res) {
 	var t = req.t
@@ -273,7 +274,7 @@ exports.router.post("/", next(function*(req, res) {
 			;[country, personalId] = getCertificatePersonalId(cert)
 			if (err = validatePersonalId(req.t, personalId)) throw err
 
-			xades = newXades(initiative)
+			xades = newXades(cert, initiative)
 
 			signable = yield signablesDb.create({
 				initiative_uuid: initiative.uuid,
@@ -306,7 +307,7 @@ exports.router.post("/", next(function*(req, res) {
 			if (err = validateCertificate(req.t, cert)) throw err
 
 			;[country, personalId] = getCertificatePersonalId(cert)
-			xades = newXades(initiative)
+			xades = newXades(cert, initiative)
 
 			logger.info(
 				"Signing via Mobile-Id for %s and %s.",
@@ -355,7 +356,7 @@ exports.router.post("/", next(function*(req, res) {
 			if (err = validateCertificate(req.t, cert)) throw err
 
 			;[country, personalId] = getCertificatePersonalId(cert)
-			xades = newXades(initiative)
+			xades = newXades(cert, initiative)
 
 			logger.info("Signing via Smart-Id for %s.", personalId)
 
@@ -386,7 +387,7 @@ exports.router.post("/", next(function*(req, res) {
 		default: throw new HttpError(422, "Unknown Signing Method")
 	}
 
-	function newXades(initiative) {
+	function newXades(cert, initiative) {
 		return hades.new(cert, [{
 			path: `initiative.${Mime.extension(String(initiative.text_type))}`,
 			type: initiative.text_type,

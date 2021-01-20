@@ -24,6 +24,8 @@ var {ensureAreaCode} = require("root/lib/mobile_id")
 var {getCertificatePersonalId} = require("root/lib/certificate")
 var {getCertificatePersonName} = require("root/lib/certificate")
 var {validateCertificate} = require("root/lib/certificate")
+var {hasSignatureType} = require("./initiatives/signatures_controller")
+var {getSigningMethod} = require("./initiatives/signatures_controller")
 var getNormalizedMobileIdErrorCode =
 	require("root/lib/mobile_id").getNormalizedErrorCode
 var logger = require("root").logger
@@ -164,7 +166,6 @@ var SMART_ID_ERRORS = {
 }
 
 exports.router = Router({mergeParams: true})
-
 exports.router.use(parseBody({type: hasSignatureType}))
 
 exports.router.get("/new", canonicalizeUrl, function(req, res) {
@@ -183,7 +184,7 @@ exports.router.post("/", next(function*(req, res, next) {
 	if (req.query["authentication-token"]) return void next()
 
 	var cert, err, country, personalId, authentication, authUrl, tokenHash
-	var method = getAuthenticationMethod(req)
+	var method = getSigningMethod(req)
 
 	var referrer = req.headers.referer
 	if (referrer && Url.parse(referrer).pathname.startsWith(req.baseUrl))
@@ -315,13 +316,11 @@ exports.router.post("/",
 		"application/x-empty"
 	].map(MediaType)),
 	next(function*(req, res) {
-	var authenticationToken = Buffer.from(
-		req.query["authentication-token"] || "",
-		"hex"
-	)
+	var authenticationToken =
+		Buffer.from(req.query["authentication-token"] || "", "hex")
 
 	var authentication
-	var method = getAuthenticationMethod(req)
+	var method = getSigningMethod(req)
 
 	switch (method) {
 		case "id-card":
@@ -659,24 +658,6 @@ function* readOrCreateUser(auth, lang) {
 		updated_at: new Date,
 		language: lang
 	})
-}
-
-function hasSignatureType(req) {
-	return req.contentType && (
-		req.contentType.match("application/pkix-cert") ||
-		req.contentType.match("application/vnd.rahvaalgatus.signature")
-	)
-}
-
-function getAuthenticationMethod(req) {
-	var type = req.contentType.name
-
-	return (
-		type == "application/x-www-form-urlencoded" ? req.body.method
-		: type == "application/pkix-cert" ? "id-card"
-		: type == "application/vnd.rahvaalgatus.signature" ? "id-card"
-		: null
-	)
 }
 
 function referTo(req, referrer, fallback) {
