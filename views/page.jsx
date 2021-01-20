@@ -182,7 +182,7 @@ function Page(attrs, children) {
 			<footer id="footer"><center>
 				<div class="contact">
 					<a href="https://kogu.ee">
-						<img width="200" src={"/assets/kogu.png"} alt={t("KOGU")} />
+						<img width="100" src="/assets/kogu.png" alt={t("KOGU")} />
 					</a>
 
 					<p>
