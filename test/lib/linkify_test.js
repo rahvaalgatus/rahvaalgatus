@@ -35,6 +35,7 @@ describe("linkify", function() {
 			// Query string
 			"http://example.com/?foo=bar",
 			"http://example.com?foo=bar",
+			"http://example.com?foo=bar&baz=bax",
 
 			// Fragment
 			"http://example.com/#foo=bar",
@@ -44,8 +45,10 @@ describe("linkify", function() {
 			"http://example.abcdefghijklmnopqrstuvwxyz",
 		].forEach(function(url) {
 			it("must link " + url, function() {
+				var href = url.replace(/&/g, "&amp;")
+
 				linkify(`Hello ${url}!`).must.equal(outdent`
-					Hello <a href="${url}" class="link" rel="external noopener">${url}</a>!
+					Hello <a href="${href}" class="link" rel="external noopener">${href}</a>!
 				`)
 			})
 		})
