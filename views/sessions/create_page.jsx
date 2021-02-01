@@ -134,7 +134,10 @@ module.exports = function(attrs) {
 					ev.preventDefault()
 					notice("")
 
-					var certificate = Hwcrypto.certificate("auth")
+					var certificate = Hwcrypto.certificate("auth").catch(function(err) {
+						if (err.message != "invalid_argument") throw err
+						return Hwcrypto.certificate("sign")
+					})
 
 					var signable = certificate.then(function(certificate) {
 						return fetch("/sessions", {
