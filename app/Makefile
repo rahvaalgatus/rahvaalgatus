@@ -63,6 +63,10 @@ public/assets/%.min.js: public/assets/%.max.js
 	@echo "Minifying $(@D)/$*.js…"
 	@$(UGLIFY) $(UGLIFY_OPTS) --output "$@" -- "$<"
 
+../tmp:
+	mkdir -p ../tmp
+
+../tmp/local_governments.geojson.json: ../tmp
 ../tmp/local_governments.geojson.json: ../lib/local_governments.json
 ../tmp/local_governments.geojson.json: ../lib/local_governments.geojson
 ../tmp/local_governments.geojson.json: ../scripts/local_governments_geojson.jq
