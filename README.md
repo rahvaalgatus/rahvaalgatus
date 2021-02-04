@@ -26,6 +26,8 @@ After installing a stable version of [Node.js](https://nodejs.org) (so far teste
    make
    ```
 
+   Note that you also need to have [`jq`](https://stedolan.github.io/jq/) v1.6 or later installed as compiling some of the assets depend on Jq scripts.
+
 3. Initialize the database:
    ```sh
    make db/create
