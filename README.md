@@ -29,9 +29,12 @@ After installing a stable version of [Node.js](https://nodejs.org) (so far teste
    Note that you also need to have [`jq`](https://stedolan.github.io/jq/) v1.6 or later installed as compiling some of the assets depend on Jq scripts.
 
 3. Initialize the database:
+
    ```sh
    make db/create
    ```
+
+   Note that for generating the initial SQLite database via Make, you need to have the SQLite command line application available. Try installing it either via your package manager or from [SQLite's home page](https://www.sqlite.org). Ensure it's at least version 3.24. Alternatively you can initialize the SQLite database with `config/database.sql` via some other means. The `sqlite3` executable isn't required during runtime.
 
 4. Run the server:
    ```sh
