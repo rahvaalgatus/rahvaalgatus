@@ -515,8 +515,13 @@
 		"name": "Pärnu linn",
 		"county": "Pärnu",
 		"population": 51271,
-		"initiativesEmails": [],
-		"signatureDownloadPersonalIds": [],
+		"initiativesEmails": [
+			"linnavalitsus@parnu.ee ",
+			"romek.kosenkranius@parnu.ee"
+		],
+		"signatureDownloadPersonalIds": [
+			"47410104224"
+		],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/parnu-linn"
 	},
