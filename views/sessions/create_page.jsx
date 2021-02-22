@@ -136,7 +136,10 @@ module.exports = function(attrs) {
 
 					var certificate = Hwcrypto.certificate("auth").catch(function(err) {
 						if (err.message != "invalid_argument") throw err
-						return Hwcrypto.certificate("sign")
+
+						// ID-software bugs out if you immediately ask for a new
+						// certificate.
+						return delay(1).then(Hwcrypto.certificate.bind(null, "sign"))
 					})
 
 					var signable = certificate.then(function(certificate) {
@@ -216,6 +219,12 @@ module.exports = function(attrs) {
 							throw err
 						})
 					else throw err
+				}
+
+				function delay(seconds) {
+					return new Promise(function(resolve) {
+						setTimeout(resolve, seconds * 1000)
+					})
 				}
 
 				function notice(msg) { flash.textContent = msg }
