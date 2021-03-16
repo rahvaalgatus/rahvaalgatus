@@ -8,6 +8,6 @@ haiguslugusid).
 riigikogu poole.
 - Milliseid e-teenuseid noored digiminad veel kasutada saavad, näeb [Eesti riigi infoportaalist](https://www.eesti.ee/et/).
 
-## Sul tekkis mõtteid või ettepankuid?
+## Sul tekkis mõtteid või ettepanekuid?
 
 Kirjuta meile aadressil [info@rahvaalgatus.ee](mailto:info@rahvaalgatus.ee).
