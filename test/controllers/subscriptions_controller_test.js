@@ -1177,7 +1177,8 @@ function mustRequireToken(request) {
 				confirmed_at: new Date
 			}))
 
-			var res = yield request.call(this,
+			var res = yield request.call(
+				this,
 				`/subscriptions?update-token=${subscription.update_token}`
 			)
 
@@ -1232,7 +1233,8 @@ function mustRequireToken(request) {
 				confirmed_at: new Date
 			}))
 
-			var res = yield request.call(this,
+			var res = yield request.call(
+				this,
 				`/subscriptions?update-token=beef&initiative=${initiative.uuid}`
 			)
 
