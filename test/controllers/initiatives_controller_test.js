@@ -758,6 +758,23 @@ describe("InitiativesController", function() {
 				_.map(obj, "id").must.eql(_.map(initiatives.slice(5), "uuid"))
 				_.map(obj, "signaturesSinceCount").must.eql([5, 6, 7, 8, 9])
 			})
+
+			// This was a bug noticed on Mar 17, 2021 where an invalid `signedSince`
+			// threw "Invalid time value".
+			it("must not return signature count if signedSince invalid",
+				function*() {
+				yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign"
+				}))
+
+				var res = yield this.request("/initiatives?signedSince=invalid", {
+					headers: {Accept: INITIATIVE_TYPE}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body[0].must.not.have.property("signaturesSinceCount")
+			})
 		})
 
 		describe("given phase", function() {

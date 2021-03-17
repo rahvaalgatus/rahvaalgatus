@@ -65,7 +65,7 @@ exports.router.get("/",
 
 	var signedSince = (
 		req.query.signedSince &&
-		DateFns.parse(req.query.signedSince)
+		Time.parse(req.query.signedSince)
 	)
 
 	var [orderBy, orderDir] = req.query.order ? parseOrder(req.query.order) : []
