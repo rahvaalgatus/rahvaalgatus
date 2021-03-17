@@ -40,7 +40,7 @@ describe("SubscriptionsController", function() {
 			var el = parseDom(res.body).querySelectorAll("li.subscription")
 			el.length.must.equal(1)
 			el[0].textContent.must.include(t("SUBSCRIPTIONS_ALL_INITIATIVES"))
-		})	
+		})
 
 		it("must not show unconfirmed subscription to initiatives", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
@@ -227,7 +227,7 @@ describe("SubscriptionsController", function() {
 
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
-			
+
 			it("must subscribe with confirmed email", function*() {
 				yield usersDb.update(this.user, {
 					email: "user@example.com",
@@ -1011,7 +1011,7 @@ describe("SubscriptionsController", function() {
 				phase: "parliament",
 				external: true
 			}))
-			
+
 			var subscriptions = yield subscriptionsDb.create([
 				new ValidSubscription({
 					confirmed_at: new Date
@@ -1045,7 +1045,7 @@ describe("SubscriptionsController", function() {
 		require("root/test/fixtures").csrf()
 		require("root/test/email")()
 		require("root/test/time")(Date.UTC(2015, 5, 18))
-		
+
 		it("must confirm given a confirmation token", function*() {
 			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
 			var token = pseudoHex(8)

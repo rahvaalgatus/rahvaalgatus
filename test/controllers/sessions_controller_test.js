@@ -1674,7 +1674,7 @@ describe("SessionsController", function() {
 
 		describe("when authenticating via Smart-Id", function() {
 			mustSignIn(signInWithSmartId, SMART_ID_CERTIFICATE)
-			
+
 			it("must create user and session", function*() {
 				var cert = new Certificate(newCertificate({
 					subject: {
@@ -2299,7 +2299,7 @@ describe("SessionsController", function() {
 
 		it("must respond with 404 given other user's session", function*() {
 			var user = yield usersDb.create(new ValidUser)
-			
+
 			var session = yield sessionsDb.create(new ValidSession({
 				user_id: user.id
 			}))
