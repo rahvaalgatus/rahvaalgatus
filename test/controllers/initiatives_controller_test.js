@@ -1050,6 +1050,24 @@ describe("InitiativesController", function() {
 					var counts = sort([5, 6, 7, 8, 9])
 					_.map(res.body, "signaturesSinceCount").must.eql(counts)
 				})
+
+				// This was a bug noticed on Mar 17, 2021 where an empty `signedSince`
+				// caused an error due to the order by signaturesSinceCount referenced
+				// a column that wasn't included.
+				it("must not order if signedSince missing", function*() {
+					yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign"
+					}))
+
+					var path = "/initiatives?order=" + encodeURIComponent(order)
+					var res = yield this.request(path, {
+						headers: {Accept: INITIATIVE_TYPE}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body[0].must.not.have.property("signaturesSinceCount")
+				})
 			})
 		})
 

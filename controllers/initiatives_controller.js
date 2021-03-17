@@ -122,7 +122,7 @@ exports.router.get("/",
 		${
 			orderBy == "signatureCount"
 			? sql`ORDER BY signature_count ${orderDir}`
-			: orderBy == "signaturesSinceCount"
+			: orderBy == "signaturesSinceCount" && signedSince
 			? sql`ORDER BY recent_signature_count ${orderDir}`
 			: sql``
 		}
