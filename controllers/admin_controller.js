@@ -24,10 +24,10 @@ exports.use(function(req, _res, next) {
 
 exports.get("/", next(function*(req, res) {
 	var from = req.query.from
-		? Time.parseDate(req.query.from)
+		? Time.parseIsoDate(req.query.from)
 		: DateFns.startOfMonth(new Date)
 
-	var to = req.query.to ? Time.parseDate(req.query.to) : null
+	var to = req.query.to ? Time.parseIsoDate(req.query.to) : null
 
 	var authenticationsCount = yield sqlite(sql`
 		SELECT

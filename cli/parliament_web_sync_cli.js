@@ -168,7 +168,7 @@ function* replaceWebInitiative(initiative, document, row) {
 	// on TZ being set.
 	// https://github.com/riigikogu-kantselei/api/issues/11
 	var createdAt = document.created
-		? Time.parseDateTime(document.created)
+		? Time.parseIsoDateTime(document.created)
 		: new Date
 
 	if (initiative == null) initiative = {
@@ -309,7 +309,7 @@ function attrsFrom(row, doc) {
 	return {
 		parliament_uuid: doc.uuid,
 		parliament_committee: row.committees[0] && row.committees[0][0],
-		received_by_parliament_at: doc.created && Time.parseDateTime(doc.created),
+		received_by_parliament_at: doc.created && Time.parseIsoDateTime(doc.created),
 		accepted_by_parliament_at: row.acceptedOn,
 		finished_in_parliament_at: row.finishedOn
 	}

@@ -711,7 +711,7 @@ function* updateInitiativeToPublished(req, res) {
 		attrs: {endsAt: initiative.discussion_ends_at}
 	})
 
-	let endsAt = DateFns.endOfDay(Time.parseDate(req.body.endsAt))
+	let endsAt = DateFns.endOfDay(Time.parseIsoDate(req.body.endsAt))
 
 	if (!Initiative.isDeadlineOk(
 		initiative.published_at || new Date,
@@ -771,7 +771,7 @@ function* updateInitiativePhaseToSign(req, res) {
 	})
 
 	var lang = req.body.language
-	let endsAt = DateFns.endOfDay(Time.parseDate(req.body.endsAt))
+	let endsAt = DateFns.endOfDay(Time.parseIsoDate(req.body.endsAt))
 	var attrs = {endsAt: endsAt}
 
 	if (!Initiative.isDeadlineOk(

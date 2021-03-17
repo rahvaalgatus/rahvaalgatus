@@ -290,32 +290,32 @@ function parseInitiative(initiative, obj) {
 
 	if ("sentToParliamentOn" in obj)
 		attrs.sent_to_parliament_at = obj.sentToParliamentOn
-			? Time.parseDate(obj.sentToParliamentOn)
+			? Time.parseIsoDate(obj.sentToParliamentOn)
 			: null
 
 	if ("receivedByParliamentOn" in obj)
 		attrs.received_by_parliament_at = obj.receivedByParliamentOn
-			? Time.parseDate(obj.receivedByParliamentOn)
+			? Time.parseIsoDate(obj.receivedByParliamentOn)
 			: null
 
 	if ("acceptedByParliamentOn" in obj)
 		attrs.accepted_by_parliament_at = obj.acceptedByParliamentOn
-			? Time.parseDate(obj.acceptedByParliamentOn)
+			? Time.parseIsoDate(obj.acceptedByParliamentOn)
 			: null
 
 	if ("finishedInParliamentOn" in obj)
 		attrs.finished_in_parliament_at = obj.finishedInParliamentOn
-			? Time.parseDate(obj.finishedInParliamentOn)
+			? Time.parseIsoDate(obj.finishedInParliamentOn)
 			: null
 
 	if ("sentToGovernmentOn" in obj)
 		attrs.sent_to_government_at = obj.sentToGovernmentOn
-			? Time.parseDate(obj.sentToGovernmentOn)
+			? Time.parseIsoDate(obj.sentToGovernmentOn)
 			: null
 
 	if ("finishedInGovernmentOn" in obj)
 		attrs.finished_in_government_at = obj.finishedInGovernmentOn
-			? Time.parseDate(obj.finishedInGovernmentOn)
+			? Time.parseIsoDate(obj.finishedInGovernmentOn)
 			: null
 
 	return attrs
@@ -351,7 +351,7 @@ function parseEvent(event, obj) {
 	}
 
 	function parseOccurredAt(obj) {
-		return Time.parseDateTime(obj.occurredOn + "T" + obj.occurredAt + ":00")
+		return Time.parseIsoDateTime(obj.occurredOn + "T" + obj.occurredAt + ":00")
 	}
 }
 

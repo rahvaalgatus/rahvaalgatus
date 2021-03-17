@@ -26,10 +26,10 @@ exports.COLUMNS = COLUMNS
 
 exports.router.get("/(:format?)", next(function*(req, res) {
 	var from = req.query.from
-		? Time.parseDate(req.query.from)
+		? Time.parseIsoDate(req.query.from)
 		: DateFns.startOfDay(new Date)
 
-	var to = req.query.to ? Time.parseDate(req.query.to) : null
+	var to = req.query.to ? Time.parseIsoDate(req.query.to) : null
 	var groupBy = req.query["group-by"] || ""
 	var timeFormat = req.query["time-format"] || "date"
 	var locationFormat = req.query["location-format"] || "text"

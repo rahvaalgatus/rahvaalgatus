@@ -149,8 +149,8 @@ function* readInitiative(opts, doc) {
 	// on TZ being set.
 	// https://github.com/riigikogu-kantselei/api/issues/11
 	var createdAt = (
-		doc.submittingDate && Time.parseDate(doc.submittingDate) ||
-		doc.created && Time.parseDateTime(doc.created) ||
+		doc.submittingDate && Time.parseIsoDate(doc.submittingDate) ||
+		doc.created && Time.parseIsoDateTime(doc.created) ||
 		new Date
 	)
 
@@ -499,7 +499,7 @@ function attrsFromEvent(event) {
 }
 
 function eventAttrsFromStatus(document, documents, status) {
-	var eventDate = Time.parseDate(status.date)
+	var eventDate = Time.parseIsoDate(status.date)
 	var eventDocuments = []
 
 	var attrs = {
@@ -600,7 +600,7 @@ function eventAttrsFromDocument(document) {
 		type: "parliament-accepted",
 		origin: "parliament",
 		external_id: "MENETLUSSE_VOETUD",
-		occurred_at: Time.parseDateTime(document.created),
+		occurred_at: Time.parseIsoDateTime(document.created),
 		title: null,
 		content: {date: document.decisionDate},
 		files: newDocumentFiles(document, document.files || EMPTY_ARR)
@@ -612,7 +612,7 @@ function eventAttrsFromDocument(document) {
 		type: "parliament-decision",
 		origin: "parliament",
 		external_id: document.uuid,
-		occurred_at: Time.parseDateTime(document.created),
+		occurred_at: Time.parseIsoDateTime(document.created),
 		title: null,
 		content: {date: document.decisionDate},
 		files: newDocumentFiles(document, document.files || EMPTY_ARR)
@@ -622,7 +622,7 @@ function eventAttrsFromDocument(document) {
 		type: "parliament-finished",
 		origin: "parliament",
 		external_id: "MENETLUS_LOPETATUD",
-		occurred_at: Time.parseDateTime(document.created),
+		occurred_at: Time.parseIsoDateTime(document.created),
 		title: null,
 		content: null,
 		files: newDocumentFiles(document, document.files || EMPTY_ARR)
@@ -643,7 +643,7 @@ function eventAttrsFromDocument(document) {
 			type: "parliament-letter",
 			origin: "parliament",
 			external_id: document.uuid,
-			occurred_at: Time.parseDateTime(document.created),
+			occurred_at: Time.parseIsoDateTime(document.created),
 			title: null,
 
 			content: {
@@ -692,7 +692,7 @@ function eventAttrsFromDocument(document) {
 		type: "parliament-national-matter",
 		origin: "parliament",
 		external_id: document.uuid,
-		occurred_at: Time.parseDateTime(document.created),
+		occurred_at: Time.parseIsoDateTime(document.created),
 		title: null,
 		content: {},
 		files: newDocumentFiles(document, document.files || EMPTY_ARR)
@@ -741,7 +741,7 @@ function eventAttrsFromVolume(opts, initiative, documents, volume) {
 			type: "parliament-interpellation",
 			origin: "parliament",
 			external_id: volume.uuid,
-			occurred_at: Time.parseDateTime(volume.created),
+			occurred_at: Time.parseIsoDateTime(volume.created),
 
 			content: {
 				to: question.addressee.value,

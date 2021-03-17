@@ -1241,7 +1241,7 @@ function SidebarInfoView(attrs) {
 			{meetings.length > 0 ? <ul class="form-output">
 				{meetings.map((meeting) => <li>
 					<UntrustedLink href={meeting.url}>
-						{I18n.formatDate("numeric", Time.parseDate(meeting.date))}
+						{I18n.formatDate("numeric", Time.parseIsoDate(meeting.date))}
 					</UntrustedLink>
 				</li>)}
 			</ul> : <AddInitiativeInfoButton t={t} />}
@@ -1938,7 +1938,7 @@ function EventsView(attrs) {
 						case "parliament-interpellation":
 							title = t("PARLIAMENT_INTERPELLATION")
 							var interpellation = event.content
-							var deadline = Time.parseDate(interpellation.deadline)
+							var deadline = Time.parseIsoDate(interpellation.deadline)
 
 							content = <Fragment>
 								<table class="event-table">
