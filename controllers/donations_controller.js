@@ -1,7 +1,6 @@
 var _ = require("root/lib/underscore")
 var Config = require("root/config")
 var Router = require("express").Router
-var encode = encodeURIComponent
 var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
 
 exports.router = Router({mergeParams: true})
@@ -17,18 +16,17 @@ exports.router.get("/new", canonicalizeUrl, function(req, res) {
 // NOTE: Don't canonicalize POST /donations as the donation form also sits on
 // local sites.
 exports.router.post("/", function(req, res) {
-	var person = (req.body.person || "").trim()
-	var def = Number(req.body.default)
-
 	var url = Config.maksekeskusUrl
-	url += "?shopId=" + encode(Config.maksekeskusId)
+	url += "?shopId=" + encodeURIComponent(Config.maksekeskusId)
 	url += "&donate=true"
 	url += "&amount=" + Number(req.body.amount)
 
-	var id = {default: def, person: person}
+	var id = {default: Number(req.body.default)}
+	if (req.body.person) id.person = String(req.body.person || "").trim()
 	if (req.body.for) id.for = req.body.for
-	id = _.map(id, (v, k) => `${k}=${encode(v)}`).join(" ")
-	url += "&paymentId=" + encode(id)
+	id = _.map(id, (v, k) => `${k}=${encodeURIComponent(v)}`).join(" ")
+
+	url += "&paymentId=" + encodeURIComponent(id)
 	res.redirect(url)
 })
 
