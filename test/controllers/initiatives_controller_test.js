@@ -578,7 +578,7 @@ describe("InitiativesController", function() {
 		it("must include social media tags", function*() {
 			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
-			
+
 			var dom = parseDom(res.body)
 			var metas = dom.head.querySelectorAll("meta")
 			var metasByName = _.indexBy(metas, (el) => el.getAttribute("name"))
@@ -4166,7 +4166,7 @@ describe("InitiativesController", function() {
 						confirmed_at: new Date,
 						comment_interest: true
 					}))
-						
+
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
@@ -4195,7 +4195,7 @@ describe("InitiativesController", function() {
 						confirmed_at: new Date,
 						comment_interest: true
 					}))
-						
+
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
@@ -4222,7 +4222,7 @@ describe("InitiativesController", function() {
 						confirmed_at: new Date,
 						comment_interest: false
 					}))
-						
+
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
@@ -4386,7 +4386,7 @@ describe("InitiativesController", function() {
 				res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
 				res.body.must.not.include("donate-form")
 			})
-			
+
 			it("must show delete signature button if signed", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
@@ -5714,8 +5714,9 @@ describe("InitiativesController", function() {
 						committee: "Keskkonnakomisjon"
 					})},
 
-					content: {type: "text", $:
-						PARLIAMENT_MEETING_DECISION_TEXTS[decision] || null
+					content: {
+						type: "text",
+						$: PARLIAMENT_MEETING_DECISION_TEXTS[decision] || null
 					}
 				})
 			})
@@ -8828,7 +8829,7 @@ describe("InitiativesController", function() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
-				
+
 				var initiativePath = `/initiatives/${initiative.uuid}`
 				var res = yield this.request(initiativePath + "/edit")
 				res.statusCode.must.equal(302)
@@ -8854,7 +8855,7 @@ describe("InitiativesController", function() {
 					user_id: this.user.id,
 					created_at: new Date(2015, 5, 18, 13, 37, 41)
 				}))
-				
+
 				var initiativePath = `/initiatives/${initiative.uuid}`
 				var res = yield this.request(initiativePath + "/edit")
 				res.statusCode.must.equal(302)
@@ -8871,7 +8872,7 @@ describe("InitiativesController", function() {
 					user: this.user,
 					status: "accepted"
 				}))
-				
+
 				var initiativePath = `/initiatives/${initiative.uuid}`
 				var res = yield this.request(initiativePath + "/edit")
 				res.statusCode.must.equal(302)

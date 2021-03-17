@@ -512,7 +512,7 @@ exports.router.delete("/:id", next(function*(req, res) {
 		WHERE initiative_uuid = ${initiative.uuid}
 	`)
 
-	yield initiativesDb.delete(initiative.uuid) 
+	yield initiativesDb.delete(initiative.uuid)
 	res.flash("notice", req.t("INITIATIVE_DELETED"))
 	res.redirect(303, req.baseUrl)
 }))
