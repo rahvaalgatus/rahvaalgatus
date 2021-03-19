@@ -8,4 +8,4 @@ Järgnevalt saad sa valida omale sobiva lahenduse digiallkirjastamise proovimise
 
 Vali omale meelepärane ning proovi!
 
-Süsteem loob sulle faili, millele lisatakse sinu allkiri. Pärast allkirjastamist saad sa selle alla laadida ning veenduda, et sinu allkiri on sellele lisatud. Samuti saad sa alla laaditud failist näha, kas su digiallkiri kehtib.
+Süsteem loob sulle **faili**(aktiivne fail/link), milles sisaldub lause "Minu esimene digiallkiri." ning millele lisatakse sinu digiallkiri. Pärast allkirjastamist saad sa selle alla laadida ning veenduda, et sinu allkiri on sellele lisatud. Samuti saad sa alla laaditud failist näha, kas su digiallkiri kehtib.
