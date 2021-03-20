@@ -134,7 +134,7 @@ describe("InitiativesDb", function() {
 						yield db.read(yield db.create(initiative)).must.then.eql(initiative)
 					})
 				})
-				
+
 				it("must throw if parliament phase", function*() {
 					var err
 					try {

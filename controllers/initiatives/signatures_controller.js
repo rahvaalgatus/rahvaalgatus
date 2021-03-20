@@ -546,7 +546,7 @@ exports.router.get("/:personalId",
 				case "application/x-empty": return void res.end()
 				default: return void res.status(303).end()
 			}
-			
+
 		case "application/vnd.etsi.asic-e+zip":
 			if (signature == null) throw new HttpError(404)
 
@@ -803,7 +803,7 @@ function* replaceSignature(signable) {
 		AND country = ${signable.country}
 		AND personal_id = ${signable.personal_id}
 	`)
-	
+
 	var oldCitizenosSignature = yield citizenosSignaturesDb.read(sql`
 		SELECT * FROM initiative_citizenos_signatures
 		WHERE initiative_uuid = ${signable.initiative_uuid}

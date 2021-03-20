@@ -515,7 +515,7 @@ describe("InitiativeCommentsController", function() {
 					phase: "parliament",
 					external: true
 				}))
-				
+
 				var path = `/initiatives/${initiative.uuid}/comments/new`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(200)

@@ -53,7 +53,7 @@ describe("AdminController", function() {
 					country: "EE",
 					personal_id: "38706181337"
 				}))
-				
+
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: source.id
 				}))
@@ -117,7 +117,7 @@ describe("AdminController", function() {
 					country: "EE",
 					personal_id: "38706181337"
 				}))
-				
+
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: other.id
 				}))
@@ -162,7 +162,7 @@ describe("AdminController", function() {
 				phase: "parliament"
 			}))
 		})
-		
+
 		describe("with action=create", function() {
 			it("must create event", function*() {
 				var res = yield this.request(`/initiatives/${this.initiative.uuid}/events`, {

@@ -39,7 +39,7 @@ describe(URL, function() {
 		"/assets/voog.css",
 		"/assets/tisapro-regular-webfont.svg"
 	]
-	
+
 	concat(
 		"/assets/page.css",
 		CORS_PATHS

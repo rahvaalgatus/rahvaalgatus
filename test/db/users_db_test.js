@@ -5,7 +5,7 @@ var db = require("root/db/users_db")
 
 describe("UsersDb", function() {
 	require("root/test/db")()
-	
+
 	describe(".create", function() {
 		it("must throw given duplicate country and personal ids", function*() {
 			var attrs = {country: "EE", personal_id: "38706181337"}

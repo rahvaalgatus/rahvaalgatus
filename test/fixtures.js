@@ -241,7 +241,7 @@ function serializeSubjectName(names) {
 	if (names instanceof Certificate) return names.asn.tbsCertificate.subject
 	if (Buffer.isBuffer(names)) return X509Asn.Name.decode(names)
 	if (Array.isArray(names)) names = _.merge({}, ...names)
-	
+
 	return {type: "rdnSequence", value: _.map(names, function(value, name) {
 		if (!LdapAttributes.has(name)) throw new Error("Unsupported name: " + name)
 

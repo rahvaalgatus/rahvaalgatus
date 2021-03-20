@@ -2516,7 +2516,7 @@ describe("ParliamentSyncCli", function() {
 				content_type: new MediaType("application/pdf")
 			})])
 		})
-			
+
 		// https://www.riigikogu.ee/riigikogu/koosseis/muudatused-koosseisus/
 		_.each({
 			ELAK: "Euroopa Liidu asjade komisjon",

@@ -22,7 +22,7 @@ describe("ImageController", function() {
 	require("root/test/mitm")()
 	require("root/test/db")()
 	require("root/test/fixtures").csrf()
-	
+
 	describe("PUT /", function() {
 		describe("when not logged in", function() {
 			it("must respond with 401", function*() {
@@ -41,7 +41,7 @@ describe("ImageController", function() {
 				res.statusMessage.must.equal("Unauthorized")
 			})
 		})
-		
+
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
 

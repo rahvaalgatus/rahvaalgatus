@@ -833,7 +833,7 @@ describe("HomeController", function() {
 
 					var res = yield this.request("/")
 					res.statusCode.must.equal(200)
-					
+
 					var dom = parseDom(res.body)
 					var recents = dom.querySelector("#recent-initiatives ol")
 					recents.childNodes.length.must.equal(6)
@@ -866,7 +866,7 @@ describe("HomeController", function() {
 
 					var res = yield this.request("/")
 					res.statusCode.must.equal(200)
-					
+
 					var dom = parseDom(res.body)
 					var recents = dom.querySelector("#recent-initiatives ol")
 					recents.childNodes.length.must.equal(6)
@@ -897,7 +897,7 @@ describe("HomeController", function() {
 
 					var res = yield this.request("/")
 					res.statusCode.must.equal(200)
-					
+
 					var dom = parseDom(res.body)
 					var recents = dom.querySelector("#recent-initiatives ol")
 					recents.childNodes.length.must.equal(6)
@@ -938,7 +938,7 @@ describe("HomeController", function() {
 
 					var res = yield this.request("/")
 					res.statusCode.must.equal(200)
-					
+
 					var dom = parseDom(res.body)
 					var recents = dom.querySelector("#recent-initiatives ol")
 					recents.childNodes.length.must.equal(3)

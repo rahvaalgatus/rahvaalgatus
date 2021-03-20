@@ -316,7 +316,7 @@ function FormCheckbox(attrs) {
 		<input type="checkbox" {...attrs} />
 	</Fragment>
 }
-	
+
 function Sentry(attrs) {
 	var user = attrs.req.user
 

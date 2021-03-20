@@ -114,7 +114,7 @@ exports.router.get("/:id/subscriptions.:ext?", next(function*(req, res) {
 			res.setHeader("Content-Type", "text/plain; charset=utf-8")
 			res.end(subs.map((s) => s.email).join("\n"))
 			break
-			
+
 		default: res.render("admin/initiatives/subscriptions_page.jsx", {
 			subscriptions: subs
 		})
@@ -385,7 +385,7 @@ function renderEventMessage(initiative, event) {
 				initiativeUrl: Initiative.initiativeUrl(initiative)
 			})
 		}
-	
+
 		default: throw new RangeError("Unsupported event type: " + event.type)
 	}
 }

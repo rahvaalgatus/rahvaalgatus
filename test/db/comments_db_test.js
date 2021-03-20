@@ -15,7 +15,7 @@ describe("CommentsDb", function() {
 			user_id: (yield usersDb.create(new ValidUser)).id
 		}))
 	})
-	
+
 	describe(".create", function() {
 		it("must throw given duplicate UUIDs", function*() {
 			var author = yield usersDb.create(new ValidUser)

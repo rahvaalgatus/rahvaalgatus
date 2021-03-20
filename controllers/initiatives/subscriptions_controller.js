@@ -129,7 +129,7 @@ exports.router.get("/new", next(function*(req, res, next) {
 				confirmation_sent_at: null,
 				updated_at: new Date
 			})
-		
+
 		res.flash("notice", req.t("CONFIRMED_INITIATIVE_SUBSCRIPTION"))
 		res.redirect(303, req.baseUrl + "/" + subscription.update_token)
 	}

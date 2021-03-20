@@ -26,7 +26,7 @@ describe("InitiativeEndEmailCli", function() {
 			email_confirmed_at: new Date
 		}))
 	})
-	
+
 	describe("when in discussion", function() {
 		it("must email when discussion has ended", function*() {
 			var initiative = yield db.create(new ValidInitiative({

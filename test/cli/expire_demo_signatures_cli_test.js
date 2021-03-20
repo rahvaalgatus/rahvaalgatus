@@ -20,7 +20,7 @@ describe("ExpireDemoSignaturesCli", function() {
 
 		yield demoSignaturesDb.read(signature).must.then.eql(signature)
 	})
-	
+
 	it("must clear signatures older than 15m", function*() {
 		var signature = yield demoSignaturesDb.create(new ValidDemoSignature({
 			signed: true,

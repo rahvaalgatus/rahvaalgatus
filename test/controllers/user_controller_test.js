@@ -555,7 +555,7 @@ describe("UserController", function() {
 
 			it("must not update name of another user", function*() {
 				var user = yield usersDb.create(new ValidUser({name: "Mary Smith"}))
-				
+
 				var res = yield this.request("/user", {
 					method: "PUT",
 					form: {name: "John Smitheroon"}
@@ -1123,7 +1123,7 @@ describe("UserController", function() {
 
 	describe("GET /signatures", function() {
 		require("root/test/fixtures").user()
-		
+
 		describe("when undersigned", function() {
 			beforeEach(function*() {
 				this.author = yield usersDb.create(new ValidUser)
@@ -1292,7 +1292,7 @@ describe("UserController", function() {
 			var el = parseDom(res.body).querySelectorAll("li.subscription")
 			el.length.must.equal(1)
 			el[0].textContent.must.include(t("SUBSCRIPTIONS_ALL_INITIATIVES"))
-		})	
+		})
 
 		it("must not show unconfirmed subscription to initiatives", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
@@ -1444,7 +1444,7 @@ describe("UserController", function() {
 
 			var el = parseDom(res.body).querySelectorAll("li.subscription")
 			el.length.must.equal(0)
-		})	
+		})
 	})
 
 	describe("PUT /subscriptions", function() {
@@ -1903,7 +1903,7 @@ describe("UserController", function() {
 				phase: "parliament",
 				external: true
 			}))
-			
+
 			var subscriptions = yield subscriptionsDb.create([
 				new ValidSubscription({
 					confirmed_at: new Date

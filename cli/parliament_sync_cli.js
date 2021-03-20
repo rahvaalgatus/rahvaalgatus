@@ -1033,7 +1033,7 @@ function parseLetterDirection(direction) {
 		case "SISSE": return "incoming"
 		case "VALJA": return "outgoing"
 		case "SISEMINE": return "outgoing"
-		default: throw new RangeError("Invalid direction: " + direction.code)	
+		default: throw new RangeError("Invalid direction: " + direction.code)
 	}
 }
 

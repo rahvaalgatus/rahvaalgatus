@@ -169,7 +169,7 @@ describe("DemoSignaturesController", function() {
 			demand(oldestEl.nextElementSibling).be.null()
 		})
 	})
-	
+
 	describe("POST /", function() {
 		require("root/test/time")()
 
@@ -511,7 +511,7 @@ function* signWithSmartId(router, request, cert) {
 		req.headers.host.must.equal(TIMEMARK_URL.host)
 		res.setHeader("Content-Type", "application/ocsp-response")
 		res.flushHeaders()
-		
+
 		// NOTE: Respond with a little delay to ensure signature
 		// polling later works as expected.
 		setTimeout(() => res.end(Ocsp.parse(newOcspResponse(cert)).toBuffer(), 10))

@@ -474,12 +474,12 @@ describe("InitiativeTextsController", function() {
 	describe("GET /new", function() {
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
-		
+
 			it("must render page if no existing texts", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
-				
+
 				var initiativePath = `/initiatives/${initiative.uuid}`
 				var res = yield this.request(initiativePath + "/texts/new")
 				res.statusCode.must.equal(200)
@@ -495,7 +495,7 @@ describe("InitiativeTextsController", function() {
 					user: this.user,
 					status: "accepted"
 				}))
-				
+
 				var initiativePath = `/initiatives/${initiative.uuid}`
 				var res = yield this.request(initiativePath + "/texts/new")
 				res.statusCode.must.equal(200)
@@ -559,7 +559,7 @@ describe("InitiativeTextsController", function() {
 					user_id: this.user.id,
 					phase: "parliament"
 				}))
-				
+
 				var text = yield textsDb.create(new ValidText({
 					initiative_uuid: initiative.uuid,
 					user_id: initiative.user_id
@@ -576,7 +576,7 @@ describe("InitiativeTextsController", function() {
 					user_id: this.user.id,
 					phase: "sign"
 				}))
-				
+
 				var text = yield textsDb.create(new ValidText({
 					initiative_uuid: initiative.uuid,
 					user_id: initiative.user_id
@@ -594,7 +594,7 @@ describe("InitiativeTextsController", function() {
 					user_id: this.user.id,
 					phase: "sign"
 				}))
-				
+
 				var text = yield textsDb.create(new ValidText({
 					initiative_uuid: initiative.uuid,
 					user_id: initiative.user_id,
@@ -617,7 +617,7 @@ describe("InitiativeTextsController", function() {
 					user: this.user,
 					status: "accepted"
 				}))
-				
+
 				var text = yield textsDb.create(new ValidText({
 					initiative_uuid: initiative.uuid,
 					user_id: initiative.user_id
@@ -1314,7 +1314,7 @@ function signWithSmartId(router, request, text, cert) {
 		req.headers.host.must.equal(TIMEMARK_URL.host)
 		res.setHeader("Content-Type", "application/ocsp-response")
 		res.flushHeaders()
-		
+
 		// NOTE: Respond with a little delay to ensure signature
 		// polling later works as expected.
 		setTimeout(() => res.end(Ocsp.parse(newOcspResponse(cert)).toBuffer(), 10))

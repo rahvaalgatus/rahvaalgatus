@@ -218,7 +218,7 @@ describe("InitiativeSubscriptionsController", function() {
 					email: subscription.email,
 					email_confirmed_at: new Date
 				})
-				
+
 				var path = `/initiatives/${this.initiative.uuid}/subscriptions`
 				var res = yield this.request(path, {
 					method: "POST",

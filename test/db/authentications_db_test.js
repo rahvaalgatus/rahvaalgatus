@@ -4,7 +4,7 @@ var db = require("root/db/authentications_db")
 
 describe("AuthenticationsDb", function() {
 	require("root/test/db")()
-	
+
 	describe(".create", function() {
 		it("must permit duplicate country and personal ids", function*() {
 			yield db.create(new ValidAuthentication({

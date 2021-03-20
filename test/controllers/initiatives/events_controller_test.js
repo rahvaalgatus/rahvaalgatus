@@ -117,7 +117,7 @@ describe("InitiativeEventsController", function() {
 				phase: "parliament",
 				external: true
 			}))
-			
+
 			var event = yield eventsDb.create(new ValidEvent({
 				initiative_uuid: initiative.uuid,
 				title: "We sent it.",
