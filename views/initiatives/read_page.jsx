@@ -578,6 +578,7 @@ function ReadPage(attrs) {
 						<a
 							href={"https://facebook.com/sharer/sharer.php?u=" + encode(initiativeUrl)}
 							target="_blank"
+							rel="external noopener"
 							class="grey-button ra-icon-facebook-logo share-button">
 							{t("SHARE_ON_FACEBOOK")}
 						</a>
@@ -585,6 +586,7 @@ function ReadPage(attrs) {
 						<a
 							href={"https://twitter.com/intent/tweet?text=" + encode(shareText)}
 							target="_blank"
+							rel="external noopener"
 							class="grey-button ra-icon-twitter-logo share-button">
 							{t("SHARE_ON_TWITTER")}
 						</a>
