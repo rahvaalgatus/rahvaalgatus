@@ -62,34 +62,9 @@ exports.router.get("/", next(function*(_req, res) {
 		GROUP BY date(datetime(created_at, 'localtime'))
 	`), "date"), (row) => row.count)
 
-	// It's worth precomputing the age (through an index on an expression, for
-	// example) only once we've got enough signatures to make the table scan
-	// expensive.
-	var signatureCountsByAge = _.mapValues(_.indexBy(yield sqlite(sql`
-		SELECT
-			(strftime('%Y', updated_at) * 12 + strftime('%m', updated_at)) -
-			((CASE substr(personal_id, 1, 1)
-				WHEN '1' THEN 1800
-				WHEN '2' THEN 1800
-				WHEN '3' THEN 1900
-				WHEN '4' THEN 1900
-				WHEN '5' THEN 2000
-				WHEN '6' THEN 2000
-			END + substr(personal_id, 2, 2)) * 12 + substr(personal_id, 4, 2))
-			AS age_in_months,
-
-			COUNT(*) AS count
-
-		FROM demo_signatures
-		WHERE signed AND timestamped
-		AND age_in_months BETWEEN 16 * 12 AND 20 * 12
-		GROUP BY age_in_months
-	`), "age_in_months"), (row) => row.count)
-
 	res.render("demo_signatures/index_page.jsx", {
 		signatureCount: signatureCount,
-		signatureCountsByDate: signatureCountsByDate,
-		signatureCountsByAge: signatureCountsByAge
+		signatureCountsByDate: signatureCountsByDate
 	})
 }))
 

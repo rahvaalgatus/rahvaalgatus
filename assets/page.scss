@@ -4170,27 +4170,6 @@ button.inherited {
 				.bar { fill: #dbdbdb; }
 			}
 		}
-
-		#signatures-by-age svg {
-			.month {
-				font-family: "Aino";
-				font-size: 13px;
-
-				.count {
-					fill: $dark-blue;
-					font-weight: bold;
-
-					& + .bar { fill: $dark-blue; }
-				}
-
-				.age {
-					fill: #555;
-					font-weight: bold;
-				}
-
-				.bar { fill: #dbdbdb; }
-			}
-		}
 	}
 }
 
