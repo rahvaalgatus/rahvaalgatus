@@ -69,8 +69,8 @@ function Page(attrs, children) {
 
 			{_.map(meta, (value, name) => name.startsWith("og:")
 				? <meta property={name} content={value} />
-				: <meta name={name} content={value} />)
-			}
+				: <meta name={name} content={value} />
+			)}
 
 			{links.map((link) => <link {...link} />)}
 
