@@ -240,8 +240,7 @@ function ReadPage(attrs) {
 										href="#comment-form"
 										class="link-button wide-button">
 										{t("ADD_YOUR_COMMENT")}
-									</a>
-									{"."}
+									</a>.
 								</h1>
 							</div>
 							else return null
@@ -411,7 +410,7 @@ function ReadPage(attrs) {
 							</DeleteSignatureButton>
 						</div>
 					</Fragment> : <Fragment>
-						<h2>{t("HEADING_CAST_YOUR_VOTE")}</h2>
+						<h2>{t("INITIATIVE_SIGN_HEADING")}</h2>
 						<p>
 							{(initiative.language != textLanguage) ? <Fragment>
 								{Jsx.html(t("INITIATIVE_SIGN_TRANSLATION_WARNING", {
@@ -436,7 +435,10 @@ function ReadPage(attrs) {
 								{" "}
 							</Fragment> : null}
 
-							{t("HEADING_VOTE_REQUIRE_HARD_ID")}
+							{initiative.destination == "parliament"
+								? t("INITIATIVE_SIGN_DESCRIPTION_FOR_PARLIAMENT")
+								: t("INITIATIVE_SIGN_DESCRIPTION_FOR_LOCAL")
+							}
 							</p>
 
 							<SigningView
