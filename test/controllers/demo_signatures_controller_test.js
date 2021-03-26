@@ -113,6 +113,20 @@ describe("DemoSignaturesController", function() {
 		})
 	})
 
+	describe("GET /dokument.txt", function() {
+		it("must render", function*() {
+			var res = yield this.request("/demo-signatures/signable")
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal("text/plain; charset=utf-8")
+
+			res.headers["content-disposition"].must.equal(
+				"attachment; filename=\"dokument.txt\""
+			)
+
+			res.body.must.equal(t("DEMO_SIGNATURES_SIGNABLE"))
+		})
+	})
+
 	describe("POST /", function() {
 		require("root/test/time")()
 
@@ -237,6 +251,10 @@ describe("DemoSignaturesController", function() {
 			var res = yield this.request(path)
 			res.statusCode.must.equal(200)
 			res.headers["content-type"].must.equal(ASICE_TYPE)
+
+			res.headers["content-disposition"].must.equal(
+				"attachment; filename=\"signature.asice\""
+			)
 
 			var zip = yield Zip.parse(Buffer.from(res.body))
 			var entries = yield Zip.parseEntries(zip)

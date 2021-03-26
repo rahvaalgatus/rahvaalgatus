@@ -17,8 +17,6 @@ var {getSigningMethod} = require("./initiatives/signatures_controller")
 var demoSignaturesDb = require("root/db/demo_signatures_db")
 var dispose = require("content-disposition")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
-var SIGNABLE_TEXT = t("DEMO_SIGNATURES_SIGNABLE")
-var SIGNABLE_TEXT_SHA256 = sha256(SIGNABLE_TEXT)
 var logger = require("root").logger
 var next = require("co-next")
 var mobileId = require("root").mobileId
@@ -39,6 +37,8 @@ var ENV = process.env.ENV
 var {hasSignatureType} = require("./initiatives/signatures_controller")
 var {waitForMobileIdSession} = require("./initiatives/signatures_controller")
 var {waitForSmartIdSession} = require("./initiatives/signatures_controller")
+var SIGNABLE_TEXT = t("DEMO_SIGNATURES_SIGNABLE")
+var SIGNABLE_TEXT_SHA256 = sha256(SIGNABLE_TEXT)
 var {MOBILE_ID_ERRORS} = require("./initiatives/signatures_controller")
 var {SMART_ID_ERRORS} = require("./initiatives/signatures_controller")
 var EXPIRATION = Config.demoSignaturesExpirationSeconds
@@ -67,6 +67,12 @@ exports.router.get("/", next(function*(_req, res) {
 		signatureCountsByDate: signatureCountsByDate
 	})
 }))
+
+exports.router.get("/signable", function(_req, res) {
+	res.setHeader("Content-Type", "text/plain; charset=utf-8")
+	res.setHeader("Content-Disposition", dispose("dokument.txt", "attachment"))
+	res.end(SIGNABLE_TEXT)
+})
 
 exports.router.post("/", next(function*(req, res) {
 	var method = res.locals.method = getSigningMethod(req)
