@@ -3,7 +3,7 @@
 	"adminUrl": "http://rahvaalgatus.test:3001",
 	"parliamentSiteUrl": "http://riigikogu.rahvaalgatus.test:3000",
 	"localSiteUrl": "http://kohalik.rahvaalgatus.test:3000",
-	"maksekeskusUrl": "https://payment-test.maksekeskus.ee/pay/1/link.html",
+	"maksekeskusUrl": "https://payment.test.maksekeskus.ee/pay/1/link.html",
 	"maksekeskusId": "45626d92-f1b2-45a5-832b-39588b192dae",
 	"signatureMilestones": [1],
 	"adminPersonalIds": ["EE60001019906", "EE60001018800", "EE10101010005"],
