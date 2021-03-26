@@ -4,7 +4,7 @@
 - Samuti saab digimina [e-maksuametis](https://www.emta.ee/et) **tuludeklaratsioon esitada** (näiteks selleks, et õppemaksult tulumaksu soodustust saada jne).
 - [Patsiendiportaalis](https://www.digilugu.ee) näeb digimina abil oma **terviseandmeid** (sh saatekirju, analüüside vastuseid ja
 haiguslugusid).
-- Digiidentiteeti on vaja **valimistel hääletamiseks**. Samuti riigikogule või kohalikule omavalitsusele kollektiivse pöördumise esitamiseks või allkirjastamiseks.
+- Digiidentiteeti on vaja **valimistel hääletamiseks**. Samuti riigikogule või kohalikule omavalitsusele suunatud kollektiivse pöördumise esitamiseks või allkirjastamiseks.
 - Milliseid e-teenuseid digiidentiteedi abil veel kasutada saab, näeb [Eesti riigi infoportaalist](https://www.eesti.ee/et/).
 
 ## Sul tekkis mõtteid või ettepanekuid?
