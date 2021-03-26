@@ -129,7 +129,7 @@ function* readInitiative(opts, doc) {
 
 	// Around April 2020 old initiatives in the parliament API were recreated and
 	// their old UUIDs were assigned to the `senderReference` field.
-	// Unfortunately prevoius Rahvaalgatus' UUIDs (in `senderReference`) were
+	// Unfortunately previous Rahvaalgatus' UUIDs (in `senderReference`) were
 	// therefore overwritten  from `senderReference` making it impossible to
 	// identify sent initiatives if you already don't have the previous parliament
 	// UUID. Waiting for an update on that as of Apr 17, 2020.
