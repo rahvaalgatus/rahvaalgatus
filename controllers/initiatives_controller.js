@@ -696,6 +696,7 @@ function isInitiativeUpdate(obj) {
 }
 
 function* updateInitiativeToPublished(req, res) {
+	var user = req.user
 	var initiative = req.initiative
 	if (initiative.phase != "edit") throw new HttpError(403, "Already Published")
 
@@ -738,10 +739,38 @@ function* updateInitiativeToPublished(req, res) {
 		discussion_end_email_sent_at: endsAt > new Date ? null : emailSentAt
 	})
 
+	if (initiative.published_at == null && user.email) {
+		var subscription = yield subscriptionsDb.read(sql`
+			SELECT * FROM initiative_subscriptions
+			WHERE (initiative_uuid, email) = (${initiative.uuid}, ${user.email})
+		`)
+
+		if (subscription) yield subscriptionsDb.update(subscription, {
+			official_interest: true,
+			author_interest: true,
+			comment_interest: true,
+			confirmed_at: subscription.confirmed_at || new Date,
+			updated_at: new Date
+		})
+		else yield subscriptionsDb.create({
+			initiative_uuid: initiative.uuid,
+			email: user.email,
+			created_at: new Date,
+			created_ip: req.ip,
+			updated_at: new Date,
+			confirmed_at: new Date,
+			comment_interest: true
+		})
+	}
+
 	res.flash("notice", initiative.published_at == null
 		? req.t("PUBLISHED_INITIATIVE")
 		: req.t("INITIATIVE_DISCUSSION_DEADLINE_UPDATED")
 	)
+
+	res.statusMessage = initiative.published_at == null
+		? "Initiative Published"
+		: "Initiative Updated"
 
 	res.redirect(303, req.baseUrl + "/" + initiative.uuid)
 }

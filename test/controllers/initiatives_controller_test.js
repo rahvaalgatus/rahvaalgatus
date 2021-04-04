@@ -6501,6 +6501,7 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Published")
 					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
 					var cookies = parseCookies(res.headers["set-cookie"])
@@ -6571,6 +6572,7 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Published")
 
 					yield initiativesDb.read(initiative).must.then.eql({
 						__proto__: initiative,
@@ -6635,12 +6637,7 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(303)
-
-					yield initiativesDb.read(initiative).must.then.eql({
-						__proto__: initiative,
-						published_at: new Date,
-						discussion_ends_at: endsAt
-					})
+					res.statusMessage.must.equal("Initiative Published")
 				})
 
 				it("must not update initiative if no text created", function*() {
@@ -6661,6 +6658,143 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(422)
 					res.statusMessage.must.equal("No Text")
 					yield initiativesDb.read(initiative).must.then.eql(initiative)
+				})
+
+				it("must subscribe publisher to comments", function*() {
+					yield usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
+
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+					}))
+
+					var endsAt = DateFns.addDays(
+						DateFns.endOfDay(new Date),
+						Config.minDeadlineDays
+					)
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {visibility: "public", endsAt: formatIsoDate(endsAt)}
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Published")
+
+					var subscriptions = yield subscriptionsDb.search(sql`
+						SELECT * FROM initiative_subscriptions
+					`)
+
+					subscriptions.must.eql([new ValidSubscription({
+						initiative_uuid: initiative.uuid,
+						email: "user@example.com",
+						created_ip: "127.0.0.1",
+						confirmed_at: new Date,
+						update_token: subscriptions[0].update_token,
+						comment_interest: true
+					})])
+				})
+
+				it("must confirm and subscribe publisher to comments if subscription pending", function*() {
+					yield usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
+
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+					}))
+
+					var sub = yield subscriptionsDb.create(new ValidSubscription({
+						initiative_uuid: initiative.uuid,
+						email: "user@example.com",
+						confirmation_sent_at: new Date,
+						official_interest: false,
+						author_interest: false,
+						comment_interest: false
+					}))
+
+					var endsAt = DateFns.addDays(
+						DateFns.endOfDay(new Date),
+						Config.minDeadlineDays
+					)
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {visibility: "public", endsAt: formatIsoDate(endsAt)}
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Published")
+
+					yield subscriptionsDb.search(sql`
+						SELECT * FROM initiative_subscriptions
+					`).must.then.eql([{
+						__proto__: sub,
+						confirmed_at: new Date,
+						official_interest: true,
+						author_interest: true,
+						comment_interest: true
+					}])
+				})
+
+				it("must subscribe publisher to comments if already subscribed", function*() {
+					yield usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
+
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+					}))
+
+					var sub = yield subscriptionsDb.create(new ValidSubscription({
+						initiative_uuid: initiative.uuid,
+						email: "user@example.com",
+						confirmed_at: pseudoDateTime(),
+						official_interest: false,
+						author_interest: false,
+						comment_interest: false
+					}))
+
+					var endsAt = DateFns.addDays(
+						DateFns.endOfDay(new Date),
+						Config.minDeadlineDays
+					)
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {visibility: "public", endsAt: formatIsoDate(endsAt)}
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Published")
+
+					yield subscriptionsDb.search(sql`
+						SELECT * FROM initiative_subscriptions
+					`).must.then.eql([{
+						__proto__: sub,
+						official_interest: true,
+						author_interest: true,
+						comment_interest: true
+					}])
 				})
 
 				describe("when already published", function() {
@@ -6686,6 +6820,7 @@ describe("InitiativesController", function() {
 						})
 
 						res.statusCode.must.equal(303)
+						res.statusMessage.must.equal("Initiative Updated")
 						res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
 						var cookies = parseCookies(res.headers["set-cookie"])
@@ -6753,6 +6888,7 @@ describe("InitiativesController", function() {
 						})
 
 						res.statusCode.must.equal(303)
+						res.statusMessage.must.equal("Initiative Updated")
 
 						yield initiativesDb.read(initiative).must.then.eql({
 							__proto__: initiative,
@@ -6809,6 +6945,7 @@ describe("InitiativesController", function() {
 						})
 
 						res.statusCode.must.equal(303)
+						res.statusMessage.must.equal("Initiative Updated")
 
 						yield initiativesDb.read(initiative).must.then.eql({
 							__proto__: initiative,
@@ -6840,6 +6977,7 @@ describe("InitiativesController", function() {
 						})
 
 						res.statusCode.must.equal(303)
+						res.statusMessage.must.equal("Initiative Updated")
 
 						yield initiativesDb.read(initiative).must.then.eql({
 							__proto__: initiative,
@@ -6872,6 +7010,40 @@ describe("InitiativesController", function() {
 						res.statusCode.must.equal(403)
 						res.statusMessage.must.equal("Already Published")
 						yield initiativesDb.read(initiative).must.then.eql(initiative)
+					})
+
+					it("must not subscribe publisher to comments", function*() {
+						yield usersDb.update(this.user, {
+							email: "user@example.com",
+							email_confirmed_at: new Date
+						})
+
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							published_at: DateFns.addDays(new Date, -90),
+						}))
+
+						yield textsDb.create(new ValidText({
+							initiative_uuid: initiative.uuid,
+							user_id: this.user.id,
+						}))
+
+						var endsAt = DateFns.addDays(
+							DateFns.endOfDay(new Date),
+							Config.minDeadlineDays
+						)
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							form: {visibility: "public", endsAt: formatIsoDate(endsAt)}
+						})
+
+						res.statusCode.must.equal(303)
+						res.statusMessage.must.equal("Initiative Updated")
+
+						yield subscriptionsDb.search(sql`
+							SELECT * FROM initiative_subscriptions
+						`).must.then.be.empty()
 					})
 				})
 			})
