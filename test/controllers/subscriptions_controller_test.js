@@ -263,7 +263,7 @@ describe("SubscriptionsController", function() {
 				res.body.must.include(t("CONFIRMED_INITIATIVES_SUBSCRIPTION"))
 			})
 
-			it("must subscribe with confirmed email case-sensitively", function*() {
+			it("must subscribe with confirmed email case-insensitively", function*() {
 				yield usersDb.update(this.user, {
 					email: "USer@EXAMple.com",
 					email_confirmed_at: new Date
