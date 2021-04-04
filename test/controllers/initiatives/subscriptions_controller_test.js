@@ -6,10 +6,11 @@ var t = require("root/lib/i18n").t.bind(null, "et")
 var sql = require("sqlate")
 var {parseCookies} = require("root/lib/http")
 var {serializeCookies} = require("root/lib/http")
-var pseudoHex = require("root/lib/crypto").pseudoHex
+var {pseudoHex} = require("root/lib/crypto")
 var usersDb = require("root/db/users_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var initiativesDb = require("root/db/initiatives_db")
+var {pseudoDateTime} = require("root/lib/crypto")
 
 describe("InitiativeSubscriptionsController", function() {
 	require("root/test/web")()
@@ -208,10 +209,13 @@ describe("InitiativeSubscriptionsController", function() {
 				res.body.must.include(t("CONFIRM_INITIATIVE_SUBSCRIPTION"))
 			})
 
-			it("must confirm if already subscribed", function*() {
+			it("must update if already subscribed", function*() {
 				var subscription = yield subscriptionsDb.create(new ValidSubscription({
 					initiative_uuid: this.initiative.uuid,
-					confirmed_at: new Date
+					confirmed_at: pseudoDateTime(),
+					official_interest: false,
+					author_interest: false,
+					comment_interest: true,
 				}))
 
 				yield usersDb.update(this.user, {
@@ -231,8 +235,9 @@ describe("InitiativeSubscriptionsController", function() {
 					SELECT * FROM initiative_subscriptions
 				`).must.then.eql({
 					__proto__: subscription,
-					confirmed_at: new Date,
-					updated_at: new Date
+					updated_at: new Date,
+					official_interest: true,
+					author_interest: true
 				})
 
 				this.emails.length.must.equal(0)

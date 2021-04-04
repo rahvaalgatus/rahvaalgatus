@@ -8,6 +8,7 @@ var sql = require("sqlate")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
+var {pseudoDateTime} = require("root/lib/crypto")
 var parseDom = require("root/lib/dom").parse
 var {parseCookies} = require("root/lib/http")
 var {serializeCookies} = require("root/lib/http")
@@ -333,9 +334,12 @@ describe("SubscriptionsController", function() {
 				res.body.must.include(t("CONFIRM_INITIATIVES_SUBSCRIPTION"))
 			})
 
-			it("must confirm if already subscribed", function*() {
+			it("must update if already subscribed", function*() {
 				var subscription = yield subscriptionsDb.create(new ValidSubscription({
-					confirmation_sent_at: new Date
+					confirmed_at: pseudoDateTime(),
+					official_interest: false,
+					author_interest: false,
+					comment_interest: true
 				}))
 
 				yield usersDb.update(this.user, {
@@ -355,7 +359,9 @@ describe("SubscriptionsController", function() {
 				`).must.then.eql({
 					__proto__: subscription,
 					confirmed_at: new Date,
-					updated_at: new Date
+					updated_at: new Date,
+					official_interest: true,
+					author_interest: true
 				})
 
 				this.emails.length.must.equal(0)

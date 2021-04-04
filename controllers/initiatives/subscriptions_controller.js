@@ -57,7 +57,9 @@ exports.router.post("/", next(function*(req, res) {
 		_.caseInsensitiveEquals(user.email, subscription.email)
 	) {
 		yield subscriptionsDb.update(subscription, {
-			confirmed_at: new Date,
+			confirmed_at: subscription.confirmed_at || new Date,
+			official_interest: true,
+			author_interest: true,
 			updated_at: new Date
 		})
 
