@@ -4,14 +4,14 @@ Rahvaalgatus.ee on arutelude pidamise ja ettepanekute koostamise platvorm, mille
 
 Rahvakogu ettepanekute tulemusel uuendati 2014. aasta kevadel Riigikogu töö- ja kodukorra seadust, mille alusel peab Riigikogu menetlema vähemalt 1000 allkirjaga pöördumist, mis on tehtud kehtiva regulatsiooni muutmiseks või ühiskonnaelu paremaks korraldamiseks. Rahvaalgatus.ee võimaldab alates 2016. aasta kevadest mugavalt ja läbipaistvalt Riigikogule kollektiivsete pöördumiste esitamise õigust kasutada. Alates 2020. aasta augustist on Rahvaalgatus.ee vahendusel võimalik teha pöördumisi ka kohalikele omavalitsustele.  
 
-Kellele on rahvaalgatus.ee mõeldud?
+Kellele on Rahvaalgatus.ee mõeldud?
 
 - ühiskonnaasjadest huvitatud kodanikele arutelude loomiseks ja ettepanekute esitamiseks
 - huvikaitse- ja katusorganisatsioonidele arutelude loomiseks ja ettepanekute esitamiseks
 - huvitatud kodanikele aruteludes osalemiseks ja pöördumiste ühisloomes koostamiseks
 - pöördumiste toetajatele digiallkirja andmiseks
 
-Kes saavad rahvaalgatus.ee-st veel kasu?
+Kes saavad Rahvaalgatus.ee-st veel kasu?
 
 - Riigikogu saadikud ja teised poliitikud, et olla kursis, milliseid arutelusid kodanikud tõstatavad
 - ministeeriumide esindajad, et olla kursis valdkondlike ettepanekutega
@@ -46,7 +46,7 @@ Kui vajad nõu või kahtled, kas Rahvaalgatus.ee on sobiv koht oma ettepaneku es
 
 ## Isikuandmete töötlemine
 
-Isikuandmed on rahvaalgatus.ee platvormil sisestatud kasutaja kohta käivad andmed. Rahvaalgatus.ee kasutaja annab platvormi haldajale õiguse tema poolt sisestatud isikuandmete töötlemiseks. Juhul kui kasutaja soovib rahvaalgatus.ee poolt isikuandmete töötlemise lõpetamist, võimaldab rahvaalgatus.ee kasutajal oma kasutajakonto ja kõik sinna juurde kuuluvad andmed kustutada.
+Isikuandmed on Rahvaalgatus.ee platvormil sisestatud kasutaja kohta käivad andmed. Rahvaalgatus.ee kasutaja annab platvormi haldajale õiguse tema poolt sisestatud isikuandmete töötlemiseks. Juhul kui kasutaja soovib Rahvaalgatus.ee poolt isikuandmete töötlemise lõpetamist, võimaldab Rahvaalgatus.ee kasutajal oma kasutajakonto ja kõik sinna juurde kuuluvad andmed kustutada.
 
 Kasutajakonto on vaja luua algatuse loomiseks ja kommentaaride andmiseks.
 
