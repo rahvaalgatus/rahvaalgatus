@@ -4,14 +4,14 @@ Rahvaalgatus.ee on arutelude pidamise ja ettepanekute koostamise platvorm, mille
 
 Rahvakogu ettepanekute tulemusel uuendati 2014. aasta kevadel Riigikogu töö- ja kodukorra seadust, mille alusel peab Riigikogu menetlema vähemalt 1000 allkirjaga pöördumist, mis on tehtud kehtiva regulatsiooni muutmiseks või ühiskonnaelu paremaks korraldamiseks. Rahvaalgatus.ee võimaldab alates 2016. aasta kevadest mugavalt ja läbipaistvalt Riigikogule kollektiivsete pöördumiste esitamise õigust kasutada. Alates 2020. aasta augustist on Rahvaalgatus.ee vahendusel võimalik teha pöördumisi ka kohalikele omavalitsustele.  
 
-Kellele on rahvaalgatus.ee mõeldud?
+Kellele on Rahvaalgatus.ee mõeldud?
 
 - ühiskonnaasjadest huvitatud kodanikele arutelude loomiseks ja ettepanekute esitamiseks
 - huvikaitse- ja katusorganisatsioonidele arutelude loomiseks ja ettepanekute esitamiseks
 - huvitatud kodanikele aruteludes osalemiseks ja pöördumiste ühisloomes koostamiseks
 - pöördumiste toetajatele digiallkirja andmiseks
 
-Kes saavad rahvaalgatus.ee-st veel kasu?
+Kes saavad Rahvaalgatus.ee-st veel kasu?
 
 - Riigikogu saadikud ja teised poliitikud, et olla kursis, milliseid arutelusid kodanikud tõstatavad
 - ministeeriumide esindajad, et olla kursis valdkondlike ettepanekutega
@@ -24,27 +24,29 @@ Rahvaalgatus.ee platvorm on ka riikliku kohustusena Riigikantselei kureeritavas 
 
 ## <a id="tos"></a> Rahvaalgatus.ee kasutamise hea tava
 
-Platvormi kasutamise hea tava on koostatud uskumuses, et argumenteeritud arutelud aitavad luua häid algatusi, mis soodustavad omakorda Eestis eluolu parandamist.
+Osalusportaali Rahvaalgatus.ee kasutamise hea tava lähtub eesmärgist, et argumenteeritud arutelud aitavad luua pöördumisi, mis soodustavad Eestis eluolu parendamist.
 
-Rahvaalgatus.ee-d kasutades pean meeles järgmist:
+Heale tavale vastavaid kollektiivseid pöördumisi ja nende koostamist kirjeldab järgnev:
 
-1. minu ettepanek või algatus on kooskõlas Eesti Vabariigi põhiseaduse aluspõhimõtetega;
-2. pakutud lahendus peab olema tõestatud ning tõestus omakorda kontrollitav;
-3. ettepaneku või algatuse sisestamisel pakun ka struktureeritud selgitusi, et niimoodi kaasamõtlejaid ja arutajaid juurde meelitada;
-4. kritiseerin ideid, mitte inimesi. Kriitikas keskendun lahendustele, mitte probleemidele;
-5. kaasan teisi inimesi arutellu ja arvestan nende argumentidega lõpliku pöördumise (algatuse) koostamisel;
-6. kasutan platvormi juhul, kui mul puuduvad teised kanalid ettepanekute ja seadusemuudatuste esitamiseks.
+1. pöördumises tehtud ettepanek on kooskõlas Eesti Vabariigi põhiseaduse aluspõhimõtete ja välislepingutest tulenevate Eesti Vabariigi rahvusvaheliste kohustustega;
+2. ettepanekule on lisatud kuni kolmeleheküljeline põhjendus, miks kehtiv olukord ei rahulda ning kuidas pöördumises esitatud ettepanek olukorda parandaks; 
+3. ettepanekus on välja toodud konstruktiivseid põhjendusi ja selgitusi; 
+4. pöördumises välja toodud ettepanekud ei sisaldada roppusi, õhuta rahvaste ja rasside vahelist vaenu, sõda, kutsu üles narkootikumide ja relvade kasutamisele, riigi kukutamisele või reetmisele või konkreetsete isikute suhtes füüsilisele vägivallale, levita valet või halvusta põhjendamatult teisi isikuid;
+5. algatajatel palume arvestada lõpliku pöördumise koostamisel (enne allkirjastamisele saatmist) kaasamõtlejate argumentide ja mõtetega; 
+6. pöördumise koostamisele kaasamõtlejatel tuleb hoiduda kommentaaridest, mis pole teemaga seotud või sisaldavad sõimu, ropendamist, laimu, solvanguid, mõnitamist ja halvustamist; 
+7. kritiseerida võib arvamusi ja ideid, kuid mitte inimesi.  
 
-Rahvaalgatus.ee-s pole teretulnud vihakõne, samamoodi pole see platvorm loodud parlamendis esindatud erakondadele.
+Riigikogus esindatud erakondadel ja Riigikogu liikmetel soovitame arutelu algatamiseks kasutada osalusportaali asemel oma parlamendi mandaati ning kodu- ja töökorrast tulenevaid võimalusi ja meetmeid. 
 
-Rahvaalgatus.ee-d haldaval Eesti Koostöö Kogul on õigus eemaldada hea tava vastu eksivad postitused (vihakõne, isiklikud solvamised jms) ilma põhjendusteta.
+Rahvaalgatus.ee ei vastuta algatuste ega neile antud kommentaaride sisu eest. 
 
-Kui vajad nõu või kahtled, kas rahvaalgatus.ee on sobiv koht oma ettepaneku esitamiseks, küsi abi info@rahvaalgatus.ee.
+Portaali haldaja suhtub ettepanekutesse demokraatlikult, eelistades modereerimise asemel nõustamist. Hea tava vastu eksivad postitused on portaali haldajal õigus eemaldada aga ilma põhjenduseta. 
 
+Kui vajad nõu või kahtled, kas Rahvaalgatus.ee on sobiv koht oma ettepaneku esitamiseks, küsi abi info@rahvaalgatus.ee. 
 
 ## Isikuandmete töötlemine
 
-Isikuandmed on rahvaalgatus.ee platvormil sisestatud kasutaja kohta käivad andmed. Rahvaalgatus.ee kasutaja annab platvormi haldajale õiguse tema poolt sisestatud isikuandmete töötlemiseks. Juhul kui kasutaja soovib rahvaalgatus.ee poolt isikuandmete töötlemise lõpetamist, võimaldab rahvaalgatus.ee kasutajal oma kasutajakonto ja kõik sinna juurde kuuluvad andmed kustutada.
+Isikuandmed on Rahvaalgatus.ee platvormil sisestatud kasutaja kohta käivad andmed. Rahvaalgatus.ee kasutaja annab platvormi haldajale õiguse tema poolt sisestatud isikuandmete töötlemiseks. Juhul kui kasutaja soovib Rahvaalgatus.ee poolt isikuandmete töötlemise lõpetamist, võimaldab Rahvaalgatus.ee kasutajal oma kasutajakonto ja kõik sinna juurde kuuluvad andmed kustutada.
 
 Kasutajakonto on vaja luua algatuse loomiseks ja kommentaaride andmiseks.
 
