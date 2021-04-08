@@ -4033,15 +4033,15 @@ describe("InitiativesController", function() {
 
 				it("must render subscription form with person's confirmed email",
 					function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						published_at: new Date
-					}))
-
 					yield usersDb.update(this.user, {
 						email: "user@example.com",
 						email_confirmed_at: new Date
 					})
+
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						published_at: new Date
+					}))
 
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
@@ -4054,15 +4054,15 @@ describe("InitiativesController", function() {
 
 				it("must render subscription form with person's unconfirmed email",
 					function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						published_at: new Date
-					}))
-
 					yield usersDb.update(this.user, {
 						unconfirmed_email: "user@example.com",
 						email_confirmation_token: Crypto.randomBytes(12)
 					})
+
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						published_at: new Date
+					}))
 
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
@@ -4090,22 +4090,22 @@ describe("InitiativesController", function() {
 					check.checked.must.be.false()
 					check.disabled.must.be.true()
 
-					form.innerHTML.must.include(t("SUBSCRIBE_TO_COMMENTS_SET_EMAIL", {
-						userUrl: "/user"
-					}))
+					form.innerHTML.must.include(
+						t("SUBSCRIBE_TO_COMMENTS_SET_EMAIL", {userUrl: "/user"})
+					)
 				})
 
 				it("must render comment form mentioning unconfirmed email",
 					function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						published_at: new Date
-					}))
-
 					yield usersDb.update(this.user, {
 						unconfirmed_email: "user@example.com",
 						email_confirmation_token: Crypto.randomBytes(12)
 					})
+
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						published_at: new Date
+					}))
 
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
@@ -4122,15 +4122,15 @@ describe("InitiativesController", function() {
 				})
 
 				it("must render comment form if user has confirmed email", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						published_at: new Date
-					}))
-
 					yield usersDb.update(this.user, {
 						email: "user@example.com",
 						email_confirmed_at: new Date
 					})
+
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						published_at: new Date
+					}))
 
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
@@ -4140,8 +4140,38 @@ describe("InitiativesController", function() {
 					var check = form.querySelector("input[type=checkbox][name=subscribe]")
 					check.checked.must.be.false()
 
+					form.innerHTML.must.not.include(
+						t("SUBSCRIBE_TO_COMMENTS_SET_EMAIL", {userUrl: "/user"})
+					)
+
 					form.textContent.must.not.include(
-						t("SUBSCRIBE_TO_COMMENTS_SET_EMAIL")
+						t("SUBSCRIBE_TO_COMMENTS_CONFIRM_EMAIL")
+					)
+				})
+
+				it("must render comment form if user has both confirmed and unconfirmed email", function*() {
+					yield usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date,
+						unconfirmed_email: "john@example.com",
+						email_confirmation_token: Crypto.randomBytes(12)
+					})
+
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						published_at: new Date
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var form = dom.getElementById("comment-form")
+					var check = form.querySelector("input[type=checkbox][name=subscribe]")
+					check.checked.must.be.false()
+
+					form.innerHTML.must.not.include(
+						t("SUBSCRIBE_TO_COMMENTS_SET_EMAIL", {userUrl: "/user"})
 					)
 
 					form.textContent.must.not.include(
@@ -4150,15 +4180,15 @@ describe("InitiativesController", function() {
 				})
 
 				it("must render subscribe checkbox if subscribed to initiative comments", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						published_at: new Date
-					}))
-
 					yield usersDb.update(this.user, {
 						email: "user@example.com",
 						email_confirmed_at: new Date
 					})
+
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						published_at: new Date
+					}))
 
 					yield subscriptionsDb.create(new ValidSubscription({
 						initiative_uuid: initiative.uuid,
@@ -4179,15 +4209,15 @@ describe("InitiativesController", function() {
 				// This was an unreleased bug in a query that still depended on the
 				// CitizenOS topic existing.
 				it("must render subscribe checkbox if subscribed to initiative comments given an external initiative", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						external: true,
-						phase: "parliament"
-					}))
-
 					yield usersDb.update(this.user, {
 						email: "user@example.com",
 						email_confirmed_at: new Date
 					})
+
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						external: true,
+						phase: "parliament"
+					}))
 
 					yield subscriptionsDb.create(new ValidSubscription({
 						initiative_uuid: initiative.uuid,
@@ -4206,15 +4236,15 @@ describe("InitiativesController", function() {
 				})
 
 				it("must render subscribe checkbox if subscribed to initiative, but not to comments", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						published_at: new Date
-					}))
-
 					yield usersDb.update(this.user, {
 						email: "user@example.com",
 						email_confirmed_at: new Date
 					})
+
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						published_at: new Date
+					}))
 
 					yield subscriptionsDb.create(new ValidSubscription({
 						initiative_uuid: initiative.uuid,
@@ -4233,15 +4263,15 @@ describe("InitiativesController", function() {
 				})
 
 				it("must render subscribe checkbox if subscribed to initiatives' comments", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						published_at: new Date
-					}))
-
 					yield usersDb.update(this.user, {
 						email: "user@example.com",
 						email_confirmed_at: new Date
 					})
+
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						published_at: new Date
+					}))
 
 					yield subscriptionsDb.create(new ValidSubscription({
 						email: "user@example.com",
@@ -4500,6 +4530,11 @@ describe("InitiativesController", function() {
 				})
 
 				it("must show publish button if text exists and author", function*() {
+					yield usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
+
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id
 					}))
@@ -4511,10 +4546,65 @@ describe("InitiativesController", function() {
 
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
-					res.body.must.include(t("PUBLISH_TOPIC"))
+
+					var dom = parseDom(res.body)
+					var button = dom.getElementById("publish-button")
+					button.textContent.must.include(t("PUBLISH_TOPIC"))
+					button.disabled.must.be.false()
+
+					var controls = dom.getElementById("initiative-author-options")
+
+					controls.textContent.must.not.include(
+						t("PUBLISH_INITIATIVE_SET_EMAIL", {userUrl: "/user"})
+					)
+
+					controls.textContent.must.not.include(
+						t("PUBLISH_INITIATIVE_CONFIRM_EMAIL")
+					)
+				})
+
+				it("must show publish button if text exists and author has both confirmed and unconfirmed email", function*() {
+					yield usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date,
+						unconfirmed_email: "john@example.com",
+						email_confirmation_token: Crypto.randomBytes(12)
+					})
+
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var button = dom.getElementById("publish-button")
+					button.textContent.must.include(t("PUBLISH_TOPIC"))
+					button.disabled.must.be.false()
+
+					var controls = dom.getElementById("initiative-author-options")
+
+					controls.textContent.must.not.include(
+						t("PUBLISH_INITIATIVE_SET_EMAIL", {userUrl: "/user"})
+					)
+
+					controls.textContent.must.not.include(
+						t("PUBLISH_INITIATIVE_CONFIRM_EMAIL")
+					)
 				})
 
 				it("must show publish button if text exists and coauthor", function*() {
+					yield usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
+
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id
 					}))
@@ -4532,7 +4622,11 @@ describe("InitiativesController", function() {
 
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
-					res.body.must.include(t("PUBLISH_TOPIC"))
+
+					var dom = parseDom(res.body)
+					var button = dom.getElementById("publish-button")
+					button.textContent.must.include(t("PUBLISH_TOPIC"))
+					button.disabled.must.be.false()
 				})
 
 				it("must not show publish button if text doesn't exist", function*() {
@@ -4543,6 +4637,59 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 					res.body.must.not.include(t("PUBLISH_TOPIC"))
+				})
+
+				it("must disable publish button if email not set", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var button = dom.getElementById("publish-button")
+					button.disabled.must.be.true()
+
+					var controls = dom.getElementById("initiative-author-options")
+
+					controls.innerHTML.must.include(
+						t("PUBLISH_INITIATIVE_SET_EMAIL", {userUrl: "/user"})
+					)
+				})
+
+				it("must disable publish button if email not confirmed", function*() {
+					yield usersDb.update(this.user, {
+						unconfirmed_email: "user@example.com",
+						email_confirmation_token: Crypto.randomBytes(12)
+					})
+
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var button = dom.getElementById("publish-button")
+					button.disabled.must.be.true()
+
+					var controls = dom.getElementById("initiative-author-options")
+
+					controls.textContent.must.include(
+						t("PUBLISH_INITIATIVE_CONFIRM_EMAIL")
+					)
 				})
 
 				it("must render send to sign button if at deadline", function*() {
@@ -6395,6 +6542,11 @@ describe("InitiativesController", function() {
 
 			describe("given visibility=public", function() {
 				it("must render update page if author", function*() {
+					yield usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
+
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id
 					}))
@@ -6415,6 +6567,11 @@ describe("InitiativesController", function() {
 				})
 
 				it("must render update visibility page if coauthor", function*() {
+					yield usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
+
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: (yield usersDb.create(new ValidUser)).id
 					}))
@@ -6478,6 +6635,11 @@ describe("InitiativesController", function() {
 				})
 
 				it("must update initiative if setting a short deadline", function*() {
+					yield usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
+
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id
 					}))
@@ -6521,6 +6683,11 @@ describe("InitiativesController", function() {
 
 				it("must respond with 422 if setting a too short deadline",
 					function*() {
+					yield usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
+
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						discussion_end_email_sent_at: new Date,
@@ -6549,6 +6716,11 @@ describe("InitiativesController", function() {
 				})
 
 				it("must update initiative if setting a long deadline", function*() {
+					yield usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
+
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id
 					}))
@@ -6583,6 +6755,11 @@ describe("InitiativesController", function() {
 
 				it("must respond with 422 if setting a too long deadline",
 					function*() {
+					yield usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
+
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						discussion_end_email_sent_at: new Date,
@@ -6610,7 +6787,71 @@ describe("InitiativesController", function() {
 					yield initiativesDb.read(initiative).must.then.eql(initiative)
 				})
 
+				it("must respond with 403 if no email set", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						discussion_end_email_sent_at: new Date,
+						published_at: DateFns.addDays(new Date, -90),
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							visibility: "public",
+							endsAt: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays)
+							)
+						}
+					})
+
+					res.statusCode.must.equal(403)
+					res.statusMessage.must.equal("Cannot Publish")
+					yield initiativesDb.read(initiative).must.then.eql(initiative)
+				})
+
+				it("must respond with 403 if email unconfirmed", function*() {
+					yield usersDb.update(this.user, {
+						unconfirmed_email: "john@example.com",
+						email_confirmation_token: Crypto.randomBytes(12)
+					})
+
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						discussion_end_email_sent_at: new Date,
+						published_at: DateFns.addDays(new Date, -90),
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							visibility: "public",
+							endsAt: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays)
+							)
+						}
+					})
+
+					res.statusCode.must.equal(403)
+					res.statusMessage.must.equal("Cannot Publish")
+					yield initiativesDb.read(initiative).must.then.eql(initiative)
+				})
+
 				it("must update initiative if coauthor", function*() {
+					yield usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
+
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: (yield usersDb.create(new ValidUser)).id
 					}))
@@ -6626,14 +6867,14 @@ describe("InitiativesController", function() {
 						user_id: this.user.id,
 					}))
 
-					var endsAt = DateFns.addDays(
-						DateFns.endOfDay(new Date),
-						Config.minDeadlineDays
-					)
-
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
-						form: {visibility: "public", endsAt: formatIsoDate(endsAt)}
+						form: {
+							visibility: "public",
+							endsAt: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays)
+							)
+						}
 					})
 
 					res.statusCode.must.equal(303)
@@ -6641,6 +6882,11 @@ describe("InitiativesController", function() {
 				})
 
 				it("must not update initiative if no text created", function*() {
+					yield usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
+
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id
 					}))
@@ -6798,6 +7044,13 @@ describe("InitiativesController", function() {
 				})
 
 				describe("when already published", function() {
+					beforeEach(function*() {
+						yield usersDb.update(this.user, {
+							email: "user@example.com",
+							email_confirmed_at: new Date
+						})
+					})
+
 					it("must update initiative if setting a short deadline", function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,

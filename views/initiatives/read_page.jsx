@@ -924,6 +924,7 @@ function SidebarAuthorView(attrs) {
 		initiative.language == "et" || signedTranslations.et
 	)
 
+	var canPublish = Initiative.canPublish(user)
 	var canSendToSign = Initiative.canPropose(new Date, initiative, user)
 
 	var actions = <Fragment>
@@ -953,14 +954,24 @@ function SidebarAuthorView(attrs) {
 			</Form>
 		</Fragment> : null}
 
-		{!initiative.published_at && text ? <FormButton
-			req={req}
-			action={"/initiatives/" + initiative.uuid}
-			name="visibility"
-			value="public"
-			class="green-button wide-button">
-			{t("PUBLISH_TOPIC")}
-		</FormButton> : null}
+		{!initiative.published_at && text ? <Fragment>
+			<FormButton
+				req={req}
+				id="publish-button"
+				action={"/initiatives/" + initiative.uuid}
+				name="visibility"
+				value="public"
+				disabled={!canPublish}
+				class="green-button wide-button">
+				{t("PUBLISH_TOPIC")}
+			</FormButton>
+
+			{user.email == null && user.unconfirmed_email == null ? <p>
+				{Jsx.html(t("PUBLISH_INITIATIVE_SET_EMAIL", {userUrl: "/user"}))}
+			</p> : user.email_confirmed_at == null ? <p>
+				{Jsx.html(t("PUBLISH_INITIATIVE_CONFIRM_EMAIL"))}
+			</p> : null}
+		</Fragment> : null}
 
 		{initiative.phase == "edit" && initiative.published_at ? <Fragment>
 			<FormButton

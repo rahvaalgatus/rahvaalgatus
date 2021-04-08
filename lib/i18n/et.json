@@ -569,6 +569,8 @@
 	"POST_COMMENT": "Kommenteeri",
 	"POST_REPLY": "Vasta kommentaarile",
 	"PUBLISHED_INITIATIVE": "Algatus on nüüd avalik.",
+	"PUBLISH_INITIATIVE_CONFIRM_EMAIL": "Enne algatuse avalikustamist palun kinnita oma meiliaadress vajutades linki sulle saadetud kinnitusmeilis.",
+	"PUBLISH_INITIATIVE_SET_EMAIL": "Enne algatuse avalikustamiseks palun <a href=\"{{userUrl}}\">määra oma meiliaadress</a>.",
 	"PUBLISH_TOPIC": "Avalikusta",
 	"RECENTLY_COMMENTED": "Hiljuti kommenteeritud.",
 	"RECENTLY_EVENTED": "Hiljuti lisatud menetlusinfot.",

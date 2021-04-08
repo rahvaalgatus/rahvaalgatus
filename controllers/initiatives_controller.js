@@ -702,6 +702,8 @@ function* updateInitiativeToPublished(req, res) {
 
 	var tmpl = "initiatives/update_for_publish_page.jsx"
 
+	if (!Initiative.canPublish(user)) throw new HttpError(403, "Cannot Publish")
+
 	if (!(yield textsDb.read(sql`
 		SELECT id FROM initiative_texts
 		WHERE initiative_uuid = ${initiative.uuid}
