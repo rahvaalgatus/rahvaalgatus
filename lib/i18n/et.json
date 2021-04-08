@@ -79,7 +79,6 @@
 	"DEMO_SIGNATURES_HEADER": "Harjuta digiallkirjastamist",
 	"DEMO_SIGNATURES_N_HAVE_TRIED": "<big>{{count}}</big> korda on juba digiallkirjastamist harjutatud.",
 	"DEMO_SIGNATURES_SIGNABLE": "Minu esimene digiallkiri.",
-	"DEMO_SIGNATURES_SIGNATURES_BY_AGE": "Allkirjastanute jaotus vanuse lõikes",
 	"DEMO_SIGNATURES_SIGNATURES_BY_DATE": "Allkirjade arv päevade lõikes",
 	"DEMO_SIGNATURES_SIGNED_HEADER": "Allkirjastamine õnnestus!",
 	"DEMO_SIGNATURES_SIGNED_TEXT": "Oled edukalt andnud failile oma digiallkirja! Järgnevalt saad oma digiallkirjastatud faili alla laadida ning seejärel avada. Failist näed sa allkirjastamise aega, allkirja kehtivust ning muid allkirjastamisega seotud andmeid. Privaatsuse tagamiseks kustutatakse fail ja seos sinuga süsteemist automaatselt 15 minuti pärast. Statistika kuvamiseks jääb alles vaid sugu, sünniaasta ja -kuu ning allkirjastamise kellaaeg.",

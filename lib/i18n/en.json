@@ -201,7 +201,7 @@
 	"INITIATIVE_SIGNING_DEADLINE_UPDATED": "Initiative signing deadline has been updated.",
 	"INITIATIVE_SIGN_DEADLINE_ERROR": "The initiative must be at least {{days}} days in the signing phase.",
 	"INITIATIVE_SIGN_DESCRIPTION_FOR_PARLIAMENT": "You can sign via the ID-card, Mobile-ID, or Smart-ID. You have to be an Estonian resident and at least 16 years old to sign.",
-	"INITIATIVE_SIGN_HEADING": "Cast your vote to this initiative! ",
+	"INITIATIVE_SIGN_HEADING": "Cast your vote to this initiative!",
 	"INITIATIVE_SIGN_PHASE_UPDATED": "Initiative is now open for signing.",
 	"INITIATIVE_SIGN_TRANSLATION_WARNING": "<strong>Note</strong> that the initiative's original text is written in <strong>{{language}}</strong>, but you read the <strong>{{translation}}</strong>.",
 	"INITIATIVE_SIGN_TRANSLATION_WARNING_SIGN_IN_EN": "Your <strong>signature will however go to the English text<strong>.",
