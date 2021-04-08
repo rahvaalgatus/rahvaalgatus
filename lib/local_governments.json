@@ -148,7 +148,9 @@
 			"lvpost@tallinnlv.ee",
 			"linnapea@tallinnlv.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"37208010244"
+		],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/tallinna-linn"
 	},
