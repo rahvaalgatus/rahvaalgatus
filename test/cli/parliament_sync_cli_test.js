@@ -2831,18 +2831,25 @@ describe("ParliamentSyncCli", function() {
 			}]))
 
 			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respondWithNotFound)
+			yield job()
+		})
 
-			this.router.get(`/api/documents/${DOCUMENT_UUID}`, function(_req, res) {
-				res.statusCode = 500
-				res.setHeader("Content-Type", "application/json")
+		// Draft act's opinion documents are unavailable via the documents API and
+		// supposedly are meant to be loaded along with the draft act from
+		// /volumes/drafts. But they don't tell you the draft act UUID...
+		it("must ignore unavailable draft act opinion documents", function*() {
+			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+				uuid: INITIATIVE_UUID,
 
-				res.end(JSON.stringify({
-					error: "Internal Server Error",
-					message: `Document not found with UUID: ${DOCUMENT_UUID}`,
-					status: 500
-				}))
-			})
+				relatedDocuments: [{
+					uuid: DOCUMENT_UUID,
+					documentType: "opinionDocument"
+				}]
+			}]))
 
+			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respondWithNotFound)
 			yield job()
 		})
 
@@ -2857,15 +2864,7 @@ describe("ParliamentSyncCli", function() {
 			}]))
 
 			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
-
-			this.router.get(`/api/documents/${DOCUMENT_UUID}`, function(_req, res) {
-				res.statusCode = 500
-				res.end(JSON.stringify({
-					error: "Internal Server Error",
-					message: `Document not found with UUID: ${DOCUMENT_UUID}`,
-					status: 500
-				}))
-			})
+			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respondWithNotFound)
 
 			var err
 			try { yield job() } catch (ex) { err = ex }
@@ -3236,8 +3235,11 @@ describe("ParliamentSyncCli", function() {
 			})])
 		})
 
+		// As of Apr 8, 2021 it's still the case that opinion documents are
+		// unavailable via the document API. They're also now attached as
+		// relatedDocuments on some initiatives.
 		// https://github.com/riigikogu-kantselei/api/issues/28
-		it("must ignore draft act volumes", function*() {
+		it("must ignore draft act volume opinion documents", function*() {
 			this.router.get(INITIATIVES_URL, respond.bind(null, [{
 				uuid: INITIATIVE_UUID,
 				relatedVolumes: [{uuid: VOLUME_UUID, volumeType: "eelnou"}]
@@ -3255,21 +3257,23 @@ describe("ParliamentSyncCli", function() {
 				documents: [{uuid: opionUuid, documentType: "opinionDocument"}]
 			}))
 
-			this.router.get(`/api/documents/${opionUuid}`, function(_req, res) {
-				res.statusCode = 500
-				res.setHeader("Content-Type", "application/json")
-
-				res.end(JSON.stringify({
-					error: "Internal Server Error",
-					message: `Document not found with UUID: ${DOCUMENT_UUID}`,
-					status: 500
-				}))
-			})
-
+			this.router.get(`/api/documents/${opionUuid}`, respondWithNotFound)
 			yield job()
 		})
 	})
 })
+
+function respondWithNotFound(_req, res) {
+	// Their 404s are 500s... ^_-
+	res.statusCode = 500
+	res.setHeader("Content-Type", "application/json")
+
+	res.end(JSON.stringify({
+		error: "Internal Server Error",
+		message: `Document not found with UUID: ${DOCUMENT_UUID}`,
+		status: 500
+	}))
+}
 
 function respondWithRiigikoguDownload(contentType, content, req, res) {
 	// https://riigikogu.ee redirects to https://www.riigikogu.ee.

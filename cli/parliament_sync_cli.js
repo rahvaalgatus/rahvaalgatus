@@ -1060,6 +1060,12 @@ function raiseForDocument(doc, err) {
 	// Silently ignore only agenda items. Let's continue to be notified of the
 	// rest.
 	if (is404(err) && doc.documentType == "unitAgendaItemDocument") return null
+
+	// Opinion documents are unavailable from the /documents endpoint. There's no
+	// way to directly get them as of Apr 8, 2021. You're supposed to know the
+	// draft act UUID and use /volumes/drafts.
+	if (is404(err) && doc.documentType == "opinionDocument") return null
+
 	throw err
 }
 
