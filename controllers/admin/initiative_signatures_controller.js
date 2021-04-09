@@ -2,6 +2,7 @@ var _ = require("root/lib/underscore")
 var Router = require("express").Router
 var DateFns = require("date-fns")
 var Time = require("root/lib/time")
+var Csv = require("root/lib/csv")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var next = require("co-next")
 var formatDate = require("root/lib/i18n").formatDate
@@ -113,7 +114,7 @@ function serializeSignaturesAsCsv(
 		default: throw new RangeError("Unknown column: " + column)
 	}}))
 
-	return concat([header], rows).map(serializeCsv).join("\n")
+	return concat([header], rows).map(Csv.serialize).join("\n")
 }
 
 function serializeSignersAsCsv(columns, locationFormat, signers) {
@@ -140,13 +141,7 @@ function serializeSignersAsCsv(columns, locationFormat, signers) {
 		default: throw new RangeError("Unknown column: " + column)
 	}}))
 
-	return concat([header], rows).map(serializeCsv).join("\n")
-}
-
-function serializeCsv(tuple) {
-	return tuple.map((value) => (
-		/["\r\n,]/.test(value) ? "\"" + value.replace(/"/g, "\"\"") + "\"" : value
-	)).join(",")
+	return concat([header], rows).map(Csv.serialize).join("\n")
 }
 
 function getSexFromPersonalId(personalId) {
