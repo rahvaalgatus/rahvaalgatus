@@ -363,6 +363,33 @@ describe("SignaturesController", function() {
 			String(entry).must.equal(initiative.text)
 		})
 
+		it("must not include signatures from other initiatives", function*() {
+			var other = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament"
+			}))
+
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament",
+				parliament_token: Crypto.randomBytes(12)
+			}))
+
+			yield signaturesDb.create(new ValidSignature({
+				initiative_uuid: other.uuid
+			}))
+
+			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
+			var res = yield this.request(path)
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(ASICE_TYPE)
+			var zip = yield Zip.parse(Buffer.from(res.body))
+			var entries = yield Zip.parseEntries(zip)
+			Object.keys(entries).length.must.equal(3)
+		})
+
 		_.each({
 			period: ".",
 			exclamation: "!"
@@ -492,6 +519,60 @@ describe("SignaturesController", function() {
 
 			yield textSignaturesDb.create(new ValidTextSignature({
 				text_id: estonian.id,
+				signed: true,
+				timestamped: true
+			}))
+
+			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
+			var res = yield this.request(path)
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(ASICE_TYPE)
+			var zip = yield Zip.parse(Buffer.from(res.body))
+			var entries = yield Zip.parseEntries(zip)
+			Object.keys(entries).length.must.equal(4)
+
+			var translation = yield Zip.readEntry(zip, entries["estonian.html"])
+			String(translation).must.equal(Initiative.renderForParliament(estonian))
+		})
+
+		it("must not include Estonian translations from other initiatives",
+			function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament",
+				parliament_token: Crypto.randomBytes(12),
+				language: "en"
+			}))
+
+			var estonian = yield textsDb.create(new ValidText({
+				initiative_uuid: initiative.uuid,
+				user_id: initiative.user_id,
+				language: "et"
+			}))
+
+			yield textSignaturesDb.create(new ValidTextSignature({
+				text_id: estonian.id,
+				signed: true,
+				timestamped: true
+			}))
+
+			// The latest translations is included, so create the decoy later.
+			var other = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament",
+				language: "en"
+			}))
+
+			var otherEstonian = yield textsDb.create(new ValidText({
+				initiative_uuid: other.uuid,
+				user_id: other.user_id,
+				language: "et"
+			}))
+
+			yield textSignaturesDb.create(new ValidTextSignature({
+				text_id: otherEstonian.id,
 				signed: true,
 				timestamped: true
 			}))
@@ -654,6 +735,31 @@ describe("SignaturesController", function() {
 			res.headers["content-type"].must.equal(CSV_TYPE)
 			res.body.must.equal("personal_id\n")
 		})
+
+		it("must not respond with signatures of other initiatives", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament",
+				parliament_token: Crypto.randomBytes(12)
+			}))
+
+			var other = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament"
+			}))
+
+			yield signaturesDb.create(new ValidSignature({
+				initiative_uuid: other.uuid
+			}))
+
+			var path = `/initiatives/${initiative.uuid}/signatures.csv`
+			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
+			var res = yield this.request(path)
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(CSV_TYPE)
+			res.body.must.equal("personal_id\n")
+		})
 	})
 
 	describe(`GET /?type=citizenos for ${ZIP_TYPE}`, function() {
@@ -725,6 +831,38 @@ describe("SignaturesController", function() {
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
+			}))
+
+			var path = `/initiatives/${initiative.uuid}/signatures.zip?type=citizenos`
+			path += "&parliament-token=" + initiative.parliament_token.toString("hex")
+			var res = yield this.request(path)
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(ZIP_TYPE)
+			var zip = yield Zip.parse(Buffer.from(res.body))
+			yield Zip.parseEntries(zip).must.then.be.empty()
+		})
+
+		it("must not include signatuers from other initiatives", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament",
+				parliament_token: Crypto.randomBytes(12)
+			}))
+
+			var other = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament"
+			}))
+
+			var asic = new Asic
+			asic.add("initiative.html", other.text)
+			asic.end()
+			asic = yield asic.toBuffer()
+
+			yield citizenosSignaturesDb.create(new ValidCitizenosSignature({
+				initiative_uuid: other.uuid,
+				asic: asic
 			}))
 
 			var path = `/initiatives/${initiative.uuid}/signatures.zip?type=citizenos`
