@@ -158,7 +158,13 @@ var SMART_ID_ERRORS = exports.SMART_ID_ERRORS = {
 exports.router = Router({mergeParams: true})
 exports.router.use(parseBody({type: hasSignatureType}))
 
-exports.router.get("/", next(function*(req, res) {
+exports.router.get("/",
+	new ResponseTypeMiddeware([
+		"application/vnd.etsi.asic-e+zip",
+		"application/zip",
+		"text/csv"
+	].map(MediaType)),
+	next(function*(req, res) {
 	var t = req.t
 	var user = req.user
 	var initiative = req.initiative
@@ -189,16 +195,22 @@ exports.router.get("/", next(function*(req, res) {
 			})
 	}
 
-	switch (req.query.type) {
-		case undefined:
+	switch (res.contentType.name) {
+		case "application/vnd.etsi.asic-e+zip":
+			if (req.query.type != null)
+				throw new HttpError(400, "Unknown Signatures Type")
+
 			var asic = new Asic
 			res.setHeader("Content-Type", asic.type)
 			res.setHeader("Content-Disposition",
 				dispose("signatures.asice", "attachment"))
 			asic.pipe(res)
 
-			var extension = Mime.extension(String(initiative.text_type))
-			asic.add(`initiative.${extension}`, initiative.text, initiative.text_type)
+			asic.add(
+				`initiative.${Mime.extension(String(initiative.text_type))}`,
+				initiative.text,
+				initiative.text_type
+			)
 
 			ESTONIAN: if (initiative.language != "et") {
 				var estonian = yield textsDb.read(sql`
@@ -217,24 +229,29 @@ exports.router.get("/", next(function*(req, res) {
 				asic.add("estonian.html", translationHtml, "text/html")
 			}
 
-			var signatures, added = 0
+			{
+				let signatures, added = 0
 
-			while ((signatures = yield signaturesDb.search(sql`
-				SELECT xades FROM initiative_signatures
-				WHERE initiative_uuid = ${initiative.uuid}
-				AND xades IS NOT NULL
-				ORDER BY country ASC, personal_id ASC
-				LIMIT ${ENV == "test" ? 1 : 100}
-				OFFSET ${added}
-			`)).length > 0) {
-				_.map(signatures, "xades").forEach(asic.addSignature, asic)
-				added += signatures.length
+				while ((signatures = yield signaturesDb.search(sql`
+					SELECT xades FROM initiative_signatures
+					WHERE initiative_uuid = ${initiative.uuid}
+					AND xades IS NOT NULL
+					ORDER BY country ASC, personal_id ASC
+					LIMIT ${ENV == "test" ? 1 : 100}
+					OFFSET ${added}
+				`)).length > 0) {
+					_.map(signatures, "xades").forEach(asic.addSignature, asic)
+					added += signatures.length
+				}
 			}
 
 			asic.end()
 			break
 
-		case "citizenos":
+		case "application/zip":
+			if (req.query.type != "citizenos")
+				throw new HttpError(400, "Unknown Signatures Type")
+
 			var zip = new Zip
 			res.setHeader("Content-Type", zip.type)
 			res.setHeader("Content-Disposition",
@@ -256,7 +273,31 @@ exports.router.get("/", next(function*(req, res) {
 			zip.end()
 			break
 
-		default: throw new HttpError(400, "Unknown Signatures Type")
+		case "text/csv":
+			res.setHeader("Content-Type", "text/csv; charset=utf-8")
+			res.setHeader("Content-Disposition",
+				dispose("signatures.csv", "attachment"))
+
+			{
+				let signatures, added = 0
+
+				res.write("personal_id\n")
+				while ((signatures = yield signaturesDb.search(sql`
+					SELECT personal_id FROM initiative_signatures
+					WHERE initiative_uuid = ${initiative.uuid}
+					ORDER BY country ASC, personal_id ASC
+					LIMIT ${ENV == "test" ? 1 : 10000}
+					OFFSET ${added}
+				`)).length > 0) {
+					res.write(signatures.map((sig) => sig.personal_id + "\n").join(""))
+					added += signatures.length
+				}
+
+				res.end()
+			}
+			break
+
+		default: throw new HttpError(406)
 	}
 }))
 

@@ -92,6 +92,7 @@ request = fetchSession(request)
 
 request = require("fetch-parse")(request, {
 	"text/html": true,
+	"text/csv": true,
 	"text/plain": true,
 	"image/*": parseBuffer,
 	"application/zip": parseBuffer,

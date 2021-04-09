@@ -36,6 +36,7 @@ var demand = require("must")
 var next = require("co-next")
 var tsl = require("root").tsl
 var ASICE_TYPE = "application/vnd.etsi.asic-e+zip"
+var CSV_TYPE = "text/csv; charset=utf-8"
 var ZIP_TYPE = "application/zip"
 var MOBILE_ID_URL = Url.parse("https://mid.sk.ee/mid-api/")
 var SMART_ID_URL = Url.parse("https://rp-api.smart-id.com/v1/")
@@ -596,6 +597,62 @@ describe("SignaturesController", function() {
 
 			var translation = yield Zip.readEntry(zip, entries["estonian.html"])
 			String(translation).must.equal(Initiative.renderForParliament(b))
+		})
+	})
+
+	describe(`GET / for ${CSV_TYPE}`, function() {
+		beforeEach(function*() {
+			this.author = yield usersDb.create(new ValidUser)
+		})
+
+		mustRespondWithSignatures(function(url) {
+			return this.request(url.replace(/\.asice/, ".csv"))
+		})
+
+		it("must respond with CSV of signatures given parliament token",
+			function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament",
+				parliament_token: Crypto.randomBytes(12)
+			}))
+
+			var signatures = _.sortBy(yield signaturesDb.create([
+				new ValidSignature({initiative_uuid: initiative.uuid}),
+				new ValidSignature({initiative_uuid: initiative.uuid}),
+				new ValidSignature({initiative_uuid: initiative.uuid})
+			]), "personal_id")
+
+			var path = `/initiatives/${initiative.uuid}/signatures.csv`
+			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
+			var res = yield this.request(path)
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(CSV_TYPE)
+			res.headers["content-disposition"].must.equal(
+				"attachment; filename=\"signatures.csv\""
+			)
+
+			res.body.must.equal(
+				"personal_id\n" +
+				signatures.map((sig) => sig.personal_id + "\n").join("")
+			)
+		})
+
+		it("must respond if no signatures", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament",
+				parliament_token: Crypto.randomBytes(12)
+			}))
+
+			var path = `/initiatives/${initiative.uuid}/signatures.csv`
+			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
+			var res = yield this.request(path)
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(CSV_TYPE)
+			res.body.must.equal("personal_id\n")
 		})
 	})
 
