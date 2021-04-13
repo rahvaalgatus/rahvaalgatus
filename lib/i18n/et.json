@@ -345,7 +345,6 @@
 	"INITIATIVE_TEXT_SIGNER_NOT_AUTHOR": "Isikukood ei tundu olevat sama, mis su kasutajakontol. Palun allkirjasta sama isikukoodiga.",
 	"INITIATIVE_TEXT_UNSAVED": "Tekstimuudatus on salvestamata. Oled kindel, et soovid lehelt lahkuda?",
 	"INITIATIVE_TITLE_PLACEHOLDER": "Algatuse pealkiri",
-	"INITIATIVE_TRANSLATION_HIDDEN_IN_EDIT_PHASE": "Algatuse tõlked on ühisloomefaasis peidetud. Kui algatus jõuab allkirjastamise faasi, saad tõlked kinnitada ning teistele nähtavaks teha.",
 	"INITIATIVE_TRANSLATION_PLEASE_SIGN": "Selleks, et tõlge teistele nähtav oleks, pead allkirjaga kinnitama, et see vastab algtekstile.",
 	"INITIATIVE_TRANSLATION_PLEASE_SIGN_AFTER_UPDATE": "Selleks, et tõlge teistele nähtav oleks, pead allkirjaga kinnitama, et see vastab algtekstile.\nKuna oled tõlget peale viimast allkirjastamist muutnud, palun allkirjasta see uuesti.",
 	"INITIATIVE_TRANSLATION_SIGN": "Kinnita tõlge allkirjaga",

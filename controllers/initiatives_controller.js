@@ -314,12 +314,7 @@ exports.read = next(function*(req, res) {
 	var signature
 	var newSignatureToken = req.flash("signatureToken")
 	var isAuthor = user && Initiative.isAuthor(user, initiative)
-
-	var textLanguage = (
-		isAuthor && req.query.language ||
-		initiative.phase != "edit" && req.query.language ||
-		initiative.language
-	)
+	var textLanguage = req.query.language || initiative.language
 
 	if (initiative.phase == "sign") if (newSignatureToken) {
 		signature = yield signaturesDb.read(sql`
@@ -382,17 +377,20 @@ exports.read = next(function*(req, res) {
 		WHERE text.initiative_uuid = ${initiative.uuid}
 		AND text.language = ${textLanguage}
 
-		${isAuthor ? sql`` : sql`AND (
-			sig.id IS NOT NULL OR
-			text.language = ${initiative.language}
-		)`}
+		${(
+			initiative.phase == "edit" ||
+			initiative.language == textLanguage ||
+			isAuthor
+		) ? sql`` : sql`AND sig.id IS NOT NULL`}
 
 		ORDER BY text.id DESC
 		LIMIT 1
 	`)
 
-	if (text == null && initiative.language != textLanguage && !isAuthor)
+	if (text == null && initiative.language != textLanguage && !isAuthor) {
+		res.statusMessage = "No Translation"
 		return void res.redirect(307, req.baseUrl + req.path)
+	}
 
 	if (text) initiative.title = text.title
 
@@ -406,17 +404,19 @@ exports.read = next(function*(req, res) {
 		else throw new HttpError(404, "No Text Yet")
 	}
 
-	var translations = isAuthor ? _.indexBy(yield textsDb.search(sql`
-		SELECT language, id
-		FROM initiative_texts
+	var translations = isAuthor || initiative.phase == "edit"
+		? _.indexBy(yield textsDb.search(sql`
+			SELECT language, id
+			FROM initiative_texts
 
-		WHERE id IN (
-			SELECT MAX(id) FROM initiative_texts
-			WHERE initiative_uuid = ${initiative.uuid}
-			AND language != ${initiative.language}
-			GROUP BY language
-		)
-	`), "language") : EMPTY
+			WHERE id IN (
+				SELECT MAX(id) FROM initiative_texts
+				WHERE initiative_uuid = ${initiative.uuid}
+				AND language != ${initiative.language}
+				GROUP BY language
+			)
+		`), "language")
+		: EMPTY
 
 	var signedTranslations = _.indexBy(yield textsDb.search(sql`
 		SELECT language, id

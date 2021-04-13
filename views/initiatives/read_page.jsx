@@ -314,13 +314,13 @@ function ReadPage(attrs) {
 
 				{(
 					!_.isEmpty(signedTranslations) ||
-					isAuthor && !_.isEmpty(translations)
+					!_.isEmpty(translations)
 				) ? <menu id="language-tabs">
 					{LANGUAGES.map(function(lang) {
 						if (!(
 							initiative.language == lang ||
 							lang in signedTranslations ||
-							isAuthor && lang in translations
+							(initiative.phase == "edit" || isAuthor) && lang in translations
 						)) return null
 
 						var path = initiativePath
@@ -328,11 +328,15 @@ function ReadPage(attrs) {
 
 						var klass = "tab " + selected(textLanguage, lang)
 
-						if (isAuthor && initiative.language != lang && (
-							signedTranslations[lang] == null ||
-							signedTranslations[lang].id !=
-							translations[lang].id
-						)) klass += " unsigned"
+						if (
+							isAuthor &&
+							initiative.phase != "edit" &&
+							initiative.language != lang && (
+								signedTranslations[lang] == null ||
+								signedTranslations[lang].id !=
+								translations[lang].id
+							)
+						) klass += " unsigned"
 
 						return <a href={path} class={klass}>{Jsx.html(
 							initiative.language != lang
@@ -365,15 +369,6 @@ function ReadPage(attrs) {
 						href={`${initiativePath}/texts/${text.id}/sign`}
 						class="sign-translation-button link-button"
 					>{t("INITIATIVE_TRANSLATION_SIGN")}</a>
-				</p> : null}
-
-				{(
-					isAuthor &&
-					text &&
-					initiative.language != text.language &&
-					initiative.phase == "edit"
-				) ? <p class="initiative-translation-information-for-author">
-					{t("INITIATIVE_TRANSLATION_HIDDEN_IN_EDIT_PHASE")}
 				</p> : null}
 
 				<InitiativeContentView

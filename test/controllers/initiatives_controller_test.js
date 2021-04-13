@@ -1490,82 +1490,281 @@ describe("InitiativesController", function() {
 				res.body.must.include(initiative.title)
 			})
 
-			it("must render initiative with latest text in language", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "edit",
-					language: "en",
-					published_at: new Date
-				}))
+			describe("given texts", function() {
+				it("must render latest text in edit phase", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "edit",
+						language: "en",
+						published_at: new Date
+					}))
 
-				var older = yield textsDb.create(new ValidText({
-					initiative_uuid: initiative.uuid,
-					user_id: this.author.id,
-					language: "en",
-					content: "Old and dusty.",
-					content_type: "text/html"
-				}))
+					var older = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.author.id,
+						language: "en",
+						content: "Old and dusty.",
+						content_type: "text/html"
+					}))
 
-				var text = yield textsDb.create(new ValidText({
-					initiative_uuid: initiative.uuid,
-					user_id: this.author.id,
-					language: "en",
-					content: "Latest and greatest.",
-					content_type: "text/html"
-				}))
+					var text = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.author.id,
+						language: "en",
+						content: "Latest and greatest.",
+						content_type: "text/html"
+					}))
 
-				var translation = yield textsDb.create(new ValidText({
-					initiative_uuid: initiative.uuid,
-					user_id: this.author.id,
-					created_at: new Date(2015, 5, 18, 13, 37, 43),
-					language: "et",
-					content: "In translation.",
-					content_type: "text/html"
-				}))
+					var translation = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.author.id,
+						created_at: new Date(2015, 5, 18, 13, 37, 43),
+						language: "et",
+						content: "In translation.",
+						content_type: "text/html"
+					}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(200)
-				res.body.must.include(this.author.name)
-				res.body.must.include(text.title)
-				res.body.must.include(text.content)
-				res.body.must.not.include(older.title)
-				res.body.must.not.include(older.content)
-				res.body.must.not.include(translation.title)
-				res.body.must.not.include(translation.content)
-			})
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
 
-			it("must render only in initiative's language if in edit phase",
-				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "edit",
-					language: "et",
-					published_at: new Date
-				}))
+					var dom = parseDom(res.body)
+					var headerEl = dom.querySelector("#initiative-header")
+					var textEl = dom.querySelector("article.text")
+					headerEl.textContent.must.include(text.title)
+					textEl.textContent.must.include(text.content)
+					headerEl.textContent.must.not.include(older.title)
+					textEl.textContent.must.not.include(older.content)
+					headerEl.textContent.must.not.include(translation.title)
+					textEl.textContent.must.not.include(translation.content)
 
-				var estonian = yield textsDb.create(new ValidText({
-					initiative_uuid: initiative.uuid,
-					user_id: this.author.id,
-					language: "et",
-					content: "Tere, maailm!",
-					content_type: "text/html"
-				}))
+					var tabsEl = dom.querySelector("#language-tabs")
 
-				var english = yield textsDb.create(new ValidText({
-					initiative_uuid: initiative.uuid,
-					user_id: this.author.id,
-					language: "en",
-					content: "Hello, world!",
-					content_type: "text/html"
-				}))
+					tabsEl.innerHTML.must.include(t("INITIATIVE_LANG_TAB_TRANSLATION_ET"))
+					tabsEl.innerHTML.must.include(t("INITIATIVE_LANG_TAB_EN"))
 
-				var initiativePath = "/initiatives/" + initiative.uuid
-				var res = yield this.request(initiativePath + "?language=en")
-				res.statusCode.must.equal(200)
-				res.body.must.include(estonian.title)
-				res.body.must.include(estonian.content)
-				res.body.must.not.include(english.title)
-				res.body.must.not.include(english.content)
+					tabsEl.innerHTML.must.not.include(
+						t("INITIATIVE_LANG_TAB_TRANSLATION_RU")
+					)
+				})
+
+				it("must render latest text in sign phase", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+						language: "en",
+						published_at: new Date
+					}))
+
+					var older = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.author.id,
+						language: "en",
+						content: "Old and dusty.",
+						content_type: "text/html"
+					}))
+
+					var text = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.author.id,
+						language: "en",
+						content: "Latest and greatest.",
+						content_type: "text/html"
+					}))
+
+					var translation = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.author.id,
+						created_at: new Date(2015, 5, 18, 13, 37, 43),
+						language: "et",
+						content: "In translation.",
+						content_type: "text/html"
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var headerEl = dom.querySelector("#initiative-header")
+					var textEl = dom.querySelector("article.text")
+					headerEl.textContent.must.include(text.title)
+					textEl.textContent.must.include(text.content)
+					headerEl.textContent.must.not.include(older.title)
+					textEl.textContent.must.not.include(older.content)
+					headerEl.textContent.must.not.include(translation.title)
+					textEl.textContent.must.not.include(translation.content)
+
+					demand(dom.querySelector("#language-tabs")).be.null()
+				})
+
+				it("must render latest translation in edit phase", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "edit",
+						language: "et",
+						published_at: new Date
+					}))
+
+					var estonian = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: initiative.user_id,
+						language: "et",
+						content: "Tere, maailm!",
+						content_type: "text/html"
+					}))
+
+					var older = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: initiative.user_id,
+						language: "en",
+						content: "Good hello, world!",
+						content_type: "text/html"
+					}))
+
+					var english = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: initiative.user_id,
+						language: "en",
+						content: "Hello, world!",
+						content_type: "text/html"
+					}))
+
+					var initiativePath = "/initiatives/" + initiative.uuid
+					var res = yield this.request(initiativePath + "?language=en")
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var headerEl = dom.querySelector("#initiative-header")
+					var textEl = dom.querySelector("article.text")
+					headerEl.textContent.must.not.include(estonian.title)
+					textEl.textContent.must.not.include(estonian.content)
+					headerEl.textContent.must.not.include(older.title)
+					textEl.textContent.must.not.include(older.content)
+					headerEl.textContent.must.include(english.title)
+					textEl.textContent.must.include(english.content)
+				})
+
+				it("must render latest signed translation in sign phase", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+						language: "et"
+					}))
+
+					var unsignedA = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: initiative.user_id,
+						language: "en",
+						content: "Good hello, world!",
+						content_type: "text/html"
+					}))
+
+					var signed = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: initiative.user_id,
+						language: "en",
+						content: "Hello, world!",
+						content_type: "text/html"
+					}))
+
+					yield textSignaturesDb.create(new ValidTextSignature({
+						text_id: signed.id,
+						signed: true,
+						timestamped: true
+					}))
+
+					var unsignedB = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: initiative.user_id,
+						language: "en",
+						content: "Good bye, world!",
+						content_type: "text/html"
+					}))
+
+					var initiativePath = "/initiatives/" + initiative.uuid
+					var res = yield this.request(initiativePath + "?language=en")
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(unsignedA.title)
+					res.body.must.not.include(unsignedA.content)
+					res.body.must.include(signed.title)
+					res.body.must.include(signed.content)
+					res.body.must.not.include(unsignedB.title)
+					res.body.must.not.include(unsignedB.content)
+
+					var dom = parseDom(res.body)
+					var headerEl = dom.querySelector("#initiative-header")
+					var textEl = dom.querySelector("article.text")
+					headerEl.textContent.must.not.include(unsignedA.title)
+					textEl.textContent.must.not.include(unsignedA.content)
+					headerEl.textContent.must.include(signed.title)
+					textEl.textContent.must.include(signed.content)
+					headerEl.textContent.must.not.include(unsignedB.title)
+					textEl.textContent.must.not.include(unsignedB.content)
+				})
+
+				it("must not render unsigned translation if in sign phase",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+						language: "et"
+					}))
+
+					var english = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: initiative.user_id,
+						language: "en",
+						content: "Hello, world!",
+						content_type: "text/html"
+					}))
+
+					yield textSignaturesDb.create(new ValidTextSignature({
+						text_id: english.id,
+						signed: true
+					}))
+
+					var initiativePath = "/initiatives/" + initiative.uuid
+					var res = yield this.request(initiativePath + "?language=en")
+					res.statusCode.must.equal(307)
+					res.statusMessage.must.equal("No Translation")
+					res.headers.location.must.equal("/initiatives/" + initiative.uuid)
+				})
+
+				it("must render warning if initiative in sign phase and translated",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+						language: "et",
+						signing_ends_at: DateFns.addDays(new Date, 1)
+					}))
+
+					var english = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: initiative.user_id,
+						language: "en"
+					}))
+
+					yield textSignaturesDb.create(new ValidTextSignature({
+						text_id: english.id,
+						signed: true,
+						timestamped: true
+					}))
+
+					var initiativePath = "/initiatives/" + initiative.uuid
+					var res = yield this.request(initiativePath + "?language=en")
+					res.statusCode.must.equal(200)
+
+					res.body.must.include(t("INITIATIVE_SIGN_TRANSLATION_WARNING", {
+						language:
+							t("INITIATIVE_SIGN_TRANSLATION_WARNING_TEXT_IN_ET"),
+						translation:
+							t("INITIATIVE_SIGN_TRANSLATION_WARNING_TRANSLATION_IN_EN")
+					}))
+
+					res.body.must.include(
+						t("INITIATIVE_SIGN_TRANSLATION_WARNING_SIGN_IN_ET")
+					)
+				})
 			})
 
 			it("must render initiative in edit phase", function*() {
@@ -1722,151 +1921,6 @@ describe("InitiativesController", function() {
 				phases.sign.text.must.equal(t("N_SIGNATURES", {
 					votes: Config.votesRequired / 2
 				}))
-			})
-
-			it("must render signed translation if in sign phase", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					language: "et"
-				}))
-
-				yield textsDb.create(new ValidText({
-					initiative_uuid: initiative.uuid,
-					user_id: initiative.user_id,
-					language: "et"
-				}))
-
-				var english = yield textsDb.create(new ValidText({
-					initiative_uuid: initiative.uuid,
-					user_id: initiative.user_id,
-					language: "en",
-					content: "Hello, world!",
-					content_type: "text/html"
-				}))
-
-				yield textSignaturesDb.create(new ValidTextSignature({
-					text_id: english.id,
-					signed: true,
-					timestamped: true
-				}))
-
-				var initiativePath = "/initiatives/" + initiative.uuid
-				var res = yield this.request(initiativePath + "?language=en")
-				res.statusCode.must.equal(200)
-				res.body.must.include(english.title)
-				res.body.must.include(english.content)
-			})
-
-			it("must not render unsigned translation if in sign phase", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					language: "et"
-				}))
-
-				var english = yield textsDb.create(new ValidText({
-					initiative_uuid: initiative.uuid,
-					user_id: initiative.user_id,
-					language: "en",
-					content: "Hello, world!",
-					content_type: "text/html"
-				}))
-
-				yield textSignaturesDb.create(new ValidTextSignature({
-					text_id: english.id,
-					signed: true
-				}))
-
-				var initiativePath = "/initiatives/" + initiative.uuid
-				var res = yield this.request(initiativePath + "?language=en")
-				res.statusCode.must.equal(307)
-				res.headers.location.must.equal("/initiatives/" + initiative.uuid)
-			})
-
-			it("must render latest signed translation", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					language: "et"
-				}))
-
-				var unsignedA = yield textsDb.create(new ValidText({
-					initiative_uuid: initiative.uuid,
-					user_id: initiative.user_id,
-					language: "et",
-					content: "Good hello, world!",
-					content_type: "text/html"
-				}))
-
-				var signed = yield textsDb.create(new ValidText({
-					initiative_uuid: initiative.uuid,
-					user_id: initiative.user_id,
-					language: "en",
-					content: "Hello, world!",
-					content_type: "text/html"
-				}))
-
-				yield textSignaturesDb.create(new ValidTextSignature({
-					text_id: signed.id,
-					signed: true,
-					timestamped: true
-				}))
-
-				var unsignedB = yield textsDb.create(new ValidText({
-					initiative_uuid: initiative.uuid,
-					user_id: initiative.user_id,
-					language: "en",
-					content: "Good bye, world!",
-					content_type: "text/html"
-				}))
-
-				var initiativePath = "/initiatives/" + initiative.uuid
-				var res = yield this.request(initiativePath + "?language=en")
-				res.statusCode.must.equal(200)
-				res.body.must.not.include(unsignedA.title)
-				res.body.must.not.include(unsignedA.content)
-				res.body.must.include(signed.title)
-				res.body.must.include(signed.content)
-				res.body.must.not.include(unsignedB.title)
-				res.body.must.not.include(unsignedB.content)
-			})
-
-			it("must render warning if initiative in sign phase and translated",
-				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					language: "et",
-					signing_ends_at: DateFns.addDays(new Date, 1)
-				}))
-
-				var english = yield textsDb.create(new ValidText({
-					initiative_uuid: initiative.uuid,
-					user_id: initiative.user_id,
-					language: "en"
-				}))
-
-				yield textSignaturesDb.create(new ValidTextSignature({
-					text_id: english.id,
-					signed: true,
-					timestamped: true
-				}))
-
-				var initiativePath = "/initiatives/" + initiative.uuid
-				var res = yield this.request(initiativePath + "?language=en")
-				res.statusCode.must.equal(200)
-
-				res.body.must.include(t("INITIATIVE_SIGN_TRANSLATION_WARNING", {
-					language:
-						t("INITIATIVE_SIGN_TRANSLATION_WARNING_TEXT_IN_ET"),
-					translation:
-						t("INITIATIVE_SIGN_TRANSLATION_WARNING_TRANSLATION_IN_EN")
-				}))
-
-				res.body.must.include(
-					t("INITIATIVE_SIGN_TRANSLATION_WARNING_SIGN_IN_ET")
-				)
 			})
 
 			it("must render initiative in sign phase with signature milestones",
@@ -3769,98 +3823,43 @@ describe("InitiativesController", function() {
 				)
 			})
 
-			it("must render unsigned translation if in sign phase if author",
-				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.user.id,
-					phase: "sign",
-					language: "et"
-				}))
+			describe("given texts", function() {
+				it("must render unsigned translation if in sign phase if author",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "sign",
+						language: "et"
+					}))
 
-				var english = yield textsDb.create(new ValidText({
-					initiative_uuid: initiative.uuid,
-					user_id: initiative.user_id,
-					language: "en",
-					content: "Hello, world!",
-					content_type: "text/html"
-				}))
+					var english = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: initiative.user_id,
+						language: "en",
+						content: "Hello, world!",
+						content_type: "text/html"
+					}))
 
-				yield textSignaturesDb.create(new ValidTextSignature({
-					text_id: english.id,
-					signed: true
-				}))
+					yield textSignaturesDb.create(new ValidTextSignature({
+						text_id: english.id,
+						signed: true
+					}))
 
-				var initiativePath = "/initiatives/" + initiative.uuid
-				var res = yield this.request(initiativePath + "?language=en")
-				res.statusCode.must.equal(200)
-				res.body.must.include(english.title)
-				res.body.must.include(english.content)
-				res.body.must.include(t("INITIATIVE_TRANSLATION_PLEASE_SIGN"))
-			})
+					var initiativePath = "/initiatives/" + initiative.uuid
+					var res = yield this.request(initiativePath + "?language=en")
+					res.statusCode.must.equal(200)
 
-			it("must render unsigned translation if in sign phase if coauthor",
-				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					language: "et"
-				}))
+					var dom = parseDom(res.body)
+					var headerEl = dom.querySelector("#initiative-header")
+					headerEl.textContent.must.include(english.title)
+					var textEl = dom.querySelector("article.text")
+					textEl.textContent.must.include(english.content)
 
-				yield coauthorsDb.create(new ValidCoauthor({
-					initiative_uuid: initiative.uuid,
-					user: this.user,
-					status: "accepted"
-				}))
+					res.body.must.include(t("INITIATIVE_TRANSLATION_PLEASE_SIGN"))
+				})
 
-				var english = yield textsDb.create(new ValidText({
-					initiative_uuid: initiative.uuid,
-					user_id: initiative.user_id,
-					language: "en",
-					content: "Hello, world!",
-					content_type: "text/html"
-				}))
-
-				yield textSignaturesDb.create(new ValidTextSignature({
-					text_id: english.id,
-					signed: true
-				}))
-
-				var initiativePath = "/initiatives/" + initiative.uuid
-				var res = yield this.request(initiativePath + "?language=en")
-				res.statusCode.must.equal(200)
-				res.body.must.include(english.title)
-				res.body.must.include(english.content)
-				res.body.must.include(t("INITIATIVE_TRANSLATION_PLEASE_SIGN"))
-			})
-
-			it("must not render unsigned translation if in sign phase if not author", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					language: "et"
-				}))
-
-				var english = yield textsDb.create(new ValidText({
-					initiative_uuid: initiative.uuid,
-					user_id: initiative.user_id,
-					language: "en",
-					content: "Hello, world!",
-					content_type: "text/html"
-				}))
-
-				yield textSignaturesDb.create(new ValidTextSignature({
-					text_id: english.id,
-					signed: true
-				}))
-
-				var initiativePath = "/initiatives/" + initiative.uuid
-				var res = yield this.request(initiativePath + "?language=en")
-				res.statusCode.must.equal(307)
-				res.headers.location.must.equal("/initiatives/" + initiative.uuid)
-			})
-
-			;["pending", "rejected"].forEach(function(status) {
-				it(`must not render unsigned translation if in sign phase if ${status} coauthor`, function*() {
+				it("must render unsigned translation if in sign phase if coauthor",
+					function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
 						phase: "sign",
@@ -3869,9 +3868,41 @@ describe("InitiativesController", function() {
 
 					yield coauthorsDb.create(new ValidCoauthor({
 						initiative_uuid: initiative.uuid,
-						country: this.user.country,
-						personal_id: this.user.personal_id,
-						status: status
+						user: this.user,
+						status: "accepted"
+					}))
+
+					var english = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: initiative.user_id,
+						language: "en",
+						content: "Hello, world!",
+						content_type: "text/html"
+					}))
+
+					yield textSignaturesDb.create(new ValidTextSignature({
+						text_id: english.id,
+						signed: true
+					}))
+
+					var initiativePath = "/initiatives/" + initiative.uuid
+					var res = yield this.request(initiativePath + "?language=en")
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var headerEl = dom.querySelector("#initiative-header")
+					headerEl.textContent.must.include(english.title)
+					var textEl = dom.querySelector("article.text")
+					textEl.textContent.must.include(english.content)
+
+					res.body.must.include(t("INITIATIVE_TRANSLATION_PLEASE_SIGN"))
+				})
+
+				it("must not render unsigned translation if in sign phase if not author", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+						language: "et"
 					}))
 
 					var english = yield textsDb.create(new ValidText({
@@ -3890,129 +3921,176 @@ describe("InitiativesController", function() {
 					var initiativePath = "/initiatives/" + initiative.uuid
 					var res = yield this.request(initiativePath + "?language=en")
 					res.statusCode.must.equal(307)
+					res.statusMessage.must.equal("No Translation")
 					res.headers.location.must.equal("/initiatives/" + initiative.uuid)
 				})
-			})
 
-			it("must render latest unsigned translation if author", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.user.id,
-					phase: "sign",
-					language: "et"
-				}))
+				;["pending", "rejected"].forEach(function(status) {
+					it(`must not render unsigned translation if in sign phase if ${status} coauthor`, function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.author.id,
+							phase: "sign",
+							language: "et"
+						}))
 
-				var signed = yield textsDb.create(new ValidText({
-					initiative_uuid: initiative.uuid,
-					user_id: initiative.user_id,
-					language: "en",
-					content: "Hello, world!",
-					content_type: "text/html"
-				}))
+						yield coauthorsDb.create(new ValidCoauthor({
+							initiative_uuid: initiative.uuid,
+							country: this.user.country,
+							personal_id: this.user.personal_id,
+							status: status
+						}))
 
-				yield textSignaturesDb.create(new ValidTextSignature({
-					text_id: signed.id,
-					signed: true,
-					timestamped: true
-				}))
+						var english = yield textsDb.create(new ValidText({
+							initiative_uuid: initiative.uuid,
+							user_id: initiative.user_id,
+							language: "en",
+							content: "Hello, world!",
+							content_type: "text/html"
+						}))
 
-				var unsigned = yield textsDb.create(new ValidText({
-					initiative_uuid: initiative.uuid,
-					user_id: initiative.user_id,
-					language: "en",
-					content: "Good bye, world!",
-					content_type: "text/html"
-				}))
+						yield textSignaturesDb.create(new ValidTextSignature({
+							text_id: english.id,
+							signed: true
+						}))
 
-				var initiativePath = "/initiatives/" + initiative.uuid
-				var res = yield this.request(initiativePath + "?language=en")
-				res.statusCode.must.equal(200)
-				res.body.must.not.include(signed.title)
-				res.body.must.not.include(signed.content)
-				res.body.must.include(unsigned.title)
-				res.body.must.include(unsigned.content)
+						var initiativePath = "/initiatives/" + initiative.uuid
+						var res = yield this.request(initiativePath + "?language=en")
+						res.statusCode.must.equal(307)
+						res.statusMessage.must.equal("No Translation")
+						res.headers.location.must.equal("/initiatives/" + initiative.uuid)
+					})
+				})
 
-				res.body.must.include(
-					t("INITIATIVE_TRANSLATION_PLEASE_SIGN_AFTER_UPDATE")
-				)
-			})
+				it("must render latest unsigned translation if author", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "sign",
+						language: "et"
+					}))
 
-			it("must render latest unsigned translation if coauthor", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					language: "et"
-				}))
+					var signed = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: initiative.user_id,
+						language: "en",
+						content: "Hello, world!",
+						content_type: "text/html"
+					}))
 
-				yield coauthorsDb.create(new ValidCoauthor({
-					initiative_uuid: initiative.uuid,
-					user: this.user,
-					status: "accepted"
-				}))
+					yield textSignaturesDb.create(new ValidTextSignature({
+						text_id: signed.id,
+						signed: true,
+						timestamped: true
+					}))
 
-				var signed = yield textsDb.create(new ValidText({
-					initiative_uuid: initiative.uuid,
-					user_id: initiative.user_id,
-					language: "en",
-					content: "Hello, world!",
-					content_type: "text/html"
-				}))
+					var unsigned = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: initiative.user_id,
+						language: "en",
+						content: "Good bye, world!",
+						content_type: "text/html"
+					}))
 
-				yield textSignaturesDb.create(new ValidTextSignature({
-					text_id: signed.id,
-					signed: true,
-					timestamped: true
-				}))
+					var initiativePath = "/initiatives/" + initiative.uuid
+					var res = yield this.request(initiativePath + "?language=en")
+					res.statusCode.must.equal(200)
 
-				var unsigned = yield textsDb.create(new ValidText({
-					initiative_uuid: initiative.uuid,
-					user_id: initiative.user_id,
-					language: "en",
-					content: "Good bye, world!",
-					content_type: "text/html"
-				}))
+					var dom = parseDom(res.body)
+					var headerEl = dom.querySelector("#initiative-header")
+					var textEl = dom.querySelector("article.text")
+					headerEl.textContent.must.not.include(signed.title)
+					textEl.textContent.must.not.include(signed.content)
+					headerEl.textContent.must.include(unsigned.title)
+					textEl.textContent.must.include(unsigned.content)
 
-				var initiativePath = "/initiatives/" + initiative.uuid
-				var res = yield this.request(initiativePath + "?language=en")
-				res.statusCode.must.equal(200)
-				res.body.must.not.include(signed.title)
-				res.body.must.not.include(signed.content)
-				res.body.must.include(unsigned.title)
-				res.body.must.include(unsigned.content)
+					res.body.must.include(
+						t("INITIATIVE_TRANSLATION_PLEASE_SIGN_AFTER_UPDATE")
+					)
+				})
 
-				res.body.must.include(
-					t("INITIATIVE_TRANSLATION_PLEASE_SIGN_AFTER_UPDATE")
-				)
-			})
+				it("must render latest unsigned translation if coauthor", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+						language: "et"
+					}))
 
-			it("must not sign text button if latest translation signed", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.user.id,
-					phase: "sign",
-					language: "et"
-				}))
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative_uuid: initiative.uuid,
+						user: this.user,
+						status: "accepted"
+					}))
 
-				var english = yield textsDb.create(new ValidText({
-					initiative_uuid: initiative.uuid,
-					user_id: initiative.user_id,
-					language: "en",
-					content: "Hello, world!",
-					content_type: "text/html"
-				}))
+					var signed = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: initiative.user_id,
+						language: "en",
+						content: "Hello, world!",
+						content_type: "text/html"
+					}))
 
-				yield textSignaturesDb.create(new ValidTextSignature({
-					text_id: english.id,
-					signed: true,
-					timestamped: true
-				}))
+					yield textSignaturesDb.create(new ValidTextSignature({
+						text_id: signed.id,
+						signed: true,
+						timestamped: true
+					}))
 
-				var initiativePath = "/initiatives/" + initiative.uuid
-				var res = yield this.request(initiativePath + "?language=en")
-				res.statusCode.must.equal(200)
-				res.body.must.not.include(t("INITIATIVE_TRANSLATION_PLEASE_SIGN"))
+					var unsigned = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: initiative.user_id,
+						language: "en",
+						content: "Good bye, world!",
+						content_type: "text/html"
+					}))
 
-				res.body.must.not.include(
-					t("INITIATIVE_TRANSLATION_PLEASE_SIGN_AFTER_UPDATE")
-				)
+					var initiativePath = "/initiatives/" + initiative.uuid
+					var res = yield this.request(initiativePath + "?language=en")
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var headerEl = dom.querySelector("#initiative-header")
+					var textEl = dom.querySelector("article.text")
+					headerEl.textContent.must.not.include(signed.title)
+					textEl.textContent.must.not.include(signed.content)
+					headerEl.textContent.must.include(unsigned.title)
+					textEl.textContent.must.include(unsigned.content)
+
+
+					res.body.must.include(
+						t("INITIATIVE_TRANSLATION_PLEASE_SIGN_AFTER_UPDATE")
+					)
+				})
+
+				it("must not show sign button if latest translation signed",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "sign",
+						language: "et"
+					}))
+
+					var english = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: initiative.user_id,
+						language: "en",
+						content: "Hello, world!",
+						content_type: "text/html"
+					}))
+
+					yield textSignaturesDb.create(new ValidTextSignature({
+						text_id: english.id,
+						signed: true,
+						timestamped: true
+					}))
+
+					var initiativePath = "/initiatives/" + initiative.uuid
+					var res = yield this.request(initiativePath + "?language=en")
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(t("INITIATIVE_TRANSLATION_PLEASE_SIGN"))
+
+					res.body.must.not.include(
+						t("INITIATIVE_TRANSLATION_PLEASE_SIGN_AFTER_UPDATE")
+					)
+				})
 			})
 
 			describe("subscription form", function() {
