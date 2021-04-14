@@ -126,11 +126,8 @@ function* assertAuthor(req, _res, next) {
 	if (!Initiative.isAuthor(user, initiative))
 		throw new HttpError(403, "No Permission to Edit")
 
-	if (!(
-		initiative.phase == "sign" ||
-		initiative.phase == "government" ||
-		initiative.phase == "parliament"
-	)) throw new HttpError(403, "Cannot Create Events")
+	if (initiative.archived_at || initiative.phase == "edit")
+		throw new HttpError(403, "Cannot Create Events")
 
 	var until = yield rateLimit(req.user, req.initiative)
 	if (until) throw new HttpError(429, "Too Many Events", {until: until})

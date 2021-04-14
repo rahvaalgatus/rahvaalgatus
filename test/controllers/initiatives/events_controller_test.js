@@ -16,7 +16,7 @@ var t = require("root/lib/i18n").t.bind(null, "et")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var sql = require("sqlate")
 var EVENT_RATE = 3
-var EVENTABLE_PHASES = ["sign", "parliament", "government"]
+var EVENTABLE_PHASES = _.without(Initiative.PHASES, "edit")
 var NONEVENTABLE_PHASES = _.difference(Initiative.PHASES, EVENTABLE_PHASES)
 
 describe("InitiativeEventsController", function() {
@@ -78,6 +78,20 @@ describe("InitiativeEventsController", function() {
 					var res = yield this.request(path)
 					res.statusCode.must.equal(200)
 				})
+			})
+
+			it("must respond with 403 if archived", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id,
+					phase: "sign",
+					published_at: new Date,
+					archived_at: new Date
+				}))
+
+				var path = `/initiatives/${initiative.uuid}/events/new`
+				var res = yield this.request(path)
+				res.statusCode.must.equal(403)
+				res.statusMessage.must.equal("Cannot Create Events")
 			})
 
 			it("must render if coauthor", function*() {
@@ -175,6 +189,21 @@ describe("InitiativeEventsController", function() {
 					res.statusCode.must.equal(403)
 					res.statusMessage.must.equal("Cannot Create Events")
 				})
+			})
+
+			it("must respond with 403 if archived", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id,
+					phase: "sign",
+					published_at: new Date,
+					archived_at: new Date
+				}))
+
+				var path = `/initiatives/${initiative.uuid}/events`
+				var res = yield this.request(path, {method: "POST"})
+
+				res.statusCode.must.equal(403)
+				res.statusMessage.must.equal("Cannot Create Events")
 			})
 
 			it("must respond with 422 given invalid type", function*() {

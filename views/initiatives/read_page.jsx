@@ -1798,11 +1798,11 @@ function EventsView(attrs) {
 	var initiativePath = "/initiatives/" + initiative.uuid
 
 	var canCreateEvents = (
-		user && Initiative.isAuthor(user, initiative) && (
-		initiative.phase == "sign" ||
-		initiative.phase == "government" ||
-		initiative.phase == "parliament"
-	))
+		user &&
+		Initiative.isAuthor(user, initiative) &&
+		initiative.archived_at == null &&
+		initiative.phase != "edit"
+	)
 
 	if (events.length > 0 || canCreateEvents)
 		return <section id="initiative-events" class="transparent-section"><center>
