@@ -107,22 +107,44 @@ describe("InitiativesController", function() {
 				phase: "edit",
 				created_at: pseudoDateTime(),
 				published_at: new Date,
-				discussion_ends_at: DateFns.addSeconds(new Date, 1)
+				discussion_ends_at: DateFns.addSeconds(new Date, 1),
+				author_name: "Freedom Organization"
 			}))
 
 			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
-			res.body.must.include(initiative.uuid)
-			res.body.must.include(initiative.title)
 
 			var dom = parseDom(res.body)
 			var el = dom.querySelector(".initiative")
+			el.getAttribute("data-uuid").must.equal(initiative.uuid)
+			el.querySelector("h3").textContent.must.equal(initiative.title)
 
 			el.querySelector("time").textContent.must.equal(
 				I18n.formatDate("numeric", initiative.created_at)
 			)
 
-			el.querySelector(".author").textContent.must.include(this.author.name)
+			el.querySelector(".author").textContent.must.equal(
+				"Freedom Organization, " + this.author.name
+			)
+		})
+
+		it("must not show duplicate author names", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "edit",
+				created_at: pseudoDateTime(),
+				published_at: new Date,
+				discussion_ends_at: DateFns.addSeconds(new Date, 1),
+				author_name: this.author.name
+			}))
+
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+
+			var dom = parseDom(res.body)
+			var el = dom.querySelector(".initiative")
+			el.getAttribute("data-uuid").must.equal(initiative.uuid)
+			el.querySelector(".author").textContent.must.equal(this.author.name)
 		})
 
 		it(`must not show coauthor name from another initiative`, function*() {
@@ -149,8 +171,7 @@ describe("InitiativesController", function() {
 
 			var dom = parseDom(res.body)
 			var el = dom.querySelector(".initiative")
-			el.querySelector(".author").textContent.must.include(this.author.name)
-			el.querySelector(".author").textContent.must.not.include(coauthor.name)
+			el.querySelector(".author").textContent.must.equal(this.author.name)
 		})
 
 		it("must not show coauthor name", function*() {
@@ -173,8 +194,7 @@ describe("InitiativesController", function() {
 
 			var dom = parseDom(res.body)
 			var el = dom.querySelector(".initiative")
-			el.querySelector(".author").textContent.must.include(this.author.name)
-			el.querySelector(".author").textContent.must.not.include(coauthor.name)
+			el.querySelector(".author").textContent.must.equal(this.author.name)
 		})
 
 		;["pending", "rejected"].forEach(function(status) {
@@ -199,8 +219,7 @@ describe("InitiativesController", function() {
 
 				var dom = parseDom(res.body)
 				var el = dom.querySelector(".initiative")
-				el.querySelector(".author").textContent.must.include(this.author.name)
-				el.querySelector(".author").textContent.must.not.include(coauthor.name)
+				el.querySelector(".author").textContent.must.equal(this.author.name)
 			})
 		})
 
@@ -1345,6 +1364,26 @@ describe("InitiativesController", function() {
 				phases.must.not.have.property("archived")
 			})
 
+			it("must render initiative header", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					published_at: new Date,
+					author_name: "Freedom Organization"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+				var dom = parseDom(res.body)
+
+				var title = dom.querySelector("#initiative-header h1")
+				title.textContent.must.include(initiative.title)
+
+				dom.querySelector("#initiative-header .author").textContent.must.equal(
+					"Freedom Organization, " + this.author.name
+				)
+			})
+
 			it("must render initiative with Trix text", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
@@ -1363,8 +1402,6 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 
 				var dom = parseDom(res.body)
-				var author = dom.querySelector("#initiative-header .author")
-				author.textContent.must.include(this.author.name)
 
 				var title = dom.querySelector("#initiative-header h1")
 				title.textContent.must.include(text.title)
@@ -1396,7 +1433,6 @@ describe("InitiativesController", function() {
 
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
-				res.body.must.include(this.author.name)
 				res.body.must.include(text.title)
 				res.body.must.not.include("Vote for Peace")
 				res.body.must.include("Rest in peace!")
@@ -1416,12 +1452,30 @@ describe("InitiativesController", function() {
 				var path = "/initiatives/" + initiative.uuid
 				var res = yield this.request(path)
 				res.statusCode.must.equal(200)
-				res.body.must.include(initiative.title)
 
 				var dom = parseDom(res.body)
+				var title = dom.querySelector("#initiative-header h1")
+				title.textContent.must.equal(initiative.title)
+
 				var object = dom.querySelector("object")
 				object.data.must.equal(path + "/files/" + file.id)
 				object.type.must.equal(String(file.content_type))
+			})
+
+			it("must not show duplicate author names", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					published_at: new Date,
+					author_name: this.author.name
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+				var author = dom.querySelector("#initiative-header .author")
+				author.textContent.must.equal(this.author.name)
 			})
 
 			it(`must not show coauthor name from another initiative`, function*() {
@@ -1448,8 +1502,7 @@ describe("InitiativesController", function() {
 
 				var dom = parseDom(res.body)
 				var author = dom.querySelector("#initiative-header .author")
-				author.textContent.must.include(this.author.name)
-				author.textContent.must.not.include(coauthor.name)
+				author.textContent.must.equal(this.author.name)
 			})
 
 			;["pending", "rejected"].forEach(function(status) {
@@ -1474,8 +1527,7 @@ describe("InitiativesController", function() {
 
 					var dom = parseDom(res.body)
 					var author = dom.querySelector("#initiative-header .author")
-					author.textContent.must.include(this.author.name)
-					author.textContent.must.not.include(coauthor.name)
+					author.textContent.must.equal(this.author.name)
 				})
 			})
 

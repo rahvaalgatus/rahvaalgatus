@@ -9,6 +9,7 @@ var diffInDays = require("date-fns").differenceInCalendarDays
 var {getRequiredSignatureCount} = require("root/lib/initiative")
 exports = module.exports = InitiativePage
 exports.ProgressView = ProgressView
+exports.renderAuthorName = renderAuthorName
 
 function InitiativePage(attrs, children) {
 	var {req} = attrs
@@ -37,10 +38,7 @@ function InitiativePage(attrs, children) {
 					<InitiativeBadgeView initiative={initiative} />
 				</h1>
 
-				<span class="author">{[
-					initiative.author_name,
-					initiative.user_name
-				].filter(Boolean).join(", ")}</span>
+				<span class="author">{renderAuthorName(initiative)}</span>
 				{", "}
 				<time datetime={initiative.created_at.toJSON()}>
 					{I18n.formatDate("numeric", initiative.created_at)}
@@ -138,4 +136,13 @@ function ProgressView(attrs) {
 				: t("N_SIGNATURES", {votes: sigs})
 			}</div>
 	}
+}
+
+function renderAuthorName(initiative) {
+	// Not showing coauthors as we're not distinguishing text editors and
+	// translators from content and philosophical coauthors.
+	return _.uniq([
+		initiative.author_name,
+		initiative.user_name
+	].filter(Boolean)).join(", ")
 }

@@ -8,6 +8,7 @@ var {Section} = require("../page")
 var {ProgressView} = require("./initiative_page")
 var I18n = require("root/lib/i18n")
 var EMPTY_ARR = Array.prototype
+var {renderAuthorName} = require("./initiative_page")
 exports = module.exports = InitiativesPage
 exports.InitiativeBoxesView = InitiativeBoxesView
 exports.InitiativeBoxView = InitiativeBoxView
@@ -304,13 +305,4 @@ function InitiativeBoxView(attrs) {
 			{attrs.note}
 		</div> : null}
 	</li>
-}
-
-function renderAuthorName(initiative) {
-	// Not showing coauthors as we're not distinguishing text editors and
-	// translators from content and philosophical coauthors.
-	return [
-		initiative.author_name,
-		initiative.user_name
-	].filter(Boolean).join(", ")
 }

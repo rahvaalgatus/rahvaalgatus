@@ -1159,7 +1159,10 @@ function SidebarInfoView(attrs) {
 					<UntrustedLink href={authorUrl}>{authorName || null}</UntrustedLink>
 				</li> : null}
 
-				{authorName || authorUrl ? <li>{initiative.user_name}</li> : null}
+				{(
+					(authorName || authorUrl) && authorName != initiative.user_name
+				) ? <li>{initiative.user_name}</li> : null}
+
 				{coauthorNames.map((name) => <li>{name}</li>)}
 			</ul>
 
