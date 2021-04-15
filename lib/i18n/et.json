@@ -299,7 +299,7 @@
 	"INITIATIVE_MEDIA_COVERAGE_EVENT_URL_INPUT": "Veebiaadress",
 	"INITIATIVE_PARLIAMENT_EVENT_MESSAGE_BODY": "Tere\n\nAlgatusele \"{{initiativeTitle}}\" ({{initiativeUrl}}) lisati menetlusinfot:\n{{eventTitles}}\n\nMenetlusinfot saad näha lehel {{eventsUrl}}.\n\n--\nRahvaalgatus\n{{siteUrl}}\n{{facebookUrl}}\n{{twitterUrl}}\n\nPS. Said selle kirja, sest tellisid algatuse kohta teavitusi. Kui neid enam ei soovi, saad nad peatada lehel {{unsubscribeUrl}}.",
 	"INITIATIVE_PARLIAMENT_EVENT_MESSAGE_TITLE": "{{initiativeTitle}}: Menetlusinfo täiendatud {{eventDate}} sündmuse kohta",
-	"INITIATIVE_PROCESSED": "Algatuse menetlus Riigikogus on lõppenud.",
+	"INITIATIVE_PROCESSED": "Algatuse menetlus on lõppenud.",
 	"INITIATIVE_PUBLISH_TITLE": "Avalikusta algatus",
 	"INITIATIVE_SAVE_BUTTON": "Salvesta",
 	"INITIATIVE_SEND_TO_PARLIAMENT_NEEDS_ESTONIAN_TEXT": "Algatuse edastamiseks <a href=\"{{newTextUrl}}\">lisa ja kinnita eestikeelne tõlge</a>.",
