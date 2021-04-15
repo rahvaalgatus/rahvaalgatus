@@ -117,7 +117,7 @@ function sortForPhase(phase, initiatives) {
 			return _.sortBy(initiatives, (i) => (
 				i.sent_to_parliament_at || i.signing_started_at
 			)).reverse()
-			
+
 		case "government": return _.sortBy(initiatives, "sent_to_government_at")
 
 		case "done":
@@ -269,7 +269,6 @@ function InitiativeBoxView(attrs) {
 	)
 
 	var badge = _.find(Config.badges, (_b, tag) => initiative.tags.includes(tag))
-	var destinationText = t("DESTINATION_" + initiative.destination)
 	var authorName = renderAuthorName(initiative)
 
 	return <li
@@ -285,9 +284,9 @@ function InitiativeBoxView(attrs) {
 
 			{initiative.destination ? <span
 				class="destination"
-				title={destinationText}
+				title={t("DESTINATION_" + initiative.destination)}
 			>
-				{destinationText}
+				{t("DESTINATION_" + initiative.destination)}
 			</span> : null}
 
 			<h3 lang="et" title={initiative.title}>{initiative.title}</h3>

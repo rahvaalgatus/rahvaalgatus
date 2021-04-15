@@ -11,14 +11,24 @@ exports = module.exports = InitiativePage
 exports.ProgressView = ProgressView
 
 function InitiativePage(attrs, children) {
-	var req = attrs.req
-	var initiative = attrs.initiative
-	var headerless = attrs.headerless
+	var {req} = attrs
+	var {t} = req
+	var {initiative} = attrs
+	var {headerless} = attrs
 	var path = "/initiatives/" + initiative.uuid
 
 	return <Page {...attrs} class={"initiative-page " + (attrs.class || "")}>
 		{!headerless ? <header id="initiative-header">
 			<center>
+				{initiative.destination && initiative.destination != "parliament" ?
+					<span
+						class="destination"
+						title={t("DESTINATION_" + initiative.destination)}
+					>
+						{t("DESTINATION_" + initiative.destination)}
+					</span>
+				: null}
+
 				<h1>
 					{req.method != "GET" || req.baseUrl + req.path != path ?
 						<a href={path}>{initiative.title}</a>
