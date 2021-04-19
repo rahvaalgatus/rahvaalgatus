@@ -27,6 +27,7 @@ exports.serialize = function(event) {
 function parseContent(type, data) {
 	switch (type) {
 		case "parliament-received":
+		case "parliament-returned":
 		case "parliament-finished": return null
 		case "media-coverage":
 		case "parliament-accepted":
@@ -44,6 +45,7 @@ function parseContent(type, data) {
 function serializeContent(type, data) {
 	switch (type) {
 		case "parliament-received":
+		case "parliament-returned":
 		case "parliament-finished": return null
 		case "media-coverage":
 		case "parliament-accepted":

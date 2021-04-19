@@ -532,6 +532,7 @@
 	"PARLIAMENT_DECISION_FORWARD": "Otsustati edastada ettepanek pädevale institutsioonile seisukoha võtmiseks ja lahendamiseks.",
 	"PARLIAMENT_DECISION_FORWARD_TO_GOVERNMENT": "Otsustati edastada ettepanek Vabariigi Valitsusele seisukoha kujundamiseks ja pöördumisele vastamiseks.",
 	"PARLIAMENT_DECISION_REJECT": "Otsustati esitatud ettepanek tagasi lükata.",
+	"PARLIAMENT_DECISION_RETURN": "Algatus tagastatud puuduste kõrvaldamiseks.",
 	"PARLIAMENT_DECISION_SOLVE_DIFFERENTLY": "Otsustati lahendada pöördumises püstitatud probleem muul viisil.",
 	"PARLIAMENT_FINISHED": "Algatuse menetlus Riigikogus on lõppenud",
 	"PARLIAMENT_HOME_PAGE_HEADER_TEXT": "Selle lehe kaudu saad Riigikogule koostada ja esitada kollektiivse ehk vähemalt 1000 allkirjaga pöördumise ning jälgida, mis algatusest edasi saab. ",

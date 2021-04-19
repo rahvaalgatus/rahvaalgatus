@@ -448,6 +448,7 @@ function attrsFromStatus(status) {
 	switch (code) {
 		case "REGISTREERITUD": return null
 		case "MENETLUSSE_VOETUD": return null
+		case "TAGASTATUD": return {parliament_decision: "return"}
 		case "TAGASI_LYKATUD": return {parliament_decision: "reject"}
 		case "MENETLUS_LOPETATUD": return null
 
@@ -786,6 +787,7 @@ function eventIdFromStatus(obj) {
 	switch (code) {
 		case "REGISTREERITUD":
 		case "MENETLUSSE_VOETUD":
+		case "TAGASTATUD":
 		case "MENETLUS_LOPETATUD": return code
 		case "TAGASI_LYKATUD": return "MENETLUS_LOPETATUD"
 		case "ARUTELU_KOMISJONIS": return code + "/" + obj.date
@@ -799,6 +801,7 @@ function eventTypeFromStatus(obj) {
 	switch (code) {
 		case "REGISTREERITUD": return "parliament-received"
 		case "MENETLUSSE_VOETUD": return "parliament-accepted"
+		case "TAGASTATUD": return "parliament-finished"
 		case "TAGASI_LYKATUD": return "parliament-finished"
 		case "MENETLUS_LOPETATUD": return "parliament-finished"
 		case "ARUTELU_KOMISJONIS": return "parliament-committee-meeting"

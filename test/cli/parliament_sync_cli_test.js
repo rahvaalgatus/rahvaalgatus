@@ -874,6 +874,20 @@ describe("ParliamentSyncCli", function() {
 				content: null
 			}],
 
+			"TAGASTATUD status": [{
+				statuses: [{date: "2018-10-24", status: {code: "TAGASTATUD"}}]
+			}, {
+				finished_in_parliament_at: new Date(2018, 9, 24),
+				parliament_decision: "return"
+			}, {
+				occurred_at: new Date(2018, 9, 24),
+				origin: "parliament",
+				external_id: "TAGASTATUD",
+				type: "parliament-finished",
+				title: null,
+				content: null
+			}],
+
 			"TAGASI_LYKATUD status": [{
 				statuses: [{date: "2018-10-24", status: {code: "TAGASI_LYKATUD"}}]
 			}, {

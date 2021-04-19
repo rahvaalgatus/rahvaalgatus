@@ -1979,7 +1979,9 @@ function EventsView(attrs) {
 							title = t("PARLIAMENT_FINISHED")
 
 							if (decision) content = <p class="text">{
-								decision == "reject"
+								decision == "return"
+								? t("PARLIAMENT_DECISION_RETURN")
+								: decision == "reject"
 								? t("PARLIAMENT_DECISION_REJECT")
 								: decision == "forward"
 								? t("PARLIAMENT_DECISION_FORWARD")

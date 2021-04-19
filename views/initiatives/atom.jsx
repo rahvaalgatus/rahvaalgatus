@@ -154,7 +154,9 @@ function EventEntryView(attrs) {
 			decision = initiative.parliament_decision
 
 			if (decision) content =
-				decision == "reject"
+				decision == "return"
+				? t("PARLIAMENT_DECISION_RETURN")
+				: decision == "reject"
 				? t("PARLIAMENT_DECISION_REJECT")
 				: decision == "forward"
 				? t("PARLIAMENT_DECISION_FORWARD")
