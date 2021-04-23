@@ -20,8 +20,6 @@ Kes saavad Rahvaalgatus.ee-st veel kasu?
 
 Rahvaalgatus.ee platvormi on püsti pannud ja seda haldab SA Eesti Koostöö Kogu tihedas koostöös Riigikogu Kantseleiga.
 
-Rahvaalgatus.ee platvorm on ka riikliku kohustusena Riigikantselei kureeritavas avatud valitsemise partnerluse tegevuskavas 2016-2018.
-
 ## <a id="tos"></a> Rahvaalgatus.ee kasutamise hea tava
 
 Osalusportaali Rahvaalgatus.ee kasutamise hea tava lähtub eesmärgist, et argumenteeritud arutelud aitavad luua pöördumisi, mis soodustavad Eestis eluolu parendamist.
