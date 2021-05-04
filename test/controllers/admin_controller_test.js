@@ -196,18 +196,18 @@ describe("AdminController", function() {
 				}))
 			})
 
-			it("must email subscribers interested in official events", function*() {
+			it("must email subscribers interested in events", function*() {
 				var subscriptions = yield subscriptionsDb.create([
 					new ValidSubscription({
 						initiative_uuid: this.initiative.uuid,
 						confirmed_at: new Date,
-						official_interest: false
+						event_interest: false
 					}),
 
 					new ValidSubscription({
 						initiative_uuid: null,
 						confirmed_at: new Date,
-						official_interest: false
+						event_interest: false
 					}),
 
 					new ValidSubscription({

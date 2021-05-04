@@ -187,8 +187,7 @@ describe("InitiativeCommentsController", function() {
 						initiative_uuid: this.initiative.uuid,
 						email: "user@example.com",
 						update_token: subscriptions[0].update_token,
-						official_interest: false,
-						author_interest: false,
+						event_interest: false,
 						comment_interest: true,
 						created_ip: "127.0.0.1",
 						created_at: new Date,
@@ -207,8 +206,7 @@ describe("InitiativeCommentsController", function() {
 						initiative_uuid: this.initiative.uuid,
 						email: "user@example.com",
 						confirmed_at: null,
-						official_interest: true,
-						author_interest: false,
+						event_interest: true,
 						comment_interest: false
 					}))
 
@@ -239,8 +237,7 @@ describe("InitiativeCommentsController", function() {
 					var sub = yield subscriptionsDb.create(new ValidSubscription({
 						email: "user@example.com",
 						confirmed_at: new Date,
-						official_interest: true,
-						author_interest: false,
+						event_interest: true,
 						comment_interest: false
 					}))
 
@@ -260,8 +257,7 @@ describe("InitiativeCommentsController", function() {
 						initiative_uuid: this.initiative.uuid,
 						email: "user@example.com",
 						update_token: subscriptions[1].update_token,
-						official_interest: false,
-						author_interest: false,
+						event_interest: false,
 						comment_interest: true,
 						created_ip: "127.0.0.1",
 						created_at: new Date,

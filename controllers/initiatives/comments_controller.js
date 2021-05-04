@@ -71,8 +71,7 @@ exports.router.post("/", next(function*(req, res) {
 			else if (subscribe) yield subscriptionsDb.create({
 				email: user.email,
 				initiative_uuid: initiative.uuid,
-				official_interest: false,
-				author_interest: false,
+				event_interest: false,
 				comment_interest: true,
 				created_at: new Date,
 				created_ip: req.ip,

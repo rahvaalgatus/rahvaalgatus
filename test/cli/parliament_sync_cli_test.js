@@ -444,7 +444,7 @@ describe("ParliamentSyncCli", function() {
 		initiative.parliament_synced_at.must.eql(syncedAt)
 	})
 
-	it("must email subscribers interested in official events", function*() {
+	it("must email subscribers interested in events", function*() {
 		var initiative = yield initiativesDb.create(new ValidInitiative({
 			uuid: INITIATIVE_UUID,
 			phase: "parliament",
@@ -457,13 +457,13 @@ describe("ParliamentSyncCli", function() {
 			new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date,
-				official_interest: false
+				event_interest: false
 			}),
 
 			new ValidSubscription({
 				initiative_uuid: null,
 				confirmed_at: new Date,
-				official_interest: false
+				event_interest: false
 			}),
 
 			new ValidSubscription({

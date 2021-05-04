@@ -7112,8 +7112,7 @@ describe("InitiativesController", function() {
 						initiative_uuid: initiative.uuid,
 						email: "user@example.com",
 						confirmation_sent_at: new Date,
-						official_interest: false,
-						author_interest: false,
+						event_interest: false,
 						comment_interest: false
 					}))
 
@@ -7135,8 +7134,7 @@ describe("InitiativesController", function() {
 					`).must.then.eql([{
 						__proto__: sub,
 						confirmed_at: new Date,
-						official_interest: true,
-						author_interest: true,
+						event_interest: true,
 						comment_interest: true
 					}])
 				})
@@ -7160,8 +7158,7 @@ describe("InitiativesController", function() {
 						initiative_uuid: initiative.uuid,
 						email: "user@example.com",
 						confirmed_at: pseudoDateTime(),
-						official_interest: false,
-						author_interest: false,
+						event_interest: false,
 						comment_interest: false
 					}))
 
@@ -7182,8 +7179,7 @@ describe("InitiativesController", function() {
 						SELECT * FROM initiative_subscriptions
 					`).must.then.eql([{
 						__proto__: sub,
-						official_interest: true,
-						author_interest: true,
+						event_interest: true,
 						comment_interest: true
 					}])
 				})
@@ -7959,13 +7955,13 @@ describe("InitiativesController", function() {
 						new ValidSubscription({
 							initiative_uuid: initiative.uuid,
 							confirmed_at: new Date,
-							official_interest: false
+							event_interest: false
 						}),
 
 						new ValidSubscription({
 							initiative_uuid: null,
 							confirmed_at: new Date,
-							official_interest: false
+							event_interest: false
 						}),
 
 						new ValidSubscription({
@@ -8484,13 +8480,13 @@ describe("InitiativesController", function() {
 							new ValidSubscription({
 								initiative_uuid: initiative.uuid,
 								confirmed_at: new Date,
-								official_interest: false
+								event_interest: false
 							}),
 
 							new ValidSubscription({
 								initiative_uuid: null,
 								confirmed_at: new Date,
-								official_interest: false
+								event_interest: false
 							}),
 
 							new ValidSubscription({
@@ -8816,13 +8812,13 @@ describe("InitiativesController", function() {
 							new ValidSubscription({
 								initiative_uuid: initiative.uuid,
 								confirmed_at: new Date,
-								official_interest: false
+								event_interest: false
 							}),
 
 							new ValidSubscription({
 								initiative_uuid: null,
 								confirmed_at: new Date,
-								official_interest: false
+								event_interest: false
 							}),
 
 							new ValidSubscription({

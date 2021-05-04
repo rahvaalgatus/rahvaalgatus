@@ -44,13 +44,13 @@ describe("InitiativeSignatureMilestonesCli", function() {
 			new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date,
-				official_interest: false
+				event_interest: false
 			}),
 
 			new ValidSubscription({
 				initiative_uuid: null,
 				confirmed_at: new Date,
-				official_interest: false
+				event_interest: false
 			}),
 
 			new ValidSubscription({

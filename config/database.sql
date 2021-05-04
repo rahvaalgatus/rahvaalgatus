@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS "initiative_subscriptions" (
   update_token TEXT UNIQUE NOT NULL DEFAULT (lower(hex(randomblob(8)))),
   created_ip TEXT NULL,
   origin TEXT NULL,
-  official_interest INTEGER NOT NULL DEFAULT 1,
+  event_interest INTEGER NOT NULL DEFAULT 1,
   author_interest INTEGER NOT NULL DEFAULT 1, comment_interest INTEGER NOT NULL DEFAULT 0,
 
 	PRIMARY KEY (initiative_uuid, email),
@@ -598,4 +598,5 @@ INSERT INTO migrations VALUES('20200815000000');
 INSERT INTO migrations VALUES('20200815000010');
 INSERT INTO migrations VALUES('20200822170508');
 INSERT INTO migrations VALUES('20200923141919');
+INSERT INTO migrations VALUES('20210504203340');
 COMMIT;

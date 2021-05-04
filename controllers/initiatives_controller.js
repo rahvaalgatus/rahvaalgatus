@@ -748,8 +748,7 @@ function* updateInitiativeToPublished(req, res) {
 		`)
 
 		if (subscription) yield subscriptionsDb.update(subscription, {
-			official_interest: true,
-			author_interest: true,
+			event_interest: true,
 			comment_interest: true,
 			confirmed_at: subscription.confirmed_at || new Date,
 			updated_at: new Date
@@ -872,7 +871,7 @@ function* updateInitiativePhaseToSign(req, res) {
 		yield Subscription.send(
 			message,
 
-			yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(
+			yield subscriptionsDb.searchConfirmedByInitiativeIdForEvent(
 				initiative.uuid
 			)
 		)
@@ -1017,7 +1016,7 @@ function* updateInitiativePhaseToParliament(req, res) {
 
 	yield Subscription.send(
 		message,
-		yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(initiative.uuid)
+		yield subscriptionsDb.searchConfirmedByInitiativeIdForEvent(initiative.uuid)
 	)
 
 	res.flash("notice", initiative.destination == "parliament"

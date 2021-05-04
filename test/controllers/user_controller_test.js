@@ -1470,8 +1470,7 @@ describe("UserController", function() {
 			var res = yield this.request("/user/subscriptions", {
 				method: "PUT",
 				form: {
-					"null[official_interest]": !subscription.official_interest,
-					"null[author_interest]": !subscription.author_interest,
+					"null[event_interest]": !subscription.event_interest,
 					"null[comment_interest]": !subscription.comment_interest
 				}
 			})
@@ -1482,8 +1481,7 @@ describe("UserController", function() {
 			yield subscriptionsDb.read(subscription).must.then.eql({
 				__proto__: subscription,
 				updated_at: new Date,
-				official_interest: !subscription.official_interest,
-				author_interest: !subscription.author_interest,
+				event_interest: !subscription.event_interest,
 				comment_interest: !subscription.comment_interest
 			})
 		})
@@ -1504,8 +1502,7 @@ describe("UserController", function() {
 			var res = yield this.request("/user/subscriptions", {
 				method: "PUT",
 				form: {
-					[uuid + "[official_interest]"]: !subscription.official_interest,
-					[uuid + "[author_interest]"]: !subscription.author_interest,
+					[uuid + "[event_interest]"]: !subscription.event_interest,
 					[uuid + "[comment_interest]"]: !subscription.comment_interest
 				}
 			})
@@ -1516,8 +1513,7 @@ describe("UserController", function() {
 			yield subscriptionsDb.read(subscription).must.then.eql({
 				__proto__: subscription,
 				updated_at: new Date,
-				official_interest: !subscription.official_interest,
-				author_interest: !subscription.author_interest,
+				event_interest: !subscription.event_interest,
 				comment_interest: !subscription.comment_interest
 			})
 		})
@@ -1538,8 +1534,7 @@ describe("UserController", function() {
 			var res = yield this.request("/user/subscriptions", {
 				method: "PUT",
 				form: {
-					[uuid + "[official_interest]"]: !subscription.official_interest,
-					[uuid + "[author_interest]"]: !subscription.author_interest,
+					[uuid + "[event_interest]"]: !subscription.event_interest,
 					[uuid + "[comment_interest]"]: !subscription.comment_interest
 				}
 			})
@@ -1550,8 +1545,7 @@ describe("UserController", function() {
 			yield subscriptionsDb.read(subscription).must.then.eql({
 				__proto__: subscription,
 				updated_at: new Date,
-				official_interest: !subscription.official_interest,
-				author_interest: !subscription.author_interest,
+				event_interest: !subscription.event_interest,
 				comment_interest: !subscription.comment_interest
 			})
 		})
@@ -1820,8 +1814,7 @@ describe("UserController", function() {
 			var res = yield this.request("/user/subscriptions", {
 				method: "PUT",
 				form: {
-					"null[official_interest]": !subscription.official_interest,
-					"null[author_interest]": !subscription.author_interest,
+					"null[event_interest]": !subscription.event_interest,
 					"null[comment_interest]": !subscription.comment_interest
 				}
 			})

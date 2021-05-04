@@ -16,9 +16,11 @@ exports.parse = function(attrs) {
 		confirmation_sent_at: attrs.confirmation_sent_at &&
 			new Date(attrs.confirmation_sent_at),
 
-		official_interest: !!attrs.official_interest,
-		author_interest: !!attrs.author_interest,
-		comment_interest: !!attrs.comment_interest
+		event_interest: !!attrs.event_interest,
+		comment_interest: !!attrs.comment_interest,
+
+		// Author interest is unused, but still present in the database.
+		author_interest: !!attrs.author_interest
 	}, attrs)
 }
 
@@ -30,12 +32,8 @@ exports.searchConfirmedByInitiativeIdWith = function(id, filter) {
 	return searchConfirmedByInitiativeIdWith(this, filter, id)
 }
 
-exports.searchConfirmedByInitiativeIdForOfficial = function(id) {
-	return searchConfirmedByInitiativeIdWith(this, sql`official_interest`, id)
-}
-
-exports.searchConfirmedByInitiativeIdForAuthor = function(id) {
-	return searchConfirmedByInitiativeIdWith(this, sql`author_interest`, id)
+exports.searchConfirmedByInitiativeIdForEvent = function(id) {
+	return searchConfirmedByInitiativeIdWith(this, sql`event_interest`, id)
 }
 
 exports.searchConfirmedByInitiativeIdForComment = function(id) {
@@ -45,11 +43,9 @@ exports.searchConfirmedByInitiativeIdForComment = function(id) {
 exports.countConfirmedByInitiativeId =
 	countConfirmedByInitiativeIdWith.bind(null, sql`1`)
 
-exports.countConfirmedByInitiativeIdForOfficial =
-	countConfirmedByInitiativeIdWith.bind(null, sql`official_interest`)
+exports.countConfirmedByInitiativeIdForEvent =
+	countConfirmedByInitiativeIdWith.bind(null, sql`event_interest`)
 
-exports.countConfirmedByInitiativeIdForAuthor =
-	countConfirmedByInitiativeIdWith.bind(null, sql`author_interest`)
 
 function countConfirmedByInitiativeIdWith(filter, id) {
 	return sqlite(sql`

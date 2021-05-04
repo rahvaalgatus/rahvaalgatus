@@ -259,7 +259,7 @@ describe("InitiativeEventsController", function() {
 					})
 				})
 
-				it("must email subscribers interested in author events", function*() {
+				it("must email subscribers interested in events", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: "sign"
@@ -269,13 +269,13 @@ describe("InitiativeEventsController", function() {
 						new ValidSubscription({
 							initiative_uuid: initiative.uuid,
 							confirmed_at: new Date,
-							author_interest: false
+							event_interest: false
 						}),
 
 						new ValidSubscription({
 							initiative_uuid: null,
 							confirmed_at: new Date,
-							author_interest: false
+							event_interest: false
 						}),
 
 						new ValidSubscription({
@@ -385,7 +385,7 @@ describe("InitiativeEventsController", function() {
 					})])
 				})
 
-				it("must email subscribers interested in author events", function*() {
+				it("must email subscribers interested in events", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: "sign"
@@ -395,13 +395,13 @@ describe("InitiativeEventsController", function() {
 						new ValidSubscription({
 							initiative_uuid: initiative.uuid,
 							confirmed_at: new Date,
-							author_interest: false
+							event_interest: false
 						}),
 
 						new ValidSubscription({
 							initiative_uuid: null,
 							confirmed_at: new Date,
-							author_interest: false
+							event_interest: false
 						}),
 
 						new ValidSubscription({

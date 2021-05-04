@@ -209,7 +209,7 @@ exports.router.post("/:id/events", next(function*(req, res) {
 
 			yield Subscription.send(
 				message,
-				yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(
+				yield subscriptionsDb.searchConfirmedByInitiativeIdForEvent(
 					initiative.uuid
 				)
 			)

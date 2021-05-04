@@ -337,8 +337,7 @@ describe("SubscriptionsController", function() {
 			it("must update if already subscribed", function*() {
 				var subscription = yield subscriptionsDb.create(new ValidSubscription({
 					confirmed_at: pseudoDateTime(),
-					official_interest: false,
-					author_interest: false,
+					event_interest: false,
 					comment_interest: true
 				}))
 
@@ -360,8 +359,7 @@ describe("SubscriptionsController", function() {
 					__proto__: subscription,
 					confirmed_at: new Date,
 					updated_at: new Date,
-					official_interest: true,
-					author_interest: true
+					event_interest: true
 				})
 
 				this.emails.length.must.equal(0)
@@ -504,8 +502,7 @@ describe("SubscriptionsController", function() {
 			var res = yield this.request(path, {
 				method: "PUT",
 				form: {
-					"null[official_interest]": !subscription.official_interest,
-					"null[author_interest]": !subscription.author_interest,
+					"null[event_interest]": !subscription.event_interest,
 					"null[comment_interest]": !subscription.comment_interest
 				}
 			})
@@ -516,8 +513,7 @@ describe("SubscriptionsController", function() {
 			yield subscriptionsDb.read(subscription).must.then.eql({
 				__proto__: subscription,
 				updated_at: new Date,
-				official_interest: !subscription.official_interest,
-				author_interest: !subscription.author_interest,
+				event_interest: !subscription.event_interest,
 				comment_interest: !subscription.comment_interest
 			})
 		})
@@ -540,8 +536,7 @@ describe("SubscriptionsController", function() {
 			var res = yield this.request(path, {
 				method: "PUT",
 				form: {
-					[uuid + "[official_interest]"]: !subscription.official_interest,
-					[uuid + "[author_interest]"]: !subscription.author_interest,
+					[uuid + "[event_interest]"]: !subscription.event_interest,
 					[uuid + "[comment_interest]"]: !subscription.comment_interest
 				}
 			})
@@ -552,8 +547,7 @@ describe("SubscriptionsController", function() {
 			yield subscriptionsDb.read(subscription).must.then.eql({
 				__proto__: subscription,
 				updated_at: new Date,
-				official_interest: !subscription.official_interest,
-				author_interest: !subscription.author_interest,
+				event_interest: !subscription.event_interest,
 				comment_interest: !subscription.comment_interest
 			})
 		})
@@ -574,8 +568,7 @@ describe("SubscriptionsController", function() {
 			var res = yield this.request(path, {
 				method: "PUT",
 				form: {
-					[uuid + "[official_interest]"]: !subscription.official_interest,
-					[uuid + "[author_interest]"]: !subscription.author_interest,
+					[uuid + "[event_interest]"]: !subscription.event_interest,
 					[uuid + "[comment_interest]"]: !subscription.comment_interest
 				}
 			})
@@ -586,8 +579,7 @@ describe("SubscriptionsController", function() {
 			yield subscriptionsDb.read(subscription).must.then.eql({
 				__proto__: subscription,
 				updated_at: new Date,
-				official_interest: !subscription.official_interest,
-				author_interest: !subscription.author_interest,
+				event_interest: !subscription.event_interest,
 				comment_interest: !subscription.comment_interest
 			})
 		})
@@ -610,7 +602,7 @@ describe("SubscriptionsController", function() {
 			var path = `/subscriptions?update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
 				method: "PUT",
-				form: {[uuid + "[official_interest]"]: !subscription.official_interest}
+				form: {[uuid + "[event_interest]"]: !subscription.event_interest}
 			})
 
 			res.statusCode.must.equal(303)
@@ -640,7 +632,7 @@ describe("SubscriptionsController", function() {
 			var path = `/subscriptions?update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
 				method: "PUT",
-				form: {[uuid + "[official_interest]"]: !subscription.official_interest}
+				form: {[uuid + "[event_interest]"]: !subscription.event_interest}
 			})
 
 			res.statusCode.must.equal(303)

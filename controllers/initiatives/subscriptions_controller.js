@@ -58,8 +58,7 @@ exports.router.post("/", next(function*(req, res) {
 	) {
 		yield subscriptionsDb.update(subscription, {
 			confirmed_at: subscription.confirmed_at || new Date,
-			official_interest: true,
-			author_interest: true,
+			event_interest: true,
 			updated_at: new Date
 		})
 

@@ -74,8 +74,7 @@ exports.router.post("/", next(function*(req, res) {
 	) {
 		yield subscriptionsDb.update(subscription, {
 			confirmed_at: new Date,
-			official_interest: true,
-			author_interest: true,
+			event_interest: true,
 			updated_at: new Date
 		})
 
@@ -193,10 +192,8 @@ function parse(obj) {
 
 	if ("delete" in obj)
 		attrs.delete = _.parseBoolean(obj.delete)
-	if ("official_interest" in obj)
-		attrs.official_interest = _.parseBoolean(obj.official_interest)
-	if ("author_interest" in obj)
-		attrs.author_interest = _.parseBoolean(obj.author_interest)
+	if ("event_interest" in obj)
+		attrs.event_interest = _.parseBoolean(obj.event_interest)
 	if ("comment_interest" in obj)
 		attrs.comment_interest = _.parseBoolean(obj.comment_interest)
 

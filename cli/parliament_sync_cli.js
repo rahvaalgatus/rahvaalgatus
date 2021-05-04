@@ -993,7 +993,7 @@ function* sendParliamentEventEmail(initiative, events) {
 
 	yield Subscription.send(
 		message,
-		yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(
+		yield subscriptionsDb.searchConfirmedByInitiativeIdForEvent(
 			initiative.uuid
 		)
 	)

@@ -18,7 +18,7 @@ exports.router.get("/new", next(assertAuthor), next(function*(req, res) {
 	var initiative = req.initiative
 
 	var subscriberCount =
-		yield subscriptionsDb.countConfirmedByInitiativeIdForAuthor(initiative.uuid)
+		yield subscriptionsDb.countConfirmedByInitiativeIdForEvent(initiative.uuid)
 
 	var type = req.query.type
 	type = EVENT_TYPES.includes(type) ? type : "text"
@@ -90,7 +90,7 @@ exports.router.post("/", next(assertAuthor), next(function*(req, res) {
 
 	if (message) yield Subscription.send(
 		message,
-		yield subscriptionsDb.searchConfirmedByInitiativeIdForAuthor(
+		yield subscriptionsDb.searchConfirmedByInitiativeIdForEvent(
 			initiative.uuid
 		)
 	)

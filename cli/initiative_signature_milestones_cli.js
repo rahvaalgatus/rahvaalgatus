@@ -104,7 +104,9 @@ function* updateMilestones([initiative, milestones]) {
 
 		yield Subscription.send(
 			message,
-			yield subscriptionsDb.searchConfirmedByInitiativeIdForOfficial(initiative.uuid)
+			yield subscriptionsDb.searchConfirmedByInitiativeIdForEvent(
+				initiative.uuid
+			)
 		)
 	}
 }

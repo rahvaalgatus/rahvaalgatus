@@ -213,8 +213,7 @@ describe("InitiativeSubscriptionsController", function() {
 				var subscription = yield subscriptionsDb.create(new ValidSubscription({
 					initiative_uuid: this.initiative.uuid,
 					confirmed_at: pseudoDateTime(),
-					official_interest: false,
-					author_interest: false,
+					event_interest: false,
 					comment_interest: true,
 				}))
 
@@ -236,8 +235,7 @@ describe("InitiativeSubscriptionsController", function() {
 				`).must.then.eql({
 					__proto__: subscription,
 					updated_at: new Date,
-					official_interest: true,
-					author_interest: true
+					event_interest: true
 				})
 
 				this.emails.length.must.equal(0)

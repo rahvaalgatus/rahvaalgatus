@@ -77,20 +77,11 @@ function SubscriptionsView(attrs) {
 
 						<label class="form-checkbox">
 							<FormCheckbox
-								name={`${scope}[official_interest]`}
-								checked={subscription.official_interest}
+								name={`${scope}[event_interest]`}
+								checked={subscription.event_interest}
 							/>
 
-							<span>{t("SUBSCRIPTION_OFFICIAL_INTEREST")}</span>
-						</label>
-
-						<label class="form-checkbox">
-							<FormCheckbox
-								name={`${scope}[author_interest]`}
-								checked={subscription.author_interest}
-							/>
-
-							<span>{t("SUBSCRIPTION_AUTHOR_INTEREST")}</span>
+							<span>{t("SUBSCRIPTION_EVENT_INTEREST")}</span>
 						</label>
 
 						<label class="form-checkbox">
