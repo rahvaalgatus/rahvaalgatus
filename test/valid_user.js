@@ -4,14 +4,12 @@ exports.randomPersonalId = randomPersonalId
 
 function newValidUser(attrs) {
 	var createdAt = new Date
-
 	var country = attrs && attrs.country || "EE"
+	var name = attrs && attrs.name || "John " + _.uniqueId()
 
 	var personalId = attrs && "personal_id" in attrs
 		? attrs.personal_id
 		: randomPersonalId()
-
-	var name = attrs && attrs.name || "John " + _.uniqueId()
 
 	return _.assign({
 		uuid: _.uuidV4(),
