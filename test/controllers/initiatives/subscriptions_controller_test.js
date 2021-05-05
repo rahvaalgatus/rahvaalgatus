@@ -318,14 +318,14 @@ describe("InitiativeSubscriptionsController", function() {
 				SELECT * FROM initiative_subscriptions
 			`).must.then.eql([{
 				__proto__: subscription,
-				updated_at: new Date,
 				confirmation_sent_at: new Date
 			}])
 
 			this.emails.length.must.equal(1)
 		})
 
-		it("must send reminder email if an hour has passed", function*() {
+		it("must send reminder email if confirmed and an hour has passed",
+			function*() {
 			var subscription = yield subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: this.initiative.uuid,
 				confirmed_at: new Date,
@@ -344,7 +344,6 @@ describe("InitiativeSubscriptionsController", function() {
 				SELECT * FROM initiative_subscriptions
 			`).must.then.eql([{
 				__proto__: subscription,
-				updated_at: new Date,
 				confirmation_sent_at: new Date
 			}])
 

@@ -103,11 +103,7 @@ exports.router.post("/", next(function*(req, res) {
 			})
 		})
 
-		yield subscriptionsDb.update(subscription, {
-			confirmation_sent_at: new Date,
-			updated_at: new Date
-		})
-
+		yield subscriptionsDb.update(subscription, {confirmation_sent_at: new Date})
 		res.flash("notice", req.t("CONFIRM_INITIATIVES_SUBSCRIPTION"))
 	}
 	else res.flash("notice", req.t("CONFIRM_INITIATIVES_SUBSCRIPTION"))
