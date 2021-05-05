@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS "initiative_subscriptions" (
   created_ip TEXT NULL,
   origin TEXT NULL,
   event_interest INTEGER NOT NULL DEFAULT 1,
-  author_interest INTEGER NOT NULL DEFAULT 1, comment_interest INTEGER NOT NULL DEFAULT 0,
+  author_interest INTEGER NOT NULL DEFAULT 0, comment_interest INTEGER NOT NULL DEFAULT 0, new_interest INTEGER NOT NULL DEFAULT 0,
 
 	PRIMARY KEY (initiative_uuid, email),
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE,
@@ -113,7 +113,10 @@ CREATE TABLE IF NOT EXISTS "initiative_subscriptions" (
 	CHECK (length(email) > 0),
 
 	CONSTRAINT iniative_subscriptions_update_token_length
-	CHECK (length(update_token) > 0)
+	CHECK (length(update_token) > 0),
+
+	CONSTRAINT new_interest_for_all_initiatives
+	CHECK (initiative_uuid IS NULL OR NOT new_interest)
 );
 CREATE UNIQUE INDEX index_initiative_subscriptions_initiative_uuid_and_email
 ON initiative_subscriptions (COALESCE(initiative_uuid, ""), email);
@@ -599,4 +602,6 @@ INSERT INTO migrations VALUES('20200815000010');
 INSERT INTO migrations VALUES('20200822170508');
 INSERT INTO migrations VALUES('20200923141919');
 INSERT INTO migrations VALUES('20210504203340');
+INSERT INTO migrations VALUES('20210504210115');
+INSERT INTO migrations VALUES('20210505142844');
 COMMIT;

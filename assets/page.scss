@@ -1241,13 +1241,13 @@ button.inherited {
 		}
 
 		.initiatives-subscription-form-view {
+			text-align: left;
 			display: block;
-			text-align: center;
 			margin-top: 2rem;
+			margin: 2rem auto 0;
+			max-width: 50rem;
 
 			p {
-				margin: 0 auto;
-				max-width: 40rem;
 				font-size: 1.6rem;
 				line-height: 1.5;
 			}
@@ -1255,10 +1255,19 @@ button.inherited {
 			input[name=email] {
 				display: inline-block;
 				margin-top: 1rem;
+				width: 100%;
 				max-width: 32rem;
+				margin-bottom: 0.5rem;
 			}
 
-			button { margin-left: 1rem; }
+			.form-checkbox {
+				margin-top: 0.3rem;
+			}
+
+			button {
+				display: block;
+				margin-top: 0.7rem;
+			}
 		}
 
 		.social-media-button {

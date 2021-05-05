@@ -13,6 +13,12 @@ exports.router = Router({mergeParams: true})
 exports.parse = parse
 exports.updateSubscriptions = updateSubscriptions
 
+var DEFAULT_INITIATIVES_INTERESTS = {
+	new_interest: true,
+	event_interest: true,
+	comment_interest: false
+}
+
 var readSubscriptionFromQuery = next(withSubscription.bind(null, (req) => [
 	req.query.initiative,
 	req.query["update-token"]
@@ -42,6 +48,7 @@ exports.router.post("/", next(function*(req, res) {
 
 	var user = req.user
 	var email = req.body.email
+	var attrs = _.defaults(parse(req.body), DEFAULT_INITIATIVES_INTERESTS)
 
 	if (!_.isValidEmail(email))
 		return void res.status(422).render("form_error_page.jsx", {
@@ -52,6 +59,9 @@ exports.router.post("/", next(function*(req, res) {
 	try {
 		subscription = yield subscriptionsDb.create({
 			email: email,
+			new_interest: attrs.new_interest,
+			event_interest: attrs.event_interest,
+			comment_interest: attrs.comment_interest,
 			created_at: new Date,
 			created_ip: req.ip,
 			updated_at: new Date
@@ -74,7 +84,9 @@ exports.router.post("/", next(function*(req, res) {
 	) {
 		yield subscriptionsDb.update(subscription, {
 			confirmed_at: new Date,
-			event_interest: true,
+			new_interest: attrs.new_interest,
+			event_interest: attrs.event_interest,
+			comment_interest: attrs.comment_interest,
 			updated_at: new Date
 		})
 
@@ -188,6 +200,9 @@ function parse(obj) {
 
 	if ("delete" in obj)
 		attrs.delete = _.parseBoolean(obj.delete)
+
+	if ("new_interest" in obj)
+		attrs.new_interest = _.parseBoolean(obj.new_interest)
 	if ("event_interest" in obj)
 		attrs.event_interest = _.parseBoolean(obj.event_interest)
 	if ("comment_interest" in obj)
@@ -231,6 +246,7 @@ function updateSubscriptions(subscriptions, form) {
 		var attrs = attrsByInitiativeUuid[subscription.initiative_uuid]
 		if (attrs == null) return Promise.resolve(subscription)
 		if (attrs.delete) return subscriptionsDb.delete(subscription)
+		if (subscription.initiative_uuid) attrs.new_interest = false
 
 		return subscriptionsDb.update(subscription, {
 			__proto__: attrs,

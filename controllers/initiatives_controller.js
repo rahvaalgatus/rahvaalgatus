@@ -764,6 +764,30 @@ function* updateInitiativeToPublished(req, res) {
 		})
 	}
 
+	if (initiative.published_at == null) {
+		var message = yield messagesDb.create({
+			initiative_uuid: initiative.uuid,
+			origin: "status",
+			created_at: new Date,
+			updated_at: new Date,
+
+			title: t("INITIATIVE_PUBLISHED_MESSAGE_TITLE", {
+				initiativeTitle: initiative.title
+			}),
+
+			text: renderEmail("et", "INITIATIVE_PUBLISHED_MESSAGE_BODY", {
+				initiativeTitle: initiative.title,
+				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+				authorName: user.name
+			})
+		})
+
+		yield Subscription.send(
+			message,
+			yield subscriptionsDb.searchConfirmedForNewInitiative()
+		)
+	}
+
 	res.flash("notice", initiative.published_at == null
 		? req.t("PUBLISHED_INITIATIVE")
 		: req.t("INITIATIVE_DISCUSSION_DEADLINE_UPDATED")

@@ -8,6 +8,7 @@ var I18n = require("root/lib/i18n")
 var {Section} = require("./page")
 var {Flash} = require("./page")
 var {Form} = require("./page")
+var FormCheckbox = Page.FormCheckbox
 var {InitiativeBoxesView} = require("./initiatives/index_page")
 var {InitiativeBoxView} = require("./initiatives/index_page")
 var EMPTY_ARR = Array.prototype
@@ -228,7 +229,7 @@ function HomePage(attrs) {
 		>
 			<h2>
 				<a href="https://kogu.ee">
-					<img src={"/assets/kogu-blue.svg"} alt={t("KOGU")} />
+					<img src="/assets/kogu-blue.svg" alt={t("KOGU")} />
 				</a>
 
 				<span>{t("HOME_PAGE_NEWS_TITLE")}</span>
@@ -346,6 +347,21 @@ function InitiativesSubscriptionForm(attrs) {
 				value={user && (user.email || user.unconfirmed_email)}
 				class="form-input"
 			/>
+
+			<label class="form-checkbox">
+				<FormCheckbox name="new_interest" checked />
+				<span>{t("SUBSCRIPTIONS_NEW_INTEREST")}</span>
+			</label>
+
+			<label class="form-checkbox">
+				<FormCheckbox name="event_interest" checked />
+				<span>{t("SUBSCRIPTIONS_EVENT_INTEREST")}</span>
+			</label>
+
+			<label class="form-checkbox">
+				<FormCheckbox name="comment_interest" />
+				<span>{t("SUBSCRIPTIONS_COMMENT_INTEREST")}</span>
+			</label>
 
 			<button type="submit" class="primary-button">
 				{t("SUBSCRIBE_TO_INITIATIVES_BUTTON")}

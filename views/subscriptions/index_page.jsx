@@ -75,13 +75,27 @@ function SubscriptionsView(attrs) {
 							hidden
 						/>
 
+						{subscription.initiative_uuid == null ? <label
+							class="form-checkbox"
+						>
+							<FormCheckbox
+								name={`${scope}[new_interest]`}
+								checked={subscription.new_interest}
+							/>
+
+							<span>{t("SUBSCRIPTIONS_NEW_INTEREST")}</span>
+						</label> : null}
+
 						<label class="form-checkbox">
 							<FormCheckbox
 								name={`${scope}[event_interest]`}
 								checked={subscription.event_interest}
 							/>
 
-							<span>{t("SUBSCRIPTION_EVENT_INTEREST")}</span>
+							<span>{subscription.initiative_uuid == null
+								? t("SUBSCRIPTIONS_EVENT_INTEREST")
+								: t("SUBSCRIPTION_EVENT_INTEREST")
+							}</span>
 						</label>
 
 						<label class="form-checkbox">
@@ -90,7 +104,10 @@ function SubscriptionsView(attrs) {
 								checked={subscription.comment_interest}
 							/>
 
-							<span>{t("SUBSCRIPTION_COMMENT_INTEREST")}</span>
+							<span>{subscription.initiative_uuid == null
+								? t("SUBSCRIPTIONS_COMMENT_INTEREST")
+								: t("SUBSCRIPTION_COMMENT_INTEREST")
+							}</span>
 						</label>
 
 						<p class="delete-phrase">{t("FORM_OR")} <label

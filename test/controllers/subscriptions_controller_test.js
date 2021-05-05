@@ -190,7 +190,12 @@ describe("SubscriptionsController", function() {
 		it("must subscribe", function*() {
 			var res = yield this.request("/subscriptions", {
 				method: "POST",
-				form: {email: "user@example.com"}
+				form: {
+					email: "user@example.com",
+					new_interest: true,
+					event_interest: true,
+					comment_interest: true
+				}
 			})
 
 			res.statusCode.must.equal(303)
@@ -207,6 +212,9 @@ describe("SubscriptionsController", function() {
 				email: "user@example.com",
 				created_ip: "127.0.0.1",
 				confirmation_sent_at: new Date,
+				new_interest: true,
+				event_interest: true,
+				comment_interest: true,
 				update_token: subscription.update_token
 			}))
 
@@ -224,6 +232,29 @@ describe("SubscriptionsController", function() {
 
 			res.statusCode.must.equal(200)
 			res.body.must.include(t("CONFIRM_INITIATIVES_SUBSCRIPTION"))
+		})
+
+		it("must subscribe given only one interest", function*() {
+			var res = yield this.request("/subscriptions", {
+				method: "POST",
+				form: {email: "user@example.com", comment_interest: true}
+			})
+
+			res.statusCode.must.equal(303)
+
+			var subscription = yield subscriptionsDb.read(sql`
+				SELECT * FROM initiative_subscriptions
+			`)
+
+			subscription.must.eql(new ValidSubscription({
+				email: "user@example.com",
+				created_ip: "127.0.0.1",
+				confirmation_sent_at: new Date,
+				new_interest: true,
+				event_interest: true,
+				comment_interest: true,
+				update_token: subscription.update_token
+			}))
 		})
 
 		describe("when logged in", function() {
@@ -250,6 +281,8 @@ describe("SubscriptionsController", function() {
 					email: "user@example.com",
 					created_ip: "127.0.0.1",
 					confirmed_at: new Date,
+					new_interest: true,
+					event_interest: true,
 					update_token: subscription.update_token
 				}))
 
@@ -284,6 +317,8 @@ describe("SubscriptionsController", function() {
 				subscription.must.eql(new ValidSubscription({
 					email: "usER@examPLE.com",
 					created_ip: "127.0.0.1",
+					new_interest: true,
+					event_interest: true,
 					confirmed_at: new Date,
 					update_token: subscription.update_token
 				}))
@@ -320,6 +355,8 @@ describe("SubscriptionsController", function() {
 					email: "user@example.com",
 					created_ip: "127.0.0.1",
 					confirmation_sent_at: new Date,
+					new_interest: true,
+					event_interest: true,
 					update_token: subscription.update_token
 				}))
 
@@ -337,6 +374,7 @@ describe("SubscriptionsController", function() {
 			it("must update if already subscribed", function*() {
 				var subscription = yield subscriptionsDb.create(new ValidSubscription({
 					confirmed_at: pseudoDateTime(),
+					new_interest: true,
 					event_interest: false,
 					comment_interest: true
 				}))
@@ -348,7 +386,12 @@ describe("SubscriptionsController", function() {
 
 				var res = yield this.request("/subscriptions", {
 					method: "POST",
-					form: {email: subscription.email}
+					form: {
+						email: subscription.email,
+						new_interest: false,
+						event_interest: true,
+						comment_interest: true
+					}
 				})
 
 				res.statusCode.must.equal(303)
@@ -359,7 +402,9 @@ describe("SubscriptionsController", function() {
 					__proto__: subscription,
 					confirmed_at: new Date,
 					updated_at: new Date,
-					event_interest: true
+					new_interest: false,
+					event_interest: true,
+					comment_interest: true
 				})
 
 				this.emails.length.must.equal(0)
@@ -494,13 +539,17 @@ describe("SubscriptionsController", function() {
 
 		it("must update subscriptions to initiatives", function*() {
 			var subscription = yield subscriptionsDb.create(new ValidSubscription({
-				confirmed_at: new Date
+				confirmed_at: new Date,
+				new_interest: true,
+				event_interest: true,
+				comment_interest: false
 			}))
 
 			var path = `/subscriptions?update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
 				method: "PUT",
 				form: {
+					"null[new_interest]": !subscription.new_interest,
 					"null[event_interest]": !subscription.event_interest,
 					"null[comment_interest]": !subscription.comment_interest
 				}
@@ -512,6 +561,7 @@ describe("SubscriptionsController", function() {
 			yield subscriptionsDb.read(subscription).must.then.eql({
 				__proto__: subscription,
 				updated_at: new Date,
+				new_interest: !subscription.new_interest,
 				event_interest: !subscription.event_interest,
 				comment_interest: !subscription.comment_interest
 			})
@@ -525,7 +575,9 @@ describe("SubscriptionsController", function() {
 
 			var subscription = yield subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: initiative.uuid,
-				confirmed_at: new Date
+				confirmed_at: new Date,
+				event_interest: true,
+				comment_interest: false
 			}))
 
 			var uuid = initiative.uuid
@@ -548,6 +600,35 @@ describe("SubscriptionsController", function() {
 				updated_at: new Date,
 				event_interest: !subscription.event_interest,
 				comment_interest: !subscription.comment_interest
+			})
+		})
+
+		it("must not update new_interest of subscription to initiative",
+			function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				published_at: new Date
+			}))
+
+			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+				initiative_uuid: initiative.uuid,
+				confirmed_at: new Date
+			}))
+
+			var uuid = initiative.uuid
+			var path = `/subscriptions`
+			path += `?initiative=${subscription.initiative_uuid}`
+			path += `&update-token=${subscription.update_token}`
+			var res = yield this.request(path, {
+				method: "PUT",
+				form: {[uuid + "[new_interest]"]: true}
+			})
+
+			res.statusCode.must.equal(303)
+
+			yield subscriptionsDb.read(subscription).must.then.eql({
+				__proto__: subscription,
+				updated_at: new Date
 			})
 		})
 

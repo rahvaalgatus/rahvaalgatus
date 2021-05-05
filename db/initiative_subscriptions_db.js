@@ -16,6 +16,7 @@ exports.parse = function(attrs) {
 		confirmation_sent_at: attrs.confirmation_sent_at &&
 			new Date(attrs.confirmation_sent_at),
 
+		new_interest: !!attrs.new_interest,
 		event_interest: !!attrs.event_interest,
 		comment_interest: !!attrs.comment_interest,
 
@@ -30,6 +31,16 @@ exports.searchConfirmedByInitiativeId = function(id) {
 
 exports.searchConfirmedByInitiativeIdWith = function(id, filter) {
 	return searchConfirmedByInitiativeIdWith(this, filter, id)
+}
+
+exports.searchConfirmedForNewInitiative = function() {
+	return this.search(sql`
+		SELECT * FROM initiative_subscriptions
+		WHERE initiative_uuid IS NULL
+		AND confirmed_at IS NOT NULL
+		AND new_interest
+		ORDER BY email
+	`)
 }
 
 exports.searchConfirmedByInitiativeIdForEvent = function(id) {
