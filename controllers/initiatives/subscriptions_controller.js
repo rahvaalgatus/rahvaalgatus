@@ -38,7 +38,8 @@ exports.router.post("/", next(function*(req, res) {
 			email: email,
 			created_at: new Date,
 			created_ip: req.ip,
-			updated_at: new Date
+			updated_at: new Date,
+			event_interest: true
 		})
 	}
 	catch (err) {

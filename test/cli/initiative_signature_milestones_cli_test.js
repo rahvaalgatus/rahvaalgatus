@@ -55,12 +55,14 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 			new ValidSubscription({
 				initiative_uuid: initiative.uuid,
-				confirmed_at: new Date
+				confirmed_at: new Date,
+				event_interest: true
 			}),
 
 			new ValidSubscription({
 				initiative_uuid: null,
-				confirmed_at: new Date
+				confirmed_at: new Date,
+				event_interest: true
 			})
 		])
 
@@ -122,7 +124,8 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 			var subscription = yield subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: initiative.uuid,
-				confirmed_at: new Date
+				confirmed_at: new Date,
+				event_interest: true
 			}))
 
 			yield cli()
@@ -190,7 +193,8 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 			var subscription = yield subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: initiative.uuid,
-				confirmed_at: new Date
+				confirmed_at: new Date,
+				event_interest: true
 			}))
 
 			yield cli()
@@ -249,12 +253,14 @@ describe("InitiativeSignatureMilestonesCli", function() {
 		yield subscriptionsDb.create([
 			new ValidSubscription({
 				initiative_uuid: initiative.uuid,
-				confirmed_at: new Date
+				confirmed_at: new Date,
+				event_interest: true
 			}),
 
 			new ValidSubscription({
 				initiative_uuid: null,
-				confirmed_at: new Date
+				confirmed_at: new Date,
+				event_interest: true
 			})
 		])
 
@@ -283,12 +289,14 @@ describe("InitiativeSignatureMilestonesCli", function() {
 		yield subscriptionsDb.create([
 			new ValidSubscription({
 				initiative_uuid: initiative.uuid,
-				confirmed_at: new Date
+				confirmed_at: new Date,
+				event_interest: true
 			}),
 
 			new ValidSubscription({
 				initiative_uuid: null,
-				confirmed_at: new Date
+				confirmed_at: new Date,
+				event_interest: true
 			})
 		])
 
@@ -311,12 +319,14 @@ describe("InitiativeSignatureMilestonesCli", function() {
 		yield subscriptionsDb.create([
 			new ValidSubscription({
 				initiative_uuid: initiative.uuid,
-				confirmed_at: new Date
+				confirmed_at: new Date,
+				event_interest: true
 			}),
 
 			new ValidSubscription({
 				initiative_uuid: null,
-				confirmed_at: new Date
+				confirmed_at: new Date,
+				event_interest: true
 			})
 		])
 
@@ -339,12 +349,14 @@ describe("InitiativeSignatureMilestonesCli", function() {
 		yield subscriptionsDb.create([
 			new ValidSubscription({
 				initiative_uuid: initiative.uuid,
-				confirmed_at: new Date
+				confirmed_at: new Date,
+				event_interest: true
 			}),
 
 			new ValidSubscription({
 				initiative_uuid: null,
-				confirmed_at: new Date
+				confirmed_at: new Date,
+				event_interest: true
 			})
 		])
 
@@ -389,12 +401,14 @@ describe("InitiativeSignatureMilestonesCli", function() {
 			yield subscriptionsDb.create([
 				new ValidSubscription({
 					initiative_uuid: initiative.uuid,
-					confirmed_at: new Date
+					confirmed_at: new Date,
+					event_interest: true
 				}),
 
 				new ValidSubscription({
 					initiative_uuid: null,
-					confirmed_at: new Date
+					confirmed_at: new Date,
+					event_interest: true
 				})
 			])
 
@@ -432,12 +446,14 @@ describe("InitiativeSignatureMilestonesCli", function() {
 		yield subscriptionsDb.create([
 			new ValidSubscription({
 				initiative_uuid: initiative.uuid,
-				confirmed_at: new Date
+				confirmed_at: new Date,
+				event_interest: true
 			}),
 
 			new ValidSubscription({
 				initiative_uuid: null,
-				confirmed_at: new Date
+				confirmed_at: new Date,
+				event_interest: true
 			})
 		])
 
@@ -458,9 +474,10 @@ describe("InitiativeSignatureMilestonesCli", function() {
 			yield createSignatures(5, DateFns.addHours(new Date, i), initiative)
 		})
 
-		yield subscriptionsDb.create([
-			new ValidSubscription({confirmed_at: new Date})
-		])
+		yield subscriptionsDb.create([new ValidSubscription({
+			confirmed_at: new Date,
+			event_interest: true
+		})])
 
 		yield cli()
 

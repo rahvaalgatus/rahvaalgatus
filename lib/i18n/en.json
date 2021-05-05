@@ -504,6 +504,7 @@
 	"SUBSCRIPTIONS_DELETE_BUTTON": "Remove All Subscriptions",
 	"SUBSCRIPTIONS_EVENT_INTEREST": "Initiatives' events and proceedings",
 	"SUBSCRIPTIONS_NEW_INTEREST": "New initiatives",
+	"SUBSCRIPTIONS_SIGNABLE_INTEREST": "Initiatives sent to signing",
 	"SUBSCRIPTIONS_UNSUBSCRIBE_BUTTON": "Unsubscribe",
 	"SUBSCRIPTIONS_UPDATE_BODY": "You've subscribed to the following initiatives with <a href=\"mailto:{{email}}\">{{email}}</a>.\nYou can update your preferences or unsubscribe below.",
 	"SUBSCRIPTIONS_UPDATE_BUTTON": "Update Preferences",

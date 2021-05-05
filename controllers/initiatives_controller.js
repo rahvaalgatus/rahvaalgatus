@@ -895,9 +895,13 @@ function* updateInitiativePhaseToSign(req, res) {
 		yield Subscription.send(
 			message,
 
-			yield subscriptionsDb.searchConfirmedByInitiativeIdForEvent(
-				initiative.uuid
-			)
+			_.uniqBy(concat(
+				yield subscriptionsDb.searchConfirmedForSignableInitiative(),
+
+				yield subscriptionsDb.searchConfirmedByInitiativeIdForEvent(
+					initiative.uuid
+				)
+			), "email")
 		)
 	}
 

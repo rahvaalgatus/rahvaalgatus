@@ -3351,7 +3351,8 @@ describe("InitiativesController", function() {
 
 					yield subscriptionsDb.create(_.times(3, () => new ValidSubscription({
 						initiative_uuid: initiative.uuid,
-						confirmed_at: new Date
+						confirmed_at: new Date,
+						event_interest: true
 					})))
 
 					var res = yield this.request("/initiatives/" + initiative.uuid)
@@ -3373,7 +3374,8 @@ describe("InitiativesController", function() {
 
 					yield subscriptionsDb.create(_.times(3, () => new ValidSubscription({
 						initiative_uuid: null,
-						confirmed_at: new Date
+						confirmed_at: new Date,
+						event_interest: true
 					})))
 
 					var res = yield this.request("/initiatives/" + initiative.uuid)
@@ -3396,7 +3398,8 @@ describe("InitiativesController", function() {
 
 					yield subscriptionsDb.create(_.times(3, () => new ValidSubscription({
 						initiative_uuid: initiative.uuid,
-						confirmed_at: new Date
+						confirmed_at: new Date,
+						event_interest: true
 					})))
 
 					yield subscriptionsDb.create(_.times(5, () => new ValidSubscription({
@@ -8028,7 +8031,7 @@ describe("InitiativesController", function() {
 					initiative.signing_ends_at.must.eql(endsAt)
 				})
 
-				it("must email subscribers of initiative events", function*() {
+				it("must email subscribers of signable initiatives", function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						destination: "parliament",
@@ -8044,23 +8047,19 @@ describe("InitiativesController", function() {
 						new ValidSubscription({
 							initiative_uuid: initiative.uuid,
 							confirmed_at: new Date,
-							event_interest: false
+							signable_interest: false
 						}),
 
 						new ValidSubscription({
 							initiative_uuid: null,
 							confirmed_at: new Date,
-							event_interest: false
-						}),
-
-						new ValidSubscription({
-							initiative_uuid: initiative.uuid,
-							confirmed_at: new Date
+							signable_interest: false
 						}),
 
 						new ValidSubscription({
 							initiative_uuid: null,
-							confirmed_at: new Date
+							confirmed_at: new Date,
+							signable_interest: true
 						})
 					])
 
@@ -8115,6 +8114,187 @@ describe("InitiativesController", function() {
 					subscriptions.slice(2).forEach((s) => (
 						vars.must.include(s.update_token)
 					))
+				})
+
+				it("must email subscribers of initiative events", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						destination: "parliament",
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
+					}))
+
+					var text = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id
+					}))
+
+					var subscriptions = yield subscriptionsDb.create([
+						new ValidSubscription({
+							initiative_uuid: initiative.uuid,
+							confirmed_at: new Date,
+							event_interest: false
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date,
+							event_interest: false
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: initiative.uuid,
+							confirmed_at: new Date,
+							event_interest: true
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date,
+							event_interest: true
+						})
+					])
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							status: "voting",
+							language: text.language,
+							endsAt: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays)
+							)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					var messages = yield messagesDb.search(sql`
+						SELECT * FROM initiative_messages
+					`)
+
+					var message = messages[0]
+					var emails = subscriptions.slice(2).map((s) => s.email).sort()
+
+					messages.must.eql([{
+						id: message.id,
+						initiative_uuid: initiative.uuid,
+						created_at: new Date,
+						updated_at: new Date,
+						origin: "status",
+
+						title: t("SENT_TO_SIGNING_MESSAGE_TITLE", {
+							initiativeTitle: initiative.title
+						}),
+
+						text: renderEmail("SENT_TO_SIGNING_MESSAGE_BODY", {
+							initiativeTitle: initiative.title,
+							initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+						}),
+
+						sent_at: new Date,
+						sent_to: emails
+					}])
+
+					this.emails.length.must.equal(1)
+					var email = this.emails[0]
+
+					email.envelope.to.must.eql(emails)
+					email.headers.subject.must.equal(message.title)
+
+					var vars = email.headers["x-mailgun-recipient-variables"]
+
+					subscriptions.slice(2).forEach((s) => (
+						vars.must.include(s.update_token)
+					))
+				})
+
+				it("must not email subscribers twice", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						destination: "parliament",
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
+					}))
+
+					var text = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id
+					}))
+
+					var john = "john@example.com"
+					var mary = "mary@example.com"
+
+					yield subscriptionsDb.create([
+						new ValidSubscription({
+							email: john,
+							confirmed_at: new Date,
+							signable_interest: true
+						}),
+
+						new ValidSubscription({
+							email: john,
+							initiative_uuid: initiative.uuid,
+							confirmed_at: new Date,
+							event_interest: true
+						}),
+
+						new ValidSubscription({
+							email: mary,
+							confirmed_at: new Date,
+							signable_interest: true
+						}),
+
+						new ValidSubscription({
+							email: mary,
+							initiative_uuid: initiative.uuid,
+							confirmed_at: new Date,
+							event_interest: true
+						}),
+					])
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							status: "voting",
+							language: text.language,
+							endsAt: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays)
+							)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					var messages = yield messagesDb.search(sql`
+						SELECT * FROM initiative_messages
+					`)
+
+					var message = messages[0]
+					var emails = [john, mary].sort()
+
+					messages.must.eql([{
+						id: message.id,
+						initiative_uuid: initiative.uuid,
+						created_at: new Date,
+						updated_at: new Date,
+						origin: "status",
+
+						title: t("SENT_TO_SIGNING_MESSAGE_TITLE", {
+							initiativeTitle: initiative.title
+						}),
+
+						text: renderEmail("SENT_TO_SIGNING_MESSAGE_BODY", {
+							initiativeTitle: initiative.title,
+							initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+						}),
+
+						sent_at: new Date,
+						sent_to: emails
+					}])
+
+					this.emails.length.must.equal(1)
+					var email = this.emails[0]
+
+					email.envelope.to.must.eql(emails)
+					email.headers.subject.must.equal(message.title)
 				})
 
 				describe("when already in sign phase", function() {
@@ -8580,12 +8760,14 @@ describe("InitiativesController", function() {
 
 							new ValidSubscription({
 								initiative_uuid: initiative.uuid,
-								confirmed_at: new Date
+								confirmed_at: new Date,
+								event_interest: true
 							}),
 
 							new ValidSubscription({
 								initiative_uuid: null,
-								confirmed_at: new Date
+								confirmed_at: new Date,
+								event_interest: true
 							})
 						])
 
@@ -8912,12 +9094,14 @@ describe("InitiativesController", function() {
 
 							new ValidSubscription({
 								initiative_uuid: initiative.uuid,
-								confirmed_at: new Date
+								confirmed_at: new Date,
+								event_interest: true
 							}),
 
 							new ValidSubscription({
 								initiative_uuid: null,
-								confirmed_at: new Date
+								confirmed_at: new Date,
+								event_interest: true
 							})
 						])
 

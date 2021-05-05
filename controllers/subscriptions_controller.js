@@ -15,7 +15,8 @@ exports.updateSubscriptions = updateSubscriptions
 
 var DEFAULT_INITIATIVES_INTERESTS = {
 	new_interest: true,
-	event_interest: true,
+	signable_interest: true,
+	event_interest: false,
 	comment_interest: false
 }
 
@@ -60,6 +61,7 @@ exports.router.post("/", next(function*(req, res) {
 		subscription = yield subscriptionsDb.create({
 			email: email,
 			new_interest: attrs.new_interest,
+			signable_interest: attrs.signable_interest,
 			event_interest: attrs.event_interest,
 			comment_interest: attrs.comment_interest,
 			created_at: new Date,
@@ -85,6 +87,7 @@ exports.router.post("/", next(function*(req, res) {
 		yield subscriptionsDb.update(subscription, {
 			confirmed_at: new Date,
 			new_interest: attrs.new_interest,
+			signable_interest: attrs.signable_interest,
 			event_interest: attrs.event_interest,
 			comment_interest: attrs.comment_interest,
 			updated_at: new Date
@@ -203,6 +206,8 @@ function parse(obj) {
 
 	if ("new_interest" in obj)
 		attrs.new_interest = _.parseBoolean(obj.new_interest)
+	if ("signable_interest" in obj)
+		attrs.signable_interest = _.parseBoolean(obj.signable_interest)
 	if ("event_interest" in obj)
 		attrs.event_interest = _.parseBoolean(obj.event_interest)
 	if ("comment_interest" in obj)
@@ -246,7 +251,11 @@ function updateSubscriptions(subscriptions, form) {
 		var attrs = attrsByInitiativeUuid[subscription.initiative_uuid]
 		if (attrs == null) return Promise.resolve(subscription)
 		if (attrs.delete) return subscriptionsDb.delete(subscription)
-		if (subscription.initiative_uuid) attrs.new_interest = false
+
+		if (subscription.initiative_uuid) {
+			attrs.new_interest = false
+			attrs.signable_interest = false
+		}
 
 		return subscriptionsDb.update(subscription, {
 			__proto__: attrs,

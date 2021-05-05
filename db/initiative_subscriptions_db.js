@@ -17,6 +17,7 @@ exports.parse = function(attrs) {
 			new Date(attrs.confirmation_sent_at),
 
 		new_interest: !!attrs.new_interest,
+		signable_interest: !!attrs.signable_interest,
 		event_interest: !!attrs.event_interest,
 		comment_interest: !!attrs.comment_interest,
 
@@ -34,13 +35,11 @@ exports.searchConfirmedByInitiativeIdWith = function(id, filter) {
 }
 
 exports.searchConfirmedForNewInitiative = function() {
-	return this.search(sql`
-		SELECT * FROM initiative_subscriptions
-		WHERE initiative_uuid IS NULL
-		AND confirmed_at IS NOT NULL
-		AND new_interest
-		ORDER BY email
-	`)
+	return searchConfirmedWith(this, sql`new_interest`)
+}
+
+exports.searchConfirmedForSignableInitiative = function() {
+	return searchConfirmedWith(this, sql`signable_interest`)
 }
 
 exports.searchConfirmedByInitiativeIdForEvent = function(id) {
@@ -57,6 +56,16 @@ exports.countConfirmedByInitiativeId =
 exports.countConfirmedByInitiativeIdForEvent =
 	countConfirmedByInitiativeIdWith.bind(null, sql`event_interest`)
 
+
+function searchConfirmedWith(db, filter) {
+	return db.search(sql`
+		SELECT * FROM initiative_subscriptions
+		WHERE initiative_uuid IS NULL
+		AND confirmed_at IS NOT NULL
+		AND ${filter}
+		ORDER BY email
+	`)
+}
 
 function countConfirmedByInitiativeIdWith(filter, id) {
 	return sqlite(sql`

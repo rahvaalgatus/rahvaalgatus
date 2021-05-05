@@ -212,12 +212,14 @@ describe("AdminController", function() {
 
 					new ValidSubscription({
 						initiative_uuid: this.initiative.uuid,
-						confirmed_at: new Date
+						confirmed_at: new Date,
+						event_interest: true
 					}),
 
 					new ValidSubscription({
 						initiative_uuid: null,
-						confirmed_at: new Date
+						confirmed_at: new Date,
+						event_interest: true
 					})
 				])
 

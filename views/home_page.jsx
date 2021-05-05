@@ -354,7 +354,12 @@ function InitiativesSubscriptionForm(attrs) {
 			</label>
 
 			<label class="form-checkbox">
-				<FormCheckbox name="event_interest" checked />
+				<FormCheckbox name="signable_interest" checked />
+				<span>{t("SUBSCRIPTIONS_SIGNABLE_INTEREST")}</span>
+			</label>
+
+			<label class="form-checkbox">
+				<FormCheckbox name="event_interest" />
 				<span>{t("SUBSCRIPTIONS_EVENT_INTEREST")}</span>
 			</label>
 

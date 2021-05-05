@@ -86,6 +86,17 @@ function SubscriptionsView(attrs) {
 							<span>{t("SUBSCRIPTIONS_NEW_INTEREST")}</span>
 						</label> : null}
 
+						{subscription.initiative_uuid == null ? <label
+							class="form-checkbox"
+						>
+							<FormCheckbox
+								name={`${scope}[signable_interest]`}
+								checked={subscription.signable_interest}
+							/>
+
+							<span>{t("SUBSCRIPTIONS_SIGNABLE_INTEREST")}</span>
+						</label> : null}
+
 						<label class="form-checkbox">
 							<FormCheckbox
 								name={`${scope}[event_interest]`}

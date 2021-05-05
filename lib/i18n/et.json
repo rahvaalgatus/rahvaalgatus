@@ -723,6 +723,7 @@
 	"SUBSCRIPTIONS_DELETE_BUTTON": "Eemalda kõik teavitused",
 	"SUBSCRIPTIONS_EVENT_INTEREST": "Algatuste sündmused ja menetlusinfo",
 	"SUBSCRIPTIONS_NEW_INTEREST": "Uued algatused",
+	"SUBSCRIPTIONS_SIGNABLE_INTEREST": "Allkirjastamisele saadetud algatused",
 	"SUBSCRIPTIONS_UNSUBSCRIBE_BUTTON": "Lõpeta teavituste tellimine",
 	"SUBSCRIPTIONS_UPDATE_BODY": "Järgnevad teavitused on tellitud <a href=\"mailto:{{email}}\">{{email}}</a> meiliaadressile.\nKui soovid tellida vaid teatud tüüpi teavitusi, määra allpool oma eelistused. Teavituste tellimuse saad soovi korral ka lõpetada. \n",
 	"SUBSCRIPTIONS_UPDATE_BUTTON": "Salvesta eelistused",

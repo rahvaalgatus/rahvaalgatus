@@ -55,7 +55,8 @@ describe("InitiativeSubscriptionsController", function() {
 				email: "user@example.com",
 				created_ip: "127.0.0.1",
 				confirmation_sent_at: new Date,
-				update_token: subscription.update_token
+				update_token: subscription.update_token,
+				event_interest: true
 			}))
 
 			subscription.update_token.must.exist()
@@ -121,7 +122,8 @@ describe("InitiativeSubscriptionsController", function() {
 					email: "user@example.com",
 					created_ip: "127.0.0.1",
 					confirmed_at: new Date,
-					update_token: subscription.update_token
+					update_token: subscription.update_token,
+					event_interest: true
 				}))
 
 				this.emails.length.must.equal(0)
@@ -158,7 +160,8 @@ describe("InitiativeSubscriptionsController", function() {
 					email: "usER@examPLE.com",
 					created_ip: "127.0.0.1",
 					confirmed_at: new Date,
-					update_token: subscription.update_token
+					update_token: subscription.update_token,
+					event_interest: true
 				}))
 
 				this.emails.length.must.equal(0)
@@ -195,7 +198,8 @@ describe("InitiativeSubscriptionsController", function() {
 					email: "user@example.com",
 					created_ip: "127.0.0.1",
 					confirmation_sent_at: new Date,
-					update_token: subscription.update_token
+					update_token: subscription.update_token,
+					event_interest: true
 				}))
 
 				this.emails.length.must.equal(1)
@@ -214,7 +218,7 @@ describe("InitiativeSubscriptionsController", function() {
 					initiative_uuid: this.initiative.uuid,
 					confirmed_at: pseudoDateTime(),
 					event_interest: false,
-					comment_interest: true,
+					comment_interest: true
 				}))
 
 				yield usersDb.update(this.user, {
@@ -260,7 +264,8 @@ describe("InitiativeSubscriptionsController", function() {
 				created_at: createdAt,
 				updated_at: createdAt,
 				confirmed_at: createdAt,
-				confirmation_sent_at: new Date
+				confirmation_sent_at: new Date,
+				event_interest: true
 			}))
 
 			var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions`, {
@@ -282,7 +287,8 @@ describe("InitiativeSubscriptionsController", function() {
 			function*() {
 			var subscription = yield subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: this.initiative.uuid,
-				confirmation_sent_at: new Date
+				confirmation_sent_at: new Date,
+				event_interest: true
 			}))
 
 			this.time.tick(3599 * 1000)
@@ -303,7 +309,8 @@ describe("InitiativeSubscriptionsController", function() {
 		it("must resend confirmation email if an hour has passed", function*() {
 			var subscription = yield subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: this.initiative.uuid,
-				confirmation_sent_at: new Date
+				confirmation_sent_at: new Date,
+				event_interest: true,
 			}))
 
 			this.time.tick(3600 * 1000)
@@ -329,7 +336,8 @@ describe("InitiativeSubscriptionsController", function() {
 			var subscription = yield subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: this.initiative.uuid,
 				confirmed_at: new Date,
-				confirmation_sent_at: new Date
+				confirmation_sent_at: new Date,
+				event_interest: true
 			}))
 
 			this.time.tick(3600 * 1000)
@@ -459,7 +467,7 @@ describe("InitiativeSubscriptionsController", function() {
 				created_at: createdAt,
 				updated_at: createdAt,
 				confirmed_at: createdAt,
-				update_token: token
+				update_token: token,
 			})
 
 			yield subscriptionsDb.create(subscription)
