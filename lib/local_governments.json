@@ -7,7 +7,9 @@
 		"initiativesEmails": [
 			"anija@anija.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"49207255258"
+		],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/anija-vald"
 	},
