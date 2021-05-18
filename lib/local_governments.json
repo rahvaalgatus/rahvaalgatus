@@ -481,7 +481,9 @@
 		"initiativesEmails": [
 			"vallavalitsus@vinnivald.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"48612015230"
+		],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/vinni-vald"
 	},
