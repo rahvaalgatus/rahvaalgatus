@@ -33,7 +33,10 @@
 		"initiativesEmails": [
 			"kantselei@joelahtme.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"49402180225",
+			"48406240352"
+		],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/joelahtme-vald"
 	},
@@ -850,7 +853,8 @@
 			"valga@valga.ee"
 		],
 		"signatureDownloadPersonalIds": [
-			"46907315719"
+			"46907315719",
+			"46810255729"
 		],
 		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/valga-vald"
