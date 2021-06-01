@@ -1954,9 +1954,7 @@ button.inherited {
 				word-wrap: break-word;
 				overflow: hidden;
 
-				-webkit-hyphens: auto;
-				-moz-hyphens: auto;
-				hyphens: auto;
+				@include hyphens(auto);
 			}
 
 			.status {
