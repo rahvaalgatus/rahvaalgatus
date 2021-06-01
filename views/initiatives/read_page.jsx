@@ -653,7 +653,7 @@ function PhasesView(attrs) {
   var daysSinceCreated = diffInDays(new Date, initiative.created_at)
 
   var daysInEdit = initiative.discussion_ends_at ? diffInDays(
-		initiative.discussion_ends_at,
+		DateFns.addMilliseconds(initiative.discussion_ends_at, -1),
 		initiative.created_at
 	) + 1 : 0
 
@@ -2183,8 +2183,11 @@ function ProgressTextView(attrs) {
 				<span>
 					{t("DISCUSSION_DEADLINE")}
 					{": "}
-					<time datetime={initiative.discussion_ends_at}>
-						{I18n.formatDateTime("numeric", initiative.discussion_ends_at)}
+					<time datetime={initiative.discussion_ends_at.toJSON()}>
+						{I18n.formatDateTime(
+							"numeric",
+							DateFns.addMilliseconds(initiative.discussion_ends_at, -1)
+						)}
 					</time>
 				</span>
 			</p>
@@ -2206,8 +2209,11 @@ function ProgressTextView(attrs) {
 				<span>
 					{t("VOTING_DEADLINE")}
 					{": "}
-					<time datetime={initiative.signing_ends_at} class="deadline">
-						{I18n.formatDateTime("numeric", initiative.signing_ends_at)}
+					<time datetime={initiative.signing_ends_at.toJSON()} class="deadline">
+						{I18n.formatDateTime(
+							"numeric",
+							DateFns.addMilliseconds(initiative.signing_ends_at, -1)
+						)}
 					</time>.
 				</span>
 			</p>

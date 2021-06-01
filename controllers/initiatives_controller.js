@@ -710,11 +710,12 @@ function* updateInitiativeToPublished(req, res) {
 		LIMIT 1
 	`))) throw new HttpError(422, "No Text")
 
-	if (req.body.endsAt == null) return void res.render(tmpl, {
+	if (req.body.endsOn == null) return void res.render(tmpl, {
 		attrs: {endsAt: initiative.discussion_ends_at}
 	})
 
-	let endsAt = DateFns.endOfDay(Time.parseIsoDate(req.body.endsAt))
+	var endsOn = Time.parseIsoDate(req.body.endsOn)
+	var endsAt = DateFns.addDays(endsOn, 1)
 
 	if (!Initiative.isDeadlineOk(
 		initiative.published_at || new Date,
@@ -820,12 +821,13 @@ function* updateInitiativePhaseToSign(req, res) {
 		)
 	`), "language")
 
-	if (req.body.endsAt == null) return void res.render(tmpl, {
+	if (req.body.endsOn == null) return void res.render(tmpl, {
 		attrs: {endsAt: initiative.signing_ends_at}
 	})
 
 	var lang = req.body.language
-	let endsAt = DateFns.endOfDay(Time.parseIsoDate(req.body.endsAt))
+	var endsOn = Time.parseIsoDate(req.body.endsOn)
+	var endsAt = DateFns.addDays(endsOn, 1)
 	var attrs = {endsAt: endsAt}
 
 	if (!Initiative.isDeadlineOk(
@@ -909,6 +911,10 @@ function* updateInitiativePhaseToSign(req, res) {
 		? req.t("INITIATIVE_SIGN_PHASE_UPDATED")
 		: req.t("INITIATIVE_SIGNING_DEADLINE_UPDATED")
 	)
+
+	res.statusMessage = initiative.signing_started_at == null
+		? "Initiative Sent to Signing"
+		: "Initiative Updated"
 
 	res.redirect(303, req.baseUrl + "/" + initiative.uuid)
 }

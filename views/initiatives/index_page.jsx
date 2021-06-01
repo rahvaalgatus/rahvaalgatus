@@ -2,6 +2,7 @@
 var _ = require("lodash")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
+var DateFns = require("date-fns")
 var Config = require("root/config")
 var Page = require("../page")
 var {Section} = require("../page")
@@ -213,8 +214,11 @@ function InitiativeRowView(attrs) {
 				<span>
 					{t("DISCUSSION_DEADLINE")}
 					{": "}
-					<time datetime={initiative.discussion_ends_at}>
-						{I18n.formatDateTime("numeric", initiative.discussion_ends_at)}
+					<time datetime={initiative.discussion_ends_at.toJSON()}>
+						{I18n.formatDateTime(
+							"numeric",
+							DateFns.addMilliseconds(initiative.discussion_ends_at, -1)
+						)}
 					</time>
 				</span>
 			</p>
@@ -223,8 +227,11 @@ function InitiativeRowView(attrs) {
 				<span>
 					{t("VOTING_DEADLINE")}
 					{": "}
-					<time datetime={initiative.signing_ends_at} class="deadline">
-						{I18n.formatDateTime("numeric", initiative.signing_ends_at)}
+					<time datetime={initiative.signing_ends_at.toJSON()} class="deadline">
+						{I18n.formatDateTime(
+							"numeric",
+							DateFns.addMilliseconds(initiative.signing_ends_at, -1)
+						)}
 					</time>.
 				</span>
 			</p>

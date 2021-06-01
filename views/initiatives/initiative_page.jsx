@@ -2,6 +2,7 @@
 var _ = require("lodash")
 var Jsx = require("j6pack")
 var Page = require("../page")
+var DateFns = require("date-fns")
 var Config = require("root/config")
 var I18n = require("root/lib/i18n")
 var Css = require("root/lib/css")
@@ -86,7 +87,7 @@ function ProgressView(attrs) {
 				var passed = diffInDays(new Date, initiative.created_at)
 
 				var total = diffInDays(
-					initiative.discussion_ends_at,
+					DateFns.addMilliseconds(initiative.discussion_ends_at, -1),
 					// TODO: Use published_at for measuring discussion phase time.
 					initiative.created_at
 				) + 1

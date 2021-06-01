@@ -6797,17 +6797,14 @@ describe("InitiativesController", function() {
 						user_id: this.user.id,
 					}))
 
-					var endsAt = DateFns.addDays(
-						DateFns.endOfDay(new Date),
-						Config.minDeadlineDays
+					var endsOn = DateFns.addDays(
+						DateFns.startOfDay(new Date),
+						Config.minDeadlineDays - 1
 					)
 
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
-						form: {
-							visibility: "public",
-							endsAt: formatIsoDate(endsAt)
-						}
+						form: {visibility: "public", endsOn: formatIsoDate(endsOn)}
 					})
 
 					res.statusCode.must.equal(303)
@@ -6825,7 +6822,7 @@ describe("InitiativesController", function() {
 					yield initiativesDb.read(initiative).must.then.eql({
 						__proto__: initiative,
 						published_at: new Date,
-						discussion_ends_at: endsAt
+						discussion_ends_at: DateFns.addDays(endsOn, 1)
 					})
 				})
 
@@ -6851,9 +6848,9 @@ describe("InitiativesController", function() {
 						method: "PUT",
 						form: {
 							visibility: "public",
-							endsAt: formatIsoDate(DateFns.addDays(
+							endsOn: formatIsoDate(DateFns.addDays(
 								initiative.published_at,
-								Config.minDeadlineDays - 1
+								Config.minDeadlineDays - 2
 							))
 						}
 					})
@@ -6878,8 +6875,8 @@ describe("InitiativesController", function() {
 						user_id: this.user.id,
 					}))
 
-					var endsAt = DateFns.addDays(
-						DateFns.endOfDay(new Date),
+					var endsOn = DateFns.addDays(
+						DateFns.startOfDay(new Date),
 						Config.maxDeadlineDays - 1
 					)
 
@@ -6887,7 +6884,7 @@ describe("InitiativesController", function() {
 						method: "PUT",
 						form: {
 							visibility: "public",
-							endsAt: formatIsoDate(endsAt)
+							endsOn: formatIsoDate(endsOn)
 						}
 					})
 
@@ -6897,7 +6894,7 @@ describe("InitiativesController", function() {
 					yield initiativesDb.read(initiative).must.then.eql({
 						__proto__: initiative,
 						published_at: new Date,
-						discussion_ends_at: endsAt
+						discussion_ends_at: DateFns.addDays(endsOn, 1)
 					})
 				})
 
@@ -6923,10 +6920,9 @@ describe("InitiativesController", function() {
 						method: "PUT",
 						form: {
 							visibility: "public",
-							endsAt: formatIsoDate(DateFns.addDays(
-								DateFns.endOfDay(new Date),
-								Config.maxDeadlineDays
-							))
+							endsOn: formatIsoDate(
+								DateFns.addDays(new Date, Config.maxDeadlineDays)
+							)
 						}
 					})
 
@@ -6951,8 +6947,8 @@ describe("InitiativesController", function() {
 						method: "PUT",
 						form: {
 							visibility: "public",
-							endsAt: formatIsoDate(
-								DateFns.addDays(new Date, Config.minDeadlineDays)
+							endsOn: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays - 1)
 							)
 						}
 					})
@@ -6983,8 +6979,8 @@ describe("InitiativesController", function() {
 						method: "PUT",
 						form: {
 							visibility: "public",
-							endsAt: formatIsoDate(
-								DateFns.addDays(new Date, Config.minDeadlineDays)
+							endsOn: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays - 1)
 							)
 						}
 					})
@@ -7019,8 +7015,8 @@ describe("InitiativesController", function() {
 						method: "PUT",
 						form: {
 							visibility: "public",
-							endsAt: formatIsoDate(
-								DateFns.addDays(new Date, Config.minDeadlineDays)
+							endsOn: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays - 1)
 							)
 						}
 					})
@@ -7043,8 +7039,8 @@ describe("InitiativesController", function() {
 						method: "PUT",
 						form: {
 							visibility: "public",
-							endsAt: formatIsoDate(
-								DateFns.addDays(new Date, Config.minDeadlineDays)
+							endsOn: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays - 1)
 							)
 						}
 					})
@@ -7069,14 +7065,14 @@ describe("InitiativesController", function() {
 						user_id: this.user.id,
 					}))
 
-					var endsAt = DateFns.addDays(
-						DateFns.endOfDay(new Date),
-						Config.minDeadlineDays
-					)
-
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
-						form: {visibility: "public", endsAt: formatIsoDate(endsAt)}
+						form: {
+							visibility: "public",
+							endsOn: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays - 1)
+							)
+						}
 					})
 
 					res.statusCode.must.equal(303)
@@ -7119,14 +7115,14 @@ describe("InitiativesController", function() {
 						comment_interest: false
 					}))
 
-					var endsAt = DateFns.addDays(
-						DateFns.endOfDay(new Date),
-						Config.minDeadlineDays
-					)
-
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
-						form: {visibility: "public", endsAt: formatIsoDate(endsAt)}
+						form: {
+							visibility: "public",
+							endsOn: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays - 1)
+							)
+						}
 					})
 
 					res.statusCode.must.equal(303)
@@ -7165,14 +7161,14 @@ describe("InitiativesController", function() {
 						comment_interest: false
 					}))
 
-					var endsAt = DateFns.addDays(
-						DateFns.endOfDay(new Date),
-						Config.minDeadlineDays
-					)
-
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
-						form: {visibility: "public", endsAt: formatIsoDate(endsAt)}
+						form: {
+							visibility: "public",
+							endsOn: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays - 1)
+							)
+						}
 					})
 
 					res.statusCode.must.equal(303)
@@ -7227,8 +7223,8 @@ describe("InitiativesController", function() {
 						method: "PUT",
 						form: {
 							visibility: "public",
-							endsAt: formatIsoDate(
-								DateFns.addDays(new Date, Config.minDeadlineDays)
+							endsOn: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays - 1)
 							)
 						}
 					})
@@ -7295,14 +7291,14 @@ describe("InitiativesController", function() {
 							user_id: this.user.id,
 						}))
 
-						var endsAt = DateFns.addDays(
-							DateFns.endOfDay(initiative.published_at),
-							Config.minDeadlineDays
+						var endsOn = DateFns.addDays(
+							DateFns.startOfDay(initiative.published_at),
+							Config.minDeadlineDays - 1
 						)
 
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {visibility: "public", endsAt: formatIsoDate(endsAt)}
+							form: {visibility: "public", endsOn: formatIsoDate(endsOn)}
 						})
 
 						res.statusCode.must.equal(303)
@@ -7319,7 +7315,7 @@ describe("InitiativesController", function() {
 
 						yield initiativesDb.read(initiative).must.then.eql({
 							__proto__: initiative,
-							discussion_ends_at: endsAt
+							discussion_ends_at: DateFns.addDays(endsOn, 1)
 						})
 					})
 
@@ -7340,9 +7336,9 @@ describe("InitiativesController", function() {
 							method: "PUT",
 							form: {
 								visibility: "public",
-								endsAt: formatIsoDate(DateFns.addDays(
+								endsOn: formatIsoDate(DateFns.addDays(
 									initiative.published_at,
-									Config.minDeadlineDays - 1
+									Config.minDeadlineDays - 2
 								))
 							}
 						})
@@ -7363,14 +7359,14 @@ describe("InitiativesController", function() {
 							user_id: this.user.id,
 						}))
 
-						var endsAt = DateFns.addDays(
-							DateFns.endOfDay(new Date),
+						var endsOn = DateFns.addDays(
+							DateFns.startOfDay(new Date),
 							Config.maxDeadlineDays - 1
 						)
 
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {visibility: "public", endsAt: formatIsoDate(endsAt)}
+							form: {visibility: "public", endsOn: formatIsoDate(endsOn)}
 						})
 
 						res.statusCode.must.equal(303)
@@ -7378,7 +7374,7 @@ describe("InitiativesController", function() {
 
 						yield initiativesDb.read(initiative).must.then.eql({
 							__proto__: initiative,
-							discussion_ends_at: endsAt
+							discussion_ends_at: DateFns.addDays(endsOn, 1)
 						})
 					})
 
@@ -7399,10 +7395,9 @@ describe("InitiativesController", function() {
 							method: "PUT",
 							form: {
 								visibility: "public",
-								endsAt: formatIsoDate(DateFns.addDays(
-									DateFns.endOfDay(new Date),
-									Config.maxDeadlineDays
-								))
+								endsOn: formatIsoDate(
+									DateFns.addDays(new Date, Config.maxDeadlineDays)
+								)
 							}
 						})
 
@@ -7424,10 +7419,11 @@ describe("InitiativesController", function() {
 							user_id: this.user.id,
 						}))
 
-						var endsAt = DateFns.addDays(DateFns.endOfDay(new Date), 5)
+						var endsOn = DateFns.addDays(DateFns.startOfDay(new Date), 5)
+
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {visibility: "public", endsAt: formatIsoDate(endsAt)}
+							form: {visibility: "public", endsOn: formatIsoDate(endsOn)}
 						})
 
 						res.statusCode.must.equal(303)
@@ -7435,7 +7431,7 @@ describe("InitiativesController", function() {
 
 						yield initiativesDb.read(initiative).must.then.eql({
 							__proto__: initiative,
-							discussion_ends_at: endsAt,
+							discussion_ends_at: DateFns.addDays(endsOn, 1),
 							discussion_end_email_sent_at: null
 						})
 					})
@@ -7452,14 +7448,14 @@ describe("InitiativesController", function() {
 							user_id: this.user.id,
 						}))
 
-						var endsAt = DateFns.addDays(
-							DateFns.endOfDay(initiative.published_at),
-							Config.minDeadlineDays
+						var endsOn = DateFns.addDays(
+							DateFns.startOfDay(initiative.published_at),
+							Config.minDeadlineDays - 1
 						)
 
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {visibility: "public", endsAt: formatIsoDate(endsAt)}
+							form: {visibility: "public", endsOn: formatIsoDate(endsOn)}
 						})
 
 						res.statusCode.must.equal(303)
@@ -7467,7 +7463,7 @@ describe("InitiativesController", function() {
 
 						yield initiativesDb.read(initiative).must.then.eql({
 							__proto__: initiative,
-							discussion_ends_at: endsAt
+							discussion_ends_at: DateFns.addDays(endsOn, 1),
 						})
 					})
 
@@ -7486,7 +7482,7 @@ describe("InitiativesController", function() {
 							method: "PUT",
 							form: {
 								visibility: "public",
-								endsAt: formatIsoDate(DateFns.addDays(
+								endsOn: formatIsoDate(DateFns.addDays(
 									initiative.published_at,
 									Config.minDeadlineDays - 1
 								))
@@ -7514,14 +7510,14 @@ describe("InitiativesController", function() {
 							user_id: this.user.id,
 						}))
 
-						var endsAt = DateFns.addDays(
-							DateFns.endOfDay(new Date),
-							Config.minDeadlineDays
-						)
-
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {visibility: "public", endsAt: formatIsoDate(endsAt)}
+							form: {
+								visibility: "public",
+								endsOn: formatIsoDate(
+									DateFns.addDays(new Date, Config.minDeadlineDays - 1)
+								)
+							}
 						})
 
 						res.statusCode.must.equal(303)
@@ -7631,7 +7627,7 @@ describe("InitiativesController", function() {
 						form: {
 							status: "voting",
 							language: text.language,
-							endsAt: formatIsoDate(DateFns.addDays(new Date, 30))
+							endsOn: formatIsoDate(DateFns.addDays(new Date, 30))
 						}
 					})
 
@@ -7655,9 +7651,9 @@ describe("InitiativesController", function() {
 						content_type: TRIX_TYPE
 					}))
 
-					var endsAt = DateFns.addDays(
-						DateFns.endOfDay(new Date),
-						Config.minDeadlineDays
+					var endsOn = DateFns.addDays(
+						DateFns.startOfDay(new Date),
+						Config.minDeadlineDays - 1
 					)
 
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
@@ -7665,11 +7661,12 @@ describe("InitiativesController", function() {
 						form: {
 							status: "voting",
 							language: text.language,
-							endsAt: formatIsoDate(endsAt)
+							endsOn: formatIsoDate(endsOn)
 						}
 					})
 
 					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Sent to Signing")
 					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
 					var cookies = parseCookies(res.headers["set-cookie"])
@@ -7689,7 +7686,7 @@ describe("InitiativesController", function() {
 						__proto__: initiative,
 						phase: "sign",
 						signing_started_at: new Date,
-						signing_ends_at: endsAt,
+						signing_ends_at: DateFns.addDays(endsOn, 1),
 						title: text.title,
 						text: html,
 						text_type: new MediaType("text/html"),
@@ -7720,9 +7717,9 @@ describe("InitiativesController", function() {
 						`
 					}))
 
-					var endsAt = DateFns.addDays(
-						DateFns.endOfDay(new Date),
-						Config.minDeadlineDays
+					var endsOn = DateFns.addDays(
+						DateFns.startOfDay(new Date),
+						Config.minDeadlineDays - 1
 					)
 
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
@@ -7730,11 +7727,12 @@ describe("InitiativesController", function() {
 						form: {
 							language: text.language,
 							status: "voting",
-							endsAt: formatIsoDate(endsAt)
+							endsOn: formatIsoDate(endsOn)
 						}
 					})
 
 					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Sent to Signing")
 					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
 					var cookies = parseCookies(res.headers["set-cookie"])
@@ -7754,7 +7752,7 @@ describe("InitiativesController", function() {
 						__proto__: initiative,
 						phase: "sign",
 						signing_started_at: new Date,
-						signing_ends_at: endsAt,
+						signing_ends_at: DateFns.addDays(endsOn, 1),
 						title: text.title,
 						text: html,
 						text_type: new MediaType("text/html"),
@@ -7778,7 +7776,7 @@ describe("InitiativesController", function() {
 						method: "PUT",
 						form: {
 							status: "voting",
-							endsAt: formatIsoDate(DateFns.addDays(new Date, 30))
+							endsOn: formatIsoDate(DateFns.addDays(new Date, 30))
 						}
 					})
 
@@ -7799,8 +7797,8 @@ describe("InitiativesController", function() {
 						method: "PUT",
 						form: {
 							status: "voting",
-							endsAt: formatIsoDate(
-								DateFns.addDays(new Date, Config.minDeadlineDays - 1)
+							endsOn: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays - 2)
 							)
 						}
 					})
@@ -7822,8 +7820,8 @@ describe("InitiativesController", function() {
 						user_id: this.user.id
 					}))
 
-					var endsAt = DateFns.addDays(
-						DateFns.endOfDay(new Date),
+					var endsOn = DateFns.addDays(
+						DateFns.startOfDay(new Date),
 						Config.maxDeadlineDays - 1
 					)
 
@@ -7832,16 +7830,17 @@ describe("InitiativesController", function() {
 						form: {
 							status: "voting",
 							language: text.language,
-							endsAt: formatIsoDate(endsAt)
+							endsOn: formatIsoDate(endsOn)
 						}
 					})
 
 					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Sent to Signing")
 					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
 					initiative = yield initiativesDb.read(initiative)
 					initiative.phase.must.equal("sign")
-					initiative.signing_ends_at.must.eql(endsAt)
+					initiative.signing_ends_at.must.eql(DateFns.addDays(endsOn, 1))
 				})
 
 				it("must respond with 422 if setting a too long deadline", function*() {
@@ -7855,7 +7854,7 @@ describe("InitiativesController", function() {
 						method: "PUT",
 						form: {
 							status: "voting",
-							endsAt: formatIsoDate(
+							endsOn: formatIsoDate(
 								DateFns.addDays(new Date, Config.maxDeadlineDays)
 							)
 						}
@@ -7884,25 +7883,17 @@ describe("InitiativesController", function() {
 						user_id: this.user.id
 					}))
 
-					var endsAt = DateFns.addDays(
-						DateFns.endOfDay(new Date),
-						Config.minDeadlineDays
-					)
-
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
 							status: "voting",
 							language: text.language,
-							endsAt: formatIsoDate(endsAt)
+							endsOn: formatIsoDate(DateFns.addDays(new Date, 30))
 						}
 					})
 
 					res.statusCode.must.equal(303)
-
-					initiative = yield initiativesDb.read(initiative)
-					initiative.phase.must.equal("sign")
-					initiative.signing_ends_at.must.eql(endsAt)
+					res.statusMessage.must.equal("Initiative Sent to Signing")
 				})
 
 				it("must update initiative if language updated", function*() {
@@ -7930,24 +7921,26 @@ describe("InitiativesController", function() {
 						created_at: new Date(2015, 5, 18, 13, 37, 42),
 					}))
 
-					var endsAt = DateFns.addDays(DateFns.endOfDay(new Date), 30)
+					var endsOn = DateFns.addDays(DateFns.startOfDay(new Date), 30)
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
 							status: "voting",
 							language: text.language,
-							endsAt: formatIsoDate(endsAt)
+							endsOn: formatIsoDate(endsOn)
 						}
 					})
 
 					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Sent to Signing")
+
 					var html = Initiative.renderForParliament(text)
 
 					yield initiativesDb.read(initiative).must.then.eql({
 						__proto__: initiative,
 						phase: "sign",
 						signing_started_at: new Date,
-						signing_ends_at: endsAt,
+						signing_ends_at: DateFns.addDays(endsOn, 1),
 						title: text.title,
 						language: text.language,
 						text: html,
@@ -7973,24 +7966,26 @@ describe("InitiativesController", function() {
 						user_id: this.user.id
 					}))
 
-					var endsAt = DateFns.addDays(DateFns.endOfDay(new Date), 30)
+					var endsOn = DateFns.addDays(DateFns.startOfDay(new Date), 30)
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
 							status: "voting",
 							language: b.language,
-							endsAt: formatIsoDate(endsAt)
+							endsOn: formatIsoDate(endsOn)
 						}
 					})
 
 					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Sent to Signing")
+
 					var html = Initiative.renderForParliament(b)
 
 					yield initiativesDb.read(initiative).must.then.eql({
 						__proto__: initiative,
 						phase: "sign",
 						signing_started_at: new Date,
-						signing_ends_at: endsAt,
+						signing_ends_at: DateFns.addDays(endsOn, 1),
 						title: b.title,
 						text: html,
 						text_type: new MediaType("text/html"),
@@ -8012,23 +8007,19 @@ describe("InitiativesController", function() {
 						user_id: this.user.id
 					}))
 
-					var endsAt = DateFns.addDays(DateFns.endOfDay(new Date), 30)
+					var endsOn = DateFns.addDays(DateFns.endOfDay(new Date), 30)
 
 					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 						method: "PUT",
 						form: {
 							status: "voting",
 							language: text.language,
-							endsAt: formatIsoDate(endsAt)
+							endsOn: formatIsoDate(endsOn)
 						}
 					})
 
 					res.statusCode.must.equal(303)
-					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
-
-					initiative = yield initiativesDb.read(initiative)
-					initiative.phase.must.equal("sign")
-					initiative.signing_ends_at.must.eql(endsAt)
+					res.statusMessage.must.equal("Initiative Sent to Signing")
 				})
 
 				it("must email subscribers of signable initiatives", function*() {
@@ -8068,8 +8059,8 @@ describe("InitiativesController", function() {
 						form: {
 							status: "voting",
 							language: text.language,
-							endsAt: formatIsoDate(
-								DateFns.addDays(new Date, Config.minDeadlineDays)
+							endsOn: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays - 1)
 							)
 						}
 					})
@@ -8159,8 +8150,8 @@ describe("InitiativesController", function() {
 						form: {
 							status: "voting",
 							language: text.language,
-							endsAt: formatIsoDate(
-								DateFns.addDays(new Date, Config.minDeadlineDays)
+							endsOn: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays - 1)
 							)
 						}
 					})
@@ -8255,8 +8246,8 @@ describe("InitiativesController", function() {
 						form: {
 							status: "voting",
 							language: text.language,
-							endsAt: formatIsoDate(
-								DateFns.addDays(new Date, Config.minDeadlineDays)
+							endsOn: formatIsoDate(
+								DateFns.addDays(new Date, Config.minDeadlineDays - 1)
 							)
 						}
 					})
@@ -8305,17 +8296,18 @@ describe("InitiativesController", function() {
 							signing_started_at: DateFns.addDays(new Date, -1)
 						}))
 
-						var endsAt = DateFns.addDays(
-							DateFns.endOfDay(initiative.signing_started_at),
-							Config.minDeadlineDays
+						var endsOn = DateFns.addDays(
+							DateFns.startOfDay(initiative.signing_started_at),
+							Config.minDeadlineDays - 1
 						)
 
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {status: "voting", endsAt: formatIsoDate(endsAt)}
+							form: {status: "voting", endsOn: formatIsoDate(endsOn)}
 						})
 
 						res.statusCode.must.equal(303)
+						res.statusMessage.must.equal("Initiative Updated")
 
 						var cookies = parseCookies(res.headers["set-cookie"])
 						res = yield this.request(res.headers.location, {
@@ -8327,7 +8319,7 @@ describe("InitiativesController", function() {
 
 						yield initiativesDb.read(initiative).must.then.eql({
 							__proto__: initiative,
-							signing_ends_at: endsAt
+							signing_ends_at: DateFns.addDays(endsOn, 1),
 						})
 					})
 
@@ -8338,21 +8330,22 @@ describe("InitiativesController", function() {
 							signing_started_at: DateFns.addDays(new Date, -90)
 						}))
 
-						var endsAt = DateFns.addDays(
-							DateFns.endOfDay(new Date),
+						var endsOn = DateFns.addDays(
+							DateFns.startOfDay(new Date),
 							Config.maxDeadlineDays - 1
 						)
 
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {status: "voting", endsAt: formatIsoDate(endsAt)}
+							form: {status: "voting", endsOn: formatIsoDate(endsOn)}
 						})
 
 						res.statusCode.must.equal(303)
+						res.statusMessage.must.equal("Initiative Updated")
 
 						yield initiativesDb.read(initiative).must.then.eql({
 							__proto__: initiative,
-							signing_ends_at: endsAt
+							signing_ends_at: DateFns.addDays(endsOn, 1),
 						})
 					})
 
@@ -8369,22 +8362,18 @@ describe("InitiativesController", function() {
 							status: "accepted"
 						}))
 
-						var endsAt = DateFns.addDays(
-							DateFns.endOfDay(new Date),
-							Config.minDeadlineDays
-						)
-
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {status: "voting", endsAt: formatIsoDate(endsAt)}
+							form: {
+								status: "voting",
+								endsOn: formatIsoDate(
+									DateFns.addDays(new Date, Config.minDeadlineDays - 1)
+								)
+							}
 						})
 
 						res.statusCode.must.equal(303)
-
-						yield initiativesDb.read(initiative).must.then.eql({
-							__proto__: initiative,
-							signing_ends_at: endsAt
-						})
+						res.statusMessage.must.equal("Initiative Updated")
 					})
 
 					it("must clear end email", function*() {
@@ -8396,21 +8385,22 @@ describe("InitiativesController", function() {
 							signing_end_email_sent_at: new Date
 						}))
 
-						var endsAt = DateFns.addDays(
-							DateFns.endOfDay(initiative.signing_started_at),
-							Config.minDeadlineDays
+						var endsOn = DateFns.addDays(
+							DateFns.startOfDay(initiative.signing_started_at),
+							Config.minDeadlineDays - 1
 						)
 
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {status: "voting", endsAt: formatIsoDate(endsAt)}
+							form: {status: "voting", endsOn: formatIsoDate(endsOn)}
 						})
 
 						res.statusCode.must.equal(303)
+						res.statusMessage.must.equal("Initiative Updated")
 
 						yield initiativesDb.read(initiative).must.then.eql({
 							__proto__: initiative,
-							signing_ends_at: endsAt,
+							signing_ends_at: DateFns.addDays(endsOn, 1),
 							signing_end_email_sent_at: null
 						})
 					})
@@ -8425,17 +8415,18 @@ describe("InitiativesController", function() {
 							signing_end_email_sent_at: new Date
 						}))
 
-						var endsAt = DateFns.addDays(
-							DateFns.endOfDay(initiative.signing_started_at),
-							Config.minDeadlineDays
+						var endsOn = DateFns.addDays(
+							DateFns.startOfDay(initiative.signing_started_at),
+							Config.minDeadlineDays - 1
 						)
 
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {status: "voting", endsAt: formatIsoDate(endsAt)}
+							form: {status: "voting", endsOn: formatIsoDate(endsOn)}
 						})
 
 						res.statusCode.must.equal(303)
+						res.statusMessage.must.equal("Initiative Updated")
 
 						var cookies = parseCookies(res.headers["set-cookie"])
 						res = yield this.request(res.headers.location, {
@@ -8447,7 +8438,7 @@ describe("InitiativesController", function() {
 
 						yield initiativesDb.read(initiative).must.then.eql(_.clone({
 							__proto__: initiative,
-							signing_ends_at: endsAt
+							signing_ends_at: DateFns.addDays(endsOn, 1),
 						}))
 					})
 
@@ -8461,21 +8452,21 @@ describe("InitiativesController", function() {
 							text_sha256: sha256("Hello, world!")
 						}))
 
-						var endsAt = DateFns.addDays(
-							DateFns.endOfDay(initiative.signing_started_at),
-							Config.minDeadlineDays
+						var endsOn = DateFns.addDays(
+							DateFns.startOfDay(initiative.signing_started_at),
+							Config.minDeadlineDays - 1
 						)
 
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {status: "voting", endsAt: formatIsoDate(endsAt)}
+							form: {status: "voting", endsOn: formatIsoDate(endsOn)}
 						})
 
 						res.statusCode.must.equal(303)
 
 						yield initiativesDb.read(initiative).must.then.eql({
 							__proto__: initiative,
-							signing_ends_at: endsAt,
+							signing_ends_at: DateFns.addDays(endsOn, 1),
 							signing_end_email_sent_at: null
 						})
 					})
@@ -8486,14 +8477,14 @@ describe("InitiativesController", function() {
 							phase: "parliament"
 						}))
 
-						var endsAt = DateFns.addDays(
-							DateFns.endOfDay(initiative.signing_started_at),
-							Config.minDeadlineDays
+						var endsOn = DateFns.addDays(
+							DateFns.startOfDay(initiative.signing_started_at),
+							Config.minDeadlineDays - 1
 						)
 
 						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
 							method: "PUT",
-							form: {status: "voting", endsAt: formatIsoDate(endsAt)}
+							form: {status: "voting", endsOn: formatIsoDate(endsOn)}
 						})
 
 						res.statusCode.must.equal(403)

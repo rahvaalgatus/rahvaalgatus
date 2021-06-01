@@ -1,6 +1,7 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var Form = require("../page").Form
+var DateFns = require("date-fns")
 var DatePickerInput = require("../page").DatePickerInput
 var InitiativePage = require("./initiative_page")
 var Initiative = require("root/lib/initiative")
@@ -12,8 +13,14 @@ module.exports = function(attributes) {
 	var initiative = attributes.initiative
 	var error = attributes.error
 	var attrs = attributes.attrs
-	var min = Initiative.getMinDeadline(initiative.published_at || new Date)
-	var max = Initiative.getMaxDeadline(new Date)
+	var endsOn = DateFns.addMilliseconds(attrs.endsAt, -1)
+
+	var minOn = DateFns.addDays(
+		Initiative.getMinDeadline(initiative.published_at || new Date),
+		-1
+	)
+
+	var maxOn = DateFns.addDays(Initiative.getMaxDeadline(new Date), -1)
 
 	return <InitiativePage
 		page="initiative-publish"
@@ -40,10 +47,10 @@ module.exports = function(attributes) {
 
 				<DatePickerInput
 					type="date"
-					name="endsAt"
-					min={formatIso(min)}
-					max={formatIso(max)}
-					value={formatIso(attrs.endsAt || min)}
+					name="endsOn"
+					min={formatIso(minOn)}
+					max={formatIso(maxOn)}
+					value={formatIso(endsOn || minOn)}
 					required
 					class="form-input"
 				/>
