@@ -552,8 +552,9 @@ button.inherited {
 
 	.initiative {
 		line-height: 1;
+		display: inline-block;
 		width: $initiative-width;
-		float: left;
+		vertical-align: top;
 		margin-bottom: 2rem;
 		margin-left: 0;
 		margin-right: 2rem;
@@ -1392,6 +1393,13 @@ button.inherited {
 
 		@include mobile {
 			h1 { font-size: 3rem; }
+		}
+	}
+
+	#recent-initiatives {
+		.initiative:not(.with-destination) > a {
+			// Compensate for missing destination to line up recent activities.
+			padding-top: 1.5rem + 1.4 * 1.4rem;
 		}
 	}
 
