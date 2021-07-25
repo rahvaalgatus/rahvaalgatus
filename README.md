@@ -86,15 +86,14 @@ Phone        | Personal id | Name
 +37200000766 | 60001019906 | Mary Änn O’Connež-Šuslik Testnumber
 +37200000566 | 60001018800 | Mary Änn O’Connež-Šuslik Testnumber (PNOEE-certificate)
 
-For more info and test numbers, see the [SK ID Solutions wiki][mobile-id-test]. You can also [register your own phone number](https://demo.sk.ee/MIDCertsReg/index.php) for use in the demo environment.
-
+For more info and test numbers, see the [SK ID Solutions wiki][mobile-id-test].
 
 #### Smart-Id
 To test signing in or signing initiatives with Smart-Id, use the following test personal id:
 
 Personal id | Name
 ------------|-----
-10101010005 | Demo Smart-Id
+30303039914 | Qualified Ok1 Testnumber
 
 For more test ids, see the [Smart-Id documentation wiki][smart-id-test].
 
