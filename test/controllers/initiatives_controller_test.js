@@ -2486,6 +2486,44 @@ describe("InitiativesController", function() {
 				})
 			})
 
+			it("must render initiative in parliament and committee meeting event with links", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					external: true
+				}))
+
+				var event = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiative.uuid,
+					created_at: pseudoDateTime(),
+					updated_at: pseudoDateTime(),
+					occurred_at: pseudoDateTime(),
+					type: "parliament-committee-meeting",
+					origin: "parliament",
+
+					content: {
+						links: [
+							{title: "Stenogramm", url: "https://stenogrammid.riigikogu.ee"},
+							{title: "Riigikogu istung", url: "https://www.youtube.com"}
+						]
+					}
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var events = queryEvents(parseDom(res.body))
+				events.length.must.equal(1)
+
+				events[0].id.must.equal(String(event.id))
+				events[0].phase.must.equal("parliament")
+				events[0].at.must.eql(event.occurred_at)
+				events[0].title.must.equal(t("PARLIAMENT_COMMITTEE_MEETING"))
+
+				events[0].content[0].textContent.must.equal(
+					_.map(event.content.links, "title").join("")
+				)
+			})
+
 			it("must render initiative in parliament and committee meeting event with summary", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "parliament",
@@ -2498,7 +2536,7 @@ describe("InitiativesController", function() {
 					updated_at: pseudoDateTime(),
 					occurred_at: pseudoDateTime(),
 					type: "parliament-committee-meeting",
-					content: {committee: "Keskkonnakomisjon", summary: "Talks happened."},
+					content: {summary: "Talks happened."},
 					origin: "parliament"
 				}))
 
@@ -2511,11 +2549,104 @@ describe("InitiativesController", function() {
 				events[0].id.must.equal(String(event.id))
 				events[0].phase.must.equal("parliament")
 				events[0].at.must.eql(event.occurred_at)
+				events[0].title.must.equal(t("PARLIAMENT_COMMITTEE_MEETING"))
+				events[0].content[0].textContent.must.equal("Talks happened.")
+			})
 
-				events[0].title.must.equal(t("PARLIAMENT_COMMITTEE_MEETING_BY", {
-					committee: "Keskkonnakomisjon"
+			it("must render initiative in parliament and plenary meeting event",
+				function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					external: true
 				}))
 
+				var event = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiative.uuid,
+					created_at: pseudoDateTime(),
+					updated_at: pseudoDateTime(),
+					occurred_at: pseudoDateTime(),
+					type: "parliament-plenary-meeting",
+					origin: "parliament",
+					content: {},
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var events = queryEvents(parseDom(res.body))
+				events.length.must.equal(1)
+
+				events[0].id.must.equal(String(event.id))
+				events[0].phase.must.equal("parliament")
+				events[0].at.must.eql(event.occurred_at)
+				events[0].title.must.equal(t("PARLIAMENT_PLENARY_MEETING"))
+				events[0].content.length.must.equal(0)
+			})
+
+			it("must render initiative in parliament and plenary meeting event with links", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					external: true
+				}))
+
+				var event = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiative.uuid,
+					created_at: pseudoDateTime(),
+					updated_at: pseudoDateTime(),
+					occurred_at: pseudoDateTime(),
+					type: "parliament-plenary-meeting",
+					origin: "parliament",
+
+					content: {
+						links: [
+							{title: "Stenogramm", url: "https://stenogrammid.riigikogu.ee"},
+							{title: "Riigikogu istung", url: "https://www.youtube.com"}
+						]
+					},
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var events = queryEvents(parseDom(res.body))
+				events.length.must.equal(1)
+
+				events[0].id.must.equal(String(event.id))
+				events[0].phase.must.equal("parliament")
+				events[0].at.must.eql(event.occurred_at)
+				events[0].title.must.equal(t("PARLIAMENT_PLENARY_MEETING"))
+
+				events[0].content[0].textContent.must.equal(
+					_.map(event.content.links, "title").join("")
+				)
+			})
+
+			it("must render initiative in parliament and plenary meeting event with summary", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					external: true
+				}))
+
+				var event = yield eventsDb.create(new ValidEvent({
+					initiative_uuid: initiative.uuid,
+					created_at: pseudoDateTime(),
+					updated_at: pseudoDateTime(),
+					occurred_at: pseudoDateTime(),
+					type: "parliament-plenary-meeting",
+					content: {summary: "Talks happened."},
+					origin: "parliament"
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var events = queryEvents(parseDom(res.body))
+				events.length.must.equal(1)
+
+				events[0].id.must.equal(String(event.id))
+				events[0].phase.must.equal("parliament")
+				events[0].at.must.eql(event.occurred_at)
+				events[0].title.must.equal(t("PARLIAMENT_PLENARY_MEETING"))
 				events[0].content[0].textContent.must.equal("Talks happened.")
 			})
 
@@ -6017,6 +6148,49 @@ describe("InitiativesController", function() {
 			})
 		})
 
+		it("must render initiative in parliament and committee meeting event with links", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament"
+			}))
+
+			var event = yield eventsDb.create(new ValidEvent({
+				initiative_uuid: initiative.uuid,
+				created_at: pseudoDateTime(),
+				updated_at: pseudoDateTime(),
+				occurred_at: pseudoDateTime(),
+				type: "parliament-committee-meeting",
+				origin: "parliament",
+
+				content: {
+					links: [
+						{title: "Stenogramm", url: "https://stenogrammid.riigikogu.ee"},
+						{title: "Riigikogu istung", url: "https://www.youtube.com"}
+					]
+				}
+			}))
+
+			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			res.statusCode.must.equal(200)
+
+			var entry = Atom.parse(res.body).feed.entry
+			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+			var eventUrl = `${initiativeUrl}#event-${event.id}`
+
+			entry.must.eql({
+				id: {$: `${initiativeUrl}/events/${event.id}`},
+				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				updated: {$: event.updated_at.toJSON()},
+				published: {$: event.occurred_at.toJSON()},
+				title: {$: t("PARLIAMENT_COMMITTEE_MEETING")},
+
+				content: {type: "text", $: outdent`
+					Stenogramm: https://stenogrammid.riigikogu.ee
+					Riigikogu istung: https://www.youtube.com
+				`}
+			})
+		})
+
 		it("must render initiative in parliament and committee meeting event with summary", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
@@ -6029,7 +6203,7 @@ describe("InitiativesController", function() {
 				updated_at: pseudoDateTime(),
 				occurred_at: pseudoDateTime(),
 				type: "parliament-committee-meeting",
-				content: {committee: "Keskkonnakomisjon", summary: "Talking happened."},
+				content: {summary: "Talking happened."},
 				origin: "parliament"
 			}))
 
@@ -6045,11 +6219,116 @@ describe("InitiativesController", function() {
 				link: {rel: "alternate", type: "text/html", href: eventUrl},
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
+				title: {$: t("PARLIAMENT_COMMITTEE_MEETING")},
+				content: {type: "text", $: "Talking happened."}
+			})
+		})
 
-				title: {$: t("PARLIAMENT_COMMITTEE_MEETING_BY", {
-					committee: "Keskkonnakomisjon"
-				})},
+		it("must render initiative in parliament and plenary meeting event",
+			function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament"
+			}))
 
+			var event = yield eventsDb.create(new ValidEvent({
+				initiative_uuid: initiative.uuid,
+				created_at: pseudoDateTime(),
+				updated_at: pseudoDateTime(),
+				occurred_at: pseudoDateTime(),
+				type: "parliament-plenary-meeting",
+				content: {},
+				origin: "parliament"
+			}))
+
+			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			res.statusCode.must.equal(200)
+
+			var entry = Atom.parse(res.body).feed.entry
+			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+			var eventUrl = `${initiativeUrl}#event-${event.id}`
+
+			entry.must.eql({
+				id: {$: `${initiativeUrl}/events/${event.id}`},
+				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				updated: {$: event.updated_at.toJSON()},
+				published: {$: event.occurred_at.toJSON()},
+				title: {$: t("PARLIAMENT_PLENARY_MEETING")}
+			})
+		})
+
+		it("must render initiative in parliament and plenary meeting event with links", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament"
+			}))
+
+			var event = yield eventsDb.create(new ValidEvent({
+				initiative_uuid: initiative.uuid,
+				created_at: pseudoDateTime(),
+				updated_at: pseudoDateTime(),
+				occurred_at: pseudoDateTime(),
+				type: "parliament-plenary-meeting",
+				origin: "parliament",
+
+				content: {
+					links: [
+						{title: "Stenogramm", url: "https://stenogrammid.riigikogu.ee"},
+						{title: "Riigikogu istung", url: "https://www.youtube.com"}
+					]
+				},
+			}))
+
+			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			res.statusCode.must.equal(200)
+
+			var entry = Atom.parse(res.body).feed.entry
+			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+			var eventUrl = `${initiativeUrl}#event-${event.id}`
+
+			entry.must.eql({
+				id: {$: `${initiativeUrl}/events/${event.id}`},
+				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				updated: {$: event.updated_at.toJSON()},
+				published: {$: event.occurred_at.toJSON()},
+				title: {$: t("PARLIAMENT_PLENARY_MEETING")},
+
+				content: {type: "text", $: outdent`
+					Stenogramm: https://stenogrammid.riigikogu.ee
+					Riigikogu istung: https://www.youtube.com
+				`}
+			})
+		})
+
+		it("must render initiative in parliament and plenary meeting event with summary", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament"
+			}))
+
+			var event = yield eventsDb.create(new ValidEvent({
+				initiative_uuid: initiative.uuid,
+				created_at: pseudoDateTime(),
+				updated_at: pseudoDateTime(),
+				occurred_at: pseudoDateTime(),
+				type: "parliament-plenary-meeting",
+				content: {summary: "Talking happened."},
+				origin: "parliament"
+			}))
+
+			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			res.statusCode.must.equal(200)
+
+			var entry = Atom.parse(res.body).feed.entry
+			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+			var eventUrl = `${initiativeUrl}#event-${event.id}`
+
+			entry.must.eql({
+				id: {$: `${initiativeUrl}/events/${event.id}`},
+				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				updated: {$: event.updated_at.toJSON()},
+				published: {$: event.occurred_at.toJSON()},
+				title: {$: t("PARLIAMENT_PLENARY_MEETING")},
 				content: {type: "text", $: "Talking happened."}
 			})
 		})

@@ -562,6 +562,7 @@
 	"PARLIAMENT_PHASE_ACCEPTANCE_N_DAYS_OVER": "{{days}}p üle tähtaja",
 	"PARLIAMENT_PHASE_N_DAYS_LEFT": "{{days}}p menetlemiseks",
 	"PARLIAMENT_PHASE_N_DAYS_OVER": "{{days}}p üle tähtaja",
+	"PARLIAMENT_PLENARY_MEETING": "Arutelu täiskogul",
 	"PARLIAMENT_RECEIVED": "Algatus jõudis riigikokku",
 	"PLACEHOLDER_ADD_YOUR_REPLY": "Lisa vastus {{name}} kommentaarile",
 	"PLACEHOLDER_PERSONAL_ID": "Isikukood",

@@ -1824,6 +1824,8 @@ function EventsView(attrs) {
 					var content
 					var summary
 					var decision
+					var meeting
+					var links
 					var klass = `event ${event.type}-event`
 					var phase = initiativePhaseFromEvent(event)
 					if (phase) klass += ` ${phase}-phase`
@@ -1863,11 +1865,31 @@ function EventsView(attrs) {
 							title = t("PARLIAMENT_BOARD_MEETING")
 							break
 
+						case "parliament-plenary-meeting":
+							title = t("PARLIAMENT_PLENARY_MEETING")
+							meeting = event.content
+							summary = meeting.summary
+							links = meeting.links || EMPTY_ARR
+
+							content = <Fragment>
+								{summary ? <p class="text">
+									{Jsx.html(linkify(summary))}
+								</p> : null}
+
+								{links.length ? <ul class="event-links">
+									{links.map((link) => <li>
+										<UntrustedLink href={link.url}>{link.title}</UntrustedLink>
+									</li>)}
+								</ul> : null}
+							</Fragment>
+							break
+
 						case "parliament-committee-meeting":
-							var meeting = event.content
+							meeting = event.content
 							decision = meeting.decision
 							var invitees = meeting.invitees
 							summary = meeting.summary
+							links = meeting.links || EMPTY_ARR
 
 							title = meeting.committee
 								? t("PARLIAMENT_COMMITTEE_MEETING_BY", {
@@ -1906,6 +1928,12 @@ function EventsView(attrs) {
 									? t("PARLIAMENT_MEETING_DECISION_DRAFT_ACT_OR_NATIONAL_MATTER")
 									: null
 								}</p> : null}
+
+								{links.length ? <ul class="event-links">
+									{links.map((link) => <li>
+										<UntrustedLink href={link.url}>{link.title}</UntrustedLink>
+									</li>)}
+								</ul> : null}
 							</Fragment>
 							break
 
@@ -2506,6 +2534,7 @@ function initiativePhaseFromEvent(event) {
 		case "parliament-national-matter":
 		case "parliament-board-meeting":
 		case "parliament-committee-meeting":
+		case "parliament-plenary-meeting":
 		case "parliament-decision":
 		case "parliament-finished": return "parliament"
 		case "sent-to-government": return "government"

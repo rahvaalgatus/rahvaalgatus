@@ -57,6 +57,8 @@ function EventEntryView(attrs) {
 	var category = CATEGORIES[event.origin]
 	var authorName
 	var decision
+	var meeting
+	var links
 
 	switch (event.type) {
 		case "signature-milestone":
@@ -84,10 +86,25 @@ function EventEntryView(attrs) {
 			title = renderEventTitle(initiative, event)
 			break
 
+		case "parliament-plenary-meeting":
+			title = renderEventTitle(initiative, event)
+			meeting = event.content
+			links = meeting.links || EMPTY_ARR
+
+			content = concat(
+				meeting.summary || EMPTY_ARR,
+
+				links.length
+					? links.map((link) => `${link.title}: ${link.url}`).join("\n")
+					: EMPTY_ARR
+			).join("\n\n")
+			break
+
 		case "parliament-committee-meeting":
 			title = renderEventTitle(initiative, event)
-			var meeting = event.content
+			meeting = event.content
 			decision = meeting.decision
+			links = meeting.links || EMPTY_ARR
 
 			content = concat(
 				meeting.summary || EMPTY_ARR,
@@ -106,7 +123,11 @@ function EventEntryView(attrs) {
 				? t("PARLIAMENT_MEETING_DECISION_SOLVE_DIFFERENTLY")
 				: decision == "draft-act-or-national-matter"
 				? t("PARLIAMENT_MEETING_DECISION_DRAFT_ACT_OR_NATIONAL_MATTER")
-				: EMPTY_ARR
+				: EMPTY_ARR,
+
+				links.length
+					? links.map((link) => `${link.title}: ${link.url}`).join("\n")
+					: EMPTY_ARR
 			).join("\n\n")
 			break
 

@@ -722,7 +722,18 @@ describe("ParliamentSyncCli", function() {
 
 			"ARUTELU_KOMISJONIS status": [{
 				responsibleCommittee: [{name: "Sotsiaalkomisjon"}],
-				statuses: [{date: "2018-10-24", status: {code: "ARUTELU_KOMISJONIS"}}]
+				statuses: [{
+					date: "2018-10-24",
+					status: {code: "ARUTELU_KOMISJONIS"},
+
+					relatedOuterLinks: [{
+            outerLinkTitle: "Stenogramm",
+            outerLink: "https://stenogrammid.riigikogu.ee"
+					}, {
+            outerLinkTitle: "Riigikogu istung",
+            outerLink: "https://www.youtube.com"
+					}]
+				}]
 			}, {
 				parliament_committee: "Sotsiaalkomisjon"
 			}, {
@@ -731,7 +742,16 @@ describe("ParliamentSyncCli", function() {
 				external_id: "ARUTELU_KOMISJONIS/2018-10-24",
 				type: "parliament-committee-meeting",
 				title: null,
-				content: {committee: "Sotsiaalkomisjon", invitees: null}
+
+				content: {
+					committee: "Sotsiaalkomisjon",
+					invitees: null,
+
+					links: [
+						{title: "Stenogramm", url: "https://stenogrammid.riigikogu.ee"},
+						{title: "Riigikogu istung", url: "https://www.youtube.com"}
+					]
+				}
 			}],
 
 			"ARUTELU_KOMISJONIS status with JATKATA_ARUTELU decision": [{
@@ -746,7 +766,13 @@ describe("ParliamentSyncCli", function() {
 				external_id: "ARUTELU_KOMISJONIS/2018-10-24",
 				type: "parliament-committee-meeting",
 				title: null,
-				content: {committee: null, decision: "continue", invitees: null},
+
+				content: {
+					committee: null,
+					decision: "continue",
+					invitees: null,
+					links: []
+				},
 			}],
 
 			"ARUTELU_KOMISJONIS status with AVALIK_ISTUNG decision": [{
@@ -761,10 +787,12 @@ describe("ParliamentSyncCli", function() {
 				external_id: "ARUTELU_KOMISJONIS/2018-10-24",
 				type: "parliament-committee-meeting",
 				title: null,
+
 				content: {
 					committee: null,
 					decision: "hold-public-hearing",
-					invitees: null
+					invitees: null,
+					links: []
 				},
 			}],
 
@@ -782,10 +810,12 @@ describe("ParliamentSyncCli", function() {
 				external_id: "ARUTELU_KOMISJONIS/2018-10-24",
 				type: "parliament-committee-meeting",
 				title: null,
+
 				content: {
 					committee: null,
 					decision: "solve-differently",
-					invitees: null
+					invitees: null,
+					links: []
 				}
 			}],
 
@@ -803,10 +833,12 @@ describe("ParliamentSyncCli", function() {
 				external_id: "ARUTELU_KOMISJONIS/2018-10-24",
 				type: "parliament-committee-meeting",
 				title: null,
+
 				content: {
 					committee: null,
 					decision: "forward-to-government",
-					invitees: null
+					invitees: null,
+					links: []
 				}
 			}],
 
@@ -824,7 +856,13 @@ describe("ParliamentSyncCli", function() {
 				external_id: "ARUTELU_KOMISJONIS/2018-10-24",
 				type: "parliament-committee-meeting",
 				title: null,
-				content: {committee: null, decision: "reject", invitees: null}
+
+				content: {
+					committee: null,
+					decision: "reject",
+					invitees: null,
+					links: []
+				}
 			}],
 
 			"ARUTELU_KOMISJONIS status with ETTEPANEK_INSTITUTSIOONILE decision": [{
@@ -841,7 +879,13 @@ describe("ParliamentSyncCli", function() {
 				external_id: "ARUTELU_KOMISJONIS/2018-10-24",
 				type: "parliament-committee-meeting",
 				title: null,
-				content: {committee: null, decision: "forward", invitees: null}
+
+				content: {
+					committee: null,
+					decision: "forward",
+					invitees: null,
+					links: []
+				}
 			}],
 
 			"ARUTELU_KOMISJONIS status with ALGATADA_EELNOU_VOI_OTRK decision": [{
@@ -858,10 +902,40 @@ describe("ParliamentSyncCli", function() {
 				external_id: "ARUTELU_KOMISJONIS/2018-10-24",
 				type: "parliament-committee-meeting",
 				title: null,
+
 				content: {
 					committee: null,
 					decision: "draft-act-or-national-matter",
-					invitees: null
+					invitees: null,
+					links: []
+				}
+			}],
+
+			"ARUTELU_TAISKOGUL status": [{
+				statuses: [{
+					date: "2018-10-24",
+					status: {code: "ARUTELU_TAISKOGUL"},
+
+					relatedOuterLinks: [{
+            outerLinkTitle: "Stenogramm",
+            outerLink: "https://stenogrammid.riigikogu.ee"
+					}, {
+            outerLinkTitle: "Riigikogu istung",
+            outerLink: "https://www.youtube.com"
+					}]
+				}]
+			}, {}, {
+				occurred_at: new Date(2018, 9, 24),
+				origin: "parliament",
+				external_id: "ARUTELU_TAISKOGUL/2018-10-24",
+				type: "parliament-plenary-meeting",
+				title: null,
+
+				content: {
+					links: [
+						{title: "Stenogramm", url: "https://stenogrammid.riigikogu.ee"},
+						{title: "Riigikogu istung", url: "https://www.youtube.com"}
+					]
 				}
 			}],
 
@@ -958,10 +1032,12 @@ describe("ParliamentSyncCli", function() {
 				external_id: "ARUTELU_KOMISJONIS/2018-10-24",
 				type: "parliament-committee-meeting",
 				title: null,
+
 				content: {
 					committee: null,
 					decision: "solve-differently",
-					invitees: null
+					invitees: null,
+					links: []
 				}
 			}, {
 				occurred_at: new Date(2018, 9, 26),
@@ -989,7 +1065,13 @@ describe("ParliamentSyncCli", function() {
 				external_id: "ARUTELU_KOMISJONIS/2018-10-24",
 				type: "parliament-committee-meeting",
 				title: null,
-				content: {committee: null, decision: "reject", invitees: null}
+
+				content: {
+					committee: null,
+					decision: "reject",
+					invitees: null,
+					links: []
+				}
 			}, {
 				occurred_at: new Date(2018, 9, 26),
 				origin: "parliament",
@@ -1016,7 +1098,13 @@ describe("ParliamentSyncCli", function() {
 				external_id: "ARUTELU_KOMISJONIS/2018-10-24",
 				type: "parliament-committee-meeting",
 				title: null,
-				content: {committee: null, decision: "forward", invitees: null}
+
+				content: {
+					committee: null,
+					decision: "forward",
+					invitees: null,
+					links: []
+				}
 			}, {
 				occurred_at: new Date(2018, 9, 26),
 				origin: "parliament",
@@ -1196,7 +1284,7 @@ describe("ParliamentSyncCli", function() {
 				external_id: "ARUTELU_KOMISJONIS/2015-06-20",
 				type: "parliament-committee-meeting",
 				title: null,
-				content: {committee: null, invitees: null},
+				content: {committee: null, invitees: null, links: []}
 			}), new ValidEvent({
 				id: 2,
 				initiative_uuid: initiative.uuid,
@@ -1294,6 +1382,7 @@ describe("ParliamentSyncCli", function() {
 				content: {
 					committee: "Sotsiaalkomisjon",
 					invitees: null,
+					links: [],
 					decision: "forward",
 					summary: "It was a good meeting."
 				}
@@ -2256,7 +2345,12 @@ describe("ParliamentSyncCli", function() {
 				external_id: "ARUTELU_KOMISJONIS/2015-06-18",
 				type: "parliament-committee-meeting",
 				title: null,
-				content: {committee: "Keskkonnakomisjon", invitees: null}
+
+				content: {
+					committee: "Keskkonnakomisjon",
+					invitees: null,
+					links: []
+				}
 			}, [{
 				id: 1,
 				event_id: 1,
@@ -3126,7 +3220,12 @@ describe("ParliamentSyncCli", function() {
 				external_id: "ARUTELU_KOMISJONIS/2015-06-18",
 				type: "parliament-committee-meeting",
 				title: null,
-				content: {committee: "Keskkonnakomisjon", invitees: null}
+
+				content: {
+					committee: "Keskkonnakomisjon",
+					invitees: null,
+					links: []
+				}
 			})])
 
 			yield filesDb.search(sql`

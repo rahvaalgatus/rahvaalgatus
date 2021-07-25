@@ -141,7 +141,7 @@ module.exports = function(attrs) {
 					<CheckboxForm
 						req={req}
 						action={initiativePath}
-						name={"hasPaperSignatures"}
+						name="hasPaperSignatures"
 						checked={initiative.has_paper_signatures}
 					/>
 				</td>
@@ -162,7 +162,7 @@ module.exports = function(attrs) {
 					<DateInputForm
 						req={req}
 						action={initiativePath}
-						name={"sentToParliamentOn"}
+						name="sentToParliamentOn"
 						value={initiative.sent_to_parliament_at}
 					/>
 				</td>
@@ -174,7 +174,7 @@ module.exports = function(attrs) {
 					<DateInputForm
 						req={req}
 						action={initiativePath}
-						name={"receivedByParliamentOn"}
+						name="receivedByParliamentOn"
 						value={initiative.received_by_parliament_at}
 					/>
 				</td>
@@ -186,7 +186,7 @@ module.exports = function(attrs) {
 					<DateInputForm
 						req={req}
 						action={initiativePath}
-						name={"acceptedByParliamentOn"}
+						name="acceptedByParliamentOn"
 						value={initiative.accepted_by_parliament_at}
 					/>
 				</td>
@@ -198,7 +198,7 @@ module.exports = function(attrs) {
 					<InputForm
 						req={req}
 						action={initiativePath}
-						name={"parliamentCommittee"}
+						name="parliamentCommittee"
 						value={initiative.parliament_committee}
 					/>
 				</td>
@@ -218,7 +218,7 @@ module.exports = function(attrs) {
 					<DateInputForm
 						req={req}
 						action={initiativePath}
-						name={"finishedInParliamentOn"}
+						name="finishedInParliamentOn"
 						value={initiative.finished_in_parliament_at}
 					/>
 				</td>
@@ -230,7 +230,7 @@ module.exports = function(attrs) {
 					<DateInputForm
 						req={req}
 						action={initiativePath}
-						name={"sentToGovernmentOn"}
+						name="sentToGovernmentOn"
 						value={initiative.sent_to_government_at}
 					/>
 				</td>
@@ -242,7 +242,7 @@ module.exports = function(attrs) {
 					<InputForm
 						req={req}
 						action={initiativePath}
-						name={"governmentAgency"}
+						name="governmentAgency"
 						value={initiative.government_agency}
 					/>
 				</td>
@@ -258,7 +258,7 @@ module.exports = function(attrs) {
 					<InputForm
 						req={req}
 						action={initiativePath}
-						name={"governmentContact"}
+						name="governmentContact"
 						value={initiative.government_contact}
 					/>
 				</td>
@@ -273,7 +273,7 @@ module.exports = function(attrs) {
 					<InputForm
 						req={req}
 						action={initiativePath}
-						name={"governmentContactDetails"}
+						name="governmentContactDetails"
 						value={initiative.government_contact_details}
 					/>
 				</td>
@@ -285,7 +285,7 @@ module.exports = function(attrs) {
 					<InputForm
 						req={req}
 						action={initiativePath}
-						name={"governmentDecision"}
+						name="governmentDecision"
 						value={initiative.government_decision}
 					/>
 				</td>
@@ -297,7 +297,7 @@ module.exports = function(attrs) {
 					<DateInputForm
 						req={req}
 						action={initiativePath}
-						name={"finishedInGovernmentOn"}
+						name="finishedInGovernmentOn"
 						value={initiative.finished_in_government_at}
 					/>
 				</td>
@@ -395,15 +395,26 @@ module.exports = function(attrs) {
 						var eventPath = `${initiativePath}/events/${event.id}`
 						var toggleId = `show-event-${event.id}-text`
 						var title = event.title
-						var content
+						var content, meeting
 
 						switch (event.type) {
 							case "text":
 								content = <p class="text">{Jsx.html(linkify(event.content))}</p>
 								break
 
+							case "parliament-plenary-meeting":
+								meeting = event.content
+
+								content = <table class="admin-horizontal-table">
+									{meeting.summary ? <tr>
+										<th scope="row">Summary</th>
+										<td>{Jsx.html(linkify(meeting.summary))}</td>
+									</tr> : null}
+								</table>
+								break
+
 							case "parliament-committee-meeting":
-								var meeting = event.content
+								meeting = event.content
 
 								content = <table class="admin-horizontal-table">
 									<tr>

@@ -337,6 +337,7 @@ function parseEvent(event, obj) {
 			occurred_at: parseOccurredAt(obj)
 		}
 
+		case "parliament-plenary-meeting":
 		case "parliament-committee-meeting":
 		case "parliament-letter":
 		case "parliament-decision": return {
@@ -393,6 +394,7 @@ function renderEventMessage(initiative, event) {
 function isEditableEvent(event) {
 	return (
 		event.type == "parliament-committee-meeting" ||
+		event.type == "parliament-plenary-meeting" ||
 		event.type == "parliament-decision" ||
 		event.type == "parliament-letter" ||
 		event.type == "text"

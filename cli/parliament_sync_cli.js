@@ -451,6 +451,7 @@ function attrsFromStatus(status) {
 		case "TAGASTATUD": return {parliament_decision: "return"}
 		case "TAGASI_LYKATUD": return {parliament_decision: "reject"}
 		case "MENETLUS_LOPETATUD": return null
+		case "ARUTELU_TAISKOGUL": return null
 
 		case "ARUTELU_KOMISJONIS":
 			// Ignoring the "continue" decision as that's not applicable as the final
@@ -490,6 +491,7 @@ function attrsFromEvent(event) {
 		}
 
 		case "parliament-committee-meeting": return null
+		case "parliament-plenary-meeting": return null
 		case "parliament-interpellation": return null
 		case "parliament-letter": return null
 		case "parliament-decision": return null
@@ -584,11 +586,19 @@ function eventAttrsFromStatus(document, documents, status) {
 					null
 				),
 
-				invitees: null
+				invitees: null,
+				links: (status.relatedOuterLinks || EMPTY_ARR).map(parseLink)
 			}
 
 			if (status.committeeDecision)
 				attrs.content.decision = parseMeetingDecision(status.committeeDecision)
+			break
+
+		case "ARUTELU_TAISKOGUL":
+			attrs.content = {
+				links: (status.relatedOuterLinks || EMPTY_ARR).map(parseLink)
+			}
+			break
 	}
 
 	return [attrs, documents]
@@ -791,6 +801,7 @@ function eventIdFromStatus(obj) {
 		case "MENETLUS_LOPETATUD": return code
 		case "TAGASI_LYKATUD": return "MENETLUS_LOPETATUD"
 		case "ARUTELU_KOMISJONIS": return code + "/" + obj.date
+		case "ARUTELU_TAISKOGUL": return code + "/" + obj.date
 		default: throw new RangeError("Unrecognized status: " + code)
 	}
 }
@@ -805,6 +816,7 @@ function eventTypeFromStatus(obj) {
 		case "TAGASI_LYKATUD": return "parliament-finished"
 		case "MENETLUS_LOPETATUD": return "parliament-finished"
 		case "ARUTELU_KOMISJONIS": return "parliament-committee-meeting"
+		case "ARUTELU_TAISKOGUL": return "parliament-plenary-meeting"
 		default: throw new RangeError("Unrecognized status: " + code)
 	}
 }
@@ -1094,6 +1106,10 @@ function is404(err) {
 function getLatestCommittee(doc) {
 	var committees = doc.responsibleCommittee || EMPTY_ARR
 	return committees.find((com) => com.active) || _.last(committees) || null
+}
+
+function parseLink(link) {
+	return {title: link.outerLinkTitle, url: link.outerLink}
 }
 
 function getBody(res) { return res.body }
