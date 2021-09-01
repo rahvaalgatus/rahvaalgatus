@@ -385,7 +385,7 @@ exports.router.put("/:textId/signatures/:signatureId",
 function parse(obj) {
 	return {
 		title: String(obj.title),
-		content: JSON.parse(obj.content),
+		content: obj.content ? JSON.parse(obj.content) : [],
 		content_type: "application/vnd.basecamp.trix+json",
 		language: LANGUAGES.includes(obj.language) ? obj.language : "et",
 		basis_id: Number(obj["basis-id"]) || null

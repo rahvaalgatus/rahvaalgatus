@@ -96,6 +96,10 @@ module.exports = function(attrs) {
 				readonly={!editable}
 			/>
 
+			<noscript><div id="editor-noscript">
+				{t("UPDATE_INITIATIVE_NOSCRIPT")}
+			</div></noscript>
+
 			<script>{javascript`
 				var Trix = require("trix")
 				Trix.config.blockAttributes.heading1.tagName = "h2";

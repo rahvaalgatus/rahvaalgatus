@@ -244,6 +244,42 @@ describe("InitiativeTextsController", function() {
 				res.body.must.include(t("INITIATIVE_TEXT_CREATED"))
 			})
 
+			it("must create new text and set title even if content empty", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id,
+					language: "en"
+				}))
+
+				var initiativePath = "/initiatives/" + initiative.uuid
+				var res = yield this.request(initiativePath + "/texts", {
+					method: "POST",
+					// With JavaScript disabled, content is left empty entirely when
+					// creating.
+					form: {title: "Let it shine", content: "", language: "en"}
+				})
+
+				res.statusCode.must.equal(302)
+				res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+				yield initiativesDb.read(initiative).must.then.eql({
+					__proto__: initiative,
+					title: "Let it shine"
+				})
+
+				yield textsDb.search(sql`
+					SELECT * FROM initiative_texts
+				`).must.then.eql([new ValidText({
+					id: 1,
+					initiative_uuid: initiative.uuid,
+					user_id: this.user.id,
+					created_at: new Date,
+					title: "Let it shine",
+					language: "en",
+					content: [],
+					content_type: TRIX_TYPE
+				})])
+			})
+
 			it("must create new text given translation in edit phase", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id

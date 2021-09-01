@@ -749,6 +749,7 @@
 	"TXT_TOPIC_VISIBILITY_PRIVATE": "Privaatne arutelu",
 	"UPDATE_EDIT_DEADLINE_BUTTON": "Uuenda tähtaega",
 	"UPDATE_INITIATIVE_INFO": "Salvesta",
+	"UPDATE_INITIATIVE_NOSCRIPT": "Algatuse teksti muutmiseks on vaja brauseris sisse lülitada JavaScripti tugi.",
 	"UPDATE_INITIATIVE_READONLY": "Kuna algatus on juba allkirjastamisel, ei saa enam selle teksti muuta. Küll aga saad algatusele lisada tõlkeid. Vali selleks ülalt teine keel.",
 	"UPDATE_INITIATIVE_TO_LANG_CURRENTLY_EN": "Hetkel inglise keeles.",
 	"UPDATE_INITIATIVE_TO_LANG_CURRENTLY_ET": "Hetkel eesti keeles.",

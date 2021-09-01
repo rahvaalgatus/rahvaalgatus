@@ -3426,8 +3426,7 @@ button.inherited {
 	.read-only-warning {
 		padding: 1rem 1.5rem;
 		background: $light-background;
-		border: 0 solid $light-background-border;
-		border-width: 1px 0;
+		border-top: 1px solid $light-background-border;
 		line-height: 1.4;
 	}
 
@@ -3445,17 +3444,29 @@ button.inherited {
 		}
 	}
 
-	trix-editor {
-		@extend .text;
+	#editor,
+	#editor-noscript {
+		display: block;
 
 		padding: $article-padding;
 		@include mobile { padding: $article-padding-mobile; }
+	}
 
-		div + h2 { margin-top: 4rem; }
+	#editor {
+		@extend .text;
 
 		min-height: 20em;
 		font-size: 1.6rem;
 		font-family: $tisa-pro;
+
+		div + h2 { margin-top: 4rem; }
+
+		&:not([trix-id]) { display: none; }
+	}
+
+	#editor-noscript {
+		border-top: 1px solid $light-background-border;
+		background: $light-background;
 	}
 
 	.submit-inputs {
