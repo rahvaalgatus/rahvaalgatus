@@ -9,7 +9,8 @@ var UA = require("root/config").userAgent
 var sql = require("sqlate")
 
 fetch = require("fetch-defaults")(fetch, {
-	timeout: 10000,
+	// The Atom feed endpoint of theirs takes a good 10s to respond these days.
+	timeout: 30000,
 	headers: {"User-Agent": UA}
 })
 
