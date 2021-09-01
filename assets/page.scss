@@ -2896,8 +2896,13 @@ button.inherited {
 			h2 ~ * { margin-top: 0.5rem; }
 
 			#initiative-destination-form {
-				select { width: 100%; }
 				margin-bottom: 1rem;
+
+				select { width: 100%; }
+
+				// Button only visible in <noscript>.
+				button { margin-top: 0.5rem; width: 100%; }
+				p { margin-top: 0.5rem; }
 			}
 
 			p {

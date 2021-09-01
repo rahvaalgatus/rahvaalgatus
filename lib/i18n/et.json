@@ -296,6 +296,8 @@
 	"INITIATIVE_MEDIA_COVERAGE_EVENT_PUBLISHER_INPUT": "Artikli autor või väljaandja",
 	"INITIATIVE_MEDIA_COVERAGE_EVENT_TITLE_INPUT": "Artikli pealkiri",
 	"INITIATIVE_MEDIA_COVERAGE_EVENT_URL_INPUT": "Veebiaadress",
+	"INITIATIVE_PAGE_DESTINATION_UPDATE_BUTTON": "Muuda saajat",
+	"INITIATIVE_PAGE_DESTINATION_UPDATE_DESCRIPTION": "Algatuse saajat saad muuta, kuniks alustad allkirjade kogumist. Kui sa ei ole kindel, kellele algatus suunata, <a class=\"link-button\" href=\"mailto:{{email}}\">võta meiega ühendust</a>.",
 	"INITIATIVE_PARLIAMENT_EVENT_MESSAGE_BODY": "Tere\n\nAlgatusele \"{{initiativeTitle}}\" ({{initiativeUrl}}) lisati menetlusinfot:\n{{eventTitles}}\n\nMenetlusinfot saad näha lehel {{eventsUrl}}.\n\n--\nRahvaalgatus.ee\n{{siteUrl}}\n{{facebookUrl}}\n{{twitterUrl}}\n\nPS. Said selle kirja, kuna oled avaldanud soovi saada algatuste kohta teavitusi. Kui teavitusi saada enam ei soovi, saad need peatada lehel {{unsubscribeUrl}}.",
 	"INITIATIVE_PARLIAMENT_EVENT_MESSAGE_TITLE": "{{initiativeTitle}}: Menetlusinfo täiendatud {{eventDate}} sündmuse kohta",
 	"INITIATIVE_PROCESSED": "Algatuse menetlus on lõppenud.",

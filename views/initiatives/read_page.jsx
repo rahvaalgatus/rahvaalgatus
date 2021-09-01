@@ -940,12 +940,15 @@ function SidebarAuthorView(attrs) {
 					onchange="this.form.submit()"
 				/>
 
-				<p>
-					Algatuse saajat saad muuta, kuniks alustad allkirjade kogumist. Kui
-					sa ei ole kindel, kellele algatus suunata, <a
-					class="link-button" href={"mailto:" + Config.helpEmail}>võta meiega
-					ühendust</a>.
-				</p>
+				<noscript>
+					<button type="submit" class="secondary-button">
+						{t("INITIATIVE_PAGE_DESTINATION_UPDATE_BUTTON")}
+					</button>
+				</noscript>
+
+				<p>{Jsx.html(t("INITIATIVE_PAGE_DESTINATION_UPDATE_DESCRIPTION", {
+					email: Config.helpEmail
+				}))}</p>
 			</Form>
 		</Fragment> : null}
 
