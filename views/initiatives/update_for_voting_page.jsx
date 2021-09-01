@@ -13,18 +13,21 @@ module.exports = function(attributes) {
 	var req = attributes.req
 	var t = attributes.t
 	var initiative = attributes.initiative
+	var initiativePath = `/initiatives/${initiative.uuid}`
 	var error = attributes.error
 	var attrs = attributes.attrs
 	var texts = attributes.texts
-	var endsOn = DateFns.addMilliseconds(attrs.endsAt, -1)
 
 	var minOn = DateFns.addDays(
 		Initiative.getMinDeadline(initiative.signing_started_at || new Date),
 		-1
 	)
 
+	var endsOn = attrs.endsAt
+		? DateFns.addMilliseconds(attrs.endsAt, -1)
+		: minOn
+
 	var maxOn = DateFns.addDays(Initiative.getMaxDeadline(new Date), -1)
-	var initiativePath = `/initiatives/${initiative.uuid}`
 
 	return <InitiativePage
 		page="initiative-send-to-voting"

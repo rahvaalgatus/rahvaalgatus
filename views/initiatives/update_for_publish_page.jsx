@@ -13,12 +13,15 @@ module.exports = function(attributes) {
 	var initiative = attributes.initiative
 	var error = attributes.error
 	var attrs = attributes.attrs
-	var endsOn = DateFns.addMilliseconds(attrs.endsAt, -1)
 
 	var minOn = DateFns.addDays(
 		Initiative.getMinDeadline(initiative.published_at || new Date),
 		-1
 	)
+
+	var endsOn = attrs.endsAt
+		? DateFns.addMilliseconds(attrs.endsAt, -1)
+		: minOn
 
 	var maxOn = DateFns.addDays(Initiative.getMaxDeadline(new Date), -1)
 
