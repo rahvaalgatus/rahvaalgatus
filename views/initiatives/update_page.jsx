@@ -96,9 +96,9 @@ module.exports = function(attrs) {
 				readonly={!editable}
 			/>
 
-			<noscript><div id="editor-noscript">
+			{editable ? <noscript><div id="editor-noscript">
 				{t("UPDATE_INITIATIVE_NOSCRIPT")}
-			</div></noscript>
+			</div></noscript> : null}
 
 			<script>{javascript`
 				var Trix = require("trix")
