@@ -350,6 +350,7 @@
 	"INITIATIVE_TITLE_PLACEHOLDER": "Algatuse pealkiri",
 	"INITIATIVE_TRANSLATION_PLEASE_SIGN": "Selleks, et tõlge teistele nähtav oleks, pead allkirjaga kinnitama, et see vastab algtekstile.",
 	"INITIATIVE_TRANSLATION_PLEASE_SIGN_AFTER_UPDATE": "Selleks, et tõlge teistele nähtav oleks, pead allkirjaga kinnitama, et see vastab algtekstile.\nKuna oled tõlget peale viimast allkirjastamist muutnud, palun allkirjasta see uuesti.",
+	"INITIATIVE_TRANSLATION_PLEASE_SIGN_SOME_TRANSLATION": "Algatusel on allkirjastamata tõlkeid. Selleks, et tõlked teistele nähtavad oleksid, pead allkirjaga kinnitama, et need vastavad algtekstile.",
 	"INITIATIVE_TRANSLATION_SIGN": "Kinnita tõlge allkirjaga",
 	"INITIATIVE_TRANSLATION_SIGNABLE_INTRO": "Kinnitan, et tõlge vastab algtekstile.",
 	"INITIATIVE_TRANSLATION_SIGNED": "Oled kinnitanud tõlke. Tõlge on nüüd avalikult nähtav.",

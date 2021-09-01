@@ -4012,6 +4012,49 @@ describe("InitiativesController", function() {
 			})
 
 			describe("given texts", function() {
+				it("must render signed translation if in sign phase if author",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "sign",
+						language: "et"
+					}))
+
+					var english = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: initiative.user_id,
+						language: "en",
+						content: "Hello, world!",
+						content_type: "text/html"
+					}))
+
+					yield textSignaturesDb.create(new ValidTextSignature({
+						text_id: english.id,
+						signed: true,
+						timestamped: true
+					}))
+
+					var initiativePath = "/initiatives/" + initiative.uuid
+					var res = yield this.request(initiativePath + "?language=en")
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var headerEl = dom.querySelector("#initiative-header")
+					headerEl.textContent.must.include(english.title)
+					var textEl = dom.querySelector("article.text")
+					textEl.textContent.must.include(english.content)
+
+					res.body.must.not.include(t("INITIATIVE_TRANSLATION_PLEASE_SIGN"))
+
+					res.body.must.not.include(
+						t("INITIATIVE_TRANSLATION_PLEASE_SIGN_AFTER_UPDATE")
+					)
+
+					res.body.must.not.include(
+						t("INITIATIVE_TRANSLATION_PLEASE_SIGN_SOME_TRANSLATION")
+					)
+				})
+
 				it("must render unsigned translation if in sign phase if author",
 					function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
@@ -4044,6 +4087,10 @@ describe("InitiativesController", function() {
 					textEl.textContent.must.include(english.content)
 
 					res.body.must.include(t("INITIATIVE_TRANSLATION_PLEASE_SIGN"))
+
+					res.body.must.not.include(
+						t("INITIATIVE_TRANSLATION_PLEASE_SIGN_SOME_TRANSLATION")
+					)
 				})
 
 				it("must render unsigned translation if in sign phase if coauthor",
@@ -4248,12 +4295,20 @@ describe("InitiativesController", function() {
 					)
 				})
 
-				it("must not show sign button if latest translation signed",
+				it("must mention unsigned translation on primary language",
 					function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: "sign",
 						language: "et"
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: initiative.user_id,
+						language: "et",
+						content: "Tere, maailm!",
+						content_type: "text/html"
 					}))
 
 					var english = yield textsDb.create(new ValidText({
@@ -4266,17 +4321,21 @@ describe("InitiativesController", function() {
 
 					yield textSignaturesDb.create(new ValidTextSignature({
 						text_id: english.id,
-						signed: true,
-						timestamped: true
+						signed: true
 					}))
 
 					var initiativePath = "/initiatives/" + initiative.uuid
-					var res = yield this.request(initiativePath + "?language=en")
+					var res = yield this.request(initiativePath)
 					res.statusCode.must.equal(200)
+
 					res.body.must.not.include(t("INITIATIVE_TRANSLATION_PLEASE_SIGN"))
 
-					res.body.must.not.include(
-						t("INITIATIVE_TRANSLATION_PLEASE_SIGN_AFTER_UPDATE")
+					res.body.must.include(
+						t("INITIATIVE_TRANSLATION_PLEASE_SIGN_SOME_TRANSLATION")
+					)
+
+					res.body.must.include(
+						t("INITIATIVE_TRANSLATION_SIGN_TRANSLATION_IN_EN")
 					)
 				})
 			})

@@ -362,13 +362,40 @@ function ReadPage(attrs) {
 						? t("INITIATIVE_TRANSLATION_PLEASE_SIGN")
 						: t("INITIATIVE_TRANSLATION_PLEASE_SIGN_AFTER_UPDATE")
 					}
-
 					<br />
 					<br />
 					<a
 						href={`${initiativePath}/texts/${text.id}/sign`}
 						class="sign-translation-button link-button"
 					>{t("INITIATIVE_TRANSLATION_SIGN")}</a>
+				</p> : null}
+
+				{(
+					isAuthor &&
+					initiative.phase != "edit" &&
+					text &&
+					initiative.language == text.language &&
+					_.any(translations, (translation) => (
+						signedTranslations[translation.language] == null ||
+						signedTranslations[translation.language].id != translation.id
+					))
+				) ? <p class="initiative-translation-information-for-author">
+					{t("INITIATIVE_TRANSLATION_PLEASE_SIGN_SOME_TRANSLATION")}
+					<br />
+
+					{_.map(translations, (translation) => (
+						signedTranslations[translation.language] == null ||
+						signedTranslations[translation.language].id != translation.id
+					) ? <Fragment>
+						<br />
+						<a
+							href={`${initiativePath}/texts/${translation.id}/sign`}
+							class="sign-translation-button link-button"
+						>{t(
+							"INITIATIVE_TRANSLATION_SIGN_TRANSLATION_IN_" +
+							translation.language.toUpperCase()
+						)}</a>
+					</Fragment> : null)}
 				</p> : null}
 
 				<InitiativeContentView
