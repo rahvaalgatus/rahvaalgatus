@@ -81,7 +81,11 @@ function Page(attrs, children) {
 			<LiveReload req={req} />
 		</head>
 
-		<body id={page + "-page"} class={attrs.class}>
+		<body id={page + "-page"} class={"no-js " + (attrs.class || "")}>
+			<script>{javascript`
+				document.body.className = document.body.className.slice(6)
+			`}</script>
+
 			<header id="header"><center>
 				<menu class="languages-and-user">
 					<Form action="/user" method="put" class="languages" req={req}>
