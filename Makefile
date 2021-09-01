@@ -7,8 +7,8 @@ TEST_TAGS =
 MOCHA = ./node_modules/.bin/_mocha
 SASS = ./node_modules/.bin/node-sass --recursive --indent-type tab --indent-width 1 --output-style expanded
 BUNDLE = bundle
-TRANSLATIONS_URL = https://spreadsheets.google.com/feeds/list/1JKPUNp8Y_8Aigq7eGJXtWT6nZFhd31k2Ht3AjC-i-Q8/1/public/full?alt=json
-LOCAL_GOVERNMENTS_URL = https://spreadsheets.google.com/feeds/list/1DynXZ8Um9TsiYPDaYW3-RTgaPy8hsdq9jj72G41yrVE/1/public/full?alt=json
+TRANSLATIONS_URL = https://docs.google.com/spreadsheets/d/1JKPUNp8Y_8Aigq7eGJXtWT6nZFhd31k2Ht3AjC-i-Q8/gviz/tq?tqx=out:json&tq&gid=0
+LOCAL_GOVERNMENTS_URL = https://docs.google.com/spreadsheets/d/1DynXZ8Um9TsiYPDaYW3-RTgaPy8hsdq9jj72G41yrVE/gviz/tq?tqx=out:json&tq&gid=0
 JQ_OPTS = --tab
 SHANGE = vendor/shange -f "config/$(ENV).sqlite3"
 WEB_PORT = 3000
@@ -168,14 +168,15 @@ tmp:
 	mkdir -p tmp
 
 tmp/translations.json: tmp
-	wget "$(TRANSLATIONS_URL)" -O "$@"
+	curl -H "X-DataSource-Auth: true" "$(TRANSLATIONS_URL)" | sed -e 1d > "$@"
 
 tmp/local_governments.json: tmp
-	wget "$(LOCAL_GOVERNMENTS_URL)" -O "$@"
+	curl -H "X-DataSource-Auth: true" "$(LOCAL_GOVERNMENTS_URL)" |\
+	sed -e 1d > "$@"
 
-lib/i18n/en.json: JQ_OPTS += --sort-keys --arg lang english
-lib/i18n/et.json: JQ_OPTS += --sort-keys --arg lang estonian
-lib/i18n/ru.json: JQ_OPTS += --sort-keys --arg lang russian
+lib/i18n/en.json: JQ_OPTS += --sort-keys --arg lang English
+lib/i18n/et.json: JQ_OPTS += --sort-keys --arg lang Estonian
+lib/i18n/ru.json: JQ_OPTS += --sort-keys --arg lang Russian
 lib/i18n/en.json \
 lib/i18n/et.json \
 lib/i18n/ru.json: tmp/translations.json
