@@ -3371,7 +3371,7 @@ button.inherited {
 #edit-initiative-page {
 	$tab-radius: 0.5rem;
 
-	.new-initiative & #initiative-sheet {
+	&.new-initiative #initiative-sheet {
 		margin-top: 4rem;
 	}
 
@@ -4080,7 +4080,7 @@ button.inherited {
 	}
 }
 
-.demo-signatures-page body {
+.demo-signatures-page {
 	font-family: $aino;
 
 	.text-section {

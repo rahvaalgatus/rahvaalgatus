@@ -54,7 +54,7 @@ function Page(attrs, children) {
 		"og:title": title || SITE_TITLE
 	}, DEFAULT_META, attrs.meta)
 
-	return <html lang={req.lang} class={attrs.class}>
+	return <html lang={req.lang}>
 		<head>
 			<meta charset="utf-8" />
 			<meta name="viewport" content="width=device-width" />
@@ -81,7 +81,7 @@ function Page(attrs, children) {
 			<LiveReload req={req} />
 		</head>
 
-		<body id={page + "-page"}>
+		<body id={page + "-page"} class={attrs.class}>
 			<header id="header"><center>
 				<menu class="languages-and-user">
 					<Form action="/user" method="put" class="languages" req={req}>
