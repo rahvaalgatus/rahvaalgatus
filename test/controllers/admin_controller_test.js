@@ -24,16 +24,6 @@ describe("AdminController", function() {
 	require("root/test/fixtures").csrf()
 	beforeEach(require("root/test/mitm").router)
 
-	describe("/", function() {
-		describe("when not logged in", function() {
-			it("must respond with 401", function*() {
-				var res = yield this.request(`/`)
-				res.statusCode.must.equal(401)
-				res.statusMessage.must.equal("Not an Admin")
-			})
-		})
-	})
-
 	describe("PUT /users/:id", function() {
 		require("root/test/fixtures").user({
 			country: Config.adminPersonalIds[0].slice(0, 2),

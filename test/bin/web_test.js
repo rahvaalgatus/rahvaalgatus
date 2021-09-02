@@ -15,6 +15,18 @@ describe("Web", function() {
 		})
 	})
 
+	describe("/non-existent", function() {
+		it("must respond with 404", function*() {
+			var res = yield this.request("/non-exitent")
+			res.statusCode.must.equal(404)
+
+			res.headers["cache-control"].must.equal("no-cache")
+			res.headers.must.have.property("etag")
+			res.headers.must.not.have.property("last-modified")
+			res.headers.must.not.have.property("expires")
+		})
+	})
+
 	_.each({
 		"/votings": "/",
 		"/topics": "/",
