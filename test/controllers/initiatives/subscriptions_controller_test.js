@@ -1,5 +1,5 @@
 var Crypto = require("crypto")
-var ValidInitiative = require("root/test/valid_db_initiative")
+var ValidInitiative = require("root/test/valid_initiative")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidUser = require("root/test/valid_user")
 var t = require("root/lib/i18n").t.bind(null, "et")

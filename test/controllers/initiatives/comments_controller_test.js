@@ -1,6 +1,6 @@
 var _ = require("root/lib/underscore")
 var Crypto = require("crypto")
-var ValidInitiative = require("root/test/valid_db_initiative")
+var ValidInitiative = require("root/test/valid_initiative")
 var ValidComment = require("root/test/valid_comment")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidUser = require("root/test/valid_user")

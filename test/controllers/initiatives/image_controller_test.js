@@ -1,6 +1,6 @@
 var _ = require("root/lib/underscore")
 var Fs = require("fs")
-var ValidInitiative = require("root/test/valid_db_initiative")
+var ValidInitiative = require("root/test/valid_initiative")
 var ValidUser = require("root/test/valid_user")
 var ValidCoauthor = require("root/test/valid_initiative_coauthor")
 var FormData = require("form-data")

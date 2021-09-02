@@ -1,5 +1,5 @@
 var ValidUser = require("root/test/valid_user")
-var ValidInitiative = require("root/test/valid_db_initiative")
+var ValidInitiative = require("root/test/valid_initiative")
 var ValidText = require("root/test/valid_initiative_text")
 var SqliteError = require("root/lib/sqlite_error")
 var initiativesDb = require("root/db/initiatives_db")

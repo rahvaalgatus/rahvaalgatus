@@ -1,5 +1,5 @@
 var ValidUser = require("root/test/valid_user")
-var ValidInitiative = require("root/test/valid_db_initiative")
+var ValidInitiative = require("root/test/valid_initiative")
 var ValidSignable = require("root/test/valid_signable")
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
