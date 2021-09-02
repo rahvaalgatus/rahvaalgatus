@@ -1144,6 +1144,7 @@ function SidebarInfoView(attrs) {
 	var authorName = initiative.author_name
 	var coauthorNames = _.map(initiative.coauthors, "user_name")
 	var authorUrl = initiative.author_url
+	var authorContacts = initiative.author_contacts
 	var communityUrl = initiative.community_url
 	var externalUrl = initiative.url
 	var organizations = initiative.organizations
@@ -1159,6 +1160,7 @@ function SidebarInfoView(attrs) {
 		authorName ||
 		coauthorNames.length > 0 ||
 		authorUrl ||
+		authorContacts ||
 		communityUrl ||
 		organizations.length > 0 ||
 		meetings.length > 0 ||
@@ -1185,20 +1187,32 @@ function SidebarInfoView(attrs) {
 			Lisainfo
 		</h2>
 
-		{authorName || authorUrl || coauthorNames.length > 0 || canEdit ? <Fragment>
+		{(
+			authorName ||
+			authorUrl ||
+			authorContacts ||
+			coauthorNames.length > 0 ||
+			canEdit
+		) ? <Fragment>
 			<h3 class="sidebar-subheader">{t("INITIATIVE_INFO_AUTHOR_TITLE")}</h3>
 
-			<ul class="form-output">
-				{authorName || authorUrl ? <li>
-					<UntrustedLink href={authorUrl}>{authorName || null}</UntrustedLink>
-				</li> : null}
+			<div class="form-output">
+				<ul>
+					{authorName || authorUrl || authorContacts ? <li>
+						<UntrustedLink href={authorUrl}>{authorName || null}</UntrustedLink>
+					</li> : null}
 
-				{(
-					(authorName || authorUrl) && authorName != initiative.user_name
-				) ? <li>{initiative.user_name}</li> : null}
+					{(
+						(authorName || authorUrl) && authorName != initiative.user_name
+					) ? <li>{initiative.user_name}</li> : null}
 
-				{coauthorNames.map((name) => <li>{name}</li>)}
-			</ul>
+					{coauthorNames.map((name) => <li>{name}</li>)}
+				</ul>
+
+				{authorContacts ? <p id="initiative-author-contacts">
+					{Jsx.html(linkify(authorContacts))}
+				</p> : null}
+			</div>
 
 			{canEdit ? <div class="form-fields">
 				<h4 class="form-header">{t("INITIATIVE_INFO_AUTHOR_NAME_TITLE")}</h4>
@@ -1229,7 +1243,21 @@ function SidebarInfoView(attrs) {
 				<p>{t("INITIATIVE_INFO_AUTHOR_URL_DESCRIPTION")}</p>
 			</div> : null}
 
-			{authorName || authorUrl || coauthorNames.length > 0
+			{canEdit ? <div class="form-fields">
+				<h4 class="form-header">{t("INITIATIVE_INFO_AUTHOR_CONTACTS_TITLE")}</h4>
+
+				<textarea
+					name="author_contacts"
+					type="contacts"
+					class="form-textarea"
+				>
+					{authorContacts}
+				</textarea>
+
+				<p>{t("INITIATIVE_INFO_AUTHOR_CONTACTS_DESCRIPTION")}</p>
+			</div> : null}
+
+			{authorName || authorUrl || authorContacts || coauthorNames.length > 0
 				? null
 				: <AddInitiativeInfoButton t={t} />
 			}

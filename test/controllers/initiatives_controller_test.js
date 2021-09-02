@@ -6925,6 +6925,7 @@ describe("InitiativesController", function() {
 						form: {
 							author_name: "John Smith",
 							author_url: "http://example.com/author",
+							author_contacts: "51 234 456\njohn@example.com",
 							community_url: "http://example.com/community",
 							url: "http://example.com/initiative",
 
@@ -6953,6 +6954,7 @@ describe("InitiativesController", function() {
 						__proto__: initiative,
 						author_name: "John Smith",
 						author_url: "http://example.com/author",
+						author_contacts: "51 234 456\njohn@example.com",
 						community_url: "http://example.com/community",
 						url: "http://example.com/initiative",
 

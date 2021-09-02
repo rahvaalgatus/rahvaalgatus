@@ -2917,8 +2917,15 @@ button.inherited {
 			input,
 			textarea { width: 100%; }
 
-			p a { @extend .link-button; }
-			p + .form-list { margin-top: 0.5rem; }
+			p {
+				a { @extend .link-button; }
+				& + .form-list { margin-top: 0.5rem; }
+			}
+
+			ul + p {
+				margin-top: 1rem;
+			}
+
 			.form-output { line-height: 1.5; }
 
 			.form-header {
@@ -2928,6 +2935,7 @@ button.inherited {
 				&:after { content: ":"; }
 			}
 
+			[name=author_contacts] { min-height: 6rem; }
 			[name=notes] { min-height: 12rem; }
 
 			.text { white-space: pre-wrap; }
@@ -2946,6 +2954,10 @@ button.inherited {
 				&:checked + h2 .edit-button,
 				&:checked ~ .edit-button,
 				&:checked ~ .form-output { display: none; }
+			}
+
+			#initiative-author-contacts {
+				white-space: pre-wrap;
 			}
 
 			#initiative-media-urls-form,

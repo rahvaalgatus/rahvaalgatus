@@ -19,6 +19,7 @@ module.exports = function(attrs) {
 		title: "Local initiative #" + _.uniqueId(),
 		author_name: "",
 		author_url: "",
+		author_contacts: "",
 		created_at: pseudoDateTime(),
 		community_url: "",
 		url: "",

@@ -684,6 +684,7 @@ function isInitiativeUpdate(obj) {
 		"destination" in obj ||
 		"author_name" in obj ||
 		"author_url" in obj ||
+		"author_contacts" in obj ||
 		"url" in obj ||
 		"community_url" in obj ||
 		"organizations" in obj ||
@@ -1075,6 +1076,10 @@ function parseInitiative(initiative, obj) {
 
 	if ("author_name" in obj) attrs.author_name = String(obj.author_name).trim()
 	if ("author_url" in obj) attrs.author_url = String(obj.author_url).trim()
+
+	if ("author_contacts" in obj)
+		attrs.author_contacts = String(obj.author_contacts).trim()
+
 	if ("url" in obj) attrs.url = String(obj.url).trim()
 	if ("notes" in obj) attrs.notes = String(obj.notes).trim()
 
