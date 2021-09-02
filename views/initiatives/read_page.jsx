@@ -638,6 +638,10 @@ function ReadPage(attrs) {
 					subscriberCounts={subscriberCounts}
 				/>
 
+				<div id="initiative-disclaimer" class="sidebar-section">
+					<p class="text">{Jsx.html(t("INITIATIVE_PAGE_DISCLAIMER"))}</p>
+				</div>
+
 				<SidebarAdminView
 					req={req}
 					initiative={initiative}

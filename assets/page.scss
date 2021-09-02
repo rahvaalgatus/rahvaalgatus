@@ -2967,6 +2967,10 @@ button.inherited {
 			}
 		}
 
+		#initiative-disclaimer {
+			p { line-height: 1.5; }
+		}
+
 		@include mobile-and-tablet {
 			width: auto;
 
