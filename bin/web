@@ -45,7 +45,6 @@ app.use(require("root/lib/middleware/extension_middleware"))
 app.use(require("root/lib/middleware/cache_middleware"))
 app.use(require("root/lib/middleware/csrf_middleware"))
 app.use(require("flash-fiction/express"))
-app.use(require("root/lib/middleware/maintenance_middleware"))
 app.use(require("root/lib/middleware/session_middleware"))
 
 _.each({
