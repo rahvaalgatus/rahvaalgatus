@@ -105,6 +105,8 @@ function CommentForm(attrs) {
 			{Jsx.html(t("TXT_TOPIC_COMMENT_LOG_IN_TO_PARTICIPATE", {
 				url: "/sessions/new"
 			}))}
-		</span> : null}
+			</span> : <p class="text">
+			{Jsx.html(t("COMMENT_FORM_TOC", {url: "/about#tos"}))}
+		</p>}
 	</Form>
 }

@@ -2198,7 +2198,6 @@ button.inherited {
 		.comment-delete-button {
 			float: right;
 			display: inline-block;
-			color: $grey;
 		}
 
 		& + .comment {
@@ -2273,7 +2272,6 @@ button.inherited {
 
 		textarea { min-height: 10rem; }
 		button + button { margin-left: 1rem; }
-		p { text-align: center; }
 
 		input[name=title],
 		textarea {
@@ -3362,10 +3360,12 @@ button.inherited {
 		.comment-form {
 			input[type=text]:disabled,
 			textarea:disabled { display: none; }
+
+			label + p { margin-top: 0.5rem; }
+
+			.signin-to-act { margin-left: 1rem; }
 		}
 	}
-
-	.signin-to-act { margin-left: 1rem; }
 }
 
 #edit-initiative-page {
