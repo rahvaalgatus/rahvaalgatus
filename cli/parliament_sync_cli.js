@@ -88,6 +88,10 @@ function* sync(opts, uuid) {
 		// attribute in the collective-addresses response, making it necessary to
 		// always load the parent document.
 		// https://github.com/riigikogu-kantselei/api/issues/33
+		//
+		// Still as of Sep 2, 2021 the collective-addresses/:id endpoint lacks the
+		// volume property. The /documents/:id endpoint on the other hand lacks
+		// relatedDocuments on statuses.
 		var doc = yield api("documents/" + initiativeDoc.uuid).then(getBody)
 
 		initiativeDoc.volume = doc.volume || null
@@ -192,7 +196,7 @@ function* syncInitiativeDocuments(api, doc) {
 	// acceptance decision (https://api.riigikogu.ee/api/documents/d655bc48-e5ec-43ad-9640-8cba05f78427)
 	// resides in a "All parliament decisions in 2019" volume.
 	doc.relatedDocuments = (
-		yield (doc.relatedDocuments || []).map(readDocument)
+		yield (doc.relatedDocuments || []).map(readDocument.bind(null, api))
 	).filter(Boolean)
 
 	doc.relatedVolumes = yield (doc.relatedVolumes || []).map(getUuid).map(
@@ -214,17 +218,12 @@ function* syncInitiativeDocuments(api, doc) {
 	doc.statuses = (yield (doc.statuses || []).map(function*(status) {
 		return _.assign({}, status, {
 			relatedDocuments: (
-				yield (status.relatedDocuments || []).map(readDocument)
+				yield (status.relatedDocuments || []).map(readDocument.bind(null, api))
 			).filter(Boolean)
 		})
 	}))
 
 	return doc
-
-	function readDocument(doc) {
-		var res = api("documents/" + doc.uuid)
-		return res.then(getBody, raiseForDocument.bind(null, doc))
-	}
 }
 
 function* replaceInitiative(opts, initiative, document) {
@@ -767,7 +766,7 @@ function eventAttrsFromVolume(opts, initiative, documents, volume) {
 	}
 
 	if (volume.volumeType == "letterVolume")
-		return [null, concat(documents, volume.documents)]
+		return [null, concat(documents, volume.documents, volume.relatedDocuments)]
 
 	if (!opts.quiet) logger.warn(
 		"Ignored initiative %s volume %s (%s)",
@@ -892,14 +891,25 @@ function* readVolumeWithDocuments(api, uuid) {
 
 	// Don't recurse into draft act documents for now as we're not sure what to
 	// make of them yet.
-	if (volume.volumeType != "eelnou")
-		volume.documents = yield (volume.documents || EMPTY_ARR).map((doc) => (
-			isMeetingTopicDocument(doc)
-				? Promise.resolve(doc)
-				: api("documents/" + doc.uuid).then(getBody)
-		))
+	if (volume.volumeType == "eelnou") return volume
+
+	volume.documents = (
+		yield (volume.documents || EMPTY_ARR).map(readDocument.bind(null, api))
+).filter(Boolean)
+
+	volume.relatedDocuments = (yield (
+		volume.relatedDocuments || EMPTY_ARR
+	).map(readDocument.bind(null, api))).filter(Boolean)
 
 	return volume
+}
+
+function readDocument(api, doc) {
+	// Don't ignore all meeting topic documents (unitAgendaItemDocument) though,
+	// as some are perfectly available from /documents/:id. For example:
+	// https://api.riigikogu.ee/api/documents/6c467b55-5425-47c0-b50f-faced52b747e
+	var res = api("documents/" + doc.uuid)
+	return res.then(getBody, raiseForDocument.bind(null, doc))
 }
 
 function sortStatuses(statuses) {
@@ -1074,7 +1084,7 @@ function diffEvent(a, b) {
 function raiseForDocument(doc, err) {
 	// Silently ignore only agenda items. Let's continue to be notified of the
 	// rest.
-	if (is404(err) && doc.documentType == "unitAgendaItemDocument") return null
+	if (is404(err) && isMeetingTopicDocument(doc)) return null
 
 	// Opinion documents are unavailable from the /documents endpoint. There's no
 	// way to directly get them as of Apr 8, 2021. You're supposed to know the

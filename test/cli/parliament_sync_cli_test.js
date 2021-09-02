@@ -1519,7 +1519,7 @@ describe("ParliamentSyncCli", function() {
 	})
 
 	describe("given volume", function() {
-		it("must create events when in a volume of letters", function*() {
+		it("must create events when in a volume of letters, with letters", function*() {
 			// NOTE: Initiative volume is missing on the collective-addresses
 			// collection response.
 			this.router.get(INITIATIVES_URL, respond.bind(null, [{
@@ -1591,6 +1591,80 @@ describe("ParliamentSyncCli", function() {
 				external_url: `https://www.riigikogu.ee/download/${FILE_UUID}`,
 				name: "Kiri.pdf",
 				title: "Linnujahi korraldamine",
+				url: `https://www.riigikogu.ee/tegevus/dokumendiregister/dokument/${DOCUMENT_UUID}`,
+				content: Buffer.from("PDF"),
+				content_type: new MediaType("application/pdf")
+			})])
+		})
+
+		it("must create events for volume's related documents", function*() {
+			// NOTE: Initiative volume is missing on the collective-addresses
+			// collection response.
+			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+				uuid: INITIATIVE_UUID
+			}]))
+
+			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {
+				uuid: INITIATIVE_UUID,
+				volume: {uuid: VOLUME_UUID}
+			}))
+
+			this.router.get(`/api/volumes/${VOLUME_UUID}`, respond.bind(null, {
+				uuid: VOLUME_UUID,
+				title: "Kollektiivne pöördumine Elu paremaks!",
+				volumeType: "letterVolume",
+				relatedDocuments: [{uuid: INITIATIVE_UUID}, {uuid: DOCUMENT_UUID}]
+			}))
+
+			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
+				uuid: DOCUMENT_UUID,
+				title: "Eemaldamise nõue",
+				created: "2015-06-18T13:37:42.666",
+				documentType: "letterDocument",
+				direction: {code: "VALJA"},
+				receiveType: {code: "E_POST"},
+
+				files: [{
+					uuid: FILE_UUID,
+          fileName: "eemaldamine.pdf",
+					accessRestrictionType: "PUBLIC"
+				}]
+			}))
+
+			this.router.get(`/download/${FILE_UUID}`,
+				respondWithRiigikoguDownload.bind(null, "application/pdf", "PDF")
+			)
+
+			yield job()
+
+			var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
+
+			events.must.eql([new ValidEvent({
+				id: 1,
+				initiative_uuid: INITIATIVE_UUID,
+				occurred_at: new Date(2015, 5, 18, 13, 37, 42, 666),
+				origin: "parliament",
+				external_id: DOCUMENT_UUID,
+				type: "parliament-letter",
+				title: null,
+
+				content: {
+					medium: "email",
+					direction: "outgoing",
+					title: "Eemaldamise nõue"
+				}
+			})])
+
+			yield filesDb.search(sql`
+				SELECT * FROM initiative_files
+			`).must.then.eql([new ValidFile({
+				id: 1,
+				initiative_uuid: INITIATIVE_UUID,
+				event_id: 1,
+				external_id: FILE_UUID,
+				external_url: `https://www.riigikogu.ee/download/${FILE_UUID}`,
+				name: "eemaldamine.pdf",
+				title: "Eemaldamise nõue",
 				url: `https://www.riigikogu.ee/tegevus/dokumendiregister/dokument/${DOCUMENT_UUID}`,
 				content: Buffer.from("PDF"),
 				content_type: new MediaType("application/pdf")
@@ -2811,12 +2885,6 @@ describe("ParliamentSyncCli", function() {
 					title: "Kollektiivne pöördumine haruapteekide säilitamise osas",
 					documentType: "unitAgendaItemDocument",
 				}, {
-					// Include another unitAgendaItemDocument to ensure it doesn't get
-					// fetched.
-					uuid: newUuid(),
-					title: "Muud küsimused",
-					documentType: "unitAgendaItemDocument",
-				}, {
 					uuid: minutesUuid,
 					title: "Protokoll",
 					documentType: "protokoll"
@@ -2965,7 +3033,7 @@ describe("ParliamentSyncCli", function() {
 			yield job()
 		})
 
-		it("must not ignore unavailable other documents", function*() {
+		it("must not ignore other unavailable documents", function*() {
 			this.router.get(INITIATIVES_URL, respond.bind(null, [{
 				uuid: INITIATIVE_UUID,
 
@@ -3000,11 +3068,6 @@ describe("ParliamentSyncCli", function() {
 				volumeType: "unitSittingVolume",
 
 				documents: [{
-					// Include a unitAgendaItemDocument to ensure it doesn't get fetched.
-					uuid: newUuid(),
-					title: "Muud küsimused",
-					documentType: "unitAgendaItemDocument",
-				}, {
 					uuid: DOCUMENT_UUID,
 					title: "Protokoll",
 					documentType: "protokoll"
@@ -3087,12 +3150,6 @@ describe("ParliamentSyncCli", function() {
 				documents: [{
 					uuid: DOCUMENT_UUID,
 					title: "Kollektiivne pöördumine haruapteekide säilitamise osas",
-					documentType: "unitAgendaItemDocument",
-				}, {
-					// Include another unitAgendaItemDocument to ensure it doesn't get
-					// fetched.
-					uuid: newUuid(),
-					title: "Muud küsimused",
 					documentType: "unitAgendaItemDocument",
 				}, {
 					uuid: minutesUuid,
@@ -3181,11 +3238,6 @@ describe("ParliamentSyncCli", function() {
 				volumeType: "unitSittingVolume",
 
 				documents: [{
-					// Include a unitAgendaItemDocument to ensure it doesn't get fetched.
-					uuid: newUuid(),
-					title: "Muud küsimused",
-					documentType: "unitAgendaItemDocument",
-				}, {
 					uuid: DOCUMENT_UUID,
 					title: "Protokoll",
 					documentType: "protokoll"
