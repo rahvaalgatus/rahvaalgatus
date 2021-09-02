@@ -6,7 +6,7 @@ h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
 del, dfn, em, img, ins, kbd, q, s, samp,
 small, strike, strong, sub, sup, tt, var,
-b, u, i, center,
+b, u, i, center, hr,
 dl, dt, dd, ol, ul, li,
 fieldset, form, label, legend,
 table, caption, tbody, tfoot, thead, tr, th, td,
@@ -58,7 +58,6 @@ a {
 	color: inherit;
 	text-decoration: inherit;
 	outline: 0;
-	cursor: pointer;
 }
 
 a:disabled,
@@ -66,9 +65,64 @@ button:disabled {
 	cursor: auto;
 }
 
+// NOTE: Don't disable outline or set outline-offset for inputs, as that will
+// remove the focus blur from native-looking inputs.
+input,
+textarea,
 button,
-input[type=submit] {
-	cursor: pointer
+select {
+	margin: 0;
+	padding: 0;
+
+	// Inheritng the whole font property will change line-height.
+	font-family: inherit;
+	font-size: inherit;
+	font-weight: inherit;
+	color: inherit;
 }
+
+input,
+textarea {
+	// Reset any ancestor disabling:
+	-moz-user-select: text;
+}
+
+textarea {
+	line-height: inherit;
+	resize: none;
+}
+
+a,
+button,
+select,
+input[type=submit],
+input[type=checkbox] {
+	cursor: pointer;
+
+	&:disabled { cursor: auto; }
+}
+
+
+blockquote,
+q {
+	quotes: none;
+}
+
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+	content: "";
+	content: none;
+}
+
+// Browsers by default only hide [hidden] elements that have no display
+// property.
+[hidden] { display: none !important; }
+td[hidden] { display: table-cell !important; visibility: hidden; }
+
+// https://stackoverflow.com/questions/17408815/fieldset-resizes-wrong-appears-to-have-unremovable-min-width-min-content
+fieldset { min-width: 0; }
+@-moz-document url-prefix() { fieldset { display: table-cell; }}
 
 // vim: ft=scss
