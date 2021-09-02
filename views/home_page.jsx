@@ -278,7 +278,7 @@ function CallToActionsView(attrs) {
 			href={Config.facebookUrl}
 			class="facebook-logo social-media-button"
 		>
-			<img src="/assets/facebook-logo.png" />
+			<img src="/assets/facebook-logo.svg" />
 		</a>
 
 		<a
