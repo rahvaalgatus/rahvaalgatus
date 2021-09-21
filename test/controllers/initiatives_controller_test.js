@@ -2885,7 +2885,7 @@ describe("InitiativesController", function() {
 				var phases = queryPhases(dom)
 
 				var deadline = DateFns.addMonths(DateFns.addDays(new Date, -5), 6)
-				var days = DateFns.differenceInDays(deadline, new Date)
+				var days = DateFns.differenceInCalendarDays(deadline, new Date)
 
 				phases.parliament.text.must.equal(t("PARLIAMENT_PHASE_N_DAYS_LEFT", {
 					days: days

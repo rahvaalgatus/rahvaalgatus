@@ -3,6 +3,7 @@ var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Config = require("root/config")
 var Fragment = Jsx.Fragment
+var DateFns = require("date-fns")
 var I18n = require("root/lib/i18n")
 var stringify = require("root/lib/json").stringify
 var selected = require("root/lib/css").selected
@@ -22,6 +23,8 @@ exports.FormButton = FormButton
 exports.FormCheckbox = FormCheckbox
 exports.DatePickerInput = DatePickerInput
 exports.LiveReload = LiveReload
+exports.DateView = DateView
+exports.RelativeDateView = RelativeDateView
 
 var DEFAULT_META = {
 	// Using twitter:card=summary_large_image explicitly where desired.
@@ -417,6 +420,29 @@ function DatePickerInput(attrs) {
 			})
 		`}</script>
 	</fieldset>
+}
+
+function DateView(attrs) {
+	var {date} = attrs
+
+	return <time datetime={date.toJSON()}>
+		{I18n.formatDate("numeric", date)}
+	</time>
+}
+
+function RelativeDateView(attrs) {
+	var {t} = attrs
+	var date = DateFns.addMilliseconds(attrs.date, -1)
+	var days = DateFns.differenceInCalendarDays(date, new Date)
+
+	return <time
+		datetime={date.toJSON()}
+		title={I18n.formatDateTime("numeric", date)}
+	>{
+		days == 0 ? t("RELATIVE_DEADLINE_0_MORE") :
+		days == 1 ? t("RELATIVE_DEADLINE_1_MORE") :
+		t("RELATIVE_DEADLINE_N_MORE", {days: days})
+	}</time>
 }
 
 function serializeUser(user) {

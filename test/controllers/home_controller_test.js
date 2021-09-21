@@ -227,11 +227,12 @@ describe("HomeController", function() {
 			res.body.must.not.include(initiative.uuid)
 		})
 
-		it("must show initiatives in sign phase", function*() {
+		it("must show initiatives in sign phase with deadline in 3 days",
+			function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "sign",
-				signing_ends_at: DateFns.addDays(new Date, 1)
+				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), 4)
 			}))
 
 			yield signaturesDb.create(_.times(5, () => new ValidSignature({
@@ -245,6 +246,60 @@ describe("HomeController", function() {
 			var el = dom.getElementById("initiatives")
 			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
 			el.textContent.must.include(t("N_SIGNATURES", {votes: 5}))
+
+			el.querySelector("time").textContent.must.equal(
+				t("RELATIVE_DEADLINE_N_MORE", {days: 3})
+			)
+		})
+
+		it("must show initiatives in sign phase with deadline in 1 days",
+			function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "sign",
+				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), 2)
+			}))
+
+			yield signaturesDb.create(_.times(5, () => new ValidSignature({
+				initiative_uuid: initiative.uuid
+			})))
+
+			var res = yield this.request("/")
+			res.statusCode.must.equal(200)
+
+			var dom = parseDom(res.body)
+			var el = dom.getElementById("initiatives")
+			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
+			el.textContent.must.include(t("N_SIGNATURES", {votes: 5}))
+
+			el.querySelector("time").textContent.must.equal(
+				t("RELATIVE_DEADLINE_1_MORE")
+			)
+		})
+
+		it("must show initiatives in sign phase with deadline today",
+			function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "sign",
+				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), 1)
+			}))
+
+			yield signaturesDb.create(_.times(5, () => new ValidSignature({
+				initiative_uuid: initiative.uuid
+			})))
+
+			var res = yield this.request("/")
+			res.statusCode.must.equal(200)
+
+			var dom = parseDom(res.body)
+			var el = dom.getElementById("initiatives")
+			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
+			el.textContent.must.include(t("N_SIGNATURES", {votes: 5}))
+
+			el.querySelector("time").textContent.must.equal(
+				t("RELATIVE_DEADLINE_0_MORE")
+			)
 		})
 
 		it("must show initiatives in sign phase that failed in less than 2w",
@@ -262,6 +317,7 @@ describe("HomeController", function() {
 			var el = dom.getElementById("initiatives")
 			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
 			el.must.exist()
+			demand(el.querySelector("time")).be.null()
 		})
 
 		it("must not show initiatives for parliament in sign phase that failed",
@@ -1460,7 +1516,7 @@ describe("HomeController", function() {
 		"/api",
 		"/statistics"
 	].forEach(function(path) {
-		describe(path, function() {
+		describe("GET " + path, function() {
 			it("must render", function*() {
 				var res = yield this.request(path)
 				res.statusCode.must.equal(200)

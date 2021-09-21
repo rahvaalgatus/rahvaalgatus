@@ -7,6 +7,8 @@ var Config = require("root/config")
 var Page = require("../page")
 var {Section} = require("../page")
 var {ProgressView} = require("./initiative_page")
+var {DateView} = Page
+var {RelativeDateView} = Page
 var I18n = require("root/lib/i18n")
 var EMPTY_ARR = Array.prototype
 var {renderAuthorName} = require("./initiative_page")
@@ -284,9 +286,16 @@ function InitiativeBoxView(attrs) {
 		class={"initiative" + (initiative.destination ? " with-destination" : "")}
 	>
 		<a href={`/initiatives/${initiative.uuid}`}>
-			{!attrs.dateless ? <time datetime={time && time.toJSON()}>
-				{time ? I18n.formatDate("numeric", time) : " "}
-			</time> : null}
+			{attrs.dateless ? null
+				: initiative.phase == "sign"
+				? (new Date < initiative.signing_ends_at ?
+					<RelativeDateView t={t} date={initiative.signing_ends_at} />
+				: null)
+				: time
+				? <DateView date={time} />
+				// Empty <time> so destinationless discussions' titles align properly.
+				: <time>&nbsp;</time>
+			}
 
 			{" "}
 
