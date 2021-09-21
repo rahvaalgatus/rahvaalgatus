@@ -2279,6 +2279,36 @@ button.inherited {
 			font-size: 1.3rem;
 		}
 
+		.persona-fields {
+			.title {
+				font-weight: 400;
+				display: block;
+				margin-bottom: 0.5rem;
+			}
+
+			input {
+				vertical-align: sub;
+				margin-right: 0.5rem;
+			}
+
+			.persona {
+				display: inline-block;
+				cursor: pointer;
+				margin-right: 1rem;
+				border: 1px solid #cecece;
+				border-radius: $button-radius;
+				background: white;
+				padding: 0.7rem 1rem 0.7rem 0.7rem;
+				margin-bottom: 0.5rem;
+			}
+
+			@media only screen and (max-width: 569px) {
+				.persona {
+					display: block;
+				}
+			}
+		}
+
 		@include mobile {
 			button { width: 100%; }
 		}

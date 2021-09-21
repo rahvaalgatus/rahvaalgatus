@@ -7,10 +7,12 @@ var I18n = require("root/lib/i18n")
 var Form = require("../../page").Form
 var FormButton = require("../../page").FormButton
 var Comment = require("root/lib/comment")
-var CommentsController =
-	require("root/controllers/initiatives/comments_controller")
+var Controller = require("root/controllers/initiatives/comments_controller")
+var {PersonaInput} = require("./create_page")
+var {getCommentAuthorName} = Controller
+var {isAdmin} = require("root/lib/user")
+var {MAX_TEXT_LENGTH} = Controller
 var confirm = require("root/lib/jsx").confirm
-var MAX_COMMENT_TEXT_LENGTH = CommentsController.MAX_TEXT_LENGTH
 exports = module.exports = ReadPage
 exports.CommentView = CommentView
 
@@ -47,6 +49,7 @@ function ReadPage(attrs) {
 function CommentView(attrs) {
 	var req = attrs.req
 	var t = req.t
+	var user = req.user
 	var initiative = attrs.initiative
 	var comment = attrs.comment
 	var commentUrl = `/initiatives/${initiative.uuid}/comments/${comment.id}`
@@ -60,7 +63,7 @@ function CommentView(attrs) {
 
 		<div class="metadata">
 			<span class={"author" + (anonymous ? " anonymous" : "")}>
-				{anonymous ? t("COMMENT_AUTHOR_HIDDEN") : comment.user_name}
+				{getCommentAuthorName(t, comment)}
 			</span>
 			{", "}
 			<time datetime={comment.created_at.toJSON()}>
@@ -72,9 +75,9 @@ function CommentView(attrs) {
 
 		<p class="text">{Jsx.html(Comment.htmlify(comment.text))}</p>
 
-		{req.user ? <menu>
+		{user ? <menu>
 			{(
-				req.user.id == comment.user_id &&
+				user.id == comment.user_id &&
 				!comment.anonymized_at &&
 				new Date - comment.created_at >= 3600 * 1000
 			) ? <FormButton
@@ -105,7 +108,7 @@ function CommentView(attrs) {
 
 				<div class="metadata">
 					<span class={"author" + (anonymous ? " anonymous" : "")}>
-						{anonymous ? t("COMMENT_AUTHOR_HIDDEN") : reply.user_name}
+						{getCommentAuthorName(t, reply)}
 					</span>
 					{", "}
 					<time datetime={reply.created_at}>
@@ -119,7 +122,7 @@ function CommentView(attrs) {
 			</li>
 		})}</ol>
 
-		{req.user ? <Form
+		{user ? <Form
 			req={req}
 			id={`comment-${comment.id}-reply`}
 			method="post"
@@ -127,10 +130,11 @@ function CommentView(attrs) {
 			hidden={!newComment}
 			class="comment-reply-form">
 			<input type="hidden" name="referrer" value={req.baseUrl + req.path} />
+			{user && isAdmin(user) ? <PersonaInput t={t} user={user} /> : null}
 
 			<textarea
 				name="text"
-				maxlength={MAX_COMMENT_TEXT_LENGTH}
+				maxlength={MAX_TEXT_LENGTH}
 				required
 				placeholder={t("PLACEHOLDER_ADD_YOUR_REPLY", {name: comment.user_name})}
 				class="form-textarea"

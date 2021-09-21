@@ -11,6 +11,7 @@ module.exports = function(attrs) {
 		anonymized_at: null,
 		parent_id: null,
 		title: attrs && attrs.parent_id ? "" : _.uniqueId("Title "),
-		text: _.uniqueId("Comment ")
+		text: _.uniqueId("Comment "),
+		as_admin: false
 	}, attrs)
 }

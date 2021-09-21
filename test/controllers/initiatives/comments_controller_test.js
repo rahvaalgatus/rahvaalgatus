@@ -1,4 +1,5 @@
 var _ = require("root/lib/underscore")
+var Config = require("root/config")
 var Crypto = require("crypto")
 var ValidInitiative = require("root/test/valid_initiative")
 var ValidComment = require("root/test/valid_comment")
@@ -72,7 +73,7 @@ describe("InitiativeCommentsController", function() {
 				})
 
 				yield commentsDb.search(sql`
-					SELECT * FROM comments ORDER BY created_at
+					SELECT * FROM comments
 				`).must.then.eql([comment])
 
 				res.headers.location.must.equal(path + "/comments/" + comment.id)
@@ -80,6 +81,70 @@ describe("InitiativeCommentsController", function() {
 				yield subscriptionsDb.search(sql`
 					SELECT * FROM initiative_subscriptions
 				`).must.then.be.empty()
+			})
+
+			_.each({
+				self: false,
+				admin: true
+			}, function(asAdmin, persona) {
+				it(`must create comment for ${persona} as admin`, function*() {
+					yield usersDb.update(this.user, {
+						country: Config.adminPersonalIds[0].slice(0, 2),
+						personal_id: Config.adminPersonalIds[0].slice(2)
+					})
+
+					var path = `/initiatives/${this.initiative.uuid}`
+					var res = yield this.request(path + "/comments", {
+						method: "POST",
+
+						form: {
+							persona: persona,
+							title: "I've some thoughts.",
+							text: "But I forgot them."
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					yield commentsDb.read(sql`
+						SELECT * FROM comments
+					`).must.then.eql(new ValidComment({
+						id: 1,
+						initiative_uuid: this.initiative.uuid,
+						user_id: this.user.id,
+						user_uuid: _.serializeUuid(this.user.uuid),
+						title: "I've some thoughts.",
+						text: "But I forgot them.",
+						as_admin: asAdmin
+					}))
+				})
+			})
+
+			it(`must not create comment for admin as a non-admin`, function*() {
+				var path = `/initiatives/${this.initiative.uuid}`
+				var res = yield this.request(path + "/comments", {
+					method: "POST",
+
+					form: {
+						persona: "admin",
+						title: "I've some thoughts.",
+						text: "But I forgot them."
+					}
+				})
+
+				res.statusCode.must.equal(303)
+
+				yield commentsDb.read(sql`
+					SELECT * FROM comments
+				`).must.then.eql(new ValidComment({
+					id: 1,
+					initiative_uuid: this.initiative.uuid,
+					user_id: this.user.id,
+					user_uuid: _.serializeUuid(this.user.uuid),
+					title: "I've some thoughts.",
+					text: "But I forgot them.",
+					as_admin: false
+				}))
 			})
 
 			it("must create comment given external initiative", function*() {
@@ -100,24 +165,16 @@ describe("InitiativeCommentsController", function() {
 
 				res.statusCode.must.equal(303)
 
-				var comment = new ValidComment({
+				yield commentsDb.read(sql`
+					SELECT * FROM comments ORDER BY created_at
+				`).must.then.eql(new ValidComment({
 					id: 1,
 					initiative_uuid: initiative.uuid,
 					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid),
 					title: "I've some thoughts.",
 					text: "But I forgot them."
-				})
-
-				yield commentsDb.search(sql`
-					SELECT * FROM comments ORDER BY created_at
-				`).must.then.eql([comment])
-
-				res.headers.location.must.equal(path + "/comments/" + comment.id)
-
-				yield subscriptionsDb.search(sql`
-					SELECT * FROM initiative_subscriptions
-				`).must.then.be.empty()
+				}))
 			})
 
 			it("must redirect to referrer", function*() {
@@ -370,18 +427,49 @@ describe("InitiativeCommentsController", function() {
 				var path = `/initiatives/${this.initiative.uuid}`
 				var res = yield this.request(path + `/comments`, {
 					method: "POST",
-					form: {__proto__: VALID_ATTRS, referrer: path}
+					form: VALID_ATTRS
 				})
 
 				res.statusCode.must.equal(303)
 
-				var emails = subscriptions.slice(2).map((s) => s.email).sort()
+				this.emails.length.must.equal(1)
+
+				var emailAddresses = subscriptions.slice(2).map((s) => s.email).sort()
+				var email = this.emails[0]
+				email.envelope.to.must.eql(emailAddresses)
+				email.headers.subject.must.include(this.initiative.title)
+				var vars = email.headers["x-mailgun-recipient-variables"]
+				subscriptions.slice(2).forEach((s) => vars.must.include(s.update_token))
+			})
+
+			it("must email subscribers if commented as admin", function*() {
+				var user = yield usersDb.update(this.user, {
+					name: "John Smith",
+					country: Config.adminPersonalIds[0].slice(0, 2),
+					personal_id: Config.adminPersonalIds[0].slice(2)
+				})
+
+				yield subscriptionsDb.create(new ValidSubscription({
+					initiative_uuid: this.initiative.uuid,
+					confirmed_at: new Date,
+					comment_interest: true
+				}))
+
+				var path = `/initiatives/${this.initiative.uuid}`
+				var res = yield this.request(path + `/comments`, {
+					method: "POST",
+					form: {__proto__: VALID_ATTRS, persona: "admin"}
+				})
+
+				res.statusCode.must.equal(303)
 
 				this.emails.length.must.equal(1)
-				this.emails[0].envelope.to.must.eql(emails)
-				var msg = String(this.emails[0].message)
-				msg.match(/^Subject: .*/m)[0].must.include(this.initiative.title)
-				subscriptions.slice(2).forEach((s) => msg.must.include(s.update_token))
+
+				var email = this.emails[0]
+				email.headers.subject.must.include(this.initiative.title)
+				email.headers.subject.must.not.include(user.name)
+				email.body.must.not.include(user.name)
+				email.body.must.include(`Autor: ${t("COMMENT_AUTHOR_ADMIN")}`)
 			})
 
 			it("must not email subscribers if private", function*() {
@@ -409,7 +497,7 @@ describe("InitiativeCommentsController", function() {
 				var path = `/initiatives/${this.initiative.uuid}`
 				var res = yield this.request(path + `/comments`, {
 					method: "POST",
-					form: {__proto__: VALID_ATTRS, referrer: path}
+					form: VALID_ATTRS
 				})
 
 				res.statusCode.must.equal(303)
@@ -441,7 +529,7 @@ describe("InitiativeCommentsController", function() {
 				var path = `/initiatives/${this.initiative.uuid}`
 				var res = yield this.request(path + `/comments`, {
 					method: "POST",
-					form: {__proto__: VALID_ATTRS, referrer: path}
+					form: VALID_ATTRS
 				})
 
 				res.statusCode.must.equal(303)
@@ -555,15 +643,62 @@ describe("InitiativeCommentsController", function() {
 			replyEl.textContent.must.include(reply.text)
 		})
 
-		it("must not render author names for anonymized comments", function*() {
+		it("must not render author name for anonymized comment", function*() {
 			var author = yield usersDb.create(new ValidUser({name: "Johnny Lang"}))
-			var replier = yield usersDb.create(new ValidUser({name: "Kenny Loggins"}))
 
 			var comment = yield commentsDb.create(new ValidComment({
 				initiative_uuid: this.initiative.uuid,
 				user_id: author.id,
 				user_uuid: _.serializeUuid(author.uuid),
 				anonymized_at: new Date
+			}))
+
+			var path = `/initiatives/${this.initiative.uuid}`
+			path += `/comments/${comment.id}`
+			var res = yield this.request(path)
+			res.statusCode.must.equal(200)
+
+			var dom = parseDom(res.body)
+			res.body.must.not.include(author.name)
+
+			var commentEl = dom.querySelector("#initiative-comment")
+			commentEl.querySelector(".author").textContent.must.equal(
+				t("COMMENT_AUTHOR_HIDDEN")
+			)
+		})
+
+		it("must not render author name for admin comment", function*() {
+			var author = yield usersDb.create(new ValidUser({name: "Johnny Lang"}))
+
+			var comment = yield commentsDb.create(new ValidComment({
+				initiative_uuid: this.initiative.uuid,
+				user_id: author.id,
+				user_uuid: _.serializeUuid(author.uuid),
+				as_admin: true
+			}))
+
+			var path = `/initiatives/${this.initiative.uuid}`
+			path += `/comments/${comment.id}`
+			var res = yield this.request(path)
+			res.statusCode.must.equal(200)
+
+			var dom = parseDom(res.body)
+			res.body.must.not.include(author.name)
+
+			var commentEl = dom.querySelector("#initiative-comment")
+			commentEl.querySelector(".author").textContent.must.equal(
+				t("COMMENT_AUTHOR_ADMIN")
+			)
+		})
+
+		it("must not render author name for anonymized reply", function*() {
+			var author = yield usersDb.create(new ValidUser({name: "Johnny Lang"}))
+			var replier = yield usersDb.create(new ValidUser({name: "Kenny Loggins"}))
+
+			var comment = yield commentsDb.create(new ValidComment({
+				initiative_uuid: this.initiative.uuid,
+				user_id: author.id,
+				user_uuid: _.serializeUuid(author.uuid)
 			}))
 
 			yield commentsDb.create(new ValidComment({
@@ -580,13 +715,11 @@ describe("InitiativeCommentsController", function() {
 			res.statusCode.must.equal(200)
 
 			var dom = parseDom(res.body)
-			res.body.must.not.include(author.name)
-			res.body.must.not.include(replier.name)
 
 			var commentEl = dom.querySelector("#initiative-comment")
-			commentEl.querySelector(".author").textContent.must.equal(
-				t("COMMENT_AUTHOR_HIDDEN")
-			)
+			commentEl.querySelector(".author").textContent.must.equal(author.name)
+
+			res.body.must.not.include(replier.name)
 
 			var replyEl = dom.querySelector("#initiative-comment .comment-replies")
 			replyEl.querySelector(".author").textContent.must.equal(
@@ -594,6 +727,41 @@ describe("InitiativeCommentsController", function() {
 			)
 		})
 
+		it("must not render author name for admin reply", function*() {
+			var author = yield usersDb.create(new ValidUser({name: "Johnny Lang"}))
+			var replier = yield usersDb.create(new ValidUser({name: "Kenny Loggins"}))
+
+			var comment = yield commentsDb.create(new ValidComment({
+				initiative_uuid: this.initiative.uuid,
+				user_id: author.id,
+				user_uuid: _.serializeUuid(author.uuid)
+			}))
+
+			yield commentsDb.create(new ValidComment({
+				initiative_uuid: this.initiative.uuid,
+				user_id: replier.id,
+				user_uuid: _.serializeUuid(replier.uuid),
+				parent_id: comment.id,
+				as_admin: true
+			}))
+
+			var path = `/initiatives/${this.initiative.uuid}`
+			path += `/comments/${comment.id}`
+			var res = yield this.request(path)
+			res.statusCode.must.equal(200)
+
+			var dom = parseDom(res.body)
+
+			var commentEl = dom.querySelector("#initiative-comment")
+			commentEl.querySelector(".author").textContent.must.equal(author.name)
+
+			res.body.must.not.include(replier.name)
+
+			var replyEl = dom.querySelector("#initiative-comment .comment-replies")
+			replyEl.querySelector(".author").textContent.must.equal(
+				t("COMMENT_AUTHOR_ADMIN")
+			)
+		})
 		it("must show comment page given external initiative", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
@@ -903,6 +1071,76 @@ describe("InitiativeCommentsController", function() {
 				res.headers.location.must.equal(path + "#comment-" + reply.id)
 			})
 
+			_.each({
+				self: false,
+				admin: true
+			}, function(asAdmin, persona) {
+				it("must create reply", function*() {
+					yield usersDb.update(this.user, {
+						country: Config.adminPersonalIds[0].slice(0, 2),
+						personal_id: Config.adminPersonalIds[0].slice(2)
+					})
+
+					var author = yield usersDb.create(new ValidUser)
+
+					var comment = yield commentsDb.create(new ValidComment({
+						user_id: author.id,
+						user_uuid: _.serializeUuid(author.uuid),
+						initiative_uuid: this.initiative.uuid
+					}))
+
+					var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+					var res = yield this.request(path + "/replies", {
+						method: "POST",
+						form: {text: "But I forgot them.", persona: persona}
+					})
+
+					res.statusCode.must.equal(303)
+
+					yield commentsDb.search(sql`
+						SELECT * FROM comments ORDER BY created_at
+					`).must.then.eql([comment, new ValidComment({
+						id: comment.id + 1,
+						initiative_uuid: this.initiative.uuid,
+						user_id: this.user.id,
+						user_uuid: _.serializeUuid(this.user.uuid),
+						parent_id: comment.id,
+						text: "But I forgot them.",
+						as_admin: asAdmin
+					})])
+				})
+			})
+
+			it("must not create reply for admin as a non-admin", function*() {
+				var author = yield usersDb.create(new ValidUser)
+
+				var comment = yield commentsDb.create(new ValidComment({
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
+					initiative_uuid: this.initiative.uuid
+				}))
+
+				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var res = yield this.request(path + "/replies", {
+					method: "POST",
+					form: {text: "But I forgot them.", persona: "admin"}
+				})
+
+				res.statusCode.must.equal(303)
+
+				yield commentsDb.search(sql`
+					SELECT * FROM comments ORDER BY created_at
+				`).must.then.eql([comment, new ValidComment({
+					id: comment.id + 1,
+					initiative_uuid: this.initiative.uuid,
+					user_id: this.user.id,
+					user_uuid: _.serializeUuid(this.user.uuid),
+					parent_id: comment.id,
+					text: "But I forgot them.",
+					as_admin: false
+				})])
+			})
+
 			it("must create reply given external initiative", function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					phase: "parliament",
@@ -925,20 +1163,16 @@ describe("InitiativeCommentsController", function() {
 
 				res.statusCode.must.equal(303)
 
-				var reply = new ValidComment({
+				yield commentsDb.search(sql`
+					SELECT * FROM comments ORDER BY created_at
+				`).must.then.eql([comment, new ValidComment({
 					id: comment.id + 1,
 					initiative_uuid: initiative.uuid,
 					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid),
 					parent_id: comment.id,
 					text: "But I forgot them."
-				})
-
-				yield commentsDb.search(sql`
-					SELECT * FROM comments ORDER BY created_at
-				`).must.then.eql([comment, reply])
-
-				res.headers.location.must.equal(path + "#comment-" + reply.id)
+				})])
 			})
 
 			it("must redirect to referrer", function*() {
@@ -1003,16 +1237,52 @@ describe("InitiativeCommentsController", function() {
 
 				res.statusCode.must.equal(303)
 
-				var emails = subscriptions.slice(2).map((s) => s.email).sort()
+				this.emails.length.must.equal(1)
+
+				var emailAddresses = subscriptions.slice(2).map((s) => s.email).sort()
+				var email = this.emails[0]
+				email.envelope.to.must.eql(emailAddresses)
+				email.headers.subject.must.include(this.initiative.title)
+				var vars = email.headers["x-mailgun-recipient-variables"]
+				subscriptions.slice(2).forEach((s) => vars.must.include(s.update_token))
+			})
+
+			it("must email subscribers if commented as admin", function*() {
+				var user = yield usersDb.update(this.user, {
+					name: "John Smith",
+					country: Config.adminPersonalIds[0].slice(0, 2),
+					personal_id: Config.adminPersonalIds[0].slice(2)
+				})
+
+				var author = yield usersDb.create(new ValidUser)
+
+				var comment = yield commentsDb.create(new ValidComment({
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
+					initiative_uuid: this.initiative.uuid
+				}))
+
+				yield subscriptionsDb.create(new ValidSubscription({
+					initiative_uuid: this.initiative.uuid,
+					confirmed_at: new Date,
+					comment_interest: true
+				}))
+
+				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var res = yield this.request(path + `/replies`, {
+					method: "POST",
+					form: {__proto__: VALID_REPLY_ATTRS, persona: "admin"}
+				})
+
+				res.statusCode.must.equal(303)
 
 				this.emails.length.must.equal(1)
-				this.emails[0].envelope.to.must.eql(emails)
-				var msg = String(this.emails[0].message)
-				msg.match(/^Subject: .*/m)[0].must.include(this.initiative.title)
 
-				subscriptions.slice(2).forEach((s) => (
-					msg.must.include(s.update_token))
-				)
+				var email = this.emails[0]
+				email.headers.subject.must.include(this.initiative.title)
+				email.headers.subject.must.not.include(user.name)
+				email.body.must.not.include(user.name)
+				email.body.must.include(`Autor: ${t("COMMENT_AUTHOR_ADMIN")}`)
 			})
 
 			it("must not email subscribers if private", function*() {

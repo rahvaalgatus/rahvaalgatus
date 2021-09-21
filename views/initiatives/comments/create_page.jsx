@@ -5,10 +5,12 @@ var Flash = require("../../page").Flash
 var Form = require("../../page").Form
 var CommentsController =
 	require("root/controllers/initiatives/comments_controller")
+var {isAdmin} = require("root/lib/user")
 var MAX_COMMENT_TITLE_LENGTH = CommentsController.MAX_TITLE_LENGTH
 var MAX_COMMENT_TEXT_LENGTH = CommentsController.MAX_TEXT_LENGTH
 exports = module.exports = CreatePage
 exports.CommentForm = CommentForm
+exports.PersonaInput = PersonaInput
 
 function CreatePage(attrs) {
 	var req = attrs.req
@@ -56,6 +58,7 @@ function CommentForm(attrs) {
 		action={commentsUrl}
 		class="comment-form">
 		{referrer ? <input type="hidden" name="referrer" value={referrer} /> : null}
+		{user && isAdmin(user) ? <PersonaInput t={t} user={user} /> : null}
 
 		<input
 			type="text"
@@ -109,4 +112,23 @@ function CommentForm(attrs) {
 			{Jsx.html(t("COMMENT_FORM_TOC", {url: "/about#tos"}))}
 		</p>}
 	</Form>
+}
+
+function PersonaInput(attrs) {
+	var {t} = attrs
+	var {user} = attrs
+
+	return <fieldset class="persona-fields">
+		<span class="title">{t("COMMENT_FORM_PERSONA_AS")}…</span>
+
+		<label class="persona">
+			<input type="radio" name="persona" value="self" required />
+			{user.name}
+		</label>
+
+		<label class="persona">
+			<input type="radio" name="persona" value="admin" required />
+			{t("COMMENT_FORM_PERSONA_AS_ADMIN")}
+		</label>
+	</fieldset>
 }

@@ -8,12 +8,14 @@ var Subscription = require("root/lib/subscription")
 var next = require("co-next")
 var sql = require("sqlate")
 var commentsDb = require("root/db/comments_db")
+var {isAdmin} = require("root/lib/user")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var MAX_TITLE_LENGTH = 140
 var MAX_TEXT_LENGTH = 3000
 exports.MAX_TITLE_LENGTH = MAX_TITLE_LENGTH
 exports.MAX_TEXT_LENGTH = MAX_TEXT_LENGTH
+exports.getCommentAuthorName = getCommentAuthorName
 exports.router = Router({mergeParams: true})
 
 var CONSTRAINT_ERRORS = {
@@ -38,13 +40,15 @@ exports.router.get("/new", function(req, res) {
 })
 
 exports.router.post("/", next(function*(req, res) {
+	var t = req.t
 	var user = req.user
 	if (user == null) throw new HttpError(401)
 
 	var initiative = req.initiative
 	var userEmail = user.email || ""
+	var parse = isAdmin(user) ? parseCommentAsAdmin : parseComment
 
-	var attrs = _.assign(parseComment(req.body), {
+	var attrs = _.assign(parse(req.body), {
 		initiative_uuid: initiative.uuid,
 		user_id: user.id,
 		user_uuid: _.serializeUuid(user.uuid),
@@ -94,7 +98,7 @@ exports.router.post("/", next(function*(req, res) {
 				text: renderEmail("EMAIL_INITIATIVE_COMMENT_BODY", {
 					initiativeTitle: initiative.title,
 					initiativeUrl: initiativeUrl,
-					userName: user.name,
+					userName: getCommentAuthorName(t, comment, user),
 					commentTitle: comment.title.replace(/\r?\n/g, " "),
 					commentText: _.quoteEmail(comment.text),
 					commentUrl: initiativeUrl + "#comment-" + comment.id
@@ -128,8 +132,12 @@ exports.router.use("/:commentId", next(function*(req, res, next) {
 	var comment = yield commentsDb.read(sql`
 		SELECT comment.*, user.name AS user_name
 		FROM comments AS comment
+
 		LEFT JOIN users AS user
-		ON comment.user_id = user.id AND comment.anonymized_at IS NULL
+		ON comment.user_id = user.id
+		AND comment.anonymized_at IS NULL
+		AND NOT comment.as_admin
+
 		WHERE (comment.id = ${id} OR comment.uuid = ${id})
 		AND comment.initiative_uuid = ${initiative.uuid}
 	`)
@@ -168,16 +176,18 @@ exports.router.delete("/:commentId", next(function*(req, res) {
 }))
 
 exports.router.post("/:commentId/replies", next(function*(req, res) {
+	var t = req.t
 	var user = req.user
 	if (user == null) throw new HttpError(401)
 
 	var initiative = req.initiative
-	var comment = req.comment
-	if (comment.parent_id) throw new HttpError(405)
+	var parent = req.comment
+	if (parent.parent_id) throw new HttpError(405)
 
-	var attrs = _.assign(parseComment(req.body), {
-		initiative_uuid: comment.initiative_uuid,
-		parent_id: comment.id,
+	var parse = isAdmin(user) ? parseCommentAsAdmin : parseComment
+	var attrs = _.assign(parse(req.body), {
+		initiative_uuid: parent.initiative_uuid,
+		parent_id: parent.id,
 		user_id: user.id,
 		user_uuid: _.serializeUuid(user.uuid),
 		created_at: new Date,
@@ -204,14 +214,14 @@ exports.router.post("/:commentId/replies", next(function*(req, res) {
 				text: renderEmail("EMAIL_INITIATIVE_COMMENT_REPLY_BODY", {
 					initiativeTitle: initiative.title,
 					initiativeUrl: initiativeUrl,
-					userName: user.name,
+					userName: getCommentAuthorName(t, reply, user),
 					commentText: _.quoteEmail(reply.text),
 					commentUrl: initiativeUrl + "#comment-" + reply.id
 				})
 			}, subs)
 		}
 
-		var url = req.body.referrer || req.baseUrl + "/" + comment.id
+		var url = req.body.referrer || req.baseUrl + "/" + parent.id
 		res.redirect(303, url + "#comment-" + reply.id)
 	}
 	catch (err) {
@@ -231,8 +241,12 @@ function* renderComment(req, res) {
 	comment.replies = yield commentsDb.search(sql`
 		SELECT comment.*, user.name AS user_name
 		FROM comments AS comment
+
 		LEFT JOIN users AS user
-		ON comment.user_id = user.id AND comment.anonymized_at IS NULL
+		ON comment.user_id = user.id
+		AND comment.anonymized_at IS NULL
+		AND NOT comment.as_admin
+
 		WHERE parent_id = ${comment.id}
 	`)
 
@@ -244,6 +258,18 @@ function parseComment(obj) {
 		title: String(obj.title || ""),
 		text: normalizeNewlines(String(obj.text || ""))
 	}
+}
+
+function parseCommentAsAdmin(obj) {
+	var attrs = parseComment(obj)
+	attrs.as_admin = obj.persona == "admin"
+	return attrs
+}
+
+function getCommentAuthorName(t, comment, user) {
+	if (comment.as_admin) return t("COMMENT_AUTHOR_ADMIN")
+	if (comment.anonymized_at) return t("COMMENT_AUTHOR_HIDDEN")
+	return user && user.name || comment.user_name
 }
 
 function normalizeNewlines(text) { return text.replace(/\r\n/g, "\n") }
