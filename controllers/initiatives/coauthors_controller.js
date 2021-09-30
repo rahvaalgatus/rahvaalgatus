@@ -7,6 +7,15 @@ var updateSql = require("heaven-sqlite").update
 var sql = require("sqlate")
 var next = require("co-next")
 
+exports.STATUSES = [
+	"accepted",
+	"pending",
+	"rejected",
+	"removed",
+	"resigned",
+	"cancelled"
+]
+
 exports.router = Router({mergeParams: true})
 
 exports.router.use(function(req, _res, next) {
@@ -27,11 +36,10 @@ exports.router.get("/", assertCreator, next(function*(req, res) {
 		FROM initiative_coauthors AS author
 		LEFT JOIN users AS user ON user.id = author.user_id
 		WHERE initiative_uuid = ${initiative.uuid}
+		AND status IN ('accepted', 'pending')
 	`)
 
-	res.render("initiatives/coauthors/index_page.jsx", {
-		coauthors: coauthors
-	})
+	res.render("initiatives/coauthors/index_page.jsx", {coauthors: coauthors})
 }))
 
 exports.router.post("/", assertCreator, next(function*(req, res) {
@@ -50,7 +58,11 @@ exports.router.post("/", assertCreator, next(function*(req, res) {
 			user_id: null,
 			country: "EE",
 			personal_id: personalId,
-			created_at: new Date
+			created_at: new Date,
+			created_by_id: user.id,
+			status: "pending",
+			status_updated_at: new Date,
+			status_updated_by_id: user.id
 		})
 
 		res.flash("notice", req.t("COAUTHORS_PAGE_COAUTHOR_ADDED"))
@@ -74,11 +86,12 @@ exports.router.put("/:personalId", next(function*(req, res) {
 		throw new HttpError(403, "Not Your Invitation")
 
 	var coauthor = yield coauthorsDb.read(sql`
-		SELECT *
-		FROM initiative_coauthors
+		SELECT * FROM initiative_coauthors
 		WHERE initiative_uuid = ${initiative.uuid}
 		AND country = ${country}
 		AND personal_id = ${personalId}
+		AND status IN ('accepted', 'pending', 'rejected')
+		ORDER BY id DESC LIMIT 1
 	`)
 
 	if (coauthor == null)
@@ -86,15 +99,20 @@ exports.router.put("/:personalId", next(function*(req, res) {
 	if (coauthor.status != "pending")
 		throw new HttpError(405, "Already Responded")
 
-	var attrs = _.assign(parseResponse(req.body), {status_updated_at: new Date})
-	attrs.user_id = attrs.status == "accepted" ? user.id : null
+	var attrs = _.assign(parseResponse(req.body), {
+		user_id: user.id,
+		status_updated_at: new Date,
+		status_updated_by_id: user.id
+	})
 
 	yield coauthorsDb.execute(sql`
 		${updateSql("initiative_coauthors", attrs)}
-		WHERE initiative_uuid = ${coauthor.initiative_uuid}
-		AND country = ${coauthor.country}
-		AND personal_id = ${coauthor.personal_id}
+		WHERE id = ${coauthor.id}
 	`)
+
+	res.statusMessage = attrs.status == "accepted"
+		? "Invitation Accepted"
+		: "Invitation Rejected"
 
 	res.flash("notice", attrs.status == "accepted"
 		? req.t("USER_PAGE_COAUTHOR_INVITATION_ACCEPTED")
@@ -104,26 +122,83 @@ exports.router.put("/:personalId", next(function*(req, res) {
 	res.redirect(303, req.body.referrer || req.headers.referer || "/user")
 }))
 
-exports.router.delete("/:personalId", assertCreator, next(function*(req, res) {
+exports.router.delete("/:personalId", next(function*(req, res) {
+	var user = req.user
 	var initiative = req.initiative
 	var [country, personalId] = parsePersonalId(req.params.personalId)
 
-	yield coauthorsDb.execute(sql`
-		DELETE FROM initiative_coauthors
+	// Check permissions before coauthor existence to not leak its presence.
+	if (!(
+		initiative.user_id == user.id ||
+		user.country == country && user.personal_id == personalId
+	)) throw new HttpError(403, "No Permission to Edit Coauthors")
+
+	var coauthor = yield coauthorsDb.read(sql`
+		SELECT * FROM initiative_coauthors
 		WHERE initiative_uuid = ${initiative.uuid}
 		AND country = ${country}
 		AND personal_id = ${personalId}
+		ORDER BY id DESC LIMIT 1
 	`)
 
-	res.flash("notice", req.t("COAUTHORS_PAGE_COAUTHOR_DELETED"))
-	res.redirect(303, req.baseUrl)
+	if (coauthor == null)
+		throw new HttpError(404, "Coauthor Not Found")
+
+	switch (coauthor.status) {
+		case "accepted": break
+		case "pending": break
+
+		case "removed": throw new HttpError(410, "Coauthor Already Removed")
+		case "resigned": throw new HttpError(410, "Coauthor Already Resigned")
+		case "rejected": throw new HttpError(410, "Coauthor Already Rejected")
+
+		case "cancelled":
+			throw new HttpError(410, "Coauthor Invitation Already Cancelled")
+
+		default: throw new HttpError(405, "Coauthor Not Deletable")
+	}
+
+	var status = initiative.user_id == user.id
+		? (coauthor.status == "pending" ? "cancelled" : "removed")
+		: (coauthor.status == "pending" ? "rejected" : "resigned")
+
+	yield coauthorsDb.execute(sql`
+		UPDATE initiative_coauthors SET
+			${status == "rejected" ? sql`user_id = ${user.id},` : sql``}
+			status = ${status},
+			status_updated_at = ${new Date},
+			status_updated_by_id = ${user.id}
+
+		WHERE id = ${coauthor.id}
+	`)
+
+	if (initiative.user_id == user.id) {
+		res.statusMessage = coauthor.status == "pending"
+			? "Coauthor Invitation Cancelled"
+			: "Coauthor Removed"
+
+		res.flash("notice", req.t("COAUTHORS_PAGE_COAUTHOR_DELETED"))
+		res.redirect(303, req.baseUrl)
+	}
+	else {
+		res.statusMessage = coauthor.status == "pending"
+			? "Invitation Rejected"
+			: "Coauthor Resigned"
+
+		res.flash("notice", coauthor.status == "pending"
+			? req.t("USER_PAGE_COAUTHOR_INVITATION_REJECTED")
+			: req.t("INITIATIVE_COAUTHOR_DELETED_SELF")
+		)
+
+		res.redirect(303, req.body.referrer || req.headers.referer || "/user")
+	}
 }))
 
 function assertCreator(req, _res, next) {
 	var user = req.user
 	var initiative = req.initiative
 
-	if (!(user && initiative.user_id == user.id))
+	if (initiative.user_id != user.id)
 		throw new HttpError(403, "No Permission to Edit Coauthors")
 
 	next()

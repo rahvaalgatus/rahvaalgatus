@@ -101,7 +101,7 @@ describe("InitiativeEventsController", function() {
 				}))
 
 				yield coauthorsDb.create(new ValidCoauthor({
-					initiative_uuid: initiative.uuid,
+					initiative: initiative,
 					user: this.user,
 					status: "accepted"
 				}))
@@ -484,7 +484,7 @@ describe("InitiativeEventsController", function() {
 				}))
 
 				yield coauthorsDb.create(new ValidCoauthor({
-					initiative_uuid: initiative.uuid,
+					initiative: initiative,
 					user: this.user,
 					status: "accepted"
 				}))

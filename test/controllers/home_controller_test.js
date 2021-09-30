@@ -31,6 +31,8 @@ var {PHASES} = require("root/lib/initiative")
 var LOCAL_PHASES = _.without(PHASES, "parliament")
 var TWITTER_NAME = Config.twitterUrl.replace(/^.*\//, "")
 var CUTOFF = 14 // days
+var COAUTHOR_STATUSES =
+	require("root/controllers/initiatives/coauthors_controller").STATUSES
 
 var EMPTY_STATISTICS = {
 	initiativeCountsByPhase: {
@@ -94,7 +96,7 @@ describe("HomeController", function() {
 			var coauthor = yield usersDb.create(new ValidUser)
 
 			yield coauthorsDb.create(new ValidCoauthor({
-				initiative_uuid: other.uuid,
+				initiative: other,
 				user: coauthor,
 				status: "accepted"
 			}))
@@ -120,7 +122,7 @@ describe("HomeController", function() {
 			var coauthor = yield usersDb.create(new ValidUser)
 
 			yield coauthorsDb.create(new ValidCoauthor({
-				initiative_uuid: initiative.uuid,
+				initiative: initiative,
 				user: coauthor,
 				status: "accepted"
 			}))
@@ -135,7 +137,7 @@ describe("HomeController", function() {
 			el.textContent.must.not.include(coauthor.name)
 		})
 
-		;["pending", "rejected"].forEach(function(status) {
+		_.without(COAUTHOR_STATUSES, "accepted").forEach(function(status) {
 			it(`must not show ${status} coauthor name`, function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
@@ -147,9 +149,8 @@ describe("HomeController", function() {
 				var coauthor = yield usersDb.create(new ValidUser)
 
 				yield coauthorsDb.create(new ValidCoauthor({
-					initiative_uuid: initiative.uuid,
-					country: coauthor.country,
-					personal_id: coauthor.personal_id,
+					initiative: initiative,
+					user: coauthor,
 					status: status
 				}))
 

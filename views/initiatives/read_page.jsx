@@ -941,6 +941,7 @@ function SidebarAuthorView(attrs) {
 	var hasComments = attrs.hasComments
 
 	var initiativePath = "/initiatives/" + initiative.uuid
+	var coauthorsPath = initiativePath + "/coauthors"
 
 	var textEditPath = text && initiative.language != text.language
 		? initiativePath + "/edit?language=" + text.language
@@ -959,7 +960,7 @@ function SidebarAuthorView(attrs) {
 				req={req}
 				id="initiative-destination-form"
 				method="put"
-				action={"/initiatives/" + initiative.uuid}
+				action={initiativePath}
 			>
 				<h3 class="sidebar-subheader">Algatuse saaja</h3>
 
@@ -987,7 +988,7 @@ function SidebarAuthorView(attrs) {
 			<FormButton
 				req={req}
 				id="publish-button"
-				action={"/initiatives/" + initiative.uuid}
+				action={initiativePath}
 				name="visibility"
 				value="public"
 				disabled={!canPublish}
@@ -1006,7 +1007,7 @@ function SidebarAuthorView(attrs) {
 			<FormButton
 				req={req}
 				id="send-to-sign-button"
-				action={"/initiatives/" + initiative.uuid}
+				action={initiativePath}
 				name="status"
 				value="voting"
 				disabled={!canSendToSign}
@@ -1047,7 +1048,7 @@ function SidebarAuthorView(attrs) {
 		) ? <Fragment>
 			<FormButton
 				req={req}
-				action={"/initiatives/" + initiative.uuid}
+				action={initiativePath}
 				name="status"
 				value="followUp"
 
@@ -1088,14 +1089,14 @@ function SidebarAuthorView(attrs) {
 		</a> : null}
 
 		{isCreator ? <a
-			href={initiativePath + "/coauthors"}
+			href={coauthorsPath}
 			class="link-button wide-button">
 			{t("EDIT_INITIATIVE_AUTHORS")}
 		</a> : null}
 
 		{initiative.phase == "edit" && initiative.published_at ? <FormButton
 			req={req}
-			action={"/initiatives/" + initiative.uuid}
+			action={initiativePath}
 			name="visibility"
 			value="public"
 			class="link-button wide-button">
@@ -1104,11 +1105,21 @@ function SidebarAuthorView(attrs) {
 
 		{Initiative.canUpdateSignDeadline(initiative, user) ? <FormButton
 			req={req}
-			action={"/initiatives/" + initiative.uuid}
+			action={initiativePath}
 			name="status"
 			value="voting"
 			class="link-button wide-button">
 			{t("RENEW_DEADLINE")}
+		</FormButton> : null}
+
+		{isAuthor && !isCreator ? <FormButton
+			req={req}
+			action={coauthorsPath + "/" + user.country + user.personal_id}
+			name="_method"
+			value="delete"
+			onclick={confirm(t("INITIATIVE_COAUTHOR_DELETE_SELF_CONFIRMATION"))}
+			class="link-button wide-button">
+			{t("INITIATIVE_COAUTHOR_DELETE_SELF")}
 		</FormButton> : null}
 
 		{(
@@ -1117,7 +1128,7 @@ function SidebarAuthorView(attrs) {
 			(!hasComments || !initiative.published_at)
 		) ? <FormButton
 			req={req}
-			action={"/initiatives/" + initiative.uuid}
+			action={initiativePath}
 			name="_method"
 			value="delete"
 			onclick={confirm(t("TXT_ALL_DISCUSSIONS_AND_VOTES_DELETED"))}
@@ -1174,7 +1185,7 @@ function SidebarInfoView(attrs) {
 		id="initiative-info"
 		class="sidebar-section"
 		method="put"
-		action={"/initiatives/" + initiative.uuid}>
+		action={initiativePath}>
 		<input type="checkbox" id="initiative-info-form-toggle" hidden />
 
 		<h2 class="sidebar-header">
@@ -1203,7 +1214,8 @@ function SidebarInfoView(attrs) {
 					</li> : null}
 
 					{(
-						(authorName || authorUrl) && authorName != initiative.user_name
+						(authorName || authorUrl || coauthorNames.length) &&
+						authorName != initiative.user_name
 					) ? <li>{initiative.user_name}</li> : null}
 
 					{coauthorNames.map((name) => <li>{name}</li>)}

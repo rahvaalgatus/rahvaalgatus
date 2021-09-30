@@ -25,6 +25,8 @@ var demand = require("must")
 var SITE_HOSTNAME = Url.parse(Config.url).hostname
 var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
 var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
+var COAUTHOR_STATUSES =
+	require("root/controllers/initiatives/coauthors_controller").STATUSES
 
 describe("UserController", function() {
 	require("root/test/db")()
@@ -207,7 +209,7 @@ describe("UserController", function() {
 					}))
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
+						initiative: initiative,
 						user: this.user,
 						status: "accepted"
 					}))
@@ -230,7 +232,7 @@ describe("UserController", function() {
 					var coauthor = yield usersDb.create(new ValidUser)
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
+						initiative: initiative,
 						user: coauthor,
 						status: "accepted"
 					}))
@@ -245,16 +247,15 @@ describe("UserController", function() {
 					el.textContent.must.not.include(coauthor.name)
 				})
 
-				;["pending", "rejected"].forEach(function(status) {
-					it(`must not show initiatives where ${status} coauthor`, function*() {
+				_.without(COAUTHOR_STATUSES, "accepted").forEach(function(status) {
+					it(`must not show initiatives if ${status} coauthor`, function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: (yield usersDb.create(new ValidUser)).id
 						}))
 
 						yield coauthorsDb.create(new ValidCoauthor({
-							initiative_uuid: initiative.uuid,
-							country: this.user.country,
-							personal_id: this.user.personal_id,
+							initiative: initiative,
+							user: this.user,
 							status: status
 						}))
 
@@ -292,7 +293,7 @@ describe("UserController", function() {
 					var coauthor = yield usersDb.create(new ValidUser)
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: other.uuid,
+						initiative: other,
 						user: coauthor,
 						status: "accepted"
 					}))
@@ -307,7 +308,7 @@ describe("UserController", function() {
 					el.textContent.must.not.include(coauthor.name)
 				})
 
-				;["pending", "rejected"].forEach(function(status) {
+				_.without(COAUTHOR_STATUSES, "accepted").forEach(function(status) {
 					it(`must not show ${status} coauthor name`, function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
@@ -317,9 +318,8 @@ describe("UserController", function() {
 						var coauthor = yield usersDb.create(new ValidUser)
 
 						yield coauthorsDb.create(new ValidCoauthor({
-							initiative_uuid: initiative.uuid,
-							country: coauthor.country,
-							personal_id: coauthor.personal_id,
+							initiative: initiative,
+							user: coauthor,
 							status: status
 						}))
 
@@ -342,9 +342,8 @@ describe("UserController", function() {
 					}))
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
-						country: this.user.country,
-						personal_id: this.user.personal_id,
+						initiative: initiative,
+						user: this.user,
 						status: "pending"
 					}))
 
@@ -362,7 +361,7 @@ describe("UserController", function() {
 					}))
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
+						initiative: initiative,
 						user: this.user,
 						status: "accepted"
 					}))
@@ -374,24 +373,29 @@ describe("UserController", function() {
 					demand(dom.getElementById("coauthor-invitations")).be.null()
 				})
 
-				it("must not show rejected invitation", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: (yield usersDb.create(new ValidUser)).id
-					}))
+				_.without(
+					COAUTHOR_STATUSES,
+					"accepted",
+					"pending"
+				).forEach(function(status) {
+					it(`must not show if ${status} coauthor`, function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: (yield usersDb.create(new ValidUser)).id
+						}))
 
-					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
-						country: this.user.country,
-						personal_id: this.user.personal_id,
-						status: "rejected"
-					}))
+						yield coauthorsDb.create(new ValidCoauthor({
+							initiative: initiative,
+							user: this.user,
+							status: status
+						}))
 
-					var res = yield this.request("/user")
-					res.statusCode.must.equal(200)
+						var res = yield this.request("/user")
+						res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
-					demand(dom.getElementById("coauthor-invitations")).be.null()
-					res.body.must.not.include(initiative.uuid)
+						var dom = parseDom(res.body)
+						demand(dom.getElementById("coauthor-invitations")).be.null()
+						res.body.must.not.include(initiative.uuid)
+					})
 				})
 
 				it("must not show pending invitations from other users with same country", function*() {
@@ -404,9 +408,8 @@ describe("UserController", function() {
 					}))
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
-						country: other.country,
-						personal_id: other.personal_id,
+						initiative: initiative,
+						user: other,
 						status: "pending"
 					}))
 
@@ -428,9 +431,8 @@ describe("UserController", function() {
 					}))
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
-						country: other.country,
-						personal_id: other.personal_id,
+						initiative: initiative,
+						user: other,
 						status: "pending"
 					}))
 

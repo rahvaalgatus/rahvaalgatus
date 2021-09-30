@@ -18,7 +18,7 @@ module.exports = function(attrs) {
 	var coauthorsPath = initiativePath + "/coauthors"
 
 	var accepted = coauthors.filter((coauthor) => coauthor.status == "accepted")
-	var pending = coauthors.filter((coauthor) => coauthor.status != "accepted")
+	var pending = coauthors.filter((coauthor) => coauthor.status == "pending")
 
 	return <InitiativePage
 		page="initiative-coauthors"
@@ -134,6 +134,10 @@ module.exports = function(attrs) {
 										value="delete"
 										class="delete-button link-button"
 										action={pathToCoauthor(coauthor)}
+
+										onclick={
+											confirm(t("COAUTHORS_PAGE_REMOVE_BUTTON_CONFIRMATION"))
+										}
 									>{t("COAUTHORS_PAGE_REMOVE_BUTTON")}</FormButton>
 								</td>
 							</tr>

@@ -476,34 +476,44 @@ CREATE INDEX index_initiative_signatures_on_created_at
 ON initiative_signatures (created_at, initiative_uuid);
 CREATE INDEX index_initiative_citizenos_signatures_on_created_at
 ON initiative_citizenos_signatures (created_at, initiative_uuid);
-CREATE TABLE initiative_coauthors (
+CREATE UNIQUE INDEX index_users_on_id_and_country_and_personal_id
+ON users (id, country, personal_id);
+CREATE TABLE IF NOT EXISTS "initiative_coauthors" (
+	id INTEGER PRIMARY KEY NOT NULL,
 	initiative_uuid TEXT NOT NULL,
 	country TEXT NOT NULL,
 	personal_id TEXT NOT NULL,
 	user_id INTEGER,
 	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	created_by_id INTEGER NOT NULL,
 	status TEXT NOT NULL DEFAULT 'pending',
-	status_updated_at TEXT,
+	status_updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	status_updated_by_id INTEGER NOT NULL,
 
-	PRIMARY KEY (initiative_uuid, country, personal_id),
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE,
 
 	FOREIGN KEY (user_id, country, personal_id)
 	REFERENCES users (id, country, personal_id),
 
-	CONSTRAINT country_length CHECK (length(country) = 2),
-	CONSTRAINT country_uppercase CHECK (country == upper(country)),
+	FOREIGN KEY (created_by_id) REFERENCES users (id),
+	FOREIGN KEY (status_updated_by_id) REFERENCES users (id),
+
+	CONSTRAINT country_format CHECK (country GLOB '[A-Z][A-Z]'),
 	CONSTRAINT personal_id_length CHECK (length(personal_id) > 0),
 
-	CONSTRAINT user_id_only_if_accepted
-	CHECK ((user_id IS NOT NULL) = (status = 'accepted'))
+	CONSTRAINT user_id_unless_pending_or_cancelled
+	CHECK ((user_id IS NULL) = (status IN ('pending', 'cancelled')))
 );
+CREATE INDEX index_initiative_coauthors_on_initiative_uuid
+ON initiative_coauthors (initiative_uuid);
 CREATE INDEX index_initiative_coauthors_on_country_and_personal_id
 ON initiative_coauthors (country, personal_id);
 CREATE INDEX index_initiative_coauthors_on_user_id
-ON initiative_coauthors (user_id);
-CREATE UNIQUE INDEX index_users_on_id_and_country_and_personal_id
-ON users (id, country, personal_id);
+ON initiative_coauthors (user_id)
+WHERE user_id IS NOT NULL;
+CREATE UNIQUE INDEX index_initiative_coauthors_on_accepted_or_pending
+ON initiative_coauthors (initiative_uuid, country, personal_id, status)
+WHERE status IN ('accepted', 'pending');
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -612,4 +622,5 @@ INSERT INTO migrations VALUES('20210505145407');
 INSERT INTO migrations VALUES('20210505204035');
 INSERT INTO migrations VALUES('20210902145013');
 INSERT INTO migrations VALUES('20210921135127');
+INSERT INTO migrations VALUES('20210922092306');
 COMMIT;

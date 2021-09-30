@@ -62,6 +62,8 @@ var PNG_PREVIEW = new Buffer("89504e470d0a1a0a4269", "hex")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var TRIX_TYPE = new MediaType("application/vnd.basecamp.trix+json")
 var TWITTER_NAME = Config.twitterUrl.replace(/^.*\//, "")
+var COAUTHOR_STATUSES =
+	require("root/controllers/initiatives/coauthors_controller").STATUSES
 
 var PARLIAMENT_MEETING_DECISION_TEXTS = {
 	"continue": t("PARLIAMENT_MEETING_DECISION_CONTINUE"),
@@ -162,7 +164,7 @@ describe("InitiativesController", function() {
 			var coauthor = yield usersDb.create(new ValidUser)
 
 			yield coauthorsDb.create(new ValidCoauthor({
-				initiative_uuid: other.uuid,
+				initiative: other,
 				user: coauthor,
 				status: "accepted"
 			}))
@@ -185,7 +187,7 @@ describe("InitiativesController", function() {
 			var coauthor = yield usersDb.create(new ValidUser)
 
 			yield coauthorsDb.create(new ValidCoauthor({
-				initiative_uuid: initiative.uuid,
+				initiative: initiative,
 				user: coauthor,
 				status: "accepted"
 			}))
@@ -198,7 +200,7 @@ describe("InitiativesController", function() {
 			el.querySelector(".author").textContent.must.equal(this.author.name)
 		})
 
-		;["pending", "rejected"].forEach(function(status) {
+		_.without(COAUTHOR_STATUSES, "accepted").forEach(function(status) {
 			it(`must not show ${status} coauthor name`, function*() {
 				var initiative = yield initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
@@ -209,9 +211,8 @@ describe("InitiativesController", function() {
 				var coauthor = yield usersDb.create(new ValidUser)
 
 				yield coauthorsDb.create(new ValidCoauthor({
-					initiative_uuid: initiative.uuid,
-					country: coauthor.country,
-					personal_id: coauthor.personal_id,
+					initiative: initiative,
+					user: coauthor,
 					status: status
 				}))
 
@@ -1493,7 +1494,7 @@ describe("InitiativesController", function() {
 				var coauthor = yield usersDb.create(new ValidUser)
 
 				yield coauthorsDb.create(new ValidCoauthor({
-					initiative_uuid: other.uuid,
+					initiative: other,
 					user: coauthor,
 					status: "accepted"
 				}))
@@ -1506,7 +1507,7 @@ describe("InitiativesController", function() {
 				author.textContent.must.equal(this.author.name)
 			})
 
-			;["pending", "rejected"].forEach(function(status) {
+			_.without(COAUTHOR_STATUSES, "accepted").forEach(function(status) {
 				it(`must not show ${status} coauthor name`, function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
@@ -1517,9 +1518,8 @@ describe("InitiativesController", function() {
 					var coauthor = yield usersDb.create(new ValidUser)
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
-						country: coauthor.country,
-						personal_id: coauthor.personal_id,
+						initiative: initiative,
+						user: coauthor,
 						status: status
 					}))
 
@@ -3861,7 +3861,7 @@ describe("InitiativesController", function() {
 				}))
 
 				yield coauthorsDb.create(new ValidCoauthor({
-					initiative_uuid: initiative.uuid,
+					initiative: initiative,
 					user: this.user,
 					status: "accepted"
 				}))
@@ -3889,7 +3889,7 @@ describe("InitiativesController", function() {
 				}))
 
 				yield coauthorsDb.create(new ValidCoauthor({
-					initiative_uuid: initiative.uuid,
+					initiative: initiative,
 					country: this.user.country,
 					personal_id: this.user.personal_id,
 					status: "pending"
@@ -3901,22 +3901,27 @@ describe("InitiativesController", function() {
 				res.body.must.include(t("USER_PAGE_COAUTHOR_INVITATION_DESCRIPTION"))
 			})
 
-			it(`must respond with 403 for unpublished discussion if rejected coauthor`, function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					published_at: null
-				}))
+			_.without(
+				COAUTHOR_STATUSES,
+				"accepted",
+				"pending"
+			).forEach(function(status) {
+				it(`must respond with 403 for unpublished discussion if ${status} coauthor`, function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						published_at: null
+					}))
 
-				yield coauthorsDb.create(new ValidCoauthor({
-					initiative_uuid: initiative.uuid,
-					country: this.user.country,
-					personal_id: this.user.personal_id,
-					status: "rejected"
-				}))
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative: initiative,
+						user: this.user,
+						status: status
+					}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				res.statusCode.must.equal(403)
-				res.statusMessage.must.equal("Initiative Not Public")
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(403)
+					res.statusMessage.must.equal("Initiative Not Public")
+				})
 			})
 
 			it("must render coauthor invitation form if pending coauthor",
@@ -3927,7 +3932,7 @@ describe("InitiativesController", function() {
 				}))
 
 				yield coauthorsDb.create(new ValidCoauthor({
-					initiative_uuid: initiative.uuid,
+					initiative: initiative,
 					country: this.user.country,
 					personal_id: this.user.personal_id,
 					status: "pending"
@@ -3955,7 +3960,7 @@ describe("InitiativesController", function() {
 				}))
 
 				yield coauthorsDb.create(new ValidCoauthor({
-					initiative_uuid: initiative.uuid,
+					initiative: initiative,
 					user: this.user,
 					status: "accepted"
 				}))
@@ -3965,22 +3970,27 @@ describe("InitiativesController", function() {
 				demand(dom.getElementById("coauthor-invitation")).be.null()
 			})
 
-			it("must not render coauthor invitation form if rejected", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					published_at: null
-				}))
+			_.without(
+				COAUTHOR_STATUSES,
+				"accepted",
+				"pending"
+			).forEach(function(status) {
+				it(`must not render coauthor invitation form if ${status}`, function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						published_at: null
+					}))
 
-				yield coauthorsDb.create(new ValidCoauthor({
-					initiative_uuid: initiative.uuid,
-					country: this.user.country,
-					personal_id: this.user.personal_id,
-					status: "rejected"
-				}))
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative: initiative,
+						user: this.user,
+						status: status
+					}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
-				var dom = parseDom(res.body)
-				demand(dom.getElementById("coauthor-invitation")).be.null()
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var dom = parseDom(res.body)
+					demand(dom.getElementById("coauthor-invitation")).be.null()
+				})
 			})
 
 			it("must render initiative in edit phase", function*() {
@@ -4102,7 +4112,7 @@ describe("InitiativesController", function() {
 					}))
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
+						initiative: initiative,
 						user: this.user,
 						status: "accepted"
 					}))
@@ -4160,7 +4170,7 @@ describe("InitiativesController", function() {
 					res.headers.location.must.equal("/initiatives/" + initiative.uuid)
 				})
 
-				;["pending", "rejected"].forEach(function(status) {
+			_.without(COAUTHOR_STATUSES, "accepted").forEach(function(status) {
 					it(`must not render unsigned translation if in sign phase if ${status} coauthor`, function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
@@ -4169,9 +4179,8 @@ describe("InitiativesController", function() {
 						}))
 
 						yield coauthorsDb.create(new ValidCoauthor({
-							initiative_uuid: initiative.uuid,
-							country: this.user.country,
-							personal_id: this.user.personal_id,
+							initiative: initiative,
+							user: this.user,
 							status: status
 						}))
 
@@ -4250,7 +4259,7 @@ describe("InitiativesController", function() {
 					}))
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
+						initiative: initiative,
 						user: this.user,
 						status: "accepted"
 					}))
@@ -4650,7 +4659,7 @@ describe("InitiativesController", function() {
 					}))
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
+						initiative: initiative,
 						user: this.user,
 						status: "accepted"
 					}))
@@ -4796,7 +4805,7 @@ describe("InitiativesController", function() {
 					}))
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
+						initiative: initiative,
 						user: this.user,
 						status: "accepted"
 					}))
@@ -4820,7 +4829,7 @@ describe("InitiativesController", function() {
 					res.body.must.not.include(t("EDIT_INITIATIVE_TEXT"))
 				})
 
-				;["pending", "rejected"].forEach(function(status) {
+				_.without(COAUTHOR_STATUSES, "accepted").forEach(function(status) {
 					it(`must not show authoring controls if ${status} author`,
 						function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
@@ -4829,9 +4838,8 @@ describe("InitiativesController", function() {
 						}))
 
 						yield coauthorsDb.create(new ValidCoauthor({
-							initiative_uuid: initiative.uuid,
-							country: this.user.country,
-							personal_id: this.user.personal_id,
+							initiative: initiative,
+							user: this.user,
 							status: status
 						}))
 
@@ -4857,7 +4865,7 @@ describe("InitiativesController", function() {
 					}))
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
+						initiative: initiative,
 						user: this.user,
 						status: "accepted"
 					}))
@@ -4948,7 +4956,7 @@ describe("InitiativesController", function() {
 					}))
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
+						initiative: initiative,
 						user: this.user,
 						status: "accepted"
 					}))
@@ -5206,7 +5214,7 @@ describe("InitiativesController", function() {
 					}))
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
+						initiative: initiative,
 						user: this.user,
 						status: "accepted"
 					}))
@@ -5323,7 +5331,7 @@ describe("InitiativesController", function() {
 						}))
 
 						yield coauthorsDb.create(new ValidCoauthor({
-							initiative_uuid: initiative.uuid,
+							initiative: initiative,
 							user: this.user,
 							status: "accepted"
 						}))
@@ -5553,7 +5561,7 @@ describe("InitiativesController", function() {
 						}))
 
 						yield coauthorsDb.create(new ValidCoauthor({
-							initiative_uuid: initiative.uuid,
+							initiative: initiative,
 							user: this.user,
 							status: "accepted"
 						}))
@@ -6839,7 +6847,7 @@ describe("InitiativesController", function() {
 					}))
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
+						initiative: initiative,
 						user: this.user,
 						status: "accepted"
 					}))
@@ -6858,16 +6866,15 @@ describe("InitiativesController", function() {
 					})
 				})
 
-			;["pending", "rejected"].forEach(function(status) {
+			_.without(COAUTHOR_STATUSES, "accepted").forEach(function(status) {
 				it(`must respond with 403 if ${status} coauthor`, function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: (yield usersDb.create(new ValidUser)).id
 					}))
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
-						country: this.user.country,
-						personal_id: this.user.personal_id,
+						initiative: initiative,
+						user: this.user,
 						status: status
 					}))
 
@@ -7065,7 +7072,7 @@ describe("InitiativesController", function() {
 					}))
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
+						initiative: initiative,
 						user: this.user,
 						status: "accepted"
 					}))
@@ -7098,7 +7105,7 @@ describe("InitiativesController", function() {
 					res.statusMessage.must.equal("No Permission to Edit")
 				})
 
-				;["pending", "rejected"].forEach(function(status) {
+				_.without(COAUTHOR_STATUSES, "accepted").forEach(function(status) {
 					it(`must respond with 403 if ${status} coauthor`, function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: (yield usersDb.create(new ValidUser)).id,
@@ -7106,9 +7113,8 @@ describe("InitiativesController", function() {
 						}))
 
 						yield coauthorsDb.create(new ValidCoauthor({
-							initiative_uuid: initiative.uuid,
-							country: this.user.country,
-							personal_id: this.user.personal_id,
+							initiative: initiative,
+							user: this.user,
 							status: status
 						}))
 
@@ -7341,7 +7347,7 @@ describe("InitiativesController", function() {
 					}))
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
+						initiative: initiative,
 						user: this.user,
 						status: "accepted"
 					}))
@@ -7898,7 +7904,7 @@ describe("InitiativesController", function() {
 					}))
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
+						initiative: initiative,
 						user: this.user,
 						status: "accepted"
 					}))
@@ -7926,7 +7932,7 @@ describe("InitiativesController", function() {
 					res.statusMessage.must.equal("No Permission to Edit")
 				})
 
-				;["pending", "rejected"].forEach(function(status) {
+				_.without(COAUTHOR_STATUSES, "accepted").forEach(function(status) {
 					it(`must respond with 403 if ${status} coauthor`, function*() {
 						var initiative = yield initiativesDb.create(new ValidInitiative({
 							user_id: (yield usersDb.create(new ValidUser)).id,
@@ -7934,9 +7940,8 @@ describe("InitiativesController", function() {
 						}))
 
 						yield coauthorsDb.create(new ValidCoauthor({
-							initiative_uuid: initiative.uuid,
-							country: this.user.country,
-							personal_id: this.user.personal_id,
+							initiative: initiative,
+							user: this.user,
 							status: status
 						}))
 
@@ -8213,7 +8218,7 @@ describe("InitiativesController", function() {
 					}))
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
+						initiative: initiative,
 						user: this.user,
 						status: "accepted"
 					}))
@@ -8697,7 +8702,7 @@ describe("InitiativesController", function() {
 						}))
 
 						yield coauthorsDb.create(new ValidCoauthor({
-							initiative_uuid: initiative.uuid,
+							initiative: initiative,
 							user: this.user,
 							status: "accepted"
 						}))
@@ -8885,7 +8890,7 @@ describe("InitiativesController", function() {
 						}))
 
 						yield coauthorsDb.create(new ValidCoauthor({
-							initiative_uuid: initiative.uuid,
+							initiative: initiative,
 							user: this.user,
 							status: "accepted"
 						}))
@@ -8899,7 +8904,7 @@ describe("InitiativesController", function() {
 						res.statusMessage.must.equal("No Permission to Edit")
 					})
 
-					;["pending", "rejected"].forEach(function(status) {
+					_.without(COAUTHOR_STATUSES, "accepted").forEach(function(status) {
 						it(`must respond with 403 if ${status} coauthor`, function*() {
 							var initiative = yield initiativesDb.create(new ValidInitiative({
 								user_id: (yield usersDb.create(new ValidUser)).id,
@@ -8907,9 +8912,8 @@ describe("InitiativesController", function() {
 							}))
 
 							yield coauthorsDb.create(new ValidCoauthor({
-								initiative_uuid: initiative.uuid,
-								country: this.user.country,
-								personal_id: this.user.personal_id,
+								initiative: initiative,
+								user: this.user,
 								status: status
 							}))
 
@@ -9899,7 +9903,7 @@ describe("InitiativesController", function() {
 				}))
 
 				yield coauthorsDb.create(new ValidCoauthor({
-					initiative_uuid: initiative.uuid,
+					initiative: initiative,
 					user: this.user,
 					status: "accepted"
 				}))
@@ -9912,7 +9916,7 @@ describe("InitiativesController", function() {
 				res.statusMessage.must.must.equal("No Permission to Delete")
 			})
 
-			;["pending", "rejected"].forEach(function(status) {
+			_.without(COAUTHOR_STATUSES, "accepted").forEach(function(status) {
 				it(`must respond with 405 if ${status} coauthor`, function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: (yield usersDb.create(new ValidUser)).id,
@@ -9920,9 +9924,8 @@ describe("InitiativesController", function() {
 					}))
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
-						country: this.user.country,
-						personal_id: this.user.personal_id,
+						initiative: initiative,
+						user: this.user,
 						status: status
 					}))
 
@@ -9975,7 +9978,7 @@ describe("InitiativesController", function() {
 				res.statusMessage.must.equal("No Permission to Edit")
 			})
 
-			;["pending", "rejected"].forEach(function(status) {
+			_.without(COAUTHOR_STATUSES, "accepted").forEach(function(status) {
 				it(`must respond with 403 if ${status} coauthor`, function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
 						user_id: (yield usersDb.create(new ValidUser)).id,
@@ -9983,9 +9986,8 @@ describe("InitiativesController", function() {
 					}))
 
 					yield coauthorsDb.create(new ValidCoauthor({
-						initiative_uuid: initiative.uuid,
-						country: this.user.country,
-						personal_id: this.user.personal_id,
+						initiative: initiative,
+						user: this.user,
 						status: status
 					}))
 
@@ -10038,7 +10040,7 @@ describe("InitiativesController", function() {
 				}))
 
 				yield coauthorsDb.create(new ValidCoauthor({
-					initiative_uuid: initiative.uuid,
+					initiative: initiative,
 					user: this.user,
 					status: "accepted"
 				}))
