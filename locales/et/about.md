@@ -48,11 +48,13 @@ Isikuandmed on Rahvaalgatus.ee platvormil sisestatud kasutaja kohta käivad andm
 
 Kasutajakonto on vaja luua algatuse loomiseks ja kommentaaride andmiseks.
 
-Toetusallkirja andmise jaoks ei ole vaja endale kasutajakontot luua. Toetusallkirja andmisel salvestatakse nimi ja isikukood. Andmeid töödeldakse üksnes kollektiivse pöördumise esitamiseks ning töötlemine toimub üldiste isikuandmete töötlemise nõuetest lähtuvalt ning märgukirjale ja selgitustaotlusele vastamise ning kollektiivse pöördumise esitamise seaduse 3. peatüki regulatsiooni alusel.
+Toetusallkirja andmise jaoks ei ole vaja endale kasutajakontot luua. Toetusallkirja andmisel salvestatakse allkirjastaja ees- ja perenimi, isikukood, allkirjastamise kellaaeg, ligikaudne asukoht ja krüptograafiline allkiri. Kasutajal on võimalik sisse logida ning oma allkiri koos selle juurde kuuluvate andmetega iga hetk alla laadida või kustutada. 
 
-Riigikogule esitatud pöördumisele toetusallkirja andnute nimekiri on nähtav Riigikogu Kantselei vastutavale töötajale, kes kontrollib rahvastikuregistrist, et digiallkirjad on andnud vähemalt 16aastased Eesti alalised elanikud. 
+Kui algatus on kogunud Riigikogule või kohalikule omavalitsusele saatmiseks piisavalt allkirju ning algataja on otsustanud selle vastavale institutsioonile edastada, saadetakse digiallkirjad koos algatuse tekstiga Riigikogule või vastavale kohalikule omavalitsusele. Seal töötleb toetusallkirjade nimekirja vastutav ametnik, kes kontrollib digiallkirjade kehtivust ning kinnitab rahvastikuregistri vahendusel, et allkirja on andnud vähemalt 16-aastane Eesti alaline elanik. Kohalikes omavalitsustes kontrollib ametnik lisaks vanusele rahvastikuregistri vahendusel ka allkirjastaja registreeritud elukohta. 
 
-Kohalikule omavalitsusele esitatud pöördumisele toetusallkirja andnute nimekiri on nähtav omavalitsuse registripidajale, kes kontrollib rahvastikuregistrist, et digiallkirjad on andnud vähemalt 16aastased vastava kohaliku omavalitsuse elanikud. 
+Andmeid töödeldakse Riigikogus üksnes kollektiivse pöördumise esitamiseks ning kohalikes omavalitsustes üksnes algatuste esitamiseks. Töötlemine toimub üldiste isikuandmete töötlemise nõuetest lähtuvalt ning märgukirjale ja selgitustaotlusele vastamise ning kollektiivse pöördumise esitamise seaduse 3. peatüki regulatsiooni alusel.
+
+Algatusele saab allkirju koguda maksimaalselt 18 kuud. Nii kaua säilitatakse ka algatusele antud allkirju. Selle aja täitudes või varem, kui algatus kogub allkirjad kiiremini kokku ning see esitatakse vastavale institutsioonile, eemaldatakse allkirjadelt isikuandmed. See tähendab, et kustutatakse krüptograafiline allkiri ja säilitatakse vaid isikukoodi 3 esimest numbrit (allkirjastaja sugu ja sünniaasta), allkirjastamise kellaaeg, ligikaudne asukoht ning viide algatusele. Anonüümitud andmete põhjal on võimalik väljastada statistikat. 
 
 Andmeid hoitakse konfidentsiaalsena ning kõiki isikuid, kellel on õigus isikandmeid töödelda, on teavitatud isikuandmete konfidentsiaalsest olemusest. Toetusallkirja andjaid Rahvaalgatus.ee avalikult ei kuva. 
 
