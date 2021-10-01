@@ -48,7 +48,7 @@ Isikuandmed on Rahvaalgatus.ee platvormil sisestatud kasutaja kohta käivad andm
 
 Kasutajakonto on vaja luua algatuse loomiseks ja kommentaaride andmiseks.
 
-Toetusallkirja andmise jaoks ei ole vaja endale kasutajakontot luua. Toetusallkirja andmisel salvestatakse allkirjastaja ees- ja perenimi, isikukood, allkirjastamise kellaaeg, ligikaudne asukoht ja krüptograafiline allkiri. Kasutajal on võimalik sisse logida ning oma allkiri koos selle juurde kuuluvate andmetega iga hetk alla laadida või kustutada. 
+Toetusallkirja andmise jaoks ei ole vaja endale kasutajakontot luua. Toetusallkirja andmisel salvestatakse allkirjastaja ees- ja perenimi, isikukood, allkirjastamise kellaaeg, ligikaudne asukoht ja krüptograafiline allkiri. Kasutajal on võimalik sisse logida ning oma allkiri iga hetk alla laadida või kustutada. 
 
 Kui algatus on kogunud Riigikogule või kohalikule omavalitsusele saatmiseks piisavalt allkirju ning algataja on otsustanud selle vastavale institutsioonile edastada, saadetakse digiallkirjad koos algatuse tekstiga Riigikogule või vastavale kohalikule omavalitsusele. Seal töötleb toetusallkirjade nimekirja vastutav ametnik, kes kontrollib digiallkirjade kehtivust ning kinnitab rahvastikuregistri vahendusel, et allkirja on andnud vähemalt 16-aastane Eesti alaline elanik. Kohalikes omavalitsustes kontrollib ametnik lisaks vanusele rahvastikuregistri vahendusel ka allkirjastaja registreeritud elukohta. 
 
