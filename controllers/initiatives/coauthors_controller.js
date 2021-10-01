@@ -3,7 +3,7 @@ var Router = require("express").Router
 var HttpError = require("standard-http-error")
 var SqliteError = require("root/lib/sqlite_error")
 var coauthorsDb = require("root/db/initiative_coauthors_db")
-var updateSql = require("heaven-sqlite").update
+var {parsePersonalId} = require("root/lib/user")
 var sql = require("sqlate")
 var next = require("co-next")
 
@@ -13,7 +13,8 @@ exports.STATUSES = [
 	"rejected",
 	"removed",
 	"resigned",
-	"cancelled"
+	"cancelled",
+	"promoted"
 ]
 
 exports.router = Router({mergeParams: true})
@@ -105,10 +106,7 @@ exports.router.put("/:personalId", next(function*(req, res) {
 		status_updated_by_id: user.id
 	})
 
-	yield coauthorsDb.execute(sql`
-		${updateSql("initiative_coauthors", attrs)}
-		WHERE id = ${coauthor.id}
-	`)
+	yield coauthorsDb.update(coauthor, attrs)
 
 	res.statusMessage = attrs.status == "accepted"
 		? "Invitation Accepted"
@@ -210,5 +208,3 @@ function parseResponse(obj) {
 
 	return {status: obj.status}
 }
-
-function parsePersonalId(id) { return [id.slice(0, 2), id.slice(2)] }

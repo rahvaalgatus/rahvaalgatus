@@ -6,6 +6,7 @@ var {Flash} = require("../../page")
 var {Fragment} = Jsx
 var {Section} = require("../../page")
 var {confirm} = require("root/lib/jsx")
+var {serializePersonalId} = require("root/lib/user")
 var InitiativePage = require("../initiative_page")
 
 module.exports = function(attrs) {
@@ -144,11 +145,37 @@ module.exports = function(attrs) {
 						})}</tbody>
 					</table>
 				</Fragment> : null}
+
+				<h3>{t("INITIATIVE_UPDATE_AUTHOR_TITLE")}</h3>
+				<p class="description">{t("INITIATIVE_UPDATE_AUTHOR_DESCRIPTION")}</p>
+
+				{initiative.phase != "edit" ? <p class="description">
+					{t("INITIATIVE_UPDATE_AUTHOR_UPDATE_UNAVAILABLE")}
+				</p> : accepted.length == 0 ? <p class="description">
+					{t("INITIATIVE_UPDATE_AUTHOR_NO_AUTHORS")}
+				</p> : <Form
+					req={req}
+					method="put"
+					action={initiativePath}
+					id="update-author-form"
+				>
+					<select name="author_personal_id">
+						{accepted.map(function(coauthor) {
+							return <option value={serializePersonalId(coauthor)}>
+								{coauthor.user_name}
+							</option>
+						})}
+					</select>
+
+					<button class="form-submit primary-button">
+						{t("INITIATIVE_UPDATE_AUTHOR_BUTTON")}
+					</button>
+				</Form>}
 			</div>
 		</Section>
 	</InitiativePage>
 
 	function pathToCoauthor(coauthor) {
-		return coauthorsPath + "/" + coauthor.country + coauthor.personal_id
+		return coauthorsPath + "/" + serializePersonalId(coauthor)
 	}
 }

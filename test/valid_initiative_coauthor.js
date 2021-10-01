@@ -22,7 +22,8 @@ module.exports = function(attrs) {
 		if (
 			attrs.status == "pending" ||
 			attrs.status == "cancelled" ||
-			attrs.status == "removed"
+			attrs.status == "removed" ||
+			attrs.status == "promoted"
 		) defaults.status_updated_by_id = initiative.user_id
 	}
 

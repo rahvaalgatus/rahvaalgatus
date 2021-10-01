@@ -342,6 +342,9 @@ button.inherited {
 .form-select {
 	display: block;
 
+	// When inside <label>, which may be bold.
+	font-weight: normal;
+
 	& + p { margin-top: 0.5rem; }
 }
 
@@ -3539,6 +3542,8 @@ button.inherited {
 		
 		.language-fields {
 			margin-bottom: 1rem;
+
+			label + label { margin-left: 1rem; }
 		}
 
 		p {
@@ -3656,7 +3661,7 @@ button.inherited {
 	.form-date-picker { margin: 2rem 0 1rem; }
 }
 
-#initiative-coauthors-page {
+#initiative-coauthors-page main {
 	.initiative-sheet {
 		padding: $article-padding;
 	}
@@ -3727,10 +3732,19 @@ button.inherited {
 	}
 
 	h3 {
-		margin-top: 2rem;
+		margin-top: 3rem;
 		font-size: 2rem;
 		font-weight: 500;
 		color: $title-text;
+	}
+
+	#update-author-form {
+		margin-top: 1rem;
+
+		select { margin-right: 1rem; }
+		.no-coauthors {
+
+		}
 	}
 }
 

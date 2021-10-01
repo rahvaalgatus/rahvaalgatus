@@ -46,6 +46,7 @@ var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var demand = require("must")
 var {newTrixDocument} = require("root/test/fixtures")
+var {serializePersonalId} = require("root/lib/user")
 var INITIATIVE_TYPE = "application/vnd.rahvaalgatus.initiative+json; v=1"
 var ATOM_TYPE = "application/atom+xml"
 var PHASES = require("root/lib/initiative").PHASES
@@ -9614,6 +9615,223 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(200)
+				})
+			})
+
+			describe("given author_personal_id", function() {
+				it("must respond with 403 if not author", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: (yield usersDb.create(new ValidUser)).id,
+						published_at: new Date
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "PUT",
+						form: {author_personal_id: "38706181337"}
+					})
+
+					res.statusCode.must.equal(403)
+					res.statusMessage.must.equal("No Permission to Edit")
+				})
+
+				it("must respond with 403 if coauthor", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: (yield usersDb.create(new ValidUser)).id,
+						published_at: new Date
+					}))
+
+					yield coauthorsDb.create(new ValidCoauthor({
+						initiative: initiative,
+						user: this.user,
+						status: "accepted"
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "PUT",
+						form: {author_personal_id: "38706181337"}
+					})
+
+					res.statusCode.must.equal(403)
+					res.statusMessage.must.equal("Only Author Can Update Author")
+				})
+
+				_.without(PHASES, "edit").forEach(function(phase) {
+					it(`must respond with 403 in ${phase} phase`, function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: phase
+						}))
+
+						var res = yield this.request("/initiatives/" + initiative.uuid, {
+							method: "PUT",
+							form: {author_personal_id: "38706181337"}
+						})
+
+						res.statusCode.must.equal(403)
+						res.statusMessage.must.equal("Can Only Update Author In Edit")
+					})
+				})
+
+				it("must update author", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "edit"
+					}))
+
+					var coauthor = yield usersDb.create(new ValidUser)
+
+					var coauthorship = yield coauthorsDb.create(new ValidCoauthor({
+						initiative: initiative,
+						user: coauthor,
+						status: "accepted"
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "PUT",
+						form: {author_personal_id: serializePersonalId(coauthor)}
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Author Updated")
+					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+					var cookies = parseCookies(res.headers["set-cookie"])
+					res = yield this.request(res.headers.location, {
+						cookies: _.mapValues(cookies, (c) => c.value)
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("INITIATIVE_UPDATE_AUTHOR_UPDATED", {
+						name: coauthor.name
+					}))
+
+					yield initiativesDb.read(initiative).must.then.eql({
+						__proto__: initiative,
+						user_id: coauthor.id
+					})
+
+					yield coauthorsDb.search(sql`
+						SELECT * FROM initiative_coauthors
+					`).must.then.eql([{
+						__proto__: coauthorship,
+						status: "promoted",
+						status_updated_at: new Date,
+						status_updated_by_id: this.user.id
+					}, new ValidCoauthor({
+						id: coauthorship.id + 1,
+						initiative: initiative,
+						user: this.user,
+						status: "accepted"
+					})])
+				})
+
+				it("must respond with 422 if given personal id not coauthor",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "edit"
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "PUT",
+						form: {author_personal_id: "38706181337"}
+					})
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("No Such Coauthor")
+				})
+
+				_.without(COAUTHOR_STATUSES, "accepted").forEach(function(status) {
+					it(`must not update author to ${status} coauthor`, function*() {
+						var initiative = yield initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: "edit"
+						}))
+
+						var coauthor = yield coauthorsDb.create(new ValidCoauthor({
+							initiative: initiative,
+							user: yield usersDb.create(new ValidUser),
+							status: status
+						}))
+
+						var res = yield this.request("/initiatives/" + initiative.uuid, {
+							method: "PUT",
+							form: {author_personal_id: serializePersonalId(coauthor)}
+						})
+
+						res.statusCode.must.equal(422)
+						res.statusMessage.must.equal("No Such Coauthor")
+					})
+				})
+
+				it("must respond with 422 given coauthor from another initiative",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "edit"
+					}))
+
+					var otherInitiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+					}))
+
+					var coauthor = yield coauthorsDb.create(new ValidCoauthor({
+						initiative: otherInitiative,
+						user: yield usersDb.create(new ValidUser),
+						status: "accepted"
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "PUT",
+						form: {author_personal_id: serializePersonalId(coauthor)}
+					})
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("No Such Coauthor")
+				})
+
+				it("must respond with 422 given coauthor from another country",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "edit"
+					}))
+
+					var coauthor = yield coauthorsDb.create(new ValidCoauthor({
+						initiative: initiative,
+						user: yield usersDb.create(new ValidUser),
+						status: "accepted"
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "PUT",
+						form: {author_personal_id: "LV" + coauthor.personal_id}
+					})
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("No Such Coauthor")
+				})
+
+				it("must respond with 422 given coauthor with another personal id",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "edit"
+					}))
+
+					var coauthor = yield coauthorsDb.create(new ValidCoauthor({
+						initiative: initiative,
+						user: yield usersDb.create(new ValidUser),
+						status: "accepted"
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "PUT",
+						form: {author_personal_id: coauthor.country + "38706181337"}
+					})
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("No Such Coauthor")
 				})
 			})
 		})

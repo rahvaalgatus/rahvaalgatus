@@ -35,6 +35,7 @@ var searchInitiativeEvents = _.compose(searchInitiativesEvents, concat)
 var parseText = require("./initiatives/texts_controller").parse
 var {countUndersignedSignaturesById} = require("root/lib/initiative")
 var {countCitizenOsSignaturesById} = require("root/lib/initiative")
+var {parsePersonalId} = require("root/lib/user")
 var {PHASES} = require("root/lib/initiative")
 var EMPTY = Object.prototype
 var EMPTY_ARR = Array.prototype
@@ -204,10 +205,10 @@ exports.router.use("/:id", next(function*(req, res, next) {
 		throw new HttpError(401, "Initiative Not Public")
 
 	var coauthors = yield coauthorsDb.search(sql`
-		SELECT author.*, user.name AS user_name
-		FROM initiative_coauthors AS author
-		LEFT JOIN users AS user ON user.id = author.user_id
-		WHERE author.initiative_uuid = ${initiative.uuid}
+		SELECT coauthor.*, user.name AS user_name
+		FROM initiative_coauthors AS coauthor
+		LEFT JOIN users AS user ON user.id = coauthor.user_id
+		WHERE coauthor.initiative_uuid = ${initiative.uuid}
 		AND status IN ('accepted', 'pending')
 	`)
 
@@ -472,6 +473,9 @@ exports.router.put("/:id", next(function*(req, res) {
 	}
 	else if (req.body.status === "followUp") {
 		yield updateInitiativePhaseToParliament(req, res)
+	}
+	else if (req.body.author_personal_id) {
+		yield updateInitiativeAuthor(req, res)
 	}
 	else if (isInitiativeUpdate(req.body)) {
 		var attrs = parseInitiative(initiative, req.body)
@@ -1060,6 +1064,56 @@ function* updateInitiativePhaseToParliament(req, res) {
 	)
 
 	res.redirect(303, req.baseUrl + "/" + initiative.uuid)
+}
+
+function* updateInitiativeAuthor(req, res) {
+	var {user} = req
+	var {initiative} = req
+	var [country, personalId] = parsePersonalId(req.body.author_personal_id)
+
+	if (initiative.user_id != user.id)
+		throw new HttpError(403, "Only Author Can Update Author")
+	if (initiative.phase != "edit")
+		throw new HttpError(403, "Can Only Update Author In Edit")
+
+	var coauthor = yield coauthorsDb.read(sql`
+		SELECT coauthor.*, user.name AS user_name
+		FROM initiative_coauthors AS coauthor
+		JOIN users AS user ON user.id = coauthor.user_id
+		WHERE coauthor.initiative_uuid = ${initiative.uuid}
+		AND coauthor.country = ${country}
+		AND coauthor.personal_id = ${personalId}
+		AND coauthor.status = 'accepted'
+	`)
+
+	if (coauthor == null) throw new HttpError(422, "No Such Coauthor")
+
+	yield initiativesDb.update(initiative.uuid, {user_id: coauthor.user_id})
+
+	yield coauthorsDb.update(coauthor, {
+		status: "promoted",
+		status_updated_at: new Date,
+		status_updated_by_id: user.id
+	})
+
+	yield coauthorsDb.create({
+		initiative_uuid: initiative.uuid,
+		user_id: user.id,
+		country: user.country,
+		personal_id: user.personal_id,
+		created_at: new Date,
+		created_by_id: user.id,
+		status: "accepted",
+		status_updated_at: new Date,
+		status_updated_by_id: user.id
+	})
+
+	res.flash("notice", req.t("INITIATIVE_UPDATE_AUTHOR_UPDATED", {
+		name: coauthor.user_name
+	}))
+
+	res.statusMessage = "Author Updated"
+	res.redirect(303, req.baseUrl + req.url)
 }
 
 function parseInitiative(initiative, obj) {
