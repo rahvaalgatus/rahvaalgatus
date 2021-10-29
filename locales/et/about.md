@@ -44,7 +44,7 @@ Kui vajad nõu või kahtled, kas Rahvaalgatus.ee on sobiv koht oma ettepaneku es
 
 ## Isikuandmete töötlemine
 
-Isikuandmed on Rahvaalgatus.ee platvormil sisestatud kasutaja kohta käivad andmed. Rahvaalgatus.ee kasutaja annab platvormi haldajale õiguse tema poolt sisestatud isikuandmete töötlemiseks. Juhul kui kasutaja soovib Rahvaalgatus.ee poolt isikuandmete töötlemise lõpetamist, võimaldab Rahvaalgatus.ee kasutajal oma kasutajakonto ja kõik sinna juurde kuuluvad andmed kustutada.
+Isikuandmed on Rahvaalgatus.ee platvormil sisestatud kasutaja kohta käivad andmed. Rahvaalgatus.ee kasutaja annab platvormi haldajale õiguse tema poolt sisestatud isikuandmete töötlemiseks. Isikuandmete vastutav töötleja on Rahvaalgatus.ee portaali haldav SA Eesti Koostöö Kogu. Juhul kui kasutaja soovib Rahvaalgatus.ee poolt isikuandmete töötlemise lõpetamist, võimaldab Rahvaalgatus.ee kasutajal oma kasutajakonto ja kõik sinna juurde kuuluvad andmed kustutada.
 
 Kasutajakonto on vaja luua algatuse loomiseks ja kommentaaride andmiseks.
 
@@ -57,6 +57,8 @@ Andmeid töödeldakse Riigikogus üksnes kollektiivse pöördumise esitamiseks n
 Algatusele saab allkirju koguda maksimaalselt 18 kuud. Nii kaua säilitatakse ka algatusele antud allkirju. Selle aja täitudes või varem, kui algatus kogub allkirjad kiiremini kokku ning see esitatakse vastavale institutsioonile, eemaldatakse allkirjadelt isikuandmed. See tähendab, et kustutatakse krüptograafiline allkiri ja säilitatakse vaid isikukoodi 3 esimest numbrit (allkirjastaja sugu ja sünniaasta), allkirjastamise kellaaeg, ligikaudne asukoht ning viide algatusele. Anonüümitud andmete põhjal on võimalik väljastada statistikat. 
 
 Andmeid hoitakse konfidentsiaalsena ning kõiki isikuid, kellel on õigus isikandmeid töödelda, on teavitatud isikuandmete konfidentsiaalsest olemusest. Toetusallkirja andjaid Rahvaalgatus.ee avalikult ei kuva. 
+
+Rahvaalgatus.ee töös hoidmiseks kogub Eesti Koostöö Kogu annetusi. Maksevahendajaks ja andmete volitatud töötlejaks on Maksekeskus AS, kellele edastatakse maksete teostamiseks vajalikud isikuandmed. 
 
 Kui isik leiab, et tema õigusi on põhjendamatult piiratud või rikutud, on tal õigus pöörduda Andmekaitse Inspektsiooni või kohtusse.
 
