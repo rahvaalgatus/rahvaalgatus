@@ -802,7 +802,9 @@
 		"initiativesEmails": [
 			"lv@tartulv.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"37404072233"
+		],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/tartu-linn"
 	},
