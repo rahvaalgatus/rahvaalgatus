@@ -35,6 +35,7 @@ var hades = require("root").hades
 var demand = require("must")
 var next = require("co-next")
 var tsl = require("root").tsl
+var concat = Array.prototype.concat.bind(Array.prototype)
 var ASICE_TYPE = "application/vnd.etsi.asic-e+zip"
 var CSV_TYPE = "text/csv; charset=utf-8"
 var ZIP_TYPE = "application/zip"
@@ -698,7 +699,13 @@ describe("SignaturesController", function() {
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
-			var signatures = _.sortBy(yield signaturesDb.create([
+			var citizenosSignatures = _.sortBy(yield citizenosSignaturesDb.create([
+				new ValidCitizenosSignature({initiative_uuid: initiative.uuid}),
+				new ValidCitizenosSignature({initiative_uuid: initiative.uuid}),
+				new ValidCitizenosSignature({initiative_uuid: initiative.uuid})
+			]), "personal_id")
+
+			var undersignedSignatures = _.sortBy(yield signaturesDb.create([
 				new ValidSignature({initiative_uuid: initiative.uuid}),
 				new ValidSignature({initiative_uuid: initiative.uuid}),
 				new ValidSignature({initiative_uuid: initiative.uuid})
@@ -714,10 +721,10 @@ describe("SignaturesController", function() {
 				"attachment; filename=\"signatures.csv\""
 			)
 
-			res.body.must.equal(
-				"personal_id\n" +
-				signatures.map((sig) => sig.personal_id + "\n").join("")
-			)
+			res.body.must.equal("personal_id\n" + concat(
+				citizenosSignatures,
+				undersignedSignatures
+			).map((sig) => sig.personal_id + "\n").join(""))
 		})
 
 		it("must respond if no signatures", function*() {

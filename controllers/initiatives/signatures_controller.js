@@ -279,19 +279,27 @@ exports.router.get("/",
 				dispose("signatures.csv", "attachment"))
 
 			{
-				let signatures, added = 0
+				let signatures, added
 
 				res.write("personal_id\n")
-				while ((signatures = yield signaturesDb.search(sql`
+
+				for (added = 0; (signatures = yield citizenosSignaturesDb.search(sql`
+					SELECT personal_id FROM initiative_citizenos_signatures
+					WHERE initiative_uuid = ${initiative.uuid}
+					ORDER BY country ASC, personal_id ASC
+					LIMIT ${ENV == "test" ? 1 : 10000}
+					OFFSET ${added}
+				`)).length > 0; added += signatures.length)
+					res.write(signatures.map((sig) => sig.personal_id + "\n").join(""))
+
+				for (added = 0; (signatures = yield signaturesDb.search(sql`
 					SELECT personal_id FROM initiative_signatures
 					WHERE initiative_uuid = ${initiative.uuid}
 					ORDER BY country ASC, personal_id ASC
 					LIMIT ${ENV == "test" ? 1 : 10000}
 					OFFSET ${added}
-				`)).length > 0) {
+				`)).length > 0; added += signatures.length)
 					res.write(signatures.map((sig) => sig.personal_id + "\n").join(""))
-					added += signatures.length
-				}
 
 				res.end()
 			}
