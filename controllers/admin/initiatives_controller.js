@@ -2,6 +2,7 @@ var _ = require("root/lib/underscore")
 var Router = require("express").Router
 var Subscription = require("root/lib/subscription")
 var HttpError = require("standard-http-error")
+var Crypto = require("crypto")
 var Initiative = require("root/lib/initiative")
 var Time = require("root/lib/time")
 var Image = require("root/lib/image")
@@ -14,9 +15,11 @@ var eventsDb = require("root/db/initiative_events_db")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var sql = require("sqlate")
-var trim = Function.call.bind(String.prototype.trim)
+var {countUndersignedSignaturesById} = require("root/lib/initiative")
+var {countCitizenOsSignaturesById} = require("root/lib/initiative")
 var next = require("co-next")
 var sqlite = require("root").sqlite
+var trim = Function.call.bind(String.prototype.trim)
 var MEGABYTE = Math.pow(2, 20)
 exports.isEditableEvent = isEditableEvent
 
@@ -88,11 +91,21 @@ exports.router.get("/:id", next(function*(req, res) {
 		WHERE initiative_uuid = ${initiative.uuid}
 	`)
 
+	var citizenosSignatureCount =
+		yield countCitizenOsSignaturesById(initiative.uuid)
+	var undersignedSignatureCount =
+		yield countUndersignedSignaturesById(initiative.uuid)
+
 	res.render("admin/initiatives/read_page.jsx", {
-		author: author,
-		image: image,
-		events: events,
-		subscriberCount: subscriberCount
+		author,
+		image,
+		events,
+		subscriberCount,
+
+		signatureCounts: {
+			undersign: undersignedSignatureCount,
+			citizenos: citizenosSignatureCount
+		}
 	})
 }))
 
@@ -253,8 +266,14 @@ exports.router.delete("/:id/events/:eventId", next(function*(req, res) {
 function parseInitiative(initiative, obj) {
 	var attrs = {}
 
-	if ("destination" in obj)
+	if ("destination" in obj) {
 		attrs.destination = obj.destination || null
+
+		if (
+			initiative.parliament_token &&
+			initiative.destination != attrs.destination
+		) attrs.parliament_token = Crypto.randomBytes(12)
+	}
 
 	if ("tags" in obj) attrs.tags = obj.tags.split(",").map(trim)
 

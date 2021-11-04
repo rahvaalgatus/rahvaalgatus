@@ -1,5 +1,6 @@
 /** @jsx Jsx */
 var _ = require("root/lib/underscore")
+var Qs = require("qs")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var DateFns = require("date-fns")
@@ -22,29 +23,30 @@ var UPDATEABLE_PHASES = ["sign", "parliament", "government", "done"]
 var EXPIRATION_MONTHS = Config.expireSignaturesInMonths
 
 module.exports = function(attrs) {
-	var req = attrs.req
-	var initiative = attrs.initiative
-	var author = attrs.author
-	var image = attrs.image
-	var subscriberCount = attrs.subscriberCount
+	var {req} = attrs
+	var {initiative} = attrs
+	var {author} = attrs
+	var {image} = attrs
+	var {subscriberCount} = attrs
 	var initiativePath = `${req.baseUrl}/${initiative.uuid}`
-	var events = attrs.events
-	var phase = initiative.phase
+	var {events} = attrs
+	var {phase} = initiative
+	var {signatureCounts} = attrs
 	var pendingSubscriberCount = subscriberCount.all - subscriberCount.confirmed
 
 	var expiresOn = initiative.phase == "sign"
 		? Initiative.getExpirationDate(initiative)
 		: null
 
+	var initiativeSiteUrl = Config.url + "/initiatives/" + initiative.uuid
+
 	return <Page page="initiative" title={initiative.title} req={req}>
 		<a href={req.baseUrl} class="admin-back">Initiatives</a>
 		<h1 class="admin-heading">{initiative.title}</h1>
 
-		<a
-			id="production-link"
-			href={Config.url + "/initiatives/" + initiative.uuid}
-			class="admin-link"
-		>View on Rahvaalgatus</a>
+		<a id="production-link" href={initiativeSiteUrl} class="admin-link">
+			View on Rahvaalgatus
+		</a>
 
 		<Flash flash={req.flash} />
 
@@ -65,6 +67,11 @@ module.exports = function(attrs) {
 							onchange="this.form.submit()"
 						/>
 					</Form>
+
+					{initiative.parliament_token ? <p>
+						Note that changing the destination at this point will invalidate
+						the signatures download link.
+					</p> : null}
 				</td>
 			</tr>
 
@@ -233,6 +240,46 @@ module.exports = function(attrs) {
 						name="sentToGovernmentOn"
 						value={initiative.sent_to_government_at}
 					/>
+
+					{(
+						initiative.parliament_token &&
+						initiative.destination != "parliament"
+					) ? <p>
+						{signatureCounts.undersign > 0 ? <a
+							class="admin-link"
+							href={`${initiativeSiteUrl}/signatures.asice?` + Qs.stringify({
+								"parliament-token": initiative.parliament_token.toString("hex")
+							})}
+						>
+							Download Signatures (ASiC-E)
+						</a> : null}
+
+						{signatureCounts.citizenos > 0 ? <Fragment><br /><a
+							class="admin-link"
+							href={`${initiativeSiteUrl}/signatures.zip?` + Qs.stringify({
+								type: "citizenos",
+								"parliament-token": initiative.parliament_token.toString("hex")
+							})}
+						>
+							Download CitizenOS Signatures (ZIP of ASiC-Es)
+						</a></Fragment> : null}
+
+						{(
+							signatureCounts.undersign > 0 ||
+							signatureCounts.citizenos > 0
+						) ? <Fragment><br /><a
+							class="admin-link"
+							href={`${initiativeSiteUrl}/signatures.csv?` + Qs.stringify({
+								"parliament-token": initiative.parliament_token.toString("hex")
+							})}
+						>
+							Download Signers (CSV)
+						</a></Fragment> : null}
+
+						<br />
+						Signatures are only available for authorized government
+						representatives.
+					</p> : null}
 				</td>
 			</tr>
 
