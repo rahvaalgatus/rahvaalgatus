@@ -721,10 +721,13 @@ describe("SignaturesController", function() {
 				"attachment; filename=\"signatures.csv\""
 			)
 
-			res.body.must.equal("personal_id\n" + concat(
+			res.body.must.equal("personal_id,created_at\n" + concat(
 				citizenosSignatures,
 				undersignedSignatures
-			).map((sig) => sig.personal_id + "\n").join(""))
+			).map((sig) => [
+				sig.personal_id,
+				sig.created_at.toISOString()
+			].join(",") + "\n").join(""))
 		})
 
 		it("must respond if no signatures", function*() {
@@ -740,7 +743,7 @@ describe("SignaturesController", function() {
 
 			res.statusCode.must.equal(200)
 			res.headers["content-type"].must.equal(CSV_TYPE)
-			res.body.must.equal("personal_id\n")
+			res.body.must.equal("personal_id,created_at\n")
 		})
 
 		it("must not respond with signatures of other initiatives", function*() {
@@ -765,7 +768,7 @@ describe("SignaturesController", function() {
 
 			res.statusCode.must.equal(200)
 			res.headers["content-type"].must.equal(CSV_TYPE)
-			res.body.must.equal("personal_id\n")
+			res.body.must.equal("personal_id,created_at\n")
 		})
 	})
 

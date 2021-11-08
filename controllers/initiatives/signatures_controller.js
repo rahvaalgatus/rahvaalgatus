@@ -281,25 +281,25 @@ exports.router.get("/",
 			{
 				let signatures, added
 
-				res.write("personal_id\n")
+				res.write("personal_id,created_at\n")
 
 				for (added = 0; (signatures = yield citizenosSignaturesDb.search(sql`
-					SELECT personal_id FROM initiative_citizenos_signatures
+					SELECT created_at, personal_id FROM initiative_citizenos_signatures
 					WHERE initiative_uuid = ${initiative.uuid}
 					ORDER BY country ASC, personal_id ASC
 					LIMIT ${ENV == "test" ? 1 : 10000}
 					OFFSET ${added}
 				`)).length > 0; added += signatures.length)
-					res.write(signatures.map((sig) => sig.personal_id + "\n").join(""))
+					res.write(signatures.map(serializeSignatureCsv).join(""))
 
 				for (added = 0; (signatures = yield signaturesDb.search(sql`
-					SELECT personal_id FROM initiative_signatures
+					SELECT created_at, personal_id FROM initiative_signatures
 					WHERE initiative_uuid = ${initiative.uuid}
 					ORDER BY country ASC, personal_id ASC
 					LIMIT ${ENV == "test" ? 1 : 10000}
 					OFFSET ${added}
 				`)).length > 0; added += signatures.length)
-					res.write(signatures.map((sig) => sig.personal_id + "\n").join(""))
+					res.write(signatures.map(serializeSignatureCsv).join(""))
 
 				res.end()
 			}
@@ -912,6 +912,10 @@ function serializeGeo(geo) {
 		city_name: geo.city ? geo.city.names.en : null,
 		city_geoname_id: geo.city ? geo.city.geoname_id : null
 	}
+}
+
+function serializeSignatureCsv(sig) {
+	return [sig.personal_id, sig.created_at.toISOString()].join(",") + "\n"
 }
 
 function parseToken(token) {
