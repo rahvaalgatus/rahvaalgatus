@@ -134,7 +134,7 @@ function ReadPage(attrs) {
 	var coauthorInvitation = attrs.coauthorInvitation
 	var initiativeUrl = serializeInitiativeUrl(initiative)
 	var shareText = `${initiative.title} ${initiativeUrl}`
-	var atomPath = req.baseUrl + req.url + ".atom"
+	var atomPath = req.baseUrl + req.path + ".atom"
 	var isAuthor = user && Initiative.isAuthor(user, initiative)
 
 	var imageEditable = (
@@ -1482,7 +1482,7 @@ function SidebarSubscribeView(attrs) {
 	var t = req.t
 	var initiative = attrs.initiative
 	var subscriberCounts = attrs.subscriberCounts
-	var atomPath = req.baseUrl + req.url + ".atom"
+	var atomPath = req.baseUrl + req.path + ".atom"
 
 	if (!initiative.published_at) return null
 
