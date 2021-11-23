@@ -186,6 +186,26 @@ describe("SessionsController", function() {
 	require("root/test/mitm")()
 	beforeEach(require("root/test/mitm").router)
 
+	describe("GET /", function() {
+		describe("when not logged in", function() {
+			it("must redirect to /sessions/new", function*() {
+				var res = yield this.request("/sessions")
+				res.statusCode.must.equal(302)
+				res.headers.location.must.equal("/sessions/new")
+			})
+		})
+
+		describe("when logged in", function() {
+			require("root/test/fixtures").user()
+
+			it("must redirect to /user", function*() {
+				var res = yield this.request("/sessions")
+				res.statusCode.must.equal(302)
+				res.headers.location.must.equal("/user")
+			})
+		})
+	})
+
 	describe("GET /new", function() {
 		describe("when not logged in", function() {
 			it("must render signin page", function*() {
@@ -251,26 +271,6 @@ describe("SessionsController", function() {
 					Referer: "http://example.com/evil"
 				})
 
-				res.statusCode.must.equal(302)
-				res.headers.location.must.equal("/user")
-			})
-		})
-	})
-
-	describe("GET /", function() {
-		describe("when not logged in", function() {
-			it("must redirect to /sessions/new", function*() {
-				var res = yield this.request("/sessions")
-				res.statusCode.must.equal(302)
-				res.headers.location.must.equal("/sessions/new")
-			})
-		})
-
-		describe("when logged in", function() {
-			require("root/test/fixtures").user()
-
-			it("must redirect to /user", function*() {
-				var res = yield this.request("/sessions")
 				res.statusCode.must.equal(302)
 				res.headers.location.must.equal("/user")
 			})
