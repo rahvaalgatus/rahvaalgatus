@@ -63,7 +63,9 @@ endif
 
 love: compile
 
-compile: javascripts stylesheets
+compile: javascripts
+compile: stylesheets
+compile: public/503.html
 
 autocompile:
 	$(MAKE) -j2 autojavascripts autostylesheets
@@ -85,6 +87,10 @@ autostylesheets: stylesheets
 
 fonticons:
 	@$(BUNDLE) exec fontcustom compile
+
+public/%.html: views/%.jsx
+	@echo "Compiling $@…"
+	@$(NODE) --require j6pack/register -e 'console.log(require("./$<")())' > "$@"
 
 test:
 	@$(NODE) $(NODE_OPTS) $(MOCHA) -R dot $(TEST)

@@ -16,6 +16,7 @@ var ENV = process.env.ENV
 var LIVERELOAD_PORT = process.env.LIVERELOAD_PORT || 35729
 var TWITTER_NAME = Config.twitterUrl.replace(/^.*\//, "")
 exports = module.exports = Page
+exports.Footer = Footer
 exports.Section = Section
 exports.Flash = Flash
 exports.Form = Form
@@ -186,68 +187,7 @@ function Page(attrs, children) {
 
 			<main id="main">{children}</main>
 
-			<footer id="footer"><center>
-				<div class="contact">
-					<a href="https://kogu.ee">
-						<img width="100" src="/assets/kogu.png" alt={t("KOGU")} />
-					</a>
-
-					<p>
-						{t("FOOTER_ADDRESS")}
-						<br />
-						{Jsx.html(t("FOOTER_EMAIL"))}
-						<br />
-						{Jsx.html(t("FOOTER_PHONE"))}
-
-						<br />
-						Facebook: <a href={Config.facebookUrl}>fb.me/rahvaalgatus</a>
-
-						<br />
-						Twitter: <a href={Config.twitterUrl}>@{TWITTER_NAME}</a>
-					</p>
-				</div>
-
-				<div class="logos">
-					<a
-						href="https://kestame.rahvaalgatus.ee"
-						title="#kuidasmekestame"
-						class="kestame"
-					>
-						<img src="/assets/kestame.png" alt="#kuidasmekestame" />
-					</a>
-					{" "}
-					<a
-						href="https://uuseakus.rahvaalgatus.ee"
-						title="Uue eakuse rahvakogu"
-						class="uuseakus"
-					>
-						<img src="/assets/uuseakus.png" alt="Uue eakuse rahvakogu" />
-					</a>
-					{" "}
-					<a
-						href="https://heakodanik.ee/annetuste-kogumise-hea-tava/"
-						title="Hea annetuse koguja"
-						class="hea-annetus"
-					>
-						<img src="/assets/hea-annetus.png" alt="Hea annetuse koguja" />
-					</a>
-					{" "}
-					<a
-						href="https://github.com/rahvaalgatus/rahvaalgatus"
-						title={t("GITHUB_LOGO_TITLE")}
-						class="github"
-					>
-						<img src="/assets/github-logo.svg" alt="GitHub" />
-					</a>
-					<a
-						href={siteUrl + "/api"}
-						title="API"
-						class="api ra-icon-api"
-					>
-						<span>API</span>
-					</a>
-				</div>
-			</center></footer>
+			<Footer t={t} siteUrl={siteUrl} />
 
 			{ENV === "production" && Config.googleAnalyticsAccount ?
 				<GoogleAnalytics accountId={Config.googleAnalyticsAccount} />
@@ -258,6 +198,74 @@ function Page(attrs, children) {
 			: null}
 		</body>
 	</html>
+}
+
+function Footer(attrs) {
+	var {t} = attrs
+	var {siteUrl} = attrs
+
+	return <footer id="footer"><center>
+		<div class="contact">
+			<a href="https://kogu.ee">
+				<img width="100" src="/assets/kogu.png" alt={t("KOGU")} />
+			</a>
+
+			<p>
+				{t("FOOTER_ADDRESS")}
+				<br />
+				{Jsx.html(t("FOOTER_EMAIL"))}
+				<br />
+				{Jsx.html(t("FOOTER_PHONE"))}
+
+				<br />
+				Facebook: <a href={Config.facebookUrl}>fb.me/rahvaalgatus</a>
+
+				<br />
+				Twitter: <a href={Config.twitterUrl}>@{TWITTER_NAME}</a>
+			</p>
+		</div>
+
+		<div class="logos">
+			<a
+				href="https://kestame.rahvaalgatus.ee"
+				title="#kuidasmekestame"
+				class="kestame"
+			>
+				<img src="/assets/kestame.png" alt="#kuidasmekestame" />
+			</a>
+			{" "}
+			<a
+				href="https://uuseakus.rahvaalgatus.ee"
+				title="Uue eakuse rahvakogu"
+				class="uuseakus"
+			>
+				<img src="/assets/uuseakus.png" alt="Uue eakuse rahvakogu" />
+			</a>
+			{" "}
+			<a
+				href="https://heakodanik.ee/annetuste-kogumise-hea-tava/"
+				title="Hea annetuse koguja"
+				class="hea-annetus"
+			>
+				<img src="/assets/hea-annetus.png" alt="Hea annetuse koguja" />
+			</a>
+			{" "}
+			<a
+				href="https://github.com/rahvaalgatus/rahvaalgatus"
+				title={t("GITHUB_LOGO_TITLE")}
+				class="github"
+			>
+				<img src="/assets/github-logo.svg" alt="GitHub" />
+			</a>
+			<a
+				href={siteUrl + "/api"}
+				title="API"
+				class="api ra-icon-api"
+			>
+				<span>API</span>
+			</a>
+		</div>
+	</center></footer>
 }
 
 function Section(attrs, children) {

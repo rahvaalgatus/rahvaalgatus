@@ -16,6 +16,8 @@ body {
 }
 
 body {
+	display: flex;
+	flex-direction: column;
 	font-family: $museo-sans;
 	font-weight: 300;
 	font-size: 1.4rem;
@@ -1020,10 +1022,7 @@ button.inherited {
 }
 
 #main {
-	min-height: 100%;
-	height: auto;
-	padding-bottom: $footer-height;
-	margin-bottom: -$footer-height;
+	flex-grow: 1;
 }
 
 #home-page,
@@ -4282,8 +4281,6 @@ button.inherited {
 }
 
 #footer {
-	position: relative;
-	min-height: $footer-height;
 	padding-top: 2rem;
 	padding-bottom: 2rem;
 	overflow: hidden;
@@ -4338,6 +4335,16 @@ button.inherited {
 		.logos {
 			text-align: left;
 			margin-top: 1rem;
+		}
+	}
+}
+
+#\35 03-page {
+	#header {
+		.logo {
+			float: none;
+			padding-bottom: 1rem;
+			height: auto;
 		}
 	}
 }

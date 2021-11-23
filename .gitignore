@@ -1,6 +1,7 @@
 /node_modules/
 /public/assets/*.js
 /public/assets/*.css
+/public/503.html
 /config/staging.json
 /config/production.json
 /config/*.sqlite3
