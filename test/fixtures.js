@@ -64,27 +64,9 @@ var tsl = require("root").tsl
 
 // EID-SK 2007 expired 2016-08-26T14:23:01.000Z,
 // ESTEID-SK 2007 expired 2016-08-26T14:23:01.000Z.
-exports.VALID_ISSUERS = [[
-	"C=EE",
-	"O=AS Sertifitseerimiskeskus",
-	"CN=ESTEID-SK 2011",
-	"1.2.840.113549.1.9.1=#1609706b6940736b2e6565"
-], [
-	"C=EE",
-	"O=AS Sertifitseerimiskeskus",
-	"2.5.4.97=#0c0e4e545245452d3130373437303133",
-	"CN=ESTEID-SK 2015"
-], [
-	"C=EE",
-	"O=SK ID Solutions AS",
-	"2.5.4.97=#0c0e4e545245452d3130373437303133",
-	"CN=ESTEID2018"
-], [
-	"C=EE",
-	"O=AS Sertifitseerimiskeskus",
-	"2.5.4.97=#0c0e4e545245452d3130373437303133",
-	"CN=EID-SK 2016"
-]].map((parts) => parts.join(",")).map(tsl.getBySubjectName.bind(tsl))
+exports.VALID_ISSUERS = Config.issuers
+	.map((parts) => parts.join(","))
+	.map(tsl.getBySubjectName.bind(tsl))
 
 var request = require("root/lib/fetch")
 request = require("root/lib/fetch/fetch_cook")(request)
@@ -214,11 +196,7 @@ exports.newOcspResponse = function(certificate) {
 					}]
 				},
 
-				signatureAlgorithm: {
-					algorithm: X509Asn.RSA,
-					parameters: EMPTY_BUFFER
-				},
-
+				signatureAlgorithm: {algorithm: X509Asn.RSA, parameters: EMPTY_BUFFER},
 				signature: {unused: 0, data: EMPTY_BUFFER}
 			})
 		}
