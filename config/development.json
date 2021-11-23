@@ -18,6 +18,7 @@
 	"cookieDomain": "rahvaalgatus.test",
 	"votesRequired": 2,
 	"minDeadlineDays": 0,
+	"maxDeadlineDays": 14,
 
 	"issuers": [[
 		"C=EE",
