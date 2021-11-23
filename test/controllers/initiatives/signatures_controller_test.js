@@ -14,7 +14,6 @@ var Certificate = require("undersign/lib/certificate")
 var Initiative = require("root/lib/initiative")
 var X509Asn = require("undersign/lib/x509_asn")
 var Ocsp = require("undersign/lib/ocsp")
-var Http = require("root/lib/http")
 var Crypto = require("crypto")
 var Zip = require("root/lib/zip")
 var respond = require("root/test/fixtures").respond
@@ -22,6 +21,8 @@ var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var newCertificate = require("root/test/fixtures").newCertificate
 var newOcspResponse = require("root/test/fixtures").newOcspResponse
+var {parseCookies} = require("root/test/web")
+var {serializeCookies} = require("root/test/web")
 var usersDb = require("root/db/users_db")
 var sessionsDb = require("root/db/sessions_db")
 var initiativesDb = require("root/db/initiatives_db")
@@ -1004,9 +1005,9 @@ describe("SignaturesController", function() {
 
 					signed.statusCode.must.equal(204)
 
-					var cookies = Http.parseCookies(signed.headers["set-cookie"])
+					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -1033,9 +1034,9 @@ describe("SignaturesController", function() {
 
 					signed.statusCode.must.equal(204)
 
-					var cookies = Http.parseCookies(signed.headers["set-cookie"])
+					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -1067,9 +1068,9 @@ describe("SignaturesController", function() {
 
 					signed.statusCode.must.equal(204)
 
-					var cookies = Http.parseCookies(signed.headers["set-cookie"])
+					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -1110,9 +1111,9 @@ describe("SignaturesController", function() {
 
 					signed.statusCode.must.equal(204)
 
-					var cookies = Http.parseCookies(signed.headers["set-cookie"])
+					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -1150,9 +1151,9 @@ describe("SignaturesController", function() {
 
 					signed.statusCode.must.equal(204)
 
-					var cookies = Http.parseCookies(signed.headers["set-cookie"])
+					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -1191,9 +1192,9 @@ describe("SignaturesController", function() {
 
 					signed.statusCode.must.equal(204)
 
-					var cookies = Http.parseCookies(signed.headers["set-cookie"])
+					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -1226,9 +1227,9 @@ describe("SignaturesController", function() {
 
 					signed.statusCode.must.equal(204)
 
-					var cookies = Http.parseCookies(signed.headers["set-cookie"])
+					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -1262,9 +1263,9 @@ describe("SignaturesController", function() {
 
 					signed.statusCode.must.equal(204)
 
-					var cookies = Http.parseCookies(signed.headers["set-cookie"])
+					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -1297,9 +1298,9 @@ describe("SignaturesController", function() {
 
 					signed.statusCode.must.equal(204)
 
-					var cookies = Http.parseCookies(signed.headers["set-cookie"])
+					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -1334,9 +1335,9 @@ describe("SignaturesController", function() {
 
 					signed.statusCode.must.equal(204)
 
-					var cookies = Http.parseCookies(signed.headers["set-cookie"])
+					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -2049,9 +2050,9 @@ describe("SignaturesController", function() {
 					SELECT * FROM initiative_signatures
 				`).must.then.not.be.empty()
 
-				var cookies = Http.parseCookies(signed.headers["set-cookie"])
+				var cookies = parseCookies(signed.headers["set-cookie"])
 				var res = yield this.request(signed.headers.location, {
-					headers: {Cookie: Http.serializeCookies(cookies)}
+					headers: {Cookie: serializeCookies(cookies)}
 				})
 
 				res.statusCode.must.equal(200)
@@ -2152,9 +2153,9 @@ describe("SignaturesController", function() {
 					var initiativePath = `/initiatives/${this.initiative.uuid}`
 					errored.headers.location.must.equal(initiativePath)
 
-					var cookies = Http.parseCookies(errored.headers["set-cookie"])
+					var cookies = parseCookies(errored.headers["set-cookie"])
 					var res = yield this.request(errored.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -2359,9 +2360,9 @@ describe("SignaturesController", function() {
 						SELECT * FROM initiative_signatures
 					`).must.then.be.empty()
 
-					var cookies = Http.parseCookies(errored.headers["set-cookie"])
+					var cookies = parseCookies(errored.headers["set-cookie"])
 					var res = yield this.request(errored.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -2397,9 +2398,9 @@ describe("SignaturesController", function() {
 					SELECT * FROM initiative_signatures
 				`).must.then.be.empty()
 
-				var cookies = Http.parseCookies(errored.headers["set-cookie"])
+				var cookies = parseCookies(errored.headers["set-cookie"])
 				var res = yield this.request(errored.headers.location, {
-					headers: {Cookie: Http.serializeCookies(cookies)}
+					headers: {Cookie: serializeCookies(cookies)}
 				})
 
 				res.statusCode.must.equal(200)
@@ -2784,9 +2785,9 @@ describe("SignaturesController", function() {
 					SELECT * FROM initiative_signatures
 				`).must.then.not.be.empty()
 
-				var cookies = Http.parseCookies(signed.headers["set-cookie"])
+				var cookies = parseCookies(signed.headers["set-cookie"])
 				var res = yield this.request(signed.headers.location, {
-					headers: {Cookie: Http.serializeCookies(cookies)}
+					headers: {Cookie: serializeCookies(cookies)}
 				})
 
 				res.statusCode.must.equal(200)
@@ -2895,9 +2896,9 @@ describe("SignaturesController", function() {
 					var initiativePath = `/initiatives/${this.initiative.uuid}`
 					errored.headers.location.must.equal(initiativePath)
 
-					var cookies = Http.parseCookies(errored.headers["set-cookie"])
+					var cookies = parseCookies(errored.headers["set-cookie"])
 					var res = yield this.request(errored.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -3012,9 +3013,9 @@ describe("SignaturesController", function() {
 						SELECT * FROM initiative_signatures
 					`).must.then.be.empty()
 
-					var cookies = Http.parseCookies(errored.headers["set-cookie"])
+					var cookies = parseCookies(errored.headers["set-cookie"])
 					var res = yield this.request(errored.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -3050,9 +3051,9 @@ describe("SignaturesController", function() {
 					SELECT * FROM initiative_signatures
 				`).must.then.be.empty()
 
-				var cookies = Http.parseCookies(errored.headers["set-cookie"])
+				var cookies = parseCookies(errored.headers["set-cookie"])
 				var res = yield this.request(errored.headers.location, {
-					headers: {Cookie: Http.serializeCookies(cookies)}
+					headers: {Cookie: serializeCookies(cookies)}
 				})
 
 				res.statusCode.must.equal(200)
@@ -3160,9 +3161,9 @@ describe("SignaturesController", function() {
 				updated_at: new Date
 			}])
 
-			var cookies = Http.parseCookies(updated.headers["set-cookie"])
+			var cookies = parseCookies(updated.headers["set-cookie"])
 			var res = yield this.request(updated.headers.location, {
-				headers: {Cookie: Http.serializeCookies(cookies)}
+				headers: {Cookie: serializeCookies(cookies)}
 			})
 
 			res.statusCode.must.equal(200)
@@ -3247,9 +3248,9 @@ describe("SignaturesController", function() {
 				SELECT * FROM initiative_signatures
 			`).must.then.be.empty()
 
-			var cookies = Http.parseCookies(deleted.headers["set-cookie"])
+			var cookies = parseCookies(deleted.headers["set-cookie"])
 			var res = yield this.request(deleted.headers.location, {
-				headers: {Cookie: Http.serializeCookies(cookies)}
+				headers: {Cookie: serializeCookies(cookies)}
 			})
 
 			res.statusCode.must.equal(200)

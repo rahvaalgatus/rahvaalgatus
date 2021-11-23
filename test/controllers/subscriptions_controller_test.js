@@ -10,8 +10,8 @@ var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var {pseudoDateTime} = require("root/lib/crypto")
 var parseDom = require("root/lib/dom").parse
-var {parseCookies} = require("root/lib/http")
-var {serializeCookies} = require("root/lib/http")
+var {parseCookies} = require("root/test/web")
+var {serializeCookies} = require("root/test/web")
 var t = require("root/lib/i18n").t.bind(null, "et")
 
 describe("SubscriptionsController", function() {

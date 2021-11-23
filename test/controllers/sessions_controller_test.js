@@ -2,7 +2,6 @@ var _ = require("root/lib/underscore")
 var Url = require("url")
 var Config = require("root/config")
 var Crypto = require("crypto")
-var Http = require("root/lib/http")
 var ValidUser = require("root/test/valid_user")
 var ValidAuthentication = require("root/test/valid_authentication")
 var ValidSession = require("root/test/valid_session")
@@ -10,7 +9,8 @@ var Certificate = require("undersign/lib/certificate")
 var DateFns = require("date-fns")
 var X509Asn = require("undersign/lib/x509_asn")
 var respond = require("root/test/fixtures").respond
-var parseCookies = Http.parseCookies
+var {parseCookies} = require("root/test/web")
+var {serializeCookies} = require("root/test/web")
 var newCertificate = require("root/test/fixtures").newCertificate
 var usersDb = require("root/db/users_db")
 var authenticationsDb = require("root/db/authentications_db")
@@ -30,9 +30,9 @@ var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
 var CERTIFICATE_TYPE = "application/pkix-cert"
 var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
 var SIGNATURE_TYPE = "application/vnd.rahvaalgatus.signature"
-var JOHN_ECDSA_KEYS = require("root/test/fixtures").JOHN_ECDSA_KEYS
-var VALID_ISSUERS = require("root/test/fixtures").VALID_ISSUERS
-var JOHN_RSA_KEYS = require("root/test/fixtures").JOHN_RSA_KEYS
+var {JOHN_ECDSA_KEYS} = require("root/test/fixtures")
+var {JOHN_RSA_KEYS} = require("root/test/fixtures")
+var {VALID_ISSUERS} = require("root/test/fixtures")
 var {PHONE_NUMBER_TRANSFORMS} = require("root/test/fixtures")
 var PERSONAL_ID = "38706181337"
 var SESSION_ID = "7c8bdd56-6772-4264-ba27-bf7a9ef72a11"
@@ -1006,7 +1006,7 @@ describe("SessionsController", function() {
 
 				var cookies = parseCookies(res.headers["set-cookie"])
 				res = yield this.request(res.headers.location, {
-					headers: {Cookie: Http.serializeCookies(cookies)}
+					headers: {Cookie: serializeCookies(cookies)}
 				})
 
 				res.statusCode.must.equal(200)
@@ -1201,9 +1201,9 @@ describe("SessionsController", function() {
 					res.statusCode.must.equal(422)
 					res.statusMessage.must.equal("Invalid Issuer")
 
-					var cookies = Http.parseCookies(res.headers["set-cookie"])
+					var cookies = parseCookies(res.headers["set-cookie"])
 					res = yield this.request(res.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -1237,9 +1237,9 @@ describe("SessionsController", function() {
 					res.statusCode.must.equal(422)
 					res.statusMessage.must.equal("Certificate Not Yet Valid")
 
-					var cookies = Http.parseCookies(res.headers["set-cookie"])
+					var cookies = parseCookies(res.headers["set-cookie"])
 					res = yield this.request(res.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -1273,9 +1273,9 @@ describe("SessionsController", function() {
 					res.statusCode.must.equal(422)
 					res.statusMessage.must.equal("Certificate Expired")
 
-					var cookies = Http.parseCookies(res.headers["set-cookie"])
+					var cookies = parseCookies(res.headers["set-cookie"])
 					res = yield this.request(res.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -1420,9 +1420,9 @@ describe("SessionsController", function() {
 					errored.statusMessage.must.equal("Invalid Mobile-Id Signature")
 					errored.headers.location.must.equal("/sessions/new")
 
-					var cookies = Http.parseCookies(errored.headers["set-cookie"])
+					var cookies = parseCookies(errored.headers["set-cookie"])
 					var res = yield this.request(errored.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -1615,9 +1615,9 @@ describe("SessionsController", function() {
 					errored.statusMessage.must.equal(statusMessage)
 					errored.headers.location.must.equal("/sessions/new")
 
-					var cookies = Http.parseCookies(errored.headers["set-cookie"])
+					var cookies = parseCookies(errored.headers["set-cookie"])
 					var res = yield this.request(errored.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -1656,9 +1656,9 @@ describe("SessionsController", function() {
 				errored.headers.location.must.equal("/sessions/new")
 				waited.must.equal(2)
 
-				var cookies = Http.parseCookies(errored.headers["set-cookie"])
+				var cookies = parseCookies(errored.headers["set-cookie"])
 				var res = yield this.request(errored.headers.location, {
-					headers: {Cookie: Http.serializeCookies(cookies)}
+					headers: {Cookie: serializeCookies(cookies)}
 				})
 
 				res.statusCode.must.equal(200)
@@ -1842,7 +1842,7 @@ describe("SessionsController", function() {
 
 				var cookies = parseCookies(res.headers["set-cookie"])
 				res = yield this.request(res.headers.location, {
-					headers: {Cookie: Http.serializeCookies(cookies)}
+					headers: {Cookie: serializeCookies(cookies)}
 				})
 
 				res.statusCode.must.equal(200)
@@ -1872,7 +1872,7 @@ describe("SessionsController", function() {
 
 				var cookies = parseCookies(res.headers["set-cookie"])
 				res = yield this.request(res.headers.location, {
-					headers: {Cookie: Http.serializeCookies(cookies)}
+					headers: {Cookie: serializeCookies(cookies)}
 				})
 
 				res.statusCode.must.equal(200)
@@ -1902,7 +1902,7 @@ describe("SessionsController", function() {
 
 				var cookies = parseCookies(res.headers["set-cookie"])
 				res = yield this.request(res.headers.location, {
-					headers: {Cookie: Http.serializeCookies(cookies)}
+					headers: {Cookie: serializeCookies(cookies)}
 				})
 
 				res.statusCode.must.equal(200)
@@ -1932,7 +1932,7 @@ describe("SessionsController", function() {
 
 				var cookies = parseCookies(res.headers["set-cookie"])
 				res = yield this.request(res.headers.location, {
-					headers: {Cookie: Http.serializeCookies(cookies)}
+					headers: {Cookie: serializeCookies(cookies)}
 				})
 
 				res.statusCode.must.equal(200)
@@ -2075,9 +2075,9 @@ describe("SessionsController", function() {
 					errored.statusMessage.must.equal("Invalid Smart-Id Signature")
 					errored.headers.location.must.equal("/sessions/new")
 
-					var cookies = Http.parseCookies(errored.headers["set-cookie"])
+					var cookies = parseCookies(errored.headers["set-cookie"])
 					var res = yield this.request(errored.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -2156,9 +2156,9 @@ describe("SessionsController", function() {
 					errored.statusMessage.must.equal(statusMessage)
 					errored.headers.location.must.equal("/sessions/new")
 
-					var cookies = Http.parseCookies(errored.headers["set-cookie"])
+					var cookies = parseCookies(errored.headers["set-cookie"])
 					var res = yield this.request(errored.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -2189,9 +2189,9 @@ describe("SessionsController", function() {
 				errored.headers.location.must.equal("/sessions/new")
 				waited.must.equal(2)
 
-				var cookies = Http.parseCookies(errored.headers["set-cookie"])
+				var cookies = parseCookies(errored.headers["set-cookie"])
 				var res = yield this.request(errored.headers.location, {
-					headers: {Cookie: Http.serializeCookies(cookies)}
+					headers: {Cookie: serializeCookies(cookies)}
 				})
 
 				res.statusCode.must.equal(200)
@@ -2223,7 +2223,7 @@ describe("SessionsController", function() {
 			cookies[SESSION_COOKIE_NAME].expires.must.be.lte(new Date)
 
 			res = yield this.request(res.headers.location, {
-				headers: {Cookie: Http.serializeCookies(cookies)}
+				headers: {Cookie: serializeCookies(cookies)}
 			})
 
 			res.statusCode.must.equal(200)
@@ -2251,7 +2251,7 @@ describe("SessionsController", function() {
 			cookies.must.not.have.property(SESSION_COOKIE_NAME)
 
 			res = yield this.request(res.headers.location, {
-				headers: {Cookie: Http.serializeCookies(cookies)}
+				headers: {Cookie: serializeCookies(cookies)}
 			})
 
 			res.statusCode.must.equal(200)

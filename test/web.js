@@ -1,5 +1,7 @@
+var _ = require("root/lib/underscore")
 var Http = require("http")
 var Web = require("root/bin/web")
+var Cookie = require("tough-cookie").Cookie
 var {request} = require("./fixtures")
 var fetchDefaults = require("fetch-defaults")
 var {wait} = require("root/lib/promise")
@@ -20,4 +22,12 @@ exports.listen = function*() {
 
 exports.close = function(done) {
 	this.server.close(done)
+}
+
+exports.parseCookies = function(header) {
+	return _.indexBy(header.map(Cookie.parse), "key")
+}
+
+exports.serializeCookies = function(cookies) {
+	return _.map(cookies, (cookie) => cookie.cookieString()).join("; ")
 }

@@ -1,5 +1,4 @@
 var _ = require("root/lib/underscore")
-var Http = require("root/lib/http")
 var Config = require("root/config")
 var ValidUser = require("root/test/valid_user")
 var ValidCoauthor = require("root/test/valid_initiative_coauthor")
@@ -8,7 +7,7 @@ var initiativesDb = require("root/db/initiatives_db")
 var coauthorsDb = require("root/db/initiative_coauthors_db")
 var usersDb = require("root/db/users_db")
 var parseDom = require("root/lib/dom").parse
-var parseCookies = Http.parseCookies
+var {parseCookies} = require("root/test/web")
 var demand = require("must")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var sql = require("sqlate")

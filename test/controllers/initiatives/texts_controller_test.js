@@ -20,7 +20,7 @@ var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var newCertificate = require("root/test/fixtures").newCertificate
 var newOcspResponse = require("root/test/fixtures").newOcspResponse
 var t = require("root/lib/i18n").t.bind(null, "et")
-var parseCookies = require("root/lib/http").parseCookies
+var parseCookies = require("root/test/web").parseCookies
 var TRIX_TYPE = new MediaType("application/vnd.basecamp.trix+json")
 var {renderForSigning} =
 	require("root/controllers/initiatives/texts_controller")

@@ -17,7 +17,6 @@ var ValidComment = require("root/test/valid_comment")
 var ValidText = require("root/test/valid_initiative_text")
 var ValidFile = require("root/test/valid_event_file")
 var ValidEvent = require("root/test/valid_initiative_event")
-var Http = require("root/lib/http")
 var I18n = require("root/lib/i18n")
 var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
 var sql = require("sqlate")
@@ -25,7 +24,8 @@ var t = require("root/lib/i18n").t.bind(null, "et")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var tHtml = _.compose(_.escapeHtml, t)
 var pseudoDateTime = require("root/lib/crypto").pseudoDateTime
-var parseCookies = Http.parseCookies
+var {parseCookies} = require("root/test/web")
+var {serializeCookies} = require("root/test/web")
 var usersDb = require("root/db/users_db")
 var coauthorsDb = require("root/db/initiative_coauthors_db")
 var textsDb = require("root/db/initiative_texts_db")
@@ -7160,7 +7160,7 @@ describe("InitiativesController", function() {
 
 					var cookies = parseCookies(res.headers["set-cookie"])
 					res = yield this.request(res.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -7654,7 +7654,7 @@ describe("InitiativesController", function() {
 
 						var cookies = parseCookies(res.headers["set-cookie"])
 						res = yield this.request(res.headers.location, {
-							headers: {Cookie: Http.serializeCookies(cookies)}
+							headers: {Cookie: serializeCookies(cookies)}
 						})
 
 						res.statusCode.must.equal(200)
@@ -8017,7 +8017,7 @@ describe("InitiativesController", function() {
 
 					var cookies = parseCookies(res.headers["set-cookie"])
 					res = yield this.request(res.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -8083,7 +8083,7 @@ describe("InitiativesController", function() {
 
 					var cookies = parseCookies(res.headers["set-cookie"])
 					res = yield this.request(res.headers.location, {
-						headers: {Cookie: Http.serializeCookies(cookies)}
+						headers: {Cookie: serializeCookies(cookies)}
 					})
 
 					res.statusCode.must.equal(200)
@@ -8657,7 +8657,7 @@ describe("InitiativesController", function() {
 
 						var cookies = parseCookies(res.headers["set-cookie"])
 						res = yield this.request(res.headers.location, {
-							headers: {Cookie: Http.serializeCookies(cookies)}
+							headers: {Cookie: serializeCookies(cookies)}
 						})
 
 						res.statusCode.must.equal(200)
@@ -8776,7 +8776,7 @@ describe("InitiativesController", function() {
 
 						var cookies = parseCookies(res.headers["set-cookie"])
 						res = yield this.request(res.headers.location, {
-							headers: {Cookie: Http.serializeCookies(cookies)}
+							headers: {Cookie: serializeCookies(cookies)}
 						})
 
 						res.statusCode.must.equal(200)
@@ -9015,7 +9015,7 @@ describe("InitiativesController", function() {
 
 						var cookies = parseCookies(res.headers["set-cookie"])
 						res = yield this.request(res.headers.location, {
-							headers: {Cookie: Http.serializeCookies(cookies)}
+							headers: {Cookie: serializeCookies(cookies)}
 						})
 
 						res.statusCode.must.equal(200)
@@ -9341,7 +9341,7 @@ describe("InitiativesController", function() {
 						res = yield this.request(res.headers.location, {
 							headers: {
 								Host: LOCAL_SITE_HOSTNAME,
-								Cookie: Http.serializeCookies(cookies)
+								Cookie: serializeCookies(cookies)
 							}
 						})
 
@@ -9877,7 +9877,7 @@ describe("InitiativesController", function() {
 
 				var cookies = parseCookies(res.headers["set-cookie"])
 				res = yield this.request(res.headers.location, {
-					headers: {Cookie: Http.serializeCookies(cookies)}
+					headers: {Cookie: serializeCookies(cookies)}
 				})
 
 				res.statusCode.must.equal(200)
@@ -9970,7 +9970,7 @@ describe("InitiativesController", function() {
 
 				var cookies = parseCookies(res.headers["set-cookie"])
 				res = yield this.request(res.headers.location, {
-					headers: {Cookie: Http.serializeCookies(cookies)}
+					headers: {Cookie: serializeCookies(cookies)}
 				})
 
 				res.statusCode.must.equal(200)

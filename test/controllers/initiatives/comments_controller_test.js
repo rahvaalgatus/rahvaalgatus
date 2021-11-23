@@ -5,8 +5,8 @@ var ValidInitiative = require("root/test/valid_initiative")
 var ValidComment = require("root/test/valid_comment")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidUser = require("root/test/valid_user")
-var Http = require("root/lib/http")
-var parseCookies = Http.parseCookies
+var {parseCookies} = require("root/test/web")
+var {serializeCookies} = require("root/test/web")
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
@@ -1007,7 +1007,7 @@ describe("InitiativeCommentsController", function() {
 
 				var cookies = parseCookies(res.headers["set-cookie"])
 				res = yield this.request(res.headers.location, {
-					headers: {Cookie: Http.serializeCookies(cookies)}
+					headers: {Cookie: serializeCookies(cookies)}
 				})
 
 				res.statusCode.must.equal(200)

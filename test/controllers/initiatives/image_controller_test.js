@@ -4,8 +4,8 @@ var ValidInitiative = require("root/test/valid_initiative")
 var ValidUser = require("root/test/valid_user")
 var ValidCoauthor = require("root/test/valid_initiative_coauthor")
 var FormData = require("form-data")
-var Http = require("root/lib/http")
 var MediaType = require("medium-type")
+var {parseCookies} = require("root/test/web")
 var usersDb = require("root/db/users_db")
 var coauthorsDb = require("root/db/initiative_coauthors_db")
 var initiativesDb = require("root/db/initiatives_db")
@@ -104,7 +104,7 @@ describe("ImageController", function() {
 				images[0].preview.must.be.an.instanceOf(Buffer)
 				images[0].preview.length.must.be.gt(0)
 
-				var cookies = Http.parseCookies(res.headers["set-cookie"])
+				var cookies = parseCookies(res.headers["set-cookie"])
 				res = yield this.request(res.headers.location, {
 					cookies: _.mapValues(cookies, (c) => c.value)
 				})
@@ -178,7 +178,7 @@ describe("ImageController", function() {
 					author_url: "http://example.com"
 				})
 
-				var cookies = Http.parseCookies(res.headers["set-cookie"])
+				var cookies = parseCookies(res.headers["set-cookie"])
 				res = yield this.request(res.headers.location, {
 					cookies: _.mapValues(cookies, (c) => c.value)
 				})
