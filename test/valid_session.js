@@ -17,7 +17,7 @@ module.exports = function(attrs) {
 	}, attrs)
 
 	Object.defineProperty(session, "token", {
-		value: token, configurable: true, writable: true
+		value: token, configurable: true, writable: true, enumerable: false
 	})
 
 	return session
