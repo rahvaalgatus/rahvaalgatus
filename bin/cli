@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 process.title = "rahvaalgatus/cli"
+if (process.env.ENV == null) process.env.ENV = "development"
 
 var Neodoc = require("neodoc")
 var concat = Array.prototype.concat.bind(Array.prototype)
@@ -14,6 +15,7 @@ Commands:
     parliament-sync       Sync initiatives against the parliament API.
     parliament-web-sync   Sync initiatives against the parliament web page.
     initiative-end-email  Sends emails to authors for initiative deadlines.
+    initiative-signatures Manage and anonmymize initiative signatures.
     initiative-signature-milestones  Records initiative signature milestones.
     expire-demo-signatures           Removes expired demo signatures.
     news-sync             Sync Eesti Koostöö Kogu news.
@@ -37,6 +39,8 @@ var CLIS = {
     require.resolve("root/cli/parliament_web_sync_cli"),
   "initiative-end-email":
     require.resolve("root/cli/initiative_end_email_cli"),
+  "initiative-signatures":
+    require.resolve("root/cli/initiative_signatures_cli"),
   "initiative-signature-milestones":
     require.resolve("root/cli/initiative_signature_milestones_cli"),
   "expire-demo-signatures":

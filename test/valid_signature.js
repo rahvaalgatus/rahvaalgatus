@@ -1,4 +1,5 @@
 var _ = require("root/lib/underscore")
+var Crypto = require("crypto")
 var {randomPersonalId} = require("./valid_user")
 
 module.exports = function(attrs) {
@@ -13,9 +14,10 @@ module.exports = function(attrs) {
 		country: country,
 		personal_id: personalId,
 		method: "id-card",
+		token: Crypto.randomBytes(12),
 		hidden: false,
 		oversigned: 0,
 		xades: `<XAdESSignatures>${country}${personalId}</XAdESSignatures>`,
-		signer_id: null
+		anonymized: false
 	}, attrs)
 }

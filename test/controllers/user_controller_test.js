@@ -1149,7 +1149,6 @@ describe("UserController", function() {
 				var el = dom.querySelector(".signature")
 				el.innerHTML.must.include(initiative.uuid)
 				el.textContent.must.include(initiative.title)
-				//el.textContent.must.include(this.author.name)
 				el.textContent.must.include(t("DOWNLOAD_SIGNATURE"))
 			})
 

@@ -183,6 +183,11 @@ exports.router.get("/",
 			description: t("INITIATIVE_SIGNATURES_NO_LONGER_AVAILABLE")
 		})
 
+	if (initiative.received_by_government_at)
+		throw new HttpError(423, "Signatures Already In Government", {
+			description: t("INITIATIVE_SIGNATURES_NO_LONGER_AVAILABLE")
+		})
+
 	if (initiative.destination != "parliament") {
 		if (user == null) throw new HttpError(401)
 
@@ -235,7 +240,7 @@ exports.router.get("/",
 				while ((signatures = yield signaturesDb.search(sql`
 					SELECT xades FROM initiative_signatures
 					WHERE initiative_uuid = ${initiative.uuid}
-					AND xades IS NOT NULL
+					AND NOT anonymized
 					ORDER BY country ASC, personal_id ASC
 					LIMIT ${ENV == "test" ? 1 : 100}
 					OFFSET ${added}
@@ -261,7 +266,7 @@ exports.router.get("/",
 			var citizenosSignatures = yield citizenosSignaturesDb.search(sql`
 				SELECT * FROM initiative_citizenos_signatures
 				WHERE initiative_uuid = ${initiative.uuid}
-				AND asic IS NOT NULL
+				AND NOT anonymized
 				ORDER BY country ASC, personal_id ASC
 			`)
 
@@ -286,6 +291,7 @@ exports.router.get("/",
 				for (added = 0; (signatures = yield citizenosSignaturesDb.search(sql`
 					SELECT created_at, personal_id FROM initiative_citizenos_signatures
 					WHERE initiative_uuid = ${initiative.uuid}
+					AND NOT anonymized
 					ORDER BY country ASC, personal_id ASC
 					LIMIT ${ENV == "test" ? 1 : 10000}
 					OFFSET ${added}
@@ -295,6 +301,7 @@ exports.router.get("/",
 				for (added = 0; (signatures = yield signaturesDb.search(sql`
 					SELECT created_at, personal_id FROM initiative_signatures
 					WHERE initiative_uuid = ${initiative.uuid}
+					AND NOT anonymized
 					ORDER BY country ASC, personal_id ASC
 					LIMIT ${ENV == "test" ? 1 : 10000}
 					OFFSET ${added}

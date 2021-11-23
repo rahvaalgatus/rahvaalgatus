@@ -45,7 +45,9 @@ function* updateMilestones([initiative, milestones]) {
 		FROM initiative_citizenos_signatures
 		WHERE initiative_uuid = ${initiative.uuid}
 
-		UNION SELECT created_at
+		UNION
+
+		SELECT created_at
 		FROM initiative_signatures
 		WHERE initiative_uuid = ${initiative.uuid}
 

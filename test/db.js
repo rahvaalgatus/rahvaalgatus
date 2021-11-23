@@ -9,6 +9,11 @@ exports.delete = function*() {
 	yield sqlite(sql`DELETE FROM initiative_subscriptions`)
 	yield sqlite(sql`DELETE FROM initiative_signatures`)
 	yield sqlite(sql`DELETE FROM initiative_citizenos_signatures`)
+
+	yield sqlite(sql`
+    UPDATE sqlite_sequence SET seq = 0 WHERE name = 'initiative_signatures'
+	`)
+
 	yield sqlite(sql`DELETE FROM initiative_signables`)
 	yield sqlite(sql`DELETE FROM initiative_messages`)
 	yield sqlite(sql`DELETE FROM initiative_events`)

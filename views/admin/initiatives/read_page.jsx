@@ -164,6 +164,14 @@ module.exports = function(attrs) {
 			</tr>
 
 			<tr>
+				<th scope="row">Signatures Anonymized On</th>
+				<td>{initiative.signatures_anonymized_at
+					? formatDate("iso", attrs.value)
+					: null
+				}</td>
+			</tr>
+
+			<tr>
 				<th scope="row">Sent to Parliament</th>
 				<td>
 					<DateInputForm
@@ -176,7 +184,13 @@ module.exports = function(attrs) {
 			</tr>
 
 			<tr>
-				<th scope="row">Received by Parliament</th>
+				<th scope="row">
+					Received by Parliament<br />
+					<small>
+						Signatures will be downloadable until initiative is received.
+					</small>
+				</th>
+
 				<td>
 					<DateInputForm
 						req={req}
@@ -280,6 +294,36 @@ module.exports = function(attrs) {
 						Signatures are only available for authorized government
 						representatives.
 					</p> : null}
+				</td>
+			</tr>
+
+			<tr>
+				<th scope="row">
+					Received by Government<br />
+					<small>
+						Signatures will be downloadable until initiative is received.
+					</small>
+				</th>
+
+				<td>
+					<DateInputForm
+						req={req}
+						action={initiativePath}
+						name="receivedByGovernmentOn"
+						value={initiative.received_by_government_at}
+					/>
+				</td>
+			</tr>
+
+			<tr>
+				<th scope="row">Accepted by Government</th>
+				<td>
+					<DateInputForm
+						req={req}
+						action={initiativePath}
+						name="acceptedByGovernmentOn"
+						value={initiative.accepted_by_government_at}
+					/>
 				</td>
 			</tr>
 

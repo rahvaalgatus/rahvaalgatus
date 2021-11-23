@@ -35,16 +35,23 @@ exports.parse = function(attrs) {
 			new Date(attrs.signing_expiration_email_sent_at),
 		sent_to_parliament_at: attrs.sent_to_parliament_at &&
 			new Date(attrs.sent_to_parliament_at),
-		sent_to_government_at: attrs.sent_to_government_at &&
-			new Date(attrs.sent_to_government_at),
 		received_by_parliament_at: attrs.received_by_parliament_at &&
 			new Date(attrs.received_by_parliament_at),
 		accepted_by_parliament_at: attrs.accepted_by_parliament_at &&
 			new Date(attrs.accepted_by_parliament_at),
 		finished_in_parliament_at: attrs.finished_in_parliament_at &&
 			new Date(attrs.finished_in_parliament_at),
+		sent_to_government_at: attrs.sent_to_government_at &&
+			new Date(attrs.sent_to_government_at),
+		received_by_government_at: attrs.received_by_government_at &&
+			new Date(attrs.received_by_government_at),
+		accepted_by_government_at: attrs.accepted_by_government_at &&
+			new Date(attrs.accepted_by_government_at),
 		finished_in_government_at: attrs.finished_in_government_at &&
 			new Date(attrs.finished_in_government_at),
+		signatures_anonymized_at: attrs.signatures_anonymized_at &&
+			new Date(attrs.signatures_anonymized_at),
+
 		parliament_api_data: attrs.parliament_api_data &&
 			JSON.parse(attrs.parliament_api_data),
 		parliament_synced_at: attrs.parliament_synced_at &&

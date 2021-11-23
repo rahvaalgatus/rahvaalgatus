@@ -120,12 +120,15 @@ exports.router.get("/signatures", next(function*(req, res) {
 			WHERE country = ${user.country}
 			AND personal_id = ${user.personal_id}
 			AND NOT hidden
+			AND NOT anonymized
 
 			UNION
+
 			SELECT initiative_uuid, country, personal_id, created_at, NULL AS token
 			FROM initiative_citizenos_signatures
 			WHERE country = ${user.country}
 			AND personal_id = ${user.personal_id}
+			AND NOT anonymized
 		)
 
 		SELECT signature.*, initiative.title AS initiative_title

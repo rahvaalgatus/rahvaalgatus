@@ -1,6 +1,6 @@
 CREATE TABLE initiatives (
 	uuid TEXT PRIMARY KEY NOT NULL,
-	mailchimp_interest_id TEXT NULL UNIQUE, notes TEXT NOT NULL DEFAULT "", parliament_api_data TEXT NULL, sent_to_parliament_at TEXT NULL, finished_in_parliament_at TEXT NULL, discussion_end_email_sent_at TEXT NULL, signing_end_email_sent_at TEXT NULL, author_url TEXT NOT NULL DEFAULT "", community_url TEXT NOT NULL DEFAULT "", organizations TEXT NOT NULL DEFAULT "[]", meetings TEXT NOT NULL DEFAULT "[]", url TEXT NOT NULL DEFAULT "", media_urls TEXT NOT NULL DEFAULT "[]", signature_milestones TEXT NOT NULL DEFAULT "{}", phase TEXT NOT NULL DEFAULT "edit", government_change_urls TEXT NOT NULL DEFAULT "[]", public_change_urls TEXT NOT NULL DEFAULT "[]", has_paper_signatures INTEGER NOT NULL DEFAULT 0, received_by_parliament_at TEXT, accepted_by_parliament_at TEXT, archived_at TEXT, parliament_decision TEXT, parliament_committee TEXT, parliament_uuid TEXT, external INTEGER NOT NULL DEFAULT 0, title TEXT NOT NULL DEFAULT '', author_name TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')), parliament_synced_at TEXT, government_agency TEXT, sent_to_government_at TEXT, finished_in_government_at TEXT, government_contact TEXT, government_contact_details TEXT, government_decision TEXT, text TEXT, text_type TEXT, text_sha256 BLOB, undersignable INTEGER NOT NULL DEFAULT 0, parliament_token BLOB, destination TEXT, user_id INTEGER, published_at TEXT, discussion_ends_at TEXT, signing_started_at TEXT, signing_ends_at TEXT, tags TEXT NOT NULL DEFAULT '[]', signing_expired_at TEXT, signing_expiration_email_sent_at TEXT, language TEXT NOT NULL DEFAULT 'et', author_contacts TEXT NOT NULL DEFAULT "",
+	mailchimp_interest_id TEXT NULL UNIQUE, notes TEXT NOT NULL DEFAULT "", parliament_api_data TEXT NULL, sent_to_parliament_at TEXT NULL, finished_in_parliament_at TEXT NULL, discussion_end_email_sent_at TEXT NULL, signing_end_email_sent_at TEXT NULL, author_url TEXT NOT NULL DEFAULT "", community_url TEXT NOT NULL DEFAULT "", organizations TEXT NOT NULL DEFAULT "[]", meetings TEXT NOT NULL DEFAULT "[]", url TEXT NOT NULL DEFAULT "", media_urls TEXT NOT NULL DEFAULT "[]", signature_milestones TEXT NOT NULL DEFAULT "{}", phase TEXT NOT NULL DEFAULT "edit", government_change_urls TEXT NOT NULL DEFAULT "[]", public_change_urls TEXT NOT NULL DEFAULT "[]", has_paper_signatures INTEGER NOT NULL DEFAULT 0, received_by_parliament_at TEXT, accepted_by_parliament_at TEXT, archived_at TEXT, parliament_decision TEXT, parliament_committee TEXT, parliament_uuid TEXT, external INTEGER NOT NULL DEFAULT 0, title TEXT NOT NULL DEFAULT '', author_name TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')), parliament_synced_at TEXT, government_agency TEXT, sent_to_government_at TEXT, finished_in_government_at TEXT, government_contact TEXT, government_contact_details TEXT, government_decision TEXT, text TEXT, text_type TEXT, text_sha256 BLOB, undersignable INTEGER NOT NULL DEFAULT 0, parliament_token BLOB, destination TEXT, user_id INTEGER, published_at TEXT, discussion_ends_at TEXT, signing_started_at TEXT, signing_ends_at TEXT, tags TEXT NOT NULL DEFAULT '[]', signing_expired_at TEXT, signing_expiration_email_sent_at TEXT, language TEXT NOT NULL DEFAULT 'et', author_contacts TEXT NOT NULL DEFAULT "", received_by_government_at TEXT, accepted_by_government_at TEXT, signatures_anonymized_at TEXT,
 
 	FOREIGN KEY (user_id) REFERENCES users (id),
 
@@ -44,6 +44,22 @@ CREATE TABLE initiatives (
 
 	CONSTRAINT signing_ends_at_if_signing
 	CHECK (phase != 'sign' OR signing_ends_at IS NOT NULL),
+
+	CONSTRAINT received_by_government_at_format
+	CHECK (received_by_government_at GLOB '*-*-*T*:*:*Z'),
+
+	CONSTRAINT accepted_by_government_at_format
+	CHECK (accepted_by_government_at GLOB '*-*-*T*:*:*Z'),
+
+	CONSTRAINT signatures_anonymized_at_format
+	CHECK (signatures_anonymized_at GLOB '*-*-*T*:*:*Z'),
+
+	CONSTRAINT signatures_anonymized_only_when_received CHECK (
+		signatures_anonymized_at IS NULL OR CASE destination
+			WHEN 'parliament' THEN received_by_parliament_at IS NOT NULL
+			ELSE received_by_government_at IS NOT NULL
+		END
+	),
 
 	CONSTRAINT signing_expired_at_phase
 	CHECK (signing_expired_at IS NULL OR phase == 'sign'),
@@ -233,30 +249,6 @@ CREATE TABLE initiative_signables (
 );
 CREATE INDEX index_signables_on_initiative_uuid
 ON initiative_signables (initiative_uuid);
-CREATE TABLE initiative_signatures (
-	initiative_uuid TEXT NOT NULL,
-	country TEXT NOT NULL,
-	personal_id TEXT NOT NULL,
-	token BLOB UNIQUE NOT NULL DEFAULT (randomblob(12)),
-	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	xades TEXT NOT NULL,
-	hidden INTEGER NOT NULL DEFAULT 0,
-	oversigned INTEGER NOT NULL DEFAULT 0, method TEXT NOT NULL, created_from TEXT, signer_id INTEGER,
-
-	PRIMARY KEY (initiative_uuid, country, personal_id),
-	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
-
-	CONSTRAINT initiative_signatures_country_length CHECK (length(country) = 2),
-
-	CONSTRAINT initiative_signatures_personal_id_length
-	CHECK (length(personal_id) > 0),
-
-	CONSTRAINT initiative_signatures_token_length CHECK (length(token) > 0),
-	CONSTRAINT initiative_signatures_xades_length CHECK (length(xades) > 0)
-);
-CREATE INDEX index_signatures_on_country_and_personal_id
-ON initiative_signatures (country, personal_id);
 CREATE TABLE users (
 	id INTEGER PRIMARY KEY NOT NULL,
 	uuid BLOB UNIQUE NOT NULL,
@@ -367,8 +359,6 @@ CREATE INDEX index_initiatives_on_user_id ON initiatives (user_id);
 CREATE INDEX index_initiative_events_on_user_id ON initiative_events (user_id);
 CREATE INDEX index_users_on_merged_with_id ON users (merged_with_id)
 WHERE merged_with_id IS NOT NULL;
-CREATE INDEX index_initiative_signatures_on_initiative_uuid_and_created_at
-ON initiative_signatures (initiative_uuid, created_at);
 CREATE TABLE demo_signatures (
   id INTEGER PRIMARY KEY NOT NULL,
 	country TEXT NOT NULL,
@@ -390,25 +380,6 @@ CREATE TABLE demo_signatures (
 	CONSTRAINT initiative_signables_token_length CHECK (length(token) > 0),
 	CONSTRAINT initiative_signables_xades_length CHECK (length(xades) > 0)
 );
-CREATE TABLE initiative_citizenos_signatures (
-	initiative_uuid TEXT NOT NULL,
-	country TEXT NOT NULL,
-	personal_id TEXT NOT NULL,
-	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	asic BLOB, signer_id INTEGER,
-
-	PRIMARY KEY (initiative_uuid, country, personal_id),
-	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
-	
-	CONSTRAINT country_length CHECK (length(country) = 2),
-	CONSTRAINT country_uppercase CHECK (country == upper(country)),
-	CONSTRAINT personal_id_length CHECK (length(personal_id) > 0),
-	CONSTRAINT asic_length CHECK (length(asic) > 0)
-);
-CREATE INDEX index_citizenos_signatures_on_country_and_personal_id
-ON initiative_citizenos_signatures (country, personal_id);
-CREATE INDEX index_citizenos_signatures_on_initiative_uuid_and_created_at
-ON initiative_citizenos_signatures (initiative_uuid, created_at);
 CREATE TABLE initiative_texts (
 	id INTEGER PRIMARY KEY NOT NULL,
 	initiative_uuid TEXT NOT NULL,
@@ -472,10 +443,6 @@ CREATE UNIQUE INDEX index_news_on_source_and_external_id
 ON news (source, external_id);
 CREATE INDEX index_news_on_published_at
 ON news (published_at);
-CREATE INDEX index_initiative_signatures_on_created_at
-ON initiative_signatures (created_at, initiative_uuid);
-CREATE INDEX index_initiative_citizenos_signatures_on_created_at
-ON initiative_citizenos_signatures (created_at, initiative_uuid);
 CREATE UNIQUE INDEX index_users_on_id_and_country_and_personal_id
 ON users (id, country, personal_id);
 CREATE TABLE IF NOT EXISTS "initiative_coauthors" (
@@ -514,6 +481,85 @@ WHERE user_id IS NOT NULL;
 CREATE UNIQUE INDEX index_initiative_coauthors_on_accepted_or_pending
 ON initiative_coauthors (initiative_uuid, country, personal_id, status)
 WHERE status IN ('accepted', 'pending');
+CREATE TABLE IF NOT EXISTS "initiative_signatures" (
+	id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+	initiative_uuid TEXT NOT NULL,
+	country TEXT NOT NULL,
+	personal_id TEXT NOT NULL,
+	token BLOB UNIQUE,
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	created_from TEXT,
+	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	method TEXT NOT NULL,
+	xades TEXT,
+	hidden INTEGER NOT NULL DEFAULT 0,
+	oversigned INTEGER NOT NULL DEFAULT 0,
+	anonymized INTEGER NOT NULL DEFAULT 0,
+
+	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
+
+	CONSTRAINT country_format CHECK (country GLOB '[A-Z][A-Z]'),
+
+	CONSTRAINT personal_id_format CHECK (CASE country
+		WHEN 'EE' THEN CASE
+			WHEN anonymized THEN personal_id GLOB '[0-9][0-9][0-9]'
+			ELSE personal_id GLOB
+				'[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
+			END
+		ELSE length(personal_id) > 0
+	END),
+
+	CONSTRAINT created_at_format CHECK (created_at GLOB '*-*-*T*:*:*Z'),
+	CONSTRAINT updated_at_format CHECK (updated_at GLOB '*-*-*T*:*:*Z'),
+	CONSTRAINT method_length CHECK (length(method) > 0),
+	CONSTRAINT token_null CHECK (token IS NOT NULL = NOT anonymized),
+	CONSTRAINT token_length CHECK (length(token) > 0),
+	CONSTRAINT xades_null CHECK (xades IS NOT NULL = NOT anonymized),
+	CONSTRAINT xades_length CHECK (length(xades) > 0),
+	CONSTRAINT oversigned_not_negative CHECK (oversigned >= 0)
+);
+CREATE INDEX index_signatures_on_initiatives_and_created_at
+ON initiative_signatures (initiative_uuid, created_at);
+CREATE UNIQUE INDEX index_signatures_on_initiative_country_and_personal_id
+ON initiative_signatures (initiative_uuid, country, personal_id)
+WHERE NOT anonymized;
+CREATE INDEX index_signatures_on_country_and_personal_id
+ON initiative_signatures (country, personal_id)
+WHERE NOT anonymized;
+CREATE TABLE IF NOT EXISTS "initiative_citizenos_signatures" (
+	id INTEGER PRIMARY KEY NOT NULL,
+	initiative_uuid TEXT NOT NULL,
+	country TEXT NOT NULL,
+	personal_id TEXT NOT NULL,
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	asic BLOB,
+	anonymized INTEGER NOT NULL DEFAULT 0,
+
+	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
+
+	CONSTRAINT country_format CHECK (country GLOB '[A-Z][A-Z]'),
+
+	CONSTRAINT personal_id_format CHECK (CASE country
+		WHEN 'EE' THEN CASE
+			WHEN anonymized THEN personal_id GLOB '[0-9][0-9][0-9]'
+			ELSE personal_id GLOB
+				'[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'
+			END
+		ELSE length(personal_id) > 0
+	END),
+
+	CONSTRAINT created_at_format CHECK (created_at GLOB '*-*-*T*:*:*Z'),
+	CONSTRAINT asic_null CHECK (asic IS NOT NULL = NOT anonymized),
+	CONSTRAINT asic_length CHECK (length(asic) > 0)
+);
+CREATE INDEX index_citizenos_signatures_on_initiative_uuid_and_created_at
+ON initiative_citizenos_signatures (initiative_uuid, created_at);
+CREATE UNIQUE INDEX index_citizenos_signatures_on_initiative_country_and_personal_id
+ON initiative_citizenos_signatures (initiative_uuid, country, personal_id)
+WHERE NOT anonymized;
+CREATE INDEX index_citizenos_signatures_on_country_and_personal_id
+ON initiative_citizenos_signatures (country, personal_id)
+WHERE NOT anonymized;
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -623,4 +669,6 @@ INSERT INTO migrations VALUES('20210505204035');
 INSERT INTO migrations VALUES('20210902145013');
 INSERT INTO migrations VALUES('20210921135127');
 INSERT INTO migrations VALUES('20210922092306');
+INSERT INTO migrations VALUES('20211115102500');
+INSERT INTO migrations VALUES('20211115102510');
 COMMIT;

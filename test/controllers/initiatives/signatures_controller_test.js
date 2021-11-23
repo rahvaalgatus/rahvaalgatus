@@ -299,6 +299,30 @@ describe("SignaturesController", function() {
 			res.headers["content-type"].must.equal("text/html; charset=utf-8")
 			res.body.must.include(t("INITIATIVE_SIGNATURES_NO_LONGER_AVAILABLE"))
 		})
+
+		it("must respond with 423 Locked if initiative received by government",
+			function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "government",
+				destination: "muhu-vald",
+				parliament_token: Crypto.randomBytes(12),
+				received_by_government_at: new Date
+			}))
+
+			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
+
+			var res = yield request.call(this, path, {
+				headers: {Host: LOCAL_SITE_HOSTNAME}
+			})
+
+			res.statusCode.must.equal(423)
+			res.statusMessage.must.equal("Signatures Already In Government")
+
+			res.headers["content-type"].must.equal("text/html; charset=utf-8")
+			res.body.must.include(t("INITIATIVE_SIGNATURES_NO_LONGER_AVAILABLE"))
+		})
 	}
 
 	describe(`GET / for ${ASICE_TYPE}`, function() {
@@ -306,7 +330,9 @@ describe("SignaturesController", function() {
 			this.author = yield usersDb.create(new ValidUser)
 		})
 
-		mustRespondWithSignatures(function(url) { return this.request(url) })
+		mustRespondWithSignatures(function(url, opts) {
+			return this.request(url, opts)
+		})
 
 		it("must respond with signature ASIC-E given parliament token",
 			function*() {
@@ -342,6 +368,35 @@ describe("SignaturesController", function() {
 				Zip.readEntry(zip, entries["META-INF/signatures-1.xml"]),
 				Zip.readEntry(zip, entries["META-INF/signatures-2.xml"]),
 			])).map(String).must.eql(_.map(signatures, "xades"))
+		})
+
+		it("must ignore anonymized signatures", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament",
+				parliament_token: Crypto.randomBytes(12)
+			}))
+
+			yield signaturesDb.create(new ValidSignature({
+				initiative_uuid: initiative.uuid,
+				personal_id: "387",
+				xades: null,
+				token: null,
+				anonymized: true
+			}))
+
+			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
+			var res = yield this.request(path)
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(ASICE_TYPE)
+			var zip = yield Zip.parse(Buffer.from(res.body))
+			var entries = yield Zip.parseEntries(zip)
+			Object.keys(entries).length.must.equal(3)
+
+			var entry = yield Zip.readEntry(zip, entries["initiative.html"])
+			String(entry).must.equal(initiative.text)
 		})
 
 		it("must respond if no signatures", function*() {
@@ -688,8 +743,8 @@ describe("SignaturesController", function() {
 			this.author = yield usersDb.create(new ValidUser)
 		})
 
-		mustRespondWithSignatures(function(url) {
-			return this.request(url.replace(/\.asice/, ".csv"))
+		mustRespondWithSignatures(function(url, opts) {
+			return this.request(url.replace(/\.asice/, ".csv"), opts)
 		})
 
 		it("must respond with CSV of signatures given parliament token",
@@ -729,6 +784,37 @@ describe("SignaturesController", function() {
 				sig.personal_id,
 				sig.created_at.toISOString()
 			].join(",") + "\n").join(""))
+		})
+
+		it("must ignore anonymized signatures", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "parliament",
+				parliament_token: Crypto.randomBytes(12)
+			}))
+
+			yield citizenosSignaturesDb.create(new ValidCitizenosSignature({
+				initiative_uuid: initiative.uuid,
+				personal_id: "387",
+				asic: null,
+				anonymized: true
+			}))
+
+			yield signaturesDb.create(new ValidSignature({
+				initiative_uuid: initiative.uuid,
+				personal_id: "387",
+				token: null,
+				xades: null,
+				anonymized: true
+			}))
+
+			var path = `/initiatives/${initiative.uuid}/signatures.csv`
+			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
+			var res = yield this.request(path)
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(CSV_TYPE)
+			res.body.must.equal("personal_id,created_at\n")
 		})
 
 		it("must respond if no signatures", function*() {
@@ -778,9 +864,9 @@ describe("SignaturesController", function() {
 			this.author = yield usersDb.create(new ValidUser)
 		})
 
-		mustRespondWithSignatures(function(url) {
+		mustRespondWithSignatures(function(url, opts) {
 			url += (url.indexOf("?") >= 0 ? "&" : "?") + "type=citizenos"
-			return this.request(url)
+			return this.request(url, opts)
 		})
 
 		it("must respond with signaturez in Zip given parliament token",
@@ -793,12 +879,10 @@ describe("SignaturesController", function() {
 
 			var aAsic = new Asic
 			aAsic.add("initiative.html", initiative.text)
-			aAsic.end()
 			aAsic = yield aAsic.toBuffer()
 
 			var bAsic = new Asic
 			bAsic.add("initiative.html", initiative.text)
-			bAsic.end()
 			bAsic = yield bAsic.toBuffer()
 
 			var signatures = _.sortBy(yield citizenosSignaturesDb.create([
@@ -854,7 +938,7 @@ describe("SignaturesController", function() {
 			yield Zip.parseEntries(zip).must.then.be.empty()
 		})
 
-		it("must not include signatuers from other initiatives", function*() {
+		it("must not include signatures from other initiatives", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
@@ -868,7 +952,6 @@ describe("SignaturesController", function() {
 
 			var asic = new Asic
 			asic.add("initiative.html", other.text)
-			asic.end()
 			asic = yield asic.toBuffer()
 
 			yield citizenosSignaturesDb.create(new ValidCitizenosSignature({
@@ -886,7 +969,7 @@ describe("SignaturesController", function() {
 			yield Zip.parseEntries(zip).must.then.be.empty()
 		})
 
-		it("must not respond with deleted signatures", function*() {
+		it("must ignore anonymized signatures", function*() {
 			var initiative = yield initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
@@ -896,7 +979,9 @@ describe("SignaturesController", function() {
 			_.sortBy(yield citizenosSignaturesDb.create([
 				new ValidCitizenosSignature({
 					initiative_uuid: initiative.uuid,
-					asic: null
+					personal_id: "387",
+					asic: null,
+					anonymized: true
 				})
 			]), "personal_id")
 
@@ -1450,6 +1535,7 @@ describe("SignaturesController", function() {
 				yield signaturesDb.search(sql`
 					SELECT * FROM initiative_signatures
 				`).must.then.eql([new ValidSignature({
+					id: 1,
 					initiative_uuid: this.initiative.uuid,
 					token: signables[0].token,
 					country: "EE",
@@ -1862,6 +1948,7 @@ describe("SignaturesController", function() {
 				yield signaturesDb.search(sql`
 					SELECT * FROM initiative_signatures
 				`).must.then.eql([new ValidSignature({
+					id: 1,
 					initiative_uuid: this.initiative.uuid,
 					token: signables[0].token,
 					country: "EE",
@@ -2539,6 +2626,7 @@ describe("SignaturesController", function() {
 				yield signaturesDb.search(sql`
 					SELECT * FROM initiative_signatures
 				`).must.then.eql([new ValidSignature({
+					id: 1,
 					initiative_uuid: this.initiative.uuid,
 					token: signables[0].token,
 					country: "EE",

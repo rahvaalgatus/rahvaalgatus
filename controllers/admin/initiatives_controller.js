@@ -332,6 +332,16 @@ function parseInitiative(initiative, obj) {
 			? Time.parseIsoDate(obj.sentToGovernmentOn)
 			: null
 
+	if ("receivedByGovernmentOn" in obj)
+		attrs.received_by_government_at = obj.receivedByGovernmentOn
+			? Time.parseIsoDate(obj.receivedByGovernmentOn)
+			: null
+
+	if ("acceptedByGovernmentOn" in obj)
+		attrs.accepted_by_government_at = obj.acceptedByGovernmentOn
+			? Time.parseIsoDate(obj.acceptedByGovernmentOn)
+			: null
+
 	if ("finishedInGovernmentOn" in obj)
 		attrs.finished_in_government_at = obj.finishedInGovernmentOn
 			? Time.parseIsoDate(obj.finishedInGovernmentOn)

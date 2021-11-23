@@ -10,6 +10,7 @@ exports = module.exports = new Db(
 
 exports.parse = function(attrs) {
 	return _.defaults({
-		created_at: attrs.created_at && new Date(attrs.created_at)
+		created_at: attrs.created_at && new Date(attrs.created_at),
+		anonymized: !!attrs.anonymized
 	}, attrs)
 }

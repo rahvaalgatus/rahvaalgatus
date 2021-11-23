@@ -22,7 +22,6 @@ var MILESTONES = _.sort(_.subtract, Config.signatureMilestones)
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 
 describe("InitiativeSignatureMilestonesCli", function() {
-	require("root/test/mitm")()
 	require("root/test/db")()
 	require("root/test/email")()
 	require("root/test/time")(new Date(2015, 5, 18, 13, 37, 42))

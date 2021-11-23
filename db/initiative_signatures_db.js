@@ -3,17 +3,16 @@ var Db = require("root/lib/db")
 var Xades = require("undersign/xades")
 var sqlite = require("root").sqlite
 exports = module.exports = new Db(Object, sqlite, "initiative_signatures")
-exports.idAttribute = "token"
-exports.idColumn = "token"
 
 exports.parse = function(attrs) {
 	// NOTE: Don't parse Xades to save on performance when loading signatures.
 	// We also never need the Xades instance again.
 	return _.defaults({
 		created_at: attrs.created_at && new Date(attrs.created_at),
+		created_from: attrs.created_from && JSON.parse(attrs.created_from),
 		updated_at: attrs.updated_at && new Date(attrs.updated_at),
 		hidden: !!attrs.hidden,
-		created_from: attrs.created_from && JSON.parse(attrs.created_from)
+		anonymized: !!attrs.anonymized
 	}, attrs)
 }
 

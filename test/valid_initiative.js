@@ -46,8 +46,6 @@ module.exports = function(attrs) {
 		government_contact: null,
 		government_contact_details: null,
 		government_decision: null,
-		sent_to_government_at: null,
-		finished_in_government_at: null,
 		government_change_urls: [],
 		public_change_urls: [],
 		signature_milestones: {},
@@ -64,11 +62,16 @@ module.exports = function(attrs) {
 		received_by_parliament_at: null,
 		accepted_by_parliament_at: null,
 		finished_in_parliament_at: null,
+		sent_to_government_at: null,
+		received_by_government_at: null,
+		accepted_by_government_at: null,
+		finished_in_government_at: null,
 		parliament_decision: null,
 		parliament_committee: null,
 		parliament_uuid: null,
 		discussion_end_email_sent_at: null,
 		signing_end_email_sent_at: null,
-		archived_at: null
+		archived_at: null,
+		signatures_anonymized_at: null
 	}, attrs)
 }
