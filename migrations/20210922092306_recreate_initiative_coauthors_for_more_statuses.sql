@@ -1,4 +1,4 @@
-SAVEPOINT coauthors;
+BEGIN;
 
 CREATE TABLE initiative_coauthors_new (
 	id INTEGER PRIMARY KEY NOT NULL,
@@ -87,4 +87,4 @@ CREATE UNIQUE INDEX index_initiative_coauthors_on_accepted_or_pending
 ON initiative_coauthors (initiative_uuid, country, personal_id, status)
 WHERE status IN ('accepted', 'pending');
 
-RELEASE coauthors;
+COMMIT;
