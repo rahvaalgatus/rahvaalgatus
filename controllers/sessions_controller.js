@@ -168,16 +168,16 @@ var SMART_ID_ERRORS = {
 exports.router = Router({mergeParams: true})
 exports.router.use(parseBody({type: hasSignatureType}))
 
+exports.router.get("/", function(req, res) {
+	if (req.user) res.redirect(302, "/user")
+	else res.redirect(302, "/sessions/new")
+})
+
 exports.router.get("/new", canonicalizeUrl, function(req, res) {
 	if (req.user)
 		res.redirect(302, referTo(req, req.headers.referer, "/user"))
 	else
 		res.render("sessions/create_page.jsx")
-})
-
-exports.router.get("/", function(req, res) {
-	if (req.user) res.redirect(302, "/user")
-	else res.redirect(302, "/sessions/new")
 })
 
 exports.router.post("/", next(function*(req, res, next) {
