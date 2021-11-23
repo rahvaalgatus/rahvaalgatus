@@ -5,6 +5,11 @@ var Config = require("root/config")
 var lazy = require("lazy-object").defineLazyProperty
 var ENV = process.env.ENV
 
+// eslint-disable-next-line no-extend-native
+Object.defineProperty(Object.prototype, "__proto__", {
+  value: undefined, configurable: true, writable: true
+})
+
 lazy(exports, "errorReporter", function() {
   switch (ENV) {
     case "staging":
