@@ -14,6 +14,7 @@ exports = module.exports = Router()
 
 exports.use(function(req, _res, next) {
 	if (req.user && isAdmin(req.user)) next()
+	else if (req.user) next(new HttpError(403, "Not an Admin"))
 	else next(new HttpError(401, "Not an Admin"))
 })
 

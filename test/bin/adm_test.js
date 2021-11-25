@@ -13,7 +13,17 @@ describe("Adm", function() {
 			})
 		})
 
-		describe("when logged in", function() {
+		describe("when logged in as user", function() {
+			require("root/test/fixtures").user()
+
+			it("must respond with 403", function*() {
+				var res = yield this.request(`/`)
+				res.statusCode.must.equal(403)
+				res.statusMessage.must.equal("Not an Admin")
+			})
+		})
+
+		describe("when logged in as admin", function() {
 			require("root/test/db")()
 			signInAsAdmin()
 
