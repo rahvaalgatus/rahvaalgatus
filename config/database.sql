@@ -96,16 +96,20 @@ CREATE TABLE IF NOT EXISTS "initiative_events" (
 	occurred_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
 	created_by TEXT,
 	title TEXT,
-	content TEXT, origin TEXT NOT NULL DEFAULT 'admin', external_id TEXT, type TEXT NOT NULL DEFAULT 'text', user_id INTEGER,
+	content TEXT, origin TEXT NOT NULL DEFAULT 'admin', external_id TEXT, type TEXT NOT NULL DEFAULT 'text', user_id INTEGER, notified_at TEXT,
 
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
 	FOREIGN KEY (user_id) REFERENCES users (id),
 
-	CONSTRAINT initiative_events_title_length
-	CHECK (length(title) > 0),
-
-	CONSTRAINT initiative_events_text_length
-	CHECK (length(content) > 0)
+	CONSTRAINT created_at_format CHECK (created_at GLOB '*-*-*T*:*:*Z'),
+	CONSTRAINT updated_at_format CHECK (updated_at GLOB '*-*-*T*:*:*Z'),
+	CONSTRAINT occurred_at_format CHECK (occurred_at GLOB '*-*-*T*:*:*Z'),
+	CONSTRAINT notified_at_format CHECK (notified_at GLOB '*-*-*T*:*:*Z'),
+	CONSTRAINT title_length CHECK (length(title) > 0),
+	CONSTRAINT content_length CHECK (length(content) > 0),
+	CONSTRAINT origin_length CHECK (length(origin) > 0),
+	CONSTRAINT external_id_length CHECK (length(external_id) > 0),
+	CONSTRAINT type_length CHECK (length(type) > 0)
 );
 CREATE INDEX index_initiative_events_on_initiative_uuid
 ON initiative_events (initiative_uuid);
@@ -184,10 +188,11 @@ CREATE TABLE IF NOT EXISTS "initiative_files" (
 	title TEXT,
 	url TEXT,
 	content BLOB NOT NULL,
-	content_type TEXT NOT NULL,
+	content_type TEXT NOT NULL, created_by_id INTEGER,
 
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
 	FOREIGN KEY (event_id) REFERENCES initiative_events (id) ON DELETE CASCADE,
+	FOREIGN KEY (created_by_id) REFERENCES users (id),
 
 	CONSTRAINT initiative_files_external_id_length
 	CHECK (length(external_id) > 0),
@@ -671,4 +676,8 @@ INSERT INTO migrations VALUES('20210921135127');
 INSERT INTO migrations VALUES('20210922092306');
 INSERT INTO migrations VALUES('20211115102500');
 INSERT INTO migrations VALUES('20211115102510');
+INSERT INTO migrations VALUES('20211125124900');
+INSERT INTO migrations VALUES('20211125124910');
+INSERT INTO migrations VALUES('20211125124920');
+INSERT INTO migrations VALUES('20211125124930');
 COMMIT;

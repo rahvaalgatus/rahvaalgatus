@@ -25,7 +25,7 @@ function Page(attrs, children) {
 			<LiveReload req={req} />
 		</head>
 
-		<body id={page + "-page"}>
+		<body id={page + "-page"} class={attrs.class}>
 			<header id="header">
 				<h1>Rahvaalgatus.ee Admin</h1>
 

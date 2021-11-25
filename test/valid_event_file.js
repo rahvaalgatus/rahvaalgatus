@@ -10,6 +10,7 @@ module.exports = function(attrs) {
 		name: _.uniqueId("document_") + ".pdf",
 		title: _.uniqueId("Document "),
 		created_at: createdAt,
+		created_by_id: null,
 		updated_at: createdAt,
 		content: _.uniqueId("Hello, world ") + "!",
 		content_type: "text/plain"

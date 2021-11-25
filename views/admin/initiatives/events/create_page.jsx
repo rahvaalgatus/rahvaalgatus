@@ -1,27 +1,26 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
-var Fragment = Jsx.Fragment
+var {Fragment} = Jsx
 var Page = require("../../page")
-var Form = Page.Form
-var Flash = Page.Flash
-var Config = require("root/config")
+var {Form} = Page
 var {selected} = require("root/lib/css")
-var linkify = require("root/lib/linkify")
-var formatDate = require("root/lib/i18n").formatDate
-var formatTime = require("root/lib/i18n").formatTime
+var {formatDate} = require("root/lib/i18n")
+var {formatTime} = require("root/lib/i18n")
+var {javascript} = require("root/lib/jsx")
 exports = module.exports = CreatePage
 exports.EventForm = EventForm
 
 function CreatePage(attrs) {
-	var req = attrs.req
-	var initiative = attrs.initiative
-	var event = attrs.event
-	var message = attrs.message
+	var {req} = attrs
+	var {initiative} = attrs
+	var {event} = attrs
+	var {subscriberCount} = attrs
 	var path = req.baseUrl + req.path
-	var frozenType = !!(event.id || message)
+	var frozenType = event.id != null
 
 	return <Page
 		page="create-event"
+		class="event-page"
 		title={"New Event for " + initiative.title}
 		req={req}
 	>
@@ -34,9 +33,6 @@ function CreatePage(attrs) {
 		</a>
 
 		<h1 class="admin-heading">New Event</h1>
-		<Flash flash={req.flash} />
-
-		{message ? <MessageView message={message} /> : null }
 
 		<menu id="event-type-tabs">
 			<a
@@ -59,22 +55,19 @@ function CreatePage(attrs) {
 		<div id="tab">
 			<EventForm
 				initiative={initiative}
+				subscriberCount={subscriberCount}
 				event={event}
 				req={req}
-				submit={message != null}>
-				<button class="admin-submit" name="action" value="preview">
-					Preview New Event
-				</button>
-			</EventForm>
+			/>
 		</div>
 	</Page>
 }
 
-function EventForm(attrs, children) {
-	var req = attrs.req
-	var initiative = attrs.initiative
-	var event = attrs.event
-	var submit = attrs.submit
+function EventForm(attrs) {
+	var {req} = attrs
+	var {initiative} = attrs
+	var {event} = attrs
+	var {subscriberCount} = attrs
 
 	var path = `${req.baseUrl}/${initiative.uuid}/events`
 	if (event.id) path += "/" + event.id
@@ -83,6 +76,8 @@ function EventForm(attrs, children) {
 		req={req}
 		action={path}
 		method={event.id ? "put" : "post"}
+		enctype="multipart/form-data"
+		id="event-form"
 		class="admin-form"
 	>
 		<input type="hidden" name="type" value={event.type} />
@@ -158,14 +153,99 @@ function EventForm(attrs, children) {
 			}
 		}()}
 
-		{children}
+		{event.id == null ? <Fragment>
+			<label class="admin-label">Failid</label>
 
-		{submit !== false ? <button
-			class="admin-danger-button admin-submit"
-			name="action"
-			value="create">
-			{event.id ? "Update Event" : "Create New Event"}
-		</button> : null}
+			<table id="files" class="admin-form-table">
+				<thead><tr>
+					<th>Fail</th>
+					<th>Pealkiri</th>
+					<th />
+				</tr></thead>
+
+				<tbody><tr>
+					<td><input type="file" name="files[]" required /></td>
+
+					<td class="title-column">
+						<input
+							type="text"
+							class="admin-input"
+							name="file_titles[]"
+							required
+							placeholder="Faili pealkiri"
+						/>
+					</td>
+
+					<td>
+						{event.id == null ? <button
+							class="admin-link remove-file-button"
+							type="button"
+						>
+							Eemalda
+						</button> : null}
+					</td>
+				</tr></tbody>
+
+				<tfoot><tr>
+					<td colspan="3">
+						<button
+							id="add-files-button"
+							class="admin-white-button"
+							type="button"
+						>
+							Lisa fail
+						</button>
+					</td>
+				</tr></tfoot>
+			</table>
+
+			<script>{javascript`
+				var button = document.getElementById("add-files-button")
+				var tBody = document.getElementById("files").tBodies[0]
+				var row = tBody.removeChild(tBody.rows[0])
+
+				button.addEventListener("click", function() {
+					tBody.appendChild(row.cloneNode(true))
+				})
+
+				tBody.addEventListener("click", function(ev) {
+					var el = ev.target
+
+					if (!(
+						el.tagName == "BUTTON" &&
+						el.classList.contains("remove-file-button")
+					)) return
+
+					var row = el.closest("tr")
+					row.parentNode.removeChild(row)
+				})
+			`}</script>
+		</Fragment> : null}
+
+		<div class="admin-submits">
+			{event.id == null ? <Fragment>
+				<button
+					class="admin-submit"
+					name="action"
+					value="create-and-notify">
+					Create Event and Notify
+				</button>
+				<span> or just </span>
+				<button
+					class="admin-link"
+					name="action"
+					value="create">
+					Create Event
+				</button>.
+			</Fragment> : <button class="admin-submit">
+				Update Event
+			</button>}
+		</div>
+
+		{event.id == null ? <p class="admin-paragraph subscriber-count">
+			<strong>{subscriberCount}</strong> people are subscribed
+			to notifications.
+		</p> : null}
 	</Form>
 }
 
@@ -193,23 +273,4 @@ function EventTimeView(attrs) {
 			/>
 		</div>
 	</Fragment>
-}
-
-function MessageView(attrs) {
-	var msg = attrs.message
-
-	return <article class="admin-message-preview">
-		<table>
-			<tr>
-				<th>From</th>
-				<td>{Config.email.from}</td>
-			</tr>
-			<tr>
-				<th>Subject</th>
-				<td>{msg.title}</td>
-			</tr>
-		</table>
-
-		<p>{Jsx.html(linkify(msg.text))}</p>
-	</article>
 }

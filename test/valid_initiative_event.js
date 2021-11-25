@@ -8,6 +8,7 @@ module.exports = function(attrs) {
 		created_at: createdAt,
 		updated_at: createdAt,
 		occurred_at: createdAt,
+		notified_at: null,
 		created_by: null,
 		user_id: null,
 		origin: "author",

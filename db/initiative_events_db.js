@@ -15,13 +15,16 @@ exports.parse = function(attrs) {
 	}, attrs)
 }
 
-exports.serialize = function(event) {
-	var attrs = _.defaults({
-		content: serializeContent(event.type, event.content)
-	}, event)
+exports.serialize = function(attrs) {
+	var obj = _.clone(attrs)
+	delete obj.files
 
-	delete attrs.files
-	return attrs
+	if ("content" in obj) {
+		if (obj.type == null) throw new Error("Need event type for content")
+		obj.content = serializeContent(obj.type, obj.content)
+	}
+
+	return obj
 }
 
 function parseContent(type, data) {

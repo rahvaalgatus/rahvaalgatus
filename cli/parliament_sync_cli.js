@@ -1,7 +1,6 @@
 var _ = require("root/lib/underscore")
 var Neodoc = require("neodoc")
 var Time = require("root/lib/time")
-var DateFns = require("date-fns")
 var Config = require("root/config")
 var Subscription = require("root/lib/subscription")
 var FetchError = require("fetch-error")
@@ -16,7 +15,8 @@ var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
-var renderEventTitle = require("root/lib/event").renderEventTitle
+var renderEventTitle = require("root/lib/event").renderTitle
+var isEventNotifiable = require("root/lib/event").isNotifiable
 var t = require("root/lib/i18n").t.bind(null, "et")
 var formatDate = require("root/lib/i18n").formatDate.bind(null, "numeric")
 var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
@@ -351,15 +351,9 @@ function* replaceEvents(initiative, eventAttrs) {
 		replaceEventFiles(event, event.files)
 	))
 
-	// Ignoring older events protects against situations where old initiatives in
-	// the parliament API get documents recreated. That happened in March
-	// 2020 when a few dozen old initiatives got new UUIDs, which in turn fired
-	// out hundreds of notification emails for new events.
-	var relevantFrom = DateFns.addMonths(DateFns.startOfDay(new Date), -3)
-
-	var relevantEvents = createdEvents.filter((ev) => (
-		ev.occurred_at >= relevantFrom
-	))
+	var relevantEvents = createdEvents.filter(
+		isEventNotifiable.bind(null, new Date)
+	)
 
 	if (relevantEvents.length > 0)
 		yield sendParliamentEventEmail(initiative, relevantEvents)

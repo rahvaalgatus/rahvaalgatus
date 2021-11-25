@@ -8,6 +8,7 @@ var runServer = require("root/lib/http").runServer
 var t = require("root/lib/i18n").t.bind(null, "en")
 var PORT = process.env.PORT || 3001
 var ENV = process.env.ENV
+var MEGABYTE = Math.pow(2, 20)
 var app = module.exports = Express.new()
 
 if (ENV == "development") {
@@ -17,7 +18,12 @@ if (ENV == "development") {
 
 app.use(require("cookie-parser")(Config.cookieSecret))
 app.use(require("body-parser").urlencoded({extended: true}))
-app.use(require("root/lib/middleware/multipart_form_middleware"))
+
+app.use(require("root/lib/middleware/multipart_form_middleware")({
+	fileSize: 50 * MEGABYTE,
+	files: 25
+}))
+
 app.use(require("root/lib/middleware/method_override_middleware"))
 app.use(require("root/lib/middleware/extension_middleware"))
 app.use(require("root/lib/middleware/cache_middleware"))

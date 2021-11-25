@@ -1,8 +1,7 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var Page = require("../../page")
-var Flash = Page.Flash
-var EventForm = require("./create_page").EventForm
+var {EventForm} = require("./create_page")
 
 module.exports = function(attrs) {
 	var req = attrs.req
@@ -23,7 +22,6 @@ module.exports = function(attrs) {
 		</a>
 
 		<h1 class="admin-heading">Edit Event</h1>
-		<Flash flash={req.flash} />
 		<EventForm initiative={initiative} event={event} req={req} />
 	</Page>
 }

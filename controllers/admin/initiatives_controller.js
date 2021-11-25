@@ -3,18 +3,17 @@ var Router = require("express").Router
 var Subscription = require("root/lib/subscription")
 var HttpError = require("standard-http-error")
 var Crypto = require("crypto")
-var Initiative = require("root/lib/initiative")
 var Time = require("root/lib/time")
 var Image = require("root/lib/image")
 var usersDb = require("root/db/users_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var imagesDb = require("root/db/initiative_images_db")
 var initiativesDb = require("root/db/initiatives_db")
-var messagesDb = require("root/db/initiative_messages_db")
+var filesDb = require("root/db/initiative_files_db")
 var eventsDb = require("root/db/initiative_events_db")
 var t = require("root/lib/i18n").t.bind(null, "et")
-var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var sql = require("sqlate")
+var isEventNotifiable = require("root/lib/event").isNotifiable
 var {countUndersignedSignaturesById} = require("root/lib/initiative")
 var {countCitizenOsSignaturesById} = require("root/lib/initiative")
 var next = require("co-next")
@@ -180,59 +179,122 @@ exports.router.delete("/:id/image", next(function*(req, res) {
 	res.redirect(req.baseUrl + "/" + initiative.uuid)
 }))
 
-exports.router.get("/:id/events/new", function(req, res) {
+exports.router.get("/:id/events/new", next(function*(req, res) {
+	var {initiative} = req
+
+	var subscriberCount =
+		yield subscriptionsDb.countConfirmedByInitiativeIdForEvent(initiative.uuid)
+
 	res.render("admin/initiatives/events/create_page.jsx", {
 		event: {
 			occurred_at: new Date,
 			type: req.query.type || "text",
 			title: "",
 			content: ""
-		}
+		},
+
+		subscriberCount
 	})
-})
+}))
+
+exports.router.post("/:id/events/notifications", next(function*(req, res) {
+	var {initiative} = req
+
+	var events = yield searchInitiativeNotifiableEvents(initiative, sql`
+		id IN ${sql.in(req.body.event_ids.map(Number))}
+	`)
+
+	if (events.length > 0) {
+		var subscribers =
+			yield subscriptionsDb.searchConfirmedByInitiativeIdForEvent(
+				initiative.uuid
+			)
+
+		yield Subscription.send(
+			Subscription.renderEventsEmail(t, initiative, events),
+			subscribers
+		)
+
+		yield eventsDb.execute(sql`
+			UPDATE initiative_events
+			SET notified_at = ${new Date}
+			WHERE id IN ${sql.in(events.map((ev) => ev.id))}
+		`)
+
+		res.statusMessage = "Notified"
+		res.flash("notice", `Notified ${subscribers.length} people.`)
+	}
+	else {
+		res.statusMessage = "No Events to Notify Of"
+		res.flash("error", "No events to notify of.")
+	}
+
+	res.redirect(req.baseUrl + "/" + initiative.uuid)
+}))
+
+exports.router.get("/:id/events/notifications/new", next(function*(req, res) {
+	var {initiative} = req
+	var events = yield searchInitiativeNotifiableEvents(initiative)
+
+	var subscriberCount =
+		yield subscriptionsDb.countConfirmedByInitiativeIdForEvent(initiative.uuid)
+
+	res.render("admin/initiatives/events/notify_page.jsx", {
+		events,
+		subscriberCount
+	})
+}))
 
 exports.router.post("/:id/events", next(function*(req, res) {
-	var initiative = req.initiative
+	var {initiative} = req
+	var {user} = req
 
 	var attrs = _.assign(parseEvent(null, req.body), {
 		initiative_uuid: initiative.uuid,
-		user_id: req.user.id,
+		user_id: user.id,
 		created_at: new Date,
 		updated_at: new Date
 	})
 
-	switch (req.body.action) {
-		case "preview":
-			res.render("admin/initiatives/events/create_page.jsx", {
-				event: attrs,
-				message: renderEventMessage(initiative, attrs)
-			})
-			break
+	var event = yield eventsDb.create(attrs)
 
-		case "create":
-			yield eventsDb.create(attrs)
+	if (req.files["files[]"]) {
+		var fileTitles = req.body.file_titles
 
-			var message = yield messagesDb.create({
-				__proto__: renderEventMessage(initiative, attrs),
-				initiative_uuid: initiative.uuid,
-				origin: "event",
-				created_at: new Date,
-				updated_at: new Date,
-			})
+		yield filesDb.create(req.files["files[]"].map((file, i) => ({
+			initiative_uuid: initiative.uuid,
+			event_id: event.id,
+			created_at: new Date,
+			created_by_id: user.id,
+			updated_at: new Date,
+			name: file.originalname,
+			title: fileTitles[i] || null,
+			content: file.buffer,
+			content_type: file.mimetype
+		})))
+	}
 
-			yield Subscription.send(
-				message,
-				yield subscriptionsDb.searchConfirmedByInitiativeIdForEvent(
-					initiative.uuid
-				)
+	if (req.body.action == "create-and-notify") {
+		var subscribers =
+			yield subscriptionsDb.searchConfirmedByInitiativeIdForEvent(
+				initiative.uuid
 			)
 
-			res.flash("notice", "Event created and message sent.")
-			res.redirect(req.baseUrl + "/" + initiative.uuid)
-			break
+		yield Subscription.send(
+			Subscription.renderEventsEmail(t, initiative, [event]),
+			subscribers
+		)
 
-		default: throw new HttpError(422, "Invalid Action")
+		yield eventsDb.update(event, {notified_at: new Date})
+
+		res.flash(
+			"notice",
+			`Event created and ${subscribers.length} people notified.`
+		)
 	}
+	else res.flash("notice", "Event created.")
+
+	res.redirect(req.baseUrl + "/" + initiative.uuid)
 }))
 
 exports.router.use("/:id/events/:eventId", next(function*(req, _res, next) {
@@ -262,6 +324,17 @@ exports.router.delete("/:id/events/:eventId", next(function*(req, res) {
 	res.flash("notice", "Event deleted.")
 	res.redirect(req.baseUrl + "/" + initiative.uuid)
 }))
+
+function* searchInitiativeNotifiableEvents(initiative, filter) {
+	var events = yield eventsDb.search(sql`
+		SELECT * FROM initiative_events
+		WHERE initiative_uuid = ${initiative.uuid}
+		${filter ? sql`AND ${filter}` : sql``}
+		ORDER BY created_at ASC
+	`)
+
+	return events.filter(isEventNotifiable.bind(null, new Date))
+}
 
 function parseInitiative(initiative, obj) {
 	var attrs = {}
@@ -382,41 +455,6 @@ function parseEvent(event, obj) {
 
 	function parseOccurredAt(obj) {
 		return Time.parseIsoDateTime(obj.occurredOn + "T" + obj.occurredAt + ":00")
-	}
-}
-
-function renderEventMessage(initiative, event) {
-	switch (event.type) {
-		case "text": return {
-			title: t("EMAIL_INITIATIVE_TEXT_EVENT_MESSAGE_TITLE", {
-				title: event.title,
-				initiativeTitle: initiative.title,
-			}),
-
-			text: renderEmail("EMAIL_INITIATIVE_TEXT_EVENT_MESSAGE_BODY", {
-				title: event.title,
-				text: _.quoteEmail(event.content),
-				initiativeTitle: initiative.title,
-				initiativeUrl: Initiative.initiativeUrl(initiative)
-			})
-		}
-
-		case "media-coverage": return {
-			title: t("EMAIL_INITIATIVE_MEDIA_COVERAGE_EVENT_MESSAGE_TITLE", {
-				title: event.title,
-				initiativeTitle: initiative.title,
-			}),
-
-			text: renderEmail("EMAIL_INITIATIVE_MEDIA_COVERAGE_EVENT_MESSAGE_BODY", {
-				title: event.title,
-				url: event.content.url,
-				publisher: event.content.publisher,
-				initiativeTitle: initiative.title,
-				initiativeUrl: Initiative.initiativeUrl(initiative)
-			})
-		}
-
-		default: throw new RangeError("Unsupported event type: " + event.type)
 	}
 }
 

@@ -8,7 +8,7 @@ var {searchInitiativesEvents} = require("./initiatives_controller")
 var {serializeApiInitiative} = require("./initiatives_controller")
 var next = require("co-next")
 var initiativesDb = require("root/db/initiatives_db")
-var renderEventTitle = require("root/lib/event").renderEventTitle
+var renderEventTitle = require("root/lib/event").renderTitle
 var sql = require("sqlate")
 
 exports.router = Router({mergeParams: true})

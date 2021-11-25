@@ -7,12 +7,13 @@ var DateFns = require("date-fns")
 var Config = require("root/config")
 var Page = require("../page")
 var I18n = require("root/lib/i18n")
-var Form = Page.Form
-var FormButton = Page.FormButton
-var Flash = Page.Flash
+var {Form} = Page
+var {FormButton} = Page
+var {Flash} = Page
 var Initiative = require("root/lib/initiative")
 var serializeImageUrl = require("root/lib/initiative").imageUrl
 var {isEditableEvent} = require("root/controllers/admin/initiatives_controller")
+var isEventNotifiable = require("root/lib/event").isNotifiable
 var {InitiativeDestinationSelectView} =
 	require("root/views/initiatives/read_page")
 var formatDate = require("root/lib/i18n").formatDate
@@ -467,6 +468,19 @@ module.exports = function(attrs) {
 				Events <span class="admin-count">({events.length})</span>
 			</h2>
 
+			{events.some(isEventNotifiable.bind(null, new Date)) ? <div
+				id="notify-events"
+			>
+				There are some events not yet notified of.
+				{" "}
+				<a
+					class="admin-link"
+					href={initiativePath + "/events/notifications/new"}
+				>
+					Preview Notifications
+				</a>
+			</div> : null}
+
 			<table class="admin-table">
 				<thead>
 					<th>Occurred On</th>
@@ -578,6 +592,11 @@ module.exports = function(attrs) {
 								<time datetime={event.occurred_at.toJSON()}>
 									{formatDateTime("isoish", event.occurred_at)}
 								</time>
+
+								{event.notified_at == null ? <Fragment>
+									<br />
+									<strong>Subscribers not yet notified.</strong>
+								</Fragment> : null}
 							</td>
 
 							<td>

@@ -109,8 +109,6 @@ button.admin-link {
 
 .admin-table,
 .admin-horizontal-table {
-  border-collapse: collapse;
-
 	& > thead > tr > th,
 	& > tbody > tr > th {
 		background: white;
@@ -166,7 +164,7 @@ button.admin-link {
 }
 
 .admin-primary-button,
-.admin-danger-button,
+.admin-white-button,
 .admin-submit {
 	border-radius: $button-radius;
 	border: 0px solid transparent;
@@ -195,19 +193,19 @@ button.admin-link {
 	color: $secondary-button-text;
 	border: 1px solid $secondary-button-border;
 
-	&:disabled, &.disabled {
+	&:disabled {
 		background: $secondary-background;
 		border: 1px solid darken($secondary-background, 10%);
 		color: $secondary-light-text;
 	}
 }
 
-.admin-danger-button {
-	background: $primary-button-background;
-	color: $primary-button-text;
-	border: 1px solid $primary-button-border;
+.admin-white-button {
+	background: $white-button-background;
+	color: $white-button-text;
+	border: .1rem solid $white-button-border;
 
-	&:disabled, &.disabled {
+	&:disabled {
 		background: $secondary-background;
 		border: 1px solid darken($secondary-background, 10%);
 		color: $secondary-light-text;
@@ -239,6 +237,10 @@ button.admin-link {
 		margin-top: 1rem;
 	}
 
+	.admin-submit + .admin-paragraph {
+		margin-top: 1rem;
+	}
+
 	button + button {
 		margin-left: 1rem;
 	}
@@ -249,6 +251,32 @@ button.admin-link {
 .admin-inline-form {
 	.admin-input ~ .admin-input,
 	.admin-input ~ .admin-submit { margin-left: 0.5rem; }
+}
+
+.admin-form-table {
+	line-height: 1.5;
+	font-size: 1.4rem;
+	width: 100%;
+
+	& > thead > tr > th {
+		font-weight: bold;
+	}
+
+	& > thead > tr > th,
+	& > tbody > tr > td,
+	& > tfoot > tr > td {
+		padding: 0.5rem 1rem;
+	}
+
+  & > thead > tr > th,
+  & > tfoot > tr > td {
+    background: $light-background;
+  }
+
+	& > thead > tr > th:first-child { border-top-left-radius: 0.5rem; }
+	& > thead > tr > th:last-child { border-top-right-radius: 0.5rem; }
+	& > tfoot > tr > td:first-child { border-bottom-left-radius: 0.5rem; }
+	& > tfoot > tr > td:last-child { border-bottom-right-radius: 0.5rem; }
 }
 
 .admin-label {
@@ -285,7 +313,7 @@ button.admin-link {
 	}
 }
 
-.admin-message-preview {
+.admin-email-preview {
 	background: white;
 	box-shadow: 0 1px 0.3rem 0 rgba(0, 0, 0, 0.2);
 	padding-top: 1.5rem;
@@ -319,17 +347,19 @@ textarea.admin-input {
 
 .flash {
 	display: inline-block;
-	border-radius: 5px;
-	border: 1px solid #d4d9df;
-	background: $light-background;
+	border-radius: 0.5rem;
+	background: white;
 	padding: 1rem 2rem;
 	white-space: pre-wrap;
 	font-size: 1.3rem;
 	font-weight: 600;
-	line-height: 1.3;
+	line-height: 1.5;
 	margin-bottom: 1rem;
 
 	&:empty { display: none; }
+
+	&.notice { background: #ceecb7; }
+	&.error { color: white; background: tomato; }
 }
 
 .admin-text {
@@ -341,7 +371,7 @@ textarea.admin-input {
 	a { @extend .admin-link; }
 }
 
-#dashboard-page {
+#dashboard-page main {
 	.overview-form {
 		display: block;
 		margin-bottom: 0.5rem;
@@ -361,7 +391,7 @@ textarea.admin-input {
 	}
 }
 
-#users-page {
+#users-page main {
 	.users {
 		em { font-style: italic; }
 	}
@@ -371,7 +401,7 @@ textarea.admin-input {
 	}
 }
 
-#user-page {
+#user-page main {
 	h1 ~ h2 {
 		margin-top: 4rem;
 	}
@@ -395,7 +425,7 @@ textarea.admin-input {
 	}
 }
 
-#initiative-page {
+#initiative-page main {
 	#production-link {
 		display: block;
 		margin-bottom: 1rem;
@@ -408,6 +438,13 @@ textarea.admin-input {
 
 	#initiative-table {
 		form ~ p { margin-top: 0.5rem; }
+	}
+
+	#notify-events {
+		border-radius: $button-radius;
+		background: white;
+		padding: 1.5rem 2rem;
+		margin-bottom: 1rem;
 	}
 
 	.events {
@@ -432,7 +469,7 @@ textarea.admin-input {
 	}
 }
 
-#signatures-page {
+#signatures-page main {
 	.options-form {
 		display: inline-block;
 		margin-bottom: 0.5rem;
@@ -482,7 +519,7 @@ textarea.admin-input {
 	}
 }
 
-#comments-page {
+#comments-page main {
 	.comments {
 		h3 {
 			font-weight: bold;
@@ -491,23 +528,33 @@ textarea.admin-input {
 	}
 }
 
-#initiative-subscriptions-page {
+#initiative-subscriptions-page main {
 	.download-link { float: right; }
 }
 
-#create-message-page {
-	h2 {
-		margin-top: 4rem;
-	}
+.event-page main {
+	#event-form {
+		#files {
+			.title-column {
+				input { width: 100%; }
+			}
 
-	textarea.admin-input {
-		min-height: 24rem;
-	}
+			tbody td input {
+				vertical-align: middle;
+			}
 
-	.admin-submit + button { margin-left: 1rem; }
+			tfoot {
+				text-align: center;
+			}
+		}
+
+		.subscriber-count {
+			margin-top: 1rem;
+		}
+	}
 }
 
-#create-event-page {
+#create-event-page main {
 	#event-type-tabs {
 		$tab-radius: 0.5rem;
 
@@ -540,6 +587,14 @@ textarea.admin-input {
 		margin-left: -$page-padding;
 		margin-right: -$page-padding;
 		padding: 2rem $page-padding;
+		background: white;
+	}
+}
+
+#update-event-page main {
+	#event-form {
+		padding: 2rem $page-padding;
+		border-radius: 0.5rem;
 		background: white;
 	}
 }

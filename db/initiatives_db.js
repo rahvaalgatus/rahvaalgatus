@@ -1,5 +1,4 @@
 var _ = require("root/lib/underscore")
-var O = require("oolong")
 var Db = require("root/lib/db")
 var MediaType = require("medium-type")
 var sql = require("sqlate")
@@ -10,7 +9,7 @@ exports.idAttribute = "uuid"
 exports.idColumn = "uuid"
 
 exports.parse = function(attrs) {
-	return O.defaults({
+	return _.defaults({
 		external: !!attrs.external,
 		undersignable: !!attrs.undersignable,
 		has_paper_signatures: !!attrs.has_paper_signatures,
@@ -66,7 +65,7 @@ exports.parse = function(attrs) {
 }
 
 exports.serialize = function(attrs) {
-	var obj = O.clone(attrs)
+	var obj = _.clone(attrs)
 	if ("media_urls" in obj) obj.media_urls = JSON.stringify(obj.media_urls)
 	if ("meetings" in obj) obj.meetings = JSON.stringify(obj.meetings)
 	if ("tags" in obj) obj.tags = JSON.stringify(obj.tags)
