@@ -6,6 +6,7 @@ var Form = Page.Form
 var formatDate = require("root/lib/i18n").formatDate
 var SignaturesController =
 	require("root/controllers/admin/initiative_signatures_controller")
+var {getBirthyearFromPersonalId} = SignaturesController
 var {getSexFromPersonalId} = SignaturesController
 var {getAgeRange} = SignaturesController
 var {serializeLocation} = SignaturesController
@@ -14,7 +15,6 @@ var {COLUMNS} = SignaturesController
 var COLUMN_TITLES = {
 	created_on: "Date",
 	initiative_uuid: "Initiative",
-	past_signatures: "Past Signatures (25mo)",
 	sex: "Sex",
 	age_range: "Age Range",
 	location: "From"
@@ -27,7 +27,6 @@ module.exports = function(attrs) {
 	var columns = attrs.columns
 	var timeFormat = attrs.timeFormat
 	var locationFormat = attrs.locationFormat
-	var groupBy = attrs.groupBy
 	var signatures = attrs.signatures || attrs.signers
 
 	return <Page page="signatures" title="Signature" req={attrs.req}>
@@ -56,32 +55,6 @@ module.exports = function(attrs) {
 				/>
 			</fieldset>
 
-			<fieldset class="signatures-or-signers-fields">
-				<h2>Group By</h2>
-
-				<label>
-					<input
-						type="radio"
-						name="group-by"
-						value=""
-						checked={groupBy == ""}
-					/>
-
-					Signature
-				</label>
-				{" or "}
-				<label>
-					<input
-						type="radio"
-						name="group-by"
-						value="signer"
-						checked={groupBy == "signer"}
-					/>
-
-					Signer
-				</label>
-			</fieldset>
-
 			<fieldset class="column-fields">
 				<h2>Columns</h2>
 
@@ -100,7 +73,7 @@ module.exports = function(attrs) {
 
 						{column == "created_on" ? <div>
 							Signing time as
-
+							{" "}
 							<label>
 								<input
 									type="radio"
@@ -108,7 +81,7 @@ module.exports = function(attrs) {
 									value="date"
 									checked={timeFormat == "date"}
 								/>
-
+								{" "}
 								Date
 							</label>
 							{" or "}
@@ -119,14 +92,14 @@ module.exports = function(attrs) {
 									value="week"
 									checked={timeFormat == "week"}
 								/>
-
+								{" "}
 								Week
 							</label>
 						</div> : null}
 
 						{column == "location" ? <div>
 							Location as
-
+							{" "}
 							<label>
 								<input
 									type="radio"
@@ -134,7 +107,7 @@ module.exports = function(attrs) {
 									value="text"
 									checked={locationFormat == "text"}
 								/>
-
+								{" "}
 								Text
 							</label>
 							{" or "}
@@ -145,7 +118,7 @@ module.exports = function(attrs) {
 									value="geoname"
 									checked={locationFormat == "geoname"}
 								/>
-
+								{" "}
 								GeoNames Id
 							</label>
 						</div> : null}
@@ -174,11 +147,6 @@ module.exports = function(attrs) {
 						{locationFormat == "text" ? "Location" : "GeoName Id"}
 					</th>
 
-					case "past_signatures": return <th>{groupBy == "signer"
-						? "Signatures within Timeframe"
-						: COLUMN_TITLES[column]
-					}</th>
-
 					default: return <th>{COLUMN_TITLES[column]}</th>
 				}})}</tr>
 			</thead>
@@ -187,7 +155,6 @@ module.exports = function(attrs) {
 				{_.sortBy(signatures, "created_at").reverse().map(function(sig) {
 					var initiativeUuid = sig.initiative_uuid
 					var initiativePath = `${req.rootUrl}/initiatives/${initiativeUuid}`
-					var birthdate = _.getBirthdateFromPersonalId(sig.personal_id)
 
 					return <tr>{columns.map((column) => { switch (column) {
 						case "created_on": return <td>{timeFormat == "date"
@@ -201,12 +168,12 @@ module.exports = function(attrs) {
 							</a>
 						</td>
 
-						case "past_signatures": return <td>{sig.past_signatures}</td>
 						case "sex": return <td>{getSexFromPersonalId(sig.personal_id)}</td>
 
-						case "age_range": return <td>
-							{getAgeRange(birthdate, sig.created_at)}
-						</td>
+						case "age_range": return <td>{getAgeRange(
+							new Date(getBirthyearFromPersonalId(sig.personal_id), 0, 1),
+							sig.created_at
+						)}</td>
 
 						case "location": return <td>
 							{sig.created_from ? (locationFormat == "text"
