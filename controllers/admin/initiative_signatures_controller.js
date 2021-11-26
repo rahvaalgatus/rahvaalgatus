@@ -19,6 +19,7 @@ var COLUMNS = [
 	"initiative_uuid",
 	"sex",
 	"age_range",
+	"method",
 	"location"
 ]
 
@@ -88,6 +89,8 @@ function serializeSignaturesAsCsv(
 			sig.created_at
 		)
 
+		case "method": return sig.method
+
 		case "location": return sig.created_from
 			? (locationFormat == "text"
 				? serializeLocation(sig.created_from)
@@ -149,18 +152,20 @@ function searchSignatures(from, to) {
 			SELECT
 				initiative_uuid,
 				created_at,
+				created_from,
 				country,
 				personal_id,
-				created_from
+				method
 
 			FROM initiative_signatures
 
 			UNION SELECT
 				initiative_uuid,
 				created_at,
+				NULL AS created_from,
 				country,
 				personal_id,
-				NULL AS created_from
+				NULL AS method
 
 			FROM initiative_citizenos_signatures
 		)
@@ -170,7 +175,8 @@ function searchSignatures(from, to) {
 			initiative.title AS initiative_title,
 			signature.created_at,
 			signature.created_from,
-			signature.personal_id
+			signature.personal_id,
+			signature.method
 
 		FROM signatures AS signature
 

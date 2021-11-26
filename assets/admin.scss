@@ -514,8 +514,12 @@ textarea.admin-input {
 		}
 	}
 
-	.admin-table {
+	#signatures-table {
 		margin-top: 2rem;
+
+		.method-column {
+			white-space: nowrap;
+		}
 	}
 }
 

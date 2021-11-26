@@ -17,6 +17,7 @@ var COLUMN_TITLES = {
 	initiative_uuid: "Initiative",
 	sex: "Sex",
 	age_range: "Age Range",
+	method: "Method",
 	location: "From"
 }
 
@@ -136,7 +137,7 @@ module.exports = function(attrs) {
 			</button>
 		</Form>
 
-		<table class="admin-table">
+		<table id="signatures-table" class="admin-table">
 			<thead>
 				<tr>{columns.map((column) => { switch (column) {
 					case "created_on": return <th>
@@ -174,6 +175,8 @@ module.exports = function(attrs) {
 							new Date(getBirthyearFromPersonalId(sig.personal_id), 0, 1),
 							sig.created_at
 						)}</td>
+
+						case "method": return <td class="method-column">{sig.method}</td>
 
 						case "location": return <td>
 							{sig.created_from ? (locationFormat == "text"
