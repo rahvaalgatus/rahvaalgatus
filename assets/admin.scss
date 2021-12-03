@@ -115,12 +115,15 @@ button.admin-link {
 		font-size: 1.5rem;
 		padding: 0.5rem 2rem;
 		font-weight: bold;
-		white-space: nowrap;
 
 		small {
 			font-weight: normal;
 			font-size: 1.3rem;
 		}
+	}
+
+	& > thead > tr > th {
+		white-space: nowrap;
 	}
 
   & > tbody {
@@ -438,6 +441,7 @@ textarea.admin-input {
 
 	#initiative-table {
 		form ~ p { margin-top: 0.5rem; }
+		th { max-width: 40rem; }
 	}
 
 	#notify-events {

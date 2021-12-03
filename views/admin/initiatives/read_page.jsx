@@ -14,6 +14,7 @@ var Initiative = require("root/lib/initiative")
 var serializeImageUrl = require("root/lib/initiative").imageUrl
 var {isEditableEvent} = require("root/controllers/admin/initiatives_controller")
 var isEventNotifiable = require("root/lib/event").isNotifiable
+var {anonymizeSignaturesReceivedAfterDays} = require("root/config")
 var {InitiativeDestinationSelectView} =
 	require("root/views/initiatives/read_page")
 var formatDate = require("root/lib/i18n").formatDate
@@ -187,8 +188,9 @@ module.exports = function(attrs) {
 			<tr>
 				<th scope="row">
 					Received by Parliament<br />
+
 					<small>
-						Signatures will be downloadable until initiative is received.
+						The date when Riigikogu confirmed reception of the initiative and its signatures. Signatures will not be downloadable after the initiative is marked received and will be anonymized {anonymizeSignaturesReceivedAfterDays} days later.
 					</small>
 				</th>
 
@@ -203,7 +205,14 @@ module.exports = function(attrs) {
 			</tr>
 
 			<tr>
-				<th scope="row">Accepted by Parliament</th>
+				<th scope="row">
+					Accepted by Parliament<br />
+
+					<small>
+						The date when Riigikogu confirmed the signatures and accepted the initiative for deliberation.
+					</small>
+				</th>
+
 				<td>
 					<DateInputForm
 						req={req}
@@ -301,8 +310,9 @@ module.exports = function(attrs) {
 			<tr>
 				<th scope="row">
 					Received by Government<br />
+
 					<small>
-						Signatures will be downloadable until initiative is received.
+						The date when the government confirmed reception of the initiative and its signatures. Signatures will not be downloadable after the initiative is marked received and will be anonymized {anonymizeSignaturesReceivedAfterDays} days later.
 					</small>
 				</th>
 
@@ -317,7 +327,14 @@ module.exports = function(attrs) {
 			</tr>
 
 			<tr>
-				<th scope="row">Accepted by Government</th>
+				<th scope="row">
+					Accepted by Government<br />
+
+					<small>
+						The date when the government confirmed the signatures (unless the initiative was forwarded from the parliament) and accepted the initiative for deliberation.
+					</small>
+				</th>
+
 				<td>
 					<DateInputForm
 						req={req}
