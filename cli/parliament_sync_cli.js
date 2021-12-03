@@ -352,7 +352,7 @@ function* replaceEvents(initiative, eventAttrs) {
 	))
 
 	var relevantEvents = createdEvents.filter(
-		isEventNotifiable.bind(null, new Date)
+		isEventNotifiable.bind(null, new Date, initiative)
 	)
 
 	if (relevantEvents.length > 0)

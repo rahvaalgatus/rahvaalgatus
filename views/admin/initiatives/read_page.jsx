@@ -485,7 +485,7 @@ module.exports = function(attrs) {
 				Events <span class="admin-count">({events.length})</span>
 			</h2>
 
-			{events.some(isEventNotifiable.bind(null, new Date)) ? <div
+			{events.some(isEventNotifiable.bind(null, new Date, initiative)) ? <div
 				id="notify-events"
 			>
 				There are some events not yet notified of.

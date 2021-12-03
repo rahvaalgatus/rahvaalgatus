@@ -333,7 +333,7 @@ function* searchInitiativeNotifiableEvents(initiative, filter) {
 		ORDER BY created_at ASC
 	`)
 
-	return events.filter(isEventNotifiable.bind(null, new Date))
+	return events.filter(isEventNotifiable.bind(null, new Date, initiative))
 }
 
 function parseInitiative(initiative, obj) {
