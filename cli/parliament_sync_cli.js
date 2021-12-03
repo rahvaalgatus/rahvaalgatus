@@ -889,7 +889,7 @@ function* readVolumeWithDocuments(api, uuid) {
 
 	volume.documents = (
 		yield (volume.documents || EMPTY_ARR).map(readDocument.bind(null, api))
-).filter(Boolean)
+	).filter(Boolean)
 
 	volume.relatedDocuments = (yield (
 		volume.relatedDocuments || EMPTY_ARR

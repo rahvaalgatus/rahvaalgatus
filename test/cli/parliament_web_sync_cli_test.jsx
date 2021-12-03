@@ -17,6 +17,7 @@ var sql = require("sqlate")
 var newUuid = _.compose(_.serializeUuid, _.uuidV4)
 var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
+var {respondWithNotFound} = require("./parliament_api")
 var WEB_INITIATIVES_PATH = "/tutvustus-ja-ajalugu/raakige-kaasa/esitage-kollektiivne-poordumine/riigikogule-esitatud-kollektiivsed-poordumised"
 var PARLIAMENT_URL = "https://www.riigikogu.ee"
 var DOCUMENT_URL = PARLIAMENT_URL + "/tegevus/dokumendiregister/dokument"
@@ -417,7 +418,7 @@ describe("ParliamentWebSyncCli", function() {
 		}, {
 			phase: "parliament",
 			received_by_parliament_at: new Date(2015, 5, 16, 13, 37, 42),
-			accepted_by_parliament_at: new Date(2015, 5, 18)
+			accepted_by_parliament_at: new Date(2015, 5, 17, 13, 37, 42, 666)
 		}, {
 			id: 1,
 			initiative_uuid: INITIATIVE_UUID,
@@ -458,9 +459,10 @@ describe("ParliamentWebSyncCli", function() {
 				}]
 			}
 		}, {
-			phase: "parliament",
+			phase: "done",
 			received_by_parliament_at: new Date(2015, 5, 16, 13, 37, 42),
-			accepted_by_parliament_at: new Date(2015, 5, 18)
+			accepted_by_parliament_at: new Date(2015, 5, 18),
+			finished_in_parliament_at: new Date(2015, 5, 18, 13, 37, 42, 666)
 		}, {
 			id: 1,
 			initiative_uuid: INITIATIVE_UUID,
@@ -586,8 +588,7 @@ describe("ParliamentWebSyncCli", function() {
 
 			var updated = yield initiativesDb.read(sql`SELECT * FROM initiatives`)
 
-			updated.must.eql(_.assign({
-				__proto__: initiative,
+			updated.must.eql(_.assign({}, initiative, {
 				parliament_api_data: updated.parliament_api_data,
 				parliament_synced_at: new Date
 			}, attrs))
@@ -668,13 +669,13 @@ describe("ParliamentWebSyncCli", function() {
 
 		var updated = yield initiativesDb.read(sql`SELECT * FROM initiatives`)
 
-		updated.must.eql({
+		_.clone(updated).must.eql(_.clone({
 			__proto__: initiative,
 			received_by_parliament_at: new Date(2015, 5, 16, 13, 37, 42),
-			accepted_by_parliament_at: new Date(2015, 5, 18),
+			accepted_by_parliament_at: new Date(2015, 5, 17, 13, 37, 42, 666),
 			parliament_api_data: updated.parliament_api_data,
 			parliament_synced_at: new Date
-		})
+		}))
 
 		yield eventsDb.search(sql`
 			SELECT * FROM initiative_events
@@ -794,10 +795,11 @@ describe("ParliamentWebSyncCli", function() {
 			created_at: new Date(2015, 5, 16, 13, 37, 42),
 			published_at: new Date(2015, 5, 16, 13, 37, 42),
 			title: "Elu paremaks!",
-			phase: "parliament",
+			phase: "done",
 			undersignable: false,
 			received_by_parliament_at: new Date(2015, 5, 16, 13, 37, 42),
 			accepted_by_parliament_at: new Date(2015, 5, 18),
+			finished_in_parliament_at: new Date(2015, 5, 19, 13, 37, 42),
 			parliament_uuid: INITIATIVE_UUID,
 			parliament_api_data: initiatives[0].parliament_api_data,
 			parliament_synced_at: new Date
@@ -995,6 +997,7 @@ describe("ParliamentWebSyncCli", function() {
 		}))
 
 		var minutesUuid = newUuid()
+		var unitAgendaUuid = newUuid()
 
 		this.router.get(`/api/volumes/${VOLUME_UUID}`, respond.bind(null, {
 			uuid: VOLUME_UUID,
@@ -1007,9 +1010,8 @@ describe("ParliamentWebSyncCli", function() {
 				title: "Kollektiivne pöördumine haruapteekide säilitamise osas",
 				documentType: "unitAgendaItemDocument",
 			}, {
-				// Include another unitAgendaItemDocument to ensure it doesn't get
-				// fetched.
-				uuid: newUuid(),
+				// Include a broken unitAgendaItemDocument for robustness checking.
+				uuid: unitAgendaUuid,
 				title: "Muud küsimused",
 				documentType: "unitAgendaItemDocument",
 			}, {
@@ -1018,6 +1020,11 @@ describe("ParliamentWebSyncCli", function() {
 				documentType: "protokoll"
 			}]
 		}))
+
+		this.router.get(
+			`/api/documents/${unitAgendaUuid}`,
+			respondWithNotFound.bind(null, unitAgendaUuid)
+		)
 
 		this.router.get(`/api/documents/${minutesUuid}`, respond.bind(null, {
 			uuid: DOCUMENT_UUID,
@@ -1096,6 +1103,8 @@ describe("ParliamentWebSyncCli", function() {
 			relatedVolumes: [{uuid: VOLUME_UUID}]
 		}))
 
+		var unitAgendaUuid = newUuid()
+
 		this.router.get(`/api/volumes/${VOLUME_UUID}`, respond.bind(null, {
 			uuid: VOLUME_UUID,
 			title: "Komisjoni istung esmaspäev, 18.06.2015 13:37",
@@ -1103,8 +1112,8 @@ describe("ParliamentWebSyncCli", function() {
 			volumeType: "unitSittingVolume",
 
 			documents: [{
-				// Include a unitAgendaItemDocument to ensure it doesn't get fetched.
-				uuid: newUuid(),
+				// Include a broken unitAgendaItemDocument for robustness checking.
+				uuid: unitAgendaUuid,
 				title: "Muud küsimused",
 				documentType: "unitAgendaItemDocument",
 			}, {
@@ -1113,6 +1122,11 @@ describe("ParliamentWebSyncCli", function() {
 				documentType: "protokoll"
 			}]
 		}))
+
+		this.router.get(
+			`/api/documents/${unitAgendaUuid}`,
+			respondWithNotFound.bind(null, unitAgendaUuid)
+		)
 
 		this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
 			uuid: DOCUMENT_UUID,
@@ -1303,20 +1317,10 @@ describe("ParliamentWebSyncCli", function() {
 
 		this.router.get(API_INITIATIVES_PATH, respond.bind(null, []))
 
-		this.router.get(`/api/documents/${INITIATIVE_UUID}`, function(_req, res) {
-			// 500 Internal Server Error is used for 404s...
-			// https://github.com/riigikogu-kantselei/api/issues/20
-			res.setHeader("Content-Type", "application/json")
-			res.statusCode = 500
-
-			res.end(JSON.stringify({
-				timestamp: "2015-06-18T13:37:42+0000",
-				status: 500,
-				error: "Internal Server Error",
-				message: `Document not found with UUID: ${INITIATIVE_UUID}`,
-				path: `/api/documents/${INITIATIVE_UUID}`
-			}))
-		})
+		this.router.get(
+			`/api/documents/${INITIATIVE_UUID}`,
+			respondWithNotFound.bind(null, INITIATIVE_UUID)
+		)
 
 		yield job()
 

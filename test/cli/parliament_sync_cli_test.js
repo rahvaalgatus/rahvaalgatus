@@ -22,6 +22,7 @@ var sql = require("sqlate")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var respondWithEmpty = respond.bind(null, {})
+var {respondWithNotFound} = require("./parliament_api")
 var outdent = require("root/lib/outdent")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
@@ -3011,7 +3012,12 @@ describe("ParliamentSyncCli", function() {
 			}]))
 
 			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
-			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respondWithNotFound)
+
+			this.router.get(
+				`/api/documents/${DOCUMENT_UUID}`,
+				respondWithNotFound.bind(null, INITIATIVE_UUID)
+			)
+
 			yield job()
 		})
 
@@ -3029,7 +3035,12 @@ describe("ParliamentSyncCli", function() {
 			}]))
 
 			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
-			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respondWithNotFound)
+
+			this.router.get(
+				`/api/documents/${DOCUMENT_UUID}`,
+				respondWithNotFound.bind(null, INITIATIVE_UUID)
+			)
+
 			yield job()
 		})
 
@@ -3044,7 +3055,11 @@ describe("ParliamentSyncCli", function() {
 			}]))
 
 			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
-			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respondWithNotFound)
+
+			this.router.get(
+				`/api/documents/${DOCUMENT_UUID}`,
+				respondWithNotFound.bind(null, INITIATIVE_UUID)
+			)
 
 			var err
 			try { yield job() } catch (ex) { err = ex }
@@ -3416,33 +3431,25 @@ describe("ParliamentSyncCli", function() {
 
 			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
 
-			var opionUuid = newUuid()
+			var opinionUuid = newUuid()
 
 			this.router.get(`/api/volumes/${VOLUME_UUID}`, respond.bind(null, {
 				uuid: VOLUME_UUID,
 				title: "Seaduse muutmise seaduse muutmise seadus",
 				volumeType: "eelnou",
 				created: "2015-06-18T13:37:42.666",
-				documents: [{uuid: opionUuid, documentType: "opinionDocument"}]
+				documents: [{uuid: opinionUuid, documentType: "opinionDocument"}]
 			}))
 
-			this.router.get(`/api/documents/${opionUuid}`, respondWithNotFound)
+			this.router.get(
+				`/api/documents/${opinionUuid}`,
+				respondWithNotFound.bind(null, opinionUuid)
+			)
+
 			yield job()
 		})
 	})
 })
-
-function respondWithNotFound(_req, res) {
-	// Their 404s are 500s... ^_-
-	res.statusCode = 500
-	res.setHeader("Content-Type", "application/json")
-
-	res.end(JSON.stringify({
-		error: "Internal Server Error",
-		message: `Document not found with UUID: ${DOCUMENT_UUID}`,
-		status: 500
-	}))
-}
 
 function respondWithRiigikoguDownload(contentType, content, req, res) {
 	// https://riigikogu.ee redirects to https://www.riigikogu.ee.
