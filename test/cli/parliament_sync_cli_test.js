@@ -1479,6 +1479,79 @@ describe("ParliamentSyncCli", function() {
 			})
 		})
 
+		it("must update committee meeting event files", function*() {
+			var requested = 0
+
+			// Update something in the initiative to get the initial diff.
+			this.router.get(INITIATIVES_URL, function(req, res) {
+				if (requested++ == 0) respond([{
+					uuid: INITIATIVE_UUID,
+					statuses: [{
+						date: "2018-10-24",
+						status: {code: "ARUTELU_KOMISJONIS"},
+						relatedDocuments: [{uuid: DOCUMENT_UUID}]
+					}]
+				}], req, res)
+				else respond([{
+					title: "Updated title",
+					uuid: INITIATIVE_UUID,
+
+					statuses: [{
+						date: "2018-10-24",
+						status: {code: "ARUTELU_KOMISJONIS"},
+						relatedDocuments: [{uuid: DOCUMENT_UUID}]
+					}]
+				}], req, res)
+			})
+
+			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+
+			this.router.get(`/api/documents/${DOCUMENT_UUID}`, function(req, res) {
+				if (requested == 1) respond({
+					uuid: DOCUMENT_UUID,
+					title: "Protokoll",
+					documentType: "protokoll",
+					files: []
+				}, req, res)
+				else respond({
+					uuid: DOCUMENT_UUID,
+					title: "Protokoll",
+					documentType: "protokoll",
+
+					files: [{
+						uuid: FILE_UUID,
+						fileName: "Protokoll.pdf",
+						accessRestrictionType: "PUBLIC"
+					}]
+				}, req, res)
+			})
+
+			this.router.get(`/download/${FILE_UUID}`,
+				respondWithRiigikoguDownload.bind(null, "application/pdf", "PDF")
+			)
+
+			yield job()
+			var event = yield eventsDb.read(sql`SELECT * FROM initiative_events`)
+			yield job()
+
+			yield eventsDb.read(event).must.then.eql(event)
+
+			yield filesDb.search(sql`
+				SELECT * FROM initiative_files
+			`).must.then.eql([new ValidFile({
+				id: 1,
+				event_id: 1,
+				initiative_uuid: event.initiative_uuid,
+				external_id: FILE_UUID,
+				name: "Protokoll.pdf",
+				title: "Protokoll",
+				url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
+				content: new Buffer("PDF"),
+				content_type: new MediaType("application/pdf"),
+				external_url: PARLIAMENT_URL + "/download/" + FILE_UUID
+			})])
+		})
+
 		it("must update decision", function*() {
 			var requestedInitiatives = 0
 			this.router.get(INITIATIVES_URL, function(req, res) {

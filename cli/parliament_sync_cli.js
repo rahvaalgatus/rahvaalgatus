@@ -333,13 +333,16 @@ function* replaceEvents(initiative, eventAttrs) {
 	`)
 
 	var eventsByExternalId = _.indexBy(events, "external_id")
+	var ignoreEvents = []
 	var createEvents = []
 	var updateEvents = []
 
 	eventAttrs.forEach(function(attrs) {
 		var event = eventsByExternalId[attrs.external_id]
 		if (event) attrs = mergeEvent(event, attrs)
-		if (event && !diffEvent(event, attrs)) return
+
+		if (event && !diffEvent(event, attrs))
+			return void ignoreEvents.push(_.defaults({files: attrs.files}, event))
 
 		attrs.updated_at = new Date
 		if (event) return void updateEvents.push([event, attrs])
@@ -365,7 +368,7 @@ function* replaceEvents(initiative, eventAttrs) {
 	var createdEvents = yield eventsDb.create(createEvents)
 
 	events = _.lastUniqBy(_.concat(
-		events,
+		ignoreEvents,
 		createdEvents,
 		yield updateEvents.map((eventAndAttrs) => eventsDb.update(...eventAndAttrs))
 	), (ev) => ev.id)
@@ -1037,8 +1040,10 @@ function mergeEvent(event, attrs) {
 			break
 	}
 
-	if (event.files && attrs.files)
-		attrs.files = _.concat(event.files, attrs.files)
+	if (event.files) attrs.files = (
+		event.files.length > 0 &&
+		attrs.files && attrs.files.length > 0
+	) ? _.concat(event.files, attrs.files) : event.files
 
 	return attrs
 }
