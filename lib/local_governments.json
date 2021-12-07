@@ -268,7 +268,9 @@
 		"initiativesEmails": [
 			"narvalv@narva.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"46704193715"
+		],
 		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/narva-linn"
 	},
