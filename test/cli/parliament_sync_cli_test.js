@@ -1320,6 +1320,95 @@ describe("ParliamentSyncCli", function() {
 			})])
 		})
 
+		it("must create events given status with related volumes", function*() {
+			var initiative = yield initiativesDb.create(new ValidInitiative({
+				user_id: (yield usersDb.create(new ValidUser)).id,
+				parliament_uuid: INITIATIVE_UUID
+			}))
+
+			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+				uuid: INITIATIVE_UUID,
+
+				statuses: [{
+					date: "2015-06-18",
+					status: {code: "ARUTELU_KOMISJONIS"},
+					relatedVolumes: [{uuid: VOLUME_UUID}]
+				}]
+			}]))
+
+			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+
+			this.router.get(`/api/volumes/${VOLUME_UUID}`, respond.bind(null, {
+				uuid: VOLUME_UUID,
+				title: "Komisjoni avalik ühisistung esmaspäev, 18.06.2015",
+				reference: "1-3/KEKK/3-7",
+				volumeType: "unitSittingVolume",
+
+				documents: [{
+					uuid: DOCUMENT_UUID,
+					title: "Protokoll",
+					documentType: "protokoll"
+				}]
+			}))
+
+			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
+				uuid: DOCUMENT_UUID,
+				title: "Protokoll",
+				documentType: "protokoll",
+
+				files: [{
+					uuid: FILE_UUID,
+					fileName: "Protokoll.pdf",
+					accessRestrictionType: "PUBLIC"
+				}]
+			}))
+
+			this.router.get(`/download/${FILE_UUID}`,
+				respondWithRiigikoguDownload.bind(null, "application/pdf", "PDF")
+			)
+
+			yield job()
+
+			var updatedInitiative = yield initiativesDb.read(initiative)
+			updatedInitiative.must.eql(_.assign({}, initiative, {
+				parliament_api_data: updatedInitiative.parliament_api_data,
+				parliament_synced_at: new Date
+			}))
+
+			yield eventsDb.search(sql`
+				SELECT * FROM initiative_events
+			`).must.then.eql([new ValidEvent({
+				id: 1,
+				initiative_uuid: initiative.uuid,
+				occurred_at: new Date(2015, 5, 18),
+				origin: "parliament",
+				external_id: "ARUTELU_KOMISJONIS/2015-06-18",
+				type: "parliament-committee-meeting",
+				title: null,
+
+				content: {
+					committee: "Keskkonnakomisjon",
+					invitees: null,
+					links: []
+				}
+			})])
+
+			yield filesDb.search(sql`
+				SELECT * FROM initiative_files
+			`).must.then.eql([new ValidFile({
+				id: 1,
+				event_id: 1,
+				initiative_uuid: initiative.uuid,
+				external_id: FILE_UUID,
+				name: "Protokoll.pdf",
+				title: "Protokoll",
+				url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
+				content: new Buffer("PDF"),
+				content_type: new MediaType("application/pdf"),
+				external_url: PARLIAMENT_URL + "/download/" + FILE_UUID
+			})])
+		})
+
 		it("must update acceptance event", function*() {
 			var requested = 0
 			this.router.get(INITIATIVES_URL, function(req, res) {
@@ -1950,6 +2039,45 @@ describe("ParliamentSyncCli", function() {
 				content_type: new MediaType("application/octet-stream")
 			}]],
 
+			"committee meeting protocol with date and time with periods": [{
+				relatedDocuments: [{uuid: DOCUMENT_UUID}]
+			}, {
+				[DOCUMENT_UUID]: {
+					uuid: DOCUMENT_UUID,
+					title: "Protokoll",
+					documentType: "protokoll",
+
+					volume: {
+						uuid: VOLUME_UUID,
+						reference: "1-3/KEKK/3-7",
+						title: "Komisjoni istung teisipäev, 18.06.2015 13.37",
+						volumeType: "unitSittingVolume",
+					},
+
+					files: [{
+						uuid: FILE_UUID,
+						fileName: "Protokoll.pdf",
+						accessRestrictionType: "PUBLIC"
+					}]
+				}
+			}, {
+				occurred_at: new Date(2015, 5, 18, 13, 37),
+				origin: "parliament",
+				external_id: "ARUTELU_KOMISJONIS/2015-06-18",
+				type: "parliament-committee-meeting",
+				title: null,
+				content: {committee: "Keskkonnakomisjon", invitees: null}
+			}, [{
+				id: 1,
+				event_id: 1,
+				external_id: FILE_UUID,
+				name: "Protokoll.pdf",
+				title: "Protokoll",
+				url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
+				content: EXAMPLE_BUFFER,
+				content_type: new MediaType("application/octet-stream")
+			}]],
+
 			"committee meeting protocol with date and time with \"kell\"": [{
 				relatedDocuments: [{uuid: DOCUMENT_UUID}]
 			}, {
@@ -2437,6 +2565,54 @@ describe("ParliamentSyncCli", function() {
 				content_type: new MediaType("application/octet-stream")
 			}]],
 
+			// Ensures the latest committee from the initiative is not used in
+			// situations where we have the protocol.
+			"ARUTELU_KOMISJONIS status and joint committee meeting protocol": [{
+				statuses: [{date: "2015-06-18", status: {code: "ARUTELU_KOMISJONIS"}}],
+				responsibleCommittee: [{name: "Rahanduskomisjon"}],
+				relatedDocuments: [{uuid: DOCUMENT_UUID}]
+			}, {
+				[DOCUMENT_UUID]: {
+					uuid: DOCUMENT_UUID,
+					title: "Protokoll",
+					documentType: "protokoll",
+
+					volume: {
+						uuid: VOLUME_UUID,
+						reference: "1-3/YHIS/3-7",
+						title: "Komisjonide ühisistung teisipäev, 18.06.2015 13:37",
+						volumeType: "unitSittingVolume",
+					},
+
+					files: [{
+						uuid: FILE_UUID,
+						fileName: "Protokoll.pdf",
+						accessRestrictionType: "PUBLIC"
+					}]
+				}
+			}, {
+				occurred_at: new Date(2015, 5, 18, 13, 37),
+				origin: "parliament",
+				external_id: "ARUTELU_KOMISJONIS/2015-06-18",
+				type: "parliament-committee-meeting",
+				title: null,
+
+				content: {
+					committee: null,
+					invitees: null,
+					links: []
+				}
+			}, [{
+				id: 1,
+				event_id: 1,
+				external_id: FILE_UUID,
+				name: "Protokoll.pdf",
+				title: "Protokoll",
+				url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
+				content: EXAMPLE_BUFFER,
+				content_type: new MediaType("application/octet-stream")
+			}]],
+
 			"MENETLUS_LOPETATUD status and response letter": [{
 				statuses: [{date: "2015-06-18", status: {code: "MENETLUS_LOPETATUD"}}],
 				relatedDocuments: [{uuid: DOCUMENT_UUID}]
@@ -2797,6 +2973,7 @@ describe("ParliamentSyncCli", function() {
 
 				volume: {
 					uuid: VOLUME_UUID,
+					reference: `1-3/LEET/3-7`,
 					title: "Secret meetings 2015",
 					volumeType: "unitSittingVolume",
 				},

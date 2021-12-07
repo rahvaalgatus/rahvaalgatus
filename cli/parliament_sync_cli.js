@@ -12,8 +12,6 @@ var eventsDb = require("root/db/initiative_events_db")
 var filesDb = require("root/db/initiative_files_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
-var concat = Array.prototype.concat.bind(Array.prototype)
-var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var renderEventTitle = require("root/lib/event").renderTitle
 var isEventNotifiable = require("root/lib/event").isNotifiable
@@ -41,6 +39,21 @@ Options:
     --cached     Do not refresh initiatives from the parliament API.
     --quiet      Do not report ignored initiatives and documents.
 `
+
+// https://www.riigikogu.ee/riigikogu/koosseis/muudatused-koosseisus/
+var COMMITTEES = {
+	ELAK: "Euroopa Liidu asjade komisjon",
+	KEKK: "Keskkonnakomisjon",
+	KULK: "Kultuurikomisjon",
+	MAEK: "Maaelukomisjon",
+	MAJK: "Majanduskomisjon",
+	PÕSK: "Põhiseaduskomisjon",
+	RAHK: "Rahanduskomisjon",
+	RIKK: "Riigikaitsekomisjon",
+	SOTK: "Sotsiaalkomisjon",
+	VÄLK: "Väliskomisjon",
+	ÕIGK: "Õiguskomisjon"
+}
 
 function* cli(argv) {
   var args = Neodoc.run(USAGE_TEXT, {argv: argv || ["parliament-sync"]})
@@ -71,7 +84,7 @@ function* sync(opts, uuid) {
 
 	var docs = yield (uuid == null
 		? api("documents/collective-addresses").then(getBody)
-		: api(`documents/collective-addresses/${uuid}`).then(getBody).then(concat)
+		: api(`documents/collective-addresses/${uuid}`).then(getBody).then(_.concat)
 	)
 
 	var pairs = _.zip(yield docs.map(readInitiative.bind(null, opts)), docs)
@@ -215,13 +228,17 @@ function* syncInitiativeDocuments(api, doc) {
 		readVolumeWithDocuments.bind(null, api)
 	)
 
-	doc.statuses = (yield (doc.statuses || []).map(function*(status) {
+	doc.statuses = yield (doc.statuses || []).map(function*(status) {
 		return _.assign({}, status, {
-			relatedDocuments: (
-				yield (status.relatedDocuments || []).map(readDocument.bind(null, api))
-			).filter(Boolean)
+			relatedDocuments: yield (status.relatedDocuments || []).map(
+				readDocument.bind(null, api)
+			).filter(Boolean),
+
+			relatedVolumes: yield (status.relatedVolumes || []).map((volume) => (
+				readVolumeWithDocuments(api, volume.uuid)
+			))
 		})
-	}))
+	})
 
 	return doc
 }
@@ -242,13 +259,18 @@ function* replaceInitiative(opts, initiative, document) {
 
 	yield replaceFiles(initiative, document)
 
-	var volumes = concat(
+	var volumes = _.concat(
 		document.volume || EMPTY_ARR,
 		document.relatedVolumes,
 		document.missingVolumes
 	)
 
-	var documents = document.relatedDocuments
+	var volumeUuids = new Set(_.map(volumes, "uuid"))
+
+	var documents = document.relatedDocuments.filter((doc) => (
+		doc.volume == null || !volumeUuids.has(doc.uuid)
+	))
+
 	var eventAttrs = []
 
 	// Unique drops later duplicates, which is what we prefer here.
@@ -258,20 +280,21 @@ function* replaceInitiative(opts, initiative, document) {
 	// days prior. Let's assume the earlier entry is canonical and of more
 	// interest to people, and the later MENETLUS_LOPETATUD status perhaps
 	// formality.
-	;[eventAttrs, documents] = _.map1st(concat.bind(null, eventAttrs), _.mapM(
+	;[eventAttrs, documents] = _.map1st(_.concat.bind(null, eventAttrs), _.mapM(
 		_.uniqBy(statuses, eventIdFromStatus),
 		documents,
-		eventAttrsFromStatus.bind(null, document)
+		eventAttrsFromStatus.bind(null, opts, initiative, document)
 	))
 
-	;[eventAttrs, documents] = _.map1st(concat.bind(null, eventAttrs), _.mapM(
-		volumes,
-		documents,
+	var [volumeEventsAttrs, addedDocuments] = _.unzip(volumes.map(
 		eventAttrsFromVolume.bind(null, opts, initiative)
 	))
 
+	eventAttrs = _.concat(eventAttrs, volumeEventsAttrs)
+	documents = _.concat(documents, _.flatten(addedDocuments))
+
 	;[eventAttrs, documents] = _.map1st(
-		concat.bind(null, eventAttrs),
+		_.concat.bind(null, eventAttrs),
 		_.partitionMap(documents, eventAttrsFromDocument)
 	)
 
@@ -341,7 +364,7 @@ function* replaceEvents(initiative, eventAttrs) {
 
 	var createdEvents = yield eventsDb.create(createEvents)
 
-	events = _.lastUniqBy(concat(
+	events = _.lastUniqBy(_.concat(
 		events,
 		createdEvents,
 		yield updateEvents.map((eventAndAttrs) => eventsDb.update(...eventAndAttrs))
@@ -494,7 +517,13 @@ function attrsFromEvent(event) {
 	}
 }
 
-function eventAttrsFromStatus(document, documents, status) {
+function eventAttrsFromStatus(
+	opts,
+	initiative,
+	initiativeDocument,
+	otherDocuments,
+	status
+) {
 	var eventDate = Time.parseIsoDate(status.date)
 	var eventDocuments = []
 
@@ -505,9 +534,17 @@ function eventAttrsFromStatus(document, documents, status) {
 		occurred_at: eventDate
 	}
 
+	var committee
+
 	switch (status.status.code) {
 		case "MENETLUSSE_VOETUD":
-			;[eventDocuments, documents] = _.partition(documents, function(doc) {
+			committee = getLatestCommittee(initiativeDocument)
+			attrs.content = {committee: committee && committee.name || null}
+
+			;[
+				eventDocuments,
+				otherDocuments
+			] = _.partition(otherDocuments, function(doc) {
 				var documentTime
 
 				return (
@@ -520,63 +557,34 @@ function eventAttrsFromStatus(document, documents, status) {
 			break
 
 		case "ARUTELU_KOMISJONIS":
-			;[eventDocuments, documents] = _.partition(documents, function(doc) {
+			;[
+				eventDocuments,
+				otherDocuments
+			] = _.partition(otherDocuments, function(doc) {
 				var documentTime
 
-				// TODO: Ensure you don't find protocols of non-committee meetings.
 				return (
-					doc.documentType == "protokoll" &&
+					isParliamentCommitteeMeetingProtocolDocument(doc) &&
 					(documentTime = parseProtocolDateTime(doc)) &&
 					Time.isSameDate(eventDate, documentTime)
 				)
 			})
-			break
 
-		case "MENETLUS_LOPETATUD":
-			;[eventDocuments, documents] = _.partition(
-				documents,
-				isParliamentResponseDocument
+			var protocol = eventDocuments.find(
+				isParliamentCommitteeMeetingProtocolDocument
 			)
-			break
-	}
 
-	eventDocuments = concat(status.relatedDocuments || EMPTY_ARR, eventDocuments)
-
-	// Create separate events for incoming letters. Outgoing letters on the other
-	// hand may be due to the event, as is with parliament-finished event's final
-	// reply.
-	var letterDocuments
-	;[letterDocuments, eventDocuments] = _.partition(eventDocuments, (doc) => (
-		doc.documentType == "letterDocument" &&
-		parseLetterDirection(doc.direction) == "incoming"
-	))
-
-	documents = documents.concat(letterDocuments)
-
-	attrs.files = flatten(eventDocuments.map((doc) => (
-		newDocumentFiles(doc, doc.files || EMPTY_ARR)
-	)))
-
-	var committee
-
-	switch (status.status.code) {
-		case "MENETLUSSE_VOETUD":
-			committee = getLatestCommittee(document)
-			attrs.content = {committee: committee && committee.name || null}
-			break
-
-		case "ARUTELU_KOMISJONIS":
-			var protocol = eventDocuments[0]
 			var protocolTime = protocol && parseProtocolDateTime(protocol)
 			if (protocolTime) attrs.occurred_at = protocolTime
 
-			committee = getLatestCommittee(document)
+			committee = getLatestCommittee(initiativeDocument)
 
 			attrs.content = {
 				committee: (
-					protocol && parseProtocolCommittee(protocol) ||
-					committee && committee.name ||
-					null
+					// Don't default to the latest committee if there's a protocol, as it
+					// might be an old event.
+					protocol ? parseProtocolDocumentCommittee(protocol) :
+					committee && committee.name || null
 				),
 
 				invitees: null,
@@ -592,9 +600,42 @@ function eventAttrsFromStatus(document, documents, status) {
 				links: (status.relatedOuterLinks || EMPTY_ARR).map(parseLink)
 			}
 			break
+
+		case "MENETLUS_LOPETATUD":
+			;[eventDocuments, otherDocuments] = _.partition(
+				otherDocuments,
+				isParliamentResponseDocument
+			)
+			break
 	}
 
-	return [attrs, documents]
+	eventDocuments = _.concat(
+		status.relatedDocuments || EMPTY_ARR,
+		eventDocuments
+	)
+
+	// Create separate events for incoming letters. Outgoing letters on the other
+	// hand may be due to the event, as is with parliament-finished event's final
+	// reply.
+	var letterDocuments
+	;[letterDocuments, eventDocuments] = _.partition(eventDocuments, (doc) => (
+		doc.documentType == "letterDocument" &&
+		parseLetterDirection(doc.direction) == "incoming"
+	))
+
+	otherDocuments = otherDocuments.concat(letterDocuments)
+
+	attrs.files = _.flatten(eventDocuments.map((doc) => (
+		newDocumentFiles(doc, doc.files || EMPTY_ARR)
+	)))
+
+	attrs = (status.relatedVolumes || EMPTY_ARR).map(
+		eventAttrsFromVolume.bind(null, opts, initiative)
+	).map(_.first).filter(Boolean).filter((ev) => (
+		ev.external_id == attrs.external_id
+	)).reduce(mergeEvent, attrs)
+
+	return [attrs, otherDocuments]
 }
 
 function eventAttrsFromDocument(document) {
@@ -662,7 +703,7 @@ function eventAttrsFromDocument(document) {
 		}
 	}
 
-	if (isParliamentBoardMeetingDocument(document)) {
+	if (isParliamentBoardMeetingProtocolDocument(document)) {
 		let time = parseInlineDateWithMaybeTime(document.title)
 
 		return {
@@ -676,10 +717,10 @@ function eventAttrsFromDocument(document) {
 		}
 	}
 
-	if (isParliamentCommitteeMeetingDocument(document)) {
+	if (isParliamentCommitteeMeetingProtocolDocument(document)) {
 		let time = parseProtocolDateTime(document)
-		var committee = parseProtocolCommittee(document)
-		if (time == null || committee == null) return null
+		var committee = parseProtocolDocumentCommittee(document)
+		if (time == null) return null
 
 		return {
 			type: "parliament-committee-meeting",
@@ -705,16 +746,16 @@ function eventAttrsFromDocument(document) {
 	return null
 }
 
-function eventAttrsFromVolume(opts, initiative, documents, volume) {
+function eventAttrsFromVolume(opts, initiative, volume) {
 	if (isCommitteeMeetingVolume(volume)) {
+		// The meeting volume does not have a date property, so we have to resort
+		// to parsing it from the title.
 		var time = parseInlineDateWithMaybeTime(volume.title)
 		if (time == null) return null
 
-		var topic = documents.find((doc) => (
+		var topic = volume.documents.find((doc) => (
 			isMeetingTopicDocument(doc) && doc.volume.uuid == volume.uuid
 		))
-
-		documents = _.reject(documents, (doc) => doc.volume.uuid == volume.uuid)
 
 		return [{
 			type: "parliament-committee-meeting",
@@ -723,14 +764,16 @@ function eventAttrsFromVolume(opts, initiative, documents, volume) {
 			occurred_at: time,
 
 			content: {
-				committee: parseCommitteeReference(volume.reference),
+				committee:
+					COMMITTEES[parseReference(volume.reference)] || null,
+
 				invitees: topic && topic.invitees || null
 			},
 
-			files: flatten(volume.documents.map((doc) => (
+			files: _.flatten(volume.documents.map((doc) => (
 				newDocumentFiles(doc, doc.files || EMPTY_ARR)
 			)))
-		}, documents]
+		}, []]
 	}
 
 	if (volume.volumeType == "interpellationsVolume") {
@@ -753,14 +796,14 @@ function eventAttrsFromVolume(opts, initiative, documents, volume) {
 				deadline: question.answerDeadline
 			},
 
-			files: flatten(volume.documents.map((doc) => (
+			files: _.flatten(volume.documents.map((doc) => (
 				newDocumentFiles(doc, doc.files || EMPTY_ARR)
 			)))
-		}, documents]
+		}, []]
 	}
 
 	if (volume.volumeType == "letterVolume")
-		return [null, concat(documents, volume.documents, volume.relatedDocuments)]
+		return [null, _.concat(volume.documents, volume.relatedDocuments)]
 
 	if (!opts.quiet) logger.warn(
 		"Ignored initiative %s volume %s (%s)",
@@ -769,7 +812,7 @@ function eventAttrsFromVolume(opts, initiative, documents, volume) {
 		volume.title
 	)
 
-	return [null, documents]
+	return [null, []]
 }
 
 function fileAttrsFrom(document, file) {
@@ -829,7 +872,7 @@ function parseMeetingDecision(obj) {
 
 function parseInlineDateWithMaybeTime(str) {
 	var parts =
-		/\b(\d?\d)\.(\d?\d)\.(\d\d\d\d)(?: (?:kell )?(\d?\d):(\d\d))?\b/.exec(str)
+		/\b(\d?\d)\.(\d?\d)\.(\d\d\d\d)(?: (?:kell )?(\d?\d)[:.](\d\d))?\b/.exec(str)
 
 	return parts && new Date(
 		+parts[3],
@@ -855,7 +898,9 @@ function normalizeParliamentDocumentForDiff(document) {
 		// NOTE: Diffing happens before documents and volumes have been populated
 		// and therefore don't contain files and documents respectively.
 		__proto__: document,
-		statuses: document.statuses && sortStatuses(document.statuses),
+
+		statuses: document.statuses &&
+			sortStatuses(document.statuses.map(normalizeStatus)),
 
 		relatedDocuments:
 			documents && _.sortBy(documents.map(normalizeDocument), "uuid"),
@@ -877,6 +922,16 @@ function normalizeParliamentDocumentForDiff(document) {
 			volumeType: volume.volumeType,
 			documents: (volume.documents || EMPTY_ARR).map(normalizeDocument)
 		}
+	}
+
+	function normalizeStatus(status) {
+		return _.defaults({
+			relatedDocuments: status.relatedDocuments &&
+				status.relatedDocuments.map(normalizeDocument),
+
+			relatedVolumes: status.relatedVolumes &&
+				status.relatedVolumes.map(normalizeVolume)
+		}, status)
 	}
 }
 
@@ -916,7 +971,7 @@ function sortStatuses(statuses) {
 function isCommitteeMeetingVolume(volume) {
 	return (
 		volume.volumeType == "unitSittingVolume" &&
-		volume.reference && parseCommitteeReference(volume.reference)
+		volume.reference && isCommitteeReference(parseReference(volume.reference))
 	)
 }
 
@@ -931,14 +986,17 @@ function isParliamentAcceptanceDocument(document) {
 	)
 }
 
-function isParliamentCommitteeMeetingDocument(document) {
-	return (
-		document.documentType == "protokoll" &&
-		parseProtocolCommittee(document) != null
-	)
+function isParliamentCommitteeMeetingProtocolDocument(document) {
+	if (!document.documentType == "protokoll") return null
+	return isCommitteeReference(parseDocumentReference(document))
 }
 
-function isParliamentBoardMeetingDocument(document) {
+function isCommitteeReference(reference) {
+	// Some joint meetings have a reference of "YHIS".
+	return reference in COMMITTEES || reference == "YHIS"
+}
+
+function isParliamentBoardMeetingProtocolDocument(document) {
 	return (
 		document.documentType == "protokoll" &&
 		document.title.match(/\bjuhatuse\b/)
@@ -973,10 +1031,14 @@ function mergeEvent(event, attrs) {
 
 			break
 
+		case "parliament-plenary-meeting":
 		case "parliament-decision":
 			attrs.content = _.assign({}, event.content, attrs.content)
 			break
 	}
+
+	if (event.files && attrs.files)
+		attrs.files = _.concat(event.files, attrs.files)
 
 	return attrs
 }
@@ -1022,29 +1084,15 @@ function parseProtocolDateTime(document) {
 	)
 }
 
-// https://www.riigikogu.ee/riigikogu/koosseis/muudatused-koosseisus/
-var COMMITTEES = {
-	ELAK: "Euroopa Liidu asjade komisjon",
-	KEKK: "Keskkonnakomisjon",
-	KULK: "Kultuurikomisjon",
-	MAEK: "Maaelukomisjon",
-	MAJK: "Majanduskomisjon",
-	PÕSK: "Põhiseaduskomisjon",
-	RAHK: "Rahanduskomisjon",
-	RIKK: "Riigikaitsekomisjon",
-	SOTK: "Sotsiaalkomisjon",
-	VÄLK: "Väliskomisjon",
-	ÕIGK: "Õiguskomisjon"
+function parseDocumentReference(document) {
+	return (
+		document.volume && document.volume.reference &&
+		parseReference(document.volume.reference) || null
+	)
 }
 
-function parseCommitteeReference(reference) {
-	return COMMITTEES[reference.split("/")[1]] || null
-}
-
-function parseProtocolCommittee(document) {
-	return document.volume && document.volume.reference
-		? parseCommitteeReference(document.volume.reference)
-		: null
+function parseProtocolDocumentCommittee(document) {
+	return COMMITTEES[parseDocumentReference(document)] || null
 }
 
 function parseLetterDirection(direction) {
@@ -1114,6 +1162,11 @@ function getLatestCommittee(doc) {
 
 function parseLink(link) {
 	return {title: link.outerLinkTitle, url: link.outerLink}
+}
+
+function parseReference(reference) {
+	var parts = reference.split("/")
+	return parts.length >= 3 ? parts[1] : null
 }
 
 function getBody(res) { return res.body }
