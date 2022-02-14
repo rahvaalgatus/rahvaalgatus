@@ -153,10 +153,6 @@ function Page(attrs, children) {
 							</a>
 						</li>
 
-						<li><a class="nav-button " href={Config.helpUrls[req.lang]}>
-							{t("LINK_HELP")}
-						</a></li>
-
 						<li>
 							<a
 								href={siteUrl + "/about"}
