@@ -188,10 +188,6 @@ function Page(attrs, children) {
 			{ENV === "production" && Config.googleAnalyticsAccount ?
 				<GoogleAnalytics accountId={Config.googleAnalyticsAccount} />
 			: null}
-
-			{ENV === "production" && Config.userVoiceApiKey ?
-				<UserVoice req={req} apiKey={Config.userVoiceApiKey} />
-			: null}
 		</body>
 	</html>
 }
@@ -374,31 +370,6 @@ function GoogleAnalytics(attrs) {
 		`}</script>
 
 		<script src={"https://www.googletagmanager.com/gtag/js?id=" + id} async />
-	</Fragment>
-}
-
-function UserVoice(attrs) {
-	var user = attrs.req.user
-
-	return <Fragment>
-		<script>{`
-			window.UserVoice = [
-				["identify", ${stringify(user ? serializeUser(user) : null)}],
-
-				["set", {
-						accent_color: "#808283",
-						trigger_color: "white",
-						trigger_background_color: "rgba(46, 49, 51, 0.6)"
-				}],
-
-				["addTrigger", {
-					mode: "contact",
-					trigger_position: "bottom-right"
-				}]
-			]
-		`}</script>
-
-		<script src={"//widget.uservoice.com/" + attrs.apiKey + ".js"} async />
 	</Fragment>
 }
 
