@@ -3,4 +3,4 @@ The rahvaalgatus.ee platform has been launched by public money, but we need the 
 [An overview about the first activity year](http://help.rahvaalgatus.ee/abi/rahvaalgatusveebi-esitlus)
 [An overview about the development works](https://github.com/rahvaalgatus/rahvaalgatus/projects/4)
 
-The recipient of the donation is SA Eesti Koostöö Kogu (National Foundation of Civil Society), which will use the collected sum to maintain rahvaalgatus.ee.
+The recipient of the donation is SA Eesti Koostöö Kogu (The Estonian Cooperation Assembly), which will use the collected sum to maintain rahvaalgatus.ee.
