@@ -96,7 +96,9 @@
 		"initiativesEmails": [
 			"linn@loksa.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"45706115215"
+		],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/loksa-linn"
 	},
@@ -598,7 +600,9 @@
 		"initiativesEmails": [
 			"vald@pparnumaa.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"47904284218"
+		],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/pohja-parnumaa-vald"
 	},
@@ -923,7 +927,9 @@
 		"initiativesEmails": [
 			"vald@antsla.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"46408296516"
+		],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/antsla-vald"
 	},
