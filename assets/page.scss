@@ -345,7 +345,7 @@ button.inherited {
 	display: block;
 
 	// When inside <label>, which may be bold.
-	font-weight: normal;
+	font-weight: 500;
 
 	& + p { margin-top: 0.5rem; }
 }
@@ -1078,7 +1078,7 @@ button.inherited {
 
 			p {
 				margin-top: 0.5rem;
-				font-weight: 400;
+				font-weight: 500;
 				font-size: 1.5rem;
 				line-height: 1.3;
 				white-space: pre-wrap;
@@ -1524,7 +1524,7 @@ button.inherited {
 			max-width: 60rem;
 			margin-top: 1rem;
 			text-align: center;
-			font-weight: 400;
+			font-weight: 500;
 			font-size: 1.5rem;
 			line-height: 1.5;
 			white-space: pre-wrap;
@@ -2283,7 +2283,7 @@ button.inherited {
 
 		.persona-fields {
 			.title {
-				font-weight: 400;
+				font-weight: 500;
 				display: block;
 				margin-bottom: 0.5rem;
 			}
@@ -2368,7 +2368,7 @@ button.inherited {
 			display: inline-block;
 			position: relative;
 			width: 33.333%;
-			font-weight: normal;
+			font-weight: 500;
 
 			i {
 				display: block;
