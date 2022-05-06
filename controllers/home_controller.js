@@ -108,6 +108,7 @@ exports.router.get("/", next(function*(req, res) {
 
 _.each({
 	"/about": "home/about_page.jsx",
+	"/eu": "home/eu_page.jsx",
 	"/credits": "home/credits_page.jsx",
 	"/api": "home/api_page.jsx"
 }, (page, path) => (

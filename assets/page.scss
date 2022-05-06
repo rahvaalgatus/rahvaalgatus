@@ -238,8 +238,6 @@ button.inherited {
 
 	background: $primary-button-background;
 	color: $primary-button-text;
-	border: 0.1rem solid $primary-button-border;
-	line-height: $button-height - .2rem;
 }
 
 .secondary-button,
@@ -4346,4 +4344,73 @@ button.inherited {
 			height: auto;
 		}
 	}
+}
+
+#eu-page main {
+	#hero-image {
+		padding-top: 6rem;
+		padding-bottom: 0;
+		text-align: center;
+
+		center { padding-left: 0; padding-right: 0; }
+		img { max-width: 100%; }
+
+		font-size: 3.8rem;
+		color: $title-text;
+		line-height: 1.3;
+		font-weight: 700;
+	}
+
+	.text-section {
+		padding-bottom: 10rem;
+
+		center { max-width: 72rem; }
+	}
+
+	.call-to-actions {
+		text-align: center;
+		margin-left: auto;
+		margin-right: auto;
+
+		.button {
+			padding-left: 5rem;
+			padding-right: 5rem;
+			border-radius: 3rem;
+			font-size: 2rem;
+			height: 5rem;
+			line-height: 5.2rem;
+			margin-right: 1.5rem;
+		}
+
+		.button:first-child {
+			margin-bottom: 1rem;
+		}
+	}
+
+	big {
+		font-size: 2.4rem;
+		font-weight: 500;
+	}
+
+	big + .call-to-actions {
+		margin-top: 4rem;
+		margin-bottom: 8rem;
+	}
+
+	h2 {
+		margin-bottom: 2rem;
+	}
+
+	p { line-height: 1.7; }
+
+	.video {
+		border-radius: 1rem;
+		max-width: 100%;
+	}
+
+	p + .video,
+	ol + .video { margin-top: 4rem; }
+	.video ~ h2 { margin-top: 6rem; }
+
+	.call-to-actions:last-child { margin-top: 6rem; }
 }
