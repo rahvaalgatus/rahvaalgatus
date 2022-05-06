@@ -157,8 +157,14 @@ deploy:
 staging: APP_PATH = /var/www/rahvaalgatus-next
 staging: deploy
 
+staging/diff: RSYNC_OPTS += --dry-run
+staging/diff: staging
+
 production: APP_PATH = /var/www/rahvaalgatus
 production: deploy
+
+production/diff: RSYNC_OPTS += --dry-run
+production/diff: production
 
 api/publish: openapi.yaml
 	http --session-read-only=rahvaalgatus post https://api.swaggerhub.com/apis/rahvaalgatus/rahvaalgatus Content-Type:application/yaml oas==3.0.0 < "$<"
