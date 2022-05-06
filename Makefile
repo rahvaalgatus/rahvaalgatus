@@ -170,8 +170,7 @@ translations: lib/i18n/ru.json
 translatables:
 	@ag --nofilename -o '\bt\("(\w+)"' | sort -u | cut -d\" -f2
 
-tmp:
-	mkdir -p tmp
+tmp:; mkdir -p tmp
 
 tmp/translations.json: tmp
 	curl -H "X-DataSource-Auth: true" "$(TRANSLATIONS_URL)" | sed -e 1d > "$@"
