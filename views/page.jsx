@@ -155,6 +155,15 @@ function Page(attrs, children) {
 
 						<li>
 							<a
+								href={siteUrl + "/eu"}
+								class={"nav-button " + selected(page, "eu")}
+							>
+								{t("NAV_EU")}
+							</a>
+						</li>
+
+						<li>
+							<a
 								href={siteUrl + "/about"}
 								class={"nav-button " + selected(page, "about")}
 							>
