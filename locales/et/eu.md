@@ -14,18 +14,21 @@ Euroopa kodanikualgatus võimaldab kõigil Euroopa kodanikel võtta aktiivselt o
 
 Alates **2012. aasta 9. maist**, mil registreeriti esimene Euroopa kodanikualgatus, on loodud **88 algatust**, millest 6 on edukalt lävendi ületanud ja Euroopa Komisjonilt ka vastuse saanud. Kokku on allkirju antud üle **16 miljoni**.
 
-<iframe
-  src="https://audiovisual.ec.europa.eu/embed/index.html?ref=I-158444&lg=EN/ET"
-  class="video"
-  width="680"
-  height="385"
-  title="What is the European Citizens' Initiative? Take the initiative"
-  frameborder="0"
-  scrolling="no"
-  webkitAllowFullScreen="true"
-  mozallowfullscreen="true"
-  allowFullScreen="true"
-></iframe>
+<div class="video">
+  <a class="fallback" href="https://audiovisual.ec.europa.eu/en/video/I-158444?&lg=EN/ET">Vaata videot</a>
+
+  <iframe
+    src="https://audiovisual.ec.europa.eu/embed/index.html?ref=I-158444&lg=EN/ET"
+    width="680"
+    height="382"
+    title="What is the European Citizens' Initiative? Take the initiative"
+    scrolling="no"
+    webkitAllowFullScreen="true"
+    mozallowfullscreen="true"
+    allowFullScreen="true"
+    loading="lazy"
+  ></iframe>
+</div>
 
 
 Mida on võimalik saavutada?
@@ -34,18 +37,21 @@ Miljoni allkirja kogumisel tekib algatajal võimalus Euroopa Parlamendis oma alg
 
 Isegi kui miljon allkirja kokku ei koguta, võimaldab tuhandete inimeste mobiliseerimine ja avalik tähelepanu alustada dialoogi ning luua otsekontakt Euroopa Liiduga. Näiteks [rändlustasude algatus](https://europa.eu/citizens-initiative/initiatives/details/2012/000016_et), mis 2013. aastal lävendit ei ületanud, aitas alustada debatti, mis viis 2017. aastal rändlustasude kaotamiseni ELis.
 
-<iframe
-  src="https://audiovisual.ec.europa.eu/embed/index.html?ref=I-214692&lg=INT/ET"
-  class="video"
-  width="680"
-  height="385"
-  title="What can you achieve with the European Citizens' Initiative?"
-  frameborder="0"
-  scrolling="no"
-  webkitAllowFullScreen="true"
-  mozallowfullscreen="true"
-  allowFullScreen="true"
-></iframe>
+<div class="video">
+  <a class="fallback" href="https://audiovisual.ec.europa.eu/en/video/I-214692?&lg=INT/ET">Vaata videot</a>
+
+  <iframe
+    src="https://audiovisual.ec.europa.eu/embed/index.html?ref=I-214692&lg=INT/ET"
+    width="680"
+    height="382"
+    title="What can you achieve with the European Citizens' Initiative?"
+    scrolling="no"
+    webkitAllowFullScreen="true"
+    mozallowfullscreen="true"
+    allowFullScreen="true"
+    loading="lazy"
+  ></iframe>
+</div>
 
 
 Kuidas algatust luua?
@@ -65,18 +71,21 @@ Kui teie algatus on kogunud vähemalt **miljon allkirja**, edastatakse need kont
 2. **Kolme kuu** jooksul korraldatakse Euroopa Parlamendis avalik kuulamine, milles saate oma algatust selgitada.
 3. **Kuue kuu** jooksul esitab komisjon ametliku vastuse, milles selgitab, miks ta esitab teie algatusel põhineva uue õigusakti ettepaneku või miks ta seda ei tee.
 
-<iframe
-  src="https://audiovisual.ec.europa.eu/embed/index.html?ref=I-199493&lg=EN&sublg=et"
-  class="video"
-  width="680"
-  height="385"
-  title="European Citizens' Initiative – What causes do you care about?"
-  frameborder="0"
-  scrolling="no"
-  webkitAllowFullScreen="true"
-  mozallowfullscreen="true"
-  allowFullScreen="true"
-></iframe>
+<div class="video">
+  <a class="fallback" href="https://audiovisual.ec.europa.eu/en/video/I-199493?&lg=EN&sublg=et">Vaata videot</a>
+
+  <iframe
+    src="https://audiovisual.ec.europa.eu/embed/index.html?ref=I-199493&lg=EN&sublg=et"
+    width="680"
+    height="382"
+    title="European Citizens' Initiative – What causes do you care about?"
+    scrolling="no"
+    webkitAllowFullScreen="true"
+    mozallowfullscreen="true"
+    allowFullScreen="true"
+    loading="lazy"
+  ></iframe>
+</div>
 
 <div class="call-to-actions">
   <a href="https://europa.eu/citizens-initiative/_et" class="button green-button">Allkirjastama</a>
