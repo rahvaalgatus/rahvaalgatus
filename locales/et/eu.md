@@ -35,7 +35,7 @@ Mida on võimalik saavutada?
 ---------------------------
 Miljoni allkirja kogumisel tekib algatajal võimalus Euroopa Parlamendis oma algatust tutvustada ning Euroopa Komisjonil tekib **kohustus** kujundada selle kohta põhjendatud seisukoht.
 
-Isegi kui miljon allkirja kokku ei koguta, võimaldab tuhandete inimeste mobiliseerimine ja avalik tähelepanu alustada dialoogi ning luua otsekontakt Euroopa Liiduga. Näiteks [rändlustasude algatus](https://europa.eu/citizens-initiative/initiatives/details/2012/000016_et), mis 2013. aastal lävendit ei ületanud, aitas alustada debatti, mis viis 2017. aastal rändlustasude kaotamiseni ELis.
+Isegi kui miljon allkirja kokku ei koguta, võimaldab tuhandete inimeste mobiliseerimine ja avalik tähelepanu alustada dialoogi ning luua otsekontakt Euroopa Liidu institutsioonidega. Näiteks [rändlustasude algatus](https://europa.eu/citizens-initiative/initiatives/details/2012/000016_et), mis 2013. aastal lävendit ei ületanud, aitas alustada debatti, mis viis 2017. aastal rändlustasude kaotamiseni ELis.
 
 <div class="video">
   <a class="fallback" href="https://audiovisual.ec.europa.eu/en/video/I-214692?&lg=INT/ET">Vaata videot</a>
