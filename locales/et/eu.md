@@ -10,7 +10,7 @@
 
 Mis on Euroopa kodanikualgatus?
 -------------------------------
-Euroopa kodanikualgatus võimaldab kõigil Euroopa kodanikel võtta aktiivselt osa EL-i poliitikakujundamisest. **Vähemalt miljoni ELi kodaniku allkirjaga** algatus edastatakse otse Euroopa Komisjonile.
+Euroopa kodanikualgatus võimaldab kõigil Euroopa kodanikel võtta aktiivselt osa ELi poliitikakujundamisest. **Vähemalt miljoni ELi kodaniku allkirjaga** algatus edastatakse otse Euroopa Komisjonile.
 
 Alates **2012. aasta 9. maist**, mil registreeriti esimene Euroopa kodanikualgatus, on loodud **88 algatust**, millest 6 on edukalt lävendi ületanud ja Euroopa Komisjonilt ka vastuse saanud. Kokku on allkirju antud üle **16 miljoni**.
 
@@ -50,7 +50,7 @@ Isegi kui miljon allkirja kokku ei koguta, võimaldab tuhandete inimeste mobilis
 
 Kuidas algatust luua?
 ---------------------
-1. Algatuse loomiseks peate esmalt kokku saama korraldajate rühma, mis koosneks vähemalt seitsme erineva EL-i liikmesriigi püsielanikust kodanikust (riigid peavad olema erinevad, ent kodakondsus ei pea kõigil erinev olema).
+1. Algatuse loomiseks peate esmalt kokku saama korraldajate rühma, mis koosneks vähemalt seitsme erineva ELi liikmesriigi püsielanikust kodanikust (riigid peavad olema erinevad, ent kodakondsus ei pea kõigil erinev olema).
 
 2. Seejärel peate komisjonile esitama registreerimistaotluse. Enne kavandatava algatuse registreerimist kontrollib komisjon selle vastavust erinevatele õiguslikele kriteeriumidele ning ka seda, kas ettepanek kuulub valdkonda, mis on Euroopa Komisjoni pädevuses.
 
@@ -61,7 +61,7 @@ Mis saab edasi?
 ---------------
 Kui teie algatus on kogunud vähemalt **miljon allkirja**, edastatakse need kontrollimiseks Euroopa Komisjonile.
 
-1. **Ühe kuu**  jooksulkohtuvad algatajate korraldajaterühmaga EL-i ametnikud.
+1. **Ühe kuu**  jooksul kohtuvad algatajate korraldajaterühmaga ELi ametnikud.
 2. **Kolme kuu** jooksul korraldatakse Euroopa Parlamendis avalik kuulamine, milles saate oma algatust selgitada.
 3. **Kuue kuu** jooksul esitab komisjon ametliku vastuse, milles selgitab, miks ta esitab teie algatusel põhineva uue õigusakti ettepaneku või miks ta seda ei tee.
 
