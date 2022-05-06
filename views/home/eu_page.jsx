@@ -12,7 +12,7 @@ module.exports = function(attrs) {
 	return <Page page="eu" title={t("EU_PAGE_TITLE")} req={req}>
 		<Section id="hero-image" class="primary-section">
 			<h1>
-				<img src="/assets/eu-page-header.svg" alt="Euroopa kodanikualgatus" />
+				<img src="/assets/eu-page-header.svg" alt={t("EU_PAGE_TITLE")} />
 			</h1>
 		</Section>
 
