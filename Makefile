@@ -2,7 +2,7 @@ NODE = node
 NODE_OPTS = --use-strict --require j6pack/register
 ENV = development
 NPM_REBUILD = npm --ignore-scripts false rebuild --build-from-source
-TEST = $$(find test -name "*_test.js")
+TEST = $$(find test -name "*_test.js" -o -name "*_test.jsx")
 TEST_TAGS =
 MOCHA = ./node_modules/.bin/_mocha
 SASS = ./node_modules/.bin/node-sass --recursive --indent-type tab --indent-width 1 --output-style expanded
@@ -32,7 +32,7 @@ RSYNC_OPTS = \
 	--exclude "/config/development.*" \
 	--exclude "/config/staging.*" \
 	--exclude "/config/production.*" \
-	--exclude "/config/*.sqlite3" \
+	--exclude "/config/*.sqlite3*" \
 	--exclude "/assets/***" \
 	--exclude "/test/***" \
 	--exclude "/scripts/***" \
@@ -157,8 +157,14 @@ deploy:
 staging: APP_PATH = /var/www/rahvaalgatus-next
 staging: deploy
 
+staging/diff: RSYNC_OPTS += --dry-run
+staging/diff: staging
+
 production: APP_PATH = /var/www/rahvaalgatus
 production: deploy
+
+production/diff: RSYNC_OPTS += --dry-run
+production/diff: production
 
 api/publish: openapi.yaml
 	http --session-read-only=rahvaalgatus post https://api.swaggerhub.com/apis/rahvaalgatus/rahvaalgatus Content-Type:application/yaml oas==3.0.0 < "$<"
@@ -170,8 +176,7 @@ translations: lib/i18n/ru.json
 translatables:
 	@ag --nofilename -o '\bt\("(\w+)"' | sort -u | cut -d\" -f2
 
-tmp:
-	mkdir -p tmp
+tmp:; mkdir -p tmp
 
 tmp/translations.json: tmp
 	curl -H "X-DataSource-Auth: true" "$(TRANSLATIONS_URL)" | sed -e 1d > "$@"
