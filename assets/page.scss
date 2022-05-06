@@ -4367,6 +4367,23 @@ button.inherited {
 		center { max-width: 72rem; }
 	}
 
+	#footer-image {
+		overflow: hidden;
+		padding-top: 0;
+		padding-bottom: 0;
+
+		center {
+			padding-right: 0;
+			max-width: 120rem;
+		}
+
+		img {
+			margin-left: auto;
+			margin-right: -4rem;
+			display: block;
+		}
+	}
+
 	.call-to-actions {
 		text-align: center;
 		margin-left: auto;

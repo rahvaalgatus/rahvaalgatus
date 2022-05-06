@@ -12,12 +12,16 @@ module.exports = function(attrs) {
 	return <Page page="eu" title={t("EU_PAGE_TITLE")} req={req}>
 		<Section id="hero-image" class="primary-section">
 			<h1>
-				<img src="/assets/eu-header.svg" alt="Euroopa kodanikualgatus" />
+				<img src="/assets/eu-page-header.svg" alt="Euroopa kodanikualgatus" />
 			</h1>
 		</Section>
 
 		<Section class="primary-section text-section">
 			{Jsx.html(I18n.markdown(lang, "eu"))}
+		</Section>
+
+		<Section id="footer-image" class="primary-section">
+			<img src="/assets/eu-page-footer.svg" alt="" />
 		</Section>
 	</Page>
 }
