@@ -32,7 +32,7 @@ RSYNC_OPTS = \
 	--exclude "/config/development.*" \
 	--exclude "/config/staging.*" \
 	--exclude "/config/production.*" \
-	--exclude "/config/*.sqlite3" \
+	--exclude "/config/*.sqlite3*" \
 	--exclude "/assets/***" \
 	--exclude "/test/***" \
 	--exclude "/scripts/***" \
