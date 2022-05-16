@@ -222,7 +222,9 @@
 		"initiativesEmails": [
 			"info@alutagusevald.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"47004272223"
+		],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/alutaguse-vald"
 	},
