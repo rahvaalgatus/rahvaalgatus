@@ -988,6 +988,10 @@ function* updateInitiativePhaseToParliament(req, res) {
 		`${initiativeUrl}/signatures.zip?` +
 		Qs.stringify({type: "citizenos", "parliament-token": parliamentToken})
 
+	var signaturesCsvUrl =
+		`${initiativeUrl}/signatures.csv?` +
+		Qs.stringify({"parliament-token": parliamentToken})
+
 	var emails = initiative.destination == "parliament"
 		? [Config.parliamentEmail]
 		: LOCAL_GOVERNMENTS[initiative.destination].initiativesEmails
@@ -1023,6 +1027,7 @@ function* updateInitiativePhaseToParliament(req, res) {
 			signatureCount: signatureCount,
 			undersignedSignaturesUrl: undersignedSignaturesUrl,
 			citizenosSignaturesUrl: citizenosSignaturesUrl,
+			signaturesCsvUrl: signaturesCsvUrl,
 
 			authorName: attrs.contact.name,
 			authorEmail: attrs.contact.email,

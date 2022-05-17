@@ -9045,9 +9045,13 @@ describe("InitiativesController", function() {
 						))
 
 						var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+
+						var token = updatedInitiative.parliament_token.toString("hex")
 						var signaturesUrl = initiativeUrl + "/signatures.asice"
-						signaturesUrl += "?parliament-token="
-						signaturesUrl += updatedInitiative.parliament_token.toString("hex")
+						signaturesUrl += `?parliament-token=${token}`
+
+						var signaturesCsvUrl = initiativeUrl + "/signatures.csv"
+						signaturesCsvUrl += `?parliament-token=${token}`
 
 						email.body.must.equal(t("EMAIL_INITIATIVE_TO_PARLIAMENT_BODY", {
 							initiativeUuid: initiative.uuid,
@@ -9055,6 +9059,7 @@ describe("InitiativesController", function() {
 							initiativeUrl: initiativeUrl,
 							signatureCount: Config.votesRequired,
 							undersignedSignaturesUrl: signaturesUrl,
+							signaturesCsvUrl: signaturesCsvUrl,
 							authorName: "John",
 							authorEmail: "john@example.com",
 							authorPhone: "42",
@@ -9381,23 +9386,30 @@ describe("InitiativesController", function() {
 
 						var initiativeUrl = `${Config.localSiteUrl}/initiatives`
 						initiativeUrl += `/${initiative.uuid}`
-						var signaturesUrl = initiativeUrl + "/signatures.asice"
-						signaturesUrl += "?parliament-token="
-						signaturesUrl += updatedInitiative.parliament_token.toString("hex")
 
-						email.body.must.equal(t("EMAIL_INITIATIVE_TO_LOCAL_GOVERNMENT_BODY", {
-							initiativeUuid: initiative.uuid,
-							initiativeTitle: initiative.title,
-							initiativeUrl: initiativeUrl,
-							signatureCount: signatureCount,
-							undersignedSignaturesUrl: signaturesUrl,
-							authorName: "John",
-							authorEmail: "john@example.com",
-							authorPhone: "42",
-							siteUrl: Config.url,
-							facebookUrl: Config.facebookUrl,
-							twitterUrl: Config.twitterUrl
-						}))
+						var token = updatedInitiative.parliament_token.toString("hex")
+						var signaturesUrl = initiativeUrl + "/signatures.asice"
+						signaturesUrl += `?parliament-token=${token}`
+
+						var signaturesCsvUrl = initiativeUrl + "/signatures.csv"
+						signaturesCsvUrl += `?parliament-token=${token}`
+
+						email.body.must.equal(
+							t("EMAIL_INITIATIVE_TO_LOCAL_GOVERNMENT_BODY", {
+								initiativeUuid: initiative.uuid,
+								initiativeTitle: initiative.title,
+								initiativeUrl: initiativeUrl,
+								signatureCount: signatureCount,
+								undersignedSignaturesUrl: signaturesUrl,
+								signaturesCsvUrl: signaturesCsvUrl,
+								authorName: "John",
+								authorEmail: "john@example.com",
+								authorPhone: "42",
+								siteUrl: Config.url,
+								facebookUrl: Config.facebookUrl,
+								twitterUrl: Config.twitterUrl
+							})
+						)
 					})
 
 					it("must email subscribers", function*() {
