@@ -65,7 +65,7 @@ Kuidas algatust luua?
 
 Mis saab edasi?
 ---------------
-Kui teie algatus on kogunud vähemalt **miljon allkirja**, edastatakse need kontrollimiseks Euroopa Komisjonile.
+Kui teie algatus on kogunud vähemalt **miljon allkirja**, edastatakse need kontrollimiseks liikmesriikide allkirjade verifitseerimisega tegelevatele asutustele (Eestis on selleks Siseministeerium) ning seejärel Euroopa Komisjonile.
 
 1. **Ühe kuu**  jooksul kohtuvad algatajate korraldajaterühmaga ELi ametnikud.
 2. **Kolme kuu** jooksul korraldatakse Euroopa Parlamendis avalik kuulamine, milles saate oma algatust selgitada.
