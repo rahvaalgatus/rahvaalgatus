@@ -12,7 +12,7 @@ Mis on Euroopa kodanikualgatus?
 -------------------------------
 Euroopa kodanikualgatus võimaldab kõigil Euroopa kodanikel võtta aktiivselt osa ELi poliitikakujundamisest. **Vähemalt miljoni ELi kodaniku allkirjaga** algatus edastatakse otse Euroopa Komisjonile.
 
-Alates **2012. aasta 9. maist**, mil registreeriti esimene Euroopa kodanikualgatus, on loodud **88 algatust**, millest 6 on edukalt lävendi ületanud ja Euroopa Komisjonilt ka vastuse saanud. Kokku on allkirju antud üle **16 miljoni**.
+Alates **2012. aasta 9. maist**, mil registreeriti esimene Euroopa kodanikualgatus, on loodud **89 algatust**, millest 6 on edukalt lävendi ületanud ja Euroopa Komisjonilt ka vastuse saanud. Kokku on allkirju antud üle **16 miljoni**.
 
 <div class="video">
   <a class="fallback" href="https://audiovisual.ec.europa.eu/en/video/I-158444?&lg=EN/ET">Vaata videot</a>
