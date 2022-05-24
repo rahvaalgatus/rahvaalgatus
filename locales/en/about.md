@@ -35,6 +35,7 @@ When using rahvaalgatus.ee I will keep in mind the following:
 5. I can criticise ideas, not persons. When criticising I focus on solutions, not problems;
 6. I engage other people to discussions and will consider their arguments in compiling the final initiative;
 7. I only use the platform if I do not have other channels for submitting my ideas and proposals for changing regulations.
+8. although Rahvaalgatus allows the user to create initiatives in Russian and English, an Estonian translation should be added. In this way, people who do not speak Russian or English, can show their support for the initiative. Furthermore, without an Estonian translation, it is not legally possible to send the initiative to the Riigikogu or the local government to be processed.
 
 Therefore rahvaalgatus.ee is not open for hate speech or any other offending remarks, also it is not designed for political parties represented in the parliament.
 
