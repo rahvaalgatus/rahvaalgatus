@@ -32,7 +32,8 @@ Heale tavale vastavaid kollektiivseid pöördumisi ja nende koostamist kirjeldab
 4. pöördumises välja toodud ettepanekud ei sisaldada roppusi, õhuta rahvaste ja rasside vahelist vaenu, sõda, kutsu üles narkootikumide ja relvade kasutamisele, riigi kukutamisele või reetmisele või konkreetsete isikute suhtes füüsilisele vägivallale, levita valet või halvusta põhjendamatult teisi isikuid;
 5. algatajatel palume arvestada lõpliku pöördumise koostamisel (enne allkirjastamisele saatmist) kaasamõtlejate argumentide ja mõtetega; 
 6. pöördumise koostamisele kaasamõtlejatel tuleb hoiduda kommentaaridest, mis pole teemaga seotud või sisaldavad sõimu, ropendamist, laimu, solvanguid, mõnitamist ja halvustamist; 
-7. kritiseerida võib arvamusi ja ideid, kuid mitte inimesi.  
+7. kritiseerida võib arvamusi ja ideid, kuid mitte inimesi.
+8. meie platvorm lubab ka võõrkeelsete algatuste loomist, kuid lisada tuleks eestikeelne tõlge. Nii saavad ka näiteks vene või inglise keelt mitteoskavad inimesed rahvaalgatuses kaasa lüüa. Võõrkeelset algatust ilma eestikeelse tõlketa Riigikokku või kohalikku omavalitsusse saata ei ole võimalik.    
 
 Riigikogus esindatud erakondadel ja Riigikogu liikmetel soovitame arutelu algatamiseks kasutada osalusportaali asemel oma parlamendi mandaati ning kodu- ja töökorrast tulenevaid võimalusi ja meetmeid. 
 
