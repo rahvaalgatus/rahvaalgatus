@@ -248,7 +248,9 @@
 		"initiativesEmails": [
 			"linnavalitsus@kjlv.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"47206156512"
+		],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kohtla-jarve-linn"
 	},
