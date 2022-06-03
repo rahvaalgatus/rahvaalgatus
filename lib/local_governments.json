@@ -60,7 +60,10 @@
 		"initiativesEmails": [
 			"info@kiilivald.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"47601160226",
+			"46002090346"
+		],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kiili-vald"
 	},
