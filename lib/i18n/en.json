@@ -745,7 +745,7 @@
 	"UPDATE_INITIATIVE_TO_LANG_CURRENTLY_EN": "Currently in English.",
 	"UPDATE_INITIATIVE_TO_LANG_CURRENTLY_ET": "Currently in Estonian.",
 	"UPDATE_INITIATIVE_TO_LANG_CURRENTLY_RU": "Currently in Russian.",
-	"UPDATE_INITIATIVE_TO_LANG_DESCRIPTION": "Although the initiative must be sent to the Riigikogu in Estonian <a href=\"https://www.riigiteataja.ee/akt/101042014003?leiaKehtiv\">, Rahvaalgatus also allows signatures to be collected on Russian or English texts. However, before sending the text to the Riigikogu, an Estonian translation must be added.",
+	"UPDATE_INITIATIVE_TO_LANG_DESCRIPTION": "Although the <a href=\"https://www.riigiteataja.ee/akt/101042014003?leiaKehtiv\">initiative must be sent to Riigikogu in Estonian</a>, Rahvaalgatus also allows signatures to be collected for Russian or English texts. However, before sending the initiative to Riigikogu, an Estonian translation must be added.",
 	"UPDATE_INITIATIVE_TO_LANG_EN": "Switch initiative to English.",
 	"UPDATE_INITIATIVE_TO_LANG_ET": "Switch initiative to Estonian.",
 	"UPDATE_INITIATIVE_TO_LANG_RU": "Switch initiative to Russian.",
