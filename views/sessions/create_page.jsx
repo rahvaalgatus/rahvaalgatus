@@ -135,7 +135,12 @@ module.exports = function(attrs) {
 					notice("")
 
 					var certificate = Hwcrypto.certificate("auth").catch(function(err) {
-						if (err.message != "invalid_argument") throw err
+						// Digidoc v4.2.11.110 (Mar 15, 2022) deprecated TokenSigning and
+						// started throwing "not_allowed" for the old "auth" method.
+						if (
+							err.message != "invalid_argument" &&
+							err.message != "not_allowed"
+						) throw err
 
 						// ID-software bugs out if you immediately ask for a new
 						// certificate.
