@@ -141,8 +141,6 @@ CREATE TABLE IF NOT EXISTS "initiative_subscriptions" (
 	CONSTRAINT signable_interest_for_all_initiatives
 	CHECK (initiative_uuid IS NULL OR NOT signable_interest)
 );
-CREATE UNIQUE INDEX index_initiative_subscriptions_initiative_uuid_and_email
-ON initiative_subscriptions (COALESCE(initiative_uuid, ""), email);
 CREATE TABLE comments (
 	id INTEGER PRIMARY KEY NOT NULL,
 	uuid TEXT,
@@ -565,6 +563,8 @@ WHERE NOT anonymized;
 CREATE INDEX index_citizenos_signatures_on_country_and_personal_id
 ON initiative_citizenos_signatures (country, personal_id)
 WHERE NOT anonymized;
+CREATE UNIQUE INDEX index_initiative_subscriptions_initiative_uuid_and_email
+ON initiative_subscriptions (COALESCE(initiative_uuid, ''), email);
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -680,4 +680,5 @@ INSERT INTO migrations VALUES('20211125124900');
 INSERT INTO migrations VALUES('20211125124910');
 INSERT INTO migrations VALUES('20211125124920');
 INSERT INTO migrations VALUES('20211125124930');
+INSERT INTO migrations VALUES('20220628084329');
 COMMIT;
