@@ -1140,7 +1140,7 @@ function SidebarAuthorView(attrs) {
 	if (!actions.some(Boolean)) return null
 
 	return <div id="initiative-author-options" class="sidebar-section">
-		<h2 class="sidebar-header">Algatajale</h2>
+		<h2 class="sidebar-header">{t("INITIATIVE_EDIT_TITLE")} </h2>
 		{actions}
 	</div>
 }
@@ -1195,7 +1195,7 @@ function SidebarInfoView(attrs) {
 				{t("EDIT_INITIATIVE_INFO")}
 			</label> : null}
 
-			Lisainfo
+			{t("INITIATIVE_INFO_TITLE")}
 		</h2>
 
 		{(
@@ -1288,7 +1288,9 @@ function SidebarInfoView(attrs) {
 		</InitiativeAttribute> : null}
 
 		{organizations.length > 0 || canEdit ? <Fragment>
-			<h3 class="sidebar-subheader">Liitunud ühendused</h3>
+			<h3 class="sidebar-subheader">
+				{t("INITIATIVE_INFO_ORGANIZATIONS_TITLE")}
+			</h3>
 
 			{organizations.length > 0 ? <ul class="form-output">
 				{organizations.map((organization) => <li>
@@ -1300,14 +1302,14 @@ function SidebarInfoView(attrs) {
 
 			{canEdit ? <InitiativeAttributeList
 				id="initiative-organizations-form"
-				add="Lisa ühendus"
-				help="Sisesta ühenduse nimi ja viide."
+				add={t("INITIATIVE_INFO_ORGANIZATIONS_ADD")}
+				help={t("INITIATIVE_INFO_ORGANIZATIONS_DESCRIPTION")}
 				values={organizations}
 				default={EMPTY_ORG}
 			>{(organization, i) => <li>
 				<input
 					class="form-input"
-					placeholder="Ühenduse nimi"
+					placeholder={t("INITIATIVE_INFO_ORGANIZATIONS_NAME_PLACEHOLDER")}
 					name={`organizations[${i}][name]`}
 					value={organization.name}
 				/>
@@ -1323,7 +1325,9 @@ function SidebarInfoView(attrs) {
 		</Fragment> : null}
 
 		{meetings.length > 0 || canEdit ? <Fragment>
-			<h3 class="sidebar-subheader">Avalikud arutelud</h3>
+			<h3 class="sidebar-subheader">
+				{t("INITIATIVE_INFO_DISCUSSIONS_TITLE")}
+			</h3>
 
 			{meetings.length > 0 ? <ul class="form-output">
 				{meetings.map((meeting) => <li>
@@ -1335,15 +1339,15 @@ function SidebarInfoView(attrs) {
 
 			{canEdit ? <InitiativeAttributeList
 				id="initiative-meetings-form"
-				add="Lisa arutelu"
-				help="Sisesta toimumiskuupäev ja viide."
+				add={t("INITIATIVE_INFO_DISCUSSIONS_ADD")}
+				help={t("INITIATIVE_INFO_DISCUSSIONS_DESCRIPTION")}
 				values={meetings}
 				default={EMPTY_ORG}
 			>{(meeting, i) => <li>
 				<input
 					class="form-input"
 					type="date"
-					placeholder="Kuupäev"
+					placeholder={t("INITIATIVE_INFO_DISCUSSIONS_NAME_PLACEHOLDER")}
 					name={`meetings[${i}][date]`}
 					value={meeting.date}
 				/>
@@ -1362,7 +1366,7 @@ function SidebarInfoView(attrs) {
 			{externalUrl || canEdit ? <InitiativeAttribute
 				t={t}
 				editable={canEdit}
-				title="Kampaanialeht"
+				title={t("INITIATIVE_INFO_EXTERNAL_URL_TITLE")}
 				name="url"
 				type="url"
 				placeholder="https://"
@@ -1374,7 +1378,9 @@ function SidebarInfoView(attrs) {
 
 		{isPhaseAtLeast("parliament", phase) ? <Fragment>
 			{mediaUrls.length > 0 || canEdit ? <Fragment>
-				<h3 class="sidebar-subheader">Menetluse meediakajastus</h3>
+				<h3 class="sidebar-subheader">
+					{t("INITIATIVE_INFO_MEDIA_URLS_TITLE")}
+				</h3>
 
 				{mediaUrls.length > 0 ? <ul class="form-output">
 					{mediaUrls.map((url) => <li>
@@ -1384,7 +1390,7 @@ function SidebarInfoView(attrs) {
 
 				{canEdit ? <InitiativeAttributeList
 					id="initiative-media-urls-form"
-					add="Lisa viide"
+					add={t("INITIATIVE_INFO_MEDIA_URLS_ADD")}
 					values={mediaUrls}
 				>{(url, i) => <li>
 					<input
@@ -1400,7 +1406,9 @@ function SidebarInfoView(attrs) {
 
 		{isPhaseAtLeast("government", phase) ? <Fragment>
 			{mediaUrls.length > 0 || canEdit ? <Fragment>
-				<h3 class="sidebar-subheader">Arengut suunavad kokkulepped</h3>
+				<h3 class="sidebar-subheader">
+					{t("INITIATIVE_INFO_GOVERNMENT_CHANGE_URLS_TITLE")}
+				</h3>
 
 				{governmentChangeUrls.length > 0 ? <ul class="form-output">
 					{governmentChangeUrls.map((url) => <li>
@@ -1410,8 +1418,8 @@ function SidebarInfoView(attrs) {
 
 				{canEdit ? <InitiativeAttributeList
 					id="initiative-government-change-urls-form"
-					add="Lisa viide"
-					help="Ühiskondliku toetuse leidnud ettepanekud võivad jõuda ka eelarvestrateegiasse, koalitsioonileppesse või arengukavasse."
+					add={t("INITIATIVE_INFO_GOVERNMENT_CHANGE_URLS_ADD")}
+					help={t("INITIATIVE_INFO_GOVERNMENT_CHANGE_URLS_DESCRIPTION")}
 					values={governmentChangeUrls}
 				>{(url, i) => <li>
 					<input
@@ -1427,7 +1435,9 @@ function SidebarInfoView(attrs) {
 
 		{isPhaseAtLeast("done", phase) ? <Fragment>
 			{mediaUrls.length > 0 || canEdit ? <Fragment>
-				<h3 class="sidebar-subheader">Otsused ja muutused</h3>
+				<h3 class="sidebar-subheader">
+					{t("INITIATIVE_INFO_PUBLIC_CHANGE_URLS_TITLE")}
+				</h3>
 
 				{publicChangeUrls.length > 0 ? <ul class="form-output">
 					{publicChangeUrls.map((url) => <li>
@@ -1437,8 +1447,8 @@ function SidebarInfoView(attrs) {
 
 				{canEdit ? <InitiativeAttributeList
 					id="initiative-public-change-urls-form"
-					add="Lisa viide"
-					help="Viited arengut suunavatele dokumentidele, vahearuannetele ja teadustöödele."
+					add={t("INITIATIVE_INFO_PUBLIC_CHANGE_URLS_ADD")}
+					help={t("INITIATIVE_INFO_PUBLIC_CHANGE_URLS_DESCRIPTION")}
 					values={publicChangeUrls}
 				>{(url, i) => <li>
 					<input
@@ -1509,16 +1519,20 @@ function SidebarSubscribeView(attrs) {
 
 function SidebarAdminView(attrs) {
 	var req = attrs.req
+	var t = req.t
 	var initiative = attrs.initiative
 
 	if (!(req.user && isAdmin(req.user))) return null
 
 	return <div class="sidebar-section">
-		<h2 class="sidebar-header">Administraatorile</h2>
+		<h2 class="sidebar-header">
+			{t("INITIATIVE_ADMIN")}
+		</h2>
+
 		<a
 			href={`${Config.adminUrl}/initiatives/${initiative.uuid}`}
 			class="link-button wide-button">
-			Administreeri algatust
+			{t("INITIATIVE_ADMINISTRATE_INITIATIVE")}
 		</a>
 	</div>
 }
