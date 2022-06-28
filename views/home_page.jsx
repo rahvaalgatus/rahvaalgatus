@@ -11,25 +11,19 @@ var {Form} = require("./page")
 var FormCheckbox = Page.FormCheckbox
 var {InitiativeBoxesView} = require("./initiatives/index_page")
 var {InitiativeBoxView} = require("./initiatives/index_page")
-var EMPTY_ARR = Array.prototype
+var {getRequiredSignatureCount} = require("root/lib/initiative")
 exports = module.exports = HomePage
 exports.CallToActionsView = CallToActionsView
 exports.StatisticsView = StatisticsView
+exports.groupInitiatives = groupInitiatives
 
 function HomePage(attrs) {
 	var t = attrs.t
 	var req = attrs.req
-	var initiatives = attrs.initiatives
 	var stats = attrs.statistics
 	var recentInitiatives = attrs.recentInitiatives
 	var news = attrs.news
-
-	var initiativesByPhase = _.groupBy(initiatives, "phase")
-	var inEdit = initiativesByPhase.edit || EMPTY_ARR
-	var inSign = initiativesByPhase.sign || EMPTY_ARR
-	var inParliament = initiativesByPhase.parliament || EMPTY_ARR
-	var inGovernment = initiativesByPhase.government || EMPTY_ARR
-	var inDone = initiativesByPhase.done || EMPTY_ARR
+	var initiativesByPhase = groupInitiatives(attrs.initiatives)
 
 	return <Page
 		page="home"
@@ -168,53 +162,69 @@ function HomePage(attrs) {
 		</Section>
 
 		<Section id="initiatives" class="secondary-section initiatives-section">
-			{inEdit.length > 0 ? <Fragment>
+			{initiativesByPhase.edit ? <Fragment>
 				<h2>{t("EDIT_PHASE")}</h2>
 
 				<InitiativeBoxesView
 					t={t}
+					id="initiatives-in-edit"
 					phase="edit"
-					initiatives={inEdit}
+					initiatives={initiativesByPhase.edit}
 				/>
 			</Fragment> : null}
 
-			{inSign.length > 0 ? <Fragment>
+			{initiativesByPhase.sign ? <Fragment>
 				<h2>{t("SIGN_PHASE")}</h2>
 
 				<InitiativeBoxesView
 					t={t}
 					phase="sign"
-					initiatives={inSign}
+					id="initiatives-in-sign"
+					initiatives={initiativesByPhase.sign}
 				/>
 			</Fragment> : null}
 
-			{inParliament.length > 0 ? <Fragment>
+			{initiativesByPhase.signUnsent ? <Fragment>
+				<h2>{t("HOME_PAGE_SIGNED_TITLE")}</h2>
+
+				<InitiativeBoxesView
+					t={t}
+					phase="sign"
+					id="initiatives-in-sign-unsent"
+					initiatives={initiativesByPhase.signUnsent}
+				/>
+			</Fragment> : null}
+
+			{initiativesByPhase.parliament ? <Fragment>
 				<h2>{t("PARLIAMENT_PHASE")}</h2>
 
 				<InitiativeBoxesView
 					t={t}
 					phase="parliament"
-					initiatives={inParliament}
+					id="initiatives-in-parliament"
+					initiatives={initiativesByPhase.parliament}
 				/>
 			</Fragment> : null}
 
-			{inGovernment.length > 0 ? <Fragment>
+			{initiativesByPhase.government ? <Fragment>
 				<h2>{t("GOVERNMENT_PHASE")}</h2>
 
 				<InitiativeBoxesView
 					t={t}
 					phase="government"
-					initiatives={inGovernment}
+					id="initiatives-in-government"
+					initiatives={initiativesByPhase.government}
 				/>
 			</Fragment> : null}
 
-			{inDone.length > 0 ? <Fragment>
+			{initiativesByPhase.done ? <Fragment>
 				<h2>{t("DONE_PHASE")}</h2>
 
 				<InitiativeBoxesView
 					t={t}
 					phase="done"
-					initiatives={inDone}
+					id="initiatives-in-done"
+					initiatives={initiativesByPhase.done}
 				/>
 			</Fragment> : null}
 
@@ -373,4 +383,20 @@ function InitiativesSubscriptionForm(attrs) {
 			</button>
 		</Form>
 	]
+}
+
+function groupInitiatives(initiatives) {
+	return _.groupBy(initiatives, function(initiative) {
+		if (initiative.phase == "sign") {
+			var signatureThreshold = getRequiredSignatureCount(initiative)
+			var signatureCount = initiative.signature_count
+
+			if (
+				signatureCount >= signatureThreshold &&
+				initiative.signing_ends_at <= new Date
+			) return "signUnsent"
+		}
+
+		return initiative.phase
+	})
 }

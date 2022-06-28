@@ -18,6 +18,7 @@ var eventsDb = require("root/db/initiative_events_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
+var {getRequiredSignatureCount} = require("root/lib/initiative")
 var parseDom = require("root/lib/dom").parse
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var demand = require("must")
@@ -165,350 +166,409 @@ describe("HomeController", function() {
 			})
 		})
 
-		it("must show initiatives in edit phase", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id,
-				phase: "edit",
-				published_at: new Date,
-				discussion_ends_at: DateFns.addSeconds(new Date, 1)
-			}))
+		describe("given initiatives in edit phase", function() {
+			it("must not show unpublished initiatives", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					discussion_ends_at: DateFns.addSeconds(new Date, 1)
+				}))
 
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+				res.body.must.not.include(initiative.uuid)
+				demand(parseDom(res.body).querySelector(".initiative")).be.null()
+			})
 
-			var dom = parseDom(res.body)
-			var el = dom.getElementById("initiatives")
-			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
-			el.must.exist()
+			it("must show", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					published_at: new Date,
+					discussion_ends_at: DateFns.addSeconds(new Date, 1)
+				}))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+
+				dom.getElementById("initiatives-in-edit").querySelector(
+					`.initiative[data-uuid="${initiative.uuid}"]`
+				).must.exist()
+			})
+
+			it("must show if deadline less than 2w ago", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					published_at: new Date,
+					discussion_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -13)
+				}))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+
+				dom.getElementById("initiatives-in-edit").querySelector(
+					`.initiative[data-uuid="${initiative.uuid}"]`
+				).must.exist()
+			})
+
+			it("must not show if deadline 2w ago", function*() {
+				yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					published_at: new Date,
+					discussion_ends_at:
+						DateFns.addDays(DateFns.startOfDay(new Date), -CUTOFF)
+				}))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+				demand(parseDom(res.body).querySelector(".initiative")).be.null()
+			})
+
+			it("must not show archived initiatives", function*() {
+				yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					published_at: new Date,
+					discussion_ends_at: DateFns.addSeconds(new Date, 1),
+					archived_at: new Date
+				}))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+				demand(parseDom(res.body).querySelector(".initiative")).be.null()
+			})
 		})
 
-		it("must show initiatives in edit phase that have ended less than 2w ago",
-			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id,
-				phase: "edit",
-				published_at: new Date,
-				discussion_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -13)
-			}))
+		describe("given initiatives in sign phase", function() {
+			it("must show if deadline in 3 days", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), 4)
+				}))
 
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
+				yield signaturesDb.create(_.times(5, () => new ValidSignature({
+					initiative_uuid: initiative.uuid
+				})))
 
-			var dom = parseDom(res.body)
-			var el = dom.getElementById("initiatives")
-			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
-			el.must.exist()
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+
+				var el = dom.getElementById("initiatives-in-sign").querySelector(
+					`.initiative[data-uuid="${initiative.uuid}"]`
+				)
+
+				el.textContent.must.include(t("N_SIGNATURES", {votes: 5}))
+
+				el.querySelector("time").textContent.must.equal(
+					t("RELATIVE_DEADLINE_N_MORE", {days: 3})
+				)
+			})
+
+			it("must show if deadline in 1 days", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), 2)
+				}))
+
+				yield signaturesDb.create(_.times(5, () => new ValidSignature({
+					initiative_uuid: initiative.uuid
+				})))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+
+				var el = dom.getElementById("initiatives-in-sign").querySelector(
+					`.initiative[data-uuid="${initiative.uuid}"]`
+				)
+
+				el.textContent.must.include(t("N_SIGNATURES", {votes: 5}))
+
+				el.querySelector("time").textContent.must.equal(
+					t("RELATIVE_DEADLINE_1_MORE")
+				)
+			})
+
+			it("must show if deadline today", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), 1)
+				}))
+
+				yield signaturesDb.create(_.times(5, () => new ValidSignature({
+					initiative_uuid: initiative.uuid
+				})))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+
+				var el = dom.getElementById("initiatives-in-sign").querySelector(
+					`.initiative[data-uuid="${initiative.uuid}"]`
+				)
+
+				el.textContent.must.include(t("N_SIGNATURES", {votes: 5}))
+
+				el.querySelector("time").textContent.must.equal(
+					t("RELATIVE_DEADLINE_0_MORE")
+				)
+			})
+
+			it("must show if deadline yesterday and succeeded", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					signing_ends_at: DateFns.startOfDay(new Date)
+				}))
+
+				yield signaturesDb.create(_.times(Config.votesRequired, () => (
+					new ValidSignature({initiative_uuid: initiative.uuid})
+				)))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+
+				var el = dom.getElementById("initiatives-in-sign-unsent").querySelector(
+					`.initiative[data-uuid="${initiative.uuid}"]`
+				)
+
+				el.textContent.must.include(t("N_SIGNATURES", {
+					votes: Config.votesRequired
+				}))
+
+				demand(el.querySelector("time")).be.null()
+			})
+
+			it("must show if for parliament and succeeded 2w ago", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "parliament",
+					signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -CUTOFF)
+				}))
+
+				yield signaturesDb.create(_.times(Config.votesRequired, () => (
+					new ValidSignature({initiative_uuid: initiative.uuid})
+				)))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+
+				var el = dom.getElementById("initiatives-in-sign-unsent").querySelector(
+					`.initiative[data-uuid="${initiative.uuid}"]`
+				)
+
+				el.textContent.must.include(t("N_SIGNATURES", {
+					votes: Config.votesRequired
+				}))
+
+				demand(el.querySelector("time")).be.null()
+			})
+
+			it("must show if for local and succeeded 2w ago", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "kihnu-vald",
+					signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -CUTOFF)
+				}))
+
+				var threshold = Math.round(
+					LOCAL_GOVERNMENTS["kihnu-vald"].population * 0.01
+				)
+
+				yield signaturesDb.create(_.times(threshold, () => (
+					new ValidSignature({initiative_uuid: initiative.uuid})
+				)))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+
+				var el = dom.getElementById("initiatives-in-sign-unsent").querySelector(
+					`.initiative[data-uuid="${initiative.uuid}"]`
+				)
+
+				el.textContent.must.include(t("N_SIGNATURES", {votes: threshold}))
+				demand(el.querySelector("time")).be.null()
+			})
+
+			it("must show if failed in less than 2w", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -13)
+				}))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+
+				var el = dom.getElementById("initiatives-in-sign").querySelector(
+					`.initiative[data-uuid="${initiative.uuid}"]`
+				)
+
+				el.must.exist()
+				demand(el.querySelector("time")).be.null()
+			})
+
+			it("must not show if for parliament and failed 2w ago", function*() {
+				yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "parliament",
+					signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -CUTOFF)
+				}))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+				demand(parseDom(res.body).querySelector(".initiative")).be.null()
+			})
+
+			it("must not show if for local and failed 2w ago", function*() {
+				yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					destination: "kihnu-vald",
+					phase: "sign",
+					signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -CUTOFF)
+				}))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+				demand(parseDom(res.body).querySelector(".initiative")).be.null()
+			})
 		})
 
-		it("must not show initiatives in edit phase that have ended", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id,
-				phase: "edit",
-				published_at: new Date,
-				discussion_ends_at:
-					DateFns.addDays(DateFns.startOfDay(new Date), -CUTOFF)
-			}))
+		describe("given initiatives in parliament phase", function() {
+			it("must show", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "parliament"
+				}))
 
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
-			res.body.must.not.include(initiative.uuid)
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+
+				dom.getElementById("initiatives-in-parliament").querySelector(
+					`.initiative[data-uuid="${initiative.uuid}"]`
+				).must.exist()
+			})
+
+			it("must show external initiatives", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					external: true
+				}))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+
+				dom.getElementById("initiatives-in-parliament").querySelector(
+					`.initiative[data-uuid="${initiative.uuid}"]`
+				).must.exist()
+			})
 		})
 
-		it("must not show archived initiatives in edit phase", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id,
-				phase: "edit",
-				published_at: new Date,
-				discussion_ends_at: DateFns.addSeconds(new Date, 1),
-				archived_at: new Date
-			}))
+		describe("given initiatives in government", function() {
+			it("must show", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "government"
+				}))
 
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
-			res.body.must.not.include(initiative.uuid)
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+
+				dom.getElementById("initiatives-in-government").querySelector(
+					`.initiative[data-uuid="${initiative.uuid}"]`
+				).must.exist()
+			})
+
+			it("must show external initiatives", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "government",
+					external: true
+				}))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseDom(res.body)
+
+				dom.getElementById("initiatives-in-government").querySelector(
+					`.initiative[data-uuid="${initiative.uuid}"]`
+				).must.exist()
+			})
 		})
 
-		it("must show initiatives in sign phase with deadline in 3 days",
-			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id,
-				phase: "sign",
-				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), 4)
-			}))
+		describe("given initiatives in done phase", function() {
+			it("must show", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "done"
+				}))
 
-			yield signaturesDb.create(_.times(5, () => new ValidSignature({
-				initiative_uuid: initiative.uuid
-			})))
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
 
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
+				var dom = parseDom(res.body)
 
-			var dom = parseDom(res.body)
-			var el = dom.getElementById("initiatives")
-			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
-			el.textContent.must.include(t("N_SIGNATURES", {votes: 5}))
+				dom.getElementById("initiatives-in-done").querySelector(
+					`.initiative[data-uuid="${initiative.uuid}"]`
+				).must.exist()
+			})
 
-			el.querySelector("time").textContent.must.equal(
-				t("RELATIVE_DEADLINE_N_MORE", {days: 3})
-			)
-		})
+			it("must show external initiatives", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					phase: "done",
+					external: true
+				}))
 
-		it("must show initiatives in sign phase with deadline in 1 days",
-			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id,
-				phase: "sign",
-				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), 2)
-			}))
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
 
-			yield signaturesDb.create(_.times(5, () => new ValidSignature({
-				initiative_uuid: initiative.uuid
-			})))
+				var dom = parseDom(res.body)
 
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
+				dom.getElementById("initiatives-in-done").querySelector(
+					`.initiative[data-uuid="${initiative.uuid}"]`
+				).must.exist()
+			})
 
-			var dom = parseDom(res.body)
-			var el = dom.getElementById("initiatives")
-			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
-			el.textContent.must.include(t("N_SIGNATURES", {votes: 5}))
+			it("must not show archived external initiatives", function*() {
+				yield initiativesDb.create(new ValidInitiative({
+					phase: "done",
+					external: true,
+					archived_at: new Date
+				}))
 
-			el.querySelector("time").textContent.must.equal(
-				t("RELATIVE_DEADLINE_1_MORE")
-			)
-		})
-
-		it("must show initiatives in sign phase with deadline today",
-			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id,
-				phase: "sign",
-				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), 1)
-			}))
-
-			yield signaturesDb.create(_.times(5, () => new ValidSignature({
-				initiative_uuid: initiative.uuid
-			})))
-
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
-
-			var dom = parseDom(res.body)
-			var el = dom.getElementById("initiatives")
-			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
-			el.textContent.must.include(t("N_SIGNATURES", {votes: 5}))
-
-			el.querySelector("time").textContent.must.equal(
-				t("RELATIVE_DEADLINE_0_MORE")
-			)
-		})
-
-		it("must show initiatives in sign phase that failed in less than 2w",
-			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id,
-				phase: "sign",
-				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -13)
-			}))
-
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
-
-			var dom = parseDom(res.body)
-			var el = dom.getElementById("initiatives")
-			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
-			el.must.exist()
-			demand(el.querySelector("time")).be.null()
-		})
-
-		it("must not show initiatives for parliament in sign phase that failed",
-			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id,
-				phase: "sign",
-				destination: "parliament",
-				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -CUTOFF)
-			}))
-
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
-			res.body.must.not.include(initiative.uuid)
-		})
-
-		it("must not show initiatives for local in sign phase that failed",
-			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id,
-				destination: "kihnu-vald",
-				phase: "sign",
-				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -CUTOFF)
-			}))
-
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
-			res.body.must.not.include(initiative.uuid)
-		})
-
-		it("must show initiatives for parliament in sign phase that succeeded",
-			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id,
-				phase: "sign",
-				destination: "parliament",
-				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -CUTOFF)
-			}))
-
-			yield signaturesDb.create(_.times(Config.votesRequired, () => (
-				new ValidSignature({initiative_uuid: initiative.uuid})
-			)))
-
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
-
-			var dom = parseDom(res.body)
-			var el = dom.getElementById("initiatives")
-			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
-			el.must.exist()
-		})
-
-		it("must show initiatives for local in sign phase that succeeded",
-			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id,
-				phase: "sign",
-				destination: "kihnu-vald",
-				signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -CUTOFF)
-			}))
-
-			var threshold = Math.round(
-				LOCAL_GOVERNMENTS["kihnu-vald"].population * 0.01
-			)
-
-			yield signaturesDb.create(_.times(threshold, () => (
-				new ValidSignature({initiative_uuid: initiative.uuid})
-			)))
-
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
-
-			var dom = parseDom(res.body)
-			var el = dom.getElementById("initiatives")
-			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
-			el.must.exist()
-		})
-
-		it("must show initiatives in parliament phase", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id,
-				phase: "parliament"
-			}))
-
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
-
-			var dom = parseDom(res.body)
-			var el = dom.getElementById("initiatives")
-			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
-			el.must.exist()
-		})
-
-		it("must show external initiatives in parliament phase", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				phase: "parliament",
-				external: true
-			}))
-
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
-
-			var dom = parseDom(res.body)
-			var el = dom.getElementById("initiatives")
-			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
-			el.must.exist()
-		})
-
-		it("must show initiatives in government phase", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id,
-				phase: "government"
-			}))
-
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
-
-			var dom = parseDom(res.body)
-			var el = dom.getElementById("initiatives")
-			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
-			el.must.exist()
-		})
-
-		it("must show external initiatives in government phase", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				phase: "government",
-				external: true
-			}))
-
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
-
-			var dom = parseDom(res.body)
-			var el = dom.getElementById("initiatives")
-			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
-			el.must.exist()
-		})
-
-		it("must show initiatives in done phase", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id,
-				phase: "done"
-			}))
-
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
-
-			var dom = parseDom(res.body)
-			var el = dom.getElementById("initiatives")
-			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
-			el.must.exist()
-		})
-
-		it("must show external initiatives in done phase", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				phase: "done",
-				external: true
-			}))
-
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
-
-			var dom = parseDom(res.body)
-			var el = dom.getElementById("initiatives")
-			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
-			el.must.exist()
-		})
-
-		it("must not show archived external initiatives in done phase",
-			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				phase: "done",
-				external: true,
-				archived_at: new Date
-			}))
-
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
-			res.body.must.not.include(initiative.uuid)
-		})
-
-		it("must not show unpublished initiatives", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: this.author.id,
-				discussion_ends_at: DateFns.addSeconds(new Date, 1)
-			}))
-
-			var res = yield this.request("/")
-			res.statusCode.must.equal(200)
-			res.body.must.not.include(initiative.uuid)
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+				demand(parseDom(res.body).querySelector(".initiative")).be.null()
+			})
 		})
 
 		it("must include social media tags", function*() {
@@ -544,9 +604,10 @@ describe("HomeController", function() {
 					res.statusCode.must.equal(200)
 
 					var dom = parseDom(res.body)
-					var el = dom.getElementById("initiatives")
-					el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
-					el.must.exist()
+
+					dom.getElementById("initiatives-in-edit").querySelector(
+						`.initiative[data-uuid="${initiative.uuid}"]`
+					).must.exist()
 				})
 
 				;["edit", "sign"].forEach(function(phase) {
@@ -560,7 +621,7 @@ describe("HomeController", function() {
 							discussion_ends_at: DateFns.addSeconds(new Date, 1),
 
 							signing_ends_at: phase == "sign"
-								? DateFns.addSeconds(new Date, 1)
+								? DateFns.addDays(DateFns.startOfDay(new Date), 1)
 								: null
 						}))
 
@@ -568,14 +629,15 @@ describe("HomeController", function() {
 						res.statusCode.must.equal(200)
 
 						var dom = parseDom(res.body)
-						var el = dom.getElementById("initiatives")
-						el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
-						el.must.exist()
+
+						dom.getElementById(`initiatives-in-${phase}`).querySelector(
+							`.initiative[data-uuid="${initiative.uuid}"]`
+						).must.exist()
 					})
 
 					it(`must not show initiatives in ${phase} not destined for ${dest}`,
 						function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
+						yield initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: phase,
 							published_at: new Date,
@@ -588,8 +650,33 @@ describe("HomeController", function() {
 
 						var res = yield this.request("/", {headers: {Host: host}})
 						res.statusCode.must.equal(200)
-						res.body.must.not.include(initiative.uuid)
+						demand(parseDom(res.body).querySelector(".initiative")).be.null()
 					})
+				})
+
+				it(`must show initiatives in sign phase with deadline past destined for ${dest}`,
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+						destination: dest,
+						signing_ends_at: DateFns.startOfDay(new Date)
+					}))
+
+					var threshold = getRequiredSignatureCount(initiative)
+
+					yield signaturesDb.create(_.times(threshold, () => (
+						new ValidSignature({initiative_uuid: initiative.uuid})
+					)))
+
+					var res = yield this.request("/", {headers: {Host: host}})
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+
+					dom.getElementById(`initiatives-in-sign-unsent`).querySelector(
+						`.initiative[data-uuid="${initiative.uuid}"]`
+					).must.exist()
 				})
 			})
 		}
@@ -609,9 +696,10 @@ describe("HomeController", function() {
 				res.statusCode.must.equal(200)
 
 				var dom = parseDom(res.body)
-				var el = dom.getElementById("initiatives")
-				el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
-				el.must.exist()
+
+				dom.getElementById("initiatives-in-edit").querySelector(
+					`.initiative[data-uuid="${initiative.uuid}"]`
+				).must.exist()
 			})
 
 			;["parliament", "muhu-vald"].forEach(function(dest) {
@@ -634,9 +722,10 @@ describe("HomeController", function() {
 						res.statusCode.must.equal(200)
 
 						var dom = parseDom(res.body)
-						var el = dom.getElementById("initiatives")
-						el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
-						el.must.exist()
+
+						dom.getElementById(`initiatives-in-${phase}`).querySelector(
+							`.initiative[data-uuid="${initiative.uuid}"]`
+						).must.exist()
 					})
 				})
 			})

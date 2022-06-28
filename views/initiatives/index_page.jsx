@@ -249,7 +249,7 @@ function InitiativeBoxesView(attrs) {
 	var initiatives = attrs.initiatives
 	initiatives = phase ? sortForPhase(phase, initiatives) : initiatives
 
-	return <ol class="initiatives">
+	return <ol id={attrs.id} class="initiatives">
 		{initiatives.map((initiative) => <InitiativeBoxView
 			t={t}
 			initiative={initiative}

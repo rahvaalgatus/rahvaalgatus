@@ -212,6 +212,7 @@
 	"HOME_PAGE_SEARCH_PLACEHOLDER": "Search Initiatives",
 	"HOME_PAGE_SEARCH_SEE_OTHER": "View initiatives only for the <a href=\"{{parliamentSiteUrl}}\">parliament</a> or <a href=\"{{localSiteUrl}}\">local governments</a>.\nFor older initiatives, <a href=\"{{archiveUrl}}\">see the initiative archive<a>.\n",
 	"HOME_PAGE_SEE_ARCHIVE": "Looking for older initiatives? See the <a href=\"{{url}}\">initiative archive</a>.",
+	"HOME_PAGE_SIGNED_TITLE": "Sending",
 	"HOME_PAGE_STATISTICS_DISCUSSIONS": "Discussions",
 	"HOME_PAGE_STATISTICS_GOVERNMENT": "Sent",
 	"HOME_PAGE_STATISTICS_INITIATIVES": "Initiatives",

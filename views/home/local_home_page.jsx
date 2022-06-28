@@ -1,5 +1,4 @@
 /** @jsx Jsx */
-var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var Page = require("../page")
@@ -9,19 +8,13 @@ var {InitiativeBoxesView} = require("../initiatives/index_page")
 var {CallToActionsView} = require("../home_page")
 var javascript = require("root/lib/jsx").javascript
 var {stringify} = require("root/lib/json")
-var EMPTY_ARR = Array.prototype
+var {groupInitiatives} = require("../home_page")
 
 module.exports = function(attrs) {
 	var t = attrs.t
 	var req = attrs.req
-	var initiatives = attrs.initiatives
 	var initiativeCounts = attrs.initiativeCounts
-
-	var initiativesByPhase = _.groupBy(initiatives, "phase")
-	var inEdit = initiativesByPhase.edit || EMPTY_ARR
-	var inSign = initiativesByPhase.sign || EMPTY_ARR
-	var inGovernment = initiativesByPhase.government || EMPTY_ARR
-	var inDone = initiativesByPhase.done || EMPTY_ARR
+	var initiativesByPhase = groupInitiatives(attrs.initiatives)
 
 	return <Page page="local-home" req={req}>
 		<script src="/assets/local.js" />
@@ -59,43 +52,58 @@ module.exports = function(attrs) {
 		</Section>
 
 		<Section id="initiatives" class="secondary-section initiatives-section">
-			{inEdit.length > 0 ? <Fragment>
+			{initiativesByPhase.edit ? <Fragment>
 				<h2>{t("EDIT_PHASE")}</h2>
 
 				<InitiativeBoxesView
 					t={t}
 					phase="edit"
-					initiatives={inEdit}
+					id="initiatives-in-edit"
+					initiatives={initiativesByPhase.edit}
 				/>
 			</Fragment> : null}
 
-			{inSign.length > 0 ? <Fragment>
+			{initiativesByPhase.sign ? <Fragment>
 				<h2>{t("SIGN_PHASE")}</h2>
 
 				<InitiativeBoxesView
 					t={t}
 					phase="sign"
-					initiatives={inSign}
+					id="initiatives-in-sign"
+					initiatives={initiativesByPhase.sign}
 				/>
 			</Fragment> : null}
 
-			{inGovernment.length > 0 ? <Fragment>
+			{initiativesByPhase.signUnsent ? <Fragment>
+				<h2>{t("HOME_PAGE_SIGNED_TITLE")}</h2>
+
+				<InitiativeBoxesView
+					t={t}
+					phase="sign"
+					id="initiatives-in-sign-unsent"
+					initiatives={initiativesByPhase.signUnsent}
+				/>
+			</Fragment> : null}
+
+			{initiativesByPhase.government ? <Fragment>
 				<h2>{t("GOVERNMENT_PHASE")}</h2>
 
 				<InitiativeBoxesView
 					t={t}
 					phase="government"
-					initiatives={inGovernment}
+					id="initiatives-in-government"
+					initiatives={initiativesByPhase.government}
 				/>
 			</Fragment> : null}
 
-			{inDone.length > 0 ? <Fragment>
+			{initiativesByPhase.done ? <Fragment>
 				<h2>{t("DONE_PHASE")}</h2>
 
 				<InitiativeBoxesView
 					t={t}
 					phase="done"
-					initiatives={inDone}
+					id="initiatives-in-done"
+					initiatives={initiativesByPhase.done}
 				/>
 			</Fragment> : null}
 

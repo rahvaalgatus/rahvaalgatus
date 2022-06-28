@@ -230,6 +230,7 @@
 	"HOME_PAGE_SEARCH_PLACEHOLDER": "Otsi algatusi",
 	"HOME_PAGE_SEARCH_SEE_OTHER": "Vaata ainult <a href=\"{{parliamentSiteUrl}}\">Riigikogule</a> või <a href=\"{{localSiteUrl}}\">kohalikele omavalitsustele</a> suunatud algatusi.\nVanemad algatused leiad <a href=\"{{archiveUrl}}\">algatuste arhiivist</a>.\n",
 	"HOME_PAGE_SEE_ARCHIVE": "Otsid vanemaid algatusi? Vaata <a href=\"{{url}}\">algatuste arhiivi</a>.",
+	"HOME_PAGE_SIGNED_TITLE": "Saatmisel",
 	"HOME_PAGE_STATISTICS_DISCUSSIONS": "Arutelusid",
 	"HOME_PAGE_STATISTICS_GOVERNMENT": "Saadetud",
 	"HOME_PAGE_STATISTICS_INITIATIVES": "Algatusi",
