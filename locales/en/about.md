@@ -1,17 +1,17 @@
 # About
 
-The Citizen Initiative Portal rahvaalgatus.ee enables you to **write proposals**, hold discussions, compose and send digitally signed collective addresses to the Estonian Parliament (Riigikogu) and the local government. At rahvaalgatus.ee you can submit a proposal on how to amend existing regulations or improve the society. A collective address sent to the Riigikogu should have **at least 1000 signatures** in support, given by at least 16 year old citizens of Estonia. For the local government the collective address needs to collect the signatures of **at least 1% of its registered population**. At rahvaalgatus.ee you can follow the proceedings of the address and see whether it will become a draft act or how the institution decides to solve the relevant problem.
+The Citizen Initiative Portal Rahvaalgatus.ee enables you to **write proposals**, hold discussions, compose and send digitally signed collective addresses to the Estonian Parliament (Riigikogu) and the local government. At Rahvaalgatus.ee you can submit a proposal on how to amend existing regulations or improve the society. A collective address sent to the Riigikogu should have **at least 1000 signatures** in support, given by at least 16 year old citizens of Estonia. For the local government the collective address needs to collect the signatures of **at least 1% of its registered population**. At Rahvaalgatus.ee you can follow the proceedings of the address and see whether it will become a draft act or how the institution decides to solve the relevant problem.
 
 Collective petitioning right emerged from the People’s Assembly process – since 2014 spring every citizen can send collective initiatives to the Parliament for consideration. According to the law, the Parliament will have to process appeals that have at least 1000 signatures. There has been over a **hundred** collective proposals that have reached the Parliament since 2014. Starting from August 2020 citizens can also send proposals to their local government. 
 
-**Who should use rahvaalgatus.ee?**
+**Who should use Rahvaalgatus.ee?**
 
 - citizens interested in societal issues for creating discussions and initiatives
 - advocacy organisations for creating discussions and initiatives
 - citizens interested in participating in discussions and in co-creating collective initiatives
 - people willing to support initiatives with their digital signature
 
-**Who else benefits from rahvaalgatus.ee?**
+**Who else benefits from Rahvaalgatus.ee?**
 
 - members of the Riigikogu and other politicians in order to keep up with discussions being held and proposals being submitted
 - representatives of ministries in order to keep up with propositions made in their fields
@@ -19,13 +19,13 @@ Collective petitioning right emerged from the People’s Assembly process – si
 
 Rahvaalgatus.ee portal is created and developed by the Estonian Cooperation Assembly in close cooperation with the Chancellery of the Riigikogu.
 
-## <a id="tos"></a> Terms of using the rahvaalgatus.ee platform
+## <a id="tos"></a> Terms of using the Rahvaalgatus.ee platform
 
 Rahvaalgatus.ee is meant for co-creating proposals and submitting them to the Parliament of Estonia. The proposal should aim at **improving the society** or **amending existing regulations**.
 
 The terms of use are compiled in good faith that argumented discussions help to create good proposals and initiatives, which in turn help to improve the life in Estonia.
 
-**When using rahvaalgatus.ee I will keep in mind the following:**
+**When using Rahvaalgatus.ee I will keep in mind the following:**
 
 1. my idea or proposal is in line with the constitution of Estonia;
 2. the submitted solution has to be proved and the proof in turn has to be controllable;
@@ -38,13 +38,13 @@ The terms of use are compiled in good faith that argumented discussions help to 
 
 Rahvaalgatus.ee is **not open for hate speech** or any other offending remarks, also it is not designed for political parties represented in the Parliament.
 
-The moderator of rahvaalgatus.ee - the Estonian Cooperation Assembly - **has the right to remove any kind of post and entry violating the terms of use**, without giving any further explanation.
+The moderator of Rahvaalgatus.ee - the Estonian Cooperation Assembly - **has the right to remove any kind of post and entry violating the terms of use**, without giving any further explanation.
 
-If you need help or you hesitate whether rahvaalgatus.ee is the proper platform for submitting your proposal, please contact info@rahvaalgatus.ee.
+If you need help or you hesitate whether Rahvaalgatus.ee is the proper platform for submitting your proposal, please contact info@rahvaalgatus.ee.
 
 
 ## Processing of personal data
-Personal data are data relating to the user that are entered on the platform of rahvaalgatus.ee. The user of rahvaalgatus.ee will grant the administrator of the platform the right to disclose, process and maintain the entered personal data. If the user wishes to cease the public disclosure, processing and maintenance of personal data by rahvaalgatus.ee, then rahvaalgatus.ee will enable the user to delete his/her user account and all data relating to it.
+Personal data are data relating to the user that are entered on the platform of Rahvaalgatus.ee. The user of rahvaalgatus.ee will grant the administrator of the platform the right to disclose, process and maintain the entered personal data. If the user wishes to cease the public disclosure, processing and maintenance of personal data by rahvaalgatus.ee, then rahvaalgatus.ee will enable the user to delete his/her user account and all data relating to it.
 
 The user account must be created in order to initiate the motion and provide commentaries.
 
