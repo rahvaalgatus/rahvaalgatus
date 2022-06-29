@@ -21,9 +21,9 @@ Rahvaalgatus.ee portal is created and developed by the Estonian Cooperation Asse
 
 ## <a id="tos"></a> Terms of using the Rahvaalgatus.ee platform
 
-Rahvaalgatus.ee is meant for co-creating proposals and submitting them to the Parliament of Estonia. The proposal should aim at **improving the society** or **amending existing regulations**.
+Rahvaalgatus.ee is meant for co-creating proposals and submitting them to the Parliament of Estonia. The proposal should aim at **improving the society** or **amending existing regulations**. 
 
-The terms of use are compiled in good faith that argumented discussions help to create good proposals and initiatives, which in turn help to improve the life in Estonia.
+The terms of use are compiled in good faith that argumented discussions help to create good proposals and initiatives, which in turn help to improve the life in Estonia. **You can collect signatures for your proposal for a maximum of 18 months**
 
 **When using Rahvaalgatus.ee I will keep in mind the following:**
 
