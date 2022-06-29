@@ -44,7 +44,7 @@ If you need help or you hesitate whether rahvaalgatus.ee is the proper platform 
 
 
 ## Processing of personal data
-Personal data are data relating to the user that are entered on the platform of rahvaalgatus.ee (‘public legislative initiative’). The user of rahvaalgatus.ee will grant the administrator of the platform the right to disclose, process and maintain the entered personal data. If the user wishes to cease the public disclosure, processing and maintenance of personal data by rahvaalgatus.ee, then rahvaalgatus.ee will enable the user to delete his/her user account and all data relating to it.
+Personal data are data relating to the user that are entered on the platform of rahvaalgatus.ee. The user of rahvaalgatus.ee will grant the administrator of the platform the right to disclose, process and maintain the entered personal data. If the user wishes to cease the public disclosure, processing and maintenance of personal data by rahvaalgatus.ee, then rahvaalgatus.ee will enable the user to delete his/her user account and all data relating to it.
 
 The user account must be created in order to initiate the motion and provide commentaries.
 
