@@ -34,7 +34,7 @@ The terms of use are compiled in good faith that argumented discussions help to 
 5. I can criticise ideas, not people. When criticising I focus on solutions, not problems;
 6. I engage other people to discussions and will consider their arguments in compiling the final initiative;
 7. I only use the platform if I do not have other channels for submitting my ideas and proposals for changing regulations.
-8. our platform also allows initiatives to be written in foreign languages, but in such a case an Estonian translation should be included. In this way, people who do not speak that language can take part in the initiative. Furthermore, according to the law it is not possible to send an initiative to the Riigikogu or local government without and Estonian translation. 
+8. our platform also allows initiatives to be written in foreign languages, but in such a case an Estonian translation should be included. In this way, people who do not speak that foreign language can still take part in the initiative. Furthermore, according to the law it is not possible to send an initiative to the Riigikogu or local government without and Estonian translation. 
 
 Rahvaalgatus.ee is not open for hate speech or any other offending remarks, also it is not designed for political parties represented in the Parliament.
 
