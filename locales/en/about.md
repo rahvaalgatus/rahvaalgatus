@@ -60,6 +60,6 @@ If a person finds that his or her rights have been unreasonably restricted or vi
 ## Useful Links
 
 - [About submitting collective proposals](https://www.riigikogu.ee/en/introduction-and-history/have-your-say/submit-collective-proposal) on the website of the Riigikogu.
-- [Collective proposals that have been sent to the Riigikogu since 2014](https://www.riigikogu.ee/tutvustus-ja-ajalugu/raakige-kaasa/esitage-kollektiivne-poordumine/riigikogule-esitatud-kollektiivsed-poordumised).
-- [Rules for proceedings regarding collective proposals submitted to the Riigikogu](https://www.riigiteataja.ee/en/eli/512032015002/consolide#para149).
+- [Collective proposals that have been sent to the Riigikogu since 2014](https://www.riigikogu.ee/tutvustus-ja-ajalugu/raakige-kaasa/esitage-kollektiivne-poordumine/riigikogule-esitatud-kollektiivsed-poordumised)
+- [Rules for proceedings regarding collective proposals submitted to the Riigikogu](https://www.riigiteataja.ee/en/eli/512032015002/consolide#para149)
 - [Local Government Organisation Act](https://www.riigiteataja.ee/en/eli/530082021001/consolide), where § 32 regulates the creation of collective proposals regarding local matters.
