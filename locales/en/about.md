@@ -36,9 +36,9 @@ The terms of use are compiled in good faith that argumented discussions help to 
 7. I only use the platform if I do not have other channels for submitting my ideas and proposals for changing regulations.
 8. our platform also allows initiatives to be written in foreign languages, but in such a case an Estonian translation should be included. In this way, people who do not speak that foreign language can still take part in the initiative. Furthermore, according to the law it is not possible to send an initiative to the Riigikogu or local government without and Estonian translation. 
 
-Rahvaalgatus.ee is not open for hate speech or any other offending remarks, also it is not designed for political parties represented in the Parliament.
+Rahvaalgatus.ee is **not open for hate speech** or any other offending remarks, also it is not designed for political parties represented in the Parliament.
 
-The moderator of rahvaalgatus.ee - the Estonian Cooperation Assembly - has the right to remove any kind of post and entry violating the terms of use, without giving any further explanation.
+The moderator of rahvaalgatus.ee - the Estonian Cooperation Assembly - **has the right to remove any kind of post and entry violating the terms of use**, without giving any further explanation.
 
 If you need help or you hesitate whether rahvaalgatus.ee is the proper platform for submitting your proposal, please contact info@rahvaalgatus.ee.
 
