@@ -996,6 +996,8 @@ function* updateInitiativePhaseToParliament(req, res) {
 		? [Config.parliamentEmail]
 		: LOCAL_GOVERNMENTS[initiative.destination].initiativesEmails
 
+	var localGovernmentGuideUrl = Config.url + "/help/kov-guide.pdf"
+
 	yield sendEmail({
 		envelope: {to: emails},
 		to: {name: "", address: "%recipient%"},
@@ -1028,6 +1030,7 @@ function* updateInitiativePhaseToParliament(req, res) {
 			undersignedSignaturesUrl: undersignedSignaturesUrl,
 			citizenosSignaturesUrl: citizenosSignaturesUrl,
 			signaturesCsvUrl: signaturesCsvUrl,
+			guideUrl: localGovernmentGuideUrl,
 
 			authorName: attrs.contact.name,
 			authorEmail: attrs.contact.email,
