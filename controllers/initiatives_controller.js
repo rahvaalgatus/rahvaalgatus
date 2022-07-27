@@ -37,7 +37,6 @@ var {countUndersignedSignaturesById} = require("root/lib/initiative")
 var {countCitizenOsSignaturesById} = require("root/lib/initiative")
 var {parsePersonalId} = require("root/lib/user")
 var {PHASES} = require("root/lib/initiative")
-var EMPTY = Object.prototype
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: "", phase: "edit"}
 var EMPTY_CONTACT = {name: "", email: "", phone: ""}
@@ -314,7 +313,6 @@ exports.read = next(function*(req, res) {
 	var thankAgain = false
 	var signature
 	var newSignatureToken = req.flash("signatureToken")
-	var isAuthor = user && Initiative.isAuthor(user, initiative)
 	var textLanguage = req.query.language || initiative.language
 
 	if (initiative.phase == "sign") if (newSignatureToken) {
@@ -372,23 +370,14 @@ exports.read = next(function*(req, res) {
 	`)
 
 	var text = yield textsDb.read(sql`
-		SELECT text.* FROM initiative_texts AS text
-		LEFT JOIN initiative_text_signatures AS sig
-		ON sig.text_id = text.id AND sig.signed AND sig.timestamped
-		WHERE text.initiative_uuid = ${initiative.uuid}
-		AND text.language = ${textLanguage}
-
-		${(
-			initiative.phase == "edit" ||
-			initiative.language == textLanguage ||
-			isAuthor
-		) ? sql`` : sql`AND sig.id IS NOT NULL`}
-
-		ORDER BY text.id DESC
+		SELECT * FROM initiative_texts
+		WHERE initiative_uuid = ${initiative.uuid}
+		AND language = ${textLanguage}
+		ORDER BY id DESC
 		LIMIT 1
 	`)
 
-	if (text == null && initiative.language != textLanguage && !isAuthor) {
+	if (text == null && initiative.language != textLanguage) {
 		res.statusMessage = "No Translation"
 		return void res.redirect(307, req.baseUrl + req.path)
 	}
@@ -405,31 +394,15 @@ exports.read = next(function*(req, res) {
 		else throw new HttpError(404, "No Text Yet")
 	}
 
-	var translations = isAuthor || initiative.phase == "edit"
-		? _.indexBy(yield textsDb.search(sql`
-			SELECT language, id
-			FROM initiative_texts
-
-			WHERE id IN (
-				SELECT MAX(id) FROM initiative_texts
-				WHERE initiative_uuid = ${initiative.uuid}
-				AND language != ${initiative.language}
-				GROUP BY language
-			)
-		`), "language")
-		: EMPTY
-
-	var signedTranslations = _.indexBy(yield textsDb.search(sql`
+	var translations = _.indexBy(yield textsDb.search(sql`
 		SELECT language, id
 		FROM initiative_texts
 
 		WHERE id IN (
-			SELECT MAX(text.id) FROM initiative_texts AS text
-			JOIN initiative_text_signatures AS sig
-			ON sig.text_id = text.id AND sig.signed AND sig.timestamped
-			WHERE text.initiative_uuid = ${initiative.uuid}
-			AND text.language != ${initiative.language}
-			GROUP BY text.language
+			SELECT MAX(id) FROM initiative_texts
+			WHERE initiative_uuid = ${initiative.uuid}
+			AND language != ${initiative.language}
+			GROUP BY language
 		)
 	`), "language")
 
@@ -447,7 +420,6 @@ exports.read = next(function*(req, res) {
 		text: text,
 		textLanguage: textLanguage,
 		translations: translations,
-		signedTranslations: signedTranslations,
 		coauthorInvitation,
 		image: image,
 		files: files,
@@ -943,18 +915,14 @@ function* updateInitiativePhaseToParliament(req, res) {
 
 	if (initiative.language != "et") {
 		var estonian = yield textsDb.read(sql`
-			SELECT text.id
-			FROM initiative_texts AS text
-			JOIN initiative_text_signatures AS sig
-			ON sig.text_id = text.id AND sig.signed AND sig.timestamped
-			WHERE text.initiative_uuid = ${initiative.uuid}
-			AND language = 'et'
-			ORDER BY text.id DESC
+			SELECT id
+			FROM initiative_texts
+			WHERE initiative_uuid = ${initiative.uuid} AND language = 'et'
+			ORDER BY id DESC
 			LIMIT 1
 		`)
 
-		if (estonian == null)
-			throw new HttpError(403, "No Signed Estonian Translation")
+		if (estonian == null) throw new HttpError(403, "No Estonian Translation")
 	}
 
 	var attrs = {

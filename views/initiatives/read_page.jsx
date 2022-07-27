@@ -129,7 +129,6 @@ function ReadPage(attrs) {
 	var text = attrs.text
 	var textLanguage = attrs.textLanguage
 	var translations = attrs.translations
-	var signedTranslations = attrs.signedTranslations
 	var image = attrs.image
 	var coauthorInvitation = attrs.coauthorInvitation
 	var initiativeUrl = serializeInitiativeUrl(initiative)
@@ -312,31 +311,14 @@ function ReadPage(attrs) {
 					}
 				}(initiative.phase)}
 
-				{(
-					!_.isEmpty(signedTranslations) ||
-					!_.isEmpty(translations)
-				) ? <menu id="language-tabs">
+				{!_.isEmpty(translations) ? <menu id="language-tabs">
 					{LANGUAGES.map(function(lang) {
-						if (!(
-							initiative.language == lang ||
-							lang in signedTranslations ||
-							(initiative.phase == "edit" || isAuthor) && lang in translations
-						)) return null
+						if (!(initiative.language == lang || lang in translations))
+							return null
 
 						var path = initiativePath
 						if (initiative.language != lang) path += "?language=" + lang
-
 						var klass = "tab " + selected(textLanguage, lang)
-
-						if (
-							isAuthor &&
-							initiative.phase != "edit" &&
-							initiative.language != lang && (
-								signedTranslations[lang] == null ||
-								signedTranslations[lang].id !=
-								translations[lang].id
-							)
-						) klass += " unsigned"
 
 						return <a href={path} class={klass}>{Jsx.html(
 							initiative.language != lang
@@ -347,56 +329,6 @@ function ReadPage(attrs) {
 						)}</a>
 					})}
 				</menu> : null}
-
-				{(
-					isAuthor &&
-					initiative.phase != "edit" &&
-					text &&
-					initiative.language != text.language && (
-						signedTranslations[text.language] == null ||
-						signedTranslations[text.language].id !=
-						translations[text.language].id
-					)
-				) ? <p class="initiative-translation-information-for-author">
-					{signedTranslations[text.language] == null
-						? t("INITIATIVE_TRANSLATION_PLEASE_SIGN")
-						: t("INITIATIVE_TRANSLATION_PLEASE_SIGN_AFTER_UPDATE")
-					}
-					<br />
-					<br />
-					<a
-						href={`${initiativePath}/texts/${text.id}/sign`}
-						class="sign-translation-button link-button"
-					>{t("INITIATIVE_TRANSLATION_SIGN")}</a>
-				</p> : null}
-
-				{(
-					isAuthor &&
-					initiative.phase != "edit" &&
-					text &&
-					initiative.language == text.language &&
-					_.any(translations, (translation) => (
-						signedTranslations[translation.language] == null ||
-						signedTranslations[translation.language].id != translation.id
-					))
-				) ? <p class="initiative-translation-information-for-author">
-					{t("INITIATIVE_TRANSLATION_PLEASE_SIGN_SOME_TRANSLATION")}
-					<br />
-
-					{_.map(translations, (translation) => (
-						signedTranslations[translation.language] == null ||
-						signedTranslations[translation.language].id != translation.id
-					) ? <Fragment>
-						<br />
-						<a
-							href={`${initiativePath}/texts/${translation.id}/sign`}
-							class="sign-translation-button link-button"
-						>{t(
-							"INITIATIVE_TRANSLATION_SIGN_TRANSLATION_IN_" +
-							translation.language.toUpperCase()
-						)}</a>
-					</Fragment> : null)}
-				</p> : null}
 
 				<InitiativeContentView
 					initiative={initiative}
@@ -623,7 +555,6 @@ function ReadPage(attrs) {
 					text={text}
 					hasComments={comments.length > 0}
 					translations={translations}
-					signedTranslations={signedTranslations}
 				/>
 
 				<SidebarInfoView
@@ -929,7 +860,6 @@ function SidebarAuthorView(attrs) {
 	var user = req.user
 	var initiative = attrs.initiative
 	var translations = attrs.translations
-	var signedTranslations = attrs.signedTranslations
 	var isCreator = user && initiative.user_id == user.id
 
 	var isAuthor = user && Initiative.isAuthor(user, initiative)
@@ -947,10 +877,7 @@ function SidebarAuthorView(attrs) {
 		? initiativePath + "/edit?language=" + text.language
 		: initiativePath + "/edit"
 
-	var hasSignedEstonianText = (
-		initiative.language == "et" || signedTranslations.et
-	)
-
+	var hasEstonianText = initiative.language == "et" || translations.et
 	var canPublish = Initiative.canPublish(user)
 	var canSendToSign = Initiative.canPropose(new Date, initiative, user)
 
@@ -1057,7 +984,7 @@ function SidebarAuthorView(attrs) {
 					: "send-to-local-government-button"
 				}
 
-				disabled={!hasSignedEstonianText}
+				disabled={!hasEstonianText}
 				class="green-button wide-button"
 			>
 				{initiative.destination == "parliament"
@@ -1066,11 +993,8 @@ function SidebarAuthorView(attrs) {
 				}
 			</FormButton>
 
-			{!hasSignedEstonianText ? <p>{Jsx.html(translations.et
-				? t("INITIATIVE_SEND_TO_PARLIAMENT_NEEDS_SIGNED_ESTONIAN_TEXT", {
-					signTextUrl: `${initiativePath}/texts/${translations.et.id}/sign`
-				})
-				: t("INITIATIVE_SEND_TO_PARLIAMENT_NEEDS_ESTONIAN_TEXT", {
+			{!hasEstonianText ? <p>{Jsx.html(
+				t("INITIATIVE_SEND_TO_PARLIAMENT_NEEDS_ESTONIAN_TEXT", {
 					newTextUrl: initiativePath + "/texts/new?language=et"
 				})
 			)}</p> : null}

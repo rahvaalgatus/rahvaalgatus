@@ -2612,7 +2612,6 @@ button.inherited {
 			&:last-child { border-top-right-radius: $tab-radius; }
 
 			&.selected { background: white; color: $text; }
-			&.unsigned { font-style: italic; }
 
 			@media only screen and (min-width: 769px) and (max-width: 920px) {
 				small { display: none; }
@@ -2630,18 +2629,6 @@ button.inherited {
 				padding-left: 1.5rem;
 				padding-right: 1.5rem;
 			}
-		}
-	}
-
-	.initiative-translation-information-for-author {
-		margin: 2rem 2rem 0;
-		border-radius: 0.5rem;
-		background-color: lemonchiffon;
-		border: 1px solid moccasin;
-		padding: 1rem;
-
-		.link-button {
-			font-weight: 500;
 		}
 	}
 

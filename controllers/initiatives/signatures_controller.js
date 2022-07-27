@@ -220,12 +220,9 @@ exports.router.get("/",
 			ESTONIAN: if (initiative.language != "et") {
 				var estonian = yield textsDb.read(sql`
 					SELECT *
-					FROM initiative_texts AS text
-					JOIN initiative_text_signatures AS sig
-					ON sig.text_id = text.id AND sig.signed AND sig.timestamped
-					WHERE text.initiative_uuid = ${initiative.uuid}
-					AND language = 'et'
-					ORDER BY text.id DESC
+					FROM initiative_texts
+					WHERE initiative_uuid = ${initiative.uuid} AND language = 'et'
+					ORDER BY id DESC
 					LIMIT 1
 				`)
 
