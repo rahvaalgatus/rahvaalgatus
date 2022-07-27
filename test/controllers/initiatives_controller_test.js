@@ -4837,6 +4837,33 @@ describe("InitiativesController", function() {
 					)
 				})
 
+				it("must disable send to sign button if Estonian translation missing",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						destination: "parliament",
+						language: "en",
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+
+					var dom = parseDom(res.body)
+					var button = dom.getElementById("send-to-sign-button")
+					button.textContent.must.equal(t("BTN_SEND_TO_VOTE"))
+					button.disabled.must.be.true()
+
+					var newTextUrl = "/initiatives/" + initiative.uuid
+					newTextUrl += "/texts/new?language=et"
+
+					res.body.must.include(
+						t("INITIATIVE_SEND_TO_SIGNING_NEEDS_ESTONIAN_TEXT", {
+							newTextUrl
+						})
+					)
+				})
+
 				it("must not render delete initiative button if not initiative author",
 					function*() {
 					var initiative = yield initiativesDb.create(new ValidInitiative({
@@ -7871,6 +7898,91 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(422)
 					res.statusMessage.must.equal("Deadline Too Near or Too Far")
 					yield initiativesDb.read(initiative).must.then.eql(initiative)
+				})
+
+				it("must respond with 403 if Estonian translation missing",
+					function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						language: "en",
+						destination: "parliament",
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
+					}))
+
+					var english = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+						language: "en"
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "PUT",
+						form: {
+							status: "voting",
+							language: english.language,
+
+							endsOn: formatIsoDate(DateFns.addDays(
+								DateFns.startOfDay(new Date),
+								Config.minDeadlineDays - 1
+							))
+						}
+					})
+
+					res.statusCode.must.equal(403)
+					res.statusMessage.must.equal("No Estonian Translation")
+				})
+
+				it("must update if Estonian translation present", function*() {
+					var initiative = yield initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						language: "en",
+						destination: "parliament",
+						published_at: DateFns.addDays(new Date, -Config.minDeadlineDays)
+					}))
+
+					var english = yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+						language: "en"
+					}))
+
+					yield textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+						language: "et"
+					}))
+
+					var endsOn = DateFns.addDays(
+						DateFns.startOfDay(new Date),
+						Config.minDeadlineDays - 1
+					)
+
+					var res = yield this.request("/initiatives/" + initiative.uuid, {
+						method: "PUT",
+						form: {
+							status: "voting",
+							language: english.language,
+							endsOn: formatIsoDate(endsOn)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Sent to Signing")
+
+					var html = Initiative.renderForParliament(english)
+
+					yield initiativesDb.search(sql`
+						SELECT * FROM initiatives
+					`).must.then.eql([{
+						__proto__: initiative,
+						phase: "sign",
+						signing_started_at: new Date,
+						signing_ends_at: DateFns.addDays(endsOn, 1),
+						title: english.title,
+						text: html,
+						text_type: new MediaType("text/html"),
+						text_sha256: sha256(html)
+					}])
 				})
 
 				it("must update initiative if coauthor", function*() {

@@ -836,13 +836,18 @@ function* updateInitiativePhaseToSign(req, res) {
 	if (initiative.phase == "edit") {
 		var text = yield textsDb.read(sql`
 			SELECT * FROM initiative_texts
-			WHERE initiative_uuid = ${initiative.uuid}
-			AND language = ${lang}
-			ORDER BY created_at DESC
+			WHERE initiative_uuid = ${initiative.uuid} AND language = ${lang}
+			ORDER BY id DESC
 			LIMIT 1
 		`)
 
 		if (text == null) throw new HttpError(422, "No Text")
+
+		if (
+			text.language != "et" &&
+			!(yield hasEstonianTranslation(initiative))
+		) throw new HttpError(403, "No Estonian Translation")
+
 		var html = Initiative.renderForParliament(text)
 
 		attrs.text = html
@@ -913,17 +918,10 @@ function* updateInitiativePhaseToParliament(req, res) {
 		Initiative.canSendToLocalGovernment(initiative, user, signatureCount)
 	)) throw new HttpError(403, "Cannot Send")
 
-	if (initiative.language != "et") {
-		var estonian = yield textsDb.read(sql`
-			SELECT id
-			FROM initiative_texts
-			WHERE initiative_uuid = ${initiative.uuid} AND language = 'et'
-			ORDER BY id DESC
-			LIMIT 1
-		`)
-
-		if (estonian == null) throw new HttpError(403, "No Estonian Translation")
-	}
+	if (
+		initiative.language != "et" &&
+		!(yield hasEstonianTranslation(initiative))
+	) throw new HttpError(403, "No Estonian Translation")
 
 	var attrs = {
 		status: req.body.status,
@@ -1090,6 +1088,16 @@ function* updateInitiativeAuthor(req, res) {
 
 	res.statusMessage = "Author Updated"
 	res.redirect(303, req.baseUrl + req.url)
+}
+
+function hasEstonianTranslation(initiative) {
+	return textsDb.read(sql`
+		SELECT true
+		FROM initiative_texts
+		WHERE initiative_uuid = ${initiative.uuid} AND language = 'et'
+		ORDER BY id DESC
+		LIMIT 1
+	`).then(Boolean)
 }
 
 function parseInitiative(initiative, obj) {

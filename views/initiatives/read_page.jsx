@@ -879,7 +879,11 @@ function SidebarAuthorView(attrs) {
 
 	var hasEstonianText = initiative.language == "et" || translations.et
 	var canPublish = Initiative.canPublish(user)
-	var canSendToSign = Initiative.canPropose(new Date, initiative, user)
+
+	var canSendToSign = (
+		Initiative.canPropose(new Date, initiative, user) &&
+		hasEstonianText
+	)
 
 	var actions = <Fragment>
 		{initiative.phase == "edit" ? <Fragment>
@@ -962,7 +966,11 @@ function SidebarAuthorView(attrs) {
 						new Date
 					)
 				})}
-			</p> : null}
+			</p> : !hasEstonianText ? <p>{Jsx.html(
+				t("INITIATIVE_SEND_TO_SIGNING_NEEDS_ESTONIAN_TEXT", {
+					newTextUrl: initiativePath + "/texts/new?language=et"
+				})
+			)}</p> : null}
 
 			{initiative.destination == null ? <p>
 				{t("INITIATIVE_SEND_TO_SIGNING_NEEDS_DESTINATION")}
