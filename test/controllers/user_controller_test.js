@@ -638,8 +638,7 @@ describe("UserController", function() {
 				email.body.must.equal(t("CONFIRM_EMAIL_BODY", {
 					url: `${host}/user/email?confirmation-token=${token.toString("hex")}`,
 					siteUrl: Config.url,
-					facebookUrl: Config.facebookUrl,
-					twitterUrl: Config.twitterUrl
+					facebookUrl: Config.facebookUrl
 				}))
 			})
 
@@ -680,8 +679,7 @@ describe("UserController", function() {
 				email.body.must.equal(t("CONFIRM_EMAIL_BODY", {
 					url: `${host}/user/email?confirmation-token=${token.toString("hex")}`,
 					siteUrl: Config.url,
-					facebookUrl: Config.facebookUrl,
-					twitterUrl: Config.twitterUrl
+					facebookUrl: Config.facebookUrl
 				}))
 			})
 
@@ -728,8 +726,7 @@ describe("UserController", function() {
 				email.body.must.equal(t("CONFIRM_EMAIL_BODY", {
 					url: `${host}/user/email?confirmation-token=${token.toString("hex")}`,
 					siteUrl: Config.url,
-					facebookUrl: Config.facebookUrl,
-					twitterUrl: Config.twitterUrl
+					facebookUrl: Config.facebookUrl
 				}))
 			})
 
@@ -772,8 +769,7 @@ describe("UserController", function() {
 				email.body.must.equal(t("CONFIRM_EMAIL_BODY", {
 					url: `${host}/user/email?confirmation-token=${token.toString("hex")}`,
 					siteUrl: Config.url,
-					facebookUrl: Config.facebookUrl,
-					twitterUrl: Config.twitterUrl
+					facebookUrl: Config.facebookUrl
 				}))
 			})
 

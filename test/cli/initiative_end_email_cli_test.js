@@ -47,8 +47,7 @@ describe("InitiativeEndEmailCli", function() {
 				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 				initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 				siteUrl: Config.url,
-				facebookUrl: Config.facebookUrl,
-				twitterUrl: Config.twitterUrl
+				facebookUrl: Config.facebookUrl
 			}))
 		})
 
@@ -182,8 +181,7 @@ describe("InitiativeEndEmailCli", function() {
 					initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 					initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 					siteUrl: Config.url,
-					facebookUrl: Config.facebookUrl,
-					twitterUrl: Config.twitterUrl
+					facebookUrl: Config.facebookUrl
 				}))
 			})
 
@@ -215,8 +213,7 @@ describe("InitiativeEndEmailCli", function() {
 					initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 					initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 					siteUrl: Config.url,
-					facebookUrl: Config.facebookUrl,
-					twitterUrl: Config.twitterUrl
+					facebookUrl: Config.facebookUrl
 				}))
 			})
 
@@ -268,8 +265,7 @@ describe("InitiativeEndEmailCli", function() {
 					initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 					initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 					siteUrl: Config.url,
-					facebookUrl: Config.facebookUrl,
-					twitterUrl: Config.twitterUrl
+					facebookUrl: Config.facebookUrl
 				}))
 			})
 
@@ -305,8 +301,7 @@ describe("InitiativeEndEmailCli", function() {
 					initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 					initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 					siteUrl: Config.url,
-					facebookUrl: Config.facebookUrl,
-					twitterUrl: Config.twitterUrl
+					facebookUrl: Config.facebookUrl
 				}))
 			})
 
@@ -463,8 +458,7 @@ describe("InitiativeEndEmailCli", function() {
 				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 				newInitiativeUrl: `${Config.url}/initiatives/new`,
 				siteUrl: Config.url,
-				facebookUrl: Config.facebookUrl,
-				twitterUrl: Config.twitterUrl
+				facebookUrl: Config.facebookUrl
 			}))
 		})
 
@@ -513,8 +507,7 @@ describe("InitiativeEndEmailCli", function() {
 				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
 				expirationDate: renderExpirationDate(initiative),
 				siteUrl: Config.url,
-				facebookUrl: Config.facebookUrl,
-				twitterUrl: Config.twitterUrl
+				facebookUrl: Config.facebookUrl
 			}))
 		})
 

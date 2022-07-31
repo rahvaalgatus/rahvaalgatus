@@ -291,13 +291,6 @@ function CallToActionsView(attrs) {
 			<img src="/assets/facebook-logo.svg" />
 		</a>
 
-		<a
-			href={Config.twitterUrl}
-			class="twitter-logo social-media-button"
-		>
-			<img src="/assets/twitter-logo.svg" />
-		</a>
-
 		{subscriptionForm}
 	</div>
 }

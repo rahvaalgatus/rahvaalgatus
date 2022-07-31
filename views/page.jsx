@@ -220,9 +220,6 @@ function Footer(attrs) {
 
 				<br />
 				Facebook: <a href={Config.facebookUrl}>fb.me/rahvaalgatus</a>
-
-				<br />
-				Twitter: <a href={Config.twitterUrl}>@{TWITTER_NAME}</a>
 			</p>
 		</div>
 

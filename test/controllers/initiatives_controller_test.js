@@ -8838,8 +8838,7 @@ describe("InitiativesController", function() {
 							authorEmail: "john@example.com",
 							authorPhone: "42",
 							siteUrl: Config.url,
-							facebookUrl: Config.facebookUrl,
-							twitterUrl: Config.twitterUrl
+							facebookUrl: Config.facebookUrl
 						}))
 					})
 
@@ -8954,8 +8953,7 @@ describe("InitiativesController", function() {
 							authorName: "John",
 							unsubscribeUrl: `${Config.url}%recipient.unsubscribeUrl%`,
 							siteUrl: Config.url,
-							facebookUrl: Config.facebookUrl,
-							twitterUrl: Config.twitterUrl
+							facebookUrl: Config.facebookUrl
 						}))
 					})
 				})
@@ -9181,8 +9179,7 @@ describe("InitiativesController", function() {
 								authorPhone: "42",
 								guideUrl: Config.url + "/help/kov-guide.pdf",
 								siteUrl: Config.url,
-								facebookUrl: Config.facebookUrl,
-								twitterUrl: Config.twitterUrl
+								facebookUrl: Config.facebookUrl
 							})
 						)
 					})
@@ -9300,8 +9297,7 @@ describe("InitiativesController", function() {
 							authorName: "John",
 							unsubscribeUrl: `${Config.url}%recipient.unsubscribeUrl%`,
 							siteUrl: Config.url,
-							facebookUrl: Config.facebookUrl,
-							twitterUrl: Config.twitterUrl
+							facebookUrl: Config.facebookUrl
 						}))
 					})
 				})
