@@ -93,6 +93,7 @@ describe("ImageController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Image Replaced")
 				res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
 				var images = yield imagesDb.search(sql`SELECT * FROM initiative_images`)
@@ -138,6 +139,7 @@ describe("ImageController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Image Replaced")
 				res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
 				var images = yield imagesDb.search(sql`SELECT * FROM initiative_images`)
@@ -170,6 +172,7 @@ describe("ImageController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Image Author Updated")
 				res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
 				yield imagesDb.read(image).must.then.eql({

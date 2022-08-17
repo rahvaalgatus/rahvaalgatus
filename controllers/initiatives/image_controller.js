@@ -73,6 +73,7 @@ exports.router.put("/", next(function*(req, res) {
 		: req.t("INITIATIVE_IMAGE_AUTHOR_UPDATED")
 	)
 
+	res.statusMessage = imageFile ? "Image Replaced" : "Image Author Updated"
 	res.redirect(303, Path.dirname(req.baseUrl))
 
 	function respondWithError(statusMessage, err) {
