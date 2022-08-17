@@ -5154,30 +5154,6 @@
       "from": "https://registry.npmjs.org/standard-http-error/-/standard-http-error-2.0.0.tgz",
       "resolved": "https://registry.npmjs.org/standard-http-error/-/standard-http-error-2.0.0.tgz"
     },
-    "syslogh": {
-      "version": "1.2.1",
-      "from": "syslogh@latest",
-      "resolved": "https://registry.npmjs.org/syslogh/-/syslogh-1.2.1.tgz",
-      "dependencies": {
-        "bindings": {
-          "version": "1.5.0",
-          "from": "bindings@>=1.1.0 <2.0.0",
-          "resolved": "https://registry.npmjs.org/bindings/-/bindings-1.5.0.tgz",
-          "dependencies": {
-            "file-uri-to-path": {
-              "version": "1.0.0",
-              "from": "file-uri-to-path@1.0.0",
-              "resolved": "https://registry.npmjs.org/file-uri-to-path/-/file-uri-to-path-1.0.0.tgz"
-            }
-          }
-        },
-        "nan": {
-          "version": "2.14.0",
-          "from": "nan@>=2.0.9 <3.0.0",
-          "resolved": "https://registry.npmjs.org/nan/-/nan-2.14.0.tgz"
-        }
-      }
-    },
     "tough-cookie": {
       "version": "2.4.3",
       "from": "tough-cookie@>=2.4.3 <2.5.0",
