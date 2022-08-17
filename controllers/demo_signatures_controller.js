@@ -17,7 +17,6 @@ var {getSigningMethod} = require("./initiatives/signatures_controller")
 var demoSignaturesDb = require("root/db/demo_signatures_db")
 var dispose = require("content-disposition")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
-var logger = require("root").logger
 var next = require("co-next")
 var mobileId = require("root").mobileId
 var smartId = require("root").smartId
@@ -107,12 +106,6 @@ exports.router.post("/", next(function*(req, res) {
 			personalId = req.body.personalId
 			sanitizedPersonalId = sanitizePersonalId(personalId)
 
-			// Log Mobile-Id requests to confirm SK's billing.
-			logger.info(
-				"Requesting Mobile-Id certificate for %s.",
-				sanitizedPersonalId
-			)
-
 			cert = yield mobileId.readCertificate(phoneNumber, personalId)
 			if (err = validateCertificate(req.t, cert)) throw err
 
@@ -121,8 +114,6 @@ exports.router.post("/", next(function*(req, res) {
 
 			// The Mobile-Id API returns any signing errors only when its status is
 			// queried, not when signing is initiated.
-			logger.info("Signing via Mobile-Id for %s.", sanitizedPersonalId)
-
 			var sessionId = yield mobileId.sign(
 				phoneNumber,
 				personalId,
@@ -153,12 +144,6 @@ exports.router.post("/", next(function*(req, res) {
 			personalId = req.body.personalId
 			sanitizedPersonalId = sanitizePersonalId(personalId)
 
-			// Log Smart-Id requests to confirm SK's billing.
-			logger.info(
-				"Requesting Smart-Id certificate for %s.",
-				sanitizedPersonalId
-			)
-
 			cert = yield smartId.certificate("PNOEE-" + personalId)
 			cert = yield waitForSmartIdSession(90, cert)
 			if (cert == null) throw new SmartIdError("TIMEOUT")
@@ -166,8 +151,6 @@ exports.router.post("/", next(function*(req, res) {
 
 			;[country, personalId] = getCertificatePersonalId(cert)
 			xades = newXades()
-
-			logger.info("Signing via Smart-Id for %s.", sanitizedPersonalId)
 
 			// The Smart-Id API returns any signing errors only when its status is
 			// queried, not when signing is initiated.
@@ -376,7 +359,6 @@ exports.router.put("/:token",
 				updated_at: new Date
 			})
 
-			logger.info("Requesting timemark for demo signature %d.", signature.id)
 			xades.setOcspResponse(yield hades.timemark(xades))
 
 			yield demoSignaturesDb.update(signature, {
@@ -414,7 +396,6 @@ function* waitForMobileIdSignature(signature, sessionId) {
 			updated_at: new Date
 		})
 
-		logger.info("Requesting timemark for demo signature %d.", signature.id)
 		xades.setOcspResponse(yield hades.timemark(xades))
 
 		yield demoSignaturesDb.update(signature, {
@@ -451,7 +432,6 @@ function* waitForSmartIdSignature(signature, session) {
 			updated_at: new Date
 		})
 
-		logger.info("Requesting timemark for demo signature %d.", signature.id)
 		xades.setOcspResponse(yield hades.timemark(xades))
 
 		yield demoSignaturesDb.update(signature, {

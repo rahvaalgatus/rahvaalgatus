@@ -35,7 +35,6 @@ var {ensureAreaCode} = require("root/lib/mobile_id")
 var constantTimeEqual = require("root/lib/crypto").constantTimeEqual
 var {getCertificatePersonalId} = require("root/lib/certificate")
 var ENV = process.env.ENV
-var logger = require("root").logger
 var {validateCertificate} = require("root/lib/certificate")
 var getNormalizedMobileIdErrorCode =
 	require("root/lib/mobile_id").getNormalizedErrorCode
@@ -349,24 +348,11 @@ exports.router.post("/", next(function*(req, res) {
 			personalId = parsePersonalId(req.t, req.body.personalId)
 			if (err = validatePersonalId(req.t, personalId)) throw err
 
-			// Log Mobile-Id requests to confirm SK's billing.
-			logger.info(
-				"Requesting Mobile-Id certificate for %s and %s.",
-				phoneNumber,
-				personalId
-			)
-
 			cert = yield mobileId.readCertificate(phoneNumber, personalId)
 			if (err = validateCertificate(req.t, cert)) throw err
 
 			;[country, personalId] = getCertificatePersonalId(cert)
 			xades = newXades(cert, initiative)
-
-			logger.info(
-				"Signing via Mobile-Id for %s and %s.",
-				phoneNumber,
-				personalId
-			)
 
 			// The Mobile-Id API returns any signing errors only when its status is
 			// queried, not when signing is initiated.
@@ -400,9 +386,6 @@ exports.router.post("/", next(function*(req, res) {
 			personalId = parsePersonalId(req.t, req.body.personalId)
 			if (err = validatePersonalId(req.t, personalId)) throw err
 
-			// Log Smart-Id requests to confirm SK's billing.
-			logger.info("Requesting Smart-Id certificate for %s.", personalId)
-
 			cert = yield smartId.certificate("PNOEE-" + personalId)
 			cert = yield waitForSmartIdSession(90, cert)
 			if (cert == null) throw new SmartIdError("TIMEOUT")
@@ -410,8 +393,6 @@ exports.router.post("/", next(function*(req, res) {
 
 			;[country, personalId] = getCertificatePersonalId(cert)
 			xades = newXades(cert, initiative)
-
-			logger.info("Signing via Smart-Id for %s.", personalId)
 
 			// The Smart-Id API returns any signing errors only when its status is
 			// queried, not when signing is initiated.
@@ -659,12 +640,6 @@ exports.router.put("/:personalId",
 				updated_at: new Date
 			})
 
-			logger.info(
-				"Requesting timemark for signable %s%s.",
-				signable.country,
-				signable.personal_id
-			)
-
 			xades.setOcspResponse(yield hades.timemark(xades))
 
 			yield signablesDb.update(signable, {
@@ -735,12 +710,6 @@ function* waitForMobileIdSignature(signable, sessionId) {
 			updated_at: new Date
 		})
 
-		logger.info(
-			"Requesting timemark for signable %s%s.",
-			signable.country,
-			signable.personal_id
-		)
-
 		xades.setOcspResponse(yield hades.timemark(xades))
 
 		yield signablesDb.update(signable, {
@@ -778,12 +747,6 @@ function* waitForSmartIdSignature(signable, session) {
 			signed: true,
 			updated_at: new Date
 		})
-
-		logger.info(
-			"Requesting timemark for signable %s%s.",
-			signable.country,
-			signable.personal_id
-		)
 
 		xades.setOcspResponse(yield hades.timemark(xades))
 

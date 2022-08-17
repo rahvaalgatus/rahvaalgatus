@@ -28,7 +28,6 @@ var {hasSignatureType} = require("./initiatives/signatures_controller")
 var {getSigningMethod} = require("./initiatives/signatures_controller")
 var getNormalizedMobileIdErrorCode =
 	require("root/lib/mobile_id").getNormalizedErrorCode
-var logger = require("root").logger
 var sql = require("sqlate")
 var sleep = require("root/lib/promise").sleep
 var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
@@ -222,13 +221,6 @@ exports.router.post("/", next(function*(req, res, next) {
 			var phoneNumber = ensureAreaCode(req.body.phoneNumber)
 			personalId = req.body.personalId
 
-			// Log Mobile-Id requests to confirm SK's billing.
-			logger.info(
-				"Authenticating via Mobile-Id for %s and %s.",
-				phoneNumber,
-				personalId
-			)
-
 			// It's easier to get the signing certificate to validate the personal id
 			// and Mobile-Id existence and only then initiate the actual
 			// authentication. This way we avoid creating a authentication and going
@@ -273,9 +265,6 @@ exports.router.post("/", next(function*(req, res, next) {
 
 		case "smart-id":
 			personalId = req.body.personalId
-
-			// Log Smart-Id requests to confirm SK's billing.
-			logger.info("Authenticating via Smart-Id for %s.", personalId)
 
 			var token = Crypto.randomBytes(16)
 			tokenHash = sha256(token)
