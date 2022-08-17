@@ -1,7 +1,8 @@
 NODE = node
 NODE_OPTS = --use-strict --require j6pack/register
 ENV = development
-NPM_REBUILD = npm --ignore-scripts false rebuild --build-from-source
+NPM = npm
+NPM_REBUILD = $(NPM) --ignore-scripts false rebuild --build-from-source
 TEST = $$(find test -name "*_test.js" -o -name "*_test.jsx")
 TEST_TAGS =
 MOCHA = ./node_modules/.bin/_mocha
@@ -124,7 +125,7 @@ livereload:
 		./node_modules/.bin/livereload public --wait 50 --port $(LIVERELOAD_PORT)
 
 shrinkwrap:
-	npm shrinkwrap --dev
+	$(NPM) shrinkwrap --dev
 
 rebuild:
 	$(NPM_REBUILD) syslogh
