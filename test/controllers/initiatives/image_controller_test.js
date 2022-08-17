@@ -189,6 +189,27 @@ describe("ImageController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("INITIATIVE_IMAGE_AUTHOR_UPDATED"))
 			})
+
+			// https://github.com/mscdex/dicer/pull/22
+			// https://github.com/mscdex/busboy/issues/250
+			it("must not crash when a header is preceded with a space", function*() {
+				var initiative = yield initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id
+				}))
+
+				var res = yield this.request(`/initiatives/${initiative.uuid}/image`, {
+					method: "PUT",
+
+					headers: {
+						"Content-Type": "multipart/form-data; boundary=----limitless",
+					},
+
+					body: "------limitless\r\n Content-Disposition: form-data; name=\"image\"\r\n\r\n\r\n------limitless--"
+				})
+
+				res.statusCode.must.equal(500)
+				res.statusMessage.must.equal("Internal Server Error")
+			})
 		})
 	})
 })
