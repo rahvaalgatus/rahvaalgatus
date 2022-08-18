@@ -1484,6 +1484,40 @@ describe("SignaturesController", function() {
 				})])
 			})
 
+			it("must respond with 405 if initiative not yet in sign phase",
+				function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					published_at: new Date
+				}))
+
+				var cert = new Certificate(newCertificate({
+					subject: {
+						countryName: "EE",
+						organizationName: "ESTEID",
+						organizationalUnitName: "digital signature",
+						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
+						surname: "SMITH",
+						givenName: "JOHN",
+						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
+					},
+
+					issuer: VALID_ISSUERS[0],
+					publicKey: JOHN_RSA_KEYS.publicKey
+				}))
+
+				var path = `/initiatives/${initiative.uuid}`
+				var signing = yield this.request(path + "/signatures", {
+					method: "POST",
+					headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
+					body: cert.toBuffer()
+				})
+
+				signing.statusCode.must.equal(405)
+				signing.statusMessage.must.equal("Signing Not Yet Started")
+			})
+
 			it("must respond with 405 if initiative signing finished", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
@@ -2016,6 +2050,29 @@ describe("SignaturesController", function() {
 					xades: String(xades),
 					created_from: LONDON_GEO
 				})])
+			})
+
+			it("must respond with 405 if initiative not yet in sign phase",
+				function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					published_at: new Date
+				}))
+
+				var initiativePath = `/initiatives/${initiative.uuid}`
+				var signing = yield this.request(initiativePath + "/signatures", {
+					method: "POST",
+
+					form: {
+						method: "mobile-id",
+						personalId: ADULT_PERSONAL_ID,
+						phoneNumber: "+37200000766"
+					}
+				})
+
+				signing.statusCode.must.equal(405)
+				signing.statusMessage.must.equal("Signing Not Yet Started")
 			})
 
 			it("must respond with 405 if initiative signing finished", function*() {
@@ -2716,6 +2773,24 @@ describe("SignaturesController", function() {
 					xades: String(xades),
 					created_from: LONDON_GEO
 				})])
+			})
+
+			it("must respond with 405 if initiative not yet in sign phase",
+				function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					published_at: new Date
+				}))
+
+				var initiativePath = `/initiatives/${initiative.uuid}`
+				var signing = yield this.request(initiativePath + "/signatures", {
+					method: "POST",
+					form: {method: "smart-id", personalId: ADULT_PERSONAL_ID}
+				})
+
+				signing.statusCode.must.equal(405)
+				signing.statusMessage.must.equal("Signing Not Yet Started")
 			})
 
 			it("must respond with 405 if initiative signing finished", function*() {

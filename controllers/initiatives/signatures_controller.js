@@ -318,10 +318,16 @@ exports.router.post("/", next(function*(req, res) {
 	var cert, err, country, personalId, xades, signable, signatureUrl
 	var geo = yield lookupAndSerializeGeo(req.ip)
 
-	// Prevents new signatures, but lets already started signing finish.
+	// Prevents new signatures after the signing deadline, but lets already
+	// started signatures finish.
 	//
 	// Mobile methods wait for the signature in the background, but the ID-card
 	// process sends a PUT later. This needs to be let through.
+	if (initiative.phase == "edit")
+		throw new HttpError(405, "Signing Not Yet Started", {
+			description: req.t("CANNOT_SIGN_SIGNING_NOT_YET_STARTED")
+		})
+
 	if (!Initiative.isSignable(new Date, initiative))
 		throw new HttpError(405, "Signing Ended", {
 			description: req.t("CANNOT_SIGN_SIGNING_ENDED")
