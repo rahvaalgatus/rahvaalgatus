@@ -4,7 +4,6 @@ var HttpError = require("standard-http-error")
 var Initiative = require("root/lib/initiative")
 var initiativesDb = require("root/db/initiatives_db")
 var textsDb = require("root/db/initiative_texts_db")
-var next = require("co-next")
 var sql = require("sqlate")
 var parseBody = require("body-parser").raw
 var {hasSignatureType} = require("./signatures_controller")
@@ -29,11 +28,11 @@ exports.router.use(function(req, _res, next) {
 	next()
 })
 
-exports.router.get("/new", next(function*(req, res) {
+exports.router.get("/new", function(req, res) {
 	var initiative = req.initiative
 	var lang = req.query.language || "et"
 
-	var text = yield textsDb.read(sql`
+	var text = textsDb.read(sql`
 		SELECT * FROM initiative_texts
 		WHERE initiative_uuid = ${initiative.uuid}
 		AND language = ${lang}
@@ -43,12 +42,12 @@ exports.router.get("/new", next(function*(req, res) {
 
 	if (text) res.redirect(req.baseUrl + "/" + text.id)
 	else res.render("initiatives/update_page.jsx", {language: lang})
-}))
+})
 
-exports.router.use("/:id", next(function*(req, _res, next) {
+exports.router.use("/:id", function(req, _res, next) {
 	var initiative = req.initiative
 
-	var text = yield textsDb.read(sql`
+	var text = textsDb.read(sql`
 		SELECT * FROM initiative_texts
 		WHERE initiative_uuid = ${initiative.uuid}
 		AND id = ${req.params.id}
@@ -58,13 +57,13 @@ exports.router.use("/:id", next(function*(req, _res, next) {
 
 	req.text = text
 	next()
-}))
+})
 
 exports.router.get("/:id", function(req, res) {
 	res.render("initiatives/update_page.jsx", {text: req.text})
 })
 
-exports.router.post("/", next(function*(req, res) {
+exports.router.post("/", function(req, res) {
 	var user = req.user
 	var initiative = req.initiative
 	var attrs = parse(req.body)
@@ -76,13 +75,13 @@ exports.router.post("/", next(function*(req, res) {
 
 	// Matching basis are also enforced by the database schema, but let's not
 	// throw an SQL error should something happen to the basis.
-	if (attrs.basis_id && !(yield textsDb.read(sql`
+	if (attrs.basis_id && textsDb.read(sql`
 		SELECT true FROM initiative_texts
 		WHERE initiative_uuid = ${initiative.uuid}
 		AND id = ${attrs.basis_id}
-	`))) attrs.basis_id = null
+	`) == null) attrs.basis_id = null
 
-	var text = yield textsDb.create({
+	var text = textsDb.create({
 		__proto__: attrs,
 		initiative_uuid: initiative.uuid,
 		user_id: user.id,
@@ -94,7 +93,7 @@ exports.router.post("/", next(function*(req, res) {
 			initiative.language == text.language ||
 			_.parseBoolean(req.body["set-default"])
 		)
-	) initiative = yield initiativesDb.update(initiative, {
+	) initiative = initiativesDb.update(initiative, {
 		title: text.title,
 		language: text.language
 	})
@@ -108,7 +107,7 @@ exports.router.post("/", next(function*(req, res) {
 	var path = "/initiatives/" + initiative.uuid
 	if (text.language != initiative.language) path += "?language=" + text.language
 	res.redirect(path)
-}))
+})
 
 function parse(obj) {
 	return {

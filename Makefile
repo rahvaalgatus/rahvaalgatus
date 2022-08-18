@@ -6,7 +6,7 @@ NPM_REBUILD = $(NPM) --ignore-scripts false rebuild --build-from-source
 TEST = $$(find test -name "*_test.js" -o -name "*_test.jsx")
 TEST_TAGS =
 MOCHA = ./node_modules/.bin/_mocha
-SASS = ./node_modules/.bin/node-sass --recursive --indent-type tab --indent-width 1 --output-style expanded
+SASS = ./node_modules/.bin/sass --style expanded --no-source-map
 BUNDLE = bundle
 TRANSLATIONS_URL = https://docs.google.com/spreadsheets/d/1JKPUNp8Y_8Aigq7eGJXtWT6nZFhd31k2Ht3AjC-i-Q8/gviz/tq?tqx=out:json&tq&gid=0
 LOCAL_GOVERNMENTS_URL = https://docs.google.com/spreadsheets/d/1DynXZ8Um9TsiYPDaYW3-RTgaPy8hsdq9jj72G41yrVE/gviz/tq?tqx=out:json&tq&gid=0
@@ -42,8 +42,8 @@ RSYNC_OPTS = \
 	--exclude "/node_modules/mitm/***" \
 	--exclude "/node_modules/mocha/***" \
 	--exclude "/node_modules/must/***" \
-	--exclude "/node_modules/node-sass/***" \
-	--exclude "/node_modules/sqlite3/***" \
+	--exclude "/node_modules/sass/***" \
+	--exclude "/node_modules/better-sqlite3/***" \
 	--exclude "/node_modules/sharp/***" \
 	--exclude "/node_modules/emailjs-mime-parser/***" \
 	--exclude "/node_modules/sinon/***" \
@@ -80,10 +80,10 @@ minify:
 	$(MAKE) -C app minify
 
 stylesheets:
-	$(SASS) --output public/assets assets
+	@$(SASS) assets:public/assets
 
 autostylesheets: stylesheets
-	$(MAKE) SASS="$(SASS) --watch" "$<"
+	@$(MAKE) SASS="$(SASS) --watch" "$<"
 
 fonticons:
 	@$(BUNDLE) exec fontcustom compile
@@ -127,8 +127,8 @@ shrinkwrap:
 	$(NPM) shrinkwrap --dev
 
 rebuild:
-	$(NPM_REBUILD) node-sass --sass-binary-site=http://localhost:0
-	$(NPM_REBUILD) sqlite3
+	cd node_modules/better-sqlite3 && \
+	$(NPM) --ignore-scripts false run build-release
 	$(NPM_REBUILD) sharp --sharp-dist-base-url=http://localhost:0
 
 config/database.sql:

@@ -17,18 +17,18 @@ Options:
     --yes        Actually anonymize signatures. Otherwise just a dry-run.
 `
 
-module.exports = function*(argv) {
+module.exports = function(argv) {
 	var args = Neodoc.run(USAGE_TEXT, {argv: argv || ["initiative-signatures"]})
 	if (args["--help"]) return void process.stdout.write(USAGE_TEXT.trimLeft())
 
-	if (args.anonymize) yield anonymize(args["--yes"])
+	if (args.anonymize) anonymize(args["--yes"])
 	else process.stdout.write(USAGE_TEXT.trimLeft())
 }
 
-function* anonymize(actuallyAnonymize) {
+function anonymize(actuallyAnonymize) {
 	var deadline = DateFns.addDays(new Date, -28)
 
-	var anonymizables = yield initiativesDb.search(sql`
+	var anonymizables = initiativesDb.search(sql`
 		SELECT
 			initiative.*,
 			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
@@ -67,10 +67,10 @@ function* anonymize(actuallyAnonymize) {
 		)
 
 		if (actuallyAnonymize) {
-			yield sqlite(sql`BEGIN`)
+			sqlite(sql`BEGIN`)
 
 			try {
-				yield sqlite(sql`
+				sqlite(sql`
 					UPDATE initiative_signatures SET
 						personal_id = substr(personal_id, 1, 3),
 						token = NULL,
@@ -80,7 +80,7 @@ function* anonymize(actuallyAnonymize) {
 					WHERE initiative_uuid = ${initiative.uuid}
 				`)
 
-				yield sqlite(sql`
+				sqlite(sql`
 					UPDATE initiative_citizenos_signatures SET
 						personal_id = substr(personal_id, 1, 3),
 						asic = NULL,
@@ -89,13 +89,13 @@ function* anonymize(actuallyAnonymize) {
 					WHERE initiative_uuid = ${initiative.uuid}
 				`)
 
-				yield initiativesDb.update(initiative, {
+				initiativesDb.update(initiative, {
 					signatures_anonymized_at: new Date
 				})
 			}
-			catch (err) { yield sqlite(sql`ROLLBACK`); throw err }
+			catch (err) { sqlite(sql`ROLLBACK`); throw err }
 
-			yield sqlite(sql`COMMIT`)
+			sqlite(sql`COMMIT`)
 		}
 	}
 }

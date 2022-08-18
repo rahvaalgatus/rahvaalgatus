@@ -31,9 +31,9 @@ describe("InitiativeEventsController", function() {
 	describe("GET /new", function() {
 		describe("when not logged in", function() {
 			it("must respond with 401", function*() {
-				var author = yield usersDb.create(new ValidUser)
+				var author = usersDb.create(new ValidUser)
 
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: author.id,
 					published_at: new Date
 				}))
@@ -54,7 +54,7 @@ describe("InitiativeEventsController", function() {
 
 			NONEVENTABLE_PHASES.forEach(function(phase) {
 				it(`must respond with 403 if in ${phase} phase`, function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: phase,
 						published_at: new Date
@@ -69,7 +69,7 @@ describe("InitiativeEventsController", function() {
 
 			EVENTABLE_PHASES.forEach(function(phase) {
 				it(`must render if in ${phase} phase`, function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: phase
 					}))
@@ -81,7 +81,7 @@ describe("InitiativeEventsController", function() {
 			})
 
 			it("must respond with 403 if archived", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					phase: "sign",
 					published_at: new Date,
@@ -95,12 +95,12 @@ describe("InitiativeEventsController", function() {
 			})
 
 			it("must render if coauthor", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: (yield usersDb.create(new ValidUser)).id,
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: usersDb.create(new ValidUser).id,
 					phase: "sign"
 				}))
 
-				yield coauthorsDb.create(new ValidCoauthor({
+				coauthorsDb.create(new ValidCoauthor({
 					initiative: initiative,
 					user: this.user,
 					status: "accepted"
@@ -112,8 +112,8 @@ describe("InitiativeEventsController", function() {
 			})
 
 			it("must respond with 403 if not author", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: (yield usersDb.create(new ValidUser)).id,
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: usersDb.create(new ValidUser).id,
 					published_at: new Date
 				}))
 
@@ -127,12 +127,12 @@ describe("InitiativeEventsController", function() {
 
 	describe("GET /:id", function() {
 		it("must redirect to initiative page given event id", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
 				external: true
 			}))
 
-			var event = yield eventsDb.create(new ValidEvent({
+			var event = eventsDb.create(new ValidEvent({
 				initiative_uuid: initiative.uuid,
 				title: "We sent it.",
 				content: "To somewhere."
@@ -147,7 +147,7 @@ describe("InitiativeEventsController", function() {
 
 		it("must redirect to initiative page given virtual event id",
 			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
 				external: true
 			}))
@@ -177,7 +177,7 @@ describe("InitiativeEventsController", function() {
 
 			NONEVENTABLE_PHASES.forEach(function(phase) {
 				it(`must respond with 403 if in ${phase} phase`, function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: phase,
 						published_at: new Date
@@ -192,7 +192,7 @@ describe("InitiativeEventsController", function() {
 			})
 
 			it("must respond with 403 if archived", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					phase: "sign",
 					published_at: new Date,
@@ -207,7 +207,7 @@ describe("InitiativeEventsController", function() {
 			})
 
 			it("must respond with 422 given invalid type", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					phase: "sign"
 				}))
@@ -225,7 +225,7 @@ describe("InitiativeEventsController", function() {
 			describe("given text event", function() {
 				EVENTABLE_PHASES.forEach(function(phase) {
 					it(`must create event if in ${phase} phase`, function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
+						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
 							phase: phase
 						}))
@@ -243,7 +243,7 @@ describe("InitiativeEventsController", function() {
 						res.statusCode.must.equal(302)
 						res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
-						var events = yield eventsDb.search(sql`
+						var events = eventsDb.search(sql`
 							SELECT * FROM initiative_events
 						`)
 
@@ -260,12 +260,12 @@ describe("InitiativeEventsController", function() {
 				})
 
 				it("must email subscribers interested in events", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: "sign"
 					}))
 
-					var subscriptions = yield subscriptionsDb.create([
+					var subscriptions = subscriptionsDb.create([
 						new ValidSubscription({
 							initiative_uuid: initiative.uuid,
 							confirmed_at: new Date,
@@ -303,7 +303,7 @@ describe("InitiativeEventsController", function() {
 
 					res.statusCode.must.equal(302)
 
-					var messages = yield messagesDb.search(sql`
+					var messages = messagesDb.search(sql`
 						SELECT * FROM initiative_messages
 					`)
 
@@ -349,7 +349,7 @@ describe("InitiativeEventsController", function() {
 
 			describe("given media-coverage event", function() {
 				it("must create event", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: "sign"
 					}))
@@ -368,7 +368,7 @@ describe("InitiativeEventsController", function() {
 					res.statusCode.must.equal(302)
 					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
-					var events = yield eventsDb.search(sql`
+					var events = eventsDb.search(sql`
 						SELECT * FROM initiative_events
 					`)
 
@@ -388,12 +388,12 @@ describe("InitiativeEventsController", function() {
 				})
 
 				it("must email subscribers interested in events", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: "sign"
 					}))
 
-					var subscriptions = yield subscriptionsDb.create([
+					var subscriptions = subscriptionsDb.create([
 						new ValidSubscription({
 							initiative_uuid: initiative.uuid,
 							confirmed_at: new Date,
@@ -432,7 +432,7 @@ describe("InitiativeEventsController", function() {
 
 					res.statusCode.must.equal(302)
 
-					var messages = yield messagesDb.search(sql`
+					var messages = messagesDb.search(sql`
 						SELECT * FROM initiative_messages
 					`)
 
@@ -478,12 +478,12 @@ describe("InitiativeEventsController", function() {
 			})
 
 			it("must create event if coauthor", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: (yield usersDb.create(new ValidUser)).id,
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: usersDb.create(new ValidUser).id,
 					phase: "sign"
 				}))
 
-				yield coauthorsDb.create(new ValidCoauthor({
+				coauthorsDb.create(new ValidCoauthor({
 					initiative: initiative,
 					user: this.user,
 					status: "accepted"
@@ -502,7 +502,7 @@ describe("InitiativeEventsController", function() {
 				res.statusCode.must.equal(302)
 				res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
-				var events = yield eventsDb.search(sql`
+				var events = eventsDb.search(sql`
 					SELECT * FROM initiative_events
 				`)
 
@@ -517,8 +517,8 @@ describe("InitiativeEventsController", function() {
 			})
 
 			it("must respond with 403 if not author", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: (yield usersDb.create(new ValidUser)).id,
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: usersDb.create(new ValidUser).id,
 					published_at: new Date
 				}))
 
@@ -535,8 +535,8 @@ describe("InitiativeEventsController", function() {
 
 function mustRateLimit(request) {
 	describe("as a rate limited endpoint", function() {
-		beforeEach(function*() {
-			this.initiative = yield initiativesDb.create(new ValidInitiative({
+		beforeEach(function() {
+			this.initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign"
 			}))
@@ -544,7 +544,7 @@ function mustRateLimit(request) {
 
 		it(`must respond with 429 if created ${EVENT_RATE} events in the last 15m`,
 			function*() {
-			yield eventsDb.create(_.times(EVENT_RATE, (_i) => new ValidEvent({
+			eventsDb.create(_.times(EVENT_RATE, (_i) => new ValidEvent({
 				initiative_uuid: this.initiative.uuid,
 				created_at: DateFns.addSeconds(DateFns.addMinutes(new Date, -15), 1),
 				user_id: this.user.id
@@ -555,7 +555,7 @@ function mustRateLimit(request) {
 		})
 
 		it(`must not respond with 429 if created <${EVENT_RATE} events in the last 15m`, function*() {
-			yield eventsDb.create(_.times(EVENT_RATE - 1, (_i) => new ValidEvent({
+			eventsDb.create(_.times(EVENT_RATE - 1, (_i) => new ValidEvent({
 				initiative_uuid: this.initiative.uuid,
 				created_at: DateFns.addSeconds(DateFns.addMinutes(new Date, -15), 1),
 				user_id: this.user.id
@@ -566,7 +566,7 @@ function mustRateLimit(request) {
 		})
 
 		it(`must not respond with 429 if created ${EVENT_RATE} events earlier than 15m`, function*() {
-			yield eventsDb.create(_.times(EVENT_RATE, (_i) => new ValidEvent({
+			eventsDb.create(_.times(EVENT_RATE, (_i) => new ValidEvent({
 				initiative_uuid: this.initiative.uuid,
 				created_at: DateFns.addMinutes(new Date, -15),
 				user_id: this.user.id

@@ -26,29 +26,29 @@ describe("AdminUsersController", function() {
 
 		describe("when merging", function() {
 			it("must merge initiatives, comments and more", function*() {
-				var source = yield usersDb.create(new ValidUser({
+				var source = usersDb.create(new ValidUser({
 					country: null,
 					personal_id: null,
 					email: "john@example.com",
 					email_confirmed_at: new Date
 				}))
 
-				var target = yield usersDb.create(new ValidUser({
+				var target = usersDb.create(new ValidUser({
 					country: "EE",
 					personal_id: "38706181337"
 				}))
 
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: source.id
 				}))
 
-				var comment = yield commentsDb.create(new ValidComment({
+				var comment = commentsDb.create(new ValidComment({
 					initiative_uuid: initiative.uuid,
 					user_id: source.id,
 					user_uuid: _.serializeUuid(source.id)
 				}))
 
-				var event = yield eventsDb.create(new ValidEvent({
+				var event = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid,
 					user_id: source.id,
 					created_by: _.serializeUuid(source.id)
@@ -62,25 +62,25 @@ describe("AdminUsersController", function() {
 				res.statusCode.must.equal(303)
 				res.headers.location.must.equal(`/users/${source.id}`)
 
-				yield usersDb.read(source).must.then.eql({
+				usersDb.read(source).must.eql({
 					__proto__: source,
 					merged_with_id: target.id
 				})
 
-				yield usersDb.read(target).must.then.eql(target)
+				usersDb.read(target).must.eql(target)
 
-				yield initiativesDb.read(initiative).must.then.eql({
+				initiativesDb.read(initiative).must.eql({
 					__proto__: initiative,
 					user_id: target.id
 				})
 
-				yield commentsDb.read(comment).must.then.eql({
+				commentsDb.read(comment).must.eql({
 					__proto__: comment,
 					user_id: target.id,
 					user_uuid: _.serializeUuid(target.uuid)
 				})
 
-				yield eventsDb.read(event).must.then.eql({
+				eventsDb.read(event).must.eql({
 					__proto__: event,
 					user_id: target.id,
 					created_by: _.serializeUuid(target.uuid)
@@ -88,31 +88,31 @@ describe("AdminUsersController", function() {
 			})
 
 			it("must not touch unrelated rows", function*() {
-				var other = yield usersDb.create(new ValidUser)
+				var other = usersDb.create(new ValidUser)
 
-				var source = yield usersDb.create(new ValidUser({
+				var source = usersDb.create(new ValidUser({
 					country: null,
 					personal_id: null,
 					email: "john@example.com",
 					email_confirmed_at: new Date
 				}))
 
-				var target = yield usersDb.create(new ValidUser({
+				var target = usersDb.create(new ValidUser({
 					country: "EE",
 					personal_id: "38706181337"
 				}))
 
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: other.id
 				}))
 
-				var comment = yield commentsDb.create(new ValidComment({
+				var comment = commentsDb.create(new ValidComment({
 					initiative_uuid: initiative.uuid,
 					user_id: other.id,
 					user_uuid: _.serializeUuid(other.id)
 				}))
 
-				var event = yield eventsDb.create(new ValidEvent({
+				var event = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid,
 					user_id: other.id,
 					created_by: _.serializeUuid(other.id)
@@ -125,9 +125,9 @@ describe("AdminUsersController", function() {
 
 				res.statusCode.must.equal(303)
 
-				yield initiativesDb.read(initiative).must.then.eql(initiative)
-				yield commentsDb.read(comment).must.then.eql(comment)
-				yield eventsDb.read(event).must.then.eql(event)
+				initiativesDb.read(initiative).must.eql(initiative)
+				commentsDb.read(comment).must.eql(comment)
+				eventsDb.read(event).must.eql(event)
 			})
 		})
 	})

@@ -65,7 +65,7 @@ function* cli(argv) {
 	var opts = {quiet: args["--quiet"]}
 
 	if (args["--cached"]) {
-		var initiatives = yield initiativesDb.search(sql`
+		var initiatives = initiativesDb.search(sql`
 			SELECT * FROM initiatives
 			WHERE parliament_api_data IS NOT NULL
 			${uuid ? sql`AND uuid = ${uuid}` : sql``}
@@ -87,7 +87,7 @@ function* sync(opts, uuid) {
 		: api(`documents/collective-addresses/${uuid}`).then(getBody).then(_.concat)
 	)
 
-	var pairs = _.zip(yield docs.map(readInitiative.bind(null, opts)), docs)
+	var pairs = _.zip(docs.map(readInitiative.bind(null, opts)), docs)
 	pairs = pairs.filter(_.compose(Boolean, _.first))
 
 	pairs = yield pairs.map(function*([initiative, initiativeDoc]) {
@@ -134,14 +134,14 @@ function* sync(opts, uuid) {
 		var doc = yield syncInitiativeDocuments(api, initiativeAndDocument[1])
 		initiative = yield replaceInitiative(opts, initiative, doc)
 
-		yield initiativesDb.update(initiative, {
+		initiativesDb.update(initiative, {
 			parliament_api_data: doc,
 			parliament_synced_at: new Date
 		})
 	})
 }
 
-function* readInitiative(opts, doc) {
+function readInitiative(opts, doc) {
 	var initiative
 
 	// Around April 2020 old initiatives in the parliament API were recreated and
@@ -150,7 +150,7 @@ function* readInitiative(opts, doc) {
 	// therefore overwritten  from `senderReference` making it impossible to
 	// identify sent initiatives if you already don't have the previous parliament
 	// UUID. Waiting for an update on that as of Apr 17, 2020.
-	if (initiative = yield initiativesDb.read(sql`
+	if (initiative = initiativesDb.read(sql`
 		SELECT * FROM initiatives
 		WHERE uuid = ${doc.senderReference}
 		OR parliament_uuid = ${doc.uuid}
@@ -250,11 +250,11 @@ function* replaceInitiative(opts, initiative, document) {
 	if (initiative.uuid == null) {
 		logger.log("Creating initiative %s (%s)…", document.uuid, document.title)
 		initiative.uuid = initiative.parliament_uuid
-		initiative = yield initiativesDb.create(_.assign(initiative, update))
+		initiative = initiativesDb.create(_.assign(initiative, update))
 	}
 	else if (diff(initiative, update)) {
 		logger.log("Updating initiative %s (%s)…", initiative.uuid, document.title)
-		initiative = yield initiativesDb.update(initiative, update)
+		initiative = initiativesDb.update(initiative, update)
 	}
 
 	yield replaceFiles(initiative, document)
@@ -310,7 +310,7 @@ function* replaceInitiative(opts, initiative, document) {
 		statuses.forEach((status) => _.merge(update, attrsFromStatus(status)))
 		eventAttrs.forEach((event) => _.merge(update, attrsFromEvent(event)))
 		if (initiative.phase != "parliament") delete update.phase
-		initiative = yield initiativesDb.update(initiative, update)
+		initiative = initiativesDb.update(initiative, update)
 	}
 
 	yield replaceEvents(initiative, eventAttrs)
@@ -326,7 +326,7 @@ function* replaceInitiative(opts, initiative, document) {
 }
 
 function* replaceEvents(initiative, eventAttrs) {
-	var events = yield eventsDb.search(sql`
+	var events = eventsDb.search(sql`
 		SELECT * FROM initiative_events
 		WHERE initiative_uuid = ${initiative.uuid}
 		AND origin = 'parliament'
@@ -365,12 +365,12 @@ function* replaceEvents(initiative, eventAttrs) {
 		initiative.uuid
 	))
 
-	var createdEvents = yield eventsDb.create(createEvents)
+	var createdEvents = eventsDb.create(createEvents)
 
 	events = _.lastUniqBy(_.concat(
 		ignoreEvents,
 		createdEvents,
-		yield updateEvents.map((eventAndAttrs) => eventsDb.update(...eventAndAttrs))
+		updateEvents.map((eventAndAttrs) => eventsDb.update(...eventAndAttrs))
 	), (ev) => ev.id)
 
 	yield events.filter((ev) => ev.files && ev.files.length).map((event) => (
@@ -390,12 +390,12 @@ function* replaceFiles(initiative, document) {
 	files = files.filter(isPublicFile)
 	if (files.length == 0) return
 
-	var existingUuids = new Set(yield filesDb.search(sql`
+	var existingUuids = new Set(filesDb.search(sql`
 		SELECT external_id
 		FROM initiative_files
 		WHERE initiative_uuid = ${initiative.uuid}
 		AND event_id IS NULL
-	`).then((files) => files.map((file) => file.external_id)))
+	`).map((file) => file.external_id))
 
 	files = files.filter((file) => !existingUuids.has(file.uuid))
 	files = files.map(fileAttrsFrom.bind(null, document))
@@ -405,15 +405,15 @@ function* replaceFiles(initiative, document) {
 		initiative_uuid: initiative.uuid
 	}))
 
-	yield filesDb.create(yield files.map(downloadFile))
+	filesDb.create(yield files.map(downloadFile))
 }
 
 function* replaceEventFiles(event, files) {
 	if (files.length == 0) return
 
-	var existingUuids = new Set(yield filesDb.search(sql`
+	var existingUuids = new Set(filesDb.search(sql`
 		SELECT external_id FROM initiative_files WHERE event_id = ${event.id}
-	`).then((files) => files.map((file) => file.external_id)))
+	`).map((file) => file.external_id))
 
 	files = files.filter((file) => !existingUuids.has(file.external_id))
 
@@ -1052,7 +1052,7 @@ function* sendParliamentEventEmail(initiative, events) {
 	var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 	events = _.sortBy(events, "occurred_at")
 
-	var message = yield messagesDb.create({
+	var message = messagesDb.create({
 		initiative_uuid: initiative.uuid,
 		origin: "event",
 		created_at: new Date,
@@ -1076,9 +1076,7 @@ function* sendParliamentEventEmail(initiative, events) {
 
 	yield Subscription.send(
 		message,
-		yield subscriptionsDb.searchConfirmedByInitiativeIdForEvent(
-			initiative.uuid
-		)
+		subscriptionsDb.searchConfirmedByInitiativeIdForEvent(initiative.uuid)
 	)
 }
 

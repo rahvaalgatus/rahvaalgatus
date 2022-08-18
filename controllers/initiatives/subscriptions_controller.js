@@ -33,7 +33,7 @@ exports.router.post("/", next(function*(req, res) {
 		// doesn't seem to interest most followers, as can be seen from
 		// unsubscriptions or explicit subscription tweaking following comment
 		// surges.
-		subscription = yield subscriptionsDb.create({
+		subscription = subscriptionsDb.create({
 			initiative_uuid: initiative.uuid,
 			email: email,
 			created_at: new Date,
@@ -44,7 +44,7 @@ exports.router.post("/", next(function*(req, res) {
 	}
 	catch (err) {
 		if (err instanceof SqliteError && err.type == "unique")
-			subscription = yield subscriptionsDb.read(sql`
+			subscription = subscriptionsDb.read(sql`
 				SELECT * FROM initiative_subscriptions
 				WHERE (initiative_uuid, email) = (${initiative.uuid}, ${email})
 			`)
@@ -57,7 +57,7 @@ exports.router.post("/", next(function*(req, res) {
 		user.email &&
 		_.caseInsensitiveEquals(user.email, subscription.email)
 	) {
-		yield subscriptionsDb.update(subscription, {
+		subscriptionsDb.update(subscription, {
 			confirmed_at: subscription.confirmed_at || new Date,
 			event_interest: true,
 			updated_at: new Date
@@ -102,7 +102,7 @@ exports.router.post("/", next(function*(req, res) {
 			})
 		})
 
-		yield subscriptionsDb.update(subscription, {confirmation_sent_at: new Date})
+		subscriptionsDb.update(subscription, {confirmation_sent_at: new Date})
 		res.flash("notice", req.t("CONFIRM_INITIATIVE_SUBSCRIPTION"))
 	}
 	else res.flash("notice", req.t("CONFIRM_INITIATIVE_SUBSCRIPTION"))
@@ -110,10 +110,10 @@ exports.router.post("/", next(function*(req, res) {
 	res.redirect(303, Path.dirname(req.baseUrl))
 }))
 
-exports.router.get("/new", next(function*(req, res, next) {
+exports.router.get("/new", function(req, res, next) {
 	var initiative = req.initiative
 
-	var subscription = yield subscriptionsDb.read(sql`
+	var subscription = subscriptionsDb.read(sql`
 		SELECT * FROM initiative_subscriptions
 		WHERE initiative_uuid = ${initiative.uuid}
 		AND update_token = ${req.query.confirmation_token}
@@ -122,7 +122,7 @@ exports.router.get("/new", next(function*(req, res, next) {
 
 	if (subscription) {
 		if (!subscription.confirmed_at)
-			yield subscriptionsDb.update(subscription, {
+			subscriptionsDb.update(subscription, {
 				confirmed_at: new Date,
 				confirmation_sent_at: null,
 				updated_at: new Date
@@ -139,12 +139,12 @@ exports.router.get("/new", next(function*(req, res, next) {
 
 		InitiativesController.read(req, res, next)
 	}
-}))
+})
 
-exports.router.use("/:token", next(function*(req, res, next) {
+exports.router.use("/:token", function(req, res, next) {
 	var initiative = req.initiative
 
-	req.subscription = yield subscriptionsDb.read(sql`
+	req.subscription = subscriptionsDb.read(sql`
 		SELECT * FROM initiative_subscriptions
 		WHERE initiative_uuid = ${initiative.uuid}
 		AND update_token = ${req.params.token.replace(/\.+$/, "")}
@@ -158,7 +158,7 @@ exports.router.use("/:token", next(function*(req, res, next) {
 		title: req.t("SUBSCRIPTION_NOT_FOUND_TITLE"),
 		body: req.t("SUBSCRIPTION_NOT_FOUND_BODY")
 	})
-}))
+})
 
 exports.router.get("/:token", function(req, res) {
 	var subscription = req.subscription

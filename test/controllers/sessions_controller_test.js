@@ -18,7 +18,6 @@ var sessionsDb = require("root/db/sessions_db")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var sql = require("sqlate")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
-var next = require("co-next")
 var tsl = require("root").tsl
 var SITE_HOSTNAME = Url.parse(Config.url).hostname
 var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
@@ -293,7 +292,7 @@ describe("SessionsController", function() {
 					cookies.session_token.httpOnly.must.be.true()
 
 					var cookieToken = Buffer.from(cookies.session_token.value, "hex")
-					var session = yield sessionsDb.read(sql`SELECT * FROM sessions`)
+					var session = sessionsDb.read(sql`SELECT * FROM sessions`)
 					session.token_sha256.must.eql(sha256(cookieToken))
 				})
 
@@ -361,7 +360,7 @@ describe("SessionsController", function() {
 					res.statusCode.must.equal(204)
 					res.headers.location.must.equal("/user")
 
-					var session = yield sessionsDb.read(sql`SELECT * FROM sessions`)
+					var session = sessionsDb.read(sql`SELECT * FROM sessions`)
 					session.created_ip.must.equal("127.0.0.1")
 					session.created_user_agent.must.equal("Mozilla")
 				})
@@ -386,13 +385,11 @@ describe("SessionsController", function() {
 					var res = yield signIn(this.router, this.request, cert)
 					res.statusCode.must.equal(204)
 
-					var user = yield usersDb.read(sql`SELECT * FROM users`)
+					var user = usersDb.read(sql`SELECT * FROM users`)
 					user.country.must.equal("EE")
 					user.personal_id.must.equal(PERSONAL_ID)
 
-					yield sessionsDb.search(sql`
-						SELECT * FROM sessions
-					`).must.then.not.be.empty()
+					sessionsDb.search(sql`SELECT * FROM sessions`).must.not.be.empty()
 				})
 
 				VALID_ISSUERS.forEach(function(issuer) {
@@ -418,13 +415,8 @@ describe("SessionsController", function() {
 						var res = yield signIn(this.router, this.request, cert)
 						res.statusCode.must.equal(204)
 
-						yield usersDb.search(sql`
-							SELECT * FROM users
-						`).must.then.not.be.empty()
-
-						yield sessionsDb.search(sql`
-							SELECT * FROM sessions
-						`).must.then.not.be.empty()
+						usersDb.search(sql`SELECT * FROM users`).must.not.be.empty()
+						sessionsDb.search(sql`SELECT * FROM sessions`).must.not.be.empty()
 					})
 				})
 			})
@@ -458,7 +450,7 @@ describe("SessionsController", function() {
 				authenticating.statusCode.must.equal(202)
 				authenticating.headers["content-type"].must.equal(SIGNABLE_TYPE)
 
-				var authentication = yield authenticationsDb.read(sql`
+				var authentication = authenticationsDb.read(sql`
 					SELECT * FROM authentications
 				`)
 
@@ -482,7 +474,7 @@ describe("SessionsController", function() {
 				var cookies = parseCookies(authenticated.headers["set-cookie"])
 				var sessionToken = Buffer.from(cookies.session_token.value, "hex")
 
-				var authentications = yield authenticationsDb.search(sql`
+				var authentications = authenticationsDb.search(sql`
 					SELECT * FROM authentications
 				`)
 
@@ -501,7 +493,7 @@ describe("SessionsController", function() {
 
 				authentications[0].token.must.not.eql(sessionToken)
 
-				var users = yield usersDb.search(sql`SELECT * FROM users`)
+				var users = usersDb.search(sql`SELECT * FROM users`)
 
 				users.must.eql([new ValidUser({
 					id: users[0].id,
@@ -514,7 +506,7 @@ describe("SessionsController", function() {
 					updated_at: users[0].updated_at
 				})])
 
-				var sessions = yield sessionsDb.search(sql`SELECT * FROM sessions`)
+				var sessions = sessionsDb.search(sql`SELECT * FROM sessions`)
 
 				sessions.must.eql([new ValidSession({
 					id: sessions[0].id,
@@ -720,7 +712,7 @@ describe("SessionsController", function() {
 
 					authenticating.statusCode.must.equal(202)
 
-					var authentication = yield authenticationsDb.read(sql`
+					var authentication = authenticationsDb.read(sql`
 						SELECT * FROM authentications
 					`)
 
@@ -735,14 +727,8 @@ describe("SessionsController", function() {
 					})
 
 					authenticated.statusCode.must.equal(204)
-
-					yield usersDb.search(sql`
-						SELECT * FROM users
-					`).must.then.not.be.empty()
-
-					yield sessionsDb.search(sql`
-						SELECT * FROM sessions
-					`).must.then.not.be.empty()
+					usersDb.search(sql`SELECT * FROM users`).must.not.be.empty()
+					sessionsDb.search(sql`SELECT * FROM sessions`).must.not.be.empty()
 				})
 
 				it(`must respond with 409 given an invalid ${algo} signature`,
@@ -791,11 +777,8 @@ describe("SessionsController", function() {
 						name: "HttpError"
 					})
 
-					yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
-
-					yield sessionsDb.search(sql`
-						SELECT * FROM sessions
-					`).must.then.be.empty()
+					usersDb.search(sql`SELECT * FROM users`).must.be.empty()
+					sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
 				})
 			})
 		})
@@ -842,7 +825,7 @@ describe("SessionsController", function() {
 				})
 
 				this.router.post(`${MOBILE_ID_URL.path}authentication`,
-					next(function*(req, res) {
+					function(req, res) {
 					res.writeHead(200)
 					req.headers.host.must.equal(MOBILE_ID_URL.host)
 
@@ -853,28 +836,28 @@ describe("SessionsController", function() {
 					req.body.hashType.must.equal("SHA256")
 					req.body.language.must.equal("EST")
 
-					var token = yield authenticationsDb.read(sql`
+					var {token} = authenticationsDb.read(sql`
 						SELECT token FROM authentications
 						ORDER BY created_at DESC
 						LIMIT 1
-					`).then((row) => row.token)
+					`)
 
 					Buffer.from(req.body.hash, "base64").must.eql(sha256(token))
 
 					respond({sessionID: SESSION_ID}, req, res)
-				}))
+				})
 
 				this.router.get(`${MOBILE_ID_URL.path}authentication/session/:token`,
-					next(function*(req, res) {
+					function(req, res) {
 					res.writeHead(200)
 					req.headers.host.must.equal(MOBILE_ID_URL.host)
 					req.params.token.must.equal(SESSION_ID)
 
-					var token = yield authenticationsDb.read(sql`
+					var {token} = authenticationsDb.read(sql`
 						SELECT token FROM authentications
 						ORDER BY created_at DESC
 						LIMIT 1
-					`).then((row) => row.token)
+					`)
 
 					respond({
 						state: "COMPLETE",
@@ -889,7 +872,7 @@ describe("SessionsController", function() {
 							).toString("base64")
 						}
 					}, req, res)
-				}))
+				})
 
 				var authenticating = yield this.request("/sessions", {
 					method: "POST",
@@ -915,7 +898,7 @@ describe("SessionsController", function() {
 				var cookies = parseCookies(authenticated.headers["set-cookie"])
 				var sessionToken = Buffer.from(cookies.session_token.value, "hex")
 
-				var authentications = yield authenticationsDb.search(sql`
+				var authentications = authenticationsDb.search(sql`
 					SELECT * FROM authentications
 				`)
 
@@ -934,7 +917,7 @@ describe("SessionsController", function() {
 
 				authentications[0].token.must.not.eql(sessionToken)
 
-				var users = yield usersDb.search(sql`SELECT * FROM users`)
+				var users = usersDb.search(sql`SELECT * FROM users`)
 
 				users.must.eql([new ValidUser({
 					id: users[0].id,
@@ -947,7 +930,7 @@ describe("SessionsController", function() {
 					updated_at: users[0].updated_at
 				})])
 
-				var sessions = yield sessionsDb.search(sql`SELECT * FROM sessions`)
+				var sessions = sessionsDb.search(sql`SELECT * FROM sessions`)
 
 				sessions.must.eql([new ValidSession({
 					id: sessions[0].id,
@@ -1289,15 +1272,15 @@ describe("SessionsController", function() {
 					this.router,
 					this.request,
 					MOBILE_ID_SIGN_CERTIFICATE,
-					next(function*(req, res) {
+					function(req, res) {
 						if (waited++ < 2) return void respond({state: "RUNNING"}, req, res)
 						res.writeHead(200)
 
-						var token = yield authenticationsDb.read(sql`
+						var {token} = authenticationsDb.read(sql`
 							SELECT token FROM authentications
 							ORDER BY created_at DESC
 							LIMIT 1
-						`).then((row) => row.token)
+						`)
 
 						respond({
 							state: "COMPLETE",
@@ -1312,18 +1295,12 @@ describe("SessionsController", function() {
 								).toString("base64")
 							}
 						}, req, res)
-					})
+					}
 				)
 
 				res.statusCode.must.equal(204)
-
-				yield usersDb.search(sql`
-					SELECT * FROM users
-				`).must.then.not.be.empty()
-
-				yield sessionsDb.search(sql`
-					SELECT * FROM sessions
-				`).must.then.not.be.empty()
+				usersDb.search(sql`SELECT * FROM users`).must.not.be.empty()
+				sessionsDb.search(sql`SELECT * FROM sessions`).must.not.be.empty()
 			})
 
 			_.each({
@@ -1350,14 +1327,14 @@ describe("SessionsController", function() {
 						this.router,
 						this.request,
 						MOBILE_ID_SIGN_CERTIFICATE,
-						next(function*(req, res) {
+						function(req, res) {
 							res.writeHead(200)
 
-							var token = yield authenticationsDb.read(sql`
+							var {token} = authenticationsDb.read(sql`
 								SELECT token FROM authentications
 								ORDER BY created_at DESC
 								LIMIT 1
-							`).then((row) => row.token)
+							`)
 
 							respond({
 								state: "COMPLETE",
@@ -1369,18 +1346,12 @@ describe("SessionsController", function() {
 									value: sign(keys.privateKey, token).toString("base64")
 								}
 							}, req, res)
-						})
+						}
 					)
 
 					res.statusCode.must.equal(204)
-
-					yield usersDb.search(sql`
-						SELECT * FROM users
-					`).must.then.not.be.empty()
-
-					yield sessionsDb.search(sql`
-						SELECT * FROM sessions
-					`).must.then.not.be.empty()
+					usersDb.search(sql`SELECT * FROM users`).must.not.be.empty()
+					sessionsDb.search(sql`SELECT * FROM sessions`).must.not.be.empty()
 				})
 
 				it(`must respond with error given an invalid ${algo} signature`,
@@ -1428,17 +1399,13 @@ describe("SessionsController", function() {
 					res.statusCode.must.equal(200)
 					res.body.must.include(t("MOBILE_ID_ERROR_INVALID_SIGNATURE_AUTH"))
 
-					var authentication = yield authenticationsDb.read(sql`
+					var authentication = authenticationsDb.read(sql`
 						SELECT * FROM authentications
 					`)
 
 					authentication.certificate.must.eql(cert)
-
-					yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
-
-					yield sessionsDb.search(sql`
-						SELECT * FROM sessions
-					`).must.then.be.empty()
+					usersDb.search(sql`SELECT * FROM users`).must.be.empty()
+					sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
 				})
 			})
 
@@ -1470,12 +1437,8 @@ describe("SessionsController", function() {
 					)
 
 					res.body.must.include(t("MOBILE_ID_ERROR_NOT_FOUND"))
-
-					yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
-
-					yield sessionsDb.search(sql`
-						SELECT * FROM sessions
-					`).must.then.be.empty()
+					usersDb.search(sql`SELECT * FROM users`).must.be.empty()
+					sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
 				})
 			})
 
@@ -1500,11 +1463,8 @@ describe("SessionsController", function() {
 					res.statusMessage.must.equal(statusMessage)
 					res.body.must.include(t(error))
 
-					yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
-
-					yield sessionsDb.search(sql`
-						SELECT * FROM sessions
-					`).must.then.be.empty()
+					usersDb.search(sql`SELECT * FROM users`).must.be.empty()
+					sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
 				})
 			})
 
@@ -1533,12 +1493,8 @@ describe("SessionsController", function() {
 				)
 
 				res.body.must.include(t("MOBILE_ID_ERROR_NOT_FOUND"))
-
-				yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
-
-				yield sessionsDb.search(sql`
-					SELECT * FROM sessions
-				`).must.then.be.empty()
+				usersDb.search(sql`SELECT * FROM users`).must.be.empty()
+				sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
 			})
 
 			it("must respond with 422 given invalid phone number", function*() {
@@ -1566,12 +1522,8 @@ describe("SessionsController", function() {
 				)
 
 				res.body.must.include(t("MOBILE_ID_ERROR_NOT_FOUND"))
-
-				yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
-
-				yield sessionsDb.search(sql`
-					SELECT * FROM sessions
-				`).must.then.be.empty()
+				usersDb.search(sql`SELECT * FROM users`).must.be.empty()
+				sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
 			})
 
 			it("must respond with 500 given Bad Request", function*() {
@@ -1594,11 +1546,8 @@ describe("SessionsController", function() {
 				res.statusMessage.must.equal("Unknown Mobile-Id Error")
 				res.body.must.not.include("FOOLANG")
 
-				yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
-
-				yield sessionsDb.search(sql`
-					SELECT * FROM sessions
-				`).must.then.be.empty()
+				usersDb.search(sql`SELECT * FROM users`).must.be.empty()
+				sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
 			})
 
 			_.each(MOBILE_ID_SESSION_ERRORS,
@@ -1623,11 +1572,8 @@ describe("SessionsController", function() {
 					res.statusCode.must.equal(200)
 					res.body.must.include(t(error))
 
-					yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
-
-					yield sessionsDb.search(sql`
-						SELECT * FROM sessions
-					`).must.then.be.empty()
+					usersDb.search(sql`SELECT * FROM users`).must.be.empty()
+					sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
 				})
 			})
 
@@ -1664,11 +1610,8 @@ describe("SessionsController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("MOBILE_ID_ERROR_TIMEOUT_AUTH"))
 
-				yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
-
-				yield sessionsDb.search(sql`
-					SELECT * FROM sessions
-				`).must.then.be.empty()
+				usersDb.search(sql`SELECT * FROM users`).must.be.empty()
+				sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
 			})
 		})
 
@@ -1709,17 +1652,16 @@ describe("SessionsController", function() {
 					respond({sessionID: SESSION_ID}, req, res)
 				})
 
-				this.router.get(`${SMART_ID_URL.path}session/:token`,
-					next(function*(req, res) {
+				this.router.get(`${SMART_ID_URL.path}session/:token`, (req, res) => {
 					res.writeHead(200)
 					req.headers.host.must.equal(SMART_ID_URL.host)
 					req.params.token.must.equal(SESSION_ID)
 
-					var token = yield authenticationsDb.read(sql`
+					var {token} = authenticationsDb.read(sql`
 						SELECT token FROM authentications
 						ORDER BY created_at DESC
 						LIMIT 1
-					`).then((row) => row.token)
+					`)
 
 					respond({
 						state: "COMPLETE",
@@ -1738,7 +1680,7 @@ describe("SessionsController", function() {
 							).toString("base64")
 						}
 					}, req, res)
-				}))
+				})
 
 				var authenticating = yield this.request("/sessions", {
 					method: "POST",
@@ -1747,11 +1689,11 @@ describe("SessionsController", function() {
 
 				authenticating.statusCode.must.equal(202)
 
-				tokenHash.must.eql(sha256(yield authenticationsDb.read(sql`
+				tokenHash.must.eql(sha256(authenticationsDb.read(sql`
 					SELECT token FROM authentications
 					ORDER BY created_at DESC
 					LIMIT 1
-				`).then((row) => row.token)))
+				`).token))
 
 				var location = authenticating.headers.location
 				var authenticated = yield this.request(location, {
@@ -1766,7 +1708,7 @@ describe("SessionsController", function() {
 				var cookies = parseCookies(authenticated.headers["set-cookie"])
 				var sessionToken = Buffer.from(cookies.session_token.value, "hex")
 
-				var authentications = yield authenticationsDb.search(sql`
+				var authentications = authenticationsDb.search(sql`
 					SELECT * FROM authentications
 				`)
 
@@ -1785,7 +1727,7 @@ describe("SessionsController", function() {
 
 				authentications[0].token.must.not.eql(sessionToken)
 
-				var users = yield usersDb.search(sql`SELECT * FROM users`)
+				var users = usersDb.search(sql`SELECT * FROM users`)
 
 				users.must.eql([new ValidUser({
 					id: users[0].id,
@@ -1798,7 +1740,7 @@ describe("SessionsController", function() {
 					updated_at: users[0].updated_at
 				})])
 
-				var sessions = yield sessionsDb.search(sql`SELECT * FROM sessions`)
+				var sessions = sessionsDb.search(sql`SELECT * FROM sessions`)
 
 				sessions.must.eql([new ValidSession({
 					id: sessions[0].id,
@@ -1944,15 +1886,15 @@ describe("SessionsController", function() {
 				var res = yield signInWithSmartId(
 					this.router,
 					this.request,
-					next(function*(req, res) {
+					function(req, res) {
 						if (waited++ < 2) return void respond({state: "RUNNING"}, req, res)
 						res.writeHead(200)
 
-						var token = yield authenticationsDb.read(sql`
+						var {token} = authenticationsDb.read(sql`
 							SELECT token FROM authentications
 							ORDER BY created_at DESC
 							LIMIT 1
-						`).then((row) => row.token)
+						`)
 
 						respond({
 							state: "COMPLETE",
@@ -1971,18 +1913,12 @@ describe("SessionsController", function() {
 								).toString("base64")
 							}
 						}, req, res)
-					})
+					}
 				)
 
 				res.statusCode.must.equal(204)
-
-				yield usersDb.search(sql`
-					SELECT * FROM users
-				`).must.then.not.be.empty()
-
-				yield sessionsDb.search(sql`
-					SELECT * FROM sessions
-				`).must.then.not.be.empty()
+				usersDb.search(sql`SELECT * FROM users`).must.not.be.empty()
+				sessionsDb.search(sql`SELECT * FROM sessions`).must.not.be.empty()
 			})
 
 			_.each({
@@ -2007,14 +1943,14 @@ describe("SessionsController", function() {
 					var res = yield signInWithSmartId(
 						this.router,
 						this.request,
-						next(function*(req, res) {
+						function(req, res) {
 							res.writeHead(200)
 
-							var token = yield authenticationsDb.read(sql`
+							var {token} = authenticationsDb.read(sql`
 								SELECT token FROM authentications
 								ORDER BY created_at DESC
 								LIMIT 1
-							`).then((row) => row.token)
+							`)
 
 							respond({
 								state: "COMPLETE",
@@ -2026,18 +1962,12 @@ describe("SessionsController", function() {
 									value: sign(keys.privateKey, token).toString("base64")
 								}
 							}, req, res)
-						})
+						}
 					)
 
 					res.statusCode.must.equal(204)
-
-					yield usersDb.search(sql`
-						SELECT * FROM users
-					`).must.then.not.be.empty()
-
-					yield sessionsDb.search(sql`
-						SELECT * FROM sessions
-					`).must.then.not.be.empty()
+					usersDb.search(sql`SELECT * FROM users`).must.not.be.empty()
+					sessionsDb.search(sql`SELECT * FROM sessions`).must.not.be.empty()
 				})
 
 				it(`must respond with error given an invalid ${algo} signature`,
@@ -2083,17 +2013,14 @@ describe("SessionsController", function() {
 					res.statusCode.must.equal(200)
 					res.body.must.include(t("SMART_ID_ERROR_INVALID_SIGNATURE"))
 
-					var authentication = yield authenticationsDb.read(sql`
+					var authentication = authenticationsDb.read(sql`
 						SELECT * FROM authentications
 					`)
 
 					authentication.certificate.must.eql(cert)
 
-					yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
-
-					yield sessionsDb.search(sql`
-						SELECT * FROM sessions
-					`).must.then.be.empty()
+					usersDb.search(sql`SELECT * FROM users`).must.be.empty()
+					sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
 				})
 			})
 
@@ -2113,11 +2040,8 @@ describe("SessionsController", function() {
 				res.statusMessage.must.equal("Not a Smart-Id User")
 				res.body.must.include(t("SMART_ID_ERROR_NOT_FOUND"))
 
-				yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
-
-				yield sessionsDb.search(sql`
-					SELECT * FROM sessions
-				`).must.then.be.empty()
+				usersDb.search(sql`SELECT * FROM users`).must.be.empty()
+				sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
 			})
 
 			it("must respond with 500 given Bad Request", function*() {
@@ -2136,11 +2060,8 @@ describe("SessionsController", function() {
 				res.statusMessage.must.equal("Unknown Smart-Id Error")
 				res.body.must.not.include("FOOLANG")
 
-				yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
-
-				yield sessionsDb.search(sql`
-					SELECT * FROM sessions
-				`).must.then.be.empty()
+				usersDb.search(sql`SELECT * FROM users`).must.be.empty()
+				sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
 			})
 
 			_.each(SMART_ID_SESSION_ERRORS,
@@ -2164,11 +2085,8 @@ describe("SessionsController", function() {
 					res.statusCode.must.equal(200)
 					res.body.must.include(t(error))
 
-					yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
-
-					yield sessionsDb.search(sql`
-						SELECT * FROM sessions
-					`).must.then.be.empty()
+					usersDb.search(sql`SELECT * FROM users`).must.be.empty()
+					sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
 				})
 			})
 
@@ -2197,11 +2115,8 @@ describe("SessionsController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("SMART_ID_ERROR_TIMEOUT_AUTH"))
 
-				yield usersDb.search(sql`SELECT * FROM users`).must.then.be.empty()
-
-				yield sessionsDb.search(sql`
-					SELECT * FROM sessions
-				`).must.then.be.empty()
+				usersDb.search(sql`SELECT * FROM users`).must.be.empty()
+				sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
 			})
 		})
 	})
@@ -2229,7 +2144,7 @@ describe("SessionsController", function() {
 			res.statusCode.must.equal(200)
 			res.body.must.include(t("CURRENT_SESSION_DELETED"))
 
-			yield sessionsDb.read(this.session).must.then.eql({
+			sessionsDb.read(this.session).must.eql({
 				__proto__: this.session,
 				deleted_at: new Date
 			})
@@ -2237,9 +2152,7 @@ describe("SessionsController", function() {
 
 		it("must delete session but not delete cookie if not current session",
 			function*() {
-			var session = yield sessionsDb.create(new ValidSession({
-				user_id: this.user.id
-			}))
+			var session = sessionsDb.create(new ValidSession({user_id: this.user.id}))
 
 			var res = yield this.request("/sessions/" + session.id, {
 				method: "DELETE"
@@ -2257,9 +2170,9 @@ describe("SessionsController", function() {
 			res.statusCode.must.equal(200)
 			res.body.must.include(t("SESSION_DELETED"))
 
-			yield sessionsDb.read(this.session).must.then.eql(this.session)
+			sessionsDb.read(this.session).must.eql(this.session)
 
-			yield sessionsDb.read(session).must.then.eql({
+			sessionsDb.read(session).must.eql({
 				__proto__: session,
 				updated_at: new Date,
 				deleted_at: new Date
@@ -2298,11 +2211,8 @@ describe("SessionsController", function() {
 		})
 
 		it("must respond with 404 given other user's session", function*() {
-			var user = yield usersDb.create(new ValidUser)
-
-			var session = yield sessionsDb.create(new ValidSession({
-				user_id: user.id
-			}))
+			var user = usersDb.create(new ValidUser)
+			var session = sessionsDb.create(new ValidSession({user_id: user.id}))
 
 			var res = yield this.request("/sessions/" + session.id, {
 				method: "DELETE"
@@ -2310,8 +2220,8 @@ describe("SessionsController", function() {
 
 			res.statusCode.must.equal(404)
 			res.statusMessage.must.equal("Session Not Found")
-			yield sessionsDb.read(this.session).must.then.eql(this.session)
-			yield sessionsDb.read(session).must.then.eql(session)
+			sessionsDb.read(this.session).must.eql(this.session)
+			sessionsDb.read(session).must.eql(session)
 		})
 
 		it("must respond with 404 given non-existent session", function*() {
@@ -2321,11 +2231,11 @@ describe("SessionsController", function() {
 
 			res.statusCode.must.equal(404)
 			res.statusMessage.must.equal("Session Not Found")
-			yield sessionsDb.read(this.session).must.then.eql(this.session)
+			sessionsDb.read(this.session).must.eql(this.session)
 		})
 
 		it("must respond with 410 given deleted session id", function*() {
-			var session = yield sessionsDb.create(new ValidSession({
+			var session = sessionsDb.create(new ValidSession({
 				user_id: this.user.id,
 				deleted_at: new Date
 			}))
@@ -2336,8 +2246,8 @@ describe("SessionsController", function() {
 
 			res.statusCode.must.equal(410)
 			res.statusMessage.must.equal("Session Gone")
-			yield sessionsDb.read(this.session).must.then.eql(this.session)
-			yield sessionsDb.read(session).must.then.eql(session)
+			sessionsDb.read(this.session).must.eql(this.session)
+			sessionsDb.read(session).must.eql(session)
 		})
 	})
 })
@@ -2356,7 +2266,7 @@ function* signInWithIdCard(_router, request, cert, headers) {
 
 	authenticating.statusCode.must.equal(202)
 
-	var authentication = yield authenticationsDb.read(sql`
+	var authentication = authenticationsDb.read(sql`
 		SELECT * FROM authentications
 	`)
 
@@ -2384,14 +2294,14 @@ function* signInWithMobileId(router, request, signCert, authCert, headers) {
 
 	router.get(
 		`${MOBILE_ID_URL.path}authentication/session/:token`,
-		typeof authCert == "function" ? authCert : next(function*(req, res) {
+		typeof authCert == "function" ? authCert : function(req, res) {
 			res.writeHead(200)
 
-			var token = yield authenticationsDb.read(sql`
+			var {token} = authenticationsDb.read(sql`
 				SELECT token FROM authentications
 				ORDER BY created_at DESC
 				LIMIT 1
-			`).then((row) => row.token)
+			`)
 
 			respond({
 				state: "COMPLETE",
@@ -2403,7 +2313,7 @@ function* signInWithMobileId(router, request, signCert, authCert, headers) {
 					value: signWithRsa(JOHN_RSA_KEYS.privateKey, token).toString("base64")
 				}
 			}, req, res)
-		})
+		}
 	)
 
 	var authenticating = yield request("/sessions", {
@@ -2433,14 +2343,14 @@ function* signInWithSmartId(router, request, cert, headers) {
 
 	router.get(
 		`${SMART_ID_URL.path}session/:token`,
-		typeof cert == "function" ? cert : next(function*(req, res) {
+		typeof cert == "function" ? cert : function(req, res) {
 			res.writeHead(200)
 
-			var token = yield authenticationsDb.read(sql`
+			var {token} = authenticationsDb.read(sql`
 				SELECT token FROM authentications
 				ORDER BY created_at DESC
 				LIMIT 1
-			`).then((row) => row.token)
+			`)
 
 			respond({
 				state: "COMPLETE",
@@ -2455,7 +2365,7 @@ function* signInWithSmartId(router, request, cert, headers) {
 					value: signWithRsa(JOHN_RSA_KEYS.privateKey, token).toString("base64")
 				}
 			}, req, res)
-		})
+		}
 	)
 
 	var authenticating = yield request("/sessions", {

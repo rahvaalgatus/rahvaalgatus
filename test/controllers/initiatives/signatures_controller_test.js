@@ -32,7 +32,6 @@ var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
 var hades = require("root").hades
 var demand = require("must")
-var next = require("co-next")
 var tsl = require("root").tsl
 var concat = Array.prototype.concat.bind(Array.prototype)
 var ASICE_TYPE = "application/vnd.etsi.asic-e+zip"
@@ -210,7 +209,7 @@ describe("SignaturesController", function() {
 	function mustRespondWithSignatures(request) {
 		it("must respond with 403 Forbidden if no token on initiative",
 			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: null
@@ -224,7 +223,7 @@ describe("SignaturesController", function() {
 		})
 
 		it("must respond with 403 Forbidden given no token", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
@@ -237,7 +236,7 @@ describe("SignaturesController", function() {
 		})
 
 		it("must respond with 403 Forbidden given empty token", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
@@ -250,7 +249,7 @@ describe("SignaturesController", function() {
 		})
 
 		it("must respond with 403 Forbidden given invalid token", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
@@ -267,7 +266,7 @@ describe("SignaturesController", function() {
 		})
 
 		it("must respond with 403 Forbidden given non-ascii token", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
@@ -281,7 +280,7 @@ describe("SignaturesController", function() {
 
 		it("must respond with 423 Locked if initiative received by parliament",
 			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12),
@@ -300,7 +299,7 @@ describe("SignaturesController", function() {
 
 		it("must respond with 423 Locked if initiative received by government",
 			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "government",
 				destination: "muhu-vald",
@@ -324,9 +323,7 @@ describe("SignaturesController", function() {
 	}
 
 	describe(`GET / for ${ASICE_TYPE}`, function() {
-		beforeEach(function*() {
-			this.author = yield usersDb.create(new ValidUser)
-		})
+		beforeEach(function() { this.author = usersDb.create(new ValidUser) })
 
 		mustRespondWithSignatures(function(url, opts) {
 			return this.request(url, opts)
@@ -334,13 +331,13 @@ describe("SignaturesController", function() {
 
 		it("must respond with signature ASIC-E given parliament token",
 			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
-			var signatures = _.sortBy(yield signaturesDb.create([
+			var signatures = _.sortBy(signaturesDb.create([
 				new ValidSignature({initiative_uuid: initiative.uuid}),
 				new ValidSignature({initiative_uuid: initiative.uuid})
 			]), "personal_id")
@@ -369,13 +366,13 @@ describe("SignaturesController", function() {
 		})
 
 		it("must ignore anonymized signatures", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
-			yield signaturesDb.create(new ValidSignature({
+			signaturesDb.create(new ValidSignature({
 				initiative_uuid: initiative.uuid,
 				personal_id: "387",
 				xades: null,
@@ -398,7 +395,7 @@ describe("SignaturesController", function() {
 		})
 
 		it("must respond if no signatures", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
@@ -419,18 +416,18 @@ describe("SignaturesController", function() {
 		})
 
 		it("must not include signatures from other initiatives", function*() {
-			var other = yield initiativesDb.create(new ValidInitiative({
+			var other = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament"
 			}))
 
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
-			yield signaturesDb.create(new ValidSignature({
+			signaturesDb.create(new ValidSignature({
 				initiative_uuid: other.uuid
 			}))
 
@@ -450,7 +447,7 @@ describe("SignaturesController", function() {
 			exclamation: "!"
 		}, function(punctuation, name) {
 			it(`must respond with signatures given trailing ${name}`, function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "parliament",
 					parliament_token: Crypto.randomBytes(12)
@@ -467,16 +464,16 @@ describe("SignaturesController", function() {
 		})
 
 		describe("when destined for local", function() {
-			beforeEach(function*() {
-				this.user = yield usersDb.create(new ValidUser)
+			beforeEach(function() {
+				this.user = usersDb.create(new ValidUser)
 
 				var session = new ValidSession({user_id: this.user.id})
 
-				this.session = _.assign(yield sessionsDb.create(session), {
+				this.session = _.assign(sessionsDb.create(session), {
 					token: session.token
 				})
 
-				this.initiative = yield initiativesDb.create(new ValidInitiative({
+				this.initiative = initiativesDb.create(new ValidInitiative({
 					destination: "muhu-vald",
 					user_id: this.author.id,
 					phase: "government",
@@ -559,14 +556,14 @@ describe("SignaturesController", function() {
 		})
 
 		it("must include Estonian translation", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12),
 				language: "en"
 			}))
 
-			var estonian = yield textsDb.create(new ValidText({
+			var estonian = textsDb.create(new ValidText({
 				initiative_uuid: initiative.uuid,
 				user_id: initiative.user_id,
 				language: "et"
@@ -588,27 +585,27 @@ describe("SignaturesController", function() {
 
 		it("must not include Estonian translations from other initiatives",
 			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12),
 				language: "en"
 			}))
 
-			var estonian = yield textsDb.create(new ValidText({
+			var estonian = textsDb.create(new ValidText({
 				initiative_uuid: initiative.uuid,
 				user_id: initiative.user_id,
 				language: "et"
 			}))
 
 			// The latest translations is included, so create the decoy later.
-			var other = yield initiativesDb.create(new ValidInitiative({
+			var other = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				language: "en"
 			}))
 
-			yield textsDb.create(new ValidText({
+			textsDb.create(new ValidText({
 				initiative_uuid: other.uuid,
 				user_id: other.user_id,
 				language: "et"
@@ -629,26 +626,26 @@ describe("SignaturesController", function() {
 		})
 
 		it("must include latest Estonian translation", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12),
 				language: "en"
 			}))
 
-			yield textsDb.create(new ValidText({
+			textsDb.create(new ValidText({
 				initiative_uuid: initiative.uuid,
 				user_id: initiative.user_id,
 				language: "en"
 			}))
 
-			yield textsDb.create(new ValidText({
+			textsDb.create(new ValidText({
 				initiative_uuid: initiative.uuid,
 				user_id: initiative.user_id,
 				language: "et"
 			}))
 
-			var latest = yield textsDb.create(new ValidText({
+			var latest = textsDb.create(new ValidText({
 				initiative_uuid: initiative.uuid,
 				user_id: initiative.user_id,
 				language: "et"
@@ -670,9 +667,7 @@ describe("SignaturesController", function() {
 	})
 
 	describe(`GET / for ${CSV_TYPE}`, function() {
-		beforeEach(function*() {
-			this.author = yield usersDb.create(new ValidUser)
-		})
+		beforeEach(function() { this.author = usersDb.create(new ValidUser) })
 
 		mustRespondWithSignatures(function(url, opts) {
 			return this.request(url.replace(/\.asice/, ".csv"), opts)
@@ -680,19 +675,19 @@ describe("SignaturesController", function() {
 
 		it("must respond with CSV of signatures given parliament token",
 			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
-			var citizenosSignatures = _.sortBy(yield citizenosSignaturesDb.create([
+			var citizenosSignatures = _.sortBy(citizenosSignaturesDb.create([
 				new ValidCitizenosSignature({initiative_uuid: initiative.uuid}),
 				new ValidCitizenosSignature({initiative_uuid: initiative.uuid}),
 				new ValidCitizenosSignature({initiative_uuid: initiative.uuid})
 			]), "personal_id")
 
-			var undersignedSignatures = _.sortBy(yield signaturesDb.create([
+			var undersignedSignatures = _.sortBy(signaturesDb.create([
 				new ValidSignature({initiative_uuid: initiative.uuid}),
 				new ValidSignature({initiative_uuid: initiative.uuid}),
 				new ValidSignature({initiative_uuid: initiative.uuid})
@@ -718,20 +713,20 @@ describe("SignaturesController", function() {
 		})
 
 		it("must ignore anonymized signatures", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
-			yield citizenosSignaturesDb.create(new ValidCitizenosSignature({
+			citizenosSignaturesDb.create(new ValidCitizenosSignature({
 				initiative_uuid: initiative.uuid,
 				personal_id: "387",
 				asic: null,
 				anonymized: true
 			}))
 
-			yield signaturesDb.create(new ValidSignature({
+			signaturesDb.create(new ValidSignature({
 				initiative_uuid: initiative.uuid,
 				personal_id: "387",
 				token: null,
@@ -749,7 +744,7 @@ describe("SignaturesController", function() {
 		})
 
 		it("must respond if no signatures", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
@@ -765,18 +760,18 @@ describe("SignaturesController", function() {
 		})
 
 		it("must not respond with signatures of other initiatives", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
-			var other = yield initiativesDb.create(new ValidInitiative({
+			var other = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament"
 			}))
 
-			yield signaturesDb.create(new ValidSignature({
+			signaturesDb.create(new ValidSignature({
 				initiative_uuid: other.uuid
 			}))
 
@@ -791,9 +786,7 @@ describe("SignaturesController", function() {
 	})
 
 	describe(`GET /?type=citizenos for ${ZIP_TYPE}`, function() {
-		beforeEach(function*() {
-			this.author = yield usersDb.create(new ValidUser)
-		})
+		beforeEach(function() { this.author = usersDb.create(new ValidUser) })
 
 		mustRespondWithSignatures(function(url, opts) {
 			url += (url.indexOf("?") >= 0 ? "&" : "?") + "type=citizenos"
@@ -802,7 +795,7 @@ describe("SignaturesController", function() {
 
 		it("must respond with signaturez in Zip given parliament token",
 			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
@@ -816,7 +809,7 @@ describe("SignaturesController", function() {
 			bAsic.add("initiative.html", initiative.text)
 			bAsic = yield bAsic.toBuffer()
 
-			var signatures = _.sortBy(yield citizenosSignaturesDb.create([
+			var signatures = _.sortBy(citizenosSignaturesDb.create([
 				new ValidCitizenosSignature({
 					initiative_uuid: initiative.uuid,
 					asic: aAsic
@@ -853,7 +846,7 @@ describe("SignaturesController", function() {
 		})
 
 		it("must respond if no signatures", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
@@ -870,13 +863,13 @@ describe("SignaturesController", function() {
 		})
 
 		it("must not include signatures from other initiatives", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
-			var other = yield initiativesDb.create(new ValidInitiative({
+			var other = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament"
 			}))
@@ -885,7 +878,7 @@ describe("SignaturesController", function() {
 			asic.add("initiative.html", other.text)
 			asic = yield asic.toBuffer()
 
-			yield citizenosSignaturesDb.create(new ValidCitizenosSignature({
+			citizenosSignaturesDb.create(new ValidCitizenosSignature({
 				initiative_uuid: other.uuid,
 				asic: asic
 			}))
@@ -901,13 +894,13 @@ describe("SignaturesController", function() {
 		})
 
 		it("must ignore anonymized signatures", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
-			_.sortBy(yield citizenosSignaturesDb.create([
+			_.sortBy(citizenosSignaturesDb.create([
 				new ValidCitizenosSignature({
 					initiative_uuid: initiative.uuid,
 					personal_id: "387",
@@ -930,10 +923,10 @@ describe("SignaturesController", function() {
 	describe("POST /", function() {
 		require("root/test/time")(TODAY)
 
-		beforeEach(function*() {
-			this.author = yield usersDb.create(new ValidUser)
+		beforeEach(function() {
+			this.author = usersDb.create(new ValidUser)
 
-			this.initiative = yield initiativesDb.create(new ValidInitiative({
+			this.initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "sign",
 				signing_ends_at: DateFns.addDays(new Date, 1)
@@ -968,7 +961,7 @@ describe("SignaturesController", function() {
 
 					res.statusCode.must.equal(204)
 
-					var signature = yield signaturesDb.read(sql`
+					var signature = signaturesDb.read(sql`
 						SELECT * FROM initiative_signatures
 					`)
 
@@ -1005,9 +998,9 @@ describe("SignaturesController", function() {
 
 						res.statusCode.must.equal(204)
 
-						yield signaturesDb.search(sql`
+						signaturesDb.search(sql`
 							SELECT * FROM initiative_signatures
-						`).must.then.not.be.empty()
+						`).must.not.be.empty()
 					})
 				})
 
@@ -1035,7 +1028,7 @@ describe("SignaturesController", function() {
 
 				it("must create a signature and thank after signing again",
 					function*() {
-					var oldSignature = yield signaturesDb.create(new ValidSignature({
+					var oldSignature = signaturesDb.create(new ValidSignature({
 						initiative_uuid: this.initiative.uuid,
 						country: "EE",
 						personal_id: ADULT_PERSONAL_ID
@@ -1061,13 +1054,13 @@ describe("SignaturesController", function() {
 					res.body.must.include(t("REVOKE_SIGNATURE"))
 					res.body.must.include("donate-form")
 
-					yield signaturesDb.search(sql`
+					signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
-					`).must.then.not.eql([oldSignature])
+					`).must.not.eql([oldSignature])
 				})
 
 				it("must create a signature and thank after oversigning a CitizenOS signature", function*() {
-					yield citizenosSignaturesDb.create(
+					citizenosSignaturesDb.create(
 						new ValidCitizenosSignature({
 							initiative_uuid: this.initiative.uuid,
 							country: "EE",
@@ -1095,17 +1088,17 @@ describe("SignaturesController", function() {
 					res.body.must.include(t("REVOKE_SIGNATURE"))
 					res.body.must.include("donate-form")
 
-					yield citizenosSignaturesDb.search(sql`
+					citizenosSignaturesDb.search(sql`
 						SELECT * FROM initiative_citizenos_signatures
-					`).must.then.be.empty()
+					`).must.be.empty()
 
-					yield signaturesDb.search(sql`
+					signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
-					`).must.then.not.be.empty()
+					`).must.not.be.empty()
 				})
 
 				it("must create a signature and thank after signing if previously hidden", function*() {
-					var oldSignature = yield signaturesDb.create(new ValidSignature({
+					var oldSignature = signaturesDb.create(new ValidSignature({
 						initiative_uuid: this.initiative.uuid,
 						country: "EE",
 						personal_id: ADULT_PERSONAL_ID,
@@ -1138,7 +1131,7 @@ describe("SignaturesController", function() {
 					res.body.must.include(t("REVOKE_SIGNATURE"))
 					res.body.must.include("donate-form")
 
-					var signatures = yield signaturesDb.search(sql`
+					var signatures = signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
 					`)
 
@@ -1148,11 +1141,11 @@ describe("SignaturesController", function() {
 				})
 
 				it("must not affect signature on another initiative", function*() {
-					var otherInitiative = yield initiativesDb.create(
+					var otherInitiative = initiativesDb.create(
 						new ValidInitiative({user_id: this.author.id, phase: "sign"})
 					)
 
-					var signature = yield signaturesDb.create(new ValidSignature({
+					var signature = signaturesDb.create(new ValidSignature({
 						initiative_uuid: otherInitiative.uuid,
 						country: "EE",
 						personal_id: ADULT_PERSONAL_ID
@@ -1176,7 +1169,7 @@ describe("SignaturesController", function() {
 					res.body.must.include(t("THANKS_FOR_SIGNING"))
 					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
 
-					var signatures = yield signaturesDb.search(sql`
+					var signatures = signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
 						ORDER BY updated_at
 					`)
@@ -1187,11 +1180,11 @@ describe("SignaturesController", function() {
 
 				it("must not affect CitizenOS signature on another initiative",
 					function*() {
-					var otherInitiative = yield initiativesDb.create(
+					var otherInitiative = initiativesDb.create(
 						new ValidInitiative({user_id: this.author.id, phase: "sign"})
 					)
 
-					var signature = yield citizenosSignaturesDb.create(
+					var signature = citizenosSignaturesDb.create(
 						new ValidCitizenosSignature({
 							initiative_uuid: otherInitiative.uuid,
 							country: "EE",
@@ -1217,18 +1210,18 @@ describe("SignaturesController", function() {
 					res.body.must.include(t("THANKS_FOR_SIGNING"))
 					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
 
-					yield citizenosSignaturesDb.search(sql`
+					citizenosSignaturesDb.search(sql`
 						SELECT * FROM initiative_citizenos_signatures
-					`).must.then.eql([signature])
+					`).must.eql([signature])
 
-					yield signaturesDb.search(sql`
+					signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
 						ORDER BY created_at
-					`).must.then.not.be.empty()
+					`).must.not.be.empty()
 				})
 
 				it("must not affect signature of another user", function*() {
-					var signature = yield signaturesDb.create(new ValidSignature({
+					var signature = signaturesDb.create(new ValidSignature({
 						initiative_uuid: this.initiative.uuid,
 						country: "EE",
 						personal_id: "70001019906"
@@ -1252,7 +1245,7 @@ describe("SignaturesController", function() {
 					res.body.must.include(t("THANKS_FOR_SIGNING"))
 					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
 
-					var signatures = yield signaturesDb.search(sql`
+					var signatures = signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
 						ORDER BY created_at
 					`)
@@ -1262,7 +1255,7 @@ describe("SignaturesController", function() {
 				})
 
 				it("must not affect CitizenOS signature of another user", function*() {
-					var signature = yield citizenosSignaturesDb.create(
+					var signature = citizenosSignaturesDb.create(
 						new ValidCitizenosSignature({
 							initiative_uuid: this.initiative.uuid,
 							country: "EE",
@@ -1288,18 +1281,18 @@ describe("SignaturesController", function() {
 					res.body.must.include(t("THANKS_FOR_SIGNING"))
 					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
 
-					yield citizenosSignaturesDb.search(sql`
+					citizenosSignaturesDb.search(sql`
 						SELECT * FROM initiative_citizenos_signatures
-					`).must.then.eql([signature])
+					`).must.eql([signature])
 
-					yield signaturesDb.search(sql`
+					signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
 						ORDER BY created_at
-					`).must.then.not.be.empty()
+					`).must.not.be.empty()
 				})
 
 				it("must not affect signature of another country", function*() {
-					var signature = yield signaturesDb.create(new ValidSignature({
+					var signature = signaturesDb.create(new ValidSignature({
 						initiative_uuid: this.initiative.uuid,
 						country: "LT",
 						personal_id: ADULT_PERSONAL_ID
@@ -1323,7 +1316,7 @@ describe("SignaturesController", function() {
 					res.body.must.include(t("THANKS_FOR_SIGNING"))
 					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
 
-					var signatures = yield signaturesDb.search(sql`
+					var signatures = signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
 						ORDER BY created_at
 					`)
@@ -1334,7 +1327,7 @@ describe("SignaturesController", function() {
 
 				it("must not affect CitizenOS signature of another country",
 					function*() {
-					var signature = yield citizenosSignaturesDb.create(
+					var signature = citizenosSignaturesDb.create(
 						new ValidCitizenosSignature({
 							initiative_uuid: this.initiative.uuid,
 							country: "LT",
@@ -1360,14 +1353,14 @@ describe("SignaturesController", function() {
 					res.body.must.include(t("THANKS_FOR_SIGNING"))
 					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
 
-					yield citizenosSignaturesDb.search(sql`
+					citizenosSignaturesDb.search(sql`
 						SELECT * FROM initiative_citizenos_signatures
-					`).must.then.eql([signature])
+					`).must.eql([signature])
 
-					yield signaturesDb.search(sql`
+					signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
 						ORDER BY created_at
-					`).must.then.not.be.empty()
+					`).must.not.be.empty()
 				})
 			})
 		}
@@ -1415,7 +1408,7 @@ describe("SignaturesController", function() {
 
 				signing.body.must.eql(xades.signableHash)
 
-				var signables = yield signablesDb.search(sql`
+				var signables = signablesDb.search(sql`
 					SELECT * FROM initiative_signables
 				`)
 
@@ -1430,9 +1423,9 @@ describe("SignaturesController", function() {
 				signables[0].created_from.must.eql(LONDON_GEO)
 				demand(signables[0].error).be.null()
 
-				yield signaturesDb.search(sql`
+				signaturesDb.search(sql`
 					SELECT * FROM initiative_signatures
-				`).must.then.be.empty()
+				`).must.be.empty()
 
 				var signatureBytes = signWithRsa(
 					JOHN_RSA_KEYS.privateKey,
@@ -1463,9 +1456,9 @@ describe("SignaturesController", function() {
 				signed.statusCode.must.equal(204)
 				signed.headers.location.must.equal(path)
 
-				yield signaturesDb.search(sql`
+				signaturesDb.search(sql`
 					SELECT * FROM initiative_signatures
-				`).must.then.eql([new ValidSignature({
+				`).must.eql([new ValidSignature({
 					id: 1,
 					initiative_uuid: this.initiative.uuid,
 					token: signables[0].token,
@@ -1681,11 +1674,11 @@ describe("SignaturesController", function() {
 
 					signing.statusCode.must.equal(202)
 
-					var xades = yield signablesDb.read(sql`
+					var {xades} = signablesDb.read(sql`
 						SELECT * FROM initiative_signables
 						ORDER BY created_at DESC
 						LIMIT 1
-					`).then((row) => row.xades)
+					`)
 
 					this.router.post(TIMEMARK_URL.path, function(req, res) {
 						req.headers.host.must.equal(TIMEMARK_URL.host)
@@ -1759,9 +1752,9 @@ describe("SignaturesController", function() {
 						name: "HttpError"
 					})
 
-					yield signaturesDb.search(sql`
+					signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
-					`).must.then.be.empty()
+					`).must.be.empty()
 				})
 			})
 		})
@@ -1861,7 +1854,7 @@ describe("SignaturesController", function() {
 				signed.statusCode.must.equal(204)
 				signed.headers.location.must.equal(initiativePath)
 
-				var signables = yield signablesDb.search(sql`
+				var signables = signablesDb.search(sql`
 					SELECT * FROM initiative_signables
 				`)
 
@@ -1876,9 +1869,9 @@ describe("SignaturesController", function() {
 				signables[0].created_from.must.eql(LONDON_GEO)
 				demand(signables[0].error).be.null()
 
-				yield signaturesDb.search(sql`
+				signaturesDb.search(sql`
 					SELECT * FROM initiative_signatures
-				`).must.then.eql([new ValidSignature({
+				`).must.eql([new ValidSignature({
 					id: 1,
 					initiative_uuid: this.initiative.uuid,
 					token: signables[0].token,
@@ -2035,17 +2028,17 @@ describe("SignaturesController", function() {
 					this.request,
 					this.initiative,
 					MOBILE_ID_CERTIFICATE,
-					next(function*(req, res) {
+					function(req, res) {
 						if (waited++ < 2)
 							return void respond({state: "RUNNING"}, req, res)
 
 						res.writeHead(200)
 
-						var xades = yield signablesDb.read(sql`
+						var {xades} = signablesDb.read(sql`
 							SELECT * FROM initiative_signables
 							ORDER BY created_at DESC
 							LIMIT 1
-						`).then((row) => row.xades)
+						`)
 
 						respond({
 							state: "COMPLETE",
@@ -2059,14 +2052,14 @@ describe("SignaturesController", function() {
 								).toString("base64")
 							}
 						}, req, res)
-					})
+					}
 				)
 
 				signed.statusCode.must.equal(204)
 
-				yield signaturesDb.search(sql`
+				signaturesDb.search(sql`
 					SELECT * FROM initiative_signatures
-				`).must.then.not.be.empty()
+				`).must.not.be.empty()
 
 				var cookies = parseCookies(signed.headers["set-cookie"])
 				var res = yield this.request(signed.headers.location, {
@@ -2102,14 +2095,14 @@ describe("SignaturesController", function() {
 						this.request,
 						this.initiative,
 						cert,
-						next(function*(req, res) {
+						function(req, res) {
 							res.writeHead(200)
 
-							var xades = yield signablesDb.read(sql`
+							var {xades} = signablesDb.read(sql`
 								SELECT * FROM initiative_signables
 								ORDER BY created_at DESC
 								LIMIT 1
-							`).then((row) => row.xades)
+							`)
 
 							respond({
 								state: "COMPLETE",
@@ -2123,14 +2116,14 @@ describe("SignaturesController", function() {
 									).toString("base64")
 								}
 							}, req, res)
-						})
+						}
 					)
 
 					signed.statusCode.must.equal(204)
 
-					yield signaturesDb.search(sql`
+					signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
-					`).must.then.not.be.empty()
+					`).must.not.be.empty()
 				})
 
 				it(`must respond with error given an invalid ${algo} signature`,
@@ -2181,9 +2174,9 @@ describe("SignaturesController", function() {
 					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
 					res.body.must.include(t("MOBILE_ID_ERROR_INVALID_SIGNATURE"))
 
-					yield signaturesDb.search(sql`
+					signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
-					`).must.then.be.empty()
+					`).must.be.empty()
 				})
 			})
 
@@ -2217,9 +2210,9 @@ describe("SignaturesController", function() {
 
 					res.body.must.include(t("MOBILE_ID_ERROR_NOT_FOUND"))
 
-					yield signablesDb.search(sql`
+					signablesDb.search(sql`
 						SELECT * FROM initiative_signables
-					`).must.then.be.empty()
+					`).must.be.empty()
 				})
 			})
 
@@ -2245,9 +2238,9 @@ describe("SignaturesController", function() {
 					res.statusMessage.must.equal(statusMessage)
 					res.body.must.include(t(error))
 
-					yield signablesDb.search(sql`
+					signablesDb.search(sql`
 						SELECT * FROM initiative_signables
-					`).must.then.be.empty()
+					`).must.be.empty()
 				})
 			})
 
@@ -2294,9 +2287,9 @@ describe("SignaturesController", function() {
 
 				res.body.must.include(t("MOBILE_ID_ERROR_NOT_FOUND"))
 
-				yield signablesDb.search(sql`
+				signablesDb.search(sql`
 					SELECT * FROM initiative_signables
-				`).must.then.be.empty()
+				`).must.be.empty()
 			})
 
 			it("must respond with 422 given invalid phone number error", function*() {
@@ -2326,9 +2319,9 @@ describe("SignaturesController", function() {
 
 				res.body.must.include(t("MOBILE_ID_ERROR_NOT_FOUND"))
 
-				yield signablesDb.search(sql`
+				signablesDb.search(sql`
 					SELECT * FROM initiative_signables
-				`).must.then.be.empty()
+				`).must.be.empty()
 			})
 
 			it("must respond with 500 given Bad Request", function*() {
@@ -2352,9 +2345,9 @@ describe("SignaturesController", function() {
 				res.statusMessage.must.equal("Unknown Mobile-Id Error")
 				res.body.must.not.include("FOOLANG")
 
-				yield signablesDb.search(sql`
+				signablesDb.search(sql`
 					SELECT * FROM initiative_signables
-				`).must.then.be.empty()
+				`).must.be.empty()
 			})
 
 			_.each(MOBILE_ID_SESSION_ERRORS,
@@ -2374,9 +2367,9 @@ describe("SignaturesController", function() {
 					var initiativePath = `/initiatives/${this.initiative.uuid}`
 					errored.headers.location.must.equal(initiativePath)
 
-					yield signaturesDb.search(sql`
+					signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
-					`).must.then.be.empty()
+					`).must.be.empty()
 
 					var cookies = parseCookies(errored.headers["set-cookie"])
 					var res = yield this.request(errored.headers.location, {
@@ -2412,9 +2405,9 @@ describe("SignaturesController", function() {
 				errored.headers.location.must.equal(initiativePath)
 				waited.must.equal(2)
 
-				yield signaturesDb.search(sql`
+				signaturesDb.search(sql`
 					SELECT * FROM initiative_signatures
-				`).must.then.be.empty()
+				`).must.be.empty()
 
 				var cookies = parseCookies(errored.headers["set-cookie"])
 				var res = yield this.request(errored.headers.location, {
@@ -2539,7 +2532,7 @@ describe("SignaturesController", function() {
 				signed.statusCode.must.equal(204)
 				signed.headers.location.must.equal(initiativePath)
 
-				var signables = yield signablesDb.search(sql`
+				var signables = signablesDb.search(sql`
 					SELECT * FROM initiative_signables
 				`)
 
@@ -2554,9 +2547,9 @@ describe("SignaturesController", function() {
 				signables[0].created_from.must.eql(LONDON_GEO)
 				demand(signables[0].error).be.null()
 
-				yield signaturesDb.search(sql`
+				signaturesDb.search(sql`
 					SELECT * FROM initiative_signatures
-				`).must.then.eql([new ValidSignature({
+				`).must.eql([new ValidSignature({
 					id: 1,
 					initiative_uuid: this.initiative.uuid,
 					token: signables[0].token,
@@ -2766,17 +2759,17 @@ describe("SignaturesController", function() {
 					this.request,
 					this.initiative,
 					SMART_ID_CERTIFICATE,
-					next(function*(req, res) {
+					function(req, res) {
 						if (waited++ < 2)
 							return void respond({state: "RUNNING"}, req, res)
 
 						res.writeHead(200)
 
-						var xades = yield signablesDb.read(sql`
+						var {xades} = signablesDb.read(sql`
 							SELECT * FROM initiative_signables
 							ORDER BY created_at DESC
 							LIMIT 1
-						`).then((row) => row.xades)
+						`)
 
 						respond({
 							state: "COMPLETE",
@@ -2795,14 +2788,14 @@ describe("SignaturesController", function() {
 								).toString("base64")
 							}
 						}, req, res)
-					})
+					}
 				)
 
 				signed.statusCode.must.equal(204)
 
-				yield signaturesDb.search(sql`
+				signaturesDb.search(sql`
 					SELECT * FROM initiative_signatures
-				`).must.then.not.be.empty()
+				`).must.not.be.empty()
 
 				var cookies = parseCookies(signed.headers["set-cookie"])
 				var res = yield this.request(signed.headers.location, {
@@ -2837,14 +2830,14 @@ describe("SignaturesController", function() {
 						this.request,
 						this.initiative,
 						cert,
-						next(function*(req, res) {
+						function(req, res) {
 							res.writeHead(200)
 
-							var xades = yield signablesDb.read(sql`
+							var {xades} = signablesDb.read(sql`
 								SELECT * FROM initiative_signables
 								ORDER BY created_at DESC
 								LIMIT 1
-							`).then((row) => row.xades)
+							`)
 
 							respond({
 								state: "COMPLETE",
@@ -2863,14 +2856,14 @@ describe("SignaturesController", function() {
 									).toString("base64")
 								}
 							}, req, res)
-						})
+						}
 					)
 
 					signed.statusCode.must.equal(204)
 
-					yield signaturesDb.search(sql`
+					signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
-					`).must.then.not.be.empty()
+					`).must.not.be.empty()
 				})
 
 				it(`must respond with error given an invalid ${algo} signature`,
@@ -2925,9 +2918,9 @@ describe("SignaturesController", function() {
 					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
 					res.body.must.include(t("SMART_ID_ERROR_INVALID_SIGNATURE"))
 
-					yield signaturesDb.search(sql`
+					signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
-					`).must.then.be.empty()
+					`).must.be.empty()
 				})
 			})
 
@@ -2966,9 +2959,9 @@ describe("SignaturesController", function() {
 				res.statusMessage.must.equal("Not a Smart-Id User")
 				res.body.must.include(t("SMART_ID_ERROR_NOT_FOUND"))
 
-				yield signablesDb.search(sql`
+				signablesDb.search(sql`
 					SELECT * FROM initiative_signables
-				`).must.then.be.empty()
+				`).must.be.empty()
 			})
 
 			it("must respond with 500 given Bad Request", function*() {
@@ -2988,9 +2981,9 @@ describe("SignaturesController", function() {
 				res.statusMessage.must.equal("Unknown Smart-Id Error")
 				res.body.must.not.include("FOOLANG")
 
-				yield signablesDb.search(sql`
+				signablesDb.search(sql`
 					SELECT * FROM initiative_signables
-				`).must.then.be.empty()
+				`).must.be.empty()
 			})
 
 			_.each(SMART_ID_SESSION_ERRORS,
@@ -3008,9 +3001,9 @@ describe("SignaturesController", function() {
 					errored.statusMessage.must.equal(statusMessage)
 					errored.body.must.include(t(error))
 
-					yield signaturesDb.search(sql`
+					signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
-					`).must.then.be.empty()
+					`).must.be.empty()
 				})
 
 				it(`must respond with error given ${code} while signing`,
@@ -3028,9 +3021,9 @@ describe("SignaturesController", function() {
 					var initiativePath = `/initiatives/${this.initiative.uuid}`
 					errored.headers.location.must.equal(initiativePath)
 
-					yield signaturesDb.search(sql`
+					signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
-					`).must.then.be.empty()
+					`).must.be.empty()
 
 					var cookies = parseCookies(errored.headers["set-cookie"])
 					var res = yield this.request(errored.headers.location, {
@@ -3066,9 +3059,9 @@ describe("SignaturesController", function() {
 				errored.headers.location.must.equal(initiativePath)
 				waited.must.equal(2)
 
-				yield signaturesDb.search(sql`
+				signaturesDb.search(sql`
 					SELECT * FROM initiative_signatures
-				`).must.then.be.empty()
+				`).must.be.empty()
 
 				var cookies = parseCookies(errored.headers["set-cookie"])
 				var res = yield this.request(errored.headers.location, {
@@ -3084,10 +3077,10 @@ describe("SignaturesController", function() {
 	})
 
 	describe(`GET /:personalid for ${ASICE_TYPE}`, function() {
-		beforeEach(function*() {
-			this.author = yield usersDb.create(new ValidUser)
+		beforeEach(function() {
+			this.author = usersDb.create(new ValidUser)
 
-			this.initiative = yield initiativesDb.create(new ValidInitiative({
+			this.initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "sign",
 				signing_ends_at: DateFns.addDays(new Date, 1)
@@ -3095,7 +3088,7 @@ describe("SignaturesController", function() {
 		})
 
 		it("must respond with signature ASIC-E", function*() {
-			var signature = yield signaturesDb.create(new ValidSignature({
+			var signature = signaturesDb.create(new ValidSignature({
 				initiative_uuid: this.initiative.uuid,
 				country: "EE",
 				personal_id: "38706181337"
@@ -3127,7 +3120,7 @@ describe("SignaturesController", function() {
 		})
 
 		it("must respond with 404 if invalid token", function*() {
-			yield signaturesDb.create(new ValidSignature({
+			signaturesDb.create(new ValidSignature({
 				initiative_uuid: this.initiative.uuid,
 				country: "EE",
 				personal_id: "38706181337"
@@ -3144,10 +3137,10 @@ describe("SignaturesController", function() {
 	describe("PUT /:personalId", function() {
 		require("root/test/time")()
 
-		beforeEach(function*() {
-			this.author = yield usersDb.create(new ValidUser)
+		beforeEach(function() {
+			this.author = usersDb.create(new ValidUser)
 
-			this.initiative = yield initiativesDb.create(new ValidInitiative({
+			this.initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "sign",
 				signing_ends_at: DateFns.addDays(new Date, 1)
@@ -3155,7 +3148,7 @@ describe("SignaturesController", function() {
 		})
 
 		it("must hide signature and redirect", function*() {
-			var signature = yield signaturesDb.create(new ValidSignature({
+			var signature = signaturesDb.create(new ValidSignature({
 				initiative_uuid: this.initiative.uuid,
 				country: "EE",
 				personal_id: "38706181337"
@@ -3172,9 +3165,9 @@ describe("SignaturesController", function() {
 			updated.statusCode.must.equal(303)
 			updated.headers.location.must.equal(initiativePath)
 
-			yield signaturesDb.search(sql`
+			signaturesDb.search(sql`
 				SELECT * FROM initiative_signatures
-			`).must.then.eql([{
+			`).must.eql([{
 				__proto__: signature,
 				hidden: true,
 				updated_at: new Date
@@ -3201,7 +3194,7 @@ describe("SignaturesController", function() {
 		})
 
 		it("must respond with 404 if invalid token", function*() {
-			var signature = yield signaturesDb.create(new ValidSignature({
+			var signature = signaturesDb.create(new ValidSignature({
 				initiative_uuid: this.initiative.uuid,
 				country: "EE",
 				personal_id: "38706181337"
@@ -3215,11 +3208,11 @@ describe("SignaturesController", function() {
 			})
 
 			res.statusCode.must.equal(404)
-			yield signaturesDb.read(signature).must.then.eql(signature)
+			signaturesDb.read(signature).must.eql(signature)
 		})
 
 		it("must respond with 409 if setting signature once signed", function*() {
-			var signature = yield signaturesDb.create(new ValidSignature({
+			var signature = signaturesDb.create(new ValidSignature({
 				initiative_uuid: this.initiative.uuid,
 				country: "EE",
 				personal_id: "38706181337"
@@ -3239,10 +3232,10 @@ describe("SignaturesController", function() {
 	})
 
 	describe("DELETE /:personalId", function() {
-		beforeEach(function*() {
-			this.author = yield usersDb.create(new ValidUser)
+		beforeEach(function() {
+			this.author = usersDb.create(new ValidUser)
 
-			this.initiative = yield initiativesDb.create(new ValidInitiative({
+			this.initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "sign",
 				signing_ends_at: DateFns.addDays(new Date, 1)
@@ -3250,7 +3243,7 @@ describe("SignaturesController", function() {
 		})
 
 		it("must delete signature and redirect", function*() {
-			var signature = yield signaturesDb.create(new ValidSignature({
+			var signature = signaturesDb.create(new ValidSignature({
 				initiative_uuid: this.initiative.uuid,
 				country: "EE",
 				personal_id: "38706181337"
@@ -3263,9 +3256,9 @@ describe("SignaturesController", function() {
 			deleted.statusCode.must.equal(303)
 			deleted.headers.location.must.equal(initiativePath)
 
-			yield signaturesDb.search(sql`
+			signaturesDb.search(sql`
 				SELECT * FROM initiative_signatures
-			`).must.then.be.empty()
+			`).must.be.empty()
 
 			var cookies = parseCookies(deleted.headers["set-cookie"])
 			var res = yield this.request(deleted.headers.location, {
@@ -3286,7 +3279,7 @@ describe("SignaturesController", function() {
 		})
 
 		it("must respond with 404 if invalid token", function*() {
-			var signature = yield signaturesDb.create(new ValidSignature({
+			var signature = signaturesDb.create(new ValidSignature({
 				initiative_uuid: this.initiative.uuid,
 				country: "EE",
 				personal_id: "38706181337"
@@ -3297,21 +3290,21 @@ describe("SignaturesController", function() {
 			var res = yield this.request(path, {method: "DELETE"})
 
 			res.statusCode.must.equal(404)
-			yield signaturesDb.read(signature).must.then.eql(signature)
+			signaturesDb.read(signature).must.eql(signature)
 		})
 
 		it("must not delete signature on another initiative", function*() {
-			var signature = yield signaturesDb.create(new ValidSignature({
+			var signature = signaturesDb.create(new ValidSignature({
 				initiative_uuid: this.initiative.uuid,
 				country: "EE",
 				personal_id: "38706181337"
 			}))
 
-			var otherInitiative = yield initiativesDb.create(new ValidInitiative({
+			var otherInitiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id
 			}))
 
-			var otherSignature = yield signaturesDb.create(new ValidSignature({
+			var otherSignature = signaturesDb.create(new ValidSignature({
 				initiative_uuid: otherInitiative.uuid,
 				country: "EE",
 				personal_id: "38706181337"
@@ -3323,19 +3316,19 @@ describe("SignaturesController", function() {
 			var res = yield this.request(path, {method: "DELETE"})
 			res.statusCode.must.equal(303)
 
-			yield signaturesDb.search(sql`
+			signaturesDb.search(sql`
 				SELECT * FROM initiative_signatures
-			`).must.then.eql([otherSignature])
+			`).must.eql([otherSignature])
 		})
 
 		it("must not delete signature of another person", function*() {
-			var signature = yield signaturesDb.create(new ValidSignature({
+			var signature = signaturesDb.create(new ValidSignature({
 				initiative_uuid: this.initiative.uuid,
 				country: "EE",
 				personal_id: "38706181337"
 			}))
 
-			var otherSignature = yield signaturesDb.create(new ValidSignature({
+			var otherSignature = signaturesDb.create(new ValidSignature({
 				initiative_uuid: this.initiative.uuid,
 				country: "EE",
 				personal_id: "60001019907"
@@ -3347,9 +3340,9 @@ describe("SignaturesController", function() {
 			var res = yield this.request(path, {method: "DELETE"})
 			res.statusCode.must.equal(303)
 
-			yield signaturesDb.search(sql`
+			signaturesDb.search(sql`
 				SELECT * FROM initiative_signatures
-			`).must.then.eql([otherSignature])
+			`).must.eql([otherSignature])
 		})
 	})
 })
@@ -3363,9 +3356,9 @@ function* signWithIdCard(router, request, initiative, cert) {
 
 	signing.statusCode.must.equal(202)
 
-	var xades = yield signablesDb.read(sql`
+	var {xades} = signablesDb.read(sql`
 		SELECT * FROM initiative_signables ORDER BY created_at DESC LIMIT 1
-	`).then((row) => row.xades)
+	`)
 
 	router.post(TIMEMARK_URL.path, function(req, res) {
 		req.headers.host.must.equal(TIMEMARK_URL.host)
@@ -3395,12 +3388,12 @@ function* signWithMobileId(router, request, initiative, cert, res) {
 
 	router.get(
 		`${MOBILE_ID_URL.path}signature/session/:token`,
-		typeof res == "function" ? res : next(function*(req, res) {
+		typeof res == "function" ? res : function(req, res) {
 			res.writeHead(200)
 
-			var xades = yield signablesDb.read(sql`
+			var {xades} = signablesDb.read(sql`
 				SELECT xades FROM initiative_signables ORDER BY created_at DESC LIMIT 1
-			`).then((row) => row.xades)
+			`)
 
 			respond({
 				state: "COMPLETE",
@@ -3414,7 +3407,7 @@ function* signWithMobileId(router, request, initiative, cert, res) {
 					).toString("base64")
 				}
 			}, req, res)
-		})
+		}
 	)
 
 	router.post(TIMEMARK_URL.path, function(req, res) {
@@ -3472,12 +3465,12 @@ function* signWithSmartId(router, request, initiative, cert, res) {
 
 	router.get(
 		`${SMART_ID_URL.path}session/${signSession}`,
-		typeof res == "function" ? res : next(function*(req, res) {
+		typeof res == "function" ? res : function(req, res) {
 			res.writeHead(200)
 
-			var xades = yield signablesDb.read(sql`
+			var {xades} = signablesDb.read(sql`
 				SELECT xades FROM initiative_signables ORDER BY created_at DESC LIMIT 1
-			`).then((row) => row.xades)
+			`)
 
 			respond({
 				state: "COMPLETE",
@@ -3492,7 +3485,7 @@ function* signWithSmartId(router, request, initiative, cert, res) {
 					).toString("base64")
 				}
 			}, req, res)
-		})
+		}
 	)
 
 	router.post(TIMEMARK_URL.path, function(req, res) {

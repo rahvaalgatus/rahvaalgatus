@@ -180,17 +180,6 @@ strong {
 	}
 }
 
-button.inherited {
-	@include appearance(none);
-
-	border: none;
-	background: none;
-	font: inherit;
-	color: inherit;
-	padding: 0;
-	margin: 0;
-}
-
 %generic-button {
 	display: inline-block;
 	border-radius: $button-radius;
@@ -289,8 +278,21 @@ button.inherited {
 	}
 }
 
+.inherited-button {
+	@include appearance(none);
+
+	border: none;
+	background: none;
+	font: inherit;
+	color: inherit;
+	padding: 0;
+	margin: 0;
+
+	cursor: pointer;
+}
+
 .link-button {
-	@extend button.inherited;
+	@extend .inherited-button;
 
 	cursor: pointer;
 	color: $link-color;
@@ -300,11 +302,6 @@ button.inherited {
 .form {
 	font-family: $museo-sans;
 	font-size: 1.3rem;
-}
-
-.inherited-button {
-	@extend button.inherited;
-	cursor: pointer;
 }
 
 .form-label,
@@ -447,7 +444,7 @@ button.inherited {
 
 	.pika-prev,
 	.pika-next {
-		@extend button.inherited;
+		@extend .inherited-button;
 		width: 2.5rem;
 		height: 2.5rem;
 		text-indent: -9999px;
@@ -481,7 +478,7 @@ button.inherited {
 		line-height: 4.6rem; // Height of the selected background image.
 
 		button {
-			@extend button.inherited;
+			@extend .inherited-button;
 			width: 100%;
 		}
 
@@ -1232,7 +1229,10 @@ button.inherited {
 
 		.initiatives-subscription-form-toggle:checked +
 		.open-subscription-form-button {
-			@extend .secondary-button:disabled;
+			cursor: auto;
+			background: $secondary-background;
+			border-color: darken($secondary-background, 10%);
+			color: $secondary-light-text;
 			pointer-events: none;
 		}
 

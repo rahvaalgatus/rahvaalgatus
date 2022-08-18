@@ -61,7 +61,7 @@ module.exports = function*(argv) {
 	else if (!args["--all"]) rows = rows.filter((row) => !docsByUuid[row.uuid])
 
 	if (args["--cached"]) {
-		var initiatives = _.indexBy(yield initiativesDb.search(sql`
+		var initiatives = _.indexBy(initiativesDb.search(sql`
 			SELECT * FROM initiatives
 			WHERE parliament_api_data IS NOT NULL
 			AND ${uuid
@@ -87,7 +87,7 @@ module.exports = function*(argv) {
 function* syncInitiative(row, collectiveAddressDocument) {
 	var api = _.memoize(parliamentApi)
 
-	var initiative = yield initiativesDb.read(sql`
+	var initiative = initiativesDb.read(sql`
 		SELECT * FROM initiatives
 		WHERE parliament_uuid = ${row.uuid}
 		OR uuid = ${row.authorUrl && parseRahvaalgatusUuidFromUrl(row.authorUrl)}
@@ -183,7 +183,7 @@ function* replaceWebInitiative(initiative, document, row) {
 		published_at: createdAt
 	}
 	else if (diff(initiative, attrs))
-		initiative = yield initiativesDb.update(initiative, attrs)
+		initiative = initiativesDb.update(initiative, attrs)
 
 	var relatedDocuments = _.uniqBy(
 		concat(document.relatedDocuments, document.webDocuments),

@@ -5,7 +5,7 @@ var sql = require("sqlate")
 var EXPIRATION = Config.demoSignaturesExpirationSeconds
 
 module.exports = function() {
-	return sqlite(sql`
+	sqlite(sql`
 		UPDATE demo_signatures
 		SET xades = NULL
 		WHERE updated_at <= ${DateFns.addSeconds(new Date, -EXPIRATION)}

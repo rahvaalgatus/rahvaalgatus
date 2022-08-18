@@ -26,9 +26,9 @@ describe("ImageController", function() {
 	describe("PUT /", function() {
 		describe("when not logged in", function() {
 			it("must respond with 401", function*() {
-				var author = yield usersDb.create(new ValidUser)
+				var author = usersDb.create(new ValidUser)
 
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: author.id,
 					published_at: new Date
 				}))
@@ -46,9 +46,9 @@ describe("ImageController", function() {
 			require("root/test/fixtures").user()
 
 			it("must respond with 403 if not author", function*() {
-				var author = yield usersDb.create(new ValidUser)
+				var author = usersDb.create(new ValidUser)
 
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: author.id,
 					published_at: new Date
 				}))
@@ -62,7 +62,7 @@ describe("ImageController", function() {
 			})
 
 			it("must respond with 422 if image missing", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
 
@@ -75,7 +75,7 @@ describe("ImageController", function() {
 			})
 
 			it("must create new initiative image", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
 
@@ -96,7 +96,7 @@ describe("ImageController", function() {
 				res.statusMessage.must.equal("Image Replaced")
 				res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
-				var images = yield imagesDb.search(sql`SELECT * FROM initiative_images`)
+				var images = imagesDb.search(sql`SELECT * FROM initiative_images`)
 				images.length.must.equal(1)
 				images[0].initiative_uuid.must.equal(initiative.uuid)
 				images[0].uploaded_by_id.must.equal(this.user.id)
@@ -115,11 +115,11 @@ describe("ImageController", function() {
 			})
 
 			it("must create new initiative image if coauthor", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: (yield usersDb.create(new ValidUser)).id
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: usersDb.create(new ValidUser).id
 				}))
 
-				yield coauthorsDb.create(new ValidCoauthor({
+				coauthorsDb.create(new ValidCoauthor({
 					initiative: initiative,
 					user: this.user,
 					status: "accepted"
@@ -142,20 +142,20 @@ describe("ImageController", function() {
 				res.statusMessage.must.equal("Image Replaced")
 				res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
-				var images = yield imagesDb.search(sql`SELECT * FROM initiative_images`)
+				var images = imagesDb.search(sql`SELECT * FROM initiative_images`)
 				images.length.must.equal(1)
 				images[0].initiative_uuid.must.equal(initiative.uuid)
 				images[0].uploaded_by_id.must.equal(this.user.id)
 			})
 
 			it("must update author", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
 
-				var otherUser = yield usersDb.create(new ValidUser)
+				var otherUser = usersDb.create(new ValidUser)
 
-				var image = yield imagesDb.create({
+				var image = imagesDb.create({
 					initiative_uuid: initiative.uuid,
 					uploaded_by_id: otherUser.id,
 					data: PNG,
@@ -175,7 +175,7 @@ describe("ImageController", function() {
 				res.statusMessage.must.equal("Image Author Updated")
 				res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
-				yield imagesDb.read(image).must.then.eql({
+				imagesDb.read(image).must.eql({
 					__proto__: image,
 					author_name: "John Smith",
 					author_url: "http://example.com"

@@ -14,7 +14,6 @@ var newCertificate = require("root/test/fixtures").newCertificate
 var newOcspResponse = require("root/test/fixtures").newOcspResponse
 var demoSignaturesDb = require("root/db/demo_signatures_db")
 var hades = require("root").hades
-var next = require("co-next")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var ASICE_TYPE = "application/vnd.etsi.asic-e+zip"
 var MOBILE_ID_URL = Url.parse("https://mid.sk.ee/mid-api/")
@@ -155,7 +154,7 @@ describe("DemoSignaturesController", function() {
 				var token = Path.basename(signed.headers.location)
 				signed.headers.location.must.equal(`/demo-signatures/${token}`)
 
-				var signatures = yield demoSignaturesDb.search(sql`
+				var signatures = demoSignaturesDb.search(sql`
 					SELECT * FROM demo_signatures
 				`)
 
@@ -186,7 +185,7 @@ describe("DemoSignaturesController", function() {
 				var token = Path.basename(signed.headers.location)
 				signed.headers.location.must.equal(`/demo-signatures/${token}`)
 
-				var signatures = yield demoSignaturesDb.search(sql`
+				var signatures = demoSignaturesDb.search(sql`
 					SELECT * FROM demo_signatures
 				`)
 
@@ -217,7 +216,7 @@ describe("DemoSignaturesController", function() {
 				var token = Path.basename(signed.headers.location)
 				signed.headers.location.must.equal(`/demo-signatures/${token}`)
 
-				var signatures = yield demoSignaturesDb.search(sql`
+				var signatures = demoSignaturesDb.search(sql`
 					SELECT * FROM demo_signatures
 				`)
 
@@ -241,7 +240,7 @@ describe("DemoSignaturesController", function() {
 		require("root/test/time")()
 
 		it("must respond with signature ASIC-E", function*() {
-			var signature = yield demoSignaturesDb.create(new ValidDemoSignature({
+			var signature = demoSignaturesDb.create(new ValidDemoSignature({
 				signed: true,
 				timestamped: true,
 				updated_at: DateFns.addSeconds(new Date, -EXPIRATION + 1)
@@ -273,13 +272,13 @@ describe("DemoSignaturesController", function() {
 		})
 
 		it("must respond with 404 if invalid token", function*() {
-			yield demoSignaturesDb.create(new ValidDemoSignature)
+			demoSignaturesDb.create(new ValidDemoSignature)
 			var res = yield this.request("/demo-signatures/aabbccddee.asice")
 			res.statusCode.must.equal(404)
 		})
 
 		it("must respond with 425 if not yet signed", function*() {
-			var signature = yield demoSignaturesDb.create(new ValidDemoSignature)
+			var signature = demoSignaturesDb.create(new ValidDemoSignature)
 			var path = `/demo-signatures/${signature.token.toString("hex")}.asice`
 			var res = yield this.request(path)
 			res.statusCode.must.equal(425)
@@ -287,7 +286,7 @@ describe("DemoSignaturesController", function() {
 		})
 
 		it("must respond with 410 if already deleted", function*() {
-			var signature = yield demoSignaturesDb.create(new ValidDemoSignature({
+			var signature = demoSignaturesDb.create(new ValidDemoSignature({
 				xades: null,
 				signed: true,
 				timestamped: true
@@ -300,7 +299,7 @@ describe("DemoSignaturesController", function() {
 		})
 
 		it("must respond with signature if younger than expiration", function*() {
-			var signature = yield demoSignaturesDb.create(new ValidDemoSignature({
+			var signature = demoSignaturesDb.create(new ValidDemoSignature({
 				signed: true,
 				timestamped: true,
 				updated_at: DateFns.addSeconds(new Date, -EXPIRATION + 1)
@@ -313,7 +312,7 @@ describe("DemoSignaturesController", function() {
 		})
 
 		it("must respond with 410 if older than expiration", function*() {
-			var signature = yield demoSignaturesDb.create(new ValidDemoSignature({
+			var signature = demoSignaturesDb.create(new ValidDemoSignature({
 				signed: true,
 				timestamped: true,
 				updated_at: DateFns.addSeconds(new Date, -EXPIRATION)
@@ -359,9 +358,9 @@ function* signWithIdCard(router, request, cert) {
 
 	signing.statusCode.must.equal(202)
 
-	var xades = yield demoSignaturesDb.read(sql`
+	var {xades} = demoSignaturesDb.read(sql`
 		SELECT * FROM demo_signatures ORDER BY created_at DESC LIMIT 1
-	`).then((row) => row.xades)
+	`)
 
 	router.post(TIMEMARK_URL.path, function(req, res) {
 		req.headers.host.must.equal(TIMEMARK_URL.host)
@@ -389,29 +388,26 @@ function* signWithMobileId(router, request, cert) {
 		respond({sessionID: "7c8bdd56-6772-4264-ba27-bf7a9ef72a11"}, req, res)
 	})
 
-	router.get(
-		`${MOBILE_ID_URL.path}signature/session/:token`,
-		next(function*(req, res) {
-			res.writeHead(200)
+	router.get(`${MOBILE_ID_URL.path}signature/session/:token`, (req, res) => {
+		res.writeHead(200)
 
-			var xades = yield demoSignaturesDb.read(sql`
-				SELECT xades FROM demo_signatures ORDER BY created_at DESC LIMIT 1
-			`).then((row) => row.xades)
+		var {xades} = demoSignaturesDb.read(sql`
+			SELECT xades FROM demo_signatures ORDER BY created_at DESC LIMIT 1
+		`)
 
-			respond({
-				state: "COMPLETE",
-				result: "OK",
+		respond({
+			state: "COMPLETE",
+			result: "OK",
 
-				signature: {
-					algorithm: "sha256WithRSAEncryption",
-					value: signWithRsa(
-						JOHN_RSA_KEYS.privateKey,
-						xades.signable
-					).toString("base64")
-				}
-			}, req, res)
-		})
-	)
+			signature: {
+				algorithm: "sha256WithRSAEncryption",
+				value: signWithRsa(
+					JOHN_RSA_KEYS.privateKey,
+					xades.signable
+				).toString("base64")
+			}
+		}, req, res)
+	})
 
 	router.post(TIMEMARK_URL.path, function(req, res) {
 		req.headers.host.must.equal(TIMEMARK_URL.host)
@@ -443,30 +439,27 @@ function* signWithSmartId(router, request, cert) {
 		respond.bind(null, {sessionID: signSession})
 	)
 
-	router.get(
-		`${SMART_ID_URL.path}session/${signSession}`,
-		next(function*(req, res) {
-			res.writeHead(200)
+	router.get(`${SMART_ID_URL.path}session/${signSession}`, function(req, res) {
+		res.writeHead(200)
 
-			var xades = yield demoSignaturesDb.read(sql`
-				SELECT xades FROM demo_signatures ORDER BY created_at DESC LIMIT 1
-			`).then((row) => row.xades)
+		var {xades} = demoSignaturesDb.read(sql`
+			SELECT xades FROM demo_signatures ORDER BY created_at DESC LIMIT 1
+		`)
 
-			respond({
-				state: "COMPLETE",
-				result: {endResult: "OK"},
-				cert: {certificateLevel: "QUALIFIED", value: cert.toString("base64")},
+		respond({
+			state: "COMPLETE",
+			result: {endResult: "OK"},
+			cert: {certificateLevel: "QUALIFIED", value: cert.toString("base64")},
 
-				signature: {
-					algorithm: "sha256WithRSAEncryption",
-					value: signWithRsa(
-						JOHN_RSA_KEYS.privateKey,
-						xades.signable
-					).toString("base64")
-				}
-			}, req, res)
-		})
-	)
+			signature: {
+				algorithm: "sha256WithRSAEncryption",
+				value: signWithRsa(
+					JOHN_RSA_KEYS.privateKey,
+					xades.signable
+				).toString("base64")
+			}
+		}, req, res)
+	})
 
 	router.post(TIMEMARK_URL.path, function(req, res) {
 		req.headers.host.must.equal(TIMEMARK_URL.host)

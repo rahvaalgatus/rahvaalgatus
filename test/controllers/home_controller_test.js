@@ -59,13 +59,13 @@ describe("HomeController", function() {
 	require("root/test/time")()
 	beforeEach(require("root/test/mitm").router)
 
-	beforeEach(function*() {
-		this.author = yield usersDb.create(new ValidUser)
+	beforeEach(function() {
+		this.author = usersDb.create(new ValidUser)
 	})
 
 	describe("GET /", function() {
 		it("must show initiatives", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "edit",
 				published_at: new Date,
@@ -83,20 +83,20 @@ describe("HomeController", function() {
 		})
 
 		it(`must not show coauthor name from another initiative`, function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "edit",
 				published_at: new Date,
 				discussion_ends_at: DateFns.addSeconds(new Date, 1)
 			}))
 
-			var other = yield initiativesDb.create(new ValidInitiative({
+			var other = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id
 			}))
 
-			var coauthor = yield usersDb.create(new ValidUser)
+			var coauthor = usersDb.create(new ValidUser)
 
-			yield coauthorsDb.create(new ValidCoauthor({
+			coauthorsDb.create(new ValidCoauthor({
 				initiative: other,
 				user: coauthor,
 				status: "accepted"
@@ -113,16 +113,16 @@ describe("HomeController", function() {
 		})
 
 		it("must not show coauthor name", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "edit",
 				published_at: new Date,
 				discussion_ends_at: DateFns.addSeconds(new Date, 1)
 			}))
 
-			var coauthor = yield usersDb.create(new ValidUser)
+			var coauthor = usersDb.create(new ValidUser)
 
-			yield coauthorsDb.create(new ValidCoauthor({
+			coauthorsDb.create(new ValidCoauthor({
 				initiative: initiative,
 				user: coauthor,
 				status: "accepted"
@@ -140,16 +140,16 @@ describe("HomeController", function() {
 
 		_.without(COAUTHOR_STATUSES, "accepted").forEach(function(status) {
 			it(`must not show ${status} coauthor name`, function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "edit",
 					published_at: new Date,
 					discussion_ends_at: DateFns.addSeconds(new Date, 1)
 				}))
 
-				var coauthor = yield usersDb.create(new ValidUser)
+				var coauthor = usersDb.create(new ValidUser)
 
-				yield coauthorsDb.create(new ValidCoauthor({
+				coauthorsDb.create(new ValidCoauthor({
 					initiative: initiative,
 					user: coauthor,
 					status: status
@@ -168,7 +168,7 @@ describe("HomeController", function() {
 
 		describe("given initiatives in edit phase", function() {
 			it("must not show unpublished initiatives", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					discussion_ends_at: DateFns.addSeconds(new Date, 1)
 				}))
@@ -180,7 +180,7 @@ describe("HomeController", function() {
 			})
 
 			it("must show", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "edit",
 					published_at: new Date,
@@ -198,7 +198,7 @@ describe("HomeController", function() {
 			})
 
 			it("must show if deadline less than 2w ago", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "edit",
 					published_at: new Date,
@@ -216,7 +216,7 @@ describe("HomeController", function() {
 			})
 
 			it("must not show if deadline 2w ago", function*() {
-				yield initiativesDb.create(new ValidInitiative({
+				initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "edit",
 					published_at: new Date,
@@ -230,7 +230,7 @@ describe("HomeController", function() {
 			})
 
 			it("must not show archived initiatives", function*() {
-				yield initiativesDb.create(new ValidInitiative({
+				initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "edit",
 					published_at: new Date,
@@ -246,13 +246,13 @@ describe("HomeController", function() {
 
 		describe("given initiatives in sign phase", function() {
 			it("must show if deadline in 3 days", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign",
 					signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), 4)
 				}))
 
-				yield signaturesDb.create(_.times(5, () => new ValidSignature({
+				signaturesDb.create(_.times(5, () => new ValidSignature({
 					initiative_uuid: initiative.uuid
 				})))
 
@@ -273,13 +273,13 @@ describe("HomeController", function() {
 			})
 
 			it("must show if deadline in 1 days", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign",
 					signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), 2)
 				}))
 
-				yield signaturesDb.create(_.times(5, () => new ValidSignature({
+				signaturesDb.create(_.times(5, () => new ValidSignature({
 					initiative_uuid: initiative.uuid
 				})))
 
@@ -300,13 +300,13 @@ describe("HomeController", function() {
 			})
 
 			it("must show if deadline today", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign",
 					signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), 1)
 				}))
 
-				yield signaturesDb.create(_.times(5, () => new ValidSignature({
+				signaturesDb.create(_.times(5, () => new ValidSignature({
 					initiative_uuid: initiative.uuid
 				})))
 
@@ -327,13 +327,13 @@ describe("HomeController", function() {
 			})
 
 			it("must show if deadline yesterday and succeeded", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign",
 					signing_ends_at: DateFns.startOfDay(new Date)
 				}))
 
-				yield signaturesDb.create(_.times(Config.votesRequired, () => (
+				signaturesDb.create(_.times(Config.votesRequired, () => (
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
@@ -354,14 +354,14 @@ describe("HomeController", function() {
 			})
 
 			it("must show if for parliament and succeeded 2w ago", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign",
 					destination: "parliament",
 					signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -CUTOFF)
 				}))
 
-				yield signaturesDb.create(_.times(Config.votesRequired, () => (
+				signaturesDb.create(_.times(Config.votesRequired, () => (
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
@@ -382,7 +382,7 @@ describe("HomeController", function() {
 			})
 
 			it("must show if for local and succeeded 2w ago", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign",
 					destination: "kihnu-vald",
@@ -393,7 +393,7 @@ describe("HomeController", function() {
 					LOCAL_GOVERNMENTS["kihnu-vald"].population * 0.01
 				)
 
-				yield signaturesDb.create(_.times(threshold, () => (
+				signaturesDb.create(_.times(threshold, () => (
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
@@ -411,7 +411,7 @@ describe("HomeController", function() {
 			})
 
 			it("must show if failed in less than 2w", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign",
 					signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -13)
@@ -431,7 +431,7 @@ describe("HomeController", function() {
 			})
 
 			it("must not show if for parliament and failed 2w ago", function*() {
-				yield initiativesDb.create(new ValidInitiative({
+				initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign",
 					destination: "parliament",
@@ -444,7 +444,7 @@ describe("HomeController", function() {
 			})
 
 			it("must not show if for local and failed 2w ago", function*() {
-				yield initiativesDb.create(new ValidInitiative({
+				initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					destination: "kihnu-vald",
 					phase: "sign",
@@ -459,7 +459,7 @@ describe("HomeController", function() {
 
 		describe("given initiatives in parliament phase", function() {
 			it("must show", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "parliament"
 				}))
@@ -475,7 +475,7 @@ describe("HomeController", function() {
 			})
 
 			it("must show external initiatives", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					phase: "parliament",
 					external: true
 				}))
@@ -493,7 +493,7 @@ describe("HomeController", function() {
 
 		describe("given initiatives in government", function() {
 			it("must show", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "government"
 				}))
@@ -509,7 +509,7 @@ describe("HomeController", function() {
 			})
 
 			it("must show external initiatives", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					phase: "government",
 					external: true
 				}))
@@ -527,7 +527,7 @@ describe("HomeController", function() {
 
 		describe("given initiatives in done phase", function() {
 			it("must show", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "done"
 				}))
@@ -543,7 +543,7 @@ describe("HomeController", function() {
 			})
 
 			it("must show external initiatives", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					phase: "done",
 					external: true
 				}))
@@ -559,7 +559,7 @@ describe("HomeController", function() {
 			})
 
 			it("must not show archived external initiatives", function*() {
-				yield initiativesDb.create(new ValidInitiative({
+				initiativesDb.create(new ValidInitiative({
 					phase: "done",
 					external: true,
 					archived_at: new Date
@@ -592,7 +592,7 @@ describe("HomeController", function() {
 			describe("as a filtered site", function() {
 				it("must show initiatives in edit phase with no destination",
 					function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
 						phase: "edit",
 						published_at: new Date,
@@ -613,7 +613,7 @@ describe("HomeController", function() {
 				;["edit", "sign"].forEach(function(phase) {
 					it(`must show initiatives in ${phase} phase destined for ${dest}`,
 						function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
+						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: phase,
 							destination: dest,
@@ -637,7 +637,7 @@ describe("HomeController", function() {
 
 					it(`must not show initiatives in ${phase} not destined for ${dest}`,
 						function*() {
-						yield initiativesDb.create(new ValidInitiative({
+						initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: phase,
 							published_at: new Date,
@@ -656,7 +656,7 @@ describe("HomeController", function() {
 
 				it(`must show initiatives in sign phase with deadline past destined for ${dest}`,
 					function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
 						phase: "sign",
 						destination: dest,
@@ -665,7 +665,7 @@ describe("HomeController", function() {
 
 					var threshold = getRequiredSignatureCount(initiative)
 
-					yield signaturesDb.create(_.times(threshold, () => (
+					signaturesDb.create(_.times(threshold, () => (
 						new ValidSignature({initiative_uuid: initiative.uuid})
 					)))
 
@@ -684,7 +684,7 @@ describe("HomeController", function() {
 		describe(`on ${SITE_HOSTNAME}`, function() {
 			it("must show initiatives in edit phase with no destination",
 				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "edit",
 					published_at: new Date,
@@ -706,7 +706,7 @@ describe("HomeController", function() {
 				;["edit", "sign"].forEach(function(phase) {
 					it(`must show initiatives in ${phase} phase destined for ${dest}`,
 						function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
+						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: phase,
 							destination: dest,
@@ -734,7 +734,7 @@ describe("HomeController", function() {
 				describe("discussions", function() {
 					it("must count initiatives in edit phase without destination",
 						function*() {
-						yield initiativesDb.create(new ValidInitiative({
+						initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: "edit",
 							published_at: new Date
@@ -749,7 +749,7 @@ describe("HomeController", function() {
 					})
 
 					it("must count initiatives", function*() {
-						yield initiativesDb.create(PHASES.map((phase) => (
+						initiativesDb.create(PHASES.map((phase) => (
 							new ValidInitiative({
 								user_id: this.author.id,
 								destination: "parliament",
@@ -758,7 +758,7 @@ describe("HomeController", function() {
 							})
 						)))
 
-						yield initiativesDb.create(LOCAL_PHASES.map((phase) => (
+						initiativesDb.create(LOCAL_PHASES.map((phase) => (
 							new ValidInitiative({
 								user_id: this.author.id,
 								destination: "kihnu-vald",
@@ -776,7 +776,7 @@ describe("HomeController", function() {
 					})
 
 					it("must not count unpublished initiatives", function*() {
-						yield initiativesDb.create(new ValidInitiative({
+						initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: "edit"
 						}))
@@ -795,7 +795,7 @@ describe("HomeController", function() {
 						var phases = _.without(PHASES, "edit")
 						var localPhases = _.without(LOCAL_PHASES, "edit")
 
-						yield initiativesDb.create(phases.map((phase) => (
+						initiativesDb.create(phases.map((phase) => (
 							new ValidInitiative({
 								user_id: this.author.id,
 								destination: "parliament",
@@ -804,7 +804,7 @@ describe("HomeController", function() {
 							})
 						)))
 
-						yield initiativesDb.create(localPhases.map((phase) => (
+						initiativesDb.create(localPhases.map((phase) => (
 							new ValidInitiative({
 								user_id: this.author.id,
 								destination: "kihnu-vald",
@@ -822,7 +822,7 @@ describe("HomeController", function() {
 					})
 
 					it("must not count external initiatives", function*() {
-						yield initiativesDb.create(new ValidInitiative({
+						initiativesDb.create(new ValidInitiative({
 							phase: "parliament",
 							external: true
 						}))
@@ -840,47 +840,47 @@ describe("HomeController", function() {
 
 				describe("signatures", function() {
 					it("must count signatures of initiatives", function*() {
-						var initiativeA = yield initiativesDb.create(new ValidInitiative({
+						var initiativeA = initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: "sign",
 							signing_ends_at: new Date,
 							destination: "parliament"
 						}))
 
-						var initiativeB = yield initiativesDb.create(new ValidInitiative({
+						var initiativeB = initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: "sign",
 							signing_ends_at: new Date,
 							destination: "muhu-vald"
 						}))
 
-						yield citizenosSignaturesDb.create(_.times(3, () => (
+						citizenosSignaturesDb.create(_.times(3, () => (
 							new ValidCitizenosSignature({initiative_uuid: initiativeA.uuid})
 						)))
 
-						yield citizenosSignaturesDb.create(_.times(5, () => (
+						citizenosSignaturesDb.create(_.times(5, () => (
 							new ValidCitizenosSignature({initiative_uuid: initiativeB.uuid})
 						)))
 
-						var initiativeC = yield initiativesDb.create(new ValidInitiative({
+						var initiativeC = initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: "sign",
 							signing_ends_at: new Date,
 							destination: "parliament"
 						}))
 
-						var initiativeD = yield initiativesDb.create(new ValidInitiative({
+						var initiativeD = initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: "sign",
 							signing_ends_at: new Date,
 							destination: "muhu-vald"
 						}))
 
-						yield signaturesDb.create(_.times(7, () => new ValidSignature({
+						signaturesDb.create(_.times(7, () => new ValidSignature({
 							initiative_uuid: initiativeC.uuid
 						})))
 
-						yield signaturesDb.create(_.times(9, () => new ValidSignature({
+						signaturesDb.create(_.times(9, () => new ValidSignature({
 							initiative_uuid: initiativeD.uuid
 						})))
 
@@ -914,7 +914,7 @@ describe("HomeController", function() {
 
 					it("must count initiatives been in parliament or local government",
 						function*() {
-						yield initiativesDb.create(flatten([
+						initiativesDb.create(flatten([
 							"parliament",
 							"muhu-vald"
 						].map((dest) => [
@@ -963,13 +963,13 @@ describe("HomeController", function() {
 				it("must show initiatives with recent signatures", function*() {
 					var self = this
 
-					var initiatives = _.reverse(yield _.times(10, function*(i) {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiatives = _.reverse(_.times(10, function(i) {
+						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: self.author.id,
 							phase: "sign"
 						}))
 
-						yield signaturesDb.create(new ValidSignature({
+						signaturesDb.create(new ValidSignature({
 							initiative_uuid: initiative.uuid,
 							created_at: DateFns.addMinutes(new Date, i * 2)
 						}))
@@ -994,13 +994,13 @@ describe("HomeController", function() {
 				it("must show initiatives with recent comments", function*() {
 					var self = this
 
-					var initiatives = _.reverse(yield _.times(10, function*(i) {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiatives = _.reverse(yield _.times(10, function(i) {
+						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: self.author.id,
 							phase: "sign"
 						}))
 
-						yield commentsDb.create(new ValidComment({
+						commentsDb.create(new ValidComment({
 							initiative_uuid: initiative.uuid,
 							user_id: self.author.id,
 							user_uuid: self.author.uuid,
@@ -1027,13 +1027,13 @@ describe("HomeController", function() {
 				it("must show initiatives with recent events", function*() {
 					var self = this
 
-					var initiatives = _.reverse(yield _.times(10, function*(i) {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiatives = _.reverse(yield _.times(10, function(i) {
+						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: self.author.id,
 							phase: "sign"
 						}))
 
-						yield eventsDb.create(new ValidEvent({
+						eventsDb.create(new ValidEvent({
 							initiative_uuid: initiative.uuid,
 							created_at: DateFns.addMinutes(new Date, i * 2)
 						}))
@@ -1057,7 +1057,7 @@ describe("HomeController", function() {
 
 				it("must order based on last update", function*() {
 					var initiatives = _.shuffle(
-						yield initiativesDb.create(_.times(3, () => new ValidInitiative({
+						initiativesDb.create(_.times(3, () => new ValidInitiative({
 							user_id: this.author.id,
 							phase: "sign"
 						})))
@@ -1103,7 +1103,7 @@ describe("HomeController", function() {
 				describe("discussions", function() {
 					it("must count initiatives in edit phase without destination",
 						function*() {
-						yield initiativesDb.create(new ValidInitiative({
+						initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: "edit",
 							published_at: new Date
@@ -1121,7 +1121,7 @@ describe("HomeController", function() {
 					})
 
 					it("must count initiatives destined for parliament", function*() {
-						yield initiativesDb.create(
+						initiativesDb.create(
 							PHASES.map((phase) => new ValidInitiative({
 								user_id: this.author.id,
 								phase: phase,
@@ -1142,7 +1142,7 @@ describe("HomeController", function() {
 					})
 
 					it("must not count local initiatives", function*() {
-						yield initiativesDb.create(
+						initiativesDb.create(
 							LOCAL_PHASES.map((phase) => new ValidInitiative({
 								user_id: this.author.id,
 								phase: phase,
@@ -1163,7 +1163,7 @@ describe("HomeController", function() {
 					})
 
 					it("must not count unpublished initiatives", function*() {
-						yield initiativesDb.create(new ValidInitiative({
+						initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: "edit"
 						}))
@@ -1184,7 +1184,7 @@ describe("HomeController", function() {
 					it("must count initiatives destined for parliament", function*() {
 						var phases = _.without(PHASES, "edit")
 
-						yield initiativesDb.create(
+						initiativesDb.create(
 							phases.map((phase) => new ValidInitiative({
 								user_id: this.author.id,
 								phase: phase,
@@ -1207,7 +1207,7 @@ describe("HomeController", function() {
 					it("must not count initiatives destined for local", function*() {
 						var phases = _.without(LOCAL_PHASES, "edit")
 
-						yield initiativesDb.create(
+						initiativesDb.create(
 							phases.map((phase) => new ValidInitiative({
 								user_id: this.author.id,
 								phase: phase,
@@ -1228,7 +1228,7 @@ describe("HomeController", function() {
 					})
 
 					it("must not count external initiatives", function*() {
-						yield initiativesDb.create(new ValidInitiative({
+						initiativesDb.create(new ValidInitiative({
 							phase: "parliament",
 							external: true
 						}))
@@ -1250,25 +1250,25 @@ describe("HomeController", function() {
 				describe("signatures", function() {
 					it("must count signatures of initiatives destined for parliament",
 						function*() {
-						var initiativeA = yield initiativesDb.create(new ValidInitiative({
+						var initiativeA = initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: "sign",
 							signing_ends_at: new Date,
 							destination: "parliament"
 						}))
 
-						yield citizenosSignaturesDb.create(_.times(5, () => (
+						citizenosSignaturesDb.create(_.times(5, () => (
 							new ValidCitizenosSignature({initiative_uuid: initiativeA.uuid})
 						)))
 
-						var initiativeB = yield initiativesDb.create(new ValidInitiative({
+						var initiativeB = initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: "sign",
 							signing_ends_at: new Date,
 							destination: "parliament"
 						}))
 
-						yield signaturesDb.create(_.times(3, () => new ValidSignature({
+						signaturesDb.create(_.times(3, () => new ValidSignature({
 							initiative_uuid: initiativeB.uuid
 						})))
 
@@ -1285,25 +1285,25 @@ describe("HomeController", function() {
 
 					it("must not count signatures of initiatives destined for local",
 						function*() {
-						var initiativeA = yield initiativesDb.create(new ValidInitiative({
+						var initiativeA = initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: "sign",
 							signing_ends_at: new Date,
 							destination: "muhu-vald"
 						}))
 
-						yield citizenosSignaturesDb.create(_.times(5, () => (
+						citizenosSignaturesDb.create(_.times(5, () => (
 							new ValidCitizenosSignature({initiative_uuid: initiativeA.uuid})
 						)))
 
-						var initiativeB = yield initiativesDb.create(new ValidInitiative({
+						var initiativeB = initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: "sign",
 							signing_ends_at: new Date,
 							destination: "muhu-vald"
 						}))
 
-						yield signaturesDb.create(_.times(3, () => new ValidSignature({
+						signaturesDb.create(_.times(3, () => new ValidSignature({
 							initiative_uuid: initiativeB.uuid
 						})))
 
@@ -1340,22 +1340,22 @@ describe("HomeController", function() {
 					})
 
 					it("must count initiatives been in parliament", function*() {
-						yield initiativesDb.create(new ValidInitiative({
+						initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: "parliament"
 						}))
 
-						yield initiativesDb.create(new ValidInitiative({
+						initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: "government"
 						}))
 
-						yield initiativesDb.create(new ValidInitiative({
+						initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							phase: "done"
 						}))
 
-						yield initiativesDb.create(new ValidInitiative({
+						initiativesDb.create(new ValidInitiative({
 							phase: "parliament",
 							external: true
 						}))
@@ -1373,19 +1373,19 @@ describe("HomeController", function() {
 
 					it("must not count initiatives been to local government",
 						function*() {
-						yield initiativesDb.create(new ValidInitiative({
+						initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							destination: "muhu-vald",
 							phase: "government"
 						}))
 
-						yield initiativesDb.create(new ValidInitiative({
+						initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
 							destination: "muhu-vald",
 							phase: "done"
 						}))
 
-						yield initiativesDb.create(new ValidInitiative({
+						initiativesDb.create(new ValidInitiative({
 							destination: "muhu-vald",
 							phase: "government",
 							external: true
@@ -1434,7 +1434,7 @@ describe("HomeController", function() {
 
 			it("must render subscription form with person's confirmed email",
 				function*() {
-				yield usersDb.update(this.user, {
+				usersDb.update(this.user, {
 					email: "user@example.com",
 					email_confirmed_at: new Date
 				})
@@ -1450,7 +1450,7 @@ describe("HomeController", function() {
 
 			it("must render subscription form with person's unconfirmed email",
 				function*() {
-				yield usersDb.update(this.user, {
+				usersDb.update(this.user, {
 					unconfirmed_email: "user@example.com",
 					email_confirmation_token: Crypto.randomBytes(12)
 				})
@@ -1479,21 +1479,21 @@ describe("HomeController", function() {
 		})
 
 		it("must respond with signature count", function*() {
-			var initiativeA = yield initiativesDb.create(new ValidInitiative({
+			var initiativeA = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "sign"
 			}))
 
-			yield citizenosSignaturesDb.create(_.times(5, () => (
+			citizenosSignaturesDb.create(_.times(5, () => (
 				new ValidCitizenosSignature({initiative_uuid: initiativeA.uuid})
 			)))
 
-			var initiativeB = yield initiativesDb.create(new ValidInitiative({
+			var initiativeB = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "sign"
 			}))
 
-			yield signaturesDb.create(_.times(3, () => new ValidSignature({
+			signaturesDb.create(_.times(3, () => new ValidSignature({
 				initiative_uuid: initiativeB.uuid
 			})))
 
@@ -1511,7 +1511,7 @@ describe("HomeController", function() {
 
 		PHASES.forEach(function(phase) {
 			it(`must count initiatives in ${phase}`, function*() {
-				yield initiativesDb.create(_.times(3, () => new ValidInitiative({
+				initiativesDb.create(_.times(3, () => new ValidInitiative({
 					user_id: this.author.id,
 					published_at: new Date,
 					phase: phase
@@ -1532,7 +1532,7 @@ describe("HomeController", function() {
 		it("must count active initiatives in edit phase", function*() {
 			var self = this
 
-			yield _.times(5, (i) => initiativesDb.create(new ValidInitiative({
+			_.times(5, (i) => initiativesDb.create(new ValidInitiative({
 				user_id: self.author.id,
 				published_at: new Date,
 				discussion_ends_at: DateFns.addSeconds(new Date, 2 - i)
@@ -1553,7 +1553,7 @@ describe("HomeController", function() {
 		it("must count active initiatives in sign phase", function*() {
 			var self = this
 
-			yield _.times(5, (i) => initiativesDb.create(new ValidInitiative({
+			_.times(5, (i) => initiativesDb.create(new ValidInitiative({
 				user_id: self.author.id,
 				phase: "sign",
 				signing_ends_at: DateFns.addSeconds(new Date, 2 - i)
@@ -1572,7 +1572,7 @@ describe("HomeController", function() {
 		})
 
 		it("must not count external initiatives", function*() {
-			yield initiativesDb.create(new ValidInitiative({
+			initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
 				external: true
 			}))
@@ -1586,7 +1586,7 @@ describe("HomeController", function() {
 		})
 
 		it("must not count unpublished initiatives", function*() {
-			yield initiativesDb.create(new ValidInitiative({
+			initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				discussion_ends_at: DateFns.addSeconds(new Date, 1),
 			}))

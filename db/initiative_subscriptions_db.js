@@ -56,7 +56,6 @@ exports.countConfirmedByInitiativeId =
 exports.countConfirmedByInitiativeIdForEvent =
 	countConfirmedByInitiativeIdWith.bind(null, sql`event_interest`)
 
-
 function searchConfirmedWith(db, filter) {
 	return db.search(sql`
 		SELECT * FROM initiative_subscriptions
@@ -74,7 +73,7 @@ function countConfirmedByInitiativeIdWith(filter, id) {
 		WHERE (initiative_uuid = ${id} OR initiative_uuid IS NULL)
 		AND confirmed_at IS NOT NULL
 		AND ${filter}
-	`).then(_.first).then((row) => row.count)
+	`)[0].count
 }
 
 function searchConfirmedByInitiativeIdWith(db, filter, id) {

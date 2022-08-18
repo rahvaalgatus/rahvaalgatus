@@ -35,17 +35,17 @@ module.exports = function*(argv) {
 
 	var feed = Atom.parse(res.body).feed
 
-	yield _.asArray(feed.entry).map(function*(entry) {
+	_.asArray(feed.entry).forEach(function(entry) {
 		var attrs = parse(entry)
 
-		var news = yield newsDb.read(sql`
+		var news = newsDb.read(sql`
 			SELECT * FROM news
 			WHERE source = ${SOURCE}
 			AND external_id = ${attrs.external_id}
 		`)
 
-		if (news) yield newsDb.update(news, attrs)
-		else yield newsDb.create({__proto__: attrs, source: SOURCE})
+		if (news) newsDb.update(news, attrs)
+		else newsDb.create({__proto__: attrs, source: SOURCE})
 	})
 }
 

@@ -46,14 +46,14 @@ exports.router = Router({mergeParams: true})
 exports.router.use(require("root/lib/middleware/canonical_site_middleware"))
 exports.router.use(parseBody({type: hasSignatureType}))
 
-exports.router.get("/", next(function*(_req, res) {
+exports.router.get("/", function(_req, res) {
 	var today = new Date
 
-	var signatureCount = yield sqlite(sql`
+	var signatureCount = sqlite(sql`
 		SELECT COUNT(*) AS count FROM demo_signatures
-	`).then(_.first).then((row) => row.count)
+	`)[0].count
 
-	var signatureCountsByDate = _.mapValues(_.indexBy(yield sqlite(sql`
+	var signatureCountsByDate = _.mapValues(_.indexBy(sqlite(sql`
 		SELECT date(datetime(created_at, 'localtime')) AS date, COUNT(*) AS count
 		FROM demo_signatures
 		WHERE signed AND timestamped
@@ -65,7 +65,7 @@ exports.router.get("/", next(function*(_req, res) {
 		signatureCount: signatureCount,
 		signatureCountsByDate: signatureCountsByDate
 	})
-}))
+})
 
 exports.router.get("/signable", function(_req, res) {
 	res.setHeader("Content-Type", "text/plain; charset=utf-8")
@@ -86,7 +86,7 @@ exports.router.post("/", next(function*(req, res) {
 			;[country, personalId] = getCertificatePersonalId(cert)
 			xades = newXades()
 
-			signature = yield demoSignaturesDb.create({
+			signature = demoSignaturesDb.create({
 				country: country,
 				personal_id: sanitizePersonalId(personalId),
 				method: "id-card",
@@ -120,7 +120,7 @@ exports.router.post("/", next(function*(req, res) {
 				xades.signableHash
 			)
 
-			signature = yield demoSignaturesDb.create({
+			signature = demoSignaturesDb.create({
 				country: country,
 				personal_id: sanitizedPersonalId,
 				method: "mobile-id",
@@ -156,7 +156,7 @@ exports.router.post("/", next(function*(req, res) {
 			// queried, not when signing is initiated.
 			var signSession = yield smartId.sign(cert, xades.signableHash)
 
-			signature = yield demoSignaturesDb.create({
+			signature = demoSignaturesDb.create({
 				country: country,
 				personal_id: sanitizePersonalId(personalId),
 				method: "smart-id",
@@ -216,8 +216,8 @@ exports.router.use("/", next(function(err, req, res, next) {
 	else next(err)
 }))
 
-exports.router.use("/:token", next(function*(req, _res, next) {
-	var signature = yield demoSignaturesDb.read(sql`
+exports.router.use("/:token", function(req, _res, next) {
+	var signature = demoSignaturesDb.read(sql`
 		SELECT * FROM demo_signatures
 		WHERE token = ${Buffer.from(req.params.token || "", "hex")}
 	`)
@@ -225,7 +225,7 @@ exports.router.use("/:token", next(function*(req, _res, next) {
 	if (signature == null) throw new HttpError(404, "Signature Not Found")
 	req.signature = signature
 	next()
-}))
+})
 
 exports.router.get("/:token",
 	new ResponseTypeMiddeware([
@@ -246,7 +246,7 @@ exports.router.get("/:token",
 				Date.now() < end;
 				yield sleep(ENV == "test" ? 50 : 500)
 			) {
-				signing = yield demoSignaturesDb.read(sql`
+				signing = demoSignaturesDb.read(sql`
 					SELECT signed, timestamped, error
 					FROM demo_signatures
 					WHERE id = ${signature.id}
@@ -353,7 +353,7 @@ exports.router.put("/:token",
 
 			xades.setSignature(req.body)
 
-			yield demoSignaturesDb.update(signature, {
+			demoSignaturesDb.update(signature, {
 				xades: xades,
 				signed: true,
 				updated_at: new Date
@@ -361,7 +361,7 @@ exports.router.put("/:token",
 
 			xades.setOcspResponse(yield hades.timemark(xades))
 
-			yield demoSignaturesDb.update(signature, {
+			demoSignaturesDb.update(signature, {
 				xades: xades,
 				timestamped: true,
 				updated_at: new Date
@@ -390,7 +390,7 @@ function* waitForMobileIdSignature(signature, sessionId) {
 
 		xades.setSignature(signatureHash)
 
-		yield demoSignaturesDb.update(signature, {
+		demoSignaturesDb.update(signature, {
 			xades: xades,
 			signed: true,
 			updated_at: new Date
@@ -398,7 +398,7 @@ function* waitForMobileIdSignature(signature, sessionId) {
 
 		xades.setOcspResponse(yield hades.timemark(xades))
 
-		yield demoSignaturesDb.update(signature, {
+		demoSignaturesDb.update(signature, {
 			xades: xades,
 			timestamped: true,
 			updated_at: new Date
@@ -410,7 +410,7 @@ function* waitForMobileIdSignature(signature, sessionId) {
 			getNormalizedMobileIdErrorCode(ex) in MOBILE_ID_ERRORS
 		)) reportError(ex)
 
-		yield demoSignaturesDb.update(signature, {error: ex, updated_at: new Date})
+		demoSignaturesDb.update(signature, {error: ex, updated_at: new Date})
 	}
 }
 
@@ -426,7 +426,7 @@ function* waitForSmartIdSignature(signature, session) {
 
 		xades.setSignature(signatureHash)
 
-		yield demoSignaturesDb.update(signature, {
+		demoSignaturesDb.update(signature, {
 			xades: xades,
 			signed: true,
 			updated_at: new Date
@@ -434,7 +434,7 @@ function* waitForSmartIdSignature(signature, session) {
 
 		xades.setOcspResponse(yield hades.timemark(xades))
 
-		yield demoSignaturesDb.update(signature, {
+		demoSignaturesDb.update(signature, {
 			xades: xades,
 			timestamped: true,
 			updated_at: new Date
@@ -444,7 +444,7 @@ function* waitForSmartIdSignature(signature, session) {
 		if (!(ex instanceof SmartIdError && ex.code in SMART_ID_ERRORS))
 			reportError(ex)
 
-		yield demoSignaturesDb.update(signature, {error: ex, updated_at: new Date})
+		demoSignaturesDb.update(signature, {error: ex, updated_at: new Date})
 	}
 }
 

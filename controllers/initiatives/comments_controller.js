@@ -57,22 +57,22 @@ exports.router.post("/", next(function*(req, res) {
 	})
 
 	try {
-		var comment = yield commentsDb.create(attrs)
+		var comment = commentsDb.create(attrs)
 		var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 		var subscribe = _.parseTrilean(req.body.subscribe)
 
 		if (subscribe != null && user.email) {
-			var subscription = yield subscriptionsDb.read(sql`
+			var subscription = subscriptionsDb.read(sql`
 				SELECT * FROM initiative_subscriptions
 				WHERE (initiative_uuid, email) = (${initiative.uuid}, ${userEmail})
 			`)
 
-			if (subscription) yield subscriptionsDb.update(subscription, {
+			if (subscription) subscriptionsDb.update(subscription, {
 				comment_interest: subscribe,
 				updated_at: new Date,
 				confirmed_at: new Date
 			})
-			else if (subscribe) yield subscriptionsDb.create({
+			else if (subscribe) subscriptionsDb.create({
 				email: user.email,
 				initiative_uuid: initiative.uuid,
 				event_interest: false,
@@ -85,7 +85,7 @@ exports.router.post("/", next(function*(req, res) {
 		}
 
 		if (initiative.published_at) {
-			var subs = yield subscriptionsDb.searchConfirmedByInitiativeIdWith(
+			var subs = subscriptionsDb.searchConfirmedByInitiativeIdWith(
 				initiative.uuid,
 				sql`comment_interest AND email != ${userEmail}`
 			)
@@ -124,12 +124,12 @@ exports.router.post("/", next(function*(req, res) {
 	}
 }))
 
-exports.router.use("/:commentId", next(function*(req, res, next) {
+exports.router.use("/:commentId", function(req, res, next) {
 	var id = req.params.commentId
 	var initiative = req.initiative
 	var baseUrl = Path.dirname(req.baseUrl)
 
-	var comment = yield commentsDb.read(sql`
+	var comment = commentsDb.read(sql`
 		SELECT comment.*, user.name AS user_name
 		FROM comments AS comment
 
@@ -149,18 +149,18 @@ exports.router.use("/:commentId", next(function*(req, res, next) {
 
 	req.comment = comment
 	next()
-}))
+})
 
-exports.router.get("/:commentId", next(function*(req, res) {
+exports.router.get("/:commentId", function(req, res) {
 	var comment = req.comment
 
 	if (comment.parent_id)
 		return void res.redirect(302, req.baseUrl + "/" + comment.parent_id)
 
-	yield renderComment(req, res)
-}))
+	renderComment(req, res)
+})
 
-exports.router.delete("/:commentId", next(function*(req, res) {
+exports.router.delete("/:commentId", function(req, res) {
 	var user = req.user
 	if (user == null) throw new HttpError(401)
 
@@ -169,11 +169,11 @@ exports.router.delete("/:commentId", next(function*(req, res) {
 	if (comment.user_id != user.id) throw new HttpError(403, "Not Author")
 	if (comment.parent_id) throw new HttpError(405, "Cannot Delete Replies")
 
-	yield commentsDb.update(comment, {anonymized_at: new Date})
+	commentsDb.update(comment, {anonymized_at: new Date})
 
 	res.flash("notice", req.t("COMMENT_ANONYMIZED"))
 	res.redirect(303, req.baseUrl + "/" + comment.id)
-}))
+})
 
 exports.router.post("/:commentId/replies", next(function*(req, res) {
 	var t = req.t
@@ -196,12 +196,12 @@ exports.router.post("/:commentId/replies", next(function*(req, res) {
 	})
 
 	try {
-		var reply = yield commentsDb.create(attrs)
+		var reply = commentsDb.create(attrs)
 		var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 		var userEmail = user.email || ""
 
 		if (initiative.published_at) {
-			var subs = yield subscriptionsDb.searchConfirmedByInitiativeIdWith(
+			var subs = subscriptionsDb.searchConfirmedByInitiativeIdWith(
 				initiative.uuid,
 				sql`comment_interest AND email != ${userEmail}`
 			)
@@ -229,16 +229,16 @@ exports.router.post("/:commentId/replies", next(function*(req, res) {
 			res.status(422)
 			res.flash("error", req.t.apply(null, CONSTRAINT_ERRORS[err.constraint]))
 			res.locals.newComment = attrs
-			yield renderComment(req, res)
+			renderComment(req, res)
 		}
 		else throw err
 	}
 }))
 
-function* renderComment(req, res) {
+function renderComment(req, res) {
 	var comment = req.comment
 
-	comment.replies = yield commentsDb.search(sql`
+	comment.replies = commentsDb.search(sql`
 		SELECT comment.*, user.name AS user_name
 		FROM comments AS comment
 

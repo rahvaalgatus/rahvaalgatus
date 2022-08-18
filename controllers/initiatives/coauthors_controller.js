@@ -5,7 +5,6 @@ var SqliteError = require("root/lib/sqlite_error")
 var coauthorsDb = require("root/db/initiative_coauthors_db")
 var {parsePersonalId} = require("root/lib/user")
 var sql = require("sqlate")
-var next = require("co-next")
 
 exports.STATUSES = [
 	"accepted",
@@ -26,10 +25,10 @@ exports.router.use(function(req, _res, next) {
 	next()
 })
 
-exports.router.get("/", assertCreator, next(function*(req, res) {
+exports.router.get("/", assertCreator, function(req, res) {
 	var initiative = req.initiative
 
-	var coauthors = yield coauthorsDb.search(sql`
+	var coauthors = coauthorsDb.search(sql`
 		SELECT
 			author.*,
 			user.name AS user_name
@@ -41,9 +40,9 @@ exports.router.get("/", assertCreator, next(function*(req, res) {
 	`)
 
 	res.render("initiatives/coauthors/index_page.jsx", {coauthors: coauthors})
-}))
+})
 
-exports.router.post("/", assertCreator, next(function*(req, res) {
+exports.router.post("/", assertCreator, function(req, res) {
 	var user = req.user
 	var initiative = req.initiative
 	var personalId = String(req.body.personalId)
@@ -54,7 +53,7 @@ exports.router.post("/", assertCreator, next(function*(req, res) {
 	}
 
 	try {
-		yield coauthorsDb.create({
+		coauthorsDb.create({
 			initiative_uuid: initiative.uuid,
 			user_id: null,
 			country: "EE",
@@ -76,9 +75,9 @@ exports.router.post("/", assertCreator, next(function*(req, res) {
 	}
 
 	res.redirect(303, req.baseUrl)
-}))
+})
 
-exports.router.put("/:personalId", next(function*(req, res) {
+exports.router.put("/:personalId", function(req, res) {
 	var user = req.user
 	var initiative = req.initiative
 	var [country, personalId] = parsePersonalId(req.params.personalId)
@@ -86,7 +85,7 @@ exports.router.put("/:personalId", next(function*(req, res) {
 	if (!(user.country == country && user.personal_id == personalId))
 		throw new HttpError(403, "Not Your Invitation")
 
-	var coauthor = yield coauthorsDb.read(sql`
+	var coauthor = coauthorsDb.read(sql`
 		SELECT * FROM initiative_coauthors
 		WHERE initiative_uuid = ${initiative.uuid}
 		AND country = ${country}
@@ -106,7 +105,7 @@ exports.router.put("/:personalId", next(function*(req, res) {
 		status_updated_by_id: user.id
 	})
 
-	yield coauthorsDb.update(coauthor, attrs)
+	coauthorsDb.update(coauthor, attrs)
 
 	res.statusMessage = attrs.status == "accepted"
 		? "Invitation Accepted"
@@ -118,9 +117,9 @@ exports.router.put("/:personalId", next(function*(req, res) {
 	)
 
 	res.redirect(303, req.body.referrer || req.headers.referer || "/user")
-}))
+})
 
-exports.router.delete("/:personalId", next(function*(req, res) {
+exports.router.delete("/:personalId", function(req, res) {
 	var user = req.user
 	var initiative = req.initiative
 	var [country, personalId] = parsePersonalId(req.params.personalId)
@@ -131,7 +130,7 @@ exports.router.delete("/:personalId", next(function*(req, res) {
 		user.country == country && user.personal_id == personalId
 	)) throw new HttpError(403, "No Permission to Edit Coauthors")
 
-	var coauthor = yield coauthorsDb.read(sql`
+	var coauthor = coauthorsDb.read(sql`
 		SELECT * FROM initiative_coauthors
 		WHERE initiative_uuid = ${initiative.uuid}
 		AND country = ${country}
@@ -160,7 +159,7 @@ exports.router.delete("/:personalId", next(function*(req, res) {
 		? (coauthor.status == "pending" ? "cancelled" : "removed")
 		: (coauthor.status == "pending" ? "rejected" : "resigned")
 
-	yield coauthorsDb.execute(sql`
+	coauthorsDb.execute(sql`
 		UPDATE initiative_coauthors SET
 			${status == "rejected" ? sql`user_id = ${user.id},` : sql``}
 			status = ${status},
@@ -190,7 +189,7 @@ exports.router.delete("/:personalId", next(function*(req, res) {
 
 		res.redirect(303, req.body.referrer || req.headers.referer || "/user")
 	}
-}))
+})
 
 function assertCreator(req, _res, next) {
 	var user = req.user

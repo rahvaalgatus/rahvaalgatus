@@ -14,15 +14,15 @@ describe("Subscription", function() {
 	require("root/test/time")()
 	require("root/test/email")()
 
-	beforeEach(function*() { this.user = yield usersDb.create(new ValidUser) })
+	beforeEach(function() { this.user = usersDb.create(new ValidUser) })
 
 	describe(".send", function() {
 		it("must batch by 1000 recipients", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id
 			}))
 
-			var message = yield messagesDb.create({
+			var message = messagesDb.create({
 				initiative_uuid: initiative.uuid,
 				origin: "message",
 				title: "Initiative was updated",
@@ -40,7 +40,7 @@ describe("Subscription", function() {
 
 			yield Subscription.send(message, subscriptions)
 
-			var messages = yield messagesDb.search(sql`
+			var messages = messagesDb.search(sql`
 				SELECT * FROM initiative_messages
 			`)
 

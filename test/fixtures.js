@@ -15,7 +15,7 @@ var sessionsDb = require("root/db/sessions_db")
 var pseudoHex = require("root/lib/crypto").pseudoHex
 var sha1 = require("root/lib/crypto").hash.bind(null, "sha1")
 var fetchDefaults = require("fetch-defaults")
-var EMPTY_BUFFER = new Buffer(0)
+var EMPTY_BUFFER = Buffer.alloc(0)
 var NO_PARAMS = Buffer.from("0500", "hex")
 var nextSerialNumber = Math.floor(10000 * Math.random())
 
@@ -99,10 +99,10 @@ exports.csrf = function() {
 }
 
 exports.user = function(attrs) {
-	beforeEach(function*() {
-		var user = yield usersDb.create(new ValidUser(attrs))
+	beforeEach(function() {
+		var user = usersDb.create(new ValidUser(attrs))
 		var session = new ValidSession({user_id: user.id})
-		session = _.assign(yield sessionsDb.create(session), {token: session.token})
+		session = _.assign(sessionsDb.create(session), {token: session.token})
 
 		this.user = user
 		this.session = session

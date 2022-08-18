@@ -16,10 +16,7 @@ form { display: inline; }
 strong { font-weight: bold; }
 
 .inherited {
-	-webkit-appearance: none;
-	-moz-appearance: none;
-	-ms-appearance: none;
-	appearance: none;
+	@include appearance(none);
 
 	border: none;
 	background: none;

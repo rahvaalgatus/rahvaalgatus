@@ -9,28 +9,28 @@ describe("ExpireDemoSignaturesCli", function() {
 	require("root/test/db")()
 	require("root/test/time")()
 
-	it("must not clear signatures newer than 15m", function*() {
-		var signature = yield demoSignaturesDb.create(new ValidDemoSignature({
+	it("must not clear signatures newer than 15m", function() {
+		var signature = demoSignaturesDb.create(new ValidDemoSignature({
 			signed: true,
 			timestamped: true,
 			updated_at: DateFns.addSeconds(new Date, -EXPIRATION + 1)
 		}))
 
-		yield cli()
+		cli()
 
-		yield demoSignaturesDb.read(signature).must.then.eql(signature)
+		demoSignaturesDb.read(signature).must.eql(signature)
 	})
 
-	it("must clear signatures older than 15m", function*() {
-		var signature = yield demoSignaturesDb.create(new ValidDemoSignature({
+	it("must clear signatures older than 15m", function() {
+		var signature = demoSignaturesDb.create(new ValidDemoSignature({
 			signed: true,
 			timestamped: true,
 			updated_at: DateFns.addSeconds(new Date, -EXPIRATION)
 		}))
 
-		yield cli()
+		cli()
 
-		yield demoSignaturesDb.read(signature).must.then.eql({
+		demoSignaturesDb.read(signature).must.eql({
 			__proto__: signature,
 			xades: null
 		})

@@ -19,10 +19,10 @@ describe("InitiativeSubscriptionsController", function() {
 	require("root/test/email")()
 	beforeEach(require("root/test/mitm").router)
 
-	beforeEach(function*() {
-		this.author = yield usersDb.create(new ValidUser)
+	beforeEach(function() {
+		this.author = usersDb.create(new ValidUser)
 
-		this.initiative = yield initiativesDb.create(new ValidInitiative({
+		this.initiative = initiativesDb.create(new ValidInitiative({
 			user_id: this.author.id,
 			published_at: new Date
 		}))
@@ -43,7 +43,7 @@ describe("InitiativeSubscriptionsController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/initiatives/" + this.initiative.uuid)
 
-			var subscriptions = yield subscriptionsDb.search(sql`
+			var subscriptions = subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
 			`)
 
@@ -69,7 +69,7 @@ describe("InitiativeSubscriptionsController", function() {
 		})
 
 		it("must subscribe given an external initiative", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
 				external: true
 			}))
@@ -83,7 +83,7 @@ describe("InitiativeSubscriptionsController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/initiatives/" + initiative.uuid)
 
-			var subscriptions = yield subscriptionsDb.search(sql`
+			var subscriptions = subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
 			`)
 
@@ -100,7 +100,7 @@ describe("InitiativeSubscriptionsController", function() {
 			require("root/test/fixtures").user()
 
 			it("must subscribe with confirmed email", function*() {
-				yield usersDb.update(this.user, {
+				usersDb.update(this.user, {
 					email: "user@example.com",
 					email_confirmed_at: new Date
 				})
@@ -113,7 +113,7 @@ describe("InitiativeSubscriptionsController", function() {
 
 				res.statusCode.must.equal(303)
 
-				var subscription = yield subscriptionsDb.read(sql`
+				var subscription = subscriptionsDb.read(sql`
 					SELECT * FROM initiative_subscriptions
 				`)
 
@@ -138,7 +138,7 @@ describe("InitiativeSubscriptionsController", function() {
 			})
 
 			it("must subscribe with confirmed email case-insensitively", function*() {
-				yield usersDb.update(this.user, {
+				usersDb.update(this.user, {
 					email: "USer@EXAMple.com",
 					email_confirmed_at: new Date
 				})
@@ -151,7 +151,7 @@ describe("InitiativeSubscriptionsController", function() {
 
 				res.statusCode.must.equal(303)
 
-				var subscription = yield subscriptionsDb.read(sql`
+				var subscription = subscriptionsDb.read(sql`
 					SELECT * FROM initiative_subscriptions
 				`)
 
@@ -176,7 +176,7 @@ describe("InitiativeSubscriptionsController", function() {
 			})
 
 			it("must subscribe with unconfirmed email", function*() {
-				yield usersDb.update(this.user, {
+				usersDb.update(this.user, {
 					unconfirmed_email: "user@example.com",
 					email_confirmation_token: Crypto.randomBytes(12)
 				})
@@ -189,7 +189,7 @@ describe("InitiativeSubscriptionsController", function() {
 
 				res.statusCode.must.equal(303)
 
-				var subscription = yield subscriptionsDb.read(sql`
+				var subscription = subscriptionsDb.read(sql`
 					SELECT * FROM initiative_subscriptions
 				`)
 
@@ -214,14 +214,14 @@ describe("InitiativeSubscriptionsController", function() {
 			})
 
 			it("must update if already subscribed", function*() {
-				var subscription = yield subscriptionsDb.create(new ValidSubscription({
+				var subscription = subscriptionsDb.create(new ValidSubscription({
 					initiative_uuid: this.initiative.uuid,
 					confirmed_at: pseudoDateTime(),
 					event_interest: false,
 					comment_interest: true
 				}))
 
-				yield usersDb.update(this.user, {
+				usersDb.update(this.user, {
 					email: subscription.email,
 					email_confirmed_at: new Date
 				})
@@ -234,9 +234,9 @@ describe("InitiativeSubscriptionsController", function() {
 
 				res.statusCode.must.equal(303)
 
-				yield subscriptionsDb.read(sql`
+				subscriptionsDb.read(sql`
 					SELECT * FROM initiative_subscriptions
-				`).must.then.eql({
+				`).must.eql({
 					__proto__: subscription,
 					updated_at: new Date,
 					event_interest: true
@@ -258,7 +258,7 @@ describe("InitiativeSubscriptionsController", function() {
 			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
 			var email = "user@example.com"
 
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: this.initiative.uuid,
 				email: email,
 				created_at: createdAt,
@@ -276,16 +276,16 @@ describe("InitiativeSubscriptionsController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/initiatives/" + this.initiative.uuid)
 
-			yield subscriptionsDb.search(sql`
+			subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
-			`).must.then.eql([subscription])
+			`).must.eql([subscription])
 
 			this.emails.length.must.equal(0)
 		})
 
 		it("must not resend confirmation email if less than an hour has passed",
 			function*() {
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: this.initiative.uuid,
 				confirmation_sent_at: new Date,
 				event_interest: true
@@ -299,15 +299,15 @@ describe("InitiativeSubscriptionsController", function() {
 
 			res.statusCode.must.equal(303)
 
-			yield subscriptionsDb.search(sql`
+			subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
-			`).must.then.eql([subscription])
+			`).must.eql([subscription])
 
 			this.emails.length.must.equal(0)
 		})
 
 		it("must resend confirmation email if an hour has passed", function*() {
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: this.initiative.uuid,
 				confirmation_sent_at: new Date,
 				event_interest: true,
@@ -321,9 +321,9 @@ describe("InitiativeSubscriptionsController", function() {
 
 			res.statusCode.must.equal(303)
 
-			yield subscriptionsDb.search(sql`
+			subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
-			`).must.then.eql([{
+			`).must.eql([{
 				__proto__: subscription,
 				confirmation_sent_at: new Date
 			}])
@@ -333,7 +333,7 @@ describe("InitiativeSubscriptionsController", function() {
 
 		it("must send reminder email if confirmed and an hour has passed",
 			function*() {
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: this.initiative.uuid,
 				confirmed_at: new Date,
 				confirmation_sent_at: new Date,
@@ -348,9 +348,9 @@ describe("InitiativeSubscriptionsController", function() {
 
 			res.statusCode.must.equal(303)
 
-			yield subscriptionsDb.search(sql`
+			subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
-			`).must.then.eql([{
+			`).must.eql([{
 				__proto__: subscription,
 				confirmation_sent_at: new Date
 			}])
@@ -359,7 +359,7 @@ describe("InitiativeSubscriptionsController", function() {
 		})
 
 		it("must respond with 401 if discussion not published", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id
 			}))
 
@@ -408,7 +408,7 @@ describe("InitiativeSubscriptionsController", function() {
 				confirmation_sent_at: createdAt
 			})
 
-			yield subscriptionsDb.create(subscription)
+			subscriptionsDb.create(subscription)
 
 			var path = `/initiatives/${this.initiative.uuid}/subscriptions`
 			var res = yield this.request(`${path}/new?confirmation_token=${token}`)
@@ -416,7 +416,7 @@ describe("InitiativeSubscriptionsController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal(`${path}/${token}`)
 
-			yield subscriptionsDb.read(subscription).must.then.eql({
+			subscriptionsDb.read(subscription).must.eql({
 				__proto__: subscription,
 				confirmed_at: new Date,
 				confirmation_sent_at: null,
@@ -426,7 +426,7 @@ describe("InitiativeSubscriptionsController", function() {
 
 		it("must confirm given a confirmation token and external initiative",
 			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
 				external: true
 			}))
@@ -442,7 +442,7 @@ describe("InitiativeSubscriptionsController", function() {
 				confirmation_sent_at: createdAt
 			})
 
-			yield subscriptionsDb.create(subscription)
+			subscriptionsDb.create(subscription)
 
 			var path = `/initiatives/${initiative.uuid}/subscriptions`
 			var res = yield this.request(`${path}/new?confirmation_token=${token}`)
@@ -450,7 +450,7 @@ describe("InitiativeSubscriptionsController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal(`${path}/${token}`)
 
-			yield subscriptionsDb.read(subscription).must.then.eql({
+			subscriptionsDb.read(subscription).must.eql({
 				__proto__: subscription,
 				confirmed_at: new Date,
 				confirmation_sent_at: null,
@@ -470,13 +470,13 @@ describe("InitiativeSubscriptionsController", function() {
 				update_token: token,
 			})
 
-			yield subscriptionsDb.create(subscription)
+			subscriptionsDb.create(subscription)
 
 			var path = `/initiatives/${this.initiative.uuid}/subscriptions`
 			var res = yield this.request(`${path}/new?confirmation_token=${token}`)
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal(`${path}/${token}`)
-			yield subscriptionsDb.read(subscription).must.then.eql(subscription)
+			subscriptionsDb.read(subscription).must.eql(subscription)
 		})
 
 		it("must not confirm given the wrong token", function*() {
@@ -491,14 +491,14 @@ describe("InitiativeSubscriptionsController", function() {
 				confirmation_sent_at: createdAt
 			})
 
-			yield subscriptionsDb.create(subscription)
+			subscriptionsDb.create(subscription)
 
 			var res = yield this.request(
 				`/initiatives/${this.initiative.uuid}/subscriptions/new?confirmation_token=deadbeef`
 			)
 
 			res.statusCode.must.equal(404)
-			yield subscriptionsDb.read(subscription).must.then.eql(subscription)
+			subscriptionsDb.read(subscription).must.eql(subscription)
 		})
 	})
 
@@ -506,7 +506,7 @@ describe("InitiativeSubscriptionsController", function() {
 		require("root/test/fixtures").csrf()
 
 		it("must redirect to subscriptions page", function*() {
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: this.initiative.uuid,
 				confirmed_at: new Date
 			}))
@@ -524,7 +524,7 @@ describe("InitiativeSubscriptionsController", function() {
 		})
 
 		it("must redirect to subscriptions page if ends with period", function*() {
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: this.initiative.uuid,
 				confirmed_at: new Date
 			}))
@@ -543,12 +543,12 @@ describe("InitiativeSubscriptionsController", function() {
 
 		it("must redirect to subscriptions page given an external initiative",
 			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
 				external: true
 			}))
 
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date
 			}))
@@ -567,7 +567,7 @@ describe("InitiativeSubscriptionsController", function() {
 
 		it("must respond with 404 given invalid update token", function*() {
 			// Still have a single subscription to ensure it's not picking randomly.
-			yield subscriptionsDb.create(new ValidSubscription({
+			subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: this.initiative.uuid,
 				confirmed_at: new Date
 			}))

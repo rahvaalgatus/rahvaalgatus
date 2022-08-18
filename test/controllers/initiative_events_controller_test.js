@@ -28,19 +28,17 @@ describe("InitiativeEventsController", function() {
 	beforeEach(require("root/test/mitm").router)
 
 	describe(`GET / with ${INITIATIVE_EVENT_TYPE}`, function() {
-		beforeEach(function*() {
-			this.author = yield usersDb.create(new ValidUser)
-		})
+		beforeEach(function() { this.author = usersDb.create(new ValidUser) })
 
 		it("must respond with initiative events", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "sign"
 			}))
 
-			var author = yield usersDb.create(new ValidUser({name: "Johnny Lang"}))
+			var author = usersDb.create(new ValidUser({name: "Johnny Lang"}))
 
-			var event = yield eventsDb.create(new ValidEvent({
+			var event = eventsDb.create(new ValidEvent({
 				initiative_uuid: initiative.uuid,
 				user_id: author.id,
 				title: "We sent it.",
@@ -70,7 +68,7 @@ describe("InitiativeEventsController", function() {
 			function*() {
 			var milestones = [1, Config.votesRequired / 2, Config.votesRequired]
 
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "sign",
 				signature_milestones: {
@@ -96,14 +94,14 @@ describe("InitiativeEventsController", function() {
 
 		describe("given include", function() {
 			it("must respond with initiative if requested", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign"
 				}))
 
-				var author = yield usersDb.create(new ValidUser)
+				var author = usersDb.create(new ValidUser)
 
-				var event = yield eventsDb.create(new ValidEvent({
+				var event = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid,
 					user_id: author.id,
 					title: "We sent it.",
@@ -145,28 +143,28 @@ describe("InitiativeEventsController", function() {
 			})
 
 			it("must keep only the first row", function*() {
-				var initiatives = yield initiativesDb.create(
+				var initiatives = initiativesDb.create(
 					_.times(2, () => new ValidInitiative({
 						user_id: this.author.id,
 						phase: "sign"
 					}))
 				)
 
-				var author = yield usersDb.create(new ValidUser)
+				var author = usersDb.create(new ValidUser)
 
-				var a = yield eventsDb.create(new ValidEvent({
+				var a = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiatives[0].uuid,
 					user_id: author.id,
 					occurred_at: new Date(2015, 5, 18, 1)
 				}))
 
-				var _b = yield eventsDb.create(new ValidEvent({
+				var _b = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiatives[0].uuid,
 					user_id: author.id,
 					occurred_at: new Date(2015, 5, 18, 2)
 				}))
 
-				var c = yield eventsDb.create(new ValidEvent({
+				var c = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiatives[1].uuid,
 					user_id: author.id,
 					occurred_at: new Date(2015, 5, 18, 3)
@@ -182,28 +180,28 @@ describe("InitiativeEventsController", function() {
 			})
 
 			it("must apply distinct after order", function*() {
-				var initiatives = yield initiativesDb.create(
+				var initiatives = initiativesDb.create(
 					_.times(2, () => new ValidInitiative({
 						user_id: this.author.id,
 						phase: "sign"
 					}))
 				)
 
-				var author = yield usersDb.create(new ValidUser)
+				var author = usersDb.create(new ValidUser)
 
-				var _a = yield eventsDb.create(new ValidEvent({
+				var _a = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiatives[0].uuid,
 					user_id: author.id,
 					occurred_at: new Date(2015, 5, 18, 1)
 				}))
 
-				var b = yield eventsDb.create(new ValidEvent({
+				var b = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiatives[0].uuid,
 					user_id: author.id,
 					occurred_at: new Date(2015, 5, 18, 2)
 				}))
 
-				var c = yield eventsDb.create(new ValidEvent({
+				var c = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiatives[1].uuid,
 					user_id: author.id,
 					occurred_at: new Date(2015, 5, 18, 3)
@@ -219,28 +217,28 @@ describe("InitiativeEventsController", function() {
 			})
 
 			it("must apply distinct before limit", function*() {
-				var initiatives = yield initiativesDb.create(
+				var initiatives = initiativesDb.create(
 					_.times(3, () => new ValidInitiative({
 						user_id: this.author.id,
 						phase: "sign"
 					}))
 				)
 
-				var author = yield usersDb.create(new ValidUser)
+				var author = usersDb.create(new ValidUser)
 
-				var a = yield eventsDb.create(new ValidEvent({
+				var a = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiatives[0].uuid,
 					user_id: author.id,
 					occurred_at: new Date(2015, 5, 18, 0)
 				}))
 
-				var events = yield eventsDb.create(_.times(5, (i) => new ValidEvent({
+				var events = eventsDb.create(_.times(5, (i) => new ValidEvent({
 					initiative_uuid: initiatives[1].uuid,
 					user_id: author.id,
 					occurred_at: new Date(2015, 5, 18, 1 + i)
 				})))
 
-				var c = yield eventsDb.create(new ValidEvent({
+				var c = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiatives[2].uuid,
 					user_id: author.id,
 					occurred_at: new Date(2015, 5, 18, 6)
@@ -279,14 +277,14 @@ describe("InitiativeEventsController", function() {
 				"-occurredAt": _.reverse,
 			}, function(sort, order) {
 				it(`must sort by ${order}`, function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
 						phase: "sign"
 					}))
 
-					var author = yield usersDb.create(new ValidUser)
+					var author = usersDb.create(new ValidUser)
 
-					var events = yield eventsDb.create(_.times(5, (i) => new ValidEvent({
+					var events = eventsDb.create(_.times(5, (i) => new ValidEvent({
 						initiative_uuid: initiative.uuid,
 						user_id: author.id,
 						occurred_at: new Date(2015, 5, 18, -i)
@@ -305,14 +303,14 @@ describe("InitiativeEventsController", function() {
 
 		describe("given limit", function() {
 			it("must limit initiative events", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign"
 				}))
 
-				var author = yield usersDb.create(new ValidUser({name: "Johnny Lang"}))
+				var author = usersDb.create(new ValidUser({name: "Johnny Lang"}))
 
-				var events = yield eventsDb.create(_.times(10, (i) => new ValidEvent({
+				var events = eventsDb.create(_.times(10, (i) => new ValidEvent({
 					initiative_uuid: initiative.uuid,
 					user_id: author.id,
 					occurred_at: new Date(2015, 5, 18, i)
@@ -330,14 +328,14 @@ describe("InitiativeEventsController", function() {
 			})
 
 			it("must limit initiative events after sorting", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign"
 				}))
 
-				var author = yield usersDb.create(new ValidUser({name: "Johnny Lang"}))
+				var author = usersDb.create(new ValidUser({name: "Johnny Lang"}))
 
-				var events = yield eventsDb.create(_.times(10, (i) => new ValidEvent({
+				var events = eventsDb.create(_.times(10, (i) => new ValidEvent({
 					initiative_uuid: initiative.uuid,
 					user_id: author.id,
 					occurred_at: new Date(2015, 5, 18, i)
@@ -357,12 +355,10 @@ describe("InitiativeEventsController", function() {
 	})
 
 	describe(`GET / with ${ATOM_TYPE}`, function() {
-		beforeEach(function*() {
-			this.author = yield usersDb.create(new ValidUser)
-		})
+		beforeEach(function() { this.author = usersDb.create(new ValidUser) })
 
 		it("must respond with Atom feed", function*() {
-			var initiatives = yield initiativesDb.create([new ValidInitiative({
+			var initiatives = initiativesDb.create([new ValidInitiative({
 				user_id: this.author.id,
 				phase: "sign",
 				published_at: new Date,
@@ -375,11 +371,11 @@ describe("InitiativeEventsController", function() {
 			})])
 
 			var authors = yield [
-				yield usersDb.create(new ValidUser({name: "Johnny Lang"})),
-				yield usersDb.create(new ValidUser({name: "Kim Mitchell"}))
+				usersDb.create(new ValidUser({name: "Johnny Lang"})),
+				usersDb.create(new ValidUser({name: "Kim Mitchell"}))
 			]
 
-			var events = yield eventsDb.create([new ValidEvent({
+			var events = eventsDb.create([new ValidEvent({
 				initiative_uuid: initiatives[0].uuid,
 				user_id: authors[0].id,
 				title: "We sent it.",
@@ -483,7 +479,7 @@ describe("InitiativeEventsController", function() {
 			function*() {
 			var milestones = [1, Config.votesRequired / 2, Config.votesRequired]
 
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "sign",
 				signature_milestones: {

@@ -97,14 +97,14 @@ function Page(attrs, children) {
 							name="language"
 							value={lang}
 							disabled={req.lang === lang}
-							class="inherited">{t(lang)}
+							class="inherited-button">{t(lang)}
 						</button>)}
 
 						{translatable ? <button
 							name="language"
 							value="xx"
 							disabled={req.lang === "xx"}
-							class="inherited">dev
+							class="inherited-button">dev
 						</button> : null}
 					</Form>
 
@@ -117,7 +117,7 @@ function Page(attrs, children) {
 							method="post"
 							class="signout"
 						>
-							<button name="_method" value="delete" class="inherited">
+							<button name="_method" value="delete" class="inherited-button">
 								{t("BTN_LOG_OFF")}
 							</button>
 						</Form>

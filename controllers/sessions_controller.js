@@ -197,7 +197,7 @@ exports.router.post("/", next(function*(req, res, next) {
 			;[country, personalId] = getCertificatePersonalId(cert)
 			if (country != "EE") throw new HttpError(422, "Estonian Users Only")
 
-			authentication = yield authenticationsDb.create({
+			authentication = authenticationsDb.create({
 				country: country,
 				personal_id: personalId,
 				method: "id-card",
@@ -231,7 +231,7 @@ exports.router.post("/", next(function*(req, res, next) {
 			;[country, personalId] = getCertificatePersonalId(cert)
 			if (country != "EE") throw new HttpError(422, "Estonian Users Only")
 
-			authentication = yield authenticationsDb.create({
+			authentication = authenticationsDb.create({
 				country: country,
 				personal_id: personalId,
 				method: "mobile-id",
@@ -270,7 +270,7 @@ exports.router.post("/", next(function*(req, res, next) {
 			tokenHash = sha256(token)
 			var session = yield smartId.authenticate("PNOEE-" + personalId, tokenHash)
 
-			authentication = yield authenticationsDb.create({
+			authentication = authenticationsDb.create({
 				country: "EE",
 				personal_id: personalId,
 				method: "smart-id",
@@ -317,7 +317,7 @@ exports.router.post("/",
 			if (type != "application/vnd.rahvaalgatus.signature")
 				throw new HttpError(415, "Signature Expected")
 
-			authentication = yield authenticationsDb.read(sql`
+			authentication = authenticationsDb.read(sql`
 				SELECT * FROM authentications WHERE token = ${authenticationToken}
 			`)
 
@@ -330,7 +330,7 @@ exports.router.post("/",
 
 			var attrs = {authenticated: true, updated_at: new Date}
 			_.assign(authentication, attrs)
-			yield authenticationsDb.update(authentication, attrs)
+			authenticationsDb.update(authentication, attrs)
 			break
 
 		case "mobile-id":
@@ -339,7 +339,7 @@ exports.router.post("/",
 				Date.now() < end;
 				yield sleep(ENV == "test" ? 50 : 500)
 			) {
-				authentication = yield authenticationsDb.read(sql`
+				authentication = authenticationsDb.read(sql`
 					SELECT * FROM authentications WHERE token = ${authenticationToken}
 				`)
 
@@ -386,7 +386,7 @@ exports.router.post("/",
 				Date.now() < end;
 				yield sleep(ENV == "test" ? 50 : 500)
 			) {
-				authentication = yield authenticationsDb.read(sql`
+				authentication = authenticationsDb.read(sql`
 					SELECT * FROM authentications WHERE token = ${authenticationToken}
 				`)
 
@@ -433,10 +433,10 @@ exports.router.post("/",
 	if (authentication.authenticated) {
 		res.setHeader("Location", referTo(req, req.query.referrer, "/user"))
 
-		var user = yield readOrCreateUser(authentication, req.lang)
+		var user = readOrCreateUser(authentication, req.lang)
 		var sessionToken = Crypto.randomBytes(16)
 
-		yield sessionsDb.create({
+		sessionsDb.create({
 			user_id: user.id,
 
 			// Hashing isn't meant to be long-term protection against token leakage.
@@ -497,11 +497,11 @@ exports.router.use("/", function(err, req, res, next) {
 	else next(err)
 })
 
-exports.router.use("/:id", next(function*(req, _res, next) {
+exports.router.use("/:id", function(req, _res, next) {
 	if (req.user == null) throw new HttpError(401)
 
 	var id = Number(req.params.id)
-	var session = req.session.id == id ? req.session : yield sessionsDb.read(sql`
+	var session = req.session.id == id ? req.session : sessionsDb.read(sql`
 		SELECT * FROM sessions WHERE id = ${id} AND user_id = ${req.user.id}
 	`)
 
@@ -509,13 +509,13 @@ exports.router.use("/:id", next(function*(req, _res, next) {
 
 	req.editableSession = session
 	next()
-}))
+})
 
-exports.router.delete("/:id", next(function*(req, res) {
+exports.router.delete("/:id", function(req, res) {
 	var session = req.editableSession
 	if (session.deleted_at) throw new HttpError(410, "Session Gone")
 
-	yield sessionsDb.update(session, {deleted_at: new Date})
+	sessionsDb.update(session, {deleted_at: new Date})
 
 	if (req.session.id == session.id) {
 		res.clearCookie(SESSION_COOKIE_NAME, {
@@ -538,7 +538,7 @@ exports.router.delete("/:id", next(function*(req, res) {
 	if (to && Url.parse(to).pathname == "/user") to = "/"
 	else if (!to) to = "/"
 	res.redirect(303, to)
-}))
+})
 
 function* waitForMobileIdAuthentication(t, authentication, sessionId) {
 	try {
@@ -547,7 +547,7 @@ function* waitForMobileIdAuthentication(t, authentication, sessionId) {
 
 		var [cert, signatureHash] = certAndSignatureHash
 
-		yield authenticationsDb.update(authentication, {
+		authenticationsDb.update(authentication, {
 			certificate: cert,
 			updated_at: new Date
 		})
@@ -564,7 +564,7 @@ function* waitForMobileIdAuthentication(t, authentication, sessionId) {
 		if (!cert.hasSigned(authentication.token, signatureHash))
 			throw new MobileIdError("INVALID_SIGNATURE")
 
-		yield authenticationsDb.update(authentication, {
+		authenticationsDb.update(authentication, {
 			authenticated: true,
 			updated_at: new Date
 		})
@@ -576,10 +576,7 @@ function* waitForMobileIdAuthentication(t, authentication, sessionId) {
 			getNormalizedMobileIdErrorCode(ex) in MOBILE_ID_ERRORS
 		)) reportError(ex)
 
-		yield authenticationsDb.update(authentication, {
-			error: ex,
-			updated_at: new Date
-		})
+		authenticationsDb.update(authentication, {error: ex, updated_at: new Date})
 	}
 }
 
@@ -590,7 +587,7 @@ function* waitForSmartIdAuthentication(t, authentication, session) {
 
 		var [cert, signature] = authCertAndSignature
 
-		yield authenticationsDb.update(authentication, {
+		authenticationsDb.update(authentication, {
 			certificate: cert,
 			updated_at: new Date
 		})
@@ -607,7 +604,7 @@ function* waitForSmartIdAuthentication(t, authentication, session) {
 		if (!cert.hasSigned(authentication.token, signature))
 			throw new SmartIdError("INVALID_SIGNATURE")
 
-		yield authenticationsDb.update(authentication, {
+		authenticationsDb.update(authentication, {
 			authenticated: true,
 			updated_at: new Date
 		})
@@ -618,15 +615,12 @@ function* waitForSmartIdAuthentication(t, authentication, session) {
 			ex instanceof SmartIdError && ex.code in SMART_ID_ERRORS
 		)) reportError(ex)
 
-		yield authenticationsDb.update(authentication, {
-			error: ex,
-			updated_at: new Date
-		})
+		authenticationsDb.update(authentication, {error: ex, updated_at: new Date})
 	}
 }
 
-function* readOrCreateUser(auth, lang) {
-	var user = yield usersDb.read(sql`
+function readOrCreateUser(auth, lang) {
+	var user = usersDb.read(sql`
 		SELECT * FROM users
 		WHERE country = ${auth.country}
 		AND personal_id = ${auth.personal_id}
