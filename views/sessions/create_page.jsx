@@ -7,7 +7,6 @@ var Flash = require("../page").Flash
 var Config = require("root/config")
 var I18n = require("root/lib/i18n")
 var javascript = require("root/lib/jsx").javascript
-var stringify = require("root/lib/json").stringify
 var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
 
@@ -125,7 +124,7 @@ module.exports = function(attrs) {
 
 			<script>{javascript`
 				var Hwcrypto = require("@rahvaalgatus/hwcrypto")
-				var TRANSLATIONS = ${stringify(UI_TRANSLATIONS[req.lang])}
+				var TRANSLATIONS = ${UI_TRANSLATIONS[req.lang]}
 				var form = document.getElementById("id-card-form")
 				var flash = document.getElementById("id-card-flash")
 				var all = Promise.all.bind(Promise)
@@ -153,9 +152,9 @@ module.exports = function(attrs) {
 							credentials: "same-origin",
 
 							headers: {
-								"X-CSRF-Token": ${stringify(req.csrfToken)},
+								"X-CSRF-Token": ${req.csrfToken},
 								"Content-Type": "application/pkix-cert",
-								Accept: "${SIGNABLE_TYPE}, ${ERR_TYPE}"
+								Accept: ${SIGNABLE_TYPE + ", " + ERR_TYPE}
 							},
 
 							body: certificate.toDer()
@@ -185,12 +184,12 @@ module.exports = function(attrs) {
 							redirect: "manual",
 
 							headers: {
-								"X-CSRF-Token": ${stringify(req.csrfToken)},
+								"X-CSRF-Token": ${req.csrfToken},
 								"Content-Type": "application/vnd.rahvaalgatus.signature",
 
 								// Fetch polyfill doesn't support manual redirect, so use
 								// x-empty.
-								Accept: "application/x-empty, ${ERR_TYPE}"
+								Accept: ${"application/x-empty, " + ERR_TYPE}
 							},
 
 							body: signature
@@ -218,7 +217,7 @@ module.exports = function(attrs) {
 					err.code = res.status
 
 					var type = res.headers.get("content-type")
-					if (type == "${ERR_TYPE}")
+					if (type == ${ERR_TYPE})
 						return res.json().then(function(body) {
 							err.description = body.description
 							throw err

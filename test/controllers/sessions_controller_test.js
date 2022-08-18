@@ -230,6 +230,15 @@ describe("SessionsController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include("MSG_ERROR_HWCRYPTO_NO_CERTIFICATES")
 			})
+
+			it("must escape CSRF token when rendering <script>", function*() {
+				var res = yield this.request("/sessions/new", {
+					cookies: {csrf_token: "</script><script>alert(42)"}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include("<\\/script><script>alert(42)")
+			})
 		})
 
 		describe("when logged in", function() {

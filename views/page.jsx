@@ -5,7 +5,6 @@ var Config = require("root/config")
 var Fragment = Jsx.Fragment
 var DateFns = require("date-fns")
 var I18n = require("root/lib/i18n")
-var stringify = require("root/lib/json").stringify
 var selected = require("root/lib/css").selected
 var javascript = require("root/lib/jsx").javascript
 var {isAdmin} = require("root/lib/user")
@@ -336,10 +335,10 @@ function Sentry(attrs) {
 	return <Fragment>
 		<script src="https://cdn.ravenjs.com/3.9.1/raven.min.js" />
 
-		<script>{`
-			Raven.config("${attrs.dsn}", {
-				environment: "${ENV}",
-				user: ${stringify(user ? serializeUser(user) : null)},
+		<script>{javascript`
+			Raven.config(${attrs.dsn}, {
+				environment: ${ENV},
+				user: ${user ? serializeUser(user) : null},
 
 				ignoreErrors: [
 					"no_implementation",
@@ -388,7 +387,7 @@ function DatePickerInput(attrs) {
 
 		<script>{javascript`
 			var Pikaday = require("pikaday")
-			var el = document.getElementById("${id}")
+			var el = document.getElementById(${id})
 			var input = el.childNodes[1]
 
 			new Pikaday({
