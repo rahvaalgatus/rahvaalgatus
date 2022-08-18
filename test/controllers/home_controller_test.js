@@ -19,7 +19,7 @@ var signaturesDb = require("root/db/initiative_signatures_db")
 var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
 var {getRequiredSignatureCount} = require("root/lib/initiative")
-var parseDom = require("root/test/html").parse
+var parseHtml = require("root/test/html").parse
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var demand = require("must")
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
@@ -75,7 +75,7 @@ describe("HomeController", function() {
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 			var el = dom.getElementById("initiatives")
 			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
 			el.textContent.must.include(initiative.title)
@@ -105,7 +105,7 @@ describe("HomeController", function() {
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 			var el = dom.getElementById("initiatives")
 			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
 			el.textContent.must.include(this.author.name)
@@ -131,7 +131,7 @@ describe("HomeController", function() {
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 			var el = dom.getElementById("initiatives")
 			el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
 			el.textContent.must.include(this.author.name)
@@ -158,7 +158,7 @@ describe("HomeController", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var el = dom.getElementById("initiatives")
 				el = el.querySelector(`.initiative[data-uuid="${initiative.uuid}"]`)
 				el.textContent.must.include(this.author.name)
@@ -176,7 +176,7 @@ describe("HomeController", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 				res.body.must.not.include(initiative.uuid)
-				demand(parseDom(res.body).querySelector(".initiative")).be.null()
+				demand(parseHtml(res.body).querySelector(".initiative")).be.null()
 			})
 
 			it("must show", function*() {
@@ -190,7 +190,7 @@ describe("HomeController", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 
 				dom.getElementById("initiatives-in-edit").querySelector(
 					`.initiative[data-uuid="${initiative.uuid}"]`
@@ -208,7 +208,7 @@ describe("HomeController", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 
 				dom.getElementById("initiatives-in-edit").querySelector(
 					`.initiative[data-uuid="${initiative.uuid}"]`
@@ -226,7 +226,7 @@ describe("HomeController", function() {
 
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
-				demand(parseDom(res.body).querySelector(".initiative")).be.null()
+				demand(parseHtml(res.body).querySelector(".initiative")).be.null()
 			})
 
 			it("must not show archived initiatives", function*() {
@@ -240,7 +240,7 @@ describe("HomeController", function() {
 
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
-				demand(parseDom(res.body).querySelector(".initiative")).be.null()
+				demand(parseHtml(res.body).querySelector(".initiative")).be.null()
 			})
 		})
 
@@ -259,7 +259,7 @@ describe("HomeController", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 
 				var el = dom.getElementById("initiatives-in-sign").querySelector(
 					`.initiative[data-uuid="${initiative.uuid}"]`
@@ -286,7 +286,7 @@ describe("HomeController", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 
 				var el = dom.getElementById("initiatives-in-sign").querySelector(
 					`.initiative[data-uuid="${initiative.uuid}"]`
@@ -313,7 +313,7 @@ describe("HomeController", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 
 				var el = dom.getElementById("initiatives-in-sign").querySelector(
 					`.initiative[data-uuid="${initiative.uuid}"]`
@@ -340,7 +340,7 @@ describe("HomeController", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 
 				var el = dom.getElementById("initiatives-in-sign-unsent").querySelector(
 					`.initiative[data-uuid="${initiative.uuid}"]`
@@ -368,7 +368,7 @@ describe("HomeController", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 
 				var el = dom.getElementById("initiatives-in-sign-unsent").querySelector(
 					`.initiative[data-uuid="${initiative.uuid}"]`
@@ -400,7 +400,7 @@ describe("HomeController", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 
 				var el = dom.getElementById("initiatives-in-sign-unsent").querySelector(
 					`.initiative[data-uuid="${initiative.uuid}"]`
@@ -420,7 +420,7 @@ describe("HomeController", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 
 				var el = dom.getElementById("initiatives-in-sign").querySelector(
 					`.initiative[data-uuid="${initiative.uuid}"]`
@@ -440,7 +440,7 @@ describe("HomeController", function() {
 
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
-				demand(parseDom(res.body).querySelector(".initiative")).be.null()
+				demand(parseHtml(res.body).querySelector(".initiative")).be.null()
 			})
 
 			it("must not show if for local and failed 2w ago", function*() {
@@ -453,7 +453,7 @@ describe("HomeController", function() {
 
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
-				demand(parseDom(res.body).querySelector(".initiative")).be.null()
+				demand(parseHtml(res.body).querySelector(".initiative")).be.null()
 			})
 		})
 
@@ -467,7 +467,7 @@ describe("HomeController", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 
 				dom.getElementById("initiatives-in-parliament").querySelector(
 					`.initiative[data-uuid="${initiative.uuid}"]`
@@ -483,7 +483,7 @@ describe("HomeController", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 
 				dom.getElementById("initiatives-in-parliament").querySelector(
 					`.initiative[data-uuid="${initiative.uuid}"]`
@@ -501,7 +501,7 @@ describe("HomeController", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 
 				dom.getElementById("initiatives-in-government").querySelector(
 					`.initiative[data-uuid="${initiative.uuid}"]`
@@ -517,7 +517,7 @@ describe("HomeController", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 
 				dom.getElementById("initiatives-in-government").querySelector(
 					`.initiative[data-uuid="${initiative.uuid}"]`
@@ -535,7 +535,7 @@ describe("HomeController", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 
 				dom.getElementById("initiatives-in-done").querySelector(
 					`.initiative[data-uuid="${initiative.uuid}"]`
@@ -551,7 +551,7 @@ describe("HomeController", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 
 				dom.getElementById("initiatives-in-done").querySelector(
 					`.initiative[data-uuid="${initiative.uuid}"]`
@@ -567,7 +567,7 @@ describe("HomeController", function() {
 
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
-				demand(parseDom(res.body).querySelector(".initiative")).be.null()
+				demand(parseHtml(res.body).querySelector(".initiative")).be.null()
 			})
 		})
 
@@ -575,7 +575,7 @@ describe("HomeController", function() {
 			var res = yield this.request("/")
 			res.statusCode.must.equal(200)
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 			var metas = dom.head.querySelectorAll("meta")
 			var metasByName = _.indexBy(metas, (el) => el.getAttribute("name"))
 			var metasByProp = _.indexBy(metas, (el) => el.getAttribute("property"))
@@ -603,7 +603,7 @@ describe("HomeController", function() {
 					var res = yield this.request("/", {headers: {Host: host}})
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 
 					dom.getElementById("initiatives-in-edit").querySelector(
 						`.initiative[data-uuid="${initiative.uuid}"]`
@@ -628,7 +628,7 @@ describe("HomeController", function() {
 						var res = yield this.request("/", {headers: {Host: host}})
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 
 						dom.getElementById(`initiatives-in-${phase}`).querySelector(
 							`.initiative[data-uuid="${initiative.uuid}"]`
@@ -650,7 +650,7 @@ describe("HomeController", function() {
 
 						var res = yield this.request("/", {headers: {Host: host}})
 						res.statusCode.must.equal(200)
-						demand(parseDom(res.body).querySelector(".initiative")).be.null()
+						demand(parseHtml(res.body).querySelector(".initiative")).be.null()
 					})
 				})
 
@@ -672,7 +672,7 @@ describe("HomeController", function() {
 					var res = yield this.request("/", {headers: {Host: host}})
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 
 					dom.getElementById(`initiatives-in-sign-unsent`).querySelector(
 						`.initiative[data-uuid="${initiative.uuid}"]`
@@ -695,7 +695,7 @@ describe("HomeController", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 
 				dom.getElementById("initiatives-in-edit").querySelector(
 					`.initiative[data-uuid="${initiative.uuid}"]`
@@ -721,7 +721,7 @@ describe("HomeController", function() {
 						var res = yield this.request("/")
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 
 						dom.getElementById(`initiatives-in-${phase}`).querySelector(
 							`.initiative[data-uuid="${initiative.uuid}"]`
@@ -743,7 +743,7 @@ describe("HomeController", function() {
 						var res = yield this.request("/")
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var el = dom.querySelector("#discussions-statistic .count")
 						el.textContent.must.equal("1")
 					})
@@ -770,7 +770,7 @@ describe("HomeController", function() {
 						var res = yield this.request("/")
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var el = dom.querySelector("#discussions-statistic .count")
 						el.textContent.must.equal(String(PHASES.length * 2 - 1))
 					})
@@ -784,7 +784,7 @@ describe("HomeController", function() {
 						var res = yield this.request("/")
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var el = dom.querySelector("#discussions-statistic .count")
 						el.textContent.must.equal("0")
 					})
@@ -816,7 +816,7 @@ describe("HomeController", function() {
 						var res = yield this.request("/")
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var el = dom.querySelector("#initiatives-statistic .count")
 						el.textContent.must.equal(String(phases.length * 2 - 1))
 					})
@@ -830,7 +830,7 @@ describe("HomeController", function() {
 						var res = yield this.request("/")
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body), el
+						var dom = parseHtml(res.body), el
 						el = dom.querySelector("#discussions-statistic .count")
 						el.textContent.must.equal("0")
 						el = dom.querySelector("#initiatives-statistic .count")
@@ -887,7 +887,7 @@ describe("HomeController", function() {
 						var res = yield this.request("/")
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var el = dom.querySelector("#signatures-statistic .count")
 						el.textContent.must.equal("24")
 					})
@@ -898,7 +898,7 @@ describe("HomeController", function() {
 						var res = yield this.request("/")
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var count = dom.querySelector("#parliament-statistic .count")
 						count.textContent.must.equal("0")
 
@@ -952,7 +952,7 @@ describe("HomeController", function() {
 						var res = yield this.request("/")
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var el = dom.querySelector("#parliament-statistic .count")
 						el.textContent.must.equal("5+3")
 					})
@@ -980,7 +980,7 @@ describe("HomeController", function() {
 					var res = yield this.request("/")
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var recents = dom.querySelector("#recent-initiatives ol")
 					recents.childNodes.length.must.equal(6)
 
@@ -1013,7 +1013,7 @@ describe("HomeController", function() {
 					var res = yield this.request("/")
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var recents = dom.querySelector("#recent-initiatives ol")
 					recents.childNodes.length.must.equal(6)
 
@@ -1044,7 +1044,7 @@ describe("HomeController", function() {
 					var res = yield this.request("/")
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var recents = dom.querySelector("#recent-initiatives ol")
 					recents.childNodes.length.must.equal(6)
 
@@ -1085,7 +1085,7 @@ describe("HomeController", function() {
 					var res = yield this.request("/")
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var recents = dom.querySelector("#recent-initiatives ol")
 					recents.childNodes.length.must.equal(3)
 
@@ -1115,7 +1115,7 @@ describe("HomeController", function() {
 
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var el = dom.querySelector("#discussions-statistic .count")
 						el.textContent.must.equal("1")
 					})
@@ -1136,7 +1136,7 @@ describe("HomeController", function() {
 
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var el = dom.querySelector("#discussions-statistic .count")
 						el.textContent.must.equal(String(PHASES.length))
 					})
@@ -1157,7 +1157,7 @@ describe("HomeController", function() {
 
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var el = dom.querySelector("#discussions-statistic .count")
 						el.textContent.must.equal("0")
 					})
@@ -1174,7 +1174,7 @@ describe("HomeController", function() {
 
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var el = dom.querySelector("#discussions-statistic .count")
 						el.textContent.must.equal("0")
 					})
@@ -1199,7 +1199,7 @@ describe("HomeController", function() {
 
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var el = dom.querySelector("#initiatives-statistic .count")
 						el.textContent.must.equal(String(phases.length))
 					})
@@ -1222,7 +1222,7 @@ describe("HomeController", function() {
 
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var el = dom.querySelector("#initiatives-statistic .count")
 						el.textContent.must.equal("0")
 					})
@@ -1239,7 +1239,7 @@ describe("HomeController", function() {
 
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body), el
+						var dom = parseHtml(res.body), el
 						el = dom.querySelector("#discussions-statistic .count")
 						el.textContent.must.equal("0")
 						el = dom.querySelector("#initiatives-statistic .count")
@@ -1278,7 +1278,7 @@ describe("HomeController", function() {
 
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var el = dom.querySelector("#signatures-statistic .count")
 						el.textContent.must.equal("8")
 					})
@@ -1313,7 +1313,7 @@ describe("HomeController", function() {
 
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var el = dom.querySelector("#signatures-statistic .count")
 						el.textContent.must.equal("0")
 					})
@@ -1327,7 +1327,7 @@ describe("HomeController", function() {
 
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var count = dom.querySelector("#parliament-statistic .count")
 						count.textContent.must.equal("0")
 
@@ -1366,7 +1366,7 @@ describe("HomeController", function() {
 
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var el = dom.querySelector("#parliament-statistic .count")
 						el.textContent.must.equal("3+1")
 					})
@@ -1397,7 +1397,7 @@ describe("HomeController", function() {
 
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var el = dom.querySelector("#parliament-statistic .count")
 						el.textContent.must.equal("0")
 					})
@@ -1414,7 +1414,7 @@ describe("HomeController", function() {
 				})
 
 				res.statusCode.must.equal(200)
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				demand(dom.querySelector("#statistics")).be.null()
 			})
 		})
@@ -1427,7 +1427,7 @@ describe("HomeController", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var form = dom.querySelector("#initiatives-subscribe")
 				form.querySelector("input[name=email]").value.must.equal("")
 			})
@@ -1442,7 +1442,7 @@ describe("HomeController", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var form = dom.querySelector("#initiatives-subscribe")
 				var input = form.querySelector("input[name=email]")
 				input.value.must.equal("user@example.com")
@@ -1458,7 +1458,7 @@ describe("HomeController", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var form = dom.querySelector("#initiatives-subscribe")
 				var input = form.querySelector("input[name=email]")
 				input.value.must.equal("user@example.com")

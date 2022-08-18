@@ -11,7 +11,7 @@ var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var commentsDb = require("root/db/comments_db")
-var parseDom = require("root/test/html").parse
+var parseHtml = require("root/test/html").parse
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var MAX_TITLE_LENGTH = 140
@@ -562,7 +562,7 @@ describe("InitiativeCommentsController", function() {
 					var res = yield this.request(path, {method: "POST", form: attrs})
 
 					res.statusCode.must.equal(422)
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					dom.querySelector(".flash.error").textContent.must.include(err)
 
 					var form = dom.querySelector(`#comment-form`)
@@ -632,7 +632,7 @@ describe("InitiativeCommentsController", function() {
 			var res = yield this.request(path)
 			res.statusCode.must.equal(200)
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 			var commentEl = dom.querySelector("#initiative-comment")
 			commentEl.querySelector(".author").textContent.must.equal(author.name)
 			commentEl.textContent.must.include(comment.title)
@@ -658,7 +658,7 @@ describe("InitiativeCommentsController", function() {
 			var res = yield this.request(path)
 			res.statusCode.must.equal(200)
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 			res.body.must.not.include(author.name)
 
 			var commentEl = dom.querySelector("#initiative-comment")
@@ -682,7 +682,7 @@ describe("InitiativeCommentsController", function() {
 			var res = yield this.request(path)
 			res.statusCode.must.equal(200)
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 			res.body.must.not.include(author.name)
 
 			var commentEl = dom.querySelector("#initiative-comment")
@@ -714,7 +714,7 @@ describe("InitiativeCommentsController", function() {
 			var res = yield this.request(path)
 			res.statusCode.must.equal(200)
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 
 			var commentEl = dom.querySelector("#initiative-comment")
 			commentEl.querySelector(".author").textContent.must.equal(author.name)
@@ -750,7 +750,7 @@ describe("InitiativeCommentsController", function() {
 			var res = yield this.request(path)
 			res.statusCode.must.equal(200)
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 
 			var commentEl = dom.querySelector("#initiative-comment")
 			commentEl.querySelector(".author").textContent.must.equal(author.name)
@@ -780,7 +780,7 @@ describe("InitiativeCommentsController", function() {
 			var res = yield this.request(path)
 			res.statusCode.must.equal(200)
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 			var commentEl = dom.querySelector("#initiative-comment")
 			commentEl.querySelector(".author").textContent.must.equal(author.name)
 			commentEl.textContent.must.include(comment.title)
@@ -839,7 +839,7 @@ describe("InitiativeCommentsController", function() {
 			var res = yield this.request(path)
 
 			res.statusCode.must.equal(200)
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 			dom.querySelector("#comment-" + comment.uuid).must.exist()
 			dom.querySelector("#comment-" + reply.uuid).must.exist()
 		})
@@ -1415,7 +1415,7 @@ describe("InitiativeCommentsController", function() {
 					})
 
 					res.statusCode.must.equal(422)
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					dom.querySelector(".flash.error").textContent.must.include(err)
 
 					var form = dom.querySelector(`#comment-${comment.id}-reply`)

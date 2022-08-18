@@ -14,7 +14,7 @@ var parseCookies = require("root/test/web").parseCookies
 var TRIX_TYPE = new MediaType("application/vnd.basecamp.trix+json")
 var {newTrixDocument} = require("root/test/fixtures")
 var outdent = require("root/lib/outdent")
-var parseDom = require("root/test/html").parse
+var parseHtml = require("root/test/html").parse
 
 describe("InitiativeTextsController", function() {
 	require("root/test/web")()
@@ -625,7 +625,7 @@ describe("InitiativeTextsController", function() {
 						var res = yield this.request(initiativePath + "/texts/" + text.id)
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var input = dom.querySelector("input[name=content]")
 
 						JSON.parse(input.value).must.equal(outdent`
@@ -663,7 +663,7 @@ describe("InitiativeTextsController", function() {
 					var res = yield this.request(initiativePath + "/texts/" + text.id)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var input = dom.querySelector("input[name=content]")
 
 					JSON.parse(input.value).must.equal(outdent`
@@ -699,7 +699,7 @@ describe("InitiativeTextsController", function() {
 					var res = yield this.request(initiativePath + "/texts/" + text.id)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var input = dom.querySelector("input[name=content]")
 
 					JSON.parse(input.value).must.equal(outdent`
@@ -738,7 +738,7 @@ describe("InitiativeTextsController", function() {
 					var res = yield this.request(initiativePath + "/texts/" + text.id)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var input = dom.querySelector("input[name=content]")
 
 					JSON.parse(input.value).must.equal(outdent`
@@ -776,7 +776,7 @@ describe("InitiativeTextsController", function() {
 					var res = yield this.request(initiativePath + "/texts/" + text.id)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var input = dom.querySelector("input[name=content]")
 
 					JSON.parse(input.value).must.equal(outdent`
@@ -817,7 +817,7 @@ describe("InitiativeTextsController", function() {
 					var res = yield this.request(initiativePath + "/texts/" + text.id)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var input = dom.querySelector("input[name=content]")
 
 					JSON.parse(input.value).must.equal(outdent`
@@ -859,7 +859,7 @@ describe("InitiativeTextsController", function() {
 						var res = yield this.request(initiativePath + "/texts/" + text.id)
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var input = dom.querySelector("input[name=content]")
 
 						JSON.parse(input.value).must.equal(outdent`

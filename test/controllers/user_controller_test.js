@@ -10,7 +10,7 @@ var ValidCoauthor = require("root/test/valid_initiative_coauthor")
 var Config = require("root/config")
 var Crypto = require("crypto")
 var {parseCookies} = require("root/test/web")
-var parseDom = require("root/test/html").parse
+var parseHtml = require("root/test/html").parse
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
@@ -60,7 +60,7 @@ describe("UserController", function() {
 				var res = yield this.request("/user")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var form = dom.querySelector("#user form")
 				form.elements.name.value.must.equal(this.user.name)
 				form.elements.email.value.must.equal("")
@@ -78,7 +78,7 @@ describe("UserController", function() {
 				var res = yield this.request("/user")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var form = dom.querySelector("#user form")
 				form.elements.name.value.must.equal(this.user.name)
 				form.elements.email.value.must.equal(this.user.email)
@@ -95,7 +95,7 @@ describe("UserController", function() {
 				var res = yield this.request("/user")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var form = dom.querySelector("#user form")
 				form.elements.email.value.must.equal(this.user.unconfirmed_email)
 				form.textContent.must.include(t("USER_PAGE_EMAIL_UNCONFIRMED"))
@@ -112,7 +112,7 @@ describe("UserController", function() {
 				var res = yield this.request("/user")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var form = dom.querySelector("#user form")
 				form.elements.email.value.must.equal(this.user.unconfirmed_email)
 
@@ -168,7 +168,7 @@ describe("UserController", function() {
 					var res = yield this.request("/user")
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var el = dom.querySelector("li.initiative")
 					el.innerHTML.must.include(initiative.uuid)
 					el.textContent.must.include(this.user.name)
@@ -214,7 +214,7 @@ describe("UserController", function() {
 					var res = yield this.request("/user")
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var el = dom.querySelector("li.initiative")
 					el.innerHTML.must.include(initiative.uuid)
 					el.textContent.must.include(author.name)
@@ -237,7 +237,7 @@ describe("UserController", function() {
 					var res = yield this.request("/user")
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var el = dom.querySelector("li.initiative")
 					el.innerHTML.must.include(initiative.uuid)
 					el.textContent.must.include(this.user.name)
@@ -259,7 +259,7 @@ describe("UserController", function() {
 						var res = yield this.request("/user")
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						demand(dom.querySelector("li.initiative")).be.null()
 					})
 				})
@@ -298,7 +298,7 @@ describe("UserController", function() {
 					var res = yield this.request("/user")
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var el = dom.querySelector("li.initiative")
 					el.innerHTML.must.include(initiative.uuid)
 					el.textContent.must.include(this.user.name)
@@ -323,7 +323,7 @@ describe("UserController", function() {
 						var res = yield this.request("/user")
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var el = dom.querySelector("li.initiative")
 						el.innerHTML.must.include(initiative.uuid)
 						el.textContent.must.include(this.user.name)
@@ -347,7 +347,7 @@ describe("UserController", function() {
 					var res = yield this.request("/user")
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var el = dom.getElementById("coauthor-invitations")
 					el.textContent.must.include(initiative.title)
 				})
@@ -366,7 +366,7 @@ describe("UserController", function() {
 					var res = yield this.request("/user")
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					demand(dom.getElementById("coauthor-invitations")).be.null()
 				})
 
@@ -389,7 +389,7 @@ describe("UserController", function() {
 						var res = yield this.request("/user")
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						demand(dom.getElementById("coauthor-invitations")).be.null()
 						res.body.must.not.include(initiative.uuid)
 					})
@@ -413,7 +413,7 @@ describe("UserController", function() {
 					var res = yield this.request("/user")
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					demand(dom.getElementById("coauthor-invitations")).be.null()
 				})
 
@@ -436,7 +436,7 @@ describe("UserController", function() {
 					var res = yield this.request("/user")
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					demand(dom.getElementById("coauthor-invitations")).be.null()
 				})
 			})
@@ -544,7 +544,7 @@ describe("UserController", function() {
 				res.statusCode.must.equal(422)
 				res.statusMessage.must.equal("Invalid Attributes")
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var form = dom.querySelector("#user form")
 				form.elements.name.value.must.equal("")
 				form.textContent.must.include(t("INPUT_ERROR_LENGTH_1"))
@@ -969,7 +969,7 @@ describe("UserController", function() {
 				res.statusCode.must.equal(422)
 				res.statusMessage.must.equal("Invalid Attributes")
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var form = dom.querySelector("#user form")
 				form.elements.name.value.must.equal(this.user.name)
 				form.elements.email.value.must.equal("@example.com")
@@ -1137,7 +1137,7 @@ describe("UserController", function() {
 				var res = yield this.request("/user/signatures")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var el = dom.querySelector(".signature")
 				el.innerHTML.must.include(initiative.uuid)
 				el.textContent.must.include(initiative.title)
@@ -1217,7 +1217,7 @@ describe("UserController", function() {
 				var res = yield this.request("/user/signatures")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var el = dom.querySelector(".signature")
 				el.innerHTML.must.include(initiative.uuid)
 				el.textContent.must.include(initiative.title)
@@ -1277,7 +1277,7 @@ describe("UserController", function() {
 			var res = yield this.request("/user/subscriptions")
 			res.statusCode.must.equal(200)
 
-			var el = parseDom(res.body).querySelectorAll("li.subscription")
+			var el = parseHtml(res.body).querySelectorAll("li.subscription")
 			el.length.must.equal(1)
 			el[0].textContent.must.include(t("SUBSCRIPTIONS_ALL_INITIATIVES"))
 		})
@@ -1300,7 +1300,7 @@ describe("UserController", function() {
 			var res = yield this.request("/user/subscriptions")
 			res.statusCode.must.equal(200)
 
-			var el = parseDom(res.body).querySelectorAll("li.subscription")
+			var el = parseHtml(res.body).querySelectorAll("li.subscription")
 			el.length.must.equal(1)
 			el[0].innerHTML.must.include(subscription.initiative_uuid)
 			el[0].textContent.must.not.include(t("SUBSCRIPTIONS_ALL_INITIATIVES"))
@@ -1359,7 +1359,7 @@ describe("UserController", function() {
 			var res = yield this.request("/user/subscriptions")
 			res.statusCode.must.equal(200)
 
-			var el = parseDom(res.body).querySelectorAll("li.subscription")
+			var el = parseHtml(res.body).querySelectorAll("li.subscription")
 			el.length.must.equal(1)
 			el[0].innerHTML.must.not.include(other.initiative_uuid)
 			el[0].textContent.must.include(t("SUBSCRIPTIONS_ALL_INITIATIVES"))
@@ -1426,7 +1426,7 @@ describe("UserController", function() {
 			res.body.must.not.include(initiative.uuid)
 			res.body.must.not.include(t("SUBSCRIPTIONS_ALL_INITIATIVES"))
 
-			var el = parseDom(res.body).querySelectorAll("li.subscription")
+			var el = parseHtml(res.body).querySelectorAll("li.subscription")
 			el.length.must.equal(0)
 		})
 	})

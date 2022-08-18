@@ -6,7 +6,7 @@ var ValidInitiative = require("root/test/valid_initiative")
 var initiativesDb = require("root/db/initiatives_db")
 var coauthorsDb = require("root/db/initiative_coauthors_db")
 var usersDb = require("root/db/users_db")
-var parseDom = require("root/test/html").parse
+var parseHtml = require("root/test/html").parse
 var {parseCookies} = require("root/test/web")
 var demand = require("must")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
@@ -77,7 +77,7 @@ describe("InitiativeAuthorsController", function() {
 				var res = yield this.request(path)
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var table = dom.getElementById("accepted-coauthors")
 				table.tBodies[0].rows.length.must.equal(1)
 			})
@@ -100,7 +100,7 @@ describe("InitiativeAuthorsController", function() {
 				var res = yield this.request(path)
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var table = dom.getElementById("pending-coauthors")
 				table.tBodies[0].rows.length.must.equal(3)
 				table.tBodies[0].textContent.must.include(coauthors[0].personal_id)
@@ -128,7 +128,7 @@ describe("InitiativeAuthorsController", function() {
 				var res = yield this.request(path)
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var table = dom.getElementById("accepted-coauthors")
 				table.tBodies[0].rows.length.must.equal(4)
 				table.tBodies[0].textContent.must.include(coauthors[0].name)
@@ -154,7 +154,7 @@ describe("InitiativeAuthorsController", function() {
 					var res = yield this.request(path)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var table = dom.getElementById("accepted-coauthors")
 					table.tBodies[0].rows.length.must.equal(1)
 					demand(dom.getElementById("pending-coauthors")).be.null()
@@ -209,7 +209,7 @@ describe("InitiativeAuthorsController", function() {
 				var res = yield this.request(path)
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var table = dom.getElementById("accepted-coauthors")
 				table.tBodies[0].rows.length.must.equal(1)
 				demand(dom.getElementById("pending-coauthors")).be.null()

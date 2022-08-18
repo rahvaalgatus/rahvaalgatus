@@ -9,7 +9,7 @@ var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var {pseudoDateTime} = require("root/lib/crypto")
-var parseDom = require("root/test/html").parse
+var parseHtml = require("root/test/html").parse
 var {parseCookies} = require("root/test/web")
 var {serializeCookies} = require("root/test/web")
 var t = require("root/lib/i18n").t.bind(null, "et")
@@ -36,7 +36,7 @@ describe("SubscriptionsController", function() {
 
 			res.statusCode.must.equal(200)
 			res.body.must.include(t("SUBSCRIPTIONS_UPDATE_TITLE"))
-			var el = parseDom(res.body).querySelectorAll("li.subscription")
+			var el = parseHtml(res.body).querySelectorAll("li.subscription")
 			el.length.must.equal(1)
 			el[0].textContent.must.include(t("SUBSCRIPTIONS_ALL_INITIATIVES"))
 		})
@@ -62,7 +62,7 @@ describe("SubscriptionsController", function() {
 
 			res.statusCode.must.equal(200)
 			res.body.must.include(t("SUBSCRIPTIONS_UPDATE_TITLE"))
-			var el = parseDom(res.body).querySelectorAll("li.subscription")
+			var el = parseHtml(res.body).querySelectorAll("li.subscription")
 			el.length.must.equal(1)
 			el[0].innerHTML.must.include(subscription.initiative_uuid)
 			el[0].textContent.must.not.include(t("SUBSCRIPTIONS_ALL_INITIATIVES"))
@@ -129,7 +129,7 @@ describe("SubscriptionsController", function() {
 
 			res.statusCode.must.equal(200)
 			res.body.must.include(t("SUBSCRIPTIONS_UPDATE_TITLE"))
-			var el = parseDom(res.body).querySelectorAll("li.subscription")
+			var el = parseHtml(res.body).querySelectorAll("li.subscription")
 			el.length.must.equal(1)
 			el[0].innerHTML.must.not.include(other.initiative_uuid)
 			el[0].textContent.must.include(t("SUBSCRIPTIONS_ALL_INITIATIVES"))

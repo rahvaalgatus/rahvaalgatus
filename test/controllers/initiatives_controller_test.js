@@ -38,7 +38,7 @@ var signaturesDb = require("root/db/initiative_signatures_db")
 var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
 var commentsDb = require("root/db/comments_db")
-var parseDom = require("root/test/html").parse
+var parseHtml = require("root/test/html").parse
 var outdent = require("root/lib/outdent")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var concat = Array.prototype.concat.bind(Array.prototype)
@@ -114,7 +114,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 			var el = dom.querySelector(".initiative")
 			el.getAttribute("data-uuid").must.equal(initiative.uuid)
 			el.querySelector("h3").textContent.must.equal(initiative.title)
@@ -141,7 +141,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 			var el = dom.querySelector(".initiative")
 			el.getAttribute("data-uuid").must.equal(initiative.uuid)
 			el.querySelector(".author").textContent.must.equal(this.author.name)
@@ -169,7 +169,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 			var el = dom.querySelector(".initiative")
 			el.querySelector(".author").textContent.must.equal(this.author.name)
 		})
@@ -192,7 +192,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 			var el = dom.querySelector(".initiative")
 			el.querySelector(".author").textContent.must.equal(this.author.name)
 		})
@@ -216,7 +216,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var el = dom.querySelector(".initiative")
 				el.querySelector(".author").textContent.must.equal(this.author.name)
 			})
@@ -271,7 +271,7 @@ describe("InitiativesController", function() {
 			res.body.must.include(initiative.uuid)
 			res.body.must.include(t("N_SIGNATURES", {votes: 8}))
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 			dom.querySelector(".initiative time").textContent.must.equal(
 				I18n.formatDate("numeric", initiative.signing_started_at)
 			)
@@ -321,7 +321,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 			res.body.must.include(initiative.uuid)
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 			dom.querySelector(".initiative time").textContent.must.equal(
 				I18n.formatDate("numeric", initiative.sent_to_parliament_at)
 			)
@@ -340,7 +340,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 			res.body.must.include(initiative.uuid)
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 			dom.querySelector(".initiative time").textContent.must.equal(
 				I18n.formatDate("numeric", initiative.received_by_parliament_at)
 			)
@@ -357,7 +357,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 			res.body.must.include(initiative.uuid)
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 			dom.querySelector(".initiative time").textContent.must.equal(
 				I18n.formatDate("numeric", initiative.received_by_parliament_at)
 			)
@@ -374,7 +374,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 			res.body.must.include(initiative.uuid)
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 			dom.querySelector(".initiative time").textContent.must.equal(
 				I18n.formatDate("numeric", initiative.sent_to_government_at)
 			)
@@ -403,7 +403,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 			res.body.must.include(initiative.uuid)
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 			dom.querySelector(".initiative time").textContent.must.equal(
 				I18n.formatDate("numeric", initiative.finished_in_government_at)
 			)
@@ -421,7 +421,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 			res.body.must.include(initiative.uuid)
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 			dom.querySelector(".initiative time").textContent.must.equal(
 				I18n.formatDate("numeric", initiative.finished_in_parliament_at)
 			)
@@ -598,7 +598,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
 
-			var dom = parseDom(res.body)
+			var dom = parseHtml(res.body)
 			var metas = dom.head.querySelectorAll("meta")
 			var metasByName = _.indexBy(metas, (el) => el.getAttribute("name"))
 			var metasByProp = _.indexBy(metas, (el) => el.getAttribute("property"))
@@ -1323,7 +1323,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var metas = dom.head.querySelectorAll("meta")
 				var metasByName = _.indexBy(metas, (el) => el.getAttribute("name"))
 				var metasByProp = _.indexBy(metas, (el) => el.getAttribute("property"))
@@ -1347,7 +1347,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 				phases.must.have.property("done")
 				phases.must.not.have.property("archived")
@@ -1363,7 +1363,7 @@ describe("InitiativesController", function() {
 
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 
 				var title = dom.querySelector("#initiative-header h1")
 				title.textContent.must.include(initiative.title)
@@ -1390,7 +1390,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 
 				var title = dom.querySelector("#initiative-header h1")
 				title.textContent.must.include(text.title)
@@ -1442,7 +1442,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request(path)
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var title = dom.querySelector("#initiative-header h1")
 				title.textContent.must.equal(initiative.title)
 
@@ -1462,7 +1462,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var author = dom.querySelector("#initiative-header .author")
 				author.textContent.must.equal(this.author.name)
 			})
@@ -1489,7 +1489,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var author = dom.querySelector("#initiative-header .author")
 				author.textContent.must.equal(this.author.name)
 			})
@@ -1513,7 +1513,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var author = dom.querySelector("#initiative-header .author")
 					author.textContent.must.equal(this.author.name)
 				})
@@ -1560,7 +1560,7 @@ describe("InitiativesController", function() {
 						var res = yield this.request("/initiatives/" + initiative.uuid)
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var headerEl = dom.querySelector("#initiative-header")
 						var textEl = dom.querySelector("article.text")
 						headerEl.textContent.must.not.include(older.title)
@@ -1599,7 +1599,7 @@ describe("InitiativesController", function() {
 						var res = yield this.request("/initiatives/" + initiative.uuid)
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var headerEl = dom.querySelector("#initiative-header")
 						var textEl = dom.querySelector("article.text")
 						headerEl.textContent.must.include(text.title)
@@ -1654,7 +1654,7 @@ describe("InitiativesController", function() {
 						var res = yield this.request(initiativePath + "?language=en")
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var headerEl = dom.querySelector("#initiative-header")
 						var textEl = dom.querySelector("article.text")
 						headerEl.textContent.must.not.include(estonian.title)
@@ -1726,7 +1726,7 @@ describe("InitiativesController", function() {
 				res.body.must.include(tHtml("INITIATIVE_IN_DISCUSSION"))
 				res.body.must.include(t("DISCUSSION_DEADLINE"))
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				demand(dom.querySelector("#initiative-phases")).be.null()
 			})
 
@@ -1745,7 +1745,7 @@ describe("InitiativesController", function() {
 				res.body.must.include(tHtml("INITIATIVE_IN_DISCUSSION"))
 				res.body.must.include(t("DISCUSSION_DEADLINE"))
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				_.sum(_.map(phases, "past")).must.equal(0)
@@ -1776,7 +1776,7 @@ describe("InitiativesController", function() {
 				res.body.must.include(tHtml("INITIATIVE_IN_DISCUSSION"))
 				res.body.must.include(t("DISCUSSION_DEADLINE"))
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				_.sum(_.map(phases, "past")).must.equal(0)
@@ -1814,7 +1814,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 				phases.edit.current.must.be.true()
 				phases.edit.text.must.equal(t("DISCUSSION_FINISHED"))
@@ -1848,7 +1848,7 @@ describe("InitiativesController", function() {
 					signatureCount: Config.votesRequired,
 				}))
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				_.sum(_.map(phases, "past")).must.equal(1)
@@ -1894,7 +1894,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var events = queryEvents(parseDom(res.body))
+				var events = queryEvents(parseHtml(res.body))
 				events.length.must.equal(3)
 
 				milestones.forEach(function(count, i) {
@@ -1934,7 +1934,7 @@ describe("InitiativesController", function() {
 
 				res.body.must.include(t("N_SIGNATURES_FAILED", {votes: signatureCount}))
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				_.sum(_.map(phases, "past")).must.equal(1)
@@ -1975,7 +1975,7 @@ describe("InitiativesController", function() {
 				res.body.must.include(t("VOTING_FAILED", {signatureCount: threshold}))
 				res.body.must.include(t("N_SIGNATURES_FAILED", {votes: signatureCount}))
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				_.sum(_.map(phases, "past")).must.equal(1)
@@ -2012,7 +2012,7 @@ describe("InitiativesController", function() {
 
 				res.body.must.include(t("N_SIGNATURES_FAILED", {votes: signatureCount}))
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				_.sum(_.map(phases, "past")).must.equal(1)
@@ -2044,7 +2044,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("VOTING_SUCCEEDED"))
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				_.sum(_.map(phases, "past")).must.equal(1)
@@ -2083,7 +2083,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("VOTING_SUCCEEDED_ON_LOCAL_LEVEL"))
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				_.sum(_.map(phases, "past")).must.equal(1)
@@ -2114,7 +2114,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				_.sum(_.map(phases, "past")).must.equal(1)
@@ -2145,7 +2145,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				_.sum(_.map(phases, "past")).must.equal(2)
@@ -2193,7 +2193,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				_.sum(_.map(phases, "past")).must.equal(2)
@@ -2232,7 +2232,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var events = queryEvents(parseDom(res.body))
+				var events = queryEvents(parseHtml(res.body))
 				events.length.must.equal(1)
 
 				events[0].id.must.equal(String(event.id))
@@ -2262,7 +2262,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var events = queryEvents(parseDom(res.body))
+				var events = queryEvents(parseHtml(res.body))
 				events.length.must.equal(1)
 
 				events[0].id.must.equal(String(event.id))
@@ -2297,7 +2297,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var events = queryEvents(parseDom(res.body))
+				var events = queryEvents(parseHtml(res.body))
 				events.length.must.equal(1)
 
 				events[0].id.must.equal(String(event.id))
@@ -2326,7 +2326,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var events = queryEvents(parseDom(res.body))
+				var events = queryEvents(parseHtml(res.body))
 				events.length.must.equal(1)
 
 				events[0].id.must.equal(String(event.id))
@@ -2360,7 +2360,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var events = queryEvents(parseDom(res.body))
+					var events = queryEvents(parseHtml(res.body))
 					events.length.must.equal(1)
 
 					events[0].id.must.equal(String(event.id))
@@ -2402,7 +2402,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var events = queryEvents(parseDom(res.body))
+				var events = queryEvents(parseHtml(res.body))
 				events.length.must.equal(1)
 
 				events[0].id.must.equal(String(event.id))
@@ -2434,7 +2434,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var events = queryEvents(parseDom(res.body))
+				var events = queryEvents(parseHtml(res.body))
 				events.length.must.equal(1)
 
 				events[0].id.must.equal(String(event.id))
@@ -2464,7 +2464,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var events = queryEvents(parseDom(res.body))
+				var events = queryEvents(parseHtml(res.body))
 				events.length.must.equal(1)
 
 				events[0].id.must.equal(String(event.id))
@@ -2499,7 +2499,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var events = queryEvents(parseDom(res.body))
+				var events = queryEvents(parseHtml(res.body))
 				events.length.must.equal(1)
 
 				events[0].id.must.equal(String(event.id))
@@ -2531,7 +2531,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var events = queryEvents(parseDom(res.body))
+				var events = queryEvents(parseHtml(res.body))
 				events.length.must.equal(1)
 
 				events[0].id.must.equal(String(event.id))
@@ -2561,7 +2561,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var events = queryEvents(parseDom(res.body))
+				var events = queryEvents(parseHtml(res.body))
 				events.length.must.equal(1)
 
 				events[0].id.must.equal(String(event.id))
@@ -2590,7 +2590,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var events = queryEvents(parseDom(res.body))
+				var events = queryEvents(parseHtml(res.body))
 				events.length.must.equal(1)
 
 				events[0].id.must.equal(String(event.id))
@@ -2626,7 +2626,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var events = queryEvents(parseDom(res.body))
+				var events = queryEvents(parseHtml(res.body))
 				events.length.must.equal(1)
 
 				events[0].id.must.equal(String(event.id))
@@ -2657,7 +2657,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var events = queryEvents(parseDom(res.body))
+				var events = queryEvents(parseHtml(res.body))
 				events.length.must.equal(1)
 
 				events[0].id.must.equal(String(event.id))
@@ -2688,7 +2688,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var events = queryEvents(parseDom(res.body))
+				var events = queryEvents(parseHtml(res.body))
 				events.length.must.equal(1)
 
 				events[0].id.must.equal(String(event.id))
@@ -2717,7 +2717,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				phases.parliament.text.must.equal(
@@ -2744,7 +2744,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				phases.parliament.text.must.equal(
@@ -2772,7 +2772,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				var deadline = DateFns.addMonths(DateFns.addDays(new Date, -5), 6)
@@ -2794,7 +2794,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 				phases.parliament.text.must.equal(t("PARLIAMENT_PHASE_0_DAYS_LEFT"))
 			})
@@ -2811,7 +2811,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 				phases.parliament.text.must.equal(t("PARLIAMENT_PHASE_N_DAYS_OVER", {
 					days: 5
@@ -2831,7 +2831,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				_.sum(_.map(phases, "past")).must.equal(2)
@@ -2862,7 +2862,7 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(200)
 					res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var events = queryEvents(dom)
 					events.length.must.equal(2)
 					events[0].id.must.equal("sent-to-parliament")
@@ -2897,7 +2897,7 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(200)
 					res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var events = queryEvents(dom)
 					events.length.must.equal(2)
 					events[0].id.must.equal("sent-to-parliament")
@@ -2952,7 +2952,7 @@ describe("InitiativesController", function() {
 					agency: "Sidususministeerium"
 				}))
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				_.sum(_.map(phases, "past")).must.equal(3)
@@ -3015,7 +3015,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_IN_LOCAL_GOVERNMENT"))
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				_.sum(_.map(phases, "past")).must.equal(2)
@@ -3085,7 +3085,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_IN_GOVERNMENT"))
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				_.sum(_.map(phases, "past")).must.equal(3)
@@ -3136,7 +3136,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_IN_GOVERNMENT"))
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				_.sum(_.map(phases, "past")).must.equal(3)
@@ -3158,7 +3158,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_PROCESSED"))
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				_.sum(_.map(phases, "past")).must.equal(3)
@@ -3185,7 +3185,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_PROCESSED"))
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				_.sum(_.map(phases, "past")).must.equal(4)
@@ -3218,7 +3218,7 @@ describe("InitiativesController", function() {
 
 				res.body.must.not.include(tHtml("VOTING_DEADLINE"))
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				_.sum(_.map(phases, "past")).must.equal(3)
@@ -3244,7 +3244,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_PROCESSED"))
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				_.sum(_.map(phases, "past")).must.equal(4)
@@ -3275,7 +3275,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var events = queryEvents(parseDom(res.body))
+				var events = queryEvents(parseHtml(res.body))
 				events.length.must.equal(1)
 
 				events[0].id.must.equal(String(event.id))
@@ -3306,7 +3306,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var events = queryEvents(parseDom(res.body))
+				var events = queryEvents(parseHtml(res.body))
 				events.length.must.equal(1)
 
 				events[0].id.must.equal(String(event.id))
@@ -3354,7 +3354,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				queryEvents(parseDom(res.body)).map((ev) => ev.id).must.eql([
+				queryEvents(parseHtml(res.body)).map((ev) => ev.id).must.eql([
 					"sent-to-parliament",
 					String(events[0].id),
 					String(events[1].id),
@@ -3380,7 +3380,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var form = dom.querySelector(".initiative-subscribe-form")
 
 					form.querySelector("p").innerHTML.must.equal(
@@ -3403,7 +3403,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var form = dom.querySelector(".initiative-subscribe-form")
 
 					form.querySelector("p").innerHTML.must.equal(
@@ -3432,7 +3432,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var form = dom.querySelector(".initiative-subscribe-form")
 
 					form.querySelector("p").innerHTML.must.equal(
@@ -3449,7 +3449,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var form = dom.querySelector(".initiative-subscribe-form")
 					demand(form.querySelector("p")).be.null()
 				})
@@ -3486,7 +3486,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var commentsEl = dom.getElementById("initiative-comments")
 					commentsEl.textContent.must.include(author.name)
 					commentsEl.textContent.must.include(comment.title)
@@ -3551,7 +3551,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var commentsEl = dom.getElementById("initiative-comments")
 					commentsEl.textContent.must.not.include(comment.text)
 				})
@@ -3832,7 +3832,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var el = dom.getElementById("coauthor-invitation")
 
 				el.textContent.must.include(
@@ -3857,7 +3857,7 @@ describe("InitiativesController", function() {
 				}))
 
 				var res = yield this.request("/initiatives/" + initiative.uuid)
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				demand(dom.getElementById("coauthor-invitation")).be.null()
 			})
 
@@ -3879,7 +3879,7 @@ describe("InitiativesController", function() {
 					}))
 
 					var res = yield this.request("/initiatives/" + initiative.uuid)
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					demand(dom.getElementById("coauthor-invitation")).be.null()
 				})
 			})
@@ -3899,7 +3899,7 @@ describe("InitiativesController", function() {
 				res.body.must.include(tHtml("INITIATIVE_IN_DISCUSSION"))
 				res.body.must.include(t("DISCUSSION_DEADLINE"))
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
 
 				_.sum(_.map(phases, "past")).must.equal(0)
@@ -3951,7 +3951,7 @@ describe("InitiativesController", function() {
 						var res = yield this.request(initiativePath + "?language=en")
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var headerEl = dom.querySelector("#initiative-header")
 						var textEl = dom.querySelector("article.text")
 						headerEl.textContent.must.not.include(estonian.title)
@@ -3999,7 +3999,7 @@ describe("InitiativesController", function() {
 						var res = yield this.request(initiativePath + "?language=en")
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var headerEl = dom.querySelector("#initiative-header")
 						var textEl = dom.querySelector("article.text")
 						headerEl.textContent.must.not.include(estonian.title)
@@ -4051,7 +4051,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var form = dom.querySelector(".initiative-subscribe-form")
 					form.querySelector("input[name=email]").value.must.equal("")
 				})
@@ -4071,7 +4071,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var form = dom.querySelector(".initiative-subscribe-form")
 					var input = form.querySelector("input[name=email]")
 					input.value.must.equal("user@example.com")
@@ -4092,7 +4092,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var form = dom.querySelector(".initiative-subscribe-form")
 					var input = form.querySelector("input[name=email]")
 					input.value.must.equal("user@example.com")
@@ -4109,7 +4109,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var form = dom.getElementById("comment-form")
 					var check = form.querySelector("input[type=checkbox][name=subscribe]")
 					check.checked.must.be.false()
@@ -4135,7 +4135,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var form = dom.getElementById("comment-form")
 					var check = form.querySelector("input[type=checkbox][name=subscribe]")
 					check.checked.must.be.false()
@@ -4160,7 +4160,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var form = dom.getElementById("comment-form")
 					var check = form.querySelector("input[type=checkbox][name=subscribe]")
 					check.checked.must.be.false()
@@ -4190,7 +4190,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var form = dom.getElementById("comment-form")
 					var check = form.querySelector("input[type=checkbox][name=subscribe]")
 					check.checked.must.be.false()
@@ -4225,7 +4225,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var form = dom.getElementById("comment-form")
 					var check = form.querySelector("input[type=checkbox][name=subscribe]")
 					check.checked.must.be.true()
@@ -4254,7 +4254,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var form = dom.getElementById("comment-form")
 					var check = form.querySelector("input[type=checkbox][name=subscribe]")
 					check.checked.must.be.true()
@@ -4281,7 +4281,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var form = dom.getElementById("comment-form")
 					var check = form.querySelector("input[type=checkbox][name=subscribe]")
 					check.checked.must.be.false()
@@ -4307,7 +4307,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var form = dom.getElementById("comment-form")
 					var check = form.querySelector("input[type=checkbox][name=subscribe]")
 					check.checked.must.be.false()
@@ -4486,7 +4486,7 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(200)
 					res.body.must.include(t("EDIT_INITIATIVE_TEXT"))
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					dom.getElementById("initiative-info").must.exist()
 				})
 
@@ -4505,7 +4505,7 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(200)
 					res.body.must.include(t("EDIT_INITIATIVE_TEXT"))
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					dom.getElementById("initiative-info").must.exist()
 				})
 
@@ -4584,7 +4584,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var button = dom.getElementById("publish-button")
 					button.textContent.must.include(t("PUBLISH_TOPIC"))
 					button.disabled.must.be.false()
@@ -4620,7 +4620,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var button = dom.getElementById("publish-button")
 					button.textContent.must.include(t("PUBLISH_TOPIC"))
 					button.disabled.must.be.false()
@@ -4660,7 +4660,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var button = dom.getElementById("publish-button")
 					button.textContent.must.include(t("PUBLISH_TOPIC"))
 					button.disabled.must.be.false()
@@ -4689,7 +4689,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var button = dom.getElementById("publish-button")
 					button.disabled.must.be.true()
 
@@ -4718,7 +4718,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var button = dom.getElementById("publish-button")
 					button.disabled.must.be.true()
 
@@ -4739,7 +4739,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var button = dom.getElementById("send-to-sign-button")
 					button.textContent.must.equal(t("BTN_SEND_TO_VOTE"))
 					button.disabled.must.be.false()
@@ -4755,7 +4755,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 
 					var button = dom.getElementById("send-to-sign-button")
 					button.textContent.must.equal(t("BTN_SEND_TO_VOTE"))
@@ -4778,7 +4778,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 
 					var button = dom.getElementById("send-to-sign-button")
 					button.textContent.must.equal(t("BTN_SEND_TO_VOTE"))
@@ -4809,7 +4809,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 
 					var button = dom.getElementById("send-to-sign-button")
 					button.textContent.must.equal(t("BTN_SEND_TO_VOTE"))
@@ -4837,7 +4837,7 @@ describe("InitiativesController", function() {
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var button = dom.getElementById("send-to-sign-button")
 					button.textContent.must.equal(t("BTN_SEND_TO_VOTE"))
 					button.disabled.must.be.true()
@@ -4974,7 +4974,7 @@ describe("InitiativesController", function() {
 						var res = yield this.request("/initiatives/" + initiative.uuid)
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						demand(dom.getElementById("send-to-parliament-button")).be.null()
 					})
 
@@ -4996,7 +4996,7 @@ describe("InitiativesController", function() {
 						var res = yield this.request("/initiatives/" + initiative.uuid)
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var button = dom.getElementById("send-to-parliament-button")
 						button.disabled.must.be.false()
 						button.textContent.must.equal(t("SEND_TO_PARLIAMENT"))
@@ -5017,7 +5017,7 @@ describe("InitiativesController", function() {
 						var res = yield this.request("/initiatives/" + initiative.uuid)
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var button = dom.getElementById("send-to-parliament-button")
 						button.disabled.must.be.false()
 					})
@@ -5036,7 +5036,7 @@ describe("InitiativesController", function() {
 						var res = yield this.request("/initiatives/" + initiative.uuid)
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var button = dom.getElementById("send-to-parliament-button")
 						button.disabled.must.be.false()
 					})
@@ -5061,7 +5061,7 @@ describe("InitiativesController", function() {
 						var res = yield this.request("/initiatives/" + initiative.uuid)
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						demand(dom.getElementById("send-to-parliament-button")).be.null()
 					})
 
@@ -5085,7 +5085,7 @@ describe("InitiativesController", function() {
 						var res = yield this.request("/initiatives/" + initiative.uuid)
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var button = dom.getElementById("send-to-parliament-button")
 						button.disabled.must.be.true()
 
@@ -5109,7 +5109,7 @@ describe("InitiativesController", function() {
 						var res = yield this.request("/initiatives/" + initiative.uuid)
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						demand(dom.getElementById("send-to-parliament-button")).be.null()
 					})
 				})
@@ -5142,7 +5142,7 @@ describe("InitiativesController", function() {
 
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var metas = dom.head.querySelectorAll("meta")
 						metas = _.indexBy(metas, (el) => el.getAttribute("property"))
 
@@ -5224,7 +5224,7 @@ describe("InitiativesController", function() {
 
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var button = dom.getElementById("send-to-local-government-button")
 						button.disabled.must.be.false()
 						button.textContent.must.equal(t("SEND_TO_LOCAL_GOVERNMENT"))
@@ -5258,7 +5258,7 @@ describe("InitiativesController", function() {
 
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var button = dom.getElementById("send-to-local-government-button")
 						demand(button).be.null()
 					})
@@ -5282,7 +5282,7 @@ describe("InitiativesController", function() {
 
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var button = dom.getElementById("send-to-local-government-button")
 						button.disabled.must.be.false()
 					})
