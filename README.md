@@ -83,6 +83,7 @@ To test signing in or signing initiatives with Mobile-Id, use one of the Mobile-
 
 Phone        | Personal id | Name
 -------------|-------------|-----
++37268000769<br>+37258000769 | 60001017869 | Eid2016 Testnumber
 +37200000766 | 60001019906 | Mary Änn O’Connež-Šuslik Testnumber
 +37200000566 | 60001018800 | Mary Änn O’Connež-Šuslik Testnumber (PNOEE-certificate)
 
@@ -94,6 +95,9 @@ To test signing in or signing initiatives with Smart-Id, use the following test 
 Personal id | Name
 ------------|-----
 30303039914 | Qualified Ok1 Testnumber
+30303039903 | Qualified Ok Testnumber
+30303039816 | Multiple Ok Testnumber
+39912319997 | Bod Testnumber
 
 For more test ids, see the [Smart-Id documentation wiki][smart-id-test].
 
