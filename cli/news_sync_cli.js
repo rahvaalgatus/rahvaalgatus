@@ -26,7 +26,7 @@ Options:
 `
 
 module.exports = function*(argv) {
-  var args = Neodoc.run(USAGE_TEXT, {argv: argv || ["parliament-web-sync"]})
+  var args = Neodoc.run(USAGE_TEXT, {argv: argv || ["news-sync"]})
   if (args["--help"]) return void process.stdout.write(USAGE_TEXT.trimLeft())
 
 	var res = yield fetch(KOGU_ATOM_FEED, {
