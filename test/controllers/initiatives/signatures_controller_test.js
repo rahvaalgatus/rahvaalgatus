@@ -960,6 +960,7 @@ describe("SignaturesController", function() {
 					)
 
 					res.statusCode.must.equal(204)
+					res.statusMessage.must.equal("Signed")
 
 					var signature = signaturesDb.read(sql`
 						SELECT * FROM initiative_signatures
@@ -997,6 +998,7 @@ describe("SignaturesController", function() {
 						)
 
 						res.statusCode.must.equal(204)
+						res.statusMessage.must.equal("Signed")
 
 						signaturesDb.search(sql`
 							SELECT * FROM initiative_signatures
@@ -1013,6 +1015,7 @@ describe("SignaturesController", function() {
 					)
 
 					signed.statusCode.must.equal(204)
+					signed.statusMessage.must.equal("Signed")
 
 					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
@@ -1042,6 +1045,7 @@ describe("SignaturesController", function() {
 					)
 
 					signed.statusCode.must.equal(204)
+					signed.statusMessage.must.equal("Signed")
 
 					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
@@ -1076,6 +1080,7 @@ describe("SignaturesController", function() {
 					)
 
 					signed.statusCode.must.equal(204)
+					signed.statusMessage.must.equal("Signed")
 
 					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
@@ -1119,6 +1124,7 @@ describe("SignaturesController", function() {
 					)
 
 					signed.statusCode.must.equal(204)
+					signed.statusMessage.must.equal("Signed")
 
 					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
@@ -1159,6 +1165,7 @@ describe("SignaturesController", function() {
 					)
 
 					signed.statusCode.must.equal(204)
+					signed.statusMessage.must.equal("Signed")
 
 					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
@@ -1200,6 +1207,7 @@ describe("SignaturesController", function() {
 					)
 
 					signed.statusCode.must.equal(204)
+					signed.statusMessage.must.equal("Signed")
 
 					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
@@ -1235,6 +1243,7 @@ describe("SignaturesController", function() {
 					)
 
 					signed.statusCode.must.equal(204)
+					signed.statusMessage.must.equal("Signed")
 
 					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
@@ -1271,6 +1280,7 @@ describe("SignaturesController", function() {
 					)
 
 					signed.statusCode.must.equal(204)
+					signed.statusMessage.must.equal("Signed")
 
 					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
@@ -1306,6 +1316,7 @@ describe("SignaturesController", function() {
 					)
 
 					signed.statusCode.must.equal(204)
+					signed.statusMessage.must.equal("Signed")
 
 					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
@@ -1343,6 +1354,7 @@ describe("SignaturesController", function() {
 					)
 
 					signed.statusCode.must.equal(204)
+					signed.statusMessage.must.equal("Signed")
 
 					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
@@ -1398,6 +1410,7 @@ describe("SignaturesController", function() {
 				})
 
 				signing.statusCode.must.equal(202)
+				signing.statusMessage.must.equal("Signing")
 				signing.headers["content-type"].must.equal(SIGNABLE_TYPE)
 
 				var xades = hades.new(cert, [{
@@ -1454,6 +1467,7 @@ describe("SignaturesController", function() {
 				})
 
 				signed.statusCode.must.equal(204)
+				signed.statusMessage.must.equal("Signed")
 				signed.headers.location.must.equal(path)
 
 				signaturesDb.search(sql`
@@ -1673,6 +1687,7 @@ describe("SignaturesController", function() {
 					})
 
 					signing.statusCode.must.equal(202)
+					signing.statusMessage.must.equal("Signing")
 
 					var {xades} = signablesDb.read(sql`
 						SELECT * FROM initiative_signables
@@ -1698,6 +1713,7 @@ describe("SignaturesController", function() {
 					})
 
 					signed.statusCode.must.equal(204)
+					signing.statusMessage.must.equal("Signing")
 				})
 
 				it(`must respond with 409 given an invalid ${algo} signature`,
@@ -1730,6 +1746,7 @@ describe("SignaturesController", function() {
 					})
 
 					signing.statusCode.must.equal(202)
+					signing.statusMessage.must.equal("Signing")
 
 					var res = yield this.request(signing.headers.location, {
 						method: "PUT",
@@ -1846,12 +1863,14 @@ describe("SignaturesController", function() {
 				})
 
 				signing.statusCode.must.equal(202)
+				signing.statusMessage.must.equal("Signing")
 
 				var signed = yield this.request(signing.headers.location, {
 					headers: {Accept: `application/x-empty, ${ERR_TYPE}`}
 				})
 
 				signed.statusCode.must.equal(204)
+				signed.statusMessage.must.equal("Signed")
 				signed.headers.location.must.equal(initiativePath)
 
 				var signables = signablesDb.search(sql`
@@ -2056,6 +2075,7 @@ describe("SignaturesController", function() {
 				)
 
 				signed.statusCode.must.equal(204)
+				signed.statusMessage.must.equal("Signed")
 
 				signaturesDb.search(sql`
 					SELECT * FROM initiative_signatures
@@ -2120,6 +2140,7 @@ describe("SignaturesController", function() {
 					)
 
 					signed.statusCode.must.equal(204)
+					signed.statusMessage.must.equal("Signed")
 
 					signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
@@ -2524,12 +2545,14 @@ describe("SignaturesController", function() {
 				})
 
 				signing.statusCode.must.equal(202)
+				signing.statusMessage.must.equal("Signing")
 
 				var signed = yield this.request(signing.headers.location, {
 					headers: {Accept: `application/x-empty, ${ERR_TYPE}`}
 				})
 
 				signed.statusCode.must.equal(204)
+				signed.statusMessage.must.equal("Signed")
 				signed.headers.location.must.equal(initiativePath)
 
 				var signables = signablesDb.search(sql`
@@ -2792,6 +2815,7 @@ describe("SignaturesController", function() {
 				)
 
 				signed.statusCode.must.equal(204)
+				signed.statusMessage.must.equal("Signed")
 
 				signaturesDb.search(sql`
 					SELECT * FROM initiative_signatures
@@ -2860,6 +2884,7 @@ describe("SignaturesController", function() {
 					)
 
 					signed.statusCode.must.equal(204)
+					signed.statusMessage.must.equal("Signed")
 
 					signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
@@ -3117,6 +3142,7 @@ describe("SignaturesController", function() {
 			path += "?token=aabbccddee"
 			var res = yield this.request(path)
 			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Signature Not Found")
 		})
 
 		it("must respond with 404 if invalid token", function*() {
@@ -3131,6 +3157,7 @@ describe("SignaturesController", function() {
 			path += "?token=aabbccddee"
 			var res = yield this.request(path)
 			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Signature Not Found")
 		})
 	})
 
@@ -3163,6 +3190,7 @@ describe("SignaturesController", function() {
 			})
 
 			updated.statusCode.must.equal(303)
+			updated.statusMessage.must.equal("Signature Hidden")
 			updated.headers.location.must.equal(initiativePath)
 
 			signaturesDb.search(sql`
@@ -3191,6 +3219,7 @@ describe("SignaturesController", function() {
 			})
 
 			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Signature Not Found")
 		})
 
 		it("must respond with 404 if invalid token", function*() {

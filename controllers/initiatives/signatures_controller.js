@@ -340,7 +340,10 @@ exports.router.post("/", next(function*(req, res) {
 			signatureUrl = req.baseUrl + "/" + pathToSignature(signable)
 			res.setHeader("Location", signatureUrl)
 			res.setHeader("Content-Type", "application/vnd.rahvaalgatus.signable")
-			res.status(202).end(xades.signableHash)
+
+			res.statusCode = 202
+			res.statusMessage = "Signing"
+			res.end(xades.signableHash)
 			break
 
 		case "mobile-id":
@@ -374,7 +377,9 @@ exports.router.post("/", next(function*(req, res) {
 			signatureUrl = req.baseUrl + "/" + pathToSignature(signable)
 			res.setHeader("Location", signatureUrl)
 
-			res.status(202).render("initiatives/signatures/creating_page.jsx", {
+			res.statusCode = 202
+			res.statusMessage = "Signing"
+			res.render("initiatives/signatures/creating_page.jsx", {
 				code: MobileId.confirmation(xades.signableHash),
 				poll: signatureUrl
 			})
@@ -410,7 +415,9 @@ exports.router.post("/", next(function*(req, res) {
 			signatureUrl = req.baseUrl + "/" + pathToSignature(signable)
 			res.setHeader("Location", signatureUrl)
 
-			res.status(202).render("initiatives/signatures/creating_page.jsx", {
+			res.statusCode = 202
+			res.statusMessage = "Signing"
+			res.render("initiatives/signatures/creating_page.jsx", {
 				code: SmartId.verification(xades.signableHash),
 				poll: signatureUrl
 			})
@@ -532,6 +539,7 @@ exports.router.get("/:personalId",
 
 			if (signature) {
 				res.statusCode = 204
+				res.statusMessage = "Signed"
 				res.flash("signatureToken", req.token.toString("hex"))
 			}
 			else if (signable.error) {
@@ -582,7 +590,7 @@ exports.router.get("/:personalId",
 			}
 
 		case "application/vnd.etsi.asic-e+zip":
-			if (signature == null) throw new HttpError(404)
+			if (signature == null) throw new HttpError(404, "Signature Not Found")
 
 			var asic = new Asic
 			res.setHeader("Content-Type", asic.type)
@@ -653,7 +661,11 @@ exports.router.put("/:personalId",
 			res.setHeader("Location", Path.dirname(req.baseUrl))
 
 			switch (res.contentType.name) {
-				case "application/x-empty": return void res.status(204).end()
+				case "application/x-empty":
+					res.statusCode = 204
+					res.statusMessage = "Signed"
+					return void res.end()
+
 				default: return void res.status(303).end()
 			}
 
@@ -667,6 +679,7 @@ exports.router.put("/:personalId",
 			})
 
 			res.flash("notice", req.t("SIGNATURE_HIDDEN"))
+			res.statusMessage = "Signature Hidden"
 			res.redirect(303, Path.dirname(req.baseUrl))
 			break
 
