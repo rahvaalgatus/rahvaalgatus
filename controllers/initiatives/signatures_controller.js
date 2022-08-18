@@ -676,10 +676,17 @@ exports.router.put("/:personalId",
 
 exports.router.delete("/:personalId", function(req, res) {
 	var signature = req.signature
-	if (signature == null) throw new HttpError(404)
+	if (signature == null) throw new HttpError(404, "Signature Not Found")
+
+	if (!Initiative.isSignable(new Date, req.initiative))
+		throw new HttpError(405, "Cannot Delete Signature as Signing Ended", {
+			description: req.t("SIGNATURE_NOT_REVOKED_NOT_SIGNABLE")
+		})
 
 	signaturesDb.delete(signature)
+
 	res.flash("notice", req.t("SIGNATURE_REVOKED"))
+	res.statusMessage = "Signature Deleted"
 	res.redirect(303, Path.dirname(req.baseUrl))
 })
 

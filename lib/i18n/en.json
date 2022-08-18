@@ -689,6 +689,7 @@
 	"SIGNATURES_COLLECTED_FOR_võru-vald": "Enough signatures collected for sending to Võru vald.",
 	"SIGNATURE_HIDDEN": "Your signature is hidden.",
 	"SIGNATURE_MILESTONE_EVENT_TITLE": "The initiative reached {{milestone}} signatures.",
+	"SIGNATURE_NOT_REVOKED_NOT_SIGNABLE": "Sorry, you can't revoke your signature after the signing phase has ended.",
 	"SIGNATURE_REVOKED": "You have removed your signature. ",
 	"SIGNED_INITIATIVES": "Signed",
 	"SIGNING_VIEW_SIGNING": "Signing…",

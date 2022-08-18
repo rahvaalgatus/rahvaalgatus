@@ -335,7 +335,9 @@ function ReadPage(attrs) {
 					files={files}
 				/>
 
-				{isSignable(initiative) ? <div id="initiative-vote">
+				{Initiative.isSignable(new Date, initiative) ? <div
+					id="initiative-vote"
+				>
 					<ProgressView
 						t={t}
 						initiative={initiative}
@@ -2285,7 +2287,7 @@ function QuicksignView(attrs) {
 			signatureCount={signatureCount}
 		/>
 
-		{isSignable(initiative) && !signature ? <a
+		{Initiative.isSignable(new Date, initiative) && !signature ? <a
 			href="#initiative-vote"
 			class="green-button wide-button sign-button">
 			{t("SIGN_THIS_DOCUMENT")}
@@ -2298,7 +2300,7 @@ function QuicksignView(attrs) {
 			signatureCount={signatureCount}
 		/>
 
-		{isSignable(initiative) && signature ? <Fragment>
+		{Initiative.isSignable(new Date, initiative) && signature ? <Fragment>
 			<h2>{t("THANKS_FOR_SIGNING")}</h2>
 
 			<DownloadSignatureButton signature={signature}>
@@ -2535,11 +2537,6 @@ function isPhaseAtLeast(than, phase) {
 
 function isPhaseAfter(than, phase) {
 	return PHASES.indexOf(phase) > PHASES.indexOf(than)
-}
-
-
-function isSignable(initiative) {
-	return initiative.phase == "sign" && new Date < initiative.signing_ends_at
 }
 
 function initiativePhaseFromEvent(event) {

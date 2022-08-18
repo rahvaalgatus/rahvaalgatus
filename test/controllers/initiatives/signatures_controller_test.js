@@ -3208,6 +3208,7 @@ describe("SignaturesController", function() {
 			})
 
 			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Signature Not Found")
 			signaturesDb.read(signature).must.eql(signature)
 		})
 
@@ -3254,6 +3255,7 @@ describe("SignaturesController", function() {
 			path += "?token=" + signature.token.toString("hex")
 			var deleted = yield this.request(path, {method: "DELETE"})
 			deleted.statusCode.must.equal(303)
+			deleted.statusMessage.must.equal("Signature Deleted")
 			deleted.headers.location.must.equal(initiativePath)
 
 			signaturesDb.search(sql`
@@ -3276,6 +3278,7 @@ describe("SignaturesController", function() {
 			var path = initiativePath + "/signatures/EE38706181337?token=aabbccddee"
 			var res = yield this.request(path, {method: "DELETE"})
 			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Signature Not Found")
 		})
 
 		it("must respond with 404 if invalid token", function*() {
@@ -3290,6 +3293,7 @@ describe("SignaturesController", function() {
 			var res = yield this.request(path, {method: "DELETE"})
 
 			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Signature Not Found")
 			signaturesDb.read(signature).must.eql(signature)
 		})
 
@@ -3315,6 +3319,7 @@ describe("SignaturesController", function() {
 			path += "?token=" + signature.token.toString("hex")
 			var res = yield this.request(path, {method: "DELETE"})
 			res.statusCode.must.equal(303)
+			res.statusMessage.must.equal("Signature Deleted")
 
 			signaturesDb.search(sql`
 				SELECT * FROM initiative_signatures
@@ -3339,10 +3344,32 @@ describe("SignaturesController", function() {
 			path += "?token=" + signature.token.toString("hex")
 			var res = yield this.request(path, {method: "DELETE"})
 			res.statusCode.must.equal(303)
+			res.statusMessage.must.equal("Signature Deleted")
 
 			signaturesDb.search(sql`
 				SELECT * FROM initiative_signatures
 			`).must.eql([otherSignature])
+		})
+
+		it("must not delete signature if signing finished", function*() {
+			var signature = signaturesDb.create(new ValidSignature({
+				initiative_uuid: this.initiative.uuid,
+				country: "EE",
+				personal_id: "38706181337"
+			}))
+
+			initiativesDb.update(this.initiative, {signing_ends_at: new Date})
+
+			var initiativePath = `/initiatives/${this.initiative.uuid}`
+			var path = initiativePath + "/signatures/EE38706181337"
+			path += "?token=" + signature.token.toString("hex")
+			var res = yield this.request(path, {method: "DELETE"})
+			res.statusCode.must.equal(405)
+			res.statusMessage.must.equal("Cannot Delete Signature as Signing Ended")
+
+			signaturesDb.search(sql`
+				SELECT * FROM initiative_signatures
+			`).must.eql([signature])
 		})
 	})
 })
