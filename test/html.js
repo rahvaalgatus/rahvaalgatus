@@ -11,6 +11,4 @@ exports.parse = function(html) {
 	return Jsdom.jsdom(html, {features: FEATURES})
 }
 
-HTMLElement.prototype.inspect = function() {
-	return this.outerHTML
-}
+HTMLElement.prototype.inspect = function() { return this.outerHTML }

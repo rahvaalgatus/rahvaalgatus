@@ -19,7 +19,7 @@ var signaturesDb = require("root/db/initiative_signatures_db")
 var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
 var {getRequiredSignatureCount} = require("root/lib/initiative")
-var parseDom = require("root/lib/dom").parse
+var parseDom = require("root/test/html").parse
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var demand = require("must")
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)

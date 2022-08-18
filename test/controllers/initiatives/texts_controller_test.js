@@ -14,7 +14,7 @@ var parseCookies = require("root/test/web").parseCookies
 var TRIX_TYPE = new MediaType("application/vnd.basecamp.trix+json")
 var {newTrixDocument} = require("root/test/fixtures")
 var outdent = require("root/lib/outdent")
-var parseDom = require("root/lib/dom").parse
+var parseDom = require("root/test/html").parse
 
 describe("InitiativeTextsController", function() {
 	require("root/test/web")()

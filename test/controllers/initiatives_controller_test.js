@@ -38,7 +38,7 @@ var signaturesDb = require("root/db/initiative_signatures_db")
 var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
 var commentsDb = require("root/db/comments_db")
-var parseDom = require("root/lib/dom").parse
+var parseDom = require("root/test/html").parse
 var outdent = require("root/lib/outdent")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var concat = Array.prototype.concat.bind(Array.prototype)

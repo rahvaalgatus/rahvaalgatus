@@ -49,8 +49,7 @@
 		"mime": "",
 		"maxmind": "",
 		"hugml": "",
-		"undersign": "git+https://github.com/moll/js-undersign.git#50e1399049ac7e2dc8ba8f2ad6af60a381c605e2",
-		"jsdom": ">= 9 < 10"
+		"undersign": "git+https://github.com/moll/js-undersign.git#50e1399049ac7e2dc8ba8f2ad6af60a381c605e2"
 	},
 
 	"devDependencies": {
@@ -60,6 +59,7 @@
 		"mitm": ">= 1 < 2",
 		"livereload": ">= 0.6 < 0.7",
 		"sinon": ">= 1 < 2",
+		"jsdom": ">= 9 < 10",
 		"tough-cookie": ">= 2 < 3",
 		"cookie-signature": ">= 1 < 2",
 		"emailjs-mime-parser": "^2.0.7",
