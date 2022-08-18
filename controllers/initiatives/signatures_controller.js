@@ -669,20 +669,6 @@ exports.router.put("/:personalId",
 				default: return void res.status(303).end()
 			}
 
-		case "application/json":
-		case "application/x-www-form-urlencoded":
-			if (signature == null) throw new HttpError(404, "Signature Not Found")
-
-			signaturesDb.update(signature, {
-				hidden: _.parseBoolean(req.body.hidden),
-				updated_at: new Date
-			})
-
-			res.flash("notice", req.t("SIGNATURE_HIDDEN"))
-			res.statusMessage = "Signature Hidden"
-			res.redirect(303, Path.dirname(req.baseUrl))
-			break
-
 		default: throw new HttpError(415)
 	}
 }))
