@@ -43,8 +43,8 @@ RSYNC_OPTS = \
 	--exclude "/node_modules/mocha/***" \
 	--exclude "/node_modules/must/***" \
 	--exclude "/node_modules/sass/***" \
-	--exclude "/node_modules/better-sqlite3/***" \
-	--exclude "/node_modules/sharp/***" \
+	--exclude "/node_modules/better-sqlite3/build/***" \
+	--exclude "/node_modules/sharp/build/***" \
 	--exclude "/node_modules/emailjs-mime-parser/***" \
 	--exclude "/node_modules/sinon/***" \
 	--exclude "/tmp/***"
