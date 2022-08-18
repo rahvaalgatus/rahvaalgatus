@@ -318,6 +318,15 @@ exports.router.post("/", next(function*(req, res) {
 	var cert, err, country, personalId, xades, signable, signatureUrl
 	var geo = yield lookupAndSerializeGeo(req.ip)
 
+	// Prevents new signatures, but lets already started signing finish.
+	//
+	// Mobile methods wait for the signature in the background, but the ID-card
+	// process sends a PUT later. This needs to be let through.
+	if (!Initiative.isSignable(new Date, initiative))
+		throw new HttpError(405, "Signing Ended", {
+			description: req.t("CANNOT_SIGN_SIGNING_ENDED")
+		})
+
 	switch (method) {
 		case "id-card":
 			cert = Certificate.parse(req.body)
@@ -616,6 +625,12 @@ exports.router.put("/:personalId",
 	next(function*(req, res) {
 	var initiative = req.initiative
 	var signature = req.signature
+
+	// NOTE: Intentionally let already started signatures finish even after the
+	// initiative signing deadline is passed.
+	if (initiative.phase != "sign") throw new HttpError(405, "Signing Ended", {
+		description: req.t("CANNOT_SIGN_SIGNING_ENDED")
+	})
 
 	// Responding to a hidden signature if you know its token is not a privacy
 	// leak given that if you have the token, you already know for a fact it

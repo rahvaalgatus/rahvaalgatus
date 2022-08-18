@@ -1484,6 +1484,39 @@ describe("SignaturesController", function() {
 				})])
 			})
 
+			it("must respond with 405 if initiative signing finished", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					signing_ends_at: new Date
+				}))
+
+				var cert = new Certificate(newCertificate({
+					subject: {
+						countryName: "EE",
+						organizationName: "ESTEID",
+						organizationalUnitName: "digital signature",
+						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
+						surname: "SMITH",
+						givenName: "JOHN",
+						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
+					},
+
+					issuer: VALID_ISSUERS[0],
+					publicKey: JOHN_RSA_KEYS.publicKey
+				}))
+
+				var path = `/initiatives/${initiative.uuid}`
+				var signing = yield this.request(path + "/signatures", {
+					method: "POST",
+					headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
+					body: cert.toBuffer()
+				})
+
+				signing.statusCode.must.equal(405)
+				signing.statusMessage.must.equal("Signing Ended")
+			})
+
 			it("must respond with 422 given certificate from untrusted issuer",
 				function*() {
 				var issuer = tsl.getBySubjectName([
@@ -1677,12 +1710,7 @@ describe("SignaturesController", function() {
 					var initiativePath = `/initiatives/${this.initiative.uuid}`
 					var signing = yield this.request(`${initiativePath}/signatures`, {
 						method: "POST",
-
-						headers: {
-							Accept: SIGNABLE_TYPE,
-							"Content-Type": CERTIFICATE_TYPE
-						},
-
+						headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
 						body: cert.toBuffer()
 					})
 
@@ -1691,8 +1719,6 @@ describe("SignaturesController", function() {
 
 					var {xades} = signablesDb.read(sql`
 						SELECT * FROM initiative_signables
-						ORDER BY created_at DESC
-						LIMIT 1
 					`)
 
 					this.router.post(TIMEMARK_URL.path, function(req, res) {
@@ -1713,7 +1739,7 @@ describe("SignaturesController", function() {
 					})
 
 					signed.statusCode.must.equal(204)
-					signing.statusMessage.must.equal("Signing")
+					signed.statusMessage.must.equal("Signed")
 				})
 
 				it(`must respond with 409 given an invalid ${algo} signature`,
@@ -1736,12 +1762,7 @@ describe("SignaturesController", function() {
 					var initiativePath = `/initiatives/${this.initiative.uuid}`
 					var signing = yield this.request(`${initiativePath}/signatures`, {
 						method: "POST",
-
-						headers: {
-							Accept: SIGNABLE_TYPE,
-							"Content-Type": CERTIFICATE_TYPE
-						},
-
+						headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
 						body: cert.toBuffer()
 					})
 
@@ -1773,6 +1794,101 @@ describe("SignaturesController", function() {
 						SELECT * FROM initiative_signatures
 					`).must.be.empty()
 				})
+			})
+
+			it("must accept signature after deadline passed", function*() {
+				var cert = new Certificate(newCertificate({
+					subject: {
+						countryName: "EE",
+						organizationName: "ESTEID",
+						organizationalUnitName: "digital signature",
+						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
+						surname: "SMITH",
+						givenName: "JOHN",
+						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
+					},
+
+					issuer: VALID_ISSUERS[0],
+					publicKey: JOHN_RSA_KEYS.publicKey
+				}))
+
+				var initiativePath = `/initiatives/${this.initiative.uuid}`
+				var signing = yield this.request(`${initiativePath}/signatures`, {
+					method: "POST",
+					headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
+					body: cert.toBuffer()
+				})
+
+				signing.statusCode.must.equal(202)
+				signing.statusMessage.must.equal("Signing")
+
+				var {xades} = signablesDb.read(sql`SELECT * FROM initiative_signables`)
+
+				this.router.post(TIMEMARK_URL.path, function(req, res) {
+					req.headers.host.must.equal(TIMEMARK_URL.host)
+					res.setHeader("Content-Type", "application/ocsp-response")
+					res.end(Ocsp.parse(newOcspResponse(cert)).toBuffer())
+				})
+
+				initiativesDb.update(this.initiative, {signing_ends_at: new Date})
+
+				var signed = yield this.request(signing.headers.location, {
+					method: "PUT",
+
+					headers: {
+						Accept: `application/x-empty, ${ERR_TYPE}`,
+						"Content-Type": SIGNATURE_TYPE
+					},
+
+					body: signWithRsa(JOHN_RSA_KEYS.privateKey, xades.signable)
+				})
+
+				signed.statusCode.must.equal(204)
+				signed.statusMessage.must.equal("Signed")
+			})
+
+			it("must reject signature if initiative not in sign phase", function*() {
+				var cert = new Certificate(newCertificate({
+					subject: {
+						countryName: "EE",
+						organizationName: "ESTEID",
+						organizationalUnitName: "digital signature",
+						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
+						surname: "SMITH",
+						givenName: "JOHN",
+						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
+					},
+
+					issuer: VALID_ISSUERS[0],
+					publicKey: JOHN_RSA_KEYS.publicKey
+				}))
+
+				var initiativePath = `/initiatives/${this.initiative.uuid}`
+				var signing = yield this.request(`${initiativePath}/signatures`, {
+					method: "POST",
+					headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
+					body: cert.toBuffer()
+				})
+
+				signing.statusCode.must.equal(202)
+				signing.statusMessage.must.equal("Signing")
+
+				initiativesDb.update(this.initiative, {
+					phase: "parliament",
+					signing_ends_at: new Date
+				})
+
+				var signed = yield this.request(signing.headers.location, {
+					method: "PUT",
+
+					headers: {
+						Accept: `application/x-empty, ${ERR_TYPE}`,
+						"Content-Type": SIGNATURE_TYPE
+					}
+				})
+
+				signed.statusCode.must.equal(405)
+				signed.statusMessage.must.equal("Signing Ended")
 			})
 		})
 
@@ -1900,6 +2016,28 @@ describe("SignaturesController", function() {
 					xades: String(xades),
 					created_from: LONDON_GEO
 				})])
+			})
+
+			it("must respond with 405 if initiative signing finished", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					signing_ends_at: new Date
+				}))
+
+				var initiativePath = `/initiatives/${initiative.uuid}`
+				var signing = yield this.request(initiativePath + "/signatures", {
+					method: "POST",
+
+					form: {
+						method: "mobile-id",
+						personalId: ADULT_PERSONAL_ID,
+						phoneNumber: "+37200000766"
+					}
+				})
+
+				signing.statusCode.must.equal(405)
+				signing.statusMessage.must.equal("Signing Ended")
 			})
 
 			it("must respond with 422 given certificate from untrusted issuer",
@@ -2055,8 +2193,6 @@ describe("SignaturesController", function() {
 
 						var {xades} = signablesDb.read(sql`
 							SELECT * FROM initiative_signables
-							ORDER BY created_at DESC
-							LIMIT 1
 						`)
 
 						respond({
@@ -2120,8 +2256,6 @@ describe("SignaturesController", function() {
 
 							var {xades} = signablesDb.read(sql`
 								SELECT * FROM initiative_signables
-								ORDER BY created_at DESC
-								LIMIT 1
 							`)
 
 							respond({
@@ -2584,6 +2718,23 @@ describe("SignaturesController", function() {
 				})])
 			})
 
+			it("must respond with 405 if initiative signing finished", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					signing_ends_at: new Date
+				}))
+
+				var initiativePath = `/initiatives/${initiative.uuid}`
+				var signing = yield this.request(initiativePath + "/signatures", {
+					method: "POST",
+					form: {method: "smart-id", personalId: ADULT_PERSONAL_ID}
+				})
+
+				signing.statusCode.must.equal(405)
+				signing.statusMessage.must.equal("Signing Ended")
+			})
+
 			it("must respond with 422 given certificate from untrusted issuer",
 				function*() {
 				var issuer = tsl.getBySubjectName([
@@ -2790,8 +2941,6 @@ describe("SignaturesController", function() {
 
 						var {xades} = signablesDb.read(sql`
 							SELECT * FROM initiative_signables
-							ORDER BY created_at DESC
-							LIMIT 1
 						`)
 
 						respond({
@@ -2859,8 +3008,6 @@ describe("SignaturesController", function() {
 
 							var {xades} = signablesDb.read(sql`
 								SELECT * FROM initiative_signables
-								ORDER BY created_at DESC
-								LIMIT 1
 							`)
 
 							respond({
@@ -3314,15 +3461,19 @@ describe("SignaturesController", function() {
 		})
 
 		it("must not delete signature if signing finished", function*() {
+			var initiative = initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "sign",
+				signing_ends_at: new Date
+			}))
+
 			var signature = signaturesDb.create(new ValidSignature({
-				initiative_uuid: this.initiative.uuid,
+				initiative_uuid: initiative.uuid,
 				country: "EE",
 				personal_id: "38706181337"
 			}))
 
-			initiativesDb.update(this.initiative, {signing_ends_at: new Date})
-
-			var initiativePath = `/initiatives/${this.initiative.uuid}`
+			var initiativePath = `/initiatives/${initiative.uuid}`
 			var path = initiativePath + "/signatures/EE38706181337"
 			path += "?token=" + signature.token.toString("hex")
 			var res = yield this.request(path, {method: "DELETE"})
@@ -3345,9 +3496,7 @@ function* signWithIdCard(router, request, initiative, cert) {
 
 	signing.statusCode.must.equal(202)
 
-	var {xades} = signablesDb.read(sql`
-		SELECT * FROM initiative_signables ORDER BY created_at DESC LIMIT 1
-	`)
+	var {xades} = signablesDb.read(sql`SELECT * FROM initiative_signables`)
 
 	router.post(TIMEMARK_URL.path, function(req, res) {
 		req.headers.host.must.equal(TIMEMARK_URL.host)
@@ -3381,7 +3530,7 @@ function* signWithMobileId(router, request, initiative, cert, res) {
 			res.writeHead(200)
 
 			var {xades} = signablesDb.read(sql`
-				SELECT xades FROM initiative_signables ORDER BY created_at DESC LIMIT 1
+				SELECT xades FROM initiative_signables
 			`)
 
 			respond({
@@ -3458,7 +3607,7 @@ function* signWithSmartId(router, request, initiative, cert, res) {
 			res.writeHead(200)
 
 			var {xades} = signablesDb.read(sql`
-				SELECT xades FROM initiative_signables ORDER BY created_at DESC LIMIT 1
+				SELECT xades FROM initiative_signables
 			`)
 
 			respond({

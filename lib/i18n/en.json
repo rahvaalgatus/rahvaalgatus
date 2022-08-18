@@ -35,6 +35,7 @@
 	"BTN_VOTE_SIGN_WITH_MOBILE_ID": "Sign with Mobile-Id",
 	"BTN_VOTE_SIGN_WITH_SMART_ID": "Sign with Smart-Id",
 	"CANCEL_INITIATIVE_INFO": "Cancel",
+	"CANNOT_SIGN_SIGNING_ENDED": "Sorry, but the signing phase has already ended.",
 	"CERTIFICATE_EXPIRED": "Unfortunately your certificat has expired.",
 	"CERTIFICATE_NOT_YET_VALID": "Unfortunately your certificate does not seem to be valid.",
 	"COAUTHORS_PAGE_ADD_ANOTHER_BUTTON": "Add Another Coauthor",
