@@ -217,6 +217,8 @@ function parse(obj) {
 function withSubscription(get, req, res, next) {
 	var [uuid, token] = get(req)
 
+	// Cannot hash the token as it's needed for emailing, but could XOR it with
+	// something secret to reduce timing leaks.
 	req.subscription = subscriptionsDb.read(sql`
 		SELECT * FROM initiative_subscriptions
 		WHERE initiative_uuid ${uuid ? sql`= ${uuid}` : sql`IS NULL`}

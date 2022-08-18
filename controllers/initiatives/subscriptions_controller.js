@@ -144,6 +144,8 @@ exports.router.get("/new", function(req, res, next) {
 exports.router.use("/:token", function(req, res, next) {
 	var initiative = req.initiative
 
+	// Cannot hash the token as it's needed for emailing, but could XOR it with
+	// something secret to reduce timing leaks.
 	req.subscription = subscriptionsDb.read(sql`
 		SELECT * FROM initiative_subscriptions
 		WHERE initiative_uuid = ${initiative.uuid}
