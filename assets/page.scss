@@ -3975,15 +3975,20 @@ strong {
 		}
 	}
 
-	#import-initiatives-from-other-accounts-info {
-		font-size: 1.5rem;
-		line-height: 1.4;
+	#my-initiatives {
+		#import-initiatives-from-other-accounts-info {
+			font-size: 1.5rem;
+			line-height: 1.4;
 
-		margin-right: 2rem;
-		margin-left: $initiative-width + 2rem;
-		@include tablet { margin-left: 0; }
+			margin-right: 2rem;
+			@include tablet { margin-left: 0; }
 
-		a { color: $link-color; text-decoration: underline; }
+			a { color: $link-color; text-decoration: underline; }
+		}
+
+		.initiatives + #import-initiatives-from-other-accounts-info {
+			margin-left: $initiative-width + 2rem;
+		}
 	}
 }
 
