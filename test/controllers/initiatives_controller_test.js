@@ -4455,6 +4455,27 @@ describe("InitiativesController", function() {
 				res.body.must.not.include("donate-form")
 			})
 
+			it("must not show thanks if signing finished", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					signing_ends_at: new Date
+				}))
+
+				signaturesDb.create(new ValidSignature({
+					initiative_uuid: initiative.uuid,
+					country: this.user.country,
+					personal_id: this.user.personal_id
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+				res.body.must.not.include(t("REVOKE_SIGNATURE"))
+				res.body.must.not.include(t("THANKS_FOR_SIGNING"))
+				res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+				res.body.must.not.include("donate-form")
+			})
+
 			it("must show delete signature button if signed", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
