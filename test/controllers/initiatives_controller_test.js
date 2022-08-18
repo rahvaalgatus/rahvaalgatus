@@ -4476,6 +4476,32 @@ describe("InitiativesController", function() {
 				res.body.must.not.include("donate-form")
 			})
 
+			_.without(PHASES, "edit", "sign").forEach(function(phase) {
+				it(`must not show thanks in ${phase} phase`, function*() {
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: phase,
+
+						// Just in case add a future deadline for signing to ensure the
+						// phase is also checked.
+						signing_ends_at: DateFns.addDays(new Date, 1)
+					}))
+
+					signaturesDb.create(new ValidSignature({
+						initiative_uuid: initiative.uuid,
+						country: this.user.country,
+						personal_id: this.user.personal_id
+					}))
+
+					var res = yield this.request("/initiatives/" + initiative.uuid)
+					res.statusCode.must.equal(200)
+					res.body.must.not.include(t("REVOKE_SIGNATURE"))
+					res.body.must.not.include(t("THANKS_FOR_SIGNING"))
+					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+					res.body.must.not.include("donate-form")
+				})
+			})
+
 			it("must show delete signature button if signed", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
