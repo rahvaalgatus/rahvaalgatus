@@ -79,6 +79,70 @@ describe("Web", function() {
 			cookies.csrf_token.httpOnly.must.be.true()
 			cookies.csrf_token.extensions.must.include("SameSite=Lax")
 		})
+
+		it("must accept request given valid CSRF token in header", function*() {
+			var res = yield this.request("/", {
+				method: "POST",
+				headers: {"X-CSRF-Token": "b00b13"},
+				cookies: {csrf_token: "b00b13"}
+			})
+
+			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Not Found")
+		})
+
+		it("must respond with 412 given invalid CSRF token in header", function*() {
+			var res = yield this.request("/", {
+				method: "POST",
+				headers: {"X-CSRF-Token": "deadbeef"},
+				cookies: {csrf_token: "b00b13"}
+			})
+
+			res.statusCode.must.equal(412)
+			res.statusMessage.must.equal("Bad CSRF Token")
+		})
+
+		it("must accept request given valid CSRF token in query", function*() {
+			var res = yield this.request("/?csrf-token=b00b13", {
+				method: "POST",
+				cookies: {csrf_token: "b00b13"}
+			})
+
+			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Not Found")
+		})
+
+		it("must respond with 412 given invalid CSRF token in query", function*() {
+			var res = yield this.request("/?csrf-token=deadbeef", {
+				method: "POST",
+				cookies: {csrf_token: "b00b13"}
+			})
+
+			res.statusCode.must.equal(412)
+			res.statusMessage.must.equal("Bad CSRF Token")
+		})
+
+		it("must accept request given valid CSRF token in body", function*() {
+			var res = yield this.request("/", {
+				method: "POST",
+				cookies: {csrf_token: "b00b13"},
+				form: {_csrf_token: "b00b13"}
+			})
+
+			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Not Found")
+		})
+
+		it("must respond with 412 given invalid CSRF token in body", function*() {
+			var res = yield this.request("/", {
+				method: "POST",
+				cookies: {csrf_token: "b00b13"},
+				form: {_csrf_token: "deadbeef"}
+			})
+
+			res.statusCode.must.equal(412)
+			res.statusMessage.must.equal("Bad CSRF Token")
+		})
 	})
 
 	describe("session", function() {
