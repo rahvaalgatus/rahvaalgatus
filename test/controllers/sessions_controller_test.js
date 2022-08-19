@@ -299,6 +299,7 @@ describe("SessionsController", function() {
 					cookies.session_token.path.must.equal("/")
 					cookies.session_token.domain.must.equal(Config.cookieDomain)
 					cookies.session_token.httpOnly.must.be.true()
+					cookies.session_token.extensions.must.include("SameSite=Lax")
 
 					cookies.session_token.maxAge.must.equal(
 						SESSION_LENGTH_IN_DAYS * 86400

@@ -452,6 +452,7 @@ exports.router.post("/",
 		res.cookie(Config.sessionCookieName, sessionToken.toString("hex"), {
 			httpOnly: true,
 			secure: req.secure,
+			sameSite: "lax",
 			domain: Config.cookieDomain,
 			maxAge: 120 * 86400 * 1000
 		})
