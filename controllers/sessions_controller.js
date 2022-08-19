@@ -453,7 +453,7 @@ exports.router.post("/",
 			httpOnly: true,
 			secure: req.secure,
 			domain: Config.cookieDomain,
-			maxAge: 365 * 86400 * 1000
+			maxAge: 120 * 86400 * 1000
 		})
 
 		csrf.reset(req, res)

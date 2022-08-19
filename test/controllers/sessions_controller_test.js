@@ -34,6 +34,7 @@ var {VALID_ISSUERS} = require("root/test/fixtures")
 var {PHONE_NUMBER_TRANSFORMS} = require("root/test/fixtures")
 var PERSONAL_ID = "38706181337"
 var SESSION_ID = "7c8bdd56-6772-4264-ba27-bf7a9ef72a11"
+var SESSION_LENGTH_IN_DAYS = 120
 
 var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
 	subject: {
@@ -298,6 +299,10 @@ describe("SessionsController", function() {
 					cookies.session_token.path.must.equal("/")
 					cookies.session_token.domain.must.equal(Config.cookieDomain)
 					cookies.session_token.httpOnly.must.be.true()
+
+					cookies.session_token.maxAge.must.equal(
+						SESSION_LENGTH_IN_DAYS * 86400
+					)
 
 					var cookieToken = Buffer.from(cookies.session_token.value, "hex")
 					var session = sessionsDb.read(sql`SELECT * FROM sessions`)

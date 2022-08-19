@@ -1,4 +1,10 @@
 var _ = require("root/lib/underscore")
+var DateFns = require("date-fns")
+var ValidUser = require("root/test/valid_user")
+var ValidSession = require("root/test/valid_session")
+var usersDb = require("root/db/users_db")
+var sessionsDb = require("root/db/sessions_db")
+var SESSION_LENGTH_IN_DAYS = 120
 
 describe("Web", function() {
 	require("root/test/web")()
@@ -58,6 +64,75 @@ describe("Web", function() {
 				;[301, 302].must.include(this.res.statusCode)
 				this.res.headers.location.must.equal(to)
 			})
+		})
+	})
+
+	describe("session", function() {
+		require("root/test/time")()
+
+		it("must authenticate given valid session token", function*() {
+			var user = usersDb.create(new ValidUser)
+			var session = new ValidSession({user_id: user.id})
+			session = _.assign(sessionsDb.create(session), {token: session.token})
+			var res = yield this.request("/user", {session: session})
+			res.statusCode.must.equal(200)
+		})
+
+		it("must not authenticate given invalid session token", function*() {
+			var user = usersDb.create(new ValidUser)
+			var session = new ValidSession({user_id: user.id})
+			session = _.assign(sessionsDb.create(session), {token: session.token})
+			session.token[0] = ~session.token[0]
+			var res = yield this.request("/user", {session: session})
+			res.statusCode.must.equal(401)
+			res.statusMessage.must.equal("Unauthorized")
+		})
+
+		it("must not authenticate given deleted session", function*() {
+			var user = usersDb.create(new ValidUser)
+
+			var session = new ValidSession({
+				user_id: user.id,
+				deleted_at: new Date
+			})
+
+			session = _.assign(sessionsDb.create(session), {token: session.token})
+
+			var res = yield this.request("/user", {session: session})
+			res.statusCode.must.equal(401)
+			res.statusMessage.must.equal("Unauthorized")
+		})
+
+		it(`must authenticate given session token newer than ${SESSION_LENGTH_IN_DAYS} days`, function*() {
+			var user = usersDb.create(new ValidUser)
+
+			var session = new ValidSession({
+				user_id: user.id,
+
+				created_at: DateFns.addSeconds(
+					DateFns.addDays(new Date, -SESSION_LENGTH_IN_DAYS),
+					1
+				)
+			})
+
+			session = _.assign(sessionsDb.create(session), {token: session.token})
+			var res = yield this.request("/user", {session: session})
+			res.statusCode.must.equal(200)
+		})
+
+		it(`must not authenticate given session token older than ${SESSION_LENGTH_IN_DAYS} days`, function*() {
+			var user = usersDb.create(new ValidUser)
+
+			var session = new ValidSession({
+				user_id: user.id,
+				created_at: DateFns.addDays(new Date, -SESSION_LENGTH_IN_DAYS)
+			})
+
+			session = _.assign(sessionsDb.create(session), {token: session.token})
+
+			var res = yield this.request("/user", {session: session})
+			res.statusCode.must.equal(401)
+			res.statusMessage.must.equal("Unauthorized")
 		})
 	})
 
