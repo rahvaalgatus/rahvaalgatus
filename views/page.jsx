@@ -192,10 +192,6 @@ function Page(attrs, children) {
 			<main id="main">{children}</main>
 
 			<Footer t={t} siteUrl={siteUrl} />
-
-			{ENV === "production" && Config.googleAnalyticsAccount ?
-				<GoogleAnalytics accountId={Config.googleAnalyticsAccount} />
-			: null}
 		</body>
 	</html>
 }
@@ -363,19 +359,6 @@ function LiveReload(attrs) {
 		async
 		defer
 	/>
-}
-
-function GoogleAnalytics(attrs) {
-	var id = attrs.accountId
-
-	return <Fragment>
-		<script>{javascript`
-			function args() { return arguments }
-			window.dataLayer = [args("js", new Date), args("config", "${id}")]
-		`}</script>
-
-		<script src={"https://www.googletagmanager.com/gtag/js?id=" + id} async />
-	</Fragment>
 }
 
 function DatePickerInput(attrs) {
