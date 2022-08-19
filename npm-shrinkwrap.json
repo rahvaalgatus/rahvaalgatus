@@ -899,11 +899,6 @@
                 }
               }
             },
-            "mime": {
-              "version": "1.6.0",
-              "from": "mime@1.6.0",
-              "resolved": "https://registry.npmjs.org/mime/-/mime-1.6.0.tgz"
-            },
             "ms": {
               "version": "2.1.1",
               "from": "ms@2.1.1",
@@ -2575,9 +2570,9 @@
       }
     },
     "mime": {
-      "version": "1.3.4",
-      "from": "https://registry.npmjs.org/mime/-/mime-1.3.4.tgz",
-      "resolved": "https://registry.npmjs.org/mime/-/mime-1.3.4.tgz"
+      "version": "1.6.0",
+      "from": "mime@1.6.0",
+      "resolved": "https://registry.npmjs.org/mime/-/mime-1.6.0.tgz"
     },
     "mitm": {
       "version": "1.7.2",
