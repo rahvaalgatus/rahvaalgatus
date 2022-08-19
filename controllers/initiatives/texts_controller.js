@@ -5,13 +5,10 @@ var Initiative = require("root/lib/initiative")
 var initiativesDb = require("root/db/initiatives_db")
 var textsDb = require("root/db/initiative_texts_db")
 var sql = require("sqlate")
-var parseBody = require("body-parser").raw
-var {hasSignatureType} = require("./signatures_controller")
 var LANGUAGES = require("root/config").languages
 exports.parse = parse
 
 exports.router = Router({mergeParams: true})
-exports.router.use(parseBody({type: hasSignatureType}))
 
 exports.router.use(function(req, _res, next) {
 	var user = req.user
