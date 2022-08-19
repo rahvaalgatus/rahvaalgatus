@@ -35,7 +35,6 @@ var reportError = require("root").errorReporter
 var sessionsDb = require("root/db/sessions_db")
 var usersDb = require("root/db/users_db")
 var authenticationsDb = require("root/db/authentications_db")
-var SESSION_COOKIE_NAME = Config.sessionCookieName
 var ENV = process.env.ENV
 var SITE_HOSTNAME = Url.parse(Config.url).hostname
 var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
@@ -450,7 +449,7 @@ exports.router.post("/",
 			authentication_id: authentication.id
 		})
 
-		res.cookie(SESSION_COOKIE_NAME, sessionToken.toString("hex"), {
+		res.cookie(Config.sessionCookieName, sessionToken.toString("hex"), {
 			httpOnly: true,
 			secure: req.secure,
 			domain: Config.cookieDomain,
@@ -518,7 +517,7 @@ exports.router.delete("/:id", function(req, res) {
 	sessionsDb.update(session, {deleted_at: new Date})
 
 	if (req.session.id == session.id) {
-		res.clearCookie(SESSION_COOKIE_NAME, {
+		res.clearCookie(Config.sessionCookieName, {
 			httpOnly: true,
 			secure: req.secure,
 			domain: Config.cookieDomain

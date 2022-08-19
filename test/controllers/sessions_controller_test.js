@@ -22,7 +22,6 @@ var tsl = require("root").tsl
 var SITE_HOSTNAME = Url.parse(Config.url).hostname
 var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
 var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
-var SESSION_COOKIE_NAME = Config.sessionCookieName
 var MOBILE_ID_URL = Url.parse("https://mid.sk.ee/mid-api/")
 var SMART_ID_URL = Url.parse("https://rp-api.smart-id.com/v1/")
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
@@ -2144,7 +2143,7 @@ describe("SessionsController", function() {
 			res.headers.location.must.equal("/")
 
 			var cookies = parseCookies(res.headers["set-cookie"])
-			cookies[SESSION_COOKIE_NAME].expires.must.be.lte(new Date)
+			cookies[Config.sessionCookieName].expires.must.be.lte(new Date)
 
 			res = yield this.request(res.headers.location, {
 				headers: {Cookie: serializeCookies(cookies)}
@@ -2170,7 +2169,7 @@ describe("SessionsController", function() {
 			res.statusCode.must.equal(303)
 
 			var cookies = parseCookies(res.headers["set-cookie"])
-			cookies.must.not.have.property(SESSION_COOKIE_NAME)
+			cookies.must.not.have.property(Config.sessionCookieName)
 
 			res = yield this.request(res.headers.location, {
 				headers: {Cookie: serializeCookies(cookies)}
