@@ -12,6 +12,7 @@ var {pseudoDateTime} = require("root/lib/crypto")
 var parseHtml = require("root/test/html").parse
 var {parseCookies} = require("root/test/web")
 var {serializeCookies} = require("root/test/web")
+var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var t = require("root/lib/i18n").t.bind(null, "et")
 
 describe("SubscriptionsController", function() {
@@ -221,9 +222,19 @@ describe("SubscriptionsController", function() {
 			subscription.update_token.must.exist()
 
 			this.emails.length.must.equal(1)
-			this.emails[0].envelope.to.must.eql(["user@example.com"])
-			var body = String(this.emails[0].message)
-			body.must.include(`confirmation_token=3D${subscription.update_token}`)
+			var email = this.emails[0]
+			email.envelope.to.must.eql(["user@example.com"])
+
+			email.headers.subject.must.equal(
+				t("CONFIRM_INITIATIVES_SUBSCRIPTION_TITLE")
+			)
+
+			email.body.must.equal(
+				renderEmail("CONFIRM_INITIATIVES_SUBSCRIPTION_BODY", {
+					url: `${this.url}/subscriptions/new?confirmation_token=` +
+						subscription.update_token
+				})
+			)
 
 			var cookies = parseCookies(res.headers["set-cookie"])
 			res = yield this.request(res.headers.location, {

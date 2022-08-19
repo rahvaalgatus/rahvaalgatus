@@ -69,7 +69,7 @@
 	"CONFIRM_EMAIL_SUBJECT": "Kinnita Rahvaalgatuse meiliaadress",
 	"CONFIRM_INITIATIVES_SUBSCRIPTION": "Üks samm veel — palun kinnita oma meiliaadress. Saatsime selleks su meilile ühe lingi.\nKui kinnitusmeili postkastist ei leia, vaata rämpsposti kausta. Kui ikka ei leia, võta meiega ühendust.",
 	"CONFIRM_INITIATIVES_SUBSCRIPTION_BODY": "Tere\n\nTellisid teavitused uutest algatustest. Palun kinnita oma meiliaadress, minnes järgmisele lehele:\n{{url}}\n\nKui mõtlesid ümber või tegu on eksimusega, võid kirja kustutada. Ilma kinnituseta teavitusi ei saadeta.\n\n--\nRahvaalgatus.ee\n{{siteUrl}}\n{{facebookUrl}}",
-	"CONFIRM_INITIATIVES_SUBSCRIPTION_TITLE": "Kinnita oma meiliaadress Rahvaalgatus.ee-lt teavituste saamiseks ",
+	"CONFIRM_INITIATIVES_SUBSCRIPTION_TITLE": "Kinnita oma meiliaadress Rahvaalgatus.ee-lt teavituste saamiseks",
 	"CONFIRM_INITIATIVE_SUBSCRIPTION": "Üks samm veel — palun kinnita oma meiliaadress. Saatsime selleks su meilile ühe lingi.\nKui kinnitusmeili postkastist ei leia, vaata rämpsposti kausta. Kui ikka ei leia, võta meiega ühendust.",
 	"CONFIRM_INITIATIVE_SUBSCRIPTION_BODY": "Tere\n\nTellisid algatuse \"{{initiativeTitle}}\" ({{initiativeUrl}}) teavitused. Palun kinnita oma meiliaadress minnes järgmisele lehele:\n{{url}}\n\nKui mõtlesid ümber või tegu on eksimusega, võid kirja kustutada. Ilma kinnituseta teavitusi ei saadeta. \n\n--\nRahvaalgatus.ee\n{{siteUrl}}\n{{facebookUrl}}",
 	"CONFIRM_INITIATIVE_SUBSCRIPTION_TITLE": "Kinnita oma meiliaadress algatuse \"{{initiativeTitle}}\" teavitusteks",

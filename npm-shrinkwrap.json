@@ -2914,9 +2914,9 @@
       }
     },
     "nodemailer": {
-      "version": "4.7.0",
-      "from": "nodemailer@latest",
-      "resolved": "https://registry.npmjs.org/nodemailer/-/nodemailer-4.7.0.tgz"
+      "version": "6.7.8",
+      "from": "nodemailer@>=6.0.0 <7.0.0",
+      "resolved": "https://registry.npmjs.org/nodemailer/-/nodemailer-6.7.8.tgz"
     },
     "oolong": {
       "version": "1.15.1",

@@ -528,10 +528,33 @@ describe("ParliamentSyncCli", function() {
 		}])
 
 		this.emails.length.must.equal(1)
-		this.emails[0].envelope.to.must.eql(emails)
-		var msg = String(this.emails[0].message)
-		msg.match(/^Subject: .*/m)[0].must.include("Teeme_elu_paremaks!")
-		subscriptions.slice(2).forEach((s) => msg.must.include(s.update_token))
+		var email = this.emails[0]
+		email.envelope.to.must.eql(emails)
+
+		email.headers.subject.must.equal(
+			t("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_TITLE", {
+				initiativeTitle: initiative.title,
+				eventDate: formatDate("numeric", eventDates[2])
+			})
+		)
+
+		email.body.must.equal(
+			renderEmail("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_BODY", {
+				initiativeTitle: initiative.title,
+				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+				eventsUrl: `${Config.url}/initiatives/${initiative.uuid}#events`,
+				unsubscribeUrl: `${Config.url}%recipient.unsubscribeUrl%`,
+
+				eventTitles: outdent`
+					${formatDate("numeric", eventDates[0])} — ${t("PARLIAMENT_RECEIVED")}
+					${formatDate("numeric", eventDates[1])} — ${t("PARLIAMENT_ACCEPTED")}
+					${formatDate("numeric", eventDates[2])} — ${t("PARLIAMENT_FINISHED")}
+				`
+			})
+		)
+
+		var vars = email.headers["x-mailgun-recipient-variables"]
+		subscriptions.slice(2).forEach((s) => vars.must.include(s.update_token))
 	})
 
 	it("must not email subscribers if event occurred earlier than 3 months",

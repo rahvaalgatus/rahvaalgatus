@@ -11,6 +11,7 @@ var usersDb = require("root/db/users_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var initiativesDb = require("root/db/initiatives_db")
 var {pseudoDateTime} = require("root/lib/crypto")
+var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 
 describe("InitiativeSubscriptionsController", function() {
 	require("root/test/web")()
@@ -62,10 +63,29 @@ describe("InitiativeSubscriptionsController", function() {
 			subscription.update_token.must.exist()
 
 			this.emails.length.must.equal(1)
-			this.emails[0].envelope.to.must.eql(["user@example.com"])
-			var body = String(this.emails[0].message)
-			body.match(/^Subject: .*/m)[0].must.include(this.initiative.title)
-			body.must.include(`confirmation_token=3D${subscription.update_token}`)
+
+			this.emails.length.must.equal(1)
+			var email = this.emails[0]
+			email.envelope.to.must.eql(["user@example.com"])
+
+			email.headers.subject.must.equal(
+				t("CONFIRM_INITIATIVE_SUBSCRIPTION_TITLE", {
+					initiativeTitle: this.initiative.title
+				})
+			)
+
+			var initiativeUrl = `${this.url}/initiatives/${this.initiative.uuid}`
+			var subscriptionsUrl = initiativeUrl + "/subscriptions"
+
+			email.body.must.equal(
+				renderEmail("CONFIRM_INITIATIVE_SUBSCRIPTION_BODY", {
+					url: subscriptionsUrl + "/new?confirmation_token=" +
+						subscription.update_token,
+
+					initiativeTitle: this.initiative.title,
+					initiativeUrl: initiativeUrl,
+				})
+			)
 		})
 
 		it("must subscribe given an external initiative", function*() {
@@ -91,9 +111,14 @@ describe("InitiativeSubscriptionsController", function() {
 			subscriptions[0].initiative_uuid.must.equal(initiative.uuid)
 
 			this.emails.length.must.equal(1)
-			this.emails[0].envelope.to.must.eql(["user@example.com"])
-			var body = String(this.emails[0].message)
-			body.match(/^Subject: .*/m)[0].must.include(initiative.title)
+			var email = this.emails[0]
+			email.envelope.to.must.eql(["user@example.com"])
+
+			email.headers.subject.must.equal(
+				t("CONFIRM_INITIATIVE_SUBSCRIPTION_TITLE", {
+					initiativeTitle: initiative.title
+				})
+			)
 		})
 
 		describe("when logged in", function() {
