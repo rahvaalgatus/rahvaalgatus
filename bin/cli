@@ -28,7 +28,6 @@ if (args["--help"]) return void process.stdout.write(USAGE_TEXT.trimLeft())
 var cmd = args["<command>"]
 if (cmd == null) return void process.stdout.write(USAGE_TEXT.trimLeft())
 
-var co = require("co")
 require("root").logger = console
 
 var CLIS = {
@@ -48,10 +47,10 @@ var CLIS = {
 
 var cmdPath = CLIS[cmd]
 if (cmdPath == null) return void die("No such command: %s", cmd)
+var cmdFn = require(cmdPath)
 
-co(function*() {
-	yield require(cmdPath)(concat(cmd, args["<args>"]))
-}).catch(handleError)
+try { Promise.resolve(cmdFn(concat(cmd, args["<args>"]))).catch(handleError) }
+catch (err) { handleError(err) }
 
 function handleError(err) {
 	require("root/lib/console_error_reporter")(err)
