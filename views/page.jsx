@@ -329,7 +329,7 @@ function Sentry(attrs) {
 	var user = attrs.req.user
 
 	return <Fragment>
-		<script src="https://cdn.ravenjs.com/3.9.1/raven.min.js" />
+		<script src="/assets/raven.js" />
 
 		<script>{javascript`
 			Raven.config(${attrs.dsn}, {
