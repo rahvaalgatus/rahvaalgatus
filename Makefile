@@ -11,7 +11,8 @@ BUNDLE = bundle
 TRANSLATIONS_URL = https://docs.google.com/spreadsheets/d/1JKPUNp8Y_8Aigq7eGJXtWT6nZFhd31k2Ht3AjC-i-Q8/gviz/tq?tqx=out:json&tq&gid=0
 LOCAL_GOVERNMENTS_URL = https://docs.google.com/spreadsheets/d/1DynXZ8Um9TsiYPDaYW3-RTgaPy8hsdq9jj72G41yrVE/gviz/tq?tqx=out:json&tq&gid=0
 JQ_OPTS = --tab
-SHANGE = vendor/shange -f "config/$(ENV).sqlite3"
+DB = config/$(ENV).sqlite3
+SHANGE = vendor/shange -f "$(DB)"
 WEB_PORT = 3000
 ADM_PORT = $(shell expr $(WEB_PORT) + 1)
 LIVERELOAD_PORT = 35731
@@ -135,10 +136,10 @@ rebuild:
 config/database.sql:
 	@$(SHANGE) schema > config/database.sql
 
-config/%.sqlite3:
+%.sqlite3:
 	sqlite3 "$@" < config/database.sql
 
-db/create: config/$(ENV).sqlite3
+db/create: $(DB)
 
 db/status:
 	@$(SHANGE) status

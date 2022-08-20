@@ -3,6 +3,8 @@ process.title = "rahvaalgatus/web"
 
 if (process.env.CONFIG) require("root").config =
 	require("root/lib/config").read(process.env.CONFIG)
+if (process.env.DB)
+	require("root").sqlite = require("root/lib/sqlite")(process.env.DB)
 
 var _ = require("root/lib/underscore")
 var Url = require("url")

@@ -12,6 +12,7 @@ Options:
     -h, --help        Display this help and exit.
 		--env=ENV         Set the environment. Defaults to $ENV or "development".
     --config=PATH     Use the given configuration instead of "config/$ENV.json".
+    --db=PATH         Use the given database instead of "config/$ENV.sqlite3".
 
 Commands:
     parliament-sync       Sync initiatives against the parliament API.
@@ -31,6 +32,9 @@ if (args["--env"] != null) process.env.ENV = args["--env"]
 
 if (args["--config"] != null) require("root").config =
 	require("root/lib/config").read(args["--config"])
+
+if (args["--db"] != null)
+	require("root").sqlite = require("root/lib/sqlite")(args["--db"])
 
 var cmd = args["<command>"]
 if (cmd == null) return void process.stdout.write(USAGE_TEXT.trimLeft())
