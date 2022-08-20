@@ -1,6 +1,6 @@
 var _ = require("root/lib/underscore")
 var Url = require("url")
-var Config = require("root/config")
+var Config = require("root").config
 var Router = require("express").Router
 var Crypto = require("crypto")
 var HttpError = require("standard-http-error")

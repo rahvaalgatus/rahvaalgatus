@@ -11,7 +11,7 @@ var signaturesDb = require("root/db/initiative_signatures_db")
 var cosSignaturesDb = require("root/db/initiative_citizenos_signatures_db")
 var sql = require("sqlate")
 var {PHASES} = require("root/lib/initiative")
-var {anonymizeSignaturesReceivedAfterDays} = require("root/config")
+var {anonymizeSignaturesReceivedAfterDays} = require("root").config
 
 describe("InitiativeSignaturesCli", function() {
 	require("root/test/db")()

@@ -1,6 +1,6 @@
 var Url = require("url")
 var Path = require("path")
-var Config = require("root/config")
+var Config = require("root").config
 var DateFns = require("date-fns")
 var ValidDemoSignature = require("root/test/valid_demo_signature")
 var Certificate = require("undersign/lib/certificate")

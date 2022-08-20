@@ -1,19 +1,23 @@
 var _ = require("root/lib/underscore")
 var Fs = require("fs")
 var Path = require("path")
-var Config = require("root/config")
 var lazy = require("lazy-object").defineLazyProperty
 var ENV = process.env.ENV
 
 // Ensure __proto__ security fix is loaded everywhere.
 void require("root/lib/underscore")
 
+lazy(exports, "config", function() {
+	var Config = require("root/lib/config")
+	return Config.read(__dirname + "/config/" + process.env.ENV + ".json")
+})
+
 lazy(exports, "errorReporter", function() {
   switch (ENV) {
     case "staging":
     case "production":
 			var ErrorReporter = require("root/lib/error_reporter")
-			return new ErrorReporter(Config.sentryDsn)
+			return new ErrorReporter(exports.config.sentryDsn)
 
 		case "test": return function() {}
 		default: return require("root/lib/console_error_reporter")
@@ -36,6 +40,8 @@ lazy(exports, "sqlite", function() {
 })
 
 lazy(exports, "sendEmail", function() {
+	var Config = exports.config
+
   switch (ENV) {
 		case "test": return require("root/lib/test_emailer")(Config.email)
 		default: return require("root/lib/emailer")(Config.email)
@@ -51,8 +57,8 @@ lazy(exports, "logger", function() {
 
 lazy(exports, "mobileId", function() {
 	var MobileId = require("undersign/lib/mobile_id")
-	var user = Config.mobileIdUser
-	var password = Config.mobileIdPassword
+	var user = exports.config.mobileIdUser
+	var password = exports.config.mobileIdPassword
 
   switch (ENV) {
 		case "development":
@@ -63,8 +69,8 @@ lazy(exports, "mobileId", function() {
 
 lazy(exports, "smartId", function() {
 	var SmartId = require("undersign/lib/smart_id")
-	var user = Config.smartIdUser
-	var password = Config.smartIdPassword
+	var user = exports.config.smartIdUser
+	var password = exports.config.smartIdPassword
 
   switch (ENV) {
 		case "development":
@@ -115,15 +121,15 @@ lazy(exports, "hades", function() {
 
 	return new Hades({
 		certificates: exports.tsl,
-		timemarkUrl: Config.timemarkUrl,
-		timestampUrl: Config.timestampUrl
+		timemarkUrl: exports.config.timemarkUrl,
+		timestampUrl: exports.config.timestampUrl
 	})
 })
 
 lazy(exports, "geoip", function() {
 	var Maxmind = require("maxmind")
 
-	var path = Config.geoIpCityPath
+	var path = exports.config.geoIpCityPath
 	if (path == null) return Promise.resolve(null)
 	path = Path.resolve(__dirname, "config", path)
 

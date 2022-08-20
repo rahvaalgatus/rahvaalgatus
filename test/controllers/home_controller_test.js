@@ -1,6 +1,6 @@
 var _ = require("root/lib/underscore")
 var Url = require("url")
-var Config = require("root/config")
+var Config = require("root").config
 var Crypto = require("crypto")
 var DateFns = require("date-fns")
 var ValidInitiative = require("root/test/valid_initiative")

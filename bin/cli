@@ -9,7 +9,9 @@ var USAGE_TEXT = `
 Usage: cli [options] [<command> [<args>...]]
 
 Options:
-    -h, --help           Display this help and exit.
+    -h, --help        Display this help and exit.
+		--env=ENV         Set the environment. Defaults to $ENV or "development".
+    --config=PATH     Use the given configuration instead of "config/$ENV.json".
 
 Commands:
     parliament-sync       Sync initiatives against the parliament API.
@@ -24,6 +26,11 @@ For more help or to give feedback, please see https://github.com/rahvaalgatus .
 
 var args = Neodoc.run(USAGE_TEXT, {optionsFirst: true, versionFlags: []})
 if (args["--help"]) return void process.stdout.write(USAGE_TEXT.trimLeft())
+
+if (args["--env"] != null) process.env.ENV = args["--env"]
+
+if (args["--config"] != null) require("root").config =
+	require("root/lib/config").read(args["--config"])
 
 var cmd = args["<command>"]
 if (cmd == null) return void process.stdout.write(USAGE_TEXT.trimLeft())

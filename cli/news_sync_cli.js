@@ -5,7 +5,7 @@ var fetch = require("root/lib/fetch")
 var newsDb = require("root/db/news_db")
 var KOGU_ATOM_FEED = "https://kogu.ee/feed/atom/"
 var SOURCE = "kogu.ee"
-var UA = require("root/config").userAgent
+var UA = require("root").config.userAgent
 var sql = require("sqlate")
 
 fetch = require("fetch-defaults")(fetch, {

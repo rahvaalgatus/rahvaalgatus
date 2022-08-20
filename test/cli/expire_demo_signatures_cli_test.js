@@ -1,4 +1,4 @@
-var Config = require("root/config")
+var Config = require("root").config
 var ValidDemoSignature = require("root/test/valid_demo_signature")
 var DateFns = require("date-fns")
 var cli = require("root/cli/expire_demo_signatures_cli")

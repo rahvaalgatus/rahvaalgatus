@@ -1,4 +1,4 @@
-var Config = require("root/config")
+var Config = require("root").config
 var DateFns = require("date-fns")
 var sqlite = require("root").sqlite
 var sql = require("sqlate")

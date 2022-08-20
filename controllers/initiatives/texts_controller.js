@@ -5,7 +5,7 @@ var Initiative = require("root/lib/initiative")
 var initiativesDb = require("root/db/initiatives_db")
 var textsDb = require("root/db/initiative_texts_db")
 var sql = require("sqlate")
-var LANGUAGES = require("root/config").languages
+var LANGUAGES = require("root").config.languages
 exports.parse = parse
 
 exports.router = Router({mergeParams: true})

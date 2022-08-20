@@ -1,7 +1,7 @@
 /** @jsx Jsx */
 var _ = require("root/lib/underscore")
 var Jsx = require("j6pack/xml")
-var Config = require("root/config")
+var Config = require("root").config
 var t = require("root/lib/i18n").t.bind(null, "et")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var renderEventTitle = require("root/lib/event").renderTitle

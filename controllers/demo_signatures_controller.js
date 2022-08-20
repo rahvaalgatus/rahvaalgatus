@@ -1,6 +1,6 @@
 var _ = require("root/lib/underscore")
 var Asic = require("undersign/lib/asic")
-var Config = require("root/config")
+var Config = require("root").config
 var Router = require("express").Router
 var DateFns = require("date-fns")
 var MobileId = require("undersign/lib/mobile_id")

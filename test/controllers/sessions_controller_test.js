@@ -1,6 +1,6 @@
 var _ = require("root/lib/underscore")
 var Url = require("url")
-var Config = require("root/config")
+var Config = require("root").config
 var Crypto = require("crypto")
 var ValidUser = require("root/test/valid_user")
 var ValidAuthentication = require("root/test/valid_authentication")

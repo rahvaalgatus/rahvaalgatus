@@ -6,7 +6,7 @@ var Fragment = Jsx.Fragment
 var Time = require("root/lib/time")
 var DateFns = require("date-fns")
 var InitiativePage = require("./initiative_page")
-var Config = require("root/config")
+var Config = require("root").config
 var I18n = require("root/lib/i18n")
 var Flash = require("../page").Flash
 var Form = require("../page").Form
@@ -40,7 +40,7 @@ var EVENT_NOTIFICATIONS_SINCE = new Date(Config.eventNotificationsSince)
 var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
-var LANGUAGES = require("root/config").languages
+var LANGUAGES = require("root").config.languages
 exports = module.exports = ReadPage
 exports.InitiativeDestinationSelectView = InitiativeDestinationSelectView
 exports.SigningView = SigningView

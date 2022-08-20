@@ -1,5 +1,5 @@
 var I18n = require("root/lib/i18n")
-var Config = require("root/config")
+var Config = require("root").config
 var Neodoc = require("neodoc")
 var DateFns = require("date-fns")
 var initiativesDb = require("root/db/initiatives_db")

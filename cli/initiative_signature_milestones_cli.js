@@ -1,5 +1,5 @@
 var _ = require("root/lib/underscore")
-var Config = require("root/config")
+var Config = require("root").config
 var Subscription = require("root/lib/subscription")
 var DateFns = require("date-fns")
 var {getRequiredSignatureCount} = require("root/lib/initiative")

@@ -1,4 +1,4 @@
-var Config = require("root/config")
+var Config = require("root").config
 var DateFns = require("date-fns")
 var I18n = require("root/lib/i18n")
 var Initiative = require("root/lib/initiative")

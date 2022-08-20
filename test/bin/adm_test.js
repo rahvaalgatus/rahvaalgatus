@@ -1,4 +1,4 @@
-var Config = require("root/config")
+var Config = require("root").config
 
 describe("Adm", function() {
 	require("root/test/adm")()
