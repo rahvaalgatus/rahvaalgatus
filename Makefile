@@ -29,6 +29,8 @@ RSYNC_OPTS = \
 	--times \
 	--delete \
 	--prune-empty-dirs \
+	--perms \
+	--chmod=ug+rwX,Dg+s,Do=X,Fo=rX \
 	--exclude ".*" \
 	--exclude "/app/***" \
 	--exclude "/config/development.*" \
