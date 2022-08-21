@@ -3,6 +3,8 @@
 	"url": "https://rahvaalgatus.ee",
 	"parliamentSiteUrl": "https://riigikogu.rahvaalgatus.ee",
 	"localSiteUrl": "https://kohalik.rahvaalgatus.ee",
+	"idCardAuthenticationUrl": "https://idcard.rahvaalgatus.ee",
+	"idCardAuthenticationSecret": null,
 	"adminUrl": "https://admin.rahvaalgatus.ee",
 	"twitterUrl": "https://twitter.com/openESTassembly",
 	"facebookUrl": "https://facebook.com/rahvaalgatus",

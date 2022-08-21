@@ -222,6 +222,8 @@
 	"HOME_PAGE_STATISTICS_N_SENT_IN_LAST_30_DAYS": "<b>{{sent}}</b> in the last 30 days\n<b>{{external}}</b> sent on paper",
 	"HOME_PAGE_STATISTICS_PARLIAMENT": "In Parliament",
 	"HOME_PAGE_STATISTICS_SIGNATURES": "Signatures",
+	"ID_CARD_ERROR_AUTHENTICATION_FAILED": "Unfortunately authentication didn't succeed. It may be because of a technical issue or an expired ID-card. If you know it works on other sites and think it's a mistake, please contact us!",
+	"ID_CARD_ERROR_CERTIFICATE_MISSING": "It looks like your browser didn't start the authentication or you cancelled it. Have you installed the ID-card software? Does it work on other sites? Sometimes it may help to restart the browser. If you need help, please contact us!",
 	"INITIATIVES_SUBSCRIPTION_DELETED": "You have been unsubscribed from notifications.",
 	"INITIATIVE_404_BODY": "This may be a broken link or just an unpublished initiative. If you think you should have access to the initiative, ask the author of the initiative to check if you've been given access to it.",
 	"INITIATIVE_404_TITLE": "No initiative found",

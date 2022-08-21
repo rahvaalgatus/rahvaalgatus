@@ -1868,6 +1868,22 @@ describe("InitiativesController", function() {
 				}))
 			})
 
+			it("must escape CSRF token when rendering <script> for signing",
+				function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					signing_ends_at: DateFns.addDays(new Date, 1)
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid, {
+					cookies: {csrf_token: "</script><script>alert(42)"}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include("<\\/script><script>alert(42)")
+			})
+
 			it("must render initiative in sign phase with signature milestones",
 				function*() {
 				var milestones = [1, Config.votesRequired / 2, Config.votesRequired]

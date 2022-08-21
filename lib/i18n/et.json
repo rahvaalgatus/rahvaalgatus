@@ -240,6 +240,8 @@
 	"HOME_PAGE_STATISTICS_N_SENT_IN_LAST_30_DAYS": "<b>{{sent}}</b> viimase 30 p jooksul\n<b>{{external}}</b> saadetud paberil\n",
 	"HOME_PAGE_STATISTICS_PARLIAMENT": "Riigikogus",
 	"HOME_PAGE_STATISTICS_SIGNATURES": "Allkirju",
+	"ID_CARD_ERROR_AUTHENTICATION_FAILED": "Kahjuks autentimine ei õnnestunud. See võib olla tingitud nii valest digiallkirjast kui ka tühistatud ID-kaardist. Kui arvad, et tegu on eksitusega, palun võta meiega ühendust.",
+	"ID_CARD_ERROR_CERTIFICATE_MISSING": "Tundub, et kas veebilehitseja ei alustanud ID-kaardiga autentimist või otsustasid autentimise katkestada. Kas ID-kaardi tarkvara on installitud ja mujal töötab? Vahel on abi veebilehitseja taasavamisest. Kui vajad abi, palun võta meiega ühendust.",
 	"INITIATIVES_SUBSCRIPTION_DELETED": "Teavituste tellimine on lõpetatud.",
 	"INITIATIVE_404_BODY": "Tegemist võib olla vigase lingiga või lihtsalt avalikustamata algatusega. Kui arvad, et peaksid algatust nägema, palu algatuse loojal kontrollida, kas sulle on antud enne avalikustamist sellele ligipääs.",
 	"INITIATIVE_404_TITLE": "Algatust ei leitud",

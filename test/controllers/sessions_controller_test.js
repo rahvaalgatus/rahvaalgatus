@@ -25,9 +25,6 @@ var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
 var MOBILE_ID_URL = Url.parse("https://mid.sk.ee/mid-api/")
 var SMART_ID_URL = Url.parse("https://rp-api.smart-id.com/v1/")
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
-var CERTIFICATE_TYPE = "application/pkix-cert"
-var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
-var SIGNATURE_TYPE = "application/vnd.rahvaalgatus.signature"
 var {JOHN_ECDSA_KEYS} = require("root/test/fixtures")
 var {JOHN_RSA_KEYS} = require("root/test/fixtures")
 var {VALID_ISSUERS} = require("root/test/fixtures")
@@ -221,24 +218,6 @@ describe("SessionsController", function() {
 					res.headers.location.must.equal(Config.url + path)
 				})
 			})
-
-			// This was a bug noticed on Mar 24, 2017 with initiative signing where
-			// the UI translation strings were not rendered on the page. They were
-			// used only for ID-card errors.
-			it("must render UI strings when voting", function*() {
-				var res = yield this.request("/sessions/new")
-				res.statusCode.must.equal(200)
-				res.body.must.include("MSG_ERROR_HWCRYPTO_NO_CERTIFICATES")
-			})
-
-			it("must escape CSRF token when rendering <script>", function*() {
-				var res = yield this.request("/sessions/new", {
-					cookies: {csrf_token: "</script><script>alert(42)"}
-				})
-
-				res.statusCode.must.equal(200)
-				res.body.must.include("<\\/script><script>alert(42)")
-			})
 		})
 
 		describe("when logged in", function() {
@@ -293,7 +272,7 @@ describe("SessionsController", function() {
 			describe("as sign-in-able", function() {
 				it("must set session cookie", function*() {
 					var res = yield signIn(this.router, this.request, cert)
-					res.statusCode.must.equal(204)
+					res.statusCode.must.be.between(200, 399)
 
 					var cookies = parseCookies(res.headers["set-cookie"])
 					cookies.session_token.path.must.equal("/")
@@ -312,7 +291,7 @@ describe("SessionsController", function() {
 
 				it("must redirect back to user profile", function*() {
 					var res = yield signIn(this.router, this.request, cert)
-					res.statusCode.must.equal(204)
+					res.statusCode.must.be.between(200, 399)
 					res.headers.location.must.equal("/user")
 				})
 
@@ -321,7 +300,7 @@ describe("SessionsController", function() {
 						Referer: this.url + "/sessions/new"
 					})
 
-					res.statusCode.must.equal(204)
+					res.statusCode.must.be.between(200, 399)
 					res.headers.location.must.equal("/user")
 				})
 
@@ -330,7 +309,7 @@ describe("SessionsController", function() {
 						Referer: this.url + "/initiatives"
 					})
 
-					res.statusCode.must.equal(204)
+					res.statusCode.must.be.between(200, 399)
 					res.headers.location.must.equal(this.url + "/initiatives")
 				})
 
@@ -344,7 +323,7 @@ describe("SessionsController", function() {
 							Referer: url + "/initiatives"
 						})
 
-						res.statusCode.must.equal(204)
+						res.statusCode.must.be.between(200, 399)
 						res.headers.location.must.equal(url + "/initiatives")
 					})
 				})
@@ -354,14 +333,13 @@ describe("SessionsController", function() {
 						Referer: "http://example.com/evil"
 					})
 
-					res.statusCode.must.equal(204)
+					res.statusCode.must.be.between(200, 399)
 					res.headers.location.must.equal("/user")
 				})
 
 				it("must reset the CSRF token", function*() {
 					var res = yield signIn(this.router, this.request, cert)
-					res.statusCode.must.equal(204)
-
+					res.statusCode.must.be.between(200, 399)
 					var cookies = parseCookies(res.headers["set-cookie"])
 					cookies.csrf_token.value.must.not.equal(this.csrfToken)
 				})
@@ -371,7 +349,7 @@ describe("SessionsController", function() {
 						"User-Agent": "Mozilla"
 					})
 
-					res.statusCode.must.equal(204)
+					res.statusCode.must.be.between(200, 399)
 					res.headers.location.must.equal("/user")
 
 					var session = sessionsDb.read(sql`SELECT * FROM sessions`)
@@ -397,7 +375,7 @@ describe("SessionsController", function() {
 					}))
 
 					var res = yield signIn(this.router, this.request, cert)
-					res.statusCode.must.equal(204)
+					res.statusCode.must.be.between(200, 399)
 
 					var user = usersDb.read(sql`SELECT * FROM users`)
 					user.country.must.equal("EE")
@@ -427,7 +405,7 @@ describe("SessionsController", function() {
 						}))
 
 						var res = yield signIn(this.router, this.request, cert)
-						res.statusCode.must.equal(204)
+						res.statusCode.must.be.between(200, 399)
 
 						usersDb.search(sql`SELECT * FROM users`).must.not.be.empty()
 						sessionsDb.search(sql`SELECT * FROM sessions`).must.not.be.empty()
@@ -455,37 +433,23 @@ describe("SessionsController", function() {
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
 
-				var authenticating = yield this.request("/sessions", {
-					method: "POST",
-					headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
-					body: cert.toBuffer()
-				})
-
-				authenticating.statusCode.must.equal(202)
-				authenticating.headers["content-type"].must.equal(SIGNABLE_TYPE)
-
-				var authentication = authenticationsDb.read(sql`
-					SELECT * FROM authentications
-				`)
-
-				authenticating.body.must.eql(sha256(authentication.token))
-
-				var location = authenticating.headers.location
-				var authenticated = yield this.request(location, {
+				var res = yield this.request("/sessions", {
 					method: "POST",
 
 					headers: {
-						Accept: `application/x-empty, ${ERR_TYPE}`,
-						"Content-Type": SIGNATURE_TYPE
+						"X-Client-Certificate": serializeCertificateForHeader(cert),
+						"X-Client-Certificate-Verification": "SUCCESS",
+						"X-Client-Certificate-Secret": Config.idCardAuthenticationSecret
 					},
 
-					body: signWithRsa(JOHN_RSA_KEYS.privateKey, authentication.token)
+					form: {method: "id-card"}
 				})
 
-				authenticated.statusCode.must.equal(204)
-				authenticated.headers.location.must.equal("/user")
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Signed In")
+				res.headers.location.must.equal("/user")
 
-				var cookies = parseCookies(authenticated.headers["set-cookie"])
+				var cookies = parseCookies(res.headers["set-cookie"])
 				var sessionToken = Buffer.from(cookies.session_token.value, "hex")
 
 				var authentications = authenticationsDb.search(sql`
@@ -498,7 +462,7 @@ describe("SessionsController", function() {
 					country: "EE",
 					personal_id: PERSONAL_ID,
 					method: "id-card",
-					certificate: authentications[0].certificate,
+					certificate: cert,
 					created_ip: "127.0.0.1",
 					created_at: authentications[0].created_at,
 					updated_at: authentications[0].updated_at,
@@ -534,6 +498,65 @@ describe("SessionsController", function() {
 				})])
 			})
 
+			it("must respond with 400 if certificate missing", function*() {
+				var res = yield this.request("/sessions", {
+					method: "POST",
+					headers: {"X-Client-Certificate-Verification": "SUCCESS"},
+					form: {method: "id-card"}
+				})
+
+				res.statusCode.must.equal(400)
+				res.statusMessage.must.equal("Missing Certificate")
+				res.headers["content-type"].must.equal("text/html; charset=utf-8")
+				res.body.must.include(t("ID_CARD_ERROR_CERTIFICATE_MISSING"))
+				sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
+			})
+
+			it("must respond with 403 if proxy secret invalid", function*() {
+				var cert = ID_CARD_CERTIFICATE
+
+				var res = yield this.request("/sessions", {
+					method: "POST",
+
+					headers: {
+						"X-Client-Certificate": serializeCertificateForHeader(cert),
+						"X-Client-Certificate-Verification": "SUCCESS",
+
+						"X-Client-Certificate-Secret":
+							Config.idCardAuthenticationSecret.replace(/./g, "9")
+					},
+
+					form: {method: "id-card"}
+				})
+
+				res.statusCode.must.equal(403)
+				res.statusMessage.must.equal("Invalid Proxy Secret")
+				res.headers["content-type"].must.equal("text/html; charset=utf-8")
+				sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
+			})
+
+			it("must respond with 422 if Nginx validation fails", function*() {
+				var cert = ID_CARD_CERTIFICATE
+
+				var res = yield this.request("/sessions", {
+					method: "POST",
+
+					headers: {
+						"X-Client-Certificate": serializeCertificateForHeader(cert),
+						"X-Client-Certificate-Verification": "FAILURE",
+						"X-Client-Certificate-Secret": Config.idCardAuthenticationSecret
+					},
+
+					form: {method: "id-card"}
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Sign In Failed")
+				res.headers["content-type"].must.equal("text/html; charset=utf-8")
+				res.body.must.include(t("ID_CARD_ERROR_AUTHENTICATION_FAILED"))
+				sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
+			})
+
 			it("must respond with 422 given certificate from untrusted issuer",
 				function*() {
 				var cert = new Certificate(newCertificate({
@@ -561,23 +584,19 @@ describe("SessionsController", function() {
 					method: "POST",
 
 					headers: {
-						Accept: `${SIGNABLE_TYPE}, ${ERR_TYPE}`,
-						"Content-Type": CERTIFICATE_TYPE
+						"X-Client-Certificate": serializeCertificateForHeader(cert),
+						"X-Client-Certificate-Verification": "SUCCESS",
+						"X-Client-Certificate-Secret": Config.idCardAuthenticationSecret
 					},
 
-					body: cert.toBuffer()
+					form: {method: "id-card"}
 				})
 
 				res.statusCode.must.equal(422)
 				res.statusMessage.must.equal("Invalid Issuer")
-				res.headers["content-type"].must.equal(ERR_TYPE)
-
-				res.body.must.eql({
-					code: 422,
-					message: "Invalid Issuer",
-					name: "HttpError",
-					description: t("INVALID_CERTIFICATE_ISSUER")
-				})
+				res.headers["content-type"].must.equal("text/html; charset=utf-8")
+				res.body.must.include(t("INVALID_CERTIFICATE_ISSUER"))
+				sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
 			})
 
 			it("must respond with 422 given non-Estonian's certificate", function*() {
@@ -600,22 +619,18 @@ describe("SessionsController", function() {
 					method: "POST",
 
 					headers: {
-						Accept: `${SIGNABLE_TYPE}, ${ERR_TYPE}`,
-						"Content-Type": CERTIFICATE_TYPE
+						"X-Client-Certificate": serializeCertificateForHeader(cert),
+						"X-Client-Certificate-Verification": "SUCCESS",
+						"X-Client-Certificate-Secret": Config.idCardAuthenticationSecret
 					},
 
-					body: cert.toBuffer()
+					form: {method: "id-card"}
 				})
 
 				res.statusCode.must.equal(422)
 				res.statusMessage.must.equal("Estonian Users Only")
-				res.headers["content-type"].must.equal(ERR_TYPE)
-
-				res.body.must.eql({
-					code: 422,
-					message: "Estonian Users Only",
-					name: "HttpError"
-				})
+				res.headers["content-type"].must.equal("text/html; charset=utf-8")
+				sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
 			})
 
 			it("must respond with 422 given future certificate", function*() {
@@ -639,23 +654,19 @@ describe("SessionsController", function() {
 					method: "POST",
 
 					headers: {
-						Accept: `${SIGNABLE_TYPE}, ${ERR_TYPE}`,
-						"Content-Type": CERTIFICATE_TYPE
+						"X-Client-Certificate": serializeCertificateForHeader(cert),
+						"X-Client-Certificate-Verification": "SUCCESS",
+						"X-Client-Certificate-Secret": Config.idCardAuthenticationSecret
 					},
 
-					body: cert.toBuffer()
+					form: {method: "id-card"}
 				})
 
 				res.statusCode.must.equal(422)
 				res.statusMessage.must.equal("Certificate Not Yet Valid")
-				res.headers["content-type"].must.equal(ERR_TYPE)
-
-				res.body.must.eql({
-					code: 422,
-					message: "Certificate Not Yet Valid",
-					name: "HttpError",
-					description: t("CERTIFICATE_NOT_YET_VALID")
-				})
+				res.headers["content-type"].must.equal("text/html; charset=utf-8")
+				res.body.must.include(t("CERTIFICATE_NOT_YET_VALID"))
+				sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
 			})
 
 			it("must respond with 422 given past certificate", function*() {
@@ -679,121 +690,19 @@ describe("SessionsController", function() {
 					method: "POST",
 
 					headers: {
-						Accept: `${SIGNABLE_TYPE}, ${ERR_TYPE}`,
-						"Content-Type": CERTIFICATE_TYPE
+						"X-Client-Certificate": serializeCertificateForHeader(cert),
+						"X-Client-Certificate-Verification": "SUCCESS",
+						"X-Client-Certificate-Secret": Config.idCardAuthenticationSecret
 					},
 
-					body: cert.toBuffer()
+					form: {method: "id-card"}
 				})
 
 				res.statusCode.must.equal(422)
 				res.statusMessage.must.equal("Certificate Expired")
-				res.headers["content-type"].must.equal(ERR_TYPE)
-
-				res.body.must.eql({
-					code: 422,
-					message: "Certificate Expired",
-					name: "HttpError",
-					description: t("CERTIFICATE_EXPIRED")
-				})
-			})
-
-			_.each({
-				RSA: [JOHN_RSA_KEYS, signWithRsa],
-				ECDSA: [JOHN_ECDSA_KEYS, signWithEcdsa]
-			}, function([keys, sign], algo) {
-				it(`must create a session given an ${algo} signature`, function*() {
-					var cert = new Certificate(newCertificate({
-						subject: {
-							countryName: "EE",
-							organizationName: "ESTEID",
-							organizationalUnitName: "authentication",
-							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
-							surname: "SMITH",
-							givenName: "JOHN",
-							serialNumber: `PNOEE-${PERSONAL_ID}`
-						},
-
-						issuer: VALID_ISSUERS[0],
-						publicKey: keys.publicKey
-					}))
-
-					var authenticating = yield this.request("/sessions", {
-						method: "POST",
-						headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
-						body: cert.toBuffer()
-					})
-
-					authenticating.statusCode.must.equal(202)
-
-					var authentication = authenticationsDb.read(sql`
-						SELECT * FROM authentications
-					`)
-
-					var location = authenticating.headers.location
-					var authenticated = yield this.request(location, {
-						method: "POST",
-						headers: {
-							Accept: `application/x-empty, ${ERR_TYPE}`,
-							"Content-Type": SIGNATURE_TYPE
-						},
-						body: sign(keys.privateKey, authentication.token)
-					})
-
-					authenticated.statusCode.must.equal(204)
-					usersDb.search(sql`SELECT * FROM users`).must.not.be.empty()
-					sessionsDb.search(sql`SELECT * FROM sessions`).must.not.be.empty()
-				})
-
-				it(`must respond with 409 given an invalid ${algo} signature`,
-					function*() {
-					var cert = new Certificate(newCertificate({
-						subject: {
-							countryName: "EE",
-							organizationName: "ESTEID",
-							organizationalUnitName: "authentication",
-							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
-							surname: "SMITH",
-							givenName: "JOHN",
-							serialNumber: `PNOEE-${PERSONAL_ID}`
-						},
-
-						issuer: VALID_ISSUERS[0],
-						publicKey: keys.publicKey
-					}))
-
-					var authenticating = yield this.request("/sessions", {
-						method: "POST",
-						headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
-						body: cert.toBuffer()
-					})
-
-					authenticating.statusCode.must.equal(202)
-
-					var res = yield this.request(authenticating.headers.location, {
-						method: "POST",
-
-						headers: {
-							Accept: `application/x-empty, ${ERR_TYPE}`,
-							"Content-Type": SIGNATURE_TYPE
-						},
-
-						body: Crypto.randomBytes(64)
-					})
-
-					res.statusCode.must.equal(409)
-					res.statusMessage.must.equal("Invalid Signature")
-					res.headers["content-type"].must.equal(ERR_TYPE)
-
-					res.body.must.eql({
-						code: 409,
-						message: "Invalid Signature",
-						name: "HttpError"
-					})
-
-					usersDb.search(sql`SELECT * FROM users`).must.be.empty()
-					sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
-				})
+				res.headers["content-type"].must.equal("text/html; charset=utf-8")
+				res.body.must.include(t("CERTIFICATE_EXPIRED"))
+				sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
 			})
 		})
 
@@ -922,7 +831,7 @@ describe("SessionsController", function() {
 					country: "EE",
 					personal_id: PERSONAL_ID,
 					method: "mobile-id",
-					certificate: authentications[0].certificate,
+					certificate: cert,
 					created_ip: "127.0.0.1",
 					created_at: authentications[0].created_at,
 					updated_at: authentications[0].updated_at,
@@ -1732,7 +1641,7 @@ describe("SessionsController", function() {
 					country: "EE",
 					personal_id: PERSONAL_ID,
 					method: "smart-id",
-					certificate: authentications[0].certificate,
+					certificate: cert,
 					created_ip: "127.0.0.1",
 					created_at: authentications[0].created_at,
 					updated_at: authentications[0].updated_at,
@@ -2266,33 +2175,17 @@ describe("SessionsController", function() {
 	})
 })
 
-function* signInWithIdCard(_router, request, cert, headers) {
-	var authenticating = yield request("/sessions", {
+function signInWithIdCard(_router, request, cert, headers) {
+	return request("/sessions", {
 		method: "POST",
 
 		headers: _.assign({
-			Accept: SIGNABLE_TYPE,
-			"Content-Type": CERTIFICATE_TYPE
+			"X-Client-Certificate": serializeCertificateForHeader(cert),
+			"X-Client-Certificate-Verification": "SUCCESS",
+			"X-Client-Certificate-Secret": Config.idCardAuthenticationSecret
 		}, headers),
 
-		body: cert.toBuffer()
-	})
-
-	authenticating.statusCode.must.equal(202)
-
-	var authentication = authenticationsDb.read(sql`
-		SELECT * FROM authentications
-	`)
-
-	return request(authenticating.headers.location, {
-		method: "POST",
-
-		headers: {
-			Accept: `application/x-empty, ${ERR_TYPE}`,
-			"Content-Type": SIGNATURE_TYPE
-		},
-
-		body: signWithRsa(JOHN_RSA_KEYS.privateKey, authentication.token)
+		form: {method: "id-card"}
 	})
 }
 
@@ -2409,4 +2302,9 @@ function signWithEcdsa(key, signable) {
 		signatureAsn.r.toBuffer("be", 32),
 		signatureAsn.s.toBuffer("be", 32)
 	])
+}
+
+function serializeCertificateForHeader(cert) {
+	// Should match the output of Nginx's ssl_client_escaped_cert.
+	return encodeURIComponent(cert.toString("pem"))
 }
