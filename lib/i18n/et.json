@@ -41,6 +41,7 @@
 	"CANNOT_SIGN_SIGNING_NOT_YET_STARTED": "Allkirjastamine pole veel alanud.",
 	"CERTIFICATE_EXPIRED": "Andestust, kuid sinu sertifikaat paistab olevat juba aegunud.",
 	"CERTIFICATE_NOT_FOR_AUTH": "Sertifikaat ei tundu sobiv autentimiseks. Tegemist võib olla ka meie veaga, nii et palun võta ühendust ja selgitame välja!",
+	"CERTIFICATE_NOT_FOR_SIGN": "Sertifikaat ei tundu sobiv digiallkirjastamiseks. Tegemist võib olla ka meie veaga, nii et palun võta ühendust ja selgitame välja!",
 	"CERTIFICATE_NOT_YET_VALID": "Andestust, kuid sinu sertifikaat ei paista olevat veel aktiivne.",
 	"COAUTHORS_PAGE_ADD_ANOTHER_BUTTON": "Lisa veel kaasautoreid",
 	"COAUTHORS_PAGE_ADD_BUTTON": "Lisa kaasautor",

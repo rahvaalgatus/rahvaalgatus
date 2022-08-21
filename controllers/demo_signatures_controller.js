@@ -22,7 +22,7 @@ var mobileId = require("root").mobileId
 var smartId = require("root").smartId
 var hades = require("root").hades
 var reportError = require("root").errorReporter
-var {validateCertificate} = require("root/lib/certificate")
+var {validateSigningCertificate} = require("root/lib/certificate")
 var {ensureAreaCode} = require("root/lib/mobile_id")
 var {getCertificatePersonalId} = require("root/lib/certificate")
 var parseBody = require("body-parser").raw
@@ -81,7 +81,7 @@ exports.router.post("/", next(function*(req, res) {
 	switch (method) {
 		case "id-card":
 			cert = Certificate.parse(req.body)
-			if (err = validateCertificate(req.t, cert)) throw err
+			if (err = validateSigningCertificate(req.t, cert)) throw err
 
 			;[country, personalId] = getCertificatePersonalId(cert)
 			xades = newXades()
@@ -107,7 +107,7 @@ exports.router.post("/", next(function*(req, res) {
 			sanitizedPersonalId = sanitizePersonalId(personalId)
 
 			cert = yield mobileId.readCertificate(phoneNumber, personalId)
-			if (err = validateCertificate(req.t, cert)) throw err
+			if (err = validateSigningCertificate(req.t, cert)) throw err
 
 			;[country, personalId] = getCertificatePersonalId(cert)
 			xades = newXades()
@@ -147,7 +147,7 @@ exports.router.post("/", next(function*(req, res) {
 			cert = yield smartId.certificate("PNOEE-" + personalId)
 			cert = yield waitForSmartIdSession(90, cert)
 			if (cert == null) throw new SmartIdError("TIMEOUT")
-			if (err = validateCertificate(req.t, cert)) throw err
+			if (err = validateSigningCertificate(req.t, cert)) throw err
 
 			;[country, personalId] = getCertificatePersonalId(cert)
 			xades = newXades()

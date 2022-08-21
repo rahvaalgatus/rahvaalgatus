@@ -39,6 +39,7 @@
 	"CANNOT_SIGN_SIGNING_NOT_YET_STARTED": "Signing hasn't started yet.",
 	"CERTIFICATE_EXPIRED": "Unfortunately your certificat has expired.",
 	"CERTIFICATE_NOT_FOR_AUTH": "Certificate doesn't look like it's for authentication. It could be our fault, so please contact us and let's find out!",
+	"CERTIFICATE_NOT_FOR_SIGN": "Certificate doesn't look like it's for digital signatures. It could be our fault, so please contact us and let's find out!",
 	"CERTIFICATE_NOT_YET_VALID": "Unfortunately your certificate does not seem to be valid.",
 	"COAUTHORS_PAGE_ADD_ANOTHER_BUTTON": "Add Another Coauthor",
 	"COAUTHORS_PAGE_ADD_BUTTON": "Add Coauthor",

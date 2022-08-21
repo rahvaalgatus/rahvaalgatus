@@ -34,6 +34,12 @@ var SITE_HOSTNAME = Url.parse(Config.url).hostname
 var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
 var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
 
+var SIGN_CERTIFICATE_EXTENSIONS = [{
+	extnID: "keyUsage",
+	critical: true,
+	extnValue: {data: Buffer.from([64])}
+}]
+
 var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
 	subject: {
 		countryName: "EE",
@@ -45,6 +51,7 @@ var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
 		serialNumber: `PNOEE-${PERSONAL_ID}`
 	},
 
+	extensions: SIGN_CERTIFICATE_EXTENSIONS,
 	issuer: VALID_ISSUERS[0],
 	publicKey: JOHN_RSA_KEYS.publicKey
 }))
@@ -60,6 +67,7 @@ var MOBILE_ID_CERTIFICATE = new Certificate(newCertificate({
 		serialNumber: `PNOEE-${PERSONAL_ID}`
 	},
 
+	extensions: SIGN_CERTIFICATE_EXTENSIONS,
 	issuer: VALID_ISSUERS[0],
 	publicKey: JOHN_RSA_KEYS.publicKey
 }))
@@ -74,6 +82,7 @@ var SMART_ID_CERTIFICATE = new Certificate(newCertificate({
 		serialNumber: `PNOEE-${PERSONAL_ID}`
 	},
 
+	extensions: SIGN_CERTIFICATE_EXTENSIONS,
 	issuer: VALID_ISSUERS[0],
 	publicKey: JOHN_RSA_KEYS.publicKey
 }))

@@ -57,10 +57,17 @@ var CHILD_PERSONAL_ID = formatPersonalId(CHILD_BIRTHDATE) + "1337"
 var SMART_ID = "PNOEE-" + ADULT_PERSONAL_ID + "-R2D2-Q"
 var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
+var KEY_USAGE_DIGITAL_SIGNATURE = 128
 
 // See https://github.com/maxmind/MaxMind-DB/blob/master/source-data for
 // available test IP addresses.
 var LONDON_FORWARDED_FOR = "81.2.69.160, 127.0.0.1"
+
+var SIGN_CERTIFICATE_EXTENSIONS = [{
+	extnID: "keyUsage",
+	critical: true,
+	extnValue: {data: Buffer.from([64])}
+}]
 
 var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
 	subject: {
@@ -73,6 +80,7 @@ var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
 		serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 	},
 
+	extensions: SIGN_CERTIFICATE_EXTENSIONS,
 	issuer: VALID_ISSUERS[0],
 	publicKey: JOHN_RSA_KEYS.publicKey
 }))
@@ -88,6 +96,7 @@ var MOBILE_ID_CERTIFICATE = new Certificate(newCertificate({
 		serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 	},
 
+	extensions: SIGN_CERTIFICATE_EXTENSIONS,
 	issuer: VALID_ISSUERS[0],
 	publicKey: JOHN_RSA_KEYS.publicKey
 }))
@@ -102,6 +111,7 @@ var SMART_ID_CERTIFICATE = new Certificate(newCertificate({
 		serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 	},
 
+	extensions: SIGN_CERTIFICATE_EXTENSIONS,
 	issuer: VALID_ISSUERS[0],
 	publicKey: JOHN_RSA_KEYS.publicKey
 }))
@@ -948,6 +958,7 @@ describe("SignaturesController", function() {
 							serialNumber: ADULT_PERSONAL_ID
 						},
 
+						extensions: SIGN_CERTIFICATE_EXTENSIONS,
 						issuer: VALID_ISSUERS[0],
 						publicKey: JOHN_RSA_KEYS.publicKey
 					}))
@@ -986,6 +997,7 @@ describe("SignaturesController", function() {
 								serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 							},
 
+							extensions: SIGN_CERTIFICATE_EXTENSIONS,
 							issuer: issuer,
 							publicKey: JOHN_RSA_KEYS.publicKey
 						}))
@@ -1392,6 +1404,7 @@ describe("SignaturesController", function() {
 						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
+					extensions: SIGN_CERTIFICATE_EXTENSIONS,
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
@@ -1492,26 +1505,11 @@ describe("SignaturesController", function() {
 					published_at: new Date
 				}))
 
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationName: "ESTEID",
-						organizationalUnitName: "digital signature",
-						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-					},
-
-					issuer: VALID_ISSUERS[0],
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
-
 				var path = `/initiatives/${initiative.uuid}`
 				var signing = yield this.request(path + "/signatures", {
 					method: "POST",
 					headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
-					body: cert.toBuffer()
+					body: ID_CARD_CERTIFICATE.toBuffer()
 				})
 
 				signing.statusCode.must.equal(405)
@@ -1525,26 +1523,11 @@ describe("SignaturesController", function() {
 					signing_ends_at: new Date
 				}))
 
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationName: "ESTEID",
-						organizationalUnitName: "digital signature",
-						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-					},
-
-					issuer: VALID_ISSUERS[0],
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
-
 				var path = `/initiatives/${initiative.uuid}`
 				var signing = yield this.request(path + "/signatures", {
 					method: "POST",
 					headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
-					body: cert.toBuffer()
+					body: ID_CARD_CERTIFICATE.toBuffer()
 				})
 
 				signing.statusCode.must.equal(405)
@@ -1571,6 +1554,7 @@ describe("SignaturesController", function() {
 						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
+					extensions: SIGN_CERTIFICATE_EXTENSIONS,
 					issuer: issuer,
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
@@ -1611,6 +1595,7 @@ describe("SignaturesController", function() {
 						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
+					extensions: SIGN_CERTIFICATE_EXTENSIONS,
 					validFrom: DateFns.addSeconds(new Date, 1),
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
@@ -1652,6 +1637,7 @@ describe("SignaturesController", function() {
 						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
+					extensions: SIGN_CERTIFICATE_EXTENSIONS,
 					validUntil: new Date,
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
@@ -1681,6 +1667,52 @@ describe("SignaturesController", function() {
 				})
 			})
 
+			it("must respond with 422 given non-sign certificate", function*() {
+				var cert = new Certificate(newCertificate({
+					subject: {
+						countryName: "EE",
+						organizationName: "ESTEID",
+						organizationalUnitName: "digital signature",
+						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
+						surname: "SMITH",
+						givenName: "JOHN",
+						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
+					},
+
+					extensions: [{
+						extnID: "keyUsage",
+						critical: true,
+						extnValue: {data: Buffer.from([KEY_USAGE_DIGITAL_SIGNATURE])}
+					}],
+
+					issuer: VALID_ISSUERS[0],
+					publicKey: JOHN_RSA_KEYS.publicKey
+				}))
+
+				var initiativePath = `/initiatives/${this.initiative.uuid}`
+				var res = yield this.request(`${initiativePath}/signatures`, {
+					method: "POST",
+
+					headers: {
+						Accept: `${SIGNABLE_TYPE}, ${ERR_TYPE}`,
+						"Content-Type": CERTIFICATE_TYPE
+					},
+
+					body: cert.toBuffer()
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Not Signing Certificate")
+				res.headers["content-type"].must.equal(ERR_TYPE)
+
+				res.body.must.eql({
+					code: 422,
+					message: "Not Signing Certificate",
+					name: "HttpError",
+					description: t("CERTIFICATE_NOT_FOR_SIGN")
+				})
+			})
+
 			it("must respond with 422 given underage signer", function*() {
 				var cert = new Certificate(newCertificate({
 					subject: {
@@ -1693,6 +1725,7 @@ describe("SignaturesController", function() {
 						serialNumber: `PNOEE-${CHILD_PERSONAL_ID}`
 					},
 
+					extensions: SIGN_CERTIFICATE_EXTENSIONS,
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
@@ -1737,6 +1770,7 @@ describe("SignaturesController", function() {
 							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 						},
 
+						extensions: SIGN_CERTIFICATE_EXTENSIONS,
 						issuer: VALID_ISSUERS[0],
 						publicKey: keys.publicKey
 					}))
@@ -1789,6 +1823,7 @@ describe("SignaturesController", function() {
 							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 						},
 
+						extensions: SIGN_CERTIFICATE_EXTENSIONS,
 						issuer: VALID_ISSUERS[0],
 						publicKey: keys.publicKey
 					}))
@@ -1831,21 +1866,7 @@ describe("SignaturesController", function() {
 			})
 
 			it("must accept signature after deadline passed", function*() {
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationName: "ESTEID",
-						organizationalUnitName: "digital signature",
-						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-					},
-
-					issuer: VALID_ISSUERS[0],
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
-
+				var cert = ID_CARD_CERTIFICATE
 				var initiativePath = `/initiatives/${this.initiative.uuid}`
 				var signing = yield this.request(`${initiativePath}/signatures`, {
 					method: "POST",
@@ -1882,26 +1903,11 @@ describe("SignaturesController", function() {
 			})
 
 			it("must reject signature if initiative not in sign phase", function*() {
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationName: "ESTEID",
-						organizationalUnitName: "digital signature",
-						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-					},
-
-					issuer: VALID_ISSUERS[0],
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
-
 				var initiativePath = `/initiatives/${this.initiative.uuid}`
 				var signing = yield this.request(`${initiativePath}/signatures`, {
 					method: "POST",
 					headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
-					body: cert.toBuffer()
+					body: ID_CARD_CERTIFICATE.toBuffer()
 				})
 
 				signing.statusCode.must.equal(202)
@@ -1941,6 +1947,7 @@ describe("SignaturesController", function() {
 						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
+					extensions: SIGN_CERTIFICATE_EXTENSIONS,
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
@@ -2117,6 +2124,7 @@ describe("SignaturesController", function() {
 						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
+					extensions: SIGN_CERTIFICATE_EXTENSIONS,
 					issuer: issuer,
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
@@ -2154,6 +2162,7 @@ describe("SignaturesController", function() {
 						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
+					extensions: SIGN_CERTIFICATE_EXTENSIONS,
 					validFrom: DateFns.addSeconds(new Date, 1),
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
@@ -2192,6 +2201,7 @@ describe("SignaturesController", function() {
 						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
+					extensions: SIGN_CERTIFICATE_EXTENSIONS,
 					validUntil: new Date,
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
@@ -2216,6 +2226,49 @@ describe("SignaturesController", function() {
 				res.statusMessage.must.equal("Certificate Expired")
 				res.headers["content-type"].must.equal("text/html; charset=utf-8")
 				res.body.must.include(t("CERTIFICATE_EXPIRED"))
+			})
+
+			it("must respond with 422 given non-sign certificate", function*() {
+				var cert = new Certificate(newCertificate({
+					subject: {
+						countryName: "EE",
+						organizationName: "ESTEID (MOBIIL-ID)",
+						organizationalUnitName: "digital signature",
+						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
+						surname: "SMITH",
+						givenName: "JOHN",
+						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
+					},
+
+					extensions: [{
+						extnID: "keyUsage",
+						critical: true,
+						extnValue: {data: Buffer.from([KEY_USAGE_DIGITAL_SIGNATURE])}
+					}],
+
+					issuer: VALID_ISSUERS[0],
+					publicKey: JOHN_RSA_KEYS.publicKey
+				}))
+
+				this.router.post(
+					`${MOBILE_ID_URL.path}certificate`,
+					respond.bind(null, {result: "OK", cert: cert.toString("base64")})
+				)
+
+				var initiativePath = `/initiatives/${this.initiative.uuid}`
+				var res = yield this.request(initiativePath + "/signatures", {
+					method: "POST",
+					form: {
+						method: "mobile-id",
+						personalId: ADULT_PERSONAL_ID,
+						phoneNumber: "+37200000766"
+					}
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Not Signing Certificate")
+				res.headers["content-type"].must.equal("text/html; charset=utf-8")
+				res.body.must.include(t("CERTIFICATE_NOT_FOR_SIGN"))
 			})
 
 			it("must respond with 422 given underage signer", function*() {
@@ -2299,6 +2352,7 @@ describe("SignaturesController", function() {
 							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 						},
 
+						extensions: SIGN_CERTIFICATE_EXTENSIONS,
 						issuer: VALID_ISSUERS[0],
 						publicKey: keys.publicKey
 					}))
@@ -2351,6 +2405,7 @@ describe("SignaturesController", function() {
 							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 						},
 
+						extensions: SIGN_CERTIFICATE_EXTENSIONS,
 						issuer: VALID_ISSUERS[0],
 						publicKey: keys.publicKey
 					}))
@@ -2647,6 +2702,7 @@ describe("SignaturesController", function() {
 						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
+					extensions: SIGN_CERTIFICATE_EXTENSIONS,
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
@@ -2829,6 +2885,7 @@ describe("SignaturesController", function() {
 						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
+					extensions: SIGN_CERTIFICATE_EXTENSIONS,
 					issuer: issuer,
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
@@ -2857,6 +2914,7 @@ describe("SignaturesController", function() {
 						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
+					extensions: SIGN_CERTIFICATE_EXTENSIONS,
 					validFrom: DateFns.addSeconds(new Date, 1),
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
@@ -2886,6 +2944,7 @@ describe("SignaturesController", function() {
 						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
+					extensions: SIGN_CERTIFICATE_EXTENSIONS,
 					validUntil: new Date,
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
@@ -2902,6 +2961,40 @@ describe("SignaturesController", function() {
 				res.statusMessage.must.equal("Certificate Expired")
 				res.headers["content-type"].must.equal("text/html; charset=utf-8")
 				res.body.must.include(t("CERTIFICATE_EXPIRED"))
+			})
+
+			it("must respond with 422 given non-sign certificate", function*() {
+				var cert = new Certificate(newCertificate({
+					subject: {
+						countryName: "EE",
+						organizationalUnitName: "SIGNATURE",
+						commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
+						surname: "SMITH",
+						givenName: "JOHN",
+						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
+					},
+
+					extensions: [{
+						extnID: "keyUsage",
+						critical: true,
+						extnValue: {data: Buffer.from([KEY_USAGE_DIGITAL_SIGNATURE])}
+					}],
+
+					issuer: VALID_ISSUERS[0],
+					publicKey: JOHN_RSA_KEYS.publicKey
+				}))
+
+				var res = yield certWithSmartId(
+					this.router,
+					this.request,
+					this.initiative,
+					cert
+				)
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Not Signing Certificate")
+				res.headers["content-type"].must.equal("text/html; charset=utf-8")
+				res.body.must.include(t("CERTIFICATE_NOT_FOR_SIGN"))
 			})
 
 			it("must respond with 422 given underage signer", function*() {
@@ -2928,6 +3021,7 @@ describe("SignaturesController", function() {
 						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 					},
 
+					extensions: SIGN_CERTIFICATE_EXTENSIONS,
 					validUntil: new Date,
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
@@ -3069,6 +3163,7 @@ describe("SignaturesController", function() {
 							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 						},
 
+						extensions: SIGN_CERTIFICATE_EXTENSIONS,
 						issuer: VALID_ISSUERS[0],
 						publicKey: keys.publicKey
 					}))
@@ -3125,6 +3220,7 @@ describe("SignaturesController", function() {
 							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 						},
 
+						extensions: SIGN_CERTIFICATE_EXTENSIONS,
 						issuer: VALID_ISSUERS[0],
 						publicKey: keys.publicKey
 					}))
