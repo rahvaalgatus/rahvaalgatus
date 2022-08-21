@@ -911,7 +911,7 @@ function SidebarAuthorView(attrs) {
 				</noscript>
 
 				<p>{Jsx.html(t("INITIATIVE_PAGE_DESTINATION_UPDATE_DESCRIPTION", {
-					email: Config.helpEmail
+					email: _.escapeHtml(Config.helpEmail)
 				}))}</p>
 			</Form>
 		</Fragment> : null}
@@ -969,7 +969,7 @@ function SidebarAuthorView(attrs) {
 				})}
 			</p> : !hasEstonianText ? <p>{Jsx.html(
 				t("INITIATIVE_SEND_TO_SIGNING_NEEDS_ESTONIAN_TEXT", {
-					newTextUrl: initiativePath + "/texts/new?language=et"
+					newTextUrl: _.escapeHtml(initiativePath + "/texts/new?language=et")
 				})
 			)}</p> : null}
 
@@ -1004,7 +1004,7 @@ function SidebarAuthorView(attrs) {
 
 			{!hasEstonianText ? <p>{Jsx.html(
 				t("INITIATIVE_SEND_TO_PARLIAMENT_NEEDS_ESTONIAN_TEXT", {
-					newTextUrl: initiativePath + "/texts/new?language=et"
+					newTextUrl: _.escapeHtml(initiativePath + "/texts/new?language=et")
 				})
 			)}</p> : null}
 		</Fragment> : null}
@@ -1170,7 +1170,7 @@ function SidebarInfoView(attrs) {
 				/>
 
 				<p>{Jsx.html(t("INITIATIVE_INFO_AUTHOR_NAME_DESCRIPTION", {
-					coauthorsUrl: initiativePath + "/coauthors"
+					coauthorsUrl: _.escapeHtml(initiativePath + "/coauthors")
 				}))}</p>
 			</div> : null}
 
@@ -2136,8 +2136,8 @@ function EventsView(attrs) {
 
             {event.type == "text" && delay != 0 ? <p class="delay">
               {Jsx.html(t("EVENT_NOTIFICATIONS_DELAYED", {
-                isotime: event.created_at.toJSON(),
-                date: I18n.formatDate("numeric", event.created_at)
+                isotime: _.escapeHtml(event.created_at.toJSON()),
+                date: _.escapeHtml(I18n.formatDate("numeric", event.created_at))
               }))}
             </p> : null}
 					</li>

@@ -1,4 +1,5 @@
 /** @jsx Jsx */
+var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var {Form} = require("../../page")
 var {FormButton} = require("../../page")
@@ -112,7 +113,7 @@ module.exports = function(attrs) {
 
 					<p class="description">
 						{Jsx.html(t("COAUTHORS_PAGE_SENT_INVITES_DESCRIPTION", {
-							initiativeUrl: initiativePath
+							initiativeUrl: _.escapeHtml(initiativePath)
 						}))}
 					</p>
 

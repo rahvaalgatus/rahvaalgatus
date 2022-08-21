@@ -154,8 +154,8 @@ function HomePage(attrs) {
 
 			<p>
 				{Jsx.html(t("HOME_PAGE_SEARCH_SEE_OTHER", {
-					parliamentSiteUrl: Config.parliamentSiteUrl,
-					localSiteUrl: Config.localSiteUrl,
+					parliamentSiteUrl: _.escapeHtml(Config.parliamentSiteUrl),
+					localSiteUrl: _.escapeHtml(Config.localSiteUrl),
 					archiveUrl: "/initiatives"
 				}))}
 			</p>

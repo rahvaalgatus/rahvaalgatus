@@ -22,7 +22,7 @@ module.exports = function(attrs) {
 		<Section id="profile" class="primary-section">
 			{user.email == null ? <p class="unconfirmed-email-info">
 				{Jsx.html(t("USER_SUBSCRIPTIONS_UNCONFIRMED_EMAIL", {
-					emailUrl: req.baseUrl
+					emailUrl: _.escapeHtml(req.baseUrl)
 				}))}
 			</p> : subscriptions.length == 0 ? <p class="no-subscriptions">
 				{t("USER_SUBSCRIPTIONS_EMPTY")}

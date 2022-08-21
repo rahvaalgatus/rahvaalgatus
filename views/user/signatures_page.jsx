@@ -1,4 +1,5 @@
 /** @jsx Jsx */
+var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var {Fragment} = Jsx
 var UserPage = require("./user_page")
@@ -39,7 +40,7 @@ module.exports = function(attrs) {
 					</h2>
 
 					{Jsx.html(t("USER_SIGNATURES_SIGNED_AT", {
-						at: formatDateTime("numeric", signature.created_at)
+						at: _.escapeHtml(formatDateTime("numeric", signature.created_at))
 					}))}
 
 					{signaturePath ? <Fragment>
