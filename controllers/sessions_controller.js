@@ -23,7 +23,7 @@ var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var {ensureAreaCode} = require("root/lib/mobile_id")
 var {getCertificatePersonalId} = require("root/lib/certificate")
 var {getCertificatePersonName} = require("root/lib/certificate")
-var {validateCertificate} = require("root/lib/certificate")
+var {validateAuthenticationCertificate} = require("root/lib/certificate")
 var {hasSignatureType} = require("./initiatives/signatures_controller")
 var getNormalizedMobileIdErrorCode =
 	require("root/lib/mobile_id").getNormalizedErrorCode
@@ -208,7 +208,7 @@ exports.router.post("/", next(function*(req, res, next) {
 			)) throw new HttpError(403, "Invalid Proxy Secret")
 
 			cert = parseCertificateFromHeader(pem)
-			if (err = validateCertificate(req.t, cert)) throw err
+			if (err = validateAuthenticationCertificate(req.t, cert)) throw err
 
 			if (req.headers["x-client-certificate-verification"] != "SUCCESS")
 				throw new HttpError(422, "Sign In Failed", {
@@ -243,7 +243,7 @@ exports.router.post("/", next(function*(req, res, next) {
 			// authentication. This way we avoid creating a authentication and going
 			// async.
 			cert = yield mobileId.readCertificate(phoneNumber, personalId)
-			if (err = validateCertificate(req.t, cert)) throw err
+			if (err = validateAuthenticationCertificate(req.t, cert)) throw err
 
 			;[country, personalId] = getCertificatePersonalId(cert)
 			if (country != "EE") throw new HttpError(422, "Estonian Users Only")
@@ -522,7 +522,7 @@ function* waitForMobileIdAuthentication(t, authentication, sessionId) {
 		})
 
 		var err
-		if (err = validateCertificate(t, cert)) throw err
+		if (err = validateAuthenticationCertificate(t, cert)) throw err
 
 		var [country, personalId] = getCertificatePersonalId(cert)
 		if (
@@ -562,7 +562,7 @@ function* waitForSmartIdAuthentication(t, authentication, session) {
 		})
 
 		var err
-		if (err = validateCertificate(t, cert)) throw err
+		if (err = validateAuthenticationCertificate(t, cert)) throw err
 
 		var [country, personalId] = getCertificatePersonalId(cert)
 		if (

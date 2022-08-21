@@ -138,13 +138,13 @@ exports.newCertificate = function(opts) {
 		signature: signatureAlgorithm,
 		subject: serializeSubjectName(opts && opts.subject || Object),
 		issuer: serializeSubjectName(issuer || Object),
+		extensions: opts.extensions,
+		subjectPublicKeyInfo: publicKey,
 
 		validity: {
 			notBefore: {type: "utcTime", value: validFrom},
-			notAfter: {type: "utcTime", value: validUntil},
-		},
-
-		subjectPublicKeyInfo: publicKey
+			notAfter: {type: "utcTime", value: validUntil}
+		}
 	}
 
 	var signature = EMPTY_BUFFER

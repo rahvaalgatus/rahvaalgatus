@@ -33,6 +33,12 @@ var PERSONAL_ID = "38706181337"
 var SESSION_ID = "7c8bdd56-6772-4264-ba27-bf7a9ef72a11"
 var SESSION_LENGTH_IN_DAYS = 120
 
+var AUTH_CERTIFICATE_EXTENSIONS = [{
+	extnID: "extendedKeyUsage",
+	critical: true,
+	extnValue: [[1, 3, 6, 1, 5, 5, 7, 3, 2]]
+}]
+
 var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
 	subject: {
 		countryName: "EE",
@@ -44,11 +50,12 @@ var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
 		serialNumber: `PNOEE-${PERSONAL_ID}`
 	},
 
+	extensions: AUTH_CERTIFICATE_EXTENSIONS,
 	issuer: VALID_ISSUERS[0],
 	publicKey: JOHN_RSA_KEYS.publicKey
 }))
 
-var MOBILE_ID_AUTH_CERTIFICATE = new Certificate(newCertificate({
+var MOBILE_ID_CERTIFICATE = new Certificate(newCertificate({
 	subject: {
 		countryName: "EE",
 		organizationName: "ESTEID (MOBIIL-ID)",
@@ -59,21 +66,7 @@ var MOBILE_ID_AUTH_CERTIFICATE = new Certificate(newCertificate({
 		serialNumber: `PNOEE-${PERSONAL_ID}`
 	},
 
-	issuer: VALID_ISSUERS[0],
-	publicKey: JOHN_RSA_KEYS.publicKey
-}))
-
-var MOBILE_ID_SIGN_CERTIFICATE = new Certificate(newCertificate({
-	subject: {
-		countryName: "EE",
-		organizationName: "ESTEID (MOBIIL-ID)",
-		organizationalUnitName: "digital signature",
-		commonName: `SMITH,JOHN,${PERSONAL_ID}`,
-		surname: "SMITH",
-		givenName: "JOHN",
-		serialNumber: `PNOEE-${PERSONAL_ID}`
-	},
-
+	extensions: AUTH_CERTIFICATE_EXTENSIONS,
 	issuer: VALID_ISSUERS[0],
 	publicKey: JOHN_RSA_KEYS.publicKey
 }))
@@ -88,6 +81,7 @@ var SMART_ID_CERTIFICATE = new Certificate(newCertificate({
 		serialNumber: `PNOEE-${PERSONAL_ID}`
 	},
 
+	extensions: AUTH_CERTIFICATE_EXTENSIONS,
 	issuer: VALID_ISSUERS[0],
 	publicKey: JOHN_RSA_KEYS.publicKey
 }))
@@ -370,6 +364,7 @@ describe("SessionsController", function() {
 							serialNumber: PERSONAL_ID
 						},
 
+						extensions: AUTH_CERTIFICATE_EXTENSIONS,
 						issuer: VALID_ISSUERS[0],
 						publicKey: JOHN_RSA_KEYS.publicKey
 					}))
@@ -400,6 +395,7 @@ describe("SessionsController", function() {
 								serialNumber: `PNOEE-${PERSONAL_ID}`
 							},
 
+							extensions: AUTH_CERTIFICATE_EXTENSIONS,
 							issuer: issuer,
 							publicKey: JOHN_RSA_KEYS.publicKey
 						}))
@@ -429,6 +425,7 @@ describe("SessionsController", function() {
 						serialNumber: `PNOEE-${PERSONAL_ID}`
 					},
 
+					extensions: AUTH_CERTIFICATE_EXTENSIONS,
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
@@ -577,6 +574,7 @@ describe("SessionsController", function() {
 						"CN=EID-SK 2007",
 					].join(",")),
 
+					extensions: AUTH_CERTIFICATE_EXTENSIONS,
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
 
@@ -611,6 +609,7 @@ describe("SessionsController", function() {
 						serialNumber: `PNOLT-${PERSONAL_ID}`
 					},
 
+					extensions: AUTH_CERTIFICATE_EXTENSIONS,
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
@@ -645,6 +644,7 @@ describe("SessionsController", function() {
 						serialNumber: `PNOEE-${PERSONAL_ID}`
 					},
 
+					extensions: AUTH_CERTIFICATE_EXTENSIONS,
 					validFrom: DateFns.addSeconds(new Date, 1),
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
@@ -681,6 +681,7 @@ describe("SessionsController", function() {
 						serialNumber: `PNOEE-${PERSONAL_ID}`
 					},
 
+					extensions: AUTH_CERTIFICATE_EXTENSIONS,
 					validUntil: new Date,
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
@@ -704,6 +705,47 @@ describe("SessionsController", function() {
 				res.body.must.include(t("CERTIFICATE_EXPIRED"))
 				sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
 			})
+
+			it("must respond with 422 given non-auth certificate", function*() {
+				var cert = new Certificate(newCertificate({
+					subject: {
+						countryName: "EE",
+						organizationName: "ESTEID",
+						organizationalUnitName: "authentication",
+						commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+						surname: "SMITH",
+						givenName: "JOHN",
+						serialNumber: `PNOEE-${PERSONAL_ID}`
+					},
+
+					extensions: [{
+						extnID: "extendedKeyUsage",
+						critical: true,
+						extnValue: [[1, 3, 6, 1, 5, 5, 7, 3, 4]]
+					}],
+
+					issuer: VALID_ISSUERS[0],
+					publicKey: JOHN_RSA_KEYS.publicKey
+				}))
+
+				var res = yield this.request("/sessions", {
+					method: "POST",
+
+					headers: {
+						"X-Client-Certificate": serializeCertificateForHeader(cert),
+						"X-Client-Certificate-Verification": "SUCCESS",
+						"X-Client-Certificate-Secret": Config.idCardAuthenticationSecret
+					},
+
+					form: {method: "id-card"}
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Not Authentication Certificate")
+				res.headers["content-type"].must.equal("text/html; charset=utf-8")
+				res.body.must.include(t("CERTIFICATE_NOT_FOR_AUTH"))
+				sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
+			})
 		})
 
 		describe("when authenticating via Mobile-Id", function() {
@@ -711,12 +753,12 @@ describe("SessionsController", function() {
 				(router, request, authCert, headers) => signInWithMobileId(
 					router,
 					request,
-					MOBILE_ID_SIGN_CERTIFICATE,
+					authCert,
 					authCert,
 					headers
 				),
 
-				MOBILE_ID_SIGN_CERTIFICATE
+				MOBILE_ID_CERTIFICATE,
 			)
 
 			it("must create user and session", function*() {
@@ -731,6 +773,7 @@ describe("SessionsController", function() {
 						serialNumber: `PNOEE-${PERSONAL_ID}`
 					},
 
+					extensions: AUTH_CERTIFICATE_EXTENSIONS,
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
@@ -867,8 +910,24 @@ describe("SessionsController", function() {
 				})])
 			})
 
-			it("must respond with 409 given different auth and sign certificates",
+			it("must respond with 409 given different preauth and auth certificates",
 				function*() {
+				var preauthCert = new Certificate(newCertificate({
+					subject: {
+						countryName: "EE",
+						organizationName: "ESTEID (MOBIIL-ID)",
+						organizationalUnitName: "digital signature",
+						commonName: "SMITH,JOHN,38706181338",
+						surname: "SMITH",
+						givenName: "JOHN",
+						serialNumber: "PNOEE-38706181338"
+					},
+
+					extensions: AUTH_CERTIFICATE_EXTENSIONS,
+					issuer: VALID_ISSUERS[0],
+					publicKey: JOHN_RSA_KEYS.publicKey
+				}))
+
 				var authCert = new Certificate(newCertificate({
 					subject: {
 						countryName: "EE",
@@ -880,21 +939,7 @@ describe("SessionsController", function() {
 						serialNumber: "PNOEE-38706181337"
 					},
 
-					issuer: VALID_ISSUERS[0],
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
-
-				var signCert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationName: "ESTEID (MOBIIL-ID)",
-						organizationalUnitName: "digital signature",
-						commonName: "SMITH,JOHN,38706181338",
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: "PNOEE-38706181338"
-					},
-
+					extensions: AUTH_CERTIFICATE_EXTENSIONS,
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
@@ -902,7 +947,7 @@ describe("SessionsController", function() {
 				var res = yield signInWithMobileId(
 					this.router,
 					this.request,
-					signCert,
+					preauthCert,
 					authCert
 				)
 
@@ -925,13 +970,14 @@ describe("SessionsController", function() {
 					subject: {
 						countryName: "EE",
 						organizationName: "ESTEID (MOBIIL-ID)",
-						organizationalUnitName: "digital signature",
+						organizationalUnitName: "authentication",
 						commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 						surname: "SMITH",
 						givenName: "JOHN",
 						serialNumber: `PNOLT-${PERSONAL_ID}`
 					},
 
+					extensions: AUTH_CERTIFICATE_EXTENSIONS,
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
@@ -954,14 +1000,14 @@ describe("SessionsController", function() {
 				res.statusMessage.must.equal("Estonian Users Only")
 			})
 
-			describe("for sign certificate", function() {
+			describe("for preauth certificate", function() {
 				it("must respond with 422 given certificate from untrusted issuer",
 					function*() {
 					var cert = new Certificate(newCertificate({
 						subject: {
 							countryName: "EE",
 							organizationName: "ESTEID (MOBIIL-ID)",
-							organizationalUnitName: "digital signature",
+							organizationalUnitName: "authentication",
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
@@ -975,6 +1021,7 @@ describe("SessionsController", function() {
 							"CN=EID-SK 2007",
 						].join(",")),
 
+						extensions: AUTH_CERTIFICATE_EXTENSIONS,
 						publicKey: JOHN_RSA_KEYS.publicKey
 					}))
 
@@ -1003,13 +1050,14 @@ describe("SessionsController", function() {
 						subject: {
 							countryName: "EE",
 							organizationName: "ESTEID (MOBIIL-ID)",
-							organizationalUnitName: "digital signature",
+							organizationalUnitName: "authentication",
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
 							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
+						extensions: AUTH_CERTIFICATE_EXTENSIONS,
 						validFrom: DateFns.addSeconds(new Date, 1),
 						issuer: VALID_ISSUERS[0],
 						publicKey: JOHN_RSA_KEYS.publicKey
@@ -1040,13 +1088,14 @@ describe("SessionsController", function() {
 						subject: {
 							countryName: "EE",
 							organizationName: "ESTEID (MOBIIL-ID)",
-							organizationalUnitName: "digital signature",
+							organizationalUnitName: "authentication",
 							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
 							surname: "SMITH",
 							givenName: "JOHN",
 							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
+						extensions: AUTH_CERTIFICATE_EXTENSIONS,
 						validUntil: new Date,
 						issuer: VALID_ISSUERS[0],
 						publicKey: JOHN_RSA_KEYS.publicKey
@@ -1070,6 +1119,48 @@ describe("SessionsController", function() {
 					res.statusMessage.must.equal("Certificate Expired")
 					res.headers["content-type"].must.equal("text/html; charset=utf-8")
 					res.body.must.include(t("CERTIFICATE_EXPIRED"))
+				})
+
+				it("must respond with 422 given non-auth certificate", function*() {
+					var cert = new Certificate(newCertificate({
+						subject: {
+							countryName: "EE",
+							organizationName: "ESTEID (MOBIIL-ID)",
+							organizationalUnitName: "authentication",
+							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+							surname: "SMITH",
+							givenName: "JOHN",
+							serialNumber: `PNOEE-${PERSONAL_ID}`
+						},
+
+						extensions: [{
+							extnID: "extendedKeyUsage",
+							critical: true,
+							extnValue: [[1, 3, 6, 1, 5, 5, 7, 3, 4]]
+						}],
+
+						issuer: VALID_ISSUERS[0],
+						publicKey: JOHN_RSA_KEYS.publicKey
+					}))
+
+					this.router.post(`${MOBILE_ID_URL.path}certificate`,
+						function(req, res) {
+						respond({result: "OK", cert: cert.toString("base64")}, req, res)
+					})
+
+					var res = yield this.request("/sessions", {
+						method: "POST",
+						form: {
+							method: "mobile-id",
+							personalId: PERSONAL_ID,
+							phoneNumber: "+37200000766"
+						}
+					})
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Not Authentication Certificate")
+					res.headers["content-type"].must.equal("text/html; charset=utf-8")
+					res.body.must.include(t("CERTIFICATE_NOT_FOR_AUTH"))
 				})
 			})
 
@@ -1094,13 +1185,14 @@ describe("SessionsController", function() {
 							"CN=EID-SK 2007",
 						].join(",")),
 
+						extensions: AUTH_CERTIFICATE_EXTENSIONS,
 						publicKey: JOHN_RSA_KEYS.publicKey
 					}))
 
 					var res = yield signInWithMobileId(
 						this.router,
 						this.request,
-						MOBILE_ID_SIGN_CERTIFICATE,
+						MOBILE_ID_CERTIFICATE,
 						cert
 					)
 
@@ -1128,6 +1220,7 @@ describe("SessionsController", function() {
 							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
+						extensions: AUTH_CERTIFICATE_EXTENSIONS,
 						validFrom: DateFns.addSeconds(new Date, 1),
 						issuer: VALID_ISSUERS[0],
 						publicKey: JOHN_RSA_KEYS.publicKey
@@ -1136,7 +1229,7 @@ describe("SessionsController", function() {
 					var res = yield signInWithMobileId(
 						this.router,
 						this.request,
-						MOBILE_ID_SIGN_CERTIFICATE,
+						MOBILE_ID_CERTIFICATE,
 						cert
 					)
 
@@ -1164,6 +1257,7 @@ describe("SessionsController", function() {
 							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
+						extensions: AUTH_CERTIFICATE_EXTENSIONS,
 						validUntil: new Date,
 						issuer: VALID_ISSUERS[0],
 						publicKey: JOHN_RSA_KEYS.publicKey
@@ -1172,7 +1266,7 @@ describe("SessionsController", function() {
 					var res = yield signInWithMobileId(
 						this.router,
 						this.request,
-						MOBILE_ID_SIGN_CERTIFICATE,
+						MOBILE_ID_CERTIFICATE,
 						cert
 					)
 
@@ -1187,6 +1281,47 @@ describe("SessionsController", function() {
 					res.statusCode.must.equal(200)
 					res.body.must.include(t("CERTIFICATE_EXPIRED"))
 				})
+
+				it("must respond with 422 given past certificate", function*() {
+					var cert = new Certificate(newCertificate({
+						subject: {
+							countryName: "EE",
+							organizationName: "ESTEID (MOBIIL-ID)",
+							organizationalUnitName: "authentication",
+							commonName: `SMITH,JOHN,${PERSONAL_ID}`,
+							surname: "SMITH",
+							givenName: "JOHN",
+							serialNumber: `PNOEE-${PERSONAL_ID}`
+						},
+
+						extensions: [{
+							extnID: "extendedKeyUsage",
+							critical: true,
+							extnValue: [[1, 3, 6, 1, 5, 5, 7, 3, 4]]
+						}],
+
+						issuer: VALID_ISSUERS[0],
+						publicKey: JOHN_RSA_KEYS.publicKey
+					}))
+
+					var res = yield signInWithMobileId(
+						this.router,
+						this.request,
+						MOBILE_ID_CERTIFICATE,
+						cert
+					)
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Not Authentication Certificate")
+
+					var cookies = parseCookies(res.headers["set-cookie"])
+					res = yield this.request(res.headers.location, {
+						headers: {Cookie: serializeCookies(cookies)}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("CERTIFICATE_NOT_FOR_AUTH"))
+				})
 			})
 
 			it("must create session if Mobile-Id session running", function*() {
@@ -1194,7 +1329,7 @@ describe("SessionsController", function() {
 				var res = yield signInWithMobileId(
 					this.router,
 					this.request,
-					MOBILE_ID_SIGN_CERTIFICATE,
+					MOBILE_ID_CERTIFICATE,
 					function(req, res) {
 						if (waited++ < 2) return void respond({state: "RUNNING"}, req, res)
 						res.writeHead(200)
@@ -1208,7 +1343,7 @@ describe("SessionsController", function() {
 						respond({
 							state: "COMPLETE",
 							result: "OK",
-							cert: MOBILE_ID_AUTH_CERTIFICATE.toString("base64"),
+							cert: MOBILE_ID_CERTIFICATE.toString("base64"),
 
 							signature: {
 								algorithm: "sha256WithRSAEncryption",
@@ -1242,6 +1377,7 @@ describe("SessionsController", function() {
 							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
+						extensions: AUTH_CERTIFICATE_EXTENSIONS,
 						issuer: VALID_ISSUERS[0],
 						publicKey: keys.publicKey
 					}))
@@ -1249,7 +1385,7 @@ describe("SessionsController", function() {
 					var res = yield signInWithMobileId(
 						this.router,
 						this.request,
-						MOBILE_ID_SIGN_CERTIFICATE,
+						MOBILE_ID_CERTIFICATE,
 						function(req, res) {
 							res.writeHead(200)
 
@@ -1290,6 +1426,7 @@ describe("SessionsController", function() {
 							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
+						extensions: AUTH_CERTIFICATE_EXTENSIONS,
 						issuer: VALID_ISSUERS[0],
 						publicKey: keys.publicKey
 					}))
@@ -1297,7 +1434,7 @@ describe("SessionsController", function() {
 					var errored = yield signInWithMobileId(
 						this.router,
 						this.request,
-						MOBILE_ID_SIGN_CERTIFICATE,
+						MOBILE_ID_CERTIFICATE,
 						respond.bind(null, {
 							state: "COMPLETE",
 							result: "OK",
@@ -1479,7 +1616,7 @@ describe("SessionsController", function() {
 					var errored = yield signInWithMobileId(
 						this.router,
 						this.request,
-						MOBILE_ID_SIGN_CERTIFICATE,
+						MOBILE_ID_CERTIFICATE,
 						respond.bind(null, {state: "COMPLETE", result: code})
 					)
 
@@ -1505,7 +1642,7 @@ describe("SessionsController", function() {
 				var errored = yield signInWithMobileId(
 					this.router,
 					this.request,
-					MOBILE_ID_AUTH_CERTIFICATE,
+					MOBILE_ID_CERTIFICATE,
 					(req, res) => {
 						if (waited++ == 0) {
 							Url.parse(req.url, true).query.timeoutMs.must.equal("120000")
@@ -1552,6 +1689,7 @@ describe("SessionsController", function() {
 						serialNumber: `PNOEE-${PERSONAL_ID}`
 					},
 
+					extensions: AUTH_CERTIFICATE_EXTENSIONS,
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
@@ -1696,6 +1834,7 @@ describe("SessionsController", function() {
 						"CN=EID-SK 2007",
 					].join(",")),
 
+					extensions: AUTH_CERTIFICATE_EXTENSIONS,
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
 
@@ -1725,6 +1864,7 @@ describe("SessionsController", function() {
 						serialNumber: `PNOLT-${PERSONAL_ID}`
 					},
 
+					extensions: AUTH_CERTIFICATE_EXTENSIONS,
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
@@ -1755,6 +1895,7 @@ describe("SessionsController", function() {
 						serialNumber: `PNOEE-${PERSONAL_ID}`
 					},
 
+					extensions: AUTH_CERTIFICATE_EXTENSIONS,
 					validFrom: DateFns.addSeconds(new Date, 1),
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
@@ -1785,6 +1926,7 @@ describe("SessionsController", function() {
 						serialNumber: `PNOEE-${PERSONAL_ID}`
 					},
 
+					extensions: AUTH_CERTIFICATE_EXTENSIONS,
 					validUntil: new Date,
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
@@ -1802,6 +1944,41 @@ describe("SessionsController", function() {
 
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("CERTIFICATE_EXPIRED"))
+			})
+
+			it("must respond with 422 given non-auth certificate", function*() {
+				var cert = new Certificate(newCertificate({
+					subject: {
+						countryName: "EE",
+						organizationalUnitName: "AUTHENTICATION",
+						commonName: `SMITH,JOHN,PNOEE-${PERSONAL_ID}`,
+						surname: "SMITH",
+						givenName: "JOHN",
+						serialNumber: `PNOEE-${PERSONAL_ID}`
+					},
+
+					extensions: [{
+						extnID: "extendedKeyUsage",
+						critical: true,
+						extnValue: [[1, 3, 6, 1, 5, 5, 7, 3, 4]]
+					}],
+
+					issuer: VALID_ISSUERS[0],
+					publicKey: JOHN_RSA_KEYS.publicKey
+				}))
+
+				var res = yield signInWithSmartId(this.router, this.request, cert)
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Not Authentication Certificate")
+				res.headers.location.must.equal("/sessions/new")
+
+				var cookies = parseCookies(res.headers["set-cookie"])
+				res = yield this.request(res.headers.location, {
+					headers: {Cookie: serializeCookies(cookies)}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("CERTIFICATE_NOT_FOR_AUTH"))
 			})
 
 			it("must create session if Smart-Id session running", function*() {
@@ -1859,6 +2036,7 @@ describe("SessionsController", function() {
 							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
+						extensions: AUTH_CERTIFICATE_EXTENSIONS,
 						issuer: VALID_ISSUERS[0],
 						publicKey: keys.publicKey
 					}))
@@ -1905,6 +2083,7 @@ describe("SessionsController", function() {
 							serialNumber: `PNOEE-${PERSONAL_ID}`
 						},
 
+						extensions: AUTH_CERTIFICATE_EXTENSIONS,
 						issuer: VALID_ISSUERS[0],
 						publicKey: keys.publicKey
 					}))
@@ -2189,9 +2368,9 @@ function signInWithIdCard(_router, request, cert, headers) {
 	})
 }
 
-function* signInWithMobileId(router, request, signCert, authCert, headers) {
+function* signInWithMobileId(router, request, preauthCert, authCert, headers) {
 	router.post(`${MOBILE_ID_URL.path}certificate`, function(req, res) {
-		respond({result: "OK", cert: signCert.toString("base64")}, req, res)
+		respond({result: "OK", cert: preauthCert.toString("base64")}, req, res)
 	})
 
 	router.post(
