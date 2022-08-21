@@ -2,6 +2,7 @@ var _ = require("root/lib/underscore")
 var DateFns = require("date-fns")
 var ValidUser = require("root/test/valid_user")
 var ValidSession = require("root/test/valid_session")
+var Config = require("root").config
 var usersDb = require("root/db/users_db")
 var sessionsDb = require("root/db/sessions_db")
 var {parseCookies} = require("root/test/web")
@@ -75,7 +76,7 @@ describe("Web", function() {
 
 			var cookies = parseCookies(res.headers["set-cookie"])
 			cookies.csrf_token.path.must.equal("/")
-			cookies.csrf_token.must.have.property("domain", null)
+			cookies.csrf_token.domain.must.equal(Config.cookieDomain)
 			cookies.csrf_token.httpOnly.must.be.true()
 			cookies.csrf_token.extensions.must.include("SameSite=Lax")
 		})

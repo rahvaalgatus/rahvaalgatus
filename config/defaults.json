@@ -7,6 +7,7 @@
 	"twitterUrl": "https://twitter.com/openESTassembly",
 	"facebookUrl": "https://facebook.com/rahvaalgatus",
 	"helpEmail": "info@rahvaalgatus.ee",
+	"csrfTokenCookieName": "csrf_token",
 	"sessionCookieName": "session_token",
 	"cookieSecret": null,
 	"cookieDomain": "rahvaalgatus.ee",
