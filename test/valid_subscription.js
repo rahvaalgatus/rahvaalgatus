@@ -1,5 +1,5 @@
 var _ = require("root/lib/underscore")
-var randomHex = require("root/lib/crypto").randomHex
+var Crypto = require("crypto")
 
 module.exports = function(attrs) {
 	var createdAt = new Date
@@ -13,7 +13,7 @@ module.exports = function(attrs) {
 		updated_at: createdAt,
 		confirmation_sent_at: null,
 		confirmed_at: null,
-		update_token: randomHex(8),
+		update_token: Crypto.randomBytes(8).toString("hex"),
 		new_interest: false,
 		signable_interest: false,
 		event_interest: false,
