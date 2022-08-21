@@ -1073,9 +1073,9 @@
       }
     },
     "heaven-sqlite": {
-      "version": "1.0.0",
-      "from": "../../../Node/HeavenSqlite",
-      "resolved": "file:../../../Node/HeavenSqlite",
+      "version": "1.1.0",
+      "from": "heaven-sqlite@>=1.1.0 <1.2.0",
+      "resolved": "https://registry.npmjs.org/heaven-sqlite/-/heaven-sqlite-1.1.0.tgz",
       "dependencies": {
         "heaven": {
           "version": "0.12.1",
