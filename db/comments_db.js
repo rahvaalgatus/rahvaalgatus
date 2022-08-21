@@ -1,6 +1,6 @@
 var O = require("oolong")
 var Db = require("root/lib/db")
-var sqlite = require("root").sqlite
+var {sqlite} = require("root")
 exports = module.exports = new Db(Object, sqlite, "comments")
 
 exports.parse = function(attrs) {

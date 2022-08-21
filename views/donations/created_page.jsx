@@ -3,8 +3,8 @@ var Jsx = require("j6pack")
 var Page = require("../page")
 
 module.exports = function(attrs) {
-	var req = attrs.req
-	var t = req.t
+	var {req} = attrs
+	var {t} = req
 
 	return <Page page="donated" title={t("SUPPORT_US_TITLE")} req={req}>
 		<section id="about" class="primary-section text-section"><center>

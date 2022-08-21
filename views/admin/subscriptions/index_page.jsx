@@ -1,14 +1,14 @@
 /** @jsx Jsx */
 var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
-var Fragment = Jsx.Fragment
+var {Fragment} = Jsx
 var Page = require("../page")
-var formatDateTime = require("root/lib/i18n").formatDateTime
+var {formatDateTime} = require("root/lib/i18n")
 exports = module.exports = IndexPage
 exports.SubscriptionsView = SubscriptionsView
 
 function IndexPage(attrs) {
-	var subscriptions = attrs.subscriptions
+	var {subscriptions} = attrs
 	var confirmed = subscriptions.filter((s) => s.confirmed_at)
 	var pending = subscriptions.filter((s) => !s.confirmed_at)
 

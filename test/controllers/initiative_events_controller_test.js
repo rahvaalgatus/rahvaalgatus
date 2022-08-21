@@ -5,7 +5,7 @@ var Config = require("root").config
 var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_initiative")
 var ValidEvent = require("root/test/valid_initiative_event")
-var pseudoDateTime = require("root/lib/crypto").pseudoDateTime
+var {pseudoDateTime} = require("root/lib/crypto")
 var initiativesDb = require("root/db/initiatives_db")
 var usersDb = require("root/db/users_db")
 var eventsDb = require("root/db/initiative_events_db")
@@ -403,7 +403,7 @@ describe("InitiativeEventsController", function() {
 			res.statusCode.must.equal(200)
 			res.headers["content-type"].must.equal(ATOM_TYPE)
 
-			var feed = Atom.parse(res.body).feed
+			var {feed} = Atom.parse(res.body)
 			feed.id.$.must.equal(Config.url + path)
 			feed.updated.$.must.equal(_.last(events).updated_at.toJSON())
 			feed.title.$.must.equal(t("ATOM_INITIATIVE_EVENTS_FEED_TITLE"))
@@ -465,7 +465,7 @@ describe("InitiativeEventsController", function() {
 			res.statusCode.must.equal(200)
 			res.headers["content-type"].must.equal(ATOM_TYPE)
 
-			var feed = Atom.parse(res.body).feed
+			var {feed} = Atom.parse(res.body)
 			feed.id.$.must.equal(Config.url + path)
 
 			var links = _.indexBy(feed.link, (link) => link.rel)

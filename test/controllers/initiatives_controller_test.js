@@ -22,7 +22,7 @@ var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var tHtml = _.compose(_.escapeHtml, t)
-var pseudoDateTime = require("root/lib/crypto").pseudoDateTime
+var {pseudoDateTime} = require("root/lib/crypto")
 var {parseCookies} = require("root/test/web")
 var {serializeCookies} = require("root/test/web")
 var usersDb = require("root/db/users_db")
@@ -47,12 +47,12 @@ var {newTrixDocument} = require("root/test/fixtures")
 var {serializePersonalId} = require("root/lib/user")
 var INITIATIVE_TYPE = "application/vnd.rahvaalgatus.initiative+json; v=1"
 var ATOM_TYPE = "application/atom+xml"
-var PHASES = require("root/lib/initiative").PHASES
+var {PHASES} = require("root/lib/initiative")
 var EVENTABLE_PHASES = _.without(PHASES, "edit")
 var NONEVENTABLE_PHASES = _.difference(Initiative.PHASES, EVENTABLE_PHASES)
 var LOCAL_PHASES = _.without(PHASES, "parliament")
-var PARLIAMENT_DECISIONS = Initiative.PARLIAMENT_DECISIONS
-var COMMITTEE_MEETING_DECISIONS = Initiative.COMMITTEE_MEETING_DECISIONS
+var {PARLIAMENT_DECISIONS} = Initiative
+var {COMMITTEE_MEETING_DECISIONS} = Initiative
 var SITE_HOSTNAME = Url.parse(Config.url).hostname
 var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
 var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
@@ -5607,7 +5607,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 			res.headers["content-type"].must.equal(ATOM_TYPE)
 
-			var feed = Atom.parse(res.body).feed
+			var {feed} = Atom.parse(res.body)
 			feed.id.$.must.equal(Config.url + path)
 			feed.updated.$.must.equal(initiative.created_at.toJSON())
 
@@ -5636,7 +5636,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 			res.headers["content-type"].must.equal(ATOM_TYPE)
 
-			var feed = Atom.parse(res.body).feed
+			var {feed} = Atom.parse(res.body)
 			feed.id.$.must.equal(Config.url + path)
 
 			var links = _.indexBy(feed.link, (link) => link.rel)
@@ -5657,7 +5657,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 			res.headers["content-type"].must.equal(ATOM_TYPE)
 
-			var feed = Atom.parse(res.body).feed
+			var {feed} = Atom.parse(res.body)
 			feed.updated.$.must.equal(initiative.created_at.toJSON())
 
 			feed.title.$.must.equal(t("ATOM_INITIATIVE_FEED_TITLE", {
@@ -5694,7 +5694,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 
-			var feed = Atom.parse(res.body).feed
+			var {feed} = Atom.parse(res.body)
 			feed.updated.$.must.equal(events[1].updated_at.toJSON())
 		})
 
@@ -5706,7 +5706,7 @@ describe("InitiativesController", function() {
 
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
-			var feed = Atom.parse(res.body).feed
+			var {feed} = Atom.parse(res.body)
 			feed.updated.$.must.equal(initiative.created_at.toJSON())
 		})
 
@@ -5758,7 +5758,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 
-			var entry = Atom.parse(res.body).feed.entry
+			var {entry} = Atom.parse(res.body).feed
 			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 			var eventUrl = `${initiativeUrl}#event-sent-to-parliament`
 
@@ -5790,7 +5790,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 
-			var entry = Atom.parse(res.body).feed.entry
+			var {entry} = Atom.parse(res.body).feed
 			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
@@ -5822,7 +5822,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 
-			var entry = Atom.parse(res.body).feed.entry
+			var {entry} = Atom.parse(res.body).feed
 			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
@@ -5861,7 +5861,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 
-			var entry = Atom.parse(res.body).feed.entry
+			var {entry} = Atom.parse(res.body).feed
 			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
@@ -5894,7 +5894,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 
-			var entry = Atom.parse(res.body).feed.entry
+			var {entry} = Atom.parse(res.body).feed
 			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
@@ -5930,7 +5930,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 				res.statusCode.must.equal(200)
 
-				var entry = Atom.parse(res.body).feed.entry
+				var {entry} = Atom.parse(res.body).feed
 				var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 				var eventUrl = `${initiativeUrl}#event-${event.id}`
 
@@ -5977,7 +5977,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 
-			var entry = Atom.parse(res.body).feed.entry
+			var {entry} = Atom.parse(res.body).feed
 			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
@@ -6014,7 +6014,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 
-			var entry = Atom.parse(res.body).feed.entry
+			var {entry} = Atom.parse(res.body).feed
 			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
@@ -6048,7 +6048,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 
-			var entry = Atom.parse(res.body).feed.entry
+			var {entry} = Atom.parse(res.body).feed
 			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
@@ -6086,7 +6086,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 
-			var entry = Atom.parse(res.body).feed.entry
+			var {entry} = Atom.parse(res.body).feed
 			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
@@ -6123,7 +6123,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 
-			var entry = Atom.parse(res.body).feed.entry
+			var {entry} = Atom.parse(res.body).feed
 			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
@@ -6156,7 +6156,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 
-			var entry = Atom.parse(res.body).feed.entry
+			var {entry} = Atom.parse(res.body).feed
 			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
@@ -6188,7 +6188,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 
-			var entry = Atom.parse(res.body).feed.entry
+			var {entry} = Atom.parse(res.body).feed
 			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
@@ -6228,7 +6228,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 
-			var entry = Atom.parse(res.body).feed.entry
+			var {entry} = Atom.parse(res.body).feed
 			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
@@ -6268,7 +6268,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 
-			var entry = Atom.parse(res.body).feed.entry
+			var {entry} = Atom.parse(res.body).feed
 			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
@@ -6306,7 +6306,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 
-			var entry = Atom.parse(res.body).feed.entry
+			var {entry} = Atom.parse(res.body).feed
 			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 			var eventUrl = `${initiativeUrl}#event-${event.id}`
 
@@ -6406,7 +6406,7 @@ describe("InitiativesController", function() {
 			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
 			res.statusCode.must.equal(200)
 
-			var entry = Atom.parse(res.body).feed.entry
+			var {entry} = Atom.parse(res.body).feed
 			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
 			var eventUrl = `${initiativeUrl}#event-sent-to-government`
 

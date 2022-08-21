@@ -10,11 +10,11 @@ var {serializePersonalId} = require("root/lib/user")
 var InitiativePage = require("../initiative_page")
 
 module.exports = function(attrs) {
-	var req = attrs.req
-	var t = req.t
-	var flash = req.flash
-	var initiative = attrs.initiative
-	var coauthors = attrs.coauthors
+	var {req} = attrs
+	var {t} = req
+	var {flash} = req
+	var {initiative} = attrs
+	var {coauthors} = attrs
 	var initiativePath = "/initiatives/" + initiative.uuid
 	var coauthorsPath = initiativePath + "/coauthors"
 

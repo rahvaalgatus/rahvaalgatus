@@ -8,10 +8,10 @@ var {Section} = require("../page")
 var {SubscriptionsView} = require("root/views/subscriptions/index_page")
 
 module.exports = function(attrs) {
-	var req = attrs.req
-	var t = attrs.t
-	var user = attrs.user
-	var subscriptions = attrs.subscriptions
+	var {req} = attrs
+	var {t} = attrs
+	var {user} = attrs
+	var {subscriptions} = attrs
 
 	return <UserPage
 		page="user-subscriptions"

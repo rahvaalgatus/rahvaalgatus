@@ -1,7 +1,7 @@
 /** @jsx Jsx */
 var _ = require("lodash")
 var Jsx = require("j6pack")
-var Fragment = Jsx.Fragment
+var {Fragment} = Jsx
 var DateFns = require("date-fns")
 var Config = require("root").config
 var Page = require("../page")
@@ -17,10 +17,10 @@ exports.InitiativeBoxesView = InitiativeBoxesView
 exports.InitiativeBoxView = InitiativeBoxView
 
 function InitiativesPage(attrs) {
-	var t = attrs.t
-	var req = attrs.req
-	var flash = attrs.flash
-	var initiatives = attrs.initiatives
+	var {t} = attrs
+	var {req} = attrs
+	var {flash} = attrs
+	var {initiatives} = attrs
 
 	var initiativesByPhase = _.groupBy(initiatives, "phase")
 	var inEdit = initiativesByPhase.edit || EMPTY_ARR
@@ -29,7 +29,7 @@ function InitiativesPage(attrs) {
 	var inGovernment = initiativesByPhase.government || EMPTY_ARR
 	var inDone = initiativesByPhase.done || EMPTY_ARR
 
-	var onlyDestinations = attrs.onlyDestinations
+	var {onlyDestinations} = attrs
 	var isFiltered = onlyDestinations.length > 0
 
 	return <Page
@@ -134,9 +134,9 @@ function sortForPhase(phase, initiatives) {
 }
 
 function InitiativeListView(attrs) {
-	var t = attrs.t
-	var phase = attrs.phase
-	var initiatives = attrs.initiatives
+	var {t} = attrs
+	var {phase} = attrs
+	var {initiatives} = attrs
 	initiatives = phase ? sortForPhase(phase, initiatives) : initiatives
 
 	return <ol class="initiatives">
@@ -149,9 +149,9 @@ function InitiativeListView(attrs) {
 }
 
 function InitiativeRowView(attrs) {
-	var t = attrs.t
-	var initiative = attrs.initiative
-	var signatureCount = attrs.signatureCount
+	var {t} = attrs
+	var {initiative} = attrs
+	var {signatureCount} = attrs
 
 	var time = (
 		initiative.phase == "edit" ? initiative.created_at :
@@ -244,9 +244,9 @@ function InitiativeRowView(attrs) {
 }
 
 function InitiativeBoxesView(attrs) {
-	var t = attrs.t
-	var phase = attrs.phase
-	var initiatives = attrs.initiatives
+	var {t} = attrs
+	var {phase} = attrs
+	var {initiatives} = attrs
 	initiatives = phase ? sortForPhase(phase, initiatives) : initiatives
 
 	return <ol id={attrs.id} class="initiatives">
@@ -259,9 +259,9 @@ function InitiativeBoxesView(attrs) {
 }
 
 function InitiativeBoxView(attrs) {
-	var t = attrs.t
-	var initiative = attrs.initiative
-	var signatureCount = attrs.signatureCount
+	var {t} = attrs
+	var {initiative} = attrs
+	var {signatureCount} = attrs
 
 	var time = (
 		initiative.phase == "edit" ? initiative.created_at :

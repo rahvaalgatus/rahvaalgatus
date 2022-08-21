@@ -1,21 +1,21 @@
 /** @jsx Jsx */
 var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
-var Fragment = Jsx.Fragment
+var {Fragment} = Jsx
 var InitiativePage = require("../initiative_page")
-var javascript = require("root/lib/jsx").javascript
+var {javascript} = require("root/lib/jsx")
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
 exports = module.exports = CreatingPage
 exports.MobileIdView = MobileIdView
 
 function CreatingPage(attrs) {
-	var req = attrs.req
-	var t = req.t
-	var initiative = attrs.initiative
-	var error = attrs.error
-	var method = attrs.method
-	var code = attrs.code
-	var poll = attrs.poll
+	var {req} = attrs
+	var {t} = req
+	var {initiative} = attrs
+	var {error} = attrs
+	var {method} = attrs
+	var {code} = attrs
+	var {poll} = attrs
 
 	return <InitiativePage
 		page="initiative-signature"
@@ -41,10 +41,10 @@ function CreatingPage(attrs) {
 }
 
 function MobileIdView(attrs) {
-	var t = attrs.t
-	var code = attrs.code
-	var poll = attrs.poll
-	var method = attrs.method
+	var {t} = attrs
+	var {code} = attrs
+	var {poll} = attrs
+	var {method} = attrs
 
 	return <Fragment>
 		<p>

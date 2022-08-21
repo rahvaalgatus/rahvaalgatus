@@ -1,7 +1,7 @@
 var _ = require("root/lib/underscore")
 var Config = require("root").config
 var Path = require("path")
-var Router = require("express").Router
+var {Router} = require("express")
 var HttpError = require("standard-http-error")
 var SqliteError = require("root/lib/sqlite_error")
 var Subscription = require("root/lib/subscription")
@@ -33,18 +33,18 @@ var CONSTRAINT_ERRORS = {
 }
 
 exports.router.get("/new", function(req, res) {
-	var user = req.user
+	var {user} = req
 	if (user == null) throw new HttpError(401)
 
 	res.render("initiatives/comments/create_page.jsx")
 })
 
 exports.router.post("/", next(function*(req, res) {
-	var t = req.t
-	var user = req.user
+	var {t} = req
+	var {user} = req
 	if (user == null) throw new HttpError(401)
 
-	var initiative = req.initiative
+	var {initiative} = req
 	var userEmail = user.email || ""
 	var parse = isAdmin(user) ? parseCommentAsAdmin : parseComment
 
@@ -126,7 +126,7 @@ exports.router.post("/", next(function*(req, res) {
 
 exports.router.use("/:commentId", function(req, res, next) {
 	var id = req.params.commentId
-	var initiative = req.initiative
+	var {initiative} = req
 	var baseUrl = Path.dirname(req.baseUrl)
 
 	var comment = commentsDb.read(sql`
@@ -152,7 +152,7 @@ exports.router.use("/:commentId", function(req, res, next) {
 })
 
 exports.router.get("/:commentId", function(req, res) {
-	var comment = req.comment
+	var {comment} = req
 
 	if (comment.parent_id)
 		return void res.redirect(302, req.baseUrl + "/" + comment.parent_id)
@@ -161,10 +161,10 @@ exports.router.get("/:commentId", function(req, res) {
 })
 
 exports.router.delete("/:commentId", function(req, res) {
-	var user = req.user
+	var {user} = req
 	if (user == null) throw new HttpError(401)
 
-	var comment = req.comment
+	var {comment} = req
 	if (comment.anonymized_at) throw new HttpError(405, "Already Anonymized")
 	if (comment.user_id != user.id) throw new HttpError(403, "Not Author")
 	if (comment.parent_id) throw new HttpError(405, "Cannot Delete Replies")
@@ -176,11 +176,11 @@ exports.router.delete("/:commentId", function(req, res) {
 })
 
 exports.router.post("/:commentId/replies", next(function*(req, res) {
-	var t = req.t
-	var user = req.user
+	var {t} = req
+	var {user} = req
 	if (user == null) throw new HttpError(401)
 
-	var initiative = req.initiative
+	var {initiative} = req
 	var parent = req.comment
 	if (parent.parent_id) throw new HttpError(405)
 
@@ -236,7 +236,7 @@ exports.router.post("/:commentId/replies", next(function*(req, res) {
 }))
 
 function renderComment(req, res) {
-	var comment = req.comment
+	var {comment} = req
 
 	comment.replies = commentsDb.search(sql`
 		SELECT comment.*, user.name AS user_name

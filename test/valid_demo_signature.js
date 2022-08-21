@@ -2,7 +2,7 @@ var _ = require("root/lib/underscore")
 var Crypto = require("crypto")
 var Xades = require("undersign/xades")
 var Certificate = require("undersign/lib/certificate")
-var newCertificate = require("root/test/fixtures").newCertificate
+var {newCertificate} = require("root/test/fixtures")
 var {randomPersonalId} = require("./valid_user")
 
 var xades = Xades.parse(String(new Xades(new Certificate(newCertificate({

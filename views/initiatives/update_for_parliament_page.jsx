@@ -1,14 +1,14 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
-var Form = require("../page").Form
+var {Form} = require("../page")
 var InitiativePage = require("./initiative_page")
 
 module.exports = function(attributes) {
-	var req = attributes.req
-	var t = attributes.t
-	var initiative = attributes.initiative
-	var error = attributes.error
-	var attrs = attributes.attrs
+	var {req} = attributes
+	var {t} = attributes
+	var {initiative} = attributes
+	var {error} = attributes
+	var {attrs} = attributes
 
 	return <InitiativePage
 		page="initiative-send-to-parliament"

@@ -8,17 +8,17 @@ var ValidSession = require("root/test/valid_session")
 var Certificate = require("undersign/lib/certificate")
 var DateFns = require("date-fns")
 var X509Asn = require("undersign/lib/x509_asn")
-var respond = require("root/test/fixtures").respond
+var {respond} = require("root/test/fixtures")
 var {parseCookies} = require("root/test/web")
 var {serializeCookies} = require("root/test/web")
-var newCertificate = require("root/test/fixtures").newCertificate
+var {newCertificate} = require("root/test/fixtures")
 var usersDb = require("root/db/users_db")
 var authenticationsDb = require("root/db/authentications_db")
 var sessionsDb = require("root/db/sessions_db")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var sql = require("sqlate")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
-var tsl = require("root").tsl
+var {tsl} = require("root")
 var SITE_HOSTNAME = Url.parse(Config.url).hostname
 var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
 var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
@@ -851,7 +851,7 @@ describe("SessionsController", function() {
 
 				authenticating.statusCode.must.equal(202)
 
-				var location = authenticating.headers.location
+				var {location} = authenticating.headers
 				var authenticated = yield this.request(location, {
 					method: "POST",
 					headers: {Accept: `application/x-empty, ${ERR_TYPE}`},
@@ -1756,7 +1756,7 @@ describe("SessionsController", function() {
 					LIMIT 1
 				`).token))
 
-				var location = authenticating.headers.location
+				var {location} = authenticating.headers
 				var authenticated = yield this.request(location, {
 					method: "POST",
 					headers: {Accept: `application/x-empty, ${ERR_TYPE}`},

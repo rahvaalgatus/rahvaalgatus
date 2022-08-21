@@ -15,11 +15,11 @@ var X509Asn = require("undersign/lib/x509_asn")
 var Ocsp = require("undersign/lib/ocsp")
 var Crypto = require("crypto")
 var Zip = require("root/lib/zip")
-var respond = require("root/test/fixtures").respond
+var {respond} = require("root/test/fixtures")
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
-var newCertificate = require("root/test/fixtures").newCertificate
-var newOcspResponse = require("root/test/fixtures").newOcspResponse
+var {newCertificate} = require("root/test/fixtures")
+var {newOcspResponse} = require("root/test/fixtures")
 var {parseCookies} = require("root/test/web")
 var {serializeCookies} = require("root/test/web")
 var usersDb = require("root/db/users_db")
@@ -30,9 +30,9 @@ var signablesDb = require("root/db/initiative_signables_db")
 var textsDb = require("root/db/initiative_texts_db")
 var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
-var hades = require("root").hades
+var {hades} = require("root")
 var demand = require("must")
-var tsl = require("root").tsl
+var {tsl} = require("root")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var ASICE_TYPE = "application/vnd.etsi.asic-e+zip"
 var CSV_TYPE = "text/csv; charset=utf-8"
@@ -44,9 +44,9 @@ var CERTIFICATE_TYPE = "application/pkix-cert"
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
 var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
 var SIGNATURE_TYPE = "application/vnd.rahvaalgatus.signature"
-var VALID_ISSUERS = require("root/test/fixtures").VALID_ISSUERS
-var JOHN_RSA_KEYS = require("root/test/fixtures").JOHN_RSA_KEYS
-var JOHN_ECDSA_KEYS = require("root/test/fixtures").JOHN_ECDSA_KEYS
+var {VALID_ISSUERS} = require("root/test/fixtures")
+var {JOHN_RSA_KEYS} = require("root/test/fixtures")
+var {JOHN_ECDSA_KEYS} = require("root/test/fixtures")
 var SESSION_ID = "7c8bdd56-6772-4264-ba27-bf7a9ef72a11"
 var {PHONE_NUMBER_TRANSFORMS} = require("root/test/fixtures")
 var TODAY = new Date(2015, 5, 18)
@@ -2658,7 +2658,7 @@ describe("SignaturesController", function() {
 					this.initiative,
 					MOBILE_ID_CERTIFICATE,
 					(req, res) => {
-						var timeoutMs = Url.parse(req.url, true).query.timeoutMs
+						var {timeoutMs} = Url.parse(req.url, true).query
 						timeoutMs.must.equal(waited == 0 ? "120000" : "1000")
 						if (waited++ == 0) this.time.tick(119 * 1000)
 						else this.time.tick(1000)
@@ -3075,7 +3075,7 @@ describe("SignaturesController", function() {
 				this.router.get(
 					`${SMART_ID_URL.path}session/${certSession}`,
 					(req, res) => {
-						var timeoutMs = Url.parse(req.url, true).query.timeoutMs
+						var {timeoutMs} = Url.parse(req.url, true).query
 						timeoutMs.must.equal(waited == 0 ? "90000" : "1000")
 						if (waited++ == 0) this.time.tick(89 * 1000)
 						else this.time.tick(1000)
@@ -3388,7 +3388,7 @@ describe("SignaturesController", function() {
 					this.initiative,
 					SMART_ID_CERTIFICATE,
 					(req, res) => {
-						var timeoutMs = Url.parse(req.url, true).query.timeoutMs
+						var {timeoutMs} = Url.parse(req.url, true).query
 						timeoutMs.must.equal(waited == 0 ? "120000" : "1000")
 						if (waited++ == 0) this.time.tick(119 * 1000)
 						else this.time.tick(1000)

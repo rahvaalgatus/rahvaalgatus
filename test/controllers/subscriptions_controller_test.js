@@ -3,7 +3,7 @@ var Crypto = require("crypto")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidInitiative = require("root/test/valid_initiative")
 var ValidUser = require("root/test/valid_user")
-var pseudoHex = require("root/lib/crypto").pseudoHex
+var {pseudoHex} = require("root/lib/crypto")
 var sql = require("sqlate")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var usersDb = require("root/db/users_db")
@@ -603,7 +603,7 @@ describe("SubscriptionsController", function() {
 				comment_interest: false
 			}))
 
-			var uuid = initiative.uuid
+			var {uuid} = initiative
 			var path = `/subscriptions`
 			path += `?initiative=${subscription.initiative_uuid}`
 			path += `&update-token=${subscription.update_token}`
@@ -638,7 +638,7 @@ describe("SubscriptionsController", function() {
 				confirmed_at: new Date
 			}))
 
-			var uuid = initiative.uuid
+			var {uuid} = initiative
 			var path = `/subscriptions`
 			path += `?initiative=${subscription.initiative_uuid}`
 			path += `&update-token=${subscription.update_token}`
@@ -669,7 +669,7 @@ describe("SubscriptionsController", function() {
 				confirmed_at: new Date
 			}))
 
-			var uuid = initiative.uuid
+			var {uuid} = initiative
 			var path = `/subscriptions?initiative=${uuid}&update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
 				method: "PUT",
@@ -704,7 +704,7 @@ describe("SubscriptionsController", function() {
 				initiative_uuid: initiative.uuid
 			}))
 
-			var uuid = initiative.uuid
+			var {uuid} = initiative
 			var path = `/subscriptions?update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
 				method: "PUT",
@@ -734,7 +734,7 @@ describe("SubscriptionsController", function() {
 				confirmed_at: new Date
 			}))
 
-			var uuid = initiative.uuid
+			var {uuid} = initiative
 			var path = `/subscriptions?update-token=${subscription.update_token}`
 			var res = yield this.request(path, {
 				method: "PUT",

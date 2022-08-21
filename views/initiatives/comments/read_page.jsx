@@ -1,27 +1,27 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
-var Fragment = Jsx.Fragment
+var {Fragment} = Jsx
 var InitiativePage = require("../initiative_page")
-var Flash = require("../../page").Flash
+var {Flash} = require("../../page")
 var I18n = require("root/lib/i18n")
-var Form = require("../../page").Form
-var FormButton = require("../../page").FormButton
+var {Form} = require("../../page")
+var {FormButton} = require("../../page")
 var Comment = require("root/lib/comment")
 var Controller = require("root/controllers/initiatives/comments_controller")
 var {PersonaInput} = require("./create_page")
 var {getCommentAuthorName} = Controller
 var {isAdmin} = require("root/lib/user")
 var {MAX_TEXT_LENGTH} = Controller
-var confirm = require("root/lib/jsx").confirm
+var {confirm} = require("root/lib/jsx")
 exports = module.exports = ReadPage
 exports.CommentView = CommentView
 
 function ReadPage(attrs) {
-	var req = attrs.req
-	var t = req.t
-	var initiative = attrs.initiative
-	var comment = attrs.comment
-	var newComment = attrs.newComment
+	var {req} = attrs
+	var {t} = req
+	var {initiative} = attrs
+	var {comment} = attrs
+	var {newComment} = attrs
 
 	return <InitiativePage
 		page="initiative-comment"
@@ -47,13 +47,13 @@ function ReadPage(attrs) {
 }
 
 function CommentView(attrs) {
-	var req = attrs.req
-	var t = req.t
-	var user = req.user
-	var initiative = attrs.initiative
-	var comment = attrs.comment
+	var {req} = attrs
+	var {t} = req
+	var {user} = req
+	var {initiative} = attrs
+	var {comment} = attrs
 	var commentUrl = `/initiatives/${initiative.uuid}/comments/${comment.id}`
-	var newComment = attrs.newComment
+	var {newComment} = attrs
 	var anonymous = !!comment.anonymized_at
 
 	return <Fragment>

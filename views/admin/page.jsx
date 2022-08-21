@@ -1,18 +1,18 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
-var Fragment = Jsx.Fragment
-var LiveReload = require("../page").LiveReload
-var selected = require("root/lib/css").selected
-var prefixed = require("root/lib/css").prefixed
+var {Fragment} = Jsx
+var {LiveReload} = require("../page")
+var {selected} = require("root/lib/css")
+var {prefixed} = require("root/lib/css")
 exports = module.exports = Page
 exports.Form = require("../page").Form
 exports.FormButton = require("../page").FormButton
 exports.Flash = Flash
 
 function Page(attrs, children) {
-	var req = attrs.req
-	var page = attrs.page
-	var title = attrs.title
+	var {req} = attrs
+	var {page} = attrs
+	var {title} = attrs
 	var fullPath = req.baseUrl + req.path
 	var path = fullPath.slice(req.rootUrl.length)
 
@@ -88,7 +88,7 @@ function Page(attrs, children) {
 }
 
 function Flash(attrs) {
-	var flash = attrs.flash
+	var {flash} = attrs
 
 	return <Fragment>
 		{flash("notice") ? <p class="flash notice">{flash("notice")}</p> : null}

@@ -1,16 +1,16 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var Page = require("./page")
-var Form = Page.Form
+var {Form} = Page
 var Config = require("root").config
-var formatDate = require("root/lib/i18n").formatDate
-var formatDateTime = require("root/lib/i18n").formatDateTime
+var {formatDate} = require("root/lib/i18n")
+var {formatDateTime} = require("root/lib/i18n")
 
 module.exports = function(attrs) {
-	var req = attrs.req
-	var from = attrs.from
-	var to = attrs.to
-	var lastSubscriptions = attrs.lastSubscriptions
+	var {req} = attrs
+	var {from} = attrs
+	var {to} = attrs
+	var {lastSubscriptions} = attrs
 
 	return <Page page="dashboard" title="Dashboard" req={req}>
 		<h1 class="admin-heading">Dashboard</h1>
@@ -197,8 +197,8 @@ module.exports = function(attrs) {
 }
 
 function SubscriptionsView(attrs) {
-	var req = attrs.req
-	var subscriptions = attrs.subscriptions
+	var {req} = attrs
+	var {subscriptions} = attrs
 
 	return <table class="admin-table subscriptions-table">
 		<thead>
@@ -209,7 +209,7 @@ function SubscriptionsView(attrs) {
 		</thead>
 
 		<tbody>{subscriptions.map(function(subscription) {
-			var initiative = subscription.initiative
+			var {initiative} = subscription
 
 			return <tr>
 				<td>{formatDateTime("numeric", subscription.created_at)}</td>

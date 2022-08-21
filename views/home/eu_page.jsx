@@ -5,9 +5,9 @@ var {Section} = require("../page")
 var I18n = require("root/lib/i18n")
 
 module.exports = function(attrs) {
-	var req = attrs.req
-	var t = req.t
-	var lang = req.lang
+	var {req} = attrs
+	var {t} = req
+	var {lang} = req
 
 	return <Page page="eu" title={t("EU_PAGE_TITLE")} req={req}>
 		<Section id="hero-image" class="primary-section">

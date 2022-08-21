@@ -1,6 +1,6 @@
 var _ = require("root/lib/underscore")
 var Fs = require("fs")
-var Html = require("j6pack").Html
+var {Html} = require("j6pack")
 var Pem = require("undersign/lib/pem")
 var Crypto = require("crypto")
 var X509Asn = require("undersign/lib/x509_asn")
@@ -12,7 +12,7 @@ var ValidUser = require("root/test/valid_user")
 var ValidSession = require("root/test/valid_session")
 var usersDb = require("root/db/users_db")
 var sessionsDb = require("root/db/sessions_db")
-var pseudoHex = require("root/lib/crypto").pseudoHex
+var {pseudoHex} = require("root/lib/crypto")
 var sha1 = require("root/lib/crypto").hash.bind(null, "sha1")
 var fetchDefaults = require("fetch-defaults")
 var EMPTY_BUFFER = Buffer.alloc(0)
@@ -60,7 +60,7 @@ exports.PHONE_NUMBER_TRANSFORMS = {
 
 // Load TSL only after setting ISSUER_KEYS as they're used for setting the
 // public keys.
-var tsl = require("root").tsl
+var {tsl} = require("root")
 
 // EID-SK 2007 expired 2016-08-26T14:23:01.000Z,
 // ESTEID-SK 2007 expired 2016-08-26T14:23:01.000Z.

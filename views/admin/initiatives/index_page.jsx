@@ -3,13 +3,13 @@ var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Page = require("../page")
 var Config = require("root").config
-var formatDate = require("root/lib/i18n").formatDate
+var {formatDate} = require("root/lib/i18n")
 var EMPTY_ARR = Array.prototype
 
 module.exports = function(attrs) {
-	var req = attrs.req
-	var initiatives = attrs.initiatives
-	var subscriberCounts = attrs.subscriberCounts
+	var {req} = attrs
+	var {initiatives} = attrs
+	var {subscriberCounts} = attrs
 
 	var initiativesByPhase = _.groupBy(initiatives, "phase")
 	var inEdit = initiativesByPhase.edit || EMPTY_ARR
@@ -84,9 +84,9 @@ module.exports = function(attrs) {
 }
 
 function InitiativesView(attrs) {
-	var req = attrs.req
-	var initiatives = attrs.initiatives
-	var subscriberCounts = attrs.subscriberCounts
+	var {req} = attrs
+	var {initiatives} = attrs
+	var {subscriberCounts} = attrs
 	var showSentTo = initiatives.some((i) => i.sent_to_parliament_at)
 	var showFinishedIn = initiatives.some((i) => i.finished_in_parliament_at)
 	var showSubscribers = initiatives.some((i) => subscriberCounts[i.uuid] > 0)

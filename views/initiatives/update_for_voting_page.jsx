@@ -1,22 +1,22 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
-var Form = require("../page").Form
+var {Form} = require("../page")
 var I18n = require("root/lib/i18n")
 var DateFns = require("date-fns")
-var DatePickerInput = require("../page").DatePickerInput
+var {DatePickerInput} = require("../page")
 var InitiativePage = require("./initiative_page")
 var Initiative = require("root/lib/initiative")
 var formatIso = require("root/lib/i18n").formatDate.bind(null, "iso")
 var LANGUAGES = require("root").config.languages
 
 module.exports = function(attributes) {
-	var req = attributes.req
-	var t = attributes.t
-	var initiative = attributes.initiative
+	var {req} = attributes
+	var {t} = attributes
+	var {initiative} = attributes
 	var initiativePath = `/initiatives/${initiative.uuid}`
-	var error = attributes.error
-	var attrs = attributes.attrs
-	var texts = attributes.texts
+	var {error} = attributes
+	var {attrs} = attributes
+	var {texts} = attributes
 
 	var minOn = DateFns.addDays(
 		Initiative.getMinDeadline(initiative.signing_started_at || new Date),

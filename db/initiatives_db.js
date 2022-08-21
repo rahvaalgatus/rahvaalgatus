@@ -2,7 +2,7 @@ var _ = require("root/lib/underscore")
 var Db = require("root/lib/db")
 var MediaType = require("medium-type")
 var sql = require("sqlate")
-var sqlite = require("root").sqlite
+var {sqlite} = require("root")
 
 exports = module.exports = new Db(Object, sqlite, "initiatives")
 exports.idAttribute = "uuid"

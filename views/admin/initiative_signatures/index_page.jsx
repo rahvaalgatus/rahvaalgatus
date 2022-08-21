@@ -2,8 +2,8 @@
 var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Page = require("../page")
-var Form = Page.Form
-var formatDate = require("root/lib/i18n").formatDate
+var {Form} = Page
+var {formatDate} = require("root/lib/i18n")
 var SignaturesController =
 	require("root/controllers/admin/initiative_signatures_controller")
 var {getBirthyearFromPersonalId} = SignaturesController
@@ -22,12 +22,12 @@ var COLUMN_TITLES = {
 }
 
 module.exports = function(attrs) {
-	var req = attrs.req
-	var from = attrs.from
-	var to = attrs.to
-	var columns = attrs.columns
-	var timeFormat = attrs.timeFormat
-	var locationFormat = attrs.locationFormat
+	var {req} = attrs
+	var {from} = attrs
+	var {to} = attrs
+	var {columns} = attrs
+	var {timeFormat} = attrs
+	var {locationFormat} = attrs
 	var signatures = attrs.signatures || attrs.signers
 
 	return <Page page="signatures" title="Signature" req={attrs.req}>

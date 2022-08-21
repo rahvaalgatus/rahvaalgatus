@@ -1,7 +1,7 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var Trix = require("root/lib/trix")
-var Fragment = Jsx.Fragment
+var {Fragment} = Jsx
 var URL = "http://example.com"
 
 var BLOCK_BREAK = {

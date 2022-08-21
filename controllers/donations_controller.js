@@ -1,6 +1,6 @@
 var _ = require("root/lib/underscore")
 var Config = require("root").config
-var Router = require("express").Router
+var {Router} = require("express")
 var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
 
 exports.router = Router({mergeParams: true})

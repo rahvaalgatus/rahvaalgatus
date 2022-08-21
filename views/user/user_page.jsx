@@ -4,10 +4,10 @@ var Page = require("../page")
 var {selected} = require("root/lib/css")
 
 module.exports = function(attrs, children) {
-	var req = attrs.req
-	var t = req.t
-	var path = req.path
-	var user = attrs.user
+	var {req} = attrs
+	var {t} = req
+	var {path} = req
+	var {user} = attrs
 
 	return <Page {...attrs} class={"user-page " + (attrs.class || "")}>
 		<header id="user-header"><center>

@@ -1,5 +1,5 @@
 var outdent = require("root/lib/outdent")
-var htmlify = require("root/lib/comment").htmlify
+var {htmlify} = require("root/lib/comment")
 
 describe("Comment", function() {
 	describe(".htmlify", function() {

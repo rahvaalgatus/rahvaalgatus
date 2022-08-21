@@ -5,12 +5,12 @@ var {MobileIdView} = require("root/views/initiatives/signatures/creating_page")
 exports = module.exports = CreatingPage
 
 function CreatingPage(attrs) {
-	var req = attrs.req
-	var t = req.t
-	var error = attrs.error
-	var method = attrs.method
-	var code = attrs.code
-	var poll = attrs.poll
+	var {req} = attrs
+	var {t} = req
+	var {error} = attrs
+	var {method} = attrs
+	var {code} = attrs
+	var {poll} = attrs
 
 	return <Page
 		page="creating-demo-signature"

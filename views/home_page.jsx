@@ -1,14 +1,14 @@
 /** @jsx Jsx */
 var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
-var Fragment = Jsx.Fragment
+var {Fragment} = Jsx
 var Page = require("./page")
 var Config = require("root").config
 var I18n = require("root/lib/i18n")
 var {Section} = require("./page")
 var {Flash} = require("./page")
 var {Form} = require("./page")
-var FormCheckbox = Page.FormCheckbox
+var {FormCheckbox} = Page
 var {InitiativeBoxesView} = require("./initiatives/index_page")
 var {InitiativeBoxView} = require("./initiatives/index_page")
 var {getRequiredSignatureCount} = require("root/lib/initiative")
@@ -18,11 +18,11 @@ exports.StatisticsView = StatisticsView
 exports.groupInitiatives = groupInitiatives
 
 function HomePage(attrs) {
-	var t = attrs.t
-	var req = attrs.req
+	var {t} = attrs
+	var {req} = attrs
 	var stats = attrs.statistics
-	var recentInitiatives = attrs.recentInitiatives
-	var news = attrs.news
+	var {recentInitiatives} = attrs
+	var {news} = attrs
 	var initiativesByPhase = groupInitiatives(attrs.initiatives)
 
 	return <Page
@@ -265,9 +265,9 @@ function HomePage(attrs) {
 }
 
 function CallToActionsView(attrs) {
-	var req = attrs.req
-	var user = req.user
-	var t = attrs.t
+	var {req} = attrs
+	var {user} = req
+	var {t} = attrs
 
 	var [
 		subscriptionFormToggle,
@@ -296,8 +296,8 @@ function CallToActionsView(attrs) {
 }
 
 function StatisticsView(attrs, children) {
-	var title = attrs.title
-	var count = attrs.count
+	var {title} = attrs
+	var {count} = attrs
 
 	return <div id={attrs.id} class="statistic">
 		<h2>{title}</h2>
@@ -307,9 +307,9 @@ function StatisticsView(attrs, children) {
 }
 
 function InitiativesSubscriptionForm(attrs) {
-	var req = attrs.req
-	var t = attrs.t
-	var user = attrs.user
+	var {req} = attrs
+	var {t} = attrs
+	var {user} = attrs
 	var toggleId = _.uniqueId("subscriptions-form-toggle-")
 
 	return [

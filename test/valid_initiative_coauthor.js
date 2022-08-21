@@ -14,7 +14,7 @@ module.exports = function(attrs) {
 	}
 
 	if (attrs && attrs.initiative) {
-		var initiative = attrs.initiative
+		var {initiative} = attrs
 		delete attrs.initiative
 		defaults.initiative_uuid = initiative.uuid
 		defaults.created_by_id = initiative.user_id
@@ -28,7 +28,7 @@ module.exports = function(attrs) {
 	}
 
 	if (attrs && attrs.user) {
-		var user = attrs.user
+		var {user} = attrs
 		delete attrs.user
 		defaults.country = user.country
 		defaults.personal_id = user.personal_id

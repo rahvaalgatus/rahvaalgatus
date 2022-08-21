@@ -2,37 +2,37 @@
 var _ = require("root/lib/underscore")
 var Url = require("url")
 var Jsx = require("j6pack")
-var Fragment = Jsx.Fragment
+var {Fragment} = Jsx
 var Time = require("root/lib/time")
 var DateFns = require("date-fns")
 var InitiativePage = require("./initiative_page")
 var Config = require("root").config
 var I18n = require("root/lib/i18n")
-var Flash = require("../page").Flash
-var Form = require("../page").Form
+var {Flash} = require("../page")
+var {Form} = require("../page")
 var Trix = require("root/lib/trix")
 var Initiative = require("root/lib/initiative")
-var FormButton = require("../page").FormButton
-var DonateForm = require("../donations/create_page").DonateForm
-var CommentView = require("./comments/read_page").CommentView
-var CommentForm = require("./comments/create_page").CommentForm
-var ProgressView = require("./initiative_page").ProgressView
+var {FormButton} = require("../page")
+var {DonateForm} = require("../donations/create_page")
+var {CommentView} = require("./comments/read_page")
+var {CommentForm} = require("./comments/create_page")
+var {ProgressView} = require("./initiative_page")
 var {CoauthorInvitationForm} = require("./coauthor_invitation_page")
 var {getRequiredSignatureCount} = require("root/lib/initiative")
 var {isAdmin} = require("root/lib/user")
 var {selected} = require("root/lib/css")
-var javascript = require("root/lib/jsx").javascript
+var {javascript} = require("root/lib/jsx")
 var serializeInitiativeUrl = require("root/lib/initiative").initiativeUrl
 var serializeImageUrl = require("root/lib/initiative").imageUrl
 var {pathToSignature} =
 	require("root/controllers/initiatives/signatures_controller")
-var confirm = require("root/lib/jsx").confirm
+var {confirm} = require("root/lib/jsx")
 var linkify = require("root/lib/linkify")
 var encode = encodeURIComponent
-var min = Math.min
+var {min} = Math
 var {normalizeCitizenOsHtml} = require("root/lib/initiative")
 var diffInDays = DateFns.differenceInCalendarDays
-var PHASES = require("root/lib/initiative").PHASES
+var {PHASES} = require("root/lib/initiative")
 var HTTP_URL = /^https?:\/\//i
 var EMPTY_ARR = Array.prototype
 var EMPTY_ORG = {name: "", url: ""}
@@ -109,27 +109,27 @@ var FILE_TYPE_NAMES = {
 }
 
 function ReadPage(attrs) {
-	var req = attrs.req
-	var t = attrs.t
-	var user = req.user
-  var lang = req.lang
-	var thank = attrs.thank
-	var thankAgain = attrs.thankAgain
-	var signature = attrs.signature
-	var files = attrs.files
-	var comments = attrs.comments
-	var subscription = attrs.subscription
-	var flash = attrs.flash
-	var events = attrs.events
-	var initiative = attrs.initiative
+	var {req} = attrs
+	var {t} = attrs
+	var {user} = req
+  var {lang} = req
+	var {thank} = attrs
+	var {thankAgain} = attrs
+	var {signature} = attrs
+	var {files} = attrs
+	var {comments} = attrs
+	var {subscription} = attrs
+	var {flash} = attrs
+	var {events} = attrs
+	var {initiative} = attrs
 	var initiativePath = "/initiatives/" + initiative.uuid
-	var subscriberCounts = attrs.subscriberCounts
+	var {subscriberCounts} = attrs
 	var signatureCount = initiative.signature_count
-	var text = attrs.text
-	var textLanguage = attrs.textLanguage
-	var translations = attrs.translations
-	var image = attrs.image
-	var coauthorInvitation = attrs.coauthorInvitation
+	var {text} = attrs
+	var {textLanguage} = attrs
+	var {translations} = attrs
+	var {image} = attrs
+	var {coauthorInvitation} = attrs
 	var initiativeUrl = serializeInitiativeUrl(initiative)
 	var shareText = `${initiative.title} ${initiativeUrl}`
 	var atomPath = req.baseUrl + req.path + ".atom"
@@ -599,10 +599,10 @@ function ReadPage(attrs) {
 }
 
 function PhasesView(attrs) {
-  var t = attrs.t
-  var initiative = attrs.initiative
+  var {t} = attrs
+  var {initiative} = attrs
   var sigs = attrs.signatureCount
-	var phase = initiative.phase
+	var {phase} = initiative
   var acceptedByParliamentAt = initiative.accepted_by_parliament_at
 	var finishedInParliamentAt = initiative.finished_in_parliament_at
 	var sentToGovernmentAt = initiative.sent_to_government_at
@@ -813,10 +813,10 @@ function PhasesView(attrs) {
 }
 
 function InitiativeContentView(attrs) {
-	var initiative = attrs.initiative
-	var text = attrs.text
+	var {initiative} = attrs
+	var {text} = attrs
 	var initiativePath = "/initiatives/" + initiative.uuid
-	var files = attrs.files
+	var {files} = attrs
 
 	if (initiative.external) {
 		var pdf = files.find((file) => file.content_type == "application/pdf")
@@ -857,19 +857,19 @@ function InitiativeContentView(attrs) {
 }
 
 function SidebarAuthorView(attrs) {
-	var req = attrs.req
-	var user = req.user
-	var initiative = attrs.initiative
-	var translations = attrs.translations
+	var {req} = attrs
+	var {user} = req
+	var {initiative} = attrs
+	var {translations} = attrs
 	var isCreator = user && initiative.user_id == user.id
 
 	var isAuthor = user && Initiative.isAuthor(user, initiative)
 	if (!isAuthor) return null
 
-	var t = req.t
-	var text = attrs.text
+	var {t} = req
+	var {text} = attrs
 	var signatureCount = initiative.signature_count
-	var hasComments = attrs.hasComments
+	var {hasComments} = attrs
 
 	var initiativePath = "/initiatives/" + initiative.uuid
 	var coauthorsPath = initiativePath + "/coauthors"
@@ -1079,22 +1079,22 @@ function SidebarAuthorView(attrs) {
 }
 
 function SidebarInfoView(attrs) {
-	var req = attrs.req
-	var t = req.t
-	var user = attrs.user
-	var initiative = attrs.initiative
+	var {req} = attrs
+	var {t} = req
+	var {user} = attrs
+	var {initiative} = attrs
 	var canEdit = user && Initiative.isAuthor(user, initiative)
-	var phase = initiative.phase
+	var {phase} = initiative
 	var authorName = initiative.author_name
 	var coauthorNames = _.map(initiative.coauthors, "user_name")
 	var authorUrl = initiative.author_url
 	var authorContacts = initiative.author_contacts
 	var communityUrl = initiative.community_url
 	var externalUrl = initiative.url
-	var organizations = initiative.organizations
+	var {organizations} = initiative
 	var mediaUrls = initiative.media_urls
-	var meetings = initiative.meetings
-	var notes = initiative.notes
+	var {meetings} = initiative
+	var {notes} = initiative
 	var governmentChangeUrls = initiative.government_change_urls
 	var publicChangeUrls = initiative.public_change_urls
 	var initiativePath = "/initiatives/" + initiative.uuid
@@ -1421,10 +1421,10 @@ function SidebarInfoView(attrs) {
 }
 
 function SidebarSubscribeView(attrs) {
-	var req = attrs.req
-	var t = req.t
-	var initiative = attrs.initiative
-	var subscriberCounts = attrs.subscriberCounts
+	var {req} = attrs
+	var {t} = req
+	var {initiative} = attrs
+	var {subscriberCounts} = attrs
 	var atomPath = req.baseUrl + req.path + ".atom"
 
 	if (!initiative.published_at) return null
@@ -1451,9 +1451,9 @@ function SidebarSubscribeView(attrs) {
 }
 
 function SidebarAdminView(attrs) {
-	var req = attrs.req
-	var t = req.t
-	var initiative = attrs.initiative
+	var {req} = attrs
+	var {t} = req
+	var {initiative} = attrs
 
 	if (!(req.user && isAdmin(req.user))) return null
 
@@ -1471,11 +1471,11 @@ function SidebarAdminView(attrs) {
 }
 
 function SigningView(attrs) {
-	var t = attrs.t
-	var req = attrs.req
-	var action = attrs.action
-	var personalId = attrs.personalId
-	var singlePage = attrs.singlePage
+	var {t} = attrs
+	var {req} = attrs
+	var {action} = attrs
+	var {personalId} = attrs
+	var {singlePage} = attrs
 
 	return <div class="signing-view">
 		<input
@@ -1815,9 +1815,9 @@ function SigningView(attrs) {
 }
 
 function EventsView(attrs) {
-	var t = attrs.t
-	var user = attrs.user
-	var initiative = attrs.initiative
+	var {t} = attrs
+	var {user} = attrs
+	var {initiative} = attrs
 	var events = attrs.events.sort(compareEvent).reverse()
 	var initiativePath = "/initiatives/" + initiative.uuid
 
@@ -1874,7 +1874,7 @@ function EventsView(attrs) {
 						case "parliament-accepted":
 							title = t("PARLIAMENT_ACCEPTED")
 
-							var committee = event.content.committee
+							var {committee} = event.content
 							if (committee) content = <p class="text">
 								{t("PARLIAMENT_ACCEPTED_SENT_TO_COMMITTEE", {
 									committee: committee
@@ -1908,7 +1908,7 @@ function EventsView(attrs) {
 						case "parliament-committee-meeting":
 							meeting = event.content
 							decision = meeting.decision
-							var invitees = meeting.invitees
+							var {invitees} = meeting
 							summary = meeting.summary
 							links = meeting.links || EMPTY_ARR
 
@@ -2154,11 +2154,11 @@ function EventsView(attrs) {
 }
 
 function CommentsView(attrs) {
-	var t = attrs.t
-	var req = attrs.req
-	var initiative = attrs.initiative
-	var comments = attrs.comments
-	var subscription = attrs.subscription
+	var {t} = attrs
+	var {req} = attrs
+	var {initiative} = attrs
+	var {comments} = attrs
+	var {subscription} = attrs
 
 	return <section id="initiative-comments" class="transparent-section"><center>
 		<h2>{t("COMMENT_HEADING")}</h2>
@@ -2182,12 +2182,12 @@ function CommentsView(attrs) {
 }
 
 function SubscribeEmailView(attrs) {
-	var t = attrs.t
-	var req = attrs.req
-	var user = req.user
-	var initiative = attrs.initiative
-	var count = attrs.count
-	var allCount = attrs.allCount
+	var {t} = attrs
+	var {req} = attrs
+	var {user} = req
+	var {initiative} = attrs
+	var {count} = attrs
+	var {allCount} = attrs
 	var counts = {count: count, allCount: allCount}
 
 	return <Form
@@ -2222,9 +2222,9 @@ function SubscribeEmailView(attrs) {
 }
 
 function ProgressTextView(attrs) {
-	var t = attrs.t
-	var initiative = attrs.initiative
-	var signatureCount = attrs.signatureCount
+	var {t} = attrs
+	var {initiative} = attrs
+	var {signatureCount} = attrs
 
 	switch (initiative.phase) {
 		case "edit":
@@ -2272,11 +2272,11 @@ function ProgressTextView(attrs) {
 }
 
 function QuicksignView(attrs) {
-	var t = attrs.t
-	var req = attrs.req
-	var initiative = attrs.initiative
-	var signature = attrs.signature
-	var signatureCount = attrs.signatureCount
+	var {t} = attrs
+	var {req} = attrs
+	var {initiative} = attrs
+	var {signature} = attrs
+	var {signatureCount} = attrs
 
 	if (!initiative.published_at) return null
 
@@ -2317,9 +2317,9 @@ function QuicksignView(attrs) {
 }
 
 function InitiativeDestinationSelectView(attrs) {
-	var initiative = attrs.initiative
+	var {initiative} = attrs
 	var dest = initiative.destination
-	var placeholder = attrs.placeholder
+	var {placeholder} = attrs
 
 	return <select
 		name={attrs.name}
@@ -2345,8 +2345,8 @@ function InitiativeDestinationSelectView(attrs) {
 }
 
 function InitiativeLocationView(attrs) {
-	var t = attrs.t
-	var initiative = attrs.initiative
+	var {t} = attrs
+	var {initiative} = attrs
 
 	var content
 	if (initiative.phase == "parliament" && initiative.parliament_committee) {
@@ -2376,14 +2376,14 @@ function InitiativeLocationView(attrs) {
 }
 
 function InitiativeAttribute(attrs, children) {
-	var t = attrs.t
-	var title = attrs.title
-	var type = attrs.type
-	var name = attrs.name
-	var value = attrs.value
-	var placeholder = attrs.placeholder
-	var help = attrs.help
-	var editable = attrs.editable
+	var {t} = attrs
+	var {title} = attrs
+	var {type} = attrs
+	var {name} = attrs
+	var {value} = attrs
+	var {placeholder} = attrs
+	var {help} = attrs
+	var {editable} = attrs
 
 	return <Fragment>
 		<h3 class="sidebar-subheader">{title}</h3>
@@ -2409,11 +2409,11 @@ function InitiativeAttribute(attrs, children) {
 }
 
 function InitiativeAttributeList(attrs, children) {
-	var id = attrs.id
-	var values = attrs.values
+	var {id} = attrs
+	var {values} = attrs
 	var def = attrs.default
-	var add = attrs.add
-	var help = attrs.help
+	var {add} = attrs
+	var {help} = attrs
 	var render = children[0]
 	var buttonId = _.uniqueId("initiative-attributes-")
 
@@ -2454,7 +2454,7 @@ function InitiativeAttributeList(attrs, children) {
 }
 
 function UntrustedLink(attrs, children) {
-	var href = attrs.href
+	var {href} = attrs
 	var klass = attrs.class || ""
 	children = children ? children.filter(Boolean) : EMPTY_ARR
 	var text = children.length ? children : href
@@ -2466,8 +2466,8 @@ function UntrustedLink(attrs, children) {
 }
 
 function InitiativeImageUploadForm(attrs, children) {
-	var req = attrs.req
-	var initiative = attrs.initiative
+	var {req} = attrs
+	var {initiative} = attrs
 	var initiativePath = "/initiatives/" + initiative.uuid
 
 	return <Form
@@ -2494,7 +2494,7 @@ function InitiativeImageUploadForm(attrs, children) {
 }
 
 function AddInitiativeInfoButton(attrs) {
-	var t = attrs.t
+	var {t} = attrs
 
 	return <label
 		class="edit-button link-button"
@@ -2504,7 +2504,7 @@ function AddInitiativeInfoButton(attrs) {
 }
 
 function DownloadSignatureButton(attrs, children) {
-	var signature = attrs.signature
+	var {signature} = attrs
 	var initiativePath = "/initiatives/" + signature.initiative_uuid
 	var signaturePath = initiativePath + "/signatures/"
 	signaturePath += pathToSignature(signature, "asice")
@@ -2515,8 +2515,8 @@ function DownloadSignatureButton(attrs, children) {
 }
 
 function DeleteSignatureButton(attrs, children) {
-	var req = attrs.req
-	var signature = attrs.signature
+	var {req} = attrs
+	var {signature} = attrs
 	var initiativePath = "/initiatives/" + signature.initiative_uuid
 
 	return <FormButton

@@ -1,7 +1,7 @@
 var _ = require("root/lib/underscore")
 var Url = require("url")
 var Config = require("root").config
-var Router = require("express").Router
+var {Router} = require("express")
 var Crypto = require("crypto")
 var HttpError = require("standard-http-error")
 var SqliteError = require("root/lib/sqlite_error")
@@ -13,7 +13,7 @@ var signaturesDb = require("root/db/initiative_signatures_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var {constantTimeEqual} = require("root/lib/crypto")
 var next = require("co-next")
-var sendEmail = require("root").sendEmail
+var {sendEmail} = require("root")
 var renderEmail = require("root/lib/i18n").email
 var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
 var {updateSubscriptions} = require("./subscriptions_controller")
@@ -41,7 +41,7 @@ exports.router.use(function(req, _res, next) {
 exports.router.get("/", read)
 
 exports.router.put("/", next(function*(req, res) {
-	var user = req.user
+	var {user} = req
 	var [attrs, errors] = parseUser(req.body)
 
 	if (errors) {
@@ -111,7 +111,7 @@ exports.router.put("/", next(function*(req, res) {
 }))
 
 exports.router.get("/signatures", function(req, res) {
-	var user = req.user
+	var {user} = req
 
 	var signatures = signaturesDb.search(sql`
 		WITH signatures AS (
@@ -145,7 +145,7 @@ exports.router.get("/signatures", function(req, res) {
 })
 
 exports.router.use("/subscriptions", function(req, _res, next) {
-	var user = req.user
+	var {user} = req
 
 	req.subscriptions = user.email ? subscriptionsDb.search(sql`
 		SELECT subscription.*, initiative.title AS initiative_title
@@ -161,8 +161,8 @@ exports.router.use("/subscriptions", function(req, _res, next) {
 })
 
 exports.router.get("/subscriptions", function(req, res) {
-	var user = req.user
-	var subscriptions = req.subscriptions
+	var {user} = req
+	var {subscriptions} = req
 
 	res.render("user/subscriptions_page.jsx", {
 		user: user,
@@ -171,7 +171,7 @@ exports.router.get("/subscriptions", function(req, res) {
 })
 
 exports.router.put("/subscriptions", function(req, res) {
-	var user = req.user
+	var {user} = req
 	if (user.email == null) throw new HttpError(403, "Email Unconfirmed")
 
 	updateSubscriptions(req.subscriptions, req.body)
@@ -180,7 +180,7 @@ exports.router.put("/subscriptions", function(req, res) {
 })
 
 exports.router.delete("/subscriptions", function(req, res) {
-	var user = req.user
+	var {user} = req
 	if (user.email == null) throw new HttpError(403, "Email Unconfirmed")
 
 	subscriptionsDb.execute(sql`
@@ -194,7 +194,7 @@ exports.router.delete("/subscriptions", function(req, res) {
 })
 
 exports.router.get("/email", function(req, res) {
-	var user = req.user
+	var {user} = req
 
 	var token = req.query["confirmation-token"]
 	if (token == null) throw new HttpError(404, "Confirmation Token Missing", {
@@ -241,7 +241,7 @@ exports.router.get("/email", function(req, res) {
 })
 
 function read(req, res) {
-	var user = req.user
+	var {user} = req
 
 	var initiatives = initiativesDb.search(sql`
 		SELECT

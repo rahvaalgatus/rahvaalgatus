@@ -18,7 +18,7 @@ var isEventNotifiable = require("root/lib/event").isNotifiable
 var t = require("root/lib/i18n").t.bind(null, "et")
 var formatDate = require("root/lib/i18n").formatDate.bind(null, "numeric")
 var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
-var logger = require("root").logger
+var {logger} = require("root")
 var EMPTY_ARR = Array.prototype
 var PARLIAMENT_URL = "https://www.riigikogu.ee"
 var DOCUMENT_URL = PARLIAMENT_URL + "/tegevus/dokumendiregister/dokument"
@@ -80,7 +80,7 @@ function* cli(argv) {
 
 function* sync(opts, uuid) {
 	var api = _.memoize(parliamentApi)
-	var force = opts.force
+	var {force} = opts
 
 	var docs = yield (uuid == null
 		? api("documents/collective-addresses").then(getBody)
@@ -459,7 +459,7 @@ function attrsFrom(doc) {
 }
 
 function attrsFromStatus(status) {
-	var code = status.status.code
+	var {code} = status.status
 
 	// NOTE: The registered date indicates when the initiative was entered into
 	// the document database. It may be later than when the initiative was given
@@ -831,7 +831,7 @@ function fileAttrsFrom(document, file) {
 }
 
 function eventIdFromStatus(obj) {
-	var code = obj.status.code
+	var {code} = obj.status
 
 	switch (code) {
 		case "REGISTREERITUD":
@@ -846,7 +846,7 @@ function eventIdFromStatus(obj) {
 }
 
 function eventTypeFromStatus(obj) {
-	var code = obj.status.code
+	var {code} = obj.status
 
 	switch (code) {
 		case "REGISTREERITUD": return "parliament-received"

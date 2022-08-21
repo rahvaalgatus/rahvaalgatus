@@ -2,17 +2,17 @@
 var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Page = require("../page")
-var Fragment = Jsx.Fragment
-var javascript = require("root/lib/jsx").javascript
+var {Fragment} = Jsx
+var {javascript} = require("root/lib/jsx")
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
 
 module.exports = function(attrs) {
-	var t = attrs.t
-	var req = attrs.req
-	var code = attrs.code
-	var error = attrs.error
-	var method = attrs.method
-	var poll = attrs.poll
+	var {t} = attrs
+	var {req} = attrs
+	var {code} = attrs
+	var {error} = attrs
+	var {method} = attrs
+	var {poll} = attrs
 
 	return <Page page="create-session" title="Logi sisse" req={req}>
 		<script src="/assets/html5.js" />
@@ -33,11 +33,11 @@ module.exports = function(attrs) {
 }
 
 function MobileIdView(attrs) {
-	var req = attrs.req
-	var t = attrs.t
-	var code = attrs.code
-	var poll = attrs.poll
-	var method = attrs.method
+	var {req} = attrs
+	var {t} = attrs
+	var {code} = attrs
+	var {poll} = attrs
+	var {method} = attrs
 
 	return <Fragment>
 		<p>

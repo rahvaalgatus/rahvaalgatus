@@ -2,7 +2,7 @@ var Http = require("http")
 var Adm = require("root/bin/adm")
 var {request} = require("./fixtures")
 var fetchDefaults = require("fetch-defaults")
-var wait = require("root/lib/promise").wait
+var {wait} = require("root/lib/promise")
 
 exports = module.exports = function() {
 	before(exports.listen)

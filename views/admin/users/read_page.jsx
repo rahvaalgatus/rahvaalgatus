@@ -1,17 +1,17 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var Page = require("../page")
-var Form = Page.Form
-var Flash = Page.Flash
+var {Form} = Page
+var {Flash} = Page
 var Config = require("root").config
-var Fragment = Jsx.Fragment
-var formatDateTime = require("root/lib/i18n").formatDateTime
+var {Fragment} = Jsx
+var {formatDateTime} = require("root/lib/i18n")
 
 module.exports = function(attrs) {
-	var req = attrs.req
-	var user = attrs.user
-	var initiatives = attrs.initiatives
-	var comments = attrs.comments
+	var {req} = attrs
+	var {user} = attrs
+	var {initiatives} = attrs
+	var {comments} = attrs
 
 	return <Page page="user" title={"User - " + user.name} req={req}>
 		<a href={req.baseUrl} class="admin-back">Users</a>

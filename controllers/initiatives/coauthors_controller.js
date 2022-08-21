@@ -1,5 +1,5 @@
 var _ = require("root/lib/underscore")
-var Router = require("express").Router
+var {Router} = require("express")
 var HttpError = require("standard-http-error")
 var SqliteError = require("root/lib/sqlite_error")
 var coauthorsDb = require("root/db/initiative_coauthors_db")
@@ -19,14 +19,14 @@ exports.STATUSES = [
 exports.router = Router({mergeParams: true})
 
 exports.router.use(function(req, _res, next) {
-	var user = req.user
+	var {user} = req
 	if (user == null) throw new HttpError(401)
 
 	next()
 })
 
 exports.router.get("/", assertCreator, function(req, res) {
-	var initiative = req.initiative
+	var {initiative} = req
 
 	var coauthors = coauthorsDb.search(sql`
 		SELECT
@@ -43,8 +43,8 @@ exports.router.get("/", assertCreator, function(req, res) {
 })
 
 exports.router.post("/", assertCreator, function(req, res) {
-	var user = req.user
-	var initiative = req.initiative
+	var {user} = req
+	var {initiative} = req
 	var personalId = String(req.body.personalId)
 
 	if (personalId == user.personal_id) {
@@ -78,8 +78,8 @@ exports.router.post("/", assertCreator, function(req, res) {
 })
 
 exports.router.put("/:personalId", function(req, res) {
-	var user = req.user
-	var initiative = req.initiative
+	var {user} = req
+	var {initiative} = req
 	var [country, personalId] = parsePersonalId(req.params.personalId)
 
 	if (!(user.country == country && user.personal_id == personalId))
@@ -120,8 +120,8 @@ exports.router.put("/:personalId", function(req, res) {
 })
 
 exports.router.delete("/:personalId", function(req, res) {
-	var user = req.user
-	var initiative = req.initiative
+	var {user} = req
+	var {initiative} = req
 	var [country, personalId] = parsePersonalId(req.params.personalId)
 
 	// Check permissions before coauthor existence to not leak its presence.
@@ -192,8 +192,8 @@ exports.router.delete("/:personalId", function(req, res) {
 })
 
 function assertCreator(req, _res, next) {
-	var user = req.user
-	var initiative = req.initiative
+	var {user} = req
+	var {initiative} = req
 
 	if (initiative.user_id != user.id)
 		throw new HttpError(403, "No Permission to Edit Coauthors")

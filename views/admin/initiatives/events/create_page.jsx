@@ -250,7 +250,7 @@ function EventForm(attrs) {
 }
 
 function EventTimeView(attrs) {
-	var event = attrs.event
+	var {event} = attrs
 
 	return <Fragment>
 		<label class="admin-label">Occurred At</label>

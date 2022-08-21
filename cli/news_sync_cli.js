@@ -33,7 +33,7 @@ module.exports = function*(argv) {
 		headers: {"Accept": "application/atom+xml"}
 	})
 
-	var feed = Atom.parse(res.body).feed
+	var {feed} = Atom.parse(res.body)
 
 	_.asArray(feed.entry).forEach(function(entry) {
 		var attrs = parse(entry)

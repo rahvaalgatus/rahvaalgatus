@@ -1,5 +1,5 @@
 var _ = require("root/lib/underscore")
-var Router = require("express").Router
+var {Router} = require("express")
 var Subscription = require("root/lib/subscription")
 var HttpError = require("standard-http-error")
 var Crypto = require("crypto")
@@ -17,7 +17,7 @@ var isEventNotifiable = require("root/lib/event").isNotifiable
 var {countUndersignedSignaturesById} = require("root/lib/initiative")
 var {countCitizenOsSignaturesById} = require("root/lib/initiative")
 var next = require("co-next")
-var sqlite = require("root").sqlite
+var {sqlite} = require("root")
 var trim = Function.call.bind(String.prototype.trim)
 var MEGABYTE = Math.pow(2, 20)
 exports.isEditableEvent = isEditableEvent
@@ -62,7 +62,7 @@ exports.router.use("/:id", function(req, res, next) {
 })
 
 exports.router.get("/:id", function(req, res) {
-	var initiative = req.initiative
+	var {initiative} = req
 
 	var author = usersDb.read(sql`
 		SELECT * FROM users WHERE id = ${initiative.user_id}
@@ -109,7 +109,7 @@ exports.router.get("/:id", function(req, res) {
 })
 
 exports.router.get("/:id/subscriptions.:ext?", function(req, res) {
-	var initiative = req.initiative
+	var {initiative} = req
 
 	var subs = subscriptionsDb.search(sql`
 		SELECT * FROM initiative_subscriptions
@@ -134,7 +134,7 @@ exports.router.get("/:id/subscriptions.:ext?", function(req, res) {
 })
 
 exports.router.put("/:id", function(req, res) {
-	var initiative = req.initiative
+	var {initiative} = req
 	var attrs = parseInitiative(initiative, req.body)
 	if (!_.isEmpty(attrs)) initiativesDb.update(initiative.uuid, attrs)
 
@@ -147,8 +147,8 @@ exports.router.put("/:id", function(req, res) {
 // better long-term to either extract commonalities or remove the admin's
 // ability to edit images. They can't edit much else anyways.
 exports.router.put("/:id/image", next(function*(req, res) {
-	var initiative = req.initiative
-	var image = req.files.image
+	var {initiative} = req
+	var {image} = req.files
   if (image == null) throw new HttpError(422, "Image Missing")
 
 	if (image.size > 3 * MEGABYTE)
@@ -173,7 +173,7 @@ exports.router.put("/:id/image", next(function*(req, res) {
 }))
 
 exports.router.delete("/:id/image", function(req, res) {
-	var initiative = req.initiative
+	var {initiative} = req
 	imagesDb.delete(initiative.uuid)
 	res.flash("notice", "Image deleted.")
 	res.redirect(req.baseUrl + "/" + initiative.uuid)
@@ -308,8 +308,8 @@ exports.router.get("/:id/events/:eventId/edit", function(req, res) {
 })
 
 exports.router.put("/:id/events/:eventId", function(req, res) {
-	var initiative = req.initiative
-	var event = req.event
+	var {initiative} = req
+	var {event} = req
 	var attrs = _.assign(parseEvent(event, req.body), {updated_at: new Date})
 	eventsDb.update(event, attrs)
 	res.flash("notice", "Event updated.")
@@ -317,7 +317,7 @@ exports.router.put("/:id/events/:eventId", function(req, res) {
 })
 
 exports.router.delete("/:id/events/:eventId", function(req, res) {
-	var initiative = req.initiative
+	var {initiative} = req
 	eventsDb.delete(req.event.id)
 	res.flash("notice", "Event deleted.")
 	res.redirect(req.baseUrl + "/" + initiative.uuid)

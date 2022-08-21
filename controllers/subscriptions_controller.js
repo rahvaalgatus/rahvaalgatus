@@ -1,10 +1,10 @@
 var _ = require("root/lib/underscore")
 var Qs = require("qs")
 var Http = require("root/lib/http")
-var Router = require("express").Router
+var {Router} = require("express")
 var HttpError = require("standard-http-error")
 var SqliteError = require("root/lib/sqlite_error")
-var sendEmail = require("root").sendEmail
+var {sendEmail} = require("root")
 var renderEmail = require("root/lib/i18n").email
 var next = require("co-next")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
@@ -26,7 +26,7 @@ var readSubscriptionFromQuery = withSubscription.bind(null, (req) => [
 ])
 
 exports.router.get("/", readSubscriptionFromQuery, function(req, res) {
-	var subscription = req.subscription
+	var {subscription} = req
 
 	var subscriptions = subscriptionsDb.search(sql`
 		SELECT subscription.*, initiative.title AS initiative_title
@@ -47,8 +47,8 @@ exports.router.get("/", readSubscriptionFromQuery, function(req, res) {
 exports.router.post("/", next(function*(req, res) {
 	if (req.body["e-mail"]) throw new HttpError(403, "Suspicion of Automation")
 
-	var user = req.user
-	var email = req.body.email
+	var {user} = req
+	var {email} = req.body
 	var attrs = _.defaults(parse(req.body), DEFAULT_INITIATIVES_INTERESTS)
 
 	if (!_.isValidEmail(email))
@@ -127,7 +127,7 @@ exports.router.post("/", next(function*(req, res) {
 }))
 
 exports.router.put("/", readSubscriptionFromQuery, function(req, res) {
-	var subscription = req.subscription
+	var {subscription} = req
 
 	var subscriptions = subscriptionsDb.search(sql`
 		SELECT * FROM initiative_subscriptions
@@ -147,7 +147,7 @@ exports.router.put("/", readSubscriptionFromQuery, function(req, res) {
 })
 
 exports.router.delete("/", readSubscriptionFromQuery, function(req, res) {
-	var subscription = req.subscription
+	var {subscription} = req
 
 	subscriptionsDb.execute(sql`
 		DELETE FROM initiative_subscriptions
@@ -192,7 +192,7 @@ exports.router.use("/:token", withSubscription.bind(null, (req) => [
 ]))
 
 exports.router.get("/:token", function(req, res) {
-	var subscription = req.subscription
+	var {subscription} = req
 	res.redirect(302, `${req.baseUrl}?update-token=${subscription.update_token}`)
 })
 

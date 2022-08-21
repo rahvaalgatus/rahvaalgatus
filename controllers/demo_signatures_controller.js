@@ -1,12 +1,12 @@
 var _ = require("root/lib/underscore")
 var Asic = require("undersign/lib/asic")
 var Config = require("root").config
-var Router = require("express").Router
+var {Router} = require("express")
 var DateFns = require("date-fns")
 var MobileId = require("undersign/lib/mobile_id")
 var SmartId = require("undersign/lib/smart_id")
-var MobileIdError = require("undersign/lib/mobile_id").MobileIdError
-var SmartIdError = require("undersign/lib/smart_id").SmartIdError
+var {MobileIdError} = require("undersign/lib/mobile_id")
+var {SmartIdError} = require("undersign/lib/smart_id")
 var HttpError = require("standard-http-error")
 var MediaType = require("medium-type")
 var Certificate = require("undersign/lib/certificate")
@@ -18,9 +18,9 @@ var demoSignaturesDb = require("root/db/demo_signatures_db")
 var dispose = require("content-disposition")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var next = require("co-next")
-var mobileId = require("root").mobileId
-var smartId = require("root").smartId
-var hades = require("root").hades
+var {mobileId} = require("root")
+var {smartId} = require("root")
+var {hades} = require("root")
 var reportError = require("root").errorReporter
 var {validateSigningCertificate} = require("root/lib/certificate")
 var {ensureAreaCode} = require("root/lib/mobile_id")
@@ -30,9 +30,9 @@ var getNormalizedMobileIdErrorCode =
 	require("root/lib/mobile_id").getNormalizedErrorCode
 var co = require("co")
 var sql = require("sqlate")
-var sleep = require("root/lib/promise").sleep
-var sqlite = require("root").sqlite
-var ENV = process.env.ENV
+var {sleep} = require("root/lib/promise")
+var {sqlite} = require("root")
+var {ENV} = process.env
 var {hasSignatureType} = require("./initiatives/signatures_controller")
 var {waitForMobileIdSession} = require("./initiatives/signatures_controller")
 var {waitForSmartIdSession} = require("./initiatives/signatures_controller")
@@ -234,7 +234,7 @@ exports.router.get("/:token",
 		"application/x-empty"
 	].map(MediaType)),
 	next(function*(req, res) {
-	var signature = req.signature
+	var {signature} = req
 
 	switch (res.contentType.name) {
 		case "text/html":
@@ -340,13 +340,13 @@ exports.router.put("/:token",
 		"application/x-empty"
 	].map(MediaType)),
 	next(function*(req, res) {
-	var signature = req.signature
+	var {signature} = req
 
 	switch (req.contentType && req.contentType.name) {
 		case "application/vnd.rahvaalgatus.signature":
 			if (signature.signed) throw new HttpError(409, "Already Signed")
 
-			var xades = signature.xades
+			var {xades} = signature
 
 			if (!xades.certificate.hasSigned(xades.signable, req.body))
 				throw new HttpError(409, "Invalid Signature")
@@ -381,7 +381,7 @@ exports.router.put("/:token",
 
 function* waitForMobileIdSignature(signature, sessionId) {
 	try {
-		var xades = signature.xades
+		var {xades} = signature
 		var signatureHash = yield waitForMobileIdSession(120, sessionId)
 		if (signatureHash == null) throw new MobileIdError("TIMEOUT")
 
@@ -416,7 +416,7 @@ function* waitForMobileIdSignature(signature, sessionId) {
 
 function* waitForSmartIdSignature(signature, session) {
 	try {
-		var xades = signature.xades
+		var {xades} = signature
 		var certAndSignatureHash = yield waitForSmartIdSession(120, session)
 		if (certAndSignatureHash == null) throw new SmartIdError("TIMEOUT")
 

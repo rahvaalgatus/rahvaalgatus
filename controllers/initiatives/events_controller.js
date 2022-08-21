@@ -1,5 +1,5 @@
 var _ = require("root/lib/underscore")
-var Router = require("express").Router
+var {Router} = require("express")
 var DateFns = require("date-fns")
 var HttpError = require("standard-http-error")
 var Subscription = require("root/lib/subscription")
@@ -15,12 +15,12 @@ var EVENT_TYPES = ["text", "media-coverage"]
 exports.router = Router({mergeParams: true})
 
 exports.router.get("/new", assertAuthor, function(req, res) {
-	var initiative = req.initiative
+	var {initiative} = req
 
 	var subscriberCount =
 		subscriptionsDb.countConfirmedByInitiativeIdForEvent(initiative.uuid)
 
-	var type = req.query.type
+	var {type} = req.query
 	type = EVENT_TYPES.includes(type) ? type : "text"
 
 	res.render("initiatives/events/create_page.jsx", {
@@ -30,12 +30,12 @@ exports.router.get("/new", assertAuthor, function(req, res) {
 })
 
 exports.router.get("/:id", function(req, res) {
-	var initiative = req.initiative
+	var {initiative} = req
 	res.redirect("/initiatives/" + initiative.uuid + "#event-" + req.params.id)
 })
 
 exports.router.post("/", assertAuthor, next(function*(req, res) {
-	var initiative = req.initiative
+	var {initiative} = req
 	var message
 
 	var event = eventsDb.create({
@@ -116,10 +116,10 @@ exports.router.use(function(err, req, res, next) {
 })
 
 function assertAuthor(req, _res, next) {
-	var user = req.user
+	var {user} = req
 	if (user == null) throw new HttpError(401)
 
-	var initiative = req.initiative
+	var {initiative} = req
 
 	if (!Initiative.isAuthor(user, initiative))
 		throw new HttpError(403, "No Permission to Edit")

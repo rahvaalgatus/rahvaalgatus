@@ -7,11 +7,11 @@ var DateFns = require("date-fns")
 var MobileId = require("undersign/lib/mobile_id")
 var SmartId = require("undersign/lib/smart_id")
 var MediaType = require("medium-type")
-var Router = require("express").Router
+var {Router} = require("express")
 var Initiative = require("root/lib/initiative")
 var HttpError = require("standard-http-error")
-var MobileIdError = require("undersign/lib/mobile_id").MobileIdError
-var SmartIdError = require("undersign/lib/smart_id").SmartIdError
+var {MobileIdError} = require("undersign/lib/mobile_id")
+var {SmartIdError} = require("undersign/lib/smart_id")
 var Certificate = require("undersign/lib/certificate")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
@@ -20,11 +20,11 @@ var co = require("co")
 var sql = require("sqlate")
 var dispose = require("content-disposition")
 var reportError = require("root").errorReporter
-var sleep = require("root/lib/promise").sleep
-var mobileId = require("root").mobileId
-var smartId = require("root").smartId
+var {sleep} = require("root/lib/promise")
+var {mobileId} = require("root")
+var {smartId} = require("root")
 var geoipPromise = require("root").geoip
-var hades = require("root").hades
+var {hades} = require("root")
 var parseBody = require("body-parser").raw
 var signaturesDb = require("root/db/initiative_signatures_db")
 var signablesDb = require("root/db/initiative_signables_db")
@@ -32,9 +32,9 @@ var textsDb = require("root/db/initiative_texts_db")
 var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
 var {ensureAreaCode} = require("root/lib/mobile_id")
-var constantTimeEqual = require("root/lib/crypto").constantTimeEqual
+var {constantTimeEqual} = require("root/lib/crypto")
 var {getCertificatePersonalId} = require("root/lib/certificate")
-var ENV = process.env.ENV
+var {ENV} = process.env
 var {validateSigningCertificate} = require("root/lib/certificate")
 var getNormalizedMobileIdErrorCode =
 	require("root/lib/mobile_id").getNormalizedErrorCode
@@ -164,9 +164,9 @@ exports.router.get("/",
 		"text/csv"
 	].map(MediaType)),
 	function(req, res) {
-	var t = req.t
-	var user = req.user
-	var initiative = req.initiative
+	var {t} = req
+	var {user} = req
+	var {initiative} = req
 	var token = parseToken(req.query["parliament-token"] || "")
 
 	if (!initiative.parliament_token)
@@ -313,7 +313,7 @@ exports.router.get("/",
 })
 
 exports.router.post("/", next(function*(req, res) {
-	var initiative = req.initiative
+	var {initiative} = req
 	var method = res.locals.method = getSigningMethod(req)
 	var cert, err, country, personalId, xades, signable, signatureUrl
 	var geo = yield lookupAndSerializeGeo(req.ip)
@@ -481,7 +481,7 @@ exports.router.use("/", next(function(err, req, res, next) {
 }))
 
 exports.router.use("/:personalId", function(req, _res, next) {
-	var initiative = req.initiative
+	var {initiative} = req
 	var [country, personalId] = parseSignatureId(req.params.personalId)
 	var token = req.token = Buffer.from(req.query.token || "", "hex")
 	req.country = country
@@ -508,8 +508,8 @@ exports.router.get("/:personalId",
 		"application/x-empty"
 	].map(MediaType)),
 	next(function*(req, res) {
-	var initiative = req.initiative
-	var signature = req.signature
+	var {initiative} = req
+	var {signature} = req
 
 	switch (res.contentType.name) {
 		case "text/html":
@@ -629,8 +629,8 @@ exports.router.put("/:personalId",
 		"application/x-empty"
 	].map(MediaType)),
 	next(function*(req, res) {
-	var initiative = req.initiative
-	var signature = req.signature
+	var {initiative} = req
+	var {signature} = req
 
 	// NOTE: Intentionally let already started signatures finish even after the
 	// initiative signing deadline is passed.
@@ -656,7 +656,7 @@ exports.router.put("/:personalId",
 
 			if (signable == null) throw new HttpError(404, "Signature Not Found")
 
-			var xades = signable.xades
+			var {xades} = signable
 
 			if (!xades.certificate.hasSigned(xades.signable, req.body))
 				throw new HttpError(409, "Invalid Signature")
@@ -695,7 +695,7 @@ exports.router.put("/:personalId",
 }))
 
 exports.router.delete("/:personalId", function(req, res) {
-	var signature = req.signature
+	var {signature} = req
 	if (signature == null) throw new HttpError(404, "Signature Not Found")
 
 	if (!Initiative.isSignable(new Date, req.initiative))
@@ -722,7 +722,7 @@ function* waitForSession(wait, timeout, session) {
 
 function* waitForMobileIdSignature(signable, sessionId) {
 	try {
-		var xades = signable.xades
+		var {xades} = signable
 		var signatureHash = yield waitForMobileIdSession(120, sessionId)
 		if (signatureHash == null) throw new MobileIdError("TIMEOUT")
 
@@ -759,7 +759,7 @@ function* waitForMobileIdSignature(signable, sessionId) {
 
 function* waitForSmartIdSignature(signable, session) {
 	try {
-		var xades = signable.xades
+		var {xades} = signable
 		var certAndSignatureHash = yield waitForSmartIdSession(120, session)
 		if (certAndSignatureHash == null) throw new SmartIdError("TIMEOUT")
 

@@ -71,7 +71,7 @@ describe(URL, function() {
 			it("must respond with 304 Not Modified if given ETag", function*() {
 				this.res.headers["content-encoding"].must.equal("gzip")
 
-				var etag = this.res.headers.etag
+				var {etag} = this.res.headers
 				var res = yield req(path, {
 					method: "HEAD",
 					headers: {"Accept-Encoding": "gzip", "If-None-Match": etag}

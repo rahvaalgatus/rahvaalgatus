@@ -1,6 +1,6 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
-var Fragment = Jsx.Fragment
+var {Fragment} = Jsx
 var Page = require("../page")
 var Config = require("root").config
 var {Section} = require("../page")
@@ -11,8 +11,8 @@ var {StatisticsView} = require("../home_page")
 var {groupInitiatives} = require("../home_page")
 
 module.exports = function(attrs) {
-	var t = attrs.t
-	var req = attrs.req
+	var {t} = attrs
+	var {req} = attrs
 	var stats = attrs.statistics
 	var initiativesByPhase = groupInitiatives(attrs.initiatives)
 

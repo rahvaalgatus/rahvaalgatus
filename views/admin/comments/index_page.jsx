@@ -3,11 +3,11 @@ var Jsx = require("j6pack")
 var Page = require("../page")
 var Config = require("root").config
 var Comment = require("root/lib/comment")
-var formatDateTime = require("root/lib/i18n").formatDateTime
+var {formatDateTime} = require("root/lib/i18n")
 
 module.exports = function(attrs) {
-	var req = attrs.req
-	var comments = attrs.comments
+	var {req} = attrs
+	var {comments} = attrs
 
 	return <Page page="comments" title="Comments" req={req}>
 		<h1 class="admin-heading">Comments</h1>

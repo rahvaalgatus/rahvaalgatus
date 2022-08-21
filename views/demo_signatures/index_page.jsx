@@ -8,11 +8,11 @@ var formatIsoDate = I18n.formatDate.bind(null, "iso")
 var {SigningView} = require("root/views/initiatives/read_page")
 
 module.exports = function(attrs) {
-	var req = attrs.req
-	var t = req.t
-	var lang = req.lang
-	var signatureCount = attrs.signatureCount
-	var signatureCountsByDate = attrs.signatureCountsByDate
+	var {req} = attrs
+	var {t} = req
+	var {lang} = req
+	var {signatureCount} = attrs
+	var {signatureCountsByDate} = attrs
 
 	return <Page
 		page="demo-signatures"
@@ -75,7 +75,7 @@ module.exports = function(attrs) {
 
 function StatisticsViewByDate(attrs) {
 	var today = new Date
-	var signatureCountsByDate = attrs.signatureCountsByDate
+	var {signatureCountsByDate} = attrs
 	var maxSignatures = _.max(_.values(signatureCountsByDate)) || 0
 	var week = _.reverse(_.times(7, (i) => DateFns.addDays(today, -i)))
 

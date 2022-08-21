@@ -1,6 +1,6 @@
 var _ = require("root/lib/underscore")
 var Qs = require("querystring")
-var Router = require("express").Router
+var {Router} = require("express")
 var HttpError = require("standard-http-error")
 var Initiative = require("root/lib/initiative")
 var DateFns = require("date-fns")
@@ -26,11 +26,11 @@ var next = require("co-next")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var renderEmail = require("root/lib/i18n").email
 var sql = require("sqlate")
-var sqlite = require("root").sqlite
+var {sqlite} = require("root")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
 var trim = Function.call.bind(String.prototype.trim)
-var sendEmail = require("root").sendEmail
+var {sendEmail} = require("root")
 var searchInitiativeEvents = _.compose(searchInitiativesEvents, concat)
 var parseText = require("./initiatives/texts_controller").parse
 var {countUndersignedSignaturesById} = require("root/lib/initiative")
@@ -149,7 +149,7 @@ exports.router.get("/",
 })
 
 exports.router.post("/", function(req, res) {
-	var user = req.user
+	var {user} = req
 	if (user == null) throw new HttpError(401)
 
 	var attrs = parseText(req.body)
@@ -174,7 +174,7 @@ exports.router.post("/", function(req, res) {
 })
 
 exports.router.get("/new", function(req, res) {
-	var user = req.user
+	var {user} = req
 	if (user == null) throw new HttpError(401)
 
 	res.render("initiatives/update_page.jsx", {
@@ -184,7 +184,7 @@ exports.router.get("/new", function(req, res) {
 })
 
 exports.router.use("/:id", function(req, res, next) {
-	var user = req.user
+	var {user} = req
 
 	var initiative = initiativesDb.read(sql`
 		SELECT
@@ -241,8 +241,8 @@ exports.router.use("/:id/coauthors",
 	require("./initiatives/coauthors_controller").router)
 
 exports.router.use("/:id", function(req, res, next) {
-	var user = req.user
-	var initiative = req.initiative
+	var {user} = req
+	var {initiative} = req
 
 	var isAuthor = user && Initiative.isAuthor(user, initiative)
 	if (initiative.published_at || isAuthor) return void next()
@@ -273,7 +273,7 @@ exports.router.get("/:id",
 	].map(MediaType)),
 	function(req, res, next) {
 	var type = res.contentType
-	var initiative = req.initiative
+	var {initiative} = req
 
 	if (type.type == "image") {
 		var image = imagesDb.read(sql`
@@ -307,8 +307,8 @@ exports.router.get("/:id",
 })
 
 exports.read = function(req, res) {
-	var user = req.user
-	var initiative = req.initiative
+	var {user} = req
+	var {initiative} = req
 	var thank = false
 	var thankAgain = false
 	var signature
@@ -429,10 +429,10 @@ exports.read = function(req, res) {
 }
 
 exports.router.put("/:id", next(function*(req, res) {
-	var user = req.user
+	var {user} = req
 	if (user == null) throw new HttpError(401)
 
-	var initiative = req.initiative
+	var {initiative} = req
 
 	var isAuthor = Initiative.isAuthor(user, initiative)
 	if (!isAuthor) throw new HttpError(403, "No Permission to Edit")
@@ -459,10 +459,10 @@ exports.router.put("/:id", next(function*(req, res) {
 }))
 
 exports.router.delete("/:id", function(req, res) {
-	var user = req.user
+	var {user} = req
 	if (user == null) throw new HttpError(401)
 
-	var initiative = req.initiative
+	var {initiative} = req
 
 	if (initiative.user_id != user.id)
 		throw new HttpError(403, "No Permission to Delete")
@@ -494,10 +494,10 @@ exports.router.delete("/:id", function(req, res) {
 })
 
 exports.router.get("/:id/edit", function(req, res) {
-	var user = req.user
+	var {user} = req
 	if (user == null) throw new HttpError(401)
 
-	var initiative = req.initiative
+	var {initiative} = req
 
 	var isAuthor = user && Initiative.isAuthor(user, initiative)
 	if (!isAuthor) throw new HttpError(403, "No Permission to Edit")
@@ -673,8 +673,8 @@ function isInitiativeUpdate(obj) {
 }
 
 function* updateInitiativeToPublished(req, res) {
-	var user = req.user
-	var initiative = req.initiative
+	var {user} = req
+	var {initiative} = req
 	if (initiative.phase != "edit") throw new HttpError(403, "Already Published")
 
 	var tmpl = "initiatives/update_for_publish_page.jsx"
@@ -779,8 +779,8 @@ function* updateInitiativeToPublished(req, res) {
 }
 
 function* updateInitiativePhaseToSign(req, res) {
-	var user = req.user
-	var initiative = req.initiative
+	var {user} = req
+	var {initiative} = req
 	var tmpl = "initiatives/update_for_voting_page.jsx"
 
 	if (!(
@@ -897,9 +897,9 @@ function* updateInitiativePhaseToSign(req, res) {
 }
 
 function* updateInitiativePhaseToParliament(req, res) {
-	var user = req.user
-	var initiative = req.initiative
-	var uuid = initiative.uuid
+	var {user} = req
+	var {initiative} = req
+	var {uuid} = initiative
 	var citizenosSignatureCount = countCitizenOsSignaturesById(uuid)
 	var undersignedSignatureCount = countUndersignedSignaturesById(uuid)
 	var signatureCount = citizenosSignatureCount + undersignedSignatureCount

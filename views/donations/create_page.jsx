@@ -1,16 +1,16 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var Page = require("../page")
-var Form = require("../page").Form
+var {Form} = require("../page")
 var I18n = require("root/lib/i18n")
 exports = module.exports = CreatePage
 exports.DonateForm = DonateForm
 
 function CreatePage(attrs) {
-	var req = attrs.req
-  var lang = req.lang
-	var t = req.t
-	var amount = attrs.amount
+	var {req} = attrs
+  var {lang} = req
+	var {t} = req
+	var {amount} = attrs
 
 	return <Page page="donate" title={t("SUPPORT_US_TITLE")} req={req}>
 		<section class="primary-section">
@@ -39,10 +39,10 @@ function CreatePage(attrs) {
 }
 
 function DonateForm(attrs) {
-	var req = attrs.req
-	var t = attrs.t
-	var amount = attrs.amount
-	var pseudoInt = require("root/lib/crypto").pseudoInt
+	var {req} = attrs
+	var {t} = attrs
+	var {amount} = attrs
+	var {pseudoInt} = require("root/lib/crypto")
 	var def = amount == null ? 3 + pseudoInt(7) : 0
 
   return <Form

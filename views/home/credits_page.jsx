@@ -5,7 +5,7 @@ var readMarkdown = require("root/lib/markdown").readSync
 var CREDITS = fixPaths(readMarkdown(__dirname + "/../../CREDITS.md"))
 
 module.exports = function(attrs) {
-	var req = attrs.req
+	var {req} = attrs
 
 	return <Page page="credits" title="Credits" req={req}>
 		<section id="credits" class="primary-section text-section"><center>

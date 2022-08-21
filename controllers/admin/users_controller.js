@@ -1,11 +1,11 @@
 var _ = require("root/lib/underscore")
-var Router = require("express").Router
+var {Router} = require("express")
 var HttpError = require("standard-http-error")
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var commentsDb = require("root/db/comments_db")
 var sql = require("sqlate")
-var sqlite = require("root").sqlite
+var {sqlite} = require("root")
 
 exports.router = Router({mergeParams: true})
 

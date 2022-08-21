@@ -1,7 +1,7 @@
 var _ = require("root/lib/underscore")
 var Db = require("root/lib/db")
 var Certificate = require("undersign/lib/certificate")
-var sqlite = require("root").sqlite
+var {sqlite} = require("root")
 exports = module.exports = new Db(Object, sqlite, "authentications")
 
 exports.idAttribute = "token"

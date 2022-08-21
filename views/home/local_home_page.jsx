@@ -1,18 +1,18 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
-var Fragment = Jsx.Fragment
+var {Fragment} = Jsx
 var Page = require("../page")
 var {Section} = require("../page")
 var {Flash} = require("../page")
 var {InitiativeBoxesView} = require("../initiatives/index_page")
 var {CallToActionsView} = require("../home_page")
-var javascript = require("root/lib/jsx").javascript
+var {javascript} = require("root/lib/jsx")
 var {groupInitiatives} = require("../home_page")
 
 module.exports = function(attrs) {
-	var t = attrs.t
-	var req = attrs.req
-	var initiativeCounts = attrs.initiativeCounts
+	var {t} = attrs
+	var {req} = attrs
+	var {initiativeCounts} = attrs
 	var initiativesByPhase = groupInitiatives(attrs.initiatives)
 
 	return <Page page="local-home" req={req}>

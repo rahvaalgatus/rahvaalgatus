@@ -1,6 +1,6 @@
 var _ = require("root/lib/underscore")
 var Db = require("root/lib/db")
-var sqlite = require("root").sqlite
+var {sqlite} = require("root")
 exports = module.exports = new Db(Object, sqlite, "sessions")
 exports.idAttribute = "token_sha256"
 exports.idColumn = "token_sha256"

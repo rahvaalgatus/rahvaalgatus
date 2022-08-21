@@ -1,7 +1,7 @@
 var _ = require("root/lib/underscore")
 var HttpError = require("standard-http-error")
 var MediaType = require("medium-type")
-var Router = require("express").Router
+var {Router} = require("express")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
 var {searchInitiativesEvents} = require("./initiatives_controller")
@@ -54,7 +54,7 @@ exports.router.get("/",
 				return obj
 			})
 
-			var order = req.query.order
+			var {order} = req.query
 			switch (order || undefined) {
 				case "occurredAt":
 				case "+occurredAt":
@@ -67,7 +67,7 @@ exports.router.get("/",
 				default: throw new HttpError(400, "Invalid Order")
 			}
 
-			var distinct = req.query.distinct
+			var {distinct} = req.query
 			switch (distinct || undefined) {
 				case "initiativeId":
 					apiEvents = _.uniqBy(apiEvents, "initiativeId")
@@ -77,7 +77,7 @@ exports.router.get("/",
 				default: throw new HttpError(400, "Invalid Distinct")
 			}
 
-			var limit = req.query.limit
+			var {limit} = req.query
 			switch (limit || undefined) {
 				case undefined: break
 				default: apiEvents = apiEvents.slice(0, Number(limit))

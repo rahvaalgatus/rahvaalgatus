@@ -1,6 +1,6 @@
 var _ = require("root/lib/underscore")
 var Path = require("path")
-var Router = require("express").Router
+var {Router} = require("express")
 var Http = require("root/lib/http")
 var HttpError = require("standard-http-error")
 var InitiativesController = require("../initiatives_controller")
@@ -8,7 +8,7 @@ var SqliteError = require("root/lib/sqlite_error")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var next = require("co-next")
 var sql = require("sqlate")
-var sendEmail = require("root").sendEmail
+var {sendEmail} = require("root")
 var renderEmail = require("root/lib/i18n").email
 
 exports.router = Router({mergeParams: true})
@@ -16,9 +16,9 @@ exports.router = Router({mergeParams: true})
 exports.router.post("/", next(function*(req, res) {
 	if (req.body["e-mail"]) throw new HttpError(403, "Suspicion of Automation")
 
-	var user = req.user
-	var initiative = req.initiative
-	var email = req.body.email
+	var {user} = req
+	var {initiative} = req
+	var {email} = req.body
 
 	if (!_.isValidEmail(email))
 		return void res.status(422).render("form_error_page.jsx", {
@@ -111,7 +111,7 @@ exports.router.post("/", next(function*(req, res) {
 }))
 
 exports.router.get("/new", function(req, res, next) {
-	var initiative = req.initiative
+	var {initiative} = req
 
 	var subscription = subscriptionsDb.read(sql`
 		SELECT * FROM initiative_subscriptions
@@ -142,7 +142,7 @@ exports.router.get("/new", function(req, res, next) {
 })
 
 exports.router.use("/:token", function(req, res, next) {
-	var initiative = req.initiative
+	var {initiative} = req
 
 	// Cannot hash the token as it's needed for emailing, but could XOR it with
 	// something secret to reduce timing leaks.
@@ -163,7 +163,7 @@ exports.router.use("/:token", function(req, res, next) {
 })
 
 exports.router.get("/:token", function(req, res) {
-	var subscription = req.subscription
+	var {subscription} = req
 	var path = "/subscriptions"
 	path += "?initiative=" + subscription.initiative_uuid
 	path += "&update-token=" + subscription.update_token

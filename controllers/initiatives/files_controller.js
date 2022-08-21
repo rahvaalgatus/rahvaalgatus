@@ -1,4 +1,4 @@
-var Router = require("express").Router
+var {Router} = require("express")
 var HttpError = require("standard-http-error")
 var renderContentDisposition = require("content-disposition")
 var filesDb = require("root/db/initiative_files_db")

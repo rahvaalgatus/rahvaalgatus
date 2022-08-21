@@ -2,7 +2,7 @@
 var _ = require("root/lib/underscore")
 var Qs = require("qs")
 var Jsx = require("j6pack")
-var Fragment = Jsx.Fragment
+var {Fragment} = Jsx
 var DateFns = require("date-fns")
 var Config = require("root").config
 var Page = require("../page")
@@ -17,9 +17,9 @@ var isEventNotifiable = require("root/lib/event").isNotifiable
 var {anonymizeSignaturesReceivedAfterDays} = require("root").config
 var {InitiativeDestinationSelectView} =
 	require("root/views/initiatives/read_page")
-var formatDate = require("root/lib/i18n").formatDate
-var formatDateTime = require("root/lib/i18n").formatDateTime
-var confirm = require("root/lib/jsx").confirm
+var {formatDate} = require("root/lib/i18n")
+var {formatDateTime} = require("root/lib/i18n")
+var {confirm} = require("root/lib/jsx")
 var linkify = require("root/lib/linkify")
 var UPDATEABLE_PHASES = ["sign", "parliament", "government", "done"]
 var EXPIRATION_MONTHS = Config.expireSignaturesInMonths
@@ -516,7 +516,7 @@ module.exports = function(attrs) {
 					{events.map(function(event) {
 						var eventPath = `${initiativePath}/events/${event.id}`
 						var toggleId = `show-event-${event.id}-text`
-						var title = event.title
+						var {title} = event
 						var content, meeting
 
 						switch (event.type) {
@@ -598,7 +598,7 @@ module.exports = function(attrs) {
 								break
 
 							case "parliament-decision":
-								var summary = event.content.summary
+								var {summary} = event.content
 								if (summary)
 									content = <p class="text">{Jsx.html(linkify(summary))}</p>
 								break
@@ -657,10 +657,10 @@ module.exports = function(attrs) {
 }
 
 function CheckboxForm(attrs) {
-	var req = attrs.req
-	var action = attrs.action
-	var name = attrs.name
-	var checked = attrs.checked
+	var {req} = attrs
+	var {action} = attrs
+	var {name} = attrs
+	var {checked} = attrs
 
 	return <Form
 		req={req}
@@ -681,11 +681,11 @@ function CheckboxForm(attrs) {
 }
 
 function InputForm(attrs) {
-	var req = attrs.req
-	var action = attrs.action
-	var type = attrs.type
-	var name = attrs.name
-	var value = attrs.value
+	var {req} = attrs
+	var {action} = attrs
+	var {type} = attrs
+	var {name} = attrs
+	var {value} = attrs
 	var label = attrs.label || "Set"
 	var toggle = "show-" + name
 
@@ -743,10 +743,10 @@ function DateInputForm(attrs) {
 }
 
 function ImageForm(attrs) {
-	var req = attrs.req
-	var action = attrs.action
-	var name = attrs.name
-	var value = attrs.value
+	var {req} = attrs
+	var {action} = attrs
+	var {name} = attrs
+	var {value} = attrs
 	var toggle = "show-" + name
 
 	return <Fragment>

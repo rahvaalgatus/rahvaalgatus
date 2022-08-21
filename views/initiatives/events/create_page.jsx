@@ -7,12 +7,12 @@ var InitiativePage = require("../initiative_page")
 var {selected} = require("root/lib/css")
 
 module.exports = function(attributes) {
-	var req = attributes.req
-	var t = req.t
-	var initiative = attributes.initiative
-	var error = attributes.error
-	var event = attributes.event
-	var subscriberCount = attributes.subscriberCount
+	var {req} = attributes
+	var {t} = req
+	var {initiative} = attributes
+	var {error} = attributes
+	var {event} = attributes
+	var {subscriberCount} = attributes
 	var path = req.baseUrl + req.path
 
 	return <InitiativePage

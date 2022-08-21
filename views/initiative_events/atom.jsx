@@ -6,9 +6,9 @@ var t = require("root/lib/i18n").t.bind(null, "et")
 var {EventEntryView} = require("../initiatives/atom")
 
 module.exports = function(attrs) {
-	var req = attrs.req
-	var events = attrs.events
-	var initiatives = attrs.initiatives
+	var {req} = attrs
+	var {events} = attrs
+	var {initiatives} = attrs
 	var initiativesByUuid = _.indexBy(initiatives, "uuid")
 	var url = Config.url + req.baseUrl + (req.url == "/" ? "" : req.url)
 

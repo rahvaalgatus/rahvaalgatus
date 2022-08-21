@@ -4,7 +4,7 @@ var Page = require("./page")
 var {Section} = require("./page")
 
 module.exports = function(attrs) {
-	var req = attrs.req
+	var {req} = attrs
 
 	return <Page page="error" req={req}>
 		<Section class="primary-section text-section">

@@ -1,7 +1,7 @@
 var _ = require("lodash")
-var formatDate = require("root/lib/i18n").formatDate
-var formatDateTime = require("root/lib/i18n").formatDateTime
-var formatBytes = require("root/lib/i18n").formatBytes
+var {formatDate} = require("root/lib/i18n")
+var {formatDateTime} = require("root/lib/i18n")
+var {formatBytes} = require("root/lib/i18n")
 
 describe("I18n", function() {
 	describe(".formatDate", function() {

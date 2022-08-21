@@ -7,10 +7,10 @@ exports = module.exports = CoauthorInvitationPage
 exports.CoauthorInvitationForm = CoauthorInvitationForm
 
 function CoauthorInvitationPage(attrs) {
-	var req = attrs.req
-	var t = req.t
-	var initiative = attrs.initiative
-	var invitation = attrs.invitation
+	var {req} = attrs
+	var {t} = req
+	var {initiative} = attrs
+	var {invitation} = attrs
 
 	return <InitiativePage
 		page="initiative-coauthor-invitation"
@@ -31,10 +31,10 @@ function CoauthorInvitationPage(attrs) {
 }
 
 function CoauthorInvitationForm(attrs) {
-	var req = attrs.req
-	var t = req.t
-	var invitation = attrs.invitation
-	var referrer = attrs.referrer
+	var {req} = attrs
+	var {t} = req
+	var {invitation} = attrs
+	var {referrer} = attrs
 
 	var initiativePath = "/initiatives/" + invitation.initiative_uuid
 	var invitationPath = initiativePath + "/coauthors/"

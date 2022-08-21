@@ -15,9 +15,9 @@ var CATEGORIES = {
 }
 
 function AtomView(attrs) {
-	var req = attrs.req
-	var initiative = attrs.initiative
-	var events = attrs.events
+	var {req} = attrs
+	var {initiative} = attrs
+	var {events} = attrs
 	var url = Config.url + req.baseUrl + req.url
 
 	var updatedAt = events.length
@@ -45,11 +45,11 @@ function AtomView(attrs) {
 }
 
 function EventEntryView(attrs) {
-	var initiative = attrs.initiative
-	var initiativeUrl = attrs.initiativeUrl
-	var event = attrs.event
+	var {initiative} = attrs
+	var {initiativeUrl} = attrs
+	var {event} = attrs
 	var eventUrl = initiativeUrl + "#event-" + event.id
-	var sourced = attrs.sourced
+	var {sourced} = attrs
 
 	var title
 	var content
@@ -76,7 +76,7 @@ function EventEntryView(attrs) {
 
 		case "parliament-accepted":
 			title = renderEventTitle(initiative, event)
-			var committee = event.content.committee
+			var {committee} = event.content
 			if (committee) content = t("PARLIAMENT_ACCEPTED_SENT_TO_COMMITTEE", {
 				committee: committee
 			})

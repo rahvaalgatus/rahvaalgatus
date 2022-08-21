@@ -2,16 +2,16 @@
 var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Config = require("root").config
-var Fragment = Jsx.Fragment
+var {Fragment} = Jsx
 var DateFns = require("date-fns")
 var I18n = require("root/lib/i18n")
-var selected = require("root/lib/css").selected
-var javascript = require("root/lib/jsx").javascript
+var {selected} = require("root/lib/css")
+var {javascript} = require("root/lib/jsx")
 var {isAdmin} = require("root/lib/user")
 var EMPTY_ARR = Array.prototype
 var SITE_TITLE = Config.title
 var LANGUAGES = Config.languages
-var ENV = process.env.ENV
+var {ENV} = process.env
 var LIVERELOAD_PORT = process.env.LIVERELOAD_PORT || 35729
 var TWITTER_NAME = Config.twitterUrl.replace(/^.*\//, "")
 exports = module.exports = Page
@@ -34,9 +34,9 @@ var DEFAULT_META = {
 }
 
 function Page(attrs, children) {
-	var req = attrs.req
-	var page = attrs.page
-	var title = attrs.title
+	var {req} = attrs
+	var {page} = attrs
+	var {title} = attrs
 	var links = attrs.links || EMPTY_ARR
 	var gov = req.government
 	var withNav = !attrs.navless
@@ -268,7 +268,7 @@ function Section(attrs, children) {
 }
 
 function Flash(attrs) {
-	var flash = attrs.flash
+	var {flash} = attrs
 
 	return <Fragment>
 		{flash("notice") ? <p class="flash notice">{flash("notice")}</p> : null}
@@ -277,7 +277,7 @@ function Flash(attrs) {
 }
 
 function Form(attrs, children) {
-	var method = attrs.method
+	var {method} = attrs
 
 	return <form
 		id={attrs.id}
@@ -326,7 +326,7 @@ function FormCheckbox(attrs) {
 }
 
 function Sentry(attrs) {
-	var user = attrs.req.user
+	var {user} = attrs.req
 
 	return <Fragment>
 		<script src="/assets/raven.js" />
@@ -352,7 +352,7 @@ function Sentry(attrs) {
 
 function LiveReload(attrs) {
 	if (ENV != "development") return null
-	var req = attrs.req
+	var {req} = attrs
 
 	return <script
 		src={`http://${req.hostname}:${LIVERELOAD_PORT}/livereload.js?snipver=1`}

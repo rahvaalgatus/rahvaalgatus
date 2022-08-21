@@ -7,17 +7,17 @@ var ValidSignable = require("root/test/valid_signable")
 var ValidSignature = require("root/test/valid_signature")
 var SqliteError = require("root/lib/sqlite_error")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
-var insert = require("heaven-sqlite").insert
-var sqlite = require("root").sqlite
+var {insert} = require("heaven-sqlite")
+var {sqlite} = require("root")
 var sql = require("sqlate")
 var initiativesDb = require("root/db/initiatives_db")
 var usersDb = require("root/db/users_db")
 var eventsDb = require("root/db/initiative_events_db")
 var signablesDb = require("root/db/initiative_signables_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
-var serialize = initiativesDb.serialize
+var {serialize} = initiativesDb
 var demand = require("must")
-var PHASES = require("root/lib/initiative").PHASES
+var {PHASES} = require("root/lib/initiative")
 
 describe("InitiativesDb", function() {
 	require("root/test/db")()

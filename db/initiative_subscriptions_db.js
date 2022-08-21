@@ -1,6 +1,6 @@
 var _ = require("root/lib/underscore")
 var Db = require("root/lib/db")
-var sqlite = require("root").sqlite
+var {sqlite} = require("root")
 var sql = require("sqlate")
 exports = module.exports = new Db(Object, sqlite, "initiative_subscriptions")
 

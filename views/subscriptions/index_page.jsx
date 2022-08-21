@@ -2,17 +2,17 @@
 var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Page = require("../page")
-var Form = Page.Form
-var FormCheckbox = Page.FormCheckbox
-var Flash = Page.Flash
-var confirm = require("root/lib/jsx").confirm
+var {Form} = Page
+var {FormCheckbox} = Page
+var {Flash} = Page
+var {confirm} = require("root/lib/jsx")
 exports = module.exports = SubscriptionsPage
 exports.SubscriptionsView = SubscriptionsView
 
 function SubscriptionsPage(attrs) {
-	var req = attrs.req
-	var t = req.t
-	var subscriptions = attrs.subscriptions
+	var {req} = attrs
+	var {t} = req
+	var {subscriptions} = attrs
 
 	var sub = attrs.subscription
 	var actionPath = req.baseUrl + req.path
@@ -41,10 +41,10 @@ function SubscriptionsPage(attrs) {
 }
 
 function SubscriptionsView(attrs) {
-	var req = attrs.req
-	var t = req.t
-	var subscriptions = attrs.subscriptions
-	var action = attrs.action
+	var {req} = attrs
+	var {t} = req
+	var {subscriptions} = attrs
+	var {action} = attrs
 
 	return <Form req={req} action={action}>
 		<div class="subscriptions-view">

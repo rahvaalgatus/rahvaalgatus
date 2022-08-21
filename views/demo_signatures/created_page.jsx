@@ -2,15 +2,15 @@
 var Jsx = require("j6pack")
 var Page = require("../page")
 var I18n = require("root/lib/i18n")
-var DonateForm = require("../donations/create_page").DonateForm
+var {DonateForm} = require("../donations/create_page")
 
 module.exports = function(attrs) {
-	var req = attrs.req
-	var t = req.t
-  var lang = req.lang
-	var signature = req.signature
+	var {req} = attrs
+	var {t} = req
+  var {lang} = req
+	var {signature} = req
 	var signatureUrl = "/demo-signatures/" + signature.token.toString("hex")
-		
+
 	return <Page
 		page="created-demo-signature"
 		class="demo-signatures-page"

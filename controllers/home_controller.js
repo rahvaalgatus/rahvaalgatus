@@ -1,16 +1,16 @@
 var _ = require("root/lib/underscore")
 var DateFns = require("date-fns")
-var Router = require("express").Router
+var {Router} = require("express")
 var MediaType = require("medium-type")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
-var sqlite = require("root").sqlite
+var {sqlite} = require("root")
 var {getRequiredSignatureCount} = require("root/lib/initiative")
 var sql = require("sqlate")
 var initiativesDb = require("root/db/initiatives_db")
 var newsDb = require("root/db/news_db")
 var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
-var PHASES = require("root/lib/initiative").PHASES
+var {PHASES} = require("root/lib/initiative")
 var ZERO_COUNTS = _.fromEntries(PHASES.map((name) => [name, 0]))
 
 exports.router = Router({mergeParams: true})

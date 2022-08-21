@@ -52,7 +52,7 @@ function InitiativePage(attrs, children) {
 }
 
 function InitiativeBadgeView(attrs) {
-	var initiative = attrs.initiative
+	var {initiative} = attrs
 	var badge = _.find(Config.badges, (_b, tag) => initiative.tags.includes(tag))
 	if (badge == null) return null
 
@@ -68,8 +68,8 @@ function InitiativeBadgeView(attrs) {
 }
 
 function ProgressView(attrs) {
-	var t = attrs.t
-	var initiative = attrs.initiative
+	var {t} = attrs
+	var {initiative} = attrs
 	var sigs = attrs.signatureCount
 	var klass = "initiative-progress " + initiative.phase + "-phase"
 	if (attrs.class) klass += " " + attrs.class

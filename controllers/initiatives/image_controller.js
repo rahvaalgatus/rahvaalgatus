@@ -1,6 +1,6 @@
 var _ = require("root/lib/underscore")
 var Path = require("path")
-var Router = require("express").Router
+var {Router} = require("express")
 var HttpError = require("standard-http-error")
 var Initiative = require("root/lib/initiative")
 var Image = require("root/lib/image")
@@ -12,10 +12,10 @@ var MEGABYTE = Math.pow(2, 20)
 exports.router = Router({mergeParams: true})
 
 exports.router.use(function(req, _res, next) {
-	var user = req.user
+	var {user} = req
 	if (user == null) throw new HttpError(401)
 
-	var initiative = req.initiative
+	var {initiative} = req
 
 	var isAuthor = user && Initiative.isAuthor(user, initiative)
 	if (!isAuthor) throw new HttpError(403, "No Permission to Edit")
@@ -30,9 +30,9 @@ exports.router.use(function(req, _res, next) {
 })
 
 exports.router.put("/", next(function*(req, res) {
-	var user = req.user
-	var initiative = req.initiative
-	var image = req.image
+	var {user} = req
+	var {initiative} = req
+	var {image} = req
 	var attrs = parse(req.body)
 	var imageFile = req.files.image
 

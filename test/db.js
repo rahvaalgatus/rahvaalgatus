@@ -1,5 +1,5 @@
 var sql = require("sqlate")
-var sqlite = require("root").sqlite
+var {sqlite} = require("root")
 
 exports = module.exports = function() {
 	beforeEach(exports.delete)

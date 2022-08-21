@@ -2,7 +2,7 @@ var _ = require("root/lib/underscore")
 var MediaType = require("medium-type")
 var outdent = require("root/lib/outdent")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
-var pseudoDateTime = require("root/lib/crypto").pseudoDateTime
+var {pseudoDateTime} = require("root/lib/crypto")
 var HTML_TYPE = new MediaType("text/html")
 
 module.exports = function(attrs) {

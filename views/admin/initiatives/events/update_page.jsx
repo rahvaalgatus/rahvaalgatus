@@ -4,9 +4,9 @@ var Page = require("../../page")
 var {EventForm} = require("./create_page")
 
 module.exports = function(attrs) {
-	var req = attrs.req
-	var initiative = attrs.initiative
-	var event = attrs.event
+	var {req} = attrs
+	var {initiative} = attrs
+	var {event} = attrs
 
 	return <Page
 		page="update-event"

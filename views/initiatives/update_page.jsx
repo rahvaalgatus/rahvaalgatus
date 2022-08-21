@@ -1,20 +1,20 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
-var Fragment = Jsx.Fragment
+var {Fragment} = Jsx
 var InitiativePage = require("./initiative_page")
-var Form = require("../page").Form
-var Flash = require("../page").Flash
-var javascript = require("root/lib/jsx").javascript
+var {Form} = require("../page")
+var {Flash} = require("../page")
+var {javascript} = require("root/lib/jsx")
 var {normalizeCitizenOsHtml} = require("root/lib/initiative")
-var selected = require("root/lib/css").selected
+var {selected} = require("root/lib/css")
 var LANGUAGES = require("root").config.languages
 
 module.exports = function(attrs) {
-	var req = attrs.req
-	var initiative = attrs.initiative
-	var flash = attrs.flash
-	var text = attrs.text
-	var t = attrs.t
+	var {req} = attrs
+	var {initiative} = attrs
+	var {flash} = attrs
+	var {text} = attrs
+	var {t} = attrs
 	var textLanguage = text && text.language || attrs.language
 	var editUrl = req.baseUrl + "/new"
 

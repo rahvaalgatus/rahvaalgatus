@@ -1,6 +1,6 @@
 var SqliteError = require("root/lib/sqlite_error")
 var sql = require("sqlate")
-var sqlite = require("root").sqlite
+var {sqlite} = require("root")
 
 describe("Sqlite", function() {
 	describe("errors", function() {

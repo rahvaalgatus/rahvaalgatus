@@ -1,13 +1,13 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
-var Fragment = Jsx.Fragment
+var {Fragment} = Jsx
 var Page = require("../page")
-var SubscriptionsView = require("../subscriptions/index_page").SubscriptionsView
+var {SubscriptionsView} = require("../subscriptions/index_page")
 
 module.exports = function(attrs) {
-	var req = attrs.req
-	var initiative = attrs.initiative
-	var subscriptions = attrs.subscriptions
+	var {req} = attrs
+	var {initiative} = attrs
+	var {subscriptions} = attrs
 	var confirmed = subscriptions.filter((s) => s.confirmed_at)
 	var pending = subscriptions.filter((s) => !s.confirmed_at)
 

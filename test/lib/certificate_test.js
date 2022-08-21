@@ -1,5 +1,5 @@
 var Certificate = require("undersign/lib/certificate")
-var newCertificate = require("root/test/fixtures").newCertificate
+var {newCertificate} = require("root/test/fixtures")
 var {getCertificatePersonName} = require("root/lib/certificate")
 
 describe("Certificate", function() {

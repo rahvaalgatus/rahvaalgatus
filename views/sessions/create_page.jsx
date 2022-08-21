@@ -1,14 +1,14 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var Page = require("../page")
-var Form = require("../page").Form
-var Flash = require("../page").Flash
+var {Form} = require("../page")
+var {Flash} = require("../page")
 var Config = require("root").config
 
 module.exports = function(attrs) {
-	var t = attrs.t
-	var req = attrs.req
-	var flash = attrs.flash
+	var {t} = attrs
+	var {req} = attrs
+	var {flash} = attrs
 
 	return <Page page="create-session" title={t("SIGNIN_PAGE_TITLE")} req={req}>
 		<script src="/assets/html5.js" />

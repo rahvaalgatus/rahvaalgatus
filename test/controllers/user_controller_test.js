@@ -1480,7 +1480,7 @@ describe("UserController", function() {
 				confirmed_at: new Date
 			}))
 
-			var uuid = initiative.uuid
+			var {uuid} = initiative
 			var res = yield this.request("/user/subscriptions", {
 				method: "PUT",
 				form: {
@@ -1512,7 +1512,7 @@ describe("UserController", function() {
 				confirmed_at: new Date
 			}))
 
-			var uuid = initiative.uuid
+			var {uuid} = initiative
 			var res = yield this.request("/user/subscriptions", {
 				method: "PUT",
 				form: {
@@ -1547,7 +1547,7 @@ describe("UserController", function() {
 				initiative_uuid: initiative.uuid
 			}))
 
-			var uuid = initiative.uuid
+			var {uuid} = initiative
 			var res = yield this.request("/user/subscriptions", {
 				method: "PUT",
 				form: {[uuid + "[official_interest]"]: !subscription.official_interest}
@@ -1576,7 +1576,7 @@ describe("UserController", function() {
 				confirmed_at: new Date
 			}))
 
-			var uuid = initiative.uuid
+			var {uuid} = initiative
 			var res = yield this.request("/user/subscriptions", {
 				method: "PUT",
 				form: {[uuid + "[official_interest]"]: !subscription.official_interest}

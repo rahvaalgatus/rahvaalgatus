@@ -1,7 +1,7 @@
 /** @jsx Jsx */
 var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
-var Fragment = Jsx.Fragment
+var {Fragment} = Jsx
 var Config = require("root").config
 var UserPage = require("./user_page")
 var I18n = require("root/lib/i18n")
@@ -11,14 +11,14 @@ var {Flash} = require("../page")
 var {InitiativeBoxesView} = require("../initiatives/index_page")
 
 module.exports = function(attrs) {
-	var t = attrs.t
-	var req = attrs.req
-	var user = attrs.user
-	var error = attrs.error
-	var initiatives = attrs.initiatives
-	var coauthorInvitations = attrs.coauthorInvitations
-	var userAttrs = attrs.userAttrs
-	var userErrors = attrs.userErrors
+	var {t} = attrs
+	var {req} = attrs
+	var {user} = attrs
+	var {error} = attrs
+	var {initiatives} = attrs
+	var {coauthorInvitations} = attrs
+	var {userAttrs} = attrs
+	var {userErrors} = attrs
 
 	return <UserPage page="user" title={user.name} req={req} user={user}>
 		<Section id="user" class="primary-section text-section">
@@ -141,8 +141,8 @@ module.exports = function(attrs) {
 }
 
 function InputError(attrs) {
-	var t = attrs.t
-	var error = attrs.error
+	var {t} = attrs
+	var {error} = attrs
 	if (error == null) return null
 
 	var text

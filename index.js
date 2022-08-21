@@ -2,7 +2,7 @@ var _ = require("root/lib/underscore")
 var Fs = require("fs")
 var Path = require("path")
 var lazy = require("lazy-object").defineLazyProperty
-var ENV = process.env.ENV
+var {ENV} = process.env
 
 // Ensure __proto__ security fix is loaded everywhere.
 void require("root/lib/underscore")
@@ -82,7 +82,7 @@ lazy(exports, "smartId", function() {
 lazy(exports, "tsl", function() {
 	var Tsl = require("undersign/lib/tsl")
 	var estonia = Tsl.parse(Fs.readFileSync(__dirname + "/config/tsl/ee.xml"))
-	var certificates = estonia.certificates
+	var {certificates} = estonia
 
   switch (ENV) {
 		case "development":
@@ -95,7 +95,7 @@ lazy(exports, "tsl", function() {
 		case "test":
 			var Pem = require("undersign/lib/pem")
 			var X509Asn = require("undersign/lib/x509_asn")
-			var ISSUER_KEYS = require("root/test/fixtures").ISSUER_KEYS
+			var {ISSUER_KEYS} = require("root/test/fixtures")
 
 			var certsByCn = _.fromEntries(certificates.toArray().map((cert) => [
 				_.merge({}, ...cert.subject).commonName,

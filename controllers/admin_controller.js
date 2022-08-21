@@ -1,5 +1,5 @@
 var _ = require("root/lib/underscore")
-var Router = require("express").Router
+var {Router} = require("express")
 var HttpError = require("standard-http-error")
 var DateFns = require("date-fns")
 var Time = require("root/lib/time")
@@ -7,7 +7,7 @@ var {isAdmin} = require("root/lib/user")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var commentsDb = require("root/db/comments_db")
 var initiativesDb = require("root/db/initiatives_db")
-var sqlite = require("root").sqlite
+var {sqlite} = require("root")
 var sql = require("sqlate")
 exports = module.exports = Router()
 

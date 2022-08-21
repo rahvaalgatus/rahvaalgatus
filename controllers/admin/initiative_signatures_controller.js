@@ -1,10 +1,10 @@
-var Router = require("express").Router
+var {Router} = require("express")
 var DateFns = require("date-fns")
 var Time = require("root/lib/time")
 var Csv = require("root/lib/csv")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var next = require("co-next")
-var formatDate = require("root/lib/i18n").formatDate
+var {formatDate} = require("root/lib/i18n")
 var sql = require("sqlate")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)

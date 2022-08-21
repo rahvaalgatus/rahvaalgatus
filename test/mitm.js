@@ -1,5 +1,5 @@
 var Mitm = require("mitm")
-var Router = require("express").Router
+var {Router} = require("express")
 var parseBody = require("body-parser").json()
 
 exports = module.exports = function() {

@@ -9,10 +9,10 @@ if (process.env.DB)
 var Express = require("root/lib/express")
 var Config = require("root").config
 var HttpError = require("standard-http-error")
-var runServer = require("root/lib/http").runServer
+var {runServer} = require("root/lib/http")
 var t = require("root/lib/i18n").t.bind(null, "en")
 var PORT = process.env.PORT || 3001
-var ENV = process.env.ENV
+var {ENV} = process.env
 var MEGABYTE = Math.pow(2, 20)
 var app = module.exports = Express.new()
 

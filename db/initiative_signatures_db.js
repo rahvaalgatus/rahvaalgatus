@@ -1,7 +1,7 @@
 var _ = require("root/lib/underscore")
 var Db = require("root/lib/db")
 var Xades = require("undersign/xades")
-var sqlite = require("root").sqlite
+var {sqlite} = require("root")
 exports = module.exports = new Db(Object, sqlite, "initiative_signatures")
 
 exports.parse = function(attrs) {

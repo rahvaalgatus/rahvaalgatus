@@ -1,5 +1,5 @@
 var _ = require("root/lib/underscore")
-var Router = require("express").Router
+var {Router} = require("express")
 var HttpError = require("standard-http-error")
 var Initiative = require("root/lib/initiative")
 var initiativesDb = require("root/db/initiatives_db")
@@ -11,10 +11,10 @@ exports.parse = parse
 exports.router = Router({mergeParams: true})
 
 exports.router.use(function(req, _res, next) {
-	var user = req.user
+	var {user} = req
 	if (user == null) throw new HttpError(401)
 
-	var initiative = req.initiative
+	var {initiative} = req
 	var isAuthor = user && Initiative.isAuthor(user, initiative)
 
 	if (!isAuthor) throw new HttpError(403, "No Permission to Edit")
@@ -26,7 +26,7 @@ exports.router.use(function(req, _res, next) {
 })
 
 exports.router.get("/new", function(req, res) {
-	var initiative = req.initiative
+	var {initiative} = req
 	var lang = req.query.language || "et"
 
 	var text = textsDb.read(sql`
@@ -42,7 +42,7 @@ exports.router.get("/new", function(req, res) {
 })
 
 exports.router.use("/:id", function(req, _res, next) {
-	var initiative = req.initiative
+	var {initiative} = req
 
 	var text = textsDb.read(sql`
 		SELECT * FROM initiative_texts
@@ -61,8 +61,8 @@ exports.router.get("/:id", function(req, res) {
 })
 
 exports.router.post("/", function(req, res) {
-	var user = req.user
-	var initiative = req.initiative
+	var {user} = req
+	var {initiative} = req
 	var attrs = parse(req.body)
 
 	if (!(

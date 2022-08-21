@@ -1,11 +1,11 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var Page = require("../page")
-var formatDateTime = require("root/lib/i18n").formatDateTime
+var {formatDateTime} = require("root/lib/i18n")
 
 module.exports = function(attrs) {
-	var req = attrs.req
-	var users = attrs.users
+	var {req} = attrs
+	var {users} = attrs
 
 	return <Page page="users" title="Users" req={req}>
 		<h1 class="admin-heading">

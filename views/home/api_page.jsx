@@ -4,8 +4,8 @@ var Page = require("../page")
 var I18n = require("root/lib/i18n")
 
 module.exports = function(attrs) {
-	var req = attrs.req
-	var lang = req.lang
+	var {req} = attrs
+	var {lang} = req
 
 	return <Page page="api" title="API" req={req}>
 		<script src="/assets/html5.js" />

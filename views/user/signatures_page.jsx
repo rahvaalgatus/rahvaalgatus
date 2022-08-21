@@ -8,10 +8,10 @@ var {pathToSignature} =
 	require("root/controllers/initiatives/signatures_controller")
 
 module.exports = function(attrs) {
-	var t = attrs.t
-	var req = attrs.req
-	var user = attrs.user
-	var signatures = attrs.signatures
+	var {t} = attrs
+	var {req} = attrs
+	var {user} = attrs
+	var {signatures} = attrs
 
 	return <UserPage
 		page="user-signatures"

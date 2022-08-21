@@ -1,8 +1,8 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var InitiativePage = require("../initiative_page")
-var Flash = require("../../page").Flash
-var Form = require("../../page").Form
+var {Flash} = require("../../page")
+var {Form} = require("../../page")
 var CommentsController =
 	require("root/controllers/initiatives/comments_controller")
 var {isAdmin} = require("root/lib/user")
@@ -13,11 +13,11 @@ exports.CommentForm = CommentForm
 exports.PersonaInput = PersonaInput
 
 function CreatePage(attrs) {
-	var req = attrs.req
-	var t = req.t
-	var initiative = attrs.initiative
-	var referrer = attrs.referrer
-	var newComment = attrs.newComment
+	var {req} = attrs
+	var {t} = req
+	var {initiative} = attrs
+	var {referrer} = attrs
+	var {newComment} = attrs
 
 	return <InitiativePage
 		page="initiative-comment"
@@ -42,13 +42,13 @@ function CreatePage(attrs) {
 }
 
 function CommentForm(attrs) {
-	var req = attrs.req
-	var t = req.t
-	var user = req.user
-	var initiative = attrs.initiative
-	var newComment = attrs.newComment
-	var referrer = attrs.referrer
-	var subscription = attrs.subscription
+	var {req} = attrs
+	var {t} = req
+	var {user} = req
+	var {initiative} = attrs
+	var {newComment} = attrs
+	var {referrer} = attrs
+	var {subscription} = attrs
 	var commentsUrl = `/initiatives/${initiative.uuid}/comments`
 
 	return <Form

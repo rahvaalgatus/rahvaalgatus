@@ -1,6 +1,6 @@
 var Config = require("root").config
 var DateFns = require("date-fns")
-var sqlite = require("root").sqlite
+var {sqlite} = require("root")
 var sql = require("sqlate")
 var EXPIRATION = Config.demoSignaturesExpirationSeconds
 
