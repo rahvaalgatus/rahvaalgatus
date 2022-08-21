@@ -2,7 +2,7 @@ Rahvaalgatus
 ============
 [![Build status][travis-badge]](https://travis-ci.org/rahvaalgatus/rahvaalgatus)
 
-The website of <https://rahvaalgatus.ee> built with JavaScript on Node.js, [JSX](https://github.com/moll/js-j6pack/) for templates and [Sass](https://sass-lang.com/) for CSS. It uses SQLite for its database, which is bundled with the [Sqlite3](https://www.npmjs.com/package/sqlite3) Node.js package. No external database servers required.
+The website of <https://rahvaalgatus.ee> built with JavaScript on Node.js, [JSX](https://github.com/moll/js-j6pack/) for templates and [Sass](https://sass-lang.com/) for CSS. It uses SQLite for its database, which is bundled with the [Better Sqlite3](https://www.npmjs.com/package/better-sqlite3) Node.js package. No external database servers required.
 
 [travis-badge]: https://travis-ci.org/rahvaalgatus/rahvaalgatus.svg?branch=master
 
