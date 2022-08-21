@@ -4,7 +4,6 @@ var Jsx = require("j6pack")
 var Page = require("../page")
 var Fragment = Jsx.Fragment
 var javascript = require("root/lib/jsx").javascript
-var stringify = require("root/lib/json").stringify
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
 
 module.exports = function(attrs) {
@@ -51,24 +50,24 @@ function MobileIdView(attrs) {
 		</p>
 
 		<script>{javascript`
-			fetch("${poll}", {
+			fetch(${poll}, {
 				method: "POST",
 				credentials: "same-origin",
 
 				headers: {
-					"X-CSRF-Token": ${stringify(req.csrfToken)},
-					Accept: "application/x-empty, ${ERR_TYPE}",
+					"X-CSRF-Token": ${req.csrfToken},
+					Accept: ${"application/x-empty, " + ERR_TYPE},
 					"Content-Type": "application/x-www-form-urlencoded"
 				},
 
-				body: "method=${method}",
+				body: "method=" + ${method},
 
 				// Fetch polyfill doesn't support manual redirect, so use
 				// x-empty.
 				redirect: "manual"
 			}).then(function(res) {
 				// WhatWG-Fetch polyfill lacks res.url.
-				window.location.assign(res.headers.get("Location") || "${poll}")
+				window.location.assign(res.headers.get("Location") || ${poll})
 			})
 		`}</script>
 	</Fragment>

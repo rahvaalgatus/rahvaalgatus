@@ -1,4 +1,4 @@
-var Config = require("root/config")
+var Config = require("root").config
 var DateFns = require("date-fns")
 var I18n = require("root/lib/i18n")
 var Initiative = require("root/lib/initiative")
@@ -8,7 +8,6 @@ var sendEmail = require("root").sendEmail
 var initiativesDb = require("root/db/initiatives_db")
 var logger = require("root").logger
 var t = require("root/lib/i18n").t.bind(null, Config.language)
-var db = require("root/db/initiatives_db")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var {getRequiredSignatureCount} = require("root/lib/initiative")
 var EXPIRATION_MONTHS = Config.expireSignaturesInMonths
@@ -20,7 +19,7 @@ module.exports = function*() {
 }
 
 function* emailEndedDiscussions() {
-	var discussions = yield initiativesDb.search(sql`
+	var discussions = initiativesDb.search(sql`
 		SELECT
 			initiative.*,
 			user.email AS user_email,
@@ -55,12 +54,14 @@ function* emailEndedDiscussions() {
 			})
 		})
 
-		yield db.update(discussion.uuid, {discussion_end_email_sent_at: new Date})
+		initiativesDb.update(discussion.uuid, {
+			discussion_end_email_sent_at: new Date
+		})
 	})
 }
 
 function* emailEndedInitiatives() {
-	var initiatives = yield initiativesDb.search(sql`
+	var initiatives = initiativesDb.search(sql`
 		SELECT
 			initiative.*,
 			user.email AS user_email,
@@ -104,7 +105,7 @@ function* emailEndedInitiatives() {
 			})
 		})
 
-		yield db.update(initiative.uuid, {signing_end_email_sent_at: new Date})
+		initiativesDb.update(initiative.uuid, {signing_end_email_sent_at: new Date})
 	})
 }
 
@@ -113,7 +114,7 @@ function* emailExpiringInitiatives() {
 
 	// We could permit successful initiatives still waiting in the sign phase to
 	// go past their expiration date if necessary.
-	var initiatives = yield initiativesDb.search(sql`
+	var initiatives = initiativesDb.search(sql`
 		SELECT
 			initiative.*,
 			user.email AS user_email,
@@ -189,7 +190,7 @@ function* emailExpiringInitiatives() {
 			})
 		})
 
-		yield db.update(initiative.uuid, {
+		initiativesDb.update(initiative.uuid, {
 			signing_expiration_email_sent_at: new Date
 		})
 	})

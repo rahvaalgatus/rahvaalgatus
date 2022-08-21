@@ -1,31 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?><TrustServiceStatusList xmlns="http://uri.etsi.org/02231/v2#" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:ecc="http://uri.etsi.org/TrstSvc/SvcInfoExt/eSigDir-1999-93-EC-TrustedList/#" xmlns:tslx="http://uri.etsi.org/02231/v2/additionaltypes#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="TEST-EE" TSLTag="http://uri.etsi.org/02231/TSLTag">
    <SchemeInformation>
       <TSLVersionIdentifier>5</TSLVersionIdentifier>
-      <TSLSequenceNumber>11</TSLSequenceNumber>
+      <TSLSequenceNumber>18</TSLSequenceNumber>
       <TSLType>http://uri.etsi.org/TrstSvc/TrustedList/TSLType/EUgeneric</TSLType>
       <SchemeOperatorName>
-         <Name xml:lang="en">SK Test Authority</Name>
+         <Name xml:lang="en">Information System Authority</Name>
       </SchemeOperatorName>
       <SchemeOperatorAddress>
          <PostalAddresses>
             <PostalAddress xml:lang="en">
-               <StreetAddress>Pärnu mnt 141</StreetAddress>
+               <StreetAddress>139A Pärnu mnt</StreetAddress>
                <Locality>Tallinn</Locality>
                <StateOrProvince>Harjumaa</StateOrProvince>
-               <PostalCode>11314</PostalCode>
+               <PostalCode>15169</PostalCode>
                <CountryName>EE</CountryName>
             </PostalAddress>
          </PostalAddresses>
          <ElectronicAddress>
-            <URI xml:lang="en">mailto:info@sk.ee</URI>
-            <URI xml:lang="en">http://sk.ee</URI>
+            <URI xml:lang="en">mailto:ria@ria.ee</URI>
+            <URI xml:lang="en">https://www.ria.ee</URI>
          </ElectronicAddress>
       </SchemeOperatorAddress>
       <SchemeName>
          <Name xml:lang="en">EE:Supervision/Accreditation Status List of test certification services</Name>
       </SchemeName>
       <SchemeInformationURI>
-         <URI xml:lang="en">http://sk.ee</URI>
+         <URI xml:lang="en">https://open-eid.github.io/test-TL/</URI>
       </SchemeInformationURI>
       <StatusDeterminationApproach>http://uri.etsi.org/TrstSvc/TrustedList/TSLType/StatusDetn/EUappropriate</StatusDeterminationApproach>
       <SchemeTypeCommunityRules>
@@ -45,7 +45,12 @@
                      <X509Certificate>MIIEvDCCAqQCCQC/HGif/u6k6TANBgkqhkiG9w0BAQUFADAgMQswCQYDVQQGEwJFRTERMA8GA1UEAxMIVGVzdCBUU0wwHhcNMTQwNjI1MDkxMDMwWhcNMTUwNjI1MDkxMDMwWjAgMQswCQYDVQQGEwJFRTERMA8GA1UEAxMIVGVzdCBUU0wwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQDCU3NdeUa4xMF78VfYPGDDGC4yd2bYboF4C2R7mfUcoaIGOZ4VCShl9ojjQY0a4/7QEI5FPDwvziydN9UFlCRYmb7YrANXL1WS71aLapLM9KuT6e0siFgh1HLeZA0YcdL7opRCVAKxejHuWShuRdvJsNXiv/nKg35I6NPW5OP7IM4HR71CqGcWgtlFkL7sqs943vccpLZa23XQcAfngW0VdPSxuz4R/kzNkIFXBjrPSpjR74006e9csrKxJmebKfGqIIOu0waFVmXsWbj46p05PLpfsVX+lJ8O9CVtq0p4R4BzcUHh4zLJpUDZlRcK0t64EjTSnH4OgEP+qH/zhBxDb8maCRqyZT7iY6e/VBbfwub7ZhNzAnPYd7yGbBz7PIBWEqDNLtTBVq7rlYd63ap2TEvXKczh50IJEM8DTdAWpHG6iRcB17nqxI3U8iq/bPVhcT/OW4Dhb9ZdEllJzCgvpDpv/yBZ/F1tggQwrtjZ4cvZ6AXt+Bb5j5vZpcxbl1Q/2a4dcFMCXfxuuoboXPlFY1ElQGiF3oOV/iVRBNn6gnv0b3+qB1sQlLii4nS/fxwAehsH5z3m4fuLgZKfT9AcpR1e8jJQLJne0dTX0spc1yOVi8nv/PvpZGh3OI/rZfGP2pUU4RQnV96Fw/VBeYFv48+mcwMta+HpaaNTNvmzhQIDAQABMA0GCSqGSIb3DQEBBQUAA4ICAQB9gBvNxbsw/iGCXlbqrqZMjvvMqJVEsSIYe7Hb3mBiPAw50zxBTVXPY9nq5P2nD1hWK/sQMLVTbhQ/rSbiiEzMizEEhMAj5NzLrGm5qDFJeJjvqvsV+IehO9E4sKZ5GI9lhbuOcPo5N1YGSDrtqJpPPKhSv4TeOtl7Y1uCSMq8R9Y3XjNBqv0BsdlnMq6ugBQ74eiOwrIdy2jCIbzNn9ZJtbTiOnVSlaywMiaRkjslkajnFDvMj3pmh9R9/r+/cGMosCVMEqxFYcNjn2CU1S9mslnZb2U/LBYm/WhHF3V1PDN56NaIgBVJAXOJgeQGKvDKHddDMjavSanXQbZeEaikH8znON+HiasNVG/Y7ZBMQTcoWJZ23q07tDQSXCDfgl1AhhaAxgsCnf+yfwWaxHjhygx40VzJnEiBTzAVnqDGW0cezpRnP8huueen38ptKjI46JFR+CgW0ckyFpNtE5AaR0vJuJl8lSpAkXtmIC6iGxsnszV519MXZxpXI0QXAhZQmkw7HPvy/aWxqmX8yyy5Yh2en25631GHt5LtSc1iiGpX0/x+rAiRjDcU5AAEOB4XWF3+NSc7Tyl09trfisQcWp9vCEFSIAwhiErpMvmP+yK/Emh7nZwqU4ueAj3OvggqPsg0Soaixr/UQC9T+rIwifv1Bh2q+VXGqdLG62Ay5Q==</X509Certificate>
                   </DigitalId>
                </ServiceDigitalIdentity>
-             </ServiceDigitalIdentities>
+               <ServiceDigitalIdentity>
+                  <DigitalId>
+                     <X509Certificate>MIIEvDCCAqQCCQCL/COUVyiGjTANBgkqhkiG9w0BAQUFADAgMQswCQYDVQQGEwJFRTERMA8GA1UEAwwIVGVzdCBUU0wwHhcNMTgxMTE1MTI1MjU1WhcNMjgxMTEyMTI1MjU1WjAgMQswCQYDVQQGEwJFRTERMA8GA1UEAwwIVGVzdCBUU0wwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQDfFK0fYeGrdngMZXZndDEpcl9pjGGNpbie3+ch5mDqObUe+OL45b4+SfPapriVRNBa+m5T1TuijP7Kb8sTNS9U3WQYvY8bEstPZnaEvdQSSVRf4j9eVg+RTJ8Y4jjZ02GbLwrpELD2Qs+ohCl8e64G29qutchv6nJqOdbL5U+d6DKyrzSpZyMRPA+UmB78KsBTs0o3wME7IA9J37YgtpUZifcC4LdgTWrX2eBICGPqi7GGKzdnI5LDhCJZnHwzva+6lBwa8fW5aXQG69uPTFmd/pNNF6+8f2FcYGljQiD6FYVKAUfYRBlw9ymKaIbNmyh9bs71ezPrI4ltOLjmZLZFRouSIaeExfzj2FkWERNG/iAuEIRolyyXjqjiQIuiEi8uo6sg1cPrD59EuWtTcMzTxuhVU8Ra37F6DrMEipqh84zQcnT0i/RNk4K723aB9uWwHJgJ5Y2/6cbta7ZkYsfQfjBC4nBRVyUlBCpEFYNePbKttYF5Cf5FraMlGzAY0W/MSIUxvRmlkjCzBod4LA+K/hQxEiw7Xa8OAZfw9l9lmSnia+fgRz3fLKxg3yklw6rA/2aISb83uVRvxgqKym3EeJ/+CsOQpwOblEBxWfQizah1Ct4NhsuKLmBbopxAXLqz25E+3BvvsM4nuwWVfoyvTVXYQ+k4V/hj2iS5buJ5twIDAQABMA0GCSqGSIb3DQEBBQUAA4ICAQAGTw5MJurTeeWy+jQikGfivrxt9lzqt+uSV8D6V1GBzBAl8m4SqSY0U8KM/gtqh9bhmQwm0qgx/mKcDKzCUKajXPKm/NbR+pjZD9Lcx4Iy0iqi9rsxSKECGM2dYAmm7GXnXvz9QUxZjteTgYoRP2s6GfosvTQiUEr/cIrYAU3wC0/94pRb9/FLVVon/aVdsh+Dqb4j7BhKLzXNCNjkv1Sv/YL1zpe/2SPxe0Bfymys97lcu1DB01e/MLfqQJThYOblMte/zGNZO24HcvROIkyoUtYy5/H4F5rsamSGMNdBfauTtYxz7lOT7qQoDNyGMN9bfjWnkVi/lV2CVooeiHIs7wLWEhYmU9DiAzcmODU9uMRRBlGOWK8UQg05exc518heICmudSbgSyQLGqzVoI4kybhmBA3w93KEXJSXlnU7hBzoYDP2d1g46Ay59UtvLycS1kxe0jVjxxRnh/f9aPbMwUYBzEC0naUzMeJtElHLHgW4HT6PLgFImgLLFh8dnYJUzn35wz10g3YBA61YUJuODpapKHixn/2X/t/8Vf1vqr/VwiwUglNQj+P78Fdb3T56JsYRG1bdf6nz5dvv4qtLoG+OjPI/tiLjh2ktqaMjeVmlQFchy/C5Lr48d9IGmo+x2ECYSWVvwzxI7PIbYBI4oaPjh2zKIrz/AlY2RmqMMA==</X509Certificate>
+                  </DigitalId>
+               </ServiceDigitalIdentity>
+            </ServiceDigitalIdentities>
             <TSLLocation>https://open-eid.github.io/test-TL/tl-mp-test-EE.xml</TSLLocation>
             <AdditionalInformation>
                <OtherInformation>
@@ -53,12 +58,12 @@
                </OtherInformation>
                <OtherInformation>
                   <SchemeOperatorName>
-                     <Name xml:lang="en">SK Test Authority</Name>
+                     <Name xml:lang="en">Information System Authority</Name>
                   </SchemeOperatorName>
                </OtherInformation>
                <OtherInformation>
                   <SchemeTypeCommunityRules>
-                     <URI>http://uri.etsi.org/TrstSvc/eSigDir-1999-93-EC-TrustedList/schemerules/CompiledList</URI>
+                     <URI xml:lang="en">http://uri.etsi.org/TrstSvc/TrustedList/schemerules/EUlistofthelists</URI>
                   </SchemeTypeCommunityRules>
                </OtherInformation>
                <OtherInformation>
@@ -70,9 +75,9 @@
             </AdditionalInformation>
          </OtherTSLPointer>
       </PointersToOtherTSL>
-      <ListIssueDateTime>2019-02-11T16:35:45Z</ListIssueDateTime>
+      <ListIssueDateTime>2021-02-22T13:00:15Z</ListIssueDateTime>
       <NextUpdate>
-         <dateTime>2020-08-20T21:00:00Z</dateTime>
+         <dateTime>2027-08-20T21:00:00Z</dateTime>
       </NextUpdate>
       <DistributionPoints>
          <URI>https://open-eid.github.io/test-TL/EE_T.xml</URI>
@@ -490,6 +495,42 @@
             </TSPService>
             <TSPService>
                <ServiceInformation>
+                  <ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/Certstatus/OCSP/QC</ServiceTypeIdentifier>
+                  <ServiceName>
+                     <Name xml:lang="en">TEST of SK OCSP RESPONDER 2021 EXPIRED</Name>
+                  </ServiceName>
+                  <ServiceDigitalIdentity>
+                     <DigitalId>
+                        <X509Certificate>MIIE1jCCA76gAwIBAgIQIZLtbtYO1nRgJRDe7FudRDANBgkqhkiG9w0BAQUFADB9MQswCQYDVQQGEwJFRTEiMCAGA1UECgwZQVMgU2VydGlmaXRzZWVyaW1pc2tlc2t1czEwMC4GA1UEAwwnVEVTVCBvZiBFRSBDZXJ0aWZpY2F0aW9uIENlbnRyZSBSb290IENBMRgwFgYJKoZIhvcNAQkBFglwa2lAc2suZWUwHhcNMjEwMjExMTExMTI2WhcNMjEwMjExMTIxMTI2WjCBizELMAkGA1UEBhMCRUUxIjAgBgNVBAoMGUFTIFNlcnRpZml0c2VlcmltaXNrZXNrdXMxDTALBgNVBAsMBE9DU1AxLzAtBgNVBAMMJlRFU1Qgb2YgU0sgT0NTUCBSRVNQT05ERVIgMjAyMSBFWFBJUkVEMRgwFgYJKoZIhvcNAQkBFglwa2lAc2suZWUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDyNa/9465cZoftXQSxBVhXGX8Yk0VUjgeIci4WYSSdYpJqv8x4u07jBTzylhFN+wEJbpmiMdTArpeTw5IC66fU8K0KpRAUxqa70Q50coGQmZvfI7CnJaEWyVDdXbP7NaQVLJ2c5puuSVmIuI/EqpjZMsq6qYgQWyBjbLpcPBwq3swSNjm0HjwbsL3h8qp7xLt77zLkZzXR/bcxQd9IqRV7FQV/aKg3KBktDfcXSTMRBkqFGDDHnBrhtmKWg0qbvI0q6mvUxB/zEx3JVCQ/R7xz+Dor+skPzmZNyuWgatKqwytWTkHC3xJvMNxSqXioXU8UMIHYKTarswmMgQC6AxgJAgMBAAGjggFBMIIBPTATBgNVHSUEDDAKBggrBgEFBQcDCTAdBgNVHQ4EFgQUXP779ETzuPOI7QrMY2CAE0EouzMwgaAGA1UdIASBmDCBlTCBkgYKKwYBBAHOHwMBATCBgzBYBggrBgEFBQcCAjBMHkoAQQBpAG4AdQBsAHQAIAB0AGUAcwB0AGkAbQBpAHMAZQBrAHMALgAgAE8AbgBsAHkAIABmAG8AcgAgAHQAZQBzAHQAaQBuAGcALjAnBggrBgEFBQcCARYbaHR0cDovL3d3dy5zay5lZS9hamF0ZW1wZWwvMB8GA1UdIwQYMBaAFLU0Cp2lLxDF5yEOvsSxZUcbA3b+MEMGA1UdHwQ8MDowOKA2oDSGMmh0dHBzOi8vd3d3LnNrLmVlL3JlcG9zaXRvcnkvY3Jscy90ZXN0X2VlY2NyY2EuY3JsMA0GCSqGSIb3DQEBBQUAA4IBAQCfx0m4HtTWNMs25N77rlPOjXDzJ8RK2NJnXdqbWJWR7AVz2bV5m9Ki91Vgd1ZofxzjqxQvgxQNtzGB0aFNJAt3CstnTmYMlYNOV+xOwPgGDeAxS8YfFPGpmfl3c5hNaQj9/NoZW8nDTvMGZZaGCoP2lMyXOcXc5nNbo/V5FvzkM3oKNC3FT8aLE8VCULXHuOtBv1i+wAV5atpbUQovqvRfNWZ8KO/kqCUs4oOGmn+7M5Px1gBglJCwI8ONGNb6eXp0sl2iBL1Qr/DyDjPMl78Lx1QPJfgDtEFePAuIRoatL5JFm4MakM+0mj9mghDTRVPlKa8OhZC6DjZ//tnNiOoN</X509Certificate>
+                     </DigitalId>
+                  </ServiceDigitalIdentity>
+                  <ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>
+                  <StatusStartingTime>2021-01-01T13:00:00Z</StatusStartingTime>
+                  <ServiceSupplyPoints>
+                     <ServiceSupplyPoint>http://demo.sk.ee/ocsp</ServiceSupplyPoint>
+                  </ServiceSupplyPoints>
+               </ServiceInformation>
+            </TSPService>
+            <TSPService>
+               <ServiceInformation>
+                  <ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/Certstatus/OCSP/QC</ServiceTypeIdentifier>
+                  <ServiceName>
+                     <Name xml:lang="en">TEST of SK OCSP RESPONDER 2020</Name>
+                  </ServiceName>
+                  <ServiceDigitalIdentity>
+                     <DigitalId>
+                        <X509Certificate>MIIEzjCCA7agAwIBAgIQa7w4iGoiIOtfrn0fG/hc1zANBgkqhkiG9w0BAQUFADB9MQswCQYDVQQGEwJFRTEiMCAGA1UECgwZQVMgU2VydGlmaXRzZWVyaW1pc2tlc2t1czEwMC4GA1UEAwwnVEVTVCBvZiBFRSBDZXJ0aWZpY2F0aW9uIENlbnRyZSBSb290IENBMRgwFgYJKoZIhvcNAQkBFglwa2lAc2suZWUwHhcNMjAxMTEzMTIzMzM1WhcNMjQwNjEzMTEzMzM1WjCBgzELMAkGA1UEBhMCRUUxIjAgBgNVBAoMGUFTIFNlcnRpZml0c2VlcmltaXNrZXNrdXMxDTALBgNVBAsMBE9DU1AxJzAlBgNVBAMMHlRFU1Qgb2YgU0sgT0NTUCBSRVNQT05ERVIgMjAyMDEYMBYGCSqGSIb3DQEJARYJcGtpQHNrLmVlMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz6U1uMvi5P6bycikgOFp1QdIdt2R/x/+WbRVNLNjDTMS0t70BVl6+Z7c5jqZUNIBZ5qlr3K8v5bIv0rdr1H/By0wFMWsWksZnQLIsb/lU+HeuSIDY2ESs0YzvZW4AB3tDrMFOrtuImmsUxhsz00KcRt9o+/o0RD9v5qxhJaqj6+Pr/8fZJK67Wuiqli2vVtuStaTb5zpjA1MJtu9OM4jk/FaL1FaST72XPTzpMVNJR/Rk63t0wL4l4f4s3y0ZI+JPzXu3jyeH+g3ZVLbwB2ccwgqfDPKXoxfNtcDxjUZz16OQQp2Rp14h/n8If0jyHfiNHHCDKaSPFyyJJMgRrQkiwIDAQABo4IBQTCCAT0wEwYDVR0lBAwwCgYIKwYBBQUHAwkwHQYDVR0OBBYEFIGteMcJzpGYrEl+MRkb+QpBx6XFMIGgBgNVHSAEgZgwgZUwgZIGCisGAQQBzh8DAQEwgYMwWAYIKwYBBQUHAgIwTB5KAEEAaQBuAHUAbAB0ACAAdABlAHMAdABpAG0AaQBzAGUAawBzAC4AIABPAG4AbAB5ACAAZgBvAHIAIAB0AGUAcwB0AGkAbgBnAC4wJwYIKwYBBQUHAgEWG2h0dHA6Ly93d3cuc2suZWUvYWphdGVtcGVsLzAfBgNVHSMEGDAWgBS1NAqdpS8QxechDr7EsWVHGwN2/jBDBgNVHR8EPDA6MDigNqA0hjJodHRwczovL3d3dy5zay5lZS9yZXBvc2l0b3J5L2NybHMvdGVzdF9lZWNjcmNhLmNybDANBgkqhkiG9w0BAQUFAAOCAQEAKR+ssgVTDDkGl+sLwz5OwaBMUOPEscr7DcCXmjmRaC+KjTe8kCuXZwnMH7tMf0mDyF22USJ/o2m0MFW1k8zjH1yr1/2JghttRfi5mCvoMHNXVM/ST1C/6rrymaYA27RxIj201USwTQp35YvhUUIZO3Xby/60yXZyt7wCS7xAnH65U/0LnkT5w5DLC8EdXlH3QF600Z74fm8z54lY80IoSgIEPmFZlLe4YR822G24mawGRQKIbhPK2DO6sGtLZDAfee4B6TGmPcunztsYaUoc1spfCKrx5EBthieSgAp0dh0kMBAR/AGh7fSwl5zyASFgYmtVP4FZS6w6ETlXU7Bg3g==</X509Certificate>
+                     </DigitalId>
+                  </ServiceDigitalIdentity>
+                  <ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>
+                  <StatusStartingTime>2020-11-13T13:00:00Z</StatusStartingTime>
+                  <ServiceSupplyPoints>
+                     <ServiceSupplyPoint>http://demo.sk.ee/ocsp</ServiceSupplyPoint>
+                  </ServiceSupplyPoints>
+               </ServiceInformation>
+            </TSPService>
+            <TSPService>
+               <ServiceInformation>
                   <ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/TSA/QTST</ServiceTypeIdentifier>
                   <ServiceName>
                      <Name xml:lang="en">DEMO of SK TSA</Name>
@@ -526,6 +567,24 @@
                      <StatusStartingTime>2014-05-31T21:00:00Z</StatusStartingTime>
                   </ServiceHistoryInstance>
                </ServiceHistory>
+            </TSPService>
+            <TSPService>
+               <ServiceInformation>
+                  <ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/TSA/QTST</ServiceTypeIdentifier>
+                  <ServiceName>
+                     <Name xml:lang="en">DEMO SK TIMESTAMPING AUTHORITY 2020</Name>
+                  </ServiceName>
+                  <ServiceDigitalIdentity>
+                     <DigitalId>
+                        <X509Certificate>MIIEgzCCA2ugAwIBAgIQcGzJsYR4QLlft+S73s/WfTANBgkqhkiG9w0BAQsFADB9MQswCQYDVQQGEwJFRTEiMCAGA1UECgwZQVMgU2VydGlmaXRzZWVyaW1pc2tlc2t1czEwMC4GA1UEAwwnVEVTVCBvZiBFRSBDZXJ0aWZpY2F0aW9uIENlbnRyZSBSb290IENBMRgwFgYJKoZIhvcNAQkBFglwa2lAc2suZWUwHhcNMjAxMTMwMjEwMDAwWhcNMjUxMTMwMjEwMDAwWjB/MSwwKgYDVQQDDCNERU1PIFNLIFRJTUVTVEFNUElORyBBVVRIT1JJVFkgMjAyMDEXMBUGA1UEYQwOTlRSRUUtMTA3NDcwMTMxDDAKBgNVBAsMA1RTQTEbMBkGA1UECgwSU0sgSUQgU29sdXRpb25zIEFTMQswCQYDVQQGEwJFRTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMz8yTHQyp8gzyPnKt/CQg+07c/ogDl4V1SmyFGPT+lQaYZvXIKNNZyJlzII+vNnsok6hIRvAX5ffDZs8dkeNdo8QOuQ81QbLn5JJT2VuSppvpnqpFCiL+uWY0/nnwNmyiDueMkUDDJavbSPCkWwmW+aQZCNGd+krSTL/zNHCfOt7cAVDQAL9C4Ue7olufIZoDCTqRA00S8bGbTQPyTS8uUMEuwWc4JYZqEu4c24bIGhbKoCOSR60WrD6cBoZXLlqwDbWdkX5SLjJ9dTCxGW+pLpnAWx+KqJY3HkDiSZCT46JXOaoVzmcFx3l7eqQfqWgkzRZs9TJvqQSLQ+vgSAORECAwEAAaOB/DCB+TAOBgNVHQ8BAf8EBAMCBsAwFgYDVR0lAQH/BAwwCgYIKwYBBQUHAwgwHQYDVR0OBBYEFJ8v3/rNs6jK0l3BxyVSixDYEOJHMB8GA1UdIwQYMBaAFLU0Cp2lLxDF5yEOvsSxZUcbA3b+MIGOBggrBgEFBQcBAQSBgTB/MCEGCCsGAQUFBzABhhVodHRwOi8vZGVtby5zay5lZS9haWEwWgYIKwYBBQUHMAKGTmh0dHBzOi8vd3d3LnNrLmVlL3VwbG9hZC9maWxlcy9URVNUX29mX0VFX0NlcnRpZmljYXRpb25fQ2VudHJlX1Jvb3RfQ0EuZGVyLmNydDANBgkqhkiG9w0BAQsFAAOCAQEAWWkQKAbEAT77n8L42gw5ql7BO1fdmUgRJRRwWL9Vo9l1c50lqieR8MUToF4wpF6D0PJUx9FDcKL0fbURFTRuETCgGekYmCjMbVQCiv6W38vMsIdJLBWjo2oT2AjtJ2VakwkrzzSxOSBrF5u0hPsAkP0VkBhmW1E0DHfm1Bti2xk5t9OsJMJqfTTl8v1HXktlnxi6WdUzLBcSdknFePDnSYoT3xOfOz1IlB3Ta729bgglAjVBEoWyrKX4kTjZPChxseMntXaW/pN+Agm3Xa9hniXdK4KamzX8d8LJ+qObxmc9TXmksbWZVup0ktfJYWIHCwZjmQukAed/pIX8UV3N9w==</X509Certificate>
+                     </DigitalId>
+                  </ServiceDigitalIdentity>
+                  <ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>
+                  <StatusStartingTime>2020-11-30T21:00:00Z</StatusStartingTime>
+                  <ServiceSupplyPoints>
+                     <ServiceSupplyPoint>http://demo.sk.ee/tsa/</ServiceSupplyPoint>
+                  </ServiceSupplyPoints>
+               </ServiceInformation>
             </TSPService>
             <TSPService>
                <ServiceInformation>
@@ -624,10 +683,6 @@
                      </ServiceDigitalIdentity>
                      <ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/undersupervision</ServiceStatus>
                      <StatusStartingTime>2010-03-31T09:17:00Z</StatusStartingTime>
-                     <TSPServiceDefinitionURI>
-                        <URI xml:lang="et">https://sk.ee/repositoorium/CP/</URI>
-                        <URI xml:lang="en">https://sk.ee/en/repository/CP/</URI>
-                     </TSPServiceDefinitionURI>
                      <ServiceInformationExtensions>
                         <Extension Critical="true">
                            <ecc:Qualifications>
@@ -754,16 +809,82 @@
             </TSPService>
          </TSPServices>
       </TrustServiceProvider>
+      <TrustServiceProvider>
+         <TSPInformation>
+            <TSPName>
+               <Name xml:lang="en">Information System Authority</Name>
+            </TSPName>
+            <TSPTradeName>
+               <Name xml:lang="en">RIA</Name>
+            </TSPTradeName>
+            <TSPAddress>
+               <PostalAddresses>
+                  <PostalAddress xml:lang="en">
+                     <StreetAddress>Pärnu maantee 139a</StreetAddress>
+                     <Locality>Tallinn</Locality>
+                     <StateOrProvince>Harjumaa</StateOrProvince>
+                     <PostalCode>15169</PostalCode>
+                     <CountryName>EE</CountryName>
+                  </PostalAddress>
+               </PostalAddresses>
+               <ElectronicAddress>
+                  <URI xml:lang="en">https://www.ria.ee</URI>
+                  <URI xml:lang="en">mailto:info@ria.ee</URI>
+               </ElectronicAddress>
+            </TSPAddress>
+            <TSPInformationURI>
+               <URI xml:lang="en">http://www.sk.ee/en/repository/CPS</URI>
+            </TSPInformationURI>
+         </TSPInformation>
+         <TSPServices>
+            <TSPService>
+               <ServiceInformation>
+                  <ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/TSA/QTST</ServiceTypeIdentifier>
+                  <ServiceName>
+                     <Name xml:lang="en">TEST of RIA TIMESTAMPING AUTHORITY 2018 G1 PROOV 1</Name>
+                  </ServiceName>
+                  <ServiceDigitalIdentity>
+                     <DigitalId>
+                        <X509Certificate>MIIFCjCCAvKgAwIBAgIIOTmoMM25tyUwDQYJKoZIhvcNAQEMBQAwdTELMAkGA1UEBhMCRUUxJTAjBgNVBAoMHEluZm9ybWF0aW9uIFN5c3RlbSBBdXRob3JpdHkxJDAiBgNVBAMMG1RFU1Qgb2YgUklBIFJPT1QgQ0EgMjAxOCBHMTEZMBcGCSqGSIb3DQEJARYKcGtpQHJpYS5lZTAeFw0xOTA3MTYwNzUyNTZaFw0zODA0MTQxMjA4MjZaMIGoMQswCQYDVQQGEwJFRTEVMBMGA1UECAwMSGFyanUgQ291bnR5MRAwDgYDVQQHDAdUYWxsaW5uMSUwIwYDVQQKDBxJbmZvcm1hdGlvbiBTeXN0ZW0gQXV0aG9yaXR5MQwwCgYDVQQLDANUU0ExOzA5BgNVBAMMMlRFU1Qgb2YgUklBIFRJTUVTVEFNUElORyBBVVRIT1JJVFkgMjAxOCBHMSBQUk9PViAxMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuwKPfXSFMJRX5/cuk950lQVN2y1dNESggm8m11D05VKAlOdor9fZO2aGVToMGqDcOa6FRH/fbdKuRN4LDJsbTiysKdlqAfoOqioOgnqu6HUt3TQztaSauqqduKKwLSNXQuN7T0/B6sTtNKlzuCtv8kwnxQVrAjPTRGx+0NIM5zxYyni0HXB+lp+w+ToG/l3s29lC5VeCnUPcYM5xtC+KsSvRRKmKI8dDK5l20v5RgmowIxP0McyhmhcGf+WbI01nq5ptEn8cFoJVwu8gcMDfLC6aRgEr+ag8G+l6pHLRiiNH+kjSFPQreDcCGcHbRKOqNT4SbwYeccZI5fpNLW7bywIDAQABo2owaDAfBgNVHSMEGDAWgBQ+6250UdpSNA6ZgOO3z9/uQysKVDAWBgNVHSUBAf8EDDAKBggrBgEFBQcDCDAdBgNVHQ4EFgQUgN06mzzCFCX8ThslsRNc1HnNcsswDgYDVR0PAQH/BAQDAgbAMA0GCSqGSIb3DQEBDAUAA4ICAQBHin1fKyM2t4J21djwjqDXROpYh7XncZDiUdAXGLlHnXI/wRG+x6ttWj/MjxsTeUGJrKuibsBIQDV4kWRNKoCt4zDOyDM11p3jg9oA325xad7cXcHOrRY7flbvFTB8jlKXHgrSdyfha8Cq7BJScepS2lELXLZ2ZziXXRdFxTpGzxdPqGKUB7tzpc6IIWEmcTOBTLXL/t2j6fZpLJKBihY74h+/16UxG3cXZa3E0BFkAeycm7XsbmS96XOmj2i/g2rKri7mztsS+WdFc++Awh1AvQiE9x5i0T/16nlJajsd6eJCBb2Nv/JlHqhmymDslmdiMSG1GMoHeQjTxLd197F3tz4TkVhEbcb6+tTgHn5nlSgk7W14hRqhv+9stBNt6d5ikdX01MugM8Iah7zGZKe35I+OUu3VKg8yDQFa2JItjIgvqcDTQKJ8cSep32YcIb/WFENRRfDocQQjai9PlJ7tvLbj17Z6fEe4M/mZAQnM3Lmw9rzz4OiOk8CrQAxJULeNOT0amKL8Hvsms5YKhahP6+PkU+bez+Cj2lV25rXVLfWYU5qKzd+aps6xHatR5HLJ13+aasJ4yYJ0AUXeUrbOb+KCFWzuIrKCDskoUAhIwVIr2tUQSeP65jBYurgsVtCi7IB7OSdaEjA7UTzyNurLKp81NEAOtp5zTRKwsraFMw==</X509Certificate>
+                     </DigitalId>
+                  </ServiceDigitalIdentity>
+                  <ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>
+                  <StatusStartingTime>2019-07-16T08:00:00Z</StatusStartingTime>
+                  <ServiceSupplyPoints>
+                     <ServiceSupplyPoint>http://tsa.test.riaint.ee/</ServiceSupplyPoint>
+                  </ServiceSupplyPoints>
+               </ServiceInformation>
+            </TSPService>
+            <TSPService>
+               <ServiceInformation>
+                  <ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/Certstatus/OCSP/QC</ServiceTypeIdentifier>
+                  <ServiceName>
+                     <Name xml:lang="en">TEST of RIA OCSP RESPONDER 2019 G1</Name>
+                  </ServiceName>
+                  <ServiceDigitalIdentity>
+                     <DigitalId>
+                        <X509Certificate>MIIE+DCCAuCgAwIBAgIIE2M27fGPKnowDQYJKoZIhvcNAQEMBQAwdTELMAkGA1UEBhMCRUUxJTAjBgNVBAoMHEluZm9ybWF0aW9uIFN5c3RlbSBBdXRob3JpdHkxJDAiBgNVBAMMG1RFU1Qgb2YgUklBIFJPT1QgQ0EgMjAxOCBHMTEZMBcGCSqGSIb3DQEJARYKcGtpQHJpYS5lZTAeFw0xOTA5MDQxMjM4MDRaFw0zODA0MTQxMjA4MjZaMIGZMQswCQYDVQQGEwJFRTEVMBMGA1UECAwMSGFyanUgQ291bnR5MRAwDgYDVQQHDAdUYWxsaW5uMSUwIwYDVQQKDBxJbmZvcm1hdGlvbiBTeXN0ZW0gQXV0aG9yaXR5MQ0wCwYDVQQLDARPQ1NQMSswKQYDVQQDDCJURVNUIG9mIFJJQSBPQ1NQIFJFU1BPTkRFUiAyMDE5IEcxMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwKu3S/omS09qV59HtnFVGFtN7lOc84QZi3LsZwVjFunnWPN1Kxe/wbmR8VK8vTbS6IUe0PKzoMui6NcZIH0wJwLV3CeaXZtbpQ8Sl1ZYTd9ks6907RKLHRW9lDuu8dBwAe7xOlfJS7/cyTQO0z5475CtIOt0fODwU1mcjebXegZPqVlzUpqaRbM1ONgsOK4dSO04+MmGpFsluXt5HfaA6O5jggKG6SiTOLSIpJeaM6T4K284Mx+1+Pfl0NR+evt+vELJonmvTfxViYoEa2T8HNqHJZxMb78X8IDJGZ/Hvp3MTJ+2XDZLNHeSx3Kdy/A18HdUGgAM37xchtgGzJsZvQIDAQABo2cwZTAfBgNVHSMEGDAWgBQ+6250UdpSNA6ZgOO3z9/uQysKVDATBgNVHSUEDDAKBggrBgEFBQcDCTAdBgNVHQ4EFgQUPa7zIV4ioQssO0Djiso9ccTnktwwDgYDVR0PAQH/BAQDAgeAMA0GCSqGSIb3DQEBDAUAA4ICAQBRGOnbtqMQHIR85CSsjITJMv4YVqvzq1Dmm2K12I4vKMsLW8VFgCBCmeh5KtJCrTYnWJJbLDZj3EACA1pWLOQXAfMuqDu5aYZ9Uvvx7bR4CiOaPoSImjLZnYeo5IbwgFE8/yHNcaXjNmnwNYnfbvLYG8aY+qoOHrs63tj5HQL2po3N1B9BOKuYRA1zenYRyqpUYF1ZV2zYDzw2en7x8ZnZHUEln2a0rGWp2KHwH63lI+MiWpOa8yMC3Nzm9ZIpLw49u7U0+Vu2at9Lf6Cb+7aMrwdsfVuLrDVBf6AQmBSvLPZQTZa2SvdUoPNrT3mFpR1gjZRu+W4XVtikm+iSVN3dQX3lT4ycC+jwGEo7QA+N3+UZJR9A7h1Bz0jqF4g5zKRUtvxRsyMbP8pnIvDEThSHzBkr64t9nchdqlpgNruMCMQZWnoosqd6PSYlgef7W7OOhkxKTsTaUayzXR9QMH7QrSwMuq9DoOKaQlOTTfxrfLcCaoRP8fwUkE3hqqdCBnzhtnadYG0KgYnDu4mMkqTvsBOFU/EooE6aUdLScPQZ2ReLI/hAwm2G8rEqwGlS/Jun7l8moHK3ZoQUeoi56h+Hx2Dj0UqZ+Ph2KVs+zi4T28dPEqIbISBX/1hQXempPHbMNw5EIYPidlFLzovoc1aYgRWNcbimUEWaIZM2YLW9eQ==</X509Certificate>
+                     </DigitalId>
+                  </ServiceDigitalIdentity>
+                  <ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>
+                  <StatusStartingTime>2019-09-04T13:00:00Z</StatusStartingTime>
+                  <ServiceSupplyPoints>
+                     <ServiceSupplyPoint>http://ocsp.test.riaint.ee/</ServiceSupplyPoint>
+                  </ServiceSupplyPoints>
+               </ServiceInformation>
+            </TSPService>
+         </TSPServices>
+      </TrustServiceProvider>
    </TrustServiceProviderList>
-<ds:Signature Id="S0"><ds:SignedInfo><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/><ds:Reference URI="#TEST-EE"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><ds:DigestValue>oSafvHB4/GynqZjBXJJhdUl2FmY1QmT5AkFNmfAyL0k=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#SignedProperties"><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><ds:DigestValue>a2xwUiKju2lsrUZzK6JyTclE/pdGC5AZV80MAB/Lym0=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>v0MHuXNMXA3fi6cRXL7Bc099VU7mvG2uFo+1eliuydh6P0udAw/WaeFfpsSe/3B8HTBaifZ75p5F
-KoiiT6zdf1UNRthNTOGB0NO6IcFKtIUyuxShBQaQt0b4Pq9YvCyb7KeTnX6V84G70M7hz+jVRELh
-o7fbz2kuD2+Fl5WBW2NBrVNH8xrhV6bOkmJBul2aw8x9UF2rRKKZPo5aX3i4wDu0jsuZvCevKySu
-g3V0MpDcdFYMj+Z3RrdQdR96y68ne9+U2ZbgryBgZUJtBpeAdWn1uZFGiwmfj7xc1GtTKyCDY3ib
-rkMg53Yhu2aem0skYTImAViFr03qINTXp2uxPa/4ZdLx/WjKBdCPGgh8qWRUsxjMIlfqwjJtrscJ
-hxoeej6pcO8ucjjeDgCRBLDnjW9XEXmxloGrheW74V+w/s6f7HmEioHm49Zk9ltTWmZC5SOvVjQY
-F3dKSYF89Tv7ObGeV1TTSu7Uh2v1/XVTSSuSMSXK/Ksxz44mVpQpVB7loxFyM0NfYq8bkRMGA53v
-k1B7iEQrJbJK723REJ4znEHWeeLOGcjoT4IL4jVroWl0iivPW0NlDCSsDFf6tfvBp39Q2E5Yczp2
-vAD+NaL9oDs7OTPidmHgAbuT8dtCjCD4rbKtAHcjQ3P/rVvvtblqKUfDGCZq7rSyolJ7p42D3xc=</ds:SignatureValue><ds:KeyInfo><ds:X509Data><ds:X509Certificate>MIIEvDCCAqQCCQCL/COUVyiGjTANBgkqhkiG9w0BAQUFADAgMQswCQYDVQQGEwJFRTERMA8GA1UE
+<ds:Signature Id="S0"><ds:SignedInfo><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/><ds:Reference URI="#TEST-EE"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><ds:DigestValue>6WH04K1LXGX3adnFovn/v53XpSGFoIXgEvxavJQR/tE=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#SignedProperties"><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><ds:DigestValue>JEpZrlqPI/71DgW8yRoz42o3fOBDQfgQbLFaPy33Yhc=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>OTsyHXdDxccRUlT66An+cJSWoNf61sKf6kLedVrjx9vrSbegI4etThU+oTs6mBNQEdkrW2EBGYsr
+lFl2Vr5awYx/GsOMolAtxCQdE8XsOgP13EdPo5Ug2O+c4WYK4k0JtIrT8Xq+bHlfOa5BJRBm83ze
+YWvQXPfExbyOOO2xOaKow/hui27MpiC/Lry6TRY9MytZ93HS2I9zaNJR7MF/DBrXGeTPSSirfd2b
+10kab9CZV/lqPUkdXeiYeiaW1+7/yJRiczPzoHyA6BwvQUu7k4RDhwnTloanKhLz4IOfM8GdChro
+kQP9RuJXh43cKhIDcHPoMIz6oyCFbNwEn85Y16SFKlgSuXd1jo5FCj9rKuUaEI+m9chxChkmooAt
+yjAv2PAAQXAXdTpsVBg4e9iiVbNyHMLc/QiXIdtvksSHImrgKNY4x0MjivSFZuYouYyWokpwVV0T
+kHsKKzNg4Etw79GuwRZDrEWu4KzcYdlU9oiukBfVmR4Wq9HYX/uI681J+y17ZLYbS9iUGOf7Ftsm
++YgnNfKAhHFeCZc/ov9ywAP7dWcUL3YgSq0fj9ENWj8vVV5+Ib9jN6EnC9NdW4WS7YX4YSNhgrab
+65YX3hN+XAPMnGmJ79JDujj994E78mWz1z1v0ip4zVv5u695PP9c9/vItWMx8KeHCJ6XUr/b2tU=</ds:SignatureValue><ds:KeyInfo><ds:X509Data><ds:X509Certificate>MIIEvDCCAqQCCQCL/COUVyiGjTANBgkqhkiG9w0BAQUFADAgMQswCQYDVQQGEwJFRTERMA8GA1UE
 AwwIVGVzdCBUU0wwHhcNMTgxMTE1MTI1MjU1WhcNMjgxMTEyMTI1MjU1WjAgMQswCQYDVQQGEwJF
 RTERMA8GA1UEAwwIVGVzdCBUU0wwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQDfFK0f
 YeGrdngMZXZndDEpcl9pjGGNpbie3+ch5mDqObUe+OL45b4+SfPapriVRNBa+m5T1TuijP7Kb8sT
@@ -784,4 +905,4 @@ AzcmODU9uMRRBlGOWK8UQg05exc518heICmudSbgSyQLGqzVoI4kybhmBA3w93KEXJSXlnU7hBzo
 YDP2d1g46Ay59UtvLycS1kxe0jVjxxRnh/f9aPbMwUYBzEC0naUzMeJtElHLHgW4HT6PLgFImgLL
 Fh8dnYJUzn35wz10g3YBA61YUJuODpapKHixn/2X/t/8Vf1vqr/VwiwUglNQj+P78Fdb3T56JsYR
 G1bdf6nz5dvv4qtLoG+OjPI/tiLjh2ktqaMjeVmlQFchy/C5Lr48d9IGmo+x2ECYSWVvwzxI7PIb
-YBI4oaPjh2zKIrz/AlY2RmqMMA==</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object><xades:QualifyingProperties Target="#S0"><xades:SignedProperties Id="SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2019-02-11T14:35:45Z</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><ds:DigestValue>nk6Dlz6rjsOp9TaNXJg0RNj/m53oC7RGzdDHcZ7jrfo=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName>CN=Test TSL, C=EE</ds:X509IssuerName><ds:X509SerialNumber>10086976385427474061</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate></xades:SignedSignatureProperties></xades:SignedProperties></xades:QualifyingProperties></ds:Object></ds:Signature></TrustServiceStatusList>
+YBI4oaPjh2zKIrz/AlY2RmqMMA==</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object><xades:QualifyingProperties Target="#S0"><xades:SignedProperties Id="SignedProperties"><xades:SignedSignatureProperties><xades:SigningTime>2021-02-22T11:00:15Z</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><ds:DigestValue>nk6Dlz6rjsOp9TaNXJg0RNj/m53oC7RGzdDHcZ7jrfo=</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName>CN=Test TSL, C=EE</ds:X509IssuerName><ds:X509SerialNumber>10086976385427474061</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate></xades:SignedSignatureProperties></xades:SignedProperties></xades:QualifyingProperties></ds:Object></ds:Signature></TrustServiceStatusList>

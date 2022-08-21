@@ -2,7 +2,7 @@ var _ = require("root/lib/underscore")
 var Qs = require("querystring")
 var Url = require("url")
 var Router = require("express").Router
-var Config = require("root/config")
+var Config = require("root").config
 var Crypto = require("crypto")
 var HttpError = require("standard-http-error")
 var Certificate = require("undersign/lib/certificate")
@@ -25,21 +25,25 @@ var {getCertificatePersonalId} = require("root/lib/certificate")
 var {getCertificatePersonName} = require("root/lib/certificate")
 var {validateCertificate} = require("root/lib/certificate")
 var {hasSignatureType} = require("./initiatives/signatures_controller")
-var {getSigningMethod} = require("./initiatives/signatures_controller")
 var getNormalizedMobileIdErrorCode =
 	require("root/lib/mobile_id").getNormalizedErrorCode
 var sql = require("sqlate")
 var sleep = require("root/lib/promise").sleep
 var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
 var reportError = require("root").errorReporter
+var {constantTimeEqual} = require("root/lib/crypto")
 var sessionsDb = require("root/db/sessions_db")
 var usersDb = require("root/db/users_db")
 var authenticationsDb = require("root/db/authentications_db")
-var SESSION_COOKIE_NAME = Config.sessionCookieName
 var ENV = process.env.ENV
 var SITE_HOSTNAME = Url.parse(Config.url).hostname
 var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
 var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
+
+var ID_CARD_AUTH_SECRET = (
+	Config.idCardAuthenticationSecret &&
+	Buffer.from(Config.idCardAuthenticationSecret)
+)
 
 var waitForMobileIdSession =
 	waitForSession.bind(null, mobileId.waitForAuthentication.bind(mobileId))
@@ -183,38 +187,51 @@ exports.router.post("/", next(function*(req, res, next) {
 	if (req.query["authentication-token"]) return void next()
 
 	var cert, err, country, personalId, authentication, authUrl, tokenHash
-	var method = getSigningMethod(req)
 
 	var referrer = req.headers.referer
 	if (referrer && Url.parse(referrer).pathname.startsWith(req.baseUrl))
 		referrer = null
 
-	switch (method) {
+	switch (getSigninMethod(req)) {
 		case "id-card":
-			cert = Certificate.parse(req.body)
+			var pem = req.headers["x-client-certificate"]
+			if (pem == null) throw new HttpError(400, "Missing Certificate", {
+				description: req.t("ID_CARD_ERROR_CERTIFICATE_MISSING")
+			})
+
+			if (!ID_CARD_AUTH_SECRET)
+				throw new HttpError(501, "ID-Card Authentication Not Yet Available")
+
+			if (!constantTimeEqual(
+				Buffer.from(req.headers["x-client-certificate-secret"] || ""),
+				ID_CARD_AUTH_SECRET
+			)) throw new HttpError(403, "Invalid Proxy Secret")
+
+			cert = parseCertificateFromHeader(pem)
 			if (err = validateCertificate(req.t, cert)) throw err
+
+			if (req.headers["x-client-certificate-verification"] != "SUCCESS")
+				throw new HttpError(422, "Sign In Failed", {
+					description: req.t("ID_CARD_ERROR_AUTHENTICATION_FAILED")
+				})
 
 			;[country, personalId] = getCertificatePersonalId(cert)
 			if (country != "EE") throw new HttpError(422, "Estonian Users Only")
 
-			authentication = yield authenticationsDb.create({
+			authentication = authenticationsDb.create({
 				country: country,
 				personal_id: personalId,
 				method: "id-card",
 				certificate: cert,
 				token: Crypto.randomBytes(16),
 				created_ip: req.ip,
-				created_user_agent: req.headers["user-agent"]
+				created_user_agent: req.headers["user-agent"],
+				authenticated: true
 			})
 
-			authUrl = req.baseUrl + "/?" + Qs.stringify({
-				"authentication-token": authentication.token.toString("hex"),
-				referrer: referrer
-			})
-
-			res.setHeader("Location", authUrl)
-			res.setHeader("Content-Type", "application/vnd.rahvaalgatus.signable")
-			res.status(202).end(sha256(authentication.token))
+			createSessionAndSignIn(authentication, req, res)
+			res.statusMessage = "Signed In"
+			res.redirect(303, referTo(req, referrer, "/user"))
 			break
 
 		case "mobile-id":
@@ -231,7 +248,7 @@ exports.router.post("/", next(function*(req, res, next) {
 			;[country, personalId] = getCertificatePersonalId(cert)
 			if (country != "EE") throw new HttpError(422, "Estonian Users Only")
 
-			authentication = yield authenticationsDb.create({
+			authentication = authenticationsDb.create({
 				country: country,
 				personal_id: personalId,
 				method: "mobile-id",
@@ -270,7 +287,7 @@ exports.router.post("/", next(function*(req, res, next) {
 			tokenHash = sha256(token)
 			var session = yield smartId.authenticate("PNOEE-" + personalId, tokenHash)
 
-			authentication = yield authenticationsDb.create({
+			authentication = authenticationsDb.create({
 				country: "EE",
 				personal_id: personalId,
 				method: "smart-id",
@@ -309,37 +326,15 @@ exports.router.post("/",
 		Buffer.from(req.query["authentication-token"] || "", "hex")
 
 	var authentication
-	var method = getSigningMethod(req)
 
-	switch (method) {
-		case "id-card":
-			var type = req.contentType && req.contentType.name
-			if (type != "application/vnd.rahvaalgatus.signature")
-				throw new HttpError(415, "Signature Expected")
-
-			authentication = yield authenticationsDb.read(sql`
-				SELECT * FROM authentications WHERE token = ${authenticationToken}
-			`)
-
-			if (!authentication)
-				throw new HttpError(404, "Authentication Not Found")
-			if (authentication.authenticated)
-				throw new HttpError(409, "Already Authenticated")
-			if (!authentication.certificate.hasSigned(authentication.token, req.body))
-				throw new HttpError(409, "Invalid Signature")
-
-			var attrs = {authenticated: true, updated_at: new Date}
-			_.assign(authentication, attrs)
-			yield authenticationsDb.update(authentication, attrs)
-			break
-
+	switch (getSigninMethod(req)) {
 		case "mobile-id":
 			for (
 				let end = Date.now() + 120 * 1000;
 				Date.now() < end;
 				yield sleep(ENV == "test" ? 50 : 500)
 			) {
-				authentication = yield authenticationsDb.read(sql`
+				authentication = authenticationsDb.read(sql`
 					SELECT * FROM authentications WHERE token = ${authenticationToken}
 				`)
 
@@ -386,7 +381,7 @@ exports.router.post("/",
 				Date.now() < end;
 				yield sleep(ENV == "test" ? 50 : 500)
 			) {
-				authentication = yield authenticationsDb.read(sql`
+				authentication = authenticationsDb.read(sql`
 					SELECT * FROM authentications WHERE token = ${authenticationToken}
 				`)
 
@@ -432,33 +427,7 @@ exports.router.post("/",
 
 	if (authentication.authenticated) {
 		res.setHeader("Location", referTo(req, req.query.referrer, "/user"))
-
-		var user = yield readOrCreateUser(authentication, req.lang)
-		var sessionToken = Crypto.randomBytes(16)
-
-		yield sessionsDb.create({
-			user_id: user.id,
-
-			// Hashing isn't meant to be long-term protection against token leakage.
-			// Rather, should someone, like an admin, glance at the sessions table,
-			// they wouldn't be able to immediately impersonate anyone and would have
-			// to mine a little Bitcoin prior.
-			token_sha256: sha256(sessionToken),
-			created_ip: authentication.created_ip,
-			created_user_agent: authentication.created_user_agent,
-			method: authentication.method,
-			authentication_id: authentication.id
-		})
-
-		res.cookie(SESSION_COOKIE_NAME, sessionToken.toString("hex"), {
-			httpOnly: true,
-			secure: req.secure,
-			domain: Config.cookieDomain,
-			maxAge: 365 * 86400 * 1000
-		})
-
-		csrf.reset(req, res)
-
+		createSessionAndSignIn(authentication, req, res)
 		res.statusCode = 204
 	}
 	else res.setHeader("Location", req.baseUrl + "/new")
@@ -497,11 +466,11 @@ exports.router.use("/", function(err, req, res, next) {
 	else next(err)
 })
 
-exports.router.use("/:id", next(function*(req, _res, next) {
+exports.router.use("/:id", function(req, _res, next) {
 	if (req.user == null) throw new HttpError(401)
 
 	var id = Number(req.params.id)
-	var session = req.session.id == id ? req.session : yield sessionsDb.read(sql`
+	var session = req.session.id == id ? req.session : sessionsDb.read(sql`
 		SELECT * FROM sessions WHERE id = ${id} AND user_id = ${req.user.id}
 	`)
 
@@ -509,16 +478,16 @@ exports.router.use("/:id", next(function*(req, _res, next) {
 
 	req.editableSession = session
 	next()
-}))
+})
 
-exports.router.delete("/:id", next(function*(req, res) {
+exports.router.delete("/:id", function(req, res) {
 	var session = req.editableSession
 	if (session.deleted_at) throw new HttpError(410, "Session Gone")
 
-	yield sessionsDb.update(session, {deleted_at: new Date})
+	sessionsDb.update(session, {deleted_at: new Date})
 
 	if (req.session.id == session.id) {
-		res.clearCookie(SESSION_COOKIE_NAME, {
+		res.clearCookie(Config.sessionCookieName, {
 			httpOnly: true,
 			secure: req.secure,
 			domain: Config.cookieDomain
@@ -538,7 +507,7 @@ exports.router.delete("/:id", next(function*(req, res) {
 	if (to && Url.parse(to).pathname == "/user") to = "/"
 	else if (!to) to = "/"
 	res.redirect(303, to)
-}))
+})
 
 function* waitForMobileIdAuthentication(t, authentication, sessionId) {
 	try {
@@ -547,7 +516,7 @@ function* waitForMobileIdAuthentication(t, authentication, sessionId) {
 
 		var [cert, signatureHash] = certAndSignatureHash
 
-		yield authenticationsDb.update(authentication, {
+		authenticationsDb.update(authentication, {
 			certificate: cert,
 			updated_at: new Date
 		})
@@ -564,7 +533,7 @@ function* waitForMobileIdAuthentication(t, authentication, sessionId) {
 		if (!cert.hasSigned(authentication.token, signatureHash))
 			throw new MobileIdError("INVALID_SIGNATURE")
 
-		yield authenticationsDb.update(authentication, {
+		authenticationsDb.update(authentication, {
 			authenticated: true,
 			updated_at: new Date
 		})
@@ -576,10 +545,7 @@ function* waitForMobileIdAuthentication(t, authentication, sessionId) {
 			getNormalizedMobileIdErrorCode(ex) in MOBILE_ID_ERRORS
 		)) reportError(ex)
 
-		yield authenticationsDb.update(authentication, {
-			error: ex,
-			updated_at: new Date
-		})
+		authenticationsDb.update(authentication, {error: ex, updated_at: new Date})
 	}
 }
 
@@ -590,7 +556,7 @@ function* waitForSmartIdAuthentication(t, authentication, session) {
 
 		var [cert, signature] = authCertAndSignature
 
-		yield authenticationsDb.update(authentication, {
+		authenticationsDb.update(authentication, {
 			certificate: cert,
 			updated_at: new Date
 		})
@@ -607,7 +573,7 @@ function* waitForSmartIdAuthentication(t, authentication, session) {
 		if (!cert.hasSigned(authentication.token, signature))
 			throw new SmartIdError("INVALID_SIGNATURE")
 
-		yield authenticationsDb.update(authentication, {
+		authenticationsDb.update(authentication, {
 			authenticated: true,
 			updated_at: new Date
 		})
@@ -618,15 +584,12 @@ function* waitForSmartIdAuthentication(t, authentication, session) {
 			ex instanceof SmartIdError && ex.code in SMART_ID_ERRORS
 		)) reportError(ex)
 
-		yield authenticationsDb.update(authentication, {
-			error: ex,
-			updated_at: new Date
-		})
+		authenticationsDb.update(authentication, {error: ex, updated_at: new Date})
 	}
 }
 
-function* readOrCreateUser(auth, lang) {
-	var user = yield usersDb.read(sql`
+function readOrCreateUser(auth, lang) {
+	var user = usersDb.read(sql`
 		SELECT * FROM users
 		WHERE country = ${auth.country}
 		AND personal_id = ${auth.personal_id}
@@ -647,6 +610,35 @@ function* readOrCreateUser(auth, lang) {
 		updated_at: new Date,
 		language: lang
 	})
+}
+
+function createSessionAndSignIn(authentication, req, res) {
+	var user = readOrCreateUser(authentication, req.lang)
+	var sessionToken = Crypto.randomBytes(16)
+
+	sessionsDb.create({
+		user_id: user.id,
+
+		// Hashing isn't meant to be long-term protection against token leakage.
+		// Rather, should someone, like an admin, glance at the sessions table,
+		// they wouldn't be able to immediately impersonate anyone and would have
+		// to mine a little Bitcoin prior.
+		token_sha256: sha256(sessionToken),
+		created_ip: authentication.created_ip,
+		created_user_agent: authentication.created_user_agent,
+		method: authentication.method,
+		authentication_id: authentication.id
+	})
+
+	res.cookie(Config.sessionCookieName, sessionToken.toString("hex"), {
+		httpOnly: true,
+		secure: req.secure,
+		sameSite: "lax",
+		domain: Config.cookieDomain,
+		maxAge: 120 * 86400 * 1000
+	})
+
+	csrf.reset(req, res)
 }
 
 function referTo(req, referrer, fallback) {
@@ -670,4 +662,18 @@ function* waitForSession(wait, timeout, session) {
 		elapsed = Date.now() / 1000 - started
 	) res = yield wait(session, timeout - elapsed)
 	return res
+}
+
+function getSigninMethod(req) {
+	var type = req.contentType.name
+
+	return (
+		type == "application/x-www-form-urlencoded" ? req.body.method :
+		type == "application/json" ? req.body.method :
+		null
+	)
+}
+
+function parseCertificateFromHeader(pem) {
+	return Certificate.parse(decodeURIComponent(pem))
 }

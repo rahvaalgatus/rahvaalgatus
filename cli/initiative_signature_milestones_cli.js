@@ -1,5 +1,5 @@
 var _ = require("root/lib/underscore")
-var Config = require("root/config")
+var Config = require("root").config
 var Subscription = require("root/lib/subscription")
 var DateFns = require("date-fns")
 var {getRequiredSignatureCount} = require("root/lib/initiative")
@@ -13,7 +13,7 @@ var renderEmail = require("root/lib/i18n").email.bind(null, Config.language)
 var logger = require("root/lib/null_logger")
 
 module.exports = function*() {
-	var initiatives = yield initiativesDb.search(sql`
+	var initiatives = initiativesDb.search(sql`
 		SELECT
 			initiative.*,
 			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
@@ -40,7 +40,7 @@ module.exports = function*() {
 function* updateMilestones([initiative, milestones]) {
 	var largest = _.findLast(milestones, (n) => initiative.signature_count >= n)
 
-	var signatures = yield signaturesDb.search(sql`
+	var signatures = signaturesDb.search(sql`
 		SELECT created_at
 		FROM initiative_citizenos_signatures
 		WHERE initiative_uuid = ${initiative.uuid}
@@ -62,7 +62,7 @@ function* updateMilestones([initiative, milestones]) {
 		return times
 	}, _.clone(initiative.signature_milestones))
 
-	yield initiativesDb.update(initiative, {
+	initiativesDb.update(initiative, {
 		signature_milestones: reachedMilestones
 	})
 
@@ -82,7 +82,7 @@ function* updateMilestones([initiative, milestones]) {
 
 		var threshold = getRequiredSignatureCount(initiative)
 
-		var message = yield messagesDb.create({
+		var message = messagesDb.create({
 			initiative_uuid: initiative.uuid,
 			origin: "signature_milestone",
 			created_at: new Date,
@@ -106,9 +106,7 @@ function* updateMilestones([initiative, milestones]) {
 
 		yield Subscription.send(
 			message,
-			yield subscriptionsDb.searchConfirmedByInitiativeIdForEvent(
-				initiative.uuid
-			)
+			subscriptionsDb.searchConfirmedByInitiativeIdForEvent(initiative.uuid)
 		)
 	}
 }

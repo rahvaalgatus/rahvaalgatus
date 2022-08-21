@@ -3,32 +3,35 @@ var ValidUser = require("root/test/valid_user")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidInitiative = require("root/test/valid_initiative")
 var initiativesDb = require("root/db/initiatives_db")
-var db = require("root/db/initiative_subscriptions_db")
+var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var usersDb = require("root/db/users_db")
 var sql = require("sqlate")
 
 describe("InitiativeSubscriptionsDb", function() {
 	require("root/test/db")()
 
-	beforeEach(function*() {
-		this.initiative = yield initiativesDb.create(new ValidInitiative({
-			user_id: (yield usersDb.create(new ValidUser)).id
+	beforeEach(function() {
+		this.initiative = initiativesDb.create(new ValidInitiative({
+			user_id: usersDb.create(new ValidUser).id
 		}))
 	})
 
 	describe(".prototype.create", function() {
-		it("must create different subscriptions for different emails", function*() {
+		it("must create different subscriptions for different emails", function() {
 			var a = new ValidSubscription({initiative_uuid: this.initiative.uuid})
 			var b = new ValidSubscription({initiative_uuid: this.initiative.uuid})
-			a = yield db.create(a)
-			b = yield db.create(b)
+			a = subscriptionsDb.create(a)
+			b = subscriptionsDb.create(b)
 
-			var subs = yield db.search(sql`SELECT * FROM initiative_subscriptions`)
+			var subs = subscriptionsDb.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`)
+
 			subs.must.eql([a, b])
 		})
 
-		it("must have a unique constraint on case-insensitive email", function*() {
-			var subscription = yield db.create(new ValidSubscription({
+		it("must have a unique constraint on case-insensitive email", function() {
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: this.initiative.uuid,
 				email: "user@example.com"
 			}))
@@ -39,7 +42,7 @@ describe("InitiativeSubscriptionsDb", function() {
 			})
 
 			var err
-			try { yield db.create(other) } catch (ex) { err = ex }
+			try { subscriptionsDb.create(other) } catch (ex) { err = ex }
 			err.must.be.an.error(SqliteError)
 			err.code.must.equal("constraint")
 			err.type.must.equal("unique")
@@ -48,8 +51,8 @@ describe("InitiativeSubscriptionsDb", function() {
 			)
 		})
 
-		it("must have a unique constraint on initiative_uuid", function*() {
-			var subscription = yield db.create(new ValidSubscription({
+		it("must have a unique constraint on initiative_uuid", function() {
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: this.initiative.uuid
 			}))
 
@@ -59,7 +62,7 @@ describe("InitiativeSubscriptionsDb", function() {
 			})
 
 			var err
-			try { yield db.create(other) } catch (ex) { err = ex }
+			try { subscriptionsDb.create(other) } catch (ex) { err = ex }
 			err.must.be.an.error(SqliteError)
 			err.code.must.equal("constraint")
 			err.type.must.equal("unique")
@@ -68,8 +71,8 @@ describe("InitiativeSubscriptionsDb", function() {
 			)
 		})
 
-		it("must have a unique constraint on NULL initiative_uuid", function*() {
-			var subscription = yield db.create(new ValidSubscription({
+		it("must have a unique constraint on NULL initiative_uuid", function() {
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: null
 			}))
 
@@ -79,7 +82,7 @@ describe("InitiativeSubscriptionsDb", function() {
 			})
 
 			var err
-			try { yield db.create(other) } catch (ex) { err = ex }
+			try { subscriptionsDb.create(other) } catch (ex) { err = ex }
 			err.must.be.an.error(SqliteError)
 			err.code.must.equal("constraint")
 			err.index.must.equal(

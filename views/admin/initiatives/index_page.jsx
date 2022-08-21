@@ -2,7 +2,7 @@
 var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Page = require("../page")
-var Config = require("root/config")
+var Config = require("root").config
 var formatDate = require("root/lib/i18n").formatDate
 var EMPTY_ARR = Array.prototype
 

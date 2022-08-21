@@ -1,6 +1,6 @@
 var _ = require("root/lib/underscore")
 var Url = require("url")
-var Config = require("root/config")
+var Config = require("root").config
 var Router = require("express").Router
 var Crypto = require("crypto")
 var HttpError = require("standard-http-error")
@@ -38,7 +38,7 @@ exports.router.use(function(req, _res, next) {
 	next()
 })
 
-exports.router.get("/", next(read))
+exports.router.get("/", read)
 
 exports.router.put("/", next(function*(req, res) {
 	var user = req.user
@@ -49,7 +49,7 @@ exports.router.put("/", next(function*(req, res) {
 		res.statusMessage = "Invalid Attributes"
 		res.locals.userAttrs = attrs
 		res.locals.userErrors = errors
-		yield read(req, res)
+		read(req, res)
 		return
 	}
 
@@ -94,9 +94,9 @@ exports.router.put("/", next(function*(req, res) {
 		delete attrs.email_confirmation_sent_at
 	}
 
-	if (!_.isEmpty(attrs)) {
-		yield usersDb.update(user, _.assign(attrs, {updated_at: new Date}))
-	}
+	if (!_.isEmpty(attrs)) usersDb.update(user, _.assign(attrs, {
+		updated_at: new Date
+	}))
 
 	var to = Url.parse(req.headers.referer || req.baseUrl).pathname
 
@@ -110,10 +110,10 @@ exports.router.put("/", next(function*(req, res) {
 	res.redirect(303, req.headers.referer || req.baseUrl)
 }))
 
-exports.router.get("/signatures", next(function*(req, res) {
+exports.router.get("/signatures", function(req, res) {
 	var user = req.user
 
-	var signatures = yield signaturesDb.search(sql`
+	var signatures = signaturesDb.search(sql`
 		WITH signatures AS (
 			SELECT initiative_uuid, country, personal_id, created_at, token
 			FROM initiative_signatures
@@ -142,12 +142,12 @@ exports.router.get("/signatures", next(function*(req, res) {
 		user: user,
 		signatures: signatures
 	})
-}))
+})
 
-exports.router.use("/subscriptions", next(function*(req, _res, next) {
+exports.router.use("/subscriptions", function(req, _res, next) {
 	var user = req.user
 
-	req.subscriptions = user.email ? (yield subscriptionsDb.search(sql`
+	req.subscriptions = user.email ? subscriptionsDb.search(sql`
 		SELECT subscription.*, initiative.title AS initiative_title
 		FROM initiative_subscriptions AS subscription
 		LEFT JOIN initiatives AS initiative
@@ -155,10 +155,10 @@ exports.router.use("/subscriptions", next(function*(req, _res, next) {
 		WHERE subscription.email = ${user.email}
 		AND subscription.confirmed_at IS NOT NULL
 		ORDER BY COALESCE(subscription.initiative_uuid, 0)
-	`)) : EMPTY_ARR
+	`) : EMPTY_ARR
 
 	next()
-}))
+})
 
 exports.router.get("/subscriptions", function(req, res) {
 	var user = req.user
@@ -170,20 +170,20 @@ exports.router.get("/subscriptions", function(req, res) {
 	})
 })
 
-exports.router.put("/subscriptions", next(function*(req, res) {
+exports.router.put("/subscriptions", function(req, res) {
 	var user = req.user
 	if (user.email == null) throw new HttpError(403, "Email Unconfirmed")
 
-	yield updateSubscriptions(req.subscriptions, req.body)
+	updateSubscriptions(req.subscriptions, req.body)
 	res.flash("notice", req.t("INITIATIVE_SUBSCRIPTIONS_UPDATED"))
 	res.redirect(303, req.baseUrl + req.path)
-}))
+})
 
-exports.router.delete("/subscriptions", next(function*(req, res) {
+exports.router.delete("/subscriptions", function(req, res) {
 	var user = req.user
 	if (user.email == null) throw new HttpError(403, "Email Unconfirmed")
 
-	yield subscriptionsDb.execute(sql`
+	subscriptionsDb.execute(sql`
 		DELETE FROM initiative_subscriptions
 		WHERE email = ${user.email}
 		AND confirmed_at IS NOT NULL
@@ -191,9 +191,9 @@ exports.router.delete("/subscriptions", next(function*(req, res) {
 
 	res.flash("notice", req.t("INITIATIVES_SUBSCRIPTION_DELETED"))
 	res.redirect(303, req.baseUrl + req.path)
-}))
+})
 
-exports.router.get("/email", next(function*(req, res) {
+exports.router.get("/email", function(req, res) {
 	var user = req.user
 
 	var token = req.query["confirmation-token"]
@@ -215,7 +215,7 @@ exports.router.get("/email", next(function*(req, res) {
 		})
 
 	try {
-		yield usersDb.update(user, {
+		usersDb.update(user, {
 			email: user.unconfirmed_email,
 			email_confirmed_at: new Date,
 			unconfirmed_email: null,
@@ -238,12 +238,12 @@ exports.router.get("/email", next(function*(req, res) {
 
 	res.flash("notice", req.t("USER_EMAIL_CONFIRMED"))
 	res.redirect(303, req.baseUrl)
-}))
+})
 
-function* read(req, res) {
+function read(req, res) {
 	var user = req.user
 
-	var initiatives = yield initiativesDb.search(sql`
+	var initiatives = initiativesDb.search(sql`
 		SELECT
 			initiative.*,
 			user.name AS user_name,
@@ -261,7 +261,7 @@ function* read(req, res) {
 		OR user_as_coauthor.user_id = ${user.id}
 	`)
 
-	var coauthorInvitations = yield coauthorsDb.search(sql`
+	var coauthorInvitations = coauthorsDb.search(sql`
 		SELECT
 			coauthor.*,
 			initiative.title AS initiative_title,

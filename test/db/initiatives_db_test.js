@@ -10,72 +10,73 @@ var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var insert = require("heaven-sqlite").insert
 var sqlite = require("root").sqlite
 var sql = require("sqlate")
-var db = require("root/db/initiatives_db")
+var initiativesDb = require("root/db/initiatives_db")
 var usersDb = require("root/db/users_db")
 var eventsDb = require("root/db/initiative_events_db")
 var signablesDb = require("root/db/initiative_signables_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
-var serialize = db.serialize
+var serialize = initiativesDb.serialize
+var demand = require("must")
 var PHASES = require("root/lib/initiative").PHASES
 
 describe("InitiativesDb", function() {
 	require("root/test/db")()
 	require("root/test/time")()
 
-	beforeEach(function*() { this.user = yield usersDb.create(new ValidUser) })
+	beforeEach(function() { this.user = usersDb.create(new ValidUser) })
 
 	describe(".search", function() {
 		describe("given a uuid", function() {
-			it("must return initiative", function*() {
+			it("must return initiative", function() {
 				var initiative = new ValidInitiative({user_id: this.user.id})
-				yield sqlite(insert("initiatives", serialize(initiative)))
-				yield db.search(initiative.uuid).must.then.eql([initiative])
+				sqlite(insert("initiatives", serialize(initiative)))
+				initiativesDb.search(initiative.uuid).must.eql([initiative])
 			})
 
-			it("must return empty array if not found", function*() {
-				yield db.search("deadbeef").must.then.eql([])
-				yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([])
+			it("must return empty array if not found", function() {
+				initiativesDb.search("deadbeef").must.eql([])
+				sqlite(sql`SELECT * FROM initiatives`).must.eql([])
 			})
 		})
 
 		describe("given an array of uuids", function() {
-			it("must return initiatives", function*() {
+			it("must return initiatives", function() {
 				var a = new ValidInitiative({user_id: this.user.id})
 				var b = new ValidInitiative({user_id: this.user.id})
-				yield sqlite(insert("initiatives", serialize(a)))
-				yield sqlite(insert("initiatives", serialize(b)))
-				var initiatives = yield db.search([a.uuid, b.uuid])
+				sqlite(insert("initiatives", serialize(a)))
+				sqlite(insert("initiatives", serialize(b)))
+				var initiatives = initiativesDb.search([a.uuid, b.uuid])
 				_.sortBy(initiatives, "uuid").must.eql(_.sortBy([a, b], "uuid"))
 			})
 
-			it("must return only found initiatives", function*() {
+			it("must return only found initiatives", function() {
 				var a = new ValidInitiative({user_id: this.user.id})
 				var b = new ValidInitiative({user_id: this.user.id})
-				yield sqlite(insert("initiatives", serialize(a)))
+				sqlite(insert("initiatives", serialize(a)))
 
-				yield db.search([a.uuid, b.uuid]).must.then.eql([a])
-				yield db.search(sql`SELECT * FROM initiatives`).must.then.eql([a])
+				initiativesDb.search([a.uuid, b.uuid]).must.eql([a])
+				initiativesDb.search(sql`SELECT * FROM initiatives`).must.eql([a])
 			})
 		})
 	})
 
 	describe(".read", function() {
 		describe("given a uuid", function() {
-			it("must return initiative", function*() {
+			it("must return initiative", function() {
 				var initiative = new ValidInitiative({user_id: this.user.id})
-				yield sqlite(insert("initiatives", serialize(initiative)))
-				yield db.read(initiative.uuid).must.then.eql(initiative)
+				sqlite(insert("initiatives", serialize(initiative)))
+				initiativesDb.read(initiative.uuid).must.eql(initiative)
 			})
 
-			it("must return null if not found", function*() {
-				yield db.read("deadbeef").must.then.be.null()
-				yield sqlite(sql`SELECT * FROM initiatives`).must.then.eql([])
+			it("must return null if not found", function() {
+				demand(initiativesDb.read("deadbeef")).be.null()
+				sqlite(sql`SELECT * FROM initiatives`).must.eql([])
 			})
 		})
 
 
 		describe("text_type", function() {
-			it("must be parsed", function*() {
+			it("must be parsed", function() {
 				var initiative = new ValidInitiative({
 					user_id: this.user.id,
 					phase: "sign",
@@ -84,16 +85,18 @@ describe("InitiativesDb", function() {
 					text_sha256: sha256("<h1>Hello, world!</h1>")
 				})
 
-				yield db.read(yield db.create(initiative)).must.then.eql(initiative)
+				initiativesDb.read(initiativesDb.create(initiative)).must.eql(
+					initiative
+				)
 			})
 		})
 	})
 
 	describe(".create", function() {
-		it("must throw given no user_id nor external", function*() {
+		it("must throw given no user_id nor external", function() {
 			var err
 			try {
-				yield db.create(new ValidInitiative({
+				initiativesDb.create(new ValidInitiative({
 					user_id: null,
 					external: false
 				}))
@@ -108,7 +111,7 @@ describe("InitiativesDb", function() {
 		describe("phase", function() {
 			describe("given initiative for parliament", function() {
 				PHASES.forEach(function(phase) {
-					it(`must allow ${phase} phase`, function*() {
+					it(`must allow ${phase} phase`, function() {
 						var initiative = new ValidInitiative({
 							phase: phase,
 							external: true,
@@ -116,14 +119,16 @@ describe("InitiativesDb", function() {
 							discussion_ends_at: new Date
 						})
 
-						yield db.read(yield db.create(initiative)).must.then.eql(initiative)
+						initiativesDb.read(initiativesDb.create(initiative)).must.eql(
+							initiative
+						)
 					})
 				})
 			})
 
 			describe("given initiative for local", function() {
 				_.without(PHASES, "parliament").forEach(function(phase) {
-					it(`must allow ${phase} phase`, function*() {
+					it(`must allow ${phase} phase`, function() {
 						var initiative = new ValidInitiative({
 							phase: phase,
 							external: true,
@@ -131,14 +136,16 @@ describe("InitiativesDb", function() {
 							discussion_ends_at: new Date
 						})
 
-						yield db.read(yield db.create(initiative)).must.then.eql(initiative)
+						initiativesDb.read(initiativesDb.create(initiative)).must.eql(
+							initiative
+						)
 					})
 				})
 
-				it("must throw if parliament phase", function*() {
+				it("must throw if parliament phase", function() {
 					var err
 					try {
-						yield db.create(new ValidInitiative({
+						initiativesDb.create(new ValidInitiative({
 							phase: "parliament",
 							external: true,
 							destination: "muhu-vald",
@@ -154,16 +161,16 @@ describe("InitiativesDb", function() {
 		})
 
 		describe("uuid", function() {
-			it("must throw given duplicate uuids", function*() {
+			it("must throw given duplicate uuids", function() {
 				var attrs = {
 					user_id: this.user.id,
 					uuid: "457628aa-42cd-45d8-bb74-94c4866c670c"
 				}
 
-				yield db.create(new ValidInitiative(attrs))
+				initiativesDb.create(new ValidInitiative(attrs))
 
 				var err
-				try { yield db.create(new ValidInitiative(attrs)) }
+				try { initiativesDb.create(new ValidInitiative(attrs)) }
 				catch (ex) { err = ex }
 				err.must.be.an.error(SqliteError)
 				err.code.must.equal("constraint")
@@ -173,7 +180,7 @@ describe("InitiativesDb", function() {
 		})
 
 		describe("text", function() {
-			it("must not be allowed in edit phase", function*() {
+			it("must not be allowed in edit phase", function() {
 				var initiative = new ValidInitiative({
 					user_id: this.user.id,
 					phase: "edit",
@@ -183,13 +190,13 @@ describe("InitiativesDb", function() {
 				})
 
 				var err
-				try { yield db.create(initiative) } catch (ex) { err = ex }
+				try { initiativesDb.create(initiative) } catch (ex) { err = ex }
 				err.must.be.an.error(SqliteError)
 				err.constraint.must.equal("initiatives_text_not_null")
 			})
 
 			_.without(PHASES, "edit").forEach(function(phase) {
-				it(`must be allowed in ${phase}`, function*() {
+				it(`must be allowed in ${phase}`, function() {
 					var initiative = new ValidInitiative({
 						user_id: this.user.id,
 						phase: phase,
@@ -198,11 +205,13 @@ describe("InitiativesDb", function() {
 						text_sha256: sha256("<h1>Hello, world!</h1>")
 					})
 
-					yield db.read(yield db.create(initiative)).must.then.eql(initiative)
+					initiativesDb.read(initiativesDb.create(initiative)).must.eql(
+						initiative
+					)
 				})
 
 				it(`must be allowed empty on external initiatives in ${phase}`,
-					function*() {
+					function() {
 					var initiative = new ValidInitiative({
 						phase: phase,
 						external: true,
@@ -211,13 +220,15 @@ describe("InitiativesDb", function() {
 						text_sha256: null
 					})
 
-					yield db.read(yield db.create(initiative)).must.then.eql(initiative)
+					initiativesDb.read(initiativesDb.create(initiative)).must.eql(
+						initiative
+					)
 				})
 			})
 		})
 
 		describe("text_type", function() {
-			it("must be required if text present", function*() {
+			it("must be required if text present", function() {
 				var initiative = new ValidInitiative({
 					user_id: this.user.id,
 					phase: "sign",
@@ -227,12 +238,12 @@ describe("InitiativesDb", function() {
 				})
 
 				var err
-				try { yield db.create(initiative) } catch (ex) { err = ex }
+				try { initiativesDb.create(initiative) } catch (ex) { err = ex }
 				err.must.be.an.error(SqliteError)
 				err.constraint.must.equal("initiatives_text_type_not_null")
 			})
 
-			it("must not be empty", function*() {
+			it("must not be empty", function() {
 				var initiative = new ValidInitiative({
 					user_id: this.user.id,
 					phase: "sign",
@@ -242,14 +253,14 @@ describe("InitiativesDb", function() {
 				})
 
 				var err
-				try { yield db.create(initiative) } catch (ex) { err = ex }
+				try { initiativesDb.create(initiative) } catch (ex) { err = ex }
 				err.must.be.an.error(SqliteError)
 				err.constraint.must.equal("initiatives_text_type_length")
 			})
 		})
 
 		describe("text_sha256", function() {
-			it("must be required if text present", function*() {
+			it("must be required if text present", function() {
 				var initiative = new ValidInitiative({
 					user_id: this.user.id,
 					phase: "sign",
@@ -259,12 +270,12 @@ describe("InitiativesDb", function() {
 				})
 
 				var err
-				try { yield db.create(initiative) } catch (ex) { err = ex }
+				try { initiativesDb.create(initiative) } catch (ex) { err = ex }
 				err.must.be.an.error(SqliteError)
 				err.constraint.must.equal("initiatives_text_sha256_not_null")
 			})
 
-			it("must have SHA256 length", function*() {
+			it("must have SHA256 length", function() {
 				var initiative = new ValidInitiative({
 					user_id: this.user.id,
 					phase: "sign",
@@ -274,7 +285,7 @@ describe("InitiativesDb", function() {
 				})
 
 				var err
-				try { yield db.create(initiative) } catch (ex) { err = ex }
+				try { initiativesDb.create(initiative) } catch (ex) { err = ex }
 				err.must.be.an.error(SqliteError)
 				err.constraint.must.equal("initiatives_text_sha256_length")
 			})
@@ -282,81 +293,78 @@ describe("InitiativesDb", function() {
 	})
 
 	describe(".delete", function() {
-		describe("given a model ", function() {
-			it("must delete the initiative", function*() {
-				var initiative = yield db.create(new ValidInitiative({
+		describe("given a model", function() {
+			it("must delete the initiative", function() {
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
 
-				yield db.delete(initiative)
-				yield db.search(sql`SELECT * FROM initiatives`).must.then.be.empty()
+				initiativesDb.delete(initiative)
+				initiativesDb.search(sql`SELECT * FROM initiatives`).must.be.empty()
 			})
 
-			it("must not delete related events", function*() {
-				var initiative = yield db.create(new ValidInitiative({
+			it("must not delete related events", function() {
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
 
-				var event = yield eventsDb.create(new ValidEvent({
+				var event = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid
 				}))
 
 				var err
-				try { yield db.delete(initiative) } catch (ex) { err = ex }
+				try { initiativesDb.delete(initiative) } catch (ex) { err = ex }
 				err.must.be.an.error(SqliteError)
 				err.code.must.equal("constraint")
 				err.type.must.equal("foreign_key")
 
-				yield db.read(sql`SELECT * FROM initiatives`).must.then.eql(initiative)
-
-				yield eventsDb.read(sql`
-					SELECT * FROM initiative_events
-				`).must.then.eql(event)
+				initiativesDb.read(sql`SELECT * FROM initiatives`).must.eql(initiative)
+				eventsDb.read(sql`SELECT * FROM initiative_events`).must.eql(event)
 			})
 
-			it("must delete signables", function*() {
-				var initiative = yield db.create(new ValidInitiative({
+			it("must delete signables", function() {
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
 
-				yield signablesDb.create(new ValidSignable({
+				signablesDb.create(new ValidSignable({
 					initiative_uuid: initiative.uuid
 				}))
 
-				yield db.delete(initiative)
+				initiativesDb.delete(initiative)
 
-				yield signablesDb.search(sql`
+				signablesDb.search(sql`
 					SELECT * FROM initiative_signables
-				`).must.then.be.empty()
+				`).must.be.empty()
 			})
 
-			it("must not delete signatures", function*() {
-				var initiative = yield db.create(new ValidInitiative({
+			it("must not delete signatures", function() {
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
 
 				// Ensure the signable doesn't get deleted even if signature didn't.
-				var signable = yield signablesDb.create(new ValidSignable({
+				var signable = signablesDb.create(new ValidSignable({
 					initiative_uuid: initiative.uuid
 				}))
 
-				var signature = yield signaturesDb.create(new ValidSignature({
+				var signature = signaturesDb.create(new ValidSignature({
 					initiative_uuid: initiative.uuid
 				}))
 
 				var err
-				try { yield db.delete(initiative) } catch (ex) { err = ex }
+				try { initiativesDb.delete(initiative) } catch (ex) { err = ex }
 				err.must.be.an.error(SqliteError)
 				err.code.must.equal("constraint")
 				err.type.must.equal("foreign_key")
 
-				yield signablesDb.read(sql`
+				signablesDb.read(sql`
 					SELECT * FROM initiative_signables
-				`).must.then.eql(signable)
+				`).must.eql(signable)
 
-				yield signaturesDb.read(sql`
+				signaturesDb.read(sql`
 					SELECT * FROM initiative_signatures
-				`).must.then.eql(signature)
+				`).must.eql(signature)
 			})
 		})
 	})

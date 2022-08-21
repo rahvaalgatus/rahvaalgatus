@@ -1,7 +1,7 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var Page = require("../page")
-var Config = require("root/config")
+var Config = require("root").config
 var Comment = require("root/lib/comment")
 var formatDateTime = require("root/lib/i18n").formatDateTime
 

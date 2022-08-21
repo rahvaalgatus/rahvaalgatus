@@ -1,11 +1,10 @@
 /** @jsx Jsx */
 var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
-var Config = require("root/config")
+var Config = require("root").config
 var Fragment = Jsx.Fragment
 var DateFns = require("date-fns")
 var I18n = require("root/lib/i18n")
-var stringify = require("root/lib/json").stringify
 var selected = require("root/lib/css").selected
 var javascript = require("root/lib/jsx").javascript
 var {isAdmin} = require("root/lib/user")
@@ -97,14 +96,14 @@ function Page(attrs, children) {
 							name="language"
 							value={lang}
 							disabled={req.lang === lang}
-							class="inherited">{t(lang)}
+							class="inherited-button">{t(lang)}
 						</button>)}
 
 						{translatable ? <button
 							name="language"
 							value="xx"
 							disabled={req.lang === "xx"}
-							class="inherited">dev
+							class="inherited-button">dev
 						</button> : null}
 					</Form>
 
@@ -117,7 +116,7 @@ function Page(attrs, children) {
 							method="post"
 							class="signout"
 						>
-							<button name="_method" value="delete" class="inherited">
+							<button name="_method" value="delete" class="inherited-button">
 								{t("BTN_LOG_OFF")}
 							</button>
 						</Form>
@@ -193,10 +192,6 @@ function Page(attrs, children) {
 			<main id="main">{children}</main>
 
 			<Footer t={t} siteUrl={siteUrl} />
-
-			{ENV === "production" && Config.googleAnalyticsAccount ?
-				<GoogleAnalytics accountId={Config.googleAnalyticsAccount} />
-			: null}
 		</body>
 	</html>
 }
@@ -334,12 +329,12 @@ function Sentry(attrs) {
 	var user = attrs.req.user
 
 	return <Fragment>
-		<script src="https://cdn.ravenjs.com/3.9.1/raven.min.js" />
+		<script src="/assets/raven.js" />
 
-		<script>{`
-			Raven.config("${attrs.dsn}", {
-				environment: "${ENV}",
-				user: ${stringify(user ? serializeUser(user) : null)},
+		<script>{javascript`
+			Raven.config(${attrs.dsn}, {
+				environment: ${ENV},
+				user: ${user ? serializeUser(user) : null},
 
 				ignoreErrors: [
 					"no_implementation",
@@ -366,19 +361,6 @@ function LiveReload(attrs) {
 	/>
 }
 
-function GoogleAnalytics(attrs) {
-	var id = attrs.accountId
-
-	return <Fragment>
-		<script>{javascript`
-			function args() { return arguments }
-			window.dataLayer = [args("js", new Date), args("config", "${id}")]
-		`}</script>
-
-		<script src={"https://www.googletagmanager.com/gtag/js?id=" + id} async />
-	</Fragment>
-}
-
 function DatePickerInput(attrs) {
 	var id = _.uniqueId("date-picker-")
 
@@ -388,7 +370,7 @@ function DatePickerInput(attrs) {
 
 		<script>{javascript`
 			var Pikaday = require("pikaday")
-			var el = document.getElementById("${id}")
+			var el = document.getElementById(${id})
 			var input = el.childNodes[1]
 
 			new Pikaday({

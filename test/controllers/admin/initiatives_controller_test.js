@@ -1,4 +1,4 @@
-var Config = require("root/config")
+var Config = require("root").config
 var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_initiative")
 var ValidEvent = require("root/test/valid_initiative_event")
@@ -26,10 +26,10 @@ describe("AdminInitiativesController", function() {
 			personal_id: Config.adminPersonalIds[0].slice(2)
 		})
 
-		beforeEach(function*() {
-			this.author = yield usersDb.create(new ValidUser)
+		beforeEach(function() {
+			this.author = usersDb.create(new ValidUser)
 
-			this.initiative = yield initiativesDb.create(new ValidInitiative({
+			this.initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament"
 			}))
@@ -51,7 +51,7 @@ describe("AdminInitiativesController", function() {
 			res.statusCode.must.equal(302)
 			res.headers.location.must.equal(`/initiatives/${this.initiative.uuid}`)
 
-			var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
+			var events = eventsDb.search(sql`SELECT * FROM initiative_events`)
 			events.length.must.equal(1)
 
 			events[0].must.eql(new ValidEvent({
@@ -68,7 +68,7 @@ describe("AdminInitiativesController", function() {
 		})
 
 		it("must email subscribers interested in events", function*() {
-			var subscriptions = yield subscriptionsDb.create([
+			var subscriptions = subscriptionsDb.create([
 				new ValidSubscription({
 					initiative_uuid: this.initiative.uuid,
 					confirmed_at: new Date,

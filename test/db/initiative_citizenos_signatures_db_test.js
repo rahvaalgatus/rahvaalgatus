@@ -12,24 +12,24 @@ var {EMPTY_ZIP} = require("root/lib/zip")
 describe("InitiativeCitizenosSignaturesDb", function() {
 	require("root/test/db")()
 
-	beforeEach(function*() {
-		this.initiative = yield initiativesDb.create(new ValidInitiative({
-			user_id: (yield usersDb.create(new ValidUser)).id
+	beforeEach(function() {
+		this.initiative = initiativesDb.create(new ValidInitiative({
+			user_id: usersDb.create(new ValidUser).id
 		}))
 	})
 
 	describe(".create", function() {
-		it("must create signature", function*() {
+		it("must create signature", function() {
 			var signature = new ValidCitizenosSignature({
 				initiative_uuid: this.initiative.uuid
 			})
 
-			yield signaturesDb.read(
-				yield signaturesDb.create(signature)
-			).must.then.eql(_.create(signature, {id: 1}))
+			signaturesDb.read(signaturesDb.create(signature)).must.eql(
+				_.create(signature, {id: 1})
+			)
 		})
 
-		it("must create anonymized signature", function*() {
+		it("must create anonymized signature", function() {
 			var signature = new ValidCitizenosSignature({
 				initiative_uuid: this.initiative.uuid,
 				country: "EE",
@@ -38,17 +38,17 @@ describe("InitiativeCitizenosSignaturesDb", function() {
 				anonymized: true
 			})
 
-			yield signaturesDb.create(signature)
+			signaturesDb.create(signature)
 
-			yield signaturesDb.search(sql`
+			signaturesDb.search(sql`
 				SELECT * FROM initiative_citizenos_signatures
-			`).must.then.eql([_.create(signature, {id: 1})])
+			`).must.eql([_.create(signature, {id: 1})])
 		})
 
 		// Ensures there's no UNIQUE constraint on the country and personal_id
 		// pair for anonymized signatures.
-		it("must create multiple anonymized signatures", function*() {
-			var signatures = yield _.times(3, () => new ValidCitizenosSignature({
+		it("must create multiple anonymized signatures", function() {
+			var signatures = _.times(3, () => new ValidCitizenosSignature({
 				initiative_uuid: this.initiative.uuid,
 				country: "EE",
 				personal_id: "387",
@@ -56,17 +56,17 @@ describe("InitiativeCitizenosSignaturesDb", function() {
 				anonymized: true
 			}))
 
-			yield signaturesDb.create(signatures)
+			signaturesDb.create(signatures)
 
-			yield signaturesDb.search(sql`
+			signaturesDb.search(sql`
 				SELECT * FROM initiative_citizenos_signatures
-			`).must.then.eql(signatures.map((sig, i) => _.create(sig, {id: i + 1})))
+			`).must.eql(signatures.map((sig, i) => _.create(sig, {id: i + 1})))
 		})
 
-		it("must err given invalid personal id for signature", function*() {
+		it("must err given invalid personal id for signature", function() {
 			var err
 			try {
-				yield signaturesDb.create(new ValidCitizenosSignature({
+				signaturesDb.create(new ValidCitizenosSignature({
 					initiative_uuid: this.initiative.uuid,
 					country: "EE",
 					personal_id: "387061813378"
@@ -80,10 +80,10 @@ describe("InitiativeCitizenosSignaturesDb", function() {
 		})
 
 		it("must err given invalid personal id for anonymized signature",
-			function*() {
+			function() {
 			var err
 			try {
-				yield signaturesDb.create(new ValidCitizenosSignature({
+				signaturesDb.create(new ValidCitizenosSignature({
 					initiative_uuid: this.initiative.uuid,
 					country: "EE",
 					personal_id: "38706",
@@ -97,17 +97,17 @@ describe("InitiativeCitizenosSignaturesDb", function() {
 			err.constraint.must.equal("personal_id_format")
 		})
 
-		it("must err given duplicate country and personal ids", function*() {
+		it("must err given duplicate country and personal ids", function() {
 			var attrs = {
 				initiative_uuid: this.initiative.uuid,
 				country: "EE",
 				personal_id: "38706181337"
 			}
 
-			yield signaturesDb.create(new ValidCitizenosSignature(attrs))
+			signaturesDb.create(new ValidCitizenosSignature(attrs))
 
 			var err
-			try { yield signaturesDb.create(new ValidCitizenosSignature(attrs)) }
+			try { signaturesDb.create(new ValidCitizenosSignature(attrs)) }
 			catch (ex) { err = ex }
 			err.must.be.an.error(SqliteError)
 			err.code.must.equal("constraint")
@@ -116,33 +116,33 @@ describe("InitiativeCitizenosSignaturesDb", function() {
 		})
 
 		it("must create signature for different initiatives from same person",
-			function*() {
+			function() {
 			var attrs = {country: "EE", personal_id: "38706181337"}
 
-			var a = yield signaturesDb.create(new ValidCitizenosSignature({
+			var a = signaturesDb.create(new ValidCitizenosSignature({
 				__proto__: attrs,
 				initiative_uuid: this.initiative.uuid
 			}))
 
-			var otherInitiative = yield initiativesDb.create(new ValidInitiative({
+			var otherInitiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.initiative.user_id
 			}))
 
-			var b = yield signaturesDb.create(new ValidCitizenosSignature({
+			var b = signaturesDb.create(new ValidCitizenosSignature({
 				__proto__: attrs,
 				initiative_uuid: otherInitiative.uuid
 			}))
 
-			yield signaturesDb.search(sql`
+			signaturesDb.search(sql`
 				SELECT * FROM initiative_citizenos_signatures
-			`).must.then.eql([a, b].map((sig, i) => _.create(sig, {id: i + 1})))
+			`).must.eql([a, b].map((sig, i) => _.create(sig, {id: i + 1})))
 		})
 
 		it("must err given ASiC for anonymized signature",
-			function*() {
+			function() {
 			var err
 			try {
-				yield signaturesDb.create(new ValidCitizenosSignature({
+				signaturesDb.create(new ValidCitizenosSignature({
 					initiative_uuid: this.initiative.uuid,
 					country: "EE",
 					personal_id: "387",

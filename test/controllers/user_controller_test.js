@@ -7,10 +7,10 @@ var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidUser = require("root/test/valid_user")
 var ValidCoauthor = require("root/test/valid_initiative_coauthor")
-var Config = require("root/config")
+var Config = require("root").config
 var Crypto = require("crypto")
 var {parseCookies} = require("root/test/web")
-var parseDom = require("root/lib/dom").parse
+var parseHtml = require("root/test/html").parse
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
@@ -55,14 +55,12 @@ describe("UserController", function() {
 			require("root/test/fixtures").user()
 
 			it("must show name without email", function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
-					name: "John Smith"
-				}))
+				usersDb.update(this.user, _.assign(this.user, {name: "John Smith"}))
 
 				var res = yield this.request("/user")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var form = dom.querySelector("#user form")
 				form.elements.name.value.must.equal(this.user.name)
 				form.elements.email.value.must.equal("")
@@ -71,7 +69,7 @@ describe("UserController", function() {
 			})
 
 			it("must show name and email", function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					name: "John Smith",
 					email: "john@example.com",
 					email_confirmed_at: new Date
@@ -80,7 +78,7 @@ describe("UserController", function() {
 				var res = yield this.request("/user")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var form = dom.querySelector("#user form")
 				form.elements.name.value.must.equal(this.user.name)
 				form.elements.email.value.must.equal(this.user.email)
@@ -89,7 +87,7 @@ describe("UserController", function() {
 			})
 
 			it("must show if email unconfirmed", function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					unconfirmed_email: "john@example.com",
 					email_confirmation_token: Crypto.randomBytes(12)
 				}))
@@ -97,14 +95,14 @@ describe("UserController", function() {
 				var res = yield this.request("/user")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var form = dom.querySelector("#user form")
 				form.elements.email.value.must.equal(this.user.unconfirmed_email)
 				form.textContent.must.include(t("USER_PAGE_EMAIL_UNCONFIRMED"))
 			})
 
 			it("must show if email confirmed but another set", function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					email: "john@example.com",
 					email_confirmed_at: new Date,
 					unconfirmed_email: "mary@example.com",
@@ -114,7 +112,7 @@ describe("UserController", function() {
 				var res = yield this.request("/user")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var form = dom.querySelector("#user form")
 				form.elements.email.value.must.equal(this.user.unconfirmed_email)
 
@@ -125,7 +123,7 @@ describe("UserController", function() {
 
 			it("must show reconfirmation link if confirmation never sent",
 				function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					unconfirmed_email: "john@example.com",
 					email_confirmation_token: Crypto.randomBytes(12)
 				}))
@@ -137,7 +135,7 @@ describe("UserController", function() {
 
 			it("must show reconfirmation link if 10 minutes have passed",
 				function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					unconfirmed_email: "john@example.com",
 					email_confirmation_token: Crypto.randomBytes(12),
 					email_confirmation_sent_at: DateFns.addMinutes(new Date, -10)
@@ -149,7 +147,7 @@ describe("UserController", function() {
 			})
 
 			it("must not show reconfirmation link if less than 10 minutes have passed", function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					unconfirmed_email: "john@example.com",
 					email_confirmation_token: Crypto.randomBytes(12),
 					email_confirmation_sent_at: DateFns.addSeconds(new Date, -600 + 1)
@@ -162,7 +160,7 @@ describe("UserController", function() {
 
 			describe("initiatives", function() {
 				it("must show initiative in edit phase", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: "edit"
 					}))
@@ -170,7 +168,7 @@ describe("UserController", function() {
 					var res = yield this.request("/user")
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var el = dom.querySelector("li.initiative")
 					el.innerHTML.must.include(initiative.uuid)
 					el.textContent.must.include(this.user.name)
@@ -178,17 +176,17 @@ describe("UserController", function() {
 				})
 
 				it("must show initiative in sign phase", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: "sign",
 						signing_ends_at: DateFns.addDays(new Date, 1)
 					}))
 
-					yield citizenosSignaturesDb.create(_.times(5, () => (
+					citizenosSignaturesDb.create(_.times(5, () => (
 						new ValidCitizenosSignature({initiative_uuid: initiative.uuid})
 					)))
 
-					yield signaturesDb.create(_.times(3, () => new ValidSignature({
+					signaturesDb.create(_.times(3, () => new ValidSignature({
 						initiative_uuid: initiative.uuid
 					})))
 
@@ -200,14 +198,14 @@ describe("UserController", function() {
 				})
 
 				it("must show initiatives where coauthor", function*() {
-					var author = yield usersDb.create(new ValidUser)
+					var author = usersDb.create(new ValidUser)
 
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: author.id,
 						phase: "edit"
 					}))
 
-					yield coauthorsDb.create(new ValidCoauthor({
+					coauthorsDb.create(new ValidCoauthor({
 						initiative: initiative,
 						user: this.user,
 						status: "accepted"
@@ -216,21 +214,21 @@ describe("UserController", function() {
 					var res = yield this.request("/user")
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var el = dom.querySelector("li.initiative")
 					el.innerHTML.must.include(initiative.uuid)
 					el.textContent.must.include(author.name)
 				})
 
 				it("must not show coauthor name", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: "edit"
 					}))
 
-					var coauthor = yield usersDb.create(new ValidUser)
+					var coauthor = usersDb.create(new ValidUser)
 
-					yield coauthorsDb.create(new ValidCoauthor({
+					coauthorsDb.create(new ValidCoauthor({
 						initiative: initiative,
 						user: coauthor,
 						status: "accepted"
@@ -239,7 +237,7 @@ describe("UserController", function() {
 					var res = yield this.request("/user")
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var el = dom.querySelector("li.initiative")
 					el.innerHTML.must.include(initiative.uuid)
 					el.textContent.must.include(this.user.name)
@@ -248,11 +246,11 @@ describe("UserController", function() {
 
 				_.without(COAUTHOR_STATUSES, "accepted").forEach(function(status) {
 					it(`must not show initiatives if ${status} coauthor`, function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: (yield usersDb.create(new ValidUser)).id
+						var initiative = initiativesDb.create(new ValidInitiative({
+							user_id: usersDb.create(new ValidUser).id
 						}))
 
-						yield coauthorsDb.create(new ValidCoauthor({
+						coauthorsDb.create(new ValidCoauthor({
 							initiative: initiative,
 							user: this.user,
 							status: status
@@ -261,15 +259,15 @@ describe("UserController", function() {
 						var res = yield this.request("/user")
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						demand(dom.querySelector("li.initiative")).be.null()
 					})
 				})
 
 				it("must not show initiatives from other users", function*() {
-					var author = yield usersDb.create(new ValidUser)
+					var author = usersDb.create(new ValidUser)
 
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: author.id,
 						phase: "edit"
 					}))
@@ -280,18 +278,18 @@ describe("UserController", function() {
 				})
 
 				t("must not show coauthor name from another initiative", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: "edit"
 					}))
 
-					var other = yield initiativesDb.create(new ValidInitiative({
-						user_id: (yield usersDb.create(new ValidUser)).id
+					var other = initiativesDb.create(new ValidInitiative({
+						user_id: usersDb.create(new ValidUser).id
 					}))
 
-					var coauthor = yield usersDb.create(new ValidUser)
+					var coauthor = usersDb.create(new ValidUser)
 
-					yield coauthorsDb.create(new ValidCoauthor({
+					coauthorsDb.create(new ValidCoauthor({
 						initiative: other,
 						user: coauthor,
 						status: "accepted"
@@ -300,7 +298,7 @@ describe("UserController", function() {
 					var res = yield this.request("/user")
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var el = dom.querySelector("li.initiative")
 					el.innerHTML.must.include(initiative.uuid)
 					el.textContent.must.include(this.user.name)
@@ -309,14 +307,14 @@ describe("UserController", function() {
 
 				_.without(COAUTHOR_STATUSES, "accepted").forEach(function(status) {
 					it(`must not show ${status} coauthor name`, function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
+						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
 							phase: "edit"
 						}))
 
-						var coauthor = yield usersDb.create(new ValidUser)
+						var coauthor = usersDb.create(new ValidUser)
 
-						yield coauthorsDb.create(new ValidCoauthor({
+						coauthorsDb.create(new ValidCoauthor({
 							initiative: initiative,
 							user: coauthor,
 							status: status
@@ -325,7 +323,7 @@ describe("UserController", function() {
 						var res = yield this.request("/user")
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var el = dom.querySelector("li.initiative")
 						el.innerHTML.must.include(initiative.uuid)
 						el.textContent.must.include(this.user.name)
@@ -336,11 +334,11 @@ describe("UserController", function() {
 
 			describe("coauthor invitations", function() {
 				it("must show pending invitation", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: (yield usersDb.create(new ValidUser)).id
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: usersDb.create(new ValidUser).id
 					}))
 
-					yield coauthorsDb.create(new ValidCoauthor({
+					coauthorsDb.create(new ValidCoauthor({
 						initiative: initiative,
 						user: this.user,
 						status: "pending"
@@ -349,17 +347,17 @@ describe("UserController", function() {
 					var res = yield this.request("/user")
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var el = dom.getElementById("coauthor-invitations")
 					el.textContent.must.include(initiative.title)
 				})
 
 				it("must not show accepted invitation", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
-						user_id: (yield usersDb.create(new ValidUser)).id
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: usersDb.create(new ValidUser).id
 					}))
 
-					yield coauthorsDb.create(new ValidCoauthor({
+					coauthorsDb.create(new ValidCoauthor({
 						initiative: initiative,
 						user: this.user,
 						status: "accepted"
@@ -368,7 +366,7 @@ describe("UserController", function() {
 					var res = yield this.request("/user")
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					demand(dom.getElementById("coauthor-invitations")).be.null()
 				})
 
@@ -378,11 +376,11 @@ describe("UserController", function() {
 					"pending"
 				).forEach(function(status) {
 					it(`must not show if ${status} coauthor`, function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
-							user_id: (yield usersDb.create(new ValidUser)).id
+						var initiative = initiativesDb.create(new ValidInitiative({
+							user_id: usersDb.create(new ValidUser).id
 						}))
 
-						yield coauthorsDb.create(new ValidCoauthor({
+						coauthorsDb.create(new ValidCoauthor({
 							initiative: initiative,
 							user: this.user,
 							status: status
@@ -391,22 +389,22 @@ describe("UserController", function() {
 						var res = yield this.request("/user")
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						demand(dom.getElementById("coauthor-invitations")).be.null()
 						res.body.must.not.include(initiative.uuid)
 					})
 				})
 
 				it("must not show pending invitations from other users with same country", function*() {
-					var other = yield usersDb.create(new ValidUser({
+					var other = usersDb.create(new ValidUser({
 						country: this.user.country
 					}))
 
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: other.id
 					}))
 
-					yield coauthorsDb.create(new ValidCoauthor({
+					coauthorsDb.create(new ValidCoauthor({
 						initiative: initiative,
 						user: other,
 						status: "pending"
@@ -415,21 +413,21 @@ describe("UserController", function() {
 					var res = yield this.request("/user")
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					demand(dom.getElementById("coauthor-invitations")).be.null()
 				})
 
 				it("must not show pending invitations from other users with same personal id", function*() {
-					var other = yield usersDb.create(new ValidUser({
+					var other = usersDb.create(new ValidUser({
 						country: "LT",
 						personal_id: this.user.personal_id
 					}))
 
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: other.id
 					}))
 
-					yield coauthorsDb.create(new ValidCoauthor({
+					coauthorsDb.create(new ValidCoauthor({
 						initiative: initiative,
 						user: other,
 						status: "pending"
@@ -438,7 +436,7 @@ describe("UserController", function() {
 					var res = yield this.request("/user")
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					demand(dom.getElementById("coauthor-invitations")).be.null()
 				})
 			})
@@ -450,7 +448,7 @@ describe("UserController", function() {
 
 		describe("when not logged in", function() {
 			it("must ignore names", function*() {
-				var user = yield usersDb.create(new ValidUser({name: "Mary Smith"}))
+				var user = usersDb.create(new ValidUser({name: "Mary Smith"}))
 
 				var res = yield this.request("/user", {
 					method: "PUT",
@@ -459,7 +457,7 @@ describe("UserController", function() {
 
 				res.statusCode.must.equal(303)
 				res.headers.location.must.equal("/")
-				yield usersDb.read(user).must.then.eql(user)
+				usersDb.read(user).must.eql(user)
 			})
 
 			;["et", "en", "ru"].forEach(function(lang) {
@@ -530,7 +528,7 @@ describe("UserController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("USER_UPDATED"))
 
-				yield usersDb.read(this.user).must.then.eql({
+				usersDb.read(this.user).must.eql({
 					__proto__: this.user,
 					name: "John Smitheroon",
 					updated_at: new Date
@@ -546,16 +544,16 @@ describe("UserController", function() {
 				res.statusCode.must.equal(422)
 				res.statusMessage.must.equal("Invalid Attributes")
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var form = dom.querySelector("#user form")
 				form.elements.name.value.must.equal("")
 				form.textContent.must.include(t("INPUT_ERROR_LENGTH_1"))
 
-				yield usersDb.read(this.user).must.then.eql(this.user)
+				usersDb.read(this.user).must.eql(this.user)
 			})
 
 			it("must not update name of another user", function*() {
-				var user = yield usersDb.create(new ValidUser({name: "Mary Smith"}))
+				var user = usersDb.create(new ValidUser({name: "Mary Smith"}))
 
 				var res = yield this.request("/user", {
 					method: "PUT",
@@ -563,7 +561,7 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(303)
-				yield usersDb.read(user).must.then.eql(user)
+				usersDb.read(user).must.eql(user)
 			})
 
 			;["et", "en", "ru"].forEach(function(lang) {
@@ -581,7 +579,7 @@ describe("UserController", function() {
 					cookies.language.value.must.equal(lang)
 					cookies.must.not.have.property("flash")
 
-					yield usersDb.read(this.user).must.then.eql({
+					usersDb.read(this.user).must.eql({
 						__proto__: this.user,
 						language: lang,
 						updated_at: new Date
@@ -597,7 +595,7 @@ describe("UserController", function() {
 
 				res.statusCode.must.equal(303)
 				res.headers.location.must.equal("/user")
-				yield usersDb.read(this.user).must.then.eql(this.user)
+				usersDb.read(this.user).must.eql(this.user)
 			})
 
 			it("must set email and send confirmation", function*() {
@@ -616,7 +614,7 @@ describe("UserController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("USER_UPDATED_WITH_EMAIL"))
 
-				var user = yield usersDb.read(this.user)
+				var user = usersDb.read(this.user)
 
 				user.must.eql({
 					__proto__: this.user,
@@ -643,7 +641,7 @@ describe("UserController", function() {
 			})
 
 			it("must update email and send confirmation if unconfirmed", function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					unconfirmed_email: "john@example.com",
 					email_confirmation_token: Crypto.randomBytes(12),
 					email_confirmation_sent_at: new Date(2015, 5, 18, 12),
@@ -656,7 +654,7 @@ describe("UserController", function() {
 
 				res.statusCode.must.equal(303)
 
-				var user = yield usersDb.read(this.user)
+				var user = usersDb.read(this.user)
 
 				user.must.eql({
 					__proto__: this.user,
@@ -684,7 +682,7 @@ describe("UserController", function() {
 			})
 
 			it("must update email and send confirmation if confirmed", function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					email: "john@example.com",
 					email_confirmed_at: new Date(2015, 5, 18, 12),
 				}))
@@ -704,7 +702,7 @@ describe("UserController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("USER_UPDATED_WITH_EMAIL"))
 
-				var user = yield usersDb.read(this.user)
+				var user = usersDb.read(this.user)
 
 				user.must.eql({
 					__proto__: this.user,
@@ -732,7 +730,7 @@ describe("UserController", function() {
 
 			it("must update email and send confirmation if confirmed and pending",
 				function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					email: "john@example.com",
 					email_confirmed_at: new Date(2015, 5, 18, 12),
 					unconfirmed_email: "mary@example.com",
@@ -746,7 +744,7 @@ describe("UserController", function() {
 
 				res.statusCode.must.equal(303)
 
-				var user = yield usersDb.read(this.user)
+				var user = usersDb.read(this.user)
 
 				user.must.eql({
 					__proto__: this.user,
@@ -775,7 +773,7 @@ describe("UserController", function() {
 
 			it("must not send confirmation if new identical to confirmed email",
 				function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					email: "john@example.com",
 					email_confirmed_at: new Date,
 				}))
@@ -795,14 +793,14 @@ describe("UserController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("USER_UPDATED"))
 
-				var user = yield usersDb.read(this.user)
+				var user = usersDb.read(this.user)
 				user.must.eql({__proto__: this.user, updated_at: new Date})
 				this.emails.length.must.equal(0)
 			})
 
 			it("must not send confirmation if new identical to unconfirmed email",
 				function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					unconfirmed_email: "john@example.com",
 					email_confirmation_token: Crypto.randomBytes(12)
 				}))
@@ -822,14 +820,14 @@ describe("UserController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("USER_UPDATED"))
 
-				var user = yield usersDb.read(this.user)
+				var user = usersDb.read(this.user)
 				user.must.eql({__proto__: this.user, updated_at: new Date})
 				this.emails.length.must.equal(0)
 			})
 
 			it("must not send confirmation if new identical to unconfirmed_email while confirmed",
 				function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					email: "john@example.com",
 					email_confirmed_at: new Date,
 					unconfirmed_email: "mary@example.com",
@@ -851,14 +849,14 @@ describe("UserController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("USER_UPDATED"))
 
-				var user = yield usersDb.read(this.user)
+				var user = usersDb.read(this.user)
 				user.must.eql({__proto__: this.user, updated_at: new Date})
 				this.emails.length.must.equal(0)
 			})
 
 			it("must not send confirmation if setting back confirmed email",
 				function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					email: "john@example.com",
 					email_confirmed_at: new Date,
 					unconfirmed_email: "mary@example.com",
@@ -880,7 +878,7 @@ describe("UserController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("USER_UPDATED"))
 
-				var user = yield usersDb.read(this.user)
+				var user = usersDb.read(this.user)
 
 				user.must.eql({
 					__proto__: this.user,
@@ -893,7 +891,7 @@ describe("UserController", function() {
 			})
 
 			it("must delete email given empty", function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					email: "john@example.com",
 					email_confirmed_at: new Date
 				}))
@@ -913,7 +911,7 @@ describe("UserController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("USER_UPDATED"))
 
-				var user = yield usersDb.read(this.user)
+				var user = usersDb.read(this.user)
 
 				user.must.eql({
 					__proto__: this.user,
@@ -926,7 +924,7 @@ describe("UserController", function() {
 			})
 
 			it("must delete email and unconfirmed email given empty", function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					email: "john@example.com",
 					email_confirmed_at: new Date,
 					unconfirmed_email: "mary@example.com",
@@ -948,7 +946,7 @@ describe("UserController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("USER_UPDATED"))
 
-				var user = yield usersDb.read(this.user)
+				var user = usersDb.read(this.user)
 
 				user.must.eql({
 					__proto__: this.user,
@@ -971,18 +969,18 @@ describe("UserController", function() {
 				res.statusCode.must.equal(422)
 				res.statusMessage.must.equal("Invalid Attributes")
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var form = dom.querySelector("#user form")
 				form.elements.name.value.must.equal(this.user.name)
 				form.elements.email.value.must.equal("@example.com")
 				form.textContent.must.include(t("INPUT_ERROR_FORMAT_EMAIL"))
 
-				yield usersDb.read(this.user).must.then.eql(this.user)
+				usersDb.read(this.user).must.eql(this.user)
 				this.emails.length.must.equal(0)
 			})
 
 			it("must resend confirmation if 10 minutes have passed", function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					unconfirmed_email: "john@example.com",
 					email_confirmation_token: Crypto.randomBytes(12),
 					email_confirmation_sent_at: DateFns.addMinutes(new Date, -10)
@@ -1004,7 +1002,7 @@ describe("UserController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("USER_UPDATED_WITH_EMAIL"))
 
-				var user = yield usersDb.read(this.user)
+				var user = usersDb.read(this.user)
 
 				user.must.eql({
 					__proto__: this.user,
@@ -1016,7 +1014,7 @@ describe("UserController", function() {
 			})
 
 			it("must not resend confirmation if no email set", function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					email_confirmation_sent_at: DateFns.addMinutes(new Date, -10)
 				}))
 
@@ -1036,12 +1034,12 @@ describe("UserController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("USER_UPDATED"))
 
-				yield usersDb.read(this.user).must.then.eql(this.user)
+				usersDb.read(this.user).must.eql(this.user)
 				this.emails.length.must.equal(0)
 			})
 
 			it("must resend confirmation if not sent before", function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					unconfirmed_email: "john@example.com",
 					email_confirmation_token: Crypto.randomBytes(12)
 				}))
@@ -1062,7 +1060,7 @@ describe("UserController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("USER_UPDATED_WITH_EMAIL"))
 
-				yield usersDb.read(this.user).must.then.eql({
+				usersDb.read(this.user).must.eql({
 					__proto__: this.user,
 					updated_at: new Date,
 					email_confirmation_sent_at: new Date
@@ -1073,7 +1071,7 @@ describe("UserController", function() {
 
 			it("must not resend confirmation if 10 minutes have not passed",
 				function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					unconfirmed_email: "john@example.com",
 					email_confirmation_token: Crypto.randomBytes(12),
 					email_confirmation_sent_at: DateFns.addSeconds(new Date, -600 + 1)
@@ -1095,12 +1093,12 @@ describe("UserController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("USER_UPDATED"))
 
-				yield usersDb.read(this.user).must.then.eql(this.user)
+				usersDb.read(this.user).must.eql(this.user)
 				this.emails.length.must.equal(0)
 			})
 
 			it("must not set email_confirmation_sent_at if not empty", function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					unconfirmed_email: "john@example.com",
 					email_confirmation_token: Crypto.randomBytes(12),
 					email_confirmation_sent_at: DateFns.addMinutes(new Date, -10)
@@ -1113,7 +1111,7 @@ describe("UserController", function() {
 
 				res.statusCode.must.equal(422)
 				res.statusMessage.must.equal("Invalid Attributes")
-				yield usersDb.read(this.user).must.then.eql(this.user)
+				usersDb.read(this.user).must.eql(this.user)
 			})
 		})
 	})
@@ -1122,17 +1120,15 @@ describe("UserController", function() {
 		require("root/test/fixtures").user()
 
 		describe("when undersigned", function() {
-			beforeEach(function*() {
-				this.author = yield usersDb.create(new ValidUser)
-			})
+			beforeEach(function() { this.author = usersDb.create(new ValidUser) })
 
 			it("must show signatures", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign"
 				}))
 
-				yield signaturesDb.create(new ValidSignature({
+				signaturesDb.create(new ValidSignature({
 					initiative_uuid: initiative.uuid,
 					country: this.user.country,
 					personal_id: this.user.personal_id
@@ -1141,7 +1137,7 @@ describe("UserController", function() {
 				var res = yield this.request("/user/signatures")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var el = dom.querySelector(".signature")
 				el.innerHTML.must.include(initiative.uuid)
 				el.textContent.must.include(initiative.title)
@@ -1150,12 +1146,12 @@ describe("UserController", function() {
 
 			it("must not show signatures by other countries",
 				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign"
 				}))
 
-				yield signaturesDb.create(new ValidSignature({
+				signaturesDb.create(new ValidSignature({
 					initiative_uuid: initiative.uuid,
 					country: "LT",
 					personal_id: this.user.personal_id
@@ -1168,12 +1164,12 @@ describe("UserController", function() {
 
 			it("must not show signatures by other personal ids",
 				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign"
 				}))
 
-				yield signaturesDb.create(new ValidSignature({
+				signaturesDb.create(new ValidSignature({
 					initiative_uuid: initiative.uuid,
 					country: this.user.country,
 					personal_id: "38706181337"
@@ -1185,12 +1181,12 @@ describe("UserController", function() {
 			})
 
 			it("must not show hidden signatures", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign"
 				}))
 
-				yield signaturesDb.create(new ValidSignature({
+				signaturesDb.create(new ValidSignature({
 					initiative_uuid: initiative.uuid,
 					country: this.user.country,
 					personal_id: this.user.personal_id,
@@ -1204,17 +1200,15 @@ describe("UserController", function() {
 		})
 
 		describe("when CitizenOS-signed", function() {
-			beforeEach(function*() {
-				this.author = yield usersDb.create(new ValidUser)
-			})
+			beforeEach(function() { this.author = usersDb.create(new ValidUser) })
 
 			it("must show signatures", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign"
 				}))
 
-				yield citizenosSignaturesDb.create(new ValidCitizenosSignature({
+				citizenosSignaturesDb.create(new ValidCitizenosSignature({
 					initiative_uuid: initiative.uuid,
 					country: this.user.country,
 					personal_id: this.user.personal_id
@@ -1223,7 +1217,7 @@ describe("UserController", function() {
 				var res = yield this.request("/user/signatures")
 				res.statusCode.must.equal(200)
 
-				var dom = parseDom(res.body)
+				var dom = parseHtml(res.body)
 				var el = dom.querySelector(".signature")
 				el.innerHTML.must.include(initiative.uuid)
 				el.textContent.must.include(initiative.title)
@@ -1231,12 +1225,12 @@ describe("UserController", function() {
 			})
 
 			it("must not show signatures by other countries", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign"
 				}))
 
-				yield citizenosSignaturesDb.create(new ValidCitizenosSignature({
+				citizenosSignaturesDb.create(new ValidCitizenosSignature({
 					initiative_uuid: initiative.uuid,
 					country: "LT",
 					personal_id: this.user.personal_id
@@ -1248,12 +1242,12 @@ describe("UserController", function() {
 			})
 
 			it("must not show signatures by other personal ids", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign"
 				}))
 
-				yield citizenosSignaturesDb.create(new ValidCitizenosSignature({
+				citizenosSignaturesDb.create(new ValidCitizenosSignature({
 					initiative_uuid: initiative.uuid,
 					country: this.user.country,
 					personal_id: "38706181337"
@@ -1272,12 +1266,10 @@ describe("UserController", function() {
 			email_confirmed_at: new Date
 		})
 
-		beforeEach(function*() {
-			this.author = yield usersDb.create(new ValidUser)
-		})
+		beforeEach(function() { this.author = usersDb.create(new ValidUser) })
 
 		it("must show subscription to initiatives", function*() {
-			yield subscriptionsDb.create(new ValidSubscription({
+			subscriptionsDb.create(new ValidSubscription({
 				email: this.user.email,
 				confirmed_at: new Date
 			}))
@@ -1285,42 +1277,42 @@ describe("UserController", function() {
 			var res = yield this.request("/user/subscriptions")
 			res.statusCode.must.equal(200)
 
-			var el = parseDom(res.body).querySelectorAll("li.subscription")
+			var el = parseHtml(res.body).querySelectorAll("li.subscription")
 			el.length.must.equal(1)
 			el[0].textContent.must.include(t("SUBSCRIPTIONS_ALL_INITIATIVES"))
 		})
 
 		it("must not show unconfirmed subscription to initiatives", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id
 			}))
 
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				email: this.user.email,
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date
 			}))
 
-			yield subscriptionsDb.create(new ValidSubscription({
+			subscriptionsDb.create(new ValidSubscription({
 				email: subscription.email
 			}))
 
 			var res = yield this.request("/user/subscriptions")
 			res.statusCode.must.equal(200)
 
-			var el = parseDom(res.body).querySelectorAll("li.subscription")
+			var el = parseHtml(res.body).querySelectorAll("li.subscription")
 			el.length.must.equal(1)
 			el[0].innerHTML.must.include(subscription.initiative_uuid)
 			el[0].textContent.must.not.include(t("SUBSCRIPTIONS_ALL_INITIATIVES"))
 		})
 
 		it("must show subscription to initiative", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				published_at: new Date
 			}))
 
-			yield subscriptionsDb.create(new ValidSubscription({
+			subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				email: this.user.email,
 				confirmed_at: new Date
@@ -1332,12 +1324,12 @@ describe("UserController", function() {
 		})
 
 		it("must show page given subscription to external initiative", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
 				external: true
 			}))
 
-			yield subscriptionsDb.create(new ValidSubscription({
+			subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				email: this.user.email,
 				confirmed_at: new Date
@@ -1349,17 +1341,17 @@ describe("UserController", function() {
 		})
 
 		it("must not show unconfirmed subscription to initiatives", function*() {
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				email: this.user.email,
 				confirmed_at: new Date
 			}))
 
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
 				external: true
 			}))
 
-			var other = yield subscriptionsDb.create(new ValidSubscription({
+			var other = subscriptionsDb.create(new ValidSubscription({
 				email: subscription.email,
 				initiative_uuid: initiative.uuid
 			}))
@@ -1367,24 +1359,22 @@ describe("UserController", function() {
 			var res = yield this.request("/user/subscriptions")
 			res.statusCode.must.equal(200)
 
-			var el = parseDom(res.body).querySelectorAll("li.subscription")
+			var el = parseHtml(res.body).querySelectorAll("li.subscription")
 			el.length.must.equal(1)
 			el[0].innerHTML.must.not.include(other.initiative_uuid)
 			el[0].textContent.must.include(t("SUBSCRIPTIONS_ALL_INITIATIVES"))
 		})
 
 		it("must show all subscriptions for given email address", function*() {
-			var initiatives = yield _.times(3, () => initiativesDb.create(
+			var initiatives = _.times(3, () => initiativesDb.create(
 				new ValidInitiative({phase: "parliament", external: true})
 			))
 
-			yield subscriptionsDb.create(initiatives.map((i) => (
-				new ValidSubscription({
-					email: this.user.email,
-					initiative_uuid: i.uuid,
-					confirmed_at: new Date
-				})
-			)))
+			subscriptionsDb.create(initiatives.map((i) => new ValidSubscription({
+				email: this.user.email,
+				initiative_uuid: i.uuid,
+				confirmed_at: new Date
+			})))
 
 			var res = yield this.request("/user/subscriptions")
 			res.statusCode.must.equal(200)
@@ -1392,19 +1382,17 @@ describe("UserController", function() {
 		})
 
 		it("must not show subscriptions for other email addresses", function*() {
-			var other = yield initiativesDb.create(new ValidInitiative({
+			var other = initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
 				external: true
 			}))
 
-			yield subscriptionsDb.create(new ValidSubscription({
+			subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: other.uuid,
 				confirmed_at: new Date
 			}))
 
-			yield subscriptionsDb.create(new ValidSubscription({
-				confirmed_at: new Date
-			}))
+			subscriptionsDb.create(new ValidSubscription({confirmed_at: new Date}))
 
 			var res = yield this.request("/user/subscriptions")
 			res.statusCode.must.equal(200)
@@ -1412,22 +1400,22 @@ describe("UserController", function() {
 		})
 
 		it("must not show subscriptions if user email unconfirmed", function*() {
-			yield usersDb.update(this.user, {
+			usersDb.update(this.user, {
 				email: null,
 				email_confirmed_at: null
 			})
 
-			yield subscriptionsDb.create(new ValidSubscription({
+			subscriptionsDb.create(new ValidSubscription({
 				email: this.user.email,
 				confirmed_at: new Date
 			}))
 
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				published_at: new Date
 			}))
 
-			yield subscriptionsDb.create(new ValidSubscription({
+			subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				email: this.user.email,
 				confirmed_at: new Date
@@ -1438,7 +1426,7 @@ describe("UserController", function() {
 			res.body.must.not.include(initiative.uuid)
 			res.body.must.not.include(t("SUBSCRIPTIONS_ALL_INITIATIVES"))
 
-			var el = parseDom(res.body).querySelectorAll("li.subscription")
+			var el = parseHtml(res.body).querySelectorAll("li.subscription")
 			el.length.must.equal(0)
 		})
 	})
@@ -1453,12 +1441,10 @@ describe("UserController", function() {
 
 		require("root/test/fixtures").csrf()
 
-		beforeEach(function*() {
-			this.author = yield usersDb.create(new ValidUser)
-		})
+		beforeEach(function() { this.author = usersDb.create(new ValidUser) })
 
 		it("must update subscriptions to initiatives", function*() {
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				email: this.user.email,
 				confirmed_at: new Date
 			}))
@@ -1474,7 +1460,7 @@ describe("UserController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/user/subscriptions")
 
-			yield subscriptionsDb.read(subscription).must.then.eql({
+			subscriptionsDb.read(subscription).must.eql({
 				__proto__: subscription,
 				updated_at: new Date,
 				event_interest: !subscription.event_interest,
@@ -1483,12 +1469,12 @@ describe("UserController", function() {
 		})
 
 		it("must update subscription to initiative", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				published_at: new Date
 			}))
 
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				email: this.user.email,
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date
@@ -1506,7 +1492,7 @@ describe("UserController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/user/subscriptions")
 
-			yield subscriptionsDb.read(subscription).must.then.eql({
+			subscriptionsDb.read(subscription).must.eql({
 				__proto__: subscription,
 				updated_at: new Date,
 				event_interest: !subscription.event_interest,
@@ -1515,12 +1501,12 @@ describe("UserController", function() {
 		})
 
 		it("must update subscription to external initiative", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
 				external: true
 			}))
 
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				email: this.user.email,
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date
@@ -1538,7 +1524,7 @@ describe("UserController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/user/subscriptions")
 
-			yield subscriptionsDb.read(subscription).must.then.eql({
+			subscriptionsDb.read(subscription).must.eql({
 				__proto__: subscription,
 				updated_at: new Date,
 				event_interest: !subscription.event_interest,
@@ -1547,16 +1533,16 @@ describe("UserController", function() {
 		})
 
 		it("must not update unconfirmed subscription to initiative", function*() {
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				email: this.user.email,
 				confirmed_at: new Date
 			}))
 
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id
 			}))
 
-			var other = yield subscriptionsDb.create(new ValidSubscription({
+			var other = subscriptionsDb.create(new ValidSubscription({
 				email: subscription.email,
 				initiative_uuid: initiative.uuid
 			}))
@@ -1570,22 +1556,22 @@ describe("UserController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/user/subscriptions")
 
-			yield subscriptionsDb.search(sql`
+			subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
-			`).must.then.eql([subscription, other])
+			`).must.eql([subscription, other])
 		})
 
 		it("must not update subscription to initiative by other emails",
 			function*() {
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				confirmed_at: new Date
 			}))
 
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id
 			}))
 
-			var other = yield subscriptionsDb.create(new ValidSubscription({
+			var other = subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date
 			}))
@@ -1599,13 +1585,13 @@ describe("UserController", function() {
 			res.statusCode.must.equal(303)
 				res.headers.location.must.equal("/user/subscriptions")
 
-			yield subscriptionsDb.search(sql`
+			subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
-			`).must.then.eql([subscription, other])
+			`).must.eql([subscription, other])
 		})
 
 		it("must not update email", function*() {
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				email: this.user.email,
 				confirmed_at: new Date
 			}))
@@ -1617,14 +1603,14 @@ describe("UserController", function() {
 
 			res.statusCode.must.equal(303)
 
-			yield subscriptionsDb.read(subscription).must.then.eql({
+			subscriptionsDb.read(subscription).must.eql({
 				__proto__: subscription,
 				updated_at: new Date
 			})
 		})
 
 		it("must delete subscription to initiatives", function*() {
-			yield subscriptionsDb.create(new ValidSubscription({
+			subscriptionsDb.create(new ValidSubscription({
 				email: this.user.email,
 				confirmed_at: new Date
 			}))
@@ -1637,18 +1623,18 @@ describe("UserController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/user/subscriptions")
 
-			yield subscriptionsDb.search(sql`
+			subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
-			`).must.then.be.empty()
+			`).must.be.empty()
 		})
 
 		it("must delete subscription to initiative", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				published_at: new Date
 			}))
 
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				email: this.user.email,
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date
@@ -1662,18 +1648,18 @@ describe("UserController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/user/subscriptions")
 
-			yield subscriptionsDb.search(sql`
+			subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
-			`).must.then.be.empty()
+			`).must.be.empty()
 		})
 
 		it("must delete subscription to external initiative", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
 				external: true
 			}))
 
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				email: this.user.email,
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date
@@ -1687,24 +1673,24 @@ describe("UserController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/user/subscriptions")
 
-			yield subscriptionsDb.search(sql`
+			subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
-			`).must.then.be.empty()
+			`).must.be.empty()
 		})
 
 		it("must not delete unconfirmed subscription to initiatives", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
 				external: true
 			}))
 
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				email: this.user.email,
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date
 			}))
 
-			var other = yield subscriptionsDb.create(new ValidSubscription({
+			var other = subscriptionsDb.create(new ValidSubscription({
 				email: subscription.email
 			}))
 
@@ -1716,27 +1702,27 @@ describe("UserController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/user/subscriptions")
 
-			yield subscriptionsDb.search(sql`
+			subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
-			`).must.then.eql([subscription, other])
+			`).must.eql([subscription, other])
 		})
 
 		it("must not delete other subscriptions of the same email", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id
 			}))
 
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				email: this.user.email,
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date
 			}))
 
-			var otherInitiative = yield initiativesDb.create(new ValidInitiative({
+			var otherInitiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id
 			}))
 
-			var others = yield subscriptionsDb.create([
+			var others = subscriptionsDb.create([
 				new ValidSubscription({
 					email: subscription.email,
 					confirmed_at: new Date
@@ -1757,18 +1743,18 @@ describe("UserController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/user/subscriptions")
 
-			yield subscriptionsDb.search(sql`
+			subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
-			`).must.then.eql(others)
+			`).must.eql(others)
 		})
 
 		it("must not delete other subscriptions on the same initiative",
 			function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id
 			}))
 
-			var others = yield subscriptionsDb.create([
+			var others = subscriptionsDb.create([
 				new ValidSubscription({confirmed_at: new Date}),
 
 				new ValidSubscription({
@@ -1777,7 +1763,7 @@ describe("UserController", function() {
 				})
 			])
 
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				email: this.user.email,
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date
@@ -1791,18 +1777,18 @@ describe("UserController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/user/subscriptions")
 
-			yield subscriptionsDb.search(sql`
+			subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
-			`).must.then.eql(others)
+			`).must.eql(others)
 		})
 
 		it("must not update subscriptions if user email unconfirmed", function*() {
-			yield usersDb.update(this.user, {
+			usersDb.update(this.user, {
 				email: null,
 				email_confirmed_at: null
 			})
 
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				email: this.user.email,
 				confirmed_at: new Date
 			}))
@@ -1817,7 +1803,7 @@ describe("UserController", function() {
 
 			res.statusCode.must.equal(403)
 			res.statusMessage.must.equal("Email Unconfirmed")
-			yield subscriptionsDb.read(subscription).must.then.eql(subscription)
+			subscriptionsDb.read(subscription).must.eql(subscription)
 		})
 	})
 
@@ -1831,21 +1817,19 @@ describe("UserController", function() {
 
 		require("root/test/fixtures").csrf()
 
-		beforeEach(function*() {
-			this.author = yield usersDb.create(new ValidUser)
-		})
+		beforeEach(function() { this.author = usersDb.create(new ValidUser) })
 
 		it("must delete subscriptions for a given email address", function*() {
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				email: this.user.email,
 				confirmed_at: new Date
 			}))
 
-			var initiatives = yield _.times(3, () => initiativesDb.create(
+			var initiatives = _.times(3, () => initiativesDb.create(
 				new ValidInitiative({phase: "parliament", external: true})
 			))
 
-			yield subscriptionsDb.create(initiatives.map((i) => (
+			subscriptionsDb.create(initiatives.map((i) => (
 				new ValidSubscription({
 					email: subscription.email,
 					initiative_uuid: i.uuid,
@@ -1857,22 +1841,22 @@ describe("UserController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/user/subscriptions")
 
-			yield subscriptionsDb.search(sql`
+			subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
-			`).must.then.be.empty()
+			`).must.be.empty()
 		})
 
 		it("must not delete unconfirmed subscriptions", function*() {
-			var initiatives = yield initiativesDb.create(_.times(2, () => (
+			var initiatives = initiativesDb.create(_.times(2, () => (
 				new ValidInitiative({phase: "parliament", external: true})
 			)))
 
-			var unconfirmed = yield subscriptionsDb.create(new ValidSubscription({
+			var unconfirmed = subscriptionsDb.create(new ValidSubscription({
 				email: this.user.email,
 				initiative_uuid: initiatives[0].uuid
 			}))
 
-			yield subscriptionsDb.create(new ValidSubscription({
+			subscriptionsDb.create(new ValidSubscription({
 				email: this.user.email,
 				initiative_uuid: initiatives[1].uuid,
 				confirmed_at: new Date
@@ -1882,18 +1866,18 @@ describe("UserController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/user/subscriptions")
 
-			yield subscriptionsDb.search(sql`
+			subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
-			`).must.then.eql([unconfirmed])
+			`).must.eql([unconfirmed])
 		})
 
 		it("must not delete subscriptions by other emails", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
 				external: true
 			}))
 
-			var subscriptions = yield subscriptionsDb.create([
+			var subscriptions = subscriptionsDb.create([
 				new ValidSubscription({
 					confirmed_at: new Date
 				}),
@@ -1904,7 +1888,7 @@ describe("UserController", function() {
 				})
 			])
 
-			yield subscriptionsDb.create(new ValidSubscription({
+			subscriptionsDb.create(new ValidSubscription({
 				email: this.user.email,
 				confirmed_at: new Date
 			}))
@@ -1913,19 +1897,19 @@ describe("UserController", function() {
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal("/user/subscriptions")
 
-			yield subscriptionsDb.search(sql`
+			subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
-			`).must.then.eql(subscriptions)
+			`).must.eql(subscriptions)
 		})
 
 		it("must not delete subscriptions if user email unconfirmed",
 			function*() {
-			yield usersDb.update(this.user, {
+			usersDb.update(this.user, {
 				email: null,
 				email_confirmed_at: null
 			})
 
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				email: this.user.email,
 				confirmed_at: new Date
 			}))
@@ -1933,7 +1917,7 @@ describe("UserController", function() {
 			var res = yield this.request("/user/subscriptions", {method: "DELETE"})
 			res.statusCode.must.equal(403)
 			res.statusMessage.must.equal("Email Unconfirmed")
-			yield subscriptionsDb.read(subscription).must.then.eql(subscription)
+			subscriptionsDb.read(subscription).must.eql(subscription)
 		})
 	})
 
@@ -1951,7 +1935,7 @@ describe("UserController", function() {
 			require("root/test/time")(new Date(2015, 5, 18, 13, 37, 42))
 
 			it("must show error if no token given", function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					unconfirmed_email: "john@example.com",
 					email_confirmation_token: Crypto.randomBytes(12)
 				}))
@@ -1963,7 +1947,7 @@ describe("UserController", function() {
 			})
 
 			it("must show error if token invalid", function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					unconfirmed_email: "john@example.com",
 					email_confirmation_token: Crypto.randomBytes(12)
 				}))
@@ -1975,7 +1959,7 @@ describe("UserController", function() {
 			})
 
 			it("must show message if already confirmed", function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					email: "john@example.com",
 					email_confirmed_at: new Date
 				}))
@@ -1992,11 +1976,11 @@ describe("UserController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("USER_EMAIL_ALREADY_CONFIRMED"))
 
-				yield usersDb.read(this.user).must.then.eql(this.user)
+				usersDb.read(this.user).must.eql(this.user)
 			})
 
 			it("must confirm email", function*() {
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					unconfirmed_email: "john@example.com",
 					email_confirmation_token: Crypto.randomBytes(12)
 				}))
@@ -2016,7 +2000,7 @@ describe("UserController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("USER_EMAIL_CONFIRMED"))
 
-				yield usersDb.read(this.user).must.then.eql({
+				usersDb.read(this.user).must.eql({
 					__proto__: this.user,
 					email: "john@example.com",
 					email_confirmed_at: new Date,
@@ -2027,12 +2011,12 @@ describe("UserController", function() {
 			})
 
 			it("must show message if email already taken", function*() {
-				yield usersDb.create(new ValidUser({
+				usersDb.create(new ValidUser({
 					email: "john@example.com",
 					email_confirmed_at: new Date
 				}))
 
-				yield usersDb.update(this.user, _.assign(this.user, {
+				usersDb.update(this.user, _.assign(this.user, {
 					unconfirmed_email: "john@example.com",
 					email_confirmation_token: Crypto.randomBytes(12)
 				}))
@@ -2045,7 +2029,7 @@ describe("UserController", function() {
 				res.statusMessage.must.equal("Email Already Taken")
 				res.body.must.include(t("USER_EMAIL_ALREADY_TAKEN"))
 
-				yield usersDb.read(this.user).must.then.eql(this.user)
+				usersDb.read(this.user).must.eql(this.user)
 			})
 		})
 	})

@@ -1,4 +1,12 @@
 var _ = require("root/lib/underscore")
+var DateFns = require("date-fns")
+var ValidUser = require("root/test/valid_user")
+var ValidSession = require("root/test/valid_session")
+var Config = require("root").config
+var usersDb = require("root/db/users_db")
+var sessionsDb = require("root/db/sessions_db")
+var {parseCookies} = require("root/test/web")
+var SESSION_LENGTH_IN_DAYS = 120
 
 describe("Web", function() {
 	require("root/test/web")()
@@ -58,6 +66,152 @@ describe("Web", function() {
 				;[301, 302].must.include(this.res.statusCode)
 				this.res.headers.location.must.equal(to)
 			})
+		})
+	})
+
+	describe("CSRF token", function() {
+		it("must be set on first load", function*() {
+			var res = yield this.request("/")
+			res.statusCode.must.equal(200)
+
+			var cookies = parseCookies(res.headers["set-cookie"])
+			cookies.csrf_token.path.must.equal("/")
+			cookies.csrf_token.domain.must.equal(Config.cookieDomain)
+			cookies.csrf_token.httpOnly.must.be.true()
+			cookies.csrf_token.extensions.must.include("SameSite=Lax")
+		})
+
+		it("must accept request given valid CSRF token in header", function*() {
+			var res = yield this.request("/", {
+				method: "POST",
+				headers: {"X-CSRF-Token": "b00b13"},
+				cookies: {csrf_token: "b00b13"}
+			})
+
+			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Not Found")
+		})
+
+		it("must respond with 412 given invalid CSRF token in header", function*() {
+			var res = yield this.request("/", {
+				method: "POST",
+				headers: {"X-CSRF-Token": "deadbeef"},
+				cookies: {csrf_token: "b00b13"}
+			})
+
+			res.statusCode.must.equal(412)
+			res.statusMessage.must.equal("Bad CSRF Token")
+		})
+
+		it("must accept request given valid CSRF token in query", function*() {
+			var res = yield this.request("/?csrf-token=b00b13", {
+				method: "POST",
+				cookies: {csrf_token: "b00b13"}
+			})
+
+			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Not Found")
+		})
+
+		it("must respond with 412 given invalid CSRF token in query", function*() {
+			var res = yield this.request("/?csrf-token=deadbeef", {
+				method: "POST",
+				cookies: {csrf_token: "b00b13"}
+			})
+
+			res.statusCode.must.equal(412)
+			res.statusMessage.must.equal("Bad CSRF Token")
+		})
+
+		it("must accept request given valid CSRF token in body", function*() {
+			var res = yield this.request("/", {
+				method: "POST",
+				cookies: {csrf_token: "b00b13"},
+				form: {_csrf_token: "b00b13"}
+			})
+
+			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Not Found")
+		})
+
+		it("must respond with 412 given invalid CSRF token in body", function*() {
+			var res = yield this.request("/", {
+				method: "POST",
+				cookies: {csrf_token: "b00b13"},
+				form: {_csrf_token: "deadbeef"}
+			})
+
+			res.statusCode.must.equal(412)
+			res.statusMessage.must.equal("Bad CSRF Token")
+		})
+	})
+
+	describe("session", function() {
+		require("root/test/time")()
+
+		it("must authenticate given valid session token", function*() {
+			var user = usersDb.create(new ValidUser)
+			var session = new ValidSession({user_id: user.id})
+			session = _.assign(sessionsDb.create(session), {token: session.token})
+			var res = yield this.request("/user", {session: session})
+			res.statusCode.must.equal(200)
+		})
+
+		it("must not authenticate given invalid session token", function*() {
+			var user = usersDb.create(new ValidUser)
+			var session = new ValidSession({user_id: user.id})
+			session = _.assign(sessionsDb.create(session), {token: session.token})
+			session.token[0] = ~session.token[0]
+			var res = yield this.request("/user", {session: session})
+			res.statusCode.must.equal(401)
+			res.statusMessage.must.equal("Unauthorized")
+		})
+
+		it("must not authenticate given deleted session", function*() {
+			var user = usersDb.create(new ValidUser)
+
+			var session = new ValidSession({
+				user_id: user.id,
+				deleted_at: new Date
+			})
+
+			session = _.assign(sessionsDb.create(session), {token: session.token})
+
+			var res = yield this.request("/user", {session: session})
+			res.statusCode.must.equal(401)
+			res.statusMessage.must.equal("Unauthorized")
+		})
+
+		it(`must authenticate given session token newer than ${SESSION_LENGTH_IN_DAYS} days`, function*() {
+			var user = usersDb.create(new ValidUser)
+
+			var session = new ValidSession({
+				user_id: user.id,
+
+				created_at: DateFns.addSeconds(
+					DateFns.addDays(new Date, -SESSION_LENGTH_IN_DAYS),
+					1
+				)
+			})
+
+			session = _.assign(sessionsDb.create(session), {token: session.token})
+			var res = yield this.request("/user", {session: session})
+			res.statusCode.must.equal(200)
+		})
+
+		it(`must not authenticate given session token older than ${SESSION_LENGTH_IN_DAYS} days`, function*() {
+			var user = usersDb.create(new ValidUser)
+
+			var session = new ValidSession({
+				user_id: user.id,
+				created_at: DateFns.addDays(new Date, -SESSION_LENGTH_IN_DAYS)
+			})
+
+			session = _.assign(sessionsDb.create(session), {token: session.token})
+
+			var res = yield this.request("/user", {session: session})
+			res.statusCode.must.equal(401)
+			res.statusMessage.must.equal("Unauthorized")
 		})
 	})
 

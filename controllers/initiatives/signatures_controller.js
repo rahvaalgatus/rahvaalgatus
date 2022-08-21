@@ -163,7 +163,7 @@ exports.router.get("/",
 		"application/zip",
 		"text/csv"
 	].map(MediaType)),
-	next(function*(req, res) {
+	function(req, res) {
 	var t = req.t
 	var user = req.user
 	var initiative = req.initiative
@@ -217,7 +217,7 @@ exports.router.get("/",
 			)
 
 			ESTONIAN: if (initiative.language != "et") {
-				var estonian = yield textsDb.read(sql`
+				var estonian = textsDb.read(sql`
 					SELECT *
 					FROM initiative_texts
 					WHERE initiative_uuid = ${initiative.uuid} AND language = 'et'
@@ -233,7 +233,7 @@ exports.router.get("/",
 			{
 				let signatures, added = 0
 
-				while ((signatures = yield signaturesDb.search(sql`
+				while ((signatures = signaturesDb.search(sql`
 					SELECT xades FROM initiative_signatures
 					WHERE initiative_uuid = ${initiative.uuid}
 					AND NOT anonymized
@@ -259,7 +259,7 @@ exports.router.get("/",
 				dispose("citizenos-signatures.zip", "attachment"))
 			zip.pipe(res)
 
-			var citizenosSignatures = yield citizenosSignaturesDb.search(sql`
+			var citizenosSignatures = citizenosSignaturesDb.search(sql`
 				SELECT * FROM initiative_citizenos_signatures
 				WHERE initiative_uuid = ${initiative.uuid}
 				AND NOT anonymized
@@ -284,7 +284,7 @@ exports.router.get("/",
 
 				res.write("personal_id,created_at\n")
 
-				for (added = 0; (signatures = yield citizenosSignaturesDb.search(sql`
+				for (added = 0; (signatures = citizenosSignaturesDb.search(sql`
 					SELECT created_at, personal_id FROM initiative_citizenos_signatures
 					WHERE initiative_uuid = ${initiative.uuid}
 					AND NOT anonymized
@@ -294,7 +294,7 @@ exports.router.get("/",
 				`)).length > 0; added += signatures.length)
 					res.write(signatures.map(serializeSignatureCsv).join(""))
 
-				for (added = 0; (signatures = yield signaturesDb.search(sql`
+				for (added = 0; (signatures = signaturesDb.search(sql`
 					SELECT created_at, personal_id FROM initiative_signatures
 					WHERE initiative_uuid = ${initiative.uuid}
 					AND NOT anonymized
@@ -310,13 +310,28 @@ exports.router.get("/",
 
 		default: throw new HttpError(406)
 	}
-}))
+})
 
 exports.router.post("/", next(function*(req, res) {
 	var initiative = req.initiative
 	var method = res.locals.method = getSigningMethod(req)
 	var cert, err, country, personalId, xades, signable, signatureUrl
 	var geo = yield lookupAndSerializeGeo(req.ip)
+
+	// Prevents new signatures after the signing deadline, but lets already
+	// started signatures finish.
+	//
+	// Mobile methods wait for the signature in the background, but the ID-card
+	// process sends a PUT later. This needs to be let through.
+	if (initiative.phase == "edit")
+		throw new HttpError(405, "Signing Not Yet Started", {
+			description: req.t("CANNOT_SIGN_SIGNING_NOT_YET_STARTED")
+		})
+
+	if (!Initiative.isSignable(new Date, initiative))
+		throw new HttpError(405, "Signing Ended", {
+			description: req.t("CANNOT_SIGN_SIGNING_ENDED")
+		})
 
 	switch (method) {
 		case "id-card":
@@ -328,7 +343,7 @@ exports.router.post("/", next(function*(req, res) {
 
 			xades = newXades(cert, initiative)
 
-			signable = yield signablesDb.create({
+			signable = signablesDb.create({
 				initiative_uuid: initiative.uuid,
 				country: country,
 				personal_id: personalId,
@@ -340,7 +355,10 @@ exports.router.post("/", next(function*(req, res) {
 			signatureUrl = req.baseUrl + "/" + pathToSignature(signable)
 			res.setHeader("Location", signatureUrl)
 			res.setHeader("Content-Type", "application/vnd.rahvaalgatus.signable")
-			res.status(202).end(xades.signableHash)
+
+			res.statusCode = 202
+			res.statusMessage = "Signing"
+			res.end(xades.signableHash)
 			break
 
 		case "mobile-id":
@@ -362,7 +380,7 @@ exports.router.post("/", next(function*(req, res) {
 				xades.signableHash
 			)
 
-			signable = yield signablesDb.create({
+			signable = signablesDb.create({
 				initiative_uuid: initiative.uuid,
 				country: country,
 				personal_id: personalId,
@@ -374,7 +392,9 @@ exports.router.post("/", next(function*(req, res) {
 			signatureUrl = req.baseUrl + "/" + pathToSignature(signable)
 			res.setHeader("Location", signatureUrl)
 
-			res.status(202).render("initiatives/signatures/creating_page.jsx", {
+			res.statusCode = 202
+			res.statusMessage = "Signing"
+			res.render("initiatives/signatures/creating_page.jsx", {
 				code: MobileId.confirmation(xades.signableHash),
 				poll: signatureUrl
 			})
@@ -398,7 +418,7 @@ exports.router.post("/", next(function*(req, res) {
 			// queried, not when signing is initiated.
 			var signSession = yield smartId.sign(cert, xades.signableHash)
 
-			signable = yield signablesDb.create({
+			signable = signablesDb.create({
 				initiative_uuid: initiative.uuid,
 				country: country,
 				personal_id: personalId,
@@ -410,7 +430,9 @@ exports.router.post("/", next(function*(req, res) {
 			signatureUrl = req.baseUrl + "/" + pathToSignature(signable)
 			res.setHeader("Location", signatureUrl)
 
-			res.status(202).render("initiatives/signatures/creating_page.jsx", {
+			res.statusCode = 202
+			res.statusMessage = "Signing"
+			res.render("initiatives/signatures/creating_page.jsx", {
 				code: SmartId.verification(xades.signableHash),
 				poll: signatureUrl
 			})
@@ -458,7 +480,7 @@ exports.router.use("/", next(function(err, req, res, next) {
 	else next(err)
 }))
 
-exports.router.use("/:personalId", next(function*(req, _res, next) {
+exports.router.use("/:personalId", function(req, _res, next) {
 	var initiative = req.initiative
 	var [country, personalId] = parseSignatureId(req.params.personalId)
 	var token = req.token = Buffer.from(req.query.token || "", "hex")
@@ -468,7 +490,7 @@ exports.router.use("/:personalId", next(function*(req, _res, next) {
 	// NOTE: Don't read the signature unconditionally to at least reduce timing
 	// leaks. Especially don't differentiate between non-existent signatures
 	// and invalid tokens in the error response.
-	req.signature = yield signaturesDb.read(sql`
+	req.signature = signaturesDb.read(sql`
 		SELECT * FROM initiative_signatures
 		WHERE initiative_uuid = ${initiative.uuid}
 		AND country = ${country}
@@ -477,7 +499,7 @@ exports.router.use("/:personalId", next(function*(req, _res, next) {
 	`)
 
 	next()
-}))
+})
 
 exports.router.get("/:personalId",
 	new ResponseTypeMiddeware([
@@ -499,7 +521,7 @@ exports.router.get("/:personalId",
 				Date.now() < end;
 				yield sleep(ENV == "test" ? 50 : 500)
 			) {
-				signable = yield signablesDb.read(sql`
+				signable = signablesDb.read(sql`
 					SELECT signed, timestamped, error
 					FROM initiative_signables
 					WHERE initiative_uuid = ${initiative.uuid}
@@ -521,7 +543,7 @@ exports.router.get("/:personalId",
 				let end = Date.now() + 5 * 1000;
 				!signature && Date.now() < end;
 				yield sleep(ENV == "test" ? 50 : 200)
-			) if (signature = yield signaturesDb.read(sql`
+			) if (signature = signaturesDb.read(sql`
 				SELECT *
 				FROM initiative_signatures
 				WHERE initiative_uuid = ${initiative.uuid}
@@ -532,6 +554,7 @@ exports.router.get("/:personalId",
 
 			if (signature) {
 				res.statusCode = 204
+				res.statusMessage = "Signed"
 				res.flash("signatureToken", req.token.toString("hex"))
 			}
 			else if (signable.error) {
@@ -582,7 +605,7 @@ exports.router.get("/:personalId",
 			}
 
 		case "application/vnd.etsi.asic-e+zip":
-			if (signature == null) throw new HttpError(404)
+			if (signature == null) throw new HttpError(404, "Signature Not Found")
 
 			var asic = new Asic
 			res.setHeader("Content-Type", asic.type)
@@ -609,6 +632,12 @@ exports.router.put("/:personalId",
 	var initiative = req.initiative
 	var signature = req.signature
 
+	// NOTE: Intentionally let already started signatures finish even after the
+	// initiative signing deadline is passed.
+	if (initiative.phase != "sign") throw new HttpError(405, "Signing Ended", {
+		description: req.t("CANNOT_SIGN_SIGNING_ENDED")
+	})
+
 	// Responding to a hidden signature if you know its token is not a privacy
 	// leak given that if you have the token, you already know for a fact it
 	// was once signed.
@@ -616,7 +645,7 @@ exports.router.put("/:personalId",
 		case "application/vnd.rahvaalgatus.signature":
 			if (signature) throw new HttpError(409, "Already Signed")
 
-			var signable = yield signablesDb.read(sql`
+			var signable = signablesDb.read(sql`
 				SELECT *
 				FROM initiative_signables
 				WHERE initiative_uuid = ${initiative.uuid}
@@ -634,7 +663,7 @@ exports.router.put("/:personalId",
 
 			xades.setSignature(req.body)
 
-			yield signablesDb.update(signable, {
+			signablesDb.update(signable, {
 				xades: xades,
 				signed: true,
 				updated_at: new Date
@@ -642,46 +671,44 @@ exports.router.put("/:personalId",
 
 			xades.setOcspResponse(yield hades.timemark(xades))
 
-			yield signablesDb.update(signable, {
+			signablesDb.update(signable, {
 				xades: xades,
 				timestamped: true,
 				updated_at: new Date
 			})
 
-			yield replaceSignature(signable)
+			replaceSignature(signable)
 			res.flash("signatureToken", req.token.toString("hex"))
 			res.setHeader("Location", Path.dirname(req.baseUrl))
 
 			switch (res.contentType.name) {
-				case "application/x-empty": return void res.status(204).end()
+				case "application/x-empty":
+					res.statusCode = 204
+					res.statusMessage = "Signed"
+					return void res.end()
+
 				default: return void res.status(303).end()
 			}
-
-		case "application/json":
-		case "application/x-www-form-urlencoded":
-			if (signature == null) throw new HttpError(404, "Signature Not Found")
-
-			yield signaturesDb.update(signature, {
-				hidden: _.parseBoolean(req.body.hidden),
-				updated_at: new Date
-			})
-
-			res.flash("notice", req.t("SIGNATURE_HIDDEN"))
-			res.redirect(303, Path.dirname(req.baseUrl))
-			break
 
 		default: throw new HttpError(415)
 	}
 }))
 
-exports.router.delete("/:personalId", next(function*(req, res) {
+exports.router.delete("/:personalId", function(req, res) {
 	var signature = req.signature
-	if (signature == null) throw new HttpError(404)
+	if (signature == null) throw new HttpError(404, "Signature Not Found")
 
-	yield signaturesDb.delete(signature)
+	if (!Initiative.isSignable(new Date, req.initiative))
+		throw new HttpError(405, "Cannot Delete Signature as Signing Ended", {
+			description: req.t("SIGNATURE_NOT_REVOKED_NOT_SIGNABLE")
+		})
+
+	signaturesDb.delete(signature)
+
 	res.flash("notice", req.t("SIGNATURE_REVOKED"))
+	res.statusMessage = "Signature Deleted"
 	res.redirect(303, Path.dirname(req.baseUrl))
-}))
+})
 
 function* waitForSession(wait, timeout, session) {
 	var res
@@ -704,7 +731,7 @@ function* waitForMobileIdSignature(signable, sessionId) {
 
 		xades.setSignature(signatureHash)
 
-		yield signablesDb.update(signable, {
+		signablesDb.update(signable, {
 			xades: xades,
 			signed: true,
 			updated_at: new Date
@@ -712,13 +739,13 @@ function* waitForMobileIdSignature(signable, sessionId) {
 
 		xades.setOcspResponse(yield hades.timemark(xades))
 
-		yield signablesDb.update(signable, {
+		signablesDb.update(signable, {
 			xades: xades,
 			timestamped: true,
 			updated_at: new Date
 		})
 
-		yield replaceSignature(signable)
+		replaceSignature(signable)
 	}
 	catch (ex) {
 		if (!(
@@ -726,7 +753,7 @@ function* waitForMobileIdSignature(signable, sessionId) {
 			getNormalizedMobileIdErrorCode(ex) in MOBILE_ID_ERRORS
 		)) reportError(ex)
 
-		yield signablesDb.update(signable, {error: ex, updated_at: new Date})
+		signablesDb.update(signable, {error: ex, updated_at: new Date})
 	}
 }
 
@@ -742,7 +769,7 @@ function* waitForSmartIdSignature(signable, session) {
 
 		xades.setSignature(signatureHash)
 
-		yield signablesDb.update(signable, {
+		signablesDb.update(signable, {
 			xades: xades,
 			signed: true,
 			updated_at: new Date
@@ -750,19 +777,19 @@ function* waitForSmartIdSignature(signable, session) {
 
 		xades.setOcspResponse(yield hades.timemark(xades))
 
-		yield signablesDb.update(signable, {
+		signablesDb.update(signable, {
 			xades: xades,
 			timestamped: true,
 			updated_at: new Date
 		})
 
-		yield replaceSignature(signable)
+		replaceSignature(signable)
 	}
 	catch (ex) {
 		if (!(ex instanceof SmartIdError && ex.code in SMART_ID_ERRORS))
 			reportError(ex)
 
-		yield signablesDb.update(signable, {error: ex, updated_at: new Date})
+		signablesDb.update(signable, {error: ex, updated_at: new Date})
 	}
 }
 
@@ -812,31 +839,31 @@ function validatePersonalId(t, id) {
 	return null
 }
 
-function* replaceSignature(signable) {
-	var oldSignature = yield signaturesDb.read(sql`
+function replaceSignature(signable) {
+	var oldSignature = signaturesDb.read(sql`
 		SELECT * FROM initiative_signatures
 		WHERE initiative_uuid = ${signable.initiative_uuid}
 		AND country = ${signable.country}
 		AND personal_id = ${signable.personal_id}
 	`)
 
-	var oldCitizenosSignature = yield citizenosSignaturesDb.read(sql`
+	var oldCitizenosSignature = citizenosSignaturesDb.read(sql`
 		SELECT * FROM initiative_citizenos_signatures
 		WHERE initiative_uuid = ${signable.initiative_uuid}
 		AND country = ${signable.country}
 		AND personal_id = ${signable.personal_id}
 	`)
 
-	if (oldSignature) yield signaturesDb.delete(oldSignature)
+	if (oldSignature) signaturesDb.delete(oldSignature)
 
-	if (oldCitizenosSignature) yield citizenosSignaturesDb.execute(sql`
+	if (oldCitizenosSignature) citizenosSignaturesDb.execute(sql`
 		DELETE FROM initiative_citizenos_signatures
 		WHERE initiative_uuid = ${signable.initiative_uuid}
 		AND country = ${signable.country}
 		AND personal_id = ${signable.personal_id}
 	`)
 
-	yield signaturesDb.create({
+	signaturesDb.create({
 		initiative_uuid: signable.initiative_uuid,
 		country: signable.country,
 		personal_id: signable.personal_id,
@@ -888,7 +915,7 @@ function serializeSignatureCsv(sig) {
 function parseToken(token) {
 	// Some email clients include trailing punctuation in links.
 	try { return Buffer.from(token.replace(/[^A-Fa-f0-9]/g, ""), "hex") }
-	catch (ex) { if (ex instanceof TypeError) return new Buffer(0); throw ex }
+	catch (ex) { if (ex instanceof TypeError) return Buffer.alloc(0); throw ex }
 }
 
 function parseSignatureId(id) { return [id.slice(0, 2), id.slice(2)] }

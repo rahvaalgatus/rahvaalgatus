@@ -4,7 +4,7 @@ var Qs = require("qs")
 var Jsx = require("j6pack")
 var Fragment = Jsx.Fragment
 var DateFns = require("date-fns")
-var Config = require("root/config")
+var Config = require("root").config
 var Page = require("../page")
 var I18n = require("root/lib/i18n")
 var {Form} = Page
@@ -14,7 +14,7 @@ var Initiative = require("root/lib/initiative")
 var serializeImageUrl = require("root/lib/initiative").imageUrl
 var {isEditableEvent} = require("root/controllers/admin/initiatives_controller")
 var isEventNotifiable = require("root/lib/event").isNotifiable
-var {anonymizeSignaturesReceivedAfterDays} = require("root/config")
+var {anonymizeSignaturesReceivedAfterDays} = require("root").config
 var {InitiativeDestinationSelectView} =
 	require("root/views/initiatives/read_page")
 var formatDate = require("root/lib/i18n").formatDate

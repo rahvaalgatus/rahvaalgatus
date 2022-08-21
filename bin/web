@@ -1,10 +1,15 @@
 #!/usr/bin/env node
 process.title = "rahvaalgatus/web"
 
+if (process.env.CONFIG) require("root").config =
+	require("root/lib/config").read(process.env.CONFIG)
+if (process.env.DB)
+	require("root").sqlite = require("root/lib/sqlite")(process.env.DB)
+
 var _ = require("root/lib/underscore")
 var Url = require("url")
 var Express = require("root/lib/express")
-var Config = require("root/config")
+var Config = require("root").config
 var HttpError = require("standard-http-error")
 var I18n = require("root/lib/i18n")
 var MediaType = require("medium-type")

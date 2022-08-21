@@ -1,5 +1,5 @@
 var Url = require("url")
-var Config = require("root/config")
+var Config = require("root").config
 var SITE_HOSTNAME = Url.parse(Config.url).hostname
 var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
 var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname

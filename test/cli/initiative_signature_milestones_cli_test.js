@@ -1,5 +1,5 @@
 var _ = require("root/lib/underscore")
-var Config = require("root/config")
+var Config = require("root").config
 var DateFns = require("date-fns")
 var ValidInitiative = require("root/test/valid_initiative")
 var ValidSubscription = require("root/test/valid_subscription")
@@ -7,7 +7,7 @@ var ValidSignature = require("root/test/valid_signature")
 var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
 var ValidUser = require("root/test/valid_user")
 var cli = require("root/cli/initiative_signature_milestones_cli")
-var db = require("root/db/initiatives_db")
+var initiativesDb = require("root/db/initiatives_db")
 var usersDb = require("root/db/users_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var messagesDb = require("root/db/initiative_messages_db")
@@ -26,20 +26,18 @@ describe("InitiativeSignatureMilestonesCli", function() {
 	require("root/test/email")()
 	require("root/test/time")(new Date(2015, 5, 18, 13, 37, 42))
 
-	beforeEach(function*() {
-		this.user = yield usersDb.create(new ValidUser)
-	})
+	beforeEach(function() { this.user = usersDb.create(new ValidUser) })
 
 	it("must update milestones and notify once given an initiative in signing",
 		function*() {
-		var initiative = yield db.create(new ValidInitiative({
+		var initiative = initiativesDb.create(new ValidInitiative({
 			user_id: this.user.id,
 			phase: "sign"
 		}))
 
-		var signatures = yield createSignatures(7, new Date, initiative)
+		var signatures = createSignatures(7, new Date, initiative)
 
-		var subscriptions = yield subscriptionsDb.create([
+		var subscriptions = subscriptionsDb.create([
 			new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date,
@@ -67,12 +65,12 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 		yield cli()
 
-		yield db.read(initiative).must.then.eql({
+		initiativesDb.read(initiative).must.eql({
 			__proto__: initiative,
 			signature_milestones: {5: signatures[4].created_at}
 		})
 
-		var messages = yield messagesDb.search(sql`
+		var messages = messagesDb.search(sql`
 			SELECT * FROM initiative_messages
 		`)
 
@@ -108,20 +106,20 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 	describe("when destined for parliament", function() {
 		it("must update milestones and notify if successful", function*() {
-			var initiative = yield db.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign"
 			}))
 
 			var milestone = Config.votesRequired
 
-			var signatures = yield createSignatures(
+			var signatures = createSignatures(
 				milestone + 2,
 				new Date,
 				initiative
 			)
 
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date,
 				event_interest: true
@@ -129,7 +127,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 			yield cli()
 
-			yield db.read(initiative).must.then.eql({
+			initiativesDb.read(initiative).must.eql({
 				__proto__: initiative,
 
 				signature_milestones: {
@@ -138,7 +136,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 				}
 			})
 
-			var messages = yield messagesDb.search(sql`
+			var messages = messagesDb.search(sql`
 				SELECT * FROM initiative_messages
 			`)
 
@@ -174,7 +172,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 	describe("when destined for local", function() {
 		it("must update milestones and notify if successful", function*() {
-			var initiative = yield db.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				destination: "muhu-vald",
 				phase: "sign"
@@ -184,13 +182,9 @@ describe("InitiativeSignatureMilestonesCli", function() {
 				LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
 			)
 
-			var signatures = yield createSignatures(
-				milestone + 2,
-				new Date,
-				initiative
-			)
+			var signatures = createSignatures(milestone + 2, new Date, initiative)
 
-			var subscription = yield subscriptionsDb.create(new ValidSubscription({
+			var subscription = subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date,
 				event_interest: true
@@ -198,7 +192,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 			yield cli()
 
-			yield db.read(initiative).must.then.eql({
+			initiativesDb.read(initiative).must.eql({
 				__proto__: initiative,
 
 				signature_milestones: {
@@ -207,7 +201,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 				}
 			})
 
-			var messages = yield messagesDb.search(sql`
+			var messages = messagesDb.search(sql`
 				SELECT * FROM initiative_messages
 			`)
 
@@ -242,14 +236,14 @@ describe("InitiativeSignatureMilestonesCli", function() {
 	})
 
 	it("must update milestones when not all milestones reached", function*() {
-		var initiative = yield db.create(new ValidInitiative({
+		var initiative = initiativesDb.create(new ValidInitiative({
 			user_id: this.user.id,
 			phase: "sign"
 		}))
 
-		var signatures = yield createSignatures(9, new Date, initiative)
+		var signatures = createSignatures(9, new Date, initiative)
 
-		yield subscriptionsDb.create([
+		subscriptionsDb.create([
 			new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date,
@@ -265,7 +259,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 		yield cli()
 
-		yield db.read(initiative).must.then.eql({
+		initiativesDb.read(initiative).must.eql({
 			__proto__: initiative,
 			signature_milestones: {5: signatures[4].created_at}
 		})
@@ -274,18 +268,18 @@ describe("InitiativeSignatureMilestonesCli", function() {
 	})
 
 	it("must notify of milestones reached 24h ago", function*() {
-		var initiative = yield db.create(new ValidInitiative({
+		var initiative = initiativesDb.create(new ValidInitiative({
 			user_id: this.user.id,
 			phase: "sign"
 		}))
 
-		yield createSignatures(
+		createSignatures(
 			5,
 			DateFns.addMinutes(DateFns.addHours(new Date, -24), -5 + 1),
 			initiative
 		)
 
-		yield subscriptionsDb.create([
+		subscriptionsDb.create([
 			new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date,
@@ -304,18 +298,18 @@ describe("InitiativeSignatureMilestonesCli", function() {
 	})
 
 	it("must not notify of milestones reached earlier than 24h", function*() {
-		var initiative = yield db.create(new ValidInitiative({
+		var initiative = initiativesDb.create(new ValidInitiative({
 			user_id: this.user.id,
 			phase: "sign"
 		}))
 
-		yield createSignatures(
+		createSignatures(
 			5,
 			DateFns.addMinutes(DateFns.addHours(new Date, -24), -5),
 			initiative
 		)
 
-		yield subscriptionsDb.create([
+		subscriptionsDb.create([
 			new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date,
@@ -334,18 +328,18 @@ describe("InitiativeSignatureMilestonesCli", function() {
 	})
 
 	it("must update old milestones but not notify", function*() {
-		var initiative = yield db.create(new ValidInitiative({
+		var initiative = initiativesDb.create(new ValidInitiative({
 			user_id: this.user.id,
 			phase: "sign",
 		}))
 
-		var signatures = yield createSignatures(10, new Date, initiative)
+		var signatures = createSignatures(10, new Date, initiative)
 
-		yield db.update(initiative, {
+		initiativesDb.update(initiative, {
 			signature_milestones: {10: signatures[9].created_at}
 		})
 
-		yield subscriptionsDb.create([
+		subscriptionsDb.create([
 			new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date,
@@ -361,7 +355,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 		yield cli()
 
-		yield db.read(initiative).must.then.eql({
+		initiativesDb.read(initiative).must.eql({
 			__proto__: initiative,
 
 			signature_milestones: {
@@ -375,29 +369,29 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 	;["parliament", "government", "done"].forEach(function(phase) {
 		it(`must update milestones when initiative in ${phase} phase`, function*() {
-			var initiative = yield db.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: phase,
 			}))
 
-			var signatures = yield createSignatures(5, new Date, initiative)
+			var signatures = createSignatures(5, new Date, initiative)
 			yield cli()
 
-			yield db.read(initiative).must.then.eql({
+			initiativesDb.read(initiative).must.eql({
 				__proto__: initiative,
 				signature_milestones: {5: signatures[4].created_at}
 			})
 		})
 
 		it(`must not notify when initiative ${phase} phase`, function*() {
-			var initiative = yield db.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: phase,
 			}))
 
-			yield createSignatures(MILESTONES[0], new Date, initiative)
+			createSignatures(MILESTONES[0], new Date, initiative)
 
-			yield subscriptionsDb.create([
+			subscriptionsDb.create([
 				new ValidSubscription({
 					initiative_uuid: initiative.uuid,
 					confirmed_at: new Date,
@@ -417,16 +411,16 @@ describe("InitiativeSignatureMilestonesCli", function() {
 	})
 
 	it("must not update already recorded milestones", function*() {
-		var initiative = yield db.create(new ValidInitiative({
+		var initiative = initiativesDb.create(new ValidInitiative({
 			user_id: this.user.id,
 			phase: "sign",
 			signature_milestones: {5: pseudoDateTime()}
 		}))
 
-		var signatures = yield createSignatures(10, new Date, initiative)
+		var signatures = createSignatures(10, new Date, initiative)
 		yield cli()
 
-		yield db.read(initiative).must.then.eql({
+		initiativesDb.read(initiative).must.eql({
 			__proto__: initiative,
 
 			signature_milestones: {
@@ -437,12 +431,12 @@ describe("InitiativeSignatureMilestonesCli", function() {
 	})
 
 	it("must not update initiative with no signatures", function*() {
-		var initiative = yield db.create(new ValidInitiative({
+		var initiative = initiativesDb.create(new ValidInitiative({
 			user_id: this.user.id,
 			phase: "sign",
 		}))
 
-		yield subscriptionsDb.create([
+		subscriptionsDb.create([
 			new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date,
@@ -457,30 +451,30 @@ describe("InitiativeSignatureMilestonesCli", function() {
 		])
 
 		yield cli()
-		yield db.read(initiative).must.then.eql(initiative)
+		initiativesDb.read(initiative).must.eql(initiative)
 		this.emails.length.must.equal(0)
 	})
 
 	it("must count signatures by initiative", function*() {
 		var self = this
 
-		yield _.times(3, function*(i) {
-			var initiative = yield db.create(new ValidInitiative({
+		_.times(3, function(i) {
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: self.user.id,
 				phase: "sign"
 			}))
 
-			yield createSignatures(5, DateFns.addHours(new Date, i), initiative)
+			createSignatures(5, DateFns.addHours(new Date, i), initiative)
 		})
 
-		yield subscriptionsDb.create([new ValidSubscription({
+		subscriptionsDb.create([new ValidSubscription({
 			confirmed_at: new Date,
 			event_interest: true
 		})])
 
 		yield cli()
 
-		var initiatives = yield db.search(sql`SELECT * FROM initiatives`)
+		var initiatives = initiativesDb.search(sql`SELECT * FROM initiatives`)
 		initiatives.forEach(function(initiative, i) {
 			initiative.signature_milestones.must.eql({
 				5: DateFns.addHours(DateFns.addMinutes(new Date, 4), i)

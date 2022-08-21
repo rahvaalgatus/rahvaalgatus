@@ -6,7 +6,6 @@ var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
 var {searchInitiativesEvents} = require("./initiatives_controller")
 var {serializeApiInitiative} = require("./initiatives_controller")
-var next = require("co-next")
 var initiativesDb = require("root/db/initiatives_db")
 var renderEventTitle = require("root/lib/event").renderTitle
 var sql = require("sqlate")
@@ -18,8 +17,8 @@ exports.router.get("/",
 		"application/atom+xml",
 		"application/vnd.rahvaalgatus.initiative-event+json; v=1",
 	].map(MediaType)),
-	next(function*(req, res) {
-	var initiatives = yield initiativesDb.search(sql`
+	function(req, res) {
+	var initiatives = initiativesDb.search(sql`
 		SELECT *
 		FROM initiatives AS initiative
 		WHERE published_at IS NOT NULL
@@ -28,7 +27,7 @@ exports.router.get("/",
 		ORDER BY ROWID
 	`)
 
-	var events = yield searchInitiativesEvents(initiatives)
+	var events = searchInitiativesEvents(initiatives)
 
 	switch (res.contentType.name) {
 		case "application/atom+xml":
@@ -89,7 +88,7 @@ exports.router.get("/",
 
 		default: throw new HttpError(406)
 	}
-}))
+})
 
 function serializeApiEvent(initiative, event) {
 	return {

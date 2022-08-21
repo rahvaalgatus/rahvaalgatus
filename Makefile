@@ -6,12 +6,13 @@ NPM_REBUILD = $(NPM) --ignore-scripts false rebuild --build-from-source
 TEST = $$(find test -name "*_test.js" -o -name "*_test.jsx")
 TEST_TAGS =
 MOCHA = ./node_modules/.bin/_mocha
-SASS = ./node_modules/.bin/node-sass --recursive --indent-type tab --indent-width 1 --output-style expanded
+SASS = ./node_modules/.bin/sass --style expanded --no-source-map
 BUNDLE = bundle
 TRANSLATIONS_URL = https://docs.google.com/spreadsheets/d/1JKPUNp8Y_8Aigq7eGJXtWT6nZFhd31k2Ht3AjC-i-Q8/gviz/tq?tqx=out:json&tq&gid=0
 LOCAL_GOVERNMENTS_URL = https://docs.google.com/spreadsheets/d/1DynXZ8Um9TsiYPDaYW3-RTgaPy8hsdq9jj72G41yrVE/gviz/tq?tqx=out:json&tq&gid=0
 JQ_OPTS = --tab
-SHANGE = vendor/shange -f "config/$(ENV).sqlite3"
+DB = config/$(ENV).sqlite3
+SHANGE = vendor/shange -f "$(DB)"
 WEB_PORT = 3000
 ADM_PORT = $(shell expr $(WEB_PORT) + 1)
 LIVERELOAD_PORT = 35731
@@ -28,7 +29,9 @@ RSYNC_OPTS = \
 	--times \
 	--delete \
 	--prune-empty-dirs \
-	--exclude ".*" \
+	--perms \
+	--chmod=ug+rwX,Dg+s,Do=X,Fo=rX \
+	--exclude "/.*" \
 	--exclude "/app/***" \
 	--exclude "/config/development.*" \
 	--exclude "/config/staging.*" \
@@ -42,10 +45,11 @@ RSYNC_OPTS = \
 	--exclude "/node_modules/mitm/***" \
 	--exclude "/node_modules/mocha/***" \
 	--exclude "/node_modules/must/***" \
-	--exclude "/node_modules/node-sass/***" \
-	--exclude "/node_modules/sqlite3/***" \
-	--exclude "/node_modules/sharp/***" \
-	--exclude "/node_modules/syslogh/***" \
+	--exclude "/node_modules/sass/***" \
+	--exclude "/node_modules/jsdom/***" \
+	--exclude "/node_modules/better-sqlite3/build/***" \
+	--exclude "/node_modules/sharp/build/***" \
+	--exclude "/node_modules/sharp/vendor/***" \
 	--exclude "/node_modules/emailjs-mime-parser/***" \
 	--exclude "/node_modules/sinon/***" \
 	--exclude "/tmp/***"
@@ -81,10 +85,10 @@ minify:
 	$(MAKE) -C app minify
 
 stylesheets:
-	$(SASS) --output public/assets assets
+	@$(SASS) assets:public/assets
 
 autostylesheets: stylesheets
-	$(MAKE) SASS="$(SASS) --watch" "$<"
+	@$(MAKE) SASS="$(SASS) --watch" "$<"
 
 fonticons:
 	@$(BUNDLE) exec fontcustom compile
@@ -128,18 +132,17 @@ shrinkwrap:
 	$(NPM) shrinkwrap --dev
 
 rebuild:
-	$(NPM_REBUILD) syslogh
-	$(NPM_REBUILD) node-sass --sass-binary-site=http://localhost:0
-	$(NPM_REBUILD) sqlite3
+	cd node_modules/better-sqlite3 && \
+	$(NPM) --ignore-scripts false run build-release
 	$(NPM_REBUILD) sharp --sharp-dist-base-url=http://localhost:0
 
 config/database.sql:
 	@$(SHANGE) schema > config/database.sql
 
-config/%.sqlite3:
+%.sqlite3:
 	sqlite3 "$@" < config/database.sql
 
-db/create: config/$(ENV).sqlite3
+db/create: $(DB)
 
 db/status:
 	@$(SHANGE) status

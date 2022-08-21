@@ -14,7 +14,7 @@ var parseCookies = require("root/test/web").parseCookies
 var TRIX_TYPE = new MediaType("application/vnd.basecamp.trix+json")
 var {newTrixDocument} = require("root/test/fixtures")
 var outdent = require("root/lib/outdent")
-var parseDom = require("root/lib/dom").parse
+var parseHtml = require("root/test/html").parse
 
 describe("InitiativeTextsController", function() {
 	require("root/test/web")()
@@ -25,8 +25,8 @@ describe("InitiativeTextsController", function() {
 	describe("POST /", function() {
 		describe("when not logged in", function() {
 			it("must respond with 401 if not published", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: (yield usersDb.create(new ValidUser)).id
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: usersDb.create(new ValidUser).id
 				}))
 
 				var initiativePath = "/initiatives/" + initiative.uuid
@@ -40,8 +40,8 @@ describe("InitiativeTextsController", function() {
 			})
 
 			it("must respond with 401 if published", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: (yield usersDb.create(new ValidUser)).id,
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: usersDb.create(new ValidUser).id,
 					published_at: new Date
 				}))
 
@@ -60,8 +60,8 @@ describe("InitiativeTextsController", function() {
 			require("root/test/fixtures").user()
 
 			it("must respond with 403 if not the author", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: (yield usersDb.create(new ValidUser)).id,
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: usersDb.create(new ValidUser).id,
 					published_at: new Date
 				}))
 
@@ -77,7 +77,7 @@ describe("InitiativeTextsController", function() {
 
 			it("must respond with 403 if no longer in edit or sign phase",
 				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					phase: "parliament"
 				}))
@@ -94,7 +94,7 @@ describe("InitiativeTextsController", function() {
 
 			it("must respond with 405 if in sign phase given no language",
 				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					phase: "sign"
 				}))
@@ -111,7 +111,7 @@ describe("InitiativeTextsController", function() {
 
 			it("must respond with 405 if in sign phase given initiative's language",
 				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					phase: "sign",
 					language: "en"
@@ -128,7 +128,7 @@ describe("InitiativeTextsController", function() {
 			})
 
 			it("must create new text and set title", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					language: "en"
 				}))
@@ -147,14 +147,14 @@ describe("InitiativeTextsController", function() {
 				res.statusCode.must.equal(302)
 				res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
-				yield initiativesDb.read(initiative).must.then.eql({
+				initiativesDb.read(initiative).must.eql({
 					__proto__: initiative,
 					title: "Let it shine"
 				})
 
-				yield textsDb.search(sql`
+				textsDb.search(sql`
 					SELECT * FROM initiative_texts
-				`).must.then.eql([new ValidText({
+				`).must.eql([new ValidText({
 					id: 1,
 					initiative_uuid: initiative.uuid,
 					user_id: this.user.id,
@@ -176,7 +176,7 @@ describe("InitiativeTextsController", function() {
 
 			it("must create new text and set title even if content empty",
 				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					language: "en"
 				}))
@@ -192,14 +192,14 @@ describe("InitiativeTextsController", function() {
 				res.statusCode.must.equal(302)
 				res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
-				yield initiativesDb.read(initiative).must.then.eql({
+				initiativesDb.read(initiative).must.eql({
 					__proto__: initiative,
 					title: "Let it shine"
 				})
 
-				yield textsDb.search(sql`
+				textsDb.search(sql`
 					SELECT * FROM initiative_texts
-				`).must.then.eql([new ValidText({
+				`).must.eql([new ValidText({
 					id: 1,
 					initiative_uuid: initiative.uuid,
 					user_id: this.user.id,
@@ -212,7 +212,7 @@ describe("InitiativeTextsController", function() {
 			})
 
 			it("must create new text given translation in edit phase", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
 
@@ -229,11 +229,11 @@ describe("InitiativeTextsController", function() {
 
 				res.statusCode.must.equal(302)
 
-				yield initiativesDb.read(initiative).must.then.eql(initiative)
+				initiativesDb.read(initiative).must.eql(initiative)
 
-				yield textsDb.search(sql`
+				textsDb.search(sql`
 					SELECT * FROM initiative_texts
-				`).must.then.eql([new ValidText({
+				`).must.eql([new ValidText({
 					id: 1,
 					initiative_uuid: initiative.uuid,
 					user_id: this.user.id,
@@ -246,7 +246,7 @@ describe("InitiativeTextsController", function() {
 			})
 
 			it("must create new text given translation in sign phase", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					phase: "sign"
 				}))
@@ -264,11 +264,11 @@ describe("InitiativeTextsController", function() {
 
 				res.statusCode.must.equal(302)
 
-				yield initiativesDb.read(initiative).must.then.eql(initiative)
+				initiativesDb.read(initiative).must.eql(initiative)
 
-				yield textsDb.search(sql`
+				textsDb.search(sql`
 					SELECT * FROM initiative_texts
-				`).must.then.eql([new ValidText({
+				`).must.eql([new ValidText({
 					id: 1,
 					initiative_uuid: initiative.uuid,
 					user_id: this.user.id,
@@ -281,11 +281,11 @@ describe("InitiativeTextsController", function() {
 			})
 
 			it("must create new text if coauthor", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: (yield usersDb.create(new ValidUser)).id
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: usersDb.create(new ValidUser).id
 				}))
 
-				yield coauthorsDb.create(new ValidCoauthor({
+				coauthorsDb.create(new ValidCoauthor({
 					initiative: initiative,
 					user: this.user,
 					status: "accepted"
@@ -305,9 +305,9 @@ describe("InitiativeTextsController", function() {
 
 				res.statusCode.must.equal(302)
 
-				yield textsDb.read(sql`
+				textsDb.read(sql`
 					SELECT * FROM initiative_texts LIMIT 1
-				`).must.then.eql(new ValidText({
+				`).must.eql(new ValidText({
 					id: 1,
 					initiative_uuid: initiative.uuid,
 					user_id: this.user.id,
@@ -319,11 +319,11 @@ describe("InitiativeTextsController", function() {
 			})
 
 			it("must create new text given basis", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
 
-				var basis = yield textsDb.create(new ValidText({
+				var basis = textsDb.create(new ValidText({
 					initiative_uuid: initiative.uuid,
 					user_id: this.user.id
 				}))
@@ -343,9 +343,9 @@ describe("InitiativeTextsController", function() {
 
 				res.statusCode.must.equal(302)
 
-				yield textsDb.read(sql`
+				textsDb.read(sql`
 					SELECT * FROM initiative_texts WHERE id = 2
-				`).must.then.eql(new ValidText({
+				`).must.eql(new ValidText({
 					id: 2,
 					basis_id: basis.id,
 					initiative_uuid: initiative.uuid,
@@ -358,17 +358,17 @@ describe("InitiativeTextsController", function() {
 			})
 
 			it("must ignore basis if from another initiative", function*() {
-				var other = yield initiativesDb.create(new ValidInitiative({
+				var other = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
 
-				var basis = yield textsDb.create(new ValidText({
+				var basis = textsDb.create(new ValidText({
 					initiative_uuid: other.uuid,
 					user_id: this.user.id,
 					title: other.title
 				}))
 
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
 
@@ -385,9 +385,9 @@ describe("InitiativeTextsController", function() {
 
 				res.statusCode.must.equal(302)
 
-				yield textsDb.read(sql`
+				textsDb.read(sql`
 					SELECT * FROM initiative_texts WHERE id = 2
-				`).must.then.eql(new ValidText({
+				`).must.eql(new ValidText({
 					id: 2,
 					initiative_uuid: initiative.uuid,
 					user_id: this.user.id,
@@ -400,7 +400,7 @@ describe("InitiativeTextsController", function() {
 
 			// <form>s may send valueless <input>s as empty strings.
 			it("must ignore basis if empty string", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
 
@@ -414,7 +414,7 @@ describe("InitiativeTextsController", function() {
 			})
 
 			it("must create new text if initiative published", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					published_at: new Date
 				}))
@@ -443,7 +443,7 @@ describe("InitiativeTextsController", function() {
 			require("root/test/fixtures").user()
 
 			it("must render page if no existing texts", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
 
@@ -453,11 +453,11 @@ describe("InitiativeTextsController", function() {
 			})
 
 			it("must render page if coauthor", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: (yield usersDb.create(new ValidUser)).id
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: usersDb.create(new ValidUser).id
 				}))
 
-				yield coauthorsDb.create(new ValidCoauthor({
+				coauthorsDb.create(new ValidCoauthor({
 					initiative: initiative,
 					user: this.user,
 					status: "accepted"
@@ -473,11 +473,11 @@ describe("InitiativeTextsController", function() {
 	describe("GET /:id", function() {
 		describe("when not logged in", function() {
 			it("must respond with 401 if not published", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: (yield usersDb.create(new ValidUser)).id
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: usersDb.create(new ValidUser).id
 				}))
 
-				var text = yield textsDb.create(new ValidText({
+				var text = textsDb.create(new ValidText({
 					initiative_uuid: initiative.uuid,
 					user_id: initiative.user_id
 				}))
@@ -489,12 +489,12 @@ describe("InitiativeTextsController", function() {
 			})
 
 			it("must respond with 401 if published", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: (yield usersDb.create(new ValidUser)).id,
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: usersDb.create(new ValidUser).id,
 					published_at: new Date
 				}))
 
-				var text = yield textsDb.create(new ValidText({
+				var text = textsDb.create(new ValidText({
 					initiative_uuid: initiative.uuid,
 					user_id: initiative.user_id
 				}))
@@ -510,8 +510,8 @@ describe("InitiativeTextsController", function() {
 			require("root/test/fixtures").user()
 
 			it("must respond with 403 if not the author", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: (yield usersDb.create(new ValidUser)).id,
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: usersDb.create(new ValidUser).id,
 					published_at: new Date
 				}))
 
@@ -522,12 +522,12 @@ describe("InitiativeTextsController", function() {
 
 			it("must respond with 403 if no longer in edit or sign phase",
 				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					phase: "parliament"
 				}))
 
-				var text = yield textsDb.create(new ValidText({
+				var text = textsDb.create(new ValidText({
 					initiative_uuid: initiative.uuid,
 					user_id: initiative.user_id
 				}))
@@ -539,12 +539,12 @@ describe("InitiativeTextsController", function() {
 			})
 
 			it("must render read-only warning if in sign phase", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					phase: "sign"
 				}))
 
-				var text = yield textsDb.create(new ValidText({
+				var text = textsDb.create(new ValidText({
 					initiative_uuid: initiative.uuid,
 					user_id: initiative.user_id
 				}))
@@ -557,12 +557,12 @@ describe("InitiativeTextsController", function() {
 
 			it("must not render read-only warning on translation if in sign phase",
 				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					phase: "sign"
 				}))
 
-				var text = yield textsDb.create(new ValidText({
+				var text = textsDb.create(new ValidText({
 					initiative_uuid: initiative.uuid,
 					user_id: initiative.user_id,
 					language: "en"
@@ -575,17 +575,17 @@ describe("InitiativeTextsController", function() {
 			})
 
 			it("must render if coauthor", function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: (yield usersDb.create(new ValidUser)).id
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: usersDb.create(new ValidUser).id
 				}))
 
-				yield coauthorsDb.create(new ValidCoauthor({
+				coauthorsDb.create(new ValidCoauthor({
 					initiative: initiative,
 					user: this.user,
 					status: "accepted"
 				}))
 
-				var text = yield textsDb.create(new ValidText({
+				var text = textsDb.create(new ValidText({
 					initiative_uuid: initiative.uuid,
 					user_id: initiative.user_id
 				}))
@@ -602,11 +602,11 @@ describe("InitiativeTextsController", function() {
 				// title with <h2>, not <h1>.
 				forEachHeader(function(tagName) {
 					it(`must remove title from first <${tagName}>`, function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
+						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id
 						}))
 
-						var text = yield textsDb.create(new ValidText({
+						var text = textsDb.create(new ValidText({
 							initiative_uuid: initiative.uuid,
 							user_id: this.user.id,
 							content_type: "application/vnd.citizenos.etherpad+html",
@@ -625,7 +625,7 @@ describe("InitiativeTextsController", function() {
 						var res = yield this.request(initiativePath + "/texts/" + text.id)
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var input = dom.querySelector("input[name=content]")
 
 						JSON.parse(input.value).must.equal(outdent`
@@ -638,11 +638,11 @@ describe("InitiativeTextsController", function() {
 				})
 
 				it("must remove title from multiline <h1>", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id
 					}))
 
-					var text = yield textsDb.create(new ValidText({
+					var text = textsDb.create(new ValidText({
 						initiative_uuid: initiative.uuid,
 						user_id: this.user.id,
 						content_type: "application/vnd.citizenos.etherpad+html",
@@ -663,7 +663,7 @@ describe("InitiativeTextsController", function() {
 					var res = yield this.request(initiativePath + "/texts/" + text.id)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var input = dom.querySelector("input[name=content]")
 
 					JSON.parse(input.value).must.equal(outdent`
@@ -675,11 +675,11 @@ describe("InitiativeTextsController", function() {
 				})
 
 				it("must remove single title given multiple <h1>", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id
 					}))
 
-					var text = yield textsDb.create(new ValidText({
+					var text = textsDb.create(new ValidText({
 						initiative_uuid: initiative.uuid,
 						user_id: this.user.id,
 						content_type: "application/vnd.citizenos.etherpad+html",
@@ -699,7 +699,7 @@ describe("InitiativeTextsController", function() {
 					var res = yield this.request(initiativePath + "/texts/" + text.id)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var input = dom.querySelector("input[name=content]")
 
 					JSON.parse(input.value).must.equal(outdent`
@@ -713,11 +713,11 @@ describe("InitiativeTextsController", function() {
 
 				it("must remove title given multiple empty and blank <h1>s",
 					function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id
 					}))
 
-					var text = yield textsDb.create(new ValidText({
+					var text = textsDb.create(new ValidText({
 						initiative_uuid: initiative.uuid,
 						user_id: this.user.id,
 						content_type: "application/vnd.citizenos.etherpad+html",
@@ -738,7 +738,7 @@ describe("InitiativeTextsController", function() {
 					var res = yield this.request(initiativePath + "/texts/" + text.id)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var input = dom.querySelector("input[name=content]")
 
 					JSON.parse(input.value).must.equal(outdent`
@@ -751,11 +751,11 @@ describe("InitiativeTextsController", function() {
 
 				it("must remove title given multiple empty and blank <h2>s",
 					function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id
 					}))
 
-					var text = yield textsDb.create(new ValidText({
+					var text = textsDb.create(new ValidText({
 						initiative_uuid: initiative.uuid,
 						user_id: this.user.id,
 						content_type: "application/vnd.citizenos.etherpad+html",
@@ -776,7 +776,7 @@ describe("InitiativeTextsController", function() {
 					var res = yield this.request(initiativePath + "/texts/" + text.id)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var input = dom.querySelector("input[name=content]")
 
 					JSON.parse(input.value).must.equal(outdent`
@@ -788,11 +788,11 @@ describe("InitiativeTextsController", function() {
 				})
 
 				it("must strip leading and trailing <br>s", function*() {
-					var initiative = yield initiativesDb.create(new ValidInitiative({
+					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id
 					}))
 
-					var text = yield textsDb.create(new ValidText({
+					var text = textsDb.create(new ValidText({
 						initiative_uuid: initiative.uuid,
 						user_id: this.user.id,
 						content_type: "application/vnd.citizenos.etherpad+html",
@@ -817,7 +817,7 @@ describe("InitiativeTextsController", function() {
 					var res = yield this.request(initiativePath + "/texts/" + text.id)
 					res.statusCode.must.equal(200)
 
-					var dom = parseDom(res.body)
+					var dom = parseHtml(res.body)
 					var input = dom.querySelector("input[name=content]")
 
 					JSON.parse(input.value).must.equal(outdent`
@@ -830,11 +830,11 @@ describe("InitiativeTextsController", function() {
 
 				forEachHeader(function(tagName) {
 					it(`must strip <br>s around <${tagName}>s`, function*() {
-						var initiative = yield initiativesDb.create(new ValidInitiative({
+						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id
 						}))
 
-						var text = yield textsDb.create(new ValidText({
+						var text = textsDb.create(new ValidText({
 							initiative_uuid: initiative.uuid,
 							user_id: this.user.id,
 							content_type: "application/vnd.citizenos.etherpad+html",
@@ -859,7 +859,7 @@ describe("InitiativeTextsController", function() {
 						var res = yield this.request(initiativePath + "/texts/" + text.id)
 						res.statusCode.must.equal(200)
 
-						var dom = parseDom(res.body)
+						var dom = parseHtml(res.body)
 						var input = dom.querySelector("input[name=content]")
 
 						JSON.parse(input.value).must.equal(outdent`

@@ -69,6 +69,11 @@ describe("linkify", function() {
 				- Alternatively at <a href="http://example.org" class="link" rel="external noopener">http://example.org</a>
 			`)
 		})
+
+		it("must escape HTML within a URL", function() {
+			var html = linkify("http://exa<script>mple.com")
+			html.must.equal("http://exa&lt;script&gt;mple.com")
+		})
 	})
 
 	describe("given email address", function() {

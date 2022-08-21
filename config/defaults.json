@@ -3,10 +3,13 @@
 	"url": "https://rahvaalgatus.ee",
 	"parliamentSiteUrl": "https://riigikogu.rahvaalgatus.ee",
 	"localSiteUrl": "https://kohalik.rahvaalgatus.ee",
+	"idCardAuthenticationUrl": "https://idcard.rahvaalgatus.ee",
+	"idCardAuthenticationSecret": null,
 	"adminUrl": "https://admin.rahvaalgatus.ee",
 	"twitterUrl": "https://twitter.com/openESTassembly",
 	"facebookUrl": "https://facebook.com/rahvaalgatus",
 	"helpEmail": "info@rahvaalgatus.ee",
+	"csrfTokenCookieName": "csrf_token",
 	"sessionCookieName": "session_token",
 	"cookieSecret": null,
 	"cookieDomain": "rahvaalgatus.ee",
@@ -40,7 +43,6 @@
 	"timestampUrl": null,
 	"parliamentEmail": null,
 
-	"googleAnalyticsAccount": "UA-74848422-1",
 	"maksekeskusUrl": "https://payment.maksekeskus.ee/pay/1/link.html",
 	"maksekeskusId": "62c9e4f7-beea-4120-a08d-3dbafda55c9a",
 

@@ -1,6 +1,7 @@
 {
 	"adminPersonalIds": ["EE60001019906"],
 	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
+	"idCardAuthenticationSecret": "7tETyK8iWAxypy0GiO24IjKa",
 	"votesRequired": 10,
 	"minDeadlineDays": 3,
 	"signatureMilestones": [5],

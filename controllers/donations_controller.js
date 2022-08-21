@@ -1,5 +1,5 @@
 var _ = require("root/lib/underscore")
-var Config = require("root/config")
+var Config = require("root").config
 var Router = require("express").Router
 var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
 

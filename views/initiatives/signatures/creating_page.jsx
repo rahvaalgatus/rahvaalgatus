@@ -57,16 +57,16 @@ function MobileIdView(attrs) {
 		</p>
 
 		<script>{javascript`
-			fetch("${poll}", {
+			fetch(${poll}, {
 				credentials: "same-origin",
-				headers: {Accept: "application/x-empty, ${ERR_TYPE}"},
+				headers: {Accept: ${"application/x-empty, " + ERR_TYPE}},
 
 				// Fetch polyfill doesn't support manual redirect, so use
 				// x-empty.
 				redirect: "manual"
 			}).then(function(res) {
 				// WhatWG-Fetch polyfill lacks res.url.
-				window.location.assign(res.headers.get("Location") || "${poll}")
+				window.location.assign(res.headers.get("Location") || ${poll})
 			})
 		`}</script>
 	</Fragment>

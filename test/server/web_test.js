@@ -1,6 +1,5 @@
 var request = require("fetch-off/request")
 var fetchDefaults = require("fetch-defaults")
-var concat = Array.prototype.concat.bind(Array.prototype)
 var URL = "https://rahvaalgatus.ee"
 var HEADERS = {headers: {"User-Agent": "Rahvaalgatus Tests"}}
 
@@ -34,16 +33,11 @@ describe(URL, function() {
 		})
 	})
 
-	var CORS_PATHS = [
-		// Fonts are also used from Voog.
-		"/assets/voog.css",
-		"/assets/tisapro-regular-webfont.svg"
-	]
-
-	concat(
+	;[
 		"/assets/page.css",
-		CORS_PATHS
-	).forEach(function(path) {
+		"/assets/rahvaalgatus.png",
+		"/assets/tisapro-regular-webfont.svg"
+	].forEach(function(path) {
 		describe(path, function() {
 			before(function*() {
 				this.res = yield req(path, {
@@ -85,16 +79,8 @@ describe(URL, function() {
 
 				res.statusCode.must.equal(304)
 			})
-		})
-	})
 
-	CORS_PATHS.forEach(function(path) {
-		describe(path, function() {
-			before(function*() {
-				this.res = yield req(path, {method: "HEAD"})
-				this.res.statusCode.must.equal(200)
-			})
-
+			// Assets are used by subsites like riigikogu.rahvaalgatus.ee.
 			it("must have CORS headers", function() {
 				this.res.headers["access-control-allow-origin"].must.equal("*")
 			})

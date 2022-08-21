@@ -14,11 +14,11 @@ var EVENT_TYPES = ["text", "media-coverage"]
 
 exports.router = Router({mergeParams: true})
 
-exports.router.get("/new", next(assertAuthor), next(function*(req, res) {
+exports.router.get("/new", assertAuthor, function(req, res) {
 	var initiative = req.initiative
 
 	var subscriberCount =
-		yield subscriptionsDb.countConfirmedByInitiativeIdForEvent(initiative.uuid)
+		subscriptionsDb.countConfirmedByInitiativeIdForEvent(initiative.uuid)
 
 	var type = req.query.type
 	type = EVENT_TYPES.includes(type) ? type : "text"
@@ -27,18 +27,18 @@ exports.router.get("/new", next(assertAuthor), next(function*(req, res) {
 		event: {type: type},
 		subscriberCount: subscriberCount
 	})
-}))
+})
 
 exports.router.get("/:id", function(req, res) {
 	var initiative = req.initiative
 	res.redirect("/initiatives/" + initiative.uuid + "#event-" + req.params.id)
 })
 
-exports.router.post("/", next(assertAuthor), next(function*(req, res) {
+exports.router.post("/", assertAuthor, next(function*(req, res) {
 	var initiative = req.initiative
 	var message
 
-	var event = yield eventsDb.create({
+	var event = eventsDb.create({
 		__proto__: parseEvent(req.body),
 		initiative_uuid: initiative.uuid,
 		created_at: new Date,
@@ -49,7 +49,7 @@ exports.router.post("/", next(assertAuthor), next(function*(req, res) {
 	})
 
 	switch (event.type) {
-		case "text": message = yield messagesDb.create({
+		case "text": message = messagesDb.create({
 			initiative_uuid: initiative.uuid,
 			origin: "event",
 			created_at: new Date,
@@ -68,7 +68,7 @@ exports.router.post("/", next(assertAuthor), next(function*(req, res) {
 			})
 		}); break
 
-		case "media-coverage": message = yield messagesDb.create({
+		case "media-coverage": message = messagesDb.create({
 			initiative_uuid: initiative.uuid,
 			origin: "event",
 			created_at: new Date,
@@ -90,9 +90,7 @@ exports.router.post("/", next(assertAuthor), next(function*(req, res) {
 
 	if (message) yield Subscription.send(
 		message,
-		yield subscriptionsDb.searchConfirmedByInitiativeIdForEvent(
-			initiative.uuid
-		)
+		subscriptionsDb.searchConfirmedByInitiativeIdForEvent(initiative.uuid)
 	)
 
 	res.flash("notice", req.t("INITIATIVE_EVENT_BY_AUTHOR_CREATED"))
@@ -117,7 +115,7 @@ exports.router.use(function(err, req, res, next) {
 	else next(err)
 })
 
-function* assertAuthor(req, _res, next) {
+function assertAuthor(req, _res, next) {
 	var user = req.user
 	if (user == null) throw new HttpError(401)
 
@@ -129,7 +127,7 @@ function* assertAuthor(req, _res, next) {
 	if (initiative.archived_at || initiative.phase == "edit")
 		throw new HttpError(403, "Cannot Create Events")
 
-	var until = yield rateLimit(req.user, req.initiative)
+	var until = rateLimit(req.user, req.initiative)
 	if (until) throw new HttpError(429, "Too Many Events", {until: until})
 
 	next()
@@ -153,8 +151,8 @@ function parseEvent(obj) {
 	}
 }
 
-function* rateLimit(user, initiative) {
-	var events = yield eventsDb.search(sql`
+function rateLimit(user, initiative) {
+	var events = eventsDb.search(sql`
 		SELECT created_at FROM initiative_events
 		WHERE initiative_uuid = ${initiative.uuid}
 		AND user_id = ${user.id}

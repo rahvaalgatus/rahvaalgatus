@@ -7,7 +7,7 @@ var Flash = require("../page").Flash
 var javascript = require("root/lib/jsx").javascript
 var {normalizeCitizenOsHtml} = require("root/lib/initiative")
 var selected = require("root/lib/css").selected
-var LANGUAGES = require("root/config").languages
+var LANGUAGES = require("root").config.languages
 
 module.exports = function(attrs) {
 	var req = attrs.req

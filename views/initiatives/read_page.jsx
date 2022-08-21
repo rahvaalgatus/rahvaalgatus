@@ -6,7 +6,7 @@ var Fragment = Jsx.Fragment
 var Time = require("root/lib/time")
 var DateFns = require("date-fns")
 var InitiativePage = require("./initiative_page")
-var Config = require("root/config")
+var Config = require("root").config
 var I18n = require("root/lib/i18n")
 var Flash = require("../page").Flash
 var Form = require("../page").Form
@@ -27,7 +27,6 @@ var serializeImageUrl = require("root/lib/initiative").imageUrl
 var {pathToSignature} =
 	require("root/controllers/initiatives/signatures_controller")
 var confirm = require("root/lib/jsx").confirm
-var stringify = require("root/lib/json").stringify
 var linkify = require("root/lib/linkify")
 var encode = encodeURIComponent
 var min = Math.min
@@ -41,7 +40,7 @@ var EVENT_NOTIFICATIONS_SINCE = new Date(Config.eventNotificationsSince)
 var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
-var LANGUAGES = require("root/config").languages
+var LANGUAGES = require("root").config.languages
 exports = module.exports = ReadPage
 exports.InitiativeDestinationSelectView = InitiativeDestinationSelectView
 exports.SigningView = SigningView
@@ -336,7 +335,9 @@ function ReadPage(attrs) {
 					files={files}
 				/>
 
-				{isSignable(initiative) ? <div id="initiative-vote">
+				{Initiative.isSignable(new Date, initiative) ? <div
+					id="initiative-vote"
+				>
 					<ProgressView
 						t={t}
 						initiative={initiative}
@@ -1640,7 +1641,7 @@ function SigningView(attrs) {
 
 		<script>{javascript`
 			var Hwcrypto = require("@rahvaalgatus/hwcrypto")
-			var TRANSLATIONS = ${stringify(UI_TRANSLATIONS[req.lang])}
+			var TRANSLATIONS = ${UI_TRANSLATIONS[req.lang]}
 			var button = document.getElementById("id-card-button")
 			var form = document.getElementById("id-card-form")
 			var flash = document.getElementById("id-card-flash")
@@ -1664,9 +1665,9 @@ function SigningView(attrs) {
 						credentials: "same-origin",
 
 						headers: {
-							"X-CSRF-Token": ${stringify(req.csrfToken)},
+							"X-CSRF-Token": ${req.csrfToken},
 							"Content-Type": "application/pkix-cert",
-							Accept: "${SIGNABLE_TYPE}, ${ERR_TYPE}"
+							Accept: ${SIGNABLE_TYPE + ", " + ERR_TYPE}
 						},
 
 						body: certificate.toDer()
@@ -1696,12 +1697,12 @@ function SigningView(attrs) {
 						redirect: "manual",
 
 						headers: {
-							"X-CSRF-Token": ${stringify(req.csrfToken)},
+							"X-CSRF-Token": ${req.csrfToken},
 							"Content-Type": "application/vnd.rahvaalgatus.signature",
 
 							// Fetch polyfill doesn't support manual redirect, so use
 							// x-empty.
-							Accept: "application/x-empty, ${ERR_TYPE}"
+							Accept: ${"application/x-empty, " + ERR_TYPE}
 						},
 
 						body: signature
@@ -1729,7 +1730,7 @@ function SigningView(attrs) {
 				err.code = res.status
 
 				var type = res.headers.get("content-type")
-				if (type == "${ERR_TYPE}")
+				if (type == ${ERR_TYPE})
 					return res.json().then(function(body) {
 						err.description = body.description
 						throw err
@@ -1759,7 +1760,7 @@ function SigningView(attrs) {
 				function notice(msg) { output.textContent = msg || "" }
 
 				ev.preventDefault()
-				notice("${t("SIGNING_VIEW_SIGNING")}")
+				notice(${t("SIGNING_VIEW_SIGNING")})
 
 				fetch(form.action, {
 					method: "POST",
@@ -1767,13 +1768,13 @@ function SigningView(attrs) {
 
           headers: {
             "Content-Type": "application/json",
-            "Accept": "application/json, ${ERR_TYPE}"
+            "Accept": ${"application/json, " + ERR_TYPE}
           },
 
           body: JSON.stringify(serializeForm(form))
         }).then(assertOk).then(function(res) {
           var code = res.headers.get("X-Verification-Code")
-          notice("${t("VERIFICATION_CODE")}: " + code)
+          notice(${t("VERIFICATION_CODE")} + ": " + code)
 
           return res.json().then(function(obj) {
 						if (obj.code == "OK") window.location.assign(obj.location)
@@ -1801,7 +1802,7 @@ function SigningView(attrs) {
 
 				var type = res.headers.get("content-type")
 
-				if (type == "${ERR_TYPE}" || /^application\\/json(;|$)/.test(type))
+				if (type == ${ERR_TYPE} || /^application\\/json(;|$)/.test(type))
 					return res.json().then(function(body) {
 						err.message = body.message
 						err.description = body.description
@@ -2286,7 +2287,7 @@ function QuicksignView(attrs) {
 			signatureCount={signatureCount}
 		/>
 
-		{isSignable(initiative) && !signature ? <a
+		{Initiative.isSignable(new Date, initiative) && !signature ? <a
 			href="#initiative-vote"
 			class="green-button wide-button sign-button">
 			{t("SIGN_THIS_DOCUMENT")}
@@ -2299,7 +2300,7 @@ function QuicksignView(attrs) {
 			signatureCount={signatureCount}
 		/>
 
-		{isSignable(initiative) && signature ? <Fragment>
+		{Initiative.isSignable(new Date, initiative) && signature ? <Fragment>
 			<h2>{t("THANKS_FOR_SIGNING")}</h2>
 
 			<DownloadSignatureButton signature={signature}>
@@ -2426,7 +2427,7 @@ function InitiativeAttributeList(attrs, children) {
 		<button type="button" id={buttonId}>{add}</button>
 
 		<script>{javascript`
-			var button = document.getElementById("${buttonId}")
+			var button = document.getElementById(${buttonId})
 			var list = button.previousSibling
 			var each = Function.call.bind(Array.prototype.forEach)
 
@@ -2536,11 +2537,6 @@ function isPhaseAtLeast(than, phase) {
 
 function isPhaseAfter(than, phase) {
 	return PHASES.indexOf(phase) > PHASES.indexOf(than)
-}
-
-
-function isSignable(initiative) {
-	return initiative.phase == "sign" && new Date < initiative.signing_ends_at
 }
 
 function initiativePhaseFromEvent(event) {

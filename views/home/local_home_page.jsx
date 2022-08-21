@@ -7,7 +7,6 @@ var {Flash} = require("../page")
 var {InitiativeBoxesView} = require("../initiatives/index_page")
 var {CallToActionsView} = require("../home_page")
 var javascript = require("root/lib/jsx").javascript
-var {stringify} = require("root/lib/json")
 var {groupInitiatives} = require("../home_page")
 
 module.exports = function(attrs) {
@@ -43,11 +42,7 @@ module.exports = function(attrs) {
 
 			<script>{javascript`
 				var Local = require("@rahvaalgatus/local")
-
-				Local.newMap(
-					document.getElementById("map"),
-					${stringify(initiativeCounts)}
-				)
+				Local.newMap(document.getElementById("map"), ${initiativeCounts})
 			`}</script>
 		</Section>
 

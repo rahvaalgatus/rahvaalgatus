@@ -1,5 +1,5 @@
 var _ = require("root/lib/underscore")
-var Config = require("root/config")
+var Config = require("root").config
 var DateFns = require("date-fns")
 var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_initiative")
@@ -75,7 +75,7 @@ describe("ParliamentSyncCli", function() {
 
 		yield job()
 
-		var initiatives = yield initiativesDb.search(sql`SELECT * FROM initiatives`)
+		var initiatives = initiativesDb.search(sql`SELECT * FROM initiatives`)
 
 		initiatives.must.eql([new ValidInitiative({
 			uuid: INITIATIVE_UUID,
@@ -92,13 +92,11 @@ describe("ParliamentSyncCli", function() {
 			parliament_synced_at: new Date
 		})])
 
-		yield eventsDb.search(sql`
-			SELECT * FROM initiative_events
-		`).must.then.be.empty()
+		eventsDb.search(sql`SELECT * FROM initiative_events`).must.be.empty()
 
-		yield filesDb.search(sql`
+		filesDb.search(sql`
 			SELECT * FROM initiative_files
-		`).must.then.eql([new ValidFile({
+		`).must.eql([new ValidFile({
 			id: 1,
 			initiative_uuid: INITIATIVE_UUID,
 			external_id: FILE_UUID,
@@ -124,7 +122,7 @@ describe("ParliamentSyncCli", function() {
 
 		yield job()
 
-		var initiative = yield initiativesDb.read(sql`SELECT * FROM initiatives`)
+		var initiative = initiativesDb.read(sql`SELECT * FROM initiatives`)
 
 		initiative.must.eql(new ValidInitiative({
 			uuid: INITIATIVE_UUID,
@@ -150,7 +148,7 @@ describe("ParliamentSyncCli", function() {
 		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
 
 		yield job()
-		var initiative = yield initiativesDb.read(INITIATIVE_UUID)
+		var initiative = initiativesDb.read(INITIATIVE_UUID)
 		initiative.title.must.equal("Teeme Tallinna paremaks!")
 	})
 
@@ -163,13 +161,13 @@ describe("ParliamentSyncCli", function() {
 		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
 
 		yield job()
-		var initiative = yield initiativesDb.read(INITIATIVE_UUID)
+		var initiative = initiativesDb.read(INITIATIVE_UUID)
 		initiative.title.must.equal("Teeme Tallinna paremaks!")
 	})
 
 	it("must update local initiative with events and files", function*() {
-		var initiative = yield initiativesDb.create(new ValidInitiative({
-			user_id: (yield usersDb.create(new ValidUser)).id,
+		var initiative = initiativesDb.create(new ValidInitiative({
+			user_id: usersDb.create(new ValidUser).id,
 			author_name: "John Smith",
 			phase: "government"
 		}))
@@ -202,7 +200,7 @@ describe("ParliamentSyncCli", function() {
 
 		yield job()
 
-		var initiatives = yield initiativesDb.search(sql`SELECT * FROM initiatives`)
+		var initiatives = initiativesDb.search(sql`SELECT * FROM initiatives`)
 
 		initiatives.must.eql([{
 			// NOTE: Phase isn't updated if initiative not in the parliament phase.
@@ -217,13 +215,11 @@ describe("ParliamentSyncCli", function() {
 			finished_in_parliament_at: new Date(2018, 9, 25)
 		}])
 
-		yield eventsDb.search(sql`
-			SELECT * FROM initiative_events
-		`).must.then.have.length(3)
+		eventsDb.search(sql`SELECT * FROM initiative_events`).must.have.length(3)
 
-		yield filesDb.search(sql`
+		filesDb.search(sql`
 			SELECT * FROM initiative_files
-		`).must.then.eql([new ValidFile({
+		`).must.eql([new ValidFile({
 			id: 1,
 			initiative_uuid: initiative.uuid,
 			external_id: FILE_UUID,
@@ -238,8 +234,8 @@ describe("ParliamentSyncCli", function() {
 
 	it("must update local initiative if reference matches old parliament UUID",
 		function*() {
-		var initiative = yield initiativesDb.create(new ValidInitiative({
-			user_id: (yield usersDb.create(new ValidUser)).id,
+		var initiative = initiativesDb.create(new ValidInitiative({
+			user_id: usersDb.create(new ValidUser).id,
 			phase: "government",
 			parliament_uuid: "83ecffc8-621a-4277-b388-39b1e626d1fa"
 		}))
@@ -254,7 +250,7 @@ describe("ParliamentSyncCli", function() {
 		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {}))
 		yield job()
 
-		var initiatives = yield initiativesDb.search(sql`SELECT * FROM initiatives`)
+		var initiatives = initiativesDb.search(sql`SELECT * FROM initiatives`)
 
 		initiatives.must.eql([{
 			// NOTE: The previous parliament UUID gets updated, too.
@@ -267,8 +263,8 @@ describe("ParliamentSyncCli", function() {
 	})
 
 	it("must update local initiative phase to done if finished", function*() {
-		var initiative = yield initiativesDb.create(new ValidInitiative({
-			user_id: (yield usersDb.create(new ValidUser)).id,
+		var initiative = initiativesDb.create(new ValidInitiative({
+			user_id: usersDb.create(new ValidUser).id,
 			phase: "parliament",
 			parliament_uuid: INITIATIVE_UUID
 		}))
@@ -282,7 +278,7 @@ describe("ParliamentSyncCli", function() {
 		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {}))
 		yield job()
 
-		var initiatives = yield initiativesDb.search(sql`SELECT * FROM initiatives`)
+		var initiatives = initiativesDb.search(sql`SELECT * FROM initiatives`)
 
 		initiatives.must.eql([_.clone({
 			__proto__: initiative,
@@ -294,8 +290,8 @@ describe("ParliamentSyncCli", function() {
 	})
 
 	it("must not update local initiative phase to done if finished but not in parliament phase", function*() {
-		var initiative = yield initiativesDb.create(new ValidInitiative({
-			user_id: (yield usersDb.create(new ValidUser)).id,
+		var initiative = initiativesDb.create(new ValidInitiative({
+			user_id: usersDb.create(new ValidUser).id,
 			phase: "government",
 			parliament_uuid: INITIATIVE_UUID
 		}))
@@ -309,7 +305,7 @@ describe("ParliamentSyncCli", function() {
 		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {}))
 		yield job()
 
-		var initiatives = yield initiativesDb.search(sql`SELECT * FROM initiatives`)
+		var initiatives = initiativesDb.search(sql`SELECT * FROM initiatives`)
 
 		initiatives.must.eql([_.clone({
 			__proto__: initiative,
@@ -320,7 +316,7 @@ describe("ParliamentSyncCli", function() {
 	})
 
 	it("must update external initiative", function*() {
-		var initiative = yield initiativesDb.create(new ValidInitiative({
+		var initiative = initiativesDb.create(new ValidInitiative({
 			uuid: INITIATIVE_UUID,
 			parliament_uuid: INITIATIVE_UUID,
 			external: true,
@@ -346,7 +342,7 @@ describe("ParliamentSyncCli", function() {
 		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
 		yield job()
 
-		var initiatives = yield initiativesDb.search(sql`SELECT * FROM initiatives`)
+		var initiatives = initiativesDb.search(sql`SELECT * FROM initiatives`)
 
 		initiatives.must.eql([{
 			__proto__: initiative,
@@ -374,9 +370,7 @@ describe("ParliamentSyncCli", function() {
 
 		yield job()
 
-		yield filesDb.search(sql`
-			SELECT * FROM initiative_files
-		`).must.then.be.empty()
+		filesDb.search(sql`SELECT * FROM initiative_files`).must.be.empty()
 	})
 
 	it("must ignore if API response not updated", function*() {
@@ -386,12 +380,12 @@ describe("ParliamentSyncCli", function() {
 
 		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
 		yield job()
-		var initiative = yield initiativesDb.read(sql`SELECT * FROM initiatives`)
+		var initiative = initiativesDb.read(sql`SELECT * FROM initiatives`)
 		var syncedAt = initiative.parliament_synced_at
 		this.time.tick(60 * 1000)
 
 		yield job()
-		initiative = yield initiativesDb.read(initiative)
+		initiative = initiativesDb.read(initiative)
 		initiative.parliament_synced_at.must.eql(syncedAt)
 	})
 
@@ -436,17 +430,17 @@ describe("ParliamentSyncCli", function() {
 		))
 
 		yield job()
-		var initiative = yield initiativesDb.read(sql`SELECT * FROM initiatives`)
+		var initiative = initiativesDb.read(sql`SELECT * FROM initiatives`)
 		var syncedAt = initiative.parliament_synced_at
 		this.time.tick(1000)
 
 		yield job()
-		initiative = yield initiativesDb.read(initiative)
+		initiative = initiativesDb.read(initiative)
 		initiative.parliament_synced_at.must.eql(syncedAt)
 	})
 
 	it("must email subscribers interested in events", function*() {
-		var initiative = yield initiativesDb.create(new ValidInitiative({
+		var initiative = initiativesDb.create(new ValidInitiative({
 			uuid: INITIATIVE_UUID,
 			phase: "parliament",
 			parliament_uuid: INITIATIVE_UUID,
@@ -454,7 +448,7 @@ describe("ParliamentSyncCli", function() {
 			external: true
 		}))
 
-		var subscriptions = yield subscriptionsDb.create([
+		var subscriptions = subscriptionsDb.create([
 			new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date,
@@ -501,10 +495,7 @@ describe("ParliamentSyncCli", function() {
 
 		yield job()
 
-		var messages = yield messagesDb.search(sql`
-			SELECT * FROM initiative_messages
-		`)
-
+		var messages = messagesDb.search(sql`SELECT * FROM initiative_messages`)
 		var emails = subscriptions.slice(2).map((s) => s.email).sort()
 
 		messages.must.eql([{
@@ -537,15 +528,38 @@ describe("ParliamentSyncCli", function() {
 		}])
 
 		this.emails.length.must.equal(1)
-		this.emails[0].envelope.to.must.eql(emails)
-		var msg = String(this.emails[0].message)
-		msg.match(/^Subject: .*/m)[0].must.include("Teeme_elu_paremaks!")
-		subscriptions.slice(2).forEach((s) => msg.must.include(s.update_token))
+		var email = this.emails[0]
+		email.envelope.to.must.eql(emails)
+
+		email.headers.subject.must.equal(
+			t("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_TITLE", {
+				initiativeTitle: initiative.title,
+				eventDate: formatDate("numeric", eventDates[2])
+			})
+		)
+
+		email.body.must.equal(
+			renderEmail("INITIATIVE_PARLIAMENT_EVENT_MESSAGE_BODY", {
+				initiativeTitle: initiative.title,
+				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+				eventsUrl: `${Config.url}/initiatives/${initiative.uuid}#events`,
+				unsubscribeUrl: `${Config.url}%recipient.unsubscribeUrl%`,
+
+				eventTitles: outdent`
+					${formatDate("numeric", eventDates[0])} — ${t("PARLIAMENT_RECEIVED")}
+					${formatDate("numeric", eventDates[1])} — ${t("PARLIAMENT_ACCEPTED")}
+					${formatDate("numeric", eventDates[2])} — ${t("PARLIAMENT_FINISHED")}
+				`
+			})
+		)
+
+		var vars = email.headers["x-mailgun-recipient-variables"]
+		subscriptions.slice(2).forEach((s) => vars.must.include(s.update_token))
 	})
 
 	it("must not email subscribers if event occurred earlier than 3 months",
 		function*() {
-		var initiative = yield initiativesDb.create(new ValidInitiative({
+		var initiative = initiativesDb.create(new ValidInitiative({
 			title: "Teeme elu paremaks!",
 			uuid: INITIATIVE_UUID,
 			phase: "parliament",
@@ -553,7 +567,7 @@ describe("ParliamentSyncCli", function() {
 			external: true
 		}))
 
-		var subscription = yield subscriptionsDb.create(new ValidSubscription({
+		var subscription = subscriptionsDb.create(new ValidSubscription({
 			initiative_uuid: null,
 			confirmed_at: new Date,
 			event_interest: true
@@ -576,7 +590,7 @@ describe("ParliamentSyncCli", function() {
 
 		yield job()
 
-		var message = yield messagesDb.read(sql`SELECT * FROM initiative_messages`)
+		var message = messagesDb.read(sql`SELECT * FROM initiative_messages`)
 
 		message.must.eql({
 			id: message.id,
@@ -609,21 +623,21 @@ describe("ParliamentSyncCli", function() {
 	})
 
 	it("must not email subscribers if no events created", function*() {
-		var initiative = yield initiativesDb.create(new ValidInitiative({
+		var initiative = initiativesDb.create(new ValidInitiative({
 			uuid: INITIATIVE_UUID,
 			parliament_uuid: INITIATIVE_UUID,
 			phase: "parliament",
 			external: true
 		}))
 
-		yield eventsDb.create(new ValidEvent({
+		eventsDb.create(new ValidEvent({
 			initiative_uuid: initiative.uuid,
 			external_id: "REGISTREERITUD",
 			origin: "parliament",
 			type: "parliament-received"
 		}))
 
-		yield subscriptionsDb.create(new ValidSubscription({
+		subscriptionsDb.create(new ValidSubscription({
 			confirmed_at: new Date,
 			event_interest: true
 		}))
@@ -640,8 +654,8 @@ describe("ParliamentSyncCli", function() {
 	})
 
 	it("must update the initiative given multiple committees", function*() {
-		var initiative = yield initiativesDb.create(new ValidInitiative({
-			user_id: (yield usersDb.create(new ValidUser)).id,
+		var initiative = initiativesDb.create(new ValidInitiative({
+			user_id: usersDb.create(new ValidUser).id,
 			parliament_uuid: INITIATIVE_UUID,
 			phase: "parliament"
 		}))
@@ -659,14 +673,14 @@ describe("ParliamentSyncCli", function() {
 
 		yield job()
 
-		initiative = yield initiativesDb.read(initiative)
+		initiative = initiativesDb.read(initiative)
 		initiative.parliament_committee.must.equal("Sotsiaalkomisjon")
 	})
 
 	it("must update the initiative given multiple committees with no active",
 		function*() {
-		var initiative = yield initiativesDb.create(new ValidInitiative({
-			user_id: (yield usersDb.create(new ValidUser)).id,
+		var initiative = initiativesDb.create(new ValidInitiative({
+			user_id: usersDb.create(new ValidUser).id,
 			parliament_uuid: INITIATIVE_UUID,
 			phase: "parliament"
 		}))
@@ -684,7 +698,7 @@ describe("ParliamentSyncCli", function() {
 
 		yield job()
 
-		initiative = yield initiativesDb.read(initiative)
+		initiative = initiativesDb.read(initiative)
 		initiative.parliament_committee.must.equal("Majanduskomisjon")
 	})
 
@@ -1120,8 +1134,8 @@ describe("ParliamentSyncCli", function() {
 			var eventAttrs = test[2]
 
 			it(`must create events given ${title}`, function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: (yield usersDb.create(new ValidUser)).id,
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: usersDb.create(new ValidUser).id,
 					parliament_uuid: INITIATIVE_UUID
 				}))
 
@@ -1132,7 +1146,7 @@ describe("ParliamentSyncCli", function() {
 				this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
 				yield job()
 
-				var updated = yield initiativesDb.read(initiative)
+				var updated = initiativesDb.read(initiative)
 
 				updated.must.eql(_.assign({
 					__proto__: initiative,
@@ -1140,7 +1154,7 @@ describe("ParliamentSyncCli", function() {
 					parliament_api_data: updated.parliament_api_data,
 				}, attrs))
 
-				var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
+				var events = eventsDb.search(sql`SELECT * FROM initiative_events`)
 				events.must.eql(concat(eventAttrs).map((attrs, i) => new ValidEvent({
 					__proto__: attrs,
 					id: i + 1,
@@ -1150,8 +1164,8 @@ describe("ParliamentSyncCli", function() {
 		})
 
 		it("must create events given status with related documents", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: (yield usersDb.create(new ValidUser)).id,
+			var initiative = initiativesDb.create(new ValidInitiative({
+				user_id: usersDb.create(new ValidUser).id,
 				parliament_uuid: INITIATIVE_UUID
 			}))
 
@@ -1189,16 +1203,16 @@ describe("ParliamentSyncCli", function() {
 
 			yield job()
 
-			var updatedInitiative = yield initiativesDb.read(initiative)
+			var updatedInitiative = initiativesDb.read(initiative)
 			updatedInitiative.must.eql(_.assign({}, initiative, {
 				accepted_by_parliament_at: new Date(2015, 5, 17),
 				parliament_api_data: updatedInitiative.parliament_api_data,
 				parliament_synced_at: new Date
 			}))
 
-			yield eventsDb.search(sql`
+			eventsDb.search(sql`
 				SELECT * FROM initiative_events
-			`).must.then.eql([new ValidEvent({
+			`).must.eql([new ValidEvent({
 				id: 1,
 				initiative_uuid: initiative.uuid,
 				occurred_at: new Date(2015, 5, 17),
@@ -1209,9 +1223,9 @@ describe("ParliamentSyncCli", function() {
 				content: {committee: null}
 			})])
 
-			yield filesDb.search(sql`
+			filesDb.search(sql`
 				SELECT * FROM initiative_files
-			`).must.then.eql([new ValidFile({
+			`).must.eql([new ValidFile({
 				id: 1,
 				event_id: 1,
 				initiative_uuid: initiative.uuid,
@@ -1226,8 +1240,8 @@ describe("ParliamentSyncCli", function() {
 		})
 
 		it("must create separate events given status with related incoming letter documents", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: (yield usersDb.create(new ValidUser)).id,
+			var initiative = initiativesDb.create(new ValidInitiative({
+				user_id: usersDb.create(new ValidUser).id,
 				parliament_uuid: INITIATIVE_UUID
 			}))
 
@@ -1269,15 +1283,15 @@ describe("ParliamentSyncCli", function() {
 
 			yield job()
 
-			var updatedInitiative = yield initiativesDb.read(initiative)
+			var updatedInitiative = initiativesDb.read(initiative)
 			updatedInitiative.must.eql(_.assign({}, initiative, {
 				parliament_api_data: updatedInitiative.parliament_api_data,
 				parliament_synced_at: new Date
 			}))
 
-			yield eventsDb.search(sql`
+			eventsDb.search(sql`
 				SELECT * FROM initiative_events
-			`).must.then.eql([new ValidEvent({
+			`).must.eql([new ValidEvent({
 				id: 1,
 				initiative_uuid: initiative.uuid,
 				occurred_at: new Date(2015, 5, 20),
@@ -1304,9 +1318,9 @@ describe("ParliamentSyncCli", function() {
 				}
 			})])
 
-			yield filesDb.search(sql`
+			filesDb.search(sql`
 				SELECT * FROM initiative_files
-			`).must.then.eql([new ValidFile({
+			`).must.eql([new ValidFile({
 				id: 1,
 				event_id: 2,
 				initiative_uuid: initiative.uuid,
@@ -1316,95 +1330,6 @@ describe("ParliamentSyncCli", function() {
 				url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
 				content: EXAMPLE_BUFFER,
 				content_type: new MediaType("application/octet-stream"),
-				external_url: PARLIAMENT_URL + "/download/" + FILE_UUID
-			})])
-		})
-
-		it("must create events given status with related volumes", function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: (yield usersDb.create(new ValidUser)).id,
-				parliament_uuid: INITIATIVE_UUID
-			}))
-
-			this.router.get(INITIATIVES_URL, respond.bind(null, [{
-				uuid: INITIATIVE_UUID,
-
-				statuses: [{
-					date: "2015-06-18",
-					status: {code: "ARUTELU_KOMISJONIS"},
-					relatedVolumes: [{uuid: VOLUME_UUID}]
-				}]
-			}]))
-
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
-
-			this.router.get(`/api/volumes/${VOLUME_UUID}`, respond.bind(null, {
-				uuid: VOLUME_UUID,
-				title: "Komisjoni avalik ühisistung esmaspäev, 18.06.2015",
-				reference: "1-3/KEKK/3-7",
-				volumeType: "unitSittingVolume",
-
-				documents: [{
-					uuid: DOCUMENT_UUID,
-					title: "Protokoll",
-					documentType: "protokoll"
-				}]
-			}))
-
-			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
-				uuid: DOCUMENT_UUID,
-				title: "Protokoll",
-				documentType: "protokoll",
-
-				files: [{
-					uuid: FILE_UUID,
-					fileName: "Protokoll.pdf",
-					accessRestrictionType: "PUBLIC"
-				}]
-			}))
-
-			this.router.get(`/download/${FILE_UUID}`,
-				respondWithRiigikoguDownload.bind(null, "application/pdf", "PDF")
-			)
-
-			yield job()
-
-			var updatedInitiative = yield initiativesDb.read(initiative)
-			updatedInitiative.must.eql(_.assign({}, initiative, {
-				parliament_api_data: updatedInitiative.parliament_api_data,
-				parliament_synced_at: new Date
-			}))
-
-			yield eventsDb.search(sql`
-				SELECT * FROM initiative_events
-			`).must.then.eql([new ValidEvent({
-				id: 1,
-				initiative_uuid: initiative.uuid,
-				occurred_at: new Date(2015, 5, 18),
-				origin: "parliament",
-				external_id: "ARUTELU_KOMISJONIS/2015-06-18",
-				type: "parliament-committee-meeting",
-				title: null,
-
-				content: {
-					committee: "Keskkonnakomisjon",
-					invitees: null,
-					links: []
-				}
-			})])
-
-			yield filesDb.search(sql`
-				SELECT * FROM initiative_files
-			`).must.then.eql([new ValidFile({
-				id: 1,
-				event_id: 1,
-				initiative_uuid: initiative.uuid,
-				external_id: FILE_UUID,
-				name: "Protokoll.pdf",
-				title: "Protokoll",
-				url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
-				content: new Buffer("PDF"),
-				content_type: new MediaType("application/pdf"),
 				external_url: PARLIAMENT_URL + "/download/" + FILE_UUID
 			})])
 		})
@@ -1427,9 +1352,9 @@ describe("ParliamentSyncCli", function() {
 			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
 			yield job()
 
-			var event = yield eventsDb.read(sql`SELECT * FROM initiative_events`)
+			var event = eventsDb.read(sql`SELECT * FROM initiative_events`)
 			yield job()
-			yield eventsDb.read(event).must.then.eql(event)
+			eventsDb.read(event).must.eql(event)
 		})
 
 		it("must update committee meeting event", function*() {
@@ -1458,16 +1383,16 @@ describe("ParliamentSyncCli", function() {
 			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
 			yield job()
 
-			var event = yield eventsDb.read(sql`SELECT * FROM initiative_events`)
+			var event = eventsDb.read(sql`SELECT * FROM initiative_events`)
 
-			event = yield eventsDb.update(event, {
+			event = eventsDb.update(event, {
 				type: event.type,
 				content: _.assign(event.content, {summary: "It was a good meeting."})
 			})
 
 			yield job()
 
-			yield eventsDb.read(event).must.then.eql({
+			eventsDb.read(event).must.eql({
 				__proto__: event,
 				content: {
 					committee: "Sotsiaalkomisjon",
@@ -1531,14 +1456,14 @@ describe("ParliamentSyncCli", function() {
 			)
 
 			yield job()
-			var event = yield eventsDb.read(sql`SELECT * FROM initiative_events`)
+			var event = eventsDb.read(sql`SELECT * FROM initiative_events`)
 			yield job()
 
-			yield eventsDb.read(event).must.then.eql(event)
+			eventsDb.read(event).must.eql(event)
 
-			yield filesDb.search(sql`
+			filesDb.search(sql`
 				SELECT * FROM initiative_files
-			`).must.then.eql([new ValidFile({
+			`).must.eql([new ValidFile({
 				id: 1,
 				event_id: 1,
 				initiative_uuid: event.initiative_uuid,
@@ -1546,7 +1471,7 @@ describe("ParliamentSyncCli", function() {
 				name: "Protokoll.pdf",
 				title: "Protokoll",
 				url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
-				content: new Buffer("PDF"),
+				content: Buffer.from("PDF"),
 				content_type: new MediaType("application/pdf"),
 				external_url: PARLIAMENT_URL + "/download/" + FILE_UUID
 			})])
@@ -1595,16 +1520,16 @@ describe("ParliamentSyncCli", function() {
 
 			yield job()
 
-			var event = yield eventsDb.read(sql`SELECT * FROM initiative_events`)
+			var event = eventsDb.read(sql`SELECT * FROM initiative_events`)
 
-			event = yield eventsDb.update(event, {
+			event = eventsDb.update(event, {
 				type: event.type,
 				content: _.assign(event.content, {summary: "An important decision"})
 			})
 
 			yield job()
 
-			yield eventsDb.read(event).must.then.eql({
+			eventsDb.read(event).must.eql({
 				__proto__: event,
 				occurred_at: new Date(2015, 5, 18, 15, 37, 42, 666),
 				updated_at: new Date,
@@ -1627,23 +1552,21 @@ describe("ParliamentSyncCli", function() {
 				this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
 				yield job()
 
-				var initiative = yield initiativesDb.read(sql`
-					SELECT * FROM initiatives
-				`)
+				var initiative = initiativesDb.read(sql`SELECT * FROM initiatives`)
 
-				var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
+				var events = eventsDb.search(sql`SELECT * FROM initiative_events`)
 				events.length.must.equal(1)
 
 				this.time.tick(1000)
 				yield job(["parliament-sync", "--force"])
 
-				;(yield initiativesDb.read(sql`
+				initiativesDb.read(sql`
 					SELECT * FROM initiatives
-				`)).parliament_synced_at.must.not.eql(initiative.parliament_synced_at)
+				`).parliament_synced_at.must.not.eql(initiative.parliament_synced_at)
 
-				yield eventsDb.search(sql`
+				eventsDb.search(sql`
 					SELECT * FROM initiative_events
-				`).must.then.eql(events)
+				`).must.eql(events)
 			})
 		})
 
@@ -1665,7 +1588,7 @@ describe("ParliamentSyncCli", function() {
 			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
 			yield job()
 
-			var initiative = yield initiativesDb.read(sql`SELECT * FROM initiatives`)
+			var initiative = initiativesDb.read(sql`SELECT * FROM initiatives`)
 
 			initiative.must.eql(new ValidInitiative({
 				__proto__: initiative,
@@ -1676,8 +1599,7 @@ describe("ParliamentSyncCli", function() {
 				parliament_synced_at: new Date
 			}))
 
-			var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
-			events.length.must.equal(1)
+			eventsDb.search(sql`SELECT * FROM initiative_events`).length.must.equal(1)
 		})
 	})
 
@@ -1724,7 +1646,7 @@ describe("ParliamentSyncCli", function() {
 
 			yield job()
 
-			var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
+			var events = eventsDb.search(sql`SELECT * FROM initiative_events`)
 
 			events.must.eql([new ValidEvent({
 				id: 1,
@@ -1744,9 +1666,9 @@ describe("ParliamentSyncCli", function() {
 				}
 			})])
 
-			yield filesDb.search(sql`
+			filesDb.search(sql`
 				SELECT * FROM initiative_files
-			`).must.then.eql([new ValidFile({
+			`).must.eql([new ValidFile({
 				id: 1,
 				initiative_uuid: INITIATIVE_UUID,
 				event_id: 1,
@@ -1800,7 +1722,7 @@ describe("ParliamentSyncCli", function() {
 
 			yield job()
 
-			var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
+			var events = eventsDb.search(sql`SELECT * FROM initiative_events`)
 
 			events.must.eql([new ValidEvent({
 				id: 1,
@@ -1818,9 +1740,9 @@ describe("ParliamentSyncCli", function() {
 				}
 			})])
 
-			yield filesDb.search(sql`
+			filesDb.search(sql`
 				SELECT * FROM initiative_files
-			`).must.then.eql([new ValidFile({
+			`).must.eql([new ValidFile({
 				id: 1,
 				initiative_uuid: INITIATIVE_UUID,
 				event_id: 1,
@@ -1841,8 +1763,8 @@ describe("ParliamentSyncCli", function() {
 	// too.
 	describe("given related documents", function() {
 		it(`must update initiative and create events and files given response letter`, function*() {
-			var initiative = yield initiativesDb.create(new ValidInitiative({
-				user_id: (yield usersDb.create(new ValidUser)).id,
+			var initiative = initiativesDb.create(new ValidInitiative({
+				user_id: usersDb.create(new ValidUser).id,
 				parliament_uuid: INITIATIVE_UUID
 			}))
 
@@ -1876,16 +1798,16 @@ describe("ParliamentSyncCli", function() {
 
 			yield job()
 
-			var updatedInitiative = yield initiativesDb.read(initiative)
+			var updatedInitiative = initiativesDb.read(initiative)
 			updatedInitiative.must.eql(_.assign({}, initiative, {
 				finished_in_parliament_at: new Date(2015, 5, 18, 13, 37, 42, 666),
 				parliament_api_data: updatedInitiative.parliament_api_data,
 				parliament_synced_at: new Date
 			}))
 
-			yield eventsDb.search(sql`
+			eventsDb.search(sql`
 				SELECT * FROM initiative_events
-			`).must.then.eql([new ValidEvent({
+			`).must.eql([new ValidEvent({
 				id: 1,
 				initiative_uuid: initiative.uuid,
 				occurred_at: new Date(2015, 5, 18, 13, 37, 42, 666),
@@ -1896,9 +1818,9 @@ describe("ParliamentSyncCli", function() {
 				content: null
 			})])
 
-			yield filesDb.search(sql`
+			filesDb.search(sql`
 				SELECT * FROM initiative_files
-			`).must.then.eql([new ValidFile({
+			`).must.eql([new ValidFile({
 				id: 1,
 				event_id: 1,
 				initiative_uuid: initiative.uuid,
@@ -2795,8 +2717,8 @@ describe("ParliamentSyncCli", function() {
 
 			it(`must create events and files given ${title}`,
 				function*() {
-				var initiative = yield initiativesDb.create(new ValidInitiative({
-					user_id: (yield usersDb.create(new ValidUser)).id,
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: usersDb.create(new ValidUser).id,
 					parliament_uuid: INITIATIVE_UUID
 				}))
 
@@ -2823,16 +2745,17 @@ describe("ParliamentSyncCli", function() {
 
 				yield job()
 
-				var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
+				var events = eventsDb.search(sql`SELECT * FROM initiative_events`)
+
 				events.must.eql(concat(eventAttrs).map((attrs, i) => new ValidEvent({
 					__proto__: attrs,
 					id: i + 1,
 					initiative_uuid: initiative.uuid
 				})))
 
-				yield filesDb.search(sql`
+				filesDb.search(sql`
 					SELECT * FROM initiative_files
-				`).must.then.eql(files.map((file) => new ValidFile({
+				`).must.eql(files.map((file) => new ValidFile({
 					__proto__: file,
 					initiative_uuid: initiative.uuid,
 					external_url: PARLIAMENT_URL + "/download/" + file.external_id
@@ -2879,9 +2802,9 @@ describe("ParliamentSyncCli", function() {
 
 			yield job()
 
-			yield filesDb.search(sql`
+			filesDb.search(sql`
 				SELECT * FROM initiative_files
-			`).must.then.eql([new ValidFile({
+			`).must.eql([new ValidFile({
 				id: 1,
 				event_id: 1,
 				initiative_uuid: INITIATIVE_UUID,
@@ -2891,7 +2814,7 @@ describe("ParliamentSyncCli", function() {
 				external_url:
 					PARLIAMENT_URL + "/download/005e0726-0886-4bc9-ad3a-f900f0173cf7",
 				url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
-				content: new Buffer("ASICE"),
+				content: Buffer.from("ASICE"),
 				content_type: new MediaType("application/zip")
 			}), new ValidFile({
 				id: 2,
@@ -2903,7 +2826,7 @@ describe("ParliamentSyncCli", function() {
 				url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
 				external_url:
 					PARLIAMENT_URL + "/download/eef04b9e-2d78-404b-b41b-679817e99d53",
-				content: new Buffer("PDF"),
+				content: Buffer.from("PDF"),
 				content_type: new MediaType("application/pdf")
 			})])
 		})
@@ -2937,9 +2860,9 @@ describe("ParliamentSyncCli", function() {
 
 			yield job()
 
-			yield filesDb.search(sql`
+			filesDb.search(sql`
 				SELECT * FROM initiative_files
-			`).must.then.eql([new ValidFile({
+			`).must.eql([new ValidFile({
 				id: 1,
 				initiative_uuid: INITIATIVE_UUID,
 				event_id: 1,
@@ -3000,7 +2923,7 @@ describe("ParliamentSyncCli", function() {
 
 				yield job()
 
-				var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
+				var events = eventsDb.search(sql`SELECT * FROM initiative_events`)
 
 				events.must.eql([new ValidEvent({
 					id: 1,
@@ -3013,9 +2936,9 @@ describe("ParliamentSyncCli", function() {
 					content: {committee: name, invitees: null}
 				})])
 
-				yield filesDb.search(sql`
+				filesDb.search(sql`
 					SELECT * FROM initiative_files
-				`).must.then.eql([new ValidFile({
+				`).must.eql([new ValidFile({
 					id: 1,
 					initiative_uuid: INITIATIVE_UUID,
 					event_id: 1,
@@ -3060,13 +2983,8 @@ describe("ParliamentSyncCli", function() {
 
 			yield job()
 
-			yield eventsDb.search(sql`
-				SELECT * FROM initiative_events
-			`).must.then.be.empty()
-
-			yield filesDb.search(sql`
-				SELECT * FROM initiative_files
-			`).must.then.be.empty()
+			eventsDb.search(sql`SELECT * FROM initiative_events`).must.be.empty()
+			filesDb.search(sql`SELECT * FROM initiative_files`).must.be.empty()
 		})
 
 		it("must not create event given letter with no public files", function*() {
@@ -3096,13 +3014,8 @@ describe("ParliamentSyncCli", function() {
 
 			yield job()
 
-			yield eventsDb.search(sql`
-				SELECT * FROM initiative_events
-			`).must.then.be.empty()
-
-			yield filesDb.search(sql`
-				SELECT * FROM initiative_files
-			`).must.then.be.empty()
+			eventsDb.search(sql`SELECT * FROM initiative_events`).must.be.empty()
+			filesDb.search(sql`SELECT * FROM initiative_files`).must.be.empty()
 		})
 
 		// There's another test elsewhere that tests given an agenda item *with*
@@ -3160,7 +3073,7 @@ describe("ParliamentSyncCli", function() {
 
 			yield job()
 
-			var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
+			var events = eventsDb.search(sql`SELECT * FROM initiative_events`)
 
 			events.must.eql([new ValidEvent({
 				id: 1,
@@ -3177,9 +3090,9 @@ describe("ParliamentSyncCli", function() {
 				}
 			})])
 
-			yield filesDb.search(sql`
+			filesDb.search(sql`
 				SELECT * FROM initiative_files
-			`).must.then.eql([new ValidFile({
+			`).must.eql([new ValidFile({
 				id: 1,
 				initiative_uuid: INITIATIVE_UUID,
 				event_id: 1,
@@ -3221,7 +3134,7 @@ describe("ParliamentSyncCli", function() {
 
 			yield job()
 
-			var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
+			var events = eventsDb.search(sql`SELECT * FROM initiative_events`)
 
 			events.must.eql([new ValidEvent({
 				id: 1,
@@ -3234,9 +3147,9 @@ describe("ParliamentSyncCli", function() {
 				content: {}
 			})])
 
-			yield filesDb.search(sql`
+			filesDb.search(sql`
 				SELECT * FROM initiative_files
-			`).must.then.eql([new ValidFile({
+			`).must.eql([new ValidFile({
 				id: 1,
 				initiative_uuid: INITIATIVE_UUID,
 				event_id: 1,
@@ -3358,7 +3271,7 @@ describe("ParliamentSyncCli", function() {
 
 			yield job()
 
-			var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
+			var events = eventsDb.search(sql`SELECT * FROM initiative_events`)
 
 			events.must.eql([new ValidEvent({
 				id: 1,
@@ -3371,9 +3284,9 @@ describe("ParliamentSyncCli", function() {
 				content: {committee: "Keskkonnakomisjon", invitees: null}
 			})])
 
-			yield filesDb.search(sql`
+			filesDb.search(sql`
 				SELECT * FROM initiative_files
-			`).must.then.eql([new ValidFile({
+			`).must.eql([new ValidFile({
 				id: 1,
 				initiative_uuid: INITIATIVE_UUID,
 				event_id: 1,
@@ -3441,7 +3354,7 @@ describe("ParliamentSyncCli", function() {
 
 			yield job()
 
-			var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
+			var events = eventsDb.search(sql`SELECT * FROM initiative_events`)
 
 			events.must.eql([new ValidEvent({
 				id: 1,
@@ -3458,9 +3371,9 @@ describe("ParliamentSyncCli", function() {
 				}
 			})])
 
-			yield filesDb.search(sql`
+			filesDb.search(sql`
 				SELECT * FROM initiative_files
-			`).must.then.eql([new ValidFile({
+			`).must.eql([new ValidFile({
 				id: 1,
 				initiative_uuid: INITIATIVE_UUID,
 				event_id: 1,
@@ -3527,7 +3440,7 @@ describe("ParliamentSyncCli", function() {
 
 			yield job()
 
-			var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
+			var events = eventsDb.search(sql`SELECT * FROM initiative_events`)
 
 			events.must.eql([new ValidEvent({
 				id: 1,
@@ -3545,9 +3458,9 @@ describe("ParliamentSyncCli", function() {
 				}
 			})])
 
-			yield filesDb.search(sql`
+			filesDb.search(sql`
 				SELECT * FROM initiative_files
-			`).must.then.eql([new ValidFile({
+			`).must.eql([new ValidFile({
 				id: 1,
 				initiative_uuid: INITIATIVE_UUID,
 				event_id: 1,
@@ -3624,7 +3537,7 @@ describe("ParliamentSyncCli", function() {
 
 			yield job()
 
-			var events = yield eventsDb.search(sql`SELECT * FROM initiative_events`)
+			var events = eventsDb.search(sql`SELECT * FROM initiative_events`)
 
 			events.must.eql([new ValidEvent({
 				id: 1,
@@ -3642,9 +3555,9 @@ describe("ParliamentSyncCli", function() {
 				}
 			})])
 
-			yield filesDb.search(sql`
+			filesDb.search(sql`
 				SELECT * FROM initiative_files
-			`).must.then.eql([new ValidFile({
+			`).must.eql([new ValidFile({
 				id: 1,
 				initiative_uuid: INITIATIVE_UUID,
 				event_id: 1,

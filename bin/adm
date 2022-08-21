@@ -1,8 +1,13 @@
 #!/usr/bin/env node
 process.title = "rahvaalgatus/adm"
 
+if (process.env.CONFIG) require("root").config =
+	require("root/lib/config").read(process.env.CONFIG)
+if (process.env.DB)
+	require("root").sqlite = require("root/lib/sqlite")(process.env.DB)
+
 var Express = require("root/lib/express")
-var Config = require("root/config")
+var Config = require("root").config
 var HttpError = require("standard-http-error")
 var runServer = require("root/lib/http").runServer
 var t = require("root/lib/i18n").t.bind(null, "en")

@@ -9,11 +9,13 @@ var USAGE_TEXT = `
 Usage: cli [options] [<command> [<args>...]]
 
 Options:
-    -h, --help           Display this help and exit.
+    -h, --help        Display this help and exit.
+		--env=ENV         Set the environment. Defaults to $ENV or "development".
+    --config=PATH     Use the given configuration instead of "config/$ENV.json".
+    --db=PATH         Use the given database instead of "config/$ENV.sqlite3".
 
 Commands:
     parliament-sync       Sync initiatives against the parliament API.
-    parliament-web-sync   Sync initiatives against the parliament web page.
     initiative-end-email  Sends emails to authors for initiative deadlines.
     initiative-signatures Manage and anonmymize initiative signatures.
     initiative-signature-milestones  Records initiative signature milestones.
@@ -26,17 +28,22 @@ For more help or to give feedback, please see https://github.com/rahvaalgatus .
 var args = Neodoc.run(USAGE_TEXT, {optionsFirst: true, versionFlags: []})
 if (args["--help"]) return void process.stdout.write(USAGE_TEXT.trimLeft())
 
+if (args["--env"] != null) process.env.ENV = args["--env"]
+
+if (args["--config"] != null) require("root").config =
+	require("root/lib/config").read(args["--config"])
+
+if (args["--db"] != null)
+	require("root").sqlite = require("root/lib/sqlite")(args["--db"])
+
 var cmd = args["<command>"]
 if (cmd == null) return void process.stdout.write(USAGE_TEXT.trimLeft())
 
-var co = require("co")
 require("root").logger = console
 
 var CLIS = {
   "parliament-sync":
     require.resolve("root/cli/parliament_sync_cli"),
-  "parliament-web-sync":
-    require.resolve("root/cli/parliament_web_sync_cli"),
   "initiative-end-email":
     require.resolve("root/cli/initiative_end_email_cli"),
   "initiative-signatures":
@@ -51,10 +58,10 @@ var CLIS = {
 
 var cmdPath = CLIS[cmd]
 if (cmdPath == null) return void die("No such command: %s", cmd)
+var cmdFn = require(cmdPath)
 
-co(function*() {
-	yield require(cmdPath)(concat(cmd, args["<args>"]))
-}).catch(handleError)
+try { Promise.resolve(cmdFn(concat(cmd, args["<args>"]))).catch(handleError) }
+catch (err) { handleError(err) }
 
 function handleError(err) {
 	require("root/lib/console_error_reporter")(err)

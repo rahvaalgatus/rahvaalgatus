@@ -20,15 +20,15 @@ var DEFAULT_INITIATIVES_INTERESTS = {
 	comment_interest: false
 }
 
-var readSubscriptionFromQuery = next(withSubscription.bind(null, (req) => [
+var readSubscriptionFromQuery = withSubscription.bind(null, (req) => [
 	req.query.initiative,
 	req.query["update-token"]
-]))
+])
 
-exports.router.get("/", readSubscriptionFromQuery, next(function*(req, res) {
+exports.router.get("/", readSubscriptionFromQuery, function(req, res) {
 	var subscription = req.subscription
 
-	var subscriptions = yield subscriptionsDb.search(sql`
+	var subscriptions = subscriptionsDb.search(sql`
 		SELECT subscription.*, initiative.title AS initiative_title
 		FROM initiative_subscriptions AS subscription
 		LEFT JOIN initiatives AS initiative
@@ -42,7 +42,7 @@ exports.router.get("/", readSubscriptionFromQuery, next(function*(req, res) {
 		subscription: subscription,
 		subscriptions: subscriptions
 	})
-}))
+})
 
 exports.router.post("/", next(function*(req, res) {
 	if (req.body["e-mail"]) throw new HttpError(403, "Suspicion of Automation")
@@ -58,7 +58,7 @@ exports.router.post("/", next(function*(req, res) {
 
 	var subscription
 	try {
-		subscription = yield subscriptionsDb.create({
+		subscription = subscriptionsDb.create({
 			email: email,
 			new_interest: attrs.new_interest,
 			signable_interest: attrs.signable_interest,
@@ -71,7 +71,7 @@ exports.router.post("/", next(function*(req, res) {
 	}
 	catch (err) {
 		if (err instanceof SqliteError && err.type == "unique")
-			subscription = yield subscriptionsDb.read(sql`
+			subscription = subscriptionsDb.read(sql`
 				SELECT * FROM initiative_subscriptions
 				WHERE initiative_uuid IS NULL AND email = ${email}
 			`)
@@ -84,7 +84,7 @@ exports.router.post("/", next(function*(req, res) {
 		user.email &&
 		_.caseInsensitiveEquals(user.email, subscription.email)
 	) {
-		yield subscriptionsDb.update(subscription, {
+		subscriptionsDb.update(subscription, {
 			confirmed_at: new Date,
 			new_interest: attrs.new_interest,
 			signable_interest: attrs.signable_interest,
@@ -118,7 +118,7 @@ exports.router.post("/", next(function*(req, res) {
 			})
 		})
 
-		yield subscriptionsDb.update(subscription, {confirmation_sent_at: new Date})
+		subscriptionsDb.update(subscription, {confirmation_sent_at: new Date})
 		res.flash("notice", req.t("CONFIRM_INITIATIVES_SUBSCRIPTION"))
 	}
 	else res.flash("notice", req.t("CONFIRM_INITIATIVES_SUBSCRIPTION"))
@@ -126,16 +126,16 @@ exports.router.post("/", next(function*(req, res) {
 	res.redirect(303, "/")
 }))
 
-exports.router.put("/", readSubscriptionFromQuery, next(function*(req, res) {
+exports.router.put("/", readSubscriptionFromQuery, function(req, res) {
 	var subscription = req.subscription
 
-	var subscriptions = yield subscriptionsDb.search(sql`
+	var subscriptions = subscriptionsDb.search(sql`
 		SELECT * FROM initiative_subscriptions
 		WHERE email = ${subscription.email}
 		AND confirmed_at IS NOT NULL
 	`)
 
-	subscriptions = yield updateSubscriptions(subscriptions, req.body)
+	subscriptions = updateSubscriptions(subscriptions, req.body)
 
 	res.flash("notice", req.t("INITIATIVE_SUBSCRIPTIONS_UPDATED"))
 
@@ -144,12 +144,12 @@ exports.router.put("/", readSubscriptionFromQuery, next(function*(req, res) {
 	)) || subscriptions[0]
 
 	res.redirect(303, to ? "/subscriptions?" + tokenize(to) : "/")
-}))
+})
 
-exports.router.delete("/", readSubscriptionFromQuery, next(function*(req, res) {
+exports.router.delete("/", readSubscriptionFromQuery, function(req, res) {
 	var subscription = req.subscription
 
-	yield subscriptionsDb.execute(sql`
+	subscriptionsDb.execute(sql`
 		DELETE FROM initiative_subscriptions
 		WHERE email = ${subscription.email}
 		AND confirmed_at IS NOT NULL
@@ -157,10 +157,10 @@ exports.router.delete("/", readSubscriptionFromQuery, next(function*(req, res) {
 
 	res.flash("notice", req.t("INITIATIVES_SUBSCRIPTION_DELETED"))
 	res.redirect(303, "/")
-}))
+})
 
-exports.router.get("/new", next(function*(req, res) {
-	var subscription = yield subscriptionsDb.read(sql`
+exports.router.get("/new", function(req, res) {
+	var subscription = subscriptionsDb.read(sql`
 		SELECT * FROM initiative_subscriptions
 		WHERE initiative_uuid IS NULL
 		AND update_token = ${req.query.confirmation_token}
@@ -168,11 +168,10 @@ exports.router.get("/new", next(function*(req, res) {
 	`)
 
 	if (subscription) {
-		if (!subscription.confirmed_at)
-			yield subscriptionsDb.update(subscription, {
-				confirmed_at: new Date,
-				updated_at: new Date
-			})
+		if (!subscription.confirmed_at) subscriptionsDb.update(subscription, {
+			confirmed_at: new Date,
+			updated_at: new Date
+		})
 
 		res.flash("notice", req.t("CONFIRMED_INITIATIVES_SUBSCRIPTION"))
 		res.redirect(303, req.baseUrl + "/" + subscription.update_token)
@@ -185,13 +184,12 @@ exports.router.get("/new", next(function*(req, res) {
 			body: req.t("INVALID_INITIATIVES_SUBSCRIPTION_CONFIRMATION_TOKEN")
 		})
 	}
-}))
+})
 
-exports.router.use("/:token",
-	next(withSubscription.bind(null, (req) => [
-		null,
-		req.params.token.replace(/\.+$/, "")
-	])))
+exports.router.use("/:token", withSubscription.bind(null, (req) => [
+	null,
+	req.params.token.replace(/\.+$/, "")
+]))
 
 exports.router.get("/:token", function(req, res) {
 	var subscription = req.subscription
@@ -216,10 +214,12 @@ function parse(obj) {
 	return attrs
 }
 
-function* withSubscription(get, req, res, next) {
+function withSubscription(get, req, res, next) {
 	var [uuid, token] = get(req)
 
-	req.subscription = yield subscriptionsDb.read(sql`
+	// Cannot hash the token as it's needed for emailing, but could XOR it with
+	// something secret to reduce timing leaks.
+	req.subscription = subscriptionsDb.read(sql`
 		SELECT * FROM initiative_subscriptions
 		WHERE initiative_uuid ${uuid ? sql`= ${uuid}` : sql`IS NULL`}
 		AND update_token = ${token}
@@ -247,10 +247,10 @@ function updateSubscriptions(subscriptions, form) {
 		id == "null" || id.indexOf("-") >= 0
 	)), parse)
 
-	return Promise.all(subscriptions.map(function(subscription) {
+	return subscriptions.map(function(subscription) {
 		var attrs = attrsByInitiativeUuid[subscription.initiative_uuid]
-		if (attrs == null) return Promise.resolve(subscription)
-		if (attrs.delete) return subscriptionsDb.delete(subscription)
+		if (attrs == null) return subscription
+		if (attrs.delete) return subscriptionsDb.delete(subscription), null
 
 		if (subscription.initiative_uuid) {
 			attrs.new_interest = false
@@ -261,5 +261,5 @@ function updateSubscriptions(subscriptions, form) {
 			__proto__: attrs,
 			updated_at: new Date
 		})
-	})).then((subs) => subs.filter(Boolean))
+	}).filter(Boolean)
 }

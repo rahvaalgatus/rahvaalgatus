@@ -4,7 +4,6 @@ var Router = require("express").Router
 var MediaType = require("medium-type")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
-var next = require("co-next")
 var sqlite = require("root").sqlite
 var {getRequiredSignatureCount} = require("root/lib/initiative")
 var sql = require("sqlate")
@@ -16,11 +15,11 @@ var ZERO_COUNTS = _.fromEntries(PHASES.map((name) => [name, 0]))
 
 exports.router = Router({mergeParams: true})
 
-exports.router.get("/", next(function*(req, res) {
+exports.router.get("/", function(req, res) {
 	var gov = req.government
 	var cutoff = DateFns.addDays(DateFns.startOfDay(new Date), -14)
 
-	var initiatives = yield initiativesDb.search(sql`
+	var initiatives = initiativesDb.search(sql`
 		SELECT
 			initiative.*,
 			user.name AS user_name,
@@ -49,7 +48,7 @@ exports.router.get("/", next(function*(req, res) {
 		initiative.signature_count >= getRequiredSignatureCount(initiative)
 	))
 
-	var statistics = gov == null || gov == "parliament" ? yield {
+	var statistics = gov == null || gov == "parliament" ? {
 		all: readStatistics(gov, null),
 
 		30: readStatistics(gov, [
@@ -60,9 +59,9 @@ exports.router.get("/", next(function*(req, res) {
 
 	switch (gov) {
 		case null:
-			var recentInitiatives = yield searchRecentInitiatives(initiatives)
+			var recentInitiatives = searchRecentInitiatives(initiatives)
 
-			var news = yield newsDb.search(sql`
+			var news = newsDb.search(sql`
 				SELECT * FROM news, json_each(news.categories) AS category
 				WHERE category.value= 'Rahvaalgatusveeb'
 				ORDER BY published_at DESC
@@ -86,7 +85,7 @@ exports.router.get("/", next(function*(req, res) {
 
 		case "local":
 			var initiativeCounts = _.mapValues(
-				_.indexBy(yield initiativesDb.search(sql`
+				_.indexBy(initiativesDb.search(sql`
 					SELECT destination, COUNT(*) AS count
 					FROM initiatives
 					WHERE destination IS NOT NULL AND destination != 'parliament'
@@ -104,7 +103,7 @@ exports.router.get("/", next(function*(req, res) {
 
 		default: throw new RangeError("Invalid government: " + gov)
 	}
-}))
+})
 
 _.each({
 	"/about": "home/about_page.jsx",
@@ -120,27 +119,27 @@ exports.router.get("/statistics",
 	new ResponseTypeMiddeware([
 		new MediaType("application/vnd.rahvaalgatus.statistics+json; v=1")
 	]),
-	next(function*(_req, res) {
+	function(_req, res) {
 	res.setHeader("Content-Type", res.contentType)
 	res.setHeader("Access-Control-Allow-Origin", "*")
 
-	var countsByPhase = _.defaults(_.fromEntries(yield sqlite(sql`
+	var countsByPhase = _.defaults(_.fromEntries(sqlite(sql`
 		SELECT phase, COUNT(*) AS count
 		FROM initiatives
 		WHERE published_at IS NOT NULL
 		AND NOT external
 		GROUP BY phase
-	`).then((rows) => rows.map((row) => [row.phase, row.count]))), ZERO_COUNTS)
+	`).map((row) => [row.phase, row.count])), ZERO_COUNTS)
 
 	// TODO: These two active-initiative queries could be combined.
-	var activeCountsByPhase = yield {
+	var activeCountsByPhase = {
 		edit: sqlite(sql`
 			SELECT COUNT(*) AS count
 			FROM initiatives
 			WHERE phase = 'edit'
 			AND published_at IS NOT NULL
 			AND discussion_ends_at > ${new Date}
-		`).then(_.first).then((res) => res.count),
+		`)[0].count,
 
 		sign: sqlite(sql`
 			SELECT COUNT(*) AS count
@@ -148,22 +147,22 @@ exports.router.get("/statistics",
 			WHERE phase = 'sign'
 			AND published_at IS NOT NULL
 			AND signing_ends_at > ${new Date}
-		`).then(_.first).then((res) => res.count),
+		`)[0].count
 	}
 
 	res.send({
 		initiativeCountsByPhase: countsByPhase,
 		activeInitiativeCountsByPhase: activeCountsByPhase,
-		signatureCount: yield readSignatureCount(null, null)
+		signatureCount: readSignatureCount(null, null)
 	})
-}))
+})
 
-function* readStatistics(gov, range) {
+function readStatistics(gov, range) {
 	// The discussion counter on the home page is really the total initiatives
 	// counter at the start of the funnel.
 	//
 	// https://github.com/rahvaalgatus/rahvaalgatus/issues/176#issuecomment-531594684.
-	var discussionsCount = yield sqlite(sql`
+	var discussionsCount = sqlite(sql`
 		SELECT COUNT(*) AS count
 		FROM initiatives
 		WHERE NOT external
@@ -175,9 +174,9 @@ function* readStatistics(gov, range) {
 		` : sql``}
 
 		AND (destination IS NULL OR ${gov ? sql`destination = ${gov}` : sql`1 = 1`})
-	`).then(_.first).then((res) => res.count)
+	`)[0].count
 
-	var initiativeCounts = yield sqlite(sql`
+	var initiativeCounts = sqlite(sql`
 		SELECT
 			COUNT(*) AS "all",
 			COALESCE(SUM(destination = 'parliament'), 0) AS parliament,
@@ -197,11 +196,11 @@ function* readStatistics(gov, range) {
 		` : sql``}
 
 		${gov ? sql`AND destination = ${gov}` : sql``}
-	`).then(_.first)
+	`)[0]
 
-	var signatureCount = yield readSignatureCount(gov, range)
+	var signatureCount = readSignatureCount(gov, range)
 
-	var governmentCounts = yield sqlite(sql`
+	var governmentCounts = sqlite(sql`
 		SELECT
 			COALESCE(SUM(NOT external), 0) AS sent,
 
@@ -233,7 +232,7 @@ function* readStatistics(gov, range) {
 		)` : sql``}
 
 		${gov ? sql`AND destination = ${gov}` : sql``}
-	`).then(_.first)
+	`)[0]
 
 	return {
 		discussionsCount: discussionsCount,
@@ -262,13 +261,13 @@ function readSignatureCount(gov, range) {
 			AND signature.created_at >= ${range[0]}
 			AND signature.created_at < ${range[1]}
 		` : sql``}
-	`).then(_.first).then((row) => row.count)
+	`)[0].count
 }
 
-function* searchRecentInitiatives() {
+function searchRecentInitiatives() {
 	// Intentionally ignoring imported CitizenOS signatures as those originate
 	// from Feb 2020 and earlier.
-	var recents = _.fromEntries(_.uniqBy(yield sqlite(sql`
+	var recents = _.fromEntries(_.uniqBy(sqlite(sql`
 		SELECT
 			comment.initiative_uuid AS uuid,
 			max(comment.created_at) AS at,
@@ -296,7 +295,7 @@ function* searchRecentInitiatives() {
 		LIMIT 6 * 3
 	`), "uuid").slice(0, 6).map((r, i) => [r.uuid, _.assign(r, {position: i})]))
 
-	return _.sortBy(yield initiativesDb.search(sql`
+	return _.sortBy(initiativesDb.search(sql`
 		SELECT
 			initiative.*,
 			user.name AS user_name,

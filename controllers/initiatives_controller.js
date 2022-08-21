@@ -5,7 +5,7 @@ var HttpError = require("standard-http-error")
 var Initiative = require("root/lib/initiative")
 var DateFns = require("date-fns")
 var Time = require("root/lib/time")
-var Config = require("root/config")
+var Config = require("root").config
 var Crypto = require("crypto")
 var MediaType = require("medium-type")
 var Subscription = require("root/lib/subscription")
@@ -49,7 +49,7 @@ exports.router = Router({mergeParams: true})
 
 exports.router.get("/",
 	new ResponseTypeMiddeware(["text/html", INITIATIVE_TYPE].map(MediaType)),
-	next(function*(req, res) {
+	function(req, res) {
 	if (res.contentType.name == INITIATIVE_TYPE.name) {
 		res.setHeader("Content-Type", INITIATIVE_TYPE)
 		res.setHeader("Access-Control-Allow-Origin", "*")
@@ -71,7 +71,7 @@ exports.router.get("/",
 	var [orderBy, orderDir] = req.query.order ? parseOrder(req.query.order) : []
 	var limit = req.query.limit ? parseLimit(req.query.limit) : null
 
-	var initiatives = yield initiativesDb.search(sql`
+	var initiatives = initiativesDb.search(sql`
 		${signedSince ? sql`
 			WITH recent_signatures AS (
 				SELECT initiative_uuid FROM initiative_signatures
@@ -146,15 +146,15 @@ exports.router.get("/",
 			onlyDestinations: onlyDestinations || EMPTY_ARR
 		})
 	}
-}))
+})
 
-exports.router.post("/", next(function*(req, res) {
+exports.router.post("/", function(req, res) {
 	var user = req.user
 	if (user == null) throw new HttpError(401)
 
 	var attrs = parseText(req.body)
 
-	var initiative = yield initiativesDb.create({
+	var initiative = initiativesDb.create({
 		uuid: _.serializeUuid(_.uuidV4()),
 		user_id: user.id,
 		title: attrs.title,
@@ -163,7 +163,7 @@ exports.router.post("/", next(function*(req, res) {
 		undersignable: true
 	})
 
-	yield textsDb.create({
+	textsDb.create({
 		__proto__: attrs,
 		initiative_uuid: initiative.uuid,
 		user_id: user.id,
@@ -171,7 +171,7 @@ exports.router.post("/", next(function*(req, res) {
 	})
 
 	res.redirect(303, req.baseUrl + "/" + initiative.uuid)
-}))
+})
 
 exports.router.get("/new", function(req, res) {
 	var user = req.user
@@ -183,10 +183,10 @@ exports.router.get("/new", function(req, res) {
 	})
 })
 
-exports.router.use("/:id", next(function*(req, res, next) {
+exports.router.use("/:id", function(req, res, next) {
 	var user = req.user
 
-	var initiative = yield initiativesDb.read(sql`
+	var initiative = initiativesDb.read(sql`
 		SELECT
 			initiative.*,
 			user.name AS user_name,
@@ -203,7 +203,7 @@ exports.router.use("/:id", next(function*(req, res, next) {
 	if (!initiative.published_at && !user)
 		throw new HttpError(401, "Initiative Not Public")
 
-	var coauthors = yield coauthorsDb.search(sql`
+	var coauthors = coauthorsDb.search(sql`
 		SELECT coauthor.*, user.name AS user_name
 		FROM initiative_coauthors AS coauthor
 		LEFT JOIN users AS user ON user.id = coauthor.user_id
@@ -235,7 +235,7 @@ exports.router.use("/:id", next(function*(req, res, next) {
 	req.coauthorInvitations = coauthors.filter((a) => a.status == "pending")
 
 	next()
-}))
+})
 
 exports.router.use("/:id/coauthors",
 	require("./initiatives/coauthors_controller").router)
@@ -271,12 +271,12 @@ exports.router.get("/:id",
 	].map(MediaType), [
 		"image/*"
 	].map(MediaType)),
-	next(function*(req, res, next) {
+	function(req, res, next) {
 	var type = res.contentType
 	var initiative = req.initiative
 
 	if (type.type == "image") {
-		var image = yield imagesDb.read(sql`
+		var image = imagesDb.read(sql`
 			SELECT type, preview
 			FROM initiative_images
 			WHERE initiative_uuid = ${initiative.uuid}
@@ -297,16 +297,16 @@ exports.router.get("/:id",
 			break
 
 		case "application/atom+xml":
-			var events = yield searchInitiativeEvents(initiative)
+			var events = searchInitiativeEvents(initiative)
 			res.setHeader("Content-Type", type)
 			res.render("initiatives/atom.jsx", {events: events})
 			break
 
 		default: exports.read(req, res, next)
 	}
-}))
+})
 
-exports.read = next(function*(req, res) {
+exports.read = function(req, res) {
 	var user = req.user
 	var initiative = req.initiative
 	var thank = false
@@ -316,7 +316,7 @@ exports.read = next(function*(req, res) {
 	var textLanguage = req.query.language || initiative.language
 
 	if (initiative.phase == "sign") if (newSignatureToken) {
-		signature = yield signaturesDb.read(sql`
+		signature = signaturesDb.read(sql`
 			SELECT * FROM initiative_signatures
 			WHERE initiative_uuid = ${initiative.uuid}
 			AND token = ${Buffer.from(newSignatureToken, "hex")}
@@ -325,14 +325,14 @@ exports.read = next(function*(req, res) {
 		thank = !!signature
 		thankAgain = signature && signature.oversigned > 0
 	}
-	else if (user) signature = yield signaturesDb.read(sql`
+	else if (user) signature = signaturesDb.read(sql`
 		SELECT * FROM initiative_signatures
 		WHERE initiative_uuid = ${initiative.uuid}
 		AND country = ${user.country}
 		AND personal_id = ${user.personal_id}
 	`)
 
-	var subscriberCounts = yield sqlite(sql`
+	var subscriberCounts = sqlite(sql`
 		SELECT
 			SUM(initiative_uuid IS NULL) AS "all",
 			SUM(initiative_uuid IS NOT NULL) AS initiative
@@ -342,13 +342,13 @@ exports.read = next(function*(req, res) {
 			initiative_uuid IS NULL OR
 			initiative_uuid = ${initiative.uuid}
 		)
-	`).then(_.first)
+	`)[0]
 
-	var comments = yield searchInitiativeComments(initiative.uuid)
-	var events = yield searchInitiativeEvents(initiative)
+	var comments = searchInitiativeComments(initiative.uuid)
+	var events = searchInitiativeEvents(initiative)
 
 	var subscription = user && user.email && user.email_confirmed_at
-		? yield subscriptionsDb.read(sql`
+		? subscriptionsDb.read(sql`
 			SELECT * FROM initiative_subscriptions
 			WHERE initiative_uuid = ${initiative.uuid}
 			AND email = ${user.email}
@@ -356,20 +356,20 @@ exports.read = next(function*(req, res) {
 		`)
 		: null
 
-	var files = yield filesDb.search(sql`
+	var files = filesDb.search(sql`
 		SELECT id, name, title, content_type, length(content) AS size
 		FROM initiative_files
 		WHERE initiative_uuid = ${initiative.uuid}
 		AND event_id IS NULL
 	`)
 
-	var image = yield imagesDb.read(sql`
+	var image = imagesDb.read(sql`
 		SELECT initiative_uuid, type, author_name, author_url
 		FROM initiative_images
 		WHERE initiative_uuid = ${initiative.uuid}
 	`)
 
-	var text = yield textsDb.read(sql`
+	var text = textsDb.read(sql`
 		SELECT * FROM initiative_texts
 		WHERE initiative_uuid = ${initiative.uuid}
 		AND language = ${textLanguage}
@@ -394,7 +394,7 @@ exports.read = next(function*(req, res) {
 		else throw new HttpError(404, "No Text Yet")
 	}
 
-	var translations = _.indexBy(yield textsDb.search(sql`
+	var translations = _.indexBy(textsDb.search(sql`
 		SELECT language, id
 		FROM initiative_texts
 
@@ -426,7 +426,7 @@ exports.read = next(function*(req, res) {
 		comments: comments,
 		events: events
 	})
-})
+}
 
 exports.router.put("/:id", next(function*(req, res) {
 	var user = req.user
@@ -447,18 +447,18 @@ exports.router.put("/:id", next(function*(req, res) {
 		yield updateInitiativePhaseToParliament(req, res)
 	}
 	else if (req.body.author_personal_id) {
-		yield updateInitiativeAuthor(req, res)
+		updateInitiativeAuthor(req, res)
 	}
 	else if (isInitiativeUpdate(req.body)) {
 		var attrs = parseInitiative(initiative, req.body)
-		yield initiativesDb.update(initiative.uuid, attrs)
+		initiativesDb.update(initiative.uuid, attrs)
 		res.flash("notice", req.t("INITIATIVE_INFO_UPDATED"))
 		res.redirect(303, req.headers.referer || req.baseUrl + req.url)
 	}
 	else throw new HttpError(422, "Invalid Attribute")
 }))
 
-exports.router.delete("/:id", next(function*(req, res) {
+exports.router.delete("/:id", function(req, res) {
 	var user = req.user
 	if (user == null) throw new HttpError(401)
 
@@ -469,31 +469,31 @@ exports.router.delete("/:id", next(function*(req, res) {
 	if (initiative.phase != "edit")
 		throw new HttpError(405, "Can Only Delete Discussions")
 
-	if (initiative.published_at && (yield commentsDb.select1(sql`
+	if (initiative.published_at && commentsDb.select1(sql`
 		SELECT COUNT(*) AS count FROM comments
 		WHERE initiative_uuid = ${initiative.uuid}
-	`).then((row) => row.count)) > 0) {
+	`).count > 0) {
 		res.flash("notice", req.t("INITIATIVE_CANNOT_BE_DELETED_HAS_COMMENTS"))
 		res.redirect(303, req.baseUrl + req.path)
 		return
 	}
 
-	yield commentsDb.execute(sql`
+	commentsDb.execute(sql`
 		DELETE FROM comments
 		WHERE initiative_uuid = ${initiative.uuid}
 	`)
 
-	yield textsDb.execute(sql`
+	textsDb.execute(sql`
 		DELETE FROM initiative_texts
 		WHERE initiative_uuid = ${initiative.uuid}
 	`)
 
-	yield initiativesDb.delete(initiative.uuid)
+	initiativesDb.delete(initiative.uuid)
 	res.flash("notice", req.t("INITIATIVE_DELETED"))
 	res.redirect(303, req.baseUrl)
-}))
+})
 
-exports.router.get("/:id/edit", next(function*(req, res) {
+exports.router.get("/:id/edit", function(req, res) {
 	var user = req.user
 	if (user == null) throw new HttpError(401)
 
@@ -502,7 +502,7 @@ exports.router.get("/:id/edit", next(function*(req, res) {
 	var isAuthor = user && Initiative.isAuthor(user, initiative)
 	if (!isAuthor) throw new HttpError(403, "No Permission to Edit")
 
-	var text = yield textsDb.read(sql`
+	var text = textsDb.read(sql`
 		SELECT * FROM initiative_texts
 		WHERE initiative_uuid = ${initiative.uuid}
 		AND language = ${req.query.language || initiative.language}
@@ -513,7 +513,7 @@ exports.router.get("/:id/edit", next(function*(req, res) {
 	var path = req.baseUrl + "/" + initiative.uuid + "/texts"
 	if (text) res.redirect(path + "/" + text.id)
 	else res.redirect(path + "/new?language=" + initiative.language)
-}))
+})
 
 exports.router.use("/:id/image",
 	require("./initiatives/image_controller").router)
@@ -543,8 +543,8 @@ exports.router.use(function(err, req, res, next) {
 	else next(err)
 })
 
-function* searchInitiativesEvents(initiatives) {
-	var events = yield eventsDb.search(sql`
+function searchInitiativesEvents(initiatives) {
+	var events = eventsDb.search(sql`
 		SELECT
 			event.*,
 			user.name AS user_name,
@@ -634,8 +634,8 @@ function* searchInitiativesEvents(initiatives) {
 	}))
 }
 
-function* searchInitiativeComments(initiativeUuid) {
-	var comments = yield commentsDb.search(sql`
+function searchInitiativeComments(initiativeUuid) {
+	var comments = commentsDb.search(sql`
 		SELECT comment.*, user.name AS user_name
 		FROM comments AS comment
 		LEFT JOIN users AS user
@@ -681,11 +681,11 @@ function* updateInitiativeToPublished(req, res) {
 
 	if (!Initiative.canPublish(user)) throw new HttpError(403, "Cannot Publish")
 
-	if (!(yield textsDb.read(sql`
+	if (!textsDb.read(sql`
 		SELECT id FROM initiative_texts
 		WHERE initiative_uuid = ${initiative.uuid}
 		LIMIT 1
-	`))) throw new HttpError(422, "No Text")
+	`)) throw new HttpError(422, "No Text")
 
 	if (req.body.endsOn == null) return void res.render(tmpl, {
 		attrs: {endsAt: initiative.discussion_ends_at}
@@ -713,25 +713,25 @@ function* updateInitiativeToPublished(req, res) {
 
 	var emailSentAt = initiative.discussion_end_email_sent_at
 
-	yield initiativesDb.update(initiative.uuid, {
+	initiativesDb.update(initiative.uuid, {
 		published_at: initiative.published_at || new Date,
 		discussion_ends_at: endsAt,
 		discussion_end_email_sent_at: endsAt > new Date ? null : emailSentAt
 	})
 
 	if (initiative.published_at == null && user.email) {
-		var subscription = yield subscriptionsDb.read(sql`
+		var subscription = subscriptionsDb.read(sql`
 			SELECT * FROM initiative_subscriptions
 			WHERE (initiative_uuid, email) = (${initiative.uuid}, ${user.email})
 		`)
 
-		if (subscription) yield subscriptionsDb.update(subscription, {
+		if (subscription) subscriptionsDb.update(subscription, {
 			event_interest: true,
 			comment_interest: true,
 			confirmed_at: subscription.confirmed_at || new Date,
 			updated_at: new Date
 		})
-		else yield subscriptionsDb.create({
+		else subscriptionsDb.create({
 			initiative_uuid: initiative.uuid,
 			email: user.email,
 			created_at: new Date,
@@ -743,7 +743,7 @@ function* updateInitiativeToPublished(req, res) {
 	}
 
 	if (initiative.published_at == null) {
-		var message = yield messagesDb.create({
+		var message = messagesDb.create({
 			initiative_uuid: initiative.uuid,
 			origin: "status",
 			created_at: new Date,
@@ -762,7 +762,7 @@ function* updateInitiativeToPublished(req, res) {
 
 		yield Subscription.send(
 			message,
-			yield subscriptionsDb.searchConfirmedForNewInitiative()
+			subscriptionsDb.searchConfirmedForNewInitiative()
 		)
 	}
 
@@ -788,7 +788,7 @@ function* updateInitiativePhaseToSign(req, res) {
 		Initiative.canUpdateSignDeadline(initiative, user)
 	)) throw new HttpError(403, "Cannot Update to Sign Phase")
 
-	res.locals.texts = _.indexBy(yield textsDb.search(sql`
+	res.locals.texts = _.indexBy(textsDb.search(sql`
 		SELECT title, language, created_at
 		FROM initiative_texts
 		WHERE id IN (
@@ -834,7 +834,7 @@ function* updateInitiativePhaseToSign(req, res) {
 	}
 
 	if (initiative.phase == "edit") {
-		var text = yield textsDb.read(sql`
+		var text = textsDb.read(sql`
 			SELECT * FROM initiative_texts
 			WHERE initiative_uuid = ${initiative.uuid} AND language = ${lang}
 			ORDER BY id DESC
@@ -843,10 +843,8 @@ function* updateInitiativePhaseToSign(req, res) {
 
 		if (text == null) throw new HttpError(422, "No Text")
 
-		if (
-			text.language != "et" &&
-			!(yield hasEstonianTranslation(initiative))
-		) throw new HttpError(403, "No Estonian Translation")
+		if (text.language != "et" && !hasEstonianTranslation(initiative))
+			throw new HttpError(403, "No Estonian Translation")
 
 		var html = Initiative.renderForParliament(text)
 
@@ -857,10 +855,10 @@ function* updateInitiativePhaseToSign(req, res) {
 		attrs.language = lang
 	}
 
-	yield initiativesDb.update(initiative, attrs)
+	initiativesDb.update(initiative, attrs)
 
 	if (initiative.phase == "edit") {
-		var message = yield messagesDb.create({
+		var message = messagesDb.create({
 			initiative_uuid: initiative.uuid,
 			origin: "status",
 			created_at: new Date,
@@ -880,11 +878,8 @@ function* updateInitiativePhaseToSign(req, res) {
 			message,
 
 			_.uniqBy(concat(
-				yield subscriptionsDb.searchConfirmedForSignableInitiative(),
-
-				yield subscriptionsDb.searchConfirmedByInitiativeIdForEvent(
-					initiative.uuid
-				)
+				subscriptionsDb.searchConfirmedForSignableInitiative(),
+				subscriptionsDb.searchConfirmedByInitiativeIdForEvent(initiative.uuid)
 			), "email")
 		)
 	}
@@ -905,8 +900,8 @@ function* updateInitiativePhaseToParliament(req, res) {
 	var user = req.user
 	var initiative = req.initiative
 	var uuid = initiative.uuid
-	var citizenosSignatureCount = yield countCitizenOsSignaturesById(uuid)
-	var undersignedSignatureCount = yield countUndersignedSignaturesById(uuid)
+	var citizenosSignatureCount = countCitizenOsSignaturesById(uuid)
+	var undersignedSignatureCount = countUndersignedSignaturesById(uuid)
 	var signatureCount = citizenosSignatureCount + undersignedSignatureCount
 	var tmpl = "initiatives/update_for_parliament_page.jsx"
 
@@ -918,10 +913,8 @@ function* updateInitiativePhaseToParliament(req, res) {
 		Initiative.canSendToLocalGovernment(initiative, user, signatureCount)
 	)) throw new HttpError(403, "Cannot Send")
 
-	if (
-		initiative.language != "et" &&
-		!(yield hasEstonianTranslation(initiative))
-	) throw new HttpError(403, "No Estonian Translation")
+	if (initiative.language != "et" && !hasEstonianTranslation(initiative))
+		throw new HttpError(403, "No Estonian Translation")
 
 	var attrs = {
 		status: req.body.status,
@@ -931,13 +924,13 @@ function* updateInitiativePhaseToParliament(req, res) {
 	if (req.body.contact == null) return void res.render(tmpl, {attrs: attrs})
 
 	if (initiative.destination == "parliament")
-		initiative = yield initiativesDb.update(initiative, {
+		initiative = initiativesDb.update(initiative, {
 			phase: "parliament",
 			sent_to_parliament_at: new Date,
 			parliament_token: Crypto.randomBytes(12)
 		})
 	else
-		initiative = yield initiativesDb.update(initiative, {
+		initiative = initiativesDb.update(initiative, {
 			phase: "government",
 			sent_to_government_at: new Date,
 			parliament_token: Crypto.randomBytes(12)
@@ -1004,7 +997,7 @@ function* updateInitiativePhaseToParliament(req, res) {
 		})
 	})
 
-	var message = yield messagesDb.create({
+	var message = messagesDb.create({
 		initiative_uuid: initiative.uuid,
 		origin: "status",
 		created_at: new Date,
@@ -1029,7 +1022,7 @@ function* updateInitiativePhaseToParliament(req, res) {
 
 	yield Subscription.send(
 		message,
-		yield subscriptionsDb.searchConfirmedByInitiativeIdForEvent(initiative.uuid)
+		subscriptionsDb.searchConfirmedByInitiativeIdForEvent(initiative.uuid)
 	)
 
 	res.flash("notice", initiative.destination == "parliament"
@@ -1040,7 +1033,7 @@ function* updateInitiativePhaseToParliament(req, res) {
 	res.redirect(303, req.baseUrl + "/" + initiative.uuid)
 }
 
-function* updateInitiativeAuthor(req, res) {
+function updateInitiativeAuthor(req, res) {
 	var {user} = req
 	var {initiative} = req
 	var [country, personalId] = parsePersonalId(req.body.author_personal_id)
@@ -1050,7 +1043,7 @@ function* updateInitiativeAuthor(req, res) {
 	if (initiative.phase != "edit")
 		throw new HttpError(403, "Can Only Update Author In Edit")
 
-	var coauthor = yield coauthorsDb.read(sql`
+	var coauthor = coauthorsDb.read(sql`
 		SELECT coauthor.*, user.name AS user_name
 		FROM initiative_coauthors AS coauthor
 		JOIN users AS user ON user.id = coauthor.user_id
@@ -1062,15 +1055,15 @@ function* updateInitiativeAuthor(req, res) {
 
 	if (coauthor == null) throw new HttpError(422, "No Such Coauthor")
 
-	yield initiativesDb.update(initiative.uuid, {user_id: coauthor.user_id})
+	initiativesDb.update(initiative.uuid, {user_id: coauthor.user_id})
 
-	yield coauthorsDb.update(coauthor, {
+	coauthorsDb.update(coauthor, {
 		status: "promoted",
 		status_updated_at: new Date,
 		status_updated_by_id: user.id
 	})
 
-	yield coauthorsDb.create({
+	coauthorsDb.create({
 		initiative_uuid: initiative.uuid,
 		user_id: user.id,
 		country: user.country,
@@ -1091,13 +1084,13 @@ function* updateInitiativeAuthor(req, res) {
 }
 
 function hasEstonianTranslation(initiative) {
-	return textsDb.read(sql`
+	return Boolean(textsDb.read(sql`
 		SELECT true
 		FROM initiative_texts
 		WHERE initiative_uuid = ${initiative.uuid} AND language = 'et'
 		ORDER BY id DESC
 		LIMIT 1
-	`).then(Boolean)
+	`))
 }
 
 function parseInitiative(initiative, obj) {

@@ -24,13 +24,13 @@ exports.isEditableEvent = isEditableEvent
 
 exports.router = Router({mergeParams: true})
 
-exports.router.get("/", next(function*(_req, res) {
-	var initiatives = yield initiativesDb.search(sql`
+exports.router.get("/", function(_req, res) {
+	var initiatives = initiativesDb.search(sql`
 		SELECT * FROM initiatives
 		WHERE published_at IS NOT NULL
 	`)
 
-	var subscriberCounts = yield sqlite(sql`
+	var subscriberCounts = sqlite(sql`
 		SELECT initiative_uuid, COUNT(*) as count
 		FROM initiative_subscriptions
 		WHERE initiative_uuid IN ${sql.in(initiatives.map((i) => i.uuid))}
@@ -47,10 +47,10 @@ exports.router.get("/", next(function*(_req, res) {
 		initiatives: initiatives,
 		subscriberCounts: subscriberCounts
 	})
-}))
+})
 
-exports.router.use("/:id", next(function*(req, res, next) {
-	var initiative = yield initiativesDb.read(req.params.id)
+exports.router.use("/:id", function(req, res, next) {
+	var initiative = initiativesDb.read(req.params.id)
 	if (initiative == null) return void next(new HttpError(404))
 
 	if (!initiative.published_at)
@@ -59,22 +59,22 @@ exports.router.use("/:id", next(function*(req, res, next) {
 	req.initiative = initiative
 	res.locals.initiative = initiative
 	next()
-}))
+})
 
-exports.router.get("/:id", next(function*(req, res) {
+exports.router.get("/:id", function(req, res) {
 	var initiative = req.initiative
 
-	var author = yield usersDb.read(sql`
+	var author = usersDb.read(sql`
 		SELECT * FROM users WHERE id = ${initiative.user_id}
 	`)
 
-	var events = yield eventsDb.search(sql`
+	var events = eventsDb.search(sql`
 		SELECT * FROM initiative_events
 		WHERE initiative_uuid = ${initiative.uuid}
 		ORDER BY "occurred_at" DESC
 	`)
 
-	var subscriberCount = yield sqlite(sql`
+	var subscriberCount = sqlite(sql`
 		SELECT
 			COUNT(*) AS "all",
 			COALESCE(SUM(CASE WHEN confirmed_at IS NOT NULL THEN 1 ELSE 0 END), 0)
@@ -82,18 +82,18 @@ exports.router.get("/:id", next(function*(req, res) {
 
 		FROM initiative_subscriptions
 		WHERE initiative_uuid = ${initiative.uuid}
-	`).then(_.first)
+	`)[0]
 
-	var image = yield imagesDb.read(sql`
+	var image = imagesDb.read(sql`
 		SELECT initiative_uuid, type
 		FROM initiative_images
 		WHERE initiative_uuid = ${initiative.uuid}
 	`)
 
-	var citizenosSignatureCount =
-		yield countCitizenOsSignaturesById(initiative.uuid)
+	var citizenosSignatureCount = countCitizenOsSignaturesById(initiative.uuid)
+
 	var undersignedSignatureCount =
-		yield countUndersignedSignaturesById(initiative.uuid)
+		countUndersignedSignaturesById(initiative.uuid)
 
 	res.render("admin/initiatives/read_page.jsx", {
 		author,
@@ -106,12 +106,12 @@ exports.router.get("/:id", next(function*(req, res) {
 			citizenos: citizenosSignatureCount
 		}
 	})
-}))
+})
 
-exports.router.get("/:id/subscriptions.:ext?", next(function*(req, res) {
+exports.router.get("/:id/subscriptions.:ext?", function(req, res) {
 	var initiative = req.initiative
 
-	var subs = yield subscriptionsDb.search(sql`
+	var subs = subscriptionsDb.search(sql`
 		SELECT * FROM initiative_subscriptions
 		WHERE initiative_uuid = ${initiative.uuid}
 		ORDER BY created_at DESC
@@ -131,16 +131,16 @@ exports.router.get("/:id/subscriptions.:ext?", next(function*(req, res) {
 			subscriptions: subs
 		})
 	}
-}))
+})
 
-exports.router.put("/:id", next(function*(req, res) {
+exports.router.put("/:id", function(req, res) {
 	var initiative = req.initiative
 	var attrs = parseInitiative(initiative, req.body)
-	if (!_.isEmpty(attrs)) yield initiativesDb.update(initiative.uuid, attrs)
+	if (!_.isEmpty(attrs)) initiativesDb.update(initiative.uuid, attrs)
 
 	res.flash("notice", "Initiative updated.")
 	res.redirect(req.baseUrl + "/" + initiative.uuid)
-}))
+})
 
 // NOTE: This is a duplicate of the InitiativeImageController endpoint
 // presented to initiative authors. Keeping this around for now, although it's
@@ -159,9 +159,9 @@ exports.router.put("/:id/image", next(function*(req, res) {
 		!isValidImageType(Image.identify(image.buffer))
 	) throw new HttpError(422, "Invalid Image Format")
 
-	yield imagesDb.delete(initiative.uuid)
+	imagesDb.delete(initiative.uuid)
 
-	yield imagesDb.create({
+	imagesDb.create({
 		initiative_uuid: initiative.uuid,
 		data: image.buffer,
 		type: image.mimetype,
@@ -172,18 +172,18 @@ exports.router.put("/:id/image", next(function*(req, res) {
 	res.redirect(req.baseUrl + "/" + initiative.uuid)
 }))
 
-exports.router.delete("/:id/image", next(function*(req, res) {
+exports.router.delete("/:id/image", function(req, res) {
 	var initiative = req.initiative
-	yield imagesDb.delete(initiative.uuid)
+	imagesDb.delete(initiative.uuid)
 	res.flash("notice", "Image deleted.")
 	res.redirect(req.baseUrl + "/" + initiative.uuid)
-}))
+})
 
-exports.router.get("/:id/events/new", next(function*(req, res) {
+exports.router.get("/:id/events/new", function(req, res) {
 	var {initiative} = req
 
 	var subscriberCount =
-		yield subscriptionsDb.countConfirmedByInitiativeIdForEvent(initiative.uuid)
+		subscriptionsDb.countConfirmedByInitiativeIdForEvent(initiative.uuid)
 
 	res.render("admin/initiatives/events/create_page.jsx", {
 		event: {
@@ -195,27 +195,26 @@ exports.router.get("/:id/events/new", next(function*(req, res) {
 
 		subscriberCount
 	})
-}))
+})
 
 exports.router.post("/:id/events/notifications", next(function*(req, res) {
 	var {initiative} = req
 
-	var events = yield searchInitiativeNotifiableEvents(initiative, sql`
+	var events = searchInitiativeNotifiableEvents(initiative, sql`
 		id IN ${sql.in(req.body.event_ids.map(Number))}
 	`)
 
 	if (events.length > 0) {
-		var subscribers =
-			yield subscriptionsDb.searchConfirmedByInitiativeIdForEvent(
-				initiative.uuid
-			)
+		var subscribers = subscriptionsDb.searchConfirmedByInitiativeIdForEvent(
+			initiative.uuid
+		)
 
 		yield Subscription.send(
 			Subscription.renderEventsEmail(t, initiative, events),
 			subscribers
 		)
 
-		yield eventsDb.execute(sql`
+		eventsDb.execute(sql`
 			UPDATE initiative_events
 			SET notified_at = ${new Date}
 			WHERE id IN ${sql.in(events.map((ev) => ev.id))}
@@ -232,18 +231,18 @@ exports.router.post("/:id/events/notifications", next(function*(req, res) {
 	res.redirect(req.baseUrl + "/" + initiative.uuid)
 }))
 
-exports.router.get("/:id/events/notifications/new", next(function*(req, res) {
+exports.router.get("/:id/events/notifications/new", function(req, res) {
 	var {initiative} = req
-	var events = yield searchInitiativeNotifiableEvents(initiative)
+	var events = searchInitiativeNotifiableEvents(initiative)
 
 	var subscriberCount =
-		yield subscriptionsDb.countConfirmedByInitiativeIdForEvent(initiative.uuid)
+		subscriptionsDb.countConfirmedByInitiativeIdForEvent(initiative.uuid)
 
 	res.render("admin/initiatives/events/notify_page.jsx", {
 		events,
 		subscriberCount
 	})
-}))
+})
 
 exports.router.post("/:id/events", next(function*(req, res) {
 	var {initiative} = req
@@ -256,12 +255,12 @@ exports.router.post("/:id/events", next(function*(req, res) {
 		updated_at: new Date
 	})
 
-	var event = yield eventsDb.create(attrs)
+	var event = eventsDb.create(attrs)
 
 	if (req.files["files[]"]) {
 		var fileTitles = req.body.file_titles
 
-		yield filesDb.create(req.files["files[]"].map((file, i) => ({
+		filesDb.create(req.files["files[]"].map((file, i) => ({
 			initiative_uuid: initiative.uuid,
 			event_id: event.id,
 			created_at: new Date,
@@ -275,17 +274,16 @@ exports.router.post("/:id/events", next(function*(req, res) {
 	}
 
 	if (req.body.action == "create-and-notify") {
-		var subscribers =
-			yield subscriptionsDb.searchConfirmedByInitiativeIdForEvent(
-				initiative.uuid
-			)
+		var subscribers = subscriptionsDb.searchConfirmedByInitiativeIdForEvent(
+			initiative.uuid
+		)
 
 		yield Subscription.send(
 			Subscription.renderEventsEmail(t, initiative, [event]),
 			subscribers
 		)
 
-		yield eventsDb.update(event, {notified_at: new Date})
+		eventsDb.update(event, {notified_at: new Date})
 
 		res.flash(
 			"notice",
@@ -297,43 +295,41 @@ exports.router.post("/:id/events", next(function*(req, res) {
 	res.redirect(req.baseUrl + "/" + initiative.uuid)
 }))
 
-exports.router.use("/:id/events/:eventId", next(function*(req, _res, next) {
-	var event = yield eventsDb.read(req.params.eventId)
+exports.router.use("/:id/events/:eventId", function(req, _res, next) {
+	var event = eventsDb.read(req.params.eventId)
 	if (event == null) throw new HttpError(404)
 	if (!isEditableEvent(event)) throw new HttpError(403, "Not Editable")
 	req.event = event
 	next()
-}))
+})
 
 exports.router.get("/:id/events/:eventId/edit", function(req, res) {
 	res.render("admin/initiatives/events/update_page.jsx", {event: req.event})
 })
 
-exports.router.put("/:id/events/:eventId", next(function*(req, res) {
+exports.router.put("/:id/events/:eventId", function(req, res) {
 	var initiative = req.initiative
 	var event = req.event
 	var attrs = _.assign(parseEvent(event, req.body), {updated_at: new Date})
-	yield eventsDb.update(event, attrs)
+	eventsDb.update(event, attrs)
 	res.flash("notice", "Event updated.")
 	res.redirect(req.baseUrl + "/" + initiative.uuid)
-}))
+})
 
-exports.router.delete("/:id/events/:eventId", next(function*(req, res) {
+exports.router.delete("/:id/events/:eventId", function(req, res) {
 	var initiative = req.initiative
-	yield eventsDb.delete(req.event.id)
+	eventsDb.delete(req.event.id)
 	res.flash("notice", "Event deleted.")
 	res.redirect(req.baseUrl + "/" + initiative.uuid)
-}))
+})
 
-function* searchInitiativeNotifiableEvents(initiative, filter) {
-	var events = yield eventsDb.search(sql`
+function searchInitiativeNotifiableEvents(initiative, filter) {
+	return eventsDb.search(sql`
 		SELECT * FROM initiative_events
 		WHERE initiative_uuid = ${initiative.uuid}
 		${filter ? sql`AND ${filter}` : sql``}
 		ORDER BY created_at ASC
-	`)
-
-	return events.filter(isEventNotifiable.bind(null, new Date, initiative))
+	`).filter(isEventNotifiable.bind(null, new Date, initiative))
 }
 
 function parseInitiative(initiative, obj) {

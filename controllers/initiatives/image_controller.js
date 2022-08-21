@@ -11,7 +11,7 @@ var MEGABYTE = Math.pow(2, 20)
 
 exports.router = Router({mergeParams: true})
 
-exports.router.use(next(function*(req, _res, next) {
+exports.router.use(function(req, _res, next) {
 	var user = req.user
 	if (user == null) throw new HttpError(401)
 
@@ -20,14 +20,14 @@ exports.router.use(next(function*(req, _res, next) {
 	var isAuthor = user && Initiative.isAuthor(user, initiative)
 	if (!isAuthor) throw new HttpError(403, "No Permission to Edit")
 
-	req.image = yield imagesDb.read(sql`
+	req.image = imagesDb.read(sql`
 		SELECT initiative_uuid
 		FROM initiative_images
 		WHERE initiative_uuid = ${initiative.uuid}
 	`)
 
 	next()
-}))
+})
 
 exports.router.put("/", next(function*(req, res) {
 	var user = req.user
@@ -63,7 +63,7 @@ exports.router.put("/", next(function*(req, res) {
 	}
 
 	if (image) imagesDb.update(image, attrs)
-	else yield imagesDb.create(_.assign(attrs, {
+	else imagesDb.create(_.assign(attrs, {
 		initiative_uuid: initiative.uuid,
 		uploaded_by_id: user.id
 	}))
@@ -87,12 +87,12 @@ exports.router.put("/", next(function*(req, res) {
 	}
 }))
 
-exports.router.delete("/", next(function*(req, res) {
+exports.router.delete("/", function(req, res) {
 	if (req.image == null) throw new HttpError(404, "No Initiative Image")
-	yield imagesDb.delete(req.image)
+	imagesDb.delete(req.image)
 	res.flash("notice", "Pilt kustutatud.")
 	res.redirect(303, Path.dirname(req.baseUrl))
-}))
+})
 
 function isValidImageType(type) {
   switch (type) {

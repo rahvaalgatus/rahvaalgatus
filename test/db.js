@@ -5,24 +5,24 @@ exports = module.exports = function() {
 	beforeEach(exports.delete)
 }
 
-exports.delete = function*() {
-	yield sqlite(sql`DELETE FROM initiative_subscriptions`)
-	yield sqlite(sql`DELETE FROM initiative_signatures`)
-	yield sqlite(sql`DELETE FROM initiative_citizenos_signatures`)
+exports.delete = function() {
+	sqlite(sql`DELETE FROM initiative_subscriptions`)
+	sqlite(sql`DELETE FROM initiative_signatures`)
+	sqlite(sql`DELETE FROM initiative_citizenos_signatures`)
 
-	yield sqlite(sql`
+	sqlite(sql`
     UPDATE sqlite_sequence SET seq = 0 WHERE name = 'initiative_signatures'
 	`)
 
-	yield sqlite(sql`DELETE FROM initiative_signables`)
-	yield sqlite(sql`DELETE FROM initiative_messages`)
-	yield sqlite(sql`DELETE FROM initiative_events`)
-	yield sqlite(sql`DELETE FROM initiative_files`)
-	yield sqlite(sql`DELETE FROM initiative_texts`)
-	yield sqlite(sql`DELETE FROM initiative_images`)
-	yield sqlite(sql`DELETE FROM demo_signatures`)
-	yield sqlite(sql`DELETE FROM comments`)
-	yield sqlite(sql`DELETE FROM initiatives`)
-	yield sqlite(sql`DELETE FROM authentications`)
-	yield sqlite(sql`DELETE FROM users`)
+	sqlite(sql`DELETE FROM initiative_signables`)
+	sqlite(sql`DELETE FROM initiative_messages`)
+	sqlite(sql`DELETE FROM initiative_events`)
+	sqlite(sql`DELETE FROM initiative_files`)
+	sqlite(sql`DELETE FROM initiative_texts`)
+	sqlite(sql`DELETE FROM initiative_images`)
+	sqlite(sql`DELETE FROM demo_signatures`)
+	sqlite(sql`DELETE FROM comments`)
+	sqlite(sql`DELETE FROM initiatives`)
+	sqlite(sql`DELETE FROM authentications`)
+	sqlite(sql`DELETE FROM users`)
 }

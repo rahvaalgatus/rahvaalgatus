@@ -5,7 +5,7 @@ var fetch = require("root/lib/fetch")
 var newsDb = require("root/db/news_db")
 var KOGU_ATOM_FEED = "https://kogu.ee/feed/atom/"
 var SOURCE = "kogu.ee"
-var UA = require("root/config").userAgent
+var UA = require("root").config.userAgent
 var sql = require("sqlate")
 
 fetch = require("fetch-defaults")(fetch, {
@@ -26,7 +26,7 @@ Options:
 `
 
 module.exports = function*(argv) {
-  var args = Neodoc.run(USAGE_TEXT, {argv: argv || ["parliament-web-sync"]})
+  var args = Neodoc.run(USAGE_TEXT, {argv: argv || ["news-sync"]})
   if (args["--help"]) return void process.stdout.write(USAGE_TEXT.trimLeft())
 
 	var res = yield fetch(KOGU_ATOM_FEED, {
@@ -35,17 +35,17 @@ module.exports = function*(argv) {
 
 	var feed = Atom.parse(res.body).feed
 
-	yield _.asArray(feed.entry).map(function*(entry) {
+	_.asArray(feed.entry).forEach(function(entry) {
 		var attrs = parse(entry)
 
-		var news = yield newsDb.read(sql`
+		var news = newsDb.read(sql`
 			SELECT * FROM news
 			WHERE source = ${SOURCE}
 			AND external_id = ${attrs.external_id}
 		`)
 
-		if (news) yield newsDb.update(news, attrs)
-		else yield newsDb.create({__proto__: attrs, source: SOURCE})
+		if (news) newsDb.update(news, attrs)
+		else newsDb.create({__proto__: attrs, source: SOURCE})
 	})
 }
 

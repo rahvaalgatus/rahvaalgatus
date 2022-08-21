@@ -1,7 +1,7 @@
 var _ = require("root/lib/underscore")
 var I18n = require("root/lib/i18n")
 var DateFns = require("date-fns")
-var Config = require("root/config")
+var Config = require("root").config
 var Crypto = require("crypto")
 var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_initiative")
@@ -9,7 +9,7 @@ var ValidSignature = require("root/test/valid_signature")
 var cli = require("root/cli/initiative_end_email_cli")
 var usersDb = require("root/db/users_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
-var db = require("root/db/initiatives_db")
+var initiativesDb = require("root/db/initiatives_db")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var EXPIRATION_MONTHS = Config.expireSignaturesInMonths
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
@@ -20,8 +20,8 @@ describe("InitiativeEndEmailCli", function() {
 	require("root/test/email")()
 	require("root/test/time")(new Date(2015, 5, 18, 13, 37, 42))
 
-	beforeEach(function*() {
-		this.user = yield usersDb.create(new ValidUser({
+	beforeEach(function() {
+		this.user = usersDb.create(new ValidUser({
 			email: "john@example.com",
 			email_confirmed_at: new Date
 		}))
@@ -29,7 +29,7 @@ describe("InitiativeEndEmailCli", function() {
 
 	describe("when in discussion", function() {
 		it("must email when discussion has ended", function*() {
-			var initiative = yield db.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				published_at: new Date,
 				discussion_ends_at: new Date
@@ -52,7 +52,7 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must email when discussion ended 6 months ago", function*() {
-			yield db.create(new ValidInitiative({
+			initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				published_at: new Date,
 				discussion_ends_at: DateFns.addMonths(new Date, -6)
@@ -64,7 +64,7 @@ describe("InitiativeEndEmailCli", function() {
 
 		it("must not email when discussion ended more than 6 months ago",
 			function*() {
-			yield db.create(new ValidInitiative({
+			initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				published_at: new Date,
 				discussion_ends_at:
@@ -76,7 +76,7 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email when discussion not ended", function*() {
-			yield db.create(new ValidInitiative({
+			initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				published_at: new Date,
 				discussion_ends_at: DateFns.addSeconds(new Date, 1)
@@ -87,9 +87,9 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email if user email not set", function*() {
-			yield usersDb.update(this.user, {email: null, email_confirmed_at: null})
+			usersDb.update(this.user, {email: null, email_confirmed_at: null})
 
-			yield db.create(new ValidInitiative({
+			initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				published_at: new Date,
 				discussion_ends_at: new Date
@@ -100,14 +100,14 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email if user email not verified", function*() {
-			yield usersDb.update(this.user, {
+			usersDb.update(this.user, {
 				email: null,
 				email_confirmed_at: null,
 				unconfirmed_email: this.user.email,
 				email_confirmation_token: Crypto.randomBytes(12)
 			})
 
-			yield db.create(new ValidInitiative({
+			initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				published_at: new Date,
 				discussion_ends_at: new Date
@@ -118,7 +118,7 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email if not public", function*() {
-			yield db.create(new ValidInitiative({
+			initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				discussion_ends_at: new Date
 			}))
@@ -128,7 +128,7 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email if already in sign phase", function*() {
-			yield db.create(new ValidInitiative({
+			initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign",
 				discussion_ends_at: new Date,
@@ -140,7 +140,7 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email twice", function*() {
-			yield db.create(new ValidInitiative({
+			initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				published_at: new Date,
 				discussion_ends_at: new Date
@@ -158,14 +158,14 @@ describe("InitiativeEndEmailCli", function() {
 		describe("when destined for parliament", function() {
 			it("must email when signing has ended and initiative successful",
 				function*() {
-				var initiative = yield db.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					phase: "sign",
 					signing_started_at: new Date,
 					signing_ends_at: new Date
 				}))
 
-				yield signaturesDb.create(_.times(Config.votesRequired, () => (
+				signaturesDb.create(_.times(Config.votesRequired, () => (
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
@@ -187,14 +187,14 @@ describe("InitiativeEndEmailCli", function() {
 
 			it("must email when signing has ended and initiative incomplete",
 				function*() {
-				var initiative = yield db.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					phase: "sign",
 					signing_started_at: new Date,
 					signing_ends_at: new Date
 				}))
 
-				yield signaturesDb.create(_.times(Config.votesRequired - 1, () => (
+				signaturesDb.create(_.times(Config.votesRequired - 1, () => (
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
@@ -218,14 +218,14 @@ describe("InitiativeEndEmailCli", function() {
 			})
 
 			it("must not email if already in parliament phase", function*() {
-				var initiative = yield db.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					phase: "parliament",
 					signing_started_at: new Date,
 					signing_ends_at: new Date
 				}))
 
-				yield signaturesDb.create(_.times(Config.votesRequired, () => (
+				signaturesDb.create(_.times(Config.votesRequired, () => (
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
@@ -237,7 +237,7 @@ describe("InitiativeEndEmailCli", function() {
 		describe("when destined for local", function() {
 			it("must email when signing has ended and initiative successful",
 				function*() {
-				var initiative = yield db.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					phase: "sign",
 					destination: "kihnu-vald",
@@ -249,7 +249,7 @@ describe("InitiativeEndEmailCli", function() {
 					LOCAL_GOVERNMENTS["kihnu-vald"].population * 0.01
 				)
 
-				yield signaturesDb.create(_.times(threshold, () => (
+				signaturesDb.create(_.times(threshold, () => (
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
@@ -271,7 +271,7 @@ describe("InitiativeEndEmailCli", function() {
 
 			it("must email when signing has ended and initiative incomplete",
 				function*() {
-				var initiative = yield db.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					phase: "sign",
 					signing_started_at: new Date,
@@ -282,7 +282,7 @@ describe("InitiativeEndEmailCli", function() {
 					LOCAL_GOVERNMENTS["kihnu-vald"].population * 0.01
 				)
 
-				yield signaturesDb.create(_.times(threshold - 1, () => (
+				signaturesDb.create(_.times(threshold - 1, () => (
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
@@ -306,14 +306,14 @@ describe("InitiativeEndEmailCli", function() {
 			})
 
 			it("must not email if already in parliament phase", function*() {
-				var initiative = yield db.create(new ValidInitiative({
+				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					phase: "parliament",
 					signing_started_at: new Date,
 					signing_ends_at: new Date
 				}))
 
-				yield signaturesDb.create(_.times(Config.votesRequired, () => (
+				signaturesDb.create(_.times(Config.votesRequired, () => (
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
@@ -323,14 +323,14 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must email when signing ended 6 months ago", function*() {
-			var initiative = yield db.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign",
 				signing_started_at: DateFns.addMonths(new Date, -6),
 				signing_ends_at: DateFns.addMonths(new Date, -6)
 			}))
 
-			yield signaturesDb.create(_.times(Config.votesRequired, () => (
+			signaturesDb.create(_.times(Config.votesRequired, () => (
 				new ValidSignature({initiative_uuid: initiative.uuid})
 			)))
 
@@ -344,14 +344,14 @@ describe("InitiativeEndEmailCli", function() {
 		it("must not email when signing ended more than 6 months ago", function*() {
 			var endsAt = DateFns.addSeconds(DateFns.addMonths(new Date, -6), -1)
 
-			var initiative = yield db.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign",
 				signing_started_at: endsAt,
 				signing_ends_at: endsAt
 			}))
 
-			yield signaturesDb.create(_.times(Config.votesRequired, () => (
+			signaturesDb.create(_.times(Config.votesRequired, () => (
 				new ValidSignature({initiative_uuid: initiative.uuid})
 			)))
 
@@ -360,7 +360,7 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email when signing not ended", function*() {
-			yield db.create(new ValidInitiative({
+			initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign",
 				signing_started_at: new Date,
@@ -372,9 +372,9 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email if user email not set", function*() {
-			yield usersDb.update(this.user, {email: null, email_confirmed_at: null})
+			usersDb.update(this.user, {email: null, email_confirmed_at: null})
 
-			yield db.create(new ValidInitiative({
+			initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign",
 				signing_started_at: new Date,
@@ -386,14 +386,14 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email if user email not verified", function*() {
-			yield usersDb.update(this.user, {
+			usersDb.update(this.user, {
 				email: null,
 				email_confirmed_at: null,
 				unconfirmed_email: this.user.email,
 				email_confirmation_token: Crypto.randomBytes(12)
 			})
 
-			yield db.create(new ValidInitiative({
+			initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign",
 				signing_ends_at: new Date
@@ -404,7 +404,7 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email twice", function*() {
-			yield db.create(new ValidInitiative({
+			initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign",
 				signing_started_at: new Date,
@@ -426,7 +426,7 @@ describe("InitiativeEndEmailCli", function() {
 		beforeEach(function() { Config.expireSignaturesFrom = "1970-01-01" })
 
 		it("must not email if already marked as expired", function*() {
-			yield db.create(new ValidInitiative({
+			initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign",
 				signing_started_at: DateFns.addMonths(new Date, -EXPIRATION_MONTHS + 1),
@@ -439,7 +439,7 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must email if expired", function*() {
-			var initiative = yield db.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign",
 				signing_started_at: DateFns.addMonths(new Date, -EXPIRATION_MONTHS),
@@ -463,7 +463,7 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email twice if expired", function*() {
-			yield db.create(new ValidInitiative({
+			initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign",
 				signing_started_at: DateFns.addMonths(new Date, -EXPIRATION_MONTHS),
@@ -483,7 +483,7 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must email when signing expiring in 14 days", function*() {
-			var initiative = yield db.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign",
 				signing_started_at: DateFns.addDays(
@@ -512,7 +512,7 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email twice when signing expiring in 14 days", function*() {
-			var initiative = yield db.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign",
 				signing_started_at: DateFns.addDays(
@@ -537,7 +537,7 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must email when signing expiring in 3 months", function*() {
-			var initiative = yield db.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign",
 				signing_started_at: DateFns.addMonths(new Date, -EXPIRATION_MONTHS + 3),
@@ -554,7 +554,7 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email twice when signing expiring in 3 months", function*() {
-			var initiative = yield db.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign",
 				signing_started_at: DateFns.addMonths(new Date, -EXPIRATION_MONTHS + 3),
@@ -576,7 +576,7 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must email when signing expiring in less than 3 months", function*() {
-			var initiative = yield db.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign",
 				signing_started_at: DateFns.addDays(
@@ -597,7 +597,7 @@ describe("InitiativeEndEmailCli", function() {
 
 		it("must not email when signing expiring in more than 3 months",
 			function*() {
-			yield db.create(new ValidInitiative({
+			initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign",
 				signing_started_at: DateFns.addDays(
@@ -615,7 +615,7 @@ describe("InitiativeEndEmailCli", function() {
 			var minDate = DateFns.addMonths(new Date, -EXPIRATION_MONTHS + 3)
 			Config.expireSignaturesFrom = I18n.formatDate("iso", minDate)
 
-			var initiative = yield db.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign",
 				signing_started_at: DateFns.addYears(new Date, -5),
@@ -636,7 +636,7 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must email at each milestone", function*() {
-			var initiative = yield db.create(new ValidInitiative({
+			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign",
 				signing_started_at: DateFns.addDays(
@@ -684,9 +684,9 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email if user email not set", function*() {
-			yield usersDb.update(this.user, {email: null, email_confirmed_at: null})
+			usersDb.update(this.user, {email: null, email_confirmed_at: null})
 
-			yield db.create(new ValidInitiative({
+			initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign",
 				signing_started_at: DateFns.addMonths(new Date, -EXPIRATION_MONTHS),
@@ -698,14 +698,14 @@ describe("InitiativeEndEmailCli", function() {
 		})
 
 		it("must not email if user email not verified", function*() {
-			yield usersDb.update(this.user, {
+			usersDb.update(this.user, {
 				email: null,
 				email_confirmed_at: null,
 				unconfirmed_email: this.user.email,
 				email_confirmation_token: Crypto.randomBytes(12)
 			})
 
-			yield db.create(new ValidInitiative({
+			initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign",
 				signing_started_at: DateFns.addMonths(new Date, -EXPIRATION_MONTHS),
