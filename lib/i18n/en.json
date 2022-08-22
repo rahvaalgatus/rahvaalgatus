@@ -487,7 +487,7 @@
 	"MOBILE_ID_ERROR_INVALID_SIGNATURE": "Signing failed because the signature does not match the certificate.",
 	"MOBILE_ID_ERROR_INVALID_SIGNATURE_AUTH": "Sign-in failed because the digital signature does not match the certificate.",
 	"MOBILE_ID_ERROR_NOT_ACTIVE": "Your certificate has not been activated. Please try again later. If the problem persists, contact your service provider.",
-	"MOBILE_ID_ERROR_NOT_FOUND": "Mobile-ID functionality is not supported. Please double check phone number and/or ID code.",
+	"MOBILE_ID_ERROR_NOT_FOUND": "This phone number and personal id don't seem to be associated with Mobile-ID. Please double check the phone number and personal id are correct. ",
 	"MOBILE_ID_ERROR_PHONE_ABSENT": "Mobile signing was not successful. Your phone is either switched off or out of coverage.",
 	"MOBILE_ID_ERROR_PHONE_ABSENT_AUTH": "The phone is switched off or out of range.",
 	"MOBILE_ID_ERROR_SIGNATURE_HASH_MISMATCH": "The signature is invalid. Your vote was not cast.",

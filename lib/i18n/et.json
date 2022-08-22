@@ -511,7 +511,7 @@
 	"MOBILE_ID_ERROR_INVALID_SIGNATURE": "Allkirjastamine ebaõnnestus, sest allkiri ei vasta sertifikaadile.",
 	"MOBILE_ID_ERROR_INVALID_SIGNATURE_AUTH": "Sisselogimine ebaõnnestus, sest digiallkirja ei vasta sertifikaadile.",
 	"MOBILE_ID_ERROR_NOT_ACTIVE": "Sinu sertifikaat pole veel aktiveeritud. Palun proovi hiljem uuesti. Probleemi püsimisel võta palun ühendust oma teenusepakkujaga.",
-	"MOBILE_ID_ERROR_NOT_FOUND": "Puudub Mobiil-ID tugi. Palun kontrolli telefoninumbrit ja isikukoodi.",
+	"MOBILE_ID_ERROR_NOT_FOUND": "Telefoninumbril ja isikukoodil ei tundu olevat Mobiil-ID tuge. Palun vaata, kas telefoninumber ja isikukood said õigesti sisestatud.",
 	"MOBILE_ID_ERROR_PHONE_ABSENT": "Allkirjastamine ebaõnnestus, kuna telefon on välja lülitatud või ei ole leviulatuses.",
 	"MOBILE_ID_ERROR_PHONE_ABSENT_AUTH": "Telefon on välja lülitatud või ei ole leviulatuses.",
 	"MOBILE_ID_ERROR_SIGNATURE_HASH_MISMATCH": "Allkiri ei ole korrektne, sinu häält ei loetud.",

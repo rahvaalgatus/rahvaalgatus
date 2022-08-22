@@ -51,20 +51,6 @@ var waitForSmartIdSession =
 	waitForSession.bind(null, smartId.wait.bind(smartId))
 
 var MOBILE_ID_ERRORS = {
-	// Initiation responses:
-	NOT_FOUND: [
-		422,
-		"Not a Mobile-Id User or Personal Id Mismatch",
-		"MOBILE_ID_ERROR_NOT_FOUND"
-	],
-
-	NOT_ACTIVE: [
-		422,
-		"Mobile-Id Certificates Not Activated",
-		"MOBILE_ID_ERROR_NOT_ACTIVE"
-	],
-
-	// Session responses;
 	TIMEOUT: [
 		410,
 		"Mobile-Id Timeout",
@@ -72,9 +58,9 @@ var MOBILE_ID_ERRORS = {
 	],
 
 	NOT_MID_CLIENT: [
-		410,
-		"Mobile-Id Certificates Not Activated",
-		"MOBILE_ID_ERROR_NOT_ACTIVE"
+		422,
+		"Not a Mobile-Id User or Personal Id Mismatch",
+		"MOBILE_ID_ERROR_NOT_FOUND"
 	],
 
 	USER_CANCELLED: [
@@ -118,6 +104,12 @@ var MOBILE_ID_ERRORS = {
 		410,
 		"Invalid Mobile-Id Signature",
 		"MOBILE_ID_ERROR_INVALID_SIGNATURE_AUTH"
+	],
+
+	NOT_FOUND: [
+		422,
+		"Not a Mobile-Id User or Personal Id Mismatch",
+		"MOBILE_ID_ERROR_NOT_FOUND"
 	]
 }
 
@@ -238,18 +230,8 @@ exports.router.post("/", next(function*(req, res, next) {
 			var phoneNumber = ensureAreaCode(req.body.phoneNumber)
 			personalId = req.body.personalId
 
-			// It's easier to get the signing certificate to validate the personal id
-			// and Mobile-Id existence and only then initiate the actual
-			// authentication. This way we avoid creating a authentication and going
-			// async.
-			cert = yield mobileId.readCertificate(phoneNumber, personalId)
-			if (err = validateAuthenticationCertificate(req.t, cert)) throw err
-
-			;[country, personalId] = getCertificatePersonalId(cert)
-			if (country != "EE") throw new HttpError(422, "Estonian Users Only")
-
 			authentication = authenticationsDb.create({
-				country: country,
+				country: "EE",
 				personal_id: personalId,
 				method: "mobile-id",
 				token: Crypto.randomBytes(16),
@@ -258,6 +240,7 @@ exports.router.post("/", next(function*(req, res, next) {
 			})
 
 			tokenHash = sha256(authentication.token)
+
 			var sessionId = yield mobileId.authenticate(
 				phoneNumber,
 				personalId,
