@@ -32,12 +32,22 @@ var {PHONE_NUMBER_TRANSFORMS} = require("root/test/fixtures")
 var PERSONAL_ID = "38706181337"
 var SESSION_ID = "7c8bdd56-6772-4264-ba27-bf7a9ef72a11"
 var SESSION_LENGTH_IN_DAYS = 120
+var KEY_USAGE_DIGITAL_SIGNATURE = 128
 
 var AUTH_CERTIFICATE_EXTENSIONS = [{
-	extnID: "extendedKeyUsage",
+	extnID: "keyUsage",
 	critical: true,
-	extnValue: [[1, 3, 6, 1, 5, 5, 7, 3, 2]]
+	extnValue: {data: Buffer.from([KEY_USAGE_DIGITAL_SIGNATURE])}
 }]
+
+var ID_CARD_AUTH_CERTIFICATE_EXTENSIONS = _.concat(
+	AUTH_CERTIFICATE_EXTENSIONS,
+	{
+		extnID: "extendedKeyUsage",
+		critical: true,
+		extnValue: [[1, 3, 6, 1, 5, 5, 7, 3, 2]]
+	}
+)
 
 var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
 	subject: {
@@ -50,7 +60,7 @@ var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
 		serialNumber: `PNOEE-${PERSONAL_ID}`
 	},
 
-	extensions: AUTH_CERTIFICATE_EXTENSIONS,
+	extensions: ID_CARD_AUTH_CERTIFICATE_EXTENSIONS,
 	issuer: VALID_ISSUERS[0],
 	publicKey: JOHN_RSA_KEYS.publicKey
 }))
@@ -350,7 +360,7 @@ describe("SessionsController", function() {
 							serialNumber: PERSONAL_ID
 						},
 
-						extensions: AUTH_CERTIFICATE_EXTENSIONS,
+						extensions: ID_CARD_AUTH_CERTIFICATE_EXTENSIONS,
 						issuer: VALID_ISSUERS[0],
 						publicKey: JOHN_RSA_KEYS.publicKey
 					}))
@@ -381,7 +391,7 @@ describe("SessionsController", function() {
 								serialNumber: `PNOEE-${PERSONAL_ID}`
 							},
 
-							extensions: AUTH_CERTIFICATE_EXTENSIONS,
+							extensions: ID_CARD_AUTH_CERTIFICATE_EXTENSIONS,
 							issuer: issuer,
 							publicKey: JOHN_RSA_KEYS.publicKey
 						}))
@@ -411,7 +421,7 @@ describe("SessionsController", function() {
 						serialNumber: `PNOEE-${PERSONAL_ID}`
 					},
 
-					extensions: AUTH_CERTIFICATE_EXTENSIONS,
+					extensions: ID_CARD_AUTH_CERTIFICATE_EXTENSIONS,
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
@@ -560,7 +570,7 @@ describe("SessionsController", function() {
 						"CN=EID-SK 2007",
 					].join(",")),
 
-					extensions: AUTH_CERTIFICATE_EXTENSIONS,
+					extensions: ID_CARD_AUTH_CERTIFICATE_EXTENSIONS,
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
 
@@ -595,7 +605,7 @@ describe("SessionsController", function() {
 						serialNumber: `PNOLT-${PERSONAL_ID}`
 					},
 
-					extensions: AUTH_CERTIFICATE_EXTENSIONS,
+					extensions: ID_CARD_AUTH_CERTIFICATE_EXTENSIONS,
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
@@ -630,7 +640,7 @@ describe("SessionsController", function() {
 						serialNumber: `PNOEE-${PERSONAL_ID}`
 					},
 
-					extensions: AUTH_CERTIFICATE_EXTENSIONS,
+					extensions: ID_CARD_AUTH_CERTIFICATE_EXTENSIONS,
 					validFrom: DateFns.addSeconds(new Date, 1),
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
@@ -667,7 +677,7 @@ describe("SessionsController", function() {
 						serialNumber: `PNOEE-${PERSONAL_ID}`
 					},
 
-					extensions: AUTH_CERTIFICATE_EXTENSIONS,
+					extensions: ID_CARD_AUTH_CERTIFICATE_EXTENSIONS,
 					validUntil: new Date,
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
@@ -704,11 +714,11 @@ describe("SessionsController", function() {
 						serialNumber: `PNOEE-${PERSONAL_ID}`
 					},
 
-					extensions: [{
+					extensions: _.concat(AUTH_CERTIFICATE_EXTENSIONS, {
 						extnID: "extendedKeyUsage",
 						critical: true,
 						extnValue: [[1, 3, 6, 1, 5, 5, 7, 3, 4]]
-					}],
+					}),
 
 					issuer: VALID_ISSUERS[0],
 					publicKey: JOHN_RSA_KEYS.publicKey
@@ -727,7 +737,7 @@ describe("SessionsController", function() {
 				})
 
 				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Not Authentication Certificate")
+				res.statusMessage.must.equal("Not Id-Card Authentication Certificate")
 				res.headers["content-type"].must.equal("text/html; charset=utf-8")
 				res.body.must.include(t("CERTIFICATE_NOT_FOR_AUTH"))
 				sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
@@ -735,16 +745,7 @@ describe("SessionsController", function() {
 		})
 
 		describe("when authenticating via Mobile-Id", function() {
-			mustSignIn(
-				(router, request, cert, headers) => signInWithMobileId(
-					router,
-					request,
-					cert,
-					headers
-				),
-
-				MOBILE_ID_CERTIFICATE,
-			)
+			mustSignIn(signInWithMobileId, MOBILE_ID_CERTIFICATE)
 
 			it("must create user and session", function*() {
 				var cert = new Certificate(newCertificate({

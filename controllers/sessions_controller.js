@@ -24,6 +24,7 @@ var {ensureAreaCode} = require("root/lib/mobile_id")
 var {getCertificatePersonalId} = require("root/lib/certificate")
 var {getCertificatePersonName} = require("root/lib/certificate")
 var {validateAuthenticationCertificate} = require("root/lib/certificate")
+var {validateIdCardAuthenticationCertificate} = require("root/lib/certificate")
 var {hasSignatureType} = require("./initiatives/signatures_controller")
 var getNormalizedMobileIdErrorCode =
 	require("root/lib/mobile_id").getNormalizedErrorCode
@@ -200,7 +201,7 @@ exports.router.post("/", next(function*(req, res, next) {
 			)) throw new HttpError(403, "Invalid Proxy Secret")
 
 			cert = parseCertificateFromHeader(pem)
-			if (err = validateAuthenticationCertificate(req.t, cert)) throw err
+			if (err = validateIdCardAuthenticationCertificate(req.t, cert)) throw err
 
 			if (req.headers["x-client-certificate-verification"] != "SUCCESS")
 				throw new HttpError(422, "Sign In Failed", {

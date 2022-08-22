@@ -57,6 +57,7 @@ var CHILD_PERSONAL_ID = formatPersonalId(CHILD_BIRTHDATE) + "1337"
 var SMART_ID = "PNOEE-" + ADULT_PERSONAL_ID + "-R2D2-Q"
 var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
+var KEY_USAGE_NONREPUDIATION = 64
 var KEY_USAGE_DIGITAL_SIGNATURE = 128
 
 // See https://github.com/maxmind/MaxMind-DB/blob/master/source-data for
@@ -66,7 +67,7 @@ var LONDON_FORWARDED_FOR = "81.2.69.160, 127.0.0.1"
 var SIGN_CERTIFICATE_EXTENSIONS = [{
 	extnID: "keyUsage",
 	critical: true,
-	extnValue: {data: Buffer.from([64])}
+	extnValue: {data: Buffer.from([KEY_USAGE_NONREPUDIATION])}
 }]
 
 var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
