@@ -47,6 +47,7 @@
 		"medium-type": "",
 		"mime": "",
 		"maxmind": "",
+		"@exodus/schemasafe": "",
 		"hugml": "",
 		"undersign": "git+https://github.com/moll/js-undersign.git#50e1399049ac7e2dc8ba8f2ad6af60a381c605e2"
 	},

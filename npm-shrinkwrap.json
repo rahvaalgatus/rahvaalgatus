@@ -2,6 +2,11 @@
   "name": "@rahvaalgatus/web",
   "version": "0.0.0",
   "dependencies": {
+    "@exodus/schemasafe": {
+      "version": "1.0.0-rc.7",
+      "from": "@exodus/schemasafe@latest",
+      "resolved": "https://registry.npmjs.org/@exodus/schemasafe/-/schemasafe-1.0.0-rc.7.tgz"
+    },
     "better-sqlite3": {
       "version": "7.4.6",
       "from": "better-sqlite3@7",
