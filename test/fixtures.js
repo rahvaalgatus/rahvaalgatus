@@ -67,6 +67,7 @@ var {tsl} = require("root")
 exports.VALID_ISSUERS = Config.issuers
 	.map((parts) => parts.join(","))
 	.map(tsl.getBySubjectName.bind(tsl))
+	.filter(Boolean)
 
 var request = require("root/lib/fetch")
 request = require("root/lib/fetch/fetch_cook")(request)
