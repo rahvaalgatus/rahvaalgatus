@@ -1160,12 +1160,7 @@ function parseMeeting(obj) {
 }
 
 function parseDestinations(dest) {
-	var dests = _.asArray(dest)
-
-	if (!dests.every(isValidDestination))
-		throw new HttpError(400, "Invalid Destination")
-
-	return dests
+	return _.asArray(dest).filter(isValidDestination)
 }
 
 function parsePhase(phase) {

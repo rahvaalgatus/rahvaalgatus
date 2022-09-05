@@ -843,35 +843,50 @@ describe("InitiativesController", function() {
 		})
 
 		describe("given for", function() {
-			it("must respond with 400 given invalid destination", function*() {
+			function createInitiativesForAllDestinations() {
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "parliament"
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					destination: null,
+					published_at: new Date
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "muhu-vald"
+				}))
+			}
+
+			it("must return no initiatives given invalid destination", function*() {
+				createInitiativesForAllDestinations.call(this)
+
 				var res = yield this.request("/initiatives?for=foo", {
 					headers: {Accept: INITIATIVE_TYPE}
 				})
 
-				res.statusCode.must.equal(400)
-				res.statusMessage.must.equal("Invalid Destination")
-
-				res.body.must.eql({
-					code: 400,
-					message: "Invalid Destination",
-					name: "HttpError"
-				})
+				res.statusCode.must.equal(200)
+				res.headers["content-type"].must.equal(INITIATIVE_TYPE)
+				res.body.must.eql([])
 			})
 
-			it("must respond with 400 given hasOwnProperty destination",
+			it("must return no initiatives given Object.prototype destination",
 				function*() {
+				createInitiativesForAllDestinations.call(this)
+
 				var res = yield this.request("/initiatives?for=hasOwnProperty", {
 					headers: {Accept: INITIATIVE_TYPE}
 				})
 
-				res.statusCode.must.equal(400)
-				res.statusMessage.must.equal("Invalid Destination")
-
-				res.body.must.eql({
-					code: 400,
-					message: "Invalid Destination",
-					name: "HttpError"
-				})
+				res.statusCode.must.equal(200)
+				res.headers["content-type"].must.equal(INITIATIVE_TYPE)
+				res.body.must.eql([])
 			})
 
 			it("must filter initiatives destined for parliament", function*() {
