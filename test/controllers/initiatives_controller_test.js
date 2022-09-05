@@ -1379,6 +1379,46 @@ describe("InitiativesController", function() {
 					}))
 				})
 			})
+
+			it("must not update other attributes", function*() {
+				var content = newTrixDocument("Hello, world")
+
+				var res = yield this.request("/initiatives", {
+					method: "POST",
+					form: {
+						title: "Hello, world!",
+						content: JSON.stringify(content),
+						phase: "sign",
+						user_id: 42
+					}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Initiative Created")
+
+				var initiatives = initiativesDb.search(sql`SELECT * FROM initiatives`)
+				initiatives.length.must.equal(1)
+				var initiative = initiatives[0]
+
+				initiative.must.eql(new ValidInitiative({
+					uuid: initiative.uuid,
+					user_id: this.user.id,
+					parliament_token: initiative.parliament_token,
+					title: "Hello, world!",
+					created_at: new Date
+				}))
+
+				textsDb.search(sql`
+					SELECT * FROM initiative_texts
+				`).must.eql([new ValidText({
+					id: 1,
+					initiative_uuid: initiative.uuid,
+					user_id: this.user.id,
+					created_at: new Date,
+					title: "Hello, world!",
+					content: content
+				})])
+			})
 		})
 	})
 

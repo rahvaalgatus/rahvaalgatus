@@ -475,6 +475,42 @@ describe("InitiativeTextsController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("INITIATIVE_TEXT_CREATED_IF_PUBLISHED"))
 			})
+
+			it("must not update other attributes", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id
+				}))
+
+				var content = newTrixDocument("Hello, world")
+				var initiativePath = "/initiatives/" + initiative.uuid
+				var res = yield this.request(initiativePath + "/texts", {
+					method: "POST",
+					form: {
+						title: "Let it shine",
+						content: JSON.stringify(content),
+						language: "en",
+						phase: "sign",
+						user_id: 42
+					}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Text Created")
+				initiativesDb.read(initiative).must.eql(initiative)
+
+				textsDb.search(sql`
+					SELECT * FROM initiative_texts
+				`).must.eql([new ValidText({
+					id: 1,
+					initiative_uuid: initiative.uuid,
+					user_id: this.user.id,
+					created_at: new Date,
+					title: "Let it shine",
+					language: "en",
+					content: content,
+					content_type: TRIX_TYPE
+				})])
+			})
 		})
 	})
 
