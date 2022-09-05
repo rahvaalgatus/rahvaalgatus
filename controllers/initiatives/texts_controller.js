@@ -1,11 +1,12 @@
 var _ = require("root/lib/underscore")
 var {Router} = require("express")
+var Config = require("root").config
 var HttpError = require("standard-http-error")
 var Initiative = require("root/lib/initiative")
 var initiativesDb = require("root/db/initiatives_db")
 var textsDb = require("root/db/initiative_texts_db")
 var sql = require("sqlate")
-var LANGUAGES = require("root").config.languages
+var TRIX_CONTENT_TYPE = "application/vnd.basecamp.trix+json"
 exports.parse = parse
 
 exports.router = Router({mergeParams: true})
@@ -103,15 +104,38 @@ exports.router.post("/", function(req, res) {
 
 	var path = "/initiatives/" + initiative.uuid
 	if (text.language != initiative.language) path += "?language=" + text.language
-	res.redirect(path)
+
+	res.statusMessage = "Text Created"
+	res.redirect(303, path)
+})
+
+var validate = require("root/lib/json_schema").new({
+	type: "object",
+
+	properties: {
+		title: {type: "string"},
+		content: {type: "array"},
+		content_type: {const: TRIX_CONTENT_TYPE},
+		language: {enum: Config.languages},
+		basis_id: {type: ["number", "null"]}
+	},
+
+	required: ["title", "content", "language"],
+	additionalProperties: false
 })
 
 function parse(obj) {
-	return {
+	var err, attrs = {
 		title: String(obj.title),
 		content: obj.content ? JSON.parse(obj.content) : [],
-		content_type: "application/vnd.basecamp.trix+json",
-		language: LANGUAGES.includes(obj.language) ? obj.language : "et",
+		content_type: TRIX_CONTENT_TYPE,
+		language: obj.language || Config.language,
 		basis_id: Number(obj["basis-id"]) || null
 	}
+
+	if (err = validate(attrs)) throw new HttpError(422, "Invalid Attributes", {
+		attributes: err
+	})
+
+	return attrs
 }

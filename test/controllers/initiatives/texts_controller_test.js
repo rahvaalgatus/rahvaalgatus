@@ -1,4 +1,5 @@
 var _ = require("root/lib/underscore")
+var Config = require("root").config
 var ValidUser = require("root/test/valid_user")
 var ValidCoauthor = require("root/test/valid_initiative_coauthor")
 var ValidInitiative = require("root/test/valid_initiative")
@@ -92,23 +93,6 @@ describe("InitiativeTextsController", function() {
 				res.statusMessage.must.must.equal("Not Editable")
 			})
 
-			it("must respond with 405 if in sign phase given no language",
-				function*() {
-				var initiative = initiativesDb.create(new ValidInitiative({
-					user_id: this.user.id,
-					phase: "sign"
-				}))
-
-				var initiativePath = "/initiatives/" + initiative.uuid
-				var res = yield this.request(initiativePath + "/texts", {
-					method: "POST",
-					form: {content: "[]"}
-				})
-
-				res.statusCode.must.equal(405)
-				res.statusMessage.must.must.equal("Can Only Add Translations")
-			})
-
 			it("must respond with 405 if in sign phase given initiative's language",
 				function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
@@ -144,7 +128,8 @@ describe("InitiativeTextsController", function() {
 					}
 				})
 
-				res.statusCode.must.equal(302)
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Text Created")
 				res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
 				initiativesDb.read(initiative).must.eql({
@@ -189,7 +174,8 @@ describe("InitiativeTextsController", function() {
 					form: {title: "Let it shine", content: "", language: "en"}
 				})
 
-				res.statusCode.must.equal(302)
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Text Created")
 				res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
 				initiativesDb.read(initiative).must.eql({
@@ -211,6 +197,55 @@ describe("InitiativeTextsController", function() {
 				})])
 			})
 
+			Config.languages.forEach(function(lang) {
+				it(`must create new text given translation in ${lang}`, function*() {
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						language: _.find(Config.languages, (l) => l != lang),
+					}))
+
+					var initiativePath = "/initiatives/" + initiative.uuid
+					var res = yield this.request(initiativePath + "/texts", {
+						method: "POST",
+						form: {
+							title: "Let it shine",
+							content: JSON.stringify(newTrixDocument("Hello, world")),
+							language: lang
+						}
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Text Created")
+					initiativesDb.read(initiative).must.eql(initiative)
+
+					textsDb.read(sql`
+						SELECT COUNT(*) AS count FROM initiative_texts
+					`).count.must.equal(1)
+				})
+			})
+
+			it("must respond with 422 given invalid language for translation",
+				function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id
+				}))
+
+				var initiativePath = "/initiatives/" + initiative.uuid
+				var res = yield this.request(initiativePath + "/texts", {
+					method: "POST",
+					form: {
+						title: "Let it shine",
+						content: JSON.stringify(newTrixDocument("Hello, world")),
+						language: "xx"
+					}
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Invalid Attributes")
+				initiativesDb.read(initiative).must.eql(initiative)
+				textsDb.search(sql`SELECT * FROM initiative_texts`).must.be.empty()
+			})
+
 			it("must create new text given translation in edit phase", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
@@ -227,8 +262,8 @@ describe("InitiativeTextsController", function() {
 					}
 				})
 
-				res.statusCode.must.equal(302)
-
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Text Created")
 				initiativesDb.read(initiative).must.eql(initiative)
 
 				textsDb.search(sql`
@@ -262,8 +297,8 @@ describe("InitiativeTextsController", function() {
 					}
 				})
 
-				res.statusCode.must.equal(302)
-
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Text Created")
 				initiativesDb.read(initiative).must.eql(initiative)
 
 				textsDb.search(sql`
@@ -303,7 +338,8 @@ describe("InitiativeTextsController", function() {
 					}
 				})
 
-				res.statusCode.must.equal(302)
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Text Created")
 
 				textsDb.read(sql`
 					SELECT * FROM initiative_texts LIMIT 1
@@ -341,7 +377,8 @@ describe("InitiativeTextsController", function() {
 					}
 				})
 
-				res.statusCode.must.equal(302)
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Text Created")
 
 				textsDb.read(sql`
 					SELECT * FROM initiative_texts WHERE id = 2
@@ -383,7 +420,8 @@ describe("InitiativeTextsController", function() {
 					}
 				})
 
-				res.statusCode.must.equal(302)
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Text Created")
 
 				textsDb.read(sql`
 					SELECT * FROM initiative_texts WHERE id = 2
@@ -410,7 +448,8 @@ describe("InitiativeTextsController", function() {
 					form: {"basis-id": "", language: "et", content: "[]"}
 				})
 
-				res.statusCode.must.equal(302)
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Text Created")
 			})
 
 			it("must create new text if initiative published", function*() {
@@ -425,7 +464,8 @@ describe("InitiativeTextsController", function() {
 					form: {language: "et", content: "[]"}
 				})
 
-				res.statusCode.must.equal(302)
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Text Created")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
 				res = yield this.request(res.headers.location, {

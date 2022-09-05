@@ -1305,11 +1305,9 @@ describe("InitiativesController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Initiative Created")
 
-				var initiatives = initiativesDb.search(sql`
-					SELECT * FROM initiatives
-				`)
-
+				var initiatives = initiativesDb.search(sql`SELECT * FROM initiatives`)
 				initiatives.length.must.equal(1)
 				var initiative = initiatives[0]
 
@@ -1336,6 +1334,50 @@ describe("InitiativesController", function() {
 				})])
 
 				res.headers.location.must.equal("/initiatives/" + initiative.uuid)
+			})
+
+			it("must respond with 422 given invalid language", function*() {
+				var res = yield this.request("/initiatives", {
+					method: "POST",
+					form: {
+						title: "Hello, world!",
+						content: JSON.stringify(newTrixDocument("Hello, world")),
+						language: "xx"
+					}
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Invalid Attributes")
+				initiativesDb.search(sql`SELECT * FROM initiatives`).must.be.empty()
+			})
+
+			Config.languages.forEach(function(lang) {
+				it(`must create initiative with language ${lang}`, function*() {
+					var res = yield this.request("/initiatives", {
+						method: "POST",
+						form: {
+							title: "Hello, world!",
+							content: JSON.stringify(newTrixDocument("Hello, world")),
+							language: lang
+						}
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Created")
+
+					var initiatives = initiativesDb.search(sql`SELECT * FROM initiatives`)
+					initiatives.length.must.equal(1)
+					var initiative = initiatives[0]
+
+					initiative.must.eql(new ValidInitiative({
+						uuid: initiative.uuid,
+						user_id: this.user.id,
+						parliament_token: initiative.parliament_token,
+						title: "Hello, world!",
+						language: lang,
+						created_at: new Date
+					}))
+				})
 			})
 		})
 	})

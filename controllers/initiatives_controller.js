@@ -170,6 +170,7 @@ exports.router.post("/", function(req, res) {
 		created_at: new Date
 	})
 
+	res.statusMessage = "Initiative Created"
 	res.redirect(303, req.baseUrl + "/" + initiative.uuid)
 })
 
