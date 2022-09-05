@@ -858,6 +858,22 @@ describe("InitiativesController", function() {
 				})
 			})
 
+			it("must respond with 400 given hasOwnProperty destination",
+				function*() {
+				var res = yield this.request("/initiatives?for=hasOwnProperty", {
+					headers: {Accept: INITIATIVE_TYPE}
+				})
+
+				res.statusCode.must.equal(400)
+				res.statusMessage.must.equal("Invalid Destination")
+
+				res.body.must.eql({
+					code: 400,
+					message: "Invalid Destination",
+					name: "HttpError"
+				})
+			})
+
 			it("must filter initiatives destined for parliament", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,

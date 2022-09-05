@@ -1191,7 +1191,7 @@ function parseLimit(limit) {
 }
 
 function isValidDestination(dest) {
-	return dest == "parliament" || dest in LOCAL_GOVERNMENTS
+	return dest == "parliament" || _.hasOwn(LOCAL_GOVERNMENTS, dest)
 }
 
 function isApiRequest(req) { return req.accept[0].name == INITIATIVE_TYPE.name }
