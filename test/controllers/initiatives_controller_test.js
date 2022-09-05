@@ -6634,27 +6634,27 @@ describe("InitiativesController", function() {
 					})
 				})
 
-			_.without(COAUTHOR_STATUSES, "accepted").forEach(function(status) {
-				it(`must respond with 403 if ${status} coauthor`, function*() {
-					var initiative = initiativesDb.create(new ValidInitiative({
-						user_id: usersDb.create(new ValidUser).id
-					}))
+				_.without(COAUTHOR_STATUSES, "accepted").forEach(function(status) {
+					it(`must respond with 403 if ${status} coauthor`, function*() {
+						var initiative = initiativesDb.create(new ValidInitiative({
+							user_id: usersDb.create(new ValidUser).id
+						}))
 
-					coauthorsDb.create(new ValidCoauthor({
-						initiative: initiative,
-						user: this.user,
-						status: status
-					}))
+						coauthorsDb.create(new ValidCoauthor({
+							initiative: initiative,
+							user: this.user,
+							status: status
+						}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
-						method: "PUT",
-						form: {destination: "parliament"}
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							form: {destination: "parliament"}
+						})
+
+						res.statusCode.must.equal(403)
+						initiativesDb.read(initiative).must.eql(initiative)
 					})
-
-					res.statusCode.must.equal(403)
-					initiativesDb.read(initiative).must.eql(initiative)
 				})
-			})
 
 				it("must respond with 422 given invalid destination", function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
