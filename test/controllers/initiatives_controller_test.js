@@ -6695,6 +6695,22 @@ describe("InitiativesController", function() {
 					initiativesDb.read(initiative).must.eql(initiative)
 				})
 
+				it("must respond with 422 given Object.prototype destination",
+					function*() {
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {destination: "hasOwnProperty"}
+					})
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Destination Invalid")
+					initiativesDb.read(initiative).must.eql(initiative)
+				})
+
 				it("must not update initiative destination after edit phase",
 					function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({

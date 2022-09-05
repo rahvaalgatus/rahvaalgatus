@@ -1099,8 +1099,11 @@ function parseInitiative(initiative, obj) {
 	if ("destination" in obj && initiative.phase == "edit") {
 		var dest = obj.destination || null
 
-		if (!(dest == null || dest == "parliament" || dest in LOCAL_GOVERNMENTS))
-			throw new HttpError(422, "Destination Invalid")
+		if (!(
+			dest == null ||
+			dest == "parliament" ||
+			_.hasOwn(LOCAL_GOVERNMENTS, dest)
+		)) throw new HttpError(422, "Destination Invalid")
 
 		attrs.destination = dest
 	}
