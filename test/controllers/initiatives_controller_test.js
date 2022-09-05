@@ -610,6 +610,51 @@ describe("InitiativesController", function() {
 			var imageUrl = `${Config.url}/assets/rahvaalgatus-description.png`
 			metasByProp["og:image"].content.must.equal(imageUrl)
 		})
+
+		describe("given for", function() {
+			it("must return no initiatives given invalid destination",
+				function*() {
+				var initiatives = createInitiativesForAllDestinations(this.author)
+
+				var res = yield this.request("/initiatives?for=foo")
+				res.statusCode.must.equal(200)
+				initiatives.forEach((i) => res.body.must.not.include(i.uuid))
+			})
+
+			it("must return no initiatives given Object.prototype destination",
+				function*() {
+				var initiatives = createInitiativesForAllDestinations(this.author)
+
+				var res = yield this.request("/initiatives?for=hasOwnProperty")
+				res.statusCode.must.equal(200)
+				initiatives.forEach((i) => res.body.must.not.include(i.uuid))
+			})
+
+			it("must filter initiatives destined for parliament", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "parliament"
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					destination: null,
+					published_at: new Date
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "muhu-vald"
+				}))
+
+				var res = yield this.request("/initiatives?for=parliament")
+				res.statusCode.must.equal(200)
+				res.body.must.include(initiative.uuid)
+			})
+		})
 	})
 
 	describe(`GET / for ${INITIATIVE_TYPE}`, function() {
@@ -843,29 +888,8 @@ describe("InitiativesController", function() {
 		})
 
 		describe("given for", function() {
-			function createInitiativesForAllDestinations() {
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "parliament"
-				}))
-
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "edit",
-					destination: null,
-					published_at: new Date
-				}))
-
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "muhu-vald"
-				}))
-			}
-
 			it("must return no initiatives given invalid destination", function*() {
-				createInitiativesForAllDestinations.call(this)
+				createInitiativesForAllDestinations(this.author)
 
 				var res = yield this.request("/initiatives?for=foo", {
 					headers: {Accept: INITIATIVE_TYPE}
@@ -878,7 +902,7 @@ describe("InitiativesController", function() {
 
 			it("must return no initiatives given Object.prototype destination",
 				function*() {
-				createInitiativesForAllDestinations.call(this)
+				createInitiativesForAllDestinations(this.author)
 
 				var res = yield this.request("/initiatives?for=hasOwnProperty", {
 					headers: {Accept: INITIATIVE_TYPE}
@@ -10068,6 +10092,29 @@ describe("InitiativesController", function() {
 		})
 	})
 })
+
+function createInitiativesForAllDestinations(author) {
+	return initiativesDb.create([
+		new ValidInitiative({
+			user_id: author.id,
+			phase: "sign",
+			destination: "parliament"
+		}),
+
+		new ValidInitiative({
+			user_id: author.id,
+			phase: "edit",
+			destination: null,
+			published_at: new Date
+		}),
+
+		new ValidInitiative({
+			user_id: author.id,
+			phase: "sign",
+			destination: "muhu-vald"
+		})
+	])
+}
 
 function queryPhases(html) {
 	var phases = html.querySelectorAll("#initiative-phases li")
