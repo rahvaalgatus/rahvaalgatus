@@ -15,6 +15,7 @@ var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
 var co = require("co")
 var next = require("co-next")
+var {logger} = require("root")
 var {mobileId} = require("root")
 var {smartId} = require("root")
 var parseBody = require("body-parser").raw
@@ -600,7 +601,7 @@ function createSessionAndSignIn(authentication, req, res) {
 	var user = readOrCreateUser(authentication, req.lang)
 	var sessionToken = Crypto.randomBytes(16)
 
-	sessionsDb.create({
+	var session = sessionsDb.create({
 		user_id: user.id,
 
 		// Hashing isn't meant to be long-term protection against token leakage.
@@ -613,6 +614,13 @@ function createSessionAndSignIn(authentication, req, res) {
 		method: authentication.method,
 		authentication_id: authentication.id
 	})
+
+	logger.info(
+		"Created session %d for user %d from request %s.",
+		session.id,
+		user.id,
+		req.headers["request-id"] || "?"
+	)
 
 	res.cookie(Config.sessionCookieName, sessionToken.toString("hex"), {
 		httpOnly: true,
