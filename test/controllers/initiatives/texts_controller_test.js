@@ -16,6 +16,7 @@ var TRIX_TYPE = new MediaType("application/vnd.basecamp.trix+json")
 var {newTrixDocument} = require("root/test/fixtures")
 var outdent = require("root/lib/outdent")
 var parseHtml = require("root/test/html").parse
+var MAX_TITLE_LENGTH = 200
 
 describe("InitiativeTextsController", function() {
 	require("root/test/web")()
@@ -104,14 +105,14 @@ describe("InitiativeTextsController", function() {
 				var initiativePath = "/initiatives/" + initiative.uuid
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
-					form: {content: "[]", language: "en"}
+					form: {title: "Hello", content: "[]", language: "en"}
 				})
 
 				res.statusCode.must.equal(405)
 				res.statusMessage.must.must.equal("Can Only Add Translations")
 			})
 
-			it("must create new text and set title", function*() {
+			it("must create text and set title", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					language: "en"
@@ -159,8 +160,7 @@ describe("InitiativeTextsController", function() {
 				res.body.must.include(t("INITIATIVE_TEXT_CREATED"))
 			})
 
-			it("must create new text and set title even if content empty",
-				function*() {
+			it("must create text and set title even if content empty", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					language: "en"
@@ -198,7 +198,7 @@ describe("InitiativeTextsController", function() {
 			})
 
 			Config.languages.forEach(function(lang) {
-				it(`must create new text given translation in ${lang}`, function*() {
+				it(`must create text given translation in ${lang}`, function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						language: _.find(Config.languages, (l) => l != lang),
@@ -224,6 +224,55 @@ describe("InitiativeTextsController", function() {
 				})
 			})
 
+			it(`must create text and set title if at most ${MAX_TITLE_LENGTH} characters`, function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id
+				}))
+
+				var initiativePath = "/initiatives/" + initiative.uuid
+				var res = yield this.request(initiativePath + "/texts", {
+					method: "POST",
+					form: {
+						title: _.repeat("a", MAX_TITLE_LENGTH),
+						content: JSON.stringify(newTrixDocument("Hello, world")),
+						language: initiative.language
+					}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Text Created")
+
+				initiativesDb.read(initiative).must.eql({
+					__proto__: initiative,
+					title: _.repeat("a", MAX_TITLE_LENGTH)
+				})
+
+				textsDb.read(sql`
+					SELECT COUNT(*) AS count FROM initiative_texts
+				`).count.must.equal(1)
+			})
+
+			it(`must respond with 422 given title longer than ${MAX_TITLE_LENGTH} characters`, function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id
+				}))
+
+				var initiativePath = "/initiatives/" + initiative.uuid
+				var res = yield this.request(initiativePath + "/texts", {
+					method: "POST",
+					form: {
+						title: _.repeat("a", MAX_TITLE_LENGTH + 1),
+						content: JSON.stringify(newTrixDocument("Hello, world")),
+						language: initiative.language
+					}
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Invalid Attributes")
+				initiativesDb.read(initiative).must.eql(initiative)
+				textsDb.search(sql`SELECT * FROM initiative_texts`).must.be.empty()
+			})
+
 			it("must respond with 422 given invalid language for translation",
 				function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
@@ -246,7 +295,7 @@ describe("InitiativeTextsController", function() {
 				textsDb.search(sql`SELECT * FROM initiative_texts`).must.be.empty()
 			})
 
-			it("must create new text given translation in edit phase", function*() {
+			it("must create text given translation in edit phase", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
@@ -280,7 +329,7 @@ describe("InitiativeTextsController", function() {
 				})])
 			})
 
-			it("must create new text given translation in sign phase", function*() {
+			it("must create text given translation in sign phase", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					phase: "sign"
@@ -315,7 +364,7 @@ describe("InitiativeTextsController", function() {
 				})])
 			})
 
-			it("must create new text if coauthor", function*() {
+			it("must create text if coauthor", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: usersDb.create(new ValidUser).id
 				}))
@@ -354,7 +403,7 @@ describe("InitiativeTextsController", function() {
 				}))
 			})
 
-			it("must create new text given basis", function*() {
+			it("must create text given basis", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
@@ -445,14 +494,14 @@ describe("InitiativeTextsController", function() {
 				var initiativePath = "/initiatives/" + initiative.uuid
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
-					form: {"basis-id": "", language: "et", content: "[]"}
+					form: {title: "Hello", "basis-id": "", language: "et", content: "[]"}
 				})
 
 				res.statusCode.must.equal(303)
 				res.statusMessage.must.equal("Text Created")
 			})
 
-			it("must create new text if initiative published", function*() {
+			it("must create text if initiative published", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					published_at: new Date
@@ -461,7 +510,7 @@ describe("InitiativeTextsController", function() {
 				var initiativePath = "/initiatives/" + initiative.uuid
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
-					form: {language: "et", content: "[]"}
+					form: {title: "Hello", language: "et", content: "[]"}
 				})
 
 				res.statusCode.must.equal(303)

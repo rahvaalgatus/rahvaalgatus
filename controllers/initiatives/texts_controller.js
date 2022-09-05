@@ -113,7 +113,7 @@ var validate = require("root/lib/json_schema").new({
 	type: "object",
 
 	properties: {
-		title: {type: "string"},
+		title: {type: "string", maxLength: 200},
 		content: {type: "array"},
 		content_type: {const: TRIX_CONTENT_TYPE},
 		language: {enum: Config.languages},
@@ -126,7 +126,7 @@ var validate = require("root/lib/json_schema").new({
 
 function parse(obj) {
 	var err, attrs = {
-		title: String(obj.title),
+		title: obj.title,
 		content: obj.content ? JSON.parse(obj.content) : [],
 		content_type: TRIX_CONTENT_TYPE,
 		language: obj.language || Config.language,
