@@ -92,10 +92,15 @@ exports.newMap = function(el, initiativeCounts) {
 
 				html += "<ul>"
 
+				var initiativesUrl = "/initiatives?for=" + encodeURIComponent(gov.id)
+
 				if (hasInitiatives(gov)) html += [
-					"<li class=\"has-initiatives\"><strong>",
-					getInitiativeCount(gov),
-					"</strong> algatus(t) Rahvaalgatuses</li>"
+					"<li class=\"has-initiatives\">",
+					"<a href=\"" + escapeHtml(initiativesUrl) + "\">",
+					"<strong>" + getInitiativeCount(gov) + "</strong>",
+					" algatus(t) Rahvaalgatuses",
+					"</a>",
+					"</li>"
 				].join("")
 
 				if (gov.kompassUrl) html += [
@@ -117,8 +122,8 @@ exports.newMap = function(el, initiativeCounts) {
 				html += "<a href=\"/initiatives/new\" class=\"new-initiative-button blue-button\">Loo algatus</a>"
 
 				if (hasInitiatives(gov)) html += [
-					" või <a href=\"/initiatives?for=",
-					gov.id,
+					" või <a href=\"",
+					escapeHtml(initiativesUrl),
 					"\" class=\"link-button\">vaata algatusi</a>."
 				].join("")
 
@@ -166,4 +171,12 @@ exports.newMap = function(el, initiativeCounts) {
 	function hasInitiatives(gov) {
 		return initiativeCounts[gov.id] > 0
 	}
+}
+
+function escapeHtml(text) {
+	text = text.replace(/&/g, "&amp;")
+	text = text.replace(/</g, "&lt;")
+	text = text.replace(/>/g, "&gt;")
+	text = text.replace(/"/g, "&quot;") // For use in attributes.
+	return text
 }
