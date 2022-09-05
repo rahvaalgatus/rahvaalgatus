@@ -49,18 +49,25 @@ exports.newMap = function(el, initiativeCounts) {
 				if (this.isPopupOpen()) return
 
 				var gov = layer.feature.properties
-				var html = "<h2>" + name + "</h2>"
 
-				html += "<p>"
-				html += "<strong>" + gov.population + "</strong> elanikku ja "
-				html += "<strong>" + gov.threshold + "</strong> allkirja vajalik algatustele. "
-				html += "</p>"
+				var html = [
+					"<h2>" + escapeHtml(name) + "</h2>",
+					"<p>",
+					"<strong>",
+					Number(gov.population),
+					"</strong> elanikku ja ",
+					"<strong>",
+					Number(gov.threshold),
+					"</strong>",
+					" allkirja vajalik algatustele. ",
+					"</p>"
+				].join("")
 
 				html += "<ul>"
 
 				if (hasInitiatives(gov)) html += [
 					"<li class=\"has-initiatives\"><strong>",
-					getInitiativeCount(gov),
+					Number(getInitiativeCount(gov)),
 					"</strong> algatus(t) Rahvaalgatuses</li>"
 				].join("")
 
@@ -83,21 +90,28 @@ exports.newMap = function(el, initiativeCounts) {
 
 			layer.bindPopup(function(layer) {
 				var gov = layer.feature.properties
-				var html = "<h2>" + name + "</h2>"
+				var initiativesUrl = "/initiatives?for=" + encodeURIComponent(gov.id)
 
-				html += "<p>"
-				html += "<strong>" + gov.population + "</strong> elanikku ja "
-				html += "<strong>" + gov.threshold + "</strong> allkirja vajalik algatustele. "
-				html += "</p>"
+				var html = [
+					"<h2>" + escapeHtml(name) + "</h2>",
+					"<p>",
+					"<strong>",
+					Number(gov.population),
+					"</strong> elanikku ja ",
+					"<strong>",
+					Number(gov.threshold),
+					"</strong> allkirja vajalik algatustele. ",
+					"</p>"
+				].join("")
 
 				html += "<ul>"
-
-				var initiativesUrl = "/initiatives?for=" + encodeURIComponent(gov.id)
 
 				if (hasInitiatives(gov)) html += [
 					"<li class=\"has-initiatives\">",
 					"<a href=\"" + escapeHtml(initiativesUrl) + "\">",
-					"<strong>" + getInitiativeCount(gov) + "</strong>",
+					"<strong>",
+					Number(getInitiativeCount(gov)),
+					"</strong>",
 					" algatus(t) Rahvaalgatuses",
 					"</a>",
 					"</li>"
@@ -105,13 +119,13 @@ exports.newMap = function(el, initiativeCounts) {
 
 				if (gov.kompassUrl) html += [
 					"<li class=\"kompass\"><a href=\"",
-					gov.kompassUrl,
+					escapeHtml(gov.kompassUrl),
 					"\">Rändnäitus \"Kodukoha kompass\"</a></li>"
 				].join("")
 
 				if (gov.rahandusministeeriumUrl) html += [
 					"<li class=\"rahandusministeerium\"><a href=\"",
-					gov.rahandusministeeriumUrl,
+					escapeHtml(gov.rahandusministeeriumUrl),
 					"\">Ülevaade teenuste tasemetest</a></li>"
 				].join("")
 
@@ -164,13 +178,8 @@ exports.newMap = function(el, initiativeCounts) {
 
 	return map
 
-	function getInitiativeCount(gov) {
-		return initiativeCounts[gov.id] || 0
-	}
-
-	function hasInitiatives(gov) {
-		return initiativeCounts[gov.id] > 0
-	}
+	function getInitiativeCount(gov) { return initiativeCounts[gov.id] || 0 }
+	function hasInitiatives(gov) { return initiativeCounts[gov.id] > 0 }
 }
 
 function escapeHtml(text) {
