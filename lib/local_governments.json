@@ -535,7 +535,9 @@
 		"initiativesEmails": [
 			"vald@kanepi.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"46907306535"
+		],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kanepi-vald"
 	},
