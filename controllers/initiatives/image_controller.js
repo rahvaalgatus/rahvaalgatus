@@ -102,6 +102,27 @@ function isValidImageType(type) {
   }
 }
 
+var validate = require("root/lib/json_schema").new({
+	type: "object",
+	additionalProperties: false,
+
+	properties: {
+		author_name: {type: "string", maxLength: 100},
+		author_url: {type: "string", maxLength: 1024}
+	}
+})
+
+exports.SCHEMA = validate.schema
+
 function parse(obj) {
-	return _.pick(obj, ["author_name", "author_url"])
+	var err, attrs = {}
+
+	if ("author_name" in obj) attrs.author_name = String(obj.author_name).trim()
+	if ("author_url" in obj) attrs.author_url = String(obj.author_url).trim()
+
+	if (err = validate(attrs)) throw new HttpError(422, "Invalid Attributes", {
+		attributes: err
+	})
+
+	return attrs
 }

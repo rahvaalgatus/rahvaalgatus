@@ -189,6 +189,34 @@ describe("ImageController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("INITIATIVE_IMAGE_AUTHOR_UPDATED"))
 			})
+
+			_.each({
+				"too long author_name": {author_name: _.repeat("a", 101)},
+				"too long author_url": {author_url: _.repeat("a", 1025)}
+			}, function(attrs, title) {
+				it(`must respond with 422 given ${title}`, function*() {
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					var image = imagesDb.create({
+						initiative_uuid: initiative.uuid,
+						uploaded_by_id: this.user.id,
+						data: PNG,
+						preview: PNG,
+						type: "image/png"
+					})
+
+					var res = yield this.request(
+						`/initiatives/${initiative.uuid}/image`,
+						{method: "PUT", form: attrs}
+					)
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Invalid Attributes")
+					imagesDb.read(image).must.eql(image)
+				})
+			})
 		})
 	})
 })

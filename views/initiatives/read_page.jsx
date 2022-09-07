@@ -41,6 +41,9 @@ var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var LANGUAGES = require("root").config.languages
+var {SCHEMA} = require("root/controllers/initiatives_controller")
+var IMAGE_SCHEMA =
+	require("root/controllers/initiatives/image_controller").SCHEMA
 exports = module.exports = ReadPage
 exports.InitiativeDestinationSelectView = InitiativeDestinationSelectView
 exports.SigningView = SigningView
@@ -492,6 +495,7 @@ function ReadPage(attrs) {
 								name="author_name"
 								type="text"
 								class="form-input"
+								maxlength={IMAGE_SCHEMA.properties.author_name.maxLength}
 								value={image.author_name}
 							/>
 
@@ -504,6 +508,7 @@ function ReadPage(attrs) {
 								type="url"
 								class="form-input"
 								placeholder="https://"
+								maxlength={IMAGE_SCHEMA.properties.author_url.maxLength}
 								value={image.author_url}
 							/>
 
@@ -1167,6 +1172,7 @@ function SidebarInfoView(attrs) {
 					type="name"
 					class="form-input"
 					value={authorName}
+					maxlength={SCHEMA.properties.author_name.maxLength}
 				/>
 
 				<p>{Jsx.html(t("INITIATIVE_INFO_AUTHOR_NAME_DESCRIPTION", {
@@ -1183,6 +1189,7 @@ function SidebarInfoView(attrs) {
 					class="form-input"
 					placeholder="https://"
 					value={authorUrl}
+					maxlength={SCHEMA.properties.author_url.maxLength}
 				/>
 
 				<p>{t("INITIATIVE_INFO_AUTHOR_URL_DESCRIPTION")}</p>
@@ -1195,6 +1202,7 @@ function SidebarInfoView(attrs) {
 					name="author_contacts"
 					type="contacts"
 					class="form-textarea"
+					maxlength={SCHEMA.properties.author_contacts.maxLength}
 				>
 					{authorContacts}
 				</textarea>
@@ -1216,6 +1224,7 @@ function SidebarInfoView(attrs) {
 			name="community_url"
 			placeholder="https://"
 			value={communityUrl}
+			maxlength={SCHEMA.properties.community_url.maxLength}
 		>
 			<UntrustedLink class="form-output" href={communityUrl} />
 		</InitiativeAttribute> : null}
@@ -1245,6 +1254,9 @@ function SidebarInfoView(attrs) {
 					placeholder={t("INITIATIVE_INFO_ORGANIZATIONS_NAME_PLACEHOLDER")}
 					name={`organizations[${i}][name]`}
 					value={organization.name}
+					maxlength={
+						SCHEMA.properties.organizations.items.properties.name.maxLength
+					}
 				/>
 
 				<input
@@ -1253,6 +1265,9 @@ function SidebarInfoView(attrs) {
 					name={`organizations[${i}][url]`}
 					value={organization.url}
 					placeholder="https://"
+					maxlength={
+						SCHEMA.properties.organizations.items.properties.url.maxLength
+					}
 				/>
 			</li>}</InitiativeAttributeList>: null}
 		</Fragment> : null}
@@ -1291,6 +1306,7 @@ function SidebarInfoView(attrs) {
 					name={`meetings[${i}][url]`}
 					value={meeting.url}
 					placeholder="https://"
+					maxlength={SCHEMA.properties.meetings.items.properties.url.maxLength}
 				/>
 			</li>}</InitiativeAttributeList>: null}
 		</Fragment> : null}
@@ -1303,6 +1319,7 @@ function SidebarInfoView(attrs) {
 				name="url"
 				type="url"
 				placeholder="https://"
+				maxlength={SCHEMA.properties.url.maxLength}
 				value={externalUrl}
 			>
 				<UntrustedLink class="form-output" href={externalUrl} />
@@ -1332,6 +1349,7 @@ function SidebarInfoView(attrs) {
 						name={`media_urls[${i}]`}
 						value={url}
 						placeholder="https://"
+						maxlength={SCHEMA.properties.media_urls.items.maxLength}
 					/>
 				</li>}</InitiativeAttributeList>: null}
 			</Fragment> : null}
@@ -1361,6 +1379,7 @@ function SidebarInfoView(attrs) {
 						name={`government_change_urls[${i}]`}
 						value={url}
 						placeholder="https://"
+						maxlength={SCHEMA.properties.government_change_urls.items.maxLength}
 					/>
 				</li>}</InitiativeAttributeList>: null}
 			</Fragment> : null}
@@ -1390,6 +1409,7 @@ function SidebarInfoView(attrs) {
 						name={`public_change_urls[${i}]`}
 						value={url}
 						placeholder="https://"
+						maxlength={SCHEMA.properties.public_change_urls.items.maxLength}
 					/>
 				</li>}</InitiativeAttributeList>: null}
 			</Fragment> : null}
@@ -1402,6 +1422,7 @@ function SidebarInfoView(attrs) {
 			title={t("NOTES_HEADER")}
 			name="notes"
 			value={initiative.notes}
+			maxlength={SCHEMA.properties.notes.maxLength}
 		>
 			<p class="text form-output">{Jsx.html(linkify(initiative.notes))}</p>
 		</InitiativeAttribute> : null}
@@ -2384,6 +2405,7 @@ function InitiativeAttribute(attrs, children) {
 	var {placeholder} = attrs
 	var {help} = attrs
 	var {editable} = attrs
+	var {maxlength} = attrs
 
 	return <Fragment>
 		<h3 class="sidebar-subheader">{title}</h3>
@@ -2393,6 +2415,7 @@ function InitiativeAttribute(attrs, children) {
 			{type == "textarea" ? <textarea
 				name={name}
 				class="form-textarea"
+				maxlength={maxlength}
 				placeholder={placeholder}>
 				{value}
 			</textarea> : <input
@@ -2401,6 +2424,7 @@ function InitiativeAttribute(attrs, children) {
 				class="form-input"
 				placeholder={placeholder}
 				value={value}
+				maxlength={maxlength}
 			/>}
 
 			{help ? <p>{help}</p> : null}

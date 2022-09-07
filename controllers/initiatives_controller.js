@@ -27,11 +27,8 @@ var t = require("root/lib/i18n").t.bind(null, Config.language)
 var renderEmail = require("root/lib/i18n").email
 var sql = require("sqlate")
 var {sqlite} = require("root")
-var concat = Array.prototype.concat.bind(Array.prototype)
-var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
-var trim = Function.call.bind(String.prototype.trim)
 var {sendEmail} = require("root")
-var searchInitiativeEvents = _.compose(searchInitiativesEvents, concat)
+var searchInitiativeEvents = _.compose(searchInitiativesEvents, _.concat)
 var parseText = require("./initiatives/texts_controller").parse
 var {countUndersignedSignaturesById} = require("root/lib/initiative")
 var {countCitizenOsSignaturesById} = require("root/lib/initiative")
@@ -41,6 +38,7 @@ var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: "", phase: "edit"}
 var EMPTY_CONTACT = {name: "", email: "", phone: ""}
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
+var MAX_URL_LENGTH = 1024
 var INITIATIVE_TYPE =
 	new MediaType("application/vnd.rahvaalgatus.initiative+json; v=1")
 exports.searchInitiativesEvents = searchInitiativesEvents
@@ -573,14 +571,14 @@ function searchInitiativesEvents(initiatives) {
 
 	var eventsByInitiativeUuid = _.groupBy(events, "initiative_uuid")
 
-	return flatten(initiatives.map(function(initiative) {
+	return _.flatten(initiatives.map(function(initiative) {
 		var events = eventsByInitiativeUuid[initiative.uuid] || EMPTY_ARR
 		var sentToParliamentAt = initiative.sent_to_parliament_at
 		var finishedInParliamentAt = initiative.finished_in_parliament_at
 		var sentToGovernmentAt = initiative.sent_to_government_at
 		var finishedInGovernmentAt = initiative.finished_in_government_at
 
-		return concat(
+		return _.concat(
 			sentToParliamentAt ? {
 				id: "sent-to-parliament",
 				initiative_uuid: initiative.uuid,
@@ -878,7 +876,7 @@ function* updateInitiativePhaseToSign(req, res) {
 		yield Subscription.send(
 			message,
 
-			_.uniqBy(concat(
+			_.uniqBy(_.concat(
 				subscriptionsDb.searchConfirmedForSignableInitiative(),
 				subscriptionsDb.searchConfirmedByInitiativeIdForEvent(initiative.uuid)
 			), "email")
@@ -1094,20 +1092,80 @@ function hasEstonianTranslation(initiative) {
 	`))
 }
 
-function parseInitiative(initiative, obj) {
-	var attrs = {}
+var validateInitiativeAttributes = require("root/lib/json_schema").new({
+	type: "object",
+	additionalProperties: false,
 
-	if ("destination" in obj && initiative.phase == "edit") {
-		var dest = obj.destination || null
+	properties: {
+		destination: {
+			enum: _.concat(null, "parliament", _.keys(LOCAL_GOVERNMENTS))
+		},
 
-		if (!(
-			dest == null ||
-			dest == "parliament" ||
-			_.hasOwn(LOCAL_GOVERNMENTS, dest)
-		)) throw new HttpError(422, "Destination Invalid")
+		author_name: {type: "string", maxLength: 100},
+		author_url: {type: "string", maxLength: MAX_URL_LENGTH},
+		author_contacts: {type: "string", maxLength: 500},
+		url: {type: "string", maxLength: MAX_URL_LENGTH},
+		community_url: {type: "string", maxLength: MAX_URL_LENGTH},
 
-		attrs.destination = dest
+		// The initiative at
+		// https://rahvaalgatus.ee/initiatives/c6b17445-f45b-488e-8778-3815f82c5f31
+		// has 6285 characters of notes. The second place goes to
+		// https://kohalik.rahvaalgatus.ee/initiatives/1e9b5c2a-2485-43db-a6d2-ba082d326c34
+		// with 1791 chracters. To not break their editing for now, limit at 8k.
+		notes: {type: "string", maxLength: 8000},
+
+		organizations: {
+			type: "array",
+
+			items: {
+				type: "object",
+				additionalProperties: false,
+
+				properties: {
+					name: {type: "string", maxLength: 100},
+					url: {type: "string", maxLength: MAX_URL_LENGTH}
+				}
+			}
+		},
+
+		meetings: {
+			type: "array",
+
+			items: {
+				type: "object",
+				additionalProperties: false,
+
+				properties: {
+					date: {type: "string", format: "date"},
+					url: {type: "string", maxLength: MAX_URL_LENGTH}
+				}
+			}
+		},
+
+		media_urls: {
+			type: "array",
+			items: {type: "string", maxLength: MAX_URL_LENGTH}
+		},
+
+		government_change_urls: {
+			type: "array",
+			items: {type: "string", maxLength: MAX_URL_LENGTH}
+		},
+
+		public_change_urls: {
+			type: "array",
+			items: {type: "string", maxLength: MAX_URL_LENGTH}
+		}
 	}
+})
+
+exports.SCHEMA = validateInitiativeAttributes.schema
+
+function parseInitiative(initiative, obj) {
+	var err, attrs = {}
+
+	if ("destination" in obj && initiative.phase == "edit")
+		attrs.destination = obj.destination || null
 
 	if ("author_name" in obj) attrs.author_name = String(obj.author_name).trim()
 	if ("author_url" in obj) attrs.author_url = String(obj.author_url).trim()
@@ -1128,13 +1186,16 @@ function parseInitiative(initiative, obj) {
 		obj.meetings.map(parseMeeting).filter(isMeetingPresent)
 
 	if ("media_urls" in obj) attrs.media_urls =
-		obj.media_urls.map(String).map(trim).filter(Boolean)
+		obj.media_urls.map(String).map(_.trim).filter(Boolean)
 
 	if ("government_change_urls" in obj) attrs.government_change_urls =
-		obj.government_change_urls.map(String).map(trim).filter(Boolean)
+		obj.government_change_urls.map(String).map(_.trim).filter(Boolean)
 
 	if ("public_change_urls" in obj) attrs.public_change_urls =
-		obj.public_change_urls.map(String).map(trim).filter(Boolean)
+		obj.public_change_urls.map(String).map(_.trim).filter(Boolean)
+
+	if (err = validateInitiativeAttributes(attrs))
+		throw new HttpError(422, "Invalid Attributes", {attributes: err})
 
 	return attrs
 }

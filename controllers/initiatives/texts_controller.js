@@ -111,6 +111,8 @@ exports.router.post("/", function(req, res) {
 
 var validate = require("root/lib/json_schema").new({
 	type: "object",
+	additionalProperties: false,
+	required: ["title", "content", "language"],
 
 	properties: {
 		title: {type: "string", maxLength: 200},
@@ -118,10 +120,7 @@ var validate = require("root/lib/json_schema").new({
 		content_type: {const: TRIX_CONTENT_TYPE},
 		language: {enum: Config.languages},
 		basis_id: {type: ["number", "null"]}
-	},
-
-	required: ["title", "content", "language"],
-	additionalProperties: false
+	}
 })
 
 function parse(obj) {

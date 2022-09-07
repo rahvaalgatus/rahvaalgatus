@@ -6,6 +6,8 @@
 	"404_TITLE": "Page not found",
 	"412_BODY": "Please go to the previous page and try again after refreshing the page. This error can also occur if you have cookies disabled in your browser. If the problem persists, please contact us.",
 	"412_TITLE": "Unfortunately, the request failed due to security reasons.",
+	"422_BODY": "Sorry, something in the submitted form doesn't seem to be valid. This could be our fault, so please contact us!",
+	"422_TITLE": "Sorry!",
 	"500_BODY": "We are sorry, but something went wrong in our system. Please try one more time. If the error persists, contact our customer support.",
 	"500_TITLE": "Sorry!",
 	"503_BODY": "Please try again later.",

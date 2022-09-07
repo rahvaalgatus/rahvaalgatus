@@ -61,6 +61,7 @@ var PNG_PREVIEW = Buffer.from("89504e470d0a1a0a4269", "hex")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var TRIX_TYPE = new MediaType("application/vnd.basecamp.trix+json")
 var TWITTER_NAME = Config.twitterUrl.replace(/^.*\//, "")
+var MAX_URL_LENGTH = 1024
 var COAUTHOR_STATUSES =
 	require("root/controllers/initiatives/coauthors_controller").STATUSES
 
@@ -6773,7 +6774,7 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(422)
-					res.statusMessage.must.equal("Destination Invalid")
+					res.statusMessage.must.equal("Invalid Attributes")
 					initiativesDb.read(initiative).must.eql(initiative)
 				})
 
@@ -6789,7 +6790,7 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(422)
-					res.statusMessage.must.equal("Destination Invalid")
+					res.statusMessage.must.equal("Invalid Attributes")
 					initiativesDb.read(initiative).must.eql(initiative)
 				})
 
@@ -6922,6 +6923,69 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(403)
 					res.statusMessage.must.equal("No Permission to Edit")
 					initiativesDb.read(initiative).must.eql(initiative)
+				})
+
+				_.each({
+					"too long author_name": {author_name: _.repeat("a", 101)},
+
+					"too long author_url": {
+						author_url: _.repeat("a", MAX_URL_LENGTH + 1)
+					},
+
+					"too long author_contacts": {author_contacts: _.repeat("a", 501)},
+
+					"too long url": {url: _.repeat("a", MAX_URL_LENGTH + 1)},
+
+					"too long community_url": {
+						community_url: _.repeat("a", MAX_URL_LENGTH + 1)
+					},
+
+					"too long notes": {notes: _.repeat("a", 8001)},
+
+					"too long organization name": {
+						"organizations[0][name]": _.repeat("a", 101)
+					},
+
+					"too long organization url": {
+						"organizations[0][url]": _.repeat("a", MAX_URL_LENGTH + 1)
+					},
+
+					"meeting date format in year 10k": {
+						"meetings[0][date]": "12015-06-18"
+					},
+
+					"invalid meeting date format": {"meetings[0][date]": "foo"},
+
+					"too long meeting url": {
+						"meetings[0][url]": _.repeat("a", MAX_URL_LENGTH + 1)
+					},
+
+					"too long media url": {
+						"media_urls[0]": _.repeat("a", MAX_URL_LENGTH + 1)
+					},
+
+					"too long government change url": {
+						"government_change_urls[0]": _.repeat("a", MAX_URL_LENGTH + 1)
+					},
+
+					"too long public change url": {
+						"public_change_urls[0]": _.repeat("a", MAX_URL_LENGTH + 1)
+					},
+				}, function(attrs, title) {
+					it(`must respond with 422 given ${title}`, function*() {
+						var initiative = initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id
+						}))
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							form: attrs
+						})
+
+						res.statusCode.must.equal(422)
+						res.statusMessage.must.equal("Invalid Attributes")
+						initiativesDb.read(initiative).must.eql(initiative)
+					})
 				})
 			})
 
