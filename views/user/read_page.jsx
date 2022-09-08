@@ -9,6 +9,7 @@ var {Section} = require("../page")
 var {Form} = require("../page")
 var {Flash} = require("../page")
 var {InitiativeBoxesView} = require("../initiatives/index_page")
+var {SCHEMA} = require("root/controllers/user_controller")
 
 module.exports = function(attrs) {
 	var {t} = attrs
@@ -34,6 +35,7 @@ module.exports = function(attrs) {
 					required
 					value={userAttrs.name}
 					class={"form-input" + (userErrors.name ? " error" : "")}
+					maxlength={SCHEMA.properties.name.maxLength}
 				/>
 
 				<InputError t={req.t} name="name" error={userErrors.name} />
@@ -44,6 +46,7 @@ module.exports = function(attrs) {
 					name="email"
 					value={userAttrs.unconfirmed_email || user.email}
 					class={"form-input" + (userErrors.unconfirmed_email ? " error" : "")}
+					maxlength={SCHEMA.properties.unconfirmed_email.maxLength}
 				/>
 
 				<InputError

@@ -535,7 +535,7 @@ describe("UserController", function() {
 				})
 			})
 
-			it("must show error if name invalid", function*() {
+			it("must show error if name empty", function*() {
 				var res = yield this.request("/user", {
 					method: "PUT",
 					form: {name: ""}
@@ -550,6 +550,18 @@ describe("UserController", function() {
 				form.textContent.must.include(t("INPUT_ERROR_LENGTH_1"))
 
 				usersDb.read(this.user).must.eql(this.user)
+			})
+
+			_.each({
+				"too long name": {name: _.repeat("a", 101)},
+				"too long email": {email: _.repeat("a", 255)}
+			}, function(attrs, title) {
+				it(`must respond with 422 given ${title}`, function*() {
+					var res = yield this.request("/user", {method: "PUT", form: attrs})
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Invalid Attributes")
+					usersDb.read(this.user).must.eql(this.user)
+				})
 			})
 
 			it("must not update name of another user", function*() {

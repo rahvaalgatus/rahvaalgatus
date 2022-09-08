@@ -42,7 +42,7 @@ exports.router.get("/", read)
 
 exports.router.put("/", next(function*(req, res) {
 	var {user} = req
-	var [attrs, errors] = parseUser(req.body)
+	var [attrs, errors] = parse(req.body)
 
 	if (errors) {
 		res.statusCode = 422
@@ -286,8 +286,24 @@ function read(req, res) {
 	})
 }
 
-function parseUser(obj) {
-	var attrs = {}
+var validate = require("root/lib/json_schema").new({
+	type: "object",
+	additionalProperties: false,
+
+	properties: {
+		name: {type: "string", maxLength: 100},
+		unconfirmed_email: {type: ["null", "string"], maxLength: 254},
+		email_confirmation_sent_at: {const: null},
+
+		// NOTE: This also lets you set the language to "xx" for debugging.
+		language: {enum: _.keys(LANGS)}
+	}
+})
+
+exports.SCHEMA = validate.schema
+
+function parse(obj) {
+	var err, attrs = {}
 	if ("name" in obj) attrs.name = obj.name
 	if ("email" in obj) attrs.unconfirmed_email = obj.email || null
 	if ("language" in obj && obj.language in LANGS) attrs.language = obj.language
@@ -310,6 +326,12 @@ function parseUser(obj) {
 		"email_confirmation_sent_at" in attrs &&
 		attrs.email_confirmation_sent_at !== null
 	) errors.email_confirmation_sent_at = {code: "type", type: "null"}
+
+	// Eventually add better machine-readable errors to schema validation and
+	// refactor this mixture of manual and automatic validating.
+	if (err = validate(attrs)) throw new HttpError(422, "Invalid Attributes", {
+		attributes: err
+	})
 
 	return [attrs, _.isEmpty(errors) ? null : errors]
 }
