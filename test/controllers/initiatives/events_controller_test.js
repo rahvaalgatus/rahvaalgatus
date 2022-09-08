@@ -80,6 +80,19 @@ describe("InitiativeEventsController", function() {
 				})
 			})
 
+			;["text", "media-coverage"].forEach(function(type) {
+				it(`must render ${type} page`, function*() {
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						phase: "sign"
+					}))
+
+					var path = `/initiatives/${initiative.uuid}/events/new?type=${type}`
+					var res = yield this.request(path)
+					res.statusCode.must.equal(200)
+				})
+			})
+
 			it("must respond with 403 if archived", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
@@ -345,6 +358,31 @@ describe("InitiativeEventsController", function() {
 						vars.must.include(s.update_token)
 					))
 				})
+
+				_.each({
+					"too long title": {title: _.repeat("a", 401)},
+					"too long content": {title: _.repeat("a", 40001)}
+				}, function(attrs, title) {
+					it(`must respond with 422 given ${title}`, function*() {
+						var initiative = initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: "sign"
+						}))
+
+						var path = `/initiatives/${initiative.uuid}/events`
+						var res = yield this.request(path, {
+							method: "POST",
+							form: _.assign({type: "text"}, attrs)
+						})
+
+						res.statusCode.must.equal(422)
+						res.statusMessage.must.equal("Invalid Attributes")
+
+						eventsDb.search(sql`
+							SELECT * FROM initiative_events
+						`).must.be.empty()
+					})
+				})
 			})
 
 			describe("given media-coverage event", function() {
@@ -474,6 +512,32 @@ describe("InitiativeEventsController", function() {
 					subscriptions.slice(2).forEach((s) => (
 						vars.must.include(s.update_token)
 					))
+				})
+
+				_.each({
+					"too long title": {title: _.repeat("a", 401)},
+					"too long url": {url: _.repeat("a", 1025)},
+					"too long publisher": {url: _.repeat("a", 201)}
+				}, function(attrs, title) {
+					it(`must respond with 422 given ${title}`, function*() {
+						var initiative = initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							phase: "sign"
+						}))
+
+						var path = `/initiatives/${initiative.uuid}/events`
+						var res = yield this.request(path, {
+							method: "POST",
+							form: _.assign({type: "media-coverage"}, attrs)
+						})
+
+						res.statusCode.must.equal(422)
+						res.statusMessage.must.equal("Invalid Attributes")
+
+						eventsDb.search(sql`
+							SELECT * FROM initiative_events
+						`).must.be.empty()
+					})
 				})
 			})
 

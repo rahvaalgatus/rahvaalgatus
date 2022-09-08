@@ -6,6 +6,11 @@ var {Fragment} = require("j6pack")
 var InitiativePage = require("../initiative_page")
 var {selected} = require("root/lib/css")
 
+var {
+	TEXT_EVENT_SCHEMA,
+	MEDIA_COVERAGE_EVENT_SCHEMA
+} = require("root/controllers/initiatives/events_controller")
+
 module.exports = function(attributes) {
 	var {req} = attributes
 	var {t} = req
@@ -63,6 +68,7 @@ module.exports = function(attributes) {
 									required
 									autofocus
 									class="form-input"
+									maxlength={TEXT_EVENT_SCHEMA.properties.title.maxLength}
 								/>
 
 								<label class="form-label">
@@ -73,7 +79,9 @@ module.exports = function(attributes) {
 									class="form-textarea"
 									name="content"
 									required
-									maxlength="10000"
+									maxlength={
+										TEXT_EVENT_SCHEMA.properties.content.maxLength
+									}
 								/>
 							</Fragment>
 
@@ -87,6 +95,9 @@ module.exports = function(attributes) {
 									required
 									autofocus
 									class="form-input"
+									maxlength={
+										MEDIA_COVERAGE_EVENT_SCHEMA.properties.title.maxLength
+									}
 								/>
 
 								<label class="form-label">
@@ -97,6 +108,7 @@ module.exports = function(attributes) {
 									name="publisher"
 									required
 									class="form-input"
+									maxlength={MEDIA_COVERAGE_EVENT_SCHEMA.properties.content.properties.publisher.maxLength}
 								/>
 
 								<label class="form-label">
@@ -108,6 +120,7 @@ module.exports = function(attributes) {
 									type="url"
 									required
 									class="form-input"
+									maxlength={MEDIA_COVERAGE_EVENT_SCHEMA.properties.content.properties.url.maxLength}
 								/>
 							</Fragment>
 

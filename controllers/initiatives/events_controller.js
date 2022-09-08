@@ -39,7 +39,7 @@ exports.router.post("/", assertAuthor, next(function*(req, res) {
 	var message
 
 	var event = eventsDb.create({
-		__proto__: parseEvent(req.body),
+		__proto__: parse(req.body),
 		initiative_uuid: initiative.uuid,
 		created_at: new Date,
 		occurred_at: new Date,
@@ -133,22 +133,78 @@ function assertAuthor(req, _res, next) {
 	next()
 }
 
-function parseEvent(obj) {
-	switch (obj.type) {
-		case "text": return {
-			title: obj.title,
-			type: "text",
-			content: String(obj.content)
-		}
+// There are plenty of events in production with title lengths of 200–300.
+var MAX_TITLE_LENGTH = 400
 
-		case "media-coverage": return {
-			type: "media-coverage",
-			title: obj.title,
-			content: {url: String(obj.url), publisher: String(obj.publisher)}
+var validateTextEvent = require("root/lib/json_schema").new({
+	type: "object",
+	additionalProperties: false,
+
+	properties: {
+		type: {const: "text"},
+		title: {type: "string", maxLength: MAX_TITLE_LENGTH},
+
+		// The maximum in production as of Sep 8, 2022 is 35758 characters, for
+		// a copy of a meeting's proceedings.
+		content: {type: "string", maxLength: 40000}
+	}
+})
+
+var validateMediaCoverageEvent = require("root/lib/json_schema").new({
+	type: "object",
+	additionalProperties: false,
+
+	properties: {
+		type: {const: "media-coverage"},
+		title: {type: "string", maxLength: MAX_TITLE_LENGTH},
+
+		content: {
+			type: "object",
+			additionalProperties: false,
+
+			properties: {
+				url: {type: "string", maxLength: 1024},
+				publisher: {type: "string", maxLength: 200},
+			}
 		}
+	}
+})
+
+exports.TEXT_EVENT_SCHEMA = validateTextEvent.schema
+exports.MEDIA_COVERAGE_EVENT_SCHEMA = validateMediaCoverageEvent.schema
+
+function parse(obj) {
+	var err, attrs, validate
+
+	switch (obj.type) {
+		case "text":
+			attrs = {
+				title: obj.title,
+				type: "text",
+				content: String(obj.content)
+			}
+
+			validate = validateTextEvent
+			break
+
+		case "media-coverage":
+			attrs = {
+				type: "media-coverage",
+				title: obj.title,
+				content: {url: String(obj.url), publisher: String(obj.publisher)}
+			}
+
+			validate = validateMediaCoverageEvent
+			break
 
 		default: throw new HttpError(422, "Invalid Event Type")
 	}
+
+	if (err = validate(attrs)) throw new HttpError(422, "Invalid Attributes", {
+		attributes: err
+	})
+
+	return attrs
 }
 
 function rateLimit(user, initiative) {
