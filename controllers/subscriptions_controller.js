@@ -193,7 +193,10 @@ exports.router.use("/:token", withSubscription.bind(null, (req) => [
 
 exports.router.get("/:token", function(req, res) {
 	var {subscription} = req
-	res.redirect(302, `${req.baseUrl}?update-token=${subscription.update_token}`)
+
+	res.redirect(302, req.baseUrl + "?" + Qs.stringify({
+		"update-token": subscription.update_token
+	}))
 })
 
 function parse(obj) {
