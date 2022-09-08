@@ -163,7 +163,7 @@ exports.router.get("/new", function(req, res) {
 	var subscription = subscriptionsDb.read(sql`
 		SELECT * FROM initiative_subscriptions
 		WHERE initiative_uuid IS NULL
-		AND update_token = ${req.query.confirmation_token}
+		AND update_token = ${String(req.query.confirmation_token)}
 		LIMIT 1
 	`)
 
@@ -225,7 +225,7 @@ function withSubscription(get, req, res, next) {
 	req.subscription = subscriptionsDb.read(sql`
 		SELECT * FROM initiative_subscriptions
 		WHERE initiative_uuid ${uuid ? sql`= ${uuid}` : sql`IS NULL`}
-		AND update_token = ${token}
+		AND update_token = ${String(token)}
 		AND confirmed_at IS NOT NULL
 		LIMIT 1
 	`)

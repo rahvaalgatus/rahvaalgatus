@@ -1151,14 +1151,13 @@ describe("SubscriptionsController", function() {
 		require("root/test/time")(Date.UTC(2015, 5, 18))
 
 		it("must confirm given a confirmation token", function*() {
-			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
 			var token = pseudoHex(8)
 
 			var subscription = subscriptionsDb.create(new ValidSubscription({
-				created_at: createdAt,
-				updated_at: createdAt,
+				created_at: pseudoDateTime(),
+				updated_at: pseudoDateTime(),
 				update_token: token,
-				confirmation_sent_at: createdAt
+				confirmation_sent_at: pseudoDateTime()
 			}))
 
 			var path = `/subscriptions`
@@ -1174,13 +1173,12 @@ describe("SubscriptionsController", function() {
 		})
 
 		it("must not confirm twice", function*() {
-			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
 			var token = pseudoHex(8)
 
 			var subscription = subscriptionsDb.create(new ValidSubscription({
-				created_at: createdAt,
-				updated_at: createdAt,
-				confirmed_at: createdAt,
+				created_at: pseudoDateTime(),
+				updated_at: pseudoDateTime(),
+				confirmed_at: pseudoDateTime(),
 				update_token: token
 			}))
 
@@ -1192,18 +1190,31 @@ describe("SubscriptionsController", function() {
 		})
 
 		it("must not confirm given the wrong token", function*() {
-			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
-			var token = pseudoHex(8)
-
 			var subscription = subscriptionsDb.create(new ValidSubscription({
-				created_at: createdAt,
-				updated_at: createdAt,
-				update_token: token,
-				confirmation_sent_at: createdAt
+				created_at: pseudoDateTime(),
+				updated_at: pseudoDateTime(),
+				update_token: pseudoHex(8),
+				confirmation_sent_at: pseudoDateTime()
 			}))
 
 			var res = yield this.request(
 				"/subscriptions/new?confirmation_token=deadbeef"
+			)
+
+			res.statusCode.must.equal(404)
+			subscriptionsDb.read(subscription).must.eql(subscription)
+		})
+
+		it("must not confirm given the token as an array", function*() {
+			var subscription = subscriptionsDb.create(new ValidSubscription({
+				created_at: pseudoDateTime(),
+				updated_at: pseudoDateTime(),
+				update_token: pseudoHex(8),
+				confirmation_sent_at: pseudoDateTime()
+			}))
+
+			var res = yield this.request(
+				"/subscriptions/new?confirmation_token[]=deadbeef"
 			)
 
 			res.statusCode.must.equal(404)
@@ -1254,10 +1265,18 @@ describe("SubscriptionsController", function() {
 
 function mustRequireToken(request) {
 	describe("as an authenticated endpoint", function() {
+		// NOTE: Still have a single subscription to ensure it's not picking
+		// randomly.
 		it("must respond with 404 given an invalid update token", function*() {
-			// Still have a single subscription to ensure it's not picking randomly.
 			subscriptionsDb.create(new ValidSubscription({confirmed_at: new Date}))
 			var res = yield request.call(this, "/subscriptions?update-token=beef")
+			res.statusCode.must.equal(404)
+			res.body.must.include(t("SUBSCRIPTION_NOT_FOUND_TITLE"))
+		})
+
+		it("must respond with 404 given an update token as an array", function*() {
+			subscriptionsDb.create(new ValidSubscription({confirmed_at: new Date}))
+			var res = yield request.call(this, "/subscriptions?update-token[]=beef")
 			res.statusCode.must.equal(404)
 			res.body.must.include(t("SUBSCRIPTION_NOT_FOUND_TITLE"))
 		})
