@@ -123,6 +123,8 @@ var validate = require("root/lib/json_schema").new({
 	}
 })
 
+exports.SCHEMA = validate.schema
+
 function parse(obj) {
 	var err, attrs = {
 		title: obj.title,

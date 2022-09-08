@@ -8,6 +8,7 @@ var {javascript} = require("root/lib/jsx")
 var {normalizeCitizenOsHtml} = require("root/lib/initiative")
 var {selected} = require("root/lib/css")
 var LANGUAGES = require("root").config.languages
+var {SCHEMA} = require("root/controllers/initiatives/texts_controller")
 
 module.exports = function(attrs) {
 	var {req} = attrs
@@ -71,7 +72,7 @@ module.exports = function(attrs) {
 				value={text && text.title || initiative.title}
 				readonly={!editable}
 				required
-				maxlength="200"
+				maxlength={SCHEMA.properties.title.maxLength}
 			/>
 
 			{
