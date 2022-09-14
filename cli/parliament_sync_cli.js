@@ -19,11 +19,12 @@ var t = require("root/lib/i18n").t.bind(null, "et")
 var formatDate = require("root/lib/i18n").formatDate.bind(null, "numeric")
 var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
 var {logger} = require("root")
+var co = require("co")
 var EMPTY_ARR = Array.prototype
 var PARLIAMENT_URL = "https://www.riigikogu.ee"
 var DOCUMENT_URL = PARLIAMENT_URL + "/tegevus/dokumendiregister/dokument"
 var FILE_URL = PARLIAMENT_URL + "/download"
-exports = module.exports = cli
+exports = module.exports = co.wrap(cli)
 exports.parseTitle = parseTitle
 exports.replaceInitiative = replaceInitiative
 exports.syncInitiativeDocuments = syncInitiativeDocuments

@@ -11,8 +11,9 @@ var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var renderEmail = require("root/lib/i18n").email.bind(null, Config.language)
 var logger = require("root/lib/null_logger")
+var co = require("co")
 
-module.exports = function*() {
+module.exports = co.wrap(function*() {
 	var initiatives = initiativesDb.search(sql`
 		SELECT
 			initiative.*,
@@ -35,7 +36,7 @@ module.exports = function*() {
 			? [initiative, milestones]
 			: null
 	}).filter(Boolean).map(updateMilestones)
-}
+})
 
 function* updateMilestones([initiative, milestones]) {
 	var largest = _.findLast(milestones, (n) => initiative.signature_count >= n)

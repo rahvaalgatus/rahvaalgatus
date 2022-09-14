@@ -10,13 +10,14 @@ var {logger} = require("root")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var {getRequiredSignatureCount} = require("root/lib/initiative")
+var co = require("co")
 var EXPIRATION_MONTHS = Config.expireSignaturesInMonths
 
-module.exports = function*() {
+module.exports = co.wrap(function*() {
 	yield emailEndedDiscussions()
 	yield emailEndedInitiatives()
 	if (EXPIRATION_MONTHS > 0) yield emailExpiringInitiatives()
-}
+})
 
 function* emailEndedDiscussions() {
 	var discussions = initiativesDb.search(sql`

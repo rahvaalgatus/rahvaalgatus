@@ -7,6 +7,7 @@ var KOGU_ATOM_FEED = "https://kogu.ee/feed/atom/"
 var SOURCE = "kogu.ee"
 var UA = require("root").config.userAgent
 var sql = require("sqlate")
+var co = require("co")
 
 fetch = require("fetch-defaults")(fetch, {
 	// The Atom feed endpoint of theirs takes a good 10s to respond these days.
@@ -25,7 +26,7 @@ Options:
     -h, --help   Display this help and exit.
 `
 
-module.exports = function*(argv) {
+module.exports = co.wrap(function*(argv) {
   var args = Neodoc.run(USAGE_TEXT, {argv: argv || ["news-sync"]})
   if (args["--help"]) return void process.stdout.write(USAGE_TEXT.trimLeft())
 
@@ -47,7 +48,7 @@ module.exports = function*(argv) {
 		if (news) newsDb.update(news, attrs)
 		else newsDb.create({__proto__: attrs, source: SOURCE})
 	})
-}
+})
 
 function parse(entry) {
 	var alt = _.asArray(entry.link).find((link) => link.rel == "alternate")
