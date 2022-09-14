@@ -8,7 +8,7 @@ Kombineerides erinevaid API päringuid saad enda lehel kuvada näiteks koondvaat
 
 <div id="example-full" class="example">
   <h3>Mis ettepanekuid rahvas Riigikogule saadab?</h3>
-  <p>Arutelu käib <strong class="edit-count">…</strong> idee üle ja toetust koguvad <strong class="sign-count">…</strong> algatust.</p>
+  <p>Arutelu all on <strong class="edit-count">…</strong> ideed ja toetust koguvad <strong class="sign-count">…</strong> algatust.</p>
 
   <h3>7 päeva jooksul enim toetust kogunud algatused</h3>
   <ol class="signed">
@@ -111,7 +111,7 @@ Kui soovid veebilehele lisada kõikide algatuste koondarvu, saad selle info [`ht
 
 <div id="example-statistics" class="example">
   <h3>Mis ettepanekuid rahvas Riigikogule saadab?</h3>
-  <p>Arutelu käib <strong class="edit-count">…</strong> idee üle ja toetust koguvad <strong class="sign-count">…</strong> algatust.</p>
+  <p>Arutelu all on <strong class="edit-count">…</strong> ideed ja toetust koguvad <strong class="sign-count">…</strong> algatust.</p>
 
   <script>!function() {
     var el = document.getElementById("example-statistics")
@@ -130,7 +130,7 @@ Kui soovid veebilehele lisada kõikide algatuste koondarvu, saad selle info [`ht
 Statistikapäringuga saad teada aktiivsete algatuste (need, mis pole tähtaega ületanud) arvu faaside lõikes ning allkirjade summa. Ülemise näite saad teha selliselt:
 
 ```html
-Arutelu käib <strong id="edit-count">…</strong> idee üle ja
+Arutelu all on <strong id="edit-count">…</strong> ideed ja
 toetust koguvad <strong id="sign-count">…</strong> algatust.
 ```
 
