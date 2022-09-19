@@ -109,7 +109,8 @@ _.each({
 	"/about": "home/about_page.jsx",
 	"/eu": "home/eu_page.jsx",
 	"/credits": "home/credits_page.jsx",
-	"/api": "home/api_page.jsx"
+	"/api": "home/api_page.jsx",
+	"/help/kov-guide": "home/help/kov_guide_page.jsx"
 }, (page, path) => (
 	exports.router.get(path, canonicalizeUrl, (_req, res) => res.render(page))
 ))
