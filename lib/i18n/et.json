@@ -283,6 +283,7 @@
 	"INITIATIVE_IMAGE_CONFIRM_REMOVAL": "Kindel, et soovid pildi eemaldada?",
 	"INITIATIVE_IMAGE_ERROR_IMAGE_MISSING": "Pilt tundub puudu.",
 	"INITIATIVE_IMAGE_ERROR_IMAGE_TOO_LARGE": "Pilt on üle 3 megabaidi. Palun proovi väiksema pildiga.",
+	"INITIATIVE_IMAGE_ERROR_IMAGE_TOO_MANY_PIXELS": "Pilt on üle 8192x8192px suur. Palun tee pilt enne üleslaadimist väiksemaks.",
 	"INITIATIVE_IMAGE_ERROR_INVALID_FORMAT": "Pilt ei tundu olevat JPEG või PNG formaadis.\nPalun proovi uuesti ja veendu, et faililaiend oleks \".jpeg\", \".jpg\" või \".png\".",
 	"INITIATIVE_IMAGE_ERROR_TITLE": "Andestust!",
 	"INITIATIVE_IMAGE_REMOVE_IMAGE": "Eemalda",

@@ -59,7 +59,17 @@ exports.router.put("/", next(function*(req, res) {
 	if (imageFile) {
 		attrs.data = imageFile.buffer
 		attrs.type = imageFile.mimetype
-		attrs.preview = yield Image.resize(1200, 675, imageFile.buffer)
+
+		try { attrs.preview = yield Image.resize(1200, 675, imageFile.buffer) }
+		catch (ex) {
+			if (ex.message == "Input image exceeds pixel limit")
+				return void respondWithError(
+					"Image Too Large",
+					req.t("INITIATIVE_IMAGE_ERROR_IMAGE_TOO_MANY_PIXELS")
+				)
+
+			throw ex
+		}
 	}
 
 	if (image) imagesDb.update(image, attrs)

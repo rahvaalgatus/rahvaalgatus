@@ -265,6 +265,7 @@
 	"INITIATIVE_IMAGE_CONFIRM_REMOVAL": "Sure you wish to remove the image?",
 	"INITIATIVE_IMAGE_ERROR_IMAGE_MISSING": "Picture seems missing.",
 	"INITIATIVE_IMAGE_ERROR_IMAGE_TOO_LARGE": "Picture's over 3 megabytes. Please try again with a smaller image.",
+	"INITIATIVE_IMAGE_ERROR_IMAGE_TOO_MANY_PIXELS": "Picture seems to be larger than 8192x8192 pixels. Please resize the image before uploading.",
 	"INITIATIVE_IMAGE_ERROR_INVALID_FORMAT": "Image doesn't seem to be in the JPEG or PNG format.\nPlease try again and make sure the extension of the file is either \".jpeg\", \".jpg\" or \".png\".",
 	"INITIATIVE_IMAGE_ERROR_TITLE": "Sorry!",
 	"INITIATIVE_IMAGE_REMOVE_IMAGE": "Remove",
