@@ -11,6 +11,7 @@ var commentsDb = require("root/db/comments_db")
 var {isAdmin} = require("root/lib/user")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
+var {validateRedirect} = require("root/lib/http")
 var MAX_TITLE_LENGTH = 140
 var MAX_TEXT_LENGTH = 3000
 exports.MAX_TITLE_LENGTH = MAX_TITLE_LENGTH
@@ -106,9 +107,13 @@ exports.router.post("/", next(function*(req, res) {
 			}, subs)
 		}
 
-		var url = req.baseUrl + "/" + comment.id
-		if (req.body.referrer) url = req.body.referrer + "#comment-" + comment.id
-		res.redirect(303, url)
+		res.statusMessage = "Comment Created"
+
+		res.redirect(303, validateRedirect(
+			req,
+			req.body.referrer ? req.body.referrer + "#comment-" + comment.id : null,
+			req.baseUrl + "/" + comment.id
+		))
 	}
 	catch (err) {
 		if (err instanceof SqliteError && err.code == "constraint") {
@@ -172,6 +177,7 @@ exports.router.delete("/:commentId", function(req, res) {
 	commentsDb.update(comment, {anonymized_at: new Date})
 
 	res.flash("notice", req.t("COMMENT_ANONYMIZED"))
+	res.statusMessage = "Comment Anonymized"
 	res.redirect(303, req.baseUrl + "/" + comment.id)
 })
 
@@ -221,8 +227,13 @@ exports.router.post("/:commentId/replies", next(function*(req, res) {
 			}, subs)
 		}
 
-		var url = req.body.referrer || req.baseUrl + "/" + parent.id
-		res.redirect(303, url + "#comment-" + reply.id)
+		res.statusMessage = "Comment Reply Created"
+
+		res.redirect(303, validateRedirect(
+			req,
+			req.body.referrer ? req.body.referrer : null,
+			req.baseUrl + "/" + parent.id
+		) + "#comment-" + reply.id)
 	}
 	catch (err) {
 		if (err instanceof SqliteError && err.code == "constraint") {

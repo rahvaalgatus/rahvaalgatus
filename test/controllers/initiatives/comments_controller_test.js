@@ -1,4 +1,5 @@
 var _ = require("root/lib/underscore")
+var Url = require("url")
 var Config = require("root").config
 var Crypto = require("crypto")
 var ValidInitiative = require("root/test/valid_initiative")
@@ -14,6 +15,7 @@ var commentsDb = require("root/db/comments_db")
 var parseHtml = require("root/test/html").parse
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
+var {SITE_URLS} = require("root/test/fixtures")
 var MAX_TITLE_LENGTH = 140
 var MAX_TEXT_LENGTH = 3000
 var VALID_ATTRS = {title: "I've some thoughts.", text: "But I forgot them."}
@@ -62,6 +64,7 @@ describe("InitiativeCommentsController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Created")
 
 				var comment = new ValidComment({
 					id: 1,
@@ -105,6 +108,7 @@ describe("InitiativeCommentsController", function() {
 					})
 
 					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Comment Created")
 
 					commentsDb.read(sql`
 						SELECT * FROM comments
@@ -133,6 +137,7 @@ describe("InitiativeCommentsController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Created")
 
 				commentsDb.read(sql`
 					SELECT * FROM comments
@@ -164,6 +169,7 @@ describe("InitiativeCommentsController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Created")
 
 				commentsDb.read(sql`
 					SELECT * FROM comments ORDER BY created_at
@@ -177,15 +183,54 @@ describe("InitiativeCommentsController", function() {
 				}))
 			})
 
-			it("must redirect to referrer", function*() {
+			it("must redirect to referrer without host", function*() {
 				var path = `/initiatives/${this.initiative.uuid}`
 				var res = yield this.request(path + `/comments`, {
 					method: "POST",
-					form: {__proto__: VALID_ATTRS, referrer: path}
+					form: {__proto__: VALID_ATTRS, referrer: "/comments"}
 				})
 
 				res.statusCode.must.equal(303)
-				res.headers.location.must.equal(path + "#comment-" + 1)
+				res.statusMessage.must.equal("Comment Created")
+				res.headers.location.must.equal("/comments#comment-1")
+			})
+
+			it("must redirect to referrer on same host", function*() {
+				var path = `/initiatives/${this.initiative.uuid}`
+				var res = yield this.request(path + `/comments`, {
+					method: "POST",
+					form: {__proto__: VALID_ATTRS, referrer: this.url + "/comments"}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Created")
+				res.headers.location.must.equal(this.url + "/comments#comment-1")
+			})
+
+			SITE_URLS.forEach(function(url) {
+				it(`must redirect back to ${Url.parse(url).hostname}`, function*() {
+					var path = `/initiatives/${this.initiative.uuid}`
+					var res = yield this.request(path + `/comments`, {
+						method: "POST",
+						form: {__proto__: VALID_ATTRS, referrer: url + "/comments"}
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Comment Created")
+					res.headers.location.must.equal(url + "/comments#comment-1")
+				})
+			})
+
+			it("must not redirect to other hosts", function*() {
+				var path = `/initiatives/${this.initiative.uuid}`
+				var res = yield this.request(path + `/comments`, {
+					method: "POST",
+					form: {__proto__: VALID_ATTRS, referrer: "http://example.com/evil"}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Created")
+				res.headers.location.must.equal(path + "/comments/1")
 			})
 
 			it("must not create comment if initiative unpublished", function*() {
@@ -219,6 +264,7 @@ describe("InitiativeCommentsController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Created")
 			})
 
 			describe("when subscribing", function() {
@@ -235,6 +281,7 @@ describe("InitiativeCommentsController", function() {
 					})
 
 					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Comment Created")
 
 					var subscriptions = subscriptionsDb.search(sql`
 						SELECT * FROM initiative_subscriptions
@@ -274,6 +321,7 @@ describe("InitiativeCommentsController", function() {
 					})
 
 					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Comment Created")
 
 					subscriptionsDb.search(sql`
 						SELECT * FROM initiative_subscriptions
@@ -305,6 +353,7 @@ describe("InitiativeCommentsController", function() {
 					})
 
 					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Comment Created")
 
 					var subscriptions = subscriptionsDb.search(sql`
 						SELECT * FROM initiative_subscriptions
@@ -336,6 +385,7 @@ describe("InitiativeCommentsController", function() {
 					})
 
 					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Comment Created")
 
 					subscriptionsDb.search(sql`
 						SELECT * FROM initiative_subscriptions
@@ -362,6 +412,7 @@ describe("InitiativeCommentsController", function() {
 					})
 
 					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Comment Created")
 
 					subscriptionsDb.search(sql`
 						SELECT * FROM initiative_subscriptions
@@ -390,6 +441,7 @@ describe("InitiativeCommentsController", function() {
 					})
 
 					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Comment Created")
 
 					subscriptionsDb.search(sql`
 						SELECT * FROM initiative_subscriptions
@@ -431,6 +483,7 @@ describe("InitiativeCommentsController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Created")
 
 				this.emails.length.must.equal(1)
 
@@ -462,6 +515,7 @@ describe("InitiativeCommentsController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Created")
 
 				this.emails.length.must.equal(1)
 
@@ -501,6 +555,7 @@ describe("InitiativeCommentsController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Created")
 				this.emails.must.be.empty()
 			})
 
@@ -533,6 +588,7 @@ describe("InitiativeCommentsController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Created")
 				this.emails.must.be.empty()
 			})
 
@@ -998,6 +1054,7 @@ describe("InitiativeCommentsController", function() {
 				var res = yield this.request(path, {method: "DELETE"})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Anonymized")
 				res.headers.location.must.equal(path)
 
 				commentsDb.read(comment).must.eql({
@@ -1054,6 +1111,7 @@ describe("InitiativeCommentsController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Reply Created")
 
 				var reply = new ValidComment({
 					id: comment.id + 1,
@@ -1096,6 +1154,7 @@ describe("InitiativeCommentsController", function() {
 					})
 
 					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Comment Reply Created")
 
 					commentsDb.search(sql`
 						SELECT * FROM comments ORDER BY created_at
@@ -1127,6 +1186,7 @@ describe("InitiativeCommentsController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Reply Created")
 
 				commentsDb.search(sql`
 					SELECT * FROM comments ORDER BY created_at
@@ -1162,6 +1222,7 @@ describe("InitiativeCommentsController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Reply Created")
 
 				commentsDb.search(sql`
 					SELECT * FROM comments ORDER BY created_at
@@ -1175,7 +1236,7 @@ describe("InitiativeCommentsController", function() {
 				})])
 			})
 
-			it("must redirect to referrer", function*() {
+			it("must redirect to referrer without host", function*() {
 				var author = usersDb.create(new ValidUser)
 
 				var comment = commentsDb.create(new ValidComment({
@@ -1187,10 +1248,83 @@ describe("InitiativeCommentsController", function() {
 				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
 				var res = yield this.request(path + `/replies`, {
 					method: "POST",
-					form: {__proto__: VALID_REPLY_ATTRS, referrer: path}
+					form: {__proto__: VALID_REPLY_ATTRS, referrer: "/comments"}
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Reply Created")
+				res.headers.location.must.equal("/comments#comment-" + (comment.id + 1))
+			})
+
+			it("must redirect to referrer on same host", function*() {
+				var author = usersDb.create(new ValidUser)
+
+				var comment = commentsDb.create(new ValidComment({
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
+					initiative_uuid: this.initiative.uuid
+				}))
+
+				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var res = yield this.request(path + `/replies`, {
+					method: "POST",
+					form: {__proto__: VALID_REPLY_ATTRS, referrer: this.url + "/comments"}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Reply Created")
+
+				res.headers.location.must.equal(
+					this.url + "/comments#comment-" + (comment.id + 1)
+				)
+			})
+
+			SITE_URLS.forEach(function(url) {
+				it(`must redirect back to ${Url.parse(url).hostname}`, function*() {
+					var author = usersDb.create(new ValidUser)
+
+					var comment = commentsDb.create(new ValidComment({
+						user_id: author.id,
+						user_uuid: _.serializeUuid(author.uuid),
+						initiative_uuid: this.initiative.uuid
+					}))
+
+					var path = `/initiatives/${this.initiative.uuid}`
+					path += `/comments/${comment.id}/replies`
+					var res = yield this.request(path, {
+						method: "POST",
+						form: {__proto__: VALID_REPLY_ATTRS, referrer: url + "/comments"}
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Comment Reply Created")
+
+					res.headers.location.must.equal(
+						url + "/comments#comment-" + (comment.id + 1)
+					)
+				})
+			})
+
+			it("must not redirect back to other hosts", function*() {
+				var author = usersDb.create(new ValidUser)
+
+				var comment = commentsDb.create(new ValidComment({
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
+					initiative_uuid: this.initiative.uuid
+				}))
+
+				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var res = yield this.request(path + `/replies`, {
+					method: "POST",
+					form: {
+						__proto__: VALID_REPLY_ATTRS,
+						referrer: "http://example.com/evil"
+					}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Reply Created")
 				res.headers.location.must.equal(path + "#comment-" + (comment.id + 1))
 			})
 
