@@ -47,7 +47,12 @@ app.use(require("root/lib/middleware/method_override_middleware"))
 app.use(require("root/lib/middleware/accept_middleware"))
 app.use(require("root/lib/middleware/request_type_middleware"))
 app.use(require("root/lib/middleware/extension_middleware"))
-app.use(require("root/lib/middleware/cache_middleware"))
+
+app.use(function(_req, res, next) {
+	res.setHeader("Cache-Control", "no-cache")
+  next()
+})
+
 app.use(require("root/lib/middleware/csrf_middleware"))
 app.use(require("flash-fiction/express"))
 app.use(require("root/lib/middleware/session_middleware"))

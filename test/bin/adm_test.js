@@ -31,7 +31,7 @@ describe("Adm", function() {
 				var res = yield this.request("/")
 				res.statusCode.must.equal(200)
 
-				res.headers["cache-control"].must.equal("no-cache")
+				res.headers["cache-control"].must.equal("no-store")
 				res.headers.must.have.property("etag")
 				res.headers.must.not.have.property("last-modified")
 				res.headers.must.not.have.property("expires")
@@ -56,7 +56,7 @@ describe("Adm", function() {
 				var res = yield this.request("/non-exitent")
 				res.statusCode.must.equal(404)
 
-				res.headers["cache-control"].must.equal("no-cache")
+				res.headers["cache-control"].must.equal("no-store")
 				res.headers.must.not.have.property("etag")
 				res.headers.must.not.have.property("last-modified")
 				res.headers.must.not.have.property("expires")
