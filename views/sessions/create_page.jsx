@@ -63,7 +63,7 @@ module.exports = function(attrs) {
 
 						<input
 							type="text"
-							pattern="[0-9]*"
+							pattern="[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]"
 							inputmode="numeric"
 							name="personalId"
 							placeholder={t("PLACEHOLDER_PERSONAL_ID")}
@@ -96,7 +96,7 @@ module.exports = function(attrs) {
 
 						<input
 							type="text"
-							pattern="[0-9]*"
+							pattern="[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]"
 							inputmode="numeric"
 							name="personalId"
 							placeholder={t("PLACEHOLDER_PERSONAL_ID")}

@@ -40,6 +40,12 @@ exports.ISSUER_KEYS = _.mapValues({
 	__dirname + `/fixtures/${path}.pub`
 ))
 
+exports.PERSONAL_ID_TRANSFORMS = {
+	"38706181337": "38706181337",
+	"3 87 06 18 1337": "38706181337",
+	"3\t8706181337": "38706181337"
+}
+
 exports.PHONE_NUMBER_TRANSFORMS = {
 	"0001337": "+3720001337",
 	"5031337": "+3725031337",

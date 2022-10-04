@@ -28,6 +28,7 @@ var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
 var {JOHN_ECDSA_KEYS} = require("root/test/fixtures")
 var {JOHN_RSA_KEYS} = require("root/test/fixtures")
 var {VALID_ISSUERS} = require("root/test/fixtures")
+var {PERSONAL_ID_TRANSFORMS} = require("root/test/fixtures")
 var {PHONE_NUMBER_TRANSFORMS} = require("root/test/fixtures")
 var PERSONAL_ID = "38706181337"
 var SESSION_ID = "7c8bdd56-6772-4264-ba27-bf7a9ef72a11"
@@ -1182,14 +1183,44 @@ describe("SessionsController", function() {
 				})
 			})
 
-			_.each(PHONE_NUMBER_TRANSFORMS, function(long, short) {
-				it(`must transform mobile-id number ${short} to ${long}`,
+			_.each(PERSONAL_ID_TRANSFORMS, function(to, from) {
+				it(`must transform Mobile-Id personal id ${from} to ${to}`,
 					function*() {
 					var created = 0
 
 					this.router.post(`${MOBILE_ID_URL.path}authentication`, (req, res) => {
 						++created
-						req.body.phoneNumber.must.equal(long)
+						req.body.phoneNumber.must.equal("+37200000766")
+						req.body.nationalIdentityNumber.must.equal(to)
+						respond({sessionID: SESSION_ID}, req, res)
+					})
+
+					this.router.get(`${MOBILE_ID_URL.path}authentication/session/:token`,
+						respond.bind(null, {state: "COMPLETE", result: "MID_NOT_ACTIVE"})
+					)
+
+					var res = yield this.request("/sessions", {
+						method: "POST",
+						form: {
+							method: "mobile-id",
+							personalId: from,
+							phoneNumber: "+37200000766"
+						}
+					})
+
+					created.must.equal(1)
+					res.statusCode.must.equal(202)
+				})
+			})
+
+			_.each(PHONE_NUMBER_TRANSFORMS, function(to, from) {
+				it(`must transform Mobile-Id number ${from} to ${to}`,
+					function*() {
+					var created = 0
+
+					this.router.post(`${MOBILE_ID_URL.path}authentication`, (req, res) => {
+						++created
+						req.body.phoneNumber.must.equal(to)
 						req.body.nationalIdentityNumber.must.equal(PERSONAL_ID)
 						respond({sessionID: SESSION_ID}, req, res)
 					})
@@ -1203,7 +1234,7 @@ describe("SessionsController", function() {
 						form: {
 							method: "mobile-id",
 							personalId: PERSONAL_ID,
-							phoneNumber: short
+							phoneNumber: from
 						}
 					})
 
@@ -1213,6 +1244,26 @@ describe("SessionsController", function() {
 			})
 
 			it("must respond with 422 given invalid personal id", function*() {
+				var res = yield this.request("/sessions", {
+					method: "POST",
+					form: {
+						method: "mobile-id",
+						personalId: "3870618666",
+						phoneNumber: "+37200000766"
+					}
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal(
+					"Not a Mobile-Id User or Personal Id Mismatch"
+				)
+
+				res.body.must.include(t("MOBILE_ID_ERROR_NOT_FOUND"))
+				usersDb.search(sql`SELECT * FROM users`).must.be.empty()
+				sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
+			})
+
+			it("must respond with 422 given invalid personal id error", function*() {
 				this.router.post(`${MOBILE_ID_URL.path}authentication`, (req, res) => {
 					res.statusCode = 400
 
@@ -1225,7 +1276,7 @@ describe("SessionsController", function() {
 					method: "POST",
 					form: {
 						method: "mobile-id",
-						personalId: "60001010",
+						personalId: "38706181337",
 						phoneNumber: "+37200000766"
 					}
 				})
@@ -1241,6 +1292,26 @@ describe("SessionsController", function() {
 			})
 
 			it("must respond with 422 given invalid phone number", function*() {
+				var res = yield this.request("/sessions", {
+					method: "POST",
+					form: {
+						method: "mobile-id",
+						personalId: "60001010",
+						phoneNumber: "+37200000766foobar"
+					}
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal(
+					"Not a Mobile-Id User or Personal Id Mismatch"
+				)
+
+				res.body.must.include(t("MOBILE_ID_ERROR_NOT_FOUND"))
+				usersDb.search(sql`SELECT * FROM users`).must.be.empty()
+				sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
+			})
+
+			it("must respond with 422 given invalid phone number error", function*() {
 				this.router.post(`${MOBILE_ID_URL.path}authentication`, (req, res) => {
 					res.statusCode = 400
 
@@ -1278,7 +1349,7 @@ describe("SessionsController", function() {
 					method: "POST",
 					form: {
 						method: "mobile-id",
-						personalId: "60001010",
+						personalId: PERSONAL_ID,
 						phoneNumber: "+37200000766"
 					}
 				})
@@ -1805,7 +1876,45 @@ describe("SessionsController", function() {
 				})
 			})
 
+			_.each(PERSONAL_ID_TRANSFORMS, function(to, from) {
+				it(`must transform Smart-Id personal id ${from} to ${to}`,
+					function*() {
+					var created = 0
+
+					this.router.post(
+						`${SMART_ID_URL.path}authentication/etsi/PNOEE-${to}`,
+						function(req, res) {
+						++created
+						res.statusCode = 404
+						respond({code: 404, message: "Not Found"}, req, res)
+					})
+
+					var res = yield this.request("/sessions", {
+						method: "POST",
+						form: {method: "smart-id", personalId: from}
+					})
+
+					created.must.equal(1)
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Not a Smart-Id User")
+				})
+			})
+
 			it("must respond with 422 given invalid personal id", function*() {
+				var res = yield this.request("/sessions", {
+					method: "POST",
+					form: {method: "smart-id", personalId: "3870618666"}
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Not a Smart-Id User")
+				res.body.must.include(t("SMART_ID_ERROR_NOT_FOUND"))
+
+				usersDb.search(sql`SELECT * FROM users`).must.be.empty()
+				sessionsDb.search(sql`SELECT * FROM sessions`).must.be.empty()
+			})
+
+			it("must respond with 422 given invalid personal id error", function*() {
 				this.router.post(`${SMART_ID_URL.path}authentication/etsi/:id`,
 					function(req, res) {
 					res.statusCode = 404
@@ -1814,7 +1923,7 @@ describe("SessionsController", function() {
 
 				var res = yield this.request("/sessions", {
 					method: "POST",
-					form: {method: "smart-id", personalId: "60001011337"}
+					form: {method: "smart-id", personalId: "38706181337"}
 				})
 
 				res.statusCode.must.equal(422)

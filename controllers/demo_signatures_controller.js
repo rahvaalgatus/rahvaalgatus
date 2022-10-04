@@ -23,11 +23,11 @@ var {smartId} = require("root")
 var {hades} = require("root")
 var reportError = require("root").errorReporter
 var {validateSigningCertificate} = require("root/lib/certificate")
-var {ensureAreaCode} = require("root/lib/mobile_id")
+var {parsePersonalId} = require("root/lib/eid")
+var {parsePhoneNumber} = require("root/lib/eid")
 var {getCertificatePersonalId} = require("root/lib/certificate")
 var parseBody = require("body-parser").raw
-var getNormalizedMobileIdErrorCode =
-	require("root/lib/mobile_id").getNormalizedErrorCode
+var {getNormalizedMobileIdErrorCode} = require("root/lib/eid")
 var co = require("co")
 var sql = require("sqlate")
 var {sleep} = require("root/lib/promise")
@@ -76,7 +76,7 @@ exports.router.get("/signable", function(_req, res) {
 exports.router.post("/", next(function*(req, res) {
 	var method = res.locals.method = getSigningMethod(req)
 	var cert, err, country, xades, signature, signatureUrl
-	var personalId, sanitizedPersonalId
+	var personalId
 
 	switch (method) {
 		case "id-card":
@@ -102,9 +102,8 @@ exports.router.post("/", next(function*(req, res) {
 			break
 
 		case "mobile-id":
-			var phoneNumber = ensureAreaCode(req.body.phoneNumber)
-			personalId = req.body.personalId
-			sanitizedPersonalId = sanitizePersonalId(personalId)
+			var phoneNumber = parsePhoneNumber(String(req.body.phoneNumber))
+			personalId = parsePersonalId(String(req.body.personalId))
 
 			cert = yield mobileId.readCertificate(phoneNumber, personalId)
 			if (err = validateSigningCertificate(req.t, cert)) throw err
@@ -122,7 +121,7 @@ exports.router.post("/", next(function*(req, res) {
 
 			signature = demoSignaturesDb.create({
 				country: country,
-				personal_id: sanitizedPersonalId,
+				personal_id: sanitizePersonalId(personalId),
 				method: "mobile-id",
 				created_at: new Date,
 				updated_at: new Date,
@@ -141,8 +140,7 @@ exports.router.post("/", next(function*(req, res) {
 			break
 
 		case "smart-id":
-			personalId = req.body.personalId
-			sanitizedPersonalId = sanitizePersonalId(personalId)
+			personalId = parsePersonalId(String(req.body.personalId))
 
 			cert = yield smartId.certificate("PNOEE-" + personalId)
 			cert = yield waitForSmartIdSession(90, cert)

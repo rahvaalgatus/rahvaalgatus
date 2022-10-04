@@ -48,6 +48,7 @@ var {VALID_ISSUERS} = require("root/test/fixtures")
 var {JOHN_RSA_KEYS} = require("root/test/fixtures")
 var {JOHN_ECDSA_KEYS} = require("root/test/fixtures")
 var SESSION_ID = "7c8bdd56-6772-4264-ba27-bf7a9ef72a11"
+var {PERSONAL_ID_TRANSFORMS} = require("root/test/fixtures")
 var {PHONE_NUMBER_TRANSFORMS} = require("root/test/fixtures")
 var TODAY = new Date(2015, 5, 18)
 var ADULT_BIRTHDATE = DateFns.addYears(TODAY, -16)
@@ -2448,13 +2449,44 @@ describe("SignaturesController", function() {
 				})
 			})
 
-			_.each(PHONE_NUMBER_TRANSFORMS, function(long, short) {
-				it(`must transform mobile-id number ${short} to ${long}`,
+			_.each(PERSONAL_ID_TRANSFORMS, function(to, from) {
+				it(`must transform Mobile-Id personal id ${from} to ${to}`,
+					function*() {
+					var created = 0
+
+					this.router.post(`${MOBILE_ID_URL.path}certificate`, (req, res) => {
+						++created
+						req.body.phoneNumber.must.equal("+37200000766")
+						req.body.nationalIdentityNumber.must.equal(to)
+						respond({result: "NOT_FOUND"}, req, res)
+					})
+
+					var path = `/initiatives/${this.initiative.uuid}`
+					var res = yield this.request(path + "/signatures", {
+						method: "POST",
+						form: {
+							method: "mobile-id",
+							personalId: from,
+							phoneNumber: "+37200000766"
+						}
+					})
+
+					created.must.equal(1)
+					res.statusCode.must.equal(422)
+
+					res.statusMessage.must.equal(
+						"Not a Mobile-Id User or Personal Id Mismatch"
+					)
+				})
+			})
+
+			_.each(PHONE_NUMBER_TRANSFORMS, function(to, from) {
+				it(`must transform mobile-id number ${from} to ${to}`,
 					function*() {
 					var created = 0
 					this.router.post(`${MOBILE_ID_URL.path}certificate`, (req, res) => {
 						++created
-						req.body.phoneNumber.must.equal(long)
+						req.body.phoneNumber.must.equal(to)
 						req.body.nationalIdentityNumber.must.equal(ADULT_PERSONAL_ID)
 						respond({result: "NOT_FOUND"}, req, res)
 					})
@@ -2465,7 +2497,7 @@ describe("SignaturesController", function() {
 						form: {
 							method: "mobile-id",
 							personalId: ADULT_PERSONAL_ID,
-							phoneNumber: short
+							phoneNumber: from
 						}
 					})
 
@@ -2518,7 +2550,7 @@ describe("SignaturesController", function() {
 					method: "POST",
 					form: {
 						method: "mobile-id",
-						personalId: "60001010",
+						personalId: ADULT_PERSONAL_ID + "666",
 						phoneNumber: "+37200000766"
 					}
 				})
@@ -3268,6 +3300,32 @@ describe("SignaturesController", function() {
 				})
 			})
 
+			_.each(PERSONAL_ID_TRANSFORMS, function(to, from) {
+				it(`must transform Smart-Id personal id ${from} to ${to}`,
+					function*() {
+					var created = 0
+
+					this.router.post(
+						`${SMART_ID_URL.path}certificatechoice/etsi/PNOEE-${to}`,
+						function(req, res) {
+						++created
+						res.statusCode = 404
+						respond({code: 404, message: "Not Found"}, req, res)
+					})
+
+					var initiativePath = `/initiatives/${this.initiative.uuid}`
+					var res = yield this.request(initiativePath + "/signatures", {
+						method: "POST",
+						form: {method: "smart-id", personalId: from}
+					})
+
+
+					created.must.equal(1)
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Not a Smart-Id User")
+				})
+			})
+
 			it("must respond with 422 given invalid personal id", function*() {
 				this.router.post(`${SMART_ID_URL.path}certificatechoice/etsi/:id`,
 					function(req, res) {
@@ -3278,7 +3336,7 @@ describe("SignaturesController", function() {
 				var initiativePath = `/initiatives/${this.initiative.uuid}`
 				var res = yield this.request(initiativePath + "/signatures", {
 					method: "POST",
-					form: {method: "smart-id", personalId: "60001010"}
+					form: {method: "smart-id", personalId: ADULT_PERSONAL_ID + "666"}
 				})
 
 				res.statusCode.must.equal(422)

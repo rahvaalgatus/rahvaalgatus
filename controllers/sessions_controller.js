@@ -21,14 +21,14 @@ var {smartId} = require("root")
 var parseBody = require("body-parser").raw
 var csrf = require("root/lib/middleware/csrf_middleware")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
-var {ensureAreaCode} = require("root/lib/mobile_id")
+var {parsePersonalId} = require("root/lib/eid")
+var {parsePhoneNumber} = require("root/lib/eid")
 var {getCertificatePersonalId} = require("root/lib/certificate")
 var {getCertificatePersonName} = require("root/lib/certificate")
 var {validateAuthenticationCertificate} = require("root/lib/certificate")
 var {validateIdCardAuthenticationCertificate} = require("root/lib/certificate")
 var {hasSignatureType} = require("./initiatives/signatures_controller")
-var getNormalizedMobileIdErrorCode =
-	require("root/lib/mobile_id").getNormalizedErrorCode
+var {getNormalizedMobileIdErrorCode} = require("root/lib/eid")
 var sql = require("sqlate")
 var {sleep} = require("root/lib/promise")
 var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
@@ -229,8 +229,11 @@ exports.router.post("/", next(function*(req, res, next) {
 			break
 
 		case "mobile-id":
-			var phoneNumber = ensureAreaCode(req.body.phoneNumber)
-			personalId = req.body.personalId
+			var phoneNumber = parsePhoneNumber(String(req.body.phoneNumber))
+			if (phoneNumber == null) throw new MobileIdError("NOT_FOUND")
+
+			personalId = parsePersonalId(String(req.body.personalId))
+			if (personalId == null) throw new MobileIdError("NOT_FOUND")
 
 			authentication = authenticationsDb.create({
 				country: "EE",
@@ -266,7 +269,8 @@ exports.router.post("/", next(function*(req, res, next) {
 			break
 
 		case "smart-id":
-			personalId = req.body.personalId
+			personalId = parsePersonalId(String(req.body.personalId))
+			if (personalId == null) throw new SmartIdError("ACCOUNT_NOT_FOUND")
 
 			var token = Crypto.randomBytes(16)
 			tokenHash = sha256(token)

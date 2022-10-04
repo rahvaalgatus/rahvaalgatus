@@ -31,13 +31,13 @@ var signablesDb = require("root/db/initiative_signables_db")
 var textsDb = require("root/db/initiative_texts_db")
 var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
-var {ensureAreaCode} = require("root/lib/mobile_id")
+var {parsePersonalId} = require("root/lib/eid")
+var {parsePhoneNumber} = require("root/lib/eid")
 var {constantTimeEqual} = require("root/lib/crypto")
 var {getCertificatePersonalId} = require("root/lib/certificate")
 var {ENV} = process.env
 var {validateSigningCertificate} = require("root/lib/certificate")
-var getNormalizedMobileIdErrorCode =
-	require("root/lib/mobile_id").getNormalizedErrorCode
+var {getNormalizedMobileIdErrorCode} = require("root/lib/eid")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 exports.pathToSignature = pathToSignature
 exports.getSigningMethod = getSigningMethod
@@ -339,7 +339,7 @@ exports.router.post("/", next(function*(req, res) {
 			if (err = validateSigningCertificate(req.t, cert)) throw err
 
 			;[country, personalId] = getCertificatePersonalId(cert)
-			if (err = validatePersonalId(req.t, personalId)) throw err
+			if (err = validateAge(req.t, personalId)) throw err
 
 			xades = newXades(cert, initiative)
 
@@ -362,9 +362,14 @@ exports.router.post("/", next(function*(req, res) {
 			break
 
 		case "mobile-id":
-			var phoneNumber = ensureAreaCode(req.body.phoneNumber)
-			personalId = parsePersonalId(req.t, req.body.personalId)
-			if (err = validatePersonalId(req.t, personalId)) throw err
+			var phoneNumber = parsePhoneNumber(String(req.body.phoneNumber))
+			personalId = parsePersonalId(req.body.personalId)
+
+			if (personalId == null) throw new HttpError(422, "Invalid Personal Id", {
+				description: req.t("SIGN_ERROR_PERSONAL_ID_INVALID")
+			})
+
+			if (err = validateAge(req.t, personalId)) throw err
 
 			cert = yield mobileId.readCertificate(phoneNumber, personalId)
 			if (err = validateSigningCertificate(req.t, cert)) throw err
@@ -403,8 +408,13 @@ exports.router.post("/", next(function*(req, res) {
 			break
 
 		case "smart-id":
-			personalId = parsePersonalId(req.t, req.body.personalId)
-			if (err = validatePersonalId(req.t, personalId)) throw err
+			personalId = parsePersonalId(req.body.personalId)
+
+			if (personalId == null) throw new HttpError(422, "Invalid Personal Id", {
+				description: req.t("SIGN_ERROR_PERSONAL_ID_INVALID")
+			})
+
+			if (err = validateAge(req.t, personalId)) throw err
 
 			cert = yield smartId.certificate("PNOEE-" + personalId)
 			cert = yield waitForSmartIdSession(90, cert)
@@ -818,17 +828,7 @@ function getSigningMethod(req) {
 	)
 }
 
-function parsePersonalId(t, id) {
-	id = id.replace(/[^0-9]/g, "")
-
-	if (id.length != 11) throw new HttpError(422, "Invalid Personal Id", {
-		description: t("SIGN_ERROR_PERSONAL_ID_INVALID")
-	})
-
-	return id
-}
-
-function validatePersonalId(t, id) {
+function validateAge(t, id) {
 	var birthdate = _.getBirthdateFromPersonalId(id)
 
 	if (birthdate > DateFns.addYears(new Date, -16))
