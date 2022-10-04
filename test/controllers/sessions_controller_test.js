@@ -25,6 +25,7 @@ var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
 var MOBILE_ID_URL = Url.parse("https://mid.sk.ee/mid-api/")
 var SMART_ID_URL = Url.parse("https://rp-api.smart-id.com/v1/")
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
+var {SITE_URLS} = require("root/test/fixtures")
 var {JOHN_ECDSA_KEYS} = require("root/test/fixtures")
 var {JOHN_RSA_KEYS} = require("root/test/fixtures")
 var {VALID_ISSUERS} = require("root/test/fixtures")
@@ -220,6 +221,15 @@ describe("SessionsController", function() {
 				res.headers.location.must.equal("/user")
 			})
 
+			it("must redirect back to referrer without host", function*() {
+				var res = yield this.request("/sessions/new", {
+					headers: {Referer: "/initiatives"}
+				})
+
+				res.statusCode.must.equal(302)
+				res.headers.location.must.equal("/initiatives")
+			})
+
 			it("must redirect back to referrer on same host", function*() {
 				var res = yield this.request("/sessions/new", {
 					headers: {Referer: this.url + "/initiatives"}
@@ -229,11 +239,7 @@ describe("SessionsController", function() {
 				res.headers.location.must.equal(this.url + "/initiatives")
 			})
 
-			;[
-				Config.url,
-				Config.parliamentSiteUrl,
-				Config.localSiteUrl
-			].forEach(function(url) {
+			SITE_URLS.forEach(function(url) {
 				it(`must redirect back to ${Url.parse(url).hostname}`, function*() {
 					var res = yield this.request("/sessions/new", {
 						headers: {Referer: url + "/initiatives"}
@@ -246,7 +252,7 @@ describe("SessionsController", function() {
 
 			it("must not redirect back to other hosts", function*() {
 				var res = yield this.request("/sessions/new", {
-					Referer: "http://example.com/evil"
+					headers: {Referer: "http://example.com/evil"}
 				})
 
 				res.statusCode.must.equal(302)
@@ -295,6 +301,15 @@ describe("SessionsController", function() {
 					res.headers.location.must.equal("/user")
 				})
 
+				it("must redirect back to referrer without host", function*() {
+					var res = yield signIn(this.router, this.request, cert, {
+						Referer: "/initiatives"
+					})
+
+					res.statusCode.must.be.between(200, 399)
+					res.headers.location.must.equal("/initiatives")
+				})
+
 				it("must redirect back to referrer on same host", function*() {
 					var res = yield signIn(this.router, this.request, cert, {
 						Referer: this.url + "/initiatives"
@@ -304,11 +319,7 @@ describe("SessionsController", function() {
 					res.headers.location.must.equal(this.url + "/initiatives")
 				})
 
-				;[
-					Config.url,
-					Config.parliamentSiteUrl,
-					Config.localSiteUrl
-				].forEach(function(url) {
+				SITE_URLS.forEach(function(url) {
 					it(`must redirect back to ${Url.parse(url).hostname}`, function*() {
 						var res = yield signIn(this.router, this.request, cert, {
 							Referer: url + "/initiatives"
@@ -321,7 +332,7 @@ describe("SessionsController", function() {
 
 				it("must not redirect to other hosts", function*() {
 					var res = yield signIn(this.router, this.request, cert, {
-						Referer: "http://example.com/evil"
+						headers: {Referer: "http://example.com/evil"}
 					})
 
 					res.statusCode.must.be.between(200, 399)
@@ -2022,6 +2033,7 @@ describe("SessionsController", function() {
 			})
 
 			res.statusCode.must.equal(303)
+			res.statusMessage.must.equal("Signed Out")
 			res.headers.location.must.equal("/")
 
 			var cookies = parseCookies(res.headers["set-cookie"])
@@ -2049,6 +2061,7 @@ describe("SessionsController", function() {
 			})
 
 			res.statusCode.must.equal(303)
+			res.statusMessage.must.equal("Session Deleted")
 
 			var cookies = parseCookies(res.headers["set-cookie"])
 			cookies.must.not.have.property(Config.sessionCookieName)
@@ -2069,23 +2082,66 @@ describe("SessionsController", function() {
 			})
 		})
 
-		it("must redirect back to referrer", function*() {
+		it("must redirect back to referrer without host", function*() {
+			var res = yield this.request("/sessions/" + this.session.id, {
+				method: "DELETE",
+				headers: {Referer: "/initiatives"}
+			})
+
+			res.statusCode.must.equal(303)
+			res.statusMessage.must.equal("Signed Out")
+			res.headers.location.must.equal("/initiatives")
+		})
+
+		it("must redirect back to referrer on sam ehost", function*() {
 			var res = yield this.request("/sessions/" + this.session.id, {
 				method: "DELETE",
 				headers: {Referer: this.url + "/initiatives"}
 			})
 
 			res.statusCode.must.equal(303)
+			res.statusMessage.must.equal("Signed Out")
 			res.headers.location.must.equal(this.url + "/initiatives")
 		})
 
-		it("must redirect to home page if on /user", function*() {
+		;[
+			"/user",
+			"/user/signatures",
+			"/user/subscriptions"
+		].forEach(function(path) {
+			it(`must redirect to home page if on ${path}`, function*() {
+				var res = yield this.request("/sessions/" + this.session.id, {
+					method: "DELETE",
+					headers: {Referer: this.url + path}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Signed Out")
+				res.headers.location.must.equal("/")
+			})
+		})
+
+		SITE_URLS.forEach(function(url) {
+			it(`must redirect back to ${Url.parse(url).hostname}`, function*() {
+				var res = yield this.request("/sessions/" + this.session.id, {
+					method: "DELETE",
+					headers: {Referer: url + "/initiatives"}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Signed Out")
+				res.headers.location.must.equal(url + "/initiatives")
+			})
+		})
+
+		it("must not redirect back to other hosts", function*() {
 			var res = yield this.request("/sessions/" + this.session.id, {
 				method: "DELETE",
-				headers: {Referer: this.url + "/user"}
+				headers: {Referer: "http://example.com/evil"}
 			})
 
 			res.statusCode.must.equal(303)
+			res.statusMessage.must.equal("Signed Out")
 			res.headers.location.must.equal("/")
 		})
 
@@ -2095,6 +2151,7 @@ describe("SessionsController", function() {
 			})
 
 			res.statusCode.must.equal(303)
+			res.statusMessage.must.equal("Signed Out")
 
 			var cookies = parseCookies(res.headers["set-cookie"])
 			cookies.must.not.have.property("csrf_token")

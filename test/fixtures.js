@@ -40,6 +40,12 @@ exports.ISSUER_KEYS = _.mapValues({
 	__dirname + `/fixtures/${path}.pub`
 ))
 
+exports.SITE_URLS = [
+	Config.url,
+	Config.parliamentSiteUrl,
+	Config.localSiteUrl
+]
+
 exports.PERSONAL_ID_TRANSFORMS = {
 	"38706181337": "38706181337",
 	"3 87 06 18 1337": "38706181337",

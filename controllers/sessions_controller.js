@@ -487,15 +487,16 @@ exports.router.delete("/:id", function(req, res) {
 		// intentions could've just logged the person out themselves or
 		// done their dirty deeds while it was logged in.
 		res.flash("notice", req.t("CURRENT_SESSION_DELETED"))
+		res.statusMessage = "Signed Out"
 	}
 	else {
 		res.flash("notice", req.t("SESSION_DELETED"))
+		res.statusMessage = "Session Deleted"
 	}
 
 	var to = req.headers.referer
-	if (to && Url.parse(to).pathname == "/user") to = "/"
-	else if (!to) to = "/"
-	res.redirect(303, to)
+	if (to && Url.parse(to).pathname.match(/^\/user($|\/)/)) to = "/"
+	res.redirect(303, referTo(req, to, "/"))
 })
 
 function* waitForMobileIdAuthentication(t, authentication, sessionId) {
@@ -638,11 +639,12 @@ function createSessionAndSignIn(authentication, req, res) {
 }
 
 function referTo(req, referrer, fallback) {
-	if (referrer == null) return fallback
+	if (!referrer) return fallback
 
 	var referrerHost = Url.parse(referrer).hostname
 
 	return [
+		null,
 		req.hostname,
 		SITE_HOSTNAME,
 		PARLIAMENT_SITE_HOSTNAME,
