@@ -33,6 +33,7 @@ var parseText = require("./initiatives/texts_controller").parse
 var {countUndersignedSignaturesById} = require("root/lib/initiative")
 var {countCitizenOsSignaturesById} = require("root/lib/initiative")
 var {parsePersonalId} = require("root/lib/user")
+var {validateRedirect} = require("root/lib/http")
 var {PHASES} = require("root/lib/initiative")
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: "", phase: "edit"}
@@ -451,8 +452,13 @@ exports.router.put("/:id", next(function*(req, res) {
 	else if (isInitiativeUpdate(req.body)) {
 		var attrs = parseInitiative(initiative, req.body)
 		initiativesDb.update(initiative.uuid, attrs)
+		res.statusMessage = "Initiative Updated"
 		res.flash("notice", req.t("INITIATIVE_INFO_UPDATED"))
-		res.redirect(303, req.headers.referer || req.baseUrl + req.url)
+
+		res.redirect(
+			303,
+			validateRedirect(req, req.headers.referer, req.baseUrl + req.url)
+		)
 	}
 	else throw new HttpError(422, "Invalid Attribute")
 }))

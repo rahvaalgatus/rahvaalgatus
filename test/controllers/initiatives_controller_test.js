@@ -56,6 +56,7 @@ var {COMMITTEE_MEETING_DECISIONS} = Initiative
 var SITE_HOSTNAME = Url.parse(Config.url).hostname
 var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
 var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
+var {SITE_URLS} = require("root/test/fixtures")
 var PNG = Buffer.from("89504e470d0a1a0a1337", "hex")
 var PNG_PREVIEW = Buffer.from("89504e470d0a1a0a4269", "hex")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
@@ -6684,6 +6685,7 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Updated")
 					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
 					initiativesDb.read(initiative).must.eql({
@@ -6707,6 +6709,7 @@ describe("InitiativesController", function() {
 						})
 
 						res.statusCode.must.equal(303)
+						res.statusMessage.must.equal("Initiative Updated")
 						res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
 						initiativesDb.read(initiative).must.eql({
@@ -6733,6 +6736,7 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Updated")
 					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
 					initiativesDb.read(initiative).must.eql({
@@ -6807,6 +6811,7 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Updated")
 					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 					initiativesDb.read(initiative).must.eql(initiative)
 				})
@@ -6846,6 +6851,7 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Updated")
 					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 
 					initiativesDb.read(initiative).must.eql({
@@ -6900,6 +6906,7 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Updated")
 
 					initiativesDb.search(sql`
 						SELECT * FROM initiatives
@@ -6986,6 +6993,72 @@ describe("InitiativesController", function() {
 						res.statusMessage.must.equal("Invalid Attributes")
 						initiativesDb.read(initiative).must.eql(initiative)
 					})
+				})
+
+				it("must redirect back to referrer without host", function*() {
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						headers: {Referer: "/user"},
+						form: {notes: "Hello, world"}
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Updated")
+					res.headers.location.must.equal("/user")
+				})
+
+				it("must redirect back to referrer on same host", function*() {
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						headers: {Referer: this.url + "/user"},
+						form: {notes: "Hello, world"}
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Updated")
+					res.headers.location.must.equal(this.url + "/user")
+				})
+
+				SITE_URLS.forEach(function(url) {
+					it(`must redirect back to ${Url.parse(url).hostname}`, function*() {
+						var initiative = initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id
+						}))
+
+						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+							method: "PUT",
+							headers: {Referer: url + "/user"},
+							form: {notes: "Hello, world"}
+						})
+
+						res.statusCode.must.equal(303)
+						res.statusMessage.must.equal("Initiative Updated")
+						res.headers.location.must.equal(url + "/user")
+					})
+				})
+
+				it("must not redirect back to other hosts", function*() {
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						headers: {Referer: "http://example.com/evil"},
+						form: {notes: "Hello, world"}
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Updated")
+					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
 				})
 			})
 
