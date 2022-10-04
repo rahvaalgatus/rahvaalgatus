@@ -289,6 +289,15 @@ strong {
 	margin: 0;
 
 	cursor: pointer;
+
+	&:focus {
+		outline-style: dashed;
+		outline-width: 0.1rem;
+		outline-offset: 0.2rem;
+		-moz-outline-radius: 0.7rem;
+	}
+
+	&:active { outline: none; }
 }
 
 .link-button {
@@ -296,7 +305,10 @@ strong {
 
 	cursor: pointer;
 	color: $link-color;
+	-moz-outline-radius: 2px;
+
 	&:hover { text-decoration: underline; }
+	&:focus { outline: 1px dashed $link-color; }
 }
 
 .form {
