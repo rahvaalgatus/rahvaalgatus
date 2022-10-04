@@ -24,6 +24,7 @@ var demand = require("must")
 var SITE_HOSTNAME = Url.parse(Config.url).hostname
 var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
 var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
+var {SITE_URLS} = require("root/test/fixtures")
 var COAUTHOR_STATUSES =
 	require("root/controllers/initiatives/coauthors_controller").STATUSES
 
@@ -277,7 +278,7 @@ describe("UserController", function() {
 					res.body.must.not.include(initiative.uuid)
 				})
 
-				t("must not show coauthor name from another initiative", function*() {
+				it("must not show coauthor name from another initiative", function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: "edit"
@@ -456,6 +457,7 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Language Updated")
 				res.headers.location.must.equal("/")
 				usersDb.read(user).must.eql(user)
 			})
@@ -464,12 +466,12 @@ describe("UserController", function() {
 				it("must update language to " + lang, function*() {
 					var res = yield this.request("/user", {
 						method: "PUT",
-						headers: {Referer: this.url + "/initiatives"},
 						form: {language: lang}
 					})
 
 					res.statusCode.must.equal(303)
-					res.headers.location.must.equal(this.url + "/initiatives")
+					res.statusMessage.must.equal("Language Updated")
+					res.headers.location.must.equal("/")
 
 					var cookies = parseCookies(res.headers["set-cookie"])
 					cookies.language.value.must.equal(lang)
@@ -484,6 +486,7 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Language Updated")
 				res.headers.location.must.equal("/")
 				res.headers.must.not.have.property("set-cookie")
 			})
@@ -492,17 +495,67 @@ describe("UserController", function() {
 				it(`must set cookie when on ${host}`, function*() {
 					var res = yield this.request("/user", {
 						method: "PUT",
-						headers: {Referer: this.url + "/initiatives", Host: host},
+						headers: {Host: host},
 						form: {language: "en"}
 					})
 
 					res.statusCode.must.equal(303)
-					res.headers.location.must.equal(this.url + "/initiatives")
+					res.statusMessage.must.equal("Language Updated")
 
 					var cookies = parseCookies(res.headers["set-cookie"])
 					cookies.language.value.must.equal("en")
 					cookies.must.not.have.property("flash")
 				})
+			})
+
+			it("must redirect back to referrer without host", function*() {
+				var res = yield this.request("/user", {
+					method: "PUT",
+					headers: {Referer: "/initiatives"},
+					form: {language: "en"}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Language Updated")
+				res.headers.location.must.equal("/initiatives")
+			})
+
+			it("must redirect back to referrer on same host", function*() {
+				var res = yield this.request("/user", {
+					method: "PUT",
+					headers: {Referer: this.url + "/initiatives"},
+					form: {language: "en"}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Language Updated")
+				res.headers.location.must.equal(this.url + "/initiatives")
+			})
+
+			SITE_URLS.forEach(function(url) {
+				it(`must redirect back to ${Url.parse(url).hostname}`, function*() {
+					var res = yield this.request("/user", {
+						method: "PUT",
+						headers: {Referer: url + "/initiatives"},
+						form: {language: "en"}
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Language Updated")
+					res.headers.location.must.equal(url + "/initiatives")
+				})
+			})
+
+			it("must not redirect back to other hosts", function*() {
+				var res = yield this.request("/user", {
+					method: "PUT",
+					headers: {Referer: "http://example.com/evil"},
+					form: {language: "en"}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Language Updated")
+				res.headers.location.must.equal("/")
 			})
 		})
 
@@ -518,6 +571,7 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("User Updated")
 				res.headers.location.must.equal("/user")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
@@ -573,19 +627,22 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("User Updated")
 				usersDb.read(user).must.eql(user)
 			})
 
 			;["et", "en", "ru"].forEach(function(lang) {
-				it("must update language to " + lang, function*() {
+				it("must update language to " + lang + " without notification",
+					function*() {
 					var res = yield this.request("/user", {
 						method: "PUT",
-						headers: {Referer: this.url + "/initiatives"},
+						headers: {Referer: "/initiatives"},
 						form: {language: lang}
 					})
 
 					res.statusCode.must.equal(303)
-					res.headers.location.must.equal(this.url + "/initiatives")
+					res.statusMessage.must.equal("User Updated")
+					res.headers.location.must.equal("/initiatives")
 
 					var cookies = parseCookies(res.headers["set-cookie"])
 					cookies.language.value.must.equal(lang)
@@ -606,7 +663,7 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(303)
-				res.headers.location.must.equal("/user")
+				res.statusMessage.must.equal("User Updated")
 				usersDb.read(this.user).must.eql(this.user)
 			})
 
@@ -617,6 +674,7 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("User Updated")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
 				res = yield this.request(res.headers.location, {
@@ -665,6 +723,7 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("User Updated")
 
 				var user = usersDb.read(this.user)
 
@@ -705,6 +764,7 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("User Updated")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
 				res = yield this.request(res.headers.location, {
@@ -755,6 +815,7 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("User Updated")
 
 				var user = usersDb.read(this.user)
 
@@ -796,6 +857,7 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("User Updated")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
 				res = yield this.request(res.headers.location, {
@@ -823,6 +885,7 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("User Updated")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
 				res = yield this.request(res.headers.location, {
@@ -852,6 +915,7 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("User Updated")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
 				res = yield this.request(res.headers.location, {
@@ -881,6 +945,7 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("User Updated")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
 				res = yield this.request(res.headers.location, {
@@ -914,6 +979,7 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("User Updated")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
 				res = yield this.request(res.headers.location, {
@@ -949,6 +1015,7 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("User Updated")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
 				res = yield this.request(res.headers.location, {
@@ -1004,6 +1071,7 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("User Updated")
 				res.headers.location.must.equal("/user")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
@@ -1036,6 +1104,7 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("User Updated")
 				res.headers.location.must.equal("/user")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
@@ -1062,6 +1131,7 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("User Updated")
 				res.headers.location.must.equal("/user")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
@@ -1095,6 +1165,7 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("User Updated")
 				res.headers.location.must.equal("/user")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
@@ -1124,6 +1195,56 @@ describe("UserController", function() {
 				res.statusCode.must.equal(422)
 				res.statusMessage.must.equal("Invalid Attributes")
 				usersDb.read(this.user).must.eql(this.user)
+			})
+
+			it("must redirect back to referrer without host", function*() {
+				var res = yield this.request("/user", {
+					method: "PUT",
+					headers: {Referer: "/initiatives"},
+					form: {language: "en"}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("User Updated")
+				res.headers.location.must.equal("/initiatives")
+			})
+
+			it("must redirect back to referrer on same host", function*() {
+				var res = yield this.request("/user", {
+					method: "PUT",
+					headers: {Referer: this.url + "/initiatives"},
+					form: {language: "en"}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("User Updated")
+				res.headers.location.must.equal(this.url + "/initiatives")
+			})
+
+			SITE_URLS.forEach(function(url) {
+				it(`must redirect back to ${Url.parse(url).hostname}`, function*() {
+					var res = yield this.request("/user", {
+						method: "PUT",
+						headers: {Referer: url + "/initiatives"},
+						form: {language: "en"}
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("User Updated")
+					res.headers.location.must.equal(url + "/initiatives")
+				})
+			})
+
+			it("must not redirect back to other hosts", function*() {
+				var res = yield this.request("/user", {
+					method: "PUT",
+					headers: {Referer: "http://example.com/evil"},
+					form: {language: "en"}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("User Updated")
+				res.headers.location.must.equal("/user")
 			})
 		})
 	})

@@ -31,6 +31,7 @@ var {hasSignatureType} = require("./initiatives/signatures_controller")
 var {getNormalizedMobileIdErrorCode} = require("root/lib/eid")
 var sql = require("sqlate")
 var {sleep} = require("root/lib/promise")
+var {validateRedirect} = require("root/lib/http")
 var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
 var reportError = require("root").errorReporter
 var {constantTimeEqual} = require("root/lib/crypto")
@@ -38,9 +39,6 @@ var sessionsDb = require("root/db/sessions_db")
 var usersDb = require("root/db/users_db")
 var authenticationsDb = require("root/db/authentications_db")
 var {ENV} = process.env
-var SITE_HOSTNAME = Url.parse(Config.url).hostname
-var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
-var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
 
 var ID_CARD_AUTH_SECRET = (
 	Config.idCardAuthenticationSecret &&
@@ -172,7 +170,7 @@ exports.router.get("/", function(req, res) {
 
 exports.router.get("/new", canonicalizeUrl, function(req, res) {
 	if (req.user)
-		res.redirect(302, referTo(req, req.headers.referer, "/user"))
+		res.redirect(302, validateRedirect(req, req.headers.referer, "/user"))
 	else
 		res.render("sessions/create_page.jsx")
 })
@@ -225,7 +223,7 @@ exports.router.post("/", next(function*(req, res, next) {
 
 			createSessionAndSignIn(authentication, req, res)
 			res.statusMessage = "Signed In"
-			res.redirect(303, referTo(req, referrer, "/user"))
+			res.redirect(303, validateRedirect(req, referrer, "/user"))
 			break
 
 		case "mobile-id":
@@ -415,7 +413,7 @@ exports.router.post("/",
 	}
 
 	if (authentication.authenticated) {
-		res.setHeader("Location", referTo(req, req.query.referrer, "/user"))
+		res.setHeader("Location", validateRedirect(req, req.query.referrer, "/user"))
 		createSessionAndSignIn(authentication, req, res)
 		res.statusCode = 204
 	}
@@ -496,7 +494,7 @@ exports.router.delete("/:id", function(req, res) {
 
 	var to = req.headers.referer
 	if (to && Url.parse(to).pathname.match(/^\/user($|\/)/)) to = "/"
-	res.redirect(303, referTo(req, to, "/"))
+	res.redirect(303, validateRedirect(req, to, "/"))
 })
 
 function* waitForMobileIdAuthentication(t, authentication, sessionId) {
@@ -638,19 +636,6 @@ function createSessionAndSignIn(authentication, req, res) {
 	csrf.reset(req, res)
 }
 
-function referTo(req, referrer, fallback) {
-	if (!referrer) return fallback
-
-	var referrerHost = Url.parse(referrer).hostname
-
-	return [
-		null,
-		req.hostname,
-		SITE_HOSTNAME,
-		PARLIAMENT_SITE_HOSTNAME,
-		LOCAL_SITE_HOSTNAME
-	].some((host) => host == referrerHost) ? referrer : fallback
-}
 
 function* waitForSession(wait, timeout, session) {
 	var res

@@ -17,6 +17,7 @@ var {sendEmail} = require("root")
 var renderEmail = require("root/lib/i18n").email
 var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
 var {updateSubscriptions} = require("./subscriptions_controller")
+var {validateRedirect} = require("root/lib/http")
 var EMPTY_OBJ = Object.create(null)
 var LANGS = require("root/lib/i18n").STRINGS
 var EMPTY_ARR = Array.prototype
@@ -28,7 +29,8 @@ exports.router.put("/", function(req, res, next) {
 
 	var lang = req.body.language
 	if (lang in LANGS) setLanguageCookie(req, res, lang)
-	res.redirect(303, req.headers.referer || "/")
+	res.statusMessage = "Language Updated"
+	res.redirect(303, validateRedirect(req, req.headers.referer, "/"))
 })
 
 exports.router.get("/", canonicalizeUrl)
@@ -107,7 +109,8 @@ exports.router.put("/", next(function*(req, res) {
 
 	if (attrs.language) setLanguageCookie(req, res, attrs.language)
 
-	res.redirect(303, req.headers.referer || req.baseUrl)
+	res.statusMessage = "User Updated"
+	res.redirect(303, validateRedirect(req, req.headers.referer, req.baseUrl))
 }))
 
 exports.router.get("/signatures", function(req, res) {
