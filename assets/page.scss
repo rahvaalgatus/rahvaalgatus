@@ -1605,6 +1605,8 @@ strong {
 			text-align: center;
 			font-size: 2rem;
 			line-height: 1.5;
+
+			a { @extend .link-button; }
 		}
 
 		@include mobile {

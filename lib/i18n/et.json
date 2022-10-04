@@ -419,7 +419,7 @@
 	"LNK_ABOUT": "Platvormist",
 	"LNK_SUPPORT": "Toeta ",
 	"LOCAL_GOVERNMENT_PHASE": "Menetluses",
-	"LOCAL_HOME_PAGE_HEADER_TEXT": "Selle lehe kaudu saad kohalikule omavalitsusele koostada ja esitada pöördumise, millel on vähemalt 1% selle omavalitsuse hääleõiguslike elanike allkiri. \n",
+	"LOCAL_HOME_PAGE_HEADER_TEXT": "Selle lehe kaudu saad kohalikule omavalitsusele koostada ja esitada pöördumise, millel on vähemalt 1% selle omavalitsuse hääleõiguslike elanike allkiri. <a href=\"/help/kov-guide\">Loe ka, kuidas KOV su algatust edasi menetleb</a>.",
 	"LOCAL_HOME_PAGE_MAP_LEGEND_INITIATIVES": "Algatustega",
 	"LOCAL_HOME_PAGE_MAP_LEGEND_KOMPASS": "Rändnäitus \"Kodukoha kompass\"",
 	"LOCAL_HOME_PAGE_WELCOME_TITLE": "Algatused kohalikule omavalitsusele",

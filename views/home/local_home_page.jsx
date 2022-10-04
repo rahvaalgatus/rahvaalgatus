@@ -22,7 +22,10 @@ module.exports = function(attrs) {
 			<Flash flash={req.flash} />
 
 			<h1>{t("LOCAL_HOME_PAGE_WELCOME_TITLE")}</h1>
-			<p class="welcome-paragraph">{t("LOCAL_HOME_PAGE_HEADER_TEXT")}</p>
+
+			<p class="welcome-paragraph">
+				{Jsx.html(t("LOCAL_HOME_PAGE_HEADER_TEXT"))}
+			</p>
 
 			<CallToActionsView req={req} t={t} />
 		</Section>
