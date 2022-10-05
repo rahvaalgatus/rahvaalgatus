@@ -487,7 +487,9 @@
 		"initiativesEmails": [
 			"vallavalitsus@tapa.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"48105015225"
+		],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/tapa-vald"
 	},
