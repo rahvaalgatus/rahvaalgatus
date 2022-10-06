@@ -9514,7 +9514,7 @@ describe("InitiativesController", function() {
 								authorName: "John",
 								authorEmail: "john@example.com",
 								authorPhone: "42",
-								guideUrl: Config.url + "/help/kov-guide.pdf",
+								guideUrl: Config.url + "/help/kov-guide",
 								siteUrl: Config.url,
 								facebookUrl: Config.facebookUrl
 							})
