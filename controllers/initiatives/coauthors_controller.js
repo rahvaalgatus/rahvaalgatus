@@ -4,6 +4,7 @@ var HttpError = require("standard-http-error")
 var SqliteError = require("root/lib/sqlite_error")
 var coauthorsDb = require("root/db/initiative_coauthors_db")
 var {parsePersonalId} = require("root/lib/user")
+var {validateRedirect} = require("root/lib/http")
 var sql = require("sqlate")
 
 exports.STATUSES = [
@@ -116,7 +117,11 @@ exports.router.put("/:personalId", function(req, res) {
 		: req.t("USER_PAGE_COAUTHOR_INVITATION_REJECTED")
 	)
 
-	res.redirect(303, req.body.referrer || req.headers.referer || "/user")
+	res.redirect(303, validateRedirect(
+		req,
+		req.body.referrer || req.headers.referer,
+		"/user"
+	))
 })
 
 exports.router.delete("/:personalId", function(req, res) {
@@ -187,7 +192,10 @@ exports.router.delete("/:personalId", function(req, res) {
 			: req.t("INITIATIVE_COAUTHOR_DELETED_SELF")
 		)
 
-		res.redirect(303, req.body.referrer || req.headers.referer || "/user")
+		res.redirect(
+			303,
+			validateRedirect(req, req.body.referrer || req.headers.referer, "/user")
+		)
 	}
 })
 

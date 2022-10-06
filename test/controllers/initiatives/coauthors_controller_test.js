@@ -1,4 +1,5 @@
 var _ = require("root/lib/underscore")
+var Url = require("url")
 var Config = require("root").config
 var ValidUser = require("root/test/valid_user")
 var ValidCoauthor = require("root/test/valid_initiative_coauthor")
@@ -12,6 +13,7 @@ var demand = require("must")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var sql = require("sqlate")
 var {STATUSES} = require("root/controllers/initiatives/coauthors_controller")
+var {SITE_URLS} = require("root/test/fixtures")
 
 describe("InitiativeAuthorsController", function() {
 	require("root/test/web")()
@@ -750,7 +752,30 @@ describe("InitiativeAuthorsController", function() {
 					`).must.eql(coauthor)
 				})
 
-				it("must redirect to referrer from header", function*() {
+				it("must redirect to referrer without host", function*() {
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: usersDb.create(new ValidUser).id,
+						published_at: new Date
+					}))
+
+					coauthorsDb.create(new ValidCoauthor({
+						initiative: initiative,
+						country: this.user.country,
+						personal_id: this.user.personal_id,
+						status: "pending"
+					}))
+
+					var res = yield this.request(pathToCoauthor(initiative, this.user), {
+						method: "PUT",
+						headers: {Referer: "/foo"},
+						form: {status: "accepted"}
+					})
+
+					res.statusCode.must.equal(303)
+					res.headers.location.must.equal("/foo")
+				})
+
+				it("must redirect to referrer on same host from header", function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: usersDb.create(new ValidUser).id,
 						published_at: new Date
@@ -773,7 +798,7 @@ describe("InitiativeAuthorsController", function() {
 					res.headers.location.must.equal(this.url + "/foo")
 				})
 
-				it("must redirect to referrer from form", function*() {
+				it("must redirect to referrer on same host from form", function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: usersDb.create(new ValidUser).id,
 						published_at: new Date
@@ -794,6 +819,54 @@ describe("InitiativeAuthorsController", function() {
 
 					res.statusCode.must.equal(303)
 					res.headers.location.must.equal(this.url + "/bar")
+				})
+
+				SITE_URLS.forEach(function(url) {
+					it(`must redirect back to ${Url.parse(url).hostname}`, function*() {
+						var initiative = initiativesDb.create(new ValidInitiative({
+							user_id: usersDb.create(new ValidUser).id,
+							published_at: new Date
+						}))
+
+						coauthorsDb.create(new ValidCoauthor({
+							initiative: initiative,
+							country: this.user.country,
+							personal_id: this.user.personal_id,
+							status: "pending"
+						}))
+
+						var res = yield this.request(pathToCoauthor(initiative, this.user), {
+							method: "PUT",
+							headers: {Referer: url + "/foo"},
+							form: {status: "accepted"}
+						})
+
+						res.statusCode.must.equal(303)
+						res.headers.location.must.equal(url + "/foo")
+					})
+				})
+
+				it("must not redirect to other hosts", function*() {
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: usersDb.create(new ValidUser).id,
+						published_at: new Date
+					}))
+
+					coauthorsDb.create(new ValidCoauthor({
+						initiative: initiative,
+						country: this.user.country,
+						personal_id: this.user.personal_id,
+						status: "pending"
+					}))
+
+					var res = yield this.request(pathToCoauthor(initiative, this.user), {
+						method: "PUT",
+						headers: {Referer: "http://example.com/evil"},
+						form: {status: "accepted"}
+					})
+
+					res.statusCode.must.equal(303)
+					res.headers.location.must.equal("/user")
 				})
 			})
 		})
