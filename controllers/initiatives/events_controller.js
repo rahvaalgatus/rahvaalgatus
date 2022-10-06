@@ -14,7 +14,7 @@ var EVENT_TYPES = ["text", "media-coverage"]
 
 exports.router = Router({mergeParams: true})
 
-exports.router.get("/new", assertAuthor, function(req, res) {
+exports.router.get("/new", assertAuthor, rateLimit, function(req, res) {
 	var {initiative} = req
 
 	var subscriberCount =
@@ -34,7 +34,7 @@ exports.router.get("/:id", function(req, res) {
 	res.redirect("/initiatives/" + initiative.uuid + "#event-" + req.params.id)
 })
 
-exports.router.post("/", assertAuthor, next(function*(req, res) {
+exports.router.post("/", assertAuthor, rateLimit, next(function*(req, res) {
 	var {initiative} = req
 	var message
 
@@ -127,10 +127,37 @@ function assertAuthor(req, _res, next) {
 	if (initiative.archived_at || initiative.phase == "edit")
 		throw new HttpError(403, "Cannot Create Events")
 
-	var until = rateLimit(req.user, req.initiative)
-	if (until) throw new HttpError(429, "Too Many Events", {until: until})
-
 	next()
+}
+
+function rateLimit(req, res, next) {
+	var {user, initiative} = req
+
+	var events = eventsDb.search(sql`
+		SELECT created_at FROM initiative_events
+		WHERE initiative_uuid = ${initiative.uuid}
+		AND user_id = ${user.id}
+		AND created_at > ${DateFns.addMinutes(new Date, -15)}
+		ORDER BY created_at ASC
+		LIMIT 3
+	`)
+
+	var until = events.length < 3
+		? null
+		: DateFns.addMinutes(events[0].created_at, 15)
+
+	if (until) {
+		res.statusCode = 429
+		res.statusMessage = "Too Many Events"
+
+		var minutes = Math.max(DateFns.differenceInMinutes(until, new Date), 1)
+
+		res.render("error_page.jsx", {
+			title: req.t("INITIATIVE_EVENT_RATE_LIMIT_TITLE", {minutes: minutes}),
+			body: req.t("INITIATIVE_EVENT_RATE_LIMIT_BODY", {minutes: minutes})
+		})
+	}
+	else next()
 }
 
 // There are plenty of events in production with title lengths of 200–300.
@@ -205,17 +232,4 @@ function parse(obj) {
 	})
 
 	return attrs
-}
-
-function rateLimit(user, initiative) {
-	var events = eventsDb.search(sql`
-		SELECT created_at FROM initiative_events
-		WHERE initiative_uuid = ${initiative.uuid}
-		AND user_id = ${user.id}
-		AND created_at > ${DateFns.addMinutes(new Date, -15)}
-		ORDER BY created_at ASC
-		LIMIT 3
-	`)
-
-	return events.length < 3 ? null : DateFns.addMinutes(events[0].created_at, 15)
 }

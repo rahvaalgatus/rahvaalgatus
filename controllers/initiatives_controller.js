@@ -147,10 +147,8 @@ exports.router.get("/",
 	}
 })
 
-exports.router.post("/", function(req, res) {
+exports.router.post("/", assertUser, rateLimit, function(req, res) {
 	var {user} = req
-	if (user == null) throw new HttpError(401)
-
 	var attrs = parseText(req.body)
 
 	var initiative = initiativesDb.create({
@@ -173,10 +171,7 @@ exports.router.post("/", function(req, res) {
 	res.redirect(303, req.baseUrl + "/" + initiative.uuid)
 })
 
-exports.router.get("/new", function(req, res) {
-	var {user} = req
-	if (user == null) throw new HttpError(401)
-
+exports.router.get("/new", assertUser, function(_req, res) {
 	res.render("initiatives/update_page.jsx", {
 		initiative: EMPTY_INITIATIVE,
 		language: "et"
@@ -428,11 +423,8 @@ exports.read = function(req, res) {
 	})
 }
 
-exports.router.put("/:id", next(function*(req, res) {
-	var {user} = req
-	if (user == null) throw new HttpError(401)
-
-	var {initiative} = req
+exports.router.put("/:id", assertUser, next(function*(req, res) {
+	var {user, initiative} = req
 
 	var isAuthor = Initiative.isAuthor(user, initiative)
 	if (!isAuthor) throw new HttpError(403, "No Permission to Edit")
@@ -463,11 +455,8 @@ exports.router.put("/:id", next(function*(req, res) {
 	else throw new HttpError(422, "Invalid Attribute")
 }))
 
-exports.router.delete("/:id", function(req, res) {
-	var {user} = req
-	if (user == null) throw new HttpError(401)
-
-	var {initiative} = req
+exports.router.delete("/:id", assertUser, function(req, res) {
+	var {user, initiative} = req
 
 	if (initiative.user_id != user.id)
 		throw new HttpError(403, "No Permission to Delete")
@@ -498,11 +487,8 @@ exports.router.delete("/:id", function(req, res) {
 	res.redirect(303, req.baseUrl)
 })
 
-exports.router.get("/:id/edit", function(req, res) {
-	var {user} = req
-	if (user == null) throw new HttpError(401)
-
-	var {initiative} = req
+exports.router.get("/:id/edit", assertUser, function(req, res) {
+	var {user, initiative} = req
 
 	var isAuthor = user && Initiative.isAuthor(user, initiative)
 	if (!isAuthor) throw new HttpError(403, "No Permission to Edit")
@@ -1086,6 +1072,40 @@ function updateInitiativeAuthor(req, res) {
 
 	res.statusMessage = "Author Updated"
 	res.redirect(303, req.baseUrl + req.url)
+}
+
+function assertUser(req, _res, next) {
+	if (req.user == null) throw new HttpError(401)
+	next()
+}
+
+function rateLimit(req, res, next) {
+	var {user} = req
+
+	var initiatives = initiativesDb.search(sql`
+		SELECT created_at FROM initiatives
+		WHERE user_id = ${user.id}
+		AND created_at > ${DateFns.addMinutes(new Date, -15)}
+		ORDER BY created_at ASC
+		LIMIT 10
+	`)
+
+	var until = initiatives.length < 10
+		? null
+		: DateFns.addMinutes(initiatives[0].created_at, 15)
+
+	if (until) {
+		res.statusCode = 429
+		res.statusMessage = "Too Many Initiatives"
+
+		var minutes = Math.max(DateFns.differenceInMinutes(until, new Date), 1)
+
+		res.render("error_page.jsx", {
+			title: req.t("INITIATIVE_RATE_LIMIT_TITLE", {minutes: minutes}),
+			body: req.t("INITIATIVE_RATE_LIMIT_BODY", {minutes: minutes})
+		})
+	}
+	else next()
 }
 
 function hasEstonianTranslation(initiative) {

@@ -63,6 +63,7 @@ var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var TRIX_TYPE = new MediaType("application/vnd.basecamp.trix+json")
 var TWITTER_NAME = Config.twitterUrl.replace(/^.*\//, "")
 var MAX_URL_LENGTH = 1024
+var INITIATIVE_RATE = 10
 var COAUTHOR_STATUSES =
 	require("root/controllers/initiatives/coauthors_controller").STATUSES
 
@@ -1420,6 +1421,68 @@ describe("InitiativesController", function() {
 					title: "Hello, world!",
 					content: content
 				})])
+			})
+
+			describe("as a rate limited endpoint", function() {
+				var INITIATIVE_FORM = {
+					title: "Hello, world!",
+					content: JSON.stringify(newTrixDocument("Hello, world"))
+				}
+
+				it(`must respond with 429 if created ${INITIATIVE_RATE} initiatives in the last 15m`, function*() {
+					initiativesDb.create(_.times(INITIATIVE_RATE, (_i) => (
+						new ValidInitiative({
+							user_id: this.user.id,
+
+							created_at:
+								DateFns.addSeconds(DateFns.addMinutes(new Date, -15), 1),
+						})
+					)))
+
+					var res = yield this.request("/initiatives", {
+						method: "POST",
+						form: INITIATIVE_FORM
+					})
+
+					res.statusCode.must.equal(429)
+					res.statusMessage.must.equal("Too Many Initiatives")
+				})
+
+				it(`must not respond with 429 if created <${INITIATIVE_RATE} initiatives in the last 15m`, function*() {
+					initiativesDb.create(_.times(INITIATIVE_RATE - 1, (_i) => (
+						new ValidInitiative({
+							user_id: this.user.id,
+
+							created_at:
+								DateFns.addSeconds(DateFns.addMinutes(new Date, -15), 1),
+						})
+					)))
+
+					var res = yield this.request("/initiatives", {
+						method: "POST",
+						form: INITIATIVE_FORM
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Created")
+				})
+
+				it(`must not respond with 429 if created ${INITIATIVE_RATE} initiatives earlier than 15m`, function*() {
+					initiativesDb.create(_.times(INITIATIVE_RATE, (_i) => (
+						new ValidInitiative({
+							user_id: this.user.id,
+							created_at: DateFns.addMinutes(new Date, -15),
+						})
+					)))
+
+					var res = yield this.request("/initiatives", {
+						method: "POST",
+						form: INITIATIVE_FORM
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Created")
+				})
 			})
 		})
 	})
