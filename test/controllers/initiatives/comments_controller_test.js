@@ -1,5 +1,6 @@
 var _ = require("root/lib/underscore")
 var Url = require("url")
+var DateFns = require("date-fns")
 var Config = require("root").config
 var Crypto = require("crypto")
 var ValidInitiative = require("root/test/valid_initiative")
@@ -18,6 +19,7 @@ var t = require("root/lib/i18n").t.bind(null, "et")
 var {SITE_URLS} = require("root/test/fixtures")
 var MAX_TITLE_LENGTH = 140
 var MAX_TEXT_LENGTH = 3000
+var COMMENT_RATE = 10
 var VALID_ATTRS = {title: "I've some thoughts.", text: "But I forgot them."}
 var VALID_REPLY_ATTRS = {text: "But I forgot them."}
 
@@ -161,11 +163,7 @@ describe("InitiativeCommentsController", function() {
 				var path = `/initiatives/${initiative.uuid}`
 				var res = yield this.request(path + "/comments", {
 					method: "POST",
-
-					form: {
-						title: "I've some thoughts.",
-						text: "But I forgot them."
-					}
+					form: {title: "I've some thoughts.", text: "But I forgot them."}
 				})
 
 				res.statusCode.must.equal(303)
@@ -626,6 +624,81 @@ describe("InitiativeCommentsController", function() {
 					form.elements.text.value.must.equal(attrs.text)
 				})
 			})
+
+			describe("as a rate limited endpoint", function() {
+				it(`must respond with 429 if created ${COMMENT_RATE} comments in the last 15m`, function*() {
+					var otherInitiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					commentsDb.create(_.times(COMMENT_RATE, (_i) => (
+						new ValidComment({
+							initiative_uuid: otherInitiative.uuid,
+							user_id: this.user.id,
+							user_uuid: _.serializeUuid(this.user.uuid),
+
+							created_at:
+								DateFns.addSeconds(DateFns.addMinutes(new Date, -15), 1),
+						})
+					)))
+
+					var path = `/initiatives/${this.initiative.uuid}`
+					var res = yield this.request(path + "/comments", {
+						method: "POST",
+						form: VALID_ATTRS
+					})
+
+					res.statusCode.must.equal(429)
+					res.statusMessage.must.equal("Too Many Comments")
+				})
+
+				it(`must not respond with 429 if created <${COMMENT_RATE} comments in the last 15m`, function*() {
+					var otherInitiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+
+					commentsDb.create(_.times(COMMENT_RATE - 1, (_i) => new ValidComment({
+						initiative_uuid: otherInitiative.uuid,
+						user_id: this.user.id,
+						user_uuid: _.serializeUuid(this.user.uuid),
+
+						created_at:
+							DateFns.addSeconds(DateFns.addMinutes(new Date, -15), 1),
+					})))
+
+					var path = `/initiatives/${this.initiative.uuid}`
+					var res = yield this.request(path + "/comments", {
+						method: "POST",
+						form: VALID_ATTRS
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Comment Created")
+				})
+
+				it(`must not respond with 429 if created ${COMMENT_RATE} comments earlier than 15m`, function*() {
+					var otherInitiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					commentsDb.create(_.times(COMMENT_RATE, (_i) => new ValidComment({
+						initiative_uuid: otherInitiative.uuid,
+						user_id: this.user.id,
+						user_uuid: _.serializeUuid(this.user.uuid),
+						created_at: DateFns.addMinutes(new Date, -15),
+					})))
+
+					var path = `/initiatives/${this.initiative.uuid}`
+					var res = yield this.request(path + "/comments", {
+						method: "POST",
+						form: VALID_ATTRS
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Comment Created")
+				})
+			})
 		})
 	})
 
@@ -818,6 +891,7 @@ describe("InitiativeCommentsController", function() {
 				t("COMMENT_AUTHOR_ADMIN")
 			)
 		})
+
 		it("must show comment page given external initiative", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
@@ -1601,6 +1675,104 @@ describe("InitiativeCommentsController", function() {
 				})
 
 				res.statusCode.must.equal(303)
+			})
+
+			describe("as a rate limited endpoint", function() {
+				it(`must respond with 429 if created ${COMMENT_RATE} comments in the last 15m`, function*() {
+					var otherInitiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					commentsDb.create(_.times(COMMENT_RATE, (_i) => (
+						new ValidComment({
+							initiative_uuid: otherInitiative.uuid,
+							user_id: this.user.id,
+							user_uuid: _.serializeUuid(this.user.uuid),
+
+							created_at:
+								DateFns.addSeconds(DateFns.addMinutes(new Date, -15), 1),
+						})
+					)))
+
+					var author = usersDb.create(new ValidUser)
+					var comment = commentsDb.create(new ValidComment({
+						user_id: author.id,
+						user_uuid: _.serializeUuid(author.uuid),
+						initiative_uuid: this.initiative.uuid
+					}))
+
+					var path = `/initiatives/${this.initiative.uuid}`
+					path += `/comments/${comment.id}`
+					var res = yield this.request(path + "/replies", {
+						method: "POST",
+						form: VALID_ATTRS
+					})
+
+					res.statusCode.must.equal(429)
+					res.statusMessage.must.equal("Too Many Comments")
+				})
+
+				it(`must not respond with 429 if created <${COMMENT_RATE} comments in the last 15m`, function*() {
+					var otherInitiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					commentsDb.create(_.times(COMMENT_RATE - 1, (_i) => new ValidComment({
+						initiative_uuid: otherInitiative.uuid,
+						user_id: this.user.id,
+						user_uuid: _.serializeUuid(this.user.uuid),
+
+						created_at:
+							DateFns.addSeconds(DateFns.addMinutes(new Date, -15), 1),
+					})))
+
+					var author = usersDb.create(new ValidUser)
+					var comment = commentsDb.create(new ValidComment({
+						user_id: author.id,
+						user_uuid: _.serializeUuid(author.uuid),
+						initiative_uuid: this.initiative.uuid
+					}))
+
+					var path = `/initiatives/${this.initiative.uuid}`
+					path += `/comments/${comment.id}`
+					var res = yield this.request(path + "/replies", {
+						method: "POST",
+						form: VALID_ATTRS
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Comment Reply Created")
+				})
+
+				it(`must not respond with 429 if created ${COMMENT_RATE} comments earlier than 15m`, function*() {
+					var otherInitiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id
+					}))
+
+					commentsDb.create(_.times(COMMENT_RATE, (_i) => new ValidComment({
+						initiative_uuid: otherInitiative.uuid,
+						user_id: this.user.id,
+						user_uuid: _.serializeUuid(this.user.uuid),
+						created_at: DateFns.addMinutes(new Date, -15),
+					})))
+
+					var author = usersDb.create(new ValidUser)
+					var comment = commentsDb.create(new ValidComment({
+						user_id: author.id,
+						user_uuid: _.serializeUuid(author.uuid),
+						initiative_uuid: this.initiative.uuid
+					}))
+
+					var path = `/initiatives/${this.initiative.uuid}`
+					path += `/comments/${comment.id}`
+					var res = yield this.request(path + "/replies", {
+						method: "POST",
+						form: VALID_ATTRS
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Comment Reply Created")
+				})
 			})
 		})
 	})

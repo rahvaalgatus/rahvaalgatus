@@ -1,6 +1,7 @@
 var _ = require("root/lib/underscore")
 var Config = require("root").config
 var Path = require("path")
+var DateFns = require("date-fns")
 var {Router} = require("express")
 var HttpError = require("standard-http-error")
 var SqliteError = require("root/lib/sqlite_error")
@@ -33,19 +34,13 @@ var CONSTRAINT_ERRORS = {
 	]
 }
 
-exports.router.get("/new", function(req, res) {
-	var {user} = req
-	if (user == null) throw new HttpError(401)
-
+exports.router.get("/new", assertUser, function(_req, res) {
 	res.render("initiatives/comments/create_page.jsx")
 })
 
-exports.router.post("/", next(function*(req, res) {
-	var {t} = req
-	var {user} = req
-	if (user == null) throw new HttpError(401)
+exports.router.post("/", assertUser, rateLimit, next(function*(req, res) {
+	var {t, user, initiative} = req
 
-	var {initiative} = req
 	var userEmail = user.email || ""
 	var parse = isAdmin(user) ? parseCommentAsAdmin : parseComment
 
@@ -165,11 +160,8 @@ exports.router.get("/:commentId", function(req, res) {
 	renderComment(req, res)
 })
 
-exports.router.delete("/:commentId", function(req, res) {
-	var {user} = req
-	if (user == null) throw new HttpError(401)
-
-	var {comment} = req
+exports.router.delete("/:commentId", assertUser, function(req, res) {
+	var {user, comment} = req
 	if (comment.anonymized_at) throw new HttpError(405, "Already Anonymized")
 	if (comment.user_id != user.id) throw new HttpError(403, "Not Author")
 	if (comment.parent_id) throw new HttpError(405, "Cannot Delete Replies")
@@ -181,12 +173,12 @@ exports.router.delete("/:commentId", function(req, res) {
 	res.redirect(303, req.baseUrl + "/" + comment.id)
 })
 
-exports.router.post("/:commentId/replies", next(function*(req, res) {
-	var {t} = req
-	var {user} = req
-	if (user == null) throw new HttpError(401)
+exports.router.post("/:commentId/replies",
+	assertUser,
+	rateLimit,
+	next(function*(req, res) {
+	var {t, user, initiative} = req
 
-	var {initiative} = req
 	var parent = req.comment
 	if (parent.parent_id) throw new HttpError(405)
 
@@ -245,6 +237,40 @@ exports.router.post("/:commentId/replies", next(function*(req, res) {
 		else throw err
 	}
 }))
+
+function assertUser(req, _res, next) {
+	if (req.user == null) throw new HttpError(401)
+	next()
+}
+
+function rateLimit(req, res, next) {
+	var {user} = req
+
+	var comments = commentsDb.search(sql`
+		SELECT created_at FROM comments
+		WHERE user_id = ${user.id}
+		AND created_at > ${DateFns.addMinutes(new Date, -15)}
+		ORDER BY created_at ASC
+		LIMIT 10
+	`)
+
+	var until = comments.length < 10
+		? null
+		: DateFns.addMinutes(comments[0].created_at, 15)
+
+	if (until) {
+		res.statusCode = 429
+		res.statusMessage = "Too Many Comments"
+
+		var minutes = Math.max(DateFns.differenceInMinutes(until, new Date), 1)
+
+		res.render("error_page.jsx", {
+			title: req.t("INITIATIVE_COMMENT_RATE_LIMIT_TITLE", {minutes: minutes}),
+			body: req.t("INITIATIVE_COMMENT_RATE_LIMIT_BODY", {minutes: minutes})
+		})
+	}
+	else next()
+}
 
 function renderComment(req, res) {
 	var {comment} = req

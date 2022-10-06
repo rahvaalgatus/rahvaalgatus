@@ -239,6 +239,8 @@
 	"INITIATIVE_COAUTHOR_DELETE_SELF": "Remove yourself as the coauthor",
 	"INITIATIVE_COAUTHOR_DELETE_SELF_CONFIRMATION": "Are you sure you no longer want to be a coauthor?\nIf you change your mind later, you can ask the author to add you back.",
 	"INITIATIVE_COAUTHOR_INVITATION_PAGE_TITLE": "You have been added as the coauthor of an initiative.",
+	"INITIATIVE_COMMENT_RATE_LIMIT_BODY": "Rahvaalgatus allows you to write 10 comments in the span of 15 minutes, and it looks like you've already written 10.\nSorry for the wait, but the limit is necessary to prevent spam — every comment results in a notification sent to all initiative subscribers, and unlimited commenting can therefore be abused.\n\nPlease try again in {{minutes}} minutes by refreshing the page.",
+	"INITIATIVE_COMMENT_RATE_LIMIT_TITLE": "Please try again in {{minutes}} minutes.",
 	"INITIATIVE_COMMENT_TEXT_LENGTH_ERROR": "The comment box should not be empty, but should also not exceed {{max}} characters.",
 	"INITIATIVE_COMMENT_TITLE_LENGTH_ERROR": "The title should not be blank, but should also not exceed {{max}} characters.",
 	"INITIATIVE_CREATE_BUTTON": "Create New Initiative",
