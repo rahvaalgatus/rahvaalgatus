@@ -1,4 +1,6 @@
+var _ = require("root/lib/underscore")
 var Crypto = require("crypto")
+var DateFns = require("date-fns")
 var ValidInitiative = require("root/test/valid_initiative")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidUser = require("root/test/valid_user")
@@ -12,6 +14,8 @@ var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var initiativesDb = require("root/db/initiatives_db")
 var {pseudoDateTime} = require("root/lib/crypto")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
+var SUBSCRIPTION_RATE = 100
+var SUBSCRIPTION_RATE_IN_MINUTES = 60
 
 describe("InitiativeSubscriptionsController", function() {
 	require("root/test/web")()
@@ -279,7 +283,7 @@ describe("InitiativeSubscriptionsController", function() {
 			})
 		})
 
-		it(`must subscribe case-insensitively`, function*() {
+		it("must subscribe case-insensitively", function*() {
 			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
 			var email = "user@example.com"
 
@@ -414,6 +418,78 @@ describe("InitiativeSubscriptionsController", function() {
 			})
 
 			res.statusCode.must.equal(422)
+		})
+
+		describe("as a rate limited endpoint", function() {
+			it(`must respond with 429 if created ${SUBSCRIPTION_RATE} subscriptions in the last ${SUBSCRIPTION_RATE_IN_MINUTES}m`, function*() {
+				subscriptionsDb.create(_.times(SUBSCRIPTION_RATE, (_i) => (
+					new ValidSubscription({
+						created_ip: "127.0.0.1",
+						created_at: DateFns.addSeconds(DateFns.addMinutes(new Date, -SUBSCRIPTION_RATE_IN_MINUTES), 1),
+					})
+				)))
+
+				var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions`, {
+					method: "POST",
+					form: {email: "user@example.com"}
+				})
+
+				res.statusCode.must.equal(429)
+				res.statusMessage.must.equal("Too Many Subscriptions")
+
+				subscriptionsDb.read(sql`
+					SELECT COUNT(*) AS count FROM initiative_subscriptions
+				`).count.must.equal(SUBSCRIPTION_RATE)
+			})
+
+			it(`must not respond with 429 if created ${SUBSCRIPTION_RATE} confirmed subscriptions in the last ${SUBSCRIPTION_RATE_IN_MINUTES}m`, function*() {
+				subscriptionsDb.create(_.times(SUBSCRIPTION_RATE, (_i) => (
+					new ValidSubscription({
+						created_ip: "127.0.0.1",
+						confirmed_at: new Date
+					})
+				)))
+
+				var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions`, {
+					method: "POST",
+					form: {email: "user@example.com"}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Subscribing")
+			})
+
+			it(`must not respond with 429 if created <${SUBSCRIPTION_RATE} subscriptions in the last ${SUBSCRIPTION_RATE_IN_MINUTES}m`, function*() {
+				subscriptionsDb.create(_.times(SUBSCRIPTION_RATE - 1, (_i) => (
+					new ValidSubscription({created_ip: "127.0.0.1"})
+				)))
+
+				var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions`, {
+					method: "POST",
+					form: {email: "user@example.com"}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Subscribing")
+			})
+
+			it(`must not respond with 429 if created ${SUBSCRIPTION_RATE} subscriptions earlier than ${SUBSCRIPTION_RATE_IN_MINUTES}m`, function*() {
+				subscriptionsDb.create(_.times(SUBSCRIPTION_RATE, (_i) => (
+					new ValidSubscription({
+						created_ip: "127.0.0.1",
+						created_at:
+							DateFns.addMinutes(new Date, -SUBSCRIPTION_RATE_IN_MINUTES)
+					})
+				)))
+
+				var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions`, {
+					method: "POST",
+					form: {email: "user@example.com"}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Subscribing")
+			})
 		})
 	})
 

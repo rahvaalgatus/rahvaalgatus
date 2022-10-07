@@ -1,6 +1,7 @@
 var _ = require("root/lib/underscore")
 var Qs = require("qs")
 var Http = require("root/lib/http")
+var DateFns = require("date-fns")
 var {Router} = require("express")
 var HttpError = require("standard-http-error")
 var SqliteError = require("root/lib/sqlite_error")
@@ -9,9 +10,12 @@ var renderEmail = require("root/lib/i18n").email
 var next = require("co-next")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var sql = require("sqlate")
+var SUBSCRIPTION_RATE = 100
+var SUBSCRIPTION_RATE_IN_MINUTES = 60
 exports.router = Router({mergeParams: true})
 exports.parse = parse
 exports.updateSubscriptions = updateSubscriptions
+exports.rateLimit = rateLimit
 
 var DEFAULT_INITIATIVES_INTERESTS = {
 	new_interest: true,
@@ -44,7 +48,7 @@ exports.router.get("/", readSubscriptionFromQuery, function(req, res) {
 	})
 })
 
-exports.router.post("/", next(function*(req, res) {
+exports.router.post("/", rateLimit, next(function*(req, res) {
 	if (req.body["e-mail"]) throw new HttpError(403, "Suspicion of Automation")
 
 	var {user} = req
@@ -123,6 +127,7 @@ exports.router.post("/", next(function*(req, res) {
 	}
 	else res.flash("notice", req.t("CONFIRM_INITIATIVES_SUBSCRIPTION"))
 
+	res.statusMessage = "Subscribing"
 	res.redirect(303, "/")
 }))
 
@@ -265,4 +270,34 @@ function updateSubscriptions(subscriptions, form) {
 			updated_at: new Date
 		})
 	}).filter(Boolean)
+}
+
+function rateLimit(req, res, next) {
+	var subs = subscriptionsDb.search(sql`
+		SELECT created_at FROM initiative_subscriptions
+		WHERE created_ip = ${req.ip}
+		AND created_at > ${
+			DateFns.addMinutes(new Date, -SUBSCRIPTION_RATE_IN_MINUTES)
+		}
+		AND confirmed_at IS NULL
+		ORDER BY created_at ASC
+		LIMIT ${SUBSCRIPTION_RATE}
+	`)
+
+	var until = subs.length < SUBSCRIPTION_RATE
+		? null
+		: DateFns.addMinutes(subs[0].created_at, SUBSCRIPTION_RATE_IN_MINUTES)
+
+	if (until) {
+		res.statusCode = 429
+		res.statusMessage = "Too Many Subscriptions"
+
+		var minutes = Math.max(DateFns.differenceInMinutes(until, new Date), 1)
+
+		res.render("error_page.jsx", {
+			title: req.t("INITIATIVE_SUBSCRIPTION_RATE_LIMIT_TITLE", {minutes: minutes}),
+			body: req.t("INITIATIVE_SUBSCRIPTION_RATE_LIMIT_BODY", {minutes: minutes})
+		})
+	}
+	else next()
 }

@@ -366,6 +366,8 @@
 	"INITIATIVE_SUBSCRIBER_COUNT_ALL": "No initiative subscribers yet, but <strong>{{allCount}}</strong> subscribed to the entire site.",
 	"INITIATIVE_SUBSCRIBER_COUNT_BOTH": "<strong>{{count}}</strong> subscribed and <strong>{{allCount}}</strong> subscribed to the entire site.",
 	"INITIATIVE_SUBSCRIPTIONS_UPDATED": "Subscription preferences have been updated.",
+	"INITIATIVE_SUBSCRIPTION_RATE_LIMIT_BODY": "You or someone else has attempted to subscribe with over 100 different emails in the past hour from the same network. Sorry for the wait, but the limit is necessary to prevent spam.\n\nPlease try again in {{minutes}} minutes. Just refershing this page should suffice.",
+	"INITIATIVE_SUBSCRIPTION_RATE_LIMIT_TITLE": "Please try again in {{minutes}} minutes.",
 	"INITIATIVE_TEXT_CREATED": "The text of the initiative has been saved.",
 	"INITIATIVE_TEXT_CREATED_IF_PUBLISHED": "The text of the initiative has been saved. As the initiative is public, the updated text will be visible to all.",
 	"INITIATIVE_TEXT_EVENT_TEXT_INPUT": "Content",

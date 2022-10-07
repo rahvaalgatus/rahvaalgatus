@@ -390,6 +390,8 @@
 	"INITIATIVE_SUBSCRIBER_COUNT_ALL": "Algatusel pole veel jälgijaid, kuid kõiki algatusi korraga jälgib <strong>{{allCount}}</strong>.",
 	"INITIATIVE_SUBSCRIBER_COUNT_BOTH": "Algatuse jälgijaid on <strong>{{count}}</strong> ja kõiki algatusi korraga jälgib <strong>{{allCount}}</strong>.",
 	"INITIATIVE_SUBSCRIPTIONS_UPDATED": "Teavituste eelistused on uuendatud.",
+	"INITIATIVE_SUBSCRIPTION_RATE_LIMIT_BODY": "Sina või keegi teine on üritanud sinu võrguühenduse tagant tellida teavitusi sajale või enamale meiliaadressile viimase tunni jooksul. Vabandust, et pead ootama, kuid ilma piirangud on vajalikud spämmi takistamiseks.\n\nPalun proovi {{minutes}} minuti pärast uuesti. Peaks piisama ka lehe värskendamisest.",
+	"INITIATIVE_SUBSCRIPTION_RATE_LIMIT_TITLE": "Vabandust! Palun proovi {{minutes}} minuti pärast uuesti",
 	"INITIATIVE_TEXT_CREATED": "Algatuse tekst on salvestatud.",
 	"INITIATIVE_TEXT_CREATED_IF_PUBLISHED": "Algatuse tekst on salvestatud. Kuna algatus on avalik, on uuendatud tekst kõigile nähtav.",
 	"INITIATIVE_TEXT_EVENT_TEXT_INPUT": "Sisu",

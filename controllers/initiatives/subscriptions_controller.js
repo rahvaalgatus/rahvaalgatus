@@ -9,11 +9,12 @@ var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var next = require("co-next")
 var sql = require("sqlate")
 var {sendEmail} = require("root")
+var {rateLimit} = require("root/controllers/subscriptions_controller")
 var renderEmail = require("root/lib/i18n").email
 
 exports.router = Router({mergeParams: true})
 
-exports.router.post("/", next(function*(req, res) {
+exports.router.post("/", rateLimit, next(function*(req, res) {
 	if (req.body["e-mail"]) throw new HttpError(403, "Suspicion of Automation")
 
 	var {user} = req
@@ -107,6 +108,7 @@ exports.router.post("/", next(function*(req, res) {
 	}
 	else res.flash("notice", req.t("CONFIRM_INITIATIVE_SUBSCRIPTION"))
 
+	res.statusMessage = "Subscribing"
 	res.redirect(303, Path.dirname(req.baseUrl))
 }))
 
