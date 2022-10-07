@@ -22,6 +22,8 @@
 	"ANONYMIZE_COMMENT": "Anonymize Comment",
 	"ANONYMIZE_COMMENT_CONFIRMATION": "Sure you wish to anonymize your comment?\nAn anonymized comment remains visible, but your name will be hidden.",
 	"ARCHIVED_PHASE": "Archived",
+	"AUTH_RATE_LIMIT_BODY": "You or someone else has attempted to sign in more than 5 times with your personal id in the past half an hour, and none of the attempts have succeeded. Sorry for the wait, but without any limits, someone could disturb you via Mobile-ID or Smart-ID by endlessly triggering authentication.\n\nIf you need help signing in, though, please contact us.\n\nPlease try again in {{minutes}} minutes. Just refreshing the page should suffice.",
+	"AUTH_RATE_LIMIT_TITLE": "Please try again in {{minutes}} minutes.",
 	"BACK_TO_DISCUSSION": "Back to Discussion",
 	"BACK_TO_INITIATIVE": "Back to Initiative",
 	"BTN_CREATE_VOTE": "Collect Signatures",

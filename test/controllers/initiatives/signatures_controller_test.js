@@ -1438,7 +1438,7 @@ describe("SignaturesController", function() {
 							country: "EE",
 							personal_id: ADULT_PERSONAL_ID,
 							method: "mobile-id",
-							created_at: new Date
+							created_at: DateFns.addSeconds(DateFns.addMinutes(new Date, -SIGN_RATE_IN_MINUTES), 1),
 						})
 					))
 
@@ -1454,9 +1454,7 @@ describe("SignaturesController", function() {
 							country: "EE",
 							personal_id: ADULT_PERSONAL_ID,
 							method: "mobile-id",
-
-							created_at:
-								DateFns.addMinutes(new Date, -SIGN_RATE_IN_MINUTES),
+							created_at: DateFns.addMinutes(new Date, -SIGN_RATE_IN_MINUTES),
 						})
 					))
 

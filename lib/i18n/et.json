@@ -24,6 +24,8 @@
 	"ARCHIVED_PHASE": "Arhiveeritud",
 	"ATOM_INITIATIVE_EVENTS_FEED_TITLE": "Algatuste menetlusinfo",
 	"ATOM_INITIATIVE_FEED_TITLE": "{{title}} Menetlusinfo",
+	"AUTH_RATE_LIMIT_BODY": "Sina või keegi teine on üritanud sinu isikukoodiga sisse logida viimase poole tunni jooksul üle viie korra, kuid ükski sisselogimistest pole õnnestunud. Vabandust, et pead ootama, kuid ilma piiranguta saaks sind su isikukoodi teades Mobiil-ID või Smart-ID kaudu lõputult tülitada.\n\nKui sul on vaja abi sisselogimisega, palun võta meiega ühendust.\n\nPalun proovi {{minutes}} minuti pärast uuesti sisse logida. Peaks piisama ka lehe värskendamisest.",
+	"AUTH_RATE_LIMIT_TITLE": "Vabandust! Palun proovi {{minutes}} minuti pärast uuesti",
 	"BACK_TO_DISCUSSION": "Tagasi arutelu juurde",
 	"BACK_TO_INITIATIVE": "Tagasi algatuse juurde",
 	"BTN_CREATE_VOTE": "Kogu allkirju",

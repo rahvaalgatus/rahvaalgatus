@@ -35,6 +35,8 @@ var PERSONAL_ID = "38706181337"
 var SESSION_ID = "7c8bdd56-6772-4264-ba27-bf7a9ef72a11"
 var SESSION_LENGTH_IN_DAYS = 120
 var KEY_USAGE_DIGITAL_SIGNATURE = 128
+var AUTH_RATE = 5
+var AUTH_RATE_IN_MINUTES = 30
 
 var AUTH_CERTIFICATE_EXTENSIONS = [{
 	extnID: "keyUsage",
@@ -418,6 +420,75 @@ describe("SessionsController", function() {
 			})
 		}
 
+		function mustRateLimit(signIn, cert) {
+			describe("as a rate limited endpoint", function() {
+				it(`must respond with 429 if created ${AUTH_RATE} authentications in the last ${AUTH_RATE_IN_MINUTES}m`, function*() {
+					authenticationsDb.create(_.times(AUTH_RATE, (_i) =>
+						new ValidAuthentication({
+							country: "EE",
+							personal_id: PERSONAL_ID,
+							method: "mobile-id",
+							created_at: DateFns.addSeconds(DateFns.addMinutes(new Date, -AUTH_RATE_IN_MINUTES), 1),
+						})
+					))
+
+					var res = yield signIn(this.router, this.request, cert)
+					res.statusCode.must.equal(429)
+					res.statusMessage.must.equal("Too Many Incomplete Authentications")
+
+					authenticationsDb.read(sql`
+						SELECT COUNT(*) AS count FROM authentications
+					`).count.must.equal(AUTH_RATE)
+				})
+
+				it(`must not respond with 429 if created ${AUTH_RATE} successful authentications in the last ${AUTH_RATE_IN_MINUTES}m`, function*() {
+					authenticationsDb.create(_.times(AUTH_RATE, (_i) =>
+						new ValidAuthentication({
+							country: "EE",
+							personal_id: PERSONAL_ID,
+							method: "mobile-id",
+							created_at: new Date,
+							authenticated: true
+						})
+					))
+
+					var res = yield signIn(this.router, this.request, cert)
+					res.statusCode.must.equal(204)
+					res.statusMessage.must.equal("Signed In")
+				})
+
+				it(`must not respond with 429 if created <${AUTH_RATE} authentications in the last ${AUTH_RATE_IN_MINUTES}m`, function*() {
+					authenticationsDb.create(_.times(AUTH_RATE - 1, (_i) =>
+						new ValidAuthentication({
+							country: "EE",
+							personal_id: PERSONAL_ID,
+							method: "mobile-id",
+							created_at: DateFns.addSeconds(DateFns.addMinutes(new Date, -AUTH_RATE_IN_MINUTES), 1)
+						})
+					))
+
+					var res = yield signIn(this.router, this.request, cert)
+					res.statusCode.must.equal(204)
+					res.statusMessage.must.equal("Signed In")
+				})
+
+				it(`must not respond with 429 if created ${AUTH_RATE} authentications earlier than ${AUTH_RATE_IN_MINUTES}m`, function*() {
+					authenticationsDb.create(_.times(AUTH_RATE - 1, (_i) =>
+						new ValidAuthentication({
+							country: "EE",
+							personal_id: PERSONAL_ID,
+							method: "mobile-id",
+							created_at: DateFns.addMinutes(new Date, -AUTH_RATE_IN_MINUTES),
+						})
+					))
+
+					var res = yield signIn(this.router, this.request, cert)
+					res.statusCode.must.equal(204)
+					res.statusMessage.must.equal("Signed In")
+				})
+			})
+		}
+
 		describe("when authenticating via Id-Card", function() {
 			mustSignIn(signInWithIdCard, ID_CARD_CERTIFICATE)
 
@@ -758,6 +829,7 @@ describe("SessionsController", function() {
 
 		describe("when authenticating via Mobile-Id", function() {
 			mustSignIn(signInWithMobileId, MOBILE_ID_CERTIFICATE)
+			mustRateLimit(signInWithMobileId, MOBILE_ID_CERTIFICATE)
 
 			it("must create user and session", function*() {
 				var cert = new Certificate(newCertificate({
@@ -1438,6 +1510,7 @@ describe("SessionsController", function() {
 
 		describe("when authenticating via Smart-Id", function() {
 			mustSignIn(signInWithSmartId, SMART_ID_CERTIFICATE)
+			mustRateLimit(signInWithSmartId, SMART_ID_CERTIFICATE)
 
 			it("must create user and session", function*() {
 				var cert = new Certificate(newCertificate({
@@ -2253,6 +2326,9 @@ function* signInWithMobileId(router, request, cert, headers) {
 		}
 	})
 
+	if (!(authenticating.statusCode >= 200 && authenticating.statusCode < 300))
+		return authenticating
+
 	authenticating.statusCode.must.equal(202)
 
 	return request(authenticating.headers.location, {
@@ -2300,6 +2376,9 @@ function* signInWithSmartId(router, request, cert, headers) {
 		headers: headers || {},
 		form: {method: "smart-id", personalId: PERSONAL_ID}
 	})
+
+	if (!(authenticating.statusCode >= 200 && authenticating.statusCode < 300))
+		return authenticating
 
 	authenticating.statusCode.must.equal(202)
 

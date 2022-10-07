@@ -4,6 +4,7 @@ var Url = require("url")
 var {Router} = require("express")
 var Config = require("root").config
 var Crypto = require("crypto")
+var DateFns = require("date-fns")
 var HttpError = require("standard-http-error")
 var Certificate = require("undersign/lib/certificate")
 var MediaType = require("medium-type")
@@ -38,6 +39,8 @@ var {constantTimeEqual} = require("root/lib/crypto")
 var sessionsDb = require("root/db/sessions_db")
 var usersDb = require("root/db/users_db")
 var authenticationsDb = require("root/db/authentications_db")
+var AUTH_RATE = 5
+var AUTH_RATE_IN_MINUTES = 30
 var {ENV} = process.env
 
 var ID_CARD_AUTH_SECRET = (
@@ -232,6 +235,7 @@ exports.router.post("/", next(function*(req, res, next) {
 
 			personalId = parsePersonalId(String(req.body.personalId))
 			if (personalId == null) throw new MobileIdError("NOT_FOUND")
+			if (rateLimitSigningIn(req, res, personalId)) return
 
 			authentication = authenticationsDb.create({
 				country: "EE",
@@ -269,6 +273,7 @@ exports.router.post("/", next(function*(req, res, next) {
 		case "smart-id":
 			personalId = parsePersonalId(String(req.body.personalId))
 			if (personalId == null) throw new SmartIdError("ACCOUNT_NOT_FOUND")
+			if (rateLimitSigningIn(req, res, personalId)) return
 
 			var token = Crypto.randomBytes(16)
 			tokenHash = sha256(token)
@@ -416,6 +421,7 @@ exports.router.post("/",
 		res.setHeader("Location", validateRedirect(req, req.query.referrer, "/user"))
 		createSessionAndSignIn(authentication, req, res)
 		res.statusCode = 204
+		res.statusMessage = "Signed In"
 	}
 	else res.setHeader("Location", req.baseUrl + "/new")
 
@@ -636,6 +642,37 @@ function createSessionAndSignIn(authentication, req, res) {
 	csrf.reset(req, res)
 }
 
+function rateLimitSigningIn(req, res, personalId) {
+	var authentications = authenticationsDb.search(sql`
+		SELECT created_at FROM authentications
+		WHERE personal_id = ${personalId}
+		AND created_at > ${DateFns.addMinutes(new Date, -AUTH_RATE_IN_MINUTES)}
+		AND NOT authenticated
+		AND method != 'id-card'
+		ORDER BY created_at ASC
+		LIMIT ${AUTH_RATE}
+	`)
+
+	var until = authentications.length < AUTH_RATE
+		? null
+		: DateFns.addMinutes(authentications[0].created_at, AUTH_RATE_IN_MINUTES)
+
+	if (until) {
+		res.statusCode = 429
+		res.statusMessage = "Too Many Incomplete Authentications"
+
+		var minutes = Math.max(DateFns.differenceInMinutes(until, new Date), 1)
+
+		res.render("error_page.jsx", {
+			title: req.t("AUTH_RATE_LIMIT_TITLE", {minutes: minutes}),
+			body: req.t("AUTH_RATE_LIMIT_BODY", {minutes: minutes})
+		})
+
+		return true
+	}
+
+	return false
+}
 
 function* waitForSession(wait, timeout, session) {
 	var res
