@@ -348,6 +348,8 @@
 	"INITIATIVE_SIGN_DESCRIPTION_FOR_PARLIAMENT": "You can sign via the ID-card, Mobile-ID, or Smart-ID. You have to be an Estonian resident and at least 16 years old to sign.",
 	"INITIATIVE_SIGN_HEADING": "Cast your vote to this initiative!",
 	"INITIATIVE_SIGN_PHASE_UPDATED": "Initiative is now open for signing.",
+	"INITIATIVE_SIGN_RATE_LIMIT_BODY": "You or someone else has attempted to sign more than 5 times with your personal id in the past half an hour, and none of the attempts have succeeded. Sorry for the wait, but without any limits, someone could disturb you via Mobile-ID or Smart-ID by endlessly triggering signing.\n\nIf you need help signing, though, please contact us.\n\nPlease try to sign again in {{minutes}} minutes. Just refreshing the page should suffice.",
+	"INITIATIVE_SIGN_RATE_LIMIT_TITLE": "Please try again in {{minutes}} minutes.",
 	"INITIATIVE_SIGN_TRANSLATION_WARNING": "<strong>Note</strong> that the initiative's original text is written in <strong>{{language}}</strong>, but you read the <strong>{{translation}}</strong>.",
 	"INITIATIVE_SIGN_TRANSLATION_WARNING_SIGN_IN_EN": "Your <strong>signature will however go to the English text<strong>.",
 	"INITIATIVE_SIGN_TRANSLATION_WARNING_SIGN_IN_ET": "Your <strong>signature will however go to the Estonian text<strong>.",

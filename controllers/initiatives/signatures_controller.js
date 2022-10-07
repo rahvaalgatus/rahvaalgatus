@@ -39,6 +39,8 @@ var {ENV} = process.env
 var {validateSigningCertificate} = require("root/lib/certificate")
 var {getNormalizedMobileIdErrorCode} = require("root/lib/eid")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
+var SIGN_RATE = 5
+var SIGN_RATE_IN_MINUTES = 30
 exports.pathToSignature = pathToSignature
 exports.getSigningMethod = getSigningMethod
 exports.hasSignatureType = hasSignatureType
@@ -370,6 +372,7 @@ exports.router.post("/", next(function*(req, res) {
 			})
 
 			if (err = validateAge(req.t, personalId)) throw err
+			if (rateLimitSigning(req, res, personalId)) return
 
 			cert = yield mobileId.readCertificate(phoneNumber, personalId)
 			if (err = validateSigningCertificate(req.t, cert)) throw err
@@ -415,6 +418,7 @@ exports.router.post("/", next(function*(req, res) {
 			})
 
 			if (err = validateAge(req.t, personalId)) throw err
+			if (rateLimitSigning(req, res, personalId)) return
 
 			cert = yield smartId.certificate("PNOEE-" + personalId)
 			cert = yield waitForSmartIdSession(90, cert)
@@ -837,6 +841,38 @@ function validateAge(t, id) {
 		})
 
 	return null
+}
+
+function rateLimitSigning(req, res, personalId) {
+	var signables = signablesDb.search(sql`
+		SELECT created_at FROM initiative_signables
+		WHERE personal_id = ${personalId}
+		AND created_at > ${DateFns.addMinutes(new Date, -SIGN_RATE_IN_MINUTES)}
+		AND NOT signed
+		AND method != 'id-card'
+		ORDER BY created_at ASC
+		LIMIT ${SIGN_RATE}
+	`)
+
+	var until = signables.length < SIGN_RATE
+		? null
+		: DateFns.addMinutes(signables[0].created_at, SIGN_RATE_IN_MINUTES)
+
+	if (until) {
+		res.statusCode = 429
+		res.statusMessage = "Too Many Incomplete Signatures"
+
+		var minutes = Math.max(DateFns.differenceInMinutes(until, new Date), 1)
+
+		res.render("error_page.jsx", {
+			title: req.t("INITIATIVE_SIGN_RATE_LIMIT_TITLE", {minutes: minutes}),
+			body: req.t("INITIATIVE_SIGN_RATE_LIMIT_BODY", {minutes: minutes})
+		})
+
+		return true
+	}
+
+	return false
 }
 
 function replaceSignature(signable) {

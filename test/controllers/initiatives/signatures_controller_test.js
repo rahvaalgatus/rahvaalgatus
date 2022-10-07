@@ -4,6 +4,7 @@ var DateFns = require("date-fns")
 var Asic = require("undersign/lib/asic")
 var Config = require("root").config
 var ValidInitiative = require("root/test/valid_initiative")
+var ValidSignable = require("root/test/valid_signable")
 var ValidSignature = require("root/test/valid_signature")
 var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
 var ValidUser = require("root/test/valid_user")
@@ -60,6 +61,8 @@ var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var KEY_USAGE_NONREPUDIATION = 64
 var KEY_USAGE_DIGITAL_SIGNATURE = 128
+var SIGN_RATE = 5
+var SIGN_RATE_IN_MINUTES = 30
 
 // See https://github.com/maxmind/MaxMind-DB/blob/master/source-data for
 // available test IP addresses.
@@ -1391,6 +1394,79 @@ describe("SignaturesController", function() {
 			})
 		}
 
+		function mustRateLimit(sign, cert) {
+			describe("as a rate limited endpoint", function() {
+				it(`must respond with 429 if created ${SIGN_RATE} signables in the last ${SIGN_RATE_IN_MINUTES}m`, function*() {
+					signablesDb.create(_.times(SIGN_RATE, (_i) => new ValidSignable({
+						initiative_uuid: this.initiative.uuid,
+						country: "EE",
+						personal_id: ADULT_PERSONAL_ID,
+						method: "mobile-id",
+						created_at: DateFns.addSeconds(DateFns.addMinutes(new Date, -SIGN_RATE_IN_MINUTES), 1),
+					})))
+
+					var res = yield sign(this.router, this.request, this.initiative, cert)
+					res.statusCode.must.equal(429)
+					res.statusMessage.must.equal("Too Many Incomplete Signatures")
+
+					signablesDb.read(sql`
+						SELECT COUNT(*) AS count FROM initiative_signables
+					`).count.must.equal(SIGN_RATE)
+				})
+
+				it(`must not respond with 429 if created ${SIGN_RATE} signed signables in the last ${SIGN_RATE_IN_MINUTES}m`, function*() {
+					signablesDb.create(_.times(SIGN_RATE, (_i) =>
+						new ValidSignable({
+							initiative_uuid: this.initiative.uuid,
+							country: "EE",
+							personal_id: ADULT_PERSONAL_ID,
+							method: "mobile-id",
+							created_at: new Date,
+							signed: true
+						})
+					))
+
+					var res = yield sign(this.router, this.request, this.initiative, cert)
+					res.statusCode.must.equal(204)
+					res.statusMessage.must.equal("Signed")
+				})
+
+				it(`must not respond with 429 if created <${SIGN_RATE} signables in the last ${SIGN_RATE_IN_MINUTES}m`, function*() {
+					signablesDb.create(_.times(SIGN_RATE - 1, (_i) =>
+						new ValidSignable({
+							initiative_uuid: this.initiative.uuid,
+							country: "EE",
+							personal_id: ADULT_PERSONAL_ID,
+							method: "mobile-id",
+							created_at: new Date
+						})
+					))
+
+					var res = yield sign(this.router, this.request, this.initiative, cert)
+					res.statusCode.must.equal(204)
+					res.statusMessage.must.equal("Signed")
+				})
+
+				it(`must not respond with 429 if created ${SIGN_RATE} signables earlier than ${SIGN_RATE_IN_MINUTES}m`, function*() {
+					signablesDb.create(_.times(SIGN_RATE - 1, (_i) =>
+						new ValidSignable({
+							initiative_uuid: this.initiative.uuid,
+							country: "EE",
+							personal_id: ADULT_PERSONAL_ID,
+							method: "mobile-id",
+
+							created_at:
+								DateFns.addMinutes(new Date, -SIGN_RATE_IN_MINUTES),
+						})
+					))
+
+					var res = yield sign(this.router, this.request, this.initiative, cert)
+					res.statusCode.must.equal(204)
+					res.statusMessage.must.equal("Signed")
+				})
+			})
+		}
+
 		describe("when signing via Id-Card", function() {
 			mustSign(signWithIdCard, ID_CARD_CERTIFICATE)
 
@@ -1936,6 +2012,7 @@ describe("SignaturesController", function() {
 
 		describe("when signing via Mobile-Id", function() {
 			mustSign(signWithMobileId, MOBILE_ID_CERTIFICATE)
+			mustRateLimit(signWithMobileId, MOBILE_ID_CERTIFICATE)
 
 			it("must create a signature", function*() {
 				var cert = new Certificate(newCertificate({
@@ -2723,6 +2800,7 @@ describe("SignaturesController", function() {
 
 		describe("when signing via Smart-Id", function() {
 			mustSign(signWithSmartId, SMART_ID_CERTIFICATE)
+			mustRateLimit(signWithSmartId, SMART_ID_CERTIFICATE)
 
 			it("must create a signature", function*() {
 				var cert = new Certificate(newCertificate({
@@ -3726,7 +3804,9 @@ function* signWithIdCard(router, request, initiative, cert) {
 
 	signing.statusCode.must.equal(202)
 
-	var {xades} = signablesDb.read(sql`SELECT * FROM initiative_signables`)
+	var {xades} = signablesDb.read(sql`
+		SELECT xades FROM initiative_signables ORDER BY rowid DESC LIMIT 1
+	`)
 
 	router.post(TIMEMARK_URL.path, function(req, res) {
 		req.headers.host.must.equal(TIMEMARK_URL.host)
@@ -3760,7 +3840,7 @@ function* signWithMobileId(router, request, initiative, cert, res) {
 			res.writeHead(200)
 
 			var {xades} = signablesDb.read(sql`
-				SELECT xades FROM initiative_signables
+				SELECT xades FROM initiative_signables ORDER BY rowid DESC LIMIT 1
 			`)
 
 			respond({
@@ -3793,6 +3873,7 @@ function* signWithMobileId(router, request, initiative, cert, res) {
 		}
 	})
 
+	if (!(signing.statusCode >= 200 && signing.statusCode < 300)) return signing
 	signing.statusCode.must.equal(202)
 
 	return request(signing.headers.location, {
@@ -3837,7 +3918,7 @@ function* signWithSmartId(router, request, initiative, cert, res) {
 			res.writeHead(200)
 
 			var {xades} = signablesDb.read(sql`
-				SELECT xades FROM initiative_signables
+				SELECT xades FROM initiative_signables ORDER BY rowid DESC LIMIT 1
 			`)
 
 			respond({
@@ -3863,6 +3944,7 @@ function* signWithSmartId(router, request, initiative, cert, res) {
 	})
 
 	var signing = yield certWithSmartId(router, request, initiative, cert)
+	if (!(signing.statusCode >= 200 && signing.statusCode < 300)) return signing
 	signing.statusCode.must.equal(202)
 
 	return request(signing.headers.location, {

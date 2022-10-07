@@ -372,6 +372,8 @@
 	"INITIATIVE_SIGN_DESCRIPTION_FOR_PARLIAMENT": "Allkirjastada saab vähemalt 16aastane Eesti alaline elanik ID-kaardi, Mobiil-ID või Smart-ID-ga. ",
 	"INITIATIVE_SIGN_HEADING": "Anna sellele algatusele oma allkiri!",
 	"INITIATIVE_SIGN_PHASE_UPDATED": "Algatus on avatud allkirjade kogumiseks.",
+	"INITIATIVE_SIGN_RATE_LIMIT_BODY": "Sina või keegi teine on üritanud sinu isikukoodiga allkirjastada viimase poole tunni jooksul üle viie korra, kuid ükski allkirjastamistest pole õnnestunud. Vabandust, et pead ootama, kuid ilma piiranguta saaks sind su isikukoodi teades Mobiil-ID või Smart-ID kaudu lõputult tülitada.\n\nKui sul on vaja abi allkirjastamisega, palun võta meiega ühendust.\n\nPalun proovi {{minutes}} minuti pärast uuesti allkirjastada. Peaks piisama ka lehe värskendamisest.",
+	"INITIATIVE_SIGN_RATE_LIMIT_TITLE": "Vabandust! Palun proovi {{minutes}} minuti pärast uuesti",
 	"INITIATIVE_SIGN_TRANSLATION_WARNING": "<strong>Tähelepanu!</strong> Algatuse algtekst on kirjutatud <strong>{{language}}</strong>, kuid lugesid ülal <strong>{{translation}}</strong>.",
 	"INITIATIVE_SIGN_TRANSLATION_WARNING_SIGN_IN_EN": "Su <strong>allkiri läheb aga inglisekeelsele tekstile</strong>.",
 	"INITIATIVE_SIGN_TRANSLATION_WARNING_SIGN_IN_ET": "Su <strong>allkiri läheb aga eestikeelsele tekstile</strong>.",
