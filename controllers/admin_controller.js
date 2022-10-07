@@ -17,6 +17,11 @@ exports.use(function(req, _res, next) {
 	else next(new HttpError(401, "Not an Admin"))
 })
 
+exports.use(function(_req, res, next) {
+	res.setHeader("Cache-Control", "no-store")
+  next()
+})
+
 exports.use(function(req, _res, next) {
 	req.rootUrl = req.baseUrl
 	next()
