@@ -238,7 +238,7 @@ test/fixtures/%_ecdsa.pub: test/fixtures/%_ecdsa.key
 .PHONY: test/server
 .PHONY: servers web adm
 .PHONY: shrinkwrap
-.PHONY: deploy staging production
+.PHONY: deploy staging staging/diff production production/diff
 .PHONY: db/create db/status db/migrate db/migration
 .PHONY: translations
 .PHONY: config/tsl
