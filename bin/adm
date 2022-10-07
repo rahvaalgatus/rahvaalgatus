@@ -34,7 +34,7 @@ app.use(require("root/lib/middleware/extension_middleware"))
 
 app.use(function(_req, res, next) {
 	res.setHeader("Cache-Control", "no-store")
-  next()
+	next()
 })
 
 app.use(require("root/lib/middleware/csrf_middleware"))
