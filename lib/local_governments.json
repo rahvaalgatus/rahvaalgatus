@@ -741,7 +741,9 @@
 		"initiativesEmails": [
 			"vald@saaremaavald.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"47102260019"
+		],
 		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/saaremaa-vald"
 	},
