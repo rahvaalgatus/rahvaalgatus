@@ -72,3 +72,4 @@ Teavitame rikkumisest Andmekaitse Inspektsiooni põhjendamatu viivituseta ja võ
 - Riigikogule alates 2014. aastast esitatud [kollektiivsed pöördumised](https://www.riigikogu.ee/tutvustus-ja-ajalugu/raakige-kaasa/esitage-kollektiivne-poordumine/riigikogule-esitatud-kollektiivsed-poordumised/)
 - [Märgukirjale ja selgitustaotlusele vastamise seaduse ning Riigikogu kodu- ja töökorra seaduse muutmise seadus](https://www.riigiteataja.ee/akt/101042014001), mis reguleerib kollektiivse pöördumise esitamise ning menetlemise tingimused
 - [Kohaliku omavalitsuse korralduse seadus](https://www.riigiteataja.ee/akt/126032013006?leiaKehtiv), kus § 32 reguleerib kohalikes omavalitsustes kohaliku elu küsimustes algatuse tegemist
+- [Kollektiivsete algatuste menetlemise juhend kohalikule omavalitsusele](https://rahvaalgatus.ee/help/kov-guide), kus on välja toodud head tavad ja näited rahvaalgatuste menetlemisest kohalikul tasandil.
