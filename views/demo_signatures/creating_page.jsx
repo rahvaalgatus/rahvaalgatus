@@ -15,22 +15,19 @@ function CreatingPage(attrs) {
 	return <Page
 		page="creating-demo-signature"
 		title={t("DEMO_SIGNATURES_TITLE")}
-		navless
+		headless
 		req={req}>
 		<script src="/assets/html5.js" />
 
-		<section class="text-section primary-section">
-			<center>
-				{error
-					? <p class="flash error">{error}</p>
-					: method == "mobile-id" || method == "smart-id" ? <MobileIdView
-						t={t}
-						method={method}
-						code={code}
-						poll={poll}
-				/>
-				: null}
-			</center>
-		</section>
+		<section class="text-section primary-section"><center>
+			{error
+				? <p class="flash error">{error}</p>
+				: method == "mobile-id" || method == "smart-id" ? <MobileIdView
+					t={t}
+					method={method}
+					code={code}
+					poll={poll}
+			/> : null}
+		</center></section>
 	</Page>
 }

@@ -15,9 +15,13 @@ module.exports = function(attrs) {
 		page="created-demo-signature"
 		class="demo-signatures-page"
 		title={t("DEMO_SIGNATURES_TITLE")}
-		navless
+		headless
 		req={req}>
 		<header class="header-section text-header"><center>
+			<a href="https://demokraatia.rahvaalgatus.ee" class="home">
+				<img src="/assets/dtv.svg" alt="Demokraatia töövihik" />
+			</a>
+
 			<h1>{t("DEMO_SIGNATURES_HEADER")}</h1>
 		</center></header>
 
