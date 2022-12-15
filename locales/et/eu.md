@@ -86,7 +86,7 @@ Kui teie algatus on kogunud vähemalt **miljon allkirja**, edastatakse need kont
     loading="lazy"
   ></iframe>
 </div>
-
+Eesti Koostöö Kogu demokraatia valdkonna ekspert täidab Euroopa kodanikualgatuse saadiku rolli. Euroopa kodanikualgatuse saadikud levitavad teadmust Euroopa kodanikualgatuse kohta, edendavad selleteemalisi arutelusid ja võimestavad kodanikke südamelähedastel teemadel sõna võtma. Saadikud on pärit erinevate ELi riikide organisatsioonidest, mis tegelevad riiklikul või piirkondlikul tasandil osalusdemokraatia teemadega. 
 <div class="call-to-actions">
   <a href="https://europa.eu/citizens-initiative/_et" class="button green-button">Allkirjastama</a>
   <a href="https://ec.europa.eu/info/about-european-commission/get-involved/european-citizens-initiative_et" class="button blue-button">Loe lähemalt</a>
