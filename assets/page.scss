@@ -4796,6 +4796,7 @@ strong {
 	}
 
 	p + .video,
+	.video + p,
 	ol + .video { margin-top: 4rem; }
 	.video ~ h2 { margin-top: 6rem; }
 
