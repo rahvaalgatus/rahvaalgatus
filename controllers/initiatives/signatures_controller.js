@@ -165,7 +165,7 @@ exports.router.get("/",
 		"application/zip",
 		"text/csv"
 	].map(MediaType)),
-	function(req, res) {
+	next(function*(req, res) {
 	var {t} = req
 	var {user} = req
 	var {initiative} = req
@@ -245,6 +245,7 @@ exports.router.get("/",
 				`)).length > 0) {
 					_.map(signatures, "xades").forEach(asic.addSignature, asic)
 					added += signatures.length
+					yield waitUntilZipFilesWritten(asic.zip)
 				}
 			}
 
@@ -312,7 +313,7 @@ exports.router.get("/",
 
 		default: throw new HttpError(406)
 	}
-})
+}))
 
 exports.router.post("/", next(function*(req, res) {
 	var {initiative} = req
@@ -942,6 +943,22 @@ function serializeGeo(geo) {
 		city_name: geo.city ? geo.city.names.en : null,
 		city_geoname_id: geo.city ? geo.city.geoname_id : null
 	}
+}
+
+function* waitUntilZipFilesWritten(zip) {
+	// NOTE: There isn't a good way to wait for the Yazl's output stream drain
+	// event as buffers go through an internal Zlib's compression stream and we
+	// can't monitor that.
+	//
+	// Iterating over the entries seems to currently be the only way to identify
+	// that everything's flushed as there's no guarantee the entries get written
+	// in order. And yes, this is O(N^2)-ish.
+	//
+	// Waiting any fixed number of milliseconds does slow down the transfer rate,
+	// but testing with 100ms locally seems to reduce signature download speed to
+	// 3–4MBps and that's fine. 10k signatures is roughly a 50MB zip file.
+	var FILE_DATA_DONE = 3
+	while (!zip.entries.every((e) => e.state == FILE_DATA_DONE)) yield sleep(100)
 }
 
 function serializeSignatureCsv(sig) {
