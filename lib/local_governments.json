@@ -21,7 +21,9 @@
 		"initiativesEmails": [
 			"harku@harku.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"48812260329"
+		],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/harku-vald"
 	},
