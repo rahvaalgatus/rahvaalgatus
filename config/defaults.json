@@ -5,6 +5,7 @@
 	"localSiteUrl": "https://kohalik.rahvaalgatus.ee",
 	"idCardAuthenticationUrl": "https://idcard.rahvaalgatus.ee",
 	"idCardAuthenticationSecret": null,
+	"dtvUrl": "https://demokraatia.rahvaalgatus.ee",
 	"adminUrl": "https://admin.rahvaalgatus.ee",
 	"twitterUrl": "https://twitter.com/openESTassembly",
 	"facebookUrl": "https://facebook.com/rahvaalgatus",

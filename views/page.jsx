@@ -1,5 +1,6 @@
 /** @jsx Jsx */
 var _ = require("root/lib/underscore")
+var Fs = require("fs")
 var Jsx = require("j6pack")
 var Config = require("root").config
 var {Fragment} = Jsx
@@ -14,6 +15,8 @@ var LANGUAGES = Config.languages
 var {ENV} = process.env
 var LIVERELOAD_PORT = process.env.LIVERELOAD_PORT || 35729
 var TWITTER_NAME = Config.twitterUrl.replace(/^.*\//, "")
+var DTV_LOGO_PATH = require.resolve("root/public/assets/dtv.svg")
+var DTV_LOGO_SVG = Fs.readFileSync(DTV_LOGO_PATH)
 exports = module.exports = Page
 exports.Footer = Footer
 exports.Section = Section
@@ -174,14 +177,17 @@ function Page(attrs, children) {
 								href={siteUrl + "/donate"}
 								class={"nav-button " + selected(page, "donate")}
 							>
-							{t("LNK_SUPPORT")}
+								{t("LNK_SUPPORT")}
 							</a>
 
+						</li>
+
+						<li class="dtv-item">
 							<a
-								href={siteUrl + "/digiallkiri"}
-								class="nav-button demo-signatures-button"
+								href={Config.dtvUrl}
+								class="nav-button dtv-button"
 							>
-								{t("NAV_DEMO_SIGNATURES")}
+								{Jsx.html(DTV_LOGO_SVG)}
 							</a>
 						</li>
 					</ul>

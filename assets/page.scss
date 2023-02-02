@@ -989,8 +989,16 @@ strong {
 		}
 	}
 
-	.demo-signatures-button {
+	.dtv-item {
 		float: right;
+		position: relative;
+		top: -0.5rem;
+
+		svg {
+			vertical-align: middle;
+			width: 11rem;
+			height: 2.5rem;
+		}
 	}
 
   @media only screen and (max-width: 889px) {
@@ -1020,7 +1028,10 @@ strong {
 	}
 
   @media only screen and (max-width: 599px) {
-		.demo-signatures-button { float: none; }
+		.dtv-item {
+			position: static;
+			float: none;
+		}
 	}
 
 	@include mobile {
