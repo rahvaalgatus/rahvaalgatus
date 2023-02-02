@@ -39,7 +39,6 @@ function Page(attrs, children) {
 	var {title} = attrs
 	var links = attrs.links || EMPTY_ARR
 	var gov = req.government
-	var withNav = !attrs.navless
 	var siteUrl = req.government == null ? "" : Config.url
 
 	// We could be rendering an error page before req.t is set.
@@ -89,7 +88,7 @@ function Page(attrs, children) {
 				document.body.className = document.body.className.slice(6)
 			`}</script>
 
-			<header id="header"><center>
+			{!attrs.headless ?<header id="header"><center>
 				<menu class="languages-and-user">
 					<Form action="/user" method="put" class="languages" req={req}>
 						{LANGUAGES.map((lang) => <button
@@ -107,7 +106,7 @@ function Page(attrs, children) {
 						</button> : null}
 					</Form>
 
-					{withNav ? (req.user ? <div class="right">
+					{req.user ? <div class="right">
 						<a href={siteUrl + "/user"} class="user">{req.user.name}</a>
 
 						<Form
@@ -122,14 +121,14 @@ function Page(attrs, children) {
 						</Form>
 					</div> : <a href={siteUrl + "/sessions/new"} class="right" >
 						{t("BTN_LOG_IN_REGISTER")}
-					</a>) : null}
+					</a>}
 				</menu>
 
 				<a href={siteUrl || "/"} class="logo">
 					<img src="/assets/rahvaalgatus.png" alt={SITE_TITLE} />
 				</a>
 
-				{withNav ? <nav>
+				<nav>
 					<ul>
 						<li>
 							<a
@@ -186,12 +185,12 @@ function Page(attrs, children) {
 							</a>
 						</li>
 					</ul>
-				</nav> : null}
-			</center></header>
+				</nav>
+			</center></header> : null}
 
 			<main id="main">{children}</main>
 
-			<Footer t={t} siteUrl={siteUrl} />
+			{!attrs.headless ? <Footer t={t} siteUrl={siteUrl} /> : null}
 		</body>
 	</html>
 }

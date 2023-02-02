@@ -4482,8 +4482,42 @@ strong {
 	}
 }
 
-.demo-signatures-page {
+.demo-signatures-page main {
 	font-family: $aino;
+
+	.header-section {
+		background-color: #d0e2f0;
+		color: black;
+		padding: 4rem 0 4rem;
+
+		.home {
+			font-weight: bold;
+			font-size: 2rem;
+			display: inline-block;
+			vertical-align: middle;
+
+			img { vertical-align: middle; }
+			&:focus { outline: 1px dashed black; }
+		}
+
+		h1 {
+			margin-top: 5rem;
+			font-size: 4.8rem;
+			font-weight: 900;
+			line-height: 1.2;
+			font-family: $museo-sans;
+		}
+
+		@include mobile-and-tablet {
+			padding: 3rem 0 4rem;
+
+			h1 { font-size: 3.5rem; margin-top: 3rem; }
+		}
+
+		@include mobile {
+			h1 { font-size: 2.5rem; }
+		}
+	}
 
 	.text-section {
 		padding-top: 5rem;
@@ -4497,7 +4531,6 @@ strong {
 
 	.subheading,
 	.text-section h2 {
-		font-family: $aino-headline;
 		font-size: 3.6rem;
 		color: $dark-blue;
 		margin-bottom: 3rem;
@@ -4508,44 +4541,16 @@ strong {
 
 	.subsubheading,
 	.text-section h3 {
-		font-family: $aino-headline;
 		font-size: 2.4rem;
 		font-weight: bold;
 		color: $dark-blue;
 		margin-bottom: 2rem;
 	}
-
-	.header-section {
-		font-family: $aino-headline;
-		background: $dark-blue;
-		color: white;
-		padding: 2rem 0 5rem;
-
-		h1 {
-			font-size: 4.6rem;
-		}
-
-		@include mobile-and-tablet {
-			padding: 1rem 0 3rem;
-			h1 { font-size: 3.5rem; }
-		}
-
-		@include mobile {
-			h1 { font-size: 2.5rem; }
-		}
-	}
 }
 
 #demo-signatures-page {
 	.video {
-		margin: 5rem 0 (-5rem);
-
-		@include mobile-and-tablet {
-			margin: 3rem 0 (-3rem);
-		}
-	}
-
-	.video {
+		margin-top: 3rem;
 		padding-bottom: 56.25%;
 		position: relative;
 
@@ -4555,6 +4560,7 @@ strong {
 			width: 100%;
 			height: 100%;
 			display: block;
+			border-radius: 3rem;
 		}
 	}
 
