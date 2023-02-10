@@ -139,7 +139,9 @@
 		"initiativesEmails": [
 			"raasiku.vald@raasiku.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"37402202731"
+		],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/raasiku-vald"
 	},
