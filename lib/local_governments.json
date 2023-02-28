@@ -11,7 +11,7 @@
 			"49207255258"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/anija-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/anija-vald"
 	},
 	"harku-vald": {
 		"ehak": "0198",
@@ -25,7 +25,7 @@
 			"48812260329"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/harku-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/harku-vald"
 	},
 	"jõelähtme-vald": {
 		"ehak": "0245",
@@ -40,7 +40,7 @@
 			"48406240352"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/joelahtme-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/joelahtme-vald"
 	},
 	"keila-linn": {
 		"ehak": "0296",
@@ -52,7 +52,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/keila-linn"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/keila-linn"
 	},
 	"kiili-vald": {
 		"ehak": "0305",
@@ -67,7 +67,7 @@
 			"46002090346"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kiili-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kiili-vald"
 	},
 	"kose-vald": {
 		"ehak": "0338",
@@ -79,7 +79,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kose-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kose-vald"
 	},
 	"kuusalu-vald": {
 		"ehak": "0353",
@@ -91,7 +91,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kuusalu-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kuusalu-vald"
 	},
 	"loksa-linn": {
 		"ehak": "0424",
@@ -105,7 +105,7 @@
 			"45706115215"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/loksa-linn"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/loksa-linn"
 	},
 	"lääne-harju-vald": {
 		"ehak": "0431",
@@ -117,7 +117,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/laane-harju-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/laane-harju-vald"
 	},
 	"maardu-linn": {
 		"ehak": "0446",
@@ -129,7 +129,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/maardu-linn"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/maardu-linn"
 	},
 	"raasiku-vald": {
 		"ehak": "0651",
@@ -143,7 +143,7 @@
 			"37402202731"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/raasiku-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/raasiku-vald"
 	},
 	"rae-vald": {
 		"ehak": "0653",
@@ -155,7 +155,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/rae-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rae-vald"
 	},
 	"saku-vald": {
 		"ehak": "0719",
@@ -167,7 +167,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/saku-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/saku-vald"
 	},
 	"saue-vald": {
 		"ehak": "0726",
@@ -179,7 +179,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/saue-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/saue-vald"
 	},
 	"tallinn": {
 		"ehak": "0784",
@@ -193,7 +193,7 @@
 			"37208010244"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/tallinna-linn"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/tallinna-linn"
 	},
 	"viimsi-vald": {
 		"ehak": "0890",
@@ -207,7 +207,7 @@
 			"46311080297"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/viimsi-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/viimsi-vald"
 	},
 	"hiiumaa-vald": {
 		"ehak": "0205",
@@ -219,7 +219,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/hiiumaa-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/hiiumaa-vald"
 	},
 	"alutaguse-vald": {
 		"ehak": "0130",
@@ -234,7 +234,7 @@
 			"48708082239"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/alutaguse-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/alutaguse-vald"
 	},
 	"jõhvi-vald": {
 		"ehak": "0251",
@@ -246,7 +246,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/johvi-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/johvi-vald"
 	},
 	"kohtla-järve-linn": {
 		"ehak": "0321",
@@ -261,7 +261,7 @@
 			"47012052246"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kohtla-jarve-linn"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kohtla-jarve-linn"
 	},
 	"lüganuse-vald": {
 		"ehak": "0442",
@@ -273,7 +273,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/luganuse-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/luganuse-vald"
 	},
 	"narva-linn": {
 		"ehak": "0511",
@@ -287,7 +287,7 @@
 			"46704193715"
 		],
 		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/narva-linn"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/narva-linn"
 	},
 	"narva-jõesuu-linn": {
 		"ehak": "0514",
@@ -299,7 +299,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/narva-joesuu-linn"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/narva-joesuu-linn"
 	},
 	"sillamäe-linn": {
 		"ehak": "0735",
@@ -311,7 +311,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/sillamae-linn"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/sillamae-linn"
 	},
 	"toila-vald": {
 		"ehak": "0803",
@@ -323,7 +323,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/toila-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/toila-vald"
 	},
 	"jõgeva-vald": {
 		"ehak": "0247",
@@ -335,7 +335,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/jogeva-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/jogeva-vald"
 	},
 	"mustvee-vald": {
 		"ehak": "0486",
@@ -347,7 +347,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/mustvee-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/mustvee-vald"
 	},
 	"põltsamaa-vald": {
 		"ehak": "0618",
@@ -359,7 +359,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/poltsamaa-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/poltsamaa-vald"
 	},
 	"järva-vald": {
 		"ehak": "0255",
@@ -371,7 +371,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/jarva-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/jarva-vald"
 	},
 	"paide-linn": {
 		"ehak": "0567",
@@ -383,7 +383,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/paide-linn"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/paide-linn"
 	},
 	"türi-vald": {
 		"ehak": "0834",
@@ -395,7 +395,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/turi-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/turi-vald"
 	},
 	"haapsalu-linn": {
 		"ehak": "0184",
@@ -407,7 +407,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/haapsalu-linn"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/haapsalu-linn"
 	},
 	"lääne-nigula-vald": {
 		"ehak": "0441",
@@ -419,7 +419,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/laane-nigula-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/laane-nigula-vald"
 	},
 	"vormsi-vald": {
 		"ehak": "0907",
@@ -431,7 +431,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/vormsi-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/vormsi-vald"
 	},
 	"haljala-vald": {
 		"ehak": "0191",
@@ -445,7 +445,7 @@
 			"46206210309"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/haljala-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/haljala-vald"
 	},
 	"kadrina-vald": {
 		"ehak": "0272",
@@ -457,7 +457,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kadrina-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kadrina-vald"
 	},
 	"rakvere-linn": {
 		"ehak": "0663",
@@ -469,7 +469,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/rakvere-linn"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rakvere-linn"
 	},
 	"rakvere-vald": {
 		"ehak": "0661",
@@ -483,7 +483,7 @@
 			"46808255217"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/rakvere-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rakvere-vald"
 	},
 	"tapa-vald": {
 		"ehak": "0792",
@@ -497,7 +497,7 @@
 			"48105015225"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/tapa-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/tapa-vald"
 	},
 	"vinni-vald": {
 		"ehak": "0901",
@@ -511,7 +511,7 @@
 			"48612015230"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/vinni-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/vinni-vald"
 	},
 	"viru-nigula-vald": {
 		"ehak": "0903",
@@ -523,7 +523,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/viru-nigula-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/viru-nigula-vald"
 	},
 	"väike-maarja-vald": {
 		"ehak": "0928",
@@ -535,7 +535,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/vaike-maarja-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/vaike-maarja-vald"
 	},
 	"kanepi-vald": {
 		"ehak": "0284",
@@ -549,7 +549,7 @@
 			"46907306535"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kanepi-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kanepi-vald"
 	},
 	"põlva-vald": {
 		"ehak": "0622",
@@ -561,7 +561,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/polva-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/polva-vald"
 	},
 	"räpina-vald": {
 		"ehak": "0708",
@@ -573,7 +573,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/rapina-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rapina-vald"
 	},
 	"häädemeeste-vald": {
 		"ehak": "0214",
@@ -585,7 +585,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/haademeeste-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/haademeeste-vald"
 	},
 	"kihnu-vald": {
 		"ehak": "0303",
@@ -597,7 +597,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kihnu-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kihnu-vald"
 	},
 	"lääneranna-vald": {
 		"ehak": "0430",
@@ -611,7 +611,7 @@
 			"47105264719"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/laaneranna-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/laaneranna-vald"
 	},
 	"põhja-pärnumaa-vald": {
 		"ehak": "0638",
@@ -625,7 +625,7 @@
 			"47904284218"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/pohja-parnumaa-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/pohja-parnumaa-vald"
 	},
 	"pärnu-linn": {
 		"ehak": "0624",
@@ -639,7 +639,7 @@
 			"47410104224"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/parnu-linn"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/parnu-linn"
 	},
 	"saarde-vald": {
 		"ehak": "0712",
@@ -653,7 +653,7 @@
 			"47412084229"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/saarde-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/saarde-vald"
 	},
 	"tori-vald": {
 		"ehak": "0809",
@@ -665,7 +665,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/tori-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/tori-vald"
 	},
 	"kehtna-vald": {
 		"ehak": "0293",
@@ -677,7 +677,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kehtna-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kehtna-vald"
 	},
 	"kohila-vald": {
 		"ehak": "0317",
@@ -689,7 +689,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kohila-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kohila-vald"
 	},
 	"märjamaa-vald": {
 		"ehak": "0503",
@@ -701,7 +701,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/marjamaa-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/marjamaa-vald"
 	},
 	"rapla-vald": {
 		"ehak": "0668",
@@ -713,7 +713,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/rapla-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rapla-vald"
 	},
 	"muhu-vald": {
 		"ehak": "0478",
@@ -725,7 +725,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/muhu-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/muhu-vald"
 	},
 	"ruhnu-vald": {
 		"ehak": "0689",
@@ -737,7 +737,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/ruhnu-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/ruhnu-vald"
 	},
 	"saaremaa-vald": {
 		"ehak": "0714",
@@ -751,7 +751,7 @@
 			"47102260019"
 		],
 		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/saaremaa-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/saaremaa-vald"
 	},
 	"elva-vald": {
 		"ehak": "0171",
@@ -763,7 +763,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/elva-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/elva-vald"
 	},
 	"kambja-vald": {
 		"ehak": "0283",
@@ -775,7 +775,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kambja-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kambja-vald"
 	},
 	"kastre-vald": {
 		"ehak": "0291",
@@ -787,7 +787,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/kastre-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kastre-vald"
 	},
 	"luunja-vald": {
 		"ehak": "0432",
@@ -799,7 +799,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/luunja-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/luunja-vald"
 	},
 	"nõo-vald": {
 		"ehak": "0528",
@@ -811,7 +811,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/noo-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/noo-vald"
 	},
 	"peipsiääre-vald": {
 		"ehak": "0586",
@@ -823,7 +823,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/peipsiaare-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/peipsiaare-vald"
 	},
 	"tartu-linn": {
 		"ehak": "0793",
@@ -837,7 +837,7 @@
 			"37404072233"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/tartu-linn"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/tartu-linn"
 	},
 	"tartu-vald": {
 		"ehak": "0796",
@@ -849,7 +849,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/tartu-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/tartu-vald"
 	},
 	"otepää-vald": {
 		"ehak": "0557",
@@ -861,7 +861,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/otepaa-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/otepaa-vald"
 	},
 	"tõrva-vald": {
 		"ehak": "0824",
@@ -875,7 +875,7 @@
 			"46205185714"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/torva-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/torva-vald"
 	},
 	"valga-vald": {
 		"ehak": "0855",
@@ -890,7 +890,7 @@
 			"46810255729"
 		],
 		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/valga-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/valga-vald"
 	},
 	"mulgi-vald": {
 		"ehak": "0480",
@@ -902,7 +902,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/mulgi-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/mulgi-vald"
 	},
 	"põhja-sakala-vald": {
 		"ehak": "0615",
@@ -916,7 +916,7 @@
 			"47106016018"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/pohja-sakala-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/pohja-sakala-vald"
 	},
 	"viljandi-linn": {
 		"ehak": "0897",
@@ -930,7 +930,7 @@
 			"45911186017"
 		],
 		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/viljandi-linn"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/viljandi-linn"
 	},
 	"viljandi-vald": {
 		"ehak": "0899",
@@ -942,7 +942,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/viljandi-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/viljandi-vald"
 	},
 	"antsla-vald": {
 		"ehak": "0142",
@@ -957,7 +957,7 @@
 			"46011206517"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/antsla-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/antsla-vald"
 	},
 	"rõuge-vald": {
 		"ehak": "0698",
@@ -971,7 +971,7 @@
 			"47303306510"
 		],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/rouge-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rouge-vald"
 	},
 	"setomaa-vald": {
 		"ehak": "0732",
@@ -983,7 +983,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/setomaa-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/setomaa-vald"
 	},
 	"võru-linn": {
 		"ehak": "0919",
@@ -995,7 +995,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/voru-linn"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/voru-linn"
 	},
 	"võru-vald": {
 		"ehak": "0917",
@@ -1007,6 +1007,6 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"kompassUrl": null,
-		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/voru-vald"
+		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/voru-vald"
 	}
 }
