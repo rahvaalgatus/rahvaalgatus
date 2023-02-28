@@ -479,7 +479,9 @@
 		"initiativesEmails": [
 			"vallavalitsus@rakverevald.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"46808255217"
+		],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.fin.ee/et/kov/rakvere-vald"
 	},
