@@ -1,0 +1,5 @@
+CREATE INDEX index_initiative_signatures_on_created_at
+ON initiative_signatures (created_at);
+
+CREATE INDEX index_initiative_citizenos_signatures_on_created_at
+ON initiative_citizenos_signatures (created_at);

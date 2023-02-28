@@ -565,6 +565,10 @@ ON initiative_citizenos_signatures (country, personal_id)
 WHERE NOT anonymized;
 CREATE UNIQUE INDEX index_initiative_subscriptions_initiative_uuid_and_email
 ON initiative_subscriptions (COALESCE(initiative_uuid, ''), email);
+CREATE INDEX index_initiative_signatures_on_created_at
+ON initiative_signatures (created_at);
+CREATE INDEX index_initiative_citizenos_signatures_on_created_at
+ON initiative_citizenos_signatures (created_at);
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -681,4 +685,5 @@ INSERT INTO migrations VALUES('20211125124910');
 INSERT INTO migrations VALUES('20211125124920');
 INSERT INTO migrations VALUES('20211125124930');
 INSERT INTO migrations VALUES('20220628084329');
+INSERT INTO migrations VALUES('20230228064416');
 COMMIT;
