@@ -166,11 +166,8 @@ module.exports = function(attrs) {
 			</tr>
 
 			<tr>
-				<th scope="row">Signatures Anonymized On</th>
-				<td>{initiative.signatures_anonymized_at
-					? formatDate("iso", attrs.value)
-					: null
-				}</td>
+				<th scope="row">Signatures Anonymized</th>
+				<td>{initiative.signatures_anonymized_at ? "Yes" : "No"}</td>
 			</tr>
 
 			<tr>
