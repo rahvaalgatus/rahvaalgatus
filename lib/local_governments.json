@@ -321,7 +321,9 @@
 		"initiativesEmails": [
 			"toilavv@toila.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"46509102247"
+		],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/toila-vald"
 	},
