@@ -942,7 +942,9 @@
 		"initiativesEmails": [
 			"viljandivald@viljandivald.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"46708086016"
+		],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/viljandi-vald"
 	},
