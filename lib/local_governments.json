@@ -347,7 +347,9 @@
 		"initiativesEmails": [
 			"info@mustvee.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"46709022721"
+		],
 		"kompassUrl": null,
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/mustvee-vald"
 	},
