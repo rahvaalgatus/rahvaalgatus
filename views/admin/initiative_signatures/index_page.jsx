@@ -3,18 +3,20 @@ var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Page = require("../page")
 var {Form} = Page
-var {formatDate} = require("root/lib/i18n")
 var SignaturesController =
 	require("root/controllers/admin/initiative_signatures_controller")
+var {formatDate} = require("root/lib/i18n")
 var {getBirthyearFromPersonalId} = SignaturesController
 var {getSexFromPersonalId} = SignaturesController
 var {getAgeRange} = SignaturesController
 var {serializeLocation} = SignaturesController
+var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var {COLUMNS} = SignaturesController
 
 var COLUMN_TITLES = {
 	created_on: "Date",
 	initiative_uuid: "Initiative",
+	initiative_destination: "Initiative Destination",
 	sex: "Sex",
 	age_range: "Age Range",
 	method: "Method",
@@ -167,6 +169,13 @@ module.exports = function(attrs) {
 							<a href={initiativePath} class="admin-link">
 								{sig.initiative_title}
 							</a>
+						</td>
+
+						case "initiative_destination": return <td>
+							{sig.initiative_destination == "parliament"
+								? "Riigikogu"
+								: LOCAL_GOVERNMENTS[sig.initiative_destination].name
+							}
 						</td>
 
 						case "sex": return <td>{getSexFromPersonalId(sig.personal_id)}</td>

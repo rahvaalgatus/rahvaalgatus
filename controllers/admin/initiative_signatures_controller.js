@@ -17,6 +17,7 @@ exports.serializeLocation = serializeLocation
 var COLUMNS = [
 	"created_on",
 	"initiative_uuid",
+	"initiative_destination",
 	"sex",
 	"age_range",
 	"method",
@@ -83,6 +84,7 @@ function serializeSignaturesAsCsv(
 			: formatDate("iso-week", sig.created_at)
 
 		case "initiative_uuid": return sig.initiative_uuid
+		case "initiative_destination": return sig.initiative_destination
 		case "sex": return getSexFromPersonalId(sig.personal_id)
 		case "age_range": return getAgeRange(
 			new Date(getBirthyearFromPersonalId(sig.personal_id), 0, 1),
@@ -173,6 +175,7 @@ function searchSignatures(from, to) {
 		SELECT
 			signature.initiative_uuid,
 			initiative.title AS initiative_title,
+			initiative.destination AS initiative_destination,
 			signature.created_at,
 			signature.created_from,
 			signature.personal_id,
