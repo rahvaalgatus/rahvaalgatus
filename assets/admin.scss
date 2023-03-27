@@ -129,6 +129,11 @@ button.admin-link {
     line-height: 1.5;
   }
 
+	& > caption {
+		line-height: 1.5;
+		padding: 0.5rem 2rem;
+	}
+
   & > tbody > tr > td { padding: 0.5rem 2rem; }
   & > tbody > tr:first-child > td { padding-top: 1rem; }
   & > tbody > tr + tr td { border-top: 1px solid white; }

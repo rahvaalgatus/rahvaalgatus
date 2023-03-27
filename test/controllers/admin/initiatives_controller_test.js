@@ -13,12 +13,10 @@ var t = require("root/lib/i18n").t.bind(null, "et")
 
 describe("AdminInitiativesController", function() {
 	require("root/test/adm")()
-	require("root/test/mitm")()
 	require("root/test/db")()
 	require("root/test/time")()
 	require("root/test/email")()
 	require("root/test/fixtures").csrf()
-	beforeEach(require("root/test/mitm").router)
 
 	describe("POST /initiatives/:id/events", function() {
 		require("root/test/fixtures").user({

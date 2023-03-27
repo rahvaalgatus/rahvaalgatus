@@ -30,7 +30,10 @@ module.exports = function(attrs) {
 	var {columns} = attrs
 	var {timeFormat} = attrs
 	var {locationFormat} = attrs
-	var signatures = attrs.signatures || attrs.signers
+	var {signatures} = attrs
+
+	var tooMany = signatures.length > 1000
+	signatures = signatures.slice(0, 1000)
 
 	return <Page page="signatures" title="Signature" req={attrs.req}>
 		<h1 class="admin-heading">Signatures</h1>
@@ -140,6 +143,10 @@ module.exports = function(attrs) {
 		</Form>
 
 		<table id="signatures-table" class="admin-table">
+			{tooMany ? <caption>
+				More than a 1000 results. Displaying the first 1000.
+			</caption> : null}
+
 			<thead>
 				<tr>{columns.map((column) => { switch (column) {
 					case "created_on": return <th>

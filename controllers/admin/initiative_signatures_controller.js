@@ -1,3 +1,4 @@
+var _ = require("root/lib/underscore")
 var {Router} = require("express")
 var DateFns = require("date-fns")
 var Time = require("root/lib/time")
@@ -6,8 +7,7 @@ var signaturesDb = require("root/db/initiative_signatures_db")
 var next = require("co-next")
 var {formatDate} = require("root/lib/i18n")
 var sql = require("sqlate")
-var concat = Array.prototype.concat.bind(Array.prototype)
-var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
+var ENV = process.env.ENV
 exports.router = Router({mergeParams: true})
 exports.getBirthyearFromPersonalId = getBirthyearFromPersonalId
 exports.getSexFromPersonalId = getSexFromPersonalId
@@ -39,18 +39,19 @@ exports.router.get("/(:format?)", next(function*(req, res) {
 		? req.query.columns.filter(COLUMNS.includes.bind(COLUMNS))
 		: COLUMNS
 
-	var signatures = yield searchSignatures(from, to)
+	var signatureGenerator = searchSignatures(from, to)
 
 	switch (req.accepts(["text/csv", "text/html"])) {
 		case "text/csv":
-			res.setHeader("Content-Type", "text/csv")
+			res.setHeader("Content-Type", "text/csv; charset=utf-8")
 
-			res.end(serializeSignaturesAsCsv(
+			yield serializeSignaturesAsCsv(
 				columns,
 				timeFormat,
 				locationFormat,
-				signatures
-			))
+				signatureGenerator,
+				res
+			)
 			break
 
 		default: res.render("admin/initiative_signatures/index_page.jsx", {
@@ -59,50 +60,56 @@ exports.router.get("/(:format?)", next(function*(req, res) {
 			columns: columns,
 			timeFormat: timeFormat,
 			locationFormat: locationFormat,
-			signatures: signatures
+			signatures: signatureGenerator.next().value
 		})
 	}
 }))
 
-function serializeSignaturesAsCsv(
+function* serializeSignaturesAsCsv(
 	columns,
 	timeFormat,
 	locationFormat,
-	signatures
+	signatureGenerator,
+	res
 ) {
-	var header = columns.map((column) => (
+	res.write(Csv.serialize(columns.map((column) => (
 		column == "created_on"
 		? (timeFormat == "date" ? "date" : "week")
 		: column == "location"
 		? (locationFormat == "text" ? "location" : "geoname_id")
 		: column
-	))
+	))) + "\n")
 
-	var rows = signatures.map((sig) => columns.map((column) => { switch (column) {
-		case "created_on": return timeFormat == "date"
-			? formatDate("iso", sig.created_at)
-			: formatDate("iso-week", sig.created_at)
+	for (var sigs of signatureGenerator) {
+		sigs = sigs.map((sig) => columns.map((column) => { switch (column) {
+			case "created_on": return timeFormat == "date"
+				? formatDate("iso", sig.created_at)
+				: formatDate("iso-week", sig.created_at)
 
-		case "initiative_uuid": return sig.initiative_uuid
-		case "initiative_destination": return sig.initiative_destination
-		case "sex": return getSexFromPersonalId(sig.personal_id)
-		case "age_range": return getAgeRange(
-			new Date(getBirthyearFromPersonalId(sig.personal_id), 0, 1),
-			sig.created_at
-		)
+			case "initiative_uuid": return sig.initiative_uuid
+			case "initiative_destination": return sig.initiative_destination
+			case "sex": return getSexFromPersonalId(sig.personal_id)
+			case "age_range": return getAgeRange(
+				new Date(getBirthyearFromPersonalId(sig.personal_id), 0, 1),
+				sig.created_at
+			)
 
-		case "method": return sig.method
+			case "method": return sig.method
 
-		case "location": return sig.created_from
-			? (locationFormat == "text"
-				? serializeLocation(sig.created_from)
-				: sig.created_from.city_geoname_id
-			) : ""
+			case "location": return sig.created_from
+				? (locationFormat == "text"
+					? serializeLocation(sig.created_from)
+					: sig.created_from.city_geoname_id
+				) : ""
 
-		default: throw new RangeError("Unknown column: " + column)
-	}}))
+			default: throw new RangeError("Unknown column: " + column)
+		}}))
 
-	return concat([header], rows).map(Csv.serialize).join("\n")
+		var csv = sigs.map(Csv.serialize).join("\n") + "\n"
+		if (res.write(csv) === false) yield _.wait(res, "drain")
+	}
+
+	res.end()
 }
 
 function getBirthyearFromPersonalId(personalId) {
@@ -148,30 +155,31 @@ function getAgeRange(birthdate, at) {
   else return ">= 75"
 }
 
-function searchSignatures(from, to) {
-	return signaturesDb.search(sql`
-		WITH signatures AS (
-			SELECT
-				initiative_uuid,
-				created_at,
-				created_from,
-				country,
-				personal_id,
-				method
+function* searchSignatures(from, to) {
+	for (let seen = 0, signatures; (signatures = signaturesDb.search(sql`
+		SELECT
+			signature.initiative_uuid,
+			initiative.title AS initiative_title,
+			initiative.destination AS initiative_destination,
+			signature.created_at,
+			NULL AS created_from,
+			signature.personal_id,
+			NULL AS method
 
-			FROM initiative_signatures
+		FROM initiative_citizenos_signatures AS signature
+		JOIN initiatives AS initiative
+		ON initiative.uuid = signature.initiative_uuid
 
-			UNION SELECT
-				initiative_uuid,
-				created_at,
-				NULL AS created_from,
-				country,
-				personal_id,
-				NULL AS method
+		WHERE signature.country = 'EE'
+		AND signature.created_at >= ${from}
+		${to ? sql`AND signature.created_at < ${to}` : sql``}
 
-			FROM initiative_citizenos_signatures
-		)
+		ORDER BY signature.created_at ASC
+		LIMIT ${ENV == "test" ? 1 : 10000}
+		OFFSET ${seen}
+	`)).length > 0; seen += signatures.length) yield _.shuffle(signatures)
 
+	for (let seen = 0, signatures; (signatures = signaturesDb.search(sql`
 		SELECT
 			signature.initiative_uuid,
 			initiative.title AS initiative_title,
@@ -181,20 +189,22 @@ function searchSignatures(from, to) {
 			signature.personal_id,
 			signature.method
 
-		FROM signatures AS signature
-
+		FROM initiative_signatures AS signature
 		JOIN initiatives AS initiative
 		ON initiative.uuid = signature.initiative_uuid
 
 		WHERE signature.country = 'EE'
 		AND signature.created_at >= ${from}
 		${to ? sql`AND signature.created_at < ${to}` : sql``}
-		ORDER BY RANDOM()
-	`)
+
+		ORDER BY signature.created_at ASC
+		LIMIT ${ENV == "test" ? 1 : 10000}
+		OFFSET ${seen}
+	`)).length > 0; seen += signatures.length) yield _.shuffle(signatures)
 }
 
 function serializeLocation(from) {
-	return flatten([
+	return _.flatten([
 		from.city_name,
 		(from.subdivisions || []).map((div) => div.name),
 		from.country_name

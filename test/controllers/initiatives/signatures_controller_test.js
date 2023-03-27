@@ -34,7 +34,6 @@ var citizenosSignaturesDb =
 var {hades} = require("root")
 var demand = require("must")
 var {tsl} = require("root")
-var concat = Array.prototype.concat.bind(Array.prototype)
 var ASICE_TYPE = "application/vnd.etsi.asic-e+zip"
 var CSV_TYPE = "text/csv; charset=utf-8"
 var ZIP_TYPE = "application/zip"
@@ -718,7 +717,7 @@ describe("SignaturesController", function() {
 				"attachment; filename=\"signatures.csv\""
 			)
 
-			res.body.must.equal("personal_id,created_at\n" + concat(
+			res.body.must.equal("personal_id,created_at\n" + _.concat(
 				citizenosSignatures,
 				undersignedSignatures
 			).map((sig) => [
