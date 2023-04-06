@@ -11,6 +11,7 @@ var USAGE_TEXT = `
 Usage: cli initiative-signatures (-h | --help)
        cli initiative-signatures [options]
        cli initiative-signatures anonymize [options]
+       cli initiative-signatures delete-signables [options]
 
 Options:
     -h, --help   Display this help and exit.
@@ -22,6 +23,7 @@ module.exports = function(argv) {
 	if (args["--help"]) return void process.stdout.write(USAGE_TEXT.trimLeft())
 
 	if (args.anonymize) anonymize(args["--yes"])
+	else if (args["delete-signables"]) deleteSignables(args["--yes"])
 	else process.stdout.write(USAGE_TEXT.trimLeft())
 }
 
@@ -80,36 +82,42 @@ function anonymize(actuallyAnonymize) {
 			I18n.formatDate("iso", initiative.received_by_government_at)
 		)
 
-		if (actuallyAnonymize) {
-			sqlite(sql`BEGIN`)
+		if (actuallyAnonymize) sqlite.transact(function() {
+			sqlite(sql`
+				UPDATE initiative_signatures SET
+					personal_id = substr(personal_id, 1, 3),
+					token = NULL,
+					xades = NULL,
+					anonymized = true
 
-			try {
-				sqlite(sql`
-					UPDATE initiative_signatures SET
-						personal_id = substr(personal_id, 1, 3),
-						token = NULL,
-						xades = NULL,
-						anonymized = true
+				WHERE initiative_uuid = ${initiative.uuid}
+			`)
 
-					WHERE initiative_uuid = ${initiative.uuid}
-				`)
+			sqlite(sql`
+				UPDATE initiative_citizenos_signatures SET
+					personal_id = substr(personal_id, 1, 3),
+					asic = NULL,
+					anonymized = true
 
-				sqlite(sql`
-					UPDATE initiative_citizenos_signatures SET
-						personal_id = substr(personal_id, 1, 3),
-						asic = NULL,
-						anonymized = true
+				WHERE initiative_uuid = ${initiative.uuid}
+			`)
 
-					WHERE initiative_uuid = ${initiative.uuid}
-				`)
+			initiativesDb.update(initiative, {signatures_anonymized_at: new Date})
+		})
+	}
+}
 
-				initiativesDb.update(initiative, {
-					signatures_anonymized_at: new Date
-				})
-			}
-			catch (err) { sqlite(sql`ROLLBACK`); throw err }
+function deleteSignables(actuallyDelete) {
+	var filter = sql`created_at <= ${DateFns.addDays(new Date, -7)}`
 
-			sqlite(sql`COMMIT`)
-		}
+	var count = sqlite(sql`
+		SELECT COUNT(*) AS count FROM initiative_signables WHERE ${filter}
+	`)[0].count
+
+	logger.info("Deleting %d signables…", count)
+
+	if (actuallyDelete) {
+		var deleted = sqlite(sql`DELETE FROM initiative_signables WHERE ${filter}`)
+		logger.info("Deleted %d signables.", deleted.changes)
 	}
 }

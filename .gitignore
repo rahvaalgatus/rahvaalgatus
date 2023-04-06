@@ -4,5 +4,5 @@
 /public/503.html
 /config/staging.json
 /config/production.json
-/config/*.sqlite3
+/config/*.sqlite3*
 /tmp/
