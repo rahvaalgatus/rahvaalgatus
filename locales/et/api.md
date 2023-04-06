@@ -1,6 +1,6 @@
 API
 ===
-Rahvaalgatusel on **avalik API**, mida saab kasutada nii serveri kui ka brauseri kaudu. Nii saab soovi korral kuvada algatusi ja kogutud allkirjade arvu ka väljaspool Rahvaalgatust. Nõnda kasutab seda näiteks [Karusloomafarmide keelustamise kampaania](https://www.aitankarusloomi.ee) oma lehel.
+Rahvaalgatusel on **avalik API**, mida saab kasutada nii serveri kui ka brauseri kaudu. Nii saab soovi korral kuvada algatusi ja kogutud allkirjade arvu ka väljaspool Rahvaalgatust. Näiteks kampaanialehel.
 
 Kogu **API dokumentatsioon** on loetav [SwaggerHubis](https://app.swaggerhub.com/apis-docs/rahvaalgatus/rahvaalgatus) ja masinloetavalt OpenAPI v3 formaadis [`openapi.yaml`](https://github.com/rahvaalgatus/rahvaalgatus/blob/master/openapi.yaml) failis.
 
