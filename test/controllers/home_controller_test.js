@@ -353,6 +353,27 @@ describe("HomeController", function() {
 				demand(el.querySelector("time")).be.null()
 			})
 
+			it("must not show if deadline yesterday, succeeded and expired",
+				function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					signing_ends_at: DateFns.startOfDay(new Date),
+					signing_expired_at: new Date
+				}))
+
+				signaturesDb.create(_.times(Config.votesRequired, () => (
+					new ValidSignature({initiative_uuid: initiative.uuid})
+				)))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+				var section = dom.querySelector("section#initiatives")
+				demand(section.querySelector(".initiative")).be.null()
+			})
+
 			it("must show if for parliament and succeeded 2w ago", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
@@ -1568,6 +1589,26 @@ describe("HomeController", function() {
 			res.body.must.eql(_.merge({}, EMPTY_STATISTICS, {
 				initiativeCountsByPhase: {sign: 5},
 				activeInitiativeCountsByPhase: {sign: 2}
+			}))
+		})
+
+		it("must not count active initiatives where signing expired", function*() {
+			initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "sign",
+				signing_ends_at: DateFns.addDays(new Date, 1),
+				signing_expired_at: new Date
+			}))
+
+			var res = yield this.request("/statistics", {
+				headers: {Accept: STATISTICS_TYPE}
+			})
+
+			res.statusCode.must.equal(200)
+
+			res.body.must.eql(_.merge({}, EMPTY_STATISTICS, {
+				initiativeCountsByPhase: {sign: 1},
+				activeInitiativeCountsByPhase: {sign: 0}
 			}))
 		})
 

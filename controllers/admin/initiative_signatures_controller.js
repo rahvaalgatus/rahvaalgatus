@@ -27,9 +27,10 @@ var COLUMNS = [
 exports.COLUMNS = COLUMNS
 
 exports.router.get("/(:format?)", next(function*(req, res) {
-	var from = req.query.from
-		? Time.parseIsoDate(req.query.from)
-		: DateFns.startOfDay(new Date)
+	var from = (
+		req.query.from && Time.parseIsoDate(req.query.from) ||
+		DateFns.startOfDay(new Date)
+	)
 
 	var to = req.query.to ? Time.parseIsoDate(req.query.to) : null
 	var timeFormat = req.query["time-format"] || "date"

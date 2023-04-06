@@ -12,10 +12,10 @@ var cosSignaturesDb = require("root/db/initiative_citizenos_signatures_db")
 var sql = require("sqlate")
 var {PHASES} = require("root/lib/initiative")
 var {anonymizeSignaturesReceivedAfterDays} = require("root").config
+var {anonymizeSignaturesExpiredAfterDays} = require("root").config
 
 describe("InitiativeSignaturesCli", function() {
 	require("root/test/db")()
-	require("root/test/email")()
 	require("root/test/time")(new Date(2015, 5, 18, 13, 37, 42))
 
 	beforeEach(function() { this.user = usersDb.create(new ValidUser) })
@@ -35,9 +35,9 @@ describe("InitiativeSignaturesCli", function() {
 
 		cli(["initiative-signatures", "anonymize", "--yes"])
 
-		initiativesDb.read(initiative).must.eql(
-			_.assign({}, initiative, {signatures_anonymized_at: new Date})
-		)
+		initiativesDb.read(initiative).must.eql(_.assign({}, initiative, {
+			signatures_anonymized_at: new Date
+		}))
 
 		signaturesDb.search(sql`
 			SELECT * FROM initiative_signatures
@@ -76,6 +76,16 @@ describe("InitiativeSignaturesCli", function() {
 		cosSignaturesDb.read(cosSignature).must.eql(cosSignature)
 	}
 
+	it("must not anonymize unexpired initiatives in sign phase", function() {
+		var initiative = initiativesDb.create(new ValidInitiative({
+			user_id: this.user.id,
+			destination: "parliament",
+			phase: "sign"
+		}))
+
+		mustNotAnonymize(initiative)
+	})
+
 	it("must not anonymize other initiatives' signatures", function() {
 		var initiative = initiativesDb.create(new ValidInitiative({
 			user_id: this.user.id,
@@ -101,9 +111,9 @@ describe("InitiativeSignaturesCli", function() {
 
 		cli(["initiative-signatures", "anonymize", "--yes"])
 
-		initiativesDb.read(initiative).must.eql(
-			_.assign({}, initiative, {signatures_anonymized_at: new Date})
-		)
+		initiativesDb.read(initiative).must.eql(_.assign({}, initiative, {
+			signatures_anonymized_at: new Date
+		}))
 
 		initiativesDb.read(otherInitiative).must.eql(otherInitiative)
 		signaturesDb.read(signature).must.eql(signature)
@@ -121,6 +131,38 @@ describe("InitiativeSignaturesCli", function() {
 		}))
 
 		mustNotAnonymize(initiative)
+	})
+
+	describe("when signing expired", function() {
+		it("must anonymize expired initiative", function() {
+			var initiative = initiativesDb.create(new ValidInitiative({
+				user_id: this.user.id,
+				destination: "parliament",
+				phase: "sign",
+
+				signing_expired_at: DateFns.addDays(
+					new Date,
+					-anonymizeSignaturesExpiredAfterDays
+				)
+			}))
+
+			mustAnonymize(initiative)
+		})
+
+		it("must not anonymize initiative expired recently", function() {
+			var initiative = initiativesDb.create(new ValidInitiative({
+				user_id: this.user.id,
+				destination: "parliament",
+				phase: "sign",
+
+				signing_expired_at: DateFns.addMilliseconds(
+					DateFns.addDays(new Date, -anonymizeSignaturesExpiredAfterDays),
+					1
+				)
+			}))
+
+			mustNotAnonymize(initiative)
+		})
 	})
 
 	describe("when destined for parliament", function() {
@@ -155,23 +197,22 @@ describe("InitiativeSignaturesCli", function() {
 			})
 		})
 
-		it(`must not anonymize initiative received recently`, function() {
-			var receivedAt = DateFns.addMilliseconds(DateFns.addDays(
-				new Date,
-				-anonymizeSignaturesReceivedAfterDays
-			), 1)
-
+		it("must not anonymize initiative received recently", function() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				destination: "parliament",
 				phase: "parliament",
-				received_by_parliament_at: receivedAt
+
+				received_by_parliament_at: DateFns.addMilliseconds(
+					DateFns.addDays(new Date, -anonymizeSignaturesReceivedAfterDays),
+					1
+				)
 			}))
 
 			mustNotAnonymize(initiative)
 		})
 
-		it(`must not anonymize initiative not received`, function() {
+		it("must not anonymize initiative not received", function() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				destination: "parliament",
@@ -229,7 +270,7 @@ describe("InitiativeSignaturesCli", function() {
 			})
 		})
 
-		it(`must not anonymize initiative not received`, function() {
+		it("must not anonymize initiative not received", function() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				destination: "muhu-vald",
@@ -239,17 +280,16 @@ describe("InitiativeSignaturesCli", function() {
 			mustNotAnonymize(initiative)
 		})
 
-		it(`must not anonymize initiative received recently`, function() {
-			var receivedAt = DateFns.addMilliseconds(DateFns.addDays(
-				new Date,
-				-anonymizeSignaturesReceivedAfterDays
-			), 1)
-
+		it("must not anonymize initiative received recently", function() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				destination: "muhu-vald",
 				phase: "government",
-				received_by_government_at: receivedAt
+
+				received_by_government_at: DateFns.addMilliseconds(
+					DateFns.addDays(new Date, -anonymizeSignaturesReceivedAfterDays),
+					1
+				)
 			}))
 
 			mustNotAnonymize(initiative)

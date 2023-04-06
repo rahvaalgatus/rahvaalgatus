@@ -3,10 +3,8 @@
 	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
 	"idCardAuthenticationSecret": "7tETyK8iWAxypy0GiO24IjKa",
 	"votesRequired": 10,
-	"minDeadlineDays": 3,
 	"signatureMilestones": [5],
 	"geoIpCityPath": "../test/config/geoip2_city.mmdb",
-	"expireSignaturesInMonths": 18,
 
 	"mobileIdUser": "Mobile Rahvaalgatus",
 	"mobileIdPassword": "f2066bec-dbe6-44b8-ab3b-a343bcc7c286",

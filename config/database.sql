@@ -54,8 +54,10 @@ CREATE TABLE initiatives (
 	CONSTRAINT signatures_anonymized_at_format
 	CHECK (signatures_anonymized_at GLOB '*-*-*T*:*:*Z'),
 
-	CONSTRAINT signatures_anonymized_only_when_received CHECK (
-		signatures_anonymized_at IS NULL OR CASE destination
+	CONSTRAINT signatures_anonymized_only_when_expired_or_received CHECK (
+		signatures_anonymized_at IS NULL OR
+
+		signing_expired_at IS NOT NULL OR CASE destination
 			WHEN 'parliament' THEN received_by_parliament_at IS NOT NULL
 			ELSE received_by_government_at IS NOT NULL
 		END
@@ -686,4 +688,5 @@ INSERT INTO migrations VALUES('20211125124920');
 INSERT INTO migrations VALUES('20211125124930');
 INSERT INTO migrations VALUES('20220628084329');
 INSERT INTO migrations VALUES('20230228064416');
+INSERT INTO migrations VALUES('20230331120000');
 COMMIT;

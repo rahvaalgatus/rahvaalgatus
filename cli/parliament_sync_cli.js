@@ -529,6 +529,8 @@ function eventAttrsFromStatus(
 	status
 ) {
 	var eventDate = Time.parseIsoDate(status.date)
+	if (eventDate == null) throw new SyntaxError("Invalid date: " + status.date)
+
 	var eventDocuments = []
 
 	var attrs = {

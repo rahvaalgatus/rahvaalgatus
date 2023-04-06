@@ -682,20 +682,17 @@ function* updateInitiativeToPublished(req, res) {
 		attrs: {endsAt: initiative.discussion_ends_at}
 	})
 
+	var publishedAt = initiative.published_at || new Date
 	var endsOn = Time.parseIsoDate(req.body.endsOn)
 	var endsAt = DateFns.addDays(endsOn, 1)
 
-	if (!Initiative.isDeadlineOk(
-		initiative.published_at || new Date,
-		new Date,
-		endsAt
-	)) {
+	if (endsAt < Initiative.getMinEditingDeadline(publishedAt)) {
 		res.statusCode = 422
 		res.statusMessage = "Deadline Too Near or Too Far"
 
 		return void res.render(tmpl, {
 			error: req.t("INITIATIVE_DISCUSSION_DEADLINE_ERROR", {
-				days: Config.minDeadlineDays
+				days: Config.minEditingDeadlineDays
 			}),
 
 			attrs: {endsAt: endsAt}
@@ -705,7 +702,7 @@ function* updateInitiativeToPublished(req, res) {
 	var emailSentAt = initiative.discussion_end_email_sent_at
 
 	initiativesDb.update(initiative.uuid, {
-		published_at: initiative.published_at || new Date,
+		published_at: publishedAt,
 		discussion_ends_at: endsAt,
 		discussion_end_email_sent_at: endsAt > new Date ? null : emailSentAt
 	})
@@ -794,21 +791,21 @@ function* updateInitiativePhaseToSign(req, res) {
 	})
 
 	var lang = req.body.language
+	var startedAt = initiative.signing_started_at || new Date
 	var endsOn = Time.parseIsoDate(req.body.endsOn)
 	var endsAt = DateFns.addDays(endsOn, 1)
 	var attrs = {endsAt: endsAt}
 
-	if (!Initiative.isDeadlineOk(
-		initiative.signing_started_at || new Date,
-		new Date,
-		endsAt
+	if (!(
+		endsAt >= Initiative.getMinSigningDeadline(startedAt) &&
+		endsAt <= Initiative.getMaxSigningDeadline(startedAt)
 	)) {
 		res.statusCode = 422
 		res.statusMessage = "Deadline Too Near or Too Far"
 
 		return void res.render(tmpl, {
 			error: req.t("INITIATIVE_SIGN_DEADLINE_ERROR", {
-				days: Config.minDeadlineDays
+				days: Config.minSigningDeadlineDays
 			}),
 
 			attrs: attrs
@@ -819,7 +816,7 @@ function* updateInitiativePhaseToSign(req, res) {
 
 	attrs = {
 		phase: "sign",
-		signing_started_at: initiative.signing_started_at || new Date,
+		signing_started_at: startedAt,
 		signing_ends_at: endsAt,
 		signing_end_email_sent_at: endsAt > new Date ? null : emailSentAt
 	}

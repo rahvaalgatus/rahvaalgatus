@@ -257,17 +257,42 @@ function ReadPage(attrs) {
                     </h1>
 
 										<p>{initiative.destination == "parliament"
-											? t("VOTING_SUCCEEDED")
-											: t("VOTING_SUCCEEDED_ON_LOCAL_LEVEL")
+											? (initiative.signing_expired_at == null
+												? t("VOTING_SUCCEEDED")
+												: t("VOTING_SUCCEEDED_AND_EXPIRED")
+											)
+
+											: (initiative.signing_expired_at == null
+												? t("VOTING_SUCCEEDED_ON_LOCAL_LEVEL")
+												: t("VOTING_SUCCEEDED_AND_EXPIRED_ON_LOCAL_LEVEL")
+											)
 										}</p>
 									</Fragment> : <Fragment>
                     <h1 class="status-header">
                       {t("N_SIGNATURES_FAILED", {votes: signatureCount})}
                     </h1>
 
-										<p>
-											{t("VOTING_FAILED", {signatureCount: signatureThreshold})}
-										</p>
+										<p>{initiative.destination == "parliament"
+											? (initiative.signing_expired_at == null
+												? t("VOTING_FAILED", {
+													signatureCount: signatureThreshold
+												})
+
+												: t("VOTING_FAILED_AND_EXPIRED", {
+													signatureCount: signatureThreshold
+												})
+											)
+
+											: (initiative.signing_expired_at == null
+												? t("VOTING_FAILED_ON_LOCAL_LEVEL", {
+													signatureCount: signatureThreshold
+												})
+
+												: t("VOTING_FAILED_AND_EXPIRED_ON_LOCAL_LEVEL", {
+													signatureCount: signatureThreshold
+												})
+											)
+										}</p>
 									</Fragment>}
 								</div>
 							}
@@ -839,7 +864,7 @@ function InitiativeContentView(attrs) {
 		case "text/html":
 			return <article class="text" lang={text.language}>
 				{Jsx.html(text.content)}
-				</article>
+			</article>
 
 		case "application/vnd.basecamp.trix+json":
 			return <article class="text trix-text" lang={text.language}>
@@ -955,18 +980,18 @@ function SidebarAuthorView(attrs) {
 			{!(
 				new Date >= DateFns.addDays(
 					DateFns.startOfDay(initiative.published_at),
-					Config.minDeadlineDays
+					Config.minEditingDeadlineDays
 				) ||
 
 				initiative.tags.includes("fast-track")
 			) ? <p>
 				{t("INITIATIVE_SEND_TO_SIGNING_WAIT", {
-					daysInEdit: Config.minDeadlineDays,
+					daysInEdit: Config.minEditingDeadlineDays,
 
 					daysLeft: diffInDays(
 						DateFns.addDays(
 							DateFns.startOfDay(initiative.published_at),
-							Config.minDeadlineDays
+							Config.minEditingDeadlineDays
 						),
 
 						new Date

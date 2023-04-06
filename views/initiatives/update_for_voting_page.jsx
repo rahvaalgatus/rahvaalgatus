@@ -18,16 +18,14 @@ module.exports = function(attributes) {
 	var {attrs} = attributes
 	var {texts} = attributes
 
-	var minOn = DateFns.addDays(
-		Initiative.getMinDeadline(initiative.signing_started_at || new Date),
-		-1
-	)
+	var startedAt = initiative.signing_started_at || new Date
+	var minOn = Initiative.getMinSigningDeadline(startedAt)
 
 	var endsOn = attrs.endsAt
 		? DateFns.addMilliseconds(attrs.endsAt, -1)
 		: minOn
 
-	var maxOn = DateFns.addDays(Initiative.getMaxDeadline(new Date), -1)
+	var maxOn = DateFns.addDays(Initiative.getMaxSigningDeadline(startedAt), -1)
 
 	return <InitiativePage
 		page="initiative-send-to-voting"

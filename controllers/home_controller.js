@@ -31,6 +31,7 @@ exports.router.get("/", function(req, res) {
 
 		WHERE initiative.archived_at IS NULL
 		AND initiative.published_at IS NOT NULL
+		AND initiative.signing_expired_at IS NULL
 		AND (
 			initiative.phase != 'edit' OR
 			initiative.discussion_ends_at > ${cutoff}
@@ -63,7 +64,7 @@ exports.router.get("/", function(req, res) {
 
 			var news = newsDb.search(sql`
 				SELECT * FROM news, json_each(news.categories) AS category
-				WHERE category.value= 'Rahvaalgatusveeb'
+				WHERE category.value = 'Rahvaalgatusveeb'
 				ORDER BY published_at DESC
 				LIMIT 3
 			`)
@@ -148,6 +149,7 @@ exports.router.get("/statistics",
 			WHERE phase = 'sign'
 			AND published_at IS NOT NULL
 			AND signing_ends_at > ${new Date}
+			AND signing_expired_at IS NULL
 		`)[0].count
 	}
 

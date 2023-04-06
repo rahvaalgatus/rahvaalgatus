@@ -26,7 +26,10 @@ module.exports = function(argv) {
 }
 
 function anonymize(actuallyAnonymize) {
-	var deadline = DateFns.addDays(new Date, -28)
+	var expiredBefore =
+		DateFns.addDays(new Date, -Config.anonymizeSignaturesExpiredAfterDays)
+	var receivedBefore =
+		DateFns.addDays(new Date, -Config.anonymizeSignaturesReceivedAfterDays)
 
 	var anonymizables = initiativesDb.search(sql`
 		SELECT
@@ -36,17 +39,22 @@ function anonymize(actuallyAnonymize) {
 
 		FROM initiatives AS initiative
 
-		WHERE phase IN ('parliament', 'government', 'done')
-		AND signatures_anonymized_at IS NULL
+		WHERE signatures_anonymized_at IS NULL
 		AND NOT external
 
-		AND ((
-			destination = 'parliament' AND
-			received_by_parliament_at <= ${deadline}
-		) OR (
-			destination != 'parliament' AND
-			received_by_government_at <= ${deadline}
-		))
+		AND (
+			phase = 'sign' AND signing_expired_at <= ${expiredBefore}
+
+			OR phase IN ('parliament', 'government', 'done') AND (
+				destination = 'parliament' AND
+				received_by_parliament_at <= ${receivedBefore}
+
+				OR
+
+				destination != 'parliament' AND
+				received_by_government_at <= ${receivedBefore}
+			)
+		)
 	`)
 
 	for (var i = 0; i < anonymizables.length; ++i) {
@@ -57,11 +65,17 @@ function anonymize(actuallyAnonymize) {
 		logger.info("Link: %s", Config.url + "/initiatives/" + initiative.uuid)
 		logger.info("Signature Count: %d", initiative.signature_count)
 
-		if (initiative.destination == "parliament") logger.info(
+		if (initiative.signing_expired_at) logger.info(
+			"Signing Expired On: %s",
+			I18n.formatDate("iso", initiative.signing_expired_at)
+		)
+
+		if (initiative.received_by_parliament_at) logger.info(
 			"Received by Parliament: %s",
 			I18n.formatDate("iso", initiative.received_by_parliament_at)
 		)
-		else logger.info(
+
+		if (initiative.received_by_government_at) logger.info(
 			"Received by Government: %s",
 			I18n.formatDate("iso", initiative.received_by_government_at)
 		)

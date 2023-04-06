@@ -1609,6 +1609,25 @@ describe("SignaturesController", function() {
 				signing.statusMessage.must.equal("Signing Ended")
 			})
 
+			it("must respond with 405 if initiative signing expired", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					signing_ends_at: DateFns.addDays(new Date, 1),
+					signing_expired_at: new Date
+				}))
+
+				var path = `/initiatives/${initiative.uuid}`
+				var signing = yield this.request(path + "/signatures", {
+					method: "POST",
+					headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
+					body: ID_CARD_CERTIFICATE.toBuffer()
+				})
+
+				signing.statusCode.must.equal(405)
+				signing.statusMessage.must.equal("Signing Ended")
+			})
+
 			it("must respond with 422 given certificate from untrusted issuer",
 				function*() {
 				var issuer = tsl.getBySubjectName([
@@ -2163,6 +2182,29 @@ describe("SignaturesController", function() {
 					user_id: this.author.id,
 					phase: "sign",
 					signing_ends_at: new Date
+				}))
+
+				var initiativePath = `/initiatives/${initiative.uuid}`
+				var signing = yield this.request(initiativePath + "/signatures", {
+					method: "POST",
+
+					form: {
+						method: "mobile-id",
+						personalId: ADULT_PERSONAL_ID,
+						phoneNumber: "+37200000766"
+					}
+				})
+
+				signing.statusCode.must.equal(405)
+				signing.statusMessage.must.equal("Signing Ended")
+			})
+
+			it("must respond with 405 if initiative signing expired", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					signing_ends_at: DateFns.addDays(new Date, 1),
+					signing_expired_at: new Date
 				}))
 
 				var initiativePath = `/initiatives/${initiative.uuid}`
@@ -2974,6 +3016,24 @@ describe("SignaturesController", function() {
 				signing.statusMessage.must.equal("Signing Ended")
 			})
 
+			it("must respond with 405 if initiative signing expired", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					signing_ends_at: DateFns.addDays(new Date, 1),
+					signing_expired_at: new Date
+				}))
+
+				var initiativePath = `/initiatives/${initiative.uuid}`
+				var signing = yield this.request(initiativePath + "/signatures", {
+					method: "POST",
+					form: {method: "smart-id", personalId: ADULT_PERSONAL_ID}
+				})
+
+				signing.statusCode.must.equal(405)
+				signing.statusMessage.must.equal("Signing Ended")
+			})
+
 			it("must respond with 422 given certificate from untrusted issuer",
 				function*() {
 				var issuer = tsl.getBySubjectName([
@@ -3765,7 +3825,7 @@ describe("SignaturesController", function() {
 			`).must.eql([otherSignature])
 		})
 
-		it("must not delete signature if signing finished", function*() {
+		it("must not delete signature if initiative signing finished", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "sign",

@@ -3,7 +3,6 @@ var _ = require("root/lib/underscore")
 var Qs = require("qs")
 var Jsx = require("j6pack")
 var {Fragment} = Jsx
-var DateFns = require("date-fns")
 var Config = require("root").config
 var Page = require("../page")
 var I18n = require("root/lib/i18n")
@@ -17,8 +16,6 @@ var isEventNotifiable = require("root/lib/event").isNotifiable
 var {anonymizeSignaturesReceivedAfterDays} = require("root").config
 var {InitiativeDestinationSelectView} =
 	require("root/views/initiatives/read_page")
-var {formatDate} = require("root/lib/i18n")
-var {formatDateTime} = require("root/lib/i18n")
 var {confirm} = require("root/lib/jsx")
 var linkify = require("root/lib/linkify")
 var UPDATEABLE_PHASES = ["sign", "parliament", "government", "done"]
@@ -139,7 +136,7 @@ module.exports = function(attrs) {
 					</FormButton>
 
 					{initiative.archived_at ? <p>
-						Archived on {formatDate("iso", initiative.archived_at)}.
+						Archived on {I18n.formatDate("iso", initiative.archived_at)}.
 					</p> : null}
 				</td>
 			</tr>
@@ -164,6 +161,17 @@ module.exports = function(attrs) {
 				>{author.name}
 				</a> : initiative.author_name}</td>
 			</tr>
+
+			{initiative.phase == "sign" && EXPIRATION_MONTHS > 0 ? <tr>
+				<th scope="row">Signing Expiration</th>
+				<td>{initiative.signing_expired_at ? <Fragment>
+					Expired on {
+						I18n.formatDateTime("isoish", initiative.signing_expired_at)
+					}.
+				</Fragment> : <Fragment>
+					Will expire on {I18n.formatDateTime("isoish", expiresOn)}.
+				</Fragment>}</td>
+			</tr> : null}
 
 			<tr>
 				<th scope="row">Signatures Anonymized</th>
@@ -447,34 +455,6 @@ module.exports = function(attrs) {
 					/>
 				</td>
 			</tr>
-
-			{initiative.phase == "sign" && EXPIRATION_MONTHS > 0 ? <tr>
-				<th scope="row">Signing Expiration</th>
-				<td>{new Date >= expiresOn ? (initiative.signing_expired_at ? <Fragment>
-					Expired on {
-						I18n.formatDate("iso", DateFns.addDays(expiresOn, -1))
-					} and signatures deleted at {
-						I18n.formatDateTime("isoish", initiative.signing_expired_at)
-					}.
-					</Fragment> : <Fragment>
-						Expired on {
-							I18n.formatDate("iso", DateFns.addDays(expiresOn, -1))
-						}.<br />
-
-						<FormButton
-							req={req}
-							action={initiativePath}
-							name="signing_expired"
-							value="true">
-							Delete Signatures
-						</FormButton>
-					</Fragment>
-				) : <Fragment>
-					Will expire on {
-						I18n.formatDate("iso", DateFns.addDays(expiresOn, -1))
-					}.
-				</Fragment>}</td>
-			</tr> : null}
 		</table>
 
 		<div class="events">
@@ -604,7 +584,7 @@ module.exports = function(attrs) {
 						return <tr class="event">
 							<td>
 								<time datetime={event.occurred_at.toJSON()}>
-									{formatDateTime("isoish", event.occurred_at)}
+									{I18n.formatDateTime("isoish", event.occurred_at)}
 								</time>
 
 								{event.notified_at == null ? <Fragment>
@@ -735,7 +715,7 @@ function DateInputForm(attrs) {
 		{...attrs}
 		type="date"
 		label="Set Date"
-		value={attrs.value && formatDate("iso", attrs.value)}
+		value={attrs.value && I18n.formatDate("iso", attrs.value)}
 	/>
 }
 
