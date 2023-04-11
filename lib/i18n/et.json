@@ -274,7 +274,7 @@
 	"INITIATIVE_EVENT_RATE_LIMIT_BODY": "Rahvaalgatus lubab lisada kolm menetlusinfo sissekannet veerand tunni jooksul ja tundub, et oled kolm juba sisestanud.\nVabandust, et pead ootama, kuid lisamise piiramine on vajalik rämpsposti tõkestamiseks — iga menetlusinfo peale läheb teavitus kõigile algatuse jälgijatele ja piiramatut kirjutamist võib keegi pahatahtlikult ära kasutada.\n\nPalun proovi {{minutes}} minuti pärast uuesti, näiteks lehte värskendades.",
 	"INITIATIVE_EVENT_RATE_LIMIT_TITLE": "Vabandust! Palun proovi {{minutes}} minuti pärast uuesti",
 	"INITIATIVE_IMAGE_ADD_IMAGE": "Lisa illustratiivne pilt",
-	"INITIATIVE_IMAGE_ADD_IMAGE_DESCRIPTION": "Vali <strong>JPEG</strong> või <strong>PNG</strong> formaadis pilt ideaalis suurusega <strong>1200x675px</strong> või suurem.\nPilt ilmub algatuse juurde näiteks sotsiaalmeedias. Veendu, et sul on pildi levitamiseks autori luba.",
+	"INITIATIVE_IMAGE_ADD_IMAGE_DESCRIPTION": "Vali <strong>JPEG</strong> või <strong>PNG</strong> formaadis pilt kuni 3MiB suur (ideaalis <strong>1200x675px</strong> või suurem).\nPilt ilmub algatuse juurde näiteks sotsiaalmeedias. Veendu, et sul on pildi levitamiseks autori luba.",
 	"INITIATIVE_IMAGE_AUTHOR_CANCEL": "Tühista",
 	"INITIATIVE_IMAGE_AUTHOR_EDIT": "Muuda autorit",
 	"INITIATIVE_IMAGE_AUTHOR_EMPTY": "Kui pildi litsents nõuab ja autor lubab, <label class=\"link-button\" for=\"initiative-image-author-toggle\">viita autorile või litsentsile</label>.",
