@@ -178,7 +178,7 @@ module.exports = function(attrs) {
 				<td>{initiative.signatures_anonymized_at ? "Yes" : "No"}</td>
 			</tr>
 
-			<tr>
+			{initiative.destination == "parliament" ? <tr>
 				<th scope="row">Sent to Parliament</th>
 				<td>
 					<DateInputForm
@@ -188,9 +188,9 @@ module.exports = function(attrs) {
 						value={initiative.sent_to_parliament_at}
 					/>
 				</td>
-			</tr>
+			</tr> : null}
 
-			<tr>
+			{initiative.destination == "parliament" ? <tr>
 				<th scope="row">
 					Received by Parliament<br />
 
@@ -207,9 +207,9 @@ module.exports = function(attrs) {
 						value={initiative.received_by_parliament_at}
 					/>
 				</td>
-			</tr>
+			</tr> : null}
 
-			<tr>
+			{initiative.destination == "parliament" ? <tr>
 				<th scope="row">
 					Accepted by Parliament<br />
 
@@ -226,9 +226,9 @@ module.exports = function(attrs) {
 						value={initiative.accepted_by_parliament_at}
 					/>
 				</td>
-			</tr>
+			</tr> : null}
 
-			<tr>
+			{initiative.destination == "parliament" ? <tr>
 				<th scope="row">Parliament Committee</th>
 				<td>
 					<InputForm
@@ -238,17 +238,17 @@ module.exports = function(attrs) {
 						value={initiative.parliament_committee}
 					/>
 				</td>
-			</tr>
+			</tr> : null}
 
-			<tr>
+			{initiative.destination == "parliament" ? <tr>
 				<th scope="row">
 					Parliament Decision<br />
 					<small>Imported from the Riigikogu API.</small>
 				</th>
 				<td>{initiative.parliament_decision}</td>
-			</tr>
+			</tr> : null}
 
-			<tr>
+			{initiative.destination == "parliament" ? <tr>
 				<th scope="row">Finished in Parliament</th>
 				<td>
 					<DateInputForm
@@ -258,7 +258,7 @@ module.exports = function(attrs) {
 						value={initiative.finished_in_parliament_at}
 					/>
 				</td>
-			</tr>
+			</tr> : null}
 
 			<tr>
 				<th scope="row">Sent to Government</th>
