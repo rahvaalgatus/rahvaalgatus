@@ -243,6 +243,8 @@ function ReadPage(attrs) {
 										{t("ADD_YOUR_COMMENT")}
 									</a>.
 								</h1>
+
+								<p>{t("INITIATIVE_IN_DISCUSSION_DESCRIPTION")}</p>
 							</div>
 							else return null
 

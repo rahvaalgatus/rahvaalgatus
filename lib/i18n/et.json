@@ -322,6 +322,7 @@
 	"INITIATIVE_INFO_TITLE": "Lisainfo",
 	"INITIATIVE_INFO_UPDATED": "Lisainfo salvestatud",
 	"INITIATIVE_IN_DISCUSSION": "Algatus on ühisloomefaasis.",
+	"INITIATIVE_IN_DISCUSSION_DESCRIPTION": "Ühisloomefaas on mõeldud algatuse tekstile kommentaaride ja ettepanekute kogumiseks — algatust veel allkirjastada ei saa. Ühisloomefaas kestab vähemalt kolm päeva, mille vältel algataja saab muuta nii teksti, tõlkeid kui ka algatuse saajat. Kui algatus allkirjastamisele saadetakse, läheb eestikeelne tekst lukku, ning muuta saab vaid tõlkeid.",
 	"INITIATIVE_IN_GOVERNMENT": "Algatus on valitsusasutuses.",
 	"INITIATIVE_IN_LOCAL_GOVERNMENT": "Algatus on menetluses.",
 	"INITIATIVE_IN_PARLIAMENT": "Algatus on Riigikogus.",
