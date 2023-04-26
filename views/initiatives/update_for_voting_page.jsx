@@ -19,7 +19,7 @@ module.exports = function(attributes) {
 	var {texts} = attributes
 
 	var startedAt = initiative.signing_started_at || new Date
-	var minOn = Initiative.getMinSigningDeadline(startedAt)
+	var minOn = DateFns.addDays(Initiative.getMinSigningDeadline(startedAt), -1)
 
 	var endsOn = attrs.endsAt
 		? DateFns.addMilliseconds(attrs.endsAt, -1)

@@ -15,7 +15,7 @@ module.exports = function(attributes) {
 	var {attrs} = attributes
 
 	var publishedAt = initiative.published_at || new Date
-	var minOn = Initiative.getMinEditingDeadline(publishedAt)
+	var minOn = DateFns.addDays(Initiative.getMinEditingDeadline(publishedAt), -1)
 	var endsOn = attrs.endsAt ? DateFns.addMilliseconds(attrs.endsAt, -1) : minOn
 
 	return <InitiativePage
