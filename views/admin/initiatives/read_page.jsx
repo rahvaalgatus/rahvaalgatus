@@ -138,6 +138,12 @@ module.exports = function(attrs) {
 					{initiative.archived_at ? <p>
 						Archived on {I18n.formatDate("iso", initiative.archived_at)}.
 					</p> : null}
+
+					<p>
+						The follow-up phase is for initiatives that were accepted by either
+						the parliament or government. Initiatives that were rejected should
+						remain in their respective phase.
+					</p>
 				</td>
 			</tr>
 
