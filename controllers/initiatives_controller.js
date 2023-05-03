@@ -9,6 +9,7 @@ var Config = require("root").config
 var Crypto = require("crypto")
 var MediaType = require("medium-type")
 var Subscription = require("root/lib/subscription")
+var Filtering = require("root/lib/filtering")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
@@ -34,6 +35,7 @@ var {countCitizenOsSignaturesById} = require("root/lib/initiative")
 var {parsePersonalId} = require("root/lib/user")
 var {validateRedirect} = require("root/lib/http")
 var {PHASES} = require("root/lib/initiative")
+var {COMPARATOR_SQL} = require("root/lib/filtering")
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: "", phase: "edit"}
 var EMPTY_CONTACT = {name: "", email: "", phone: ""}
@@ -64,6 +66,7 @@ exports.router.get("/",
 	// Perhaps it's worth changing the query parameter name to "tag". Remember
 	// backwards compatibility!
 	var tag = req.query.category
+	var {signingEndsAt} = Filtering.parseFilters(["signingEndsAt"], req.query)
 
 	var signedSince = (
 		req.query.signedSince &&
@@ -71,6 +74,7 @@ exports.router.get("/",
 	)
 
 	var [orderBy, orderDir] = req.query.order ? parseOrder(req.query.order) : []
+	var orderDirSql = orderDir == "desc" ? sql`DESC` : sql`ASC`
 	var limit = req.query.limit ? parseLimit(req.query.limit) : null
 
 	var initiatives = initiativesDb.search(sql`
@@ -106,27 +110,37 @@ exports.router.get("/",
 
 		WHERE initiative.published_at IS NOT NULL
 
-		AND (destination IS NULL AND phase = 'edit' OR destination ${
-			gov == null ? sql`IS NOT NULL` :
-			gov == "parliament" ? sql`= 'parliament'` : sql`!= 'parliament'`
-		})
+		AND (
+			initiative.destination IS NULL AND phase = 'edit'
+
+			OR initiative.destination ${
+				gov == null ? sql`IS NOT NULL` :
+				gov == "parliament" ? sql`= 'parliament'` : sql`!= 'parliament'`
+			}
+		)
 
 		${onlyDestinations
-			? sql`AND destination IN ${sql.in(onlyDestinations)}`
+			? sql`AND initiative.destination IN ${sql.in(onlyDestinations)}`
 			: sql``
 		}
 
-		${onlyPhase ? sql`AND phase = ${onlyPhase}` : sql``}
+		${onlyPhase ? sql`AND initiative.phase = ${onlyPhase}` : sql``}
 		${tag ? sql`AND tag.value = ${tag}` : sql``}
+
+		${signingEndsAt ? sql`
+			AND initiative.signing_ends_at
+			${COMPARATOR_SQL[signingEndsAt[0]]}
+			${signingEndsAt[1]}
+		` : sql``}
 
 		GROUP BY initiative.uuid
 
 		${
 			orderBy == "signatureCount"
-			? sql`ORDER BY signature_count ${orderDir}`
+			? sql`ORDER BY signature_count ${orderDirSql}`
 			: orderBy == "signaturesSinceCount" && signedSince
-			? sql`ORDER BY recent_signature_count ${orderDir}`
-			: sql``
+			? sql`ORDER BY recent_signature_count ${orderDirSql}`
+			: sql`ORDER BY initiative.rowid ASC`
 		}
 
 		${limit != null ? sql`LIMIT ${limit}` : sql``}
@@ -1284,12 +1298,9 @@ function parsePhase(phase) {
 }
 
 function parseOrder(order) {
-	var by = order.replace(/^[-+]/, "")
-	order = order[0] == "-" ? sql`DESC` : sql`ASC`
-
-	switch (by) {
+	switch ((order = Filtering.parseOrder(order))[0]) {
 		case "signatureCount":
-		case "signaturesSinceCount": return [by, order]
+		case "signaturesSinceCount": return order
 		default: throw new HttpError(400, "Invalid Order")
 	}
 }

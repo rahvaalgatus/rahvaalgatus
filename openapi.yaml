@@ -175,6 +175,19 @@ paths:
               - "signaturesSinceCount"
               - "-signaturesSinceCount"
 
+        - name: signingEndsAt
+          in: query
+          description: |
+            Filter initiatives based on their signing deadline.  
+            Use `<`, `<=`, `=`, `>=` and `>` as the field separator in the
+            query for less-than or more-than filters.  
+            E.g., use `/initiatives?phase=sign&signingEndsAt>2015-06-18T13:37:42Z`.
+
+          schema:
+            type: string
+            format: date-time
+            example: "2015-06-18T13:37:42Z"
+
         - name: limit
           in: query
           description: Limit returned initiatives.

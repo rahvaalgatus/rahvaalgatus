@@ -172,7 +172,13 @@ Kui soovid veebilehele loetelu Rahvaalgatuses kajastuvatest algatustest, saad se
   </ol>
 
   <script>!function() {
-    fetch("/initiatives?phase=sign&order=-signatureCount&limit=5", {
+    var path = "/initiatives"
+    path += "?phase=sign"
+    path += "&signingEndsAt>" + new Date().toISOString()
+    path += "&order=-signatureCount"
+    path += "&limit=5"
+
+    fetch(path, {
       headers: {Accept: "application/vnd.rahvaalgatus.initiative+json; v=1"}
     }).then(getJson).then(function(initiatives) {
       var ol = document.getElementById("example-initiatives-list")
@@ -199,12 +205,18 @@ Alustuseks piisab ühest loetelu (`<ol>`) elemendist.
 <ol id="initiatives"></ol>
 ```
 
-Algatusi pärides saad ka määrata, kuidas neid järjestada, filtreerida algatuse faasi järgi ning piirata tagastatud algatuste arvu. Määrame, et soovime ainult allkirjastamises olevaid algatusi (`phase=sign`), sorteerida nad allkirjade järgi kahanevas järjekorras (`order=-signatureCount`) ja ainult esimest viite (`limit=5`):
+Algatusi pärides saad ka määrata, kuidas neid järjestada, filtreerida algatuse faasi järgi ning piirata tagastatud algatuste arvu. Määrame, et soovime ainult allkirjastamises olevaid algatusi (`phase=sign`) tähtajaga tulevikus (`signingEndsAt>` + ajavööndiga praegune kellaaeg), sorteerida nad allkirjade järgi kahanevas järjekorras (`order=-signatureCount`) ja ainult esimest viite (`limit=5`):
 
 ```javascript
 var URL = "https://rahvaalgatus.ee"
 
-fetch(URL + "/initiatives?phase=sign&order=-signatureCount&limit=5", {
+var url = URL + "/initiatives"
+url += "?phase=sign"
+url += "&signingEndsAt>" + new Date().toISOString()
+url += "&order=-signatureCount"
+url += "&limit=5"
+
+fetch(url, {
   headers: {Accept: "application/vnd.rahvaalgatus.initiative+json; v=1"}
 }).then(function(res) { return res.json() }).then(function(body) {
   var ol = document.getElementById("initiatives")

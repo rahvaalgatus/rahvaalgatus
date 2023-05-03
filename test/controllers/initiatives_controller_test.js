@@ -766,6 +766,40 @@ describe("InitiativesController", function() {
 			})])
 		})
 
+		describe("given signingEndsAt", function() {
+			it("must include initiatives >= signingEndsAt", function*() {
+				var now = new Date
+
+				var initiatives = initiativesDb.create([
+					new ValidInitiative({
+						user_id: this.author.id,
+						signing_ends_at: DateFns.addSeconds(now, -1),
+						phase: "sign"
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						signing_ends_at: now,
+						phase: "sign"
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						signing_ends_at: DateFns.addSeconds(now, 1),
+						phase: "sign"
+					})
+				])
+
+				var res = yield this.request(
+					`/initiatives?signingEndsAt>=${now.toJSON()}`, {
+					headers: {Accept: INITIATIVE_TYPE}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.eql(initiatives.slice(1).map(serializeApiInitiative))
+			})
+		})
+
 		describe("given signedSince", function() {
 			it("must return signature count since given date", function*() {
 				var self = this
