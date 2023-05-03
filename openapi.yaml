@@ -466,6 +466,16 @@ components:
           description: The phase of the initiative.
           example: "sign"
 
+        signingEndsAt:
+          type: string
+          nullable: true
+          format: date-time
+          example: "2020-06-18T13:37:42.666Z"
+
+          description: |
+            The deadline for signing.  
+            You can use it to filter out inactive initiatives.
+
         signatureCount:
           type: integer
           nullable: true

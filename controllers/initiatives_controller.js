@@ -1255,6 +1255,7 @@ function serializeApiInitiative(initiative) {
 		for: initiative.destination,
 		title: initiative.title,
 		phase: initiative.phase,
+		signingEndsAt: initiative.signing_ends_at,
 		signatureCount: initiative.external ? null : initiative.signature_count
 	}
 }

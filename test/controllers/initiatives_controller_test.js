@@ -688,14 +688,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 			res.headers["content-type"].must.equal(INITIATIVE_TYPE)
 			res.headers["access-control-allow-origin"].must.equal("*")
-
-			res.body.must.eql([{
-				id: initiative.uuid,
-				for: null,
-				title: initiative.title,
-				phase: "edit",
-				signatureCount: 0
-			}])
+			res.body.must.eql([serializeApiInitiative(initiative)])
 		})
 
 		it("must respond with initiatives destined for parliament", function*() {
@@ -711,14 +704,7 @@ describe("InitiativesController", function() {
 			})
 
 			res.statusCode.must.equal(200)
-
-			res.body.must.eql([{
-				id: initiative.uuid,
-				for: "parliament",
-				title: initiative.title,
-				phase: "edit",
-				signatureCount: 0
-			}])
+			res.body.must.eql([serializeApiInitiative(initiative)])
 		})
 
 		it("must respond with initiatives destined for local", function*() {
@@ -734,14 +720,7 @@ describe("InitiativesController", function() {
 			})
 
 			res.statusCode.must.equal(200)
-
-			res.body.must.eql([{
-				id: initiative.uuid,
-				for: "muhu-vald",
-				title: initiative.title,
-				phase: "edit",
-				signatureCount: 0
-			}])
+			res.body.must.eql([serializeApiInitiative(initiative)])
 		})
 
 		it("must respond with external initiatives in parliament", function*() {
@@ -757,13 +736,9 @@ describe("InitiativesController", function() {
 
 			res.statusCode.must.equal(200)
 
-			res.body.must.eql([{
-				id: initiative.uuid,
-				for: "parliament",
-				title: initiative.title,
-				phase: "parliament",
+			res.body.must.eql([_.assign(serializeApiInitiative(initiative), {
 				signatureCount: null
-			}])
+			})])
 		})
 
 		it("must respond with signature count", function*() {
@@ -786,13 +761,9 @@ describe("InitiativesController", function() {
 
 			res.statusCode.must.equal(200)
 
-			res.body.must.eql([{
-				id: initiative.uuid,
-				for: "parliament",
-				title: initiative.title,
-				phase: "sign",
+			res.body.must.eql([_.assign(serializeApiInitiative(initiative), {
 				signatureCount: 8
-			}])
+			})])
 		})
 
 		describe("given signedSince", function() {
@@ -878,14 +849,7 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(200)
-
-					res.body.must.eql([{
-						id: initiative.uuid,
-						for: "parliament",
-						title: initiative.title,
-						phase: phase,
-						signatureCount: 0
-					}])
+					res.body.must.eql([serializeApiInitiative(initiative)])
 				})
 			})
 		})
@@ -942,14 +906,7 @@ describe("InitiativesController", function() {
 
 				res.statusCode.must.equal(200)
 				res.headers["content-type"].must.equal(INITIATIVE_TYPE)
-
-				res.body.must.eql([{
-					id: initiative.uuid,
-					for: "parliament",
-					title: initiative.title,
-					phase: "sign",
-					signatureCount: 0
-				}])
+				res.body.must.eql([serializeApiInitiative(initiative)])
 			})
 
 			Object.keys(LOCAL_GOVERNMENTS).forEach(function(dest) {
@@ -979,14 +936,7 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(200)
 					res.headers["content-type"].must.equal(INITIATIVE_TYPE)
-
-					res.body.must.eql([{
-						id: initiative.uuid,
-						for: dest,
-						title: initiative.title,
-						phase: "sign",
-						signatureCount: 0
-					}])
+					res.body.must.eql([serializeApiInitiative(initiative)])
 				})
 			})
 
@@ -1028,12 +978,14 @@ describe("InitiativesController", function() {
 					for: "muhu-vald",
 					title: a.title,
 					phase: "sign",
+					signingEndsAt: a.signing_ends_at.toJSON(),
 					signatureCount: 0
 				}, {
 					id: b.uuid,
 					for: "tallinn",
 					title: b.title,
 					phase: "sign",
+					signingEndsAt: b.signing_ends_at.toJSON(),
 					signatureCount: 0
 				}])
 			})
@@ -5807,14 +5759,7 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 			res.headers["content-type"].must.equal(INITIATIVE_TYPE)
 			res.headers["access-control-allow-origin"].must.equal("*")
-
-			res.body.must.eql({
-				id: initiative.uuid,
-				for: null,
-				title: initiative.title,
-				phase: "edit",
-				signatureCount: 0
-			})
+			res.body.must.eql(serializeApiInitiative(initiative))
 		})
 
 		it("must respond with initiative destined for parliament", function*() {
@@ -5829,14 +5774,7 @@ describe("InitiativesController", function() {
 			})
 
 			res.statusCode.must.equal(200)
-
-			res.body.must.eql({
-				id: initiative.uuid,
-				for: "parliament",
-				title: initiative.title,
-				phase: "edit",
-				signatureCount: 0
-			})
+			res.body.must.eql(serializeApiInitiative(initiative))
 		})
 
 		it("must respond with initiative destined for local", function*() {
@@ -5851,14 +5789,7 @@ describe("InitiativesController", function() {
 			})
 
 			res.statusCode.must.equal(200)
-
-			res.body.must.eql({
-				id: initiative.uuid,
-				for: "muhu-vald",
-				title: initiative.title,
-				phase: "edit",
-				signatureCount: 0
-			})
+			res.body.must.eql(serializeApiInitiative(initiative))
 		})
 
 		it("must respond with external initiative", function*() {
@@ -5874,13 +5805,9 @@ describe("InitiativesController", function() {
 
 			res.statusCode.must.equal(200)
 
-			res.body.must.eql({
-				id: initiative.uuid,
-				for: "parliament",
-				title: "Better life for everyone.",
-				phase: "parliament",
+			res.body.must.eql(_.assign(serializeApiInitiative(initiative), {
 				signatureCount: null
-			})
+			}))
 		})
 
 		it("must respond with signature count", function*() {
@@ -5903,13 +5830,9 @@ describe("InitiativesController", function() {
 
 			res.statusCode.must.equal(200)
 
-			res.body.must.eql({
-				id: initiative.uuid,
-				for: "parliament",
-				title: initiative.title,
-				phase: "sign",
+			res.body.must.eql(_.assign(serializeApiInitiative(initiative), {
 				signatureCount: 8
-			})
+			}))
 		})
 	})
 
@@ -10705,4 +10628,18 @@ function queryEvents(html) {
 			phase: phase ? phase[1] : null
 		}
 	}).reverse()
+}
+
+function serializeApiInitiative(initiative) {
+	return {
+		id: initiative.uuid,
+		for: initiative.destination,
+		title: initiative.title,
+		phase: initiative.phase,
+
+		signingEndsAt:
+			initiative.signing_ends_at && initiative.signing_ends_at.toJSON(),
+
+		signatureCount: 0
+	}
 }
