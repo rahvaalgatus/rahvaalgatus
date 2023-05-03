@@ -571,6 +571,7 @@ CREATE INDEX index_initiative_signatures_on_created_at
 ON initiative_signatures (created_at);
 CREATE INDEX index_initiative_citizenos_signatures_on_created_at
 ON initiative_citizenos_signatures (created_at);
+CREATE INDEX index_initiatives_on_phase ON initiatives (phase);
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -689,4 +690,5 @@ INSERT INTO migrations VALUES('20211125124930');
 INSERT INTO migrations VALUES('20220628084329');
 INSERT INTO migrations VALUES('20230228064416');
 INSERT INTO migrations VALUES('20230331120000');
+INSERT INTO migrations VALUES('20230503063630');
 COMMIT;

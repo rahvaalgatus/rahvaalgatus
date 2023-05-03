@@ -28,7 +28,6 @@ var renderEmail = require("root/lib/i18n").email
 var sql = require("sqlate")
 var {sqlite} = require("root")
 var {sendEmail} = require("root")
-var searchInitiativeEvents = _.compose(searchInitiativesEvents, _.concat)
 var parseText = require("./initiatives/texts_controller").parse
 var {countUndersignedSignaturesById} = require("root/lib/initiative")
 var {countCitizenOsSignaturesById} = require("root/lib/initiative")
@@ -42,9 +41,13 @@ var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var MAX_URL_LENGTH = 1024
 var INITIATIVE_TYPE =
 	new MediaType("application/vnd.rahvaalgatus.initiative+json; v=1")
-exports.searchInitiativesEvents = searchInitiativesEvents
+exports.searchInitiativesEventsForAtom = searchInitiativesEventsForAtom
+exports.synthesizeInitiativeEvents = synthesizeInitiativeEvents
 exports.serializeApiInitiative = serializeApiInitiative
 exports.router = Router({mergeParams: true})
+
+var searchInitiativeEventsForAtom =
+	_.compose(searchInitiativesEventsForAtom, _.concat)
 
 exports.router.get("/",
 	new ResponseTypeMiddeware(["text/html", INITIATIVE_TYPE].map(MediaType)),
@@ -292,7 +295,7 @@ exports.router.get("/:id",
 			break
 
 		case "application/atom+xml":
-			var events = searchInitiativeEvents(initiative)
+			var events = searchInitiativeEventsForAtom(initiative)
 			res.setHeader("Content-Type", type)
 			res.render("initiatives/atom.jsx", {events: events})
 			break
@@ -340,7 +343,7 @@ exports.read = function(req, res) {
 	`)[0]
 
 	var comments = searchInitiativeComments(initiative.uuid)
-	var events = searchInitiativeEvents(initiative)
+	var events = searchInitiativeEventsWithFiles(initiative)
 
 	var subscription = user && user.email && user.email_confirmed_at
 		? subscriptionsDb.read(sql`
@@ -534,7 +537,7 @@ exports.router.use(function(err, req, res, next) {
 	else next(err)
 })
 
-function searchInitiativesEvents(initiatives) {
+function searchInitiativeEventsWithFiles(initiative) {
 	var events = eventsDb.search(sql`
 		SELECT
 			event.*,
@@ -552,15 +555,38 @@ function searchInitiativesEvents(initiatives) {
 		FROM initiative_events AS event
 		LEFT JOIN initiative_files AS file on file.event_id = event.id
 		LEFT JOIN users AS user ON event.user_id = user.id
-		WHERE event.initiative_uuid IN ${sql.in(initiatives.map((i) => i.uuid))}
+		WHERE event.initiative_uuid = ${initiative.uuid}
 		GROUP BY event.id
-		ORDER BY event.occurred_at ASC
 	`)
 
 	events.forEach(function(ev) {
 		ev.files = JSON.parse(ev.files).filter((f) => f.id).map(filesDb.parse)
 	})
 
+	return synthesizeInitiativeEvents([initiative], events)
+}
+
+function searchInitiativesEventsForAtom(initiatives) {
+	return synthesizeInitiativeEvents(initiatives, eventsDb.search(sql`
+		SELECT
+			event.id,
+			event.origin,
+			event.initiative_uuid,
+			event.type,
+			event.title,
+			event.content,
+			event.updated_at,
+			event.occurred_at,
+			user.name AS user_name
+
+		FROM initiative_events AS event
+		LEFT JOIN users AS user ON event.user_id = user.id
+		WHERE event.initiative_uuid IN ${sql.in(initiatives.map((i) => i.uuid))}
+		ORDER BY event.occurred_at ASC
+	`))
+}
+
+function synthesizeInitiativeEvents(initiatives, events) {
 	var eventsByInitiativeUuid = _.groupBy(events, "initiative_uuid")
 
 	return _.flatten(initiatives.map(function(initiative) {

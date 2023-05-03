@@ -215,8 +215,7 @@ function EventEntryView(attrs) {
 			authorName = event.origin == "author" ? event.user_name : null
 			break
 
-		default:
-			throw new RangeError("Unsupported event type: " + event.type)
+		default: throw new RangeError("Unsupported event type: " + event.type)
 	}
 
 	return <entry>

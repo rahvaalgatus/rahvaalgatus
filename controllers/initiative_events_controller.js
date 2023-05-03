@@ -4,9 +4,11 @@ var MediaType = require("medium-type")
 var {Router} = require("express")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
-var {searchInitiativesEvents} = require("./initiatives_controller")
+var {searchInitiativesEventsForAtom} = require("./initiatives_controller")
+var {synthesizeInitiativeEvents} = require("./initiatives_controller")
 var {serializeApiInitiative} = require("./initiatives_controller")
 var initiativesDb = require("root/db/initiatives_db")
+var eventsDb = require("root/db/initiative_events_db")
 var renderEventTitle = require("root/lib/event").renderTitle
 var sql = require("sqlate")
 
@@ -21,16 +23,13 @@ exports.router.get("/",
 	var initiatives = initiativesDb.search(sql`
 		SELECT *
 		FROM initiatives AS initiative
-		WHERE published_at IS NOT NULL
-		AND phase != 'edit'
-		GROUP BY uuid
-		ORDER BY ROWID
+		WHERE phase != 'edit'
 	`)
 
-	var events = searchInitiativesEvents(initiatives)
-
+	var events
 	switch (res.contentType.name) {
 		case "application/atom+xml":
+			events = searchInitiativesEventsForAtom(initiatives)
 			res.setHeader("Content-Type", res.contentType)
 
 			res.render("initiative_events/atom.jsx", {
@@ -40,6 +39,7 @@ exports.router.get("/",
 			break
 
 		case "application/vnd.rahvaalgatus.initiative-event+json":
+			events = searchInitiativesEventsForApi(initiatives)
 			res.setHeader("Content-Type", res.contentType)
 			res.setHeader("Access-Control-Allow-Origin", "*")
 			var initiativesByUuid = _.indexBy(initiatives, "uuid")
@@ -89,6 +89,24 @@ exports.router.get("/",
 		default: throw new HttpError(406)
 	}
 })
+
+function searchInitiativesEventsForApi(initiatives) {
+	return synthesizeInitiativeEvents(initiatives, eventsDb.search(sql`
+		SELECT
+			event.id,
+			event.initiative_uuid,
+			event.type,
+			event.title,
+			event.content,
+			event.occurred_at,
+			user.name AS user_name
+
+		FROM initiative_events AS event
+		LEFT JOIN users AS user ON event.user_id = user.id
+		WHERE event.initiative_uuid IN ${sql.in(initiatives.map((i) => i.uuid))}
+		ORDER BY event.occurred_at ASC
+	`))
+}
 
 function serializeApiEvent(initiative, event) {
 	return {
