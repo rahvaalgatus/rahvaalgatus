@@ -3,7 +3,6 @@ var Config = require("root").config
 var Neodoc = require("neodoc")
 var DateFns = require("date-fns")
 var co = require("co")
-var {Sql} = require("sqlate")
 var sql = require("sqlate")
 var {logger} = require("root")
 var Initiative = require("root/lib/initiative")
@@ -36,7 +35,8 @@ module.exports = co.wrap(function*(argv) {
 })
 
 function* expireSigning({actuallyExpire, actuallyEmail}) {
-	var today = DateFns.startOfDay(new Date)
+	var now = new Date
+	var cutoff = DateFns.addMonths(now, -Config.expireSignaturesInMonths)
 
 	var expirables = initiativesDb.search(sql`
 		SELECT
@@ -44,12 +44,7 @@ function* expireSigning({actuallyExpire, actuallyEmail}) {
 			user.email AS user_email,
 
 			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
-			AS signature_count,
-
-			date(
-				date(initiative.signing_started_at, 'localtime'),
-				'+${new Sql(String(Number(Config.expireSignaturesInMonths)))} months'
-			) AS expires_on
+			AS signature_count
 
 		FROM initiatives AS initiative
 		LEFT JOIN users AS user ON initiative.user_id = user.id
@@ -57,10 +52,10 @@ function* expireSigning({actuallyExpire, actuallyEmail}) {
 		WHERE initiative.phase = 'sign'
 		AND initiative.signing_expired_at IS NULL
 		AND NOT initiative.external
-		AND date(${today}, 'localtime') >= expires_on
-		AND expires_on >= date(initiative.signing_ends_at, 'localtime')
+		AND initiative.signing_started_at <= ${cutoff}
+		AND ${now} >= initiative.signing_ends_at
 
-		ORDER BY expires_on ASC
+		ORDER BY initiative.signing_started_at ASC
 	`)
 
 	for (var i = 0; i < expirables.length; ++i) {
@@ -90,10 +85,10 @@ function* expireSigning({actuallyExpire, actuallyEmail}) {
 			DateFns.addMilliseconds(initiative.signing_ends_at, -1)
 		))
 
-		logger.info(
-			"Expired On: %s",
-			I18n.formatDate("iso", initiative.expires_on)
-		)
+		logger.info("Expired On: %s", I18n.formatDate("iso", DateFns.addMonths(
+			initiative.signing_started_at,
+			Config.expireSignaturesInMonths
+		)))
 
 		if (actuallyExpire) initiativesDb.update(initiative, {
 			signing_expired_at: new Date
