@@ -14,22 +14,30 @@ Usage: cli initiative-signatures (-h | --help)
        cli initiative-signatures delete-signables [options]
 
 Options:
-    -h, --help   Display this help and exit.
-    --yes        Actually anonymize signatures. Otherwise just a dry-run.
+    -h, --help     Display this help and exit.
+    --yes          Actually anonymize signatures. Otherwise just a dry-run.
+    --expired-now  Anonymize expired initiatives now, without waiting the
+                   customary ${Config.anonymizeSignaturesExpiredAfterDays} days.
 `
 
 module.exports = function(argv) {
 	var args = Neodoc.run(USAGE_TEXT, {argv: argv || ["initiative-signatures"]})
 	if (args["--help"]) return void process.stdout.write(USAGE_TEXT.trimLeft())
 
-	if (args.anonymize) anonymize(args["--yes"])
+	if (args.anonymize) anonymize({
+		actuallyAnonymize: args["--yes"],
+		anonymizeExpiredNow: args["--expired-now"]
+	})
+
 	else if (args["delete-signables"]) deleteSignables(args["--yes"])
 	else process.stdout.write(USAGE_TEXT.trimLeft())
 }
 
-function anonymize(actuallyAnonymize) {
-	var expiredBefore =
-		DateFns.addDays(new Date, -Config.anonymizeSignaturesExpiredAfterDays)
+function anonymize({actuallyAnonymize, anonymizeExpiredNow}) {
+	var expiredBefore = anonymizeExpiredNow
+		? new Date
+		: DateFns.addDays(new Date, -Config.anonymizeSignaturesExpiredAfterDays)
+
 	var receivedBefore =
 		DateFns.addDays(new Date, -Config.anonymizeSignaturesReceivedAfterDays)
 
