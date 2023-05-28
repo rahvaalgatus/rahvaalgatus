@@ -3,5 +3,5 @@ root = true
 [Makefile]
 indent_style = tab
 
-[*.{js,jsx,json,css,scss}]
+[*.{js,jsx,json,css,scss,sql}]
 indent_style = tab
