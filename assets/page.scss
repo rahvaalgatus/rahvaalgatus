@@ -4,7 +4,7 @@
 @import "_rahvaicons";
 @import "_rahvaicons_lib";
 @import "_editor";
-@import "../app/node_modules/leaflet/dist/leaflet";
+@import "./vendor/leaflet";
 $article-padding: 3rem;
 $article-padding-mobile: 2rem;
 $article-width-percentage: 70%;
@@ -375,8 +375,18 @@ strong {
 
 .form-select {
 	height: 3rem;
-	padding-left: 0.5rem;
-	padding-right: 0.5rem;
+	padding-left: 1rem;
+	padding-right: 1rem;
+
+	border: 1px solid #ccc;
+	border-radius: 0.5rem;
+	background: linear-gradient(180deg, white 0%, #eee 100%) #eee;
+
+	&:focus {
+		border-color: $link-color;
+		box-shadow: $link-color 0 0 0 1px;
+		outline: none;
+	}
 }
 
 .form-textarea {
@@ -1269,7 +1279,7 @@ strong {
 			display: block;
 			margin-top: 2rem;
 			margin: 2rem auto 0;
-			max-width: 50rem;
+			max-width: 60rem;
 
 			p {
 				font-size: 1.6rem;
@@ -1647,16 +1657,40 @@ strong {
 	}
 
 	#map-section {
-		$initiatives-legend: $parliament-phase-color;
 		$kompass-legend: #eab1be;
+		$max-map-width: 120rem;
+		$edit-legend-color: #F2BF3C;
+		$sign-legend-color: #1D9967;
+		$government-legend-color: #1C71A2;
+		$archive-legend-color: #8B8B8B;
+		$dtv-legend-color: #FEEF7F;
 
 		padding-top: 0;
 		padding-bottom: 0;
+		position: relative;
 		text-align: center;
 
-		center {
-			padding-left: 0;
-			padding-right: 0;
+		.map-location {
+			font-size: 1.4rem;
+		}
+
+		#map-location {
+			position: relative;
+			z-index: 1000;
+			background: rgba($secondary-background, 0.7);
+			padding: 1rem 1rem;
+			height: 5rem;
+			margin-bottom: -5rem;
+
+			.form-select {
+				height: 3rem;
+				margin: 0 auto;
+			}
+
+		}
+
+		#map-location-embedded {
+			clear: none;
 		}
 
 		#map {
@@ -1665,15 +1699,24 @@ strong {
 			background: $secondary-background;
 			font-family: $museo-sans;
 
-			.leaflet-control {
-				margin-left: 2rem;
-				margin-top: 4rem;
+			.leaflet-control-container {
+				position: relative;
+				max-width: $max-map-width;
+				margin: 0 auto;
+
+				.leaflet-top.leaflet-left {
+					margin-left: 2rem;
+					margin-top: 2rem;
+				}
 			}
 
 			.gov-tooltip,
 			.gov-popup {
-				.has-initiatives:before { background-color: $initiatives-legend; }
-				.kompass:before { background-color: $kompass-legend; }
+				.edit-phase:before { background-color: $edit-legend-color; }
+				.sign-phase:before { background-color: $sign-legend-color; }
+				.government-phase:before { background-color: $government-legend-color; }
+				.archive-phase:before { background-color: $archive-legend-color; }
+				.dtv:before { background-color: $dtv-legend-color; }
 				.rahandusministeerium:before { background-color: #003087; }
 			}
 
@@ -1726,6 +1769,11 @@ strong {
 					margin: 0;
 				}
 
+				h3 {
+					font-weight: bold;
+					margin-top: 1rem;
+				}
+
 				p + ul {
 					margin-top: 1rem;
 				}
@@ -1753,54 +1801,110 @@ strong {
 				}
 			}
 
-			.kompass-marker-below,
-			.kompass-marker-above {
-				opacity: 1;
-				fill-opacity: 1;
-			}
-
-			.kompass-marker-below {
-				fill: #ffcece;
-				stroke: #ffe6e9;
-				stroke-width: 2;
-			}
-
-			.kompass-marker-above {
-				fill: #c69aac;
-				stroke: #eab1be;
-				stroke-width: 3;
-			}
-
-			@media only screen and (max-width: 599px) { height: 40rem; }
-			@media only screen and (max-width: 499px) { height: 30rem; }
+			@media only screen and (max-width: 679px) { height: 40rem; }
+			@media only screen and (max-width: 499px) { height: 35rem; }
 		}
 
-		#map-legend {
-			margin: 0 2rem;
-			padding: 1rem 2rem;
-			text-align: center;
+		.map-legend {
+			font-size: 1.5rem;
+			line-height: 1.5;
 
-			@media only screen and (max-width: 539px) {
-				background: rgba(white, 0.3);
+			h2 {
+				font-weight: bold;
+
+				& ~ h2 { margin-top: 2rem; }
 			}
 
-			li {
-				margin-right: 2rem;
+			.checkbox {
 				display: inline-block;
+				margin-right: 0.8rem;
 
-				&:before {
-					content: "";
+				input { display: none; }
+
+				.check {
 					display: inline-block;
-					vertical-align: baseline;
-					margin-right: 0.5rem;
-					width: 0.9rem;
-					height: 0.9rem;
+					position: relative;
+					top: -0.1rem;
+					vertical-align: middle;
+					width: 1.7rem;
 					border-radius: 50%;
+					height: 1.7rem;
+					border: 0.2rem solid transparent;
+					background-repeat: no-repeat;
+					background-position: center 0.3rem;
+				}
+
+				&[data-value="edit"] .check {
+					border-color: $edit-legend-color;
+					background-color: $edit-legend-color;
+				}
+
+				&[data-value="sign"] .check {
+					border-color: $sign-legend-color;
+					background-color: $sign-legend-color;
+				}
+
+				&[data-value="government"] .check {
+					border-color: $government-legend-color;
+					background-color: $government-legend-color;
+				}
+
+				&[data-value="archive"] .check {
+					border-color: $archive-legend-color;
+					background-color: $archive-legend-color;
+				}
+
+				&[data-value="dtv"] .check {
+					border-color: $dtv-legend-color;
+					background-color: $dtv-legend-color;
+				}
+
+				input:checked + .check {
+					background-image: url("/assets/check-white.svg");
+				}
+
+				input[value="dtv"]:checked + .check  {
+					background-image: url("/assets/check-black.svg");
+				}
+
+				input:not(:checked) + .check {
+					background-color: transparent !important;
 				}
 			}
 
-			.initiatives-legend:before { background-color: $initiatives-legend; }
-			.kompass-legend:before { background-color: $kompass-legend; }
+			li {
+				label { cursor: pointer; }
+				& + li { margin-top: 0.3rem; }
+			}
+		}
+
+		#map-legend {
+			display: inline-block;
+			text-align: left;
+			padding: 1rem 1rem 0;
+		}
+
+		#map-legend-embedded {
+			clear: both;
+			margin-top: 1rem;
+			margin-left: 1rem;
+			padding: 1rem;
+			background: rgba($secondary-background, 0.7);
+			border-radius: 0.5rem;
+		}
+
+		@media only screen and (min-width: 680px) {
+			#map-location,
+			#map-legend {
+				display: none;
+			}
+		}
+
+		@media only screen and (max-width: 679px) {
+			#map-location-embedded,
+			#map-legend-embedded {
+				display: none;
+			}
 		}
 	}
 

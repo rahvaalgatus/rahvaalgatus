@@ -6,5 +6,11 @@
 ) as $govs |
 
 .features[].properties |=
-	$govs[.OKOOD] as $gov |
-	$gov + {threshold: [$gov.population * 0.01 | round, 5] | max}
+	$govs[.OKOOD] as $gov | {
+		id: $gov.id,
+		name: $gov.name,
+		population: $gov.population,
+		rahandusministeeriumUrl: $gov.rahandusministeeriumUrl,
+		dtvSchools: $gov.dtvSchools,
+		threshold: [$gov.population * 0.01 | round, 5] | max
+	}

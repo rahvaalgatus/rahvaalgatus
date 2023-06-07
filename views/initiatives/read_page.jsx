@@ -39,22 +39,15 @@ var EMPTY_ORG = {name: "", url: ""}
 var EVENT_NOTIFICATIONS_SINCE = new Date(Config.eventNotificationsSince)
 var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
-var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var LANGUAGES = require("root").config.languages
 var {SCHEMA} = require("root/controllers/initiatives_controller")
 var IMAGE_SCHEMA =
 	require("root/controllers/initiatives/image_controller").SCHEMA
+var LOCAL_GOVERNMENTS_BY_COUNTY =
+	require("root/lib/local_governments").BY_COUNTY
 exports = module.exports = ReadPage
 exports.InitiativeDestinationSelectView = InitiativeDestinationSelectView
 exports.SigningView = SigningView
-
-var LOCAL_GOVERNMENTS_BY_COUNTY = _.mapValues(_.groupBy(
-	_.toEntries(LOCAL_GOVERNMENTS),
-	([_id, gov]) => gov.county
-), (govs) => _.sortBy(govs, ([_id, gov]) => gov.name).map(([id, gov]) => [
-	id,
-	gov.name
-]))
 
 // Kollektiivse pöördumise (edaspidi käesolevas peatükis pöördumine) menetlusse
 // võtmise otsustab Riigikogu juhatus 30 kalendripäeva jooksul kollektiivse

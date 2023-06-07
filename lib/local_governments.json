@@ -10,7 +10,7 @@
 		"signatureDownloadPersonalIds": [
 			"49207255258"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/anija-vald"
 	},
 	"harku-vald": {
@@ -24,7 +24,7 @@
 		"signatureDownloadPersonalIds": [
 			"48812260329"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/harku-vald"
 	},
 	"jõelähtme-vald": {
@@ -39,7 +39,7 @@
 			"49402180225",
 			"48406240352"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/joelahtme-vald"
 	},
 	"keila-linn": {
@@ -51,7 +51,7 @@
 			"klv@keila.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/keila-linn"
 	},
 	"kiili-vald": {
@@ -66,7 +66,7 @@
 			"47601160226",
 			"46002090346"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kiili-vald"
 	},
 	"kose-vald": {
@@ -78,7 +78,7 @@
 			"vald@kose.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kose-vald"
 	},
 	"kuusalu-vald": {
@@ -90,7 +90,7 @@
 			"vallavalitsus@kuusalu.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kuusalu-vald"
 	},
 	"loksa-linn": {
@@ -104,7 +104,12 @@
 		"signatureDownloadPersonalIds": [
 			"45706115215"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [
+			{
+				"name": "Loksa Gümnaasium",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/9-loksa-g%C3%BCmnaasium"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/loksa-linn"
 	},
 	"lääne-harju-vald": {
@@ -116,7 +121,7 @@
 			"info@laaneharju.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/laane-harju-vald"
 	},
 	"maardu-linn": {
@@ -128,7 +133,7 @@
 			"linnavalitsus@maardu.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/maardu-linn"
 	},
 	"raasiku-vald": {
@@ -142,7 +147,7 @@
 		"signatureDownloadPersonalIds": [
 			"37402202731"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/raasiku-vald"
 	},
 	"rae-vald": {
@@ -154,7 +159,7 @@
 			"info@rae.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rae-vald"
 	},
 	"saku-vald": {
@@ -166,7 +171,7 @@
 			"saku@sakuvald.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/saku-vald"
 	},
 	"saue-vald": {
@@ -178,7 +183,7 @@
 			"info@sauevald.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/saue-vald"
 	},
 	"tallinn": {
@@ -192,7 +197,32 @@
 		"signatureDownloadPersonalIds": [
 			"37208010244"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [
+			{
+				"name": "Lasnamäe Gümnaasium",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/10-lasnam%C3%A4e-g%C3%BCmnaasium"
+			},
+			{
+				"name": "Kaarli Kool",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/13-kaarli-kool"
+			},
+			{
+				"name": "Tallinna 32. Keskkool",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/20-tallinna-32-keskkool"
+			},
+			{
+				"name": "Tallinna Läänemere Gümnaasium",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/11-tallinna-l%C3%A4%C3%A4nemere-g%C3%BCmnaasium"
+			},
+			{
+				"name": "Tallinna Rahumäe Põhikool",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/3-tallinna-rahum%C3%A4e-p%C3%B5hikool"
+			},
+			{
+				"name": "Tallinna Saksa Gümnaasium",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/21-tallinna-saksa-g%C3%BCmnaasium"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/tallinna-linn"
 	},
 	"viimsi-vald": {
@@ -206,7 +236,7 @@
 		"signatureDownloadPersonalIds": [
 			"46311080297"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/viimsi-vald"
 	},
 	"hiiumaa-vald": {
@@ -218,7 +248,7 @@
 			"valitsus@hiiumaa.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/hiiumaa-vald"
 	},
 	"alutaguse-vald": {
@@ -233,7 +263,7 @@
 			"47004272223",
 			"48708082239"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/alutaguse-vald"
 	},
 	"jõhvi-vald": {
@@ -245,7 +275,7 @@
 			"johvi@johvi.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/johvi-vald"
 	},
 	"kohtla-järve-linn": {
@@ -260,7 +290,12 @@
 			"47206156512",
 			"47012052246"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [
+			{
+				"name": "Kohtla-Järve Gümnaasium",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/15-kohtla-j%C3%A4rve-g%C3%BCmnaasium"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kohtla-jarve-linn"
 	},
 	"lüganuse-vald": {
@@ -272,7 +307,7 @@
 			"valitsus@lyganuse.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/luganuse-vald"
 	},
 	"narva-linn": {
@@ -286,7 +321,16 @@
 		"signatureDownloadPersonalIds": [
 			"46704193715"
 		],
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"dtvSchools": [
+			{
+				"name": "Narva Pähklimäe Gümnaasium ",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/12-narva-p%C3%A4hklim%C3%A4e-g%C3%BCmnaasium"
+			},
+			{
+				"name": "Narva Soldino Gümnaasium",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/8-narva-soldino-g%C3%BCmnaasium"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/narva-linn"
 	},
 	"narva-jõesuu-linn": {
@@ -298,7 +342,7 @@
 			"info@narva-joesuu.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/narva-joesuu-linn"
 	},
 	"sillamäe-linn": {
@@ -310,7 +354,7 @@
 			"linnavalitsus@sillamae.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/sillamae-linn"
 	},
 	"toila-vald": {
@@ -324,7 +368,7 @@
 		"signatureDownloadPersonalIds": [
 			"46509102247"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/toila-vald"
 	},
 	"jõgeva-vald": {
@@ -336,7 +380,7 @@
 			"info@jogeva.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/jogeva-vald"
 	},
 	"mustvee-vald": {
@@ -350,7 +394,7 @@
 		"signatureDownloadPersonalIds": [
 			"46709022721"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/mustvee-vald"
 	},
 	"põltsamaa-vald": {
@@ -362,7 +406,7 @@
 			"info@poltsamaa.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/poltsamaa-vald"
 	},
 	"järva-vald": {
@@ -374,7 +418,12 @@
 			"info@jarva.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [
+			{
+				"name": "Imavere Kool",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/16-imavere-kool"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/jarva-vald"
 	},
 	"paide-linn": {
@@ -386,7 +435,7 @@
 			"paide@paide.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/paide-linn"
 	},
 	"türi-vald": {
@@ -398,7 +447,7 @@
 			"vallavalitsus@tyri.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/turi-vald"
 	},
 	"haapsalu-linn": {
@@ -410,7 +459,7 @@
 			"hlv@haapsalulv.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/haapsalu-linn"
 	},
 	"lääne-nigula-vald": {
@@ -422,7 +471,7 @@
 			"vv@laanenigula.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/laane-nigula-vald"
 	},
 	"vormsi-vald": {
@@ -434,7 +483,7 @@
 			"vv@vormsi.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/vormsi-vald"
 	},
 	"haljala-vald": {
@@ -448,7 +497,7 @@
 		"signatureDownloadPersonalIds": [
 			"46206210309"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/haljala-vald"
 	},
 	"kadrina-vald": {
@@ -460,7 +509,7 @@
 			"kadrina@kadrina.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kadrina-vald"
 	},
 	"rakvere-linn": {
@@ -472,7 +521,7 @@
 			"linnavalitsus@rakvere.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rakvere-linn"
 	},
 	"rakvere-vald": {
@@ -486,7 +535,7 @@
 		"signatureDownloadPersonalIds": [
 			"46808255217"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rakvere-vald"
 	},
 	"tapa-vald": {
@@ -500,7 +549,7 @@
 		"signatureDownloadPersonalIds": [
 			"48105015225"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/tapa-vald"
 	},
 	"vinni-vald": {
@@ -514,7 +563,7 @@
 		"signatureDownloadPersonalIds": [
 			"48612015230"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/vinni-vald"
 	},
 	"viru-nigula-vald": {
@@ -526,7 +575,7 @@
 			"vallavalitsus@viru-nigula.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/viru-nigula-vald"
 	},
 	"väike-maarja-vald": {
@@ -538,7 +587,7 @@
 			"valitsus@v-maarja.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/vaike-maarja-vald"
 	},
 	"kanepi-vald": {
@@ -552,7 +601,7 @@
 		"signatureDownloadPersonalIds": [
 			"46907306535"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kanepi-vald"
 	},
 	"põlva-vald": {
@@ -564,7 +613,7 @@
 			"info@polva.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/polva-vald"
 	},
 	"räpina-vald": {
@@ -576,7 +625,7 @@
 			"vald@rapina.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rapina-vald"
 	},
 	"häädemeeste-vald": {
@@ -588,7 +637,7 @@
 			"haademeeste@haademeeste.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/haademeeste-vald"
 	},
 	"kihnu-vald": {
@@ -600,7 +649,7 @@
 			"info@kihnu.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kihnu-vald"
 	},
 	"lääneranna-vald": {
@@ -614,7 +663,7 @@
 		"signatureDownloadPersonalIds": [
 			"47105264719"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/laaneranna-vald"
 	},
 	"põhja-pärnumaa-vald": {
@@ -628,7 +677,7 @@
 		"signatureDownloadPersonalIds": [
 			"47904284218"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/pohja-parnumaa-vald"
 	},
 	"pärnu-linn": {
@@ -642,7 +691,7 @@
 		"signatureDownloadPersonalIds": [
 			"47410104224"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/parnu-linn"
 	},
 	"saarde-vald": {
@@ -656,7 +705,7 @@
 		"signatureDownloadPersonalIds": [
 			"47412084229"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/saarde-vald"
 	},
 	"tori-vald": {
@@ -668,7 +717,7 @@
 			"tori@torivald.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/tori-vald"
 	},
 	"kehtna-vald": {
@@ -680,7 +729,7 @@
 			"kehtna@kehtna.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kehtna-vald"
 	},
 	"kohila-vald": {
@@ -692,7 +741,7 @@
 			"vallavalitsus@kohila.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kohila-vald"
 	},
 	"märjamaa-vald": {
@@ -704,7 +753,12 @@
 			"marjamaa@marjamaa.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [
+			{
+				"name": "Märjamaa Gümnaasium",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/18-m%C3%A4rjamaa-g%C3%BCmnaasium"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/marjamaa-vald"
 	},
 	"rapla-vald": {
@@ -716,7 +770,12 @@
 			"rapla@rapla.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"dtvSchools": [
+			{
+				"name": "Rapla Gümnaasium",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/2-rapla-g%C3%BCmnaasium"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rapla-vald"
 	},
 	"muhu-vald": {
@@ -728,7 +787,7 @@
 			"vald@muhu.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/muhu-vald"
 	},
 	"ruhnu-vald": {
@@ -740,7 +799,7 @@
 			"ruhnu@ruhnu.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/ruhnu-vald"
 	},
 	"saaremaa-vald": {
@@ -754,7 +813,7 @@
 		"signatureDownloadPersonalIds": [
 			"47102260019"
 		],
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/saaremaa-vald"
 	},
 	"elva-vald": {
@@ -766,7 +825,7 @@
 			"elva@elva.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/elva-vald"
 	},
 	"kambja-vald": {
@@ -778,7 +837,7 @@
 			"vald@kambja.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kambja-vald"
 	},
 	"kastre-vald": {
@@ -790,7 +849,7 @@
 			"vald@kastre.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kastre-vald"
 	},
 	"luunja-vald": {
@@ -802,7 +861,7 @@
 			"vald@luunja.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/luunja-vald"
 	},
 	"nõo-vald": {
@@ -814,7 +873,7 @@
 			"vald@nvv.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/noo-vald"
 	},
 	"peipsiääre-vald": {
@@ -826,7 +885,7 @@
 			"vald@peipsivald.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/peipsiaare-vald"
 	},
 	"tartu-linn": {
@@ -840,7 +899,12 @@
 		"signatureDownloadPersonalIds": [
 			"37404072233"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [
+			{
+				"name": "Tartu Annelinna Gümnaasium",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/7-tartu-annelinna-g%C3%BCmnaasium"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/tartu-linn"
 	},
 	"tartu-vald": {
@@ -852,7 +916,7 @@
 			"tartuvald@tartuvald.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/tartu-vald"
 	},
 	"otepää-vald": {
@@ -864,7 +928,12 @@
 			"vald@otepaa.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [
+			{
+				"name": "Keeni Põhikool",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/4-keeni-p%C3%B5hikool"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/otepaa-vald"
 	},
 	"tõrva-vald": {
@@ -878,7 +947,7 @@
 		"signatureDownloadPersonalIds": [
 			"46205185714"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/torva-vald"
 	},
 	"valga-vald": {
@@ -893,7 +962,7 @@
 			"46907315719",
 			"46810255729"
 		],
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/valga-vald"
 	},
 	"mulgi-vald": {
@@ -905,7 +974,7 @@
 			"mulgi@mulgivald.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/mulgi-vald"
 	},
 	"põhja-sakala-vald": {
@@ -919,7 +988,12 @@
 		"signatureDownloadPersonalIds": [
 			"47106016018"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [
+			{
+				"name": "Kõpu Põhikool",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/17-k%C3%B5pu-p%C3%B5hikool"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/pohja-sakala-vald"
 	},
 	"viljandi-linn": {
@@ -933,7 +1007,7 @@
 		"signatureDownloadPersonalIds": [
 			"45911186017"
 		],
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/viljandi-linn"
 	},
 	"viljandi-vald": {
@@ -947,7 +1021,7 @@
 		"signatureDownloadPersonalIds": [
 			"46708086016"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/viljandi-vald"
 	},
 	"antsla-vald": {
@@ -962,7 +1036,7 @@
 			"46408296516",
 			"46011206517"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/antsla-vald"
 	},
 	"rõuge-vald": {
@@ -976,7 +1050,7 @@
 		"signatureDownloadPersonalIds": [
 			"47303306510"
 		],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rouge-vald"
 	},
 	"setomaa-vald": {
@@ -988,7 +1062,7 @@
 			"vald@setomaa.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/setomaa-vald"
 	},
 	"võru-linn": {
@@ -1000,7 +1074,7 @@
 			"info@voru.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": "https://www.kogu.ee/kodukoha-kompass/",
+		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/voru-linn"
 	},
 	"võru-vald": {
@@ -1012,7 +1086,12 @@
 			"vald@voruvald.ee"
 		],
 		"signatureDownloadPersonalIds": [],
-		"kompassUrl": null,
+		"dtvSchools": [
+			{
+				"name": "Puiga Põhikool",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/14-puiga-p%C3%B5hikool"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/voru-vald"
 	}
 }

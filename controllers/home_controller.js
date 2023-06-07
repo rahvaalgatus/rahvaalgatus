@@ -85,20 +85,9 @@ exports.router.get("/", function(req, res) {
 			break
 
 		case "local":
-			var initiativeCounts = _.mapValues(
-				_.indexBy(initiativesDb.search(sql`
-					SELECT destination, COUNT(*) AS count
-					FROM initiatives
-					WHERE destination IS NOT NULL AND destination != 'parliament'
-					AND published_at IS NOT NULL
-					GROUP BY destination
-				`), "destination"),
-				(row) => row.count
-			)
-
 			res.render("home/local_home_page.jsx", {
 				initiatives: initiatives,
-				initiativeCounts: initiativeCounts
+				initiativeCounts: searchInitiativeCounts()
 			})
 			break
 
@@ -312,4 +301,18 @@ function searchRecentInitiatives() {
 		i,
 		{reason: recents[i.uuid].reason}
 	))
+}
+
+function searchInitiativeCounts() {
+	return _.mapValues(_.groupBy(initiativesDb.search(sql`
+		SELECT destination, phase, signing_expired_at, archived_at
+		FROM initiatives
+		WHERE destination IS NOT NULL AND destination != 'parliament'
+		AND published_at IS NOT NULL
+	`), "destination"), (initiatives) => _.countBy(initiatives, (initiative) => (
+		initiative.archived_at ? "archive" :
+		initiative.signing_expired_at ? "archive" :
+		initiative.phase == "done" ? "government" :
+		initiative.phase
+	)))
 }

@@ -9,7 +9,7 @@ def lines: sub("\\s+$"; "") | split("\n");
 ($header | index("County")) as $county_column |
 ($header | index("Initiatives Emails")) as $emails_column |
 ($header | index("Signature Download Personal Ids")) as $personal_ids_column |
-($header | index("Kompass URL")) as $kompass_column |
+($header | index("DTV Schools")) as $dtv_column |
 ($header | index("Rahandusministeerium")) as $rahandusmin_column |
 .rows |
 
@@ -22,7 +22,14 @@ map(.c | {
 		population: .[$population_column].v,
 		initiativesEmails: (.[$emails_column].v // "") | lines,
 		signatureDownloadPersonalIds: (.[$personal_ids_column].v // "") | lines,
-		kompassUrl: .[$kompass_column].v,
+
+		dtvSchools: (.[$dtv_column].v // "")
+			| lines
+			| map(match("([^ ]+) (.*)") | {
+				name: .captures[1].string,
+				url: .captures[0].string
+			}),
+
 		rahandusministeeriumUrl: .[$rahandusmin_column].v
 	}
 }) |

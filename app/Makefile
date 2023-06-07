@@ -6,6 +6,7 @@ UGLIFY = ./node_modules/.bin/uglifyjs
 
 BROWSERIFY_OPTS =
 BROWSERIFY_OPTS += --no-detect-globals
+BROWSERIFY_OPTS += --extension=jsx --transform j6pack/browserify
 
 UGLIFY_OPTS =
 UGLIFY_OPTS += --stats
