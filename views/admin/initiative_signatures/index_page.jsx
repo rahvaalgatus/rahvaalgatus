@@ -15,7 +15,8 @@ var {COLUMNS} = SignaturesController
 
 var COLUMN_TITLES = {
 	created_on: "Date",
-	initiative_uuid: "Initiative",
+	initiative_uuid: "Initiative Id",
+	initiative_title: "Initiative Title",
 	initiative_destination: "Initiative Destination",
 	sex: "Sex",
 	age_range: "Age Range",
@@ -34,6 +35,10 @@ module.exports = function(attrs) {
 
 	var tooMany = signatures.length > 1000
 	signatures = signatures.slice(0, 1000)
+
+	var columnsWithoutId = _.uniq(columns.map((col) => (
+		col == "initiative_uuid" ? "initiative_title" : col
+	)))
 
 	return <Page page="signatures" title="Signature" req={attrs.req}>
 		<h1 class="admin-heading">Signatures</h1>
@@ -148,10 +153,12 @@ module.exports = function(attrs) {
 			</caption> : null}
 
 			<thead>
-				<tr>{columns.map((column) => { switch (column) {
+				<tr>{columnsWithoutId.map((column) => { switch (column) {
 					case "created_on": return <th>
 						{timeFormat == "date" ? "Date" : "Week (ISO)"}
 					</th>
+
+					case "initiative_title": return <th>Initiative</th>
 
 					case "location": return <th>
 						{locationFormat == "text" ? "Location" : "GeoName Id"}
@@ -166,13 +173,13 @@ module.exports = function(attrs) {
 					var initiativeUuid = sig.initiative_uuid
 					var initiativePath = `${req.rootUrl}/initiatives/${initiativeUuid}`
 
-					return <tr>{columns.map((column) => { switch (column) {
+					return <tr>{columnsWithoutId.map((column) => { switch (column) {
 						case "created_on": return <td>{timeFormat == "date"
 							? formatDate("iso", sig.created_at)
 							: formatDate("iso-week", sig.created_at)
 						}</td>
 
-						case "initiative_uuid": return <td>
+						case "initiative_title": return <td>
 							<a href={initiativePath} class="admin-link">
 								{sig.initiative_title}
 							</a>

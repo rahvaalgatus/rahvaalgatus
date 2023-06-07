@@ -47,6 +47,7 @@ describe("AdminInitiativeSignaturesController", function() {
 			res.body.must.equal([
 				"date",
 				"initiative_uuid",
+				"initiative_title",
 				"initiative_destination",
 				"sex",
 				"age_range",
@@ -106,6 +107,7 @@ describe("AdminInitiativeSignaturesController", function() {
 			lines[0].must.equal([
 				"date",
 				"initiative_uuid",
+				"initiative_title",
 				"initiative_destination",
 				"sex",
 				"age_range",
@@ -117,6 +119,7 @@ describe("AdminInitiativeSignaturesController", function() {
 				Csv.serialize([
 					"2010-06-18",
 					initiativeA.uuid,
+					initiativeA.title,
 					"parliament",
 					"male",
 					"35–44",
@@ -127,6 +130,7 @@ describe("AdminInitiativeSignaturesController", function() {
 				Csv.serialize([
 					"2011-07-19",
 					initiativeB.uuid,
+					initiativeB.title,
 					"parliament",
 					"female",
 					"25–34",
@@ -137,6 +141,7 @@ describe("AdminInitiativeSignaturesController", function() {
 				Csv.serialize([
 					"2012-08-20",
 					initiativeA.uuid,
+					initiativeA.title,
 					"parliament",
 					"male",
 					"18–24",
@@ -147,6 +152,7 @@ describe("AdminInitiativeSignaturesController", function() {
 				Csv.serialize([
 					"2013-09-21",
 					initiativeB.uuid,
+					initiativeB.title,
 					"parliament",
 					"female",
 					"< 16",
