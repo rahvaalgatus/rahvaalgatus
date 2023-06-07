@@ -42,7 +42,7 @@ exports.router.get("/(:format?)", next(function*(req, res) {
 
 	var signatureGenerator = searchSignatures(from, to)
 
-	switch (req.accepts(["text/csv", "text/html"])) {
+	switch (req.accepts(["text/html", "text/csv"])) {
 		case "text/csv":
 			res.setHeader("Content-Type", "text/csv; charset=utf-8")
 
@@ -61,7 +61,7 @@ exports.router.get("/(:format?)", next(function*(req, res) {
 			columns: columns,
 			timeFormat: timeFormat,
 			locationFormat: locationFormat,
-			signatures: signatureGenerator.next().value
+			signatures: signatureGenerator.next().value || []
 		})
 	}
 }))

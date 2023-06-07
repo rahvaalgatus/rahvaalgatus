@@ -18,6 +18,19 @@ describe("AdminInitiativeSignaturesController", function() {
 	require("root/test/time")(Date.UTC(2015, 5, 18))
 	require("root/test/fixtures").csrf()
 
+	describe("GET /", function() {
+		require("root/test/fixtures").user({
+			country: Config.adminPersonalIds[0].slice(0, 2),
+			personal_id: Config.adminPersonalIds[0].slice(2)
+		})
+
+		it("must respond", function*() {
+			var res = yield this.request("/signatures")
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal("text/html; charset=utf-8")
+		})
+	})
+
 	describe(`GET / for ${CSV_TYPE}`, function() {
 		require("root/test/fixtures").user({
 			country: Config.adminPersonalIds[0].slice(0, 2),
@@ -27,7 +40,7 @@ describe("AdminInitiativeSignaturesController", function() {
 		beforeEach(function() { this.author = usersDb.create(new ValidUser) })
 
 		it("must respond with CSV header if no signatures", function*() {
-			var res = yield this.request("/signatures.csv?")
+			var res = yield this.request("/signatures.csv")
 			res.statusCode.must.equal(200)
 			res.headers["content-type"].must.equal(CSV_TYPE)
 
