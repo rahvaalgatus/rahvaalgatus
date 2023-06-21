@@ -477,7 +477,7 @@ function* signWithSmartId(router, request, cert) {
 
 		// NOTE: Respond with a little delay to ensure signature
 		// polling later works as expected.
-		setTimeout(() => res.end(Ocsp.parse(newOcspResponse(cert)).toBuffer(), 10))
+		setTimeout(() => res.end(Ocsp.parse(newOcspResponse(cert)).toBuffer()))
 	})
 
 	var signing = yield certWithSmartId(router, request, cert)
