@@ -81,15 +81,7 @@ function CommentView(attrs) {
 				user.id == comment.user_id &&
 				!comment.anonymized_at &&
 				canAnonymize(new Date, comment)
-			) ? <FormButton
-				req={req}
-				action={commentUrl}
-				name="_method"
-				value="delete"
-				onclick={confirm(t("ANONYMIZE_COMMENT_CONFIRMATION"))}
-				class="comment-delete-button link-button">
-				{t("ANONYMIZE_COMMENT")}
-			</FormButton> : null}
+			) ? <CommentDeleteButton req={req} t={t} comment={comment} /> : null}
 
 			<a
 				href={`#comment-${comment.id}-reply`}
@@ -120,6 +112,15 @@ function CommentView(attrs) {
 				</div>
 
 				<p class="text">{Jsx.html(Comment.htmlify(reply.text))}</p>
+
+				{(
+					user &&
+					user.id == reply.user_id &&
+					!reply.anonymized_at &&
+					canAnonymize(new Date, reply)
+				) ? <menu>
+					<CommentDeleteButton req={req} t={t} comment={reply} />
+				</menu> : null}
 			</li>
 		})}</ol>
 
@@ -146,6 +147,20 @@ function CommentView(attrs) {
 			<button class="secondary-button">{t("POST_REPLY")}</button>
 		</Form> : null}
 	</Fragment>
+}
+
+function CommentDeleteButton({req, t, comment}) {
+	var commentsPath = `/initiatives/${comment.initiative_uuid}/comments`
+
+	return <FormButton
+		req={req}
+		action={`${commentsPath}/${comment.id}`}
+		name="_method"
+		value="delete"
+		onclick={confirm(t("ANONYMIZE_COMMENT_CONFIRMATION"))}
+		class="comment-delete-button link-button">
+		{t("ANONYMIZE_COMMENT")}
+	</FormButton>
 }
 
 function isCommentShort(comment) {

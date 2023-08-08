@@ -2209,20 +2209,20 @@ strong {
 			&::first-letter { color: $text; }
 		}
 
-		menu {
+		& > menu {
 			margin-top: 1.5rem;
-		}
 
-		.comment-reply-button {
-			display: inline-block;
-			font-weight: 600;
+			.comment-reply-button {
+				display: inline-block;
+				font-weight: 600;
 
-			&[disabled] { color: #ccc; }
-		}
+				&[disabled] { color: #ccc; }
+			}
 
-		.comment-delete-button {
-			float: right;
-			display: inline-block;
+			.comment-delete-button {
+				float: right;
+				display: inline-block;
+			}
 		}
 
 		& + .comment {
@@ -2264,6 +2264,16 @@ strong {
 		& + .comment-reply {
 			margin-top: 2rem;
 			border-top: 1px solid $secondary-background;
+		}
+
+		menu {
+			margin-top: 1.5rem;
+			overflow: hidden;
+
+			.comment-delete-button {
+				float: right;
+				display: inline-block;
+			}
 		}
 	}
 

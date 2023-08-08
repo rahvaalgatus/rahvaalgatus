@@ -1077,6 +1077,60 @@ describe("InitiativeCommentsController", function() {
 				var deleteEl = menuEl.querySelector(".comment-delete-button")
 				deleteEl.textContent.must.equal(t("ANONYMIZE_COMMENT"))
 			})
+
+			it("must not render button for anonymizing reply if created in less than an hour", function*() {
+				var author = usersDb.create(new ValidUser)
+
+				var comment = commentsDb.create(new ValidComment({
+					initiative_uuid: this.initiative.uuid,
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid)
+				}))
+
+				commentsDb.create(new ValidComment({
+					initiative_uuid: this.initiative.uuid,
+					created_at: DateFns.addSeconds(DateFns.addHours(new Date, -1), 1),
+					user_id: this.user.id,
+					user_uuid: _.serializeUuid(this.user.uuid),
+					parent_id: comment.id
+				}))
+
+				var path = `/initiatives/${this.initiative.uuid}`
+				path += `/comments/${comment.id}`
+				var res = yield this.request(path)
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+				demand(dom.querySelector(".comment-reply > menu")).be.null()
+			})
+
+			it("must render button for anonymizing reply", function*() {
+				var author = usersDb.create(new ValidUser)
+
+				var comment = commentsDb.create(new ValidComment({
+					initiative_uuid: this.initiative.uuid,
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid)
+				}))
+
+				commentsDb.create(new ValidComment({
+					initiative_uuid: this.initiative.uuid,
+					created_at: DateFns.addHours(new Date, -1),
+					user_id: this.user.id,
+					user_uuid: _.serializeUuid(this.user.uuid),
+					parent_id: comment.id
+				}))
+
+				var path = `/initiatives/${this.initiative.uuid}`
+				path += `/comments/${comment.id}`
+				var res = yield this.request(path)
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+				var menuEl = dom.querySelector(".comment-reply > menu")
+				var deleteEl = menuEl.querySelector(".comment-delete-button")
+				deleteEl.textContent.must.equal(t("ANONYMIZE_COMMENT"))
+			})
 		})
 	})
 
@@ -1135,28 +1189,6 @@ describe("InitiativeCommentsController", function() {
 				commentsDb.read(comment).must.eql(comment)
 			})
 
-			it("must respond with 405 given reply", function*() {
-				var comment = commentsDb.create(new ValidComment({
-					initiative_uuid: this.initiative.uuid,
-					user_id: this.user.id,
-					user_uuid: _.serializeUuid(this.user.uuid)
-				}))
-
-				var reply = commentsDb.create(new ValidComment({
-					initiative_uuid: this.initiative.uuid,
-					user_id: this.user.id,
-					user_uuid: _.serializeUuid(this.user.uuid),
-					parent_id: comment.id
-				}))
-
-				var path = `/initiatives/${this.initiative.uuid}/comments/${reply.id}`
-				var res = yield this.request(path, {method: "DELETE"})
-
-				res.statusCode.must.equal(405)
-				res.statusMessage.must.equal("Cannot Delete Replies")
-				commentsDb.read(comment).must.eql(comment)
-			})
-
 			it("must respond with 405 given anonymized comment even if other's",
 				function*() {
 				var author = usersDb.create(new ValidUser)
@@ -1193,6 +1225,47 @@ describe("InitiativeCommentsController", function() {
 
 				commentsDb.read(comment).must.eql({
 					__proto__: comment,
+					anonymized_at: new Date
+				})
+
+				var cookies = parseCookies(res.headers["set-cookie"])
+				res = yield this.request(res.headers.location, {
+					headers: {Cookie: serializeCookies(cookies)}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("COMMENT_ANONYMIZED"))
+				res.body.must.not.include(this.user.name)
+			})
+
+			it("must anonymize reply", function*() {
+				var author = usersDb.create(new ValidUser)
+
+				var comment = commentsDb.create(new ValidComment({
+					initiative_uuid: this.initiative.uuid,
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid)
+				}))
+
+				var reply = commentsDb.create(new ValidComment({
+					initiative_uuid: this.initiative.uuid,
+					created_at: DateFns.addHours(new Date, -1),
+					user_id: this.user.id,
+					user_uuid: _.serializeUuid(this.user.uuid),
+					parent_id: comment.id
+				}))
+
+				var commentsPath = `/initiatives/${this.initiative.uuid}/comments`
+				var parentPath = commentsPath + `/${comment.id}`
+				var replyPath = commentsPath + `/${reply.id}`
+				var res = yield this.request(replyPath, {method: "DELETE"})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Anonymized")
+				res.headers.location.must.equal(parentPath + "#comment-" + reply.id)
+
+				commentsDb.read(reply).must.eql({
+					__proto__: reply,
 					anonymized_at: new Date
 				})
 

@@ -166,7 +166,6 @@ exports.router.delete("/:commentId", assertUser, function(req, res) {
 	// Don't reveal that we're not the author if a comment's anonymized.
 	if (comment.anonymized_at) throw new HttpError(405, "Already Anonymized")
 	if (comment.user_id != user.id) throw new HttpError(403, "Not Author")
-	if (comment.parent_id) throw new HttpError(405, "Cannot Delete Replies")
 
 	if (!canAnonymize(new Date, comment))
 		throw new HttpError(405, "Cannot Yet Anonymize")
@@ -175,7 +174,11 @@ exports.router.delete("/:commentId", assertUser, function(req, res) {
 
 	res.flash("notice", req.t("COMMENT_ANONYMIZED"))
 	res.statusMessage = "Comment Anonymized"
-	res.redirect(303, req.baseUrl + "/" + comment.id)
+
+	res.redirect(303, req.baseUrl + "/" + (comment.parent_id
+		? comment.parent_id + "#comment-" + comment.id
+		: comment.id
+	))
 })
 
 exports.router.post("/:commentId/replies",
