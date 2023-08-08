@@ -18,6 +18,7 @@ var MAX_TEXT_LENGTH = 3000
 exports.MAX_TITLE_LENGTH = MAX_TITLE_LENGTH
 exports.MAX_TEXT_LENGTH = MAX_TEXT_LENGTH
 exports.getCommentAuthorName = getCommentAuthorName
+exports.canAnonymize = canAnonymize
 exports.router = Router({mergeParams: true})
 
 var CONSTRAINT_ERRORS = {
@@ -162,9 +163,13 @@ exports.router.get("/:commentId", function(req, res) {
 
 exports.router.delete("/:commentId", assertUser, function(req, res) {
 	var {user, comment} = req
+	// Don't reveal that we're not the author if a comment's anonymized.
 	if (comment.anonymized_at) throw new HttpError(405, "Already Anonymized")
 	if (comment.user_id != user.id) throw new HttpError(403, "Not Author")
 	if (comment.parent_id) throw new HttpError(405, "Cannot Delete Replies")
+
+	if (!canAnonymize(new Date, comment))
+		throw new HttpError(405, "Cannot Yet Anonymize")
 
 	commentsDb.update(comment, {anonymized_at: new Date})
 
@@ -307,6 +312,10 @@ function getCommentAuthorName(t, comment, user) {
 	if (comment.as_admin) return t("COMMENT_AUTHOR_ADMIN")
 	if (comment.anonymized_at) return t("COMMENT_AUTHOR_HIDDEN")
 	return user && user.name || comment.user_name
+}
+
+function canAnonymize(now, comment) {
+	return now - comment.created_at >= 3600 * 1000
 }
 
 function normalizeNewlines(text) { return text.replace(/\r\n/g, "\n") }

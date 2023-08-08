@@ -10,6 +10,7 @@ var Comment = require("root/lib/comment")
 var Controller = require("root/controllers/initiatives/comments_controller")
 var {PersonaInput} = require("./create_page")
 var {getCommentAuthorName} = Controller
+var {canAnonymize} = Controller
 var {isAdmin} = require("root/lib/user")
 var {MAX_TEXT_LENGTH} = Controller
 var {confirm} = require("root/lib/jsx")
@@ -79,7 +80,7 @@ function CommentView(attrs) {
 			{(
 				user.id == comment.user_id &&
 				!comment.anonymized_at &&
-				new Date - comment.created_at >= 3600 * 1000
+				canAnonymize(new Date, comment)
 			) ? <FormButton
 				req={req}
 				action={commentUrl}

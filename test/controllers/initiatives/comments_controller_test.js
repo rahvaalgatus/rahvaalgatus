@@ -16,6 +16,7 @@ var commentsDb = require("root/db/comments_db")
 var parseHtml = require("root/test/html").parse
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
+var demand = require("must")
 var {SITE_URLS} = require("root/test/fixtures")
 var MAX_TITLE_LENGTH = 140
 var MAX_TEXT_LENGTH = 3000
@@ -657,7 +658,6 @@ describe("InitiativeCommentsController", function() {
 						user_id: this.user.id
 					}))
 
-
 					commentsDb.create(_.times(COMMENT_RATE - 1, (_i) => new ValidComment({
 						initiative_uuid: otherInitiative.uuid,
 						user_id: this.user.id,
@@ -1036,6 +1036,48 @@ describe("InitiativeCommentsController", function() {
 			var res = yield this.request(path)
 			res.statusCode.must.equal(404)
 		})
+
+		describe("when logged in", function() {
+			require("root/test/fixtures").user()
+			require("root/test/time")()
+
+			it("must not render button for anonymizing comment if created in less than an hour", function*() {
+				var comment = commentsDb.create(new ValidComment({
+					initiative_uuid: this.initiative.uuid,
+					created_at: DateFns.addSeconds(DateFns.addHours(new Date, -1), 1),
+					user_id: this.user.id,
+					user_uuid: _.serializeUuid(this.user.uuid)
+				}))
+
+				var path = `/initiatives/${this.initiative.uuid}`
+				path += `/comments/${comment.id}`
+				var res = yield this.request(path)
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+				var menuEl = dom.querySelector(".comment > menu")
+				demand(menuEl.querySelector(".comment-delete-button")).be.null()
+			})
+
+			it("must render button for anonymizing comment", function*() {
+				var comment = commentsDb.create(new ValidComment({
+					initiative_uuid: this.initiative.uuid,
+					created_at: DateFns.addHours(new Date, -1),
+					user_id: this.user.id,
+					user_uuid: _.serializeUuid(this.user.uuid)
+				}))
+
+				var path = `/initiatives/${this.initiative.uuid}`
+				path += `/comments/${comment.id}`
+				var res = yield this.request(path)
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+				var menuEl = dom.querySelector(".comment > menu")
+				var deleteEl = menuEl.querySelector(".comment-delete-button")
+				deleteEl.textContent.must.equal(t("ANONYMIZE_COMMENT"))
+			})
+		})
 	})
 
 	describe("DELETE /:id", function() {
@@ -1058,6 +1100,7 @@ describe("InitiativeCommentsController", function() {
 
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
+			require("root/test/time")()
 
 			it("must respond with 403 if not author", function*() {
 				var author = usersDb.create(new ValidUser)
@@ -1073,6 +1116,22 @@ describe("InitiativeCommentsController", function() {
 
 				res.statusCode.must.equal(403)
 				res.statusMessage.must.equal("Not Author")
+				commentsDb.read(comment).must.eql(comment)
+			})
+
+			it("must respond with 405 if created in less than an hour", function*() {
+				var comment = commentsDb.create(new ValidComment({
+					initiative_uuid: this.initiative.uuid,
+					created_at: DateFns.addSeconds(DateFns.addHours(new Date, -1), 1),
+					user_id: this.user.id,
+					user_uuid: _.serializeUuid(this.user.uuid)
+				}))
+
+				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var res = yield this.request(path, {method: "DELETE"})
+
+				res.statusCode.must.equal(405)
+				res.statusMessage.must.equal("Cannot Yet Anonymize")
 				commentsDb.read(comment).must.eql(comment)
 			})
 
@@ -1120,6 +1179,7 @@ describe("InitiativeCommentsController", function() {
 			it("must anonymize comment", function*() {
 				var comment = commentsDb.create(new ValidComment({
 					initiative_uuid: this.initiative.uuid,
+					created_at: DateFns.addHours(new Date, -1),
 					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid)
 				}))
