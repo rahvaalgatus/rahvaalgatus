@@ -105,7 +105,7 @@ module.exports = function(attrs) {
 
 			<tr>
 				<th scope="row">
-					Initiatives passed {Config.votesRequired} signatures<br />
+					Initiatives for Riigikogu that passed {Config.votesRequired} signatures<br />
 					<small>Milestone reached, regardless of creation date.</small>
 				</th>
 

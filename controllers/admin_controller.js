@@ -1,4 +1,5 @@
 var _ = require("root/lib/underscore")
+var Config = require("root").config
 var {Router} = require("express")
 var HttpError = require("standard-http-error")
 var DateFns = require("date-fns")
@@ -66,12 +67,13 @@ exports.get("/", function(req, res) {
 		SELECT signature_milestones
 		FROM initiatives
 		WHERE signature_milestones != '{}'
+		AND destination = 'parliament'
 	`).map((row) => row.signature_milestones)
 
-	var successfulInitiativesCount = _.sum(_.map(milestones, (milestones) => (
-		milestones[1000] &&
-		milestones[1000] >= from &&
-		milestones[1000] < to ? 1 : 0
+	var successfulInitiativesCount = _.sum(milestones.map((milestones) => (
+		milestones[Config.votesRequired] &&
+		milestones[Config.votesRequired] >= from &&
+		(to == null || milestones[Config.votesRequired] < to) ? 1 : 0
 	)))
 
 	var signingStartedCount = sqlite(sql`
