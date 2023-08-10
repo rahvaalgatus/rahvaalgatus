@@ -55,7 +55,18 @@ module.exports = function(attrs) {
 					Initiatives published<br />
 					<small>Created on Rahvaalgatus, published and not deleted.</small>
 				</th>
-				<td>{attrs.publishedInitiativesCount}</td>
+
+				<td>
+					{attrs.publishedInitiativesCount.all}
+
+					<ul>
+						<li>{attrs.publishedInitiativesCount.parliament} for Riigikogu.</li>
+
+						<li>
+							{attrs.publishedInitiativesCount.local} for Local Governments.
+						</li>
+					</ul>
+				</td>
 			</tr>
 
 			<tr>

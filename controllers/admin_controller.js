@@ -90,12 +90,16 @@ exports.get("/", function(req, res) {
 	`)[0].count
 
 	var publishedInitiativesCount = sqlite(sql`
-		SELECT COUNT(*) AS count
+		SELECT
+			COUNT(*) AS "all",
+			COALESCE(SUM(destination = 'parliament'), 0) AS parliament,
+			COALESCE(SUM(destination != 'parliament'), 0) AS local
+
 		FROM initiatives
 		WHERE published_at >= ${from}
 		${to ? sql`AND published_at < ${to}` : sql``}
 		AND published_at IS NOT NULL
-	`)[0].count
+	`)[0]
 
 	var externalInitiativesCount = sqlite(sql`
 		SELECT COUNT(*) AS count
