@@ -57,7 +57,7 @@ module.exports = function(attrs) {
 				</th>
 
 				<td>
-					{attrs.publishedInitiativesCount.all}
+					<strong>{attrs.publishedInitiativesCount.all}</strong>
 
 					<ul>
 						<li>{attrs.publishedInitiativesCount.parliament} for Riigikogu.</li>
@@ -91,7 +91,7 @@ module.exports = function(attrs) {
 				</th>
 
 				<td>
-					{attrs.signingStartedCount.all}
+					<strong>{attrs.signingStartedCount.all}</strong>
 
 					<ul>
 						<li>{attrs.signingStartedCount.parliament} for Riigikogu.</li>
@@ -119,7 +119,7 @@ module.exports = function(attrs) {
 				</th>
 
 				<td>
-					{attrs.sentInitiativesCount.all}
+					<strong>{attrs.sentInitiativesCount.all}</strong>
 
 					<ul>
 						<li>{attrs.sentInitiativesCount.parliament} to Riigikogu.</li>
@@ -135,7 +135,7 @@ module.exports = function(attrs) {
 				</th>
 
 				<td>
-					{attrs.authenticationsCount.all}
+					<strong>{attrs.authenticationsCount.all}</strong>
 
 					<ul>
 						<li>{attrs.authenticationsCount.id_card} with Id-card.</li>
@@ -155,7 +155,16 @@ module.exports = function(attrs) {
 					</small>
 				</th>
 
-				<td>{attrs.signatureCount.all + attrs.citizenSignatureCount}</td>
+				<td>
+					<strong>
+						{attrs.signatureCount.all + attrs.citizenSignatureCount.all}
+					</strong>
+
+					<ul>
+						<li>{attrs.signatureCount.parliament + attrs.citizenSignatureCount.parliament} to Riigikogu.</li>
+						<li>{attrs.signatureCount.local + attrs.citizenSignatureCount.local} to Local Governments.</li>
+					</ul>
+				</td>
 			</tr>
 
 			<tr>
@@ -183,6 +192,11 @@ module.exports = function(attrs) {
 
 				<td>
 					<SignatureCountsView counts={attrs.signatureCount} />
+
+					<ul>
+						<li>{attrs.signatureCount.parliament} to Riigikogu.</li>
+						<li>{attrs.signatureCount.local} to Local Governments.</li>
+					</ul>
 				</td>
 			</tr>
 
@@ -196,7 +210,14 @@ module.exports = function(attrs) {
 					</small>
 				</th>
 
-				<td>{attrs.citizenSignatureCount}</td>
+				<td>
+					<strong>{attrs.citizenSignatureCount.all}</strong>
+
+					<ul>
+						<li>{attrs.citizenSignatureCount.parliament} to Riigikogu.</li>
+						<li>{attrs.citizenSignatureCount.local} to Local Governments.</li>
+					</ul>
+				</td>
 			</tr>
 
 			<tr>

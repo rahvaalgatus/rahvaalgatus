@@ -35,53 +35,6 @@ exports.get("/", function(req, res) {
 
 	var to = req.query.to ? Time.parseIsoDate(req.query.to) : null
 
-	var authenticationsCount = sqlite(sql`
-		SELECT
-			COUNT(*) AS "all",
-			COALESCE(SUM(method == 'id-card'), 0) AS id_card,
-			COALESCE(SUM(method == 'mobile-id'), 0) AS mobile_id,
-			COALESCE(SUM(method == 'smart-id'), 0) AS smart_id
-
-		FROM sessions
-		WHERE created_at >= ${from}
-		${to ? sql`AND created_at < ${to}` : sql``}
-	`)[0]
-
-	var signatureCount = sqlite(sql`
-		SELECT
-			COUNT(*) AS "all",
-			COALESCE(SUM(method == 'id-card'), 0) AS id_card,
-			COALESCE(SUM(method == 'mobile-id'), 0) AS mobile_id,
-			COALESCE(SUM(method == 'smart-id'), 0) AS smart_id
-
-		FROM initiative_signatures
-		WHERE created_at >= ${from}
-		${to ? sql`AND created_at < ${to}` : sql``}
-	`)[0]
-
-	var signerCount = sqlite(sql`
-		WITH signers AS (
-			SELECT country, personal_id
-			FROM initiative_signatures
-			WHERE created_at >= ${from}
-			${to ? sql`AND created_at < ${to}` : sql``}
-
-			UNION SELECT country, personal_id
-			FROM initiative_citizenos_signatures
-			WHERE created_at >= ${from}
-			${to ? sql`AND created_at < ${to}` : sql``}
-		)
-
-		SELECT COUNT(*) AS count FROM signers
-	`)[0].count
-
-	var citizenSignatureCount = sqlite(sql`
-		SELECT COUNT(*) AS count
-		FROM initiative_citizenos_signatures
-		WHERE created_at >= ${from}
-		${to ? sql`AND created_at < ${to}` : sql``}
-	`)[0].count
-
 	var initiativesCount = sqlite(sql`
 		SELECT COUNT(*) AS count
 		FROM initiatives
@@ -151,6 +104,61 @@ exports.get("/", function(req, res) {
 			AND sent_to_government_at >= ${from}
 			${to ? sql`AND sent_to_government_at < ${to}` : sql``}
 		)
+	`)[0]
+
+	var authenticationsCount = sqlite(sql`
+		SELECT
+			COUNT(*) AS "all",
+			COALESCE(SUM(method == 'id-card'), 0) AS id_card,
+			COALESCE(SUM(method == 'mobile-id'), 0) AS mobile_id,
+			COALESCE(SUM(method == 'smart-id'), 0) AS smart_id
+
+		FROM sessions
+		WHERE created_at >= ${from}
+		${to ? sql`AND created_at < ${to}` : sql``}
+	`)[0]
+
+	var signerCount = sqlite(sql`
+		WITH signers AS (
+			SELECT country, personal_id
+			FROM initiative_signatures
+			WHERE created_at >= ${from}
+			${to ? sql`AND created_at < ${to}` : sql``}
+
+			UNION SELECT country, personal_id
+			FROM initiative_citizenos_signatures
+			WHERE created_at >= ${from}
+			${to ? sql`AND created_at < ${to}` : sql``}
+		)
+
+		SELECT COUNT(*) AS count FROM signers
+	`)[0].count
+
+	var signatureCount = sqlite(sql`
+		SELECT
+			COUNT(*) AS "all",
+			COALESCE(SUM(sig.method == 'id-card'), 0) AS id_card,
+			COALESCE(SUM(sig.method == 'mobile-id'), 0) AS mobile_id,
+			COALESCE(SUM(sig.method == 'smart-id'), 0) AS smart_id,
+			COALESCE(SUM(initiative.destination = 'parliament'), 0) AS parliament,
+			COALESCE(SUM(initiative.destination != 'parliament'), 0) AS local
+
+		FROM initiative_signatures AS sig
+		JOIN initiatives AS initiative ON initiative.uuid = sig.initiative_uuid
+		WHERE sig.created_at >= ${from}
+		${to ? sql`AND sig.created_at < ${to}` : sql``}
+	`)[0]
+
+	var citizenSignatureCount = sqlite(sql`
+		SELECT
+			COUNT(*) AS "all",
+			COALESCE(SUM(initiative.destination = 'parliament'), 0) AS parliament,
+			COALESCE(SUM(initiative.destination != 'parliament'), 0) AS local
+
+		FROM initiative_citizenos_signatures AS sig
+		JOIN initiatives AS initiative ON initiative.uuid = sig.initiative_uuid
+		WHERE sig.created_at >= ${from}
+		${to ? sql`AND sig.created_at < ${to}` : sql``}
 	`)[0]
 
 	var subscriberCount = sqlite(sql`
