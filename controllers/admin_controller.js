@@ -122,11 +122,15 @@ exports.get("/", function(req, res) {
 	)))
 
 	var signingStartedCount = sqlite(sql`
-		SELECT COUNT(*) AS count
+		SELECT
+			COUNT(*) AS "all",
+			COALESCE(SUM(destination = 'parliament'), 0) AS parliament,
+			COALESCE(SUM(destination != 'parliament'), 0) AS local
+
 		FROM initiatives
 		WHERE signing_started_at >= ${from}
 		${to ? sql`AND signing_started_at < ${to}` : sql``}
-	`)[0].count
+	`)[0]
 
 	var sentInitiativesCount = sqlite(sql`
 		SELECT

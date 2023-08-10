@@ -89,7 +89,18 @@ module.exports = function(attrs) {
 						Sent to signing during given period, regardless of creation date.
 					</small>
 				</th>
-				<td>{attrs.signingStartedCount}</td>
+
+				<td>
+					{attrs.signingStartedCount.all}
+
+					<ul>
+						<li>{attrs.signingStartedCount.parliament} for Riigikogu.</li>
+
+						<li>
+							{attrs.signingStartedCount.local} for Local Governments.
+						</li>
+					</ul>
+				</td>
 			</tr>
 
 			<tr>
