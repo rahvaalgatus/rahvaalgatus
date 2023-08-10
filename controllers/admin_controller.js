@@ -111,7 +111,7 @@ exports.get("/", function(req, res) {
 		WHERE signature_milestones != '{}'
 	`).map((row) => row.signature_milestones)
 
-	var successfulCount = _.sum(_.map(milestones, (milestones) => (
+	var successfulInitiativesCount = _.sum(_.map(milestones, (milestones) => (
 		milestones[1000] &&
 		milestones[1000] >= from &&
 		milestones[1000] < to ? 1 : 0
@@ -124,7 +124,7 @@ exports.get("/", function(req, res) {
 		${to ? sql`AND signing_started_at < ${to}` : sql``}
 	`)[0].count
 
-	var sentCount = sqlite(sql`
+	var sentInitiativesCount = sqlite(sql`
 		SELECT
 			COUNT(*) AS "all",
 			COALESCE(SUM(destination = 'parliament'), 0) AS parliament,
@@ -175,20 +175,20 @@ exports.get("/", function(req, res) {
 	})
 
 	res.render("admin/dashboard_page.jsx", {
-		from: from,
-		to: to,
-		lastSubscriptions: lastSubscriptions,
-		authenticationsCount: authenticationsCount,
-		signatureCount: signatureCount,
-		signerCount: signerCount,
-		citizenSignatureCount: citizenSignatureCount,
-		subscriberCount: subscriberCount,
-		successfulCount: successfulCount,
-		initiativesCount: initiativesCount,
-		publishedInitiativesCount: publishedInitiativesCount,
-		externalInitiativesCount: externalInitiativesCount,
-		signingStartedCount: signingStartedCount,
-		sentCount: sentCount
+		from,
+		to,
+		lastSubscriptions,
+		authenticationsCount,
+		signatureCount,
+		signerCount,
+		citizenSignatureCount,
+		subscriberCount,
+		successfulInitiativesCount,
+		initiativesCount,
+		publishedInitiativesCount,
+		externalInitiativesCount,
+		signingStartedCount,
+		sentInitiativesCount
 	})
 })
 

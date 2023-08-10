@@ -87,7 +87,7 @@ module.exports = function(attrs) {
 					<small>Milestone reached, regardless of creation date.</small>
 				</th>
 
-				<td>{attrs.successfulCount}</td>
+				<td>{attrs.successfulInitiativesCount}</td>
 			</tr>
 
 			<tr>
@@ -97,11 +97,11 @@ module.exports = function(attrs) {
 				</th>
 
 				<td>
-					{attrs.sentCount.all}
+					{attrs.sentInitiativesCount.all}
 
 					<ul>
-						<li>{attrs.sentCount.parliament} to Riigikogu.</li>
-						<li>{attrs.sentCount.local} to Local Governments.</li>
+						<li>{attrs.sentInitiativesCount.parliament} to Riigikogu.</li>
+						<li>{attrs.sentInitiativesCount.local} to Local Governments.</li>
 					</ul>
 				</td>
 			</tr>
