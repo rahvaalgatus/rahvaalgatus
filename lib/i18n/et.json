@@ -812,7 +812,6 @@
 	"UPDATE_INITIATIVE_TO_LANG_ET": "Muuda algatus eestikeelseks.",
 	"UPDATE_INITIATIVE_TO_LANG_RU": "Muuda algatus venekeelseks.",
 	"UPDATE_SIGN_DEADLINE_BUTTON": "Uuenda tähtaega",
-	"USER_EMAIL_ALREADY_CONFIRMED": "Meiliaadress on juba kinnitatud.",
 	"USER_EMAIL_ALREADY_TAKEN": "Kahjuks on see meiliaadress juba mõne teise kasutajakontoga seotud.\nKui sul ei ole ligipääsu teisele kontole, et meiliaadress ära muuta, palun võta meiega ühendust.",
 	"USER_EMAIL_CONFIRMATION_TOKEN_INVALID": "Kahjuks meiliaadressi kinnituslink enam ei kehti.\nSee võib olla tingitud sellest, et kinnitasid just meiliaadressi, või oled peale kinnitusmeili veel meiliaadressi muutnud.",
 	"USER_EMAIL_CONFIRMATION_TOKEN_MISSING": "Kahjuks see meiliaadressi kinnituslink ei kehti.\nPalun klõpsa kinnituslingile meilis uuesti või telli uus kinnitus.",

@@ -2056,23 +2056,9 @@ describe("UserController", function() {
 
 	describe("GET /email", function() {
 		describe("when not logged in", function() {
-			it("must respond with 401 if not logged in", function*() {
-				var res = yield this.request("/user/email")
-				res.statusCode.must.equal(401)
-				res.statusMessage.must.equal("Unauthorized")
-			})
-		})
-
-		describe("when logged in", function() {
-			require("root/test/fixtures").user()
 			require("root/test/time")(new Date(2015, 5, 18, 13, 37, 42))
 
 			it("must show error if no token given", function*() {
-				usersDb.update(this.user, _.assign(this.user, {
-					unconfirmed_email: "john@example.com",
-					email_confirmation_token: Crypto.randomBytes(12)
-				}))
-
 				var res = yield this.request("/user/email")
 				res.statusCode.must.equal(404)
 				res.statusMessage.must.equal("Confirmation Token Missing")
@@ -2080,7 +2066,14 @@ describe("UserController", function() {
 			})
 
 			it("must show error if token invalid", function*() {
-				usersDb.update(this.user, _.assign(this.user, {
+				var res = yield this.request("/user/email?confirmation-token=foo[]")
+				res.statusCode.must.equal(404)
+				res.statusMessage.must.equal("Confirmation Token Invalid")
+				res.body.must.include(t("USER_EMAIL_CONFIRMATION_TOKEN_INVALID"))
+			})
+
+			it("must show error if token not found", function*() {
+				var user = usersDb.create(new ValidUser({
 					unconfirmed_email: "john@example.com",
 					email_confirmation_token: Crypto.randomBytes(12)
 				}))
@@ -2089,17 +2082,22 @@ describe("UserController", function() {
 				res.statusCode.must.equal(404)
 				res.statusMessage.must.equal("Confirmation Token Invalid")
 				res.body.must.include(t("USER_EMAIL_CONFIRMATION_TOKEN_INVALID"))
+
+				usersDb.read(user).must.eql(user)
 			})
 
-			it("must show message if already confirmed", function*() {
-				usersDb.update(this.user, _.assign(this.user, {
-					email: "john@example.com",
-					email_confirmed_at: new Date
+			it("must confirm email", function*() {
+				var user = usersDb.create(new ValidUser({
+					unconfirmed_email: "john@example.com",
+					email_confirmation_token: Crypto.randomBytes(12)
 				}))
 
-				var res = yield this.request("/user/email?confirmation-token=deadbeef")
+				var path = "/user/email?confirmation-token="
+				path += user.email_confirmation_token.toString("hex")
+				var res = yield this.request(path)
+
 				res.statusCode.must.equal(303)
-				res.headers.location.must.equal("/user")
+				res.headers.location.must.equal("/")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
 				res = yield this.request(res.headers.location, {
@@ -2107,12 +2105,47 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(200)
-				res.body.must.include(t("USER_EMAIL_ALREADY_CONFIRMED"))
+				res.body.must.include(t("USER_EMAIL_CONFIRMED"))
 
-				usersDb.read(this.user).must.eql(this.user)
+				usersDb.read(user).must.eql({
+					__proto__: user,
+					email: "john@example.com",
+					email_confirmed_at: new Date,
+					unconfirmed_email: null,
+					email_confirmation_token: null,
+					updated_at: new Date
+				})
 			})
 
-			it("must confirm email", function*() {
+			it("must show message if email already taken", function*() {
+				var old = usersDb.create(new ValidUser({
+					email: "john@example.com",
+					email_confirmed_at: new Date
+				}))
+
+				var user = usersDb.create(new ValidUser({
+					unconfirmed_email: "john@example.com",
+					email_confirmation_token: Crypto.randomBytes(12)
+				}))
+
+				var path = "/user/email?confirmation-token="
+				path += user.email_confirmation_token.toString("hex")
+				var res = yield this.request(path)
+
+				res.statusCode.must.equal(409)
+				res.statusMessage.must.equal("Email Already Taken")
+				res.body.must.include(t("USER_EMAIL_ALREADY_TAKEN"))
+
+				usersDb.read(old).must.eql(old)
+				usersDb.read(user).must.eql(user)
+			})
+		})
+
+		describe("when logged in", function() {
+			require("root/test/fixtures").user()
+			require("root/test/time")(new Date(2015, 5, 18, 13, 37, 42))
+
+			it("must confirm email if user same as logged in", function*() {
 				usersDb.update(this.user, _.assign(this.user, {
 					unconfirmed_email: "john@example.com",
 					email_confirmation_token: Crypto.randomBytes(12)
@@ -2143,26 +2176,35 @@ describe("UserController", function() {
 				})
 			})
 
-			it("must show message if email already taken", function*() {
-				usersDb.create(new ValidUser({
-					email: "john@example.com",
-					email_confirmed_at: new Date
-				}))
-
-				usersDb.update(this.user, _.assign(this.user, {
+			it("must confirm email if user not same as logged in", function*() {
+				var user = usersDb.create(new ValidUser({
 					unconfirmed_email: "john@example.com",
 					email_confirmation_token: Crypto.randomBytes(12)
 				}))
 
 				var path = "/user/email?confirmation-token="
-				path += this.user.email_confirmation_token.toString("hex")
+				path += user.email_confirmation_token.toString("hex")
 				var res = yield this.request(path)
 
-				res.statusCode.must.equal(409)
-				res.statusMessage.must.equal("Email Already Taken")
-				res.body.must.include(t("USER_EMAIL_ALREADY_TAKEN"))
+				res.statusCode.must.equal(303)
+				res.headers.location.must.equal("/")
 
-				usersDb.read(this.user).must.eql(this.user)
+				var cookies = parseCookies(res.headers["set-cookie"])
+				res = yield this.request(res.headers.location, {
+					cookies: _.mapValues(cookies, (c) => c.value)
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("USER_EMAIL_CONFIRMED"))
+
+				usersDb.read(user).must.eql({
+					__proto__: user,
+					email: "john@example.com",
+					email_confirmed_at: new Date,
+					unconfirmed_email: null,
+					email_confirmation_token: null,
+					updated_at: new Date
+				})
 			})
 		})
 	})

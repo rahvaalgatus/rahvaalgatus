@@ -11,7 +11,6 @@ var coauthorsDb = require("root/db/initiative_coauthors_db")
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
-var {constantTimeEqual} = require("root/lib/crypto")
 var next = require("co-next")
 var {sendEmail} = require("root")
 var renderEmail = require("root/lib/i18n").email
@@ -24,6 +23,8 @@ var EMPTY_ARR = Array.prototype
 
 exports.router = Router({mergeParams: true})
 
+exports.router.get("/", canonicalizeUrl)
+
 exports.router.put("/", function(req, res, next) {
 	if (req.user) return void next()
 
@@ -33,7 +34,47 @@ exports.router.put("/", function(req, res, next) {
 	res.redirect(303, validateRedirect(req, req.headers.referer, "/"))
 })
 
-exports.router.get("/", canonicalizeUrl)
+exports.router.get("/email", function(req, res) {
+	var token = req.query["confirmation-token"]
+	if (token == null) throw new HttpError(404, "Confirmation Token Missing", {
+		description: req.t("USER_EMAIL_CONFIRMATION_TOKEN_MISSING")
+	})
+
+	token = Buffer.from(token, "hex")
+
+	var user = usersDb.read(sql`
+		SELECT * FROM users WHERE email_confirmation_token = ${token}
+	`)
+
+	if (user == null) throw new HttpError(404, "Confirmation Token Invalid", {
+		description: req.t("USER_EMAIL_CONFIRMATION_TOKEN_INVALID")
+	})
+
+	try {
+		usersDb.update(user, {
+			email: user.unconfirmed_email,
+			email_confirmed_at: new Date,
+			unconfirmed_email: null,
+			email_confirmation_token: null,
+			updated_at: new Date
+		})
+	}
+	catch (ex) {
+		if (
+			ex instanceof SqliteError &&
+			ex.code == "constraint" &&
+			ex.type == "unique" &&
+			_.deepEquals(ex.columns, ["email"])
+		) throw new HttpError(409, "Email Already Taken", {
+			description: req.t("USER_EMAIL_ALREADY_TAKEN")
+		})
+
+		throw ex
+	}
+
+	res.flash("notice", req.t("USER_EMAIL_CONFIRMED"))
+	res.redirect(303, req.user && req.user.id == user.id ? "/user" : "/")
+})
 
 exports.router.use(function(req, _res, next) {
 	if (req.user == null) throw new HttpError(401)
@@ -194,53 +235,6 @@ exports.router.delete("/subscriptions", function(req, res) {
 
 	res.flash("notice", req.t("INITIATIVES_SUBSCRIPTION_DELETED"))
 	res.redirect(303, req.baseUrl + req.path)
-})
-
-exports.router.get("/email", function(req, res) {
-	var {user} = req
-
-	var token = req.query["confirmation-token"]
-	if (token == null) throw new HttpError(404, "Confirmation Token Missing", {
-		description: req.t("USER_EMAIL_CONFIRMATION_TOKEN_MISSING")
-	})
-
-	if (user.unconfirmed_email == null) {
-		res.flash("notice", req.t("USER_EMAIL_ALREADY_CONFIRMED"))
-		res.redirect(303, req.baseUrl)
-		return
-	}
-
-	token = Buffer.from(token, "hex")
-
-	if (!constantTimeEqual(user.email_confirmation_token, token))
-		throw new HttpError(404, "Confirmation Token Invalid", {
-			description: req.t("USER_EMAIL_CONFIRMATION_TOKEN_INVALID")
-		})
-
-	try {
-		usersDb.update(user, {
-			email: user.unconfirmed_email,
-			email_confirmed_at: new Date,
-			unconfirmed_email: null,
-			email_confirmation_token: null,
-			updated_at: new Date
-		})
-	}
-	catch (ex) {
-		if (
-			ex instanceof SqliteError &&
-			ex.code == "constraint" &&
-			ex.type == "unique" &&
-			_.deepEquals(ex.columns, ["email"])
-		) throw new HttpError(409, "Email Already Taken", {
-			description: req.t("USER_EMAIL_ALREADY_TAKEN")
-		})
-
-		throw ex
-	}
-
-	res.flash("notice", req.t("USER_EMAIL_CONFIRMED"))
-	res.redirect(303, req.baseUrl)
 })
 
 function read(req, res) {
