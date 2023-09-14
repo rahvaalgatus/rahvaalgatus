@@ -1802,7 +1802,6 @@ strong {
 			}
 
 			@media only screen and (max-width: 679px) { height: 40rem; }
-			@media only screen and (max-width: 499px) { height: 35rem; }
 		}
 
 		.map-legend {
@@ -3536,6 +3535,93 @@ strong {
 			label + p { margin-top: 0.5rem; }
 
 			.signin-to-act { margin-left: 1rem; }
+		}
+	}
+}
+
+#initiative-print-page main {
+	padding: 4rem;
+
+	@media print { padding: 2rem; }
+
+	#initiative {
+		flex-grow: 1;
+		font-size: 1.6rem;
+		font-family: $tisa-pro;
+		page-break-after: always;
+
+		header {
+			time,
+			.author,
+			.destination {
+				font-size: 1.6rem;
+				color: #8a8a8a;
+			}
+
+			.destination {
+				font-size: 2.4rem;
+
+				& + h1 { margin-top: 0.5rem; }
+			}
+
+			h1 {
+				color: $title-text;
+				font-size: 4.2rem;
+				line-height: 1.2;
+				word-wrap: break-word;
+				margin-bottom: 0.8rem;
+			}
+		}
+
+		.text {
+			margin-top: 4rem;
+
+			&.trix-text { white-space: pre-wrap; }
+		}
+	}
+
+	#signature-table-section {
+		margin-top: 8rem;
+		$signature-table-border: #ccc;
+
+		@media print {
+			margin-top: 0rem;
+		}
+
+		table {
+			width: 100%;
+			table-layout: fixed;
+			border-collapse: separate;
+			border-radius: 0.5rem;
+			border: 1px solid $signature-table-border;
+			font-size: 1.6rem;
+
+			@media print {
+				//height: 100vh;
+			}
+
+			caption {
+				line-height: 1.5;
+				padding: 1rem 2rem;
+			}
+		}
+
+		th {
+			padding: 1.5rem 2rem;
+			min-width: 33%;
+			font-weight: bold;
+
+			& + th { border-left: 1px solid $signature-table-border; }
+		}
+
+		tbody tr td {
+			border-top: 1px solid $signature-table-border;
+		}
+
+		td {
+			height: 5rem;
+
+			& + td { border-left: 1px solid $signature-table-border; }
 		}
 	}
 }
