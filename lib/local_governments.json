@@ -915,7 +915,9 @@
 		"initiativesEmails": [
 			"tartuvald@tartuvald.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureDownloadPersonalIds": [
+			"47907302734"
+		],
 		"dtvSchools": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/tartu-vald"
 	},
