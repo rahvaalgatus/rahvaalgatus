@@ -1,5 +1,4 @@
 var Qs = require("qs")
-var Config = require("root").config
 var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_initiative")
 var ValidSignature = require("root/test/valid_signature")
@@ -19,23 +18,29 @@ describe("AdminInitiativeSignaturesController", function() {
 	require("root/test/fixtures").csrf()
 
 	describe("GET /", function() {
-		require("root/test/fixtures").user({
-			country: Config.adminPersonalIds[0].slice(0, 2),
-			personal_id: Config.adminPersonalIds[0].slice(2)
+		describe("when admin without signatures permission", function() {
+			require("root/test/fixtures").admin()
+
+			it("must respond", function*() {
+				var res = yield this.request("/signatures")
+				res.statusCode.must.equal(403)
+				res.statusMessage.must.equal("No Signatures Permission")
+			})
 		})
 
-		it("must respond", function*() {
-			var res = yield this.request("/signatures")
-			res.statusCode.must.equal(200)
-			res.headers["content-type"].must.equal("text/html; charset=utf-8")
+		describe("when admin with signatures permission", function() {
+			require("root/test/fixtures").admin({permissions: ["signatures"]})
+
+			it("must respond", function*() {
+				var res = yield this.request("/signatures")
+				res.statusCode.must.equal(200)
+				res.headers["content-type"].must.equal("text/html; charset=utf-8")
+			})
 		})
 	})
 
 	describe(`GET / for ${CSV_TYPE}`, function() {
-		require("root/test/fixtures").user({
-			country: Config.adminPersonalIds[0].slice(0, 2),
-			personal_id: Config.adminPersonalIds[0].slice(2)
-		})
+		require("root/test/fixtures").admin({permissions: ["signatures"]})
 
 		beforeEach(function() { this.author = usersDb.create(new ValidUser) })
 

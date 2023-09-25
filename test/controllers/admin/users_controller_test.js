@@ -1,5 +1,4 @@
 var _ = require("root/lib/underscore")
-var Config = require("root").config
 var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_initiative")
 var ValidComment = require("root/test/valid_comment")
@@ -19,10 +18,7 @@ describe("AdminUsersController", function() {
 	beforeEach(require("root/test/mitm").router)
 
 	describe("PUT /users/:id", function() {
-		require("root/test/fixtures").user({
-			country: Config.adminPersonalIds[0].slice(0, 2),
-			personal_id: Config.adminPersonalIds[0].slice(2)
-		})
+		require("root/test/fixtures").admin()
 
 		describe("when merging", function() {
 			it("must merge initiatives, comments and more", function*() {

@@ -56,13 +56,13 @@ function Page(attrs, children) {
 							</a>
 						</li>
 
-						<li>
+						{req.adminPermissions.includes("signatures") ? <li>
 							<a
 								href={req.rootUrl + "/signatures"}
 								class={prefixed("/signatures/", path)}>
 								Signatures
 							</a>
-						</li>
+						</li> : null}
 
 						<li>
 							<a

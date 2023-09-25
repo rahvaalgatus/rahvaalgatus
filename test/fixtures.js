@@ -13,6 +13,7 @@ var ValidSession = require("root/test/valid_session")
 var usersDb = require("root/db/users_db")
 var sessionsDb = require("root/db/sessions_db")
 var {pseudoHex} = require("root/lib/crypto")
+var {serializePersonalId} = require("root/lib/user")
 var sha1 = require("root/lib/crypto").hash.bind(null, "sha1")
 var fetchDefaults = require("fetch-defaults")
 var EMPTY_BUFFER = Buffer.alloc(0)
@@ -124,6 +125,21 @@ exports.user = function(attrs) {
 		delete this.request
 		this.request = fetchDefaults(this.request, {session: session})
 	})
+}
+
+exports.admin =function(attrs) {
+	var country = attrs && attrs.country || "EE"
+	var personalId = attrs && attrs.personal_id || ValidUser.randomPersonalId()
+	var perms = attrs && attrs.permissions || []
+	exports.user({country, personal_id: personalId})
+
+	beforeEach(function() {
+		Config.admins = {
+			[serializePersonalId({country, personal_id: personalId})]: perms
+		}
+	})
+
+	afterEach(function() { Config.admins = {} })
 }
 
 exports.respond = respond

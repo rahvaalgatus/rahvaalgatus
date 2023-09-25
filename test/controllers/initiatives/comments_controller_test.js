@@ -16,6 +16,7 @@ var commentsDb = require("root/db/comments_db")
 var parseHtml = require("root/test/html").parse
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
+var {serializePersonalId} = require("root/lib/user")
 var demand = require("must")
 var {SITE_URLS} = require("root/test/fixtures")
 var MAX_TITLE_LENGTH = 140
@@ -54,6 +55,7 @@ describe("InitiativeCommentsController", function() {
 
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
+			afterEach(function() { Config.admins = {} })
 
 			it("must create comment", function*() {
 				var path = `/initiatives/${this.initiative.uuid}`
@@ -94,10 +96,7 @@ describe("InitiativeCommentsController", function() {
 				admin: true
 			}, function(asAdmin, persona) {
 				it(`must create comment for ${persona} as admin`, function*() {
-					usersDb.update(this.user, {
-						country: Config.adminPersonalIds[0].slice(0, 2),
-						personal_id: Config.adminPersonalIds[0].slice(2)
-					})
+					Config.admins = {[serializePersonalId(this.user)]: []}
 
 					var path = `/initiatives/${this.initiative.uuid}`
 					var res = yield this.request(path + "/comments", {
@@ -495,11 +494,8 @@ describe("InitiativeCommentsController", function() {
 			})
 
 			it("must email subscribers if commented as admin", function*() {
-				var user = usersDb.update(this.user, {
-					name: "John Smith",
-					country: Config.adminPersonalIds[0].slice(0, 2),
-					personal_id: Config.adminPersonalIds[0].slice(2)
-				})
+				var user = usersDb.update(this.user, {name: "John Smith"})
+				Config.admins = {[serializePersonalId(user)]: []}
 
 				subscriptionsDb.create(new ValidSubscription({
 					initiative_uuid: this.initiative.uuid,
@@ -1341,11 +1337,7 @@ describe("InitiativeCommentsController", function() {
 				admin: true
 			}, function(asAdmin, persona) {
 				it("must create reply", function*() {
-					usersDb.update(this.user, {
-						country: Config.adminPersonalIds[0].slice(0, 2),
-						personal_id: Config.adminPersonalIds[0].slice(2)
-					})
-
+					Config.admins = {[serializePersonalId(this.user)]: []}
 					var author = usersDb.create(new ValidUser)
 
 					var comment = commentsDb.create(new ValidComment({
@@ -1589,11 +1581,8 @@ describe("InitiativeCommentsController", function() {
 			})
 
 			it("must email subscribers if commented as admin", function*() {
-				var user = usersDb.update(this.user, {
-					name: "John Smith",
-					country: Config.adminPersonalIds[0].slice(0, 2),
-					personal_id: Config.adminPersonalIds[0].slice(2)
-				})
+				var user = usersDb.update(this.user, {name: "John Smith"})
+				Config.admins = {[serializePersonalId(user)]: []}
 
 				var author = usersDb.create(new ValidUser)
 

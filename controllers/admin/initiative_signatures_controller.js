@@ -1,6 +1,7 @@
 var _ = require("root/lib/underscore")
 var {Router} = require("express")
 var DateFns = require("date-fns")
+var HttpError = require("standard-http-error")
 var Time = require("root/lib/time")
 var Csv = require("root/lib/csv")
 var signaturesDb = require("root/db/initiative_signatures_db")
@@ -26,6 +27,11 @@ var COLUMNS = [
 ]
 
 exports.COLUMNS = COLUMNS
+
+exports.router.use(function(req, _res, next) {
+	if (req.adminPermissions.includes("signatures")) next()
+	else next(new HttpError(403, "No Signatures Permission"))
+})
 
 exports.router.get("/(:format?)", next(function*(req, res) {
 	var from = (

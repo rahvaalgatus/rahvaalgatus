@@ -1,4 +1,7 @@
+var _ = require("root/lib/underscore")
 var Config = require("root").config
+var parseHtml = require("root/test/html").parse
+var some = Function.call.bind(Array.prototype.some)
 
 describe("Adm", function() {
 	require("root/test/adm")()
@@ -25,7 +28,7 @@ describe("Adm", function() {
 
 		describe("when logged in as admin", function() {
 			require("root/test/db")()
-			signInAsAdmin()
+			require("root/test/fixtures").admin()
 
 			it("must respond with cache headers", function*() {
 				var res = yield this.request("/")
@@ -35,6 +38,29 @@ describe("Adm", function() {
 				res.headers.must.have.property("etag")
 				res.headers.must.not.have.property("last-modified")
 				res.headers.must.not.have.property("expires")
+			})
+
+			it("must not render signatures tab if without permission", function*() {
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+
+				some(dom.querySelectorAll("#header nav li"), (el) => (
+					el.textContent == "Signatures"
+				)).must.be.false()
+			})
+
+			it("must render signatures tab if with permission", function*() {
+				_.each(Config.admins, (perms) => perms.push("signatures"))
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+
+				some(dom.querySelectorAll("#header nav li"), (el) => (
+					el.textContent == "Signatures"
+				)).must.be.true()
 			})
 		})
 	})
@@ -50,7 +76,7 @@ describe("Adm", function() {
 
 		describe("when logged in", function() {
 			require("root/test/db")()
-			signInAsAdmin()
+			require("root/test/fixtures").admin()
 
 			it("must respond with 404", function*() {
 				var res = yield this.request("/non-exitent")
@@ -64,10 +90,3 @@ describe("Adm", function() {
 		})
 	})
 })
-
-function signInAsAdmin() {
-	require("root/test/fixtures").user({
-		country: Config.adminPersonalIds[0].slice(0, 2),
-		personal_id: Config.adminPersonalIds[0].slice(2)
-	})
-}

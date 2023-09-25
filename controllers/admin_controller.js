@@ -4,7 +4,7 @@ var {Router} = require("express")
 var HttpError = require("standard-http-error")
 var DateFns = require("date-fns")
 var Time = require("root/lib/time")
-var {isAdmin} = require("root/lib/user")
+var {getAdminPermissions} = require("root/lib/user")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var commentsDb = require("root/db/comments_db")
 var initiativesDb = require("root/db/initiatives_db")
@@ -12,10 +12,14 @@ var {sqlite} = require("root")
 var sql = require("sqlate")
 exports = module.exports = Router()
 
+// The AdminController is mounted under /admin on staging. That's why its
+// contents is not in bin/adm.
 exports.use(function(req, _res, next) {
-	if (req.user && isAdmin(req.user)) next()
-	else if (req.user) next(new HttpError(403, "Not an Admin"))
-	else next(new HttpError(401, "Not an Admin"))
+	if (req.user == null) return void next(new HttpError(401, "Not an Admin"))
+	var perms = getAdminPermissions(req.user)
+	if (perms == null) return void next(new HttpError(403, "Not an Admin"))
+	req.adminPermissions = perms
+	next()
 })
 
 exports.use(function(_req, res, next) {

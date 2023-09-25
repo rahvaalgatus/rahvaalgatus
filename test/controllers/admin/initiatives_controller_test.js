@@ -19,10 +19,7 @@ describe("AdminInitiativesController", function() {
 	require("root/test/fixtures").csrf()
 
 	describe("POST /initiatives/:id/events", function() {
-		require("root/test/fixtures").user({
-			country: Config.adminPersonalIds[0].slice(0, 2),
-			personal_id: Config.adminPersonalIds[0].slice(2)
-		})
+		require("root/test/fixtures").admin()
 
 		beforeEach(function() {
 			this.author = usersDb.create(new ValidUser)
