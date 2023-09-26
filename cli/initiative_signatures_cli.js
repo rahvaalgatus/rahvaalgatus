@@ -16,6 +16,8 @@ Usage: cli initiative-signatures (-h | --help)
 Options:
     -h, --help     Display this help and exit.
     --yes          Actually anonymize signatures. Otherwise just a dry-run.
+    --received-now Anonymize received initiatives now, without waiting the
+                   customary ${Config.anonymizeSignaturesReceivedAfterDays} days.
     --expired-now  Anonymize expired initiatives now, without waiting the
                    customary ${Config.anonymizeSignaturesExpiredAfterDays} days.
 `
@@ -26,6 +28,7 @@ module.exports = function(argv) {
 
 	if (args.anonymize) anonymize({
 		actuallyAnonymize: args["--yes"],
+		anonymizeReceivedNow: args["--received-now"],
 		anonymizeExpiredNow: args["--expired-now"]
 	})
 
@@ -33,13 +36,20 @@ module.exports = function(argv) {
 	else process.stdout.write(USAGE_TEXT.trimLeft())
 }
 
-function anonymize({actuallyAnonymize, anonymizeExpiredNow}) {
-	var expiredBefore = anonymizeExpiredNow
-		? new Date
-		: DateFns.addDays(new Date, -Config.anonymizeSignaturesExpiredAfterDays)
+function anonymize({
+	actuallyAnonymize,
+	anonymizeReceivedNow,
+	anonymizeExpiredNow
+}) {
+	var now = new Date
 
-	var receivedBefore =
-		DateFns.addDays(new Date, -Config.anonymizeSignaturesReceivedAfterDays)
+	var expiredBefore = anonymizeExpiredNow
+		? now
+		: DateFns.addDays(now, -Config.anonymizeSignaturesExpiredAfterDays)
+
+	var receivedBefore = anonymizeReceivedNow
+		? now
+		: DateFns.addDays(now, -Config.anonymizeSignaturesReceivedAfterDays)
 
 	var anonymizables = initiativesDb.search(sql`
 		SELECT
