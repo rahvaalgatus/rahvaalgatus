@@ -10,7 +10,7 @@ var initiativesDb = require("root/db/initiatives_db")
 var {logger} = require("root")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
-var {getRequiredSignatureCount} = require("root/lib/initiative")
+var {getSignatureThreshold} = require("root/lib/initiative")
 var co = require("co")
 
 var USAGE_TEXT = `
@@ -102,7 +102,7 @@ function* emailEndedInitiatives({actuallyEmail}) {
 		)
 
 		if (actuallyEmail) {
-			var threshold = getRequiredSignatureCount(initiative)
+			var threshold = getSignatureThreshold(initiative)
 
 			yield sendEmail({
 				to: initiative.user_email,

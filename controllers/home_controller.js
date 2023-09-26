@@ -5,7 +5,7 @@ var MediaType = require("medium-type")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
 var {sqlite} = require("root")
-var {getRequiredSignatureCount} = require("root/lib/initiative")
+var {getSignatureThreshold} = require("root/lib/initiative")
 var sql = require("sqlate")
 var initiativesDb = require("root/db/initiatives_db")
 var newsDb = require("root/db/news_db")
@@ -46,7 +46,7 @@ exports.router.get("/", function(req, res) {
 		initiative.external ||
 		initiative.phase != "sign" ||
 		initiative.signing_ends_at > cutoff ||
-		initiative.signature_count >= getRequiredSignatureCount(initiative)
+		initiative.signature_count >= getSignatureThreshold(initiative)
 	))
 
 	var statistics = gov == null || gov == "parliament" ? {

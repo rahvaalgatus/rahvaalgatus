@@ -2,7 +2,7 @@ var _ = require("root/lib/underscore")
 var Config = require("root").config
 var Subscription = require("root/lib/subscription")
 var DateFns = require("date-fns")
-var {getRequiredSignatureCount} = require("root/lib/initiative")
+var {getSignatureThreshold} = require("root/lib/initiative")
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var messagesDb = require("root/db/initiative_messages_db")
@@ -29,7 +29,7 @@ module.exports = co.wrap(function*() {
 		var passed = initiative.signature_milestones
 
 		var milestones = _.uniq(_.sort(_.subtract,
-			Config.signatureMilestones.concat(getRequiredSignatureCount(initiative)
+			Config.signatureMilestones.concat(getSignatureThreshold(initiative)
 		)))
 
 		return milestones.some((n) => n <= signatureCount && !(n in passed))
@@ -81,7 +81,7 @@ function* updateMilestones([initiative, milestones]) {
 			largest
 		)
 
-		var threshold = getRequiredSignatureCount(initiative)
+		var threshold = getSignatureThreshold(initiative)
 
 		var message = messagesDb.create({
 			initiative_uuid: initiative.uuid,

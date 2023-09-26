@@ -50,6 +50,8 @@ exports.parse = function(attrs) {
 			new Date(attrs.finished_in_government_at),
 		signatures_anonymized_at: attrs.signatures_anonymized_at &&
 			new Date(attrs.signatures_anonymized_at),
+		signature_threshold_at: attrs.signature_threshold_at &&
+			new Date(attrs.signature_threshold_at),
 
 		parliament_api_data: attrs.parliament_api_data &&
 			JSON.parse(attrs.parliament_api_data),

@@ -70,7 +70,7 @@ function* expireSigning({actuallyExpire, actuallyEmail}) {
 			"Signature Count: %d (%s)",
 			signatureCount,
 
-			signatureCount > Initiative.getRequiredSignatureCount(initiative)
+			signatureCount > Initiative.getSignatureThreshold(initiative)
 				? "Succeeded"
 				: "Failed"
 		)
@@ -91,7 +91,9 @@ function* expireSigning({actuallyExpire, actuallyEmail}) {
 		)))
 
 		if (actuallyExpire) initiativesDb.update(initiative, {
-			signing_expired_at: new Date
+			signing_expired_at: new Date,
+			signature_threshold: Initiative.getSignatureThreshold(initiative),
+			signature_threshold_at: new Date
 		})
 
 		if (actuallyExpire && actuallyEmail) {

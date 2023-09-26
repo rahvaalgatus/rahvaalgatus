@@ -9,6 +9,7 @@ var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var {PHASES} = require("root/lib/initiative")
 var EXPIRATION_MONTHS = Config.expireSignaturesInMonths
+var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 
 describe("InitiativesCli", function() {
@@ -24,7 +25,7 @@ describe("InitiativesCli", function() {
 	})
 
 	describe("expire-signing", function() {
-		it("must expire initiative if time passed", function*() {
+		it("must expire parliament initiative if time passed", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign",
@@ -36,7 +37,42 @@ describe("InitiativesCli", function() {
 
 			initiativesDb.read(initiative).must.eql(_.assign({}, initiative, {
 				signing_expired_at: new Date,
-				signing_expiration_email_sent_at: new Date
+				signing_expiration_email_sent_at: new Date,
+				signature_threshold: Config.votesRequired,
+				signature_threshold_at: new Date
+			}))
+
+			this.emails.length.must.equal(1)
+
+			var email = this.emails[0]
+			email.envelope.to.must.eql([this.user.email])
+			email.headers.subject.must.equal(t("SIGNING_EXPIRED_EMAIL_SUBJECT"))
+
+			email.body.must.equal(t("SIGNING_EXPIRED_EMAIL_BODY", {
+				initiativeTitle: initiative.title,
+				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+				newInitiativeUrl: `${Config.url}/initiatives/new`,
+				siteUrl: Config.url,
+				facebookUrl: Config.facebookUrl
+			}))
+		})
+
+		it("must expire local initiative if time passed", function*() {
+			var initiative = initiativesDb.create(new ValidInitiative({
+				user_id: this.user.id,
+				destination: "muhu-vald",
+				phase: "sign",
+				signing_started_at: DateFns.addMonths(new Date, -EXPIRATION_MONTHS),
+				signing_ends_at: new Date
+			}))
+
+			yield cli(["initiatives", "expire-signing", "--yes"])
+
+			initiativesDb.read(initiative).must.eql(_.assign({}, initiative, {
+				signing_expired_at: new Date,
+				signing_expiration_email_sent_at: new Date,
+				signature_threshold: LOCAL_GOVERNMENTS["muhu-vald"].signatureThreshold,
+				signature_threshold_at: new Date
 			}))
 
 			this.emails.length.must.equal(1)
@@ -87,7 +123,7 @@ describe("InitiativesCli", function() {
 			})
 		})
 
-		it("must not expire initiatives with signing end after expiration",
+		it("must not expire initiatives with signing end in the future",
 			function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
@@ -99,6 +135,25 @@ describe("InitiativesCli", function() {
 			yield cli(["initiatives", "expire-signing", "--yes"])
 			initiativesDb.read(initiative).must.eql(initiative)
 			this.emails.must.be.empty()
+		})
+
+		it("must expire initiatives with signing end after expiration date",
+			function*() {
+			var initiative = initiativesDb.create(new ValidInitiative({
+				user_id: this.user.id,
+				phase: "sign",
+				signing_started_at: DateFns.addMonths(new Date, -EXPIRATION_MONTHS - 1),
+				signing_ends_at: new Date
+			}))
+
+			yield cli(["initiatives", "expire-signing", "--yes"])
+
+			initiativesDb.read(initiative).must.eql(_.assign({}, initiative, {
+				signing_expired_at: new Date,
+				signing_expiration_email_sent_at: new Date,
+				signature_threshold: Config.votesRequired,
+				signature_threshold_at: new Date
+			}))
 		})
 
 		it("must not expire already expired initiatives", function*() {
@@ -139,7 +194,9 @@ describe("InitiativesCli", function() {
 			yield cli(["initiatives", "expire-signing", "--yes", "--no-email"])
 
 			initiativesDb.read(initiative).must.eql(_.assign({}, initiative, {
-				signing_expired_at: new Date
+				signing_expired_at: new Date,
+				signature_threshold: Config.votesRequired,
+				signature_threshold_at: new Date
 			}))
 
 			this.emails.must.be.empty()
@@ -158,7 +215,9 @@ describe("InitiativesCli", function() {
 			yield cli(["initiatives", "expire-signing", "--yes"])
 
 			initiativesDb.read(initiative).must.eql(_.assign({}, initiative, {
-				signing_expired_at: new Date
+				signing_expired_at: new Date,
+				signature_threshold: Config.votesRequired,
+				signature_threshold_at: new Date
 			}))
 
 			this.emails.must.be.empty()
@@ -182,7 +241,9 @@ describe("InitiativesCli", function() {
 			yield cli(["initiatives", "expire-signing", "--yes"])
 
 			initiativesDb.read(initiative).must.eql(_.assign({}, initiative, {
-				signing_expired_at: new Date
+				signing_expired_at: new Date,
+				signature_threshold: Config.votesRequired,
+				signature_threshold_at: new Date
 			}))
 
 			this.emails.must.be.empty()

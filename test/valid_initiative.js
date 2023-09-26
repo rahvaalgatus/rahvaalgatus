@@ -72,6 +72,8 @@ module.exports = function(attrs) {
 		discussion_end_email_sent_at: null,
 		signing_end_email_sent_at: null,
 		archived_at: null,
-		signatures_anonymized_at: null
+		signatures_anonymized_at: null,
+		signature_threshold: null,
+		signature_threshold_at: null
 	}, attrs)
 }

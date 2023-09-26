@@ -197,7 +197,7 @@ describe("InitiativeEndEmailCli", function() {
 				}))
 			})
 
-			it("must email when signing has ended and initiative incomplete",
+			it("must email when signing has ended and initiative unsuccessful",
 				function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
@@ -265,16 +265,14 @@ describe("InitiativeEndEmailCli", function() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					phase: "sign",
-					destination: "kihnu-vald",
+					destination: "muhu-vald",
 					signing_started_at: new Date,
 					signing_ends_at: new Date
 				}))
 
-				var threshold = Math.round(
-					LOCAL_GOVERNMENTS["kihnu-vald"].population * 0.01
-				)
+				var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
 
-				signaturesDb.create(_.times(threshold, () => (
+				signaturesDb.create(_.times(signatureThreshold, () => (
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
@@ -294,20 +292,19 @@ describe("InitiativeEndEmailCli", function() {
 				}))
 			})
 
-			it("must email when signing has ended and initiative incomplete",
+			it("must email when signing has ended and initiative unsuccessful",
 				function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
 					phase: "sign",
+					destination: "muhu-vald",
 					signing_started_at: new Date,
 					signing_ends_at: new Date
 				}))
 
-				var threshold = Math.round(
-					LOCAL_GOVERNMENTS["kihnu-vald"].population * 0.01
-				)
+				var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
 
-				signaturesDb.create(_.times(threshold - 1, () => (
+				signaturesDb.create(_.times(signatureThreshold - 1, () => (
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 

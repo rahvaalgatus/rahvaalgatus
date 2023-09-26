@@ -10,7 +10,7 @@
 		id: $gov.id,
 		name: $gov.name,
 		population: $gov.population,
+		signatureThreshold: $gov.signatureThreshold,
 		rahandusministeeriumUrl: $gov.rahandusministeeriumUrl,
-		dtvSchools: $gov.dtvSchools,
-		threshold: [$gov.population * 0.01 | round, 5] | max
+		dtvSchools: $gov.dtvSchools
 	}

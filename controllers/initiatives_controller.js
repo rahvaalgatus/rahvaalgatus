@@ -951,18 +951,22 @@ function* updateInitiativePhaseToParliament(req, res) {
 
 	if (req.body.contact == null) return void res.render(tmpl, {attrs: attrs})
 
+	var initiativeAttrs = {
+		parliament_token: Crypto.randomBytes(12),
+		signature_threshold: Initiative.getSignatureThreshold(initiative),
+		signature_threshold_at: new Date
+	}
+
 	if (initiative.destination == "parliament")
-		initiative = initiativesDb.update(initiative, {
+		initiative = initiativesDb.update(initiative, _.defaults({
 			phase: "parliament",
-			sent_to_parliament_at: new Date,
-			parliament_token: Crypto.randomBytes(12)
-		})
+			sent_to_parliament_at: new Date
+		}, initiativeAttrs))
 	else
-		initiative = initiativesDb.update(initiative, {
+		initiative = initiativesDb.update(initiative, _.defaults({
 			phase: "government",
-			sent_to_government_at: new Date,
-			parliament_token: Crypto.randomBytes(12)
-		})
+			sent_to_government_at: new Date
+		}, initiativeAttrs))
 
 	var initiativeUrl = Initiative.initiativeUrl(initiative)
 	var parliamentToken = initiative.parliament_token.toString("hex")

@@ -11,7 +11,7 @@ var {Form} = require("./page")
 var {FormCheckbox} = Page
 var {InitiativeBoxesView} = require("./initiatives/index_page")
 var {InitiativeBoxView} = require("./initiatives/index_page")
-var {getRequiredSignatureCount} = require("root/lib/initiative")
+var {getSignatureThreshold} = require("root/lib/initiative")
 exports = module.exports = HomePage
 exports.CallToActionsView = CallToActionsView
 exports.StatisticsView = StatisticsView
@@ -381,7 +381,7 @@ function InitiativesSubscriptionForm(attrs) {
 function groupInitiatives(initiatives) {
 	return _.groupBy(initiatives, function(initiative) {
 		if (initiative.phase == "sign") {
-			var signatureThreshold = getRequiredSignatureCount(initiative)
+			var signatureThreshold = getSignatureThreshold(initiative)
 			var signatureCount = initiative.signature_count
 
 			if (

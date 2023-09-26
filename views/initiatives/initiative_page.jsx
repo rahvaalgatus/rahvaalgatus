@@ -7,7 +7,7 @@ var Config = require("root").config
 var I18n = require("root/lib/i18n")
 var Css = require("root/lib/css")
 var diffInDays = require("date-fns").differenceInCalendarDays
-var {getRequiredSignatureCount} = require("root/lib/initiative")
+var {getSignatureThreshold} = require("root/lib/initiative")
 exports = module.exports = InitiativePage
 exports.ProgressView = ProgressView
 exports.renderAuthorName = renderAuthorName
@@ -108,7 +108,7 @@ function ProgressView(attrs) {
 		case "sign":
 			if (initiative.external) return null
 
-			var signatureThreshold = getRequiredSignatureCount(initiative)
+			var signatureThreshold = getSignatureThreshold(initiative)
 
 			if (sigs >= signatureThreshold)
 				return <div class={`${klass} completed`}>

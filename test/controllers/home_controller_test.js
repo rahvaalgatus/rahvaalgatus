@@ -18,7 +18,7 @@ var eventsDb = require("root/db/initiative_events_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
-var {getRequiredSignatureCount} = require("root/lib/initiative")
+var {getSignatureThreshold} = require("root/lib/initiative")
 var parseHtml = require("root/test/html").parse
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var demand = require("must")
@@ -406,15 +406,13 @@ describe("HomeController", function() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign",
-					destination: "kihnu-vald",
+					destination: "muhu-vald",
 					signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -CUTOFF)
 				}))
 
-				var threshold = Math.round(
-					LOCAL_GOVERNMENTS["kihnu-vald"].population * 0.01
-				)
+				var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
 
-				signaturesDb.create(_.times(threshold, () => (
+				signaturesDb.create(_.times(signatureThreshold, () => (
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
@@ -427,7 +425,42 @@ describe("HomeController", function() {
 					`.initiative[data-uuid="${initiative.uuid}"]`
 				)
 
-				el.textContent.must.include(t("N_SIGNATURES", {votes: threshold}))
+				el.textContent.must.include(t("N_SIGNATURES", {
+					votes: signatureThreshold
+				}))
+
+				demand(el.querySelector("time")).be.null()
+			})
+
+			it("must not use saved signature threshold for local", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "muhu-vald",
+					signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -CUTOFF),
+					signature_threshold: 1000,
+					signature_threshold_at: new Date
+				}))
+
+				var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
+
+				signaturesDb.create(_.times(signatureThreshold, () => (
+					new ValidSignature({initiative_uuid: initiative.uuid})
+				)))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+
+				var el = dom.getElementById("initiatives-in-sign-unsent").querySelector(
+					`.initiative[data-uuid="${initiative.uuid}"]`
+				)
+
+				el.textContent.must.include(t("N_SIGNATURES", {
+					votes: signatureThreshold
+				}))
+
 				demand(el.querySelector("time")).be.null()
 			})
 
@@ -467,7 +500,7 @@ describe("HomeController", function() {
 			it("must not show if for local and failed 2w ago", function*() {
 				initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
-					destination: "kihnu-vald",
+					destination: "muhu-vald",
 					phase: "sign",
 					signing_ends_at: DateFns.addDays(DateFns.startOfDay(new Date), -CUTOFF)
 				}))
@@ -479,7 +512,7 @@ describe("HomeController", function() {
 		})
 
 		describe("given initiatives in parliament phase", function() {
-			it("must show", function*() {
+			it("must show given no signatures", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "parliament"
@@ -493,6 +526,30 @@ describe("HomeController", function() {
 				dom.getElementById("initiatives-in-parliament").querySelector(
 					`.initiative[data-uuid="${initiative.uuid}"]`
 				).must.exist()
+			})
+
+			it("must show with signatures", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "parliament",
+					signature_threshold: 1000,
+					signature_threshold_at: new Date
+				}))
+
+				signaturesDb.create(_.times(42, () => (
+					new ValidSignature({initiative_uuid: initiative.uuid})
+				)))
+
+				var res = yield this.request("/")
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+
+				var el = dom.getElementById("initiatives-in-parliament").querySelector(
+					`.initiative[data-uuid="${initiative.uuid}"]`
+				)
+
+				el.textContent.must.include(t("N_SIGNATURES", {votes: 42}))
 			})
 
 			it("must show external initiatives", function*() {
@@ -684,9 +741,9 @@ describe("HomeController", function() {
 						signing_ends_at: DateFns.startOfDay(new Date)
 					}))
 
-					var threshold = getRequiredSignatureCount(initiative)
+					var signatureThreshold = getSignatureThreshold(initiative)
 
-					signaturesDb.create(_.times(threshold, () => (
+					signaturesDb.create(_.times(signatureThreshold, () => (
 						new ValidSignature({initiative_uuid: initiative.uuid})
 					)))
 
@@ -782,7 +839,7 @@ describe("HomeController", function() {
 						initiativesDb.create(LOCAL_PHASES.map((phase) => (
 							new ValidInitiative({
 								user_id: this.author.id,
-								destination: "kihnu-vald",
+								destination: "muhu-vald",
 								phase: phase,
 								published_at: new Date
 							})
@@ -828,7 +885,7 @@ describe("HomeController", function() {
 						initiativesDb.create(localPhases.map((phase) => (
 							new ValidInitiative({
 								user_id: this.author.id,
-								destination: "kihnu-vald",
+								destination: "muhu-vald",
 								phase: phase,
 								published_at: new Date
 							})

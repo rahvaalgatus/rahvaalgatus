@@ -18,7 +18,7 @@ var {CommentView} = require("./comments/read_page")
 var {CommentForm} = require("./comments/create_page")
 var {ProgressView} = require("./initiative_page")
 var {CoauthorInvitationForm} = require("./coauthor_invitation_page")
-var {getRequiredSignatureCount} = require("root/lib/initiative")
+var {getSignatureThreshold} = require("root/lib/initiative")
 var {isAdmin} = require("root/lib/user")
 var {selected} = require("root/lib/css")
 var {javascript} = require("root/lib/jsx")
@@ -242,7 +242,7 @@ function ReadPage(attrs) {
 							else return null
 
 						case "sign":
-							var signatureThreshold = getRequiredSignatureCount(initiative)
+							var signatureThreshold = getSignatureThreshold(initiative)
 
 							if (initiative.signing_ends_at <= new Date) {
 								return <div class="initiative-status">
@@ -645,7 +645,7 @@ function PhasesView(attrs) {
 		initiative.created_at
 	) + 1 : 0
 
-	var editProgress = isPhaseAfter("edit", phase)
+	var editProgress = Initiative.isPhaseGt(phase, "edit")
 		? 1
 		: min(daysSinceCreated / daysInEdit, 1)
 
@@ -669,13 +669,13 @@ function PhasesView(attrs) {
 		initiative.signing_started_at
 	)
 
-	var signProgress = isPhaseAfter("sign", phase)
+	var signProgress = Initiative.isPhaseGt(phase, "sign")
 		? 1
-		: sigs / getRequiredSignatureCount(initiative)
+		: sigs / getSignatureThreshold(initiative)
 
   var signPhaseText
 
-	if (isPhaseAtLeast("sign", phase)) {
+	if (Initiative.isPhaseGte(phase, "sign")) {
 		if (initiative.external)
 			signPhaseText = t("N_SIGNATURES_EXTERNAL")
 		else if (initiative.has_paper_signatures)
@@ -688,7 +688,10 @@ function PhasesView(attrs) {
   var parliamentPhaseText
 
 	if (initiative.destination != "parliament");
-	else if (isPhaseAfter("parliament", phase) || finishedInParliamentAt) {
+	else if (
+		Initiative.isPhaseGt(phase, "parliament") ||
+		finishedInParliamentAt
+	) {
 		parliamentProgress = 1
 
 		parliamentPhaseText = finishedInParliamentAt ? I18n.formatDateSpan(
@@ -724,7 +727,7 @@ function PhasesView(attrs) {
 		let daysLeft = diffInDays(proceedingsDeadline, new Date)
 		var daysTotal = diffInDays(proceedingsDeadline, acceptedByParliamentAt)
 
-		parliamentProgress = isPhaseAfter("parliament", phase)
+		parliamentProgress = Initiative.isPhaseGt(phase, "parliament")
 			? 1
 			: daysSinceAccepted / daysTotal
 
@@ -742,11 +745,11 @@ function PhasesView(attrs) {
   var governmentPhaseText
 
 	if (
-		isPhaseAtLeast("government", phase) &&
+		Initiative.isPhaseGte(phase, "government") &&
 		(phase == "government" || sentToGovernmentAt)
 	) {
 		governmentProgress = (
-			isPhaseAfter("government", phase) ||
+			Initiative.isPhaseGt(phase, "government") ||
 			finishedInGovernmentAt
 		) ? 1 : 0
 
@@ -1331,7 +1334,7 @@ function SidebarInfoView(attrs) {
 			</li>}</InitiativeAttributeList>: null}
 		</Fragment> : null}
 
-		{isPhaseAtLeast("sign", phase) ? <Fragment>
+		{Initiative.isPhaseGte(phase, "sign") ? <Fragment>
 			{externalUrl || canEdit ? <InitiativeAttribute
 				t={t}
 				editable={canEdit}
@@ -1346,7 +1349,7 @@ function SidebarInfoView(attrs) {
 			</InitiativeAttribute> : null}
 		</Fragment> : null}
 
-		{isPhaseAtLeast("parliament", phase) ? <Fragment>
+		{Initiative.isPhaseGte(phase, "parliament") ? <Fragment>
 			{mediaUrls.length > 0 || canEdit ? <Fragment>
 				<h3 class="sidebar-subheader">
 					{t("INITIATIVE_INFO_MEDIA_URLS_TITLE")}
@@ -1375,7 +1378,7 @@ function SidebarInfoView(attrs) {
 			</Fragment> : null}
 		</Fragment> : null}
 
-		{isPhaseAtLeast("government", phase) ? <Fragment>
+		{Initiative.isPhaseGte(phase, "government") ? <Fragment>
 			{mediaUrls.length > 0 || canEdit ? <Fragment>
 				<h3 class="sidebar-subheader">
 					{t("INITIATIVE_INFO_GOVERNMENT_CHANGE_URLS_TITLE")}
@@ -1405,7 +1408,7 @@ function SidebarInfoView(attrs) {
 			</Fragment> : null}
 		</Fragment> : null}
 
-		{isPhaseAtLeast("done", phase) ? <Fragment>
+		{Initiative.isPhaseGte(phase, "done") ? <Fragment>
 			{mediaUrls.length > 0 || canEdit ? <Fragment>
 				<h3 class="sidebar-subheader">
 					{t("INITIATIVE_INFO_PUBLIC_CHANGE_URLS_TITLE")}
@@ -2186,7 +2189,7 @@ function EventsView(attrs) {
 			</article>
 		</center></section>
 
-	else if (isPhaseAtLeast("parliament", initiative))
+	else if (Initiative.isPhaseGte(initiative, "parliament"))
 		return <section id="initiative-events" class="transparent-section"><center>
 			<article><p class="text empty">{t("NO_GOVERNMENT_REPLY")}</p></article>
 		</center></section>
@@ -2283,7 +2286,7 @@ function ProgressTextView(attrs) {
 			</p>
 
 		case "sign":
-			var signatureThreshold = getRequiredSignatureCount(initiative)
+			var signatureThreshold = getSignatureThreshold(initiative)
 			var missing = signatureThreshold - signatureCount
 
 			return <p class="initiative-progress-text">
@@ -2573,14 +2576,6 @@ function DeleteSignatureButton(attrs, children) {
 		value="delete">
 		{children}
 	</FormButton>
-}
-
-function isPhaseAtLeast(than, phase) {
-	return PHASES.indexOf(phase) >= PHASES.indexOf(than)
-}
-
-function isPhaseAfter(than, phase) {
-	return PHASES.indexOf(phase) > PHASES.indexOf(than)
 }
 
 function initiativePhaseFromEvent(event) {

@@ -74,6 +74,8 @@ exports.get("/", function(req, res) {
 		AND destination = 'parliament'
 	`).map((row) => row.signature_milestones)
 
+	// TODO: This should probably take the saved signature threshold into account
+	// should that ever change for the parliament.
 	var successfulInitiativesCount = _.sum(milestones.map((milestones) => (
 		milestones[Config.votesRequired] &&
 		milestones[Config.votesRequired] >= from &&

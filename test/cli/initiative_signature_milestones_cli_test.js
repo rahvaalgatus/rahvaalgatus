@@ -168,6 +168,57 @@ describe("InitiativeSignatureMilestonesCli", function() {
 			this.emails[0].envelope.to.must.eql([subscription.email])
 			this.emails[0].headers.subject.must.equal(message.title)
 		})
+
+		it("must not use saved signature threshold in sign phase", function*() {
+			var initiative = initiativesDb.create(new ValidInitiative({
+				user_id: this.user.id,
+				phase: "sign",
+				signature_threshold: Config.votesRequired - 1,
+				signature_threshold_at: new Date
+			}))
+
+			var signatures = createSignatures(10, new Date, initiative)
+			yield cli()
+
+			initiativesDb.read(initiative).must.eql({
+				__proto__: initiative,
+
+				signature_milestones: {
+					5: signatures[4].created_at,
+					[Config.votesRequired]: signatures[9].created_at
+				}
+			})
+		})
+
+		it("must use saved signature threshold in sign phase if signing expired",
+			function*() {
+			var signatureThreshold = Config.votesRequired + 1
+
+			var initiative = initiativesDb.create(new ValidInitiative({
+				user_id: this.user.id,
+				phase: "sign",
+				signing_expired_at: new Date,
+				signature_threshold: signatureThreshold,
+				signature_threshold_at: new Date
+			}))
+
+			var signatures = createSignatures(
+				signatureThreshold + 1,
+				new Date,
+				initiative
+			)
+
+			yield cli()
+
+			initiativesDb.read(initiative).must.eql({
+				__proto__: initiative,
+
+				signature_milestones: {
+					5: signatures[4].created_at,
+					[signatureThreshold]: signatures[signatureThreshold - 1].created_at
+				}
+			})
+		})
 	})
 
 	describe("when destined for local", function() {
@@ -178,11 +229,13 @@ describe("InitiativeSignatureMilestonesCli", function() {
 				phase: "sign"
 			}))
 
-			var milestone = Math.round(
-				LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
-			)
+			var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
 
-			var signatures = createSignatures(milestone + 2, new Date, initiative)
+			var signatures = createSignatures(
+				signatureThreshold + 2,
+				new Date,
+				initiative
+			)
 
 			var subscription = subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: initiative.uuid,
@@ -197,7 +250,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 				signature_milestones: {
 					5: signatures[4].created_at,
-					[milestone]: signatures[milestone - 1].created_at
+					[signatureThreshold]: signatures[signatureThreshold - 1].created_at
 				}
 			})
 
@@ -216,13 +269,13 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 				title: t("EMAIL_SIGNATURES_COLLECTED_SUBJECT", {
 					initiativeTitle: initiative.title,
-					milestone: milestone
+					milestone: signatureThreshold
 				}),
 
 				text: renderEmail("EMAIL_SIGNATURES_COLLECTED_BODY", {
 					initiativeTitle: initiative.title,
 					initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-					milestone: milestone
+					milestone: signatureThreshold
 				}),
 
 				sent_at: new Date,
@@ -232,6 +285,67 @@ describe("InitiativeSignatureMilestonesCli", function() {
 			this.emails.length.must.equal(1)
 			this.emails[0].envelope.to.must.eql([subscription.email])
 			this.emails[0].headers.subject.must.equal(message.title)
+		})
+
+		it("must not use saved signature threshold in sign phase", function*() {
+			var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
+
+			var initiative = initiativesDb.create(new ValidInitiative({
+				user_id: this.user.id,
+				destination: "muhu-vald",
+				phase: "sign",
+				signature_threshold: signatureThreshold - 1,
+				signature_threshold_at: new Date
+			}))
+
+			var signatures = createSignatures(
+				signatureThreshold + 1,
+				new Date,
+				initiative
+			)
+
+			yield cli()
+
+			initiativesDb.read(initiative).must.eql({
+				__proto__: initiative,
+
+				signature_milestones: {
+					5: signatures[4].created_at,
+					[signatureThreshold]: signatures[signatureThreshold - 1].created_at
+				}
+			})
+		})
+
+		it("must use saved signature threshold in sign phase if signing expired",
+			function*() {
+			var signatureThreshold =
+				LOCAL_GOVERNMENTS["muhu-vald"].signatureThreshold + 10
+
+			var initiative = initiativesDb.create(new ValidInitiative({
+				user_id: this.user.id,
+				destination: "muhu-vald",
+				phase: "sign",
+				signing_expired_at: new Date,
+				signature_threshold: signatureThreshold,
+				signature_threshold_at: new Date
+			}))
+
+			var signatures = createSignatures(
+				signatureThreshold + 1,
+				new Date,
+				initiative
+			)
+
+			yield cli()
+
+			initiativesDb.read(initiative).must.eql({
+				__proto__: initiative,
+
+				signature_milestones: {
+					5: signatures[4].created_at,
+					[signatureThreshold]: signatures[signatureThreshold - 1].created_at
+				}
+			})
 		})
 	})
 
@@ -368,45 +482,68 @@ describe("InitiativeSignatureMilestonesCli", function() {
 	})
 
 	;["parliament", "government", "done"].forEach(function(phase) {
-		it(`must update milestones when initiative in ${phase} phase`, function*() {
-			var initiative = initiativesDb.create(new ValidInitiative({
-				user_id: this.user.id,
-				phase: phase,
-			}))
+		describe(`when initiative in ${phase}`, function() {
+			it("must update milestones", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id,
+					phase: phase
+				}))
 
-			var signatures = createSignatures(5, new Date, initiative)
-			yield cli()
+				var signatures = createSignatures(5, new Date, initiative)
+				yield cli()
 
-			initiativesDb.read(initiative).must.eql({
-				__proto__: initiative,
-				signature_milestones: {5: signatures[4].created_at}
-			})
-		})
-
-		it(`must not notify when initiative ${phase} phase`, function*() {
-			var initiative = initiativesDb.create(new ValidInitiative({
-				user_id: this.user.id,
-				phase: phase,
-			}))
-
-			createSignatures(MILESTONES[0], new Date, initiative)
-
-			subscriptionsDb.create([
-				new ValidSubscription({
-					initiative_uuid: initiative.uuid,
-					confirmed_at: new Date,
-					event_interest: true
-				}),
-
-				new ValidSubscription({
-					initiative_uuid: null,
-					confirmed_at: new Date,
-					event_interest: true
+				initiativesDb.read(initiative).must.eql({
+					__proto__: initiative,
+					signature_milestones: {5: signatures[4].created_at}
 				})
-			])
+			})
 
-			yield cli()
-			this.emails.length.must.equal(0)
+			it("must update milestones using saved signature threshold", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id,
+					phase: phase,
+					signature_threshold: 3,
+					signature_threshold_at: new Date
+				}))
+
+				var signatures = createSignatures(10, new Date, initiative)
+				yield cli()
+
+				initiativesDb.read(initiative).must.eql({
+					__proto__: initiative,
+
+					signature_milestones: {
+						3: signatures[2].created_at,
+						5: signatures[4].created_at
+					}
+				})
+			})
+
+			it("must not notify", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id,
+					phase: phase,
+				}))
+
+				createSignatures(MILESTONES[0], new Date, initiative)
+
+				subscriptionsDb.create([
+					new ValidSubscription({
+						initiative_uuid: initiative.uuid,
+						confirmed_at: new Date,
+						event_interest: true
+					}),
+
+					new ValidSubscription({
+						initiative_uuid: null,
+						confirmed_at: new Date,
+						event_interest: true
+					})
+				])
+
+				yield cli()
+				this.emails.length.must.equal(0)
+			})
 		})
 	})
 

@@ -184,6 +184,16 @@ module.exports = function(attrs) {
 				<td>{initiative.signatures_anonymized_at ? "Yes" : "No"}</td>
 			</tr>
 
+			{initiative.signature_threshold != null ? <tr>
+				<th scope="row">Signature Threshold</th>
+				<td>
+					<strong>{initiative.signature_threshold}</strong> saved at {
+						I18n.formatDateTime("isoish", initiative.signing_expired_at)
+					}.
+					<br />
+				</td>
+			</tr> : null}
+
 			{initiative.destination == "parliament" ? <tr>
 				<th scope="row">Sent to Parliament</th>
 				<td>

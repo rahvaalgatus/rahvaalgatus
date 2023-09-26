@@ -1949,7 +1949,7 @@ describe("InitiativesController", function() {
 			it("must render initiative for local in edit phase", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
-					destination: "kihnu-vald",
+					destination: "muhu-vald",
 					created_at: new Date,
 					published_at: new Date,
 					discussion_ends_at: DateFns.addDays(new Date, 5)
@@ -2148,8 +2148,7 @@ describe("InitiativesController", function() {
 				phases.sign.text.must.equal(t("N_SIGNATURES", {votes: signatureCount}))
 			})
 
-			it("must render initiative for parliament in sign phase that failed and expired",
-				function*() {
+			it("must render initiative for parliament in sign phase that failed and expired", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign",
@@ -2169,20 +2168,46 @@ describe("InitiativesController", function() {
 				}))
 			})
 
+			it("must render initiative for parliament in sign phase that failed and expired with saved signature threshold",
+				function*() {
+				var signatureThreshold = Config.votesRequired + 10
+
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					signing_ends_at: new Date,
+					signing_expired_at: new Date,
+					signature_threshold: signatureThreshold,
+					signature_threshold_at: new Date
+				}))
+
+				var signatureCount = signatureThreshold - 1
+
+				signaturesDb.create(_.times(signatureCount, () => (
+					new ValidSignature({initiative_uuid: initiative.uuid})
+				)))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				res.body.must.include(t("VOTING_FAILED_AND_EXPIRED", {
+					signatureCount: signatureThreshold
+				}))
+
+				res.body.must.include(t("N_SIGNATURES_FAILED", {votes: signatureCount}))
+			})
+
 			it("must render initiative for local in sign phase that failed",
 				function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign",
-					destination: "kihnu-vald",
+					destination: "muhu-vald",
 					signing_ends_at: new Date
 				}))
 
-				var threshold = Math.round(
-					LOCAL_GOVERNMENTS["kihnu-vald"].population * 0.01
-				)
-
-				var signatureCount = threshold - 1
+				var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
+				var signatureCount = signatureThreshold - 1
 
 				citizenosSignaturesDb.create(new ValidCitizenosSignature({
 					initiative_uuid: initiative.uuid
@@ -2199,7 +2224,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 
 				res.body.must.include(t("VOTING_FAILED_ON_LOCAL_LEVEL", {
-					signatureCount: threshold
+					signatureCount: signatureThreshold
 				}))
 
 				res.body.must.include(t("N_SIGNATURES_FAILED", {votes: signatureCount}))
@@ -2214,21 +2239,18 @@ describe("InitiativesController", function() {
 				phases.sign.text.must.equal(t("N_SIGNATURES", {votes: signatureCount}))
 			})
 
-			it("must render initiative for local in sign phase that failed and expired",
-				function*() {
+			it("must render initiative for local in sign phase that failed and expired", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "sign",
-					destination: "kihnu-vald",
+					destination: "muhu-vald",
 					signing_ends_at: new Date,
 					signing_expired_at: new Date
 				}))
 
-				var threshold = Math.round(
-					LOCAL_GOVERNMENTS["kihnu-vald"].population * 0.01
-				)
+				var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
 
-				signaturesDb.create(_.times(threshold - 1, () => (
+				signaturesDb.create(_.times(signatureThreshold - 1, () => (
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
@@ -2239,7 +2261,36 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 
 				res.body.must.include(t("VOTING_FAILED_AND_EXPIRED_ON_LOCAL_LEVEL", {
-					signatureCount: threshold
+					signatureCount: signatureThreshold
+				}))
+			})
+
+			it("must render initiative for local in sign phase that failed and expired with saved signature threshold", function*() {
+				var signatureThreshold =
+					LOCAL_GOVERNMENTS["muhu-vald"].signatureThreshold + 10
+
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "muhu-vald",
+					signing_ends_at: new Date,
+					signing_expired_at: new Date,
+					signature_threshold: signatureThreshold,
+					signature_threshold_at: new Date
+				}))
+
+				signaturesDb.create(_.times(signatureThreshold - 1, () => (
+					new ValidSignature({initiative_uuid: initiative.uuid})
+				)))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid, {
+					headers: {Host: LOCAL_SITE_HOSTNAME}
+				})
+
+				res.statusCode.must.equal(200)
+
+				res.body.must.include(t("VOTING_FAILED_AND_EXPIRED_ON_LOCAL_LEVEL", {
+					signatureCount: signatureThreshold
 				}))
 			})
 
@@ -2252,11 +2303,12 @@ describe("InitiativesController", function() {
 					signing_ends_at: new Date
 				}))
 
+				var signatureCount = Config.votesRequired - 1
+
 				citizenosSignaturesDb.create(new ValidCitizenosSignature({
 					initiative_uuid: initiative.uuid
 				}))
 
-				var signatureCount = Config.votesRequired - 1
 				signaturesDb.create(_.times(signatureCount - 1, () => (
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
@@ -2345,11 +2397,9 @@ describe("InitiativesController", function() {
 					signing_ends_at: new Date
 				}))
 
-				var signatureCount = Math.round(
-					LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
-				)
+				var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
 
-				signaturesDb.create(_.times(signatureCount, () => (
+				signaturesDb.create(_.times(signatureThreshold, () => (
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
@@ -2367,7 +2417,11 @@ describe("InitiativesController", function() {
 				_.sum(_.map(phases, "current")).must.equal(1)
 				phases.edit.past.must.be.true()
 				phases.sign.current.must.be.true()
-				phases.sign.text.must.equal(t("N_SIGNATURES", {votes: signatureCount}))
+
+				phases.sign.text.must.equal(t("N_SIGNATURES", {
+					votes: signatureThreshold
+				}))
+
 				phases.must.have.property("government")
 			})
 
@@ -2381,11 +2435,9 @@ describe("InitiativesController", function() {
 					signing_expired_at: new Date
 				}))
 
-				var signatureCount = Math.round(
-					LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
-				)
+				var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
 
-				signaturesDb.create(_.times(signatureCount, () => (
+				signaturesDb.create(_.times(signatureThreshold, () => (
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
@@ -3299,15 +3351,13 @@ describe("InitiativesController", function() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "government",
-					destination: "kihnu-vald",
+					destination: "muhu-vald",
 					sent_to_government_at: new Date
 				}))
 
-				var signatureCount = Math.round(
-					LOCAL_GOVERNMENTS["kihnu-vald"].population * 0.01
-				)
+				var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
 
-				signaturesDb.create(_.times(signatureCount, () => (
+				signaturesDb.create(_.times(signatureThreshold, () => (
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
@@ -3328,7 +3378,9 @@ describe("InitiativesController", function() {
 				phases.must.not.have.property("parliament")
 				phases.government.current.must.be.true()
 
-				phases.sign.text.must.equal(t("N_SIGNATURES", {votes: signatureCount}))
+				phases.sign.text.must.equal(t("N_SIGNATURES", {
+					votes: signatureThreshold
+				}))
 
 				phases.government.text.must.equal(
 					I18n.formatDate("numeric", initiative.sent_to_government_at)
@@ -5531,11 +5583,9 @@ describe("InitiativesController", function() {
 							destination: "muhu-vald"
 						}))
 
-						var signatureCount = Math.round(
-							LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
-						)
+						var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
 
-						signaturesDb.create(_.times(signatureCount, () => (
+						signaturesDb.create(_.times(signatureThreshold, () => (
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
@@ -5556,11 +5606,9 @@ describe("InitiativesController", function() {
 							destination: "muhu-vald"
 						}))
 
-						var threshold = Math.round(
-							LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
-						)
+						var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
 
-						signaturesDb.create(_.times(threshold - 1, () => (
+						signaturesDb.create(_.times(signatureThreshold - 1, () => (
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
@@ -5580,11 +5628,9 @@ describe("InitiativesController", function() {
 							destination: "muhu-vald"
 						}))
 
-						var signatureCount = Math.round(
-							LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
-						)
+						var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
 
-						signaturesDb.create(_.times(signatureCount, () => (
+						signaturesDb.create(_.times(signatureThreshold, () => (
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
@@ -5614,11 +5660,9 @@ describe("InitiativesController", function() {
 							status: "accepted"
 						}))
 
-						var signatureCount = Math.round(
-							LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
-						)
+						var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
 
-						signaturesDb.create(_.times(signatureCount, () => (
+						signaturesDb.create(_.times(signatureThreshold, () => (
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
@@ -9332,7 +9376,7 @@ describe("InitiativesController", function() {
 						))
 
 						signaturesDb.create(_.times(
-							Config.votesRequired / 2 - 1,
+							Config.votesRequired / 2,
 							() => new ValidSignature({initiative_uuid: initiative.uuid})
 						))
 
@@ -9367,7 +9411,9 @@ describe("InitiativesController", function() {
 							phase: "sign"
 						}))
 
-						signaturesDb.create(_.times(Config.votesRequired, () => (
+						var signatureCount = Config.votesRequired + 1
+
+						signaturesDb.create(_.times(signatureCount, () => (
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
@@ -9398,7 +9444,9 @@ describe("InitiativesController", function() {
 							__proto__: initiative,
 							phase: "parliament",
 							sent_to_parliament_at: new Date,
-							parliament_token: updatedInitiative.parliament_token
+							parliament_token: updatedInitiative.parliament_token,
+							signature_threshold: Config.votesRequired,
+							signature_threshold_at: new Date
 						})
 
 						updatedInitiative.parliament_token.must.exist()
@@ -9428,7 +9476,7 @@ describe("InitiativesController", function() {
 							initiativeUuid: initiative.uuid,
 							initiativeTitle: initiative.title,
 							initiativeUrl: initiativeUrl,
-							signatureCount: Config.votesRequired,
+							signatureCount: signatureCount,
 							undersignedSignaturesUrl: signaturesUrl,
 							signaturesCsvUrl: signaturesCsvUrl,
 							authorName: "John",
@@ -9570,11 +9618,9 @@ describe("InitiativesController", function() {
 							phase: "sign"
 						}))
 
-						var signatureCount = Math.round(
-							LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
-						)
+						var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
 
-						signaturesDb.create(_.times(signatureCount, () => (
+						signaturesDb.create(_.times(signatureThreshold, () => (
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
@@ -9620,11 +9666,9 @@ describe("InitiativesController", function() {
 							phase: "sign"
 						}))
 
-						var signatureCount = Math.round(
-							LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
-						)
+						var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
 
-						signaturesDb.create(_.times(signatureCount, () => (
+						signaturesDb.create(_.times(signatureThreshold, () => (
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
@@ -9645,11 +9689,9 @@ describe("InitiativesController", function() {
 							phase: "sign"
 						}))
 
-						var threshold = Math.round(
-							LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
-						)
+						var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
 
-						signaturesDb.create(_.times(threshold - 1, () => (
+						signaturesDb.create(_.times(signatureThreshold - 1, () => (
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
@@ -9688,9 +9730,8 @@ describe("InitiativesController", function() {
 							phase: "sign"
 						}))
 
-						var signatureCount = Math.round(
-							LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
-						)
+						var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
+						var signatureCount = signatureThreshold + 1
 
 						signaturesDb.create(_.times(signatureCount, () => (
 							new ValidSignature({initiative_uuid: initiative.uuid})
@@ -9728,7 +9769,9 @@ describe("InitiativesController", function() {
 							__proto__: initiative,
 							phase: "government",
 							sent_to_government_at: new Date,
-							parliament_token: updatedInitiative.parliament_token
+							parliament_token: updatedInitiative.parliament_token,
+							signature_threshold: signatureThreshold,
+							signature_threshold_at: new Date
 						})
 
 						updatedInitiative.parliament_token.must.exist()
@@ -9788,11 +9831,9 @@ describe("InitiativesController", function() {
 							phase: "sign"
 						}))
 
-						var signatureCount = Math.round(
-							LOCAL_GOVERNMENTS["muhu-vald"].population * 0.01
-						)
+						var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
 
-						signaturesDb.create(_.times(signatureCount, () => (
+						signaturesDb.create(_.times(signatureThreshold, () => (
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
@@ -9859,7 +9900,7 @@ describe("InitiativesController", function() {
 								authorName: "John",
 								initiativeTitle: initiative.title,
 								initiativeUrl: initiativeUrl,
-								signatureCount: signatureCount
+								signatureCount: signatureThreshold
 							}),
 
 							sent_at: new Date,
@@ -9890,7 +9931,7 @@ describe("InitiativesController", function() {
 						email.body.must.equal(t("SENT_TO_LOCAL_GOVERNMENT_MESSAGE_BODY", {
 							initiativeTitle: initiative.title,
 							initiativeUrl: initiativeUrl,
-							signatureCount: signatureCount,
+							signatureCount: signatureThreshold,
 							authorName: "John",
 							unsubscribeUrl: `${Config.url}%recipient.unsubscribeUrl%`,
 							siteUrl: Config.url,

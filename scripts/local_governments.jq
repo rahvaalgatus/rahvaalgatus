@@ -20,6 +20,7 @@ map(.c | {
 		name: .[$name_column].v,
 		county: .[$county_column].v,
 		population: .[$population_column].v,
+		signatureThreshold: [.[$population_column].v * 0.01 | round, 5] | max,
 		initiativesEmails: (.[$emails_column].v // "") | lines,
 		signatureDownloadPersonalIds: (.[$personal_ids_column].v // "") | lines,
 
