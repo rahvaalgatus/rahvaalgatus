@@ -10,7 +10,7 @@ var {logger} = require("root")
 var USAGE_TEXT = `
 Usage: cli initiative-signatures (-h | --help)
        cli initiative-signatures [options]
-       cli initiative-signatures anonymize [options]
+       cli initiative-signatures anonymize [options] [<uuid>]
        cli initiative-signatures delete-signables [options]
 
 Options:
@@ -30,7 +30,7 @@ module.exports = function(argv) {
 		actuallyAnonymize: args["--yes"],
 		anonymizeReceivedNow: args["--received-now"],
 		anonymizeExpiredNow: args["--expired-now"]
-	})
+	}, args["<uuid>"])
 
 	else if (args["delete-signables"]) deleteSignables(args["--yes"])
 	else process.stdout.write(USAGE_TEXT.trimLeft())
@@ -40,7 +40,7 @@ function anonymize({
 	actuallyAnonymize,
 	anonymizeReceivedNow,
 	anonymizeExpiredNow
-}) {
+}, uuid) {
 	var now = new Date
 
 	var expiredBefore = anonymizeExpiredNow
@@ -75,6 +75,8 @@ function anonymize({
 				received_by_government_at <= ${receivedBefore}
 			)
 		)
+
+		${uuid ? sql`AND uuid = ${uuid}` : sql``}
 	`)
 
 	for (var i = 0; i < anonymizables.length; ++i) {
