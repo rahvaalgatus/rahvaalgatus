@@ -31,7 +31,6 @@ var {validateIdCardAuthenticationCertificate} = require("root/lib/certificate")
 var {hasSignatureType} = require("./initiatives/signatures_controller")
 var {getNormalizedMobileIdErrorCode} = require("root/lib/eid")
 var sql = require("sqlate")
-var {sleep} = require("root/lib/promise")
 var {validateRedirect} = require("root/lib/http")
 var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
 var reportError = require("root").errorReporter
@@ -324,7 +323,7 @@ exports.router.post("/",
 			for (
 				let end = Date.now() + 120 * 1000;
 				Date.now() < end;
-				yield sleep(ENV == "test" ? 50 : 500)
+				yield _.sleep(ENV == "test" ? 50 : 500)
 			) {
 				authentication = authenticationsDb.read(sql`
 					SELECT * FROM authentications WHERE token = ${authenticationToken}
@@ -371,7 +370,7 @@ exports.router.post("/",
 			for (
 				let end = Date.now() + 120 * 1000;
 				Date.now() < end;
-				yield sleep(ENV == "test" ? 50 : 500)
+				yield _.sleep(ENV == "test" ? 50 : 500)
 			) {
 				authentication = authenticationsDb.read(sql`
 					SELECT * FROM authentications WHERE token = ${authenticationToken}

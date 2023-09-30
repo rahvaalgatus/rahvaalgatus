@@ -30,7 +30,6 @@ var parseBody = require("body-parser").raw
 var {getNormalizedMobileIdErrorCode} = require("root/lib/eid")
 var co = require("co")
 var sql = require("sqlate")
-var {sleep} = require("root/lib/promise")
 var {sqlite} = require("root")
 var {ENV} = process.env
 var {hasSignatureType} = require("./initiatives/signatures_controller")
@@ -242,7 +241,7 @@ exports.router.get("/:token",
 			if (!(signature.timestamped || signature.error)) for (
 				var end = Date.now() + 120 * 1000;
 				Date.now() < end;
-				yield sleep(ENV == "test" ? 50 : 500)
+				yield _.sleep(ENV == "test" ? 50 : 500)
 			) {
 				signing = demoSignaturesDb.read(sql`
 					SELECT signed, timestamped, error

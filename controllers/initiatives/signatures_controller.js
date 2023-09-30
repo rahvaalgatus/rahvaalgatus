@@ -20,7 +20,6 @@ var co = require("co")
 var sql = require("sqlate")
 var dispose = require("content-disposition")
 var reportError = require("root").errorReporter
-var {sleep} = require("root/lib/promise")
 var {mobileId} = require("root")
 var {smartId} = require("root")
 var geoipPromise = require("root").geoip
@@ -534,7 +533,7 @@ exports.router.get("/:personalId",
 			if (!signature) for (
 				let end = Date.now() + 120 * 1000;
 				Date.now() < end;
-				yield sleep(ENV == "test" ? 50 : 500)
+				yield _.sleep(ENV == "test" ? 50 : 500)
 			) {
 				signable = signablesDb.read(sql`
 					SELECT signed, timestamped, error
@@ -557,7 +556,7 @@ exports.router.get("/:personalId",
 			if (!signature && signable.timestamped) for (
 				let end = Date.now() + 5 * 1000;
 				!signature && Date.now() < end;
-				yield sleep(ENV == "test" ? 50 : 200)
+				yield _.sleep(ENV == "test" ? 50 : 200)
 			) if (signature = signaturesDb.read(sql`
 				SELECT *
 				FROM initiative_signatures
@@ -958,7 +957,9 @@ function* waitUntilZipFilesWritten(zip) {
 	// but testing with 100ms locally seems to reduce signature download speed to
 	// 3–4MBps and that's fine. 10k signatures is roughly a 50MB zip file.
 	var FILE_DATA_DONE = 3
-	while (!zip.entries.every((e) => e.state == FILE_DATA_DONE)) yield sleep(100)
+
+	while (!zip.entries.every((e) => e.state == FILE_DATA_DONE))
+		yield _.sleep(100)
 }
 
 function serializeSignatureCsv(sig) {
