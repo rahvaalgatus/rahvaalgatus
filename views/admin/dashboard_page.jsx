@@ -172,7 +172,7 @@ module.exports = function(attrs) {
 					Unique signers<br />
 
 					<small>
-						Unique signers for all initiatives.
+						Unique signers for all initiatives. In case of anonymized signatures, counts unique gender and birthyear combos.
 						Excluded if deleted.
 					</small>
 				</th>
