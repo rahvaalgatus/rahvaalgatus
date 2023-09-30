@@ -34,7 +34,6 @@
 		"marked": "",
 		"lazy-object": "",
 		"date-fns": "",
-		"denodeify": "",
 		"sqlate": "",
 		"better-sqlite3": ">= 7.4.6",
 		"raven": "",
