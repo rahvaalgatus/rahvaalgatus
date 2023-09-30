@@ -30,7 +30,7 @@ module.exports = function(attrs) {
 				value={from && formatDate("iso", from)}
 			/>
 
-			<label class="admin-label">To 00:00 of</label>
+			<label class="admin-label">To Start of</label>
 			<input
 				type="date"
 				class="admin-input"
