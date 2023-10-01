@@ -3,8 +3,8 @@
 		"ehak": "0141",
 		"name": "Anija vald",
 		"county": "Harju",
-		"population": 6214,
-		"signatureThreshold": 62,
+		"population": 6431,
+		"signatureThreshold": 64,
 		"initiativesEmails": [
 			"anija@anija.ee"
 		],
@@ -18,8 +18,8 @@
 		"ehak": "0198",
 		"name": "Harku vald",
 		"county": "Harju",
-		"population": 14820,
-		"signatureThreshold": 148,
+		"population": 17520,
+		"signatureThreshold": 175,
 		"initiativesEmails": [
 			"harku@harku.ee"
 		],
@@ -33,8 +33,8 @@
 		"ehak": "0245",
 		"name": "Jõelähtme vald",
 		"county": "Harju",
-		"population": 6508,
-		"signatureThreshold": 65,
+		"population": 7217,
+		"signatureThreshold": 72,
 		"initiativesEmails": [
 			"kantselei@joelahtme.ee"
 		],
@@ -49,8 +49,8 @@
 		"ehak": "0296",
 		"name": "Keila linn",
 		"county": "Harju",
-		"population": 9975,
-		"signatureThreshold": 100,
+		"population": 10387,
+		"signatureThreshold": 104,
 		"initiativesEmails": [
 			"klv@keila.ee"
 		],
@@ -62,8 +62,8 @@
 		"ehak": "0305",
 		"name": "Kiili vald",
 		"county": "Harju",
-		"population": 5442,
-		"signatureThreshold": 54,
+		"population": 6364,
+		"signatureThreshold": 64,
 		"initiativesEmails": [
 			"info@kiilivald.ee"
 		],
@@ -78,8 +78,8 @@
 		"ehak": "0338",
 		"name": "Kose vald",
 		"county": "Harju",
-		"population": 7123,
-		"signatureThreshold": 71,
+		"population": 7700,
+		"signatureThreshold": 77,
 		"initiativesEmails": [
 			"vald@kose.ee"
 		],
@@ -91,8 +91,8 @@
 		"ehak": "0353",
 		"name": "Kuusalu vald",
 		"county": "Harju",
-		"population": 6446,
-		"signatureThreshold": 64,
+		"population": 6614,
+		"signatureThreshold": 66,
 		"initiativesEmails": [
 			"vallavalitsus@kuusalu.ee"
 		],
@@ -104,8 +104,8 @@
 		"ehak": "0424",
 		"name": "Loksa linn",
 		"county": "Harju",
-		"population": 2636,
-		"signatureThreshold": 26,
+		"population": 2498,
+		"signatureThreshold": 25,
 		"initiativesEmails": [
 			"linn@loksa.ee"
 		],
@@ -124,8 +124,8 @@
 		"ehak": "0431",
 		"name": "Lääne-Harju vald",
 		"county": "Harju",
-		"population": 12578,
-		"signatureThreshold": 126,
+		"population": 13604,
+		"signatureThreshold": 136,
 		"initiativesEmails": [
 			"info@laaneharju.ee"
 		],
@@ -137,8 +137,8 @@
 		"ehak": "0446",
 		"name": "Maardu linn",
 		"county": "Harju",
-		"population": 15468,
-		"signatureThreshold": 155,
+		"population": 16040,
+		"signatureThreshold": 160,
 		"initiativesEmails": [
 			"linnavalitsus@maardu.ee"
 		],
@@ -150,8 +150,8 @@
 		"ehak": "0651",
 		"name": "Raasiku vald",
 		"county": "Harju",
-		"population": 5022,
-		"signatureThreshold": 50,
+		"population": 5344,
+		"signatureThreshold": 53,
 		"initiativesEmails": [
 			"raasiku.vald@raasiku.ee"
 		],
@@ -165,8 +165,8 @@
 		"ehak": "0653",
 		"name": "Rae vald",
 		"county": "Harju",
-		"population": 18951,
-		"signatureThreshold": 190,
+		"population": 23147,
+		"signatureThreshold": 231,
 		"initiativesEmails": [
 			"info@rae.ee"
 		],
@@ -178,8 +178,8 @@
 		"ehak": "0719",
 		"name": "Saku vald",
 		"county": "Harju",
-		"population": 10127,
-		"signatureThreshold": 101,
+		"population": 11644,
+		"signatureThreshold": 116,
 		"initiativesEmails": [
 			"saku@sakuvald.ee"
 		],
@@ -191,8 +191,8 @@
 		"ehak": "0726",
 		"name": "Saue vald",
 		"county": "Harju",
-		"population": 22139,
-		"signatureThreshold": 221,
+		"population": 25571,
+		"signatureThreshold": 256,
 		"initiativesEmails": [
 			"info@sauevald.ee"
 		],
@@ -204,8 +204,8 @@
 		"ehak": "0784",
 		"name": "Tallinn",
 		"county": "Harju",
-		"population": 438930,
-		"signatureThreshold": 4389,
+		"population": 458373,
+		"signatureThreshold": 4584,
 		"initiativesEmails": [
 			"lvpost@tallinnlv.ee"
 		],
@@ -244,8 +244,8 @@
 		"ehak": "0890",
 		"name": "Viimsi vald",
 		"county": "Harju",
-		"population": 20142,
-		"signatureThreshold": 201,
+		"population": 22481,
+		"signatureThreshold": 225,
 		"initiativesEmails": [
 			"info@viimsivv.ee"
 		],
@@ -259,8 +259,8 @@
 		"ehak": "0205",
 		"name": "Hiiumaa vald",
 		"county": "Hiiu",
-		"population": 9512,
-		"signatureThreshold": 95,
+		"population": 9758,
+		"signatureThreshold": 98,
 		"initiativesEmails": [
 			"valitsus@hiiumaa.ee"
 		],
@@ -272,8 +272,8 @@
 		"ehak": "0130",
 		"name": "Alutaguse vald",
 		"county": "Ida-Viru",
-		"population": 4766,
-		"signatureThreshold": 48,
+		"population": 4678,
+		"signatureThreshold": 47,
 		"initiativesEmails": [
 			"info@alutagusevald.ee"
 		],
@@ -288,8 +288,8 @@
 		"ehak": "0251",
 		"name": "Jõhvi vald",
 		"county": "Ida-Viru",
-		"population": 11280,
-		"signatureThreshold": 113,
+		"population": 11459,
+		"signatureThreshold": 115,
 		"initiativesEmails": [
 			"johvi@johvi.ee"
 		],
@@ -301,8 +301,8 @@
 		"ehak": "0321",
 		"name": "Kohtla-Järve linn",
 		"county": "Ida-Viru",
-		"population": 33709,
-		"signatureThreshold": 337,
+		"population": 32296,
+		"signatureThreshold": 323,
 		"initiativesEmails": [
 			"linnavalitsus@kjlv.ee"
 		],
@@ -322,8 +322,8 @@
 		"ehak": "0442",
 		"name": "Lüganuse vald",
 		"county": "Ida-Viru",
-		"population": 8631,
-		"signatureThreshold": 86,
+		"population": 8188,
+		"signatureThreshold": 82,
 		"initiativesEmails": [
 			"valitsus@lyganuse.ee"
 		],
@@ -335,8 +335,8 @@
 		"ehak": "0511",
 		"name": "Narva linn",
 		"county": "Ida-Viru",
-		"population": 56459,
-		"signatureThreshold": 565,
+		"population": 53625,
+		"signatureThreshold": 536,
 		"initiativesEmails": [
 			"narvalv@narva.ee"
 		],
@@ -359,8 +359,8 @@
 		"ehak": "0514",
 		"name": "Narva-Jõesuu linn",
 		"county": "Ida-Viru",
-		"population": 4601,
-		"signatureThreshold": 46,
+		"population": 4773,
+		"signatureThreshold": 48,
 		"initiativesEmails": [
 			"info@narva-joesuu.ee"
 		],
@@ -372,8 +372,8 @@
 		"ehak": "0735",
 		"name": "Sillamäe linn",
 		"county": "Ida-Viru",
-		"population": 12842,
-		"signatureThreshold": 128,
+		"population": 12157,
+		"signatureThreshold": 122,
 		"initiativesEmails": [
 			"linnavalitsus@sillamae.ee"
 		],
@@ -385,8 +385,8 @@
 		"ehak": "0803",
 		"name": "Toila vald",
 		"county": "Ida-Viru",
-		"population": 4779,
-		"signatureThreshold": 48,
+		"population": 4599,
+		"signatureThreshold": 46,
 		"initiativesEmails": [
 			"toilavv@toila.ee"
 		],
@@ -400,8 +400,8 @@
 		"ehak": "0247",
 		"name": "Jõgeva vald",
 		"county": "Jõgeva",
-		"population": 13523,
-		"signatureThreshold": 135,
+		"population": 13127,
+		"signatureThreshold": 131,
 		"initiativesEmails": [
 			"info@jogeva.ee"
 		],
@@ -413,8 +413,8 @@
 		"ehak": "0486",
 		"name": "Mustvee vald",
 		"county": "Jõgeva",
-		"population": 5546,
-		"signatureThreshold": 55,
+		"population": 5291,
+		"signatureThreshold": 53,
 		"initiativesEmails": [
 			"info@mustvee.ee"
 		],
@@ -428,8 +428,8 @@
 		"ehak": "0618",
 		"name": "Põltsamaa vald",
 		"county": "Jõgeva",
-		"population": 9756,
-		"signatureThreshold": 98,
+		"population": 9484,
+		"signatureThreshold": 95,
 		"initiativesEmails": [
 			"info@poltsamaa.ee"
 		],
@@ -441,8 +441,8 @@
 		"ehak": "0255",
 		"name": "Järva vald",
 		"county": "Järva",
-		"population": 8968,
-		"signatureThreshold": 90,
+		"population": 8868,
+		"signatureThreshold": 89,
 		"initiativesEmails": [
 			"info@jarva.ee"
 		],
@@ -459,8 +459,8 @@
 		"ehak": "0567",
 		"name": "Paide linn",
 		"county": "Järva",
-		"population": 10513,
-		"signatureThreshold": 105,
+		"population": 10289,
+		"signatureThreshold": 103,
 		"initiativesEmails": [
 			"paide@paide.ee"
 		],
@@ -472,8 +472,8 @@
 		"ehak": "0834",
 		"name": "Türi vald",
 		"county": "Järva",
-		"population": 10808,
-		"signatureThreshold": 108,
+		"population": 10661,
+		"signatureThreshold": 107,
 		"initiativesEmails": [
 			"vallavalitsus@tyri.ee"
 		],
@@ -485,8 +485,8 @@
 		"ehak": "0184",
 		"name": "Haapsalu linn",
 		"county": "Lääne",
-		"population": 13193,
-		"signatureThreshold": 132,
+		"population": 13106,
+		"signatureThreshold": 131,
 		"initiativesEmails": [
 			"hlv@haapsalulv.ee"
 		],
@@ -498,8 +498,8 @@
 		"ehak": "0441",
 		"name": "Lääne-Nigula vald",
 		"county": "Lääne",
-		"population": 7115,
-		"signatureThreshold": 71,
+		"population": 7269,
+		"signatureThreshold": 73,
 		"initiativesEmails": [
 			"vv@laanenigula.ee"
 		],
@@ -511,7 +511,7 @@
 		"ehak": "0907",
 		"name": "Vormsi vald",
 		"county": "Lääne",
-		"population": 400,
+		"population": 452,
 		"signatureThreshold": 5,
 		"initiativesEmails": [
 			"vv@vormsi.ee"
@@ -524,7 +524,7 @@
 		"ehak": "0191",
 		"name": "Haljala vald",
 		"county": "Lääne-Viru",
-		"population": 4361,
+		"population": 4377,
 		"signatureThreshold": 44,
 		"initiativesEmails": [
 			"haljala@haljala.ee"
@@ -539,8 +539,8 @@
 		"ehak": "0272",
 		"name": "Kadrina vald",
 		"county": "Lääne-Viru",
-		"population": 4875,
-		"signatureThreshold": 49,
+		"population": 4843,
+		"signatureThreshold": 48,
 		"initiativesEmails": [
 			"kadrina@kadrina.ee"
 		],
@@ -552,7 +552,7 @@
 		"ehak": "0663",
 		"name": "Rakvere linn",
 		"county": "Lääne-Viru",
-		"population": 15092,
+		"population": 15134,
 		"signatureThreshold": 151,
 		"initiativesEmails": [
 			"linnavalitsus@rakvere.ee"
@@ -565,7 +565,7 @@
 		"ehak": "0661",
 		"name": "Rakvere vald",
 		"county": "Lääne-Viru",
-		"population": 5590,
+		"population": 5649,
 		"signatureThreshold": 56,
 		"initiativesEmails": [
 			"vallavalitsus@rakverevald.ee"
@@ -580,8 +580,8 @@
 		"ehak": "0792",
 		"name": "Tapa vald",
 		"county": "Lääne-Viru",
-		"population": 10866,
-		"signatureThreshold": 109,
+		"population": 10626,
+		"signatureThreshold": 106,
 		"initiativesEmails": [
 			"vallavalitsus@tapa.ee"
 		],
@@ -595,8 +595,8 @@
 		"ehak": "0901",
 		"name": "Vinni vald",
 		"county": "Lääne-Viru",
-		"population": 6900,
-		"signatureThreshold": 69,
+		"population": 6764,
+		"signatureThreshold": 68,
 		"initiativesEmails": [
 			"vallavalitsus@vinnivald.ee"
 		],
@@ -610,8 +610,8 @@
 		"ehak": "0903",
 		"name": "Viru-Nigula vald",
 		"county": "Lääne-Viru",
-		"population": 5859,
-		"signatureThreshold": 59,
+		"population": 5720,
+		"signatureThreshold": 57,
 		"initiativesEmails": [
 			"vallavalitsus@viru-nigula.ee"
 		],
@@ -623,8 +623,8 @@
 		"ehak": "0928",
 		"name": "Väike-Maarja vald",
 		"county": "Lääne-Viru",
-		"population": 5928,
-		"signatureThreshold": 59,
+		"population": 5679,
+		"signatureThreshold": 57,
 		"initiativesEmails": [
 			"valitsus@v-maarja.ee"
 		],
@@ -636,7 +636,7 @@
 		"ehak": "0284",
 		"name": "Kanepi vald",
 		"county": "Põlva",
-		"population": 4821,
+		"population": 4811,
 		"signatureThreshold": 48,
 		"initiativesEmails": [
 			"vald@kanepi.ee"
@@ -651,8 +651,8 @@
 		"ehak": "0622",
 		"name": "Põlva vald",
 		"county": "Põlva",
-		"population": 13982,
-		"signatureThreshold": 140,
+		"population": 13435,
+		"signatureThreshold": 134,
 		"initiativesEmails": [
 			"info@polva.ee"
 		],
@@ -664,8 +664,8 @@
 		"ehak": "0708",
 		"name": "Räpina vald",
 		"county": "Põlva",
-		"population": 6377,
-		"signatureThreshold": 64,
+		"population": 6123,
+		"signatureThreshold": 61,
 		"initiativesEmails": [
 			"vald@rapina.ee"
 		],
@@ -677,8 +677,8 @@
 		"ehak": "0214",
 		"name": "Häädemeeste vald",
 		"county": "Pärnu",
-		"population": 4906,
-		"signatureThreshold": 49,
+		"population": 5047,
+		"signatureThreshold": 50,
 		"initiativesEmails": [
 			"haademeeste@haademeeste.ee"
 		],
@@ -690,7 +690,7 @@
 		"ehak": "0303",
 		"name": "Kihnu vald",
 		"county": "Pärnu",
-		"population": 701,
+		"population": 691,
 		"signatureThreshold": 7,
 		"initiativesEmails": [
 			"info@kihnu.ee"
@@ -703,8 +703,8 @@
 		"ehak": "0430",
 		"name": "Lääneranna vald",
 		"county": "Pärnu",
-		"population": 5396,
-		"signatureThreshold": 54,
+		"population": 5198,
+		"signatureThreshold": 52,
 		"initiativesEmails": [
 			"vallavalitsus@laaneranna.ee"
 		],
@@ -718,8 +718,8 @@
 		"ehak": "0638",
 		"name": "Põhja-Pärnumaa vald",
 		"county": "Pärnu",
-		"population": 8285,
-		"signatureThreshold": 83,
+		"population": 7976,
+		"signatureThreshold": 80,
 		"initiativesEmails": [
 			"vald@pparnumaa.ee"
 		],
@@ -733,8 +733,8 @@
 		"ehak": "0624",
 		"name": "Pärnu linn",
 		"county": "Pärnu",
-		"population": 51271,
-		"signatureThreshold": 513,
+		"population": 51874,
+		"signatureThreshold": 519,
 		"initiativesEmails": [
 			"linnavalitsus@parnu.ee"
 		],
@@ -748,8 +748,8 @@
 		"ehak": "0712",
 		"name": "Saarde vald",
 		"county": "Pärnu",
-		"population": 4603,
-		"signatureThreshold": 46,
+		"population": 4505,
+		"signatureThreshold": 45,
 		"initiativesEmails": [
 			"info@saarde.ee"
 		],
@@ -763,8 +763,8 @@
 		"ehak": "0809",
 		"name": "Tori vald",
 		"county": "Pärnu",
-		"population": 11699,
-		"signatureThreshold": 117,
+		"population": 12474,
+		"signatureThreshold": 125,
 		"initiativesEmails": [
 			"tori@torivald.ee"
 		],
@@ -776,8 +776,8 @@
 		"ehak": "0293",
 		"name": "Kehtna vald",
 		"county": "Rapla",
-		"population": 5464,
-		"signatureThreshold": 55,
+		"population": 5432,
+		"signatureThreshold": 54,
 		"initiativesEmails": [
 			"kehtna@kehtna.ee"
 		],
@@ -789,8 +789,8 @@
 		"ehak": "0317",
 		"name": "Kohila vald",
 		"county": "Rapla",
-		"population": 7215,
-		"signatureThreshold": 72,
+		"population": 7768,
+		"signatureThreshold": 78,
 		"initiativesEmails": [
 			"vallavalitsus@kohila.ee"
 		],
@@ -802,8 +802,8 @@
 		"ehak": "0503",
 		"name": "Märjamaa vald",
 		"county": "Rapla",
-		"population": 7558,
-		"signatureThreshold": 76,
+		"population": 7548,
+		"signatureThreshold": 75,
 		"initiativesEmails": [
 			"marjamaa@marjamaa.ee"
 		],
@@ -820,7 +820,7 @@
 		"ehak": "0668",
 		"name": "Rapla vald",
 		"county": "Rapla",
-		"population": 13179,
+		"population": 13228,
 		"signatureThreshold": 132,
 		"initiativesEmails": [
 			"rapla@rapla.ee"
@@ -838,8 +838,8 @@
 		"ehak": "0478",
 		"name": "Muhu vald",
 		"county": "Saare",
-		"population": 1927,
-		"signatureThreshold": 19,
+		"population": 2080,
+		"signatureThreshold": 21,
 		"initiativesEmails": [
 			"vald@muhu.ee"
 		],
@@ -851,7 +851,7 @@
 		"ehak": "0689",
 		"name": "Ruhnu vald",
 		"county": "Saare",
-		"population": 159,
+		"population": 173,
 		"signatureThreshold": 5,
 		"initiativesEmails": [
 			"ruhnu@ruhnu.ee"
@@ -864,8 +864,8 @@
 		"ehak": "0714",
 		"name": "Saaremaa vald",
 		"county": "Saare",
-		"population": 31453,
-		"signatureThreshold": 315,
+		"population": 32296,
+		"signatureThreshold": 323,
 		"initiativesEmails": [
 			"vald@saaremaavald.ee"
 		],
@@ -879,8 +879,8 @@
 		"ehak": "0171",
 		"name": "Elva vald",
 		"county": "Tartu",
-		"population": 14583,
-		"signatureThreshold": 146,
+		"population": 14707,
+		"signatureThreshold": 147,
 		"initiativesEmails": [
 			"elva@elva.ee"
 		],
@@ -892,8 +892,8 @@
 		"ehak": "0283",
 		"name": "Kambja vald",
 		"county": "Tartu",
-		"population": 11040,
-		"signatureThreshold": 110,
+		"population": 13434,
+		"signatureThreshold": 134,
 		"initiativesEmails": [
 			"vald@kambja.ee"
 		],
@@ -905,8 +905,8 @@
 		"ehak": "0291",
 		"name": "Kastre vald",
 		"county": "Tartu",
-		"population": 5212,
-		"signatureThreshold": 52,
+		"population": 6100,
+		"signatureThreshold": 61,
 		"initiativesEmails": [
 			"vald@kastre.ee"
 		],
@@ -918,8 +918,8 @@
 		"ehak": "0432",
 		"name": "Luunja vald",
 		"county": "Tartu",
-		"population": 4734,
-		"signatureThreshold": 47,
+		"population": 5737,
+		"signatureThreshold": 57,
 		"initiativesEmails": [
 			"vald@luunja.ee"
 		],
@@ -931,8 +931,8 @@
 		"ehak": "0528",
 		"name": "Nõo vald",
 		"county": "Tartu",
-		"population": 4311,
-		"signatureThreshold": 43,
+		"population": 4443,
+		"signatureThreshold": 44,
 		"initiativesEmails": [
 			"vald@nvv.ee"
 		],
@@ -944,8 +944,8 @@
 		"ehak": "0586",
 		"name": "Peipsiääre vald",
 		"county": "Tartu",
-		"population": 5587,
-		"signatureThreshold": 56,
+		"population": 5329,
+		"signatureThreshold": 53,
 		"initiativesEmails": [
 			"vald@peipsivald.ee"
 		],
@@ -957,8 +957,8 @@
 		"ehak": "0793",
 		"name": "Tartu linn",
 		"county": "Tartu",
-		"population": 95334,
-		"signatureThreshold": 953,
+		"population": 97435,
+		"signatureThreshold": 974,
 		"initiativesEmails": [
 			"lv@tartu.ee"
 		],
@@ -977,8 +977,8 @@
 		"ehak": "0796",
 		"name": "Tartu vald",
 		"county": "Tartu",
-		"population": 10846,
-		"signatureThreshold": 108,
+		"population": 12747,
+		"signatureThreshold": 127,
 		"initiativesEmails": [
 			"tartuvald@tartuvald.ee"
 		],
@@ -992,8 +992,8 @@
 		"ehak": "0557",
 		"name": "Otepää vald",
 		"county": "Valga",
-		"population": 6566,
-		"signatureThreshold": 66,
+		"population": 6541,
+		"signatureThreshold": 65,
 		"initiativesEmails": [
 			"vald@otepaa.ee"
 		],
@@ -1010,8 +1010,8 @@
 		"ehak": "0824",
 		"name": "Tõrva vald",
 		"county": "Valga",
-		"population": 6162,
-		"signatureThreshold": 62,
+		"population": 5929,
+		"signatureThreshold": 59,
 		"initiativesEmails": [
 			"torva@torva.ee"
 		],
@@ -1025,8 +1025,8 @@
 		"ehak": "0855",
 		"name": "Valga vald",
 		"county": "Valga",
-		"population": 15625,
-		"signatureThreshold": 156,
+		"population": 15456,
+		"signatureThreshold": 155,
 		"initiativesEmails": [
 			"valga@valga.ee"
 		],
@@ -1041,8 +1041,8 @@
 		"ehak": "0480",
 		"name": "Mulgi vald",
 		"county": "Viljandi",
-		"population": 7525,
-		"signatureThreshold": 75,
+		"population": 7268,
+		"signatureThreshold": 73,
 		"initiativesEmails": [
 			"mulgi@mulgivald.ee"
 		],
@@ -1054,8 +1054,8 @@
 		"ehak": "0615",
 		"name": "Põhja-Sakala vald",
 		"county": "Viljandi",
-		"population": 7984,
-		"signatureThreshold": 80,
+		"population": 7899,
+		"signatureThreshold": 79,
 		"initiativesEmails": [
 			"info@pohja-sakala.ee"
 		],
@@ -1074,8 +1074,8 @@
 		"ehak": "0897",
 		"name": "Viljandi linn",
 		"county": "Viljandi",
-		"population": 17301,
-		"signatureThreshold": 173,
+		"population": 16800,
+		"signatureThreshold": 168,
 		"initiativesEmails": [
 			"viljandi@viljandi.ee"
 		],
@@ -1089,7 +1089,7 @@
 		"ehak": "0899",
 		"name": "Viljandi vald",
 		"county": "Viljandi",
-		"population": 13635,
+		"population": 13620,
 		"signatureThreshold": 136,
 		"initiativesEmails": [
 			"viljandivald@viljandivald.ee"
@@ -1104,8 +1104,8 @@
 		"ehak": "0142",
 		"name": "Antsla vald",
 		"county": "Võru",
-		"population": 4565,
-		"signatureThreshold": 46,
+		"population": 4329,
+		"signatureThreshold": 43,
 		"initiativesEmails": [
 			"vald@antsla.ee"
 		],
@@ -1120,8 +1120,8 @@
 		"ehak": "0698",
 		"name": "Rõuge vald",
 		"county": "Võru",
-		"population": 5482,
-		"signatureThreshold": 55,
+		"population": 5253,
+		"signatureThreshold": 53,
 		"initiativesEmails": [
 			"vald@rougevald.ee"
 		],
@@ -1135,8 +1135,8 @@
 		"ehak": "0732",
 		"name": "Setomaa vald",
 		"county": "Võru",
-		"population": 3392,
-		"signatureThreshold": 34,
+		"population": 3197,
+		"signatureThreshold": 32,
 		"initiativesEmails": [
 			"vald@setomaa.ee"
 		],
@@ -1148,8 +1148,8 @@
 		"ehak": "0919",
 		"name": "Võru linn",
 		"county": "Võru",
-		"population": 11829,
-		"signatureThreshold": 118,
+		"population": 11532,
+		"signatureThreshold": 115,
 		"initiativesEmails": [
 			"info@voru.ee"
 		],
@@ -1161,8 +1161,8 @@
 		"ehak": "0917",
 		"name": "Võru vald",
 		"county": "Võru",
-		"population": 10844,
-		"signatureThreshold": 108,
+		"population": 10695,
+		"signatureThreshold": 107,
 		"initiativesEmails": [
 			"vald@voruvald.ee"
 		],
