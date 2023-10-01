@@ -704,7 +704,10 @@ describe("InitiativesController", function() {
 			})
 
 			res.statusCode.must.equal(200)
-			res.body.must.eql([serializeApiInitiative(initiative)])
+
+			res.body.must.eql([_.assign(serializeApiInitiative(initiative), {
+				signatureThreshold: Config.votesRequired
+			})])
 		})
 
 		it("must respond with initiatives destined for local", function*() {
@@ -720,7 +723,10 @@ describe("InitiativesController", function() {
 			})
 
 			res.statusCode.must.equal(200)
-			res.body.must.eql([serializeApiInitiative(initiative)])
+
+			res.body.must.eql([_.assign(serializeApiInitiative(initiative), {
+				signatureThreshold: LOCAL_GOVERNMENTS["muhu-vald"].signatureThreshold
+			})])
 		})
 
 		it("must respond with external initiatives in parliament", function*() {
@@ -737,7 +743,8 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 
 			res.body.must.eql([_.assign(serializeApiInitiative(initiative), {
-				signatureCount: null
+				signatureCount: null,
+				signatureThreshold: Config.votesRequired
 			})])
 		})
 
@@ -762,7 +769,8 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 
 			res.body.must.eql([_.assign(serializeApiInitiative(initiative), {
-				signatureCount: 8
+				signatureCount: 8,
+				signatureThreshold: Config.votesRequired
 			})])
 		})
 
@@ -796,7 +804,11 @@ describe("InitiativesController", function() {
 				})
 
 				res.statusCode.must.equal(200)
-				res.body.must.eql(initiatives.slice(1).map(serializeApiInitiative))
+
+				res.body.must.eql(initiatives.slice(1).map((initiative) => _.assign(
+					serializeApiInitiative(initiative),
+					{signatureThreshold: Config.votesRequired}
+				)))
 			})
 		})
 
@@ -883,7 +895,10 @@ describe("InitiativesController", function() {
 					})
 
 					res.statusCode.must.equal(200)
-					res.body.must.eql([serializeApiInitiative(initiative)])
+
+					res.body.must.eql([_.assign(serializeApiInitiative(initiative), {
+						signatureThreshold: Config.votesRequired
+					})])
 				})
 			})
 		})
@@ -940,7 +955,10 @@ describe("InitiativesController", function() {
 
 				res.statusCode.must.equal(200)
 				res.headers["content-type"].must.equal(INITIATIVE_TYPE)
-				res.body.must.eql([serializeApiInitiative(initiative)])
+
+				res.body.must.eql([_.assign(serializeApiInitiative(initiative), {
+					signatureThreshold: Config.votesRequired
+				})])
 			})
 
 			Object.keys(LOCAL_GOVERNMENTS).forEach(function(dest) {
@@ -970,7 +988,10 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(200)
 					res.headers["content-type"].must.equal(INITIATIVE_TYPE)
-					res.body.must.eql([serializeApiInitiative(initiative)])
+
+					res.body.must.eql([_.assign(serializeApiInitiative(initiative), {
+						signatureThreshold: LOCAL_GOVERNMENTS[dest].signatureThreshold
+					})])
 				})
 			})
 
@@ -1007,21 +1028,17 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.headers["content-type"].must.equal(INITIATIVE_TYPE)
 
-				_.sortBy(res.body, "for").must.eql([{
-					id: a.uuid,
-					for: "muhu-vald",
-					title: a.title,
-					phase: "sign",
-					signingEndsAt: a.signing_ends_at.toJSON(),
-					signatureCount: 0
-				}, {
-					id: b.uuid,
-					for: "tallinn",
-					title: b.title,
-					phase: "sign",
-					signingEndsAt: b.signing_ends_at.toJSON(),
-					signatureCount: 0
-				}])
+				_.sortBy(res.body, "for").must.eql([
+					_.assign(serializeApiInitiative(a), {
+						signatureThreshold:
+							LOCAL_GOVERNMENTS[a.destination].signatureThreshold
+					}),
+
+					_.assign(serializeApiInitiative(b), {
+						signatureThreshold:
+							LOCAL_GOVERNMENTS[b.destination].signatureThreshold
+					})
+				])
 			})
 		})
 
@@ -5852,7 +5869,10 @@ describe("InitiativesController", function() {
 			})
 
 			res.statusCode.must.equal(200)
-			res.body.must.eql(serializeApiInitiative(initiative))
+
+			res.body.must.eql(_.assign(serializeApiInitiative(initiative), {
+				signatureThreshold: Config.votesRequired
+			}))
 		})
 
 		it("must respond with initiative destined for local", function*() {
@@ -5867,7 +5887,10 @@ describe("InitiativesController", function() {
 			})
 
 			res.statusCode.must.equal(200)
-			res.body.must.eql(serializeApiInitiative(initiative))
+
+			res.body.must.eql(_.assign(serializeApiInitiative(initiative), {
+				signatureThreshold: LOCAL_GOVERNMENTS["muhu-vald"].signatureThreshold
+			}))
 		})
 
 		it("must respond with external initiative", function*() {
@@ -5884,7 +5907,8 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 
 			res.body.must.eql(_.assign(serializeApiInitiative(initiative), {
-				signatureCount: null
+				signatureCount: null,
+				signatureThreshold: Config.votesRequired
 			}))
 		})
 
@@ -5909,7 +5933,8 @@ describe("InitiativesController", function() {
 			res.statusCode.must.equal(200)
 
 			res.body.must.eql(_.assign(serializeApiInitiative(initiative), {
-				signatureCount: 8
+				signatureCount: 8,
+				signatureThreshold: Config.votesRequired
 			}))
 		})
 	})
@@ -10715,6 +10740,7 @@ function serializeApiInitiative(initiative) {
 		signingEndsAt:
 			initiative.signing_ends_at && initiative.signing_ends_at.toJSON(),
 
-		signatureCount: 0
+		signatureCount: 0,
+		signatureThreshold: null
 	}
 }
