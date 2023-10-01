@@ -17,7 +17,6 @@ var filesDb = require("root/db/initiative_files_db")
 var {respond} = require("root/test/fixtures")
 var newUuid = _.compose(_.serializeUuid, _.uuidV4)
 var {formatDate} = require("root/lib/i18n")
-var job = require("root/cli/parliament_sync_cli")
 var sql = require("sqlate")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
@@ -34,6 +33,10 @@ var FILE_UUID = "a8dd7913-0816-4e46-9b5a-c661a2eb97de"
 var PARLIAMENT_URL = "https://www.riigikogu.ee"
 var DOCUMENT_URL = PARLIAMENT_URL + "/tegevus/dokumendiregister/dokument"
 var EXAMPLE_BUFFER = Buffer.from("\x0d\x25")
+
+var job = _.compose(require("root/cli/parliament_sync_cli"), (args) => _.concat(
+	"parliament-sync", "--external", args || []
+))
 
 describe("ParliamentSyncCli", function() {
 	require("root/test/mitm")()
@@ -1558,7 +1561,7 @@ describe("ParliamentSyncCli", function() {
 				events.length.must.equal(1)
 
 				this.time.tick(1000)
-				yield job(["parliament-sync", "--force"])
+				yield job(["--force"])
 
 				initiativesDb.read(sql`
 					SELECT * FROM initiatives

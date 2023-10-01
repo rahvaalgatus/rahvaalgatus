@@ -39,6 +39,8 @@ Options:
     --force      Force refreshing initiatives from the parliament API.
     --cached     Do not refresh initiatives from the parliament API.
     --quiet      Do not report ignored initiatives and documents.
+    --external   Also import external initiatives.
+    --dry-run    Check for new external initiatives. Don't import any.
 `
 
 // https://www.riigikogu.ee/riigikogu/koosseis/muudatused-koosseisus/
@@ -63,7 +65,11 @@ function* cli(argv) {
 	var uuid = args["<uuid>"]
 	if (uuid == "") throw new Error("Invalid UUID: " + uuid)
 
-	var opts = {quiet: args["--quiet"]}
+	var opts = {
+		quiet: args["--quiet"],
+		importExternal: args["--external"],
+		dryRun: args["--dry-run"]
+	}
 
 	if (args["--cached"]) {
 		var initiatives = initiativesDb.search(sql`
@@ -143,21 +149,34 @@ function* sync(opts, uuid) {
 }
 
 function readInitiative(opts, doc) {
-	var initiative
-
 	// Around April 2020 old initiatives in the parliament API were recreated and
 	// their old UUIDs were assigned to the `senderReference` field.
 	// Unfortunately previous Rahvaalgatus' UUIDs (in `senderReference`) were
 	// therefore overwritten  from `senderReference` making it impossible to
 	// identify sent initiatives if you already don't have the previous parliament
 	// UUID. Waiting for an update on that as of Apr 17, 2020.
-	if (initiative = initiativesDb.read(sql`
+	var initiative = initiativesDb.read(sql`
 		SELECT * FROM initiatives
 		WHERE uuid = ${doc.senderReference}
 		OR parliament_uuid = ${doc.uuid}
 		OR parliament_uuid = ${doc.senderReference}
 		LIMIT 1
-	`)) return initiative
+	`)
+
+	if (opts.dryRun) {
+		if (initiative) logger.log("Old initiative %s (%s)…", doc.uuid, doc.title)
+		else logger.log("New initiative %s (%s)…", doc.uuid, doc.title)
+		return null
+	}
+
+	if (initiative) return initiative
+
+	if (!opts.importExternal) {
+		if (!opts.quiet)
+			logger.log("Ignoring new initiative %s (%s)…", doc.uuid, doc.title)
+
+		return null
+	}
 
 	// Use submittedDate as some initiatives documents were recreated
 	// 5 years after the actual submitting date. Example:
@@ -172,13 +191,7 @@ function readInitiative(opts, doc) {
 		new Date
 	)
 
-	if (!Config.importInitiativesFromParliament) {
-		if (!opts.quiet)
-			logger.log("Ignoring new initiative %s (%s)…", doc.uuid, doc.title)
-
-		return null
-	}
-	else return {
+	return {
 		parliament_uuid: doc.uuid,
 		external: true,
 		phase: "parliament",
