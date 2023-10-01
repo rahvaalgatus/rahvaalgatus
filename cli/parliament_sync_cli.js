@@ -40,7 +40,9 @@ Options:
     --cached     Do not refresh initiatives from the parliament API.
     --quiet      Do not report ignored initiatives and documents.
     --external   Also import external initiatives.
+    --no-update  Only import new (external) initiatives. Don't update existing.
     --dry-run    Check for new external initiatives. Don't import any.
+    --no-email   Don't email about imported initiative events.
 `
 
 // https://www.riigikogu.ee/riigikogu/koosseis/muudatused-koosseisus/
@@ -68,7 +70,9 @@ function* cli(argv) {
 	var opts = {
 		quiet: args["--quiet"],
 		importExternal: args["--external"],
-		dryRun: args["--dry-run"]
+		update: !args["--no-update"],
+		dryRun: args["--dry-run"],
+		email: !args["--no-email"]
 	}
 
 	if (args["--cached"]) {
@@ -169,7 +173,7 @@ function readInitiative(opts, doc) {
 		return null
 	}
 
-	if (initiative) return initiative
+	if (initiative) return opts.update ? initiative : null
 
 	if (!opts.importExternal) {
 		if (!opts.quiet)
@@ -327,7 +331,7 @@ function* replaceInitiative(opts, initiative, document) {
 		initiative = initiativesDb.update(initiative, update)
 	}
 
-	yield replaceEvents(initiative, eventAttrs)
+	yield replaceEvents(opts, initiative, eventAttrs)
 
 	if (!opts.quiet) documents.forEach((document) => logger.warn(
 		"Ignored initiative %s document %s (%s)",
@@ -339,7 +343,7 @@ function* replaceInitiative(opts, initiative, document) {
 	return initiative
 }
 
-function* replaceEvents(initiative, eventAttrs) {
+function* replaceEvents(opts, initiative, eventAttrs) {
 	var events = eventsDb.search(sql`
 		SELECT * FROM initiative_events
 		WHERE initiative_uuid = ${initiative.uuid}
@@ -395,7 +399,7 @@ function* replaceEvents(initiative, eventAttrs) {
 		isEventNotifiable.bind(null, new Date, initiative)
 	)
 
-	if (relevantEvents.length > 0)
+	if (opts.email && relevantEvents.length > 0)
 		yield sendParliamentEventEmail(initiative, relevantEvents)
 }
 
