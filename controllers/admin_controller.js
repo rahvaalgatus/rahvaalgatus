@@ -145,9 +145,20 @@ exports.get("/", function(req, res) {
 	var signatureCount = sqlite(sql`
 		SELECT
 			COUNT(*) AS "all",
+			COALESCE(SUM(sig.oversigned), 0) AS all_oversigned,
 			COALESCE(SUM(sig.method == 'id-card'), 0) AS id_card,
 			COALESCE(SUM(sig.method == 'mobile-id'), 0) AS mobile_id,
 			COALESCE(SUM(sig.method == 'smart-id'), 0) AS smart_id,
+
+			COALESCE(SUM(IIF(sig.method = 'id-card', sig.oversigned, 0)), 0)
+			AS id_card_oversigned,
+
+			COALESCE(SUM(IIF(sig.method = 'mobile-id', sig.oversigned, 0)), 0)
+			AS mobile_id_oversigned,
+
+			COALESCE(SUM(IIF(sig.method = 'smart-id', sig.oversigned, 0)), 0)
+			AS smart_id_oversigned,
+
 			COALESCE(SUM(initiative.destination = 'parliament'), 0) AS parliament,
 			COALESCE(SUM(initiative.destination != 'parliament'), 0) AS local
 

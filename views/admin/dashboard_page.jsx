@@ -163,6 +163,7 @@ module.exports = function(attrs) {
 					<ul>
 						<li>{attrs.signatureCount.parliament + attrs.citizenSignatureCount.parliament} to Riigikogu.</li>
 						<li>{attrs.signatureCount.local + attrs.citizenSignatureCount.local} to Local Governments.</li>
+						<li>{attrs.signatureCount.all_oversigned} oversigned.</li>
 					</ul>
 				</td>
 			</tr>
@@ -283,13 +284,23 @@ function SubscriptionsView(attrs) {
 }
 
 function SignatureCountsView({counts}) {
-	var idCardCosts = 0
-	var mobileIdCosts = counts.mobile_id * Config.mobileIdCost
-	var smartIdCosts = counts.smart_id * Config.smartIdCost
-	var methodCosts = idCardCosts + mobileIdCosts + smartIdCosts
-
 	var timestampCost = Config.timemarkCost
-	var timestampCosts = counts.all * timestampCost
+
+	var idCardCosts = 0
+	var idCardCount = counts.id_card + counts.id_card_oversigned
+	var idCardTimestampCosts = idCardCount * timestampCost
+
+	var mobileIdCount = counts.mobile_id + counts.mobile_id_oversigned
+	var mobileIdCosts = mobileIdCount * Config.mobileIdCost
+	var mobileIdTimestampCosts = mobileIdCount * timestampCost
+
+	var smartIdCount = counts.smart_id + counts.smart_id_oversigned
+	var smartIdCosts = smartIdCount * Config.smartIdCost
+	var smartIdTimestampCosts = smartIdCount * timestampCost
+
+	var allCount = counts.all + counts.all_oversigned
+	var allCosts = idCardCosts + mobileIdCosts + smartIdCosts
+	var allTimestampCosts = allCount * timestampCost
 
 	return <table class="signature-counts-table admin-table">
 		<thead>
@@ -305,64 +316,81 @@ function SignatureCountsView({counts}) {
 		<tbody>
 			<tr>
 				<th>Total</th>
-				<td>{counts.all}</td>
-				<td>€{methodCosts.toFixed(2)}</td>
-				<td>€{timestampCosts.toFixed(2)}</td>
-				<td>€{(methodCosts + timestampCosts).toFixed(2)}</td>
+
+				<td>
+					<strong>{allCount}</strong><br />
+					{counts.all}{" "}current<br />
+					{counts.all_oversigned}{" "}oversigned
+				</td>
+
+				<td>€{allCosts.toFixed(2)}</td>
+				<td>€{allTimestampCosts.toFixed(2)}</td>
+				<td>€{(allCosts + allTimestampCosts).toFixed(2)}</td>
 			</tr>
 
 			<tr>
 				<th>Id-card</th>
-				<td>{counts.id_card}</td>
+
+				<td>
+					<strong>{idCardCount}</strong><br />
+					{counts.id_card}{" "}current<br />
+					{counts.id_card_oversigned}{" "}oversigned
+				</td>
+
 				<td>€{idCardCosts.toFixed(2)}</td>
 
 				<td>
-					€{(counts.id_card * timestampCost).toFixed(2)}
-					<br />
+					€{idCardTimestampCosts.toFixed(2)}<br />
 					<small>€{timestampCost}/sig</small>
 				</td>
 
-				<td>€{(idCardCosts + counts.id_card * timestampCost).toFixed(2)}</td>
+				<td>€{(idCardCosts + idCardTimestampCosts).toFixed(2)}</td>
 			</tr>
 
 			<tr>
 				<th>Mobile-Id</th>
-				<td>{counts.mobile_id}</td>
 
 				<td>
-					€{mobileIdCosts.toFixed(2)}
-					<br />
+					<strong>{mobileIdCount}</strong><br />
+					{counts.mobile_id}{" "}current<br />
+					{counts.mobile_id_oversigned}{" "}oversigned
+				</td>
+
+				<td>
+					€{mobileIdCosts.toFixed(2)}<br />
 					<small>€{Config.mobileIdCost}/sig</small>
 				</td>
 
 				<td>
-					€{(counts.mobile_id * timestampCost).toFixed(2)}
-					<br />
+					€{mobileIdTimestampCosts.toFixed(2)}<br />
 					<small>€{timestampCost}/sig</small>
 				</td>
 
 				<td>
-					€{(mobileIdCosts + counts.mobile_id * timestampCost).toFixed(2)}
+					€{(mobileIdCosts + mobileIdTimestampCosts).toFixed(2)}
 				</td>
 			</tr>
 
 			<tr>
 				<th>Smart-Id</th>
-				<td>{counts.smart_id}</td>
 
 				<td>
-					€{smartIdCosts.toFixed(2)}
-					<br />
+					<strong>{smartIdCount}</strong><br />
+					{counts.smart_id}{" "}current<br />
+					{counts.smart_id_oversigned}{" "}oversigned
+				</td>
+
+				<td>
+					€{smartIdCosts.toFixed(2)}<br />
 					<small>€{Config.smartIdCost}/sig</small>
 				</td>
 
 				<td>
-					€{(counts.smart_id * timestampCost).toFixed(2)}
-					<br />
+					€{smartIdTimestampCosts.toFixed(2)}<br />
 					<small>€{timestampCost}/sig</small>
 				</td>
 
-				<td>€{(smartIdCosts + counts.smart_id * timestampCost).toFixed(2)}</td>
+				<td>€{(smartIdCosts + smartIdTimestampCosts).toFixed(2)}</td>
 			</tr>
 		</tbody>
 	</table>
