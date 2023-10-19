@@ -1664,6 +1664,7 @@ strong {
 		$government-legend-color: #1C71A2;
 		$archive-legend-color: #8B8B8B;
 		$dtv-legend-color: #FEEF7F;
+		$dialog-legend-color: #FFB237;
 
 		padding-top: 0;
 		padding-bottom: 0;
@@ -1717,6 +1718,7 @@ strong {
 				.government-phase:before { background-color: $government-legend-color; }
 				.archive-phase:before { background-color: $archive-legend-color; }
 				.dtv:before { background-color: $dtv-legend-color; }
+				.dialog:before { background-color: $dialog-legend-color; }
 				.rahandusministeerium:before { background-color: #003087; }
 			}
 
@@ -1858,11 +1860,17 @@ strong {
 					background-color: $dtv-legend-color;
 				}
 
+				&[data-value="dialog"] .check {
+					border-color: $dialog-legend-color;
+					background-color: $dialog-legend-color;
+				}
+
 				input:checked + .check {
 					background-image: url("/assets/check-white.svg");
 				}
 
-				input[value="dtv"]:checked + .check  {
+				input[value="dtv"]:checked + .check,
+				input[value="dialog"]:checked + .check {
 					background-image: url("/assets/check-black.svg");
 				}
 

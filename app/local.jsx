@@ -26,6 +26,7 @@ exports.newMap = function(mapElement, initiativeCounts, location, legend) {
 	})
 
 	var dtvMarkers = Leaflet.layerGroup()
+	var dialogMarkers = Leaflet.layerGroup()
 
 	var visibilities = {
 		edit: true,
@@ -71,19 +72,27 @@ exports.newMap = function(mapElement, initiativeCounts, location, legend) {
 				mouseout: function(ev) { layerGroup.resetStyle(ev.target) }
 			})
 
-			if (gov.dtvSchools.length > 0) {
-				var coords = layer.getBounds().getCenter()
+			if (gov.dtvSchools.length > 0)
+				Leaflet.marker(layer.getBounds().getCenter(), {
+					icon: Leaflet.icon({
+						iconUrl: "/assets/map-dtv-legend.svg",
+						iconSize: [22, 22]
+					}),
 
-				var icon = Leaflet.icon({
-					iconUrl: "/assets/map-dtv-legend.svg",
-					iconSize: [22, 22]
-				})
-
-				Leaflet.marker(coords, {
-					icon: icon,
 					interactive: false,
+					zIndexOffset: 10
 				}).addTo(dtvMarkers)
-			}
+
+			if (gov.dialogs.length > 0)
+				Leaflet.marker(layer.getBounds().getCenter(), {
+					icon: Leaflet.icon({
+						iconUrl: "/assets/map-dialog-legend.svg",
+						iconSize: [22, 22],
+						iconAnchor: [0, 4]
+					}),
+
+					interactive: false,
+				}).addTo(dialogMarkers)
 		}
 	})
 
@@ -123,6 +132,10 @@ exports.newMap = function(mapElement, initiativeCounts, location, legend) {
 
 				{gov.dtvSchools.length > 0 ? <li class="dtv">
 					Koolide kaasav eelarve
+				</li> : null}
+
+				{gov.dialogs.length > 0 ? <li class="dialog">
+					Dialoogikoolitused
 				</li> : null}
 			</ul>
 		</Jsx.Fragment>.join("")
@@ -186,6 +199,16 @@ exports.newMap = function(mapElement, initiativeCounts, location, legend) {
 				})}</ul>
 			</Jsx.Fragment>.join("") : null}
 
+			{gov.dialogs.length > 0 ? <Jsx.Fragment>
+				<h3>Dialoogikoolitused</h3>
+
+				<ul>{gov.dialogs.map(function(location) {
+					return <li class="dialog">
+						<a href={location.url}>{location.name}</a>
+					</li>
+				})}</ul>
+			</Jsx.Fragment>.join("") : null}
+
 			<menu>
 				<a
 					href="/initiatives/new"
@@ -210,8 +233,8 @@ exports.newMap = function(mapElement, initiativeCounts, location, legend) {
 	})
 
 	layerGroup.addTo(map)
-
 	dtvMarkers.addTo(map)
+	dialogMarkers.addTo(map)
 
 	var worldBounds = layerGroup.getBounds()
 	var paddingLeftWithLegend = 240
@@ -326,6 +349,10 @@ exports.newMap = function(mapElement, initiativeCounts, location, legend) {
 					else if (el.name == "event" && el.value == "dtv") {
 						if (el.checked) dtvMarkers.addTo(map)
 						else dtvMarkers.remove()
+					}
+					else if (el.name == "event" && el.value == "dialog") {
+						if (el.checked) dialogMarkers.addTo(map)
+						else dialogMarkers.remove()
 					}
 
 					legends.forEach(function(otherLegend) {

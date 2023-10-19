@@ -81,6 +81,11 @@ module.exports = function(attrs) {
 						<Checkbox name="event" value="dtv" checked />
 						{t("LOCAL_HOME_PAGE_MAP_LEGEND_DTV")}
 					</label></li>
+
+					<li><label>
+						<Checkbox name="event" value="dialog" checked />
+						{t("LOCAL_HOME_PAGE_MAP_LEGEND_DIALOG")}
+					</label></li>
 				</ol>
 			</div>
 

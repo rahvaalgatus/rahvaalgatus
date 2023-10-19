@@ -10,6 +10,7 @@ def lines: sub("\\s+$"; "") | split("\n");
 ($header | index("Initiatives Emails")) as $emails_column |
 ($header | index("Signature Download Personal Ids")) as $personal_ids_column |
 ($header | index("DTV Schools")) as $dtv_column |
+($header | index("Dialogs")) as $dialogs_column |
 ($header | index("Rahandusministeerium")) as $rahandusmin_column |
 .rows |
 
@@ -25,6 +26,13 @@ map(.c | {
 		signatureDownloadPersonalIds: (.[$personal_ids_column].v // "") | lines,
 
 		dtvSchools: (.[$dtv_column].v // "")
+			| lines
+			| map(match("([^ ]+) (.*)") | {
+				name: .captures[1].string,
+				url: .captures[0].string
+			}),
+
+		dialogs: (.[$dialogs_column].v // "")
 			| lines
 			| map(match("([^ ]+) (.*)") | {
 				name: .captures[1].string,

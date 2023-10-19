@@ -12,6 +12,7 @@
 			"49207255258"
 		],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/anija-vald"
 	},
 	"harku-vald": {
@@ -27,6 +28,7 @@
 			"48812260329"
 		],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/harku-vald"
 	},
 	"jõelähtme-vald": {
@@ -43,6 +45,7 @@
 			"48406240352"
 		],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/joelahtme-vald"
 	},
 	"keila-linn": {
@@ -56,6 +59,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/keila-linn"
 	},
 	"kiili-vald": {
@@ -72,6 +76,7 @@
 			"46002090346"
 		],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kiili-vald"
 	},
 	"kose-vald": {
@@ -85,6 +90,12 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [
+			{
+				"name": "Kose-Uuemõisa Raamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kose-vald"
 	},
 	"kuusalu-vald": {
@@ -98,6 +109,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kuusalu-vald"
 	},
 	"loksa-linn": {
@@ -118,6 +130,7 @@
 				"url": "https://demokraatia.rahvaalgatus.ee/koolid/9-loksa-g%C3%BCmnaasium"
 			}
 		],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/loksa-linn"
 	},
 	"lääne-harju-vald": {
@@ -131,6 +144,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/laane-harju-vald"
 	},
 	"maardu-linn": {
@@ -144,6 +158,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/maardu-linn"
 	},
 	"raasiku-vald": {
@@ -159,6 +174,12 @@
 			"37402202731"
 		],
 		"dtvSchools": [],
+		"dialogs": [
+			{
+				"name": "Raasiku Valla raamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/raasiku-vald"
 	},
 	"rae-vald": {
@@ -172,6 +193,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rae-vald"
 	},
 	"saku-vald": {
@@ -185,6 +207,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/saku-vald"
 	},
 	"saue-vald": {
@@ -198,6 +221,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/saue-vald"
 	},
 	"tallinn": {
@@ -238,6 +262,12 @@
 				"url": "https://demokraatia.rahvaalgatus.ee/koolid/21-tallinna-saksa-g%C3%BCmnaasium"
 			}
 		],
+		"dialogs": [
+			{
+				"name": "Tallinna Keskraamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/tallinna-linn"
 	},
 	"viimsi-vald": {
@@ -253,6 +283,7 @@
 			"37003010333"
 		],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/viimsi-vald"
 	},
 	"hiiumaa-vald": {
@@ -266,6 +297,12 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [
+			{
+				"name": "Kärdla Linnaraamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/hiiumaa-vald"
 	},
 	"alutaguse-vald": {
@@ -282,6 +319,7 @@
 			"48708082239"
 		],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/alutaguse-vald"
 	},
 	"jõhvi-vald": {
@@ -295,6 +333,12 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [
+			{
+				"name": "Jõhvi Keskraamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/johvi-vald"
 	},
 	"kohtla-järve-linn": {
@@ -316,6 +360,7 @@
 				"url": "https://demokraatia.rahvaalgatus.ee/koolid/15-kohtla-j%C3%A4rve-g%C3%BCmnaasium"
 			}
 		],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kohtla-jarve-linn"
 	},
 	"lüganuse-vald": {
@@ -329,6 +374,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/luganuse-vald"
 	},
 	"narva-linn": {
@@ -353,6 +399,7 @@
 				"url": "https://demokraatia.rahvaalgatus.ee/koolid/8-narva-soldino-g%C3%BCmnaasium"
 			}
 		],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/narva-linn"
 	},
 	"narva-jõesuu-linn": {
@@ -366,6 +413,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/narva-joesuu-linn"
 	},
 	"sillamäe-linn": {
@@ -379,6 +427,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/sillamae-linn"
 	},
 	"toila-vald": {
@@ -394,6 +443,12 @@
 			"46509102247"
 		],
 		"dtvSchools": [],
+		"dialogs": [
+			{
+				"name": "Toila Vallaraamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/toila-vald"
 	},
 	"jõgeva-vald": {
@@ -407,6 +462,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/jogeva-vald"
 	},
 	"mustvee-vald": {
@@ -422,6 +478,7 @@
 			"46709022721"
 		],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/mustvee-vald"
 	},
 	"põltsamaa-vald": {
@@ -435,6 +492,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/poltsamaa-vald"
 	},
 	"järva-vald": {
@@ -453,6 +511,12 @@
 				"url": "https://demokraatia.rahvaalgatus.ee/koolid/16-imavere-kool"
 			}
 		],
+		"dialogs": [
+			{
+				"name": "Järva Vallaraamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/jarva-vald"
 	},
 	"paide-linn": {
@@ -466,6 +530,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/paide-linn"
 	},
 	"türi-vald": {
@@ -479,6 +544,12 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [
+			{
+				"name": "Türi Raamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/turi-vald"
 	},
 	"haapsalu-linn": {
@@ -492,6 +563,12 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [
+			{
+				"name": "Lääne Maakonna Keskraamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/haapsalu-linn"
 	},
 	"lääne-nigula-vald": {
@@ -505,6 +582,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/laane-nigula-vald"
 	},
 	"vormsi-vald": {
@@ -518,6 +596,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/vormsi-vald"
 	},
 	"haljala-vald": {
@@ -533,6 +612,7 @@
 			"46206210309"
 		],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/haljala-vald"
 	},
 	"kadrina-vald": {
@@ -546,6 +626,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kadrina-vald"
 	},
 	"rakvere-linn": {
@@ -559,6 +640,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rakvere-linn"
 	},
 	"rakvere-vald": {
@@ -574,6 +656,7 @@
 			"46808255217"
 		],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rakvere-vald"
 	},
 	"tapa-vald": {
@@ -589,6 +672,7 @@
 			"48105015225"
 		],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/tapa-vald"
 	},
 	"vinni-vald": {
@@ -604,6 +688,7 @@
 			"48612015230"
 		],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/vinni-vald"
 	},
 	"viru-nigula-vald": {
@@ -617,6 +702,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/viru-nigula-vald"
 	},
 	"väike-maarja-vald": {
@@ -630,6 +716,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/vaike-maarja-vald"
 	},
 	"kanepi-vald": {
@@ -645,6 +732,7 @@
 			"46907306535"
 		],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kanepi-vald"
 	},
 	"põlva-vald": {
@@ -658,6 +746,12 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [
+			{
+				"name": "Põlva keskraamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/polva-vald"
 	},
 	"räpina-vald": {
@@ -671,6 +765,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rapina-vald"
 	},
 	"häädemeeste-vald": {
@@ -684,6 +779,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/haademeeste-vald"
 	},
 	"kihnu-vald": {
@@ -697,6 +793,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kihnu-vald"
 	},
 	"lääneranna-vald": {
@@ -712,6 +809,7 @@
 			"47105264719"
 		],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/laaneranna-vald"
 	},
 	"põhja-pärnumaa-vald": {
@@ -727,6 +825,12 @@
 			"47904284218"
 		],
 		"dtvSchools": [],
+		"dialogs": [
+			{
+				"name": "Põhja-Pärnumaa Raamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/pohja-parnumaa-vald"
 	},
 	"pärnu-linn": {
@@ -742,6 +846,12 @@
 			"47410104224"
 		],
 		"dtvSchools": [],
+		"dialogs": [
+			{
+				"name": "Tõstamaa raamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/parnu-linn"
 	},
 	"saarde-vald": {
@@ -757,6 +867,7 @@
 			"47412084229"
 		],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/saarde-vald"
 	},
 	"tori-vald": {
@@ -770,6 +881,12 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [
+			{
+				"name": "Sindi raamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/tori-vald"
 	},
 	"kehtna-vald": {
@@ -783,6 +900,12 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [
+			{
+				"name": "Kehtna Raamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kehtna-vald"
 	},
 	"kohila-vald": {
@@ -796,6 +919,12 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [
+			{
+				"name": "Kohila Raamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kohila-vald"
 	},
 	"märjamaa-vald": {
@@ -814,6 +943,7 @@
 				"url": "https://demokraatia.rahvaalgatus.ee/koolid/18-m%C3%A4rjamaa-g%C3%BCmnaasium"
 			}
 		],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/marjamaa-vald"
 	},
 	"rapla-vald": {
@@ -832,6 +962,7 @@
 				"url": "https://demokraatia.rahvaalgatus.ee/koolid/2-rapla-g%C3%BCmnaasium"
 			}
 		],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rapla-vald"
 	},
 	"muhu-vald": {
@@ -845,6 +976,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/muhu-vald"
 	},
 	"ruhnu-vald": {
@@ -858,6 +990,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/ruhnu-vald"
 	},
 	"saaremaa-vald": {
@@ -873,6 +1006,7 @@
 			"47102260019"
 		],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/saaremaa-vald"
 	},
 	"elva-vald": {
@@ -886,6 +1020,16 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [
+			{
+				"name": "Sangla raamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			},
+			{
+				"name": "Teedla raamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/elva-vald"
 	},
 	"kambja-vald": {
@@ -899,6 +1043,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kambja-vald"
 	},
 	"kastre-vald": {
@@ -912,6 +1057,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kastre-vald"
 	},
 	"luunja-vald": {
@@ -925,6 +1071,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/luunja-vald"
 	},
 	"nõo-vald": {
@@ -938,6 +1085,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/noo-vald"
 	},
 	"peipsiääre-vald": {
@@ -951,6 +1099,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/peipsiaare-vald"
 	},
 	"tartu-linn": {
@@ -971,6 +1120,12 @@
 				"url": "https://demokraatia.rahvaalgatus.ee/koolid/7-tartu-annelinna-g%C3%BCmnaasium"
 			}
 		],
+		"dialogs": [
+			{
+				"name": "Tartu Linnaraamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/tartu-linn"
 	},
 	"tartu-vald": {
@@ -986,6 +1141,7 @@
 			"47907302734"
 		],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/tartu-vald"
 	},
 	"otepää-vald": {
@@ -1004,6 +1160,7 @@
 				"url": "https://demokraatia.rahvaalgatus.ee/koolid/4-keeni-p%C3%B5hikool"
 			}
 		],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/otepaa-vald"
 	},
 	"tõrva-vald": {
@@ -1019,6 +1176,7 @@
 			"46205185714"
 		],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/torva-vald"
 	},
 	"valga-vald": {
@@ -1035,6 +1193,16 @@
 			"46810255729"
 		],
 		"dtvSchools": [],
+		"dialogs": [
+			{
+				"name": "Tsirguliina raamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			},
+			{
+				"name": "Valga Keskraamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/valga-vald"
 	},
 	"mulgi-vald": {
@@ -1048,6 +1216,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/mulgi-vald"
 	},
 	"põhja-sakala-vald": {
@@ -1068,6 +1237,7 @@
 				"url": "https://demokraatia.rahvaalgatus.ee/koolid/17-k%C3%B5pu-p%C3%B5hikool"
 			}
 		],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/pohja-sakala-vald"
 	},
 	"viljandi-linn": {
@@ -1083,6 +1253,12 @@
 			"45911186017"
 		],
 		"dtvSchools": [],
+		"dialogs": [
+			{
+				"name": "Viljandi Linnaraamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/viljandi-linn"
 	},
 	"viljandi-vald": {
@@ -1098,6 +1274,12 @@
 			"46708086016"
 		],
 		"dtvSchools": [],
+		"dialogs": [
+			{
+				"name": "Tarvastu Raamatukogu",
+				"url": "https://kogu.ee/kohalike-dialoog-kohalikus-raamatukogus/"
+			}
+		],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/viljandi-vald"
 	},
 	"antsla-vald": {
@@ -1114,6 +1296,7 @@
 			"46011206517"
 		],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/antsla-vald"
 	},
 	"rõuge-vald": {
@@ -1129,6 +1312,7 @@
 			"47303306510"
 		],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rouge-vald"
 	},
 	"setomaa-vald": {
@@ -1142,6 +1326,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/setomaa-vald"
 	},
 	"võru-linn": {
@@ -1155,6 +1340,7 @@
 		],
 		"signatureDownloadPersonalIds": [],
 		"dtvSchools": [],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/voru-linn"
 	},
 	"võru-vald": {
@@ -1173,6 +1359,7 @@
 				"url": "https://demokraatia.rahvaalgatus.ee/koolid/14-puiga-p%C3%B5hikool"
 			}
 		],
+		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/voru-vald"
 	}
 }
