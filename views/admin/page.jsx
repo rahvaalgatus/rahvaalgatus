@@ -13,8 +13,8 @@ function Page(attrs, children) {
 	var {req} = attrs
 	var {page} = attrs
 	var {title} = attrs
-	var fullPath = req.baseUrl + req.path
-	var path = fullPath.slice(req.rootUrl.length)
+	var path = (req.baseUrl + req.path).slice(req.rootUrl.length)
+	if (!path.endsWith("/")) path += "/"
 
 	return <html>
 		<head>
@@ -37,6 +37,14 @@ function Page(attrs, children) {
 								class={selected(req.rootUrl || "/", path)}
 							>
 								Dashboard
+							</a>
+						</li>
+
+						<li>
+							<a
+								href={req.rootUrl + "/history"}
+								class={prefixed("/history/", path)}>
+								History
 							</a>
 						</li>
 

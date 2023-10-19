@@ -4,6 +4,7 @@
 $back-color: #bbb;
 $button-height: 3rem;
 $page-padding: 2rem;
+$table-border-color: #d4d9df;
 
 body {
 	font-family: $museo-sans;
@@ -108,7 +109,7 @@ button.admin-link {
 .admin-table,
 .admin-horizontal-table {
 	& > thead > tr > th,
-	& > tbody > tr > th {
+	& > tbody > tr:not(.admin-table-columns-header) > th {
 		background: white;
 		font-size: 1.5rem;
 		padding: 0.5rem 2rem;
@@ -148,25 +149,43 @@ button.admin-link {
 .admin-table {
 	width: 100%;
 
-	th {
-		border-bottom: 1px solid #d4d9df;
+	thead tr:last-child th {
+		border-bottom: 1px solid $table-border-color;
+	}
 
-		&:first-child {
-			border-top-left-radius: 0.5rem;
-			border-bottom-left-radius: 0.5rem;
-		}
+	thead tr:first-child th:first-child {
+		border-top-left-radius: 0.5rem;
+		border-bottom-left-radius: 0.5rem;
+	}
 
-		&:last-child {
-			border-top-right-radius: 0.5rem;
-			border-bottom-right-radius: 0.5rem;
+	thead tr:first-child th:last-child {
+		border-top-right-radius: 0.5rem;
+		border-bottom-right-radius: 0.5rem;
+	}
+
+	.admin-sticky-header {
+		top: 0px;
+		position: sticky;
+		box-shadow: 0 1px 0px 0 rgba(black, 0.1);
+	}
+
+	.admin-table-columns-header {
+		th {
+			background: white;
+			font-size: 1.5rem;
+			padding: 0.5rem 2rem;
+			font-weight: bold;
+
+			small {
+				font-weight: normal;
+				font-size: 1.3rem;
+			}
 		}
 	}
 }
 
 .admin-horizontal-table {
-	th {
-		border-right: 1px solid #d4d9df;
-	}
+	th { border-right: 1px solid $table-border-color; }
 }
 
 .admin-primary-button,
@@ -396,6 +415,43 @@ textarea.admin-input {
 
 	.subscriptions-table {
 		i { font-style: italic; }
+	}
+}
+
+#history-page main {
+	.intro {
+		margin-bottom: 1rem;
+
+		kbd {
+			border-radius: .3rem;
+			background-color: #eee;
+			border: 1px solid #b4b4b4;
+			padding: 0 .4rem .3rem;
+			color: #333;
+			display: inline-block;
+			font-size: 0.9em;
+
+			box-shadow:
+				0 -2px rgba(black, .3) inset,
+				0 -3px rgba(white, .7) inset;
+		}
+	}
+
+	#history-table {
+		.month-column { border-right: 1px solid $table-border-color; }
+
+		.authentication-column,
+		.signature-column {
+			text-align: right;
+			font-family: $monospace;
+		}
+
+		.signature-column-1st,
+		.id-card-signature-column-1st,
+		.mobile-id-signature-column-1st,
+		.smart-id-signature-column-1st {
+			border-left: 1px solid $table-border-color;
+		}
 	}
 }
 

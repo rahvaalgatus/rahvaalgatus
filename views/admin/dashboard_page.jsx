@@ -7,21 +7,16 @@ var {formatDate} = require("root/lib/i18n")
 var {formatDateTime} = require("root/lib/i18n")
 
 module.exports = function(attrs) {
-	var {req} = attrs
 	var {from} = attrs
 	var {to} = attrs
 	var {lastSubscriptions} = attrs
 
-	return <Page page="dashboard" title="Dashboard" req={req}>
+	return <Page page="dashboard" title="Dashboard" req={attrs.req}>
 		<h1 class="admin-heading">Dashboard</h1>
 
 		<h2 class="admin-subheading">Overview</h2>
 
-		<Form
-			method="get"
-			class="admin-inline-form overview-form"
-			req={req}
-		>
+		<Form method="get" class="admin-inline-form overview-form">
 			<label class="admin-label">From</label>
 			<input
 				type="date"
@@ -236,7 +231,7 @@ module.exports = function(attrs) {
 			<span class="admin-count">({lastSubscriptions.length})</span>
 		</h2>
 
-		<SubscriptionsView req={req} subscriptions={lastSubscriptions} />
+		<SubscriptionsView req={attrs.req} subscriptions={lastSubscriptions} />
 	</Page>
 }
 

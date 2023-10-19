@@ -4,11 +4,13 @@ var {Router} = require("express")
 var HttpError = require("standard-http-error")
 var DateFns = require("date-fns")
 var Time = require("root/lib/time")
+var {YearMonth} = require("root/lib/time")
 var {getAdminPermissions} = require("root/lib/user")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var commentsDb = require("root/db/comments_db")
 var initiativesDb = require("root/db/initiatives_db")
 var {sqlite} = require("root")
+var redirect = require("root/lib/redirect")
 var sql = require("sqlate")
 exports = module.exports = Router()
 
@@ -226,6 +228,57 @@ exports.get("/", function(req, res) {
 		sentInitiativesCount
 	})
 })
+
+exports.get("/history", function(_req, res) {
+	var authenticationCounts = sqlite(sql`
+		SELECT
+			strftime('%Y-%m', created_at, 'localtime') AS year_month,
+			COUNT(*) AS "all",
+			COALESCE(SUM(method == 'id-card'), 0) AS id_card,
+			COALESCE(SUM(method == 'mobile-id'), 0) AS mobile_id,
+			COALESCE(SUM(method == 'smart-id'), 0) AS smart_id
+
+		FROM sessions
+		GROUP BY year_month
+	`).map(parseYearMonth)
+
+	var signatureCounts = sqlite(sql`
+		SELECT
+			strftime('%Y-%m', sig.created_at, 'localtime') AS year_month,
+			COUNT(*) AS "all",
+			COALESCE(SUM(sig.oversigned), 0) AS all_oversigned,
+			COALESCE(SUM(sig.method == 'id-card'), 0) AS id_card,
+			COALESCE(SUM(sig.method == 'mobile-id'), 0) AS mobile_id,
+			COALESCE(SUM(sig.method == 'smart-id'), 0) AS smart_id,
+
+			COALESCE(SUM(IIF(sig.method = 'id-card', sig.oversigned, 0)), 0)
+			AS id_card_oversigned,
+
+			COALESCE(SUM(IIF(sig.method = 'mobile-id', sig.oversigned, 0)), 0)
+			AS mobile_id_oversigned,
+
+			COALESCE(SUM(IIF(sig.method = 'smart-id', sig.oversigned, 0)), 0)
+			AS smart_id_oversigned
+
+		FROM initiative_signatures AS sig
+		JOIN initiatives AS initiative ON initiative.uuid = sig.initiative_uuid
+
+		GROUP BY year_month
+	`).map(parseYearMonth)
+
+	res.render("admin/history_page.jsx", {
+		authenticationCounts,
+		signatureCounts
+	})
+
+	function parseYearMonth(row) {
+		return _.assign(row, {year_month: YearMonth.parse(row.year_month)})
+	}
+})
+
+_.each({
+	"/overview": "/history"
+}, (to, from) => exports.get(from, redirect(302, to)))
 
 _.each({
 	"/users": require("./admin/users_controller").router,
