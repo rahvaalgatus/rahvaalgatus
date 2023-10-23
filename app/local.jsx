@@ -42,9 +42,9 @@ exports.newMap = function(mapElement, initiativeCounts, location, legend) {
 			var counts = getInitiativeCounts(layer.properties)
 
 			var color = (
+				visibilities.edit && counts.edit ? PHASE_COLORS.edit :
 				visibilities.sign && counts.sign ? PHASE_COLORS.sign :
 				visibilities.government && counts.government ? PHASE_COLORS.government :
-				visibilities.edit && counts.edit ? PHASE_COLORS.edit :
 				visibilities.archive && counts.archive ? PHASE_COLORS.archive :
 				"#ccc"
 			)
@@ -154,9 +154,7 @@ exports.newMap = function(mapElement, initiativeCounts, location, legend) {
 
 				{gov.rahandusministeeriumUrl ? <>
 					<br />
-					<a href={gov.rahandusministeeriumUrl}>
-						Ülevaade teenuste tasemetest
-					</a>
+					<a href={gov.rahandusministeeriumUrl}>Ülevaade teenuste tasemetest</a>
 				</> : null}
 			</p>
 

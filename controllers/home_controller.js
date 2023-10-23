@@ -12,12 +12,13 @@ var newsDb = require("root/db/news_db")
 var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
 var {PHASES} = require("root/lib/initiative")
 var ZERO_COUNTS = _.fromEntries(PHASES.map((name) => [name, 0]))
+var HIDE_EXPIRED_AFTER_DAYS = 14
 
 exports.router = Router({mergeParams: true})
 
 exports.router.get("/", function(req, res) {
 	var gov = req.government
-	var cutoff = DateFns.addDays(DateFns.startOfDay(new Date), -14)
+	var cutoff = getExpirationCutoff(new Date)
 
 	var initiatives = initiativesDb.search(sql`
 		SELECT
@@ -304,15 +305,38 @@ function searchRecentInitiatives() {
 }
 
 function searchInitiativeCounts() {
+	var cutoff = getExpirationCutoff(new Date)
+
 	return _.mapValues(_.groupBy(initiativesDb.search(sql`
-		SELECT destination, phase, signing_expired_at, archived_at
+		SELECT
+			destination,
+			phase,
+			discussion_ends_at,
+			signing_expired_at,
+			archived_at
+
 		FROM initiatives
 		WHERE destination IS NOT NULL AND destination != 'parliament'
 		AND published_at IS NOT NULL
-	`), "destination"), (initiatives) => _.countBy(initiatives, (initiative) => (
-		initiative.archived_at ? "archive" :
-		initiative.signing_expired_at ? "archive" :
-		initiative.phase == "done" ? "government" :
-		initiative.phase
-	)))
+	`), "destination"), (initiatives) => _.countBy(initiatives, (initiative) => {
+		switch (initiative.phase) {
+			case "edit":
+				if (initiative.discussion_ends_at <= cutoff) return "archive"
+				return "edit"
+
+			case "sign":
+				if (initiative.signing_ends_at <= cutoff) return "archive"
+				if (initiative.signing_expired_at) return "archive"
+				return "sign"
+
+			case "parliament":
+			case "government": return "government"
+			case "done": return "archive"
+			default: return null
+		}
+	}))
+}
+
+function getExpirationCutoff(now) {
+	return DateFns.addDays(DateFns.startOfDay(now), -HIDE_EXPIRED_AFTER_DAYS)
 }
