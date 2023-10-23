@@ -100,34 +100,30 @@ exports.newMap = function(mapElement, initiativeCounts, location, legend) {
 		var gov = layer.feature.properties
 		var counts = getInitiativeCounts(gov)
 
-		return <Jsx.Fragment>
+		return <>
 			<h2>{gov.name}</h2>
 
 			<p>
-				<strong>{gov.population}</strong> elanikku
-				ja <strong>{gov.signatureThreshold}</strong> allkirja
+				<strong>{gov.population}</strong>&nbsp;elanikku
+				ja <strong>{gov.signatureThreshold}</strong>&nbsp;allkirja
 				vajalik algatustele.
 			</p>
 
 			<ul>
 				{counts.edit ? <li class="edit-phase">
-					<strong>{counts.edit}</strong> algatus(t) ühisloomes
+					<strong>{counts.edit}</strong>&nbsp;algatus(t) ühisloomes
 				</li> : null}
 
 				{counts.sign ? <li class="sign-phase">
-					<strong>{counts.sign}</strong> algatus(t) allkirjatamises
+					<strong>{counts.sign}</strong>&nbsp;algatus(t) allkirjatamises
 				</li> : null}
 
 				{counts.government ? <li class="government-phase">
-					<strong>{counts.government}</strong> algatus(t) menetluses
+					<strong>{counts.government}</strong>&nbsp;algatus(t) menetluses
 				</li> : null}
 
 				{counts.archive ? <li class="archive-phase">
-					<strong>{counts.archive}</strong> algatus(t) arhiveeritud
-				</li> : null}
-
-				{gov.rahandusministeeriumUrl ? <li class="rahandusministeerium">
-					Ülevaade teenuste tasemetest
+					<strong>{counts.archive}</strong>&nbsp;algatus(t) arhiveeritud
 				</li> : null}
 
 				{gov.dtvSchools.length > 0 ? <li class="dtv">
@@ -138,7 +134,7 @@ exports.newMap = function(mapElement, initiativeCounts, location, legend) {
 					Dialoogikoolitused
 				</li> : null}
 			</ul>
-		</Jsx.Fragment>.join("")
+		</>.join("")
 	}, {
 		className: "gov-tooltip"
 	})
@@ -148,48 +144,58 @@ exports.newMap = function(mapElement, initiativeCounts, location, legend) {
 		var counts = getInitiativeCounts(gov)
 		var initiativesUrl = "/initiatives?for=" + encodeURIComponent(gov.id)
 
-		return <Jsx.Fragment>
+		return <>
 			<h2>{gov.name}</h2>
 
 			<p>
-				<strong>{gov.population}</strong> elanikku
-				ja <strong>{gov.signatureThreshold}</strong> allkirja
+				<strong>{gov.population}</strong>&nbsp;elanikku
+				ja <strong>{gov.signatureThreshold}</strong>&nbsp;allkirja
 				vajalik algatustele.
-			</p>
 
-			<ul>
-				{counts.edit ? <li class="edit-phase">
-					<a href={initiativesUrl}>
-						<strong>{counts.edit}</strong> algatus(t) ühisloomes
-					</a>
-				</li> : null}
-
-				{counts.sign ? <li class="sign-phase">
-					<a href={initiativesUrl}>
-						<strong>{counts.sign}</strong> algatus(t) allkirjatamises
-					</a>
-				</li> : null}
-
-				{counts.government ? <li class="government-phase">
-					<a href={initiativesUrl}>
-						<strong>{counts.government}</strong> algatus(t) menetluses
-					</a>
-				</li> : null}
-
-				{counts.archive ? <li class="archive-phase">
-					<a href={initiativesUrl}>
-						<strong>{counts.archive}</strong> algatus(t) arhiveeritud
-					</a>
-				</li> : null}
-
-				{gov.rahandusministeeriumUrl ? <li class="rahandusministeerium">
+				{gov.rahandusministeeriumUrl ? <>
+					<br />
 					<a href={gov.rahandusministeeriumUrl}>
 						Ülevaade teenuste tasemetest
 					</a>
-				</li> : null}
-			</ul>
+				</> : null}
+			</p>
 
-			{gov.dtvSchools.length > 0 ? <Jsx.Fragment>
+			{(
+				counts.edit ||
+				counts.sign ||
+				counts.government ||
+				counts.archive
+			) ? <>
+				<h3>Algatused</h3>
+
+				<ul>
+					{counts.edit ? <li class="edit-phase">
+						<a href={initiativesUrl}>
+							<strong>{counts.edit}</strong>&nbsp;algatus(t) ühisloomes
+						</a>
+					</li> : null}
+
+					{counts.sign ? <li class="sign-phase">
+						<a href={initiativesUrl}>
+							<strong>{counts.sign}</strong>&nbsp;algatus(t) allkirjatamises
+						</a>
+					</li> : null}
+
+					{counts.government ? <li class="government-phase">
+						<a href={initiativesUrl}>
+							<strong>{counts.government}</strong>&nbsp;algatus(t) menetluses
+						</a>
+					</li> : null}
+
+					{counts.archive ? <li class="archive-phase">
+						<a href={initiativesUrl}>
+							<strong>{counts.archive}</strong>&nbsp;algatus(t) arhiveeritud
+						</a>
+					</li> : null}
+				</ul>
+			</>.join("") : null}
+
+			{gov.dtvSchools.length > 0 ? <>
 				<h3>Koolide kaasav eelarve</h3>
 
 				<ul>{gov.dtvSchools.map(function(school) {
@@ -197,9 +203,9 @@ exports.newMap = function(mapElement, initiativeCounts, location, legend) {
 						<a href={school.url}>{school.name}</a>
 					</li>
 				})}</ul>
-			</Jsx.Fragment>.join("") : null}
+			</>.join("") : null}
 
-			{gov.dialogs.length > 0 ? <Jsx.Fragment>
+			{gov.dialogs.length > 0 ? <>
 				<h3>Dialoogikoolitused</h3>
 
 				<ul>{gov.dialogs.map(function(location) {
@@ -207,7 +213,7 @@ exports.newMap = function(mapElement, initiativeCounts, location, legend) {
 						<a href={location.url}>{location.name}</a>
 					</li>
 				})}</ul>
-			</Jsx.Fragment>.join("") : null}
+			</>.join("") : null}
 
 			<menu>
 				<a
@@ -215,13 +221,13 @@ exports.newMap = function(mapElement, initiativeCounts, location, legend) {
 					class="new-initiative-button blue-button"
 				>Loo algatus</a>
 
-				{hasInitiatives(gov) ? <Jsx.Fragment>
+				{hasInitiatives(gov) ? <>
 					või <a href={initiativesUrl} class="link-button">
 						vaata algatusi
 					</a>
-				</Jsx.Fragment> : null}
+				</> : null}
 			</menu>
-		</Jsx.Fragment>.join("")
+		</>.join("")
 	}, {
 		autoPanPaddingTopLeft: [0, 40],
 		className: "gov-popup"

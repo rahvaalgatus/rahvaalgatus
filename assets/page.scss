@@ -1719,7 +1719,6 @@ strong {
 				.archive-phase:before { background-color: $archive-legend-color; }
 				.dtv:before { background-color: $dtv-legend-color; }
 				.dialog:before { background-color: $dialog-legend-color; }
-				.rahandusministeerium:before { background-color: #003087; }
 			}
 
 			.gov-tooltip {
@@ -1769,14 +1768,15 @@ strong {
 
 				p {
 					margin: 0;
+
+					& + ul,
+					& + p {
+						margin-top: 1rem;
+					}
 				}
 
 				h3 {
 					font-weight: bold;
-					margin-top: 1rem;
-				}
-
-				p + ul {
 					margin-top: 1rem;
 				}
 
@@ -1790,6 +1790,7 @@ strong {
 					border-radius: 50%;
 				}
 
+				p a,
 				li a {
 					text-decoration: underline;
 				}
