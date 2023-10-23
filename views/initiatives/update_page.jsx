@@ -1,6 +1,5 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
-var {Fragment} = Jsx
 var InitiativePage = require("./initiative_page")
 var {Form} = require("../page")
 var {Flash} = require("../page")
@@ -150,7 +149,7 @@ module.exports = function(attrs) {
 				{(
 					initiative.uuid == null &&
 					initiative.language == null
-				) ? <Fragment>
+				) ? <>
 					<h3>{t("NEW_INITIATIVE_LANGUAGE_LABEL")}</h3>
 
 					<fieldset class="language-fields">
@@ -169,13 +168,13 @@ module.exports = function(attrs) {
 					</fieldset>
 
 					<p>{Jsx.html(t("UPDATE_INITIATIVE_TO_LANG_DESCRIPTION"))}</p>
-				</Fragment> : null}
+				</> : null}
 
 				{(
 					initiative.uuid &&
 					initiative.phase == "edit" &&
 					initiative.language != textLanguage
-				) ? <Fragment>
+				) ? <>
 					<label class="default-fields form-checkbox">
 						<input type="checkbox" name="set-default" />
 						{t("UPDATE_INITIATIVE_TO_LANG_" + textLanguage.toUpperCase())}
@@ -184,7 +183,7 @@ module.exports = function(attrs) {
 					</label>
 
 					<p>{Jsx.html(t("UPDATE_INITIATIVE_TO_LANG_DESCRIPTION"))}</p>
-				</Fragment> : null}
+				</> : null}
 
 				<button
 					id="create-text-button"

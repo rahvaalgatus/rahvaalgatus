@@ -1,13 +1,12 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
-var {Fragment} = Jsx
 var {LiveReload} = require("../page")
 var {selected} = require("root/lib/css")
 var {prefixed} = require("root/lib/css")
 exports = module.exports = Page
 exports.Form = require("../page").Form
 exports.FormButton = require("../page").FormButton
-exports.Flash = Flash
+exports.Flash = require("../page").Flash
 
 function Page(attrs, children) {
 	var {req} = attrs
@@ -93,13 +92,4 @@ function Page(attrs, children) {
 			<main>{children}</main>
 		</body>
 	</html>
-}
-
-function Flash(attrs) {
-	var {flash} = attrs
-
-	return <Fragment>
-		{flash("notice") ? <p class="flash notice">{flash("notice")}</p> : null}
-		{flash("error") ? <p class="flash error">{flash("error")}</p> : null}
-	</Fragment>
 }

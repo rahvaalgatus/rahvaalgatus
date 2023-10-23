@@ -2,7 +2,6 @@
 var _ = require("root/lib/underscore")
 var Qs = require("qs")
 var Jsx = require("j6pack")
-var {Fragment} = Jsx
 var Config = require("root").config
 var Page = require("../page")
 var I18n = require("root/lib/i18n")
@@ -170,13 +169,13 @@ module.exports = function(attrs) {
 
 			{initiative.phase == "sign" && EXPIRATION_MONTHS > 0 ? <tr>
 				<th scope="row">Signing Expiration</th>
-				<td>{initiative.signing_expired_at ? <Fragment>
+				<td>{initiative.signing_expired_at ? <>
 					Expired on {
 						I18n.formatDateTime("isoish", initiative.signing_expired_at)
 					}.
-				</Fragment> : <Fragment>
+				</> : <>
 					Will expire on {I18n.formatDateTime("isoish", expiresOn)}.
-				</Fragment>}</td>
+				</>}</td>
 			</tr> : null}
 
 			<tr>
@@ -299,7 +298,7 @@ module.exports = function(attrs) {
 							Download Signatures (ASiC-E)
 						</a> : null}
 
-						{signatureCounts.citizenos > 0 ? <Fragment><br /><a
+						{signatureCounts.citizenos > 0 ? <><br /><a
 							class="admin-link"
 							href={`${initiativeSiteUrl}/signatures.zip?` + Qs.stringify({
 								type: "citizenos",
@@ -307,19 +306,19 @@ module.exports = function(attrs) {
 							})}
 						>
 							Download CitizenOS Signatures (ZIP of ASiC-Es)
-						</a></Fragment> : null}
+						</a></> : null}
 
 						{(
 							signatureCounts.undersign > 0 ||
 							signatureCounts.citizenos > 0
-						) ? <Fragment><br /><a
+						) ? <><br /><a
 							class="admin-link"
 							href={`${initiativeSiteUrl}/signatures.csv?` + Qs.stringify({
 								"parliament-token": initiative.parliament_token.toString("hex")
 							})}
 						>
 							Download Signers (CSV)
-						</a></Fragment> : null}
+						</a></> : null}
 
 						<br />
 						Signatures are only available for authorized government
@@ -603,10 +602,10 @@ module.exports = function(attrs) {
 									{I18n.formatDateTime("isoish", event.occurred_at)}
 								</time>
 
-								{event.notified_at == null ? <Fragment>
+								{event.notified_at == null ? <>
 									<br />
 									<strong>Subscribers not yet notified.</strong>
-								</Fragment> : null}
+								</> : null}
 							</td>
 
 							<td>
@@ -682,16 +681,12 @@ function InputForm(attrs) {
 	var label = attrs.label || "Set"
 	var toggle = "show-" + name
 
-	return <Fragment>
-		{value ? <Fragment>
-			{value}
-			<br />
-		</Fragment> : null}
-
+	return <>
+		{value ? <>{value}<br /></> : null}
 		<input id={toggle} hidden type="checkbox" class="form-toggle" />
 
 		<span class="form-toggle-buttons">
-			{value ? <Fragment>
+			{value ? <>
 				<label for={toggle} class="admin-link">Edit</label>
 				&nbsp;or&nbsp;
 
@@ -702,7 +697,7 @@ function InputForm(attrs) {
 					value=""
 					onclick={confirm("Sure?")}
 					class="admin-link">Remove</FormButton>
-			</Fragment> : <label for={toggle} class="admin-link">{label}</label>}
+			</> : <label for={toggle} class="admin-link">{label}</label>}
 		</span>
 
 		<Form
@@ -723,7 +718,7 @@ function InputForm(attrs) {
 			&nbsp;or&nbsp;
 			<label for={toggle} class="admin-link">Cancel</label>
 		</Form>
-	</Fragment>
+	</>
 }
 
 function DateInputForm(attrs) {
@@ -742,16 +737,16 @@ function ImageForm(attrs) {
 	var {value} = attrs
 	var toggle = "show-" + name
 
-	return <Fragment>
-		{value ? <Fragment>
+	return <>
+		{value ? <>
 			<img width="300" src={value} />
 			<br />
-		</Fragment> : null}
+		</> : null}
 
 		<input id={toggle} hidden type="checkbox" class="form-toggle" />
 
 		<span class="form-toggle-buttons">
-			{value ? <Fragment>
+			{value ? <>
 				<label for={toggle} class="admin-link">Replace</label>
 				&nbsp;or&nbsp;
 
@@ -762,7 +757,7 @@ function ImageForm(attrs) {
 					value="delete"
 					onclick={confirm("Sure?")}
 					class="admin-link">Remove</FormButton>
-			</Fragment> : <label for={toggle} class="admin-link">Upload</label>}
+			</> : <label for={toggle} class="admin-link">Upload</label>}
 		</span>
 
 		<Form
@@ -786,5 +781,5 @@ function ImageForm(attrs) {
 			<br />
 			<small>Aim for a JPEG or PNG with a size of 1200x675px or larger.</small>
 		</Form>
-	</Fragment>
+	</>
 }

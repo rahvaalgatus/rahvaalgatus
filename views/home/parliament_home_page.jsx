@@ -1,6 +1,5 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
-var {Fragment} = Jsx
 var Page = require("../page")
 var Config = require("root").config
 var {Section} = require("../page")
@@ -89,7 +88,7 @@ module.exports = function(attrs) {
 		</Section>
 
 		<Section id="initiatives" class="secondary-section initiatives-section">
-			{initiativesByPhase.edit ? <Fragment>
+			{initiativesByPhase.edit ? <>
 				<h2>{t("EDIT_PHASE")}</h2>
 
 				<InitiativeBoxesView
@@ -98,9 +97,9 @@ module.exports = function(attrs) {
 					id="initiatives-in-edit"
 					initiatives={initiativesByPhase.edit}
 				/>
-			</Fragment> : null}
+			</> : null}
 
-			{initiativesByPhase.sign ? <Fragment>
+			{initiativesByPhase.sign ? <>
 				<h2>{t("SIGN_PHASE")}</h2>
 
 				<InitiativeBoxesView
@@ -109,9 +108,9 @@ module.exports = function(attrs) {
 					id="initiatives-in-sign"
 					initiatives={initiativesByPhase.sign}
 				/>
-			</Fragment> : null}
+			</> : null}
 
-			{initiativesByPhase.signUnsent ? <Fragment>
+			{initiativesByPhase.signUnsent ? <>
 				<h2>{t("HOME_PAGE_SIGNED_TITLE")}</h2>
 
 				<InitiativeBoxesView
@@ -120,9 +119,9 @@ module.exports = function(attrs) {
 					id="initiatives-in-sign-unsent"
 					initiatives={initiativesByPhase.signUnsent}
 				/>
-			</Fragment> : null}
+			</> : null}
 
-			{initiativesByPhase.parliament ? <Fragment>
+			{initiativesByPhase.parliament ? <>
 				<h2>{t("PARLIAMENT_PHASE")}</h2>
 
 				<InitiativeBoxesView
@@ -131,9 +130,9 @@ module.exports = function(attrs) {
 					id="initiatives-in-parliament"
 					initiatives={initiativesByPhase.parliament}
 				/>
-			</Fragment> : null}
+			</> : null}
 
-			{initiativesByPhase.government ? <Fragment>
+			{initiativesByPhase.government ? <>
 				<h2>{t("GOVERNMENT_PHASE")}</h2>
 
 				<InitiativeBoxesView
@@ -142,9 +141,9 @@ module.exports = function(attrs) {
 					id="initiatives-in-government"
 					initiatives={initiativesByPhase.government}
 				/>
-			</Fragment> : null}
+			</> : null}
 
-			{initiativesByPhase.done ? <Fragment>
+			{initiativesByPhase.done ? <>
 				<h2>{t("DONE_PHASE")}</h2>
 
 				<InitiativeBoxesView
@@ -153,7 +152,7 @@ module.exports = function(attrs) {
 					id="initiatives-in-done"
 					initiatives={initiativesByPhase.done}
 				/>
-			</Fragment> : null}
+			</> : null}
 
 			<p id="see-archive">
 				{Jsx.html(t("HOME_PAGE_SEE_ARCHIVE", {url: "/initiatives"}))}

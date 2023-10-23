@@ -1,6 +1,5 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
-var {Fragment} = Jsx
 var InitiativePage = require("../initiative_page")
 var {Flash} = require("../../page")
 var I18n = require("root/lib/i18n")
@@ -57,7 +56,7 @@ function CommentView(attrs) {
 	var {newComment} = attrs
 	var anonymous = !!comment.anonymized_at
 
-	return <Fragment>
+	return <>
 		{comment.uuid ? <a id={"comment-" + comment.uuid} /> : null}
 
 		<h3 class="title"><a href={commentUrl}>{comment.title}</a></h3>
@@ -146,7 +145,7 @@ function CommentView(attrs) {
 
 			<button class="secondary-button">{t("POST_REPLY")}</button>
 		</Form> : null}
-	</Fragment>
+	</>
 }
 
 function CommentDeleteButton({req, t, comment}) {

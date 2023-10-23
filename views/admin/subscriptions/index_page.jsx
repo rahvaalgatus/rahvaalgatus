@@ -1,7 +1,6 @@
 /** @jsx Jsx */
 var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
-var {Fragment} = Jsx
 var Page = require("../page")
 var {formatDateTime} = require("root/lib/i18n")
 exports = module.exports = IndexPage
@@ -15,20 +14,20 @@ function IndexPage(attrs) {
 	return <Page page="subscriptions" title="Subscriptions" req={attrs.req}>
 		<h1 class="admin-heading">Subscriptions</h1>
 
-		{confirmed.length > 0 ? <Fragment>
+		{confirmed.length > 0 ? <>
 			<h2 class="admin-subheading">
 				Confirmed <span class="admin-count">({confirmed.length})</span>
 			</h2>
 
 			<SubscriptionsView subscriptions={confirmed} />
-		</Fragment> : null}
+		</> : null}
 
-		{pending.length > 0 ? <Fragment>
+		{pending.length > 0 ? <>
 			<h2 class="admin-subheading">
 				Pending <span class="admin-count">({pending.length})</span>
 			</h2>
 			<SubscriptionsView subscriptions={pending} />
-		</Fragment> : null}
+		</> : null}
 	</Page>
 }
 

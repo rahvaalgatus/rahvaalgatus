@@ -4,7 +4,6 @@ var Page = require("../page")
 var {Form} = Page
 var {Flash} = Page
 var Config = require("root").config
-var {Fragment} = Jsx
 var {formatDateTime} = require("root/lib/i18n")
 
 module.exports = function(attrs) {
@@ -39,28 +38,28 @@ module.exports = function(attrs) {
 
 			<tr>
 				<th scope="row">Email</th>
-				<td>{user.email ? <Fragment>
+				<td>{user.email ? <>
 					<a href={"mailto:" + user.email} class="admin-link">
 					{user.email}
 					</a><br />
 
 					Confirmed at {formatDateTime("numeric", user.email_confirmed_at)}.
-				</Fragment> : null}</td>
+				</> : null}</td>
 			</tr>
 
 			<tr>
 				<th scope="row">Unconfirmed Email</th>
-				<td>{user.unconfirmed_email ? <Fragment>
+				<td>{user.unconfirmed_email ? <>
 					<a href={"mailto:" + user.unconfirmed_email} class="admin-link">
 					{user.unconfirmed_email}
 					</a><br />
 
-					{user.email_confirmation_sent_at ? <Fragment>
+					{user.email_confirmation_sent_at ? <>
 						Confirmation sent at {
 							formatDateTime("numeric", user.email_confirmation_sent_at)
 						}.
-					</Fragment> : null}
-				</Fragment> : null}</td>
+					</> : null}
+				</> : null}</td>
 			</tr>
 		</table>
 

@@ -1,7 +1,6 @@
 /** @jsx Jsx */
 var _ = require("lodash")
 var Jsx = require("j6pack")
-var {Fragment} = Jsx
 var DateFns = require("date-fns")
 var Config = require("root").config
 var Page = require("../page")
@@ -57,7 +56,7 @@ function InitiativesPage(attrs) {
 		</Section> : null}
 
 		<Section id="initiatives" class="secondary-section initiative-list-section">
-			{inEdit.length > 0 ? <Fragment>
+			{inEdit.length > 0 ? <>
 				<h2 class="edit-phase">{t("EDIT_PHASE")}</h2>
 
 				<InitiativeListView
@@ -65,9 +64,9 @@ function InitiativesPage(attrs) {
 					phase="edit"
 					initiatives={inEdit}
 				/>
-			</Fragment> : null}
+			</> : null}
 
-			{inSign.length > 0 ? <Fragment>
+			{inSign.length > 0 ? <>
 				<h2 class="sign-phase">{t("SIGN_PHASE")}</h2>
 
 				<InitiativeListView
@@ -75,9 +74,9 @@ function InitiativesPage(attrs) {
 					phase="sign"
 					initiatives={inSign}
 				/>
-			</Fragment> : null}
+			</> : null}
 
-			{inParliament.length > 0 ? <Fragment>
+			{inParliament.length > 0 ? <>
 				<h2 class="parliament-phase">{t("PARLIAMENT_PHASE")}</h2>
 
 				<InitiativeListView
@@ -85,9 +84,9 @@ function InitiativesPage(attrs) {
 					phase="parliament"
 					initiatives={inParliament}
 				/>
-			</Fragment> : null}
+			</> : null}
 
-			{inGovernment.length > 0 ? <Fragment>
+			{inGovernment.length > 0 ? <>
 				<h2 class="government-phase">{t("GOVERNMENT_PHASE")}</h2>
 
 				<InitiativeListView
@@ -95,9 +94,9 @@ function InitiativesPage(attrs) {
 					phase="government"
 					initiatives={inGovernment}
 				/>
-			</Fragment> : null}
+			</> : null}
 
-			{inDone.length > 0 ? <Fragment>
+			{inDone.length > 0 ? <>
 				<h2 class="done-phase">{t("DONE_PHASE")}</h2>
 
 				<InitiativeListView
@@ -105,7 +104,7 @@ function InitiativesPage(attrs) {
 					phase="done"
 					initiatives={inDone}
 				/>
-			</Fragment> : null}
+			</> : null}
 		</Section>
 	</Page>
 }

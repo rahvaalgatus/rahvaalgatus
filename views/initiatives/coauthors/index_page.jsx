@@ -4,7 +4,6 @@ var Jsx = require("j6pack")
 var {Form} = require("../../page")
 var {FormButton} = require("../../page")
 var {Flash} = require("../../page")
-var {Fragment} = Jsx
 var {Section} = require("../../page")
 var {confirm} = require("root/lib/jsx")
 var {serializePersonalId} = require("root/lib/user")
@@ -108,7 +107,7 @@ module.exports = function(attrs) {
 					</tbody>
 				</table>
 
-				{pending.length > 0 ? <Fragment>
+				{pending.length > 0 ? <>
 					<h3>{t("COAUTHORS_PAGE_SENT_INVITES")}</h3>
 
 					<p class="description">
@@ -145,7 +144,7 @@ module.exports = function(attrs) {
 							</tr>
 						})}</tbody>
 					</table>
-				</Fragment> : null}
+				</> : null}
 
 				<h3>{t("INITIATIVE_UPDATE_AUTHOR_TITLE")}</h3>
 				<p class="description">{t("INITIATIVE_UPDATE_AUTHOR_DESCRIPTION")}</p>

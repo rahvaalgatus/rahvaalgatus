@@ -1,7 +1,6 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var Trix = require("root/lib/trix")
-var {Fragment} = Jsx
 var URL = "http://example.com"
 
 var BLOCK_BREAK = {
@@ -40,10 +39,10 @@ describe("Trix", function() {
 				}, BLOCK_BREAK],
 
 				"attributes": []
-			}]).must.eql(<Fragment>
+			}]).must.eql(<>
 				<p>Hello, world!</p>
 				<p>How are you?</p>
-			</Fragment>)
+			</>)
 		})
 
 		// I'm not sure this can actually happen as the editor seems to merge
@@ -65,10 +64,10 @@ describe("Trix", function() {
 				}, BLOCK_BREAK],
 
 				"attributes": []
-			}]).must.eql(<Fragment>
+			}]).must.eql(<>
 				<p>Hello, world!</p>
 				<p>How are you?</p>
-			</Fragment>)
+			</>)
 		})
 
 		it("must render two paragraphs separated by three newlines", function() {
@@ -80,10 +79,10 @@ describe("Trix", function() {
 				}, BLOCK_BREAK],
 
 				"attributes": []
-			}]).must.eql(<Fragment>
+			}]).must.eql(<>
 				<p>Hello, world!</p>
 				<p>How are you?</p>
-			</Fragment>)
+			</>)
 		})
 
 		it("must not render an empty text block", function() {
@@ -271,10 +270,10 @@ describe("Trix", function() {
 				],
 
 				"attributes": []
-			}]).must.eql(<Fragment>
+			}]).must.eql(<>
 				<h1>My idea</h1>
 				<p>Hello, world!</p>
-			</Fragment>)
+			</>)
 		})
 
 		// Headings seem the only block types that are not merged together.
@@ -295,10 +294,10 @@ describe("Trix", function() {
 				],
 
 				"attributes": ["heading1"]
-			}]).must.eql(<Fragment>
+			}]).must.eql(<>
 				<h1>Hello, world!</h1>
 				<h1>How are you?</h1>
-			</Fragment>)
+			</>)
 		})
 
 		it("must render quote", function() {
@@ -381,10 +380,10 @@ describe("Trix", function() {
 				],
 
 				"attributes": ["code"]
-			}]).must.eql(<Fragment>
+			}]).must.eql(<>
 				<pre>Hello, world!</pre>
 				<pre>How are you?</pre>
-			</Fragment>)
+			</>)
 		})
 
 		it("must render link in code", function() {

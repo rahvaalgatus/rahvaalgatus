@@ -1,6 +1,5 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
-var {Fragment} = Jsx
 var Page = require("../../page")
 var {Form} = Page
 var {selected} = require("root/lib/css")
@@ -84,7 +83,7 @@ function EventForm(attrs) {
 
 		{function() {
 			switch (event.type) {
-				case "text": return <Fragment>
+				case "text": return <>
 					<EventTimeView event={event} />
 
 					<label class="admin-label">Title</label>
@@ -103,9 +102,9 @@ function EventForm(attrs) {
 						class="admin-input">
 						{event.content}
 					</textarea>
-				</Fragment>
+				</>
 
-				case "media-coverage": return <Fragment>
+				case "media-coverage": return <>
 					<EventTimeView event={event} />
 
 					<label class="admin-label">Title</label>
@@ -133,27 +132,27 @@ function EventForm(attrs) {
 						required
 						class="admin-input"
 					/>
-				</Fragment>
+				</>
 
 				// Don't use the "require" attribute on the summary. This permits
 				// clearing it out.
 				case "parliament-committee-meeting":
 				case "parliament-plenary-meeting":
 				case "parliament-letter":
-				case "parliament-decision": return <Fragment>
+				case "parliament-decision": return <>
 					<label class="admin-label">Summary</label>
 					<textarea
 						name="content[summary]"
 						class="admin-input">
 						{event.content.summary}
 					</textarea>
-				</Fragment>
+				</>
 
 				default: throw new RangeError("Unsupported event type: " + event.type)
 			}
 		}()}
 
-		{event.id == null ? <Fragment>
+		{event.id == null ? <>
 			<label class="admin-label">Failid</label>
 
 			<table id="files" class="admin-form-table">
@@ -220,10 +219,10 @@ function EventForm(attrs) {
 					row.parentNode.removeChild(row)
 				})
 			`}</script>
-		</Fragment> : null}
+		</> : null}
 
 		<div class="admin-submits">
-			{event.id == null ? <Fragment>
+			{event.id == null ? <>
 				<button
 					class="admin-submit"
 					name="action"
@@ -237,7 +236,7 @@ function EventForm(attrs) {
 					value="create">
 					Create Event
 				</button>.
-			</Fragment> : <button class="admin-submit">
+			</> : <button class="admin-submit">
 				Update Event
 			</button>}
 		</div>
@@ -252,7 +251,7 @@ function EventForm(attrs) {
 function EventTimeView(attrs) {
 	var {event} = attrs
 
-	return <Fragment>
+	return <>
 		<label class="admin-label">Occurred At</label>
 
 		<div class="admin-datetime-input">
@@ -272,5 +271,5 @@ function EventTimeView(attrs) {
 				value={event.occurred_at && formatTime("iso", event.occurred_at)}
 			/>
 		</div>
-	</Fragment>
+	</>
 }

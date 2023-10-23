@@ -2,7 +2,6 @@
 var _ = require("root/lib/underscore")
 var Url = require("url")
 var Jsx = require("j6pack")
-var {Fragment} = Jsx
 var Time = require("root/lib/time")
 var DateFns = require("date-fns")
 var InitiativePage = require("./initiative_page")
@@ -246,7 +245,7 @@ function ReadPage(attrs) {
 
 							if (initiative.signing_ends_at <= new Date) {
 								return <div class="initiative-status">
-									{signatureCount >= signatureThreshold ? <Fragment>
+									{signatureCount >= signatureThreshold ? <>
                     <h1 class="status-header">
                       {t("N_SIGNATURES_COLLECTED", {votes: signatureCount})}
                     </h1>
@@ -262,7 +261,7 @@ function ReadPage(attrs) {
 												: t("VOTING_SUCCEEDED_AND_EXPIRED_ON_LOCAL_LEVEL")
 											)
 										}</p>
-									</Fragment> : <Fragment>
+									</> : <>
                     <h1 class="status-header">
                       {t("N_SIGNATURES_FAILED", {votes: signatureCount})}
                     </h1>
@@ -288,7 +287,7 @@ function ReadPage(attrs) {
 												})
 											)
 										}</p>
-									</Fragment>}
+									</>}
 								</div>
 							}
 							else return null
@@ -373,7 +372,7 @@ function ReadPage(attrs) {
 						signatureCount={signatureCount}
 					/>
 
-					{signature ? <Fragment>
+					{signature ? <>
 						<h2>{t("THANKS_FOR_SIGNING")}</h2>
 
 						<div class="signature-buttons">
@@ -387,10 +386,10 @@ function ReadPage(attrs) {
 								{t("REVOKE_SIGNATURE")}
 							</DeleteSignatureButton>
 						</div>
-					</Fragment> : <Fragment>
+					</> : <>
 						<h2>{t("INITIATIVE_SIGN_HEADING")}</h2>
 						<p>
-							{(initiative.language != textLanguage) ? <Fragment>
+							{(initiative.language != textLanguage) ? <>
 								{Jsx.html(t("INITIATIVE_SIGN_TRANSLATION_WARNING", {
 									language: t(
 										"INITIATIVE_SIGN_TRANSLATION_WARNING_TEXT_IN_" +
@@ -411,7 +410,7 @@ function ReadPage(attrs) {
 								))}
 
 								{" "}
-							</Fragment> : null}
+							</> : null}
 
 							{initiative.destination == "parliament"
 								? t("INITIATIVE_SIGN_DESCRIPTION_FOR_PARLIAMENT")
@@ -424,7 +423,7 @@ function ReadPage(attrs) {
 								t={t}
 								action={initiativePath + "/signatures"}
 							/>
-					</Fragment>}
+					</>}
 				</div> : null}
 			</div>
 
@@ -455,9 +454,9 @@ function ReadPage(attrs) {
 						) ? <figcaption
 							class={image.author_name || image.author_url ? "" : "empty"}
 						>
-							{image.author_name || image.author_url ? <Fragment>
+							{image.author_name || image.author_url ? <>
 								{t("INITIATIVE_IMAGE_AUTHOR_IS")}: {renderImageAuthor(image)}
-							</Fragment> : Jsx.html(t("INITIATIVE_IMAGE_AUTHOR_EMPTY"))}
+							</> : Jsx.html(t("INITIATIVE_IMAGE_AUTHOR_EMPTY"))}
 						</figcaption> : null}
 
 						{imageEditable ? <input
@@ -473,14 +472,14 @@ function ReadPage(attrs) {
 								hidden
 							/>
 
-							{image.author_name || image.author_url ? <Fragment>
+							{image.author_name || image.author_url ? <>
 								<label
 									class="link-button"
 									for="initiative-image-author-toggle">
 									{t("INITIATIVE_IMAGE_AUTHOR_EDIT")}
 								</label>
 								{", "}
-							</Fragment> : null}
+							</> : null}
 
 							<InitiativeImageUploadForm
 								req={req}
@@ -554,7 +553,7 @@ function ReadPage(attrs) {
 						<p>{Jsx.html(t("INITIATIVE_IMAGE_ADD_IMAGE_DESCRIPTION"))}</p>
 					</InitiativeImageUploadForm> : null}
 
-					{initiative.published_at ? <Fragment>
+					{initiative.published_at ? <>
 						<h3 class="sidebar-subheader">{t("SHARE_INITIATIVE")}</h3>
 
 						<a
@@ -572,7 +571,7 @@ function ReadPage(attrs) {
 							class="grey-button ra-icon-twitter-logo share-button">
 							{t("SHARE_ON_TWITTER")}
 						</a>
-					</Fragment> : null}
+					</> : null}
 				</div>
 
 				<SidebarAuthorView
@@ -914,8 +913,8 @@ function SidebarAuthorView(attrs) {
 		hasEstonianText
 	)
 
-	var actions = <Fragment>
-		{initiative.phase == "edit" ? <Fragment>
+	var actions = <>
+		{initiative.phase == "edit" ? <>
 			<Form
 				req={req}
 				id="initiative-destination-form"
@@ -942,9 +941,9 @@ function SidebarAuthorView(attrs) {
 					email: _.escapeHtml(Config.helpEmail)
 				}))}</p>
 			</Form>
-		</Fragment> : null}
+		</> : null}
 
-		{!initiative.published_at && text ? <Fragment>
+		{!initiative.published_at && text ? <>
 			<FormButton
 				req={req}
 				id="publish-button"
@@ -961,9 +960,9 @@ function SidebarAuthorView(attrs) {
 			</p> : user.email_confirmed_at == null ? <p>
 				{Jsx.html(t("PUBLISH_INITIATIVE_CONFIRM_EMAIL"))}
 			</p> : null}
-		</Fragment> : null}
+		</> : null}
 
-		{initiative.phase == "edit" && initiative.published_at ? <Fragment>
+		{initiative.phase == "edit" && initiative.published_at ? <>
 			<FormButton
 				req={req}
 				id="send-to-sign-button"
@@ -1004,12 +1003,12 @@ function SidebarAuthorView(attrs) {
 			{initiative.destination == null ? <p>
 				{t("INITIATIVE_SEND_TO_SIGNING_NEEDS_DESTINATION")}
 			</p> : null}
-		</Fragment> : null}
+		</> : null}
 
 		{(
 			Initiative.canSendToParliament(initiative, user, signatureCount) ||
 			Initiative.canSendToLocalGovernment(initiative, user, signatureCount)
-		) ? <Fragment>
+		) ? <>
 			<FormButton
 				req={req}
 				action={initiativePath}
@@ -1035,7 +1034,7 @@ function SidebarAuthorView(attrs) {
 					newTextUrl: _.escapeHtml(initiativePath + "/texts/new?language=et")
 				})
 			)}</p> : null}
-		</Fragment> : null}
+		</> : null}
 
 		{initiative.phase == "edit" ? <a
 			href={textEditPath}
@@ -1096,7 +1095,7 @@ function SidebarAuthorView(attrs) {
 			class="link-button wide-button">
 			{t("DELETE_DISCUSSION")}
 		</FormButton> : null}
-	</Fragment>
+	</>
 
 	if (!actions.some(Boolean)) return null
 
@@ -1165,7 +1164,7 @@ function SidebarInfoView(attrs) {
 			authorContacts ||
 			coauthorNames.length > 0 ||
 			canEdit
-		) ? <Fragment>
+		) ? <>
 			<h3 class="sidebar-subheader">{t("INITIATIVE_INFO_AUTHOR_TITLE")}</h3>
 
 			<div class="form-output">
@@ -1237,7 +1236,7 @@ function SidebarInfoView(attrs) {
 				? null
 				: <AddInitiativeInfoButton t={t} />
 			}
-		</Fragment> : null}
+		</> : null}
 
 		{communityUrl || canEdit ? <InitiativeAttribute
 			t={t}
@@ -1252,7 +1251,7 @@ function SidebarInfoView(attrs) {
 			<UntrustedLink class="form-output" href={communityUrl} />
 		</InitiativeAttribute> : null}
 
-		{organizations.length > 0 || canEdit ? <Fragment>
+		{organizations.length > 0 || canEdit ? <>
 			<h3 class="sidebar-subheader">
 				{t("INITIATIVE_INFO_ORGANIZATIONS_TITLE")}
 			</h3>
@@ -1293,9 +1292,9 @@ function SidebarInfoView(attrs) {
 					}
 				/>
 			</li>}</InitiativeAttributeList>: null}
-		</Fragment> : null}
+		</> : null}
 
-		{meetings.length > 0 || canEdit ? <Fragment>
+		{meetings.length > 0 || canEdit ? <>
 			<h3 class="sidebar-subheader">
 				{t("INITIATIVE_INFO_DISCUSSIONS_TITLE")}
 			</h3>
@@ -1332,9 +1331,9 @@ function SidebarInfoView(attrs) {
 					maxlength={SCHEMA.properties.meetings.items.properties.url.maxLength}
 				/>
 			</li>}</InitiativeAttributeList>: null}
-		</Fragment> : null}
+		</> : null}
 
-		{Initiative.isPhaseGte(phase, "sign") ? <Fragment>
+		{Initiative.isPhaseGte(phase, "sign") ? <>
 			{externalUrl || canEdit ? <InitiativeAttribute
 				t={t}
 				editable={canEdit}
@@ -1347,10 +1346,10 @@ function SidebarInfoView(attrs) {
 			>
 				<UntrustedLink class="form-output" href={externalUrl} />
 			</InitiativeAttribute> : null}
-		</Fragment> : null}
+		</> : null}
 
-		{Initiative.isPhaseGte(phase, "parliament") ? <Fragment>
-			{mediaUrls.length > 0 || canEdit ? <Fragment>
+		{Initiative.isPhaseGte(phase, "parliament") ? <>
+			{mediaUrls.length > 0 || canEdit ? <>
 				<h3 class="sidebar-subheader">
 					{t("INITIATIVE_INFO_MEDIA_URLS_TITLE")}
 				</h3>
@@ -1375,11 +1374,11 @@ function SidebarInfoView(attrs) {
 						maxlength={SCHEMA.properties.media_urls.items.maxLength}
 					/>
 				</li>}</InitiativeAttributeList>: null}
-			</Fragment> : null}
-		</Fragment> : null}
+			</> : null}
+		</> : null}
 
-		{Initiative.isPhaseGte(phase, "government") ? <Fragment>
-			{mediaUrls.length > 0 || canEdit ? <Fragment>
+		{Initiative.isPhaseGte(phase, "government") ? <>
+			{mediaUrls.length > 0 || canEdit ? <>
 				<h3 class="sidebar-subheader">
 					{t("INITIATIVE_INFO_GOVERNMENT_CHANGE_URLS_TITLE")}
 				</h3>
@@ -1405,11 +1404,11 @@ function SidebarInfoView(attrs) {
 						maxlength={SCHEMA.properties.government_change_urls.items.maxLength}
 					/>
 				</li>}</InitiativeAttributeList>: null}
-			</Fragment> : null}
-		</Fragment> : null}
+			</> : null}
+		</> : null}
 
-		{Initiative.isPhaseGte(phase, "done") ? <Fragment>
-			{mediaUrls.length > 0 || canEdit ? <Fragment>
+		{Initiative.isPhaseGte(phase, "done") ? <>
+			{mediaUrls.length > 0 || canEdit ? <>
 				<h3 class="sidebar-subheader">
 					{t("INITIATIVE_INFO_PUBLIC_CHANGE_URLS_TITLE")}
 				</h3>
@@ -1435,8 +1434,8 @@ function SidebarInfoView(attrs) {
 						maxlength={SCHEMA.properties.public_change_urls.items.maxLength}
 					/>
 				</li>}</InitiativeAttributeList>: null}
-			</Fragment> : null}
-		</Fragment> : null}
+			</> : null}
+		</> : null}
 
 		{initiative.notes || canEdit ? <InitiativeAttribute
 			t={t}
@@ -1936,7 +1935,7 @@ function EventsView(attrs) {
 							summary = meeting.summary
 							links = meeting.links || EMPTY_ARR
 
-							content = <Fragment>
+							content = <>
 								{summary ? <p class="text">
 									{Jsx.html(linkify(summary))}
 								</p> : null}
@@ -1946,7 +1945,7 @@ function EventsView(attrs) {
 										<UntrustedLink href={link.url}>{link.title}</UntrustedLink>
 									</li>)}
 								</ul> : null}
-							</Fragment>
+							</>
 							break
 
 						case "parliament-committee-meeting":
@@ -1962,7 +1961,7 @@ function EventsView(attrs) {
 								})
 								: t("PARLIAMENT_COMMITTEE_MEETING")
 
-							content = <Fragment>
+							content = <>
 								{invitees ? <table class="event-table">
 									<tr>
 										<th scope="row">{t("PARLIAMENT_MEETING_INVITEES")}</th>
@@ -1999,7 +1998,7 @@ function EventsView(attrs) {
 										<UntrustedLink href={link.url}>{link.title}</UntrustedLink>
 									</li>)}
 								</ul> : null}
-							</Fragment>
+							</>
 							break
 
 						case "parliament-decision":
@@ -2018,7 +2017,7 @@ function EventsView(attrs) {
 								? t("PARLIAMENT_LETTER_INCOMING")
 								: t("PARLIAMENT_LETTER_OUTGOING")
 
-							content = <Fragment>
+							content = <>
 								<table class="event-table">
 									<tr>
 										<th scope="row">{t("PARLIAMENT_LETTER_TITLE")}</th>
@@ -2038,7 +2037,7 @@ function EventsView(attrs) {
 								</table>
 
 								{summary && <p class="text">{Jsx.html(linkify(summary))}</p>}
-							</Fragment>
+							</>
 							break
 
 						case "parliament-interpellation":
@@ -2046,7 +2045,7 @@ function EventsView(attrs) {
 							var interpellation = event.content
 							var deadline = Time.parseIsoDate(interpellation.deadline)
 
-							content = <Fragment>
+							content = <>
 								<table class="event-table">
 									<tr>
 										<th scope="row">{t("PARLIAMENT_INTERPELLATION_TO")}</th>
@@ -2060,7 +2059,7 @@ function EventsView(attrs) {
 										<td>{I18n.formatDate("numeric", deadline)}</td>
 									</tr>
 								</table>
-							</Fragment>
+							</>
 							break
 
 						case "parliament-national-matter":
@@ -2149,10 +2148,10 @@ function EventsView(attrs) {
 								</a>
 							</time>
 
-							{authorName ? <Fragment>
+							{authorName ? <>
 								{", "}
 								<span class="author">{authorName}</span>
-							</Fragment> : null}
+							</> : null}
 						</div>
 
 						{content}
@@ -2344,7 +2343,7 @@ function QuicksignView(attrs) {
 			signatureCount={signatureCount}
 		/>
 
-		{Initiative.isSignable(new Date, initiative) && signature ? <Fragment>
+		{Initiative.isSignable(new Date, initiative) && signature ? <>
 			<h2>{t("THANKS_FOR_SIGNING")}</h2>
 
 			<DownloadSignatureButton signature={signature}>
@@ -2356,7 +2355,7 @@ function QuicksignView(attrs) {
 			<DeleteSignatureButton req={req} signature={signature}>
 				{t("REVOKE_SIGNATURE")}
 			</DeleteSignatureButton>
-		</Fragment> : null}
+		</> : null}
 	</div>
 }
 
@@ -2394,25 +2393,25 @@ function InitiativeLocationView(attrs) {
 
 	var content
 	if (initiative.phase == "parliament" && initiative.parliament_committee) {
-		content = <Fragment>
+		content = <>
 			{Jsx.html(t("INITIATIVE_IS_IN_PARLIAMENT_COMMITTEE", {
 				committee: _.escapeHtml(initiative.parliament_committee)
 			}))}
-		</Fragment>
+		</>
 	}
 	else if (initiative.phase == "government" && initiative.government_agency) {
-		content = <Fragment>
+		content = <>
 			{Jsx.html(t("INITIATIVE_IS_IN_GOVERNMENT_AGENCY", {
 				agency: _.escapeHtml(initiative.government_agency)
 			}))}<br />
 
-			{initiative.government_contact ? <Fragment>
+			{initiative.government_contact ? <>
 				<br />
 				<strong>{t("GOVERNMENT_AGENCY_CONTACT")}</strong>:<br />
 				{initiative.government_contact}<br />
 				{Jsx.html(linkify(initiative.government_contact_details || ""))}
-			</Fragment> : null}
-		</Fragment>
+			</> : null}
+		</>
 	}
 
 	if (content == null) return null
@@ -2430,7 +2429,7 @@ function InitiativeAttribute(attrs, children) {
 	var {editable} = attrs
 	var {maxlength} = attrs
 
-	return <Fragment>
+	return <>
 		<h3 class="sidebar-subheader">{title}</h3>
 		{value ? children : <AddInitiativeInfoButton t={t} /> }
 
@@ -2452,7 +2451,7 @@ function InitiativeAttribute(attrs, children) {
 
 			{help ? <p>{help}</p> : null}
 		</div> : null}
-	</Fragment>
+	</>
 }
 
 function InitiativeAttributeList(attrs, children) {

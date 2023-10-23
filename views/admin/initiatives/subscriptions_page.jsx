@@ -1,6 +1,5 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
-var {Fragment} = Jsx
 var Page = require("../page")
 var {SubscriptionsView} = require("../subscriptions/index_page")
 
@@ -23,7 +22,7 @@ module.exports = function(attrs) {
 
 		<h1 class="admin-heading">Subscriptions</h1>
 
-		{confirmed.length > 0 ? <Fragment>
+		{confirmed.length > 0 ? <>
 			<a
 				class="download-link admin-primary-button"
 				href={req.path + ".txt?confirmed=true"}>
@@ -35,13 +34,13 @@ module.exports = function(attrs) {
 			</h2>
 
 			<SubscriptionsView subscriptions={confirmed} />
-		</Fragment> : null}
+		</> : null}
 
-		{pending.length > 0 ? <Fragment>
+		{pending.length > 0 ? <>
 			<h2 class="admin-subheading">
 				Pending <span class="admin-count">({pending.length})</span>
 			</h2>
 			<SubscriptionsView subscriptions={pending} />
-		</Fragment> : null}
+		</> : null}
 	</Page>
 }

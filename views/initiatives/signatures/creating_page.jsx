@@ -1,7 +1,6 @@
 /** @jsx Jsx */
 var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
-var {Fragment} = Jsx
 var InitiativePage = require("../initiative_page")
 var {javascript} = require("root/lib/jsx")
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
@@ -46,7 +45,7 @@ function MobileIdView(attrs) {
 	var {poll} = attrs
 	var {method} = attrs
 
-	return <Fragment>
+	return <>
 		<p>
 			<strong>{t("CONTROL_CODE", {code: _.padLeft(code, 4, 0)})}</strong><br />
 
@@ -69,5 +68,5 @@ function MobileIdView(attrs) {
 				window.location.assign(res.headers.get("Location") || ${poll})
 			})
 		`}</script>
-	</Fragment>
+	</>
 }

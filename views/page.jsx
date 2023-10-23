@@ -3,7 +3,6 @@ var _ = require("root/lib/underscore")
 var Fs = require("fs")
 var Jsx = require("j6pack")
 var Config = require("root").config
-var {Fragment} = Jsx
 var DateFns = require("date-fns")
 var I18n = require("root/lib/i18n")
 var {selected} = require("root/lib/css")
@@ -272,13 +271,11 @@ function Section(attrs, children) {
 	</section>
 }
 
-function Flash(attrs) {
-	var {flash} = attrs
-
-	return <Fragment>
+function Flash({flash}) {
+	return <>
 		{flash("notice") ? <p class="flash notice">{flash("notice")}</p> : null}
 		{flash("error") ? <p class="flash error">{flash("error")}</p> : null}
-	</Fragment>
+	</>
 }
 
 function Form(attrs, children) {
@@ -324,16 +321,16 @@ function FormButton(attrs, children) {
 }
 
 function FormCheckbox(attrs) {
-	return <Fragment>
+	return <>
 		<input type="hidden" name={attrs.name} />
 		<input type="checkbox" {...attrs} />
-	</Fragment>
+	</>
 }
 
 function Sentry(attrs) {
 	var {user} = attrs.req
 
-	return <Fragment>
+	return <>
 		<script src="/assets/raven.js" />
 
 		<script>{javascript`
@@ -352,7 +349,7 @@ function Sentry(attrs) {
 				]
 			}).install()
 		`}</script>
-	</Fragment>
+	</>
 }
 
 function LiveReload(attrs) {

@@ -2,7 +2,6 @@
 var Jsx = require("j6pack")
 var {Form} = require("../../page")
 var {Section} = require("../../page")
-var {Fragment} = require("j6pack")
 var InitiativePage = require("../initiative_page")
 var {selected} = require("root/lib/css")
 
@@ -24,7 +23,8 @@ module.exports = function(attributes) {
 		page="create-initiative-event"
 		title={initiative.title}
 		initiative={initiative}
-		req={req}>
+		req={req}
+	>
 		<Section class="initiative-section transparent-section">
 			<div class="initiative-sheet">
 				<h2>{t("CREATE_INITIATIVE_EVENT_PAGE_TITLE")}</h2>
@@ -58,7 +58,7 @@ module.exports = function(attributes) {
 
 					{function() {
 						switch (event.type) {
-							case "text": return <Fragment>
+							case "text": return <>
 								<label class="form-label">
 									{t("INITIATIVE_TEXT_EVENT_TITLE_INPUT")}
 								</label>
@@ -83,9 +83,9 @@ module.exports = function(attributes) {
 										TEXT_EVENT_SCHEMA.properties.content.maxLength
 									}
 								/>
-							</Fragment>
+							</>
 
-							case "media-coverage": return <Fragment>
+							case "media-coverage": return <>
 								<label class="form-label">
 									{t("INITIATIVE_MEDIA_COVERAGE_EVENT_TITLE_INPUT")}
 								</label>
@@ -122,7 +122,7 @@ module.exports = function(attributes) {
 									class="form-input"
 									maxlength={MEDIA_COVERAGE_EVENT_SCHEMA.properties.content.properties.url.maxLength}
 								/>
-							</Fragment>
+							</>
 
 							default:
 								throw new RangeError("Unsupported event type: " + event.type)
