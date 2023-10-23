@@ -27,7 +27,6 @@ var {hades} = require("root")
 var parseBody = require("body-parser").raw
 var signaturesDb = require("root/db/initiative_signatures_db")
 var signablesDb = require("root/db/initiative_signables_db")
-var textsDb = require("root/db/initiative_texts_db")
 var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
 var {parsePersonalId} = require("root/lib/eid")
@@ -211,25 +210,14 @@ exports.router.get("/",
 				dispose("signatures.asice", "attachment"))
 			asic.pipe(res)
 
+			// NOTE: Unfortunately can't add translations to the container. Even
+			// though the ASiC-E container supports signed and unsigned files
+			// together, client software like Digidoc doesn't.
 			asic.add(
 				`initiative.${Mime.extension(String(initiative.text_type))}`,
 				initiative.text,
 				initiative.text_type
 			)
-
-			ESTONIAN: if (initiative.language != "et") {
-				var estonian = textsDb.read(sql`
-					SELECT *
-					FROM initiative_texts
-					WHERE initiative_uuid = ${initiative.uuid} AND language = 'et'
-					ORDER BY id DESC
-					LIMIT 1
-				`)
-
-				if (estonian == null) break ESTONIAN
-				var translationHtml = Initiative.renderForParliament(estonian)
-				asic.add("estonian.html", translationHtml, "text/html")
-			}
 
 			{
 				let signatures, added = 0
