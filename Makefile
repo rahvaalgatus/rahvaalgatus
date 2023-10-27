@@ -179,6 +179,8 @@ translations: lib/i18n/ru.json
 
 translatables:
 	@ag --nofilename -o '\bt\("([\w.]+)"' | sort -u | cut -d\" -f2
+	@jq -r 'keys[] | "initiative_page.signing_section.description.\(.)"' \
+		lib/local_governments.json
 
 tmp:; mkdir -p tmp
 

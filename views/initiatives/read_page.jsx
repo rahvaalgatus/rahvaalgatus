@@ -11,6 +11,7 @@ var {Flash} = require("../page")
 var {Form} = require("../page")
 var Trix = require("root/lib/trix")
 var Initiative = require("root/lib/initiative")
+var ImageController = require("root/controllers/initiatives/image_controller")
 var {FormButton} = require("../page")
 var {DonateForm} = require("../donations/create_page")
 var {CommentView} = require("./comments/read_page")
@@ -40,10 +41,9 @@ var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
 var LANGUAGES = require("root").config.languages
 var {SCHEMA} = require("root/controllers/initiatives_controller")
-var IMAGE_SCHEMA =
-	require("root/controllers/initiatives/image_controller").SCHEMA
-var LOCAL_GOVERNMENTS_BY_COUNTY =
-	require("root/lib/local_governments").BY_COUNTY
+var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
+var LOCAL_GOVERNMENTS_BY_COUNTY = LOCAL_GOVERNMENTS.BY_COUNTY
+var IMAGE_SCHEMA = ImageController.SCHEMA
 exports = module.exports = ReadPage
 exports.InitiativeDestinationSelectView = InitiativeDestinationSelectView
 exports.SigningView = SigningView
@@ -415,8 +415,11 @@ function ReadPage(attrs) {
 							</> : null}
 
 							{initiative.destination == "parliament"
-								? t("INITIATIVE_SIGN_DESCRIPTION_FOR_PARLIAMENT")
-								: t("INITIATIVE_SIGN_DESCRIPTION_FOR_LOCAL")
+								? t("initiative_page.signing_section.description.parliament")
+								: Jsx.html(t(
+									"initiative_page.signing_section.description." +
+									initiative.destination
+								))
 							}
 							</p>
 
