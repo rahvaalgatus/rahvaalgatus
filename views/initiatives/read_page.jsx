@@ -227,16 +227,18 @@ function ReadPage(attrs) {
 								new Date < initiative.discussion_ends_at
 							) return <div class="initiative-status">
 								<h1 class="status-header">
-									{t("INITIATIVE_IN_DISCUSSION")}
+									{t("initiative_page.discussion_header.title")}
 									{" "}
 									<a
 										href="#comment-form"
 										class="link-button wide-button">
-										{t("ADD_YOUR_COMMENT")}
+										{t("initiative_page.discussion_header.comment_button")}
 									</a>.
 								</h1>
 
-								<p>{t("INITIATIVE_IN_DISCUSSION_DESCRIPTION")}</p>
+								<p>
+									{Jsx.html(t("initiative_page.discussion_header.description"))}
+								</p>
 							</div>
 							else return null
 

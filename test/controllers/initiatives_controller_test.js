@@ -1928,7 +1928,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				res.body.must.include(tHtml("INITIATIVE_IN_DISCUSSION"))
+				res.body.must.include(tHtml("initiative_page.discussion_header.title"))
 				res.body.must.include(t("DISCUSSION_DEADLINE"))
 
 				var dom = parseHtml(res.body)
@@ -1947,7 +1947,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				res.body.must.include(tHtml("INITIATIVE_IN_DISCUSSION"))
+				res.body.must.include(tHtml("initiative_page.discussion_header.title"))
 				res.body.must.include(t("DISCUSSION_DEADLINE"))
 
 				var dom = parseHtml(res.body)
@@ -1978,7 +1978,7 @@ describe("InitiativesController", function() {
 
 				res.statusCode.must.equal(200)
 
-				res.body.must.include(tHtml("INITIATIVE_IN_DISCUSSION"))
+				res.body.must.include(tHtml("initiative_page.discussion_header.title"))
 				res.body.must.include(t("DISCUSSION_DEADLINE"))
 
 				var dom = parseHtml(res.body)
@@ -2005,7 +2005,7 @@ describe("InitiativesController", function() {
 
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
-				res.body.must.not.include(tHtml("INITIATIVE_IN_DISCUSSION"))
+				res.body.must.not.include(tHtml("initiative_page.discussion_header.title"))
 			})
 
 			it("must render initiative in edit phase that has ended", function*() {
@@ -2045,7 +2045,7 @@ describe("InitiativesController", function() {
 
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
-				res.body.must.not.include(tHtml("INITIATIVE_IN_DISCUSSION"))
+				res.body.must.not.include(tHtml("initiative_page.discussion_header.title"))
 				res.body.must.not.include(tHtml("VOTING_SUCCEEDED"))
 				res.body.must.not.include(tHtml("VOTING_SUCCEEDED_ON_LOCAL_LEVEL"))
 
@@ -4268,7 +4268,7 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
 
-				res.body.must.include(tHtml("INITIATIVE_IN_DISCUSSION"))
+				res.body.must.include(tHtml("initiative_page.discussion_header.title"))
 				res.body.must.include(t("DISCUSSION_DEADLINE"))
 
 				var dom = parseHtml(res.body)
