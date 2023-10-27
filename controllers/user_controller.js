@@ -288,7 +288,6 @@ var validate = require("root/lib/json_schema").new({
 	additionalProperties: false,
 
 	properties: {
-		name: {type: "string", maxLength: 100},
 		unconfirmed_email: {type: ["null", "string"], maxLength: 254},
 		email_confirmation_sent_at: {const: null},
 
@@ -301,7 +300,6 @@ exports.SCHEMA = validate.schema
 
 function parse(obj) {
 	var err, attrs = {}
-	if ("name" in obj) attrs.name = obj.name
 	if ("email" in obj) attrs.unconfirmed_email = obj.email || null
 	if ("language" in obj && obj.language in LANGS) attrs.language = obj.language
 
@@ -309,9 +307,6 @@ function parse(obj) {
 		attrs.email_confirmation_sent_at = obj.email_confirmation_sent_at || null
 
 	var errors = {}
-
-	if ("name" in attrs && !attrs.name)
-		errors.name = {code: "length", minimum: 1}
 
 	if (
 		"unconfirmed_email" in attrs &&

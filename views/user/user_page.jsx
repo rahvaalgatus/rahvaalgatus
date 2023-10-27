@@ -13,6 +13,10 @@ module.exports = function(attrs, children) {
 		<header id="user-header"><center>
 			<h1>{user.name}</h1>
 
+			{user.personal_id ? <p class="personal-id">
+				{t("user_page.header.personal_id")}: {user.personal_id}
+			</p> : null}
+
 			<menu id="tabs">
 				<a href="/user" class={selected(path, "/")}>
 					{t("USER_PAGE_TABS_USER")}

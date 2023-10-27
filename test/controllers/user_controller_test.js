@@ -66,7 +66,7 @@ describe("UserController", function() {
 				form.elements.name.value.must.equal(this.user.name)
 				form.elements.email.value.must.equal("")
 
-				res.body.must.not.include(t("USER_PAGE_EMAIL_UNCONFIRMED"))
+				res.body.must.not.include(t("user_page.form.email_unconfirmed"))
 			})
 
 			it("must show name and email", function*() {
@@ -84,7 +84,7 @@ describe("UserController", function() {
 				form.elements.name.value.must.equal(this.user.name)
 				form.elements.email.value.must.equal(this.user.email)
 
-				res.body.must.not.include(t("USER_PAGE_EMAIL_UNCONFIRMED"))
+				res.body.must.not.include(t("user_page.form.email_unconfirmed"))
 			})
 
 			it("must show if email unconfirmed", function*() {
@@ -99,7 +99,7 @@ describe("UserController", function() {
 				var dom = parseHtml(res.body)
 				var form = dom.querySelector("#user form")
 				form.elements.email.value.must.equal(this.user.unconfirmed_email)
-				form.textContent.must.include(t("USER_PAGE_EMAIL_UNCONFIRMED"))
+				form.textContent.must.include(t("user_page.form.email_unconfirmed"))
 			})
 
 			it("must show if email confirmed but another set", function*() {
@@ -118,7 +118,9 @@ describe("UserController", function() {
 				form.elements.email.value.must.equal(this.user.unconfirmed_email)
 
 				form.textContent.must.include(
-					t("USER_PAGE_EMAIL_UNCONFIRMED_USING_OLD", {email: this.user.email})
+					t("user_page.form.email_unconfirmed_using_old", {
+						email: this.user.email
+					})
 				)
 			})
 
@@ -131,7 +133,7 @@ describe("UserController", function() {
 
 				var res = yield this.request("/user")
 				res.statusCode.must.equal(200)
-				res.body.must.include(t("USER_EMAIL_RESEND_CONFIRMATION"))
+				res.body.must.include(t("user_page.form.email_resend_confirmation"))
 			})
 
 			it("must show reconfirmation link if 10 minutes have passed",
@@ -144,7 +146,7 @@ describe("UserController", function() {
 
 				var res = yield this.request("/user")
 				res.statusCode.must.equal(200)
-				res.body.must.include(t("USER_EMAIL_RESEND_CONFIRMATION"))
+				res.body.must.include(t("user_page.form.email_resend_confirmation"))
 			})
 
 			it("must not show reconfirmation link if less than 10 minutes have passed", function*() {
@@ -156,7 +158,7 @@ describe("UserController", function() {
 
 				var res = yield this.request("/user")
 				res.statusCode.must.equal(200)
-				res.body.must.not.include(t("USER_EMAIL_RESEND_CONFIRMATION"))
+				res.body.must.not.include(t("user_page.form.email_resend_confirmation"))
 			})
 
 			describe("initiatives", function() {
@@ -564,7 +566,7 @@ describe("UserController", function() {
 			require("root/test/time")(new Date(2015, 5, 18, 13, 37, 42))
 			require("root/test/email")()
 
-			it("must update name", function*() {
+			it("must not update name", function*() {
 				var res = yield this.request("/user", {
 					method: "PUT",
 					form: {name: "John Smitheroon"}
@@ -572,63 +574,7 @@ describe("UserController", function() {
 
 				res.statusCode.must.equal(303)
 				res.statusMessage.must.equal("User Updated")
-				res.headers.location.must.equal("/user")
-
-				var cookies = parseCookies(res.headers["set-cookie"])
-				res = yield this.request(res.headers.location, {
-					cookies: _.mapValues(cookies, (c) => c.value)
-				})
-
-				res.statusCode.must.equal(200)
-				res.body.must.include(t("USER_UPDATED"))
-
-				usersDb.read(this.user).must.eql({
-					__proto__: this.user,
-					name: "John Smitheroon",
-					updated_at: new Date
-				})
-			})
-
-			it("must show error if name empty", function*() {
-				var res = yield this.request("/user", {
-					method: "PUT",
-					form: {name: ""}
-				})
-
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Invalid Attributes")
-
-				var dom = parseHtml(res.body)
-				var form = dom.querySelector("#user form")
-				form.elements.name.value.must.equal("")
-				form.textContent.must.include(t("INPUT_ERROR_LENGTH_1"))
-
 				usersDb.read(this.user).must.eql(this.user)
-			})
-
-			_.each({
-				"too long name": {name: _.repeat("a", 101)},
-				"too long email": {email: _.repeat("a", 255)}
-			}, function(attrs, title) {
-				it(`must respond with 422 given ${title}`, function*() {
-					var res = yield this.request("/user", {method: "PUT", form: attrs})
-					res.statusCode.must.equal(422)
-					res.statusMessage.must.equal("Invalid Attributes")
-					usersDb.read(this.user).must.eql(this.user)
-				})
-			})
-
-			it("must not update name of another user", function*() {
-				var user = usersDb.create(new ValidUser({name: "Mary Smith"}))
-
-				var res = yield this.request("/user", {
-					method: "PUT",
-					form: {name: "John Smitheroon"}
-				})
-
-				res.statusCode.must.equal(303)
-				res.statusMessage.must.equal("User Updated")
-				usersDb.read(user).must.eql(user)
 			})
 
 			;["et", "en", "ru"].forEach(function(lang) {

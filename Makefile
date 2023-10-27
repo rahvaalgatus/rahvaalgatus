@@ -178,7 +178,7 @@ translations: lib/i18n/et.json
 translations: lib/i18n/ru.json
 
 translatables:
-	@ag --nofilename -o '\bt\("(\w+)"' | sort -u | cut -d\" -f2
+	@ag --nofilename -o '\bt\("([\w.]+)"' | sort -u | cut -d\" -f2
 
 tmp:; mkdir -p tmp
 

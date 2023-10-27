@@ -27,19 +27,22 @@ module.exports = function(attrs) {
 			<Form method="put" action="/user" class="form" req={req}>
 				{error ? <p class="flash error">{error}</p> : null}
 
-				<label class="form-label">{t("LBL_FULL_NAME")}</label>
+				<label class="form-label">{t("user_page.form.name_label")}</label>
+
+				<p class="form-input-description">
+					{Jsx.html(t("user_page.form.name_description"))}
+				</p>
+
 				<input
 					type="text"
 					name="name"
-					required
+					disabled
 					value={userAttrs.name}
-					class={"form-input" + (userErrors.name ? " error" : "")}
-					maxlength={SCHEMA.properties.name.maxLength}
+					class="form-input"
 				/>
 
-				<InputError t={req.t} name="name" error={userErrors.name} />
+				<label class="form-label">{t("user_page.form.email_label")}</label>
 
-				<label class="form-label">{t("LBL_EMAIL")}</label>
 				<input
 					type="email"
 					name="email"
@@ -54,10 +57,10 @@ module.exports = function(attrs) {
 					error={userErrors.unconfirmed_email}
 				/>
 
-				{user.unconfirmed_email ? <p>
+				{user.unconfirmed_email ? <p class="form-input-description">
 					{user.email
-					? t("USER_PAGE_EMAIL_UNCONFIRMED_USING_OLD", {email: user.email})
-					: t("USER_PAGE_EMAIL_UNCONFIRMED")}
+					? t("user_page.form.email_unconfirmed_using_old", {email: user.email})
+					: t("user_page.form.email_unconfirmed")}
 
 					{(
 						user.email_confirmation_sent_at == null ||
@@ -65,11 +68,13 @@ module.exports = function(attrs) {
 					) ? <>{" "}<button
 						class="link-button"
 						name="email_confirmation_sent_at"
-						value="">{t("USER_EMAIL_RESEND_CONFIRMATION")}
+						value="">{t("user_page.form.email_resend_confirmation")}
 					</button></> : null}
 				</p> : null}
 
-				<button class="form-submit secondary-button">{t("BTN_SAVE")}</button>
+				<button class="form-submit secondary-button">
+					{t("user_page.form.update_button")}
+				</button>
 			</Form>
 		</Section>
 
