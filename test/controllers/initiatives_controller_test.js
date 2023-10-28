@@ -10721,7 +10721,7 @@ function queryEvents(html) {
 
 		return {
 			id: event.id.replace(/^event-/, ""),
-			title: event.querySelector("h2").textContent,
+			title: event.querySelector("h3").textContent,
 			at: new Date(event.querySelector(".metadata time").dateTime),
 			author: author && author.textContent,
 			content: event.querySelectorAll(".metadata ~ *:not(.files)"),

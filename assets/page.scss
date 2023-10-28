@@ -1057,6 +1057,8 @@ strong {
 	@include mobile {
 		.logo { max-width: 16rem; }
 	}
+
+	@media print { display: none; }
 }
 
 #main {
@@ -2176,7 +2178,7 @@ strong {
 
 				.narrow-initiative-progress {
 					display: block;
-					border-radius: none;
+					border-radius: 0;
 					margin: 0.5rem -2rem -1rem;
 					padding-top: 1rem;
 					padding-bottom: 0.9rem;
@@ -2195,19 +2197,19 @@ strong {
 .initiative-page {
 	background-color: $secondary-background;
 
+	@media print { background-color: transparent; }
+
 	#initiative-header {
-		margin-top: 4rem;
-		margin-bottom: 4rem;
 		font-family: $tisa-pro;
 
-		center {
-			padding-left: $article-padding;
-			padding-right: $article-padding;
+		margin-top: 4rem;
+		margin-bottom: 4rem;
+		@media print { margin-top: 0; }
 
-			@include mobile {
-				padding-left: $article-padding-mobile;
-				padding-right: $article-padding-mobile;
-			}
+		center {
+			padding: 0 $article-padding;
+			@include mobile { padding: 0 $article-padding-mobile; }
+			@media print { padding: 0; }
 		}
 
 		img.badge {
@@ -2256,6 +2258,12 @@ strong {
 		width: $article-width-percentage;
 
 		@include mobile-and-tablet { width: auto; }
+
+		@media print {
+			width: auto;
+			box-shadow: none;
+			background: none;
+		}
 	}
 
 	.initiative-section {
@@ -2265,8 +2273,8 @@ strong {
 			display: flex;
 			padding-left: 0;
 			padding-right: 0;
-			max-width: $page-width + $article-padding;
 
+			@media screen { max-width: $page-width + $article-padding; }
 			@include mobile-and-tablet { display: block; }
 		}
 	}
@@ -2275,6 +2283,7 @@ strong {
 #initiative-page,
 #initiative-comment-page {
 	#initiative-comment,
+	#initiative-events,
 	#initiative-comments {
 		h2 {
 			font-family: $museo-sans;
@@ -2282,6 +2291,8 @@ strong {
 			color: $title-text;
 			margin-bottom: 1rem;
 			font-weight: 500;
+
+			@media print { color: black; }
 		}
 	}
 
@@ -2345,11 +2356,11 @@ strong {
 				float: right;
 				display: inline-block;
 			}
+
+			@media print { display: none; }
 		}
 
-		& + .comment {
-			margin-top: 1rem;
-		}
+		& + .comment { margin-top: 1rem; }
 	}
 
 	.comment-replies,
@@ -2367,6 +2378,12 @@ strong {
 	.comment-replies {
 		margin-top: 2rem;
 
+		@media print {
+			margin: 0;
+			margin-top: 2rem;
+			border-top: none;
+		}
+
 		&:empty { display: none; }
 	}
 
@@ -2383,9 +2400,16 @@ strong {
 	}
 
 	.comment-reply {
+		@media print {
+			padding: 0;
+			margin-left: 4rem;
+		}
+
 		& + .comment-reply {
 			margin-top: 2rem;
 			border-top: 1px solid $secondary-background;
+
+			@media print { border-top: 0; }
 		}
 
 		menu {
@@ -2396,6 +2420,12 @@ strong {
 				float: right;
 				display: inline-block;
 			}
+
+			@media print { display: none; }
+		}
+
+		.metadata .author {
+			@media print { font-weight: 600; }
 		}
 	}
 
@@ -2460,15 +2490,15 @@ strong {
 			}
 
 			@media only screen and (max-width: 569px) {
-				.persona {
-					display: block;
-				}
+				.persona { display: block; }
 			}
 		}
 
 		@include mobile {
 			button { width: 100%; }
 		}
+
+		@media print { display: none; }
 	}
 
 	.comment-reply-form {
@@ -2488,10 +2518,6 @@ strong {
 		$phase-icon-width: 6rem;
 		$progress-height: 1.2rem;
 		$progress-background: $initiative-sidebar-header-background;
-
-		@media only screen and (max-width: 767px) {
-			display: none;
-		}
 
 		center {
 			padding-left: $article-padding;
@@ -2724,6 +2750,9 @@ strong {
 				}
 			}
 		}
+
+		@media only screen and (max-width: 767px) { display: none; }
+		@media print { display: none; }
 	}
 
 	.quicksign.mobile {
@@ -2743,6 +2772,10 @@ strong {
 			padding-left: $article-padding-mobile;
 			padding-right: $article-padding-mobile;
 		}
+	}
+
+	.initiative-section {
+		page-break-after: always;
 	}
 
 	#language-tabs {
@@ -2813,6 +2846,7 @@ strong {
 		padding: $article-padding;
 
 		@include mobile { padding: $article-padding-mobile; }
+		@media print { padding: 0; }
 
 		&.trix-text {
 			white-space: pre-wrap;
@@ -2916,14 +2950,28 @@ strong {
 		padding: $sidebar-padding;
 		font-size: 1.3rem;
 
-		.sidebar-section + .sidebar-section {
-			margin-top: 2rem;
+		.sidebar-section {
+			& + .sidebar-section { margin-top: 2rem; }
+
+			&:first-child > .sidebar-header:first-child {
+				margin-top: -$sidebar-padding;
+			}
+		}
+
+		details.sidebar-section {
+			summary.sidebar-header {
+				cursor: pointer;
+				margin-bottom: 0;
+			}
+
+			&[open] summary { margin-bottom: 1.5rem; }
+			&:not([open]):not([hidden]) + .sidebar-section { margin-top: 0; }
 		}
 
 		.sidebar-header {
-			margin-bottom: 1rem;
 			margin-left: -$sidebar-padding;
 			margin-right: -$sidebar-padding;
+			margin-bottom: 1.5rem;
 			padding: 0 $sidebar-padding;
 			line-height: 3.6rem;
 			background: $initiative-sidebar-header-background;
@@ -2931,10 +2979,6 @@ strong {
 			color: $dark-blue;
 			font-weight: 900;
 			text-transform: uppercase;
-		}
-
-		.sidebar-section:first-child > .sidebar-header:first-child {
-			margin-top: -$sidebar-padding;
 		}
 
 		.sidebar-subheader {
@@ -3157,11 +3201,23 @@ strong {
 			p { line-height: 1.5; }
 		}
 
+		#initiative-print {
+			label {
+				display: block;
+				& + label { margin-top: 1rem; }
+				span { margin-left: 0.7rem; }
+			}
+
+			button { margin-top: 1rem; }
+		}
+
 		@include mobile-and-tablet {
 			width: auto;
 
 			.quicksign { display: none; }
 		}
+
+		@media print { display: none; }
 	}
 
 	#initiative-vote {
@@ -3221,6 +3277,7 @@ strong {
 
 		& + *:not(#language-tabs) {
 			border-top: 1px solid $light-background-border;
+			@media print { border-top: none; }
 		}
 
 		&,
@@ -3291,6 +3348,8 @@ strong {
 		p { white-space: pre-wrap; }
 		a { color: $link-color; text-decoration: underline; }
 		p + ul { margin-top: 1rem; }
+
+		@media print { display: none; }
 	}
 
 	#coauthor-invitation {
@@ -3302,11 +3361,16 @@ strong {
 	}
 
 	#initiative-events {
+		page-break-after: always;
+
 		center {
-			max-width: $page-width + $article-padding;
 			padding-left: 0;
 			padding-right: 0;
+
+			@media screen { max-width: $page-width + $article-padding; }
 		}
+
+		h2 { @media screen { display: none; } }
 
 		.create-event-button {
 			display: block;
@@ -3319,9 +3383,7 @@ strong {
 			font-weight: bold;
 			border-bottom: 1px solid $light-background-border;
 
-			&:hover {
-				color: $link-color;
-			}
+			&:hover { color: $link-color; }
 
 			&:focus {
 				box-shadow: 0 0 .5rem $link-color;
@@ -3335,6 +3397,8 @@ strong {
 				border-right: none;
 				max-width: none;
 			}
+
+			@media print { display: none; }
 		}
 
 		.empty {
@@ -3345,6 +3409,8 @@ strong {
 		}
 
 		.event {
+			$event-separator-color: #eee;
+
 			position: relative;
 			padding: 2.5rem $article-padding;
 			border-left: 0.5rem solid transparent;
@@ -3357,7 +3423,15 @@ strong {
 				padding-right: $article-padding-mobile;
 			}
 
-			h2 {
+			@media print {
+				padding: 2.5rem 0;
+				border-left: 0;
+				border-top: 1pt solid $event-separator-color;
+
+				&:last-child { border-bottom: 1pt solid $event-separator-color; }
+			}
+
+			h3 {
 				font-size: 2rem;
 				color: $title-text;
 			}
@@ -3459,7 +3533,10 @@ strong {
 
 			// Border-top doesn't fill the whole width because we're using the left
 			// border for phase colors.
-			& + .event { box-shadow: 0 -1px 0 #eee; }
+			& + .event {
+				box-shadow: 0 -1px 0 $event-separator-color;
+				@media print { box-shadow: none; }
+			}
 		}
 
 		#contribute {
@@ -3486,9 +3563,7 @@ strong {
 			}
 
 			p { white-space: pre-wrap; }
-			p + p {
-				margin-top: 2rem;
-			}
+			p + p { margin-top: 2rem; }
 
 			a {
 				margin-right: 0.5rem;
@@ -3507,9 +3582,19 @@ strong {
 	}
 
 	#initiative-comments {
-		center > * {
-			width: $article-width-percentage;
-			@include mobile-and-tablet { width: auto; }
+		page-break-after: always;
+
+		center {
+			& > * {
+				width: $article-width-percentage;
+				@include mobile-and-tablet { width: auto; }
+			}
+
+			@media print {
+				padding: 0;
+
+				& > * { width: auto; }
+			}
 		}
 
 		@include mobile-and-tablet {
@@ -3543,6 +3628,11 @@ strong {
 				padding-left: $article-padding-mobile;
 				padding-right: $article-padding-mobile;
 			}
+
+			@media print {
+				padding: 1.5rem 0;
+				border-top: 1pt solid $secondary-background;
+			}
 		}
 
 		.comments:empty + .comment-form { margin-top: 0; }
@@ -3556,91 +3646,58 @@ strong {
 			.signin-to-act { margin-left: 1rem; }
 		}
 	}
-}
 
-#initiative-print-page main {
-	padding: 4rem;
-
-	@media print { padding: 2rem; }
-
-	#initiative {
-		flex-grow: 1;
-		font-size: 1.6rem;
-		font-family: $tisa-pro;
+	#signatures-table-section {
+		$signatures-table-border: #ccc;
+		display: none;
 		page-break-after: always;
-
-		header {
-			time,
-			.author,
-			.destination {
-				font-size: 1.6rem;
-				color: #8a8a8a;
-			}
-
-			.destination {
-				font-size: 2.4rem;
-
-				& + h1 { margin-top: 0.5rem; }
-			}
-
-			h1 {
-				color: $title-text;
-				font-size: 4.2rem;
-				line-height: 1.2;
-				word-wrap: break-word;
-				margin-bottom: 0.8rem;
-			}
-		}
-
-		.text {
-			margin-top: 4rem;
-
-			&.trix-text { white-space: pre-wrap; }
-		}
-	}
-
-	#signature-table-section {
-		margin-top: 8rem;
-		$signature-table-border: #ccc;
-
-		@media print {
-			margin-top: 0rem;
-		}
 
 		table {
 			width: 100%;
 			table-layout: fixed;
 			border-collapse: separate;
-			border-radius: 0.5rem;
-			border: 1px solid $signature-table-border;
-			font-size: 1.6rem;
-
-			@media print {
-				//height: 100vh;
-			}
+			border-radius: 4pt;
+			border: 1pt solid $signatures-table-border;
+			font-size: 12pt;
 
 			caption {
 				line-height: 1.5;
-				padding: 1rem 2rem;
+				padding: 8pt 16pt;
 			}
 		}
 
 		th {
-			padding: 1.5rem 2rem;
+			padding: 10pt 12pt 8pt;
 			min-width: 33%;
 			font-weight: bold;
 
-			& + th { border-left: 1px solid $signature-table-border; }
+			& + th { border-left: 1pt solid $signatures-table-border; }
 		}
 
 		tbody tr td {
-			border-top: 1px solid $signature-table-border;
+			border-top: 1pt solid $signatures-table-border;
 		}
 
 		td {
-			height: 5rem;
+			height: 32pt;
 
-			& + td { border-left: 1px solid $signature-table-border; }
+			& + td { border-left: 1pt solid $signatures-table-border; }
+		}
+	}
+
+	@media print {
+		#signatures-table-section { display: block; }
+
+		&.disable-printing-text.disable-printing-events.disable-printing-comments
+			#initiative-header {
+				display: none;
+			}
+
+		&.disable-printing-text .initiative-section,
+		&.disable-printing-events #initiative-events,
+		&.disable-printing-comments #initiative-comments,
+		&.disable-printing-signatures-table #signatures-table-section {
+			display: none;
 		}
 	}
 }
@@ -3783,29 +3840,6 @@ strong {
 		button[type=submit] {
 			padding: 0 2rem;
 		}
-	}
-}
-
-#sign-initiative-text-page {
-	.initiative-sheet {
-		padding: $article-padding;
-	}
-
-	h2 {
-		font-size: 2.4rem;
-		font-weight: 500;
-		color: $title-text;
-		margin-bottom: 1rem;
-	}
-
-	p {
-		line-height: 1.5;
-
-		a { color: $link-color; text-decoration: underline; }
-	}
-
-	.signing-view {
-		margin-top: 3rem;
 	}
 }
 
@@ -4923,6 +4957,8 @@ strong {
 			margin-top: 1rem;
 		}
 	}
+
+	@media print { display: none; }
 }
 
 #\35 03-page {

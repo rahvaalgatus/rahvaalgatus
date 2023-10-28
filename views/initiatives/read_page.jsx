@@ -139,7 +139,9 @@ function ReadPage(attrs) {
 	return <InitiativePage
 		page="initiative"
 		title={initiative.title}
+		req={req}
 		initiative={initiative}
+		class="disable-printing-signatures-table"
 
 		meta={_.filterValues({
 			"twitter:card": "summary_large_image",
@@ -154,8 +156,7 @@ function ReadPage(attrs) {
 			title: t("ATOM_INITIATIVE_FEED_TITLE", {title: initiative.title}),
 			href: atomPath
 		}]}
-
-		req={req}>
+	>
 		<script src="/assets/html5.js" />
 		<script src="/assets/hwcrypto.js" />
 
@@ -603,10 +604,8 @@ function ReadPage(attrs) {
 					<p class="text">{Jsx.html(t("INITIATIVE_PAGE_DISCLAIMER"))}</p>
 				</div>
 
-				<SidebarAdminView
-					req={req}
-					initiative={initiative}
-				/>
+				<SidebarPrintView t={t} />
+				<SidebarAdminView req={req} t={t} initiative={initiative} />
 			</aside>
 		</center></section>
 
@@ -624,6 +623,8 @@ function ReadPage(attrs) {
 			subscription={subscription}
 			comments={comments}
 		/>
+
+		<SignaturesTableView initiative={initiative} />
 	</InitiativePage>
 }
 
@@ -1498,22 +1499,80 @@ function SidebarSubscribeView(attrs) {
 	</div>
 }
 
-function SidebarAdminView(attrs) {
-	var {req} = attrs
-	var {t} = req
-	var {initiative} = attrs
+function SidebarPrintView({t}) {
+	return <details class="sidebar-section" id="initiative-print" hidden>
+		<summary class="sidebar-header">
+			{t("initiative_page.sidebar.print.title")}
+		</summary>
 
+		<form id="initiative-print-settings-form">
+			<label>
+				<input type="checkbox" name="text" checked />
+				<span>{t("initiative_page.sidebar.print.text_label")}</span>
+			</label>
+
+			<label>
+				<input type="checkbox" name="events" checked />
+				<span>{t("initiative_page.sidebar.print.events_label")}</span>
+			</label>
+
+			<label>
+				<input type="checkbox" name="comments" checked />
+				<span>{t("initiative_page.sidebar.print.comments_label")}</span>
+			</label>
+
+			<label>
+				<input type="checkbox" name="signatures-table" />
+				<span>{t("initiative_page.sidebar.print.signatures_table_label")}</span>
+			</label>
+
+			<button type="submit" class="secondary-button">
+				{t("initiative_page.sidebar.print.print_button")}
+			</button>
+		</form>
+
+		{/* TODO: Ensure a polyfill for Element.prototype.classList exists. */}
+		<script>{javascript`
+			document.querySelector("#initiative-print").hidden = false
+			var form = document.querySelector("#initiative-print-settings-form")
+			var each = Function.call.bind(Array.prototype.forEach)
+
+			form.addEventListener("submit", function(ev) {
+				ev.preventDefault()
+				window.print()
+			})
+
+			form.addEventListener("change", function(ev) { setPrinting(ev.target) })
+
+			// When you refresh the page, browsers tend to restore the checkboxes as
+			// they last were
+			each(form.elements, function(el) {
+				if (el.tagName == "INPUT") setPrinting(el)
+			})
+
+			function setPrinting(input) {
+				document.body.classList.toggle(
+					"disable-printing-" + input.name,
+					!input.checked
+				)
+			}
+		`}</script>
+	</details>
+}
+
+function SidebarAdminView({req, t, initiative}) {
 	if (!(req.user && isAdmin(req.user))) return null
 
 	return <div class="sidebar-section">
 		<h2 class="sidebar-header">
-			{t("INITIATIVE_ADMIN")}
+			{t("initiative_page.sidebar.admin.title")}
 		</h2>
 
 		<a
 			href={`${Config.adminUrl}/initiatives/${initiative.uuid}`}
-			class="link-button wide-button">
-			{t("INITIATIVE_ADMINISTRATE_INITIATIVE")}
+			class="link-button wide-button"
+		>
+			{t("initiative_page.sidebar.admin.edit_button")}
 		</a>
 	</div>
 }
@@ -1879,6 +1938,7 @@ function EventsView(attrs) {
 	if (events.length > 0 || canCreateEvents)
 		return <section id="initiative-events" class="transparent-section"><center>
 			<a name="events" />
+			<h2>{t("initiative_page.events.title")}</h2>
 
 			<article class="initiative-sheet">
 				{canCreateEvents ? <a
@@ -2144,7 +2204,7 @@ function EventsView(attrs) {
 						: 0
 
 					return <li id={"event-" + event.id} class={klass}>
-						<h2>{title}</h2>
+						<h3>{title}</h3>
 
 						<div class="metadata">
 							<time class="occurred-at" datetime={event.occurred_at.toJSON()}>
@@ -2227,6 +2287,28 @@ function CommentsView(attrs) {
 			referrer={req.baseUrl + req.path}
 		/>
 	</center></section>
+}
+
+function SignaturesTableView({initiative}) {
+	return <section id="signatures-table-section">
+		<table>
+			<caption>
+				Olen lugenud läbi algatuse "{initiative.title}" ja avaldan toetust oma allkirjaga.
+			</caption>
+
+			<thead><tr>
+				<th class="name-column">Nimi</th>
+				<th class="personal-id-column">Isikukood</th>
+				<th class="signature-column">Allkiri</th>
+			</tr></thead>
+
+			<tbody>{_.fill(new Array(20), <tr>
+				<td class="name-column" />
+				<td class="personal-id-column" />
+				<td class="signature-id-column" />
+			</tr>)}</tbody>
+		</table>
+	</section>
 }
 
 function SubscribeEmailView(attrs) {
