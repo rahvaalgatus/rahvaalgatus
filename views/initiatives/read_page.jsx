@@ -2465,10 +2465,8 @@ function InitiativeDestinationSelectView(attrs) {
 		</optgroup>
 
 		{_.map(LOCAL_GOVERNMENTS_BY_COUNTY, (govs, county) => (
-			<optgroup label={county + " maakond"}>{govs.map(([id, name]) => (
-				<option value={id} selected={dest == id}>
-					{name}
-				</option>
+			<optgroup label={county + " maakond"}>{govs.map(([id, {name}]) => (
+				<option value={id} selected={dest == id}>{name}</option>
 			))}</optgroup>
 		))}
 	</select>

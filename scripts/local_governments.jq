@@ -6,6 +6,7 @@ def lines: sub("\\s+$"; "") | split("\n");
 ($header | index("EHAK")) as $ehak_column |
 ($header | index("Name")) as $name_column |
 ($header | index("Population")) as $population_column |
+($header | index("Voters")) as $voters_column |
 ($header | index("County")) as $county_column |
 ($header | index("Initiatives Emails")) as $emails_column |
 ($header | index("Signature Download Personal Ids")) as $personal_ids_column |
@@ -21,7 +22,8 @@ map(.c | {
 		name: .[$name_column].v,
 		county: .[$county_column].v,
 		population: .[$population_column].v,
-		signatureThreshold: [.[$population_column].v * 0.01 | round, 5] | max,
+		voterCount: .[$voters_column].v,
+		signatureThreshold: [.[$voters_column].v * 0.01 | round, 5] | max,
 		initiativesEmails: (.[$emails_column].v // "") | lines,
 		signatureDownloadPersonalIds: (.[$personal_ids_column].v // "") | lines,
 

@@ -9,6 +9,7 @@
 	id: $gov.id,
 	name: $gov.name,
 	population: $gov.population,
+	voterCount: $gov.voterCount,
 	signatureThreshold: $gov.signatureThreshold,
 	rahandusministeeriumUrl: $gov.rahandusministeeriumUrl,
 	dtvSchools: $gov.dtvSchools,

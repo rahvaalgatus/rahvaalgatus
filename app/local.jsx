@@ -104,7 +104,8 @@ exports.newMap = function(mapElement, initiativeCounts, location, legend) {
 			<h2>{gov.name}</h2>
 
 			<p>
-				<strong>{gov.population}</strong>&nbsp;elanikku
+				<strong>{gov.population}</strong>&nbsp;elanikku,{" "}
+				<strong>{gov.voterCount}</strong>&nbsp;valimisealist,
 				ja <strong>{gov.signatureThreshold}</strong>&nbsp;allkirja
 				vajalik algatustele.
 			</p>
@@ -148,7 +149,8 @@ exports.newMap = function(mapElement, initiativeCounts, location, legend) {
 			<h2>{gov.name}</h2>
 
 			<p>
-				<strong>{gov.population}</strong>&nbsp;elanikku
+				<strong>{gov.population}</strong>&nbsp;elanikku,{" "}
+				<strong>{gov.voterCount}</strong>&nbsp;valimisealist,
 				ja <strong>{gov.signatureThreshold}</strong>&nbsp;allkirja
 				vajalik algatustele.
 

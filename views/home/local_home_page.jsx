@@ -38,10 +38,8 @@ module.exports = function(attrs) {
 					<option value="all">Kogu Eesti</option>
 
 					{_.map(LOCAL_GOVERNMENTS_BY_COUNTY, (govs, county) => (
-						<optgroup label={county + " maakond"}>{govs.map(([id, name]) => (
-							<option value={id}>
-								{name}
-							</option>
+						<optgroup label={county + " maakond"}>{govs.map(([id, {name}]) => (
+							<option value={id}>{name}</option>
 						))}</optgroup>
 					))}
 				</select>
