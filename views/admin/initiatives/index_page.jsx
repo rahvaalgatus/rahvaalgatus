@@ -102,39 +102,37 @@ function InitiativesView(attrs) {
 			</tr>
 		</thead>
 
-		<tbody>
-			{initiatives.map(function(initiative) {
-				var initiativePath = `${req.baseUrl}/${initiative.uuid}`
+		<tbody>{initiatives.map(function(initiative) {
+			var initiativePath = `${req.baseUrl}/${initiative.uuid}`
 
-				return <tr>
-					{showSentTo ? <td>{initiative.sent_to_parliament_at
-						? formatDate("iso", initiative.sent_to_parliament_at)
-						: null
-					}</td> : null}
+			return <tr>
+				{showSentTo ? <td>{initiative.sent_to_parliament_at
+					? formatDate("iso", initiative.sent_to_parliament_at)
+					: null
+				}</td> : null}
 
-					{showFinishedIn ? <td>{initiative.finished_in_parliament_at
-						? formatDate("iso", initiative.finished_in_parliament_at)
-						: null
-					}</td> : null}
+				{showFinishedIn ? <td>{initiative.finished_in_parliament_at
+					? formatDate("iso", initiative.finished_in_parliament_at)
+					: null
+				}</td> : null}
 
-					<td>
-						<a href={initiativePath} class="admin-link">{initiative.title}</a>
-					</td>
+				<td>
+					<a href={initiativePath} class="admin-link">{initiative.title}</a>
+				</td>
 
-					{showSubscribers ? <td><a
+				{showSubscribers ? <td><a
+					class="admin-link"
+					href={`${initiativePath}/subscriptions`}>
+					{subscriberCounts[initiative.uuid]}
+				</a></td> : null}
+
+				<td>
+					<a
+						href={Config.url + "/initiatives/" + initiative.uuid}
 						class="admin-link"
-						href={`${initiativePath}/subscriptions`}>
-						{subscriberCounts[initiative.uuid]}
-					</a></td> : null}
-
-					<td>
-						<a
-							href={Config.url + "/initiatives/" + initiative.uuid}
-							class="admin-link"
-						>View on Rahvaalgatus</a>
-					</td>
-				</tr>
-			})}
-		</tbody>
+					>View on Rahvaalgatus</a>
+				</td>
+			</tr>
+		})}</tbody>
 	</table>
 }
