@@ -568,145 +568,141 @@ module.exports = function(attrs) {
 					</th>
 				</thead>
 
-				<tbody>
-					{events.map(function(event) {
-						var eventPath = `${initiativePath}/events/${event.id}`
-						var toggleId = `show-event-${event.id}-text`
-						var {title} = event
-						var content, meeting
+				<tbody>{events.map(function(event) {
+					var eventPath = `${initiativePath}/events/${event.id}`
+					var toggleId = `show-event-${event.id}-text`
+					var {title} = event
+					var content, meeting
 
-						switch (event.type) {
-							case "text":
-								content = <p class="text">{Jsx.html(linkify(event.content))}</p>
-								break
+					switch (event.type) {
+						case "text":
+							content = <p class="text">{Jsx.html(linkify(event.content))}</p>
+							break
 
-							case "parliament-plenary-meeting":
-								meeting = event.content
+						case "parliament-plenary-meeting":
+							meeting = event.content
 
-								content = <table class="admin-horizontal-table">
-									{meeting.summary ? <tr>
-										<th scope="row">Summary</th>
-										<td>{Jsx.html(linkify(meeting.summary))}</td>
-									</tr> : null}
-								</table>
-								break
+							content = <table class="admin-horizontal-table">
+								{meeting.summary ? <tr>
+									<th scope="row">Summary</th>
+									<td>{Jsx.html(linkify(meeting.summary))}</td>
+								</tr> : null}
+							</table>
+							break
 
-							case "parliament-committee-meeting":
-								meeting = event.content
+						case "parliament-committee-meeting":
+							meeting = event.content
 
-								content = <table class="admin-horizontal-table">
-									<tr>
-										<th scope="row">Comittee</th>
-										<td>{meeting.committee}</td>
-									</tr>
+							content = <table class="admin-horizontal-table">
+								<tr>
+									<th scope="row">Comittee</th>
+									<td>{meeting.committee}</td>
+								</tr>
 
-									{meeting.decision ? <tr>
-										<th scope="row">Decision</th>
-										<td>{meeting.decision}</td>
-									</tr> : null}
+								{meeting.decision ? <tr>
+									<th scope="row">Decision</th>
+									<td>{meeting.decision}</td>
+								</tr> : null}
 
-									{meeting.invitees ? <tr>
-										<th scope="row">Invitees</th>
-										<td>{meeting.invitees}</td>
-									</tr> : null}
+								{meeting.invitees ? <tr>
+									<th scope="row">Invitees</th>
+									<td>{meeting.invitees}</td>
+								</tr> : null}
 
-									{meeting.summary ? <tr>
-										<th scope="row">Summary</th>
-										<td>{Jsx.html(linkify(meeting.summary))}</td>
-									</tr> : null}
-								</table>
-								break
+								{meeting.summary ? <tr>
+									<th scope="row">Summary</th>
+									<td>{Jsx.html(linkify(meeting.summary))}</td>
+								</tr> : null}
+							</table>
+							break
 
-							case "parliament-letter":
-								var letter = event.content
+						case "parliament-letter":
+							var letter = event.content
 
-								content = <table class="admin-horizontal-table">
-									<tr>
-										<th scope="row">Medium</th>
-										<td>{letter.medium}</td>
-									</tr>
+							content = <table class="admin-horizontal-table">
+								<tr>
+									<th scope="row">Medium</th>
+									<td>{letter.medium}</td>
+								</tr>
 
-									<tr>
-										<th scope="row">Direction</th>
-										<td>{letter.direction}</td>
-									</tr>
+								<tr>
+									<th scope="row">Direction</th>
+									<td>{letter.direction}</td>
+								</tr>
 
-									<tr>
-										<th scope="row">Title</th>
-										<td>{letter.title}</td>
-									</tr>
+								<tr>
+									<th scope="row">Title</th>
+									<td>{letter.title}</td>
+								</tr>
 
-									{letter.from ? <tr>
-										<th scope="row">From</th>
-										<td>{letter.from}</td>
-									</tr> : null}
+								{letter.from ? <tr>
+									<th scope="row">From</th>
+									<td>{letter.from}</td>
+								</tr> : null}
 
-									{letter.to ? <tr>
-										<th scope="row">To</th>
-										<td>{letter.to}</td>
-									</tr> : null}
+								{letter.to ? <tr>
+									<th scope="row">To</th>
+									<td>{letter.to}</td>
+								</tr> : null}
 
-									{letter.summary ? <tr>
-										<th scope="row">Summary</th>
-										<td>{Jsx.html(linkify(letter.summary))}</td>
-									</tr> : null}
-								</table>
-								break
+								{letter.summary ? <tr>
+									<th scope="row">Summary</th>
+									<td>{Jsx.html(linkify(letter.summary))}</td>
+								</tr> : null}
+							</table>
+							break
 
-							case "parliament-decision":
-								var {summary} = event.content
-								if (summary)
-									content = <p class="text">{Jsx.html(linkify(summary))}</p>
-								break
-						}
+						case "parliament-decision":
+							var {summary} = event.content
+							if (summary)
+								content = <p class="text">{Jsx.html(linkify(summary))}</p>
+							break
+					}
 
-						return <tr class="event">
-							<td>
-								<time datetime={event.occurred_at.toJSON()}>
-									{I18n.formatDateTime("isoish", event.occurred_at)}
-								</time>
+					return <tr class="event">
+						<td>
+							<time datetime={event.occurred_at.toJSON()}>
+								{I18n.formatDateTime("isoish", event.occurred_at)}
+							</time>
 
-								{event.notified_at == null ? <>
-									<br />
-									<strong>Subscribers not yet notified.</strong>
-								</> : null}
-							</td>
+							{event.notified_at == null ? <>
+								<br />
+								<strong>Subscribers not yet notified.</strong>
+							</> : null}
+						</td>
 
-							<td>
-								{event.type}
-							</td>
+						<td>{event.type}</td>
 
-							<td>
-								<h3>{title}</h3>
+						<td>
+							<h3>{title}</h3>
 
-								<input
-									id={toggleId}
-									checked={event.type != "text"}
-									hidden
-									type="checkbox"
-									class="text-toggle"
-								/>
+							<input
+								id={toggleId}
+								checked={event.type != "text"}
+								hidden
+								type="checkbox"
+								class="text-toggle"
+							/>
 
-								<label for={toggleId} class="admin-link">Show</label>
+							<label for={toggleId} class="admin-link">Show</label>
 
-								{content}
-							</td>
+							{content}
+						</td>
 
-							{isEditableEvent(event) ? <td>
-								<a href={eventPath + "/edit"} class="admin-link">Edit</a>
-								&nbsp;or&nbsp;
+						{isEditableEvent(event) ? <td>
+							<a href={eventPath + "/edit"} class="admin-link">Edit</a>
+							&nbsp;or&nbsp;
 
-								<FormButton
-									req={req}
-									action={eventPath}
-									name="_method"
-									value="delete"
-									onclick={confirm("Sure?")}
-									class="admin-link">Delete</FormButton>
-							</td> : <td />}
-						</tr>
-					})}
-				</tbody>
+							<FormButton
+								req={req}
+								action={eventPath}
+								name="_method"
+								value="delete"
+								onclick={confirm("Sure?")}
+								class="admin-link">Delete</FormButton>
+						</td> : <td />}
+					</tr>
+				})}</tbody>
 			</table>
 		</div>
 	</Page>
