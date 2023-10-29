@@ -9,7 +9,7 @@ def lines: sub("\\s+$"; "") | split("\n");
 ($header | index("Voters")) as $voters_column |
 ($header | index("County")) as $county_column |
 ($header | index("Initiatives Emails")) as $emails_column |
-($header | index("Signature Download Personal Ids")) as $personal_ids_column |
+($header | index("Signature Trustees")) as $signature_trustees_column |
 ($header | index("DTV Schools")) as $dtv_column |
 ($header | index("Dialogs")) as $dialogs_column |
 ($header | index("Rahandusministeerium")) as $rahandusmin_column |
@@ -25,7 +25,13 @@ map(.c | {
 		voterCount: .[$voters_column].v,
 		signatureThreshold: [.[$voters_column].v * 0.01 | round, 5] | max,
 		initiativesEmails: (.[$emails_column].v // "") | lines,
-		signatureDownloadPersonalIds: (.[$personal_ids_column].v // "") | lines,
+
+		signatureTrustees: (.[$signature_trustees_column].v // "")
+			| lines
+			| map(match("([^ ]+)(?: (.*))?") | {
+				personalId: .captures[0].string,
+				name: .captures[1].string
+			}),
 
 		dtvSchools: (.[$dtv_column].v // "")
 			| lines

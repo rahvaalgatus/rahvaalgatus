@@ -9,8 +9,11 @@
 		"initiativesEmails": [
 			"anija@anija.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"49207255258"
+		"signatureTrustees": [
+			{
+				"personalId": "49207255258",
+				"name": "Kristiina Kari"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [],
@@ -26,8 +29,11 @@
 		"initiativesEmails": [
 			"harku@harku.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"48812260329"
+		"signatureTrustees": [
+			{
+				"personalId": "48812260329",
+				"name": "Maarja Lehemets-Tihhanov"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [],
@@ -43,9 +49,15 @@
 		"initiativesEmails": [
 			"kantselei@joelahtme.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"49402180225",
-			"48406240352"
+		"signatureTrustees": [
+			{
+				"personalId": "49402180225",
+				"name": "Piret Reinmart"
+			},
+			{
+				"personalId": "48406240352",
+				"name": "Kristy Tann"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [],
@@ -61,7 +73,7 @@
 		"initiativesEmails": [
 			"klv@keila.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/keila-linn"
@@ -76,9 +88,15 @@
 		"initiativesEmails": [
 			"info@kiilivald.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"47601160226",
-			"46002090346"
+		"signatureTrustees": [
+			{
+				"personalId": "47601160226",
+				"name": "Kadri Tuisk"
+			},
+			{
+				"personalId": "46002090346",
+				"name": "Urve Valdna"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [],
@@ -94,7 +112,7 @@
 		"initiativesEmails": [
 			"vald@kose.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [
 			{
@@ -114,7 +132,7 @@
 		"initiativesEmails": [
 			"vallavalitsus@kuusalu.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kuusalu-vald"
@@ -129,8 +147,11 @@
 		"initiativesEmails": [
 			"linn@loksa.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"45706115215"
+		"signatureTrustees": [
+			{
+				"personalId": "45706115215",
+				"name": "Viive Pajusaar"
+			}
 		],
 		"dtvSchools": [
 			{
@@ -151,7 +172,7 @@
 		"initiativesEmails": [
 			"info@laaneharju.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/laane-harju-vald"
@@ -166,7 +187,7 @@
 		"initiativesEmails": [
 			"linnavalitsus@maardu.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/maardu-linn"
@@ -181,8 +202,11 @@
 		"initiativesEmails": [
 			"raasiku.vald@raasiku.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"37402202731"
+		"signatureTrustees": [
+			{
+				"personalId": "37402202731",
+				"name": "Gunnar Nuuma"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [
@@ -203,7 +227,7 @@
 		"initiativesEmails": [
 			"info@rae.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rae-vald"
@@ -218,7 +242,7 @@
 		"initiativesEmails": [
 			"saku@sakuvald.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/saku-vald"
@@ -233,7 +257,7 @@
 		"initiativesEmails": [
 			"info@sauevald.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/saue-vald"
@@ -248,8 +272,11 @@
 		"initiativesEmails": [
 			"lvpost@tallinnlv.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"37208010244"
+		"signatureTrustees": [
+			{
+				"personalId": "37208010244",
+				"name": "Heiki Soome"
+			}
 		],
 		"dtvSchools": [
 			{
@@ -295,8 +322,11 @@
 		"initiativesEmails": [
 			"info@viimsivv.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"37003010333"
+		"signatureTrustees": [
+			{
+				"personalId": "37003010333",
+				"name": "Leevi Laever"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [],
@@ -312,7 +342,7 @@
 		"initiativesEmails": [
 			"valitsus@hiiumaa.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [
 			{
@@ -332,9 +362,15 @@
 		"initiativesEmails": [
 			"info@alutagusevald.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"47004272223",
-			"48708082239"
+		"signatureTrustees": [
+			{
+				"personalId": "47004272223",
+				"name": "Heidi Kruut"
+			},
+			{
+				"personalId": "48708082239",
+				"name": "Katrin Junolainen"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [],
@@ -350,7 +386,7 @@
 		"initiativesEmails": [
 			"johvi@johvi.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [
 			{
@@ -370,9 +406,15 @@
 		"initiativesEmails": [
 			"linnavalitsus@kjlv.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"47206156512",
-			"47012052246"
+		"signatureTrustees": [
+			{
+				"personalId": "47206156512",
+				"name": "Anneli Järvi"
+			},
+			{
+				"personalId": "47012052246",
+				"name": "Olga Lass"
+			}
 		],
 		"dtvSchools": [
 			{
@@ -393,7 +435,7 @@
 		"initiativesEmails": [
 			"valitsus@lyganuse.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/luganuse-vald"
@@ -408,8 +450,11 @@
 		"initiativesEmails": [
 			"narvalv@narva.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"46704193715"
+		"signatureTrustees": [
+			{
+				"personalId": "46704193715",
+				"name": "Jelena Jušina"
+			}
 		],
 		"dtvSchools": [
 			{
@@ -434,7 +479,7 @@
 		"initiativesEmails": [
 			"info@narva-joesuu.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/narva-joesuu-linn"
@@ -449,7 +494,7 @@
 		"initiativesEmails": [
 			"linnavalitsus@sillamae.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/sillamae-linn"
@@ -464,8 +509,11 @@
 		"initiativesEmails": [
 			"toilavv@toila.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"46509102247"
+		"signatureTrustees": [
+			{
+				"personalId": "46509102247",
+				"name": "Anneli Tint"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [
@@ -486,7 +534,7 @@
 		"initiativesEmails": [
 			"info@jogeva.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/jogeva-vald"
@@ -501,8 +549,11 @@
 		"initiativesEmails": [
 			"info@mustvee.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"46709022721"
+		"signatureTrustees": [
+			{
+				"personalId": "46709022721",
+				"name": "Tiina Piigats"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [],
@@ -518,7 +569,7 @@
 		"initiativesEmails": [
 			"info@poltsamaa.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/poltsamaa-vald"
@@ -533,7 +584,7 @@
 		"initiativesEmails": [
 			"info@jarva.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [
 			{
 				"name": "Imavere Kool",
@@ -558,7 +609,7 @@
 		"initiativesEmails": [
 			"paide@paide.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/paide-linn"
@@ -573,7 +624,7 @@
 		"initiativesEmails": [
 			"vallavalitsus@tyri.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [
 			{
@@ -593,7 +644,7 @@
 		"initiativesEmails": [
 			"hlv@haapsalulv.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [
 			{
@@ -613,7 +664,7 @@
 		"initiativesEmails": [
 			"vv@laanenigula.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/laane-nigula-vald"
@@ -628,7 +679,7 @@
 		"initiativesEmails": [
 			"vv@vormsi.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/vormsi-vald"
@@ -643,8 +694,11 @@
 		"initiativesEmails": [
 			"haljala@haljala.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"46206210309"
+		"signatureTrustees": [
+			{
+				"personalId": "46206210309",
+				"name": "Ingrid Nurmsalu"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [],
@@ -660,7 +714,7 @@
 		"initiativesEmails": [
 			"kadrina@kadrina.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kadrina-vald"
@@ -675,7 +729,7 @@
 		"initiativesEmails": [
 			"linnavalitsus@rakvere.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rakvere-linn"
@@ -690,8 +744,11 @@
 		"initiativesEmails": [
 			"vallavalitsus@rakverevald.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"46808255217"
+		"signatureTrustees": [
+			{
+				"personalId": "46808255217",
+				"name": "Janne Lainjärv"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [],
@@ -707,8 +764,11 @@
 		"initiativesEmails": [
 			"vallavalitsus@tapa.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"48105015225"
+		"signatureTrustees": [
+			{
+				"personalId": "48105015225",
+				"name": "Evelin Värk"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [],
@@ -724,8 +784,11 @@
 		"initiativesEmails": [
 			"vallavalitsus@vinnivald.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"48612015230"
+		"signatureTrustees": [
+			{
+				"personalId": "48612015230",
+				"name": "Kätlin Pugri"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [],
@@ -741,7 +804,7 @@
 		"initiativesEmails": [
 			"vallavalitsus@viru-nigula.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/viru-nigula-vald"
@@ -756,7 +819,7 @@
 		"initiativesEmails": [
 			"valitsus@v-maarja.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/vaike-maarja-vald"
@@ -771,8 +834,11 @@
 		"initiativesEmails": [
 			"vald@kanepi.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"46907306535"
+		"signatureTrustees": [
+			{
+				"personalId": "46907306535",
+				"name": "Ly Vätson"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [],
@@ -788,7 +854,7 @@
 		"initiativesEmails": [
 			"info@polva.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [
 			{
@@ -808,7 +874,7 @@
 		"initiativesEmails": [
 			"vald@rapina.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rapina-vald"
@@ -823,7 +889,7 @@
 		"initiativesEmails": [
 			"haademeeste@haademeeste.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/haademeeste-vald"
@@ -838,7 +904,7 @@
 		"initiativesEmails": [
 			"info@kihnu.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kihnu-vald"
@@ -853,8 +919,11 @@
 		"initiativesEmails": [
 			"vallavalitsus@laaneranna.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"47105264719"
+		"signatureTrustees": [
+			{
+				"personalId": "47105264719",
+				"name": "Ade Pääbo"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [],
@@ -870,8 +939,11 @@
 		"initiativesEmails": [
 			"vald@pparnumaa.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"47904284218"
+		"signatureTrustees": [
+			{
+				"personalId": "47904284218",
+				"name": "Julia Erm"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [
@@ -892,8 +964,11 @@
 		"initiativesEmails": [
 			"linnavalitsus@parnu.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"47410104224"
+		"signatureTrustees": [
+			{
+				"personalId": "47410104224",
+				"name": "Riita Lillemets"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [
@@ -914,8 +989,11 @@
 		"initiativesEmails": [
 			"info@saarde.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"47412084229"
+		"signatureTrustees": [
+			{
+				"personalId": "47412084229",
+				"name": "Mari Treial"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [],
@@ -931,7 +1009,7 @@
 		"initiativesEmails": [
 			"tori@torivald.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [
 			{
@@ -951,7 +1029,7 @@
 		"initiativesEmails": [
 			"kehtna@kehtna.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [
 			{
@@ -971,7 +1049,7 @@
 		"initiativesEmails": [
 			"vallavalitsus@kohila.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [
 			{
@@ -991,7 +1069,7 @@
 		"initiativesEmails": [
 			"marjamaa@marjamaa.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [
 			{
 				"name": "Märjamaa Gümnaasium",
@@ -1011,7 +1089,7 @@
 		"initiativesEmails": [
 			"rapla@rapla.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [
 			{
 				"name": "Rapla Gümnaasium",
@@ -1031,7 +1109,7 @@
 		"initiativesEmails": [
 			"vald@muhu.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/muhu-vald"
@@ -1046,7 +1124,7 @@
 		"initiativesEmails": [
 			"ruhnu@ruhnu.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/ruhnu-vald"
@@ -1061,8 +1139,11 @@
 		"initiativesEmails": [
 			"vald@saaremaavald.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"47102260019"
+		"signatureTrustees": [
+			{
+				"personalId": "47102260019",
+				"name": "Margit Kaldre"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [],
@@ -1078,7 +1159,7 @@
 		"initiativesEmails": [
 			"elva@elva.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [
 			{
@@ -1102,7 +1183,7 @@
 		"initiativesEmails": [
 			"vald@kambja.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kambja-vald"
@@ -1117,7 +1198,7 @@
 		"initiativesEmails": [
 			"vald@kastre.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/kastre-vald"
@@ -1132,7 +1213,7 @@
 		"initiativesEmails": [
 			"vald@luunja.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/luunja-vald"
@@ -1147,7 +1228,7 @@
 		"initiativesEmails": [
 			"vald@nvv.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/noo-vald"
@@ -1162,7 +1243,7 @@
 		"initiativesEmails": [
 			"vald@peipsivald.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/peipsiaare-vald"
@@ -1177,8 +1258,11 @@
 		"initiativesEmails": [
 			"lv@tartu.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"37404072233"
+		"signatureTrustees": [
+			{
+				"personalId": "37404072233",
+				"name": "Jüri Mölder"
+			}
 		],
 		"dtvSchools": [
 			{
@@ -1204,8 +1288,11 @@
 		"initiativesEmails": [
 			"tartuvald@tartuvald.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"47907302734"
+		"signatureTrustees": [
+			{
+				"personalId": "47907302734",
+				"name": "Eve Kallas"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [],
@@ -1221,7 +1308,7 @@
 		"initiativesEmails": [
 			"vald@otepaa.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [
 			{
 				"name": "Keeni Põhikool",
@@ -1241,8 +1328,11 @@
 		"initiativesEmails": [
 			"torva@torva.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"46205185714"
+		"signatureTrustees": [
+			{
+				"personalId": "46205185714",
+				"name": "Tiina Õunpuu"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [],
@@ -1258,9 +1348,15 @@
 		"initiativesEmails": [
 			"valga@valga.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"46907315719",
-			"46810255729"
+		"signatureTrustees": [
+			{
+				"personalId": "46907315719",
+				"name": "Piret Villemson"
+			},
+			{
+				"personalId": "46810255729",
+				"name": "Liina Pettai"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [
@@ -1285,7 +1381,7 @@
 		"initiativesEmails": [
 			"mulgi@mulgivald.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/mulgi-vald"
@@ -1300,8 +1396,11 @@
 		"initiativesEmails": [
 			"info@pohja-sakala.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"47106016018"
+		"signatureTrustees": [
+			{
+				"personalId": "47106016018",
+				"name": "Aili Adamson"
+			}
 		],
 		"dtvSchools": [
 			{
@@ -1322,8 +1421,11 @@
 		"initiativesEmails": [
 			"viljandi@viljandi.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"45911186017"
+		"signatureTrustees": [
+			{
+				"personalId": "45911186017",
+				"name": "Tiina Põder"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [
@@ -1344,8 +1446,11 @@
 		"initiativesEmails": [
 			"viljandivald@viljandivald.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"46708086016"
+		"signatureTrustees": [
+			{
+				"personalId": "46708086016",
+				"name": "Tiina Almer"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [
@@ -1366,9 +1471,15 @@
 		"initiativesEmails": [
 			"vald@antsla.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"46408296516",
-			"46011206517"
+		"signatureTrustees": [
+			{
+				"personalId": "46408296516",
+				"name": "Kersti Käis"
+			},
+			{
+				"personalId": "46011206517",
+				"name": "Tiina Trump"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [],
@@ -1384,8 +1495,11 @@
 		"initiativesEmails": [
 			"vald@rougevald.ee"
 		],
-		"signatureDownloadPersonalIds": [
-			"47303306510"
+		"signatureTrustees": [
+			{
+				"personalId": "47303306510",
+				"name": "Ailen Paas"
+			}
 		],
 		"dtvSchools": [],
 		"dialogs": [],
@@ -1401,7 +1515,7 @@
 		"initiativesEmails": [
 			"vald@setomaa.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/setomaa-vald"
@@ -1416,7 +1530,7 @@
 		"initiativesEmails": [
 			"info@voru.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/voru-linn"
@@ -1431,7 +1545,7 @@
 		"initiativesEmails": [
 			"vald@voruvald.ee"
 		],
-		"signatureDownloadPersonalIds": [],
+		"signatureTrustees": [],
 		"dtvSchools": [
 			{
 				"name": "Puiga Põhikool",

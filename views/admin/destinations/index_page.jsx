@@ -69,8 +69,8 @@ module.exports = function({req}) {
 							</td>
 
 							<td>
-								<ul>{gov.signatureDownloadPersonalIds.map((personalId) => <li>
-									{personalId}
+								<ul>{gov.signatureTrustees.map(({name, personalId}) => <li>
+									{name} ({personalId})
 								</li>)}</ul>
 							</td>
 						</tr>

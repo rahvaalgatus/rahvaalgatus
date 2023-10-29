@@ -515,7 +515,7 @@ describe("SignaturesController", function() {
 			})
 
 			it("must respond with 403 Forbidden if no personal ids set", function*() {
-				LOCAL_GOVERNMENTS["muhu-vald"].signatureDownloadPersonalIds = []
+				LOCAL_GOVERNMENTS["muhu-vald"].signatureTrustees = []
 
 				var path = `/initiatives/${this.initiative.uuid}/signatures.asice`
 				var token = this.initiative.parliament_token.toString("hex")
@@ -532,9 +532,10 @@ describe("SignaturesController", function() {
 
 			it("must respond with 403 Forbidden if not permitted downloader",
 				function*() {
-				LOCAL_GOVERNMENTS["muhu-vald"].signatureDownloadPersonalIds = [
-					"38706181337"
-				]
+				LOCAL_GOVERNMENTS["muhu-vald"].signatureTrustees = [{
+					personalId: "38706181337",
+					name: "John Smith"
+				}]
 
 				var path = `/initiatives/${this.initiative.uuid}/signatures.asice`
 				var token = this.initiative.parliament_token.toString("hex")
@@ -555,10 +556,10 @@ describe("SignaturesController", function() {
 			})
 
 			it("must respond with signatures if permitted downloader", function*() {
-				LOCAL_GOVERNMENTS["muhu-vald"].signatureDownloadPersonalIds = [
-					"38706181337",
-					this.user.personal_id,
-					"38706181338"
+				LOCAL_GOVERNMENTS["muhu-vald"].signatureTrustees = [
+					{personalId: "38706181337"},
+					{personalId: this.user.personal_id},
+					{personalId: "38706181338"}
 				]
 
 				var path = `/initiatives/${this.initiative.uuid}/signatures.asice`

@@ -191,7 +191,7 @@ exports.router.get("/",
 		if (user == null) throw new HttpError(401)
 
 		var government = LOCAL_GOVERNMENTS[initiative.destination]
-		var downloaders = government.signatureDownloadPersonalIds
+		var downloaders = _.map(government.signatureTrustees, "personalId")
 
 		if (!downloaders.includes(user.personal_id))
 			throw new HttpError(403, "Not a Permitted Downloader", {

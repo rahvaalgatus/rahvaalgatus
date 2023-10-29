@@ -23,4 +23,13 @@ describe("LOCAL_GOVERNMENTS", function() {
 			gov.signatureThreshold.must.equal(threshold)
 		})
 	})
+
+	it("must have personal ids for all signature trustees", function() {
+		_.each(LOCAL_GOVERNMENTS, function(gov) {
+			_.each(gov.signatureTrustees, function({personalId}) {
+				personalId.must.be.a.string()
+				personalId.must.have.length(11)
+			})
+		})
+	})
 })
