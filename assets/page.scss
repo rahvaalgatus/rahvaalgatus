@@ -3233,6 +3233,8 @@ strong {
 			padding: 2rem $article-padding-mobile;
 		}
 
+		@media print { display: none; }
+
 		// Don't use overflow to not cut off the blur around buttons.
 		&:after { display: block; clear: both; content: ""; }
 
