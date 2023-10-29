@@ -770,8 +770,6 @@
 	"USER_PAGE_TABS_SIGNATURES": "Signatures",
 	"USER_PAGE_TABS_SUBSCRIPTIONS": "Subscriptions",
 	"USER_PAGE_TABS_USER": "Profile",
-	"USER_SUBSCRIPTIONS_EMPTY": "You have no subscription notifications yet. You can subscribe to receive notifications under each individual initiative.",
-	"USER_SUBSCRIPTIONS_UNCONFIRMED_EMAIL": "To view your subscriptions, please add and confirm your email address.",
 	"USER_UPDATED": "Muudatused salvestatud.",
 	"USER_UPDATED_WITH_EMAIL": "Changes saved.\nOne more step - please confirm your email address by clicking on the link we have sent to your email.",
 	"VERIFICATION_CODE": "Verification code",
@@ -891,5 +889,9 @@
 	"user_signatures_page.signatures.download_button": "Download Signature",
 	"user_signatures_page.signatures.empty": "You've not signed any initiatives yet. When you do, you will find an overview of the signed initiatives on this page.",
 	"user_signatures_page.signatures.signed_at": "Signed at <time>{{at}}</time>.",
-	"user_signatures_page.title": "Signatures"
+	"user_signatures_page.title": "Signatures",
+	"user_subscriptions_page.subscriptions.description": "You've subscribed to the following initiatives with <a href=\"mailto:{{email}}\">{{email}}</a>.\nYou can update your preferences or unsubscribe below.",
+	"user_subscriptions_page.subscriptions.empty": "You have no subscription notifications yet. You can subscribe to receive notifications under each individual initiative.",
+	"user_subscriptions_page.subscriptions.unconfirmed_email": "To view your subscriptions, please add and confirm your email address.",
+	"user_subscriptions_page.title": "Subscriptions"
 }
