@@ -141,7 +141,13 @@ function ReadPage(attrs) {
 		title={initiative.title}
 		req={req}
 		initiative={initiative}
-		class="disable-printing-signatures-table"
+
+		class={[
+			(initiative.external ? "disable-printing-text" : ""),
+			(events.length == 0 ? "disable-printing-events" : ""),
+			(comments.length == 0 ? "disable-printing-comments" : ""),
+			"disable-printing-signatures-table"
+		].join(" ")}
 
 		meta={_.filterValues({
 			"twitter:card": "summary_large_image",
@@ -604,7 +610,13 @@ function ReadPage(attrs) {
 					<p class="text">{Jsx.html(t("INITIATIVE_PAGE_DISCLAIMER"))}</p>
 				</div>
 
-				<SidebarPrintView t={t} />
+				<SidebarPrintView
+					initiative={initiative}
+					events={events}
+					comments={comments}
+					t={t}
+				/>
+
 				<SidebarAdminView req={req} t={t} initiative={initiative} />
 			</aside>
 		</center></section>
@@ -1499,7 +1511,7 @@ function SidebarSubscribeView(attrs) {
 	</div>
 }
 
-function SidebarPrintView({t}) {
+function SidebarPrintView({t, initiative, events, comments}) {
 	return <details class="sidebar-section" id="initiative-print" hidden>
 		<summary class="sidebar-header">
 			{t("initiative_page.sidebar.print.title")}
@@ -1507,17 +1519,35 @@ function SidebarPrintView({t}) {
 
 		<form id="initiative-print-settings-form">
 			<label>
-				<input type="checkbox" name="text" checked />
+				<input
+					type="checkbox"
+					name="text"
+					checked={!initiative.external}
+					disabled={initiative.external}
+				/>
+
 				<span>{t("initiative_page.sidebar.print.text_label")}</span>
 			</label>
 
 			<label>
-				<input type="checkbox" name="events" checked />
+				<input
+					type="checkbox"
+					name="events"
+					checked={events.length > 0}
+					disabled={events.length == 0}
+				/>
+
 				<span>{t("initiative_page.sidebar.print.events_label")}</span>
 			</label>
 
 			<label>
-				<input type="checkbox" name="comments" checked />
+				<input
+					type="checkbox"
+					name="comments"
+					checked={comments.length > 0}
+					disabled={comments.length == 0}
+				/>
+
 				<span>{t("initiative_page.sidebar.print.comments_label")}</span>
 			</label>
 
