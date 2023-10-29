@@ -999,12 +999,13 @@ function* updateInitiativePhaseToParliament(req, res) {
 			)
 		},
 
-		subject: t(initiative.destination == "parliament"
-			? "EMAIL_INITIATIVE_TO_PARLIAMENT_TITLE"
-			: "EMAIL_INITIATIVE_TO_LOCAL_GOVERNMENT_TITLE"
-			, {
-			initiativeTitle: initiative.title
-		}),
+		subject: initiative.destination == "parliament"
+			? t("EMAIL_INITIATIVE_TO_PARLIAMENT_TITLE", {
+				initiativeTitle: initiative.title
+			})
+			: t("EMAIL_INITIATIVE_TO_LOCAL_GOVERNMENT_TITLE", {
+				initiativeTitle: initiative.title
+			}),
 
 		text: renderEmail(
 			"et",
