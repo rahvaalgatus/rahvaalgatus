@@ -2881,6 +2881,7 @@ strong {
 		// Chromium.  Use flex for backup.
 		display: flex;
 		flex-direction: column;
+		flex-grow: 1;
 
 		object {
 			display: block;

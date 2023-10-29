@@ -864,7 +864,12 @@ function InitiativeContentView(attrs) {
 	var {files} = attrs
 
 	if (initiative.external) {
-		var pdf = files.find((file) => file.content_type == "application/pdf")
+		var pdf = (
+			initiative.external_text_file_id &&
+			files.find((file) => file.id == initiative.external_text_file_id) ||
+			files.find((file) => file.content_type == "application/pdf")
+		)
+
 		if (pdf == null) return null
 
 		return <article class="pdf">

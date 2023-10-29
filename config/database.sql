@@ -1,8 +1,9 @@
 CREATE TABLE initiatives (
 	uuid TEXT PRIMARY KEY NOT NULL,
-	mailchimp_interest_id TEXT NULL UNIQUE, notes TEXT NOT NULL DEFAULT "", parliament_api_data TEXT NULL, sent_to_parliament_at TEXT NULL, finished_in_parliament_at TEXT NULL, discussion_end_email_sent_at TEXT NULL, signing_end_email_sent_at TEXT NULL, author_url TEXT NOT NULL DEFAULT "", community_url TEXT NOT NULL DEFAULT "", organizations TEXT NOT NULL DEFAULT "[]", meetings TEXT NOT NULL DEFAULT "[]", url TEXT NOT NULL DEFAULT "", media_urls TEXT NOT NULL DEFAULT "[]", signature_milestones TEXT NOT NULL DEFAULT "{}", phase TEXT NOT NULL DEFAULT "edit", government_change_urls TEXT NOT NULL DEFAULT "[]", public_change_urls TEXT NOT NULL DEFAULT "[]", has_paper_signatures INTEGER NOT NULL DEFAULT 0, received_by_parliament_at TEXT, accepted_by_parliament_at TEXT, archived_at TEXT, parliament_decision TEXT, parliament_committee TEXT, parliament_uuid TEXT, external INTEGER NOT NULL DEFAULT 0, title TEXT NOT NULL DEFAULT '', author_name TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')), parliament_synced_at TEXT, government_agency TEXT, sent_to_government_at TEXT, finished_in_government_at TEXT, government_contact TEXT, government_contact_details TEXT, government_decision TEXT, text TEXT, text_type TEXT, text_sha256 BLOB, undersignable INTEGER NOT NULL DEFAULT 0, parliament_token BLOB, destination TEXT, user_id INTEGER, published_at TEXT, discussion_ends_at TEXT, signing_started_at TEXT, signing_ends_at TEXT, tags TEXT NOT NULL DEFAULT '[]', signing_expired_at TEXT, signing_expiration_email_sent_at TEXT, language TEXT NOT NULL DEFAULT 'et', author_contacts TEXT NOT NULL DEFAULT "", received_by_government_at TEXT, accepted_by_government_at TEXT, signatures_anonymized_at TEXT, signature_threshold INTEGER, signature_threshold_at TEXT,
+	mailchimp_interest_id TEXT NULL UNIQUE, notes TEXT NOT NULL DEFAULT "", parliament_api_data TEXT NULL, sent_to_parliament_at TEXT NULL, finished_in_parliament_at TEXT NULL, discussion_end_email_sent_at TEXT NULL, signing_end_email_sent_at TEXT NULL, author_url TEXT NOT NULL DEFAULT "", community_url TEXT NOT NULL DEFAULT "", organizations TEXT NOT NULL DEFAULT "[]", meetings TEXT NOT NULL DEFAULT "[]", url TEXT NOT NULL DEFAULT "", media_urls TEXT NOT NULL DEFAULT "[]", signature_milestones TEXT NOT NULL DEFAULT "{}", phase TEXT NOT NULL DEFAULT "edit", government_change_urls TEXT NOT NULL DEFAULT "[]", public_change_urls TEXT NOT NULL DEFAULT "[]", has_paper_signatures INTEGER NOT NULL DEFAULT 0, received_by_parliament_at TEXT, accepted_by_parliament_at TEXT, archived_at TEXT, parliament_decision TEXT, parliament_committee TEXT, parliament_uuid TEXT, external INTEGER NOT NULL DEFAULT 0, title TEXT NOT NULL DEFAULT '', author_name TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')), parliament_synced_at TEXT, government_agency TEXT, sent_to_government_at TEXT, finished_in_government_at TEXT, government_contact TEXT, government_contact_details TEXT, government_decision TEXT, text TEXT, text_type TEXT, text_sha256 BLOB, undersignable INTEGER NOT NULL DEFAULT 0, parliament_token BLOB, destination TEXT, user_id INTEGER, published_at TEXT, discussion_ends_at TEXT, signing_started_at TEXT, signing_ends_at TEXT, tags TEXT NOT NULL DEFAULT '[]', signing_expired_at TEXT, signing_expiration_email_sent_at TEXT, language TEXT NOT NULL DEFAULT 'et', author_contacts TEXT NOT NULL DEFAULT "", received_by_government_at TEXT, accepted_by_government_at TEXT, signatures_anonymized_at TEXT, signature_threshold INTEGER, signature_threshold_at TEXT, external_text_file_id INTEGER,
 
 	FOREIGN KEY (user_id) REFERENCES users (id),
+	FOREIGN KEY (external_text_file_id) REFERENCES initiative_files (id),
 
 	CONSTRAINT initiatives_uuid_length
 	CHECK (length(uuid) == 36),
@@ -575,6 +576,8 @@ ON initiative_signatures (created_at);
 CREATE INDEX index_initiative_citizenos_signatures_on_created_at
 ON initiative_citizenos_signatures (created_at);
 CREATE INDEX index_initiatives_on_phase ON initiatives (phase);
+CREATE INDEX index_initiatives_on_external_text_file_id
+ON initiatives (external_text_file_id);
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -696,4 +699,5 @@ INSERT INTO migrations VALUES('20230331120000');
 INSERT INTO migrations VALUES('20230503063630');
 INSERT INTO migrations VALUES('20230920074135');
 INSERT INTO migrations VALUES('20230920074150');
+INSERT INTO migrations VALUES('20231020000000');
 COMMIT;

@@ -27,6 +27,7 @@ module.exports = function(attrs) {
 	var {image} = attrs
 	var {subscriberCount} = attrs
 	var initiativePath = `${req.baseUrl}/${initiative.uuid}`
+	var {files} = attrs
 	var {events} = attrs
 	var {phase} = initiative
 	var {signatureCounts} = attrs
@@ -470,7 +471,70 @@ module.exports = function(attrs) {
 					/>
 				</td>
 			</tr>
+
+			{initiative.external ? <tr>
+				<th scope="row">External Text File</th>
+				<td>
+					<Form
+						req={req}
+						action={initiativePath}
+						method="put"
+						class="admin-inline-form"
+					>
+						<select name="external_text_file_id">{files.map((file) => <option
+							value={file.id}
+							selected={initiative.external_text_file_id == file.id}
+						>
+							{file.name}
+						</option>)}</select>
+						{" "}
+						<button class="admin-submit">Set</button>
+					</Form>
+				</td>
+			</tr> : null}
 		</table>
+
+		{files.length > 0 ? <div class="files">
+			<h2 class="admin-subheading">
+				Files <span class="admin-count">({files.length})</span>
+			</h2>
+
+			<table class="admin-table">
+				<thead>
+					<th>Id</th>
+					<th>Title</th>
+					<th>Name</th>
+					<th>Content Type</th>
+					<th>Size</th>
+					<th>URL</th>
+				</thead>
+
+				<tbody>{files.map(function(file) {
+					return <tr>
+						<td>{file.id}</td>
+						<td>{file.title}</td>
+
+						<td>
+							<a
+								href={initiativeSiteUrl + "/files/" + file.id}
+								class="admin-link"
+							>
+								{file.name}
+							</a>
+						</td>
+
+						<td>{file.content_type}</td>
+						<td>{I18n.formatBytes(file.size)}</td>
+
+						<td>
+							<a href={file.url} class="admin-link">
+								Riigikogu dokumendiregistris
+							</a>
+						</td>
+					</tr>
+				})}</tbody>
+			</table>
+		</div> : null}
 
 		<div class="events">
 			<h2 class="admin-subheading">

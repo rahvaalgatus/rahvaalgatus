@@ -55,6 +55,7 @@ module.exports = function(attrs) {
 		undersignable: true,
 		mailchimp_interest_id: null,
 		external: false,
+		external_text_file_id: null,
 		parliament_api_data: null,
 		parliament_synced_at: null,
 		parliament_token: null,

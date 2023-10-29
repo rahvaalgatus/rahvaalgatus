@@ -68,6 +68,13 @@ exports.router.get("/:id", function(req, res) {
 		SELECT * FROM users WHERE id = ${initiative.user_id}
 	`)
 
+	var files = filesDb.search(sql`
+		SELECT id, name, title, url, content_type, length(content) AS size
+		FROM initiative_files
+		WHERE initiative_uuid = ${initiative.uuid}
+		AND event_id IS NULL
+	`)
+
 	var events = eventsDb.search(sql`
 		SELECT * FROM initiative_events
 		WHERE initiative_uuid = ${initiative.uuid}
@@ -98,6 +105,7 @@ exports.router.get("/:id", function(req, res) {
 	res.render("admin/initiatives/read_page.jsx", {
 		author,
 		image,
+		files,
 		events,
 		subscriberCount,
 
@@ -412,6 +420,13 @@ function parseInitiative(initiative, obj) {
 		attrs.finished_in_government_at = obj.finishedInGovernmentOn
 			? Time.parseIsoDate(obj.finishedInGovernmentOn)
 			: null
+
+	if (
+		initiative.external &&
+		"external_text_file_id" in obj
+	) attrs.external_text_file_id = (
+		obj.external_text_file_id && Number(obj.external_text_file_id) || null
+	)
 
 	return attrs
 }

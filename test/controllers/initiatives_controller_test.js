@@ -1632,7 +1632,7 @@ describe("InitiativesController", function() {
 				res.body.must.include("Rest in peace!")
 			})
 
-			it("must render external initiative with latest PDF", function*() {
+			it("must render external initiative with a PDF", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					phase: "parliament",
 					external: true
@@ -1654,6 +1654,40 @@ describe("InitiativesController", function() {
 				var object = dom.querySelector("object")
 				object.data.must.equal(path + "/files/" + file.id)
 				object.type.must.equal(String(file.content_type))
+			})
+
+			it("must render external initiative with the set external file id",
+				function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					phase: "parliament",
+					external: true,
+				}))
+
+				filesDb.create(new ValidFile({
+					initiative_uuid: initiative.uuid,
+					content_type: "application/pdf"
+				}))
+
+				var text = filesDb.create(new ValidFile({
+					initiative_uuid: initiative.uuid,
+					content_type: "application/pdf"
+				}))
+
+				initiativesDb.update(initiative, {
+					external_text_file_id: text.id
+				})
+
+				var path = "/initiatives/" + initiative.uuid
+				var res = yield this.request(path)
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+				var title = dom.querySelector("#initiative-header h1")
+				title.textContent.must.equal(initiative.title)
+
+				var object = dom.querySelector("object")
+				object.data.must.equal(path + "/files/" + text.id)
+				object.type.must.equal(String(text.content_type))
 			})
 
 			it("must not show duplicate author names", function*() {
