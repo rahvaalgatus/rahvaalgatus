@@ -4278,17 +4278,18 @@ strong {
 	}
 }
 
-#user-signatures-page {
-	background: white;
-}
-
 #user-signatures-page main {
 	background: white;
 
+	.description-paragraph,
 	.no-signatures {
 		line-height: 1.5;
 		font-size: 1.6rem;
 		white-space: pre-wrap;
+	}
+
+	.description-paragraph {
+		margin-bottom: 2rem;
 	}
 
 	.signature {

@@ -9,7 +9,11 @@ module.exports = function(attrs, children) {
 	var {path} = req
 	var {user} = attrs
 
-	return <Page {...attrs} class={"user-page " + (attrs.class || "")}>
+	return <Page
+		{...attrs}
+		title={attrs.title ? attrs.title + " - " + user.name : user.name}
+		class={"user-page " + (attrs.class || "")}
+	>
 		<header id="user-header"><center>
 			<h1>{user.name}</h1>
 

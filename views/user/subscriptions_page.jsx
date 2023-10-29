@@ -14,7 +14,6 @@ module.exports = function(attrs) {
 
 	return <UserPage
 		page="user-subscriptions"
-		title={user.name}
 		req={req}
 		user={user}
 	>

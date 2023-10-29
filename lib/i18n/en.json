@@ -770,8 +770,6 @@
 	"USER_PAGE_TABS_SIGNATURES": "Signatures",
 	"USER_PAGE_TABS_SUBSCRIPTIONS": "Subscriptions",
 	"USER_PAGE_TABS_USER": "Profile",
-	"USER_SIGNATURES_EMPTY": "You have not signed any initiatives yet. When you do, you will find an overview of the signed initiatives on this page.",
-	"USER_SIGNATURES_SIGNED_AT": "Signed at <time>{{at}}</time>.",
 	"USER_SUBSCRIPTIONS_EMPTY": "You have no subscription notifications yet. You can subscribe to receive notifications under each individual initiative.",
 	"USER_SUBSCRIPTIONS_UNCONFIRMED_EMAIL": "To view your subscriptions, please add and confirm your email address.",
 	"USER_UPDATED": "Muudatused salvestatud.",
@@ -888,5 +886,10 @@
 	"user_page.form.name_description": "If you wish to change your name, please <a href=\"mailto:{{email}}\">contact us</a>.",
 	"user_page.form.name_label": "Name",
 	"user_page.form.update_button": "Update",
-	"user_page.header.personal_id": "Personal id"
+	"user_page.header.personal_id": "Personal id",
+	"user_signatures_page.description": "Here you'll find a list of initiatives you've signed that have not yet been sent to Riigikogu or a local government. Initiatives received by the government will have their signatures deleted within 30 days. In general, signatures are retained for a maximum of 18 months. If within that time an initiative fails to pass the threshold for sending to the government, it expires and its signatures get deleted.",
+	"user_signatures_page.signatures.download_button": "Download Signature",
+	"user_signatures_page.signatures.empty": "You've not signed any initiatives yet. When you do, you will find an overview of the signed initiatives on this page.",
+	"user_signatures_page.signatures.signed_at": "Signed at <time>{{at}}</time>.",
+	"user_signatures_page.title": "Signatures"
 }

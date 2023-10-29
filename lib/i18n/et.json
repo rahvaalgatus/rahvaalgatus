@@ -812,8 +812,6 @@
 	"USER_PAGE_TABS_SIGNATURES": "Allkirjad",
 	"USER_PAGE_TABS_SUBSCRIPTIONS": "Teavitused",
 	"USER_PAGE_TABS_USER": "Profiil",
-	"USER_SIGNATURES_EMPTY": "Sa pole veel ühtki algatust allkirjastanud. Kui seda teed, saad siit lehelt ülevaate allkirjastatud algatustest.",
-	"USER_SIGNATURES_SIGNED_AT": "Allkirjastatud <time>{{at}}</time>.",
 	"USER_SUBSCRIPTIONS_EMPTY": "Sul pole veel ühtki algatuse teavituse tellimust.\nAlgatuste kohta saad tellida teavitusi iga algatuste juures.",
 	"USER_SUBSCRIPTIONS_UNCONFIRMED_EMAIL": "Teavituste tellimuste vaatamiseks palun <a href=\"{{emailUrl}}\">lisa ja kinnita oma meiliaadress</a>.",
 	"USER_UPDATED": "Muudatused salvestatud.",
@@ -930,5 +928,10 @@
 	"user_page.form.name_description": "Kui soovid oma nime muuta, palun <a href=\"mailto:{{email}}\">võta meiega ühendust</a>.",
 	"user_page.form.name_label": "Nimi",
 	"user_page.form.update_button": "Salvesta",
-	"user_page.header.personal_id": "Isikukood"
+	"user_page.header.personal_id": "Isikukood",
+	"user_signatures_page.description": "Alt leiad loetelu sinu allkirjastatud algatustest, mis ei ole veel Riigikogule või kohalikule omavalitsusele menetlemiseks saadetud või mille allkirju pole menetlusse võtmiseks kontrollitud. Menetlusse võetud algatuste allkirjad kustutatakse 30 päeva jooksul. Maksimaalselt hoitakse algatustele antud allkirju 18 kuud. Kui selle aja sees algatus Riigikogule või omavalitsusele saatmiseks lävendit ei ületa, algatus aegub ja allkirjad kustutatakse.",
+	"user_signatures_page.signatures.download_button": "Lae allkiri alla",
+	"user_signatures_page.signatures.empty": "Sa pole veel ühtki algatust allkirjastanud. Kui seda teed, saad siit lehelt ülevaate allkirjastatud algatustest.",
+	"user_signatures_page.signatures.signed_at": "Allkirjastatud <time>{{at}}</time>.",
+	"user_signatures_page.title": "Allkirjad"
 }

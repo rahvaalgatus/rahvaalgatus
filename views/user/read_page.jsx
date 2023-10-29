@@ -20,7 +20,7 @@ module.exports = function(attrs) {
 	var {userAttrs} = attrs
 	var {userErrors} = attrs
 
-	return <UserPage page="user" title={user.name} req={req} user={user}>
+	return <UserPage page="user" req={req} user={user}>
 		<Section id="user" class="primary-section text-section">
 			<Flash flash={req.flash} />
 

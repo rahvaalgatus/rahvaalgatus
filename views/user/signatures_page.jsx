@@ -15,13 +15,17 @@ module.exports = function(attrs) {
 
 	return <UserPage
 		page="user-signatures"
-		title={user.name}
+		title={t("user_signatures_page.title")}
 		req={req}
 		user={user}
 	>
 		<Section class="primary-section">
+			<p class="description-paragraph">
+				{t("user_signatures_page.description")}
+			</p>
+
 			{signatures.length == 0 ? <p class="no-signatures">
-				{t("USER_SIGNATURES_EMPTY")}
+				{t("user_signatures_page.signatures.empty")}
 			</p> : <ol id="signatures">{signatures.map(function(signature) {
 				var initiativePath = "/initiatives/" + signature.initiative_uuid
 				var signaturePath = null
@@ -32,18 +36,16 @@ module.exports = function(attrs) {
 				}
 
 				return <li class="signature">
-					<h2>
-						<a href={initiativePath}>
-							{signature.initiative_title}
-						</a>
-					</h2>
+					<h2><a href={initiativePath}>{signature.initiative_title}</a></h2>
 
-					{Jsx.html(t("USER_SIGNATURES_SIGNED_AT", {
+					{Jsx.html(t("user_signatures_page.signatures.signed_at", {
 						at: _.escapeHtml(formatDateTime("numeric", signature.created_at))
 					}))}
 
 					{signaturePath ? <>
-						{" "}<a href={signaturePath} download>{t("DOWNLOAD_SIGNATURE")}</a>.
+						{" "}<a href={signaturePath} download>
+						{t("user_signatures_page.signatures.download_button")}
+						</a>.
 					</> : null}
 				</li>
 			})}</ol>}
