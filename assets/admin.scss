@@ -455,6 +455,20 @@ textarea.admin-input {
 	}
 }
 
+#destinations-page main {
+	.population-column,
+	.voter-count-column,
+	.signature-threshold-column {
+		text-align: right;
+	}
+
+	td.population-column,
+	td.voter-count-column,
+	td.signature-threshold-column {
+		font-family: $monospace;
+	}
+}
+
 #users-page main {
 	.users {
 		em { font-style: italic; }

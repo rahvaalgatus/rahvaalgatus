@@ -286,6 +286,10 @@ _.each({
 	"/signatures": require("./admin/initiative_signatures_controller").router
 }, (router, path) => exports.use(path, router))
 
+exports.get("/destinations", function(_req, res) {
+	res.render("admin/destinations/index_page.jsx")
+})
+
 exports.get("/comments", function(_req, res) {
 	var comments = commentsDb.search(sql`
 		SELECT comment.*, user.id AS user_id, user.name AS user_name
