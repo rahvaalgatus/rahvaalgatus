@@ -314,9 +314,13 @@ function readPhaseInitiativeCounts() {
 			discussion_ends_at,
 			signing_ends_at,
 			signing_expired_at,
-			archived_at
+			archived_at,
 
-		FROM initiatives
+			CASE phase WHEN 'sign' THEN
+			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
+			END AS signature_count
+
+		FROM initiatives AS initiative
 		WHERE destination IS NOT NULL AND destination != 'parliament'
 		AND published_at IS NOT NULL
 	`), "destination"), (initiatives) => _.countBy(initiatives, (initiative) => {
@@ -326,7 +330,11 @@ function readPhaseInitiativeCounts() {
 				return "edit"
 
 			case "sign":
-				if (initiative.signing_ends_at <= cutoff) return "archive"
+				if (
+					initiative.signing_ends_at <= cutoff &&
+					initiative.signature_count < getSignatureThreshold(initiative)
+				) return "archive"
+
 				if (initiative.signing_expired_at) return "archive"
 				return "sign"
 
