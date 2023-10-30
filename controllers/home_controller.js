@@ -88,7 +88,7 @@ exports.router.get("/", function(req, res) {
 		case "local":
 			res.render("home/local_home_page.jsx", {
 				initiatives: initiatives,
-				initiativeCounts: searchInitiativeCounts()
+				initiativeCounts: readPhaseInitiativeCounts()
 			})
 			break
 
@@ -304,7 +304,7 @@ function searchRecentInitiatives() {
 	))
 }
 
-function searchInitiativeCounts() {
+function readPhaseInitiativeCounts() {
 	var cutoff = getExpirationCutoff(new Date)
 
 	return _.mapValues(_.groupBy(initiativesDb.search(sql`
@@ -312,6 +312,7 @@ function searchInitiativeCounts() {
 			destination,
 			phase,
 			discussion_ends_at,
+			signing_ends_at,
 			signing_expired_at,
 			archived_at
 
