@@ -89,6 +89,8 @@ After your initiative has reached a **million signatures**, the signatures must 
 
 The Estonian Cooperation Assembly's democracy expert is the European Citizens’ Initiative ambassador who contributes to spreading the word about the ECI in Estonia.  The ambassadors come from a wide range of organisations active at European, national or regional level, and they all have something in common – expertise in participatory democracy and a common goal to encourage citizens’ involvement in policy-making.
 
+[Subscribe to the European Citizens' Initiative monthly newsletter.](https://citizens-initiative.europa.eu/newsletter/subscribe_en) 
+
 <div class="call-to-actions">
   <a href="https://europa.eu/citizens-initiative/_en" class="button green-button">Initiatives</a>
   <a href="https://europa.eu/citizens-initiative/how-it-works_en" class="button blue-button">Read more</a>
