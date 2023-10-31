@@ -1442,7 +1442,7 @@ describe("SignaturesController", function() {
 					path: "initiative.html",
 					type: "text/html",
 					hash: this.initiative.text_sha256
-				}], {policy: "bdoc"})
+				}])
 
 				signing.body.must.eql(xades.signableHash)
 
@@ -4006,7 +4006,7 @@ function newXades(initiative, cert) {
 		path: "initiative.html",
 		type: "text/html",
 		hash: initiative.text_sha256
-	}], {policy: "bdoc"})
+	}])
 
 	var signatureBytes = signWithRsa(
 		JOHN_RSA_KEYS.privateKey,

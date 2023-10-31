@@ -528,7 +528,7 @@ function newXades(cert) {
 		path: "dokument.txt",
 		type: "text/plain",
 		hash: SIGNABLE_TEXT_SHA256
-	}], {policy: "bdoc"})
+	}])
 
 	xades.setSignature(signWithRsa(
 		JOHN_RSA_KEYS.privateKey,

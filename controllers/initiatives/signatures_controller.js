@@ -450,7 +450,7 @@ exports.router.post("/", next(function*(req, res) {
 			path: `initiative.${Mime.extension(String(initiative.text_type))}`,
 			type: initiative.text_type,
 			hash: initiative.text_sha256
-		}], {policy: "bdoc"})
+		}])
 	}
 }))
 

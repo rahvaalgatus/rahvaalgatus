@@ -181,7 +181,7 @@ exports.router.post("/", next(function*(req, res) {
 			path: "dokument.txt",
 			type: "text/plain",
 			hash: SIGNABLE_TEXT_SHA256
-		}], {policy: "bdoc"})
+		}])
 	}
 }))
 
