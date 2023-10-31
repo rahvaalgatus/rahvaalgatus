@@ -5,6 +5,8 @@ var Pem = require("undersign/lib/pem")
 var Crypto = require("crypto")
 var X509Asn = require("undersign/lib/x509_asn")
 var OcspAsn = require("undersign/lib/ocsp_asn")
+var TimestampAsn = require("undersign/lib/timestamp_asn")
+var {SIGNED_DATA_OID} = TimestampAsn
 var Certificate = require("undersign/lib/certificate")
 var Config = require("root").config
 var LdapAttributes = require("undersign/lib/ldap_attributes")
@@ -192,6 +194,16 @@ exports.newCertificate = function(opts) {
 		tbsCertificate: unsignedCertificate,
 		signatureAlgorithm: signatureAlgorithm,
 		signature: {unused: 0, data: signature}
+	})
+}
+
+exports.newTimestampResponse = function() {
+	return TimestampAsn.TimestampResponse.encode({
+		status: {status: "granted", statusString: ["Operation Okay"]},
+		timeStampToken: {
+			contentType: SIGNED_DATA_OID,
+			content: TimestampAsn.SignedData.encode(Buffer.from("xyz"))
+		}
 	})
 }
 

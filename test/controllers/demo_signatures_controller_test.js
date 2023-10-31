@@ -4,6 +4,7 @@ var Config = require("root").config
 var DateFns = require("date-fns")
 var ValidDemoSignature = require("root/test/valid_demo_signature")
 var Certificate = require("undersign/lib/certificate")
+var Timestamp = require("undersign/lib/timestamp")
 var Ocsp = require("undersign/lib/ocsp")
 var Zip = require("root/lib/zip")
 var Crypto = require("crypto")
@@ -11,6 +12,7 @@ var {respond} = require("root/test/fixtures")
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var {newCertificate} = require("root/test/fixtures")
+var {newTimestampResponse} = require("root/test/fixtures")
 var {newOcspResponse} = require("root/test/fixtures")
 var demoSignaturesDb = require("root/db/demo_signatures_db")
 var {hades} = require("root")
@@ -18,7 +20,9 @@ var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var ASICE_TYPE = "application/vnd.etsi.asic-e+zip"
 var MOBILE_ID_URL = Url.parse("https://mid.sk.ee/mid-api/")
 var SMART_ID_URL = Url.parse("https://rp-api.smart-id.com/v1/")
-var TIMEMARK_URL = Url.parse(Config.timemarkUrl)
+var TIMESTAMP_URL = Url.parse(Config.timestampUrl)
+var OCSP_URL = Url.parse("http://example.com/ocsp")
+var OCSP_URL_OID = require("undersign/lib/x509_asn").OCSP_URL
 var CERTIFICATE_TYPE = "application/pkix-cert"
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
 var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
@@ -38,6 +42,15 @@ var SIGN_CERTIFICATE_EXTENSIONS = [{
 	extnID: "keyUsage",
 	critical: true,
 	extnValue: {data: Buffer.from([64])}
+}, {
+	extnID: "authorityInformationAccess",
+	extnValue: [{
+		accessMethod: OCSP_URL_OID,
+		accessLocation: {
+			type: "uniformResourceIdentifier",
+			value: Url.format(OCSP_URL)
+		}
+	}]
 }]
 
 var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
@@ -371,10 +384,16 @@ function* signWithIdCard(router, request, cert) {
 		SELECT * FROM demo_signatures ORDER BY created_at DESC LIMIT 1
 	`)
 
-	router.post(TIMEMARK_URL.path, function(req, res) {
-		req.headers.host.must.equal(TIMEMARK_URL.host)
+	router.post(TIMESTAMP_URL.path, function(req, res) {
+		req.headers.host.must.equal(TIMESTAMP_URL.host)
+		res.setHeader("Content-Type", "application/timestamp-reply")
+		res.end(newTimestampResponse())
+	})
+
+	router.post(OCSP_URL.path, function(req, res) {
+		req.headers.host.must.equal(OCSP_URL.host)
 		res.setHeader("Content-Type", "application/ocsp-response")
-		res.end(Ocsp.parse(newOcspResponse(cert)).toBuffer())
+		res.end(newOcspResponse(cert))
 	})
 
 	return request(signing.headers.location, {
@@ -418,10 +437,20 @@ function* signWithMobileId(router, request, cert) {
 		}, req, res)
 	})
 
-	router.post(TIMEMARK_URL.path, function(req, res) {
-		req.headers.host.must.equal(TIMEMARK_URL.host)
+	router.post(TIMESTAMP_URL.path, function(req, res) {
+		req.headers.host.must.equal(TIMESTAMP_URL.host)
+		res.setHeader("Content-Type", "application/timestamp-reply")
+		res.end(newTimestampResponse())
+	})
+
+	router.post(OCSP_URL.path, function(req, res) {
+		req.headers.host.must.equal(OCSP_URL.host)
 		res.setHeader("Content-Type", "application/ocsp-response")
-		res.end(Ocsp.parse(newOcspResponse(cert)).toBuffer())
+		res.flushHeaders()
+
+		// NOTE: Respond with a little delay to ensure signature
+		// polling later works as expected.
+		setTimeout(() => res.end(newOcspResponse(cert)), 100)
 	})
 
 	var signing = yield request("/demo-signatures", {
@@ -470,14 +499,20 @@ function* signWithSmartId(router, request, cert) {
 		}, req, res)
 	})
 
-	router.post(TIMEMARK_URL.path, function(req, res) {
-		req.headers.host.must.equal(TIMEMARK_URL.host)
+	router.post(TIMESTAMP_URL.path, function(req, res) {
+		req.headers.host.must.equal(TIMESTAMP_URL.host)
+		res.setHeader("Content-Type", "application/timestamp-reply")
+		res.end(newTimestampResponse())
+	})
+
+	router.post(OCSP_URL.path, function(req, res) {
+		req.headers.host.must.equal(OCSP_URL.host)
 		res.setHeader("Content-Type", "application/ocsp-response")
 		res.flushHeaders()
 
 		// NOTE: Respond with a little delay to ensure signature
 		// polling later works as expected.
-		setTimeout(() => res.end(Ocsp.parse(newOcspResponse(cert)).toBuffer()))
+		setTimeout(() => res.end(newOcspResponse(cert)), 100)
 	})
 
 	var signing = yield certWithSmartId(router, request, cert)
@@ -500,8 +535,8 @@ function newXades(cert) {
 		xades.signable
 	))
 
-	var ocspResponse = Ocsp.parse(newOcspResponse(cert))
-	xades.setOcspResponse(ocspResponse)
+	xades.setTimestamp(Timestamp.parse(newTimestampResponse()))
+	xades.setOcspResponse(Ocsp.parse(newOcspResponse(cert)))
 	return xades
 }
 

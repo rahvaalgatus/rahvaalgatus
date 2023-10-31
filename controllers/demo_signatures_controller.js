@@ -356,7 +356,8 @@ exports.router.put("/:token",
 				updated_at: new Date
 			})
 
-			xades.setOcspResponse(yield hades.timemark(xades))
+			xades.setTimestamp(yield hades.timestamp(xades))
+			xades.setOcspResponse(yield hades.ocsp(xades.certificate))
 
 			demoSignaturesDb.update(signature, {
 				xades: xades,
@@ -393,7 +394,8 @@ function* waitForMobileIdSignature(signature, sessionId) {
 			updated_at: new Date
 		})
 
-		xades.setOcspResponse(yield hades.timemark(xades))
+		xades.setTimestamp(yield hades.timestamp(xades))
+		xades.setOcspResponse(yield hades.ocsp(xades.certificate))
 
 		demoSignaturesDb.update(signature, {
 			xades: xades,
@@ -429,7 +431,8 @@ function* waitForSmartIdSignature(signature, session) {
 			updated_at: new Date
 		})
 
-		xades.setOcspResponse(yield hades.timemark(xades))
+		xades.setTimestamp(yield hades.timestamp(xades))
+		xades.setOcspResponse(yield hades.ocsp(xades.certificate))
 
 		demoSignaturesDb.update(signature, {
 			xades: xades,
