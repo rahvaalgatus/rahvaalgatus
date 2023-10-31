@@ -12,6 +12,7 @@ var ValidSession = require("root/test/valid_session")
 var ValidText = require("root/test/valid_initiative_text")
 var Certificate = require("undersign/lib/certificate")
 var X509Asn = require("undersign/lib/x509_asn")
+var Timestamp = require("undersign/lib/timestamp")
 var Ocsp = require("undersign/lib/ocsp")
 var Crypto = require("crypto")
 var Zip = require("root/lib/zip")
@@ -19,6 +20,7 @@ var {respond} = require("root/test/fixtures")
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var {newCertificate} = require("root/test/fixtures")
+var {newTimestampResponse} = require("root/test/fixtures")
 var {newOcspResponse} = require("root/test/fixtures")
 var {parseCookies} = require("root/test/web")
 var {serializeCookies} = require("root/test/web")
@@ -38,7 +40,9 @@ var CSV_TYPE = "text/csv; charset=utf-8"
 var ZIP_TYPE = "application/zip"
 var MOBILE_ID_URL = Url.parse("https://mid.sk.ee/mid-api/")
 var SMART_ID_URL = Url.parse("https://rp-api.smart-id.com/v1/")
-var TIMEMARK_URL = Url.parse(Config.timemarkUrl)
+var TIMESTAMP_URL = Url.parse(Config.timestampUrl)
+var OCSP_URL = Url.parse("http://example.com/ocsp")
+var OCSP_URL_OID = require("undersign/lib/x509_asn").OCSP_URL
 var CERTIFICATE_TYPE = "application/pkix-cert"
 var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
 var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
@@ -71,6 +75,15 @@ var SIGN_CERTIFICATE_EXTENSIONS = [{
 	extnID: "keyUsage",
 	critical: true,
 	extnValue: {data: Buffer.from([KEY_USAGE_NONREPUDIATION])}
+}, {
+	extnID: "authorityInformationAccess",
+	extnValue: [{
+		accessMethod: OCSP_URL_OID,
+		accessLocation: {
+			type: "uniformResourceIdentifier",
+			value: Url.format(OCSP_URL)
+		}
+	}]
 }]
 
 var ID_CARD_CERTIFICATE = new Certificate(newCertificate({
@@ -1458,11 +1471,19 @@ describe("SignaturesController", function() {
 				)
 
 				xades.setSignature(signatureBytes)
+				var timestampResponse = Timestamp.parse(newTimestampResponse())
+				xades.setTimestamp(timestampResponse)
 				var ocspResponse = Ocsp.parse(newOcspResponse(cert))
 				xades.setOcspResponse(ocspResponse)
 
-				this.router.post(TIMEMARK_URL.path, function(req, res) {
-					req.headers.host.must.equal(TIMEMARK_URL.host)
+				this.router.post(TIMESTAMP_URL.path, function(req, res) {
+					req.headers.host.must.equal(TIMESTAMP_URL.host)
+					res.setHeader("Content-Type", "application/timestamp-reply")
+					res.end(timestampResponse.toBuffer())
+				})
+
+				this.router.post(OCSP_URL.path, function(req, res) {
+					req.headers.host.must.equal(OCSP_URL.host)
 					res.setHeader("Content-Type", "application/ocsp-response")
 					res.end(ocspResponse.toBuffer())
 				})
@@ -1807,10 +1828,16 @@ describe("SignaturesController", function() {
 						SELECT * FROM initiative_signables
 					`)
 
-					this.router.post(TIMEMARK_URL.path, function(req, res) {
-						req.headers.host.must.equal(TIMEMARK_URL.host)
+					this.router.post(TIMESTAMP_URL.path, function(req, res) {
+						req.headers.host.must.equal(TIMESTAMP_URL.host)
+						res.setHeader("Content-Type", "application/timestamp-reply")
+						res.end(newTimestampResponse())
+					})
+
+					this.router.post(OCSP_URL.path, function(req, res) {
+						req.headers.host.must.equal(OCSP_URL.host)
 						res.setHeader("Content-Type", "application/ocsp-response")
-						res.end(Ocsp.parse(newOcspResponse(cert)).toBuffer())
+						res.end(newOcspResponse(cert))
 					})
 
 					var signed = yield this.request(signing.headers.location, {
@@ -1897,10 +1924,16 @@ describe("SignaturesController", function() {
 
 				var {xades} = signablesDb.read(sql`SELECT * FROM initiative_signables`)
 
-				this.router.post(TIMEMARK_URL.path, function(req, res) {
-					req.headers.host.must.equal(TIMEMARK_URL.host)
+				this.router.post(TIMESTAMP_URL.path, function(req, res) {
+					req.headers.host.must.equal(TIMESTAMP_URL.host)
+					res.setHeader("Content-Type", "application/timestamp-reply")
+					res.end(newTimestampResponse())
+				})
+
+				this.router.post(OCSP_URL.path, function(req, res) {
+					req.headers.host.must.equal(OCSP_URL.host)
 					res.setHeader("Content-Type", "application/ocsp-response")
-					res.end(Ocsp.parse(newOcspResponse(cert)).toBuffer())
+					res.end(newOcspResponse(cert))
 				})
 
 				initiativesDb.update(this.initiative, {signing_ends_at: new Date})
@@ -1971,7 +2004,7 @@ describe("SignaturesController", function() {
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
 
-				var [xades, ocspResponse] = newXades(this.initiative, cert)
+				var [xades, tsResponse, ocspResponse] = newXades(this.initiative, cert)
 
 				this.router.post(`${MOBILE_ID_URL.path}certificate`,
 					function(req, res) {
@@ -2016,13 +2049,19 @@ describe("SignaturesController", function() {
 					}, req, res)
 				})
 
-				this.router.post(TIMEMARK_URL.path, function(req, res) {
-					req.headers.host.must.equal(TIMEMARK_URL.host)
+				this.router.post(TIMESTAMP_URL.path, function(req, res) {
+					req.headers.host.must.equal(TIMESTAMP_URL.host)
+					res.setHeader("Content-Type", "application/timestamp-reply")
+					res.end(tsResponse.toBuffer())
+				})
+
+				this.router.post(OCSP_URL.path, function(req, res) {
+					req.headers.host.must.equal(OCSP_URL.host)
 					res.setHeader("Content-Type", "application/ocsp-response")
 					res.flushHeaders()
 
 					// NOTE: Respond with a little delay to ensure signature
-					// polling later works as expected.
+					// long-polling later works as expected.
 					setTimeout(() => res.end(ocspResponse.toBuffer()), 100)
 				})
 
@@ -2781,7 +2820,7 @@ describe("SignaturesController", function() {
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
 
-				var [xades, ocspResponse] = newXades(this.initiative, cert)
+				var [xades, tsResponse, ocspResponse] = newXades(this.initiative, cert)
 				var certSession = "3befb011-37bf-4e57-b041-e4cba1496766"
 				var signSession = "21e55f06-d6cb-40b7-9638-75dc0b131851"
 
@@ -2848,13 +2887,19 @@ describe("SignaturesController", function() {
 					}, req, res)
 				})
 
-				this.router.post(TIMEMARK_URL.path, function(req, res) {
-					req.headers.host.must.equal(TIMEMARK_URL.host)
+				this.router.post(TIMESTAMP_URL.path, function(req, res) {
+					req.headers.host.must.equal(TIMESTAMP_URL.host)
+					res.setHeader("Content-Type", "application/timestamp-reply")
+					res.end(tsResponse.toBuffer())
+				})
+
+				this.router.post(OCSP_URL.path, function(req, res) {
+					req.headers.host.must.equal(OCSP_URL.host)
 					res.setHeader("Content-Type", "application/ocsp-response")
 					res.flushHeaders()
 
 					// NOTE: Respond with a little delay to ensure signature
-					// polling later works as expected.
+					// long-polling later works as expected.
 					setTimeout(() => res.end(ocspResponse.toBuffer()), 100)
 				})
 
@@ -3794,10 +3839,16 @@ function* signWithIdCard(router, request, initiative, cert) {
 		SELECT xades FROM initiative_signables ORDER BY rowid DESC LIMIT 1
 	`)
 
-	router.post(TIMEMARK_URL.path, function(req, res) {
-		req.headers.host.must.equal(TIMEMARK_URL.host)
+	router.post(TIMESTAMP_URL.path, function(req, res) {
+		req.headers.host.must.equal(TIMESTAMP_URL.host)
+		res.setHeader("Content-Type", "application/timestamp-reply")
+		res.end(newTimestampResponse())
+	})
+
+	router.post(OCSP_URL.path, function(req, res) {
+		req.headers.host.must.equal(OCSP_URL.host)
 		res.setHeader("Content-Type", "application/ocsp-response")
-		res.end(Ocsp.parse(newOcspResponse(cert)).toBuffer())
+		res.end(newOcspResponse(cert))
 	})
 
 	return request(signing.headers.location, {
@@ -3844,10 +3895,16 @@ function* signWithMobileId(router, request, initiative, cert, res) {
 		}
 	)
 
-	router.post(TIMEMARK_URL.path, function(req, res) {
-		req.headers.host.must.equal(TIMEMARK_URL.host)
+	router.post(TIMESTAMP_URL.path, function(req, res) {
+		req.headers.host.must.equal(TIMESTAMP_URL.host)
+		res.setHeader("Content-Type", "application/timestamp-reply")
+		res.end(newTimestampResponse())
+	})
+
+	router.post(OCSP_URL.path, function(req, res) {
+		req.headers.host.must.equal(OCSP_URL.host)
 		res.setHeader("Content-Type", "application/ocsp-response")
-		res.end(Ocsp.parse(newOcspResponse(cert)).toBuffer())
+		res.end(newOcspResponse(cert))
 	})
 
 	var signing = yield request(`/initiatives/${initiative.uuid}/signatures`, {
@@ -3923,10 +3980,16 @@ function* signWithSmartId(router, request, initiative, cert, res) {
 		}
 	)
 
-	router.post(TIMEMARK_URL.path, function(req, res) {
-		req.headers.host.must.equal(TIMEMARK_URL.host)
+	router.post(TIMESTAMP_URL.path, function(req, res) {
+		req.headers.host.must.equal(TIMESTAMP_URL.host)
+		res.setHeader("Content-Type", "application/timestamp-reply")
+		res.end(newTimestampResponse())
+	})
+
+	router.post(OCSP_URL.path, function(req, res) {
+		req.headers.host.must.equal(OCSP_URL.host)
 		res.setHeader("Content-Type", "application/ocsp-response")
-		res.end(Ocsp.parse(newOcspResponse(cert)).toBuffer())
+		res.end(newOcspResponse(cert))
 	})
 
 	var signing = yield certWithSmartId(router, request, initiative, cert)
@@ -3951,9 +4014,14 @@ function newXades(initiative, cert) {
 	)
 
 	xades.setSignature(signatureBytes)
+
+	var timestampResponse = Timestamp.parse(newTimestampResponse())
+	xades.setTimestamp(timestampResponse)
+
 	var ocspResponse = Ocsp.parse(newOcspResponse(cert))
 	xades.setOcspResponse(ocspResponse)
-	return [xades, ocspResponse]
+
+	return [xades, timestampResponse, ocspResponse]
 }
 
 function signWithRsa(key, signable) {

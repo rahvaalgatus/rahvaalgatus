@@ -671,7 +671,8 @@ exports.router.put("/:personalId",
 				updated_at: new Date
 			})
 
-			xades.setOcspResponse(yield hades.timemark(xades))
+			xades.setTimestamp(yield hades.timestamp(xades))
+			xades.setOcspResponse(yield hades.ocsp(xades.certificate))
 
 			signablesDb.update(signable, {
 				xades: xades,
@@ -739,7 +740,8 @@ function* waitForMobileIdSignature(signable, sessionId) {
 			updated_at: new Date
 		})
 
-		xades.setOcspResponse(yield hades.timemark(xades))
+		xades.setTimestamp(yield hades.timestamp(xades))
+		xades.setOcspResponse(yield hades.ocsp(xades.certificate))
 
 		signablesDb.update(signable, {
 			xades: xades,
@@ -777,7 +779,8 @@ function* waitForSmartIdSignature(signable, session) {
 			updated_at: new Date
 		})
 
-		xades.setOcspResponse(yield hades.timemark(xades))
+		xades.setTimestamp(yield hades.timestamp(xades))
+		xades.setOcspResponse(yield hades.ocsp(xades.certificate))
 
 		signablesDb.update(signable, {
 			xades: xades,
