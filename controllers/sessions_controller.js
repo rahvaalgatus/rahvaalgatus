@@ -236,6 +236,12 @@ exports.router.post("/", next(function*(req, res, next) {
 			if (personalId == null) throw new MobileIdError("NOT_FOUND")
 			if (rateLimitSigningIn(req, res, personalId)) return
 
+			logger.info({
+				request_id: req.headers["request-id"],
+				event: "authentication-start",
+				authentication_method: "mobile-id"
+			})
+
 			authentication = authenticationsDb.create({
 				country: "EE",
 				personal_id: personalId,
@@ -253,7 +259,7 @@ exports.router.post("/", next(function*(req, res, next) {
 				tokenHash
 			)
 
-			co(waitForMobileIdAuthentication(req.t, authentication, sessionId))
+			co(waitForMobileIdAuthentication(req, req.t, authentication, sessionId))
 
 			authUrl = req.baseUrl + "/?" + Qs.stringify({
 				"authentication-token": authentication.token.toString("hex"),
@@ -274,6 +280,12 @@ exports.router.post("/", next(function*(req, res, next) {
 			if (personalId == null) throw new SmartIdError("ACCOUNT_NOT_FOUND")
 			if (rateLimitSigningIn(req, res, personalId)) return
 
+			logger.info({
+				request_id: req.headers["request-id"],
+				event: "authentication-start",
+				authentication_method: "smart-id"
+			})
+
 			var token = Crypto.randomBytes(16)
 			tokenHash = sha256(token)
 			var session = yield smartId.authenticate("PNOEE-" + personalId, tokenHash)
@@ -287,7 +299,7 @@ exports.router.post("/", next(function*(req, res, next) {
 				created_user_agent: req.headers["user-agent"]
 			})
 
-			co(waitForSmartIdAuthentication(req.t, authentication, session))
+			co(waitForSmartIdAuthentication(req, req.t, authentication, session))
 
 			authUrl = req.baseUrl + "/?" + Qs.stringify({
 				"authentication-token": authentication.token.toString("hex"),
@@ -502,10 +514,24 @@ exports.router.delete("/:id", function(req, res) {
 	res.redirect(303, validateRedirect(req, to, "/"))
 })
 
-function* waitForMobileIdAuthentication(t, authentication, sessionId) {
+function* waitForMobileIdAuthentication(req, t, authentication, sessionId) {
+	logger.info({
+		request_id: req.headers["request-id"],
+		event: "authentication-waiting",
+		authentication_method: authentication.method,
+		mobile_id_session_id: sessionId
+	})
+
 	try {
 		var certAndSignatureHash = yield waitForMobileIdSession(120, sessionId)
 		if (certAndSignatureHash == null) throw new MobileIdError("TIMEOUT")
+
+		logger.info({
+			request_id: req.headers["request-id"],
+			event: "authentication-signed",
+			authentication_id: authentication.id,
+			authentication_method: authentication.method
+		})
 
 		var [cert, signatureHash] = certAndSignatureHash
 
@@ -526,12 +552,27 @@ function* waitForMobileIdAuthentication(t, authentication, sessionId) {
 		if (!cert.hasSigned(authentication.token, signatureHash))
 			throw new MobileIdError("INVALID_SIGNATURE")
 
+		logger.info({
+			request_id: req.headers["request-id"],
+			event: "authentication-validated",
+			authentication_id: authentication.id,
+			authentication_method: authentication.method
+		})
+
 		authenticationsDb.update(authentication, {
 			authenticated: true,
 			updated_at: new Date
 		})
 	}
 	catch (ex) {
+		logger.info({
+			request_id: req.headers["request-id"],
+			event: "authentication-error",
+			authentication_id: authentication.id,
+			authentication_method: authentication.method,
+			error: ex.message
+		})
+
 		if (!(
 			ex instanceof HttpError ||
 			ex instanceof MobileIdError &&
@@ -542,10 +583,24 @@ function* waitForMobileIdAuthentication(t, authentication, sessionId) {
 	}
 }
 
-function* waitForSmartIdAuthentication(t, authentication, session) {
+function* waitForSmartIdAuthentication(req, t, authentication, session) {
+	logger.info({
+		request_id: req.headers["request-id"],
+		event: "authentication-waiting",
+		authentication_method: authentication.method,
+		smart_id_session_id: session.id
+	})
+
 	try {
 		var authCertAndSignature = yield waitForSmartIdSession(120, session)
 		if (authCertAndSignature == null) throw new SmartIdError("TIMEOUT")
+
+		logger.info({
+			request_id: req.headers["request-id"],
+			event: "authentication-signed",
+			authentication_id: authentication.id,
+			authentication_method: authentication.method
+		})
 
 		var [cert, signature] = authCertAndSignature
 
@@ -566,12 +621,27 @@ function* waitForSmartIdAuthentication(t, authentication, session) {
 		if (!cert.hasSigned(authentication.token, signature))
 			throw new SmartIdError("INVALID_SIGNATURE")
 
+		logger.info({
+			request_id: req.headers["request-id"],
+			event: "authentication-validated",
+			authentication_id: authentication.id,
+			authentication_method: authentication.method
+		})
+
 		authenticationsDb.update(authentication, {
 			authenticated: true,
 			updated_at: new Date
 		})
 	}
 	catch (ex) {
+		logger.info({
+			request_id: req.headers["request-id"],
+			event: "authentication-error",
+			authentication_id: authentication.id,
+			authentication_method: authentication.method,
+			error: ex.message
+		})
+
 		if (!(
 			ex instanceof HttpError ||
 			ex instanceof SmartIdError && ex.code in SMART_ID_ERRORS
@@ -623,12 +693,14 @@ function createSessionAndSignIn(authentication, req, res) {
 		authentication_id: authentication.id
 	})
 
-	logger.info(
-		"Created session %d for user %d from request %s.",
-		session.id,
-		user.id,
-		req.headers["request-id"] || "?"
-	)
+	logger.info({
+		request_id: req.headers["request-id"],
+		event: "authentication-end",
+		authentication_id: authentication.id,
+		authentication_method: authentication.method,
+		session_id: session.id,
+		user_id: user.id
+	})
 
 	res.cookie(Config.sessionCookieName, sessionToken.toString("hex"), {
 		httpOnly: true,
