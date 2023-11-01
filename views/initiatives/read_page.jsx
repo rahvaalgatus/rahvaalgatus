@@ -421,13 +421,13 @@ function ReadPage(attrs) {
 								{" "}
 							</> : null}
 
-							{initiative.destination == "parliament"
+							{Jsx.html(initiative.destination == "parliament"
 								? t("initiative_page.signing_section.description.parliament")
-								: Jsx.html(t(
+								: t(
 									"initiative_page.signing_section.description." +
 									initiative.destination
-								))
-							}
+								)
+							)}
 							</p>
 
 							<SigningView
