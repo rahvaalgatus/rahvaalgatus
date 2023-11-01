@@ -158,7 +158,6 @@ module.exports = function(attrs) {
 					<ul>
 						<li>{attrs.signatureCount.parliament + attrs.citizenSignatureCount.parliament} to Riigikogu.</li>
 						<li>{attrs.signatureCount.local + attrs.citizenSignatureCount.local} to Local Governments.</li>
-						<li>{attrs.signatureCount.all_oversigned} oversigned.</li>
 					</ul>
 				</td>
 			</tr>
