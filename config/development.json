@@ -7,7 +7,6 @@
 	"maksekeskusId": "45626d92-f1b2-45a5-832b-39588b192dae",
 	"signatureMilestones": [1],
 	"expireSignaturesInMonths": 1,
-	"timemarkUrl": "http://demo.sk.ee/ocsp",
 	"timestampUrl": "http://demo.sk.ee/tsa",
 	"parliamentEmail": "dev@rahvaalgatus.ee",
 	"admins": {"EE60001019906": [], "EE30303039914": ["signatures"]},

@@ -121,7 +121,6 @@ lazy(exports, "hades", function() {
 
 	return new Hades({
 		certificates: exports.tsl,
-		timemarkUrl: exports.config.timemarkUrl,
 		timestampUrl: exports.config.timestampUrl
 	})
 })

@@ -8,7 +8,6 @@
 	"mobileIdPassword": "f2066bec-dbe6-44b8-ab3b-a343bcc7c286",
 	"smartIdUser": "Smart Rahvaalgatus",
 	"smartIdPassword": "72e7219e-5a5f-4161-87f3-9fd6b6b620e5",
-	"timemarkUrl": "http://demo.sk.ee/ocsp",
 	"timestampUrl": "http://demo.sk.ee/tsa",
 	"parliamentEmail": "riigikogu@example.com"
 }
