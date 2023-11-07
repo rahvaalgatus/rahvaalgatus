@@ -275,7 +275,7 @@ describe("SessionsController", function() {
 
 					var cookies = parseCookies(res.headers["set-cookie"])
 					cookies.session_token.path.must.equal("/")
-					cookies.session_token.domain.must.equal(Config.cookieDomain)
+					cookies.session_token.domain.must.equal(Config.sessionCookieDomain)
 					cookies.session_token.httpOnly.must.be.true()
 					cookies.session_token.extensions.must.include("SameSite=Lax")
 

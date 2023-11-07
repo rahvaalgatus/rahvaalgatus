@@ -494,7 +494,7 @@ exports.router.delete("/:id", function(req, res) {
 		res.clearCookie(Config.sessionCookieName, {
 			httpOnly: true,
 			secure: req.secure,
-			domain: Config.cookieDomain
+			domain: Config.sessionCookieDomain
 		})
 
 		// NOTE: There's no security benefit in resetting the CSRF token on
@@ -706,7 +706,7 @@ function createSessionAndSignIn(authentication, req, res) {
 		httpOnly: true,
 		secure: req.secure,
 		sameSite: "lax",
-		domain: Config.cookieDomain,
+		domain: Config.sessionCookieDomain,
 		maxAge: 120 * 86400 * 1000
 	})
 

@@ -76,7 +76,7 @@ describe("Web", function() {
 
 			var cookies = parseCookies(res.headers["set-cookie"])
 			cookies.csrf_token.path.must.equal("/")
-			cookies.csrf_token.domain.must.equal(Config.cookieDomain)
+			cookies.csrf_token.domain.must.equal(Config.csrfCookieDomain)
 			cookies.csrf_token.httpOnly.must.be.true()
 			cookies.csrf_token.extensions.must.include("SameSite=Lax")
 		})

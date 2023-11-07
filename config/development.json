@@ -12,7 +12,8 @@
 	"admins": {"EE60001019906": [], "EE30303039914": ["signatures"]},
 
 	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
-	"cookieDomain": "rahvaalgatus.test",
+	"csrfCookieDomain": "rahvaalgatus.test",
+	"sessionCookieDomain": "rahvaalgatus.test",
 	"votesRequired": 2,
 	"minEditingDeadlineDays": 0,
 	"minSigningDeadlineDays": 0,
