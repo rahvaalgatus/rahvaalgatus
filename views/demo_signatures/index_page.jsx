@@ -17,7 +17,7 @@ module.exports = function(attrs) {
 	return <Page
 		page="demo-signatures"
 		class="demo-signatures-page"
-		title={t("DEMO_SIGNATURES_TITLE")}
+		title={t("demo_signatures_page.title")}
 		headless
 		req={req}>
 		<script src="/assets/html5.js" />
@@ -25,10 +25,10 @@ module.exports = function(attrs) {
 
 		<header class="header-section text-header"><center>
 			<a href="https://demokraatia.rahvaalgatus.ee" class="home">
-				<img src="/assets/dtv.svg" alt="Demokraatia töövihik" />
+				<img src="/assets/dtv.svg" alt={t("demo_signatures_page.dtv")} />
 			</a>
 
-			<h1>{t("DEMO_SIGNATURES_HEADER")}</h1>
+			<h1>{t("demo_signatures_page.title")}</h1>
 
 			<div class="video">
 				<iframe
@@ -58,7 +58,7 @@ module.exports = function(attrs) {
 
 			<div id="statistics">
 				<div id="signature-count">
-					{Jsx.html(t("DEMO_SIGNATURES_N_HAVE_TRIED", {count: signatureCount}))}
+					{Jsx.html(t("demo_signatures_page.n_tried", {count: signatureCount}))}
 				</div>
 
 				{_.any(signatureCountsByDate) ? <figure id="signatures-by-date">
@@ -66,7 +66,9 @@ module.exports = function(attrs) {
 						signatureCountsByDate={signatureCountsByDate}
 					/>
 
-					<figcaption>{t("DEMO_SIGNATURES_SIGNATURES_BY_DATE")}</figcaption>
+					<figcaption>
+						{t("demo_signatures_page.signatures_by_date")}
+					</figcaption>
 				</figure> : null}
 			</div>
 		</center></section>

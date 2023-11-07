@@ -4,8 +4,7 @@ var Page = require("../page")
 var I18n = require("root/lib/i18n")
 var {DonateForm} = require("../donations/create_page")
 
-module.exports = function(attrs) {
-	var {req} = attrs
+module.exports = function({req}) {
 	var {t} = req
   var {lang} = req
 	var {signature} = req
@@ -14,23 +13,24 @@ module.exports = function(attrs) {
 	return <Page
 		page="created-demo-signature"
 		class="demo-signatures-page"
-		title={t("DEMO_SIGNATURES_TITLE")}
+		title={t("created_demo_signature_page.title")}
 		headless
-		req={req}>
+		req={req}
+	>
 		<header class="header-section text-header"><center>
 			<a href="https://demokraatia.rahvaalgatus.ee" class="home">
 				<img src="/assets/dtv.svg" alt="Demokraatia töövihik" />
 			</a>
 
-			<h1>{t("DEMO_SIGNATURES_HEADER")}</h1>
+			<h1>{t("created_demo_signature_page.heading")}</h1>
 		</center></header>
 
 		<section class="primary-section text-section"><center>
 			<h2 class="subheading">{t("DEMO_SIGNATURES_SIGNED_HEADER")}</h2>
-			<p>{t("DEMO_SIGNATURES_SIGNED_TEXT")}</p>
+			<p>{t("created_demo_signature_page.description")}</p>
 
 			<a class="button blue-button" href={signatureUrl + ".asice"}>
-				Lae allkiri alla
+				{t("created_demo_signature_page.download_button")}
 			</a>
 		</center></section>
 

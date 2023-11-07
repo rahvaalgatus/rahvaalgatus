@@ -31,7 +31,7 @@ var PERSONAL_ID = "38706181337"
 var {VALID_ISSUERS} = require("root/test/fixtures")
 var {JOHN_RSA_KEYS} = require("root/test/fixtures")
 var SMART_ID = "PNOEE-" + PERSONAL_ID + "-R2D2-Q"
-var SIGNABLE_TEXT = t("DEMO_SIGNATURES_SIGNABLE")
+var SIGNABLE_TEXT = t("demo_signatures_page.signable")
 var SIGNABLE_TEXT_SHA256 = sha256(SIGNABLE_TEXT)
 var EXPIRATION = Config.demoSignaturesExpirationSeconds
 var SITE_HOSTNAME = Url.parse(Config.url).hostname
@@ -144,7 +144,7 @@ describe("DemoSignaturesController", function() {
 				"attachment; filename=\"dokument.txt\""
 			)
 
-			res.body.must.equal(t("DEMO_SIGNATURES_SIGNABLE"))
+			res.body.must.equal(t("demo_signatures_page.signable"))
 		})
 	})
 
@@ -159,7 +159,7 @@ describe("DemoSignaturesController", function() {
 
 					var res = yield this.request(signed.headers.location)
 					res.statusCode.must.equal(200)
-					res.body.must.include(t("DEMO_SIGNATURES_SIGNED_TEXT"))
+					res.body.must.include(t("created_demo_signature_page.description"))
 				})
 			})
 		}
