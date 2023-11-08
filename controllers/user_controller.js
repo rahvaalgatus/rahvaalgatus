@@ -27,10 +27,14 @@ exports.router.get("/", canonicalizeUrl)
 
 exports.router.put("/", function(req, res, next) {
 	if (req.user) return void next()
-
 	var lang = req.body.language
-	if (lang in LANGS) setLanguageCookie(req, res, lang)
-	res.statusMessage = "Language Updated"
+
+	if (lang in LANGS) {
+		setLanguageCookie(req, res, lang)
+		res.statusMessage = "Language Updated"
+	}
+	else res.statusMessage = "Unknown Language"
+
 	res.redirect(303, validateRedirect(req, req.headers.referer, "/"))
 })
 
@@ -329,9 +333,18 @@ function parse(obj) {
 }
 
 function setLanguageCookie(req, res, lang) {
-	res.cookie("language", lang, {
+	if (
+		req.cookies[Config.languageCookieName] &&
+		Config.languageCookieDomain
+	) res.clearCookie(Config.languageCookieName, {
+		httpOnly: true,
+		secure: req.secure
+	})
+
+	res.cookie(Config.languageCookieName, lang, {
 		httpOnly: true,
 		secure: req.secure,
+		domain: Config.languageCookieDomain,
 		maxAge: 365 * 86400 * 1000
 	})
 }

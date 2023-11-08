@@ -448,18 +448,19 @@ describe("UserController", function() {
 
 	describe("PUT /", function() {
 		require("root/test/fixtures").csrf()
+		beforeEach(function() { Config.languageCookieDomain = null })
 
 		describe("when not logged in", function() {
-			it("must ignore names", function*() {
+			it("must ignore email", function*() {
 				var user = usersDb.create(new ValidUser({name: "Mary Smith"}))
 
 				var res = yield this.request("/user", {
 					method: "PUT",
-					form: {name: "John Smitheroon"}
+					form: {email: "john@example.com"}
 				})
 
 				res.statusCode.must.equal(303)
-				res.statusMessage.must.equal("Language Updated")
+				res.statusMessage.must.equal("Unknown Language")
 				res.headers.location.must.equal("/")
 				usersDb.read(user).must.eql(user)
 			})
@@ -476,9 +477,63 @@ describe("UserController", function() {
 					res.headers.location.must.equal("/")
 
 					var cookies = parseCookies(res.headers["set-cookie"])
-					cookies.language.value.must.equal(lang)
+					var languageCookie = cookies[Config.languageCookieName]
+					languageCookie.value.must.equal(lang)
+					languageCookie.must.have.property("domain", null)
+					languageCookie.maxAge.must.equal(365 * 86400)
+					languageCookie.httpOnly.must.be.true()
 					cookies.must.not.have.property("flash")
 				})
+			})
+
+			it("must set the language cookie on separate domain", function*() {
+				Config.languageCookieDomain = "rahvaalgatus.test"
+
+				var res = yield this.request("/user", {
+					method: "PUT",
+					form: {language: "en"}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Language Updated")
+				res.headers.location.must.equal("/")
+
+				var cookies = parseCookies(res.headers["set-cookie"])
+				var languageCookie = cookies[Config.languageCookieName]
+				languageCookie.value.must.equal("en")
+				languageCookie.domain.must.equal("rahvaalgatus.test")
+				languageCookie.maxAge.must.equal(365 * 86400)
+				languageCookie.httpOnly.must.be.true()
+				cookies.must.not.have.property("flash")
+			})
+
+			it("must delete the language cookie from current domain", function*() {
+				Config.languageCookieDomain = "rahvaalgatus.test"
+
+				var res = yield this.request("/user", {
+					method: "PUT",
+					cookies: {[Config.languageCookieName]: "en"},
+					form: {language: "en"}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Language Updated")
+				res.headers.location.must.equal("/")
+
+				var cookies = parseCookies(res.headers["set-cookie"])
+				var languageCookies = cookies[Config.languageCookieName]
+				languageCookies.must.be.an.array()
+				languageCookies.must.have.length(2)
+
+				languageCookies[0].value.must.equal("")
+				languageCookies[0].must.have.property("domain", null)
+				languageCookies[0].expires.must.eql(new Date(0))
+				languageCookies[0].httpOnly.must.be.true()
+
+				languageCookies[1].value.must.equal("en")
+				languageCookies[1].domain.must.equal("rahvaalgatus.test")
+				languageCookies[1].maxAge.must.equal(365 * 86400)
+				languageCookies[1].httpOnly.must.be.true()
 			})
 
 			it("must ignore invalid language", function*() {
@@ -488,7 +543,7 @@ describe("UserController", function() {
 				})
 
 				res.statusCode.must.equal(303)
-				res.statusMessage.must.equal("Language Updated")
+				res.statusMessage.must.equal("Unknown Language")
 				res.headers.location.must.equal("/")
 				res.headers.must.not.have.property("set-cookie")
 			})
@@ -505,7 +560,11 @@ describe("UserController", function() {
 					res.statusMessage.must.equal("Language Updated")
 
 					var cookies = parseCookies(res.headers["set-cookie"])
-					cookies.language.value.must.equal("en")
+					var languageCookie = cookies[Config.languageCookieName]
+					languageCookie.value.must.equal("en")
+					languageCookie.must.have.property("domain", null)
+					languageCookie.maxAge.must.equal(365 * 86400)
+					languageCookie.httpOnly.must.be.true()
 					cookies.must.not.have.property("flash")
 				})
 			})
@@ -591,7 +650,11 @@ describe("UserController", function() {
 					res.headers.location.must.equal("/initiatives")
 
 					var cookies = parseCookies(res.headers["set-cookie"])
-					cookies.language.value.must.equal(lang)
+					var languageCookie = cookies[Config.languageCookieName]
+					languageCookie.value.must.equal(lang)
+					languageCookie.must.have.property("domain", null)
+					languageCookie.maxAge.must.equal(365 * 86400)
+					languageCookie.httpOnly.must.be.true()
 					cookies.must.not.have.property("flash")
 
 					usersDb.read(this.user).must.eql({
@@ -602,6 +665,57 @@ describe("UserController", function() {
 				})
 			})
 
+			it("must set the language cookie on separate domain", function*() {
+				Config.languageCookieDomain = "rahvaalgatus.test"
+
+				var res = yield this.request("/user", {
+					method: "PUT",
+					headers: {Referer: "/initiatives"},
+					form: {language: "en"}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("User Updated")
+				res.headers.location.must.equal("/initiatives")
+
+				var cookies = parseCookies(res.headers["set-cookie"])
+				var languageCookie = cookies[Config.languageCookieName]
+				languageCookie.value.must.equal("en")
+				languageCookie.domain.must.equal("rahvaalgatus.test")
+				languageCookie.maxAge.must.equal(365 * 86400)
+				languageCookie.httpOnly.must.be.true()
+				cookies.must.not.have.property("flash")
+			})
+
+			it("must delete the language cookie from current domain", function*() {
+				Config.languageCookieDomain = "rahvaalgatus.test"
+
+				var res = yield this.request("/user", {
+					method: "PUT",
+					cookies: {[Config.languageCookieName]: "en"},
+					form: {language: "en"}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("User Updated")
+				res.headers.location.must.equal("/user")
+
+				var cookies = parseCookies(res.headers["set-cookie"])
+				var languageCookies = cookies[Config.languageCookieName]
+				languageCookies.must.be.an.array()
+				languageCookies.must.have.length(2)
+
+				languageCookies[0].value.must.equal("")
+				languageCookies[0].must.have.property("domain", null)
+				languageCookies[0].expires.must.eql(new Date(0))
+				languageCookies[0].httpOnly.must.be.true()
+
+				languageCookies[1].value.must.equal("en")
+				languageCookies[1].domain.must.equal("rahvaalgatus.test")
+				languageCookies[1].maxAge.must.equal(365 * 86400)
+				languageCookies[1].httpOnly.must.be.true()
+			})
+
 			it("must ignore invalid language", function*() {
 				var res = yield this.request("/user", {
 					method: "PUT",
@@ -610,6 +724,9 @@ describe("UserController", function() {
 
 				res.statusCode.must.equal(303)
 				res.statusMessage.must.equal("User Updated")
+				res.headers.location.must.equal("/user")
+				var cookies = parseCookies(res.headers["set-cookie"])
+				cookies.must.not.have.property(Config.languageCookieName)
 				usersDb.read(this.user).must.eql(this.user)
 			})
 

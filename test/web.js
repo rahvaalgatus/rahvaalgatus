@@ -24,7 +24,9 @@ exports.close = function(done) {
 }
 
 exports.parseCookies = function(header) {
-	return _.indexBy(header.map(Cookie.parse), "key")
+	return _.mapValues(_.groupBy(header.map(Cookie.parse), "key"), (cookies) => (
+		cookies.length > 1 ? cookies : cookies[0]
+	))
 }
 
 exports.serializeCookies = function(cookies) {

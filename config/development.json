@@ -13,6 +13,7 @@
 
 	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
 	"csrfCookieDomain": "rahvaalgatus.test",
+	"languageCookieDomain": "rahvaalgatus.test",
 	"sessionCookieDomain": "rahvaalgatus.test",
 	"votesRequired": 2,
 	"minEditingDeadlineDays": 0,

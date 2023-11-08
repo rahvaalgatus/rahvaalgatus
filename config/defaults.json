@@ -13,6 +13,8 @@
 	"cookieSecret": null,
 	"csrfCookieName": "csrf_token",
 	"csrfCookieDomain": "rahvaalgatus.ee",
+	"languageCookieName": "language",
+	"languageCookieDomain": "rahvaalgatus.ee",
 	"sessionCookieName": "session_token",
 	"sessionCookieDomain": "rahvaalgatus.ee",
 	"userAgent": "Rahvaalgatus (+https://rahvaalgatus.ee)",
