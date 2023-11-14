@@ -97,7 +97,7 @@ module.exports = function(attrs) {
 						<p>Hoolimata praegu kehtiva seaduse sõnastusest ei peaks elanikud kohaliku elu küsimuses arvamuse avaldamise eeltingimusena omama õigusaktide vormistamise ja koostamise pädevust. Avatud valitsemise üks peamine juhtmõte on, et kogukond saab kaasa rääkida ning see on tervitatav.</p>
 					</aside>
 
-					<p>Kui kodanikud on portaalis Rahvaalgatus.ee loonud algatuse, võtab portaali esindaja ühendust kohaliku omavalitsusega, et neid sellest teavitada, ning küsib volitatud registripidaja isikukoodi.</p>
+					<p>Kui kodanikud on portaalis Rahvaalgatus.ee loonud algatuse, võtab portaali esindaja ühendust kohaliku omavalitsusega, et küsida volitatud registripidaja isikukoodi (juhul kui seda juba varem antud pole).</p>
 				</li>
 
 				<li>
