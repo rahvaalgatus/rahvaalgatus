@@ -123,11 +123,17 @@ app.use(require("root/lib/middleware/error_handler_middleware").bind(null,
 		case "application/vnd.rahvaalgatus.error+json":
 		case "application/json":
 			res.setHeader("Content-Type", type)
-			res.end(JSON.stringify(err instanceof HttpError ? err : {
+
+			res.end(JSON.stringify(err instanceof HttpError ? {
+				code: err.code,
+				message: err.message,
+				description: err.description
+			} : {
 				code: 500,
 				message: t("500_TITLE"),
 				description: t("500_BODY")
 			}))
+
 			break
 
 		default:

@@ -1,10 +1,13 @@
+var SqliteError = require("root/lib/sqlite_error")
+var sql = require("sqlate")
 var {sqlite} = require("root")
 
-exports = module.exports = function() {
-	beforeEach(exports.delete)
+module.exports = function() {
+	beforeEach(truncate)
+	afterEach(assertNoTransaction)
 }
 
-exports.delete = function() {
+function truncate() {
 	sqlite.batch(`
 		PRAGMA foreign_keys = OFF;
 
@@ -29,4 +32,11 @@ exports.delete = function() {
 
 		PRAGMA foreign_keys = ON;
 	`)
+}
+
+function assertNoTransaction() {
+	var err
+	try { sqlite(sql`ROLLBACK`) } catch (ex) { err = ex }
+	err.must.be.an.error(SqliteError)
+	err.message.must.equal("cannot rollback - no transaction is active")
 }

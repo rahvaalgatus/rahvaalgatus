@@ -244,7 +244,7 @@ CREATE TABLE initiative_signables (
 	xades TEXT NOT NULL,
 	signed INTEGER NOT NULL DEFAULT 0,
 	timestamped INTEGER NOT NULL DEFAULT 0,
-	error TEXT, method TEXT NOT NULL, created_from TEXT,
+	error TEXT, method TEXT NOT NULL, created_from TEXT, eid_session TEXT,
 
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE,
 
@@ -254,7 +254,10 @@ CREATE TABLE initiative_signables (
 	CHECK (length(personal_id) > 0),
 
 	CONSTRAINT initiative_signables_token_length CHECK (length(token) > 0),
-	CONSTRAINT initiative_signables_xades_length CHECK (length(xades) > 0)
+	CONSTRAINT initiative_signables_xades_length CHECK (length(xades) > 0),
+
+	CONSTRAINT eid_session_json
+	CHECK (eid_session IS NULL OR json_valid(eid_session))
 );
 CREATE INDEX index_signables_on_initiative_uuid
 ON initiative_signables (initiative_uuid);
@@ -333,7 +336,7 @@ CREATE TABLE authentications (
 	created_ip TEXT,
 	created_user_agent TEXT,
 	authenticated INTEGER NOT NULL DEFAULT 0,
-	error TEXT,
+	error TEXT, eid_session TEXT,
 
 	CONSTRAINT authentications_country_length CHECK (length(country) = 2),
 	CONSTRAINT authentications_personal_id_length
@@ -343,7 +346,10 @@ CREATE TABLE authentications (
 	CONSTRAINT authentications_token_sha256_length CHECK (length(token) > 0),
 
 	CONSTRAINT authentications_country_uppercase
-	CHECK (country == upper(country))
+	CHECK (country == upper(country)),
+
+	CONSTRAINT eid_session_json
+	CHECK (eid_session IS NULL OR json_valid(eid_session))
 );
 CREATE TABLE sessions (
 	id INTEGER PRIMARY KEY NOT NULL,
@@ -351,16 +357,14 @@ CREATE TABLE sessions (
   token_sha256 BLOB UNIQUE NOT NULL,
 	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
 	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	authentication_id INTEGER UNIQUE,
+	authentication_id INTEGER NOT NULL UNIQUE,
 	method TEXT NOT NULL,
 	created_ip TEXT,
 	created_user_agent TEXT,
 	deleted_at TEXT,
 
 	FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-
-	FOREIGN KEY (authentication_id) REFERENCES authentications (id)
-	ON DELETE SET NULL,
+	FOREIGN KEY (authentication_id) REFERENCES authentications (id),
 
 	CONSTRAINT sessions_token_sha256_length CHECK (length(token_sha256) == 32)
 );
@@ -700,4 +704,7 @@ INSERT INTO migrations VALUES('20230503063630');
 INSERT INTO migrations VALUES('20230920074135');
 INSERT INTO migrations VALUES('20230920074150');
 INSERT INTO migrations VALUES('20231020000000');
+INSERT INTO migrations VALUES('20231102110120');
+INSERT INTO migrations VALUES('20231102110130');
+INSERT INTO migrations VALUES('20231102110140');
 COMMIT;

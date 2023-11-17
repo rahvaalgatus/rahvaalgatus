@@ -12,7 +12,9 @@ var Config = require("root").config
 var LdapAttributes = require("undersign/lib/ldap_attributes")
 var ValidUser = require("root/test/valid_user")
 var ValidSession = require("root/test/valid_session")
+var ValidAuthentication = require("root/test/valid_authentication")
 var usersDb = require("root/db/users_db")
+var authenticationsDb = require("root/db/authentications_db")
 var sessionsDb = require("root/db/sessions_db")
 var {pseudoHex} = require("root/lib/crypto")
 var {serializePersonalId} = require("root/lib/user")
@@ -117,7 +119,17 @@ exports.csrf = function() {
 exports.user = function(attrs) {
 	beforeEach(function() {
 		var user = usersDb.create(new ValidUser(attrs))
-		var session = new ValidSession({user_id: user.id})
+
+		var auth = authenticationsDb.create(new ValidAuthentication({
+			country: user.country,
+			personal_id: user.personal_id
+		}))
+
+		var session = new ValidSession({
+			user_id: user.id,
+			authentication_id: auth.id
+		})
+
 		session = _.assign(sessionsDb.create(session), {token: session.token})
 
 		this.user = user
@@ -129,7 +141,7 @@ exports.user = function(attrs) {
 	})
 }
 
-exports.admin =function(attrs) {
+exports.admin = function(attrs) {
 	var country = attrs && attrs.country || "EE"
 	var personalId = attrs && attrs.personal_id || ValidUser.randomPersonalId()
 	var perms = attrs && attrs.permissions || []

@@ -2,9 +2,11 @@ var _ = require("root/lib/underscore")
 var DateFns = require("date-fns")
 var ValidUser = require("root/test/valid_user")
 var ValidSession = require("root/test/valid_session")
+var ValidAuthentication = require("root/test/valid_authentication")
 var Config = require("root").config
 var usersDb = require("root/db/users_db")
 var sessionsDb = require("root/db/sessions_db")
+var authenticationsDb = require("root/db/authentications_db")
 var {parseCookies} = require("root/test/web")
 var SESSION_LENGTH_IN_DAYS = 120
 
@@ -151,7 +153,17 @@ describe("Web", function() {
 
 		it("must authenticate given valid session token", function*() {
 			var user = usersDb.create(new ValidUser)
-			var session = new ValidSession({user_id: user.id})
+
+			var auth = authenticationsDb.create(new ValidAuthentication({
+				country: user.country,
+				personal_id: user.personal_id
+			}))
+
+			var session = new ValidSession({
+				user_id: user.id,
+				authentication_id: auth.id
+			})
+
 			session = _.assign(sessionsDb.create(session), {token: session.token})
 			var res = yield this.request("/user", {session: session})
 			res.statusCode.must.equal(200)
@@ -159,7 +171,17 @@ describe("Web", function() {
 
 		it("must not authenticate given invalid session token", function*() {
 			var user = usersDb.create(new ValidUser)
-			var session = new ValidSession({user_id: user.id})
+
+			var auth = authenticationsDb.create(new ValidAuthentication({
+				country: user.country,
+				personal_id: user.personal_id
+			}))
+
+			var session = new ValidSession({
+				user_id: user.id,
+				authentication_id: auth.id
+			})
+
 			session = _.assign(sessionsDb.create(session), {token: session.token})
 			session.token[0] = ~session.token[0]
 			var res = yield this.request("/user", {session: session})
@@ -170,8 +192,14 @@ describe("Web", function() {
 		it("must not authenticate given deleted session", function*() {
 			var user = usersDb.create(new ValidUser)
 
+			var auth = authenticationsDb.create(new ValidAuthentication({
+				country: user.country,
+				personal_id: user.personal_id
+			}))
+
 			var session = new ValidSession({
 				user_id: user.id,
+				authentication_id: auth.id,
 				deleted_at: new Date
 			})
 
@@ -185,8 +213,14 @@ describe("Web", function() {
 		it(`must authenticate given session token newer than ${SESSION_LENGTH_IN_DAYS} days`, function*() {
 			var user = usersDb.create(new ValidUser)
 
+			var auth = authenticationsDb.create(new ValidAuthentication({
+				country: user.country,
+				personal_id: user.personal_id
+			}))
+
 			var session = new ValidSession({
 				user_id: user.id,
+				authentication_id: auth.id,
 
 				created_at: DateFns.addSeconds(
 					DateFns.addDays(new Date, -SESSION_LENGTH_IN_DAYS),
@@ -202,8 +236,14 @@ describe("Web", function() {
 		it(`must not authenticate given session token older than ${SESSION_LENGTH_IN_DAYS} days`, function*() {
 			var user = usersDb.create(new ValidUser)
 
+			var auth = authenticationsDb.create(new ValidAuthentication({
+				country: user.country,
+				personal_id: user.personal_id
+			}))
+
 			var session = new ValidSession({
 				user_id: user.id,
+				authentication_id: auth.id,
 				created_at: DateFns.addDays(new Date, -SESSION_LENGTH_IN_DAYS)
 			})
 

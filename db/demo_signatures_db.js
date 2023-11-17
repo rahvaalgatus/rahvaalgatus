@@ -2,6 +2,7 @@ var _ = require("root/lib/underscore")
 var Db = require("root/lib/db")
 var Xades = require("undersign/xades")
 var {sqlite} = require("root")
+var {serializeError} = require("./authentications_db")
 exports = module.exports = new Db(Object, sqlite, "demo_signatures")
 
 exports.parse = function(attrs) {
@@ -18,14 +19,6 @@ exports.parse = function(attrs) {
 exports.serialize = function(model) {
 	var obj = _.clone(model)
 	if (model.xades instanceof Xades) obj.xades = String(model.xades)
-	if ("error" in model) obj.error = model.error && stringifyError(model.error)
+	if ("error" in model) obj.error = model.error && serializeError(model.error)
 	return obj
-}
-
-function stringifyError(err) {
-	return JSON.stringify(_.defaults({
-		name: err.name,
-		message: err.message,
-		stack: err.stack
-	}, err))
 }

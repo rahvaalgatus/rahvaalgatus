@@ -3,12 +3,15 @@ var Url = require("url")
 var DateFns = require("date-fns")
 var Asic = require("undersign/lib/asic")
 var Config = require("root").config
+var MobileId = require("undersign/lib/mobile_id")
+var SmartId = require("undersign/lib/smart_id")
 var ValidInitiative = require("root/test/valid_initiative")
 var ValidSignable = require("root/test/valid_signable")
 var ValidSignature = require("root/test/valid_signature")
 var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
 var ValidUser = require("root/test/valid_user")
 var ValidSession = require("root/test/valid_session")
+var ValidAuthentication = require("root/test/valid_authentication")
 var ValidText = require("root/test/valid_initiative_text")
 var Certificate = require("undersign/lib/certificate")
 var X509Asn = require("undersign/lib/x509_asn")
@@ -24,7 +27,10 @@ var {newTimestampResponse} = require("root/test/fixtures")
 var {newOcspResponse} = require("root/test/fixtures")
 var {parseCookies} = require("root/test/web")
 var {serializeCookies} = require("root/test/web")
+var {parseRefreshHeader} = require("root/lib/http")
+var parseHtml = require("root/test/html").parse
 var usersDb = require("root/db/users_db")
+var authenticationsDb = require("root/db/authentications_db")
 var sessionsDb = require("root/db/sessions_db")
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
@@ -35,18 +41,21 @@ var citizenosSignaturesDb =
 var {hades} = require("root")
 var demand = require("must")
 var {tsl} = require("root")
-var ASICE_TYPE = "application/vnd.etsi.asic-e+zip"
-var CSV_TYPE = "text/csv; charset=utf-8"
-var ZIP_TYPE = "application/zip"
 var MOBILE_ID_URL = Url.parse("https://mid.sk.ee/mid-api/")
 var SMART_ID_URL = Url.parse("https://rp-api.smart-id.com/v1/")
 var TIMESTAMP_URL = Url.parse(Config.timestampUrl)
 var OCSP_URL = Url.parse("http://example.com/ocsp")
 var OCSP_URL_OID = require("undersign/lib/x509_asn").OCSP_URL
+var ASICE_TYPE = "application/vnd.etsi.asic-e+zip"
 var CERTIFICATE_TYPE = "application/pkix-cert"
-var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
+var CSV_TYPE = "text/csv; charset=utf-8"
+var ERROR_TYPE = "application/vnd.rahvaalgatus.error+json"
+var HTML_TYPE = "text/html; charset=utf-8"
+var JSON_TYPE = "application/json; charset=utf-8"
 var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
 var SIGNATURE_TYPE = "application/vnd.rahvaalgatus.signature"
+var EMPTY_TYPE = "application/x-empty"
+var ZIP_TYPE = "application/zip"
 var {VALID_ISSUERS} = require("root/test/fixtures")
 var {JOHN_RSA_KEYS} = require("root/test/fixtures")
 var {JOHN_ECDSA_KEYS} = require("root/test/fixtures")
@@ -133,87 +142,87 @@ var SMART_ID_CERTIFICATE = new Certificate(newCertificate({
 	publicKey: JOHN_RSA_KEYS.publicKey
 }))
 
-var MOBILE_ID_CREATE_ERRORS = {
+var MOBILE_ID_CERT_ERRORS = {
 	NOT_FOUND: [
 		422,
-		"Not a Mobile-Id User or Personal Id Mismatch",
-		"MOBILE_ID_ERROR_NOT_FOUND"
-	],
-
-	NOT_ACTIVE: [
-		422,
-		"Mobile-Id Certificates Not Activated",
-		"MOBILE_ID_ERROR_NOT_ACTIVE"
+		"Not a Mobile-ID User",
+		"eid_view.mobile_id_errors.not_found"
 	]
 }
 
-var MOBILE_ID_SESSION_ERRORS = {
+var MOBILE_ID_SIGN_ERRORS = {
 	TIMEOUT: [
 		410,
-		"Mobile-Id Timeout",
-		"MOBILE_ID_ERROR_TIMEOUT"
+		"Mobile-ID Timeout",
+		"eid_view.mobile_id_errors.sign_timeout"
 	],
 
 	NOT_MID_CLIENT: [
 		410,
-		"Mobile-Id Certificates Not Activated",
-		"MOBILE_ID_ERROR_NOT_ACTIVE"
+		"Mobile-ID Certificates Not Activated",
+		"eid_view.mobile_id_errors.not_active"
 	],
 
 	USER_CANCELLED: [
 		410,
-		"Mobile-Id Cancelled",
-		"MOBILE_ID_ERROR_USER_CANCELLED"
+		"Mobile-ID Cancelled",
+		"eid_view.mobile_id_errors.sign_cancelled"
 	],
 
 	SIGNATURE_HASH_MISMATCH: [
 		410,
-		"Mobile-Id Signature Hash Mismatch",
-		"MOBILE_ID_ERROR_SIGNATURE_HASH_MISMATCH"
+		"Mobile-ID Signature Hash Mismatch",
+		"eid_view.mobile_id_errors.sign_hash_mismatch"
 	],
 
 	PHONE_ABSENT: [
 		410,
-		"Mobile-Id Phone Absent",
-		"MOBILE_ID_ERROR_PHONE_ABSENT"
+		"Mobile-ID Phone Absent",
+		"eid_view.mobile_id_errors.sign_phone_absent"
 	],
 
 	DELIVERY_ERROR: [
 		410,
-		"Mobile-Id Delivery Error",
-		"MOBILE_ID_ERROR_DELIVERY_ERROR"
+		"Mobile-ID Delivery Error",
+		"eid_view.mobile_id_errors.sign_delivery_error"
 	],
 
 	SIM_ERROR: [
 		410,
-		"Mobile-Id SIM Application Error",
-		"MOBILE_ID_ERROR_SIM_ERROR"
+		"Mobile-ID SIM Application Error",
+		"eid_view.mobile_id_errors.sim_error"
 	],
 }
 
 var SMART_ID_SESSION_ERRORS = {
 	USER_REFUSED: [
 		410,
-		"Smart-Id Cancelled",
-		"SMART_ID_ERROR_USER_REFUSED_SIGN"
+		"Smart-ID Cancelled",
+		"eid_view.smart_id_errors.sign_cancelled"
 	],
 
 	TIMEOUT: [
 		410,
-		"Smart-Id Timeout",
-		"SMART_ID_ERROR_TIMEOUT_SIGN"
+		"Smart-ID Timeout",
+		"eid_view.smart_id_errors.sign_timeout"
+	],
+
+	NO_SUITABLE_CERTIFICATE: [
+		410,
+		"No Smart-ID Certificate",
+		"eid_view.smart_id_errors.sign_no_suitable_certificate"
 	],
 
 	DOCUMENT_UNUSABLE: [
 		410,
-		"Smart-Id Certificate Unusable",
-		"SMART_ID_ERROR_DOCUMENT_UNUSABLE"
+		"Smart-ID Certificate Unusable",
+		"eid_view.smart_id_errors.document_unusable"
 	],
 
 	WRONG_VC: [
 		410,
-		"Wrong Smart-Id Verification Code Chosen",
-		"SMART_ID_ERROR_WRONG_VERIFICATION_CODE"
+		"Wrong Smart-ID Verification Code Chosen",
+		"eid_view.smart_id_errors.wrong_vc"
 	]
 }
 
@@ -500,7 +509,15 @@ describe("SignaturesController", function() {
 			beforeEach(function() {
 				this.user = usersDb.create(new ValidUser)
 
-				var session = new ValidSession({user_id: this.user.id})
+				var auth = authenticationsDb.create(new ValidAuthentication({
+					country: this.user.country,
+					personal_id: this.user.personal_id
+				}))
+
+				var session = new ValidSession({
+					user_id: this.user.id,
+					authentication_id: auth.id
+				})
 
 				this.session = _.assign(sessionsDb.create(session), {
 					token: session.token
@@ -884,8 +901,170 @@ describe("SignaturesController", function() {
 			}))
 		})
 
-		function mustSign(sign, certificate) {
+		function mustSign(sign, assertError) {
 			describe("as signable", function() {
+				it("must respond with 405 if initiative not yet in sign phase",
+					function*() {
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "edit",
+						published_at: new Date
+					}))
+
+					assertError(yield sign(this.router, this.request, initiative), {
+						code: 405,
+						message: "Signing Not Yet Started",
+						description:
+							t("creating_initiative_signature_page.errors.not_yet_started")
+					})
+				})
+
+				it("must respond with 405 if initiative signing finished", function*() {
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+						signing_ends_at: new Date
+					}))
+
+					assertError(yield sign(this.router, this.request, initiative), {
+						code: 405,
+						message: "Signing Ended",
+						description:
+							t("creating_initiative_signature_page.errors.signing_ended")
+					})
+				})
+
+				it("must respond with 405 if initiative signing expired", function*() {
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+						signing_ends_at: DateFns.addDays(new Date, 1),
+						signing_expired_at: new Date
+					}))
+
+					assertError(yield sign(this.router, this.request, initiative), {
+						code: 405,
+						message: "Signing Ended",
+						description: t("creating_initiative_signature_page.errors.signing_ended")
+					})
+				})
+
+				it("must respond with 422 given certificate from untrusted issuer",
+					function*() {
+					var issuer = tsl.getBySubjectName([
+						"C=EE",
+						"O=AS Sertifitseerimiskeskus",
+						"OU=Sertifitseerimisteenused",
+						"CN=EID-SK 2007",
+					].join(","))
+
+					var cert = new Certificate(newCertificate({
+						subject: {
+							countryName: "EE",
+							organizationalUnitName: "SIGNATURE",
+							commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
+							surname: "SMITH",
+							givenName: "JOHN",
+							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
+						},
+
+						extensions: SIGN_CERTIFICATE_EXTENSIONS,
+						issuer: issuer,
+						publicKey: JOHN_RSA_KEYS.publicKey
+					}))
+
+					var res = yield sign(this.router, this.request, this.initiative, cert)
+
+					assertError(res, {
+						code: 422,
+						message: "Invalid Issuer",
+						description: t("eid_view.errors.invalid_issuer")
+					})
+				})
+
+				it("must respond with 422 given future certificate", function*() {
+					var cert = new Certificate(newCertificate({
+						subject: {
+							countryName: "EE",
+							organizationalUnitName: "SIGNATURE",
+							commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
+							surname: "SMITH",
+							givenName: "JOHN",
+							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
+						},
+
+						extensions: SIGN_CERTIFICATE_EXTENSIONS,
+						validFrom: DateFns.addSeconds(new Date, 1),
+						issuer: VALID_ISSUERS[0],
+						publicKey: JOHN_RSA_KEYS.publicKey
+					}))
+
+					var res = yield sign(this.router, this.request, this.initiative, cert)
+
+					assertError(res, {
+						code: 422,
+						message: "Certificate Not Yet Valid",
+						description: t("eid_view.errors.certificate_not_yet_valid")
+					})
+				})
+
+				it("must respond with 422 given past certificate", function*() {
+					var cert = new Certificate(newCertificate({
+						subject: {
+							countryName: "EE",
+							organizationalUnitName: "SIGNATURE",
+							commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
+							surname: "SMITH",
+							givenName: "JOHN",
+							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
+						},
+
+						extensions: SIGN_CERTIFICATE_EXTENSIONS,
+						validUntil: new Date,
+						issuer: VALID_ISSUERS[0],
+						publicKey: JOHN_RSA_KEYS.publicKey
+					}))
+
+					var res = yield sign(this.router, this.request, this.initiative, cert)
+
+					assertError(res, {
+						code: 422,
+						message: "Certificate Expired",
+						description: t("eid_view.errors.certificate_expired")
+					})
+				})
+
+				it("must respond with 422 given non-sign certificate", function*() {
+					var cert = new Certificate(newCertificate({
+						subject: {
+							countryName: "EE",
+							organizationName: "ESTEID",
+							organizationalUnitName: "digital signature",
+							commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
+							surname: "SMITH",
+							givenName: "JOHN",
+							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
+						},
+
+						extensions: [{
+							extnID: "keyUsage",
+							critical: true,
+							extnValue: {data: Buffer.from([KEY_USAGE_DIGITAL_SIGNATURE])}
+						}],
+
+						issuer: VALID_ISSUERS[0],
+						publicKey: JOHN_RSA_KEYS.publicKey
+					}))
+
+					var res = yield sign(this.router, this.request, this.initiative, cert)
+
+					assertError(res, {
+						code: 422,
+						message: "Not Signing Certificate",
+						description: t("eid_view.errors.certificate_not_for_sign")
+					})
+				})
+
 				it("must create a signature given a non-ETSI semantic personal id",
 					function*() {
 					var cert = new Certificate(newCertificate({
@@ -904,15 +1083,15 @@ describe("SignaturesController", function() {
 						publicKey: JOHN_RSA_KEYS.publicKey
 					}))
 
-					var res = yield sign(
+					var signed = yield sign(
 						this.router,
 						this.request,
 						this.initiative,
 						cert
 					)
 
-					res.statusCode.must.equal(204)
-					res.statusMessage.must.equal("Signed")
+					signed.statusCode.must.equal(303)
+					signed.statusMessage.must.match(/^Signed with /)
 
 					var signature = signaturesDb.read(sql`
 						SELECT * FROM initiative_signatures
@@ -950,8 +1129,8 @@ describe("SignaturesController", function() {
 							cert
 						)
 
-						res.statusCode.must.equal(204)
-						res.statusMessage.must.equal("Signed")
+						res.statusCode.must.equal(303)
+						res.statusMessage.must.match(/^Signed with /)
 
 						signaturesDb.search(sql`
 							SELECT * FROM initiative_signatures
@@ -960,15 +1139,9 @@ describe("SignaturesController", function() {
 				})
 
 				it("must thank after signing", function*() {
-					var signed = yield sign(
-						this.router,
-						this.request,
-						this.initiative,
-						certificate
-					)
-
-					signed.statusCode.must.equal(204)
-					signed.statusMessage.must.equal("Signed")
+					var signed = yield sign(this.router, this.request, this.initiative)
+					signed.statusCode.must.equal(303)
+					signed.statusMessage.must.match(/^Signed with /)
 
 					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
@@ -990,15 +1163,9 @@ describe("SignaturesController", function() {
 						personal_id: ADULT_PERSONAL_ID
 					}))
 
-					var signed = yield sign(
-						this.router,
-						this.request,
-						this.initiative,
-						certificate
-					)
-
-					signed.statusCode.must.equal(204)
-					signed.statusMessage.must.equal("Signed")
+					var signed = yield sign(this.router, this.request, this.initiative)
+					signed.statusCode.must.equal(303)
+					signed.statusMessage.must.match(/^Signed with /)
 
 					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
@@ -1025,15 +1192,9 @@ describe("SignaturesController", function() {
 						})
 					)
 
-					var signed = yield sign(
-						this.router,
-						this.request,
-						this.initiative,
-						certificate
-					)
-
-					signed.statusCode.must.equal(204)
-					signed.statusMessage.must.equal("Signed")
+					var signed = yield sign(this.router, this.request, this.initiative)
+					signed.statusCode.must.equal(303)
+					signed.statusMessage.must.match(/^Signed with /)
 
 					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
@@ -1069,15 +1230,9 @@ describe("SignaturesController", function() {
 						}])
 					}))
 
-					var signed = yield sign(
-						this.router,
-						this.request,
-						this.initiative,
-						certificate
-					)
-
-					signed.statusCode.must.equal(204)
-					signed.statusMessage.must.equal("Signed")
+					var signed = yield sign(this.router, this.request, this.initiative)
+					signed.statusCode.must.equal(303)
+					signed.statusMessage.must.match(/^Signed with /)
 
 					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
@@ -1110,15 +1265,9 @@ describe("SignaturesController", function() {
 						personal_id: ADULT_PERSONAL_ID
 					}))
 
-					var signed = yield sign(
-						this.router,
-						this.request,
-						this.initiative,
-						certificate
-					)
-
-					signed.statusCode.must.equal(204)
-					signed.statusMessage.must.equal("Signed")
+					var signed = yield sign(this.router, this.request, this.initiative)
+					signed.statusCode.must.equal(303)
+					signed.statusMessage.must.match(/^Signed with /)
 
 					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
@@ -1152,15 +1301,9 @@ describe("SignaturesController", function() {
 						})
 					)
 
-					var signed = yield sign(
-						this.router,
-						this.request,
-						this.initiative,
-						certificate
-					)
-
-					signed.statusCode.must.equal(204)
-					signed.statusMessage.must.equal("Signed")
+					var signed = yield sign(this.router, this.request, this.initiative)
+					signed.statusCode.must.equal(303)
+					signed.statusMessage.must.match(/^Signed with /)
 
 					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
@@ -1188,15 +1331,9 @@ describe("SignaturesController", function() {
 						personal_id: "70001019906"
 					}))
 
-					var signed = yield sign(
-						this.router,
-						this.request,
-						this.initiative,
-						certificate
-					)
-
-					signed.statusCode.must.equal(204)
-					signed.statusMessage.must.equal("Signed")
+					var signed = yield sign(this.router, this.request, this.initiative)
+					signed.statusCode.must.equal(303)
+					signed.statusMessage.must.match(/^Signed with /)
 
 					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
@@ -1225,15 +1362,9 @@ describe("SignaturesController", function() {
 						})
 					)
 
-					var signed = yield sign(
-						this.router,
-						this.request,
-						this.initiative,
-						certificate
-					)
-
-					signed.statusCode.must.equal(204)
-					signed.statusMessage.must.equal("Signed")
+					var signed = yield sign(this.router, this.request, this.initiative)
+					signed.statusCode.must.equal(303)
+					signed.statusMessage.must.match(/^Signed with /)
 
 					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
@@ -1261,15 +1392,9 @@ describe("SignaturesController", function() {
 						personal_id: ADULT_PERSONAL_ID
 					}))
 
-					var signed = yield sign(
-						this.router,
-						this.request,
-						this.initiative,
-						certificate
-					)
-
-					signed.statusCode.must.equal(204)
-					signed.statusMessage.must.equal("Signed")
+					var signed = yield sign(this.router, this.request, this.initiative)
+					signed.statusCode.must.equal(303)
+					signed.statusMessage.must.match(/^Signed with /)
 
 					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
@@ -1299,15 +1424,9 @@ describe("SignaturesController", function() {
 						})
 					)
 
-					var signed = yield sign(
-						this.router,
-						this.request,
-						this.initiative,
-						certificate
-					)
-
-					signed.statusCode.must.equal(204)
-					signed.statusMessage.must.equal("Signed")
+					var signed = yield sign(this.router, this.request, this.initiative)
+					signed.statusCode.must.equal(303)
+					signed.statusMessage.must.match(/^Signed with /)
 
 					var cookies = parseCookies(signed.headers["set-cookie"])
 					var res = yield this.request(signed.headers.location, {
@@ -1330,9 +1449,9 @@ describe("SignaturesController", function() {
 			})
 		}
 
-		function mustRateLimit(sign, cert) {
+		function mustRateLimit(sign, assertOk, assertError) {
 			describe("as a rate limited endpoint", function() {
-				it(`must respond with 429 if created ${SIGN_RATE} signables in the last ${SIGN_RATE_IN_MINUTES}m`, function*() {
+				it(`must respond with error if created ${SIGN_RATE} signables in the last ${SIGN_RATE_IN_MINUTES}m`, function*() {
 					signablesDb.create(_.times(SIGN_RATE, (_i) => new ValidSignable({
 						initiative_uuid: this.initiative.uuid,
 						country: "EE",
@@ -1341,16 +1460,22 @@ describe("SignaturesController", function() {
 						created_at: DateFns.addSeconds(DateFns.addMinutes(new Date, -SIGN_RATE_IN_MINUTES), 1),
 					})))
 
-					var res = yield sign(this.router, this.request, this.initiative, cert)
-					res.statusCode.must.equal(429)
-					res.statusMessage.must.equal("Too Many Incomplete Signatures")
+					assertError(yield sign(
+						this.router,
+						this.request,
+						this.initiative
+					), {
+						code: 429,
+						message: "Too Many Incomplete Signatures",
+						description: t("eid_view.errors.sign_rate_limit", {minutes: 1})
+					})
 
 					signablesDb.read(sql`
 						SELECT COUNT(*) AS count FROM initiative_signables
 					`).count.must.equal(SIGN_RATE)
 				})
 
-				it(`must not respond with 429 if created ${SIGN_RATE} signed signables in the last ${SIGN_RATE_IN_MINUTES}m`, function*() {
+				it(`must not respond with error if created ${SIGN_RATE} signed signables in the last ${SIGN_RATE_IN_MINUTES}m`, function*() {
 					signablesDb.create(_.times(SIGN_RATE, (_i) =>
 						new ValidSignable({
 							initiative_uuid: this.initiative.uuid,
@@ -1362,12 +1487,10 @@ describe("SignaturesController", function() {
 						})
 					))
 
-					var res = yield sign(this.router, this.request, this.initiative, cert)
-					res.statusCode.must.equal(204)
-					res.statusMessage.must.equal("Signed")
+					assertOk(yield sign(this.router, this.request, this.initiative))
 				})
 
-				it(`must not respond with 429 if created <${SIGN_RATE} signables in the last ${SIGN_RATE_IN_MINUTES}m`, function*() {
+				it(`must not respond with error if created <${SIGN_RATE} signables in the last ${SIGN_RATE_IN_MINUTES}m`, function*() {
 					signablesDb.create(_.times(SIGN_RATE - 1, (_i) =>
 						new ValidSignable({
 							initiative_uuid: this.initiative.uuid,
@@ -1378,12 +1501,10 @@ describe("SignaturesController", function() {
 						})
 					))
 
-					var res = yield sign(this.router, this.request, this.initiative, cert)
-					res.statusCode.must.equal(204)
-					res.statusMessage.must.equal("Signed")
+					assertOk(yield sign(this.router, this.request, this.initiative))
 				})
 
-				it(`must not respond with 429 if created ${SIGN_RATE} signables earlier than ${SIGN_RATE_IN_MINUTES}m`, function*() {
+				it(`must not respond with error if created ${SIGN_RATE} signables earlier than ${SIGN_RATE_IN_MINUTES}m`, function*() {
 					signablesDb.create(_.times(SIGN_RATE - 1, (_i) =>
 						new ValidSignable({
 							initiative_uuid: this.initiative.uuid,
@@ -1394,15 +1515,27 @@ describe("SignaturesController", function() {
 						})
 					))
 
-					var res = yield sign(this.router, this.request, this.initiative, cert)
-					res.statusCode.must.equal(204)
-					res.statusMessage.must.equal("Signed")
+					assertOk(yield sign(this.router, this.request, this.initiative))
 				})
 			})
 		}
 
-		describe("when signing via Id-Card", function() {
-			mustSign(signWithIdCard, ID_CARD_CERTIFICATE)
+		describe("when signing via ID-card", function() {
+			function assertOk(res) {
+				res.statusCode.must.equal(204)
+				res.statusMessage.must.equal("Signed with ID-card")
+			}
+
+			function assertError(res, obj) {
+				res.statusCode.must.equal(obj.code)
+				res.statusMessage.must.equal(obj.message)
+				res.headers["content-type"].must.equal(ERROR_TYPE)
+				res.body.must.eql(obj)
+			}
+
+			mustSign((router, request, initiative, cert) => (
+				signWithIdCard(router, request, initiative, cert || ID_CARD_CERTIFICATE)
+			), assertError)
 
 			it("must create a signature", function*() {
 				var cert = new Certificate(newCertificate({
@@ -1435,7 +1568,7 @@ describe("SignaturesController", function() {
 				})
 
 				signing.statusCode.must.equal(202)
-				signing.statusMessage.must.equal("Signing")
+				signing.statusMessage.must.equal("Signing with ID-card")
 				signing.headers["content-type"].must.equal(SIGNABLE_TYPE)
 
 				var xades = hades.new(cert, [{
@@ -1465,7 +1598,7 @@ describe("SignaturesController", function() {
 					SELECT * FROM initiative_signatures
 				`).must.be.empty()
 
-				var signatureBytes = signWithRsa(
+				var signatureBytes = hashAndSignWithRsa(
 					JOHN_RSA_KEYS.privateKey,
 					xades.signable
 				)
@@ -1492,7 +1625,7 @@ describe("SignaturesController", function() {
 					method: "PUT",
 
 					headers: {
-						Accept: `application/x-empty, ${ERR_TYPE}`,
+						Accept: `application/x-empty, ${ERROR_TYPE}`,
 						"Content-Type": SIGNATURE_TYPE
 					},
 
@@ -1500,7 +1633,7 @@ describe("SignaturesController", function() {
 				})
 
 				signed.statusCode.must.equal(204)
-				signed.statusMessage.must.equal("Signed")
+				signed.statusMessage.must.equal("Signed with ID-card")
 				signed.headers.location.must.equal(path)
 
 				signaturesDb.search(sql`
@@ -1515,241 +1648,6 @@ describe("SignaturesController", function() {
 					xades: String(xades),
 					created_from: LONDON_GEO
 				})])
-			})
-
-			it("must respond with 405 if initiative not yet in sign phase",
-				function*() {
-				var initiative = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "edit",
-					published_at: new Date
-				}))
-
-				var path = `/initiatives/${initiative.uuid}`
-				var signing = yield this.request(path + "/signatures", {
-					method: "POST",
-					headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
-					body: ID_CARD_CERTIFICATE.toBuffer()
-				})
-
-				signing.statusCode.must.equal(405)
-				signing.statusMessage.must.equal("Signing Not Yet Started")
-			})
-
-			it("must respond with 405 if initiative signing finished", function*() {
-				var initiative = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					signing_ends_at: new Date
-				}))
-
-				var path = `/initiatives/${initiative.uuid}`
-				var signing = yield this.request(path + "/signatures", {
-					method: "POST",
-					headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
-					body: ID_CARD_CERTIFICATE.toBuffer()
-				})
-
-				signing.statusCode.must.equal(405)
-				signing.statusMessage.must.equal("Signing Ended")
-			})
-
-			it("must respond with 405 if initiative signing expired", function*() {
-				var initiative = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					signing_ends_at: DateFns.addDays(new Date, 1),
-					signing_expired_at: new Date
-				}))
-
-				var path = `/initiatives/${initiative.uuid}`
-				var signing = yield this.request(path + "/signatures", {
-					method: "POST",
-					headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
-					body: ID_CARD_CERTIFICATE.toBuffer()
-				})
-
-				signing.statusCode.must.equal(405)
-				signing.statusMessage.must.equal("Signing Ended")
-			})
-
-			it("must respond with 422 given certificate from untrusted issuer",
-				function*() {
-				var issuer = tsl.getBySubjectName([
-					"C=EE",
-					"O=AS Sertifitseerimiskeskus",
-					"OU=Sertifitseerimisteenused",
-					"CN=EID-SK 2007",
-				].join(","))
-
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationName: "ESTEID",
-						organizationalUnitName: "digital signature",
-						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-					},
-
-					extensions: SIGN_CERTIFICATE_EXTENSIONS,
-					issuer: issuer,
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
-
-				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var res = yield this.request(`${initiativePath}/signatures`, {
-					method: "POST",
-
-					headers: {
-						Accept: `${SIGNABLE_TYPE}, ${ERR_TYPE}`,
-						"Content-Type": CERTIFICATE_TYPE
-					},
-
-					body: cert.toBuffer()
-				})
-
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Invalid Issuer")
-				res.headers["content-type"].must.equal(ERR_TYPE)
-
-				res.body.must.eql({
-					code: 422,
-					message: "Invalid Issuer",
-					name: "HttpError",
-					description: t("INVALID_CERTIFICATE_ISSUER")
-				})
-			})
-
-			it("must respond with 422 given future certificate", function*() {
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationName: "ESTEID",
-						organizationalUnitName: "digital signature",
-						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-					},
-
-					extensions: SIGN_CERTIFICATE_EXTENSIONS,
-					validFrom: DateFns.addSeconds(new Date, 1),
-					issuer: VALID_ISSUERS[0],
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
-
-				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var res = yield this.request(`${initiativePath}/signatures`, {
-					method: "POST",
-
-					headers: {
-						Accept: `${SIGNABLE_TYPE}, ${ERR_TYPE}`,
-						"Content-Type": CERTIFICATE_TYPE
-					},
-
-					body: cert.toBuffer()
-				})
-
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Certificate Not Yet Valid")
-				res.headers["content-type"].must.equal(ERR_TYPE)
-
-				res.body.must.eql({
-					code: 422,
-					message: "Certificate Not Yet Valid",
-					name: "HttpError",
-					description: t("CERTIFICATE_NOT_YET_VALID")
-				})
-			})
-
-			it("must respond with 422 given past certificate", function*() {
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationName: "ESTEID",
-						organizationalUnitName: "digital signature",
-						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-					},
-
-					extensions: SIGN_CERTIFICATE_EXTENSIONS,
-					validUntil: new Date,
-					issuer: VALID_ISSUERS[0],
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
-
-				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var res = yield this.request(`${initiativePath}/signatures`, {
-					method: "POST",
-
-					headers: {
-						Accept: `${SIGNABLE_TYPE}, ${ERR_TYPE}`,
-						"Content-Type": CERTIFICATE_TYPE
-					},
-
-					body: cert.toBuffer()
-				})
-
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Certificate Expired")
-				res.headers["content-type"].must.equal(ERR_TYPE)
-
-				res.body.must.eql({
-					code: 422,
-					message: "Certificate Expired",
-					name: "HttpError",
-					description: t("CERTIFICATE_EXPIRED")
-				})
-			})
-
-			it("must respond with 422 given non-sign certificate", function*() {
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationName: "ESTEID",
-						organizationalUnitName: "digital signature",
-						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-					},
-
-					extensions: [{
-						extnID: "keyUsage",
-						critical: true,
-						extnValue: {data: Buffer.from([KEY_USAGE_DIGITAL_SIGNATURE])}
-					}],
-
-					issuer: VALID_ISSUERS[0],
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
-
-				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var res = yield this.request(`${initiativePath}/signatures`, {
-					method: "POST",
-
-					headers: {
-						Accept: `${SIGNABLE_TYPE}, ${ERR_TYPE}`,
-						"Content-Type": CERTIFICATE_TYPE
-					},
-
-					body: cert.toBuffer()
-				})
-
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Not Signing Certificate")
-				res.headers["content-type"].must.equal(ERR_TYPE)
-
-				res.body.must.eql({
-					code: 422,
-					message: "Not Signing Certificate",
-					name: "HttpError",
-					description: t("CERTIFICATE_NOT_FOR_SIGN")
-				})
 			})
 
 			it("must respond with 422 given underage signer", function*() {
@@ -1774,28 +1672,23 @@ describe("SignaturesController", function() {
 					method: "POST",
 
 					headers: {
-						Accept: `${SIGNABLE_TYPE}, ${ERR_TYPE}`,
+						Accept: `${SIGNABLE_TYPE}, ${ERROR_TYPE}`,
 						"Content-Type": CERTIFICATE_TYPE
 					},
 
 					body: cert.toBuffer()
 				})
 
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Too Young")
-				res.headers["content-type"].must.equal(ERR_TYPE)
-
-				res.body.must.eql({
+				assertError(res, {
 					code: 422,
 					message: "Too Young",
-					name: "HttpError",
-					description: t("SIGN_ERROR_TOO_YOUNG")
+					description: t("creating_initiative_signature_page.errors.too_young")
 				})
 			})
 
 			_.each({
-				RSA: [JOHN_RSA_KEYS, signWithRsa],
-				ECDSA: [JOHN_ECDSA_KEYS, signWithEcdsa]
+				RSA: [JOHN_RSA_KEYS, hashAndSignWithRsa],
+				ECDSA: [JOHN_ECDSA_KEYS, hashAndSignWithEcdsa]
 			}, function([keys, sign], algo) {
 				it(`must create a signature given an ${algo} signature`, function*() {
 					var cert = new Certificate(newCertificate({
@@ -1822,7 +1715,7 @@ describe("SignaturesController", function() {
 					})
 
 					signing.statusCode.must.equal(202)
-					signing.statusMessage.must.equal("Signing")
+					signing.statusMessage.must.equal("Signing with ID-card")
 
 					var {xades} = signablesDb.read(sql`
 						SELECT * FROM initiative_signables
@@ -1840,19 +1733,16 @@ describe("SignaturesController", function() {
 						res.end(newOcspResponse(cert))
 					})
 
-					var signed = yield this.request(signing.headers.location, {
+					assertOk(yield this.request(signing.headers.location, {
 						method: "PUT",
 
 						headers: {
-							Accept: `application/x-empty, ${ERR_TYPE}`,
+							Accept: `application/x-empty, ${ERROR_TYPE}`,
 							"Content-Type": SIGNATURE_TYPE
 						},
 
 						body: sign(keys.privateKey, xades.signable)
-					})
-
-					signed.statusCode.must.equal(204)
-					signed.statusMessage.must.equal("Signed")
+					}))
 				})
 
 				it(`must respond with 409 given an invalid ${algo} signature`,
@@ -1881,27 +1771,23 @@ describe("SignaturesController", function() {
 					})
 
 					signing.statusCode.must.equal(202)
-					signing.statusMessage.must.equal("Signing")
+					signing.statusMessage.must.equal("Signing with ID-card")
 
 					var res = yield this.request(signing.headers.location, {
 						method: "PUT",
 
 						headers: {
-							Accept: `application/x-empty, ${ERR_TYPE}`,
+							Accept: `application/x-empty, ${ERROR_TYPE}`,
 							"Content-Type": SIGNATURE_TYPE
 						},
 
 						body: Crypto.randomBytes(64)
 					})
 
-					res.statusCode.must.equal(409)
-					res.statusMessage.must.equal("Invalid Signature")
-					res.headers["content-type"].must.equal(ERR_TYPE)
-
-					res.body.must.eql({
+					assertError(res, {
 						code: 409,
 						message: "Invalid Signature",
-						name: "HttpError"
+						description: t("eid_view.id_card_errors.sign_invalid_signature")
 					})
 
 					signaturesDb.search(sql`
@@ -1920,7 +1806,7 @@ describe("SignaturesController", function() {
 				})
 
 				signing.statusCode.must.equal(202)
-				signing.statusMessage.must.equal("Signing")
+				signing.statusMessage.must.equal("Signing with ID-card")
 
 				var {xades} = signablesDb.read(sql`SELECT * FROM initiative_signables`)
 
@@ -1942,15 +1828,14 @@ describe("SignaturesController", function() {
 					method: "PUT",
 
 					headers: {
-						Accept: `application/x-empty, ${ERR_TYPE}`,
+						Accept: `application/x-empty, ${ERROR_TYPE}`,
 						"Content-Type": SIGNATURE_TYPE
 					},
 
-					body: signWithRsa(JOHN_RSA_KEYS.privateKey, xades.signable)
+					body: hashAndSignWithRsa(JOHN_RSA_KEYS.privateKey, xades.signable)
 				})
 
-				signed.statusCode.must.equal(204)
-				signed.statusMessage.must.equal("Signed")
+				assertOk(signed)
 			})
 
 			it("must reject signature if initiative not in sign phase", function*() {
@@ -1962,7 +1847,7 @@ describe("SignaturesController", function() {
 				})
 
 				signing.statusCode.must.equal(202)
-				signing.statusMessage.must.equal("Signing")
+				signing.statusMessage.must.equal("Signing with ID-card")
 
 				initiativesDb.update(this.initiative, {
 					phase: "parliament",
@@ -1973,403 +1858,717 @@ describe("SignaturesController", function() {
 					method: "PUT",
 
 					headers: {
-						Accept: `application/x-empty, ${ERR_TYPE}`,
+						Accept: `application/x-empty, ${ERROR_TYPE}`,
 						"Content-Type": SIGNATURE_TYPE
 					}
 				})
 
-				signed.statusCode.must.equal(405)
-				signed.statusMessage.must.equal("Signing Ended")
+				assertError(signed, {
+					code: 405,
+					message: "Signing Ended",
+
+					description:
+						t("creating_initiative_signature_page.errors.signing_ended")
+				})
 			})
 		})
 
-		describe("when signing via Mobile-Id", function() {
-			mustSign(signWithMobileId, MOBILE_ID_CERTIFICATE)
-			mustRateLimit(signWithMobileId, MOBILE_ID_CERTIFICATE)
+		describe("when signing via Mobile-ID", function() {
+			describe("when without JavaScript", function() {
+				function assertOk(res) {
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Signed with Mobile-ID")
+				}
 
-			it("must create a signature", function*() {
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationName: "ESTEID (MOBIIL-ID)",
-						organizationalUnitName: "digital signature",
-						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-					},
+				function assertError(res, obj) {
+					res.statusCode.must.equal(obj.code)
+					res.statusMessage.must.equal(obj.message)
+					res.headers["content-type"].must.equal(HTML_TYPE)
 
-					extensions: SIGN_CERTIFICATE_EXTENSIONS,
-					issuer: VALID_ISSUERS[0],
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
+					var el = parseHtml(res.body).querySelector("#error .description")
+					el.textContent.must.equal(obj.description)
+				}
 
-				var [xades, tsResponse, ocspResponse] = newXades(this.initiative, cert)
+				mustSign((router, request, initiative, cert) => signWithMobileId(
+					router,
+					request,
+					initiative,
+					cert || MOBILE_ID_CERTIFICATE
+				), assertError)
 
-				this.router.post(`${MOBILE_ID_URL.path}certificate`,
-					function(req, res) {
-					req.headers.host.must.equal(MOBILE_ID_URL.host)
+				mustSignWithMobileId(signWithMobileId, assertOk, assertError)
 
-					req.body.relyingPartyName.must.equal(Config.mobileIdUser)
-					req.body.relyingPartyUUID.must.equal(Config.mobileIdPassword)
-					req.body.phoneNumber.must.equal("+37200000766")
-					req.body.nationalIdentityNumber.must.equal(ADULT_PERSONAL_ID)
+				mustRateLimit((router, request, initiative) => (
+					signWithMobileId(router, request, initiative, MOBILE_ID_CERTIFICATE)
+				), assertOk, assertError)
 
-					respond({result: "OK", cert: cert.toString("base64")}, req, res)
-				})
+				it("must create a signature", function*() {
+					var cert = new Certificate(newCertificate({
+						subject: {
+							countryName: "EE",
+							organizationName: "ESTEID (MOBIIL-ID)",
+							organizationalUnitName: "digital signature",
+							commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
+							surname: "SMITH",
+							givenName: "JOHN",
+							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
+						},
 
-				this.router.post(`${MOBILE_ID_URL.path}signature`,
-					function(req, res) {
-					req.headers.host.must.equal(MOBILE_ID_URL.host)
+						extensions: SIGN_CERTIFICATE_EXTENSIONS,
+						issuer: VALID_ISSUERS[0],
+						publicKey: JOHN_RSA_KEYS.publicKey
+					}))
 
-					req.body.relyingPartyName.must.equal(Config.mobileIdUser)
-					req.body.relyingPartyUUID.must.equal(Config.mobileIdPassword)
-					req.body.phoneNumber.must.equal("+37200000766")
-					req.body.nationalIdentityNumber.must.equal(ADULT_PERSONAL_ID)
-					req.body.hashType.must.equal("SHA256")
-					req.body.hash.must.equal(xades.signableHash.toString("base64"))
-					req.body.language.must.equal("EST")
+					var [
+						xades,
+						tsResponse,
+						ocspResponse
+					] = newXades(this.initiative, cert)
 
-					respond({sessionID: SESSION_ID}, req, res)
-				})
+					this.router.post(`${MOBILE_ID_URL.path}certificate`,
+						function(req, res) {
+						req.headers.host.must.equal(MOBILE_ID_URL.host)
 
-				this.router.get(`${MOBILE_ID_URL.path}signature/session/:token`,
-					function(req, res) {
-					req.headers.host.must.equal(MOBILE_ID_URL.host)
-					req.params.token.must.equal(SESSION_ID)
+						req.body.relyingPartyName.must.equal(Config.mobileIdUser)
+						req.body.relyingPartyUUID.must.equal(Config.mobileIdPassword)
+						req.body.phoneNumber.must.equal("+37200000766")
+						req.body.nationalIdentityNumber.must.equal(ADULT_PERSONAL_ID)
 
-					respond({
-						state: "COMPLETE",
-						result: "OK",
+						respond({result: "OK", cert: cert.toString("base64")}, req, res)
+					})
 
-						signature: {
-							algorithm: "sha256WithRSAEncryption",
-							value: xades.signature.toString("base64")
+					this.router.post(`${MOBILE_ID_URL.path}signature`,
+						function(req, res) {
+						req.headers.host.must.equal(MOBILE_ID_URL.host)
+
+						req.body.relyingPartyName.must.equal(Config.mobileIdUser)
+						req.body.relyingPartyUUID.must.equal(Config.mobileIdPassword)
+						req.body.phoneNumber.must.equal("+37200000766")
+						req.body.nationalIdentityNumber.must.equal(ADULT_PERSONAL_ID)
+						req.body.hashType.must.equal("SHA256")
+						req.body.hash.must.equal(xades.signableHash.toString("base64"))
+						req.body.language.must.equal("EST")
+
+						respond({sessionID: SESSION_ID}, req, res)
+					})
+
+					this.router.get(`${MOBILE_ID_URL.path}signature/session/:token`,
+						function(req, res) {
+						req.headers.host.must.equal(MOBILE_ID_URL.host)
+						req.params.token.must.equal(SESSION_ID)
+
+						respond({
+							state: "COMPLETE",
+							result: "OK",
+
+							signature: {
+								algorithm: "sha256WithRSAEncryption",
+								value: xades.signature.toString("base64")
+							}
+						}, req, res)
+					})
+
+					this.router.post(TIMESTAMP_URL.path, function(req, res) {
+						req.headers.host.must.equal(TIMESTAMP_URL.host)
+						res.setHeader("Content-Type", "application/timestamp-reply")
+						res.end(tsResponse.toBuffer())
+					})
+
+					this.router.post(OCSP_URL.path, function(req, res) {
+						req.headers.host.must.equal(OCSP_URL.host)
+						res.setHeader("Content-Type", "application/ocsp-response")
+						res.flushHeaders()
+
+						// NOTE: Respond with a little delay to ensure waiting for signable
+						// works as expected.
+						setTimeout(() => res.end(ocspResponse.toBuffer()), 100)
+					})
+
+					var initiativePath = `/initiatives/${this.initiative.uuid}`
+					var signing = yield this.request(initiativePath + "/signatures", {
+						method: "POST",
+						headers: {"X-Forwarded-For": LONDON_FORWARDED_FOR},
+
+						form: {
+							method: "mobile-id",
+							"personal-id": ADULT_PERSONAL_ID,
+							"phone-number": "+37200000766"
 						}
-					}, req, res)
-				})
+					})
 
-				this.router.post(TIMESTAMP_URL.path, function(req, res) {
-					req.headers.host.must.equal(TIMESTAMP_URL.host)
-					res.setHeader("Content-Type", "application/timestamp-reply")
-					res.end(tsResponse.toBuffer())
-				})
+					var verificationCode =
+						padVerificationCode(MobileId.verification(xades.signableHash))
 
-				this.router.post(OCSP_URL.path, function(req, res) {
-					req.headers.host.must.equal(OCSP_URL.host)
-					res.setHeader("Content-Type", "application/ocsp-response")
-					res.flushHeaders()
+					signing.statusCode.must.equal(202)
+					signing.statusMessage.must.equal("Signing with Mobile-ID")
+					signing.headers["content-type"].must.equal(HTML_TYPE)
+					signing.headers["x-verification-code"].must.equal(verificationCode)
 
-					// NOTE: Respond with a little delay to ensure signature
-					// long-polling later works as expected.
-					setTimeout(() => res.end(ocspResponse.toBuffer()), 100)
-				})
+					var waitUrl = parseRefreshHeader(signing.headers.refresh)[1]
+					var waiting = yield this.request(waitUrl)
+					waiting.statusCode.must.equal(202)
+					waiting.statusMessage.must.equal("Waiting for Mobile-ID")
+					waiting.headers["content-type"].must.equal(HTML_TYPE)
+					waiting.headers["x-verification-code"].must.equal(verificationCode)
 
-				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var signing = yield this.request(initiativePath + "/signatures", {
-					method: "POST",
-					headers: {"X-Forwarded-For": LONDON_FORWARDED_FOR},
+					yield _.sleep(100)
 
-					form: {
+					waitUrl = parseRefreshHeader(waiting.headers.refresh)[1]
+					var signed = yield this.request(waitUrl)
+					signed.statusCode.must.equal(303)
+					signed.statusMessage.must.equal("Signed with Mobile-ID")
+					signed.headers.location.must.equal(initiativePath)
+
+					var signables = signablesDb.search(sql`
+						SELECT * FROM initiative_signables
+					`)
+
+					signables.length.must.equal(1)
+					signables[0].initiative_uuid.must.equal(this.initiative.uuid)
+					signables[0].country.must.equal("EE")
+					signables[0].personal_id.must.equal(ADULT_PERSONAL_ID)
+					signables[0].method.must.equal("mobile-id")
+					signables[0].xades.toString().must.equal(String(xades))
+					signables[0].signed.must.be.true()
+					signables[0].timestamped.must.be.true()
+					signables[0].created_from.must.eql(LONDON_GEO)
+					demand(signables[0].error).be.null()
+
+					signaturesDb.search(sql`
+						SELECT * FROM initiative_signatures
+					`).must.eql([new ValidSignature({
+						id: 1,
+						initiative_uuid: this.initiative.uuid,
+						token: signables[0].token,
+						country: "EE",
+						personal_id: ADULT_PERSONAL_ID,
 						method: "mobile-id",
-						personalId: ADULT_PERSONAL_ID,
-						phoneNumber: "+37200000766"
-					}
+						xades: String(xades),
+						created_from: LONDON_GEO
+					})])
 				})
 
-				signing.statusCode.must.equal(202)
-				signing.statusMessage.must.equal("Signing")
+				it("must respond with 422 given invalid personal id", function*() {
+					var path = `/initiatives/${this.initiative.uuid}`
+					var res = yield this.request(path + "/signatures", {
+						method: "POST",
+						form: {
+							method: "mobile-id",
+							"personal-id": ADULT_PERSONAL_ID + "666",
+							"phone-number": "+37200000766"
+						}
+					})
 
-				var signed = yield this.request(signing.headers.location, {
-					headers: {Accept: `application/x-empty, ${ERR_TYPE}`}
+					assertError(res, {
+						code: 422,
+						message: "Invalid Personal Id",
+						description: t("eid_view.errors.invalid_personal_id")
+					})
+
+					signablesDb.search(sql`
+						SELECT * FROM initiative_signables
+					`).must.be.empty()
 				})
 
-				signed.statusCode.must.equal(204)
-				signed.statusMessage.must.equal("Signed")
-				signed.headers.location.must.equal(initiativePath)
+				it("must respond with 422 given underage signer", function*() {
+					var initiativePath = `/initiatives/${this.initiative.uuid}`
+					var res = yield this.request(initiativePath + "/signatures", {
+						method: "POST",
+						form: {
+							method: "mobile-id",
+							"personal-id": CHILD_PERSONAL_ID,
+							"phone-number": "+37200000766"
+						}
+					})
 
-				var signables = signablesDb.search(sql`
-					SELECT * FROM initiative_signables
-				`)
+					assertError(res, {
+						code: 422,
+						message: "Too Young",
+						description:
+							t("creating_initiative_signature_page.errors.too_young")
+					})
+				})
 
-				signables.length.must.equal(1)
-				signables[0].initiative_uuid.must.equal(this.initiative.uuid)
-				signables[0].country.must.equal("EE")
-				signables[0].personal_id.must.equal(ADULT_PERSONAL_ID)
-				signables[0].method.must.equal("mobile-id")
-				signables[0].xades.toString().must.equal(String(xades))
-				signables[0].signed.must.be.true()
-				signables[0].timestamped.must.be.true()
-				signables[0].created_from.must.eql(LONDON_GEO)
-				demand(signables[0].error).be.null()
+				_.each(PERSONAL_ID_TRANSFORMS, function(to, from) {
+					it(`must transform Mobile-ID personal id ${from} to ${to}`,
+						function*() {
+						var created = 0
 
-				signaturesDb.search(sql`
-					SELECT * FROM initiative_signatures
-				`).must.eql([new ValidSignature({
-					id: 1,
-					initiative_uuid: this.initiative.uuid,
-					token: signables[0].token,
-					country: "EE",
-					personal_id: ADULT_PERSONAL_ID,
-					method: "mobile-id",
-					xades: String(xades),
-					created_from: LONDON_GEO
-				})])
+						this.router.post(`${MOBILE_ID_URL.path}certificate`, (req, res) => {
+							++created
+							req.body.phoneNumber.must.equal("+37200000766")
+							req.body.nationalIdentityNumber.must.equal(to)
+							respond({result: "NOT_FOUND"}, req, res)
+						})
+
+						var path = `/initiatives/${this.initiative.uuid}`
+						var res = yield this.request(path + "/signatures", {
+							method: "POST",
+							form: {
+								method: "mobile-id",
+								"personal-id": from,
+								"phone-number": "+37200000766"
+							}
+						})
+
+						created.must.equal(1)
+
+						assertError(res, {
+							code: 422,
+							message: "Not a Mobile-ID User",
+							description: t("eid_view.mobile_id_errors.not_found")
+						})
+					})
+				})
+
+				_.each(PHONE_NUMBER_TRANSFORMS, function(to, from) {
+					it(`must transform Mobile-ID number ${from} to ${to}`,
+						function*() {
+						var created = 0
+						this.router.post(`${MOBILE_ID_URL.path}certificate`, (req, res) => {
+							++created
+							req.body.phoneNumber.must.equal(to)
+							req.body.nationalIdentityNumber.must.equal(ADULT_PERSONAL_ID)
+							respond({result: "NOT_FOUND"}, req, res)
+						})
+
+						var path = `/initiatives/${this.initiative.uuid}`
+						var res = yield this.request(path + "/signatures", {
+							method: "POST",
+							form: {
+								method: "mobile-id",
+								"personal-id": ADULT_PERSONAL_ID,
+								"phone-number": from
+							}
+						})
+
+						created.must.equal(1)
+
+						assertError(res, {
+							code: 422,
+							message: "Not a Mobile-ID User",
+							description: t("eid_view.mobile_id_errors.not_found")
+						})
+					})
+				})
 			})
 
-			it("must respond with 405 if initiative not yet in sign phase",
-				function*() {
-				var initiative = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "edit",
-					published_at: new Date
-				}))
+			describe("when with JavaScript", function() {
+				function assertOk(res) {
+					res.statusCode.must.equal(200)
+					res.statusMessage.must.equal("Signed with Mobile-ID")
+					res.headers["content-type"].must.equal(JSON_TYPE)
+					res.body.must.eql({state: "DONE"})
+				}
 
-				var initiativePath = `/initiatives/${initiative.uuid}`
-				var signing = yield this.request(initiativePath + "/signatures", {
-					method: "POST",
+				function assertError(res, obj) {
+					res.statusCode.must.equal(obj.code)
+					res.statusMessage.must.equal(obj.message)
+					res.headers["content-type"].must.equal(ERROR_TYPE)
+					res.body.must.eql(obj)
+				}
 
-					form: {
-						method: "mobile-id",
-						personalId: ADULT_PERSONAL_ID,
-						phoneNumber: "+37200000766"
-					}
+				mustSign(function*(router, request, initiative, cert) {
+					var res = yield signWithMobileId(
+						router,
+						request,
+						initiative,
+						cert || MOBILE_ID_CERTIFICATE,
+						null,
+						{Accept: `${JSON_TYPE}, ${ERROR_TYPE}`}
+					)
+
+					if (!(res.statusCode >= 200 && res.statusCode < 300)) return res
+					return request(res.headers.location)
+				}, assertError)
+
+				mustSignWithMobileId((router, request, initiative, cert, session) => (
+					signWithMobileId(router, request, initiative, cert, session, {
+						Accept: `${JSON_TYPE}, ${ERROR_TYPE}`
+					})
+				), assertOk, assertError)
+
+				mustRateLimit((router, request, initiative) => signWithMobileId(
+					router,
+					request,
+					initiative,
+					MOBILE_ID_CERTIFICATE,
+					null,
+					{Accept: `${JSON_TYPE}, ${ERROR_TYPE}`}
+				), assertOk, assertError)
+
+				it("must create a signature", function*() {
+					var [
+						xades,
+						tsResponse,
+						ocspResponse
+					] = newXades(this.initiative, MOBILE_ID_CERTIFICATE)
+
+					this.router.post(
+						`${MOBILE_ID_URL.path}certificate`,
+						respond.bind(null, {
+							result: "OK",
+							cert: MOBILE_ID_CERTIFICATE.toString("base64")
+						})
+					)
+
+					this.router.post(
+						`${MOBILE_ID_URL.path}signature`,
+						respond.bind(null, {sessionID: SESSION_ID})
+					)
+
+					this.router.get(`${MOBILE_ID_URL.path}signature/session/:token`,
+						function(req, res) {
+						req.headers.host.must.equal(MOBILE_ID_URL.host)
+						req.params.token.must.equal(SESSION_ID)
+
+						respond({
+							state: "COMPLETE",
+							result: "OK",
+
+							signature: {
+								algorithm: "sha256WithRSAEncryption",
+								value: xades.signature.toString("base64")
+							}
+						}, req, res)
+					})
+
+					this.router.post(TIMESTAMP_URL.path, function(req, res) {
+						req.headers.host.must.equal(TIMESTAMP_URL.host)
+						res.setHeader("Content-Type", "application/timestamp-reply")
+						res.end(tsResponse.toBuffer())
+					})
+
+					this.router.post(OCSP_URL.path, function(req, res) {
+						req.headers.host.must.equal(OCSP_URL.host)
+						res.setHeader("Content-Type", "application/ocsp-response")
+						res.flushHeaders()
+
+						// NOTE: Respond with a little delay to ensure waiting for signable
+						// works as expected.
+						setTimeout(() => res.end(ocspResponse.toBuffer()), 100)
+					})
+
+					var initiativePath = `/initiatives/${this.initiative.uuid}`
+					var signing = yield this.request(initiativePath + "/signatures", {
+						method: "POST",
+
+						headers: {
+							Accept: `${EMPTY_TYPE}, ${ERROR_TYPE}`,
+							"X-Forwarded-For": LONDON_FORWARDED_FOR
+						},
+
+						form: {
+							method: "mobile-id",
+							"personal-id": ADULT_PERSONAL_ID,
+							"phone-number": "+37200000766"
+						}
+					})
+
+					var verificationCode =
+						padVerificationCode(MobileId.verification(xades.signableHash))
+
+					signing.statusCode.must.equal(202)
+					signing.statusMessage.must.equal("Signing with Mobile-ID")
+					signing.headers.must.not.have.property("content-type")
+					signing.headers["x-verification-code"].must.equal(verificationCode)
+
+					var waitUrl = parseRefreshHeader(signing.headers.refresh)[1]
+					var waiting = yield this.request(waitUrl, {
+						headers: {Accept: `${JSON_TYPE}, ${ERROR_TYPE}`}
+					})
+
+					waiting.statusCode.must.equal(200)
+					waiting.statusMessage.must.equal("Signed with Mobile-ID")
+					waiting.headers["content-type"].must.equal(JSON_TYPE)
+					waiting.headers.must.not.have.property("x-verification-code")
+					waiting.headers.must.not.have.property("refresh")
+					waiting.body.must.eql({state: "DONE"})
+
+					var signed = yield this.request(waiting.headers.location)
+					signed.statusCode.must.equal(303)
+					signed.statusMessage.must.equal("Signed with Mobile-ID")
+					signed.headers.location.must.equal(initiativePath)
+
+					signaturesDb.search(sql`
+						SELECT * FROM initiative_signatures
+					`).must.not.be.empty()
 				})
 
-				signing.statusCode.must.equal(405)
-				signing.statusMessage.must.equal("Signing Not Yet Started")
-			})
+				it("must respond with 422 given invalid personal id", function*() {
+					var path = `/initiatives/${this.initiative.uuid}`
+					var res = yield this.request(path + "/signatures", {
+						method: "POST",
+						headers: {Accept: `${EMPTY_TYPE}, ${ERROR_TYPE}`},
+						form: {
+							method: "mobile-id",
+							"personal-id": ADULT_PERSONAL_ID + "666",
+							"phone-number": "+37200000766"
+						}
+					})
 
-			it("must respond with 405 if initiative signing finished", function*() {
-				var initiative = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					signing_ends_at: new Date
-				}))
+					assertError(res, {
+						code: 422,
+						message: "Invalid Personal Id",
+						description: t("eid_view.errors.invalid_personal_id")
+					})
 
-				var initiativePath = `/initiatives/${initiative.uuid}`
-				var signing = yield this.request(initiativePath + "/signatures", {
-					method: "POST",
-
-					form: {
-						method: "mobile-id",
-						personalId: ADULT_PERSONAL_ID,
-						phoneNumber: "+37200000766"
-					}
+					signablesDb.search(sql`
+						SELECT * FROM initiative_signables
+					`).must.be.empty()
 				})
-
-				signing.statusCode.must.equal(405)
-				signing.statusMessage.must.equal("Signing Ended")
 			})
 
-			it("must respond with 405 if initiative signing expired", function*() {
-				var initiative = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					signing_ends_at: DateFns.addDays(new Date, 1),
-					signing_expired_at: new Date
-				}))
+			function mustSignWithMobileId(sign, assertOk, assertError) {
+				describe("as a Mobile-ID method", function() {
+					_.each({
+						RSA: [JOHN_RSA_KEYS, hashAndSignWithRsa],
+						ECDSA: [JOHN_ECDSA_KEYS, hashAndSignWithEcdsa]
+					}, function([keys, signSignable], algo) {
+						it(`must create a signature given an ${algo} signature`, function*() {
+							var cert = new Certificate(newCertificate({
+								subject: {
+									countryName: "EE",
+									organizationName: "ESTEID (MOBIIL-ID)",
+									organizationalUnitName: "digital signature",
+									commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
+									surname: "SMITH",
+									givenName: "JOHN",
+									serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
+								},
 
-				var initiativePath = `/initiatives/${initiative.uuid}`
-				var signing = yield this.request(initiativePath + "/signatures", {
-					method: "POST",
+								extensions: SIGN_CERTIFICATE_EXTENSIONS,
+								issuer: VALID_ISSUERS[0],
+								publicKey: keys.publicKey
+							}))
 
-					form: {
-						method: "mobile-id",
-						personalId: ADULT_PERSONAL_ID,
-						phoneNumber: "+37200000766"
-					}
+							assertOk(yield sign(
+								this.router,
+								this.request,
+								this.initiative,
+								cert,
+								function(req, res) {
+									var {xades} = signablesDb.read(sql`
+										SELECT * FROM initiative_signables
+									`)
+
+									respond({
+										state: "COMPLETE",
+										result: "OK",
+
+										signature: {
+											algorithm: "sha256WithRSAEncryption",
+											value: signSignable(
+												keys.privateKey,
+												xades.signable
+											).toString("base64")
+										}
+									}, req, res)
+								}
+							))
+
+							signaturesDb.search(sql`
+								SELECT * FROM initiative_signatures
+							`).must.not.be.empty()
+						})
+
+						it(`must respond with error given an invalid ${algo} signature`,
+							function*() {
+							var cert = new Certificate(newCertificate({
+								subject: {
+									countryName: "EE",
+									organizationName: "ESTEID (MOBIIL-ID)",
+									organizationalUnitName: "digital signature",
+									commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
+									surname: "SMITH",
+									givenName: "JOHN",
+									serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
+								},
+
+								extensions: SIGN_CERTIFICATE_EXTENSIONS,
+								issuer: VALID_ISSUERS[0],
+								publicKey: keys.publicKey
+							}))
+
+							var res = yield sign(
+								this.router,
+								this.request,
+								this.initiative,
+								cert,
+								respond.bind(null, {
+									state: "COMPLETE",
+									result: "OK",
+
+									signature: {
+										algorithm: "sha256WithRSAEncryption",
+										value: Crypto.randomBytes(64).toString("base64")
+									}
+								})
+							)
+
+							assertError(res, {
+								code: 410,
+								message: "Invalid Mobile-ID Signature",
+
+								description:
+									t("eid_view.mobile_id_errors.sign_invalid_signature")
+							})
+
+							signaturesDb.search(sql`
+								SELECT * FROM initiative_signatures
+							`).must.be.empty()
+						})
+					})
+
+					it("must respond with 422 given invalid personal id from certificate request", function*() {
+						this.router.post(`${MOBILE_ID_URL.path}certificate`, (req, res) => {
+							res.statusCode = 400
+
+							respond({
+								error: "nationalIdentityNumber must contain of 11 digits"
+							}, req, res)
+						})
+
+						var res = yield sign(
+							this.router,
+							this.request,
+							this.initiative,
+							MOBILE_ID_CERTIFICATE
+						)
+
+						assertError(res, {
+							code: 422,
+							message: "Not a Mobile-ID User",
+							description: t("eid_view.mobile_id_errors.not_found")
+						})
+
+						signablesDb.search(sql`
+							SELECT * FROM initiative_signables
+						`).must.be.empty()
+					})
+
+					it("must respond with 422 given invalid phone number from certificate request", function*() {
+						this.router.post(`${MOBILE_ID_URL.path}certificate`, (req, res) => {
+							res.statusCode = 400
+
+							respond({
+								error: "phoneNumber must contain of + and numbers(8-30)"
+							}, req, res)
+						})
+
+						var res = yield sign(
+							this.router,
+							this.request,
+							this.initiative,
+							MOBILE_ID_CERTIFICATE
+						)
+
+						assertError(res, {
+							code: 422,
+							message: "Not a Mobile-ID User",
+							description: t("eid_view.mobile_id_errors.not_found")
+						})
+
+						signablesDb.search(sql`
+							SELECT * FROM initiative_signables
+						`).must.be.empty()
+					})
+
+					_.each(MOBILE_ID_CERT_ERRORS, ([
+						statusCode,
+						statusMessage,
+						error
+					], code) => it(`must respond with error given ${code}`, function*() {
+						var res = yield sign(
+							this.router,
+							this.request,
+							this.initiative,
+							respond.bind(null, {result: code})
+						)
+
+						assertError(res, {
+							code: statusCode,
+							message: statusMessage,
+							description: t(error)
+						})
+
+						signablesDb.search(sql`
+							SELECT * FROM initiative_signables
+						`).must.be.empty()
+						})
+					)
+
+					_.each(MOBILE_ID_SIGN_ERRORS, ([
+						statusCode,
+						statusMessage,
+						error
+					], code) => it(`must respond with error given ${code} while signing`,
+						function*() {
+						var res = yield sign(
+							this.router,
+							this.request,
+							this.initiative,
+							MOBILE_ID_CERTIFICATE,
+							respond.bind(null, {state: "COMPLETE", result: code})
+						)
+
+						assertError(res, {
+							code: statusCode,
+							message: statusMessage,
+							description: t(error)
+						})
+
+						signaturesDb.search(sql`
+							SELECT * FROM initiative_signatures
+						`).must.be.empty()
+						})
+					)
+
+					it("must respond with error given Bad Request from sign request",
+						function*() {
+						this.router.post(
+							`${MOBILE_ID_URL.path}signature`,
+							function(_req, res) { res.statusCode = 400; res.end() }
+						)
+
+						var res = yield sign(
+							this.router,
+							this.request,
+							this.initiative,
+							MOBILE_ID_CERTIFICATE
+						)
+
+						assertError(res, {
+							code: 500,
+							message: "Unknown Mobile-ID Error",
+							description: t("500_BODY")
+						})
+
+						signablesDb.search(sql`
+							SELECT * FROM initiative_signables
+						`).must.be.empty()
+					})
+
+					it("must respond with error given Bad Request from sign session",
+					function*() {
+						var res = yield sign(
+							this.router,
+							this.request,
+							this.initiative,
+							MOBILE_ID_CERTIFICATE,
+							function(_req, res) { res.statusCode = 400; res.end() }
+						)
+
+						assertError(res, {
+							code: 500,
+							message: "Unknown Mobile-ID Error",
+							description: t("500_BODY")
+						})
+					})
 				})
+			}
 
-				signing.statusCode.must.equal(405)
-				signing.statusMessage.must.equal("Signing Ended")
-			})
-
-			it("must respond with 422 given certificate from untrusted issuer",
-				function*() {
-				var issuer = tsl.getBySubjectName([
-					"C=EE",
-					"O=AS Sertifitseerimiskeskus",
-					"OU=Sertifitseerimisteenused",
-					"CN=EID-SK 2007",
-				].join(","))
-
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationName: "ESTEID (MOBIIL-ID)",
-						organizationalUnitName: "digital signature",
-						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-					},
-
-					extensions: SIGN_CERTIFICATE_EXTENSIONS,
-					issuer: issuer,
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
-
-				this.router.post(
-					`${MOBILE_ID_URL.path}certificate`,
-					respond.bind(null, {result: "OK", cert: cert.toString("base64")})
-				)
-
-				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var res = yield this.request(initiativePath + "/signatures", {
-					method: "POST",
-					form: {
-						method: "mobile-id",
-						personalId: ADULT_PERSONAL_ID,
-						phoneNumber: "+37200000766"
-					}
-				})
-
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Invalid Issuer")
-				res.headers["content-type"].must.equal("text/html; charset=utf-8")
-				res.body.must.include(t("INVALID_CERTIFICATE_ISSUER"))
-			})
-
-			it("must respond with 422 given future certificate", function*() {
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationName: "ESTEID (MOBIIL-ID)",
-						organizationalUnitName: "digital signature",
-						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-					},
-
-					extensions: SIGN_CERTIFICATE_EXTENSIONS,
-					validFrom: DateFns.addSeconds(new Date, 1),
-					issuer: VALID_ISSUERS[0],
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
-
-				this.router.post(
-					`${MOBILE_ID_URL.path}certificate`,
-					respond.bind(null, {result: "OK", cert: cert.toString("base64")})
-				)
-
-				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var res = yield this.request(initiativePath + "/signatures", {
-					method: "POST",
-					form: {
-						method: "mobile-id",
-						personalId: ADULT_PERSONAL_ID,
-						phoneNumber: "+37200000766"
-					}
-				})
-
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Certificate Not Yet Valid")
-				res.headers["content-type"].must.equal("text/html; charset=utf-8")
-				res.body.must.include(t("CERTIFICATE_NOT_YET_VALID"))
-			})
-
-			it("must respond with 422 given past certificate", function*() {
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationName: "ESTEID (MOBIIL-ID)",
-						organizationalUnitName: "digital signature",
-						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-					},
-
-					extensions: SIGN_CERTIFICATE_EXTENSIONS,
-					validUntil: new Date,
-					issuer: VALID_ISSUERS[0],
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
-
-				this.router.post(
-					`${MOBILE_ID_URL.path}certificate`,
-					respond.bind(null, {result: "OK", cert: cert.toString("base64")})
-				)
-
-				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var res = yield this.request(initiativePath + "/signatures", {
-					method: "POST",
-					form: {
-						method: "mobile-id",
-						personalId: ADULT_PERSONAL_ID,
-						phoneNumber: "+37200000766"
-					}
-				})
-
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Certificate Expired")
-				res.headers["content-type"].must.equal("text/html; charset=utf-8")
-				res.body.must.include(t("CERTIFICATE_EXPIRED"))
-			})
-
-			it("must respond with 422 given non-sign certificate", function*() {
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationName: "ESTEID (MOBIIL-ID)",
-						organizationalUnitName: "digital signature",
-						commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-					},
-
-					extensions: [{
-						extnID: "keyUsage",
-						critical: true,
-						extnValue: {data: Buffer.from([KEY_USAGE_DIGITAL_SIGNATURE])}
-					}],
-
-					issuer: VALID_ISSUERS[0],
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
-
-				this.router.post(
-					`${MOBILE_ID_URL.path}certificate`,
-					respond.bind(null, {result: "OK", cert: cert.toString("base64")})
-				)
-
-				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var res = yield this.request(initiativePath + "/signatures", {
-					method: "POST",
-					form: {
-						method: "mobile-id",
-						personalId: ADULT_PERSONAL_ID,
-						phoneNumber: "+37200000766"
-					}
-				})
-
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Not Signing Certificate")
-				res.headers["content-type"].must.equal("text/html; charset=utf-8")
-				res.body.must.include(t("CERTIFICATE_NOT_FOR_SIGN"))
-			})
-
-			it("must respond with 422 given underage signer", function*() {
-				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var res = yield this.request(initiativePath + "/signatures", {
-					method: "POST",
-					form: {
-						method: "mobile-id",
-						personalId: CHILD_PERSONAL_ID,
-						phoneNumber: "+37200000766"
-					}
-				})
-
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Too Young")
-				res.headers["content-type"].must.equal("text/html; charset=utf-8")
-				res.body.must.include(t("SIGN_ERROR_TOO_YOUNG"))
-			})
-
-			it("must create signature if Mobile-Id session running", function*() {
+			xit("must create signature if signature session running", function*() {
 				var waited = 0
 				var signed = yield signWithMobileId(
 					this.router,
@@ -2379,8 +2578,6 @@ describe("SignaturesController", function() {
 					function(req, res) {
 						if (waited++ < 2)
 							return void respond({state: "RUNNING"}, req, res)
-
-						res.writeHead(200)
 
 						var {xades} = signablesDb.read(sql`
 							SELECT * FROM initiative_signables
@@ -2392,7 +2589,7 @@ describe("SignaturesController", function() {
 
 							signature: {
 								algorithm: "sha256WithRSAEncryption",
-								value: signWithRsa(
+								value: hashAndSignWithRsa(
 									JOHN_RSA_KEYS.privateKey,
 									xades.signable
 								).toString("base64")
@@ -2417,352 +2614,7 @@ describe("SignaturesController", function() {
 				res.body.must.include(t("THANKS_FOR_SIGNING"))
 			})
 
-			_.each({
-				RSA: [JOHN_RSA_KEYS, signWithRsa],
-				ECDSA: [JOHN_ECDSA_KEYS, signWithEcdsa]
-			}, function([keys, sign], algo) {
-				it(`must create a signature given an ${algo} signature`, function*() {
-					var cert = new Certificate(newCertificate({
-						subject: {
-							countryName: "EE",
-							organizationName: "ESTEID (MOBIIL-ID)",
-							organizationalUnitName: "digital signature",
-							commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
-							surname: "SMITH",
-							givenName: "JOHN",
-							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-						},
-
-						extensions: SIGN_CERTIFICATE_EXTENSIONS,
-						issuer: VALID_ISSUERS[0],
-						publicKey: keys.publicKey
-					}))
-
-					var signed = yield signWithMobileId(
-						this.router,
-						this.request,
-						this.initiative,
-						cert,
-						function(req, res) {
-							res.writeHead(200)
-
-							var {xades} = signablesDb.read(sql`
-								SELECT * FROM initiative_signables
-							`)
-
-							respond({
-								state: "COMPLETE",
-								result: "OK",
-
-								signature: {
-									algorithm: "sha256WithRSAEncryption",
-									value: sign(
-										keys.privateKey,
-										xades.signable
-									).toString("base64")
-								}
-							}, req, res)
-						}
-					)
-
-					signed.statusCode.must.equal(204)
-					signed.statusMessage.must.equal("Signed")
-
-					signaturesDb.search(sql`
-						SELECT * FROM initiative_signatures
-					`).must.not.be.empty()
-				})
-
-				it(`must respond with error given an invalid ${algo} signature`,
-					function*() {
-					var cert = new Certificate(newCertificate({
-						subject: {
-							countryName: "EE",
-							organizationName: "ESTEID (MOBIIL-ID)",
-							organizationalUnitName: "digital signature",
-							commonName: `SMITH,JOHN,${ADULT_PERSONAL_ID}`,
-							surname: "SMITH",
-							givenName: "JOHN",
-							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-						},
-
-						extensions: SIGN_CERTIFICATE_EXTENSIONS,
-						issuer: VALID_ISSUERS[0],
-						publicKey: keys.publicKey
-					}))
-
-					var errored = yield signWithMobileId(
-						this.router,
-						this.request,
-						this.initiative,
-						cert,
-						respond.bind(null, {
-							state: "COMPLETE",
-							result: "OK",
-
-							signature: {
-								algorithm: "sha256WithRSAEncryption",
-								value: Crypto.randomBytes(64).toString("base64")
-							}
-						})
-					)
-
-					errored.statusCode.must.equal(410)
-					errored.statusMessage.must.equal("Invalid Mobile-Id Signature")
-					var initiativePath = `/initiatives/${this.initiative.uuid}`
-					errored.headers.location.must.equal(initiativePath)
-
-					var cookies = parseCookies(errored.headers["set-cookie"])
-					var res = yield this.request(errored.headers.location, {
-						headers: {Cookie: serializeCookies(cookies)}
-					})
-
-					res.statusCode.must.equal(200)
-					res.body.must.not.include(t("THANKS_FOR_SIGNING"))
-					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
-					res.body.must.include(t("MOBILE_ID_ERROR_INVALID_SIGNATURE"))
-
-					signaturesDb.search(sql`
-						SELECT * FROM initiative_signatures
-					`).must.be.empty()
-				})
-			})
-
-			_.each(PERSONAL_ID_TRANSFORMS, function(to, from) {
-				it(`must transform Mobile-Id personal id ${from} to ${to}`,
-					function*() {
-					var created = 0
-
-					this.router.post(`${MOBILE_ID_URL.path}certificate`, (req, res) => {
-						++created
-						req.body.phoneNumber.must.equal("+37200000766")
-						req.body.nationalIdentityNumber.must.equal(to)
-						respond({result: "NOT_FOUND"}, req, res)
-					})
-
-					var path = `/initiatives/${this.initiative.uuid}`
-					var res = yield this.request(path + "/signatures", {
-						method: "POST",
-						form: {
-							method: "mobile-id",
-							personalId: from,
-							phoneNumber: "+37200000766"
-						}
-					})
-
-					created.must.equal(1)
-					res.statusCode.must.equal(422)
-
-					res.statusMessage.must.equal(
-						"Not a Mobile-Id User or Personal Id Mismatch"
-					)
-				})
-			})
-
-			_.each(PHONE_NUMBER_TRANSFORMS, function(to, from) {
-				it(`must transform mobile-id number ${from} to ${to}`,
-					function*() {
-					var created = 0
-					this.router.post(`${MOBILE_ID_URL.path}certificate`, (req, res) => {
-						++created
-						req.body.phoneNumber.must.equal(to)
-						req.body.nationalIdentityNumber.must.equal(ADULT_PERSONAL_ID)
-						respond({result: "NOT_FOUND"}, req, res)
-					})
-
-					var path = `/initiatives/${this.initiative.uuid}`
-					var res = yield this.request(path + "/signatures", {
-						method: "POST",
-						form: {
-							method: "mobile-id",
-							personalId: ADULT_PERSONAL_ID,
-							phoneNumber: from
-						}
-					})
-
-					created.must.equal(1)
-					res.statusCode.must.equal(422)
-
-					res.statusMessage.must.equal(
-						"Not a Mobile-Id User or Personal Id Mismatch"
-					)
-
-					res.body.must.include(t("MOBILE_ID_ERROR_NOT_FOUND"))
-
-					signablesDb.search(sql`
-						SELECT * FROM initiative_signables
-					`).must.be.empty()
-				})
-			})
-
-			_.each(MOBILE_ID_CREATE_ERRORS,
-				function([statusCode, statusMessage, error], code) {
-				it(`must respond with error given ${code}`, function*() {
-					this.router.post(
-						`${MOBILE_ID_URL.path}certificate`,
-						respond.bind(null, {result: code})
-					)
-
-					var path = `/initiatives/${this.initiative.uuid}`
-					var res = yield this.request(path + "/signatures", {
-						method: "POST",
-						form: {
-							method: "mobile-id",
-							personalId: ADULT_PERSONAL_ID,
-							phoneNumber: "+37200000766"
-						}
-					})
-
-					res.statusCode.must.equal(statusCode)
-					res.statusMessage.must.equal(statusMessage)
-					res.body.must.include(t(error))
-
-					signablesDb.search(sql`
-						SELECT * FROM initiative_signables
-					`).must.be.empty()
-				})
-			})
-
-			it("must respond with 422 given invalid personal id", function*() {
-				var path = `/initiatives/${this.initiative.uuid}`
-				var res = yield this.request(path + "/signatures", {
-					method: "POST",
-					form: {
-						method: "mobile-id",
-						personalId: ADULT_PERSONAL_ID + "666",
-						phoneNumber: "+37200000766"
-					}
-				})
-
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Invalid Personal Id")
-				res.body.must.include(t("SIGN_ERROR_PERSONAL_ID_INVALID"))
-			})
-
-			it("must respond with 422 given invalid personal id error", function*() {
-				this.router.post(`${MOBILE_ID_URL.path}certificate`,
-					function(req, res) {
-					res.statusCode = 400
-
-					respond({
-						error: "nationalIdentityNumber must contain of 11 digits"
-					}, req, res)
-				})
-
-				var path = `/initiatives/${this.initiative.uuid}`
-				var res = yield this.request(path + "/signatures", {
-					method: "POST",
-					form: {
-						method: "mobile-id",
-						personalId: ADULT_PERSONAL_ID,
-						phoneNumber: "+37200000766"
-					}
-				})
-
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal(
-					"Not a Mobile-Id User or Personal Id Mismatch"
-				)
-
-				res.body.must.include(t("MOBILE_ID_ERROR_NOT_FOUND"))
-
-				signablesDb.search(sql`
-					SELECT * FROM initiative_signables
-				`).must.be.empty()
-			})
-
-			it("must respond with 422 given invalid phone number error", function*() {
-				this.router.post(`${MOBILE_ID_URL.path}certificate`,
-					function(req, res) {
-					res.statusCode = 400
-
-					respond({
-						error: "phoneNumber must contain of + and numbers(8-30)"
-					}, req, res)
-				})
-
-				var path = `/initiatives/${this.initiative.uuid}`
-				var res = yield this.request(path + "/signatures", {
-					method: "POST",
-					form: {
-						method: "mobile-id",
-						personalId: ADULT_PERSONAL_ID,
-						phoneNumber: "+37200000766"
-					}
-				})
-
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal(
-					"Not a Mobile-Id User or Personal Id Mismatch"
-				)
-
-				res.body.must.include(t("MOBILE_ID_ERROR_NOT_FOUND"))
-
-				signablesDb.search(sql`
-					SELECT * FROM initiative_signables
-				`).must.be.empty()
-			})
-
-			it("must respond with 500 given Bad Request", function*() {
-				this.router.post(`${MOBILE_ID_URL.path}certificate`,
-					function(req, res) {
-					res.statusCode = 400
-					respond({error: "Unknown language 'FOOLANG"}, req, res)
-				})
-
-				var path = `/initiatives/${this.initiative.uuid}`
-				var res = yield this.request(path + "/signatures", {
-					method: "POST",
-					form: {
-						method: "mobile-id",
-						personalId: ADULT_PERSONAL_ID,
-						phoneNumber: "+37200000766"
-					}
-				})
-
-				res.statusCode.must.equal(500)
-				res.statusMessage.must.equal("Unknown Mobile-Id Error")
-				res.body.must.not.include("FOOLANG")
-
-				signablesDb.search(sql`
-					SELECT * FROM initiative_signables
-				`).must.be.empty()
-			})
-
-			_.each(MOBILE_ID_SESSION_ERRORS,
-				function([statusCode, statusMessage, error], code) {
-				it(`must respond with error given ${code} while signing`,
-					function*() {
-					var errored = yield signWithMobileId(
-						this.router,
-						this.request,
-						this.initiative,
-						MOBILE_ID_CERTIFICATE,
-						respond.bind(null, {state: "COMPLETE", result: code})
-					)
-
-					errored.statusCode.must.equal(statusCode)
-					errored.statusMessage.must.equal(statusMessage)
-					var initiativePath = `/initiatives/${this.initiative.uuid}`
-					errored.headers.location.must.equal(initiativePath)
-
-					signaturesDb.search(sql`
-						SELECT * FROM initiative_signatures
-					`).must.be.empty()
-
-					var cookies = parseCookies(errored.headers["set-cookie"])
-					var res = yield this.request(errored.headers.location, {
-						headers: {Cookie: serializeCookies(cookies)}
-					})
-
-					res.statusCode.must.equal(200)
-					res.body.must.not.include(t("THANKS_FOR_SIGNING"))
-					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
-					res.body.must.include(t(error))
-				})
-			})
-
-			it("must time out after 2 minutes", function*() {
+			xit("must time out after 2 minutes", function*() {
 				var waited = 0
 				var errored = yield signWithMobileId(
 					this.router,
@@ -2779,7 +2631,7 @@ describe("SignaturesController", function() {
 				)
 
 				errored.statusCode.must.equal(410)
-				errored.statusMessage.must.equal("Mobile-Id Timeout")
+				errored.statusMessage.must.equal("Mobile-ID Timeout")
 				var initiativePath = `/initiatives/${this.initiative.uuid}`
 				errored.headers.location.must.equal(initiativePath)
 				waited.must.equal(2)
@@ -2796,411 +2648,830 @@ describe("SignaturesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.not.include(t("THANKS_FOR_SIGNING"))
 				res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
-				res.body.must.include(t("MOBILE_ID_ERROR_TIMEOUT"))
+				res.body.must.include(t("eid_view.mobile_id_errors.sign_timeout"))
 			})
 		})
 
-		describe("when signing via Smart-Id", function() {
-			mustSign(signWithSmartId, SMART_ID_CERTIFICATE)
-			mustRateLimit(signWithSmartId, SMART_ID_CERTIFICATE)
+		describe("when signing via Smart-ID", function() {
+			describe("when without JavaScript", function() {
+				function assertOk(res) {
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Signed with Smart-ID")
+				}
 
-			it("must create a signature", function*() {
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationalUnitName: "SIGNATURE",
-						commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-					},
+				function assertError(res, obj) {
+					res.statusCode.must.equal(obj.code)
+					res.statusMessage.must.equal(obj.message)
+					res.headers["content-type"].must.equal(HTML_TYPE)
 
-					extensions: SIGN_CERTIFICATE_EXTENSIONS,
-					issuer: VALID_ISSUERS[0],
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
+					var el = parseHtml(res.body).querySelector("#error .description")
+					el.textContent.must.equal(obj.description)
+				}
 
-				var [xades, tsResponse, ocspResponse] = newXades(this.initiative, cert)
-				var certSession = "3befb011-37bf-4e57-b041-e4cba1496766"
-				var signSession = "21e55f06-d6cb-40b7-9638-75dc0b131851"
+				mustSign((router, request, initiative, cert) => signWithSmartId(
+					router,
+					request,
+					initiative,
+					cert || SMART_ID_CERTIFICATE
+				), assertError)
 
-				this.router.post(
-					`${SMART_ID_URL.path}certificatechoice/etsi/PNOEE-${ADULT_PERSONAL_ID}`,
-					function(req, res) {
-					req.headers.host.must.equal(SMART_ID_URL.host)
+				mustSignWithSmartId(signWithSmartId, assertOk, assertError)
 
-					req.body.relyingPartyName.must.equal(Config.smartIdUser)
-					req.body.relyingPartyUUID.must.equal(Config.smartIdPassword)
+				mustRateLimit((router, request, initiative) => (
+					signWithSmartId(router, request, initiative, SMART_ID_CERTIFICATE)
+				), assertOk, assertError)
 
-					respond({sessionID: certSession}, req, res)
-				})
-
-				this.router.get(
-					`${SMART_ID_URL.path}session/${certSession}`,
-					function(req, res) {
-					res.writeHead(200)
-					req.headers.host.must.equal(SMART_ID_URL.host)
-
-					respond({
-						state: "COMPLETE",
-						result: {endResult: "OK", documentNumber: SMART_ID},
-
-						cert: {
-							certificateLevel: "QUALIFIED",
-							value: cert.toString("base64"),
-						}
-					}, req, res)
-				})
-
-				this.router.post(
-					`${SMART_ID_URL.path}signature/document/${SMART_ID}`,
-					function(req, res) {
-					res.writeHead(200)
-					req.headers.host.must.equal(SMART_ID_URL.host)
-
-					req.body.relyingPartyName.must.equal(Config.smartIdUser)
-					req.body.relyingPartyUUID.must.equal(Config.smartIdPassword)
-					req.body.hashType.must.equal("SHA256")
-					req.body.hash.must.equal(xades.signableHash.toString("base64"))
-
-					respond({sessionID: signSession}, req, res)
-				})
-
-				this.router.get(`${SMART_ID_URL.path}session/${signSession}`,
-					function(req, res) {
-					res.writeHead(200)
-					req.headers.host.must.equal(SMART_ID_URL.host)
-
-					respond({
-						state: "COMPLETE",
-						result: {endResult: "OK"},
-
-						cert: {
-							certificateLevel: "QUALIFIED",
-							value: cert.toString("base64"),
+				it("must create a signature", function*() {
+					var cert = new Certificate(newCertificate({
+						subject: {
+							countryName: "EE",
+							organizationalUnitName: "SIGNATURE",
+							commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
+							surname: "SMITH",
+							givenName: "JOHN",
+							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
 						},
 
-						signature: {
-							algorithm: "sha256WithRSAEncryption",
-							value: xades.signature.toString("base64")
-						}
-					}, req, res)
-				})
+						extensions: SIGN_CERTIFICATE_EXTENSIONS,
+						issuer: VALID_ISSUERS[0],
+						publicKey: JOHN_RSA_KEYS.publicKey
+					}))
 
-				this.router.post(TIMESTAMP_URL.path, function(req, res) {
-					req.headers.host.must.equal(TIMESTAMP_URL.host)
-					res.setHeader("Content-Type", "application/timestamp-reply")
-					res.end(tsResponse.toBuffer())
-				})
+					var [xades, tsResponse, ocspResponse] = newXades(this.initiative, cert)
+					var certSession = "3befb011-37bf-4e57-b041-e4cba1496766"
+					var signSession = "21e55f06-d6cb-40b7-9638-75dc0b131851"
 
-				this.router.post(OCSP_URL.path, function(req, res) {
-					req.headers.host.must.equal(OCSP_URL.host)
-					res.setHeader("Content-Type", "application/ocsp-response")
-					res.flushHeaders()
+					this.router.post(
+						`${SMART_ID_URL.path}certificatechoice/etsi/PNOEE-${ADULT_PERSONAL_ID}`,
+						function(req, res) {
+						req.headers.host.must.equal(SMART_ID_URL.host)
 
-					// NOTE: Respond with a little delay to ensure signature
-					// long-polling later works as expected.
-					setTimeout(() => res.end(ocspResponse.toBuffer()), 100)
-				})
+						req.body.relyingPartyName.must.equal(Config.smartIdUser)
+						req.body.relyingPartyUUID.must.equal(Config.smartIdPassword)
 
-				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var signing = yield this.request(initiativePath + "/signatures", {
-					method: "POST",
-					headers: {"X-Forwarded-For": LONDON_FORWARDED_FOR},
-					form: {method: "smart-id", personalId: ADULT_PERSONAL_ID}
-				})
+						respond({sessionID: certSession}, req, res)
+					})
 
-				signing.statusCode.must.equal(202)
-				signing.statusMessage.must.equal("Signing")
-
-				var signed = yield this.request(signing.headers.location, {
-					headers: {Accept: `application/x-empty, ${ERR_TYPE}`}
-				})
-
-				signed.statusCode.must.equal(204)
-				signed.statusMessage.must.equal("Signed")
-				signed.headers.location.must.equal(initiativePath)
-
-				var signables = signablesDb.search(sql`
-					SELECT * FROM initiative_signables
-				`)
-
-				signables.length.must.equal(1)
-				signables[0].initiative_uuid.must.equal(this.initiative.uuid)
-				signables[0].country.must.equal("EE")
-				signables[0].personal_id.must.equal(ADULT_PERSONAL_ID)
-				signables[0].method.must.equal("smart-id")
-				signables[0].xades.toString().must.equal(String(xades))
-				signables[0].signed.must.be.true()
-				signables[0].timestamped.must.be.true()
-				signables[0].created_from.must.eql(LONDON_GEO)
-				demand(signables[0].error).be.null()
-
-				signaturesDb.search(sql`
-					SELECT * FROM initiative_signatures
-				`).must.eql([new ValidSignature({
-					id: 1,
-					initiative_uuid: this.initiative.uuid,
-					token: signables[0].token,
-					country: "EE",
-					personal_id: ADULT_PERSONAL_ID,
-					method: "smart-id",
-					xades: String(xades),
-					created_from: LONDON_GEO
-				})])
-			})
-
-			it("must respond with 405 if initiative not yet in sign phase",
-				function*() {
-				var initiative = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "edit",
-					published_at: new Date
-				}))
-
-				var initiativePath = `/initiatives/${initiative.uuid}`
-				var signing = yield this.request(initiativePath + "/signatures", {
-					method: "POST",
-					form: {method: "smart-id", personalId: ADULT_PERSONAL_ID}
-				})
-
-				signing.statusCode.must.equal(405)
-				signing.statusMessage.must.equal("Signing Not Yet Started")
-			})
-
-			it("must respond with 405 if initiative signing finished", function*() {
-				var initiative = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					signing_ends_at: new Date
-				}))
-
-				var initiativePath = `/initiatives/${initiative.uuid}`
-				var signing = yield this.request(initiativePath + "/signatures", {
-					method: "POST",
-					form: {method: "smart-id", personalId: ADULT_PERSONAL_ID}
-				})
-
-				signing.statusCode.must.equal(405)
-				signing.statusMessage.must.equal("Signing Ended")
-			})
-
-			it("must respond with 405 if initiative signing expired", function*() {
-				var initiative = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					signing_ends_at: DateFns.addDays(new Date, 1),
-					signing_expired_at: new Date
-				}))
-
-				var initiativePath = `/initiatives/${initiative.uuid}`
-				var signing = yield this.request(initiativePath + "/signatures", {
-					method: "POST",
-					form: {method: "smart-id", personalId: ADULT_PERSONAL_ID}
-				})
-
-				signing.statusCode.must.equal(405)
-				signing.statusMessage.must.equal("Signing Ended")
-			})
-
-			it("must respond with 422 given certificate from untrusted issuer",
-				function*() {
-				var issuer = tsl.getBySubjectName([
-					"C=EE",
-					"O=AS Sertifitseerimiskeskus",
-					"OU=Sertifitseerimisteenused",
-					"CN=EID-SK 2007",
-				].join(","))
-
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationalUnitName: "SIGNATURE",
-						commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-					},
-
-					extensions: SIGN_CERTIFICATE_EXTENSIONS,
-					issuer: issuer,
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
-
-				var res = yield certWithSmartId(
-					this.router,
-					this.request,
-					this.initiative,
-					cert
-				)
-
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Invalid Issuer")
-				res.headers["content-type"].must.equal("text/html; charset=utf-8")
-				res.body.must.include(t("INVALID_CERTIFICATE_ISSUER"))
-			})
-
-			it("must respond with 422 given future certificate", function*() {
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationalUnitName: "SIGNATURE",
-						commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-					},
-
-					extensions: SIGN_CERTIFICATE_EXTENSIONS,
-					validFrom: DateFns.addSeconds(new Date, 1),
-					issuer: VALID_ISSUERS[0],
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
-
-				var res = yield certWithSmartId(
-					this.router,
-					this.request,
-					this.initiative,
-					cert
-				)
-
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Certificate Not Yet Valid")
-				res.headers["content-type"].must.equal("text/html; charset=utf-8")
-				res.body.must.include(t("CERTIFICATE_NOT_YET_VALID"))
-			})
-
-			it("must respond with 422 given past certificate", function*() {
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationalUnitName: "SIGNATURE",
-						commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-					},
-
-					extensions: SIGN_CERTIFICATE_EXTENSIONS,
-					validUntil: new Date,
-					issuer: VALID_ISSUERS[0],
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
-
-				var res = yield certWithSmartId(
-					this.router,
-					this.request,
-					this.initiative,
-					cert
-				)
-
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Certificate Expired")
-				res.headers["content-type"].must.equal("text/html; charset=utf-8")
-				res.body.must.include(t("CERTIFICATE_EXPIRED"))
-			})
-
-			it("must respond with 422 given non-sign certificate", function*() {
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationalUnitName: "SIGNATURE",
-						commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-					},
-
-					extensions: [{
-						extnID: "keyUsage",
-						critical: true,
-						extnValue: {data: Buffer.from([KEY_USAGE_DIGITAL_SIGNATURE])}
-					}],
-
-					issuer: VALID_ISSUERS[0],
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
-
-				var res = yield certWithSmartId(
-					this.router,
-					this.request,
-					this.initiative,
-					cert
-				)
-
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Not Signing Certificate")
-				res.headers["content-type"].must.equal("text/html; charset=utf-8")
-				res.body.must.include(t("CERTIFICATE_NOT_FOR_SIGN"))
-			})
-
-			it("must respond with 422 given underage signer", function*() {
-				var path = `/initiatives/${this.initiative.uuid}/signatures`
-				var res = yield this.request(path, {
-					method: "POST",
-					form: {method: "smart-id", personalId: CHILD_PERSONAL_ID}
-				})
-
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Too Young")
-				res.headers["content-type"].must.equal("text/html; charset=utf-8")
-				res.body.must.include(t("SIGN_ERROR_TOO_YOUNG"))
-			})
-
-			it("must get certificate if request running", function*() {
-				var cert = new Certificate(newCertificate({
-					subject: {
-						countryName: "EE",
-						organizationalUnitName: "SIGNATURE",
-						commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
-						surname: "SMITH",
-						givenName: "JOHN",
-						serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-					},
-
-					extensions: SIGN_CERTIFICATE_EXTENSIONS,
-					validUntil: new Date,
-					issuer: VALID_ISSUERS[0],
-					publicKey: JOHN_RSA_KEYS.publicKey
-				}))
-
-				var certSession = "3befb011-37bf-4e57-b041-e4cba1496766"
-
-				this.router.post(
-					`${SMART_ID_URL.path}certificatechoice/etsi/:id`,
-					respond.bind(null, {sessionID: certSession})
-				)
-
-				var waited = 0
-				this.router.get(
-					`${SMART_ID_URL.path}session/${certSession}`,
-					function(req, res) {
-						if (waited++ < 2) return void respond({state: "RUNNING"}, req, res)
+					this.router.get(
+						`${SMART_ID_URL.path}session/${certSession}`,
+						function(req, res) {
+						req.headers.host.must.equal(SMART_ID_URL.host)
 
 						respond({
 							state: "COMPLETE",
 							result: {endResult: "OK", documentNumber: SMART_ID},
+
 							cert: {
 								certificateLevel: "QUALIFIED",
-								value: cert.toString("base64")
+								value: cert.toString("base64"),
 							}
 						}, req, res)
-					}
-				)
+					})
 
-				var path = `/initiatives/${this.initiative.uuid}/signatures`
-				var res = yield this.request(path, {
-					method: "POST",
-					form: {method: "smart-id", personalId: ADULT_PERSONAL_ID}
+					this.router.post(
+						`${SMART_ID_URL.path}signature/document/${SMART_ID}`,
+						function(req, res) {
+						req.headers.host.must.equal(SMART_ID_URL.host)
+
+						req.body.relyingPartyName.must.equal(Config.smartIdUser)
+						req.body.relyingPartyUUID.must.equal(Config.smartIdPassword)
+						req.body.hashType.must.equal("SHA256")
+						req.body.hash.must.equal(xades.signableHash.toString("base64"))
+
+						respond({sessionID: signSession}, req, res)
+					})
+
+					this.router.get(`${SMART_ID_URL.path}session/${signSession}`,
+						function(req, res) {
+						req.headers.host.must.equal(SMART_ID_URL.host)
+
+						respond({
+							state: "COMPLETE",
+							result: {endResult: "OK"},
+
+							cert: {
+								certificateLevel: "QUALIFIED",
+								value: cert.toString("base64"),
+							},
+
+							signature: {
+								algorithm: "sha256WithRSAEncryption",
+								value: xades.signature.toString("base64")
+							}
+						}, req, res)
+					})
+
+					this.router.post(TIMESTAMP_URL.path, function(req, res) {
+						req.headers.host.must.equal(TIMESTAMP_URL.host)
+						res.setHeader("Content-Type", "application/timestamp-reply")
+						res.end(tsResponse.toBuffer())
+					})
+
+					this.router.post(OCSP_URL.path, function(req, res) {
+						req.headers.host.must.equal(OCSP_URL.host)
+						res.setHeader("Content-Type", "application/ocsp-response")
+						res.flushHeaders()
+
+						// NOTE: Respond with a little delay to ensure waiting for signable
+						// works as expected.
+						setTimeout(() => res.end(ocspResponse.toBuffer()), 100)
+					})
+
+					var initiativePath = `/initiatives/${this.initiative.uuid}`
+					var signing = yield this.request(initiativePath + "/signatures", {
+						method: "POST",
+						headers: {"X-Forwarded-For": LONDON_FORWARDED_FOR},
+						form: {method: "smart-id", "personal-id": ADULT_PERSONAL_ID}
+					})
+
+					var verificationCode =
+						padVerificationCode(SmartId.verification(xades.signableHash))
+
+					signing.statusCode.must.equal(202)
+					signing.statusMessage.must.equal("Signing with Smart-ID")
+					signing.headers["content-type"].must.equal(HTML_TYPE)
+					signing.headers["x-verification-code"].must.equal(verificationCode)
+
+					var waitUrl = parseRefreshHeader(signing.headers.refresh)[1]
+					var waiting = yield this.request(waitUrl)
+					waiting.statusCode.must.equal(202)
+					waiting.statusMessage.must.equal("Waiting for Smart-ID")
+					waiting.headers["content-type"].must.equal(HTML_TYPE)
+					waiting.headers["x-verification-code"].must.equal(verificationCode)
+
+					yield _.sleep(100)
+
+					waitUrl = parseRefreshHeader(signing.headers.refresh)[1]
+					var signed = yield this.request(waitUrl)
+					signed.statusCode.must.equal(303)
+					signed.statusMessage.must.equal("Signed with Smart-ID")
+					signed.headers.location.must.equal(initiativePath)
+
+					var signables = signablesDb.search(sql`
+						SELECT * FROM initiative_signables
+					`)
+
+					signables.length.must.equal(1)
+					signables[0].initiative_uuid.must.equal(this.initiative.uuid)
+					signables[0].country.must.equal("EE")
+					signables[0].personal_id.must.equal(ADULT_PERSONAL_ID)
+					signables[0].method.must.equal("smart-id")
+					signables[0].xades.toString().must.equal(String(xades))
+					signables[0].signed.must.be.true()
+					signables[0].timestamped.must.be.true()
+					signables[0].created_from.must.eql(LONDON_GEO)
+					demand(signables[0].error).be.null()
+
+					signaturesDb.search(sql`
+						SELECT * FROM initiative_signatures
+					`).must.eql([new ValidSignature({
+						id: 1,
+						initiative_uuid: this.initiative.uuid,
+						token: signables[0].token,
+						country: "EE",
+						personal_id: ADULT_PERSONAL_ID,
+						method: "smart-id",
+						xades: String(xades),
+						created_from: LONDON_GEO
+					})])
 				})
 
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Certificate Expired")
-				res.headers["content-type"].must.equal("text/html; charset=utf-8")
-				res.body.must.include(t("CERTIFICATE_EXPIRED"))
+				it("must get certificate if certificate session running once", function*() {
+					var cert = new Certificate(newCertificate({
+						subject: {
+							countryName: "EE",
+							organizationalUnitName: "SIGNATURE",
+							commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
+							surname: "SMITH",
+							givenName: "JOHN",
+							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
+						},
+
+						extensions: SIGN_CERTIFICATE_EXTENSIONS,
+						validUntil: new Date,
+						issuer: VALID_ISSUERS[0],
+						publicKey: JOHN_RSA_KEYS.publicKey
+					}))
+
+					var certSession = "3befb011-37bf-4e57-b041-e4cba1496766"
+
+					this.router.post(
+						`${SMART_ID_URL.path}certificatechoice/etsi/:id`,
+						respond.bind(null, {sessionID: certSession})
+					)
+
+					var waited = 0
+
+					this.router.get(
+						`${SMART_ID_URL.path}session/${certSession}`,
+						function(req, res) {
+							if (waited++ < 1) return void respond({
+								state: "RUNNING"
+							}, req, res)
+
+							respond({
+								state: "COMPLETE",
+								result: {endResult: "OK", documentNumber: SMART_ID},
+								cert: {
+									certificateLevel: "QUALIFIED",
+									value: cert.toString("base64")
+								}
+							}, req, res)
+						}
+					)
+
+					var path = `/initiatives/${this.initiative.uuid}/signatures`
+					var res = yield this.request(path, {
+						method: "POST",
+						form: {method: "smart-id", "personal-id": ADULT_PERSONAL_ID}
+					})
+
+					assertError(res, {
+						code: 422,
+						message: "Certificate Expired",
+						description: t("eid_view.errors.certificate_expired")
+					})
+				})
+
+				it("must create signature if signature session running once",
+					function*() {
+					var waited = 0
+
+					var signed = yield signWithSmartId(
+						this.router,
+						this.request,
+						this.initiative,
+						SMART_ID_CERTIFICATE,
+						function(req, res) {
+							if (waited++ < 1) return void respond({
+								state: "RUNNING"
+							}, req, res)
+
+							var {xades} = signablesDb.read(sql`
+								SELECT * FROM initiative_signables
+							`)
+
+							respond({
+								state: "COMPLETE",
+								result: {endResult: "OK"},
+
+								cert: {
+									certificateLevel: "QUALIFIED",
+									value: SMART_ID_CERTIFICATE.toString("base64")
+								},
+
+								signature: {
+									algorithm: "sha256WithRSAEncryption",
+									value: hashAndSignWithRsa(
+										JOHN_RSA_KEYS.privateKey,
+										xades.signable
+									).toString("base64")
+								}
+							}, req, res)
+						}
+					)
+
+					assertOk(signed)
+
+					signaturesDb.search(sql`
+						SELECT * FROM initiative_signatures
+					`).must.not.be.empty()
+				})
+
+				it("must respond with 422 given invalid personal id", function*() {
+					var initiativePath = `/initiatives/${this.initiative.uuid}`
+					var res = yield this.request(initiativePath + "/signatures", {
+						method: "POST",
+						form: {method: "smart-id", "personal-id": ADULT_PERSONAL_ID + "666"}
+					})
+
+					assertError(res, {
+						code: 422,
+						message: "Invalid Personal Id",
+						description: t("eid_view.errors.invalid_personal_id")
+					})
+
+					signablesDb.search(sql`
+						SELECT * FROM initiative_signables
+					`).must.be.empty()
+				})
+
+				_.each(PERSONAL_ID_TRANSFORMS, function(to, from) {
+					it(`must transform Smart-ID personal id ${from} to ${to}`,
+						function*() {
+						var created = 0
+
+						this.router.post(
+							`${SMART_ID_URL.path}certificatechoice/etsi/PNOEE-${to}`,
+							function(_req, res) {
+								++created
+								res.statusCode = 404
+								res.end()
+						})
+
+						var initiativePath = `/initiatives/${this.initiative.uuid}`
+						var res = yield this.request(initiativePath + "/signatures", {
+							method: "POST",
+							form: {method: "smart-id", "personal-id": from}
+						})
+
+						created.must.equal(1)
+
+						assertError(res, {
+							code: 422,
+							message: "Not a Smart-ID User",
+							description: t("eid_view.smart_id_errors.not_found")
+						})
+					})
+				})
+
+				it("must respond with 422 given underage signer", function*() {
+					var initiativePath = `/initiatives/${this.initiative.uuid}/signatures`
+					var res = yield this.request(initiativePath, {
+						method: "POST",
+						form: {method: "smart-id", "personal-id": CHILD_PERSONAL_ID}
+					})
+
+					assertError(res, {
+						code: 422,
+						message: "Too Young",
+						description: t("creating_initiative_signature_page.errors.too_young")
+					})
+				})
 			})
 
-			it("must time out after 90s of waiting for certificate", function*() {
+			describe("when with JavaScript", function() {
+				function assertOk(res) {
+					res.statusCode.must.equal(200)
+					res.statusMessage.must.equal("Signed with Smart-ID")
+					res.headers["content-type"].must.equal(JSON_TYPE)
+					res.body.must.eql({state: "DONE"})
+				}
+
+				function assertError(res, obj) {
+					res.statusCode.must.equal(obj.code)
+					res.statusMessage.must.equal(obj.message)
+					res.headers["content-type"].must.equal(ERROR_TYPE)
+					res.body.must.eql(obj)
+				}
+
+				mustSign(function*(router, request, initiative, cert) {
+					var res = yield signWithSmartId(
+						router,
+						request,
+						initiative,
+						cert || SMART_ID_CERTIFICATE,
+						null,
+						{Accept: `${JSON_TYPE}, ${ERROR_TYPE}`}
+					)
+
+					if (!(res.statusCode >= 200 && res.statusCode < 300)) return res
+					return request(res.headers.location)
+				}, assertError)
+
+				mustSignWithSmartId((router, request, initiative, cert, session) => (
+					signWithSmartId(router, request, initiative, cert, session, {
+						Accept: `${JSON_TYPE}, ${ERROR_TYPE}`
+					})
+				), assertOk, assertError)
+
+				mustRateLimit((router, request, initiative) => signWithSmartId(
+					router,
+					request,
+					initiative,
+					SMART_ID_CERTIFICATE,
+					null,
+					{Accept: `${JSON_TYPE}, ${ERROR_TYPE}`}
+				), assertOk, assertError)
+
+				it("must create a signature", function*() {
+					var [
+						xades,
+						tsResponse,
+						ocspResponse
+					] = newXades(this.initiative, SMART_ID_CERTIFICATE)
+
+					var signSession = "21e55f06-d6cb-40b7-9638-75dc0b131851"
+
+					this.router.post(
+						`${SMART_ID_URL.path}signature/document/${SMART_ID}`,
+						respond.bind(null, {sessionID: signSession})
+					)
+
+					this.router.get(`${SMART_ID_URL.path}session/${signSession}`,
+						function(req, res) {
+						respond({
+							state: "COMPLETE",
+							result: {endResult: "OK"},
+
+							cert: {
+								certificateLevel: "QUALIFIED",
+								value: SMART_ID_CERTIFICATE.toString("base64"),
+							},
+
+							signature: {
+								algorithm: "sha256WithRSAEncryption",
+								value: hashAndSignWithRsa(
+									JOHN_RSA_KEYS.privateKey,
+									xades.signable
+								).toString("base64")
+							}
+						}, req, res)
+					})
+
+					this.router.post(TIMESTAMP_URL.path, function(req, res) {
+						req.headers.host.must.equal(TIMESTAMP_URL.host)
+						res.setHeader("Content-Type", "application/timestamp-reply")
+						res.end(tsResponse.toBuffer(0))
+					})
+
+					this.router.post(OCSP_URL.path, function(req, res) {
+						req.headers.host.must.equal(OCSP_URL.host)
+						res.setHeader("Content-Type", "application/ocsp-response")
+						res.flushHeaders()
+
+						// NOTE: Respond with a little delay to ensure waiting for signable
+						// works as expected.
+						setTimeout(() => res.end(ocspResponse.toBuffer()), 100)
+					})
+
+					var signing = yield certWithSmartId(
+						this.router,
+						this.request,
+						this.initiative,
+						SMART_ID_CERTIFICATE,
+						{Accept: `${EMPTY_TYPE}, ${ERROR_TYPE}`}
+					)
+
+					signing.statusCode.must.equal(202)
+					signing.statusMessage.must.equal("Signing with Smart-ID")
+					signing.headers.must.not.have.property("content-type")
+
+					signing.headers["x-verification-code"].must.equal(
+						_.padLeft(SmartId.verification(xades.signableHash), 4, 0)
+					)
+
+					var waitUrl = parseRefreshHeader(signing.headers.refresh)[1]
+					var waiting = yield this.request(waitUrl, {
+						headers: {Accept: `${JSON_TYPE}, ${ERROR_TYPE}`}
+					})
+
+					waiting.statusCode.must.equal(200)
+					waiting.statusMessage.must.equal("Signed with Smart-ID")
+					waiting.headers["content-type"].must.equal(JSON_TYPE)
+					waiting.headers.must.not.have.property("x-verification-code")
+					waiting.headers.must.not.have.property("refresh")
+					waiting.body.must.eql({state: "DONE"})
+
+					var signed = yield this.request(waitUrl)
+					signed.statusCode.must.equal(303)
+					signed.statusMessage.must.equal("Signed with Smart-ID")
+					var initiativePath = `/initiatives/${this.initiative.uuid}`
+					signed.headers.location.must.equal(initiativePath)
+
+					signaturesDb.search(sql`
+						SELECT * FROM initiative_signatures
+					`).must.not.be.empty()
+				})
+
+				it("must respond with 422 given invalid personal id", function*() {
+					var initiativePath = `/initiatives/${this.initiative.uuid}`
+					var res = yield this.request(initiativePath + "/signatures", {
+						method: "POST",
+						headers: {Accept: `${EMPTY_TYPE}, ${ERROR_TYPE}`},
+						form: {method: "smart-id", "personal-id": ADULT_PERSONAL_ID + "666"}
+					})
+
+					assertError(res, {
+						code: 422,
+						message: "Invalid Personal Id",
+						description: t("eid_view.errors.invalid_personal_id")
+					})
+
+					signablesDb.search(sql`
+						SELECT * FROM initiative_signables
+					`).must.be.empty()
+				})
+			})
+
+			function mustSignWithSmartId(sign, assertOk, assertError) {
+				describe("as a Smart-ID method", function() {
+					_.each({
+						RSA: [JOHN_RSA_KEYS, hashAndSignWithRsa],
+						ECDSA: [JOHN_ECDSA_KEYS, hashAndSignWithEcdsa]
+					}, function([keys, signSignable], algo) {
+						it(`must create a signature given an ${algo} signature`, function*() {
+							var cert = new Certificate(newCertificate({
+								subject: {
+									countryName: "EE",
+									organizationalUnitName: "SIGNATURE",
+									commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
+									surname: "SMITH",
+									givenName: "JOHN",
+									serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
+								},
+
+								extensions: SIGN_CERTIFICATE_EXTENSIONS,
+								issuer: VALID_ISSUERS[0],
+								publicKey: keys.publicKey
+							}))
+
+							assertOk(yield sign(
+								this.router,
+								this.request,
+								this.initiative,
+								cert,
+								function(req, res) {
+									var {xades} = signablesDb.read(sql`
+										SELECT * FROM initiative_signables
+									`)
+
+									respond({
+										state: "COMPLETE",
+										result: {endResult: "OK"},
+
+										cert: {
+											certificateLevel: "QUALIFIED",
+											value: SMART_ID_CERTIFICATE.toString("base64")
+										},
+
+										signature: {
+											algorithm: "sha256WithRSAEncryption",
+											value: signSignable(
+												keys.privateKey,
+												xades.signable
+											).toString("base64")
+										}
+									}, req, res)
+								}
+							))
+
+							signaturesDb.search(sql`
+								SELECT * FROM initiative_signatures
+							`).must.not.be.empty()
+						})
+
+						it(`must respond with error given an invalid ${algo} signature`,
+							function*() {
+							var cert = new Certificate(newCertificate({
+								subject: {
+									countryName: "EE",
+									organizationalUnitName: "SIGNATURE",
+									commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
+									surname: "SMITH",
+									givenName: "JOHN",
+									serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
+								},
+
+								extensions: SIGN_CERTIFICATE_EXTENSIONS,
+								issuer: VALID_ISSUERS[0],
+								publicKey: keys.publicKey
+							}))
+
+							var res = yield sign(
+								this.router,
+								this.request,
+								this.initiative,
+								cert,
+								respond.bind(null, {
+									state: "COMPLETE",
+									result: {endResult: "OK"},
+
+									cert: {
+										certificateLevel: "QUALIFIED",
+										value: cert.toString("base64")
+									},
+
+									signature: {
+										algorithm: "sha256WithRSAEncryption",
+										value: Crypto.randomBytes(64).toString("base64")
+									}
+								})
+							)
+
+							assertError(res, {
+								code: 410,
+								message: "Invalid Smart-ID Signature",
+
+								description:
+									t("eid_view.smart_id_errors.sign_invalid_signature")
+							})
+
+							signaturesDb.search(sql`
+								SELECT * FROM initiative_signatures
+							`).must.be.empty()
+						})
+					})
+
+					_.each(SMART_ID_SESSION_ERRORS, function([
+						statusCode,
+						statusMessage,
+						error
+					], code) {
+						it(`must respond with error given ${code} while fetching certificate`,
+							function*() {
+							var res = yield sign(
+								this.router,
+								this.request,
+								this.initiative,
+								respond.bind(null, {
+									state: "COMPLETE",
+									result: {endResult: code}
+								})
+							)
+
+							assertError(res, {
+								code: statusCode,
+								message: statusMessage,
+								description: t(error)
+							})
+
+							signaturesDb.search(sql`
+								SELECT * FROM initiative_signatures
+							`).must.be.empty()
+						})
+
+						it(`must respond with error given ${code} while signing`,
+							function*() {
+							var res = yield sign(
+								this.router,
+								this.request,
+								this.initiative,
+								SMART_ID_CERTIFICATE,
+								respond.bind(null, {
+									state: "COMPLETE",
+									result: {endResult: code}
+								})
+							)
+
+							assertError(res, {
+								code: statusCode,
+								message: statusMessage,
+								description: t(error)
+							})
+
+							signaturesDb.search(sql`
+								SELECT * FROM initiative_signatures
+							`).must.be.empty()
+						})
+					})
+
+					it("must respond with 422 given invalid personal id from certificate request", function*() {
+						this.router.post(
+							`${SMART_ID_URL.path}certificatechoice/etsi/:id`,
+							function(_req, res) { res.statusCode = 404; res.end() }
+						)
+
+						var res = yield sign(
+							this.router,
+							this.request,
+							this.initiative,
+							SMART_ID_CERTIFICATE
+						)
+
+						assertError(res, {
+							code: 422,
+							message: "Not a Smart-ID User",
+							description: t("eid_view.smart_id_errors.not_found")
+						})
+
+						signablesDb.search(sql`
+							SELECT * FROM initiative_signables
+						`).must.be.empty()
+					})
+
+					it("must respond with error if certificate session expired",
+						function*() {
+						var res = yield sign(
+							this.router,
+							this.request,
+							this.initiative,
+							function(_req, res) { res.statusCode = 404; res.end() }
+						)
+
+						assertError(res, {
+							code: 410,
+							message: "Smart-ID Timeout",
+							description: t("eid_view.smart_id_errors.sign_timeout")
+						})
+
+						signaturesDb.search(sql`
+							SELECT * FROM initiative_signatures
+						`).must.be.empty()
+					})
+
+					it("must respond with error if signing session expired",
+						function*() {
+						var res = yield sign(
+							this.router,
+							this.request,
+							this.initiative,
+							SMART_ID_CERTIFICATE,
+							function(_req, res) { res.statusCode = 404; res.end() }
+						)
+
+						assertError(res, {
+							code: 410,
+							message: "Smart-ID Timeout",
+							description: t("eid_view.smart_id_errors.sign_timeout")
+						})
+
+						signaturesDb.search(sql`
+							SELECT * FROM initiative_signatures
+						`).must.be.empty()
+					})
+
+					it("must respond with error given Bad Request from certificate request", function*() {
+						this.router.post(
+							`${SMART_ID_URL.path}certificatechoice/etsi/:id`,
+							function(_req, res) { res.statusCode = 400; res.end() }
+						)
+
+						var res = yield sign(
+							this.router,
+							this.request,
+							this.initiative,
+							SMART_ID_CERTIFICATE
+						)
+
+						assertError(res, {
+							code: 500,
+							message: "Unknown Smart-ID Error",
+							description: t("500_BODY")
+						})
+
+						signaturesDb.search(sql`
+							SELECT * FROM initiative_signatures
+						`).must.be.empty()
+					})
+
+					it("must respond with error given Bad Request from certificate session", function*() {
+						var res = yield sign(
+							this.router,
+							this.request,
+							this.initiative,
+							function(_req, res) { res.statusCode = 400; res.end() }
+						)
+
+						assertError(res, {
+							code: 500,
+							message: "Unknown Smart-ID Error",
+							description: t("500_BODY")
+						})
+
+						signaturesDb.search(sql`
+							SELECT * FROM initiative_signatures
+						`).must.be.empty()
+					})
+
+					it("must respond with error given Bad Request from sign request", function*() {
+						this.router.post(
+							`${SMART_ID_URL.path}signature/document/${SMART_ID}`,
+							function(_req, res) { res.statusCode = 400; res.end() }
+						)
+
+						var res = yield sign(
+							this.router,
+							this.request,
+							this.initiative,
+							SMART_ID_CERTIFICATE
+						)
+
+						assertError(res, {
+							code: 500,
+							message: "Unknown Smart-ID Error",
+							description: t("500_BODY")
+						})
+
+						signaturesDb.search(sql`
+							SELECT * FROM initiative_signatures
+						`).must.be.empty()
+					})
+
+					it("must respond with error given Bad Request from sign session",
+						function*() {
+						var res = yield sign(
+							this.router,
+							this.request,
+							this.initiative,
+							SMART_ID_CERTIFICATE,
+							function(_req, res) { res.statusCode = 400; res.end() }
+						)
+
+						assertError(res, {
+							code: 500,
+							message: "Unknown Smart-ID Error",
+							description: t("500_BODY")
+						})
+
+						signaturesDb.search(sql`
+							SELECT * FROM initiative_signatures
+						`).must.be.empty()
+					})
+				})
+			}
+
+			xit("must time out after 90s of waiting for certificate", function*() {
 				var certSession = "3befb011-37bf-4e57-b041-e4cba1496766"
 
 				this.router.post(
@@ -3223,327 +3494,16 @@ describe("SignaturesController", function() {
 				var path = `/initiatives/${this.initiative.uuid}/signatures`
 				var res = yield this.request(path, {
 					method: "POST",
-					form: {method: "smart-id", personalId: ADULT_PERSONAL_ID}
+					form: {method: "smart-id", "personal-id": ADULT_PERSONAL_ID}
 				})
 
 				res.statusCode.must.equal(410)
-				res.statusMessage.must.equal("Smart-Id Timeout")
+				res.statusMessage.must.equal("Smart-ID Timeout")
 				res.headers["content-type"].must.equal("text/html; charset=utf-8")
-				res.body.must.include(t("SMART_ID_ERROR_TIMEOUT_SIGN"))
+				res.body.must.include(t("eid_view.smart_id_errors.sign_timeout"))
 			})
 
-			it("must create signature if Smart-Id session running", function*() {
-				var waited = 0
-				var signed = yield signWithSmartId(
-					this.router,
-					this.request,
-					this.initiative,
-					SMART_ID_CERTIFICATE,
-					function(req, res) {
-						if (waited++ < 2)
-							return void respond({state: "RUNNING"}, req, res)
-
-						res.writeHead(200)
-
-						var {xades} = signablesDb.read(sql`
-							SELECT * FROM initiative_signables
-						`)
-
-						respond({
-							state: "COMPLETE",
-							result: {endResult: "OK"},
-
-							cert: {
-								certificateLevel: "QUALIFIED",
-								value: SMART_ID_CERTIFICATE.toString("base64")
-							},
-
-							signature: {
-								algorithm: "sha256WithRSAEncryption",
-								value: signWithRsa(
-									JOHN_RSA_KEYS.privateKey,
-									xades.signable
-								).toString("base64")
-							}
-						}, req, res)
-					}
-				)
-
-				signed.statusCode.must.equal(204)
-				signed.statusMessage.must.equal("Signed")
-
-				signaturesDb.search(sql`
-					SELECT * FROM initiative_signatures
-				`).must.not.be.empty()
-
-				var cookies = parseCookies(signed.headers["set-cookie"])
-				var res = yield this.request(signed.headers.location, {
-					headers: {Cookie: serializeCookies(cookies)}
-				})
-
-				res.statusCode.must.equal(200)
-				res.body.must.include(t("THANKS_FOR_SIGNING"))
-			})
-
-			_.each({
-				RSA: [JOHN_RSA_KEYS, signWithRsa],
-				ECDSA: [JOHN_ECDSA_KEYS, signWithEcdsa]
-			}, function([keys, sign], algo) {
-				it(`must create a signature given an ${algo} signature`, function*() {
-					var cert = new Certificate(newCertificate({
-						subject: {
-							countryName: "EE",
-							organizationalUnitName: "SIGNATURE",
-							commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
-							surname: "SMITH",
-							givenName: "JOHN",
-							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-						},
-
-						extensions: SIGN_CERTIFICATE_EXTENSIONS,
-						issuer: VALID_ISSUERS[0],
-						publicKey: keys.publicKey
-					}))
-
-					var signed = yield signWithSmartId(
-						this.router,
-						this.request,
-						this.initiative,
-						cert,
-						function(req, res) {
-							res.writeHead(200)
-
-							var {xades} = signablesDb.read(sql`
-								SELECT * FROM initiative_signables
-							`)
-
-							respond({
-								state: "COMPLETE",
-								result: {endResult: "OK"},
-
-								cert: {
-									certificateLevel: "QUALIFIED",
-									value: SMART_ID_CERTIFICATE.toString("base64")
-								},
-
-								signature: {
-									algorithm: "sha256WithRSAEncryption",
-									value: sign(
-										keys.privateKey,
-										xades.signable
-									).toString("base64")
-								}
-							}, req, res)
-						}
-					)
-
-					signed.statusCode.must.equal(204)
-					signed.statusMessage.must.equal("Signed")
-
-					signaturesDb.search(sql`
-						SELECT * FROM initiative_signatures
-					`).must.not.be.empty()
-				})
-
-				it(`must respond with error given an invalid ${algo} signature`,
-					function*() {
-					var cert = new Certificate(newCertificate({
-						subject: {
-							countryName: "EE",
-							organizationalUnitName: "SIGNATURE",
-							commonName: `SMITH,JOHN,PNOEE-${ADULT_PERSONAL_ID}`,
-							surname: "SMITH",
-							givenName: "JOHN",
-							serialNumber: `PNOEE-${ADULT_PERSONAL_ID}`
-						},
-
-						extensions: SIGN_CERTIFICATE_EXTENSIONS,
-						issuer: VALID_ISSUERS[0],
-						publicKey: keys.publicKey
-					}))
-
-					var errored = yield signWithSmartId(
-						this.router,
-						this.request,
-						this.initiative,
-						cert,
-						respond.bind(null, {
-							state: "COMPLETE",
-							result: {endResult: "OK"},
-
-							cert: {
-								certificateLevel: "QUALIFIED",
-								value: SMART_ID_CERTIFICATE.toString("base64")
-							},
-
-							signature: {
-								algorithm: "sha256WithRSAEncryption",
-								value: Crypto.randomBytes(64).toString("base64")
-							}
-						})
-					)
-
-					errored.statusCode.must.equal(410)
-					errored.statusMessage.must.equal("Invalid Smart-Id Signature")
-					var initiativePath = `/initiatives/${this.initiative.uuid}`
-					errored.headers.location.must.equal(initiativePath)
-
-					var cookies = parseCookies(errored.headers["set-cookie"])
-					var res = yield this.request(errored.headers.location, {
-						headers: {Cookie: serializeCookies(cookies)}
-					})
-
-					res.statusCode.must.equal(200)
-					res.body.must.not.include(t("THANKS_FOR_SIGNING"))
-					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
-					res.body.must.include(t("SMART_ID_ERROR_INVALID_SIGNATURE"))
-
-					signaturesDb.search(sql`
-						SELECT * FROM initiative_signatures
-					`).must.be.empty()
-				})
-			})
-
-			_.each(PERSONAL_ID_TRANSFORMS, function(to, from) {
-				it(`must transform Smart-Id personal id ${from} to ${to}`,
-					function*() {
-					var created = 0
-
-					this.router.post(
-						`${SMART_ID_URL.path}certificatechoice/etsi/PNOEE-${to}`,
-						function(req, res) {
-						++created
-						res.statusCode = 404
-						respond({code: 404, message: "Not Found"}, req, res)
-					})
-
-					var initiativePath = `/initiatives/${this.initiative.uuid}`
-					var res = yield this.request(initiativePath + "/signatures", {
-						method: "POST",
-						form: {method: "smart-id", personalId: from}
-					})
-
-
-					created.must.equal(1)
-					res.statusCode.must.equal(422)
-					res.statusMessage.must.equal("Not a Smart-Id User")
-				})
-			})
-
-			it("must respond with 422 given invalid personal id", function*() {
-				this.router.post(`${SMART_ID_URL.path}certificatechoice/etsi/:id`,
-					function(req, res) {
-					res.statusCode = 404
-					respond({code: 404, message: "Not Found"}, req, res)
-				})
-
-				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var res = yield this.request(initiativePath + "/signatures", {
-					method: "POST",
-					form: {method: "smart-id", personalId: ADULT_PERSONAL_ID + "666"}
-				})
-
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Invalid Personal Id")
-				res.body.must.include(t("SIGN_ERROR_PERSONAL_ID_INVALID"))
-			})
-
-			it("must respond with 422 given invalid personal id error", function*() {
-				this.router.post(`${SMART_ID_URL.path}certificatechoice/etsi/:id`,
-					function(req, res) {
-					res.statusCode = 404
-					respond({code: 404, message: "Not Found"}, req, res)
-				})
-
-				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var res = yield this.request(initiativePath + "/signatures", {
-					method: "POST",
-					form: {method: "smart-id", personalId: ADULT_PERSONAL_ID}
-				})
-
-				res.statusCode.must.equal(422)
-				res.statusMessage.must.equal("Not a Smart-Id User")
-				res.body.must.include(t("SMART_ID_ERROR_NOT_FOUND"))
-
-				signablesDb.search(sql`
-					SELECT * FROM initiative_signables
-				`).must.be.empty()
-			})
-
-			it("must respond with 500 given Bad Request", function*() {
-				this.router.post(`${SMART_ID_URL.path}certificatechoice/etsi/:id`,
-					function(req, res) {
-					res.statusCode = 400
-					respond({code: 400, message: "Bad Request"}, req, res)
-				})
-
-				var initiativePath = `/initiatives/${this.initiative.uuid}`
-				var res = yield this.request(initiativePath + "/signatures", {
-					method: "POST",
-					form: {method: "smart-id", personalId: ADULT_PERSONAL_ID}
-				})
-
-				res.statusCode.must.equal(500)
-				res.statusMessage.must.equal("Unknown Smart-Id Error")
-				res.body.must.not.include("FOOLANG")
-
-				signablesDb.search(sql`
-					SELECT * FROM initiative_signables
-				`).must.be.empty()
-			})
-
-			_.each(SMART_ID_SESSION_ERRORS,
-				function([statusCode, statusMessage, error], code) {
-				it(`must respond with error given ${code} while fetching certificate`,
-					function*() {
-					var errored = yield certWithSmartId(
-						this.router,
-						this.request,
-						this.initiative,
-						respond.bind(null, {state: "COMPLETE", result: {endResult: code}})
-					)
-
-					errored.statusCode.must.equal(statusCode)
-					errored.statusMessage.must.equal(statusMessage)
-					errored.body.must.include(t(error))
-
-					signaturesDb.search(sql`
-						SELECT * FROM initiative_signatures
-					`).must.be.empty()
-				})
-
-				it(`must respond with error given ${code} while signing`,
-					function*() {
-					var errored = yield signWithSmartId(
-						this.router,
-						this.request,
-						this.initiative,
-						SMART_ID_CERTIFICATE,
-						respond.bind(null, {state: "COMPLETE", result: {endResult: code}})
-					)
-
-					errored.statusCode.must.equal(statusCode)
-					errored.statusMessage.must.equal(statusMessage)
-					var initiativePath = `/initiatives/${this.initiative.uuid}`
-					errored.headers.location.must.equal(initiativePath)
-
-					signaturesDb.search(sql`
-						SELECT * FROM initiative_signatures
-					`).must.be.empty()
-
-					var cookies = parseCookies(errored.headers["set-cookie"])
-					var res = yield this.request(errored.headers.location, {
-						headers: {Cookie: serializeCookies(cookies)}
-					})
-
-					res.statusCode.must.equal(200)
-					res.body.must.not.include(t("THANKS_FOR_SIGNING"))
-					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
-					res.body.must.include(t(error))
-				})
-			})
-
-			it("must time out after 2 minutes", function*() {
+			xit("must time out after 2 minutes", function*() {
 				var waited = 0
 				var errored = yield signWithSmartId(
 					this.router,
@@ -3560,7 +3520,7 @@ describe("SignaturesController", function() {
 				)
 
 				errored.statusCode.must.equal(410)
-				errored.statusMessage.must.equal("Smart-Id Timeout")
+				errored.statusMessage.must.equal("Smart-ID Timeout")
 				var initiativePath = `/initiatives/${this.initiative.uuid}`
 				errored.headers.location.must.equal(initiativePath)
 				waited.must.equal(2)
@@ -3577,7 +3537,7 @@ describe("SignaturesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.not.include(t("THANKS_FOR_SIGNING"))
 				res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
-				res.body.must.include(t("SMART_ID_ERROR_TIMEOUT_SIGN"))
+				res.body.must.include(t("eid_view.smart_id_errors.sign_timeout"))
 			})
 		})
 	})
@@ -3829,15 +3789,20 @@ describe("SignaturesController", function() {
 function* signWithIdCard(router, request, initiative, cert) {
 	var signing = yield request(`/initiatives/${initiative.uuid}/signatures`, {
 		method: "POST",
-		headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
+
+		headers: {
+			Accept: `${SIGNABLE_TYPE}, ${ERROR_TYPE}`,
+			"Content-Type": CERTIFICATE_TYPE
+		},
+
 		body: cert.toBuffer()
 	})
 
+	if (!(signing.statusCode >= 200 && signing.statusCode < 300)) return signing
 	signing.statusCode.must.equal(202)
+	signing.statusMessage.must.equal("Signing with ID-card")
 
-	var {xades} = signablesDb.read(sql`
-		SELECT xades FROM initiative_signables ORDER BY rowid DESC LIMIT 1
-	`)
+	var {xades} = signablesDb.read(sql`SELECT xades FROM initiative_signables`)
 
 	router.post(TIMESTAMP_URL.path, function(req, res) {
 		req.headers.host.must.equal(TIMESTAMP_URL.host)
@@ -3854,28 +3819,38 @@ function* signWithIdCard(router, request, initiative, cert) {
 	return request(signing.headers.location, {
 		method: "PUT",
 		headers: {
-			Accept: `application/x-empty, ${ERR_TYPE}`,
+			Accept: `text/html, ${ERROR_TYPE}`,
 			"Content-Type": SIGNATURE_TYPE
 		},
 
-		body: signWithRsa(JOHN_RSA_KEYS.privateKey, xades.signable)
+		body: hashAndSignWithRsa(JOHN_RSA_KEYS.privateKey, xades.signable)
 	})
 }
 
-function* signWithMobileId(router, request, initiative, cert, res) {
-	router.post(`${MOBILE_ID_URL.path}certificate`, function(req, res) {
-		respond({result: "OK", cert: cert.toString("base64")}, req, res)
-	})
+function* signWithMobileId(
+	router,
+	request,
+	initiative,
+	cert,
+	session,
+	headers
+) {
+	router.post(
+		`${MOBILE_ID_URL.path}certificate`,
+		typeof cert == "function" ? cert : respond.bind(null, {
+			result: "OK",
+			cert: cert.toString("base64")
+		})
+	)
 
-	router.post(`${MOBILE_ID_URL.path}signature`, function(req, res) {
-		respond({sessionID: "7c8bdd56-6772-4264-ba27-bf7a9ef72a11"}, req, res)
-	})
+	router.post(`${MOBILE_ID_URL.path}signature`, respond.bind(null, {
+		sessionID: "7c8bdd56-6772-4264-ba27-bf7a9ef72a11"
+	}))
 
 	router.get(
 		`${MOBILE_ID_URL.path}signature/session/:token`,
-		typeof res == "function" ? res : function(req, res) {
-			res.writeHead(200)
-
+		typeof session == "function" ? session : function(req, res) {
+			// There could be multiple signables when testing rate limiting.
 			var {xades} = signablesDb.read(sql`
 				SELECT xades FROM initiative_signables ORDER BY rowid DESC LIMIT 1
 			`)
@@ -3886,7 +3861,7 @@ function* signWithMobileId(router, request, initiative, cert, res) {
 
 				signature: {
 					algorithm: "sha256WithRSAEncryption",
-					value: signWithRsa(
+					value: hashAndSignWithRsa(
 						JOHN_RSA_KEYS.privateKey,
 						xades.signable
 					).toString("base64")
@@ -3909,22 +3884,25 @@ function* signWithMobileId(router, request, initiative, cert, res) {
 
 	var signing = yield request(`/initiatives/${initiative.uuid}/signatures`, {
 		method: "POST",
+		headers: headers || {},
+
 		form: {
 			method: "mobile-id",
-			personalId: ADULT_PERSONAL_ID,
-			phoneNumber: "+37200000766"
+			"personal-id": ADULT_PERSONAL_ID,
+			"phone-number": "+37200000766"
 		}
 	})
 
 	if (!(signing.statusCode >= 200 && signing.statusCode < 300)) return signing
 	signing.statusCode.must.equal(202)
+	signing.statusMessage.must.equal("Signing with Mobile-ID")
 
-	return request(signing.headers.location, {
-		headers: {Accept: `application/x-empty, ${ERR_TYPE}`}
+	return request(parseRefreshHeader(signing.headers.refresh)[1], {
+		headers: headers || {}
 	})
 }
 
-function certWithSmartId(router, request, initiative, cert) {
+function certWithSmartId(router, request, initiative, cert, headers) {
 	var certSession = "3befb011-37bf-4e57-b041-e4cba1496766"
 
 	router.post(
@@ -3943,11 +3921,12 @@ function certWithSmartId(router, request, initiative, cert) {
 
 	return request(`/initiatives/${initiative.uuid}/signatures`, {
 		method: "POST",
-		form: {method: "smart-id", personalId: ADULT_PERSONAL_ID}
+		headers: headers || {},
+		form: {method: "smart-id", "personal-id": ADULT_PERSONAL_ID}
 	})
 }
 
-function* signWithSmartId(router, request, initiative, cert, res) {
+function* signWithSmartId(router, request, initiative, cert, session, headers) {
 	var signSession = "21e55f06-d6cb-40b7-9638-75dc0b131851"
 
 	router.post(
@@ -3957,9 +3936,8 @@ function* signWithSmartId(router, request, initiative, cert, res) {
 
 	router.get(
 		`${SMART_ID_URL.path}session/${signSession}`,
-		typeof res == "function" ? res : function(req, res) {
-			res.writeHead(200)
-
+		typeof session == "function" ? session : function(req, res) {
+			// There could be multiple signables when testing rate limiting.
 			var {xades} = signablesDb.read(sql`
 				SELECT xades FROM initiative_signables ORDER BY rowid DESC LIMIT 1
 			`)
@@ -3971,7 +3949,7 @@ function* signWithSmartId(router, request, initiative, cert, res) {
 
 				signature: {
 					algorithm: "sha256WithRSAEncryption",
-					value: signWithRsa(
+					value: hashAndSignWithRsa(
 						JOHN_RSA_KEYS.privateKey,
 						xades.signable
 					).toString("base64")
@@ -3992,12 +3970,20 @@ function* signWithSmartId(router, request, initiative, cert, res) {
 		res.end(newOcspResponse(cert))
 	})
 
-	var signing = yield certWithSmartId(router, request, initiative, cert)
+	var signing = yield certWithSmartId(
+		router,
+		request,
+		initiative,
+		cert,
+		headers
+	)
+
 	if (!(signing.statusCode >= 200 && signing.statusCode < 300)) return signing
 	signing.statusCode.must.equal(202)
+	signing.statusMessage.must.equal("Signing with Smart-ID")
 
-	return request(signing.headers.location, {
-		headers: {Accept: `application/x-empty, ${ERR_TYPE}`}
+	return request(parseRefreshHeader(signing.headers.refresh)[1], {
+		headers: headers || {}
 	})
 }
 
@@ -4008,7 +3994,7 @@ function newXades(initiative, cert) {
 		hash: initiative.text_sha256
 	}])
 
-	var signatureBytes = signWithRsa(
+	var signatureBytes = hashAndSignWithRsa(
 		JOHN_RSA_KEYS.privateKey,
 		xades.signable
 	)
@@ -4024,11 +4010,12 @@ function newXades(initiative, cert) {
 	return [xades, timestampResponse, ocspResponse]
 }
 
-function signWithRsa(key, signable) {
+// Can't sign the hash directly unfortunately with Node.js.
+function hashAndSignWithRsa(key, signable) {
 	return Crypto.createSign("sha256").update(signable).sign(key)
 }
 
-function signWithEcdsa(key, signable) {
+function hashAndSignWithEcdsa(key, signable) {
 	var signatureDer = Crypto.createSign("sha256").update(signable).sign(key)
 	var signatureAsn = X509Asn.EcSignature.decode(signatureDer)
 
@@ -4045,3 +4032,5 @@ function formatPersonalId(date) {
 	var day = _.padLeft(String(date.getDate()), 2, "0")
 	return sexCentury + year + month + day
 }
+
+function padVerificationCode(code) { return _.padLeft(code, 4, 0) }

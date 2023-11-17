@@ -48,7 +48,7 @@
 		"maxmind": "",
 		"@exodus/schemasafe": "",
 		"hugml": "",
-		"undersign": "git+https://github.com/moll/js-undersign.git#50e1399049ac7e2dc8ba8f2ad6af60a381c605e2"
+		"undersign": "git+https://github.com/moll/js-undersign.git#e4b950ea3e92e9d30543af0e5970f34a7cc1f642"
 	},
 
 	"devDependencies": {

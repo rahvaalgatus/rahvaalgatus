@@ -134,12 +134,7 @@ describe("InitiativeEventsController", function() {
 
 				res.statusCode.must.equal(400)
 				res.statusMessage.must.equal("Invalid Distinct")
-
-				res.body.must.eql({
-					code: 400,
-					message: "Invalid Distinct",
-					name: "HttpError"
-				})
+				res.body.must.eql({code: 400, message: "Invalid Distinct"})
 			})
 
 			it("must keep only the first row", function*() {
@@ -263,12 +258,7 @@ describe("InitiativeEventsController", function() {
 
 				res.statusCode.must.equal(400)
 				res.statusMessage.must.equal("Invalid Order")
-
-				res.body.must.eql({
-					code: 400,
-					message: "Invalid Order",
-					name: "HttpError"
-				})
+				res.body.must.eql({code: 400, message: "Invalid Order"})
 			})
 
 			_.each({

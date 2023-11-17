@@ -177,16 +177,21 @@ translations: lib/i18n/en.json
 translations: lib/i18n/et.json
 translations: lib/i18n/ru.json
 
-translatables: JQ_MAP = 'keys[] | [\
+translatables: JQ_MAP_GOVERNMENTS = 'keys[] | [\
 	"DESTINATION_\(.)", \
 	"SIGNATURES_COLLECTED_FOR_\(.)", \
 	"MISSING_N_SIGNATURES_FOR_\(.)", \
 	"initiative_page.signing_section.description.\(.)" \
 	] | .[]'
 translatables:
-	@ag --nofilename -o '\b(t|renderEmail)\("([\w.]+)"' |\
+	@ag --nofilename -o '\b(t\(|renderEmail\((\w+\.lang, )?)"([\w.]+)"' |\
 		grep -v '^$$' | sort -u | cut -d\" -f2
-	@jq -r $(JQ_MAP) lib/local_governments.json
+	@jq -r $(JQ_MAP_GOVERNMENTS) lib/local_governments.json
+	@echo en
+	@echo et
+	@echo ru
+	@echo MISSING_N_SIGNATURES_FOR_parliament
+	@echo SIGNATURES_COLLECTED_FOR_parliament
 	@echo DESTINATION_parliament
 	@echo CURSEWORDS
 

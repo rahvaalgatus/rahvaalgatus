@@ -19,141 +19,40 @@ var next = require("co-next")
 var co = require("co")
 var sql = require("sqlate")
 var dispose = require("content-disposition")
-var reportError = require("root").errorReporter
+var {serializeRefreshHeader} = require("root/lib/http")
+var {parsePersonalId} = require("root/lib/eid")
+var {parsePhoneNumber} = require("root/lib/eid")
+var {constantTimeEqual} = require("root/lib/crypto")
+var {getCertificatePersonalId} = require("root/lib/certificate")
+var {validateSigningCertificate} = require("root/lib/certificate")
+var {getNormalizedMobileIdErrorCode} = require("root/lib/eid")
+var signaturesDb = require("root/db/initiative_signatures_db")
+var signablesDb = require("root/db/initiative_signables_db")
+var citizenosSignaturesDb =
+	require("root/db/initiative_citizenos_signatures_db")
+var {ENV} = process.env
 var {mobileId} = require("root")
 var {smartId} = require("root")
 var geoipPromise = require("root").geoip
 var {logger} = require("root")
 var {hades} = require("root")
 var parseBody = require("body-parser").raw
-var signaturesDb = require("root/db/initiative_signatures_db")
-var signablesDb = require("root/db/initiative_signables_db")
-var citizenosSignaturesDb =
-	require("root/db/initiative_citizenos_signatures_db")
-var {parsePersonalId} = require("root/lib/eid")
-var {parsePhoneNumber} = require("root/lib/eid")
-var {constantTimeEqual} = require("root/lib/crypto")
-var {getCertificatePersonalId} = require("root/lib/certificate")
-var {ENV} = process.env
-var {validateSigningCertificate} = require("root/lib/certificate")
-var {getNormalizedMobileIdErrorCode} = require("root/lib/eid")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
+var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
 var SIGN_RATE = 5
 var SIGN_RATE_IN_MINUTES = 30
 exports.pathToSignature = pathToSignature
-exports.getSigningMethod = getSigningMethod
+exports.parseSignatureAttrs = parseSignatureAttrs
 exports.hasSignatureType = hasSignatureType
+exports.reinstantiateError = reinstantiateError
+exports.handleEidError = handleEidError
+exports.serializeVerificationCode = serializeVerificationCode
+exports.SIGNABLE_TYPE = SIGNABLE_TYPE
 
 var waitForMobileIdSession = exports.waitForMobileIdSession =
-	waitForSession.bind(null, mobileId.waitForSignature.bind(mobileId))
+	waitForSession.bind(null, mobileId.wait.bind(mobileId))
 var waitForSmartIdSession = exports.waitForSmartIdSession =
 	waitForSession.bind(null, smartId.wait.bind(smartId))
-
-var MOBILE_ID_ERRORS = exports.MOBILE_ID_ERRORS = {
-	// Initiation responses:
-	NOT_FOUND: [
-		422,
-		"Not a Mobile-Id User or Personal Id Mismatch",
-		"MOBILE_ID_ERROR_NOT_FOUND"
-	],
-
-	NOT_ACTIVE: [
-		422,
-		"Mobile-Id Certificates Not Activated",
-		"MOBILE_ID_ERROR_NOT_ACTIVE"
-	],
-
-	// Session responses;
-	TIMEOUT: [
-		410,
-		"Mobile-Id Timeout",
-		"MOBILE_ID_ERROR_TIMEOUT"
-	],
-
-	NOT_MID_CLIENT: [
-		410,
-		"Mobile-Id Certificates Not Activated",
-		"MOBILE_ID_ERROR_NOT_ACTIVE"
-	],
-
-	USER_CANCELLED: [
-		410,
-		"Mobile-Id Cancelled",
-		"MOBILE_ID_ERROR_USER_CANCELLED"
-	],
-
-	SIGNATURE_HASH_MISMATCH: [
-		410,
-		"Mobile-Id Signature Hash Mismatch",
-		"MOBILE_ID_ERROR_SIGNATURE_HASH_MISMATCH"
-	],
-
-	PHONE_ABSENT: [
-		410,
-		"Mobile-Id Phone Absent",
-		"MOBILE_ID_ERROR_PHONE_ABSENT"
-	],
-
-	DELIVERY_ERROR: [
-		410,
-		"Mobile-Id Delivery Error",
-		"MOBILE_ID_ERROR_DELIVERY_ERROR"
-	],
-
-	SIM_ERROR: [
-		410,
-		"Mobile-Id SIM Application Error",
-		"MOBILE_ID_ERROR_SIM_ERROR"
-	],
-
-	// Custom responses:
-	INVALID_SIGNATURE: [
-		410,
-		"Invalid Mobile-Id Signature",
-		"MOBILE_ID_ERROR_INVALID_SIGNATURE"
-	]
-}
-
-var SMART_ID_ERRORS = exports.SMART_ID_ERRORS = {
-	// Initiation responses:
-	ACCOUNT_NOT_FOUND: [
-		422,
-		"Not a Smart-Id User",
-		"SMART_ID_ERROR_NOT_FOUND"
-	],
-
-	// Session responses:
-	USER_REFUSED: [
-		410,
-		"Smart-Id Cancelled",
-		"SMART_ID_ERROR_USER_REFUSED_SIGN"
-	],
-
-	TIMEOUT: [
-		410,
-		"Smart-Id Timeout",
-		"SMART_ID_ERROR_TIMEOUT_SIGN"
-	],
-
-	DOCUMENT_UNUSABLE: [
-		410,
-		"Smart-Id Certificate Unusable",
-		"SMART_ID_ERROR_DOCUMENT_UNUSABLE"
-	],
-
-	WRONG_VC: [
-		410,
-		"Wrong Smart-Id Verification Code Chosen",
-		"SMART_ID_ERROR_WRONG_VERIFICATION_CODE"
-	],
-
-	// Custom responses:
-	INVALID_SIGNATURE: [
-		410,
-		"Invalid Smart-Id Signature",
-		"SMART_ID_ERROR_INVALID_SIGNATURE"
-	]
-}
 
 exports.router = Router({mergeParams: true})
 exports.router.use(parseBody({type: hasSignatureType}))
@@ -303,10 +202,24 @@ exports.router.get("/",
 	}
 }))
 
-exports.router.post("/", next(function*(req, res) {
+exports.router.post("/",
+	new ResponseTypeMiddeware([
+		"text/html",
+		"application/json",
+		"application/x-empty",
+		SIGNABLE_TYPE
+	].map(MediaType)),
+	next(function*(req, res) {
+	var {t} = req
 	var {initiative} = req
-	var method = res.locals.method = getSigningMethod(req)
-	var cert, err, country, personalId, xades, signable, signatureUrl
+
+	let {
+		method,
+		personalId: untrustedPersonalId,
+		phoneNumber
+	} = parseSignatureAttrs(req, req.body)
+
+	var err, signable
 	var geo = yield lookupAndSerializeGeo(req.ip)
 
 	// Prevents new signatures after the signing deadline, but lets already
@@ -316,23 +229,26 @@ exports.router.post("/", next(function*(req, res) {
 	// process sends a PUT later. This needs to be let through.
 	if (initiative.phase == "edit")
 		throw new HttpError(405, "Signing Not Yet Started", {
-			description: req.t("CANNOT_SIGN_SIGNING_NOT_YET_STARTED")
+			description:
+				t("creating_initiative_signature_page.errors.not_yet_started")
 		})
 
 	if (!Initiative.isSignable(new Date, initiative))
 		throw new HttpError(405, "Signing Ended", {
-			description: req.t("CANNOT_SIGN_SIGNING_ENDED")
+			description: t("creating_initiative_signature_page.errors.signing_ended")
 		})
 
 	switch (method) {
-		case "id-card":
-			cert = Certificate.parse(req.body)
-			if (err = validateSigningCertificate(req.t, cert)) throw err
+		case "id-card": {
+			if (res.contentType.name != SIGNABLE_TYPE) throw new HttpError(406)
 
-			;[country, personalId] = getCertificatePersonalId(cert)
-			if (err = validateAge(req.t, personalId)) throw err
+			let cert = Certificate.parse(req.body)
+			if (err = validateSigningCertificate(t, cert)) throw err
 
-			xades = newXades(cert, initiative)
+			let [country, personalId] = getCertificatePersonalId(cert)
+			if (err = validateAge(t, personalId)) throw err
+
+			let xades = newXades(cert, initiative)
 
 			signable = signablesDb.create({
 				initiative_uuid: initiative.uuid,
@@ -353,25 +269,23 @@ exports.router.post("/", next(function*(req, res) {
 				signature_method: method
 			})
 
-			signatureUrl = req.baseUrl + "/" + pathToSignature(signable)
+			let signatureUrl = req.baseUrl + "/" + pathToSignature(signable)
 			res.setHeader("Location", signatureUrl)
-			res.setHeader("Content-Type", "application/vnd.rahvaalgatus.signable")
+			res.setHeader("Content-Type", SIGNABLE_TYPE)
 
 			res.statusCode = 202
-			res.statusMessage = "Signing"
-			res.end(xades.signableHash)
-			break
+			res.statusMessage = "Signing with ID-card"
+			return void res.end(xades.signableHash)
+		}
 
-		case "mobile-id":
-			var phoneNumber = parsePhoneNumber(String(req.body.phoneNumber))
-			personalId = parsePersonalId(req.body.personalId)
+		case "mobile-id": {
+			if (untrustedPersonalId == null)
+				throw new HttpError(422, "Invalid Personal Id", {
+					description: t("eid_view.errors.invalid_personal_id")
+				})
 
-			if (personalId == null) throw new HttpError(422, "Invalid Personal Id", {
-				description: req.t("SIGN_ERROR_PERSONAL_ID_INVALID")
-			})
-
-			if (err = validateAge(req.t, personalId)) throw err
-			if (rateLimitSigning(req, res, personalId)) return
+			if (err = validateAge(t, untrustedPersonalId)) throw err
+			if (err = rateLimitSigning(t, untrustedPersonalId)) throw err
 
 			logger.info({
 				request_id: req.headers["request-id"],
@@ -380,7 +294,7 @@ exports.router.post("/", next(function*(req, res) {
 				signature_method: method
 			})
 
-			cert = yield mobileId.readCertificate(phoneNumber, personalId)
+			let cert = yield mobileId.certificate(phoneNumber, untrustedPersonalId)
 
 			logger.info({
 				request_id: req.headers["request-id"],
@@ -389,10 +303,10 @@ exports.router.post("/", next(function*(req, res) {
 				signature_method: method
 			})
 
-			if (err = validateSigningCertificate(req.t, cert)) throw err
+			if (err = validateSigningCertificate(t, cert)) throw err
 
-			;[country, personalId] = getCertificatePersonalId(cert)
-			xades = newXades(cert, initiative)
+			let [country, personalId] = getCertificatePersonalId(cert)
+			let xades = newXades(cert, initiative)
 
 			logger.info({
 				request_id: req.headers["request-id"],
@@ -401,9 +315,9 @@ exports.router.post("/", next(function*(req, res) {
 				signature_method: method
 			})
 
-			// The Mobile-Id API returns any signing errors only when its status is
+			// The Mobile-ID API returns any signing errors only when its status is
 			// queried, not when signing is initiated.
-			var sessionId = yield mobileId.sign(
+			let session = yield mobileId.sign(
 				phoneNumber,
 				personalId,
 				xades.signableHash
@@ -414,34 +328,25 @@ exports.router.post("/", next(function*(req, res) {
 				country: country,
 				personal_id: personalId,
 				method: "mobile-id",
-				xades: xades,
-				created_from: geo
+				xades,
+				created_from: geo,
+				eid_session: session
 			})
 
 			signable.id = readSignableId(signable)
-
-			signatureUrl = req.baseUrl + "/" + pathToSignature(signable)
-			res.setHeader("Location", signatureUrl)
-
-			res.statusCode = 202
-			res.statusMessage = "Signing"
-			res.render("initiatives/signatures/creating_page.jsx", {
-				code: MobileId.confirmation(xades.signableHash),
-				poll: signatureUrl
-			})
-
-			co(waitForMobileIdSignature(req, signable, sessionId))
+			res.statusMessage = "Signing with Mobile-ID"
+			co(waitForMobileIdSignature(req, signable, session))
 			break
+		}
 
-		case "smart-id":
-			personalId = parsePersonalId(req.body.personalId)
+		case "smart-id": {
+			if (untrustedPersonalId == null)
+				throw new HttpError(422, "Invalid Personal Id", {
+					description: t("eid_view.errors.invalid_personal_id")
+				})
 
-			if (personalId == null) throw new HttpError(422, "Invalid Personal Id", {
-				description: req.t("SIGN_ERROR_PERSONAL_ID_INVALID")
-			})
-
-			if (err = validateAge(req.t, personalId)) throw err
-			if (rateLimitSigning(req, res, personalId)) return
+			if (err = validateAge(t, untrustedPersonalId)) throw err
+			if (err = rateLimitSigning(t, untrustedPersonalId)) throw err
 
 			logger.info({
 				request_id: req.headers["request-id"],
@@ -450,7 +355,7 @@ exports.router.post("/", next(function*(req, res) {
 				signature_method: method
 			})
 
-			cert = yield smartId.certificate("PNOEE-" + personalId)
+			let cert = yield smartId.certificate("PNOEE-" + untrustedPersonalId)
 			cert = yield waitForSmartIdSession(90, cert)
 			if (cert == null) throw new SmartIdError("TIMEOUT")
 
@@ -461,10 +366,10 @@ exports.router.post("/", next(function*(req, res) {
 				signature_method: method
 			})
 
-			if (err = validateSigningCertificate(req.t, cert)) throw err
+			if (err = validateSigningCertificate(t, cert)) throw err
 
-			;[country, personalId] = getCertificatePersonalId(cert)
-			xades = newXades(cert, initiative)
+			let [country, personalId] = getCertificatePersonalId(cert)
+			let xades = newXades(cert, initiative)
 
 			logger.info({
 				request_id: req.headers["request-id"],
@@ -473,35 +378,44 @@ exports.router.post("/", next(function*(req, res) {
 				signature_method: method
 			})
 
-			// The Smart-Id API returns any signing errors only when its status is
+			// The Smart-ID API returns any signing errors only when its status is
 			// queried, not when signing is initiated.
-			var signSession = yield smartId.sign(cert, xades.signableHash)
+			let session = yield smartId.sign(cert, xades.signableHash)
 
 			signable = signablesDb.create({
 				initiative_uuid: initiative.uuid,
 				country: country,
 				personal_id: personalId,
 				method: "smart-id",
-				xades: xades,
-				created_from: geo
+				xades,
+				created_from: geo,
+				eid_session: session
 			})
 
 			signable.id = readSignableId(signable)
-
-			signatureUrl = req.baseUrl + "/" + pathToSignature(signable)
-			res.setHeader("Location", signatureUrl)
-
-			res.statusCode = 202
-			res.statusMessage = "Signing"
-			res.render("initiatives/signatures/creating_page.jsx", {
-				code: SmartId.verification(xades.signableHash),
-				poll: signatureUrl
-			})
-
-			co(waitForSmartIdSignature(req, signable, signSession))
+			res.statusMessage = "Signing with Smart-ID"
+			co(waitForSmartIdSignature(req, signable, session))
 			break
+		}
 
 		default: throw new HttpError(422, "Unknown Signing Method")
+	}
+
+	res.statusCode = 202
+
+	var waitUrl = serializeWaitPath(req, res, signable)
+	res.setHeader("Refresh", serializeRefreshHeader(3, waitUrl))
+	var verificationCode = serializeVerificationCode(signable)
+	res.setHeader("X-Verification-Code", verificationCode)
+
+	switch (res.contentType.name) {
+		case "application/json":
+		case "application/x-empty": return void res.end()
+
+		default: res.render("initiatives/signatures/creating_page.jsx", {
+			method,
+			verificationCode
+		})
 	}
 
 	function newXades(cert, initiative) {
@@ -511,35 +425,7 @@ exports.router.post("/", next(function*(req, res) {
 			hash: initiative.text_sha256
 		}])
 	}
-}))
-
-exports.router.use("/", next(function(err, req, res, next) {
-	if (err instanceof MobileIdError) {
-		var code = getNormalizedMobileIdErrorCode(err)
-
-		if (code in MOBILE_ID_ERRORS) {
-			res.statusCode = MOBILE_ID_ERRORS[code][0]
-			res.statusMessage = MOBILE_ID_ERRORS[code][1]
-
-			res.render("initiatives/signatures/creating_page.jsx", {
-				error: req.t(MOBILE_ID_ERRORS[code][2])
-			})
-		}
-		else throw new HttpError(500, "Unknown Mobile-Id Error", {error: err})
-	}
-	else if (err instanceof SmartIdError) {
-		if (err.code in SMART_ID_ERRORS) {
-			res.statusCode = SMART_ID_ERRORS[err.code][0]
-			res.statusMessage = SMART_ID_ERRORS[err.code][1]
-
-			res.render("initiatives/signatures/creating_page.jsx", {
-				error: req.t(SMART_ID_ERRORS[err.code][2])
-			})
-		}
-		else throw new HttpError(500, "Unknown Smart-Id Error", {error: err})
-	}
-	else next(err)
-}))
+}), handleEidError)
 
 exports.router.use("/:personalId", function(req, _res, next) {
 	var {initiative} = req
@@ -566,7 +452,7 @@ exports.router.get("/:personalId",
 	new ResponseTypeMiddeware([
 		"text/html",
 		"application/vnd.etsi.asic-e+zip",
-		"application/x-empty"
+		"application/json"
 	].map(MediaType)),
 	next(function*(req, res) {
 	var {initiative} = req
@@ -574,96 +460,95 @@ exports.router.get("/:personalId",
 
 	switch (res.contentType.name) {
 		case "text/html":
-		case "application/x-empty":
+		case "application/json":
 			var signable
+			var isAjax = res.contentType.name == "application/json"
+			var MAX_WAIT_MS = 120 * 1000
 
-			if (!signature) for (
-				let end = Date.now() + 120 * 1000;
-				Date.now() < end;
-				yield _.sleep(ENV == "test" ? 50 : 500)
-			) {
-				signable = signablesDb.read(sql`
-					SELECT signed, timestamped, error
-					FROM initiative_signables
-					WHERE initiative_uuid = ${initiative.uuid}
-					AND country = ${req.country}
-					AND personal_id = ${req.personalId}
-					AND token = ${req.token}
+			if (signature == null) {
+				while (true) {
+					signable = signablesDb.read(sql`
+						SELECT method, error, created_at, timestamped
+						FROM initiative_signables
+						WHERE token = ${req.token}
+					`)
+
+					if (signable == null) throw new HttpError(404, "Signature Not Found")
+					if (signable.error) throw reinstantiateError(signable.error)
+
+					// Wait until not only signing, but timestamping finishes, to have the
+					// signature count on the initiative page increment after the
+					// redirect.
+					if (signable.timestamped) break
+
+					var timedout = signable.created_at <= Date.now() - MAX_WAIT_MS
+
+					switch (signable.method) {
+						case "mobile-id":
+							if (timedout) throw new MobileIdError("TIMEOUT"); break
+
+						case "smart-id":
+							if (timedout) throw new SmartIdError("TIMEOUT"); break
+
+						default: throw new HttpError(409, "Cannot Wait for ID-card")
+					}
+
+					if (isAjax) yield _.sleep(ENV == "test" ? 50 : 500); else break
+				}
+
+				// NOTE: Read based on "token" to not select signatures that happened to
+				// have been overwritten since we read the signable above.
+				if (signable.timestamped) signature = signaturesDb.read(sql`
+					SELECT * FROM initiative_signatures WHERE token = ${req.token}
 				`)
 
-				if (signable == null) throw new HttpError(404, "Signature Not Found")
-				// Wait until not only signing, but timestamping finishes, to have the
-				// signature count on the initiative page increment after the redirect.
-				if (signable.timestamped || signable.error) break
+				if (signature == null) signable = signablesDb.read(sql`
+					SELECT * FROM initiative_signables WHERE token = ${req.token}
+				`)
 			}
-
-			// Until we're using transactions for atomic signable and signature
-			// creation, reload the signature. Be sure to match on "token" to not
-			// select soon-to-be-deleted old signatures.
-			if (!signature && signable.timestamped) for (
-				let end = Date.now() + 5 * 1000;
-				!signature && Date.now() < end;
-				yield _.sleep(ENV == "test" ? 50 : 200)
-			) if (signature = signaturesDb.read(sql`
-				SELECT *
-				FROM initiative_signatures
-				WHERE initiative_uuid = ${initiative.uuid}
-				AND country = ${req.country}
-				AND personal_id = ${req.personalId}
-				AND token = ${req.token}
-			`)) break
 
 			if (signature) {
-				res.statusCode = 204
-				res.statusMessage = "Signed"
-				res.flash("signatureToken", req.token.toString("hex"))
-			}
-			else if (signable.error) {
-				var err = signable.error
+				var initiativePath = Path.dirname(req.baseUrl)
 
-				if (err.name == "MobileIdError") {
-					if (err.code in MOBILE_ID_ERRORS) {
-						res.statusCode = MOBILE_ID_ERRORS[err.code][0]
-						res.statusMessage = MOBILE_ID_ERRORS[err.code][1]
-						res.flash("error", req.t(MOBILE_ID_ERRORS[err.code][2]))
-					}
-					else {
-						res.statusCode = 500
-						res.statusMessage = "Unknown Mobile-Id Error"
-						res.flash("error", req.t("500_BODY"))
-					}
+				res.statusMessage =
+					signature.method == "mobile-id" ? "Signed with Mobile-ID" :
+					signature.method == "smart-id" ? "Signed with Smart-ID" :
+					"Signed"
+
+				switch (res.contentType.name) {
+					case "application/json":
+						var waitUrl = serializeWaitPath(req, res, signature)
+						res.setHeader("Location", waitUrl)
+						return void res.json({state: "DONE"})
+
+					default:
+						res.flash("signatureToken", req.token.toString("hex"))
+						res.redirect(303, initiativePath)
 				}
-				else if (err.name == "SmartIdError") {
-					if (err.code in SMART_ID_ERRORS) {
-						res.statusCode = SMART_ID_ERRORS[err.code][0]
-						res.statusMessage = SMART_ID_ERRORS[err.code][1]
-						res.flash("error", req.t(SMART_ID_ERRORS[err.code][2]))
-					}
-					else {
-						res.statusCode = 500
-						res.statusMessage = "Unknown Smart-Id Error"
-						res.flash("error", req.t("500_BODY"))
-					}
-				}
-				else {
-					res.statusCode = 500
-					res.flash("error", req.t("500_BODY"))
-				}
-			}
-			else if (signable.method == "mobile-id") {
-				res.statusCode = 408
-				res.flash("error", req.t("MOBILE_ID_ERROR_TIMEOUT"))
 			}
 			else {
-				res.statusCode = 408
-				res.flash("error", req.t("SMART_ID_ERROR_TIMEOUT_SIGN"))
-			}
+				res.statusCode = 202
 
-			res.setHeader("Location", Path.dirname(req.baseUrl))
-			switch (res.contentType.name) {
-				case "application/x-empty": return void res.end()
-				default: return void res.status(303).end()
+				res.statusMessage =
+					signable.method == "mobile-id" ? "Waiting for Mobile-ID" :
+					signable.method == "smart-id" ? "Waiting for Smart-ID" :
+					"Waiting"
+
+				let waitUrl = serializeWaitPath(req, res, signable)
+				res.setHeader("Refresh", serializeRefreshHeader(2, waitUrl))
+				var verificationCode = serializeVerificationCode(signable)
+				res.setHeader("X-Verification-Code", verificationCode)
+
+				switch (res.contentType.name) {
+					case "application/json": return void res.json({state: "PENDING"})
+
+					default: res.render("initiatives/signatures/creating_page.jsx", {
+						method: signable.method,
+						verificationCode
+					})
+				}
 			}
+			break
 
 		case "application/vnd.etsi.asic-e+zip":
 			if (signature == null) throw new HttpError(404, "Signature Not Found")
@@ -682,7 +567,7 @@ exports.router.get("/:personalId",
 
 		default: throw new HttpError(406)
 	}
-}))
+}), handleEidError)
 
 exports.router.put("/:personalId",
 	new ResponseTypeMiddeware([
@@ -690,13 +575,14 @@ exports.router.put("/:personalId",
 		"application/x-empty"
 	].map(MediaType)),
 	next(function*(req, res) {
+	var {t} = req
 	var {initiative} = req
 	var {signature} = req
 
 	// NOTE: Intentionally let already started signatures finish even after the
 	// initiative signing deadline is passed.
 	if (initiative.phase != "sign") throw new HttpError(405, "Signing Ended", {
-		description: req.t("CANNOT_SIGN_SIGNING_ENDED")
+		description: t("creating_initiative_signature_page.errors.signing_ended")
 	})
 
 	// Responding to a hidden signature if you know its token is not a privacy
@@ -709,10 +595,7 @@ exports.router.put("/:personalId",
 			var signable = signablesDb.read(sql`
 				SELECT rowid AS id, *
 				FROM initiative_signables
-				WHERE initiative_uuid = ${initiative.uuid}
-				AND country = ${req.country}
-				AND personal_id = ${req.personalId}
-				AND token = ${req.token}
+				WHERE token = ${req.token}
 			`)
 
 			if (signable == null) throw new HttpError(404, "Signature Not Found")
@@ -728,72 +611,18 @@ exports.router.put("/:personalId",
 			var {xades} = signable
 
 			if (!xades.certificate.hasSigned(xades.signable, req.body))
-				throw new HttpError(409, "Invalid Signature")
+				throw new HttpError(409, "Invalid Signature", {
+					description: t("eid_view.id_card_errors.sign_invalid_signature")
+				})
 
-			xades.setSignature(req.body)
+			yield finalizeSignable(req, signable, req.body)
 
-			signablesDb.update(signable, {
-				xades: xades,
-				signed: true,
-				updated_at: new Date
-			})
-
-			logger.info({
-				request_id: req.headers["request-id"],
-				event: "initiative-signature-timestamping",
-				initiative_uuid: signable.initiative_uuid,
-				signable_id: signable.id,
-				signature_method: signable.method,
-				timestamp_url: hades.timestampUrl
-			})
-
-			xades.setTimestamp(yield hades.timestamp(xades))
-
-			logger.info({
-				request_id: req.headers["request-id"],
-				event: "initiative-signature-timestamped",
-				initiative_uuid: signable.initiative_uuid,
-				signable_id: signable.id,
-				signature_method: signable.method,
-				timestamp_url: hades.timestampUrl
-			})
-
-			logger.info({
-				request_id: req.headers["request-id"],
-				event: "initiative-signature-ocsping",
-				initiative_uuid: signable.initiative_uuid,
-				signable_id: signable.id,
-				signature_method: signable.method,
-				ocsp_url: xades.certificate.ocspUrl
-			})
-
-			xades.setOcspResponse(yield hades.ocsp(xades.certificate))
-
-			logger.info({
-				request_id: req.headers["request-id"],
-				event: "initiative-signature-ocsped",
-				initiative_uuid: signable.initiative_uuid,
-				signable_id: signable.id,
-				signature_method: signable.method,
-				ocsp_url: xades.certificate.ocspUrl
-			})
-
-			signablesDb.update(signable, {
-				xades: xades,
-				timestamped: true,
-				updated_at: new Date
-			})
-
-			replaceSignature(req, signable)
+			res.statusMessage = "Signed with ID-card"
 			res.flash("signatureToken", req.token.toString("hex"))
 			res.setHeader("Location", Path.dirname(req.baseUrl))
 
 			switch (res.contentType.name) {
-				case "application/x-empty":
-					res.statusCode = 204
-					res.statusMessage = "Signed"
-					return void res.end()
-
+				case "application/x-empty": return void res.status(204).end()
 				default: return void res.status(303).end()
 			}
 
@@ -837,20 +666,20 @@ function* waitForSession(wait, timeout, session) {
 	return res
 }
 
-function* waitForMobileIdSignature(req, signable, sessionId) {
+function* waitForMobileIdSignature(req, signable, session) {
 	logger.info({
 		request_id: req.headers["request-id"],
 		event: "initiative-signature-waiting",
 		initiative_uuid: signable.initiative_uuid,
 		signable_id: signable.id,
 		signature_method: signable.method,
-		mobile_id_session_id: sessionId
+		mobile_id_session_id: session.id
 	})
 
 	try {
 		var {xades} = signable
-		var signatureHash = yield waitForMobileIdSession(120, sessionId)
-		if (signatureHash == null) throw new MobileIdError("TIMEOUT")
+		var sig = yield waitForMobileIdSession(120, session)
+		if (sig == null) throw new MobileIdError("TIMEOUT")
 
 		logger.info({
 			request_id: req.headers["request-id"],
@@ -860,64 +689,10 @@ function* waitForMobileIdSignature(req, signable, sessionId) {
 			signature_method: signable.method
 		})
 
-		if (!xades.certificate.hasSigned(xades.signable, signatureHash))
+		if (!xades.certificate.hasSigned(xades.signable, sig))
 			throw new MobileIdError("INVALID_SIGNATURE")
 
-		xades.setSignature(signatureHash)
-
-		signablesDb.update(signable, {
-			xades: xades,
-			signed: true,
-			updated_at: new Date
-		})
-
-		logger.info({
-			request_id: req.headers["request-id"],
-			event: "initiative-signature-timestamping",
-			initiative_uuid: signable.initiative_uuid,
-			signable_id: signable.id,
-			signature_method: signable.method,
-			timestamp_url: hades.timestampUrl
-		})
-
-		xades.setTimestamp(yield hades.timestamp(xades))
-
-		logger.info({
-			request_id: req.headers["request-id"],
-			event: "initiative-signature-timestamped",
-			initiative_uuid: signable.initiative_uuid,
-			signable_id: signable.id,
-			signature_method: signable.method,
-			timestamp_url: hades.timestampUrl
-		})
-
-		logger.info({
-			request_id: req.headers["request-id"],
-			event: "initiative-signature-ocsping",
-			initiative_uuid: signable.initiative_uuid,
-			signable_id: signable.id,
-			signature_method: signable.method,
-			ocsp_url: xades.certificate.ocspUrl
-		})
-
-		xades.setOcspResponse(yield hades.ocsp(xades.certificate))
-
-		logger.info({
-			request_id: req.headers["request-id"],
-			event: "initiative-signature-ocsped",
-			initiative_uuid: signable.initiative_uuid,
-			signable_id: signable.id,
-			signature_method: signable.method,
-			ocsp_url: xades.certificate.ocspUrl
-		})
-
-		signablesDb.update(signable, {
-			xades: xades,
-			timestamped: true,
-			updated_at: new Date
-		})
-
-		replaceSignature(req, signable)
+		yield finalizeSignable(req, signable, sig)
 	}
 	catch (ex) {
 		logger.info({
@@ -928,11 +703,6 @@ function* waitForMobileIdSignature(req, signable, sessionId) {
 			signature_method: signable.method,
 			error: ex.message
 		})
-
-		if (!(
-			ex instanceof MobileIdError &&
-			getNormalizedMobileIdErrorCode(ex) in MOBILE_ID_ERRORS
-		)) reportError(ex)
 
 		signablesDb.update(signable, {error: ex, updated_at: new Date})
 	}
@@ -950,8 +720,8 @@ function* waitForSmartIdSignature(req, signable, session) {
 
 	try {
 		var {xades} = signable
-		var certAndSignatureHash = yield waitForSmartIdSession(120, session)
-		if (certAndSignatureHash == null) throw new SmartIdError("TIMEOUT")
+		var [_cert, sig] = (yield waitForSmartIdSession(120, session)) || []
+		if (sig == null) throw new SmartIdError("TIMEOUT")
 
 		logger.info({
 			request_id: req.headers["request-id"],
@@ -961,65 +731,10 @@ function* waitForSmartIdSignature(req, signable, session) {
 			signature_method: signable.method
 		})
 
-		var [_cert, signatureHash] = certAndSignatureHash
-		if (!xades.certificate.hasSigned(xades.signable, signatureHash))
+		if (!xades.certificate.hasSigned(xades.signable, sig))
 			throw new SmartIdError("INVALID_SIGNATURE")
 
-		xades.setSignature(signatureHash)
-
-		signablesDb.update(signable, {
-			xades: xades,
-			signed: true,
-			updated_at: new Date
-		})
-
-		logger.info({
-			request_id: req.headers["request-id"],
-			event: "initiative-signature-timestamping",
-			initiative_uuid: signable.initiative_uuid,
-			signable_id: signable.id,
-			signature_method: signable.method,
-			timestamp_url: hades.timestampUrl
-		})
-
-		xades.setTimestamp(yield hades.timestamp(xades))
-
-		logger.info({
-			request_id: req.headers["request-id"],
-			event: "initiative-signature-timestamped",
-			initiative_uuid: signable.initiative_uuid,
-			signable_id: signable.id,
-			signature_method: signable.method,
-			timestamp_url: hades.timestampUrl
-		})
-
-		logger.info({
-			request_id: req.headers["request-id"],
-			event: "initiative-signature-ocsping",
-			initiative_uuid: signable.initiative_uuid,
-			signable_id: signable.id,
-			signature_method: signable.method,
-			ocsp_url: xades.certificate.ocspUrl
-		})
-
-		xades.setOcspResponse(yield hades.ocsp(xades.certificate))
-
-		logger.info({
-			request_id: req.headers["request-id"],
-			event: "initiative-signature-ocsped",
-			initiative_uuid: signable.initiative_uuid,
-			signable_id: signable.id,
-			signature_method: signable.method,
-			ocsp_url: xades.certificate.ocspUrl
-		})
-
-		signablesDb.update(signable, {
-			xades: xades,
-			timestamped: true,
-			updated_at: new Date
-		})
-
-		replaceSignature(req, signable)
+		yield finalizeSignable(req, signable, sig)
 	}
 	catch (ex) {
 		logger.info({
@@ -1031,10 +746,153 @@ function* waitForSmartIdSignature(req, signable, session) {
 			error: ex.message
 		})
 
-		if (!(ex instanceof SmartIdError && ex.code in SMART_ID_ERRORS))
-			reportError(ex)
-
 		signablesDb.update(signable, {error: ex, updated_at: new Date})
+	}
+}
+
+function handleEidError(err, {t}, _res, next) {
+	var statusCode, statusMessage, description
+
+	if (err instanceof MobileIdError) {
+		switch (getNormalizedMobileIdErrorCode(err)) {
+			// Initiation responses:
+			case "NOT_FOUND":
+				statusCode = 422
+				statusMessage = "Not a Mobile-ID User"
+				description = t("eid_view.mobile_id_errors.not_found")
+				break
+
+			// Session responses;
+			case "TIMEOUT":
+				statusCode = 410
+				statusMessage = "Mobile-ID Timeout"
+				description = t("eid_view.mobile_id_errors.sign_timeout")
+				break
+
+			case "NOT_MID_CLIENT":
+				statusCode = 410
+				statusMessage = "Mobile-ID Certificates Not Activated"
+				description = t("eid_view.mobile_id_errors.not_active")
+				break
+
+			case "USER_CANCELLED":
+				statusCode = 410
+				statusMessage = "Mobile-ID Cancelled"
+				description = t("eid_view.mobile_id_errors.sign_cancelled")
+				break
+
+			case "SIGNATURE_HASH_MISMATCH":
+				statusCode = 410
+				statusMessage = "Mobile-ID Signature Hash Mismatch"
+				description = t("eid_view.mobile_id_errors.sign_hash_mismatch")
+				break
+
+			case "PHONE_ABSENT":
+				statusCode = 410
+				statusMessage = "Mobile-ID Phone Absent"
+				description = t("eid_view.mobile_id_errors.sign_phone_absent")
+				break
+
+			case "DELIVERY_ERROR":
+				statusCode = 410
+				statusMessage = "Mobile-ID Delivery Error"
+				description = t("eid_view.mobile_id_errors.sign_delivery_error")
+				break
+
+			case "SIM_ERROR":
+				statusCode = 410
+				statusMessage = "Mobile-ID SIM Application Error"
+				description = t("eid_view.mobile_id_errors.sim_error")
+				break
+
+			// Custom responses:
+			case "INVALID_SIGNATURE":
+				statusCode = 410
+				statusMessage = "Invalid Mobile-ID Signature"
+				description = t("eid_view.mobile_id_errors.sign_invalid_signature")
+				break
+
+			default:
+				statusCode = 500
+				statusMessage = "Unknown Mobile-ID Error"
+				description = t("500_BODY")
+		}
+
+		next(new HttpError(statusCode, statusMessage, {description, error: err}))
+	}
+	else if (err instanceof SmartIdError) {
+		switch (err.code) {
+			// Initiation responses:
+			case "ACCOUNT_NOT_FOUND":
+				statusCode = 422
+				statusMessage = "Not a Smart-ID User"
+				description = t("eid_view.smart_id_errors.not_found")
+				break
+
+			// Session responses:
+			case "USER_REFUSED":
+				statusCode = 410
+				statusMessage = "Smart-ID Cancelled"
+				description = t("eid_view.smart_id_errors.sign_cancelled")
+				break
+
+			case "TIMEOUT":
+				statusCode = 410
+				statusMessage = "Smart-ID Timeout"
+				description = t("eid_view.smart_id_errors.sign_timeout")
+				break
+
+			case "NO_SUITABLE_CERTIFICATE":
+				statusCode = 410
+				statusMessage = "No Smart-ID Certificate"
+				description = t("eid_view.smart_id_errors.sign_no_suitable_certificate")
+				break
+
+			case "DOCUMENT_UNUSABLE":
+				statusCode = 410
+				statusMessage = "Smart-ID Certificate Unusable"
+				description = t("eid_view.smart_id_errors.document_unusable")
+				break
+
+			case "WRONG_VC":
+				statusCode = 410
+				statusMessage = "Wrong Smart-ID Verification Code Chosen"
+				description = t("eid_view.smart_id_errors.wrong_vc")
+				break
+
+			case "SESSION_NOT_FOUND":
+				statusCode = 410
+				statusMessage = "Smart-ID Timeout"
+				description = t("eid_view.smart_id_errors.sign_timeout")
+				break
+
+			// Custom responses:
+			case "INVALID_SIGNATURE":
+				statusCode = 410
+				statusMessage = "Invalid Smart-ID Signature"
+				description = t("eid_view.smart_id_errors.sign_invalid_signature")
+				break
+
+			default:
+				statusCode = 500
+				statusMessage = "Unknown Smart-ID Error"
+				description = t("500_BODY")
+		}
+
+		next(new HttpError(statusCode, statusMessage, {description, error: err}))
+	}
+	else next(err)
+}
+
+function reinstantiateError(obj) {
+	switch (obj.name) {
+		case "HttpError": return new HttpError(obj.code, obj.message, {
+			description: obj.description
+		})
+
+		case "MobileIdError": return new MobileIdError(obj.code, obj.message)
+		case "SmartIdError": return new SmartIdError(obj.code, obj.message)
+		default: return new HttpError(500, "Internal Server Error", {error: obj})
 	}
 }
 
@@ -1063,18 +921,35 @@ function getSigningMethod(req) {
 	)
 }
 
+function parseSignatureAttrs(req, obj) {
+	var method = getSigningMethod(req)
+
+	if (method == "mobile-id") return {
+		method,
+		personalId: parsePersonalId(String(obj["personal-id"])),
+		phoneNumber: parsePhoneNumber(String(obj["phone-number"]))
+	}
+
+	if (method == "smart-id") return {
+		method,
+		personalId: parsePersonalId(String(obj["personal-id"]))
+	}
+
+	return {method}
+}
+
 function validateAge(t, id) {
 	var birthdate = _.getBirthdateFromPersonalId(id)
 
 	if (birthdate > DateFns.addYears(new Date, -16))
 		return new HttpError(422, "Too Young", {
-			description: t("SIGN_ERROR_TOO_YOUNG")
+			description: t("creating_initiative_signature_page.errors.too_young")
 		})
 
 	return null
 }
 
-function rateLimitSigning(req, res, personalId) {
+function rateLimitSigning(t, personalId) {
 	var signables = signablesDb.search(sql`
 		SELECT created_at FROM initiative_signables
 		WHERE personal_id = ${personalId}
@@ -1090,80 +965,138 @@ function rateLimitSigning(req, res, personalId) {
 		: DateFns.addMinutes(signables[0].created_at, SIGN_RATE_IN_MINUTES)
 
 	if (until) {
-		res.statusCode = 429
-		res.statusMessage = "Too Many Incomplete Signatures"
-
 		var minutes = Math.max(DateFns.differenceInMinutes(until, new Date), 1)
 
-		res.render("error_page.jsx", {
-			title: req.t("INITIATIVE_SIGN_RATE_LIMIT_TITLE", {minutes: minutes}),
-			body: req.t("INITIATIVE_SIGN_RATE_LIMIT_BODY", {minutes: minutes})
+		return new HttpError(429, "Too Many Incomplete Signatures", {
+			description: t("eid_view.errors.sign_rate_limit", {minutes: minutes})
 		})
-
-		return true
 	}
 
-	return false
+	return null
 }
 
-function replaceSignature(req, signable) {
-	var oldSignature = signaturesDb.read(sql`
-		SELECT rowid AS id, * FROM initiative_signatures
-		WHERE initiative_uuid = ${signable.initiative_uuid}
-		AND country = ${signable.country}
-		AND personal_id = ${signable.personal_id}
-	`)
+function* finalizeSignable(req, signable, signature) {
+	var {xades} = signable
 
-	var oldCitizenosSignature = citizenosSignaturesDb.read(sql`
-		SELECT * FROM initiative_citizenos_signatures
-		WHERE initiative_uuid = ${signable.initiative_uuid}
-		AND country = ${signable.country}
-		AND personal_id = ${signable.personal_id}
-	`)
+	xades.setSignature(signature)
 
-	if (oldSignature) signaturesDb.delete(oldSignature)
-
-	if (oldCitizenosSignature) citizenosSignaturesDb.execute(sql`
-		DELETE FROM initiative_citizenos_signatures
-		WHERE initiative_uuid = ${signable.initiative_uuid}
-		AND country = ${signable.country}
-		AND personal_id = ${signable.personal_id}
-	`)
-
-	var signature = signaturesDb.create({
-		initiative_uuid: signable.initiative_uuid,
-		country: signable.country,
-		personal_id: signable.personal_id,
-		method: signable.method,
-		token: signable.token,
-		xades: signable.xades,
-
-		oversigned: (
-			oldSignature && !oldSignature.hidden && oldSignature.oversigned + 1 ||
-			oldCitizenosSignature && 1 ||
-			0
-		),
-
-		created_at: new Date,
-		created_from: signable.created_from,
+	signable = signablesDb.update(signable, {
+		xades: xades,
+		signed: true,
 		updated_at: new Date
 	})
 
 	logger.info({
 		request_id: req.headers["request-id"],
-		event: "initiative-signature-end",
-		initiative_uuid: signature.initiative_uuid,
+		event: "initiative-signature-timestamping",
+		initiative_uuid: signable.initiative_uuid,
 		signable_id: signable.id,
-		signature_id: signature.id,
-		signature_method: signature.method,
-		signature_oversigned: signature.oversigned,
+		signature_method: signable.method,
+		timestamp_url: hades.timestampUrl
+	})
 
-		signature_oversigned_id:
-			oldSignature && oldSignature.id || undefined,
-		signature_oversigned_created_at:
-			oldSignature && oldSignature.created_at || undefined,
-		signature_oversigned_method:
-			oldSignature && oldSignature.method || undefined
+	xades.setTimestamp(yield hades.timestamp(xades))
+
+	logger.info({
+		request_id: req.headers["request-id"],
+		event: "initiative-signature-timestamped",
+		initiative_uuid: signable.initiative_uuid,
+		signable_id: signable.id,
+		signature_method: signable.method,
+		timestamp_url: hades.timestampUrl
+	})
+
+	logger.info({
+		request_id: req.headers["request-id"],
+		event: "initiative-signature-ocsping",
+		initiative_uuid: signable.initiative_uuid,
+		signable_id: signable.id,
+		signature_method: signable.method,
+		ocsp_url: xades.certificate.ocspUrl
+	})
+
+	xades.setOcspResponse(yield hades.ocsp(xades.certificate))
+
+	logger.info({
+		request_id: req.headers["request-id"],
+		event: "initiative-signature-ocsped",
+		initiative_uuid: signable.initiative_uuid,
+		signable_id: signable.id,
+		signature_method: signable.method,
+		ocsp_url: xades.certificate.ocspUrl
+	})
+
+	signablesDb.transact(function() {
+		signable = signablesDb.update(signable, {
+			xades: xades,
+			timestamped: true,
+			updated_at: new Date
+		})
+
+		replaceSignature(req, signable)
+	})
+}
+
+function replaceSignature(req, signable) {
+	signaturesDb.transact(function() {
+		var oldSignature = signaturesDb.read(sql`
+			SELECT rowid AS id, * FROM initiative_signatures
+			WHERE initiative_uuid = ${signable.initiative_uuid}
+			AND country = ${signable.country}
+			AND personal_id = ${signable.personal_id}
+		`)
+
+		var oldCitizenosSignature = citizenosSignaturesDb.read(sql`
+			SELECT * FROM initiative_citizenos_signatures
+			WHERE initiative_uuid = ${signable.initiative_uuid}
+			AND country = ${signable.country}
+			AND personal_id = ${signable.personal_id}
+		`)
+
+		if (oldSignature) signaturesDb.delete(oldSignature)
+
+		if (oldCitizenosSignature) citizenosSignaturesDb.execute(sql`
+			DELETE FROM initiative_citizenos_signatures
+			WHERE initiative_uuid = ${signable.initiative_uuid}
+			AND country = ${signable.country}
+			AND personal_id = ${signable.personal_id}
+		`)
+
+		var signature = signaturesDb.create({
+			initiative_uuid: signable.initiative_uuid,
+			country: signable.country,
+			personal_id: signable.personal_id,
+			method: signable.method,
+			token: signable.token,
+			xades: signable.xades,
+
+			oversigned: (
+				oldSignature && !oldSignature.hidden && oldSignature.oversigned + 1 ||
+				oldCitizenosSignature && 1 ||
+				0
+			),
+
+			created_at: new Date,
+			created_from: signable.created_from,
+			updated_at: new Date
+		})
+
+		logger.info({
+			request_id: req.headers["request-id"],
+			event: "initiative-signature-end",
+			initiative_uuid: signature.initiative_uuid,
+			signable_id: signable.id,
+			signature_id: signature.id,
+			signature_method: signature.method,
+			signature_oversigned: signature.oversigned,
+
+			signature_oversigned_id:
+				oldSignature && oldSignature.id || undefined,
+			signature_oversigned_created_at:
+				oldSignature && oldSignature.created_at || undefined,
+			signature_oversigned_method:
+				oldSignature && oldSignature.method || undefined
+		})
 	})
 }
 
@@ -1227,6 +1160,21 @@ function parseToken(token) {
 	// Some email clients include trailing punctuation in links.
 	try { return Buffer.from(token.replace(/[^A-Fa-f0-9]/g, ""), "hex") }
 	catch (ex) { if (ex instanceof TypeError) return Buffer.alloc(0); throw ex }
+}
+
+
+function serializeWaitPath(req, res, signatureOrSignable) {
+	return req.baseUrl + "/" + pathToSignature(signatureOrSignable)
+		+ (res.contentType.name == "text/html" ? "#verification-code" : "")
+}
+
+function serializeVerificationCode(signable) {
+	var {signableHash} = signable.xades
+
+	return _.padLeft((
+		signable.method == "mobile-id" ? MobileId.verification(signableHash) :
+		signable.method == "smart-id" ? SmartId.verification(signableHash) :
+	0), 4, 0)
 }
 
 function parseSignatureId(id) { return [id.slice(0, 2), id.slice(2)] }

@@ -14,7 +14,6 @@ var SmartId = require("undersign/lib/smart_id")
 var {SmartIdError} = require("undersign/lib/smart_id")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
-var co = require("co")
 var next = require("co-next")
 var {logger} = require("root")
 var {mobileId} = require("root")
@@ -26,141 +25,26 @@ var {parsePersonalId} = require("root/lib/eid")
 var {parsePhoneNumber} = require("root/lib/eid")
 var {getCertificatePersonalId} = require("root/lib/certificate")
 var {getCertificatePersonName} = require("root/lib/certificate")
+var {serializeRefreshHeader} = require("root/lib/http")
 var {validateAuthenticationCertificate} = require("root/lib/certificate")
 var {validateIdCardAuthenticationCertificate} = require("root/lib/certificate")
 var {hasSignatureType} = require("./initiatives/signatures_controller")
+var {reinstantiateError} = require("./initiatives/signatures_controller")
 var {getNormalizedMobileIdErrorCode} = require("root/lib/eid")
 var sql = require("sqlate")
 var {validateRedirect} = require("root/lib/http")
 var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
-var reportError = require("root").errorReporter
 var {constantTimeEqual} = require("root/lib/crypto")
 var sessionsDb = require("root/db/sessions_db")
 var usersDb = require("root/db/users_db")
 var authenticationsDb = require("root/db/authentications_db")
 var AUTH_RATE = 5
 var AUTH_RATE_IN_MINUTES = 30
-var {ENV} = process.env
 
 var ID_CARD_AUTH_SECRET = (
 	Config.idCardAuthenticationSecret &&
 	Buffer.from(Config.idCardAuthenticationSecret)
 )
-
-var waitForMobileIdSession =
-	waitForSession.bind(null, mobileId.waitForAuthentication.bind(mobileId))
-var waitForSmartIdSession =
-	waitForSession.bind(null, smartId.wait.bind(smartId))
-
-var MOBILE_ID_ERRORS = {
-	TIMEOUT: [
-		410,
-		"Mobile-Id Timeout",
-		"MOBILE_ID_ERROR_TIMEOUT_AUTH"
-	],
-
-	NOT_MID_CLIENT: [
-		422,
-		"Not a Mobile-Id User or Personal Id Mismatch",
-		"MOBILE_ID_ERROR_NOT_FOUND"
-	],
-
-	USER_CANCELLED: [
-		410,
-		"Mobile-Id Cancelled",
-		"MOBILE_ID_ERROR_USER_CANCELLED_AUTH"
-	],
-
-	SIGNATURE_HASH_MISMATCH: [
-		410,
-		"Mobile-Id Signature Hash Mismatch",
-		"MOBILE_ID_ERROR_SIGNATURE_HASH_MISMATCH_AUTH"
-	],
-
-	PHONE_ABSENT: [
-		410,
-		"Mobile-Id Phone Absent",
-		"MOBILE_ID_ERROR_PHONE_ABSENT_AUTH"
-	],
-
-	DELIVERY_ERROR: [
-		410,
-		"Mobile-Id Delivery Error",
-		"MOBILE_ID_ERROR_DELIVERY_ERROR_AUTH"
-	],
-
-	SIM_ERROR: [
-		410,
-		"Mobile-Id SIM Application Error",
-		"MOBILE_ID_ERROR_SIM_ERROR"
-	],
-
-	// Custom responses:
-	CERTIFICATE_MISMATCH: [
-		409,
-		"Authentication Certificate Doesn't Match",
-		"MOBILE_ID_ERROR_AUTH_CERTIFICATE_MISMATCH"
-	],
-
-	INVALID_SIGNATURE: [
-		410,
-		"Invalid Mobile-Id Signature",
-		"MOBILE_ID_ERROR_INVALID_SIGNATURE_AUTH"
-	],
-
-	NOT_FOUND: [
-		422,
-		"Not a Mobile-Id User or Personal Id Mismatch",
-		"MOBILE_ID_ERROR_NOT_FOUND"
-	]
-}
-
-var SMART_ID_ERRORS = {
-	// Initiation responses:
-	ACCOUNT_NOT_FOUND: [
-		422,
-		"Not a Smart-Id User",
-		"SMART_ID_ERROR_NOT_FOUND"
-	],
-
-	// Session responses:
-	USER_REFUSED: [
-		410,
-		"Smart-Id Cancelled",
-		"SMART_ID_ERROR_USER_REFUSED_AUTH"
-	],
-
-	TIMEOUT: [
-		410,
-		"Smart-Id Timeout",
-		"SMART_ID_ERROR_TIMEOUT_AUTH"
-	],
-
-	DOCUMENT_UNUSABLE: [
-		410,
-		"Smart-Id Certificate Unusable",
-		"SMART_ID_ERROR_DOCUMENT_UNUSABLE"
-	],
-
-	WRONG_VC: [
-		410,
-		"Wrong Smart-Id Verification Code Chosen",
-		"SMART_ID_ERROR_WRONG_VERIFICATION_CODE"
-	],
-
-	// Custom responses:
-	CERTIFICATE_MISMATCH: [
-		409,
-		"Authentication Certificate Doesn't Match",
-		"SMART_ID_ERROR_AUTH_CERTIFICATE_MISMATCH"
-	],
-
-	INVALID_SIGNATURE: [
-		410,
-		"Invalid Smart-Id Signature",
-		"SMART_ID_ERROR_INVALID_SIGNATURE"
-	]
-}
 
 exports.router = Router({mergeParams: true})
 exports.router.use(parseBody({type: hasSignatureType}))
@@ -170,71 +54,206 @@ exports.router.get("/", function(req, res) {
 	else res.redirect(302, "/sessions/new")
 })
 
-exports.router.get("/new", canonicalizeUrl, function(req, res) {
-	if (req.user)
-		res.redirect(302, validateRedirect(req, req.headers.referer, "/user"))
+exports.router.get("/new", canonicalizeUrl, function(req, res, next) {
+	if (req.user) {
+		var referrer = req.query.referrer || req.headers.referer
+		res.redirect(302, validateRedirect(req, referrer, "/user"))
+	}
+	else if (req.query["authentication-token"])
+		next()
 	else
 		res.render("sessions/create_page.jsx")
 })
 
-exports.router.post("/", next(function*(req, res, next) {
-	if (req.query["authentication-token"]) return void next()
+exports.router.get("/new",
+	new ResponseTypeMiddeware([
+		"text/html",
+		"application/json"
+	].map(MediaType)),
+	next(function*(req, res) {
+	var {t} = req
 
-	var cert, err, country, personalId, authentication, authUrl, tokenHash
+	if (req.query["csrf-token"] !== req.csrfToken)
+		throw new HttpError(412, "Bad Query CSRF Token", {
+			description: t("create_session_page.errors.invalid_csrf_token")
+		})
+
+	var authenticationToken =
+		Buffer.from(req.query["authentication-token"] || "", "hex")
+
+	var authentication = authenticationsDb.read(sql`
+		SELECT * FROM authentications WHERE token = ${authenticationToken}
+	`)
+
+	if (!authentication) throw new HttpError(404, "Authentication Not Found")
+
+	var {method} = authentication
+
+	if (!(method == "mobile-id" || method == "smart-id"))
+		throw new HttpError(409, "Cannot Wait for ID-card")
+
+	if (authentication.error) throw reinstantiateError(authentication.error)
+
+	if (authentication.authenticated) {
+		var used = Boolean(sessionsDb.read(sql`
+			SELECT true FROM sessions
+			WHERE authentication_id = ${authentication.id}
+		`))
+
+		if (used) throw new HttpError(410, "Session Already Created", {
+			description: t("create_session_page.errors.authentication_already_used")
+		})
+	}
+	else {
+		var isAjax = res.contentType.name == "application/json"
+		var timeout = isAjax ? 120 : 1
+
+		switch (method) {
+			case "mobile-id":
+				authentication = (yield waitForMobileIdAuthentication(
+					req,
+					req.t,
+					authentication,
+					timeout
+				)) || authentication
+				break
+
+			case "smart-id":
+				authentication = (yield waitForSmartIdAuthentication(
+					req,
+					req.t,
+					authentication,
+					timeout
+				)) || authentication
+				break
+
+			default: throw new Error("Unknown Authentication Method")
+		}
+	}
+
+	var waitUrl = req.baseUrl + "/new?" + Qs.stringify({
+		"authentication-token": authentication.token.toString("hex"),
+		"csrf-token": req.csrfToken,
+		referrer: req.query.referrer
+	}) + (res.contentType.name == "text/html" ? "#verification-code" : "")
+
+	if (authentication.authenticated) switch (res.contentType.name) {
+		case "application/json":
+			res.statusMessage =
+				method == "mobile-id" ? "Authenticated with Mobile-ID" :
+				method == "smart-id" ? "Authenticated with Smart-ID" :
+				"Authenticated"
+
+			res.setHeader("Location", waitUrl)
+			return void res.json({state: "DONE"})
+
+		default:
+			createSessionAndSignIn(authentication, req, res)
+
+			res.statusMessage =
+				method == "mobile-id" ? "Signed In with Mobile-ID" :
+				method == "smart-id" ? "Signed In with Smart-ID" :
+				"Signed In"
+
+			res.redirect(303, validateRedirect(req, req.query.referrer, "/user"))
+	}
+	else {
+		res.statusCode = 202
+
+		res.statusMessage =
+			method == "mobile-id" ? "Waiting for Mobile-ID" :
+			method == "smart-id" ? "Waiting for Smart-ID" :
+			"Waiting"
+
+		res.setHeader("Refresh", serializeRefreshHeader(2, waitUrl))
+		var verificationCode = serializeVerificationCode(authentication)
+		res.setHeader("X-Verification-Code", verificationCode)
+
+		switch (res.contentType.name) {
+			case "application/json": return void res.json({state: "PENDING"})
+
+			default: res.render("sessions/creating_page.jsx", {
+				method,
+				verificationCode,
+			})
+		}
+	}
+}), handleEidError)
+
+exports.router.post("/",
+	new ResponseTypeMiddeware([
+		"text/html",
+		"application/json",
+		"application/x-empty",
+	].map(MediaType)),
+	next(function*(req, res) {
+	var {t} = req
+	// TODO: Rename personalId to untrustedPersonalId.
+	var {method, personalId, phoneNumber} = parseAuthenticationAttrs(req.body)
+	var err, authentication
+	var token = Crypto.randomBytes(16)
 
 	var referrer = req.headers.referer
 	if (referrer && Url.parse(referrer).pathname.startsWith(req.baseUrl))
 		referrer = null
 
-	switch (getSigninMethod(req)) {
-		case "id-card":
+	switch (method) {
+		case "id-card": {
 			var pem = req.headers["x-client-certificate"]
 			if (pem == null) throw new HttpError(400, "Missing Certificate", {
-				description: req.t("ID_CARD_ERROR_CERTIFICATE_MISSING")
+				description: t("create_session_page.id_card_errors.certificate_missing")
 			})
 
 			if (!ID_CARD_AUTH_SECRET)
-				throw new HttpError(501, "ID-Card Authentication Not Yet Available")
+				throw new HttpError(501, "ID-card Authentication Not Yet Available")
 
 			if (!constantTimeEqual(
 				Buffer.from(req.headers["x-client-certificate-secret"] || ""),
 				ID_CARD_AUTH_SECRET
-			)) throw new HttpError(403, "Invalid Proxy Secret")
+			)) throw new HttpError(403, "Invalid Proxy Secret", {
+				description:
+					t("create_session_page.id_card_errors.invalid_proxy_secret")
+			})
 
-			cert = parseCertificateFromHeader(pem)
-			if (err = validateIdCardAuthenticationCertificate(req.t, cert)) throw err
+			let cert = parseCertificateFromHeader(pem)
+			if (err = validateIdCardAuthenticationCertificate(t, cert)) throw err
 
 			if (req.headers["x-client-certificate-verification"] != "SUCCESS")
 				throw new HttpError(422, "Sign In Failed", {
-					description: req.t("ID_CARD_ERROR_AUTHENTICATION_FAILED")
+					description: t("create_session_page.id_card_errors.authentication_failed")
 				})
 
-			;[country, personalId] = getCertificatePersonalId(cert)
-			if (country != "EE") throw new HttpError(422, "Estonian Users Only")
+			let [country, personalId] = getCertificatePersonalId(cert)
+
+			if (country != "EE") throw new HttpError(422, "Estonian Users Only", {
+				description:
+					t("create_session_page.id_card_errors.non_estonian_certificate")
+			})
 
 			authentication = authenticationsDb.create({
 				country: country,
 				personal_id: personalId,
-				method: "id-card",
+				method,
 				certificate: cert,
-				token: Crypto.randomBytes(16),
+				token,
 				created_ip: req.ip,
 				created_user_agent: req.headers["user-agent"],
 				authenticated: true
 			})
 
 			createSessionAndSignIn(authentication, req, res)
-			res.statusMessage = "Signed In"
-			res.redirect(303, validateRedirect(req, referrer, "/user"))
-			break
+			res.statusMessage = "Signed In with ID-card"
+			return void res.redirect(303, validateRedirect(req, referrer, "/user"))
+		}
 
-		case "mobile-id":
-			var phoneNumber = parsePhoneNumber(String(req.body.phoneNumber))
+		case "mobile-id": {
 			if (phoneNumber == null) throw new MobileIdError("NOT_FOUND")
 
-			personalId = parsePersonalId(String(req.body.personalId))
-			if (personalId == null) throw new MobileIdError("NOT_FOUND")
-			if (rateLimitSigningIn(req, res, personalId)) return
+			if (personalId == null) throw new HttpError(422, "Invalid Personal Id", {
+				description: t("eid_view.errors.invalid_personal_id")
+			})
+
+			if (err = rateLimitSigningIn(t, personalId)) throw err
 
 			logger.info({
 				request_id: req.headers["request-id"],
@@ -242,43 +261,31 @@ exports.router.post("/", next(function*(req, res, next) {
 				authentication_method: "mobile-id"
 			})
 
+			let session = yield mobileId.authenticate(
+				phoneNumber,
+				personalId,
+				sha256(token)
+			)
+
 			authentication = authenticationsDb.create({
 				country: "EE",
 				personal_id: personalId,
-				method: "mobile-id",
-				token: Crypto.randomBytes(16),
+				method,
+				token,
 				created_ip: req.ip,
-				created_user_agent: req.headers["user-agent"]
+				created_user_agent: req.headers["user-agent"],
+				eid_session: session
 			})
 
-			tokenHash = sha256(authentication.token)
-
-			var sessionId = yield mobileId.authenticate(
-				phoneNumber,
-				personalId,
-				tokenHash
-			)
-
-			co(waitForMobileIdAuthentication(req, req.t, authentication, sessionId))
-
-			authUrl = req.baseUrl + "/?" + Qs.stringify({
-				"authentication-token": authentication.token.toString("hex"),
-				referrer: referrer
-			})
-
-			res.setHeader("Location", authUrl)
-
-			res.status(202).render("sessions/creating_page.jsx", {
-				method: "mobile-id",
-				code: MobileId.confirmation(tokenHash),
-				poll: authUrl
-			})
 			break
+		}
 
-		case "smart-id":
-			personalId = parsePersonalId(String(req.body.personalId))
-			if (personalId == null) throw new SmartIdError("ACCOUNT_NOT_FOUND")
-			if (rateLimitSigningIn(req, res, personalId)) return
+		case "smart-id": {
+			if (personalId == null) throw new HttpError(422, "Invalid Personal Id", {
+				description: t("eid_view.errors.invalid_personal_id")
+			})
+
+			if (err = rateLimitSigningIn(t, personalId)) throw err
 
 			logger.info({
 				request_id: req.headers["request-id"],
@@ -286,189 +293,54 @@ exports.router.post("/", next(function*(req, res, next) {
 				authentication_method: "smart-id"
 			})
 
-			var token = Crypto.randomBytes(16)
-			tokenHash = sha256(token)
-			var session = yield smartId.authenticate("PNOEE-" + personalId, tokenHash)
+			let session = yield smartId.authenticate(
+				"PNOEE-" + personalId,
+				sha256(token)
+			)
 
 			authentication = authenticationsDb.create({
 				country: "EE",
 				personal_id: personalId,
-				method: "smart-id",
-				token: token,
+				method,
+				token,
 				created_ip: req.ip,
-				created_user_agent: req.headers["user-agent"]
+				created_user_agent: req.headers["user-agent"],
+				eid_session: session
 			})
 
-			co(waitForSmartIdAuthentication(req, req.t, authentication, session))
-
-			authUrl = req.baseUrl + "/?" + Qs.stringify({
-				"authentication-token": authentication.token.toString("hex"),
-				referrer: referrer
-			})
-
-			res.setHeader("Location", authUrl)
-
-			res.status(202).render("sessions/creating_page.jsx", {
-				method: "smart-id",
-				code: SmartId.verification(tokenHash),
-				poll: authUrl
-			})
 			break
+		}
 
-		default: throw new HttpError(422, "Unknown Signing Method")
-	}
-}))
-
-exports.router.post("/",
-	new ResponseTypeMiddeware([
-		"text/html",
-		"application/x-empty"
-	].map(MediaType)),
-	next(function*(req, res) {
-	var authenticationToken =
-		Buffer.from(req.query["authentication-token"] || "", "hex")
-
-	var authentication
-
-	switch (getSigninMethod(req)) {
-		case "mobile-id":
-			for (
-				let end = Date.now() + 120 * 1000;
-				Date.now() < end;
-				yield _.sleep(ENV == "test" ? 50 : 500)
-			) {
-				authentication = authenticationsDb.read(sql`
-					SELECT * FROM authentications WHERE token = ${authenticationToken}
-				`)
-
-				if (!authentication)
-					throw new HttpError(404, "Authentication Not Found")
-
-				if (authentication.authenticated || authentication.error) break
-			}
-
-			if (authentication.error) {
-				let err = authentication.error
-
-				if (err.name == "HttpError") {
-					res.statusCode = err.code
-					res.statusMessage = err.message
-					res.flash("error", err.description || err.message)
-				}
-				else if (err.name == "MobileIdError") {
-					if (err.code in MOBILE_ID_ERRORS) {
-						res.statusCode = MOBILE_ID_ERRORS[err.code][0]
-						res.statusMessage = MOBILE_ID_ERRORS[err.code][1]
-						res.flash("error", req.t(MOBILE_ID_ERRORS[err.code][2]))
-					}
-					else {
-						res.statusCode = 500
-						res.statusMessage = "Unknown Mobile-Id Error"
-						res.flash("error", req.t("500_BODY"))
-					}
-				}
-				else {
-					res.statusCode = 500
-					res.flash("error", req.t("500_BODY"))
-				}
-			}
-			else if (!authentication.authenticated) {
-				res.statusCode = 410
-				res.flash("error", req.t("MOBILE_ID_ERROR_TIMEOUT"))
-			}
-			break
-
-		case "smart-id":
-			for (
-				let end = Date.now() + 120 * 1000;
-				Date.now() < end;
-				yield _.sleep(ENV == "test" ? 50 : 500)
-			) {
-				authentication = authenticationsDb.read(sql`
-					SELECT * FROM authentications WHERE token = ${authenticationToken}
-				`)
-
-				if (!authentication)
-					throw new HttpError(404, "Authentication Not Found")
-
-				if (authentication.authenticated || authentication.error) break
-			}
-
-			if (authentication.error) {
-				let err = authentication.error
-
-				if (err.name == "HttpError") {
-					res.statusCode = err.code
-					res.statusMessage = err.message
-					res.flash("error", err.description || err.message)
-				}
-				else if (err.name == "SmartIdError") {
-					if (err.code in SMART_ID_ERRORS) {
-						res.statusCode = SMART_ID_ERRORS[err.code][0]
-						res.statusMessage = SMART_ID_ERRORS[err.code][1]
-						res.flash("error", req.t(SMART_ID_ERRORS[err.code][2]))
-					}
-					else {
-						res.statusCode = 500
-						res.statusMessage = "Unknown Smart-Id Error"
-						res.flash("error", req.t("500_BODY"))
-					}
-				}
-				else {
-					res.statusCode = 500
-					res.flash("error", req.t("500_BODY"))
-				}
-			}
-			else if (!authentication.authenticated) {
-				res.statusCode = 410
-				res.flash("error", req.t("SMART_ID_ERROR_TIMEOUT_AUTH"))
-			}
-			break
-
-		default: throw new HttpError(422, "Unknown Signing Method")
+		default: throw new HttpError(422, "Unknown Authentication Method")
 	}
 
-	if (authentication.authenticated) {
-		res.setHeader("Location", validateRedirect(req, req.query.referrer, "/user"))
-		createSessionAndSignIn(authentication, req, res)
-		res.statusCode = 204
-		res.statusMessage = "Signed In"
-	}
-	else res.setHeader("Location", req.baseUrl + "/new")
+	var waitUrl = req.baseUrl + "/new?" + Qs.stringify({
+		"authentication-token": authentication.token.toString("hex"),
+		"csrf-token": req.csrfToken,
+		referrer: referrer
+	}) + (res.contentType.name == "text/html" ? "#verification-code" : "")
+
+	res.statusCode = 202
+
+	res.statusMessage =
+		method == "mobile-id" ? "Signing In with Mobile-ID" :
+		method == "smart-id" ? "Signing In with Smart-ID" :
+		"Signed In"
+
+	var verificationCode = serializeVerificationCode(authentication)
+	res.setHeader("Refresh", serializeRefreshHeader(4, waitUrl))
+	res.setHeader("X-Verification-Code", verificationCode)
 
 	switch (res.contentType.name) {
+		case "application/json":
 		case "application/x-empty": return void res.end()
-		default: return void res.status(303).end()
+
+		default: res.render("sessions/creating_page.jsx", {
+			method,
+			verificationCode
+		})
 	}
-}))
-
-exports.router.use("/", function(err, req, res, next) {
-	if (err instanceof MobileIdError) {
-		var code = getNormalizedMobileIdErrorCode(err)
-
-		if (code in MOBILE_ID_ERRORS) {
-			res.statusCode = MOBILE_ID_ERRORS[code][0]
-			res.statusMessage = MOBILE_ID_ERRORS[code][1]
-
-			res.render("sessions/creating_page.jsx", {
-				error: req.t(MOBILE_ID_ERRORS[code][2])
-			})
-		}
-		else throw new HttpError(500, "Unknown Mobile-Id Error", {error: err})
-	}
-	else if (err instanceof SmartIdError) {
-		if (err.code in SMART_ID_ERRORS) {
-			res.statusCode = SMART_ID_ERRORS[err.code][0]
-			res.statusMessage = SMART_ID_ERRORS[err.code][1]
-
-			res.render("sessions/creating_page.jsx", {
-				error: req.t(SMART_ID_ERRORS[err.code][2])
-			})
-		}
-		else throw new HttpError(500, "Unknown Smart-Id Error", {error: err})
-	}
-	else next(err)
-})
+}), handleEidError)
 
 exports.router.use("/:id", function(req, _res, next) {
 	if (req.user == null) throw new HttpError(401)
@@ -514,17 +386,19 @@ exports.router.delete("/:id", function(req, res) {
 	res.redirect(303, validateRedirect(req, to, "/"))
 })
 
-function* waitForMobileIdAuthentication(req, t, authentication, sessionId) {
+function* waitForMobileIdAuthentication(req, t, authentication, timeout) {
+	var session = authentication.eid_session
+
 	logger.info({
 		request_id: req.headers["request-id"],
 		event: "authentication-waiting",
 		authentication_method: authentication.method,
-		mobile_id_session_id: sessionId
+		mobile_id_session_id: session.id
 	})
 
 	try {
-		var certAndSignatureHash = yield waitForMobileIdSession(120, sessionId)
-		if (certAndSignatureHash == null) throw new MobileIdError("TIMEOUT")
+		var [cert, sig] = (yield mobileId.wait(session, timeout)) || []
+		if (cert == null || sig == null) return null
 
 		logger.info({
 			request_id: req.headers["request-id"],
@@ -533,9 +407,7 @@ function* waitForMobileIdAuthentication(req, t, authentication, sessionId) {
 			authentication_method: authentication.method
 		})
 
-		var [cert, signatureHash] = certAndSignatureHash
-
-		authenticationsDb.update(authentication, {
+		authentication = authenticationsDb.update(authentication, {
 			certificate: cert,
 			updated_at: new Date
 		})
@@ -549,7 +421,7 @@ function* waitForMobileIdAuthentication(req, t, authentication, sessionId) {
 			authentication.personal_id != personalId
 		) throw new MobileIdError("CERTIFICATE_MISMATCH")
 
-		if (!cert.hasSigned(authentication.token, signatureHash))
+		if (!cert.hasSigned(authentication.token, sig))
 			throw new MobileIdError("INVALID_SIGNATURE")
 
 		logger.info({
@@ -559,7 +431,7 @@ function* waitForMobileIdAuthentication(req, t, authentication, sessionId) {
 			authentication_method: authentication.method
 		})
 
-		authenticationsDb.update(authentication, {
+		return authenticationsDb.update(authentication, {
 			authenticated: true,
 			updated_at: new Date
 		})
@@ -573,27 +445,26 @@ function* waitForMobileIdAuthentication(req, t, authentication, sessionId) {
 			error: ex.message
 		})
 
-		if (!(
-			ex instanceof HttpError ||
-			ex instanceof MobileIdError &&
-			getNormalizedMobileIdErrorCode(ex) in MOBILE_ID_ERRORS
-		)) reportError(ex)
-
 		authenticationsDb.update(authentication, {error: ex, updated_at: new Date})
+
+		throw ex
 	}
 }
 
-function* waitForSmartIdAuthentication(req, t, authentication, session) {
+function* waitForSmartIdAuthentication(req, t, authentication, timeout) {
+	var session = authentication.eid_session
+
 	logger.info({
 		request_id: req.headers["request-id"],
 		event: "authentication-waiting",
 		authentication_method: authentication.method,
-		smart_id_session_id: session.id
+		smart_id_session_id: session.id,
+		timeout
 	})
 
 	try {
-		var authCertAndSignature = yield waitForSmartIdSession(120, session)
-		if (authCertAndSignature == null) throw new SmartIdError("TIMEOUT")
+		var [cert, sig] = (yield smartId.wait(session, timeout)) || []
+		if (cert == null) return null
 
 		logger.info({
 			request_id: req.headers["request-id"],
@@ -602,9 +473,7 @@ function* waitForSmartIdAuthentication(req, t, authentication, session) {
 			authentication_method: authentication.method
 		})
 
-		var [cert, signature] = authCertAndSignature
-
-		authenticationsDb.update(authentication, {
+		authentication = authenticationsDb.update(authentication, {
 			certificate: cert,
 			updated_at: new Date
 		})
@@ -618,7 +487,7 @@ function* waitForSmartIdAuthentication(req, t, authentication, session) {
 			authentication.personal_id != personalId
 		) throw new SmartIdError("CERTIFICATE_MISMATCH")
 
-		if (!cert.hasSigned(authentication.token, signature))
+		if (!cert.hasSigned(authentication.token, sig))
 			throw new SmartIdError("INVALID_SIGNATURE")
 
 		logger.info({
@@ -628,7 +497,7 @@ function* waitForSmartIdAuthentication(req, t, authentication, session) {
 			authentication_method: authentication.method
 		})
 
-		authenticationsDb.update(authentication, {
+		return authenticationsDb.update(authentication, {
 			authenticated: true,
 			updated_at: new Date
 		})
@@ -642,13 +511,160 @@ function* waitForSmartIdAuthentication(req, t, authentication, session) {
 			error: ex.message
 		})
 
-		if (!(
-			ex instanceof HttpError ||
-			ex instanceof SmartIdError && ex.code in SMART_ID_ERRORS
-		)) reportError(ex)
-
 		authenticationsDb.update(authentication, {error: ex, updated_at: new Date})
+
+		throw ex
 	}
+}
+
+function handleEidError(err, {t}, _res, next) {
+	var statusCode, statusMessage, description
+
+	if (err instanceof MobileIdError) {
+		switch (getNormalizedMobileIdErrorCode(err)) {
+			case "NOT_FOUND":
+				statusCode = 422
+				statusMessage = "Not a Mobile-ID User"
+				description = t("eid_view.mobile_id_errors.not_found")
+				break
+
+			case "TIMEOUT":
+				statusCode = 410
+				statusMessage = "Mobile-ID Timeout"
+				description = t("eid_view.mobile_id_errors.auth_timeout")
+				break
+
+			case "NOT_MID_CLIENT":
+				statusCode = 422
+				statusMessage = "Not a Mobile-ID User"
+				description = t("eid_view.mobile_id_errors.not_found")
+				break
+
+			case "USER_CANCELLED":
+				statusCode = 410
+				statusMessage = "Mobile-ID Cancelled"
+				description = t("eid_view.mobile_id_errors.auth_cancelled")
+				break
+
+			case "SIGNATURE_HASH_MISMATCH":
+				statusCode = 410
+				statusMessage = "Mobile-ID Signature Hash Mismatch"
+				description = t("eid_view.mobile_id_errors.auth_hash_mismatch")
+				break
+
+			case "PHONE_ABSENT":
+				statusCode = 410
+				statusMessage = "Mobile-ID Phone Absent"
+				description = t("eid_view.mobile_id_errors.auth_phone_absent")
+				break
+
+			case "DELIVERY_ERROR":
+				statusCode = 410
+				statusMessage = "Mobile-ID Delivery Error"
+				description = t("eid_view.mobile_id_errors.auth_delivery_error")
+				break
+
+			case "SIM_ERROR":
+				statusCode = 410
+				statusMessage = "Mobile-ID SIM Application Error"
+				description = t("eid_view.mobile_id_errors.sim_error")
+				break
+
+			case "SESSION_NOT_FOUND":
+				statusCode = 410
+				statusMessage = "Mobile-ID Timeout"
+				description = t("eid_view.mobile_id_errors.auth_timeout")
+				break
+
+			// Custom responses
+			case "CERTIFICATE_MISMATCH":
+				statusCode = 409
+				statusMessage = "Authentication Certificate Doesn't Match"
+				description = t("eid_view.mobile_id_errors.auth_certificate_mismatch")
+				break
+
+			case "INVALID_SIGNATURE":
+				statusCode = 410
+				statusMessage = "Invalid Mobile-ID Signature"
+				description = t("eid_view.mobile_id_errors.auth_invalid_signature")
+				break
+
+			default:
+				statusCode = 500
+				statusMessage = "Unknown Mobile-ID Error"
+				description = t("500_BODY")
+		}
+
+		next(new HttpError(statusCode, statusMessage, {description, error: err}))
+	}
+	else if (err instanceof SmartIdError) {
+		switch (err.code) {
+			// Initiation responses:
+			case "ACCOUNT_NOT_FOUND":
+				statusCode = 422
+				statusMessage = "Not a Smart-ID User"
+				description = t("eid_view.smart_id_errors.not_found")
+				break
+
+			// Session responses:
+			case "USER_REFUSED":
+				statusCode = 410
+				statusMessage = "Smart-ID Cancelled"
+				description = t("eid_view.smart_id_errors.auth_cancelled")
+				break
+
+			case "TIMEOUT":
+				statusCode = 410
+				statusMessage = "Smart-ID Timeout"
+				description = t("eid_view.smart_id_errors.auth_timeout")
+				break
+
+			case "NO_SUITABLE_CERTIFICATE":
+				statusCode = 410
+				statusMessage = "No Smart-ID Certificate"
+				description = t("eid_view.smart_id_errors.auth_no_suitable_certificate")
+				break
+
+			case "DOCUMENT_UNUSABLE":
+				statusCode = 410
+				statusMessage = "Smart-ID Certificate Unusable"
+				description = t("eid_view.smart_id_errors.document_unusable")
+				break
+
+			case "WRONG_VC":
+				statusCode = 410
+				statusMessage = "Wrong Smart-ID Verification Code Chosen"
+				description = t("eid_view.smart_id_errors.wrong_vc")
+				break
+
+			case "SESSION_NOT_FOUND":
+				statusCode = 410
+				statusMessage = "Smart-ID Timeout"
+				description = t("eid_view.smart_id_errors.auth_timeout")
+				break
+
+			// Custom responses:
+			case "CERTIFICATE_MISMATCH":
+				statusCode = 409
+				statusMessage = "Authentication Certificate Doesn't Match"
+				description = t("eid_view.smart_id_errors.auth_certificate_mismatch")
+				break
+
+			case "INVALID_SIGNATURE":
+				statusCode = 410
+				statusMessage = "Invalid Smart-ID Signature"
+				description = t("eid_view.smart_id_errors.auth_invalid_signature")
+				break
+
+			default:
+				statusCode = 500
+				statusMessage = "Unknown Smart-ID Error"
+				description = t("500_BODY")
+		}
+
+		next(new HttpError(statusCode, statusMessage, {description, error: err}))
+	}
+	else next(err)
 }
 
 function readOrCreateUser(auth, lang) {
@@ -676,6 +692,9 @@ function readOrCreateUser(auth, lang) {
 }
 
 function createSessionAndSignIn(authentication, req, res) {
+	if (!authentication.authenticated)
+		throw new Error("Authentication is not authenticated")
+
 	var user = readOrCreateUser(authentication, req.lang)
 	var sessionToken = Crypto.randomBytes(16)
 
@@ -713,10 +732,11 @@ function createSessionAndSignIn(authentication, req, res) {
 	csrf.reset(req, res)
 }
 
-function rateLimitSigningIn(req, res, personalId) {
+function rateLimitSigningIn(t, personalId) {
 	var authentications = authenticationsDb.search(sql`
 		SELECT created_at FROM authentications
-		WHERE personal_id = ${personalId}
+		WHERE country = 'EE'
+		AND personal_id = ${personalId}
 		AND created_at > ${DateFns.addMinutes(new Date, -AUTH_RATE_IN_MINUTES)}
 		AND NOT authenticated
 		AND method != 'id-card'
@@ -729,42 +749,43 @@ function rateLimitSigningIn(req, res, personalId) {
 		: DateFns.addMinutes(authentications[0].created_at, AUTH_RATE_IN_MINUTES)
 
 	if (until) {
-		res.statusCode = 429
-		res.statusMessage = "Too Many Incomplete Authentications"
-
 		var minutes = Math.max(DateFns.differenceInMinutes(until, new Date), 1)
 
-		res.render("error_page.jsx", {
-			title: req.t("AUTH_RATE_LIMIT_TITLE", {minutes: minutes}),
-			body: req.t("AUTH_RATE_LIMIT_BODY", {minutes: minutes})
+		return new HttpError(429, "Too Many Incomplete Authentications", {
+			description: t("eid_view.errors.auth_rate_limit", {minutes: minutes})
 		})
-
-		return true
 	}
 
-	return false
+	return null
 }
 
-function* waitForSession(wait, timeout, session) {
-	var res
-	for (
-		var started = Date.now() / 1000, elapsed = 0;
-		res == null && elapsed < timeout;
-		elapsed = Date.now() / 1000 - started
-	) res = yield wait(session, timeout - elapsed)
-	return res
-}
+function parseAuthenticationAttrs(obj) {
+	var {method} = obj
 
-function getSigninMethod(req) {
-	var type = req.contentType.name
+	if (method == "mobile-id") return {
+		method,
+		personalId: parsePersonalId(String(obj["personal-id"])),
+		phoneNumber: parsePhoneNumber(String(obj["phone-number"]))
+	}
 
-	return (
-		type == "application/x-www-form-urlencoded" ? req.body.method :
-		type == "application/json" ? req.body.method :
-		null
-	)
+	if (method == "smart-id") return {
+		method,
+		personalId: parsePersonalId(String(obj["personal-id"]))
+	}
+
+	return {method}
 }
 
 function parseCertificateFromHeader(pem) {
 	return Certificate.parse(decodeURIComponent(pem))
+}
+
+
+function serializeVerificationCode(authentication) {
+	var tokenHash = sha256(authentication.token)
+
+	return _.padLeft((
+		authentication.method == "mobile-id" ? MobileId.verification(tokenHash) :
+		authentication.method == "smart-id" ? SmartId.verification(tokenHash) :
+	0), 4, 0)
 }

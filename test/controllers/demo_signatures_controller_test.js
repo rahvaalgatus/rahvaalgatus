@@ -1,3 +1,4 @@
+var _ = require("root/lib/underscore")
 var Url = require("url")
 var Path = require("path")
 var Config = require("root").config
@@ -16,6 +17,7 @@ var {newTimestampResponse} = require("root/test/fixtures")
 var {newOcspResponse} = require("root/test/fixtures")
 var demoSignaturesDb = require("root/db/demo_signatures_db")
 var {hades} = require("root")
+var {parseRefreshHeader} = require("root/lib/http")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var ASICE_TYPE = "application/vnd.etsi.asic-e+zip"
 var MOBILE_ID_URL = Url.parse("https://mid.sk.ee/mid-api/")
@@ -34,9 +36,9 @@ var SMART_ID = "PNOEE-" + PERSONAL_ID + "-R2D2-Q"
 var SIGNABLE_TEXT = t("demo_signatures_page.signable")
 var SIGNABLE_TEXT_SHA256 = sha256(SIGNABLE_TEXT)
 var EXPIRATION = Config.demoSignaturesExpirationSeconds
-var SITE_HOSTNAME = Url.parse(Config.url).hostname
-var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
-var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
+var ERROR_TYPE = "application/vnd.rahvaalgatus.error+json"
+var HTML_TYPE = "text/html; charset=utf-8"
+var JSON_TYPE = "application/json; charset=utf-8"
 
 var SIGN_CERTIFICATE_EXTENSIONS = [{
 	extnID: "keyUsage",
@@ -113,25 +115,6 @@ describe("DemoSignaturesController", function() {
 			var res = yield this.request("/digiallkiri")
 			res.statusCode.must.equal(200)
 		})
-
-		;[PARLIAMENT_SITE_HOSTNAME, LOCAL_SITE_HOSTNAME].forEach(function(host) {
-			it(`must redirect to ${SITE_HOSTNAME} from ${host}`, function*() {
-				var path = "/digiallkiri?foo=bar"
-				var res = yield this.request(path, {headers: {Host: host}})
-				res.statusCode.must.equal(301)
-				res.headers.location.must.equal(Config.url + path)
-			})
-		})
-
-		// Once upon a time, on Mar 24, 2017, there was a bug where the UI
-		// translation strings were not rendered on the initiative page. Adding
-		// this test here for double checking. They're used only for ID-card
-		// errors.
-		it("must render UI strings", function*() {
-			var res = yield this.request("/digiallkiri")
-			res.statusCode.must.equal(200)
-			res.body.must.include("MSG_ERROR_HWCRYPTO_NO_CERTIFICATES")
-		})
 	})
 
 	describe("GET /dokument.txt", function() {
@@ -154,17 +137,23 @@ describe("DemoSignaturesController", function() {
 		function mustSign(sign, certificate) {
 			describe("as signable", function() {
 				it("must thank after signing", function*() {
-					var signed = yield sign(this.router, this.request, certificate)
-					signed.statusCode.must.equal(204)
+					var waiting = yield sign(this.router, this.request, certificate)
+					waiting.statusCode.must.be.between(200, 299)
 
-					var res = yield this.request(signed.headers.location)
+					yield _.sleep(100)
+
+					var waitUrl = waiting.headers.refresh
+						? parseRefreshHeader(waiting.headers.refresh)[1]
+						: waiting.headers.location
+
+					var res = yield this.request(waitUrl)
 					res.statusCode.must.equal(200)
 					res.body.must.include(t("created_demo_signature_page.description"))
 				})
 			})
 		}
 
-		describe("when signing via Id-Card", function() {
+		describe("when signing via ID-card", function() {
 			mustSign(signWithIdCard, ID_CARD_CERTIFICATE)
 
 			it("must create a signature", function*() {
@@ -173,6 +162,8 @@ describe("DemoSignaturesController", function() {
 				var signed = yield signWithIdCard(this.router, this.request, cert)
 
 				signed.statusCode.must.equal(204)
+				signed.statusMessage.must.equal("Signed with ID-card")
+
 				var token = Path.basename(signed.headers.location)
 				signed.headers.location.must.equal(`/demo-signatures/${token}`)
 
@@ -198,62 +189,170 @@ describe("DemoSignaturesController", function() {
 		describe("when signing via Mobile-Id", function() {
 			mustSign(signWithMobileId, MOBILE_ID_CERTIFICATE)
 
-			it("must create a signature", function*() {
-				var cert = MOBILE_ID_CERTIFICATE
-				var xades = newXades(cert)
-				var signed = yield signWithMobileId(this.router, this.request, cert)
+			describe("when without JavaScript", function() {
+				it("must create a signature", function*() {
+					var cert = MOBILE_ID_CERTIFICATE
+					var xades = newXades(cert)
 
-				signed.statusCode.must.equal(204)
-				var token = Path.basename(signed.headers.location)
-				signed.headers.location.must.equal(`/demo-signatures/${token}`)
+					var waiting = yield signWithMobileId(this.router, this.request, cert)
+					waiting.statusCode.must.equal(202)
+					waiting.statusMessage.must.equal("Waiting for Mobile-ID")
+					waiting.headers["content-type"].must.equal(HTML_TYPE)
+					waiting.headers["x-verification-code"].must.exist()
 
-				var signatures = demoSignaturesDb.search(sql`
-					SELECT * FROM demo_signatures
-				`)
+					yield _.sleep(100)
 
-				signatures.must.eql([new ValidDemoSignature({
-					id: 1,
-					token: Buffer.from(token, "hex"),
-					country: "EE",
-					personal_id: PERSONAL_ID.slice(0, 5),
-					method: "mobile-id",
-					xades: signatures[0].xades,
-					signed: true,
-					timestamped: true
-				})])
+					var waitUrl = parseRefreshHeader(waiting.headers.refresh)[1]
+					var signed = yield this.request(waitUrl)
+					signed.statusCode.must.equal(200)
+					signed.statusMessage.must.equal("Signed with Mobile-ID")
+					signed.headers["content-type"].must.equal(HTML_TYPE)
 
-				signatures[0].xades.toString().must.equal(String(xades))
+					var signatures = demoSignaturesDb.search(sql`
+						SELECT * FROM demo_signatures
+					`)
+
+					signatures.must.eql([new ValidDemoSignature({
+						id: 1,
+						token: Buffer.from(Path.basename(waitUrl), "hex"),
+						country: "EE",
+						personal_id: PERSONAL_ID.slice(0, 5),
+						method: "mobile-id",
+						xades: signatures[0].xades,
+						signed: true,
+						timestamped: true
+					})])
+
+					signatures[0].xades.toString().must.equal(String(xades))
+				})
+			})
+
+			describe("when with JavaScript", function() {
+				it("must create a signature", function*() {
+					var cert = MOBILE_ID_CERTIFICATE
+					var xades = newXades(cert)
+
+					var waiting = yield signWithMobileId(
+						this.router,
+						this.request,
+						cert,
+						{Accept: `${JSON_TYPE}, ${ERROR_TYPE}`}
+					)
+
+					waiting.statusCode.must.equal(200)
+					waiting.statusMessage.must.equal("Signed with Mobile-ID")
+					waiting.headers["content-type"].must.equal(JSON_TYPE)
+					waiting.headers.must.not.have.property("x-verification-code")
+					waiting.headers.must.not.have.property("refresh")
+					waiting.body.must.eql({state: "DONE"})
+
+					var signed = yield this.request(waiting.headers.location)
+					signed.statusCode.must.equal(200)
+					signed.statusMessage.must.equal("Signed with Mobile-ID")
+					signed.headers["content-type"].must.equal(HTML_TYPE)
+
+					var signatures = demoSignaturesDb.search(sql`
+						SELECT * FROM demo_signatures
+					`)
+
+					signatures.must.eql([new ValidDemoSignature({
+						id: 1,
+						token: Buffer.from(Path.basename(waiting.headers.location), "hex"),
+						country: "EE",
+						personal_id: PERSONAL_ID.slice(0, 5),
+						method: "mobile-id",
+						xades: signatures[0].xades,
+						signed: true,
+						timestamped: true
+					})])
+
+					signatures[0].xades.toString().must.equal(String(xades))
+				})
 			})
 		})
 
 		describe("when signing via Smart-Id", function() {
 			mustSign(signWithSmartId, SMART_ID_CERTIFICATE)
 
-			it("must create a signature", function*() {
-				var cert = SMART_ID_CERTIFICATE
-				var xades = newXades(cert)
-				var signed = yield signWithSmartId(this.router, this.request, cert)
+			describe("when without JavaScript", function() {
+				it("must create a signature", function*() {
+					var cert = SMART_ID_CERTIFICATE
+					var xades = newXades(cert)
 
-				signed.statusCode.must.equal(204)
-				var token = Path.basename(signed.headers.location)
-				signed.headers.location.must.equal(`/demo-signatures/${token}`)
+					var waiting = yield signWithSmartId(this.router, this.request, cert)
+					waiting.statusCode.must.equal(202)
+					waiting.statusMessage.must.equal("Waiting for Smart-ID")
+					waiting.headers["content-type"].must.equal(HTML_TYPE)
+					waiting.headers["x-verification-code"].must.exist()
 
-				var signatures = demoSignaturesDb.search(sql`
-					SELECT * FROM demo_signatures
-				`)
+					yield _.sleep(100)
 
-				signatures.must.eql([new ValidDemoSignature({
-					id: 1,
-					token: Buffer.from(token, "hex"),
-					country: "EE",
-					personal_id: PERSONAL_ID.slice(0, 5),
-					method: "smart-id",
-					xades: signatures[0].xades,
-					signed: true,
-					timestamped: true
-				})])
+					var waitUrl = parseRefreshHeader(waiting.headers.refresh)[1]
+					var signed = yield this.request(waitUrl)
+					signed.statusCode.must.equal(200)
+					signed.statusMessage.must.equal("Signed with Smart-ID")
+					signed.headers["content-type"].must.equal(HTML_TYPE)
 
-				signatures[0].xades.toString().must.equal(String(xades))
+					var signatures = demoSignaturesDb.search(sql`
+						SELECT * FROM demo_signatures
+					`)
+
+					signatures.must.eql([new ValidDemoSignature({
+						id: 1,
+						token: Buffer.from(Path.basename(waitUrl), "hex"),
+						country: "EE",
+						personal_id: PERSONAL_ID.slice(0, 5),
+						method: "smart-id",
+						xades: signatures[0].xades,
+						signed: true,
+						timestamped: true
+					})])
+
+					signatures[0].xades.toString().must.equal(String(xades))
+				})
+			})
+
+			describe("when with JavaScript", function() {
+				it("must create a signature", function*() {
+					var cert = SMART_ID_CERTIFICATE
+					var xades = newXades(cert)
+
+					var waiting = yield signWithSmartId(
+						this.router,
+						this.request,
+						cert,
+						{Accept: `${JSON_TYPE}, ${ERROR_TYPE}`}
+					)
+
+					waiting.statusCode.must.equal(200)
+					waiting.statusMessage.must.equal("Signed with Smart-ID")
+					waiting.headers["content-type"].must.equal(JSON_TYPE)
+					waiting.headers.must.not.have.property("x-verification-code")
+					waiting.headers.must.not.have.property("refresh")
+					waiting.body.must.eql({state: "DONE"})
+
+					var signed = yield this.request(waiting.headers.location)
+					signed.statusCode.must.equal(200)
+					signed.statusMessage.must.equal("Signed with Smart-ID")
+					signed.headers["content-type"].must.equal(HTML_TYPE)
+
+					var signatures = demoSignaturesDb.search(sql`
+						SELECT * FROM demo_signatures
+					`)
+
+					signatures.must.eql([new ValidDemoSignature({
+						id: 1,
+						token: Buffer.from(Path.basename(waiting.headers.location), "hex"),
+						country: "EE",
+						personal_id: PERSONAL_ID.slice(0, 5),
+						method: "smart-id",
+						xades: signatures[0].xades,
+						signed: true,
+						timestamped: true
+					})])
+
+					signatures[0].xades.toString().must.equal(String(xades))
+				})
 			})
 		})
 	})
@@ -348,7 +447,7 @@ describe("DemoSignaturesController", function() {
 	})
 })
 
-function certWithSmartId(router, request, cert) {
+function certWithSmartId(router, request, cert, headers) {
 	var certSession = "3befb011-37bf-4e57-b041-e4cba1496766"
 
 	router.post(
@@ -367,7 +466,8 @@ function certWithSmartId(router, request, cert) {
 
 	return request(`/demo-signatures`, {
 		method: "POST",
-		form: {method: "smart-id", personalId: PERSONAL_ID}
+		headers: headers || {},
+		form: {method: "smart-id", "personal-id": PERSONAL_ID}
 	})
 }
 
@@ -379,6 +479,7 @@ function* signWithIdCard(router, request, cert) {
 	})
 
 	signing.statusCode.must.equal(202)
+	signing.statusMessage.must.equal("Signing with ID-card")
 
 	var {xades} = demoSignaturesDb.read(sql`
 		SELECT * FROM demo_signatures ORDER BY created_at DESC LIMIT 1
@@ -403,11 +504,11 @@ function* signWithIdCard(router, request, cert) {
 			"Content-Type": SIGNATURE_TYPE
 		},
 
-		body: signWithRsa(JOHN_RSA_KEYS.privateKey, xades.signable)
+		body: hashAndSignWithRsa(JOHN_RSA_KEYS.privateKey, xades.signable)
 	})
 }
 
-function* signWithMobileId(router, request, cert) {
+function* signWithMobileId(router, request, cert, headers) {
 	router.post(`${MOBILE_ID_URL.path}certificate`, function(req, res) {
 		respond({result: "OK", cert: cert.toString("base64")}, req, res)
 	})
@@ -429,7 +530,7 @@ function* signWithMobileId(router, request, cert) {
 
 			signature: {
 				algorithm: "sha256WithRSAEncryption",
-				value: signWithRsa(
+				value: hashAndSignWithRsa(
 					JOHN_RSA_KEYS.privateKey,
 					xades.signable
 				).toString("base64")
@@ -455,21 +556,25 @@ function* signWithMobileId(router, request, cert) {
 
 	var signing = yield request("/demo-signatures", {
 		method: "POST",
+		headers: headers || {},
+
 		form: {
 			method: "mobile-id",
-			personalId: PERSONAL_ID,
-			phoneNumber: "+37200000766"
+			"personal-id": PERSONAL_ID,
+			"phone-number": "+37200000766"
 		}
 	})
 
+	if (!(signing.statusCode >= 200 && signing.statusCode < 300)) return signing
 	signing.statusCode.must.equal(202)
+	signing.statusMessage.must.equal("Signing with Mobile-ID")
 
-	return request(signing.headers.location, {
-		headers: {Accept: `application/x-empty, ${ERR_TYPE}`}
+	return request(parseRefreshHeader(signing.headers.refresh)[1], {
+		headers: headers || {}
 	})
 }
 
-function* signWithSmartId(router, request, cert) {
+function* signWithSmartId(router, request, cert, headers) {
 	var signSession = "21e55f06-d6cb-40b7-9638-75dc0b131851"
 
 	router.post(
@@ -491,7 +596,7 @@ function* signWithSmartId(router, request, cert) {
 
 			signature: {
 				algorithm: "sha256WithRSAEncryption",
-				value: signWithRsa(
+				value: hashAndSignWithRsa(
 					JOHN_RSA_KEYS.privateKey,
 					xades.signable
 				).toString("base64")
@@ -518,8 +623,8 @@ function* signWithSmartId(router, request, cert) {
 	var signing = yield certWithSmartId(router, request, cert)
 	signing.statusCode.must.equal(202)
 
-	return request(signing.headers.location, {
-		headers: {Accept: `application/x-empty, ${ERR_TYPE}`}
+	return request(parseRefreshHeader(signing.headers.refresh)[1], {
+		headers: headers || {}
 	})
 }
 
@@ -530,7 +635,7 @@ function newXades(cert) {
 		hash: SIGNABLE_TEXT_SHA256
 	}])
 
-	xades.setSignature(signWithRsa(
+	xades.setSignature(hashAndSignWithRsa(
 		JOHN_RSA_KEYS.privateKey,
 		xades.signable
 	))
@@ -540,6 +645,6 @@ function newXades(cert) {
 	return xades
 }
 
-function signWithRsa(key, signable) {
+function hashAndSignWithRsa(key, signable) {
 	return Crypto.createSign("sha256").update(signable).sign(key)
 }

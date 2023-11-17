@@ -3,8 +3,8 @@ var Db = require("root/lib/db")
 var MediaType = require("medium-type")
 var sql = require("sqlate")
 var {sqlite} = require("root")
-
 exports = module.exports = new Db(Object, sqlite, "initiatives")
+
 exports.idAttribute = "uuid"
 exports.idColumn = "uuid"
 

@@ -4,8 +4,8 @@ var Jsx = require("j6pack")
 var Page = require("../page")
 var I18n = require("root/lib/i18n")
 var DateFns = require("date-fns")
+var EidView = require("../eid_view")
 var formatIsoDate = I18n.formatDate.bind(null, "iso")
-var {SigningView} = require("root/views/initiatives/read_page")
 
 module.exports = function(attrs) {
 	var {req} = attrs
@@ -41,21 +41,28 @@ module.exports = function(attrs) {
 			</div>
 		</center></header>
 
-		<section id="intro" class="primary-section text-section"><center>
+		<section class="primary-section text-section"><center>
 			{Jsx.html(I18n.markdown(lang, "demo_signatures_prologue"))}
 		</center></section>
 
-		<section id="sign" class="secondary-section text-section"><center>
+		<section class="secondary-section text-section"><center>
 			{Jsx.html(I18n.markdown(lang, "demo_signatures_sign"))}
+		</center></section>
 
-			<div id="sign-form">
-				<SigningView
-					req={req}
-					t={t}
-					action="/demo-signatures"
-				/>
-			</div>
+		<section id="sign-section" class="secondary-section"><center>
+			<EidView
+				t={t}
+				centered
+				csrfToken={req.csrfToken}
+				url="/demo-signatures"
+				id="create-signature-form"
+				action="sign"
+				submit={t("initiative_page.signing_section.eid_view.sign_button")}
+				pending={t("initiative_page.signing_section.eid_view.signing")}
+			/>
+		</center></section>
 
+		<section class="secondary-section text-section"><center>
 			<div id="statistics">
 				<div id="signature-count">
 					{Jsx.html(t("demo_signatures_page.n_tried", {count: signatureCount}))}

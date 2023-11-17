@@ -1,33 +1,34 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var Page = require("../page")
-var {MobileIdView} = require("root/views/initiatives/signatures/creating_page")
-exports = module.exports = CreatingPage
 
-function CreatingPage(attrs) {
-	var {req} = attrs
-	var {t} = req
-	var {error} = attrs
-	var {method} = attrs
-	var {code} = attrs
-	var {poll} = attrs
+module.exports = function({req, t, method, verificationCode}) {
+	//var {error} = attrs
+	//? <p class="flash error">{error}</p>
 
 	return <Page
 		page="creating-demo-signature"
 		title={t("DEMO_SIGNATURES_TITLE")}
 		headless
-		req={req}>
-		<script src="/assets/html5.js" />
+		req={req}
+	>
+		<section id="verification-code" class="primary-section text-section">
+			<center>{
+				method == "mobile-id" || method == "smart-id" ? <p>
+					<strong>
+						{t("creating_initiative_signature_page.verification_code")}:
+						{" "}
+						{verificationCode}
+					</strong>
 
-		<section class="text-section primary-section"><center>
-			{error
-				? <p class="flash error">{error}</p>
-				: method == "mobile-id" || method == "smart-id" ? <MobileIdView
-					t={t}
-					method={method}
-					code={code}
-					poll={poll}
-			/> : null}
-		</center></section>
+					<br />
+
+					{method == "mobile-id"
+						? t("creating_initiative_signature_page.mobile_id.verification_code_description")
+						: t("creating_initiative_signature_page.smart_id.verification_code_description")
+					}
+				</p> : null
+			}</center>
+		</section>
 	</Page>
 }

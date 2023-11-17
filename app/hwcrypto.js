@@ -1,4 +1,3 @@
-var ERR_PREFIX = "MSG_ERROR_HWCRYPTO_"
 void require("./vendor/hwcrypto-legacy.js")
 var Hwcrypto = require("./vendor/hwcrypto.js")
 exports.Certificate = Certificate
@@ -41,11 +40,10 @@ function identifyError(err) {
 		case Hwcrypto.NOT_ALLOWED:
 		case Hwcrypto.NO_CERTIFICATES:
 		case Hwcrypto.USER_CANCEL:
-		case Hwcrypto.NO_IMPLEMENTATION:
-			return ERR_PREFIX + err.message.toUpperCase()
+		case Hwcrypto.NO_IMPLEMENTATION: return err.message.toUpperCase()
 
 		case Hwcrypto.INVALID_ARGUMENT:
 		case Hwcrypto.TECHNICAL_ERROR:
-		default: return ERR_PREFIX + "TECHNICAL_ERROR"
+		default: return "TECHNICAL_ERROR"
 	}
 }

@@ -861,12 +861,7 @@ describe("InitiativesController", function() {
 
 				res.statusCode.must.equal(400)
 				res.statusMessage.must.equal("Invalid Phase")
-
-				res.body.must.eql({
-					code: 400,
-					message: "Invalid Phase",
-					name: "HttpError"
-				})
+				res.body.must.eql({code: 400, message: "Invalid Phase"})
 			})
 
 			PHASES.forEach(function(phase, i) {
@@ -1044,12 +1039,7 @@ describe("InitiativesController", function() {
 
 				res.statusCode.must.equal(400)
 				res.statusMessage.must.equal("Invalid Order")
-
-				res.body.must.eql({
-					code: 400,
-					message: "Invalid Order",
-					name: "HttpError"
-				})
+				res.body.must.eql({code: 400, message: "Invalid Order"})
 			})
 
 			_.each({
@@ -1204,12 +1194,7 @@ describe("InitiativesController", function() {
 
 				res.statusCode.must.equal(400)
 				res.statusMessage.must.equal("Invalid Limit")
-
-				res.body.must.eql({
-					code: 400,
-					message: "Invalid Limit",
-					name: "HttpError"
-				})
+				res.body.must.eql({code: 400, message: "Invalid Limit"})
 			})
 
 			it("must respond with 400 given a negative number", function*() {
@@ -1223,12 +1208,7 @@ describe("InitiativesController", function() {
 
 				res.statusCode.must.equal(400)
 				res.statusMessage.must.equal("Invalid Limit")
-
-				res.body.must.eql({
-					code: 400,
-					message: "Invalid Limit",
-					name: "HttpError"
-				})
+				res.body.must.eql({code: 400, message: "Invalid Limit"})
 			})
 
 			it("must respond with 400 given Infinity", function*() {
@@ -1242,12 +1222,7 @@ describe("InitiativesController", function() {
 
 				res.statusCode.must.equal(400)
 				res.statusMessage.must.equal("Invalid Limit")
-
-				res.body.must.eql({
-					code: 400,
-					message: "Invalid Limit",
-					name: "HttpError"
-				})
+				res.body.must.eql({code: 400, message: "Invalid Limit"})
 			})
 		})
 	})
@@ -3995,7 +3970,7 @@ describe("InitiativesController", function() {
 
 				var res = yield this.request("/initiatives/" + initiative.uuid)
 				res.statusCode.must.equal(200)
-				res.body.must.include("MSG_ERROR_HWCRYPTO_NO_CERTIFICATES")
+				res.body.must.include("NO_CERTIFICATES")
 			})
 
 			it("must not show thanks if not signed", function*() {

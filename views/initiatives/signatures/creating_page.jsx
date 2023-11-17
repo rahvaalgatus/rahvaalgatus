@@ -1,72 +1,35 @@
 /** @jsx Jsx */
-var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var InitiativePage = require("../initiative_page")
-var {javascript} = require("root/lib/jsx")
-var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
-exports = module.exports = CreatingPage
-exports.MobileIdView = MobileIdView
 
-function CreatingPage(attrs) {
-	var {req} = attrs
-	var {t} = req
-	var {initiative} = attrs
-	var {error} = attrs
-	var {method} = attrs
-	var {code} = attrs
-	var {poll} = attrs
-
+module.exports = function({req, t, method, initiative, verificationCode}) {
 	return <InitiativePage
-		page="initiative-signature"
-		title={initiative.title}
-		initiative={initiative}
-		req={req}>
-		<script src="/assets/html5.js" />
+		page="creating-initiative-signature"
 
-		<section id="initiative-signature" class="text-section primary-section">
-			<center>
-				{error
-					? <p class="flash error">{error}</p>
-					: method == "mobile-id" || method == "smart-id" ? <MobileIdView
-						t={t}
-						method={method}
-						code={code}
-						poll={poll}
-				/>
-				: null}
-			</center>
+		title={
+			t("creating_initiative_signature_page.title") + " - " + initiative.title
+		}
+
+		initiative={initiative}
+		req={req}
+	>
+		<section id="verification-code" class="primary-section text-section">
+			<center>{
+				method == "mobile-id" || method == "smart-id" ? <p>
+					<strong>
+						{t("creating_initiative_signature_page.verification_code")}:
+						{" "}
+						{verificationCode}
+					</strong>
+
+					<br />
+
+					{method == "mobile-id"
+						? t("creating_initiative_signature_page.mobile_id.verification_code_description")
+						: t("creating_initiative_signature_page.smart_id.verification_code_description")
+					}
+				</p> : null
+			}</center>
 		</section>
 	</InitiativePage>
-}
-
-function MobileIdView(attrs) {
-	var {t} = attrs
-	var {code} = attrs
-	var {poll} = attrs
-	var {method} = attrs
-
-	return <>
-		<p>
-			<strong>{t("CONTROL_CODE", {code: _.padLeft(code, 4, 0)})}</strong><br />
-
-			{method == "mobile-id"
-				? t("MOBILE_ID_CONFIRMATION_CODE_FOR_SIGNING")
-				: t("SMART_ID_CONFIRMATION_CODE_FOR_SIGNING")
-			}
-		</p>
-
-		<script>{javascript`
-			fetch(${poll}, {
-				credentials: "same-origin",
-				headers: {Accept: ${"application/x-empty, " + ERR_TYPE}},
-
-				// Fetch polyfill doesn't support manual redirect, so use
-				// x-empty.
-				redirect: "manual"
-			}).then(function(res) {
-				// WhatWG-Fetch polyfill lacks res.url.
-				window.location.assign(res.headers.get("Location") || ${poll})
-			})
-		`}</script>
-	</>
 }

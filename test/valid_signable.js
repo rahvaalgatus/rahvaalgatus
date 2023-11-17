@@ -25,6 +25,7 @@ module.exports = function(attrs) {
 		personal_id: personalId,
 		token: Crypto.randomBytes(12),
 		method: "id-card",
+		eid_session: null,
 		signed: false,
 		timestamped: false,
 		xades: xades,

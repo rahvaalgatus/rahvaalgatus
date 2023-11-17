@@ -18,6 +18,7 @@ var {CommentView} = require("./comments/read_page")
 var {CommentForm} = require("./comments/create_page")
 var {ProgressView} = require("./initiative_page")
 var {CoauthorInvitationForm} = require("./coauthor_invitation_page")
+var EidView = require("../eid_view")
 var {getSignatureThreshold} = require("root/lib/initiative")
 var {isAdmin} = require("root/lib/user")
 var {selected} = require("root/lib/css")
@@ -37,8 +38,6 @@ var HTTP_URL = /^https?:\/\//i
 var EMPTY_ARR = Array.prototype
 var EMPTY_ORG = {name: "", url: ""}
 var EVENT_NOTIFICATIONS_SINCE = new Date(Config.eventNotificationsSince)
-var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
-var ERR_TYPE = "application/vnd.rahvaalgatus.error+json"
 var LANGUAGES = require("root").config.languages
 var {SCHEMA} = require("root/controllers/initiatives_controller")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
@@ -46,7 +45,6 @@ var LOCAL_GOVERNMENTS_BY_COUNTY = LOCAL_GOVERNMENTS.BY_COUNTY
 var IMAGE_SCHEMA = ImageController.SCHEMA
 exports = module.exports = ReadPage
 exports.InitiativeDestinationSelectView = InitiativeDestinationSelectView
-exports.SigningView = SigningView
 
 // Kollektiivse pöördumise (edaspidi käesolevas peatükis pöördumine) menetlusse
 // võtmise otsustab Riigikogu juhatus 30 kalendripäeva jooksul kollektiivse
@@ -60,10 +58,6 @@ var PARLIAMENT_ACCEPTANCE_DEADLINE_IN_DAYS = 30
 //
 // https://www.riigiteataja.ee/akt/122122014013?leiaKehtiv#para152b12
 var PARLIAMENT_PROCEEDINGS_DEADLINE_IN_MONTHS = 6
-
-var UI_TRANSLATIONS = _.mapValues(I18n.STRINGS, function(lang) {
-	return _.filterValues(lang, (_value, key) => key.indexOf("HWCRYPTO") >= 0)
-})
 
 var FILE_TYPE_ICONS = {
 	"text/html": "ra-icon-html",
@@ -430,10 +424,21 @@ function ReadPage(attrs) {
 							)}
 							</p>
 
-							<SigningView
-								req={req}
+							<EidView
 								t={t}
-								action={initiativePath + "/signatures"}
+								centered
+								csrfToken={req.csrfToken}
+								url={initiativePath + "/signatures"}
+								id="create-signature-view"
+								action="sign"
+								buttonClass="green-button"
+
+								submit={
+									t("initiative_page.signing_section.eid_view.sign_button")
+								}
+
+								pending={t("initiative_page.signing_section.eid_view.signing")}
+								done={t("initiative_page.signing_section.eid_view.signed")}
 							/>
 					</>}
 				</div> : null}
@@ -1609,350 +1614,6 @@ function SidebarAdminView({req, t, initiative}) {
 		>
 			{t("initiative_page.sidebar.admin.edit_button")}
 		</a>
-	</div>
-}
-
-function SigningView(attrs) {
-	var {t} = attrs
-	var {req} = attrs
-	var {action} = attrs
-	var {personalId} = attrs
-	var {singlePage} = attrs
-
-	return <div class="signing-view">
-		<input
-			type="radio"
-			id="signature-method-tab-id-card"
-			name="signature-method-tab"
-			value="id-card"
-			style="display: none"
-		/>
-
-		<input
-			type="radio"
-			name="signature-method-tab"
-			id="signature-method-tab-mobile-id"
-			value="mobile-id"
-			style="display: none"
-		/>
-
-		<input
-			type="radio"
-			name="signature-method-tab"
-			id="signature-method-tab-smart-id"
-			value="smart-id"
-			style="display: none"
-		/>
-
-		<div class="signature-methods">
-			<label
-				id="id-card-button"
-				for="signature-method-tab-id-card"
-				class="inherited-button"
-			>
-				<img
-					src="/assets/id-kaart-button.png"
-					title={t("BTN_VOTE_SIGN_WITH_ID_CARD")}
-					alt={t("BTN_VOTE_SIGN_WITH_ID_CARD")}
-				/>
-			</label>
-
-			<label
-				for="signature-method-tab-mobile-id"
-				class="inherited-button"
-			>
-				<img
-					src="/assets/mobile-id-button.png"
-					title={t("BTN_VOTE_SIGN_WITH_MOBILE_ID")}
-					alt={t("BTN_VOTE_SIGN_WITH_MOBILE_ID")}
-				/>
-			</label>
-
-			{Config.smartId ? <label
-				for="signature-method-tab-smart-id"
-				class="inherited-button"
-			>
-				<img
-					src="/assets/smart-id-button.svg"
-					title={t("BTN_VOTE_SIGN_WITH_SMART_ID")}
-					alt={t("BTN_VOTE_SIGN_WITH_SMART_ID")}
-				/>
-			</label> : null}
-		</div>
-
-		<Form
-			req={req}
-			id="id-card-form"
-			class="signature-form"
-			method="post"
-			action={action}>
-			<p id="id-card-flash" class="flash error" />
-		</Form>
-
-		<Form
-			req={req}
-			id="mobile-id-form"
-			class="signature-form"
-			method="post"
-			action={action}>
-
-			<label class="form-label">
-				{t("LABEL_PHONE_NUMBER")}
-
-				<input
-					type="tel"
-					name="phoneNumber"
-					placeholder={t("PLACEHOLDER_PHONE_NUMBER")}
-					required
-					class="form-input"
-				/>
-			</label>
-
-			<label class="form-label">
-				{t("LABEL_PERSONAL_ID")}
-
-				<input
-					type="text"
-					pattern="[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]"
-					inputmode="numeric"
-					name="personalId"
-					placeholder={t("PLACEHOLDER_PERSONAL_ID")}
-					value={personalId}
-					required
-					class="form-input"
-				/>
-			</label>
-
-			<button
-				name="method"
-				value="mobile-id"
-				class="button green-button">
-				{t("BTN_VOTE_SIGN_WITH_MOBILE_ID")}
-			</button>
-
-			<output />
-		</Form>
-
-		{Config.smartId ? <Form
-			req={req}
-			id="smart-id-form"
-			class="signature-form"
-			method="post"
-			action={action}>
-			<label class="form-label">
-				{t("LABEL_PERSONAL_ID")}
-
-				<input
-					type="text"
-					pattern="[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]"
-					inputmode="numeric"
-					name="personalId"
-					placeholder={t("PLACEHOLDER_PERSONAL_ID")}
-					value={personalId}
-					required
-					class="form-input"
-				/>
-			</label>
-
-			<button
-				name="method"
-				value="smart-id"
-				class="green-button">
-				{t("BTN_VOTE_SIGN_WITH_SMART_ID")}
-			</button>
-
-			<output />
-		</Form> : null}
-
-		<script>{javascript`
-			var each = Function.call.bind(Array.prototype.forEach)
-
-			var inputs = [
-				document.querySelector("#mobile-id-form input[name=personalId]"),
-				document.querySelector("#smart-id-form input[name=personalId]")
-			].filter(Boolean)
-
-			inputs.forEach(function(from) {
-				from.addEventListener("change", function(ev) {
-					each(inputs, function(to) {
-						if (to != from) to.value = ev.target.value
-					})
-				})
-			})	
-		`}</script>
-
-		<script>{javascript`
-			var Hwcrypto = require("@rahvaalgatus/hwcrypto")
-			var TRANSLATIONS = ${UI_TRANSLATIONS[req.lang]}
-			var button = document.getElementById("id-card-button")
-			var form = document.getElementById("id-card-form")
-			var flash = document.getElementById("id-card-flash")
-			var all = Promise.all.bind(Promise)
-
-			button.addEventListener("click", sign)
-
-			form.addEventListener("submit", function(ev) {
-				ev.preventDefault()
-				sign()
-			})
-
-			function sign() {
-				notice("")
-
-				var certificate = Hwcrypto.certificate("sign")
-
-				var signable = certificate.then(function(certificate) {
-					return fetch(form.action, {
-						method: "POST",
-						credentials: "same-origin",
-
-						headers: {
-							"X-CSRF-Token": ${req.csrfToken},
-							"Content-Type": "application/pkix-cert",
-							Accept: ${SIGNABLE_TYPE + ", " + ERR_TYPE}
-						},
-
-						body: certificate.toDer()
-					}).then(assertOk).then(function(res) {
-						return res.arrayBuffer().then(function(signable) {
-							return [
-								res.headers.get("location"),
-								new Uint8Array(signable)
-							]
-						})
-					})
-				})
-
-				var signature = all([certificate, signable]).then(function(all) {
-					var certificate = all[0]
-					var signable = all[1][1]
-					return Hwcrypto.sign(certificate, "SHA-256", signable)
-				})
-
-				var done = all([signable, signature]).then(function(all) {
-					var url = all[0][0]
-					var signature = all[1]
-
-					return fetch(url, {
-						method: "PUT",
-						credentials: "same-origin",
-						redirect: "manual",
-
-						headers: {
-							"X-CSRF-Token": ${req.csrfToken},
-							"Content-Type": "application/vnd.rahvaalgatus.signature",
-
-							// Fetch polyfill doesn't support manual redirect, so use
-							// x-empty.
-							Accept: ${"application/x-empty, " + ERR_TYPE}
-						},
-
-						body: signature
-					}).then(assertOk).then(function(res) {
-						window.location.assign(res.headers.get("location"))
-					})
-				})
-
-				done.catch(noticeError)
-				done.catch(raise)
-			}
-
-			function noticeError(err) {
-				notice(
-					err.code && TRANSLATIONS[err.code] ||
-					err.description ||
-					err.message
-				)
-			}
-
-			function assertOk(res) {
-				if (res.status >= 200 && res.status < 400) return res
-
-				var err = new Error(res.statusText)
-				err.code = res.status
-
-				var type = res.headers.get("content-type")
-				if (type == ${ERR_TYPE})
-					return res.json().then(function(body) {
-						err.description = body.description
-						throw err
-					})
-				else throw err
-			}
-
-			function notice(msg) { flash.textContent = msg }
-			function raise(err) { setTimeout(function() { throw err }) }
-		`}</script>
-
-		{singlePage ? <script>{javascript`
-			var reduce = Function.call.bind(Array.prototype.reduce)
-
-			var forms = [
-				document.getElementById("mobile-id-form"),
-				document.getElementById("smart-id-form")
-			].filter(Boolean)
-
-			forms.forEach(function(form) {
-				form.addEventListener("submit", handleSubmit)
-			})
-
-			function handleSubmit(ev) {
-				var form = ev.target
-				var output = form.querySelector("output")
-				function notice(msg) { output.textContent = msg || "" }
-
-				ev.preventDefault()
-				notice(${t("SIGNING_VIEW_SIGNING")})
-
-				fetch(form.action, {
-					method: "POST",
-					credentials: "same-origin",
-
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": ${"application/json, " + ERR_TYPE}
-          },
-
-          body: JSON.stringify(serializeForm(form))
-        }).then(assertOk).then(function(res) {
-          var code = res.headers.get("X-Verification-Code")
-          notice(${t("VERIFICATION_CODE")} + ": " + code)
-
-          return res.json().then(function(obj) {
-						if (obj.code == "OK") window.location.assign(obj.location)
-						else notice(obj.description || obj.message)
-          })
-        }).catch(function(err) {
-          notice(err.description || err.message)
-        })
-			}
-
-			function serializeForm(form) {
-				return reduce(form.elements, function(obj, el) {
-					if (!(el.tagName == "INPUT" || el.tagName == "BUTTON")) return obj
-
-					obj[el.name] = el.value
-					return obj
-				}, {})
-			}
-
-      function assertOk(res) {
-        if (res.ok) return res
-
-        var err = new Error(res.statusText)
-        err.code = res.status
-
-				var type = res.headers.get("content-type")
-
-				if (type == ${ERR_TYPE} || /^application\\/json(;|$)/.test(type))
-					return res.json().then(function(body) {
-						err.message = body.message
-						err.description = body.description
-						throw err
-					})
-        else throw err
-      }
-		`}</script> : null}
 	</div>
 }
 

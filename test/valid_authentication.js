@@ -17,6 +17,7 @@ module.exports = function(attrs) {
 		token: Crypto.randomBytes(16),
 		created_ip: null,
 		created_user_agent: null,
-		error: null
+		error: null,
+		eid_session: null
 	}, attrs)
 }

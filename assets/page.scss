@@ -545,6 +545,206 @@ strong {
 	&:empty { display: none; }
 }
 
+.eid-view {
+	$methods: (id-card, mobile-id, smart-id);
+	$tab-radius: 0.5rem;
+	$input-height: 3.6rem;
+	$eid-background: #fbfbfb;
+	$light-grey: #f0f1f2;
+
+	.tabs {
+		.tab {
+			display: inline-block;
+			background-color: $eid-background;
+			border: 0.1rem solid $light-grey;
+			line-height: 4.9rem;
+			padding: 0 2rem;
+			font-size: 1.6rem;
+			margin-bottom: -0.1rem;
+			font-weight: 500;
+			color: #888;
+			cursor: pointer;
+
+			img {
+				max-height: 2rem;
+				vertical-align: middle;
+
+				// Internet Explorer v11 won't activate the label if clicked on an
+				// image.
+				pointer-events: none;
+			}
+
+			& + .tab { margin-left: -0.1rem; }
+
+			&:first-child {
+				border-top-left-radius: $tab-radius;
+				border-bottom-left-radius: $tab-radius;
+			}
+
+			&:last-child {
+				border-top-right-radius: $tab-radius;
+				border-bottom-right-radius: $tab-radius;
+			}
+		}
+	}
+
+	&.centered {
+		.tabs { text-align: center; }
+
+		form {
+			text-align: center;
+
+			label { text-align: left; }
+		}
+	}
+
+	form {
+		padding: 2rem 2rem 1rem;
+		display: none;
+		border: 0.1rem solid $light-grey;
+		border-top-right-radius: 0.5rem;
+		border-bottom-left-radius: 0.5rem;
+		border-bottom-right-radius: 0.5rem;
+		line-height: 1.5;
+
+		label {
+			display: inline-block;
+			margin-right: 1rem;
+			margin-bottom: 1rem;
+			font-weight: 400;
+			font-size: 1.6rem;
+		}
+
+		input {
+			display: block;
+			margin-top: 0.5rem;
+			max-width: 30rem;
+			height: $input-height;
+			line-height: $input-height;
+		}
+
+		p {
+			line-height: 1.5;
+		}
+
+		button {
+			position: relative;
+			vertical-align: bottom;
+			margin-bottom: 1rem;
+			height: $input-height;
+			line-height: $input-height;
+
+			.spinner { display: none; }
+		}
+
+		&.pending button:disabled {
+			color: transparent;
+			cursor: wait;
+
+			.spinner {
+				display: block;
+				color: darken($secondary-background, 20%);
+			}
+		}
+
+		.spinner {
+			$size: 1rem;
+
+			position: absolute;
+			top: 0%;
+			left: 0%;
+			right: 0%;
+			bottom: 0%;
+			text-align: center;
+
+			span {
+				display: inline-block;
+				vertical-align: text-bottom;
+				background: currentColor;
+				width: $size;
+				height: $size;
+				border-radius: 50%;
+				animation: scale-of-3-children 1.6s infinite ease-in-out;
+				animation-fill-mode: both;
+
+				& + span { margin-left: $size; }
+			}
+
+			span:nth-child(2) { animation-delay: 0.3s; }
+			span:nth-child(3) { animation-delay: 0.6s; }
+		}
+
+		output {
+			display: block;
+			margin-bottom: 1rem;
+			white-space: pre-line;
+			font-size: 1.6rem;
+
+			&:empty { display: none; }
+		}
+
+		.id-card-form output {
+			margin-top: 1rem;
+		}
+
+		label + button { margin-top: 1rem; }
+	}
+
+	body.no-js & .id-card-form button {
+		display: none;
+	}
+
+	@each $method in $methods {
+		input[name=method][value=#{$method}]:checked {
+			& ~ .tabs .#{$method}-tab {
+				background: white;
+				border-bottom-color: white;
+				color: black;
+			}
+
+			& ~ .tabs .tab {
+				&:first-child { border-bottom-left-radius: 0; }
+				&:last-child { border-bottom-right-radius: 0; }
+			}
+
+			& ~ .#{$method}-form {
+				display: block;
+				background: white;
+			}
+		}
+	}
+
+	@media only screen and (max-width: 549px) {
+		form label {
+			display: block;
+			max-width: 30rem;
+			margin-left: auto;
+			margin-right: auto;
+
+			input {
+				width: 100%;
+			}
+		}
+	}
+
+	@media only screen and (max-width: 499px) {
+		.tabs .tab {
+			padding: 0 1.3rem;
+			line-height: 4rem;
+
+			img { max-height: 1.7rem }
+		}
+	}
+
+	@media only screen and (max-width: 350px) {
+		.tabs .tab {
+			padding: 0 1rem;
+
+			img { max-height: 1.6rem }
+		}
+	}
+}
+
 .initiatives-section {
 	center {
 		padding-right: 0;
@@ -796,73 +996,6 @@ strong {
 	}
 }
 
-.signing-view {
-	$methods: (id-card, mobile-id, smart-id);
-
-	.signature-methods {
-		margin-top: 1rem;
-		text-align: center;
-
-		form,
-		label {
-			display: inline-block;
-
-			& + * { margin-left: 1rem; }
-		}
-
-		form button,
-		label {
-			display: inline-block;
-			width: 8.8rem;
-			height: 3.1rem;
-
-			img	{
-				width: 100%;
-
-				// Internet Explorer v11 won't activate the label if clicked on an
-				// image.
-				img { pointer-events: none; }
-			}
-		}
-	}
-
-	.signature-form {
-		text-align: center;
-		margin-top: 1rem;
-		display: none;
-
-		.form-label {
-			text-align: left;
-			margin-right: 0.5rem;
-		}
-
-		.form-label, button {
-			margin-top: 0;
-			margin-bottom: 0.5rem;
-			vertical-align: bottom;
-		}
-
-		@include mobile {
-			.form-label {
-				width: 100%;
-
-				input { width: 100%; }
-			}
-		}
-	}
-
-	output {
-		display: block;
-		margin-top: 0.5rem;
-	}
-
-	@each $method in $methods {
-		#signature-method-tab-#{$method}:checked ~ ##{$method}-form {
-			display: block;
-		}
-	}
-}
-
 .subscriptions-view {
 	$border-color: #dadada;
 
@@ -1061,7 +1194,7 @@ strong {
 	@media print { display: none; }
 }
 
-#main {
+main {
 	flex-grow: 1;
 }
 
@@ -1364,7 +1497,7 @@ strong {
 	}
 }
 
-#home-page #main {
+#home-page main {
 	#welcome {
 		padding-top: 6rem;
 		padding-bottom: 6rem;
@@ -1933,72 +2066,37 @@ strong {
 	}
 }
 
-#create-session-page #main {
+#create-session-page main {
 	$form-padding: 2.5rem;
 
 	background: $light-background;
 
-	center {
-		max-width: 80rem;
+	center { max-width: 80rem; }
+
+	h1 {
+		font-size: 3.4rem;
+		color: $title-text;
+		font-family: $museo-sans;
+		line-height: 1.2;
+		margin-bottom: 2rem;
 	}
 
-	#signin-forms {
-		margin-top: 2rem;
-		background: white;
-		box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.15);
-		padding: 3rem $form-padding 2rem;
-	}
+	.eid-view {
+		@media only screen and (max-width: 610px) {
+			.tabs { text-align: center; }
 
-	.form-label {
-		font-size: 1.3rem;
-	}
+			form {
+				text-align: center;
 
-	form {
-		h2 img {
-			// Without max-width in rems in addition to max-height, Chrome has the
-			// image take up 100% width.
-			max-height: 3rem;
-			max-width: 4rem;
-			vertical-align: sub;
-			margin-right: 1rem;
-		}
+				label { text-align: left; }
+			}
 
-		input {
-			max-width: 30rem;
-		}
+			margin-left: -$page-padding;
+			margin-right: -$page-padding;
 
-		& + form {
-			margin: 2rem (-$form-padding) 0;
-			border-top: 1px solid #eee;
-			padding: 2rem $form-padding 0;
-		}
-	}
-
-	#id-card-form {
-		#id-card-flash {
-			margin-top: 0.5rem;
-		}
-	}
-
-	#mobile-id-form,
-	#smart-id-form {
-		h2 {
-			margin-bottom: 1rem;
-		}
-
-		.form-label {
-			margin-top: 0;
-			margin-right: 0.5rem;
-		}
-
-		.form-label, button {
-			margin-bottom: 0.5rem;
-			vertical-align: bottom;
-		}
-
-		@media only screen and (max-width: 669px) {
-			.form-label {
-				display: block;
+			@include mobile {
+				margin-left: -$page-mobile-padding;
+				margin-right: -$page-mobile-padding;
 			}
 		}
 	}
@@ -3222,8 +3320,6 @@ strong {
 	}
 
 	#initiative-vote {
-		$methods: (id-card, mobile-id, smart-id);
-
 		border-top: 1px solid $light-background-border;
 		background-color: $light-background;
 
@@ -3252,10 +3348,26 @@ strong {
 			font-weight: 500;
 		}
 
-		p {
+		& > p {
 			margin-top: 1rem;
 			text-align: center;
 			line-height: 1.5;
+		}
+
+		.eid-view {
+			margin-top: 2rem;
+
+			@include mobile-and-tablet {
+				margin-left: -$article-padding;
+				margin-right: -$article-padding;
+
+				form { margin-bottom: -2rem; }
+			}
+
+			@include mobile {
+				margin-left: -$article-padding-mobile;
+				margin-right: -$article-padding-mobile;
+			}
 		}
 
 		.signature-buttons {
@@ -4795,11 +4907,6 @@ strong {
 		}
 	}
 
-	.text-section {
-		padding-top: 5rem;
-		padding-bottom: 5rem;
-	}
-
 	.text-header center,
 	.text-section center {
 		max-width: 80rem;
@@ -4840,19 +4947,7 @@ strong {
 		}
 	}
 
-	#sign-form {
-		$form-padding: 2.5rem;
-
-		margin-top: 3rem;
-		background: white;
-		box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.1);
-		padding: 3rem $form-padding;
-		font-size: 1.4rem;
-	}
-
 	#statistics {
-		margin-top: 3rem;
-
 		svg {
 			display: block;
 			max-width: 100%;
@@ -5085,4 +5180,11 @@ strong {
 	.video ~ h2 { margin-top: 6rem; }
 
 	.call-to-actions:last-child { margin-top: 6rem; }
+}
+
+@keyframes scale-of-3-children {
+  0%,
+	50%,
+	100% { transform: scale(0); }
+  25% { transform: scale(1); }
 }
