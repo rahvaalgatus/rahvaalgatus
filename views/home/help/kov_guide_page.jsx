@@ -167,20 +167,22 @@ module.exports = function(attrs) {
 
 			<h3>Nõuame bussiliini nr. 5 säilimist Pirita-Kose asumis endisel marsuudil</h3>
 
-			Tallinna linnas koguti 2023. aasta juulis algatusele "<a href="https://kohalik.rahvaalgatus.ee/initiatives/1edc305f-7e3c-4623-80b5-5fc2582ace4b">Nõuame bussiliini nr. 5 säilimist Pirita-Kose asumis endisel marsruudil</a>" 6693 allkirja. Algatus oli kõrge kvaliteediga, läbimõeldud argumentidega ja hea sotsiaalmeedia kohaloluga. Linn reageeris algatusele operatiivselt ja muutis oma otsust vähem kui nädalaga, mil algatusele need allkirjad koguti. 
+			<p>Tallinna linnas koguti 2023. aasta juulis algatusele "<a href="https://kohalik.rahvaalgatus.ee/initiatives/1edc305f-7e3c-4623-80b5-5fc2582ace4b">Nõuame bussiliini nr. 5 säilimist Pirita-Kose asumis endisel marsruudil</a>" 6693 allkirja. Algatus oli kõrge kvaliteediga, läbimõeldud argumentidega ja hea sotsiaalmeedia kohaloluga. Linn reageeris algatusele operatiivselt ja muutis oma otsust vähem kui nädalaga, mil algatusele need allkirjad koguti.</p>
 
-			<p><strong>Märkimist väärib see</strong>, et linn reageeris kodanike murele ja hindas oma plaani vastavalt neilt saadud infole ümber. 
+			<p><strong>Märkimist väärib see</strong>, et linn reageeris kodanike murele ja hindas oma plaani vastavalt neilt saadud infole ümber.</p>
 
 			<h3>Rõuge ja Mustvee koolivõrgu ümberkorraldused</h3>
 
-			Rõuge valda saadeti 2023. aastal algatused "<a href="https://kohalik.rahvaalgatus.ee/initiatives/e16ce8a8-81a3-4e2b-944f-a9c2c035dabe?fbclid=IwAR3Grhwd_WMEMduUdfnvdolP7p5ddkxhmUUGStVMnFiQzwi8-Osazq21v38">Las jääda Rõuge Põhikool nii nagu on</a>", "<a href="https://kohalik.rahvaalgatus.ee/initiatives/b4330652-daf2-48c1-9a99-3acbf35f9c4f?fbclid=IwAR28Ce_Y3JrZxrrMVsdVDyrp9_te90TeHQ61GQRkxvsbl5wuWEw_J92-MSE">Palume toetada põhikooli tegevuse jätkamist Varstu koolimajas</a>", "<a href="https://kohalik.rahvaalgatus.ee/initiatives/5e3b4876-e8ee-408e-a6f9-8950c6a62ce6?fbclid=IwAR0DK4oSLsSj3D1OcaFT77cD-ZKeVojer02Z9n_8X-w-K2tqrmUYqgY4CuU">Toetan Mõniste Kooli jätkamist lasteaia ja 9-klassilise põhikoolina Kuutsi külas</a>" ja Mustvee valda saadeti algatus "<a href="https://kohalik.rahvaalgatus.ee/initiatives/79346506-82f1-450d-a787-54e985665675?fbclid=IwAR3C1sMX8wHgwGS22HlVaCQGAgdWDdu8MgyTRCimUFJYRahjW6CbyT6G1dY">Palume teil toetada Lohusuu põhikooli jätkamist</a>". Algatused taotlesid erinevate koolide püsimist ning kogusid kollektiivselt ligi 3000 allkirja. 
-			<p><strong>Märkimist väärib see</strong>, et mõlemad vallad otsustasid kohtuda algatajatega ning saadud info põhjal peatada või edasi lükata haridusvõrgu ümberkorraldused. Rõuge vald lubas küll tulevikus plaaniga edasi minna, kuid anda avatud valitsemise põhimõtete kohaselt võimaluse ka huvigruppidel kaasa rääkida ja otsustusprotsessis osaleda. 
-			
+			<p>Rõuge valda saadeti 2023. aastal algatused "<a href="https://kohalik.rahvaalgatus.ee/initiatives/e16ce8a8-81a3-4e2b-944f-a9c2c035dabe">Las jääda Rõuge Põhikool nii nagu on</a>", "<a href="https://kohalik.rahvaalgatus.ee/initiatives/b4330652-daf2-48c1-9a99-3acbf35f9c4f">Palume toetada põhikooli tegevuse jätkamist Varstu koolimajas</a>", "<a href="https://kohalik.rahvaalgatus.ee/initiatives/5e3b4876-e8ee-408e-a6f9-8950c6a62ce6">Toetan Mõniste Kooli jätkamist lasteaia ja 9-klassilise põhikoolina Kuutsi külas</a>" ja Mustvee valda saadeti algatus "<a href="https://kohalik.rahvaalgatus.ee/initiatives/79346506-82f1-450d-a787-54e985665675">Palume teil toetada Lohusuu põhikooli jätkamist</a>". Algatused taotlesid erinevate koolide püsimist ning kogusid kollektiivselt ligi 3000 allkirja.</p>
+
+			<p><strong>Märkimist väärib see</strong>, et mõlemad vallad otsustasid kohtuda algatajatega ning saadud info põhjal peatada või edasi lükata haridusvõrgu ümberkorraldused. Rõuge vald lubas küll tulevikus plaaniga edasi minna, kuid anda avatud valitsemise põhimõtete kohaselt võimaluse ka huvigruppidel kaasa rääkida ja otsustusprotsessis osaleda.</p>
+
 			<h3>Põhja-Pärnumaa tuuleparkide rajamise tingimuste täpsustamine</h3>
 
-			Põhja-Pärnumaa vallale saadeti 2022. aastal digi- ja paberallkirjadega algatus "<a href="https://kohalik.rahvaalgatus.ee/initiatives/0ea4f4d3-1d68-4a73-b935-dd3fc9dcfe04">Põhja-Pärnumaa tuuleparkide rajamise tingimuste täpsustamine</a>", mis soovis muuhulgas kehtestada ja täpsustada tuuleparkide talumistasu, minimaalsed vahekaugused eluhoonetest ning kohustada valda edasisi plaane kogukonnaga arutama. Algatusest välja kasvanud eelnõu ei leidnud küll 7 poolt- ja 12 vastuhäälega toetust, kuid aitas sel teemal vallas debatti avada.
-			<p><strong>Märkimist väärib see</strong>, et vald aitas algatuse eelnõuks vormistamisel kaasa ning tänu sellele jõudis algatajate idee vallavolikokku hääletamisele. Allkirjastaja vaatest väärib märkimist ka see, et algataja ja vald jagasid Rahvaalgatus.ee vahendusel operatiivselt infot, mis tähendas, et kõik kaasaelajad ja allkirjastajad olid sündmustega kursis.
-				
+			<p>Põhja-Pärnumaa vallale saadeti 2022. aastal digi- ja paberallkirjadega algatus "<a href="https://kohalik.rahvaalgatus.ee/initiatives/0ea4f4d3-1d68-4a73-b935-dd3fc9dcfe04">Põhja-Pärnumaa tuuleparkide rajamise tingimuste täpsustamine</a>", mis soovis muuhulgas kehtestada ja täpsustada tuuleparkide talumistasu, minimaalsed vahekaugused eluhoonetest ning kohustada valda edasisi plaane kogukonnaga arutama. Algatusest välja kasvanud eelnõu ei leidnud küll 7 poolt- ja 12 vastuhäälega toetust, kuid aitas sel teemal vallas debatti avada.</p>
+
+			<p><strong>Märkimist väärib see</strong>, et vald aitas algatuse eelnõuks vormistamisel kaasa ning tänu sellele jõudis algatajate idee vallavolikokku hääletamisele. Allkirjastaja vaatest väärib märkimist ka see, et algataja ja vald jagasid Rahvaalgatus.ee vahendusel operatiivselt infot, mis tähendas, et kõik kaasaelajad ja allkirjastajad olid sündmustega kursis.</p>
+
 			<h3>Loo veoautovabaks</h3>
 
 			<img src="/help/kov-guide/loo-initiative.png" class="initiative-image" alt="" />
