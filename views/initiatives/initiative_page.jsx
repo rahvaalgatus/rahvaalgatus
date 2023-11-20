@@ -140,10 +140,13 @@ function ProgressView(attrs) {
 }
 
 function renderAuthorName(initiative) {
-	// Not showing coauthors as we're not distinguishing text editors and
-	// translators from content and philosophical coauthors.
-	return _.uniq([
+	// While coauthors could also just be translators and uninvolved with the
+	// contents of the initiative, we'll presume they'll be removed from the
+	// initiative once it goes to signing (when it gets most of its attention) or
+	// they'll do their work outside of the site entirely.
+	return _.uniq(_.concat(
 		initiative.author_name,
-		initiative.user_name
-	].filter(Boolean)).join(", ")
+		initiative.user_name,
+		initiative.coauthors && _.map(initiative.coauthors, "user_name")
+	).filter(Boolean)).join(", ")
 }

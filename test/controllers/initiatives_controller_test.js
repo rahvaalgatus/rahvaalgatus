@@ -161,11 +161,9 @@ describe("InitiativesController", function() {
 				user_id: this.author.id
 			}))
 
-			var coauthor = usersDb.create(new ValidUser)
-
 			coauthorsDb.create(new ValidCoauthor({
 				initiative: other,
-				user: coauthor,
+				user: usersDb.create(new ValidUser),
 				status: "accepted"
 			}))
 
@@ -177,18 +175,16 @@ describe("InitiativesController", function() {
 			el.querySelector(".author").textContent.must.equal(this.author.name)
 		})
 
-		it("must not show coauthor name", function*() {
+		it("must not show accepted coauthor names", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "edit",
 				published_at: new Date
 			}))
 
-			var coauthor = usersDb.create(new ValidUser)
-
 			coauthorsDb.create(new ValidCoauthor({
 				initiative: initiative,
-				user: coauthor,
+				user: usersDb.create(new ValidUser),
 				status: "accepted"
 			}))
 
@@ -208,11 +204,9 @@ describe("InitiativesController", function() {
 					published_at: new Date
 				}))
 
-				var coauthor = usersDb.create(new ValidUser)
-
 				coauthorsDb.create(new ValidCoauthor({
 					initiative: initiative,
-					user: coauthor,
+					user: usersDb.create(new ValidUser),
 					status: status
 				}))
 
@@ -1717,11 +1711,9 @@ describe("InitiativesController", function() {
 					user_id: this.author.id
 				}))
 
-				var coauthor = usersDb.create(new ValidUser)
-
 				coauthorsDb.create(new ValidCoauthor({
 					initiative: other,
-					user: coauthor,
+					user: usersDb.create(new ValidUser),
 					status: "accepted"
 				}))
 
@@ -1733,6 +1725,37 @@ describe("InitiativesController", function() {
 				author.textContent.must.equal(this.author.name)
 			})
 
+			it("must show accepted coauthor names", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					published_at: new Date
+				}))
+
+				var coauthors = usersDb.create([
+					new ValidUser,
+					new ValidUser,
+					new ValidUser
+				])
+
+				coauthorsDb.create(coauthors.map((coauthor) => new ValidCoauthor({
+					initiative: initiative,
+					user: coauthor,
+					status: "accepted"
+				})))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+				var author = dom.querySelector("#initiative-header .author")
+
+				author.textContent.must.equal(_.concat(
+					this.author.name,
+					coauthors.map((coauthor) => coauthor.name)
+				).join(", "))
+			})
+
 			_.without(COAUTHOR_STATUSES, "accepted").forEach(function(status) {
 				it(`must not show ${status} coauthor name`, function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
@@ -1741,11 +1764,9 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var coauthor = usersDb.create(new ValidUser)
-
 					coauthorsDb.create(new ValidCoauthor({
 						initiative: initiative,
-						user: coauthor,
+						user: usersDb.create(new ValidUser),
 						status: status
 					}))
 
