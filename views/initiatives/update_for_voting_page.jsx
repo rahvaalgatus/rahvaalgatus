@@ -84,6 +84,7 @@ module.exports = function(attributes) {
 				</fieldset> : null}
 
 				<h3>{t("INITIATIVE_SIGNING_DEADLINE_TITLE")}</h3>
+				<p>{Jsx.html(t("INITIATIVE_SEND_TO_SIGN_DESCRIPTION"))}</p>
 
 				<DatePickerInput
 					type="date"
