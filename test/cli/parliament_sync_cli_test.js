@@ -3123,6 +3123,7 @@ describe("ParliamentSyncCli", function() {
 				created: "2015-06-18T13:37:42.666",
 				documentType: "otherQuestionDocument",
 				subType: {code: "OLULISE_TAHTSUSEGA_RIIKLIK_KUSIMUS"},
+				respondDate: "2015-06-27",
 
 				files: [{
 					uuid: FILE_UUID,
@@ -3142,7 +3143,7 @@ describe("ParliamentSyncCli", function() {
 			events.must.eql([new ValidEvent({
 				id: 1,
 				initiative_uuid: INITIATIVE_UUID,
-				occurred_at: new Date(2015, 5, 18, 13, 37, 42, 666),
+				occurred_at: new Date(2015, 5, 27),
 				origin: "parliament",
 				external_id: DOCUMENT_UUID,
 				type: "parliament-national-matter",

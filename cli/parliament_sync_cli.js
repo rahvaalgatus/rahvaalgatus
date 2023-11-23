@@ -760,7 +760,12 @@ function eventAttrsFromDocument(document) {
 		type: "parliament-national-matter",
 		origin: "parliament",
 		external_id: document.uuid,
-		occurred_at: Time.parseIsoDateTime(document.created),
+
+		occurred_at: (
+			Time.parseIsoDate(document.respondDate) ||
+			Time.parseIsoDateTime(document.created)
+		),
+
 		title: null,
 		content: {},
 		files: newDocumentFiles(document, document.files || EMPTY_ARR)
