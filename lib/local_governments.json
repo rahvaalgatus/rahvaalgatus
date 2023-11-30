@@ -257,7 +257,16 @@
 		"initiativesEmails": [
 			"info@sauevald.ee"
 		],
-		"signatureTrustees": [],
+		"signatureTrustees": [
+			{
+				"personalId": "48203270221",
+				"name": "Kirsti Saar"
+			},
+			{
+				"personalId": "47901064232",
+				"name": "Kairit Kõpper"
+			}
+		],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/saue-vald"
