@@ -48,7 +48,7 @@ module.exports = function(attrs) {
 			<div id="map" />
 
 			<div id="map-legend" class="map-legend">
-				<h2>Algatused</h2>
+				<h2>Rahvaalgatused</h2>
 
 				<ol id="initiatives-legend">
 					<li><label>

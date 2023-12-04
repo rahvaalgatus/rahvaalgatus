@@ -76,7 +76,8 @@ exports.newMap = function(mapElement, initiativeCounts, location, legend) {
 				Leaflet.marker(layer.getBounds().getCenter(), {
 					icon: Leaflet.icon({
 						iconUrl: "/assets/map-dtv-legend.svg",
-						iconSize: [22, 22]
+						iconSize: [50, 50],
+						iconAnchor: [25, 35]
 					}),
 
 					interactive: false,
@@ -84,11 +85,14 @@ exports.newMap = function(mapElement, initiativeCounts, location, legend) {
 				}).addTo(dtvMarkers)
 
 			if (gov.dialogs.length > 0)
-				Leaflet.marker(layer.getBounds().getCenter(), {
+				Leaflet.marker(addLngLat(layer.getBounds().getCenter(), {
+					lat: -0.02,
+					lng: 0.05
+				}), {
 					icon: Leaflet.icon({
 						iconUrl: "/assets/map-dialog-legend.svg",
-						iconSize: [22, 22],
-						iconAnchor: [0, 4]
+						iconSize: [50, 50],
+						iconAnchor: [25, 35]
 					}),
 
 					interactive: false,
@@ -166,7 +170,7 @@ exports.newMap = function(mapElement, initiativeCounts, location, legend) {
 				counts.government ||
 				counts.archive
 			) ? <>
-				<h3>Algatused</h3>
+				<h3>Rahvaalgatused</h3>
 
 				<ul>
 					{counts.edit ? <li class="edit-phase">
@@ -369,5 +373,11 @@ exports.newMap = function(mapElement, initiativeCounts, location, legend) {
 				})
 			})
 		})
+	}
+
+	function addLngLat(a, b) {
+		var lat = (a.lat || 0) + (b.lat || 0)
+		var lng = (a.lng || 0) + (b.lng || 0)
+		return {lat: lat, lng: lng}
 	}
 }

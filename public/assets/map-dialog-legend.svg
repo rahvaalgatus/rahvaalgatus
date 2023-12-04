@@ -1,13 +1,29 @@
-<svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-<circle cx="11" cy="11" r="10.5" fill="#FFB237" stroke="black"/>
-<g clip-path="url(#clip0_1004_368)">
-<path d="M11.5547 17.999C15.6607 17.999 18.9889 14.8661 18.9889 11.001C18.9889 7.136 15.6607 4.00311 11.5547 4.00311V17.999Z" fill="black"/>
-<path d="M9.45048 7.19821H6.05505V4.00206H9.45048V7.19821Z" fill="black"/>
-<path d="M9.45048 17.999H6.05505V14.8028H9.45048V17.999Z" fill="black"/>
-</g>
-<defs>
-<clipPath id="clip0_1004_368">
-<rect width="13" height="14" fill="white" transform="matrix(1 0 0 -1 6 18)"/>
-</clipPath>
-</defs>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Ikoonid" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 19.84 19.84">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+        filter: url(#drop-shadow-92);
+        stroke: #fcb137;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: .4px;
+      }
+
+      .cls-2 {
+        fill: #231f20;
+        stroke-width: 0px;
+      }
+    </style>
+    <filter id="drop-shadow-92" filterUnits="userSpaceOnUse">
+      <feOffset dx=".28" dy=".28"/>
+      <feGaussianBlur result="blur" stdDeviation=".57"/>
+      <feFlood flood-color="#231f20" flood-opacity=".4"/>
+      <feComposite in2="blur" operator="in"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <path class="cls-1" d="m15.29,9.2c0-2.97-2.41-5.37-5.37-5.37s-5.37,2.41-5.37,5.37c0,2.47,1.66,4.54,3.93,5.17l1.45,1.65,1.45-1.65c2.26-.63,3.93-2.7,3.93-5.17Z"/>
+  <path class="cls-2" d="m13.24,8.92c0-1.53-1.25-2.78-2.78-2.78-1.03,0-1.92.57-2.4,1.4-.95.27-1.66,1.14-1.66,2.18,0,.49.16.96.44,1.35l-.13.75-.12.7.66-.26.85-.33c.19.05.38.07.58.07.46,0,.88-.14,1.24-.37.17.04.35.07.53.07.27,0,.54-.04.81-.12l1.61.63-.27-1.53c.41-.5.63-1.12.63-1.76Zm-5.15,2.59l-.98.38.16-.92c-.29-.33-.47-.77-.47-1.24,0-1.04.84-1.88,1.88-1.88s1.88.84,1.88,1.88-.84,1.88-1.88,1.88c-.21,0-.41-.03-.59-.1Zm3.19-.35l-.07.02c-.25.08-.5.12-.75.12-.04,0-.08,0-.12-.01.39-.41.63-.96.63-1.56,0-1.26-1.02-2.28-2.28-2.28-.02,0-.04,0-.06,0,.44-.55,1.09-.91,1.84-.91,1.31,0,2.38,1.07,2.38,2.38,0,.58-.21,1.14-.6,1.57l-.06.07.18,1.01-1.08-.42Z"/>
 </svg>
