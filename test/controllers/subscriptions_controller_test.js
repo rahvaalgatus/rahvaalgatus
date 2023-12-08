@@ -15,6 +15,7 @@ var {parseCookies} = require("root/test/web")
 var {serializeCookies} = require("root/test/web")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var t = require("root/lib/i18n").t.bind(null, "et")
+var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var SUBSCRIPTION_RATE = 100
 var SUBSCRIPTION_RATE_IN_MINUTES = 60
 
@@ -39,10 +40,10 @@ describe("SubscriptionsController", function() {
 			)
 
 			res.statusCode.must.equal(200)
-			res.body.must.include(t("SUBSCRIPTIONS_UPDATE_TITLE"))
+			res.body.must.include(t("subscriptions_page.title"))
 			var el = parseHtml(res.body).querySelectorAll("li.subscription")
 			el.length.must.equal(1)
-			el[0].textContent.must.include(t("SUBSCRIPTIONS_ALL_INITIATIVES"))
+			el[0].textContent.must.include(t("subscriptions_page.subscriptions.all_initiatives"))
 		})
 
 		it("must not show unconfirmed subscription to initiatives", function*() {
@@ -65,11 +66,11 @@ describe("SubscriptionsController", function() {
 			var res = yield this.request(path)
 
 			res.statusCode.must.equal(200)
-			res.body.must.include(t("SUBSCRIPTIONS_UPDATE_TITLE"))
+			res.body.must.include(t("subscriptions_page.title"))
 			var el = parseHtml(res.body).querySelectorAll("li.subscription")
 			el.length.must.equal(1)
 			el[0].innerHTML.must.include(subscription.initiative_uuid)
-			el[0].textContent.must.not.include(t("SUBSCRIPTIONS_ALL_INITIATIVES"))
+			el[0].textContent.must.not.include(t("subscriptions_page.subscriptions.all_initiatives"))
 		})
 
 		it("must show page given subscription to initiative", function*() {
@@ -88,7 +89,7 @@ describe("SubscriptionsController", function() {
 			)
 
 			res.statusCode.must.equal(200)
-			res.body.must.include(t("SUBSCRIPTIONS_UPDATE_TITLE"))
+			res.body.must.include(t("subscriptions_page.title"))
 			res.body.must.include(initiative.title)
 		})
 
@@ -108,7 +109,7 @@ describe("SubscriptionsController", function() {
 			path += `&update-token=${subscription.update_token}`
 			var res = yield this.request(path)
 			res.statusCode.must.equal(200)
-			res.body.must.include(t("SUBSCRIPTIONS_UPDATE_TITLE"))
+			res.body.must.include(t("subscriptions_page.title"))
 			res.body.must.include(initiative.title)
 		})
 
@@ -132,11 +133,11 @@ describe("SubscriptionsController", function() {
 			)
 
 			res.statusCode.must.equal(200)
-			res.body.must.include(t("SUBSCRIPTIONS_UPDATE_TITLE"))
+			res.body.must.include(t("subscriptions_page.title"))
 			var el = parseHtml(res.body).querySelectorAll("li.subscription")
 			el.length.must.equal(1)
 			el[0].innerHTML.must.not.include(other.initiative_uuid)
-			el[0].textContent.must.include(t("SUBSCRIPTIONS_ALL_INITIATIVES"))
+			el[0].textContent.must.include(t("subscriptions_page.subscriptions.all_initiatives"))
 		})
 
 		it("must show all subscriptions for given email address", function*() {
@@ -189,10 +190,11 @@ describe("SubscriptionsController", function() {
 		require("root/test/email")()
 		require("root/test/time")(Date.UTC(2015, 5, 18))
 
-		it("must subscribe", function*() {
+		it("must subscribe to all destinations", function*() {
 			var res = yield this.request("/subscriptions", {
 				method: "POST",
 				form: {
+					initiative_destination: "",
 					email: "user@example.com",
 					new_interest: true,
 					signable_interest: true,
@@ -276,6 +278,76 @@ describe("SubscriptionsController", function() {
 			}))
 		})
 
+		it("must subscribe to parliament destination", function*() {
+			var res = yield this.request("/subscriptions", {
+				method: "POST",
+				form: {initiative_destination: "parliament", email: "user@example.com"}
+			})
+
+			res.statusCode.must.equal(303)
+
+			var subscription = subscriptionsDb.read(sql`
+				SELECT * FROM initiative_subscriptions
+			`)
+
+			subscription.must.eql(new ValidSubscription({
+				email: "user@example.com",
+				initiative_destination: "parliament",
+				created_ip: "127.0.0.1",
+				confirmation_sent_at: new Date,
+				update_token: subscription.update_token,
+				new_interest: true,
+				signable_interest: true
+			}))
+		})
+
+		Object.keys(LOCAL_GOVERNMENTS).forEach(function(dest) {
+			it(`must subscribe to ${dest} destination`, function*() {
+				var res = yield this.request("/subscriptions", {
+					method: "POST",
+					form: {initiative_destination: dest, email: "user@example.com"}
+				})
+
+				res.statusCode.must.equal(303)
+
+				var subscription = subscriptionsDb.read(sql`
+					SELECT * FROM initiative_subscriptions
+				`)
+
+				subscription.must.eql(new ValidSubscription({
+					email: "user@example.com",
+					initiative_destination: dest,
+					created_ip: "127.0.0.1",
+					confirmation_sent_at: new Date,
+					update_token: subscription.update_token,
+					new_interest: true,
+					signable_interest: true
+				}))
+			})
+		})
+
+		it("must ignore destination if invalid", function*() {
+			var res = yield this.request("/subscriptions", {
+				method: "POST",
+				form: {initiative_destination: "invalid", email: "user@example.com"}
+			})
+
+			res.statusCode.must.equal(303)
+
+			var subscription = subscriptionsDb.read(sql`
+				SELECT * FROM initiative_subscriptions
+			`)
+
+			subscription.must.eql(new ValidSubscription({
+				email: "user@example.com",
+				created_ip: "127.0.0.1",
+				confirmation_sent_at: new Date,
+				update_token: subscription.update_token,
+				new_interest: true,
+				signable_interest: true
+			}))
+		})
+
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
 
@@ -316,7 +388,8 @@ describe("SubscriptionsController", function() {
 				res.body.must.include(t("CONFIRMED_INITIATIVES_SUBSCRIPTION"))
 			})
 
-			it("must subscribe with confirmed email case-insensitively", function*() {
+			it("must subscribe with confirmed email case-insensitively",
+				function*() {
 				usersDb.update(this.user, {
 					email: "USer@EXAMple.com",
 					email_confirmed_at: new Date
@@ -439,6 +512,122 @@ describe("SubscriptionsController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("CONFIRMED_INITIATIVES_SUBSCRIPTION"))
 			})
+
+			it("must update if already subscribed to destination", function*() {
+				var other = subscriptionsDb.create(new ValidSubscription({
+					confirmed_at: pseudoDateTime(),
+					new_interest: true,
+					signable_interest: false,
+					event_interest: false,
+					comment_interest: true
+				}))
+
+				var subscription = subscriptionsDb.create(new ValidSubscription({
+					initiative_destination: "tallinn",
+					email: other.email,
+					confirmed_at: pseudoDateTime(),
+					new_interest: true,
+					signable_interest: false,
+					event_interest: false,
+					comment_interest: true
+				}))
+
+				usersDb.update(this.user, {
+					email: other.email,
+					email_confirmed_at: new Date
+				})
+
+				var res = yield this.request("/subscriptions", {
+					method: "POST",
+					form: {
+						initiative_destination: "tallinn",
+						email: subscription.email,
+						new_interest: false,
+						signable_interest: true,
+						event_interest: true,
+						comment_interest: true
+					}
+				})
+
+				res.statusCode.must.equal(303)
+
+				var subscriptions = subscriptionsDb.search(sql`
+					SELECT * FROM initiative_subscriptions
+				`)
+
+				subscriptions.must.eql([other, {
+					__proto__: subscription,
+					confirmed_at: new Date,
+					updated_at: new Date,
+					new_interest: false,
+					signable_interest: true,
+					event_interest: true,
+					comment_interest: true
+				}])
+
+				this.emails.length.must.equal(0)
+
+				var cookies = parseCookies(res.headers["set-cookie"])
+				res = yield this.request(res.headers.location, {
+					headers: {Cookie: serializeCookies(cookies)}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("CONFIRMED_INITIATIVES_SUBSCRIPTION"))
+			})
+
+			it("must subscribe anew if already subscribed to another destination",
+				function*() {
+				var a = subscriptionsDb.create(new ValidSubscription({
+					confirmed_at: pseudoDateTime()
+				}))
+
+				var b = subscriptionsDb.create(new ValidSubscription({
+					email: a.email,
+					initiative_destination: "tallinn",
+					confirmed_at: pseudoDateTime()
+				}))
+
+				usersDb.update(this.user, {
+					email: a.email,
+					email_confirmed_at: new Date
+				})
+
+				var res = yield this.request("/subscriptions", {
+					method: "POST",
+					form: {
+						initiative_destination: "muhu-vald",
+						email: a.email,
+						signable_interest: true
+					}
+				})
+
+				res.statusCode.must.equal(303)
+
+				var subscriptions = subscriptionsDb.search(sql`
+					SELECT * FROM initiative_subscriptions
+				`)
+
+				subscriptions.must.eql([a, b, new ValidSubscription({
+					email: a.email,
+					initiative_destination: "muhu-vald",
+					created_ip: "127.0.0.1",
+					confirmed_at: new Date,
+					new_interest: true,
+					signable_interest: true,
+					update_token: subscriptions[2].update_token
+				})])
+
+				this.emails.length.must.equal(0)
+
+				var cookies = parseCookies(res.headers["set-cookie"])
+				res = yield this.request(res.headers.location, {
+					headers: {Cookie: serializeCookies(cookies)}
+				})
+
+				res.statusCode.must.equal(200)
+				res.body.must.include(t("CONFIRMED_INITIATIVES_SUBSCRIPTION"))
+			})
 		})
 
 		it("must subscribe case-insensitively", function*() {
@@ -465,6 +654,39 @@ describe("SubscriptionsController", function() {
 			`).must.eql([subscription])
 
 			this.emails.length.must.equal(0)
+		})
+
+		it("must subscribe again if another destination", function*() {
+			var a = subscriptionsDb.create(new ValidSubscription({
+				confirmed_at: pseudoDateTime()
+			}))
+
+			var b = subscriptionsDb.create(new ValidSubscription({
+				email: a.email,
+				initiative_destination: "tallinn",
+				confirmed_at: pseudoDateTime()
+			}))
+
+			var res = yield this.request("/subscriptions", {
+				method: "POST",
+				form: {initiative_destination: "muhu-vald", email: a.email}
+			})
+
+			res.statusCode.must.equal(303)
+
+			var subscriptions = subscriptionsDb.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`)
+
+			subscriptions.must.eql([a, b, new ValidSubscription({
+				email: a.email,
+				initiative_destination: "muhu-vald",
+				created_ip: "127.0.0.1",
+				confirmation_sent_at: new Date,
+				new_interest: true,
+				signable_interest: true,
+				update_token: subscriptions[2].update_token
+			})])
 		})
 
 		it("must not resend confirmation email if less than an hour has passed",
@@ -635,7 +857,7 @@ describe("SubscriptionsController", function() {
 			return this.request(url, {method: "PUT"})
 		})
 
-		it("must update subscriptions to initiatives", function*() {
+		it("must update subscription to initiatives", function*() {
 			var subscription = subscriptionsDb.create(new ValidSubscription({
 				confirmed_at: new Date,
 				new_interest: true,
@@ -662,6 +884,70 @@ describe("SubscriptionsController", function() {
 				new_interest: !subscription.new_interest,
 				event_interest: !subscription.event_interest,
 				comment_interest: !subscription.comment_interest
+			})
+		})
+
+		it("must update subscription to parliament initiatives", function*() {
+			var subscription = subscriptionsDb.create(new ValidSubscription({
+				initiative_destination: "parliament",
+				confirmed_at: new Date,
+				new_interest: true,
+				event_interest: true,
+				comment_interest: false
+			}))
+
+			var path = `/subscriptions?update-token=${subscription.update_token}`
+			var res = yield this.request(path, {
+				method: "PUT",
+				form: {
+					"parliament[new_interest]": !subscription.new_interest,
+					"parliament[event_interest]": !subscription.event_interest,
+					"parliament[comment_interest]": !subscription.comment_interest
+				}
+			})
+
+			res.statusCode.must.equal(303)
+			res.headers.location.must.equal(path)
+
+			subscriptionsDb.read(subscription).must.eql({
+				__proto__: subscription,
+				updated_at: new Date,
+				new_interest: !subscription.new_interest,
+				event_interest: !subscription.event_interest,
+				comment_interest: !subscription.comment_interest
+			})
+		})
+
+		Object.keys(LOCAL_GOVERNMENTS).forEach(function(dest) {
+			it(`must update subscription to ${dest} initiatives`, function*() {
+				var subscription = subscriptionsDb.create(new ValidSubscription({
+					initiative_destination: dest,
+					confirmed_at: new Date,
+					new_interest: true,
+					event_interest: true,
+					comment_interest: false
+				}))
+
+				var path = `/subscriptions?update-token=${subscription.update_token}`
+				var res = yield this.request(path, {
+					method: "PUT",
+					form: {
+						[dest + "[new_interest]"]: !subscription.new_interest,
+						[dest + "[event_interest]"]: !subscription.event_interest,
+						[dest + "[comment_interest]"]: !subscription.comment_interest
+					}
+				})
+
+				res.statusCode.must.equal(303)
+				res.headers.location.must.equal(path)
+
+				subscriptionsDb.read(subscription).must.eql({
+					__proto__: subscription,
+					updated_at: new Date,
+					new_interest: !subscription.new_interest,
+					event_interest: !subscription.event_interest,
+					comment_interest: !subscription.comment_interest
+				})
 			})
 		})
 
@@ -792,6 +1078,33 @@ describe("SubscriptionsController", function() {
 			subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
 			`).must.eql([subscription, other])
+		})
+
+		it("must not update subscription to initiatives by other emails",
+			function*() {
+			var subscription = subscriptionsDb.create(new ValidSubscription({
+				confirmed_at: new Date
+			}))
+
+			var other = subscriptionsDb.create(new ValidSubscription({
+				confirmed_at: new Date
+			}))
+
+			var path = `/subscriptions?update-token=${subscription.update_token}`
+			var res = yield this.request(path, {
+				method: "PUT",
+				form: {["null[event_interest]"]: !subscription.event_interest}
+			})
+
+			res.statusCode.must.equal(303)
+			res.headers.location.must.equal(path)
+
+			subscriptionsDb.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`).must.eql([{
+				__proto__: subscription,
+				event_interest: !subscription.event_interest
+			}, other])
 		})
 
 		it("must not update subscription to initiative by other emails",
@@ -1047,7 +1360,13 @@ describe("SubscriptionsController", function() {
 				user_id: this.author.id
 			}))
 
-			var subscription = subscriptionsDb.create(new ValidSubscription({
+			var a = subscriptionsDb.create(new ValidSubscription({
+				initiative_destination: "tallinn",
+				confirmed_at: new Date
+			}))
+
+			var b = subscriptionsDb.create(new ValidSubscription({
+				email: a.email,
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date
 			}))
@@ -1058,28 +1377,77 @@ describe("SubscriptionsController", function() {
 
 			var others = subscriptionsDb.create([
 				new ValidSubscription({
-					email: subscription.email,
+					email: a.email,
 					confirmed_at: new Date
 				}),
 
 				new ValidSubscription({
-					email: subscription.email,
+					initiative_destination: "muhu-vald",
+					email: a.email,
+					confirmed_at: new Date
+				}),
+
+				new ValidSubscription({
+					email: a.email,
 					initiative_uuid: otherInitiative.uuid,
 					confirmed_at: new Date
 				})
 			])
 
 			var path = `/subscriptions`
-			path += `?initiative=${subscription.initiative_uuid}`
-			path += `&update-token=${subscription.update_token}`
+			path += `?initiative=${b.initiative_uuid}`
+			path += `&update-token=${b.update_token}`
 			var res = yield this.request(path, {
 				method: "PUT",
-				form: {[subscription.initiative_uuid + "[delete]"]: true}
+				form: {
+					["tallinn[delete]"]: true,
+					[b.initiative_uuid + "[delete]"]: true
+				}
 			})
 
 			res.statusCode.must.equal(303)
 			path = `/subscriptions?update-token=${others[0].update_token}`
 			res.headers.location.must.equal(path)
+
+			subscriptionsDb.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`).must.eql(others)
+		})
+
+		it("must not delete other subscriptions of the same destination",
+			function*() {
+			var initiative = initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id
+			}))
+
+			var others = subscriptionsDb.create([
+				new ValidSubscription({confirmed_at: new Date}),
+
+				new ValidSubscription({
+					initiative_destination: "tallinn",
+					confirmed_at: new Date
+				}),
+
+				new ValidSubscription({
+					initiative_uuid: initiative.uuid,
+					confirmed_at: new Date
+				})
+			])
+
+			var subscription = subscriptionsDb.create(new ValidSubscription({
+				initiative_destination: "tallinn",
+				confirmed_at: new Date
+			}))
+
+			var path = `/subscriptions`
+			path += `?update-token=${subscription.update_token}`
+			var res = yield this.request(path, {
+				method: "PUT",
+				form: {["tallinn[delete]"]: true}
+			})
+
+			res.statusCode.must.equal(303)
+			res.headers.location.must.equal("/")
 
 			subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
@@ -1134,6 +1502,20 @@ describe("SubscriptionsController", function() {
 			var subscription = subscriptionsDb.create(new ValidSubscription({
 				confirmed_at: new Date
 			}))
+
+			subscriptionsDb.create([
+				new ValidSubscription({
+					email: subscription.email,
+					confirmed_at: new Date,
+					initiative_destination: "parliament"
+				}),
+
+				new ValidSubscription({
+					email: subscription.email,
+					confirmed_at: new Date,
+					initiative_destination: "tallinn"
+				})
+			])
 
 			var initiatives = _.times(3, () => initiativesDb.create(
 				new ValidInitiative({phase: "parliament", external: true})
@@ -1277,6 +1659,7 @@ describe("SubscriptionsController", function() {
 			)
 
 			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Invalid Confirmation Token")
 			subscriptionsDb.read(subscription).must.eql(subscription)
 		})
 
@@ -1293,6 +1676,7 @@ describe("SubscriptionsController", function() {
 			)
 
 			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Invalid Confirmation Token")
 			subscriptionsDb.read(subscription).must.eql(subscription)
 		})
 	})
@@ -1333,6 +1717,7 @@ describe("SubscriptionsController", function() {
 			subscriptionsDb.create(new ValidSubscription({confirmed_at: new Date}))
 			var res = yield this.request("/subscriptions/beef")
 			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Subscription Not Found")
 			res.body.must.include(t("SUBSCRIPTION_NOT_FOUND_TITLE"))
 		})
 	})
@@ -1346,6 +1731,7 @@ function mustRequireToken(request) {
 			subscriptionsDb.create(new ValidSubscription({confirmed_at: new Date}))
 			var res = yield request.call(this, "/subscriptions?update-token=beef")
 			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Subscription Not Found")
 			res.body.must.include(t("SUBSCRIPTION_NOT_FOUND_TITLE"))
 		})
 
@@ -1353,6 +1739,7 @@ function mustRequireToken(request) {
 			subscriptionsDb.create(new ValidSubscription({confirmed_at: new Date}))
 			var res = yield request.call(this, "/subscriptions?update-token[]=beef")
 			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Subscription Not Found")
 			res.body.must.include(t("SUBSCRIPTION_NOT_FOUND_TITLE"))
 		})
 
@@ -1361,6 +1748,7 @@ function mustRequireToken(request) {
 			var path = `/subscriptions?update-token=${subscription.update_token}`
 			var res = yield request.call(this, path)
 			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Subscription Not Found")
 			res.body.must.include(t("SUBSCRIPTION_NOT_FOUND_TITLE"))
 		})
 
@@ -1381,6 +1769,7 @@ function mustRequireToken(request) {
 			)
 
 			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Subscription Not Found")
 			res.body.must.include(t("SUBSCRIPTION_NOT_FOUND_TITLE"))
 		})
 
@@ -1399,6 +1788,7 @@ function mustRequireToken(request) {
 			path += `&update-token=${subscription.update_token}`
 			var res = yield request.call(this, path)
 			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Subscription Not Found")
 			res.body.must.include(t("SUBSCRIPTION_NOT_FOUND_TITLE"))
 		})
 
@@ -1417,6 +1807,7 @@ function mustRequireToken(request) {
 			path += `&update-token=${subscription.update_token}`
 			var res = yield request.call(this, path)
 			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Subscription Not Found")
 			res.body.must.include(t("SUBSCRIPTION_NOT_FOUND_TITLE"))
 		})
 
@@ -1437,6 +1828,7 @@ function mustRequireToken(request) {
 			)
 
 			res.statusCode.must.equal(404)
+			res.statusMessage.must.equal("Subscription Not Found")
 			res.body.must.include(t("SUBSCRIPTION_NOT_FOUND_TITLE"))
 		})
 	})

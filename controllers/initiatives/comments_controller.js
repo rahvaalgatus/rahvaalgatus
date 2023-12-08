@@ -82,10 +82,9 @@ exports.router.post("/", assertUser, rateLimit, next(function*(req, res) {
 		}
 
 		if (initiative.published_at) {
-			var subs = subscriptionsDb.searchConfirmedByInitiativeIdWith(
-				initiative.uuid,
-				sql`comment_interest AND email != ${userEmail}`
-			)
+			var subs =
+				subscriptionsDb.searchConfirmedByInitiativeForComment(initiative).
+				filter((sub) => sub.email != userEmail)
 
 			yield Subscription.send({
 				title: req.t("EMAIL_INITIATIVE_COMMENT_TITLE", {
@@ -207,10 +206,9 @@ exports.router.post("/:commentId/replies",
 		var userEmail = user.email || ""
 
 		if (initiative.published_at) {
-			var subs = subscriptionsDb.searchConfirmedByInitiativeIdWith(
-				initiative.uuid,
-				sql`comment_interest AND email != ${userEmail}`
-			)
+			var subs =
+				subscriptionsDb.searchConfirmedByInitiativeForComment(initiative).
+				filter((sub) => sub.email != userEmail)
 
 			yield Subscription.send({
 				title: req.t("EMAIL_INITIATIVE_COMMENT_REPLY_TITLE", {

@@ -15,6 +15,7 @@ var messagesDb = require("root/db/initiative_messages_db")
 var eventsDb = require("root/db/initiative_events_db")
 var filesDb = require("root/db/initiative_files_db")
 var {respond} = require("root/test/fixtures")
+var {serializeMailgunVariables} = require("root/lib/subscription")
 var newUuid = _.compose(_.serializeUuid, _.uuidV4)
 var {formatDate} = require("root/lib/i18n")
 var sql = require("sqlate")
@@ -451,7 +452,7 @@ describe("ParliamentSyncCli", function() {
 			external: true
 		}))
 
-		var subscriptions = subscriptionsDb.create([
+		subscriptionsDb.create([
 			new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date,
@@ -464,6 +465,14 @@ describe("ParliamentSyncCli", function() {
 				event_interest: false
 			}),
 
+			new ValidSubscription({
+				initiative_destination: "tallinn",
+				confirmed_at: new Date,
+				event_interest: true
+			})
+		])
+
+		var subscriptions = subscriptionsDb.create([
 			new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date,
@@ -472,6 +481,12 @@ describe("ParliamentSyncCli", function() {
 
 			new ValidSubscription({
 				initiative_uuid: null,
+				confirmed_at: new Date,
+				event_interest: true
+			}),
+
+			new ValidSubscription({
+				initiative_destination: initiative.destination,
 				confirmed_at: new Date,
 				event_interest: true
 			})
@@ -499,7 +514,7 @@ describe("ParliamentSyncCli", function() {
 		yield job()
 
 		var messages = messagesDb.search(sql`SELECT * FROM initiative_messages`)
-		var emails = subscriptions.slice(2).map((s) => s.email).sort()
+		var emails = subscriptions.map((s) => s.email).sort()
 
 		messages.must.eql([{
 			id: messages[0].id,
@@ -556,8 +571,9 @@ describe("ParliamentSyncCli", function() {
 			})
 		)
 
-		var vars = email.headers["x-mailgun-recipient-variables"]
-		subscriptions.slice(2).forEach((s) => vars.must.include(s.update_token))
+		JSON.parse(email.headers["x-mailgun-recipient-variables"]).must.eql(
+			serializeMailgunVariables(subscriptions)
+		)
 	})
 
 	it("must not email subscribers if event occurred earlier than 3 months",

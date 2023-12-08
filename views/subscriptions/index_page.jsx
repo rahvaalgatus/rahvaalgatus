@@ -21,12 +21,12 @@ function SubscriptionsPage(attrs) {
 
 	return <Page page="subscriptions" req={req}>
 		<section class="primary-section"><center>
-			<h2>{t("SUBSCRIPTIONS_UPDATE_TITLE")}</h2>
+			<h2>{t("subscriptions_page.title")}</h2>
 
 			<Flash flash={req.flash} />
 
 			<p class="text">
-				{Jsx.html(t("SUBSCRIPTIONS_UPDATE_BODY", {
+				{Jsx.html(t("subscriptions_page.description", {
 					email: _.escapeHtml(sub.email)
 				}))}
 			</p>
@@ -49,11 +49,18 @@ function SubscriptionsView(attrs) {
 	return <Form req={req} action={action}>
 		<div class="subscriptions-view">
 			<ul>{subscriptions.map(function(subscription) {
-				var scope = subscription.initiative_uuid || "null"
+				var scope =
+					subscription.initiative_uuid ||
+					subscription.initiative_destination ||
+					"null"
 
 				var title = subscription.initiative_uuid
 					? subscription.initiative_title
-					: t("SUBSCRIPTIONS_ALL_INITIATIVES")
+					: subscription.initiative_destination
+					? t("subscriptions_page.subscriptions.initiatives_for", {
+						destination: t("DESTINATION_" + subscription.initiative_destination)
+					})
+					: t("subscriptions_page.subscriptions.all_initiatives")
 
 				return <li
 					id={`subscription-` + subscription.initiative_uuid}
@@ -83,7 +90,9 @@ function SubscriptionsView(attrs) {
 								checked={subscription.new_interest}
 							/>
 
-							<span>{t("SUBSCRIPTIONS_NEW_INTEREST")}</span>
+							<span>
+								{t("subscriptions_page.subscriptions.all_new_interest")}
+							</span>
 						</label> : null}
 
 						{subscription.initiative_uuid == null ? <label
@@ -94,7 +103,9 @@ function SubscriptionsView(attrs) {
 								checked={subscription.signable_interest}
 							/>
 
-							<span>{t("SUBSCRIPTIONS_SIGNABLE_INTEREST")}</span>
+							<span>
+								{t("subscriptions_page.subscriptions.all_signable_interest")}
+							</span>
 						</label> : null}
 
 						<label class="form-checkbox">
@@ -104,8 +115,8 @@ function SubscriptionsView(attrs) {
 							/>
 
 							<span>{subscription.initiative_uuid == null
-								? t("SUBSCRIPTIONS_EVENT_INTEREST")
-								: t("SUBSCRIPTION_EVENT_INTEREST")
+								? t("subscriptions_page.subscriptions.all_event_interest")
+								: t("subscriptions_page.subscriptions.one_event_interest")
 							}</span>
 						</label>
 
@@ -116,21 +127,25 @@ function SubscriptionsView(attrs) {
 							/>
 
 							<span>{subscription.initiative_uuid == null
-								? t("SUBSCRIPTIONS_COMMENT_INTEREST")
-								: t("SUBSCRIPTION_COMMENT_INTEREST")
+								? t("subscriptions_page.subscriptions.all_comment_interest")
+								: t("subscriptions_page.subscriptions.one_comment_interest")
 							}</span>
 						</label>
 
 						<p class="delete-phrase">{t("FORM_OR")} <label
 							for={`${scope}[delete]`}
 							class="delete-button link-button"
-						>{t("SUBSCRIPTION_DELETE_BUTTON")}</label>.</p>
+						>{t("subscriptions_page.subscriptions.delete_button")}</label>.</p>
 
 						<p class="deleted-phrase">
-							<span>{t("SUBSCRIPTIONS_WILL_BE_DELETED")}</span> <label
-							for={`${scope}[delete]`}
-							class="delete-button link-button"
-						>{t("SUBSCRIPTIONS_CANCEL_DELETE")}</label>
+							<span>{t("subscriptions_page.subscriptions.deleting")}</span>
+							{" "}
+							<label
+								for={`${scope}[delete]`}
+								class="delete-button link-button"
+							>
+								{t("subscriptions_page.subscriptions.cancel_button")}
+							</label>
 						</p>
 					</div>
 				</li>
@@ -152,7 +167,7 @@ function SubscriptionsView(attrs) {
 			class="form-submit delete-all-button link-button"
 			onclick={confirm(t("SUBSCRIPTIONS_CONFIRM_DELETE"))}
 		>
-			{t("SUBSCRIPTIONS_DELETE_BUTTON")}
+			{t("subscriptions_page.subscriptions.delete_all_button")}
 		</button>.
 	</Form>
 }

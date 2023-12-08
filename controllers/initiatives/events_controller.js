@@ -90,7 +90,7 @@ exports.router.post("/", assertAuthor, rateLimit, next(function*(req, res) {
 
 	if (message) yield Subscription.send(
 		message,
-		subscriptionsDb.searchConfirmedByInitiativeIdForEvent(initiative.uuid)
+		subscriptionsDb.searchConfirmedByInitiativeForEvent(initiative)
 	)
 
 	res.flash("notice", req.t("INITIATIVE_EVENT_BY_AUTHOR_CREATED"))

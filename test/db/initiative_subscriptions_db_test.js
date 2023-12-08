@@ -47,8 +47,25 @@ describe("InitiativeSubscriptionsDb", function() {
 			err.code.must.equal("constraint")
 			err.type.must.equal("unique")
 			err.index.must.equal(
-				"index_initiative_subscriptions_initiative_uuid_and_email"
+				"index_initiative_subscriptions_initiative_uuid_destination_and_email"
 			)
+		})
+
+		it("must prevent subscription for both initiative and destination",
+			function() {
+			var err
+			try {
+				subscriptionsDb.create(new ValidSubscription({
+					initiative_uuid: this.initiative.uuid,
+					initiative_destination: "tallinn"
+				}))
+			}
+			catch (ex) { err = ex }
+
+			err.must.be.an.error(SqliteError)
+			err.code.must.equal("constraint")
+			err.type.must.equal("check")
+			err.constraint.must.equal("initiative_uuid_nand_destination")
 		})
 
 		it("must have a unique constraint on initiative_uuid", function() {
@@ -67,7 +84,7 @@ describe("InitiativeSubscriptionsDb", function() {
 			err.code.must.equal("constraint")
 			err.type.must.equal("unique")
 			err.index.must.equal(
-				"index_initiative_subscriptions_initiative_uuid_and_email"
+				"index_initiative_subscriptions_initiative_uuid_destination_and_email"
 			)
 		})
 
@@ -86,7 +103,44 @@ describe("InitiativeSubscriptionsDb", function() {
 			err.must.be.an.error(SqliteError)
 			err.code.must.equal("constraint")
 			err.index.must.equal(
-				"index_initiative_subscriptions_initiative_uuid_and_email"
+				"index_initiative_subscriptions_initiative_uuid_destination_and_email"
+			)
+		})
+
+		it("must permit different initiative destinations", function() {
+			var subscriptions = subscriptionsDb.create([
+				new ValidSubscription({
+					initiative_destination: "parliament",
+					email: "user@example.com"
+				}),
+
+				new ValidSubscription({
+					initiative_destination: "tallinn",
+					email: "user@example.com"
+				})
+			])
+
+			subscriptionsDb.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`).must.eql(subscriptions)
+		})
+
+		it("must have a unique constraint on initiative destination", function() {
+			var subscription = subscriptionsDb.create(new ValidSubscription({
+				initiative_destination: "tallinn"
+			}))
+
+			var other = new ValidSubscription({
+				initiative_destination: "tallinn",
+				email: subscription.email
+			})
+
+			var err
+			try { subscriptionsDb.create(other) } catch (ex) { err = ex }
+			err.must.be.an.error(SqliteError)
+			err.code.must.equal("constraint")
+			err.index.must.equal(
+				"index_initiative_subscriptions_initiative_uuid_destination_and_email"
 			)
 		})
 	})

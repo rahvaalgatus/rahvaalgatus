@@ -28,16 +28,17 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 	beforeEach(function() { this.user = usersDb.create(new ValidUser) })
 
-	it("must update milestones and notify once given an initiative in signing",
+	it("must update milestones when threshold not passed and notify once given an initiative in signing",
 		function*() {
 		var initiative = initiativesDb.create(new ValidInitiative({
 			user_id: this.user.id,
+			destination: "parliament",
 			phase: "sign"
 		}))
 
 		var signatures = createSignatures(7, new Date, initiative)
 
-		var subscriptions = subscriptionsDb.create([
+		subscriptionsDb.create([
 			new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date,
@@ -50,6 +51,14 @@ describe("InitiativeSignatureMilestonesCli", function() {
 				event_interest: false
 			}),
 
+			new ValidSubscription({
+				initiative_destination: "tallinn",
+				confirmed_at: new Date,
+				event_interest: true
+			}),
+		])
+
+		var subscriptions = subscriptionsDb.create([
 			new ValidSubscription({
 				initiative_uuid: initiative.uuid,
 				confirmed_at: new Date,
@@ -58,6 +67,12 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 			new ValidSubscription({
 				initiative_uuid: null,
+				confirmed_at: new Date,
+				event_interest: true
+			}),
+
+			new ValidSubscription({
+				initiative_destination: initiative.destination,
 				confirmed_at: new Date,
 				event_interest: true
 			})
@@ -75,7 +90,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 		`)
 
 		var message = messages[0]
-		var emails = subscriptions.slice(2).map((s) => s.email).sort()
+		var emails = subscriptions.map((s) => s.email).sort()
 
 		messages.must.eql([{
 			id: message.id,
@@ -105,7 +120,8 @@ describe("InitiativeSignatureMilestonesCli", function() {
 	})
 
 	describe("when destined for parliament", function() {
-		it("must update milestones and notify if successful", function*() {
+		it("must update milestones when threshold passed and notify if successful",
+			function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				phase: "sign"
@@ -119,11 +135,45 @@ describe("InitiativeSignatureMilestonesCli", function() {
 				initiative
 			)
 
-			var subscription = subscriptionsDb.create(new ValidSubscription({
-				initiative_uuid: initiative.uuid,
-				confirmed_at: new Date,
-				event_interest: true
-			}))
+			subscriptionsDb.create([
+				new ValidSubscription({
+					initiative_uuid: initiative.uuid,
+					confirmed_at: new Date,
+					event_interest: false
+				}),
+
+				new ValidSubscription({
+					initiative_uuid: null,
+					confirmed_at: new Date,
+					event_interest: false
+				}),
+
+				new ValidSubscription({
+					initiative_destination: "tallinn",
+					confirmed_at: new Date,
+					event_interest: true
+				}),
+			])
+
+			var subscriptions = subscriptionsDb.create([
+				new ValidSubscription({
+					initiative_uuid: initiative.uuid,
+					confirmed_at: new Date,
+					event_interest: true
+				}),
+
+				new ValidSubscription({
+					initiative_uuid: null,
+					confirmed_at: new Date,
+					event_interest: true
+				}),
+
+				new ValidSubscription({
+					initiative_destination: initiative.destination,
+					confirmed_at: new Date,
+					event_interest: true
+				})
+			])
 
 			yield cli()
 
@@ -141,6 +191,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 			`)
 
 			var message = messages[0]
+			var emails = subscriptions.map((s) => s.email).sort()
 
 			messages.must.eql([{
 				id: message.id,
@@ -161,11 +212,11 @@ describe("InitiativeSignatureMilestonesCli", function() {
 				}),
 
 				sent_at: new Date,
-				sent_to: [subscription.email]
+				sent_to: emails
 			}])
 
 			this.emails.length.must.equal(1)
-			this.emails[0].envelope.to.must.eql([subscription.email])
+			this.emails[0].envelope.to.must.eql(emails)
 			this.emails[0].headers.subject.must.equal(message.title)
 		})
 
@@ -222,7 +273,8 @@ describe("InitiativeSignatureMilestonesCli", function() {
 	})
 
 	describe("when destined for local", function() {
-		it("must update milestones and notify if successful", function*() {
+		it("must update milestones when threshold passed and notify if successful",
+			function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.user.id,
 				destination: "muhu-vald",
@@ -237,11 +289,45 @@ describe("InitiativeSignatureMilestonesCli", function() {
 				initiative
 			)
 
-			var subscription = subscriptionsDb.create(new ValidSubscription({
-				initiative_uuid: initiative.uuid,
-				confirmed_at: new Date,
-				event_interest: true
-			}))
+			subscriptionsDb.create([
+				new ValidSubscription({
+					initiative_uuid: initiative.uuid,
+					confirmed_at: new Date,
+					event_interest: false
+				}),
+
+				new ValidSubscription({
+					initiative_uuid: null,
+					confirmed_at: new Date,
+					event_interest: false
+				}),
+
+				new ValidSubscription({
+					initiative_destination: "parliament",
+					confirmed_at: new Date,
+					event_interest: true
+				}),
+			])
+
+			var subscriptions = subscriptionsDb.create([
+				new ValidSubscription({
+					initiative_uuid: initiative.uuid,
+					confirmed_at: new Date,
+					event_interest: true
+				}),
+
+				new ValidSubscription({
+					initiative_uuid: null,
+					confirmed_at: new Date,
+					event_interest: true
+				}),
+
+				new ValidSubscription({
+					initiative_destination: initiative.destination,
+					confirmed_at: new Date,
+					event_interest: true
+				})
+			])
 
 			yield cli()
 
@@ -259,6 +345,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 			`)
 
 			var message = messages[0]
+			var emails = subscriptions.map((s) => s.email).sort()
 
 			messages.must.eql([{
 				id: message.id,
@@ -279,11 +366,11 @@ describe("InitiativeSignatureMilestonesCli", function() {
 				}),
 
 				sent_at: new Date,
-				sent_to: [subscription.email]
+				sent_to: emails
 			}])
 
 			this.emails.length.must.equal(1)
-			this.emails[0].envelope.to.must.eql([subscription.email])
+			this.emails[0].envelope.to.must.eql(emails)
 			this.emails[0].headers.subject.must.equal(message.title)
 		})
 

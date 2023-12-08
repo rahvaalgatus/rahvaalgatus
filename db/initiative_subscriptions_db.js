@@ -19,52 +19,43 @@ exports.parse = function(attrs) {
 		new_interest: !!attrs.new_interest,
 		signable_interest: !!attrs.signable_interest,
 		event_interest: !!attrs.event_interest,
-		comment_interest: !!attrs.comment_interest,
-
-		// Author interest is unused, but still present in the database.
-		author_interest: !!attrs.author_interest
+		comment_interest: !!attrs.comment_interest
 	}, attrs)
 }
 
-exports.searchConfirmedByInitiativeId = function(id) {
-	return searchConfirmedByInitiativeIdWith(this, sql`1`, id)
+exports.searchConfirmedForNewInitiative = function(initiative) {
+	return searchConfirmedByInitiativeIdWith(this, initiative, sql`new_interest`)
 }
 
-exports.searchConfirmedByInitiativeIdWith = function(id, filter) {
-	return searchConfirmedByInitiativeIdWith(this, filter, id)
+exports.searchConfirmedForSignableInitiative = function(initiative) {
+	return searchConfirmedByInitiativeIdWith(
+		this,
+		initiative,
+		sql`(signable_interest OR event_interest)`
+	)
 }
 
-exports.searchConfirmedForNewInitiative = function() {
-	return searchConfirmedWith(this, sql`new_interest`)
+exports.searchConfirmedByInitiativeForEvent = function(initiative) {
+	return searchConfirmedByInitiativeIdWith(
+		this,
+		initiative,
+		sql`event_interest`
+	)
 }
 
-exports.searchConfirmedForSignableInitiative = function() {
-	return searchConfirmedWith(this, sql`signable_interest`)
-}
-
-exports.searchConfirmedByInitiativeIdForEvent = function(id) {
-	return searchConfirmedByInitiativeIdWith(this, sql`event_interest`, id)
-}
-
-exports.searchConfirmedByInitiativeIdForComment = function(id) {
-	return searchConfirmedByInitiativeIdWith(this, sql`comment_interest`, id)
+exports.searchConfirmedByInitiativeForComment = function(initiative) {
+	return searchConfirmedByInitiativeIdWith(
+		this,
+		initiative,
+		sql`comment_interest`
+	)
 }
 
 exports.countConfirmedByInitiativeId =
-	countConfirmedByInitiativeIdWith.bind(null, sql`1`)
+	countConfirmedByInitiativeIdWith.bind(null, sql`true`)
 
 exports.countConfirmedByInitiativeIdForEvent =
 	countConfirmedByInitiativeIdWith.bind(null, sql`event_interest`)
-
-function searchConfirmedWith(db, filter) {
-	return db.search(sql`
-		SELECT * FROM initiative_subscriptions
-		WHERE initiative_uuid IS NULL
-		AND confirmed_at IS NOT NULL
-		AND ${filter}
-		ORDER BY email
-	`)
-}
 
 function countConfirmedByInitiativeIdWith(filter, id) {
 	return sqlite(sql`
@@ -76,11 +67,15 @@ function countConfirmedByInitiativeIdWith(filter, id) {
 	`)[0].count
 }
 
-function searchConfirmedByInitiativeIdWith(db, filter, id) {
+function searchConfirmedByInitiativeIdWith(db, {uuid, destination}, filter) {
 	return db.search(sql`
 		SELECT * FROM (
 			SELECT * FROM initiative_subscriptions
-			WHERE (initiative_uuid = ${id} OR initiative_uuid IS NULL)
+			WHERE (initiative_uuid = ${uuid} OR initiative_uuid IS NULL)
+			AND (
+				initiative_destination IS NULL OR
+				initiative_destination = ${destination}
+			)
 			AND confirmed_at IS NOT NULL
 			AND (${filter})
 			ORDER BY initiative_uuid IS NOT NULL

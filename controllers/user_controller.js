@@ -202,7 +202,10 @@ exports.router.use("/subscriptions", function(req, _res, next) {
 		ON initiative.uuid = subscription.initiative_uuid
 		WHERE subscription.email = ${user.email}
 		AND subscription.confirmed_at IS NOT NULL
-		ORDER BY COALESCE(subscription.initiative_uuid, 0)
+
+		ORDER BY
+			COALESCE(subscription.initiative_uuid, '') ASC,
+			COALESCE(subscription.initiative_destination, '') ASC
 	`) : EMPTY_ARR
 
 	next()

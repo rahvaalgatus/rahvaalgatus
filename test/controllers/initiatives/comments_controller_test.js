@@ -9,6 +9,7 @@ var ValidSubscription = require("root/test/valid_subscription")
 var ValidUser = require("root/test/valid_user")
 var {parseCookies} = require("root/test/web")
 var {serializeCookies} = require("root/test/web")
+var {serializeMailgunVariables} = require("root/lib/subscription")
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
@@ -447,8 +448,9 @@ describe("InitiativeCommentsController", function() {
 				})
 			})
 
-			it("must email subscribers interested in comments", function*() {
-				var subscriptions = subscriptionsDb.create([
+			it("must email parliament initiative subscribers interested in comments",
+				function*() {
+				subscriptionsDb.create([
 					new ValidSubscription({
 						initiative_uuid: this.initiative.uuid,
 						confirmed_at: new Date,
@@ -461,6 +463,14 @@ describe("InitiativeCommentsController", function() {
 						comment_interest: false
 					}),
 
+					new ValidSubscription({
+						initiative_destination: "tallinn",
+						confirmed_at: new Date,
+						comment_interest: true
+					})
+				])
+
+				var subscriptions = subscriptionsDb.create([
 					new ValidSubscription({
 						initiative_uuid: this.initiative.uuid,
 						confirmed_at: new Date,
@@ -469,6 +479,12 @@ describe("InitiativeCommentsController", function() {
 
 					new ValidSubscription({
 						initiative_uuid: null,
+						confirmed_at: new Date,
+						comment_interest: true
+					}),
+
+					new ValidSubscription({
+						initiative_destination: this.initiative.destination,
 						confirmed_at: new Date,
 						comment_interest: true
 					})
@@ -485,12 +501,81 @@ describe("InitiativeCommentsController", function() {
 
 				this.emails.length.must.equal(1)
 
-				var emailAddresses = subscriptions.slice(2).map((s) => s.email).sort()
+				var emailAddresses = subscriptions.map((s) => s.email).sort()
 				var email = this.emails[0]
 				email.envelope.to.must.eql(emailAddresses)
 				email.headers.subject.must.include(this.initiative.title)
-				var vars = email.headers["x-mailgun-recipient-variables"]
-				subscriptions.slice(2).forEach((s) => vars.must.include(s.update_token))
+
+				JSON.parse(email.headers["x-mailgun-recipient-variables"]).must.eql(
+					serializeMailgunVariables(subscriptions)
+				)
+			})
+
+			it("must email local initiative subscribers interested in comments",
+				function*() {
+				var initiative = initiativesDb.update(this.initiative, {
+					destination: "tallinn"
+				})
+
+				subscriptionsDb.create([
+					new ValidSubscription({
+						initiative_uuid: initiative.uuid,
+						confirmed_at: new Date,
+						comment_interest: false
+					}),
+
+					new ValidSubscription({
+						initiative_uuid: null,
+						confirmed_at: new Date,
+						comment_interest: false
+					}),
+
+					new ValidSubscription({
+						initiative_destination: "parliament",
+						confirmed_at: new Date,
+						comment_interest: true
+					})
+				])
+
+				var subscriptions = subscriptionsDb.create([
+					new ValidSubscription({
+						initiative_uuid: initiative.uuid,
+						confirmed_at: new Date,
+						comment_interest: true
+					}),
+
+					new ValidSubscription({
+						initiative_uuid: null,
+						confirmed_at: new Date,
+						comment_interest: true
+					}),
+
+					new ValidSubscription({
+						initiative_destination: initiative.destination,
+						confirmed_at: new Date,
+						comment_interest: true
+					})
+				])
+
+				var path = `/initiatives/${initiative.uuid}`
+				var res = yield this.request(path + `/comments`, {
+					method: "POST",
+					form: VALID_ATTRS
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Created")
+
+				this.emails.length.must.equal(1)
+
+				var emailAddresses = subscriptions.map((s) => s.email).sort()
+				var email = this.emails[0]
+				email.envelope.to.must.eql(emailAddresses)
+				email.headers.subject.must.include(initiative.title)
+
+				JSON.parse(email.headers["x-mailgun-recipient-variables"]).must.eql(
+					serializeMailgunVariables(subscriptions)
+				)
 			})
 
 			it("must email subscribers if commented as admin", function*() {
@@ -1536,7 +1621,7 @@ describe("InitiativeCommentsController", function() {
 					initiative_uuid: this.initiative.uuid
 				}))
 
-				var subscriptions = subscriptionsDb.create([
+				subscriptionsDb.create([
 					new ValidSubscription({
 						initiative_uuid: this.initiative.uuid,
 						confirmed_at: new Date,
@@ -1549,6 +1634,14 @@ describe("InitiativeCommentsController", function() {
 						comment_interest: false
 					}),
 
+					new ValidSubscription({
+						initiative_destination: "tallinn",
+						confirmed_at: new Date,
+						comment_interest: true
+					})
+				])
+
+				var subscriptions = subscriptionsDb.create([
 					new ValidSubscription({
 						initiative_uuid: this.initiative.uuid,
 						confirmed_at: new Date,
@@ -1557,6 +1650,12 @@ describe("InitiativeCommentsController", function() {
 
 					new ValidSubscription({
 						initiative_uuid: null,
+						confirmed_at: new Date,
+						comment_interest: true
+					}),
+
+					new ValidSubscription({
+						initiative_destination: this.initiative.destination,
 						confirmed_at: new Date,
 						comment_interest: true
 					})
@@ -1572,12 +1671,14 @@ describe("InitiativeCommentsController", function() {
 
 				this.emails.length.must.equal(1)
 
-				var emailAddresses = subscriptions.slice(2).map((s) => s.email).sort()
+				var emailAddresses = subscriptions.map((s) => s.email).sort()
 				var email = this.emails[0]
 				email.envelope.to.must.eql(emailAddresses)
 				email.headers.subject.must.include(this.initiative.title)
-				var vars = email.headers["x-mailgun-recipient-variables"]
-				subscriptions.slice(2).forEach((s) => vars.must.include(s.update_token))
+
+				JSON.parse(email.headers["x-mailgun-recipient-variables"]).must.eql(
+					serializeMailgunVariables(subscriptions)
+				)
 			})
 
 			it("must email subscribers if commented as admin", function*() {

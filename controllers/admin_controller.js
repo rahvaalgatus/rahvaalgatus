@@ -310,7 +310,5 @@ exports.get("/subscriptions", function(_req, res) {
 		ORDER BY created_at DESC
 	`)
 
-	res.render("admin/subscriptions/index_page.jsx", {
-		subscriptions: subscriptions
-	})
+	res.render("admin/subscriptions/index_page.jsx", {subscriptions})
 })

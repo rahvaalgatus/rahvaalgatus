@@ -119,34 +119,6 @@ CREATE TABLE IF NOT EXISTS "initiative_events" (
 );
 CREATE INDEX index_initiative_events_on_initiative_uuid
 ON initiative_events (initiative_uuid);
-CREATE TABLE IF NOT EXISTS "initiative_subscriptions" (
-	initiative_uuid TEXT NULL,
-	email TEXT COLLATE NOCASE NOT NULL,
-	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-	confirmed_at TEXT,
-	confirmation_sent_at TEXT,
-  update_token TEXT UNIQUE NOT NULL DEFAULT (lower(hex(randomblob(8)))),
-  created_ip TEXT NULL,
-  origin TEXT NULL,
-  event_interest INTEGER NOT NULL DEFAULT 0,
-  author_interest INTEGER NOT NULL DEFAULT 0, comment_interest INTEGER NOT NULL DEFAULT 0, new_interest INTEGER NOT NULL DEFAULT 0, signable_interest INTEGER NOT NULL DEFAULT 0,
-
-	PRIMARY KEY (initiative_uuid, email),
-	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE,
-
-	CONSTRAINT iniative_subscriptions_email_length
-	CHECK (length(email) > 0),
-
-	CONSTRAINT iniative_subscriptions_update_token_length
-	CHECK (length(update_token) > 0),
-
-	CONSTRAINT new_interest_for_all_initiatives
-	CHECK (initiative_uuid IS NULL OR NOT new_interest),
-
-	CONSTRAINT signable_interest_for_all_initiatives
-	CHECK (initiative_uuid IS NULL OR NOT signable_interest)
-);
 CREATE TABLE comments (
 	id INTEGER PRIMARY KEY NOT NULL,
 	uuid TEXT,
@@ -573,8 +545,6 @@ WHERE NOT anonymized;
 CREATE INDEX index_citizenos_signatures_on_country_and_personal_id
 ON initiative_citizenos_signatures (country, personal_id)
 WHERE NOT anonymized;
-CREATE UNIQUE INDEX index_initiative_subscriptions_initiative_uuid_and_email
-ON initiative_subscriptions (COALESCE(initiative_uuid, ''), email);
 CREATE INDEX index_initiative_signatures_on_created_at
 ON initiative_signatures (created_at);
 CREATE INDEX index_initiative_citizenos_signatures_on_created_at
@@ -582,6 +552,46 @@ ON initiative_citizenos_signatures (created_at);
 CREATE INDEX index_initiatives_on_phase ON initiatives (phase);
 CREATE INDEX index_initiatives_on_external_text_file_id
 ON initiatives (external_text_file_id);
+CREATE TABLE IF NOT EXISTS "initiative_subscriptions" (
+	initiative_uuid TEXT,
+	initiative_destination TEXT,
+	email TEXT COLLATE NOCASE NOT NULL,
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	confirmed_at TEXT,
+	confirmation_sent_at TEXT,
+  update_token TEXT UNIQUE NOT NULL DEFAULT (lower(hex(randomblob(8)))),
+  created_ip TEXT NULL,
+  origin TEXT NULL,
+  event_interest INTEGER NOT NULL DEFAULT 0,
+	comment_interest INTEGER NOT NULL DEFAULT 0,
+	new_interest INTEGER NOT NULL DEFAULT 0,
+	signable_interest INTEGER NOT NULL DEFAULT 0,
+
+	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid) ON DELETE CASCADE,
+
+	CONSTRAINT initiative_uuid_nand_destination
+	CHECK (initiative_uuid IS NULL OR initiative_destination IS NULL),
+
+	CONSTRAINT initiative_destination_length
+	CHECK (length(initiative_destination) > 0),
+
+	CONSTRAINT email_length CHECK (length(email) > 0),
+	CONSTRAINT update_token_length CHECK (length(update_token) > 0),
+
+	CONSTRAINT new_interest_for_all_initiatives
+	CHECK (initiative_uuid IS NULL OR NOT new_interest)
+);
+CREATE UNIQUE INDEX index_initiative_subscriptions_initiative_uuid_destination_and_email
+ON initiative_subscriptions (
+	COALESCE(initiative_uuid, ''),
+	COALESCE(initiative_destination, ''),
+	email
+);
+CREATE INDEX index_initiative_subscriptions_on_email
+ON initiative_subscriptions (email);
+CREATE INDEX index_initiative_subscriptions_on_initiative_destination
+ON initiative_subscriptions (initiative_destination);
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -707,4 +717,5 @@ INSERT INTO migrations VALUES('20231020000000');
 INSERT INTO migrations VALUES('20231102110120');
 INSERT INTO migrations VALUES('20231102110130');
 INSERT INTO migrations VALUES('20231102110140');
+INSERT INTO migrations VALUES('20231120000000');
 COMMIT;

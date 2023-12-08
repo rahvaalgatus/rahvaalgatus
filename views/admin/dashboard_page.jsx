@@ -5,6 +5,7 @@ var {Form} = Page
 var Config = require("root").config
 var {formatDate} = require("root/lib/i18n")
 var {formatDateTime} = require("root/lib/i18n")
+var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 
 module.exports = function(attrs) {
 	var {from} = attrs
@@ -234,6 +235,7 @@ module.exports = function(attrs) {
 	</Page>
 }
 
+// TODO: Merge with the subscriptions page' SubscriptionsView.
 function SubscriptionsView(attrs) {
 	var {req} = attrs
 	var {subscriptions} = attrs
@@ -248,6 +250,7 @@ function SubscriptionsView(attrs) {
 
 		<tbody>{subscriptions.map(function(subscription) {
 			var {initiative} = subscription
+			var destination = subscription.initiative_destination
 
 			return <tr>
 				<td>{formatDateTime("numeric", subscription.created_at)}</td>
@@ -263,7 +266,10 @@ function SubscriptionsView(attrs) {
 						class="admin-link">
 						{initiative.title}
 					</a>
-				: <i>All initiatives</i>}</td>
+					: destination
+					? <i>{LOCAL_GOVERNMENTS[destination].name} initiatives</i>
+					: <i>All initiatives</i>
+				}</td>
 
 				<td>
 					<a href={"mailto:" + subscription.email} class="admin-link">

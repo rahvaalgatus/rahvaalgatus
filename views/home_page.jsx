@@ -11,6 +11,8 @@ var {FormCheckbox} = Page
 var {InitiativeBoxesView} = require("./initiatives/index_page")
 var {InitiativeBoxView} = require("./initiatives/index_page")
 var {getSignatureThreshold} = require("root/lib/initiative")
+var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
+var LOCAL_GOVERNMENTS_BY_COUNTY = LOCAL_GOVERNMENTS.BY_COUNTY
 exports = module.exports = HomePage
 exports.CallToActionsView = CallToActionsView
 exports.StatisticsView = StatisticsView
@@ -339,6 +341,29 @@ function InitiativesSubscriptionForm(attrs) {
 
 			{/* Catch naive bots */}
 			<input name="e-mail" type="email" hidden />
+
+			<select
+				name="initiative_destination"
+				class="form-select"
+			>
+				<option value="">
+					{t("home_page.initiative_subscriptions_form.destination.all")}
+				</option>
+
+				<optgroup
+					label={t("home_page.initiative_subscriptions_form.destination.parliament_group_label")}
+				>
+					<option value="parliament">
+						{t("home_page.initiative_subscriptions_form.destination.parliament_label")}
+					</option>
+				</optgroup>
+
+				{_.map(LOCAL_GOVERNMENTS_BY_COUNTY, (govs, county) => (
+					<optgroup label={county + " " + t("home_page.initiative_subscriptions_form.destination.county_group_label_suffix")}>{govs.map(([id, {name}]) => (
+						<option value={id}>{name}</option>
+					))}</optgroup>
+				))}
+			</select>
 
 			<input
 				id="subscriptions-form-email"

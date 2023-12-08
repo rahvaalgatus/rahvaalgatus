@@ -790,7 +790,7 @@ function* updateInitiativeToPublished(req, res) {
 
 		yield Subscription.send(
 			message,
-			subscriptionsDb.searchConfirmedForNewInitiative()
+			subscriptionsDb.searchConfirmedForNewInitiative(initiative)
 		)
 	}
 
@@ -904,11 +904,7 @@ function* updateInitiativePhaseToSign(req, res) {
 
 		yield Subscription.send(
 			message,
-
-			_.uniqBy(_.concat(
-				subscriptionsDb.searchConfirmedForSignableInitiative(),
-				subscriptionsDb.searchConfirmedByInitiativeIdForEvent(initiative.uuid)
-			), "email")
+			subscriptionsDb.searchConfirmedForSignableInitiative(initiative)
 		)
 	}
 
@@ -1055,7 +1051,7 @@ function* updateInitiativePhaseToParliament(req, res) {
 
 	yield Subscription.send(
 		message,
-		subscriptionsDb.searchConfirmedByInitiativeIdForEvent(initiative.uuid)
+		subscriptionsDb.searchConfirmedByInitiativeForEvent(initiative)
 	)
 
 	res.flash("notice", initiative.destination == "parliament"

@@ -213,9 +213,8 @@ exports.router.post("/:id/events/notifications", next(function*(req, res) {
 	`)
 
 	if (events.length > 0) {
-		var subscribers = subscriptionsDb.searchConfirmedByInitiativeIdForEvent(
-			initiative.uuid
-		)
+		var subscribers =
+			subscriptionsDb.searchConfirmedByInitiativeForEvent(initiative)
 
 		yield Subscription.send(
 			Subscription.renderEventsEmail(t, initiative, events),
@@ -282,9 +281,8 @@ exports.router.post("/:id/events", next(function*(req, res) {
 	}
 
 	if (req.body.action == "create-and-notify") {
-		var subscribers = subscriptionsDb.searchConfirmedByInitiativeIdForEvent(
-			initiative.uuid
-		)
+		var subscribers =
+			subscriptionsDb.searchConfirmedByInitiativeForEvent(initiative)
 
 		yield Subscription.send(
 			Subscription.renderEventsEmail(t, initiative, [event]),

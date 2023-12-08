@@ -1475,7 +1475,7 @@ describe("UserController", function() {
 
 			var el = parseHtml(res.body).querySelectorAll("li.subscription")
 			el.length.must.equal(1)
-			el[0].textContent.must.include(t("SUBSCRIPTIONS_ALL_INITIATIVES"))
+			el[0].textContent.must.include(t("subscriptions_page.subscriptions.all_initiatives"))
 		})
 
 		it("must not show unconfirmed subscription to initiatives", function*() {
@@ -1499,7 +1499,7 @@ describe("UserController", function() {
 			var el = parseHtml(res.body).querySelectorAll("li.subscription")
 			el.length.must.equal(1)
 			el[0].innerHTML.must.include(subscription.initiative_uuid)
-			el[0].textContent.must.not.include(t("SUBSCRIPTIONS_ALL_INITIATIVES"))
+			el[0].textContent.must.not.include(t("subscriptions_page.subscriptions.all_initiatives"))
 		})
 
 		it("must show subscription to initiative", function*() {
@@ -1558,7 +1558,7 @@ describe("UserController", function() {
 			var el = parseHtml(res.body).querySelectorAll("li.subscription")
 			el.length.must.equal(1)
 			el[0].innerHTML.must.not.include(other.initiative_uuid)
-			el[0].textContent.must.include(t("SUBSCRIPTIONS_ALL_INITIATIVES"))
+			el[0].textContent.must.include(t("subscriptions_page.subscriptions.all_initiatives"))
 		})
 
 		it("must show all subscriptions for given email address", function*() {
@@ -1620,7 +1620,7 @@ describe("UserController", function() {
 			var res = yield this.request("/user/subscriptions")
 			res.statusCode.must.equal(200)
 			res.body.must.not.include(initiative.uuid)
-			res.body.must.not.include(t("SUBSCRIPTIONS_ALL_INITIATIVES"))
+			res.body.must.not.include(t("subscriptions_page.subscriptions.all_initiatives"))
 
 			var el = parseHtml(res.body).querySelectorAll("li.subscription")
 			el.length.must.equal(0)

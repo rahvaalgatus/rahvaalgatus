@@ -1101,7 +1101,7 @@ function* sendParliamentEventEmail(initiative, events) {
 
 	yield Subscription.send(
 		message,
-		subscriptionsDb.searchConfirmedByInitiativeIdForEvent(initiative.uuid)
+		subscriptionsDb.searchConfirmedByInitiativeForEvent(initiative)
 	)
 }
 

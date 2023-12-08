@@ -12,6 +12,7 @@ var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var sql = require("sqlate")
 var SUBSCRIPTION_RATE = 100
 var SUBSCRIPTION_RATE_IN_MINUTES = 60
+var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 exports.router = Router({mergeParams: true})
 exports.parse = parse
 exports.updateSubscriptions = updateSubscriptions
@@ -39,7 +40,10 @@ exports.router.get("/", readSubscriptionFromQuery, function(req, res) {
 		ON initiative.uuid = subscription.initiative_uuid
 		WHERE subscription.email = ${subscription.email}
 		AND subscription.confirmed_at IS NOT NULL
-		ORDER BY COALESCE(subscription.initiative_uuid, 0)
+
+		ORDER BY
+			COALESCE(subscription.initiative_uuid, '') ASC,
+			COALESCE(subscription.initiative_destination, '') ASC
 	`)
 
 	res.render("subscriptions/index_page.jsx", {
@@ -53,6 +57,7 @@ exports.router.post("/", rateLimit, next(function*(req, res) {
 
 	var {user} = req
 	var {email} = req.body
+	var destination = parseDestination(req.body.initiative_destination || "")
 	var attrs = _.defaults(parse(req.body), DEFAULT_INITIATIVES_INTERESTS)
 
 	if (!_.isValidEmail(email))
@@ -64,6 +69,7 @@ exports.router.post("/", rateLimit, next(function*(req, res) {
 	try {
 		subscription = subscriptionsDb.create({
 			email: email,
+			initiative_destination: destination,
 			new_interest: attrs.new_interest,
 			signable_interest: attrs.signable_interest,
 			event_interest: attrs.event_interest,
@@ -77,7 +83,9 @@ exports.router.post("/", rateLimit, next(function*(req, res) {
 		if (err instanceof SqliteError && err.type == "unique")
 			subscription = subscriptionsDb.read(sql`
 				SELECT * FROM initiative_subscriptions
-				WHERE initiative_uuid IS NULL AND email = ${email}
+				WHERE initiative_uuid IS NULL
+				AND initiative_destination IS ${destination}
+				AND email = ${email}
 			`)
 
 		else throw err
@@ -86,7 +94,8 @@ exports.router.post("/", rateLimit, next(function*(req, res) {
 	if (
 		user &&
 		user.email &&
-		_.caseInsensitiveEquals(user.email, subscription.email)
+		_.caseInsensitiveEquals(user.email, subscription.email) &&
+		destination == subscription.initiative_destination
 	) {
 		subscriptionsDb.update(subscription, {
 			confirmed_at: new Date,
@@ -222,6 +231,10 @@ function parse(obj) {
 	return attrs
 }
 
+function parseDestination(dest) {
+	return dest == "parliament" || _.hasOwn(LOCAL_GOVERNMENTS, dest) ? dest : null
+}
+
 function withSubscription(get, req, res, next) {
 	var [uuid, token] = get(req)
 
@@ -237,7 +250,10 @@ function withSubscription(get, req, res, next) {
 
 	if (req.subscription) return void next()
 
-	return void res.status(404).render("error_page.jsx", {
+	res.statusCode = 404
+	res.statusMessage = "Subscription Not Found"
+
+	res.render("error_page.jsx", {
 		title: req.t("SUBSCRIPTION_NOT_FOUND_TITLE"),
 		body: req.t("SUBSCRIPTION_NOT_FOUND_BODY")
 	})
@@ -251,12 +267,18 @@ function tokenize(subscription) {
 }
 
 function updateSubscriptions(subscriptions, form) {
-	var attrsByInitiativeUuid = _.mapValues(_.filterValues(form, (_a, id) => (
-		id == "null" || id.indexOf("-") >= 0
+	var attrsByInitiative = _.mapValues(_.filterValues(form, (_a, id) => (
+		id == "null" ||
+		id == "parliament" ||
+		_.hasOwn(LOCAL_GOVERNMENTS, id) ||
+		id.indexOf("-") >= 0
 	)), parse)
 
 	return subscriptions.map(function(subscription) {
-		var attrs = attrsByInitiativeUuid[subscription.initiative_uuid]
+		var attrs = attrsByInitiative[
+			subscription.initiative_uuid || subscription.initiative_destination
+		]
+
 		if (attrs == null) return subscription
 		if (attrs.delete) return subscriptionsDb.delete(subscription), null
 

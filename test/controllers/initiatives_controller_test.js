@@ -45,6 +45,7 @@ var concat = Array.prototype.concat.bind(Array.prototype)
 var demand = require("must")
 var {newTrixDocument} = require("root/test/fixtures")
 var {serializePersonalId} = require("root/lib/user")
+var {serializeMailgunVariables} = require("root/lib/subscription")
 var INITIATIVE_TYPE = "application/vnd.rahvaalgatus.initiative+json; v=1"
 var ATOM_TYPE = "application/atom+xml"
 var {PHASES} = require("root/lib/initiative")
@@ -3831,6 +3832,12 @@ describe("InitiativesController", function() {
 						confirmed_at: new Date
 					})))
 
+					subscriptionsDb.create(new ValidSubscription({
+						initiative_destination: "parliament",
+						confirmed_at: new Date,
+						event_interest: true
+					}))
+
 					var res = yield this.request("/initiatives/" + initiative.uuid)
 					res.statusCode.must.equal(200)
 
@@ -3838,7 +3845,7 @@ describe("InitiativesController", function() {
 					var form = dom.querySelector(".initiative-subscribe-form")
 
 					form.querySelector("p").innerHTML.must.equal(
-						t("INITIATIVE_SUBSCRIBER_COUNT_BOTH", {count: 3, allCount: 5})
+						t("INITIATIVE_SUBSCRIBER_COUNT_BOTH", {count: 3, allCount: 6})
 					)
 				})
 
@@ -7785,7 +7792,8 @@ describe("InitiativesController", function() {
 					}])
 				})
 
-				it("must email subscribers of new initiatives", function*() {
+				it("must email subscribers of new initiatives without destination",
+					function*() {
 					usersDb.update(this.user, {
 						name: "Johnny Lang",
 						email: "user@example.com",
@@ -7801,7 +7809,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id,
 					}))
 
-					var subscriptions = subscriptionsDb.create([
+					subscriptionsDb.create([
 						new ValidSubscription({
 							initiative_uuid: initiative.uuid,
 							confirmed_at: new Date,
@@ -7812,6 +7820,26 @@ describe("InitiativesController", function() {
 							initiative_uuid: null,
 							confirmed_at: new Date,
 							new_interest: false
+						}),
+
+						new ValidSubscription({
+							initiative_destination: "parliament",
+							confirmed_at: new Date,
+							new_interest: true
+						}),
+
+						new ValidSubscription({
+							initiative_destination: "tallinn",
+							confirmed_at: new Date,
+							new_interest: true
+						})
+					])
+
+					var subscriptions = subscriptionsDb.create([
+						new ValidSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date,
+							new_interest: true
 						}),
 
 						new ValidSubscription({
@@ -7838,7 +7866,7 @@ describe("InitiativesController", function() {
 					`)
 
 					var message = messages[0]
-					var emails = subscriptions.slice(2).map((s) => s.email).sort()
+					var emails = subscriptions.map((s) => s.email).sort()
 
 					messages.must.eql([{
 						id: message.id,
@@ -7867,11 +7895,225 @@ describe("InitiativesController", function() {
 					email.envelope.to.must.eql(emails)
 					email.headers.subject.must.equal(message.title)
 
-					var vars = email.headers["x-mailgun-recipient-variables"]
+					JSON.parse(email.headers["x-mailgun-recipient-variables"]).must.eql(
+						serializeMailgunVariables(subscriptions)
+					)
+				})
 
-					subscriptions.slice(2).forEach((s) => (
-						vars.must.include(s.update_token)
-					))
+				it("must email subscribers of new parliament initiatives", function*() {
+					usersDb.update(this.user, {
+						name: "Johnny Lang",
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
+
+					var initiative = initiativesDb.create(new ValidInitiative({
+						destination: "parliament",
+						user_id: this.user.id
+					}))
+
+					textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+					}))
+
+					subscriptionsDb.create([
+						new ValidSubscription({
+							initiative_uuid: initiative.uuid,
+							confirmed_at: new Date,
+							new_interest: false
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date,
+							new_interest: false
+						}),
+
+						new ValidSubscription({
+							initiative_destination: "tallinn",
+							confirmed_at: new Date,
+							new_interest: true
+						})
+					])
+
+					var subscriptions = subscriptionsDb.create([
+						new ValidSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date,
+							new_interest: true
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date,
+							new_interest: true
+						}),
+
+						new ValidSubscription({
+							initiative_destination: initiative.destination,
+							confirmed_at: new Date,
+							new_interest: true
+						})
+					])
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							visibility: "public",
+							endsOn: formatIsoDate(
+								DateFns.addDays(new Date, Config.minEditingDeadlineDays - 1)
+							)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					var messages = messagesDb.search(sql`
+						SELECT * FROM initiative_messages
+					`)
+
+					var message = messages[0]
+					var emails = subscriptions.map((s) => s.email).sort()
+
+					messages.must.eql([{
+						id: message.id,
+						initiative_uuid: initiative.uuid,
+						created_at: new Date,
+						updated_at: new Date,
+						origin: "status",
+
+						title: t("INITIATIVE_PUBLISHED_MESSAGE_TITLE", {
+							initiativeTitle: initiative.title
+						}),
+
+						text: renderEmail("INITIATIVE_PUBLISHED_MESSAGE_BODY", {
+							initiativeTitle: initiative.title,
+							initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+							authorName: "Johnny Lang"
+						}),
+
+						sent_at: new Date,
+						sent_to: emails
+					}])
+
+					this.emails.length.must.equal(1)
+					var email = this.emails[0]
+
+					email.envelope.to.must.eql(emails)
+					email.headers.subject.must.equal(message.title)
+
+					JSON.parse(email.headers["x-mailgun-recipient-variables"]).must.eql(
+						serializeMailgunVariables(subscriptions)
+					)
+				})
+
+				it("must email subscribers of new local initiatives", function*() {
+					usersDb.update(this.user, {
+						name: "Johnny Lang",
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
+
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						destination: "tallinn"
+					}))
+
+					textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+					}))
+
+					subscriptionsDb.create([
+						new ValidSubscription({
+							initiative_uuid: initiative.uuid,
+							confirmed_at: new Date,
+							new_interest: false
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date,
+							new_interest: false
+						}),
+
+						new ValidSubscription({
+							initiative_destination: "parliament",
+							confirmed_at: new Date,
+							new_interest: true
+						})
+					])
+
+					var subscriptions = subscriptionsDb.create([
+						new ValidSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date,
+							new_interest: true
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date,
+							new_interest: true
+						}),
+
+						new ValidSubscription({
+							initiative_destination: initiative.destination,
+							confirmed_at: new Date,
+							new_interest: true
+						})
+					])
+
+					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						method: "PUT",
+						form: {
+							visibility: "public",
+							endsOn: formatIsoDate(
+								DateFns.addDays(new Date, Config.minEditingDeadlineDays - 1)
+							)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+
+					var messages = messagesDb.search(sql`
+						SELECT * FROM initiative_messages
+					`)
+
+					var message = messages[0]
+					var emails = subscriptions.map((s) => s.email).sort()
+
+					messages.must.eql([{
+						id: message.id,
+						initiative_uuid: initiative.uuid,
+						created_at: new Date,
+						updated_at: new Date,
+						origin: "status",
+
+						title: t("INITIATIVE_PUBLISHED_MESSAGE_TITLE", {
+							initiativeTitle: initiative.title
+						}),
+
+						text: renderEmail("INITIATIVE_PUBLISHED_MESSAGE_BODY", {
+							initiativeTitle: initiative.title,
+							initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+							authorName: "Johnny Lang"
+						}),
+
+						sent_at: new Date,
+						sent_to: emails
+					}])
+
+					this.emails.length.must.equal(1)
+					var email = this.emails[0]
+
+					email.envelope.to.must.eql(emails)
+					email.headers.subject.must.equal(message.title)
+
+					JSON.parse(email.headers["x-mailgun-recipient-variables"]).must.eql(
+						serializeMailgunVariables(subscriptions)
+					)
 				})
 
 				describe("when already published", function() {
@@ -8754,7 +8996,7 @@ describe("InitiativesController", function() {
 					res.statusMessage.must.equal("Initiative Sent to Signing")
 				})
 
-				it("must email subscribers of signable initiatives", function*() {
+				it("must email subscribers of parliament signable initiatives and events", function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						destination: "parliament",
@@ -8770,7 +9012,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id
 					}))
 
-					var subscriptions = subscriptionsDb.create([
+					subscriptionsDb.create([
 						new ValidSubscription({
 							initiative_uuid: initiative.uuid,
 							confirmed_at: new Date,
@@ -8783,10 +9025,66 @@ describe("InitiativesController", function() {
 							signable_interest: false
 						}),
 
+						new ValidSubscription({
+							initiative_destination: "tallinn",
+							confirmed_at: new Date,
+							signable_interest: true
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: initiative.uuid,
+							confirmed_at: new Date,
+							event_interest: false
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date,
+							event_interest: false
+						}),
+
+						new ValidSubscription({
+							initiative_destination: "tallinn",
+							confirmed_at: new Date,
+							event_interest: true
+						})
+					])
+
+					var subscriptions = subscriptionsDb.create([
 						new ValidSubscription({
 							initiative_uuid: null,
 							confirmed_at: new Date,
 							signable_interest: true
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: initiative.uuid,
+							confirmed_at: new Date,
+							signable_interest: true
+						}),
+
+						new ValidSubscription({
+							initiative_destination: initiative.destination,
+							confirmed_at: new Date,
+							signable_interest: true
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date,
+							event_interest: true
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: initiative.uuid,
+							confirmed_at: new Date,
+							event_interest: true
+						}),
+
+						new ValidSubscription({
+							initiative_destination: initiative.destination,
+							confirmed_at: new Date,
+							event_interest: true
 						})
 					])
 
@@ -8808,7 +9106,7 @@ describe("InitiativesController", function() {
 					`)
 
 					var message = messages[0]
-					var emails = subscriptions.slice(2).map((s) => s.email).sort()
+					var emails = subscriptions.map((s) => s.email).sort()
 
 					messages.must.eql([{
 						id: message.id,
@@ -8836,17 +9134,16 @@ describe("InitiativesController", function() {
 					email.envelope.to.must.eql(emails)
 					email.headers.subject.must.equal(message.title)
 
-					var vars = email.headers["x-mailgun-recipient-variables"]
-
-					subscriptions.slice(2).forEach((s) => (
-						vars.must.include(s.update_token)
-					))
+					JSON.parse(email.headers["x-mailgun-recipient-variables"]).must.eql(
+						serializeMailgunVariables(subscriptions)
+					)
 				})
 
-				it("must email subscribers of initiative events", function*() {
+				it("must email subscribers of local signable initiatives and events",
+					function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
-						destination: "parliament",
+						destination: "tallinn",
 
 						published_at: DateFns.addDays(
 							new Date,
@@ -8859,7 +9156,25 @@ describe("InitiativesController", function() {
 						user_id: this.user.id
 					}))
 
-					var subscriptions = subscriptionsDb.create([
+					subscriptionsDb.create([
+						new ValidSubscription({
+							initiative_uuid: initiative.uuid,
+							confirmed_at: new Date,
+							signable_interest: false
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date,
+							signable_interest: false
+						}),
+
+						new ValidSubscription({
+							initiative_destination: "parliament",
+							confirmed_at: new Date,
+							signable_interest: true
+						}),
+
 						new ValidSubscription({
 							initiative_uuid: initiative.uuid,
 							confirmed_at: new Date,
@@ -8870,6 +9185,38 @@ describe("InitiativesController", function() {
 							initiative_uuid: null,
 							confirmed_at: new Date,
 							event_interest: false
+						}),
+
+						new ValidSubscription({
+							initiative_destination: "parliament",
+							confirmed_at: new Date,
+							event_interest: true
+						})
+					])
+
+					var subscriptions = subscriptionsDb.create([
+						new ValidSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date,
+							signable_interest: true
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: initiative.uuid,
+							confirmed_at: new Date,
+							signable_interest: true
+						}),
+
+						new ValidSubscription({
+							initiative_destination: initiative.destination,
+							confirmed_at: new Date,
+							signable_interest: true
+						}),
+
+						new ValidSubscription({
+							initiative_uuid: null,
+							confirmed_at: new Date,
+							event_interest: true
 						}),
 
 						new ValidSubscription({
@@ -8879,7 +9226,7 @@ describe("InitiativesController", function() {
 						}),
 
 						new ValidSubscription({
-							initiative_uuid: null,
+							initiative_destination: initiative.destination,
 							confirmed_at: new Date,
 							event_interest: true
 						})
@@ -8903,7 +9250,7 @@ describe("InitiativesController", function() {
 					`)
 
 					var message = messages[0]
-					var emails = subscriptions.slice(2).map((s) => s.email).sort()
+					var emails = subscriptions.map((s) => s.email).sort()
 
 					messages.must.eql([{
 						id: message.id,
@@ -8931,11 +9278,9 @@ describe("InitiativesController", function() {
 					email.envelope.to.must.eql(emails)
 					email.headers.subject.must.equal(message.title)
 
-					var vars = email.headers["x-mailgun-recipient-variables"]
-
-					subscriptions.slice(2).forEach((s) => (
-						vars.must.include(s.update_token)
-					))
+					JSON.parse(email.headers["x-mailgun-recipient-variables"]).must.eql(
+						serializeMailgunVariables(subscriptions)
+					)
 				})
 
 				it("must not email subscribers twice", function*() {
@@ -9545,6 +9890,7 @@ describe("InitiativesController", function() {
 					it("must email subscribers", function*() {
 						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
+							destination: "parliament",
 							phase: "sign"
 						}))
 
@@ -9559,7 +9905,7 @@ describe("InitiativesController", function() {
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
-						var subscriptions = subscriptionsDb.create([
+						subscriptionsDb.create([
 							new ValidSubscription({
 								initiative_uuid: initiative.uuid,
 								confirmed_at: new Date,
@@ -9572,6 +9918,14 @@ describe("InitiativesController", function() {
 								event_interest: false
 							}),
 
+							new ValidSubscription({
+								initiative_destination: "tallinn",
+								confirmed_at: new Date,
+								event_interest: true
+							})
+						])
+
+						var subscriptions = subscriptionsDb.create([
 							new ValidSubscription({
 								initiative_uuid: initiative.uuid,
 								confirmed_at: new Date,
@@ -9580,6 +9934,12 @@ describe("InitiativesController", function() {
 
 							new ValidSubscription({
 								initiative_uuid: null,
+								confirmed_at: new Date,
+								event_interest: true
+							}),
+
+							new ValidSubscription({
+								initiative_destination: "parliament",
 								confirmed_at: new Date,
 								event_interest: true
 							})
@@ -9601,7 +9961,7 @@ describe("InitiativesController", function() {
 							SELECT * FROM initiative_messages
 						`)
 
-						var emails = subscriptions.slice(2).map((s) => s.email).sort()
+						var emails = subscriptions.map((s) => s.email).sort()
 
 						messages.must.eql([{
 							id: messages[0].id,
@@ -9634,18 +9994,6 @@ describe("InitiativesController", function() {
 							{initiativeTitle: initiative.title}
 						))
 
-						var vars = email.headers["x-mailgun-recipient-variables"]
-
-						JSON.parse(vars).must.eql({
-							[subscriptions[2].email]: {
-								unsubscribeUrl: `/initiatives/${initiative.uuid}/subscriptions/${subscriptions[2].update_token}`
-							},
-
-							[subscriptions[3].email]: {
-								unsubscribeUrl: `/subscriptions/${subscriptions[3].update_token}`
-							}
-						})
-
 						email.body.must.equal(t("SENT_TO_PARLIAMENT_MESSAGE_BODY", {
 							initiativeTitle: initiative.title,
 							initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
@@ -9655,6 +10003,10 @@ describe("InitiativesController", function() {
 							siteUrl: Config.url,
 							facebookUrl: Config.facebookUrl
 						}))
+
+						JSON.parse(email.headers["x-mailgun-recipient-variables"]).must.eql(
+							serializeMailgunVariables(subscriptions)
+						)
 					})
 				})
 
@@ -9840,7 +10192,6 @@ describe("InitiativesController", function() {
 						])
 
 						var vars = email.headers["x-mailgun-recipient-variables"]
-
 						JSON.parse(vars).must.eql({
 							"muhu@example.org": {},
 							"muhu-cc@example.org": {}
@@ -9892,7 +10243,7 @@ describe("InitiativesController", function() {
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
-						var subscriptions = subscriptionsDb.create([
+						subscriptionsDb.create([
 							new ValidSubscription({
 								initiative_uuid: initiative.uuid,
 								confirmed_at: new Date,
@@ -9905,6 +10256,14 @@ describe("InitiativesController", function() {
 								event_interest: false
 							}),
 
+							new ValidSubscription({
+								initiative_destination: "parliament",
+								confirmed_at: new Date,
+								event_interest: true
+							})
+						])
+
+						var subscriptions = subscriptionsDb.create([
 							new ValidSubscription({
 								initiative_uuid: initiative.uuid,
 								confirmed_at: new Date,
@@ -9913,6 +10272,12 @@ describe("InitiativesController", function() {
 
 							new ValidSubscription({
 								initiative_uuid: null,
+								confirmed_at: new Date,
+								event_interest: true
+							}),
+
+							new ValidSubscription({
+								initiative_destination: initiative.destination,
 								confirmed_at: new Date,
 								event_interest: true
 							})
@@ -9935,7 +10300,7 @@ describe("InitiativesController", function() {
 							SELECT * FROM initiative_messages
 						`)
 
-						var emails = subscriptions.slice(2).map((s) => s.email).sort()
+						var emails = subscriptions.map((s) => s.email).sort()
 
 						var initiativeUrl = `${Config.localSiteUrl}/initiatives`
 						initiativeUrl += `/${initiative.uuid}`
@@ -9971,18 +10336,6 @@ describe("InitiativesController", function() {
 							{initiativeTitle: initiative.title}
 						))
 
-						var vars = email.headers["x-mailgun-recipient-variables"]
-
-						JSON.parse(vars).must.eql({
-							[subscriptions[2].email]: {
-								unsubscribeUrl: `/initiatives/${initiative.uuid}/subscriptions/${subscriptions[2].update_token}`
-							},
-
-							[subscriptions[3].email]: {
-								unsubscribeUrl: `/subscriptions/${subscriptions[3].update_token}`
-							}
-						})
-
 						email.body.must.equal(t("SENT_TO_LOCAL_GOVERNMENT_MESSAGE_BODY", {
 							initiativeTitle: initiative.title,
 							initiativeUrl: initiativeUrl,
@@ -9992,6 +10345,10 @@ describe("InitiativesController", function() {
 							siteUrl: Config.url,
 							facebookUrl: Config.facebookUrl
 						}))
+
+						JSON.parse(email.headers["x-mailgun-recipient-variables"]).must.eql(
+							serializeMailgunVariables(subscriptions)
+						)
 					})
 				})
 

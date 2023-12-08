@@ -6,6 +6,7 @@ module.exports = function(attrs) {
 
 	return _.assign({
 		initiative_uuid: null,
+		initiative_destination: null,
 		email: _.uniqueId("user") + "@example.com",
 		created_at: createdAt,
 		created_ip: null,
@@ -17,7 +18,6 @@ module.exports = function(attrs) {
 		new_interest: false,
 		signable_interest: false,
 		event_interest: false,
-		author_interest: false,
 		comment_interest: false
 	}, attrs)
 }
