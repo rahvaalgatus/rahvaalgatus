@@ -53,8 +53,6 @@ exports.parse = function(attrs) {
 		signature_threshold_at: attrs.signature_threshold_at &&
 			new Date(attrs.signature_threshold_at),
 
-		parliament_api_data: attrs.parliament_api_data &&
-			JSON.parse(attrs.parliament_api_data),
 		parliament_synced_at: attrs.parliament_synced_at &&
 			new Date(attrs.parliament_synced_at),
 		signature_milestones: attrs.signature_milestones &&
@@ -72,8 +70,6 @@ exports.serialize = function(attrs) {
 	if ("meetings" in obj) obj.meetings = JSON.stringify(obj.meetings)
 	if ("tags" in obj) obj.tags = JSON.stringify(obj.tags)
 
-	if ("parliament_api_data" in obj)
-		obj.parliament_api_data = JSON.stringify(obj.parliament_api_data)
 	if ("organizations" in obj)
 		obj.organizations = JSON.stringify(obj.organizations)
 	if ("signature_milestones" in obj)

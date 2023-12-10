@@ -11,6 +11,7 @@ function truncate() {
 	sqlite.batch(`
 		PRAGMA foreign_keys = OFF;
 
+		DELETE FROM external_responses;
 		DELETE FROM initiative_coauthors;
 		DELETE FROM initiative_subscriptions;
 		DELETE FROM initiative_signatures;

@@ -685,3 +685,10 @@ textarea.admin-input {
 		background: white;
 	}
 }
+
+#external-responses-page main {
+	td.duration-column {
+		font-family: $monospace;
+		font-size: 1.3rem;
+	}
+}

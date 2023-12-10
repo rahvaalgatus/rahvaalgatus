@@ -1,4 +1,4 @@
-var O = require("oolong")
+var _ = require("root/lib/underscore")
 var Db = require("root/lib/db")
 var MediaType = require("medium-type")
 var {sqlite} = require("root")
@@ -8,7 +8,7 @@ exports.idAttribute = "initiative_uuid"
 exports.idColumn = "initiative_uuid"
 
 exports.parse = function(attrs) {
-	return O.defaults({
+	return _.defaults({
 		type: MediaType.parse(attrs.type)
 	}, attrs)
 }

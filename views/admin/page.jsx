@@ -93,6 +93,13 @@ function Page(attrs, children) {
 								class={prefixed("/subscriptions/", path)}
 							>Subscriptions</a>
 						</li>
+
+						<li>
+							<a
+								href={req.rootUrl + "/external-responses"}
+								class={prefixed("/external-responses/", path)}
+							>External Responses</a>
+						</li>
 					</ul>
 				</nav>
 			</header>

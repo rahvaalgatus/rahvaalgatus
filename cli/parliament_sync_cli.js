@@ -4,6 +4,7 @@ var Time = require("root/lib/time")
 var Config = require("root").config
 var Subscription = require("root/lib/subscription")
 var FetchError = require("fetch-error")
+var ExternalApi = require("root/lib/external_api")
 var parliamentApi = require("root/lib/parliament_api")
 var diff = require("root/lib/diff")
 var sql = require("sqlate")
@@ -12,6 +13,7 @@ var eventsDb = require("root/db/initiative_events_db")
 var filesDb = require("root/db/initiative_files_db")
 var messagesDb = require("root/db/initiative_messages_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
+var responsesDb = require("root/db/external_responses_db")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var renderEventTitle = require("root/lib/event").renderTitle
 var isEventNotifiable = require("root/lib/event").isNotifiable
@@ -24,11 +26,7 @@ var EMPTY_ARR = Array.prototype
 var PARLIAMENT_URL = "https://www.riigikogu.ee"
 var DOCUMENT_URL = PARLIAMENT_URL + "/tegevus/dokumendiregister/dokument"
 var FILE_URL = PARLIAMENT_URL + "/download"
-exports = module.exports = co.wrap(cli)
-exports.parseTitle = parseTitle
-exports.replaceInitiative = replaceInitiative
-exports.syncInitiativeDocuments = syncInitiativeDocuments
-exports.readVolumeWithDocuments = readVolumeWithDocuments
+module.exports = co.wrap(cli)
 
 var USAGE_TEXT = `
 Usage: cli parliament-sync (-h | --help)
@@ -36,12 +34,7 @@ Usage: cli parliament-sync (-h | --help)
 
 Options:
     -h, --help   Display this help and exit.
-    --force      Force refreshing initiatives from the parliament API.
-    --cached     Do not refresh initiatives from the parliament API.
     --quiet      Do not report ignored initiatives and documents.
-    --external   Also import external initiatives.
-    --no-update  Only import new (external) initiatives. Don't update existing.
-    --dry-run    Check for new external initiatives. Don't import any.
     --no-email   Don't email about imported initiative events.
 `
 
@@ -67,92 +60,42 @@ function* cli(argv) {
 	var uuid = args["<uuid>"]
 	if (uuid == "") throw new Error("Invalid UUID: " + uuid)
 
-	var opts = {
+	yield sync({
 		quiet: args["--quiet"],
-		importExternal: args["--external"],
-		update: !args["--no-update"],
-		dryRun: args["--dry-run"],
 		email: !args["--no-email"]
-	}
-
-	if (args["--cached"]) {
-		var initiatives = initiativesDb.search(sql`
-			SELECT * FROM initiatives
-			WHERE parliament_api_data IS NOT NULL
-			${uuid ? sql`AND uuid = ${uuid}` : sql``}
-		`)
-
-		yield initiatives.map((i) => (
-			replaceInitiative(opts, i, i.parliament_api_data)
-		))
-	}
-	else yield sync(_.defaults({force: args["--force"]}, opts), uuid)
+	}, uuid)
 }
 
-function* sync(opts, uuid) {
-	var api = _.memoize(parliamentApi)
-	var {force} = opts
+function* sync(opts, onlyUuid) {
+	var api = new ExternalApi(parliamentApi.URL, parliamentApi, responsesDb)
 
-	var docs = yield (uuid == null
-		? api("documents/collective-addresses").then(getBody)
-		: api(`documents/collective-addresses/${uuid}`).then(getBody).then(_.concat)
-	)
+	var docsRes = yield api.read("documents/collective-addresses")
+	if (docsRes.status == 304) return
 
-	var pairs = _.zip(docs.map(readInitiative.bind(null, opts)), docs)
-	pairs = pairs.filter(_.compose(Boolean, _.first))
+	for (let {uuid} of docsRes.body) {
+		if (onlyUuid && uuid != onlyUuid) continue
 
-	pairs = yield pairs.map(function*([initiative, initiativeDoc]) {
-		// Because the collective-addresses/:id endpoint doesn't return files
-		// (https://github.com/riigikogu-kantselei/api/issues/27), we used to
-		// populate files only on the first run and later switched to use
-		// a cached response on the assumption that no new files will appear after
-		// creation.
-		//
-		// A change made in the summer of 2020, however, broke the relatedDocuments
-		// attribute in the collective-addresses response, making it necessary to
-		// always load the parent document.
-		// https://github.com/riigikogu-kantselei/api/issues/33
-		//
-		// Still as of Sep 2, 2021 the collective-addresses/:id endpoint lacks the
-		// volume property. The /documents/:id endpoint on the other hand lacks
-		// relatedDocuments on statuses.
-		var doc = yield api("documents/" + initiativeDoc.uuid).then(getBody)
+		var docPath = "documents/collective-addresses/" + uuid
+		var cached = api.readCached(docPath)
 
-		initiativeDoc.volume = doc.volume || null
-		initiativeDoc.files = doc.files || null
+		// Because the /collective-addresses endpoint lacks `relatedDocuments` for
+		// _some_ initiatives, we can't even rely on it for identifying updates.
+		// We'll have to fetch the full document again. No If-None-Match, either:
+		// https://github.com/riigikogu-kantselei/api/issues/35
+		var initiativeDoc = yield api.read(docPath).then(getBody)
 
-		if (doc.relatedDocuments)
-			initiativeDoc.relatedDocuments = doc.relatedDocuments
-		if (doc.relatedVolumes)
-			initiativeDoc.relatedVolumes = doc.relatedVolumes
+		if (cached && !diff(
+			normalizeInitiativeDocumentForDiff(cached.body),
+			normalizeInitiativeDocumentForDiff(initiativeDoc)
+		)) continue
 
-		return [initiative, initiativeDoc]
-	})
-
-	var updated = pairs.filter(function(initiativeAndDocument) {
-		var initiative = initiativeAndDocument[0]
-		var document = initiativeAndDocument[1]
-
-		return initiative.parliament_api_data == null || force || diff(
-			normalizeParliamentDocumentForDiff(initiative.parliament_api_data),
-			normalizeParliamentDocumentForDiff(document)
-		)
-	})
-
-	yield updated.map(function*(initiativeAndDocument) {
-		var initiative = initiativeAndDocument[0]
-
-		var doc = yield syncInitiativeDocuments(api, initiativeAndDocument[1])
-		initiative = yield replaceInitiative(opts, initiative, doc)
-
-		initiativesDb.update(initiative, {
-			parliament_api_data: doc,
-			parliament_synced_at: new Date
-		})
-	})
+		yield syncInitiative(opts, api, initiativeDoc)
+	}
 }
 
-function readInitiative(opts, doc) {
+function* syncInitiative(opts, api, initiativeDoc) {
+	initiativeDoc = yield readInitiativeFromApi(api, initiativeDoc)
+
 	// Around April 2020 old initiatives in the parliament API were recreated and
 	// their old UUIDs were assigned to the `senderReference` field.
 	// Unfortunately previous Rahvaalgatus' UUIDs (in `senderReference`) were
@@ -161,131 +104,166 @@ function readInitiative(opts, doc) {
 	// UUID. Waiting for an update on that as of Apr 17, 2020.
 	var initiative = initiativesDb.read(sql`
 		SELECT * FROM initiatives
-		WHERE uuid = ${doc.senderReference}
-		OR parliament_uuid = ${doc.uuid}
-		OR parliament_uuid = ${doc.senderReference}
+		WHERE uuid = ${initiativeDoc.senderReference}
+		OR parliament_uuid = ${initiativeDoc.uuid}
+		OR parliament_uuid = ${initiativeDoc.senderReference}
 		LIMIT 1
 	`)
 
-	if (opts.dryRun) {
-		if (initiative) logger.log("Old initiative %s (%s)…", doc.uuid, doc.title)
-		else logger.log("New initiative %s (%s)…", doc.uuid, doc.title)
-		return null
-	}
-
-	if (initiative) return opts.update ? initiative : null
-
-	if (!opts.importExternal) {
-		if (!opts.quiet)
-			logger.log("Ignoring new initiative %s (%s)…", doc.uuid, doc.title)
-
-		return null
-	}
-
-	// Use submittedDate as some initiatives documents were recreated
-	// 5 years after the actual submitting date. Example:
-	// https://api.riigikogu.ee/api/documents/collective-addresses/b9a5b10c-3744-49bc-b4f4-cecf34721b1f
-	//
-	// TODO: Ensure time parsing is always in Europe/Tallinn and don't depend
-	// on TZ being set.
-	// https://github.com/riigikogu-kantselei/api/issues/11
-	var createdAt = (
-		doc.submittingDate && Time.parseIsoDate(doc.submittingDate) ||
-		doc.created && Time.parseIsoDateTime(doc.created) ||
-		new Date
-	)
-
-	return {
-		parliament_uuid: doc.uuid,
-		external: true,
-		phase: "parliament",
-		destination: "parliament",
-		title: doc.title ? parseTitle(doc.title) : "",
-		author_name: doc.sender || "",
-		created_at: createdAt,
-		published_at: createdAt
-	}
+	yield updateInitiativeFromDocument(opts, initiative, initiativeDoc)
 }
 
-function* syncInitiativeDocuments(api, doc) {
-	if (doc.volume) {
-		doc.volume = yield readVolumeWithDocuments(api, doc.volume.uuid)
+// Because the /collective-addresses/:id endpoint didn't return
+// files (https://github.com/riigikogu-kantselei/api/issues/27), we used to
+// populate files from /documents/:id. Did so only on the first run on the
+// assumption that no new files will appear after creation.
+//
+// A change made in the summer of 2020, however, broke the relatedDocuments
+// attribute in the /collective-addresses/:id response, making it necessary
+// to always load the parent document.
+// https://github.com/riigikogu-kantselei/api/issues/33. As of Dec 10, 2023,
+// both endpoints seem to return `relatedDocuments` at least for that example
+// initiative. However the index endpoint now lacks `relatedDocuments`
+// *inconsistently*.
+//
+// As of Sep 2, 2021 the /collective-addresses/:id endpoint lacks the
+// volume property. The /documents/:id endpoint on the other hand lacks
+// `relatedDocuments` on statuses.
+//
+// As of Dec 9, 2023, the /collective-addresses and /collective-addresses/:id
+// endpoints still lacks the `volume` property which /documents/:id has, and
+// only /collective-documents and /collective-documents/:id contain
+// `relatedDocuments` on the `statuses` arrays.
+//
+// As of Dec 9, 2023, the /collective-addresses index endpoint lacks
+// `relatedDocuments` for _some_ initiatives:
+// https://github.com/riigikogu-kantselei/api/issues/34.
+//
+// The /collective-addresses index endpoint _also_ differs from
+// /collective-addresses/:id Dec 9, 2023 regarding `accessRestrictionHistory`
+// on files. The former lacks it.
+// https://github.com/riigikogu-kantselei/api/issues/36
+function* readInitiativeFromApi(api, initiativeDoc) {
+	if (initiativeDoc.volume == null) {
+		var initiativeOtherDoc =
+			yield api.read("documents/" + initiativeDoc.uuid).then(getBody)
 
-		// The document we're syncing could either be one from
-		// /documents/collective-addresses or from /documents, so
-		// _.without(volume.documents, doc) won't cut it.
-		doc.volume.documents = _.reject(doc.volume.documents, (d) => (
-			d.uuid == doc.uuid
-		))
+		initiativeDoc.volume = initiativeOtherDoc.volume || null
+	}
+
+	if (initiativeDoc.volume) {
+		initiativeDoc.volume =
+			yield readVolumeWithDocuments(api, initiativeDoc.volume.uuid)
+
+		initiativeDoc.volume.documents =
+			_.reject(initiativeDoc.volume.documents, (doc) => (
+				doc.uuid == initiativeDoc.uuid
+			))
 	}
 
 	// Note we need to fetch the initiative as a document, too, as the
-	// /collective-addresses response doesn't include documents' volumes.
+	// /collective-addresses/:id response doesn't include the volume property.
 	//
 	// Don't then fetch all volumes for all documents as some of them include
 	// documents unrelated to the initiative. For example, an initiative
 	// acceptance decision (https://api.riigikogu.ee/api/documents/d655bc48-e5ec-43ad-9640-8cba05f78427)
 	// resides in a "All parliament decisions in 2019" volume.
-	doc.relatedDocuments = (
-		yield (doc.relatedDocuments || []).map(readDocument.bind(null, api))
+	initiativeDoc.relatedDocuments = (
+		yield (initiativeDoc.relatedDocuments || []).map(readDocument.bind(null, api))
 	).filter(Boolean)
 
-	doc.relatedVolumes = yield (doc.relatedVolumes || []).map(getUuid).map(
+	initiativeDoc.relatedVolumes =
+		yield (initiativeDoc.relatedVolumes || []).map(getUuid).map(
+			readVolumeWithDocuments.bind(null, api)
+		)
+
+	var relatedVolumeUuids = new Set(initiativeDoc.relatedVolumes.map(getUuid))
+
+	var missingVolumeUuids =
+		yield initiativeDoc.relatedDocuments.filter((doc) => (
+			doc.volume &&
+			!relatedVolumeUuids.has(doc.volume.uuid) &&
+			isMeetingTopicDocument(doc)
+		)).map((doc) => doc.volume.uuid)
+
+	initiativeDoc.missingVolumes = yield missingVolumeUuids.map(
 		readVolumeWithDocuments.bind(null, api)
 	)
 
-	var relatedVolumeUuids = new Set(doc.relatedVolumes.map(getUuid))
+	initiativeDoc.statuses =
+		yield (initiativeDoc.statuses || []).map(function*(status) {
+			return _.assign({}, status, {
+				relatedDocuments: yield (status.relatedDocuments || []).map(
+					readDocument.bind(null, api)
+				).filter(Boolean),
 
-	var missingVolumeUuids = yield doc.relatedDocuments.filter((doc) => (
-		doc.volume &&
-		!relatedVolumeUuids.has(doc.volume.uuid) &&
-		isMeetingTopicDocument(doc)
-	)).map((doc) => doc.volume.uuid)
-
-	doc.missingVolumes = yield missingVolumeUuids.map(
-		readVolumeWithDocuments.bind(null, api)
-	)
-
-	doc.statuses = yield (doc.statuses || []).map(function*(status) {
-		return _.assign({}, status, {
-			relatedDocuments: yield (status.relatedDocuments || []).map(
-				readDocument.bind(null, api)
-			).filter(Boolean),
-
-			relatedVolumes: yield (status.relatedVolumes || []).map((volume) => (
-				readVolumeWithDocuments(api, volume.uuid)
-			))
+				relatedVolumes: yield (status.relatedVolumes || []).map((volume) => (
+					readVolumeWithDocuments(api, volume.uuid)
+				))
+			})
 		})
-	})
 
-	return doc
+	return initiativeDoc
 }
 
-function* replaceInitiative(opts, initiative, document) {
-	var statuses = sortStatuses(document.statuses || EMPTY_ARR)
-	var update = attrsFrom(document)
+function* updateInitiativeFromDocument(opts, initiative, initiativeDoc) {
+	var update = initiativeAttrsFromInitiativeDocument(initiativeDoc)
 
-	if (initiative.uuid == null) {
-		logger.log("Creating initiative %s (%s)…", document.uuid, document.title)
-		initiative.uuid = initiative.parliament_uuid
-		initiative = initiativesDb.create(_.assign(initiative, update))
+	if (initiative == null) {
+		logger.log(
+			"Creating initiative %s (%s)…",
+			initiativeDoc.uuid,
+			initiativeDoc.title
+		)
+
+		// Use submittedDate as some initiatives documents were recreated
+		// 5 years after the actual submitting date. Example:
+		// https://api.riigikogu.ee/api/documents/collective-addresses/b9a5b10c-3744-49bc-b4f4-cecf34721b1f
+		//
+		// TODO: Ensure time parsing is always in Europe/Tallinn and don't depend
+		// on TZ being set.
+		// https://github.com/riigikogu-kantselei/api/issues/11
+		var createdAt = (
+			initiativeDoc.submittingDate &&
+			Time.parseIsoDate(initiativeDoc.submittingDate) ||
+
+			initiativeDoc.created && Time.parseIsoDateTime(initiativeDoc.created) ||
+			new Date
+		)
+
+		initiative = initiativesDb.create(_.assign({
+			uuid: initiativeDoc.uuid,
+			parliament_uuid: initiativeDoc.uuid,
+			external: true,
+			phase: "parliament",
+			destination: "parliament",
+			title: initiativeDoc.title ? parseTitle(initiativeDoc.title) : "",
+			author_name: initiativeDoc.sender || "",
+			created_at: createdAt,
+			published_at: createdAt
+		}, update))
 	}
 	else if (diff(initiative, update)) {
-		logger.log("Updating initiative %s (%s)…", initiative.uuid, document.title)
+		logger.log(
+			"Updating initiative %s (%s)…",
+			initiative.uuid,
+			initiativeDoc.title
+		)
+
 		initiative = initiativesDb.update(initiative, update)
 	}
 
-	yield replaceFiles(initiative, document)
+	yield replaceFiles(initiative, initiativeDoc)
 
 	var volumes = _.concat(
-		document.volume || EMPTY_ARR,
-		document.relatedVolumes,
-		document.missingVolumes
+		initiativeDoc.volume || EMPTY_ARR,
+		initiativeDoc.relatedVolumes,
+		initiativeDoc.missingVolumes
 	)
 
 	var volumeUuids = new Set(_.map(volumes, "uuid"))
 
-	var documents = document.relatedDocuments.filter((doc) => (
+	var documents = initiativeDoc.relatedDocuments.filter((doc) => (
 		doc.volume == null || !volumeUuids.has(doc.uuid)
 	))
 
@@ -298,10 +276,12 @@ function* replaceInitiative(opts, initiative, document) {
 	// days prior. Let's assume the earlier entry is canonical and of more
 	// interest to people, and the later MENETLUS_LOPETATUD status perhaps
 	// formality.
+	var statuses = sortStatuses(initiativeDoc.statuses || EMPTY_ARR)
+
 	;[eventAttrs, documents] = _.map1st(_.concat.bind(null, eventAttrs), _.mapM(
 		_.uniqBy(statuses, eventIdFromStatus),
 		documents,
-		eventAttrsFromStatus.bind(null, opts, initiative, document)
+		eventAttrsFromStatus.bind(null, opts, initiative, initiativeDoc)
 	))
 
 	var [volumeEventsAttrs, addedDocuments] = _.unzip(volumes.map(
@@ -333,14 +313,14 @@ function* replaceInitiative(opts, initiative, document) {
 
 	yield replaceEvents(opts, initiative, eventAttrs)
 
-	if (!opts.quiet) documents.forEach((document) => logger.warn(
+	if (!opts.quiet) documents.forEach((initiativeDoc) => logger.warn(
 		"Ignored initiative %s document %s (%s)",
 		initiative.uuid,
-		document.uuid,
-		document.title
+		initiativeDoc.uuid,
+		initiativeDoc.title
 	))
 
-	return initiative
+	initiativesDb.update(initiative, {parliament_synced_at: new Date})
 }
 
 function* replaceEvents(opts, initiative, eventAttrs) {
@@ -465,11 +445,11 @@ function downloadFile(file) {
 	return parliamentApi(file.external_url).then((res) => ({
 		__proto__: file,
 		content: Buffer.from(res.body),
-		content_type: res.headers["content-type"]
+		content_type: res.headers.get("content-type")
 	}))
 }
 
-function attrsFrom(doc) {
+function initiativeAttrsFromInitiativeDocument(doc) {
 	var attrs = {parliament_uuid: doc.uuid}
 	var committee = getLatestCommittee(doc)
 	if (committee) attrs.parliament_committee = committee.name
@@ -918,53 +898,44 @@ function parseTitle(title) {
 	return _.capitalize(title)
 }
 
-function normalizeParliamentDocumentForDiff(document) {
-	var documents = document.relatedDocuments
-	var volumes = document.relatedVolumes
+function normalizeInitiativeDocumentForDiff(initiativeDoc) {
+	return _.defaults({
+		files: initiativeDoc.files
+			? _.sortBy(initiativeDoc.files.map(normalizeFile), "uuid")
+			: [],
 
-	return {
-		// NOTE: Diffing happens before documents and volumes have been populated
-		// and therefore don't contain files and documents respectively.
-		__proto__: document,
+		statuses: initiativeDoc.statuses
+			? sortStatuses(initiativeDoc.statuses.map(normalizeStatus))
+			: [],
 
-		statuses: document.statuses &&
-			sortStatuses(document.statuses.map(normalizeStatus)),
+		relatedDocuments: initiativeDoc.relatedDocuments
+			? _.sortBy(initiativeDoc.relatedDocuments, "uuid")
+			: [],
 
-		relatedDocuments:
-			documents && _.sortBy(documents.map(normalizeDocument), "uuid"),
+		relatedVolumes: initiativeDoc.relatedVolumes
+			? _.sortBy(initiativeDoc.relatedVolumes, "uuid")
+			: []
+	}, initiativeDoc)
 
-		relatedVolumes: volumes && _.sortBy(volumes.map(normalizeVolume), "uuid"),
-		missingVolumes: null
-	}
-
-	// Ideally we'd compare something like an updated-at attribute, but there's
-	// none in the /api/documents/collective-addresses response.
-	function normalizeDocument(doc) {
-		return {uuid: doc.uuid, title: doc.title, documentType: doc.documentType}
-	}
-
-	function normalizeVolume(volume) {
-		return {
-			uuid: volume.uuid,
-			title: volume.title,
-			volumeType: volume.volumeType,
-			documents: (volume.documents || EMPTY_ARR).map(normalizeDocument)
-		}
+	function normalizeFile(file) {
+		return _.defaults({accessRestrictionHistory: null}, file)
 	}
 
 	function normalizeStatus(status) {
 		return _.defaults({
-			relatedDocuments: status.relatedDocuments &&
-				status.relatedDocuments.map(normalizeDocument),
+			relatedDocuments: status.relatedDocuments
+				? _.sortBy(status.relatedDocuments, "uuid")
+				: [],
 
-			relatedVolumes: status.relatedVolumes &&
-				status.relatedVolumes.map(normalizeVolume)
+			relatedVolumes: status.relatedVolumes
+				? _.sortBy(status.relatedVolumes, "uuid")
+				: []
 		}, status)
 	}
 }
 
 function* readVolumeWithDocuments(api, uuid) {
-	var volume = yield api("volumes/" + uuid).then(getBody)
+	var volume = yield api.read("volumes/" + uuid).then(getBody)
 
 	// Don't recurse into draft act documents for now as we're not sure what to
 	// make of them yet.
@@ -985,7 +956,7 @@ function readDocument(api, doc) {
 	// Don't ignore all meeting topic documents (unitAgendaItemDocument) though,
 	// as some are perfectly available from /documents/:id. For example:
 	// https://api.riigikogu.ee/api/documents/6c467b55-5425-47c0-b50f-faced52b747e
-	var res = api("documents/" + doc.uuid)
+	var res = api.read("documents/" + doc.uuid)
 	return res.then(getBody, raiseForDocument.bind(null, doc))
 }
 

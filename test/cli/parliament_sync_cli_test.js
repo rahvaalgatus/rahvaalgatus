@@ -21,7 +21,6 @@ var {formatDate} = require("root/lib/i18n")
 var sql = require("sqlate")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var flatten = Function.apply.bind(Array.prototype.concat, Array.prototype)
-var respondWithEmpty = respond.bind(null, {})
 var {respondWithNotFound} = require("./parliament_api")
 var outdent = require("root/lib/outdent")
 var t = require("root/lib/i18n").t.bind(null, "et")
@@ -36,7 +35,7 @@ var DOCUMENT_URL = PARLIAMENT_URL + "/tegevus/dokumendiregister/dokument"
 var EXAMPLE_BUFFER = Buffer.from("\x0d\x25")
 
 var job = _.compose(require("root/cli/parliament_sync_cli"), (args) => _.concat(
-	"parliament-sync", "--external", args || []
+	"parliament-sync", args || []
 ))
 
 describe("ParliamentSyncCli", function() {
@@ -56,22 +55,32 @@ describe("ParliamentSyncCli", function() {
 	})
 
 	it("must create external initiative with files", function*() {
-		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+		var initiativeDoc = {
 			uuid: INITIATIVE_UUID,
 			title: "Kollektiivne pöördumine elu paremaks tegemiseks",
 			created: "2015-06-18T13:37:42.666",
 			submittingDate: "2015-06-17",
 			sender: "John Smith",
-			responsibleCommittee: [{name: "Sotsiaalkomisjon"}]
-		}]))
+			responsibleCommittee: [{name: "Sotsiaalkomisjon"}],
 
-		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {
 			files: [{
 				uuid: FILE_UUID,
 				fileName: "algatus.pdf",
 				accessRestrictionType: "PUBLIC"
 			}]
-		}))
+		}
+
+		this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+		this.router.get(
+			`/api/documents/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
+
+		this.router.get(
+			`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
 
 		this.router.get(`/download/${FILE_UUID}`,
 			respondWithRiigikoguDownload.bind(null, "application/pdf", "PDF")
@@ -92,7 +101,6 @@ describe("ParliamentSyncCli", function() {
 			undersignable: false,
 			parliament_uuid: INITIATIVE_UUID,
 			parliament_committee: "Sotsiaalkomisjon",
-			parliament_api_data: initiatives[0].parliament_api_data,
 			parliament_synced_at: new Date
 		})])
 
@@ -115,14 +123,24 @@ describe("ParliamentSyncCli", function() {
 
 	it("must create external initiative in parliament phase if finished",
 		function*() {
-		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+		var initiativeDoc = {
 			uuid: INITIATIVE_UUID,
 			title: "Kollektiivne pöördumine elu Tallinnas paremaks tegemiseks",
 			submittingDate: "2015-06-18",
 			statuses: [{date: "2015-06-20", status: {code: "MENETLUS_LOPETATUD"}}]
-		}]))
+		}
 
-		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+		this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+		this.router.get(
+			`/api/documents/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
+
+		this.router.get(
+			`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
 
 		yield job()
 
@@ -138,18 +156,27 @@ describe("ParliamentSyncCli", function() {
 			undersignable: false,
 			finished_in_parliament_at: new Date(2015, 5, 20),
 			parliament_uuid: INITIATIVE_UUID,
-			parliament_api_data: initiative.parliament_api_data,
 			parliament_synced_at: new Date
 		}))
 	})
 
 	it("must strip quotes from title on an external initiative", function*() {
-		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+		var initiativeDoc = {
 			uuid: INITIATIVE_UUID,
 			title: "Kollektiivne pöördumine \"Teeme Tallinna paremaks!\""
-		}]))
+		}
 
-		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+		this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+		this.router.get(
+			`/api/documents/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
+
+		this.router.get(
+			`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
 
 		yield job()
 		var initiative = initiativesDb.read(INITIATIVE_UUID)
@@ -157,12 +184,22 @@ describe("ParliamentSyncCli", function() {
 	})
 
 	it("must strip dash from title on an external initiative", function*() {
-		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+		var initiativeDoc = {
 			uuid: INITIATIVE_UUID,
 			title: "Kollektiivne pöördumine - Teeme Tallinna paremaks!"
-		}]))
+		}
 
-		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+		this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+		this.router.get(
+			`/api/documents/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
+
+		this.router.get(
+			`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
 
 		yield job()
 		var initiative = initiativesDb.read(INITIATIVE_UUID)
@@ -176,7 +213,7 @@ describe("ParliamentSyncCli", function() {
 			phase: "government"
 		}))
 
-		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+		var initiativeDoc = {
 			uuid: INITIATIVE_UUID,
 			title: "Kollektiivne pöördumine elu Tallinnas paremaks tegemiseks",
 			sender: "Mike Smith",
@@ -187,16 +224,26 @@ describe("ParliamentSyncCli", function() {
 				{date: "2018-10-23", status: {code: "REGISTREERITUD"}},
 				{date: "2018-10-24", status: {code: "MENETLUSSE_VOETUD"}},
 				{date: "2018-10-25", status: {code: "MENETLUS_LOPETATUD"}}
-			]
-		}]))
+			],
 
-		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {
 			files: [{
 				uuid: FILE_UUID,
 				fileName: "algatus.pdf",
 				accessRestrictionType: "PUBLIC"
 			}]
-		}))
+		}
+
+		this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+		this.router.get(
+			`/api/documents/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
+
+		this.router.get(
+			`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
 
 		this.router.get(`/download/${FILE_UUID}`,
 			respondWithRiigikoguDownload.bind(null, "application/pdf", "PDF")
@@ -212,7 +259,6 @@ describe("ParliamentSyncCli", function() {
 			__proto__: initiative,
 			parliament_uuid: INITIATIVE_UUID,
 			parliament_committee: "Sotsiaalkomisjon",
-			parliament_api_data: initiatives[0].parliament_api_data,
 			parliament_synced_at: new Date,
 			received_by_parliament_at: new Date(2018, 9, 23),
 			accepted_by_parliament_at: new Date(2018, 9, 24),
@@ -244,14 +290,25 @@ describe("ParliamentSyncCli", function() {
 			parliament_uuid: "83ecffc8-621a-4277-b388-39b1e626d1fa"
 		}))
 
-		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+		var initiativeDoc = {
 			uuid: INITIATIVE_UUID,
 			title: "Kollektiivne pöördumine elu Tallinnas paremaks tegemiseks",
 			senderReference: initiative.parliament_uuid,
 			responsibleCommittee: [{name: "Sotsiaalkomisjon"}]
-		}]))
+		}
 
-		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {}))
+		this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+		this.router.get(
+			`/api/documents/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
+
+		this.router.get(
+			`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
+
 		yield job()
 
 		var initiatives = initiativesDb.search(sql`SELECT * FROM initiatives`)
@@ -261,7 +318,6 @@ describe("ParliamentSyncCli", function() {
 			__proto__: initiative,
 			parliament_uuid: INITIATIVE_UUID,
 			parliament_committee: "Sotsiaalkomisjon",
-			parliament_api_data: initiatives[0].parliament_api_data,
 			parliament_synced_at: new Date
 		}])
 	})
@@ -273,13 +329,24 @@ describe("ParliamentSyncCli", function() {
 			parliament_uuid: INITIATIVE_UUID
 		}))
 
-		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+		var initiativeDoc = {
 			uuid: INITIATIVE_UUID,
 			senderReference: initiative.uuid,
 			statuses: [{date: "2015-06-20", status: {code: "MENETLUS_LOPETATUD"}}]
-		}]))
+		}
 
-		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {}))
+		this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+		this.router.get(
+			`/api/documents/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
+
+		this.router.get(
+			`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
+
 		yield job()
 
 		var initiatives = initiativesDb.search(sql`SELECT * FROM initiatives`)
@@ -288,7 +355,6 @@ describe("ParliamentSyncCli", function() {
 			__proto__: initiative,
 			phase: "done",
 			finished_in_parliament_at: new Date(2015, 5, 20),
-			parliament_api_data: initiatives[0].parliament_api_data,
 			parliament_synced_at: new Date
 		})])
 	})
@@ -300,13 +366,24 @@ describe("ParliamentSyncCli", function() {
 			parliament_uuid: INITIATIVE_UUID
 		}))
 
-		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+		var initiativeDoc = {
 			uuid: INITIATIVE_UUID,
 			senderReference: initiative.uuid,
 			statuses: [{date: "2015-06-20", status: {code: "MENETLUS_LOPETATUD"}}]
-		}]))
+		}
 
-		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {}))
+		this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+		this.router.get(
+			`/api/documents/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
+
+		this.router.get(
+			`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
+
 		yield job()
 
 		var initiatives = initiativesDb.search(sql`SELECT * FROM initiatives`)
@@ -314,7 +391,6 @@ describe("ParliamentSyncCli", function() {
 		initiatives.must.eql([_.clone({
 			__proto__: initiative,
 			finished_in_parliament_at: new Date(2015, 5, 20),
-			parliament_api_data: initiatives[0].parliament_api_data,
 			parliament_synced_at: new Date
 		})])
 	})
@@ -331,7 +407,7 @@ describe("ParliamentSyncCli", function() {
 			destination: "parliament"
 		}))
 
-		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+		var initiativeDoc = {
 			uuid: INITIATIVE_UUID,
 			title: "Kollektiivne pöördumine elu paremaks tegemiseks",
 			sender: "John Smith",
@@ -341,9 +417,20 @@ describe("ParliamentSyncCli", function() {
 				{date: "2018-10-24", status: {code: "MENETLUSSE_VOETUD"}},
 				{date: "2018-10-25", status: {code: "MENETLUS_LOPETATUD"}}
 			]
-		}]))
+		}
 
-		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+		this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+		this.router.get(
+			`/api/documents/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
+
+		this.router.get(
+			`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
+
 		yield job()
 
 		var initiatives = initiativesDb.search(sql`SELECT * FROM initiatives`)
@@ -351,7 +438,6 @@ describe("ParliamentSyncCli", function() {
 		initiatives.must.eql([{
 			__proto__: initiative,
 			parliament_uuid: INITIATIVE_UUID,
-			parliament_api_data: initiatives[0].parliament_api_data,
 			parliament_synced_at: new Date,
 			received_by_parliament_at: new Date(2018, 9, 23),
 			accepted_by_parliament_at: new Date(2018, 9, 24),
@@ -360,87 +446,203 @@ describe("ParliamentSyncCli", function() {
 	})
 
 	it("must not download non-public files", function*() {
-		this.router.get(INITIATIVES_URL, respond.bind(null, [{
-			uuid: INITIATIVE_UUID
-		}]))
+		var initiativeDoc = {
+			uuid: INITIATIVE_UUID,
 
-		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {
 			files: [{
 				uuid: FILE_UUID,
 				fileName: "Pöördumise allkirjade register _30_10_2018.xlsx",
 				accessRestrictionType: "FOR_USE_WITHIN_ESTABLISHMENT",
 			}]
-		}))
+		}
+
+		this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+		this.router.get(
+			`/api/documents/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
+
+		this.router.get(
+			`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
 
 		yield job()
 
 		filesDb.search(sql`SELECT * FROM initiative_files`).must.be.empty()
 	})
 
-	it("must ignore if API response not updated", function*() {
-		this.router.get(INITIATIVES_URL, respond.bind(null, [{
-			uuid: INITIATIVE_UUID
-		}]))
+	it("must ignore if initiative not updated", function*() {
+		var initiativeDoc = {
+			uuid: INITIATIVE_UUID,
+			title: "Teeme elu paremaks!"
+		}
 
-		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+		this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+		this.router.get(
+			`/api/documents/${INITIATIVE_UUID}`,
+			respondOnce(initiativeDoc)
+		)
+
+		this.router.get(
+			`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+			respondMany([initiativeDoc, initiativeDoc])
+		)
+
 		yield job()
 		var initiative = initiativesDb.read(sql`SELECT * FROM initiatives`)
-		var syncedAt = initiative.parliament_synced_at
 		this.time.tick(60 * 1000)
 
 		yield job()
-		initiative = initiativesDb.read(initiative)
-		initiative.parliament_synced_at.must.eql(syncedAt)
+		initiativesDb.read(initiative).must.eql(initiative)
 	})
 
-	// It seems to be the case as of Jul 19, 2019 that the statuses array is
-	// sorted randomly on every response. Same for relatedDocuments and
-	// relatedVolumes.
-	it("must ignore if API response shuffles arrays", function*() {
+	// It seems to be the case as of Jul 19, 2019 and still as of Dec, 2023
+	// that the statuses array is sorted randomly on every response. Same for
+	// relatedDocuments and relatedVolumes.
+	it("must ignore update if arrays shuffled", function*() {
 		var documents = [{uuid: newUuid()}, {uuid: newUuid()}, {uuid: newUuid()}]
 		var volumes = [{uuid: newUuid()}, {uuid: newUuid()}, {uuid: newUuid()}]
+		var files = [{uuid: newUuid()}, {uuid: newUuid()}, {uuid: newUuid()}]
 
-		var parliamentResponse = {
+		files.forEach((file) => (
+			file.accessRestrictionType = "FOR_USE_WITHIN_ESTABLISHMENT"
+		))
+
+		var a = {
 			uuid: INITIATIVE_UUID,
+			files,
 			relatedDocuments: documents,
 			relatedVolumes: volumes,
 
 			statuses: [
 				// Note the test with two statuses on the same date, too.
-				{date: "2018-10-24", status: {code: "REGISTREERITUD"}},
-				{date: "2018-10-24", status: {code: "MENETLUSSE_VOETUD"}},
+				{
+					date: "2018-10-24",
+					status: {code: "REGISTREERITUD", relatedDocuments: documents}
+				},
+
+				{
+					date: "2018-10-24",
+					status: {code: "MENETLUSSE_VOETUD", relatedVolumes: volumes},
+				},
+
 				{date: "2018-10-25", status: {code: "MENETLUS_LOPETATUD"}}
 			]
 		}
 
-		var requests = 0
-		this.router.get(INITIATIVES_URL, function(req, res) {
-			if (requests++ == 0) respond([parliamentResponse], req, res)
-			else respond([_.assign({}, parliamentResponse, {
-				statuses: _.shuffle(parliamentResponse.statuses),
-				relatedDocuments: _.shuffle(parliamentResponse.relatedDocuments),
-				relatedVolumes: _.shuffle(parliamentResponse.relatedVolumes)
-			})], req, res)
-		})
+		var b = _.defaults({
+			files: _.shuffle(a.files),
 
-		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			statuses: _.shuffle(a.statuses).map((status) => _.defaults({
+				relatedDocuments: _.shuffle(status.relatedDocuments || []),
+				relatedVolumes: _.shuffle(status.relatedVolumes || [])
+			}, status)),
+
+			relatedDocuments: _.shuffle(a.relatedDocuments),
+			relatedVolumes: _.shuffle(a.relatedVolumes)
+		}, a)
+
+		this.router.get(INITIATIVES_URL, respondMany([[a], [b]]))
+		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondOnce(a))
+
+		this.router.get(
+			`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+			respondMany([a, b])
+		)
 
 		documents.forEach((doc) => (
-			this.router.get(`/api/documents/${doc.uuid}`, respond.bind(null, doc))
+			this.router.get(`/api/documents/${doc.uuid}`, respondOnce(doc))
 		))
 
 		volumes.forEach((volume) => (
-			this.router.get(`/api/volumes/${volume.uuid}`, respond.bind(null, volume))
+			this.router.get(`/api/volumes/${volume.uuid}`, respondOnce(volume))
 		))
 
 		yield job()
 		var initiative = initiativesDb.read(sql`SELECT * FROM initiatives`)
-		var syncedAt = initiative.parliament_synced_at
-		this.time.tick(1000)
+		this.time.tick(60 * 1000)
 
 		yield job()
-		initiative = initiativesDb.read(initiative)
-		initiative.parliament_synced_at.must.eql(syncedAt)
+		initiativesDb.read(initiative).must.eql(initiative)
+	})
+
+	it("must ignore update if collection response misses file accessRestrictionHistory", function*() {
+		var fileUuid = newUuid()
+
+		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			uuid: INITIATIVE_UUID,
+			files: [{uuid: fileUuid}],
+		}]))
+
+		var initiativeDoc = {
+			uuid: INITIATIVE_UUID,
+
+			files: [{
+				uuid: fileUuid,
+				accessRestrictionHistory: [{
+					changeReason: {code: "PIIRANG_KEHTETUKS_TUNNISTATUD"}
+				}]
+			}],
+		}
+
+		this.router.get(
+			`/api/documents/${INITIATIVE_UUID}`,
+			respondOnce(initiativeDoc)
+		)
+
+		this.router.get(
+			`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+			respondMany([initiativeDoc, initiativeDoc])
+		)
+
+		yield job()
+		var initiative = initiativesDb.read(sql`SELECT * FROM initiatives`)
+		this.time.tick(60 * 1000)
+
+		yield job()
+		initiativesDb.read(initiative).must.eql(initiative)
+	})
+
+	// The /collective-addresses endpoint lacks `relatedDocuments` for _some_
+	// initiatives. For some, it includes them.
+	// https://github.com/riigikogu-kantselei/api/issues/34.
+	it("must ignore update if collection response misses relatedDocuments", function*() {
+		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			uuid: INITIATIVE_UUID
+		}]))
+
+		var documents = [{uuid: newUuid()}, {uuid: newUuid()}, {uuid: newUuid()}]
+		var initiativeDoc = {uuid: INITIATIVE_UUID, relatedDocuments: documents}
+
+		this.router.get(
+			`/api/documents/${INITIATIVE_UUID}`,
+			respondOnce(initiativeDoc)
+		)
+
+		this.router.get(
+			`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+			respondMany([
+				initiativeDoc,
+
+				_.defaults({
+					relatedDocuments: _.shuffle(initiativeDoc.relatedDocuments),
+				}, initiativeDoc)
+			])
+		)
+
+		documents.forEach((doc) => (
+			this.router.get(`/api/documents/${doc.uuid}`, respondOnce(doc))
+		))
+
+		yield job()
+		var initiative = initiativesDb.read(sql`SELECT * FROM initiatives`)
+		this.time.tick(60 * 1000)
+
+		yield job()
+		initiativesDb.read(initiative).must.eql(initiative)
 	})
 
 	it("must email subscribers interested in events", function*() {
@@ -494,7 +696,7 @@ describe("ParliamentSyncCli", function() {
 
 		var eventDates = _.times(3, (i) => DateFns.addDays(new Date, i + -5))
 
-		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+		var initiativeDoc = {
 			uuid: INITIATIVE_UUID,
 
 			statuses: [{
@@ -507,9 +709,19 @@ describe("ParliamentSyncCli", function() {
 				date: formatDate("iso", eventDates[2]),
 				status: {code: "MENETLUS_LOPETATUD"}
 			}]
-		}]))
+		}
 
-		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+		this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+		this.router.get(
+			`/api/documents/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
+
+		this.router.get(
+			`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
 
 		yield job()
 
@@ -594,7 +806,7 @@ describe("ParliamentSyncCli", function() {
 
 		var threshold = DateFns.addMonths(new Date, -3)
 
-		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+		var initiativeDoc = {
 			uuid: INITIATIVE_UUID,
 			statuses: [{
 				date: formatDate("iso", DateFns.addDays(threshold, -1)),
@@ -603,9 +815,18 @@ describe("ParliamentSyncCli", function() {
 				date: formatDate("iso", threshold),
 				status: {code: "MENETLUS_LOPETATUD"}
 			}]
-		}]))
+		}
+		this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
 
-		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+		this.router.get(
+			`/api/documents/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
+
+		this.router.get(
+			`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
 
 		yield job()
 
@@ -661,12 +882,22 @@ describe("ParliamentSyncCli", function() {
 			event_interest: true
 		}))
 
-		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+		var initiativeDoc = {
 			uuid: INITIATIVE_UUID,
 			statuses: [{date: "2018-10-23", status: {code: "REGISTREERITUD"}}]
-		}]))
+		}
 
-		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+		this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+		this.router.get(
+			`/api/documents/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
+
+		this.router.get(
+			`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
 
 		yield job()
 		this.emails.length.must.equal(0)
@@ -679,16 +910,26 @@ describe("ParliamentSyncCli", function() {
 			phase: "parliament"
 		}))
 
-		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+		var initiativeDoc = {
 			uuid: INITIATIVE_UUID,
 			responsibleCommittee: [
 				{name: "Kultuurikomisjon"},
 				{name: "Sotsiaalkomisjon", active: true},
 				{name: "Majanduskomisjon"}
 			]
-		}]))
+		}
 
-		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+		this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+		this.router.get(
+			`/api/documents/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
+
+		this.router.get(
+			`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
 
 		yield job()
 
@@ -704,16 +945,26 @@ describe("ParliamentSyncCli", function() {
 			phase: "parliament"
 		}))
 
-		this.router.get(INITIATIVES_URL, respond.bind(null, [{
+		var initiativeDoc = {
 			uuid: INITIATIVE_UUID,
 			responsibleCommittee: [
 				{name: "Kultuurikomisjon"},
 				{name: "Sotsiaalkomisjon"},
 				{name: "Majanduskomisjon"}
 			]
-		}]))
+		}
 
-		this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+		this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+		this.router.get(
+			`/api/documents/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
+
+		this.router.get(
+			`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+			respond.bind(null, initiativeDoc)
+		)
 
 		yield job()
 
@@ -1147,30 +1398,34 @@ describe("ParliamentSyncCli", function() {
 				title: null,
 				content: null
 			}]]
-		}, function(test, title) {
-			var api = test[0]
-			var attrs = test[1]
-			var eventAttrs = test[2]
-
+		}, function([api, attrs, eventAttrs], title) {
 			it(`must create events given ${title}`, function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: usersDb.create(new ValidUser).id,
 					parliament_uuid: INITIATIVE_UUID
 				}))
 
-				this.router.get(INITIATIVES_URL,	respond.bind(null, [
-					_.defaults({uuid: INITIATIVE_UUID}, api)
-				]))
+				var initiativeDoc = _.defaults({uuid: INITIATIVE_UUID}, api)
 
-				this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+				this.router.get(INITIATIVES_URL,	respond.bind(null, [initiativeDoc]))
+
+				this.router.get(
+					`/api/documents/${INITIATIVE_UUID}`,
+					respond.bind(null, initiativeDoc)
+				)
+
+				this.router.get(
+					`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+					respond.bind(null, initiativeDoc)
+				)
+
 				yield job()
 
 				var updated = initiativesDb.read(initiative)
 
 				updated.must.eql(_.assign({
 					__proto__: initiative,
-					parliament_synced_at: new Date,
-					parliament_api_data: updated.parliament_api_data,
+					parliament_synced_at: new Date
 				}, attrs))
 
 				var events = eventsDb.search(sql`SELECT * FROM initiative_events`)
@@ -1188,7 +1443,7 @@ describe("ParliamentSyncCli", function() {
 				parliament_uuid: INITIATIVE_UUID
 			}))
 
-			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			var initiativeDoc = {
 				uuid: INITIATIVE_UUID,
 
 				statuses: [{
@@ -1196,9 +1451,19 @@ describe("ParliamentSyncCli", function() {
 					status: {code: "MENETLUSSE_VOETUD"},
 					relatedDocuments: [{uuid: DOCUMENT_UUID}]
 				}]
-			}]))
+			}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
 
 			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
 				uuid: DOCUMENT_UUID,
@@ -1225,7 +1490,6 @@ describe("ParliamentSyncCli", function() {
 			var updatedInitiative = initiativesDb.read(initiative)
 			updatedInitiative.must.eql(_.assign({}, initiative, {
 				accepted_by_parliament_at: new Date(2015, 5, 17),
-				parliament_api_data: updatedInitiative.parliament_api_data,
 				parliament_synced_at: new Date
 			}))
 
@@ -1264,7 +1528,7 @@ describe("ParliamentSyncCli", function() {
 				parliament_uuid: INITIATIVE_UUID
 			}))
 
-			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			var initiativeDoc = {
 				uuid: INITIATIVE_UUID,
 
 				statuses: [{
@@ -1272,9 +1536,19 @@ describe("ParliamentSyncCli", function() {
 					status: {code: "ARUTELU_KOMISJONIS"},
 					relatedDocuments: [{uuid: DOCUMENT_UUID}]
 				}]
-			}]))
+			}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
 
 			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
 				uuid: DOCUMENT_UUID,
@@ -1304,7 +1578,6 @@ describe("ParliamentSyncCli", function() {
 
 			var updatedInitiative = initiativesDb.read(initiative)
 			updatedInitiative.must.eql(_.assign({}, initiative, {
-				parliament_api_data: updatedInitiative.parliament_api_data,
 				parliament_synced_at: new Date
 			}))
 
@@ -1354,21 +1627,30 @@ describe("ParliamentSyncCli", function() {
 		})
 
 		it("must update acceptance event", function*() {
-			var requested = 0
-			this.router.get(INITIATIVES_URL, function(req, res) {
-				if (requested++ == 0) respond([{
-					uuid: INITIATIVE_UUID,
-					responsibleCommittee: [{name: "Sotsiaalkomisjon"}],
-					statuses: [{date: "2015-06-18", status: {code: "MENETLUSSE_VOETUD"}}]
-				}], req, res)
-				else respond([{
-					uuid: INITIATIVE_UUID,
-					responsibleCommittee: [{name: "Majanduskomisjon"}],
-					statuses: [{date: "2015-06-18", status: {code: "MENETLUSSE_VOETUD"}}]
-				}], req, res)
-			})
+			var a = {
+				uuid: INITIATIVE_UUID,
+				responsibleCommittee: [{name: "Sotsiaalkomisjon"}],
+				statuses: [{date: "2015-06-18", status: {code: "MENETLUSSE_VOETUD"}}]
+			}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			var b = {
+				uuid: INITIATIVE_UUID,
+				responsibleCommittee: [{name: "Majanduskomisjon"}],
+				statuses: [{date: "2015-06-18", status: {code: "MENETLUSSE_VOETUD"}}]
+			}
+
+			this.router.get(INITIATIVES_URL, respondMany([[a], [b]]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respondMany([a, b])
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respondMany([a, b])
+			)
+
 			yield job()
 
 			var event = eventsDb.read(sql`SELECT * FROM initiative_events`)
@@ -1377,29 +1659,38 @@ describe("ParliamentSyncCli", function() {
 		})
 
 		it("must update committee meeting event", function*() {
-			var requested = 0
-			this.router.get(INITIATIVES_URL, function(req, res) {
-				if (requested++ == 0) respond([{
-					uuid: INITIATIVE_UUID,
-					responsibleCommittee: [{name: "Sotsiaalkomisjon"}],
-					statuses: [{
-						date: "2018-10-24",
-						status: {code: "ARUTELU_KOMISJONIS"},
-						committeeDecision: {code: "JATKATA_ARUTELU"}
-					}]
-				}], req, res)
-				else respond([{
-					uuid: INITIATIVE_UUID,
-					responsibleCommittee: [{name: "Majanduskomisjon"}],
-					statuses: [{
-						date: "2018-10-24",
-						status: {code: "ARUTELU_KOMISJONIS"},
-						committeeDecision: {code: "ETTEPANEK_INSTITUTSIOONILE"}
-					}]
-				}], req, res)
-			})
+			var a = {
+				uuid: INITIATIVE_UUID,
+				responsibleCommittee: [{name: "Sotsiaalkomisjon"}],
+				statuses: [{
+					date: "2018-10-24",
+					status: {code: "ARUTELU_KOMISJONIS"},
+					committeeDecision: {code: "JATKATA_ARUTELU"}
+				}]
+			}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			var b = {
+				uuid: INITIATIVE_UUID,
+				responsibleCommittee: [{name: "Majanduskomisjon"}],
+				statuses: [{
+					date: "2018-10-24",
+					status: {code: "ARUTELU_KOMISJONIS"},
+					committeeDecision: {code: "ETTEPANEK_INSTITUTSIOONILE"}
+				}]
+			}
+
+			this.router.get(INITIATIVES_URL, respondMany([[a], [b]]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respondMany([a, b])
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respondMany([a, b])
+			)
+
 			yield job()
 
 			var event = eventsDb.read(sql`SELECT * FROM initiative_events`)
@@ -1424,51 +1715,55 @@ describe("ParliamentSyncCli", function() {
 		})
 
 		it("must update committee meeting event files", function*() {
-			var requested = 0
+			var a = {
+				uuid: INITIATIVE_UUID,
+				statuses: [{
+					date: "2018-10-24",
+					status: {code: "ARUTELU_KOMISJONIS"},
+					relatedDocuments: [{uuid: DOCUMENT_UUID}]
+				}]
+			}
 
-			// Update something in the initiative to get the initial diff.
-			this.router.get(INITIATIVES_URL, function(req, res) {
-				if (requested++ == 0) respond([{
-					uuid: INITIATIVE_UUID,
-					statuses: [{
-						date: "2018-10-24",
-						status: {code: "ARUTELU_KOMISJONIS"},
-						relatedDocuments: [{uuid: DOCUMENT_UUID}]
-					}]
-				}], req, res)
-				else respond([{
-					title: "Updated title",
-					uuid: INITIATIVE_UUID,
+			// Update something in the initiative to get past the initial diff.
+			var b = {
+				title: "Updated title",
+				uuid: INITIATIVE_UUID,
 
-					statuses: [{
-						date: "2018-10-24",
-						status: {code: "ARUTELU_KOMISJONIS"},
-						relatedDocuments: [{uuid: DOCUMENT_UUID}]
-					}]
-				}], req, res)
-			})
+				statuses: [{
+					date: "2018-10-24",
+					status: {code: "ARUTELU_KOMISJONIS"},
+					relatedDocuments: [{uuid: DOCUMENT_UUID}]
+				}]
+			}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			this.router.get(INITIATIVES_URL, respondMany([[a], [b]]))
 
-			this.router.get(`/api/documents/${DOCUMENT_UUID}`, function(req, res) {
-				if (requested == 1) respond({
-					uuid: DOCUMENT_UUID,
-					title: "Protokoll",
-					documentType: "protokoll",
-					files: []
-				}, req, res)
-				else respond({
-					uuid: DOCUMENT_UUID,
-					title: "Protokoll",
-					documentType: "protokoll",
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respondMany([a, b])
+			)
 
-					files: [{
-						uuid: FILE_UUID,
-						fileName: "Protokoll.pdf",
-						accessRestrictionType: "PUBLIC"
-					}]
-				}, req, res)
-			})
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respondMany([a, b])
+			)
+
+			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respondMany([{
+				uuid: DOCUMENT_UUID,
+				title: "Protokoll",
+				documentType: "protokoll",
+				files: []
+			}, {
+				uuid: DOCUMENT_UUID,
+				title: "Protokoll",
+				documentType: "protokoll",
+
+				files: [{
+					uuid: FILE_UUID,
+					fileName: "Protokoll.pdf",
+					accessRestrictionType: "PUBLIC"
+				}]
+			}]))
 
 			this.router.get(`/download/${FILE_UUID}`,
 				respondWithRiigikoguDownload.bind(null, "application/pdf", "PDF")
@@ -1497,45 +1792,49 @@ describe("ParliamentSyncCli", function() {
 		})
 
 		it("must update decision", function*() {
-			var requestedInitiatives = 0
-			this.router.get(INITIATIVES_URL, function(req, res) {
-				if (requestedInitiatives++ == 0) respond([{
-					uuid: INITIATIVE_UUID,
-					// Use an updated title as a way to force refetching of related
-					// documents.
-					relatedDocuments: [{
-						uuid: DOCUMENT_UUID,
-						documentType: "decisionDocument",
-						title: "A"
-					}]
-				}], req, res)
-				else respond([{
-					uuid: INITIATIVE_UUID,
-					relatedDocuments: [{
-						uuid: DOCUMENT_UUID,
-						documentType: "decisionDocument",
-						title: "B"
-					}]
-				}], req, res)
-			})
-
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
-
-			var requestedDocuments = 0
-			this.router.get(`/api/documents/${DOCUMENT_UUID}`, function(req, res) {
-				if (requestedDocuments++ == 0) respond({
+			var a = {
+				uuid: INITIATIVE_UUID,
+				relatedDocuments: [{
 					uuid: DOCUMENT_UUID,
-					title: "Otsuse muutmine",
 					documentType: "decisionDocument",
-					created: "2015-06-18T13:37:42.666"
-				}, req, res)
-				else respond({
+					title: "A"
+				}]
+			}
+
+			// Use an updated title as a way to force refetching of related
+			// documents.
+			var b = {
+				uuid: INITIATIVE_UUID,
+				relatedDocuments: [{
 					uuid: DOCUMENT_UUID,
-					title: "Otsuse muutmine (uuendatud)",
 					documentType: "decisionDocument",
-					created: "2015-06-18T15:37:42.666"
-				}, req, res)
-			})
+					title: "B"
+				}]
+			}
+
+			this.router.get(INITIATIVES_URL, respondMany([[a], [b]]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respondMany([a, b])
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respondMany([a, b])
+			)
+
+			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respondMany([{
+				uuid: DOCUMENT_UUID,
+				title: "Otsuse muutmine",
+				documentType: "decisionDocument",
+				created: "2015-06-18T13:37:42.666"
+			}, {
+				uuid: DOCUMENT_UUID,
+				title: "Otsuse muutmine (uuendatud)",
+				documentType: "decisionDocument",
+				created: "2015-06-18T15:37:42.666"
+			}]))
 
 			yield job()
 
@@ -1563,12 +1862,30 @@ describe("ParliamentSyncCli", function() {
 			"MENETLUS_LOPETATUD"
 		].forEach(function(code) {
 			it("must not update event if not changed given " + code, function*() {
-				this.router.get(INITIATIVES_URL, respond.bind(null, [{
+				var a = {
 					uuid: INITIATIVE_UUID,
-					statuses: [{date: "2015-06-18", status: {code:code}}]
-				}]))
+					statuses: [{date: "2015-06-18", status: {code: code}}]
+				}
 
-				this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+				// Update something in the initiative to get past the initial diff.
+				var b = {
+					title: "Updated title",
+					uuid: INITIATIVE_UUID,
+					statuses: [{date: "2015-06-18", status: {code: code}}]
+				}
+
+				this.router.get(INITIATIVES_URL, respondMany([[a], [b]]))
+
+				this.router.get(
+					`/api/documents/${INITIATIVE_UUID}`,
+					respondMany([a, b])
+				)
+
+				this.router.get(
+					`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+					respondMany([a, b])
+				)
+
 				yield job()
 
 				var initiative = initiativesDb.read(sql`SELECT * FROM initiatives`)
@@ -1577,11 +1894,11 @@ describe("ParliamentSyncCli", function() {
 				events.length.must.equal(1)
 
 				this.time.tick(1000)
-				yield job(["--force"])
+				yield job()
 
 				initiativesDb.read(sql`
 					SELECT * FROM initiatives
-				`).parliament_synced_at.must.not.eql(initiative.parliament_synced_at)
+				`).must.eql(_.defaults({parliament_synced_at: new Date}, initiative))
 
 				eventsDb.search(sql`
 					SELECT * FROM initiative_events
@@ -1595,16 +1912,27 @@ describe("ParliamentSyncCli", function() {
 		//
 		// https://github.com/riigikogu-kantselei/api/issues/17
 		it("must ignore duplicate REGISTREERITUD statuses", function*() {
-			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			var initiativeDoc = {
 				uuid: INITIATIVE_UUID,
 
 				statuses: [
 					{date: "2018-10-24", status: {code: "REGISTREERITUD"}},
 					{date: "2018-10-24", status: {code: "REGISTREERITUD"}}
 				]
-			}]))
+			}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
+
 			yield job()
 
 			var initiative = initiativesDb.read(sql`SELECT * FROM initiatives`)
@@ -1614,7 +1942,6 @@ describe("ParliamentSyncCli", function() {
 				uuid: INITIATIVE_UUID,
 				received_by_parliament_at: new Date(2018, 9, 24),
 				parliament_uuid: INITIATIVE_UUID,
-				parliament_api_data: initiative.parliament_api_data,
 				parliament_synced_at: new Date
 			}))
 
@@ -1626,14 +1953,18 @@ describe("ParliamentSyncCli", function() {
 		it("must create events when in a volume of letters, with letters", function*() {
 			// NOTE: Initiative volume is missing on the collective-addresses
 			// collection response.
-			this.router.get(INITIATIVES_URL, respond.bind(null, [{
-				uuid: INITIATIVE_UUID
-			}]))
+			var initiativeDoc = {uuid: INITIATIVE_UUID}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {
-				uuid: INITIATIVE_UUID,
-				volume: {uuid: VOLUME_UUID}
-			}))
+			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null,
+				_.defaults({volume: {uuid: VOLUME_UUID}}, initiativeDoc)
+			))
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
 
 			this.router.get(`/api/volumes/${VOLUME_UUID}`, respond.bind(null, {
 				uuid: VOLUME_UUID,
@@ -1704,14 +2035,18 @@ describe("ParliamentSyncCli", function() {
 		it("must create events for volume's related documents", function*() {
 			// NOTE: Initiative volume is missing on the collective-addresses
 			// collection response.
-			this.router.get(INITIATIVES_URL, respond.bind(null, [{
-				uuid: INITIATIVE_UUID
-			}]))
+			var initiativeDoc = {uuid: INITIATIVE_UUID}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null, {
-				uuid: INITIATIVE_UUID,
-				volume: {uuid: VOLUME_UUID}
-			}))
+			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respond.bind(null,
+				_.defaults({volume: {uuid: VOLUME_UUID}}, initiativeDoc)
+			))
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
 
 			this.router.get(`/api/volumes/${VOLUME_UUID}`, respond.bind(null, {
 				uuid: VOLUME_UUID,
@@ -1787,12 +2122,22 @@ describe("ParliamentSyncCli", function() {
 				parliament_uuid: INITIATIVE_UUID
 			}))
 
-			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			var initiativeDoc = {
 				uuid: INITIATIVE_UUID,
 				relatedDocuments: [{uuid: DOCUMENT_UUID}]
-			}]))
+			}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
 
 			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
 				uuid: DOCUMENT_UUID,
@@ -1820,7 +2165,6 @@ describe("ParliamentSyncCli", function() {
 			var updatedInitiative = initiativesDb.read(initiative)
 			updatedInitiative.must.eql(_.assign({}, initiative, {
 				finished_in_parliament_at: new Date(2015, 5, 18, 13, 37, 42, 666),
-				parliament_api_data: updatedInitiative.parliament_api_data,
 				parliament_synced_at: new Date
 			}))
 
@@ -2728,24 +3072,26 @@ describe("ParliamentSyncCli", function() {
 				content: EXAMPLE_BUFFER,
 				content_type: new MediaType("application/octet-stream")
 			}]]
-		}, function(test, title) {
-			var api = test[0]
-			var documents = test[1]
-			var eventAttrs = test[2]
-			var files = test[3]
-
+		}, function([api, documents, eventAttrs, files], title) {
 			it(`must create events and files given ${title}`,
 				function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: usersDb.create(new ValidUser).id,
 					parliament_uuid: INITIATIVE_UUID
 				}))
+				var initiativeDoc = _.defaults({uuid: INITIATIVE_UUID}, api)
 
-				this.router.get(INITIATIVES_URL, respond.bind(null, [
-					_.defaults({uuid: INITIATIVE_UUID}, api)
-				]))
+				this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
 
-				this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+				this.router.get(
+					`/api/documents/${INITIATIVE_UUID}`,
+					respond.bind(null, initiativeDoc)
+				)
+
+				this.router.get(
+					`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+					respond.bind(null, initiativeDoc)
+				)
 
 				_.each(documents, (document, uuid) => (
 					this.router.get(`/api/documents/${uuid}`,
@@ -2783,12 +3129,22 @@ describe("ParliamentSyncCli", function() {
 		})
 
 		it("must download only public files", function*() {
-			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			var initiativeDoc = {
 				uuid: INITIATIVE_UUID,
 				relatedDocuments: [{uuid: DOCUMENT_UUID}]
-			}]))
+			}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
 
 			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
 				uuid: DOCUMENT_UUID,
@@ -2830,8 +3186,10 @@ describe("ParliamentSyncCli", function() {
 				external_id: "005e0726-0886-4bc9-ad3a-f900f0173cf7",
 				name: "Kollektiivse_pöördumise_menetlusse_võtmine.asice",
 				title: "Kollektiivse pöördumise menetlusse võtmine",
+
 				external_url:
 					PARLIAMENT_URL + "/download/005e0726-0886-4bc9-ad3a-f900f0173cf7",
+
 				url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
 				content: Buffer.from("ASICE"),
 				content_type: new MediaType("application/zip")
@@ -2843,20 +3201,32 @@ describe("ParliamentSyncCli", function() {
 				name: "70_17.06.2019_pöördumine.pdf",
 				title: "Kollektiivse pöördumise menetlusse võtmine",
 				url: DOCUMENT_URL + "/" + DOCUMENT_UUID,
+
 				external_url:
 					PARLIAMENT_URL + "/download/eef04b9e-2d78-404b-b41b-679817e99d53",
+
 				content: Buffer.from("PDF"),
 				content_type: new MediaType("application/pdf")
 			})])
 		})
 
 		it("must use related document file title if available", function*() {
-			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			var initiativeDoc = {
 				uuid: INITIATIVE_UUID,
 				relatedDocuments: [{uuid: DOCUMENT_UUID}]
-			}]))
+			}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
 
 			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
 				uuid: DOCUMENT_UUID,
@@ -2910,12 +3280,22 @@ describe("ParliamentSyncCli", function() {
 			ÕIGK: "Õiguskomisjon"
 		}, function(name, code) {
 			it("must create event given committee meeting protocol of " + name, function*() {
-				this.router.get(INITIATIVES_URL, respond.bind(null, [{
+				var initiativeDoc = {
 					uuid: INITIATIVE_UUID,
 					relatedDocuments: [{uuid: DOCUMENT_UUID}]
-				}]))
+				}
 
-				this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+				this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+				this.router.get(
+					`/api/documents/${INITIATIVE_UUID}`,
+					respond.bind(null, initiativeDoc)
+				)
+
+				this.router.get(
+					`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+					respond.bind(null, initiativeDoc)
+				)
 
 				this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
 					uuid: DOCUMENT_UUID,
@@ -2974,12 +3354,22 @@ describe("ParliamentSyncCli", function() {
 
 		it("must not create event given non-committee meeting protocol ",
 			function*() {
-			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			var initiativeDoc = {
 				uuid: INITIATIVE_UUID,
 				relatedDocuments: [{uuid: DOCUMENT_UUID}]
-			}]))
+			}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
 
 			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
 				uuid: DOCUMENT_UUID,
@@ -3007,12 +3397,22 @@ describe("ParliamentSyncCli", function() {
 		})
 
 		it("must not create event given letter with no public files", function*() {
-			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			var initiativeDoc = {
 				uuid: INITIATIVE_UUID,
 				relatedDocuments: [{uuid: DOCUMENT_UUID}]
-			}]))
+			}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
 
 			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
 				uuid: DOCUMENT_UUID,
@@ -3040,12 +3440,22 @@ describe("ParliamentSyncCli", function() {
 		// There's another test elsewhere that tests given an agenda item *with*
 		// a volume.
 		it("must create event given a document representing an agenda item without related volume", function*() {
-			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			var initiativeDoc = {
 				uuid: INITIATIVE_UUID,
 				relatedDocuments: [{uuid: DOCUMENT_UUID}]
-			}]))
+			}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
 
 			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
 				uuid: DOCUMENT_UUID,
@@ -3126,12 +3536,22 @@ describe("ParliamentSyncCli", function() {
 		})
 
 		it("must create event given a document of national matter", function*() {
-			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			var initiativeDoc = {
 				uuid: INITIATIVE_UUID,
 				relatedDocuments: [{uuid: DOCUMENT_UUID}]
-			}]))
+			}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
 
 			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
 				uuid: DOCUMENT_UUID,
@@ -3185,16 +3605,26 @@ describe("ParliamentSyncCli", function() {
 
 		// https://github.com/riigikogu-kantselei/api/issues/28
 		it("must ignore unavailable agenda documents", function*() {
-			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			var initiativeDoc = {
 				uuid: INITIATIVE_UUID,
 
 				relatedDocuments: [{
 					uuid: DOCUMENT_UUID,
 					documentType: "unitAgendaItemDocument"
 				}]
-			}]))
+			}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
 
 			this.router.get(
 				`/api/documents/${DOCUMENT_UUID}`,
@@ -3208,16 +3638,26 @@ describe("ParliamentSyncCli", function() {
 		// supposedly are meant to be loaded along with the draft act from
 		// /volumes/drafts. But they don't tell you the draft act UUID...
 		it("must ignore unavailable draft act opinion documents", function*() {
-			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			var initiativeDoc = {
 				uuid: INITIATIVE_UUID,
 
 				relatedDocuments: [{
 					uuid: DOCUMENT_UUID,
 					documentType: "opinionDocument"
 				}]
-			}]))
+			}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
 
 			this.router.get(
 				`/api/documents/${DOCUMENT_UUID}`,
@@ -3228,16 +3668,26 @@ describe("ParliamentSyncCli", function() {
 		})
 
 		it("must not ignore other unavailable documents", function*() {
-			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			var initiativeDoc = {
 				uuid: INITIATIVE_UUID,
 
 				relatedDocuments: [{
 					uuid: DOCUMENT_UUID,
 					documentType: "decisionDocument"
 				}]
-			}]))
+			}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
 
 			this.router.get(
 				`/api/documents/${DOCUMENT_UUID}`,
@@ -3252,12 +3702,22 @@ describe("ParliamentSyncCli", function() {
 
 	describe("given related volumes", function() {
 		it("must create event given a volume of a committee meeting", function*() {
-			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			var initiativeDoc = {
 				uuid: INITIATIVE_UUID,
 				relatedVolumes: [{uuid: VOLUME_UUID}]
-			}]))
+			}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
 
 			this.router.get(`/api/volumes/${VOLUME_UUID}`, respond.bind(null, {
 				uuid: VOLUME_UUID,
@@ -3321,13 +3781,23 @@ describe("ParliamentSyncCli", function() {
 		})
 
 		it("must create event given a volume of a committee meeting and an agenda item", function*() {
-			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			var initiativeDoc = {
 				uuid: INITIATIVE_UUID,
 				relatedDocuments: [{uuid: DOCUMENT_UUID}],
 				relatedVolumes: [{uuid: VOLUME_UUID}]
-			}]))
+			}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
 
 			this.router.get(`/api/documents/${DOCUMENT_UUID}`, respond.bind(null, {
 				uuid: DOCUMENT_UUID,
@@ -3413,7 +3883,7 @@ describe("ParliamentSyncCli", function() {
 		// "relatedDocuments".
 		it("must create event given a status and volume of a committee meeting",
 			function*() {
-			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			var initiativeDoc = {
 				uuid: INITIATIVE_UUID,
 
 				statuses: [
@@ -3425,9 +3895,19 @@ describe("ParliamentSyncCli", function() {
 					title: "Komisjoni istung esmaspäev, 18.06.2015 13:37",
 					volumeType: "unitSittingVolume"
 				}]
-			}]))
+			}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
 
 			this.router.get(`/api/volumes/${VOLUME_UUID}`, respond.bind(null, {
 				uuid: VOLUME_UUID,
@@ -3495,12 +3975,22 @@ describe("ParliamentSyncCli", function() {
 		})
 
 		it("must create event given a volume of an interpellation", function*() {
-			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			var initiativeDoc = {
 				uuid: INITIATIVE_UUID,
 				relatedVolumes: [{uuid: VOLUME_UUID}]
-			}]))
+			}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
 
 			var aDocumentUuid = newUuid()
 			var bDocumentUuid = newUuid()
@@ -3607,12 +4097,22 @@ describe("ParliamentSyncCli", function() {
 		// relatedDocuments on some initiatives.
 		// https://github.com/riigikogu-kantselei/api/issues/28
 		it("must ignore draft act volume opinion documents", function*() {
-			this.router.get(INITIATIVES_URL, respond.bind(null, [{
+			var initiativeDoc = {
 				uuid: INITIATIVE_UUID,
 				relatedVolumes: [{uuid: VOLUME_UUID, volumeType: "eelnou"}]
-			}]))
+			}
 
-			this.router.get(`/api/documents/${INITIATIVE_UUID}`, respondWithEmpty)
+			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
 
 			var opinionUuid = newUuid()
 
@@ -3633,6 +4133,26 @@ describe("ParliamentSyncCli", function() {
 		})
 	})
 })
+
+function respondOnce(body) {
+	var requested = 0
+
+	return function(req, res) {
+		if (++requested <= 1) return void respond(body, req, res)
+		res.statusCode = 500
+		res.statusMessage = "Requested More Than Once: " + req.url
+		res.end()
+	}
+}
+
+function respondMany(bodies) {
+	return function(req, res) {
+		if (bodies.length > 0) return void respond(bodies.shift(), req, res)
+		res.statusCode = 500
+		res.statusMessage = "Out of Body Experience"
+		res.end()
+	}
+}
 
 function respondWithRiigikoguDownload(contentType, content, req, res) {
 	// https://riigikogu.ee redirects to https://www.riigikogu.ee.
