@@ -72,7 +72,7 @@ module.exports = function(attrs) {
 					</label></li>
 				</ol>
 
-				<h2>Sündmused</h2>
+				<h2>Programmid</h2>
 				<ol id="events-legend">
 					<li><label>
 						<Checkbox name="event" value="dtv" checked />
