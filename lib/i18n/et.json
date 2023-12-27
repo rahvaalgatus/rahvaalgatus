@@ -22,7 +22,7 @@
 	"ANONYMIZE_COMMENT_CONFIRMATION": "Kindel, et soovid kommentaari anonüümida?\nAnonüümides jääb kommentaar nähtavaks, kuid su nimi ei kuvata.",
 	"ARCHIVED_PHASE": "Arhiveeritud",
 	"ATOM_INITIATIVE_EVENTS_FEED_TITLE": "Algatuste menetlusinfo",
-	"ATOM_INITIATIVE_FEED_TITLE": "{{title}} Menetlusinfo",
+	"ATOM_INITIATIVE_FEED_TITLE": "{{title}} menetlusinfo",
 	"BTN_CREATE_VOTE": "Kogu allkirju",
 	"BTN_LOG_IN_REGISTER": "Logi sisse või registreeri",
 	"BTN_LOG_OFF": "Välju",
