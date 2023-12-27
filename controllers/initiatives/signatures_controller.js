@@ -264,6 +264,7 @@ exports.router.post("/",
 			logger.info({
 				request_id: req.headers["request-id"],
 				event: "initiative-signature-start",
+				initiative_id: initiative.id,
 				initiative_uuid: initiative.uuid,
 				signable_id: signable.id,
 				signature_method: method
@@ -508,8 +509,6 @@ exports.router.get("/:personalId",
 			}
 
 			if (signature) {
-				var initiativePath = Path.dirname(req.baseUrl)
-
 				res.statusMessage =
 					signature.method == "mobile-id" ? "Signed with Mobile-ID" :
 					signature.method == "smart-id" ? "Signed with Smart-ID" :
@@ -523,7 +522,7 @@ exports.router.get("/:personalId",
 
 					default:
 						res.flash("signatureToken", req.token.toString("hex"))
-						res.redirect(303, initiativePath)
+						res.redirect(303, Initiative.slugPath(initiative))
 				}
 			}
 			else {
@@ -653,7 +652,7 @@ exports.router.delete("/:personalId", function(req, res) {
 
 	res.flash("notice", req.t("SIGNATURE_REVOKED"))
 	res.statusMessage = "Signature Deleted"
-	res.redirect(303, Path.dirname(req.baseUrl))
+	res.redirect(303, Initiative.slugPath(initiative))
 })
 
 function* waitForSession(wait, timeout, session) {

@@ -194,22 +194,18 @@ exports.get("/", function(req, res) {
 	`)[0].count
 
 	var lastSubscriptions = subscriptionsDb.search(sql`
-		SELECT *
-		FROM initiative_subscriptions
-		ORDER BY created_at DESC
+		SELECT
+			subscription.*,
+			initiative.id AS initiative_id,
+			initiative.slug AS initiative_slug,
+			initiative.title AS initiative_title
+
+		FROM initiative_subscriptions AS subscription
+		LEFT JOIN initiatives AS initiative
+		ON initiative.uuid = subscription.initiative_uuid
+		ORDER BY subscription.created_at DESC
 		LIMIT 15
 	`)
-
-	var subscriptionInitiatives = sqlite(sql`
-		SELECT uuid, title
-		FROM initiatives
-		WHERE uuid IN ${sql.in(_.uniq(_.map(lastSubscriptions, "initiative_uuid")))}
-	`)
-
-	subscriptionInitiatives = _.indexBy(subscriptionInitiatives, "uuid")
-	lastSubscriptions.forEach(function(sub) {
-		sub.initiative = subscriptionInitiatives[sub.initiative_uuid]
-	})
 
 	res.render("admin/dashboard_page.jsx", {
 		from,
@@ -293,8 +289,15 @@ exports.get("/destinations", function(_req, res) {
 
 exports.get("/comments", function(_req, res) {
 	var comments = commentsDb.search(sql`
-		SELECT comment.*, user.id AS user_id, user.name AS user_name
+		SELECT
+			comment.*,
+			initiative.id AS initiative_id,
+			initiative.slug AS initiative_slug,
+			user.id AS user_id,
+			user.name AS user_name
+
 		FROM comments AS comment
+		JOIN initiatives AS initiative ON initiative.uuid = comment.initiative_uuid
 		JOIN users AS user ON comment.user_id = user.id
 		ORDER BY created_at DESC
 		LIMIT 15

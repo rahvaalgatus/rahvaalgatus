@@ -3,6 +3,7 @@ var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Config = require("root").config
 var UserPage = require("./user_page")
+var Initiative = require("root/lib/initiative")
 var I18n = require("root/lib/i18n")
 var {Section} = require("../page")
 var {Form} = require("../page")
@@ -86,16 +87,12 @@ module.exports = function(attrs) {
 			<p>{t("USER_PAGE_COAUTHOR_INVITATION_DESCRIPTION")}</p>
 
 			<ul>{coauthorInvitations.map(function(invitation) {
-				var initiativePath = "/initiatives/" + invitation.initiative_uuid
+				var initiativePath = "/initiatives/" + invitation.initiative_id
 				var invitationPath = initiativePath + "/coauthors/"
 				invitationPath += invitation.country + invitation.personal_id
 
 				return <li>
-					<Form
-						req={req}
-						action={invitationPath}
-						method="put"
-					>
+					<Form req={req} action={invitationPath} method="put">
 						<button
 							name="status"
 							value="accepted"
@@ -112,7 +109,10 @@ module.exports = function(attrs) {
 					</Form>
 
 					<h3>
-						{invitation.initiative_published_at ? <a href={initiativePath}>
+						{invitation.initiative_published_at ? <a href={Initiative.slugPath({
+							id: invitation.initiative_id,
+							slug: invitation.initiative_slug
+						})}>
 							{invitation.initiative_title}
 						</a> : invitation.initiative_title}
 					</h3>

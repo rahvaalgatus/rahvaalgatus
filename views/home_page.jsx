@@ -104,7 +104,7 @@ function HomePage(attrs) {
 					sent: stats[30].governmentCounts.sent,
 					sentToParliament: stats[30].governmentCounts.sent_parliament,
 					sentToLocal: stats[30].governmentCounts.sent_local,
-					external: stats.all.governmentCounts.external,
+					external: stats.all.governmentCounts.external
 				}))}
 			</StatisticsView>
 		</Section>
@@ -133,14 +133,8 @@ function HomePage(attrs) {
 			</ol>
 		</Section> : null}
 
-		<Section
-			id="search"
-			class="primary-section"
-		>
-			<form
-				method="get"
-				action="https://cse.google.com/cse"
-			>
+		<Section id="search" class="primary-section">
+			<form method="get" action="https://cse.google.com/cse">
 				<input type="hidden" name="cx" value={Config.googleSiteSearchId} />
 
 				<input
@@ -153,13 +147,11 @@ function HomePage(attrs) {
 				<button class="blue-button">{t("HOME_PAGE_SEARCH_BUTTON")}</button>
 			</form>
 
-			<p>
-				{Jsx.html(t("HOME_PAGE_SEARCH_SEE_OTHER", {
-					parliamentSiteUrl: _.escapeHtml(Config.parliamentSiteUrl),
-					localSiteUrl: _.escapeHtml(Config.localSiteUrl),
-					archiveUrl: "/initiatives"
-				}))}
-			</p>
+			<p>{Jsx.html(t("HOME_PAGE_SEARCH_SEE_OTHER", {
+				parliamentSiteUrl: "/parliament",
+				localSiteUrl: "/local",
+				archiveUrl: "/initiatives"
+			}))}</p>
 		</Section>
 
 		<Section id="initiatives" class="secondary-section initiatives-section">

@@ -15,7 +15,7 @@ var sql = require("sqlate")
 var {STATUSES} = require("root/controllers/initiatives/coauthors_controller")
 var {SITE_URLS} = require("root/test/fixtures")
 
-describe("InitiativeAuthorsController", function() {
+describe("InitiativeCoauthorsController", function() {
 	require("root/test/web")()
 	require("root/test/mitm")()
 	require("root/test/db")()
@@ -31,7 +31,7 @@ describe("InitiativeAuthorsController", function() {
 					published_at: new Date
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/coauthors`
+				var path = `/initiatives/${initiative.id}/coauthors`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(401)
 			})
@@ -46,7 +46,7 @@ describe("InitiativeAuthorsController", function() {
 					published_at: new Date
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/coauthors`
+				var path = `/initiatives/${initiative.id}/coauthors`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(403)
 				res.statusMessage.must.equal("No Permission to Edit Coauthors")
@@ -64,7 +64,7 @@ describe("InitiativeAuthorsController", function() {
 					status: "accepted"
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/coauthors`
+				var path = `/initiatives/${initiative.id}/coauthors`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(403)
 				res.statusMessage.must.equal("No Permission to Edit Coauthors")
@@ -75,7 +75,7 @@ describe("InitiativeAuthorsController", function() {
 					user_id: this.user.id
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/coauthors`
+				var path = `/initiatives/${initiative.id}/coauthors`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(200)
 
@@ -98,7 +98,7 @@ describe("InitiativeAuthorsController", function() {
 					status: "pending"
 				})))
 
-				var path = `/initiatives/${initiative.uuid}/coauthors`
+				var path = `/initiatives/${initiative.id}/coauthors`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(200)
 
@@ -126,7 +126,7 @@ describe("InitiativeAuthorsController", function() {
 					status: "accepted"
 				})))
 
-				var path = `/initiatives/${initiative.uuid}/coauthors`
+				var path = `/initiatives/${initiative.id}/coauthors`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(200)
 
@@ -152,7 +152,7 @@ describe("InitiativeAuthorsController", function() {
 						status: status
 					}))
 
-					var path = `/initiatives/${initiative.uuid}/coauthors`
+					var path = `/initiatives/${initiative.id}/coauthors`
 					var res = yield this.request(path)
 					res.statusCode.must.equal(200)
 
@@ -207,7 +207,7 @@ describe("InitiativeAuthorsController", function() {
 					status: "removed"
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/coauthors`
+				var path = `/initiatives/${initiative.id}/coauthors`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(200)
 
@@ -219,6 +219,26 @@ describe("InitiativeAuthorsController", function() {
 				coauthors.forEach(function(coauthor) {
 					res.body.must.not.include(coauthor.name)
 				})
+			})
+
+			it("must respond if path with slug", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id
+				}))
+
+				var path = `/initiatives/${initiative.id}-foo/coauthors`
+				var res = yield this.request(path)
+				res.statusCode.must.equal(200)
+			})
+
+			it("must respond if path with UUID", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id
+				}))
+
+				var path = `/initiatives/${initiative.uuid}/coauthors`
+				var res = yield this.request(path)
+				res.statusCode.must.equal(200)
 			})
 		})
 	})
@@ -233,7 +253,7 @@ describe("InitiativeAuthorsController", function() {
 					published_at: new Date
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/coauthors`
+				var path = `/initiatives/${initiative.id}/coauthors`
 				var res = yield this.request(path, {method: "POST"})
 				res.statusCode.must.equal(403)
 				res.statusMessage.must.equal("No Permission to Edit Coauthors")
@@ -251,7 +271,7 @@ describe("InitiativeAuthorsController", function() {
 					status: "accepted"
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/coauthors`
+				var path = `/initiatives/${initiative.id}/coauthors`
 				var res = yield this.request(path, {method: "POST"})
 				res.statusCode.must.equal(403)
 				res.statusMessage.must.equal("No Permission to Edit Coauthors")
@@ -262,7 +282,7 @@ describe("InitiativeAuthorsController", function() {
 					user_id: this.user.id
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/coauthors`
+				var path = `/initiatives/${initiative.id}/coauthors`
 				var res = yield this.request(path, {
 					method: "POST",
 					form: {personalId: "38706181337"}
@@ -294,7 +314,7 @@ describe("InitiativeAuthorsController", function() {
 					user_id: this.user.id
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/coauthors`
+				var path = `/initiatives/${initiative.id}/coauthors`
 				var res = yield this.request(path, {
 					method: "POST",
 					form: {personalId: this.user.personal_id}
@@ -327,7 +347,7 @@ describe("InitiativeAuthorsController", function() {
 					status: "pending"
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/coauthors`
+				var path = `/initiatives/${initiative.id}/coauthors`
 				var res = yield this.request(path, {
 					method: "POST",
 					form: {personalId: "38706181337"}
@@ -363,7 +383,7 @@ describe("InitiativeAuthorsController", function() {
 						status: status
 					}))
 
-					var path = `/initiatives/${initiative.uuid}/coauthors`
+					var path = `/initiatives/${initiative.id}/coauthors`
 					var res = yield this.request(path, {
 						method: "POST",
 						form: {personalId: otherUser.personal_id}
@@ -413,7 +433,7 @@ describe("InitiativeAuthorsController", function() {
 						published_at: new Date
 					}))
 
-					var path = `/initiatives/${initiative.uuid}/coauthors/`
+					var path = `/initiatives/${initiative.id}/coauthors/`
 					path += "/LV" + this.user.personal_id
 					var res = yield this.request(path, {
 						method: "PUT",
@@ -431,7 +451,7 @@ describe("InitiativeAuthorsController", function() {
 						published_at: new Date
 					}))
 
-					var path = `/initiatives/${initiative.uuid}/coauthors/`
+					var path = `/initiatives/${initiative.id}/coauthors/`
 					path += "/" + this.user.country + "40001011337"
 					var res = yield this.request(path, {
 						method: "PUT",
@@ -933,7 +953,7 @@ describe("InitiativeAuthorsController", function() {
 					res.statusMessage.must.equal("Coauthor Invitation Cancelled")
 
 					res.headers.location.must.equal(
-						`/initiatives/${initiative.uuid}/coauthors`
+						`/initiatives/${initiative.id}/coauthors`
 					)
 
 					var cookies = parseCookies(res.headers["set-cookie"])
@@ -974,7 +994,7 @@ describe("InitiativeAuthorsController", function() {
 					res.statusMessage.must.equal("Coauthor Removed")
 
 					res.headers.location.must.equal(
-						`/initiatives/${initiative.uuid}/coauthors`
+						`/initiatives/${initiative.id}/coauthors`
 					)
 
 					var cookies = parseCookies(res.headers["set-cookie"])
@@ -1295,6 +1315,6 @@ describe("InitiativeAuthorsController", function() {
 })
 
 function pathToCoauthor(initiative, user) {
-	var path = `/initiatives/${initiative.uuid}/coauthors/`
+	var path = `/initiatives/${initiative.id}/coauthors/`
 	return path + "/" + user.country + user.personal_id
 }

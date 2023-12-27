@@ -33,7 +33,6 @@ var {reinstantiateError} = require("./initiatives/signatures_controller")
 var {getNormalizedMobileIdErrorCode} = require("root/lib/eid")
 var sql = require("sqlate")
 var {validateRedirect} = require("root/lib/http")
-var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
 var {constantTimeEqual} = require("root/lib/crypto")
 var sessionsDb = require("root/db/sessions_db")
 var usersDb = require("root/db/users_db")
@@ -54,7 +53,7 @@ exports.router.get("/", function(req, res) {
 	else res.redirect(302, "/sessions/new")
 })
 
-exports.router.get("/new", canonicalizeUrl, function(req, res, next) {
+exports.router.get("/new", function(req, res, next) {
 	if (req.user) {
 		var referrer = req.query.referrer || req.headers.referer
 		res.redirect(302, validateRedirect(req, referrer, "/user"))

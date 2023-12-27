@@ -26,9 +26,6 @@ var {pseudoHex} = require("root/lib/crypto")
 var parseHtml = require("root/test/html").parse
 var {parseRefreshHeader} = require("root/lib/http")
 var {tsl} = require("root")
-var SITE_HOSTNAME = Url.parse(Config.url).hostname
-var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
-var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
 var MOBILE_ID_URL = Url.parse("https://mid.sk.ee/mid-api/")
 var SMART_ID_URL = Url.parse("https://rp-api.smart-id.com/v1/")
 var JSON_TYPE = "application/json; charset=utf-8"
@@ -218,15 +215,6 @@ describe("SessionsController", function() {
 				var res = yield this.request("/sessions/new")
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("create_session_page.title"))
-			})
-
-			;[PARLIAMENT_SITE_HOSTNAME, LOCAL_SITE_HOSTNAME].forEach(function(host) {
-				it(`must redirect to ${SITE_HOSTNAME} from ${host}`, function*() {
-					var path = "/sessions/new?foo=bar"
-					var res = yield this.request(path, {headers: {Host: host}})
-					res.statusCode.must.equal(301)
-					res.headers.location.must.equal(Config.url + path)
-				})
 			})
 		})
 

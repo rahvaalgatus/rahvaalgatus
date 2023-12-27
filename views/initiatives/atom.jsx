@@ -2,6 +2,7 @@
 var _ = require("root/lib/underscore")
 var Jsx = require("j6pack/xml")
 var Config = require("root").config
+var Initiative = require("root/lib/initiative")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var renderEventTitle = require("root/lib/event").renderTitle
@@ -14,21 +15,27 @@ var CATEGORIES = {
 	author: "initiator"
 }
 
-function AtomView(attrs) {
-	var {req} = attrs
-	var {initiative} = attrs
-	var {events} = attrs
-	var url = Config.url + req.baseUrl + req.url
-
+function AtomView({initiative, events}) {
 	var updatedAt = events.length
 		? _.last(events).updated_at
 		: initiative.created_at
 
 	return <feed xmlns="http://www.w3.org/2005/Atom">
-		<id>{url}</id>
+		<id>{Config.url + "/initiatives/" + initiative.uuid}</id>
 		<title>{t("ATOM_INITIATIVE_FEED_TITLE", {title: initiative.title})}</title>
-		<link rel="self" type="application/atom+xml" href={url + ".atom"} />
-		<link rel="alternate" type="text/html" href={url} />
+
+		<link
+			rel="self"
+			type="application/atom+xml"
+			href={Initiative.url(initiative) + ".atom"}
+		/>
+
+		<link
+			rel="alternate"
+			type="text/html"
+			href={Initiative.slugUrl(initiative)}
+		/>
+
 		<updated>{updatedAt.toJSON()}</updated>
 
 		<author>
@@ -38,19 +45,14 @@ function AtomView(attrs) {
 
 		{events.map((event) => <EventEntryView
 			initiative={initiative}
-			initiativeUrl={url}
 			event={event}
 		/>)}
 	</feed>
 }
 
-function EventEntryView(attrs) {
-	var {initiative} = attrs
-	var {initiativeUrl} = attrs
-	var {event} = attrs
-	var eventUrl = initiativeUrl + "#event-" + event.id
-	var {sourced} = attrs
-
+function EventEntryView({initiative, event, sourced}) {
+	var initiativeSlugUrl = Initiative.slugUrl(initiative)
+	var initiativeUuidUrl = Config.url + "/initiatives/" + initiative.uuid
 	var title
 	var content
 	var contentUrl
@@ -219,8 +221,14 @@ function EventEntryView(attrs) {
 	}
 
 	return <entry>
-		<id>{initiativeUrl + "/events/" + event.id}</id>
-		<link rel="alternate" type="text/html" href={eventUrl} />
+		<id>{initiativeUuidUrl + "/events/" + event.id}</id>
+
+		<link
+			rel="alternate"
+			type="text/html"
+			href={initiativeSlugUrl + "#event-" + event.id}
+		/>
+
 		<title>{(sourced ? `${initiative.title}: ` : "") + title}</title>
 		<published>{event.occurred_at.toJSON()}</published>
 		<updated>{event.updated_at.toJSON()}</updated>
@@ -235,7 +243,7 @@ function EventEntryView(attrs) {
 		{authorName ? <author><name>{authorName}</name></author> : null}
 
 		{sourced ? <source>
-			<id>{initiativeUrl}</id>
+			<id>{initiativeUuidUrl}</id>
 
 			<title>
 				{t("ATOM_INITIATIVE_FEED_TITLE", {title: initiative.title})}
@@ -244,10 +252,10 @@ function EventEntryView(attrs) {
 			<link
 				rel="self"
 				type="application/atom+xml"
-				href={initiativeUrl + ".atom"}
+				href={Initiative.url(initiative) + ".atom"}
 			/>
 
-			<link rel="alternate" type="text/html" href={initiativeUrl} />
+			<link rel="alternate" type="text/html" href={initiativeSlugUrl} />
 		</source> : null}
 	</entry>
 }

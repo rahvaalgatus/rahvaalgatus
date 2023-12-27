@@ -12,7 +12,7 @@ module.exports = function(attrs) {
 	var {initiative} = attrs
 	var {events} = attrs
 	var {subscriberCount} = attrs
-	var initiativePath = req.baseUrl + "/" + initiative.uuid
+	var initiativePath = req.baseUrl + "/" + initiative.id
 	var notificationsPath = initiativePath + "/events/notifications"
 
 	var email = events.length > 0
@@ -26,7 +26,7 @@ module.exports = function(attrs) {
 	>
 		<a href={req.baseUrl} class="admin-back-2">Initiatives</a>
 		<a
-			href={req.baseUrl + "/" + initiative.uuid}
+			href={req.baseUrl + "/" + initiative.id}
 			class="admin-back"
 		>
 			{initiative.title}

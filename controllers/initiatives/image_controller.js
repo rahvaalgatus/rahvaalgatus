@@ -1,5 +1,4 @@
 var _ = require("root/lib/underscore")
-var Path = require("path")
 var {Router} = require("express")
 var HttpError = require("standard-http-error")
 var Initiative = require("root/lib/initiative")
@@ -84,7 +83,7 @@ exports.router.put("/", next(function*(req, res) {
 	)
 
 	res.statusMessage = imageFile ? "Image Replaced" : "Image Author Updated"
-	res.redirect(303, Path.dirname(req.baseUrl))
+	res.redirect(303, Initiative.slugPath(initiative))
 
 	function respondWithError(statusMessage, err) {
 		res.statusCode = 422
@@ -101,7 +100,7 @@ exports.router.delete("/", function(req, res) {
 	if (req.image == null) throw new HttpError(404, "No Initiative Image")
 	imagesDb.delete(req.image)
 	res.flash("notice", "Pilt kustutatud.")
-	res.redirect(303, Path.dirname(req.baseUrl))
+	res.redirect(303, Initiative.slugPath(req.initiative))
 })
 
 function isValidImageType(type) {

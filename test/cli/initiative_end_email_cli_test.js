@@ -3,6 +3,7 @@ var I18n = require("root/lib/i18n")
 var DateFns = require("date-fns")
 var Config = require("root").config
 var Crypto = require("crypto")
+var Initiative = require("root/lib/initiative")
 var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_initiative")
 var ValidSignature = require("root/test/valid_signature")
@@ -44,8 +45,8 @@ describe("InitiativeEndEmailCli", function() {
 
 			email.body.must.equal(t("DISCUSSION_END_EMAIL_BODY", {
 				initiativeTitle: initiative.title,
-				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-				initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+				initiativeUrl: Initiative.slugUrl(initiative),
+				initiativeEditUrl: Initiative.slugUrl(initiative),
 				siteUrl: Config.url,
 				facebookUrl: Config.facebookUrl
 			}))
@@ -190,8 +191,8 @@ describe("InitiativeEndEmailCli", function() {
 
 				email.body.must.equal(t("SIGNING_END_COMPLETE_EMAIL_BODY", {
 					initiativeTitle: initiative.title,
-					initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-					initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+					initiativeUrl: Initiative.slugUrl(initiative),
+					initiativeEditUrl: Initiative.slugUrl(initiative),
 					siteUrl: Config.url,
 					facebookUrl: Config.facebookUrl
 				}))
@@ -222,8 +223,8 @@ describe("InitiativeEndEmailCli", function() {
 
 				email.body.must.equal(t("SIGNING_END_INCOMPLETE_EMAIL_BODY", {
 					initiativeTitle: initiative.title,
-					initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-					initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+					initiativeUrl: Initiative.slugUrl(initiative),
+					initiativeEditUrl: Initiative.slugUrl(initiative),
 					siteUrl: Config.url,
 					facebookUrl: Config.facebookUrl
 				}))
@@ -285,8 +286,8 @@ describe("InitiativeEndEmailCli", function() {
 
 				email.body.must.equal(t("SIGNING_END_COMPLETE_EMAIL_BODY", {
 					initiativeTitle: initiative.title,
-					initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-					initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+					initiativeUrl: Initiative.slugUrl(initiative),
+					initiativeEditUrl: Initiative.slugUrl(initiative),
 					siteUrl: Config.url,
 					facebookUrl: Config.facebookUrl
 				}))
@@ -320,8 +321,8 @@ describe("InitiativeEndEmailCli", function() {
 
 				email.body.must.equal(t("SIGNING_END_INCOMPLETE_EMAIL_BODY", {
 					initiativeTitle: initiative.title,
-					initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-					initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+					initiativeUrl: Initiative.slugUrl(initiative),
+					initiativeEditUrl: Initiative.slugUrl(initiative),
 					siteUrl: Config.url,
 					facebookUrl: Config.facebookUrl
 				}))
@@ -494,7 +495,7 @@ describe("InitiativeEndEmailCli", function() {
 
 			email.body.must.equal(t("SIGNING_EXPIRING_EMAIL_BODY", {
 				initiativeTitle: initiative.title,
-				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+				initiativeUrl: Initiative.slugUrl(initiative),
 				expirationDate: renderExpirationDate(initiative),
 				siteUrl: Config.url,
 				facebookUrl: Config.facebookUrl

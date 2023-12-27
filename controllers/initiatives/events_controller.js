@@ -31,7 +31,7 @@ exports.router.get("/new", assertAuthor, rateLimit, function(req, res) {
 
 exports.router.get("/:id", function(req, res) {
 	var {initiative} = req
-	res.redirect("/initiatives/" + initiative.uuid + "#event-" + req.params.id)
+	res.redirect(Initiative.slugPath(initiative) + "#event-" + req.params.id)
 })
 
 exports.router.post("/", assertAuthor, rateLimit, next(function*(req, res) {
@@ -62,7 +62,7 @@ exports.router.post("/", assertAuthor, rateLimit, next(function*(req, res) {
 
 			text: renderEmail("EMAIL_INITIATIVE_AUTHOR_TEXT_EVENT_BODY", {
 				initiativeTitle: initiative.title,
-				initiativeUrl: Initiative.initiativeUrl(initiative),
+				initiativeUrl: Initiative.slugUrl(initiative),
 				title: event.title,
 				text: _.quoteEmail(event.content)
 			})
@@ -80,7 +80,7 @@ exports.router.post("/", assertAuthor, rateLimit, next(function*(req, res) {
 
 			text: renderEmail("EMAIL_INITIATIVE_AUTHOR_MEDIA_COVERAGE_EVENT_BODY", {
 				initiativeTitle: initiative.title,
-				initiativeUrl: Initiative.initiativeUrl(initiative),
+				initiativeUrl: Initiative.slugUrl(initiative),
 				title: event.title,
 				publisher: event.content.publisher,
 				url: event.content.url
@@ -94,7 +94,7 @@ exports.router.post("/", assertAuthor, rateLimit, next(function*(req, res) {
 	)
 
 	res.flash("notice", req.t("INITIATIVE_EVENT_BY_AUTHOR_CREATED"))
-	res.redirect("/initiatives/" + initiative.uuid)
+	res.redirect(Initiative.slugPath(initiative))
 }))
 
 exports.router.use(function(err, req, res, next) {

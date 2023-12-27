@@ -54,9 +54,6 @@ var NONEVENTABLE_PHASES = _.difference(Initiative.PHASES, EVENTABLE_PHASES)
 var LOCAL_PHASES = _.without(PHASES, "parliament")
 var {PARLIAMENT_DECISIONS} = Initiative
 var {COMMITTEE_MEETING_DECISIONS} = Initiative
-var SITE_HOSTNAME = Url.parse(Config.url).hostname
-var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
-var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
 var {SITE_URLS} = require("root/test/fixtures")
 var PNG = Buffer.from("89504e470d0a1a0a1337", "hex")
 var PNG_PREVIEW = Buffer.from("89504e470d0a1a0a4269", "hex")
@@ -64,6 +61,7 @@ var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var TRIX_TYPE = new MediaType("application/vnd.basecamp.trix+json")
 var TWITTER_NAME = Config.twitterUrl.replace(/^.*\//, "")
 var MAX_URL_LENGTH = 1024
+var INITIATIVES_URL = `${Config.url}/initiatives`
 var INITIATIVE_RATE = 10
 var COAUTHOR_STATUSES =
 	require("root/controllers/initiatives/coauthors_controller").STATUSES
@@ -120,6 +118,7 @@ describe("InitiativesController", function() {
 
 			var dom = parseHtml(res.body)
 			var el = dom.querySelector(".initiative")
+			el.getAttribute("data-id").must.equal(String(initiative.id))
 			el.getAttribute("data-uuid").must.equal(initiative.uuid)
 			el.querySelector("h3").textContent.must.equal(initiative.title)
 
@@ -147,6 +146,7 @@ describe("InitiativesController", function() {
 
 			var dom = parseHtml(res.body)
 			var el = dom.querySelector(".initiative")
+			el.getAttribute("data-id").must.equal(String(initiative.id))
 			el.getAttribute("data-uuid").must.equal(initiative.uuid)
 			el.querySelector(".author").textContent.must.equal(this.author.name)
 		})
@@ -448,120 +448,37 @@ describe("InitiativesController", function() {
 			res.body.must.include(initiative.uuid)
 		})
 
-		function mustShowInitiativesInPhases(host, dest) {
-			describe("as a filtered site", function() {
-				it("must show initiatives in edit phase with no destination",
+		it("must show initiatives in edit phase with no destination",
+			function*() {
+			var initiative = initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "edit",
+				destination: null,
+				published_at: new Date
+			}))
+
+			var res = yield this.request("/initiatives")
+			res.statusCode.must.equal(200)
+			res.body.must.include(initiative.uuid)
+		})
+
+		;["parliament", "muhu-vald"].forEach(function(dest) {
+			var phases = dest == "parliament" ? PHASES : LOCAL_PHASES
+			phases.forEach(function(phase) {
+				it(`must show initiatives in ${phase} phase destined for ${dest}`,
 					function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
-						phase: "edit",
-						destination: null,
+						phase: phase,
+						destination: dest,
 						published_at: new Date
 					}))
 
-					var res = yield this.request("/initiatives", {headers: {Host: host}})
-					res.statusCode.must.equal(200)
-					res.body.must.include(initiative.uuid)
-				})
-
-				var phases = dest == "parliament" ? PHASES : LOCAL_PHASES
-				phases.forEach(function(phase) {
-					it(`must show initiatives in ${phase} phase destined for ${dest}`,
-						function*() {
-						var initiative = initiativesDb.create(new ValidInitiative({
-							user_id: this.author.id,
-							phase: phase,
-							destination: dest,
-							published_at: new Date
-						}))
-
-						var res = yield this.request("/initiatives", {
-							headers: {Host: host}
-						})
-
-						res.statusCode.must.equal(200)
-						res.body.must.include(initiative.uuid)
-					})
-
-					if (dest != "parliament" || phase != "parliament")
-						it(`must not show initiatives in ${phase} not destined for ${dest}`,
-							function*() {
-							var initiative = initiativesDb.create(new ValidInitiative({
-								user_id: this.author.id,
-								phase: phase,
-								destination: dest == "parliament" ? "muhu-vald" : "parliament",
-								published_at: new Date
-							}))
-
-							var res = yield this.request("/initiatives", {
-								headers: {Host: host}
-							})
-
-							res.statusCode.must.equal(200)
-							res.body.must.not.include(initiative.uuid)
-						})
-				})
-			})
-		}
-
-		describe(`on ${SITE_HOSTNAME}`, function() {
-			it("must show initiatives in edit phase with no destination",
-				function*() {
-				var initiative = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "edit",
-					destination: null,
-					published_at: new Date
-				}))
-
-				var res = yield this.request("/initiatives")
-				res.statusCode.must.equal(200)
-				res.body.must.include(initiative.uuid)
-			})
-
-			;["parliament", "muhu-vald"].forEach(function(dest) {
-				var phases = dest == "parliament" ? PHASES : LOCAL_PHASES
-				phases.forEach(function(phase) {
-					it(`must show initiatives in ${phase} phase destined for ${dest}`,
-						function*() {
-						var initiative = initiativesDb.create(new ValidInitiative({
-							user_id: this.author.id,
-							phase: phase,
-							destination: dest,
-							published_at: new Date
-						}))
-
-						var res = yield this.request("/initiatives")
-						res.statusCode.must.equal(200)
-						res.body.must.include(initiative.uuid)
-					})
-				})
-			})
-		})
-
-		describe(`on ${PARLIAMENT_SITE_HOSTNAME}`, function() {
-			mustShowInitiativesInPhases(PARLIAMENT_SITE_HOSTNAME, "parliament")
-		})
-
-		describe(`on ${LOCAL_SITE_HOSTNAME}`, function() {
-			Object.keys(LOCAL_GOVERNMENTS).forEach(function(dest) {
-				it(`must show initiatives destined for ${dest}`, function*() {
-					var initiative = initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						phase: "sign",
-						destination: dest
-					}))
-
-					var res = yield this.request("/initiatives", {
-						headers: {Host: LOCAL_SITE_HOSTNAME}
-					})
-
+					var res = yield this.request("/initiatives")
 					res.statusCode.must.equal(200)
 					res.body.must.include(initiative.uuid)
 				})
 			})
-
-			mustShowInitiativesInPhases(LOCAL_SITE_HOSTNAME, "muhu-vald")
 		})
 
 		it("must not show unpublished initiatives", function*() {
@@ -592,11 +509,19 @@ describe("InitiativesController", function() {
 			res.body.must.not.include(initiativeB.uuid)
 		})
 
-		it("must include social media tags", function*() {
+		it("must include metadata tags", function*() {
 			var res = yield this.request("/initiatives")
 			res.statusCode.must.equal(200)
 
 			var dom = parseHtml(res.body)
+			var links = dom.head.querySelectorAll("link")
+			var linksByType = _.indexBy(links, (el) => el.getAttribute("type"))
+
+			var atomLink = linksByType[ATOM_TYPE]
+			atomLink.rel.must.equal("alternate")
+			atomLink.href.must.equal("/initiative-events.atom")
+			atomLink.title.must.equal(t("ATOM_INITIATIVE_EVENTS_FEED_TITLE"))
+
 			var metas = dom.head.querySelectorAll("meta")
 			var metasByName = _.indexBy(metas, (el) => el.getAttribute("name"))
 			var metasByProp = _.indexBy(metas, (el) => el.getAttribute("property"))
@@ -1064,8 +989,8 @@ describe("InitiativesController", function() {
 						return initiative
 					})
 
-					var path = "/initiatives?order=" + encodeURIComponent(order)
-					var res = yield this.request(path, {
+					var initiativePath = "/initiatives?order=" + encodeURIComponent(order)
+					var res = yield this.request(initiativePath, {
 						headers: {Accept: INITIATIVE_TYPE}
 					})
 
@@ -1097,9 +1022,9 @@ describe("InitiativesController", function() {
 						return initiative
 					})
 
-					var path = "/initiatives?signedSince=2015-06-23"
-					path += "&order=" + encodeURIComponent(order)
-					var res = yield this.request(path, {
+					var initiativePath = "/initiatives?signedSince=2015-06-23"
+					initiativePath += "&order=" + encodeURIComponent(order)
+					var res = yield this.request(initiativePath, {
 						headers: {Accept: INITIATIVE_TYPE}
 					})
 
@@ -1119,8 +1044,8 @@ describe("InitiativesController", function() {
 						phase: "sign"
 					}))
 
-					var path = "/initiatives?order=" + encodeURIComponent(order)
-					var res = yield this.request(path, {
+					var initiativePath = "/initiatives?order=" + encodeURIComponent(order)
+					var res = yield this.request(initiativePath, {
 						headers: {Accept: INITIATIVE_TYPE}
 					})
 
@@ -1161,8 +1086,8 @@ describe("InitiativesController", function() {
 					return initiative
 				})
 
-				var path = "/initiatives?order=-signatureCount&limit=5"
-				var res = yield this.request(path, {
+				var initiativePath = "/initiatives?order=-signatureCount&limit=5"
+				var res = yield this.request(initiativePath, {
 					headers: {Accept: INITIATIVE_TYPE}
 				})
 
@@ -1288,7 +1213,9 @@ describe("InitiativesController", function() {
 				var initiative = initiatives[0]
 
 				initiative.must.eql(new ValidInitiative({
+					id: initiative.id,
 					uuid: initiative.uuid,
+					slug: "hello-world",
 					user_id: this.user.id,
 					parliament_token: initiative.parliament_token,
 					title: "Hello, world!",
@@ -1309,7 +1236,45 @@ describe("InitiativesController", function() {
 					content_type: TRIX_TYPE
 				})])
 
-				res.headers.location.must.equal("/initiatives/" + initiative.uuid)
+				res.headers.location.must.equal(
+					"/initiatives/" + initiative.id + "-hello-world"
+				)
+			})
+
+			it("must create initiative without slug if nothing remains", function*() {
+				var res = yield this.request("/initiatives", {
+					method: "POST",
+					form: {title: "!?", content: ""}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Initiative Created")
+
+				var initiative = initiativesDb.read(sql`SELECT * FROM initiatives`)
+
+				initiative.must.eql(new ValidInitiative({
+					id: initiative.id,
+					uuid: initiative.uuid,
+					slug: null,
+					user_id: this.user.id,
+					parliament_token: initiative.parliament_token,
+					title: "!?",
+					created_at: new Date
+				}))
+
+				textsDb.search(sql`
+					SELECT * FROM initiative_texts
+				`).must.eql([new ValidText({
+					id: 1,
+					initiative_uuid: initiative.uuid,
+					user_id: this.user.id,
+					created_at: new Date,
+					title: "!?",
+					content: [],
+					content_type: TRIX_TYPE
+				})])
+
+				res.headers.location.must.equal("/initiatives/" + initiative.id)
 			})
 
 			it("must respond with 422 given invalid language", function*() {
@@ -1346,7 +1311,9 @@ describe("InitiativesController", function() {
 					var initiative = initiatives[0]
 
 					initiative.must.eql(new ValidInitiative({
+						id: initiative.id,
 						uuid: initiative.uuid,
+						slug: "hello-world",
 						user_id: this.user.id,
 						parliament_token: initiative.parliament_token,
 						title: "Hello, world!",
@@ -1377,7 +1344,9 @@ describe("InitiativesController", function() {
 				var initiative = initiatives[0]
 
 				initiative.must.eql(new ValidInitiative({
+					id: initiative.id,
 					uuid: initiative.uuid,
+					slug: "hello-world",
 					user_id: this.user.id,
 					parliament_token: initiative.parliament_token,
 					title: "Hello, world!",
@@ -1471,7 +1440,7 @@ describe("InitiativesController", function() {
 					user_id: this.author.id
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(401)
 				res.statusMessage.must.equal("Initiative Not Public")
 			})
@@ -1482,10 +1451,11 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(404)
 			})
 
-			it("must include social media tags", function*() {
+			it("must include metadata tags", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
-					published_at: new Date
+					published_at: new Date,
+					title: "Hello, world!",
 				}))
 
 				imagesDb.create({
@@ -1495,10 +1465,20 @@ describe("InitiativesController", function() {
 					preview: PNG_PREVIEW
 				})
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
+				var links = dom.head.querySelectorAll("link")
+				var linksByType = _.indexBy(links, (el) => el.getAttribute("type"))
+				var atomLink = linksByType[ATOM_TYPE]
+				atomLink.rel.must.equal("alternate")
+				atomLink.href.must.equal("/initiatives/" + initiative.id + ".atom")
+
+				atomLink.title.must.equal(t("ATOM_INITIATIVE_FEED_TITLE", {
+					title: initiative.title
+				}))
+
 				var metas = dom.head.querySelectorAll("meta")
 				var metasByName = _.indexBy(metas, (el) => el.getAttribute("name"))
 				var metasByProp = _.indexBy(metas, (el) => el.getAttribute("property"))
@@ -1506,9 +1486,9 @@ describe("InitiativesController", function() {
 				metasByName["twitter:site"].content.must.equal("@" + TWITTER_NAME)
 				metasByName["twitter:card"].content.must.equal("summary_large_image")
 
-				var url = `${Config.url}/initiatives/${initiative.uuid}`
+				var url = `${Config.url}/initiatives/${initiative.id}`
 				metasByProp["og:title"].content.must.equal(initiative.title)
-				metasByProp["og:url"].content.must.equal(url)
+				metasByProp["og:url"].content.must.equal(url + "-hello-world")
 				metasByProp["og:image"].content.must.equal(url + ".png")
 			})
 
@@ -1519,7 +1499,7 @@ describe("InitiativesController", function() {
 					published_at: new Date
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
@@ -1536,7 +1516,7 @@ describe("InitiativesController", function() {
 					author_name: "Freedom Organization"
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				var dom = parseHtml(res.body)
 
@@ -1562,7 +1542,7 @@ describe("InitiativesController", function() {
 					content: newTrixDocument("Hello, world!")
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
@@ -1595,7 +1575,7 @@ describe("InitiativesController", function() {
 					`
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.include(text.title)
 				res.body.must.not.include("Vote for Peace")
@@ -1613,8 +1593,8 @@ describe("InitiativesController", function() {
 					content_type: "application/pdf"
 				}))
 
-				var path = "/initiatives/" + initiative.uuid
-				var res = yield this.request(path)
+				var initiativePath = "/initiatives/" + initiative.id
+				var res = yield this.request(initiativePath)
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
@@ -1622,7 +1602,7 @@ describe("InitiativesController", function() {
 				title.textContent.must.equal(initiative.title)
 
 				var object = dom.querySelector("object")
-				object.data.must.equal(path + "/files/" + file.id)
+				object.data.must.equal(initiativePath + "/files/" + file.id)
 				object.type.must.equal(String(file.content_type))
 			})
 
@@ -1647,8 +1627,8 @@ describe("InitiativesController", function() {
 					external_text_file_id: text.id
 				})
 
-				var path = "/initiatives/" + initiative.uuid
-				var res = yield this.request(path)
+				var initiativePath = "/initiatives/" + initiative.id
+				var res = yield this.request(initiativePath)
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
@@ -1656,7 +1636,7 @@ describe("InitiativesController", function() {
 				title.textContent.must.equal(initiative.title)
 
 				var object = dom.querySelector("object")
-				object.data.must.equal(path + "/files/" + text.id)
+				object.data.must.equal(initiativePath + "/files/" + text.id)
 				object.type.must.equal(String(text.content_type))
 			})
 
@@ -1668,7 +1648,7 @@ describe("InitiativesController", function() {
 					author_name: this.author.name
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
@@ -1693,7 +1673,7 @@ describe("InitiativesController", function() {
 					status: "accepted"
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
@@ -1720,7 +1700,7 @@ describe("InitiativesController", function() {
 					status: "accepted"
 				})))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
@@ -1746,7 +1726,7 @@ describe("InitiativesController", function() {
 						status: status
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -1761,8 +1741,8 @@ describe("InitiativesController", function() {
 					external: true
 				}))
 
-				var path = "/initiatives/" + initiative.uuid
-				var res = yield this.request(path)
+				var initiativePath = "/initiatives/" + initiative.id
+				var res = yield this.request(initiativePath)
 				res.statusCode.must.equal(200)
 				res.body.must.include(initiative.title)
 			})
@@ -1793,7 +1773,7 @@ describe("InitiativesController", function() {
 							content_type: "text/html"
 						}))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid)
+						var res = yield this.request("/initiatives/" + initiative.id)
 						res.statusCode.must.equal(200)
 
 						var dom = parseHtml(res.body)
@@ -1832,7 +1812,7 @@ describe("InitiativesController", function() {
 							content_type: "text/html"
 						}))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid)
+						var res = yield this.request("/initiatives/" + initiative.id)
 						res.statusCode.must.equal(200)
 
 						var dom = parseHtml(res.body)
@@ -1886,7 +1866,7 @@ describe("InitiativesController", function() {
 							content_type: "text/html"
 						}))
 
-						var initiativePath = "/initiatives/" + initiative.uuid
+						var initiativePath = "/initiatives/" + initiative.id
 						var res = yield this.request(initiativePath + "?language=en")
 						res.statusCode.must.equal(200)
 
@@ -1906,14 +1886,15 @@ describe("InitiativesController", function() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
 						phase: "edit",
+						title: "Hello, world!",
 						published_at: new Date
 					}))
 
-					var initiativePath = "/initiatives/" + initiative.uuid
+					var initiativePath = "/initiatives/" + initiative.id
 					var res = yield this.request(initiativePath + "?language=en")
 					res.statusCode.must.equal(307)
 					res.statusMessage.must.equal("No Translation")
-					res.headers.location.must.equal("/initiatives/" + initiative.uuid)
+					res.headers.location.must.equal(initiativePath + "-hello-world")
 				})
 
 				it("must render warning if initiative in sign phase and translated",
@@ -1931,7 +1912,7 @@ describe("InitiativesController", function() {
 						language: "en"
 					}))
 
-					var initiativePath = "/initiatives/" + initiative.uuid
+					var initiativePath = "/initiatives/" + initiative.id
 					var res = yield this.request(initiativePath + "?language=en")
 					res.statusCode.must.equal(200)
 
@@ -1956,7 +1937,7 @@ describe("InitiativesController", function() {
 					discussion_ends_at: DateFns.addDays(new Date, 5)
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				res.body.must.include(tHtml("initiative_page.discussion_header.title"))
@@ -1975,7 +1956,7 @@ describe("InitiativesController", function() {
 					discussion_ends_at: DateFns.addDays(new Date, 5)
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				res.body.must.include(tHtml("initiative_page.discussion_header.title"))
@@ -2003,10 +1984,7 @@ describe("InitiativesController", function() {
 					discussion_ends_at: DateFns.addDays(new Date, 5)
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid, {
-					headers: {Host: LOCAL_SITE_HOSTNAME}
-				})
-
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				res.body.must.include(tHtml("initiative_page.discussion_header.title"))
@@ -2034,7 +2012,7 @@ describe("InitiativesController", function() {
 					published_at: new Date
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.not.include(tHtml("initiative_page.discussion_header.title"))
 			})
@@ -2047,7 +2025,7 @@ describe("InitiativesController", function() {
 					discussion_ends_at: new Date
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
@@ -2074,7 +2052,7 @@ describe("InitiativesController", function() {
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.not.include(tHtml("initiative_page.discussion_header.title"))
 				res.body.must.not.include(tHtml("VOTING_SUCCEEDED"))
@@ -2112,7 +2090,7 @@ describe("InitiativesController", function() {
 					signing_ends_at: DateFns.addDays(new Date, 1)
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid, {
+				var res = yield this.request("/initiatives/" + initiative.id, {
 					cookies: {csrf_token: "</script><script>alert(42)"}
 				})
 
@@ -2143,7 +2121,7 @@ describe("InitiativesController", function() {
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var events = queryEvents(parseHtml(res.body))
@@ -2177,7 +2155,7 @@ describe("InitiativesController", function() {
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				res.body.must.include(t("VOTING_FAILED", {
@@ -2208,7 +2186,7 @@ describe("InitiativesController", function() {
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				res.body.must.include(t("VOTING_FAILED_AND_EXPIRED", {
@@ -2235,7 +2213,7 @@ describe("InitiativesController", function() {
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				res.body.must.include(t("VOTING_FAILED_AND_EXPIRED", {
@@ -2265,10 +2243,7 @@ describe("InitiativesController", function() {
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid, {
-					headers: {Host: LOCAL_SITE_HOSTNAME}
-				})
-
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				res.body.must.include(t("VOTING_FAILED_ON_LOCAL_LEVEL", {
@@ -2302,10 +2277,7 @@ describe("InitiativesController", function() {
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid, {
-					headers: {Host: LOCAL_SITE_HOSTNAME}
-				})
-
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				res.body.must.include(t("VOTING_FAILED_AND_EXPIRED_ON_LOCAL_LEVEL", {
@@ -2331,10 +2303,7 @@ describe("InitiativesController", function() {
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid, {
-					headers: {Host: LOCAL_SITE_HOSTNAME}
-				})
-
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				res.body.must.include(t("VOTING_FAILED_AND_EXPIRED_ON_LOCAL_LEVEL", {
@@ -2361,7 +2330,7 @@ describe("InitiativesController", function() {
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				res.body.must.include(t("VOTING_FAILED", {
@@ -2398,7 +2367,7 @@ describe("InitiativesController", function() {
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("VOTING_SUCCEEDED"))
 
@@ -2431,7 +2400,7 @@ describe("InitiativesController", function() {
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("VOTING_SUCCEEDED_AND_EXPIRED"))
 			})
@@ -2451,10 +2420,7 @@ describe("InitiativesController", function() {
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid, {
-					headers: {Host: LOCAL_SITE_HOSTNAME}
-				})
-
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("VOTING_SUCCEEDED_ON_LOCAL_LEVEL"))
 
@@ -2489,9 +2455,7 @@ describe("InitiativesController", function() {
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid, {
-					headers: {Host: LOCAL_SITE_HOSTNAME}
-				})
+				var res = yield this.request("/initiatives/" + initiative.id)
 
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("VOTING_SUCCEEDED_AND_EXPIRED_ON_LOCAL_LEVEL"))
@@ -2514,7 +2478,7 @@ describe("InitiativesController", function() {
 					initiative_uuid: initiative.uuid
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
@@ -2544,7 +2508,7 @@ describe("InitiativesController", function() {
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
 
@@ -2592,7 +2556,7 @@ describe("InitiativesController", function() {
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
 
@@ -2632,7 +2596,7 @@ describe("InitiativesController", function() {
 					origin: "parliament"
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var events = queryEvents(parseHtml(res.body))
@@ -2662,7 +2626,7 @@ describe("InitiativesController", function() {
 					origin: "parliament"
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var events = queryEvents(parseHtml(res.body))
@@ -2697,7 +2661,7 @@ describe("InitiativesController", function() {
 					origin: "parliament"
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var events = queryEvents(parseHtml(res.body))
@@ -2726,7 +2690,7 @@ describe("InitiativesController", function() {
 					origin: "parliament"
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var events = queryEvents(parseHtml(res.body))
@@ -2760,7 +2724,7 @@ describe("InitiativesController", function() {
 						origin: "parliament"
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var events = queryEvents(parseHtml(res.body))
@@ -2802,7 +2766,7 @@ describe("InitiativesController", function() {
 					}
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var events = queryEvents(parseHtml(res.body))
@@ -2834,7 +2798,7 @@ describe("InitiativesController", function() {
 					origin: "parliament"
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var events = queryEvents(parseHtml(res.body))
@@ -2864,7 +2828,7 @@ describe("InitiativesController", function() {
 					content: {},
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var events = queryEvents(parseHtml(res.body))
@@ -2899,7 +2863,7 @@ describe("InitiativesController", function() {
 					},
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var events = queryEvents(parseHtml(res.body))
@@ -2931,7 +2895,7 @@ describe("InitiativesController", function() {
 					origin: "parliament"
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var events = queryEvents(parseHtml(res.body))
@@ -2961,7 +2925,7 @@ describe("InitiativesController", function() {
 					origin: "parliament"
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var events = queryEvents(parseHtml(res.body))
@@ -2990,7 +2954,7 @@ describe("InitiativesController", function() {
 					origin: "parliament"
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var events = queryEvents(parseHtml(res.body))
@@ -3026,7 +2990,7 @@ describe("InitiativesController", function() {
 					}
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var events = queryEvents(parseHtml(res.body))
@@ -3057,7 +3021,7 @@ describe("InitiativesController", function() {
 					content: {to: "John Wick", deadline: "2015-07-10"}
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var events = queryEvents(parseHtml(res.body))
@@ -3088,7 +3052,7 @@ describe("InitiativesController", function() {
 					content: {}
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var events = queryEvents(parseHtml(res.body))
@@ -3117,7 +3081,7 @@ describe("InitiativesController", function() {
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
@@ -3144,7 +3108,7 @@ describe("InitiativesController", function() {
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
@@ -3172,7 +3136,7 @@ describe("InitiativesController", function() {
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
@@ -3194,7 +3158,7 @@ describe("InitiativesController", function() {
 					accepted_by_parliament_at: DateFns.addMonths(new Date, -6)
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
@@ -3211,7 +3175,7 @@ describe("InitiativesController", function() {
 						DateFns.addMonths(DateFns.addDays(new Date, -5), -6)
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
@@ -3230,7 +3194,7 @@ describe("InitiativesController", function() {
 					finished_in_parliament_at: DateFns.addDays(new Date, -5)
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
 
@@ -3261,7 +3225,7 @@ describe("InitiativesController", function() {
 						finished_in_parliament_at: DateFns.addDays(new Date, -5)
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 					res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
 
@@ -3296,7 +3260,7 @@ describe("InitiativesController", function() {
 						origin: "parliament"
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 					res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
 
@@ -3322,7 +3286,7 @@ describe("InitiativesController", function() {
 					received_by_parliament_at: new Date
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_IN_PARLIAMENT"))
 			})
@@ -3347,7 +3311,7 @@ describe("InitiativesController", function() {
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_IN_GOVERNMENT"))
 
@@ -3409,9 +3373,7 @@ describe("InitiativesController", function() {
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid, {
-					headers: {Host: LOCAL_SITE_HOSTNAME}
-				})
+				var res = yield this.request("/initiatives/" + initiative.id)
 
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_IN_LOCAL_GOVERNMENT"))
@@ -3464,7 +3426,7 @@ describe("InitiativesController", function() {
 					new ValidSignature({initiative_uuid: initiative.uuid})
 				)))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("GOVERNMENT_AGENCY_CONTACT"))
 				res.body.must.include("John Smith")
@@ -3484,7 +3446,7 @@ describe("InitiativesController", function() {
 					government_decision: "Anda alla."
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_IN_GOVERNMENT"))
 
@@ -3535,7 +3497,7 @@ describe("InitiativesController", function() {
 					finished_in_parliament_at: DateFns.addDays(new Date, -5)
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_IN_GOVERNMENT"))
 
@@ -3557,7 +3519,7 @@ describe("InitiativesController", function() {
 					sent_to_parliament_at: new Date
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_PROCESSED"))
 
@@ -3584,7 +3546,7 @@ describe("InitiativesController", function() {
 					finished_in_government_at: new Date
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_PROCESSED"))
 
@@ -3609,7 +3571,7 @@ describe("InitiativesController", function() {
 					archived_at: new Date
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_PROCESSED"))
 				res.body.must.not.include(tHtml("VOTING_SUCCEEDED"))
@@ -3643,7 +3605,7 @@ describe("InitiativesController", function() {
 					archived_at: new Date
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_PROCESSED"))
 
@@ -3675,7 +3637,7 @@ describe("InitiativesController", function() {
 					occurred_at: pseudoDateTime()
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var events = queryEvents(parseHtml(res.body))
@@ -3706,7 +3668,7 @@ describe("InitiativesController", function() {
 					occurred_at: pseudoDateTime()
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var events = queryEvents(parseHtml(res.body))
@@ -3754,7 +3716,7 @@ describe("InitiativesController", function() {
 					})
 				])
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				queryEvents(parseHtml(res.body)).map((ev) => ev.id).must.eql([
@@ -3780,7 +3742,7 @@ describe("InitiativesController", function() {
 						event_interest: true
 					})))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -3803,7 +3765,7 @@ describe("InitiativesController", function() {
 						event_interest: true
 					})))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -3838,7 +3800,7 @@ describe("InitiativesController", function() {
 						event_interest: true
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -3855,7 +3817,7 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -3892,7 +3854,7 @@ describe("InitiativesController", function() {
 						parent_id: comment.id
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -3933,7 +3895,7 @@ describe("InitiativesController", function() {
 						anonymized_at: new Date
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 					res.body.must.not.include(author.name)
 					res.body.must.not.include(replier.name)
@@ -3957,7 +3919,7 @@ describe("InitiativesController", function() {
 						user_uuid: _.serializeUuid(author.uuid)
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -3975,7 +3937,7 @@ describe("InitiativesController", function() {
 					signing_ends_at: DateFns.addDays(new Date, 1)
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.include("NO_CERTIFICATES")
 			})
@@ -3987,158 +3949,48 @@ describe("InitiativesController", function() {
 					signing_ends_at: DateFns.addDays(new Date, 1)
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.not.include(t("THANKS_FOR_SIGNING"))
 				res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
 				res.body.must.not.include("donate-form")
 			})
 
-			describe(`on ${SITE_HOSTNAME}`, function() {
-				it("must render initiative without destination", function*() {
-					var initiative = initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						phase: "edit",
-						destination: null,
-						published_at: new Date
-					}))
+			it("must render initiative without destination", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					destination: null,
+					published_at: new Date
+				}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
-					res.statusCode.must.equal(200)
-				})
-
-				it("must render initiative destined for parliament", function*() {
-					var initiative = initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						phase: "edit",
-						destination: null,
-						published_at: new Date
-					}))
-
-					var res = yield this.request("/initiatives/" + initiative.uuid)
-					res.statusCode.must.equal(200)
-				})
-
-				it(`must redirect initiative destined for local to ${LOCAL_SITE_HOSTNAME}`, function*() {
-					var initiative = initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						phase: "edit",
-						destination: "muhu-vald",
-						published_at: new Date
-					}))
-
-					// Use a path with an extension that could get stripped by middleware.
-					var path = "/initiatives/" + initiative.uuid + ".jpeg?foo=bar"
-					var res = yield this.request(path)
-					res.statusCode.must.equal(301)
-					res.headers.location.must.equal(Config.localSiteUrl + path)
-				})
+				var res = yield this.request("/initiatives/" + initiative.id)
+				res.statusCode.must.equal(200)
 			})
 
-			describe(`on ${PARLIAMENT_SITE_HOSTNAME}`, function() {
-				it(`must redirect initiative without destination to ${SITE_HOSTNAME}`, function*() {
-					var initiative = initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						phase: "edit",
-						destination: null,
-						published_at: new Date
-					}))
+			it("must render initiative destined for parliament", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					destination: null,
+					published_at: new Date
+				}))
 
-					var path = "/initiatives/" + initiative.uuid + ".jpeg?foo=bar"
-					var res = yield this.request(path, {
-						headers: {Host: PARLIAMENT_SITE_HOSTNAME}
-					})
-
-					res.statusCode.must.equal(301)
-					res.headers.location.must.equal(Config.url + path)
-				})
-
-				it(`must redirect initiative destined for parliament to ${SITE_HOSTNAME}`, function*() {
-					var initiative = initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						phase: "edit",
-						destination: "parliament",
-						published_at: new Date
-					}))
-
-					var path = "/initiatives/" + initiative.uuid + ".jpeg?foo=bar"
-					var res = yield this.request(path, {
-						headers: {Host: PARLIAMENT_SITE_HOSTNAME}
-					})
-
-					res.statusCode.must.equal(301)
-					res.headers.location.must.equal(Config.url + path)
-				})
-
-				it(`must redirect initiative destined for local to ${LOCAL_SITE_HOSTNAME}`, function*() {
-					var initiative = initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						phase: "edit",
-						destination: "muhu-vald",
-						published_at: new Date
-					}))
-
-					// Use a path with an extension that could get stripped by middleware.
-					var path = "/initiatives/" + initiative.uuid + ".jpeg?foo=bar"
-					var res = yield this.request(path, {
-						headers: {Host: PARLIAMENT_SITE_HOSTNAME}
-					})
-
-					res.statusCode.must.equal(301)
-					res.headers.location.must.equal(Config.localSiteUrl + path)
-				})
+				var res = yield this.request("/initiatives/" + initiative.id)
+				res.statusCode.must.equal(200)
 			})
 
-			describe(`on ${LOCAL_SITE_HOSTNAME}`, function() {
-				Object.keys(LOCAL_GOVERNMENTS).forEach(function(dest) {
-					it(`must render initiative destined for ${dest}`, function*() {
-						var initiative = initiativesDb.create(new ValidInitiative({
-							user_id: this.author.id,
-							phase: "sign",
-							destination: dest,
-							published_at: new Date
-						}))
-
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
-							headers: {Host: LOCAL_SITE_HOSTNAME}
-						})
-
-						res.statusCode.must.equal(200)
-					})
-				})
-
-				it(`must redirect initiative without destination to ${SITE_HOSTNAME}`, function*() {
+			Object.keys(LOCAL_GOVERNMENTS).forEach(function(dest) {
+				it(`must render initiative destined for ${dest}`, function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
-						phase: "edit",
-						destination: null,
+						phase: "sign",
+						destination: dest,
 						published_at: new Date
 					}))
 
-					var path = "/initiatives/" + initiative.uuid + ".jpeg?foo=bar"
-					var res = yield this.request(path, {
-						headers: {Host: LOCAL_SITE_HOSTNAME}
-					})
-
-					res.statusCode.must.equal(301)
-					res.headers.location.must.equal(Config.url + path)
-				})
-
-				it(`must redirect initiative destined for parliament to ${SITE_HOSTNAME}`, function*() {
-					var initiative = initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						phase: "edit",
-						destination: "parliament",
-						published_at: new Date
-					}))
-
-					var path = "/initiatives/" + initiative.uuid + ".jpeg?foo=bar"
-					var res = yield this.request(path, {
-						headers: {Host: LOCAL_SITE_HOSTNAME}
-					})
-
-					res.statusCode.must.equal(301)
-					res.headers.location.must.equal(Config.url + path)
+					var res = yield this.request("/initiatives/" + initiative.id)
+					res.statusCode.must.equal(200)
 				})
 			})
 		})
@@ -4151,7 +4003,7 @@ describe("InitiativesController", function() {
 					user_id: this.user.id
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 			})
 
@@ -4166,7 +4018,7 @@ describe("InitiativesController", function() {
 					status: "accepted"
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 			})
 
@@ -4177,7 +4029,7 @@ describe("InitiativesController", function() {
 					published_at: null
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(403)
 				res.statusMessage.must.equal("Initiative Not Public")
 			})
@@ -4195,7 +4047,7 @@ describe("InitiativesController", function() {
 					status: "pending"
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(403)
 				res.statusMessage.must.equal("Accept Invitation")
 				res.body.must.include(t("USER_PAGE_COAUTHOR_INVITATION_DESCRIPTION"))
@@ -4218,7 +4070,7 @@ describe("InitiativesController", function() {
 						status: status
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(403)
 					res.statusMessage.must.equal("Initiative Not Public")
 				})
@@ -4238,7 +4090,7 @@ describe("InitiativesController", function() {
 					status: "pending"
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
@@ -4265,7 +4117,7 @@ describe("InitiativesController", function() {
 					status: "accepted"
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				var dom = parseHtml(res.body)
 				demand(dom.getElementById("coauthor-invitation")).be.null()
 			})
@@ -4287,7 +4139,7 @@ describe("InitiativesController", function() {
 						status: status
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					var dom = parseHtml(res.body)
 					demand(dom.getElementById("coauthor-invitation")).be.null()
 				})
@@ -4302,7 +4154,7 @@ describe("InitiativesController", function() {
 					discussion_ends_at: DateFns.addDays(new Date, 5)
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 
 				res.body.must.include(tHtml("initiative_page.discussion_header.title"))
@@ -4356,7 +4208,7 @@ describe("InitiativesController", function() {
 							content_type: "text/html"
 						}))
 
-						var initiativePath = "/initiatives/" + initiative.uuid
+						var initiativePath = "/initiatives/" + initiative.id
 						var res = yield this.request(initiativePath + "?language=en")
 						res.statusCode.must.equal(200)
 
@@ -4404,7 +4256,7 @@ describe("InitiativesController", function() {
 							content_type: "text/html"
 						}))
 
-						var initiativePath = "/initiatives/" + initiative.uuid
+						var initiativePath = "/initiatives/" + initiative.id
 						var res = yield this.request(initiativePath + "?language=en")
 						res.statusCode.must.equal(200)
 
@@ -4424,28 +4276,30 @@ describe("InitiativesController", function() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: "edit",
+						title: "Hello, world!",
 						published_at: new Date
 					}))
 
-					var initiativePath = "/initiatives/" + initiative.uuid
+					var initiativePath = "/initiatives/" + initiative.id
 					var res = yield this.request(initiativePath + "?language=en")
 					res.statusCode.must.equal(307)
 					res.statusMessage.must.equal("No Translation")
-					res.headers.location.must.equal("/initiatives/" + initiative.uuid)
+					res.headers.location.must.equal(initiativePath + "-hello-world")
 				})
 
 				it("must redirect to primary language when translation missing and not author", function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
 						phase: "edit",
+						title: "Hello, world!",
 						published_at: new Date
 					}))
 
-					var initiativePath = "/initiatives/" + initiative.uuid
+					var initiativePath = "/initiatives/" + initiative.id
 					var res = yield this.request(initiativePath + "?language=en")
 					res.statusCode.must.equal(307)
 					res.statusMessage.must.equal("No Translation")
-					res.headers.location.must.equal("/initiatives/" + initiative.uuid)
+					res.headers.location.must.equal(initiativePath + "-hello-world")
 				})
 			})
 
@@ -4457,7 +4311,7 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -4477,7 +4331,7 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -4498,7 +4352,7 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -4515,7 +4369,7 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -4541,7 +4395,7 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -4566,7 +4420,7 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -4596,7 +4450,7 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -4631,7 +4485,7 @@ describe("InitiativesController", function() {
 						comment_interest: true
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -4660,7 +4514,7 @@ describe("InitiativesController", function() {
 						comment_interest: true
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -4687,7 +4541,7 @@ describe("InitiativesController", function() {
 						comment_interest: false
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -4713,7 +4567,7 @@ describe("InitiativesController", function() {
 						comment_interest: true
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -4732,7 +4586,7 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 					res.body.must.not.include(t("CREATE_INITIATIVE_EVENT_BUTTON"))
 				})
@@ -4746,7 +4600,7 @@ describe("InitiativesController", function() {
 						phase: phase
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 					res.body.must.include(t("CREATE_INITIATIVE_EVENT_BUTTON"))
 				})
@@ -4764,7 +4618,7 @@ describe("InitiativesController", function() {
 						status: "accepted"
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 					res.body.must.include(t("CREATE_INITIATIVE_EVENT_BUTTON"))
 				})
@@ -4778,7 +4632,7 @@ describe("InitiativesController", function() {
 					archived_at: new Date
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.not.include(t("CREATE_INITIATIVE_EVENT_BUTTON"))
 			})
@@ -4790,7 +4644,7 @@ describe("InitiativesController", function() {
 					phase: "sign"
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.not.include(t("CREATE_INITIATIVE_EVENT_BUTTON"))
 			})
@@ -4812,7 +4666,7 @@ describe("InitiativesController", function() {
 					personal_id: this.user.personal_id
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.not.include(t("REVOKE_SIGNATURE"))
 				res.body.must.not.include(t("THANKS_FOR_SIGNING"))
@@ -4834,7 +4688,7 @@ describe("InitiativesController", function() {
 					personal_id: this.user.personal_id
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.not.include(t("REVOKE_SIGNATURE"))
 				res.body.must.not.include(t("THANKS_FOR_SIGNING"))
@@ -4856,7 +4710,7 @@ describe("InitiativesController", function() {
 					personal_id: "38706181337"
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.not.include(t("REVOKE_SIGNATURE"))
 				res.body.must.not.include(t("THANKS_FOR_SIGNING"))
@@ -4877,7 +4731,7 @@ describe("InitiativesController", function() {
 					personal_id: this.user.personal_id
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.not.include(t("REVOKE_SIGNATURE"))
 				res.body.must.not.include(t("THANKS_FOR_SIGNING"))
@@ -4902,7 +4756,7 @@ describe("InitiativesController", function() {
 						personal_id: this.user.personal_id
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 					res.body.must.not.include(t("REVOKE_SIGNATURE"))
 					res.body.must.not.include(t("THANKS_FOR_SIGNING"))
@@ -4924,7 +4778,7 @@ describe("InitiativesController", function() {
 					personal_id: this.user.personal_id
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid)
+				var res = yield this.request("/initiatives/" + initiative.id)
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("REVOKE_SIGNATURE"))
 				res.body.must.include(t("THANKS_FOR_SIGNING"))
@@ -4933,12 +4787,19 @@ describe("InitiativesController", function() {
 			})
 
 			describe("authoring controls", function() {
+				beforeEach(function() {
+					LOCAL_GOVERNMENTS["muhu-vald"].initiativesEmails = [
+						"muhu@example.org",
+						"muhu-cc@example.org"
+					]
+				})
+
 				it("must show authoring controls if author", function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 					res.body.must.include(t("EDIT_INITIATIVE_TEXT"))
 
@@ -4957,7 +4818,7 @@ describe("InitiativesController", function() {
 						status: "accepted"
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 					res.body.must.include(t("EDIT_INITIATIVE_TEXT"))
 
@@ -4971,7 +4832,7 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 					res.body.must.not.include(t("EDIT_INITIATIVE_TEXT"))
 				})
@@ -4990,7 +4851,7 @@ describe("InitiativesController", function() {
 							status: status
 						}))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid)
+						var res = yield this.request("/initiatives/" + initiative.id)
 						res.statusCode.must.equal(200)
 						res.body.must.not.include(t("EDIT_INITIATIVE_TEXT"))
 					})
@@ -5001,7 +4862,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 					res.body.must.include(t("EDIT_INITIATIVE_AUTHORS"))
 				})
@@ -5017,7 +4878,7 @@ describe("InitiativesController", function() {
 						status: "accepted"
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 					res.body.must.not.include(t("EDIT_INITIATIVE_AUTHORS"))
 				})
@@ -5037,7 +4898,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -5073,7 +4934,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -5113,7 +4974,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -5127,7 +4988,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 					res.body.must.not.include(t("PUBLISH_TOPIC"))
 				})
@@ -5142,7 +5003,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -5171,7 +5032,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -5196,7 +5057,7 @@ describe("InitiativesController", function() {
 						)
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -5216,7 +5077,7 @@ describe("InitiativesController", function() {
 						)
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -5243,7 +5104,7 @@ describe("InitiativesController", function() {
 						)
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -5278,7 +5139,7 @@ describe("InitiativesController", function() {
 						)
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -5310,7 +5171,7 @@ describe("InitiativesController", function() {
 						)
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
@@ -5318,7 +5179,7 @@ describe("InitiativesController", function() {
 					button.textContent.must.equal(t("BTN_SEND_TO_VOTE"))
 					button.disabled.must.be.true()
 
-					var newTextUrl = "/initiatives/" + initiative.uuid
+					var newTextUrl = "/initiatives/" + initiative.id
 					newTextUrl += "/texts/new?language=et"
 
 					res.body.must.include(
@@ -5336,7 +5197,7 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 					res.body.must.not.include(t("DELETE_DISCUSSION"))
 				})
@@ -5347,7 +5208,7 @@ describe("InitiativesController", function() {
 						phase: "edit"
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 					res.body.must.include(t("DELETE_DISCUSSION"))
 				})
@@ -5359,7 +5220,7 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 					res.body.must.include(t("DELETE_DISCUSSION"))
 				})
@@ -5377,7 +5238,7 @@ describe("InitiativesController", function() {
 						user_uuid: _.serializeUuid(this.user.uuid)
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 					res.body.must.include(t("DELETE_DISCUSSION"))
 				})
@@ -5396,7 +5257,7 @@ describe("InitiativesController", function() {
 						user_uuid: _.serializeUuid(this.user.uuid)
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 					res.body.must.not.include(t("DELETE_DISCUSSION"))
 				})
@@ -5413,7 +5274,7 @@ describe("InitiativesController", function() {
 						status: "accepted"
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid)
+					var res = yield this.request("/initiatives/" + initiative.id)
 					res.statusCode.must.equal(200)
 					res.body.must.not.include(t("DELETE_DISCUSSION"))
 				})
@@ -5426,13 +5287,13 @@ describe("InitiativesController", function() {
 							phase: phase
 						}))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid)
+						var res = yield this.request("/initiatives/" + initiative.id)
 						res.statusCode.must.equal(200)
 						res.body.must.not.include(t("DELETE_DISCUSSION"))
 					})
 				})
 
-				describe(`on ${PARLIAMENT_SITE_HOSTNAME}`, function() {
+				describe("when destined for parliament", function() {
 					it("must not render send to parliament button if not enough signatures", function*() {
 						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
@@ -5447,7 +5308,7 @@ describe("InitiativesController", function() {
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid)
+						var res = yield this.request("/initiatives/" + initiative.id)
 						res.statusCode.must.equal(200)
 
 						var dom = parseHtml(res.body)
@@ -5469,7 +5330,7 @@ describe("InitiativesController", function() {
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid)
+						var res = yield this.request("/initiatives/" + initiative.id)
 						res.statusCode.must.equal(200)
 
 						var dom = parseHtml(res.body)
@@ -5490,7 +5351,7 @@ describe("InitiativesController", function() {
 							initiative_uuid: initiative.uuid
 						}))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid)
+						var res = yield this.request("/initiatives/" + initiative.id)
 						res.statusCode.must.equal(200)
 
 						var dom = parseHtml(res.body)
@@ -5509,7 +5370,7 @@ describe("InitiativesController", function() {
 							initiative_uuid: initiative.uuid
 						}))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid)
+						var res = yield this.request("/initiatives/" + initiative.id)
 						res.statusCode.must.equal(200)
 
 						var dom = parseHtml(res.body)
@@ -5534,7 +5395,7 @@ describe("InitiativesController", function() {
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid)
+						var res = yield this.request("/initiatives/" + initiative.id)
 						res.statusCode.must.equal(200)
 
 						var dom = parseHtml(res.body)
@@ -5558,14 +5419,14 @@ describe("InitiativesController", function() {
 							language: "en"
 						}))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid)
+						var res = yield this.request("/initiatives/" + initiative.id)
 						res.statusCode.must.equal(200)
 
 						var dom = parseHtml(res.body)
 						var button = dom.getElementById("send-to-parliament-button")
 						button.disabled.must.be.true()
 
-						var newTextUrl = "/initiatives/" + initiative.uuid
+						var newTextUrl = "/initiatives/" + initiative.id
 						newTextUrl += "/texts/new?language=et"
 
 						res.body.must.include(
@@ -5582,7 +5443,7 @@ describe("InitiativesController", function() {
 							has_paper_signatures: true
 						}))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid)
+						var res = yield this.request("/initiatives/" + initiative.id)
 						res.statusCode.must.equal(200)
 
 						var dom = parseHtml(res.body)
@@ -5590,43 +5451,7 @@ describe("InitiativesController", function() {
 					})
 				})
 
-				describe(`on ${LOCAL_SITE_HOSTNAME}`, function() {
-					beforeEach(function() {
-						LOCAL_GOVERNMENTS["muhu-vald"].initiativesEmails = [
-							"muhu@example.org",
-							"muhu-cc@example.org"
-						]
-					})
-
-					it("must include social media tags with local URLs", function*() {
-						var initiative = initiativesDb.create(new ValidInitiative({
-							user_id: this.author.id,
-							destination: "muhu-vald",
-							published_at: new Date
-						}))
-
-						imagesDb.create({
-							initiative_uuid: initiative.uuid,
-							data: PNG,
-							type: "image/png",
-							preview: PNG_PREVIEW
-						})
-
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
-							headers: {Host: LOCAL_SITE_HOSTNAME}
-						})
-
-						res.statusCode.must.equal(200)
-
-						var dom = parseHtml(res.body)
-						var metas = dom.head.querySelectorAll("meta")
-						metas = _.indexBy(metas, (el) => el.getAttribute("property"))
-
-						var url = `${Config.localSiteUrl}/initiatives/${initiative.uuid}`
-						metas["og:url"].content.must.equal(url)
-						metas["og:image"].content.must.equal(url + ".png")
-					})
-
+				describe("when destined for local", function() {
 					it("must not render send to government button if emails empty",
 						function*() {
 						LOCAL_GOVERNMENTS["muhu-vald"].initiativesEmails = []
@@ -5643,9 +5468,7 @@ describe("InitiativesController", function() {
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
-							headers: {Host: LOCAL_SITE_HOSTNAME}
-						})
+						var res = yield this.request("/initiatives/" + initiative.id)
 
 						res.statusCode.must.equal(200)
 						res.body.must.not.include(t("SEND_TO_PARLIAMENT"))
@@ -5666,10 +5489,7 @@ describe("InitiativesController", function() {
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
-							headers: {Host: LOCAL_SITE_HOSTNAME}
-						})
-
+						var res = yield this.request("/initiatives/" + initiative.id)
 						res.statusCode.must.equal(200)
 						res.body.must.not.include(t("SEND_TO_PARLIAMENT"))
 						res.body.must.not.include(t("SEND_TO_LOCAL_GOVERNMENT"))
@@ -5688,10 +5508,7 @@ describe("InitiativesController", function() {
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
-							headers: {Host: LOCAL_SITE_HOSTNAME}
-						})
-
+						var res = yield this.request("/initiatives/" + initiative.id)
 						res.statusCode.must.equal(200)
 
 						var dom = parseHtml(res.body)
@@ -5720,10 +5537,7 @@ describe("InitiativesController", function() {
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
-							headers: {Host: LOCAL_SITE_HOSTNAME}
-						})
-
+						var res = yield this.request("/initiatives/" + initiative.id)
 						res.statusCode.must.equal(200)
 
 						var dom = parseHtml(res.body)
@@ -5744,10 +5558,7 @@ describe("InitiativesController", function() {
 							initiative_uuid: initiative.uuid
 						}))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
-							headers: {Host: LOCAL_SITE_HOSTNAME}
-						})
-
+						var res = yield this.request("/initiatives/" + initiative.id)
 						res.statusCode.must.equal(200)
 
 						var dom = parseHtml(res.body)
@@ -5755,6 +5566,89 @@ describe("InitiativesController", function() {
 						button.disabled.must.be.false()
 					})
 				})
+			})
+		})
+	})
+
+	describe("GET /:uuid", function() {
+		beforeEach(function() { this.author = usersDb.create(new ValidUser) })
+
+		describe("when not logged in", function() {
+			require("root/test/time")(new Date(2015, 5, 18, 13, 37, 42))
+
+			it("must respond with 401 for a unpublished initiative", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+				res.statusCode.must.equal(401)
+				res.statusMessage.must.equal("Initiative Not Public")
+			})
+
+			it("must respond with 404 for a non-existent initiative", function*() {
+				var uuid = "b3c6f2c0-f671-4fc7-8064-d364f7792db9"
+				var res = yield this.request("/initiatives/" + uuid)
+				res.statusCode.must.equal(404)
+			})
+
+			it("must redirect to id and slug", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					title: "Hello, world!",
+					published_at: new Date
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid)
+
+				res.statusCode.must.equal(301)
+
+				res.headers.location.must.equal(
+					"/initiatives/" + initiative.id + "-hello-world"
+				)
+			})
+
+			it("must redirect to id and slug with extension", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					title: "Hello, world!",
+					published_at: new Date
+				}))
+
+				var res = yield this.request(
+					"/initiatives/" + initiative.uuid + ".html?foo=bar"
+				)
+
+				res.statusCode.must.equal(301)
+
+				res.headers.location.must.equal(
+					"/initiatives/" + initiative.id + "-hello-world.html?foo=bar"
+				)
+			})
+		})
+	})
+
+	describe(`GET /:uuid for ${INITIATIVE_TYPE}`, function() {
+		beforeEach(function() { this.author = usersDb.create(new ValidUser) })
+
+		describe("when not logged in", function() {
+			it(`must respond with initiative if requesting ${INITIATIVE_TYPE}`,
+				function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					destination: "parliament",
+					published_at: new Date
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.uuid, {
+					headers: {Accept: INITIATIVE_TYPE}
+				})
+
+				res.statusCode.must.equal(200)
+
+				res.body.must.eql(_.assign(serializeApiInitiative(initiative), {
+					signatureThreshold: Config.votesRequired
+				}))
 			})
 		})
 	})
@@ -5777,7 +5671,7 @@ describe("InitiativesController", function() {
 				preview: PNG_PREVIEW
 			})
 
-			var res = yield this.request("/initiatives/" + this.initiative.uuid, {
+			var res = yield this.request("/initiatives/" + this.initiative.id, {
 				headers: {Accept: "image/*"}
 			})
 
@@ -5795,8 +5689,87 @@ describe("InitiativesController", function() {
 				preview: PNG_PREVIEW
 			})
 
-			var res = yield this.request("/initiatives/" + this.initiative.uuid, {
+			var res = yield this.request("/initiatives/" + this.initiative.id, {
 				headers: {Accept: "image/png"}
+			})
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal("image/png")
+			res.headers["content-length"].must.equal(String(PNG.length))
+			res.body.equals(PNG_PREVIEW).must.be.true()
+		})
+
+		it("must respond with image if extension matches type", function*() {
+			imagesDb.create({
+				initiative_uuid: this.initiative.uuid,
+				data: PNG,
+				type: "image/png",
+				preview: PNG_PREVIEW
+			})
+
+			var res = yield this.request(`/initiatives/${this.initiative.id}.png`)
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal("image/png")
+			res.headers["content-length"].must.equal(String(PNG.length))
+			res.body.equals(PNG_PREVIEW).must.be.true()
+		})
+
+		it("must respond with 406 if no image", function*() {
+			var res = yield this.request("/initiatives/" + this.initiative.id, {
+				headers: {Accept: "image/*"}
+			})
+
+			res.statusCode.must.equal(406)
+		})
+
+		it("must respond with 406 if type doesn't match", function*() {
+			imagesDb.create({
+				initiative_uuid: this.initiative.uuid,
+				data: PNG,
+				type: "image/png",
+				preview: PNG_PREVIEW
+			})
+
+			var res = yield this.request("/initiatives/" + this.initiative.id, {
+				headers: {Accept: "image/jpeg"}
+			})
+
+			res.statusCode.must.equal(406)
+		})
+
+		it("must respond 406 if extension doesn't match type", function*() {
+			imagesDb.create({
+				initiative_uuid: this.initiative.uuid,
+				data: PNG,
+				type: "image/png",
+				preview: PNG_PREVIEW
+			})
+
+			var res = yield this.request(`/initiatives/${this.initiative.id}.jpeg`)
+			res.statusCode.must.equal(406)
+		})
+	})
+
+	describe(`GET /:uuid for image/*`, function() {
+		beforeEach(function() {
+			this.author = usersDb.create(new ValidUser)
+
+			this.initiative = initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				published_at: new Date
+			}))
+		})
+
+		it("must respond with image if Accept is image/*", function*() {
+			imagesDb.create({
+				initiative_uuid: this.initiative.uuid,
+				data: PNG,
+				type: "image/png",
+				preview: PNG_PREVIEW
+			})
+
+			var res = yield this.request("/initiatives/" + this.initiative.uuid, {
+				headers: {Accept: "image/*"}
 			})
 
 			res.statusCode.must.equal(200)
@@ -5827,33 +5800,6 @@ describe("InitiativesController", function() {
 
 			res.statusCode.must.equal(406)
 		})
-
-		it("must respond with 406 if type doesn't match", function*() {
-			imagesDb.create({
-				initiative_uuid: this.initiative.uuid,
-				data: PNG,
-				type: "image/png",
-				preview: PNG_PREVIEW
-			})
-
-			var res = yield this.request("/initiatives/" + this.initiative.uuid, {
-				headers: {Accept: "image/jpeg"}
-			})
-
-			res.statusCode.must.equal(406)
-		})
-
-		it("must respond 406 if extension doesn't match type", function*() {
-			imagesDb.create({
-				initiative_uuid: this.initiative.uuid,
-				data: PNG,
-				type: "image/png",
-				preview: PNG_PREVIEW
-			})
-
-			var res = yield this.request(`/initiatives/${this.initiative.uuid}.jpeg`)
-			res.statusCode.must.equal(406)
-		})
 	})
 
 	describe(`GET /:id for ${INITIATIVE_TYPE}`, function() {
@@ -5864,7 +5810,7 @@ describe("InitiativesController", function() {
 				user_id: this.author.id
 			}))
 
-			var res = yield this.request("/initiatives/" + initiative.uuid, {
+			var res = yield this.request("/initiatives/" + initiative.id, {
 				headers: {Accept: INITIATIVE_TYPE}
 			})
 
@@ -5884,7 +5830,7 @@ describe("InitiativesController", function() {
 				published_at: new Date
 			}))
 
-			var res = yield this.request("/initiatives/" + initiative.uuid, {
+			var res = yield this.request("/initiatives/" + initiative.id, {
 				headers: {Accept: INITIATIVE_TYPE}
 			})
 
@@ -5901,7 +5847,7 @@ describe("InitiativesController", function() {
 				published_at: new Date
 			}))
 
-			var res = yield this.request("/initiatives/" + initiative.uuid, {
+			var res = yield this.request("/initiatives/" + initiative.id, {
 				headers: {Accept: INITIATIVE_TYPE}
 			})
 
@@ -5919,7 +5865,7 @@ describe("InitiativesController", function() {
 				published_at: new Date
 			}))
 
-			var res = yield this.request("/initiatives/" + initiative.uuid, {
+			var res = yield this.request("/initiatives/" + initiative.id, {
 				headers: {Accept: INITIATIVE_TYPE}
 			})
 
@@ -5937,7 +5883,7 @@ describe("InitiativesController", function() {
 				phase: "parliament"
 			}))
 
-			var res = yield this.request("/initiatives/" + initiative.uuid, {
+			var res = yield this.request("/initiatives/" + initiative.id, {
 				headers: {Accept: INITIATIVE_TYPE}
 			})
 
@@ -5963,7 +5909,7 @@ describe("InitiativesController", function() {
 				initiative_uuid: initiative.uuid
 			})))
 
-			var res = yield this.request("/initiatives/" + initiative.uuid, {
+			var res = yield this.request("/initiatives/" + initiative.id, {
 				headers: {Accept: INITIATIVE_TYPE}
 			})
 
@@ -5982,27 +5928,37 @@ describe("InitiativesController", function() {
 		it("must respond with Atom feed", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				title: "Better life for everyone.",
+				title: "Hello, world!",
 				published_at: new Date
 			}))
 
-			var path = `/initiatives/${initiative.uuid}`
-			var res = yield this.request(path, {headers: {Accept: ATOM_TYPE}})
+			var res = yield this.request(`/initiatives/${initiative.id}`, {
+				headers: {Accept: ATOM_TYPE}
+			})
+
 			res.statusCode.must.equal(200)
 			res.headers["content-type"].must.equal(ATOM_TYPE)
 
 			var {feed} = Atom.parse(res.body)
-			feed.id.$.must.equal(Config.url + path)
+			feed.id.$.must.equal(Config.url + `/initiatives/${initiative.uuid}`)
 			feed.updated.$.must.equal(initiative.created_at.toJSON())
 
 			feed.title.$.must.equal(t("ATOM_INITIATIVE_FEED_TITLE", {
-				title: "Better life for everyone."
+				title: "Hello, world!"
 			}))
 
 			var links = _.indexBy(feed.link, (link) => link.rel)
-			links.self.href.must.equal(Config.url + path + ".atom")
+
+			links.self.href.must.equal(
+				Config.url + `/initiatives/${initiative.id}.atom`
+			)
+
 			links.self.type.must.equal(ATOM_TYPE)
-			links.alternate.href.must.equal(Config.url + path)
+
+			links.alternate.href.must.equal(
+				Config.url + `/initiatives/${initiative.id}-hello-world`
+			)
+
 			links.alternate.type.must.equal("text/html")
 
 			feed.author.name.$.must.equal(Config.title)
@@ -6012,21 +5968,29 @@ describe("InitiativesController", function() {
 		it("must respond with correct feed id given .atom extension", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
+				title: "Hello, world!",
 				published_at: new Date
 			}))
 
-			var path = `/initiatives/${initiative.uuid}`
-			var res = yield this.request(path + ".atom")
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 			res.headers["content-type"].must.equal(ATOM_TYPE)
 
 			var {feed} = Atom.parse(res.body)
-			feed.id.$.must.equal(Config.url + path)
+			feed.id.$.must.equal(Config.url + `/initiatives/${initiative.uuid}`)
 
 			var links = _.indexBy(feed.link, (link) => link.rel)
-			links.self.href.must.equal(Config.url + path + ".atom")
+
+			links.self.href.must.equal(
+				Config.url + `/initiatives/${initiative.id}.atom`
+			)
+
 			links.self.type.must.equal(ATOM_TYPE)
-			links.alternate.href.must.equal(Config.url + path)
+
+			links.alternate.href.must.equal(
+				Config.url + `/initiatives/${initiative.id}-hello-world`
+			)
+
 			links.alternate.type.must.equal("text/html")
 		})
 
@@ -6037,7 +6001,7 @@ describe("InitiativesController", function() {
 				title: "Better life for everyone."
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 			res.headers["content-type"].must.equal(ATOM_TYPE)
 
@@ -6075,7 +6039,7 @@ describe("InitiativesController", function() {
 				occurred_at: new Date(2015, 5, 23)
 			})])
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 
 			var {feed} = Atom.parse(res.body)
@@ -6088,7 +6052,7 @@ describe("InitiativesController", function() {
 				published_at: new Date
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 			var {feed} = Atom.parse(res.body)
 			feed.updated.$.must.equal(initiative.created_at.toJSON())
@@ -6101,6 +6065,7 @@ describe("InitiativesController", function() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "sign",
+				title: "Hello, world!",
 				signature_milestones: {
 					[milestones[0]]: DateFns.addDays(new Date, -5),
 					[milestones[1]]: DateFns.addDays(new Date, -3),
@@ -6108,7 +6073,7 @@ describe("InitiativesController", function() {
 				}
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 
 			var events = milestones.map((count) => ({
@@ -6119,12 +6084,16 @@ describe("InitiativesController", function() {
 
 			Atom.parse(res.body).feed.entry.forEach(function(entry, i) {
 				var event = events[i]
-				var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-				var eventUrl = `${initiativeUrl}#event-${event.id}`
 
 				entry.must.eql({
-					id: {$: `${initiativeUrl}/events/${event.id}`},
-					link: {rel: "alternate", type: "text/html", href: eventUrl},
+					id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/${event.id}`},
+
+					link: {
+						rel: "alternate",
+						type: "text/html",
+						href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-${event.id}`
+					},
+
 					updated: {$: event.occurred_at.toJSON()},
 					published: {$: event.occurred_at.toJSON()},
 					title: {$: event.title}
@@ -6135,20 +6104,25 @@ describe("InitiativesController", function() {
 		it("must render initiative in parliament", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
+				title: "Hello, world!",
 				phase: "parliament",
 				sent_to_parliament_at: new Date(2015, 5, 1)
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 
-			var {entry} = Atom.parse(res.body).feed
-			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-			var eventUrl = `${initiativeUrl}#event-sent-to-parliament`
+			Atom.parse(res.body).feed.entry.must.eql({
+				id: {
+					$: `${INITIATIVES_URL}/${initiative.uuid}/events/sent-to-parliament`
+				},
 
-			entry.must.eql({
-				id: {$: `${initiativeUrl}/events/sent-to-parliament`},
-				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				link: {
+					rel: "alternate",
+					type: "text/html",
+					href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-sent-to-parliament`
+				},
+
 				updated: {$: initiative.sent_to_parliament_at.toJSON()},
 				published: {$: initiative.sent_to_parliament_at.toJSON()},
 				title: {$: t("INITIATIVE_SENT_TO_PARLIAMENT_TITLE")},
@@ -6159,6 +6133,7 @@ describe("InitiativesController", function() {
 		it("must render initiative in parliament and received event", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
+				title: "Hello, world!",
 				phase: "parliament"
 			}))
 
@@ -6171,16 +6146,18 @@ describe("InitiativesController", function() {
 				origin: "parliament"
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 
-			var {entry} = Atom.parse(res.body).feed
-			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-			var eventUrl = `${initiativeUrl}#event-${event.id}`
+			Atom.parse(res.body).feed.entry.must.eql({
+				id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/${event.id}`},
 
-			entry.must.eql({
-				id: {$: `${initiativeUrl}/events/${event.id}`},
-				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				link: {
+					rel: "alternate",
+					type: "text/html",
+					href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-${event.id}`
+				},
+
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 				title: {$: t("PARLIAMENT_RECEIVED")}
@@ -6190,7 +6167,8 @@ describe("InitiativesController", function() {
 		it("must render initiative in parliament and accepted event", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "parliament"
+				phase: "parliament",
+				title: "Hello, world!"
 			}))
 
 			var event = eventsDb.create(new ValidEvent({
@@ -6203,16 +6181,18 @@ describe("InitiativesController", function() {
 				origin: "parliament"
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 
-			var {entry} = Atom.parse(res.body).feed
-			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-			var eventUrl = `${initiativeUrl}#event-${event.id}`
+			Atom.parse(res.body).feed.entry.must.eql({
+				id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/${event.id}`},
 
-			entry.must.eql({
-				id: {$: `${initiativeUrl}/events/${event.id}`},
-				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				link: {
+					rel: "alternate",
+					type: "text/html",
+					href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-${event.id}`
+				},
+
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 				title: {$: t("PARLIAMENT_ACCEPTED")},
@@ -6229,7 +6209,8 @@ describe("InitiativesController", function() {
 			function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "parliament"
+				phase: "parliament",
+				title: "Hello, world!"
 			}))
 
 			var event = eventsDb.create(new ValidEvent({
@@ -6242,16 +6223,18 @@ describe("InitiativesController", function() {
 				origin: "parliament"
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 
-			var {entry} = Atom.parse(res.body).feed
-			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-			var eventUrl = `${initiativeUrl}#event-${event.id}`
+			Atom.parse(res.body).feed.entry.must.eql({
+				id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/${event.id}`},
 
-			entry.must.eql({
-				id: {$: `${initiativeUrl}/events/${event.id}`},
-				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				link: {
+					rel: "alternate",
+					type: "text/html",
+					href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-${event.id}`
+				},
+
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 				title: {$: t("PARLIAMENT_BOARD_MEETING")}
@@ -6262,7 +6245,8 @@ describe("InitiativesController", function() {
 			function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "parliament"
+				phase: "parliament",
+				title: "Hello, world!"
 			}))
 
 			var event = eventsDb.create(new ValidEvent({
@@ -6275,16 +6259,18 @@ describe("InitiativesController", function() {
 				origin: "parliament"
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 
-			var {entry} = Atom.parse(res.body).feed
-			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-			var eventUrl = `${initiativeUrl}#event-${event.id}`
+			Atom.parse(res.body).feed.entry.must.eql({
+				id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/${event.id}`},
 
-			entry.must.eql({
-				id: {$: `${initiativeUrl}/events/${event.id}`},
-				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				link: {
+					rel: "alternate",
+					type: "text/html",
+					href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-${event.id}`
+				},
+
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 
@@ -6298,7 +6284,8 @@ describe("InitiativesController", function() {
 			it(`must render initiative in parliament and committee meeting event with ${decision} decision`, function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
-					phase: "parliament"
+					phase: "parliament",
+					title: "Hello, world!"
 				}))
 
 				var event = eventsDb.create(new ValidEvent({
@@ -6311,16 +6298,18 @@ describe("InitiativesController", function() {
 					origin: "parliament"
 				}))
 
-				var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+				var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 				res.statusCode.must.equal(200)
 
-				var {entry} = Atom.parse(res.body).feed
-				var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-				var eventUrl = `${initiativeUrl}#event-${event.id}`
+				Atom.parse(res.body).feed.entry.must.eql({
+					id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/${event.id}`},
 
-				entry.must.eql({
-					id: {$: `${initiativeUrl}/events/${event.id}`},
-					link: {rel: "alternate", type: "text/html", href: eventUrl},
+					link: {
+						rel: "alternate",
+						type: "text/html",
+						href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-${event.id}`
+					},
+
 					updated: {$: event.updated_at.toJSON()},
 					published: {$: event.occurred_at.toJSON()},
 
@@ -6339,7 +6328,8 @@ describe("InitiativesController", function() {
 		it("must render initiative in parliament and committee meeting event with links", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "parliament"
+				phase: "parliament",
+				title: "Hello, world!"
 			}))
 
 			var event = eventsDb.create(new ValidEvent({
@@ -6358,16 +6348,18 @@ describe("InitiativesController", function() {
 				}
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 
-			var {entry} = Atom.parse(res.body).feed
-			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-			var eventUrl = `${initiativeUrl}#event-${event.id}`
+			Atom.parse(res.body).feed.entry.must.eql({
+				id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/${event.id}`},
 
-			entry.must.eql({
-				id: {$: `${initiativeUrl}/events/${event.id}`},
-				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				link: {
+					rel: "alternate",
+					type: "text/html",
+					href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-${event.id}`
+				},
+
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 				title: {$: t("PARLIAMENT_COMMITTEE_MEETING")},
@@ -6382,7 +6374,8 @@ describe("InitiativesController", function() {
 		it("must render initiative in parliament and committee meeting event with summary", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "parliament"
+				phase: "parliament",
+				title: "Hello, world!"
 			}))
 
 			var event = eventsDb.create(new ValidEvent({
@@ -6395,16 +6388,18 @@ describe("InitiativesController", function() {
 				origin: "parliament"
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 
-			var {entry} = Atom.parse(res.body).feed
-			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-			var eventUrl = `${initiativeUrl}#event-${event.id}`
+			Atom.parse(res.body).feed.entry.must.eql({
+				id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/${event.id}`},
 
-			entry.must.eql({
-				id: {$: `${initiativeUrl}/events/${event.id}`},
-				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				link: {
+					rel: "alternate",
+					type: "text/html",
+					href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-${event.id}`
+				},
+
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 				title: {$: t("PARLIAMENT_COMMITTEE_MEETING")},
@@ -6416,7 +6411,8 @@ describe("InitiativesController", function() {
 			function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "parliament"
+				phase: "parliament",
+				title: "Hello, world!"
 			}))
 
 			var event = eventsDb.create(new ValidEvent({
@@ -6429,16 +6425,18 @@ describe("InitiativesController", function() {
 				origin: "parliament"
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 
-			var {entry} = Atom.parse(res.body).feed
-			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-			var eventUrl = `${initiativeUrl}#event-${event.id}`
+			Atom.parse(res.body).feed.entry.must.eql({
+				id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/${event.id}`},
 
-			entry.must.eql({
-				id: {$: `${initiativeUrl}/events/${event.id}`},
-				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				link: {
+					rel: "alternate",
+					type: "text/html",
+					href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-${event.id}`
+				},
+
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 				title: {$: t("PARLIAMENT_PLENARY_MEETING")}
@@ -6448,7 +6446,8 @@ describe("InitiativesController", function() {
 		it("must render initiative in parliament and plenary meeting event with links", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "parliament"
+				phase: "parliament",
+				title: "Hello, world!"
 			}))
 
 			var event = eventsDb.create(new ValidEvent({
@@ -6464,19 +6463,21 @@ describe("InitiativesController", function() {
 						{title: "Stenogramm", url: "https://stenogrammid.riigikogu.ee"},
 						{title: "Riigikogu istung", url: "https://www.youtube.com"}
 					]
-				},
+				}
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 
-			var {entry} = Atom.parse(res.body).feed
-			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-			var eventUrl = `${initiativeUrl}#event-${event.id}`
+			Atom.parse(res.body).feed.entry.must.eql({
+				id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/${event.id}`},
 
-			entry.must.eql({
-				id: {$: `${initiativeUrl}/events/${event.id}`},
-				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				link: {
+					rel: "alternate",
+					type: "text/html",
+					href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-${event.id}`
+				},
+
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 				title: {$: t("PARLIAMENT_PLENARY_MEETING")},
@@ -6491,7 +6492,8 @@ describe("InitiativesController", function() {
 		it("must render initiative in parliament and plenary meeting event with summary", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "parliament"
+				phase: "parliament",
+				title: "Hello, world!"
 			}))
 
 			var event = eventsDb.create(new ValidEvent({
@@ -6504,16 +6506,18 @@ describe("InitiativesController", function() {
 				origin: "parliament"
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 
-			var {entry} = Atom.parse(res.body).feed
-			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-			var eventUrl = `${initiativeUrl}#event-${event.id}`
+			Atom.parse(res.body).feed.entry.must.eql({
+				id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/${event.id}`},
 
-			entry.must.eql({
-				id: {$: `${initiativeUrl}/events/${event.id}`},
-				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				link: {
+					rel: "alternate",
+					type: "text/html",
+					href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-${event.id}`
+				},
+
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 				title: {$: t("PARLIAMENT_PLENARY_MEETING")},
@@ -6524,7 +6528,8 @@ describe("InitiativesController", function() {
 		it("must render initiative in parliament and decision event", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "parliament"
+				phase: "parliament",
+				title: "Hello, world!"
 			}))
 
 			var event = eventsDb.create(new ValidEvent({
@@ -6537,16 +6542,18 @@ describe("InitiativesController", function() {
 				origin: "parliament"
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 
-			var {entry} = Atom.parse(res.body).feed
-			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-			var eventUrl = `${initiativeUrl}#event-${event.id}`
+			Atom.parse(res.body).feed.entry.must.eql({
+				id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/${event.id}`},
 
-			entry.must.eql({
-				id: {$: `${initiativeUrl}/events/${event.id}`},
-				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				link: {
+					rel: "alternate",
+					type: "text/html",
+					href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-${event.id}`
+				},
+
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 				title: {$: t("PARLIAMENT_DECISION")}
@@ -6556,7 +6563,8 @@ describe("InitiativesController", function() {
 		it("must render initiative in parliament and decision event with summary", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "parliament"
+				phase: "parliament",
+				title: "Hello, world!"
 			}))
 
 			var event = eventsDb.create(new ValidEvent({
@@ -6569,16 +6577,18 @@ describe("InitiativesController", function() {
 				origin: "parliament"
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 
-			var {entry} = Atom.parse(res.body).feed
-			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-			var eventUrl = `${initiativeUrl}#event-${event.id}`
+			Atom.parse(res.body).feed.entry.must.eql({
+				id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/${event.id}`},
 
-			entry.must.eql({
-				id: {$: `${initiativeUrl}/events/${event.id}`},
-				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				link: {
+					rel: "alternate",
+					type: "text/html",
+					href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-${event.id}`
+				},
+
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 				title: {$: t("PARLIAMENT_DECISION")},
@@ -6589,7 +6599,8 @@ describe("InitiativesController", function() {
 		it("must render initiative in parliament and letter event", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "parliament"
+				phase: "parliament",
+				title: "Hello, world!"
 			}))
 
 			var event = eventsDb.create(new ValidEvent({
@@ -6609,16 +6620,18 @@ describe("InitiativesController", function() {
 				}
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 
-			var {entry} = Atom.parse(res.body).feed
-			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-			var eventUrl = `${initiativeUrl}#event-${event.id}`
+			Atom.parse(res.body).feed.entry.must.eql({
+				id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/${event.id}`},
 
-			entry.must.eql({
-				id: {$: `${initiativeUrl}/events/${event.id}`},
-				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				link: {
+					rel: "alternate",
+					type: "text/html",
+					href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-${event.id}`
+				},
+
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 				title: {$: t("PARLIAMENT_LETTER_INCOMING")},
@@ -6636,7 +6649,8 @@ describe("InitiativesController", function() {
 			function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "parliament"
+				phase: "parliament",
+				title: "Hello, world!"
 			}))
 
 			var event = eventsDb.create(new ValidEvent({
@@ -6649,16 +6663,18 @@ describe("InitiativesController", function() {
 				content: {to: "John Wick", deadline: "2015-07-10"}
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 
-			var {entry} = Atom.parse(res.body).feed
-			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-			var eventUrl = `${initiativeUrl}#event-${event.id}`
+			Atom.parse(res.body).feed.entry.must.eql({
+				id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/${event.id}`},
 
-			entry.must.eql({
-				id: {$: `${initiativeUrl}/events/${event.id}`},
-				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				link: {
+					rel: "alternate",
+					type: "text/html",
+					href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-${event.id}`
+				},
+
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 				title: {$: t("PARLIAMENT_INTERPELLATION")},
@@ -6674,7 +6690,8 @@ describe("InitiativesController", function() {
 			function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "parliament"
+				phase: "parliament",
+				title: "Hello, world!"
 			}))
 
 			var event = eventsDb.create(new ValidEvent({
@@ -6687,16 +6704,18 @@ describe("InitiativesController", function() {
 				content: {}
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 
-			var {entry} = Atom.parse(res.body).feed
-			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-			var eventUrl = `${initiativeUrl}#event-${event.id}`
+			Atom.parse(res.body).feed.entry.must.eql({
+				id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/${event.id}`},
 
-			entry.must.eql({
-				id: {$: `${initiativeUrl}/events/${event.id}`},
-				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				link: {
+					rel: "alternate",
+					type: "text/html",
+					href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-${event.id}`
+				},
+
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
 				title: {$: t("PARLIAMENT_NATIONAL_MATTER")}
@@ -6708,24 +6727,30 @@ describe("InitiativesController", function() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "parliament",
+					title: "Hello, world!",
 					sent_to_parliament_at: DateFns.addDays(new Date, -30),
 					parliament_decision: decision,
 					finished_in_parliament_at: DateFns.addDays(new Date, -5)
 				}))
 
-				var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+				var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 				res.statusCode.must.equal(200)
 
 				var entries = Atom.parse(res.body).feed.entry
 				entries.length.must.equal(2)
 				entries[0].id.$.must.match(/\/sent-to-parliament$/)
 
-				var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-				var eventUrl = `${initiativeUrl}#event-parliament-finished`
-
 				entries[1].must.eql({
-					id: {$: `${initiativeUrl}/events/parliament-finished`},
-					link: {rel: "alternate", type: "text/html", href: eventUrl},
+					id: {
+						$: `${INITIATIVES_URL}/${initiative.uuid}/events/parliament-finished`
+					},
+
+					link: {
+						rel: "alternate",
+						type: "text/html",
+						href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-parliament-finished`
+					},
+
 					updated: {$: initiative.finished_in_parliament_at.toJSON()},
 					published: {$: initiative.finished_in_parliament_at.toJSON()},
 					title: {$: t("PARLIAMENT_FINISHED")},
@@ -6741,6 +6766,7 @@ describe("InitiativesController", function() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "parliament",
+					title: "Hello, world!",
 					sent_to_parliament_at: DateFns.addDays(new Date, -30),
 					parliament_decision: decision,
 					finished_in_parliament_at: DateFns.addDays(new Date, -5)
@@ -6754,19 +6780,22 @@ describe("InitiativesController", function() {
 					origin: "parliament"
 				}))
 
-				var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+				var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 				res.statusCode.must.equal(200)
 
 				var entries = Atom.parse(res.body).feed.entry
 				entries.length.must.equal(2)
 				entries[0].id.$.must.match(/\/sent-to-parliament$/)
 
-				var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-				var eventUrl = `${initiativeUrl}#event-${event.id}`
-
 				entries[1].must.eql({
-					id: {$: `${initiativeUrl}/events/${event.id}`},
-					link: {rel: "alternate", type: "text/html", href: eventUrl},
+					id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/${event.id}`},
+
+					link: {
+						rel: "alternate",
+						type: "text/html",
+						href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-${event.id}`
+					},
+
 					updated: {$: event.updated_at.toJSON()},
 					published: {$: event.occurred_at.toJSON()},
 					title: {$: t("PARLIAMENT_FINISHED")},
@@ -6783,20 +6812,23 @@ describe("InitiativesController", function() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
+				title: "Hello, world!",
 				sent_to_government_at: new Date(2015, 5, 1),
 				government_agency: "Sidususministeerium"
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 
-			var {entry} = Atom.parse(res.body).feed
-			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-			var eventUrl = `${initiativeUrl}#event-sent-to-government`
+			Atom.parse(res.body).feed.entry.must.eql({
+				id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/sent-to-government`},
 
-			entry.must.eql({
-				id: {$: `${initiativeUrl}/events/sent-to-government`},
-				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				link: {
+					rel: "alternate",
+					type: "text/html",
+					href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-sent-to-government`
+				},
+
 				updated: {$: initiative.sent_to_government_at.toJSON()},
 				published: {$: initiative.sent_to_government_at.toJSON()},
 
@@ -6810,25 +6842,29 @@ describe("InitiativesController", function() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
+				title: "Hello, world!",
 				sent_to_government_at: new Date(2015, 5, 1),
 				government_agency: "Sidususministeerium",
 				finished_in_government_at: new Date(2015, 5, 5),
 				government_decision: "Anda alla."
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 
 			var entries = Atom.parse(res.body).feed.entry
 			entries.length.must.equal(2)
 			entries[0].id.$.must.match(/\/sent-to-government$/)
 
-			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-			var eventUrl = `${initiativeUrl}#event-finished-in-government`
-
 			entries[1].must.eql({
-				id: {$: `${initiativeUrl}/events/finished-in-government`},
-				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/finished-in-government`},
+
+				link: {
+					rel: "alternate",
+					type: "text/html",
+					href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-finished-in-government`
+				},
+
 				updated: {$: initiative.finished_in_government_at.toJSON()},
 				published: {$: initiative.finished_in_government_at.toJSON()},
 
@@ -6845,7 +6881,8 @@ describe("InitiativesController", function() {
 		it("must render initiative with media coverage event", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "parliament"
+				phase: "parliament",
+				title: "Hello, world!"
 			}))
 
 			var event = eventsDb.create(new ValidEvent({
@@ -6857,15 +6894,18 @@ describe("InitiativesController", function() {
 				occurred_at: pseudoDateTime()
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 
-			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-			var eventUrl = `${initiativeUrl}#event-${event.id}`
-
 			Atom.parse(res.body).feed.entry.must.eql({
-				id: {$: `${initiativeUrl}/events/${event.id}`},
-				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/${event.id}`},
+
+				link: {
+					rel: "alternate",
+					type: "text/html",
+					href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-${event.id}`
+				},
+
 				category: {term: "initiator"},
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
@@ -6878,7 +6918,8 @@ describe("InitiativesController", function() {
 		it("must render initiative with text event", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
-				phase: "parliament"
+				phase: "parliament",
+				title: "Hello, world!"
 			}))
 
 			var author = usersDb.create(new ValidUser({name: "Johnny Lang"}))
@@ -6892,15 +6933,19 @@ describe("InitiativesController", function() {
 				occurred_at: pseudoDateTime()
 			}))
 
-			var res = yield this.request(`/initiatives/${initiative.uuid}.atom`)
+			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
 			res.statusCode.must.equal(200)
 
-			var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-			var eventUrl = `${initiativeUrl}#event-${event.id}`
-
 			Atom.parse(res.body).feed.entry.must.eql({
-				id: {$: `${initiativeUrl}/events/${event.id}`},
-				link: {rel: "alternate", type: "text/html", href: eventUrl},
+				id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/${event.id}`},
+
+				link: {
+					rel: "alternate",
+					type: "text/html",
+					href: `${INITIATIVES_URL}/${initiative.id}-hello-world#event-${event.id}`
+				},
+
+
 				category: {term: "initiator"},
 				updated: {$: event.updated_at.toJSON()},
 				published: {$: event.occurred_at.toJSON()},
@@ -6921,17 +6966,19 @@ describe("InitiativesController", function() {
 				it("must set destination to null given empty string", function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
-						destination: "tallinn"
+						destination: "tallinn",
+						title: "Hello, world!"
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var initiativePath = `/initiatives/${initiative.id}`
+					var res = yield this.request(initiativePath, {
 						method: "PUT",
 						form: {destination: ""}
 					})
 
 					res.statusCode.must.equal(303)
 					res.statusMessage.must.equal("Initiative Updated")
-					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+					res.headers.location.must.equal(initiativePath + "-hello-world")
 
 					initiativesDb.read(initiative).must.eql({
 						__proto__: initiative,
@@ -6945,17 +6992,19 @@ describe("InitiativesController", function() {
 				).forEach(function(dest) {
 					it(`must update destination to ${dest}`, function*() {
 						var initiative = initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id
+							user_id: this.user.id,
+							title: "Hello, world!"
 						}))
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var initiativePath = `/initiatives/${initiative.id}`
+						var res = yield this.request(initiativePath, {
 							method: "PUT",
 							form: {destination: dest}
 						})
 
 						res.statusCode.must.equal(303)
 						res.statusMessage.must.equal("Initiative Updated")
-						res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+						res.headers.location.must.equal(initiativePath + "-hello-world")
 
 						initiativesDb.read(initiative).must.eql({
 							__proto__: initiative,
@@ -6966,7 +7015,8 @@ describe("InitiativesController", function() {
 
 				it("must update destination if coauthor", function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
-						user_id: usersDb.create(new ValidUser).id
+						user_id: usersDb.create(new ValidUser).id,
+						title: "Hello, world!"
 					}))
 
 					coauthorsDb.create(new ValidCoauthor({
@@ -6975,14 +7025,15 @@ describe("InitiativesController", function() {
 						status: "accepted"
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var initiativePath = `/initiatives/${initiative.id}`
+					var res = yield this.request(initiativePath, {
 						method: "PUT",
 						form: {destination: "parliament"}
 					})
 
 					res.statusCode.must.equal(303)
 					res.statusMessage.must.equal("Initiative Updated")
-					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+					res.headers.location.must.equal(initiativePath + "-hello-world")
 
 					initiativesDb.read(initiative).must.eql({
 						__proto__: initiative,
@@ -7002,7 +7053,7 @@ describe("InitiativesController", function() {
 							status: status
 						}))
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
 							method: "PUT",
 							form: {destination: "parliament"}
 						})
@@ -7017,7 +7068,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {destination: "foo"}
 					})
@@ -7033,7 +7084,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {destination: "hasOwnProperty"}
 					})
@@ -7047,17 +7098,19 @@ describe("InitiativesController", function() {
 					function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
-						phase: "sign"
+						phase: "sign",
+						title: "Hello, world!"
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var initiativePath = `/initiatives/${initiative.id}`
+					var res = yield this.request(initiativePath, {
 						method: "PUT",
 						form: {destination: "muhu-vald"}
 					})
 
 					res.statusCode.must.equal(303)
 					res.statusMessage.must.equal("Initiative Updated")
-					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+					res.headers.location.must.equal(initiativePath + "-hello-world")
 					initiativesDb.read(initiative).must.eql(initiative)
 				})
 			})
@@ -7065,10 +7118,12 @@ describe("InitiativesController", function() {
 			describe("given local info", function() {
 				it("must update attributes", function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id
+						user_id: this.user.id,
+						title: "Hello, world!"
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var initiativePath = `/initiatives/${initiative.id}`
+					var res = yield this.request(initiativePath, {
 						method: "PUT",
 						form: {
 							author_name: "John Smith",
@@ -7097,7 +7152,7 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(303)
 					res.statusMessage.must.equal("Initiative Updated")
-					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+					res.headers.location.must.equal(initiativePath + "-hello-world")
 
 					initiativesDb.read(initiative).must.eql({
 						__proto__: initiative,
@@ -7145,7 +7200,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {notes: "Hello, world"}
 					})
@@ -7167,7 +7222,7 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {notes: "Hello, world"}
 					})
@@ -7229,7 +7284,7 @@ describe("InitiativesController", function() {
 							user_id: this.user.id
 						}))
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
 							method: "PUT",
 							form: attrs
 						})
@@ -7245,7 +7300,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						headers: {Referer: "/user"},
 						form: {notes: "Hello, world"}
@@ -7261,7 +7316,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						headers: {Referer: this.url + "/user"},
 						form: {notes: "Hello, world"}
@@ -7278,7 +7333,7 @@ describe("InitiativesController", function() {
 							user_id: this.user.id
 						}))
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
 							method: "PUT",
 							headers: {Referer: url + "/user"},
 							form: {notes: "Hello, world"}
@@ -7292,10 +7347,12 @@ describe("InitiativesController", function() {
 
 				it("must not redirect back to other hosts", function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id
+						user_id: this.user.id,
+						title: "Hello, world!"
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var initiativePath = `/initiatives/${initiative.id}`
+					var res = yield this.request(initiativePath, {
 						method: "PUT",
 						headers: {Referer: "http://example.com/evil"},
 						form: {notes: "Hello, world"}
@@ -7303,7 +7360,7 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(303)
 					res.statusMessage.must.equal("Initiative Updated")
-					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+					res.headers.location.must.equal(initiativePath + "-hello-world")
 				})
 			})
 
@@ -7323,7 +7380,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id,
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
+					var res = yield this.request("/initiatives/" + initiative.id, {
 						method: "PUT",
 						form: {visibility: "public"}
 					})
@@ -7354,7 +7411,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id,
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
+					var res = yield this.request("/initiatives/" + initiative.id, {
 						method: "PUT",
 						form: {visibility: "public"}
 					})
@@ -7368,7 +7425,7 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
+					var res = yield this.request("/initiatives/" + initiative.id, {
 						method: "PUT",
 						form: {visibility: "public"}
 					})
@@ -7390,7 +7447,7 @@ describe("InitiativesController", function() {
 							status: status
 						}))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
+						var res = yield this.request("/initiatives/" + initiative.id, {
 							method: "PUT",
 							form: {visibility: "public"}
 						})
@@ -7407,7 +7464,8 @@ describe("InitiativesController", function() {
 					})
 
 					var initiative = initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id
+						user_id: this.user.id,
+						title: "Hello, world!"
 					}))
 
 					textsDb.create(new ValidText({
@@ -7420,14 +7478,15 @@ describe("InitiativesController", function() {
 						Config.minEditingDeadlineDays - 1
 					)
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var initiativePath = `/initiatives/${initiative.id}`
+					var res = yield this.request(initiativePath, {
 						method: "PUT",
 						form: {visibility: "public", endsOn: formatIsoDate(endsOn)}
 					})
 
 					res.statusCode.must.equal(303)
 					res.statusMessage.must.equal("Initiative Published")
-					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+					res.headers.location.must.equal(initiativePath + "-hello-world")
 
 					var cookies = parseCookies(res.headers["set-cookie"])
 					res = yield this.request(res.headers.location, {
@@ -7461,7 +7520,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id,
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {visibility: "public", endsOn: "foo"}
 					})
@@ -7489,7 +7548,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id,
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							visibility: "public",
@@ -7522,7 +7581,7 @@ describe("InitiativesController", function() {
 
 					var endsOn = DateFns.addDays(DateFns.startOfDay(new Date), 3650)
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							visibility: "public",
@@ -7552,7 +7611,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id,
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							visibility: "public",
@@ -7584,7 +7643,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id,
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							visibility: "public",
@@ -7620,7 +7679,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id,
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							visibility: "public",
@@ -7644,7 +7703,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							visibility: "public",
@@ -7674,7 +7733,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id,
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							visibility: "public",
@@ -7724,7 +7783,7 @@ describe("InitiativesController", function() {
 						comment_interest: false
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							visibility: "public",
@@ -7770,7 +7829,7 @@ describe("InitiativesController", function() {
 						comment_interest: false
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							visibility: "public",
@@ -7801,7 +7860,8 @@ describe("InitiativesController", function() {
 					})
 
 					var initiative = initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id
+						user_id: this.user.id,
+						title: "Hello, world!"
 					}))
 
 					textsDb.create(new ValidText({
@@ -7849,7 +7909,7 @@ describe("InitiativesController", function() {
 						})
 					])
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							visibility: "public",
@@ -7881,7 +7941,10 @@ describe("InitiativesController", function() {
 
 						text: renderEmail("INITIATIVE_PUBLISHED_MESSAGE_BODY", {
 							initiativeTitle: initiative.title,
-							initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+
+							initiativeUrl:
+								`${Config.url}/initiatives/${initiative.id}-hello-world`,
+
 							authorName: "Johnny Lang"
 						}),
 
@@ -7909,7 +7972,8 @@ describe("InitiativesController", function() {
 
 					var initiative = initiativesDb.create(new ValidInitiative({
 						destination: "parliament",
-						user_id: this.user.id
+						user_id: this.user.id,
+						title: "Hello, world!"
 					}))
 
 					textsDb.create(new ValidText({
@@ -7957,7 +8021,7 @@ describe("InitiativesController", function() {
 						})
 					])
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							visibility: "public",
@@ -7989,7 +8053,10 @@ describe("InitiativesController", function() {
 
 						text: renderEmail("INITIATIVE_PUBLISHED_MESSAGE_BODY", {
 							initiativeTitle: initiative.title,
-							initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+
+							initiativeUrl:
+								`${Config.url}/initiatives/${initiative.id}-hello-world`,
+
 							authorName: "Johnny Lang"
 						}),
 
@@ -8017,7 +8084,8 @@ describe("InitiativesController", function() {
 
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
-						destination: "tallinn"
+						destination: "tallinn",
+						title: "Hello, world!"
 					}))
 
 					textsDb.create(new ValidText({
@@ -8065,7 +8133,7 @@ describe("InitiativesController", function() {
 						})
 					])
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							visibility: "public",
@@ -8097,7 +8165,10 @@ describe("InitiativesController", function() {
 
 						text: renderEmail("INITIATIVE_PUBLISHED_MESSAGE_BODY", {
 							initiativeTitle: initiative.title,
-							initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+
+							initiativeUrl:
+								`${Config.url}/initiatives/${initiative.id}-hello-world`,
+
 							authorName: "Johnny Lang"
 						}),
 
@@ -8127,6 +8198,7 @@ describe("InitiativesController", function() {
 					it("must update initiative if setting a short deadline", function*() {
 						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
+							title: "Hello, world!",
 							published_at: DateFns.addDays(new Date, -1),
 						}))
 
@@ -8140,14 +8212,15 @@ describe("InitiativesController", function() {
 							Config.minEditingDeadlineDays - 1
 						)
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var initiativePath = `/initiatives/${initiative.id}`
+						var res = yield this.request(initiativePath, {
 							method: "PUT",
 							form: {visibility: "public", endsOn: formatIsoDate(endsOn)}
 						})
 
 						res.statusCode.must.equal(303)
 						res.statusMessage.must.equal("Initiative Updated")
-						res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+						res.headers.location.must.equal(initiativePath + "-hello-world")
 
 						var cookies = parseCookies(res.headers["set-cookie"])
 						res = yield this.request(res.headers.location, {
@@ -8176,7 +8249,7 @@ describe("InitiativesController", function() {
 							user_id: this.user.id,
 						}))
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
 							method: "PUT",
 							form: {
 								visibility: "public",
@@ -8205,7 +8278,7 @@ describe("InitiativesController", function() {
 
 						var endsOn = DateFns.addDays(DateFns.startOfDay(new Date), 3650)
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
 							method: "PUT",
 							form: {visibility: "public", endsOn: formatIsoDate(endsOn)}
 						})
@@ -8234,7 +8307,7 @@ describe("InitiativesController", function() {
 
 						var endsOn = DateFns.addDays(DateFns.startOfDay(new Date), 5)
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
 							method: "PUT",
 							form: {visibility: "public", endsOn: formatIsoDate(endsOn)}
 						})
@@ -8266,7 +8339,7 @@ describe("InitiativesController", function() {
 							Config.minEditingDeadlineDays - 1
 						)
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
 							method: "PUT",
 							form: {visibility: "public", endsOn: formatIsoDate(endsOn)}
 						})
@@ -8291,7 +8364,7 @@ describe("InitiativesController", function() {
 							user_id: this.user.id
 						}))
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
 							method: "PUT",
 							form: {
 								visibility: "public",
@@ -8323,7 +8396,7 @@ describe("InitiativesController", function() {
 							user_id: this.user.id,
 						}))
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
 							method: "PUT",
 							form: {
 								visibility: "public",
@@ -8355,7 +8428,7 @@ describe("InitiativesController", function() {
 						)
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
+					var res = yield this.request("/initiatives/" + initiative.id, {
 						method: "PUT",
 						form: {status: "voting"}
 					})
@@ -8384,7 +8457,7 @@ describe("InitiativesController", function() {
 						status: "accepted"
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
+					var res = yield this.request("/initiatives/" + initiative.id, {
 						method: "PUT",
 						form: {status: "voting"}
 					})
@@ -8398,7 +8471,7 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
+					var res = yield this.request("/initiatives/" + initiative.id, {
 						method: "PUT",
 						form: {status: "voting"}
 					})
@@ -8420,7 +8493,7 @@ describe("InitiativesController", function() {
 							status: status
 						}))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
+						var res = yield this.request("/initiatives/" + initiative.id, {
 							method: "PUT",
 							form: {status: "voting"}
 						})
@@ -8446,7 +8519,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							status: "voting",
@@ -8465,6 +8538,7 @@ describe("InitiativesController", function() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						destination: "parliament",
+						title: "Hello, world!",
 
 						published_at: DateFns.addDays(
 							new Date,
@@ -8484,7 +8558,8 @@ describe("InitiativesController", function() {
 						Config.minSigningDeadlineDays - 1
 					)
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var initiativePath = `/initiatives/${initiative.id}`
+					var res = yield this.request(initiativePath, {
 						method: "PUT",
 						form: {
 							status: "voting",
@@ -8495,7 +8570,7 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(303)
 					res.statusMessage.must.equal("Initiative Sent to Signing")
-					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+					res.headers.location.must.equal(initiativePath + "-hello-world")
 
 					var cookies = parseCookies(res.headers["set-cookie"])
 					res = yield this.request(res.headers.location, {
@@ -8527,6 +8602,7 @@ describe("InitiativesController", function() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						destination: "parliament",
+						title: "Hello, world!",
 
 						published_at: DateFns.addDays(
 							new Date,
@@ -8554,7 +8630,8 @@ describe("InitiativesController", function() {
 						Config.minSigningDeadlineDays - 1
 					)
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var initiativePath = `/initiatives/${initiative.id}`
+					var res = yield this.request(initiativePath, {
 						method: "PUT",
 						form: {
 							language: text.language,
@@ -8565,7 +8642,7 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(303)
 					res.statusMessage.must.equal("Initiative Sent to Signing")
-					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+					res.headers.location.must.equal(initiativePath + "-hello-world")
 
 					var cookies = parseCookies(res.headers["set-cookie"])
 					res = yield this.request(res.headers.location, {
@@ -8604,7 +8681,7 @@ describe("InitiativesController", function() {
 						)
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							status: "voting",
@@ -8628,7 +8705,7 @@ describe("InitiativesController", function() {
 						)
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {status: "voting", endsOn: "foo"}
 					})
@@ -8650,7 +8727,7 @@ describe("InitiativesController", function() {
 						)
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							status: "voting",
@@ -8669,6 +8746,7 @@ describe("InitiativesController", function() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						destination: "parliament",
+						title: "Hello, world!",
 
 						published_at: DateFns.addDays(
 							new Date,
@@ -8686,7 +8764,8 @@ describe("InitiativesController", function() {
 						Config.maxSigningDeadlineMonths
 					), -1)
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var initiativePath = `/initiatives/${initiative.id}`
+					var res = yield this.request(initiativePath, {
 						method: "PUT",
 						form: {
 							status: "voting",
@@ -8697,7 +8776,7 @@ describe("InitiativesController", function() {
 
 					res.statusCode.must.equal(303)
 					res.statusMessage.must.equal("Initiative Sent to Signing")
-					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+					res.headers.location.must.equal(initiativePath + "-hello-world")
 
 					initiative = initiativesDb.read(initiative)
 					initiative.phase.must.equal("sign")
@@ -8715,7 +8794,7 @@ describe("InitiativesController", function() {
 						)
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							status: "voting",
@@ -8749,7 +8828,7 @@ describe("InitiativesController", function() {
 						language: "en"
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
+					var res = yield this.request("/initiatives/" + initiative.id, {
 						method: "PUT",
 						form: {
 							status: "voting",
@@ -8795,7 +8874,7 @@ describe("InitiativesController", function() {
 						Config.minSigningDeadlineDays - 1
 					)
 
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
+					var res = yield this.request("/initiatives/" + initiative.id, {
 						method: "PUT",
 						form: {
 							status: "voting",
@@ -8845,7 +8924,7 @@ describe("InitiativesController", function() {
 						user_id: this.user.id
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							status: "voting",
@@ -8888,7 +8967,7 @@ describe("InitiativesController", function() {
 					}))
 
 					var endsOn = DateFns.addDays(DateFns.startOfDay(new Date), 30)
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							status: "voting",
@@ -8937,7 +9016,7 @@ describe("InitiativesController", function() {
 					}))
 
 					var endsOn = DateFns.addDays(DateFns.startOfDay(new Date), 30)
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							status: "voting",
@@ -8983,7 +9062,7 @@ describe("InitiativesController", function() {
 
 					var endsOn = DateFns.addDays(DateFns.endOfDay(new Date), 30)
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							status: "voting",
@@ -9000,6 +9079,7 @@ describe("InitiativesController", function() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						destination: "parliament",
+						title: "Hello, world!",
 
 						published_at: DateFns.addDays(
 							new Date,
@@ -9088,7 +9168,7 @@ describe("InitiativesController", function() {
 						})
 					])
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							status: "voting",
@@ -9121,7 +9201,9 @@ describe("InitiativesController", function() {
 
 						text: renderEmail("SENT_TO_SIGNING_MESSAGE_BODY", {
 							initiativeTitle: initiative.title,
-							initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+
+							initiativeUrl:
+								`${Config.url}/initiatives/${initiative.id}-hello-world`,
 						}),
 
 						sent_at: new Date,
@@ -9144,6 +9226,7 @@ describe("InitiativesController", function() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						destination: "tallinn",
+						title: "Hello, world!",
 
 						published_at: DateFns.addDays(
 							new Date,
@@ -9232,7 +9315,7 @@ describe("InitiativesController", function() {
 						})
 					])
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							status: "voting",
@@ -9265,7 +9348,9 @@ describe("InitiativesController", function() {
 
 						text: renderEmail("SENT_TO_SIGNING_MESSAGE_BODY", {
 							initiativeTitle: initiative.title,
-							initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+
+							initiativeUrl:
+								`${Config.url}/initiatives/${initiative.id}-hello-world`,
 						}),
 
 						sent_at: new Date,
@@ -9287,6 +9372,7 @@ describe("InitiativesController", function() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						destination: "parliament",
+						title: "Hello, world!",
 
 						published_at: DateFns.addDays(
 							new Date,
@@ -9330,7 +9416,7 @@ describe("InitiativesController", function() {
 						}),
 					])
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
 						form: {
 							status: "voting",
@@ -9363,7 +9449,9 @@ describe("InitiativesController", function() {
 
 						text: renderEmail("SENT_TO_SIGNING_MESSAGE_BODY", {
 							initiativeTitle: initiative.title,
-							initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+
+							initiativeUrl:
+								`${Config.url}/initiatives/${initiative.id}-hello-world`,
 						}),
 
 						sent_at: new Date,
@@ -9393,7 +9481,7 @@ describe("InitiativesController", function() {
 							Config.minSigningDeadlineDays - 2
 						)
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
 							method: "PUT",
 							form: {status: "voting", endsOn: formatIsoDate(endsOn)}
 						})
@@ -9414,7 +9502,7 @@ describe("InitiativesController", function() {
 							Config.minSigningDeadlineDays - 1
 						)
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
 							method: "PUT",
 							form: {status: "voting", endsOn: formatIsoDate(endsOn)}
 						})
@@ -9450,7 +9538,7 @@ describe("InitiativesController", function() {
 							Config.maxSigningDeadlineMonths
 						), -1)
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
 							method: "PUT",
 							form: {status: "voting", endsOn: formatIsoDate(endsOn)}
 						})
@@ -9478,7 +9566,7 @@ describe("InitiativesController", function() {
 							Config.maxSigningDeadlineMonths
 						)
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
 							method: "PUT",
 							form: {status: "voting", endsOn: formatIsoDate(endsOn)}
 						})
@@ -9501,7 +9589,7 @@ describe("InitiativesController", function() {
 							status: "accepted"
 						}))
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
 							method: "PUT",
 							form: {
 								status: "voting",
@@ -9529,7 +9617,7 @@ describe("InitiativesController", function() {
 							Config.minSigningDeadlineDays - 1
 						)
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
 							method: "PUT",
 							form: {status: "voting", endsOn: formatIsoDate(endsOn)}
 						})
@@ -9559,7 +9647,7 @@ describe("InitiativesController", function() {
 							Config.minSigningDeadlineDays - 1
 						)
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
 							method: "PUT",
 							form: {status: "voting", endsOn: formatIsoDate(endsOn)}
 						})
@@ -9596,7 +9684,7 @@ describe("InitiativesController", function() {
 							Config.minSigningDeadlineDays - 1
 						)
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
 							method: "PUT",
 							form: {status: "voting", endsOn: formatIsoDate(endsOn)}
 						})
@@ -9621,7 +9709,7 @@ describe("InitiativesController", function() {
 							Config.minSigningDeadlineDays - 1
 						)
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
 							method: "PUT",
 							form: {status: "voting", endsOn: formatIsoDate(endsOn)}
 						})
@@ -9643,7 +9731,7 @@ describe("InitiativesController", function() {
 							Config.minSigningDeadlineDays - 1
 						)
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
 							method: "PUT",
 							form: {status: "voting", endsOn: formatIsoDate(endsOn)}
 						})
@@ -9674,7 +9762,7 @@ describe("InitiativesController", function() {
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
+						var res = yield this.request("/initiatives/" + initiative.id, {
 							method: "PUT",
 							form: {status: "followUp"}
 						})
@@ -9690,7 +9778,7 @@ describe("InitiativesController", function() {
 							published_at: new Date
 						}))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
+						var res = yield this.request("/initiatives/" + initiative.id, {
 							method: "PUT",
 							form: {status: "followUp"}
 						})
@@ -9711,7 +9799,7 @@ describe("InitiativesController", function() {
 							status: "accepted"
 						}))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
+						var res = yield this.request("/initiatives/" + initiative.id, {
 							method: "PUT",
 							form: {status: "followUp"}
 						})
@@ -9733,7 +9821,7 @@ describe("InitiativesController", function() {
 								status: status
 							}))
 
-							var res = yield this.request("/initiatives/" + initiative.uuid, {
+							var res = yield this.request("/initiatives/" + initiative.id, {
 								method: "PUT",
 								form: {status: "followUp"}
 							})
@@ -9754,7 +9842,7 @@ describe("InitiativesController", function() {
 							initiative_uuid: initiative.uuid
 						}))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
+						var res = yield this.request("/initiatives/" + initiative.id, {
 							method: "PUT",
 							form: {status: "followUp"}
 						})
@@ -9780,7 +9868,7 @@ describe("InitiativesController", function() {
 							() => new ValidSignature({initiative_uuid: initiative.uuid})
 						))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
+						var res = yield this.request("/initiatives/" + initiative.id, {
 							method: "PUT",
 							form: {status: "followUp"}
 						})
@@ -9796,7 +9884,7 @@ describe("InitiativesController", function() {
 							has_paper_signatures: true
 						}))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
+						var res = yield this.request("/initiatives/" + initiative.id, {
 							method: "PUT",
 							form: {status: "followUp"}
 						})
@@ -9808,7 +9896,8 @@ describe("InitiativesController", function() {
 					it("must update initiative and email parliament", function*() {
 						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
-							phase: "sign"
+							phase: "sign",
+							title: "Hello, world!"
 						}))
 
 						var signatureCount = Config.votesRequired + 1
@@ -9817,7 +9906,8 @@ describe("InitiativesController", function() {
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var initiativePath = `/initiatives/${initiative.id}`
+						var res = yield this.request(initiativePath, {
 							method: "PUT",
 							form: {
 								status: "followUp",
@@ -9828,7 +9918,7 @@ describe("InitiativesController", function() {
 						})
 
 						res.statusCode.must.equal(303)
-						res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+						res.headers.location.must.equal(initiativePath + "-hello-world")
 
 						var cookies = parseCookies(res.headers["set-cookie"])
 						res = yield this.request(res.headers.location, {
@@ -9863,7 +9953,7 @@ describe("InitiativesController", function() {
 							{initiativeTitle: initiative.title}
 						))
 
-						var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
+						var initiativeUrl = `${Config.url}/initiatives/${initiative.id}`
 
 						var token = updatedInitiative.parliament_token.toString("hex")
 						var signaturesUrl = initiativeUrl + "/signatures.asice"
@@ -9875,7 +9965,7 @@ describe("InitiativesController", function() {
 						email.body.must.equal(t("EMAIL_INITIATIVE_TO_PARLIAMENT_BODY", {
 							initiativeUuid: initiative.uuid,
 							initiativeTitle: initiative.title,
-							initiativeUrl: initiativeUrl,
+							initiativeUrl: initiativeUrl + "-hello-world",
 							signatureCount: signatureCount,
 							undersignedSignaturesUrl: signaturesUrl,
 							signaturesCsvUrl: signaturesCsvUrl,
@@ -9891,7 +9981,8 @@ describe("InitiativesController", function() {
 						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
 							destination: "parliament",
-							phase: "sign"
+							phase: "sign",
+							title: "Hello, world!"
 						}))
 
 						citizenosSignaturesDb.create(_.times(
@@ -9945,7 +10036,7 @@ describe("InitiativesController", function() {
 							})
 						])
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
 							method: "PUT",
 							form: {
 								status: "followUp",
@@ -9977,7 +10068,10 @@ describe("InitiativesController", function() {
 							text: renderEmail("SENT_TO_PARLIAMENT_MESSAGE_BODY", {
 								authorName: "John",
 								initiativeTitle: initiative.title,
-								initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+
+								initiativeUrl:
+									`${Config.url}/initiatives/${initiative.id}-hello-world`,
+
 								signatureCount: Config.votesRequired + 3
 							}),
 
@@ -9996,7 +10090,10 @@ describe("InitiativesController", function() {
 
 						email.body.must.equal(t("SENT_TO_PARLIAMENT_MESSAGE_BODY", {
 							initiativeTitle: initiative.title,
-							initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+
+							initiativeUrl:
+								`${Config.url}/initiatives/${initiative.id}-hello-world`,
+
 							signatureCount: Config.votesRequired + 3,
 							authorName: "John",
 							unsubscribeUrl: `${Config.url}%recipient.unsubscribeUrl%`,
@@ -10031,9 +10128,8 @@ describe("InitiativesController", function() {
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
+						var res = yield this.request("/initiatives/" + initiative.id, {
 							method: "PUT",
-							headers: {Host: LOCAL_SITE_HOSTNAME},
 							form: {status: "followUp"}
 						})
 
@@ -10054,9 +10150,8 @@ describe("InitiativesController", function() {
 							initiative_uuid: initiative.uuid
 						}))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
+						var res = yield this.request("/initiatives/" + initiative.id, {
 							method: "PUT",
-							headers: {Host: LOCAL_SITE_HOSTNAME},
 							form: {status: "followUp"}
 						})
 
@@ -10079,9 +10174,8 @@ describe("InitiativesController", function() {
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
+						var res = yield this.request("/initiatives/" + initiative.id, {
 							method: "PUT",
-							headers: {Host: LOCAL_SITE_HOSTNAME},
 							form: {status: "followUp"}
 						})
 
@@ -10102,9 +10196,8 @@ describe("InitiativesController", function() {
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
+						var res = yield this.request("/initiatives/" + initiative.id, {
 							method: "PUT",
-							headers: {Host: LOCAL_SITE_HOSTNAME},
 							form: {status: "followUp"}
 						})
 
@@ -10120,9 +10213,8 @@ describe("InitiativesController", function() {
 							has_paper_signatures: true
 						}))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
+						var res = yield this.request("/initiatives/" + initiative.id, {
 							method: "PUT",
-							headers: {Host: LOCAL_SITE_HOSTNAME},
 							form: {status: "followUp"}
 						})
 
@@ -10133,6 +10225,7 @@ describe("InitiativesController", function() {
 					it("must update initiative and email local government", function*() {
 						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
+							title: "Hello, world!",
 							destination: "muhu-vald",
 							phase: "sign"
 						}))
@@ -10144,9 +10237,9 @@ describe("InitiativesController", function() {
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var initiativePath = `/initiatives/${initiative.id}`
+						var res = yield this.request(initiativePath, {
 							method: "PUT",
-							headers: {Host: LOCAL_SITE_HOSTNAME},
 
 							form: {
 								status: "followUp",
@@ -10157,14 +10250,11 @@ describe("InitiativesController", function() {
 						})
 
 						res.statusCode.must.equal(303)
-						res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+						res.headers.location.must.equal(initiativePath + "-hello-world")
 
 						var cookies = parseCookies(res.headers["set-cookie"])
 						res = yield this.request(res.headers.location, {
-							headers: {
-								Host: LOCAL_SITE_HOSTNAME,
-								Cookie: serializeCookies(cookies)
-							}
+							headers: {Cookie: serializeCookies(cookies)}
 						})
 
 						res.statusCode.must.equal(200)
@@ -10202,8 +10292,7 @@ describe("InitiativesController", function() {
 							{initiativeTitle: initiative.title}
 						))
 
-						var initiativeUrl = `${Config.localSiteUrl}/initiatives`
-						initiativeUrl += `/${initiative.uuid}`
+						var initiativeUrl = `${Config.url}/initiatives/${initiative.id}`
 
 						var token = updatedInitiative.parliament_token.toString("hex")
 						var signaturesUrl = initiativeUrl + "/signatures.asice"
@@ -10216,7 +10305,7 @@ describe("InitiativesController", function() {
 							t("EMAIL_INITIATIVE_TO_LOCAL_GOVERNMENT_BODY", {
 								initiativeUuid: initiative.uuid,
 								initiativeTitle: initiative.title,
-								initiativeUrl: initiativeUrl,
+								initiativeUrl: initiativeUrl + "-hello-world",
 								signatureCount: signatureCount,
 								undersignedSignaturesUrl: signaturesUrl,
 								signaturesCsvUrl: signaturesCsvUrl,
@@ -10234,7 +10323,8 @@ describe("InitiativesController", function() {
 						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
 							destination: "muhu-vald",
-							phase: "sign"
+							phase: "sign",
+							title: "Hello, world!"
 						}))
 
 						var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
@@ -10283,9 +10373,8 @@ describe("InitiativesController", function() {
 							})
 						])
 
-						var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
 							method: "PUT",
-							headers: {Host: LOCAL_SITE_HOSTNAME},
 							form: {
 								status: "followUp",
 								"contact[name]": "John",
@@ -10302,8 +10391,7 @@ describe("InitiativesController", function() {
 
 						var emails = subscriptions.map((s) => s.email).sort()
 
-						var initiativeUrl = `${Config.localSiteUrl}/initiatives`
-						initiativeUrl += `/${initiative.uuid}`
+						var initiativeUrl = `${Config.url}/initiatives/${initiative.id}`
 
 						messages.must.eql([{
 							id: messages[0].id,
@@ -10319,7 +10407,7 @@ describe("InitiativesController", function() {
 							text: renderEmail("SENT_TO_LOCAL_GOVERNMENT_MESSAGE_BODY", {
 								authorName: "John",
 								initiativeTitle: initiative.title,
-								initiativeUrl: initiativeUrl,
+								initiativeUrl: initiativeUrl + "-hello-world",
 								signatureCount: signatureThreshold
 							}),
 
@@ -10338,7 +10426,7 @@ describe("InitiativesController", function() {
 
 						email.body.must.equal(t("SENT_TO_LOCAL_GOVERNMENT_MESSAGE_BODY", {
 							initiativeTitle: initiative.title,
-							initiativeUrl: initiativeUrl,
+							initiativeUrl: initiativeUrl + "-hello-world",
 							signatureCount: signatureThreshold,
 							authorName: "John",
 							unsubscribeUrl: `${Config.url}%recipient.unsubscribeUrl%`,
@@ -10370,7 +10458,7 @@ describe("InitiativesController", function() {
 						language: "en"
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
+					var res = yield this.request("/initiatives/" + initiative.id, {
 						method: "PUT",
 						form: {status: "followUp"}
 					})
@@ -10396,7 +10484,7 @@ describe("InitiativesController", function() {
 						language: "et"
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
+					var res = yield this.request("/initiatives/" + initiative.id, {
 						method: "PUT",
 						form: {status: "followUp"}
 					})
@@ -10415,7 +10503,7 @@ describe("InitiativesController", function() {
 						new ValidSignature({initiative_uuid: initiative.uuid})
 					)))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
+					var res = yield this.request("/initiatives/" + initiative.id, {
 						method: "PUT",
 						form: {status: "followUp"}
 					})
@@ -10432,7 +10520,7 @@ describe("InitiativesController", function() {
 						published_at: new Date
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
+					var res = yield this.request("/initiatives/" + initiative.id, {
 						method: "PUT",
 						form: {author_personal_id: "38706181337"}
 					})
@@ -10453,7 +10541,7 @@ describe("InitiativesController", function() {
 						status: "accepted"
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
+					var res = yield this.request("/initiatives/" + initiative.id, {
 						method: "PUT",
 						form: {author_personal_id: "38706181337"}
 					})
@@ -10469,7 +10557,7 @@ describe("InitiativesController", function() {
 							phase: phase
 						}))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
+						var res = yield this.request("/initiatives/" + initiative.id, {
 							method: "PUT",
 							form: {author_personal_id: "38706181337"}
 						})
@@ -10482,6 +10570,7 @@ describe("InitiativesController", function() {
 				it("must update author", function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
+						title: "Hello, world!",
 						phase: "edit"
 					}))
 
@@ -10493,14 +10582,15 @@ describe("InitiativesController", function() {
 						status: "accepted"
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
+					var initiativePath = "/initiatives/" + initiative.id
+					var res = yield this.request(initiativePath, {
 						method: "PUT",
 						form: {author_personal_id: serializePersonalId(coauthor)}
 					})
 
 					res.statusCode.must.equal(303)
 					res.statusMessage.must.equal("Author Updated")
-					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+					res.headers.location.must.equal(initiativePath + "-hello-world")
 
 					var cookies = parseCookies(res.headers["set-cookie"])
 					res = yield this.request(res.headers.location, {
@@ -10539,7 +10629,7 @@ describe("InitiativesController", function() {
 						phase: "edit"
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
+					var res = yield this.request("/initiatives/" + initiative.id, {
 						method: "PUT",
 						form: {author_personal_id: "38706181337"}
 					})
@@ -10561,7 +10651,7 @@ describe("InitiativesController", function() {
 							status: status
 						}))
 
-						var res = yield this.request("/initiatives/" + initiative.uuid, {
+						var res = yield this.request("/initiatives/" + initiative.id, {
 							method: "PUT",
 							form: {author_personal_id: serializePersonalId(coauthor)}
 						})
@@ -10588,7 +10678,7 @@ describe("InitiativesController", function() {
 						status: "accepted"
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
+					var res = yield this.request("/initiatives/" + initiative.id, {
 						method: "PUT",
 						form: {author_personal_id: serializePersonalId(coauthor)}
 					})
@@ -10610,7 +10700,7 @@ describe("InitiativesController", function() {
 						status: "accepted"
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
+					var res = yield this.request("/initiatives/" + initiative.id, {
 						method: "PUT",
 						form: {author_personal_id: "LV" + coauthor.personal_id}
 					})
@@ -10632,7 +10722,7 @@ describe("InitiativesController", function() {
 						status: "accepted"
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
+					var res = yield this.request("/initiatives/" + initiative.id, {
 						method: "PUT",
 						form: {author_personal_id: coauthor.country + "38706181337"}
 					})
@@ -10652,7 +10742,7 @@ describe("InitiativesController", function() {
 					published_at: new Date
 				}))
 
-				var res = yield this.request(`/initiatives/${initiative.uuid}`, {
+				var res = yield this.request(`/initiatives/${initiative.id}`, {
 					method: "DELETE"
 				})
 
@@ -10675,7 +10765,7 @@ describe("InitiativesController", function() {
 					user_id: this.user.id
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid, {
+				var res = yield this.request("/initiatives/" + initiative.id, {
 					method: "DELETE"
 				})
 
@@ -10705,7 +10795,7 @@ describe("InitiativesController", function() {
 					user_id: this.user.id
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid, {
+				var res = yield this.request("/initiatives/" + initiative.id, {
 					method: "DELETE"
 				})
 
@@ -10729,7 +10819,7 @@ describe("InitiativesController", function() {
 					user_uuid: _.serializeUuid(this.user.uuid)
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid, {
+				var res = yield this.request("/initiatives/" + initiative.id, {
 					method: "DELETE"
 				})
 
@@ -10743,6 +10833,7 @@ describe("InitiativesController", function() {
 				function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
+					title: "Hello, world!",
 					published_at: new Date
 				}))
 
@@ -10757,11 +10848,11 @@ describe("InitiativesController", function() {
 					user_uuid: _.serializeUuid(this.user.uuid)
 				}))
 
-				var path = "/initiatives/" + initiative.uuid
-				var res = yield this.request(path, {method: "DELETE"})
+				var initiativePath = "/initiatives/" + initiative.id
+				var res = yield this.request(initiativePath, {method: "DELETE"})
 
 				res.statusCode.must.equal(303)
-				res.headers.location.must.equal(path)
+				res.headers.location.must.equal(initiativePath + "-hello-world")
 
 				var cookies = parseCookies(res.headers["set-cookie"])
 				res = yield this.request(res.headers.location, {
@@ -10795,7 +10886,7 @@ describe("InitiativesController", function() {
 					user_id: this.user.id
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid, {
+				var res = yield this.request("/initiatives/" + initiative.id, {
 					method: "DELETE"
 				})
 
@@ -10824,7 +10915,7 @@ describe("InitiativesController", function() {
 					initiative_uuid: initiative.uuid
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid, {
+				var res = yield this.request("/initiatives/" + initiative.id, {
 					method: "DELETE"
 				})
 
@@ -10858,7 +10949,7 @@ describe("InitiativesController", function() {
 					initiative_uuid: other.uuid
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid, {
+				var res = yield this.request("/initiatives/" + initiative.id, {
 					method: "DELETE"
 				})
 
@@ -10878,7 +10969,7 @@ describe("InitiativesController", function() {
 					phase: "sign"
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid, {
+				var res = yield this.request("/initiatives/" + initiative.id, {
 					method: "DELETE"
 				})
 
@@ -10892,7 +10983,7 @@ describe("InitiativesController", function() {
 					published_at: new Date
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid, {
+				var res = yield this.request("/initiatives/" + initiative.id, {
 					method: "DELETE"
 				})
 
@@ -10912,7 +11003,7 @@ describe("InitiativesController", function() {
 					status: "accepted"
 				}))
 
-				var res = yield this.request("/initiatives/" + initiative.uuid, {
+				var res = yield this.request("/initiatives/" + initiative.id, {
 					method: "DELETE"
 				})
 
@@ -10933,7 +11024,7 @@ describe("InitiativesController", function() {
 						status: status
 					}))
 
-					var res = yield this.request("/initiatives/" + initiative.uuid, {
+					var res = yield this.request("/initiatives/" + initiative.id, {
 						method: "DELETE"
 					})
 
@@ -10951,7 +11042,7 @@ describe("InitiativesController", function() {
 					user_id: usersDb.create(new ValidUser).id
 				}))
 
-				var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
+				var res = yield this.request(`/initiatives/${initiative.id}/edit`)
 				res.statusCode.must.equal(401)
 				res.statusMessage.must.equal("Initiative Not Public")
 			})
@@ -10962,7 +11053,7 @@ describe("InitiativesController", function() {
 					published_at: new Date
 				}))
 
-				var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
+				var res = yield this.request(`/initiatives/${initiative.id}/edit`)
 				res.statusCode.must.equal(401)
 				res.statusMessage.must.equal("Unauthorized")
 			})
@@ -10977,7 +11068,7 @@ describe("InitiativesController", function() {
 					published_at: new Date
 				}))
 
-				var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
+				var res = yield this.request(`/initiatives/${initiative.id}/edit`)
 				res.statusCode.must.equal(403)
 				res.statusMessage.must.equal("No Permission to Edit")
 			})
@@ -10995,7 +11086,7 @@ describe("InitiativesController", function() {
 						status: status
 					}))
 
-					var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
+					var res = yield this.request(`/initiatives/${initiative.id}/edit`)
 					res.statusCode.must.equal(403)
 					res.statusMessage.must.equal("No Permission to Edit")
 				})
@@ -11006,7 +11097,7 @@ describe("InitiativesController", function() {
 					user_id: this.user.id
 				}))
 
-				var initiativePath = `/initiatives/${initiative.uuid}`
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/edit")
 				res.statusCode.must.equal(302)
 
@@ -11032,7 +11123,7 @@ describe("InitiativesController", function() {
 					created_at: new Date(2015, 5, 18, 13, 37, 41)
 				}))
 
-				var initiativePath = `/initiatives/${initiative.uuid}`
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/edit")
 				res.statusCode.must.equal(302)
 				res.headers.location.must.equal(initiativePath + "/texts/" + text.id)
@@ -11049,7 +11140,7 @@ describe("InitiativesController", function() {
 					status: "accepted"
 				}))
 
-				var initiativePath = `/initiatives/${initiative.uuid}`
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/edit")
 				res.statusCode.must.equal(302)
 

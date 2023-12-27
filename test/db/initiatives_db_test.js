@@ -26,11 +26,15 @@ describe("InitiativesDb", function() {
 	beforeEach(function() { this.user = usersDb.create(new ValidUser) })
 
 	describe(".search", function() {
-		describe("given a uuid", function() {
+		describe("given a id", function() {
 			it("must return initiative", function() {
 				var initiative = new ValidInitiative({user_id: this.user.id})
-				sqlite(insert("initiatives", serialize(initiative)))
-				initiativesDb.search(initiative.uuid).must.eql([initiative])
+
+				var id = sqlite(sql`
+					${insert("initiatives", serialize(initiative))} RETURNING id
+				`)[0].id
+
+				initiativesDb.search(id).must.eql([_.defaults({id}, initiative)])
 			})
 
 			it("must return empty array if not found", function() {
@@ -39,37 +43,53 @@ describe("InitiativesDb", function() {
 			})
 		})
 
-		describe("given an array of uuids", function() {
+		describe("given an array of ids", function() {
 			it("must return initiatives", function() {
 				var a = new ValidInitiative({user_id: this.user.id})
 				var b = new ValidInitiative({user_id: this.user.id})
-				sqlite(insert("initiatives", serialize(a)))
-				sqlite(insert("initiatives", serialize(b)))
-				var initiatives = initiativesDb.search([a.uuid, b.uuid])
-				_.sortBy(initiatives, "uuid").must.eql(_.sortBy([a, b], "uuid"))
+
+				var aId = sqlite(sql`
+					${insert("initiatives", serialize(a))} RETURNING id
+				`)[0].id
+
+				var bId = sqlite(sql`
+					${insert("initiatives", serialize(b))} RETURNING id
+				`)[0].id
+
+				initiativesDb.search([bId, aId]).must.eql([
+					_.defaults({id: aId}, a),
+					_.defaults({id: bId}, b)
+				])
 			})
 
 			it("must return only found initiatives", function() {
-				var a = new ValidInitiative({user_id: this.user.id})
-				var b = new ValidInitiative({user_id: this.user.id})
-				sqlite(insert("initiatives", serialize(a)))
+				var initiative = new ValidInitiative({user_id: this.user.id})
 
-				initiativesDb.search([a.uuid, b.uuid]).must.eql([a])
-				initiativesDb.search(sql`SELECT * FROM initiatives`).must.eql([a])
+				var id = sqlite(sql`
+					${insert("initiatives", serialize(initiative))} RETURNING id
+				`)[0].id
+
+				initiativesDb.search([id, id + 42]).must.eql([
+					_.defaults({id}, initiative)
+				])
 			})
 		})
 	})
 
 	describe(".read", function() {
-		describe("given a uuid", function() {
+		describe("given an id", function() {
 			it("must return initiative", function() {
 				var initiative = new ValidInitiative({user_id: this.user.id})
-				sqlite(insert("initiatives", serialize(initiative)))
-				initiativesDb.read(initiative.uuid).must.eql(initiative)
+
+				var id = sqlite(sql`
+					${insert("initiatives", serialize(initiative))} RETURNING id
+				`)[0].id
+
+				initiativesDb.read(id).must.eql(_.defaults({id}, initiative))
 			})
 
 			it("must return null if not found", function() {
-				demand(initiativesDb.read("deadbeef")).be.null()
+				demand(initiativesDb.read(42)).be.null()
 				sqlite(sql`SELECT * FROM initiatives`).must.eql([])
 			})
 		})
@@ -85,9 +105,11 @@ describe("InitiativesDb", function() {
 					text_sha256: sha256("<h1>Hello, world!</h1>")
 				})
 
-				initiativesDb.read(initiativesDb.create(initiative)).must.eql(
-					initiative
-				)
+				var created = initiativesDb.create(initiative)
+
+				initiativesDb.read(created.id).must.eql(_.defaults({
+					id: created.id
+				}, initiative))
 			})
 		})
 	})
@@ -105,7 +127,7 @@ describe("InitiativesDb", function() {
 			err.must.be.an.error(SqliteError)
 			err.code.must.equal("constraint")
 			err.type.must.equal("check")
-			err.constraint.must.equal("initiatives_user_id_or_external")
+			err.constraint.must.equal("user_id_or_external")
 		})
 
 		describe("phase", function() {
@@ -119,9 +141,11 @@ describe("InitiativesDb", function() {
 							discussion_ends_at: new Date
 						})
 
-						initiativesDb.read(initiativesDb.create(initiative)).must.eql(
-							initiative
-						)
+						var created = initiativesDb.create(initiative)
+
+						initiativesDb.read(created.id).must.eql(_.defaults({
+							id: created.id
+						}, initiative))
 					})
 				})
 			})
@@ -136,9 +160,11 @@ describe("InitiativesDb", function() {
 							discussion_ends_at: new Date
 						})
 
-						initiativesDb.read(initiativesDb.create(initiative)).must.eql(
-							initiative
-						)
+						var created = initiativesDb.create(initiative)
+
+						initiativesDb.read(created.id).must.eql(_.defaults({
+							id: created.id
+						}, initiative))
 					})
 				})
 
@@ -192,7 +218,7 @@ describe("InitiativesDb", function() {
 				var err
 				try { initiativesDb.create(initiative) } catch (ex) { err = ex }
 				err.must.be.an.error(SqliteError)
-				err.constraint.must.equal("initiatives_text_not_null")
+				err.constraint.must.equal("text_not_null")
 			})
 
 			_.without(PHASES, "edit").forEach(function(phase) {
@@ -205,9 +231,11 @@ describe("InitiativesDb", function() {
 						text_sha256: sha256("<h1>Hello, world!</h1>")
 					})
 
-					initiativesDb.read(initiativesDb.create(initiative)).must.eql(
-						initiative
-					)
+					var created = initiativesDb.create(initiative)
+
+					initiativesDb.read(created.id).must.eql(_.defaults({
+						id: created.id
+					}, initiative))
 				})
 
 				it(`must be allowed empty on external initiatives in ${phase}`,
@@ -220,9 +248,11 @@ describe("InitiativesDb", function() {
 						text_sha256: null
 					})
 
-					initiativesDb.read(initiativesDb.create(initiative)).must.eql(
-						initiative
-					)
+					var created = initiativesDb.create(initiative)
+
+					initiativesDb.read(created.id).must.eql(_.defaults({
+						id: created.id
+					}, initiative))
 				})
 			})
 		})
@@ -240,7 +270,7 @@ describe("InitiativesDb", function() {
 				var err
 				try { initiativesDb.create(initiative) } catch (ex) { err = ex }
 				err.must.be.an.error(SqliteError)
-				err.constraint.must.equal("initiatives_text_type_not_null")
+				err.constraint.must.equal("text_type_not_null")
 			})
 
 			it("must not be empty", function() {
@@ -255,7 +285,7 @@ describe("InitiativesDb", function() {
 				var err
 				try { initiativesDb.create(initiative) } catch (ex) { err = ex }
 				err.must.be.an.error(SqliteError)
-				err.constraint.must.equal("initiatives_text_type_length")
+				err.constraint.must.equal("text_type_length")
 			})
 		})
 
@@ -272,7 +302,7 @@ describe("InitiativesDb", function() {
 				var err
 				try { initiativesDb.create(initiative) } catch (ex) { err = ex }
 				err.must.be.an.error(SqliteError)
-				err.constraint.must.equal("initiatives_text_sha256_not_null")
+				err.constraint.must.equal("text_sha256_not_null")
 			})
 
 			it("must have SHA256 length", function() {
@@ -287,7 +317,7 @@ describe("InitiativesDb", function() {
 				var err
 				try { initiativesDb.create(initiative) } catch (ex) { err = ex }
 				err.must.be.an.error(SqliteError)
-				err.constraint.must.equal("initiatives_text_sha256_length")
+				err.constraint.must.equal("text_sha256_length")
 			})
 		})
 	})

@@ -91,6 +91,7 @@ describe("ParliamentSyncCli", function() {
 		var initiatives = initiativesDb.search(sql`SELECT * FROM initiatives`)
 
 		initiatives.must.eql([new ValidInitiative({
+			id: initiatives[0].id,
 			uuid: INITIATIVE_UUID,
 			external: true,
 			created_at: new Date(2015, 5, 17),
@@ -147,6 +148,7 @@ describe("ParliamentSyncCli", function() {
 		var initiative = initiativesDb.read(sql`SELECT * FROM initiatives`)
 
 		initiative.must.eql(new ValidInitiative({
+			id: initiative.id,
 			uuid: INITIATIVE_UUID,
 			external: true,
 			created_at: new Date(2015, 5, 18),
@@ -179,7 +181,11 @@ describe("ParliamentSyncCli", function() {
 		)
 
 		yield job()
-		var initiative = initiativesDb.read(INITIATIVE_UUID)
+
+		var initiative = initiativesDb.read(sql`
+			SELECT * FROM initiatives WHERE uuid = ${INITIATIVE_UUID}
+		`)
+
 		initiative.title.must.equal("Teeme Tallinna paremaks!")
 	})
 
@@ -202,7 +208,11 @@ describe("ParliamentSyncCli", function() {
 		)
 
 		yield job()
-		var initiative = initiativesDb.read(INITIATIVE_UUID)
+
+		var initiative = initiativesDb.read(sql`
+			SELECT * FROM initiatives WHERE uuid = ${INITIATIVE_UUID}
+		`)
+
 		initiative.title.must.equal("Teeme Tallinna paremaks!")
 	})
 

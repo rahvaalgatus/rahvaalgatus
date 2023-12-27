@@ -17,6 +17,7 @@ exports.serializeLocation = serializeLocation
 
 var COLUMNS = [
 	"created_on",
+	"initiative_id",
 	"initiative_uuid",
 	"initiative_title",
 	"initiative_destination",
@@ -94,6 +95,7 @@ function* serializeSignaturesAsCsv(
 				? formatDate("iso", sig.created_at)
 				: formatDate("iso-week", sig.created_at)
 
+			case "initiative_id": return sig.initiative_id
 			case "initiative_uuid": return sig.initiative_uuid
 			case "initiative_title": return sig.initiative_title
 			case "initiative_destination": return sig.initiative_destination
@@ -167,7 +169,8 @@ function getAgeRange(birthdate, at) {
 function* searchSignatures(from, to) {
 	for (let seen = 0, signatures; (signatures = signaturesDb.search(sql`
 		SELECT
-			signature.initiative_uuid,
+			initiative.id AS initiative_id,
+			initiative.uuid AS initiative_uuid,
 			initiative.title AS initiative_title,
 			initiative.destination AS initiative_destination,
 			signature.created_at,
@@ -190,7 +193,8 @@ function* searchSignatures(from, to) {
 
 	for (let seen = 0, signatures; (signatures = signaturesDb.search(sql`
 		SELECT
-			signature.initiative_uuid,
+			initiative.id AS initiative_id,
+			initiative.uuid AS initiative_uuid,
 			initiative.title AS initiative_title,
 			initiative.destination AS initiative_destination,
 			signature.created_at,

@@ -2,7 +2,7 @@
 var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Page = require("../page")
-var Config = require("root").config
+var Initiative = require("root/lib/initiative")
 var {formatDate} = require("root/lib/i18n")
 var EMPTY_ARR = Array.prototype
 
@@ -103,7 +103,7 @@ function InitiativesView(attrs) {
 		</thead>
 
 		<tbody>{initiatives.map(function(initiative) {
-			var initiativePath = `${req.baseUrl}/${initiative.uuid}`
+			var initiativePath = `${req.baseUrl}/${initiative.id}`
 
 			return <tr>
 				{showSentTo ? <td>{initiative.sent_to_parliament_at
@@ -123,15 +123,12 @@ function InitiativesView(attrs) {
 				{showSubscribers ? <td><a
 					class="admin-link"
 					href={`${initiativePath}/subscriptions`}>
-					{subscriberCounts[initiative.uuid]}
+					{subscriberCounts[initiative.id]}
 				</a></td> : null}
 
-				<td>
-					<a
-						href={Config.url + "/initiatives/" + initiative.uuid}
-						class="admin-link"
-					>View on Rahvaalgatus</a>
-				</td>
+				<td><a href={Initiative.slugUrl(initiative)} class="admin-link">
+					View on Rahvaalgatus
+				</a></td>
 			</tr>
 		})}</tbody>
 	</table>

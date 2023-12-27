@@ -1,5 +1,6 @@
 var _ = require("root/lib/underscore")
 var MediaType = require("medium-type")
+var Initiative = require("root/lib/initiative")
 var outdent = require("root/lib/outdent")
 var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var {pseudoDateTime} = require("root/lib/crypto")
@@ -9,6 +10,10 @@ module.exports = function(attrs) {
 	var phase = attrs && attrs.phase || "edit"
 	var external = attrs && attrs.external
 
+	var title = attrs.title == null
+		? "Local initiative #" + _.uniqueId()
+		: attrs.title
+
 	var text = outdent`<body>
 		<p>Make the world a better place for ${_.uniqueId()} people.</p>
 	</body>`
@@ -16,7 +21,8 @@ module.exports = function(attrs) {
 	return _.assign({
 		uuid: _.serializeUuid(_.uuidV4()),
 		user_id: null,
-		title: "Local initiative #" + _.uniqueId(),
+		title,
+		slug: Initiative.slug(title),
 		author_name: "",
 		author_url: "",
 		author_contacts: "",
@@ -53,10 +59,8 @@ module.exports = function(attrs) {
 		language: "et",
 		has_paper_signatures: false,
 		undersignable: true,
-		mailchimp_interest_id: null,
 		external: false,
 		external_text_file_id: null,
-		parliament_api_data: null,
 		parliament_synced_at: null,
 		parliament_token: null,
 		sent_to_parliament_at: null,

@@ -46,9 +46,7 @@ exports.ISSUER_KEYS = _.mapValues({
 ))
 
 exports.SITE_URLS = [
-	Config.url,
-	Config.parliamentSiteUrl,
-	Config.localSiteUrl
+	Config.url
 ]
 
 exports.PERSONAL_ID_TRANSFORMS = {

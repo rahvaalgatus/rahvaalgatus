@@ -40,8 +40,6 @@ function Page(attrs, children) {
 	var {page} = attrs
 	var {title} = attrs
 	var links = attrs.links || EMPTY_ARR
-	var gov = req.government
-	var siteUrl = req.government == null ? "" : Config.url
 
 	// We could be rendering an error page before req.t is set.
 	var t = req.t || I18n.t.bind(null, "et")
@@ -65,7 +63,7 @@ function Page(attrs, children) {
 
 			<link
 				rel="stylesheet"
-				href={siteUrl + "/assets/page.css"}
+				href="/assets/page.css"
 				type="text/css"
 			/>
 
@@ -109,7 +107,7 @@ function Page(attrs, children) {
 					</Form>
 
 					{req.user ? <div class="right">
-						<a href={siteUrl + "/user"} class="user">{req.user.name}</a>
+						<a href="/user" class="user">{req.user.name}</a>
 
 						<Form
 							req={req}
@@ -121,12 +119,12 @@ function Page(attrs, children) {
 								{t("BTN_LOG_OFF")}
 							</button>
 						</Form>
-					</div> : <a href={siteUrl + "/sessions/new"} class="right" >
+					</div> : <a href="/sessions/new" class="right" >
 						{t("BTN_LOG_IN_REGISTER")}
 					</a>}
 				</menu>
 
-				<a href={siteUrl || "/"} class="logo">
+				<a href="/" class="logo">
 					<img src="/assets/rahvaalgatus.png" alt={SITE_TITLE} />
 				</a>
 
@@ -134,8 +132,8 @@ function Page(attrs, children) {
 					<ul>
 						<li>
 							<a
-								href={gov == "parliament" ? "/" : Config.parliamentSiteUrl}
-								class={"nav-button" + (gov == "parliament" ? " selected" : "")}
+								href="/parliament"
+								class={"nav-button" + selected(page, "parliament")}
 							>
 								{t("NAV_PARLIAMENT")}
 							</a>
@@ -143,11 +141,8 @@ function Page(attrs, children) {
 
 						<li>
 							<a
-								href={gov && gov != "parliament" ? "/" : Config.localSiteUrl}
-
-								class={
-									"nav-button" + (gov && gov != "parliament" ? " selected" : "")
-								}
+								href="/local"
+								class={"nav-button" + selected(page, "local")}
 							>
 								{t("NAV_LOCAL")}
 							</a>
@@ -155,7 +150,7 @@ function Page(attrs, children) {
 
 						<li>
 							<a
-								href={siteUrl + "/eu"}
+								href="/eu"
 								class={"nav-button " + selected(page, "eu")}
 							>
 								{t("NAV_EU")}
@@ -164,7 +159,7 @@ function Page(attrs, children) {
 
 						<li>
 							<a
-								href={siteUrl + "/about"}
+								href="/about"
 								class={"nav-button " + selected(page, "about")}
 							>
 								{t("LNK_ABOUT")}
@@ -173,7 +168,7 @@ function Page(attrs, children) {
 
 						<li>
 							<a
-								href={siteUrl + "/donate"}
+								href="/donate"
 								class={"nav-button " + selected(page, "donate")}
 							>
 								{t("LNK_SUPPORT")}
@@ -195,15 +190,12 @@ function Page(attrs, children) {
 
 			<main id="main">{children}</main>
 
-			{!attrs.headless ? <Footer t={t} siteUrl={siteUrl} /> : null}
+			{!attrs.headless ? <Footer t={t} /> : null}
 		</body>
 	</html>
 }
 
-function Footer(attrs) {
-	var {t} = attrs
-	var {siteUrl} = attrs
-
+function Footer({t}) {
 	return <footer id="footer"><center>
 		<div class="contact">
 			<a href="https://kogu.ee">
@@ -254,11 +246,8 @@ function Footer(attrs) {
 			>
 				<img src="/assets/github-logo.svg" alt="GitHub" />
 			</a>
-			<a
-				href={siteUrl + "/api"}
-				title="API"
-				class="api ra-icon-api"
-			>
+			{" "}
+			<a href="/api" title="API" class="api ra-icon-api">
 				<span>API</span>
 			</a>
 		</div>

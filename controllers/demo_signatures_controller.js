@@ -41,7 +41,6 @@ var EXPIRATION = Config.demoSignaturesExpirationSeconds
 var ERROR_TYPE = new MediaType("application/vnd.rahvaalgatus.error+json")
 
 exports.router = Router({mergeParams: true})
-exports.router.use(require("root/lib/middleware/canonical_site_middleware"))
 exports.router.use(parseBody({type: hasSignatureType}))
 
 exports.router.get("/", function(_req, res) {

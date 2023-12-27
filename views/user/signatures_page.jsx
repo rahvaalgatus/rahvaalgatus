@@ -2,6 +2,7 @@
 var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var UserPage = require("./user_page")
+var Initiative = require("root/lib/initiative")
 var {Section} = require("../page")
 var {formatDateTime} = require("root/lib/i18n")
 var {pathToSignature} =
@@ -27,16 +28,21 @@ module.exports = function(attrs) {
 			{signatures.length == 0 ? <p class="no-signatures">
 				{t("user_signatures_page.signatures.empty")}
 			</p> : <ol id="signatures">{signatures.map(function(signature) {
-				var initiativePath = "/initiatives/" + signature.initiative_uuid
 				var signaturePath = null
 
 				if (signature.token) {
+					var initiativePath = "/initiatives/" + signature.initiative_id
 					signaturePath = initiativePath + "/signatures/"
 					signaturePath += pathToSignature(signature, "asice")
 				}
 
 				return <li class="signature">
-					<h2><a href={initiativePath}>{signature.initiative_title}</a></h2>
+					<h2><a href={Initiative.slugPath({
+						id: signature.initiative_id,
+						slug: signature.initiative_slug
+					})}>
+						{signature.initiative_title}
+					</a></h2>
 
 					{Jsx.html(t("user_signatures_page.signatures.signed_at", {
 						at: _.escapeHtml(formatDateTime("numeric", signature.created_at))

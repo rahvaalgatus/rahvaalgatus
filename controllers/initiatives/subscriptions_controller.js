@@ -3,6 +3,7 @@ var Path = require("path")
 var {Router} = require("express")
 var Http = require("root/lib/http")
 var HttpError = require("standard-http-error")
+var Initiative = require("root/lib/initiative")
 var InitiativesController = require("../initiatives_controller")
 var SqliteError = require("root/lib/sqlite_error")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
@@ -109,7 +110,7 @@ exports.router.post("/", rateLimit, next(function*(req, res) {
 	else res.flash("notice", req.t("CONFIRM_INITIATIVE_SUBSCRIPTION"))
 
 	res.statusMessage = "Subscribing"
-	res.redirect(303, Path.dirname(req.baseUrl))
+	res.redirect(303, Initiative.slugPath(initiative))
 }))
 
 exports.router.get("/new", function(req, res, next) {

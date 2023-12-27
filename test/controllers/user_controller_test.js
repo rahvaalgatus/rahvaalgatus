@@ -1,6 +1,7 @@
 var _ = require("root/lib/underscore")
 var Url = require("url")
 var DateFns = require("date-fns")
+var Initiative = require("root/lib/initiative")
 var ValidInitiative = require("root/test/valid_initiative")
 var ValidSignature = require("root/test/valid_signature")
 var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
@@ -21,9 +22,6 @@ var citizenosSignaturesDb =
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var sql = require("sqlate")
 var demand = require("must")
-var SITE_HOSTNAME = Url.parse(Config.url).hostname
-var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
-var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
 var {SITE_URLS} = require("root/test/fixtures")
 var COAUTHOR_STATUSES =
 	require("root/controllers/initiatives/coauthors_controller").STATUSES
@@ -40,15 +38,6 @@ describe("UserController", function() {
 				var res = yield this.request("/user")
 				res.statusCode.must.equal(401)
 				res.statusMessage.must.equal("Unauthorized")
-			})
-		})
-
-		;[PARLIAMENT_SITE_HOSTNAME, LOCAL_SITE_HOSTNAME].forEach(function(host) {
-			it(`must redirect to ${SITE_HOSTNAME} from ${host}`, function*() {
-				var path = "/user?foo=bar"
-				var res = yield this.request(path, {headers: {Host: host}})
-				res.statusCode.must.equal(301)
-				res.headers.location.must.equal(Config.url + path)
 			})
 		})
 
@@ -172,8 +161,9 @@ describe("UserController", function() {
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
-					var el = dom.querySelector("li.initiative")
-					el.innerHTML.must.include(initiative.uuid)
+					var el = dom.querySelector(".initiative")
+					el.firstChild.href.must.equal(Initiative.slugPath(initiative))
+					el.querySelector("h3").textContent.must.equal(initiative.title)
 					el.textContent.must.include(this.user.name)
 					el.textContent.must.include(initiative.title)
 				})
@@ -218,8 +208,9 @@ describe("UserController", function() {
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
-					var el = dom.querySelector("li.initiative")
-					el.innerHTML.must.include(initiative.uuid)
+					var el = dom.querySelector(".initiative")
+					el.firstChild.href.must.equal(Initiative.slugPath(initiative))
+					el.querySelector("h3").textContent.must.equal(initiative.title)
 					el.textContent.must.include(author.name)
 				})
 
@@ -241,8 +232,9 @@ describe("UserController", function() {
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
-					var el = dom.querySelector("li.initiative")
-					el.innerHTML.must.include(initiative.uuid)
+					var el = dom.querySelector(".initiative")
+					el.firstChild.href.must.equal(Initiative.slugPath(initiative))
+					el.querySelector("h3").textContent.must.equal(initiative.title)
 					el.textContent.must.include(this.user.name)
 					el.textContent.must.not.include(coauthor.name)
 				})
@@ -263,7 +255,7 @@ describe("UserController", function() {
 						res.statusCode.must.equal(200)
 
 						var dom = parseHtml(res.body)
-						demand(dom.querySelector("li.initiative")).be.null()
+						demand(dom.querySelector(".initiative")).be.null()
 					})
 				})
 
@@ -302,8 +294,9 @@ describe("UserController", function() {
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
-					var el = dom.querySelector("li.initiative")
-					el.innerHTML.must.include(initiative.uuid)
+					var el = dom.querySelector(".initiative")
+					el.firstChild.href.must.equal(Initiative.slugPath(initiative))
+					el.querySelector("h3").textContent.must.equal(initiative.title)
 					el.textContent.must.include(this.user.name)
 					el.textContent.must.not.include(coauthor.name)
 				})
@@ -327,8 +320,9 @@ describe("UserController", function() {
 						res.statusCode.must.equal(200)
 
 						var dom = parseHtml(res.body)
-						var el = dom.querySelector("li.initiative")
-						el.innerHTML.must.include(initiative.uuid)
+						var el = dom.querySelector(".initiative")
+						el.firstChild.href.must.equal(Initiative.slugPath(initiative))
+						el.querySelector("h3").textContent.must.equal(initiative.title)
 						el.textContent.must.include(this.user.name)
 						el.textContent.must.not.include(coauthor.name)
 					})
@@ -546,27 +540,6 @@ describe("UserController", function() {
 				res.statusMessage.must.equal("Unknown Language")
 				res.headers.location.must.equal("/")
 				res.headers.must.not.have.property("set-cookie")
-			})
-
-			;[PARLIAMENT_SITE_HOSTNAME, LOCAL_SITE_HOSTNAME].forEach(function(host) {
-				it(`must set cookie when on ${host}`, function*() {
-					var res = yield this.request("/user", {
-						method: "PUT",
-						headers: {Host: host},
-						form: {language: "en"}
-					})
-
-					res.statusCode.must.equal(303)
-					res.statusMessage.must.equal("Language Updated")
-
-					var cookies = parseCookies(res.headers["set-cookie"])
-					var languageCookie = cookies[Config.languageCookieName]
-					languageCookie.value.must.equal("en")
-					languageCookie.must.have.property("domain", null)
-					languageCookie.maxAge.must.equal(365 * 86400)
-					languageCookie.httpOnly.must.be.true()
-					cookies.must.not.have.property("flash")
-				})
 			})
 
 			it("must redirect back to referrer without host", function*() {
@@ -1335,9 +1308,14 @@ describe("UserController", function() {
 
 				var dom = parseHtml(res.body)
 				var el = dom.querySelector(".signature")
-				el.innerHTML.must.include(initiative.uuid)
-				el.textContent.must.include(initiative.title)
-				el.textContent.must.include(t("DOWNLOAD_SIGNATURE"))
+
+				var link = el.querySelector("h2 a")
+				link.href.must.equal(Initiative.slugPath(initiative))
+				link.textContent.must.equal(initiative.title)
+
+				el.textContent.must.include(
+					t("user_signatures_page.signatures.download_button")
+				)
 			})
 
 			it("must not show signatures by other countries",
@@ -1415,9 +1393,14 @@ describe("UserController", function() {
 
 				var dom = parseHtml(res.body)
 				var el = dom.querySelector(".signature")
-				el.innerHTML.must.include(initiative.uuid)
-				el.textContent.must.include(initiative.title)
-				el.textContent.must.not.include(t("DOWNLOAD_SIGNATURE"))
+
+				var link = el.querySelector("h2 a")
+				link.href.must.equal(Initiative.slugPath(initiative))
+				link.textContent.must.equal(initiative.title)
+
+				el.textContent.must.not.include(
+					t("user_signatures_page.signatures.download_button")
+				)
 			})
 
 			it("must not show signatures by other countries", function*() {

@@ -39,7 +39,7 @@ describe("InitiativeEventsController", function() {
 					published_at: new Date
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/events/new`
+				var path = `/initiatives/${initiative.id}/events/new`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(401)
 				res.statusMessage.must.equal("Unauthorized")
@@ -50,7 +50,7 @@ describe("InitiativeEventsController", function() {
 			require("root/test/fixtures").user()
 
 			mustRateLimit(function() {
-				return this.request(`/initiatives/${this.initiative.uuid}/events/new`)
+				return this.request(`/initiatives/${this.initiative.id}/events/new`)
 			})
 
 			NONEVENTABLE_PHASES.forEach(function(phase) {
@@ -61,7 +61,7 @@ describe("InitiativeEventsController", function() {
 						published_at: new Date
 					}))
 
-					var path = `/initiatives/${initiative.uuid}/events/new`
+					var path = `/initiatives/${initiative.id}/events/new`
 					var res = yield this.request(path)
 					res.statusCode.must.equal(403)
 					res.statusMessage.must.equal("Cannot Create Events")
@@ -75,7 +75,7 @@ describe("InitiativeEventsController", function() {
 						phase: phase
 					}))
 
-					var path = `/initiatives/${initiative.uuid}/events/new`
+					var path = `/initiatives/${initiative.id}/events/new`
 					var res = yield this.request(path)
 					res.statusCode.must.equal(200)
 				})
@@ -88,7 +88,7 @@ describe("InitiativeEventsController", function() {
 						phase: "sign"
 					}))
 
-					var path = `/initiatives/${initiative.uuid}/events/new?type=${type}`
+					var path = `/initiatives/${initiative.id}/events/new?type=${type}`
 					var res = yield this.request(path)
 					res.statusCode.must.equal(200)
 				})
@@ -102,7 +102,7 @@ describe("InitiativeEventsController", function() {
 					archived_at: new Date
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/events/new`
+				var path = `/initiatives/${initiative.id}/events/new`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(403)
 				res.statusMessage.must.equal("Cannot Create Events")
@@ -120,7 +120,7 @@ describe("InitiativeEventsController", function() {
 					status: "accepted"
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/events/new`
+				var path = `/initiatives/${initiative.id}/events/new`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(200)
 			})
@@ -131,7 +131,7 @@ describe("InitiativeEventsController", function() {
 					published_at: new Date
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/events/new`
+				var path = `/initiatives/${initiative.id}/events/new`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(403)
 				res.statusMessage.must.equal("No Permission to Edit")
@@ -143,6 +143,7 @@ describe("InitiativeEventsController", function() {
 		it("must redirect to initiative page given event id", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
+				title: "Hello, world!",
 				external: true
 			}))
 
@@ -152,25 +153,30 @@ describe("InitiativeEventsController", function() {
 				content: "To somewhere."
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/events/${event.id}`
+			var path = `/initiatives/${initiative.id}/events/${event.id}`
 			var res = yield this.request(path)
 			res.statusCode.must.equal(302)
-			path = `/initiatives/${initiative.uuid}#event-${event.id}`
-			res.headers.location.must.equal(path)
+
+			res.headers.location.must.equal(
+				`/initiatives/${initiative.id}-hello-world#event-${event.id}`
+			)
 		})
 
 		it("must redirect to initiative page given virtual event id",
 			function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
+				title: "Hello, world!",
 				external: true
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/events/finished-in-government`
+			var path = `/initiatives/${initiative.id}/events/finished-in-government`
 			var res = yield this.request(path)
 			res.statusCode.must.equal(302)
-			path = `/initiatives/${initiative.uuid}#event-finished-in-government`
-			res.headers.location.must.equal(path)
+
+			res.headers.location.must.equal(
+				`/initiatives/${initiative.id}-hello-world#event-finished-in-government`
+			)
 		})
 	})
 
@@ -179,7 +185,7 @@ describe("InitiativeEventsController", function() {
 			require("root/test/fixtures").user()
 
 			mustRateLimit(function() {
-				return this.request(`/initiatives/${this.initiative.uuid}/events`, {
+				return this.request(`/initiatives/${this.initiative.id}/events`, {
 					method: "POST",
 					form: {
 						type: "text",
@@ -197,7 +203,7 @@ describe("InitiativeEventsController", function() {
 						published_at: new Date
 					}))
 
-					var path = `/initiatives/${initiative.uuid}/events`
+					var path = `/initiatives/${initiative.id}/events`
 					var res = yield this.request(path, {method: "POST"})
 
 					res.statusCode.must.equal(403)
@@ -213,7 +219,7 @@ describe("InitiativeEventsController", function() {
 					archived_at: new Date
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/events`
+				var path = `/initiatives/${initiative.id}/events`
 				var res = yield this.request(path, {method: "POST"})
 
 				res.statusCode.must.equal(403)
@@ -226,7 +232,7 @@ describe("InitiativeEventsController", function() {
 					phase: "sign"
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/events`
+				var path = `/initiatives/${initiative.id}/events`
 				var res = yield this.request(path, {
 					method: "POST",
 					form: {type: "parliament-finished"}
@@ -241,10 +247,11 @@ describe("InitiativeEventsController", function() {
 					it(`must create event if in ${phase} phase`, function*() {
 						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
-							phase: phase
+							phase: phase,
+							title: "Hello, world!"
 						}))
 
-						var path = `/initiatives/${initiative.uuid}/events`
+						var path = `/initiatives/${initiative.id}/events`
 						var res = yield this.request(path, {
 							method: "POST",
 							form: {
@@ -255,7 +262,10 @@ describe("InitiativeEventsController", function() {
 						})
 
 						res.statusCode.must.equal(302)
-						res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+						res.headers.location.must.equal(
+							`/initiatives/${initiative.id}-hello-world`
+						)
 
 						var events = eventsDb.search(sql`
 							SELECT * FROM initiative_events
@@ -321,7 +331,7 @@ describe("InitiativeEventsController", function() {
 						})
 					])
 
-					var path = `/initiatives/${initiative.uuid}/events`
+					var path = `/initiatives/${initiative.id}/events`
 					var res = yield this.request(path, {
 						method: "POST",
 						form: {
@@ -353,7 +363,7 @@ describe("InitiativeEventsController", function() {
 
 						text: renderEmail("EMAIL_INITIATIVE_AUTHOR_TEXT_EVENT_BODY", {
 							initiativeTitle: initiative.title,
-							initiativeUrl: Initiative.initiativeUrl(initiative),
+							initiativeUrl: Initiative.slugUrl(initiative),
 							title: "Something happened",
 							text: "> You shouldn't miss it.",
 							unsubscribeUrl: "{{unsubscribeUrl}}"
@@ -422,7 +432,7 @@ describe("InitiativeEventsController", function() {
 						})
 					])
 
-					var path = `/initiatives/${initiative.uuid}/events`
+					var path = `/initiatives/${initiative.id}/events`
 					var res = yield this.request(path, {
 						method: "POST",
 						form: {
@@ -454,7 +464,7 @@ describe("InitiativeEventsController", function() {
 
 						text: renderEmail("EMAIL_INITIATIVE_AUTHOR_TEXT_EVENT_BODY", {
 							initiativeTitle: initiative.title,
-							initiativeUrl: Initiative.initiativeUrl(initiative),
+							initiativeUrl: Initiative.slugUrl(initiative),
 							title: "Something happened",
 							text: "> You shouldn't miss it.",
 							unsubscribeUrl: "{{unsubscribeUrl}}"
@@ -485,7 +495,7 @@ describe("InitiativeEventsController", function() {
 							phase: "sign"
 						}))
 
-						var path = `/initiatives/${initiative.uuid}/events`
+						var path = `/initiatives/${initiative.id}/events`
 						var res = yield this.request(path, {
 							method: "POST",
 							form: _.assign({type: "text"}, attrs)
@@ -505,10 +515,11 @@ describe("InitiativeEventsController", function() {
 				it("must create event", function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
-						phase: "sign"
+						phase: "sign",
+						title: "Hello, world!"
 					}))
 
-					var path = `/initiatives/${initiative.uuid}/events`
+					var path = `/initiatives/${initiative.id}/events`
 					var res = yield this.request(path, {
 						method: "POST",
 						form: {
@@ -520,7 +531,10 @@ describe("InitiativeEventsController", function() {
 					})
 
 					res.statusCode.must.equal(302)
-					res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+					res.headers.location.must.equal(
+						`/initiatives/${initiative.id}-hello-world`
+					)
 
 					var events = eventsDb.search(sql`
 						SELECT * FROM initiative_events
@@ -589,7 +603,7 @@ describe("InitiativeEventsController", function() {
 						})
 					])
 
-					var path = `/initiatives/${initiative.uuid}/events`
+					var path = `/initiatives/${initiative.id}/events`
 					var res = yield this.request(path, {
 						method: "POST",
 						form: {
@@ -622,7 +636,7 @@ describe("InitiativeEventsController", function() {
 						text: renderEmail(
 							"EMAIL_INITIATIVE_AUTHOR_MEDIA_COVERAGE_EVENT_BODY", {
 							initiativeTitle: initiative.title,
-							initiativeUrl: Initiative.initiativeUrl(initiative),
+							initiativeUrl: Initiative.slugUrl(initiative),
 							title: "Something happened",
 							publisher: "Old York Times",
 							url: "http://example.com/article",
@@ -692,7 +706,7 @@ describe("InitiativeEventsController", function() {
 						})
 					])
 
-					var path = `/initiatives/${initiative.uuid}/events`
+					var path = `/initiatives/${initiative.id}/events`
 					var res = yield this.request(path, {
 						method: "POST",
 						form: {
@@ -725,7 +739,7 @@ describe("InitiativeEventsController", function() {
 						text: renderEmail(
 							"EMAIL_INITIATIVE_AUTHOR_MEDIA_COVERAGE_EVENT_BODY", {
 							initiativeTitle: initiative.title,
-							initiativeUrl: Initiative.initiativeUrl(initiative),
+							initiativeUrl: Initiative.slugUrl(initiative),
 							title: "Something happened",
 							publisher: "Old York Times",
 							url: "http://example.com/article",
@@ -758,7 +772,7 @@ describe("InitiativeEventsController", function() {
 							phase: "sign"
 						}))
 
-						var path = `/initiatives/${initiative.uuid}/events`
+						var path = `/initiatives/${initiative.id}/events`
 						var res = yield this.request(path, {
 							method: "POST",
 							form: _.assign({type: "media-coverage"}, attrs)
@@ -777,7 +791,8 @@ describe("InitiativeEventsController", function() {
 			it("must create event if coauthor", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: usersDb.create(new ValidUser).id,
-					phase: "sign"
+					phase: "sign",
+					title: "Hello, world!"
 				}))
 
 				coauthorsDb.create(new ValidCoauthor({
@@ -786,7 +801,7 @@ describe("InitiativeEventsController", function() {
 					status: "accepted"
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/events`
+				var path = `/initiatives/${initiative.id}/events`
 				var res = yield this.request(path, {
 					method: "POST",
 					form: {
@@ -797,7 +812,10 @@ describe("InitiativeEventsController", function() {
 				})
 
 				res.statusCode.must.equal(302)
-				res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+				res.headers.location.must.equal(
+					`/initiatives/${initiative.id}-hello-world`
+				)
 
 				var events = eventsDb.search(sql`
 					SELECT * FROM initiative_events
@@ -819,7 +837,7 @@ describe("InitiativeEventsController", function() {
 					published_at: new Date
 				}))
 
-				var res = yield this.request(`/initiatives/${initiative.uuid}/events`, {
+				var res = yield this.request(`/initiatives/${initiative.id}/events`, {
 					method: "POST"
 				})
 

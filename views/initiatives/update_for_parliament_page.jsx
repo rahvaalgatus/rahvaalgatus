@@ -31,8 +31,9 @@ module.exports = function(attributes) {
 			<Form
 				req={req}
 				method="put"
-				action={"/initiatives/" + initiative.uuid}
-				class="form">
+				action={"/initiatives/" + initiative.id}
+				class="form"
+			>
 				<label class="form-label">{t("LBL_FULL_NAME")}</label>
 				<input
 					type="text"

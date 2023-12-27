@@ -1,8 +1,6 @@
 {
 	"title": "Rahvaalgatus",
 	"url": "https://rahvaalgatus.ee",
-	"parliamentSiteUrl": "https://riigikogu.rahvaalgatus.ee",
-	"localSiteUrl": "https://kohalik.rahvaalgatus.ee",
 	"idCardAuthenticationUrl": "https://idcard.rahvaalgatus.ee",
 	"idCardAuthenticationSecret": null,
 	"dtvUrl": "https://demokraatia.rahvaalgatus.ee",

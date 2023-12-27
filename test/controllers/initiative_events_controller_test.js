@@ -5,12 +5,14 @@ var Config = require("root").config
 var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_initiative")
 var ValidEvent = require("root/test/valid_initiative_event")
+var Initiative = require("root/lib/initiative")
 var {pseudoDateTime} = require("root/lib/crypto")
 var initiativesDb = require("root/db/initiatives_db")
 var usersDb = require("root/db/users_db")
 var eventsDb = require("root/db/initiative_events_db")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var ATOM_TYPE = "application/atom+xml"
+var INITIATIVES_URL = `${Config.url}/initiatives`
 var INITIATIVE_EVENT_TYPE =
 	"application/vnd.rahvaalgatus.initiative-event+json; v=1"
 
@@ -413,14 +415,18 @@ describe("InitiativeEventsController", function() {
 			feed.entry.forEach(function(entry, i) {
 				var event = events[i]
 				var initiative = initiativesByUuid[event.initiative_uuid]
+				var initiativeUuidUrl = `${INITIATIVES_URL}/${initiative.uuid}`
 				var author = authorsById[event.user_id]
 
-				var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-				var eventUrl = `${initiativeUrl}#event-${event.id}`
-
 				entry.must.eql({
-					id: {$: `${initiativeUrl}/events/${event.id}`},
-					link: {rel: "alternate", type: "text/html", href: eventUrl},
+					id: {$: `${initiativeUuidUrl}/events/${event.id}`},
+
+					link: {
+						rel: "alternate",
+						type: "text/html",
+						href: Initiative.slugUrl(initiative) + `#event-${event.id}`
+					},
+
 					updated: {$: event.updated_at.toJSON()},
 					published: {$: event.occurred_at.toJSON()},
 					author: {name: {$: author.name}},
@@ -429,7 +435,7 @@ describe("InitiativeEventsController", function() {
 					title: {$: initiative.title + ": " + event.title},
 
 					source: {
-						id: {$: initiativeUrl},
+						id: {$: initiativeUuidUrl},
 
 						title: {
 							$: t("ATOM_INITIATIVE_FEED_TITLE", {title: initiative.title})
@@ -438,11 +444,11 @@ describe("InitiativeEventsController", function() {
 						link: [{
 							rel: "self",
 							type: "application/atom+xml",
-							href: initiativeUrl + ".atom"
+							href: `${INITIATIVES_URL}/${initiative.id}.atom`
 						}, {
 							rel: "alternate",
 							type: "text/html",
-							href: initiativeUrl
+							href: Initiative.slugUrl(initiative)
 						}]
 					}
 				})
@@ -491,12 +497,16 @@ describe("InitiativeEventsController", function() {
 
 			Atom.parse(res.body).feed.entry.forEach(function(entry, i) {
 				var event = events[i]
-				var initiativeUrl = `${Config.url}/initiatives/${initiative.uuid}`
-				var eventUrl = `${initiativeUrl}#event-${event.id}`
 
 				_.omit(entry, "source").must.eql({
-					id: {$: `${initiativeUrl}/events/${event.id}`},
-					link: {rel: "alternate", type: "text/html", href: eventUrl},
+					id: {$: `${INITIATIVES_URL}/${initiative.uuid}/events/${event.id}`},
+
+					link: {
+						rel: "alternate",
+						type: "text/html",
+						href: Initiative.slugUrl(initiative) + `#event-${event.id}`
+					},
+
 					updated: {$: event.occurred_at.toJSON()},
 					published: {$: event.occurred_at.toJSON()},
 					title: {$: initiative.title + ": " + event.title}

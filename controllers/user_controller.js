@@ -14,7 +14,6 @@ var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var next = require("co-next")
 var {sendEmail} = require("root")
 var renderEmail = require("root/lib/i18n").email
-var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
 var {updateSubscriptions} = require("./subscriptions_controller")
 var {validateRedirect} = require("root/lib/http")
 var EMPTY_OBJ = Object.create(null)
@@ -22,8 +21,6 @@ var LANGS = require("root/lib/i18n").STRINGS
 var EMPTY_ARR = Array.prototype
 
 exports.router = Router({mergeParams: true})
-
-exports.router.get("/", canonicalizeUrl)
 
 exports.router.put("/", function(req, res, next) {
 	if (req.user) return void next()
@@ -179,7 +176,12 @@ exports.router.get("/signatures", function(req, res) {
 			AND NOT anonymized
 		)
 
-		SELECT signature.*, initiative.title AS initiative_title
+		SELECT
+			signature.*,
+			initiative.id AS initiative_id,
+			initiative.slug AS initiative_slug,
+			initiative.title AS initiative_title
+
 		FROM signatures AS signature
 		JOIN initiatives AS initiative
 		ON initiative.uuid = signature.initiative_uuid
@@ -268,6 +270,7 @@ function read(req, res) {
 	var coauthorInvitations = coauthorsDb.search(sql`
 		SELECT
 			coauthor.*,
+			initiative.slug AS initiative_slug,
 			initiative.title AS initiative_title,
 			initiative.published_at AS initiative_published_at,
 			inviter.name AS inviter_name

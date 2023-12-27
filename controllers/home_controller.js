@@ -9,91 +9,63 @@ var {getSignatureThreshold} = require("root/lib/initiative")
 var sql = require("sqlate")
 var initiativesDb = require("root/db/initiatives_db")
 var newsDb = require("root/db/news_db")
-var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
 var {PHASES} = require("root/lib/initiative")
 var ZERO_COUNTS = _.fromEntries(PHASES.map((name) => [name, 0]))
 var HIDE_EXPIRED_AFTER_DAYS = 14
 
 exports.router = Router({mergeParams: true})
 
-exports.router.get("/", function(req, res) {
-	var gov = req.government
-	var cutoff = getExpirationCutoff(new Date)
+exports.router.get("/", function(_req, res) {
+	var initiatives = searchInitiatives(null)
 
-	var initiatives = initiativesDb.search(sql`
-		SELECT
-			initiative.*,
-			user.name AS user_name,
-			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
-			AS signature_count
+	var statistics = {
+		all: readStatistics(null, null),
 
-		FROM initiatives AS initiative
-		LEFT JOIN users AS user ON initiative.user_id = user.id
-
-		WHERE initiative.archived_at IS NULL
-		AND initiative.published_at IS NOT NULL
-		AND initiative.signing_expired_at IS NULL
-		AND (
-			initiative.phase != 'edit' OR
-			initiative.discussion_ends_at > ${cutoff}
-		)
-		AND (initiative.destination IS NULL OR initiative.destination ${
-			gov == null ? sql`IS NOT NULL` :
-			gov == "parliament" ? sql`= 'parliament'` : sql`!= 'parliament'`
-		})
-	`)
-
-	initiatives = initiatives.filter((initiative) => (
-		initiative.external ||
-		initiative.phase != "sign" ||
-		initiative.signing_ends_at > cutoff ||
-		initiative.signature_count >= getSignatureThreshold(initiative)
-	))
-
-	var statistics = gov == null || gov == "parliament" ? {
-		all: readStatistics(gov, null),
-
-		30: readStatistics(gov, [
+		30: readStatistics(null, [
 			DateFns.addDays(DateFns.startOfDay(new Date), -30),
 			new Date
 		])
-	} : null
-
-	switch (gov) {
-		case null:
-			var recentInitiatives = searchRecentInitiatives(initiatives)
-
-			var news = newsDb.search(sql`
-				SELECT * FROM news, json_each(news.categories) AS category
-				WHERE category.value = 'Rahvaalgatusveeb'
-				ORDER BY published_at DESC
-				LIMIT 3
-			`)
-
-			res.render("home_page.jsx", {
-				initiatives: initiatives,
-				statistics: statistics,
-				recentInitiatives: recentInitiatives,
-				news: news
-			})
-			break
-
-		case "parliament":
-			res.render("home/parliament_home_page.jsx", {
-				initiatives: initiatives,
-				statistics: statistics
-			})
-			break
-
-		case "local":
-			res.render("home/local_home_page.jsx", {
-				initiatives: initiatives,
-				initiativeCounts: readPhaseInitiativeCounts()
-			})
-			break
-
-		default: throw new RangeError("Invalid government: " + gov)
 	}
+
+	var recentInitiatives = searchRecentInitiatives(initiatives)
+
+	var news = newsDb.search(sql`
+		SELECT * FROM news, json_each(news.categories) AS category
+		WHERE category.value = 'Rahvaalgatusveeb'
+		ORDER BY published_at DESC
+		LIMIT 3
+	`)
+
+	res.render("home_page.jsx", {
+		initiatives,
+		statistics,
+		recentInitiatives,
+		news
+	})
+})
+
+exports.router.get("/parliament", function(_req, res) {
+	var initiatives = searchInitiatives("parliament")
+
+	var statistics = {
+		all: readStatistics("parliament", null),
+
+		30: readStatistics("parliament", [
+			DateFns.addDays(DateFns.startOfDay(new Date), -30),
+			new Date
+		])
+	}
+
+	res.render("home/parliament_home_page.jsx", {initiatives, statistics})
+})
+
+exports.router.get("/local", function(_req, res) {
+	var initiatives = searchInitiatives("local")
+
+	res.render("home/local_home_page.jsx", {
+		initiatives,
+		initiativeCounts: readPhaseInitiativeCounts()
+	})
 })
 
 _.each({
@@ -103,11 +75,10 @@ _.each({
 	"/api": "home/api_page.jsx",
 	"/help/kov-guide": "home/help/kov_guide_page.jsx"
 }, (page, path) => (
-	exports.router.get(path, canonicalizeUrl, (_req, res) => res.render(page))
+	exports.router.get(path, (_req, res) => res.render(page))
 ))
 
 exports.router.get("/statistics",
-	canonicalizeUrl,
 	new ResponseTypeMiddeware([
 		new MediaType("application/vnd.rahvaalgatus.statistics+json; v=1")
 	]),
@@ -150,7 +121,42 @@ exports.router.get("/statistics",
 	})
 })
 
-function readStatistics(gov, range) {
+function searchInitiatives(destination) {
+	var cutoff = getExpirationCutoff(new Date)
+
+	var initiatives = initiativesDb.search(sql`
+		SELECT
+			initiative.*,
+			user.name AS user_name,
+			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
+			AS signature_count
+
+		FROM initiatives AS initiative
+		LEFT JOIN users AS user ON initiative.user_id = user.id
+
+		WHERE initiative.archived_at IS NULL
+		AND initiative.published_at IS NOT NULL
+		AND initiative.signing_expired_at IS NULL
+		AND (
+			initiative.phase != 'edit' OR
+			initiative.discussion_ends_at > ${cutoff}
+		)
+		AND (initiative.destination IS NULL OR initiative.destination ${
+			destination == null ? sql`IS NOT NULL` :
+			destination == "parliament" ? sql`= 'parliament'` :
+			destination == "local" ? sql`!= 'parliament'` : sql`= ${destination}`
+		})
+	`)
+
+	return initiatives.filter((initiative) => (
+		initiative.external ||
+		initiative.phase != "sign" ||
+		initiative.signing_ends_at > cutoff ||
+		initiative.signature_count >= getSignatureThreshold(initiative)
+	))
+}
+
+function readStatistics(destination, range) {
 	// The discussion counter on the home page is really the total initiatives
 	// counter at the start of the funnel.
 	//
@@ -166,7 +172,10 @@ function readStatistics(gov, range) {
 			AND created_at < ${range[1]}
 		` : sql``}
 
-		AND (destination IS NULL OR ${gov ? sql`destination = ${gov}` : sql`1 = 1`})
+		${destination ? sql`AND (
+			destination = ${destination} OR
+			destination IS NULL
+		)` : sql``}
 	`)[0].count
 
 	var initiativeCounts = sqlite(sql`
@@ -188,10 +197,10 @@ function readStatistics(gov, range) {
 			AND "signing_started_at" < ${range[1]}
 		` : sql``}
 
-		${gov ? sql`AND destination = ${gov}` : sql``}
+		${destination ? sql`AND destination = ${destination}` : sql``}
 	`)[0]
 
-	var signatureCount = readSignatureCount(gov, range)
+	var signatureCount = readSignatureCount(destination, range)
 
 	var governmentCounts = sqlite(sql`
 		SELECT
@@ -224,7 +233,7 @@ function readStatistics(gov, range) {
 			AND "sent_to_government_at" < ${range[1]}
 		)` : sql``}
 
-		${gov ? sql`AND destination = ${gov}` : sql``}
+		${destination ? sql`AND destination = ${destination}` : sql``}
 	`)[0]
 
 	return {
@@ -235,7 +244,7 @@ function readStatistics(gov, range) {
 	}
 }
 
-function readSignatureCount(gov, range) {
+function readSignatureCount(destination, range) {
 	return sqlite(sql`
 		WITH signatures AS (
 			SELECT initiative_uuid, created_at FROM initiative_signatures
@@ -248,7 +257,7 @@ function readSignatureCount(gov, range) {
 		ON initiative.uuid = signature.initiative_uuid
 		WHERE 1 = 1
 
-		${gov ? sql`AND initiative.destination = ${gov}` : sql``}
+		${destination ? sql`AND initiative.destination = ${destination}` : sql``}
 
 		${range ? sql`
 			AND signature.created_at >= ${range[0]}

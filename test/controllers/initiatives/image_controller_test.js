@@ -33,7 +33,7 @@ describe("ImageController", function() {
 					published_at: new Date
 				}))
 
-				var res = yield this.request(`/initiatives/${initiative.uuid}/image`, {
+				var res = yield this.request(`/initiatives/${initiative.id}/image`, {
 					method: "PUT"
 				})
 
@@ -53,7 +53,7 @@ describe("ImageController", function() {
 					published_at: new Date
 				}))
 
-				var res = yield this.request(`/initiatives/${initiative.uuid}/image`, {
+				var res = yield this.request(`/initiatives/${initiative.id}/image`, {
 					method: "PUT"
 				})
 
@@ -66,7 +66,7 @@ describe("ImageController", function() {
 					user_id: this.user.id
 				}))
 
-				var res = yield this.request(`/initiatives/${initiative.uuid}/image`, {
+				var res = yield this.request(`/initiatives/${initiative.id}/image`, {
 					method: "PUT"
 				})
 
@@ -76,7 +76,8 @@ describe("ImageController", function() {
 
 			it("must create new initiative image", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
-					user_id: this.user.id
+					user_id: this.user.id,
+					title: "Hello, world!"
 				}))
 
 				var form = new FormData
@@ -86,7 +87,7 @@ describe("ImageController", function() {
 					contentType: "image/png"
 				})
 
-				var res = yield this.request(`/initiatives/${initiative.uuid}/image`, {
+				var res = yield this.request(`/initiatives/${initiative.id}/image`, {
 					method: "PUT",
 					headers: form.getHeaders(),
 					body: form.getBuffer()
@@ -94,7 +95,10 @@ describe("ImageController", function() {
 
 				res.statusCode.must.equal(303)
 				res.statusMessage.must.equal("Image Replaced")
-				res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+				res.headers.location.must.equal(
+					`/initiatives/${initiative.id}-hello-world`
+				)
 
 				var images = imagesDb.search(sql`SELECT * FROM initiative_images`)
 				images.length.must.equal(1)
@@ -116,7 +120,8 @@ describe("ImageController", function() {
 
 			it("must create new initiative image if coauthor", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
-					user_id: usersDb.create(new ValidUser).id
+					user_id: usersDb.create(new ValidUser).id,
+					title: "Hello, world!"
 				}))
 
 				coauthorsDb.create(new ValidCoauthor({
@@ -132,7 +137,7 @@ describe("ImageController", function() {
 					contentType: "image/png"
 				})
 
-				var res = yield this.request(`/initiatives/${initiative.uuid}/image`, {
+				var res = yield this.request(`/initiatives/${initiative.id}/image`, {
 					method: "PUT",
 					headers: form.getHeaders(),
 					body: form.getBuffer()
@@ -140,7 +145,10 @@ describe("ImageController", function() {
 
 				res.statusCode.must.equal(303)
 				res.statusMessage.must.equal("Image Replaced")
-				res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+				res.headers.location.must.equal(
+					`/initiatives/${initiative.id}-hello-world`
+				)
 
 				var images = imagesDb.search(sql`SELECT * FROM initiative_images`)
 				images.length.must.equal(1)
@@ -150,7 +158,8 @@ describe("ImageController", function() {
 
 			it("must update author", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
-					user_id: this.user.id
+					user_id: this.user.id,
+					title: "Hello, world!"
 				}))
 
 				var otherUser = usersDb.create(new ValidUser)
@@ -163,7 +172,7 @@ describe("ImageController", function() {
 					type: "image/png"
 				})
 
-				var res = yield this.request(`/initiatives/${initiative.uuid}/image`, {
+				var res = yield this.request(`/initiatives/${initiative.id}/image`, {
 					method: "PUT",
 					form: {
 						author_name: "John Smith",
@@ -173,7 +182,10 @@ describe("ImageController", function() {
 
 				res.statusCode.must.equal(303)
 				res.statusMessage.must.equal("Image Author Updated")
-				res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+				res.headers.location.must.equal(
+					`/initiatives/${initiative.id}-hello-world`
+				)
 
 				imagesDb.read(image).must.eql({
 					__proto__: image,
@@ -208,7 +220,7 @@ describe("ImageController", function() {
 					})
 
 					var res = yield this.request(
-						`/initiatives/${initiative.uuid}/image`,
+						`/initiatives/${initiative.id}/image`,
 						{method: "PUT", form: attrs}
 					)
 

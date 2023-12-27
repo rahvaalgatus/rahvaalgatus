@@ -16,7 +16,6 @@ module.exports = function(attrs) {
 	var {text} = attrs
 	var {t} = attrs
 	var textLanguage = text && text.language || attrs.language
-	var editUrl = req.baseUrl + "/new"
 
 	var editable = (
 		initiative.phase == "edit" ||
@@ -25,10 +24,10 @@ module.exports = function(attrs) {
 
 	return <InitiativePage
 		page="edit-initiative"
-		class={initiative.uuid == null ? "new-initiative" : ""}
+		class={initiative.id == null ? "new-initiative" : ""}
 		title={initiative.title}
 		initiative={initiative}
-		headerless={initiative.uuid == null}
+		headerless={initiative.id == null}
 		req={req}>
 		<Form
 			id="initiative-form"
@@ -36,14 +35,14 @@ module.exports = function(attrs) {
 			req={req}
 			class="initiative-section transparent-section"
 
-			action={initiative.uuid
-				? `/initiatives/${initiative.uuid}/texts`
+			action={initiative.id
+				? `/initiatives/${initiative.id}/texts`
 				: "/initiatives"
 			}
 		><center><div id="initiative-sheet" class="initiative-sheet">
-			{initiative.uuid ? <menu id="language-tabs">
+			{initiative.id ? <menu id="language-tabs">
 				{LANGUAGES.map((lang) => <a
-					href={editUrl + "?language=" + lang}
+					href={`/initiatives/${initiative.id}/texts/new?language=${lang}`}
 					class={"tab " + selected(textLanguage, lang)}
 				>{Jsx.html(initiative.language == lang
 					? t("INITIATIVE_LANG_TAB_" + lang.toUpperCase())
@@ -60,7 +59,7 @@ module.exports = function(attrs) {
 				<input type="hidden" name="basis-id" value={text.id} />
 			: null}
 
-			{initiative.uuid ?
+			{initiative.id ?
 				<input type="hidden" name="language" value={textLanguage} />
 			: null}
 
@@ -147,7 +146,7 @@ module.exports = function(attrs) {
 
 			<fieldset class="submit-inputs">
 				{(
-					initiative.uuid == null &&
+					initiative.id == null &&
 					initiative.language == null
 				) ? <>
 					<h3>{t("NEW_INITIATIVE_LANGUAGE_LABEL")}</h3>
@@ -171,7 +170,7 @@ module.exports = function(attrs) {
 				</> : null}
 
 				{(
-					initiative.uuid &&
+					initiative.id &&
 					initiative.phase == "edit" &&
 					initiative.language != textLanguage
 				) ? <>
@@ -190,7 +189,7 @@ module.exports = function(attrs) {
 					type="submit"
 					class="green-button"
 					disabled={!editable}
-				>{initiative.uuid == null
+				>{initiative.id == null
 					? t("INITIATIVE_CREATE_BUTTON")
 					: initiative.language != textLanguage
 					? t("INITIATIVE_UPDATE_TRANSLATION_BUTTON")

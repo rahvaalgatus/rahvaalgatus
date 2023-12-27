@@ -2,10 +2,10 @@ var I18n = require("root/lib/i18n")
 var Config = require("root").config
 var Neodoc = require("neodoc")
 var DateFns = require("date-fns")
+var Initiative = require("root/lib/initiative")
 var co = require("co")
 var sql = require("sqlate")
 var {logger} = require("root")
-var Initiative = require("root/lib/initiative")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var initiativesDb = require("root/db/initiatives_db")
 var {sendEmail} = require("root")
@@ -15,11 +15,13 @@ var USAGE_TEXT = `
 Usage: cli initiatives (-h | --help)
        cli initiatives [options]
        cli initiatives expire-signing [options]
+       cli initiatives regenerate-slug [options]
 
 Options:
     -h, --help   Display this help and exit.
     --yes        Actually expire initiatives. Otherwise just a dry-run.
     --no-email   Disable email notifications of expired initiatives.
+    --all        Regenerate slugs even if already set.
 `
 
 module.exports = co.wrap(function*(argv) {
@@ -30,6 +32,7 @@ module.exports = co.wrap(function*(argv) {
 		actuallyExpire: args["--yes"],
 		actuallyEmail: !args["--no-email"]
 	})
+	else if (args["regenerate-slug"]) regenerateSlug({all: !!args["--all"]})
 
 	else process.stdout.write(USAGE_TEXT.trimLeft())
 })
@@ -65,7 +68,7 @@ function* expireSigning({actuallyExpire, actuallyEmail}) {
 		var signatureCount = initiative.signature_count
 
 		logger.info(initiative.title)
-		logger.info("Link: %s", Config.url + "/initiatives/" + initiative.uuid)
+		logger.info("Link: %s", Initiative.url(initiative))
 		logger.info(
 			"Signature Count: %d (%s)",
 			signatureCount,
@@ -113,14 +116,27 @@ function* expireSigning({actuallyExpire, actuallyEmail}) {
 				subject: t("SIGNING_EXPIRED_EMAIL_SUBJECT"),
 				text: renderEmail("SIGNING_EXPIRED_EMAIL_BODY", {
 					initiativeTitle: initiative.title,
-					initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+					initiativeUrl: Initiative.slugUrl(initiative),
 					newInitiativeUrl: `${Config.url}/initiatives/new`
 				})
 			})
 
-			initiativesDb.update(initiative.uuid, {
+			initiativesDb.update(initiative.id, {
 				signing_expiration_email_sent_at: new Date
 			})
 		}
 	}
+}
+
+function regenerateSlug({all}) {
+	var initiatives = initiativesDb.search(sql`
+		SELECT id, title FROM initiatives
+		${all ? sql`` : sql`WHERE slug IS NULL`}
+	`)
+
+	initiatives.forEach(function({id, title}) {
+		var slug = Initiative.slug(title)
+		logger.info("Setting %d's slug to: %s", id, slug)
+		initiativesDb.update(id, {slug: slug})
+	})
 }

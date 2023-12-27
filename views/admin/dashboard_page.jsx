@@ -249,7 +249,6 @@ function SubscriptionsView(attrs) {
 		</thead>
 
 		<tbody>{subscriptions.map(function(subscription) {
-			var {initiative} = subscription
 			var destination = subscription.initiative_destination
 
 			return <tr>
@@ -260,11 +259,12 @@ function SubscriptionsView(attrs) {
 					: null
 				}</td>
 
-				<td>{initiative ?
+				<td>{subscription.initiative_id ?
 					<a
-						href={`${req.baseUrl}/initiatives/${initiative.uuid}`}
-						class="admin-link">
-						{initiative.title}
+						href={`${req.baseUrl}/initiatives/${subscription.initiative_id}`}
+						class="admin-link"
+					>
+						{subscription.initiative_title}
 					</a>
 					: destination
 					? <i>{LOCAL_GOVERNMENTS[destination].name} initiatives</i>

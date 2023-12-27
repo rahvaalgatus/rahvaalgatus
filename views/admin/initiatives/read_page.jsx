@@ -26,7 +26,7 @@ module.exports = function(attrs) {
 	var {author} = attrs
 	var {image} = attrs
 	var {subscriberCount} = attrs
-	var initiativePath = `${req.baseUrl}/${initiative.uuid}`
+	var initiativePath = `${req.baseUrl}/${initiative.id}`
 	var {files} = attrs
 	var {events} = attrs
 	var {phase} = initiative
@@ -37,13 +37,17 @@ module.exports = function(attrs) {
 		? Initiative.getExpirationDate(initiative)
 		: null
 
-	var initiativeSiteUrl = Config.url + "/initiatives/" + initiative.uuid
+	var initiativeUrl = Initiative.url(initiative)
 
 	return <Page page="initiative" title={initiative.title} req={req}>
 		<a href={req.baseUrl} class="admin-back">Initiatives</a>
 		<h1 class="admin-heading">{initiative.title}</h1>
 
-		<a id="production-link" href={initiativeSiteUrl} class="admin-link">
+		<a
+			id="production-link"
+			href={Initiative.slugUrl(initiative)}
+			class="admin-link"
+		>
 			View on Rahvaalgatus
 		</a>
 
@@ -292,7 +296,7 @@ module.exports = function(attrs) {
 					) ? <p>
 						{signatureCounts.undersign > 0 ? <a
 							class="admin-link"
-							href={`${initiativeSiteUrl}/signatures.asice?` + Qs.stringify({
+							href={`${initiativeUrl}/signatures.asice?` + Qs.stringify({
 								"parliament-token": initiative.parliament_token.toString("hex")
 							})}
 						>
@@ -301,7 +305,7 @@ module.exports = function(attrs) {
 
 						{signatureCounts.citizenos > 0 ? <><br /><a
 							class="admin-link"
-							href={`${initiativeSiteUrl}/signatures.zip?` + Qs.stringify({
+							href={`${initiativeUrl}/signatures.zip?` + Qs.stringify({
 								type: "citizenos",
 								"parliament-token": initiative.parliament_token.toString("hex")
 							})}
@@ -314,7 +318,7 @@ module.exports = function(attrs) {
 							signatureCounts.citizenos > 0
 						) ? <><br /><a
 							class="admin-link"
-							href={`${initiativeSiteUrl}/signatures.csv?` + Qs.stringify({
+							href={`${initiativeUrl}/signatures.csv?` + Qs.stringify({
 								"parliament-token": initiative.parliament_token.toString("hex")
 							})}
 						>
@@ -516,7 +520,7 @@ module.exports = function(attrs) {
 
 						<td>
 							<a
-								href={initiativeSiteUrl + "/files/" + file.id}
+								href={initiativeUrl + "/files/" + file.id}
 								class="admin-link"
 							>
 								{file.name}

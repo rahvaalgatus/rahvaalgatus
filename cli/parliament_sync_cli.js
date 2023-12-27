@@ -5,6 +5,7 @@ var Config = require("root").config
 var Subscription = require("root/lib/subscription")
 var FetchError = require("fetch-error")
 var ExternalApi = require("root/lib/external_api")
+var Initiative = require("root/lib/initiative")
 var parliamentApi = require("root/lib/parliament_api")
 var diff = require("root/lib/diff")
 var sql = require("sqlate")
@@ -231,13 +232,16 @@ function* updateInitiativeFromDocument(opts, initiative, initiativeDoc) {
 			new Date
 		)
 
+		var title = initiativeDoc.title ? parseTitle(initiativeDoc.title) : "?"
+
 		initiative = initiativesDb.create(_.assign({
 			uuid: initiativeDoc.uuid,
 			parliament_uuid: initiativeDoc.uuid,
 			external: true,
 			phase: "parliament",
 			destination: "parliament",
-			title: initiativeDoc.title ? parseTitle(initiativeDoc.title) : "",
+			title: title,
+			slug: Initiative.slug(title),
 			author_name: initiativeDoc.sender || "",
 			created_at: createdAt,
 			published_at: createdAt

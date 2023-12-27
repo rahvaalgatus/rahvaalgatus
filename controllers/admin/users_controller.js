@@ -40,14 +40,17 @@ exports.router.get("/:id", function(req, res) {
 	`)
 
 	var comments = commentsDb.search(sql`
-		SELECT * FROM comments WHERE user_id = ${user.id}
+		SELECT
+			comment.*,
+			initiative.id AS initiative_id,
+			initiative.slug AS initiative_slug
+
+		FROM comments AS comment
+		JOIN initiatives AS initiative ON initiative.uuid = comment.initiative_uuid
+		WHERE comment.user_id = ${user.id}
 	`)
 
-	res.render("admin/users/read_page.jsx", {
-		user: user,
-		initiatives: initiatives,
-		comments: comments
-	})
+	res.render("admin/users/read_page.jsx", {user, initiatives, comments})
 })
 
 exports.router.put("/:id", function(req, res) {

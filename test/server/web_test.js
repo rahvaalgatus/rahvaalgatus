@@ -1,3 +1,4 @@
+var _ = require("root/lib/underscore")
 var request = require("fetch-off/request")
 var fetchDefaults = require("fetch-defaults")
 var URL = "https://rahvaalgatus.ee"
@@ -35,7 +36,6 @@ describe(URL, function() {
 
 	;[
 		"/assets/page.css",
-		"/assets/rahvaalgatus.png",
 		"/assets/tisapro-regular-webfont.svg"
 	].forEach(function(path) {
 		describe(path, function() {
@@ -65,16 +65,27 @@ describe(URL, function() {
 				this.res.headers.must.not.have.property("expires")
 			})
 
-			// Zone's Apache has an issue that if the content is encoded with gzip,
-			// the returned ETag has a "-gzip suffix and that breaks futher
-			// comparison.
 			it("must respond with 304 Not Modified if given ETag", function*() {
 				this.res.headers["content-encoding"].must.equal("gzip")
 
-				var {etag} = this.res.headers
 				var res = yield req(path, {
 					method: "HEAD",
-					headers: {"Accept-Encoding": "gzip", "If-None-Match": etag}
+					headers: {"If-None-Match": this.res.headers.etag}
+				})
+
+				res.statusCode.must.equal(304)
+			})
+
+			it("must respond with 304 Not Modified if given ETag and gzip",
+				function*() {
+				this.res.headers["content-encoding"].must.equal("gzip")
+
+				var res = yield req(path, {
+					method: "HEAD",
+					headers: {
+						"Accept-Encoding": "gzip",
+						"If-None-Match": this.res.headers.etag
+					}
 				})
 
 				res.statusCode.must.equal(304)
@@ -88,26 +99,35 @@ describe(URL, function() {
 	})
 })
 
-if (/\bserver\b/.test(process.env.TEST_TAGS)) [
-	"http://rahvaalgatus.ee",
-	"http://www.rahvaalgatus.ee",
-	"https://www.rahvaalgatus.ee"
-].forEach(function(url) {
-	describe(url, function() {
-		mustRedirectTo(url, URL)
-	})
-})
+if (/\bserver\b/.test(process.env.TEST_TAGS)) _.each({
+	"http://rahvaalgatus.ee": "/",
+	"http://www.rahvaalgatus.ee": "/",
+	"https://www.rahvaalgatus.ee": "/",
+	"https://riigikogu.rahvaalgatus.ee": "/parliament",
+	"https://kohalik.rahvaalgatus.ee": "/local"
+}, (rootPath, url) => describe(url, function() {
+	mustRedirectTo(url, URL, rootPath)
+}))
 
-function mustRedirectTo(from, to) {
+function mustRedirectTo(from, to, rootPath) {
   var req = fetchDefaults(request, from, HEADERS)
 
 	describe("as a canonical URL", function() {
 		describe("/", function() {
 			before(function*() { this.res = yield req("/", {method: "HEAD"}) })
 
-			it("must redirect to " + to, function() {
+			it("must redirect to " + to + rootPath, function() {
 				this.res.statusCode.must.equal(301)
-				this.res.headers.location.must.equal(to + "/")
+				this.res.headers.location.must.equal(to + rootPath)
+			})
+		})
+
+		describe("/?42", function() {
+			before(function*() { this.res = yield req("/?42", {method: "HEAD"}) })
+
+			it("must redirect to " + to + rootPath, function() {
+				this.res.statusCode.must.equal(301)
+				this.res.headers.location.must.equal(to + rootPath + "?42")
 			})
 		})
 

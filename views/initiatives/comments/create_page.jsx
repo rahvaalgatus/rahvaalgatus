@@ -49,13 +49,12 @@ function CommentForm(attrs) {
 	var {newComment} = attrs
 	var {referrer} = attrs
 	var {subscription} = attrs
-	var commentsUrl = `/initiatives/${initiative.uuid}/comments`
 
 	return <Form
 		req={req}
 		id={attrs.id}
 		method="post"
-		action={commentsUrl}
+		action={`/initiatives/${initiative.id}/comments`}
 		class="comment-form">
 		{referrer ? <input type="hidden" name="referrer" value={referrer} /> : null}
 		{user && isAdmin(user) ? <PersonaInput t={t} user={user} /> : null}

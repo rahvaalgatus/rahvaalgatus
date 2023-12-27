@@ -23,7 +23,6 @@ var {getSignatureThreshold} = require("root/lib/initiative")
 var {isAdmin} = require("root/lib/user")
 var {selected} = require("root/lib/css")
 var {javascript} = require("root/lib/jsx")
-var serializeInitiativeUrl = require("root/lib/initiative").initiativeUrl
 var serializeImageUrl = require("root/lib/initiative").imageUrl
 var {pathToSignature} =
 	require("root/controllers/initiatives/signatures_controller")
@@ -111,7 +110,8 @@ function ReadPage(attrs) {
 	var {flash} = attrs
 	var {events} = attrs
 	var {initiative} = attrs
-	var initiativePath = "/initiatives/" + initiative.uuid
+	var initiativePath = "/initiatives/" + initiative.id
+	var initiativeSlugPath = Initiative.slugPath(initiative)
 	var {subscriberCounts} = attrs
 	var signatureCount = initiative.signature_count
 	var {text} = attrs
@@ -119,9 +119,8 @@ function ReadPage(attrs) {
 	var {translations} = attrs
 	var {image} = attrs
 	var {coauthorInvitation} = attrs
-	var initiativeUrl = serializeInitiativeUrl(initiative)
-	var shareText = `${initiative.title} ${initiativeUrl}`
-	var atomPath = req.baseUrl + req.path + ".atom"
+	var initiativeSlugUrl = Initiative.slugUrl(initiative)
+	var shareText = `${initiative.title} ${initiativeSlugUrl}`
 	var isAuthor = user && Initiative.isAuthor(user, initiative)
 
 	var imageEditable = (
@@ -146,7 +145,7 @@ function ReadPage(attrs) {
 		meta={_.filterValues({
 			"twitter:card": "summary_large_image",
 			"og:title": initiative.title,
-			"og:url": initiativeUrl,
+			"og:url": initiativeSlugUrl,
 			"og:image": image && serializeImageUrl(initiative, image)
 		}, Boolean)}
 
@@ -154,7 +153,7 @@ function ReadPage(attrs) {
 			rel: "alternate",
 			type: "application/atom+xml",
 			title: t("ATOM_INITIATIVE_FEED_TITLE", {title: initiative.title}),
-			href: atomPath
+			href: Initiative.path(initiative) + ".atom"
 		}]}
 	>
 		<script src="/assets/html5.js" />
@@ -340,7 +339,7 @@ function ReadPage(attrs) {
 						if (!(initiative.language == lang || lang in translations))
 							return null
 
-						var path = initiativePath
+						var path = initiativeSlugPath
 						if (initiative.language != lang) path += "?language=" + lang
 						var klass = "tab " + selected(textLanguage, lang)
 
@@ -574,7 +573,7 @@ function ReadPage(attrs) {
 						<h3 class="sidebar-subheader">{t("SHARE_INITIATIVE")}</h3>
 
 						<a
-							href={"https://facebook.com/sharer/sharer.php?u=" + encode(initiativeUrl)}
+							href={"https://facebook.com/sharer/sharer.php?u=" + encode(initiativeSlugUrl)}
 							target="_blank"
 							rel="external noopener"
 							class="grey-button ra-icon-facebook-logo share-button">
@@ -865,7 +864,7 @@ function PhasesView(attrs) {
 function InitiativeContentView(attrs) {
 	var {initiative} = attrs
 	var {text} = attrs
-	var initiativePath = "/initiatives/" + initiative.uuid
+	var initiativePath = "/initiatives/" + initiative.id
 	var {files} = attrs
 
 	if (initiative.external) {
@@ -926,7 +925,7 @@ function SidebarAuthorView(attrs) {
 	var signatureCount = initiative.signature_count
 	var {hasComments} = attrs
 
-	var initiativePath = "/initiatives/" + initiative.uuid
+	var initiativePath = "/initiatives/" + initiative.id
 	var coauthorsPath = initiativePath + "/coauthors"
 
 	var textEditPath = text && initiative.language != text.language
@@ -1076,9 +1075,7 @@ function SidebarAuthorView(attrs) {
 			{t("EDIT_INITIATIVE_TRANSLATIONS")}
 		</a> : null}
 
-		{isCreator ? <a
-			href={coauthorsPath}
-			class="link-button wide-button">
+		{isCreator ? <a href={coauthorsPath} class="link-button wide-button">
 			{t("EDIT_INITIATIVE_AUTHORS")}
 		</a> : null}
 
@@ -1152,7 +1149,7 @@ function SidebarInfoView(attrs) {
 	var {notes} = initiative
 	var governmentChangeUrls = initiative.government_change_urls
 	var publicChangeUrls = initiative.public_change_urls
-	var initiativePath = "/initiatives/" + initiative.uuid
+	var initiativePath = "/initiatives/" + initiative.id
 
 	if (!(
 		canEdit ||
@@ -1173,7 +1170,8 @@ function SidebarInfoView(attrs) {
 		id="initiative-info"
 		class="sidebar-section"
 		method="put"
-		action={initiativePath}>
+		action={initiativePath}
+	>
 		<input type="checkbox" id="initiative-info-form-toggle" hidden />
 
 		<h2 class="sidebar-header">
@@ -1491,14 +1489,10 @@ function SidebarInfoView(attrs) {
 	</Form>
 }
 
-function SidebarSubscribeView(attrs) {
-	var {req} = attrs
-	var {t} = req
-	var {initiative} = attrs
-	var {subscriberCounts} = attrs
-	var atomPath = req.baseUrl + req.path + ".atom"
-
+function SidebarSubscribeView({req, initiative, subscriberCounts}) {
 	if (!initiative.published_at) return null
+
+	var {t} = req
 
 	return <div class="sidebar-section">
 		<h2 class="sidebar-header">{t("INITIATIVE_SIDEBAR_FOLLOW_HEADER")}</h2>
@@ -1515,7 +1509,10 @@ function SidebarSubscribeView(attrs) {
 
 		<h3 class="sidebar-subheader">{t("SUBSCRIBE_VIA_ATOM_HEADER")}</h3>
 
-		<a href={atomPath} class="grey-button ra-icon-rss">
+		<a
+			href={Initiative.path(initiative) + ".atom"}
+			class="grey-button ra-icon-rss"
+		>
 			{t("SUBSCRIBE_VIA_ATOM_BUTTON")}
 		</a>
 	</div>
@@ -1609,7 +1606,7 @@ function SidebarAdminView({req, t, initiative}) {
 		</h2>
 
 		<a
-			href={`${Config.adminUrl}/initiatives/${initiative.uuid}`}
+			href={`${Config.adminUrl}/initiatives/${initiative.id}`}
 			class="link-button wide-button"
 		>
 			{t("initiative_page.sidebar.admin.edit_button")}
@@ -1622,7 +1619,7 @@ function EventsView(attrs) {
 	var {user} = attrs
 	var {initiative} = attrs
 	var events = attrs.events.sort(compareEvent).reverse()
-	var initiativePath = "/initiatives/" + initiative.uuid
+	var initiativePath = "/initiatives/" + initiative.id
 
 	var canCreateEvents = (
 		user &&
@@ -1638,8 +1635,9 @@ function EventsView(attrs) {
 
 			<article class="initiative-sheet">
 				{canCreateEvents ? <a
-					href={`/initiatives/${initiative.uuid}/events/new`}
-					class="create-event-button">
+					href={`${initiativePath}/events/new`}
+					class="create-event-button"
+				>
 					{t("CREATE_INITIATIVE_EVENT_BUTTON")}
 				</a> : null}
 
@@ -2295,7 +2293,7 @@ function UntrustedLink(attrs, children) {
 function InitiativeImageUploadForm(attrs, children) {
 	var {req} = attrs
 	var {initiative} = attrs
-	var initiativePath = "/initiatives/" + initiative.uuid
+	var initiativePath = "/initiatives/" + initiative.id
 
 	return <Form
 		id={attrs.id}

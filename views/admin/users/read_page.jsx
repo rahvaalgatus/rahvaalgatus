@@ -1,9 +1,9 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var Page = require("../page")
+var Initiative = require("root/lib/initiative")
 var {Form} = Page
 var {Flash} = Page
-var Config = require("root").config
 var {formatDateTime} = require("root/lib/i18n")
 
 module.exports = function(attrs) {
@@ -83,7 +83,7 @@ module.exports = function(attrs) {
 
 			<tbody>
 				{initiatives.map(function(initiative) {
-					var initiativePath = `${req.rootUrl}/initiatives/${initiative.uuid}`
+					var initiativePath = `${req.rootUrl}/initiatives/${initiative.id}`
 
 					return <tr>
 						<td>
@@ -101,7 +101,7 @@ module.exports = function(attrs) {
 
 						<td>
 							{initiative.published_at ? <a
-								href={Config.url + "/initiatives/" + initiative.uuid}
+								href={Initiative.slugUrl(initiative)}
 								class="admin-link"
 							>View on Rahvaalgatus</a> : null}
 						</td>
@@ -141,13 +141,11 @@ module.exports = function(attrs) {
 
 						<td>
 							<a
-								href={[
-									Config.url,
-									"/initiatives/",
-									comment.initiative_uuid,
-									"/comments/",
-									comment.id
-								].join("")}
+								href={Initiative.slugUrl({
+									id: comment.initiative_id,
+									slug: comment.initiative_slug
+								}) + "/comments/" + comment.id}
+
 								class="admin-link"
 							>View on Rahvaalgatus</a>
 						</td>

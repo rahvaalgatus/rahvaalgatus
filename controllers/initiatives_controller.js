@@ -43,9 +43,12 @@ var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var MAX_URL_LENGTH = 1024
 var INITIATIVE_TYPE =
 	new MediaType("application/vnd.rahvaalgatus.initiative+json; v=1")
+var UUID_REGEX =
+	/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 exports.searchInitiativesEventsForAtom = searchInitiativesEventsForAtom
 exports.synthesizeInitiativeEvents = synthesizeInitiativeEvents
 exports.serializeApiInitiative = serializeApiInitiative
+exports.parseId = parseId
 exports.router = Router({mergeParams: true})
 
 var searchInitiativeEventsForAtom =
@@ -59,7 +62,6 @@ exports.router.get("/",
 		res.setHeader("Access-Control-Allow-Origin", "*")
 	}
 
-	var gov = req.government
 	var onlyDestinations = req.query.for && parseDestinations(req.query.for)
 	var onlyPhase = req.query.phase && parsePhase(req.query.phase)
 
@@ -109,15 +111,6 @@ exports.router.get("/",
 		` : sql``}
 
 		WHERE initiative.published_at IS NOT NULL
-
-		AND (
-			initiative.destination IS NULL AND phase = 'edit'
-
-			OR initiative.destination ${
-				gov == null ? sql`IS NOT NULL` :
-				gov == "parliament" ? sql`= 'parliament'` : sql`!= 'parliament'`
-			}
-		)
 
 		${onlyDestinations
 			? sql`AND initiative.destination IN ${sql.in(onlyDestinations)}`
@@ -172,6 +165,7 @@ exports.router.post("/", assertUser, rateLimit, function(req, res) {
 		uuid: _.serializeUuid(_.uuidV4()),
 		user_id: user.id,
 		title: attrs.title,
+		slug: Initiative.slug(attrs.title),
 		language: attrs.language,
 		created_at: new Date,
 		undersignable: true
@@ -185,7 +179,7 @@ exports.router.post("/", assertUser, rateLimit, function(req, res) {
 	})
 
 	res.statusMessage = "Initiative Created"
-	res.redirect(303, req.baseUrl + "/" + initiative.uuid)
+	res.redirect(303, Initiative.slugPath(initiative))
 })
 
 exports.router.get("/new", assertUser, function(_req, res) {
@@ -197,6 +191,7 @@ exports.router.get("/new", assertUser, function(_req, res) {
 
 exports.router.use("/:id", function(req, res, next) {
 	var {user} = req
+	var id = req.initiativeId = parseId(req.params.id)
 
 	var initiative = initiativesDb.read(sql`
 		SELECT
@@ -207,7 +202,11 @@ exports.router.use("/:id", function(req, res, next) {
 
 		FROM initiatives AS initiative
 		LEFT JOIN users AS user ON user.id = initiative.user_id
-		WHERE initiative.uuid = ${req.params.id}
+
+		WHERE ${id == null || typeof id == "string"
+			? sql`initiative.uuid = ${id}`
+			: sql`initiative.id = ${id.id}`
+		}
 	`)
 
 	if (initiative == null) throw new HttpError(404)
@@ -230,15 +229,6 @@ exports.router.use("/:id", function(req, res, next) {
 
 	if (!(initiative.published_at || isAuthorOrPendingAuthor))
 		throw new HttpError(403, "Initiative Not Public")
-
-	if ((req.method == "HEAD" || req.method == "GET") && !isApiRequest(req)) {
-		var isLocalInitiative = Initiative.isLocalInitiative(initiative)
-
-		if (req.government != "local" && isLocalInitiative)
-			return void res.redirect(301, Config.localSiteUrl + req.originalUrl)
-		else if (req.government != null && !isLocalInitiative)
-			return void res.redirect(301, Config.url + req.originalUrl)
-	}
 
 	initiative.coauthors = coauthors.filter((a) => a.status == "accepted")
 
@@ -314,7 +304,14 @@ exports.router.get("/:id",
 			res.render("initiatives/atom.jsx", {events: events})
 			break
 
-		default: exports.read(req, res, next)
+		default:
+			if (typeof req.initiativeId == "string") return void res.redirect(301,
+				Initiative.slugPath(initiative) +
+				(req.extension ? "." + req.extension : "") +
+				req.url.replace(/^[^?]+/, "")
+			)
+
+			exports.read(req, res, next)
 	}
 })
 
@@ -391,12 +388,12 @@ exports.read = function(req, res) {
 
 	if (text == null && initiative.language != textLanguage) {
 		res.statusMessage = "No Translation"
-		return void res.redirect(307, req.baseUrl + req.path)
+		return void res.redirect(307, Initiative.slugPath(initiative))
 	}
 
 	if (text) initiative.title = text.title
 
-	if (req.originalUrl.endsWith(".html")) {
+	if (req.extension && req.extension.toLowerCase() == "html") {
 		var html = (
 			initiative.text ||
 			text && Initiative.renderForParliament(text)
@@ -460,13 +457,14 @@ exports.router.put("/:id", assertUser, next(function*(req, res) {
 	}
 	else if (isInitiativeUpdate(req.body)) {
 		var attrs = parseInitiative(initiative, req.body)
-		initiativesDb.update(initiative.uuid, attrs)
+		initiativesDb.update(initiative.id, attrs)
 		res.statusMessage = "Initiative Updated"
 		res.flash("notice", req.t("INITIATIVE_INFO_UPDATED"))
+		var initiativeSlugPath = Initiative.slugPath(initiative)
 
 		res.redirect(
 			303,
-			validateRedirect(req, req.headers.referer, req.baseUrl + req.url)
+			validateRedirect(req, req.headers.referer, initiativeSlugPath)
 		)
 	}
 	else throw new HttpError(422, "Invalid Attribute")
@@ -485,7 +483,7 @@ exports.router.delete("/:id", assertUser, function(req, res) {
 		WHERE initiative_uuid = ${initiative.uuid}
 	`).count > 0) {
 		res.flash("notice", req.t("INITIATIVE_CANNOT_BE_DELETED_HAS_COMMENTS"))
-		res.redirect(303, req.baseUrl + req.path)
+		res.redirect(303, Initiative.slugPath(initiative))
 		return
 	}
 
@@ -499,7 +497,7 @@ exports.router.delete("/:id", assertUser, function(req, res) {
 		WHERE initiative_uuid = ${initiative.uuid}
 	`)
 
-	initiativesDb.delete(initiative.uuid)
+	initiativesDb.delete(initiative.id)
 	res.flash("notice", req.t("INITIATIVE_DELETED"))
 	res.redirect(303, req.baseUrl)
 })
@@ -518,7 +516,7 @@ exports.router.get("/:id/edit", assertUser, function(req, res) {
 		LIMIT 1
 	`)
 
-	var path = req.baseUrl + "/" + initiative.uuid + "/texts"
+	var path = req.baseUrl + "/" + initiative.id + "/texts"
 	if (text) res.redirect(path + "/" + text.id)
 	else res.redirect(path + "/new?language=" + initiative.language)
 })
@@ -741,7 +739,7 @@ function* updateInitiativeToPublished(req, res) {
 
 	var emailSentAt = initiative.discussion_end_email_sent_at
 
-	initiativesDb.update(initiative.uuid, {
+	initiativesDb.update(initiative.id, {
 		published_at: publishedAt,
 		discussion_ends_at: endsAt,
 		discussion_end_email_sent_at: endsAt > new Date ? null : emailSentAt
@@ -783,7 +781,7 @@ function* updateInitiativeToPublished(req, res) {
 
 			text: renderEmail("et", "INITIATIVE_PUBLISHED_MESSAGE_BODY", {
 				initiativeTitle: initiative.title,
-				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+				initiativeUrl: Initiative.slugUrl(initiative),
 				authorName: user.name
 			})
 		})
@@ -803,7 +801,7 @@ function* updateInitiativeToPublished(req, res) {
 		? "Initiative Published"
 		: "Initiative Updated"
 
-	res.redirect(303, req.baseUrl + "/" + initiative.uuid)
+	res.redirect(303, Initiative.slugPath(initiative))
 }
 
 function* updateInitiativePhaseToSign(req, res) {
@@ -898,7 +896,7 @@ function* updateInitiativePhaseToSign(req, res) {
 
 			text: renderEmail("et", "SENT_TO_SIGNING_MESSAGE_BODY", {
 				initiativeTitle: initiative.title,
-				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+				initiativeUrl: Initiative.slugUrl(initiative)
 			})
 		})
 
@@ -917,7 +915,7 @@ function* updateInitiativePhaseToSign(req, res) {
 		? "Initiative Sent to Signing"
 		: "Initiative Updated"
 
-	res.redirect(303, req.baseUrl + "/" + initiative.uuid)
+	res.redirect(303, Initiative.slugPath(initiative))
 }
 
 function* updateInitiativePhaseToParliament(req, res) {
@@ -964,7 +962,7 @@ function* updateInitiativePhaseToParliament(req, res) {
 			sent_to_government_at: new Date
 		}, initiativeAttrs))
 
-	var initiativeUrl = Initiative.initiativeUrl(initiative)
+	var initiativeUrl = `${Config.url}/initiatives/${initiative.id}`
 	var parliamentToken = initiative.parliament_token.toString("hex")
 
 	var undersignedSignaturesUrl =
@@ -1011,7 +1009,7 @@ function* updateInitiativePhaseToParliament(req, res) {
 			? "EMAIL_INITIATIVE_TO_PARLIAMENT_WITH_CITIZENOS_SIGNATURES_BODY"
 			: "EMAIL_INITIATIVE_TO_PARLIAMENT_BODY", {
 			initiativeTitle: initiative.title,
-			initiativeUrl: initiativeUrl,
+			initiativeUrl: Initiative.slugUrl(initiative),
 			initiativeUuid: initiative.uuid,
 
 			signatureCount: signatureCount,
@@ -1044,7 +1042,7 @@ function* updateInitiativePhaseToParliament(req, res) {
 			: "SENT_TO_LOCAL_GOVERNMENT_MESSAGE_BODY", {
 			authorName: attrs.contact.name,
 			initiativeTitle: initiative.title,
-			initiativeUrl: initiativeUrl,
+			initiativeUrl: Initiative.slugUrl(initiative),
 			signatureCount: signatureCount
 		})
 	})
@@ -1059,7 +1057,7 @@ function* updateInitiativePhaseToParliament(req, res) {
 		: req.t("SENT_TO_LOCAL_GOVERNMENT_CONTENT")
 	)
 
-	res.redirect(303, req.baseUrl + "/" + initiative.uuid)
+	res.redirect(303, Initiative.slugPath(initiative))
 }
 
 function updateInitiativeAuthor(req, res) {
@@ -1084,7 +1082,7 @@ function updateInitiativeAuthor(req, res) {
 
 	if (coauthor == null) throw new HttpError(422, "No Such Coauthor")
 
-	initiativesDb.update(initiative.uuid, {user_id: coauthor.user_id})
+	initiativesDb.update(initiative.id, {user_id: coauthor.user_id})
 
 	coauthorsDb.update(coauthor, {
 		status: "promoted",
@@ -1109,7 +1107,7 @@ function updateInitiativeAuthor(req, res) {
 	}))
 
 	res.statusMessage = "Author Updated"
-	res.redirect(303, req.baseUrl + req.url)
+	res.redirect(303, Initiative.slugPath(initiative))
 }
 
 function assertUser(req, _res, next) {
@@ -1225,6 +1223,12 @@ var validateInitiativeAttributes = require("root/lib/json_schema").new({
 
 exports.SCHEMA = validateInitiativeAttributes.schema
 
+function parseId(id) {
+	if (UUID_REGEX.test(id)) return id
+	var [m, number, slug] = /^(\d+)(-.*)?$/.exec(id) || []
+	return m ? {id: Number(number), slug: slug && slug.slice(1) || null} : null
+}
+
 function parseInitiative(initiative, obj) {
 	var err, attrs = {}
 
@@ -1320,6 +1324,5 @@ function isValidDestination(dest) {
 	return dest == "parliament" || _.hasOwn(LOCAL_GOVERNMENTS, dest)
 }
 
-function isApiRequest(req) { return req.accept[0].name == INITIATIVE_TYPE.name }
 function isOrganizationPresent(org) { return org.name || org.url }
 function isMeetingPresent(org) { return org.date || org.url }

@@ -62,12 +62,12 @@ function* emailEndedDiscussions({actuallyEmail}) {
 				subject: t("DISCUSSION_END_EMAIL_SUBJECT"),
 				text: renderEmail("DISCUSSION_END_EMAIL_BODY", {
 					initiativeTitle: discussion.title,
-					initiativeUrl: `${Config.url}/initiatives/${discussion.uuid}`,
-					initiativeEditUrl: `${Config.url}/initiatives/${discussion.uuid}`
+					initiativeUrl: Initiative.slugUrl(discussion),
+					initiativeEditUrl: Initiative.slugUrl(discussion)
 				})
 			})
 
-			initiativesDb.update(discussion.uuid, {
+			initiativesDb.update(discussion.id, {
 				discussion_end_email_sent_at: new Date
 			})
 		}
@@ -115,14 +115,12 @@ function* emailEndedInitiatives({actuallyEmail}) {
 					? "SIGNING_END_COMPLETE_EMAIL_BODY"
 					: "SIGNING_END_INCOMPLETE_EMAIL_BODY", {
 					initiativeTitle: initiative.title,
-					initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
-					initiativeEditUrl: `${Config.url}/initiatives/${initiative.uuid}`
+					initiativeUrl: Initiative.slugUrl(initiative),
+					initiativeEditUrl: Initiative.slugUrl(initiative)
 				})
 			})
 
-			initiativesDb.update(initiative.uuid, {
-				signing_end_email_sent_at: new Date
-			})
+			initiativesDb.update(initiative.id, {signing_end_email_sent_at: new Date})
 		}
 	}
 }
@@ -175,7 +173,7 @@ function* emailExpiringInitiatives({actuallyEmail}) {
 		logger.info(
 			"Notifying %s of initiative %s expiring…",
 			initiative.user_email,
-			initiative.uuid
+			initiative.id
 		)
 
 		if (actuallyEmail) {
@@ -187,7 +185,7 @@ function* emailExpiringInitiatives({actuallyEmail}) {
 
 				text: renderEmail("SIGNING_EXPIRING_EMAIL_BODY", {
 					initiativeTitle: initiative.title,
-					initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+					initiativeUrl: Initiative.slugUrl(initiative),
 					expirationDate: expirationDate
 				})
 			})

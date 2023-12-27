@@ -1,11 +1,10 @@
 var _ = require("root/lib/underscore")
 var Config = require("root").config
 var {Router} = require("express")
-var canonicalizeUrl = require("root/lib/middleware/canonical_site_middleware")
 
 exports.router = Router({mergeParams: true})
 
-exports.router.get("/new", canonicalizeUrl, function(req, res) {
+exports.router.get("/new", function(req, res) {
 	var transaction = "json" in req.query ? parseJson(req.query.json) : null
 
 	res.render("donations/create_page.jsx", {
@@ -30,7 +29,7 @@ exports.router.post("/", function(req, res) {
 	res.redirect(url)
 })
 
-exports.router.get("/created", canonicalizeUrl, (_req, res) => (
+exports.router.get("/created", (_req, res) => (
 	res.render("donations/created_page.jsx")
 ))
 

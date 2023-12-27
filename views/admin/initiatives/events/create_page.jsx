@@ -24,10 +24,7 @@ function CreatePage(attrs) {
 		req={req}
 	>
 		<a href={req.baseUrl} class="admin-back-2">Initiatives</a>
-		<a
-			href={req.baseUrl + "/" + initiative.uuid}
-			class="admin-back"
-		>
+		<a href={req.baseUrl + "/" + initiative.id} class="admin-back">
 			{initiative.title}
 		</a>
 
@@ -68,7 +65,7 @@ function EventForm(attrs) {
 	var {event} = attrs
 	var {subscriberCount} = attrs
 
-	var path = `${req.baseUrl}/${initiative.uuid}/events`
+	var path = `${req.baseUrl}/${initiative.id}/events`
 	if (event.id) path += "/" + event.id
 
 	return <Form

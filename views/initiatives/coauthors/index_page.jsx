@@ -1,6 +1,7 @@
 /** @jsx Jsx */
 var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
+var Initiative = require("root/lib/initiative")
 var {Form} = require("../../page")
 var {FormButton} = require("../../page")
 var {Flash} = require("../../page")
@@ -15,7 +16,7 @@ module.exports = function(attrs) {
 	var {flash} = req
 	var {initiative} = attrs
 	var {coauthors} = attrs
-	var initiativePath = "/initiatives/" + initiative.uuid
+	var initiativePath = "/initiatives/" + initiative.id
 	var coauthorsPath = initiativePath + "/coauthors"
 
 	var accepted = coauthors.filter((coauthor) => coauthor.status == "accepted")
@@ -112,7 +113,7 @@ module.exports = function(attrs) {
 
 					<p class="description">
 						{Jsx.html(t("COAUTHORS_PAGE_SENT_INVITES_DESCRIPTION", {
-							initiativeUrl: _.escapeHtml(initiativePath)
+							initiativeUrl: _.escapeHtml(Initiative.slugPath(initiative))
 						}))}
 					</p>
 

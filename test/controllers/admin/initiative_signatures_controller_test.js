@@ -51,6 +51,7 @@ describe("AdminInitiativeSignaturesController", function() {
 
 			res.body.must.equal([
 				"date",
+				"initiative_id",
 				"initiative_uuid",
 				"initiative_title",
 				"initiative_destination",
@@ -111,6 +112,7 @@ describe("AdminInitiativeSignaturesController", function() {
 
 			lines[0].must.equal([
 				"date",
+				"initiative_id",
 				"initiative_uuid",
 				"initiative_title",
 				"initiative_destination",
@@ -123,6 +125,7 @@ describe("AdminInitiativeSignaturesController", function() {
 			lines.slice(1).sort().must.eql([
 				Csv.serialize([
 					"2010-06-18",
+					initiativeA.id,
 					initiativeA.uuid,
 					initiativeA.title,
 					"parliament",
@@ -134,6 +137,7 @@ describe("AdminInitiativeSignaturesController", function() {
 
 				Csv.serialize([
 					"2011-07-19",
+					initiativeB.id,
 					initiativeB.uuid,
 					initiativeB.title,
 					"parliament",
@@ -145,6 +149,7 @@ describe("AdminInitiativeSignaturesController", function() {
 
 				Csv.serialize([
 					"2012-08-20",
+					initiativeA.id,
 					initiativeA.uuid,
 					initiativeA.title,
 					"parliament",
@@ -156,6 +161,7 @@ describe("AdminInitiativeSignaturesController", function() {
 
 				Csv.serialize([
 					"2013-09-21",
+					initiativeB.id,
 					initiativeB.uuid,
 					initiativeB.title,
 					"parliament",

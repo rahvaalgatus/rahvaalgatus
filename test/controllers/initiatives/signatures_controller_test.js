@@ -68,7 +68,6 @@ var CHILD_BIRTHDATE = DateFns.addDays(ADULT_BIRTHDATE, 1)
 var ADULT_PERSONAL_ID = formatPersonalId(ADULT_BIRTHDATE) + "1337"
 var CHILD_PERSONAL_ID = formatPersonalId(CHILD_BIRTHDATE) + "1337"
 var SMART_ID = "PNOEE-" + ADULT_PERSONAL_ID + "-R2D2-Q"
-var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var KEY_USAGE_NONREPUDIATION = 64
 var KEY_USAGE_DIGITAL_SIGNATURE = 128
@@ -251,7 +250,7 @@ describe("SignaturesController", function() {
 				parliament_token: null
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			var path = `/initiatives/${initiative.id}/signatures.asice`
 			path += "?parliament-token="
 			var res = yield request.call(this, path)
 			res.statusCode.must.equal(403)
@@ -265,7 +264,7 @@ describe("SignaturesController", function() {
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			var path = `/initiatives/${initiative.id}/signatures.asice`
 			var res = yield request.call(this, path)
 			res.statusCode.must.equal(403)
 			res.statusMessage.must.equal("Invalid Token")
@@ -278,7 +277,7 @@ describe("SignaturesController", function() {
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			var path = `/initiatives/${initiative.id}/signatures.asice`
 			var res = yield request.call(this, path + "?parliament-token=")
 			res.statusCode.must.equal(403)
 			res.statusMessage.must.equal("Invalid Token")
@@ -291,7 +290,7 @@ describe("SignaturesController", function() {
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			var path = `/initiatives/${initiative.id}/signatures.asice`
 			var token = Crypto.randomBytes(12).toString("hex")
 			var res = yield request.call(this, path + "?parliament-token=" + token)
 			res.statusCode.must.equal(403)
@@ -308,7 +307,7 @@ describe("SignaturesController", function() {
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			var path = `/initiatives/${initiative.id}/signatures.asice`
 			var res = yield request.call(this, path + "?parliament-token=foo.bar")
 			res.statusCode.must.equal(403)
 			res.statusMessage.must.equal("Invalid Token")
@@ -323,7 +322,7 @@ describe("SignaturesController", function() {
 				received_by_parliament_at: new Date
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			var path = `/initiatives/${initiative.id}/signatures.asice`
 			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
 			var res = yield request.call(this, path)
 			res.statusCode.must.equal(423)
@@ -343,13 +342,10 @@ describe("SignaturesController", function() {
 				received_by_government_at: new Date
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			var path = `/initiatives/${initiative.id}/signatures.asice`
 			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
 
-			var res = yield request.call(this, path, {
-				headers: {Host: LOCAL_SITE_HOSTNAME}
-			})
-
+			var res = yield request.call(this, path)
 			res.statusCode.must.equal(423)
 			res.statusMessage.must.equal("Signatures Already In Government")
 
@@ -378,7 +374,7 @@ describe("SignaturesController", function() {
 				new ValidSignature({initiative_uuid: initiative.uuid})
 			]), "personal_id")
 
-			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			var path = `/initiatives/${initiative.id}/signatures.asice`
 			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
 			var res = yield this.request(path)
 
@@ -422,7 +418,7 @@ describe("SignaturesController", function() {
 				anonymized: true
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			var path = `/initiatives/${initiative.id}/signatures.asice`
 			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
 			var res = yield this.request(path)
 
@@ -443,7 +439,7 @@ describe("SignaturesController", function() {
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			var path = `/initiatives/${initiative.id}/signatures.asice`
 			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
 			var res = yield this.request(path)
 
@@ -473,7 +469,7 @@ describe("SignaturesController", function() {
 				initiative_uuid: other.uuid
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			var path = `/initiatives/${initiative.id}/signatures.asice`
 			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
 			var res = yield this.request(path)
 
@@ -495,7 +491,7 @@ describe("SignaturesController", function() {
 					parliament_token: Crypto.randomBytes(12)
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/signatures.asice`
+				var path = `/initiatives/${initiative.id}/signatures.asice`
 				path += "?parliament-token="
 				path += initiative.parliament_token.toString("hex")
 
@@ -532,14 +528,11 @@ describe("SignaturesController", function() {
 			})
 
 			it("must respond with 401 Unauthenticated if not logged in", function*() {
-				var path = `/initiatives/${this.initiative.uuid}/signatures.asice`
+				var path = `/initiatives/${this.initiative.id}/signatures.asice`
 				var token = this.initiative.parliament_token.toString("hex")
 				path += "?parliament-token=" + token
 
-				var res = yield this.request(path, {
-					headers: {Host: LOCAL_SITE_HOSTNAME}
-				})
-
+				var res = yield this.request(path)
 				res.statusCode.must.equal(401)
 				res.statusMessage.must.equal("Unauthorized")
 			})
@@ -547,15 +540,11 @@ describe("SignaturesController", function() {
 			it("must respond with 403 Forbidden if no personal ids set", function*() {
 				LOCAL_GOVERNMENTS["muhu-vald"].signatureTrustees = []
 
-				var path = `/initiatives/${this.initiative.uuid}/signatures.asice`
+				var path = `/initiatives/${this.initiative.id}/signatures.asice`
 				var token = this.initiative.parliament_token.toString("hex")
 				path += "?parliament-token=" + token
 
-				var res = yield this.request(path, {
-					headers: {Host: LOCAL_SITE_HOSTNAME},
-					session: this.session
-				})
-
+				var res = yield this.request(path, {session: this.session})
 				res.statusCode.must.equal(403)
 				res.statusMessage.must.equal("Not a Permitted Downloader")
 			})
@@ -567,15 +556,11 @@ describe("SignaturesController", function() {
 					name: "John Smith"
 				}]
 
-				var path = `/initiatives/${this.initiative.uuid}/signatures.asice`
+				var path = `/initiatives/${this.initiative.id}/signatures.asice`
 				var token = this.initiative.parliament_token.toString("hex")
 				path += "?parliament-token=" + token
 
-				var res = yield this.request(path, {
-					headers: {Host: LOCAL_SITE_HOSTNAME},
-					session: this.session
-				})
-
+				var res = yield this.request(path, {session: this.session})
 				res.statusCode.must.equal(403)
 				res.statusMessage.must.equal("Not a Permitted Downloader")
 				res.headers["content-type"].must.equal("text/html; charset=utf-8")
@@ -592,15 +577,11 @@ describe("SignaturesController", function() {
 					{personalId: "38706181338"}
 				]
 
-				var path = `/initiatives/${this.initiative.uuid}/signatures.asice`
+				var path = `/initiatives/${this.initiative.id}/signatures.asice`
 				var token = this.initiative.parliament_token.toString("hex")
 				path += "?parliament-token=" + token
 
-				var res = yield this.request(path, {
-					headers: {Host: LOCAL_SITE_HOSTNAME},
-					session: this.session
-				})
-
+				var res = yield this.request(path, {session: this.session})
 				res.statusCode.must.equal(200)
 				res.headers["content-type"].must.equal(ASICE_TYPE)
 			})
@@ -620,7 +601,7 @@ describe("SignaturesController", function() {
 				language: "et"
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/signatures.asice`
+			var path = `/initiatives/${initiative.id}/signatures.asice`
 			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
 			var res = yield this.request(path)
 
@@ -661,7 +642,7 @@ describe("SignaturesController", function() {
 				new ValidSignature({initiative_uuid: initiative.uuid})
 			]), "personal_id")
 
-			var path = `/initiatives/${initiative.uuid}/signatures.csv`
+			var path = `/initiatives/${initiative.id}/signatures.csv`
 			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
 			var res = yield this.request(path)
 
@@ -702,7 +683,7 @@ describe("SignaturesController", function() {
 				anonymized: true
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/signatures.csv`
+			var path = `/initiatives/${initiative.id}/signatures.csv`
 			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
 			var res = yield this.request(path)
 
@@ -718,7 +699,7 @@ describe("SignaturesController", function() {
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/signatures.csv`
+			var path = `/initiatives/${initiative.id}/signatures.csv`
 			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
 			var res = yield this.request(path)
 
@@ -743,7 +724,7 @@ describe("SignaturesController", function() {
 				initiative_uuid: other.uuid
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/signatures.csv`
+			var path = `/initiatives/${initiative.id}/signatures.csv`
 			path += "?parliament-token=" + initiative.parliament_token.toString("hex")
 			var res = yield this.request(path)
 
@@ -789,7 +770,7 @@ describe("SignaturesController", function() {
 				})
 			]), "personal_id")
 
-			var path = `/initiatives/${initiative.uuid}/signatures.zip?type=citizenos`
+			var path = `/initiatives/${initiative.id}/signatures.zip?type=citizenos`
 			path += "&parliament-token=" + initiative.parliament_token.toString("hex")
 			var res = yield this.request(path)
 
@@ -820,7 +801,7 @@ describe("SignaturesController", function() {
 				parliament_token: Crypto.randomBytes(12)
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/signatures.zip?type=citizenos`
+			var path = `/initiatives/${initiative.id}/signatures.zip?type=citizenos`
 			path += "&parliament-token=" + initiative.parliament_token.toString("hex")
 			var res = yield this.request(path)
 
@@ -851,7 +832,7 @@ describe("SignaturesController", function() {
 				asic: asic
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/signatures.zip?type=citizenos`
+			var path = `/initiatives/${initiative.id}/signatures.zip?type=citizenos`
 			path += "&parliament-token=" + initiative.parliament_token.toString("hex")
 			var res = yield this.request(path)
 
@@ -877,7 +858,7 @@ describe("SignaturesController", function() {
 				})
 			]), "personal_id")
 
-			var path = `/initiatives/${initiative.uuid}/signatures.zip?type=citizenos`
+			var path = `/initiatives/${initiative.id}/signatures.zip?type=citizenos`
 			path += "&parliament-token=" + initiative.parliament_token.toString("hex")
 			var res = yield this.request(path)
 
@@ -897,6 +878,7 @@ describe("SignaturesController", function() {
 			this.initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "sign",
+				title: "Hello, world!",
 				signing_ends_at: DateFns.addDays(new Date, 1)
 			}))
 		})
@@ -1554,7 +1536,7 @@ describe("SignaturesController", function() {
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}`
+				var path = `/initiatives/${this.initiative.id}`
 				var signing = yield this.request(path + "/signatures", {
 					method: "POST",
 
@@ -1667,7 +1649,7 @@ describe("SignaturesController", function() {
 					publicKey: JOHN_RSA_KEYS.publicKey
 				}))
 
-				var initiativePath = `/initiatives/${this.initiative.uuid}`
+				var initiativePath = `/initiatives/${this.initiative.id}`
 				var res = yield this.request(`${initiativePath}/signatures`, {
 					method: "POST",
 
@@ -1707,7 +1689,7 @@ describe("SignaturesController", function() {
 						publicKey: keys.publicKey
 					}))
 
-					var initiativePath = `/initiatives/${this.initiative.uuid}`
+					var initiativePath = `/initiatives/${this.initiative.id}`
 					var signing = yield this.request(`${initiativePath}/signatures`, {
 						method: "POST",
 						headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
@@ -1763,7 +1745,7 @@ describe("SignaturesController", function() {
 						publicKey: keys.publicKey
 					}))
 
-					var initiativePath = `/initiatives/${this.initiative.uuid}`
+					var initiativePath = `/initiatives/${this.initiative.id}`
 					var signing = yield this.request(`${initiativePath}/signatures`, {
 						method: "POST",
 						headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
@@ -1798,7 +1780,7 @@ describe("SignaturesController", function() {
 
 			it("must accept signature after deadline passed", function*() {
 				var cert = ID_CARD_CERTIFICATE
-				var initiativePath = `/initiatives/${this.initiative.uuid}`
+				var initiativePath = `/initiatives/${this.initiative.id}`
 				var signing = yield this.request(`${initiativePath}/signatures`, {
 					method: "POST",
 					headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
@@ -1839,7 +1821,7 @@ describe("SignaturesController", function() {
 			})
 
 			it("must reject signature if initiative not in sign phase", function*() {
-				var initiativePath = `/initiatives/${this.initiative.uuid}`
+				var initiativePath = `/initiatives/${this.initiative.id}`
 				var signing = yield this.request(`${initiativePath}/signatures`, {
 					method: "POST",
 					headers: {Accept: SIGNABLE_TYPE, "Content-Type": CERTIFICATE_TYPE},
@@ -1984,7 +1966,7 @@ describe("SignaturesController", function() {
 						setTimeout(() => res.end(ocspResponse.toBuffer()), 100)
 					})
 
-					var initiativePath = `/initiatives/${this.initiative.uuid}`
+					var initiativePath = `/initiatives/${this.initiative.id}`
 					var signing = yield this.request(initiativePath + "/signatures", {
 						method: "POST",
 						headers: {"X-Forwarded-For": LONDON_FORWARDED_FOR},
@@ -2017,7 +1999,7 @@ describe("SignaturesController", function() {
 					var signed = yield this.request(waitUrl)
 					signed.statusCode.must.equal(303)
 					signed.statusMessage.must.equal("Signed with Mobile-ID")
-					signed.headers.location.must.equal(initiativePath)
+					signed.headers.location.must.equal(initiativePath + "-hello-world")
 
 					var signables = signablesDb.search(sql`
 						SELECT * FROM initiative_signables
@@ -2049,7 +2031,7 @@ describe("SignaturesController", function() {
 				})
 
 				it("must respond with 422 given invalid personal id", function*() {
-					var path = `/initiatives/${this.initiative.uuid}`
+					var path = `/initiatives/${this.initiative.id}`
 					var res = yield this.request(path + "/signatures", {
 						method: "POST",
 						form: {
@@ -2071,7 +2053,7 @@ describe("SignaturesController", function() {
 				})
 
 				it("must respond with 422 given underage signer", function*() {
-					var initiativePath = `/initiatives/${this.initiative.uuid}`
+					var initiativePath = `/initiatives/${this.initiative.id}`
 					var res = yield this.request(initiativePath + "/signatures", {
 						method: "POST",
 						form: {
@@ -2101,7 +2083,7 @@ describe("SignaturesController", function() {
 							respond({result: "NOT_FOUND"}, req, res)
 						})
 
-						var path = `/initiatives/${this.initiative.uuid}`
+						var path = `/initiatives/${this.initiative.id}`
 						var res = yield this.request(path + "/signatures", {
 							method: "POST",
 							form: {
@@ -2132,7 +2114,7 @@ describe("SignaturesController", function() {
 							respond({result: "NOT_FOUND"}, req, res)
 						})
 
-						var path = `/initiatives/${this.initiative.uuid}`
+						var path = `/initiatives/${this.initiative.id}`
 						var res = yield this.request(path + "/signatures", {
 							method: "POST",
 							form: {
@@ -2249,7 +2231,7 @@ describe("SignaturesController", function() {
 						setTimeout(() => res.end(ocspResponse.toBuffer()), 100)
 					})
 
-					var initiativePath = `/initiatives/${this.initiative.uuid}`
+					var initiativePath = `/initiatives/${this.initiative.id}`
 					var signing = yield this.request(initiativePath + "/signatures", {
 						method: "POST",
 
@@ -2288,7 +2270,7 @@ describe("SignaturesController", function() {
 					var signed = yield this.request(waiting.headers.location)
 					signed.statusCode.must.equal(303)
 					signed.statusMessage.must.equal("Signed with Mobile-ID")
-					signed.headers.location.must.equal(initiativePath)
+					signed.headers.location.must.equal(initiativePath + "-hello-world")
 
 					signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
@@ -2296,7 +2278,7 @@ describe("SignaturesController", function() {
 				})
 
 				it("must respond with 422 given invalid personal id", function*() {
-					var path = `/initiatives/${this.initiative.uuid}`
+					var path = `/initiatives/${this.initiative.id}`
 					var res = yield this.request(path + "/signatures", {
 						method: "POST",
 						headers: {Accept: `${EMPTY_TYPE}, ${ERROR_TYPE}`},
@@ -2632,7 +2614,7 @@ describe("SignaturesController", function() {
 
 				errored.statusCode.must.equal(410)
 				errored.statusMessage.must.equal("Mobile-ID Timeout")
-				var initiativePath = `/initiatives/${this.initiative.uuid}`
+				var initiativePath = `/initiatives/${this.initiative.id}`
 				errored.headers.location.must.equal(initiativePath)
 				waited.must.equal(2)
 
@@ -2777,7 +2759,7 @@ describe("SignaturesController", function() {
 						setTimeout(() => res.end(ocspResponse.toBuffer()), 100)
 					})
 
-					var initiativePath = `/initiatives/${this.initiative.uuid}`
+					var initiativePath = `/initiatives/${this.initiative.id}`
 					var signing = yield this.request(initiativePath + "/signatures", {
 						method: "POST",
 						headers: {"X-Forwarded-For": LONDON_FORWARDED_FOR},
@@ -2805,7 +2787,7 @@ describe("SignaturesController", function() {
 					var signed = yield this.request(waitUrl)
 					signed.statusCode.must.equal(303)
 					signed.statusMessage.must.equal("Signed with Smart-ID")
-					signed.headers.location.must.equal(initiativePath)
+					signed.headers.location.must.equal(initiativePath + "-hello-world")
 
 					var signables = signablesDb.search(sql`
 						SELECT * FROM initiative_signables
@@ -2880,7 +2862,7 @@ describe("SignaturesController", function() {
 						}
 					)
 
-					var path = `/initiatives/${this.initiative.uuid}/signatures`
+					var path = `/initiatives/${this.initiative.id}/signatures`
 					var res = yield this.request(path, {
 						method: "POST",
 						form: {method: "smart-id", "personal-id": ADULT_PERSONAL_ID}
@@ -2939,7 +2921,7 @@ describe("SignaturesController", function() {
 				})
 
 				it("must respond with 422 given invalid personal id", function*() {
-					var initiativePath = `/initiatives/${this.initiative.uuid}`
+					var initiativePath = `/initiatives/${this.initiative.id}`
 					var res = yield this.request(initiativePath + "/signatures", {
 						method: "POST",
 						form: {method: "smart-id", "personal-id": ADULT_PERSONAL_ID + "666"}
@@ -2969,7 +2951,7 @@ describe("SignaturesController", function() {
 								res.end()
 						})
 
-						var initiativePath = `/initiatives/${this.initiative.uuid}`
+						var initiativePath = `/initiatives/${this.initiative.id}`
 						var res = yield this.request(initiativePath + "/signatures", {
 							method: "POST",
 							form: {method: "smart-id", "personal-id": from}
@@ -2986,7 +2968,7 @@ describe("SignaturesController", function() {
 				})
 
 				it("must respond with 422 given underage signer", function*() {
-					var initiativePath = `/initiatives/${this.initiative.uuid}/signatures`
+					var initiativePath = `/initiatives/${this.initiative.id}/signatures`
 					var res = yield this.request(initiativePath, {
 						method: "POST",
 						form: {method: "smart-id", "personal-id": CHILD_PERSONAL_ID}
@@ -3123,11 +3105,11 @@ describe("SignaturesController", function() {
 					waiting.headers.must.not.have.property("refresh")
 					waiting.body.must.eql({state: "DONE"})
 
-					var signed = yield this.request(waitUrl)
-					signed.statusCode.must.equal(303)
-					signed.statusMessage.must.equal("Signed with Smart-ID")
-					var initiativePath = `/initiatives/${this.initiative.uuid}`
-					signed.headers.location.must.equal(initiativePath)
+					var res = yield this.request(waitUrl)
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Signed with Smart-ID")
+					var initiativePath = `/initiatives/${this.initiative.id}`
+					res.headers.location.must.equal(initiativePath + "-hello-world")
 
 					signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
@@ -3135,7 +3117,7 @@ describe("SignaturesController", function() {
 				})
 
 				it("must respond with 422 given invalid personal id", function*() {
-					var initiativePath = `/initiatives/${this.initiative.uuid}`
+					var initiativePath = `/initiatives/${this.initiative.id}`
 					var res = yield this.request(initiativePath + "/signatures", {
 						method: "POST",
 						headers: {Accept: `${EMPTY_TYPE}, ${ERROR_TYPE}`},
@@ -3491,7 +3473,7 @@ describe("SignaturesController", function() {
 					}
 				)
 
-				var path = `/initiatives/${this.initiative.uuid}/signatures`
+				var path = `/initiatives/${this.initiative.id}/signatures`
 				var res = yield this.request(path, {
 					method: "POST",
 					form: {method: "smart-id", "personal-id": ADULT_PERSONAL_ID}
@@ -3521,7 +3503,7 @@ describe("SignaturesController", function() {
 
 				errored.statusCode.must.equal(410)
 				errored.statusMessage.must.equal("Smart-ID Timeout")
-				var initiativePath = `/initiatives/${this.initiative.uuid}`
+				var initiativePath = `/initiatives/${this.initiative.id}`
 				errored.headers.location.must.equal(initiativePath)
 				waited.must.equal(2)
 
@@ -3560,7 +3542,7 @@ describe("SignaturesController", function() {
 				personal_id: "38706181337"
 			}))
 
-			var initiativePath = `/initiatives/${this.initiative.uuid}`
+			var initiativePath = `/initiatives/${this.initiative.id}`
 			var path = initiativePath + "/signatures/EE38706181337.asice"
 			path += "?token=" + signature.token.toString("hex")
 			var res = yield this.request(path)
@@ -3583,7 +3565,7 @@ describe("SignaturesController", function() {
 		})
 
 		it("must respond with 404 if no signature", function*() {
-			var initiativePath = `/initiatives/${this.initiative.uuid}`
+			var initiativePath = `/initiatives/${this.initiative.id}`
 			var path = initiativePath + "/signatures/EE38706181337.asice"
 			path += "?token=aabbccddee"
 			var res = yield this.request(path)
@@ -3598,7 +3580,7 @@ describe("SignaturesController", function() {
 				personal_id: "38706181337"
 			}))
 
-			var initiativePath = `/initiatives/${this.initiative.uuid}`
+			var initiativePath = `/initiatives/${this.initiative.id}`
 			var path = initiativePath + "/signatures/EE38706181337.asice"
 			path += "?token=aabbccddee"
 			var res = yield this.request(path)
@@ -3627,7 +3609,7 @@ describe("SignaturesController", function() {
 				personal_id: "38706181337"
 			}))
 
-			var initiativePath = `/initiatives/${this.initiative.uuid}`
+			var initiativePath = `/initiatives/${this.initiative.id}`
 			var path = initiativePath + "/signatures/EE38706181337"
 			path += "?token=" + signature.token.toString("hex")
 			var updated = yield this.request(path, {
@@ -3647,6 +3629,7 @@ describe("SignaturesController", function() {
 			this.initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "sign",
+				title: "Hello, world!",
 				signing_ends_at: DateFns.addDays(new Date, 1)
 			}))
 		})
@@ -3658,13 +3641,13 @@ describe("SignaturesController", function() {
 				personal_id: "38706181337"
 			}))
 
-			var initiativePath = `/initiatives/${this.initiative.uuid}`
+			var initiativePath = `/initiatives/${this.initiative.id}`
 			var path = initiativePath + "/signatures/EE38706181337"
 			path += "?token=" + signature.token.toString("hex")
 			var deleted = yield this.request(path, {method: "DELETE"})
 			deleted.statusCode.must.equal(303)
 			deleted.statusMessage.must.equal("Signature Deleted")
-			deleted.headers.location.must.equal(initiativePath)
+			deleted.headers.location.must.equal(initiativePath + "-hello-world")
 
 			signaturesDb.search(sql`
 				SELECT * FROM initiative_signatures
@@ -3682,7 +3665,7 @@ describe("SignaturesController", function() {
 		})
 
 		it("must respond with 404 if no signature", function*() {
-			var initiativePath = `/initiatives/${this.initiative.uuid}`
+			var initiativePath = `/initiatives/${this.initiative.id}`
 			var path = initiativePath + "/signatures/EE38706181337?token=aabbccddee"
 			var res = yield this.request(path, {method: "DELETE"})
 			res.statusCode.must.equal(404)
@@ -3696,7 +3679,7 @@ describe("SignaturesController", function() {
 				personal_id: "38706181337"
 			}))
 
-			var initiativePath = `/initiatives/${this.initiative.uuid}`
+			var initiativePath = `/initiatives/${this.initiative.id}`
 			var path = initiativePath + "/signatures/EE38706181337?token=aabbccddee"
 			var res = yield this.request(path, {method: "DELETE"})
 
@@ -3722,7 +3705,7 @@ describe("SignaturesController", function() {
 				personal_id: "38706181337"
 			}))
 
-			var initiativePath = `/initiatives/${this.initiative.uuid}`
+			var initiativePath = `/initiatives/${this.initiative.id}`
 			var path = initiativePath + "/signatures/EE38706181337"
 			path += "?token=" + signature.token.toString("hex")
 			var res = yield this.request(path, {method: "DELETE"})
@@ -3747,7 +3730,7 @@ describe("SignaturesController", function() {
 				personal_id: "60001019907"
 			}))
 
-			var initiativePath = `/initiatives/${this.initiative.uuid}`
+			var initiativePath = `/initiatives/${this.initiative.id}`
 			var path = initiativePath + "/signatures/EE38706181337"
 			path += "?token=" + signature.token.toString("hex")
 			var res = yield this.request(path, {method: "DELETE"})
@@ -3772,7 +3755,7 @@ describe("SignaturesController", function() {
 				personal_id: "38706181337"
 			}))
 
-			var initiativePath = `/initiatives/${initiative.uuid}`
+			var initiativePath = `/initiatives/${initiative.id}`
 			var path = initiativePath + "/signatures/EE38706181337"
 			path += "?token=" + signature.token.toString("hex")
 			var res = yield this.request(path, {method: "DELETE"})
@@ -3787,7 +3770,7 @@ describe("SignaturesController", function() {
 })
 
 function* signWithIdCard(router, request, initiative, cert) {
-	var signing = yield request(`/initiatives/${initiative.uuid}/signatures`, {
+	var signing = yield request(`/initiatives/${initiative.id}/signatures`, {
 		method: "POST",
 
 		headers: {
@@ -3882,7 +3865,7 @@ function* signWithMobileId(
 		res.end(newOcspResponse(cert))
 	})
 
-	var signing = yield request(`/initiatives/${initiative.uuid}/signatures`, {
+	var signing = yield request(`/initiatives/${initiative.id}/signatures`, {
 		method: "POST",
 		headers: headers || {},
 
@@ -3919,7 +3902,7 @@ function certWithSmartId(router, request, initiative, cert, headers) {
 		})
 	)
 
-	return request(`/initiatives/${initiative.uuid}/signatures`, {
+	return request(`/initiatives/${initiative.id}/signatures`, {
 		method: "POST",
 		headers: headers || {},
 		form: {method: "smart-id", "personal-id": ADULT_PERSONAL_ID}

@@ -1,4 +1,5 @@
 var Config = require("root").config
+var Initiative = require("root/lib/initiative")
 var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_initiative")
 var ValidEvent = require("root/test/valid_initiative_event")
@@ -119,7 +120,7 @@ describe("AdminInitiativesController", function() {
 			email.body.must.equal(
 				renderEmail("EMAIL_INITIATIVE_TEXT_EVENT_MESSAGE_BODY", {
 					initiativeTitle: this.initiative.title,
-					initiativeUrl: `${Config.url}/initiatives/${this.initiative.uuid}`,
+					initiativeUrl: Initiative.slugUrl(this.initiative),
 					title: "Initiative was handled",
 					text: "> All good.",
 					unsubscribeUrl: `${Config.url}%recipient.unsubscribeUrl%`

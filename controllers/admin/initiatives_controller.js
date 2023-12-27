@@ -16,6 +16,7 @@ var sql = require("sqlate")
 var isEventNotifiable = require("root/lib/event").isNotifiable
 var {countUndersignedSignaturesById} = require("root/lib/initiative")
 var {countCitizenOsSignaturesById} = require("root/lib/initiative")
+var {parseId} = require("root/controllers/initiatives_controller")
 var next = require("co-next")
 var {sqlite} = require("root")
 var trim = Function.call.bind(String.prototype.trim)
@@ -50,7 +51,15 @@ exports.router.get("/", function(_req, res) {
 })
 
 exports.router.use("/:id", function(req, res, next) {
-	var initiative = initiativesDb.read(req.params.id)
+	var id = parseId(req.params.id)
+
+	var initiative = initiativesDb.read(sql`
+		SELECT * FROM initiatives WHERE ${id == null || typeof id == "string"
+			? sql`uuid = ${id}`
+			: sql`id = ${id.id}`
+		}
+	`)
+
 	if (initiative == null) return void next(new HttpError(404))
 
 	if (!initiative.published_at)
@@ -144,7 +153,7 @@ exports.router.get("/:id/subscriptions.:ext?", function(req, res) {
 exports.router.put("/:id", function(req, res) {
 	var {initiative} = req
 	var attrs = parseInitiative(initiative, req.body)
-	if (!_.isEmpty(attrs)) initiativesDb.update(initiative.uuid, attrs)
+	if (!_.isEmpty(attrs)) initiativesDb.update(initiative.id, attrs)
 
 	res.flash("notice", "Initiative updated.")
 	res.redirect(req.baseUrl + "/" + initiative.uuid)
@@ -167,7 +176,7 @@ exports.router.put("/:id/image", next(function*(req, res) {
 		!isValidImageType(Image.identify(image.buffer))
 	) throw new HttpError(422, "Invalid Image Format")
 
-	imagesDb.delete(initiative.uuid)
+	imagesDb.delete(initiative.id)
 
 	imagesDb.create({
 		initiative_uuid: initiative.uuid,

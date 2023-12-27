@@ -17,6 +17,7 @@ var {newTrixDocument} = require("root/test/fixtures")
 var outdent = require("root/lib/outdent")
 var parseHtml = require("root/test/html").parse
 var MAX_TITLE_LENGTH = 200
+var MAX_SLUG_LENGTH = 150
 
 describe("InitiativeTextsController", function() {
 	require("root/test/web")()
@@ -31,7 +32,7 @@ describe("InitiativeTextsController", function() {
 					user_id: usersDb.create(new ValidUser).id
 				}))
 
-				var initiativePath = "/initiatives/" + initiative.uuid
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					form: {content: "[]"}
@@ -47,7 +48,7 @@ describe("InitiativeTextsController", function() {
 					published_at: new Date
 				}))
 
-				var initiativePath = "/initiatives/" + initiative.uuid
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					form: {content: "[]"}
@@ -67,7 +68,7 @@ describe("InitiativeTextsController", function() {
 					published_at: new Date
 				}))
 
-				var initiativePath = "/initiatives/" + initiative.uuid
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					form: {content: "[]"}
@@ -84,7 +85,7 @@ describe("InitiativeTextsController", function() {
 					phase: "parliament"
 				}))
 
-				var initiativePath = "/initiatives/" + initiative.uuid
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					form: {content: "[]"}
@@ -102,7 +103,7 @@ describe("InitiativeTextsController", function() {
 					language: "en"
 				}))
 
-				var initiativePath = "/initiatives/" + initiative.uuid
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					form: {title: "Hello", content: "[]", language: "en"}
@@ -115,15 +116,15 @@ describe("InitiativeTextsController", function() {
 			it("must create text and set title", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id,
-					language: "en"
+					language: "en",
 				}))
 
-				var content = newTrixDocument("Hello, world")
-				var initiativePath = "/initiatives/" + initiative.uuid
+				var content = newTrixDocument("Let it shine.")
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					form: {
-						title: "Let it shine",
+						title: "Hello, world!",
 						content: JSON.stringify(content),
 						language: "en"
 					}
@@ -131,11 +132,15 @@ describe("InitiativeTextsController", function() {
 
 				res.statusCode.must.equal(303)
 				res.statusMessage.must.equal("Text Created")
-				res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+				res.headers.location.must.equal(
+					`/initiatives/${initiative.id}-hello-world`
+				)
 
 				initiativesDb.read(initiative).must.eql({
 					__proto__: initiative,
-					title: "Let it shine"
+					title: "Hello, world!",
+					slug: "hello-world"
 				})
 
 				textsDb.search(sql`
@@ -145,7 +150,7 @@ describe("InitiativeTextsController", function() {
 					initiative_uuid: initiative.uuid,
 					user_id: this.user.id,
 					created_at: new Date,
-					title: "Let it shine",
+					title: "Hello, world!",
 					language: "en",
 					content: content,
 					content_type: TRIX_TYPE
@@ -166,21 +171,25 @@ describe("InitiativeTextsController", function() {
 					language: "en"
 				}))
 
-				var initiativePath = "/initiatives/" + initiative.uuid
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					// With JavaScript disabled, content is left empty entirely when
 					// creating.
-					form: {title: "Let it shine", content: "", language: "en"}
+					form: {title: "Hello, world!", content: "", language: "en"}
 				})
 
 				res.statusCode.must.equal(303)
 				res.statusMessage.must.equal("Text Created")
-				res.headers.location.must.equal(`/initiatives/${initiative.uuid}`)
+
+				res.headers.location.must.equal(
+					`/initiatives/${initiative.id}-hello-world`
+				)
 
 				initiativesDb.read(initiative).must.eql({
 					__proto__: initiative,
-					title: "Let it shine"
+					title: "Hello, world!",
+					slug: "hello-world"
 				})
 
 				textsDb.search(sql`
@@ -190,7 +199,43 @@ describe("InitiativeTextsController", function() {
 					initiative_uuid: initiative.uuid,
 					user_id: this.user.id,
 					created_at: new Date,
-					title: "Let it shine",
+					title: "Hello, world!",
+					language: "en",
+					content: [],
+					content_type: TRIX_TYPE
+				})])
+			})
+
+			it("must skip slug if nothing remains", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id,
+					language: "en"
+				}))
+
+				var initiativePath = `/initiatives/${initiative.id}`
+				var res = yield this.request(initiativePath + "/texts", {
+					method: "POST",
+					form: {title: "!?", content: "", language: "en"}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Text Created")
+				res.headers.location.must.equal(`/initiatives/${initiative.id}`)
+
+				initiativesDb.read(initiative).must.eql({
+					__proto__: initiative,
+					title: "!?",
+					slug: null
+				})
+
+				textsDb.search(sql`
+					SELECT * FROM initiative_texts
+				`).must.eql([new ValidText({
+					id: 1,
+					initiative_uuid: initiative.uuid,
+					user_id: this.user.id,
+					created_at: new Date,
+					title: "!?",
 					language: "en",
 					content: [],
 					content_type: TRIX_TYPE
@@ -204,7 +249,7 @@ describe("InitiativeTextsController", function() {
 						language: _.find(Config.languages, (l) => l != lang),
 					}))
 
-					var initiativePath = "/initiatives/" + initiative.uuid
+					var initiativePath = `/initiatives/${initiative.id}`
 					var res = yield this.request(initiativePath + "/texts", {
 						method: "POST",
 						form: {
@@ -229,7 +274,7 @@ describe("InitiativeTextsController", function() {
 					user_id: this.user.id
 				}))
 
-				var initiativePath = "/initiatives/" + initiative.uuid
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					form: {
@@ -244,7 +289,8 @@ describe("InitiativeTextsController", function() {
 
 				initiativesDb.read(initiative).must.eql({
 					__proto__: initiative,
-					title: _.repeat("a", MAX_TITLE_LENGTH)
+					title: _.repeat("a", MAX_TITLE_LENGTH),
+					slug: _.repeat("a", MAX_SLUG_LENGTH)
 				})
 
 				textsDb.read(sql`
@@ -257,7 +303,7 @@ describe("InitiativeTextsController", function() {
 					user_id: this.user.id
 				}))
 
-				var initiativePath = "/initiatives/" + initiative.uuid
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					form: {
@@ -279,7 +325,7 @@ describe("InitiativeTextsController", function() {
 					user_id: this.user.id
 				}))
 
-				var initiativePath = "/initiatives/" + initiative.uuid
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					form: {
@@ -301,7 +347,7 @@ describe("InitiativeTextsController", function() {
 				}))
 
 				var content = newTrixDocument("Hello, world")
-				var initiativePath = "/initiatives/" + initiative.uuid
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					form: {
@@ -336,7 +382,7 @@ describe("InitiativeTextsController", function() {
 				}))
 
 				var content = newTrixDocument("Hello, world")
-				var initiativePath = "/initiatives/" + initiative.uuid
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					form: {
@@ -376,7 +422,7 @@ describe("InitiativeTextsController", function() {
 				}))
 
 				var content = newTrixDocument("How are you?")
-				var initiativePath = "/initiatives/" + initiative.uuid
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 
@@ -414,7 +460,7 @@ describe("InitiativeTextsController", function() {
 				}))
 
 				var content = newTrixDocument("How are you?")
-				var initiativePath = "/initiatives/" + initiative.uuid
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 
@@ -458,7 +504,7 @@ describe("InitiativeTextsController", function() {
 					user_id: this.user.id
 				}))
 
-				var initiativePath = "/initiatives/" + initiative.uuid
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					form: {
@@ -491,7 +537,7 @@ describe("InitiativeTextsController", function() {
 					user_id: this.user.id
 				}))
 
-				var initiativePath = "/initiatives/" + initiative.uuid
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					form: {title: "Hello", "basis-id": "", language: "et", content: "[]"}
@@ -507,7 +553,7 @@ describe("InitiativeTextsController", function() {
 					published_at: new Date
 				}))
 
-				var initiativePath = "/initiatives/" + initiative.uuid
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					form: {title: "Hello", language: "et", content: "[]"}
@@ -531,7 +577,7 @@ describe("InitiativeTextsController", function() {
 				}))
 
 				var content = newTrixDocument("Hello, world")
-				var initiativePath = "/initiatives/" + initiative.uuid
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					form: {
@@ -572,7 +618,7 @@ describe("InitiativeTextsController", function() {
 					user_id: this.user.id
 				}))
 
-				var initiativePath = `/initiatives/${initiative.uuid}`
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts/new")
 				res.statusCode.must.equal(200)
 			})
@@ -588,7 +634,7 @@ describe("InitiativeTextsController", function() {
 					status: "accepted"
 				}))
 
-				var initiativePath = `/initiatives/${initiative.uuid}`
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts/new")
 				res.statusCode.must.equal(200)
 			})
@@ -607,7 +653,7 @@ describe("InitiativeTextsController", function() {
 					user_id: initiative.user_id
 				}))
 
-				var initiativePath = `/initiatives/${initiative.uuid}`
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts/" + text.id)
 				res.statusCode.must.equal(401)
 				res.statusMessage.must.equal("Initiative Not Public")
@@ -624,7 +670,7 @@ describe("InitiativeTextsController", function() {
 					user_id: initiative.user_id
 				}))
 
-				var initiativePath = `/initiatives/${initiative.uuid}`
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts/" + text.id)
 				res.statusCode.must.equal(401)
 				res.statusMessage.must.equal("Unauthorized")
@@ -640,7 +686,7 @@ describe("InitiativeTextsController", function() {
 					published_at: new Date
 				}))
 
-				var res = yield this.request(`/initiatives/${initiative.uuid}/edit`)
+				var res = yield this.request(`/initiatives/${initiative.id}/edit`)
 				res.statusCode.must.equal(403)
 				res.statusMessage.must.equal("No Permission to Edit")
 			})
@@ -657,7 +703,7 @@ describe("InitiativeTextsController", function() {
 					user_id: initiative.user_id
 				}))
 
-				var initiativePath = `/initiatives/${initiative.uuid}`
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts/" + text.id)
 				res.statusCode.must.equal(403)
 				res.statusMessage.must.equal("Not Editable")
@@ -674,7 +720,7 @@ describe("InitiativeTextsController", function() {
 					user_id: initiative.user_id
 				}))
 
-				var initiativePath = `/initiatives/${initiative.uuid}`
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts/" + text.id)
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("UPDATE_INITIATIVE_READONLY"))
@@ -693,7 +739,7 @@ describe("InitiativeTextsController", function() {
 					language: "en"
 				}))
 
-				var initiativePath = `/initiatives/${initiative.uuid}`
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts/" + text.id)
 				res.statusCode.must.equal(200)
 				res.body.must.not.include(t("UPDATE_INITIATIVE_READONLY"))
@@ -715,7 +761,7 @@ describe("InitiativeTextsController", function() {
 					user_id: initiative.user_id
 				}))
 
-				var initiativePath = `/initiatives/${initiative.uuid}`
+				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts/" + text.id)
 				res.statusCode.must.equal(200)
 			})
@@ -746,7 +792,7 @@ describe("InitiativeTextsController", function() {
 							`
 						}))
 
-						var initiativePath = `/initiatives/${initiative.uuid}`
+						var initiativePath = `/initiatives/${initiative.id}`
 						var res = yield this.request(initiativePath + "/texts/" + text.id)
 						res.statusCode.must.equal(200)
 
@@ -784,7 +830,7 @@ describe("InitiativeTextsController", function() {
 						`
 					}))
 
-					var initiativePath = `/initiatives/${initiative.uuid}`
+					var initiativePath = `/initiatives/${initiative.id}`
 					var res = yield this.request(initiativePath + "/texts/" + text.id)
 					res.statusCode.must.equal(200)
 
@@ -820,7 +866,7 @@ describe("InitiativeTextsController", function() {
 						`
 					}))
 
-					var initiativePath = `/initiatives/${initiative.uuid}`
+					var initiativePath = `/initiatives/${initiative.id}`
 					var res = yield this.request(initiativePath + "/texts/" + text.id)
 					res.statusCode.must.equal(200)
 
@@ -859,7 +905,7 @@ describe("InitiativeTextsController", function() {
 						`
 					}))
 
-					var initiativePath = `/initiatives/${initiative.uuid}`
+					var initiativePath = `/initiatives/${initiative.id}`
 					var res = yield this.request(initiativePath + "/texts/" + text.id)
 					res.statusCode.must.equal(200)
 
@@ -897,7 +943,7 @@ describe("InitiativeTextsController", function() {
 						`
 					}))
 
-					var initiativePath = `/initiatives/${initiative.uuid}`
+					var initiativePath = `/initiatives/${initiative.id}`
 					var res = yield this.request(initiativePath + "/texts/" + text.id)
 					res.statusCode.must.equal(200)
 
@@ -938,7 +984,7 @@ describe("InitiativeTextsController", function() {
 						`
 					}))
 
-					var initiativePath = `/initiatives/${initiative.uuid}`
+					var initiativePath = `/initiatives/${initiative.id}`
 					var res = yield this.request(initiativePath + "/texts/" + text.id)
 					res.statusCode.must.equal(200)
 
@@ -980,7 +1026,7 @@ describe("InitiativeTextsController", function() {
 							`
 						}))
 
-						var initiativePath = `/initiatives/${initiative.uuid}`
+						var initiativePath = `/initiatives/${initiative.id}`
 						var res = yield this.request(initiativePath + "/texts/" + text.id)
 						res.statusCode.must.equal(200)
 

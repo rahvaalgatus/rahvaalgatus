@@ -5,8 +5,8 @@ var sql = require("sqlate")
 var {sqlite} = require("root")
 exports = module.exports = new Db(Object, sqlite, "initiatives")
 
-exports.idAttribute = "uuid"
-exports.idColumn = "uuid"
+exports.idAttribute = "id"
+exports.idColumn = "id"
 
 exports.parse = function(attrs) {
 	return _.defaults({

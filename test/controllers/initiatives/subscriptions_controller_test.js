@@ -29,7 +29,8 @@ describe("InitiativeSubscriptionsController", function() {
 
 		this.initiative = initiativesDb.create(new ValidInitiative({
 			user_id: this.author.id,
-			published_at: new Date
+			published_at: new Date,
+			title: "Hello, world!"
 		}))
 	})
 
@@ -39,14 +40,17 @@ describe("InitiativeSubscriptionsController", function() {
 		require("root/test/time")(Date.UTC(2015, 5, 18))
 
 		it("must subscribe", function*() {
-			var path = `/initiatives/${this.initiative.uuid}/subscriptions`
+			var path = `/initiatives/${this.initiative.id}/subscriptions`
 			var res = yield this.request(path, {
 				method: "POST",
 				form: {email: "user@example.com"}
 			})
 
 			res.statusCode.must.equal(303)
-			res.headers.location.must.equal("/initiatives/" + this.initiative.uuid)
+
+			res.headers.location.must.equal(
+				`/initiatives/${this.initiative.id}-hello-world`
+			)
 
 			var subscriptions = subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
@@ -78,7 +82,7 @@ describe("InitiativeSubscriptionsController", function() {
 				})
 			)
 
-			var initiativeUrl = `${this.url}/initiatives/${this.initiative.uuid}`
+			var initiativeUrl = `${this.url}/initiatives/${this.initiative.id}`
 			var subscriptionsUrl = initiativeUrl + "/subscriptions"
 
 			email.body.must.equal(
@@ -95,17 +99,21 @@ describe("InitiativeSubscriptionsController", function() {
 		it("must subscribe given an external initiative", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
+				title: "Hello, world!",
 				external: true
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/subscriptions`
+			var path = `/initiatives/${initiative.id}/subscriptions`
 			var res = yield this.request(path, {
 				method: "POST",
 				form: {email: "user@example.com"}
 			})
 
 			res.statusCode.must.equal(303)
-			res.headers.location.must.equal("/initiatives/" + initiative.uuid)
+
+			res.headers.location.must.equal(
+				`/initiatives/${initiative.id}-hello-world`
+			)
 
 			var subscriptions = subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
@@ -125,6 +133,48 @@ describe("InitiativeSubscriptionsController", function() {
 			)
 		})
 
+		it("must subscribe given a path with initiative slug", function*() {
+			var path = `/initiatives/${this.initiative.id}-foo/subscriptions`
+			var res = yield this.request(path, {
+				method: "POST",
+				form: {email: "user@example.com"}
+			})
+
+			res.statusCode.must.equal(303)
+
+			res.headers.location.must.equal(
+				`/initiatives/${this.initiative.id}-hello-world`
+			)
+
+			var subscriptions = subscriptionsDb.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`)
+
+			subscriptions.length.must.equal(1)
+			subscriptions[0].initiative_uuid.must.equal(this.initiative.uuid)
+		})
+
+		it("must subscribe given a path with initiative UUID", function*() {
+			var path = `/initiatives/${this.initiative.uuid}/subscriptions`
+			var res = yield this.request(path, {
+				method: "POST",
+				form: {email: "user@example.com"}
+			})
+
+			res.statusCode.must.equal(303)
+
+			res.headers.location.must.equal(
+				`/initiatives/${this.initiative.id}-hello-world`
+			)
+
+			var subscriptions = subscriptionsDb.search(sql`
+				SELECT * FROM initiative_subscriptions
+			`)
+
+			subscriptions.length.must.equal(1)
+			subscriptions[0].initiative_uuid.must.equal(this.initiative.uuid)
+		})
+
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
 
@@ -134,7 +184,7 @@ describe("InitiativeSubscriptionsController", function() {
 					email_confirmed_at: new Date
 				})
 
-				var path = `/initiatives/${this.initiative.uuid}/subscriptions`
+				var path = `/initiatives/${this.initiative.id}/subscriptions`
 				var res = yield this.request(path, {
 					method: "POST",
 					form: {email: "user@example.com"}
@@ -172,7 +222,7 @@ describe("InitiativeSubscriptionsController", function() {
 					email_confirmed_at: new Date
 				})
 
-				var path = `/initiatives/${this.initiative.uuid}/subscriptions`
+				var path = `/initiatives/${this.initiative.id}/subscriptions`
 				var res = yield this.request(path, {
 					method: "POST",
 					form: {email: "usER@examPLE.com"}
@@ -210,7 +260,7 @@ describe("InitiativeSubscriptionsController", function() {
 					email_confirmation_token: Crypto.randomBytes(12)
 				})
 
-				var path = `/initiatives/${this.initiative.uuid}/subscriptions`
+				var path = `/initiatives/${this.initiative.id}/subscriptions`
 				var res = yield this.request(path, {
 					method: "POST",
 					form: {email: "user@example.com"}
@@ -255,7 +305,7 @@ describe("InitiativeSubscriptionsController", function() {
 					email_confirmed_at: new Date
 				})
 
-				var path = `/initiatives/${this.initiative.uuid}/subscriptions`
+				var path = `/initiatives/${this.initiative.id}/subscriptions`
 				var res = yield this.request(path, {
 					method: "POST",
 					form: {email: subscription.email}
@@ -297,13 +347,16 @@ describe("InitiativeSubscriptionsController", function() {
 				event_interest: true
 			}))
 
-			var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions`, {
+			var res = yield this.request(`/initiatives/${this.initiative.id}/subscriptions`, {
 				method: "POST",
 				form: {email: email.toUpperCase()}
 			})
 
 			res.statusCode.must.equal(303)
-			res.headers.location.must.equal("/initiatives/" + this.initiative.uuid)
+
+			res.headers.location.must.equal(
+				`/initiatives/${this.initiative.id}-hello-world`
+			)
 
 			subscriptionsDb.search(sql`
 				SELECT * FROM initiative_subscriptions
@@ -321,7 +374,7 @@ describe("InitiativeSubscriptionsController", function() {
 			}))
 
 			this.time.tick(3599 * 1000)
-			var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions`, {
+			var res = yield this.request(`/initiatives/${this.initiative.id}/subscriptions`, {
 				method: "POST",
 				form: {email: subscription.email}
 			})
@@ -343,7 +396,7 @@ describe("InitiativeSubscriptionsController", function() {
 			}))
 
 			this.time.tick(3600 * 1000)
-			var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions`, {
+			var res = yield this.request(`/initiatives/${this.initiative.id}/subscriptions`, {
 				method: "POST",
 				form: {email: subscription.email}
 			})
@@ -370,7 +423,7 @@ describe("InitiativeSubscriptionsController", function() {
 			}))
 
 			this.time.tick(3600 * 1000)
-			var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions`, {
+			var res = yield this.request(`/initiatives/${this.initiative.id}/subscriptions`, {
 				method: "POST",
 				form: {email: subscription.email}
 			})
@@ -392,7 +445,7 @@ describe("InitiativeSubscriptionsController", function() {
 				user_id: this.author.id
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/subscriptions`
+			var path = `/initiatives/${initiative.id}/subscriptions`
 			var res = yield this.request(path, {
 				method: "POST",
 				form: {email: "user@example.com"}
@@ -403,7 +456,7 @@ describe("InitiativeSubscriptionsController", function() {
 		})
 
 		it("must respond with 422 given missing email", function*() {
-			var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions`, {
+			var res = yield this.request(`/initiatives/${this.initiative.id}/subscriptions`, {
 				method: "POST",
 				form: {email: ""}
 			})
@@ -412,7 +465,7 @@ describe("InitiativeSubscriptionsController", function() {
 		})
 
 		it("must respond with 422 given invalid email", function*() {
-			var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions`, {
+			var res = yield this.request(`/initiatives/${this.initiative.id}/subscriptions`, {
 				method: "POST",
 				form: {email: "fubar"}
 			})
@@ -429,7 +482,7 @@ describe("InitiativeSubscriptionsController", function() {
 					})
 				)))
 
-				var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions`, {
+				var res = yield this.request(`/initiatives/${this.initiative.id}/subscriptions`, {
 					method: "POST",
 					form: {email: "user@example.com"}
 				})
@@ -450,7 +503,7 @@ describe("InitiativeSubscriptionsController", function() {
 					})
 				)))
 
-				var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions`, {
+				var res = yield this.request(`/initiatives/${this.initiative.id}/subscriptions`, {
 					method: "POST",
 					form: {email: "user@example.com"}
 				})
@@ -464,7 +517,7 @@ describe("InitiativeSubscriptionsController", function() {
 					new ValidSubscription({created_ip: "127.0.0.1"})
 				)))
 
-				var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions`, {
+				var res = yield this.request(`/initiatives/${this.initiative.id}/subscriptions`, {
 					method: "POST",
 					form: {email: "user@example.com"}
 				})
@@ -482,7 +535,7 @@ describe("InitiativeSubscriptionsController", function() {
 					})
 				)))
 
-				var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions`, {
+				var res = yield this.request(`/initiatives/${this.initiative.id}/subscriptions`, {
 					method: "POST",
 					form: {email: "user@example.com"}
 				})
@@ -511,7 +564,7 @@ describe("InitiativeSubscriptionsController", function() {
 
 			subscriptionsDb.create(subscription)
 
-			var path = `/initiatives/${this.initiative.uuid}/subscriptions`
+			var path = `/initiatives/${this.initiative.id}/subscriptions`
 			var res = yield this.request(`${path}/new?confirmation_token=${token}`)
 
 			res.statusCode.must.equal(303)
@@ -545,9 +598,62 @@ describe("InitiativeSubscriptionsController", function() {
 
 			subscriptionsDb.create(subscription)
 
-			var path = `/initiatives/${initiative.uuid}/subscriptions`
+			var path = `/initiatives/${initiative.id}/subscriptions`
 			var res = yield this.request(`${path}/new?confirmation_token=${token}`)
+			res.statusCode.must.equal(303)
+			res.headers.location.must.equal(`${path}/${token}`)
 
+			subscriptionsDb.read(subscription).must.eql({
+				__proto__: subscription,
+				confirmed_at: new Date,
+				confirmation_sent_at: null,
+				updated_at: new Date
+			})
+		})
+
+		it("must confirm given a path with initiative slug", function*() {
+			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
+			var token = pseudoHex(8)
+
+			var subscription = new ValidSubscription({
+				initiative_uuid: this.initiative.uuid,
+				created_at: createdAt,
+				updated_at: createdAt,
+				update_token: token,
+				confirmation_sent_at: createdAt
+			})
+
+			subscriptionsDb.create(subscription)
+
+			var path = `/initiatives/${this.initiative.id}-foo/subscriptions`
+			var res = yield this.request(`${path}/new?confirmation_token=${token}`)
+			res.statusCode.must.equal(303)
+			res.headers.location.must.equal(`${path}/${token}`)
+
+			subscriptionsDb.read(subscription).must.eql({
+				__proto__: subscription,
+				confirmed_at: new Date,
+				confirmation_sent_at: null,
+				updated_at: new Date
+			})
+		})
+
+		it("must confirm given a path with initiative UUID", function*() {
+			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
+			var token = pseudoHex(8)
+
+			var subscription = new ValidSubscription({
+				initiative_uuid: this.initiative.uuid,
+				created_at: createdAt,
+				updated_at: createdAt,
+				update_token: token,
+				confirmation_sent_at: createdAt
+			})
+
+			subscriptionsDb.create(subscription)
+
+			var path = `/initiatives/${this.initiative.uuid}/subscriptions`
+			var res = yield this.request(`${path}/new?confirmation_token=${token}`)
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal(`${path}/${token}`)
 
@@ -573,7 +679,7 @@ describe("InitiativeSubscriptionsController", function() {
 
 			subscriptionsDb.create(subscription)
 
-			var path = `/initiatives/${this.initiative.uuid}/subscriptions`
+			var path = `/initiatives/${this.initiative.id}/subscriptions`
 			var res = yield this.request(`${path}/new?confirmation_token=${token}`)
 			res.statusCode.must.equal(303)
 			res.headers.location.must.equal(`${path}/${token}`)
@@ -595,7 +701,7 @@ describe("InitiativeSubscriptionsController", function() {
 			subscriptionsDb.create(subscription)
 
 			var res = yield this.request(
-				`/initiatives/${this.initiative.uuid}/subscriptions/new?confirmation_token=deadbeef`
+				`/initiatives/${this.initiative.id}/subscriptions/new?confirmation_token=deadbeef`
 			)
 
 			res.statusCode.must.equal(404)
@@ -607,6 +713,42 @@ describe("InitiativeSubscriptionsController", function() {
 		require("root/test/fixtures").csrf()
 
 		it("must redirect to subscriptions page", function*() {
+			var subscription = subscriptionsDb.create(new ValidSubscription({
+				initiative_uuid: this.initiative.uuid,
+				confirmed_at: new Date
+			}))
+
+			var res = yield this.request(
+				`/initiatives/${this.initiative.id}/subscriptions/${subscription.update_token}`
+			)
+
+			res.statusCode.must.equal(302)
+			var path = "/subscriptions"
+			path += "?initiative=" + subscription.initiative_uuid
+			path += "&update-token=" + subscription.update_token
+			path += "#subscription-" + subscription.initiative_uuid
+			res.headers.location.must.equal(path)
+		})
+
+		it("must redirect to subscriptions page if path with slug", function*() {
+			var subscription = subscriptionsDb.create(new ValidSubscription({
+				initiative_uuid: this.initiative.uuid,
+				confirmed_at: new Date
+			}))
+
+			var res = yield this.request(
+				`/initiatives/${this.initiative.id}-foo/subscriptions/${subscription.update_token}`
+			)
+
+			res.statusCode.must.equal(302)
+			var path = "/subscriptions"
+			path += "?initiative=" + subscription.initiative_uuid
+			path += "&update-token=" + subscription.update_token
+			path += "#subscription-" + subscription.initiative_uuid
+			res.headers.location.must.equal(path)
+		})
+
+		it("must redirect to subscriptions page if path with UUID", function*() {
 			var subscription = subscriptionsDb.create(new ValidSubscription({
 				initiative_uuid: this.initiative.uuid,
 				confirmed_at: new Date
@@ -631,7 +773,7 @@ describe("InitiativeSubscriptionsController", function() {
 			}))
 
 			var res = yield this.request(
-				`/initiatives/${this.initiative.uuid}/subscriptions/${subscription.update_token}.`
+				`/initiatives/${this.initiative.id}/subscriptions/${subscription.update_token}.`
 			)
 
 			res.statusCode.must.equal(302)
@@ -655,7 +797,7 @@ describe("InitiativeSubscriptionsController", function() {
 			}))
 
 			var res = yield this.request(
-				`/initiatives/${initiative.uuid}/subscriptions/${subscription.update_token}`
+				`/initiatives/${initiative.id}/subscriptions/${subscription.update_token}`
 			)
 
 			res.statusCode.must.equal(302)
@@ -673,7 +815,7 @@ describe("InitiativeSubscriptionsController", function() {
 				confirmed_at: new Date
 			}))
 
-			var res = yield this.request(`/initiatives/${this.initiative.uuid}/subscriptions/beef`)
+			var res = yield this.request(`/initiatives/${this.initiative.id}/subscriptions/beef`)
 			res.statusCode.must.equal(404)
 			res.body.must.include(t("SUBSCRIPTION_NOT_FOUND_TITLE"))
 		})

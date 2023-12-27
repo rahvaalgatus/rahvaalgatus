@@ -47,7 +47,7 @@ describe("InitiativeCommentsController", function() {
 	describe("POST /", function() {
 		describe("when not logged in", function() {
 			it("must respond with 401 when not logged in", function*() {
-				var path = `/initiatives/${this.initiative.uuid}/comments`
+				var path = `/initiatives/${this.initiative.id}/comments`
 				var res = yield this.request(path, {method: "POST"})
 				res.statusCode.must.equal(401)
 				res.statusMessage.must.equal("Unauthorized")
@@ -59,7 +59,7 @@ describe("InitiativeCommentsController", function() {
 			afterEach(function() { Config.admins = {} })
 
 			it("must create comment", function*() {
-				var path = `/initiatives/${this.initiative.uuid}`
+				var path = `/initiatives/${this.initiative.id}`
 				var res = yield this.request(path + "/comments", {
 					method: "POST",
 
@@ -99,7 +99,7 @@ describe("InitiativeCommentsController", function() {
 				it(`must create comment for ${persona} as admin`, function*() {
 					Config.admins = {[serializePersonalId(this.user)]: []}
 
-					var path = `/initiatives/${this.initiative.uuid}`
+					var path = `/initiatives/${this.initiative.id}`
 					var res = yield this.request(path + "/comments", {
 						method: "POST",
 
@@ -128,7 +128,7 @@ describe("InitiativeCommentsController", function() {
 			})
 
 			it(`must not create comment for admin as a non-admin`, function*() {
-				var path = `/initiatives/${this.initiative.uuid}`
+				var path = `/initiatives/${this.initiative.id}`
 				var res = yield this.request(path + "/comments", {
 					method: "POST",
 
@@ -161,7 +161,7 @@ describe("InitiativeCommentsController", function() {
 					external: true
 				}))
 
-				var path = `/initiatives/${initiative.uuid}`
+				var path = `/initiatives/${initiative.id}`
 				var res = yield this.request(path + "/comments", {
 					method: "POST",
 					form: {title: "I've some thoughts.", text: "But I forgot them."}
@@ -183,7 +183,7 @@ describe("InitiativeCommentsController", function() {
 			})
 
 			it("must redirect to referrer without host", function*() {
-				var path = `/initiatives/${this.initiative.uuid}`
+				var path = `/initiatives/${this.initiative.id}`
 				var res = yield this.request(path + `/comments`, {
 					method: "POST",
 					form: {__proto__: VALID_ATTRS, referrer: "/comments"}
@@ -195,7 +195,7 @@ describe("InitiativeCommentsController", function() {
 			})
 
 			it("must redirect to referrer on same host", function*() {
-				var path = `/initiatives/${this.initiative.uuid}`
+				var path = `/initiatives/${this.initiative.id}`
 				var res = yield this.request(path + `/comments`, {
 					method: "POST",
 					form: {__proto__: VALID_ATTRS, referrer: this.url + "/comments"}
@@ -208,7 +208,7 @@ describe("InitiativeCommentsController", function() {
 
 			SITE_URLS.forEach(function(url) {
 				it(`must redirect back to ${Url.parse(url).hostname}`, function*() {
-					var path = `/initiatives/${this.initiative.uuid}`
+					var path = `/initiatives/${this.initiative.id}`
 					var res = yield this.request(path + `/comments`, {
 						method: "POST",
 						form: {__proto__: VALID_ATTRS, referrer: url + "/comments"}
@@ -221,7 +221,7 @@ describe("InitiativeCommentsController", function() {
 			})
 
 			it("must not redirect to other hosts", function*() {
-				var path = `/initiatives/${this.initiative.uuid}`
+				var path = `/initiatives/${this.initiative.id}`
 				var res = yield this.request(path + `/comments`, {
 					method: "POST",
 					form: {__proto__: VALID_ATTRS, referrer: "http://example.com/evil"}
@@ -235,7 +235,7 @@ describe("InitiativeCommentsController", function() {
 			it("must not create comment if initiative unpublished", function*() {
 				initiativesDb.update(this.initiative, {published_at: null})
 
-				var path = `/initiatives/${this.initiative.uuid}`
+				var path = `/initiatives/${this.initiative.id}`
 				var res = yield this.request(path + `/comments`, {
 					method: "POST",
 					form: VALID_ATTRS
@@ -256,7 +256,7 @@ describe("InitiativeCommentsController", function() {
 					published_at: null
 				})
 
-				var path = `/initiatives/${this.initiative.uuid}`
+				var path = `/initiatives/${this.initiative.id}`
 				var res = yield this.request(path + `/comments`, {
 					method: "POST",
 					form: VALID_ATTRS
@@ -273,7 +273,7 @@ describe("InitiativeCommentsController", function() {
 						email_confirmed_at: new Date
 					})
 
-					var path = `/initiatives/${this.initiative.uuid}/comments`
+					var path = `/initiatives/${this.initiative.id}/comments`
 					var res = yield this.request(path, {
 						method: "POST",
 						form: {__proto__: VALID_ATTRS, subscribe: true}
@@ -313,7 +313,7 @@ describe("InitiativeCommentsController", function() {
 						comment_interest: false
 					}))
 
-					var path = `/initiatives/${this.initiative.uuid}/comments`
+					var path = `/initiatives/${this.initiative.id}/comments`
 					var res = yield this.request(path, {
 						method: "POST",
 						form: {__proto__: VALID_ATTRS, subscribe: true}
@@ -345,7 +345,7 @@ describe("InitiativeCommentsController", function() {
 						comment_interest: false
 					}))
 
-					var path = `/initiatives/${this.initiative.uuid}/comments`
+					var path = `/initiatives/${this.initiative.id}/comments`
 					var res = yield this.request(path, {
 						method: "POST",
 						form: {__proto__: VALID_ATTRS, subscribe: true}
@@ -377,7 +377,7 @@ describe("InitiativeCommentsController", function() {
 						email_confirmation_token: Crypto.randomBytes(12)
 					})
 
-					var path = `/initiatives/${this.initiative.uuid}/comments`
+					var path = `/initiatives/${this.initiative.id}/comments`
 					var res = yield this.request(path, {
 						method: "POST",
 						form: {__proto__: VALID_ATTRS, subscribe: true}
@@ -404,7 +404,7 @@ describe("InitiativeCommentsController", function() {
 						confirmed_at: new Date
 					}))
 
-					var path = `/initiatives/${this.initiative.uuid}/comments`
+					var path = `/initiatives/${this.initiative.id}/comments`
 					var res = yield this.request(path, {
 						method: "POST",
 						form: {__proto__: VALID_ATTRS, subscribe: false}
@@ -434,7 +434,7 @@ describe("InitiativeCommentsController", function() {
 						confirmed_at: new Date
 					}))
 
-					var res = yield this.request(`/initiatives/${this.initiative.uuid}/comments`, {
+					var res = yield this.request(`/initiatives/${this.initiative.id}/comments`, {
 						method: "POST",
 						form: {__proto__: VALID_ATTRS, subscribe: false}
 					})
@@ -490,7 +490,7 @@ describe("InitiativeCommentsController", function() {
 					})
 				])
 
-				var path = `/initiatives/${this.initiative.uuid}`
+				var path = `/initiatives/${this.initiative.id}`
 				var res = yield this.request(path + `/comments`, {
 					method: "POST",
 					form: VALID_ATTRS
@@ -557,8 +557,8 @@ describe("InitiativeCommentsController", function() {
 					})
 				])
 
-				var path = `/initiatives/${initiative.uuid}`
-				var res = yield this.request(path + `/comments`, {
+				var initiativePath = `/initiatives/${initiative.id}`
+				var res = yield this.request(initiativePath + `/comments`, {
 					method: "POST",
 					form: VALID_ATTRS
 				})
@@ -588,8 +588,8 @@ describe("InitiativeCommentsController", function() {
 					comment_interest: true
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}`
-				var res = yield this.request(path + `/comments`, {
+				var initiativePath = `/initiatives/${this.initiative.id}`
+				var res = yield this.request(initiativePath + `/comments`, {
 					method: "POST",
 					form: {__proto__: VALID_ATTRS, persona: "admin"}
 				})
@@ -628,8 +628,8 @@ describe("InitiativeCommentsController", function() {
 					})
 				])
 
-				var path = `/initiatives/${this.initiative.uuid}`
-				var res = yield this.request(path + `/comments`, {
+				var initiativePath = `/initiatives/${this.initiative.id}`
+				var res = yield this.request(initiativePath + `/comments`, {
 					method: "POST",
 					form: VALID_ATTRS
 				})
@@ -661,8 +661,8 @@ describe("InitiativeCommentsController", function() {
 					})
 				])
 
-				var path = `/initiatives/${this.initiative.uuid}`
-				var res = yield this.request(path + `/comments`, {
+				var initiativePath = `/initiatives/${this.initiative.id}`
+				var res = yield this.request(initiativePath + `/comments`, {
 					method: "POST",
 					form: VALID_ATTRS
 				})
@@ -694,7 +694,7 @@ describe("InitiativeCommentsController", function() {
 				var err = test[2]
 
 				it(`must show error if ${description}`, function*() {
-					var path = `/initiatives/${this.initiative.uuid}/comments`
+					var path = `/initiatives/${this.initiative.id}/comments`
 					var res = yield this.request(path, {method: "POST", form: attrs})
 
 					res.statusCode.must.equal(422)
@@ -724,8 +724,8 @@ describe("InitiativeCommentsController", function() {
 						})
 					)))
 
-					var path = `/initiatives/${this.initiative.uuid}`
-					var res = yield this.request(path + "/comments", {
+					var initiativePath = `/initiatives/${this.initiative.id}`
+					var res = yield this.request(initiativePath + "/comments", {
 						method: "POST",
 						form: VALID_ATTRS
 					})
@@ -748,8 +748,8 @@ describe("InitiativeCommentsController", function() {
 							DateFns.addSeconds(DateFns.addMinutes(new Date, -15), 1),
 					})))
 
-					var path = `/initiatives/${this.initiative.uuid}`
-					var res = yield this.request(path + "/comments", {
+					var initiativePath = `/initiatives/${this.initiative.id}`
+					var res = yield this.request(initiativePath + "/comments", {
 						method: "POST",
 						form: VALID_ATTRS
 					})
@@ -770,8 +770,8 @@ describe("InitiativeCommentsController", function() {
 						created_at: DateFns.addMinutes(new Date, -15),
 					})))
 
-					var path = `/initiatives/${this.initiative.uuid}`
-					var res = yield this.request(path + "/comments", {
+					var initiativePath = `/initiatives/${this.initiative.id}`
+					var res = yield this.request(initiativePath + "/comments", {
 						method: "POST",
 						form: VALID_ATTRS
 					})
@@ -786,7 +786,7 @@ describe("InitiativeCommentsController", function() {
 	describe("GET /new", function() {
 		describe("when not logged in", function() {
 			it("must respond with 401 when not logged in", function*() {
-				var path = `/initiatives/${this.initiative.uuid}/comments/new`
+				var path = `/initiatives/${this.initiative.id}/comments/new`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(401)
 				res.statusMessage.must.equal("Unauthorized")
@@ -797,7 +797,7 @@ describe("InitiativeCommentsController", function() {
 			require("root/test/fixtures").user()
 
 			it("must render new comment page", function*() {
-				var path = `/initiatives/${this.initiative.uuid}/comments/new`
+				var path = `/initiatives/${this.initiative.id}/comments/new`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("POST_COMMENT"))
@@ -810,7 +810,7 @@ describe("InitiativeCommentsController", function() {
 					external: true
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/comments/new`
+				var path = `/initiatives/${initiative.id}/comments/new`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("POST_COMMENT"))
@@ -837,7 +837,7 @@ describe("InitiativeCommentsController", function() {
 				parent_id: comment.id
 			}))
 
-			var path = `/initiatives/${this.initiative.uuid}`
+			var path = `/initiatives/${this.initiative.id}`
 			path += `/comments/${comment.id}`
 			var res = yield this.request(path)
 			res.statusCode.must.equal(200)
@@ -863,7 +863,7 @@ describe("InitiativeCommentsController", function() {
 				anonymized_at: new Date
 			}))
 
-			var path = `/initiatives/${this.initiative.uuid}`
+			var path = `/initiatives/${this.initiative.id}`
 			path += `/comments/${comment.id}`
 			var res = yield this.request(path)
 			res.statusCode.must.equal(200)
@@ -887,7 +887,7 @@ describe("InitiativeCommentsController", function() {
 				as_admin: true
 			}))
 
-			var path = `/initiatives/${this.initiative.uuid}`
+			var path = `/initiatives/${this.initiative.id}`
 			path += `/comments/${comment.id}`
 			var res = yield this.request(path)
 			res.statusCode.must.equal(200)
@@ -919,7 +919,7 @@ describe("InitiativeCommentsController", function() {
 				anonymized_at: new Date
 			}))
 
-			var path = `/initiatives/${this.initiative.uuid}`
+			var path = `/initiatives/${this.initiative.id}`
 			path += `/comments/${comment.id}`
 			var res = yield this.request(path)
 			res.statusCode.must.equal(200)
@@ -955,7 +955,7 @@ describe("InitiativeCommentsController", function() {
 				as_admin: true
 			}))
 
-			var path = `/initiatives/${this.initiative.uuid}`
+			var path = `/initiatives/${this.initiative.id}`
 			path += `/comments/${comment.id}`
 			var res = yield this.request(path)
 			res.statusCode.must.equal(200)
@@ -987,7 +987,7 @@ describe("InitiativeCommentsController", function() {
 				user_uuid: _.serializeUuid(author.uuid)
 			}))
 
-			var path = `/initiatives/${initiative.uuid}/comments/${comment.id}`
+			var path = `/initiatives/${initiative.id}/comments/${comment.id}`
 			var res = yield this.request(path)
 			res.statusCode.must.equal(200)
 
@@ -1020,7 +1020,7 @@ describe("InitiativeCommentsController", function() {
 				parent_id: other.id
 			}))
 
-			var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+			var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
 			var res = yield this.request(path)
 			res.statusCode.must.equal(200)
 			res.body.must.not.include(reply.text)
@@ -1045,7 +1045,7 @@ describe("InitiativeCommentsController", function() {
 				parent_id: comment.id
 			}))
 
-			var path = `/initiatives/${this.initiative.uuid}`
+			var path = `/initiatives/${this.initiative.id}`
 			path += `/comments/${comment.id}`
 			var res = yield this.request(path)
 
@@ -1065,14 +1065,14 @@ describe("InitiativeCommentsController", function() {
 				user_uuid: _.serializeUuid(author.uuid)
 			}))
 
-			var path = `/initiatives/${this.initiative.uuid}/comments`
+			var path = `/initiatives/${this.initiative.id}/comments`
 			var res = yield this.request(path + "/" + comment.uuid)
 			res.statusCode.must.equal(308)
 			res.headers.location.must.equal(path + "/" + comment.id)
 		})
 
 		it("must show 404 given a non-existent comment", function*() {
-			var path = `/initiatives/${this.initiative.uuid}/comments/42`
+			var path = `/initiatives/${this.initiative.id}/comments/42`
 			var res = yield this.request(path)
 			res.statusCode.must.equal(404)
 		})
@@ -1093,7 +1093,7 @@ describe("InitiativeCommentsController", function() {
 				parent_id: parent.id
 			}))
 
-			var path = `/initiatives/${this.initiative.uuid}/comments`
+			var path = `/initiatives/${this.initiative.id}/comments`
 			var res = yield this.request(path + "/" + comment.id)
 			res.statusCode.must.equal(302)
 			res.headers.location.must.equal(path + "/" + parent.id)
@@ -1112,7 +1112,7 @@ describe("InitiativeCommentsController", function() {
 				user_uuid: _.serializeUuid(author.uuid)
 			}))
 
-			var path = `/initiatives/${this.initiative.uuid}`
+			var path = `/initiatives/${this.initiative.id}`
 			path += `/comments/${comment.id}`
 			var res = yield this.request(path)
 			res.statusCode.must.equal(404)
@@ -1130,7 +1130,7 @@ describe("InitiativeCommentsController", function() {
 					user_uuid: _.serializeUuid(this.user.uuid)
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}`
+				var path = `/initiatives/${this.initiative.id}`
 				path += `/comments/${comment.id}`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(200)
@@ -1148,7 +1148,7 @@ describe("InitiativeCommentsController", function() {
 					user_uuid: _.serializeUuid(this.user.uuid)
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}`
+				var path = `/initiatives/${this.initiative.id}`
 				path += `/comments/${comment.id}`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(200)
@@ -1176,7 +1176,7 @@ describe("InitiativeCommentsController", function() {
 					parent_id: comment.id
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}`
+				var path = `/initiatives/${this.initiative.id}`
 				path += `/comments/${comment.id}`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(200)
@@ -1202,7 +1202,7 @@ describe("InitiativeCommentsController", function() {
 					parent_id: comment.id
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}`
+				var path = `/initiatives/${this.initiative.id}`
 				path += `/comments/${comment.id}`
 				var res = yield this.request(path)
 				res.statusCode.must.equal(200)
@@ -1226,7 +1226,7 @@ describe("InitiativeCommentsController", function() {
 					user_uuid: _.serializeUuid(author.uuid)
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
 				var res = yield this.request(path, {method: "DELETE"})
 				res.statusCode.must.equal(401)
 				res.statusMessage.must.equal("Unauthorized")
@@ -1246,7 +1246,7 @@ describe("InitiativeCommentsController", function() {
 					user_uuid: _.serializeUuid(author.uuid)
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
 				var res = yield this.request(path, {method: "DELETE"})
 
 				res.statusCode.must.equal(403)
@@ -1262,7 +1262,7 @@ describe("InitiativeCommentsController", function() {
 					user_uuid: _.serializeUuid(this.user.uuid)
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
 				var res = yield this.request(path, {method: "DELETE"})
 
 				res.statusCode.must.equal(405)
@@ -1281,7 +1281,7 @@ describe("InitiativeCommentsController", function() {
 					anonymized_at: new Date
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
 				var res = yield this.request(path, {method: "DELETE"})
 
 				res.statusCode.must.equal(405)
@@ -1297,7 +1297,7 @@ describe("InitiativeCommentsController", function() {
 					user_uuid: _.serializeUuid(this.user.uuid)
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
 				var res = yield this.request(path, {method: "DELETE"})
 
 				res.statusCode.must.equal(303)
@@ -1336,7 +1336,7 @@ describe("InitiativeCommentsController", function() {
 					parent_id: comment.id
 				}))
 
-				var commentsPath = `/initiatives/${this.initiative.uuid}/comments`
+				var commentsPath = `/initiatives/${this.initiative.id}/comments`
 				var parentPath = commentsPath + `/${comment.id}`
 				var replyPath = commentsPath + `/${reply.id}`
 				var res = yield this.request(replyPath, {method: "DELETE"})
@@ -1373,7 +1373,7 @@ describe("InitiativeCommentsController", function() {
 					user_uuid: _.serializeUuid(author.uuid)
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
 				var res = yield this.request(path + "/replies", {method: "POST"})
 				res.statusCode.must.equal(401)
 				res.statusMessage.must.equal("Unauthorized")
@@ -1392,7 +1392,7 @@ describe("InitiativeCommentsController", function() {
 					initiative_uuid: this.initiative.uuid
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
 				var res = yield this.request(path + "/replies", {
 					method: "POST",
 					form: {text: "But I forgot them."}
@@ -1431,7 +1431,7 @@ describe("InitiativeCommentsController", function() {
 						initiative_uuid: this.initiative.uuid
 					}))
 
-					var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+					var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
 					var res = yield this.request(path + "/replies", {
 						method: "POST",
 						form: {text: "But I forgot them.", persona: persona}
@@ -1463,7 +1463,7 @@ describe("InitiativeCommentsController", function() {
 					initiative_uuid: this.initiative.uuid
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
 				var res = yield this.request(path + "/replies", {
 					method: "POST",
 					form: {text: "But I forgot them.", persona: "admin"}
@@ -1499,7 +1499,7 @@ describe("InitiativeCommentsController", function() {
 					initiative_uuid: initiative.uuid
 				}))
 
-				var path = `/initiatives/${initiative.uuid}/comments/${comment.id}`
+				var path = `/initiatives/${initiative.id}/comments/${comment.id}`
 				var res = yield this.request(path + "/replies", {
 					method: "POST",
 					form: {text: "But I forgot them."}
@@ -1529,7 +1529,7 @@ describe("InitiativeCommentsController", function() {
 					initiative_uuid: this.initiative.uuid
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
 				var res = yield this.request(path + `/replies`, {
 					method: "POST",
 					form: {__proto__: VALID_REPLY_ATTRS, referrer: "/comments"}
@@ -1549,7 +1549,7 @@ describe("InitiativeCommentsController", function() {
 					initiative_uuid: this.initiative.uuid
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
 				var res = yield this.request(path + `/replies`, {
 					method: "POST",
 					form: {__proto__: VALID_REPLY_ATTRS, referrer: this.url + "/comments"}
@@ -1573,7 +1573,7 @@ describe("InitiativeCommentsController", function() {
 						initiative_uuid: this.initiative.uuid
 					}))
 
-					var path = `/initiatives/${this.initiative.uuid}`
+					var path = `/initiatives/${this.initiative.id}`
 					path += `/comments/${comment.id}/replies`
 					var res = yield this.request(path, {
 						method: "POST",
@@ -1598,7 +1598,7 @@ describe("InitiativeCommentsController", function() {
 					initiative_uuid: this.initiative.uuid
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
 				var res = yield this.request(path + `/replies`, {
 					method: "POST",
 					form: {
@@ -1661,7 +1661,7 @@ describe("InitiativeCommentsController", function() {
 					})
 				])
 
-				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
 				var res = yield this.request(path + `/replies`, {
 					method: "POST",
 					form: VALID_REPLY_ATTRS
@@ -1699,7 +1699,7 @@ describe("InitiativeCommentsController", function() {
 					comment_interest: true
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
 				var res = yield this.request(path + `/replies`, {
 					method: "POST",
 					form: {__proto__: VALID_REPLY_ATTRS, persona: "admin"}
@@ -1744,7 +1744,7 @@ describe("InitiativeCommentsController", function() {
 					})
 				])
 
-				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
 				var res = yield this.request(path + `/replies`, {
 					method: "POST",
 					form: VALID_REPLY_ATTRS
@@ -1784,7 +1784,7 @@ describe("InitiativeCommentsController", function() {
 					})
 				])
 
-				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
 				var res = yield this.request(path + `/replies`, {
 					method: "POST",
 					form: VALID_REPLY_ATTRS
@@ -1810,7 +1810,7 @@ describe("InitiativeCommentsController", function() {
 					parent_id: parent.id
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
 				var res = yield this.request(path + "/replies", {method: "POST"})
 				res.statusCode.must.equal(405)
 			})
@@ -1837,7 +1837,7 @@ describe("InitiativeCommentsController", function() {
 						user_uuid: _.serializeUuid(author.uuid)
 					}))
 
-					var path = `/initiatives/${this.initiative.uuid}`
+					var path = `/initiatives/${this.initiative.id}`
 					path += `/comments/${comment.id}`
 
 					var res = yield this.request(path + "/replies", {
@@ -1864,7 +1864,7 @@ describe("InitiativeCommentsController", function() {
 					initiative_uuid: this.initiative.uuid
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
 				var res = yield this.request(path + `/replies`, {
 					method: "POST",
 					form: VALID_REPLY_ATTRS
@@ -1891,7 +1891,7 @@ describe("InitiativeCommentsController", function() {
 					initiative_uuid: this.initiative.uuid
 				}))
 
-				var path = `/initiatives/${this.initiative.uuid}/comments/${comment.id}`
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
 				var res = yield this.request(path + `/replies`, {
 					method: "POST",
 					form: VALID_REPLY_ATTRS
@@ -1924,7 +1924,7 @@ describe("InitiativeCommentsController", function() {
 						initiative_uuid: this.initiative.uuid
 					}))
 
-					var path = `/initiatives/${this.initiative.uuid}`
+					var path = `/initiatives/${this.initiative.id}`
 					path += `/comments/${comment.id}`
 					var res = yield this.request(path + "/replies", {
 						method: "POST",
@@ -1956,7 +1956,7 @@ describe("InitiativeCommentsController", function() {
 						initiative_uuid: this.initiative.uuid
 					}))
 
-					var path = `/initiatives/${this.initiative.uuid}`
+					var path = `/initiatives/${this.initiative.id}`
 					path += `/comments/${comment.id}`
 					var res = yield this.request(path + "/replies", {
 						method: "POST",
@@ -1986,7 +1986,7 @@ describe("InitiativeCommentsController", function() {
 						initiative_uuid: this.initiative.uuid
 					}))
 
-					var path = `/initiatives/${this.initiative.uuid}`
+					var path = `/initiatives/${this.initiative.id}`
 					path += `/comments/${comment.id}`
 					var res = yield this.request(path + "/replies", {
 						method: "POST",

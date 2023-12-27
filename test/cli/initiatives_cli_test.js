@@ -2,6 +2,7 @@ var _ = require("root/lib/underscore")
 var DateFns = require("date-fns")
 var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_initiative")
+var Initiative = require("root/lib/initiative")
 var Config = require("root").config
 var Crypto = require("crypto")
 var cli = require("root/cli/initiatives_cli")
@@ -50,7 +51,7 @@ describe("InitiativesCli", function() {
 
 			email.body.must.equal(t("SIGNING_EXPIRED_EMAIL_BODY", {
 				initiativeTitle: initiative.title,
-				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+				initiativeUrl: Initiative.slugUrl(initiative),
 				newInitiativeUrl: `${Config.url}/initiatives/new`,
 				siteUrl: Config.url,
 				facebookUrl: Config.facebookUrl
@@ -83,7 +84,7 @@ describe("InitiativesCli", function() {
 
 			email.body.must.equal(t("SIGNING_EXPIRED_EMAIL_BODY", {
 				initiativeTitle: initiative.title,
-				initiativeUrl: `${Config.url}/initiatives/${initiative.uuid}`,
+				initiativeUrl: Initiative.slugUrl(initiative),
 				newInitiativeUrl: `${Config.url}/initiatives/new`,
 				siteUrl: Config.url,
 				facebookUrl: Config.facebookUrl

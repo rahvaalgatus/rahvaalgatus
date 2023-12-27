@@ -6,6 +6,7 @@ var DateFns = require("date-fns")
 var Config = require("root").config
 var I18n = require("root/lib/i18n")
 var Css = require("root/lib/css")
+var Initiative = require("root/lib/initiative")
 var diffInDays = require("date-fns").differenceInCalendarDays
 var {getSignatureThreshold} = require("root/lib/initiative")
 exports = module.exports = InitiativePage
@@ -17,7 +18,6 @@ function InitiativePage(attrs, children) {
 	var {t} = req
 	var {initiative} = attrs
 	var {headerless} = attrs
-	var path = "/initiatives/" + initiative.uuid
 
 	return <Page {...attrs} class={"initiative-page " + (attrs.class || "")}>
 		{!headerless ? <header id="initiative-header">
@@ -32,8 +32,8 @@ function InitiativePage(attrs, children) {
 				: null}
 
 				<h1>
-					{req.method != "GET" || req.baseUrl + req.path != path ?
-						<a href={path}>{initiative.title}</a>
+					{req.method != "GET" || !/^\/[^/]+$/.test(req.path) ?
+						<a href={Initiative.slugPath(initiative)}>{initiative.title}</a>
 					: initiative.title}
 
 					<InitiativeBadgeView initiative={initiative} />

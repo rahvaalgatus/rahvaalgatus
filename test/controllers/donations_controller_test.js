@@ -1,8 +1,5 @@
 var Url = require("url")
 var Config = require("root").config
-var SITE_HOSTNAME = Url.parse(Config.url).hostname
-var PARLIAMENT_SITE_HOSTNAME = Url.parse(Config.parliamentSiteUrl).hostname
-var LOCAL_SITE_HOSTNAME = Url.parse(Config.localSiteUrl).hostname
 
 describe("DonationsController", function() {
 	require("root/test/web")()
@@ -13,15 +10,6 @@ describe("DonationsController", function() {
 			var res = yield this.request("/donate")
 			res.statusCode.must.equal(200)
 			res.body.must.include("Maksekeskus")
-		})
-
-		;[PARLIAMENT_SITE_HOSTNAME, LOCAL_SITE_HOSTNAME].forEach(function(host) {
-			it(`must redirect to ${SITE_HOSTNAME} from ${host}`, function*() {
-				var path = "/donate?foo=bar"
-				var res = yield this.request(path, {headers: {Host: host}})
-				res.statusCode.must.equal(301)
-				res.headers.location.must.equal(Config.url + path)
-			})
 		})
 	})
 
@@ -95,15 +83,6 @@ describe("DonationsController", function() {
 			var res = yield this.request("/donated")
 			res.statusCode.must.equal(200)
 			res.body.must.include("Täname toetuse")
-		})
-
-		;[PARLIAMENT_SITE_HOSTNAME, LOCAL_SITE_HOSTNAME].forEach(function(host) {
-			it(`must redirect to ${SITE_HOSTNAME} from ${host}`, function*() {
-				var path = "/donated?foo=bar"
-				var res = yield this.request(path, {headers: {Host: host}})
-				res.statusCode.must.equal(301)
-				res.headers.location.must.equal(Config.url + path)
-			})
 		})
 	})
 })

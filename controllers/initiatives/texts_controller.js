@@ -93,6 +93,7 @@ exports.router.post("/", function(req, res) {
 		)
 	) initiative = initiativesDb.update(initiative, {
 		title: text.title,
+		slug: Initiative.slug(text.title),
 		language: text.language
 	})
 
@@ -102,7 +103,7 @@ exports.router.post("/", function(req, res) {
 		: req.t("INITIATIVE_TEXT_CREATED")
 	)
 
-	var path = "/initiatives/" + initiative.uuid
+	var path = Initiative.slugPath(initiative)
 	if (text.language != initiative.language) path += "?language=" + text.language
 
 	res.statusMessage = "Text Created"

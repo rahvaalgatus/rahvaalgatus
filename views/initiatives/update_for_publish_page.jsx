@@ -29,7 +29,7 @@ module.exports = function(attributes) {
 			<Form
 				req={req}
 				method="put"
-				action={"/initiatives/" + initiative.uuid}
+				action={"/initiatives/" + initiative.id}
 				class="initiative-sheet"
 			>
 				<h2>{initiative.published_at == null

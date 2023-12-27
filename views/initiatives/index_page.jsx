@@ -4,6 +4,7 @@ var Jsx = require("j6pack")
 var DateFns = require("date-fns")
 var Config = require("root").config
 var Page = require("../page")
+var Initiative = require("root/lib/initiative")
 var {Section} = require("../page")
 var {ProgressView} = require("./initiative_page")
 var {DateView} = Page
@@ -171,10 +172,11 @@ function InitiativeRowView(attrs) {
 	var authorName = renderAuthorName(initiative)
 
 	return <li
+		data-id={initiative.id}
 		data-uuid={initiative.uuid}
 		class={"initiative" + (initiative.destination ? " with-destination" : "")}
 	>
-		<a href={`/initiatives/${initiative.uuid}`}>
+		<a href={Initiative.slugPath(initiative)}>
 			<time class="initiative-time" datetime={time && time.toJSON()}>
 				{time ? I18n.formatDate("numeric", time) : " "}
 			</time>
@@ -281,10 +283,11 @@ function InitiativeBoxView(attrs) {
 	var authorName = renderAuthorName(initiative)
 
 	return <li
+		data-id={initiative.id}
 		data-uuid={initiative.uuid}
 		class={"initiative" + (initiative.destination ? " with-destination" : "")}
 	>
-		<a href={`/initiatives/${initiative.uuid}`}>
+		<a href={Initiative.slugPath(initiative)}>
 			{attrs.dateless ? null
 				: initiative.phase == "sign"
 				? (new Date < initiative.signing_ends_at ?

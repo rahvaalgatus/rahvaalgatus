@@ -1,11 +1,12 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
+var Initiative = require("root/lib/initiative")
 var InitiativePage = require("../initiative_page")
-var {Flash} = require("../../page")
+var Comment = require("root/lib/comment")
 var I18n = require("root/lib/i18n")
+var {Flash} = require("../../page")
 var {Form} = require("../../page")
 var {FormButton} = require("../../page")
-var Comment = require("root/lib/comment")
 var Controller = require("root/controllers/initiatives/comments_controller")
 var {PersonaInput} = require("./create_page")
 var {getCommentAuthorName} = Controller
@@ -52,14 +53,16 @@ function CommentView(attrs) {
 	var {user} = req
 	var {initiative} = attrs
 	var {comment} = attrs
-	var commentUrl = `/initiatives/${initiative.uuid}/comments/${comment.id}`
+	var commentPath = `/initiatives/${initiative.uuid}/comments/${comment.id}`
+	var initiativeSlugPath = Initiative.slugPath(initiative)
+	var commentSlugPath = initiativeSlugPath + `/comments/${comment.id}`
 	var {newComment} = attrs
 	var anonymous = !!comment.anonymized_at
 
 	return <>
 		{comment.uuid ? <a id={"comment-" + comment.uuid} /> : null}
 
-		<h3 class="title"><a href={commentUrl}>{comment.title}</a></h3>
+		<h3 class="title"><a href={commentSlugPath}>{comment.title}</a></h3>
 
 		<div class="metadata">
 			<span class={"author" + (anonymous ? " anonymous" : "")}>
@@ -67,7 +70,7 @@ function CommentView(attrs) {
 			</span>
 			{", "}
 			<time datetime={comment.created_at.toJSON()}>
-				<a href={commentUrl}>
+				<a href={commentSlugPath}>
 					{I18n.formatDateTime("numeric", comment.created_at)}
 				</a>
 			</time>
@@ -104,7 +107,7 @@ function CommentView(attrs) {
 					</span>
 					{", "}
 					<time datetime={reply.created_at}>
-						<a href={commentUrl + `#comment-${reply.id}`}>
+						<a href={commentSlugPath + `#comment-${reply.id}`}>
 							{I18n.formatDateTime("numeric", reply.created_at)}
 						</a>
 					</time>
@@ -127,7 +130,7 @@ function CommentView(attrs) {
 			req={req}
 			id={`comment-${comment.id}-reply`}
 			method="post"
-			action={commentUrl + "/replies"}
+			action={commentPath + "/replies"}
 			hidden={!newComment}
 			class="comment-reply-form">
 			<input type="hidden" name="referrer" value={req.baseUrl + req.path} />

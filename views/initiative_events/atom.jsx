@@ -31,7 +31,6 @@ module.exports = function(attrs) {
 
 			return <EventEntryView
 				initiative={initiative}
-				initiativeUrl={Config.url + "/initiatives/" + initiative.uuid}
 				event={event}
 				sourced
 			/>

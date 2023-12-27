@@ -15,7 +15,8 @@ var {COLUMNS} = SignaturesController
 
 var COLUMN_TITLES = {
 	created_on: "Date",
-	initiative_uuid: "Initiative Id",
+	initiative_id: "Initiative Id",
+	initiative_uuid: "Initiative UUID",
 	initiative_title: "Initiative Title",
 	initiative_destination: "Initiative Destination",
 	sex: "Sex",
@@ -37,7 +38,9 @@ module.exports = function(attrs) {
 	signatures = signatures.slice(0, 1000)
 
 	var columnsWithoutId = _.uniq(columns.map((col) => (
-		col == "initiative_uuid" ? "initiative_title" : col
+		col == "initiative_id" ? "initiative_title" :
+		col == "initiative_uuid" ? "initiative_title" :
+		col
 	)))
 
 	return <Page page="signatures" title="Signature" req={attrs.req}>
@@ -170,8 +173,8 @@ module.exports = function(attrs) {
 
 			<tbody>
 				{_.sortBy(signatures, "created_at").reverse().map(function(sig) {
-					var initiativeUuid = sig.initiative_uuid
-					var initiativePath = `${req.rootUrl}/initiatives/${initiativeUuid}`
+					var initiativeId = sig.initiative_id
+					var initiativePath = `${req.rootUrl}/initiatives/${initiativeId}`
 
 					return <tr>{columnsWithoutId.map((column) => { switch (column) {
 						case "created_on": return <td>{timeFormat == "date"
