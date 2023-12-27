@@ -311,6 +311,14 @@
 			{
 				"name": "Tallinna Saksa Gümnaasium",
 				"url": "https://demokraatia.rahvaalgatus.ee/koolid/21-tallinna-saksa-g%C3%BCmnaasium"
+			},
+			{
+				"name": "",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/23-tallinna%C3%B5ism%C3%A4evenel%C3%BCtseum"
+			},
+			{
+				"name": "Õismäe Vene Lütseum",
+				"url": "Tallinna"
 			}
 		],
 		"dialogs": [
@@ -473,6 +481,10 @@
 			{
 				"name": "Narva Soldino Gümnaasium",
 				"url": "https://demokraatia.rahvaalgatus.ee/koolid/8-narva-soldino-g%C3%BCmnaasium"
+			},
+			{
+				"name": "Narva Eesti Gümnaasium",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/22-narvaeestiriigig%C3%BCmnaasium"
 			}
 		],
 		"dialogs": [],
@@ -1154,7 +1166,12 @@
 				"name": "Margit Kaldre"
 			}
 		],
-		"dtvSchools": [],
+		"dtvSchools": [
+			{
+				"name": "Saaremaa Gümnaasium",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/25-saaremaag%C3%BCmnaasium"
+			}
+		],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/saaremaa-vald"
 	},
@@ -1303,7 +1320,12 @@
 				"name": "Eve Kallas"
 			}
 		],
-		"dtvSchools": [],
+		"dtvSchools": [
+			{
+				"name": "Tabivere Põhikool",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/24-tabiverep%C3%B5hikool"
+			}
+		],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/tartu-vald"
 	},
