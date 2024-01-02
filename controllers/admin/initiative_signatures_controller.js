@@ -15,19 +15,24 @@ exports.getSexFromPersonalId = getSexFromPersonalId
 exports.getAgeRange = getAgeRange
 exports.serializeLocation = serializeLocation
 
-var COLUMNS = [
+var UNRESTRICTED_COLUMNS = [
 	"created_on",
 	"initiative_id",
 	"initiative_uuid",
 	"initiative_title",
-	"initiative_destination",
+	"initiative_destination"
+]
+
+var RESTRICTED_COLUMNS = [
 	"sex",
 	"age_range",
 	"method",
 	"location"
 ]
 
+var COLUMNS = _.concat(UNRESTRICTED_COLUMNS, RESTRICTED_COLUMNS)
 exports.COLUMNS = COLUMNS
+exports.UNRESTRICTED_COLUMNS = UNRESTRICTED_COLUMNS
 
 exports.router.use(function(req, _res, next) {
 	if (req.adminPermissions.includes("signatures")) next()
@@ -44,9 +49,14 @@ exports.router.get("/(:format?)", next(function*(req, res) {
 	var timeFormat = req.query["time-format"] || "date"
 	var locationFormat = req.query["location-format"] || "text"
 
+	var permittedColumns =
+		req.adminPermissions.includes("signatures-with-restricted-columns")
+		? COLUMNS
+		: UNRESTRICTED_COLUMNS
+
 	var columns = req.query.columns
-		? req.query.columns.filter(COLUMNS.includes.bind(COLUMNS))
-		: COLUMNS
+		? req.query.columns.filter(permittedColumns.includes.bind(permittedColumns))
+		: permittedColumns
 
 	var signatureGenerator = searchSignatures(from, to)
 

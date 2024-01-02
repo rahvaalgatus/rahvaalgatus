@@ -12,6 +12,7 @@ var {getAgeRange} = SignaturesController
 var {serializeLocation} = SignaturesController
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var {COLUMNS} = SignaturesController
+var {UNRESTRICTED_COLUMNS} = SignaturesController
 
 var COLUMN_TITLES = {
 	created_on: "Date",
@@ -33,6 +34,11 @@ module.exports = function(attrs) {
 	var {timeFormat} = attrs
 	var {locationFormat} = attrs
 	var {signatures} = attrs
+
+	var permittedColumns =
+		req.adminPermissions.includes("signatures-with-restricted-columns")
+		? COLUMNS
+		: UNRESTRICTED_COLUMNS
 
 	var tooMany = signatures.length > 1000
 	signatures = signatures.slice(0, 1000)
@@ -79,6 +85,7 @@ module.exports = function(attrs) {
 								type="checkbox"
 								name="columns[]"
 								value={column}
+								disabled={!permittedColumns.includes(column)}
 								checked={columns.includes(column)}
 							/>
 
@@ -119,6 +126,7 @@ module.exports = function(attrs) {
 									type="radio"
 									name="location-format"
 									value="text"
+									disabled={!permittedColumns.includes(column)}
 									checked={locationFormat == "text"}
 								/>
 								{" "}
@@ -130,6 +138,7 @@ module.exports = function(attrs) {
 									type="radio"
 									name="location-format"
 									value="geoname"
+									disabled={!permittedColumns.includes(column)}
 									checked={locationFormat == "geoname"}
 								/>
 								{" "}

@@ -7,7 +7,10 @@
 	"expireSignaturesInMonths": 1,
 	"timestampUrl": "http://demo.sk.ee/tsa",
 	"parliamentEmail": "dev@rahvaalgatus.ee",
-	"admins": {"EE60001019906": [], "EE30303039914": ["signatures"]},
+	"admins": {
+		"EE60001019906": [],
+		"EE30303039914": ["signatures", "signatures-with-restricted-columns"]
+	},
 
 	"cookieSecret": "DBISKTNG3XW1FhjuAwnOmPZzoLZvjkEG",
 	"csrfCookieDomain": "rahvaalgatus.test",

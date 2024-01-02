@@ -1,15 +1,23 @@
+var _ = require("root/lib/underscore")
 var Qs = require("qs")
+var Config = require("root").config
 var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_initiative")
 var ValidSignature = require("root/test/valid_signature")
 var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
 var Csv = require("root/lib/csv")
+var SignaturesController =
+	require("root/controllers/admin/initiative_signatures_controller")
+var parseHtml = require("root/test/html").parse
+var {serializePersonalId} = require("root/lib/user")
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
 var CSV_TYPE = "text/csv; charset=utf-8"
+var {COLUMNS} = SignaturesController
+var {UNRESTRICTED_COLUMNS} = SignaturesController
 
 describe("AdminInitiativeSignaturesController", function() {
 	require("root/test/adm")()
@@ -31,10 +39,42 @@ describe("AdminInitiativeSignaturesController", function() {
 		describe("when admin with signatures permission", function() {
 			require("root/test/fixtures").admin({permissions: ["signatures"]})
 
-			it("must respond", function*() {
+			it("must respond and enable unrestricted columns", function*() {
 				var res = yield this.request("/signatures")
 				res.statusCode.must.equal(200)
 				res.headers["content-type"].must.equal("text/html; charset=utf-8")
+
+				var dom = parseHtml(res.body)
+				var form = dom.querySelector(".options-form")
+				var checkboxes = form.querySelectorAll("input[name='columns[]']")
+				checkboxes = _.indexBy(checkboxes, (el) => el.value)
+
+				COLUMNS.forEach(function(column) {
+					checkboxes[column].disabled.must.equal(
+						!UNRESTRICTED_COLUMNS.includes(column)
+					)
+				})
+			})
+
+			it("must respond and enable restricted columns if permitted",
+				function*() {
+				Config.admins = {[serializePersonalId(this.user)]: [
+					"signatures",
+					"signatures-with-restricted-columns"
+				]}
+
+				var res = yield this.request("/signatures")
+				res.statusCode.must.equal(200)
+				res.headers["content-type"].must.equal("text/html; charset=utf-8")
+
+				var dom = parseHtml(res.body)
+				var form = dom.querySelector(".options-form")
+				var checkboxes = form.querySelectorAll("input[name='columns[]']")
+				checkboxes = _.indexBy(checkboxes, (el) => el.value)
+
+				COLUMNS.forEach(function(column) {
+					checkboxes[column].disabled.must.be.false()
+				})
 			})
 		})
 	})
@@ -54,6 +94,25 @@ describe("AdminInitiativeSignaturesController", function() {
 				"initiative_id",
 				"initiative_uuid",
 				"initiative_title",
+				"initiative_destination"
+			].join(",") + "\n")
+		})
+
+		it("must respond with CSV header if no signatures and restricted columns if permitted", function*() {
+			Config.admins = {[serializePersonalId(this.user)]: [
+				"signatures",
+				"signatures-with-restricted-columns"
+			]}
+
+			var res = yield this.request("/signatures.csv")
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(CSV_TYPE)
+
+			res.body.must.equal([
+				"date",
+				"initiative_id",
+				"initiative_uuid",
+				"initiative_title",
 				"initiative_destination",
 				"sex",
 				"age_range",
@@ -62,7 +121,12 @@ describe("AdminInitiativeSignaturesController", function() {
 			].join(",") + "\n")
 		})
 
-		it("must respond with CSV of anonymized signatures", function*() {
+		it("must respond with CSV of anonymized signatures with restricted columns if permitted", function*() {
+			Config.admins = {[serializePersonalId(this.user)]: [
+				"signatures",
+				"signatures-with-restricted-columns"
+			]}
+
 			var initiativeA = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "sign"
