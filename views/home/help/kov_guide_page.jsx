@@ -61,7 +61,7 @@ module.exports = function(attrs) {
 
 				<li>
 					<img src="/help/kov-guide/phase-sending.svg" alt="" />
-					<span>1% allkirjade kokkusaamisel algatuse edastamine KOV-ile</span>
+					<span>1% hääleõiguslike allkirjade kokkusaamisel algatuse edastamine KOV-ile</span>
 				</li>
 
 				<li>
@@ -103,7 +103,7 @@ module.exports = function(attrs) {
 				<li>
 					<img src="/help/kov-guide/2.svg" alt="2." />
 
-					<p>Kui algatus on kogunud vähemalt 1% omavalitsuse elanike allkirjadest ning algatuse esindaja on otsustanud selle KOV-ile esitada, edastatakse meiliaadressilt <a href="mailto:info@rahvaalgatus.ee">info@rahvaalgatus.ee</a> KOV-ile algatuse tekst koos digiallkirjadega.</p>
+					<p>Kui algatus on kogunud vähemalt 1% omavalitsuse hääleõiguslike elanike allkirjadest ning algatuse esindaja on otsustanud selle KOV-ile esitada, edastatakse meiliaadressilt <a href="mailto:info@rahvaalgatus.ee">info@rahvaalgatus.ee</a> KOV-ile algatuse tekst koos digiallkirjadega.</p>
 				</li>
 
 				<li>
@@ -147,7 +147,7 @@ module.exports = function(attrs) {
 				<li>
 					<img src="/help/kov-guide/1.svg" alt="1." />
 
-					<p>Kui algatusele on kogunenud vähemalt 1% omavalitsuse elanike allkirjadest, võib algatuse esindaja saata KOV-ile automaatkirja, mis sisaldab linke failidele, mis näitavad digiallkirjade kehtivust (.asice) ning rahvastikuregistrist hääleõiguslikkuse kontrollimist (.csv).</p>
+					<p>Kui algatusele on kogunenud vähemalt 1% omavalitsuse hääleõiguslike elanike allkirjadest, võib algatuse esindaja saata KOV-ile automaatkirja, mis sisaldab linke failidele, mis näitavad digiallkirjade kehtivust (.asice) ning rahvastikuregistrist hääleõiguslikkuse kontrollimist (.csv).</p>
 				</li>
 
 				<li>
