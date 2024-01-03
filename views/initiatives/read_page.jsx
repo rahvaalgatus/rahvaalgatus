@@ -184,6 +184,8 @@ function ReadPage(attrs) {
             : t("THANKS_FOR_SIGNING")
           }</h1>
 
+					<p>{Jsx.html(t("initiative_page.signed_section.plead"))}</p>
+
           <h2 class="status-subheader">{t("SUPPORT_US_TITLE")}</h2>
           {Jsx.html(I18n.markdown(lang, "donate"))}
 					<DonateForm req={req} t={t} />
@@ -2089,6 +2091,9 @@ function ProgressTextView(attrs) {
 						)}
 					</time>.
 				</span>
+				<br />
+
+				<span>{Jsx.html(t("initiative_page.sidebar.sign.plead"))}</span>
 			</p>
 
 		default: return null
