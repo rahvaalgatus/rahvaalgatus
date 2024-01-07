@@ -2047,11 +2047,7 @@ function SubscribeEmailView(attrs) {
 	</Form>
 }
 
-function ProgressTextView(attrs) {
-	var {t} = attrs
-	var {initiative} = attrs
-	var {signatureCount} = attrs
-
+function ProgressTextView({t, initiative, signatureCount}) {
 	switch (initiative.phase) {
 		case "edit":
 			return <p class="initiative-progress-text">
@@ -2091,25 +2087,23 @@ function ProgressTextView(attrs) {
 						)}
 					</time>.
 				</span>
-				<br />
-
-				<span>{Jsx.html(t("initiative_page.sidebar.sign.plead"))}</span>
 			</p>
 
 		default: return null
 	}
 }
 
-function QuicksignView(attrs) {
-	var {t} = attrs
-	var {req} = attrs
-	var {initiative} = attrs
-	var {signature} = attrs
-	var {signatureCount} = attrs
-
+function QuicksignView({
+	t,
+	req,
+	initiative,
+	signature,
+	signatureCount,
+	class: klass
+}) {
 	if (!initiative.published_at) return null
 
-	return <div class={"quicksign " + (attrs.class || "")}>
+	return <div class={"quicksign " + (klass || "")}>
 		<ProgressView
 			t={t}
 			initiative={initiative}
@@ -2128,6 +2122,8 @@ function QuicksignView(attrs) {
 			initiative={initiative}
 			signatureCount={signatureCount}
 		/>
+
+		<p class="plea">{Jsx.html(t("initiative_page.sidebar.sign.plead"))}</p>
 
 		{Initiative.isSignable(new Date, initiative) && signature ? <>
 			<h2>{t("THANKS_FOR_SIGNING")}</h2>
