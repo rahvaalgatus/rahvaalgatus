@@ -1,5 +1,5 @@
 (
-	$govs |
+	$govs[0] |
 	to_entries |
 	map({key: .value.ehak, value: (.value + {id: .key})}) |
 	from_entries

@@ -72,7 +72,7 @@ public/assets/%.min.js: public/assets/%.max.js
 ../tmp/local_governments.geojson.json: ../lib/local_governments.geojson
 ../tmp/local_governments.geojson.json: ../scripts/local_governments_geojson.jq
 	jq $(JQ_OPTS) -c -f ../scripts/local_governments_geojson.jq \
-		--argfile govs ../lib/local_governments.json \
+		--slurpfile govs ../lib/local_governments.json \
 		../lib/local_governments.geojson \
 		> "$@"
 
