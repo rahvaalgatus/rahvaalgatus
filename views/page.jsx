@@ -1,5 +1,6 @@
 /** @jsx Jsx */
 var _ = require("root/lib/underscore")
+var Qs = require("qs")
 var Fs = require("fs")
 var Jsx = require("j6pack")
 var Config = require("root").config
@@ -15,7 +16,9 @@ var {ENV} = process.env
 var LIVERELOAD_PORT = process.env.LIVERELOAD_PORT || 35729
 var TWITTER_NAME = Config.twitterUrl.replace(/^.*\//, "")
 var DTV_LOGO_PATH = require.resolve("root/public/assets/dtv.svg")
-var DTV_LOGO_SVG = Fs.readFileSync(DTV_LOGO_PATH)
+var DTV_LOGO_SVG = Fs.readFileSync(DTV_LOGO_PATH, "utf8")
+var SVG_BUTTON_PATH = __dirname + "/../public/assets/sort.svg"
+var SORT_BUTTON_SVG = Fs.readFileSync(SVG_BUTTON_PATH, "utf8").trim()
 exports = module.exports = Page
 exports.Footer = Footer
 exports.Section = Section
@@ -27,6 +30,7 @@ exports.DatePickerInput = DatePickerInput
 exports.LiveReload = LiveReload
 exports.DateView = DateView
 exports.RelativeDateView = RelativeDateView
+exports.SortButton = SortButton
 
 var DEFAULT_META = {
 	// Using twitter:card=summary_large_image explicitly where desired.
@@ -63,7 +67,7 @@ function Page(attrs, children) {
 
 			<link
 				rel="stylesheet"
-				href="/assets/page.css"
+				href="/assets/page.css?49"
 				type="text/css"
 			/>
 
@@ -397,6 +401,30 @@ function RelativeDateView(attrs) {
 		days == 1 ? t("RELATIVE_DEADLINE_1_MORE") :
 		t("RELATIVE_DEADLINE_N_MORE", {days: days})
 	}</time>
+}
+
+function SortButton({
+	path,
+	query,
+	name,
+	sorted,
+	direction,
+	class: klass
+}, children) {
+	direction = !sorted ? (direction || "asc") : sorted == "asc" ? "desc" : "asc"
+	query = _.defaults({order: (direction == "asc" ? "" : "-") + name}, query)
+
+	var url = path + Qs.stringify(query, {
+		addQueryPrefix: true,
+		arrayFormat: "brackets"
+	})
+
+	klass = [klass, "column-name", "sort-button", sorted].filter(Boolean)
+
+	return <a href={url} class={klass.join(" ")}>
+		{children}
+		{Jsx.html(SORT_BUTTON_SVG)}
+	</a>
 }
 
 function serializeUser(user) {

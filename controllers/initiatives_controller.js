@@ -1,6 +1,7 @@
 var _ = require("root/lib/underscore")
 var Qs = require("querystring")
 var {Router} = require("express")
+var Range = require("strange")
 var HttpError = require("standard-http-error")
 var Initiative = require("root/lib/initiative")
 var DateFns = require("date-fns")
@@ -35,7 +36,6 @@ var {countCitizenOsSignaturesById} = require("root/lib/initiative")
 var {parsePersonalId} = require("root/lib/user")
 var {validateRedirect} = require("root/lib/http")
 var {PHASES} = require("root/lib/initiative")
-var {COMPARATOR_SQL} = require("root/lib/filtering")
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: "", phase: "edit"}
 var EMPTY_CONTACT = {name: "", email: "", phone: ""}
@@ -57,36 +57,30 @@ var searchInitiativeEventsForAtom =
 exports.router.get("/",
 	new ResponseTypeMiddeware(["text/html", INITIATIVE_TYPE].map(MediaType)),
 	function(req, res) {
+	// Set CORS header early for errors, too.
 	if (res.contentType.name == INITIATIVE_TYPE.name) {
 		res.setHeader("Content-Type", INITIATIVE_TYPE)
 		res.setHeader("Access-Control-Allow-Origin", "*")
 	}
 
-	var onlyDestinations = req.query.for && parseDestinations(req.query.for)
-	var onlyPhase = req.query.phase && parsePhase(req.query.phase)
+	var filters = parseFilters(req.query)
 
-	// Perhaps it's worth changing the query parameter name to "tag". Remember
-	// backwards compatibility!
-	var tag = req.query.category
-	var {signingEndsAt} = Filtering.parseFilters(["signingEndsAt"], req.query)
+	var [orderBy, orderDir] =
+		req.query.order ? parseOrder(req.query.order) :
+		res.contentType.name == INITIATIVE_TYPE.name ? ["id", "asc"] :
+		["phase", "asc"]
 
-	var signedSince = (
-		req.query.signedSince &&
-		Time.parse(req.query.signedSince)
-	)
-
-	var [orderBy, orderDir] = req.query.order ? parseOrder(req.query.order) : []
 	var orderDirSql = orderDir == "desc" ? sql`DESC` : sql`ASC`
 	var limit = req.query.limit ? parseLimit(req.query.limit) : null
 
 	var initiatives = initiativesDb.search(sql`
-		${signedSince ? sql`
+		${filters.signedSince ? sql`
 			WITH recent_signatures AS (
 				SELECT initiative_uuid FROM initiative_signatures
-				WHERE created_at >= ${signedSince}
+				WHERE created_at >= ${filters.signedSince}
 				UNION ALL
 				SELECT initiative_uuid FROM initiative_citizenos_signatures
-				WHERE created_at >= ${signedSince}
+				WHERE created_at >= ${filters.signedSince}
 			)
 		` : sql``}
 
@@ -96,45 +90,128 @@ exports.router.get("/",
 			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
 			AS signature_count
 
-			${signedSince ? sql`,
+			${filters.signedSince ? sql`,
 				COUNT(recent.initiative_uuid) AS recent_signature_count
 			` : sql``}
 
 		FROM initiatives AS initiative
-		${tag ? sql`JOIN json_each(initiative.tags) AS tag` : sql``}
+		${filters.tag ? sql`JOIN json_each(initiative.tags) AS tag` : sql``}
 
 		LEFT JOIN users AS user ON user.id = initiative.user_id
 
-		${signedSince ? sql`
+		${filters.signedSince ? sql`
 			JOIN recent_signatures AS recent
 			ON recent.initiative_uuid = initiative.uuid
 		` : sql``}
 
 		WHERE initiative.published_at IS NOT NULL
 
-		${onlyDestinations
-			? sql`AND initiative.destination IN ${sql.in(onlyDestinations)}`
+		${filters.destination
+			? sql`AND initiative.destination IN ${sql.in(filters.destination)}`
 			: sql``
 		}
 
-		${onlyPhase ? sql`AND initiative.phase = ${onlyPhase}` : sql``}
-		${tag ? sql`AND tag.value = ${tag}` : sql``}
+		${filters.phase ? sql`AND initiative.phase = ${filters.phase}` : sql``}
+		${filters.tag ? sql`AND tag.value = ${filters.tag}` : sql``}
 
-		${signingEndsAt ? sql`
-			AND initiative.signing_ends_at
-			${COMPARATOR_SQL[signingEndsAt[0]]}
-			${signingEndsAt[1]}
+		${filters.publishedOn && filters.publishedOn.begin ? sql`
+			AND initiative.published_at >= ${filters.publishedOn.begin}
+		` : sql``}
+
+		${filters.publishedOn && filters.publishedOn.end ? sql`
+			AND initiative.published_at < ${filters.publishedOn.end}
+		` : sql``}
+
+		${filters.signingStartedOn && filters.signingStartedOn.begin ? sql`
+			AND initiative.signing_started_at >= ${filters.signingStartedOn.begin}
+		` : sql``}
+
+		${filters.signingStartedOn && filters.signingStartedOn.end ? sql`
+			AND initiative.signing_started_at < ${filters.signingStartedOn.end}
+		` : sql``}
+
+		${filters.signingEndedOn && filters.signingEndedOn.begin ? sql`
+			AND initiative.signing_ends_at >= ${filters.signingEndedOn.begin}
+		` : sql``}
+
+		${filters.signingEndedOn && filters.signingEndedOn.end ? sql`
+			AND initiative.signing_ends_at < ${filters.signingEndedOn.end}
+		` : sql``}
+
+		${filters.signingEndsAt && filters.signingEndsAt.begin ? sql`
+			AND initiative.signing_ends_at >= ${filters.signingEndsAt.begin}
+		` : sql``}
+
+		${filters.signingEndsAt && filters.signingEndsAt.end ? sql`
+			AND initiative.signing_ends_at < ${filters.signingEndsAt.end}
 		` : sql``}
 
 		GROUP BY initiative.uuid
 
-		${
-			orderBy == "signatureCount"
-			? sql`ORDER BY signature_count ${orderDirSql}`
-			: orderBy == "signaturesSinceCount" && signedSince
-			? sql`ORDER BY recent_signature_count ${orderDirSql}`
-			: sql`ORDER BY initiative.rowid ASC`
-		}
+		${{
+			id: sql`ORDER BY initiative.id ${orderDirSql}`,
+			title: sql`ORDER BY initiative.title COLLATE NOCASE ${orderDirSql}`,
+
+			author: sql`ORDER BY COALESCE(
+				user.name,
+				initiative.author_name
+			) COLLATE NOCASE ${orderDirSql}`,
+
+			phase: sql`ORDER BY CASE initiative.phase
+				WHEN 'edit' THEN 0
+				WHEN 'sign' THEN 1
+				WHEN 'parliament' THEN 2
+				WHEN 'government' THEN 3
+				WHEN 'done' THEN 4
+			END ${orderDirSql}, CASE initiative.phase
+				WHEN 'edit' THEN initiative.created_at
+				WHEN 'sign' THEN signature_count
+				WHEN 'parliament' THEN initiative.sent_to_parliament_at
+				WHEN 'government' THEN initiative.sent_to_government_at
+				WHEN 'done' THEN COALESCE(
+					initiative.finished_in_government_at,
+					initiative.finished_in_parliament_at
+				)
+			END ${orderDir == "asc" ? sql`desc` : sql`asc`}`,
+
+			destination: sql`ORDER BY CASE initiative.destination
+				WHEN NULL THEN ''
+				WHEN 'parliament' THEN '0'
+				ELSE initiative.destination
+			END ${orderDirSql}`,
+
+			"published-at": sql`ORDER BY initiative.published_at ${orderDirSql}`,
+
+			"signing-started-at": sql`ORDER BY
+				initiative.signing_started_at ${orderDirSql},
+				initiative.published_at ${orderDirSql}
+			`,
+
+			"signing-ended-at": sql`ORDER BY
+				initiative.signing_ends_at ${orderDirSql},
+				initiative.published_at ${orderDirSql}
+			`,
+
+			"signature-count": sql`ORDER BY CASE
+				WHEN initiative.external THEN 1000
+				ELSE signature_count
+				END ${orderDirSql}
+			`,
+
+			"signatures-since-count": filters.signedSince
+				? sql`ORDER BY recent_signature_count ${orderDirSql}`
+				: null,
+
+			"proceedings-started-at": sql`ORDER BY COALESCE(
+				initiative.sent_to_parliament_at,
+				initiative.sent_to_government_at
+			) ${orderDirSql}`,
+
+			"proceedings-ended-at": sql`ORDER BY COALESCE(
+				initiative.finished_in_government_at,
+				initiative.finished_in_parliament_at
+			) ${orderDirSql}`
+		}[orderBy] || sql``}
 
 		${limit != null ? sql`LIMIT ${limit}` : sql``}
 	`)
@@ -151,8 +228,9 @@ exports.router.get("/",
 			}))
 
 		default: res.render("initiatives/index_page.jsx", {
-			initiatives: initiatives,
-			onlyDestinations: onlyDestinations || EMPTY_ARR
+			order: [orderBy, orderDir],
+			initiatives,
+			filters
 		})
 	}
 })
@@ -1012,10 +1090,10 @@ function* updateInitiativePhaseToParliament(req, res) {
 			initiativeUrl: Initiative.slugUrl(initiative),
 			initiativeUuid: initiative.uuid,
 
-			signatureCount: signatureCount,
-			undersignedSignaturesUrl: undersignedSignaturesUrl,
-			citizenosSignaturesUrl: citizenosSignaturesUrl,
-			signaturesCsvUrl: signaturesCsvUrl,
+			signatureCount,
+			undersignedSignaturesUrl,
+			citizenosSignaturesUrl,
+			signaturesCsvUrl,
 			guideUrl: localGovernmentGuideUrl,
 
 			authorName: attrs.contact.name,
@@ -1043,7 +1121,7 @@ function* updateInitiativePhaseToParliament(req, res) {
 			authorName: attrs.contact.name,
 			initiativeTitle: initiative.title,
 			initiativeUrl: Initiative.slugUrl(initiative),
-			signatureCount: signatureCount
+			signatureCount
 		})
 	})
 
@@ -1297,8 +1375,45 @@ function parseMeeting(obj) {
 	}
 }
 
-function parseDestinations(dest) {
-	return _.asArray(dest).filter(isValidDestination)
+function parseFilters(query) {
+	var filters = _.mapKeys(_.renameKeys(Filtering.parseFilters({
+		"for": "array",
+		"destination": "array",
+
+		"published-on": "range",
+		"signing-started-on": "range",
+		"signing-ended-on": "range",
+		phase: true,
+
+		signingEndsAt: "range",
+		"signing-ends-at": "range",
+
+		signedSince: true,
+		"signed-since": true,
+
+		category: true,
+		tag: true
+	}, query), {
+		"for": "destination",
+		"category": "tag",
+		signingEndsAt: "signing-ends-at",
+		signedSince: "signed-since"
+	}), _.camelCase)
+
+	if (filters.phase)
+		filters.phase = parsePhase(filters.phase)
+	if (filters.destination)
+		filters.destination = filters.destination.filter(isValidDestination)
+	if (filters.publishedOn)
+		filters.publishedOn = parseDateRange(filters.publishedOn)
+	if (filters.signingStartedOn)
+		filters.signingStartedOn = parseDateRange(filters.signingStartedOn)
+	if (filters.signingEndedOn)
+		filters.signingEndedOn = parseDateRange(filters.signingEndedOn)
+	if (filters.signedSince)
+		filters.signedSince = Time.parse(filters.signedSince)
+
+	return filters
 }
 
 function parsePhase(phase) {
@@ -1306,10 +1421,36 @@ function parsePhase(phase) {
 	else throw new HttpError(400, "Invalid Phase")
 }
 
+function parseDateRange({begin, end, bounds}) {
+	begin = begin && Time.parseIsoDate(begin)
+	end = end && Time.parseIsoDate(end)
+	if (begin == null && end == null) return null
+
+	return new Range(
+		bounds[0] == "(" && begin ? DateFns.addDays(begin, 1) : begin,
+		bounds[1] == "]" && end ? DateFns.addDays(end, 1) : end,
+		"[)"
+	)
+}
+
 function parseOrder(order) {
 	switch ((order = Filtering.parseOrder(order))[0]) {
-		case "signatureCount":
-		case "signaturesSinceCount": return order
+		case "id":
+		case "title":
+		case "author":
+		case "phase":
+		case "destination":
+		case "published-at":
+		case "signing-started-at":
+		case "signing-ended-at":
+		case "signature-count":
+		case "signatures-since-count":
+		case "proceedings-started-at": return order
+		case "proceedings-ended-at": return order
+
+		case "signatureCount": return ["signature-count", order[1]]
+		case "signaturesSinceCount": return ["signatures-since-count", order[1]]
+
 		default: throw new HttpError(400, "Invalid Order")
 	}
 }

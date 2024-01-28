@@ -10,6 +10,10 @@ $article-padding-mobile: 2rem;
 $article-width-percentage: 70%;
 $initiative-width: 22.5rem;
 
+html {
+	scroll-behavior: smooth;
+}
+
 html,
 body {
 	height: 100%;
@@ -193,7 +197,7 @@ strong {
 	border: none;
 
 	height: $button-height;
-	line-height: $button-height;
+	line-height: $button-height + 0.1rem;
 
 	i {
 		margin-right: 0.75rem;
@@ -203,7 +207,7 @@ strong {
 	&:before {
 		display: inline-block;
 		vertical-align: middle;
-		margin-top: -.2rem;
+		margin-top: -.3rem;
 		margin-left: -0.2rem;
 		margin-right: 0.7rem;
 		font-size: 1.6rem;
@@ -235,6 +239,16 @@ strong {
 
 	background: $secondary-button-background;
 	color: $secondary-button-text;
+}
+
+.blue-rounded-button {
+	@extend %generic-button;
+
+	background: $secondary-button-background;
+	color: $secondary-button-text;
+	border-radius: 2rem;
+	height: 3.6rem;
+	line-height: 3.6rem;
 }
 
 .dark-blue-button {
@@ -2128,168 +2142,349 @@ main {
 	}
 }
 
-#initiatives-page {
+#initiatives-page main {
 	$screen-width-for-boxes: 586px;
+	$table-border-color: #d4d9df;
 
 	background-color: $secondary-background;
 
-	#filter {
-		h1 {
-			font-size: 3.4rem;
-			line-height: 1.2;
-			color: $title-text;
-			font-family: $museo-sans;
-		}
+	h1 {
+		margin: 0 2rem 3rem;
+		font-size: 3.8rem;
+
+		color: $title-text;
+		font-family: $museo-sans;
+		font-weight: 700;
+		line-height: 1.3;
 	}
 
-	.initiative-list-section {
-		padding-top: 3rem; // Phase headers have extra top-padding.
+	#initiatives-section {
+		padding-left: $page-padding;
+		padding-right: $page-padding;
 
-		h2 {
-			padding-top: 1rem; // A bit of space when a sticky header.
-			font-size: 2rem;
-			line-height: 3rem;
-			color: $title-text;
-			border-bottom: 1px solid transparent;
-			font-family: $museo-sans;
-			font-weight: 900;
-			text-transform: uppercase;
+		@include mobile {
+			padding-left: $page-mobile-padding;
+			padding-right: $page-mobile-padding;
+		}
 
-			position: sticky;
-			top: 0;
-			background: $secondary-background;
+		#filters {
+			details {
+				$input-height: 3.6rem;
+				border-radius: 0.5rem;
+				display: inline-block;
+				position: relative;
 
-			&.edit-phase { border-bottom-color: $edit-phase-color; }
-			&.sign-phase { border-bottom-color: $sign-phase-color; }
-			&.parliament-phase { border-bottom-color: $parliament-phase-color; }
-			&.government-phase { border-bottom-color: $government-phase-color; }
-			&.done-phase { border-bottom-color: $done-phase-color; }
+				summary { list-style: none; }
 
-			& ~ h2 { margin-top: 3rem; }
+				&:not([open]) summary {
+					@extend .blue-rounded-button;
+					@extend .ra-icon-filter;
 
-			@media only screen and (max-width: $screen-width-for-boxes) {
-				// Edge-to-edge to hide the shadow of initiative boxes.
-				margin-left: -2rem;
-				margin-right: -2rem;
-				padding-left: 2rem;
-				padding-right: 2rem;
-				margin-bottom: 2rem;
+					line-height: 3.6rem + 0.1rem;
+					margin-bottom: 0.5rem;
+					margin-right: 1rem;
+				}
+
+				&[open] {
+					display: block;
+					background: white;
+					padding: 1rem 3rem 1.5rem 2rem;
+					margin-bottom: 0.5rem;
+
+					& + #current-filters { display: none; }
+				}
+
+				&[open] summary {
+					position: absolute;
+					overflow: hidden;
+					top: 0;
+					right: 0;
+					@extend .ra-icon-close;
+					height: 4rem;
+					width: 4rem;
+					line-height: 4rem;
+					cursor: pointer;
+					text-align: center;
+					color: #bababa;
+
+					&:focus {
+						outline-color: currentcolor;
+						outline-style: dashed;
+						outline-width: 0.1rem;
+						color: #888;
+						border-radius: 1rem;
+						outline-offset: -0.5rem;
+					}
+
+					&:hover { color: #888; }
+
+					.open-text { display: none; }
+				}
+
+				label {
+					display: inline-block;
+					margin-right: 1rem;
+
+					span { font-weight: 600; }
+				}
+
+				input,
+				select {
+					display: block;
+					margin-top: 0.5rem;
+					margin-bottom: 1rem;
+					max-width: 35rem;
+					height: $input-height;
+				}
+
+				button { margin-right: 0.5rem; }
+			}
+
+			#current-filters {
+				display: inline;
+				font-size: 1.6rem;
+
+				.filter {
+					display: inline-block;
+					background: white;
+					border: 1px solid $light-background-border;
+					padding: 0.5rem 1.5rem;
+					border-radius: 0.5rem;
+					margin-right: 0.7rem;
+					margin-bottom: 0.5rem;
+
+					.name {
+						text-transform: uppercase;
+						font-size: 1.4rem;
+						font-weight: 700;
+						color: $grey;
+						margin-right: 0.7rem;
+					}
+
+					ul { display: inline; }
+					li { display: inline; }
+					li:not(:last-child):after { content: ", "; }
+				}
 			}
 		}
 
-		.initiative {
-			$title-font-size: 1.7rem;
-			background: white;
 
-			a {
-				display: block;
-				padding: 1.2rem 2rem 1rem;
+		#initiatives {
+			width: 100%;
+
+			& > thead > tr > th { padding: 0.5rem 0.5rem; }
+			& > tbody > tr > td { padding: 1.3rem 0.5rem 1.4rem; }
+
+			& > thead > tr > th:first-child,
+			& > tbody > tr > td:first-child { padding-left: 2rem; }
+			& > thead > tr > th:last-child,
+			& > tbody > tr > td:last-child { padding-right: 2rem; }
+
+			& > thead {
+				top: 0;
+				position: sticky;
+
+				// Border radius for box-shadow. The background comes from <th>.
+				border-radius: 0.5rem;
+				box-shadow: 0 1px #e0e0e0;
+				box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+			}
+
+			& > thead > tr > th {
+				background: white;
+				font-size: 1.6rem;
+				font-weight: bold;
+				color: black;
+				white-space: nowrap;
+
+				small {
+					font-weight: normal;
+					font-size: 1.5rem;
+					color: $grey;
+				}
+			}
+
+			& > thead > tr:first-child > th {
+				padding-top: 1.5rem;
+
+				&:first-child { border-top-left-radius: 0.5rem; }
+				&:last-child { border-top-right-radius: 0.5rem; }
+			}
+
+			& > thead > tr:last-child > th {
+				padding-bottom: 1.2rem;
+
+				&:first-child { border-bottom-left-radius: 0.5rem; }
+				&:last-child { border-bottom-right-radius: 0.5rem; }
+			}
+
+			.sort-button {
+				white-space: nowrap;
+
+				svg { margin-left: 0.6rem; vertical-align: sub; }
+
+				&.asc,
+				&.desc { font-weight: 600; }
+				&.asc .sort-chevrons .up { fill: $dark-blue; }
+				&.desc .sort-chevrons .down { fill: $dark-blue; }
+
+				&:focus {
+					outline-color: currentcolor;
+					outline-style: dashed;
+					outline-width: 0.1rem;
+					outline-offset: 0.2rem;
+				}
 
 				&:hover {
-					h3 { color: $title-text; }
+					color: $link-color;
+					text-decoration: underline;
+				}
+
+				& + .column-name { margin-left: 0.7rem; }
+			}
+
+			caption {
+				text-align: left;
+				font-size: 1.6rem;
+				line-height: 1.5;
+
+				// Filter buttons add another 0.5rem of bottom margin.
+				padding: 0 0 0.5rem;
+
+				.total { padding: 0 2rem; }
+				.total + #filters { margin-top: 0.5rem; }
+			}
+
+			.table-group-header th {
+				font-size: 1.5rem;
+				padding: 2.5rem 2rem 0.5rem;
+
+				h2 {
+					font-size: 2rem;
+					line-height: 1.5;
+					color: black;
+					font-family: $museo-sans;
+					font-weight: 900;
+					text-transform: uppercase;
 				}
 			}
 
-			.initiative-time,
-			.author,
-			.destination,
-			.status p {
-				font-size: 1.4rem;
-				font-family: $tisa-pro;
-				color: $secondary-light-text;
-				line-height: 1.4;
+			.empty td {
+				line-height: 1.5;
+				font-size: 1.6rem;
+				text-align: center;
+				padding-top: 2rem;
 			}
 
-			.initiative-time {
-				float: right;
-			}
+			.initiative {
+				background: white;
+				box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
 
-			h3 {
-				font-size: $title-font-size;
-				color: #4f4f4f;
-				line-height: 1.5 * $title-font-size;
-				margin-top: 0.5rem;
-				word-wrap: break-word;
-				overflow: hidden;
+				h3 {
+					margin-top: 0.4rem;
 
-				@include hyphens(auto);
-			}
+					a {
+						color: $title-text;
+						font-size: 1.9rem;
+						font-family: $museo-sans;
+						line-height: 1.5;
+						font-weight: 400;
+						word-wrap: break-word;
+						//text-decoration: underline;
 
-			.status {
-				margin-top: 0.5rem;
-				text-align: right;
-				clear: right;
-				float: right;
-				margin-left: 2rem;
+						overflow: hidden;
+						@include hyphens(auto);
 
-				.initiative-progress {
-					display: inline-block;
-					border-radius: 3rem;
-					height: 1.5 * $title-font-size;
-					line-height: 1.5 * $title-font-size;
-					text-align: center;
-					width: $initiative-width;
-				}
+						&:focus {
+							outline-color: currentcolor;
+							outline-style: dashed;
+							outline-width: 0.1rem;
+							outline-offset: 0.2rem;
 
-				p {
-					margin-top: 0.2rem;
-				}
-			}
+							border-radius: 0.1rem;
+							-moz-outline-radius: 0.1rem;
+						}
 
-			.author {
-				display: block;
-				@include ellipsis;
-				margin-top: 0.2rem;
-				padding-bottom: 0.5rem; // For descenders like "j" and "g".
-			}
+						&:hover {
+							color: $link-color;
+							text-decoration: underline;
+						}
+					}
 
-			.badge {
-				float: left;
-				height: 2rem;
-				margin-top: 0.2rem;
-				margin-right: 1rem;
-			}
-
-			.narrow-initiative-progress { display: none; }
-
-			& + .initiative {
-				border-top: 1px solid $light-background-border;
-			}
-
-			@media only screen and (max-width: $screen-width-for-boxes) {
-				a {
-					box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
-
-					&:hover {
-						box-shadow: 0 1px 10px 0 rgba(0, 0, 0, 0.4);
+					img.badge {
+						vertical-align: middle;
+						display: inline-block;
+						height: 2rem;
+						margin-left: 1rem;
 					}
 				}
 
-				.author { margin-top: 0; }
-
-				.badge {
-					float: right;
-					height: 2rem;
-					margin-top: -0.2rem;
-					margin-right: -0.5rem;
-					margin-left: 0.5rem;
+				td {
+					font-size: 1.5rem;
+					line-height: 1.5;
+					vertical-align: middle;
 				}
 
-				.status { display: none; }
-
-				.narrow-initiative-progress {
-					display: block;
-					border-radius: 0;
-					margin: 0.5rem -2rem -1rem;
-					padding-top: 1rem;
-					padding-bottom: 0.9rem;
-					line-height: 1;
+				.title-column {
+					font-family: $tisa-pro;
+					color: $grey;
 				}
 
-				& + .initiative {
-					border-top: none;
-					margin-top: 2rem;
+				.phase-column {
+					.phase {
+						text-transform: uppercase;
+						font-size: 1.3rem;
+						font-weight: 700;
+						border-radius: 2rem;
+						padding: 0.5rem 1rem 0.3rem;
+						color: white;
+
+						&.edit-phase { background-color: $edit-phase-color; }
+						&.sign-phase { background-color: $sign-phase-color; }
+						&.parliament-phase { background-color: $parliament-phase-color; }
+						&.government-phase { background-color: $government-phase-color; }
+						&.done-phase { background-color: $done-phase-color; }
+					}
 				}
+
+				td.published-at-column,
+				td.signing-started-at-column,
+				td.signing-ended-at-column,
+				td.proceedings-started-at-column,
+				td.proceedings-ended-at-column {
+					font-size: 1.6rem;
+					font-weight: 500;
+					font-variant-numeric: tabular-nums;
+				}
+
+				td.published-at-column,
+				td.signing-started-at-column,
+				td.signing-ended-at-column {
+					text-align: right;
+				}
+
+				td.signing-started-at-column,
+				td.proceedings-phase-column { white-space: nowrap; }
+
+				.signature-progress {
+					display: inline-block;
+					white-space: nowrap;
+					font-size: 1.3rem;;
+					font-weight: 700;
+					border-radius: 2rem;
+					padding: 0.3rem 1rem 0.1rem;
+					color: $progress-bar-color;
+					background-color: $progress-bar-background;
+					width: 100%;
+					min-width: 11rem;
+					text-align: center;
+
+					&.external { background-color: $parliament-color; color: white; }
+					&.completed { background-color: white; }
+					&.failed { background-color: #9a9a9a; color: white; }
+				}
+
+				& + .initiative > td { border-top: 1px solid $secondary-background; }
 			}
 		}
 	}

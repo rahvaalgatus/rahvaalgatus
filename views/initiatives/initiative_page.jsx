@@ -10,7 +10,8 @@ var Initiative = require("root/lib/initiative")
 var diffInDays = require("date-fns").differenceInCalendarDays
 var {getSignatureThreshold} = require("root/lib/initiative")
 exports = module.exports = InitiativePage
-exports.ProgressView = ProgressView
+exports.InitiativeBadgeView = InitiativeBadgeView
+exports.InitiativeProgressView = InitiativeProgressView
 exports.renderAuthorName = renderAuthorName
 
 function InitiativePage(attrs, children) {
@@ -67,7 +68,7 @@ function InitiativeBadgeView(attrs) {
 	/>
 }
 
-function ProgressView(attrs) {
+function InitiativeProgressView(attrs) {
 	var {t} = attrs
 	var {initiative} = attrs
 	var sigs = attrs.signatureCount
@@ -115,12 +116,11 @@ function ProgressView(attrs) {
 					{t("N_SIGNATURES_COLLECTED", {votes: sigs})}
 				</div>
 
-			else if (new Date < initiative.signing_ends_at)
-				return <div
-					style={Css.linearBackground("#00cb81", sigs / signatureThreshold)}
-					class={klass}>
-					{t("N_SIGNATURES", {votes: sigs})}
-				</div>
+			else if (new Date < initiative.signing_ends_at) return <div
+				style={Css.linearBackground("#00cb81", sigs / signatureThreshold)}
+				class={klass}>
+				{t("N_SIGNATURES", {votes: sigs})}
+			</div>
 
 			else return <div class={`${klass} failed`}>
 				{t("N_SIGNATURES_FAILED", {votes: sigs})}

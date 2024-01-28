@@ -3851,6 +3851,11 @@
       "from": "https://registry.npmjs.org/standard-http-error/-/standard-http-error-2.0.0.tgz",
       "resolved": "https://registry.npmjs.org/standard-http-error/-/standard-http-error-2.0.0.tgz"
     },
+    "strange": {
+      "version": "1.7.2",
+      "from": "strange@latest",
+      "resolved": "https://registry.npmjs.org/strange/-/strange-1.7.2.tgz"
+    },
     "tough-cookie": {
       "version": "2.4.3",
       "from": "tough-cookie@>=2.4.3 <2.5.0",

@@ -8,7 +8,7 @@ var I18n = require("root/lib/i18n")
 var {Section} = require("../page")
 var {Form} = require("../page")
 var {Flash} = require("../page")
-var {InitiativeBoxesView} = require("../initiatives/index_page")
+var {InitiativeBoxesView} = require("../home_page")
 var {SCHEMA} = require("root/controllers/user_controller")
 
 module.exports = function(attrs) {

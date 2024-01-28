@@ -3,18 +3,20 @@
   font-weight: normal;
   font-style: normal;
 
-  src: url("/assets/Rahvaicons_9e6162492b40231a57a49b6e671d5cd6.eot");
-  src: url("/assets/Rahvaicons_9e6162492b40231a57a49b6e671d5cd6.eot?#iefix") format("embedded-opentype"),
-       url("/assets/Rahvaicons_9e6162492b40231a57a49b6e671d5cd6.woff") format("woff"),
-       url("/assets/Rahvaicons_9e6162492b40231a57a49b6e671d5cd6.woff2") format("woff2"),
-       url("/assets/Rahvaicons_9e6162492b40231a57a49b6e671d5cd6.ttf") format("truetype");
+  src: url("/assets/Rahvaicons_2b96d11236f5aaaaf8d737b98ec63d2f.eot");
+  src: url("/assets/Rahvaicons_2b96d11236f5aaaaf8d737b98ec63d2f.eot?#iefix") format("embedded-opentype"),
+       url("/assets/Rahvaicons_2b96d11236f5aaaaf8d737b98ec63d2f.woff") format("woff"),
+       url("/assets/Rahvaicons_2b96d11236f5aaaaf8d737b98ec63d2f.woff2") format("woff2"),
+       url("/assets/Rahvaicons_2b96d11236f5aaaaf8d737b98ec63d2f.ttf") format("truetype");
 }
 
 .ra-icon-api:before,
+.ra-icon-close:before,
 .ra-icon-ddoc:before,
 .ra-icon-doc:before,
 .ra-icon-external-link:before,
 .ra-icon-facebook-logo:before,
+.ra-icon-filter:before,
 .ra-icon-html:before,
 .ra-icon-jpeg:before,
 .ra-icon-msg:before,
@@ -35,10 +37,12 @@
 /* NOTE: iOS (at least 4.2) doesn't seem to support CSS Unicode escapes. */
 /* Use !important so we could provide fallback content in CSS. */
 .ra-icon-api:before { content: "" !important; }
+.ra-icon-close:before { content: "" !important; }
 .ra-icon-ddoc:before { content: "" !important; }
 .ra-icon-doc:before { content: "" !important; }
 .ra-icon-external-link:before { content: "" !important; }
 .ra-icon-facebook-logo:before { content: "" !important; }
+.ra-icon-filter:before { content: "" !important; }
 .ra-icon-html:before { content: "" !important; }
 .ra-icon-jpeg:before { content: "" !important; }
 .ra-icon-msg:before { content: "" !important; }

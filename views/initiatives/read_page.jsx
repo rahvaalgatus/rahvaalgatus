@@ -16,7 +16,7 @@ var {FormButton} = require("../page")
 var {DonateForm} = require("../donations/create_page")
 var {CommentView} = require("./comments/read_page")
 var {CommentForm} = require("./comments/create_page")
-var {ProgressView} = require("./initiative_page")
+var {InitiativeProgressView} = require("./initiative_page")
 var {CoauthorInvitationForm} = require("./coauthor_invitation_page")
 var EidView = require("../eid_view")
 var {getSignatureThreshold} = require("root/lib/initiative")
@@ -364,7 +364,7 @@ function ReadPage(attrs) {
 				{Initiative.isSignable(new Date, initiative) ? <div
 					id="initiative-vote"
 				>
-					<ProgressView
+					<InitiativeProgressView
 						t={t}
 						initiative={initiative}
 						signatureCount={signatureCount}
@@ -793,12 +793,12 @@ function PhasesView(attrs) {
     <ol>
 			<li id="edit-phase" class={classifyPhase("edit", phase)}>
         <i>{t("EDIT_PHASE")}</i>
-				<ProgressView value={editProgress} text={editPhaseText} />
+				<InitiativeProgressView value={editProgress} text={editPhaseText} />
       </li>
 
 			<li id="sign-phase" class={classifyPhase("sign", phase)}>
         <i>{t("SIGN_PHASE")}</i>
-				<ProgressView value={signProgress} text={signPhaseText} />
+				<InitiativeProgressView value={signProgress} text={signPhaseText} />
       </li>
 
 			{initiative.destination == "parliament" ? <li
@@ -809,7 +809,7 @@ function PhasesView(attrs) {
 				}
 			>
         <i>{t("PARLIAMENT_PHASE")}</i>
-				<ProgressView
+				<InitiativeProgressView
 					before={initiative.parliament_committee}
 					value={parliamentProgress}
 					text={parliamentPhaseText}
@@ -825,7 +825,7 @@ function PhasesView(attrs) {
 					: t("LOCAL_GOVERNMENT_PHASE")
 				}</i>
 
-				<ProgressView
+				<InitiativeProgressView
 					before={initiative.government_agency}
 					value={governmentProgress}
 					text={governmentPhaseText}
@@ -844,7 +844,7 @@ function PhasesView(attrs) {
     </ol>
   </center></section>
 
-	function ProgressView(attrs) {
+	function InitiativeProgressView(attrs) {
 		var value = attrs && attrs.value
 		var before = attrs && attrs.before
 		var text = attrs && attrs.text
@@ -2104,7 +2104,7 @@ function QuicksignView({
 	if (!initiative.published_at) return null
 
 	return <div class={"quicksign " + (klass || "")}>
-		<ProgressView
+		<InitiativeProgressView
 			t={t}
 			initiative={initiative}
 			signatureCount={signatureCount}

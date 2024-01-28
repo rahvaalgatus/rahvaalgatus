@@ -4,7 +4,7 @@ var Jsx = require("j6pack")
 var Page = require("../page")
 var {Section} = require("../page")
 var {Flash} = require("../page")
-var {InitiativeBoxesView} = require("../initiatives/index_page")
+var {InitiativeBoxesView} = require("../home_page")
 var {CallToActionsView} = require("../home_page")
 var LOCAL_GOVERNMENTS_BY_COUNTY =
 	require("root/lib/local_governments").BY_COUNTY

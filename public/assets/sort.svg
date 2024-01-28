@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="sort-chevrons" width="9" height="16" viewBox="0 0 9 16" fill="#C6CACC">
+	<path class="up" d="M4.50491 2.83L7.61614 6L9 4.59L4.50491 0L0 4.59L1.39368 6L4.50491 2.83Z" />
+
+	<path class="down" d="M1.38386 10L4.49509 13.17L7.60633 10L9 11.41L4.49509 16L0 11.41L1.38386 10Z" />
+</svg>

@@ -4,18 +4,22 @@ var Jsx = require("j6pack")
 var Page = require("./page")
 var Config = require("root").config
 var I18n = require("root/lib/i18n")
+var Initiative = require("root/lib/initiative")
 var {Section} = require("./page")
 var {Flash} = require("./page")
 var {Form} = require("./page")
 var {FormCheckbox} = Page
-var {InitiativeBoxesView} = require("./initiatives/index_page")
-var {InitiativeBoxView} = require("./initiatives/index_page")
+var {DateView} = Page
+var {RelativeDateView} = Page
+var {InitiativeProgressView} = require("./initiatives/initiative_page")
 var {getSignatureThreshold} = require("root/lib/initiative")
+var {renderAuthorName} = require("./initiatives/initiative_page")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var LOCAL_GOVERNMENTS_BY_COUNTY = LOCAL_GOVERNMENTS.BY_COUNTY
 exports = module.exports = HomePage
 exports.CallToActionsView = CallToActionsView
 exports.StatisticsView = StatisticsView
+exports.InitiativeBoxesView = InitiativeBoxesView
 exports.groupInitiatives = groupInitiatives
 
 function HomePage(attrs) {
@@ -394,6 +398,87 @@ function InitiativesSubscriptionForm(attrs) {
 	]
 }
 
+function InitiativeBoxesView(attrs) {
+	var {t} = attrs
+	var {phase} = attrs
+	var {initiatives} = attrs
+	initiatives = phase ? sortForPhase(phase, initiatives) : initiatives
+
+	return <ol id={attrs.id} class="initiatives">
+		{initiatives.map((initiative) => <InitiativeBoxView
+			t={t}
+			initiative={initiative}
+			signatureCount={initiative.signature_count}
+		/>)}
+	</ol>
+}
+
+function InitiativeBoxView(attrs) {
+	var {t} = attrs
+	var {initiative} = attrs
+	var {signatureCount} = attrs
+
+	var time = (
+		initiative.phase == "edit" ? initiative.created_at :
+		initiative.phase == "sign" ? initiative.signing_started_at :
+		initiative.phase == "parliament" ? (
+			initiative.received_by_parliament_at ||
+			initiative.sent_to_parliament_at
+		) :
+		initiative.phase == "government" ? initiative.sent_to_government_at :
+		initiative.phase == "done" ? (
+			initiative.finished_in_government_at ||
+			initiative.finished_in_parliament_at
+		) :
+		null
+	)
+
+	var badge = _.find(Config.badges, (_b, tag) => initiative.tags.includes(tag))
+	var authorName = renderAuthorName(initiative)
+
+	return <li
+		data-id={initiative.id}
+		data-uuid={initiative.uuid}
+		class={"initiative" + (initiative.destination ? " with-destination" : "")}
+	>
+		<a href={Initiative.slugPath(initiative)}>
+			{attrs.dateless ? null
+				: initiative.phase == "sign"
+				? (new Date < initiative.signing_ends_at ?
+					<RelativeDateView t={t} date={initiative.signing_ends_at} />
+				: null)
+				: time
+				? <DateView date={time} />
+				// Empty <time> so destinationless discussions' titles align properly.
+				: <time>&nbsp;</time>
+			}
+
+			{" "}
+
+			{initiative.destination ? <span
+				class="destination"
+				title={t("DESTINATION_" + initiative.destination)}
+			>
+				{t("DESTINATION_" + initiative.destination)}
+			</span> : null}
+
+			<h3 lang="et" title={initiative.title}>{initiative.title}</h3>
+			{badge ? <img src={badge.icon} class="badge" title={badge.name} /> : null}
+			<span class="author" title={authorName}>{authorName}</span>
+
+			<InitiativeProgressView
+				t={t}
+				initiative={initiative}
+				signatureCount={signatureCount}
+			/>
+		</a>
+
+		{attrs.note ? <div class="note">
+			{attrs.note}
+		</div> : null}
+	</li>
+}
+
 function groupInitiatives(initiatives) {
 	return _.groupBy(initiatives, function(initiative) {
 		if (initiative.phase == "sign") {
@@ -408,4 +493,27 @@ function groupInitiatives(initiatives) {
 
 		return initiative.phase
 	})
+}
+
+function sortForPhase(phase, initiatives) {
+	switch (phase) {
+		case "edit": return _.sortBy(initiatives, "created_at").reverse()
+
+		case "sign":
+			return _.sortBy(initiatives, (i) => i.signature_count || 0).reverse()
+
+		case "parliament":
+			return _.sortBy(initiatives, (i) => (
+				i.sent_to_parliament_at || i.signing_started_at
+			)).reverse()
+
+		case "government": return _.sortBy(initiatives, "sent_to_government_at")
+
+		case "done":
+			return _.sortBy(initiatives, (i) => (
+				i.finished_in_government_at || i.finished_in_parliament_at
+			)).reverse()
+
+		default: throw new RangeError("Invalid phase: " + phase)
+	}
 }

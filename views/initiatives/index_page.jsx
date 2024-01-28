@@ -1,36 +1,29 @@
 /** @jsx Jsx */
-var _ = require("lodash")
+var _ = require("root/lib/underscore")
+var Qs = require("qs")
 var Jsx = require("j6pack")
+var Range = require("strange")
 var DateFns = require("date-fns")
-var Config = require("root").config
 var Page = require("../page")
 var Initiative = require("root/lib/initiative")
+var Filtering = require("root/lib/filtering")
+var Css = require("root/lib/css")
 var {Section} = require("../page")
-var {ProgressView} = require("./initiative_page")
 var {DateView} = Page
-var {RelativeDateView} = Page
-var I18n = require("root/lib/i18n")
-var EMPTY_ARR = Array.prototype
+var {SortButton} = Page
+var {InitiativeBadgeView} = require("./initiative_page")
+var {getSignatureThreshold} = require("root/lib/initiative")
+var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
 var {renderAuthorName} = require("./initiative_page")
-exports = module.exports = InitiativesPage
-exports.InitiativeBoxesView = InitiativeBoxesView
-exports.InitiativeBoxView = InitiativeBoxView
+var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
+var LOCAL_GOVERNMENTS_BY_COUNTY = LOCAL_GOVERNMENTS.BY_COUNTY
+var {PHASES} = require("root/lib/initiative")
+module.exports = InitiativesPage
 
-function InitiativesPage(attrs) {
-	var {t} = attrs
-	var {req} = attrs
-	var {flash} = attrs
-	var {initiatives} = attrs
-
-	var initiativesByPhase = _.groupBy(initiatives, "phase")
-	var inEdit = initiativesByPhase.edit || EMPTY_ARR
-	var inSign = initiativesByPhase.sign || EMPTY_ARR
-	var inParliament = initiativesByPhase.parliament || EMPTY_ARR
-	var inGovernment = initiativesByPhase.government || EMPTY_ARR
-	var inDone = initiativesByPhase.done || EMPTY_ARR
-
-	var {onlyDestinations} = attrs
-	var isFiltered = onlyDestinations.length > 0
+function InitiativesPage({t, req, flash, filters, order, initiatives}) {
+	var [orderBy, orderDir] = order
+	var filterQuery = serializeFilters(filters)
+	var initiativesPath = req.baseUrl + req.path
 
 	return <Page
 		page="initiatives"
@@ -50,277 +43,565 @@ function InitiativesPage(attrs) {
 			<p class="flash notice">{flash("notice")}</p>
 		</Section> : null}
 
-		{isFiltered ? <Section id="filter" class="primary-section">
-			<h1>
-				{onlyDestinations.map((dest) => t("DESTINATION_" + dest)).join(", ")}
-			</h1>
-		</Section> : null}
+		<section id="initiatives-section" class="secondary-section">
+			<h1>Algatused</h1>
 
-		<Section id="initiatives" class="secondary-section initiative-list-section">
-			{inEdit.length > 0 ? <>
-				<h2 class="edit-phase">{t("EDIT_PHASE")}</h2>
+			<table id="initiatives">
+				<caption>
+					{initiatives.length > 0 ? <div class="total">{_.any(filters) ? <>
+						Leitud <strong>{initiatives.length}</strong> algatust.
+					</> : <>
+						Kokku <strong>{initiatives.length}</strong> algatust.
+					</>}</div> : null}
 
-				<InitiativeListView
-					t={t}
-					phase="edit"
-					initiatives={inEdit}
-				/>
-			</> : null}
+					<FiltersView
+						t={t}
+						filters={filters}
+						path={initiativesPath}
+						order={order}
+					/>
+				</caption>
 
-			{inSign.length > 0 ? <>
-				<h2 class="sign-phase">{t("SIGN_PHASE")}</h2>
+				<thead>
+					<tr>
+						<th>
+							<SortButton
+								path={initiativesPath}
+								query={filterQuery}
+								name="title"
+								sorted={orderBy == "title" ? orderDir : null}
+							>
+								Pealkiri
+							</SortButton>
+						</th>
 
-				<InitiativeListView
-					t={t}
-					phase="sign"
-					initiatives={inSign}
-				/>
-			</> : null}
+						<th class="phase-column">
+							<SortButton
+								path={initiativesPath}
+								query={filterQuery}
+								name="phase"
+								sorted={orderBy == "phase" ? orderDir : null}
+							>
+								{t("initiatives_page.table.phase_column")}
+							</SortButton>
+						</th>
 
-			{inParliament.length > 0 ? <>
-				<h2 class="parliament-phase">{t("PARLIAMENT_PHASE")}</h2>
+						<th class="edit-phase-column">
+							Ühisloomes
+						</th>
 
-				<InitiativeListView
-					t={t}
-					phase="parliament"
-					initiatives={inParliament}
-				/>
-			</> : null}
+						<th colspan="2" class="sign-phase-column">
+							Allkirjastamisel
+						</th>
 
-			{inGovernment.length > 0 ? <>
-				<h2 class="government-phase">{t("GOVERNMENT_PHASE")}</h2>
+						<th class="proceedings-phase-column">
+							Menetluses
+						</th>
+					</tr>
 
-				<InitiativeListView
-					t={t}
-					phase="government"
-					initiatives={inGovernment}
-				/>
-			</> : null}
+					<tr>
+						<th>
+							<small>
+								<SortButton
+									path={initiativesPath}
+									query={filterQuery}
+									name="destination"
+									sorted={orderBy == "destination" ? orderDir : null}
+								>
+									Saaja
+								</SortButton>
 
-			{inDone.length > 0 ? <>
-				<h2 class="done-phase">{t("DONE_PHASE")}</h2>
+								<SortButton
+									path={initiativesPath}
+									query={filterQuery}
+									name="author"
+									sorted={orderBy == "author" ? orderDir : null}
+								>
+									Algataja
+								</SortButton>
+							</small>
+						</th>
 
-				<InitiativeListView
-					t={t}
-					phase="done"
-					initiatives={inDone}
-				/>
-			</> : null}
-		</Section>
+						<th />
+
+						<th class="published-at-column edit-phase-column"><small>
+							<SortButton
+								path={initiativesPath}
+								query={filterQuery}
+								name="published-at"
+								direction="desc"
+								sorted={orderBy == "published-at" ? orderDir : null}
+							>
+								Algus
+							</SortButton>
+						</small></th>
+
+						<th class="signing-started-at-column signing-ended-at-column sign-phase-column"><small>
+							<SortButton
+								path={initiativesPath}
+								query={filterQuery}
+								name="signing-started-at"
+								direction="desc"
+								sorted={orderBy == "signing-started-at" ? orderDir : null}
+							>
+								Algus
+							</SortButton>
+
+							<SortButton
+								path={initiativesPath}
+								query={filterQuery}
+								name="signing-ended-at"
+								direction="desc"
+								sorted={orderBy == "signing-ended-at" ? orderDir : null}
+							>
+								Lõpp
+							</SortButton>
+						</small></th>
+
+						<th class="signature-count-column sign-phase-column"><small>
+							<SortButton
+								path={initiativesPath}
+								query={filterQuery}
+								name="signature-count"
+								direction="desc"
+								sorted={orderBy == "signature-count" ? orderDir : null}
+							>
+								Allkirju
+							</SortButton>
+						</small></th>
+
+						<th class="proceedings-phase-column"><small>
+							<SortButton
+								path={initiativesPath}
+								query={filterQuery}
+								name="proceedings-started-at"
+								direction="desc"
+								sorted={orderBy == "proceedings-started-at" ? orderDir : null}
+							>
+								Algus
+							</SortButton>
+
+							<SortButton
+								path={initiativesPath}
+								query={filterQuery}
+								name="proceedings-ended-at"
+								direction="desc"
+								sorted={orderBy == "proceedings-ended-at" ? orderDir : null}
+							>
+								Lõpp
+							</SortButton>
+						</small></th>
+					</tr>
+				</thead>
+
+				{initiatives.length == 0 ? <tbody class="empty"><tr>
+					<td colspan="8">{_.any(filters) ? <>
+						<p>Kahjuks ei leidnud ühtki filtritele vastavat algatust.</p>
+
+						<p>
+							<a href={initiativesPath + Qs.stringify({
+								order: orderBy
+									? (orderDir == "asc" ? "" : "-") + orderBy
+									: undefined
+							}, {addQueryPrefix: true})}
+							class="link-button">Vaata kõiki algatusi</a></p>.
+						</>
+						: <p>Veel ei ole ühtki algatust.</p>
+					}</td>
+				</tr></tbody> :
+
+				_.map(groupInitiatives(orderBy, initiatives), (initiatives) => {
+					var group = groupInitiative(orderBy, initiatives[0])
+
+					var title =
+						orderBy == "destination" ? t("DESTINATION_" + group) :
+						orderBy == "phase" ? t("initiatives_page.phases." + group) :
+						group
+
+					return <InitiativeGroupView
+						t={t}
+						title={title}
+						initiatives={initiatives}
+					/>
+				})}
+			</table>
+		</section>
 	</Page>
 }
 
-function sortForPhase(phase, initiatives) {
-	switch (phase) {
-		case "edit": return _.sortBy(initiatives, "created_at").reverse()
+function FiltersView({t, filters, path, order: [orderBy, orderDir]}) {
+	return <div id="filters">
+		<details>
+			<summary>
+				<span class="open-text">
+					{_.any(filters) ? "Muuda filtreid" : "Filtreeri algatusi"}
+				</span>
+			</summary>
 
-		case "sign":
-			return _.sortBy(initiatives, (i) => i.signature_count || 0).reverse()
+			<form method="get" action={path}>
+				<label>
+					<span>{t("initiatives_page.filters.phase_label")}</span>
 
-		case "parliament":
-			return _.sortBy(initiatives, (i) => (
-				i.sent_to_parliament_at || i.signing_started_at
-			)).reverse()
+					<select name="phase" class="form-select">
+						<option value="" selected={filters.phase == null}>
+							{t("initiatives_page.filters.phases.all")}
+						</option>
 
-		case "government": return _.sortBy(initiatives, "sent_to_government_at")
+						{PHASES.map((phase) => <option
+							value={phase}
+							selected={filters.phase == phase}
+						>
+							{t("initiatives_page.phases." + phase)}
+						</option>)}
+					</select>
+				</label>
 
-		case "done":
-			return _.sortBy(initiatives, (i) => (
-				i.finished_in_government_at || i.finished_in_parliament_at
-			)).reverse()
+				<label>
+					<span>Saaja</span>
 
-		default: throw new RangeError("Invalid phase: " + phase)
+					<select name="destination" class="form-select">
+						<option value="" selected={filters.destination == null}>
+							Kõik
+						</option>
+
+						<optgroup label="Riiklik">
+							<option
+								value="parliament"
+								selected={(filters.destination || []).includes("parliament")}
+							>
+								Riigikogu
+							</option>
+						</optgroup>
+
+						{_.map(LOCAL_GOVERNMENTS_BY_COUNTY, (govs, county) => <optgroup
+							label={county + " maakond"}
+						>{govs.map(([id, {name}]) => <option
+							value={id}
+							selected={(filters.destination || []).includes(id)}
+						>{name}</option>)}</optgroup>)}
+					</select>
+				</label>
+
+				<label>
+					<span>Avalikustatud alates</span>
+
+					<input
+						type="date"
+						name="published-on>"
+						class="form-input"
+
+						value={
+							filters.publishedOn && formatIsoDate(filters.publishedOn.begin)
+						}
+					/>
+				</label>
+
+				<label>
+					<span>Avalikustatud kuni (k.a)</span>
+
+					<input
+						type="date"
+						name="published-on<"
+						class="form-input"
+
+						value={
+							filters.publishedOn &&
+							formatIsoDate(DateFns.addDays(filters.publishedOn.end, -1))
+						}
+					/>
+				</label>
+
+				<label>
+					<span>Allkirjastamise algus alates</span>
+
+					<input
+						type="date"
+						name="signing-started-on>"
+						class="form-input"
+
+						value={
+							filters.signingStartedOn &&
+							formatIsoDate(filters.signingStartedOn.begin)
+						}
+					/>
+				</label>
+
+				<label>
+					<span>Allkirjastamise algus kuni (k.a)</span>
+
+					<input
+						type="date"
+						name="signing-started-on<"
+						class="form-input"
+
+						value={
+							filters.signingStartedOn &&
+							formatIsoDate(DateFns.addDays(filters.signingStartedOn.end, -1))
+						}
+					/>
+				</label>
+
+				<br />
+				<button type="submit" class="blue-rounded-button">
+					{t("initiatives_page.filters.filter_button")}
+				</button>
+
+				{_.any(filters, _.id) ? <>
+					või <a href={path + Qs.stringify({
+						order: orderBy
+							? (orderDir == "asc" ? "" : "-") + orderBy
+							: undefined
+					}, {addQueryPrefix: true})} class="link-button">eemalda filtrid</a>.
+				</> : null}
+
+				{orderBy ? <input
+					type="hidden"
+					name="order"
+					value={(orderDir == "asc" ? "" : "-") + orderBy}
+				/> : null}
+			</form>
+		</details>
+
+		<CurrentFiltersView t={t} filters={filters} />
+	</div>
+}
+
+function CurrentFiltersView({t, filters}) {
+	var facets = _.intersperse([
+		filters.phase && <Filter name="Faas">
+			<strong>{t("initiatives_page.phases." + filters.phase)}</strong>
+		</Filter>,
+
+		filters.destination && <Filter name="Saaja">
+			<ul>{filters.destination.map((destination) => <li>
+				<strong>{destination == "parliament"
+					? "Riigikogu"
+					: LOCAL_GOVERNMENTS[destination].name
+				}</strong>
+			</li>)}</ul>
+		</Filter>,
+
+		filters.publishedOn && <Filter name="Avalikustatud">
+			<DateRangeView range={filters.publishedOn} />
+		</Filter>,
+
+		filters.signingStartedOn && <Filter name="Allkirjastamise algus">
+			<DateRangeView range={filters.signingStartedOn} />
+		</Filter>
+	])
+
+	if (facets.length == 0) return null
+	return <ul id="current-filters">{facets}</ul>
+
+	function DateRangeView({range: {begin, end}}) {
+		begin = begin && <strong><DateView date={begin} /></strong>
+		end = end && <strong><DateView date={DateFns.addDays(end, -1)} /></strong>
+
+		if (begin && end) return <>{begin}—{end}</>
+		if (begin) return <>{begin}—</>
+		if (end) return <>—{end}</>
+		return null
+	}
+
+	function Filter({name}, children) {
+		return <li class="filter">
+			<span class="name">{name}</span> {children}
+		</li>
 	}
 }
 
-function InitiativeListView(attrs) {
-	var {t} = attrs
-	var {phase} = attrs
-	var {initiatives} = attrs
-	initiatives = phase ? sortForPhase(phase, initiatives) : initiatives
 
-	return <ol class="initiatives">
-		{initiatives.map((initiative) => <InitiativeRowView
-			t={t}
-			initiative={initiative}
-			signatureCount={initiative.signature_count}
-		/>)}
-	</ol>
-}
+function InitiativeGroupView({title, initiatives, t}) {
+	return <tbody>
+		<tr class="table-group-header">
+			<th colspan="8" scope="rowgroup">
+				{title ? <h2>{title}</h2> : null}
+			</th>
+		</tr>
 
-function InitiativeRowView(attrs) {
-	var {t} = attrs
-	var {initiative} = attrs
-	var {signatureCount} = attrs
+		{initiatives.map(function(initiative) {
+			var proceedingsStartedAt =
+				initiative.sent_to_parliament_at ||
+				initiative.sent_to_government_at
 
-	var time = (
-		initiative.phase == "edit" ? initiative.created_at :
-		initiative.phase == "sign" ? initiative.signing_started_at :
-		initiative.phase == "parliament" ? (
-			initiative.received_by_parliament_at ||
-			initiative.sent_to_parliament_at
-		) :
-		initiative.phase == "government" ? initiative.sent_to_government_at :
-		initiative.phase == "done" ? (
-			initiative.finished_in_government_at ||
-			initiative.finished_in_parliament_at
-		) :
-		null
-	)
+			var proceedingsEndedAt =
+				initiative.finished_in_parliament_at ||
+				initiative.finished_in_government_at
 
-	var badge = _.find(Config.badges, (_b, tag) => initiative.tags.includes(tag))
-	var authorName = renderAuthorName(initiative)
+			var authorName = renderAuthorName(initiative)
 
-	return <li
-		data-id={initiative.id}
-		data-uuid={initiative.uuid}
-		class={"initiative" + (initiative.destination ? " with-destination" : "")}
-	>
-		<a href={Initiative.slugPath(initiative)}>
-			<time class="initiative-time" datetime={time && time.toJSON()}>
-				{time ? I18n.formatDate("numeric", time) : " "}
-			</time>
-
-			{" "}
-
-			<span class="destination">{initiative.destination
-				? t("DESTINATION_" + initiative.destination)
-				: " "
-			}</span>
-
-			<div class="status">
-				<ProgressView
-					t={t}
-					initiative={initiative}
-					signatureCount={signatureCount}
-				/>
-
-				<ProgressTextView />
-			</div>
-
-			<h3 lang="et">{initiative.title}</h3>
-			{badge ? <img src={badge.icon} class="badge" title={badge.name} /> : null}
-			<span class="author" title={authorName}>{authorName}</span>
-
-			<ProgressView
-				t={t}
-				initiative={initiative}
-				class="narrow-initiative-progress"
-				signatureCount={signatureCount}
-			/>
-		</a>
-	</li>
-
-	function ProgressTextView() {
-		switch (initiative.phase) {
-			case "edit": return <p>
-				<span>
-					{t("DISCUSSION_DEADLINE")}
-					{": "}
-					<time datetime={initiative.discussion_ends_at.toJSON()}>
-						{I18n.formatDateTime(
-							"numeric",
-							DateFns.addMilliseconds(initiative.discussion_ends_at, -1)
-						)}
-					</time>
-				</span>
-			</p>
-
-			case "sign": return <p>
-				<span>
-					{t("VOTING_DEADLINE")}
-					{": "}
-					<time datetime={initiative.signing_ends_at.toJSON()} class="deadline">
-						{I18n.formatDateTime(
-							"numeric",
-							DateFns.addMilliseconds(initiative.signing_ends_at, -1)
-						)}
-					</time>.
-				</span>
-			</p>
-
-			default: return null
-		}
-	}
-}
-
-function InitiativeBoxesView(attrs) {
-	var {t} = attrs
-	var {phase} = attrs
-	var {initiatives} = attrs
-	initiatives = phase ? sortForPhase(phase, initiatives) : initiatives
-
-	return <ol id={attrs.id} class="initiatives">
-		{initiatives.map((initiative) => <InitiativeBoxView
-			t={t}
-			initiative={initiative}
-			signatureCount={initiative.signature_count}
-		/>)}
-	</ol>
-}
-
-function InitiativeBoxView(attrs) {
-	var {t} = attrs
-	var {initiative} = attrs
-	var {signatureCount} = attrs
-
-	var time = (
-		initiative.phase == "edit" ? initiative.created_at :
-		initiative.phase == "sign" ? initiative.signing_started_at :
-		initiative.phase == "parliament" ? (
-			initiative.received_by_parliament_at ||
-			initiative.sent_to_parliament_at
-		) :
-		initiative.phase == "government" ? initiative.sent_to_government_at :
-		initiative.phase == "done" ? (
-			initiative.finished_in_government_at ||
-			initiative.finished_in_parliament_at
-		) :
-		null
-	)
-
-	var badge = _.find(Config.badges, (_b, tag) => initiative.tags.includes(tag))
-	var authorName = renderAuthorName(initiative)
-
-	return <li
-		data-id={initiative.id}
-		data-uuid={initiative.uuid}
-		class={"initiative" + (initiative.destination ? " with-destination" : "")}
-	>
-		<a href={Initiative.slugPath(initiative)}>
-			{attrs.dateless ? null
-				: initiative.phase == "sign"
-				? (new Date < initiative.signing_ends_at ?
-					<RelativeDateView t={t} date={initiative.signing_ends_at} />
-				: null)
-				: time
-				? <DateView date={time} />
-				// Empty <time> so destinationless discussions' titles align properly.
-				: <time>&nbsp;</time>
-			}
-
-			{" "}
-
-			{initiative.destination ? <span
-				class="destination"
-				title={t("DESTINATION_" + initiative.destination)}
+			return <tr
+				class="initiative"
+				data-id={initiative.id}
+				data-uuid={initiative.uuid}
 			>
-				{t("DESTINATION_" + initiative.destination)}
-			</span> : null}
+				<td class="title-column">
+					<span class="destination">{initiative.destination
+						? t("DESTINATION_" + initiative.destination)
+						: ""
+					}</span>
 
-			<h3 lang="et" title={initiative.title}>{initiative.title}</h3>
-			{badge ? <img src={badge.icon} class="badge" title={badge.name} /> : null}
-			<span class="author" title={authorName}>{authorName}</span>
+					<h3 lang="et" title={initiative.title}>
+						<a href={Initiative.slugPath(initiative)}>
+							{initiative.title}
+						</a>
 
-			<ProgressView
-				t={t}
-				initiative={initiative}
-				signatureCount={signatureCount}
-			/>
-		</a>
+						<InitiativeBadgeView initiative={initiative} />
+					</h3>
 
-		{attrs.note ? <div class="note">
-			{attrs.note}
-		</div> : null}
-	</li>
+					<span class="author" title={authorName}>{authorName}</span>
+				</td>
+
+				<td class="phase-column">
+					<span class={"phase " + initiative.phase + "-phase"}>
+						{t("initiatives_page.phases." + initiative.phase)}
+					</span>
+				</td>
+
+				<td class="published-at-column edit-phase-column">
+					<DateView date={initiative.published_at} />
+				</td>
+
+				<td class="signing-started-at-column signing-ended-at-column sign-phase-column">
+					{initiative.signing_started_at
+						? <DateView date={initiative.signing_started_at} />
+						: null
+					}
+
+					{initiative.signing_started_at && initiative.signing_ends_at
+							? "—" : ""
+					}
+
+					{initiative.signing_ends_at ? <DateView
+						date={DateFns.addMilliseconds(initiative.signing_ends_at, -1)}
+					/> : null}
+				</td>
+
+				<td class="signature-count-column sign-phase-column">{
+					initiative.phase != "edit" ? <SignatureProgressView
+						t={t}
+						initiative={initiative}
+						signatureCount={initiative.signature_count}
+					/> : null
+				}</td>
+
+				<td class="proceedings-started-at-column proceedings-ended-at-column proceedings-phase-column">
+					{proceedingsStartedAt
+						? <DateView date={proceedingsStartedAt} />
+						: null
+					}
+
+					{proceedingsStartedAt && proceedingsEndedAt ? "—" : ""}
+					{proceedingsEndedAt ? <DateView date={proceedingsEndedAt} /> : null}
+				</td>
+			</tr>
+		})}
+	</tbody>
+}
+
+function SignatureProgressView({t, initiative, signatureCount: count}) {
+	if (initiative.external) return <div class="signature-progress external">
+		{t("initiatives_page.table.signature_count.external")}
+	</div>
+
+	var threshold = getSignatureThreshold(initiative)
+
+	if (
+		count >= threshold ||
+		new Date < initiative.signing_ends_at
+	) return <div
+		class={"signature-progress " + (count >= threshold ? "completed" : "")}
+		style={Css.linearBackground("#00cb81", Math.min(count / threshold, 1))}
+	>{initiative.has_paper_signatures
+		? t("initiatives_page.table.signature_count.progress_with_paper", {
+			signatureCount: count
+		})
+		: t("initiatives_page.table.signature_count.progress", {
+			signatureCount: count
+		})
+	}</div>
+
+	else return <div class="signature-progress failed">
+		{t("initiatives_page.table.signature_count.progress", {
+			signatureCount: count
+		})}
+	</div>
+}
+
+function groupInitiatives(by, initiatives) {
+	// Can't just depend on _.groupBy and JavaScript key-insertion order as if
+	// you group by strings that resemble numbers, the insertion-order
+	// preservation no longer applies.
+	return _.groupAdjacent(initiatives, (a, b) => (
+		groupInitiative(by, a) === groupInitiative(by, b)
+	))
+}
+
+function groupInitiative(by, initiative) {
+	switch (by) {
+		case "title": return initiative.title[0].toUpperCase() || ""
+		case "destination": return initiative.destination
+		case "phase": return initiative.phase
+		case "published-at": return initiative.published_at.getFullYear()
+
+		case "signing-started-at": return (
+			initiative.signing_started_at &&
+			initiative.signing_started_at.getFullYear()
+		)
+
+		case "signing-ended-at": return (
+			initiative.signing_ends_at &&
+			initiative.signing_ends_at.getFullYear()
+		)
+
+		case "signature-count": return (
+			initiative.external ? "1000+" :
+			initiative.signature_count == 0 ? "0" :
+			Math.pow(10, Math.floor(Math.log10(initiative.signature_count))) + "+"
+		)
+
+		case "proceedings-started-at":
+			var proceedingsStartedAt =
+				initiative.sent_to_parliament_at ||
+				initiative.sent_to_government_at
+
+			return proceedingsStartedAt && proceedingsStartedAt.getFullYear()
+
+		case "proceedings-ended-at":
+			var proceedingsEndedAt =
+				initiative.finished_in_parliament_at ||
+				initiative.finished_in_government_at
+
+			return proceedingsEndedAt && proceedingsEndedAt.getFullYear()
+
+		default: return null
+	}
+}
+
+function serializeFilters(filters) {
+	var serializeDateRange = _.compose(
+		serializeRangeEndpoints.bind(null, formatIsoDate),
+		inclusifyDateRange
+	)
+
+	filters = _.clone(filters)
+
+	if (filters.publishedOn)
+		filters.publishedOn = serializeDateRange(filters.publishedOn)
+	if (filters.signingStartedOn)
+		filters.signingStartedOn = serializeDateRange(filters.signingStartedOn)
+	if (filters.signingEndsOn)
+		filters.signingEndsOn = serializeDateRange(filters.signingEndsOn)
+
+	return Filtering.serializeFilters(_.mapKeys(filters, _.kebabCase))
+}
+
+function inclusifyDateRange({begin, end, bounds}) {
+	if (bounds[0] == "(" && begin) begin = DateFns.addDays(begin, 1)
+	if (bounds[1] == ")" && end) end = DateFns.addDays(end, -1)
+	return new Range(begin, end, "[]")
+}
+
+function serializeRangeEndpoints(serialize, {begin, end, bounds}) {
+	return new Range(begin && serialize(begin), end && serialize(end), bounds)
 }
