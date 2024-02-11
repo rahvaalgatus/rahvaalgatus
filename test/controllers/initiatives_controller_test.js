@@ -47,6 +47,7 @@ var demand = require("must")
 var {newTrixDocument} = require("root/test/fixtures")
 var {serializePersonalId} = require("root/lib/user")
 var {serializeMailgunVariables} = require("root/lib/subscription")
+var {TRIX_BLANK_DOCUMENT} = require("root/test/fixtures")
 var INITIATIVE_TYPE = "application/vnd.rahvaalgatus.initiative+json; v=1"
 var ATOM_TYPE = "application/atom+xml"
 var {PHASES} = require("root/lib/initiative")
@@ -60,6 +61,8 @@ var PNG = Buffer.from("89504e470d0a1a0a1337", "hex")
 var PNG_PREVIEW = Buffer.from("89504e470d0a1a0a4269", "hex")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var TRIX_TYPE = new MediaType("application/vnd.basecamp.trix+json")
+var TRIX_SECTIONS_TYPE =
+	new MediaType("application/vnd.rahvaalgatus.trix-sections+json")
 var TWITTER_NAME = Config.twitterUrl.replace(/^.*\//, "")
 var MAX_URL_LENGTH = 1024
 var INITIATIVES_URL = `${Config.url}/initiatives`
@@ -2122,6 +2125,18 @@ describe("InitiativesController", function() {
 				var res = yield this.request("/initiatives/new")
 				res.statusCode.must.equal(200)
 			})
+
+			it("must render Trix text sections form", function*() {
+				var res = yield this.request("/initiatives/new")
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+				var form = dom.getElementById("initiative-form")
+
+				form.elements["content[summary]"].value.must.equal("")
+				form.elements["content[problem]"].value.must.equal("")
+				form.elements["content[solution]"].value.must.equal("")
+			})
 		})
 	})
 
@@ -2188,6 +2203,58 @@ describe("InitiativesController", function() {
 					language: "en",
 					content: content,
 					content_type: TRIX_TYPE
+				})])
+
+				res.headers.location.must.equal(
+					"/initiatives/" + initiative.id + "-hello-world"
+				)
+			})
+
+			it("must create initiative with text sections", function*() {
+				var summary = newTrixDocument("World.")
+				var problem = newTrixDocument("Bad world.")
+				var solution = newTrixDocument("Make better.")
+
+				var res = yield this.request("/initiatives", {
+					method: "POST",
+					form: {
+						title: "Hello, world!",
+						"content[summary]": JSON.stringify(summary),
+						"content[problem]": JSON.stringify(problem),
+						"content[solution]": JSON.stringify(solution),
+						language: "en"
+					}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Initiative Created")
+
+				var initiatives = initiativesDb.search(sql`SELECT * FROM initiatives`)
+				initiatives.length.must.equal(1)
+				var initiative = initiatives[0]
+
+				initiative.must.eql(new ValidInitiative({
+					id: initiative.id,
+					uuid: initiative.uuid,
+					slug: "hello-world",
+					user_id: this.user.id,
+					parliament_token: initiative.parliament_token,
+					title: "Hello, world!",
+					language: "en",
+					created_at: new Date
+				}))
+
+				textsDb.search(sql`
+					SELECT * FROM initiative_texts
+				`).must.eql([new ValidText({
+					id: 1,
+					initiative_uuid: initiative.uuid,
+					user_id: this.user.id,
+					created_at: new Date,
+					title: "Hello, world!",
+					language: "en",
+					content: {summary, problem, solution},
+					content_type: TRIX_SECTIONS_TYPE
 				})])
 
 				res.headers.location.must.equal(
@@ -2505,6 +2572,104 @@ describe("InitiativesController", function() {
 				title.textContent.must.include(text.title)
 
 				res.body.must.include("Hello, world!")
+			})
+
+			it("must render initiative with Trix text sections", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					published_at: new Date
+				}))
+
+				var text = textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: this.author.id,
+					content_type: TRIX_SECTIONS_TYPE,
+
+					content: {
+						summary: newTrixDocument("World."),
+						problem: newTrixDocument("Bad world."),
+						solution: newTrixDocument("Make better.")
+					}
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.id)
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+
+				var title = dom.querySelector("#initiative-header h1")
+				title.textContent.must.include(text.title)
+
+				var article = dom.querySelector("#initiative-sheet article")
+				article.textContent.must.include("World.")
+				article.textContent.must.include("Bad world.")
+				article.textContent.must.include("Make better.")
+			})
+
+			it("must render initiative with Trix text sections when some unknown",
+				function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					published_at: new Date
+				}))
+
+				var text = textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: this.author.id,
+					content_type: TRIX_SECTIONS_TYPE,
+
+					content: {
+						summary: newTrixDocument("World."),
+						problem: newTrixDocument("Bad world."),
+						hope: newTrixDocument("Make better.")
+					}
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.id)
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+
+				var title = dom.querySelector("#initiative-header h1")
+				title.textContent.must.include(text.title)
+
+				var article = dom.querySelector("#initiative-sheet article")
+				article.textContent.must.include("World.")
+				article.textContent.must.include("Bad world.")
+				article.textContent.must.include("Make better.")
+			})
+
+			it("must not render empty Trix text sections", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					published_at: new Date
+				}))
+
+				var text = textsDb.create(new ValidText({
+					initiative_uuid: initiative.uuid,
+					user_id: this.author.id,
+					content_type: TRIX_SECTIONS_TYPE,
+
+					content: {
+						summary: TRIX_BLANK_DOCUMENT,
+						problem: TRIX_BLANK_DOCUMENT,
+						solution: TRIX_BLANK_DOCUMENT
+					}
+				}))
+
+				var res = yield this.request("/initiatives/" + initiative.id)
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+
+				var title = dom.querySelector("#initiative-header h1")
+				title.textContent.must.include(text.title)
+
+				var article = dom.querySelector("#initiative-sheet article")
+				article.textContent.must.equal("")
 			})
 
 			it("must render initiative with CitizenOS HTML", function*() {
@@ -9535,7 +9700,73 @@ describe("InitiativesController", function() {
 					res.body.must.include(t("INITIATIVE_SIGN_PHASE_UPDATED"))
 
 					var html = Initiative.renderForParliament(text)
-					html.must.include("Hello, world!")
+
+					initiativesDb.search(sql`
+						SELECT * FROM initiatives
+					`).must.eql([{
+						__proto__: initiative,
+						phase: "sign",
+						signing_started_at: new Date,
+						signing_ends_at: DateFns.addDays(endsOn, 1),
+						title: text.title,
+						text: html,
+						text_type: new MediaType("text/html"),
+						text_sha256: sha256(html)
+					}])
+				})
+
+				it("must update initiative given Trix text sections and short deadline",
+					function*() {
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						destination: "parliament",
+						title: "Hello, world!",
+
+						published_at: DateFns.addDays(
+							new Date,
+							-Config.minSigningDeadlineDays
+						)
+					}))
+
+					var text = textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+						content: {
+							summary: newTrixDocument("World."),
+							problem: newTrixDocument("Bad world."),
+							solution: newTrixDocument("Make better.")
+						},
+						content_type: TRIX_SECTIONS_TYPE
+					}))
+
+					var endsOn = DateFns.addDays(
+						DateFns.startOfDay(new Date),
+						Config.minSigningDeadlineDays - 1
+					)
+
+					var initiativePath = `/initiatives/${initiative.id}`
+					var res = yield this.request(initiativePath, {
+						method: "PUT",
+						form: {
+							status: "voting",
+							language: text.language,
+							endsOn: formatIsoDate(endsOn)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Sent to Signing")
+					res.headers.location.must.equal(initiativePath + "-hello-world")
+
+					var cookies = parseCookies(res.headers["set-cookie"])
+					res = yield this.request(res.headers.location, {
+						headers: {Cookie: serializeCookies(cookies)}
+					})
+
+					res.statusCode.must.equal(200)
+					res.body.must.include(t("INITIATIVE_SIGN_PHASE_UPDATED"))
+
+					var html = Initiative.renderForParliament(text)
 
 					initiativesDb.search(sql`
 						SELECT * FROM initiatives

@@ -8,6 +8,7 @@ var {normalizeCitizenOsHtml} = require("root/lib/initiative")
 var {selected} = require("root/lib/css")
 var LANGUAGES = require("root").config.languages
 var {SCHEMA} = require("root/controllers/initiatives/texts_controller")
+var TEXT_SECTIONS = ["summary", "problem", "solution"]
 
 module.exports = function(attrs) {
 	var {req} = attrs
@@ -21,6 +22,10 @@ module.exports = function(attrs) {
 		initiative.phase == "edit" ||
 		initiative.phase == "sign" && initiative.language != textLanguage
 	)
+
+	var textSections = (text ? (
+		text.content_type == "application/vnd.rahvaalgatus.trix-sections+json"
+	) : attrs.sections == null || attrs.sections) ? TEXT_SECTIONS : null
 
 	return <InitiativePage
 		page="edit-initiative"
@@ -73,75 +78,120 @@ module.exports = function(attrs) {
 				maxlength={SCHEMA.properties.title.maxLength}
 			/>
 
-			{
-				// Pass the text through an <input> to rely on the browser's form
-				// input restoration when navigating back. Otherwise the person
-				// would be shown the pre-edited text again.
-			}
-			<input
-				type="hidden"
-				name="content"
-				readonly={!editable}
-				value={text && JSON.stringify(serializeText(text))}
-			/>
-
 			{!editable ? <p class="read-only-warning">
 				{t("UPDATE_INITIATIVE_READONLY")}
 			</p> : null}
 
-			<trix-editor
-				id="editor"
-				class="text trix-content"
-				readonly={!editable}
-			/>
+			{textSections
+				? textSections.map(function(section) {
+					var title, description
 
-			{editable ? <noscript><div id="editor-noscript">
-				{t("UPDATE_INITIATIVE_NOSCRIPT")}
-			</div></noscript> : null}
+					switch (section) {
+						case undefined: break
+
+						case "summary":
+							title = Jsx.html(t("edit_initiative_page.text.sections.summary"))
+
+							description =
+								Jsx.html(t("edit_initiative_page.text.sections.summary_description", {
+									tosUrl: "/about#tos"
+								}))
+							break
+
+						case "problem":
+							title = Jsx.html(t("edit_initiative_page.text.sections.problem"))
+
+							description =
+								Jsx.html(t("edit_initiative_page.text.sections.problem_description"))
+							break
+
+						case "solution":
+							title = Jsx.html(t("edit_initiative_page.text.sections.solution"))
+
+							description =
+								Jsx.html(t("edit_initiative_page.text.sections.solution_description"))
+							break
+
+						default: throw new RangeError("Unsupported section: " + section)
+					}
+
+					return <EditorView
+						t={t}
+						editable={editable}
+						text={text}
+						title={title}
+						description={description}
+						section={section}
+					/>
+				})
+				: <EditorView
+					t={t}
+					editable={editable}
+					text={text}
+				/>
+			}
 
 			<script>{javascript`
 				var Trix = require("trix")
+				var slice = Function.call.bind(Array.prototype.slice)
 				Trix.config.blockAttributes.heading1.tagName = "h2";
 
 				var form = document.getElementById("initiative-form")
+
 				// Don't get the "editor" property yet as it'll only exist after
 				// initialization.
-				var el = document.getElementById("editor")
-				var loadedDocument
+				var editorEls = slice(form.querySelectorAll("trix-editor"))
 
-				el.addEventListener("trix-file-accept", function(ev) {
-					ev.preventDefault()
-				})
+				editorEls.forEach(function(editorEl) {
+					var contentName = editorEl.getAttribute("data-content-name")
 
-				// Trix-initialize is likely to be triggered even when "back"-ing
-				// into this page. However, as we keep the serialized text in an
-				// <input> element, that's restored by the browser.
-				el.addEventListener("trix-initialize", function(ev) {
-					var content = form.elements.content.value
-					content = content ? JSON.parse(content) : null
+					editorEl.addEventListener("trix-file-accept", function(ev) {
+						ev.preventDefault()
+					})
 
-					if (typeof content == "string")
-						el.editor.loadHTML(content)
-					else if (content)
-						el.editor.loadJSON({document: content, selectedRange: [0, 0]})
+					// Trix-initialize is likely to be triggered even when "back"-ing
+					// into this page. However, as we keep the serialized text in an
+					// <input> element, that's restored by the browser.
+					editorEl.addEventListener("trix-initialize", function(ev) {
+						var content = form.elements[contentName].value
+						content = content ? JSON.parse(content) : null
 
-					loadedDocument = el.editor.getDocument()
+						if (typeof content == "string") editorEl.editor.loadHTML(content)
+						else if (content) editorEl.editor.loadJSON({
+							document: content,
+							selectedRange: [0, 0]
+						})
 
-					el.contentEditable = !el.hasAttribute("readonly")
+						editorEl.loadedDocument = editorEl.editor.getDocument()
+						editorEl.contentEditable = !editorEl.hasAttribute("readonly")
+					})
 				})
 
 				window.onbeforeunload = function() {
-					if (loadedDocument == null) return undefined
-					if (loadedDocument === el.editor.getDocument()) return undefined
-					return ${JSON.stringify(t("INITIATIVE_TEXT_UNSAVED"))}
+					if (editorEls.every(function(editorEl) {
+						return (
+							editorEl.loadedDocument == null ||
+							editorEl.loadedDocument === editorEl.editor.getDocument()
+						)
+					})) return undefined
+
+					return ${t("INITIATIVE_TEXT_UNSAVED")}
 				}
 
 				form.addEventListener("submit", function() {
-					var editor = document.querySelector("trix-editor").editor
-					var json = JSON.stringify(editor.getDocument())
-					form.elements.content.value = json
+					editorEls.forEach(function(editorEl) {
+						var contentName = editorEl.getAttribute("data-content-name")
+						var json = JSON.stringify(editorEl.editor.getDocument())
+						form.elements[contentName].value = json
+					})
+
 					window.onbeforeunload = null
 				})
+
+				function isEmpty(obj) {
+					for (var key in obj) return true
+					return true
+				}
 			`}</script>
 
 			<fieldset class="submit-inputs">
@@ -200,11 +250,49 @@ module.exports = function(attrs) {
 	</InitiativePage>
 }
 
-function serializeText(text) {
+function EditorView({t, editable, section, title, description, text}) {
+	var inputName = "content"
+	if (section) inputName += "[" + section + "]"
+
+	return <>
+		{title ? <label class="editor-label" for={section + "-editor"}>
+			{title}
+		</label> : null}
+
+		{description ? <p class="editor-description">{description}</p> : null}
+
+		{
+			// Pass the text through an <input> to rely on the browser's form
+			// input restoration when navigating back. Otherwise the person
+			// would be shown the pre-edited text again.
+		}
+		<input
+			type="hidden"
+			name={inputName}
+			readonly={!editable}
+			value={text && JSON.stringify(serializeText(text, section))}
+		/>
+
+		<trix-editor
+			id={section + "-editor"}
+			class="text editor"
+			data-content-name={inputName}
+			readonly={!editable}
+		/>
+
+		{editable ? <noscript><div class="editor-noscript">
+			{t("UPDATE_INITIATIVE_NOSCRIPT")}
+		</div></noscript> : null}
+	</>
+}
+
+function serializeText(text, section) {
 	switch (String(text.content_type)) {
 		case "text/html": return text.content
 		case "application/vnd.basecamp.trix+json": return text.content
 
+		case "application/vnd.rahvaalgatus.trix-sections+json":
+			return text.content[section]
 		case "application/vnd.citizenos.etherpad+html":
 			return normalizeCitizenOsHtml(text.content)
 

@@ -254,7 +254,7 @@ exports.newOcspResponse = function(certificate) {
 	})
 }
 
-var BLOCK_BREAK = {
+var TRIX_BLOCK_BREAK = {
 	"type": "string",
 	"attributes": {"blockBreak": true},
 	"string": "\n"
@@ -262,10 +262,15 @@ var BLOCK_BREAK = {
 
 exports.newTrixDocument = function(text) {
 	return [{
-		"text": [{"type": "string", "attributes": {}, "string": text}, BLOCK_BREAK],
+		"text": [
+			{"type": "string", "attributes": {}, "string": text},
+			TRIX_BLOCK_BREAK
+		],
 		"attributes": []
 	}]
 }
+
+exports.TRIX_BLANK_DOCUMENT = exports.newTrixDocument("\t \n")
 
 function serializeSubjectName(names) {
 	if (names instanceof Certificate) return names.asn.tbsCertificate.subject

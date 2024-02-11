@@ -26,7 +26,7 @@
 	"INITIATIVE_UPDATE_SIGNING_DEADLINE": "Установление срока",
 	"INVALID_FORM": "Vormis tundub olevat viga",
 	"IN_FOLLOW_UP_LIST": "Hа рассмотрении",
-	"I_HAVE_READ": "Я ознакомился и согласен <a href=\"{{url}}\">с добрыми принципами использования rahvaalgatus.ee</a>.",
+	"I_HAVE_READ": "Я ознакомился и согласен <a href=\"{{tosUrl}}\">с добрыми принципами использования rahvaalgatus.ee</a>.",
 	"KOGU": "Ассамблея Сотрудничества Эстонии",
 	"LABEL_PERSONAL_ID": "Личный код",
 	"LABEL_PHONE_NUMBER": "Номер телефона",

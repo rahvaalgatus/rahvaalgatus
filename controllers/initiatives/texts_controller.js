@@ -7,6 +7,7 @@ var initiativesDb = require("root/db/initiatives_db")
 var textsDb = require("root/db/initiative_texts_db")
 var sql = require("sqlate")
 var TRIX_CONTENT_TYPE = "application/vnd.basecamp.trix+json"
+var TRIX_SECTIONS_TYPE = "application/vnd.rahvaalgatus.trix-sections+json"
 exports.parse = parse
 
 exports.router = Router({mergeParams: true})
@@ -28,7 +29,7 @@ exports.router.use(function(req, _res, next) {
 
 exports.router.get("/new", function(req, res) {
 	var {initiative} = req
-	var lang = req.query.language || "et"
+	var lang = req.query.language || initiative.language
 
 	var text = textsDb.read(sql`
 		SELECT * FROM initiative_texts
@@ -38,8 +39,24 @@ exports.router.get("/new", function(req, res) {
 		LIMIT 1
 	`)
 
-	if (text) res.redirect(req.baseUrl + "/" + text.id)
-	else res.render("initiatives/update_page.jsx", {language: lang})
+	if (text) return void res.redirect(req.baseUrl + "/" + text.id)
+
+	var primaryText = textsDb.read(sql`
+		SELECT content_type FROM initiative_texts
+		WHERE initiative_uuid = ${initiative.uuid}
+		AND language = ${initiative.language}
+		ORDER BY id DESC
+		LIMIT 1
+	`)
+
+	res.render("initiatives/update_page.jsx", {
+		language: lang,
+
+		sections: (
+			primaryText == null ||
+			primaryText.content_type.name == TRIX_SECTIONS_TYPE
+		)
+	})
 })
 
 exports.router.use("/:id", function(req, _res, next) {
@@ -117,8 +134,8 @@ var validate = require("root/lib/json_schema").new({
 
 	properties: {
 		title: {type: "string", maxLength: 200},
-		content: {type: "array"},
-		content_type: {const: TRIX_CONTENT_TYPE},
+		content: {type: ["object", "array"]},
+		content_type: {enum: [TRIX_CONTENT_TYPE, TRIX_SECTIONS_TYPE]},
 		language: {enum: Config.languages},
 		basis_id: {type: ["number", "null"]}
 	}
@@ -127,10 +144,18 @@ var validate = require("root/lib/json_schema").new({
 exports.SCHEMA = validate.schema
 
 function parse(obj) {
+	var content =
+		// If JavaScript is disabled, content is left as an empty string.
+		typeof obj.content == "string" && obj.content ? JSON.parse(obj.content)
+		: _.isPlainObject(obj.content) ? _.mapValues(obj.content, (content) =>
+			content && JSON.parse(content) || []
+		)
+		: []
+
 	var err, attrs = {
 		title: obj.title,
-		content: obj.content ? JSON.parse(obj.content) : [],
-		content_type: TRIX_CONTENT_TYPE,
+		content,
+		content_type: _.isArray(content) ? TRIX_CONTENT_TYPE : TRIX_SECTIONS_TYPE,
 		language: obj.language || Config.language,
 		basis_id: Number(obj["basis-id"]) || null
 	}

@@ -356,6 +356,7 @@ function ReadPage(attrs) {
 				</menu> : null}
 
 				<InitiativeContentView
+					t={t}
 					initiative={initiative}
 					text={text}
 					files={files}
@@ -863,11 +864,8 @@ function PhasesView(attrs) {
 	}
 }
 
-function InitiativeContentView(attrs) {
-	var {initiative} = attrs
-	var {text} = attrs
+function InitiativeContentView({t, initiative, text, files}) {
 	var initiativePath = "/initiatives/" + initiative.id
-	var {files} = attrs
 
 	if (initiative.external) {
 		var pdf = (
@@ -895,6 +893,24 @@ function InitiativeContentView(attrs) {
 		case "application/vnd.basecamp.trix+json":
 			return <article class="text trix-text" lang={text.language}>
 				{Trix.render(text.content, {heading: "h2"})}
+			</article>
+
+		case "application/vnd.rahvaalgatus.trix-sections+json":
+			return <article class="text trix-text" lang={text.language}>
+				{_.map(text.content, function(content, section) {
+					if (content.every(Trix.isBlankString)) return null
+
+					switch (section) {
+						case "summary": return <big>
+							{Trix.render(content, {heading: "h3"})}
+						</big>
+
+						default: return <>
+							<h2>{t("initiative_page.text.sections." + section)}</h2>
+							{Trix.render(content, {heading: "h3"})}
+						</>
+					}
+				})}
 			</article>
 
 		case "application/vnd.citizenos.etherpad+html":

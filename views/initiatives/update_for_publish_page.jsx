@@ -59,7 +59,7 @@ module.exports = function(attributes) {
 						required
 					/>
 
-					{Jsx.html(t("I_HAVE_READ", {url: "/about#tos"}))}
+					{Jsx.html(t("I_HAVE_READ", {tosUrl: "/about#tos"}))}
 				</label> : null}
 
 				<button

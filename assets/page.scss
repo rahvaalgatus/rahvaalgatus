@@ -121,7 +121,15 @@ strong {
 	p + p,
 	p + h2,
 	p + h3 {
-		margin-top: 2rem;
+		margin-top: 3rem;
+	}
+
+	big + h2 {
+		margin-top: 3rem;
+	}
+
+	big {
+		font-size: 2rem;
 	}
 
 	em { font-style: italic; }
@@ -4072,6 +4080,7 @@ main {
 		font-family: $tisa-pro;
 		color: $title-text;
 		width: 100%;
+		border-bottom: 1px solid $light-background-border;
 
 		@include mobile { padding: $article-padding-mobile; }
 	}
@@ -4079,19 +4088,55 @@ main {
 	input[name=content][readonly] ~ trix-toolbar { display: none; }
 
 	.read-only-warning {
-		padding: 1rem 1.5rem;
+		padding: 2rem $article-padding 0;
+
+		@include mobile {
+			padding-left: $article-padding-mobile;
+			padding-right: $article-padding-mobile;
+		}
+
+		font-size: 1.6rem;
 		background: $light-background;
 		border-top: 1px solid $light-background-border;
 		line-height: 1.4;
 	}
 
+	.editor-label {
+		display: block;
+		padding: 3rem $article-padding 0.5rem;
+
+		@include mobile {
+			padding-left: $article-padding-mobile;
+			padding-right: $article-padding-mobile;
+		}
+
+		background: $light-background;
+		font-size: 1.6rem;
+		font-weight: 700;
+		line-height: 1.4;
+
+		& ~ .editor-label { border-top: 1px solid $light-background-border; }
+	}
+
+	.editor-description {
+		padding: 0 $article-padding 0.5rem;
+
+		@include mobile {
+			padding-left: $article-padding-mobile;
+			padding-right: $article-padding-mobile;
+		}
+
+		background: $light-background;
+		font-size: 1.6rem;
+		line-height: 1.4;
+	}
+
 	trix-toolbar {
-		padding: 1rem 1.5rem 0.5rem;
+		padding: 1rem 2rem 0.5rem;
 		position: sticky;
 		top: 0;
 		background: $light-background;
-		border: 0 solid $light-background-border;
-		border-width: 1px 0;
+		border-bottom: 1px solid $light-background-border;
 
 		.trix-dialog {
 			background: $light-background;
@@ -4099,15 +4144,15 @@ main {
 		}
 	}
 
-	#editor,
-	#editor-noscript {
+	.editor,
+	.editor-noscript {
 		display: block;
 
 		padding: $article-padding;
 		@include mobile { padding: $article-padding-mobile; }
 	}
 
-	#editor {
+	.editor {
 		@extend .text;
 
 		min-height: 20em;
@@ -4119,7 +4164,7 @@ main {
 		&:not([trix-id]) { display: none; }
 	}
 
-	#editor-noscript {
+	.editor-noscript {
 		border-top: 1px solid $light-background-border;
 		background: $light-background;
 	}
@@ -4153,9 +4198,7 @@ main {
 			a { color: $link-color; text-decoration: underline; }
 		}
 
-		button[type=submit] {
-			padding: 0 2rem;
-		}
+		button[type=submit] { padding: 0 2rem; }
 	}
 }
 
