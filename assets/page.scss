@@ -2398,7 +2398,6 @@ main {
 						line-height: 1.5;
 						font-weight: 400;
 						word-wrap: break-word;
-						//text-decoration: underline;
 
 						overflow: hidden;
 						@include hyphens(auto);
@@ -2445,6 +2444,7 @@ main {
 						font-weight: 700;
 						border-radius: 2rem;
 						padding: 0.5rem 1rem 0.3rem;
+						white-space: nowrap;
 						color: white;
 
 						&.edit-phase { background-color: $edit-phase-color; }

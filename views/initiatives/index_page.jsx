@@ -216,6 +216,25 @@ function InitiativesPage({t, req, flash, filters, order, initiatives}) {
 					var title =
 						orderBy == "destination" ? t("DESTINATION_" + group) :
 						orderBy == "phase" ? t("initiatives_page.phases." + group) :
+
+						orderBy == "signing-started-at" ? (
+							group || t("initiatives_page.table.signing_started_at_ungrouped")
+						) :
+
+						orderBy == "signing-ended-at" ? (
+							group || t("initiatives_page.table.signing_ended_at_ungrouped")
+						) :
+
+						orderBy == "proceedings-started-at" ? (
+							group ||
+							t("initiatives_page.table.proceedings_started_at_ungrouped")
+						) :
+
+						orderBy == "proceedings-ended-at" ? (
+							group ||
+							t("initiatives_page.table.proceedings_ended_at_ungrouped")
+						) :
+
 						group
 
 					return <InitiativeGroupView
