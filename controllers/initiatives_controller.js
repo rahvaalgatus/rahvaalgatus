@@ -203,8 +203,8 @@ exports.router.get("/",
 				: null,
 
 			"proceedings-started-at": sql`ORDER BY COALESCE(
-				initiative.sent_to_parliament_at,
-				initiative.sent_to_government_at
+				initiative.accepted_by_parliament_at,
+				initiative.accepted_by_government_at
 			) ${orderDirSql}`,
 
 			"proceedings-ended-at": sql`ORDER BY COALESCE(

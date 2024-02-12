@@ -1352,40 +1352,40 @@ describe("InitiativesController", function() {
 					new ValidInitiative({
 						user_id: this.author.id,
 						phase: "sign",
-						sent_to_parliament_at: DateFns.addDays(new Date, -2),
+						accepted_by_parliament_at: DateFns.addDays(new Date, -2),
 					}),
 
 					new ValidInitiative({
 						user_id: this.author.id,
 						phase: "sign",
-						sent_to_parliament_at: DateFns.addDays(new Date, -1),
+						accepted_by_parliament_at: DateFns.addDays(new Date, -1),
 					}),
 
 					new ValidInitiative({
 						user_id: this.author.id,
 						phase: "sign",
-						sent_to_parliament_at: DateFns.addDays(new Date, -3)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						destination: "tallinn",
-						phase: "sign",
-						sent_to_government_at: DateFns.addDays(new Date, -6),
+						accepted_by_parliament_at: DateFns.addDays(new Date, -3)
 					}),
 
 					new ValidInitiative({
 						user_id: this.author.id,
 						destination: "tallinn",
 						phase: "sign",
-						sent_to_government_at: DateFns.addDays(new Date, -5),
+						accepted_by_government_at: DateFns.addDays(new Date, -6),
 					}),
 
 					new ValidInitiative({
 						user_id: this.author.id,
 						destination: "tallinn",
 						phase: "sign",
-						sent_to_government_at: DateFns.addDays(new Date, -7)
+						accepted_by_government_at: DateFns.addDays(new Date, -5),
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						destination: "tallinn",
+						phase: "sign",
+						accepted_by_government_at: DateFns.addDays(new Date, -7)
 					})
 				])
 
@@ -1397,32 +1397,33 @@ describe("InitiativesController", function() {
 
 				_.map(els, (el) => Number(el.getAttribute("data-id"))).must.eql(
 					sort(_.map(_.sortBy(initiatives, (initiative) => (
-						initiative.sent_to_parliament_at || initiative.sent_to_government_at
+						initiative.accepted_by_parliament_at ||
+						initiative.accepted_by_government_at
 					)), "id"))
 				)
 			}))
 
-			it(`must sort based on sending to parliament if in government when sorting by proceedings-started-at`, function*() {
+			it(`must sort based on accepted by parliament if in government when sorting by proceedings-started-at`, function*() {
 				var initiatives = initiativesDb.create([
 					new ValidInitiative({
 						user_id: this.author.id,
 						phase: "government",
-						sent_to_parliament_at: DateFns.addDays(new Date, -4),
-						sent_to_government_at: DateFns.addDays(new Date, -3)
+						accepted_by_parliament_at: DateFns.addDays(new Date, -4),
+						accepted_by_government_at: DateFns.addDays(new Date, -3)
 					}),
 
 					new ValidInitiative({
 						user_id: this.author.id,
 						phase: "government",
-						sent_to_parliament_at: DateFns.addDays(new Date, -3),
-						sent_to_government_at: DateFns.addDays(new Date, -2)
+						accepted_by_parliament_at: DateFns.addDays(new Date, -3),
+						accepted_by_government_at: DateFns.addDays(new Date, -2)
 					}),
 
 					new ValidInitiative({
 						user_id: this.author.id,
 						phase: "government",
-						sent_to_parliament_at: DateFns.addDays(new Date, -5),
-						sent_to_government_at: DateFns.addDays(new Date, -1)
+						accepted_by_parliament_at: DateFns.addDays(new Date, -5),
+						accepted_by_government_at: DateFns.addDays(new Date, -1)
 					})
 				])
 
@@ -1436,7 +1437,7 @@ describe("InitiativesController", function() {
 				var els = dom.body.querySelectorAll("#initiatives .initiative")
 
 				_.map(els, (el) => Number(el.getAttribute("data-id"))).must.eql(
-					_.map(_.sortBy(initiatives, "sent_to_parliament_at"), "id")
+					_.map(_.sortBy(initiatives, "accepted_by_parliament_at"), "id")
 				)
 			})
 

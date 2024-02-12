@@ -440,8 +440,8 @@ function InitiativeGroupView({title, initiatives, t}) {
 
 		{initiatives.map(function(initiative) {
 			var proceedingsStartedAt =
-				initiative.sent_to_parliament_at ||
-				initiative.sent_to_government_at
+				initiative.accepted_by_parliament_at ||
+				initiative.accepted_by_government_at
 
 			var proceedingsEndedAt =
 				initiative.finished_in_parliament_at ||
@@ -581,8 +581,8 @@ function groupInitiative(by, initiative) {
 
 		case "proceedings-started-at":
 			var proceedingsStartedAt =
-				initiative.sent_to_parliament_at ||
-				initiative.sent_to_government_at
+				initiative.accepted_by_parliament_at ||
+				initiative.accepted_by_government_at
 
 			return proceedingsStartedAt && proceedingsStartedAt.getFullYear()
 
