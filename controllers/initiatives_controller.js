@@ -174,6 +174,11 @@ exports.router.get("/",
 			) < ${filters.proceedingsEndedOn.end}
 		` : sql``}
 
+		${filters.proceedingsHandler ? sql`AND (
+			initiative.parliament_committee = ${filters.proceedingsHandler} OR
+			initiative.destination = ${filters.proceedingsHandler}
+		)` : sql``}
+
 		GROUP BY initiative.uuid
 
 		${{
@@ -260,11 +265,20 @@ exports.router.get("/",
 				return obj
 			}))
 
-		default: res.render("initiatives/index_page.jsx", {
-			order: [orderBy, orderDir],
-			initiatives,
-			filters
-		})
+		default:
+			var parliamentCommittees = sqlite(sql`
+				SELECT DISTINCT parliament_committee AS committee
+				FROM initiatives
+				WHERE parliament_committee IS NOT NULL
+				ORDER BY committee ASC
+			`).map(({committee}) => committee)
+
+			res.render("initiatives/index_page.jsx", {
+				order: [orderBy, orderDir],
+				initiatives,
+				filters,
+				parliamentCommittees
+			})
 	}
 })
 
@@ -1418,6 +1432,7 @@ function parseFilters(query) {
 		"signing-ended-on": "range",
 		"proceedings-started-on": "range",
 		"proceedings-ended-on": "range",
+		"proceedings-handler": true,
 		phase: true,
 
 		signingEndsAt: "range",

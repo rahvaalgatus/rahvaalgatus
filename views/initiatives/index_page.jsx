@@ -20,7 +20,15 @@ var LOCAL_GOVERNMENTS_BY_COUNTY = LOCAL_GOVERNMENTS.BY_COUNTY
 var {PHASES} = require("root/lib/initiative")
 module.exports = InitiativesPage
 
-function InitiativesPage({t, req, flash, filters, order, initiatives}) {
+function InitiativesPage({
+	t,
+	req,
+	flash,
+	filters,
+	order,
+	initiatives,
+	parliamentCommittees
+}) {
 	var [orderBy, orderDir] = order
 	var filterQuery = serializeFilters(filters)
 	var initiativesPath = req.baseUrl + req.path
@@ -59,6 +67,7 @@ function InitiativesPage({t, req, flash, filters, order, initiatives}) {
 						filters={filters}
 						path={initiativesPath}
 						order={order}
+						parliamentCommittees={parliamentCommittees}
 					/>
 				</caption>
 
@@ -258,7 +267,13 @@ function InitiativesPage({t, req, flash, filters, order, initiatives}) {
 	</Page>
 }
 
-function FiltersView({t, filters, path, order: [orderBy, orderDir]}) {
+function FiltersView({
+	t,
+	filters,
+	path,
+	order: [orderBy, orderDir],
+	parliamentCommittees
+}) {
 	return <div id="filters">
 		<details>
 			<summary>
@@ -442,6 +457,32 @@ function FiltersView({t, filters, path, order: [orderBy, orderDir]}) {
 					/>
 				</label>
 
+				<label>
+					<span>Menetleja</span>
+
+					<select name="proceedings-handler" class="form-select">
+						<option value="" selected={filters.proceedingsHandler == null}>
+							Kõik
+						</option>
+
+						<optgroup label="Riigikogu">
+							{parliamentCommittees.map((committee) => <option
+								value={committee}
+								selected={filters.proceedingsHandler == committee}
+							>
+								{committee}
+							</option>)}
+						</optgroup>
+
+						{_.map(LOCAL_GOVERNMENTS_BY_COUNTY, (govs, county) => <optgroup
+							label={county + " maakond"}
+						>{govs.map(([id, {name}]) => <option
+							value={id}
+							selected={filters.proceedingsHandler == id}
+						>{name}</option>)}</optgroup>)}
+					</select>
+				</label>
+
 				<br />
 				<button type="submit" class="blue-rounded-button">
 					{t("initiatives_page.filters.filter_button")}
@@ -496,6 +537,13 @@ function CurrentFiltersView({t, filters}) {
 
 		filters.proceedingsEndedOn && <Filter name="Menetluse lõpp">
 			<DateRangeView range={filters.proceedingsEndedOn} />
+		</Filter>,
+
+		filters.proceedingsHandler && <Filter name="Menetleja">
+			<strong>{filters.proceedingsHandler in LOCAL_GOVERNMENTS
+				? LOCAL_GOVERNMENTS[filters.proceedingsHandler].name
+				: filters.proceedingsHandler
+			}</strong>
 		</Filter>
 	])
 

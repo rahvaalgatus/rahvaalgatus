@@ -1279,6 +1279,60 @@ describe("InitiativesController", function() {
 			})
 		})
 
+		describe("given proceedings-handler", function() {
+			it("must filter initiatives in parliament committees", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "parliament",
+					parliament_committee: "Sotsiaalkomisjon"
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "parliament",
+					parliament_committee: "Keskkonnakomisjon"
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "parliament"
+				}))
+
+				var res = yield this.request(
+					"/initiatives?proceedings-handler=Sotsiaalkomisjon"
+				)
+
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+				var els = dom.body.querySelectorAll("#initiatives .initiative")
+				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
+				ids.must.eql([initiative.id])
+			})
+
+			it("must filter initiatives destined for local government", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "government",
+					destination: "tallinn",
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "government",
+					destination: "muhu-vald"
+				}))
+
+				var res = yield this.request("/initiatives?proceedings-handler=tallinn")
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+				var els = dom.body.querySelectorAll("#initiatives .initiative")
+				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
+				ids.must.eql([initiative.id])
+			})
+		})
+
 		describe("given order", function() {
 			_.each({
 				"title": _.id,
