@@ -320,7 +320,9 @@ function FiltersView({t, filters, path, order: [orderBy, orderDir]}) {
 						class="form-input"
 
 						value={
-							filters.publishedOn && formatIsoDate(filters.publishedOn.begin)
+							filters.publishedOn &&
+							filters.publishedOn.begin &&
+							formatIsoDate(filters.publishedOn.begin)
 						}
 					/>
 				</label>
@@ -335,6 +337,7 @@ function FiltersView({t, filters, path, order: [orderBy, orderDir]}) {
 
 						value={
 							filters.publishedOn &&
+							filters.publishedOn.end &&
 							formatIsoDate(DateFns.addDays(filters.publishedOn.end, -1))
 						}
 					/>
@@ -350,6 +353,7 @@ function FiltersView({t, filters, path, order: [orderBy, orderDir]}) {
 
 						value={
 							filters.signingStartedOn &&
+							filters.signingStartedOn.begin &&
 							formatIsoDate(filters.signingStartedOn.begin)
 						}
 					/>
@@ -365,7 +369,75 @@ function FiltersView({t, filters, path, order: [orderBy, orderDir]}) {
 
 						value={
 							filters.signingStartedOn &&
+							filters.signingStartedOn.end &&
 							formatIsoDate(DateFns.addDays(filters.signingStartedOn.end, -1))
+						}
+					/>
+				</label>
+
+				<label>
+					<span>Menetluse algus alates</span>
+
+					<input
+						type="date"
+						name="proceedings-started-on>"
+						class="form-input"
+
+						value={
+							filters.proceedingsStartedOn &&
+							filters.proceedingsStartedOn.begin &&
+							formatIsoDate(filters.proceedingsStartedOn.begin)
+						}
+					/>
+				</label>
+
+				<label>
+					<span>Menetluse algus kuni (k.a)</span>
+
+					<input
+						type="date"
+						name="proceedings-started-on<"
+						class="form-input"
+
+						value={
+							filters.proceedingsStartedOn &&
+							filters.proceedingsStartedOn.end &&
+
+							formatIsoDate(
+								DateFns.addDays(filters.proceedingsStartedOn.end, -1)
+							)
+						}
+					/>
+				</label>
+
+				<label>
+					<span>Menetluse lõpp alates</span>
+
+					<input
+						type="date"
+						name="proceedings-ended-on>"
+						class="form-input"
+
+						value={
+							filters.proceedingsEndedOn &&
+							filters.proceedingsEndedOn.begin &&
+							formatIsoDate(filters.proceedingsEndedOn.begin)
+						}
+					/>
+				</label>
+
+				<label>
+					<span>Menetluse lõpp kuni (k.a)</span>
+
+					<input
+						type="date"
+						name="proceedings-ended-on<"
+						class="form-input"
+
+						value={
+							filters.proceedingsEndedOn &&
+							filters.proceedingsEndedOn.end &&
+							formatIsoDate(DateFns.addDays(filters.proceedingsEndedOn.end, -1))
 						}
 					/>
 				</label>
@@ -416,6 +488,14 @@ function CurrentFiltersView({t, filters}) {
 
 		filters.signingStartedOn && <Filter name="Allkirjastamise algus">
 			<DateRangeView range={filters.signingStartedOn} />
+		</Filter>,
+
+		filters.proceedingsStartedOn && <Filter name="Menetluse algus">
+			<DateRangeView range={filters.proceedingsStartedOn} />
+		</Filter>,
+
+		filters.proceedingsEndedOn && <Filter name="Menetluse lõpp">
+			<DateRangeView range={filters.proceedingsEndedOn} />
 		</Filter>
 	])
 

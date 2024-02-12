@@ -146,6 +146,34 @@ exports.router.get("/",
 			AND initiative.signing_ends_at < ${filters.signingEndsAt.end}
 		` : sql``}
 
+		${filters.proceedingsStartedOn && filters.proceedingsStartedOn.begin ? sql`
+			AND COALESCE(
+				initiative.accepted_by_parliament_at,
+				initiative.accepted_by_government_at
+			) >= ${filters.proceedingsStartedOn.begin}
+		` : sql``}
+
+		${filters.proceedingsStartedOn && filters.proceedingsStartedOn.end ? sql`
+			AND COALESCE(
+				initiative.accepted_by_parliament_at,
+				initiative.accepted_by_government_at
+			) < ${filters.proceedingsStartedOn.end}
+		` : sql``}
+
+		${filters.proceedingsEndedOn && filters.proceedingsEndedOn.begin ? sql`
+			AND COALESCE(
+				initiative.finished_in_parliament_at,
+				initiative.finished_in_government_at
+			) >= ${filters.proceedingsEndedOn.begin}
+		` : sql``}
+
+		${filters.proceedingsEndedOn && filters.proceedingsEndedOn.end ? sql`
+			AND COALESCE(
+				initiative.finished_in_parliament_at,
+				initiative.finished_in_government_at
+			) < ${filters.proceedingsEndedOn.end}
+		` : sql``}
+
 		GROUP BY initiative.uuid
 
 		${{
@@ -1388,6 +1416,8 @@ function parseFilters(query) {
 		"published-on": "range",
 		"signing-started-on": "range",
 		"signing-ended-on": "range",
+		"proceedings-started-on": "range",
+		"proceedings-ended-on": "range",
 		phase: true,
 
 		signingEndsAt: "range",
@@ -1417,6 +1447,10 @@ function parseFilters(query) {
 		filters.signingEndedOn = parseDateRange(filters.signingEndedOn)
 	if (filters.signedSince)
 		filters.signedSince = Time.parse(filters.signedSince)
+	if (filters.proceedingsStartedOn)
+		filters.proceedingsStartedOn = parseDateRange(filters.proceedingsStartedOn)
+	if (filters.proceedingsEndedOn)
+		filters.proceedingsEndedOn = parseDateRange(filters.proceedingsEndedOn)
 
 	return filters
 }
