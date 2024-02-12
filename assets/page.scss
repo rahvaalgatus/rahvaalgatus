@@ -2432,7 +2432,8 @@ main {
 					vertical-align: middle;
 				}
 
-				.title-column {
+				.title-column,
+				.proceedings-handler {
 					font-family: $tisa-pro;
 					color: $grey;
 				}

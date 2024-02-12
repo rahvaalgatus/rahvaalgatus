@@ -1535,6 +1535,45 @@ describe("InitiativesController", function() {
 					_.map(_.sortBy(initiatives, "finished_in_government_at"), "id")
 				)
 			})
+
+			_.each({
+				"proceedings-handler": _.id,
+				"+proceedings-handler": _.id,
+				"-proceedings-handler": _.reverse,
+			}, (sort, order) => it(`must sort by ${order}`, function*() {
+				var initiatives = initiativesDb.create([
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "parliament",
+						parliament_committee: "Majanduskomisjon"
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "parliament",
+						parliament_committee: "Sotsiaalkomisjon"
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						destination: "tallinn",
+						phase: "government"
+					})
+				])
+
+				var res = yield this.request("/initiatives?" + Qs.stringify({order}))
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+				var els = dom.body.querySelectorAll("#initiatives .initiative")
+
+				_.map(els, (el) => Number(el.getAttribute("data-id"))).must.eql(
+					sort(_.map(_.sortBy(initiatives, (initiative) => (
+						initiative.parliament_committee ||
+						initiative.destination
+					)), "id"))
+				)
+			}))
 		})
 	})
 

@@ -190,6 +190,16 @@ function InitiativesPage({t, req, flash, filters, order, initiatives}) {
 							>
 								Lõpp
 							</SortButton>
+
+							<SortButton
+								path={initiativesPath}
+								query={filterQuery}
+								name="proceedings-handler"
+								direction="asc"
+								sorted={orderBy == "proceedings-handler" ? orderDir : null}
+							>
+								Menetleja
+							</SortButton>
 						</small></th>
 					</tr>
 				</thead>
@@ -439,15 +449,10 @@ function InitiativeGroupView({title, initiatives, t}) {
 		</tr>
 
 		{initiatives.map(function(initiative) {
-			var proceedingsStartedAt =
-				initiative.accepted_by_parliament_at ||
-				initiative.accepted_by_government_at
-
-			var proceedingsEndedAt =
-				initiative.finished_in_parliament_at ||
-				initiative.finished_in_government_at
-
 			var authorName = renderAuthorName(initiative)
+			var proceedingsStartedAt = getProceedingsStartedAt(initiative)
+			var proceedingsEndedAt = getProceedingsEndedAt(initiative)
+			var proceedingsHandler = getProceedingsHandler(initiative)
 
 			return <tr
 				class="initiative"
@@ -512,6 +517,9 @@ function InitiativeGroupView({title, initiatives, t}) {
 
 					{proceedingsStartedAt && proceedingsEndedAt ? "—" : ""}
 					{proceedingsEndedAt ? <DateView date={proceedingsEndedAt} /> : null}
+
+					<br />
+					<span class="proceedings-handler">{proceedingsHandler}</span>
 				</td>
 			</tr>
 		})}
@@ -580,21 +588,39 @@ function groupInitiative(by, initiative) {
 		)
 
 		case "proceedings-started-at":
-			var proceedingsStartedAt =
-				initiative.accepted_by_parliament_at ||
-				initiative.accepted_by_government_at
-
+			var proceedingsStartedAt = getProceedingsStartedAt(initiative)
 			return proceedingsStartedAt && proceedingsStartedAt.getFullYear()
 
 		case "proceedings-ended-at":
-			var proceedingsEndedAt =
-				initiative.finished_in_parliament_at ||
-				initiative.finished_in_government_at
-
+			var proceedingsEndedAt = getProceedingsEndedAt(initiative)
 			return proceedingsEndedAt && proceedingsEndedAt.getFullYear()
 
+		case "proceedings-handler": return getProceedingsHandler(initiative)
 		default: return null
 	}
+}
+
+function getProceedingsStartedAt(initiative) {
+	return (
+		initiative.accepted_by_parliament_at ||
+		initiative.accepted_by_government_at
+	)
+}
+
+function getProceedingsEndedAt(initiative) {
+	return (
+		initiative.finished_in_parliament_at ||
+		initiative.finished_in_government_at
+	)
+}
+
+function getProceedingsHandler(initiative) {
+	return initiative.parliament_committee || (
+		initiative.destination != "parliament" &&
+		initiative.accepted_by_government_at
+		? LOCAL_GOVERNMENTS[initiative.destination].name
+		: null
+	)
 }
 
 function serializeFilters(filters) {

@@ -210,6 +210,11 @@ exports.router.get("/",
 			"proceedings-ended-at": sql`ORDER BY COALESCE(
 				initiative.finished_in_government_at,
 				initiative.finished_in_parliament_at
+			) ${orderDirSql}`,
+
+			"proceedings-handler": sql`ORDER BY COALESCE(
+				initiative.parliament_committee,
+				initiative.destination
 			) ${orderDirSql}`
 		}[orderBy] || sql``}
 
@@ -1445,8 +1450,9 @@ function parseOrder(order) {
 		case "signing-ended-at":
 		case "signature-count":
 		case "signatures-since-count":
-		case "proceedings-started-at": return order
-		case "proceedings-ended-at": return order
+		case "proceedings-started-at":
+		case "proceedings-ended-at":
+		case "proceedings-handler": return order
 
 		case "signatureCount": return ["signature-count", order[1]]
 		case "signaturesSinceCount": return ["signatures-since-count", order[1]]
