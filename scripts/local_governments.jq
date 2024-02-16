@@ -21,8 +21,8 @@ map(.c | {
 		ehak: .[$ehak_column].v,
 		name: .[$name_column].v,
 		county: .[$county_column].v,
-		population: .[$population_column].v,
-		voterCount: .[$voters_column].v,
+		population: .[$population_column].v | round,
+		voterCount: .[$voters_column].v | round,
 		signatureThreshold: [.[$voters_column].v * 0.01 | round, 5] | max,
 		initiativesEmails: (.[$emails_column].v // "") | lines,
 
