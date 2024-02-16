@@ -452,7 +452,16 @@
 		"initiativesEmails": [
 			"valitsus@lyganuse.ee"
 		],
-		"signatureTrustees": [],
+		"signatureTrustees": [
+			{
+				"personalId": "47002112264",
+				"name": "Kaja Välk"
+			},
+			{
+				"personalId": "47511122226",
+				"name": "Kristel Lahe"
+			}
+		],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/luganuse-vald"
@@ -1185,7 +1194,12 @@
 		"initiativesEmails": [
 			"elva@elva.ee"
 		],
-		"signatureTrustees": [],
+		"signatureTrustees": [
+			{
+				"personalId": "48803284245",
+				"name": "Kristi Kalmus"
+			}
+		],
 		"dtvSchools": [],
 		"dialogs": [
 			{
