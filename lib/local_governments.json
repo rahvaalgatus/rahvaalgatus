@@ -1564,7 +1564,12 @@
 		"initiativesEmails": [
 			"vald@setomaa.ee"
 		],
-		"signatureTrustees": [],
+		"signatureTrustees": [
+			{
+				"personalId": "48807016514",
+				"name": "Margarita Kõdala"
+			}
+		],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/setomaa-vald"
