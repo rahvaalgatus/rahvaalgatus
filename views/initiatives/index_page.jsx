@@ -72,7 +72,7 @@ function InitiativesPage({
 				</caption>
 
 				<thead>
-					<tr>
+					<tr title="Sorteeri">
 						<th>
 							<SortButton
 								path={initiativesPath}
@@ -82,34 +82,7 @@ function InitiativesPage({
 							>
 								Pealkiri
 							</SortButton>
-						</th>
 
-						<th class="phase-column">
-							<SortButton
-								path={initiativesPath}
-								query={filterQuery}
-								name="phase"
-								sorted={orderBy == "phase" ? orderDir : null}
-							>
-								{t("initiatives_page.table.phase_column")}
-							</SortButton>
-						</th>
-
-						<th class="edit-phase-column">
-							Ühisloomes
-						</th>
-
-						<th colspan="2" class="sign-phase-column">
-							Allkirjastamisel
-						</th>
-
-						<th class="proceedings-phase-column">
-							Menetluses
-						</th>
-					</tr>
-
-					<tr>
-						<th>
 							<small>
 								<SortButton
 									path={initiativesPath}
@@ -131,85 +104,104 @@ function InitiativesPage({
 							</small>
 						</th>
 
-						<th />
-
-						<th class="published-at-column edit-phase-column"><small>
+						<th class="phase-column">
 							<SortButton
 								path={initiativesPath}
 								query={filterQuery}
-								name="published-at"
-								direction="desc"
-								sorted={orderBy == "published-at" ? orderDir : null}
+								name="phase"
+								sorted={orderBy == "phase" ? orderDir : null}
 							>
-								Algus
+								{t("initiatives_page.table.phase_column")}
 							</SortButton>
-						</small></th>
+						</th>
 
-						<th class="signing-started-at-column signing-ended-at-column sign-phase-column"><small>
-							<SortButton
-								path={initiativesPath}
-								query={filterQuery}
-								name="signing-started-at"
-								direction="desc"
-								sorted={orderBy == "signing-started-at" ? orderDir : null}
-							>
-								Algus
-							</SortButton>
+						<th class="edit-phase-column">
+							<span class="column-name">Ühisloomes</span>
 
-							<SortButton
-								path={initiativesPath}
-								query={filterQuery}
-								name="signing-ended-at"
-								direction="desc"
-								sorted={orderBy == "signing-ended-at" ? orderDir : null}
-							>
-								Lõpp
-							</SortButton>
-						</small></th>
+							<small>
+								<SortButton
+									path={initiativesPath}
+									query={filterQuery}
+									name="published-at"
+									direction="desc"
+									sorted={orderBy == "published-at" ? orderDir : null}
+								>
+									Algus
+								</SortButton>
+							</small>
+						</th>
 
-						<th class="signature-count-column sign-phase-column"><small>
-							<SortButton
-								path={initiativesPath}
-								query={filterQuery}
-								name="signature-count"
-								direction="desc"
-								sorted={orderBy == "signature-count" ? orderDir : null}
-							>
-								Allkirju
-							</SortButton>
-						</small></th>
+						<th colspan="2" class="sign-phase-column">
+							<span class="column-name">Allkirjastamisel</span>
 
-						<th class="proceedings-phase-column"><small>
-							<SortButton
-								path={initiativesPath}
-								query={filterQuery}
-								name="proceedings-started-at"
-								direction="desc"
-								sorted={orderBy == "proceedings-started-at" ? orderDir : null}
-							>
-								Algus
-							</SortButton>
+							<small>
+								<SortButton
+									path={initiativesPath}
+									query={filterQuery}
+									name="signing-started-at"
+									direction="desc"
+									sorted={orderBy == "signing-started-at" ? orderDir : null}
+								>
+									Algus
+								</SortButton>
 
-							<SortButton
-								path={initiativesPath}
-								query={filterQuery}
-								name="proceedings-ended-at"
-								direction="desc"
-								sorted={orderBy == "proceedings-ended-at" ? orderDir : null}
-							>
-								Lõpp
-							</SortButton>
+								<SortButton
+									path={initiativesPath}
+									query={filterQuery}
+									name="signing-ended-at"
+									direction="desc"
+									sorted={orderBy == "signing-ended-at" ? orderDir : null}
+								>
+									Lõpp
+								</SortButton>
 
-							<SortButton
-								path={initiativesPath}
-								query={filterQuery}
-								name="proceedings-handler"
-								direction="asc"
-								sorted={orderBy == "proceedings-handler" ? orderDir : null}
-							>
-								Menetleja
-							</SortButton>
-						</small></th>
+								<SortButton
+									path={initiativesPath}
+									query={filterQuery}
+									name="signature-count"
+									direction="desc"
+									sorted={orderBy == "signature-count" ? orderDir : null}
+								>
+									Allkirju
+								</SortButton>
+							</small>
+						</th>
+
+						<th class="proceedings-phase-column">
+							<span class="column-name">Menetluses</span>
+
+							<small>
+								<SortButton
+									path={initiativesPath}
+									query={filterQuery}
+									name="proceedings-started-at"
+									direction="desc"
+									sorted={orderBy == "proceedings-started-at" ? orderDir : null}
+								>
+									Algus
+								</SortButton>
+
+								<SortButton
+									path={initiativesPath}
+									query={filterQuery}
+									name="proceedings-ended-at"
+									direction="desc"
+									sorted={orderBy == "proceedings-ended-at" ? orderDir : null}
+								>
+									Lõpp
+								</SortButton>
+
+								<SortButton
+									path={initiativesPath}
+									query={filterQuery}
+									name="proceedings-handler"
+									direction="asc"
+									sorted={orderBy == "proceedings-handler" ? orderDir : null}
+								>
+									Menetleja
+								</SortButton>
+							</small>
+						</th>
 					</tr>
 				</thead>
 
@@ -604,24 +596,24 @@ function InitiativeGroupView({title, initiatives, t}) {
 					<span class="author" title={authorName}>{authorName}</span>
 				</td>
 
-				<td class="phase-column">
+				<td class="phase-column" title="Faas">
 					<span class={"phase " + initiative.phase + "-phase"}>
 						{t("initiatives_page.phases." + initiative.phase)}
 					</span>
 				</td>
 
-				<td class="published-at-column edit-phase-column">
+				<td class="published-at-column edit-phase-column" title="Ühisloomes">
 					<DateView date={initiative.published_at} />
 				</td>
 
-				<td class="signing-started-at-column signing-ended-at-column sign-phase-column">
+				<td class="signing-started-at-column signing-ended-at-column sign-phase-column" title="Allkirjastamisel">
 					{initiative.signing_started_at
 						? <DateView date={initiative.signing_started_at} />
 						: null
 					}
 
 					{initiative.signing_started_at && initiative.signing_ends_at
-							? "—" : ""
+						? "—" : ""
 					}
 
 					{initiative.signing_ends_at ? <DateView
@@ -629,7 +621,7 @@ function InitiativeGroupView({title, initiatives, t}) {
 					/> : null}
 				</td>
 
-				<td class="signature-count-column sign-phase-column">{
+				<td class="signature-count-column sign-phase-column" title="Allkirjad">{
 					initiative.phase != "edit" ? <SignatureProgressView
 						t={t}
 						initiative={initiative}
@@ -637,7 +629,7 @@ function InitiativeGroupView({title, initiatives, t}) {
 					/> : null
 				}</td>
 
-				<td class="proceedings-started-at-column proceedings-ended-at-column proceedings-phase-column">
+				<td class="proceedings-started-at-column proceedings-ended-at-column proceedings-phase-column" title="Menetluses">
 					{proceedingsStartedAt
 						? <DateView date={proceedingsStartedAt} />
 						: null
@@ -646,8 +638,13 @@ function InitiativeGroupView({title, initiatives, t}) {
 					{proceedingsStartedAt && proceedingsEndedAt ? "—" : ""}
 					{proceedingsEndedAt ? <DateView date={proceedingsEndedAt} /> : null}
 
-					<br />
-					<span class="proceedings-handler">{proceedingsHandler}</span>
+					{proceedingsHandler ? <>
+						<br />
+
+						<span class="proceedings-handler" title="Menetleja">
+							{proceedingsHandler}
+						</span>
+					</> : null}
 				</td>
 			</tr>
 		})}

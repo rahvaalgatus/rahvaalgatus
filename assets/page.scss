@@ -27,6 +27,8 @@ body {
 	font-weight: 300;
 	font-size: 1.4rem;
 	color: $text;
+	width: fit-content;
+	min-width: 100%;
 }
 
 center {
@@ -1103,6 +1105,9 @@ strong {
 		.languages {
 			display: inline;
 			font-weight: bold;
+
+			// Right margin so the user's name won't move into the languages.
+			margin-right: 1rem;
 
 			button { text-transform: uppercase; }
 			button[disabled] { color: $link-color; }
@@ -2275,225 +2280,320 @@ main {
 				}
 			}
 		}
+	}
 
+	#initiatives {
+		width: 100%;
 
-		#initiatives {
-			width: 100%;
+		& > tbody > tr > td { padding: 1.3rem 0.5rem 1.4rem; }
 
-			& > thead > tr > th { padding: 0.5rem 0.5rem; }
-			& > tbody > tr > td { padding: 1.3rem 0.5rem 1.4rem; }
+		& > thead > tr > th:first-child,
+		& > tbody > tr > td:first-child { padding-left: 2rem; }
+		& > thead > tr > th:last-child,
+		& > tbody > tr > td:last-child { padding-right: 2rem; }
 
-			& > thead > tr > th:first-child,
-			& > tbody > tr > td:first-child { padding-left: 2rem; }
-			& > thead > tr > th:last-child,
-			& > tbody > tr > td:last-child { padding-right: 2rem; }
+		& > thead {
+			top: 0;
+			position: sticky;
 
-			& > thead {
-				top: 0;
-				position: sticky;
+			// Border radius for box-shadow. The background comes from <th>.
+			border-radius: 0.5rem;
+			box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+		}
 
-				// Border radius for box-shadow. The background comes from <th>.
-				border-radius: 0.5rem;
-				box-shadow: 0 1px #e0e0e0;
-				box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+		& > thead > tr > th {
+			background: white;
+			font-size: 1.6rem;
+			font-weight: bold;
+			color: black;
+			white-space: nowrap;
+			line-height: 1.5;
+			padding: 1.5rem 0.5rem 1.4rem;
+
+			small {
+				display: block;
+				margin-top: 0.3rem;
+				font-weight: normal;
+				font-size: 1.5rem;
+				color: $grey;
 			}
 
-			& > thead > tr > th {
-				background: white;
-				font-size: 1.6rem;
-				font-weight: bold;
+			&:first-child { border-top-left-radius: 0.5rem; }
+			&:last-child { border-top-right-radius: 0.5rem; }
+			&:first-child { border-bottom-left-radius: 0.5rem; }
+			&:last-child { border-bottom-right-radius: 0.5rem; }
+		}
+
+		.sort-button {
+			white-space: nowrap;
+
+			svg { margin-left: 0.6rem; vertical-align: sub; }
+
+			&.asc,
+			&.desc { font-weight: 600; }
+			&.asc .sort-chevrons .up { fill: $dark-blue; }
+			&.desc .sort-chevrons .down { fill: $dark-blue; }
+
+			&:focus {
+				outline-color: currentcolor;
+				outline-style: dashed;
+				outline-width: 0.1rem;
+				outline-offset: 0.2rem;
+			}
+
+			&:hover {
+				color: $link-color;
+				text-decoration: underline;
+			}
+
+			& + .column-name { margin-left: 0.7rem; }
+		}
+
+		caption {
+			text-align: left;
+			font-size: 1.6rem;
+			line-height: 1.5;
+
+			// Filter buttons add another 0.5rem of bottom margin.
+			padding: 0 0 0.5rem;
+
+			.total { padding: 0 2rem; }
+			.total + #filters { margin-top: 0.5rem; }
+		}
+
+		.table-group-header th {
+			font-size: 1.5rem;
+			padding: 2.5rem 2rem 0.5rem;
+
+			h2 {
+				font-size: 2rem;
+				line-height: 1.5;
 				color: black;
+				font-family: $museo-sans;
+				font-weight: 900;
+				text-transform: uppercase;
+			}
+		}
+
+		.empty td {
+			line-height: 1.5;
+			font-size: 1.6rem;
+			text-align: center;
+			padding-top: 2rem;
+		}
+
+		.initiative {
+			background: white;
+			box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+
+			h3 {
+				margin-top: 0.4rem;
+
+				a {
+					color: $title-text;
+					font-size: 1.9rem;
+					font-family: $museo-sans;
+					line-height: 1.5;
+					font-weight: 400;
+					word-wrap: break-word;
+
+					overflow: hidden;
+					@include hyphens(auto);
+
+					&:focus {
+						outline-color: currentcolor;
+						outline-style: dashed;
+						outline-width: 0.1rem;
+						outline-offset: 0.2rem;
+
+						border-radius: 0.1rem;
+						-moz-outline-radius: 0.1rem;
+					}
+
+					&:hover {
+						color: $link-color;
+						text-decoration: underline;
+					}
+				}
+
+				img.badge {
+					vertical-align: middle;
+					display: inline-block;
+					height: 2rem;
+					margin-left: 1rem;
+				}
+			}
+
+			td {
+				font-size: 1.5rem;
+				line-height: 1.5;
+				vertical-align: middle;
+			}
+
+			.title-column,
+			.proceedings-handler {
+				font-family: $tisa-pro;
+				color: $grey;
+			}
+
+			td.phase-column {
+				.phase {
+					display: inline-block;
+					text-transform: uppercase;
+					font-size: 1.3rem;
+					font-weight: 700;
+					border-radius: 2rem;
+					padding: 0.2rem 1rem 0.1rem;
+					white-space: nowrap;
+					color: white;
+
+					&.edit-phase { background-color: $edit-phase-color; }
+					&.sign-phase { background-color: $sign-phase-color; }
+					&.parliament-phase { background-color: $parliament-phase-color; }
+					&.government-phase { background-color: $government-phase-color; }
+					&.done-phase { background-color: $done-phase-color; }
+				}
+			}
+
+			td.published-at-column,
+			td.signing-started-at-column,
+			td.signing-ended-at-column,
+			td.proceedings-started-at-column,
+			td.proceedings-ended-at-column {
+				font-size: 1.6rem;
+				font-weight: 500;
+				font-variant-numeric: tabular-nums;
+			}
+
+			td.published-at-column,
+			td.signing-started-at-column,
+			td.signing-ended-at-column {
+				text-align: right;
+			}
+
+			.signature-progress {
+				display: inline-block;
 				white-space: nowrap;
+				font-size: 1.3rem;;
+				font-weight: 700;
+				border-radius: 2rem;
+				padding: 0.2rem 1rem 0.1rem;
+				color: $progress-bar-color;
+				background-color: $progress-bar-background;
+				width: 100%;
+				min-width: 11rem;
+				text-align: center;
 
-				small {
-					font-weight: normal;
-					font-size: 1.5rem;
-					color: $grey;
-				}
+				&.external { background-color: $parliament-color; color: white; }
+				&.completed { background-color: white; }
+				&.failed { background-color: #9a9a9a; color: white; }
 			}
 
-			& > thead > tr:first-child > th {
-				padding-top: 1.5rem;
+			& + .initiative > td { border-top: 1px solid $secondary-background; }
+		}
 
-				&:first-child { border-top-left-radius: 0.5rem; }
-				&:last-child { border-top-right-radius: 0.5rem; }
-			}
-
-			& > thead > tr:last-child > th {
-				padding-bottom: 1.2rem;
-
-				&:first-child { border-bottom-left-radius: 0.5rem; }
-				&:last-child { border-bottom-right-radius: 0.5rem; }
-			}
-
-			.sort-button {
-				white-space: nowrap;
-
-				svg { margin-left: 0.6rem; vertical-align: sub; }
-
-				&.asc,
-				&.desc { font-weight: 600; }
-				&.asc .sort-chevrons .up { fill: $dark-blue; }
-				&.desc .sort-chevrons .down { fill: $dark-blue; }
-
-				&:focus {
-					outline-color: currentcolor;
-					outline-style: dashed;
-					outline-width: 0.1rem;
-					outline-offset: 0.2rem;
-				}
-
-				&:hover {
-					color: $link-color;
-					text-decoration: underline;
-				}
-
-				& + .column-name { margin-left: 0.7rem; }
-			}
+		@media only screen and (max-width: 1020px) {
+			display: block;
 
 			caption {
-				text-align: left;
-				font-size: 1.6rem;
-				line-height: 1.5;
-
-				// Filter buttons add another 0.5rem of bottom margin.
-				padding: 0 0 0.5rem;
-
-				.total { padding: 0 2rem; }
-				.total + #filters { margin-top: 0.5rem; }
+				display: block;
 			}
 
-			.table-group-header th {
-				font-size: 1.5rem;
-				padding: 2.5rem 2rem 0.5rem;
+			& > thead,
+			& > thead > tr,
+			& > tbody,
+			& > tbody > tr { display: block; }
 
-				h2 {
-					font-size: 2rem;
-					line-height: 1.5;
-					color: black;
-					font-family: $museo-sans;
-					font-weight: 900;
-					text-transform: uppercase;
+			& > thead {
+				position: static;
+				background: white;
+
+				& > tr {
+					padding: 1.5rem 2rem;
+
+					&:before {
+						display: block;
+						text-transform: uppercase;
+						font-size: 1.4rem;
+						margin-bottom: 1rem;
+						font-weight: 700;
+						color: $grey;
+						white-space: nowrap;
+
+						content: attr(title) ":";
+					}
 				}
-			}
 
-			.empty td {
-				line-height: 1.5;
-				font-size: 1.6rem;
-				text-align: center;
-				padding-top: 2rem;
+				& > tr > th {
+					display: block;
+					padding: 0;
+
+					&:first-child { padding-left: 0; }
+					&:last-child { padding-left: 0; }
+
+					& + th {
+						margin-top: 0.5rem;
+					}
+				}
 			}
 
 			.initiative {
-				background: white;
-				box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
-
-				h3 {
-					margin-top: 0.4rem;
-
-					a {
-						color: $title-text;
-						font-size: 1.9rem;
-						font-family: $museo-sans;
-						line-height: 1.5;
-						font-weight: 400;
-						word-wrap: break-word;
-
-						overflow: hidden;
-						@include hyphens(auto);
-
-						&:focus {
-							outline-color: currentcolor;
-							outline-style: dashed;
-							outline-width: 0.1rem;
-							outline-offset: 0.2rem;
-
-							border-radius: 0.1rem;
-							-moz-outline-radius: 0.1rem;
-						}
-
-						&:hover {
-							color: $link-color;
-							text-decoration: underline;
-						}
-					}
-
-					img.badge {
-						vertical-align: middle;
-						display: inline-block;
-						height: 2rem;
-						margin-left: 1rem;
-					}
-				}
+				padding: 1.5rem 2rem;
 
 				td {
-					font-size: 1.5rem;
-					line-height: 1.5;
-					vertical-align: middle;
+					display: block;
+					width: 100%;
+					padding: 0;
+
+					&:first-child { padding-left: 0; }
+					&:last-child { padding-left: 0; }
 				}
 
-				.title-column,
-				.proceedings-handler {
-					font-family: $tisa-pro;
-					color: $grey;
-				}
-
-				.phase-column {
-					.phase {
-						text-transform: uppercase;
-						font-size: 1.3rem;
-						font-weight: 700;
-						border-radius: 2rem;
-						padding: 0.5rem 1rem 0.3rem;
-						white-space: nowrap;
-						color: white;
-
-						&.edit-phase { background-color: $edit-phase-color; }
-						&.sign-phase { background-color: $sign-phase-color; }
-						&.parliament-phase { background-color: $parliament-phase-color; }
-						&.government-phase { background-color: $government-phase-color; }
-						&.done-phase { background-color: $done-phase-color; }
-					}
-				}
-
-				td.published-at-column,
-				td.signing-started-at-column,
-				td.signing-ended-at-column,
-				td.proceedings-started-at-column,
-				td.proceedings-ended-at-column {
-					font-size: 1.6rem;
-					font-weight: 500;
-					font-variant-numeric: tabular-nums;
+				td.title-column {
+					margin-bottom: 1.5rem;
 				}
 
 				td.published-at-column,
 				td.signing-started-at-column,
 				td.signing-ended-at-column {
-					text-align: right;
+					text-align: left;
 				}
 
+				td.phase-column,
+				td.published-at-column,
 				td.signing-started-at-column,
-				td.proceedings-phase-column { white-space: nowrap; }
-
-				.signature-progress {
-					display: inline-block;
-					white-space: nowrap;
-					font-size: 1.3rem;;
-					font-weight: 700;
-					border-radius: 2rem;
-					padding: 0.3rem 1rem 0.1rem;
-					color: $progress-bar-color;
-					background-color: $progress-bar-background;
-					width: 100%;
-					min-width: 11rem;
-					text-align: center;
-
-					&.external { background-color: $parliament-color; color: white; }
-					&.completed { background-color: white; }
-					&.failed { background-color: #9a9a9a; color: white; }
+				td.signature-count-column,
+				td.proceedings-started-at-column {
+					margin-top: 0.5rem;
 				}
 
-				& + .initiative > td { border-top: 1px solid $secondary-background; }
+				td.phase-column:before,
+				td.published-at-column:before,
+				td.signing-started-at-column:not(:empty):before,
+				td.signature-count-column:not(:empty):before,
+				td.proceedings-started-at-column:not(:empty):before,
+				.proceedings-handler:before {
+					display: inline-block;
+					text-transform: uppercase;
+					font-family: inherit;
+					font-size: 1.4rem;
+					font-weight: 700;
+					color: $grey;
+					white-space: nowrap;
+					margin-right: 1rem;
+
+					content: attr(title) ":";
+				}
+
+				.signature-progress { width: auto; }
+
+				.proceedings-handler {
+					font-family: inherit;
+					color: inherit;
+				}
+
+				& + .initiative { margin-top: 2rem; }
+				& + .initiative > td { border-top: none; }
 			}
 		}
 	}
