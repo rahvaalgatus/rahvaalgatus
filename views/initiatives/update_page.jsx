@@ -82,34 +82,38 @@ module.exports = function(attrs) {
 				{t("UPDATE_INITIATIVE_READONLY")}
 			</p> : null}
 
-			{textSections
-				? textSections.map(function(section) {
+			{textSections ? <>
+				<p class="description">
+					{Jsx.html(t("edit_initiative_page.text.sections_description"))}
+				</p>
+
+				{textSections.map(function(section) {
 					var title, description
 
 					switch (section) {
 						case undefined: break
 
 						case "summary":
-							title = Jsx.html(t("edit_initiative_page.text.sections.summary"))
+							title = t("edit_initiative_page.text.sections.summary")
 
 							description =
-								Jsx.html(t("edit_initiative_page.text.sections.summary_description", {
+								t("edit_initiative_page.text.sections.summary_description", {
 									tosUrl: "/about#tos"
-								}))
+								})
 							break
 
 						case "problem":
-							title = Jsx.html(t("edit_initiative_page.text.sections.problem"))
+							title = t("edit_initiative_page.text.sections.problem")
 
 							description =
-								Jsx.html(t("edit_initiative_page.text.sections.problem_description"))
+								t("edit_initiative_page.text.sections.problem_description")
 							break
 
 						case "solution":
-							title = Jsx.html(t("edit_initiative_page.text.sections.solution"))
+							title = t("edit_initiative_page.text.sections.solution")
 
 							description =
-								Jsx.html(t("edit_initiative_page.text.sections.solution_description"))
+								t("edit_initiative_page.text.sections.solution_description")
 							break
 
 						default: throw new RangeError("Unsupported section: " + section)
@@ -123,8 +127,8 @@ module.exports = function(attrs) {
 						description={description}
 						section={section}
 					/>
-				})
-				: <EditorView
+				})}
+			</> : <EditorView
 					t={t}
 					editable={editable}
 					text={text}

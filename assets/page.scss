@@ -9,6 +9,7 @@ $article-padding: 3rem;
 $article-padding-mobile: 2rem;
 $article-width-percentage: 70%;
 $initiative-width: 22.5rem;
+$info-background-color: #fffbd6;
 
 html {
 	scroll-behavior: smooth;
@@ -120,11 +121,10 @@ strong {
 
 	p + p,
 	p + h2,
-	p + h3 {
-		margin-top: 3rem;
-	}
-
-	big + h2 {
+	p + h3,
+	big + h2,
+	big + h3,
+	big + p {
 		margin-top: 3rem;
 	}
 
@@ -4036,6 +4036,7 @@ main {
 
 	#initiative-sheet {
 		border-top-left-radius: $tab-radius;
+		background: $light-background;
 	}
 
 	#language-tabs {
@@ -4076,7 +4077,7 @@ main {
 	input[name=title] {
 		@include appearance(none);
 		border: none;
-		padding: 1.5rem 3rem 1.5rem;
+		padding: 1.5rem 2.5rem 1.5rem;
 		font-size: 3.4rem;
 		font-family: $tisa-pro;
 		color: $title-text;
@@ -4088,52 +4089,62 @@ main {
 
 	input[name=content][readonly] ~ trix-toolbar { display: none; }
 
+	$label-padding: 2rem;
+
 	.read-only-warning {
-		padding: 2rem $article-padding 0;
+		padding: 1.3rem $label-padding 1rem;
 
 		@include mobile {
 			padding-left: $article-padding-mobile;
 			padding-right: $article-padding-mobile;
 		}
 
+		border-bottom: 1px solid $light-background-border;
+		background-color: $info-background-color;
 		font-size: 1.6rem;
-		background: $light-background;
-		border-top: 1px solid $light-background-border;
 		line-height: 1.4;
 	}
 
 	.editor-label {
 		display: block;
-		padding: 3rem $article-padding 0.5rem;
+		margin: 3rem $label-padding 0.5rem;
 
 		@include mobile {
-			padding-left: $article-padding-mobile;
-			padding-right: $article-padding-mobile;
+			margin-left: $article-padding-mobile;
+			margin-right: $article-padding-mobile;
 		}
 
-		background: $light-background;
 		font-size: 1.6rem;
 		font-weight: 700;
 		line-height: 1.4;
+	}
 
-		& ~ .editor-label { border-top: 1px solid $light-background-border; }
+	.description {
+		margin: 2rem $label-padding 2rem;
+
+		@include mobile {
+			margin-left: $article-padding-mobile;
+			margin-right: $article-padding-mobile;
+		}
+
+		font-size: 1.6rem;
+		line-height: 1.4;
 	}
 
 	.editor-description {
-		padding: 0 $article-padding 0.5rem;
+		margin: 0 $label-padding 0.5rem;
 
 		@include mobile {
-			padding-left: $article-padding-mobile;
-			padding-right: $article-padding-mobile;
+			margin-left: $article-padding-mobile;
+			margin-right: $article-padding-mobile;
 		}
 
-		background: $light-background;
 		font-size: 1.6rem;
 		line-height: 1.4;
 	}
 
 	trix-toolbar {
-		padding: 1rem 2rem 0.5rem;
+		padding: 1rem $label-padding 0.5rem;
 		position: sticky;
 		top: 0;
 		background: $light-background;
@@ -4149,7 +4160,10 @@ main {
 	.editor-noscript {
 		display: block;
 
-		padding: $article-padding;
+		background: white;
+		padding: 2rem $label-padding;
+		border-bottom: 1px solid $light-background-border;
+
 		@include mobile { padding: $article-padding-mobile; }
 	}
 
@@ -4171,10 +4185,20 @@ main {
 	}
 
 	.submit-inputs {
-		padding: 1.5rem 1.5rem 1.5rem;
-		background: $light-background;
-		border: 0 solid $light-background-border;
-		border-width: 1px 0;
+		margin: 2rem $label-padding;
+		font-size: 1.6rem;
+		line-height: 1.4;
+
+		h3 {
+			font-weight: 500;
+			margin-bottom: 0.3rem;
+		}
+
+		p {
+			margin-bottom: 1rem;
+
+			a { color: $link-color; text-decoration: underline; }
+		}
 
 		.default-fields {
 			display: inline-block;
@@ -4182,21 +4206,10 @@ main {
 			margin-bottom: 0.5rem;
 		}
 
-		h3 {
-			font-weight: 500;
-			margin-bottom: 0.3rem;
-		}
-		
 		.language-fields {
 			margin-bottom: 1rem;
 
 			label + label { margin-left: 1rem; }
-		}
-
-		p {
-			margin-bottom: 1rem;
-
-			a { color: $link-color; text-decoration: underline; }
 		}
 
 		button[type=submit] { padding: 0 2rem; }

@@ -356,7 +356,6 @@ function ReadPage(attrs) {
 				</menu> : null}
 
 				<InitiativeContentView
-					t={t}
 					initiative={initiative}
 					text={text}
 					files={files}
@@ -864,7 +863,7 @@ function PhasesView(attrs) {
 	}
 }
 
-function InitiativeContentView({t, initiative, text, files}) {
+function InitiativeContentView({initiative, text, files}) {
 	var initiativePath = "/initiatives/" + initiative.id
 
 	if (initiative.external) {
@@ -902,13 +901,10 @@ function InitiativeContentView({t, initiative, text, files}) {
 
 					switch (section) {
 						case "summary": return <big>
-							{Trix.render(content, {heading: "h3"})}
+							{Trix.render(content, {heading: "h2"})}
 						</big>
 
-						default: return <>
-							<h2>{t("initiative_page.text.sections." + section)}</h2>
-							{Trix.render(content, {heading: "h3"})}
-						</>
+						default: return Trix.render(content, {heading: "h2"})
 					}
 				})}
 			</article>

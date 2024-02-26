@@ -5,7 +5,6 @@ var Initiative = require("root/lib/initiative")
 var MediaType = require("medium-type")
 var ValidText = require("root/test/valid_initiative_text")
 var Config = require("root").config
-var I18n = require("root/lib/i18n")
 var demand = require("must")
 var outdent = require("root/lib/outdent")
 var {newTrixDocument} = require("root/test/fixtures")
@@ -165,7 +164,7 @@ describe("Initiative", function() {
 			</html>.toString("doctype"))
 		})
 
-		it("must render Trix text sections in text's language", function() {
+		it("must render Trix text sections", function() {
 			var text = new ValidText({
 				content_type: TRIX_SECTIONS_TYPE,
 				language: "en",
@@ -191,11 +190,7 @@ describe("Initiative", function() {
 				<body>
 					<h1>{text.title}</h1>
 					<big><p>World.</p></big>
-
-					<h2>{I18n.t("en", "initiative_page.text.sections.problem")}</h2>
 					<p>Bad world.</p>
-
-					<h2>{I18n.t("en", "initiative_page.text.sections.solution")}</h2>
 					<p>Make better.</p>
 				</body>
 			</html>.toString("doctype"))
@@ -264,16 +259,14 @@ describe("Initiative", function() {
 					<h1>{text.title}</h1>
 
 					<big>
-						<h3>My Idea</h3>
+						<h2>My Idea</h2>
 						<p>World.</p>
 					</big>
 
-					<h2>{I18n.t("en", "initiative_page.text.sections.problem")}</h2>
-					<h3>My Problem</h3>
+					<h2>My Problem</h2>
 					<p>Bad world.</p>
 
-					<h2>{I18n.t("en", "initiative_page.text.sections.solution")}</h2>
-					<h3>My Solution</h3>
+					<h2>My Solution</h2>
 					<p>Make better.</p>
 				</body>
 			</html>.toString("doctype"))
