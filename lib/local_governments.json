@@ -243,7 +243,12 @@
 			"saku@sakuvald.ee"
 		],
 		"signatureTrustees": [],
-		"dtvSchools": [],
+		"dtvSchools": [
+			{
+				"name": "Saku Gümnaasium",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/28-saku-g%C3%BCmnaasium"
+			}
+		],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/saku-vald"
 	},
@@ -313,12 +318,12 @@
 				"url": "https://demokraatia.rahvaalgatus.ee/koolid/21-tallinna-saksa-g%C3%BCmnaasium"
 			},
 			{
-				"name": "",
+				"name": "Tallinna Õismäe Vene Lütseum",
 				"url": "https://demokraatia.rahvaalgatus.ee/koolid/23-tallinna%C3%B5ism%C3%A4evenel%C3%BCtseum"
 			},
 			{
-				"name": "Õismäe Vene Lütseum",
-				"url": "Tallinna"
+				"name": "  Tallinna Kunstigümnaasium",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/27-tallinna-kunstig%C3%BCmnaasium"
 			}
 		],
 		"dialogs": [
@@ -1308,6 +1313,10 @@
 			{
 				"name": "Tartu Annelinna Gümnaasium",
 				"url": "https://demokraatia.rahvaalgatus.ee/koolid/7-tartu-annelinna-g%C3%BCmnaasium"
+			},
+			{
+				"name": "Tartu Forseliuse Kool",
+				"url": "https://demokraatia.rahvaalgatus.ee/koolid/26-tartuforseliusekool"
 			}
 		],
 		"dialogs": [
