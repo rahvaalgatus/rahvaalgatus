@@ -9,12 +9,14 @@ var {selected} = require("root/lib/css")
 var LANGUAGES = require("root").config.languages
 var {SCHEMA} = require("root/controllers/initiatives/texts_controller")
 var TEXT_SECTIONS = ["summary", "problem", "solution"]
+var SUMMARY_MAX_LENGTH = 280
 
 module.exports = function(attrs) {
 	var {req} = attrs
 	var {initiative} = attrs
 	var {flash} = attrs
 	var {text} = attrs
+	var {errors} = attrs
 	var {t} = attrs
 	var textLanguage = text && text.language || attrs.language
 
@@ -67,6 +69,23 @@ module.exports = function(attrs) {
 			{initiative.id ?
 				<input type="hidden" name="language" value={textLanguage} />
 			: null}
+
+			{errors ? <div class="errors">
+				{t("edit_initiative_page.errors.description")}
+				<ul>{errors.map(function(err) { switch (err.keywordLocation) {
+					case "#/properties/title/minLength": return <li>
+						{t("edit_initiative_page.errors.title_min_length")}
+					</li>
+
+					case "#/properties/content/maxLength": return <li>
+						{t("edit_initiative_page.errors.summary_max_length", {
+							length: SUMMARY_MAX_LENGTH
+						})}
+					</li>
+
+					default: return null
+				}})}</ul>
+			</div> : null}
 
 			<input
 				type="text"
@@ -122,6 +141,7 @@ module.exports = function(attrs) {
 					return <EditorView
 						t={t}
 						editable={editable}
+						counter={section == "summary"}
 						text={text}
 						title={title}
 						description={description}
@@ -129,11 +149,10 @@ module.exports = function(attrs) {
 					/>
 				})}
 			</> : <EditorView
-					t={t}
-					editable={editable}
-					text={text}
-				/>
-			}
+				t={t}
+				editable={editable}
+				text={text}
+			/>}
 
 			<script>{javascript`
 				var Trix = require("trix")
@@ -148,10 +167,8 @@ module.exports = function(attrs) {
 
 				editorEls.forEach(function(editorEl) {
 					var contentName = editorEl.getAttribute("data-content-name")
-
-					editorEl.addEventListener("trix-file-accept", function(ev) {
-						ev.preventDefault()
-					})
+					var counterId = editorEl.getAttribute("data-counter-id")
+					var counterEl = counterId ? document.getElementById(counterId) : null
 
 					// Trix-initialize is likely to be triggered even when "back"-ing
 					// into this page. However, as we keep the serialized text in an
@@ -168,6 +185,17 @@ module.exports = function(attrs) {
 
 						editorEl.loadedDocument = editorEl.editor.getDocument()
 						editorEl.contentEditable = !editorEl.hasAttribute("readonly")
+					})
+
+					editorEl.addEventListener("trix-file-accept", function(ev) {
+						ev.preventDefault()
+					})
+
+					if (counterEl) editorEl.addEventListener("trix-change", function(ev) {
+						var length = editorEl.editor.getDocument().toString().trimRight().length
+						counterEl.querySelector(".current").textContent = length
+
+						counterEl.classList.toggle("exceeded", length > ${SUMMARY_MAX_LENGTH})
 					})
 				})
 
@@ -206,9 +234,7 @@ module.exports = function(attrs) {
 					<h3>{t("NEW_INITIATIVE_LANGUAGE_LABEL")}</h3>
 
 					<fieldset class="language-fields">
-						{LANGUAGES.map((lang) => <label
-							class="language-field form-radio"
-						>
+						{LANGUAGES.map((lang) => <label class="language-field form-radio">
 							<input
 								type="radio"
 								name="language"
@@ -254,7 +280,7 @@ module.exports = function(attrs) {
 	</InitiativePage>
 }
 
-function EditorView({t, editable, section, title, description, text}) {
+function EditorView({t, editable, section, title, description, text, counter}) {
 	var inputName = "content"
 	if (section) inputName += "[" + section + "]"
 
@@ -277,16 +303,26 @@ function EditorView({t, editable, section, title, description, text}) {
 			value={text && JSON.stringify(serializeText(text, section))}
 		/>
 
+		<trix-toolbar id={section + "-editor-toolbar"} />
+
 		<trix-editor
 			id={section + "-editor"}
+			toolbar={section + "-editor-toolbar"}
 			class="text editor"
 			data-content-name={inputName}
+			data-counter-id={counter ? section + "-editor-counter" : null}
 			readonly={!editable}
 		/>
 
 		{editable ? <noscript><div class="editor-noscript">
 			{t("UPDATE_INITIATIVE_NOSCRIPT")}
 		</div></noscript> : null}
+
+		{counter ? <div id={section + "-editor-counter"} class="editor-counter">
+			{Jsx.html(t("edit_initiative_page.text.counter", {
+				maxLength: SUMMARY_MAX_LENGTH
+			}))}
+		</div> : null}
 	</>
 }
 

@@ -3,12 +3,15 @@ var {Router} = require("express")
 var Config = require("root").config
 var HttpError = require("standard-http-error")
 var Initiative = require("root/lib/initiative")
+var Trix = require("root/lib/trix")
 var initiativesDb = require("root/db/initiatives_db")
 var textsDb = require("root/db/initiative_texts_db")
 var sql = require("sqlate")
 var TRIX_CONTENT_TYPE = "application/vnd.basecamp.trix+json"
 var TRIX_SECTIONS_TYPE = "application/vnd.rahvaalgatus.trix-sections+json"
+var SUMMARY_MAX_LENGTH = 280
 exports.parse = parse
+exports.SUMMARY_MAX_LENGTH = SUMMARY_MAX_LENGTH
 
 exports.router = Router({mergeParams: true})
 
@@ -81,7 +84,29 @@ exports.router.get("/:id", function(req, res) {
 exports.router.post("/", function(req, res) {
 	var {user} = req
 	var {initiative} = req
-	var attrs = parse(req.body)
+	var attrs
+
+	try { attrs = parse(req.body) }
+	catch (err) {
+		if (err instanceof HttpError && err.code == 422) {
+			res.statusCode = err.code
+			res.statusMessage = err.message
+
+			return void res.render("initiatives/update_page.jsx", {
+				text: {
+					id: err.attributes.basis_id,
+					title: err.attributes.title,
+					content: err.attributes.content,
+					content_type: err.attributes.content_type,
+					language: err.attributes.language
+				},
+
+				errors: err.errors
+			})
+		}
+
+		throw err
+	}
 
 	if (!(
 		initiative.phase == "edit" ||
@@ -133,7 +158,7 @@ var validate = require("root/lib/json_schema").new({
 	required: ["title", "content", "language"],
 
 	properties: {
-		title: {type: "string", maxLength: 200},
+		title: {type: "string", minLength: 1, maxLength: 200},
 		content: {type: ["object", "array"]},
 		content_type: {enum: [TRIX_CONTENT_TYPE, TRIX_SECTIONS_TYPE]},
 		language: {enum: Config.languages},
@@ -152,7 +177,7 @@ function parse(obj) {
 		)
 		: []
 
-	var err, attrs = {
+	var errors, attrs = {
 		title: obj.title,
 		content,
 		content_type: _.isArray(content) ? TRIX_CONTENT_TYPE : TRIX_SECTIONS_TYPE,
@@ -160,8 +185,22 @@ function parse(obj) {
 		basis_id: Number(obj["basis-id"]) || null
 	}
 
-	if (err = validate(attrs)) throw new HttpError(422, "Invalid Attributes", {
-		attributes: err
+	if (errors = validate(attrs)) throw new HttpError(422, "Invalid Attributes", {
+		attributes: attrs,
+		errors
+	})
+
+	if (
+		_.isPlainObject(content) &&
+		content.summary &&
+		Trix.length(content.summary) > SUMMARY_MAX_LENGTH
+	) throw new HttpError(422, "Invalid Attributes", {
+		attributes: attrs,
+
+		errors: [{
+			keywordLocation: "#/properties/content/maxLength",
+			instanceLocation: "#/content/summary"
+		}]
 	})
 
 	return attrs

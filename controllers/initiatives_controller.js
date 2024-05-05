@@ -283,8 +283,30 @@ exports.router.get("/",
 })
 
 exports.router.post("/", assertUser, rateLimit, function(req, res) {
-	var {user} = req
-	var attrs = parseText(req.body)
+	var {user} = req, attrs
+
+	try { attrs = parseText(req.body) }
+	catch (err) {
+		if (err instanceof HttpError && err.code == 422) {
+			res.statusCode = err.code
+			res.statusMessage = err.message
+
+			return void res.render("initiatives/update_page.jsx", {
+				initiative: EMPTY_INITIATIVE,
+
+				text: {
+					title: err.attributes.title,
+					content: err.attributes.content,
+					content_type: err.attributes.content_type,
+					language: err.attributes.language
+				},
+
+				errors: err.errors
+			})
+		}
+
+		throw err
+	}
 
 	var initiative = initiativesDb.create({
 		uuid: _.serializeUuid(_.uuidV4()),

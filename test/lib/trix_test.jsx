@@ -876,4 +876,433 @@ describe("Trix", function() {
 			err.must.be.an.error(TypeError, "Invalid inline type: foo")
 		})
 	})
+
+	describe("length", function() {
+		it("must return 0 given no blocks", function() {
+			Trix.length([]).must.equal(0)
+		})
+
+		it("must count a text block", function() {
+			Trix.length([{
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Hello, world!"},
+					BLOCK_BREAK
+				],
+
+				"attributes": []
+			}]).must.equal(13)
+		})
+
+		it("must count two paragraphs in one text block", function() {
+			Trix.length([{
+				"text": [{
+					"type": "string",
+					"attributes": {},
+					"string": "Hello, world!\n\nHow are you?"
+				}, BLOCK_BREAK],
+
+				"attributes": []
+			}]).must.equal(13 + 12)
+		})
+
+		it("must count two paragraphs in adjacent text blocks", function() {
+			Trix.length([{
+				"text": [{
+					"type": "string",
+					"attributes": {},
+					"string": "Hello, world!"
+				}, BLOCK_BREAK],
+
+				"attributes": []
+			}, {
+				"text": [{
+					"type": "string",
+					"attributes": {},
+					"string": "\nHow are you?"
+				}, BLOCK_BREAK],
+
+				"attributes": []
+			}]).must.equal(13 + 12)
+		})
+
+		it("must count two paragraphs separated by three newlines", function() {
+			Trix.length([{
+				"text": [{
+					"type": "string",
+					"attributes": {},
+					"string": "Hello, world!\n\n\nHow are you?"
+				}, BLOCK_BREAK],
+
+				"attributes": []
+			}]).must.equal(13 + 12)
+		})
+
+		it("must count an empty text block", function() {
+			Trix.length([{"text": [BLOCK_BREAK], "attributes": []}]).must.equal(0)
+		})
+
+		it("must count text with attributes", function() {
+			Trix.length([{
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Hello, "},
+					{"type": "string", "attributes": {"bold": true}, "string": "world"},
+					{"type": "string", "attributes": {}, "string": "!"},
+					BLOCK_BREAK
+				],
+
+				"attributes": []
+			}]).must.equal(13)
+		})
+
+		it("must count a heading", function() {
+			Trix.length([{
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Hello, world!"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["heading1"]
+			}]).must.equal(13)
+		})
+
+		it("must count heading with one newline", function() {
+			Trix.length([{
+				"text": [{
+					"type": "string",
+					"attributes": {},
+					"string": "Hello, world!\nHow are you?"
+				}, BLOCK_BREAK],
+
+				"attributes": ["heading1"]
+			}]).must.equal(13 + 1 + 12)
+		})
+
+		it("must count heading with two newlines", function() {
+			Trix.length([{
+				"text": [{
+					"type": "string",
+					"attributes": {},
+					"string": "Hello, world!\n\nHow are you?"
+				}, BLOCK_BREAK],
+
+				"attributes": ["heading1"]
+			}]).must.equal(13 + 12)
+		})
+
+		it("must count heading with three newlines", function() {
+			Trix.length([{
+				"text": [{
+					"type": "string",
+					"attributes": {},
+					"string": "Hello, world!\n\nHow are you?"
+				}, BLOCK_BREAK],
+
+				"attributes": ["heading1"]
+			}]).must.equal(13 + 12)
+		})
+
+		it("must count a heading and text separated by newline", function() {
+			Trix.length([{
+				"text": [
+					{"type": "string", "attributes": {}, "string": "My idea"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["heading1"]
+			}, {
+				"text": [
+					{"type": "string", "attributes": {}, "string": "\nHello, world!"},
+					BLOCK_BREAK
+				],
+
+				"attributes": []
+			}]).must.equal(7 + 13)
+		})
+
+		it("must count two adjacent headings", function() {
+			Trix.length([{
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Hello, world!"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["heading1"]
+			}, {
+				"text": [
+					{"type": "string", "attributes": {}, "string": "How are you?"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["heading1"]
+			}]).must.equal(12 + 13)
+		})
+
+		it("must count quote", function() {
+			Trix.length([{
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Hello, world!"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["quote"]
+			}]).must.equal(13)
+		})
+
+		it("must count quote with two levels", function() {
+			Trix.length([{
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Hello, world!"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["quote", "quote"]
+			}]).must.equal(13)
+		})
+
+		it("must count two adjacent quotes", function() {
+			Trix.length([{
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Hello, world!"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["quote"]
+			}, {
+				"text": [
+					{"type": "string", "attributes": {}, "string": "How are you?"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["quote"]
+			}]).must.equal(13 + 12)
+		})
+
+		it("must count code", function() {
+			Trix.length([{
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Hello, world!"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["code"]
+			}]).must.equal(13)
+		})
+
+		it("must count bullet list", function() {
+			Trix.length([{
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Alice"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["bulletList", "bullet"]
+			}, {
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Bob"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["bulletList", "bullet"]
+			}, {
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Charlie"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["bulletList", "bullet"]
+			}]).must.equal(15)
+		})
+
+		it("must count bullet list with one newlines", function() {
+			Trix.length([{
+				"text": [{
+					"type": "string",
+					"attributes": {},
+					"string": "Hello, world!\nHow are you?"
+				}, BLOCK_BREAK],
+
+
+				"attributes": ["bulletList", "bullet"]
+			}]).must.equal(13 + 1 + 12)
+		})
+
+		it("must count bullet list with two newlines", function() {
+			Trix.length([{
+				"text": [{
+					"type": "string",
+					"attributes": {},
+					"string": "Hello, world!\n\nHow are you?"
+				}, BLOCK_BREAK],
+
+
+				"attributes": ["bulletList", "bullet"]
+			}]).must.equal(13 + 12)
+		})
+
+		it("must count bullet list with three newlines", function() {
+			Trix.length([{
+				"text": [{
+					"type": "string",
+					"attributes": {},
+					"string": "Hello, world!\n\n\nHow are you?"
+				}, BLOCK_BREAK],
+
+				"attributes": ["bulletList", "bullet"]
+			}]).must.equal(13 + 12)
+		})
+
+		it("must count bullet list with nested bullet list", function() {
+			Trix.length([{
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Alice"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["bulletList", "bullet"]
+			}, {
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Alice's Alpha"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["bulletList", "bullet", "bulletList", "bullet"]
+			}, {
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Alice's Bravo"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["bulletList", "bullet", "bulletList", "bullet"]
+			}, {
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Bob"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["bulletList", "bullet"]
+			}]).must.equal(34)
+		})
+
+		it("must count bullet list with nested number list", function() {
+			Trix.length([{
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Alice"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["bulletList", "bullet"]
+			}, {
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Alice's Alpha"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["bulletList", "bullet", "numberList", "number"]
+			}, {
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Alice's Bravo"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["bulletList", "bullet", "numberList", "number"]
+			}, {
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Bob"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["bulletList", "bullet"]
+			}]).must.equal(34)
+		})
+
+		it("must count nested bullet list without parent", function() {
+			Trix.length([{
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Alice's Alpha"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["bulletList", "bullet", "bulletList", "bullet"]
+			}, {
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Alice's Bravo"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["bulletList", "bullet", "bulletList", "bullet"]
+			}, {
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Bob"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["bulletList", "bullet"]
+			}]).must.equal(29)
+		})
+
+		it("must count bullet list with quotes", function() {
+			Trix.length([{
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Alice"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["bulletList", "bullet", "quote"]
+			}, {
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Bob"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["bulletList", "bullet", "quote"]
+			}, {
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Charlie"},
+					BLOCK_BREAK
+				],
+
+				"attributes": ["bulletList", "bullet", "quote"]
+			}]).must.equal(15)
+		})
+
+		it("must ignore attachments", function() {
+			Trix.length([{
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Hello, "},
+
+					{
+						"type": "attachment",
+						"attributes": {},
+						"attachment": {
+							contentType: "image",
+							height: 800,
+							width: 600,
+							url: "http://example.com/image.jpg"
+						}
+					},
+
+					{"type": "string", "attributes": {}, "string": "world!"},
+					BLOCK_BREAK
+				],
+
+				"attributes": []
+			}]).must.equal(13)
+		})
+
+		it("must err given unknown inline type", function() {
+			var err
+			try {
+				Trix.length([{
+					"text": [
+						{"type": "foo", "attributes": {}, "foo": "Hello, world!"},
+						BLOCK_BREAK
+					],
+
+					"attributes": []
+				}])
+			}
+			catch (ex) { err = ex }
+			err.must.be.an.error(TypeError, "Invalid inline type: foo")
+		})
+	})
 })

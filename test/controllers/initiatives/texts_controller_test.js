@@ -16,10 +16,12 @@ var TRIX_TYPE = new MediaType("application/vnd.basecamp.trix+json")
 var {newTrixDocument} = require("root/test/fixtures")
 var outdent = require("root/lib/outdent")
 var parseHtml = require("root/test/html").parse
-var MAX_TITLE_LENGTH = 200
-var MAX_SLUG_LENGTH = 150
+var TITLE_MAX_LENGTH = 200
+var SLUG_MAX_LENGTH = 150
 var TRIX_SECTIONS_TYPE =
 	new MediaType("application/vnd.rahvaalgatus.trix-sections+json")
+var {SUMMARY_MAX_LENGTH} =
+	require("root/controllers/initiatives/texts_controller")
 
 describe("InitiativeTextsController", function() {
 	require("root/test/web")()
@@ -224,6 +226,51 @@ describe("InitiativeTextsController", function() {
 				res.body.must.include(t("INITIATIVE_TEXT_CREATED"))
 			})
 
+			it(`must err given summary longer than ${SUMMARY_MAX_LENGTH} characters and text sections`, function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id
+				}))
+
+				var summary = newTrixDocument(_.repeat("a", SUMMARY_MAX_LENGTH + 1))
+				var problem = newTrixDocument("")
+				var solution = newTrixDocument("")
+
+				var initiativePath = `/initiatives/${initiative.id}`
+				var res = yield this.request(initiativePath + "/texts", {
+					method: "POST",
+					form: {
+						title: "Hello, world!",
+						"content[summary]": JSON.stringify(summary),
+						"content[problem]": JSON.stringify(problem),
+						"content[solution]": JSON.stringify(solution),
+						language: initiative.language
+					}
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Invalid Attributes")
+				initiativesDb.read(initiative).must.eql(initiative)
+
+				var dom = parseHtml(res.body)
+				var form = dom.getElementById("initiative-form")
+				form.elements.title.value.must.equal("Hello, world!")
+
+				form.elements["content[summary]"].value.must.equal(
+					JSON.stringify(summary)
+				)
+
+				form.elements["content[problem]"].value.must.equal(
+					JSON.stringify(problem)
+				)
+
+				form.elements["content[solution]"].value.must.equal(
+					JSON.stringify(solution)
+				)
+
+				form.elements.language.value.must.equal(initiative.language)
+				textsDb.search(sql`SELECT * FROM initiative_texts`).must.be.empty()
+			})
+
 			it("must create text and set title given unknown text sections",
 				function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
@@ -426,7 +473,36 @@ describe("InitiativeTextsController", function() {
 				})
 			})
 
-			it(`must create text and set title if at most ${MAX_TITLE_LENGTH} characters`, function*() {
+			it("must respond with 422 given empty title", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.user.id
+				}))
+
+				var content = newTrixDocument("Hello, world")
+
+				var initiativePath = `/initiatives/${initiative.id}`
+				var res = yield this.request(initiativePath + "/texts", {
+					method: "POST",
+					form: {
+						title: "",
+						content: JSON.stringify(content),
+						language: initiative.language
+					}
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Invalid Attributes")
+				initiativesDb.read(initiative).must.eql(initiative)
+
+				var dom = parseHtml(res.body)
+				var form = dom.getElementById("initiative-form")
+				form.elements.title.value.must.equal(initiative.title)
+				form.elements.content.value.must.equal(JSON.stringify(content))
+
+				textsDb.search(sql`SELECT * FROM initiative_texts`).must.be.empty()
+			})
+
+			it(`must create text and set title if at most ${TITLE_MAX_LENGTH} characters`, function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
@@ -435,7 +511,7 @@ describe("InitiativeTextsController", function() {
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					form: {
-						title: _.repeat("a", MAX_TITLE_LENGTH),
+						title: _.repeat("a", TITLE_MAX_LENGTH),
 						content: JSON.stringify(newTrixDocument("Hello, world")),
 						language: initiative.language
 					}
@@ -446,8 +522,8 @@ describe("InitiativeTextsController", function() {
 
 				initiativesDb.read(initiative).must.eql({
 					__proto__: initiative,
-					title: _.repeat("a", MAX_TITLE_LENGTH),
-					slug: _.repeat("a", MAX_SLUG_LENGTH)
+					title: _.repeat("a", TITLE_MAX_LENGTH),
+					slug: _.repeat("a", SLUG_MAX_LENGTH)
 				})
 
 				textsDb.read(sql`
@@ -455,17 +531,20 @@ describe("InitiativeTextsController", function() {
 				`).count.must.equal(1)
 			})
 
-			it(`must respond with 422 given title longer than ${MAX_TITLE_LENGTH} characters`, function*() {
+			it(`must respond with 422 given title longer than ${TITLE_MAX_LENGTH} characters`, function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.user.id
 				}))
+
+				var title = _.repeat("a", TITLE_MAX_LENGTH + 1)
+				var content = newTrixDocument("Hello, world")
 
 				var initiativePath = `/initiatives/${initiative.id}`
 				var res = yield this.request(initiativePath + "/texts", {
 					method: "POST",
 					form: {
-						title: _.repeat("a", MAX_TITLE_LENGTH + 1),
-						content: JSON.stringify(newTrixDocument("Hello, world")),
+						title,
+						content: JSON.stringify(content),
 						language: initiative.language
 					}
 				})
@@ -473,6 +552,12 @@ describe("InitiativeTextsController", function() {
 				res.statusCode.must.equal(422)
 				res.statusMessage.must.equal("Invalid Attributes")
 				initiativesDb.read(initiative).must.eql(initiative)
+
+				var dom = parseHtml(res.body)
+				var form = dom.getElementById("initiative-form")
+				form.elements.title.value.must.equal(title)
+				form.elements.content.value.must.equal(JSON.stringify(content))
+
 				textsDb.search(sql`SELECT * FROM initiative_texts`).must.be.empty()
 			})
 
@@ -815,6 +900,7 @@ describe("InitiativeTextsController", function() {
 
 				var dom = parseHtml(res.body)
 				var form = dom.getElementById("initiative-form")
+				form.elements.title.value.must.equal(initiative.title)
 				form.elements.content.value.must.equal("")
 			})
 
@@ -830,6 +916,7 @@ describe("InitiativeTextsController", function() {
 
 				var dom = parseHtml(res.body)
 				var form = dom.getElementById("initiative-form")
+				form.elements.title.value.must.equal(initiative.title)
 				form.elements["content[summary]"].value.must.equal("")
 				form.elements["content[problem]"].value.must.equal("")
 				form.elements["content[solution]"].value.must.equal("")
@@ -853,6 +940,7 @@ describe("InitiativeTextsController", function() {
 
 				var dom = parseHtml(res.body)
 				var form = dom.getElementById("initiative-form")
+				form.elements.title.value.must.equal(initiative.title)
 				form.elements["content[summary]"].value.must.equal("")
 				form.elements["content[problem]"].value.must.equal("")
 				form.elements["content[solution]"].value.must.equal("")
@@ -1005,6 +1093,7 @@ describe("InitiativeTextsController", function() {
 
 					var dom = parseHtml(res.body)
 					var form = dom.getElementById("initiative-form")
+					form.elements.title.value.must.equal(text.title)
 					form.elements.content.value.must.equal(JSON.stringify(content))
 				})
 			})
@@ -1032,6 +1121,7 @@ describe("InitiativeTextsController", function() {
 
 					var dom = parseHtml(res.body)
 					var form = dom.getElementById("initiative-form")
+					form.elements.title.value.must.equal(text.title)
 
 					form.elements["content[summary]"].value.must.equal(
 						JSON.stringify(summary)

@@ -60,6 +60,8 @@ var {SITE_URLS} = require("root/test/fixtures")
 var PNG = Buffer.from("89504e470d0a1a0a1337", "hex")
 var PNG_PREVIEW = Buffer.from("89504e470d0a1a0a4269", "hex")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
+var {SUMMARY_MAX_LENGTH} =
+	require("root/controllers/initiatives/texts_controller")
 var TRIX_TYPE = new MediaType("application/vnd.basecamp.trix+json")
 var TRIX_SECTIONS_TYPE =
 	new MediaType("application/vnd.rahvaalgatus.trix-sections+json")
@@ -2507,6 +2509,7 @@ describe("InitiativesController", function() {
 				var dom = parseHtml(res.body)
 				var form = dom.getElementById("initiative-form")
 
+				form.elements.title.value.must.equal("")
 				form.elements["content[summary]"].value.must.equal("")
 				form.elements["content[problem]"].value.must.equal("")
 				form.elements["content[solution]"].value.must.equal("")
@@ -2636,6 +2639,65 @@ describe("InitiativesController", function() {
 				)
 			})
 
+			it("must err given empty title", function*() {
+				var res = yield this.request("/initiatives", {
+					method: "POST",
+					form: {title: "", content: []}
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Invalid Attributes")
+				res.headers["content-type"].must.equal("text/html; charset=utf-8")
+
+				var dom = parseHtml(res.body)
+				var form = dom.getElementById("initiative-form")
+				form.elements.title.value.must.equal("")
+
+				initiativesDb.search(sql`SELECT * FROM initiatives`).must.be.empty()
+			})
+
+			it("must err given too long summary and prefill form", function*() {
+				var summary = newTrixDocument(_.repeat("a", SUMMARY_MAX_LENGTH + 1))
+				var problem = newTrixDocument("")
+				var solution = newTrixDocument("")
+
+				var res = yield this.request("/initiatives", {
+					method: "POST",
+					form: {
+						title: "Hello, world!",
+						"content[summary]": JSON.stringify(summary),
+						"content[problem]": JSON.stringify(problem),
+						"content[solution]": JSON.stringify(solution),
+						language: "en"
+					}
+				})
+
+				res.statusCode.must.equal(422)
+				res.statusMessage.must.equal("Invalid Attributes")
+				res.headers["content-type"].must.equal("text/html; charset=utf-8")
+
+				var dom = parseHtml(res.body)
+				var form = dom.getElementById("initiative-form")
+				form.elements.title.value.must.equal("Hello, world!")
+
+				form.elements["content[summary]"].value.must.equal(
+					JSON.stringify(summary)
+				)
+
+				form.elements["content[problem]"].value.must.equal(
+					JSON.stringify(problem)
+				)
+
+				form.elements["content[solution]"].value.must.equal(
+					JSON.stringify(solution)
+				)
+
+				var langEl = form.querySelector("input[name='language'][value='en']")
+				langEl.checked.must.be.true()
+
+				initiativesDb.search(sql`SELECT * FROM initiatives`).must.be.empty()
+			})
+
 			it("must create initiative without slug if nothing remains", function*() {
 				var res = yield this.request("/initiatives", {
 					method: "POST",
@@ -2672,7 +2734,7 @@ describe("InitiativesController", function() {
 				res.headers.location.must.equal("/initiatives/" + initiative.id)
 			})
 
-			it("must respond with 422 given invalid language", function*() {
+			it("must err given invalid language", function*() {
 				var res = yield this.request("/initiatives", {
 					method: "POST",
 					form: {
@@ -2684,6 +2746,12 @@ describe("InitiativesController", function() {
 
 				res.statusCode.must.equal(422)
 				res.statusMessage.must.equal("Invalid Attributes")
+				res.headers["content-type"].must.equal("text/html; charset=utf-8")
+
+				var dom = parseHtml(res.body)
+				var form = dom.getElementById("initiative-form")
+				form.elements.title.value.must.equal("Hello, world!")
+
 				initiativesDb.search(sql`SELECT * FROM initiatives`).must.be.empty()
 			})
 

@@ -347,9 +347,7 @@ strong {
 		background-color: $secondary-background;
 	}
 
-	&.error {
-		border-color: $red;
-	}
+	&.error { border-color: $red; }
 }
 
 .form-input ~ .form-submit,
@@ -4129,6 +4127,7 @@ main {
 
 #edit-initiative-page {
 	$tab-radius: 0.5rem;
+	$label-padding: 2rem;
 
 	&.new-initiative #initiative-sheet {
 		margin-top: 4rem;
@@ -4174,6 +4173,29 @@ main {
 		}
 	}
 
+	.errors {
+		padding: 1.5rem $label-padding 1.5rem;
+
+		@include mobile {
+			padding-left: $article-padding-mobile;
+			padding-right: $article-padding-mobile;
+		}
+
+		background-color: #fdf2f5;
+		font-weight: 500;
+		color: $red;
+		font-size: 1.6rem;
+		line-height: 1.5;
+		border-bottom: 1px solid $light-background-border;
+
+		ul {
+			li {
+				list-style-type: disc;
+				margin-left: 3rem;
+			}
+		}
+	}
+
 	input[name=title] {
 		@include appearance(none);
 		border: none;
@@ -4188,8 +4210,6 @@ main {
 	}
 
 	input[name=content][readonly] ~ trix-toolbar { display: none; }
-
-	$label-padding: 2rem;
 
 	.read-only-warning {
 		padding: 1.3rem $label-padding 1rem;
@@ -4279,9 +4299,28 @@ main {
 		&:not([trix-id]) { display: none; }
 	}
 
+	#summary-editor-toolbar {
+		.trix-button-group--block-tools { display: none; }
+	}
+
+	#summary-editor {
+		min-height: 10em;
+	}
+
 	.editor-noscript {
 		border-top: 1px solid $light-background-border;
 		background: $light-background;
+	}
+
+	.editor-counter {
+		text-align: right;
+		padding: 1rem $label-padding;
+		font-weight: 500;
+
+		&.exceeded .current {
+			color: $red;
+			font-weight: bold;
+		}
 	}
 
 	.submit-inputs {
