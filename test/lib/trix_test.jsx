@@ -155,6 +155,25 @@ describe("Trix", function() {
 			})
 		})
 
+		it("must render text with all attributes", function() {
+			Trix.render([{
+				"text": [
+					{"type": "string", "attributes": {}, "string": "Hello, "},
+					{"type": "string", "attributes": {
+						"italic": true,
+						"bold": true,
+						"strike": true
+					}, "string": "world"},
+					{"type": "string", "attributes": {}, "string": "!"},
+					BLOCK_BREAK
+				],
+
+				"attributes": []
+			}]).must.eql([
+				<p>Hello, <strong><em><s>world</s></em></strong>!</p>
+			])
+		})
+
 		;["javascript:alert(1)", "magnet:foobar"].forEach(function(url) {
 			it(`must render link to ${url} in title`, function() {
 				Trix.render([{
@@ -739,7 +758,7 @@ describe("Trix", function() {
 			])
 		})
 
-		it("must throw given unknown inline type", function() {
+		it("must err given unknown inline type", function() {
 			var err
 			try {
 				Trix.render([{
