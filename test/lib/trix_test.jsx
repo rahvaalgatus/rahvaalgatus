@@ -265,7 +265,7 @@ describe("Trix", function() {
 				"text": [{
 					"type": "string",
 					"attributes": {},
-					"string": "Hello, world!\n\nHow are you?"
+					"string": "Hello, world!\n\n\nHow are you?"
 				}, BLOCK_BREAK],
 
 				"attributes": ["heading1"]
@@ -451,6 +451,57 @@ describe("Trix", function() {
 			])
 		})
 
+		it("must render bullet list with one newlines", function() {
+			Trix.render([{
+				"text": [{
+					"type": "string",
+					"attributes": {},
+					"string": "Hello, world!\nHow are you?"
+				}, BLOCK_BREAK],
+
+
+				"attributes": ["bulletList", "bullet"]
+			}]).must.eql([
+				<ul>
+					<li>Hello, world!{"\n"}How are you?</li>
+				</ul>
+			])
+		})
+
+		it("must render bullet list with two newlines", function() {
+			Trix.render([{
+				"text": [{
+					"type": "string",
+					"attributes": {},
+					"string": "Hello, world!\n\nHow are you?"
+				}, BLOCK_BREAK],
+
+
+				"attributes": ["bulletList", "bullet"]
+			}]).must.eql([
+				<ul>
+					<li>Hello, world!{"\n\n"}How are you?</li>
+				</ul>
+			])
+		})
+
+		it("must render bullet list with three newlines", function() {
+			Trix.render([{
+				"text": [{
+					"type": "string",
+					"attributes": {},
+					"string": "Hello, world!\n\n\nHow are you?"
+				}, BLOCK_BREAK],
+
+
+				"attributes": ["bulletList", "bullet"]
+			}]).must.eql([
+				<ul>
+					<li>Hello, world!{"\n\n"}How are you?</li>
+				</ul>
+			])
+		})
+
 		it("must render bullet list with nested bullet list", function() {
 			Trix.render([{
 				"text": [
@@ -607,6 +658,57 @@ describe("Trix", function() {
 					<li>Alice</li>
 					<li>Bob</li>
 					<li>Charlie</li>
+				</ol>
+			])
+		})
+
+		it("must render number list with one newlines", function() {
+			Trix.render([{
+				"text": [{
+					"type": "string",
+					"attributes": {},
+					"string": "Hello, world!\nHow are you?"
+				}, BLOCK_BREAK],
+
+
+				"attributes": ["numberList", "number"]
+			}]).must.eql([
+				<ol>
+					<li>Hello, world!{"\n"}How are you?</li>
+				</ol>
+			])
+		})
+
+		it("must render number list with two newlines", function() {
+			Trix.render([{
+				"text": [{
+					"type": "string",
+					"attributes": {},
+					"string": "Hello, world!\n\nHow are you?"
+				}, BLOCK_BREAK],
+
+
+				"attributes": ["numberList", "number"]
+			}]).must.eql([
+				<ol>
+					<li>Hello, world!{"\n\n"}How are you?</li>
+				</ol>
+			])
+		})
+
+		it("must render number list with three newlines", function() {
+			Trix.render([{
+				"text": [{
+					"type": "string",
+					"attributes": {},
+					"string": "Hello, world!\n\n\nHow are you?"
+				}, BLOCK_BREAK],
+
+
+				"attributes": ["numberList", "number"]
+			}]).must.eql([
+				<ol>
+					<li>Hello, world!{"\n\n"}How are you?</li>
 				</ol>
 			])
 		})
