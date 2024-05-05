@@ -17,6 +17,7 @@ module.exports = function(attributes) {
 	var publishedAt = initiative.published_at || new Date
 	var minOn = DateFns.addDays(Initiative.getMinEditingDeadline(publishedAt), -1)
 	var endsOn = attrs.endsAt ? DateFns.addMilliseconds(attrs.endsAt, -1) : minOn
+	var maxOn = DateFns.addDays(Initiative.getMaxEditingDeadline(publishedAt), -1)
 
 	return <InitiativePage
 		page="initiative-publish"
@@ -45,6 +46,7 @@ module.exports = function(attributes) {
 					type="date"
 					name="endsOn"
 					min={formatIso(minOn)}
+					max={formatIso(maxOn)}
 					value={formatIso(endsOn || minOn)}
 					required
 					class="form-input"

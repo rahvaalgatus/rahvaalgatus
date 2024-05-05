@@ -871,7 +871,10 @@ function* updateInitiativeToPublished(req, res) {
 	var endsOn = Time.parseIsoDate(req.body.endsOn)
 	var endsAt = DateFns.addDays(endsOn, 1)
 
-	if (endsAt < Initiative.getMinEditingDeadline(publishedAt)) {
+	if (!(
+		endsAt >= Initiative.getMinEditingDeadline(publishedAt) &&
+		endsAt <= Initiative.getMaxEditingDeadline(publishedAt)
+	)) {
 		res.statusCode = 422
 		res.statusMessage = "Deadline Too Near or Too Far"
 

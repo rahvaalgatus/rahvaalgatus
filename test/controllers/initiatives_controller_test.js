@@ -9018,6 +9018,65 @@ describe("InitiativesController", function() {
 					})
 				})
 
+				it("must respond with 422 if setting an invalid date", function*() {
+					usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
+
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						discussion_end_email_sent_at: new Date
+					}))
+
+					textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
+						method: "PUT",
+						form: {visibility: "public", endsOn: "foo"}
+					})
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Deadline Too Near or Too Far")
+					initiativesDb.read(initiative).must.eql(initiative)
+				})
+
+				it("must respond with 422 if setting a too short deadline",
+					function*() {
+					usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
+
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						discussion_end_email_sent_at: new Date
+					}))
+
+					textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
+						method: "PUT",
+						form: {
+							visibility: "public",
+							endsOn: formatIsoDate(DateFns.addDays(
+								DateFns.startOfDay(new Date),
+								Config.minEditingDeadlineDays - 2
+							))
+						}
+					})
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Deadline Too Near or Too Far")
+					initiativesDb.read(initiative).must.eql(initiative)
+				})
+
 				it("must update initiative if setting a short deadline", function*() {
 					usersDb.update(this.user, {
 						email: "user@example.com",
@@ -9064,67 +9123,6 @@ describe("InitiativesController", function() {
 					})
 				})
 
-				it("must respond with 422 if setting an invalid date", function*() {
-					usersDb.update(this.user, {
-						email: "user@example.com",
-						email_confirmed_at: new Date
-					})
-
-					var initiative = initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id,
-						discussion_end_email_sent_at: new Date,
-						published_at: DateFns.addDays(new Date, -1),
-					}))
-
-					textsDb.create(new ValidText({
-						initiative_uuid: initiative.uuid,
-						user_id: this.user.id,
-					}))
-
-					var res = yield this.request(`/initiatives/${initiative.id}`, {
-						method: "PUT",
-						form: {visibility: "public", endsOn: "foo"}
-					})
-
-					res.statusCode.must.equal(422)
-					res.statusMessage.must.equal("Deadline Too Near or Too Far")
-					initiativesDb.read(initiative).must.eql(initiative)
-				})
-
-				it("must respond with 422 if setting a too short deadline",
-					function*() {
-					usersDb.update(this.user, {
-						email: "user@example.com",
-						email_confirmed_at: new Date
-					})
-
-					var initiative = initiativesDb.create(new ValidInitiative({
-						user_id: this.user.id,
-						discussion_end_email_sent_at: new Date,
-						published_at: DateFns.addDays(new Date, -1),
-					}))
-
-					textsDb.create(new ValidText({
-						initiative_uuid: initiative.uuid,
-						user_id: this.user.id,
-					}))
-
-					var res = yield this.request(`/initiatives/${initiative.id}`, {
-						method: "PUT",
-						form: {
-							visibility: "public",
-							endsOn: formatIsoDate(DateFns.addDays(
-								initiative.published_at,
-								Config.minEditingDeadlineDays - 2
-							))
-						}
-					})
-
-					res.statusCode.must.equal(422)
-					res.statusMessage.must.equal("Deadline Too Near or Too Far")
-					initiativesDb.read(initiative).must.eql(initiative)
-				})
-
 				it("must update initiative if setting a long deadline", function*() {
 					usersDb.update(this.user, {
 						email: "user@example.com",
@@ -9140,14 +9138,14 @@ describe("InitiativesController", function() {
 						user_id: this.user.id,
 					}))
 
-					var endsOn = DateFns.addDays(DateFns.startOfDay(new Date), 3650)
+					var endsOn = DateFns.addDays(DateFns.addMonths(
+						DateFns.startOfDay(new Date),
+						Config.maxEditingDeadlineMonths
+					), -1)
 
 					var res = yield this.request(`/initiatives/${initiative.id}`, {
 						method: "PUT",
-						form: {
-							visibility: "public",
-							endsOn: formatIsoDate(endsOn)
-						}
+						form: {visibility: "public", endsOn: formatIsoDate(endsOn)}
 					})
 
 					res.statusCode.must.equal(303)
@@ -9160,10 +9158,43 @@ describe("InitiativesController", function() {
 					})
 				})
 
+				it("must respond with 422 if setting a too long deadline", function*() {
+					usersDb.update(this.user, {
+						email: "user@example.com",
+						email_confirmed_at: new Date
+					})
+
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						discussion_end_email_sent_at: new Date
+					}))
+
+					textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id,
+					}))
+
+					var res = yield this.request(`/initiatives/${initiative.id}`, {
+						method: "PUT",
+
+						form: {
+							visibility: "public",
+
+							endsOn: formatIsoDate(DateFns.addMonths(
+								DateFns.startOfDay(new Date),
+								Config.maxEditingDeadlineMonths
+							))
+						}
+					})
+
+					res.statusCode.must.equal(422)
+					res.statusMessage.must.equal("Deadline Too Near or Too Far")
+					initiativesDb.read(initiative).must.eql(initiative)
+				})
+
 				it("must respond with 403 if no email set", function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
-						discussion_end_email_sent_at: new Date,
 						published_at: DateFns.addDays(new Date, -90),
 					}))
 
@@ -9756,6 +9787,35 @@ describe("InitiativesController", function() {
 						})
 					})
 
+					it("must respond with 422 if setting a too short deadline",
+						function*() {
+						var initiative = initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							discussion_end_email_sent_at: new Date,
+							published_at: DateFns.addDays(new Date, -1),
+						}))
+
+						textsDb.create(new ValidText({
+							initiative_uuid: initiative.uuid,
+							user_id: this.user.id,
+						}))
+
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
+							method: "PUT",
+							form: {
+								visibility: "public",
+								endsOn: formatIsoDate(DateFns.addDays(
+									initiative.published_at,
+									Config.minEditingDeadlineDays - 2
+								))
+							}
+						})
+
+						res.statusCode.must.equal(422)
+						res.statusMessage.must.equal("Deadline Too Near or Too Far")
+						initiativesDb.read(initiative).must.eql(initiative)
+					})
+
 					it("must update initiative if setting a short deadline", function*() {
 						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
@@ -9797,7 +9857,37 @@ describe("InitiativesController", function() {
 						})
 					})
 
-					it("must respond with 422 if setting a too short deadline",
+					it("must update initiative if setting a long deadline", function*() {
+						var initiative = initiativesDb.create(new ValidInitiative({
+							user_id: this.user.id,
+							published_at: DateFns.addDays(new Date, -1),
+						}))
+
+						textsDb.create(new ValidText({
+							initiative_uuid: initiative.uuid,
+							user_id: this.user.id,
+						}))
+
+						var endsOn = DateFns.addDays(DateFns.addMonths(
+							DateFns.startOfDay(initiative.published_at),
+							Config.maxEditingDeadlineMonths
+						), -1)
+
+						var res = yield this.request(`/initiatives/${initiative.id}`, {
+							method: "PUT",
+							form: {visibility: "public", endsOn: formatIsoDate(endsOn)}
+						})
+
+						res.statusCode.must.equal(303)
+						res.statusMessage.must.equal("Initiative Updated")
+
+						initiativesDb.read(initiative).must.eql({
+							__proto__: initiative,
+							discussion_ends_at: DateFns.addDays(endsOn, 1)
+						})
+					})
+
+					it("must respond with 422 if setting a too long deadline",
 						function*() {
 						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
@@ -9814,9 +9904,9 @@ describe("InitiativesController", function() {
 							method: "PUT",
 							form: {
 								visibility: "public",
-								endsOn: formatIsoDate(DateFns.addDays(
-									initiative.published_at,
-									Config.minEditingDeadlineDays - 2
+								endsOn: formatIsoDate(DateFns.addMonths(
+									DateFns.startOfDay(initiative.published_at),
+									Config.maxEditingDeadlineMonths
 								))
 							}
 						})
@@ -9824,33 +9914,6 @@ describe("InitiativesController", function() {
 						res.statusCode.must.equal(422)
 						res.statusMessage.must.equal("Deadline Too Near or Too Far")
 						initiativesDb.read(initiative).must.eql(initiative)
-					})
-
-					it("must update initiative if setting a long deadline", function*() {
-						var initiative = initiativesDb.create(new ValidInitiative({
-							user_id: this.user.id,
-							published_at: DateFns.addDays(new Date, -90),
-						}))
-
-						textsDb.create(new ValidText({
-							initiative_uuid: initiative.uuid,
-							user_id: this.user.id,
-						}))
-
-						var endsOn = DateFns.addDays(DateFns.startOfDay(new Date), 3650)
-
-						var res = yield this.request(`/initiatives/${initiative.id}`, {
-							method: "PUT",
-							form: {visibility: "public", endsOn: formatIsoDate(endsOn)}
-						})
-
-						res.statusCode.must.equal(303)
-						res.statusMessage.must.equal("Initiative Updated")
-
-						initiativesDb.read(initiative).must.eql({
-							__proto__: initiative,
-							discussion_ends_at: DateFns.addDays(endsOn, 1)
-						})
 					})
 
 					it("must clear end email when setting discussion end time",
@@ -10367,6 +10430,47 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(422)
 					res.statusMessage.must.equal("Deadline Too Near or Too Far")
 					initiativesDb.read(initiative).must.eql(initiative)
+				})
+
+				it("must update initiative if setting a short deadline", function*() {
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.user.id,
+						destination: "parliament",
+						title: "Hello, world!",
+
+						published_at: DateFns.addDays(
+							new Date,
+							-Config.minEditingDeadlineDays
+						)
+					}))
+
+					var text = textsDb.create(new ValidText({
+						initiative_uuid: initiative.uuid,
+						user_id: this.user.id
+					}))
+
+					var endsOn = DateFns.addDays(
+						new Date,
+						Config.minSigningDeadlineDays - 1
+					)
+
+					var initiativePath = `/initiatives/${initiative.id}`
+					var res = yield this.request(initiativePath, {
+						method: "PUT",
+						form: {
+							status: "voting",
+							language: text.language,
+							endsOn: formatIsoDate(endsOn)
+						}
+					})
+
+					res.statusCode.must.equal(303)
+					res.statusMessage.must.equal("Initiative Sent to Signing")
+					res.headers.location.must.equal(initiativePath + "-hello-world")
+
+					initiative = initiativesDb.read(initiative)
+					initiative.phase.must.equal("sign")
+					initiative.signing_ends_at.must.eql(DateFns.addDays(endsOn, 1))
 				})
 
 				it("must update initiative if setting a long deadline", function*() {
@@ -11117,6 +11221,7 @@ describe("InitiativesController", function() {
 						res.statusMessage.must.equal("Deadline Too Near or Too Far")
 						initiativesDb.read(initiative).must.eql(initiative)
 					})
+
 					it("must update initiative if setting a short deadline", function*() {
 						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,

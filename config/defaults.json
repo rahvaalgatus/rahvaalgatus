@@ -27,6 +27,7 @@
 	"languages": ["et", "ru", "en"],
 	"votesRequired": 1000,
 	"minEditingDeadlineDays": 3,
+	"maxEditingDeadlineMonths": 6,
 	"minSigningDeadlineDays": 3,
 	"maxSigningDeadlineMonths": 18,
 	"expireSignaturesInMonths": 18,
