@@ -259,16 +259,17 @@ function SubscriptionsView(attrs) {
 					: null
 				}</td>
 
-				<td>{subscription.initiative_id ?
-					<a
+				<td>{
+					subscription.initiative_id ? <a
 						href={`${req.baseUrl}/initiatives/${subscription.initiative_id}`}
 						class="admin-link"
 					>
 						{subscription.initiative_title}
-					</a>
-					: destination
-					? <i>{LOCAL_GOVERNMENTS[destination].name} initiatives</i>
-					: <i>All initiatives</i>
+					</a> :
+
+					destination == "parliament" ? <i>Parliament</i> :
+					destination ? <i>{LOCAL_GOVERNMENTS[destination].name}</i> :
+					<i>Parliament and all local</i>
 				}</td>
 
 				<td>

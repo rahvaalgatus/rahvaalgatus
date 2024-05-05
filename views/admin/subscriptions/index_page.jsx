@@ -54,9 +54,10 @@ function SubscriptionsView({subscriptions, showDestination}) {
 					: null
 				}</td>
 
-				{showDestination ? <td>{destination
-					? <i>{LOCAL_GOVERNMENTS[destination].name} initiatives</i>
-					: <i>All</i>
+				{showDestination ? <td>{
+					destination == "parliament" ? <i>Parliament</i> :
+					destination ? <i>{LOCAL_GOVERNMENTS[destination].name}</i> :
+					<i>All</i>
 				}</td> : null}
 
 				<td>
