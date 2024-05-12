@@ -106,6 +106,8 @@ exports.router.get("/",
 
 		WHERE initiative.published_at IS NOT NULL
 
+		${filters.id ? sql`AND initiative.id IN ${sql.in(filters.id)}` : sql``}
+
 		${filters.destination
 			? sql`AND initiative.destination IN ${sql.in(filters.destination)}`
 			: sql``
@@ -1449,6 +1451,7 @@ function parseMeeting(obj) {
 
 function parseFilters(query) {
 	var filters = _.mapKeys(_.renameKeys(Filtering.parseFilters({
+		"id": "array",
 		"for": "array",
 		"destination": "array",
 

@@ -13,8 +13,10 @@ var {DateView} = Page
 var {SortButton} = Page
 var {InitiativeBadgeView} = require("./initiative_page")
 var {getSignatureThreshold} = require("root/lib/initiative")
+var {javascript} = require("root/lib/jsx")
 var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
 var {renderAuthorName} = require("./initiative_page")
+var getWeight = _.property("weight")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var LOCAL_GOVERNMENTS_BY_COUNTY = LOCAL_GOVERNMENTS.BY_COUNTY
 var {PHASES} = require("root/lib/initiative")
@@ -33,8 +35,13 @@ function InitiativesPage({
 	var filterQuery = serializeFilters(filters)
 	var initiativesPath = req.baseUrl + req.path
 
+	var query = _.defaults({
+		order: orderBy ? (orderDir == "asc" ? "" : "-") + orderBy : undefined
+	}, filterQuery)
+
 	return <Page
 		page="initiatives"
+		title={t("initiatives_page.title")}
 		req={req}
 
 		links={[{
@@ -52,15 +59,36 @@ function InitiativesPage({
 		</Section> : null}
 
 		<section id="initiatives-section" class="secondary-section">
-			<h1>Algatused</h1>
+			<h1>{t("initiatives_page.title")}</h1>
+
+			<GraphsView
+				t={t}
+				initiatives={initiatives}
+				path={initiativesPath}
+				query={query}
+			/>
 
 			<table id="initiatives">
 				<caption>
 					{initiatives.length > 0 ? <div class="total">{_.any(filters) ? <>
-						Leitud <strong>{initiatives.length}</strong> algatust.
-					</> : <>
-						Kokku <strong>{initiatives.length}</strong> algatust.
-					</>}</div> : null}
+						{Jsx.html(initiatives.length == 1
+							? t("initiatives_page.caption.filtered_total_1")
+							: t("initiatives_page.caption.filtered_total_n", {
+								count: initiatives.length
+							})
+						)}
+						{" "}
+						<a href={initiativesPath + Qs.stringify({
+							order: orderBy
+								? (orderDir == "asc" ? "" : "-") + orderBy
+								: undefined
+						}, {addQueryPrefix: true})} class="link-button">
+							{Jsx.html(t("initiatives_page.caption.view_all_button"))}
+						</a>.
+					</> : Jsx.html(initiatives.length == 1
+						? t("initiatives_page.caption.total_1")
+						: t("initiatives_page.caption.total_n", {count: initiatives.length})
+					)}</div> : null}
 
 					<FiltersView
 						t={t}
@@ -80,7 +108,7 @@ function InitiativesPage({
 								name="title"
 								sorted={orderBy == "title" ? orderDir : null}
 							>
-								Pealkiri
+								{t("initiatives_page.table.title_column")}
 							</SortButton>
 
 							<small>
@@ -90,7 +118,7 @@ function InitiativesPage({
 									name="destination"
 									sorted={orderBy == "destination" ? orderDir : null}
 								>
-									Saaja
+									{t("initiatives_page.table.destination_column")}
 								</SortButton>
 
 								<SortButton
@@ -99,7 +127,7 @@ function InitiativesPage({
 									name="author"
 									sorted={orderBy == "author" ? orderDir : null}
 								>
-									Algataja
+									{t("initiatives_page.table.author_column")}
 								</SortButton>
 							</small>
 						</th>
@@ -116,7 +144,9 @@ function InitiativesPage({
 						</th>
 
 						<th class="edit-phase-column">
-							<span class="column-name">Ühisloomes</span>
+							<span class="column-name">
+								{t("initiatives_page.table.edit_phase_column")}
+							</span>
 
 							<small>
 								<SortButton
@@ -126,13 +156,15 @@ function InitiativesPage({
 									direction="desc"
 									sorted={orderBy == "published-at" ? orderDir : null}
 								>
-									Algus
+									{t("initiatives_page.table.start_column")}
 								</SortButton>
 							</small>
 						</th>
 
 						<th colspan="2" class="sign-phase-column">
-							<span class="column-name">Allkirjastamisel</span>
+							<span class="column-name">
+								{t("initiatives_page.table.sign_phase_column")}
+							</span>
 
 							<small>
 								<SortButton
@@ -142,7 +174,7 @@ function InitiativesPage({
 									direction="desc"
 									sorted={orderBy == "signing-started-at" ? orderDir : null}
 								>
-									Algus
+									{t("initiatives_page.table.start_column")}
 								</SortButton>
 
 								<SortButton
@@ -152,7 +184,7 @@ function InitiativesPage({
 									direction="desc"
 									sorted={orderBy == "signing-ended-at" ? orderDir : null}
 								>
-									Lõpp
+									{t("initiatives_page.table.end_column")}
 								</SortButton>
 
 								<SortButton
@@ -162,13 +194,15 @@ function InitiativesPage({
 									direction="desc"
 									sorted={orderBy == "signature-count" ? orderDir : null}
 								>
-									Allkirju
+									{t("initiatives_page.table.signatures_column")}
 								</SortButton>
 							</small>
 						</th>
 
 						<th class="proceedings-phase-column">
-							<span class="column-name">Menetluses</span>
+							<span class="column-name">
+								{t("initiatives_page.table.parliament_phase_column")}
+							</span>
 
 							<small>
 								<SortButton
@@ -178,7 +212,7 @@ function InitiativesPage({
 									direction="desc"
 									sorted={orderBy == "proceedings-started-at" ? orderDir : null}
 								>
-									Algus
+									{t("initiatives_page.table.start_column")}
 								</SortButton>
 
 								<SortButton
@@ -188,7 +222,7 @@ function InitiativesPage({
 									direction="desc"
 									sorted={orderBy == "proceedings-ended-at" ? orderDir : null}
 								>
-									Lõpp
+									{t("initiatives_page.table.end_column")}
 								</SortButton>
 
 								<SortButton
@@ -198,7 +232,7 @@ function InitiativesPage({
 									direction="asc"
 									sorted={orderBy == "proceedings-handler" ? orderDir : null}
 								>
-									Menetleja
+									{t("initiatives_page.table.proceedings_handler_column")}
 								</SortButton>
 							</small>
 						</th>
@@ -207,18 +241,19 @@ function InitiativesPage({
 
 				{initiatives.length == 0 ? <tbody class="empty"><tr>
 					<td colspan="8">{_.any(filters) ? <>
-						<p>Kahjuks ei leidnud ühtki filtritele vastavat algatust.</p>
+						<p>
+							{t("initiatives_page.table.no_initiatives_with_filters")}
+						</p>
 
 						<p>
 							<a href={initiativesPath + Qs.stringify({
 								order: orderBy
 									? (orderDir == "asc" ? "" : "-") + orderBy
 									: undefined
-							}, {addQueryPrefix: true})}
-							class="link-button">Vaata kõiki algatusi</a></p>.
-						</>
-						: <p>Veel ei ole ühtki algatust.</p>
-					}</td>
+							}, {addQueryPrefix: true})} class="link-button">
+								{t("initiatives_page.table.view_all_button")}
+							</a></p>.
+					</> : <p>{t("initiatives_page.table.no_initiatives")}</p>}</td>
 				</tr></tbody> :
 
 				_.map(groupInitiatives(orderBy, initiatives), (initiatives) => {
@@ -269,9 +304,10 @@ function FiltersView({
 	return <div id="filters">
 		<details>
 			<summary>
-				<span class="open-text">
-					{_.any(filters) ? "Muuda filtreid" : "Filtreeri algatusi"}
-				</span>
+				<span class="open-text">{_.any(filters)
+					? t("initiatives_page.filters.open_button_with_filters")
+					: t("initiatives_page.filters.open_button")
+				}</span>
 			</summary>
 
 			<form method="get" action={path}>
@@ -293,24 +329,24 @@ function FiltersView({
 				</label>
 
 				<label>
-					<span>Saaja</span>
+					<span>{t("initiatives_page.filters.destination_label")}</span>
 
 					<select name="destination" class="form-select">
 						<option value="" selected={filters.destination == null}>
-							Kõik
+							{t("initiatives_page.filters.destination.all_label")}
 						</option>
 
-						<optgroup label="Riiklik">
+						<optgroup label={t("initiatives_page.filters.destination.parliament_group_label")}>
 							<option
 								value="parliament"
 								selected={(filters.destination || []).includes("parliament")}
 							>
-								Riigikogu
+								{t("initiatives_page.filters.destination.parliament_label")}
 							</option>
 						</optgroup>
 
 						{_.map(LOCAL_GOVERNMENTS_BY_COUNTY, (govs, county) => <optgroup
-							label={county + " maakond"}
+							label={county + " " + t("initiatives_page.filters.proceedings_handler.county_group_label_suffix")}
 						>{govs.map(([id, {name}]) => <option
 							value={id}
 							selected={(filters.destination || []).includes(id)}
@@ -319,7 +355,9 @@ function FiltersView({
 				</label>
 
 				<label>
-					<span>Avalikustatud alates</span>
+					<span>
+						{t("initiatives_page.filters.published_since_label")}
+					</span>
 
 					<input
 						type="date"
@@ -335,7 +373,7 @@ function FiltersView({
 				</label>
 
 				<label>
-					<span>Avalikustatud kuni (k.a)</span>
+					<span>{t("initiatives_page.filters.published_until_label")}</span>
 
 					<input
 						type="date"
@@ -351,7 +389,9 @@ function FiltersView({
 				</label>
 
 				<label>
-					<span>Allkirjastamise algus alates</span>
+					<span>
+						{t("initiatives_page.filters.signing_started_since_label")}
+					</span>
 
 					<input
 						type="date"
@@ -367,7 +407,9 @@ function FiltersView({
 				</label>
 
 				<label>
-					<span>Allkirjastamise algus kuni (k.a)</span>
+					<span>
+						{t("initiatives_page.filters.signing_started_until_label")}
+					</span>
 
 					<input
 						type="date"
@@ -383,7 +425,9 @@ function FiltersView({
 				</label>
 
 				<label>
-					<span>Menetluse algus alates</span>
+					<span>
+						{t("initiatives_page.filters.proceedings_started_since_label")}
+					</span>
 
 					<input
 						type="date"
@@ -399,7 +443,9 @@ function FiltersView({
 				</label>
 
 				<label>
-					<span>Menetluse algus kuni (k.a)</span>
+					<span>
+						{t("initiatives_page.filters.proceedings_started_until_label")}
+					</span>
 
 					<input
 						type="date"
@@ -418,7 +464,9 @@ function FiltersView({
 				</label>
 
 				<label>
-					<span>Menetluse lõpp alates</span>
+					<span>
+						{t("initiatives_page.filters.proceedings_ended_since_label")}
+					</span>
 
 					<input
 						type="date"
@@ -434,7 +482,9 @@ function FiltersView({
 				</label>
 
 				<label>
-					<span>Menetluse lõpp kuni (k.a)</span>
+					<span>
+						{t("initiatives_page.filters.proceedings_ended_until_label")}
+					</span>
 
 					<input
 						type="date"
@@ -450,14 +500,14 @@ function FiltersView({
 				</label>
 
 				<label>
-					<span>Menetleja</span>
+					<span>{t("initiatives_page.filters.proceedings_handler_label")}</span>
 
 					<select name="proceedings-handler" class="form-select">
 						<option value="" selected={filters.proceedingsHandler == null}>
-							Kõik
+							{t("initiatives_page.filters.proceedings_handler.all_label")}
 						</option>
 
-						<optgroup label="Riigikogu">
+						<optgroup label={t("initiatives_page.filters.proceedings_handler.parliament_group_label")}>
 							{parliamentCommittees.map((committee) => <option
 								value={committee}
 								selected={filters.proceedingsHandler == committee}
@@ -467,7 +517,7 @@ function FiltersView({
 						</optgroup>
 
 						{_.map(LOCAL_GOVERNMENTS_BY_COUNTY, (govs, county) => <optgroup
-							label={county + " maakond"}
+							label={county + " " + t("initiatives_page.filters.proceedings_handler.county_group_label_suffix")}
 						>{govs.map(([id, {name}]) => <option
 							value={id}
 							selected={filters.proceedingsHandler == id}
@@ -481,11 +531,16 @@ function FiltersView({
 				</button>
 
 				{_.any(filters, _.id) ? <>
-					või <a href={path + Qs.stringify({
+					{" "}
+					{t("initiatives_page.filters.or")}
+					{" "}
+					<a href={path + Qs.stringify({
 						order: orderBy
 							? (orderDir == "asc" ? "" : "-") + orderBy
 							: undefined
-					}, {addQueryPrefix: true})} class="link-button">eemalda filtrid</a>.
+					}, {addQueryPrefix: true})} class="link-button">
+						{t("initiatives_page.filters.reset_button")}
+					</a>.
 				</> : null}
 
 				{orderBy ? <input
@@ -502,36 +557,54 @@ function FiltersView({
 
 function CurrentFiltersView({t, filters}) {
 	var facets = _.intersperse([
-		filters.phase && <Filter name="Faas">
+		filters.id && <Filter name="Id">
+			<strong>{filters.id.join(", ")}</strong>
+		</Filter>,
+
+		filters.phase && <Filter
+			name={t("initiatives_page.caption.filters.phase_label")}
+		>
 			<strong>{t("initiatives_page.phases." + filters.phase)}</strong>
 		</Filter>,
 
-		filters.destination && <Filter name="Saaja">
+		filters.destination && <Filter
+			name={t("initiatives_page.caption.filters.destination_label")}
+		>
 			<ul>{filters.destination.map((destination) => <li>
 				<strong>{destination == "parliament"
-					? "Riigikogu"
+					? t("initiatives_page.caption.filters.destination_parliament")
 					: LOCAL_GOVERNMENTS[destination].name
 				}</strong>
 			</li>)}</ul>
 		</Filter>,
 
-		filters.publishedOn && <Filter name="Avalikustatud">
+		filters.publishedOn && <Filter
+			name={t("initiatives_page.caption.filters.published_label")}
+		>
 			<DateRangeView range={filters.publishedOn} />
 		</Filter>,
 
-		filters.signingStartedOn && <Filter name="Allkirjastamise algus">
+		filters.signingStartedOn && <Filter
+			name={t("initiatives_page.caption.filters.signing_started_label")}
+		>
 			<DateRangeView range={filters.signingStartedOn} />
 		</Filter>,
 
-		filters.proceedingsStartedOn && <Filter name="Menetluse algus">
+		filters.proceedingsStartedOn && <Filter
+			name={t("initiatives_page.caption.filters.proceedings_started_label")}
+		>
 			<DateRangeView range={filters.proceedingsStartedOn} />
 		</Filter>,
 
-		filters.proceedingsEndedOn && <Filter name="Menetluse lõpp">
+		filters.proceedingsEndedOn && <Filter
+			name={t("initiatives_page.caption.filters.proceedings_ended_label")}
+		>
 			<DateRangeView range={filters.proceedingsEndedOn} />
 		</Filter>,
 
-		filters.proceedingsHandler && <Filter name="Menetleja">
+		filters.proceedingsHandler && <Filter
+			name={t("initiatives_page.caption.filters.proceedings_handler_label")}
+		>
 			<strong>{filters.proceedingsHandler in LOCAL_GOVERNMENTS
 				? LOCAL_GOVERNMENTS[filters.proceedingsHandler].name
 				: filters.proceedingsHandler
@@ -649,6 +722,257 @@ function InitiativeGroupView({title, initiatives, t}) {
 			</tr>
 		})}
 	</tbody>
+}
+
+function GraphsView({t, initiatives, path, query}) {
+	return <div id="graphs">
+		<HandlerGraphView
+			t={t}
+			initiatives={initiatives}
+			path={path}
+			query={query}
+		/>
+
+		<TopSignedInitiativesGraphView
+			t={t}
+			initiatives={initiatives}
+			path={path}
+			query={query}
+		/>
+	</div>
+}
+
+var PIE_CHART_COLORS = [
+	"#40A2E3",
+	"#86A7FC",
+	"#3468C0",
+	"#0D9276",
+	"#BBE2EC",
+	"#FF9843",
+	"#FFDD95",
+	"#7BD3EA",
+	"#A1EEBD",
+	"#F6F7C4",
+	"#F6D6D6",
+	"#190482",
+	"#7752FE",
+	"#8E8FFA",
+	"#C2D9FF",
+	"#B5C18E",
+	"#F7DCB9",
+	"#DEAC80",
+	"#B99470",
+	"#FFF6E9",
+]
+
+function HandlerGraphView({t, initiatives, path, query}) {
+	var handlers = _.countBy(initiatives.map(getProceedingsHandler))
+	delete handlers.null
+
+	handlers = _.sortBy(_.toEntries(handlers), _.second).reverse().slice(0, 10)
+	if (handlers.length < 2) return null
+
+	handlers = handlers.map(([handler, count], i) => ({
+		title: handler == "null" ? null : handler,
+		weight: count,
+		color: PIE_CHART_COLORS[i]
+	}))
+
+	return <figure id="handler-graph" class="graph">
+		<figcaption><h2>
+			{t("initiatives_page.graphs.proceeding_handlers_label")}
+		</h2></figcaption>
+
+		<div>
+			<PieChartView
+				elements={handlers}
+				arcRadius={60}
+				arcWidth={40}
+			/>
+
+			<table class="legend">{handlers.map(({title, weight: count, color}) => <tr>
+				<td class="color" style={`color: ${color}`} />
+				<td class="count">{count}</td>
+
+				<td class="title" title={title}>
+					<a href={path + Qs.stringify(_.defaults({
+						"proceedings-handler": title
+					}, query), {addQueryPrefix: true})} class="link-button">
+						{title}
+					</a>
+				</td>
+			</tr>)}</table>
+		</div>
+
+		<script>{javascript`
+			var el = document.getElementById("handler-graph")
+			var slice = Function.call.bind(Array.prototype.slice)
+			var legend = el.querySelector(".legend")
+
+			slice(el.querySelectorAll("svg .element")).forEach(function(el, i) {
+				el.addEventListener("mouseenter", function() {
+					toggleLegendRow(i, true)
+				})
+
+				el.addEventListener("mouseleave", function() {
+					toggleLegendRow(i, false)
+				})
+			})
+
+			function toggleLegendRow(i, highlight) {
+				legend.rows[i].classList.toggle("highlighted", highlight)
+			}
+		`}</script>
+	</figure>
+}
+
+function TopSignedInitiativesGraphView({t, initiatives, path, query}) {
+	var signedInitiatives = initiatives.filter((i) => i.signature_count > 0)
+	signedInitiatives = _.sortBy(signedInitiatives, "signature_count").reverse()
+	if (signedInitiatives.length < 2) return null
+	signedInitiatives = signedInitiatives.slice(0, 10)
+
+	var elements = signedInitiatives.map((initiative, i) => ({
+		title: initiative.title,
+		weight: initiative.signature_count,
+		color: PIE_CHART_COLORS[i]
+	}))
+
+	return <figure id="top-signed-initiatives-graph" class="graph">
+		<figcaption><h2>
+			{t("initiatives_page.graphs.signed_initiatives_label")}
+		</h2></figcaption>
+
+		<div>
+			<BarChartView
+				elements={elements}
+				barHeight={205}
+				barWidth={15}
+				gapWidth={2}
+			/>
+
+			<table class="legend">{signedInitiatives.map((initiative, i) => <tr>
+				<td class="color" style={`color: ${PIE_CHART_COLORS[i]}`} />
+				<td class="count">{initiative.signature_count}</td>
+
+				<td class="title" title={initiative.title}>
+					<a href={path + Qs.stringify(_.defaults({
+						"id": initiative.id
+					}, query), {addQueryPrefix: true})} class="link-button">
+						{initiative.title}
+					</a>
+				</td>
+			</tr>)}</table>
+		</div>
+
+		<script>{javascript`
+			var el = document.getElementById("top-signed-initiatives-graph")
+			var slice = Function.call.bind(Array.prototype.slice)
+			var legend = el.querySelector(".legend")
+
+			slice(el.querySelectorAll("svg .element")).forEach(function(el, i) {
+				el.addEventListener("mouseenter", function() {
+					toggleLegendRow(i, true)
+				})
+
+				el.addEventListener("mouseleave", function() {
+					toggleLegendRow(i, false)
+				})
+			})
+
+			function toggleLegendRow(i, highlight) {
+				legend.rows[i].classList.toggle("highlighted", highlight)
+			}
+		`}</script>
+	</figure>
+}
+
+// NOTE: This does not currently work for a single element — a full circle.
+function PieChartView({elements, arcRadius, arcWidth}) {
+	var boxWidth = 2 * (arcRadius + arcWidth) + 5
+	var boxHeight = boxWidth
+	var arcAngle = 2 * Math.PI / _.sum(elements.map(getWeight))
+
+	return <svg
+		width={boxWidth}
+		height={boxHeight}
+		viewBox={"0 0 " + boxWidth + " " + boxHeight}
+	>
+		<defs>
+			<filter id="pie-chart-arc-shadow">
+				<feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.40" />
+			</filter>
+		</defs>
+
+		<g transform={translate(boxWidth / 2, boxHeight / 2)}>
+			{elements.map(function(el, i, els) {
+				var startAngle = arcAngle * _.sum(els.slice(0, i).map(getWeight))
+				var endAngle = startAngle + arcAngle * el.weight
+
+				return <g class="element">
+					<title>{el.title}</title>
+
+					<path
+						id={"vision-arc-path-" + i}
+						fill={el.color}
+						stroke="white"
+						stroke-width="1"
+						d={donut(startAngle, endAngle, arcRadius, arcWidth).join("\n")}
+					/>
+				</g>
+			})}
+		</g>
+	</svg>
+}
+
+function BarChartView({elements, barHeight, barWidth, gapWidth}) {
+	var maxWeight = _.max(elements.map(getWeight))
+	let {length} = elements
+	var boxWidth = length * barWidth + Math.max(length - 1, 0) * gapWidth
+
+	return <svg
+		width={boxWidth}
+		height={barHeight}
+		viewBox={"0 0 " + boxWidth + " " + barHeight}
+	>
+		<line x1="0" y1={barHeight} x2={boxWidth} y2={barHeight} stroke="#ddd" />
+
+		{elements.map(function(el, i) {
+			var x = i * barWidth + i * gapWidth
+			var height = Math.max(barHeight * el.weight / maxWeight, 3)
+			var y = barHeight - height
+
+			return <g class="element">
+				<title>{el.title}</title>
+
+				<rect
+					fill="transparent"
+					x={x}
+					y={0}
+					width={barWidth}
+					height={barHeight}
+				/>
+
+				<rect
+					fill={el.color}
+					x={x}
+					y={y}
+					width={barWidth}
+					height="6"
+					rx="3"
+					ry="3"
+				/>
+
+				<rect
+					fill={el.color}
+					x={x}
+					y={y + 3}
+					width={barWidth}
+					height={barHeight - 3}
+				/>
+			</g>
+		})}
+	</svg>
 }
 
 function SignatureProgressView({t, initiative, signatureCount: count}) {
@@ -775,3 +1099,26 @@ function inclusifyDateRange({begin, end, bounds}) {
 function serializeRangeEndpoints(serialize, {begin, end, bounds}) {
 	return new Range(begin && serialize(begin), end && serialize(end), bounds)
 }
+
+function donut(startAngle, endAngle, circleRadius, arcWidth) {
+	var innerStartX = Math.cos(startAngle) * circleRadius
+	var innerStartY = Math.sin(startAngle) * circleRadius
+	var innerEndX = Math.cos(endAngle) * circleRadius
+	var innerEndY = Math.sin(endAngle) * circleRadius
+
+	var outerCircleRadius = circleRadius + arcWidth
+	var outerStartX = Math.cos(startAngle) * outerCircleRadius
+	var outerStartY = Math.sin(startAngle) * outerCircleRadius
+	var outerEndX = Math.cos(endAngle) * outerCircleRadius
+	var outerEndY = Math.sin(endAngle) * outerCircleRadius
+
+	return [
+		`M ${innerStartX} ${innerStartY}`,
+		`A ${circleRadius} ${circleRadius} 0 0 1 ${innerEndX} ${innerEndY}`,
+		`L ${outerEndX} ${outerEndY}`,
+		`A ${outerCircleRadius} ${outerCircleRadius} 0 0 0 ${outerStartX} ${outerStartY}`,
+		`Z`,
+	]
+}
+
+function translate(x, y) { return "translate(" + x + ", " + y + ")" }

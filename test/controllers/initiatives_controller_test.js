@@ -129,7 +129,7 @@ describe("InitiativesController", function() {
 			metasByName["twitter:site"].content.must.equal("@" + TWITTER_NAME)
 			metasByName["twitter:card"].content.must.equal("summary")
 
-			metasByProp["og:title"].content.must.equal("Rahvaalgatus")
+			metasByProp["og:title"].content.must.equal(t("initiatives_page.title"))
 			var imageUrl = `${Config.url}/assets/rahvaalgatus-description.png`
 			metasByProp["og:image"].content.must.equal(imageUrl)
 		})
@@ -644,6 +644,53 @@ describe("InitiativesController", function() {
 			var els = dom.body.querySelectorAll("#initiatives .initiative")
 			var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
 			ids.must.eql([initiative.id])
+		})
+
+		describe("given id", function() {
+			it("must filter initiatives by id", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					published_at: new Date
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					published_at: new Date
+				}))
+
+				var res = yield this.request(`/initiatives?id=${initiative.id}`)
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+				var els = dom.body.querySelectorAll("#initiatives .initiative")
+				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
+				ids.must.eql([initiative.id])
+			})
+
+			it("must filter initiatives by ids", function*() {
+				var a = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					published_at: new Date
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					published_at: new Date
+				}))
+
+				var b = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					published_at: new Date
+				}))
+
+				var res = yield this.request(`/initiatives?id[]=${a.id}&id[]=${b.id}`)
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+				var els = dom.body.querySelectorAll("#initiatives .initiative")
+				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
+				ids.sort().must.eql([a.id, b.id])
+			})
 		})
 
 		describe("given for", function() {

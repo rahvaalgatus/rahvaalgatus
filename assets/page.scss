@@ -2178,6 +2178,116 @@ main {
 			padding-right: $page-mobile-padding;
 		}
 
+		#graphs {
+			margin-bottom: 4rem;
+			display: flex;
+			gap: 1rem;
+
+			&:empty { display: none; }
+
+			.graph {
+				padding: 2rem 2rem;
+				border-radius: 0.5rem;
+				background: white;
+				display: inline-block;
+
+				figcaption {
+					font-weight: 600;
+					font-size: 1.6rem;
+					margin-bottom: 1rem;
+				}
+
+				& > div {
+					display: inline-flex;
+					gap: 1rem;
+					flex-wrap: wrap;
+					align-items: center;
+				}
+
+				svg {
+					display: block;
+				}
+			}
+
+			#handler-graph,
+			#top-signed-initiatives-graph {
+				.legend {
+					margin-left: 2rem;
+					line-height: 1.4;
+					font-size: 1.4rem;
+
+					tr.highlighted td {
+						background-color: #f6f7c4;
+					}
+
+					td:first-child {
+						border-top-left-radius: 1rem;
+						border-bottom-left-radius: 1rem;
+					}
+
+					td:last-child {
+						border-top-right-radius: 1rem;
+						border-bottom-right-radius: 1rem;
+					}
+
+					.color {
+						padding-left: 0.5rem;
+						padding-right: 1rem;
+
+						&:before {
+							display: inline-block;
+							content: "";
+							width: 1rem;
+							height: 1rem;
+							border-radius: 10rem;
+							background-color: currentColor;
+						}
+					}
+
+					.count {
+						font-weight: bold;
+						font-variant-numeric: tabular-nums;
+						text-align: right;
+					}
+
+					.title {
+						padding-left: .7rem;
+						padding-right: 0.5rem;
+					}
+				}
+
+				@media only screen and (max-width: 580px) {
+					display: block;
+
+					svg,
+					.legend { margin-left: auto; margin-right: auto; }
+					.legend { margin-top: 2rem; }
+				}
+			}
+
+			#handler-graph {
+				figcaption h2 {
+					text-align: center;
+					max-width: 20.5rem;
+				}
+
+				svg .element:hover {
+					filter: url(#pie-chart-arc-shadow);
+					transition: transform ease 0.1s;
+					transform: translate(0, -3px);
+				}
+			}
+
+			#top-signed-initiatives-graph {
+				.legend {
+					.title {
+						max-width: 30rem;
+						@include ellipsis;
+					}
+				}
+			}
+		}
+
 		#filters {
 			details {
 				$input-height: 3.6rem;
