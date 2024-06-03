@@ -661,16 +661,16 @@ function PhasesView(attrs) {
 		initiative.sent_to_parliament_at
 	)
 
-  var daysSinceCreated = diffInDays(new Date, initiative.created_at)
+  var daysSincePublished = diffInDays(new Date, initiative.published_at)
 
   var daysInEdit = initiative.discussion_ends_at ? diffInDays(
 		DateFns.addMilliseconds(initiative.discussion_ends_at, -1),
-		initiative.created_at
+		initiative.published_at
 	) + 1 : 0
 
 	var editProgress = Initiative.isPhaseGt(phase, "edit")
 		? 1
-		: min(daysSinceCreated / daysInEdit, 1)
+		: min(daysSincePublished / daysInEdit, 1)
 
 	var editPhaseText
 	if (phase == "edit") {
@@ -678,17 +678,15 @@ function PhasesView(attrs) {
 			editPhaseText = ""
 		else if (new Date < initiative.discussion_ends_at)
 			editPhaseText = t("TXT_DEADLINE_CALENDAR_DAYS_LEFT", {
-				numberOfDaysLeft: daysInEdit - daysSinceCreated
+				numberOfDaysLeft: daysInEdit - daysSincePublished
 			})
 		else editPhaseText = t("DISCUSSION_FINISHED")
 	}
 	else if (initiative.external)
 		editPhaseText = ""
-	// TODO: Use initiative.published_at here once old CitizenOS initiatives have
-	// it adjusted from the imported 1970-01-01 time.
 	else if (initiative.signing_started_at) editPhaseText = I18n.formatDateSpan(
 		"numeric",
-		initiative.created_at,
+		initiative.published_at,
 		initiative.signing_started_at
 	)
 

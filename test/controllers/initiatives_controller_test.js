@@ -3634,7 +3634,7 @@ describe("InitiativesController", function() {
 
 				phases.edit.text.must.equal(I18n.formatDateSpan(
 					"numeric",
-					initiative.created_at,
+					initiative.published_at,
 					initiative.signing_started_at
 				))
 
