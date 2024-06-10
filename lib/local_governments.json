@@ -187,7 +187,12 @@
 		"initiativesEmails": [
 			"linnavalitsus@maardu.ee"
 		],
-		"signatureTrustees": [],
+		"signatureTrustees": [
+			{
+				"personalId": "47705260264",
+				"name": "Triin Uudeväli"
+			}
+		],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/maardu-linn"
