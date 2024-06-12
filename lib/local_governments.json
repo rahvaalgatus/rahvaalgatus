@@ -609,7 +609,12 @@
 		"initiativesEmails": [
 			"info@poltsamaa.ee"
 		],
-		"signatureTrustees": [],
+		"signatureTrustees": [
+			{
+				"personalId": "47211052737",
+				"name": "Ülle Ant"
+			}
+		],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/poltsamaa-vald"
