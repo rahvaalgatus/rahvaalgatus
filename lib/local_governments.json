@@ -232,7 +232,12 @@
 		"initiativesEmails": [
 			"info@rae.ee"
 		],
-		"signatureTrustees": [],
+		"signatureTrustees": [
+			{
+				"personalId": "46710010244",
+				"name": "Meeli Vaarik"
+			}
+		],
 		"dtvSchools": [],
 		"dialogs": [],
 		"rahandusministeeriumUrl": "https://minuomavalitsus.ee/kov/rae-vald"
