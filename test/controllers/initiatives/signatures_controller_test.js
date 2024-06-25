@@ -9,6 +9,8 @@ var ValidInitiative = require("root/test/valid_initiative")
 var ValidSignable = require("root/test/valid_signable")
 var ValidSignature = require("root/test/valid_signature")
 var ValidCitizenosSignature = require("root/test/valid_citizenos_signature")
+var ValidSignatureTrustee =
+	require("root/test/valid_initiative_signature_trustee")
 var ValidUser = require("root/test/valid_user")
 var ValidSession = require("root/test/valid_session")
 var ValidAuthentication = require("root/test/valid_authentication")
@@ -34,6 +36,7 @@ var authenticationsDb = require("root/db/authentications_db")
 var sessionsDb = require("root/db/sessions_db")
 var initiativesDb = require("root/db/initiatives_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
+var signatureTrusteesDb = require("root/db/initiative_signature_trustees_db")
 var signablesDb = require("root/db/initiative_signables_db")
 var textsDb = require("root/db/initiative_texts_db")
 var citizenosSignaturesDb =
@@ -68,7 +71,6 @@ var CHILD_BIRTHDATE = DateFns.addDays(ADULT_BIRTHDATE, 1)
 var ADULT_PERSONAL_ID = formatPersonalId(ADULT_BIRTHDATE) + "1337"
 var CHILD_PERSONAL_ID = formatPersonalId(CHILD_BIRTHDATE) + "1337"
 var SMART_ID = "PNOEE-" + ADULT_PERSONAL_ID + "-R2D2-Q"
-var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var KEY_USAGE_NONREPUDIATION = 64
 var KEY_USAGE_DIGITAL_SIGNATURE = 128
 var SIGN_RATE = 5
@@ -537,25 +539,8 @@ describe("SignaturesController", function() {
 				res.statusMessage.must.equal("Unauthorized")
 			})
 
-			it("must respond with 403 Forbidden if no personal ids set", function*() {
-				LOCAL_GOVERNMENTS["muhu-vald"].signatureTrustees = []
-
-				var path = `/initiatives/${this.initiative.id}/signatures.asice`
-				var token = this.initiative.parliament_token.toString("hex")
-				path += "?parliament-token=" + token
-
-				var res = yield this.request(path, {session: this.session})
-				res.statusCode.must.equal(403)
-				res.statusMessage.must.equal("Not a Permitted Downloader")
-			})
-
-			it("must respond with 403 Forbidden if not permitted downloader",
+			it("must respond with 403 Forbidden if no signature trustees",
 				function*() {
-				LOCAL_GOVERNMENTS["muhu-vald"].signatureTrustees = [{
-					personalId: "38706181337",
-					name: "John Smith"
-				}]
-
 				var path = `/initiatives/${this.initiative.id}/signatures.asice`
 				var token = this.initiative.parliament_token.toString("hex")
 				path += "?parliament-token=" + token
@@ -570,12 +555,91 @@ describe("SignaturesController", function() {
 				)
 			})
 
-			it("must respond with signatures if permitted downloader", function*() {
-				LOCAL_GOVERNMENTS["muhu-vald"].signatureTrustees = [
-					{personalId: "38706181337"},
-					{personalId: this.user.personal_id},
-					{personalId: "38706181338"}
-				]
+			it("must respond with 403 Forbidden if another user in same country trustee", function*() {
+				signatureTrusteesDb.create(new ValidSignatureTrustee({
+					initiative_destination: "tallinn",
+					country: this.user.country,
+					created_by_id: this.user.id
+				}))
+
+				var path = `/initiatives/${this.initiative.id}/signatures.asice`
+				var token = this.initiative.parliament_token.toString("hex")
+				path += "?parliament-token=" + token
+
+				var res = yield this.request(path, {session: this.session})
+				res.statusCode.must.equal(403)
+				res.statusMessage.must.equal("Not a Permitted Downloader")
+			})
+
+			it("must respond with 403 Forbidden if another user in another country country trustee", function*() {
+				signatureTrusteesDb.create(new ValidSignatureTrustee({
+					initiative_destination: "tallinn",
+					country: "FI",
+					personal_id: this.user.personal_id,
+					name: this.user.name,
+					created_by_id: this.user.id
+				}))
+
+				var path = `/initiatives/${this.initiative.id}/signatures.asice`
+				var token = this.initiative.parliament_token.toString("hex")
+				path += "?parliament-token=" + token
+
+				var res = yield this.request(path, {session: this.session})
+				res.statusCode.must.equal(403)
+				res.statusMessage.must.equal("Not a Permitted Downloader")
+			})
+
+			it("must respond with 403 Forbidden if a signature trustee of another destination", function*() {
+				signatureTrusteesDb.create(new ValidSignatureTrustee({
+					initiative_destination: "tallinn",
+					country: this.user.country,
+					personal_id: this.user.personal_id,
+					created_by_id: this.user.id
+				}))
+
+				var path = `/initiatives/${this.initiative.id}/signatures.asice`
+				var token = this.initiative.parliament_token.toString("hex")
+				path += "?parliament-token=" + token
+
+				var res = yield this.request(path, {session: this.session})
+				res.statusCode.must.equal(403)
+				res.statusMessage.must.equal("Not a Permitted Downloader")
+			})
+
+			it("must respond with 403 Forbidden if trustee deleted", function*() {
+				signatureTrusteesDb.create(new ValidSignatureTrustee({
+					initiative_destination: this.initiative.destination,
+					country: this.user.country,
+					personal_id: this.user.personal_id,
+					created_by_id: this.user.id,
+					deleted_at: new Date,
+					deleted_by_id: this.user.id
+				}))
+
+				var path = `/initiatives/${this.initiative.id}/signatures.asice`
+				var token = this.initiative.parliament_token.toString("hex")
+				path += "?parliament-token=" + token
+
+				var res = yield this.request(path, {session: this.session})
+				res.statusCode.must.equal(403)
+				res.statusMessage.must.equal("Not a Permitted Downloader")
+			})
+
+			it("must respond with signatures if a signature trustee", function*() {
+				signatureTrusteesDb.create([new ValidSignatureTrustee({
+					initiative_destination: this.initiative.destination,
+					country: this.user.country,
+					created_by_id: this.user.id
+				}), new ValidSignatureTrustee({
+					initiative_destination: this.initiative.destination,
+					country: this.user.country,
+					personal_id: this.user.personal_id,
+					created_by_id: this.user.id
+				}), new ValidSignatureTrustee({
+					initiative_destination: this.initiative.destination,
+					country: this.user.country,
+					created_by_id: this.user.id
+				})])
 
 				var path = `/initiatives/${this.initiative.id}/signatures.asice`
 				var token = this.initiative.parliament_token.toString("hex")

@@ -27,6 +27,7 @@ var {getCertificatePersonalId} = require("root/lib/certificate")
 var {validateSigningCertificate} = require("root/lib/certificate")
 var {getNormalizedMobileIdErrorCode} = require("root/lib/eid")
 var signaturesDb = require("root/db/initiative_signatures_db")
+var signatureTrusteesDb = require("root/db/initiative_signature_trustees_db")
 var signablesDb = require("root/db/initiative_signables_db")
 var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
@@ -37,7 +38,6 @@ var geoipPromise = require("root").geoip
 var {logger} = require("root")
 var {hades} = require("root")
 var parseBody = require("body-parser").raw
-var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var SIGNABLE_TYPE = "application/vnd.rahvaalgatus.signable"
 var SIGN_RATE = 5
 var SIGN_RATE_IN_MINUTES = 30
@@ -90,13 +90,22 @@ exports.router.get("/",
 	if (initiative.destination != "parliament") {
 		if (user == null) throw new HttpError(401)
 
-		var government = LOCAL_GOVERNMENTS[initiative.destination]
-		var downloaders = _.map(government.signatureTrustees, "personalId")
+		var trustee = signatureTrusteesDb.read(sql`
+			SELECT * FROM initiative_signature_trustees
+			WHERE initiative_destination = ${initiative.destination}
+			AND country = ${user.country}
+			AND personal_id = ${user.personal_id}
+			AND deleted_at IS NULL
+		`)
 
-		if (!downloaders.includes(user.personal_id))
-			throw new HttpError(403, "Not a Permitted Downloader", {
-				description: t("INITIATIVE_SIGNATURES_NOT_PERMITTED_DOWNLOADER")
-			})
+		// Being extra careful with a redundant personal id equivalency test.
+		if (!(
+			trustee &&
+			trustee.country == user.country &&
+			trustee.personal_id == user.personal_id
+		)) throw new HttpError(403, "Not a Permitted Downloader", {
+			description: t("INITIATIVE_SIGNATURES_NOT_PERMITTED_DOWNLOADER")
+		})
 	}
 
 	switch (res.contentType.name) {

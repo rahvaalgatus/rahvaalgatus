@@ -278,14 +278,11 @@ _.each({
 
 _.each({
 	"/users": require("./admin/users_controller").router,
+	"/destinations": require("./admin/destinations_controller").router,
 	"/initiatives": require("./admin/initiatives_controller").router,
 	"/signatures": require("./admin/initiative_signatures_controller").router,
 	"/external-responses": require("./admin/external_responses_controller").router
 }, (router, path) => exports.use(path, router))
-
-exports.get("/destinations", function(_req, res) {
-	res.render("admin/destinations/index_page.jsx")
-})
 
 exports.get("/comments", function(_req, res) {
 	var comments = commentsDb.search(sql`

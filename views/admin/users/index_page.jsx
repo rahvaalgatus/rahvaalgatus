@@ -19,7 +19,7 @@ module.exports = function(attrs) {
 				<th>Created At</th>
 				<th>
 					Name<br />
-					<small>Identity Code</small>
+					<small>Personal Id</small>
 				</th>
 				<th>Email</th>
 			</thead>

@@ -15,6 +15,7 @@ function truncate() {
 		DELETE FROM initiative_coauthors;
 		DELETE FROM initiative_subscriptions;
 		DELETE FROM initiative_signatures;
+		DELETE FROM initiative_signature_trustees;
 		DELETE FROM initiative_citizenos_signatures;
 		DELETE FROM initiative_signables;
 		DELETE FROM initiative_messages;

@@ -6,7 +6,12 @@ var Config = require("root").config
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var LOCAL_GOVERNMENTS_BY_COUNTY = LOCAL_GOVERNMENTS.BY_COUNTY
 
-module.exports = function({req}) {
+module.exports = function({req, signatureTrustees}) {
+	var signatureTrusteesByDestination = _.groupBy(
+		signatureTrustees,
+		"initiative_destination"
+	)
+
 	return <Page page="destinations" title="Destinations" req={req}>
 		<h1 class="admin-heading">Destinations</h1>
 
@@ -52,9 +57,16 @@ module.exports = function({req}) {
 						<th colspan="6">{county} maakond</th>
 					</tr>
 
-					{govs.map(function([_id, gov]) {
+					{govs.map(function([id, gov]) {
+						var signatureTrustees = signatureTrusteesByDestination[id] || []
+
 						return <tr>
-							<td>{gov.name}</td>
+							<td>
+								<a href={req.baseUrl + "/" + id} class="admin-link">
+									{gov.name}
+								</a>
+							</td>
+
 							<td class="population-column">{gov.population}</td>
 							<td class="voter-count-column">{gov.voterCount}</td>
 
@@ -69,8 +81,8 @@ module.exports = function({req}) {
 							</td>
 
 							<td>
-								<ul>{gov.signatureTrustees.map(({name, personalId}) => <li>
-									{name} ({personalId})
+								<ul>{signatureTrustees.map((trustee) => <li>
+									{trustee.name} ({trustee.personal_id})
 								</li>)}</ul>
 							</td>
 						</tr>

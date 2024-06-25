@@ -77,9 +77,9 @@ main {
 
 .admin-subheading {
   font-size: 2.4rem;
-  margin-bottom: 1rem;
 	font-weight: 300;
 
+  & + * { margin-top: 1rem; }
   & ~ .admin-subheading { margin-top: 3rem; }
 }
 
@@ -121,6 +121,10 @@ button.admin-link {
 		}
 	}
 
+	& > tfoot > tr > td {
+		background: white;
+	}
+
 	& > thead > tr > th {
 		white-space: nowrap;
 	}
@@ -135,15 +139,21 @@ button.admin-link {
 		padding: 0.5rem 2rem;
 	}
 
-  & > tbody > tr > td { padding: 0.5rem 2rem; }
+  & > tbody > tr > td,
+  & > tfoot > tr > td { padding: 0.5rem 2rem; }
   & > tbody > tr:first-child > td { padding-top: 1rem; }
   & > tbody > tr + tr td { border-top: 1px solid white; }
 
 	& > thead > tr:first-child > th,
-	& > tbody > tr:first-child > th { padding-top: 1.5rem; }
+	& > tbody > tr:first-child > th,
+	& > tfoot > tr:first-child > td { padding-top: 1.5rem; }
 
 	& > thead > tr:last-child > th,
 	& > tbody > tr:last-child > th { padding-bottom: 1rem; }
+
+	& > tfoot > tr:last-child > td { padding-bottom: 1.5rem; }
+
+	& + .admin-subheading { margin-top: 4rem; }
 }
 
 .admin-table {
@@ -186,6 +196,34 @@ button.admin-link {
 
 .admin-horizontal-table {
 	th { border-right: 1px solid $table-border-color; }
+}
+
+.admin-overview-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+
+	& > li {
+		background-color: white;
+		border-radius: 0.5rem;
+		padding: 1.5rem 2rem 1rem;
+		text-align: center;
+
+		& > .label {
+			text-transform: uppercase;
+			font-size: 1.2rem;
+			font-weight: 700;
+			margin-bottom: 0.5rem;
+			color: $grey;
+		}
+
+		& > .value {
+			font-size: 3.6rem;
+			font-weight: 700;
+		}
+	}
+
+	& + .admin-horizontal-table { margin-top: 2rem; }
 }
 
 .admin-primary-button,
@@ -256,6 +294,29 @@ button.admin-link {
 
 	.admin-label ~ .admin-label {
 		margin-top: 1rem;
+	}
+
+	.admin-form-label {
+		display: block;
+		font-weight: 600;
+	}
+
+	.admin-form-field {
+		display: block;
+	}
+
+	&.--one-line {
+		max-width: 100%;
+
+		.admin-form-field {
+			display: inline-block;
+			vertical-align: bottom;
+			margin-right: 1.2rem;
+		}
+
+		.admin-submit {
+			margin-top: 0;
+		}
 	}
 
 	.admin-submit {
