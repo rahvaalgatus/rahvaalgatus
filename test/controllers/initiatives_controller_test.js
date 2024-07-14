@@ -1,6 +1,7 @@
 var _ = require("root/lib/underscore")
 var Qs = require("qs")
 var Url = require("url")
+var Csv = require("root/lib/csv")
 var Atom = require("root/lib/atom")
 var DateFns = require("date-fns")
 var Config = require("root").config
@@ -47,6 +48,8 @@ var demand = require("must")
 var {newTrixDocument} = require("root/test/fixtures")
 var {serializePersonalId} = require("root/lib/user")
 var {serializeMailgunVariables} = require("root/lib/subscription")
+var {serializeCsvInitiative} =
+	require("root/controllers/initiatives_controller")
 var {TRIX_BLANK_DOCUMENT} = require("root/test/fixtures")
 var INITIATIVE_TYPE = "application/vnd.rahvaalgatus.initiative+json; v=1"
 var ATOM_TYPE = "application/atom+xml"
@@ -65,6 +68,7 @@ var {SUMMARY_MAX_LENGTH} =
 var TRIX_TYPE = new MediaType("application/vnd.basecamp.trix+json")
 var TRIX_SECTIONS_TYPE =
 	new MediaType("application/vnd.rahvaalgatus.trix-sections+json")
+var CSV_TYPE = "text/csv; charset=utf-8"
 var TWITTER_NAME = Config.twitterUrl.replace(/^.*\//, "")
 var MAX_URL_LENGTH = 1024
 var INITIATIVES_URL = `${Config.url}/initiatives`
@@ -159,7 +163,7 @@ describe("InitiativesController", function() {
 				var table = dom.body.querySelector("#initiatives")
 				var heading = table.tHead.querySelector("th .column-name")
 				heading.textContent.trim().must.equal("Pealkiri")
-				heading.href.must.startWith("/initiatives/?")
+				heading.href.must.startWith("/initiatives?")
 				Qs.parse(Url.parse(heading.href).query).must.eql({order: "title"})
 			})
 
@@ -188,7 +192,7 @@ describe("InitiativesController", function() {
 				var table = dom.body.querySelector("#initiatives")
 				var heading = table.tHead.querySelector("th .column-name")
 				heading.textContent.trim().must.equal("Pealkiri")
-				heading.href.must.startWith("/initiatives/?")
+				heading.href.must.startWith("/initiatives?")
 
 				Qs.parse(Url.parse(heading.href).query).must.eql(_.defaults({
 					order: "title",
@@ -2529,6 +2533,181 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(400)
 				res.statusMessage.must.equal("Invalid Limit")
 				res.body.must.eql({code: 400, message: "Invalid Limit"})
+			})
+		})
+	})
+
+	describe(`GET / for text/csv`, function() {
+		beforeEach(function() { this.author = usersDb.create(new ValidUser) })
+
+		var CSV_HEADER = Csv.serialize([
+			"id",
+			"uuid",
+			"title",
+			"authors",
+			"destination",
+			"phase",
+			"published_at",
+			"signing_started_at",
+			"signing_ends_at",
+			"signature_count",
+			"sent_to_parliament_at",
+			"parliament_committees",
+			"finished_in_parliament_at",
+			"sent_to_government_at",
+			"finished_in_government_at"
+		])
+
+		it("must respond with CSV header if no initiatives", function*() {
+			var res = yield this.request("/initiatives.csv")
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(CSV_TYPE)
+			res.body.must.equal(CSV_HEADER + "\n")
+		})
+
+		it("must not respond with unpublished initiatives", function*() {
+			initiativesDb.create(new ValidInitiative({user_id: this.author.id}))
+			var res = yield this.request("/initiatives.csv")
+			res.statusCode.must.equal(200)
+			res.body.must.equal(CSV_HEADER + "\n")
+		})
+
+		it("must respond with initiatives without destination", function*() {
+			var initiative = initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "edit",
+				published_at: new Date
+			}))
+
+			var res = yield this.request("/initiatives.csv")
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(CSV_TYPE)
+			res.headers["access-control-allow-origin"].must.equal("*")
+
+			res.body.must.eql(_.concat(CSV_HEADER, serializeCsvInitiative(_.defaults({
+				user_name: this.author.name
+			}, initiative))).join("\n"))
+		})
+
+		it("must respond with initiatives destined for parliament", function*() {
+			var initiative = initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "edit",
+				destination: "parliament",
+				published_at: new Date
+			}))
+
+			var res = yield this.request("/initiatives.csv")
+			res.statusCode.must.equal(200)
+
+			res.body.must.eql(_.concat(CSV_HEADER, serializeCsvInitiative(_.defaults({
+				user_name: this.author.name
+			}, initiative))).join("\n"))
+		})
+
+		it("must respond with initiatives destined for local", function*() {
+			var initiative = initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "edit",
+				destination: "muhu-vald",
+				published_at: new Date
+			}))
+
+			var res = yield this.request("/initiatives.csv")
+			res.statusCode.must.equal(200)
+
+			res.body.must.eql(_.concat(CSV_HEADER, serializeCsvInitiative(_.defaults({
+				user_name: this.author.name
+			}, initiative))).join("\n"))
+		})
+
+		it("must respond with external initiatives in parliament", function*() {
+			var initiative = initiativesDb.create(new ValidInitiative({
+				phase: "parliament",
+				received_by_parliament_at: pseudoDateTime(),
+				external: true
+			}))
+
+			var res = yield this.request("/initiatives.csv")
+			res.statusCode.must.equal(200)
+
+			res.body.must.eql(_.concat(
+				CSV_HEADER,
+				serializeCsvInitiative(initiative)
+			).join("\n"))
+		})
+
+		it("must respond with signature count", function*() {
+			var initiative = initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "sign"
+			}))
+
+			citizenosSignaturesDb.create(_.times(5, () => (
+				new ValidCitizenosSignature({initiative_uuid: initiative.uuid})
+			)))
+
+			signaturesDb.create(_.times(3, () => new ValidSignature({
+				initiative_uuid: initiative.uuid
+			})))
+
+			var res = yield this.request("/initiatives.csv")
+			res.statusCode.must.equal(200)
+
+			res.body.must.eql(_.concat(CSV_HEADER, serializeCsvInitiative(_.defaults({
+				user_name: this.author.name,
+				signature_count: 8
+			}, initiative))).join("\n"))
+		})
+
+		it("must respond with initiatives with author name", function*() {
+			var initiative = initiativesDb.create(new ValidInitiative({
+				user_id: this.author.id,
+				phase: "edit",
+				published_at: new Date,
+				author_name: "Freedom Organization"
+			}))
+
+			var res = yield this.request("/initiatives.csv")
+			res.statusCode.must.equal(200)
+
+			res.body.must.eql(_.concat(CSV_HEADER, serializeCsvInitiative(_.defaults({
+				user_name: this.author.name
+			}, initiative))).join("\n"))
+		})
+
+		describe("given phase", function() {
+			it("must respond with 400 given invalid phase", function*() {
+				var res = yield this.request("/initiatives.csv?phase=foo")
+				res.statusCode.must.equal(400)
+				res.statusMessage.must.equal("Invalid Phase")
+			})
+
+			PHASES.forEach(function(phase, i) {
+				it(`must respond with ${phase} initiatives if requested`, function*() {
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						destination: "parliament",
+						published_at: new Date,
+						phase: phase
+					}))
+
+					initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						published_at: new Date,
+						phase: PHASES[(i + 1) % PHASES.length]
+					}))
+
+					var res = yield this.request("/initiatives.csv?phase=" + phase)
+					res.statusCode.must.equal(200)
+
+					res.body.must.eql(_.concat(
+						CSV_HEADER,
+						serializeCsvInitiative(_.defaults({
+							user_name: this.author.name
+						}, initiative))).join("\n")
+					)
+				})
 			})
 		})
 	})
@@ -12927,6 +13106,48 @@ describe("InitiativesController", function() {
 					initiativePath + "/texts/new?language=et"
 				)
 			})
+		})
+	})
+
+	describe(".serializeCsvInitiative", function() {
+		it("must serialize initiative", function() {
+			var initiative = _.assign(new ValidInitiative({
+				id: 42,
+				uuid: "b5e594c2-2aef-4420-9780-3a5b1c00e1c0",
+				destination: "muhu-vald",
+				title: "Hello, world!",
+				author_name: "John Smith",
+				phase: "sign",
+				published_at: new Date(2015, 5, 18, 13, 37, 42, 666),
+				signing_started_at: new Date(2015, 5, 19, 13, 37, 43, 666),
+				signing_ends_at: new Date(2015, 5, 20, 13, 37, 44, 666),
+				sent_to_parliament_at: new Date(2015, 5, 21, 13, 37, 45, 666),
+				finished_in_parliament_at: new Date(2015, 5, 22, 13, 37, 46, 666),
+				parliament_committee: "Keskkonnakomisjon",
+				sent_to_government_at: new Date(2015, 5, 23, 13, 37, 47, 666),
+				finished_in_government_at: new Date(2015, 5, 24, 13, 37, 48, 666),
+			}), {
+				user_name: "Mary Smith",
+				signature_count: 666
+			})
+
+			serializeCsvInitiative(initiative).must.equal(Csv.serialize([
+				initiative.id,
+				initiative.uuid,
+				initiative.title,
+				"John Smith\nMary Smith",
+				initiative.destination,
+				initiative.phase,
+				initiative.published_at.toJSON(),
+				initiative.signing_started_at.toJSON(),
+				initiative.signing_ends_at.toJSON(),
+				666,
+				initiative.sent_to_parliament_at.toJSON(),
+				initiative.parliament_committee,
+				initiative.finished_in_parliament_at.toJSON(),
+				initiative.sent_to_government_at.toJSON(),
+				initiative.finished_in_government_at.toJSON()
+			]))
 		})
 	})
 })

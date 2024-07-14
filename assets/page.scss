@@ -2395,12 +2395,16 @@ main {
 	#initiatives {
 		width: 100%;
 
-		& > tbody > tr > td { padding: 1.3rem 0.5rem 1.4rem; }
+		& > tbody > tr > td,
+		& > tfoot > tr > td { padding: 1.3rem 0.5rem 1.4rem; }
 
 		& > thead > tr > th:first-child,
-		& > tbody > tr > td:first-child { padding-left: 2rem; }
+		& > tbody > tr > td:first-child,
+		& > tfoot > tr > td:first-child { padding-left: 2rem; }
+
 		& > thead > tr > th:last-child,
-		& > tbody > tr > td:last-child { padding-right: 2rem; }
+		& > tbody > tr > td:last-child,
+		& > tfoot > tr > td:last-child { padding-right: 2rem; }
 
 		& > thead {
 			top: 0;
@@ -2606,6 +2610,12 @@ main {
 
 			& + .initiative > td { border-top: 1px solid $secondary-background; }
 		}
+
+    tfoot td {
+      font-size: 1.5rem;
+      line-height: 1.5;
+      text-align: right;
+    }
 
 		@media only screen and (max-width: 1020px) {
 			display: block;

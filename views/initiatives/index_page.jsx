@@ -32,11 +32,13 @@ function InitiativesPage({
 }) {
 	var [orderBy, orderDir] = order
 	var filterQuery = serializeFilters(filters)
-	var initiativesPath = req.baseUrl + req.path
+	var initiativesPath = req.baseUrl
 
 	var query = _.defaults({
 		order: orderBy ? (orderDir == "asc" ? "" : "-") + orderBy : undefined
 	}, filterQuery)
+
+	var colSpan = 8
 
 	return <Page
 		page="initiatives"
@@ -239,7 +241,7 @@ function InitiativesPage({
 				</thead>
 
 				{initiatives.length == 0 ? <tbody class="empty"><tr>
-					<td colspan="8">{_.any(filters) ? <>
+					<td colspan={colSpan}>{_.any(filters) ? <>
 						<p>
 							{t("initiatives_page.table.no_initiatives_with_filters")}
 						</p>
@@ -288,6 +290,20 @@ function InitiativesPage({
 						initiatives={initiatives}
 					/>
 				})}
+
+				<tfoot><tr>
+					<td colspan={colSpan}>
+						{initiatives.length > 0 ? <a
+							href={initiativesPath + ".csv" + Qs.stringify(query, {
+								addQueryPrefix: true
+							})}
+
+							class="link-button"
+						>
+							{t("initiatives_page.table.download_csv_button")}
+						</a> : null}
+					</td>
+				</tr></tfoot>
 			</table>
 		</section>
 	</Page>
@@ -633,9 +649,11 @@ function CurrentFiltersView({t, filters}) {
 
 
 function InitiativeGroupView({title, initiatives, t}) {
+	var colSpan = 8
+
 	return <tbody>
 		<tr class="table-group-header">
-			<th colspan="8" scope="rowgroup">
+			<th colspan={colSpan} scope="rowgroup">
 				{title ? <h2>{title}</h2> : null}
 			</th>
 		</tr>

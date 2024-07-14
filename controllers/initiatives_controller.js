@@ -1,5 +1,6 @@
 var _ = require("root/lib/underscore")
 var Qs = require("querystring")
+var Csv = require("root/lib/csv")
 var {Router} = require("express")
 var Range = require("strange")
 var HttpError = require("standard-http-error")
@@ -35,6 +36,7 @@ var {countUndersignedSignaturesById} = require("root/lib/initiative")
 var {countCitizenOsSignaturesById} = require("root/lib/initiative")
 var {parsePersonalId} = require("root/lib/user")
 var {validateRedirect} = require("root/lib/http")
+var dispose = require("content-disposition")
 var {PHASES} = require("root/lib/initiative")
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: "", phase: "edit"}
@@ -48,6 +50,7 @@ var UUID_REGEX =
 exports.searchInitiativesEventsForAtom = searchInitiativesEventsForAtom
 exports.synthesizeInitiativeEvents = synthesizeInitiativeEvents
 exports.serializeApiInitiative = serializeApiInitiative
+exports.serializeCsvInitiative = serializeCsvInitiative
 exports.parseId = parseId
 exports.router = Router({mergeParams: true})
 
@@ -55,10 +58,17 @@ var searchInitiativeEventsForAtom =
 	_.compose(searchInitiativesEventsForAtom, _.concat)
 
 exports.router.get("/",
-	new ResponseTypeMiddeware(["text/html", INITIATIVE_TYPE].map(MediaType)),
+	new ResponseTypeMiddeware([
+		"text/html",
+		"text/csv",
+		INITIATIVE_TYPE
+	].map(MediaType)),
 	function(req, res) {
 	// Set CORS header early for errors, too.
-	if (res.contentType.name == INITIATIVE_TYPE.name) {
+	if (
+		res.contentType.name == INITIATIVE_TYPE.name ||
+		res.contentType.name == "text/csv"
+	) {
 		res.setHeader("Content-Type", INITIATIVE_TYPE)
 		res.setHeader("Access-Control-Allow-Origin", "*")
 	}
@@ -266,6 +276,33 @@ exports.router.get("/",
 
 				return obj
 			}))
+
+		case "text/csv":
+			res.setHeader("Content-Type", "text/csv; charset=utf-8")
+			res.setHeader("Content-Disposition",
+				dispose("initiatives.csv", "attachment"))
+
+			res.write(Csv.serialize([
+				"id",
+				"uuid",
+				"title",
+				"authors",
+				"destination",
+				"phase",
+				"published_at",
+				"signing_started_at",
+				"signing_ends_at",
+				"signature_count",
+				"sent_to_parliament_at",
+				"parliament_committees",
+				"finished_in_parliament_at",
+				"sent_to_government_at",
+				"finished_in_government_at"
+			]) + "\n")
+
+			res.write(initiatives.map(serializeCsvInitiative).join("\n"))
+			res.end()
+			break
 
 		default:
 			var parliamentCommittees = sqlite(sql`
@@ -1433,6 +1470,33 @@ function serializeApiInitiative(initiative) {
 			? Initiative.getSignatureThreshold(initiative)
 			: null
 	}
+}
+
+function serializeCsvInitiative(initiative) {
+	return Csv.serialize([
+		initiative.id,
+		initiative.uuid,
+		initiative.title,
+		Initiative.authorNames(initiative).join("\n"),
+		initiative.destination,
+		initiative.phase,
+		initiative.published_at.toJSON(),
+		initiative.signing_started_at && initiative.signing_started_at.toJSON(),
+		initiative.signing_ends_at && initiative.signing_ends_at.toJSON(),
+		initiative.external ? null : initiative.signature_count || 0,
+
+		initiative.sent_to_parliament_at &&
+			initiative.sent_to_parliament_at.toJSON(),
+
+		initiative.parliament_committee,
+
+		initiative.finished_in_parliament_at &&
+			initiative.finished_in_parliament_at.toJSON(),
+		initiative.sent_to_government_at &&
+			initiative.sent_to_government_at.toJSON(),
+		initiative.finished_in_government_at &&
+			initiative.finished_in_government_at.toJSON(),
+	])
 }
 
 function parseOrganization(obj) {
