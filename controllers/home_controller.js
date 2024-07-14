@@ -168,8 +168,8 @@ function readStatistics(destination, range) {
 		AND published_at IS NOT NULL
 
 		${range ? sql`
-			AND created_at >= ${range[0]}
-			AND created_at < ${range[1]}
+			AND published_at >= ${range[0]}
+			AND published_at < ${range[1]}
 		` : sql``}
 
 		${destination ? sql`AND (
