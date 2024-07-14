@@ -697,12 +697,12 @@ describe("InitiativesController", function() {
 			})
 		})
 
-		describe("given for", function() {
+		describe("given destination", function() {
 			it("must return no initiatives given invalid destination",
 				function*() {
 				createInitiativesForAllDestinations(this.author)
 
-				var res = yield this.request("/initiatives?for=foo")
+				var res = yield this.request("/initiatives?destination=foo")
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
@@ -713,7 +713,7 @@ describe("InitiativesController", function() {
 				function*() {
 				createInitiativesForAllDestinations(this.author)
 
-				var res = yield this.request("/initiatives?for=hasOwnProperty")
+				var res = yield this.request("/initiatives?destination=hasOwnProperty")
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
@@ -740,13 +740,155 @@ describe("InitiativesController", function() {
 					destination: "muhu-vald"
 				}))
 
-				var res = yield this.request("/initiatives?for=parliament")
+				var res = yield this.request("/initiatives?destination=parliament")
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
 				var els = dom.body.querySelectorAll("#initiatives .initiative")
 				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
 				ids.must.eql([initiative.id])
+			})
+
+			Object.keys(LOCAL_GOVERNMENTS).forEach(function(dest) {
+				it(`must filter initiatives destined for ${dest}`, function*() {
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+						destination: dest
+					}))
+
+					initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "edit",
+						destination: null,
+						published_at: new Date
+					}))
+
+					initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+						destination: "parliament"
+					}))
+
+					var res = yield this.request("/initiatives?destination=" + dest)
+					res.statusCode.must.equal(200)
+
+					var dom = parseHtml(res.body)
+					var els = dom.body.querySelectorAll("#initiatives .initiative")
+					var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
+					ids.must.eql([initiative.id])
+				})
+			})
+
+			it("must filter initiatives destined for multiple places", function*() {
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "parliament"
+				}))
+
+				var a = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "muhu-vald"
+				}))
+
+				var b = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "tallinn"
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "pärnu-linn"
+				}))
+
+				var res = yield this.request(
+					"/initiatives?for[]=muhu-vald&for[]=tallinn"
+				)
+
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+				var els = dom.body.querySelectorAll("#initiatives .initiative")
+				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
+				ids.sort().must.eql([a.id, b.id])
+			})
+
+			it("must filter initiatives destined local", function*() {
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "parliament"
+				}))
+
+				var a = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "muhu-vald"
+				}))
+
+				var b = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "tallinn"
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					destination: null,
+					published_at: new Date
+				}))
+
+				var res = yield this.request("/initiatives?destination=local")
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+				var els = dom.body.querySelectorAll("#initiatives .initiative")
+				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
+				ids.sort().must.eql([a.id, b.id])
+			})
+
+			it("must filter initiatives destined local and parliament",
+				function*() {
+				var a = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "parliament"
+				}))
+
+				var b = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "muhu-vald"
+				}))
+
+				var c = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "tallinn"
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					destination: null,
+					published_at: new Date
+				}))
+
+				var res = yield this.request(
+					"/initiatives?destination[]=local&destination[]=parliament"
+				)
+
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+				var els = dom.body.querySelectorAll("#initiatives .initiative")
+				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
+				ids.sort().must.eql([a.id, b.id, c.id])
 			})
 		})
 
@@ -2202,11 +2344,11 @@ describe("InitiativesController", function() {
 			})
 		})
 
-		describe("given for", function() {
+		describe("given destination", function() {
 			it("must return no initiatives given invalid destination", function*() {
 				createInitiativesForAllDestinations(this.author)
 
-				var res = yield this.request("/initiatives?for=foo", {
+				var res = yield this.request("/initiatives?destination=foo", {
 					headers: {Accept: INITIATIVE_TYPE}
 				})
 
@@ -2219,7 +2361,7 @@ describe("InitiativesController", function() {
 				function*() {
 				createInitiativesForAllDestinations(this.author)
 
-				var res = yield this.request("/initiatives?for=hasOwnProperty", {
+				var res = yield this.request("/initiatives?destination=hasOwnProperty", {
 					headers: {Accept: INITIATIVE_TYPE}
 				})
 
@@ -2248,7 +2390,7 @@ describe("InitiativesController", function() {
 					destination: "muhu-vald"
 				}))
 
-				var res = yield this.request("/initiatives?for=parliament", {
+				var res = yield this.request("/initiatives?destination=parliament", {
 					headers: {Accept: INITIATIVE_TYPE}
 				})
 
@@ -2281,7 +2423,7 @@ describe("InitiativesController", function() {
 						destination: "parliament"
 					}))
 
-					var res = yield this.request("/initiatives?for=" + dest, {
+					var res = yield this.request("/initiatives?destination=" + dest, {
 						headers: {Accept: INITIATIVE_TYPE}
 					})
 
@@ -2338,6 +2480,33 @@ describe("InitiativesController", function() {
 							LOCAL_GOVERNMENTS[b.destination].signatureThreshold
 					})
 				])
+			})
+		})
+
+		describe("given for", function() {
+			it("must be an alias for destination", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "parliament"
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "muhu-vald"
+				}))
+
+				var res = yield this.request("/initiatives?for=parliament", {
+					headers: {Accept: INITIATIVE_TYPE}
+				})
+
+				res.statusCode.must.equal(200)
+				res.headers["content-type"].must.equal(INITIATIVE_TYPE)
+
+				res.body.must.eql([_.assign(serializeApiInitiative(initiative), {
+					signatureThreshold: Config.votesRequired
+				})])
 			})
 		})
 

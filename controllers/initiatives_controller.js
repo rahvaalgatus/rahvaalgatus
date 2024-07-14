@@ -118,10 +118,14 @@ exports.router.get("/",
 
 		${filters.id ? sql`AND initiative.id IN ${sql.in(filters.id)}` : sql``}
 
-		${filters.destination
-			? sql`AND initiative.destination IN ${sql.in(filters.destination)}`
-			: sql``
-		}
+		${filters.destination ? (
+			filters.destination.includes("local") ? sql`
+				AND initiative.destination IS NOT NULL AND (
+					initiative.destination != 'parliament' OR
+					initiative.destination IN ${sql.in(filters.destination)}
+				)
+			` : sql`AND initiative.destination IN ${sql.in(filters.destination)}`
+		) : sql``}
 
 		${filters.phase ? sql`AND initiative.phase = ${filters.phase}` : sql``}
 		${filters.tag ? sql`AND tag.value = ${filters.tag}` : sql``}
@@ -1609,7 +1613,11 @@ function parseLimit(limit) {
 }
 
 function isValidDestination(dest) {
-	return dest == "parliament" || _.hasOwn(LOCAL_GOVERNMENTS, dest)
+	return (
+		dest == "parliament" ||
+		dest == "local" ||
+		_.hasOwn(LOCAL_GOVERNMENTS, dest)
+	)
 }
 
 function isOrganizationPresent(org) { return org.name || org.url }

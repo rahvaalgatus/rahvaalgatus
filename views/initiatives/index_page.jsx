@@ -334,6 +334,8 @@ function FiltersView({
 							{t("initiatives_page.filters.phases.all")}
 						</option>
 
+						<hr />
+
 						{PHASES.map((phase) => <option
 							value={phase}
 							selected={filters.phase == phase}
@@ -351,12 +353,19 @@ function FiltersView({
 							{t("initiatives_page.filters.destination.all_label")}
 						</option>
 
-						<optgroup label={t("initiatives_page.filters.destination.parliament_group_label")}>
+						<optgroup label={t("initiatives_page.filters.destination.national_group_label")}>
 							<option
 								value="parliament"
 								selected={(filters.destination || []).includes("parliament")}
 							>
 								{t("initiatives_page.filters.destination.parliament_label")}
+							</option>
+
+							<option
+								value="local"
+								selected={(filters.destination || []).includes("local")}
+							>
+								{t("initiatives_page.filters.destination.local_label")}
 							</option>
 						</optgroup>
 
@@ -586,8 +595,11 @@ function CurrentFiltersView({t, filters}) {
 			name={t("initiatives_page.caption.filters.destination_label")}
 		>
 			<ul>{filters.destination.map((destination) => <li>
-				<strong>{destination == "parliament"
+				<strong>{
+					destination == "parliament"
 					? t("initiatives_page.caption.filters.destination_parliament")
+					: destination == "local"
+					? t("initiatives_page.caption.filters.destination_local")
 					: LOCAL_GOVERNMENTS[destination].name
 				}</strong>
 			</li>)}</ul>
