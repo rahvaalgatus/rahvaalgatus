@@ -1,5 +1,6 @@
 var _ = require("root/lib/underscore")
 var Mime = require("mime")
+var Csv = require("root/lib/csv")
 var Zip = require("root/lib/zip")
 var Asic = require("undersign/lib/asic")
 var Path = require("path")
@@ -1161,7 +1162,7 @@ function readSignableId(signable) {
 }
 
 function serializeSignatureCsv(sig) {
-	return [sig.personal_id, sig.created_at.toISOString()].join(",") + "\n"
+	return Csv.serialize([sig.personal_id, sig.created_at.toISOString()]) + "\n"
 }
 
 function parseToken(token) {
