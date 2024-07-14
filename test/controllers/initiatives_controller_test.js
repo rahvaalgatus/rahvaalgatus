@@ -200,6 +200,19 @@ describe("InitiativesController", function() {
 				}, query))
 			})
 
+			it("must show set destination filter if all local governments",
+				function*() {
+				var res = yield this.request("/initiatives?" + Qs.stringify({
+					destination: "local"
+				}))
+
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+				var form = dom.querySelector("#filters form")
+				form.elements.destination.value.must.equal("local")
+			})
+
 			it("must show set destination filter if a local government", function*() {
 				var res = yield this.request("/initiatives?" + Qs.stringify({
 					destination: "tallinn"
