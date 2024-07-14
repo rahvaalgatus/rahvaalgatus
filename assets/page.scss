@@ -827,7 +827,7 @@ strong {
 		}
 
 		time,
-		.author,
+		.authors,
 		.destination {
 			font-size: 1.4rem;
 			font-family: $tisa-pro;
@@ -845,10 +845,12 @@ strong {
 			@include ellipsis;
 		}
 
-		.author {
+		.authors {
 			display: block;
 			@include ellipsis;
 			padding-bottom: 1rem; // For descenders like "j" and "g".
+
+			li { display: inline; }
 		}
 
 		h3 {
@@ -2544,6 +2546,11 @@ main {
 				color: $grey;
 			}
 
+      .authors {
+        display: inline;
+        li { display: inline; }
+      }
+
 			td.phase-column {
 				.phase {
 					display: inline-block;
@@ -2735,10 +2742,15 @@ main {
 		a.badge img { vertical-align: baseline; }
 
 		time,
-		.author,
+		.authors,
 		.destination {
 			font-size: 1.6rem;
 			color: #8a8a8a;
+		}
+
+		.authors {
+			display: inline;
+			li { display: inline; }
 		}
 
 		.destination {

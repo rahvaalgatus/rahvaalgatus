@@ -15,7 +15,6 @@ var {InitiativeBadgeView} = require("./initiative_page")
 var {getSignatureThreshold} = require("root/lib/initiative")
 var {javascript} = require("root/lib/jsx")
 var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
-var {renderAuthorName} = require("./initiative_page")
 var getWeight = _.property("weight")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var LOCAL_GOVERNMENTS_BY_COUNTY = LOCAL_GOVERNMENTS.BY_COUNTY
@@ -642,7 +641,7 @@ function InitiativeGroupView({title, initiatives, t}) {
 		</tr>
 
 		{initiatives.map(function(initiative) {
-			var authorName = renderAuthorName(initiative)
+			var authorNames = Initiative.authorNames(initiative)
 			var proceedingsStartedAt = getProceedingsStartedAt(initiative)
 			var proceedingsEndedAt = getProceedingsEndedAt(initiative)
 			var proceedingsHandler = getProceedingsHandler(initiative)
@@ -666,7 +665,12 @@ function InitiativeGroupView({title, initiatives, t}) {
 						<InitiativeBadgeView initiative={initiative} />
 					</h3>
 
-					<span class="author" title={authorName}>{authorName}</span>
+					<ul class="authors" title={authorNames.join(", ")}>
+						{/* Adding comma to <li> to permit selecting it. */}
+						{_.intersperse(authorNames.map((name, i, names) => <li>
+							{name}{i + 1 < names.length ? "," : ""}
+						</li>), " ")}
+					</ul>
 				</td>
 
 				<td class="phase-column" title="Faas">

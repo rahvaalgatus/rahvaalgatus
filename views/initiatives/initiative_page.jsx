@@ -1,5 +1,5 @@
 /** @jsx Jsx */
-var _ = require("lodash")
+var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Page = require("../page")
 var DateFns = require("date-fns")
@@ -12,13 +12,13 @@ var {getSignatureThreshold} = require("root/lib/initiative")
 exports = module.exports = InitiativePage
 exports.InitiativeBadgeView = InitiativeBadgeView
 exports.InitiativeProgressView = InitiativeProgressView
-exports.renderAuthorName = renderAuthorName
 
 function InitiativePage(attrs, children) {
 	var {req} = attrs
 	var {t} = req
 	var {initiative} = attrs
 	var {headerless} = attrs
+	var authorNames = Initiative.authorNames(initiative)
 
 	return <Page {...attrs} class={"initiative-page " + (attrs.class || "")}>
 		{!headerless ? <header id="initiative-header">
@@ -40,7 +40,12 @@ function InitiativePage(attrs, children) {
 					<InitiativeBadgeView initiative={initiative} />
 				</h1>
 
-				<span class="author">{renderAuthorName(initiative)}</span>
+				<ul class="authors">
+					{/* Adding comma to <li> to permit selecting it. */}
+					{_.intersperse(authorNames.map((name, i, names) => <li>
+						{name}{i + 1 < names.length ? "," : ""}
+					</li>), " ")}
+				</ul>
 				{", "}
 				<time datetime={initiative.created_at.toJSON()}>
 					{I18n.formatDate("numeric", initiative.created_at)}
@@ -137,16 +142,4 @@ function InitiativeProgressView(attrs) {
 				: t("N_SIGNATURES", {votes: sigs})
 			}</div>
 	}
-}
-
-function renderAuthorName(initiative) {
-	// While coauthors could also just be translators and uninvolved with the
-	// contents of the initiative, we'll presume they'll be removed from the
-	// initiative once it goes to signing (when it gets most of its attention) or
-	// they'll do their work outside of the site entirely.
-	return _.uniq(_.concat(
-		initiative.author_name,
-		initiative.user_name,
-		initiative.coauthors && _.map(initiative.coauthors, "user_name")
-	).filter(Boolean)).join(", ")
 }

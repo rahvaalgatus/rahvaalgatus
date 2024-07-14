@@ -13,7 +13,6 @@ var {DateView} = Page
 var {RelativeDateView} = Page
 var {InitiativeProgressView} = require("./initiatives/initiative_page")
 var {getSignatureThreshold} = require("root/lib/initiative")
-var {renderAuthorName} = require("./initiatives/initiative_page")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var LOCAL_GOVERNMENTS_BY_COUNTY = LOCAL_GOVERNMENTS.BY_COUNTY
 exports = module.exports = HomePage
@@ -434,7 +433,7 @@ function InitiativeBoxView(attrs) {
 	)
 
 	var badge = _.find(Config.badges, (_b, tag) => initiative.tags.includes(tag))
-	var authorName = renderAuthorName(initiative)
+	var authorNames = Initiative.authorNames(initiative)
 
 	return <li
 		data-id={initiative.id}
@@ -464,7 +463,13 @@ function InitiativeBoxView(attrs) {
 
 			<h3 lang="et" title={initiative.title}>{initiative.title}</h3>
 			{badge ? <img src={badge.icon} class="badge" title={badge.name} /> : null}
-			<span class="author" title={authorName}>{authorName}</span>
+
+			<ul class="authors" title={authorNames.join(", ")}>
+				{/* Adding comma to <li> to permit selecting it. */}
+				{_.intersperse(authorNames.map((name, i, names) => <li>
+					{name}{i + 1 < names.length ? "," : ""}
+				</li>), " ")}
+			</ul>
 
 			<InitiativeProgressView
 				t={t}

@@ -228,7 +228,7 @@ describe("InitiativesController", function() {
 			el.getAttribute("data-uuid").must.equal(initiative.uuid)
 			el.querySelector("h3").textContent.must.equal(initiative.title)
 
-			el.querySelector(".author").textContent.must.equal(
+			el.querySelector(".authors").textContent.must.equal(
 				"Freedom Organization, " + this.author.name
 			)
 		})
@@ -248,7 +248,7 @@ describe("InitiativesController", function() {
 
 			var dom = parseHtml(res.body)
 			var el = dom.body.querySelector("#initiatives .initiative")
-			el.querySelector(".author").textContent.must.equal(this.author.name)
+			el.querySelector(".authors").textContent.must.equal(this.author.name)
 		})
 
 		it(`must not show coauthor name from another initiative`, function*() {
@@ -273,7 +273,7 @@ describe("InitiativesController", function() {
 
 			var dom = parseHtml(res.body)
 			var el = dom.body.querySelector("#initiatives .initiative")
-			el.querySelector(".author").textContent.must.equal(this.author.name)
+			el.querySelector(".authors").textContent.must.equal(this.author.name)
 		})
 
 		it("must not show accepted coauthor names", function*() {
@@ -294,7 +294,7 @@ describe("InitiativesController", function() {
 
 			var dom = parseHtml(res.body)
 			var el = dom.body.querySelector("#initiatives .initiative")
-			el.querySelector(".author").textContent.must.equal(this.author.name)
+			el.querySelector(".authors").textContent.must.equal(this.author.name)
 		})
 
 		_.without(COAUTHOR_STATUSES, "accepted").forEach(function(status) {
@@ -316,7 +316,7 @@ describe("InitiativesController", function() {
 
 				var dom = parseHtml(res.body)
 				var el = dom.body.querySelector("#initiatives .initiative")
-				el.querySelector(".author").textContent.must.equal(this.author.name)
+				el.querySelector(".authors").textContent.must.equal(this.author.name)
 			})
 		})
 
@@ -3033,7 +3033,7 @@ describe("InitiativesController", function() {
 				var title = dom.querySelector("#initiative-header h1")
 				title.textContent.must.include(initiative.title)
 
-				dom.querySelector("#initiative-header .author").textContent.must.equal(
+				dom.querySelector("#initiative-header .authors").textContent.must.equal(
 					"Freedom Organization, " + this.author.name
 				)
 			})
@@ -3260,7 +3260,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
-				var author = dom.querySelector("#initiative-header .author")
+				var author = dom.querySelector("#initiative-header .authors")
 				author.textContent.must.equal(this.author.name)
 			})
 
@@ -3285,7 +3285,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
-				var author = dom.querySelector("#initiative-header .author")
+				var author = dom.querySelector("#initiative-header .authors")
 				author.textContent.must.equal(this.author.name)
 			})
 
@@ -3312,7 +3312,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
-				var author = dom.querySelector("#initiative-header .author")
+				var author = dom.querySelector("#initiative-header .authors")
 
 				author.textContent.must.equal(_.concat(
 					this.author.name,
@@ -3338,7 +3338,7 @@ describe("InitiativesController", function() {
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body)
-					var author = dom.querySelector("#initiative-header .author")
+					var author = dom.querySelector("#initiative-header .authors")
 					author.textContent.must.equal(this.author.name)
 				})
 			})
