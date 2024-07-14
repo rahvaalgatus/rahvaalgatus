@@ -196,11 +196,11 @@ describe("InitiativesController", function() {
 
 				Qs.parse(Url.parse(heading.href).query).must.eql(_.defaults({
 					order: "title",
-					destination: ["parliament"]
+					destination: "parliament"
 				}, query))
 			})
 
-			it("must show set destination filters if a local government", function*() {
+			it("must show set destination filter if a local government", function*() {
 				var res = yield this.request("/initiatives?" + Qs.stringify({
 					destination: "tallinn"
 				}))
