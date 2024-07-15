@@ -1,19 +1,25 @@
 /** @jsx Jsx */
+var _ = require("root/lib/underscore")
+var Qs = require("qs")
 var Jsx = require("j6pack")
 var Page = require("../page")
 var Config = require("root").config
+var DateFns = require("date-fns")
+var Initiative = require("root/lib/initiative")
 var {Section} = require("../page")
 var {Flash} = require("../page")
 var {InitiativeBoxesView} = require("../home_page")
 var {CallToActionsView} = require("../home_page")
-var {StatisticsView} = require("../home_page")
+var {StatisticView} = require("../home_page")
 var {groupInitiatives} = require("../home_page")
+var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
 
 module.exports = function(attrs) {
 	var {t} = attrs
 	var {req} = attrs
 	var stats = attrs.statistics
 	var initiativesByPhase = groupInitiatives(attrs.initiatives)
+	var thirtyDaysAgo = DateFns.addDays(DateFns.startOfDay(new Date), -30)
 
 	return <Page page="parliament-home" req={req}>
 		<Section id="welcome" class="primary-section">
@@ -38,39 +44,68 @@ module.exports = function(attrs) {
 		</Section>
 
 		<Section id="statistics" class="primary-section">
-			<StatisticsView
+			<StatisticView
 				id="discussions-statistic"
-				title={t("HOME_PAGE_STATISTICS_DISCUSSIONS")}
+				title={t("home_page.statistics.discussions_title")}
 				count={stats.all.discussionsCount}
-			>
-				{Jsx.html(t("HOME_PAGE_STATISTICS_N_IN_LAST_30_DAYS", {
-					count: stats[30].discussionsCount
-				}))}
-			</StatisticsView>
 
-			<StatisticsView
+				url={"/initiatives?" + Qs.stringify({
+					destination: "parliament",
+					external: false
+				})}
+			>
+				{Jsx.html(t("home_page.statistics.discussions_in_last_days", {
+					count: stats[30].discussionsCount,
+
+					url: _.escapeHtml("/initiatives?" + Qs.stringify({
+						external: false,
+						destination: "parliament",
+						"published-on>": formatIsoDate(thirtyDaysAgo)
+					}))
+				}))}
+			</StatisticView>
+
+			<StatisticView
 				id="initiatives-statistic"
-				title={t("HOME_PAGE_STATISTICS_INITIATIVES")}
+				title={t("home_page.statistics.initiatives_title")}
 				count={stats.all.initiativeCounts.all}
-			>
-				{Jsx.html(t("HOME_PAGE_STATISTICS_N_IN_LAST_30_DAYS", {
-					count: stats[30].initiativeCounts.all
-				}))}
-			</StatisticsView>
 
-			<StatisticsView
-				id="signatures-statistic"
-				title={t("HOME_PAGE_STATISTICS_SIGNATURES")}
-				count={stats.all.signatureCount}
+				url={"/initiatives?" + Qs.stringify({
+					external: false,
+					destination: "parliament",
+					phase: _.without(Initiative.PHASES, "edit")
+				}, {arrayFormat: "brackets"})}
 			>
-				{Jsx.html(t("HOME_PAGE_STATISTICS_N_IN_LAST_30_DAYS", {
+				{Jsx.html(t("home_page.statistics.parliament_initiatives_in_last_days", {
+					count: stats[30].initiativeCounts.all,
+
+					url: _.escapeHtml("/initiatives?" + Qs.stringify({
+						destination: "parliament",
+						"signing-started-on>": formatIsoDate(thirtyDaysAgo)
+					}))
+				}))}
+			</StatisticView>
+
+			<StatisticView
+				id="signatures-statistic"
+				title={t("home_page.statistics.signatures_title")}
+				count={stats.all.signatureCount}
+
+				url={"/initiatives?" + Qs.stringify({
+					external: false,
+					destination: "parliament",
+					order: "-signature-count"
+				})}
+			>
+				{Jsx.html(t("home_page.statistics.signatures_in_last_days", {
 					count: stats[30].signatureCount
 				}))}
-			</StatisticsView>
+			</StatisticView>
 
-			<StatisticsView
+			<StatisticView
 				id="parliament-statistic"
-				title={t("HOME_PAGE_STATISTICS_PARLIAMENT")}
+				title={t("home_page.statistics.parliament_title")}
+
 				count={
 					stats.all.governmentCounts.sent > 0 ||
 					stats.all.governmentCounts.external > 0 ? [
@@ -79,12 +114,29 @@ module.exports = function(attrs) {
 					].join("+")
 					: 0
 				}
+
+				url={"/initiatives?" + Qs.stringify({
+					destination: "parliament",
+					phase: _.without(Initiative.PHASES, "edit", "sign")
+				}, {arrayFormat: "brackets"})}
 			>
-				{Jsx.html(t("HOME_PAGE_STATISTICS_N_SENT_IN_LAST_30_DAYS", {
-					sent: stats[30].governmentCounts.sent,
-					external: stats.all.governmentCounts.external,
+				{Jsx.html(t("home_page.statistics.parliament_in_last_days", {
+					count: stats[30].governmentCounts.sent,
+
+					url: _.escapeHtml("/initiatives?" + Qs.stringify({
+						external: false,
+						destination: "parliament",
+						"proceedings-started-on>": formatIsoDate(thirtyDaysAgo)
+					})),
+
+					externalCount: stats.all.governmentCounts.external,
+
+					externalUrl: _.escapeHtml("/initiatives?" + Qs.stringify({
+						external: "true",
+						destination: "parliament"
+					}))
 				}))}
-			</StatisticsView>
+			</StatisticView>
 		</Section>
 
 		<Section id="initiatives" class="secondary-section initiatives-section">

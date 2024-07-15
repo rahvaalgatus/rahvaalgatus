@@ -127,7 +127,10 @@ exports.router.get("/",
 			` : sql`AND initiative.destination IN ${sql.in(filters.destination)}`
 		) : sql``}
 
-		${filters.phase ? sql`AND initiative.phase = ${filters.phase}` : sql``}
+		${filters.phase ?
+			sql`AND initiative.phase IN ${sql.in(filters.phase)}`
+		: sql``}
+
 		${filters.tag ? sql`AND tag.value = ${filters.tag}` : sql``}
 
 		${filters.publishedOn && filters.publishedOn.begin ? sql`
@@ -194,6 +197,11 @@ exports.router.get("/",
 			initiative.parliament_committee = ${filters.proceedingsHandler} OR
 			initiative.destination = ${filters.proceedingsHandler}
 		)` : sql``}
+
+		${filters.external == null ? sql`` : filters.external
+			? sql`AND initiative.external`
+			: sql`AND NOT initiative.external`
+		}
 
 		GROUP BY initiative.uuid
 
@@ -305,6 +313,7 @@ exports.router.get("/",
 			]) + "\n")
 
 			res.write(initiatives.map(serializeCsvInitiative).join("\n"))
+			//res.write("\n")
 			res.end()
 			break
 
@@ -1468,7 +1477,9 @@ function serializeApiInitiative(initiative) {
 		title: initiative.title,
 		phase: initiative.phase,
 		signingEndsAt: initiative.signing_ends_at,
-		signatureCount: initiative.external ? null : initiative.signature_count,
+
+		signatureCount:
+			initiative.external ? null : initiative.signature_count || 0,
 
 		signatureThreshold: initiative.destination
 			? Initiative.getSignatureThreshold(initiative)
@@ -1529,7 +1540,7 @@ function parseFilters(query) {
 		"proceedings-started-on": "range",
 		"proceedings-ended-on": "range",
 		"proceedings-handler": true,
-		phase: true,
+		phase: "array",
 
 		signingEndsAt: "range",
 		"signing-ends-at": "range",
@@ -1537,6 +1548,7 @@ function parseFilters(query) {
 		signedSince: true,
 		"signed-since": true,
 
+		external: true,
 		category: true,
 		tag: true
 	}, query), {
@@ -1547,7 +1559,7 @@ function parseFilters(query) {
 	}), _.camelCase)
 
 	if (filters.phase)
-		filters.phase = parsePhase(filters.phase)
+		filters.phase = filters.phase.filter(isValidPhase)
 	if (filters.destination)
 		filters.destination = filters.destination.filter(isValidDestination)
 	if (filters.publishedOn)
@@ -1556,19 +1568,18 @@ function parseFilters(query) {
 		filters.signingStartedOn = parseDateRange(filters.signingStartedOn)
 	if (filters.signingEndedOn)
 		filters.signingEndedOn = parseDateRange(filters.signingEndedOn)
+	if (filters.signingEndsAt)
+		filters.signingEndsAt = parseDateTimeRange(filters.signingEndsAt)
 	if (filters.signedSince)
 		filters.signedSince = Time.parse(filters.signedSince)
 	if (filters.proceedingsStartedOn)
 		filters.proceedingsStartedOn = parseDateRange(filters.proceedingsStartedOn)
 	if (filters.proceedingsEndedOn)
 		filters.proceedingsEndedOn = parseDateRange(filters.proceedingsEndedOn)
+	if (filters.external != null)
+		filters.external = _.parseBoolean(filters.external)
 
 	return filters
-}
-
-function parsePhase(phase) {
-	if (PHASES.includes(phase)) return phase
-	else throw new HttpError(400, "Invalid Phase")
 }
 
 function parseDateRange({begin, end, bounds}) {
@@ -1579,6 +1590,18 @@ function parseDateRange({begin, end, bounds}) {
 	return new Range(
 		bounds[0] == "(" && begin ? DateFns.addDays(begin, 1) : begin,
 		bounds[1] == "]" && end ? DateFns.addDays(end, 1) : end,
+		"[)"
+	)
+}
+
+function parseDateTimeRange({begin, end, bounds}) {
+	begin = begin && Time.parseIsoDateTime(begin)
+	end = end && Time.parseIsoDateTime(end)
+	if (begin == null && end == null) return null
+
+	return new Range(
+		bounds[0] == "(" && begin ? DateFns.addMilliseconds(begin, 1) : begin,
+		bounds[1] == "]" && end ? DateFns.addMilliseconds(end, 1) : end,
 		"[)"
 	)
 }
@@ -1622,3 +1645,4 @@ function isValidDestination(dest) {
 
 function isOrganizationPresent(org) { return org.name || org.url }
 function isMeetingPresent(org) { return org.date || org.url }
+function isValidPhase(phase) { return PHASES.includes(phase) }

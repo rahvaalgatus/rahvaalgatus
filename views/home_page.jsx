@@ -1,8 +1,10 @@
 /** @jsx Jsx */
 var _ = require("root/lib/underscore")
+var Qs = require("qs")
 var Jsx = require("j6pack")
 var Page = require("./page")
 var Config = require("root").config
+var DateFns = require("date-fns")
 var I18n = require("root/lib/i18n")
 var Initiative = require("root/lib/initiative")
 var {Section} = require("./page")
@@ -13,11 +15,12 @@ var {DateView} = Page
 var {RelativeDateView} = Page
 var {InitiativeProgressView} = require("./initiatives/initiative_page")
 var {getSignatureThreshold} = require("root/lib/initiative")
+var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var LOCAL_GOVERNMENTS_BY_COUNTY = LOCAL_GOVERNMENTS.BY_COUNTY
 exports = module.exports = HomePage
 exports.CallToActionsView = CallToActionsView
-exports.StatisticsView = StatisticsView
+exports.StatisticView = StatisticView
 exports.InitiativeBoxesView = InitiativeBoxesView
 exports.groupInitiatives = groupInitiatives
 
@@ -28,6 +31,7 @@ function HomePage(attrs) {
 	var {recentInitiatives} = attrs
 	var {news} = attrs
 	var initiativesByPhase = groupInitiatives(attrs.initiatives)
+	var thirtyDaysAgo = DateFns.addDays(DateFns.startOfDay(new Date), -30)
 
 	return <Page
 		page="home"
@@ -59,41 +63,74 @@ function HomePage(attrs) {
 		</Section>
 
 		<Section id="statistics" class="primary-section">
-			<StatisticsView
+			<StatisticView
 				id="discussions-statistic"
-				title={t("HOME_PAGE_STATISTICS_DISCUSSIONS")}
+				title={t("home_page.statistics.discussions_title")}
 				count={stats.all.discussionsCount}
+				url={"/initiatives?" + Qs.stringify({external: false})}
 			>
-				{Jsx.html(t("HOME_PAGE_STATISTICS_N_IN_LAST_30_DAYS", {
-					count: stats[30].discussionsCount
-				}))}
-			</StatisticsView>
+				{Jsx.html(t("home_page.statistics.discussions_in_last_days", {
+					count: stats[30].discussionsCount,
 
-			<StatisticsView
+					url: _.escapeHtml("/initiatives?" + Qs.stringify({
+						external: false,
+						"published-on>": formatIsoDate(thirtyDaysAgo)
+					}))
+				}))}
+			</StatisticView>
+
+			<StatisticView
 				id="initiatives-statistic"
-				title={t("HOME_PAGE_STATISTICS_INITIATIVES")}
+				title={t("home_page.statistics.initiatives_title")}
 				count={stats.all.initiativeCounts.all}
-			>
-				{Jsx.html(t("HOME_PAGE_STATISTICS_N_INITIATIVES_IN_LAST_30_DAYS", {
-					count: stats[30].initiativeCounts.all,
-					parliamentCount: stats[30].initiativeCounts.parliament,
-					localCount: stats[30].initiativeCounts.local
-				}))}
-			</StatisticsView>
 
-			<StatisticsView
-				id="signatures-statistic"
-				title={t("HOME_PAGE_STATISTICS_SIGNATURES")}
-				count={stats.all.signatureCount}
+				url={"/initiatives?" + Qs.stringify({
+					external: false,
+					phase: _.without(Initiative.PHASES, "edit")
+				}, {arrayFormat: "brackets"})}
 			>
-				{Jsx.html(t("HOME_PAGE_STATISTICS_N_IN_LAST_30_DAYS", {
+				{Jsx.html(t("home_page.statistics.initiatives_in_last_days", {
+					count: stats[30].initiativeCounts.all,
+
+					url: _.escapeHtml("/initiatives?" + Qs.stringify({
+						"signing-started-on>": formatIsoDate(thirtyDaysAgo)
+					})),
+
+					parliamentCount: stats[30].initiativeCounts.parliament,
+
+					parliamentUrl: _.escapeHtml("/initiatives?" + Qs.stringify({
+						destination: "parliament",
+						"signing-started-on>": formatIsoDate(thirtyDaysAgo)
+					})),
+
+					localCount: stats[30].initiativeCounts.local,
+
+					localUrl: _.escapeHtml("/initiatives?" + Qs.stringify({
+						destination: "local",
+						"signing-started-on>": formatIsoDate(thirtyDaysAgo)
+					}))
+				}))}
+			</StatisticView>
+
+			<StatisticView
+				id="signatures-statistic"
+				title={t("home_page.statistics.signatures_title")}
+				count={stats.all.signatureCount}
+
+				url={"/initiatives?" + Qs.stringify({
+					external: false,
+					order: "-signature-count"
+				})}
+			>
+				{Jsx.html(t("home_page.statistics.signatures_in_last_days", {
 					count: stats[30].signatureCount
 				}))}
-			</StatisticsView>
+			</StatisticView>
 
-			<StatisticsView
+			<StatisticView
 				id="parliament-statistic"
-				title={t("HOME_PAGE_STATISTICS_GOVERNMENT")}
+				title={t("home_page.statistics.government_title")}
+
 				count={
 					stats.all.governmentCounts.sent > 0 ||
 					stats.all.governmentCounts.external > 0 ? [
@@ -102,14 +139,42 @@ function HomePage(attrs) {
 					].join("+")
 					: 0
 				}
+
+				url={"/initiatives?" + Qs.stringify({
+					phase: _.without(Initiative.PHASES, "edit", "sign")
+				}, {arrayFormat: "brackets"})}
 			>
-				{Jsx.html(t("HOME_PAGE_STATISTICS_N_SENT_ALL_IN_LAST_30_DAYS", {
-					sent: stats[30].governmentCounts.sent,
-					sentToParliament: stats[30].governmentCounts.sent_parliament,
-					sentToLocal: stats[30].governmentCounts.sent_local,
-					external: stats.all.governmentCounts.external
+				{Jsx.html(t("home_page.statistics.government_in_last_days", {
+					count: stats[30].governmentCounts.sent,
+
+					url: _.escapeHtml("/initiatives?" + Qs.stringify({
+						external: false,
+						"proceedings-started-on>": formatIsoDate(thirtyDaysAgo)
+					})),
+
+					parliamentCount: stats[30].governmentCounts.sent_parliament,
+
+					parliamentUrl: _.escapeHtml("/initiatives?" + Qs.stringify({
+						external: false,
+						destination: "parliament",
+						"proceedings-started-on>": formatIsoDate(thirtyDaysAgo)
+					})),
+
+					localCount: stats[30].governmentCounts.sent_local,
+
+					localUrl: _.escapeHtml("/initiatives?" + Qs.stringify({
+						external: false,
+						destination: "local",
+						"proceedings-started-on>": formatIsoDate(thirtyDaysAgo)
+					})),
+
+					externalCount: stats.all.governmentCounts.external,
+
+					externalUrl: _.escapeHtml("/initiatives?" + Qs.stringify({
+						external: "true"
+					}))
 				}))}
-			</StatisticsView>
+			</StatisticView>
 		</Section>
 
 		{recentInitiatives.length > 0 ? <Section
@@ -291,13 +356,14 @@ function CallToActionsView(attrs) {
 	</div>
 }
 
-function StatisticsView(attrs, children) {
-	var {title} = attrs
-	var {count} = attrs
-
-	return <div id={attrs.id} class="statistic">
+function StatisticView({id, url, title, count}, children) {
+	var els = <>
 		<h2>{title}</h2>
 		<span class="count">{count}</span>
+	</>
+
+	return <div id={id} class="statistic">
+		{url ? <a href={url}>{els}</a> : els}
 		<p>{children}</p>
 	</div>
 }

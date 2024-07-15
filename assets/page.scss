@@ -327,7 +327,6 @@ strong {
 .link-button {
 	@extend .inherited-button;
 
-	cursor: pointer;
 	color: $link-color;
 	-moz-outline-radius: 2px;
 
@@ -1245,12 +1244,20 @@ main {
 			text-align: center;
 			margin-bottom: 4rem;
 			position: relative;
+			color: $title-text;
+
+			& > a {
+				display: block;
+				@extend .inherited-button;
+				border-radius: 0.5rem;
+				&:hover { color: $link-color; }
+				&:focus { outline: 1px dashed $link-color; }
+			}
 
 			h2 {
 				font-size: 2rem;
 				font-weight: 900;
 				text-transform: uppercase;
-				color: $title-text;
 				margin-bottom: 0.5rem;
 			}
 
@@ -1273,7 +1280,6 @@ main {
 				font-size: 5rem;
 				line-height: 5rem;
 				font-weight: 700;
-				color: $title-text;
 			}
 
 			p {
@@ -1282,11 +1288,10 @@ main {
 				font-size: 1.5rem;
 				line-height: 1.3;
 				white-space: pre-wrap;
+				color: $text;
 
-				b {
-					font-weight: 500;
-					color: $title-text;
-				}
+				a { @extend .link-button; }
+				b { font-weight: 500; color: $title-text; }
 			}
 
 			&:before {

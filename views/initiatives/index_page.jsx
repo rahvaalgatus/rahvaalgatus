@@ -295,7 +295,8 @@ function InitiativesPage({
 					<td colspan={colSpan}>
 						{initiatives.length > 0 ? <a
 							href={initiativesPath + ".csv" + Qs.stringify(query, {
-								addQueryPrefix: true
+								addQueryPrefix: true,
+								arrayFormat: "brackets"
 							})}
 
 							class="link-button"
@@ -588,7 +589,9 @@ function CurrentFiltersView({t, filters}) {
 		filters.phase && <Filter
 			name={t("initiatives_page.caption.filters.phase_label")}
 		>
-			<strong>{t("initiatives_page.phases." + filters.phase)}</strong>
+			<ul>{filters.phase.map((phase) => <li>
+				<strong>{t("initiatives_page.phases." + phase)}</strong>
+			</li>)}</ul>
 		</Filter>,
 
 		filters.destination && <Filter
@@ -636,7 +639,16 @@ function CurrentFiltersView({t, filters}) {
 				? LOCAL_GOVERNMENTS[filters.proceedingsHandler].name
 				: filters.proceedingsHandler
 			}</strong>
-		</Filter>
+		</Filter>,
+
+		filters.external != null ? <Filter
+			name={t("initiatives_page.caption.filters.external_label")}
+		>
+			<strong>{filters.external
+				? t("initiatives_page.caption.filters.external")
+				: t("initiatives_page.caption.filters.nonexternal")
+			}</strong>
+		</Filter> : null
 	])
 
 	if (facets.length == 0) return null

@@ -65,6 +65,7 @@ var PNG_PREVIEW = Buffer.from("89504e470d0a1a0a4269", "hex")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var {SUMMARY_MAX_LENGTH} =
 	require("root/controllers/initiatives/texts_controller")
+var HTML_TYPE = "text/html; charset=utf-8"
 var TRIX_TYPE = new MediaType("application/vnd.basecamp.trix+json")
 var TRIX_SECTIONS_TYPE =
 	new MediaType("application/vnd.rahvaalgatus.trix-sections+json")
@@ -75,6 +76,12 @@ var INITIATIVES_URL = `${Config.url}/initiatives`
 var INITIATIVE_RATE = 10
 var COAUTHOR_STATUSES =
 	require("root/controllers/initiatives/coauthors_controller").STATUSES
+
+var serializeApiInitiative = _.compose(
+  JSON.parse,
+  JSON.stringify,
+	require("root/controllers/initiatives_controller").serializeApiInitiative
+)
 
 var PARLIAMENT_MEETING_DECISION_TEXTS = {
 	"continue": t("PARLIAMENT_MEETING_DECISION_CONTINUE"),
@@ -620,7 +627,7 @@ describe("InitiativesController", function() {
 					function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
-						phase: phase,
+						phase,
 						destination: dest,
 						published_at: new Date
 					}))
@@ -663,882 +670,18 @@ describe("InitiativesController", function() {
 			ids.must.eql([initiative.id])
 		})
 
-		describe("given id", function() {
-			it("must filter initiatives by id", function*() {
-				var initiative = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					published_at: new Date
-				}))
-
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					published_at: new Date
-				}))
-
-				var res = yield this.request(`/initiatives?id=${initiative.id}`)
-				res.statusCode.must.equal(200)
-
-				var dom = parseHtml(res.body)
-				var els = dom.body.querySelectorAll("#initiatives .initiative")
-				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
-				ids.must.eql([initiative.id])
-			})
-
-			it("must filter initiatives by ids", function*() {
-				var a = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					published_at: new Date
-				}))
-
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					published_at: new Date
-				}))
-
-				var b = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					published_at: new Date
-				}))
-
-				var res = yield this.request(`/initiatives?id[]=${a.id}&id[]=${b.id}`)
-				res.statusCode.must.equal(200)
-
-				var dom = parseHtml(res.body)
-				var els = dom.body.querySelectorAll("#initiatives .initiative")
-				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
-				ids.sort().must.eql([a.id, b.id])
-			})
-		})
-
-		describe("given destination", function() {
-			it("must return no initiatives given invalid destination",
-				function*() {
-				createInitiativesForAllDestinations(this.author)
-
-				var res = yield this.request("/initiatives?destination=foo")
-				res.statusCode.must.equal(200)
-
-				var dom = parseHtml(res.body)
-				dom.body.querySelectorAll("#initiatives .initiative").length.must.be(0)
-			})
-
-			it("must return no initiatives given Object.prototype destination",
-				function*() {
-				createInitiativesForAllDestinations(this.author)
-
-				var res = yield this.request("/initiatives?destination=hasOwnProperty")
-				res.statusCode.must.equal(200)
-
-				var dom = parseHtml(res.body)
-				dom.body.querySelectorAll("#initiatives .initiative").length.must.be(0)
-			})
-
-			it("must filter initiatives destined for parliament", function*() {
-				var initiative = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "parliament"
-				}))
-
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "edit",
-					destination: null,
-					published_at: new Date
-				}))
-
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "muhu-vald"
-				}))
-
-				var res = yield this.request("/initiatives?destination=parliament")
-				res.statusCode.must.equal(200)
-
-				var dom = parseHtml(res.body)
-				var els = dom.body.querySelectorAll("#initiatives .initiative")
-				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
-				ids.must.eql([initiative.id])
-			})
-
-			Object.keys(LOCAL_GOVERNMENTS).forEach(function(dest) {
-				it(`must filter initiatives destined for ${dest}`, function*() {
-					var initiative = initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						phase: "sign",
-						destination: dest
-					}))
-
-					initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						phase: "edit",
-						destination: null,
-						published_at: new Date
-					}))
-
-					initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						phase: "sign",
-						destination: "parliament"
-					}))
-
-					var res = yield this.request("/initiatives?destination=" + dest)
-					res.statusCode.must.equal(200)
-
-					var dom = parseHtml(res.body)
-					var els = dom.body.querySelectorAll("#initiatives .initiative")
-					var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
-					ids.must.eql([initiative.id])
-				})
-			})
-
-			it("must filter initiatives destined for multiple places", function*() {
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "parliament"
-				}))
-
-				var a = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "muhu-vald"
-				}))
-
-				var b = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "tallinn"
-				}))
-
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "pärnu-linn"
-				}))
-
-				var res = yield this.request(
-					"/initiatives?for[]=muhu-vald&for[]=tallinn"
-				)
-
-				res.statusCode.must.equal(200)
-
-				var dom = parseHtml(res.body)
-				var els = dom.body.querySelectorAll("#initiatives .initiative")
-				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
-				ids.sort().must.eql([a.id, b.id])
-			})
-
-			it("must filter initiatives destined local", function*() {
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "parliament"
-				}))
-
-				var a = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "muhu-vald"
-				}))
-
-				var b = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "tallinn"
-				}))
-
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "edit",
-					destination: null,
-					published_at: new Date
-				}))
-
-				var res = yield this.request("/initiatives?destination=local")
-				res.statusCode.must.equal(200)
-
-				var dom = parseHtml(res.body)
-				var els = dom.body.querySelectorAll("#initiatives .initiative")
-				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
-				ids.sort().must.eql([a.id, b.id])
-			})
-
-			it("must filter initiatives destined local and parliament",
-				function*() {
-				var a = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "parliament"
-				}))
-
-				var b = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "muhu-vald"
-				}))
-
-				var c = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "tallinn"
-				}))
-
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "edit",
-					destination: null,
-					published_at: new Date
-				}))
-
-				var res = yield this.request(
-					"/initiatives?destination[]=local&destination[]=parliament"
-				)
-
-				res.statusCode.must.equal(200)
-
-				var dom = parseHtml(res.body)
-				var els = dom.body.querySelectorAll("#initiatives .initiative")
-				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
-				ids.sort().must.eql([a.id, b.id, c.id])
-			})
-		})
-
-		describe("given phase", function() {
-			it("must respond with 400 given invalid phase", function*() {
-				var res = yield this.request("/initiatives?phase=foo")
-				res.statusCode.must.equal(400)
-				res.statusMessage.must.equal("Invalid Phase")
-			})
-
-			PHASES.forEach(function(phase, i) {
-				it(`must respond with ${phase} initiatives if requested`, function*() {
-					var initiative = initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						destination: "parliament",
-						published_at: new Date,
-						phase: phase
-					}))
-
-					initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						published_at: new Date,
-						phase: PHASES[(i + 1) % PHASES.length]
-					}))
-
-					var res = yield this.request("/initiatives?phase=" + phase)
-					res.statusCode.must.equal(200)
-
-					var dom = parseHtml(res.body)
-					var els = dom.body.querySelectorAll("#initiatives .initiative")
-					var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
-					ids.must.eql([initiative.id])
-				})
-			})
-		})
-
-		describe("given published-on", function() {
-			it("must include initiatives published on and after date", function*() {
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-
-					published_at: DateFns.addSeconds(
-						DateFns.addDays(DateFns.startOfDay(new Date), -1),
-						-1
-					)
-				}))
-
-				var initiatives = initiativesDb.create([
-					new ValidInitiative({
-						user_id: this.author.id,
-						published_at: DateFns.addDays(DateFns.startOfDay(new Date), -1)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						published_at: DateFns.startOfDay(new Date)
-					})
-				])
-
-				var res = yield this.request("/initiatives?" + Qs.stringify({
-					order: "id",
-					"published-on>": formatIsoDate(DateFns.addDays(new Date, -1))
-				}))
-
-				res.statusCode.must.equal(200)
-
-				var dom = parseHtml(res.body)
-				var els = dom.body.querySelectorAll("#initiatives .initiative")
-				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
-				ids.must.eql(_.map(initiatives, "id"))
-			})
-
-			it("must include initiatives published between given dates", function*() {
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-
-					published_at: DateFns.addSeconds(
-						DateFns.addDays(DateFns.startOfDay(new Date), -2),
-						-1
-					)
-				}))
-
-				var initiatives = initiativesDb.create([
-					new ValidInitiative({
-						user_id: this.author.id,
-						published_at: DateFns.addDays(DateFns.startOfDay(new Date), -2)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						published_at: DateFns.addSeconds(DateFns.startOfDay(new Date), -1)
-					})
-				])
-
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					published_at: DateFns.startOfDay(new Date)
-				}))
-
-				var res = yield this.request("/initiatives?" + Qs.stringify({
-					order: "id",
-					"published-on>": formatIsoDate(DateFns.addDays(new Date, -2)),
-					"published-on<": formatIsoDate(DateFns.addDays(new Date, -1))
-				}))
-
-				res.statusCode.must.equal(200)
-
-				var dom = parseHtml(res.body)
-				var els = dom.body.querySelectorAll("#initiatives .initiative")
-				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
-				ids.must.eql(_.map(initiatives, "id"))
-			})
-
-			it("must include initiatives published on and before date", function*() {
-				var initiatives = initiativesDb.create([
-					new ValidInitiative({
-						user_id: this.author.id,
-						published_at: DateFns.addDays(DateFns.startOfDay(new Date), -2)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						published_at: DateFns.addSeconds(DateFns.startOfDay(new Date), -1)
-					})
-				])
-
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					published_at: DateFns.startOfDay(new Date)
-				}))
-
-				var res = yield this.request("/initiatives?" + Qs.stringify({
-					order: "id",
-					"published-on<": formatIsoDate(DateFns.addDays(new Date, -1))
-				}))
-
-				res.statusCode.must.equal(200)
-
-				var dom = parseHtml(res.body)
-				var els = dom.body.querySelectorAll("#initiatives .initiative")
-				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
-				ids.must.eql(_.map(initiatives, "id"))
-			})
-		})
-
-		describe("given signing-started-on", function() {
-			it("must include initiatives where signing started on and after date", function*() {
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-
-					signing_started_at: DateFns.addSeconds(
-						DateFns.addDays(DateFns.startOfDay(new Date), -1),
-						-1
-					)
-				}))
-
-				var initiatives = initiativesDb.create([
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "sign",
-
-						signing_started_at:
-							DateFns.addDays(DateFns.startOfDay(new Date), -1)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "sign",
-						signing_started_at: DateFns.startOfDay(new Date)
-					})
-				])
-
-				var res = yield this.request("/initiatives?" + Qs.stringify({
-					order: "id",
-					"signing-started-on>": formatIsoDate(DateFns.addDays(new Date, -1))
-				}))
-
-				res.statusCode.must.equal(200)
-
-				var dom = parseHtml(res.body)
-				var els = dom.body.querySelectorAll("#initiatives .initiative")
-				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
-				ids.must.eql(_.map(initiatives, "id"))
-			})
-
-			it("must include initiatives where signing started on and before date", function*() {
-				var initiatives = initiativesDb.create([
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "sign",
-
-						signing_started_at:
-							DateFns.addDays(DateFns.startOfDay(new Date), -2)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "sign",
-
-						signing_started_at:
-							DateFns.addSeconds(DateFns.startOfDay(new Date), -1)
-					})
-				])
-
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					signing_started_at: DateFns.startOfDay(new Date)
-				}))
-
-				var res = yield this.request("/initiatives?" + Qs.stringify({
-					order: "id",
-					"signing-started-on<": formatIsoDate(DateFns.addDays(new Date, -1))
-				}))
-
-				res.statusCode.must.equal(200)
-
-				var dom = parseHtml(res.body)
-				var els = dom.body.querySelectorAll("#initiatives .initiative")
-				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
-				ids.must.eql(_.map(initiatives, "id"))
-			})
-		})
-
-		describe("given signing-ended-on", function() {
-			it("must include initiatives where signing ended on and after date", function*() {
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-
-					signing_ends_at: DateFns.addSeconds(
-						DateFns.addDays(DateFns.startOfDay(new Date), -1),
-						-1
-					)
-				}))
-
-				var initiatives = initiativesDb.create([
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "sign",
-
-						signing_ends_at:
-							DateFns.addDays(DateFns.startOfDay(new Date), -1)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "sign",
-						signing_ends_at: DateFns.startOfDay(new Date)
-					})
-				])
-
-				var res = yield this.request("/initiatives?" + Qs.stringify({
-					order: "id",
-					"signing-ended-on>": formatIsoDate(DateFns.addDays(new Date, -1))
-				}))
-
-				res.statusCode.must.equal(200)
-
-				var dom = parseHtml(res.body)
-				var els = dom.body.querySelectorAll("#initiatives .initiative")
-				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
-				ids.must.eql(_.map(initiatives, "id"))
-			})
-
-			it("must include initiatives where signing ended on and before date", function*() {
-				var initiatives = initiativesDb.create([
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "sign",
-
-						signing_ends_at:
-							DateFns.addDays(DateFns.startOfDay(new Date), -2)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "sign",
-
-						signing_ends_at:
-							DateFns.addSeconds(DateFns.startOfDay(new Date), -1)
-					})
-				])
-
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					signing_ends_at: DateFns.startOfDay(new Date)
-				}))
-
-				var res = yield this.request("/initiatives?" + Qs.stringify({
-					order: "id",
-					"signing-ended-on<": formatIsoDate(DateFns.addDays(new Date, -1))
-				}))
-
-				res.statusCode.must.equal(200)
-
-				var dom = parseHtml(res.body)
-				var els = dom.body.querySelectorAll("#initiatives .initiative")
-				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
-				ids.must.eql(_.map(initiatives, "id"))
-			})
-		})
-
-		describe("given proceedings-started-on", function() {
-			it("must include initiatives where proceedings started on and after date", function*() {
-				initiativesDb.create([
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "parliament",
-
-						accepted_by_parliament_at: DateFns.addSeconds(
-							DateFns.addDays(DateFns.startOfDay(new Date), -1),
-							-1
-						)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "government",
-						destination: "tallinn",
-
-						accepted_by_government_at: DateFns.addSeconds(
-							DateFns.addDays(DateFns.startOfDay(new Date), -1),
-							-1
-						)
-					})
-				])
-
-				var initiatives = initiativesDb.create([
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "parliament",
-
-						accepted_by_parliament_at:
-							DateFns.addDays(DateFns.startOfDay(new Date), -1)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "parliament",
-						accepted_by_parliament_at: DateFns.startOfDay(new Date)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "government",
-						destination: "tallinn",
-
-						accepted_by_government_at:
-							DateFns.addDays(DateFns.startOfDay(new Date), -1)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "government",
-						destination: "tallinn",
-						accepted_by_government_at: DateFns.startOfDay(new Date)
-					})
-				])
-
-				var res = yield this.request("/initiatives?" + Qs.stringify({
-					order: "id",
-
-					"proceedings-started-on>":
-						formatIsoDate(DateFns.addDays(new Date, -1))
-				}))
-
-				res.statusCode.must.equal(200)
-
-				var dom = parseHtml(res.body)
-				var els = dom.body.querySelectorAll("#initiatives .initiative")
-				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
-				ids.must.eql(_.map(initiatives, "id"))
-			})
-
-			it("must include initiatives where proceedings started on and before date", function*() {
-				var initiatives = initiativesDb.create([
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "parliament",
-
-						accepted_by_parliament_at:
-							DateFns.addDays(DateFns.startOfDay(new Date), -2)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "parliament",
-
-						accepted_by_parliament_at:
-							DateFns.addSeconds(DateFns.startOfDay(new Date), -1)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "government",
-						destination: "tallinn",
-
-						accepted_by_government_at:
-							DateFns.addDays(DateFns.startOfDay(new Date), -2)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "government",
-						destination: "tallinn",
-
-						accepted_by_government_at:
-							DateFns.addSeconds(DateFns.startOfDay(new Date), -1)
-					})
-				])
-
-				initiativesDb.create([
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "parliament",
-						accepted_by_parliament_at: DateFns.startOfDay(new Date)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "government",
-						destination: "tallinn",
-						accepted_by_government_at: DateFns.startOfDay(new Date)
-					})
-				])
-
-				var res = yield this.request("/initiatives?" + Qs.stringify({
-					order: "id",
-
-					"proceedings-started-on<":
-						formatIsoDate(DateFns.addDays(new Date, -1))
-				}))
-
-				res.statusCode.must.equal(200)
-
-				var dom = parseHtml(res.body)
-				var els = dom.body.querySelectorAll("#initiatives .initiative")
-				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
-				ids.must.eql(_.map(initiatives, "id"))
-			})
-		})
-
-		describe("given proceedings-ended-on", function() {
-			it("must include initiatives where proceedings ended on and after date", function*() {
-				initiativesDb.create([
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "parliament",
-
-						finished_in_parliament_at: DateFns.addSeconds(
-							DateFns.addDays(DateFns.startOfDay(new Date), -1),
-							-1
-						)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "government",
-						destination: "tallinn",
-
-						finished_in_government_at: DateFns.addSeconds(
-							DateFns.addDays(DateFns.startOfDay(new Date), -1),
-							-1
-						)
-					})
-				])
-
-				var initiatives = initiativesDb.create([
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "parliament",
-
-						finished_in_parliament_at:
-							DateFns.addDays(DateFns.startOfDay(new Date), -1)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "parliament",
-						finished_in_parliament_at: DateFns.startOfDay(new Date)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "government",
-						destination: "tallinn",
-
-						finished_in_government_at:
-							DateFns.addDays(DateFns.startOfDay(new Date), -1)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "government",
-						destination: "tallinn",
-						finished_in_government_at: DateFns.startOfDay(new Date)
-					})
-				])
-
-				var res = yield this.request("/initiatives?" + Qs.stringify({
-					order: "id",
-
-					"proceedings-ended-on>":
-						formatIsoDate(DateFns.addDays(new Date, -1))
-				}))
-
-				res.statusCode.must.equal(200)
-
-				var dom = parseHtml(res.body)
-				var els = dom.body.querySelectorAll("#initiatives .initiative")
-				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
-				ids.must.eql(_.map(initiatives, "id"))
-			})
-
-			it("must include initiatives where proceedings ended on and before date", function*() {
-				var initiatives = initiativesDb.create([
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "parliament",
-
-						finished_in_parliament_at:
-							DateFns.addDays(DateFns.startOfDay(new Date), -2)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "parliament",
-
-						finished_in_parliament_at:
-							DateFns.addSeconds(DateFns.startOfDay(new Date), -1)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "government",
-						destination: "tallinn",
-
-						finished_in_government_at:
-							DateFns.addDays(DateFns.startOfDay(new Date), -2)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "government",
-						destination: "tallinn",
-
-						finished_in_government_at:
-							DateFns.addSeconds(DateFns.startOfDay(new Date), -1)
-					})
-				])
-
-				initiativesDb.create([
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "parliament",
-						finished_in_parliament_at: DateFns.startOfDay(new Date)
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						phase: "government",
-						destination: "tallinn",
-						finished_in_government_at: DateFns.startOfDay(new Date)
-					})
-				])
-
-				var res = yield this.request("/initiatives?" + Qs.stringify({
-					order: "id",
-
-					"proceedings-ended-on<":
-						formatIsoDate(DateFns.addDays(new Date, -1))
-				}))
-
-				res.statusCode.must.equal(200)
-
-				var dom = parseHtml(res.body)
-				var els = dom.body.querySelectorAll("#initiatives .initiative")
-				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
-				ids.must.eql(_.map(initiatives, "id"))
-			})
-		})
-
-		describe("given proceedings-handler", function() {
-			it("must filter initiatives in parliament committees", function*() {
-				var initiative = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "parliament",
-					parliament_committee: "Sotsiaalkomisjon"
-				}))
-
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "parliament",
-					parliament_committee: "Keskkonnakomisjon"
-				}))
-
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "parliament"
-				}))
-
-				var res = yield this.request(
-					"/initiatives?proceedings-handler=Sotsiaalkomisjon"
-				)
-
-				res.statusCode.must.equal(200)
-
-				var dom = parseHtml(res.body)
-				var els = dom.body.querySelectorAll("#initiatives .initiative")
-				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
-				ids.must.eql([initiative.id])
-			})
-
-			it("must filter initiatives destined for local government", function*() {
-				var initiative = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "government",
-					destination: "tallinn",
-				}))
-
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "government",
-					destination: "muhu-vald"
-				}))
-
-				var res = yield this.request("/initiatives?proceedings-handler=tallinn")
-				res.statusCode.must.equal(200)
-
-				var dom = parseHtml(res.body)
-				var els = dom.body.querySelectorAll("#initiatives .initiative")
-				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
-				ids.must.eql([initiative.id])
-			})
+		testFilters(function* request(query, expected) {
+			var res = yield this.request(
+				"/initiatives?" + Qs.stringify(_.defaults({order: "id"}, query))
+			)
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(HTML_TYPE)
+
+			var dom = parseHtml(res.body)
+			var els = dom.body.querySelectorAll("#initiatives .initiative")
+			var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
+			ids.must.eql(expected.map((initiative) => initiative.id))
 		})
 
 		describe("given order", function() {
@@ -2119,8 +1262,907 @@ describe("InitiativesController", function() {
 		})
 	})
 
+	function testFilters(request) { describe("as filterable", function() {
+		describe("given id", function() {
+			it("must filter initiatives by id", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					published_at: new Date
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					published_at: new Date
+				}))
+
+				yield request.call(this, {id: initiative.id}, [initiative])
+			})
+
+			it("must filter initiatives by ids", function*() {
+				var a = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					published_at: new Date
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					published_at: new Date
+				}))
+
+				var b = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					published_at: new Date
+				}))
+
+				yield request.call(this, {id: [a.id, b.id]}, [a, b])
+			})
+		})
+
+		describe("given phase", function() {
+			it("must respond with no initiatives given invalid phase", function*() {
+				initiativesDb.create(PHASES.map((phase) => new ValidInitiative({
+					user_id: this.author.id,
+					destination: "parliament",
+					published_at: new Date,
+					phase
+				})))
+
+				yield request.call(this, {phase: "foo"}, [])
+			})
+
+			PHASES.forEach(function(phase, i) {
+				it(`must respond with ${phase} initiatives if requested`, function*() {
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						destination: "parliament",
+						published_at: new Date,
+						phase
+					}))
+
+					initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						published_at: new Date,
+						phase: PHASES[(i + 1) % PHASES.length]
+					}))
+
+					yield request.call(this, {phase}, [initiative])
+				})
+			})
+
+			it("must respond with multiple selected phases", function*() {
+				var initiatives = initiativesDb.create(PHASES.map((phase) => (
+					new ValidInitiative({
+						user_id: this.author.id,
+						destination: "parliament",
+						published_at: new Date,
+						phase
+					})
+				)))
+
+				yield request.call(this, {
+					phase: [initiatives[0].phase, initiatives[2].phase]
+				}, [initiatives[0], initiatives[2]])
+			})
+		})
+
+		describe("given destination", function() {
+			it("must return no initiatives given invalid destination", function*() {
+				createInitiativesForAllDestinations(this.author)
+				yield request.call(this, {destination: "foo"}, [])
+			})
+
+			it("must return no initiatives given Object.prototype destination",
+				function*() {
+				createInitiativesForAllDestinations(this.author)
+				yield request.call(this, {destination: "hasOwnProperty"}, [])
+			})
+
+			it("must filter initiatives destined for parliament", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "parliament"
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					destination: null,
+					published_at: new Date
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "muhu-vald"
+				}))
+
+				yield request.call(this, {destination: "parliament"}, [initiative])
+			})
+
+			Object.keys(LOCAL_GOVERNMENTS).forEach(function(dest) {
+				it(`must filter initiatives destined for ${dest}`, function*() {
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+						destination: dest
+					}))
+
+					initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "edit",
+						destination: null,
+						published_at: new Date
+					}))
+
+					initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+						destination: "parliament"
+					}))
+
+					yield request.call(this, {destination: dest}, [initiative])
+				})
+			})
+
+			it("must filter initiatives destined for multiple places", function*() {
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "parliament"
+				}))
+
+				var a = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "muhu-vald"
+				}))
+
+				var b = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "tallinn"
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "pärnu-linn"
+				}))
+
+				yield request.call(this, {
+					destination: ["muhu-vald", "tallinn"]
+				}, [a, b])
+			})
+
+			it("must filter initiatives destined local", function*() {
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "parliament"
+				}))
+
+				var a = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "muhu-vald"
+				}))
+
+				var b = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "tallinn"
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					destination: null,
+					published_at: new Date
+				}))
+
+				yield request.call(this, {destination: "local"}, [a, b])
+			})
+
+			it("must filter initiatives destined local and parliament",
+				function*() {
+				var a = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "parliament"
+				}))
+
+				var b = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "muhu-vald"
+				}))
+
+				var c = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "tallinn"
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					destination: null,
+					published_at: new Date
+				}))
+
+				yield request.call(this, {
+					destination: ["local", "parliament"]
+				}, [a, b, c])
+			})
+		})
+
+		describe("given for", function() {
+			it("must be an alias for destination", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "parliament"
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "muhu-vald"
+				}))
+
+				yield request.call(this, {destination: "parliament"}, [initiative])
+			})
+		})
+
+		describe("given published-on", function() {
+			it("must include initiatives published on and after date", function*() {
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+
+					published_at: DateFns.addSeconds(
+						DateFns.addDays(DateFns.startOfDay(new Date), -1),
+						-1
+					)
+				}))
+
+				var initiatives = initiativesDb.create([
+					new ValidInitiative({
+						user_id: this.author.id,
+						published_at: DateFns.addDays(DateFns.startOfDay(new Date), -1)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						published_at: DateFns.startOfDay(new Date)
+					})
+				])
+
+				yield request.call(this, {
+					"published-on>": formatIsoDate(DateFns.addDays(new Date, -1))
+				}, initiatives)
+			})
+
+			it("must include initiatives published between given dates", function*() {
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+
+					published_at: DateFns.addSeconds(
+						DateFns.addDays(DateFns.startOfDay(new Date), -2),
+						-1
+					)
+				}))
+
+				var initiatives = initiativesDb.create([
+					new ValidInitiative({
+						user_id: this.author.id,
+						published_at: DateFns.addDays(DateFns.startOfDay(new Date), -2)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						published_at: DateFns.addSeconds(DateFns.startOfDay(new Date), -1)
+					})
+				])
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					published_at: DateFns.startOfDay(new Date)
+				}))
+
+				yield request.call(this, {
+					"published-on>": formatIsoDate(DateFns.addDays(new Date, -2)),
+					"published-on<": formatIsoDate(DateFns.addDays(new Date, -1))
+				}, initiatives)
+			})
+
+			it("must include initiatives published on and before date", function*() {
+				var initiatives = initiativesDb.create([
+					new ValidInitiative({
+						user_id: this.author.id,
+						published_at: DateFns.addDays(DateFns.startOfDay(new Date), -2)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						published_at: DateFns.addSeconds(DateFns.startOfDay(new Date), -1)
+					})
+				])
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					published_at: DateFns.startOfDay(new Date)
+				}))
+
+				yield request.call(this, {
+					"published-on<": formatIsoDate(DateFns.addDays(new Date, -1))
+				}, initiatives)
+			})
+		})
+
+		describe("given signing-started-on", function() {
+			it("must include initiatives where signing started on and after date", function*() {
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+
+					signing_started_at: DateFns.addSeconds(
+						DateFns.addDays(DateFns.startOfDay(new Date), -1),
+						-1
+					)
+				}))
+
+				var initiatives = initiativesDb.create([
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+
+						signing_started_at:
+							DateFns.addDays(DateFns.startOfDay(new Date), -1)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+						signing_started_at: DateFns.startOfDay(new Date)
+					})
+				])
+
+				yield request.call(this, {
+					"signing-started-on>": formatIsoDate(DateFns.addDays(new Date, -1))
+				}, initiatives)
+			})
+
+			it("must include initiatives where signing started on and before date", function*() {
+				var initiatives = initiativesDb.create([
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+
+						signing_started_at:
+							DateFns.addDays(DateFns.startOfDay(new Date), -2)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+
+						signing_started_at:
+							DateFns.addSeconds(DateFns.startOfDay(new Date), -1)
+					})
+				])
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					signing_started_at: DateFns.startOfDay(new Date)
+				}))
+
+				yield request.call(this, {
+					"signing-started-on<": formatIsoDate(DateFns.addDays(new Date, -1))
+				}, initiatives)
+			})
+		})
+
+		describe("given signing-ended-on", function() {
+			it("must include initiatives where signing ended on and after date", function*() {
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+
+					signing_ends_at: DateFns.addSeconds(
+						DateFns.addDays(DateFns.startOfDay(new Date), -1),
+						-1
+					)
+				}))
+
+				var initiatives = initiativesDb.create([
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+
+						signing_ends_at:
+							DateFns.addDays(DateFns.startOfDay(new Date), -1)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+						signing_ends_at: DateFns.startOfDay(new Date)
+					})
+				])
+
+				yield request.call(this, {
+					"signing-ended-on>": formatIsoDate(DateFns.addDays(new Date, -1))
+				}, initiatives)
+			})
+
+			it("must include initiatives where signing ended on and before date", function*() {
+				var initiatives = initiativesDb.create([
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+
+						signing_ends_at:
+							DateFns.addDays(DateFns.startOfDay(new Date), -2)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+
+						signing_ends_at:
+							DateFns.addSeconds(DateFns.startOfDay(new Date), -1)
+					})
+				])
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					signing_ends_at: DateFns.startOfDay(new Date)
+				}))
+
+				yield request.call(this, {
+					"signing-ended-on<": formatIsoDate(DateFns.addDays(new Date, -1))
+				}, initiatives)
+			})
+		})
+
+		describe("given signing-ends-at", function() {
+			it("must include initiatives where signing ends at and after time",
+				function*() {
+				var now = new Date
+
+				var initiatives = initiativesDb.create([
+					new ValidInitiative({
+						user_id: this.author.id,
+						signing_ends_at: DateFns.addSeconds(now, -1),
+						phase: "sign"
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						signing_ends_at: now,
+						phase: "sign"
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						signing_ends_at: DateFns.addSeconds(now, 1),
+						phase: "sign"
+					})
+				])
+
+				yield request.call(this, {
+					"signing-ends-at>": now.toJSON()
+				}, initiatives.slice(1))
+			})
+
+			it("must include initiatives where signing ends at and before time",
+				function*() {
+				var now = new Date
+
+				var initiatives = initiativesDb.create([
+					new ValidInitiative({
+						user_id: this.author.id,
+						signing_ends_at: DateFns.addSeconds(now, -1),
+						phase: "sign"
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						signing_ends_at: now,
+						phase: "sign"
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						signing_ends_at: DateFns.addSeconds(now, 1),
+						phase: "sign"
+					})
+				])
+
+				yield request.call(this, {
+					"signing-ends-at<": now.toJSON()
+				}, initiatives.slice(0, 2))
+			})
+		})
+
+		describe("given signingEndsAt", function() {
+			it("must be an alias for signing-ends-at", function*() {
+				var now = new Date
+
+				var initiatives = initiativesDb.create([
+					new ValidInitiative({
+						user_id: this.author.id,
+						signing_ends_at: DateFns.addSeconds(now, -1),
+						phase: "sign"
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						signing_ends_at: now,
+						phase: "sign"
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						signing_ends_at: DateFns.addSeconds(now, 1),
+						phase: "sign"
+					})
+				])
+
+				yield request.call(this, {
+					"signingEndsAt>": now.toJSON()
+				}, initiatives.slice(1))
+			})
+		})
+
+		describe("given proceedings-started-on", function() {
+			it("must include initiatives where proceedings started on and after date", function*() {
+				initiativesDb.create([
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "parliament",
+
+						accepted_by_parliament_at: DateFns.addSeconds(
+							DateFns.addDays(DateFns.startOfDay(new Date), -1),
+							-1
+						)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "government",
+						destination: "tallinn",
+
+						accepted_by_government_at: DateFns.addSeconds(
+							DateFns.addDays(DateFns.startOfDay(new Date), -1),
+							-1
+						)
+					})
+				])
+
+				var initiatives = initiativesDb.create([
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "parliament",
+
+						accepted_by_parliament_at:
+							DateFns.addDays(DateFns.startOfDay(new Date), -1)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "parliament",
+						accepted_by_parliament_at: DateFns.startOfDay(new Date)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "government",
+						destination: "tallinn",
+
+						accepted_by_government_at:
+							DateFns.addDays(DateFns.startOfDay(new Date), -1)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "government",
+						destination: "tallinn",
+						accepted_by_government_at: DateFns.startOfDay(new Date)
+					})
+				])
+
+				yield request.call(this, {
+					"proceedings-started-on>":
+						formatIsoDate(DateFns.addDays(new Date, -1))
+				}, initiatives)
+			})
+
+			it("must include initiatives where proceedings started on and before date", function*() {
+				var initiatives = initiativesDb.create([
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "parliament",
+
+						accepted_by_parliament_at:
+							DateFns.addDays(DateFns.startOfDay(new Date), -2)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "parliament",
+
+						accepted_by_parliament_at:
+							DateFns.addSeconds(DateFns.startOfDay(new Date), -1)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "government",
+						destination: "tallinn",
+
+						accepted_by_government_at:
+							DateFns.addDays(DateFns.startOfDay(new Date), -2)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "government",
+						destination: "tallinn",
+
+						accepted_by_government_at:
+							DateFns.addSeconds(DateFns.startOfDay(new Date), -1)
+					})
+				])
+
+				initiativesDb.create([
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "parliament",
+						accepted_by_parliament_at: DateFns.startOfDay(new Date)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "government",
+						destination: "tallinn",
+						accepted_by_government_at: DateFns.startOfDay(new Date)
+					})
+				])
+
+				yield request.call(this, {
+					"proceedings-started-on<":
+						formatIsoDate(DateFns.addDays(new Date, -1))
+				}, initiatives)
+			})
+		})
+
+		describe("given proceedings-ended-on", function() {
+			it("must include initiatives where proceedings ended on and after date", function*() {
+				initiativesDb.create([
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "parliament",
+
+						finished_in_parliament_at: DateFns.addSeconds(
+							DateFns.addDays(DateFns.startOfDay(new Date), -1),
+							-1
+						)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "government",
+						destination: "tallinn",
+
+						finished_in_government_at: DateFns.addSeconds(
+							DateFns.addDays(DateFns.startOfDay(new Date), -1),
+							-1
+						)
+					})
+				])
+
+				var initiatives = initiativesDb.create([
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "parliament",
+
+						finished_in_parliament_at:
+							DateFns.addDays(DateFns.startOfDay(new Date), -1)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "parliament",
+						finished_in_parliament_at: DateFns.startOfDay(new Date)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "government",
+						destination: "tallinn",
+
+						finished_in_government_at:
+							DateFns.addDays(DateFns.startOfDay(new Date), -1)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "government",
+						destination: "tallinn",
+						finished_in_government_at: DateFns.startOfDay(new Date)
+					})
+				])
+
+				yield request.call(this, {
+					"proceedings-ended-on>": formatIsoDate(DateFns.addDays(new Date, -1))
+				}, initiatives)
+			})
+
+			it("must include initiatives where proceedings ended on and before date", function*() {
+				var initiatives = initiativesDb.create([
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "parliament",
+
+						finished_in_parliament_at:
+							DateFns.addDays(DateFns.startOfDay(new Date), -2)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "parliament",
+
+						finished_in_parliament_at:
+							DateFns.addSeconds(DateFns.startOfDay(new Date), -1)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "government",
+						destination: "tallinn",
+
+						finished_in_government_at:
+							DateFns.addDays(DateFns.startOfDay(new Date), -2)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "government",
+						destination: "tallinn",
+
+						finished_in_government_at:
+							DateFns.addSeconds(DateFns.startOfDay(new Date), -1)
+					})
+				])
+
+				initiativesDb.create([
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "parliament",
+						finished_in_parliament_at: DateFns.startOfDay(new Date)
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "government",
+						destination: "tallinn",
+						finished_in_government_at: DateFns.startOfDay(new Date)
+					})
+				])
+
+				yield request.call(this, {
+					"proceedings-ended-on<": formatIsoDate(DateFns.addDays(new Date, -1))
+				}, initiatives)
+			})
+		})
+
+		describe("given proceedings-handler", function() {
+			it("must filter initiatives in parliament committees", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "parliament",
+					parliament_committee: "Sotsiaalkomisjon"
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "parliament",
+					parliament_committee: "Keskkonnakomisjon"
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "parliament"
+				}))
+
+				yield request.call(this, {
+					"proceedings-handler": "Sotsiaalkomisjon"
+				}, [initiative])
+			})
+
+			it("must filter initiatives destined for local government", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "government",
+					destination: "tallinn",
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "government",
+					destination: "muhu-vald"
+				}))
+
+				yield request.call(this, {
+					"proceedings-handler": "tallinn"
+				}, [initiative])
+			})
+		})
+
+		describe("given external", function() {
+			it("must filter for non-external initiatives if invalid boolean",
+				function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					phase: "sign",
+					external: true
+				}))
+
+				yield request.call(this, {external: "yahoo"}, [initiative])
+			})
+
+			it("must filter for external initiatives", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					phase: "sign",
+					external: true
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign"
+				}))
+
+				yield request.call(this, {external: true}, [initiative])
+			})
+
+			it("must filter for non-external initiatives", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign"
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					phase: "sign",
+					external: true
+				}))
+
+				yield request.call(this, {external: false}, [initiative])
+			})
+		})
+	}) }
+
 	describe(`GET / for ${INITIATIVE_TYPE}`, function() {
 		beforeEach(function() { this.author = usersDb.create(new ValidUser) })
+
+		testFilters(function* request(query, expected) {
+			var res = yield this.request(
+				"/initiatives?" + Qs.stringify(_.defaults({order: "id"}, query)),
+				{headers: {Accept: INITIATIVE_TYPE}}
+			)
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(INITIATIVE_TYPE)
+			res.headers["access-control-allow-origin"].must.equal("*")
+			res.body.must.eql(expected.map(serializeApiInitiative))
+		})
 
 		it("must not respond with unpublished initiatives", function*() {
 			initiativesDb.create(new ValidInitiative({user_id: this.author.id}))
@@ -2233,44 +2275,6 @@ describe("InitiativesController", function() {
 			})])
 		})
 
-		describe("given signingEndsAt", function() {
-			it("must be an alias for signing-ends-at", function*() {
-				var now = new Date
-
-				var initiatives = initiativesDb.create([
-					new ValidInitiative({
-						user_id: this.author.id,
-						signing_ends_at: DateFns.addSeconds(now, -1),
-						phase: "sign"
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						signing_ends_at: now,
-						phase: "sign"
-					}),
-
-					new ValidInitiative({
-						user_id: this.author.id,
-						signing_ends_at: DateFns.addSeconds(now, 1),
-						phase: "sign"
-					})
-				])
-
-				var res = yield this.request(
-					`/initiatives?signingEndsAt>=${now.toJSON()}`, {
-					headers: {Accept: INITIATIVE_TYPE}
-				})
-
-				res.statusCode.must.equal(200)
-
-				res.body.must.eql(initiatives.slice(1).map((initiative) => _.assign(
-					serializeApiInitiative(initiative),
-					{signatureThreshold: Config.votesRequired}
-				)))
-			})
-		})
-
 		describe("given signedSince", function() {
 			it("must return signature count since given date", function*() {
 				var self = this
@@ -2315,211 +2319,6 @@ describe("InitiativesController", function() {
 
 				res.statusCode.must.equal(200)
 				res.body[0].must.not.have.property("signaturesSinceCount")
-			})
-		})
-
-		describe("given phase", function() {
-			it("must respond with 400 given invalid phase", function*() {
-				var res = yield this.request("/initiatives?phase=foo", {
-					headers: {Accept: INITIATIVE_TYPE}
-				})
-
-				res.statusCode.must.equal(400)
-				res.statusMessage.must.equal("Invalid Phase")
-				res.body.must.eql({code: 400, message: "Invalid Phase"})
-			})
-
-			PHASES.forEach(function(phase, i) {
-				it(`must respond with ${phase} initiatives if requested`, function*() {
-					var initiative = initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						destination: "parliament",
-						published_at: new Date,
-						phase: phase
-					}))
-
-					initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						published_at: new Date,
-						phase: PHASES[(i + 1) % PHASES.length]
-					}))
-
-					var res = yield this.request("/initiatives?phase=" + phase, {
-						headers: {Accept: INITIATIVE_TYPE}
-					})
-
-					res.statusCode.must.equal(200)
-
-					res.body.must.eql([_.assign(serializeApiInitiative(initiative), {
-						signatureThreshold: Config.votesRequired
-					})])
-				})
-			})
-		})
-
-		describe("given destination", function() {
-			it("must return no initiatives given invalid destination", function*() {
-				createInitiativesForAllDestinations(this.author)
-
-				var res = yield this.request("/initiatives?destination=foo", {
-					headers: {Accept: INITIATIVE_TYPE}
-				})
-
-				res.statusCode.must.equal(200)
-				res.headers["content-type"].must.equal(INITIATIVE_TYPE)
-				res.body.must.eql([])
-			})
-
-			it("must return no initiatives given Object.prototype destination",
-				function*() {
-				createInitiativesForAllDestinations(this.author)
-
-				var res = yield this.request("/initiatives?destination=hasOwnProperty", {
-					headers: {Accept: INITIATIVE_TYPE}
-				})
-
-				res.statusCode.must.equal(200)
-				res.headers["content-type"].must.equal(INITIATIVE_TYPE)
-				res.body.must.eql([])
-			})
-
-			it("must filter initiatives destined for parliament", function*() {
-				var initiative = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "parliament"
-				}))
-
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "edit",
-					destination: null,
-					published_at: new Date
-				}))
-
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "muhu-vald"
-				}))
-
-				var res = yield this.request("/initiatives?destination=parliament", {
-					headers: {Accept: INITIATIVE_TYPE}
-				})
-
-				res.statusCode.must.equal(200)
-				res.headers["content-type"].must.equal(INITIATIVE_TYPE)
-
-				res.body.must.eql([_.assign(serializeApiInitiative(initiative), {
-					signatureThreshold: Config.votesRequired
-				})])
-			})
-
-			Object.keys(LOCAL_GOVERNMENTS).forEach(function(dest) {
-				it(`must filter initiatives destined for ${dest}`, function*() {
-					var initiative = initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						phase: "sign",
-						destination: dest
-					}))
-
-					initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						phase: "edit",
-						destination: null,
-						published_at: new Date
-					}))
-
-					initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						phase: "sign",
-						destination: "parliament"
-					}))
-
-					var res = yield this.request("/initiatives?destination=" + dest, {
-						headers: {Accept: INITIATIVE_TYPE}
-					})
-
-					res.statusCode.must.equal(200)
-					res.headers["content-type"].must.equal(INITIATIVE_TYPE)
-
-					res.body.must.eql([_.assign(serializeApiInitiative(initiative), {
-						signatureThreshold: LOCAL_GOVERNMENTS[dest].signatureThreshold
-					})])
-				})
-			})
-
-			it("must filter initiatives destined for multiple places", function*() {
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "parliament"
-				}))
-
-				var a = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "muhu-vald"
-				}))
-
-				var b = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "tallinn"
-				}))
-
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "pärnu-linn"
-				}))
-
-				var path = "/initiatives"
-				path += "?for[]=muhu-vald"
-				path += "&for[]=tallinn"
-				var res = yield this.request(path, {headers: {Accept: INITIATIVE_TYPE}})
-
-				res.statusCode.must.equal(200)
-				res.headers["content-type"].must.equal(INITIATIVE_TYPE)
-
-				_.sortBy(res.body, "for").must.eql([
-					_.assign(serializeApiInitiative(a), {
-						signatureThreshold:
-							LOCAL_GOVERNMENTS[a.destination].signatureThreshold
-					}),
-
-					_.assign(serializeApiInitiative(b), {
-						signatureThreshold:
-							LOCAL_GOVERNMENTS[b.destination].signatureThreshold
-					})
-				])
-			})
-		})
-
-		describe("given for", function() {
-			it("must be an alias for destination", function*() {
-				var initiative = initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "parliament"
-				}))
-
-				initiativesDb.create(new ValidInitiative({
-					user_id: this.author.id,
-					phase: "sign",
-					destination: "muhu-vald"
-				}))
-
-				var res = yield this.request("/initiatives?for=parliament", {
-					headers: {Accept: INITIATIVE_TYPE}
-				})
-
-				res.statusCode.must.equal(200)
-				res.headers["content-type"].must.equal(INITIATIVE_TYPE)
-
-				res.body.must.eql([_.assign(serializeApiInitiative(initiative), {
-					signatureThreshold: Config.votesRequired
-				})])
 			})
 		})
 
@@ -2747,6 +2546,22 @@ describe("InitiativesController", function() {
 			res.body.must.equal(CSV_HEADER + "\n")
 		})
 
+		testFilters(function* request(query, expected) {
+			var res = yield this.request(
+				"/initiatives.csv?" + Qs.stringify(_.defaults({order: "id"}, query))
+			)
+
+			res.statusCode.must.equal(200)
+			res.headers["content-type"].must.equal(CSV_TYPE)
+			res.headers["access-control-allow-origin"].must.equal("*")
+
+			res.body.must.equal(CSV_HEADER + "\n" + expected.map((initiative) => (
+				serializeCsvInitiative(_.defaults({
+					user_name: initiative.external ? null : this.author.name
+				}, initiative))
+			)).join("\n"))
+		})
+
 		it("must not respond with unpublished initiatives", function*() {
 			initiativesDb.create(new ValidInitiative({user_id: this.author.id}))
 			var res = yield this.request("/initiatives.csv")
@@ -2856,41 +2671,6 @@ describe("InitiativesController", function() {
 			res.body.must.eql(_.concat(CSV_HEADER, serializeCsvInitiative(_.defaults({
 				user_name: this.author.name
 			}, initiative))).join("\n"))
-		})
-
-		describe("given phase", function() {
-			it("must respond with 400 given invalid phase", function*() {
-				var res = yield this.request("/initiatives.csv?phase=foo")
-				res.statusCode.must.equal(400)
-				res.statusMessage.must.equal("Invalid Phase")
-			})
-
-			PHASES.forEach(function(phase, i) {
-				it(`must respond with ${phase} initiatives if requested`, function*() {
-					var initiative = initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						destination: "parliament",
-						published_at: new Date,
-						phase: phase
-					}))
-
-					initiativesDb.create(new ValidInitiative({
-						user_id: this.author.id,
-						published_at: new Date,
-						phase: PHASES[(i + 1) % PHASES.length]
-					}))
-
-					var res = yield this.request("/initiatives.csv?phase=" + phase)
-					res.statusCode.must.equal(200)
-
-					res.body.must.eql(_.concat(
-						CSV_HEADER,
-						serializeCsvInitiative(_.defaults({
-							user_name: this.author.name
-						}, initiative))).join("\n")
-					)
-				})
-			})
 		})
 	})
 
@@ -3721,7 +3501,7 @@ describe("InitiativesController", function() {
 					it(`must render latest text in ${phase} phase`, function*() {
 						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
-							phase: phase,
+							phase,
 							language: "en",
 							published_at: new Date
 						}))
@@ -3759,7 +3539,7 @@ describe("InitiativesController", function() {
 					it(`must render translation tabs in ${phase} if a translation exist`, function*() {
 						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
-							phase: phase,
+							phase,
 							language: "en",
 							published_at: new Date
 						}))
@@ -3806,7 +3586,7 @@ describe("InitiativesController", function() {
 					it(`must render latest translation in ${phase} phase`, function*() {
 						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
-							phase: phase,
+							phase,
 							language: "et",
 							published_at: new Date
 						}))
@@ -6148,7 +5928,7 @@ describe("InitiativesController", function() {
 						function*() {
 						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
-							phase: phase,
+							phase,
 							language: "et",
 							published_at: new Date
 						}))
@@ -6196,7 +5976,7 @@ describe("InitiativesController", function() {
 						function*() {
 						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.author.id,
-							phase: phase,
+							phase,
 							language: "et",
 							published_at: new Date
 						}))
@@ -6551,7 +6331,7 @@ describe("InitiativesController", function() {
 					function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
-						phase: phase,
+						phase,
 						published_at: new Date
 					}))
 
@@ -6566,7 +6346,7 @@ describe("InitiativesController", function() {
 					function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
-						phase: phase
+						phase
 					}))
 
 					var res = yield this.request("/initiatives/" + initiative.id)
@@ -6578,7 +6358,7 @@ describe("InitiativesController", function() {
 					function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
-						phase: phase
+						phase
 					}))
 
 					coauthorsDb.create(new ValidCoauthor({
@@ -6712,7 +6492,7 @@ describe("InitiativesController", function() {
 				it(`must not show thanks in ${phase} phase`, function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
-						phase: phase,
+						phase,
 
 						// Just in case add a future deadline for signing to ensure the
 						// phase is also checked.
@@ -7253,7 +7033,7 @@ describe("InitiativesController", function() {
 						function*() {
 						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
-							phase: phase
+							phase
 						}))
 
 						var res = yield this.request("/initiatives/" + initiative.id)
@@ -12694,7 +12474,7 @@ describe("InitiativesController", function() {
 					it(`must respond with 403 in ${phase} phase`, function*() {
 						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
-							phase: phase
+							phase
 						}))
 
 						var res = yield this.request("/initiatives/" + initiative.id, {
@@ -13291,6 +13071,75 @@ describe("InitiativesController", function() {
 		})
 	})
 
+	describe(".serializeApiInitiative", function() {
+		it("must serialize parliament initiative", function() {
+			var initiative = _.assign(new ValidInitiative({
+				id: 42,
+				uuid: "b5e594c2-2aef-4420-9780-3a5b1c00e1c0",
+				destination: "parliament",
+				title: "Hello, world!",
+				phase: "sign",
+				signing_ends_at: new Date(2015, 5, 20, 13, 37, 44, 666)
+			}), {
+				signature_count: 666
+			})
+
+			serializeApiInitiative(initiative).must.eql({
+				id: initiative.uuid,
+				for: initiative.destination,
+				title: initiative.title,
+				phase: initiative.phase,
+				signingEndsAt: initiative.signing_ends_at.toJSON(),
+				signatureCount: 666,
+				signatureThreshold: Config.votesRequired
+			})
+		})
+
+		it("must serialize local government initiative", function() {
+			var initiative = _.assign(new ValidInitiative({
+				id: 42,
+				uuid: "b5e594c2-2aef-4420-9780-3a5b1c00e1c0",
+				destination: "muhu-vald",
+				title: "Hello, world!",
+				phase: "sign",
+				signing_ends_at: new Date(2015, 5, 20, 13, 37, 44, 666)
+			}), {
+				signature_count: 666
+			})
+
+			serializeApiInitiative(initiative).must.eql({
+				id: initiative.uuid,
+				for: initiative.destination,
+				title: initiative.title,
+				phase: initiative.phase,
+				signingEndsAt: initiative.signing_ends_at.toJSON(),
+				signatureCount: 666,
+				signatureThreshold: Initiative.getSignatureThreshold(initiative)
+			})
+		})
+
+		it("must serialize external initiative", function() {
+			var initiative = _.assign(new ValidInitiative({
+				id: 42,
+				uuid: "b5e594c2-2aef-4420-9780-3a5b1c00e1c0",
+				destination: "parliament",
+				title: "Hello, world!",
+				phase: "parliament",
+				external: true
+			}))
+
+			serializeApiInitiative(initiative).must.eql({
+				id: initiative.uuid,
+				for: initiative.destination,
+				title: initiative.title,
+				phase: initiative.phase,
+				signingEndsAt: null,
+				signatureCount: null,
+				signatureThreshold: Config.votesRequired
+			})
+		})
+	})
+
 	describe(".serializeCsvInitiative", function() {
 		it("must serialize initiative", function() {
 			var initiative = _.assign(new ValidInitiative({
@@ -13388,19 +13237,4 @@ function queryEvents(html) {
 			phase: phase ? phase[1] : null
 		}
 	}).reverse()
-}
-
-function serializeApiInitiative(initiative) {
-	return {
-		id: initiative.uuid,
-		for: initiative.destination,
-		title: initiative.title,
-		phase: initiative.phase,
-
-		signingEndsAt:
-			initiative.signing_ends_at && initiative.signing_ends_at.toJSON(),
-
-		signatureCount: 0,
-		signatureThreshold: null
-	}
 }

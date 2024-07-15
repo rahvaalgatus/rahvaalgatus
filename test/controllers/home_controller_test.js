@@ -990,15 +990,6 @@ describe("HomeController", function() {
 					var dom = parseHtml(res.body)
 					var count = dom.querySelector("#parliament-statistic .count")
 					count.textContent.must.equal("0")
-
-					dom.querySelector("#parliament-statistic p").innerHTML.must.equal(
-						t("HOME_PAGE_STATISTICS_N_SENT_ALL_IN_LAST_30_DAYS", {
-							sent: 0,
-							sentToParliament: 0,
-							sentToLocal: 0,
-							external: 0
-						})
-					)
 				})
 
 				it("must count initiatives been in parliament or local government",
@@ -1452,13 +1443,6 @@ describe("HomeController", function() {
 					var dom = parseHtml(res.body)
 					var count = dom.querySelector("#parliament-statistic .count")
 					count.textContent.must.equal("0")
-
-					dom.querySelector("#parliament-statistic p").innerHTML.must.equal(
-						t("HOME_PAGE_STATISTICS_N_SENT_IN_LAST_30_DAYS", {
-							sent: 0,
-							external: 0
-						})
-					)
 				})
 
 				it("must count initiatives been in parliament", function*() {
