@@ -62,43 +62,54 @@ function InitiativesPage({
 		<section id="initiatives-section" class="secondary-section">
 			<h1>{t("initiatives_page.title")}</h1>
 
-			<GraphsView
-				t={t}
-				initiatives={initiatives}
-				path={initiativesPath}
-				query={query}
-			/>
-
 			<table id="initiatives">
-				<caption>
-					{initiatives.length > 0 ? <div class="total">{_.any(filters) ? <>
-						{Jsx.html(initiatives.length == 1
-							? t("initiatives_page.caption.filtered_total_1")
-							: t("initiatives_page.caption.filtered_total_n", {
-								count: initiatives.length
-							})
-						)}
-						{" "}
-						<a href={initiativesPath + Qs.stringify({
-							order: orderBy
-								? (orderDir == "asc" ? "" : "-") + orderBy
-								: undefined
-						}, {addQueryPrefix: true})} class="link-button">
-							{Jsx.html(t("initiatives_page.caption.view_all_button"))}
-						</a>.
-					</> : Jsx.html(initiatives.length == 1
-						? t("initiatives_page.caption.total_1")
-						: t("initiatives_page.caption.total_n", {count: initiatives.length})
-					)}</div> : null}
+				<caption><div>
+					<div class="summary">
+						{initiatives.length > 0 ? <div class="total">{_.any(filters) ? <>
+							{Jsx.html(initiatives.length == 1
+								? t("initiatives_page.caption.filtered_total_1")
+								: t("initiatives_page.caption.filtered_total_n", {
+									count: initiatives.length
+								})
+							)}
+							{" "}
+							<a href={initiativesPath + Qs.stringify({
+								order: orderBy
+									? (orderDir == "asc" ? "" : "-") + orderBy
+									: undefined
+							}, {addQueryPrefix: true})} class="link-button">
+								{Jsx.html(t("initiatives_page.caption.view_all_button"))}
+							</a>.
+						</> : Jsx.html(initiatives.length == 1
+							? t("initiatives_page.caption.total_1")
+							: t("initiatives_page.caption.total_n", {count: initiatives.length})
+						)}</div> : null}
 
-					<FiltersView
-						t={t}
-						filters={filters}
-						path={initiativesPath}
-						order={order}
-						parliamentCommittees={parliamentCommittees}
-					/>
-				</caption>
+						<CurrentFiltersView t={t} filters={filters} />
+					</div>
+
+					<div class="configuration">
+						<FiltersView
+							t={t}
+							filters={filters}
+							path={initiativesPath}
+							order={order}
+							parliamentCommittees={parliamentCommittees}
+						/>
+
+						{initiatives.length > 0 ? <a
+							href={initiativesPath + ".csv" + Qs.stringify(query, {
+								addQueryPrefix: true,
+								arrayFormat: "brackets"
+							})}
+
+							class="csv-button"
+						>
+							{t("initiatives_page.table.download_csv_button")}
+						</a> : null}
+
+					</div>
+				</div></caption>
 
 				<thead>
 					<tr title="Sorteeri">
@@ -240,6 +251,15 @@ function InitiativesPage({
 					</tr>
 				</thead>
 
+				<tbody class="graphs"><tr><td colspan={colSpan}>
+					<GraphsView
+						t={t}
+						initiatives={initiatives}
+						path={initiativesPath}
+						query={query}
+					/>
+				</td></tr></tbody>
+
 				{initiatives.length == 0 ? <tbody class="empty"><tr>
 					<td colspan={colSpan}>{_.any(filters) ? <>
 						<p>
@@ -290,21 +310,6 @@ function InitiativesPage({
 						initiatives={initiatives}
 					/>
 				})}
-
-				<tfoot><tr>
-					<td colspan={colSpan}>
-						{initiatives.length > 0 ? <a
-							href={initiativesPath + ".csv" + Qs.stringify(query, {
-								addQueryPrefix: true,
-								arrayFormat: "brackets"
-							})}
-
-							class="link-button"
-						>
-							{t("initiatives_page.table.download_csv_button")}
-						</a> : null}
-					</td>
-				</tr></tfoot>
 			</table>
 		</section>
 	</Page>
@@ -317,267 +322,263 @@ function FiltersView({
 	order: [orderBy, orderDir],
 	parliamentCommittees
 }) {
-	return <div id="filters">
-		<details>
-			<summary>
-				<span class="open-text">{_.any(filters)
-					? t("initiatives_page.filters.open_button_with_filters")
-					: t("initiatives_page.filters.open_button")
-				}</span>
-			</summary>
+	return <details id="filters">
+		<summary>
+			<span class="open-text">{_.any(filters)
+				? t("initiatives_page.filters.open_button_with_filters")
+				: t("initiatives_page.filters.open_button")
+			}</span>
+		</summary>
 
-			<form method="get" action={path}>
-				<label>
-					<span>{t("initiatives_page.filters.phase_label")}</span>
+		<form method="get" action={path}>
+			<label>
+				<span>{t("initiatives_page.filters.phase_label")}</span>
 
-					<select name="phase" class="form-select">
-						<option value="" selected={filters.phase == null}>
-							{t("initiatives_page.filters.phases.all")}
-						</option>
+				<select name="phase" class="form-select">
+					<option value="" selected={filters.phase == null}>
+						{t("initiatives_page.filters.phases.all")}
+					</option>
 
-						<hr />
+					<hr />
 
-						{PHASES.map((phase) => <option
-							value={phase}
-							selected={filters.phase == phase}
+					{PHASES.map((phase) => <option
+						value={phase}
+						selected={filters.phase == phase}
+					>
+						{t("initiatives_page.phases." + phase)}
+					</option>)}
+				</select>
+			</label>
+
+			<label>
+				<span>{t("initiatives_page.filters.destination_label")}</span>
+
+				<select name="destination" class="form-select">
+					<option value="" selected={filters.destination == null}>
+						{t("initiatives_page.filters.destination.all_label")}
+					</option>
+
+					<optgroup label={t("initiatives_page.filters.destination.national_group_label")}>
+						<option
+							value="parliament"
+							selected={(filters.destination || []).includes("parliament")}
 						>
-							{t("initiatives_page.phases." + phase)}
+							{t("initiatives_page.filters.destination.parliament_label")}
+						</option>
+
+						<option
+							value="local"
+							selected={(filters.destination || []).includes("local")}
+						>
+							{t("initiatives_page.filters.destination.local_label")}
+						</option>
+					</optgroup>
+
+					{_.map(LOCAL_GOVERNMENTS_BY_COUNTY, (govs, county) => <optgroup
+						label={county + " " + t("initiatives_page.filters.proceedings_handler.county_group_label_suffix")}
+					>{govs.map(([id, {name}]) => <option
+						value={id}
+						selected={(filters.destination || []).includes(id)}
+					>{name}</option>)}</optgroup>)}
+				</select>
+			</label>
+
+			<label>
+				<span>
+					{t("initiatives_page.filters.published_since_label")}
+				</span>
+
+				<input
+					type="date"
+					name="published-on>"
+					class="form-input"
+
+					value={
+						filters.publishedOn &&
+						filters.publishedOn.begin &&
+						formatIsoDate(filters.publishedOn.begin)
+					}
+				/>
+			</label>
+
+			<label>
+				<span>{t("initiatives_page.filters.published_until_label")}</span>
+
+				<input
+					type="date"
+					name="published-on<"
+					class="form-input"
+
+					value={
+						filters.publishedOn &&
+						filters.publishedOn.end &&
+						formatIsoDate(DateFns.addDays(filters.publishedOn.end, -1))
+					}
+				/>
+			</label>
+
+			<label>
+				<span>
+					{t("initiatives_page.filters.signing_started_since_label")}
+				</span>
+
+				<input
+					type="date"
+					name="signing-started-on>"
+					class="form-input"
+
+					value={
+						filters.signingStartedOn &&
+						filters.signingStartedOn.begin &&
+						formatIsoDate(filters.signingStartedOn.begin)
+					}
+				/>
+			</label>
+
+			<label>
+				<span>
+					{t("initiatives_page.filters.signing_started_until_label")}
+				</span>
+
+				<input
+					type="date"
+					name="signing-started-on<"
+					class="form-input"
+
+					value={
+						filters.signingStartedOn &&
+						filters.signingStartedOn.end &&
+						formatIsoDate(DateFns.addDays(filters.signingStartedOn.end, -1))
+					}
+				/>
+			</label>
+
+			<label>
+				<span>
+					{t("initiatives_page.filters.proceedings_started_since_label")}
+				</span>
+
+				<input
+					type="date"
+					name="proceedings-started-on>"
+					class="form-input"
+
+					value={
+						filters.proceedingsStartedOn &&
+						filters.proceedingsStartedOn.begin &&
+						formatIsoDate(filters.proceedingsStartedOn.begin)
+					}
+				/>
+			</label>
+
+			<label>
+				<span>
+					{t("initiatives_page.filters.proceedings_started_until_label")}
+				</span>
+
+				<input
+					type="date"
+					name="proceedings-started-on<"
+					class="form-input"
+
+					value={
+						filters.proceedingsStartedOn &&
+						filters.proceedingsStartedOn.end &&
+
+						formatIsoDate(
+							DateFns.addDays(filters.proceedingsStartedOn.end, -1)
+						)
+					}
+				/>
+			</label>
+
+			<label>
+				<span>
+					{t("initiatives_page.filters.proceedings_ended_since_label")}
+				</span>
+
+				<input
+					type="date"
+					name="proceedings-ended-on>"
+					class="form-input"
+
+					value={
+						filters.proceedingsEndedOn &&
+						filters.proceedingsEndedOn.begin &&
+						formatIsoDate(filters.proceedingsEndedOn.begin)
+					}
+				/>
+			</label>
+
+			<label>
+				<span>
+					{t("initiatives_page.filters.proceedings_ended_until_label")}
+				</span>
+
+				<input
+					type="date"
+					name="proceedings-ended-on<"
+					class="form-input"
+
+					value={
+						filters.proceedingsEndedOn &&
+						filters.proceedingsEndedOn.end &&
+						formatIsoDate(DateFns.addDays(filters.proceedingsEndedOn.end, -1))
+					}
+				/>
+			</label>
+
+			<label>
+				<span>{t("initiatives_page.filters.proceedings_handler_label")}</span>
+
+				<select name="proceedings-handler" class="form-select">
+					<option value="" selected={filters.proceedingsHandler == null}>
+						{t("initiatives_page.filters.proceedings_handler.all_label")}
+					</option>
+
+					<optgroup label={t("initiatives_page.filters.proceedings_handler.parliament_group_label")}>
+						{parliamentCommittees.map((committee) => <option
+							value={committee}
+							selected={filters.proceedingsHandler == committee}
+						>
+							{committee}
 						</option>)}
-					</select>
-				</label>
+					</optgroup>
 
-				<label>
-					<span>{t("initiatives_page.filters.destination_label")}</span>
+					{_.map(LOCAL_GOVERNMENTS_BY_COUNTY, (govs, county) => <optgroup
+						label={county + " " + t("initiatives_page.filters.proceedings_handler.county_group_label_suffix")}
+					>{govs.map(([id, {name}]) => <option
+						value={id}
+						selected={filters.proceedingsHandler == id}
+					>{name}</option>)}</optgroup>)}
+				</select>
+			</label>
 
-					<select name="destination" class="form-select">
-						<option value="" selected={filters.destination == null}>
-							{t("initiatives_page.filters.destination.all_label")}
-						</option>
+			<br />
+			<button type="submit" class="blue-rounded-button">
+				{t("initiatives_page.filters.filter_button")}
+			</button>
 
-						<optgroup label={t("initiatives_page.filters.destination.national_group_label")}>
-							<option
-								value="parliament"
-								selected={(filters.destination || []).includes("parliament")}
-							>
-								{t("initiatives_page.filters.destination.parliament_label")}
-							</option>
+			{_.any(filters, _.id) ? <>
+				{" "}
+				{t("initiatives_page.filters.or")}
+				{" "}
+				<a href={path + Qs.stringify({
+					order: orderBy
+						? (orderDir == "asc" ? "" : "-") + orderBy
+						: undefined
+				}, {addQueryPrefix: true})} class="link-button">
+					{t("initiatives_page.filters.reset_button")}
+				</a>.
+			</> : null}
 
-							<option
-								value="local"
-								selected={(filters.destination || []).includes("local")}
-							>
-								{t("initiatives_page.filters.destination.local_label")}
-							</option>
-						</optgroup>
-
-						{_.map(LOCAL_GOVERNMENTS_BY_COUNTY, (govs, county) => <optgroup
-							label={county + " " + t("initiatives_page.filters.proceedings_handler.county_group_label_suffix")}
-						>{govs.map(([id, {name}]) => <option
-							value={id}
-							selected={(filters.destination || []).includes(id)}
-						>{name}</option>)}</optgroup>)}
-					</select>
-				</label>
-
-				<label>
-					<span>
-						{t("initiatives_page.filters.published_since_label")}
-					</span>
-
-					<input
-						type="date"
-						name="published-on>"
-						class="form-input"
-
-						value={
-							filters.publishedOn &&
-							filters.publishedOn.begin &&
-							formatIsoDate(filters.publishedOn.begin)
-						}
-					/>
-				</label>
-
-				<label>
-					<span>{t("initiatives_page.filters.published_until_label")}</span>
-
-					<input
-						type="date"
-						name="published-on<"
-						class="form-input"
-
-						value={
-							filters.publishedOn &&
-							filters.publishedOn.end &&
-							formatIsoDate(DateFns.addDays(filters.publishedOn.end, -1))
-						}
-					/>
-				</label>
-
-				<label>
-					<span>
-						{t("initiatives_page.filters.signing_started_since_label")}
-					</span>
-
-					<input
-						type="date"
-						name="signing-started-on>"
-						class="form-input"
-
-						value={
-							filters.signingStartedOn &&
-							filters.signingStartedOn.begin &&
-							formatIsoDate(filters.signingStartedOn.begin)
-						}
-					/>
-				</label>
-
-				<label>
-					<span>
-						{t("initiatives_page.filters.signing_started_until_label")}
-					</span>
-
-					<input
-						type="date"
-						name="signing-started-on<"
-						class="form-input"
-
-						value={
-							filters.signingStartedOn &&
-							filters.signingStartedOn.end &&
-							formatIsoDate(DateFns.addDays(filters.signingStartedOn.end, -1))
-						}
-					/>
-				</label>
-
-				<label>
-					<span>
-						{t("initiatives_page.filters.proceedings_started_since_label")}
-					</span>
-
-					<input
-						type="date"
-						name="proceedings-started-on>"
-						class="form-input"
-
-						value={
-							filters.proceedingsStartedOn &&
-							filters.proceedingsStartedOn.begin &&
-							formatIsoDate(filters.proceedingsStartedOn.begin)
-						}
-					/>
-				</label>
-
-				<label>
-					<span>
-						{t("initiatives_page.filters.proceedings_started_until_label")}
-					</span>
-
-					<input
-						type="date"
-						name="proceedings-started-on<"
-						class="form-input"
-
-						value={
-							filters.proceedingsStartedOn &&
-							filters.proceedingsStartedOn.end &&
-
-							formatIsoDate(
-								DateFns.addDays(filters.proceedingsStartedOn.end, -1)
-							)
-						}
-					/>
-				</label>
-
-				<label>
-					<span>
-						{t("initiatives_page.filters.proceedings_ended_since_label")}
-					</span>
-
-					<input
-						type="date"
-						name="proceedings-ended-on>"
-						class="form-input"
-
-						value={
-							filters.proceedingsEndedOn &&
-							filters.proceedingsEndedOn.begin &&
-							formatIsoDate(filters.proceedingsEndedOn.begin)
-						}
-					/>
-				</label>
-
-				<label>
-					<span>
-						{t("initiatives_page.filters.proceedings_ended_until_label")}
-					</span>
-
-					<input
-						type="date"
-						name="proceedings-ended-on<"
-						class="form-input"
-
-						value={
-							filters.proceedingsEndedOn &&
-							filters.proceedingsEndedOn.end &&
-							formatIsoDate(DateFns.addDays(filters.proceedingsEndedOn.end, -1))
-						}
-					/>
-				</label>
-
-				<label>
-					<span>{t("initiatives_page.filters.proceedings_handler_label")}</span>
-
-					<select name="proceedings-handler" class="form-select">
-						<option value="" selected={filters.proceedingsHandler == null}>
-							{t("initiatives_page.filters.proceedings_handler.all_label")}
-						</option>
-
-						<optgroup label={t("initiatives_page.filters.proceedings_handler.parliament_group_label")}>
-							{parliamentCommittees.map((committee) => <option
-								value={committee}
-								selected={filters.proceedingsHandler == committee}
-							>
-								{committee}
-							</option>)}
-						</optgroup>
-
-						{_.map(LOCAL_GOVERNMENTS_BY_COUNTY, (govs, county) => <optgroup
-							label={county + " " + t("initiatives_page.filters.proceedings_handler.county_group_label_suffix")}
-						>{govs.map(([id, {name}]) => <option
-							value={id}
-							selected={filters.proceedingsHandler == id}
-						>{name}</option>)}</optgroup>)}
-					</select>
-				</label>
-
-				<br />
-				<button type="submit" class="blue-rounded-button">
-					{t("initiatives_page.filters.filter_button")}
-				</button>
-
-				{_.any(filters, _.id) ? <>
-					{" "}
-					{t("initiatives_page.filters.or")}
-					{" "}
-					<a href={path + Qs.stringify({
-						order: orderBy
-							? (orderDir == "asc" ? "" : "-") + orderBy
-							: undefined
-					}, {addQueryPrefix: true})} class="link-button">
-						{t("initiatives_page.filters.reset_button")}
-					</a>.
-				</> : null}
-
-				{orderBy ? <input
-					type="hidden"
-					name="order"
-					value={(orderDir == "asc" ? "" : "-") + orderBy}
-				/> : null}
-			</form>
-		</details>
-
-		<CurrentFiltersView t={t} filters={filters} />
-	</div>
+			{orderBy ? <input
+				type="hidden"
+				name="order"
+				value={(orderDir == "asc" ? "" : "-") + orderBy}
+			/> : null}
+		</form>
+	</details>
 }
 
 function CurrentFiltersView({t, filters}) {
@@ -771,7 +772,7 @@ function InitiativeGroupView({title, initiatives, t}) {
 }
 
 function GraphsView({t, initiatives, path, query}) {
-	return <div id="graphs">
+	return <div class="graphs-view">
 		<HandlerGraphView
 			t={t}
 			initiatives={initiatives}

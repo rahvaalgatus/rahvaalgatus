@@ -2185,8 +2185,88 @@ main {
 			padding-right: $page-mobile-padding;
 		}
 
-		#graphs {
-			margin-bottom: 4rem;
+		#filters {
+			$input-height: 3.6rem;
+			margin-top: 1rem;
+			border-radius: 0.5rem;
+			font-size: 1.6rem;
+			display: inline-block;
+			position: relative;
+
+			summary { list-style: none; }
+
+			&:not([open]) summary {
+				display: inline-block;
+				line-height: 2.4rem;
+				padding: 0.7rem 1.5rem;
+				background: white;
+				text-align: center;
+				font-weight: 600;
+				border-radius: 2rem;
+				cursor: pointer;
+
+				@extend .ra-icon-filter;
+				&:before { vertical-align: top; margin-right: 1rem; }
+				&:hover { color: $link-color; }
+			}
+
+			&[open] {
+				display: block;
+				background: white;
+				padding: 1.5rem 2rem 2rem;
+				margin-bottom: 0.5rem;
+
+				& + #current-filters { display: none; }
+			}
+
+			&[open] summary {
+				position: absolute;
+				overflow: hidden;
+				top: 0;
+				right: 0;
+				height: 5rem;
+				width: 5rem;
+				line-height: 5rem;
+				cursor: pointer;
+				text-align: center;
+				color: #bababa;
+
+				@extend .ra-icon-close;
+
+				&:focus {
+					outline-color: currentcolor;
+					outline-style: dashed;
+					outline-width: 0.1rem;
+					color: #888;
+					border-radius: 1rem;
+					outline-offset: -0.5rem;
+				}
+
+				&:hover { color: #888; }
+
+				.open-text { display: none; }
+			}
+
+			label {
+				display: inline-block;
+				margin-right: 1rem;
+
+				span { font-weight: 600; }
+			}
+
+			input,
+			select {
+				display: block;
+				margin-top: 0.5rem;
+				margin-bottom: 1rem;
+				max-width: 35rem;
+				height: $input-height;
+			}
+
+			button { margin-right: 0.5rem; }
+		}
+
+		.graphs-view {
 			display: flex;
 			gap: 1rem;
 
@@ -2197,6 +2277,7 @@ main {
 				border-radius: 0.5rem;
 				background: white;
 				display: inline-block;
+				flex-grow: 1;
 
 				figcaption {
 					font-weight: 600;
@@ -2295,104 +2376,29 @@ main {
 			}
 		}
 
-		#filters {
-			details {
-				$input-height: 3.6rem;
-				border-radius: 0.5rem;
+		#current-filters {
+			display: inline;
+			font-size: 1.6rem;
+
+			.filter {
 				display: inline-block;
-				position: relative;
+				background: white;
+				padding: 0.7rem 2rem;
+				border-radius: 0.5rem;
+				margin-right: 0.7rem;
+				margin-top: 0.5rem;
 
-				summary { list-style: none; }
-
-				&:not([open]) summary {
-					@extend .blue-rounded-button;
-					@extend .ra-icon-filter;
-
-					line-height: 3.6rem + 0.1rem;
-					margin-bottom: 0.5rem;
-					margin-right: 1rem;
-				}
-
-				&[open] {
-					display: block;
-					background: white;
-					padding: 1rem 3rem 1.5rem 2rem;
-					margin-bottom: 0.5rem;
-
-					& + #current-filters { display: none; }
-				}
-
-				&[open] summary {
-					position: absolute;
-					overflow: hidden;
-					top: 0;
-					right: 0;
-					@extend .ra-icon-close;
-					height: 4rem;
-					width: 4rem;
-					line-height: 4rem;
-					cursor: pointer;
-					text-align: center;
-					color: #bababa;
-
-					&:focus {
-						outline-color: currentcolor;
-						outline-style: dashed;
-						outline-width: 0.1rem;
-						color: #888;
-						border-radius: 1rem;
-						outline-offset: -0.5rem;
-					}
-
-					&:hover { color: #888; }
-
-					.open-text { display: none; }
-				}
-
-				label {
-					display: inline-block;
-					margin-right: 1rem;
-
-					span { font-weight: 600; }
-				}
-
-				input,
-				select {
-					display: block;
-					margin-top: 0.5rem;
-					margin-bottom: 1rem;
-					max-width: 35rem;
-					height: $input-height;
-				}
-
-				button { margin-right: 0.5rem; }
-			}
-
-			#current-filters {
-				display: inline;
-				font-size: 1.6rem;
-
-				.filter {
-					display: inline-block;
-					background: white;
-					border: 1px solid $light-background-border;
-					padding: 0.5rem 1.5rem;
-					border-radius: 0.5rem;
+				.name {
+					text-transform: uppercase;
+					font-size: 1.4rem;
+					font-weight: 700;
+					color: $grey;
 					margin-right: 0.7rem;
-					margin-bottom: 0.5rem;
-
-					.name {
-						text-transform: uppercase;
-						font-size: 1.4rem;
-						font-weight: 700;
-						color: $grey;
-						margin-right: 0.7rem;
-					}
-
-					ul { display: inline; }
-					li { display: inline; }
-					li:not(:last-child):after { content: ", "; }
 				}
+
+				ul { display: inline; }
+				li { display: inline; }
+				li:not(:last-child):after { content: ", "; }
 			}
 		}
 	}
@@ -2471,13 +2477,32 @@ main {
 		caption {
 			text-align: left;
 			font-size: 1.6rem;
+			margin-bottom: 1rem;
 			line-height: 1.5;
 
-			// Filter buttons add another 0.5rem of bottom margin.
-			padding: 0 0 0.5rem;
+			& > div {
+				display: flex;
+				align-items: end;
+				justify-content: space-between;
+				flex-wrap: wrap;
+			}
 
-			.total { padding: 0 2rem; }
-			.total + #filters { margin-top: 0.5rem; }
+			.total { padding-left: 2rem; }
+			.summary { max-width: 75%; }
+			#filters[open] ~ * { display: none; }
+
+			.csv-button {
+				display: inline-block;
+				margin-left: 1rem;
+				padding: 0.7rem 1.5rem;
+				background: white;
+				text-align: center;
+				font-weight: 600;
+				border-radius: 2rem;
+				cursor: pointer;
+
+				&:hover { color: $link-color; }
+			}
 		}
 
 		.table-group-header th {
@@ -2494,11 +2519,17 @@ main {
 			}
 		}
 
-		.empty td {
+		tbody.empty td {
 			line-height: 1.5;
 			font-size: 1.6rem;
 			text-align: center;
 			padding-top: 2rem;
+		}
+
+		tbody.graphs tr td {
+			padding: 0;
+
+			.graphs-view { padding-top: 1.5rem; }
 		}
 
 		.initiative {
@@ -2627,6 +2658,8 @@ main {
 
 			caption {
 				display: block;
+
+				.summary { max-width: 100%; }
 			}
 
 			& > thead,
