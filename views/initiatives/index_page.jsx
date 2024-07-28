@@ -612,6 +612,12 @@ function FiltersView({
 				</a>.
 			</> : null}
 
+			{filters.external != null ? <input
+				type="hidden"
+				name="external"
+				value={String(filters.external)}
+			/> : null}
+
 			{orderBy ? <input
 				type="hidden"
 				name="order"

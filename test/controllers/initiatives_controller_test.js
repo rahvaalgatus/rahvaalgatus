@@ -178,7 +178,8 @@ describe("InitiativesController", function() {
 				form.elements["proceedings-started-on<"].value.must.equal("")
 				form.elements["proceedings-ended-on>"].value.must.equal("")
 				form.elements["proceedings-ended-on<"].value.must.equal("")
-				form.elements["proceedings-handler"].value.must.equal("")
+				form.elements.must.not.have.property("external")
+				form.elements.order.value.must.equal("phase")
 				demand(form.querySelector(".reset-filters-button")).be.null()
 
 				var table = dom.body.querySelector("#initiatives")
@@ -201,7 +202,8 @@ describe("InitiativesController", function() {
 					"proceedings-started-on<": "2015-06-27",
 					"proceedings-ended-on>": "2015-06-28",
 					"proceedings-ended-on<": "2015-06-30",
-					"proceedings-handler": "local"
+					"proceedings-handler": "local",
+					order: "-signing-started-at"
 				}
 
 				var res = yield this.request("/initiatives?" + Qs.stringify(query))
@@ -221,6 +223,7 @@ describe("InitiativesController", function() {
 				form.elements["proceedings-ended-on>"].value.must.equal("2015-06-28")
 				form.elements["proceedings-ended-on<"].value.must.equal("2015-06-30")
 				form.elements["proceedings-handler"].value.must.equal("local")
+				form.elements.order.value.must.equal("-signing-started-at")
 				form.querySelector(".reset-filters-button").must.exist()
 
 				var table = dom.body.querySelector("#initiatives")
@@ -243,6 +246,8 @@ describe("InitiativesController", function() {
 				var dom = parseHtml(res.body)
 
 				var filters = dom.querySelector("#filters")
+				var form = filters.querySelector("form")
+				form.elements.external.value.must.equal("false")
 				filters.querySelector(".reset-filters-button").must.exist()
 
 				var table = dom.body.querySelector("#initiatives")
