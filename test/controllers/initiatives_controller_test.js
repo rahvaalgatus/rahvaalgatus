@@ -442,7 +442,7 @@ describe("InitiativesController", function() {
 			var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
 			ids.must.eql([initiative.id])
 
-			els[0].querySelector(".signature-count-column").textContent.must.equal(
+			els[0].querySelector(".signature-progress").textContent.must.equal(
 				t("initiatives_page.table.signature_count.progress", {
 					signatureCount: 8
 				})
@@ -1050,6 +1050,38 @@ describe("InitiativesController", function() {
 					// order doesn't match initiative creation order.
 					signaturesDb.create(_.times(4 - i, () => new ValidSignature({
 						initiative_uuid: initiative.uuid
+					})))
+
+					return initiative
+				})
+
+				var res = yield this.request("/initiatives?" + Qs.stringify({order}))
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+				var els = dom.body.querySelectorAll("#initiatives .initiative")
+
+				_.map(els, (el) => Number(el.getAttribute("data-id"))).must.eql(
+					sort(_.map(initiatives, "id").reverse())
+				)
+			}))
+
+			_.each({
+				"last-signed-at": _.id,
+				"+last-signed-at": _.id,
+				"-last-signed-at": _.reverse,
+			}, (sort, order) => it(`must sort by ${order}`, function*() {
+				var initiatives = _.times(5, (i) => {
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign"
+					}))
+
+					// Create signatures in descending order to ensure their default
+					// order doesn't match initiative creation order.
+					signaturesDb.create(_.times(4 - i, () => new ValidSignature({
+						initiative_uuid: initiative.uuid,
+						created_at: DateFns.addMinutes(new Date, -i * 2)
 					})))
 
 					return initiative
@@ -2600,6 +2632,7 @@ describe("InitiativesController", function() {
 			"signing_started_at",
 			"signing_ends_at",
 			"signature_count",
+			"last_signed_at",
 			"sent_to_parliament_at",
 			"parliament_committees",
 			"finished_in_parliament_at",
@@ -2708,12 +2741,16 @@ describe("InitiativesController", function() {
 				phase: "sign"
 			}))
 
-			citizenosSignaturesDb.create(_.times(5, () => (
-				new ValidCitizenosSignature({initiative_uuid: initiative.uuid})
+			citizenosSignaturesDb.create(_.times(5, (i) => (
+				new ValidCitizenosSignature({
+					initiative_uuid: initiative.uuid,
+					created_at: DateFns.addMinutes(new Date, -(i - 3) * 2)
+				})
 			)))
 
-			signaturesDb.create(_.times(3, () => new ValidSignature({
-				initiative_uuid: initiative.uuid
+			var signatures = signaturesDb.create(_.times(3, (i) => new ValidSignature({
+				initiative_uuid: initiative.uuid,
+				created_at: DateFns.addMinutes(new Date, -i * 2)
 			})))
 
 			var res = yield this.request("/initiatives.csv")
@@ -2721,7 +2758,8 @@ describe("InitiativesController", function() {
 
 			res.body.must.eql(_.concat(CSV_HEADER, serializeCsvInitiative(_.defaults({
 				user_name: this.author.name,
-				signature_count: 8
+				signature_count: 8,
+				last_signed_at: signatures[0].created_at
 			}, initiative))).join("\n"))
 		})
 
@@ -13227,7 +13265,8 @@ describe("InitiativesController", function() {
 				finished_in_government_at: new Date(2015, 5, 24, 13, 37, 48, 666),
 			}), {
 				user_name: "Mary Smith",
-				signature_count: 666
+				signature_count: 666,
+				last_signed_at: new Date(2015, 5, 20, 13, 37, 43, 705)
 			})
 
 			serializeCsvInitiative(initiative).must.equal(Csv.serialize([
@@ -13241,6 +13280,7 @@ describe("InitiativesController", function() {
 				initiative.signing_started_at.toJSON(),
 				initiative.signing_ends_at.toJSON(),
 				666,
+				initiative.last_signed_at.toJSON(),
 				initiative.sent_to_parliament_at.toJSON(),
 				initiative.parliament_committee,
 				initiative.finished_in_parliament_at.toJSON(),

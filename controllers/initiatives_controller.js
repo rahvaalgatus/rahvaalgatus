@@ -84,21 +84,38 @@ exports.router.get("/",
 	var limit = req.query.limit ? parseLimit(req.query.limit) : null
 
 	var initiatives = initiativesDb.search(sql`
-		${filters.signedSince ? sql`
-			WITH recent_signatures AS (
-				SELECT initiative_uuid FROM initiative_signatures
-				WHERE created_at >= ${filters.signedSince}
-				UNION ALL
-				SELECT initiative_uuid FROM initiative_citizenos_signatures
-				WHERE created_at >= ${filters.signedSince}
-			)
-		` : sql``}
+		${filters.signedSince ? sql`WITH recent_signatures AS (
+			SELECT initiative_uuid FROM initiative_signatures
+			WHERE created_at >= ${filters.signedSince}
+			UNION ALL
+			SELECT initiative_uuid FROM initiative_citizenos_signatures
+			WHERE created_at >= ${filters.signedSince}
+		)` : sql``}
 
 		SELECT
 			initiative.*,
 			user.name AS user_name,
+
 			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
-			AS signature_count
+			AS signature_count,
+
+			(CASE initiative.phase
+				WHEN 'edit' THEN NULL
+				ELSE (
+					SELECT max(created_at) AS created_at
+					FROM initiative_signatures
+					WHERE initiative_uuid = initiative.uuid
+					GROUP BY initiative_uuid
+
+					UNION
+
+					SELECT max(created_at) AS created_at
+					FROM initiative_citizenos_signatures
+					WHERE initiative_uuid = initiative.uuid
+					GROUP BY initiative_uuid
+				)
+				END
+			) AS last_signed_at
 
 			${filters.signedSince ? sql`,
 				COUNT(recent.initiative_uuid) AS recent_signature_count
@@ -258,6 +275,10 @@ exports.router.get("/",
 				END ${orderDirSql}
 			`,
 
+			"last-signed-at": sql`
+				ORDER BY last_signed_at ${orderDirSql}
+			`,
+
 			"signatures-since-count": filters.signedSince
 				? sql`ORDER BY recent_signature_count ${orderDirSql}`
 				: null,
@@ -280,6 +301,11 @@ exports.router.get("/",
 
 		${limit != null ? sql`LIMIT ${limit}` : sql``}
 	`)
+
+	initiatives.forEach(function(initiative) {
+		if (initiative.last_signed_at)
+			initiative.last_signed_at = new Date(initiative.last_signed_at)
+	})
 
 	switch (res.contentType.name) {
 		case INITIATIVE_TYPE.name:
@@ -308,6 +334,7 @@ exports.router.get("/",
 				"signing_started_at",
 				"signing_ends_at",
 				"signature_count",
+				"last_signed_at",
 				"sent_to_parliament_at",
 				"parliament_committees",
 				"finished_in_parliament_at",
@@ -1502,6 +1529,7 @@ function serializeCsvInitiative(initiative) {
 		initiative.signing_started_at && initiative.signing_started_at.toJSON(),
 		initiative.signing_ends_at && initiative.signing_ends_at.toJSON(),
 		initiative.external ? null : initiative.signature_count || 0,
+		initiative.last_signed_at && initiative.last_signed_at.toJSON(),
 
 		initiative.sent_to_parliament_at &&
 			initiative.sent_to_parliament_at.toJSON(),
@@ -1620,6 +1648,7 @@ function parseOrder(order) {
 		case "signing-started-at":
 		case "signing-ended-at":
 		case "signature-count":
+		case "last-signed-at":
 		case "signatures-since-count":
 		case "proceedings-started-at":
 		case "proceedings-ended-at":

@@ -212,6 +212,16 @@ function InitiativesPage({
 								>
 									{t("initiatives_page.table.signatures_column")}
 								</SortButton>
+
+								<SortButton
+									path={initiativesPath}
+									query={filterQuery}
+									name="last-signed-at"
+									direction="desc"
+									sorted={orderBy == "last-signed-at" ? orderDir : null}
+								>
+									{t("initiatives_page.table.last_signed_column")}
+								</SortButton>
 							</small>
 						</th>
 
@@ -294,6 +304,10 @@ function InitiativesPage({
 
 						orderBy == "signing-ended-at" ? (
 							group || t("initiatives_page.table.signing_ended_at_ungrouped")
+						) :
+
+						orderBy == "last-signed-at" ? (
+							group || t("initiatives_page.table.last_signed_ungrouped")
 						) :
 
 						orderBy == "proceedings-started-at" ? (
@@ -762,13 +776,22 @@ function InitiativeGroupView({title, initiatives, t}) {
 				<td
 					class="signature-count-column sign-phase-column"
 					title={t("initiatives_page.table.signatures_column")}
-				>{
-					initiative.phase != "edit" ? <SignatureProgressView
+				>{initiative.phase != "edit" ? <>
+					<SignatureProgressView
 						t={t}
 						initiative={initiative}
 						signatureCount={initiative.signature_count}
-					/> : null
-				}</td>
+					/>
+
+					{(
+						initiative.phase == "sign" &&
+						initiative.last_signed_at
+					)	? <p class="last-signed"><small>
+						{Jsx.html(t("initiatives_page.table.last_signed_at", {
+							date: <DateView date={initiative.last_signed_at} />
+						}))}
+					</small></p> : null}
+				</> : null}</td>
 
 				<td
 					class="proceedings-started-at-column proceedings-ended-at-column proceedings-phase-column"
@@ -1108,6 +1131,11 @@ function groupInitiative(by, initiative) {
 			initiative.external ? "1000+" :
 			initiative.signature_count == 0 ? "0" :
 			Math.pow(10, Math.floor(Math.log10(initiative.signature_count))) + "+"
+		)
+
+		case "last-signed-at": return (
+			initiative.last_signed_at &&
+			initiative.last_signed_at.getFullYear()
 		)
 
 		case "proceedings-started-at":

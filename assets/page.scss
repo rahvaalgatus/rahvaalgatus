@@ -2640,22 +2640,32 @@ main {
 				text-align: right;
 			}
 
-			.signature-progress {
-				display: inline-block;
-				white-space: nowrap;
-				font-size: 1.3rem;;
-				font-weight: 700;
-				border-radius: 2rem;
-				padding: 0.2rem 1rem 0.1rem;
-				color: $progress-bar-color;
-				background-color: $progress-bar-background;
-				width: 100%;
-				min-width: 11rem;
-				text-align: center;
+			.signature-count-column {
+        .signature-progress {
+          display: inline-block;
+          white-space: nowrap;
+          font-size: 1.3rem;;
+          font-weight: 700;
+          border-radius: 2rem;
+          padding: 0.2rem 1rem 0.1rem;
+          color: $progress-bar-color;
+          background-color: $progress-bar-background;
+          width: 100%;
+          min-width: 11rem;
+          text-align: center;
 
-				&.external { background-color: $parliament-color; color: white; }
-				&.completed { background-color: white; }
-				&.failed { background-color: #9a9a9a; color: white; }
+          &.external { background-color: $parliament-color; color: white; }
+          &.completed { background-color: white; }
+          &.failed { background-color: #9a9a9a; color: white; }
+        }
+
+				.last-signed {
+					color: $grey;
+					font-weight: 500;
+					margin-top: 0.3rem;
+					text-align: center;
+					white-space: nowrap;
+				}
 			}
 
 			& + .initiative > td { border-top: 1px solid $secondary-background; }
@@ -2762,7 +2772,10 @@ main {
 					content: attr(title) ":";
 				}
 
-				.signature-progress { width: auto; }
+        .signature-count-column {
+          .signature-progress { width: auto; }
+          .last-signed { margin-left: 1rem; display: inline; }
+        }
 
 				.proceedings-handler {
 					font-family: inherit;
