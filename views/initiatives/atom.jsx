@@ -6,6 +6,7 @@ var Initiative = require("root/lib/initiative")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var renderEventTitle = require("root/lib/event").renderTitle
+var {renderParliamentDecision} = require("./initiative_page")
 var EMPTY_ARR = Array.prototype
 exports = module.exports = AtomView
 exports.EventEntryView = EventEntryView
@@ -175,21 +176,7 @@ function EventEntryView({initiative, event, sourced}) {
 		case "parliament-finished":
 			title = renderEventTitle(initiative, event)
 			decision = initiative.parliament_decision
-
-			if (decision) content =
-				decision == "return"
-				? t("PARLIAMENT_DECISION_RETURN")
-				: decision == "reject"
-				? t("PARLIAMENT_DECISION_REJECT")
-				: decision == "forward"
-				? t("PARLIAMENT_DECISION_FORWARD")
-				: decision == "forward-to-government"
-				? t("PARLIAMENT_DECISION_FORWARD_TO_GOVERNMENT")
-				: decision == "solve-differently"
-				? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
-				: decision == "draft-act-or-national-matter"
-				? t("PARLIAMENT_DECISION_DRAFT_ACT_OR_NATIONAL_MATTER")
-				: null
+			if (decision) content = renderParliamentDecision(t, decision)
 			break
 
 		case "sent-to-government":

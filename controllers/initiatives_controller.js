@@ -38,6 +38,7 @@ var {parsePersonalId} = require("root/lib/user")
 var {validateRedirect} = require("root/lib/http")
 var dispose = require("content-disposition")
 var {PHASES} = require("root/lib/initiative")
+var {PARLIAMENT_DECISIONS} = require("root/lib/initiative")
 var EMPTY_ARR = Array.prototype
 var EMPTY_INITIATIVE = {title: "", phase: "edit"}
 var EMPTY_CONTACT = {name: "", email: "", phone: ""}
@@ -226,6 +227,10 @@ exports.router.get("/",
 			initiative.destination = ${filters.proceedingsHandler}
 		)`) : sql``}
 
+		${filters.proceedingsDecision ? sql`
+			AND initiative.parliament_decision = ${filters.proceedingsDecision}
+		` : sql``}
+
 		${filters.external == null ? sql`` : filters.external
 			? sql`AND initiative.external`
 			: sql`AND NOT initiative.external`
@@ -345,13 +350,13 @@ exports.router.get("/",
 				"last_signed_at",
 				"sent_to_parliament_at",
 				"parliament_committees",
+				"parliament_decision",
 				"finished_in_parliament_at",
 				"sent_to_government_at",
 				"finished_in_government_at"
 			]) + "\n")
 
 			res.write(initiatives.map(serializeCsvInitiative).join("\n"))
-			//res.write("\n")
 			res.end()
 			break
 
@@ -1543,6 +1548,7 @@ function serializeCsvInitiative(initiative) {
 			initiative.sent_to_parliament_at.toJSON(),
 
 		initiative.parliament_committee,
+		initiative.parliament_decision,
 
 		initiative.finished_in_parliament_at &&
 			initiative.finished_in_parliament_at.toJSON(),
@@ -1580,6 +1586,7 @@ function parseFilters(query) {
 		"proceedings-started-on": "range",
 		"proceedings-ended-on": "range",
 		"proceedings-handler": true,
+		"proceedings-decision": true,
 		phase: "array",
 
 		signingEndsAt: "range",
@@ -1618,6 +1625,12 @@ function parseFilters(query) {
 		filters.proceedingsStartedOn = parseDateRange(filters.proceedingsStartedOn)
 	if (filters.proceedingsEndedOn)
 		filters.proceedingsEndedOn = parseDateRange(filters.proceedingsEndedOn)
+
+	if (
+		filters.proceedingsDecision &&
+		!isValidProceedingsDecision(filters.proceedingsDecision)
+	) filters.proceedingsDecision = null
+
 	if (filters.external != null)
 		filters.external = _.parseBoolean(filters.external)
 
@@ -1684,6 +1697,10 @@ function isValidDestination(dest) {
 		dest == "local" ||
 		_.hasOwn(LOCAL_GOVERNMENTS, dest)
 	)
+}
+
+function isValidProceedingsDecision(decision) {
+	return PARLIAMENT_DECISIONS.includes(decision)
 }
 
 function isOrganizationPresent(org) { return org.name || org.url }

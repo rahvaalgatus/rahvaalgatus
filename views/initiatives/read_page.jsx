@@ -1841,21 +1841,9 @@ function EventsView(attrs) {
 							decision = initiative.parliament_decision
 							title = t("PARLIAMENT_FINISHED")
 
-							if (decision) content = <p class="text">{
-								decision == "return"
-								? t("PARLIAMENT_DECISION_RETURN")
-								: decision == "reject"
-								? t("PARLIAMENT_DECISION_REJECT")
-								: decision == "forward"
-								? t("PARLIAMENT_DECISION_FORWARD")
-								: decision == "forward-to-government"
-								? t("PARLIAMENT_DECISION_FORWARD_TO_GOVERNMENT")
-								: decision == "solve-differently"
-								? t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY")
-								: decision == "draft-act-or-national-matter"
-								? t("PARLIAMENT_DECISION_DRAFT_ACT_OR_NATIONAL_MATTER")
-								: null
-								}</p>
+							if (decision) content = <p class="text">
+								{InitiativePage.renderParliamentDecision(t, decision)}
+							</p>
 							break
 
 						case "sent-to-government":

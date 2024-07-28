@@ -16,6 +16,7 @@ var {getSignatureThreshold} = require("root/lib/initiative")
 var {javascript} = require("root/lib/jsx")
 var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
 var getWeight = _.property("weight")
+var {PARLIAMENT_DECISIONS} = require("root/lib/initiative")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var LOCAL_GOVERNMENTS_BY_COUNTY = LOCAL_GOVERNMENTS.BY_COUNTY
 var {PHASES} = require("root/lib/initiative")
@@ -594,6 +595,25 @@ function FiltersView({
 				</select>
 			</label>
 
+			<label>
+				<span>{t("initiatives_page.filters.proceedings_decision_label")}</span>
+
+				<select name="proceedings-decision" class="form-select">
+					<option value="" selected={filters.proceedingsDecision == null}>
+						{t("initiatives_page.filters.proceedings_decision.all_label")}
+					</option>
+
+					<optgroup label={t("initiatives_page.filters.proceedings_decision.parliament_group_label")}>
+						{PARLIAMENT_DECISIONS.map((decision) => <option
+							value={decision}
+							selected={filters.proceedingsDecision == decision}
+						>
+							{renderParliamentDecision(t, decision)}
+						</option>)}
+					</optgroup>
+				</select>
+			</label>
+
 			<br />
 			<button type="submit" class="blue-rounded-button">
 				{t("initiatives_page.filters.filter_button")}
@@ -694,6 +714,14 @@ function CurrentFiltersView({t, filters}) {
 				? t("initiatives_page.caption.filters.proceedings_handler_local")
 				: filters.proceedingsHandler
 			}</strong>
+		</Filter>,
+
+		filters.proceedingsDecision && <Filter
+			name={t("initiatives_page.caption.filters.proceedings_decision_label")}
+		>
+			<strong>
+				{renderParliamentDecision(t, filters.proceedingsDecision)}
+			</strong>
 		</Filter>,
 
 		filters.external != null ? <Filter
@@ -835,16 +863,16 @@ function InitiativeGroupView({title, initiatives, t}) {
 					{proceedingsStartedAt && proceedingsEndedAt ? "—" : ""}
 					{proceedingsEndedAt ? <DateView date={proceedingsEndedAt} /> : null}
 
-					{proceedingsHandler ? <>
-						<br />
+					{proceedingsHandler ? <p
+						class="proceedings-handler"
+						title={t("initiatives_page.table.proceedings_handler_column")}
+					>
+						{proceedingsHandler}
+					</p> : null}
 
-						<span
-							class="proceedings-handler"
-							title={t("initiatives_page.table.proceedings_handler_column")}
-						>
-							{proceedingsHandler}
-						</span>
-					</> : null}
+					{initiative.parliament_decision ? <p class="proceedings-decision">
+						{renderParliamentDecision(t, initiative.parliament_decision)}.
+					</p> : null}
 				</td>
 			</tr>
 		})}
@@ -1257,6 +1285,21 @@ function donut(startAngle, endAngle, circleRadius, arcWidth) {
 		`A ${outerCircleRadius} ${outerCircleRadius} 0 0 0 ${outerStartX} ${outerStartY}`,
 		`Z`,
 	]
+}
+
+function renderParliamentDecision(t, decision) {
+	switch (decision) {
+		case "return":
+		case "reject":
+		case "forward":
+		case "forward-to-government":
+		case "solve-differently":
+		case "draft-act-or-national-matter":
+			var key = decision.replace(/-/g, "_")
+			return Jsx.html(t("initiatives_page.table.parliament_decisions." + key))
+
+		default: return null
+	}
 }
 
 function anyDefined(obj) { return _.any(obj, (value) => value != null) }

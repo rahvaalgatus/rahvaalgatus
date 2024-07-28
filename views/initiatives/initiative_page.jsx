@@ -12,6 +12,7 @@ var {getSignatureThreshold} = require("root/lib/initiative")
 exports = module.exports = InitiativePage
 exports.InitiativeBadgeView = InitiativeBadgeView
 exports.InitiativeProgressView = InitiativeProgressView
+exports.renderParliamentDecision = renderParliamentDecision
 
 function InitiativePage(attrs, children) {
 	var {req} = attrs
@@ -141,5 +142,20 @@ function InitiativeProgressView(attrs) {
 				? t("N_SIGNATURES_WITH_PAPER", {votes: sigs})
 				: t("N_SIGNATURES", {votes: sigs})
 			}</div>
+	}
+}
+
+function renderParliamentDecision(t, decision) {
+	switch (decision) {
+		case "return":
+		case "reject":
+		case "forward":
+		case "forward-to-government":
+		case "solve-differently":
+		case "draft-act-or-national-matter":
+			var key = decision.replace(/-/g, "_")
+			return Jsx.html(t("initiative_page.events.parliament_decisions." + key))
+
+		default: return null
 	}
 }

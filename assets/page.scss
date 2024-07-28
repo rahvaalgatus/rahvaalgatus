@@ -2259,7 +2259,8 @@ main {
 				display: block;
 				margin-top: 0.5rem;
 				margin-bottom: 1rem;
-				max-width: 35rem;
+				max-width: 30rem;
+        min-width: 100%;
 				height: $input-height;
 			}
 
@@ -2599,6 +2600,8 @@ main {
 				font-family: $tisa-pro;
 				color: $grey;
 			}
+
+			.proceedings-decision { margin-top: 0.3rem; }
 
       .authors {
         display: inline;

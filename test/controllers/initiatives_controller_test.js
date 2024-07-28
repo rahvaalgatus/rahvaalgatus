@@ -98,15 +98,16 @@ var PARLIAMENT_MEETING_DECISION_TEXTS = {
 }
 
 var PARLIAMENT_DECISION_TEXTS = {
-	"continue": t("PARLIAMENT_DECISION_CONTINUE"),
-	"return": t("PARLIAMENT_DECISION_RETURN"),
-	"reject": t("PARLIAMENT_DECISION_REJECT"),
-	"forward": t("PARLIAMENT_DECISION_FORWARD"),
-	"forward-to-government": t("PARLIAMENT_DECISION_FORWARD_TO_GOVERNMENT"),
-	"solve-differently": t("PARLIAMENT_DECISION_SOLVE_DIFFERENTLY"),
+	"return": t("initiative_page.events.parliament_decisions.return"),
+	"reject": t("initiative_page.events.parliament_decisions.reject"),
+	"forward": t("initiative_page.events.parliament_decisions.forward"),
 
+	"forward-to-government":
+		t("initiative_page.events.parliament_decisions.forward_to_government"),
+	"solve-differently":
+		t("initiative_page.events.parliament_decisions.solve_differently"),
 	"draft-act-or-national-matter":
-		t("PARLIAMENT_DECISION_DRAFT_ACT_OR_NATIONAL_MATTER"),
+		t("initiative_page.events.parliament_decisions.draft_act_or_national_matter")
 }
 
 describe("InitiativesController", function() {
@@ -159,7 +160,8 @@ describe("InitiativesController", function() {
 					"proceedings-started-on<": "",
 					"proceedings-ended-on>": "",
 					"proceedings-ended-on<": "",
-					"proceedings-handler": ""
+					"proceedings-handler": "",
+					"proceedings-decision": ""
 				}))
 
 				res.statusCode.must.equal(200)
@@ -178,6 +180,8 @@ describe("InitiativesController", function() {
 				form.elements["proceedings-started-on<"].value.must.equal("")
 				form.elements["proceedings-ended-on>"].value.must.equal("")
 				form.elements["proceedings-ended-on<"].value.must.equal("")
+				form.elements["proceedings-handler"].value.must.equal("")
+				form.elements["proceedings-decision"].value.must.equal("")
 				form.elements.must.not.have.property("external")
 				form.elements.order.value.must.equal("phase")
 				demand(form.querySelector(".reset-filters-button")).be.null()
@@ -203,6 +207,7 @@ describe("InitiativesController", function() {
 					"proceedings-ended-on>": "2015-06-28",
 					"proceedings-ended-on<": "2015-06-30",
 					"proceedings-handler": "local",
+					"proceedings-decision": "reject",
 					order: "-signing-started-at"
 				}
 
@@ -223,6 +228,7 @@ describe("InitiativesController", function() {
 				form.elements["proceedings-ended-on>"].value.must.equal("2015-06-28")
 				form.elements["proceedings-ended-on<"].value.must.equal("2015-06-30")
 				form.elements["proceedings-handler"].value.must.equal("local")
+				form.elements["proceedings-decision"].value.must.equal("reject")
 				form.elements.order.value.must.equal("-signing-started-at")
 				form.querySelector(".reset-filters-button").must.exist()
 
@@ -2307,6 +2313,45 @@ describe("InitiativesController", function() {
 			})
 		})
 
+		describe("given proceedings-decision", function() {
+			PARLIAMENT_DECISIONS.forEach(function(decision, i, decisions) {
+				it(`must filter initiatives in with parliament decision ${decision}`,
+					function*() {
+					var initiative = initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "parliament",
+						parliament_decision: decision
+					}))
+
+					initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "parliament",
+						parliament_decision: decisions[(i + 1) % decision.length]
+					}))
+
+					initiativesDb.create(new ValidInitiative({
+						user_id: this.author.id,
+						phase: "parliament"
+					}))
+
+					yield request.call(this, {
+						"proceedings-decision": decision
+					}, [initiative])
+				})
+			})
+
+			it("must not filter initiatives with an invalid decision", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "parliament"
+				}))
+
+				yield request.call(this, {
+					"proceedings-decision": "invalid"
+				}, [initiative])
+			})
+		})
+
 		describe("given external", function() {
 			it("must filter for non-external initiatives if invalid boolean",
 				function*() {
@@ -2739,6 +2784,7 @@ describe("InitiativesController", function() {
 			"last_signed_at",
 			"sent_to_parliament_at",
 			"parliament_committees",
+			"parliament_decision",
 			"finished_in_parliament_at",
 			"sent_to_government_at",
 			"finished_in_government_at"
@@ -13365,6 +13411,7 @@ describe("InitiativesController", function() {
 				sent_to_parliament_at: new Date(2015, 5, 21, 13, 37, 45, 666),
 				finished_in_parliament_at: new Date(2015, 5, 22, 13, 37, 46, 666),
 				parliament_committee: "Keskkonnakomisjon",
+				parliament_decision: "reject",
 				sent_to_government_at: new Date(2015, 5, 23, 13, 37, 47, 666),
 				finished_in_government_at: new Date(2015, 5, 24, 13, 37, 48, 666),
 			}), {
@@ -13387,6 +13434,7 @@ describe("InitiativesController", function() {
 				initiative.last_signed_at.toJSON(),
 				initiative.sent_to_parliament_at.toJSON(),
 				initiative.parliament_committee,
+				initiative.parliament_decision,
 				initiative.finished_in_parliament_at.toJSON(),
 				initiative.sent_to_government_at.toJSON(),
 				initiative.finished_in_government_at.toJSON()
