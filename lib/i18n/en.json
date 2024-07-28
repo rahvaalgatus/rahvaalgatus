@@ -918,7 +918,7 @@
 	"initiatives_page.caption.filters.destination_local": "Local Government",
 	"initiatives_page.caption.filters.destination_parliament": "Riigikogu",
 	"initiatives_page.caption.filters.external": "Outside of Rahvaalgatus",
-	"initiatives_page.caption.filters.external_label": "Platform",
+	"initiatives_page.caption.filters.external_label": "Channel",
 	"initiatives_page.caption.filters.nonexternal": "Rahvaalgatus",
 	"initiatives_page.caption.filters.phase_label": "Phase",
 	"initiatives_page.caption.filters.proceedings_ended_label": "Proceedings End",

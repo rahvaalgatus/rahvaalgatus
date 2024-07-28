@@ -960,7 +960,7 @@
 	"initiatives_page.caption.filters.destination_local": "Kohalik omavalitsus",
 	"initiatives_page.caption.filters.destination_parliament": "Riigikogu",
 	"initiatives_page.caption.filters.external": "Väljaspool Rahvaalgatust",
-	"initiatives_page.caption.filters.external_label": "Keskkond",
+	"initiatives_page.caption.filters.external_label": "Kanal",
 	"initiatives_page.caption.filters.nonexternal": "Rahvaalgatus",
 	"initiatives_page.caption.filters.phase_label": "Faas",
 	"initiatives_page.caption.filters.proceedings_ended_label": "Menetluse lõpp",
