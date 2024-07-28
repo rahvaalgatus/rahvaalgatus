@@ -117,7 +117,8 @@ module.exports = function(attrs) {
 
 				url={"/initiatives?" + Qs.stringify({
 					destination: "parliament",
-					phase: _.without(Initiative.PHASES, "edit", "sign")
+					phase: _.without(Initiative.PHASES, "edit", "sign"),
+					order: "-proceedings-started-at"
 				}, {arrayFormat: "brackets"})}
 			>
 				{Jsx.html(t("home_page.statistics.parliament_in_last_days", {
@@ -126,14 +127,16 @@ module.exports = function(attrs) {
 					url: _.escapeHtml("/initiatives?" + Qs.stringify({
 						external: false,
 						destination: "parliament",
-						"proceedings-started-on>": formatIsoDate(thirtyDaysAgo)
+						"proceedings-started-on>": formatIsoDate(thirtyDaysAgo),
+						order: "-proceedings-started-at"
 					})),
 
 					externalCount: stats.all.governmentCounts.external,
 
 					externalUrl: _.escapeHtml("/initiatives?" + Qs.stringify({
 						external: "true",
-						destination: "parliament"
+						destination: "parliament",
+						order: "-proceedings-started-at"
 					}))
 				}))}
 			</StatisticView>

@@ -141,7 +141,8 @@ function HomePage(attrs) {
 				}
 
 				url={"/initiatives?" + Qs.stringify({
-					phase: _.without(Initiative.PHASES, "edit", "sign")
+					phase: _.without(Initiative.PHASES, "edit", "sign"),
+					order: "-proceedings-started-at"
 				}, {arrayFormat: "brackets"})}
 			>
 				{Jsx.html(t("home_page.statistics.government_in_last_days", {
@@ -149,7 +150,8 @@ function HomePage(attrs) {
 
 					url: _.escapeHtml("/initiatives?" + Qs.stringify({
 						external: false,
-						"proceedings-started-on>": formatIsoDate(thirtyDaysAgo)
+						"proceedings-started-on>": formatIsoDate(thirtyDaysAgo),
+						order: "-proceedings-started-at"
 					})),
 
 					parliamentCount: stats[30].governmentCounts.sent_parliament,
@@ -157,7 +159,8 @@ function HomePage(attrs) {
 					parliamentUrl: _.escapeHtml("/initiatives?" + Qs.stringify({
 						external: false,
 						destination: "parliament",
-						"proceedings-started-on>": formatIsoDate(thirtyDaysAgo)
+						"proceedings-started-on>": formatIsoDate(thirtyDaysAgo),
+						order: "-proceedings-started-at"
 					})),
 
 					localCount: stats[30].governmentCounts.sent_local,
@@ -165,13 +168,15 @@ function HomePage(attrs) {
 					localUrl: _.escapeHtml("/initiatives?" + Qs.stringify({
 						external: false,
 						destination: "local",
-						"proceedings-started-on>": formatIsoDate(thirtyDaysAgo)
+						"proceedings-started-on>": formatIsoDate(thirtyDaysAgo),
+						order: "-proceedings-started-at"
 					})),
 
 					externalCount: stats.all.governmentCounts.external,
 
 					externalUrl: _.escapeHtml("/initiatives?" + Qs.stringify({
-						external: "true"
+						external: "true",
+						order: "-proceedings-started-at"
 					}))
 				}))}
 			</StatisticView>
