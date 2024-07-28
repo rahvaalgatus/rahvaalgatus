@@ -65,7 +65,7 @@ function InitiativesPage({
 			<table id="initiatives">
 				<caption><div>
 					<div class="summary">
-						{initiatives.length > 0 ? <div class="total">{_.any(filters) ? <>
+						{initiatives.length > 0 ? <div class="total">{anyDefined(filters) ? <>
 							{Jsx.html(initiatives.length == 1
 								? t("initiatives_page.caption.filtered_total_1")
 								: t("initiatives_page.caption.filtered_total_n", {
@@ -73,11 +73,15 @@ function InitiativesPage({
 								})
 							)}
 							{" "}
-							<a href={initiativesPath + Qs.stringify({
-								order: orderBy
-									? (orderDir == "asc" ? "" : "-") + orderBy
-									: undefined
-							}, {addQueryPrefix: true})} class="link-button">
+							<a
+								href={initiativesPath + Qs.stringify({
+									order: orderBy
+										? (orderDir == "asc" ? "" : "-") + orderBy
+										: undefined
+								}, {addQueryPrefix: true})}
+
+								class="link-button reset-filters-button"
+							>
 								{Jsx.html(t("initiatives_page.caption.view_all_button"))}
 							</a>.
 						</> : Jsx.html(initiatives.length == 1
@@ -261,7 +265,7 @@ function InitiativesPage({
 				</td></tr></tbody>
 
 				{initiatives.length == 0 ? <tbody class="empty"><tr>
-					<td colspan={colSpan}>{_.any(filters) ? <>
+					<td colspan={colSpan}>{anyDefined(filters) ? <>
 						<p>
 							{t("initiatives_page.table.no_initiatives_with_filters")}
 						</p>
@@ -324,7 +328,7 @@ function FiltersView({
 }) {
 	return <details id="filters">
 		<summary>
-			<span class="open-text">{_.any(filters)
+			<span class="open-text">{anyDefined(filters)
 				? t("initiatives_page.filters.open_button_with_filters")
 				: t("initiatives_page.filters.open_button")
 			}</span>
@@ -566,7 +570,7 @@ function FiltersView({
 				{t("initiatives_page.filters.filter_button")}
 			</button>
 
-			{_.any(filters, _.id) ? <>
+			{anyDefined(filters) ? <>
 				{" "}
 				{t("initiatives_page.filters.or")}
 				{" "}
@@ -574,7 +578,7 @@ function FiltersView({
 					order: orderBy
 						? (orderDir == "asc" ? "" : "-") + orderBy
 						: undefined
-				}, {addQueryPrefix: true})} class="link-button">
+				}, {addQueryPrefix: true})} class="link-button reset-filters-button">
 					{t("initiatives_page.filters.reset_button")}
 				</a>.
 			</> : null}
@@ -1195,4 +1199,5 @@ function donut(startAngle, endAngle, circleRadius, arcWidth) {
 	]
 }
 
+function anyDefined(obj) { return _.any(obj, (value) => value != null) }
 function translate(x, y) { return "translate(" + x + ", " + y + ")" }

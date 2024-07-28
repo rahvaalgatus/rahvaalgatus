@@ -145,7 +145,7 @@ describe("InitiativesController", function() {
 			metasByProp["og:image"].content.must.equal(imageUrl)
 		})
 
-		describe("filters form", function() {
+		describe("filters", function() {
 			it("must show filters at default if all empty", function*() {
 				var res = yield this.request("/initiatives?" + Qs.stringify({
 					destination: "",
@@ -159,6 +159,7 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
+
 				var form = dom.querySelector("#filters form")
 				form.elements.destination.value.must.equal("")
 				form.elements.phase.value.must.equal("")
@@ -166,6 +167,7 @@ describe("InitiativesController", function() {
 				form.elements["published-on<"].value.must.equal("")
 				form.elements["signing-started-on>"].value.must.equal("")
 				form.elements["signing-started-on<"].value.must.equal("")
+				demand(form.querySelector(".reset-filters-button")).be.null()
 
 				var table = dom.body.querySelector("#initiatives")
 				var heading = table.tHead.querySelector("th .column-name")
@@ -195,6 +197,7 @@ describe("InitiativesController", function() {
 				form.elements["published-on<"].value.must.equal("2015-06-20")
 				form.elements["signing-started-on>"].value.must.equal("2015-06-22")
 				form.elements["signing-started-on<"].value.must.equal("2015-06-24")
+				form.querySelector(".reset-filters-button").must.exist()
 
 				var table = dom.body.querySelector("#initiatives")
 				var heading = table.tHead.querySelector("th .column-name")
@@ -202,13 +205,33 @@ describe("InitiativesController", function() {
 				heading.href.must.startWith("/initiatives?")
 
 				Qs.parse(Url.parse(heading.href).query).must.eql(_.defaults({
-					order: "title",
-					destination: "parliament"
+					order: "title"
 				}, query))
 			})
 
-			it("must show set destination filter if all local governments",
-				function*() {
+			// This internally uses a external=false value — easily ignorable being
+			// falsy.
+			it("must show reset filters button if filtering for non-external initiatives", function*() {
+				var query = {external: "false"}
+				var res = yield this.request("/initiatives?" + Qs.stringify(query))
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+
+				var filters = dom.querySelector("#filters")
+				filters.querySelector(".reset-filters-button").must.exist()
+
+				var table = dom.body.querySelector("#initiatives")
+				var heading = table.tHead.querySelector("th .column-name")
+				heading.textContent.trim().must.equal("Pealkiri")
+				heading.href.must.startWith("/initiatives?")
+
+				Qs.parse(Url.parse(heading.href).query).must.eql(_.defaults({
+					order: "title"
+				}, query))
+			})
+
+			it("must show set destination filter if filtering by all local governments", function*() {
 				var res = yield this.request("/initiatives?" + Qs.stringify({
 					destination: "local"
 				}))
@@ -220,7 +243,7 @@ describe("InitiativesController", function() {
 				form.elements.destination.value.must.equal("local")
 			})
 
-			it("must show set destination filter if a local government", function*() {
+			it("must show set destination filter if filtering by a local government", function*() {
 				var res = yield this.request("/initiatives?" + Qs.stringify({
 					destination: "tallinn"
 				}))
