@@ -488,10 +488,7 @@ function FiltersView({
 					value={
 						filters.proceedingsStartedOn &&
 						filters.proceedingsStartedOn.end &&
-
-						formatIsoDate(
-							DateFns.addDays(filters.proceedingsStartedOn.end, -1)
-						)
+						formatIsoDate(DateFns.addDays(filters.proceedingsStartedOn.end, -1))
 					}
 				/>
 			</label>
@@ -684,7 +681,6 @@ function CurrentFiltersView({t, filters}) {
 		</li>
 	}
 }
-
 
 function InitiativeGroupView({title, initiatives, t}) {
 	var colSpan = 8
