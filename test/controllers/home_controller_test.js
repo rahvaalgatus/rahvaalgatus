@@ -877,6 +877,20 @@ describe("HomeController", function() {
 					var el = dom.querySelector("#discussions-statistic .count")
 					el.textContent.must.equal("0")
 				})
+
+				it("must not count external initiatives", function*() {
+					initiativesDb.create(new ValidInitiative({
+						phase: "parliament",
+						external: true
+					}))
+
+					var res = yield this.request("/")
+					res.statusCode.must.equal(200)
+
+					var dom = parseHtml(res.body), el
+					el = dom.querySelector("#discussions-statistic .count")
+					el.textContent.must.equal("0")
+				})
 			})
 
 			describe("initiatives", function() {
@@ -920,8 +934,6 @@ describe("HomeController", function() {
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body), el
-					el = dom.querySelector("#discussions-statistic .count")
-					el.textContent.must.equal("0")
 					el = dom.querySelector("#initiatives-statistic .count")
 					el.textContent.must.equal("0")
 				})
@@ -1244,7 +1256,7 @@ describe("HomeController", function() {
 
 		describe("statistics", function() {
 			describe("discussions", function() {
-				it("must count initiatives in edit phase without destination",
+				it("must not count initiatives in edit phase without destination",
 					function*() {
 					initiativesDb.create(new ValidInitiative({
 						user_id: this.author.id,
@@ -1257,7 +1269,7 @@ describe("HomeController", function() {
 
 					var dom = parseHtml(res.body)
 					var el = dom.querySelector("#discussions-statistic .count")
-					el.textContent.must.equal("1")
+					el.textContent.must.equal("0")
 				})
 
 				it("must count initiatives destined for parliament", function*() {
@@ -1307,6 +1319,20 @@ describe("HomeController", function() {
 
 					var dom = parseHtml(res.body)
 					var el = dom.querySelector("#discussions-statistic .count")
+					el.textContent.must.equal("0")
+				})
+
+				it("must not count external initiatives", function*() {
+					initiativesDb.create(new ValidInitiative({
+						phase: "parliament",
+						external: true
+					}))
+
+					var res = yield this.request("/parliament")
+					res.statusCode.must.equal(200)
+
+					var dom = parseHtml(res.body), el
+					el = dom.querySelector("#discussions-statistic .count")
 					el.textContent.must.equal("0")
 				})
 			})
@@ -1362,8 +1388,6 @@ describe("HomeController", function() {
 					res.statusCode.must.equal(200)
 
 					var dom = parseHtml(res.body), el
-					el = dom.querySelector("#discussions-statistic .count")
-					el.textContent.must.equal("0")
 					el = dom.querySelector("#initiatives-statistic .count")
 					el.textContent.must.equal("0")
 				})

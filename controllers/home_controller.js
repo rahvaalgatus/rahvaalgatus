@@ -173,8 +173,7 @@ function readStatistics(destination, range) {
 		` : sql``}
 
 		${destination ? sql`AND (
-			destination = ${destination} OR
-			destination IS NULL
+			destination = ${destination}
 		)` : sql``}
 	`)[0].count
 
