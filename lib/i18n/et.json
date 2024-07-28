@@ -1024,6 +1024,7 @@
 	"initiatives_page.table.signatures_column": "Allkirju",
 	"initiatives_page.table.signing_ended_at_ungrouped": "Pole allkirjastamises",
 	"initiatives_page.table.signing_started_at_ungrouped": "Pole allkirjastamises",
+	"initiatives_page.table.sort_tooltip": "Sorteeri",
 	"initiatives_page.table.start_column": "Algus",
 	"initiatives_page.table.title_column": "Pealkiri",
 	"initiatives_page.table.view_all_button": "Vaata kõiki algatusi",

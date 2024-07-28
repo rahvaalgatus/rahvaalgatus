@@ -982,6 +982,7 @@
 	"initiatives_page.table.signatures_column": "Signatures",
 	"initiatives_page.table.signing_ended_at_ungrouped": "Not Signable",
 	"initiatives_page.table.signing_started_at_ungrouped": "Not Signable",
+	"initiatives_page.table.sort_tooltip": "Sort",
 	"initiatives_page.table.start_column": "Start",
 	"initiatives_page.table.title_column": "Title",
 	"initiatives_page.table.view_all_button": "View all initiatives",

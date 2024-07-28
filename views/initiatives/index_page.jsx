@@ -112,7 +112,7 @@ function InitiativesPage({
 				</div></caption>
 
 				<thead>
-					<tr title="Sorteeri">
+					<tr title={t("initiatives_page.table.sort_tooltip")}>
 						<th>
 							<SortButton
 								path={initiativesPath}
@@ -725,17 +725,26 @@ function InitiativeGroupView({title, initiatives, t}) {
 					</ul>
 				</td>
 
-				<td class="phase-column" title="Faas">
+				<td
+					class="phase-column"
+					title={t("initiatives_page.table.phase_column")}
+				>
 					<span class={"phase " + initiative.phase + "-phase"}>
 						{t("initiatives_page.phases." + initiative.phase)}
 					</span>
 				</td>
 
-				<td class="published-at-column edit-phase-column" title="Ühisloomes">
+				<td
+					class="published-at-column edit-phase-column"
+					title={t("initiatives_page.table.edit_phase_column")}
+				>
 					<DateView date={initiative.published_at} />
 				</td>
 
-				<td class="signing-started-at-column signing-ended-at-column sign-phase-column" title="Allkirjastamisel">
+				<td
+					class="signing-started-at-column signing-ended-at-column sign-phase-column"
+					title={t("initiatives_page.table.sign_phase_column")}
+				>
 					{initiative.signing_started_at
 						? <DateView date={initiative.signing_started_at} />
 						: null
@@ -750,7 +759,10 @@ function InitiativeGroupView({title, initiatives, t}) {
 					/> : null}
 				</td>
 
-				<td class="signature-count-column sign-phase-column" title="Allkirjad">{
+				<td
+					class="signature-count-column sign-phase-column"
+					title={t("initiatives_page.table.signatures_column")}
+				>{
 					initiative.phase != "edit" ? <SignatureProgressView
 						t={t}
 						initiative={initiative}
@@ -758,7 +770,10 @@ function InitiativeGroupView({title, initiatives, t}) {
 					/> : null
 				}</td>
 
-				<td class="proceedings-started-at-column proceedings-ended-at-column proceedings-phase-column" title="Menetluses">
+				<td
+					class="proceedings-started-at-column proceedings-ended-at-column proceedings-phase-column"
+					title={t("initiatives_page.table.parliament_phase_column")}
+				>
 					{proceedingsStartedAt
 						? <DateView date={proceedingsStartedAt} />
 						: null
@@ -770,7 +785,10 @@ function InitiativeGroupView({title, initiatives, t}) {
 					{proceedingsHandler ? <>
 						<br />
 
-						<span class="proceedings-handler" title="Menetleja">
+						<span
+							class="proceedings-handler"
+							title={t("initiatives_page.table.proceedings_handler_column")}
+						>
 							{proceedingsHandler}
 						</span>
 					</> : null}
