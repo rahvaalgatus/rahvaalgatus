@@ -182,6 +182,14 @@ exports.router.get("/",
 			AND initiative.signing_ends_at < ${filters.signingEndsAt.end}
 		` : sql``}
 
+		${filters.lastSignedOn && filters.lastSignedOn.begin ? sql`
+			AND last_signed_at >= ${filters.lastSignedOn.begin}
+		` : sql``}
+
+		${filters.lastSignedOn && filters.lastSignedOn.end ? sql`
+			AND last_signed_at < ${filters.lastSignedOn.end}
+		` : sql``}
+
 		${filters.proceedingsStartedOn && filters.proceedingsStartedOn.begin ? sql`
 			AND COALESCE(
 				initiative.accepted_by_parliament_at,
@@ -1568,6 +1576,7 @@ function parseFilters(query) {
 		"published-on": "range",
 		"signing-started-on": "range",
 		"signing-ended-on": "range",
+		"last-signed-on": "range",
 		"proceedings-started-on": "range",
 		"proceedings-ended-on": "range",
 		"proceedings-handler": true,
@@ -1603,6 +1612,8 @@ function parseFilters(query) {
 		filters.signingEndsAt = parseDateTimeRange(filters.signingEndsAt)
 	if (filters.signedSince)
 		filters.signedSince = Time.parse(filters.signedSince)
+	if (filters.lastSignedOn)
+		filters.lastSignedOn = parseDateRange(filters.lastSignedOn)
 	if (filters.proceedingsStartedOn)
 		filters.proceedingsStartedOn = parseDateRange(filters.proceedingsStartedOn)
 	if (filters.proceedingsEndedOn)

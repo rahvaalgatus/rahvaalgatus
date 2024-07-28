@@ -154,6 +154,7 @@ describe("InitiativesController", function() {
 					"published-on<": "",
 					"signing-started-on>": "",
 					"signing-started-on<": "",
+					"last-signed-on>": "",
 					"proceedings-started-on>": "",
 					"proceedings-started-on<": "",
 					"proceedings-ended-on>": "",
@@ -172,6 +173,12 @@ describe("InitiativesController", function() {
 				form.elements["published-on<"].value.must.equal("")
 				form.elements["signing-started-on>"].value.must.equal("")
 				form.elements["signing-started-on<"].value.must.equal("")
+				form.elements["last-signed-on>"].value.must.equal("")
+				form.elements["proceedings-started-on>"].value.must.equal("")
+				form.elements["proceedings-started-on<"].value.must.equal("")
+				form.elements["proceedings-ended-on>"].value.must.equal("")
+				form.elements["proceedings-ended-on<"].value.must.equal("")
+				form.elements["proceedings-handler"].value.must.equal("")
 				demand(form.querySelector(".reset-filters-button")).be.null()
 
 				var table = dom.body.querySelector("#initiatives")
@@ -189,6 +196,7 @@ describe("InitiativesController", function() {
 					"published-on<": "2015-06-20",
 					"signing-started-on>": "2015-06-22",
 					"signing-started-on<": "2015-06-24",
+					"last-signed-on>": "2015-05-12",
 					"proceedings-started-on>": "2015-06-25",
 					"proceedings-started-on<": "2015-06-27",
 					"proceedings-ended-on>": "2015-06-28",
@@ -207,6 +215,7 @@ describe("InitiativesController", function() {
 				form.elements["published-on<"].value.must.equal("2015-06-20")
 				form.elements["signing-started-on>"].value.must.equal("2015-06-22")
 				form.elements["signing-started-on<"].value.must.equal("2015-06-24")
+				form.elements["last-signed-on>"].value.must.equal("2015-05-12")
 				form.elements["proceedings-started-on>"].value.must.equal("2015-06-25")
 				form.elements["proceedings-started-on<"].value.must.equal("2015-06-27")
 				form.elements["proceedings-ended-on>"].value.must.equal("2015-06-28")
@@ -1885,6 +1894,96 @@ describe("InitiativesController", function() {
 				yield request.call(this, {
 					"signingEndsAt>": now.toJSON()
 				}, initiatives.slice(1))
+			})
+		})
+
+		describe("given last-signed-on", function() {
+			it("must include initiatives signed last on and after date", function*() {
+				var initiativeA = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign"
+				}))
+
+				signaturesDb.create(new ValidSignature({
+					initiative_uuid: initiativeA.uuid,
+
+					created_at: DateFns.addSeconds(
+						DateFns.addDays(DateFns.startOfDay(new Date), -1),
+						-1
+					)
+				}))
+
+				var initiativeB = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign"
+				}))
+
+				var signatureA = signaturesDb.create(new ValidSignature({
+					initiative_uuid: initiativeB.uuid,
+					created_at: DateFns.addDays(DateFns.startOfDay(new Date), -1)
+				}))
+
+				var initiativeC = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign"
+				}))
+
+				var signatureB = signaturesDb.create(new ValidSignature({
+					initiative_uuid: initiativeC.uuid,
+					created_at: DateFns.startOfDay(new Date)
+				}))
+
+				yield request.call(this, {
+					"last-signed-on>": formatIsoDate(DateFns.addDays(new Date, -1))
+				}, [_.assign(initiativeB, {
+					signature_count: 1,
+					last_signed_at: signatureA.created_at
+				}), _.assign(initiativeC, {
+					signature_count: 1,
+					last_signed_at: signatureB.created_at
+				})])
+			})
+
+			it("must include initiatives signed last on and before date", function*() {
+				var initiativeA = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign"
+				}))
+
+				var signatureA = signaturesDb.create(new ValidSignature({
+					initiative_uuid: initiativeA.uuid,
+					created_at: DateFns.addDays(DateFns.startOfDay(new Date), -2)
+				}))
+
+				var initiativeB = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign"
+				}))
+
+				var signatureB = signaturesDb.create(new ValidSignature({
+					initiative_uuid: initiativeB.uuid,
+					created_at: DateFns.addSeconds(DateFns.startOfDay(new Date), -1)
+				}))
+
+				var initiativeC = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign"
+				}))
+
+				signaturesDb.create(new ValidSignature({
+					initiative_uuid: initiativeC.uuid,
+					created_at: DateFns.startOfDay(new Date)
+				}))
+
+				yield request.call(this, {
+					"last-signed-on<": formatIsoDate(DateFns.addDays(new Date, -1))
+				}, [_.assign(initiativeA, {
+					signature_count: 1,
+					last_signed_at: signatureA.created_at
+				}), _.assign(initiativeB, {
+					signature_count: 1,
+					last_signed_at: signatureB.created_at
+				})])
 			})
 		})
 

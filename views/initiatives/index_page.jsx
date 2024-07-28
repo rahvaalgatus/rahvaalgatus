@@ -473,6 +473,24 @@ function FiltersView({
 
 			<label>
 				<span>
+					{t("initiatives_page.filters.last_signed_since_label")}
+				</span>
+
+				<input
+					type="date"
+					name="last-signed-on>"
+					class="form-input"
+
+					value={
+						filters.lastSignedOn &&
+						filters.lastSignedOn.begin &&
+						formatIsoDate(filters.lastSignedOn.begin)
+					}
+				/>
+			</label>
+
+			<label>
+				<span>
 					{t("initiatives_page.filters.proceedings_started_since_label")}
 				</span>
 
@@ -641,6 +659,12 @@ function CurrentFiltersView({t, filters}) {
 			name={t("initiatives_page.caption.filters.signing_started_label")}
 		>
 			<DateRangeView range={filters.signingStartedOn} />
+		</Filter>,
+
+		filters.lastSignedOn && <Filter
+			name={t("initiatives_page.caption.filters.last_signed_label")}
+		>
+			<DateRangeView range={filters.lastSignedOn} />
 		</Filter>,
 
 		filters.proceedingsStartedOn && <Filter
@@ -1188,6 +1212,8 @@ function serializeFilters(filters) {
 		serializeDateRange(filters.signingStartedOn)
 	if (filters.signingEndsOn) filters.signingEndsOn =
 		serializeDateRange(filters.signingEndsOn)
+	if (filters.lastSignedOn) filters.lastSignedOn =
+		serializeDateRange(filters.lastSignedOn)
 	if (filters.proceedingsStartedOn) filters.proceedingsStartedOn =
 		serializeDateRange(filters.proceedingsStartedOn)
 	if (filters.proceedingsEndedOn) filters.proceedingsEndedOn =
