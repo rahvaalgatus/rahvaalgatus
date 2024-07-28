@@ -375,7 +375,7 @@ function FiltersView({
 					</optgroup>
 
 					{_.map(LOCAL_GOVERNMENTS_BY_COUNTY, (govs, county) => <optgroup
-						label={county + " " + t("initiatives_page.filters.proceedings_handler.county_group_label_suffix")}
+						label={county + " " + t("initiatives_page.filters.destination.county_group_label_suffix")}
 					>{govs.map(([id, {name}]) => <option
 						value={id}
 						selected={(filters.destination || []).includes(id)}
@@ -536,6 +536,13 @@ function FiltersView({
 						{t("initiatives_page.filters.proceedings_handler.all_label")}
 					</option>
 
+					<option
+						value="local"
+						selected={filters.proceedingsHandler == "local"}
+					>
+						{t("initiatives_page.filters.proceedings_handler.local_label")}
+					</option>
+
 					<optgroup label={t("initiatives_page.filters.proceedings_handler.parliament_group_label")}>
 						{parliamentCommittees.map((committee) => <option
 							value={committee}
@@ -638,6 +645,8 @@ function CurrentFiltersView({t, filters}) {
 		>
 			<strong>{filters.proceedingsHandler in LOCAL_GOVERNMENTS
 				? LOCAL_GOVERNMENTS[filters.proceedingsHandler].name
+				: filters.proceedingsHandler == "local"
+				? t("initiatives_page.caption.filters.proceedings_handler_local")
 				: filters.proceedingsHandler
 			}</strong>
 		</Filter>,

@@ -2101,6 +2101,36 @@ describe("InitiativesController", function() {
 					"proceedings-handler": "tallinn"
 				}, [initiative])
 			})
+
+			it("must filter initiatives destined for all local governments",
+				function*() {
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "parliament"
+				}))
+
+				var a = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "muhu-vald"
+				}))
+
+				var b = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "sign",
+					destination: "tallinn"
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "edit",
+					destination: null,
+					published_at: new Date
+				}))
+
+				yield request.call(this, {"proceedings-handler": "local"}, [a, b])
+			})
 		})
 
 		describe("given external", function() {

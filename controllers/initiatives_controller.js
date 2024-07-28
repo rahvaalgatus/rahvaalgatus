@@ -193,10 +193,13 @@ exports.router.get("/",
 			) < ${filters.proceedingsEndedOn.end}
 		` : sql``}
 
-		${filters.proceedingsHandler ? sql`AND (
+		${filters.proceedingsHandler ? (filters.proceedingsHandler == "local" ? sql`
+			AND initiative.destination IS NOT NULL
+			AND initiative.destination != 'parliament'
+		` : sql`AND (
 			initiative.parliament_committee = ${filters.proceedingsHandler} OR
 			initiative.destination = ${filters.proceedingsHandler}
-		)` : sql``}
+		)`) : sql``}
 
 		${filters.external == null ? sql`` : filters.external
 			? sql`AND initiative.external`
