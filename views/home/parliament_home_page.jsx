@@ -73,7 +73,8 @@ module.exports = function(attrs) {
 				url={"/initiatives?" + Qs.stringify({
 					external: false,
 					destination: "parliament",
-					phase: _.without(Initiative.PHASES, "edit")
+					phase: _.without(Initiative.PHASES, "edit"),
+					order: "-signing-started-at"
 				}, {arrayFormat: "brackets"})}
 			>
 				{Jsx.html(t("home_page.statistics.parliament_initiatives_in_last_days", {
@@ -81,7 +82,8 @@ module.exports = function(attrs) {
 
 					url: _.escapeHtml("/initiatives?" + Qs.stringify({
 						destination: "parliament",
-						"signing-started-on>": formatIsoDate(thirtyDaysAgo)
+						"signing-started-on>": formatIsoDate(thirtyDaysAgo),
+						order: "-signing-started-at"
 					}))
 				}))}
 			</StatisticView>

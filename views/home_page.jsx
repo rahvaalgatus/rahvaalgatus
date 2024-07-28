@@ -86,28 +86,32 @@ function HomePage(attrs) {
 
 				url={"/initiatives?" + Qs.stringify({
 					external: false,
-					phase: _.without(Initiative.PHASES, "edit")
+					phase: _.without(Initiative.PHASES, "edit"),
+					order: "-signing-started-at"
 				}, {arrayFormat: "brackets"})}
 			>
 				{Jsx.html(t("home_page.statistics.initiatives_in_last_days", {
 					count: stats[30].initiativeCounts.all,
 
 					url: _.escapeHtml("/initiatives?" + Qs.stringify({
-						"signing-started-on>": formatIsoDate(thirtyDaysAgo)
+						"signing-started-on>": formatIsoDate(thirtyDaysAgo),
+						order: "-signing-started-at"
 					})),
 
 					parliamentCount: stats[30].initiativeCounts.parliament,
 
 					parliamentUrl: _.escapeHtml("/initiatives?" + Qs.stringify({
 						destination: "parliament",
-						"signing-started-on>": formatIsoDate(thirtyDaysAgo)
+						"signing-started-on>": formatIsoDate(thirtyDaysAgo),
+						order: "-signing-started-at"
 					})),
 
 					localCount: stats[30].initiativeCounts.local,
 
 					localUrl: _.escapeHtml("/initiatives?" + Qs.stringify({
 						destination: "local",
-						"signing-started-on>": formatIsoDate(thirtyDaysAgo)
+						"signing-started-on>": formatIsoDate(thirtyDaysAgo),
+						order: "-signing-started-at"
 					}))
 				}))}
 			</StatisticView>
