@@ -153,7 +153,12 @@ describe("InitiativesController", function() {
 					"published-on>": "",
 					"published-on<": "",
 					"signing-started-on>": "",
-					"signing-started-on<": ""
+					"signing-started-on<": "",
+					"proceedings-started-on>": "",
+					"proceedings-started-on<": "",
+					"proceedings-ended-on>": "",
+					"proceedings-ended-on<": "",
+					"proceedings-handler": ""
 				}))
 
 				res.statusCode.must.equal(200)
@@ -183,7 +188,12 @@ describe("InitiativesController", function() {
 					"published-on>": "2015-06-18",
 					"published-on<": "2015-06-20",
 					"signing-started-on>": "2015-06-22",
-					"signing-started-on<": "2015-06-24"
+					"signing-started-on<": "2015-06-24",
+					"proceedings-started-on>": "2015-06-25",
+					"proceedings-started-on<": "2015-06-27",
+					"proceedings-ended-on>": "2015-06-28",
+					"proceedings-ended-on<": "2015-06-30",
+					"proceedings-handler": "local"
 				}
 
 				var res = yield this.request("/initiatives?" + Qs.stringify(query))
@@ -197,6 +207,11 @@ describe("InitiativesController", function() {
 				form.elements["published-on<"].value.must.equal("2015-06-20")
 				form.elements["signing-started-on>"].value.must.equal("2015-06-22")
 				form.elements["signing-started-on<"].value.must.equal("2015-06-24")
+				form.elements["proceedings-started-on>"].value.must.equal("2015-06-25")
+				form.elements["proceedings-started-on<"].value.must.equal("2015-06-27")
+				form.elements["proceedings-ended-on>"].value.must.equal("2015-06-28")
+				form.elements["proceedings-ended-on<"].value.must.equal("2015-06-30")
+				form.elements["proceedings-handler"].value.must.equal("local")
 				form.querySelector(".reset-filters-button").must.exist()
 
 				var table = dom.body.querySelector("#initiatives")

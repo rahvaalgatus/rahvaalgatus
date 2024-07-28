@@ -1154,12 +1154,16 @@ function serializeFilters(filters) {
 
 	filters = _.clone(filters)
 
-	if (filters.publishedOn)
-		filters.publishedOn = serializeDateRange(filters.publishedOn)
-	if (filters.signingStartedOn)
-		filters.signingStartedOn = serializeDateRange(filters.signingStartedOn)
-	if (filters.signingEndsOn)
-		filters.signingEndsOn = serializeDateRange(filters.signingEndsOn)
+	if (filters.publishedOn) filters.publishedOn =
+		serializeDateRange(filters.publishedOn)
+	if (filters.signingStartedOn) filters.signingStartedOn =
+		serializeDateRange(filters.signingStartedOn)
+	if (filters.signingEndsOn) filters.signingEndsOn =
+		serializeDateRange(filters.signingEndsOn)
+	if (filters.proceedingsStartedOn) filters.proceedingsStartedOn =
+		serializeDateRange(filters.proceedingsStartedOn)
+	if (filters.proceedingsEndedOn) filters.proceedingsEndedOn =
+		serializeDateRange(filters.proceedingsEndedOn)
 
 	return Filtering.serializeFilters(_.mapKeys(filters, _.kebabCase))
 }
