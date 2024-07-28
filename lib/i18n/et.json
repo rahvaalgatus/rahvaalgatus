@@ -855,7 +855,7 @@
 	"home_page.statistics.parliament_in_last_days": "<a href=\"{{url}}\"><b>{{count}}</b> viimase 30 p jooksul</a>\n<a href=\"{{externalUrl}}\"><b>{{externalCount}}</b> saadetud mujalt</a>",
 	"home_page.statistics.parliament_initiatives_in_last_days": "<a href=\"{{url}}\"><b>{{count}}</b>&nbsp;viimase 30&nbsp;p jooksul</a>",
 	"home_page.statistics.parliament_title": "Riigikogus",
-	"home_page.statistics.signatures_in_last_days": "<b>{{count}}</b>&nbsp;viimase 30&nbsp;p jooksul",
+	"home_page.statistics.signatures_in_last_days": "<a href=\"{{url}}\"><b>{{count}}</b>&nbsp;viimase 30&nbsp;p jooksul</a>",
 	"home_page.statistics.signatures_title": "Allkirju",
 	"initiative_page.discussion_header.comment_button": "Esita oma kommentaar",
 	"initiative_page.discussion_header.description": "Ühisloomefaas on mõeldud algatuse tekstile kommentaaride ja ettepanekute kogumiseks — <strong>algatust veel allkirjastada ei saa</strong>. Ühisloomefaas kestab vähemalt kolm päeva, mille vältel algataja saab muuta nii teksti, tõlkeid kui ka algatuse saajat. Kui algatus allkirjastamisele saadetakse, läheb eestikeelne tekst lukku, ning muuta saab vaid tõlkeid.",

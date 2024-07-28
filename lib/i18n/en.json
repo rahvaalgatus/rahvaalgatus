@@ -813,7 +813,7 @@
 	"home_page.statistics.parliament_in_last_days": "<a href=\"{{url}}\"><b>{{countb> in the last 30 days</a>\n<a href=\"{{externalUrl}}\"><b>{{externalCount}}</b> sent externally</a>",
 	"home_page.statistics.parliament_initiatives_in_last_days": "<a href=\"{{url}}\"><b>{{count}}</b>&nbsp;in the last 30&nbsp;days</a>",
 	"home_page.statistics.parliament_title": "In Parliament",
-	"home_page.statistics.signatures_in_last_days": "<b>{{count}}</b>&nbsp;in the last 30&nbsp;days",
+	"home_page.statistics.signatures_in_last_days": "<a href=\"{{url}}\"><b>{{count}}</b>&nbsp;in the last 30&nbsp;days</a>",
 	"home_page.statistics.signatures_title": "Signatures",
 	"initiative_page.discussion_header.comment_button": "Add your comment",
 	"initiative_page.discussion_header.description": "The discussion phase is intended for commenting on the initiative's text — <strong>it can't yet be signed</strong>. The discussion phase lasts at least three days, during which the author can modify the text, translations, and the recipient of the initiative. When the initiative is sent for signing, the Estonian text is locked, and only translations can be modified.",

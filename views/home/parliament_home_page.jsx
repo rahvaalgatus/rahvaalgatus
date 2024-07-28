@@ -100,7 +100,14 @@ module.exports = function(attrs) {
 				})}
 			>
 				{Jsx.html(t("home_page.statistics.signatures_in_last_days", {
-					count: stats[30].signatureCount
+					count: stats[30].signatureCount,
+
+					url: _.escapeHtml("/initiatives?" + Qs.stringify({
+						external: false,
+						destination: "parliament",
+						"last-signed-on>": formatIsoDate(thirtyDaysAgo),
+						order: "-last-signed-at"
+					}))
 				}))}
 			</StatisticView>
 
