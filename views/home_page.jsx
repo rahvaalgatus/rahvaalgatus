@@ -119,7 +119,7 @@ function HomePage(attrs) {
 
 				url={"/initiatives?" + Qs.stringify({
 					external: false,
-					order: "-signature-count"
+					order: "-last-signed-at"
 				})}
 			>
 				{Jsx.html(t("home_page.statistics.signatures_in_last_days", {

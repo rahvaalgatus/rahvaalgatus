@@ -94,7 +94,7 @@ module.exports = function(attrs) {
 				url={"/initiatives?" + Qs.stringify({
 					external: false,
 					destination: "parliament",
-					order: "-signature-count"
+					order: "-last-signed-at"
 				})}
 			>
 				{Jsx.html(t("home_page.statistics.signatures_in_last_days", {
