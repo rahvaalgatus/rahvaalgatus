@@ -289,6 +289,36 @@ describe("InitiativesController", function() {
 				var form = dom.querySelector("#filters form")
 				form.elements.destination.value.must.equal("tallinn")
 			})
+
+			it("must show set proceedings handler filter if filtering by a parliament committee", function*() {
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "parliament",
+					parliament_committee: "Keskkonnakomisjon"
+				}))
+
+				var res = yield this.request("/initiatives?" + Qs.stringify({
+					"proceedings-handler": "Keskkonnakomisjon"
+				}))
+
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+				var form = dom.querySelector("#filters form")
+				form.elements["proceedings-handler"].value.must.equal("Keskkonnakomisjon")
+			})
+
+			it("must show set proceedings handler filter if filtering by a local government", function*() {
+				var res = yield this.request("/initiatives?" + Qs.stringify({
+					"proceedings-handler": "tallinn"
+				}))
+
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+				var form = dom.querySelector("#filters form")
+				form.elements["proceedings-handler"].value.must.equal("tallinn")
+			})
 		})
 
 		it("must show initiatives in edit phase", function*() {
