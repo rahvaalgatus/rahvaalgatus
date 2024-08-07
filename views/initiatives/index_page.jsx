@@ -2,6 +2,7 @@
 var _ = require("root/lib/underscore")
 var Qs = require("qs")
 var Jsx = require("j6pack")
+var I18n = require("root/lib/i18n")
 var Range = require("strange")
 var DateFns = require("date-fns")
 var Page = require("../page")
@@ -19,10 +20,12 @@ var getWeight = _.property("weight")
 var {PARLIAMENT_DECISIONS} = require("root/lib/initiative")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var {PHASES} = require("root/lib/initiative")
-var PARLIAMENT_COMMITTEE_COUNT = 11
-module.exports = InitiativesPage
+var PARLIAMENT_COMMITTEES = require("root/lib/parliament_committees")
 
-function InitiativesPage({
+var PARLIAMENT_COMMITTEE_IDS =
+	_.keys(_.filterValues(PARLIAMENT_COMMITTEES, (c) => c.permanent))
+
+module.exports = function({
 	t,
 	req,
 	flash,
@@ -31,6 +34,7 @@ function InitiativesPage({
 	initiatives,
 	parliamentCommittees
 }) {
+	var {lang} = req
 	var [orderBy, orderDir] = order
 	var filterQuery = serializeFilters(filters)
 	var initiativesPath = req.baseUrl
@@ -90,12 +94,13 @@ function InitiativesPage({
 							: t("initiatives_page.caption.total_n", {count: initiatives.length})
 						)}</div> : null}
 
-						<CurrentFiltersView t={t} filters={filters} />
+						<CurrentFiltersView t={t} lang={lang} filters={filters} />
 					</div>
 
 					<div class="configuration">
 						<FiltersView
 							t={t}
+							lang={lang}
 							filters={filters}
 							path={initiativesPath}
 							order={order}
@@ -269,6 +274,7 @@ function InitiativesPage({
 				<tbody class="graphs"><tr><td colspan={colSpan}>
 					<GraphsView
 						t={t}
+						lang={lang}
 						initiatives={initiatives}
 						path={initiativesPath}
 						query={query}
@@ -321,10 +327,15 @@ function InitiativesPage({
 							t("initiatives_page.table.proceedings_ended_at_ungrouped")
 						) :
 
+						orderBy == "proceedings-handler" ? (
+							group && nameProceedingsHandler(lang, group)
+						) :
+
 						group
 
 					return <InitiativeGroupView
 						t={t}
+						lang={lang}
 						title={title}
 						initiatives={initiatives}
 					/>
@@ -336,11 +347,15 @@ function InitiativesPage({
 
 function FiltersView({
 	t,
+	lang,
 	filters,
 	path,
 	order: [orderBy, orderDir],
 	parliamentCommittees
 }) {
+	var extraParliamentCommittees =
+		_.difference(parliamentCommittees, PARLIAMENT_COMMITTEE_IDS)
+
 	return <details id="filters">
 		<summary>
 			<span class="open-text">{anyDefined(filters)
@@ -578,7 +593,14 @@ function FiltersView({
 					<hr />
 
 					<optgroup label={t("initiatives_page.filters.proceedings_handler.parliament_group_label")}>
-						{parliamentCommittees.map((committee) => <option
+						{PARLIAMENT_COMMITTEE_IDS.map((committee) => <option
+							value={committee}
+							selected={filters.proceedingsHandler == committee}
+						>
+							{I18n.nameParliamentCommittee(lang, committee)}
+						</option>)}
+
+						{extraParliamentCommittees.map((committee) => <option
 							value={committee}
 							selected={filters.proceedingsHandler == committee}
 						>
@@ -645,7 +667,7 @@ function FiltersView({
 	</details>
 }
 
-function CurrentFiltersView({t, filters}) {
+function CurrentFiltersView({t, lang, filters}) {
 	var facets = _.intersperse([
 		filters.id && <Filter name="Id">
 			<strong>{filters.id.join(", ")}</strong>
@@ -706,7 +728,10 @@ function CurrentFiltersView({t, filters}) {
 		filters.proceedingsHandler && <Filter
 			name={t("initiatives_page.caption.filters.proceedings_handler_label")}
 		>
-			<strong>{filters.proceedingsHandler in LOCAL_GOVERNMENTS
+			<strong>{
+				filters.proceedingsHandler in PARLIAMENT_COMMITTEES
+				? I18n.nameParliamentCommittee(lang, filters.proceedingsHandler)
+				: filters.proceedingsHandler in LOCAL_GOVERNMENTS
 				? LOCAL_GOVERNMENTS[filters.proceedingsHandler].name
 				: filters.proceedingsHandler == "local"
 				? t("initiatives_page.caption.filters.proceedings_handler_local")
@@ -752,7 +777,7 @@ function CurrentFiltersView({t, filters}) {
 	}
 }
 
-function InitiativeGroupView({title, initiatives, t}) {
+function InitiativeGroupView({t, lang, title, initiatives}) {
 	var colSpan = 8
 
 	return <tbody>
@@ -864,9 +889,7 @@ function InitiativeGroupView({title, initiatives, t}) {
 					{proceedingsHandler ? <p
 						class="proceedings-handler"
 						title={t("initiatives_page.table.proceedings_handler_column")}
-					>
-						{proceedingsHandler}
-					</p> : null}
+					>{nameProceedingsHandler(lang, proceedingsHandler)}</p> : null}
 
 					{initiative.parliament_decision ? <p class="proceedings-decision">
 						{renderParliamentDecision(t, initiative.parliament_decision)}.
@@ -877,10 +900,11 @@ function InitiativeGroupView({title, initiatives, t}) {
 	</tbody>
 }
 
-function GraphsView({t, initiatives, path, query}) {
+function GraphsView({t, lang, initiatives, path, query}) {
 	return <div class="graphs-view">
-		<HandlerGraphView
+		<ProceedingsHandlersGraphView
 			t={t}
+			lang={lang}
 			initiatives={initiatives}
 			path={path}
 			query={query}
@@ -918,7 +942,7 @@ var PIE_CHART_COLORS = [
 	"#FFF6E9",
 ]
 
-function HandlerGraphView({t, initiatives, path, query}) {
+function ProceedingsHandlersGraphView({t, lang, initiatives, path, query}) {
 	var handlers = _.countBy(initiatives.map(getProceedingsHandler))
 	delete handlers.null
 
@@ -926,7 +950,8 @@ function HandlerGraphView({t, initiatives, path, query}) {
 	if (handlers.length < 2) return null
 
 	handlers = handlers.map(([handler, count], i) => ({
-		title: handler == "null" ? null : handler,
+		id: handler,
+		title: handler == "null" ? null : nameProceedingsHandler(lang, handler),
 		weight: count,
 		color: PIE_CHART_COLORS[i]
 	}))
@@ -945,7 +970,8 @@ function HandlerGraphView({t, initiatives, path, query}) {
 
 			<table
 				class="legend"
-			>{handlers.slice(0, PARLIAMENT_COMMITTEE_COUNT).map(({
+			>{handlers.slice(0, PARLIAMENT_COMMITTEE_IDS.length).map(({
+				id,
 				title,
 				weight: count,
 				color
@@ -955,7 +981,7 @@ function HandlerGraphView({t, initiatives, path, query}) {
 
 				<td class="title" title={title}>
 					<a href={path + Qs.stringify(_.defaults({
-						"proceedings-handler": title
+						"proceedings-handler": id
 					}, query), {addQueryPrefix: true})} class="link-button">
 						{title}
 					</a>
@@ -1229,12 +1255,19 @@ function getProceedingsEndedAt(initiative) {
 }
 
 function getProceedingsHandler(initiative) {
-	return initiative.parliament_committee || (
-		initiative.destination != "parliament" &&
-		initiative.accepted_by_government_at
-		? LOCAL_GOVERNMENTS[initiative.destination].name
+	return initiative.destination == "parliament"
+		? initiative.parliament_committee
+		: initiative.destination && initiative.accepted_by_government_at
+		? initiative.destination
 		: null
-	)
+}
+
+function nameProceedingsHandler(lang, handler) {
+	return handler in PARLIAMENT_COMMITTEES
+		? I18n.nameParliamentCommittee(lang, handler)
+		: handler in LOCAL_GOVERNMENTS
+		? LOCAL_GOVERNMENTS[handler].name
+		: handler
 }
 
 function serializeFilters(filters) {

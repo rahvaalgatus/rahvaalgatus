@@ -1,6 +1,7 @@
 /** @jsx Jsx */
 var _ = require("root/lib/underscore")
 var Jsx = require("j6pack/xml")
+var I18n = require("root/lib/i18n")
 var Config = require("root").config
 var Initiative = require("root/lib/initiative")
 var t = require("root/lib/i18n").t.bind(null, "et")
@@ -81,7 +82,7 @@ function EventEntryView({initiative, event, sourced}) {
 			title = renderEventTitle(initiative, event)
 			var {committee} = event.content
 			if (committee) content = t("PARLIAMENT_ACCEPTED_SENT_TO_COMMITTEE", {
-				committee: committee
+				committee: I18n.nameParliamentCommittee("et", committee)
 			})
 			break
 

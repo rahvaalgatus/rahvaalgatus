@@ -25,6 +25,7 @@ var {respondWithNotFound} = require("./parliament_api")
 var outdent = require("root/lib/outdent")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
+var COMMITTEES_BY_NAME = require("root/lib/parliament_committees").ID_BY_NAME
 var INITIATIVES_URL = "/api/documents/collective-addresses"
 var INITIATIVE_UUID = "c5c91e62-124b-41a4-9f37-6f80f8cab5ab"
 var DOCUMENT_UUID = "e519fd6f-584a-4f0e-9434-6d7c6dfe4865"
@@ -101,7 +102,7 @@ describe("ParliamentSyncCli", function() {
 			phase: "parliament",
 			undersignable: false,
 			parliament_uuid: INITIATIVE_UUID,
-			parliament_committee: "Sotsiaalkomisjon",
+			parliament_committee: "social-affairs",
 			parliament_synced_at: new Date
 		})])
 
@@ -268,7 +269,7 @@ describe("ParliamentSyncCli", function() {
 			// Neither is the author_name.
 			__proto__: initiative,
 			parliament_uuid: INITIATIVE_UUID,
-			parliament_committee: "Sotsiaalkomisjon",
+			parliament_committee: "social-affairs",
 			parliament_synced_at: new Date,
 			received_by_parliament_at: new Date(2018, 9, 23),
 			accepted_by_parliament_at: new Date(2018, 9, 24),
@@ -327,7 +328,7 @@ describe("ParliamentSyncCli", function() {
 			// NOTE: The previous parliament UUID gets updated, too.
 			__proto__: initiative,
 			parliament_uuid: INITIATIVE_UUID,
-			parliament_committee: "Sotsiaalkomisjon",
+			parliament_committee: "social-affairs",
 			parliament_synced_at: new Date
 		}])
 	})
@@ -913,6 +914,38 @@ describe("ParliamentSyncCli", function() {
 		this.emails.length.must.equal(0)
 	})
 
+	_.map(COMMITTEES_BY_NAME, function(id, name) {
+		it(`must update the initiative given ${name}`, function*() {
+			var initiative = initiativesDb.create(new ValidInitiative({
+				user_id: usersDb.create(new ValidUser).id,
+				parliament_uuid: INITIATIVE_UUID,
+				phase: "parliament"
+			}))
+
+			var initiativeDoc = {
+				uuid: INITIATIVE_UUID,
+				responsibleCommittee: [{name}]
+			}
+
+			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
+
+			this.router.get(
+				`/api/documents/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
+
+			this.router.get(
+				`/api/documents/collective-addresses/${INITIATIVE_UUID}`,
+				respond.bind(null, initiativeDoc)
+			)
+
+			yield job()
+
+			initiative = initiativesDb.read(initiative)
+			initiative.parliament_committee.must.equal(id)
+		})
+	})
+
 	it("must update the initiative given multiple committees", function*() {
 		var initiative = initiativesDb.create(new ValidInitiative({
 			user_id: usersDb.create(new ValidUser).id,
@@ -944,7 +977,7 @@ describe("ParliamentSyncCli", function() {
 		yield job()
 
 		initiative = initiativesDb.read(initiative)
-		initiative.parliament_committee.must.equal("Sotsiaalkomisjon")
+		initiative.parliament_committee.must.equal("social-affairs")
 	})
 
 	it("must update the initiative given multiple committees with no active",
@@ -979,7 +1012,7 @@ describe("ParliamentSyncCli", function() {
 		yield job()
 
 		initiative = initiativesDb.read(initiative)
-		initiative.parliament_committee.must.equal("Majanduskomisjon")
+		initiative.parliament_committee.must.equal("economic-affairs")
 	})
 
 	describe("given statuses", function() {
@@ -1004,7 +1037,7 @@ describe("ParliamentSyncCli", function() {
 				responsibleCommittee: [{name: "Sotsiaalkomisjon"}],
 				statuses: [{date: "2018-10-24", status: {code: "MENETLUSSE_VOETUD"}}]
 			}, {
-				parliament_committee: "Sotsiaalkomisjon",
+				parliament_committee: "social-affairs",
 				accepted_by_parliament_at: new Date(2018, 9, 24)
 			}, {
 				occurred_at: new Date(2018, 9, 24),
@@ -1012,7 +1045,7 @@ describe("ParliamentSyncCli", function() {
 				external_id: "MENETLUSSE_VOETUD",
 				type: "parliament-accepted",
 				title: null,
-				content: {committee: "Sotsiaalkomisjon"},
+				content: {committee: "social-affairs"},
 			}],
 
 			"ARUTELU_KOMISJONIS status": [{
@@ -1030,7 +1063,7 @@ describe("ParliamentSyncCli", function() {
 					}]
 				}]
 			}, {
-				parliament_committee: "Sotsiaalkomisjon"
+				parliament_committee: "social-affairs"
 			}, {
 				occurred_at: new Date(2018, 9, 24),
 				origin: "parliament",
@@ -1039,7 +1072,7 @@ describe("ParliamentSyncCli", function() {
 				title: null,
 
 				content: {
-					committee: "Sotsiaalkomisjon",
+					committee: "social-affairs",
 					invitees: null,
 
 					links: [
@@ -1715,7 +1748,7 @@ describe("ParliamentSyncCli", function() {
 			eventsDb.read(event).must.eql({
 				__proto__: event,
 				content: {
-					committee: "Sotsiaalkomisjon",
+					committee: "social-affairs",
 					invitees: null,
 					links: [],
 					decision: "forward",
@@ -2356,7 +2389,7 @@ describe("ParliamentSyncCli", function() {
 				external_id: "ARUTELU_KOMISJONIS/2015-06-18",
 				type: "parliament-committee-meeting",
 				title: null,
-				content: {committee: "Keskkonnakomisjon", invitees: null}
+				content: {committee: "environment", invitees: null}
 			}, [{
 				id: 1,
 				event_id: 1,
@@ -2395,7 +2428,7 @@ describe("ParliamentSyncCli", function() {
 				external_id: "ARUTELU_KOMISJONIS/2015-06-18",
 				type: "parliament-committee-meeting",
 				title: null,
-				content: {committee: "Keskkonnakomisjon", invitees: null}
+				content: {committee: "environment", invitees: null}
 			}, [{
 				id: 1,
 				event_id: 1,
@@ -2434,7 +2467,7 @@ describe("ParliamentSyncCli", function() {
 				external_id: "ARUTELU_KOMISJONIS/2015-06-18",
 				type: "parliament-committee-meeting",
 				title: null,
-				content: {committee: "Keskkonnakomisjon", invitees: null}
+				content: {committee: "environment", invitees: null}
 			}, [{
 				id: 1,
 				event_id: 1,
@@ -2473,7 +2506,7 @@ describe("ParliamentSyncCli", function() {
 				external_id: "ARUTELU_KOMISJONIS/2015-06-18",
 				type: "parliament-committee-meeting",
 				title: null,
-				content: {committee: "Keskkonnakomisjon", invitees: null}
+				content: {committee: "environment", invitees: null}
 			}, [{
 				id: 1,
 				event_id: 1,
@@ -2805,7 +2838,7 @@ describe("ParliamentSyncCli", function() {
 				external_id: "MENETLUSSE_VOETUD",
 				type: "parliament-accepted",
 				title: null,
-				content: {committee: "Keskkonnakomisjon"}
+				content: {committee: "environment"}
 			}, [{
 				id: 1,
 				event_id: 1,
@@ -2840,7 +2873,7 @@ describe("ParliamentSyncCli", function() {
 				external_id: "MENETLUSSE_VOETUD",
 				type: "parliament-accepted",
 				title: null,
-				content: {committee: "Keskkonnakomisjon"}
+				content: {committee: "environment"}
 			}, [{
 				id: 1,
 				event_id: 1,
@@ -2874,7 +2907,7 @@ describe("ParliamentSyncCli", function() {
 				external_id: "MENETLUSSE_VOETUD",
 				type: "parliament-accepted",
 				title: null,
-				content: {committee: "Keskkonnakomisjon"}
+				content: {committee: "environment"}
 			}, [{
 				id: 1,
 				event_id: 1,
@@ -2916,12 +2949,7 @@ describe("ParliamentSyncCli", function() {
 				external_id: "ARUTELU_KOMISJONIS/2015-06-18",
 				type: "parliament-committee-meeting",
 				title: null,
-
-				content: {
-					committee: "Keskkonnakomisjon",
-					invitees: null,
-					links: []
-				}
+				content: {committee: "environment", invitees: null, links: []}
 			}, [{
 				id: 1,
 				event_id: 1,
@@ -3275,21 +3303,25 @@ describe("ParliamentSyncCli", function() {
 			})])
 		})
 
+		// https://www.riigikogu.ee/riigikogu/riigikogu-komisjonid
 		// https://www.riigikogu.ee/riigikogu/koosseis/muudatused-koosseisus/
 		_.each({
-			ELAK: "Euroopa Liidu asjade komisjon",
-			KEKK: "Keskkonnakomisjon",
-			KULK: "Kultuurikomisjon",
-			MAEK: "Maaelukomisjon",
-			MAJK: "Majanduskomisjon",
-			PÕSK: "Põhiseaduskomisjon",
-			RAHK: "Rahanduskomisjon",
-			RIKK: "Riigikaitsekomisjon",
-			SOTK: "Sotsiaalkomisjon",
-			VÄLK: "Väliskomisjon",
-			ÕIGK: "Õiguskomisjon"
+			ELAK: "eu-affairs",
+			KEKK: "environment",
+			KULK: "cultural-affairs",
+			MAEK: "rural-affairs",
+			MAJK: "economic-affairs",
+			PÕSK: "constitutional",
+			RAHK: "finance",
+			RIKK: "national-defence",
+			SOTK: "social-affairs",
+			VÄLK: "foreign-affairs",
+			ÕIGK: "legal-affairs",
+			KVEK: "anti-corruption",
+			REKK: "state-budget-control",
+			JAJK: "security-authorities-surveillance"
 		}, function(name, code) {
-			it("must create event given committee meeting protocol of " + name, function*() {
+			it("must create event given committee meeting protocol of " + code, function*() {
 				var initiativeDoc = {
 					uuid: INITIATIVE_UUID,
 					relatedDocuments: [{uuid: DOCUMENT_UUID}]
@@ -3524,7 +3556,7 @@ describe("ParliamentSyncCli", function() {
 				title: null,
 
 				content: {
-					committee: "Sotsiaalkomisjon",
+					committee: "social-affairs",
 					invitees: "Sotsiaalministeeriumi terviseala asekantsler"
 				}
 			})])
@@ -3771,7 +3803,7 @@ describe("ParliamentSyncCli", function() {
 				external_id: "ARUTELU_KOMISJONIS/2015-06-18",
 				type: "parliament-committee-meeting",
 				title: null,
-				content: {committee: "Keskkonnakomisjon", invitees: null}
+				content: {committee: "environment", invitees: null}
 			})])
 
 			filesDb.search(sql`
@@ -3866,7 +3898,7 @@ describe("ParliamentSyncCli", function() {
 				title: null,
 
 				content: {
-					committee: "Sotsiaalkomisjon",
+					committee: "social-affairs",
 					invitees: "Sotsiaalministeeriumi terviseala asekantsler"
 				}
 			})])
@@ -3960,12 +3992,7 @@ describe("ParliamentSyncCli", function() {
 				external_id: "ARUTELU_KOMISJONIS/2015-06-18",
 				type: "parliament-committee-meeting",
 				title: null,
-
-				content: {
-					committee: "Keskkonnakomisjon",
-					invitees: null,
-					links: []
-				}
+				content: {committee: "environment", invitees: null, links: []}
 			})])
 
 			filesDb.search(sql`

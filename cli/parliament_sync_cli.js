@@ -26,6 +26,9 @@ var co = require("co")
 var EMPTY_ARR = Array.prototype
 var PARLIAMENT_URL = "https://www.riigikogu.ee"
 var DOCUMENT_URL = PARLIAMENT_URL + "/tegevus/dokumendiregister/dokument"
+var COMMITTEES = require("root/lib/parliament_committees")
+var COMMITTEES_BY_NAME = COMMITTEES.ID_BY_NAME
+var COMMITTEES_BY_ABBR = COMMITTEES.ID_BY_ABBR
 var FILE_URL = PARLIAMENT_URL + "/download"
 module.exports = co.wrap(cli)
 
@@ -38,21 +41,6 @@ Options:
     --quiet      Do not report ignored initiatives and documents.
     --no-email   Don't email about imported initiative events.
 `
-
-// https://www.riigikogu.ee/riigikogu/koosseis/muudatused-koosseisus/
-var COMMITTEES = {
-	ELAK: "Euroopa Liidu asjade komisjon",
-	KEKK: "Keskkonnakomisjon",
-	KULK: "Kultuurikomisjon",
-	MAEK: "Maaelukomisjon",
-	MAJK: "Majanduskomisjon",
-	PÕSK: "Põhiseaduskomisjon",
-	RAHK: "Rahanduskomisjon",
-	RIKK: "Riigikaitsekomisjon",
-	SOTK: "Sotsiaalkomisjon",
-	VÄLK: "Väliskomisjon",
-	ÕIGK: "Õiguskomisjon"
-}
 
 function* cli(argv) {
   var args = Neodoc.run(USAGE_TEXT, {argv: argv || ["parliament-sync"]})
@@ -455,8 +443,8 @@ function downloadFile(file) {
 
 function initiativeAttrsFromInitiativeDocument(doc) {
 	var attrs = {parliament_uuid: doc.uuid}
-	var committee = getLatestCommittee(doc)
-	if (committee) attrs.parliament_committee = committee.name
+	var committeeId = getLatestCommitteeId(doc)
+	if (committeeId) attrs.parliament_committee = committeeId
 	return attrs
 }
 
@@ -541,12 +529,9 @@ function eventAttrsFromStatus(
 		occurred_at: eventDate
 	}
 
-	var committee
-
 	switch (status.status.code) {
 		case "MENETLUSSE_VOETUD":
-			committee = getLatestCommittee(initiativeDocument)
-			attrs.content = {committee: committee && committee.name || null}
+			attrs.content = {committee: getLatestCommitteeId(initiativeDocument)}
 
 			;[
 				eventDocuments,
@@ -584,14 +569,12 @@ function eventAttrsFromStatus(
 			var protocolTime = protocol && parseProtocolDateTime(protocol)
 			if (protocolTime) attrs.occurred_at = protocolTime
 
-			committee = getLatestCommittee(initiativeDocument)
-
 			attrs.content = {
 				committee: (
 					// Don't default to the latest committee if there's a protocol, as it
 					// might be an old event.
 					protocol ? parseProtocolDocumentCommittee(protocol) :
-					committee && committee.name || null
+					getLatestCommitteeId(initiativeDocument)
 				),
 
 				invitees: null,
@@ -776,9 +759,7 @@ function eventAttrsFromVolume(opts, initiative, volume) {
 			occurred_at: time,
 
 			content: {
-				committee:
-					COMMITTEES[parseReference(volume.reference)] || null,
-
+				committee: COMMITTEES_BY_ABBR[parseReference(volume.reference)] || null,
 				invitees: topic && topic.invitees || null
 			},
 
@@ -996,7 +977,7 @@ function isParliamentCommitteeMeetingProtocolDocument(document) {
 
 function isCommitteeReference(reference) {
 	// Some joint meetings have a reference of "YHIS".
-	return reference in COMMITTEES || reference == "YHIS"
+	return reference in COMMITTEES_BY_ABBR || reference == "YHIS"
 }
 
 function isParliamentBoardMeetingProtocolDocument(document) {
@@ -1095,7 +1076,7 @@ function parseDocumentReference(document) {
 }
 
 function parseProtocolDocumentCommittee(document) {
-	return COMMITTEES[parseDocumentReference(document)] || null
+	return COMMITTEES_BY_ABBR[parseDocumentReference(document)] || null
 }
 
 function parseLetterDirection(direction) {
@@ -1158,9 +1139,13 @@ function is404(err) {
 	)
 }
 
-function getLatestCommittee(doc) {
+function getLatestCommitteeId(doc) {
 	var committees = doc.responsibleCommittee || EMPTY_ARR
-	return committees.find((com) => com.active) || _.last(committees) || null
+	var committee = committees.find((com) => com.active) || _.last(committees)
+
+	return committee
+		? COMMITTEES_BY_NAME[committee.name] || committee.name
+		: null
 }
 
 function parseLink(link) {

@@ -44,6 +44,7 @@ var EMPTY_INITIATIVE = {title: "", phase: "edit"}
 var EMPTY_CONTACT = {name: "", email: "", phone: ""}
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var MAX_URL_LENGTH = 1024
+var PARLIAMENT_COMMITTEES = require("root/lib/parliament_committees")
 var INITIATIVE_TYPE =
 	new MediaType("application/vnd.rahvaalgatus.initiative+json; v=1")
 var UUID_REGEX =
@@ -219,13 +220,19 @@ exports.router.get("/",
 			) < ${filters.proceedingsEndedOn.end}
 		` : sql``}
 
-		${filters.proceedingsHandler ? (filters.proceedingsHandler == "local" ? sql`
-			AND initiative.destination IS NOT NULL
-			AND initiative.destination != 'parliament'
-		` : sql`AND (
-			initiative.parliament_committee = ${filters.proceedingsHandler} OR
-			initiative.destination = ${filters.proceedingsHandler}
-		)`) : sql``}
+		${filters.proceedingsHandler ? (
+			filters.proceedingsHandler in PARLIAMENT_COMMITTEES ? sql`
+				AND initiative.destination = 'parliament'
+				AND initiative.parliament_committee = ${filters.proceedingsHandler}
+			` :
+
+			filters.proceedingsHandler == "local" ? sql`
+				AND initiative.destination IS NOT NULL
+				AND initiative.destination != 'parliament'
+			` :
+
+			sql`AND initiative.destination = ${filters.proceedingsHandler}`
+		) : sql``}
 
 		${filters.proceedingsDecision ? sql`
 			AND initiative.parliament_decision = ${filters.proceedingsDecision}

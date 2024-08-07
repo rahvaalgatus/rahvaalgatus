@@ -294,18 +294,18 @@ describe("InitiativesController", function() {
 				initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "parliament",
-					parliament_committee: "Keskkonnakomisjon"
+					parliament_committee: "environment"
 				}))
 
 				var res = yield this.request("/initiatives?" + Qs.stringify({
-					"proceedings-handler": "Keskkonnakomisjon"
+					"proceedings-handler": "environment"
 				}))
 
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
 				var form = dom.querySelector("#filters form")
-				form.elements["proceedings-handler"].value.must.equal("Keskkonnakomisjon")
+				form.elements["proceedings-handler"].value.must.equal("environment")
 			})
 
 			it("must show set proceedings handler filter if filtering by a local government", function*() {
@@ -1350,13 +1350,13 @@ describe("InitiativesController", function() {
 					new ValidInitiative({
 						user_id: this.author.id,
 						phase: "parliament",
-						parliament_committee: "Majanduskomisjon"
+						parliament_committee: "economic-affairs"
 					}),
 
 					new ValidInitiative({
 						user_id: this.author.id,
 						phase: "parliament",
-						parliament_committee: "Sotsiaalkomisjon"
+						parliament_committee: "social-affairs"
 					}),
 
 					new ValidInitiative({
@@ -2275,13 +2275,13 @@ describe("InitiativesController", function() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "parliament",
-					parliament_committee: "Sotsiaalkomisjon"
+					parliament_committee: "social-affairs"
 				}))
 
 				initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "parliament",
-					parliament_committee: "Keskkonnakomisjon"
+					parliament_committee: "environment"
 				}))
 
 				initiativesDb.create(new ValidInitiative({
@@ -2290,7 +2290,7 @@ describe("InitiativesController", function() {
 				}))
 
 				yield request.call(this, {
-					"proceedings-handler": "Sotsiaalkomisjon"
+					"proceedings-handler": "social-affairs"
 				}, [initiative])
 			})
 
@@ -4579,7 +4579,7 @@ describe("InitiativesController", function() {
 					phase: "parliament",
 					sent_to_parliament_at: DateFns.addDays(new Date, -6),
 					received_by_parliament_at: DateFns.addDays(new Date, -5),
-					parliament_committee: "Keskkonnakomisjon"
+					parliament_committee: "environment"
 				}))
 
 				citizenosSignaturesDb.create(_.times(
@@ -4657,7 +4657,7 @@ describe("InitiativesController", function() {
 					updated_at: pseudoDateTime(),
 					occurred_at: pseudoDateTime(),
 					type: "parliament-accepted",
-					content: {committee: "Keskkonnakomisjon"},
+					content: {committee: "environment"},
 					origin: "parliament"
 				}))
 
@@ -4721,7 +4721,7 @@ describe("InitiativesController", function() {
 					updated_at: pseudoDateTime(),
 					occurred_at: pseudoDateTime(),
 					type: "parliament-committee-meeting",
-					content: {committee: "Keskkonnakomisjon"},
+					content: {committee: "environment"},
 					origin: "parliament"
 				}))
 
@@ -4755,7 +4755,7 @@ describe("InitiativesController", function() {
 						updated_at: pseudoDateTime(),
 						occurred_at: pseudoDateTime(),
 						type: "parliament-committee-meeting",
-						content: {committee: "Keskkonnakomisjon", decision: decision},
+						content: {committee: "environment", decision: decision},
 						origin: "parliament"
 					}))
 
@@ -8212,7 +8212,7 @@ describe("InitiativesController", function() {
 				updated_at: pseudoDateTime(),
 				occurred_at: pseudoDateTime(),
 				type: "parliament-accepted",
-				content: {committee: "Keskkonnakomisjon"},
+				content: {committee: "environment"},
 				origin: "parliament"
 			}))
 
@@ -8290,7 +8290,7 @@ describe("InitiativesController", function() {
 				updated_at: pseudoDateTime(),
 				occurred_at: pseudoDateTime(),
 				type: "parliament-committee-meeting",
-				content: {committee: "Keskkonnakomisjon"},
+				content: {committee: "environment"},
 				origin: "parliament"
 			}))
 
@@ -8329,7 +8329,7 @@ describe("InitiativesController", function() {
 					updated_at: pseudoDateTime(),
 					occurred_at: pseudoDateTime(),
 					type: "parliament-committee-meeting",
-					content: {committee: "Keskkonnakomisjon", decision: decision},
+					content: {committee: "environment", decision: decision},
 					origin: "parliament"
 				}))
 
@@ -13440,7 +13440,7 @@ describe("InitiativesController", function() {
 				signing_ends_at: new Date(2015, 5, 20, 13, 37, 44, 666),
 				sent_to_parliament_at: new Date(2015, 5, 21, 13, 37, 45, 666),
 				finished_in_parliament_at: new Date(2015, 5, 22, 13, 37, 46, 666),
-				parliament_committee: "Keskkonnakomisjon",
+				parliament_committee: "environment",
 				parliament_decision: "reject",
 				sent_to_government_at: new Date(2015, 5, 23, 13, 37, 47, 666),
 				finished_in_government_at: new Date(2015, 5, 24, 13, 37, 48, 666),

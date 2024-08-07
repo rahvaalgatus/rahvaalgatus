@@ -1,0 +1,85 @@
+{
+	"eu-affairs": {
+		"name": "Euroopa Liidu asjade komisjon",
+		"permanent": true,
+		"abbreviation": "ELAK"
+	},
+	
+	"environment": {
+		"name": "Keskkonnakomisjon",
+		"permanent": true,
+		"abbreviation": "KEKK"
+	},
+	
+	"cultural-affairs": {
+		"name": "Kultuurikomisjon",
+		"permanent": true,
+		"abbreviation": "KULK"
+	},
+	
+	"rural-affairs": {
+		"name": "Maaelukomisjon",
+		"permanent": true,
+		"abbreviation": "MAEK"
+	},
+	
+	"economic-affairs": {
+		"name": "Majanduskomisjon",
+		"permanent": true,
+		"abbreviation": "MAJK"
+	},
+	
+	"constitutional": {
+		"name": "Põhiseaduskomisjon",
+		"permanent": true,
+		"abbreviation": "PÕSK"
+	},
+	
+	"finance": {
+		"name": "Rahanduskomisjon",
+		"permanent": true,
+		"abbreviation": "RAHK"
+	},
+	
+	"national-defence": {
+		"name": "Riigikaitsekomisjon",
+		"permanent": true,
+		"abbreviation": "RIKK"
+	},
+	
+	"social-affairs": {
+		"name": "Sotsiaalkomisjon",
+		"permanent": true,
+		"abbreviation": "SOTK"
+	},
+	
+	"foreign-affairs": {
+		"name": "Väliskomisjon",
+		"permanent": true,
+		"abbreviation": "VÄLK"
+	},
+	
+	"legal-affairs": {
+		"name": "Õiguskomisjon",
+		"permanent": true,
+		"abbreviation": "ÕIGK"
+	},
+	
+	"anti-corruption": {
+		"name": "Korruptsioonivastane erikomisjon",
+		"permanent": false,
+		"abbreviation": "KVEK"
+	},
+	
+	"state-budget-control": {
+		"name": "Riigieelarve kontrolli erikomisjon",
+		"permanent": false,
+		"abbreviation": "REKK"
+	},
+	
+	"security-authorities-surveillance": {
+		"name": "Julgeolekuasutuste järelevalve erikomisjon",
+		"permanent": false,
+		"abbreviation": "JAJK"
+	}
+}

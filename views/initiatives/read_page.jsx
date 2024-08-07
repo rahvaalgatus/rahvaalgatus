@@ -160,6 +160,7 @@ function ReadPage(attrs) {
 
 		{initiative.destination ? <PhasesView
       t={t}
+			lang={lang}
       initiative={initiative}
 			signatureCount={signatureCount}
     /> : null}
@@ -454,7 +455,7 @@ function ReadPage(attrs) {
 						signatureCount={signatureCount}
 					/>
 
-					<InitiativeLocationView t={t} initiative={initiative} />
+					<InitiativeLocationView t={t} lang={lang} initiative={initiative} />
 
 					{image ? <figure
 						id="initiative-image"
@@ -628,6 +629,7 @@ function ReadPage(attrs) {
 
 		<EventsView
 			t={t}
+			lang={lang}
 			user={user}
 			initiative={initiative}
 			events={events}
@@ -647,6 +649,7 @@ function ReadPage(attrs) {
 
 function PhasesView(attrs) {
   var {t} = attrs
+  var {lang} = attrs
   var {initiative} = attrs
   var sigs = attrs.signatureCount
 	var {phase} = initiative
@@ -807,7 +810,10 @@ function PhasesView(attrs) {
 			>
         <i>{t("PARLIAMENT_PHASE")}</i>
 				<InitiativeProgressView
-					before={initiative.parliament_committee}
+					before={initiative.parliament_committee &&
+						I18n.nameParliamentCommittee(lang, initiative.parliament_committee)
+					}
+
 					value={parliamentProgress}
 					text={parliamentPhaseText}
 				/>
@@ -1628,6 +1634,7 @@ function SidebarAdminView({req, t, initiative}) {
 
 function EventsView(attrs) {
 	var {t} = attrs
+	var {lang} = attrs
 	var {user} = attrs
 	var {initiative} = attrs
 	var events = attrs.events.sort(compareEvent).reverse()
@@ -1689,9 +1696,10 @@ function EventsView(attrs) {
 							title = t("PARLIAMENT_ACCEPTED")
 
 							var {committee} = event.content
+
 							if (committee) content = <p class="text">
 								{t("PARLIAMENT_ACCEPTED_SENT_TO_COMMITTEE", {
-									committee: committee
+									committee: I18n.nameParliamentCommittee(lang, committee)
 								})}
 							</p>
 							break
@@ -1728,7 +1736,8 @@ function EventsView(attrs) {
 
 							title = meeting.committee
 								? t("PARLIAMENT_COMMITTEE_MEETING_BY", {
-									committee: meeting.committee
+									committee:
+										I18n.nameParliamentCommittee(lang, meeting.committee)
 								})
 								: t("PARLIAMENT_COMMITTEE_MEETING")
 
@@ -2164,15 +2173,14 @@ function InitiativeDestinationSelectView(attrs) {
 	</select>
 }
 
-function InitiativeLocationView(attrs) {
-	var {t} = attrs
-	var {initiative} = attrs
-
+function InitiativeLocationView({t, lang, initiative}) {
 	var content
 	if (initiative.phase == "parliament" && initiative.parliament_committee) {
 		content = <>
 			{Jsx.html(t("INITIATIVE_IS_IN_PARLIAMENT_COMMITTEE", {
-				committee: _.escapeHtml(initiative.parliament_committee)
+				committee: _.escapeHtml(
+					I18n.nameParliamentCommittee(lang, initiative.parliament_committee)
+				)
 			}))}
 		</>
 	}
