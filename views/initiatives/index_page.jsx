@@ -19,6 +19,7 @@ var getWeight = _.property("weight")
 var {PARLIAMENT_DECISIONS} = require("root/lib/initiative")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var {PHASES} = require("root/lib/initiative")
+var PARLIAMENT_COMMITTEE_COUNT = 11
 module.exports = InitiativesPage
 
 function InitiativesPage({
@@ -942,7 +943,9 @@ function HandlerGraphView({t, initiatives, path, query}) {
 				arcWidth={40}
 			/>
 
-			<table class="legend">{handlers.slice(0, 10).map(({
+			<table
+				class="legend"
+			>{handlers.slice(0, PARLIAMENT_COMMITTEE_COUNT).map(({
 				title,
 				weight: count,
 				color
