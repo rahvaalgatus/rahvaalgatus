@@ -1,7 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    ffi (1.9.25)
+    ffi (1.15.1)
     fontcustom (2.0.0)
       json (~> 1.4)
       listen (>= 1.0, < 4.0)
