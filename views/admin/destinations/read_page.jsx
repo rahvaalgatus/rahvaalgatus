@@ -21,6 +21,7 @@ module.exports = function({
 	var {flash} = req
 	var destinationPath = req.baseUrl + "/" + destination
 	var signatureTrusteesPath = destinationPath + "/signature-trustees"
+	var rootPath = req.rootUrl
 
 	return <Page page="destinations" title="Destinations" req={req}>
 		<a href={req.baseUrl} class="admin-back">Destinations</a>
@@ -133,7 +134,7 @@ module.exports = function({
 		return <tr>
 			<td>
 				{formatDateTime("numeric", trustee.created_at)}<br />
-				<small>Created by: <a href={req.baseUrl + "/" + trustee.created_by_id} class="admin-link">{trustee.created_by_name}</a></small>
+				<small>Created by: <a href={rootPath + "/users/" + trustee.created_by_id} class="admin-link">{trustee.created_by_name}</a></small>
 			</td>
 
 			<td>{trustee.country}{" "}{trustee.personal_id}</td>
