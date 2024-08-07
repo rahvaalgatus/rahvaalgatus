@@ -921,7 +921,7 @@ function HandlerGraphView({t, initiatives, path, query}) {
 	var handlers = _.countBy(initiatives.map(getProceedingsHandler))
 	delete handlers.null
 
-	handlers = _.sortBy(_.toEntries(handlers), _.second).reverse().slice(0, 10)
+	handlers = _.sortBy(_.toEntries(handlers), _.second).reverse()
 	if (handlers.length < 2) return null
 
 	handlers = handlers.map(([handler, count], i) => ({
@@ -942,7 +942,11 @@ function HandlerGraphView({t, initiatives, path, query}) {
 				arcWidth={40}
 			/>
 
-			<table class="legend">{handlers.map(({title, weight: count, color}) => <tr>
+			<table class="legend">{handlers.slice(0, 10).map(({
+				title,
+				weight: count,
+				color
+			}) => <tr>
 				<td class="color" style={`color: ${color}`} />
 				<td class="count">{count}</td>
 
@@ -972,7 +976,8 @@ function HandlerGraphView({t, initiatives, path, query}) {
 			})
 
 			function toggleLegendRow(i, highlight) {
-				legend.rows[i].classList.toggle("highlighted", highlight)
+				legendRow = legend.rows[i]
+				if (legendRow) legendRow.classList.toggle("highlighted", highlight)
 			}
 		`}</script>
 	</figure>
