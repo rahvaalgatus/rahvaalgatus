@@ -18,7 +18,6 @@ var formatIsoDate = require("root/lib/i18n").formatDate.bind(null, "iso")
 var getWeight = _.property("weight")
 var {PARLIAMENT_DECISIONS} = require("root/lib/initiative")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
-var LOCAL_GOVERNMENTS_BY_COUNTY = LOCAL_GOVERNMENTS.BY_COUNTY
 var {PHASES} = require("root/lib/initiative")
 module.exports = InitiativesPage
 
@@ -393,12 +392,10 @@ function FiltersView({
 						</option>
 					</optgroup>
 
-					{_.map(LOCAL_GOVERNMENTS_BY_COUNTY, (govs, county) => <optgroup
-						label={county + " " + t("initiatives_page.filters.destination.county_group_label_suffix")}
-					>{govs.map(([id, {name}]) => <option
+					<optgroup label={t("initiatives_page.filters.destination.local_group_label")}>{_.map(LOCAL_GOVERNMENTS.SORTED_BY_NAME, ({name}, id) => <option
 						value={id}
 						selected={(filters.destination || []).includes(id)}
-					>{name}</option>)}</optgroup>)}
+					>{name}</option>)}</optgroup>
 				</select>
 			</label>
 
@@ -577,6 +574,8 @@ function FiltersView({
 						{t("initiatives_page.filters.proceedings_handler.local_label")}
 					</option>
 
+					<hr />
+
 					<optgroup label={t("initiatives_page.filters.proceedings_handler.parliament_group_label")}>
 						{parliamentCommittees.map((committee) => <option
 							value={committee}
@@ -586,12 +585,10 @@ function FiltersView({
 						</option>)}
 					</optgroup>
 
-					{_.map(LOCAL_GOVERNMENTS_BY_COUNTY, (govs, county) => <optgroup
-						label={county + " " + t("initiatives_page.filters.proceedings_handler.county_group_label_suffix")}
-					>{govs.map(([id, {name}]) => <option
+					<optgroup label={t("initiatives_page.filters.proceedings_handler.local_group_label")}>{_.map(LOCAL_GOVERNMENTS.SORTED_BY_NAME, ({name}, id) => <option
 						value={id}
 						selected={filters.proceedingsHandler == id}
-					>{name}</option>)}</optgroup>)}
+					>{name}</option>)}</optgroup>
 				</select>
 			</label>
 

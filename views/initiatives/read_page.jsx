@@ -40,7 +40,6 @@ var EVENT_NOTIFICATIONS_SINCE = new Date(Config.eventNotificationsSince)
 var LANGUAGES = require("root").config.languages
 var {SCHEMA} = require("root/controllers/initiatives_controller")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
-var LOCAL_GOVERNMENTS_BY_COUNTY = LOCAL_GOVERNMENTS.BY_COUNTY
 var IMAGE_SCHEMA = ImageController.SCHEMA
 exports = module.exports = ReadPage
 exports.InitiativeDestinationSelectView = InitiativeDestinationSelectView
@@ -963,9 +962,10 @@ function SidebarAuthorView(attrs) {
 				<h3 class="sidebar-subheader">Algatuse saaja</h3>
 
 				<InitiativeDestinationSelectView
+					t={t}
 					name="destination"
 					initiative={initiative}
-					placeholder="Vali Riigikogu või omavalitsus…"
+					placeholder={t("initiative_page.sidebar.destination.placeholder")}
 					class="form-select"
 					onchange="this.form.submit()"
 				/>
@@ -2140,6 +2140,7 @@ function QuicksignView({
 }
 
 function InitiativeDestinationSelectView(attrs) {
+	var {t} = attrs
 	var {initiative} = attrs
 	var dest = initiative.destination
 	var {placeholder} = attrs
@@ -2151,17 +2152,15 @@ function InitiativeDestinationSelectView(attrs) {
 	>
 		<option value="" selected={dest == null}>{placeholder}</option>
 
-		<optgroup label="Riiklik">
+		<optgroup label={t("initiative_page.sidebar.destination.parliament_group_label")}>
 			<option value="parliament" selected={dest == "parliament"}>
-				Riigikogu
+				{t("initiative_page.sidebar.destination.parliament_label")}
 			</option>
 		</optgroup>
 
-		{_.map(LOCAL_GOVERNMENTS_BY_COUNTY, (govs, county) => (
-			<optgroup label={county + " maakond"}>{govs.map(([id, {name}]) => (
-				<option value={id} selected={dest == id}>{name}</option>
-			))}</optgroup>
-		))}
+		<optgroup label={t("initiative_page.sidebar.destination.local_group_label")}>{_.map(LOCAL_GOVERNMENTS.SORTED_BY_NAME, ({name}, id) => (
+			<option value={id} selected={dest == id}>{name}</option>
+		))}</optgroup>
 	</select>
 }
 

@@ -6,8 +6,7 @@ var {Section} = require("../page")
 var {Flash} = require("../page")
 var {InitiativeBoxesView} = require("../home_page")
 var {CallToActionsView} = require("../home_page")
-var LOCAL_GOVERNMENTS_BY_COUNTY =
-	require("root/lib/local_governments").BY_COUNTY
+var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var {javascript} = require("root/lib/jsx")
 var {groupInitiatives} = require("../home_page")
 
@@ -35,12 +34,10 @@ module.exports = function(attrs) {
 		<section id="map-section" class="secondary-section">
 			<div id="map-location" class="map-location">
 				<select class="form-select">
-					<option value="all">Kogu Eesti</option>
-
-					{_.map(LOCAL_GOVERNMENTS_BY_COUNTY, (govs, county) => (
-						<optgroup label={county + " maakond"}>{govs.map(([id, {name}]) => (
-							<option value={id}>{name}</option>
-						))}</optgroup>
+					<option value="all">{t("local_home_page.map.location.all")}</option>
+					<hr />
+					{_.map(LOCAL_GOVERNMENTS.SORTED_BY_NAME, ({name}, id) => (
+						<option value={id}>{name}</option>
 					))}
 				</select>
 			</div>

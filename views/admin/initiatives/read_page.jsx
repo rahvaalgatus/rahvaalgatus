@@ -22,6 +22,7 @@ var EXPIRATION_MONTHS = Config.expireSignaturesInMonths
 
 module.exports = function(attrs) {
 	var {req} = attrs
+	var {t} = req
 	var {initiative} = attrs
 	var {author} = attrs
 	var {image} = attrs
@@ -65,6 +66,7 @@ module.exports = function(attrs) {
 						class="admin-inline-form"
 					>
 						<InitiativeDestinationSelectView
+							t={t}
 							name="destination"
 							initiative={initiative}
 							onchange="this.form.submit()"
