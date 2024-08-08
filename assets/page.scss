@@ -2360,7 +2360,8 @@ main {
 					max-width: 20.5rem;
 				}
 
-				svg .sector:hover {
+				svg .sector:hover,
+				svg .sector.highlighted {
 					filter: url(#pie-chart-sector-shadow);
 					transition: transform ease 0.1s;
 					transform: translate(0, -3px);

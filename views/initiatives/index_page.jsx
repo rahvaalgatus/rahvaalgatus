@@ -949,11 +949,34 @@ function ProceedingsHandlersGraphView({t, lang, initiatives, path, query}) {
 	handlers = _.sortBy(_.toEntries(handlers), _.second).reverse()
 	if (handlers.length < 2) return null
 
-	handlers = handlers.map(([handler, count], i) => ({
+	var sectors = handlers.map(([handler, count], i) => ({
 		id: handler,
 		title: handler == "null" ? null : nameProceedingsHandler(lang, handler),
 		weight: count,
-		color: PIE_CHART_COLORS[i]
+		class: "handler",
+		color: PIE_CHART_COLORS[i],
+
+		href: path + Qs.stringify(_.defaults({
+			"proceedings-handler": handler
+		}, query), {addQueryPrefix: true})
+	}))
+
+	var groups = _.groupBy(sectors, ({id}) => (
+		id in PARLIAMENT_COMMITTEES ? "parliament" : "local"
+	))
+
+	groups = _.map(groups, (sectors, group) => ({
+		title: group == "parliament"
+			? t("initiatives_page.filters.proceedings_handler.parliament_group_label")
+			: t("initiatives_page.filters.proceedings_handler.local_label"),
+
+		weight: _.sum(sectors.map(getWeight)),
+		color: group == "parliament" ? "#1c71a2" : "#ffb237",
+		sectors,
+
+		href: path + Qs.stringify(_.defaults(group == "parliament"
+			? {destination: "parliament"}
+			: {"proceedings-handler": "local"}, query), {addQueryPrefix: true})
 	}))
 
 	return <figure id="handler-graph" class="graph">
@@ -963,14 +986,14 @@ function ProceedingsHandlersGraphView({t, lang, initiatives, path, query}) {
 
 		<div>
 			<PieChartView
-				sectors={handlers}
-				sectorRadius={60}
-				sectorWidth={40}
+				sectors={groups}
+				sectorRadius={40}
+				sectorWidth={30}
 			/>
 
 			<table
 				class="legend"
-			>{handlers.slice(0, PARLIAMENT_COMMITTEE_IDS.length).map(({
+			>{sectors.slice(0, PARLIAMENT_COMMITTEE_IDS.length).map(({
 				id,
 				title,
 				weight: count,
@@ -993,8 +1016,9 @@ function ProceedingsHandlersGraphView({t, lang, initiatives, path, query}) {
 			var el = document.getElementById("handler-graph")
 			var slice = Function.call.bind(Array.prototype.slice)
 			var legend = el.querySelector(".legend")
+			var handlerSectors = el.querySelectorAll("svg .sector.handler")
 
-			slice(el.querySelectorAll("svg .sector")).forEach(function(el, i) {
+			slice(handlerSectors).forEach(function(el, i) {
 				el.addEventListener("mouseenter", function() {
 					toggleLegendRow(i, true)
 				})
@@ -1004,9 +1028,24 @@ function ProceedingsHandlersGraphView({t, lang, initiatives, path, query}) {
 				})
 			})
 
+			Array.prototype.forEach.call(legend.rows, function(el, i) {
+				el.addEventListener("mouseenter", function() {
+					toggleHandlerSector(i, true)
+				})
+
+				el.addEventListener("mouseleave", function() {
+					toggleHandlerSector(i, false)
+				})
+			})
+
 			function toggleLegendRow(i, highlight) {
-				legendRow = legend.rows[i]
-				if (legendRow) legendRow.classList.toggle("highlighted", highlight)
+				var row = legend.rows[i]
+				if (row) row.classList.toggle("highlighted", highlight)
+			}
+
+			function toggleHandlerSector(i, highlight) {
+				var sector = handlerSectors[i]
+				if (sector) sector.classList.toggle("highlighted", highlight)
 			}
 		`}</script>
 	</figure>
@@ -1073,11 +1112,10 @@ function TopSignedInitiativesGraphView({t, initiatives, path, query}) {
 	</figure>
 }
 
-// NOTE: This does not currently work for a single element — a full circle.
 function PieChartView({sectors, sectorRadius, sectorWidth}) {
-	var boxWidth = 2 * (sectorRadius + sectorWidth) + 5
+	var depth = _.max(sectors.map(getDepth))
+	var boxWidth = 2 * (sectorRadius + depth * sectorWidth) + 5
 	var boxHeight = boxWidth
-	var sectorAngle = 2 * Math.PI / _.sum(sectors.map(getWeight))
 
 	return <svg
 		width={boxWidth}
@@ -1091,24 +1129,44 @@ function PieChartView({sectors, sectorRadius, sectorWidth}) {
 		</defs>
 
 		<g transform={translate(boxWidth / 2, boxHeight / 2)}>
-			{sectors.map(function(el, i, els) {
-				var startAngle = sectorAngle * _.sum(els.slice(0, i).map(getWeight))
-				var endAngle = startAngle + sectorAngle * el.weight
-				let paths = donut(startAngle, endAngle, sectorRadius, sectorWidth)
+			{renderSectors(0, 0, 2 * Math.PI, sectors)}
+		</g>
+	</svg>
 
-				return <g class="sector">
-					<title>{el.title}</title>
+	function renderSectors(ringIndex, ringStartAngle, ringEndAngle, sectors) {
+		var ringAngle = ringEndAngle - ringStartAngle
+		var ringRadius = sectorRadius + sectorWidth * ringIndex
+		var weightAngle = ringAngle / _.sum(sectors.map(getWeight))
+
+		return <g>{sectors.map(function(sector, sectorIndex, sectors) {
+			var weightsBefore = _.sum(sectors.slice(0, sectorIndex).map(getWeight))
+			var startAngle = ringStartAngle + weightAngle * weightsBefore
+			var endAngle = startAngle + weightAngle * sector.weight
+			let paths = donut(startAngle, endAngle, ringRadius, sectorWidth)
+			var Sector = Jsx.bind(null, sector.href ? "a" : "g")
+
+			return <>
+				<Sector class={"sector " + (sector.class || "")} href={sector.href}>
+					<title>{sector.title}</title>
 
 					<path
-						fill={el.color}
+						fill={sector.color}
 						stroke="white"
 						stroke-width="1"
 						d={paths.join("\n")}
 					/>
-				</g>
-			})}
-		</g>
-	</svg>
+				</Sector>
+
+				{sector.sectors ? <g class="subsectors">
+					{renderSectors(ringIndex + 1, startAngle, endAngle, sector.sectors)}
+				</g> : null}
+			</>
+		})}</g>
+	}
+
+	function getDepth({sectors}) {
+		return 1 + (sectors ? _.max(sectors.map(getDepth)) : 0)
+	}
 }
 
 function BarChartView({bars, barHeight, barWidth, gapWidth}) {
@@ -1316,11 +1374,13 @@ function donut(startAngle, endAngle, circleRadius, arcWidth) {
 	var outerEndX = Math.cos(endAngle) * outerCircleRadius
 	var outerEndY = Math.sin(endAngle) * outerCircleRadius
 
+	let largerThanPi = Number(endAngle - startAngle >= Math.PI)
+
 	return [
 		`M ${innerStartX} ${innerStartY}`,
-		`A ${circleRadius} ${circleRadius} 0 0 1 ${innerEndX} ${innerEndY}`,
+		`A ${circleRadius} ${circleRadius} 0 ${largerThanPi} 1 ${innerEndX} ${innerEndY}`,
 		`L ${outerEndX} ${outerEndY}`,
-		`A ${outerCircleRadius} ${outerCircleRadius} 0 0 0 ${outerStartX} ${outerStartY}`,
+		`A ${outerCircleRadius} ${outerCircleRadius} 0 ${largerThanPi} 0 ${outerStartX} ${outerStartY}`,
 		`Z`,
 	]
 }
