@@ -963,9 +963,9 @@ function ProceedingsHandlersGraphView({t, lang, initiatives, path, query}) {
 
 		<div>
 			<PieChartView
-				elements={handlers}
-				arcRadius={60}
-				arcWidth={40}
+				sectors={handlers}
+				sectorRadius={60}
+				sectorWidth={40}
 			/>
 
 			<table
@@ -994,7 +994,7 @@ function ProceedingsHandlersGraphView({t, lang, initiatives, path, query}) {
 			var slice = Function.call.bind(Array.prototype.slice)
 			var legend = el.querySelector(".legend")
 
-			slice(el.querySelectorAll("svg .element")).forEach(function(el, i) {
+			slice(el.querySelectorAll("svg .sector")).forEach(function(el, i) {
 				el.addEventListener("mouseenter", function() {
 					toggleLegendRow(i, true)
 				})
@@ -1031,7 +1031,7 @@ function TopSignedInitiativesGraphView({t, initiatives, path, query}) {
 
 		<div>
 			<BarChartView
-				elements={elements}
+				bars={elements}
 				barHeight={205}
 				barWidth={15}
 				gapWidth={2}
@@ -1056,7 +1056,7 @@ function TopSignedInitiativesGraphView({t, initiatives, path, query}) {
 			var slice = Function.call.bind(Array.prototype.slice)
 			var legend = el.querySelector(".legend")
 
-			slice(el.querySelectorAll("svg .element")).forEach(function(el, i) {
+			slice(el.querySelectorAll("svg .bar")).forEach(function(el, i) {
 				el.addEventListener("mouseenter", function() {
 					toggleLegendRow(i, true)
 				})
@@ -1074,10 +1074,10 @@ function TopSignedInitiativesGraphView({t, initiatives, path, query}) {
 }
 
 // NOTE: This does not currently work for a single element — a full circle.
-function PieChartView({elements, arcRadius, arcWidth}) {
-	var boxWidth = 2 * (arcRadius + arcWidth) + 5
+function PieChartView({sectors, sectorRadius, sectorWidth}) {
+	var boxWidth = 2 * (sectorRadius + sectorWidth) + 5
 	var boxHeight = boxWidth
-	var arcAngle = 2 * Math.PI / _.sum(elements.map(getWeight))
+	var sectorAngle = 2 * Math.PI / _.sum(sectors.map(getWeight))
 
 	return <svg
 		width={boxWidth}
@@ -1085,25 +1085,25 @@ function PieChartView({elements, arcRadius, arcWidth}) {
 		viewBox={"0 0 " + boxWidth + " " + boxHeight}
 	>
 		<defs>
-			<filter id="pie-chart-arc-shadow">
+			<filter id="pie-chart-sector-shadow">
 				<feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.40" />
 			</filter>
 		</defs>
 
 		<g transform={translate(boxWidth / 2, boxHeight / 2)}>
-			{elements.map(function(el, i, els) {
-				var startAngle = arcAngle * _.sum(els.slice(0, i).map(getWeight))
-				var endAngle = startAngle + arcAngle * el.weight
+			{sectors.map(function(el, i, els) {
+				var startAngle = sectorAngle * _.sum(els.slice(0, i).map(getWeight))
+				var endAngle = startAngle + sectorAngle * el.weight
+				let paths = donut(startAngle, endAngle, sectorRadius, sectorWidth)
 
-				return <g class="element">
+				return <g class="sector">
 					<title>{el.title}</title>
 
 					<path
-						id={"vision-arc-path-" + i}
 						fill={el.color}
 						stroke="white"
 						stroke-width="1"
-						d={donut(startAngle, endAngle, arcRadius, arcWidth).join("\n")}
+						d={paths.join("\n")}
 					/>
 				</g>
 			})}
@@ -1111,9 +1111,9 @@ function PieChartView({elements, arcRadius, arcWidth}) {
 	</svg>
 }
 
-function BarChartView({elements, barHeight, barWidth, gapWidth}) {
-	var maxWeight = _.max(elements.map(getWeight))
-	let {length} = elements
+function BarChartView({bars, barHeight, barWidth, gapWidth}) {
+	var maxWeight = _.max(bars.map(getWeight))
+	let {length} = bars
 	var boxWidth = length * barWidth + Math.max(length - 1, 0) * gapWidth
 
 	return <svg
@@ -1123,12 +1123,12 @@ function BarChartView({elements, barHeight, barWidth, gapWidth}) {
 	>
 		<line x1="0" y1={barHeight} x2={boxWidth} y2={barHeight} stroke="#ddd" />
 
-		{elements.map(function(el, i) {
+		{bars.map(function(el, i) {
 			var x = i * barWidth + i * gapWidth
 			var height = Math.max(barHeight * el.weight / maxWeight, 3)
 			var y = barHeight - height
 
-			return <g class="element">
+			return <g class="bar">
 				<title>{el.title}</title>
 
 				<rect
