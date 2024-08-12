@@ -102,5 +102,10 @@
 		"O=AS Sertifitseerimiskeskus",
 		"2.5.4.97=#0c0e4e545245452d3130373437303133",
 		"CN=EID-SK 2016"
+	], [
+		"C=EE",
+		"O=SK ID Solutions AS",
+		"2.5.4.97=#0c0e4e545245452d3130373437303133",
+		"CN=SK ID Solutions EID-Q 2021E"
 	]]
 }

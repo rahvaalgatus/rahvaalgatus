@@ -39,7 +39,8 @@ exports.ISSUER_KEYS = _.mapValues({
 	"ESTEID-SK 2011": "esteid_2011_rsa",
 	"ESTEID-SK 2015": "esteid_2015_rsa",
 	"ESTEID2018": "esteid_2018_ecdsa",
-	"EID-SK 2016": "eid_2016_rsa"
+	"EID-SK 2016": "eid_2016_rsa",
+	"SK ID Solutions EID-Q 2021E": "eid_2021e_ecdsa"
 }, (path) => readKeyPairSync(
 	__dirname + `/fixtures/${path}.key`,
 	__dirname + `/fixtures/${path}.pub`

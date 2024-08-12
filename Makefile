@@ -231,6 +231,8 @@ test/fixtures: test/fixtures/eid_2007_rsa.pub
 test/fixtures: test/fixtures/esteid_2011_rsa.pub
 test/fixtures: test/fixtures/esteid_2015_rsa.pub
 test/fixtures: test/fixtures/esteid_2018_ecdsa.pub
+test/fixtures: test/fixtures/eid_2016_rsa.pub
+test/fixtures: test/fixtures/eid_2021e_ecdsa.pub
 
 test/fixtures/%_rsa.key:
 	openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out "$@"
