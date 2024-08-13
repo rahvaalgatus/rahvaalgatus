@@ -77,10 +77,11 @@ exports.router.get("/",
 
 	var filters = parseFilters(req.query)
 
-	var [orderBy, orderDir] =
-		req.query.order ? parseOrder(req.query.order) :
-		res.contentType.name == INITIATIVE_TYPE.name ? ["id", "asc"] :
-		["phase", "asc"]
+	var [orderBy, orderDir] = req.query.order && parseOrder(req.query.order) || (
+		res.contentType.name == INITIATIVE_TYPE.name
+			? ["id", "asc"]
+			: ["phase", "asc"]
+	)
 
 	var orderDirSql = orderDir == "desc" ? sql`DESC` : sql`ASC`
 	var limit = req.query.limit ? parseLimit(req.query.limit) : null
@@ -1684,11 +1685,9 @@ function parseOrder(order) {
 		case "proceedings-started-at":
 		case "proceedings-ended-at":
 		case "proceedings-handler": return order
-
 		case "signatureCount": return ["signature-count", order[1]]
 		case "signaturesSinceCount": return ["signatures-since-count", order[1]]
-
-		default: throw new HttpError(400, "Invalid Order")
+		default: return null
 	}
 }
 

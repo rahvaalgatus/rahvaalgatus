@@ -209,8 +209,7 @@ paths:
           description: |
             Invalid request
 
-            It could be because of an invalid phase or an invalid order query
-            parameter.
+            It could be because of an invalid limit query parameter.
 
   /initiative-events:
     get:

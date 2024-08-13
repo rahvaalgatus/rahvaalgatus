@@ -773,6 +773,11 @@ describe("InitiativesController", function() {
 		})
 
 		describe("given order", function() {
+			it("must ignore invalid order", function*() {
+				var res = yield this.request("/initiatives?order=foo")
+				res.statusCode.must.equal(200)
+			})
+
 			it("must use last order if given twice", function*() {
 				var initiatives = initiativesDb.create([
 					new ValidInitiative({
@@ -2633,16 +2638,6 @@ describe("InitiativesController", function() {
 		})
 
 		describe("given order", function() {
-			it("must respond with 400 given invalid order", function*() {
-				var res = yield this.request("/initiatives?order=foo", {
-					headers: {Accept: INITIATIVE_TYPE}
-				})
-
-				res.statusCode.must.equal(400)
-				res.statusMessage.must.equal("Invalid Order")
-				res.body.must.eql({code: 400, message: "Invalid Order"})
-			})
-
 			_.each({
 				"signature-count": _.id,
 				"+signature-count": _.id,
