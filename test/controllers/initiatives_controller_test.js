@@ -773,6 +773,37 @@ describe("InitiativesController", function() {
 		})
 
 		describe("given order", function() {
+			it("must use last order if given twice", function*() {
+				var initiatives = initiativesDb.create([
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "edit",
+						published_at: new Date,
+						title: "B"
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "sign",
+						title: "C"
+					}),
+
+					new ValidInitiative({
+						user_id: this.author.id,
+						phase: "parliament",
+						title: "A"
+					})
+				])
+
+				var res = yield this.request("/initiatives?order=foo&order=title")
+				res.statusCode.must.equal(200)
+
+				var dom = parseHtml(res.body)
+				var els = dom.body.querySelectorAll("#initiatives .initiative")
+				var ids = _.map(els, (el) => Number(el.getAttribute("data-id")))
+				ids.must.eql(_.map(_.sortBy(initiatives, "title"), "id"))
+			})
+
 			_.each({
 				"title": _.id,
 				"+title": _.id,
