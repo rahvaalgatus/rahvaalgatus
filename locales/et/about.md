@@ -31,7 +31,7 @@ Osalusportaali Rahvaalgatus.ee kasutamise hea tava lähtub eesmärgist, et **arg
 3. pöördumises välja toodud ettepanekud ei sisalda roppusi, kutsu üles konkreetsete isikute suhtes füüsilisele vägivallale või levita laimu; 
 4. meie platvorm lubab suurema auditooriumi kaasamiseks võõrkeelsete algatuste loomist, kuid ilma eestikeelse tõlketa neid Riigikokku või kohalikku omavalitsusse saata ei ole võimalik;
 5. läbipaistvuse huvides tuleb ära märkida kui esindatakse mõnda organisatsiooni (huvikaitseorganisatsioon, erakond, vabaühendus, ettevõte); 
-6. algatajatel palume arvestada enne oma algatuse allkirjastamisele saatmist kaasamõtlejate argumentide ja mõtetega; 
+6. algatajatel palume arvestada enne oma algatuse allkirjastamisele saatmist kaasamõtlejate argumentide ja muudatusettepanekutega; 
 7. pöördumise koostamisele kaasamõtlejatel tuleb hoiduda kommentaaridest, mis sisaldavad ropendamist või laimu;
 8. algataja vastutab, et kui vajalik arv allkirju kokku kogutakse, siis kohalikus omavalitsuses või Riigikogus ka allkirjastajate huvisid esindama minnakse.    
 
