@@ -16,9 +16,7 @@ SHANGE = vendor/shange -f "$(DB)"
 WEB_PORT = 3000
 ADM_PORT = $(shell expr $(WEB_PORT) + 1)
 LIVERELOAD_PORT = 35731
-
 APP_HOST = rahvaalgatus.ee
-APP_PATH = $(error "Please set APP_PATH")
 
 RSYNC_OPTS = \
 	--compress \
@@ -155,19 +153,16 @@ db/migration: NAME = $(error "Please set NAME.")
 db/migration:
 	@$(SHANGE) create "$(NAME)"
 
-deploy:
-	@rsync $(RSYNC_OPTS) . "$(APP_HOST):$(or $(APP_PATH), $(error "APP_PATH"))/"
+staging:
+	@rsync $(RSYNC_OPTS) . "$(APP_HOST):/var/www/rahvaalgatus-next"
 
-staging: APP_PATH = /var/www/rahvaalgatus-next
-staging: deploy
-
-staging/diff: RSYNC_OPTS += --dry-run
+staging/diff: override RSYNC_OPTS += --dry-run
 staging/diff: staging
 
-production: APP_PATH = /var/www/rahvaalgatus
-production: deploy
+production:
+	@rsync $(RSYNC_OPTS) . "$(APP_HOST):/var/www/rahvaalgatus"
 
-production/diff: RSYNC_OPTS += --dry-run
+production/diff: override RSYNC_OPTS += --dry-run
 production/diff: production
 
 api/publish: openapi.yaml
@@ -255,7 +250,7 @@ test/fixtures/%_ecdsa.pub: test/fixtures/%_ecdsa.key
 .PHONY: test/server
 .PHONY: servers web adm
 .PHONY: shrinkwrap
-.PHONY: deploy staging staging/diff production production/diff
+.PHONY: staging staging/diff production production/diff
 .PHONY: db/create db/status db/migrate db/migration
 .PHONY: translations
 .PHONY: config/tsl
