@@ -1313,11 +1313,15 @@ function getProceedingsEndedAt(initiative) {
 }
 
 function getProceedingsHandler(initiative) {
-	return initiative.destination == "parliament"
-		? initiative.parliament_committee
-		: initiative.destination && initiative.accepted_by_government_at
-		? initiative.destination
-		: null
+	if (initiative.destination == "parliament") {
+		if (initiative.accepted_by_parliament_at)
+			return initiative.parliament_committee
+	}
+	else if (initiative.destination) {
+		if (initiative.accepted_by_government_at) return initiative.destination
+	}
+
+	return null
 }
 
 function nameProceedingsHandler(lang, handler) {

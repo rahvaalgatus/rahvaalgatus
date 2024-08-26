@@ -224,15 +224,20 @@ exports.router.get("/",
 		${filters.proceedingsHandler ? (
 			filters.proceedingsHandler in PARLIAMENT_COMMITTEES ? sql`
 				AND initiative.destination = 'parliament'
+				AND initiative.accepted_by_parliament_at IS NOT NULL
 				AND initiative.parliament_committee = ${filters.proceedingsHandler}
 			` :
 
 			filters.proceedingsHandler == "local" ? sql`
 				AND initiative.destination IS NOT NULL
 				AND initiative.destination != 'parliament'
+				AND initiative.accepted_by_government_at IS NOT NULL
 			` :
 
-			sql`AND initiative.destination = ${filters.proceedingsHandler}`
+			sql`
+				AND initiative.destination = ${filters.proceedingsHandler}
+				AND initiative.accepted_by_government_at IS NOT NULL
+			`
 		) : sql``}
 
 		${filters.proceedingsDecision ? sql`

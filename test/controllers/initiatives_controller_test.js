@@ -2311,18 +2311,21 @@ describe("InitiativesController", function() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "parliament",
+					accepted_by_parliament_at: new Date,
 					parliament_committee: "social-affairs"
 				}))
 
 				initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "parliament",
+					accepted_by_parliament_at: new Date,
 					parliament_committee: "environment"
 				}))
 
 				initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
-					phase: "parliament"
+					phase: "parliament",
+					accepted_by_parliament_at: new Date
 				}))
 
 				yield request.call(this, {
@@ -2330,17 +2333,19 @@ describe("InitiativesController", function() {
 				}, [initiative])
 			})
 
-			it("must filter initiatives destined for local government", function*() {
+			it("must filter initiatives handled by local government", function*() {
 				var initiative = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "government",
 					destination: "tallinn",
+					accepted_by_government_at: new Date
 				}))
 
 				initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "government",
-					destination: "muhu-vald"
+					destination: "muhu-vald",
+					accepted_by_government_at: new Date
 				}))
 
 				yield request.call(this, {
@@ -2348,34 +2353,69 @@ describe("InitiativesController", function() {
 				}, [initiative])
 			})
 
-			it("must filter initiatives destined for all local governments",
+			it("must not include initiative not accepted by government if filtering for local government",
+				function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "government",
+					destination: "tallinn",
+					accepted_by_government_at: new Date
+				}))
+
+				initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "government",
+					destination: "tallinn"
+				}))
+
+				yield request.call(this, {"proceedings-handler": "tallinn"}, [
+					initiative
+				])
+			})
+
+			it("must filter initiatives handled by any local government",
 				function*() {
 				initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
-					phase: "sign",
-					destination: "parliament"
+					phase: "government",
+					destination: "parliament",
+					accepted_by_parliament_at: new Date,
+					accepted_by_government_at: new Date
 				}))
 
 				var a = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
-					phase: "sign",
-					destination: "muhu-vald"
+					phase: "government",
+					destination: "muhu-vald",
+					accepted_by_government_at: new Date
 				}))
 
 				var b = initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
-					phase: "sign",
-					destination: "tallinn"
+					phase: "government",
+					destination: "tallinn",
+					accepted_by_government_at: new Date
+				}))
+
+				yield request.call(this, {"proceedings-handler": "local"}, [a, b])
+			})
+
+			it("must not include initiative not accepted by government if filtering for any local government",
+				function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					user_id: this.author.id,
+					phase: "government",
+					destination: "muhu-vald",
+					accepted_by_government_at: new Date
 				}))
 
 				initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
-					phase: "edit",
-					destination: null,
-					published_at: new Date
+					phase: "government",
+					destination: "tallinn"
 				}))
 
-				yield request.call(this, {"proceedings-handler": "local"}, [a, b])
+				yield request.call(this, {"proceedings-handler": "local"}, [initiative])
 			})
 		})
 
