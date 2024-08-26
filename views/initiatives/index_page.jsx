@@ -954,7 +954,7 @@ function ProceedingsHandlersGraphView({t, lang, initiatives, path, query}) {
 		title: handler == "null" ? null : nameProceedingsHandler(lang, handler),
 		weight: count,
 		class: "handler",
-		color: PIE_CHART_COLORS[i],
+		color: PIE_CHART_COLORS[i] || "#ccc",
 
 		href: path + Qs.stringify(_.defaults({
 			"proceedings-handler": handler
