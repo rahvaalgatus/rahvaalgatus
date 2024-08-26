@@ -22,18 +22,18 @@ Rahvaalgatus.ee platvormi on püsti pannud ja seda haldab SA Eesti Koostöö Kog
 
 ## <a id="tos"></a> Rahvaalgatus.ee kasutamise hea tava
 
-Osalusportaali Rahvaalgatus.ee kasutamise hea tava lähtub eesmärgist, et **argumenteeritud arutelud** aitavad luua pöördumisi, mis soodustavad Eestis eluolu parendamist.
+Osalusportaali Rahvaalgatus.ee kasutamise hea tava lähtub eesmärgist, et **argumenteeritud arutelud** aitavad luua pöördumisi, mis soodustavad Eestis eluolu parendamist. Kvaliteetsed algatused tõstavad menetlusprotsessi taset ja seaduse mainet, aidates kaasa avatuma riigi ning tugevama **osalusdemokraatia** tekkeks:
 
 **Heale tavale vastavaid kollektiivseid pöördumisi ja nende koostamist kirjeldab järgnev:**
 
-1. pöördumises tehtud ettepanek on kooskõlas Eesti Vabariigi põhiseaduse aluspõhimõtete ja välislepingutest tulenevate Eesti Vabariigi rahvusvaheliste kohustustega;
-2. ettepanekule on lisatud kuni kolmeleheküljeline põhjendus, miks kehtiv olukord ei rahulda ning kuidas pöördumises esitatud ettepanek olukorda parandaks; 
-3. ettepanekus on välja toodud konstruktiivseid põhjendusi ja selgitusi; 
-4. pöördumises välja toodud ettepanekud ei sisaldada roppusi, õhuta rahvaste ja rasside vahelist vaenu, sõda, kutsu üles narkootikumide ja relvade kasutamisele, riigi kukutamisele või reetmisele või konkreetsete isikute suhtes füüsilisele vägivallale, levita valet või halvusta põhjendamatult teisi isikuid;
-5. algatajatel palume arvestada lõpliku pöördumise koostamisel (enne allkirjastamisele saatmist) kaasamõtlejate argumentide ja mõtetega; 
-6. pöördumise koostamisele kaasamõtlejatel tuleb hoiduda kommentaaridest, mis pole teemaga seotud või sisaldavad sõimu, ropendamist, laimu, solvanguid, mõnitamist ja halvustamist; 
-7. kritiseerida võib arvamusi ja ideid, kuid mitte inimesi.
-8. meie platvorm lubab ka võõrkeelsete algatuste loomist, kuid lisada tuleks eestikeelne tõlge. Nii saavad ka näiteks vene või inglise keelt mitteoskavad inimesed rahvaalgatuses kaasa lüüa. Võõrkeelset algatust ilma eestikeelse tõlketa Riigikokku või kohalikku omavalitsusse saata ei ole võimalik.    
+1. algatus lähtub [Riigikogu](https://www.riigiteataja.ee/akt/125102016016?leiaKehtiv) või [kohaliku omavalitsuse](https://www.riigiteataja.ee/akt/126032013006?leiaKehtiv#para32) vastavatest seadustest;
+2. algatusele on lisatud kuni kolmeleheküljeline konstruktiivne ettepanek, miks kehtiv olukord ei rahulda ning kuidas pöördumises esitatud ettepanek olukorda parandaks; 
+3. pöördumises välja toodud ettepanekud ei sisalda roppusi, kutsu üles konkreetsete isikute suhtes füüsilisele vägivallale või levita laimu; 
+4. meie platvorm lubab suurema auditooriumi kaasamiseks võõrkeelsete algatuste loomist, kuid ilma eestikeelse tõlketa neid Riigikokku või kohalikku omavalitsusse saata ei ole võimalik;
+5. läbipaistvuse huvides tuleb ära märkida kui esindatakse mõnda organisatsiooni (huvikaitseorganisatsioon, erakond, vabaühendus, ettevõte); 
+6. algatajatel palume arvestada enne oma algatuse allkirjastamisele saatmist kaasamõtlejate argumentide ja muudatusettepanekutega; 
+7. pöördumise koostamisele kaasamõtlejatel tuleb hoiduda kommentaaridest, mis sisaldavad ropendamist või laimu;
+8. algataja vastutab, et kui vajalik arv allkirju kokku kogutakse, siis kohalikus omavalitsuses või Riigikogus ka allkirjastajate huvisid esindama minnakse.    
 
 Riigikogus esindatud erakondadel ja Riigikogu liikmetel soovitame arutelu algatamiseks kasutada osalusportaali asemel oma parlamendi mandaati ning kodu- ja töökorrast tulenevaid võimalusi ja meetmeid. 
 
