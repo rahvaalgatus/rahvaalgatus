@@ -2294,19 +2294,14 @@
       "resolved": "https://registry.npmjs.org/mime/-/mime-1.6.0.tgz"
     },
     "mitm": {
-      "version": "1.7.2",
-      "from": "mitm@1.7.2",
-      "resolved": "https://registry.npmjs.org/mitm/-/mitm-1.7.2.tgz",
+      "version": "1.7.3",
+      "from": "mitm@latest",
+      "resolved": "https://registry.npmjs.org/mitm/-/mitm-1.7.3.tgz",
       "dependencies": {
-        "underscore": {
-          "version": "1.13.4",
-          "from": "underscore@>=1.1.6 <1.14.0",
-          "resolved": "https://registry.npmjs.org/underscore/-/underscore-1.13.4.tgz"
-        },
         "semver": {
-          "version": "5.7.1",
+          "version": "5.7.2",
           "from": "semver@>=5.0.0 <6.0.0",
-          "resolved": "https://registry.npmjs.org/semver/-/semver-5.7.1.tgz"
+          "resolved": "https://registry.npmjs.org/semver/-/semver-5.7.2.tgz"
         }
       }
     },
