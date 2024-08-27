@@ -62,7 +62,7 @@ describe("ParliamentSyncCli", function() {
 			created: "2015-06-18T13:37:42.666",
 			submittingDate: "2015-06-17",
 			sender: "John Smith",
-			responsibleCommittee: [{name: "Sotsiaalkomisjon"}],
+			responsibleCommittee: [{name: "Sotsiaalkomisjon", active: true}],
 
 			files: [{
 				uuid: FILE_UUID,
@@ -102,7 +102,7 @@ describe("ParliamentSyncCli", function() {
 			phase: "parliament",
 			undersignable: false,
 			parliament_uuid: INITIATIVE_UUID,
-			parliament_committee: "social-affairs",
+			parliament_committees: ["social-affairs"],
 			parliament_synced_at: new Date
 		})])
 
@@ -229,7 +229,7 @@ describe("ParliamentSyncCli", function() {
 			title: "Kollektiivne pöördumine elu Tallinnas paremaks tegemiseks",
 			sender: "Mike Smith",
 			senderReference: initiative.uuid,
-			responsibleCommittee: [{name: "Sotsiaalkomisjon"}],
+			responsibleCommittee: [{name: "Sotsiaalkomisjon", active: true}],
 
 			statuses: [
 				{date: "2018-10-23", status: {code: "REGISTREERITUD"}},
@@ -269,7 +269,7 @@ describe("ParliamentSyncCli", function() {
 			// Neither is the author_name.
 			__proto__: initiative,
 			parliament_uuid: INITIATIVE_UUID,
-			parliament_committee: "social-affairs",
+			parliament_committees: ["social-affairs"],
 			parliament_synced_at: new Date,
 			received_by_parliament_at: new Date(2018, 9, 23),
 			accepted_by_parliament_at: new Date(2018, 9, 24),
@@ -305,7 +305,7 @@ describe("ParliamentSyncCli", function() {
 			uuid: INITIATIVE_UUID,
 			title: "Kollektiivne pöördumine elu Tallinnas paremaks tegemiseks",
 			senderReference: initiative.parliament_uuid,
-			responsibleCommittee: [{name: "Sotsiaalkomisjon"}]
+			responsibleCommittee: [{name: "Sotsiaalkomisjon", active: true}]
 		}
 
 		this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
@@ -328,7 +328,7 @@ describe("ParliamentSyncCli", function() {
 			// NOTE: The previous parliament UUID gets updated, too.
 			__proto__: initiative,
 			parliament_uuid: INITIATIVE_UUID,
-			parliament_committee: "social-affairs",
+			parliament_committees: ["social-affairs"],
 			parliament_synced_at: new Date
 		}])
 	})
@@ -924,7 +924,7 @@ describe("ParliamentSyncCli", function() {
 
 			var initiativeDoc = {
 				uuid: INITIATIVE_UUID,
-				responsibleCommittee: [{name}]
+				responsibleCommittee: [{name, active: true}]
 			}
 
 			this.router.get(INITIATIVES_URL, respond.bind(null, [initiativeDoc]))
@@ -942,7 +942,7 @@ describe("ParliamentSyncCli", function() {
 			yield job()
 
 			initiative = initiativesDb.read(initiative)
-			initiative.parliament_committee.must.equal(id)
+			initiative.parliament_committees.must.eql([id])
 		})
 	})
 
@@ -958,7 +958,8 @@ describe("ParliamentSyncCli", function() {
 			responsibleCommittee: [
 				{name: "Kultuurikomisjon"},
 				{name: "Sotsiaalkomisjon", active: true},
-				{name: "Majanduskomisjon"}
+				{name: "Majanduskomisjon"},
+				{name: "Rahanduskomisjon", active: true}
 			]
 		}
 
@@ -977,7 +978,7 @@ describe("ParliamentSyncCli", function() {
 		yield job()
 
 		initiative = initiativesDb.read(initiative)
-		initiative.parliament_committee.must.equal("social-affairs")
+		initiative.parliament_committees.must.eql(["social-affairs", "finance"])
 	})
 
 	it("must update the initiative given multiple committees with no active",
@@ -985,7 +986,8 @@ describe("ParliamentSyncCli", function() {
 		var initiative = initiativesDb.create(new ValidInitiative({
 			user_id: usersDb.create(new ValidUser).id,
 			parliament_uuid: INITIATIVE_UUID,
-			phase: "parliament"
+			phase: "parliament",
+			parliament_committees: ["social-affairs"],
 		}))
 
 		var initiativeDoc = {
@@ -1012,7 +1014,7 @@ describe("ParliamentSyncCli", function() {
 		yield job()
 
 		initiative = initiativesDb.read(initiative)
-		initiative.parliament_committee.must.equal("economic-affairs")
+		initiative.parliament_committees.must.eql([])
 	})
 
 	describe("given statuses", function() {
@@ -1034,10 +1036,15 @@ describe("ParliamentSyncCli", function() {
 			}],
 
 			"MENETLUSSE_VOETUD status": [{
-				responsibleCommittee: [{name: "Sotsiaalkomisjon"}],
+				responsibleCommittee: [
+					{name: "Kultuurikomisjon"},
+					{name: "Sotsiaalkomisjon", active: true},
+					{name: "Rahanduskomisjon", active: true}
+				],
+
 				statuses: [{date: "2018-10-24", status: {code: "MENETLUSSE_VOETUD"}}]
 			}, {
-				parliament_committee: "social-affairs",
+				parliament_committees: ["social-affairs", "finance"],
 				accepted_by_parliament_at: new Date(2018, 9, 24)
 			}, {
 				occurred_at: new Date(2018, 9, 24),
@@ -1045,11 +1052,16 @@ describe("ParliamentSyncCli", function() {
 				external_id: "MENETLUSSE_VOETUD",
 				type: "parliament-accepted",
 				title: null,
-				content: {committee: "social-affairs"},
+				content: {committees: ["social-affairs", "finance"]}
 			}],
 
 			"ARUTELU_KOMISJONIS status": [{
-				responsibleCommittee: [{name: "Sotsiaalkomisjon"}],
+				responsibleCommittee: [
+					{name: "Kultuurikomisjon"},
+					{name: "Sotsiaalkomisjon", active: true},
+					{name: "Rahanduskomisjon", active: true}
+				],
+
 				statuses: [{
 					date: "2018-10-24",
 					status: {code: "ARUTELU_KOMISJONIS"},
@@ -1063,7 +1075,7 @@ describe("ParliamentSyncCli", function() {
 					}]
 				}]
 			}, {
-				parliament_committee: "social-affairs"
+				parliament_committees: ["social-affairs", "finance"]
 			}, {
 				occurred_at: new Date(2018, 9, 24),
 				origin: "parliament",
@@ -1546,7 +1558,7 @@ describe("ParliamentSyncCli", function() {
 				external_id: "MENETLUSSE_VOETUD",
 				type: "parliament-accepted",
 				title: null,
-				content: {committee: null}
+				content: {committees: []}
 			})])
 
 			filesDb.search(sql`
@@ -1672,14 +1684,14 @@ describe("ParliamentSyncCli", function() {
 		it("must update acceptance event", function*() {
 			var a = {
 				uuid: INITIATIVE_UUID,
-				responsibleCommittee: [{name: "Sotsiaalkomisjon"}],
+				responsibleCommittee: [{name: "Sotsiaalkomisjon", active: true}],
 				statuses: [{date: "2015-06-18", status: {code: "MENETLUSSE_VOETUD"}}]
 			}
 
 			var b = {
 				uuid: INITIATIVE_UUID,
-				responsibleCommittee: [{name: "Majanduskomisjon"}],
-				statuses: [{date: "2015-06-18", status: {code: "MENETLUSSE_VOETUD"}}]
+				responsibleCommittee: [{name: "Majanduskomisjon", active: true}],
+				statuses: [{date: "2015-06-20", status: {code: "MENETLUSSE_VOETUD"}}]
 			}
 
 			this.router.get(INITIATIVES_URL, respondMany([[a], [b]]))
@@ -1698,13 +1710,17 @@ describe("ParliamentSyncCli", function() {
 
 			var event = eventsDb.read(sql`SELECT * FROM initiative_events`)
 			yield job()
-			eventsDb.read(event).must.eql(event)
+
+			eventsDb.read(event).must.eql({
+				__proto__: event,
+				occurred_at: new Date(2015, 5, 20)
+			})
 		})
 
 		it("must update committee meeting event", function*() {
 			var a = {
 				uuid: INITIATIVE_UUID,
-				responsibleCommittee: [{name: "Sotsiaalkomisjon"}],
+				responsibleCommittee: [{name: "Sotsiaalkomisjon", active: true}],
 				statuses: [{
 					date: "2018-10-24",
 					status: {code: "ARUTELU_KOMISJONIS"},
@@ -1714,7 +1730,7 @@ describe("ParliamentSyncCli", function() {
 
 			var b = {
 				uuid: INITIATIVE_UUID,
-				responsibleCommittee: [{name: "Majanduskomisjon"}],
+				responsibleCommittee: [{name: "Majanduskomisjon", active: true}],
 				statuses: [{
 					date: "2018-10-24",
 					status: {code: "ARUTELU_KOMISJONIS"},
@@ -1907,14 +1923,14 @@ describe("ParliamentSyncCli", function() {
 			it("must not update event if not changed given " + code, function*() {
 				var a = {
 					uuid: INITIATIVE_UUID,
-					statuses: [{date: "2015-06-18", status: {code: code}}]
+					statuses: [{date: "2015-06-18", status: {code}}]
 				}
 
 				// Update something in the initiative to get past the initial diff.
 				var b = {
 					title: "Updated title",
 					uuid: INITIATIVE_UUID,
-					statuses: [{date: "2015-06-18", status: {code: code}}]
+					statuses: [{date: "2015-06-18", status: {code}}]
 				}
 
 				this.router.get(INITIATIVES_URL, respondMany([[a], [b]]))
@@ -2817,7 +2833,7 @@ describe("ParliamentSyncCli", function() {
 			}]],
 
 			"MENETLUSSE_VOETUD status and decision": [{
-				responsibleCommittee: [{name: "Keskkonnakomisjon"}],
+				responsibleCommittee: [{name: "Keskkonnakomisjon", active: true}],
 				statuses: [{date: "2015-06-18", status: {code: "MENETLUSSE_VOETUD"}}],
 				relatedDocuments: [{uuid: DOCUMENT_UUID}]
 			}, {
@@ -2838,7 +2854,7 @@ describe("ParliamentSyncCli", function() {
 				external_id: "MENETLUSSE_VOETUD",
 				type: "parliament-accepted",
 				title: null,
-				content: {committee: "environment"}
+				content: {committees: ["environment"]}
 			}, [{
 				id: 1,
 				event_id: 1,
@@ -2852,7 +2868,7 @@ describe("ParliamentSyncCli", function() {
 
 			// https://api.riigikogu.ee/api/documents/9eb9dfd0-2a2f-4eaf-bdf4-1552ed89a7ae
 			"MENETLUSSE_VOETUD status and board meeting protocol": [{
-				responsibleCommittee: [{name: "Keskkonnakomisjon"}],
+				responsibleCommittee: [{name: "Keskkonnakomisjon", active: true}],
 				statuses: [{date: "2015-06-18", status: {code: "MENETLUSSE_VOETUD"}}],
 				relatedDocuments: [{uuid: DOCUMENT_UUID}]
 			}, {
@@ -2873,7 +2889,7 @@ describe("ParliamentSyncCli", function() {
 				external_id: "MENETLUSSE_VOETUD",
 				type: "parliament-accepted",
 				title: null,
-				content: {committee: "environment"}
+				content: {committees: ["environment"]}
 			}, [{
 				id: 1,
 				event_id: 1,
@@ -2886,7 +2902,7 @@ describe("ParliamentSyncCli", function() {
 			}]],
 
 			"MENETLUSSE_VOETUD status and board meeting protocol with no leading zeroes": [{
-				responsibleCommittee: [{name: "Keskkonnakomisjon"}],
+				responsibleCommittee: [{name: "Keskkonnakomisjon", active: true}],
 				statuses: [{date: "2015-06-01", status: {code: "MENETLUSSE_VOETUD"}}],
 				relatedDocuments: [{uuid: DOCUMENT_UUID}]
 			}, {
@@ -2907,7 +2923,7 @@ describe("ParliamentSyncCli", function() {
 				external_id: "MENETLUSSE_VOETUD",
 				type: "parliament-accepted",
 				title: null,
-				content: {committee: "environment"}
+				content: {committees: ["environment"]}
 			}, [{
 				id: 1,
 				event_id: 1,

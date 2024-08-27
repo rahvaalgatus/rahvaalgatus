@@ -442,10 +442,10 @@ function downloadFile(file) {
 }
 
 function initiativeAttrsFromInitiativeDocument(doc) {
-	var attrs = {parliament_uuid: doc.uuid}
-	var committeeId = getLatestCommitteeId(doc)
-	if (committeeId) attrs.parliament_committee = committeeId
-	return attrs
+	return {
+		parliament_uuid: doc.uuid,
+		parliament_committees: getActiveCommitteeIds(doc)
+	}
 }
 
 function attrsFromStatus(status) {
@@ -531,7 +531,9 @@ function eventAttrsFromStatus(
 
 	switch (status.status.code) {
 		case "MENETLUSSE_VOETUD":
-			attrs.content = {committee: getLatestCommitteeId(initiativeDocument)}
+			attrs.content = {
+				committees: getActiveCommitteeIds(initiativeDocument) || null
+			}
 
 			;[
 				eventDocuments,
@@ -574,7 +576,7 @@ function eventAttrsFromStatus(
 					// Don't default to the latest committee if there's a protocol, as it
 					// might be an old event.
 					protocol ? parseProtocolDocumentCommittee(protocol) :
-					getLatestCommitteeId(initiativeDocument)
+					getLastCommitteeId(initiativeDocument)
 				),
 
 				invitees: null,
@@ -1007,6 +1009,13 @@ function isParliamentNationalMatterDocument(document) {
 function mergeEvent(event, attrs) {
 	switch (event.type) {
 		case "parliament-accepted":
+			attrs.content = _.assign({}, event.content, attrs.content)
+
+			if (event.content.committees)
+				attrs.content.committees = event.content.committees
+
+			break
+
 		case "parliament-committee-meeting":
 			attrs.content = _.assign({}, event.content, attrs.content)
 
@@ -1139,13 +1148,19 @@ function is404(err) {
 	)
 }
 
-function getLatestCommitteeId(doc) {
-	var committees = doc.responsibleCommittee || EMPTY_ARR
-	var committee = committees.find((com) => com.active) || _.last(committees)
+function getLastCommitteeId(doc) {
+	var committees = (doc.responsibleCommittee || EMPTY_ARR)
+	var committee = committees.find(({active}) => active) || _.last(committees)
 
 	return committee
 		? COMMITTEES_BY_NAME[committee.name] || committee.name
 		: null
+}
+
+function getActiveCommitteeIds(doc) {
+	return (doc.responsibleCommittee || EMPTY_ARR)
+		.filter(({active}) => active)
+		.map(({name}) => COMMITTEES_BY_NAME[name] || name)
 }
 
 function parseLink(link) {

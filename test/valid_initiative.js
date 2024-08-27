@@ -72,7 +72,7 @@ module.exports = function(attrs) {
 		accepted_by_government_at: null,
 		finished_in_government_at: null,
 		parliament_decision: null,
-		parliament_committee: null,
+		parliament_committees: [],
 		parliament_uuid: null,
 		discussion_end_email_sent_at: null,
 		signing_end_email_sent_at: null,

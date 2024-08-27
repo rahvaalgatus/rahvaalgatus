@@ -225,7 +225,11 @@ exports.router.get("/",
 			filters.proceedingsHandler in PARLIAMENT_COMMITTEES ? sql`
 				AND initiative.destination = 'parliament'
 				AND initiative.accepted_by_parliament_at IS NOT NULL
-				AND initiative.parliament_committee = ${filters.proceedingsHandler}
+				AND EXISTS (
+					SELECT *
+					FROM json_each(parliament_committees) AS committee
+					WHERE committee.value = ${filters.proceedingsHandler}
+				)
 			` :
 
 			filters.proceedingsHandler == "local" ? sql`
@@ -320,7 +324,7 @@ exports.router.get("/",
 			) ${orderDirSql}`,
 
 			"proceedings-handler": sql`ORDER BY COALESCE(
-				initiative.parliament_committee,
+				json_extract(initiative.parliament_committees, '$[0]'),
 				initiative.destination
 			) ${orderDirSql}`
 		}[orderBy] || sql``}
@@ -375,9 +379,9 @@ exports.router.get("/",
 
 		default:
 			var parliamentCommittees = sqlite(sql`
-				SELECT DISTINCT parliament_committee AS committee
-				FROM initiatives
-				WHERE parliament_committee IS NOT NULL
+				SELECT DISTINCT committee.value AS committee
+				FROM initiatives AS initiative
+				JOIN json_each(initiative.parliament_committees) AS committee
 				ORDER BY committee ASC
 			`).map(({committee}) => committee)
 
@@ -1560,7 +1564,7 @@ function serializeCsvInitiative(initiative) {
 		initiative.sent_to_parliament_at &&
 			initiative.sent_to_parliament_at.toJSON(),
 
-		initiative.parliament_committee,
+		initiative.parliament_committees.join("\n"),
 		initiative.parliament_decision,
 
 		initiative.finished_in_parliament_at &&

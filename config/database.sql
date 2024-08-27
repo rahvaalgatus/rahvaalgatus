@@ -599,7 +599,7 @@ CREATE TABLE IF NOT EXISTS "initiatives" (
 	public_change_urls TEXT NOT NULL DEFAULT '[]',
 
 	parliament_decision TEXT,
-	parliament_committee TEXT,
+	parliament_committees TEXT NOT NULL DEFAULT '[]',
 	parliament_uuid TEXT,
 	parliament_synced_at TEXT,
 	parliament_token BLOB,
@@ -738,6 +738,9 @@ CREATE TABLE IF NOT EXISTS "initiatives" (
 
 	CONSTRAINT phase_not_parliament_when_local
 	CHECK (phase != 'parliament' OR destination == 'parliament'),
+
+	CONSTRAINT parliament_committees_json
+	CHECK (json_valid(parliament_committees)),
 
 	CONSTRAINT parliament_uuid_length CHECK (length(parliament_uuid) == 36),
 
@@ -926,4 +929,5 @@ INSERT INTO migrations VALUES('20231124000000');
 INSERT INTO migrations VALUES('20240603082158');
 INSERT INTO migrations VALUES('20240620000000');
 INSERT INTO migrations VALUES('20240807212157');
+INSERT INTO migrations VALUES('20240827072953');
 COMMIT;

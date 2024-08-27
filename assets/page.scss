@@ -2597,7 +2597,7 @@ main {
 			}
 
 			.title-column,
-			.proceedings-handler {
+			.proceedings-handlers {
 				font-family: $tisa-pro;
 				color: $grey;
 			}
@@ -2763,7 +2763,7 @@ main {
 				td.signing-started-at-column:not(:empty):before,
 				td.signature-count-column:not(:empty):before,
 				td.proceedings-started-at-column:not(:empty):before,
-				.proceedings-handler:before {
+				.proceedings-handlers:before {
 					display: inline-block;
 					text-transform: uppercase;
 					font-family: inherit;
@@ -2772,7 +2772,6 @@ main {
 					color: $grey;
 					white-space: nowrap;
 					margin-right: 1rem;
-
 					content: attr(title) ":";
 				}
 
@@ -2781,7 +2780,7 @@ main {
           .last-signed { margin-left: 1rem; display: inline; }
         }
 
-				.proceedings-handler {
+				.proceedings-handlers {
 					font-family: inherit;
 					color: inherit;
 				}
@@ -3200,6 +3199,14 @@ main {
 				font-size: 1.1rem;
 				line-height: $progress-line-height;
 				color: $grey;
+
+				.before {
+					padding: 0 1rem;
+					display: block;
+					@include ellipsis;
+
+					&:empty:before { content: " "; }
+				}
 			}
 
 			progress {

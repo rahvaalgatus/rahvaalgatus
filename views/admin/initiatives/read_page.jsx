@@ -251,15 +251,10 @@ module.exports = function(attrs) {
 			</tr> : null}
 
 			{initiative.destination == "parliament" ? <tr>
-				<th scope="row">Parliament Committee</th>
-				<td>
-					<InputForm
-						req={req}
-						action={initiativePath}
-						name="parliamentCommittee"
-						value={initiative.parliament_committee}
-					/>
-				</td>
+				<th scope="row">Parliament Committees</th>
+				<td><ul>{initiative.parliament_committees.map((committee) => <li>
+					{committee}
+				</li>)}</ul></td>
 			</tr> : null}
 
 			{initiative.destination == "parliament" ? <tr>

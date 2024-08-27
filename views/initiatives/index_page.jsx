@@ -791,7 +791,7 @@ function InitiativeGroupView({t, lang, title, initiatives}) {
 			var authorNames = Initiative.authorNames(initiative)
 			var proceedingsStartedAt = getProceedingsStartedAt(initiative)
 			var proceedingsEndedAt = getProceedingsEndedAt(initiative)
-			var proceedingsHandler = getProceedingsHandler(initiative)
+			var proceedingsHandlers = getProceedingsHandlers(initiative)
 
 			return <tr
 				class="initiative"
@@ -886,10 +886,12 @@ function InitiativeGroupView({t, lang, title, initiatives}) {
 					{proceedingsStartedAt && proceedingsEndedAt ? "—" : ""}
 					{proceedingsEndedAt ? <DateView date={proceedingsEndedAt} /> : null}
 
-					{proceedingsHandler ? <p
-						class="proceedings-handler"
+					{proceedingsHandlers.length > 0 ? <p
+						class="proceedings-handlers"
 						title={t("initiatives_page.table.proceedings_handler_column")}
-					>{nameProceedingsHandler(lang, proceedingsHandler)}</p> : null}
+					>{proceedingsHandlers.map(
+						nameProceedingsHandler.bind(null, lang)
+					).join(", ")}</p> : null}
 
 					{initiative.parliament_decision ? <p class="proceedings-decision">
 						{renderParliamentDecision(t, initiative.parliament_decision)}.
@@ -943,9 +945,7 @@ var PIE_CHART_COLORS = [
 ]
 
 function ProceedingsHandlersGraphView({t, lang, initiatives, path, query}) {
-	var handlers = _.countBy(initiatives.map(getProceedingsHandler))
-	delete handlers.null
-
+	var handlers = _.countBy(initiatives.flatMap(getProceedingsHandlers))
 	handlers = _.sortBy(_.toEntries(handlers), _.second).reverse()
 	if (handlers.length < 2) return null
 
@@ -1293,7 +1293,9 @@ function groupInitiative(by, initiative) {
 			var proceedingsEndedAt = getProceedingsEndedAt(initiative)
 			return proceedingsEndedAt && proceedingsEndedAt.getFullYear()
 
-		case "proceedings-handler": return getProceedingsHandler(initiative)
+		case "proceedings-handler":
+			return getProceedingsHandlers(initiative)[0] || null
+
 		default: return null
 	}
 }
@@ -1312,16 +1314,16 @@ function getProceedingsEndedAt(initiative) {
 	)
 }
 
-function getProceedingsHandler(initiative) {
+function getProceedingsHandlers(initiative) {
 	if (initiative.destination == "parliament") {
 		if (initiative.accepted_by_parliament_at)
-			return initiative.parliament_committee
+			return initiative.parliament_committees
 	}
 	else if (initiative.destination) {
-		if (initiative.accepted_by_government_at) return initiative.destination
+		if (initiative.accepted_by_government_at) return [initiative.destination]
 	}
 
-	return null
+	return []
 }
 
 function nameProceedingsHandler(lang, handler) {
@@ -1367,6 +1369,9 @@ function serializeRangeEndpoints(serialize, {begin, end, bounds}) {
 }
 
 function donut(startAngle, endAngle, circleRadius, arcWidth) {
+	var centralAngle = Math.abs(endAngle - startAngle)
+	if (centralAngle >= Math.PI * 2) endAngle = startAngle - 0.001
+
 	var innerStartX = Math.cos(startAngle) * circleRadius
 	var innerStartY = Math.sin(startAngle) * circleRadius
 	var innerEndX = Math.cos(endAngle) * circleRadius
@@ -1378,13 +1383,13 @@ function donut(startAngle, endAngle, circleRadius, arcWidth) {
 	var outerEndX = Math.cos(endAngle) * outerCircleRadius
 	var outerEndY = Math.sin(endAngle) * outerCircleRadius
 
-	let largerThanPi = Number(endAngle - startAngle >= Math.PI)
+	let largerThanHalf = Number(centralAngle >= Math.PI)
 
 	return [
 		`M ${innerStartX} ${innerStartY}`,
-		`A ${circleRadius} ${circleRadius} 0 ${largerThanPi} 1 ${innerEndX} ${innerEndY}`,
+		`A ${circleRadius} ${circleRadius} 0 ${largerThanHalf} 1 ${innerEndX} ${innerEndY}`,
 		`L ${outerEndX} ${outerEndY}`,
-		`A ${outerCircleRadius} ${outerCircleRadius} 0 ${largerThanPi} 0 ${outerStartX} ${outerStartY}`,
+		`A ${outerCircleRadius} ${outerCircleRadius} 0 ${largerThanHalf} 0 ${outerStartX} ${outerStartY}`,
 		`Z`,
 	]
 }

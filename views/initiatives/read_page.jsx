@@ -810,9 +810,9 @@ function PhasesView(attrs) {
 			>
         <i>{t("PARLIAMENT_PHASE")}</i>
 				<InitiativeProgressView
-					before={initiative.parliament_committee &&
-						I18n.nameParliamentCommittee(lang, initiative.parliament_committee)
-					}
+					before={initiative.parliament_committees.map((committee) => (
+						I18n.nameParliamentCommittee(lang, committee)
+					)).join(", ")}
 
 					value={parliamentProgress}
 					text={parliamentPhaseText}
@@ -854,7 +854,7 @@ function PhasesView(attrs) {
 
 		// Linebreaks are for alignment _and_ rendering without CSS.
 		return <label class="progress">
-			{before}<br />
+			<span class="before">{before}</span>
 			<progress value={value == null ? null : min(1, value)} /><br />
 			{text}
 		</label>
@@ -1695,13 +1695,19 @@ function EventsView(attrs) {
 						case "parliament-accepted":
 							title = t("PARLIAMENT_ACCEPTED")
 
-							var {committee} = event.content
+							var committeeNames = event.content.committees.map(
+								I18n.nameParliamentCommittee.bind(null, lang)
+							)
 
-							if (committee) content = <p class="text">
-								{t("PARLIAMENT_ACCEPTED_SENT_TO_COMMITTEE", {
-									committee: I18n.nameParliamentCommittee(lang, committee)
-								})}
-							</p>
+							if (committeeNames.length > 0) content = <p class="text">{
+								committeeNames.length == 1
+									? t("initiative_page.events.parliament_accepted.committee", {
+										committee: committeeNames[0]
+									})
+									: t("initiative_page.events.parliament_accepted.committees", {
+										committees: committeeNames.join(", ")
+									})
+							}</p>
 							break
 
 						case "parliament-board-meeting":
@@ -2175,18 +2181,28 @@ function InitiativeDestinationSelectView(attrs) {
 
 function InitiativeLocationView({t, lang, initiative}) {
 	var content
-	if (initiative.phase == "parliament" && initiative.parliament_committee) {
-		content = <>
-			{Jsx.html(t("INITIATIVE_IS_IN_PARLIAMENT_COMMITTEE", {
-				committee: _.escapeHtml(
-					I18n.nameParliamentCommittee(lang, initiative.parliament_committee)
-				)
-			}))}
-		</>
+
+	if (
+			initiative.phase == "parliament" &&
+			initiative.parliament_committees.length > 0
+	) {
+		var committeeNames = initiative.parliament_committees.map(
+			I18n.nameParliamentCommittee.bind(null, lang)
+		)
+
+		content = Jsx.html(committeeNames.length == 1
+			? t("initiative_page.sidebar.location.in_parliament_committee", {
+				committee: _.escapeHtml(committeeNames[0])
+			})
+
+			: t("initiative_page.sidebar.location.in_parliament_committees", {
+				committees: committeeNames.map(_.escapeHtml).join(", ")
+			})
+		)
 	}
 	else if (initiative.phase == "government" && initiative.government_agency) {
 		content = <>
-			{Jsx.html(t("INITIATIVE_IS_IN_GOVERNMENT_AGENCY", {
+			{Jsx.html(t("initiative_page.sidebar.location.in_government_agency", {
 				agency: _.escapeHtml(initiative.government_agency)
 			}))}<br />
 

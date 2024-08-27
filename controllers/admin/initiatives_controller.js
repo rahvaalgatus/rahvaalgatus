@@ -373,9 +373,6 @@ function parseInitiative(initiative, obj) {
 		_.contains(["sign", "parliament", "government", "done"], obj.phase)
 	) attrs.phase = obj.phase
 
-	if ("parliamentCommittee" in obj)
-		attrs.parliament_committee = obj.parliamentCommittee
-
 	if ("governmentAgency" in obj)
 		attrs.government_agency = obj.governmentAgency
 

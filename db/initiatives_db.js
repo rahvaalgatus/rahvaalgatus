@@ -52,9 +52,10 @@ exports.parse = function(attrs) {
 			new Date(attrs.signatures_anonymized_at),
 		signature_threshold_at: attrs.signature_threshold_at &&
 			new Date(attrs.signature_threshold_at),
-
 		parliament_synced_at: attrs.parliament_synced_at &&
 			new Date(attrs.parliament_synced_at),
+		parliament_committees: attrs.parliament_committees &&
+			JSON.parse(attrs.parliament_committees),
 		signature_milestones: attrs.signature_milestones &&
 			_.mapValues(JSON.parse(attrs.signature_milestones), parseDateTime),
 		government_change_urls: attrs.government_change_urls &&
@@ -74,6 +75,8 @@ exports.serialize = function(attrs) {
 		obj.organizations = JSON.stringify(obj.organizations)
 	if ("signature_milestones" in obj)
 		obj.signature_milestones = JSON.stringify(obj.signature_milestones)
+	if ("parliament_committees" in obj)
+		obj.parliament_committees = JSON.stringify(obj.parliament_committees)
 	if ("government_change_urls" in obj)
 		obj.government_change_urls = JSON.stringify(obj.government_change_urls)
 	if ("public_change_urls" in obj)

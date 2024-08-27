@@ -294,7 +294,7 @@ describe("InitiativesController", function() {
 				initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "parliament",
-					parliament_committee: "environment"
+					parliament_committees: ["environment"]
 				}))
 
 				var res = yield this.request("/initiatives?" + Qs.stringify({
@@ -1386,13 +1386,13 @@ describe("InitiativesController", function() {
 					new ValidInitiative({
 						user_id: this.author.id,
 						phase: "parliament",
-						parliament_committee: "economic-affairs"
+						parliament_committees: ["economic-affairs"]
 					}),
 
 					new ValidInitiative({
 						user_id: this.author.id,
 						phase: "parliament",
-						parliament_committee: "social-affairs"
+						parliament_committees: ["social-affairs"]
 					}),
 
 					new ValidInitiative({
@@ -1410,7 +1410,7 @@ describe("InitiativesController", function() {
 
 				_.map(els, (el) => Number(el.getAttribute("data-id"))).must.eql(
 					sort(_.map(_.sortBy(initiatives, (initiative) => (
-						initiative.parliament_committee ||
+						initiative.parliament_committees[0] ||
 						initiative.destination
 					)), "id"))
 				)
@@ -2312,14 +2312,14 @@ describe("InitiativesController", function() {
 					user_id: this.author.id,
 					phase: "parliament",
 					accepted_by_parliament_at: new Date,
-					parliament_committee: "social-affairs"
+					parliament_committees: ["social-affairs"]
 				}))
 
 				initiativesDb.create(new ValidInitiative({
 					user_id: this.author.id,
 					phase: "parliament",
 					accepted_by_parliament_at: new Date,
-					parliament_committee: "environment"
+					parliament_committees: ["environment"]
 				}))
 
 				initiativesDb.create(new ValidInitiative({
@@ -4645,7 +4645,7 @@ describe("InitiativesController", function() {
 					phase: "parliament",
 					sent_to_parliament_at: DateFns.addDays(new Date, -6),
 					received_by_parliament_at: DateFns.addDays(new Date, -5),
-					parliament_committee: "environment"
+					parliament_committees: ["environment"]
 				}))
 
 				citizenosSignaturesDb.create(_.times(
@@ -4723,7 +4723,7 @@ describe("InitiativesController", function() {
 					updated_at: pseudoDateTime(),
 					occurred_at: pseudoDateTime(),
 					type: "parliament-accepted",
-					content: {committee: "environment"},
+					content: {committees: ["environment"]},
 					origin: "parliament"
 				}))
 
@@ -4739,7 +4739,7 @@ describe("InitiativesController", function() {
 				events[0].title.must.equal(t("PARLIAMENT_ACCEPTED"))
 
 				events[0].content[0].textContent.must.equal(
-					t("PARLIAMENT_ACCEPTED_SENT_TO_COMMITTEE", {
+					t("initiative_page.events.parliament_accepted.committee", {
 						committee: "Keskkonnakomisjon"
 					})
 				)
@@ -5416,9 +5416,11 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(tHtml("INITIATIVE_IN_GOVERNMENT"))
 
-				res.body.must.include(t("INITIATIVE_IS_IN_GOVERNMENT_AGENCY", {
-					agency: "Sidususministeerium"
-				}))
+				res.body.must.include(
+					t("initiative_page.sidebar.location.in_government_agency", {
+						agency: "Sidususministeerium"
+					})
+				)
 
 				var dom = parseHtml(res.body)
 				var phases = queryPhases(dom)
@@ -5806,7 +5808,8 @@ describe("InitiativesController", function() {
 						initiative_uuid: initiative.uuid,
 						occurred_at: new Date(2015, 5, 17),
 						type: "parliament-accepted",
-						origin: "parliament"
+						origin: "parliament",
+						content: {committees: []},
 					}),
 
 					new ValidEvent({
@@ -8278,7 +8281,7 @@ describe("InitiativesController", function() {
 				updated_at: pseudoDateTime(),
 				occurred_at: pseudoDateTime(),
 				type: "parliament-accepted",
-				content: {committee: "environment"},
+				content: {committees: ["environment"]},
 				origin: "parliament"
 			}))
 
@@ -8299,7 +8302,7 @@ describe("InitiativesController", function() {
 				title: {$: t("PARLIAMENT_ACCEPTED")},
 				content: {
 					type: "text",
-					$: t("PARLIAMENT_ACCEPTED_SENT_TO_COMMITTEE", {
+					$: t("initiative_page.events.parliament_accepted.committee", {
 						committee: "Keskkonnakomisjon"
 					})
 				}
@@ -13506,7 +13509,7 @@ describe("InitiativesController", function() {
 				signing_ends_at: new Date(2015, 5, 20, 13, 37, 44, 666),
 				sent_to_parliament_at: new Date(2015, 5, 21, 13, 37, 45, 666),
 				finished_in_parliament_at: new Date(2015, 5, 22, 13, 37, 46, 666),
-				parliament_committee: "environment",
+				parliament_committees: ["environment"],
 				parliament_decision: "reject",
 				sent_to_government_at: new Date(2015, 5, 23, 13, 37, 47, 666),
 				finished_in_government_at: new Date(2015, 5, 24, 13, 37, 48, 666),
@@ -13529,7 +13532,7 @@ describe("InitiativesController", function() {
 				666,
 				initiative.last_signed_at.toJSON(),
 				initiative.sent_to_parliament_at.toJSON(),
-				initiative.parliament_committee,
+				initiative.parliament_committees.join("\n"),
 				initiative.parliament_decision,
 				initiative.finished_in_parliament_at.toJSON(),
 				initiative.sent_to_government_at.toJSON(),

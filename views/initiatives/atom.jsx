@@ -80,10 +80,18 @@ function EventEntryView({initiative, event, sourced}) {
 
 		case "parliament-accepted":
 			title = renderEventTitle(initiative, event)
-			var {committee} = event.content
-			if (committee) content = t("PARLIAMENT_ACCEPTED_SENT_TO_COMMITTEE", {
-				committee: I18n.nameParliamentCommittee("et", committee)
-			})
+
+			var committeeNames = event.content.committees.map(
+				I18n.nameParliamentCommittee.bind(null, "et")
+			)
+
+			content = committeeNames.length == 1
+				? t("initiative_page.events.parliament_accepted.committee", {
+					committee: committeeNames[0]
+				})
+				: t("initiative_page.events.parliament_accepted.committees", {
+					committees: committeeNames.join(", ")
+				})
 			break
 
 		case "parliament-board-meeting":
