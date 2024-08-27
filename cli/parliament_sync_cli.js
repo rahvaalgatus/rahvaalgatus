@@ -617,9 +617,9 @@ function eventAttrsFromStatus(
 
 	otherDocuments = otherDocuments.concat(letterDocuments)
 
-	attrs.files = _.flatten(eventDocuments.map((doc) => (
+	attrs.files = eventDocuments.flatMap((doc) => (
 		newDocumentFiles(doc, doc.files || EMPTY_ARR)
-	)))
+	))
 
 	attrs = (status.relatedVolumes || EMPTY_ARR).map(
 		eventAttrsFromVolume.bind(null, opts, initiative)
@@ -765,9 +765,9 @@ function eventAttrsFromVolume(opts, initiative, volume) {
 				invitees: topic && topic.invitees || null
 			},
 
-			files: _.flatten(volume.documents.map((doc) => (
+			files: volume.documents.flatMap((doc) => (
 				newDocumentFiles(doc, doc.files || EMPTY_ARR)
-			)))
+			))
 		}, []]
 	}
 
@@ -791,9 +791,9 @@ function eventAttrsFromVolume(opts, initiative, volume) {
 				deadline: question.answerDeadline
 			},
 
-			files: _.flatten(volume.documents.map((doc) => (
+			files: volume.documents.flatMap((doc) => (
 				newDocumentFiles(doc, doc.files || EMPTY_ARR)
-			)))
+			))
 		}, []]
 	}
 

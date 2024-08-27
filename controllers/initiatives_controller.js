@@ -860,7 +860,7 @@ function searchInitiativesEventsForAtom(initiatives) {
 function synthesizeInitiativeEvents(initiatives, events) {
 	var eventsByInitiativeUuid = _.groupBy(events, "initiative_uuid")
 
-	return _.flatten(initiatives.map(function(initiative) {
+	return initiatives.flatMap(function(initiative) {
 		var events = eventsByInitiativeUuid[initiative.uuid] || EMPTY_ARR
 		var sentToParliamentAt = initiative.sent_to_parliament_at
 		var finishedInParliamentAt = initiative.finished_in_parliament_at
@@ -919,7 +919,7 @@ function synthesizeInitiativeEvents(initiatives, events) {
 				origin: "system"
 			} : EMPTY_ARR
 		)
-	}))
+	})
 }
 
 function searchInitiativeComments(initiativeUuid) {
