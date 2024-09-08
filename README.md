@@ -1,6 +1,10 @@
 Rahvaalgatus
 ============
+[![Build status][build-badge]](https://github.com/rahvaalgatus/rahvaalgatus/actions/workflows/node.yaml)
+
 The website of <https://rahvaalgatus.ee> built with JavaScript on Node.js, [JSX](https://github.com/moll/js-j6pack/) for templates and [Sass](https://sass-lang.com/) for CSS. It uses SQLite for its database, which is bundled with the [Better SQLite3](https://www.npmjs.com/package/better-sqlite3) Node.js package. No external database servers required.
+
+[build-badge]: https://github.com/rahvaalgatus/rahvaalgatus/actions/workflows/node.yaml/badge.svg
 
 
 Development
