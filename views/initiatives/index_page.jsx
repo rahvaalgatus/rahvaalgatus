@@ -21,7 +21,6 @@ var {PARLIAMENT_DECISIONS} = require("root/lib/initiative")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
 var {PHASES} = require("root/lib/initiative")
 var PARLIAMENT_COMMITTEES = require("root/lib/parliament_committees")
-
 var PARLIAMENT_COMMITTEE_IDS =
 	_.keys(_.filterValues(PARLIAMENT_COMMITTEES, (c) => c.permanent))
 
@@ -967,8 +966,12 @@ function ProceedingsHandlersGraphView({t, lang, initiatives, path, query}) {
 
 	groups = _.map(groups, (sectors, group) => ({
 		title: group == "parliament"
-			? t("initiatives_page.filters.proceedings_handler.parliament_group_label")
-			: t("initiatives_page.filters.proceedings_handler.local_label"),
+			? t("initiatives_page.graphs.proceedings_handler.parliament_ring_title")
+			: t("initiatives_page.graphs.proceedings_handler.local_ring_title"),
+
+		label: group == "parliament"
+			? t("initiatives_page.graphs.proceedings_handler.parliament_ring_label")
+			: t("initiatives_page.graphs.proceedings_handler.local_ring_label"),
 
 		weight: _.sum(sectors.map(getWeight)),
 		color: group == "parliament" ? "#1c71a2" : "#ffb237",
@@ -1129,20 +1132,21 @@ function PieChartView({sectors, sectorRadius, sectorWidth}) {
 		</defs>
 
 		<g transform={translate(boxWidth / 2, boxHeight / 2)}>
-			{renderSectors(0, 0, 2 * Math.PI, sectors)}
+			{renderRing(0, 0, Math.PI * 2, sectors)}
 		</g>
 	</svg>
 
-	function renderSectors(ringIndex, ringStartAngle, ringEndAngle, sectors) {
+	function renderRing(ringIndex, ringStartAngle, ringEndAngle, sectors) {
 		var ringAngle = ringEndAngle - ringStartAngle
 		var ringRadius = sectorRadius + sectorWidth * ringIndex
 		var weightAngle = ringAngle / _.sum(sectors.map(getWeight))
 
-		return <g>{sectors.map(function(sector, sectorIndex, sectors) {
+		return sectors.map(function(sector, sectorIndex, sectors) {
 			var weightsBefore = _.sum(sectors.slice(0, sectorIndex).map(getWeight))
 			var startAngle = ringStartAngle + weightAngle * weightsBefore
 			var endAngle = startAngle + weightAngle * sector.weight
-			let paths = donut(startAngle, endAngle, ringRadius, sectorWidth)
+			let donutPaths = donut(startAngle, endAngle, ringRadius, sectorWidth)
+			var labelCenterAngle = (endAngle + startAngle) / 2
 			var Sector = Jsx.bind(null, sector.href ? "a" : "g")
 
 			return <>
@@ -1153,15 +1157,37 @@ function PieChartView({sectors, sectorRadius, sectorWidth}) {
 						fill={sector.color}
 						stroke="white"
 						stroke-width="1"
-						d={paths.join("\n")}
+						d={donutPaths.join("\n")}
 					/>
+
+					<circle
+						id={`ring-${ringIndex}-sector-${sectorIndex}-label-path`}
+						fill="none"
+						cx="0"
+						cy="0"
+						r={ringRadius + 10}
+						transform={`rotate(${toDegrees(labelCenterAngle + Math.PI)})`}
+					/>
+
+					{sector.label ? <>
+						<text>
+							<textPath
+								class="label"
+								text-anchor="middle"
+								startOffset="50%"
+								href={`#ring-${ringIndex}-sector-${sectorIndex}-label-path`}
+							>
+								{sector.label}
+							</textPath>
+						</text>
+					</> : null}
 				</Sector>
 
 				{sector.sectors ? <g class="subsectors">
-					{renderSectors(ringIndex + 1, startAngle, endAngle, sector.sectors)}
+					{renderRing(ringIndex + 1, startAngle, endAngle, sector.sectors)}
 				</g> : null}
 			</>
-		})}</g>
+		})
 	}
 
 	function getDepth({sectors}) {
@@ -1411,3 +1437,4 @@ function renderParliamentDecision(t, decision) {
 
 function anyDefined(obj) { return _.any(obj, (value) => value != null) }
 function translate(x, y) { return "translate(" + x + ", " + y + ")" }
+function toDegrees(radians) { return radians * (360 / (Math.PI * 2)) }
