@@ -6,6 +6,7 @@ EXE=$(basename "$0")
 VERSION=0.1.337
 AUTHOR_NAME="Andri Möll"
 AUTHOR_EMAIL="andri@dot.ee"
+SQLITE=sqlite3
 MIGRATIONS_DIR=migrations
 DATABASE=
 
@@ -21,16 +22,17 @@ help() {
 	usage
 	echo
 	echo "Options:"
-	echo "    -f=DATABASE    Set database file."
-	echo "    -d=MIGRATIONS  Set migrations directory [default: migrations]."
-	echo "    -h             Show this help."
-	echo "    -V             Show version and exit."
+	echo "    -c=SQLITE_PATH  Set the sqlite3 binary path."
+	echo "    -f=DATABASE     Set database file."
+	echo "    -d=MIGRATIONS   Set migrations directory [default: migrations]."
+	echo "    -h              Show this help."
+	echo "    -V              Show version and exit."
 	echo
 	echo "Commands:"
-	echo "    create         Create a new migration."
-	echo "    status         Show applied and pending migrations."
-	echo "    migrate        Apply pending migrations."
-	echo "    schema         Dump schema in SQL."
+	echo "    create          Create a new migration."
+	echo "    status          Show applied and pending migrations."
+	echo "    migrate         Apply pending migrations."
+	echo "    schema          Dump schema in SQL."
 	echo
 	echo "For more help or to give feedback, please contact $AUTHOR_EMAIL."
 }
@@ -40,7 +42,10 @@ sqlite() {
 	# Let's not use it so those in cobwebs can still run `status`. Migrating is
 	# risky, though, as v3.3.6 doesn't exit with an error code on SQL errors.
 	[ -z "$DATABASE" ] && warn "Please set -f DATABASE." && exit 2
-	sqlite3 -init "" "$DATABASE" "$@"
+
+	# Somewhere around Sqlite3 v3.3x `-init ""` started showing an error.
+	# Previously it disabled loading ~/.sqliterc.
+	$SQLITE -init /dev/null -bail "$DATABASE" -cmd ".timeout 5000" "$@"
 }
 
 sqlite_migrations() {
@@ -90,8 +95,9 @@ green() { printf "\\033[32m%b\\033[0m" "$*"; }
 yellow() { printf "\\033[33m%b\\033[0m" "$*"; }
 clear_line() { printf "\\r\\033[2K"; }
 
-while getopts f:d:hV option; do
+while getopts c:f:d:hV option; do
 	case "$option" in
+		c) SQLITE=$OPTARG;;
 		f) DATABASE=$OPTARG;;
 		d) MIGRATIONS_DIR=$OPTARG;;
 		\? | h) help; exit 0;;
