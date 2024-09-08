@@ -612,7 +612,7 @@ CREATE TABLE IF NOT EXISTS "initiatives" (
 	government_contact_details TEXT,
 	government_decision TEXT,
 
-	external_text_file_id INTEGER, last_comment_created_at TEXT,
+	external_text_file_id INTEGER, last_comment_created_at TEXT, last_event_created_at TEXT,
 
 	FOREIGN KEY (user_id) REFERENCES users (id),
 	FOREIGN KEY (external_text_file_id) REFERENCES initiative_files (id),
@@ -677,6 +677,9 @@ CREATE TABLE IF NOT EXISTS "initiatives" (
 
 	CONSTRAINT last_comment_created_at_format
 	CHECK (last_comment_created_at GLOB '*-*-*T*:*:*Z'),
+
+	CONSTRAINT last_event_created_at_format
+	CHECK (last_event_created_at GLOB '*-*-*T*:*:*Z'),
 
 	CONSTRAINT archived_at_format CHECK (archived_at GLOB '*-*-*T*:*:*Z'),
 
@@ -816,6 +819,18 @@ END;
 CREATE INDEX index_initiatives_on_last_comment_created_at
 ON initiatives (last_comment_created_at DESC)
 WHERE last_comment_created_at IS NOT NULL;
+CREATE TRIGGER set_initiative_last_event_created_at_on_create
+AFTER INSERT ON initiative_events
+FOR EACH ROW BEGIN
+  UPDATE initiatives SET last_event_created_at = COALESCE(
+		max(last_event_created_at, NEW.created_at),
+		NEW.created_at
+	)
+  WHERE uuid = NEW.initiative_uuid;
+END;
+CREATE INDEX index_initiatives_on_last_event_created_at
+ON initiatives (last_event_created_at DESC)
+WHERE last_event_created_at IS NOT NULL;
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -950,4 +965,5 @@ INSERT INTO migrations VALUES('20240807212157');
 INSERT INTO migrations VALUES('20240827072953');
 INSERT INTO migrations VALUES('20240908212900');
 INSERT INTO migrations VALUES('20240908212957');
+INSERT INTO migrations VALUES('20240908222218');
 COMMIT;

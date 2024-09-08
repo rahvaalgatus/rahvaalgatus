@@ -1,3 +1,4 @@
+var _ = require("root/lib/underscore")
 var Config = require("root").config
 var Initiative = require("root/lib/initiative")
 var ValidUser = require("root/test/valid_user")
@@ -31,7 +32,7 @@ describe("AdminInitiativesController", function() {
 			}))
 		})
 
-		it("must create event", function*() {
+		it("must create event and update initiative", function*() {
 			var res = yield this.request(`/initiatives/${this.initiative.uuid}/events`, {
 				method: "POST",
 
@@ -61,6 +62,10 @@ describe("AdminInitiativesController", function() {
 				title: "Initiative was handled",
 				content: "All good."
 			}))
+
+			initiativesDb.read(this.initiative.id).must.eql(_.defaults({
+				last_event_created_at: events[0].created_at
+			}, this.initiative))
 		})
 
 		it("must email subscribers interested in events", function*() {

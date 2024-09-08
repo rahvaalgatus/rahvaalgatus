@@ -60,6 +60,8 @@ exports.parse = function(attrs) {
 			_.mapValues(JSON.parse(attrs.signature_milestones), parseDateTime),
 		last_comment_created_at: attrs.last_comment_created_at &&
 			new Date(attrs.last_comment_created_at),
+		last_event_created_at: attrs.last_event_created_at &&
+			new Date(attrs.last_event_created_at),
 		government_change_urls: attrs.government_change_urls &&
 			JSON.parse(attrs.government_change_urls),
 		public_change_urls: attrs.public_change_urls &&

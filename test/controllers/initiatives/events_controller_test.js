@@ -244,7 +244,8 @@ describe("InitiativeEventsController", function() {
 
 			describe("given text event", function() {
 				EVENTABLE_PHASES.forEach(function(phase) {
-					it(`must create event if in ${phase} phase`, function*() {
+					it(`must create event if in ${phase} phase and update initiative`,
+						function*() {
 						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
 							phase: phase,
@@ -280,6 +281,10 @@ describe("InitiativeEventsController", function() {
 							title: "Something happened",
 							content: "You shouldn't miss it."
 						})])
+
+						initiativesDb.read(initiative.id).must.eql(_.defaults({
+							last_event_created_at: events[0].created_at
+						}, initiative))
 					})
 				})
 
@@ -512,7 +517,7 @@ describe("InitiativeEventsController", function() {
 			})
 
 			describe("given media-coverage event", function() {
-				it("must create event", function*() {
+				it("must create event and update initiative", function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
 						phase: "sign",
@@ -553,6 +558,10 @@ describe("InitiativeEventsController", function() {
 							url: "http://example.com/article"
 						}
 					})])
+
+					initiativesDb.read(initiative.id).must.eql(_.defaults({
+						last_event_created_at: events[0].created_at
+					}, initiative))
 				})
 
 				it("must email parliament initiative subscribers interested in events",

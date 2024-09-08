@@ -159,7 +159,8 @@ describe("ParliamentSyncCli", function() {
 			undersignable: false,
 			finished_in_parliament_at: new Date(2015, 5, 20),
 			parliament_uuid: INITIATIVE_UUID,
-			parliament_synced_at: new Date
+			parliament_synced_at: new Date,
+			last_event_created_at: new Date
 		}))
 	})
 
@@ -273,7 +274,8 @@ describe("ParliamentSyncCli", function() {
 			parliament_synced_at: new Date,
 			received_by_parliament_at: new Date(2018, 9, 23),
 			accepted_by_parliament_at: new Date(2018, 9, 24),
-			finished_in_parliament_at: new Date(2018, 9, 25)
+			finished_in_parliament_at: new Date(2018, 9, 25),
+			last_event_created_at: new Date,
 		}])
 
 		eventsDb.search(sql`SELECT * FROM initiative_events`).must.have.length(3)
@@ -366,7 +368,8 @@ describe("ParliamentSyncCli", function() {
 			__proto__: initiative,
 			phase: "done",
 			finished_in_parliament_at: new Date(2015, 5, 20),
-			parliament_synced_at: new Date
+			parliament_synced_at: new Date,
+			last_event_created_at: new Date
 		})])
 	})
 
@@ -401,6 +404,7 @@ describe("ParliamentSyncCli", function() {
 
 		initiatives.must.eql([_.clone({
 			__proto__: initiative,
+			last_event_created_at: new Date,
 			finished_in_parliament_at: new Date(2015, 5, 20),
 			parliament_synced_at: new Date
 		})])
@@ -450,6 +454,7 @@ describe("ParliamentSyncCli", function() {
 			__proto__: initiative,
 			parliament_uuid: INITIATIVE_UUID,
 			parliament_synced_at: new Date,
+			last_event_created_at: new Date,
 			received_by_parliament_at: new Date(2018, 9, 23),
 			accepted_by_parliament_at: new Date(2018, 9, 24),
 			finished_in_parliament_at: new Date(2018, 9, 25)
@@ -1477,13 +1482,14 @@ describe("ParliamentSyncCli", function() {
 				yield job()
 
 				var updated = initiativesDb.read(initiative)
+				var events = eventsDb.search(sql`SELECT * FROM initiative_events`)
 
 				updated.must.eql(_.assign({
 					__proto__: initiative,
+					last_event_created_at: _.max(events.map((event) => event.created_at)),
 					parliament_synced_at: new Date
 				}, attrs))
 
-				var events = eventsDb.search(sql`SELECT * FROM initiative_events`)
 				events.must.eql(concat(eventAttrs).map((attrs, i) => new ValidEvent({
 					__proto__: attrs,
 					id: i + 1,
@@ -1542,8 +1548,8 @@ describe("ParliamentSyncCli", function() {
 
 			yield job()
 
-			var updatedInitiative = initiativesDb.read(initiative)
-			updatedInitiative.must.eql(_.assign({}, initiative, {
+			initiativesDb.read(initiative).must.eql(_.assign({}, initiative, {
+				last_event_created_at: new Date,
 				accepted_by_parliament_at: new Date(2015, 5, 17),
 				parliament_synced_at: new Date
 			}))
@@ -1631,9 +1637,9 @@ describe("ParliamentSyncCli", function() {
 
 			yield job()
 
-			var updatedInitiative = initiativesDb.read(initiative)
-			updatedInitiative.must.eql(_.assign({}, initiative, {
-				parliament_synced_at: new Date
+			initiativesDb.read(initiative).must.eql(_.assign({}, initiative, {
+				parliament_synced_at: new Date,
+				last_event_created_at: new Date
 			}))
 
 			eventsDb.search(sql`
@@ -2221,9 +2227,9 @@ describe("ParliamentSyncCli", function() {
 
 			yield job()
 
-			var updatedInitiative = initiativesDb.read(initiative)
-			updatedInitiative.must.eql(_.assign({}, initiative, {
+			initiativesDb.read(initiative).must.eql(_.assign({}, initiative, {
 				finished_in_parliament_at: new Date(2015, 5, 18, 13, 37, 42, 666),
+				last_event_created_at: new Date,
 				parliament_synced_at: new Date
 			}))
 

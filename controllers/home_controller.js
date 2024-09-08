@@ -282,9 +282,10 @@ function searchRecentInitiatives() {
 
 		UNION ALL
 
-		SELECT initiative_uuid AS uuid, max(created_at) AS at, 'event' AS reason
-		FROM initiative_events
-		GROUP BY initiative_uuid
+		SELECT uuid, last_event_created_at AS at, 'event' AS reason
+		FROM initiatives
+		WHERE published_at IS NOT NULL
+		AND last_event_created_at IS NOT NULL
 
 		ORDER BY at DESC
 		LIMIT 6 * 3

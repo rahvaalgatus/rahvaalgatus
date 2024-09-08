@@ -80,6 +80,7 @@ module.exports = function(attrs) {
 		signatures_anonymized_at: null,
 		signature_threshold: null,
 		signature_threshold_at: null,
-		last_comment_created_at: null
+		last_comment_created_at: null,
+		last_event_created_at: null
 	}, attrs)
 }

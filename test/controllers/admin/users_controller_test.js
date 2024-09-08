@@ -68,6 +68,7 @@ describe("AdminUsersController", function() {
 				initiativesDb.read(initiative.id).must.eql({
 					__proto__: initiative,
 					last_comment_created_at: comment.created_at,
+					last_event_created_at: event.created_at,
 					user_id: target.id
 				})
 
@@ -123,7 +124,8 @@ describe("AdminUsersController", function() {
 				res.statusCode.must.equal(303)
 
 				initiativesDb.read(initiative.id).must.eql(_.defaults({
-					last_comment_created_at: comment.created_at
+					last_comment_created_at: comment.created_at,
+					last_event_created_at: event.created_at
 				}, initiative))
 
 				commentsDb.read(comment).must.eql(comment)

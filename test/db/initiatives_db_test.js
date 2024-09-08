@@ -348,7 +348,12 @@ describe("InitiativesDb", function() {
 				err.code.must.equal("constraint")
 				err.type.must.equal("foreign_key")
 
-				initiativesDb.read(sql`SELECT * FROM initiatives`).must.eql(initiative)
+				initiativesDb.read(sql`
+					SELECT * FROM initiatives
+				`).must.eql(_.defaults({
+					last_event_created_at: event.created_at
+				}, initiative))
+
 				eventsDb.read(sql`SELECT * FROM initiative_events`).must.eql(event)
 			})
 

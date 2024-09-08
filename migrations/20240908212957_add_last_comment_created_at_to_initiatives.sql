@@ -18,8 +18,7 @@ WHERE name = 'initiatives';
 
 PRAGMA writable_schema = RESET;
 
-UPDATE initiatives AS initiative
-SET last_comment_created_at = (
+UPDATE initiatives AS initiative SET last_comment_created_at = (
 	SELECT created_at FROM comments AS comment
 	WHERE comment.initiative_uuid = initiative.uuid
 	ORDER BY created_at DESC
