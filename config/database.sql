@@ -56,6 +56,9 @@ CREATE TABLE comments (
 	FOREIGN KEY (parent_id) REFERENCES comments (id),
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
 
+	CONSTRAINT created_at_format CHECK (created_at GLOB '*-*-*T*:*:*Z'),
+	CONSTRAINT updated_at_format CHECK (updated_at GLOB '*-*-*T*:*:*Z'),
+
 	CONSTRAINT comments_title_present
 	CHECK (
 		(title != '' AND parent_id IS NULL) OR
@@ -609,7 +612,7 @@ CREATE TABLE IF NOT EXISTS "initiatives" (
 	government_contact_details TEXT,
 	government_decision TEXT,
 
-	external_text_file_id INTEGER,
+	external_text_file_id INTEGER, last_comment_created_at TEXT,
 
 	FOREIGN KEY (user_id) REFERENCES users (id),
 	FOREIGN KEY (external_text_file_id) REFERENCES initiative_files (id),
@@ -671,6 +674,9 @@ CREATE TABLE IF NOT EXISTS "initiatives" (
 
 	CONSTRAINT finished_in_government_at_format
 	CHECK (finished_in_government_at GLOB '*-*-*T*:*:*Z'),
+
+	CONSTRAINT last_comment_created_at_format
+	CHECK (last_comment_created_at GLOB '*-*-*T*:*:*Z'),
 
 	CONSTRAINT archived_at_format CHECK (archived_at GLOB '*-*-*T*:*:*Z'),
 
@@ -798,6 +804,18 @@ CREATE INDEX index_initiative_signature_trustees_on_created_by_id
 ON initiative_signature_trustees (created_by_id);
 CREATE INDEX index_initiative_signature_trustees_on_deleted_by_id
 ON initiative_signature_trustees (deleted_by_id);
+CREATE TRIGGER set_initiative_last_comment_created_at_on_create
+AFTER INSERT ON comments
+FOR EACH ROW BEGIN
+  UPDATE initiatives SET last_comment_created_at = COALESCE(
+		max(last_comment_created_at, NEW.created_at),
+		NEW.created_at
+	)
+  WHERE uuid = NEW.initiative_uuid;
+END;
+CREATE INDEX index_initiatives_on_last_comment_created_at
+ON initiatives (last_comment_created_at DESC)
+WHERE last_comment_created_at IS NOT NULL;
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -930,4 +948,6 @@ INSERT INTO migrations VALUES('20240603082158');
 INSERT INTO migrations VALUES('20240620000000');
 INSERT INTO migrations VALUES('20240807212157');
 INSERT INTO migrations VALUES('20240827072953');
+INSERT INTO migrations VALUES('20240908212900');
+INSERT INTO migrations VALUES('20240908212957');
 COMMIT;

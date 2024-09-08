@@ -269,16 +269,10 @@ function searchRecentInitiatives() {
 	// Intentionally ignoring imported CitizenOS signatures as those originate
 	// from Feb 2020 and earlier.
 	var recents = _.fromEntries(_.uniqBy(sqlite(sql`
-		SELECT
-			comment.initiative_uuid AS uuid,
-			max(comment.created_at) AS at,
-			'commented' AS reason
-
-		FROM comments AS comment
-		JOIN initiatives AS initiative
-		ON initiative.uuid = comment.initiative_uuid
-		WHERE initiative.published_at IS NOT NULL
-		GROUP BY initiative_uuid
+		SELECT uuid, last_comment_created_at AS at, 'commented' AS reason
+		FROM initiatives
+		WHERE published_at IS NOT NULL
+		AND last_comment_created_at IS NOT NULL
 
 		UNION ALL
 

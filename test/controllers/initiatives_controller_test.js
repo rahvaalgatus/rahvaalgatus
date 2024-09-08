@@ -13117,7 +13117,7 @@ describe("InitiativesController", function() {
 					user_id: this.user.id
 				}))
 
-				commentsDb.create(new ValidComment({
+				var comment = commentsDb.create(new ValidComment({
 					initiative_uuid: initiative.uuid,
 					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid)
@@ -13137,7 +13137,10 @@ describe("InitiativesController", function() {
 				res.statusCode.must.equal(200)
 				res.body.must.include(t("INITIATIVE_CANNOT_BE_DELETED_HAS_COMMENTS"))
 
-				initiativesDb.read(initiative).must.eql(initiative)
+				initiativesDb.read(initiative.id).must.eql(_.defaults({
+					last_comment_created_at: comment.created_at
+				}, initiative))
+
 				textsDb.read(text).must.eql(text)
 			})
 

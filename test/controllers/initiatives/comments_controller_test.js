@@ -58,7 +58,7 @@ describe("InitiativeCommentsController", function() {
 			require("root/test/fixtures").user()
 			afterEach(function() { Config.admins = {} })
 
-			it("must create comment", function*() {
+			it("must create comment and update initiative", function*() {
 				var path = `/initiatives/${this.initiative.id}`
 				var res = yield this.request(path + "/comments", {
 					method: "POST",
@@ -90,6 +90,10 @@ describe("InitiativeCommentsController", function() {
 				subscriptionsDb.search(sql`
 					SELECT * FROM initiative_subscriptions
 				`).must.be.empty()
+
+				initiativesDb.read(this.initiative.id).must.eql(_.defaults({
+					last_comment_created_at: comment.created_at
+				}, this.initiative))
 			})
 
 			_.each({
@@ -1383,7 +1387,7 @@ describe("InitiativeCommentsController", function() {
 		describe("when logged in", function() {
 			require("root/test/fixtures").user()
 
-			it("must create reply", function*() {
+			it("must create reply and update initiative", function*() {
 				var author = usersDb.create(new ValidUser)
 
 				var comment = commentsDb.create(new ValidComment({
@@ -1413,6 +1417,10 @@ describe("InitiativeCommentsController", function() {
 				commentsDb.search(sql`
 					SELECT * FROM comments ORDER BY created_at
 				`).must.eql([comment, reply])
+
+				initiativesDb.read(this.initiative.id).must.eql(_.defaults({
+					last_comment_created_at: reply.created_at
+				}, this.initiative))
 
 				res.headers.location.must.equal(path + "#comment-" + reply.id)
 			})
