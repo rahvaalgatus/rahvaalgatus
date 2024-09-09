@@ -39,7 +39,8 @@ describe("InitiativeSignaturesCli", function() {
 			cli(["initiative-signatures", "anonymize", "--yes"])
 
 			initiativesDb.read(initiative).must.eql(_.assign({}, initiative, {
-				signatures_anonymized_at: new Date
+				signatures_anonymized_at: new Date,
+				last_signature_created_at: _.last(signatures).created_at
 			}))
 
 			signaturesDb.search(sql`
@@ -74,7 +75,11 @@ describe("InitiativeSignaturesCli", function() {
 			cosSignature.anonymized.must.be.false()
 
 			cli(["initiative-signatures", "anonymize", "--yes"])
-			initiativesDb.read(initiative).must.eql(initiative)
+
+			initiativesDb.read(initiative).must.eql(_.defaults({
+				last_signature_created_at: signature.created_at
+			}, initiative))
+
 			signaturesDb.read(signature).must.eql(signature)
 			cosSignaturesDb.read(cosSignature).must.eql(cosSignature)
 		}
@@ -118,7 +123,10 @@ describe("InitiativeSignaturesCli", function() {
 				signatures_anonymized_at: new Date
 			}))
 
-			initiativesDb.read(otherInitiative).must.eql(otherInitiative)
+			initiativesDb.read(otherInitiative).must.eql(_.defaults({
+				last_signature_created_at: signature.created_at
+			}, otherInitiative))
+
 			signaturesDb.read(signature).must.eql(signature)
 			cosSignaturesDb.read(cosSignature).must.eql(cosSignature)
 		})

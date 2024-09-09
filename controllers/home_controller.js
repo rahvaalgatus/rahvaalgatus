@@ -276,9 +276,10 @@ function searchRecentInitiatives() {
 
 		UNION ALL
 
-		SELECT initiative_uuid AS uuid, max(created_at) AS at, 'signed' AS reason
-		FROM initiative_signatures
-		GROUP BY initiative_uuid
+		SELECT uuid, last_signature_created_at AS at, 'signed' AS reason
+		FROM initiatives
+		WHERE published_at IS NOT NULL
+		AND last_signature_created_at IS NOT NULL
 
 		UNION ALL
 

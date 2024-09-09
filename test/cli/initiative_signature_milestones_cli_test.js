@@ -82,6 +82,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 		initiativesDb.read(initiative).must.eql({
 			__proto__: initiative,
+			last_signature_created_at: findLastUndersigned(signatures).created_at,
 			signature_milestones: {5: signatures[4].created_at}
 		})
 
@@ -179,6 +180,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 			initiativesDb.read(initiative).must.eql({
 				__proto__: initiative,
+				last_signature_created_at: findLastUndersigned(signatures).created_at,
 
 				signature_milestones: {
 					5: signatures[4].created_at,
@@ -233,6 +235,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 			initiativesDb.read(initiative).must.eql({
 				__proto__: initiative,
+				last_signature_created_at: findLastUndersigned(signatures).created_at,
 
 				signature_milestones: {
 					5: signatures[4].created_at,
@@ -263,6 +266,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 			initiativesDb.read(initiative).must.eql({
 				__proto__: initiative,
+				last_signature_created_at: findLastUndersigned(signatures).created_at,
 
 				signature_milestones: {
 					5: signatures[4].created_at,
@@ -333,6 +337,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 			initiativesDb.read(initiative).must.eql({
 				__proto__: initiative,
+				last_signature_created_at: findLastUndersigned(signatures).created_at,
 
 				signature_milestones: {
 					5: signatures[4].created_at,
@@ -395,6 +400,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 			initiativesDb.read(initiative).must.eql({
 				__proto__: initiative,
+				last_signature_created_at: findLastUndersigned(signatures).created_at,
 
 				signature_milestones: {
 					5: signatures[4].created_at,
@@ -427,6 +433,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 			initiativesDb.read(initiative).must.eql({
 				__proto__: initiative,
+				last_signature_created_at: findLastUndersigned(signatures).created_at,
 
 				signature_milestones: {
 					5: signatures[4].created_at,
@@ -460,8 +467,9 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 		yield cli()
 
-		initiativesDb.read(initiative).must.eql({
+		initiativesDb.read(initiative.id).must.eql({
 			__proto__: initiative,
+			last_signature_created_at: findLastUndersigned(signatures).created_at,
 			signature_milestones: {5: signatures[4].created_at}
 		})
 
@@ -536,7 +544,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 		var signatures = createSignatures(10, new Date, initiative)
 
-		initiativesDb.update(initiative, {
+		initiativesDb.update(initiative.id, {
 			signature_milestones: {10: signatures[9].created_at}
 		})
 
@@ -556,8 +564,9 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 		yield cli()
 
-		initiativesDb.read(initiative).must.eql({
+		initiativesDb.read(initiative.id).must.eql({
 			__proto__: initiative,
+			last_signature_created_at: findLastUndersigned(signatures).created_at,
 
 			signature_milestones: {
 				5: signatures[4].created_at,
@@ -579,8 +588,9 @@ describe("InitiativeSignatureMilestonesCli", function() {
 				var signatures = createSignatures(5, new Date, initiative)
 				yield cli()
 
-				initiativesDb.read(initiative).must.eql({
+				initiativesDb.read(initiative.id).must.eql({
 					__proto__: initiative,
+					last_signature_created_at: findLastUndersigned(signatures).created_at,
 					signature_milestones: {5: signatures[4].created_at}
 				})
 			})
@@ -596,8 +606,9 @@ describe("InitiativeSignatureMilestonesCli", function() {
 				var signatures = createSignatures(10, new Date, initiative)
 				yield cli()
 
-				initiativesDb.read(initiative).must.eql({
+				initiativesDb.read(initiative.id).must.eql({
 					__proto__: initiative,
+					last_signature_created_at: findLastUndersigned(signatures).created_at,
 
 					signature_milestones: {
 						3: signatures[2].created_at,
@@ -646,6 +657,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 		initiativesDb.read(initiative).must.eql({
 			__proto__: initiative,
+			last_signature_created_at: findLastUndersigned(signatures).created_at,
 
 			signature_milestones: {
 				5: initiative.signature_milestones[5],
@@ -720,4 +732,8 @@ function createSignatures(n, at, initiative) {
 			created_at: DateFns.addMinutes(at, i)
 		}))
 	)
+}
+
+function findLastUndersigned(signatures) {
+	return _.findLast(signatures, (sig) => sig.xades != null)
 }

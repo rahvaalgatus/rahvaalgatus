@@ -865,10 +865,10 @@ function InitiativeGroupView({t, lang, title, initiatives}) {
 
 					{(
 						initiative.phase == "sign" &&
-						initiative.last_signed_at
+						initiative.last_signature_created_at
 					)	? <p class="last-signed"><small>
 						{Jsx.html(t("initiatives_page.table.last_signed_at", {
-							date: <DateView date={initiative.last_signed_at} />
+							date: <DateView date={initiative.last_signature_created_at} />
 						}))}
 					</small></p> : null}
 				</> : null}</td>
@@ -1307,8 +1307,8 @@ function groupInitiative(by, initiative) {
 		)
 
 		case "last-signed-at": return (
-			initiative.last_signed_at &&
-			initiative.last_signed_at.getFullYear()
+			initiative.last_signature_created_at &&
+			initiative.last_signature_created_at.getFullYear()
 		)
 
 		case "proceedings-started-at":

@@ -2014,10 +2014,10 @@ describe("InitiativesController", function() {
 					"last-signed-on>": formatIsoDate(DateFns.addDays(new Date, -1))
 				}, [_.assign(initiativeB, {
 					signature_count: 1,
-					last_signed_at: signatureA.created_at
+					last_signature_created_at: signatureA.created_at
 				}), _.assign(initiativeC, {
 					signature_count: 1,
-					last_signed_at: signatureB.created_at
+					last_signature_created_at: signatureB.created_at
 				})])
 			})
 
@@ -2056,10 +2056,10 @@ describe("InitiativesController", function() {
 					"last-signed-on<": formatIsoDate(DateFns.addDays(new Date, -1))
 				}, [_.assign(initiativeA, {
 					signature_count: 1,
-					last_signed_at: signatureA.created_at
+					last_signature_created_at: signatureA.created_at
 				}), _.assign(initiativeB, {
 					signature_count: 1,
-					last_signed_at: signatureB.created_at
+					last_signature_created_at: signatureB.created_at
 				})])
 			})
 		})
@@ -3005,7 +3005,7 @@ describe("InitiativesController", function() {
 			res.body.must.eql(_.concat(CSV_HEADER, serializeCsvInitiative(_.defaults({
 				user_name: this.author.name,
 				signature_count: 8,
-				last_signed_at: signatures[0].created_at
+				last_signature_created_at: signatures[0].created_at
 			}, initiative))).join("\n"))
 		})
 
@@ -12177,7 +12177,7 @@ describe("InitiativesController", function() {
 
 						var signatureCount = Config.votesRequired + 1
 
-						signaturesDb.create(_.times(signatureCount, () => (
+						var signatures = signaturesDb.create(_.times(signatureCount, () => (
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
@@ -12211,7 +12211,8 @@ describe("InitiativesController", function() {
 							sent_to_parliament_at: new Date,
 							parliament_token: updatedInitiative.parliament_token,
 							signature_threshold: Config.votesRequired,
-							signature_threshold_at: new Date
+							signature_threshold_at: new Date,
+							last_signature_created_at: _.last(signatures).created_at
 						})
 
 						updatedInitiative.parliament_token.must.exist()
@@ -12508,7 +12509,7 @@ describe("InitiativesController", function() {
 						var {signatureThreshold} = LOCAL_GOVERNMENTS["muhu-vald"]
 						var signatureCount = signatureThreshold + 1
 
-						signaturesDb.create(_.times(signatureCount, () => (
+						var signatures = signaturesDb.create(_.times(signatureCount, () => (
 							new ValidSignature({initiative_uuid: initiative.uuid})
 						)))
 
@@ -12543,7 +12544,8 @@ describe("InitiativesController", function() {
 							sent_to_government_at: new Date,
 							parliament_token: updatedInitiative.parliament_token,
 							signature_threshold: signatureThreshold,
-							signature_threshold_at: new Date
+							signature_threshold_at: new Date,
+							last_signature_created_at: _.last(signatures).created_at
 						})
 
 						updatedInitiative.parliament_token.must.exist()
@@ -13516,10 +13518,10 @@ describe("InitiativesController", function() {
 				parliament_decision: "reject",
 				sent_to_government_at: new Date(2015, 5, 23, 13, 37, 47, 666),
 				finished_in_government_at: new Date(2015, 5, 24, 13, 37, 48, 666),
+				last_signature_created_at: new Date(2015, 5, 20, 13, 37, 43, 705)
 			}), {
 				user_name: "Mary Smith",
 				signature_count: 666,
-				last_signed_at: new Date(2015, 5, 20, 13, 37, 43, 705)
 			})
 
 			serializeCsvInitiative(initiative).must.equal(Csv.serialize([
@@ -13533,7 +13535,7 @@ describe("InitiativesController", function() {
 				initiative.signing_started_at.toJSON(),
 				initiative.signing_ends_at.toJSON(),
 				666,
-				initiative.last_signed_at.toJSON(),
+				initiative.last_signature_created_at.toJSON(),
 				initiative.sent_to_parliament_at.toJSON(),
 				initiative.parliament_committees.join("\n"),
 				initiative.parliament_decision,

@@ -81,6 +81,7 @@ module.exports = function(attrs) {
 		signature_threshold: null,
 		signature_threshold_at: null,
 		last_comment_created_at: null,
-		last_event_created_at: null
+		last_event_created_at: null,
+		last_signature_created_at: null
 	}, attrs)
 }

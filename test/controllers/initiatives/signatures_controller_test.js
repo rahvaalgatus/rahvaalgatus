@@ -1583,7 +1583,7 @@ describe("SignaturesController", function() {
 				signWithIdCard(router, request, initiative, cert || ID_CARD_CERTIFICATE)
 			), assertError)
 
-			it("must create a signature", function*() {
+			it("must create a signature and update initiative", function*() {
 				var cert = new Certificate(newCertificate({
 					subject: {
 						countryName: "EE",
@@ -1694,6 +1694,10 @@ describe("SignaturesController", function() {
 					xades: String(xades),
 					created_from: LONDON_GEO
 				})])
+
+				initiativesDb.read(this.initiative).must.eql(_.defaults({
+					last_signature_created_at: new Date
+				}, this.initiative))
 			})
 
 			it("must respond with 422 given underage signer", function*() {
@@ -1948,7 +1952,7 @@ describe("SignaturesController", function() {
 					signWithMobileId(router, request, initiative, MOBILE_ID_CERTIFICATE)
 				), assertOk, assertError)
 
-				it("must create a signature", function*() {
+				it("must create a signature and update initiative", function*() {
 					var cert = new Certificate(newCertificate({
 						subject: {
 							countryName: "EE",
@@ -2092,6 +2096,10 @@ describe("SignaturesController", function() {
 						xades: String(xades),
 						created_from: LONDON_GEO
 					})])
+
+					initiativesDb.read(this.initiative).must.eql(_.defaults({
+						last_signature_created_at: new Date
+					}, this.initiative))
 				})
 
 				it("must respond with 422 given invalid personal id", function*() {
@@ -2243,7 +2251,7 @@ describe("SignaturesController", function() {
 					{Accept: `${JSON_TYPE}, ${ERROR_TYPE}`}
 				), assertOk, assertError)
 
-				it("must create a signature", function*() {
+				it("must create a signature and update initiative", function*() {
 					var [
 						xades,
 						tsResponse,
@@ -2339,6 +2347,10 @@ describe("SignaturesController", function() {
 					signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
 					`).must.not.be.empty()
+
+					initiativesDb.read(this.initiative).must.eql(_.defaults({
+						last_signature_created_at: new Date
+					}, this.initiative))
 				})
 
 				it("must respond with 422 given invalid personal id", function*() {
@@ -2727,7 +2739,7 @@ describe("SignaturesController", function() {
 					signWithSmartId(router, request, initiative, SMART_ID_CERTIFICATE)
 				), assertOk, assertError)
 
-				it("must create a signature", function*() {
+				it("must create a signature and update initiative", function*() {
 					var cert = new Certificate(newCertificate({
 						subject: {
 							countryName: "EE",
@@ -2880,6 +2892,10 @@ describe("SignaturesController", function() {
 						xades: String(xades),
 						created_from: LONDON_GEO
 					})])
+
+					initiativesDb.read(this.initiative).must.eql(_.defaults({
+						last_signature_created_at: new Date
+					}, this.initiative))
 				})
 
 				it("must get certificate if certificate session running once", function*() {
@@ -3090,7 +3106,7 @@ describe("SignaturesController", function() {
 					{Accept: `${JSON_TYPE}, ${ERROR_TYPE}`}
 				), assertOk, assertError)
 
-				it("must create a signature", function*() {
+				it("must create a signature and update initiative", function*() {
 					var [
 						xades,
 						tsResponse,
@@ -3178,6 +3194,10 @@ describe("SignaturesController", function() {
 					signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
 					`).must.not.be.empty()
+
+					initiativesDb.read(this.initiative).must.eql(_.defaults({
+						last_signature_created_at: new Date
+					}, this.initiative))
 				})
 
 				it("must respond with 422 given invalid personal id", function*() {

@@ -87,52 +87,17 @@ exports.router.get("/",
 	var limit = req.query.limit ? parseLimit(req.query.limit) : null
 
 	var initiatives = initiativesDb.search(sql`
-		${filters.signedSince ? sql`WITH recent_signatures AS (
-			SELECT initiative_uuid FROM initiative_signatures
-			WHERE created_at >= ${filters.signedSince}
-			UNION ALL
-			SELECT initiative_uuid FROM initiative_citizenos_signatures
-			WHERE created_at >= ${filters.signedSince}
-		)` : sql``}
-
 		SELECT
 			initiative.*,
 			user.name AS user_name,
 
 			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
-			AS signature_count,
-
-			(CASE initiative.phase
-				WHEN 'edit' THEN NULL
-				ELSE (
-					SELECT max(created_at) AS created_at
-					FROM initiative_signatures
-					WHERE initiative_uuid = initiative.uuid
-					GROUP BY initiative_uuid
-
-					UNION
-
-					SELECT max(created_at) AS created_at
-					FROM initiative_citizenos_signatures
-					WHERE initiative_uuid = initiative.uuid
-					GROUP BY initiative_uuid
-				)
-				END
-			) AS last_signed_at
-
-			${filters.signedSince ? sql`,
-				COUNT(recent.initiative_uuid) AS recent_signature_count
-			` : sql``}
+			AS signature_count
 
 		FROM initiatives AS initiative
 		${filters.tag ? sql`JOIN json_each(initiative.tags) AS tag` : sql``}
 
 		LEFT JOIN users AS user ON user.id = initiative.user_id
-
-		${filters.signedSince ? sql`
-			JOIN recent_signatures AS recent
-			ON recent.initiative_uuid = initiative.uuid
-		` : sql``}
 
 		WHERE initiative.published_at IS NOT NULL
 
@@ -185,12 +150,16 @@ exports.router.get("/",
 			AND initiative.signing_ends_at < ${filters.signingEndsAt.end}
 		` : sql``}
 
+		${filters.signedSince ? sql`
+			AND initiative.last_signature_created_at >= ${filters.signedSince}
+		` : sql``}
+
 		${filters.lastSignedOn && filters.lastSignedOn.begin ? sql`
-			AND last_signed_at >= ${filters.lastSignedOn.begin}
+			AND initiative.last_signature_created_at >= ${filters.lastSignedOn.begin}
 		` : sql``}
 
 		${filters.lastSignedOn && filters.lastSignedOn.end ? sql`
-			AND last_signed_at < ${filters.lastSignedOn.end}
+			AND initiative.last_signature_created_at < ${filters.lastSignedOn.end}
 		` : sql``}
 
 		${filters.proceedingsStartedOn && filters.proceedingsStartedOn.begin ? sql`
@@ -306,12 +275,11 @@ exports.router.get("/",
 			`,
 
 			"last-signed-at": sql`
-				ORDER BY last_signed_at ${orderDirSql}
+				ORDER BY last_signature_created_at ${orderDirSql}
 			`,
 
-			"signatures-since-count": filters.signedSince
-				? sql`ORDER BY recent_signature_count ${orderDirSql}`
-				: null,
+			// Handled in JavaScript.
+			"signatures-since-count": sql``,
 
 			"proceedings-started-at": sql`ORDER BY COALESCE(
 				initiative.accepted_by_parliament_at,
@@ -332,21 +300,46 @@ exports.router.get("/",
 		${limit != null ? sql`LIMIT ${limit}` : sql``}
 	`)
 
-	initiatives.forEach(function(initiative) {
-		if (initiative.last_signed_at)
-			initiative.last_signed_at = new Date(initiative.last_signed_at)
-	})
-
 	switch (res.contentType.name) {
 		case INITIATIVE_TYPE.name:
-			return void res.send(initiatives.map(function(initiative) {
-				var obj = serializeApiInitiative(initiative)
+			initiatives = initiatives.map(serializeApiInitiative)
 
-				if (initiative.recent_signature_count)
-					obj.signaturesSinceCount = initiative.recent_signature_count
+			if (filters.signedSince) {
+				var uuids = _.map(initiatives, "id")
 
-				return obj
-			}))
+				var signatureCounts = _.mapValues(_.indexBy(sqlite(sql`
+					WITH recent_signature_counts AS (
+						SELECT initiative_uuid AS uuid, COUNT(*) AS count
+						FROM initiative_signatures
+						WHERE initiative_uuid IN ${sql.in(uuids)}
+						AND created_at >= ${filters.signedSince}
+						GROUP BY initiative_uuid
+
+						UNION ALL
+
+						SELECT initiative_uuid AS uuid, COUNT(*) AS count
+						FROM initiative_citizenos_signatures
+						WHERE initiative_uuid IN ${sql.in(uuids)}
+						AND created_at >= ${filters.signedSince}
+						GROUP BY initiative_uuid
+					)
+
+					SELECT uuid, SUM(count) AS count
+					FROM recent_signature_counts
+					GROUP BY uuid
+				`), "uuid"), ({count}) => count)
+
+				initiatives.forEach(function(initiative) {
+					initiative.signaturesSinceCount = signatureCounts[initiative.id] || 0
+				})
+
+				if (orderBy == "signatures-since-count") {
+					initiatives = _.sortBy(initiatives, "signaturesSinceCount")
+					if (orderDir == "desc") initiatives = initiatives.reverse()
+				}
+			}
+
+			return void res.send(initiatives)
 
 		case "text/csv":
 			res.setHeader("Content-Type", "text/csv; charset=utf-8")
@@ -1559,8 +1552,9 @@ function serializeCsvInitiative(initiative) {
 		initiative.signing_started_at && initiative.signing_started_at.toJSON(),
 		initiative.signing_ends_at && initiative.signing_ends_at.toJSON(),
 		initiative.external ? null : initiative.signature_count || 0,
-		initiative.last_signed_at && initiative.last_signed_at.toJSON(),
 
+		initiative.last_signature_created_at &&
+			initiative.last_signature_created_at.toJSON(),
 		initiative.sent_to_parliament_at &&
 			initiative.sent_to_parliament_at.toJSON(),
 
