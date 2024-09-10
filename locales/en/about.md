@@ -2,7 +2,7 @@
 
 The Citizen Initiative Portal Rahvaalgatus.ee enables you to **write proposals**, hold discussions, compose and send digitally signed collective addresses to the Estonian Parliament (Riigikogu) and the local government. At Rahvaalgatus.ee you can submit a proposal on how to amend existing regulations or improve the society. A collective address sent to the Riigikogu should have **at least 1000 signatures** in support, given by at least 16 year old citizens of Estonia. For the local government the collective address needs to collect the signatures of **at least 1% of its registered population**. At Rahvaalgatus.ee you can follow the proceedings of the address and see whether it will become a draft act or how the institution decides to solve the relevant problem.
 
-Collective petitioning right emerged from the People’s Assembly process – since 2014 spring every citizen can send collective initiatives to the Parliament for consideration. According to the law, the Parliament will have to process appeals that have at least 1000 signatures. There has been over a **hundred** collective proposals that have reached the Parliament since 2014. Starting from August 2020 citizens can also send proposals to their local government. 
+Collective petitioning right emerged from the People’s Assembly process – since 2014 spring every citizen can send collective initiatives to the Parliament for consideration. According to the law, the Parliament will have to process appeals that have at least 1000 signatures. There has been over **two hundred** collective proposals that have reached the Parliament since 2014. Starting from August 2020 citizens can also send proposals to their local government. 
 
 **Who should use Rahvaalgatus.ee?**
 
@@ -21,26 +21,24 @@ Rahvaalgatus.ee portal is created and developed by the Estonian Cooperation Asse
 
 ## <a id="tos"></a> Terms of using the Rahvaalgatus.ee platform
 
-Rahvaalgatus.ee is meant for co-creating proposals and submitting them to the Parliament of Estonia. The proposal should aim at **improving the society** or **amending existing regulations**. 
+Rahvaalgatus.ee is meant for co-creating proposals and submitting them to the Parliament of Estonia or any one of the local governments in Estonia. The proposal should aim at **improving the society** or **amending existing regulations**. 
 
-The terms of use are compiled in good faith that argumented discussions help to create good proposals and initiatives, which in turn help to improve the life in Estonia. **You can collect signatures for your proposal for a maximum of 18 months**
+The terms of use are compiled in good faith that argumented discussions help to create good proposals and initiatives, which in turn help to improve the life and participatory democracy in Estonia. **You can collect signatures for your proposal for a maximum of 18 months**
 
-**When using Rahvaalgatus.ee I will keep in mind the following:**
+**A collective proposal process corresponds with our good practice standards if:**
 
-1. my idea or proposal is in line with the constitution of Estonia;
-2. the submitted solution has to be proved and the proof in turn has to be controllable;
-3. when submitting a proposal or initiative I offer structured explanations in order to attract co-thinkers and others to join the discussion;
-4. I am convinced that Riigikogu (Parliament of Estonia) is the right addressee of my proposal or initiative;
-5. I can criticise ideas, not people. When criticising I focus on solutions, not problems;
-6. I engage other people to discussions and will consider their arguments in compiling the final initiative;
-7. I only use the platform if I do not have other channels for submitting my ideas and proposals for changing regulations.
-8. our platform also allows initiatives to be written in foreign languages, but in such a case an Estonian translation should be included. In this way, people who do not speak that foreign language can still take part in the initiative. Furthermore, according to the law it is not possible to send an initiative to the Riigikogu or local government without and Estonian translation. 
+1. the initiative is based on the relevant laws of the [Parliament](https://www.riigiteataja.ee/en/eli/512032015002/consolide#para152b9) or [local government](https://www.riigiteataja.ee/en/eli/530082021001/consolide);
+2. it is a constructive proposal which outlines the problem and the solution;
+3. the initiative does not include profanities, calls for physical violence or spread slander against specific individuals;
+4. it is written in Estonian. Our platform lets people add English and Russian translations to garner support from non-Estonian speakers, but the official proposal has to be in Estonian;
+5. for the sake of transparency, all organizations that are affiliated with the initiative are mentioned (lobbying organizations, political parties, non-governmental organizations, companies etc);
+6. the author of the initiative considers the arguments and amendment proposals of others before they send the proposal to gather signatures;
+7. the commentators refrain from comments that contain profanity or slander;
+8. the author of the proposal understands that they are responsible for representing the interests of the signatories in the local government or Riigikogu and are willing to do so.
 
-Rahvaalgatus.ee is **not open for hate speech** or any other offending remarks, also it is not designed for political parties represented in the Parliament.
+Rahvaalgatus.ee is **not open for hate speech**. The moderator of Rahvaalgatus.ee - the Estonian Cooperation Assembly - takes a democratic approach and opts for suggestions and recommendations instead of censoring, but **has the right to remove any kind of post and entry violating the terms of use**, without giving any further explanation. 
 
-The moderator of Rahvaalgatus.ee - the Estonian Cooperation Assembly - **has the right to remove any kind of post and entry violating the terms of use**, without giving any further explanation.
-
-If you need help or you hesitate whether Rahvaalgatus.ee is the proper platform for submitting your proposal, please contact info@rahvaalgatus.ee.
+If you need help or you hesitate whether Rahvaalgatus.ee is the proper platform for submitting your proposal, please contact info@rahvaalgatus.ee. We recommend Parliament members and parties to use the tools already at their disposal, instead of this participatory democracy portal.
 
 
 ## Processing of personal data
@@ -61,5 +59,5 @@ If a person finds that his or her rights have been unreasonably restricted or vi
 
 - [About submitting collective proposals](https://www.riigikogu.ee/en/introduction-and-history/have-your-say/submit-collective-proposal) on the website of the Riigikogu.
 - [Collective proposals that have been sent to the Riigikogu since 2014](https://www.riigikogu.ee/tutvustus-ja-ajalugu/raakige-kaasa/esitage-kollektiivne-poordumine/riigikogule-esitatud-kollektiivsed-poordumised)
-- [Rules for proceedings regarding collective proposals submitted to the Riigikogu](https://www.riigiteataja.ee/en/eli/512032015002/consolide#para149)
+- [Rules for proceedings regarding collective proposals submitted to the Riigikogu](https://www.riigiteataja.ee/en/eli/512032015002/consolide#para152b9)
 - [Local Government Organisation Act](https://www.riigiteataja.ee/en/eli/530082021001/consolide), where § 32 regulates the creation of collective proposals regarding local matters.
