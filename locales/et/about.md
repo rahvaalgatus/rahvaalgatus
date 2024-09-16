@@ -53,7 +53,7 @@ Isikuandmed on Rahvaalgatus.ee platvormil sisestatud kasutaja kohta käivad andm
 
 Kui algatus on kogunud Riigikogule või kohalikule omavalitsusele saatmiseks piisavalt allkirju ning algataja on otsustanud selle vastavale institutsioonile edastada, saadetakse digiallkirjad koos algatuse tekstiga Riigikogule või vastavale kohalikule omavalitsusele. Seal töötleb toetusallkirjade nimekirja vastutav ametnik, kes kontrollib digiallkirjade kehtivust ning kinnitab rahvastikuregistri vahendusel, et allkirja on andnud vähemalt 16-aastane Eesti alaline elanik. Kohalikes omavalitsustes kontrollib ametnik lisaks vanusele rahvastikuregistri vahendusel ka allkirjastaja registreeritud elukohta. 
 
-Andmeid töödeldakse Riigikogus üksnes kollektiivse pöördumise esitamiseks ning kohalikes omavalitsustes üksnes algatuse esitamiseks. Töötlemine toimub üldiste isikuandmete töötlemise nõuetest lähtuvalt ning märgukirjale ja selgitustaotlusele vastamise ning kollektiivse pöördumise esitamise seaduse 3. peatüki regulatsiooni alusel.
+Andmeid töödeldakse Riigikogus üksnes kollektiivse pöördumise esitamiseks ning kohalikes omavalitsustes üksnes algatuse esitamiseks. Töötlemine toimub üldiste isikuandmete töötlemise nõuetest lähtuvalt ning märgukirjale ja selgitustaotlusele vastamise ning kollektiivse pöördumise esitamise seaduse 3. peatüki regulatsiooni alusel Riigikogu puhul ning Kohaliku omavalitsuse korralduse seaduse § 32 alusel kohaliku omavalitsuse puhul.
 
 **Algatusele saab allkirju koguda maksimaalselt 18 kuud.** Nii kaua säilitatakse ka algatusele antud allkirju. Selle aja täitudes või varem, kui algatus kogub allkirjad kiiremini kokku ning see esitatakse vastavale institutsioonile, eemaldatakse allkirjadelt isikuandmed. See tähendab, et kustutatakse krüptograafiline allkiri ja säilitatakse vaid isikukoodi 3 esimest numbrit (allkirjastaja sugu ja sünniaasta), allkirjastamise kellaaeg, ligikaudne asukoht ning viide algatusele. Anonüümitud andmete põhjal on võimalik väljastada statistikat. 
 
@@ -68,8 +68,9 @@ Teavitame rikkumisest Andmekaitse Inspektsiooni põhjendamatu viivituseta ja võ
 
 ## Kasulikke linke
 
-- Kollektiivsete pöördumiste esitamisest [Riigikogu kodulehel](https://www.riigikogu.ee/tutvustus-ja-ajalugu/raakige-kaasa/esitage-kollektiivne-poordumine/)
-- Riigikogule alates 2014. aastast esitatud [kollektiivsed pöördumised](https://www.riigikogu.ee/tutvustus-ja-ajalugu/raakige-kaasa/esitage-kollektiivne-poordumine/riigikogule-esitatud-kollektiivsed-poordumised/)
-- [Märgukirjale ja selgitustaotlusele vastamise seaduse ning Riigikogu kodu- ja töökorra seaduse muutmise seadus](https://www.riigiteataja.ee/akt/101042014001), mis reguleerib kollektiivse pöördumise esitamise ning menetlemise tingimused
-- [Kohaliku omavalitsuse korralduse seadus](https://www.riigiteataja.ee/akt/126032013006?leiaKehtiv), kus § 32 reguleerib kohalikes omavalitsustes kohaliku elu küsimustes algatuse tegemist
+- Kollektiivsete pöördumiste esitamisest [Riigikogu kodulehel](https://www.riigikogu.ee/tutvustus-ja-ajalugu/raakige-kaasa/esitage-kollektiivne-poordumine/) .
+- Riigikogule alates 2014. aastast esitatud [kollektiivsed pöördumised](https://www.riigikogu.ee/tutvustus-ja-ajalugu/raakige-kaasa/esitage-kollektiivne-poordumine/riigikogule-esitatud-kollektiivsed-poordumised/) .
+- [Märgukirjale ja selgitustaotlusele vastamise ning kollektiivse pöördumise esitamise seadus](https://www.riigiteataja.ee/akt/125102016016?leiaKehtiv), mis reguleerib kollektiivse pöördumise esitamise ning menetlemise tingimused.
+- [Riigikogu kodu- ja töökorra seadus](https://www.riigiteataja.ee/akt/122122014013?leiaKehtiv#para152b9), mis paneb paika kollektiivsete pöördumiste menetlemise korra. 
+- [Kohaliku omavalitsuse korralduse seadus](https://www.riigiteataja.ee/akt/126032013006?leiaKehtiv), kus § 32 reguleerib kohalikes omavalitsustes kohaliku elu küsimustes algatuse tegemist.
 - [Kollektiivsete algatuste menetlemise juhend kohalikule omavalitsusele](https://rahvaalgatus.ee/help/kov-guide), kus on välja toodud head tavad ja näited rahvaalgatuste menetlemisest kohalikul tasandil.
