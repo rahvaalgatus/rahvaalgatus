@@ -2,6 +2,8 @@
 
 Rahvaalgatus.ee on arutelude pidamise ja ettepanekute koostamise platvorm, mille kaudu saab Riigikogule ja kohalikele omavalitsustele esitada kollektiivseid pöördumisi (ehk algatusi). Rahvaalgatus.ee võimaldab igaühel teha ettepaneku, kuidas muuta kehtivat regulatsiooni või ühiskonnaelu paremini korraldada. Pärast ettepaneku kirjapanemist saab kutsuda teisi kaasa arutlema, arutelu tulemusel pöördumise ühiselt koostada, vähemalt 16aastastelt Eesti elanikelt digiallkirju koguda ning pöördumine ühe klikiga Riigikogule või kohalikule omavalitsusele esitada. Platvormi vahendusel saab jälgida, mis algatusest edasi saab, mida parlamendi komisjon(id) ettepaneku kohta arvavad ja mil viisil ettepanekus välja toodu lahendatakse. 
 
+Rahvaalgatus.ee kasutab Riigikogu dokumendiregistri avaandmeid selleks, et avaldada iga kollektiivse pöördumise menetlusinfo kohe, kui see avaldatakse dokumendiregistris ja anda uuendustest tellinutele e-kirja vahendusel teada. Lisaks avaandmete kasutamisele on Rahvaalgatus.ee loonud oma avaandmete [rakendusliidese (API)](https://rahvaalgatus.ee/api), mille kaudu on huvikaitsjatel võimalik nende valdkonda puudutavate algatuste käekäigul silma peal hoida.
+
 Rahvakogu ettepanekute tulemusel uuendati 2014. aasta kevadel Riigikogu töö- ja kodukorra seadust, mille alusel peab Riigikogu menetlema **vähemalt 1000 allkirjaga** pöördumist, mis on tehtud kehtiva regulatsiooni muutmiseks või ühiskonnaelu paremaks korraldamiseks. Rahvaalgatus.ee võimaldab alates 2016. aasta kevadest mugavalt ja läbipaistvalt Riigikogule kollektiivsete pöördumiste esitamise õigust kasutada. Alates 2020. aasta augustist on Rahvaalgatus.ee vahendusel võimalik teha pöördumisi ka **kohalikele omavalitsustele**.  
 
 **Kellele on Rahvaalgatus.ee mõeldud?**
