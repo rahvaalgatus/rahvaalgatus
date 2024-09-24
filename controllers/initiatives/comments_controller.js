@@ -6,15 +6,21 @@ var {Router} = require("express")
 var HttpError = require("standard-http-error")
 var SqliteError = require("root/lib/sqlite_error")
 var Subscription = require("root/lib/subscription")
+var Initiative = require("root/lib/initiative")
 var next = require("co-next")
 var sql = require("sqlate")
+var outdent = require("root/lib/outdent")
 var commentsDb = require("root/db/comments_db")
 var {isAdmin} = require("root/lib/user")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
+var reportsDb = require("root/db/initiative_comment_reports_db")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var {validateRedirect} = require("root/lib/http")
+var {sendEmail} = require("root")
+var reportError = require("root").errorReporter
 var MAX_TITLE_LENGTH = 140
 var MAX_TEXT_LENGTH = 3000
+var REPORT_THRESHOLD = Config.commentReportNotificationThreshold
 exports.MAX_TITLE_LENGTH = MAX_TITLE_LENGTH
 exports.MAX_TEXT_LENGTH = MAX_TEXT_LENGTH
 exports.getCommentAuthorName = getCommentAuthorName
@@ -126,17 +132,26 @@ exports.router.post("/", assertUser, rateLimit, next(function*(req, res) {
 
 exports.router.use("/:commentId", function(req, res, next) {
 	var id = req.params.commentId
+	var {user} = req
 	var {initiative} = req
 	var baseUrl = Path.dirname(req.baseUrl)
 
 	var comment = commentsDb.read(sql`
-		SELECT comment.*, user.name AS user_name
+		SELECT
+			comment.*,
+			user.name AS user_name,
+			report.created_at AS reported_at
+
 		FROM comments AS comment
 
 		LEFT JOIN users AS user
 		ON comment.user_id = user.id
 		AND comment.anonymized_at IS NULL
 		AND NOT comment.as_admin
+
+		LEFT JOIN initiative_comment_reports AS report
+		ON report.comment_id = comment.id
+		AND report.created_by_id = ${user && user.id}
 
 		WHERE (comment.id = ${id} OR comment.uuid = ${id})
 		AND comment.initiative_uuid = ${initiative.uuid}
@@ -171,7 +186,7 @@ exports.router.delete("/:commentId", assertUser, function(req, res) {
 
 	commentsDb.update(comment, {anonymized_at: new Date})
 
-	res.flash("notice", req.t("COMMENT_ANONYMIZED"))
+	res.flash("notice", req.t("comment_page.comment_anonymized"))
 	res.statusMessage = "Comment Anonymized"
 
 	res.redirect(303, req.baseUrl + "/" + (comment.parent_id
@@ -244,6 +259,66 @@ exports.router.post("/:commentId/replies",
 	}
 }))
 
+exports.router.post("/:commentId/reports", assertUser,
+	next(function*(req, res) {
+	var {user} = req
+	var {initiative} = req
+	var {comment} = req
+
+	try {
+		reportsDb.create_({
+			initiative_id: initiative.id,
+			comment_id: comment.id,
+			created_at: new Date,
+			created_by_id: user.id
+		})
+
+		res.statusMessage = "Comment Reported"
+		res.flash("notice", req.t("comment_page.comment_reported"))
+
+		var {count} = reportsDb.select1(sql`
+			SELECT COUNT(*) AS count
+			FROM initiative_comment_reports
+			WHERE comment_id = ${comment.id}
+		`)
+
+		if (count == REPORT_THRESHOLD) yield sendEmail({
+			envelope: {to: Config.helpEmail},
+			to: {name: "", address: Config.helpEmail},
+			subject: "Comment reported on " + initiative.title,
+
+			text: outdent`
+				Hi,
+
+				A comment on "${initiative.title}" was reported at least ${REPORT_THRESHOLD}.
+				Moderate the comment at ${Config.adminUrl + "/comments/" + comment.id}.
+
+				See the initiative at ${Initiative.url(initiative)}.
+
+				Rahvaalgatus
+				${Config.url}
+			`
+		}).catch(reportError)
+	}
+	catch (ex) {
+		if (
+			ex instanceof SqliteError &&
+			ex.code == "constraint" &&
+			ex.type == "unique" &&
+			_.deepEquals(ex.columns, ["comment_id", "created_by_id"])
+		) {
+			res.statusMessage = "Comment Already Reported"
+			res.flash("notice", req.t("comment_page.comment_already_reported"))
+		}
+		else throw ex
+	}
+
+	res.redirect(303, req.baseUrl + "/" + (comment.parent_id
+		? comment.parent_id + "#comment-" + comment.id
+		: comment.id
+	))
+}))
+
 function assertUser(req, _res, next) {
 	if (req.user == null) throw new HttpError(401)
 	next()
@@ -279,10 +354,15 @@ function rateLimit(req, res, next) {
 }
 
 function renderComment(req, res) {
+	var {user} = req
 	var {comment} = req
 
 	comment.replies = commentsDb.search(sql`
-		SELECT comment.*, user.name AS user_name
+		SELECT
+			comment.*,
+			user.name AS user_name,
+			report.created_at AS reported_at
+
 		FROM comments AS comment
 
 		LEFT JOIN users AS user
@@ -290,10 +370,14 @@ function renderComment(req, res) {
 		AND comment.anonymized_at IS NULL
 		AND NOT comment.as_admin
 
+		LEFT JOIN initiative_comment_reports AS report
+		ON report.comment_id = comment.id
+		AND report.created_by_id = ${user && user.id}
+
 		WHERE parent_id = ${comment.id}
 	`)
 
-	res.render("initiatives/comments/read_page.jsx", {comment: comment})
+	res.render("initiatives/comments/read_page.jsx", {comment})
 }
 
 function parseComment(obj) {
@@ -310,8 +394,8 @@ function parseCommentAsAdmin(obj) {
 }
 
 function getCommentAuthorName(t, comment, user) {
-	if (comment.as_admin) return t("COMMENT_AUTHOR_ADMIN")
-	if (comment.anonymized_at) return t("COMMENT_AUTHOR_HIDDEN")
+	if (comment.as_admin) return t("comment_page.comment.admin_author")
+	if (comment.anonymized_at) return t("comment_page.comment.hidden_author")
 	return user && user.name || comment.user_name
 }
 

@@ -50,11 +50,12 @@ CREATE TABLE comments (
 	user_uuid TEXT NOT NULL,
 	parent_id INTEGER,
 	title TEXT NOT NULL DEFAULT '',
-	"text" TEXT NOT NULL DEFAULT '', user_id INTEGER NOT NULL, anonymized_at TEXT, as_admin INTEGER NOT NULL DEFAULT 0,
+	"text" TEXT NOT NULL DEFAULT '', user_id INTEGER NOT NULL, anonymized_at TEXT, as_admin INTEGER NOT NULL DEFAULT 0, walled INTEGER, walled_at TEXT, walled_by_id INTEGER,
 
 	FOREIGN KEY (user_id) REFERENCES users (id),
 	FOREIGN KEY (parent_id) REFERENCES comments (id),
 	FOREIGN KEY (initiative_uuid) REFERENCES initiatives (uuid),
+	FOREIGN KEY (walled_by_id) REFERENCES users (id),
 
 	CONSTRAINT created_at_format CHECK (created_at GLOB '*-*-*T*:*:*Z'),
 	CONSTRAINT updated_at_format CHECK (updated_at GLOB '*-*-*T*:*:*Z'),
@@ -69,7 +70,11 @@ CREATE TABLE comments (
 	CHECK (length(title) <= 140),
 
 	CONSTRAINT comments_text_length
-	CHECK (text != '' AND length(text) <= 3000)
+	CHECK (text != '' AND length(text) <= 3000),
+
+	CONSTRAINT walled_at_format CHECK (walled_at GLOB '*-*-*T*:*:*Z'),
+	CONSTRAINT walled_with_at CHECK ((walled IS NULL) = (walled_at IS NULL)),
+	CONSTRAINT walled_with_by CHECK ((walled IS NULL) = (walled_by_id IS NULL))
 );
 CREATE UNIQUE INDEX index_comments_on_uuid
 ON comments (uuid);
@@ -846,6 +851,30 @@ END;
 CREATE INDEX index_initiatives_on_last_signature_created_at
 ON initiatives (last_signature_created_at DESC)
 WHERE last_signature_created_at IS NOT NULL;
+CREATE TABLE initiative_comment_reports (
+	id INTEGER PRIMARY KEY NOT NULL,
+	initiative_id INTEGER NOT NULL,
+	comment_id INTEGER NOT NULL,
+	created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+	created_by_id INTEGER NOT NULL,
+
+	FOREIGN KEY (initiative_id) REFERENCES initiatives (id),
+	FOREIGN KEY (comment_id) REFERENCES comments (id),
+	FOREIGN KEY (created_by_id) REFERENCES users (id),
+
+	CONSTRAINT created_at_format CHECK (created_at GLOB '*-*-*T*:*:*Z')
+);
+CREATE INDEX index_initiative_comment_reports_on_initiative
+ON initiative_comment_reports (initiative_id);
+CREATE UNIQUE INDEX index_initiative_comment_reports_on_comment_and_user
+ON initiative_comment_reports (comment_id, created_by_id);
+CREATE INDEX index_initiative_comment_reports_on_created_by
+ON initiative_comment_reports (created_by_id);
+CREATE INDEX index_initiative_comment_reports_on_created_at
+ON initiative_comment_reports (created_at DESC);
+CREATE INDEX index_comments_on_walled_by
+ON comments (walled_by_id)
+WHERE walled_by_id IS NOT NULL;
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -982,4 +1011,6 @@ INSERT INTO migrations VALUES('20240908212900');
 INSERT INTO migrations VALUES('20240908212957');
 INSERT INTO migrations VALUES('20240908222218');
 INSERT INTO migrations VALUES('20240909000159');
+INSERT INTO migrations VALUES('20240910000000');
+INSERT INTO migrations VALUES('20240910000010');
 COMMIT;

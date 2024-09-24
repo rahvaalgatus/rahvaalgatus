@@ -14,6 +14,7 @@ var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var commentsDb = require("root/db/comments_db")
+var reportsDb = require("root/db/initiative_comment_reports_db")
 var parseHtml = require("root/test/html").parse
 var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
@@ -607,7 +608,7 @@ describe("InitiativeCommentsController", function() {
 				email.headers.subject.must.include(this.initiative.title)
 				email.headers.subject.must.not.include(user.name)
 				email.body.must.not.include(user.name)
-				email.body.must.include(`Autor: ${t("COMMENT_AUTHOR_ADMIN")}`)
+				email.body.must.include(`Autor: ${t("comment_page.comment.admin_author")}`)
 			})
 
 			it("must not email subscribers if private", function*() {
@@ -877,7 +878,7 @@ describe("InitiativeCommentsController", function() {
 
 			var commentEl = dom.querySelector("#initiative-comment")
 			commentEl.querySelector(".author").textContent.must.equal(
-				t("COMMENT_AUTHOR_HIDDEN")
+				t("comment_page.comment.hidden_author")
 			)
 		})
 
@@ -901,7 +902,7 @@ describe("InitiativeCommentsController", function() {
 
 			var commentEl = dom.querySelector("#initiative-comment")
 			commentEl.querySelector(".author").textContent.must.equal(
-				t("COMMENT_AUTHOR_ADMIN")
+				t("comment_page.comment.admin_author")
 			)
 		})
 
@@ -937,7 +938,7 @@ describe("InitiativeCommentsController", function() {
 
 			var replyEl = dom.querySelector("#initiative-comment .comment-replies")
 			replyEl.querySelector(".author").textContent.must.equal(
-				t("COMMENT_AUTHOR_HIDDEN")
+				t("comment_page.comment.hidden_author")
 			)
 		})
 
@@ -973,7 +974,7 @@ describe("InitiativeCommentsController", function() {
 
 			var replyEl = dom.querySelector("#initiative-comment .comment-replies")
 			replyEl.querySelector(".author").textContent.must.equal(
-				t("COMMENT_AUTHOR_ADMIN")
+				t("comment_page.comment.admin_author")
 			)
 		})
 
@@ -1160,7 +1161,10 @@ describe("InitiativeCommentsController", function() {
 				var dom = parseHtml(res.body)
 				var menuEl = dom.querySelector(".comment > menu")
 				var deleteEl = menuEl.querySelector(".comment-delete-button")
-				deleteEl.textContent.must.equal(t("ANONYMIZE_COMMENT"))
+
+				deleteEl.textContent.must.equal(
+					t("comment_page.comment.anonymize_button")
+				)
 			})
 
 			it("must not render button for anonymizing reply if created in less than an hour", function*() {
@@ -1186,7 +1190,10 @@ describe("InitiativeCommentsController", function() {
 				res.statusCode.must.equal(200)
 
 				var dom = parseHtml(res.body)
-				demand(dom.querySelector(".comment-reply > menu")).be.null()
+
+				demand(
+					dom.querySelector(".comment-reply menu .comment-delete-button")
+				).be.null()
 			})
 
 			it("must render button for anonymizing reply", function*() {
@@ -1214,7 +1221,10 @@ describe("InitiativeCommentsController", function() {
 				var dom = parseHtml(res.body)
 				var menuEl = dom.querySelector(".comment-reply > menu")
 				var deleteEl = menuEl.querySelector(".comment-delete-button")
-				deleteEl.textContent.must.equal(t("ANONYMIZE_COMMENT"))
+
+				deleteEl.textContent.must.equal(
+					t("comment_page.comment.anonymize_button")
+				)
 			})
 		})
 	})
@@ -1319,7 +1329,7 @@ describe("InitiativeCommentsController", function() {
 				})
 
 				res.statusCode.must.equal(200)
-				res.body.must.include(t("COMMENT_ANONYMIZED"))
+				res.body.must.include(t("comment_page.comment_anonymized"))
 				res.body.must.not.include(this.user.name)
 			})
 
@@ -1360,7 +1370,7 @@ describe("InitiativeCommentsController", function() {
 				})
 
 				res.statusCode.must.equal(200)
-				res.body.must.include(t("COMMENT_ANONYMIZED"))
+				res.body.must.include(t("comment_page.comment_anonymized"))
 				res.body.must.not.include(this.user.name)
 			})
 		})
@@ -1721,7 +1731,7 @@ describe("InitiativeCommentsController", function() {
 				email.headers.subject.must.include(this.initiative.title)
 				email.headers.subject.must.not.include(user.name)
 				email.body.must.not.include(user.name)
-				email.body.must.include(`Autor: ${t("COMMENT_AUTHOR_ADMIN")}`)
+				email.body.must.include(`Autor: ${t("comment_page.comment.admin_author")}`)
 			})
 
 			it("must not email subscribers if private", function*() {
@@ -2004,6 +2014,280 @@ describe("InitiativeCommentsController", function() {
 					res.statusCode.must.equal(303)
 					res.statusMessage.must.equal("Comment Reply Created")
 				})
+			})
+		})
+	})
+
+	describe("POST /:id/reports", function() {
+		describe("when not logged in", function() {
+			it("must respond with 401 when not logged in", function*() {
+				var author = usersDb.create(new ValidUser)
+
+				var comment = commentsDb.create(new ValidComment({
+					initiative_uuid: this.initiative.uuid,
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid)
+				}))
+
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
+				var res = yield this.request(path + "/reports", {method: "POST"})
+				res.statusCode.must.equal(401)
+				res.statusMessage.must.equal("Unauthorized")
+			})
+		})
+
+		describe("when logged in", function() {
+			require("root/test/fixtures").user()
+
+			it("must create report", function*() {
+				var author = usersDb.create(new ValidUser)
+
+				var comment = commentsDb.create(new ValidComment({
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
+					initiative_uuid: this.initiative.uuid
+				}))
+
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
+				var res = yield this.request(path + "/reports", {method: "POST"})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Reported")
+				res.headers.location.must.equal(path)
+
+				var report = reportsDb.read(sql`
+					SELECT * FROM initiative_comment_reports
+				`)
+
+				report.must.eql({
+					id: report.id,
+					initiative_id: this.initiative.id,
+					comment_id: comment.id,
+					created_at: new Date,
+					created_by_id: this.user.id
+				})
+			})
+
+			it("must create report for reply", function*() {
+				var author = usersDb.create(new ValidUser)
+
+				var comment = commentsDb.create(new ValidComment({
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
+					initiative_uuid: this.initiative.uuid
+				}))
+
+				var reply = commentsDb.create(new ValidComment({
+					initiative_uuid: this.initiative.uuid,
+					created_at: DateFns.addHours(new Date, -1),
+					user_id: this.user.id,
+					user_uuid: _.serializeUuid(this.user.uuid),
+					parent_id: comment.id
+				}))
+
+				var commentsPath = `/initiatives/${this.initiative.id}/comments`
+				var parentPath = commentsPath + `/${comment.id}`
+				var replyPath = commentsPath + `/${reply.id}`
+				var res = yield this.request(replyPath + "/reports", {method: "POST"})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Reported")
+				res.headers.location.must.equal(parentPath + "#comment-" + reply.id)
+
+				var report = reportsDb.read(sql`
+					SELECT * FROM initiative_comment_reports
+				`)
+
+				report.must.eql({
+					id: report.id,
+					initiative_id: this.initiative.id,
+					comment_id: reply.id,
+					created_at: new Date,
+					created_by_id: this.user.id
+				})
+			})
+
+			it("must not notify of report if less than threshold", function*() {
+				var author = usersDb.create(new ValidUser)
+
+				var comment = commentsDb.create(new ValidComment({
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
+					initiative_uuid: this.initiative.uuid
+				}))
+
+				_.times(Config.commentReportNotificationThreshold - 2, () => (
+					reportsDb.create({
+						initiative_id: this.initiative.id,
+						comment_id: comment.id,
+						created_by_id: usersDb.create(new ValidUser).id
+					})
+				))
+
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
+				var res = yield this.request(path + "/reports", {method: "POST"})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Reported")
+				this.emails.must.be.empty()
+			})
+
+			it("must notify of report if at threshold", function*() {
+				var author = usersDb.create(new ValidUser)
+
+				var comment = commentsDb.create(new ValidComment({
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
+					initiative_uuid: this.initiative.uuid
+				}))
+
+				_.times(Config.commentReportNotificationThreshold - 1, () => (
+					reportsDb.create({
+						initiative_id: this.initiative.id,
+						comment_id: comment.id,
+						created_by_id: usersDb.create(new ValidUser).id
+					})
+				))
+
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
+				var res = yield this.request(path + "/reports", {method: "POST"})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Reported")
+				this.emails.length.must.equal(1)
+
+				var email = this.emails[0]
+				email.envelope.to.must.eql(Config.helpEmail)
+				email.headers.subject.must.startWith("Comment reported on ")
+			})
+
+			it("must not notify of report if beyond threshold", function*() {
+				var author = usersDb.create(new ValidUser)
+
+				var comment = commentsDb.create(new ValidComment({
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
+					initiative_uuid: this.initiative.uuid
+				}))
+
+				_.times(Config.commentReportNotificationThreshold, () => (
+					reportsDb.create({
+						initiative_id: this.initiative.id,
+						comment_id: comment.id,
+						created_by_id: usersDb.create(new ValidUser).id
+					})
+				))
+
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
+				var res = yield this.request(path + "/reports", {method: "POST"})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Reported")
+				this.emails.must.be.empty()
+			})
+
+			it("must ignore if report already created by user for same comment",
+				function*() {
+				var author = usersDb.create(new ValidUser)
+
+				var comment = commentsDb.create(new ValidComment({
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
+					initiative_uuid: this.initiative.uuid
+				}))
+
+				var report = reportsDb.create({
+					initiative_id: this.initiative.id,
+					comment_id: comment.id,
+					created_by_id: this.user.id
+				})
+
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
+				var res = yield this.request(path + "/reports", {method: "POST"})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Already Reported")
+				res.headers.location.must.equal(path)
+
+				reportsDb.read(sql`
+					SELECT * FROM initiative_comment_reports
+				`).must.eql(report)
+			})
+
+			it("must create report given a report by another user", function*() {
+				var author = usersDb.create(new ValidUser)
+
+				var comment = commentsDb.create(new ValidComment({
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
+					initiative_uuid: this.initiative.uuid
+				}))
+
+				var report = reportsDb.create({
+					initiative_id: this.initiative.id,
+					comment_id: comment.id,
+					created_by_id: usersDb.create(new ValidUser).id
+				})
+
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
+				var res = yield this.request(path + "/reports", {method: "POST"})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Reported")
+				res.headers.location.must.equal(path)
+
+				var reports = reportsDb.search(sql`
+					SELECT * FROM initiative_comment_reports
+				`)
+
+				reports.must.eql([report, {
+					id: reports[1].id,
+					initiative_id: this.initiative.id,
+					comment_id: comment.id,
+					created_at: new Date,
+					created_by_id: this.user.id
+				}])
+			})
+
+			it("must create report given a report for another comment", function*() {
+				var author = usersDb.create(new ValidUser)
+
+				var comment = commentsDb.create(new ValidComment({
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
+					initiative_uuid: this.initiative.uuid
+				}))
+
+				var otherComment = commentsDb.create(new ValidComment({
+					user_id: author.id,
+					user_uuid: _.serializeUuid(author.uuid),
+					initiative_uuid: this.initiative.uuid
+				}))
+
+				var report = reportsDb.create({
+					initiative_id: this.initiative.id,
+					comment_id: otherComment.id,
+					created_by_id: this.user.id
+				})
+
+				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
+				var res = yield this.request(path + "/reports", {method: "POST"})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Reported")
+				res.headers.location.must.equal(path)
+
+				var reports = reportsDb.search(sql`
+					SELECT * FROM initiative_comment_reports
+				`)
+
+				reports.must.eql([report, {
+					id: reports[1].id,
+					initiative_id: this.initiative.id,
+					comment_id: comment.id,
+					created_at: new Date,
+					created_by_id: this.user.id
+				}])
 			})
 		})
 	})

@@ -1411,9 +1411,7 @@ main {
 #local-home-page {
 	background-color: $secondary-background;
 
-	.flash {
-		margin-bottom: 2rem;
-	}
+	.flash { margin-bottom: 2rem; }
 
 	#call-to-actions {
 		text-align: center;
@@ -2928,6 +2926,28 @@ main {
 			.author.anonymous { font-style: italic; }
 		}
 
+		.unwall-checkbox:checked + .unwall-button { display: none; }
+		.unwall-checkbox:not(:checked) ~ p { display: none; }
+
+		.walled,
+		.unwall-button {
+			white-space: pre-line;
+			line-height: 1.4;
+			margin-top: 0.5rem;
+			text-align: center;
+			display: block;
+			padding: 0.8rem 2rem;
+			border: 0.1rem dashed $light-background-border;
+			border-radius: 0.5rem;
+		}
+
+		.unwall-button {
+			cursor: pointer;
+
+			&:focus { border-color: $link-color; }
+			&:hover { border-color: $link-color; }
+		}
+
 		p {
 			margin-top: 0.5rem;
 			font-family: $tisa-pro;
@@ -2952,18 +2972,24 @@ main {
 
 		& > menu {
 			margin-top: 1.5rem;
+			display: flex;
 
 			.comment-reply-button {
-				display: inline-block;
 				font-weight: 600;
 
 				&[disabled] { color: #ccc; }
 			}
 
-			.comment-delete-button {
-				float: right;
+			form { display: inline-block; }
+
+			.comment-delete-form,
+			.comment-report-form,
+			.comment-reported {
 				display: inline-block;
+				margin-left: auto;
 			}
+
+			.comment-reported { color: $secondary-light-text; }
 
 			@media print { display: none; }
 		}
@@ -3022,14 +3048,19 @@ main {
 
 		menu {
 			margin-top: 1.5rem;
-			overflow: hidden;
+			display: flex;
 
-			.comment-delete-button {
-				float: right;
+			.comment-delete-form,
+			.comment-report-form,
+			.comment-reported {
 				display: inline-block;
+				margin-left: auto;
 			}
 
+			.comment-reported { color: $secondary-light-text; }
+
 			@media print { display: none; }
+			&:empty { display: none; }
 		}
 
 		.metadata .author {
@@ -4832,6 +4863,10 @@ main {
 			margin-top: 1rem;
 		}
 	}
+}
+
+#initiative-comment-page main {
+	.flash { margin-bottom: 2rem; }
 }
 
 #subscriptions-page main {

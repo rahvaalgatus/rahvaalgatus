@@ -22,6 +22,7 @@
 	"demoSignaturesExpirationSeconds": 900,
 	"geoIpCityPath": null,
 	"googleSiteSearchId": "014950189983170776524:rqhs4alk_au",
+	"commentReportNotificationThreshold": 10,
 
 	"language": "et",
 	"languages": ["et", "en"],

@@ -20,6 +20,7 @@
 	"minEditingDeadlineDays": 0,
 	"minSigningDeadlineDays": 0,
 	"maxSigningDeadlineMonths": 1,
+	"commentReportNotificationThreshold": 2,
 
 	"issuers": [[
 		"C=EE",

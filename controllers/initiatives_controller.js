@@ -603,7 +603,7 @@ exports.read = function(req, res) {
 		)
 	`)[0]
 
-	var comments = searchInitiativeComments(initiative.uuid)
+	var comments = searchInitiativeComments(user, initiative.uuid)
 	var events = searchInitiativeEventsWithFiles(initiative)
 
 	var subscription = user && user.email && user.email_confirmed_at
@@ -913,12 +913,21 @@ function synthesizeInitiativeEvents(initiatives, events) {
 	})
 }
 
-function searchInitiativeComments(initiativeUuid) {
+function searchInitiativeComments(user, initiativeUuid) {
 	var comments = commentsDb.search(sql`
-		SELECT comment.*, user.name AS user_name
+		SELECT
+			comment.*,
+			user.name AS user_name,
+			report.created_at AS reported_at
+
 		FROM comments AS comment
 		LEFT JOIN users AS user
 		ON comment.user_id = user.id AND comment.anonymized_at IS NULL
+
+		LEFT JOIN initiative_comment_reports AS report
+		ON report.comment_id = comment.id
+		AND report.created_by_id = ${user && user.id}
+
 		WHERE comment.initiative_uuid = ${initiativeUuid}
 		ORDER BY comment.created_at
 	`)

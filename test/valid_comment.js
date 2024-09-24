@@ -12,6 +12,9 @@ module.exports = function(attrs) {
 		parent_id: null,
 		title: attrs && attrs.parent_id ? "" : _.uniqueId("Title "),
 		text: _.uniqueId("Comment "),
-		as_admin: false
+		as_admin: false,
+		walled: null,
+		walled_at: null,
+		walled_by_id: null
 	}, attrs)
 }

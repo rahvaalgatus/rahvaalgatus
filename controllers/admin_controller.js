@@ -7,7 +7,6 @@ var Time = require("root/lib/time")
 var {YearMonth} = require("root/lib/time")
 var {getAdminPermissions} = require("root/lib/user")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
-var commentsDb = require("root/db/comments_db")
 var initiativesDb = require("root/db/initiatives_db")
 var {sqlite} = require("root")
 var redirect = require("root/lib/redirect")
@@ -281,27 +280,13 @@ _.each({
 	"/destinations": require("./admin/destinations_controller").router,
 	"/initiatives": require("./admin/initiatives_controller").router,
 	"/signatures": require("./admin/initiative_signatures_controller").router,
+	"/comments": require("./admin/initiative_comment_controller").router,
+
+	"/comment-reports":
+		require("./admin/initiative_comment_reports_controller").router,
+
 	"/external-responses": require("./admin/external_responses_controller").router
 }, (router, path) => exports.use(path, router))
-
-exports.get("/comments", function(_req, res) {
-	var comments = commentsDb.search(sql`
-		SELECT
-			comment.*,
-			initiative.id AS initiative_id,
-			initiative.slug AS initiative_slug,
-			user.id AS user_id,
-			user.name AS user_name
-
-		FROM comments AS comment
-		JOIN initiatives AS initiative ON initiative.uuid = comment.initiative_uuid
-		JOIN users AS user ON comment.user_id = user.id
-		ORDER BY created_at DESC
-		LIMIT 15
-	`)
-
-	res.render("admin/comments/index_page.jsx", {comments: comments})
-})
 
 exports.get("/subscriptions", function(_req, res) {
 	var subscriptions = subscriptionsDb.search(sql`

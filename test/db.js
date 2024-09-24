@@ -24,6 +24,7 @@ function truncate() {
 		DELETE FROM initiative_texts;
 		DELETE FROM initiative_images;
 		DELETE FROM demo_signatures;
+		DELETE FROM initiative_comment_reports;
 		DELETE FROM comments;
 		DELETE FROM initiatives;
 		DELETE FROM sessions;

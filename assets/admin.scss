@@ -135,6 +135,7 @@ button.admin-link {
   }
 
 	& > caption {
+		text-align: left;
 		line-height: 1.5;
 		padding: 0.5rem 2rem;
 	}
@@ -191,6 +192,31 @@ button.admin-link {
 				font-size: 1.3rem;
 			}
 		}
+	}
+
+	.sort-button {
+		white-space: nowrap;
+
+		svg { margin-left: 0.6rem; vertical-align: sub; }
+
+		&.asc,
+		&.desc { font-weight: 600; }
+		&.asc .sort-chevrons .up { fill: $dark-blue; }
+		&.desc .sort-chevrons .down { fill: $dark-blue; }
+
+		&:focus {
+			outline-color: currentcolor;
+			outline-style: dashed;
+			outline-width: 0.1rem;
+			outline-offset: 0.2rem;
+		}
+
+		&:hover {
+			color: $link-color;
+			text-decoration: underline;
+		}
+
+		& + .column-name { margin-left: 0.7rem; }
 	}
 }
 
@@ -303,6 +329,10 @@ button.admin-link {
 
 	.admin-form-field {
 		display: block;
+
+		input[type=radio] {
+			margin-right: 0.5rem;
+		}
 	}
 
 	&.--one-line {
@@ -369,13 +399,15 @@ button.admin-link {
 	&:after { content: ":"; }
 }
 
-.admin-input {
+.admin-input,
+.admin-select {
 	font-size: 1.4rem;
 	font-family: $museo-sans;
 	font-weight: 500;
 
 	border: 1px solid #cecece;
 	height: $button-height;
+	line-height: $button-height;
 	padding: 0 0.5rem;
 
 	background: white;
@@ -424,6 +456,86 @@ button.admin-link {
 		white-space: pre-wrap;
 
 		.link { @extend .admin-link; }
+	}
+}
+
+.pagination-view {
+	max-width: 60rem;
+	margin: 2rem auto 0;
+	text-align: center;
+	
+	li {
+		color: #303030;
+		display: inline-block;
+		margin-bottom: 1rem;
+
+		&.page {
+			background: #eaf0f6;
+			border-radius: 0.3rem;
+		}
+
+		a {
+			display: inline-block;
+			padding: 1rem 1rem;
+		}
+
+		&:not(.current) a {
+			text-decoration: underline;
+		}
+
+		&.current {
+			color: black;
+			background: white;
+			font-weight: bold;
+		}
+
+		& + li {
+			margin-left: 1rem;
+		}
+	}
+}
+
+.filters-view {
+	$input-height: 3.6rem;
+	margin-bottom: 2rem;
+	padding: 0 1.5rem;
+	border-radius: 0.5rem;
+	background-color: white;
+
+	&[open] {
+		padding-bottom: 1.5rem;
+	}
+
+	summary {
+		cursor: pointer;
+		padding: 1rem 1.5rem;
+		margin-left: -1.5rem;
+		margin-right: -1.5rem;
+	}
+
+	&[open] summary {
+		margin-bottom: 1rem;
+		border-bottom: 1px solid $table-border-color;
+	}
+
+	label {
+		display: inline-block;
+		margin-right: 1rem;
+
+		span { font-weight: 600; }
+	}
+
+	input,
+	select {
+		display: block;
+		margin-top: 0.5rem;
+		margin-bottom: 1rem;
+		max-width: 35rem;
+		height: $input-height;
+	}
+
+	button {
+		margin-right: 0.5rem;
 	}
 }
 
@@ -671,8 +783,46 @@ textarea.admin-input {
 	.comments {
 		h3 {
 			font-weight: bold;
+			margin-bottom: 0.5rem;
+		}
+
+		td.text-column .admin-text {
+			word-wrap: break-word;
+			white-space: pre-line;
+			max-width: 60rem;
+		}
+
+		td.reports-column {
+			.report-decision i { font-style: italic; }
+
+			p + h2 { margin-top: 0.5rem; }
+		}
+	}
+}
+
+#comment-page main {
+	#comment-text {
+		margin-top: 2rem;
+		border: 1px solid $table-border-color;
+		padding: 1.5rem 2rem;
+		border-radius: .5rem;
+		background: white;
+		font-size: 1.6rem;
+		white-space: pre-line;
+		word-wrap: break-word;
+
+		h3 {
+			font-size: 2rem;
 			margin-bottom: 1rem;
 		}
+
+		& ~ .admin-subheading { margin-top: 3rem; }
+	}
+
+	#comment-report-decision-form {
+		display: block;
+		margin-top: 1rem;
+
 	}
 }
 

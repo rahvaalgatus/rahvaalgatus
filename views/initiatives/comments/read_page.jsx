@@ -1,7 +1,9 @@
 /** @jsx Jsx */
+var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Initiative = require("root/lib/initiative")
 var InitiativePage = require("../initiative_page")
+var Config = require("root").config
 var Comment = require("root/lib/comment")
 var I18n = require("root/lib/i18n")
 var {Flash} = require("../../page")
@@ -76,24 +78,37 @@ function CommentView(attrs) {
 			</time>
 		</div>
 
-		<p class="text">{Jsx.html(Comment.htmlify(comment.text))}</p>
+		<CommentText
+			t={t}
+			comment={comment}
+			user={user}
+			path={commentSlugPath}
+		/>
 
 		{user ? <menu>
-			{(
-				user.id == comment.user_id &&
-				!comment.anonymized_at &&
-				canAnonymize(new Date, comment)
-			) ? <CommentDeleteButton req={req} t={t} comment={comment} /> : null}
-
 			<a
 				href={`#comment-${comment.id}-reply`}
 				class="comment-reply-button link-button">
 				{t("REPLY")}
 			</a>
+
+			{(
+				user.id == comment.user_id &&
+				comment.anonymized_at == null &&
+				canAnonymize(new Date, comment)
+			) ? <CommentDeleteButton req={req} t={t} comment={comment} /> : null}
+
+			{user.id != comment.user_id && comment.walled == null ?
+				(comment.reported_at
+					? <span class="comment-reported">Raporteeritud</span>
+					: <CommentReportButton req={req} t={t} comment={comment} />
+				)
+			: null}
 		</menu> : null}
 
 		<ol class="comment-replies">{(comment.replies || []).map(function(reply) {
 			var anonymous = !!reply.anonymized_at
+			var replySlugPath = commentSlugPath + `#comment-${reply.id}`
 
 			return <li
 				id={`comment-${reply.id}`}
@@ -107,21 +122,32 @@ function CommentView(attrs) {
 					</span>
 					{", "}
 					<time datetime={reply.created_at}>
-						<a href={commentSlugPath + `#comment-${reply.id}`}>
+						<a href={replySlugPath}>
 							{I18n.formatDateTime("numeric", reply.created_at)}
 						</a>
 					</time>
 				</div>
 
-				<p class="text">{Jsx.html(Comment.htmlify(reply.text))}</p>
+				<CommentText
+					t={t}
+					comment={reply}
+					user={user}
+					path={replySlugPath}
+				/>
 
-				{(
-					user &&
-					user.id == reply.user_id &&
-					!reply.anonymized_at &&
-					canAnonymize(new Date, reply)
-				) ? <menu>
-					<CommentDeleteButton req={req} t={t} comment={reply} />
+				{user ? <menu>
+					{(
+						user.id == reply.user_id &&
+						reply.anonymized_at == null &&
+						canAnonymize(new Date, reply)
+					) ? <CommentDeleteButton req={req} t={t} comment={reply} /> : null}
+
+					{user.id != reply.user_id && reply.walled == null ?
+						(reply.reported_at
+							? <span class="comment-reported">Raporteeritud</span>
+							: <CommentReportButton req={req} t={t} comment={reply} />
+						)
+					: null}
 				</menu> : null}
 			</li>
 		})}</ol>
@@ -159,10 +185,58 @@ function CommentDeleteButton({req, t, comment}) {
 		action={`${commentsPath}/${comment.id}`}
 		name="_method"
 		value="delete"
-		onclick={confirm(t("ANONYMIZE_COMMENT_CONFIRMATION"))}
-		class="comment-delete-button link-button">
-		{t("ANONYMIZE_COMMENT")}
+		onclick={confirm(t("comment_page.comment.anonymize_button_confirmation"))}
+		class="comment-delete-button link-button"
+		formClass="comment-delete-form"
+	>
+		{t("comment_page.comment.anonymize_button")}
 	</FormButton>
+}
+
+function CommentReportButton({req, t, comment}) {
+	var commentsPath = `/initiatives/${comment.initiative_uuid}/comments`
+
+	return <FormButton
+		req={req}
+		action={`${commentsPath}/${comment.id}/reports`}
+		name="_method"
+		onclick={confirm(t("comment_page.comment.report_button_confirmation"))}
+		class="comment-report-button link-button"
+		formClass="comment-report-form"
+	>
+		{t("comment_page.comment.report_button")}
+	</FormButton>
+}
+
+function CommentText({t, user, comment, path}) {
+	var commentText = Jsx.html(Comment.htmlify(comment.text))
+
+	if (comment.walled) {
+		var unwallCheckboxId = `comment-${comment.id}-unwall`
+
+		if (user) return <>
+			<input
+				type="checkbox"
+				id={unwallCheckboxId}
+				class="unwall-checkbox"
+				hidden
+			/>
+
+			<label class="unwall-button" for={unwallCheckboxId}>
+				{Jsx.html(t("comment_page.comment.unwall_button"))}
+			</label>
+
+			<p class="text">{commentText}</p>
+		</>
+
+		return <div class="walled">{Jsx.html(t("comment_page.comment.walled", {
+			signInUrl: _.escapeHtml(
+				"/sessions/new?referrer=" + encodeURIComponent(path)
+			)
+		}))}</div>
+	}
+
+	return <p class="text">{commentText}</p>
 }
 
 function isCommentShort(comment) {
