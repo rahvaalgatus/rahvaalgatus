@@ -1,5 +1,1 @@
-Rahvaalgatus.ee platvorm on üles pandud avaliku rahaga, kuid selle töös hoidmiseks vajame kasutajate toetust. Abiks on igas suuruses annetused, olgu selleks 5, 50 või 500 eurot. Kogutud raha aitab katta digiallkirjastamisega seotud kulusid ning tagada keskkonnas tehnilise toe ja turvalisuse. Meie jaoks on oluline läbipaistvus: anname ülevaadet platvormi [arendustegevustest](https://github.com/rahvaalgatus/rahvaalgatus/issues) ja [Rahvaalgatus.ee arengutest](https://kogu.ee/2023/03/15/seitse-aastat-rahvaalgatus-ee-edulugu-kodanikud-suudavad-kollektiivselt-murda-vaikuse-ka-siis-kui-riigikogus-voi-kohalikus-omavalitsuses-on-otsustajad-justkui-juba-kokku-leppinud/). 
-
-Rahvaalgatus.ee on [The Innovation in Politics Awards 2023](https://innovationinpolitics.eu/) konkursil finalist ja nomineeriti Majandus- ja Kommunikatsiooniministeeriumi 2023. aasta konkursil [parimaks avaandmete taaskasutajaks](https://medium.com/digiriik/eesti-avaandmete-valdkonna-silmapaistvad-panustajad-2023-1f353177c0b0).
-
-Eesti Koostöö Kogu uudiskirjaga [liitudes](https://kogu.us12.list-manage.com/subscribe?u=e48415516e4da94ccc60c569b&id=2ecc6cc26f) saab iga kuu ülevaate organisatsiooni tegemistest.
+Mobiil-ID ja Smart-ID allkirjad on tasulised teenused. Tänu annetustele saame allkirjastamist tasuta pakkuda. Toeta järgmisi allkirjastajaid! 1 € = 10 digiallkirja. Aitäh!
