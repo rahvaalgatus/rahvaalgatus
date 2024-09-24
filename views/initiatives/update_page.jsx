@@ -162,7 +162,10 @@ module.exports = function(attrs) {
 				var form = document.getElementById("initiative-form")
 
 				// Don't get the "editor" property yet as it'll only exist after
-				// initialization.
+				// initialization. Native custom elements are initialized
+				// synchronously, but polyfills may do so through MutationObserver and
+				// that invoces the HTML Custom Element connectedCallback
+				// asynchronously.
 				var editorEls = slice(form.querySelectorAll("trix-editor"))
 
 				editorEls.forEach(function(editorEl) {
@@ -170,10 +173,10 @@ module.exports = function(attrs) {
 					var counterId = editorEl.getAttribute("data-counter-id")
 					var counterEl = counterId ? document.getElementById(counterId) : null
 
-					// Trix-initialize is likely to be triggered even when "back"-ing
-					// into this page. However, as we keep the serialized text in an
-					// <input> element, that's restored by the browser.
-					editorEl.addEventListener("trix-initialize", function(ev) {
+					if (editorEl.editor) initialize()
+					else editorEl.addEventListener("trix-initialize", initialize)
+
+					function initialize() {
 						var content = form.elements[contentName].value
 						content = content ? JSON.parse(content) : null
 
@@ -185,7 +188,7 @@ module.exports = function(attrs) {
 
 						editorEl.loadedDocument = editorEl.editor.getDocument()
 						editorEl.contentEditable = !editorEl.hasAttribute("readonly")
-					})
+					}
 
 					editorEl.addEventListener("trix-file-accept", function(ev) {
 						ev.preventDefault()
