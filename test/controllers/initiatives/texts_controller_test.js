@@ -446,11 +446,11 @@ describe("InitiativeTextsController", function() {
 				})])
 			})
 
-			Config.languages.forEach(function(lang) {
+			Config.initiativeLanguages.forEach(function(lang) {
 				it(`must create text given translation in ${lang}`, function*() {
 					var initiative = initiativesDb.create(new ValidInitiative({
 						user_id: this.user.id,
-						language: _.find(Config.languages, (l) => l != lang),
+						language: _.find(Config.initiativeLanguages, (l) => l != lang),
 					}))
 
 					var initiativePath = `/initiatives/${initiative.id}`

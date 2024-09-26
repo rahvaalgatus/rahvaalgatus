@@ -7,7 +7,7 @@ var Initiative = require("root/lib/initiative")
 var InitiativePage = require("./initiative_page")
 var {DatePickerInput} = require("../page")
 var formatIso = require("root/lib/i18n").formatDate.bind(null, "iso")
-var LANGUAGES = require("root").config.languages
+var LANGUAGES = require("root").config.initiativeLanguages
 
 module.exports = function(attributes) {
 	var {req} = attributes

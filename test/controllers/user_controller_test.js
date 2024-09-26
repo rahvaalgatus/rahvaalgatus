@@ -459,7 +459,7 @@ describe("UserController", function() {
 				usersDb.read(user).must.eql(user)
 			})
 
-			;["et", "en", "ru"].forEach(function(lang) {
+			Config.languages.forEach(function(lang) {
 				it("must update language to " + lang, function*() {
 					var res = yield this.request("/user", {
 						method: "PUT",
@@ -609,7 +609,7 @@ describe("UserController", function() {
 				usersDb.read(this.user).must.eql(this.user)
 			})
 
-			;["et", "en", "ru"].forEach(function(lang) {
+			Config.languages.forEach(function(lang) {
 				it("must update language to " + lang + " without notification",
 					function*() {
 					var res = yield this.request("/user", {

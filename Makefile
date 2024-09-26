@@ -170,7 +170,6 @@ api/publish: openapi.yaml
 
 translations: lib/i18n/en.json
 translations: lib/i18n/et.json
-translations: lib/i18n/ru.json
 
 translatables: JQ_MAP_GOVERNMENTS = 'keys[] | [\
 	"DESTINATION_\(.)", \
@@ -201,10 +200,8 @@ tmp/local_governments.json: tmp
 
 lib/i18n/en.json: JQ_OPTS += --sort-keys --arg lang English
 lib/i18n/et.json: JQ_OPTS += --sort-keys --arg lang Estonian
-lib/i18n/ru.json: JQ_OPTS += --sort-keys --arg lang Russian
 lib/i18n/en.json \
-lib/i18n/et.json \
-lib/i18n/ru.json: tmp/translations.json
+lib/i18n/et.json: tmp/translations.json
 	jq $(JQ_OPTS) -f scripts/translation.jq "$<" > "$@"
 
 lib/local_governments.json: scripts/local_governments.jq

@@ -24,7 +24,8 @@
 	"googleSiteSearchId": "014950189983170776524:rqhs4alk_au",
 
 	"language": "et",
-	"languages": ["et", "ru", "en"],
+	"languages": ["et", "en"],
+	"initiativeLanguages": ["et", "en", "ru"],
 	"votesRequired": 1000,
 	"minEditingDeadlineDays": 3,
 	"maxEditingDeadlineMonths": 6,

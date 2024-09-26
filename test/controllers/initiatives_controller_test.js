@@ -3295,7 +3295,7 @@ describe("InitiativesController", function() {
 				initiativesDb.search(sql`SELECT * FROM initiatives`).must.be.empty()
 			})
 
-			Config.languages.forEach(function(lang) {
+			Config.initiativeLanguages.forEach(function(lang) {
 				it(`must create initiative with language ${lang}`, function*() {
 					var res = yield this.request("/initiatives", {
 						method: "POST",

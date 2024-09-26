@@ -161,7 +161,7 @@ var validate = require("root/lib/json_schema").new({
 		title: {type: "string", minLength: 1, maxLength: 200},
 		content: {type: ["object", "array"]},
 		content_type: {enum: [TRIX_CONTENT_TYPE, TRIX_SECTIONS_TYPE]},
-		language: {enum: Config.languages},
+		language: {enum: Config.initiativeLanguages},
 		basis_id: {type: ["number", "null"]}
 	}
 })
