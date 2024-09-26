@@ -43,7 +43,7 @@ function DonateForm(attrs) {
 	var {t} = attrs
 	var {amount} = attrs
 	var {pseudoInt} = require("root/lib/crypto")
-	var def = amount == null ? 3 + pseudoInt(7) : 0
+	var def = amount == null ? 3 + pseudoInt(23) : 0
 
   return <Form
     req={req}
