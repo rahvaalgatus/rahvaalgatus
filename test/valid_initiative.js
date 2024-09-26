@@ -2,8 +2,6 @@ var _ = require("root/lib/underscore")
 var MediaType = require("medium-type")
 var Initiative = require("root/lib/initiative")
 var outdent = require("root/lib/outdent")
-var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
-var {pseudoDateTime} = require("root/lib/crypto")
 var HTML_TYPE = new MediaType("text/html")
 
 module.exports = function(attrs) {
@@ -26,25 +24,25 @@ module.exports = function(attrs) {
 		author_name: "",
 		author_url: "",
 		author_contacts: "",
-		created_at: pseudoDateTime(),
+		created_at: _.pseudorandomDateTime(),
 		community_url: "",
 		url: "",
 		phase: phase,
-		signing_started_at: phase == "sign" ? pseudoDateTime() : null,
-		signing_ends_at: phase == "sign" ? pseudoDateTime() : null,
+		signing_started_at: phase == "sign" ? _.pseudorandomDateTime() : null,
+		signing_ends_at: phase == "sign" ? _.pseudorandomDateTime() : null,
 		signing_expired_at: null,
 		signing_expiration_email_sent_at: null,
-		published_at: phase != "edit" || external ? pseudoDateTime() : null,
+		published_at: phase != "edit" || external ? _.pseudorandomDateTime() : null,
 		tags: [],
 
-		discussion_ends_at: (
-			phase == "edit" && attrs && attrs.published_at ? pseudoDateTime() : null
-		),
+		discussion_ends_at: phase == "edit" && attrs && attrs.published_at
+			? _.pseudorandomDateTime()
+			: null,
 
 		organizations: [],
 		text: phase != "edit" && !external ? text : null,
 		text_type: phase != "edit" && !external ? HTML_TYPE : null,
-		text_sha256: phase != "edit" && !external ? sha256(text) : null,
+		text_sha256: phase != "edit" && !external ? _.sha256(text) : null,
 		destination: phase != "edit" ? "parliament" : null,
 		meetings: [],
 		media_urls: [],

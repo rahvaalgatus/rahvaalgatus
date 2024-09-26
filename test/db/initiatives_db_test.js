@@ -6,7 +6,6 @@ var ValidEvent = require("root/test/valid_initiative_event")
 var ValidSignable = require("root/test/valid_signable")
 var ValidSignature = require("root/test/valid_signature")
 var SqliteError = require("root/lib/sqlite_error")
-var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var {insert} = require("heaven-sqlite")
 var {sqlite} = require("root")
 var sql = require("sqlate")
@@ -102,7 +101,7 @@ describe("InitiativesDb", function() {
 					phase: "sign",
 					text: "<h1>Hello, world!</h1>",
 					text_type: new MediaType("text/html"),
-					text_sha256: sha256("<h1>Hello, world!</h1>")
+					text_sha256: _.sha256("<h1>Hello, world!</h1>")
 				})
 
 				var created = initiativesDb.create(initiative)
@@ -228,7 +227,7 @@ describe("InitiativesDb", function() {
 						phase: phase,
 						text: "<h1>Hello, world!</h1>",
 						text_type: new MediaType("text/html"),
-						text_sha256: sha256("<h1>Hello, world!</h1>")
+						text_sha256: _.sha256("<h1>Hello, world!</h1>")
 					})
 
 					var created = initiativesDb.create(initiative)
@@ -264,7 +263,7 @@ describe("InitiativesDb", function() {
 					phase: "sign",
 					text: "<h1>Hello, world!</h1>",
 					text_type: null,
-					text_sha256: sha256("<h1>Hello, world!</h1>")
+					text_sha256: _.sha256("<h1>Hello, world!</h1>")
 				})
 
 				var err
@@ -279,7 +278,7 @@ describe("InitiativesDb", function() {
 					phase: "sign",
 					text: "<h1>Hello, world!</h1>",
 					text_type: "",
-					text_sha256: sha256("<h1>Hello, world!</h1>")
+					text_sha256: _.sha256("<h1>Hello, world!</h1>")
 				})
 
 				var err
@@ -311,7 +310,7 @@ describe("InitiativesDb", function() {
 					phase: "sign",
 					text: "<h1>Hello, world!</h1>",
 					text_type: new MediaType("text/html"),
-					text_sha256: sha256("<h1>Hello, world!</h1>").slice(0, -1)
+					text_sha256: _.sha256("<h1>Hello, world!</h1>").slice(0, -1)
 				})
 
 				var err

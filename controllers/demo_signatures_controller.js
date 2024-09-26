@@ -13,7 +13,6 @@ var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
 var demoSignaturesDb = require("root/db/demo_signatures_db")
 var dispose = require("content-disposition")
-var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var next = require("co-next")
 var {mobileId} = require("root")
 var {smartId} = require("root")
@@ -36,7 +35,7 @@ var {serializeVerificationCode} = require("./initiatives/signatures_controller")
 var {reinstantiateError} = require("./initiatives/signatures_controller")
 var {SIGNABLE_TYPE} = require("./initiatives/signatures_controller")
 var SIGNABLE_TEXT = I18n.t(Config.language, "demo_signatures_page.signable")
-var SIGNABLE_TEXT_SHA256 = sha256(SIGNABLE_TEXT)
+var SIGNABLE_TEXT_SHA256 = _.sha256(SIGNABLE_TEXT)
 var EXPIRATION = Config.demoSignaturesExpirationSeconds
 var ERROR_TYPE = new MediaType("application/vnd.rahvaalgatus.error+json")
 

@@ -14,7 +14,6 @@ var messagesDb = require("root/db/initiative_messages_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
 var citizenosSignaturesDb =
 	require("root/db/initiative_citizenos_signatures_db")
-var {pseudoDateTime} = require("root/lib/crypto")
 var sql = require("sqlate")
 var renderEmail = require("root/lib/i18n").email.bind(null, Config.language)
 var t = require("root/lib/i18n").t.bind(null, Config.language)
@@ -649,7 +648,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 		var initiative = initiativesDb.create(new ValidInitiative({
 			user_id: this.user.id,
 			phase: "sign",
-			signature_milestones: {5: pseudoDateTime()}
+			signature_milestones: {5: _.pseudorandomDateTime()}
 		}))
 
 		var signatures = createSignatures(10, new Date, initiative)

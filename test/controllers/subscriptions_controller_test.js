@@ -4,12 +4,10 @@ var DateFns = require("date-fns")
 var ValidSubscription = require("root/test/valid_subscription")
 var ValidInitiative = require("root/test/valid_initiative")
 var ValidUser = require("root/test/valid_user")
-var {pseudoHex} = require("root/lib/crypto")
 var sql = require("sqlate")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var usersDb = require("root/db/users_db")
 var initiativesDb = require("root/db/initiatives_db")
-var {pseudoDateTime} = require("root/lib/crypto")
 var parseHtml = require("root/test/html").parse
 var {parseCookies} = require("root/test/web")
 var {serializeCookies} = require("root/test/web")
@@ -465,7 +463,7 @@ describe("SubscriptionsController", function() {
 
 			it("must update if already subscribed", function*() {
 				var subscription = subscriptionsDb.create(new ValidSubscription({
-					confirmed_at: pseudoDateTime(),
+					confirmed_at: _.pseudorandomDateTime(),
 					new_interest: true,
 					signable_interest: false,
 					event_interest: false,
@@ -515,7 +513,7 @@ describe("SubscriptionsController", function() {
 
 			it("must update if already subscribed to destination", function*() {
 				var other = subscriptionsDb.create(new ValidSubscription({
-					confirmed_at: pseudoDateTime(),
+					confirmed_at: _.pseudorandomDateTime(),
 					new_interest: true,
 					signable_interest: false,
 					event_interest: false,
@@ -525,7 +523,7 @@ describe("SubscriptionsController", function() {
 				var subscription = subscriptionsDb.create(new ValidSubscription({
 					initiative_destination: "tallinn",
 					email: other.email,
-					confirmed_at: pseudoDateTime(),
+					confirmed_at: _.pseudorandomDateTime(),
 					new_interest: true,
 					signable_interest: false,
 					event_interest: false,
@@ -579,13 +577,13 @@ describe("SubscriptionsController", function() {
 			it("must subscribe anew if already subscribed to another destination",
 				function*() {
 				var a = subscriptionsDb.create(new ValidSubscription({
-					confirmed_at: pseudoDateTime()
+					confirmed_at: _.pseudorandomDateTime()
 				}))
 
 				var b = subscriptionsDb.create(new ValidSubscription({
 					email: a.email,
 					initiative_destination: "tallinn",
-					confirmed_at: pseudoDateTime()
+					confirmed_at: _.pseudorandomDateTime()
 				}))
 
 				usersDb.update(this.user, {
@@ -658,13 +656,13 @@ describe("SubscriptionsController", function() {
 
 		it("must subscribe again if another destination", function*() {
 			var a = subscriptionsDb.create(new ValidSubscription({
-				confirmed_at: pseudoDateTime()
+				confirmed_at: _.pseudorandomDateTime()
 			}))
 
 			var b = subscriptionsDb.create(new ValidSubscription({
 				email: a.email,
 				initiative_destination: "tallinn",
-				confirmed_at: pseudoDateTime()
+				confirmed_at: _.pseudorandomDateTime()
 			}))
 
 			var res = yield this.request("/subscriptions", {
@@ -1608,13 +1606,13 @@ describe("SubscriptionsController", function() {
 		require("root/test/time")(Date.UTC(2015, 5, 18))
 
 		it("must confirm given a confirmation token", function*() {
-			var token = pseudoHex(8)
+			var token = _.randomHex(8)
 
 			var subscription = subscriptionsDb.create(new ValidSubscription({
-				created_at: pseudoDateTime(),
-				updated_at: pseudoDateTime(),
+				created_at: _.pseudorandomDateTime(),
+				updated_at: _.pseudorandomDateTime(),
 				update_token: token,
-				confirmation_sent_at: pseudoDateTime()
+				confirmation_sent_at: _.pseudorandomDateTime()
 			}))
 
 			var path = `/subscriptions`
@@ -1630,12 +1628,12 @@ describe("SubscriptionsController", function() {
 		})
 
 		it("must not confirm twice", function*() {
-			var token = pseudoHex(8)
+			var token = _.randomHex(8)
 
 			var subscription = subscriptionsDb.create(new ValidSubscription({
-				created_at: pseudoDateTime(),
-				updated_at: pseudoDateTime(),
-				confirmed_at: pseudoDateTime(),
+				created_at: _.pseudorandomDateTime(),
+				updated_at: _.pseudorandomDateTime(),
+				confirmed_at: _.pseudorandomDateTime(),
 				update_token: token
 			}))
 
@@ -1648,10 +1646,10 @@ describe("SubscriptionsController", function() {
 
 		it("must not confirm given the wrong token", function*() {
 			var subscription = subscriptionsDb.create(new ValidSubscription({
-				created_at: pseudoDateTime(),
-				updated_at: pseudoDateTime(),
-				update_token: pseudoHex(8),
-				confirmation_sent_at: pseudoDateTime()
+				created_at: _.pseudorandomDateTime(),
+				updated_at: _.pseudorandomDateTime(),
+				update_token: _.randomHex(8),
+				confirmation_sent_at: _.pseudorandomDateTime()
 			}))
 
 			var res = yield this.request(
@@ -1665,10 +1663,10 @@ describe("SubscriptionsController", function() {
 
 		it("must not confirm given the token as an array", function*() {
 			var subscription = subscriptionsDb.create(new ValidSubscription({
-				created_at: pseudoDateTime(),
-				updated_at: pseudoDateTime(),
-				update_token: pseudoHex(8),
-				confirmation_sent_at: pseudoDateTime()
+				created_at: _.pseudorandomDateTime(),
+				updated_at: _.pseudorandomDateTime(),
+				update_token: _.randomHex(8),
+				confirmation_sent_at: _.pseudorandomDateTime()
 			}))
 
 			var res = yield this.request(

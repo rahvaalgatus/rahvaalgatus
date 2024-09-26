@@ -8,11 +8,9 @@ var t = require("root/lib/i18n").t.bind(null, "et")
 var sql = require("sqlate")
 var {parseCookies} = require("root/test/web")
 var {serializeCookies} = require("root/test/web")
-var {pseudoHex} = require("root/lib/crypto")
 var usersDb = require("root/db/users_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var initiativesDb = require("root/db/initiatives_db")
-var {pseudoDateTime} = require("root/lib/crypto")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var SUBSCRIPTION_RATE = 100
 var SUBSCRIPTION_RATE_IN_MINUTES = 60
@@ -295,7 +293,7 @@ describe("InitiativeSubscriptionsController", function() {
 			it("must update if already subscribed", function*() {
 				var subscription = subscriptionsDb.create(new ValidSubscription({
 					initiative_uuid: this.initiative.uuid,
-					confirmed_at: pseudoDateTime(),
+					confirmed_at: _.pseudorandomDateTime(),
 					event_interest: false,
 					comment_interest: true
 				}))
@@ -552,7 +550,7 @@ describe("InitiativeSubscriptionsController", function() {
 
 		it("must confirm given a confirmation token", function*() {
 			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
-			var token = pseudoHex(8)
+			var token = _.randomHex(8)
 
 			var subscription = new ValidSubscription({
 				initiative_uuid: this.initiative.uuid,
@@ -586,7 +584,7 @@ describe("InitiativeSubscriptionsController", function() {
 			}))
 
 			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
-			var token = pseudoHex(8)
+			var token = _.randomHex(8)
 
 			var subscription = new ValidSubscription({
 				initiative_uuid: initiative.uuid,
@@ -613,7 +611,7 @@ describe("InitiativeSubscriptionsController", function() {
 
 		it("must confirm given a path with initiative slug", function*() {
 			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
-			var token = pseudoHex(8)
+			var token = _.randomHex(8)
 
 			var subscription = new ValidSubscription({
 				initiative_uuid: this.initiative.uuid,
@@ -640,7 +638,7 @@ describe("InitiativeSubscriptionsController", function() {
 
 		it("must confirm given a path with initiative UUID", function*() {
 			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
-			var token = pseudoHex(8)
+			var token = _.randomHex(8)
 
 			var subscription = new ValidSubscription({
 				initiative_uuid: this.initiative.uuid,
@@ -667,7 +665,7 @@ describe("InitiativeSubscriptionsController", function() {
 
 		it("must not confirm twice", function*() {
 			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
-			var token = pseudoHex(8)
+			var token = _.randomHex(8)
 
 			var subscription = new ValidSubscription({
 				initiative_uuid: this.initiative.uuid,
@@ -688,7 +686,7 @@ describe("InitiativeSubscriptionsController", function() {
 
 		it("must not confirm given the wrong token", function*() {
 			var createdAt = new Date(2015, 5, 18, 13, 37, 42, 666)
-			var token = pseudoHex(8)
+			var token = _.randomHex(8)
 
 			var subscription = new ValidSubscription({
 				initiative_uuid: this.initiative.uuid,

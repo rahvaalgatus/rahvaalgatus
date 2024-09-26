@@ -24,7 +24,6 @@ var sql = require("sqlate")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var renderEmail = require("root/lib/i18n").email.bind(null, "et")
 var tHtml = _.compose(_.escapeHtml, t)
-var {pseudoDateTime} = require("root/lib/crypto")
 var {parseCookies} = require("root/test/web")
 var {serializeCookies} = require("root/test/web")
 var usersDb = require("root/db/users_db")
@@ -42,7 +41,6 @@ var citizenosSignaturesDb =
 var commentsDb = require("root/db/comments_db")
 var parseHtml = require("root/test/html").parse
 var outdent = require("root/lib/outdent")
-var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var concat = Array.prototype.concat.bind(Array.prototype)
 var demand = require("must")
 var {newTrixDocument} = require("root/test/fixtures")
@@ -325,7 +323,7 @@ describe("InitiativesController", function() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "edit",
-				created_at: pseudoDateTime(),
+				created_at: _.pseudorandomDateTime(),
 				published_at: new Date,
 				discussion_ends_at: DateFns.addSeconds(new Date, 1),
 				author_name: "Freedom Organization"
@@ -349,7 +347,7 @@ describe("InitiativesController", function() {
 			initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "edit",
-				created_at: pseudoDateTime(),
+				created_at: _.pseudorandomDateTime(),
 				published_at: new Date,
 				discussion_ends_at: DateFns.addSeconds(new Date, 1),
 				author_name: this.author.name
@@ -472,7 +470,7 @@ describe("InitiativesController", function() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "sign",
-				signing_started_at: pseudoDateTime(),
+				signing_started_at: _.pseudorandomDateTime(),
 				signing_ends_at: DateFns.addDays(new Date, 1)
 			}))
 
@@ -544,7 +542,7 @@ describe("InitiativesController", function() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
-				sent_to_parliament_at: pseudoDateTime()
+				sent_to_parliament_at: _.pseudorandomDateTime()
 			}))
 
 			var res = yield this.request("/initiatives")
@@ -562,8 +560,8 @@ describe("InitiativesController", function() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "parliament",
-				sent_to_parliament_at: pseudoDateTime(),
-				received_by_parliament_at: pseudoDateTime()
+				sent_to_parliament_at: _.pseudorandomDateTime(),
+				received_by_parliament_at: _.pseudorandomDateTime()
 			}))
 
 			var res = yield this.request("/initiatives")
@@ -578,7 +576,7 @@ describe("InitiativesController", function() {
 		it("must show external initiatives in parliament", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
-				received_by_parliament_at: pseudoDateTime(),
+				received_by_parliament_at: _.pseudorandomDateTime(),
 				external: true
 			}))
 
@@ -596,7 +594,7 @@ describe("InitiativesController", function() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "government",
-				sent_to_government_at: pseudoDateTime()
+				sent_to_government_at: _.pseudorandomDateTime()
 			}))
 
 			var res = yield this.request("/initiatives")
@@ -627,8 +625,8 @@ describe("InitiativesController", function() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "done",
-				finished_in_parliament_at: pseudoDateTime(),
-				finished_in_government_at: pseudoDateTime()
+				finished_in_parliament_at: _.pseudorandomDateTime(),
+				finished_in_government_at: _.pseudorandomDateTime()
 			}))
 
 			var res = yield this.request("/initiatives")
@@ -646,7 +644,7 @@ describe("InitiativesController", function() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				user_id: this.author.id,
 				phase: "done",
-				finished_in_parliament_at: pseudoDateTime()
+				finished_in_parliament_at: _.pseudorandomDateTime()
 			}))
 
 			var res = yield this.request("/initiatives")
@@ -2588,7 +2586,7 @@ describe("InitiativesController", function() {
 		it("must respond with external initiatives in parliament", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
-				received_by_parliament_at: pseudoDateTime(),
+				received_by_parliament_at: _.pseudorandomDateTime(),
 				external: true
 			}))
 
@@ -2968,7 +2966,7 @@ describe("InitiativesController", function() {
 		it("must respond with external initiatives in parliament", function*() {
 			var initiative = initiativesDb.create(new ValidInitiative({
 				phase: "parliament",
-				received_by_parliament_at: pseudoDateTime(),
+				received_by_parliament_at: _.pseudorandomDateTime(),
 				external: true
 			}))
 
@@ -4690,9 +4688,9 @@ describe("InitiativesController", function() {
 
 				var event = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid,
-					created_at: pseudoDateTime(),
-					updated_at: pseudoDateTime(),
-					occurred_at: pseudoDateTime(),
+					created_at: _.pseudorandomDateTime(),
+					updated_at: _.pseudorandomDateTime(),
+					occurred_at: _.pseudorandomDateTime(),
 					type: "parliament-received",
 					origin: "parliament"
 				}))
@@ -4719,9 +4717,9 @@ describe("InitiativesController", function() {
 
 				var event = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid,
-					created_at: pseudoDateTime(),
-					updated_at: pseudoDateTime(),
-					occurred_at: pseudoDateTime(),
+					created_at: _.pseudorandomDateTime(),
+					updated_at: _.pseudorandomDateTime(),
+					occurred_at: _.pseudorandomDateTime(),
 					type: "parliament-accepted",
 					content: {committees: ["environment"]},
 					origin: "parliament"
@@ -4754,9 +4752,9 @@ describe("InitiativesController", function() {
 
 				var event = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid,
-					created_at: pseudoDateTime(),
-					updated_at: pseudoDateTime(),
-					occurred_at: pseudoDateTime(),
+					created_at: _.pseudorandomDateTime(),
+					updated_at: _.pseudorandomDateTime(),
+					occurred_at: _.pseudorandomDateTime(),
 					type: "parliament-board-meeting",
 					content: {},
 					origin: "parliament"
@@ -4783,9 +4781,9 @@ describe("InitiativesController", function() {
 
 				var event = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid,
-					created_at: pseudoDateTime(),
-					updated_at: pseudoDateTime(),
-					occurred_at: pseudoDateTime(),
+					created_at: _.pseudorandomDateTime(),
+					updated_at: _.pseudorandomDateTime(),
+					occurred_at: _.pseudorandomDateTime(),
 					type: "parliament-committee-meeting",
 					content: {committee: "environment"},
 					origin: "parliament"
@@ -4817,9 +4815,9 @@ describe("InitiativesController", function() {
 
 					var event = eventsDb.create(new ValidEvent({
 						initiative_uuid: initiative.uuid,
-						created_at: pseudoDateTime(),
-						updated_at: pseudoDateTime(),
-						occurred_at: pseudoDateTime(),
+						created_at: _.pseudorandomDateTime(),
+						updated_at: _.pseudorandomDateTime(),
+						occurred_at: _.pseudorandomDateTime(),
 						type: "parliament-committee-meeting",
 						content: {committee: "environment", decision: decision},
 						origin: "parliament"
@@ -4853,9 +4851,9 @@ describe("InitiativesController", function() {
 
 				var event = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid,
-					created_at: pseudoDateTime(),
-					updated_at: pseudoDateTime(),
-					occurred_at: pseudoDateTime(),
+					created_at: _.pseudorandomDateTime(),
+					updated_at: _.pseudorandomDateTime(),
+					occurred_at: _.pseudorandomDateTime(),
 					type: "parliament-committee-meeting",
 					origin: "parliament",
 
@@ -4891,9 +4889,9 @@ describe("InitiativesController", function() {
 
 				var event = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid,
-					created_at: pseudoDateTime(),
-					updated_at: pseudoDateTime(),
-					occurred_at: pseudoDateTime(),
+					created_at: _.pseudorandomDateTime(),
+					updated_at: _.pseudorandomDateTime(),
+					occurred_at: _.pseudorandomDateTime(),
 					type: "parliament-committee-meeting",
 					content: {summary: "Talks happened."},
 					origin: "parliament"
@@ -4921,9 +4919,9 @@ describe("InitiativesController", function() {
 
 				var event = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid,
-					created_at: pseudoDateTime(),
-					updated_at: pseudoDateTime(),
-					occurred_at: pseudoDateTime(),
+					created_at: _.pseudorandomDateTime(),
+					updated_at: _.pseudorandomDateTime(),
+					occurred_at: _.pseudorandomDateTime(),
 					type: "parliament-plenary-meeting",
 					origin: "parliament",
 					content: {},
@@ -4950,9 +4948,9 @@ describe("InitiativesController", function() {
 
 				var event = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid,
-					created_at: pseudoDateTime(),
-					updated_at: pseudoDateTime(),
-					occurred_at: pseudoDateTime(),
+					created_at: _.pseudorandomDateTime(),
+					updated_at: _.pseudorandomDateTime(),
+					occurred_at: _.pseudorandomDateTime(),
 					type: "parliament-plenary-meeting",
 					origin: "parliament",
 
@@ -4988,9 +4986,9 @@ describe("InitiativesController", function() {
 
 				var event = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid,
-					created_at: pseudoDateTime(),
-					updated_at: pseudoDateTime(),
-					occurred_at: pseudoDateTime(),
+					created_at: _.pseudorandomDateTime(),
+					updated_at: _.pseudorandomDateTime(),
+					occurred_at: _.pseudorandomDateTime(),
 					type: "parliament-plenary-meeting",
 					content: {summary: "Talks happened."},
 					origin: "parliament"
@@ -5018,9 +5016,9 @@ describe("InitiativesController", function() {
 
 				var event = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid,
-					created_at: pseudoDateTime(),
-					updated_at: pseudoDateTime(),
-					occurred_at: pseudoDateTime(),
+					created_at: _.pseudorandomDateTime(),
+					updated_at: _.pseudorandomDateTime(),
+					occurred_at: _.pseudorandomDateTime(),
 					type: "parliament-decision",
 					content: {},
 					origin: "parliament"
@@ -5047,9 +5045,9 @@ describe("InitiativesController", function() {
 
 				var event = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid,
-					created_at: pseudoDateTime(),
-					updated_at: pseudoDateTime(),
-					occurred_at: pseudoDateTime(),
+					created_at: _.pseudorandomDateTime(),
+					updated_at: _.pseudorandomDateTime(),
+					occurred_at: _.pseudorandomDateTime(),
 					type: "parliament-decision",
 					content: {summary: "Talks happened."},
 					origin: "parliament"
@@ -5076,9 +5074,9 @@ describe("InitiativesController", function() {
 
 				var event = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid,
-					created_at: pseudoDateTime(),
-					updated_at: pseudoDateTime(),
-					occurred_at: pseudoDateTime(),
+					created_at: _.pseudorandomDateTime(),
+					updated_at: _.pseudorandomDateTime(),
+					occurred_at: _.pseudorandomDateTime(),
 					origin: "parliament",
 					type: "parliament-letter",
 
@@ -5114,9 +5112,9 @@ describe("InitiativesController", function() {
 
 				var event = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid,
-					created_at: pseudoDateTime(),
-					updated_at: pseudoDateTime(),
-					occurred_at: pseudoDateTime(),
+					created_at: _.pseudorandomDateTime(),
+					updated_at: _.pseudorandomDateTime(),
+					occurred_at: _.pseudorandomDateTime(),
 					origin: "parliament",
 					type: "parliament-interpellation",
 					content: {to: "John Wick", deadline: "2015-07-10"}
@@ -5145,9 +5143,9 @@ describe("InitiativesController", function() {
 
 				var event = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid,
-					created_at: pseudoDateTime(),
-					updated_at: pseudoDateTime(),
-					occurred_at: pseudoDateTime(),
+					created_at: _.pseudorandomDateTime(),
+					updated_at: _.pseudorandomDateTime(),
+					occurred_at: _.pseudorandomDateTime(),
 					origin: "parliament",
 					type: "parliament-national-matter",
 					content: {}
@@ -5736,8 +5734,8 @@ describe("InitiativesController", function() {
 					type: "media-coverage",
 					title: "News at 11",
 					content: {url: "http://example.com/article", publisher: "Newsbook"},
-					created_at: pseudoDateTime(),
-					occurred_at: pseudoDateTime()
+					created_at: _.pseudorandomDateTime(),
+					occurred_at: _.pseudorandomDateTime()
 				}))
 
 				var res = yield this.request("/initiatives/" + initiative.id)
@@ -5767,8 +5765,8 @@ describe("InitiativesController", function() {
 					user_id: author.id,
 					title: "This just in.",
 					content: "Everything is fine!",
-					created_at: pseudoDateTime(),
-					occurred_at: pseudoDateTime()
+					created_at: _.pseudorandomDateTime(),
+					occurred_at: _.pseudorandomDateTime()
 				}))
 
 				var res = yield this.request("/initiatives/" + initiative.id)
@@ -8243,9 +8241,9 @@ describe("InitiativesController", function() {
 
 			var event = eventsDb.create(new ValidEvent({
 				initiative_uuid: initiative.uuid,
-				created_at: pseudoDateTime(),
-				updated_at: pseudoDateTime(),
-				occurred_at: pseudoDateTime(),
+				created_at: _.pseudorandomDateTime(),
+				updated_at: _.pseudorandomDateTime(),
+				occurred_at: _.pseudorandomDateTime(),
 				type: "parliament-received",
 				origin: "parliament"
 			}))
@@ -8277,9 +8275,9 @@ describe("InitiativesController", function() {
 
 			var event = eventsDb.create(new ValidEvent({
 				initiative_uuid: initiative.uuid,
-				created_at: pseudoDateTime(),
-				updated_at: pseudoDateTime(),
-				occurred_at: pseudoDateTime(),
+				created_at: _.pseudorandomDateTime(),
+				updated_at: _.pseudorandomDateTime(),
+				occurred_at: _.pseudorandomDateTime(),
 				type: "parliament-accepted",
 				content: {committees: ["environment"]},
 				origin: "parliament"
@@ -8319,9 +8317,9 @@ describe("InitiativesController", function() {
 
 			var event = eventsDb.create(new ValidEvent({
 				initiative_uuid: initiative.uuid,
-				created_at: pseudoDateTime(),
-				updated_at: pseudoDateTime(),
-				occurred_at: pseudoDateTime(),
+				created_at: _.pseudorandomDateTime(),
+				updated_at: _.pseudorandomDateTime(),
+				occurred_at: _.pseudorandomDateTime(),
 				type: "parliament-board-meeting",
 				content: {},
 				origin: "parliament"
@@ -8355,9 +8353,9 @@ describe("InitiativesController", function() {
 
 			var event = eventsDb.create(new ValidEvent({
 				initiative_uuid: initiative.uuid,
-				created_at: pseudoDateTime(),
-				updated_at: pseudoDateTime(),
-				occurred_at: pseudoDateTime(),
+				created_at: _.pseudorandomDateTime(),
+				updated_at: _.pseudorandomDateTime(),
+				occurred_at: _.pseudorandomDateTime(),
 				type: "parliament-committee-meeting",
 				content: {committee: "environment"},
 				origin: "parliament"
@@ -8394,9 +8392,9 @@ describe("InitiativesController", function() {
 
 				var event = eventsDb.create(new ValidEvent({
 					initiative_uuid: initiative.uuid,
-					created_at: pseudoDateTime(),
-					updated_at: pseudoDateTime(),
-					occurred_at: pseudoDateTime(),
+					created_at: _.pseudorandomDateTime(),
+					updated_at: _.pseudorandomDateTime(),
+					occurred_at: _.pseudorandomDateTime(),
 					type: "parliament-committee-meeting",
 					content: {committee: "environment", decision: decision},
 					origin: "parliament"
@@ -8438,9 +8436,9 @@ describe("InitiativesController", function() {
 
 			var event = eventsDb.create(new ValidEvent({
 				initiative_uuid: initiative.uuid,
-				created_at: pseudoDateTime(),
-				updated_at: pseudoDateTime(),
-				occurred_at: pseudoDateTime(),
+				created_at: _.pseudorandomDateTime(),
+				updated_at: _.pseudorandomDateTime(),
+				occurred_at: _.pseudorandomDateTime(),
 				type: "parliament-committee-meeting",
 				origin: "parliament",
 
@@ -8484,9 +8482,9 @@ describe("InitiativesController", function() {
 
 			var event = eventsDb.create(new ValidEvent({
 				initiative_uuid: initiative.uuid,
-				created_at: pseudoDateTime(),
-				updated_at: pseudoDateTime(),
-				occurred_at: pseudoDateTime(),
+				created_at: _.pseudorandomDateTime(),
+				updated_at: _.pseudorandomDateTime(),
+				occurred_at: _.pseudorandomDateTime(),
 				type: "parliament-committee-meeting",
 				content: {summary: "Talking happened."},
 				origin: "parliament"
@@ -8521,9 +8519,9 @@ describe("InitiativesController", function() {
 
 			var event = eventsDb.create(new ValidEvent({
 				initiative_uuid: initiative.uuid,
-				created_at: pseudoDateTime(),
-				updated_at: pseudoDateTime(),
-				occurred_at: pseudoDateTime(),
+				created_at: _.pseudorandomDateTime(),
+				updated_at: _.pseudorandomDateTime(),
+				occurred_at: _.pseudorandomDateTime(),
 				type: "parliament-plenary-meeting",
 				content: {},
 				origin: "parliament"
@@ -8556,9 +8554,9 @@ describe("InitiativesController", function() {
 
 			var event = eventsDb.create(new ValidEvent({
 				initiative_uuid: initiative.uuid,
-				created_at: pseudoDateTime(),
-				updated_at: pseudoDateTime(),
-				occurred_at: pseudoDateTime(),
+				created_at: _.pseudorandomDateTime(),
+				updated_at: _.pseudorandomDateTime(),
+				occurred_at: _.pseudorandomDateTime(),
 				type: "parliament-plenary-meeting",
 				origin: "parliament",
 
@@ -8602,9 +8600,9 @@ describe("InitiativesController", function() {
 
 			var event = eventsDb.create(new ValidEvent({
 				initiative_uuid: initiative.uuid,
-				created_at: pseudoDateTime(),
-				updated_at: pseudoDateTime(),
-				occurred_at: pseudoDateTime(),
+				created_at: _.pseudorandomDateTime(),
+				updated_at: _.pseudorandomDateTime(),
+				occurred_at: _.pseudorandomDateTime(),
 				type: "parliament-plenary-meeting",
 				content: {summary: "Talking happened."},
 				origin: "parliament"
@@ -8638,9 +8636,9 @@ describe("InitiativesController", function() {
 
 			var event = eventsDb.create(new ValidEvent({
 				initiative_uuid: initiative.uuid,
-				created_at: pseudoDateTime(),
-				updated_at: pseudoDateTime(),
-				occurred_at: pseudoDateTime(),
+				created_at: _.pseudorandomDateTime(),
+				updated_at: _.pseudorandomDateTime(),
+				occurred_at: _.pseudorandomDateTime(),
 				type: "parliament-decision",
 				content: {},
 				origin: "parliament"
@@ -8673,9 +8671,9 @@ describe("InitiativesController", function() {
 
 			var event = eventsDb.create(new ValidEvent({
 				initiative_uuid: initiative.uuid,
-				created_at: pseudoDateTime(),
-				updated_at: pseudoDateTime(),
-				occurred_at: pseudoDateTime(),
+				created_at: _.pseudorandomDateTime(),
+				updated_at: _.pseudorandomDateTime(),
+				occurred_at: _.pseudorandomDateTime(),
 				type: "parliament-decision",
 				content: {summary: "Talking happened."},
 				origin: "parliament"
@@ -8709,9 +8707,9 @@ describe("InitiativesController", function() {
 
 			var event = eventsDb.create(new ValidEvent({
 				initiative_uuid: initiative.uuid,
-				created_at: pseudoDateTime(),
-				updated_at: pseudoDateTime(),
-				occurred_at: pseudoDateTime(),
+				created_at: _.pseudorandomDateTime(),
+				updated_at: _.pseudorandomDateTime(),
+				occurred_at: _.pseudorandomDateTime(),
 				origin: "parliament",
 				type: "parliament-letter",
 
@@ -8759,9 +8757,9 @@ describe("InitiativesController", function() {
 
 			var event = eventsDb.create(new ValidEvent({
 				initiative_uuid: initiative.uuid,
-				created_at: pseudoDateTime(),
-				updated_at: pseudoDateTime(),
-				occurred_at: pseudoDateTime(),
+				created_at: _.pseudorandomDateTime(),
+				updated_at: _.pseudorandomDateTime(),
+				occurred_at: _.pseudorandomDateTime(),
 				origin: "parliament",
 				type: "parliament-interpellation",
 				content: {to: "John Wick", deadline: "2015-07-10"}
@@ -8800,9 +8798,9 @@ describe("InitiativesController", function() {
 
 			var event = eventsDb.create(new ValidEvent({
 				initiative_uuid: initiative.uuid,
-				created_at: pseudoDateTime(),
-				updated_at: pseudoDateTime(),
-				occurred_at: pseudoDateTime(),
+				created_at: _.pseudorandomDateTime(),
+				updated_at: _.pseudorandomDateTime(),
+				occurred_at: _.pseudorandomDateTime(),
 				origin: "parliament",
 				type: "parliament-national-matter",
 				content: {}
@@ -8994,8 +8992,8 @@ describe("InitiativesController", function() {
 				type: "media-coverage",
 				title: "News at 11",
 				content: {url: "http://example.com/article", publisher: "Newsbook"},
-				created_at: pseudoDateTime(),
-				occurred_at: pseudoDateTime()
+				created_at: _.pseudorandomDateTime(),
+				occurred_at: _.pseudorandomDateTime()
 			}))
 
 			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
@@ -9033,8 +9031,8 @@ describe("InitiativesController", function() {
 				user_id: author.id,
 				title: "This just in.",
 				content: "Everything is fine!",
-				created_at: pseudoDateTime(),
-				occurred_at: pseudoDateTime()
+				created_at: _.pseudorandomDateTime(),
+				occurred_at: _.pseudorandomDateTime()
 			}))
 
 			var res = yield this.request(`/initiatives/${initiative.id}.atom`)
@@ -9959,7 +9957,7 @@ describe("InitiativesController", function() {
 					var sub = subscriptionsDb.create(new ValidSubscription({
 						initiative_uuid: initiative.uuid,
 						email: "user@example.com",
-						confirmed_at: pseudoDateTime(),
+						confirmed_at: _.pseudorandomDateTime(),
 						event_interest: false,
 						comment_interest: false
 					}))
@@ -10464,7 +10462,7 @@ describe("InitiativesController", function() {
 						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
 							published_at: new Date,
-							discussion_end_email_sent_at: pseudoDateTime()
+							discussion_end_email_sent_at: _.pseudorandomDateTime()
 						}))
 
 						textsDb.create(new ValidText({
@@ -10759,7 +10757,7 @@ describe("InitiativesController", function() {
 						title: text.title,
 						text: html,
 						text_type: new MediaType("text/html"),
-						text_sha256: sha256(html)
+						text_sha256: _.sha256(html)
 					}])
 				})
 
@@ -10826,7 +10824,7 @@ describe("InitiativesController", function() {
 						title: text.title,
 						text: html,
 						text_type: new MediaType("text/html"),
-						text_sha256: sha256(html)
+						text_sha256: _.sha256(html)
 					}])
 				})
 
@@ -10898,7 +10896,7 @@ describe("InitiativesController", function() {
 						title: text.title,
 						text: html,
 						text_type: new MediaType("text/html"),
-						text_sha256: sha256(html)
+						text_sha256: _.sha256(html)
 					}])
 				})
 
@@ -11172,7 +11170,7 @@ describe("InitiativesController", function() {
 						title: english.title,
 						text: html,
 						text_type: new MediaType("text/html"),
-						text_sha256: sha256(html)
+						text_sha256: _.sha256(html)
 					}])
 				})
 
@@ -11264,7 +11262,7 @@ describe("InitiativesController", function() {
 						language: text.language,
 						text: html,
 						text_type: new MediaType("text/html"),
-						text_sha256: sha256(html)
+						text_sha256: _.sha256(html)
 					})
 				})
 
@@ -11312,7 +11310,7 @@ describe("InitiativesController", function() {
 						title: b.title,
 						text: html,
 						text_type: new MediaType("text/html"),
-						text_sha256: sha256(html)
+						text_sha256: _.sha256(html)
 					})
 				})
 
@@ -11948,10 +11946,10 @@ describe("InitiativesController", function() {
 						var initiative = initiativesDb.create(new ValidInitiative({
 							user_id: this.user.id,
 							phase: "sign",
-							signing_started_at: pseudoDateTime(),
+							signing_started_at: _.pseudorandomDateTime(),
 							text: "Hello, world!",
 							text_type: "text/plain",
-							text_sha256: sha256("Hello, world!")
+							text_sha256: _.sha256("Hello, world!")
 						}))
 
 						var endsOn = DateFns.addDays(

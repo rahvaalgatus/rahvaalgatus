@@ -21,8 +21,6 @@ var authenticationsDb = require("root/db/authentications_db")
 var sessionsDb = require("root/db/sessions_db")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var sql = require("sqlate")
-var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
-var {pseudoHex} = require("root/lib/crypto")
 var parseHtml = require("root/test/html").parse
 var {parseRefreshHeader} = require("root/lib/http")
 var {tsl} = require("root")
@@ -453,7 +451,7 @@ describe("SessionsController", function() {
 
 					var cookieToken = Buffer.from(cookies.session_token.value, "hex")
 					var session = sessionsDb.read(sql`SELECT * FROM sessions`)
-					session.token_sha256.must.eql(sha256(cookieToken))
+					session.token_sha256.must.eql(_.sha256(cookieToken))
 				})
 
 				it("must redirect back to user profile", function*() {
@@ -756,7 +754,7 @@ describe("SessionsController", function() {
 					id: sessions[0].id,
 					user_id: users[0].id,
 					method: "id-card",
-					token_sha256: sha256(sessionToken),
+					token_sha256: _.sha256(sessionToken),
 					created_ip: "127.0.0.1",
 					authentication_id: authentications[0].id,
 					created_at: sessions[0].created_at,
@@ -1030,7 +1028,7 @@ describe("SessionsController", function() {
 					authenticating.statusMessage.must.equal("Signing In with Mobile-ID")
 					authenticating.headers["content-type"].must.equal(HTML_TYPE)
 
-					tokenHash.must.eql(sha256(authenticationsDb.read(sql`
+					tokenHash.must.eql(_.sha256(authenticationsDb.read(sql`
 						SELECT token FROM authentications
 						ORDER BY created_at DESC
 						LIMIT 1
@@ -1088,7 +1086,7 @@ describe("SessionsController", function() {
 						id: sessions[0].id,
 						user_id: users[0].id,
 						method: "mobile-id",
-						token_sha256: sha256(sessionToken),
+						token_sha256: _.sha256(sessionToken),
 						created_ip: "127.0.0.1",
 						authentication_id: authentications[0].id,
 						created_at: sessions[0].created_at,
@@ -1155,7 +1153,7 @@ describe("SessionsController", function() {
 
 					var waitUrl = parseRefreshHeader(waiting.headers.refresh)[1]
 					var res = yield this.request(waitUrl, {
-						cookies: {csrf_token: pseudoHex(16)}
+						cookies: {csrf_token: _.randomHex(16)}
 					})
 
 					assertError(res, {
@@ -1374,7 +1372,7 @@ describe("SessionsController", function() {
 					authenticating.statusMessage.must.equal("Signing In with Mobile-ID")
 					authenticating.headers.must.not.have.property("content-type")
 
-					var tokenHash = sha256(authenticationsDb.read(sql`
+					var tokenHash = _.sha256(authenticationsDb.read(sql`
 						SELECT token FROM authentications
 						ORDER BY created_at DESC
 						LIMIT 1
@@ -1402,7 +1400,7 @@ describe("SessionsController", function() {
 					var cookies = parseCookies(signedIn.headers["set-cookie"])
 					var sessionToken = Buffer.from(cookies.session_token.value, "hex")
 					var session = sessionsDb.read(sql`SELECT * FROM sessions`)
-					session.token_sha256.must.eql(sha256(sessionToken))
+					session.token_sha256.must.eql(_.sha256(sessionToken))
 
 					usersDb.search(sql`SELECT * FROM users`).must.not.be.empty()
 					sessionsDb.search(sql`SELECT * FROM sessions`).must.not.be.empty()
@@ -1477,7 +1475,7 @@ describe("SessionsController", function() {
 
 					var waitUrl = parseRefreshHeader(waiting.headers.refresh)[1]
 					var res = yield this.request(waitUrl, {
-						cookies: {csrf_token: pseudoHex(16)},
+						cookies: {csrf_token: _.randomHex(16)},
 						headers: {Accept: `${JSON_TYPE}, ${ERROR_TYPE}`}
 					})
 
@@ -1930,7 +1928,7 @@ describe("SessionsController", function() {
 					authenticating.statusMessage.must.equal("Signing In with Smart-ID")
 					authenticating.headers["content-type"].must.equal(HTML_TYPE)
 
-					tokenHash.must.eql(sha256(authenticationsDb.read(sql`
+					tokenHash.must.eql(_.sha256(authenticationsDb.read(sql`
 						SELECT token FROM authentications
 						ORDER BY created_at DESC
 						LIMIT 1
@@ -1988,7 +1986,7 @@ describe("SessionsController", function() {
 						id: sessions[0].id,
 						user_id: users[0].id,
 						method: "smart-id",
-						token_sha256: sha256(sessionToken),
+						token_sha256: _.sha256(sessionToken),
 						created_ip: "127.0.0.1",
 						authentication_id: authentications[0].id,
 						created_at: sessions[0].created_at,
@@ -2059,7 +2057,7 @@ describe("SessionsController", function() {
 
 					var waitUrl = parseRefreshHeader(waiting.headers.refresh)[1]
 					var res = yield this.request(waitUrl, {
-						cookies: {csrf_token: pseudoHex(16)}
+						cookies: {csrf_token: _.randomHex(16)}
 					})
 
 					assertError(res, {
@@ -2221,7 +2219,7 @@ describe("SessionsController", function() {
 					authenticating.statusMessage.must.equal("Signing In with Smart-ID")
 					authenticating.headers.must.not.have.property("content-type")
 
-					var tokenHash = sha256(authenticationsDb.read(sql`
+					var tokenHash = _.sha256(authenticationsDb.read(sql`
 						SELECT token FROM authentications
 						ORDER BY created_at DESC
 						LIMIT 1
@@ -2250,7 +2248,7 @@ describe("SessionsController", function() {
 					var cookies = parseCookies(signedIn.headers["set-cookie"])
 					var sessionToken = Buffer.from(cookies.session_token.value, "hex")
 					var session = sessionsDb.read(sql`SELECT * FROM sessions`)
-					session.token_sha256.must.eql(sha256(sessionToken))
+					session.token_sha256.must.eql(_.sha256(sessionToken))
 
 					usersDb.search(sql`SELECT * FROM users`).must.not.be.empty()
 					sessionsDb.search(sql`SELECT * FROM sessions`).must.not.be.empty()
@@ -2329,7 +2327,7 @@ describe("SessionsController", function() {
 
 					var waitUrl = parseRefreshHeader(waiting.headers.refresh)[1]
 					var res = yield this.request(waitUrl, {
-						cookies: {csrf_token: pseudoHex(16)},
+						cookies: {csrf_token: _.randomHex(16)},
 						headers: {Accept: `${JSON_TYPE}, ${ERROR_TYPE}`}
 					})
 

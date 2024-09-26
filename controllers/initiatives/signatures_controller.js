@@ -23,7 +23,6 @@ var dispose = require("content-disposition")
 var {serializeRefreshHeader} = require("root/lib/http")
 var {parsePersonalId} = require("root/lib/eid")
 var {parsePhoneNumber} = require("root/lib/eid")
-var {constantTimeEqual} = require("root/lib/crypto")
 var {getCertificatePersonalId} = require("root/lib/certificate")
 var {validateSigningCertificate} = require("root/lib/certificate")
 var {getNormalizedMobileIdErrorCode} = require("root/lib/eid")
@@ -73,7 +72,7 @@ exports.router.get("/",
 	if (!initiative.parliament_token)
 		throw new HttpError(403, "Signatures Not Available")
 
-	if (!constantTimeEqual(initiative.parliament_token, token))
+	if (!_.constantTimeEqual(initiative.parliament_token, token))
 		throw new HttpError(403, "Invalid Token", {
 			description: t("INITIATIVE_SIGNATURES_INVALID_TOKEN")
 		})

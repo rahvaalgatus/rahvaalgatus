@@ -3,7 +3,6 @@ var Qs = require("querystring")
 var Url = require("url")
 var {Router} = require("express")
 var Config = require("root").config
-var Crypto = require("crypto")
 var DateFns = require("date-fns")
 var HttpError = require("standard-http-error")
 var Certificate = require("undersign/lib/certificate")
@@ -20,7 +19,6 @@ var {mobileId} = require("root")
 var {smartId} = require("root")
 var parseBody = require("body-parser").raw
 var csrf = require("root/lib/middleware/csrf_middleware")
-var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var {parsePersonalId} = require("root/lib/eid")
 var {parsePhoneNumber} = require("root/lib/eid")
 var {getCertificatePersonalId} = require("root/lib/certificate")
@@ -33,7 +31,6 @@ var {reinstantiateError} = require("./initiatives/signatures_controller")
 var {getNormalizedMobileIdErrorCode} = require("root/lib/eid")
 var sql = require("sqlate")
 var {validateRedirect} = require("root/lib/http")
-var {constantTimeEqual} = require("root/lib/crypto")
 var sessionsDb = require("root/db/sessions_db")
 var usersDb = require("root/db/users_db")
 var authenticationsDb = require("root/db/authentications_db")
@@ -190,7 +187,7 @@ exports.router.post("/",
 	// TODO: Rename personalId to untrustedPersonalId.
 	var {method, personalId, phoneNumber} = parseAuthenticationAttrs(req.body)
 	var err, authentication
-	var token = Crypto.randomBytes(16)
+	var token = _.randomBytes(16)
 
 	var referrer = req.headers.referer
 	if (referrer && Url.parse(referrer).pathname.startsWith(req.baseUrl))
@@ -206,7 +203,7 @@ exports.router.post("/",
 			if (!ID_CARD_AUTH_SECRET)
 				throw new HttpError(501, "ID-card Authentication Not Yet Available")
 
-			if (!constantTimeEqual(
+			if (!_.constantTimeEqual(
 				Buffer.from(req.headers["x-client-certificate-secret"] || ""),
 				ID_CARD_AUTH_SECRET
 			)) throw new HttpError(403, "Invalid Proxy Secret", {
@@ -263,7 +260,7 @@ exports.router.post("/",
 			let session = yield mobileId.authenticate(
 				phoneNumber,
 				personalId,
-				sha256(token)
+				_.sha256(token)
 			)
 
 			authentication = authenticationsDb.create({
@@ -294,7 +291,7 @@ exports.router.post("/",
 
 			let session = yield smartId.authenticate(
 				"PNOEE-" + personalId,
-				sha256(token)
+				_.sha256(token)
 			)
 
 			authentication = authenticationsDb.create({
@@ -695,7 +692,7 @@ function createSessionAndSignIn(authentication, req, res) {
 		throw new Error("Authentication is not authenticated")
 
 	var user = readOrCreateUser(authentication, req.lang)
-	var sessionToken = Crypto.randomBytes(16)
+	var sessionToken = _.randomBytes(16)
 
 	var session = sessionsDb.create({
 		user_id: user.id,
@@ -704,7 +701,7 @@ function createSessionAndSignIn(authentication, req, res) {
 		// Rather, should someone, like an admin, glance at the sessions table,
 		// they wouldn't be able to immediately impersonate anyone and would have
 		// to mine a little Bitcoin prior.
-		token_sha256: sha256(sessionToken),
+		token_sha256: _.sha256(sessionToken),
 		created_ip: authentication.created_ip,
 		created_user_agent: authentication.created_user_agent,
 		method: authentication.method,
@@ -781,7 +778,7 @@ function parseCertificateFromHeader(pem) {
 
 
 function serializeVerificationCode(authentication) {
-	var tokenHash = sha256(authentication.token)
+	var tokenHash = _.sha256(authentication.token)
 
 	return _.padLeft((
 		authentication.method == "mobile-id" ? MobileId.verification(tokenHash) :

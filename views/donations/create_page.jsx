@@ -1,4 +1,5 @@
 /** @jsx Jsx */
+var _ = require("root/lib/underscore")
 var Jsx = require("j6pack")
 var Page = require("../page")
 var {Form} = require("../page")
@@ -42,8 +43,7 @@ function DonateForm(attrs) {
 	var {req} = attrs
 	var {t} = attrs
 	var {amount} = attrs
-	var {pseudoInt} = require("root/lib/crypto")
-	var def = amount == null ? 3 + pseudoInt(23) : 0
+	var def = amount == null ? 3 + _.pseudorandomInt(23) : 0
 
   return <Form
     req={req}

@@ -6,7 +6,6 @@ var ValidUser = require("root/test/valid_user")
 var ValidInitiative = require("root/test/valid_initiative")
 var ValidEvent = require("root/test/valid_initiative_event")
 var Initiative = require("root/lib/initiative")
-var {pseudoDateTime} = require("root/lib/crypto")
 var initiativesDb = require("root/db/initiatives_db")
 var usersDb = require("root/db/users_db")
 var eventsDb = require("root/db/initiative_events_db")
@@ -354,12 +353,12 @@ describe("InitiativeEventsController", function() {
 				user_id: this.author.id,
 				phase: "sign",
 				published_at: new Date,
-				created_at: pseudoDateTime()
+				created_at: _.pseudorandomDateTime()
 			}), new ValidInitiative({
 				title: "Better life.",
 				phase: "parliament",
 				external: true,
-				created_at: pseudoDateTime()
+				created_at: _.pseudorandomDateTime()
 			})])
 
 			var authors = yield [

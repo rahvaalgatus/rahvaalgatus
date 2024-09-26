@@ -8,13 +8,11 @@ var Initiative = require("root/lib/initiative")
 var DateFns = require("date-fns")
 var Time = require("root/lib/time")
 var Config = require("root").config
-var Crypto = require("crypto")
 var MediaType = require("medium-type")
 var Subscription = require("root/lib/subscription")
 var Filtering = require("root/lib/filtering")
 var ResponseTypeMiddeware =
 	require("root/lib/middleware/response_type_middleware")
-var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var initiativesDb = require("root/db/initiatives_db")
 var subscriptionsDb = require("root/db/initiative_subscriptions_db")
 var signaturesDb = require("root/db/initiative_signatures_db")
@@ -1131,7 +1129,7 @@ function* updateInitiativePhaseToSign(req, res) {
 
 		attrs.text = html
 		attrs.text_type = new MediaType("text/html")
-		attrs.text_sha256 = sha256(html)
+		attrs.text_sha256 = _.sha256(html)
 		attrs.title = text.title
 		attrs.language = lang
 	}
@@ -1201,7 +1199,7 @@ function* updateInitiativePhaseToParliament(req, res) {
 	if (req.body.contact == null) return void res.render(tmpl, {attrs: attrs})
 
 	var initiativeAttrs = {
-		parliament_token: Crypto.randomBytes(12),
+		parliament_token: _.randomBytes(12),
 		signature_threshold: Initiative.getSignatureThreshold(initiative),
 		signature_threshold_at: new Date
 	}

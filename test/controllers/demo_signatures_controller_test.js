@@ -18,7 +18,6 @@ var {newOcspResponse} = require("root/test/fixtures")
 var demoSignaturesDb = require("root/db/demo_signatures_db")
 var {hades} = require("root")
 var {parseRefreshHeader} = require("root/lib/http")
-var sha256 = require("root/lib/crypto").hash.bind(null, "sha256")
 var ASICE_TYPE = "application/vnd.etsi.asic-e+zip"
 var MOBILE_ID_URL = Url.parse("https://mid.sk.ee/mid-api/")
 var SMART_ID_URL = Url.parse("https://rp-api.smart-id.com/v1/")
@@ -34,7 +33,7 @@ var {VALID_ISSUERS} = require("root/test/fixtures")
 var {JOHN_RSA_KEYS} = require("root/test/fixtures")
 var SMART_ID = "PNOEE-" + PERSONAL_ID + "-R2D2-Q"
 var SIGNABLE_TEXT = t("demo_signatures_page.signable")
-var SIGNABLE_TEXT_SHA256 = sha256(SIGNABLE_TEXT)
+var SIGNABLE_TEXT_SHA256 = _.sha256(SIGNABLE_TEXT)
 var EXPIRATION = Config.demoSignaturesExpirationSeconds
 var ERROR_TYPE = "application/vnd.rahvaalgatus.error+json"
 var HTML_TYPE = "text/html; charset=utf-8"

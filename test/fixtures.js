@@ -16,9 +16,7 @@ var ValidAuthentication = require("root/test/valid_authentication")
 var usersDb = require("root/db/users_db")
 var authenticationsDb = require("root/db/authentications_db")
 var sessionsDb = require("root/db/sessions_db")
-var {pseudoHex} = require("root/lib/crypto")
 var {serializePersonalId} = require("root/lib/user")
-var sha1 = require("root/lib/crypto").hash.bind(null, "sha1")
 var fetchDefaults = require("fetch-defaults")
 var EMPTY_BUFFER = Buffer.alloc(0)
 var NO_PARAMS = Buffer.from("0500", "hex")
@@ -106,7 +104,7 @@ exports.request = request
 
 exports.csrf = function() {
 	beforeEach(function() {
-		this.csrfToken = pseudoHex(16)
+		this.csrfToken = _.randomHex(16)
 
 		this.request = fetchDefaults(this.request, {
 			headers: {"X-CSRF-Token": this.csrfToken},
@@ -238,8 +236,8 @@ exports.newOcspResponse = function(certificate) {
 						certId: {
 							hashAlgorithm: {algorithm: X509Asn.SHA1},
 							serialNumber: certificate.serialNumber,
-							issuerNameHash: sha1(certificate.issuerDer),
-							issuerKeyHash: sha1("")
+							issuerNameHash: _.sha1(certificate.issuerDer),
+							issuerKeyHash: _.sha1("")
 						},
 
 						certStatus: {type: "good", value: null},
