@@ -180,14 +180,17 @@ function ReadPage(attrs) {
 
 				{thank ? <div class="initiative-status">
           <h1 class="status-serif-header">{thankAgain
-            ? t("THANKS_FOR_SIGNING_AGAIN")
-            : t("THANKS_FOR_SIGNING")
+            ? t("initiative_page.signed_section.title_when_overwritten")
+            : t("initiative_page.signed_section.title")
           }</h1>
 
 					<p>{Jsx.html(t("initiative_page.signed_section.plead"))}</p>
 
-          <h2 class="status-subheader">{t("SUPPORT_US_TITLE")}</h2>
-          {Jsx.html(I18n.markdown(lang, "donate"))}
+					<h2 class="status-subheader">
+						{t("initiative_page.signed_section.donate_title")}
+					</h2>
+
+					<p>{t("initiative_page.signed_section.donate_body")}</p>
 					<DonateForm req={req} t={t} />
 
           <h2 class="status-subheader">
@@ -198,15 +201,13 @@ function ReadPage(attrs) {
             {t("INITIATIVE_SIDEBAR_SUBSCRIBE")}
           </h3>
 
-					{initiative.published_at ?
-						<SubscribeEmailView
-							req={req}
-							initiative={initiative}
-							count={subscriberCounts.initiative}
-							allCount={subscriberCounts.all}
-							t={t}
-						/>
-					: null}
+					<SubscribeEmailView
+						req={req}
+						initiative={initiative}
+						count={subscriberCounts.initiative}
+						allCount={subscriberCounts.all}
+						t={t}
+					/>
 				</div> : null}
 
 				{coauthorInvitation ? <div
@@ -377,7 +378,7 @@ function ReadPage(attrs) {
 					/>
 
 					{signature ? <>
-						<h2>{t("THANKS_FOR_SIGNING")}</h2>
+						<h2>{t("initiative_page.signed_section.title")}</h2>
 
 						<div class="signature-buttons">
 							<DownloadSignatureButton signature={signature}>
@@ -2139,7 +2140,7 @@ function QuicksignView({
 		<p class="plea">{Jsx.html(t("initiative_page.sidebar.sign.plead"))}</p>
 
 		{Initiative.isSignable(new Date, initiative) && signature ? <>
-			<h2>{t("THANKS_FOR_SIGNING")}</h2>
+			<h2>{t("initiative_page.signed_section.title")}</h2>
 
 			<DownloadSignatureButton signature={signature}>
 				{t("DOWNLOAD_SIGNATURE")}

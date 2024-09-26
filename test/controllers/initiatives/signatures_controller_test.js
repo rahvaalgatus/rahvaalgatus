@@ -1195,8 +1195,8 @@ describe("SignaturesController", function() {
 					})
 
 					res.statusCode.must.equal(200)
-					res.body.must.include(t("THANKS_FOR_SIGNING"))
-					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+					res.body.must.include(t("initiative_page.signed_section.title"))
+					res.body.must.not.include(t("initiative_page.signed_section.title_when_overwritten"))
 					res.body.must.include(t("REVOKE_SIGNATURE"))
 					res.body.must.include("donate-form")
 				})
@@ -1219,8 +1219,8 @@ describe("SignaturesController", function() {
 					})
 
 					res.statusCode.must.equal(200)
-					res.body.must.include(t("THANKS_FOR_SIGNING"))
-					res.body.must.include(t("THANKS_FOR_SIGNING_AGAIN"))
+					res.body.must.include(t("initiative_page.signed_section.title"))
+					res.body.must.include(t("initiative_page.signed_section.title_when_overwritten"))
 					res.body.must.include(t("REVOKE_SIGNATURE"))
 					res.body.must.include("donate-form")
 
@@ -1248,8 +1248,8 @@ describe("SignaturesController", function() {
 					})
 
 					res.statusCode.must.equal(200)
-					res.body.must.include(t("THANKS_FOR_SIGNING"))
-					res.body.must.include(t("THANKS_FOR_SIGNING_AGAIN"))
+					res.body.must.include(t("initiative_page.signed_section.title"))
+					res.body.must.include(t("initiative_page.signed_section.title_when_overwritten"))
 					res.body.must.include(t("REVOKE_SIGNATURE"))
 					res.body.must.include("donate-form")
 
@@ -1286,8 +1286,8 @@ describe("SignaturesController", function() {
 					})
 
 					res.statusCode.must.equal(200)
-					res.body.must.include(t("THANKS_FOR_SIGNING"))
-					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+					res.body.must.include(t("initiative_page.signed_section.title"))
+					res.body.must.not.include(t("initiative_page.signed_section.title_when_overwritten"))
 					res.body.must.include(t("REVOKE_SIGNATURE"))
 					res.body.must.include("donate-form")
 
@@ -1321,8 +1321,8 @@ describe("SignaturesController", function() {
 					})
 
 					res.statusCode.must.equal(200)
-					res.body.must.include(t("THANKS_FOR_SIGNING"))
-					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+					res.body.must.include(t("initiative_page.signed_section.title"))
+					res.body.must.not.include(t("initiative_page.signed_section.title_when_overwritten"))
 
 					var signatures = signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
@@ -1357,8 +1357,8 @@ describe("SignaturesController", function() {
 					})
 
 					res.statusCode.must.equal(200)
-					res.body.must.include(t("THANKS_FOR_SIGNING"))
-					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+					res.body.must.include(t("initiative_page.signed_section.title"))
+					res.body.must.not.include(t("initiative_page.signed_section.title_when_overwritten"))
 
 					citizenosSignaturesDb.search(sql`
 						SELECT * FROM initiative_citizenos_signatures
@@ -1387,8 +1387,8 @@ describe("SignaturesController", function() {
 					})
 
 					res.statusCode.must.equal(200)
-					res.body.must.include(t("THANKS_FOR_SIGNING"))
-					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+					res.body.must.include(t("initiative_page.signed_section.title"))
+					res.body.must.not.include(t("initiative_page.signed_section.title_when_overwritten"))
 
 					var signatures = signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
@@ -1418,8 +1418,8 @@ describe("SignaturesController", function() {
 					})
 
 					res.statusCode.must.equal(200)
-					res.body.must.include(t("THANKS_FOR_SIGNING"))
-					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+					res.body.must.include(t("initiative_page.signed_section.title"))
+					res.body.must.not.include(t("initiative_page.signed_section.title_when_overwritten"))
 
 					citizenosSignaturesDb.search(sql`
 						SELECT * FROM initiative_citizenos_signatures
@@ -1448,8 +1448,8 @@ describe("SignaturesController", function() {
 					})
 
 					res.statusCode.must.equal(200)
-					res.body.must.include(t("THANKS_FOR_SIGNING"))
-					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+					res.body.must.include(t("initiative_page.signed_section.title"))
+					res.body.must.not.include(t("initiative_page.signed_section.title_when_overwritten"))
 
 					var signatures = signaturesDb.search(sql`
 						SELECT * FROM initiative_signatures
@@ -1480,8 +1480,8 @@ describe("SignaturesController", function() {
 					})
 
 					res.statusCode.must.equal(200)
-					res.body.must.include(t("THANKS_FOR_SIGNING"))
-					res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+					res.body.must.include(t("initiative_page.signed_section.title"))
+					res.body.must.not.include(t("initiative_page.signed_section.title_when_overwritten"))
 
 					citizenosSignaturesDb.search(sql`
 						SELECT * FROM initiative_citizenos_signatures
@@ -2669,7 +2669,7 @@ describe("SignaturesController", function() {
 				})
 
 				res.statusCode.must.equal(200)
-				res.body.must.include(t("THANKS_FOR_SIGNING"))
+				res.body.must.include(t("initiative_page.signed_section.title"))
 			})
 
 			xit("must time out after 2 minutes", function*() {
@@ -2704,8 +2704,8 @@ describe("SignaturesController", function() {
 				})
 
 				res.statusCode.must.equal(200)
-				res.body.must.not.include(t("THANKS_FOR_SIGNING"))
-				res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+				res.body.must.not.include(t("initiative_page.signed_section.title"))
+				res.body.must.not.include(t("initiative_page.signed_section.title_when_overwritten"))
 				res.body.must.include(t("eid_view.mobile_id_errors.sign_timeout"))
 			})
 		})
@@ -3601,8 +3601,8 @@ describe("SignaturesController", function() {
 				})
 
 				res.statusCode.must.equal(200)
-				res.body.must.not.include(t("THANKS_FOR_SIGNING"))
-				res.body.must.not.include(t("THANKS_FOR_SIGNING_AGAIN"))
+				res.body.must.not.include(t("initiative_page.signed_section.title"))
+				res.body.must.not.include(t("initiative_page.signed_section.title_when_overwritten"))
 				res.body.must.include(t("eid_view.smart_id_errors.sign_timeout"))
 			})
 		})
@@ -3744,7 +3744,7 @@ describe("SignaturesController", function() {
 
 			res.statusCode.must.equal(200)
 			res.body.must.include(t("SIGNATURE_REVOKED"))
-			res.body.must.not.include(t("THANKS_FOR_SIGNING"))
+			res.body.must.not.include(t("initiative_page.signed_section.title"))
 			res.body.must.not.include("donate-form")
 		})
 

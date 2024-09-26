@@ -12,10 +12,10 @@ function CreatePage(attrs) {
 	var {t} = req
 	var {amount} = attrs
 
-	return <Page page="donate" title={t("SUPPORT_US_TITLE")} req={req}>
+	return <Page page="donate" title={t("create_donation_page.title")} req={req}>
 		<section class="primary-section">
 			<center class="text-section">
-				<h1>{t("SUPPORT_US_TITLE")}</h1>
+				<h1>{t("create_donation_page.title")}</h1>
 				{Jsx.html(I18n.markdown(lang, "donate"))}
 			</center>
 
