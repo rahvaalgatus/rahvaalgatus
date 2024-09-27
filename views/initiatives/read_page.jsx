@@ -184,12 +184,6 @@ function ReadPage(attrs) {
             : t("initiative_page.signed_section.title")
           }</h1>
 
-					<p>{Jsx.html(t("initiative_page.signed_section.plead"))}</p>
-
-					<h2 class="status-subheader">
-						{t("initiative_page.signed_section.donate_title")}
-					</h2>
-
 					<p>{t("initiative_page.signed_section.donate_body")}</p>
 					<DonateForm req={req} t={t} />
 
