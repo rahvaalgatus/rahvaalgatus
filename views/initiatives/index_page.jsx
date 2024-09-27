@@ -1145,7 +1145,6 @@ function PieChartView({sectors, sectorRadius, sectorWidth}) {
 			var weightsBefore = _.sum(sectors.slice(0, sectorIndex).map(getWeight))
 			var startAngle = ringStartAngle + weightAngle * weightsBefore
 			var endAngle = startAngle + weightAngle * sector.weight
-			let donutPaths = donut(startAngle, endAngle, ringRadius, sectorWidth)
 			var labelCenterAngle = (endAngle + startAngle) / 2
 			var Sector = Jsx.bind(null, sector.href ? "a" : "g")
 
@@ -1157,30 +1156,29 @@ function PieChartView({sectors, sectorRadius, sectorWidth}) {
 						fill={sector.color}
 						stroke="white"
 						stroke-width="1"
-						d={donutPaths.join("\n")}
+						d={donut(startAngle, endAngle, ringRadius, sectorWidth).join("\n")}
 					/>
 
-					<circle
+					{/*
+						Can't use <circle> for the text's path as that's not supported on
+						Chrome. Only <path> references are supported.
+					*/}
+					<path
 						id={`ring-${ringIndex}-sector-${sectorIndex}-label-path`}
 						fill="none"
-						cx="0"
-						cy="0"
-						r={ringRadius + 10}
-						transform={`rotate(${toDegrees(labelCenterAngle + Math.PI)})`}
+						d={circle(labelCenterAngle - Math.PI, ringRadius + 10).join("\n")}
 					/>
 
-					{sector.label ? <>
-						<text>
-							<textPath
-								class="label"
-								text-anchor="middle"
-								startOffset="50%"
-								href={`#ring-${ringIndex}-sector-${sectorIndex}-label-path`}
-							>
-								{sector.label}
-							</textPath>
-						</text>
-					</> : null}
+					{sector.label ? <text>
+						<textPath
+							class="label"
+							text-anchor="middle"
+							startOffset="50%"
+							href={`#ring-${ringIndex}-sector-${sectorIndex}-label-path`}
+						>
+							{sector.label}
+						</textPath>
+					</text> : null}
 				</Sector>
 
 				{sector.sectors ? <g class="subsectors">
@@ -1416,7 +1414,20 @@ function donut(startAngle, endAngle, circleRadius, arcWidth) {
 		`A ${circleRadius} ${circleRadius} 0 ${largerThanHalf} 1 ${innerEndX} ${innerEndY}`,
 		`L ${outerEndX} ${outerEndY}`,
 		`A ${outerCircleRadius} ${outerCircleRadius} 0 ${largerThanHalf} 0 ${outerStartX} ${outerStartY}`,
-		`Z`,
+		"Z"
+	]
+}
+
+function circle(startAngle, radius) {
+	var startX = Math.cos(startAngle) * radius
+	var startY = Math.sin(startAngle) * radius
+	var endX = Math.cos(startAngle - 0.001) * radius
+	var endY = Math.sin(startAngle - 0.001) * radius
+
+	return [
+		`M ${startX} ${startY}`,
+		`A ${radius} ${radius} 0 1 1 ${endX} ${endY}`,
+		"Z"
 	]
 }
 
@@ -1437,4 +1448,3 @@ function renderParliamentDecision(t, decision) {
 
 function anyDefined(obj) { return _.any(obj, (value) => value != null) }
 function translate(x, y) { return "translate(" + x + ", " + y + ")" }
-function toDegrees(radians) { return radians * (360 / (Math.PI * 2)) }
