@@ -74,7 +74,7 @@ function DonateForm(attrs) {
       <input name="person" maxlength={32} class="form-input" />
     </label>
 
-		<button class="form-submit secondary-button">{t("SUPPORT_BUTTON")}</button>
+		<button class="form-submit primary-button">{t("SUPPORT_BUTTON")}</button>
 
 		<p class="text">{Jsx.html(t("SUPPORT_REDIRECT"))}</p>
 	</Form>
