@@ -12,15 +12,15 @@ function CreatePage(attrs) {
   var {lang} = req
 	var {t} = req
 	var {amount} = attrs
+	var markdownHtml = I18n.markdown(lang, "donate")
+	var formHtml = <DonateForm req={req} t={t} amount={amount} />
 
 	return <Page page="donate" title={t("create_donation_page.title")} req={req}>
 		<section class="primary-section">
 			<center class="text-section">
 				<h1>{t("create_donation_page.title")}</h1>
-				{Jsx.html(I18n.markdown(lang, "donate"))}
+				{Jsx.html(markdownHtml.replaceAll("<DonateForm />", String(formHtml)))}
 			</center>
-
-			<center><DonateForm req={req} t={t} amount={amount} /></center>
 		</section>
 
 		<section id="logo-section" class="secondary-section text-section"><center>

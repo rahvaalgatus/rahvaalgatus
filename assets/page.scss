@@ -963,8 +963,6 @@ strong {
 }
 
 .donate-form {
-	margin-top: 2rem;
-
 	h2 {
 		font-weight: bold;
 		margin-bottom: 1rem;
@@ -3990,6 +3988,12 @@ main {
 		@media print { display: none; }
 	}
 
+	#thanks {
+		.donate-form {
+			margin-top: 2rem;
+		}
+	}
+
 	#coauthor-invitation {
 		menu {
 			margin-top: 1.5rem;
@@ -4859,6 +4863,36 @@ main {
 		font-size: 1.6rem;
 	}
 
+	p + .donate-form,
+	.donate-form + p { margin-top: 1.5rem; }
+
+	.donate-form {
+		background: $light-background;
+		margin-left: -$page-padding;
+		margin-right: -$page-padding;
+		padding: 2rem $page-padding;
+		border-radius: 0.7rem;
+
+		@media only screen and (max-width: 640px) {
+			border-radius: 0;
+		}
+
+		@include mobile {
+			margin-left: -$page-mobile-padding;
+			margin-right: -$page-mobile-padding;
+			padding-left: $page-mobile-padding;
+			padding-right: $page-mobile-padding;
+		}
+	}
+
+	p + iframe,
+	iframe + p,
+	iframe + h2 { margin-top: 2rem; }
+
+	section iframe {
+		width: 100%;
+	}
+
 	#logo-section {
 		img {
 			vertical-align: middle;
@@ -4866,9 +4900,7 @@ main {
 			max-height: 9rem;
 		}
 
-		a + a {
-			margin-left: 2rem;
-		}
+		a + a { margin-left: 2rem; }
 	}
 }
 

@@ -178,7 +178,7 @@ function ReadPage(attrs) {
 			<div id="initiative-sheet" class="initiative-sheet">
 				<Flash flash={flash} />
 
-				{thank ? <div class="initiative-status">
+				{thank ? <div id="thanks" class="initiative-status">
           <h1 class="status-serif-header">{thankAgain
             ? t("initiative_page.signed_section.title_when_overwritten")
             : t("initiative_page.signed_section.title")

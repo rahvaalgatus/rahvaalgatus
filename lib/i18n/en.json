@@ -697,7 +697,7 @@
 	"VOTING_SUCCEEDED_AND_EXPIRED": "Collecting signatures has ended. Although the initiative gathered enough signatures to send to Riigikogu, the authors didn't choose to do so within a year and half from the start of collecting signatures. We've since anonymized all the signatures.",
 	"VOTING_SUCCEEDED_AND_EXPIRED_ON_LOCAL_LEVEL": "Collecting signatures has ended. Although the initiative gathered enough signatures to send to the local government, the authors didn't choose to do so within a year and half from the start of collecting signatures. We've since anonymized all the signatures.",
 	"VOTING_SUCCEEDED_ON_LOCAL_LEVEL": "Collecting signatures has ended successfully! As the next step, the authors of the initiative will send the initiative along with collected signatures to the local government unit. Since processing the initiative can take some time, we recommend you to order notifications for this initiative by clicking \"Keep me informed\".",
-	"create_donation_page.title": "Support",
+	"create_donation_page.title": "Support Us",
 	"create_session_page.eid_view.sign_in_button": "Sign In",
 	"create_session_page.eid_view.signed_in": "Signed in! Redirecting…",
 	"create_session_page.eid_view.signing_in": "Signing in…",
