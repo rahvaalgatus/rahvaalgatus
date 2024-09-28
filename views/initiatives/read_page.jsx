@@ -180,11 +180,11 @@ function ReadPage(attrs) {
 
 				{thank ? <div id="thanks" class="initiative-status">
           <h1 class="status-serif-header">{thankAgain
-            ? t("initiative_page.signed_section.title_when_overwritten")
-            : t("initiative_page.signed_section.title")
+            ? t("initiative_page.thanks_section.title_when_overwritten")
+            : t("initiative_page.thanks_section.title")
           }</h1>
 
-					<p>{t("initiative_page.signed_section.donate_body")}</p>
+					<p>{t("initiative_page.thanks_section.donate_body")}</p>
 					<DonateForm req={req} t={t} />
 
           <h2 class="status-subheader">
@@ -376,7 +376,7 @@ function ReadPage(attrs) {
 
 						<div class="signature-buttons">
 							<DownloadSignatureButton signature={signature}>
-								{t("DOWNLOAD_SIGNATURE")}
+								{t("initiative_page.signed_section.download_button")}
 							</DownloadSignatureButton>
 
 							<span class="form-or">{t("FORM_OR")}</span>
@@ -428,6 +428,14 @@ function ReadPage(attrs) {
 								id="create-signature-view"
 								action="sign"
 								buttonClass="green-button"
+
+								mobileIdPrologue={<p class="donation-plea">
+									{t("initiative_page.signing_section.mobile_id_donation_plea")}
+								</p>}
+
+								smartIdPrologue={<p class="donation-plea">
+									{t("initiative_page.signing_section.smart_id_donation_plea")}
+								</p>}
 
 								submit={
 									t("initiative_page.signing_section.eid_view.sign_button")
@@ -2137,7 +2145,7 @@ function QuicksignView({
 			<h2>{t("initiative_page.signed_section.title")}</h2>
 
 			<DownloadSignatureButton signature={signature}>
-				{t("DOWNLOAD_SIGNATURE")}
+				{t("initiative_page.signed_section.download_button")}
 			</DownloadSignatureButton>
 
 			<span class="form-or">{t("FORM_OR")}</span>

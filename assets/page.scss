@@ -3879,6 +3879,16 @@ main {
 		.eid-view {
 			margin-top: 2rem;
 
+			.donation-plea {
+				display: inline-block;
+				margin-top: -1rem;
+				margin-bottom: 1.5rem;
+				padding: 0.5rem 1.3rem;
+				background-color: $light-background;
+				border-radius: 0.5rem;
+				font-weight: 500;
+			}
+
 			@include mobile-and-tablet {
 				margin-left: -$article-padding;
 				margin-right: -$article-padding;

@@ -13,6 +13,8 @@ function EidView({
 	url,
 	action, // "auth" or "sign"
 	idCardAuthenticationUrl,
+	mobileIdPrologue,
+	smartIdPrologue,
 	submit,
 	pending,
 	done,
@@ -115,6 +117,8 @@ function EidView({
 			<input type="hidden" name="method" value="mobile-id" />
 			<input type="hidden" name="_csrf_token" value={csrfToken} />
 
+			{mobileIdPrologue}
+
 			<label>
 				<span>{t("eid_view.mobile_id.phone_number")}</span>
 
@@ -151,6 +155,8 @@ function EidView({
 		<form action={url} method="post" class="smart-id-form"><fieldset>
 			<input type="hidden" name="method" value="smart-id" />
 			<input type="hidden" name="_csrf_token" value={csrfToken} />
+
+			{smartIdPrologue}
 
 			<label>
 				<span>{t("eid_view.smart_id.personal_id")}</span>
