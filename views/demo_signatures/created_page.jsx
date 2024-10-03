@@ -1,12 +1,9 @@
 /** @jsx Jsx */
 var Jsx = require("j6pack")
 var Page = require("../page")
-var I18n = require("root/lib/i18n")
-var {DonateForm} = require("../donations/create_page")
 
 module.exports = function({req}) {
 	var {t} = req
-  var {lang} = req
 	var {signature} = req
 	var signatureUrl = "/demo-signatures/" + signature.token.toString("hex")
 
@@ -32,12 +29,6 @@ module.exports = function({req}) {
 			<a class="button blue-button" href={signatureUrl + ".asice"}>
 				{t("created_demo_signature_page.download_button")}
 			</a>
-		</center></section>
-
-		<section id="sign" class="secondary-section text-section"><center>
-			<h2 class="subheading">{t("SUPPORT_US_TITLE")}</h2>
-			{Jsx.html(I18n.markdown(lang, "donate"))}
-			<DonateForm req={req} t={t} for="education" />
 		</center></section>
 	</Page>
 }
