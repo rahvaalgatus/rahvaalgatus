@@ -13,7 +13,7 @@ function CreatePage(attrs) {
 	var {t} = req
 	var {amount} = attrs
 	var markdownHtml = I18n.markdown(lang, "donate")
-	var formHtml = <DonateForm req={req} t={t} amount={amount} />
+	var formHtml = <DonateForm req={req} t={t} amount={amount} descriptionless />
 
 	return <Page page="donate" title={t("create_donation_page.title")} req={req}>
 		<section class="primary-section">
@@ -76,6 +76,8 @@ function DonateForm(attrs) {
 
 		<button class="form-submit primary-button">{t("SUPPORT_BUTTON")}</button>
 
-		<p class="text">{Jsx.html(t("SUPPORT_REDIRECT"))}</p>
+		{!attrs.descriptionless ? <p class="text">
+			{Jsx.html(t("SUPPORT_REDIRECT"))}
+		</p> : null}
 	</Form>
 }
