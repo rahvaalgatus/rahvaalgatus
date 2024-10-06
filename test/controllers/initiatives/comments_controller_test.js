@@ -76,6 +76,7 @@ describe("InitiativeCommentsController", function() {
 				var comment = new ValidComment({
 					id: 1,
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid),
 					title: "I've some thoughts.",
@@ -95,6 +96,40 @@ describe("InitiativeCommentsController", function() {
 				initiativesDb.read(this.initiative.id).must.eql(_.defaults({
 					last_comment_created_at: comment.created_at
 				}, this.initiative))
+			})
+
+			it("must update initiative with phase", function*() {
+				var initiative = initiativesDb.create(new ValidInitiative({
+					phase: "government",
+					external: true
+				}))
+
+				var path = `/initiatives/${initiative.id}`
+				var res = yield this.request(path + "/comments", {
+					method: "POST",
+
+					form: {
+						persona: "admin",
+						title: "I've some thoughts.",
+						text: "But I forgot them."
+					}
+				})
+
+				res.statusCode.must.equal(303)
+				res.statusMessage.must.equal("Comment Created")
+
+				commentsDb.read(sql`
+					SELECT * FROM comments
+				`).must.eql(new ValidComment({
+					id: 1,
+					initiative_uuid: initiative.uuid,
+					initiative_phase: initiative.phase,
+					user_id: this.user.id,
+					user_uuid: _.serializeUuid(this.user.uuid),
+					title: "I've some thoughts.",
+					text: "But I forgot them.",
+					as_admin: false
+				}))
 			})
 
 			_.each({
@@ -123,6 +158,7 @@ describe("InitiativeCommentsController", function() {
 					`).must.eql(new ValidComment({
 						id: 1,
 						initiative_uuid: this.initiative.uuid,
+						initiative_phase: this.initiative.phase,
 						user_id: this.user.id,
 						user_uuid: _.serializeUuid(this.user.uuid),
 						title: "I've some thoughts.",
@@ -132,7 +168,7 @@ describe("InitiativeCommentsController", function() {
 				})
 			})
 
-			it(`must not create comment for admin as a non-admin`, function*() {
+			it("must not create comment for admin as a non-admin", function*() {
 				var path = `/initiatives/${this.initiative.id}`
 				var res = yield this.request(path + "/comments", {
 					method: "POST",
@@ -152,6 +188,7 @@ describe("InitiativeCommentsController", function() {
 				`).must.eql(new ValidComment({
 					id: 1,
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid),
 					title: "I've some thoughts.",
@@ -180,6 +217,7 @@ describe("InitiativeCommentsController", function() {
 				`).must.eql(new ValidComment({
 					id: 1,
 					initiative_uuid: initiative.uuid,
+					initiative_phase: initiative.phase,
 					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid),
 					title: "I've some thoughts.",
@@ -718,16 +756,13 @@ describe("InitiativeCommentsController", function() {
 						user_id: this.user.id
 					}))
 
-					commentsDb.create(_.times(COMMENT_RATE, (_i) => (
-						new ValidComment({
-							initiative_uuid: otherInitiative.uuid,
-							user_id: this.user.id,
-							user_uuid: _.serializeUuid(this.user.uuid),
-
-							created_at:
-								DateFns.addSeconds(DateFns.addMinutes(new Date, -15), 1),
-						})
-					)))
+					commentsDb.create(_.times(COMMENT_RATE, (_i) => new ValidComment({
+						initiative_uuid: otherInitiative.uuid,
+						initiative_phase: otherInitiative.phase,
+						user_id: this.user.id,
+						user_uuid: _.serializeUuid(this.user.uuid),
+						created_at: DateFns.addSeconds(DateFns.addMinutes(new Date, -15), 1)
+					})))
 
 					var initiativePath = `/initiatives/${this.initiative.id}`
 					var res = yield this.request(initiativePath + "/comments", {
@@ -746,11 +781,10 @@ describe("InitiativeCommentsController", function() {
 
 					commentsDb.create(_.times(COMMENT_RATE - 1, (_i) => new ValidComment({
 						initiative_uuid: otherInitiative.uuid,
+						initiative_phase: otherInitiative.phase,
 						user_id: this.user.id,
 						user_uuid: _.serializeUuid(this.user.uuid),
-
-						created_at:
-							DateFns.addSeconds(DateFns.addMinutes(new Date, -15), 1),
+						created_at: DateFns.addSeconds(DateFns.addMinutes(new Date, -15), 1)
 					})))
 
 					var initiativePath = `/initiatives/${this.initiative.id}`
@@ -770,9 +804,10 @@ describe("InitiativeCommentsController", function() {
 
 					commentsDb.create(_.times(COMMENT_RATE, (_i) => new ValidComment({
 						initiative_uuid: otherInitiative.uuid,
+						initiative_phase: otherInitiative.phase,
 						user_id: this.user.id,
 						user_uuid: _.serializeUuid(this.user.uuid),
-						created_at: DateFns.addMinutes(new Date, -15),
+						created_at: DateFns.addMinutes(new Date, -15)
 					})))
 
 					var initiativePath = `/initiatives/${this.initiative.id}`
@@ -831,12 +866,14 @@ describe("InitiativeCommentsController", function() {
 
 			var comment = commentsDb.create(new ValidComment({
 				initiative_uuid: this.initiative.uuid,
+				initiative_phase: this.initiative.phase,
 				user_id: author.id,
 				user_uuid: _.serializeUuid(author.uuid)
 			}))
 
 			var reply = commentsDb.create(new ValidComment({
 				initiative_uuid: this.initiative.uuid,
+				initiative_phase: this.initiative.phase,
 				user_id: replier.id,
 				user_uuid: _.serializeUuid(replier.uuid),
 				parent_id: comment.id
@@ -863,6 +900,7 @@ describe("InitiativeCommentsController", function() {
 
 			var comment = commentsDb.create(new ValidComment({
 				initiative_uuid: this.initiative.uuid,
+				initiative_phase: this.initiative.phase,
 				user_id: author.id,
 				user_uuid: _.serializeUuid(author.uuid),
 				anonymized_at: new Date
@@ -887,6 +925,7 @@ describe("InitiativeCommentsController", function() {
 
 			var comment = commentsDb.create(new ValidComment({
 				initiative_uuid: this.initiative.uuid,
+				initiative_phase: this.initiative.phase,
 				user_id: author.id,
 				user_uuid: _.serializeUuid(author.uuid),
 				as_admin: true
@@ -912,12 +951,14 @@ describe("InitiativeCommentsController", function() {
 
 			var comment = commentsDb.create(new ValidComment({
 				initiative_uuid: this.initiative.uuid,
+				initiative_phase: this.initiative.phase,
 				user_id: author.id,
 				user_uuid: _.serializeUuid(author.uuid)
 			}))
 
 			commentsDb.create(new ValidComment({
 				initiative_uuid: this.initiative.uuid,
+				initiative_phase: this.initiative.phase,
 				user_id: replier.id,
 				user_uuid: _.serializeUuid(replier.uuid),
 				parent_id: comment.id,
@@ -948,12 +989,14 @@ describe("InitiativeCommentsController", function() {
 
 			var comment = commentsDb.create(new ValidComment({
 				initiative_uuid: this.initiative.uuid,
+				initiative_phase: this.initiative.phase,
 				user_id: author.id,
 				user_uuid: _.serializeUuid(author.uuid)
 			}))
 
 			commentsDb.create(new ValidComment({
 				initiative_uuid: this.initiative.uuid,
+				initiative_phase: this.initiative.phase,
 				user_id: replier.id,
 				user_uuid: _.serializeUuid(replier.uuid),
 				parent_id: comment.id,
@@ -988,6 +1031,7 @@ describe("InitiativeCommentsController", function() {
 
 			var comment = commentsDb.create(new ValidComment({
 				initiative_uuid: initiative.uuid,
+				initiative_phase: initiative.phase,
 				user_id: author.id,
 				user_uuid: _.serializeUuid(author.uuid)
 			}))
@@ -1008,18 +1052,21 @@ describe("InitiativeCommentsController", function() {
 
 			var comment = commentsDb.create(new ValidComment({
 				initiative_uuid: this.initiative.uuid,
+				initiative_phase: this.initiative.phase,
 				user_id: author.id,
 				user_uuid: _.serializeUuid(author.uuid)
 			}))
 
 			var other = commentsDb.create(new ValidComment({
 				initiative_uuid: this.initiative.uuid,
+				initiative_phase: this.initiative.phase,
 				user_id: author.id,
 				user_uuid: _.serializeUuid(author.uuid)
 			}))
 
 			var reply = commentsDb.create(new ValidComment({
 				initiative_uuid: this.initiative.uuid,
+				initiative_phase: this.initiative.phase,
 				user_id: author.id,
 				user_uuid: _.serializeUuid(author.uuid),
 				parent_id: other.id
@@ -1038,6 +1085,7 @@ describe("InitiativeCommentsController", function() {
 			var comment = commentsDb.create(new ValidComment({
 				uuid: "f80ebc50-8f96-4482-8211-602b7376f204",
 				initiative_uuid: this.initiative.uuid,
+				initiative_phase: this.initiative.phase,
 				user_id: author.id,
 				user_uuid: _.serializeUuid(replier.uuid)
 			}))
@@ -1045,6 +1093,7 @@ describe("InitiativeCommentsController", function() {
 			var reply = commentsDb.create(new ValidComment({
 				uuid: "c3e1f67c-41b0-4db7-8467-79bc0b80cfb7",
 				initiative_uuid: this.initiative.uuid,
+				initiative_phase: this.initiative.phase,
 				user_id: author.id,
 				user_uuid: _.serializeUuid(replier.uuid),
 				parent_id: comment.id
@@ -1066,6 +1115,7 @@ describe("InitiativeCommentsController", function() {
 			var comment = commentsDb.create(new ValidComment({
 				uuid: "30898eb8-4177-4040-8fc0-d3402ecb14c7",
 				initiative_uuid: this.initiative.uuid,
+				initiative_phase: this.initiative.phase,
 				user_id: author.id,
 				user_uuid: _.serializeUuid(author.uuid)
 			}))
@@ -1087,12 +1137,14 @@ describe("InitiativeCommentsController", function() {
 
 			var parent = commentsDb.create(new ValidComment({
 				initiative_uuid: this.initiative.uuid,
+				initiative_phase: this.initiative.phase,
 				user_id: author.id,
 				user_uuid: _.serializeUuid(author.uuid)
 			}))
 
 			var comment = commentsDb.create(new ValidComment({
 				initiative_uuid: this.initiative.uuid,
+				initiative_phase: this.initiative.phase,
 				user_id: author.id,
 				user_uuid: _.serializeUuid(author.uuid),
 				parent_id: parent.id
@@ -1113,6 +1165,7 @@ describe("InitiativeCommentsController", function() {
 
 			var comment = commentsDb.create(new ValidComment({
 				initiative_uuid: other.uuid,
+				initiative_phase: other.phase,
 				user_id: author.id,
 				user_uuid: _.serializeUuid(author.uuid)
 			}))
@@ -1130,6 +1183,7 @@ describe("InitiativeCommentsController", function() {
 			it("must not render button for anonymizing comment if created in less than an hour", function*() {
 				var comment = commentsDb.create(new ValidComment({
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					created_at: DateFns.addSeconds(DateFns.addHours(new Date, -1), 1),
 					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid)
@@ -1148,6 +1202,7 @@ describe("InitiativeCommentsController", function() {
 			it("must render button for anonymizing comment", function*() {
 				var comment = commentsDb.create(new ValidComment({
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					created_at: DateFns.addHours(new Date, -1),
 					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid)
@@ -1172,12 +1227,14 @@ describe("InitiativeCommentsController", function() {
 
 				var comment = commentsDb.create(new ValidComment({
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid)
 				}))
 
 				commentsDb.create(new ValidComment({
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					created_at: DateFns.addSeconds(DateFns.addHours(new Date, -1), 1),
 					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid),
@@ -1201,12 +1258,14 @@ describe("InitiativeCommentsController", function() {
 
 				var comment = commentsDb.create(new ValidComment({
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid)
 				}))
 
 				commentsDb.create(new ValidComment({
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					created_at: DateFns.addHours(new Date, -1),
 					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid),
@@ -1236,6 +1295,7 @@ describe("InitiativeCommentsController", function() {
 
 				var comment = commentsDb.create(new ValidComment({
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid)
 				}))
@@ -1256,6 +1316,7 @@ describe("InitiativeCommentsController", function() {
 
 				var comment = commentsDb.create(new ValidComment({
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid)
 				}))
@@ -1271,6 +1332,7 @@ describe("InitiativeCommentsController", function() {
 			it("must respond with 405 if created in less than an hour", function*() {
 				var comment = commentsDb.create(new ValidComment({
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					created_at: DateFns.addSeconds(DateFns.addHours(new Date, -1), 1),
 					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid)
@@ -1290,6 +1352,7 @@ describe("InitiativeCommentsController", function() {
 
 				var comment = commentsDb.create(new ValidComment({
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
 					anonymized_at: new Date
@@ -1306,6 +1369,7 @@ describe("InitiativeCommentsController", function() {
 			it("must anonymize comment", function*() {
 				var comment = commentsDb.create(new ValidComment({
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					created_at: DateFns.addHours(new Date, -1),
 					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid)
@@ -1338,12 +1402,14 @@ describe("InitiativeCommentsController", function() {
 
 				var comment = commentsDb.create(new ValidComment({
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid)
 				}))
 
 				var reply = commentsDb.create(new ValidComment({
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					created_at: DateFns.addHours(new Date, -1),
 					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid),
@@ -1383,6 +1449,7 @@ describe("InitiativeCommentsController", function() {
 
 				var comment = commentsDb.create(new ValidComment({
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid)
 				}))
@@ -1403,7 +1470,8 @@ describe("InitiativeCommentsController", function() {
 				var comment = commentsDb.create(new ValidComment({
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase
 				}))
 
 				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
@@ -1418,6 +1486,7 @@ describe("InitiativeCommentsController", function() {
 				var reply = new ValidComment({
 					id: comment.id + 1,
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid),
 					parent_id: comment.id,
@@ -1446,7 +1515,8 @@ describe("InitiativeCommentsController", function() {
 					var comment = commentsDb.create(new ValidComment({
 						user_id: author.id,
 						user_uuid: _.serializeUuid(author.uuid),
-						initiative_uuid: this.initiative.uuid
+						initiative_uuid: this.initiative.uuid,
+						initiative_phase: this.initiative.phase
 					}))
 
 					var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
@@ -1463,6 +1533,7 @@ describe("InitiativeCommentsController", function() {
 					`).must.eql([comment, new ValidComment({
 						id: comment.id + 1,
 						initiative_uuid: this.initiative.uuid,
+						initiative_phase: this.initiative.phase,
 						user_id: this.user.id,
 						user_uuid: _.serializeUuid(this.user.uuid),
 						parent_id: comment.id,
@@ -1478,7 +1549,8 @@ describe("InitiativeCommentsController", function() {
 				var comment = commentsDb.create(new ValidComment({
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase
 				}))
 
 				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
@@ -1495,6 +1567,7 @@ describe("InitiativeCommentsController", function() {
 				`).must.eql([comment, new ValidComment({
 					id: comment.id + 1,
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid),
 					parent_id: comment.id,
@@ -1514,7 +1587,8 @@ describe("InitiativeCommentsController", function() {
 				var comment = commentsDb.create(new ValidComment({
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
-					initiative_uuid: initiative.uuid
+					initiative_uuid: initiative.uuid,
+					initiative_phase: initiative.phase
 				}))
 
 				var path = `/initiatives/${initiative.id}/comments/${comment.id}`
@@ -1531,6 +1605,7 @@ describe("InitiativeCommentsController", function() {
 				`).must.eql([comment, new ValidComment({
 					id: comment.id + 1,
 					initiative_uuid: initiative.uuid,
+					initiative_phase: initiative.phase,
 					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid),
 					parent_id: comment.id,
@@ -1544,7 +1619,8 @@ describe("InitiativeCommentsController", function() {
 				var comment = commentsDb.create(new ValidComment({
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase
 				}))
 
 				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
@@ -1564,7 +1640,8 @@ describe("InitiativeCommentsController", function() {
 				var comment = commentsDb.create(new ValidComment({
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase
 				}))
 
 				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
@@ -1588,7 +1665,8 @@ describe("InitiativeCommentsController", function() {
 					var comment = commentsDb.create(new ValidComment({
 						user_id: author.id,
 						user_uuid: _.serializeUuid(author.uuid),
-						initiative_uuid: this.initiative.uuid
+						initiative_uuid: this.initiative.uuid,
+						initiative_phase: this.initiative.phase
 					}))
 
 					var path = `/initiatives/${this.initiative.id}`
@@ -1613,7 +1691,8 @@ describe("InitiativeCommentsController", function() {
 				var comment = commentsDb.create(new ValidComment({
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase
 				}))
 
 				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
@@ -1636,7 +1715,8 @@ describe("InitiativeCommentsController", function() {
 				var comment = commentsDb.create(new ValidComment({
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase
 				}))
 
 				subscriptionsDb.create([
@@ -1708,7 +1788,8 @@ describe("InitiativeCommentsController", function() {
 				var comment = commentsDb.create(new ValidComment({
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase
 				}))
 
 				subscriptionsDb.create(new ValidSubscription({
@@ -1745,7 +1826,8 @@ describe("InitiativeCommentsController", function() {
 				var comment = commentsDb.create(new ValidComment({
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase
 				}))
 
 				subscriptionsDb.create([
@@ -1783,7 +1865,8 @@ describe("InitiativeCommentsController", function() {
 				var comment = commentsDb.create(new ValidComment({
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase
 				}))
 
 				subscriptionsDb.create([
@@ -1817,12 +1900,14 @@ describe("InitiativeCommentsController", function() {
 
 				var parent = commentsDb.create(new ValidComment({
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid)
 				}))
 
 				var comment = commentsDb.create(new ValidComment({
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
 					parent_id: parent.id
@@ -1851,6 +1936,7 @@ describe("InitiativeCommentsController", function() {
 
 					var comment = commentsDb.create(new ValidComment({
 						initiative_uuid: this.initiative.uuid,
+						initiative_phase: this.initiative.phase,
 						user_id: author.id,
 						user_uuid: _.serializeUuid(author.uuid)
 					}))
@@ -1879,7 +1965,8 @@ describe("InitiativeCommentsController", function() {
 				var comment = commentsDb.create(new ValidComment({
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase
 				}))
 
 				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
@@ -1906,7 +1993,8 @@ describe("InitiativeCommentsController", function() {
 				var comment = commentsDb.create(new ValidComment({
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase
 				}))
 
 				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
@@ -1927,6 +2015,7 @@ describe("InitiativeCommentsController", function() {
 					commentsDb.create(_.times(COMMENT_RATE, (_i) => (
 						new ValidComment({
 							initiative_uuid: otherInitiative.uuid,
+							initiative_phase: otherInitiative.phase,
 							user_id: this.user.id,
 							user_uuid: _.serializeUuid(this.user.uuid),
 
@@ -1939,7 +2028,8 @@ describe("InitiativeCommentsController", function() {
 					var comment = commentsDb.create(new ValidComment({
 						user_id: author.id,
 						user_uuid: _.serializeUuid(author.uuid),
-						initiative_uuid: this.initiative.uuid
+						initiative_uuid: this.initiative.uuid,
+						initiative_phase: this.initiative.phase
 					}))
 
 					var path = `/initiatives/${this.initiative.id}`
@@ -1960,6 +2050,7 @@ describe("InitiativeCommentsController", function() {
 
 					commentsDb.create(_.times(COMMENT_RATE - 1, (_i) => new ValidComment({
 						initiative_uuid: otherInitiative.uuid,
+						initiative_phase: otherInitiative.phase,
 						user_id: this.user.id,
 						user_uuid: _.serializeUuid(this.user.uuid),
 
@@ -1971,7 +2062,8 @@ describe("InitiativeCommentsController", function() {
 					var comment = commentsDb.create(new ValidComment({
 						user_id: author.id,
 						user_uuid: _.serializeUuid(author.uuid),
-						initiative_uuid: this.initiative.uuid
+						initiative_uuid: this.initiative.uuid,
+						initiative_phase: this.initiative.phase
 					}))
 
 					var path = `/initiatives/${this.initiative.id}`
@@ -1992,6 +2084,7 @@ describe("InitiativeCommentsController", function() {
 
 					commentsDb.create(_.times(COMMENT_RATE, (_i) => new ValidComment({
 						initiative_uuid: otherInitiative.uuid,
+						initiative_phase: otherInitiative.phase,
 						user_id: this.user.id,
 						user_uuid: _.serializeUuid(this.user.uuid),
 						created_at: DateFns.addMinutes(new Date, -15),
@@ -2001,7 +2094,8 @@ describe("InitiativeCommentsController", function() {
 					var comment = commentsDb.create(new ValidComment({
 						user_id: author.id,
 						user_uuid: _.serializeUuid(author.uuid),
-						initiative_uuid: this.initiative.uuid
+						initiative_uuid: this.initiative.uuid,
+						initiative_phase: this.initiative.phase
 					}))
 
 					var path = `/initiatives/${this.initiative.id}`
@@ -2025,6 +2119,7 @@ describe("InitiativeCommentsController", function() {
 
 				var comment = commentsDb.create(new ValidComment({
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid)
 				}))
@@ -2045,7 +2140,8 @@ describe("InitiativeCommentsController", function() {
 				var comment = commentsDb.create(new ValidComment({
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase
 				}))
 
 				var path = `/initiatives/${this.initiative.id}/comments/${comment.id}`
@@ -2074,11 +2170,13 @@ describe("InitiativeCommentsController", function() {
 				var comment = commentsDb.create(new ValidComment({
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase
 				}))
 
 				var reply = commentsDb.create(new ValidComment({
 					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase,
 					created_at: DateFns.addHours(new Date, -1),
 					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid),
@@ -2113,7 +2211,8 @@ describe("InitiativeCommentsController", function() {
 				var comment = commentsDb.create(new ValidComment({
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase
 				}))
 
 				_.times(Config.commentReportNotificationThreshold - 2, () => (
@@ -2138,7 +2237,8 @@ describe("InitiativeCommentsController", function() {
 				var comment = commentsDb.create(new ValidComment({
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase
 				}))
 
 				_.times(Config.commentReportNotificationThreshold - 1, () => (
@@ -2167,7 +2267,8 @@ describe("InitiativeCommentsController", function() {
 				var comment = commentsDb.create(new ValidComment({
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase
 				}))
 
 				_.times(Config.commentReportNotificationThreshold, () => (
@@ -2193,7 +2294,8 @@ describe("InitiativeCommentsController", function() {
 				var comment = commentsDb.create(new ValidComment({
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase
 				}))
 
 				var report = reportsDb.create({
@@ -2220,7 +2322,8 @@ describe("InitiativeCommentsController", function() {
 				var comment = commentsDb.create(new ValidComment({
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase
 				}))
 
 				var report = reportsDb.create({
@@ -2255,13 +2358,15 @@ describe("InitiativeCommentsController", function() {
 				var comment = commentsDb.create(new ValidComment({
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase
 				}))
 
 				var otherComment = commentsDb.create(new ValidComment({
 					user_id: author.id,
 					user_uuid: _.serializeUuid(author.uuid),
-					initiative_uuid: this.initiative.uuid
+					initiative_uuid: this.initiative.uuid,
+					initiative_phase: this.initiative.phase
 				}))
 
 				var report = reportsDb.create({

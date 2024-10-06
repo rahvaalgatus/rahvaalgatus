@@ -145,7 +145,8 @@ describe("InitiativeEndEmailCli", function() {
 				user_id: this.user.id,
 				phase: "sign",
 				discussion_ends_at: new Date,
-				signing_started_at: new Date
+				signing_started_at: new Date,
+				signing_ends_at: DateFns.addDays(new Date, 1)
 			}))
 
 			yield cli()

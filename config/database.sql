@@ -50,7 +50,7 @@ CREATE TABLE comments (
 	user_uuid TEXT NOT NULL,
 	parent_id INTEGER,
 	title TEXT NOT NULL DEFAULT '',
-	"text" TEXT NOT NULL DEFAULT '', user_id INTEGER NOT NULL, anonymized_at TEXT, as_admin INTEGER NOT NULL DEFAULT 0, walled INTEGER, walled_at TEXT, walled_by_id INTEGER,
+	"text" TEXT NOT NULL DEFAULT '', user_id INTEGER NOT NULL, anonymized_at TEXT, as_admin INTEGER NOT NULL DEFAULT 0, walled INTEGER, walled_at TEXT, walled_by_id INTEGER, initiative_phase TEXT NOT NULL,
 
 	FOREIGN KEY (user_id) REFERENCES users (id),
 	FOREIGN KEY (parent_id) REFERENCES comments (id),
@@ -1039,5 +1039,6 @@ INSERT INTO migrations VALUES('20240909000159');
 INSERT INTO migrations VALUES('20240910000000');
 INSERT INTO migrations VALUES('20240910000010');
 INSERT INTO migrations VALUES('20240929000000');
+INSERT INTO migrations VALUES('20241001000000');
 INSERT INTO migrations VALUES('20241028095622');
 COMMIT;
