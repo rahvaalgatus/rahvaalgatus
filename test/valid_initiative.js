@@ -52,6 +52,7 @@ module.exports = function(attrs) {
 		government_decision: null,
 		government_change_urls: [],
 		public_change_urls: [],
+		signature_count: 0,
 		signature_milestones: {},
 		notes: "",
 		language: "et",

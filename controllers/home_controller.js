@@ -125,12 +125,7 @@ function searchInitiatives(destination) {
 	var cutoff = getExpirationCutoff(new Date)
 
 	var initiatives = initiativesDb.search(sql`
-		SELECT
-			initiative.*,
-			user.name AS user_name,
-			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
-			AS signature_count
-
+		SELECT initiative.*, user.name AS user_name
 		FROM initiatives AS initiative
 		LEFT JOIN users AS user ON initiative.user_id = user.id
 
@@ -293,12 +288,7 @@ function searchRecentInitiatives() {
 	`), "uuid").slice(0, 6).map((r, i) => [r.uuid, _.assign(r, {position: i})]))
 
 	return _.sortBy(initiativesDb.search(sql`
-		SELECT
-			initiative.*,
-			user.name AS user_name,
-			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
-			AS signature_count
-
+		SELECT initiative.*, user.name AS user_name
 		FROM initiatives AS initiative
 		LEFT JOIN users AS user ON user.id = initiative.user_id
 		WHERE initiative.uuid IN ${sql.in(_.keys(recents))}
@@ -318,11 +308,7 @@ function readPhaseInitiativeCounts() {
 			discussion_ends_at,
 			signing_ends_at,
 			signing_expired_at,
-			archived_at,
-
-			CASE phase WHEN 'sign' THEN
-			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
-			END AS signature_count
+			archived_at
 
 		FROM initiatives AS initiative
 		WHERE destination IS NOT NULL AND destination != 'parliament'

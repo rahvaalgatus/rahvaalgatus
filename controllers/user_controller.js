@@ -250,11 +250,7 @@ function read(req, res) {
 	var {user} = req
 
 	var initiatives = initiativesDb.search(sql`
-		SELECT
-			initiative.*,
-			user.name AS user_name,
-			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
-			AS signature_count
+		SELECT initiative.*, user.name AS user_name
 
 		FROM initiatives AS initiative
 		LEFT JOIN users AS user ON user.id = initiative.user_id

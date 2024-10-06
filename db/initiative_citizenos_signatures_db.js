@@ -1,5 +1,6 @@
 var _ = require("root/lib/underscore")
 var Db = require("root/lib/db")
+var sql = require("sqlate")
 var {sqlite} = require("root")
 
 exports = module.exports = new Db(
@@ -14,3 +15,12 @@ exports.parse = function(attrs) {
 		anonymized: !!attrs.anonymized
 	}, attrs)
 }
+
+exports.countByInitiativeUuid = function(uuid) {
+	return this.sqlite(sql`
+		SELECT COUNT(*) AS count
+		FROM initiative_citizenos_signatures
+		WHERE initiative_uuid = ${uuid}
+	`).count
+}
+

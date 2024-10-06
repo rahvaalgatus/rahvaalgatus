@@ -617,7 +617,7 @@ CREATE TABLE IF NOT EXISTS "initiatives" (
 	government_contact_details TEXT,
 	government_decision TEXT,
 
-	external_text_file_id INTEGER, last_comment_created_at TEXT, last_event_created_at TEXT, last_signature_created_at TEXT,
+	external_text_file_id INTEGER, last_comment_created_at TEXT, last_event_created_at TEXT, last_signature_created_at TEXT, signature_count INTEGER NOT NULL DEFAULT 0,
 
 	FOREIGN KEY (user_id) REFERENCES users (id),
 	FOREIGN KEY (external_text_file_id) REFERENCES initiative_files (id),
@@ -709,6 +709,7 @@ CREATE TABLE IF NOT EXISTS "initiatives" (
 	CONSTRAINT text_sha256_not_null
 	CHECK ((text IS NULL) = (text_sha256 IS NULL)),
 
+	CONSTRAINT signature_count_nonnegative CHECK (signature_count >= 0),
 	CONSTRAINT signature_milestones_json CHECK (json_valid(signature_milestones)),
 	CONSTRAINT tags_json CHECK (json_valid(tags)),
 	CONSTRAINT organizations_json CHECK (json_valid(organizations)),
@@ -875,6 +876,30 @@ ON initiative_comment_reports (created_at DESC);
 CREATE INDEX index_comments_on_walled_by
 ON comments (walled_by_id)
 WHERE walled_by_id IS NOT NULL;
+CREATE TRIGGER add_initiative_signature_count_on_signature_create
+AFTER INSERT ON initiative_signatures
+FOR EACH ROW BEGIN
+  UPDATE initiatives SET signature_count = signature_count + 1
+  WHERE uuid = NEW.initiative_uuid;
+END;
+CREATE TRIGGER add_initiative_signature_count_on_citizenos_signature_create
+AFTER INSERT ON initiative_citizenos_signatures
+FOR EACH ROW BEGIN
+  UPDATE initiatives SET signature_count = signature_count + 1
+  WHERE uuid = NEW.initiative_uuid;
+END;
+CREATE TRIGGER sub_initiative_signature_count_on_signature_create
+AFTER DELETE ON initiative_signatures
+FOR EACH ROW BEGIN
+  UPDATE initiatives SET signature_count = signature_count - 1
+  WHERE uuid = OLD.initiative_uuid;
+END;
+CREATE TRIGGER sub_initiative_signature_count_on_citizenos_signature_create
+AFTER DELETE ON initiative_citizenos_signatures
+FOR EACH ROW BEGIN
+  UPDATE initiatives SET signature_count = signature_count - 1
+  WHERE uuid = OLD.initiative_uuid;
+END;
 
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
@@ -1013,5 +1038,6 @@ INSERT INTO migrations VALUES('20240908222218');
 INSERT INTO migrations VALUES('20240909000159');
 INSERT INTO migrations VALUES('20240910000000');
 INSERT INTO migrations VALUES('20240910000010');
+INSERT INTO migrations VALUES('20240929000000');
 INSERT INTO migrations VALUES('20241028095622');
 COMMIT;

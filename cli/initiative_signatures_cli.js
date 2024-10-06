@@ -52,13 +52,8 @@ function anonymize({
 		: DateFns.addDays(now, -Config.anonymizeSignaturesReceivedAfterDays)
 
 	var anonymizables = initiativesDb.search(sql`
-		SELECT
-			initiative.*,
-			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
-			AS signature_count
-
-		FROM initiatives AS initiative
-
+		SELECT *
+		FROM initiatives
 		WHERE signatures_anonymized_at IS NULL
 		AND NOT external
 

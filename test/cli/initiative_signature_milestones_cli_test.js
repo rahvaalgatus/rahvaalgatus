@@ -27,8 +27,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 	beforeEach(function() { this.user = usersDb.create(new ValidUser) })
 
-	it("must update milestones when threshold not passed and notify once given an initiative in signing",
-		function*() {
+	it("must update milestones when threshold not passed and notify once given an initiative in signing", function*() {
 		var initiative = initiativesDb.create(new ValidInitiative({
 			user_id: this.user.id,
 			destination: "parliament",
@@ -81,6 +80,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 		initiativesDb.read(initiative).must.eql({
 			__proto__: initiative,
+			signature_count: 7,
 			last_signature_created_at: findLastUndersigned(signatures).created_at,
 			signature_milestones: {5: signatures[4].created_at}
 		})
@@ -179,6 +179,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 			initiativesDb.read(initiative).must.eql({
 				__proto__: initiative,
+				signature_count: milestone + 2,
 				last_signature_created_at: findLastUndersigned(signatures).created_at,
 
 				signature_milestones: {
@@ -234,6 +235,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 			initiativesDb.read(initiative).must.eql({
 				__proto__: initiative,
+				signature_count: 10,
 				last_signature_created_at: findLastUndersigned(signatures).created_at,
 
 				signature_milestones: {
@@ -265,6 +267,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 			initiativesDb.read(initiative).must.eql({
 				__proto__: initiative,
+				signature_count: signatureThreshold + 1,
 				last_signature_created_at: findLastUndersigned(signatures).created_at,
 
 				signature_milestones: {
@@ -336,6 +339,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 			initiativesDb.read(initiative).must.eql({
 				__proto__: initiative,
+				signature_count: signatureThreshold + 2,
 				last_signature_created_at: findLastUndersigned(signatures).created_at,
 
 				signature_milestones: {
@@ -399,6 +403,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 			initiativesDb.read(initiative).must.eql({
 				__proto__: initiative,
+				signature_count: signatureThreshold + 1,
 				last_signature_created_at: findLastUndersigned(signatures).created_at,
 
 				signature_milestones: {
@@ -432,6 +437,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 			initiativesDb.read(initiative).must.eql({
 				__proto__: initiative,
+				signature_count: signatureThreshold + 1,
 				last_signature_created_at: findLastUndersigned(signatures).created_at,
 
 				signature_milestones: {
@@ -468,6 +474,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 		initiativesDb.read(initiative.id).must.eql({
 			__proto__: initiative,
+			signature_count: 9,
 			last_signature_created_at: findLastUndersigned(signatures).created_at,
 			signature_milestones: {5: signatures[4].created_at}
 		})
@@ -565,6 +572,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 		initiativesDb.read(initiative.id).must.eql({
 			__proto__: initiative,
+			signature_count: 10,
 			last_signature_created_at: findLastUndersigned(signatures).created_at,
 
 			signature_milestones: {
@@ -589,6 +597,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 				initiativesDb.read(initiative.id).must.eql({
 					__proto__: initiative,
+					signature_count: 5,
 					last_signature_created_at: findLastUndersigned(signatures).created_at,
 					signature_milestones: {5: signatures[4].created_at}
 				})
@@ -607,6 +616,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 				initiativesDb.read(initiative.id).must.eql({
 					__proto__: initiative,
+					signature_count: 10,
 					last_signature_created_at: findLastUndersigned(signatures).created_at,
 
 					signature_milestones: {
@@ -656,6 +666,7 @@ describe("InitiativeSignatureMilestonesCli", function() {
 
 		initiativesDb.read(initiative).must.eql({
 			__proto__: initiative,
+			signature_count: 10,
 			last_signature_created_at: findLastUndersigned(signatures).created_at,
 
 			signature_milestones: {

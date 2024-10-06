@@ -12208,6 +12208,7 @@ describe("InitiativesController", function() {
 							phase: "parliament",
 							sent_to_parliament_at: new Date,
 							parliament_token: updatedInitiative.parliament_token,
+							signature_count: signatureCount,
 							signature_threshold: Config.votesRequired,
 							signature_threshold_at: new Date,
 							last_signature_created_at: _.last(signatures).created_at
@@ -12541,6 +12542,7 @@ describe("InitiativesController", function() {
 							phase: "government",
 							sent_to_government_at: new Date,
 							parliament_token: updatedInitiative.parliament_token,
+							signature_count: signatureCount,
 							signature_threshold: signatureThreshold,
 							signature_threshold_at: new Date,
 							last_signature_created_at: _.last(signatures).created_at

@@ -23,6 +23,8 @@ var filesDb = require("root/db/initiative_files_db")
 var textsDb = require("root/db/initiative_texts_db")
 var commentsDb = require("root/db/comments_db")
 var coauthorsDb = require("root/db/initiative_coauthors_db")
+var citizenosSignaturesDb =
+	require("root/db/initiative_citizenos_signatures_db")
 var next = require("co-next")
 var t = require("root/lib/i18n").t.bind(null, Config.language)
 var renderEmail = require("root/lib/i18n").email
@@ -30,8 +32,6 @@ var sql = require("sqlate")
 var {sqlite} = require("root")
 var {sendEmail} = require("root")
 var parseText = require("./initiatives/texts_controller").parse
-var {countUndersignedSignaturesById} = require("root/lib/initiative")
-var {countCitizenOsSignaturesById} = require("root/lib/initiative")
 var {parsePersonalId} = require("root/lib/user")
 var {validateRedirect} = require("root/lib/http")
 var dispose = require("content-disposition")
@@ -85,12 +85,7 @@ exports.router.get("/",
 	var limit = req.query.limit ? parseLimit(req.query.limit) : null
 
 	var initiatives = initiativesDb.search(sql`
-		SELECT
-			initiative.*,
-			user.name AS user_name,
-
-			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
-			AS signature_count
+		SELECT initiative.*, user.name AS user_name
 
 		FROM initiatives AS initiative
 		${filters.tag ? sql`JOIN json_each(initiative.tags) AS tag` : sql``}
@@ -239,7 +234,7 @@ exports.router.get("/",
 				WHEN 'done' THEN 4
 			END ${orderDirSql}, CASE initiative.phase
 				WHEN 'edit' THEN initiative.created_at
-				WHEN 'sign' THEN signature_count
+				WHEN 'sign' THEN initiative.signature_count
 				WHEN 'parliament' THEN initiative.sent_to_parliament_at
 				WHEN 'government' THEN initiative.sent_to_government_at
 				WHEN 'done' THEN COALESCE(
@@ -268,7 +263,7 @@ exports.router.get("/",
 
 			"signature-count": sql`ORDER BY CASE
 				WHEN initiative.external THEN 1000
-				ELSE signature_count
+				ELSE initiative.signature_count
 				END ${orderDirSql}
 			`,
 
@@ -444,12 +439,7 @@ exports.router.use("/:id", function(req, res, next) {
 	var id = req.initiativeId = parseId(req.params.id)
 
 	var initiative = initiativesDb.read(sql`
-		SELECT
-			initiative.*,
-			user.name AS user_name,
-			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
-			AS signature_count
-
+		SELECT initiative.*, user.name AS user_name
 		FROM initiatives AS initiative
 		LEFT JOIN users AS user ON user.id = initiative.user_id
 
@@ -1184,10 +1174,11 @@ function* updateInitiativePhaseToParliament(req, res) {
 	var {user} = req
 	var {initiative} = req
 	var {uuid} = initiative
-	var citizenosSignatureCount = countCitizenOsSignaturesById(uuid)
-	var undersignedSignatureCount = countUndersignedSignaturesById(uuid)
-	var signatureCount = citizenosSignatureCount + undersignedSignatureCount
+	var signatureCount = initiative.signature_count
 	var tmpl = "initiatives/update_for_parliament_page.jsx"
+
+	var citizenosSignatureCount =
+		citizenosSignaturesDb.countByInitiativeUuid(uuid)
 
 	if (initiative.user_id != user.id)
 		throw new HttpError(403, "No Permission to Edit")

@@ -14,8 +14,8 @@ var eventsDb = require("root/db/initiative_events_db")
 var t = require("root/lib/i18n").t.bind(null, "et")
 var sql = require("sqlate")
 var isEventNotifiable = require("root/lib/event").isNotifiable
-var {countUndersignedSignaturesById} = require("root/lib/initiative")
-var {countCitizenOsSignaturesById} = require("root/lib/initiative")
+var citizenosSignaturesDb =
+	require("root/db/initiative_citizenos_signatures_db")
 var {parseId} = require("root/controllers/initiatives_controller")
 var next = require("co-next")
 var {sqlite} = require("root")
@@ -106,10 +106,8 @@ exports.router.get("/:id", function(req, res) {
 		WHERE initiative_uuid = ${initiative.uuid}
 	`)
 
-	var citizenosSignatureCount = countCitizenOsSignaturesById(initiative.uuid)
-
-	var undersignedSignatureCount =
-		countUndersignedSignaturesById(initiative.uuid)
+	var citizenosSignatureCount =
+		citizenosSignaturesDb.countByInitiativeUuid(initiative.uuid)
 
 	res.render("admin/initiatives/read_page.jsx", {
 		author,
@@ -119,7 +117,7 @@ exports.router.get("/:id", function(req, res) {
 		subscriberCount,
 
 		signatureCounts: {
-			undersign: undersignedSignatureCount,
+			undersign: initiative.signature_count - citizenosSignatureCount,
 			citizenos: citizenosSignatureCount
 		}
 	})

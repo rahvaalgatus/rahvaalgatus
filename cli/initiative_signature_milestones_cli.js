@@ -15,13 +15,7 @@ var co = require("co")
 
 module.exports = co.wrap(function*() {
 	var initiatives = initiativesDb.search(sql`
-		SELECT
-			initiative.*,
-			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
-			AS signature_count
-
-		FROM initiatives AS initiative
-		WHERE initiative.phase != 'edit'
+		SELECT * FROM initiatives WHERE phase != 'edit'
 	`)
 
 	yield initiatives.map(function(initiative) {
