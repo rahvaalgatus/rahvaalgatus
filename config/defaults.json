@@ -109,5 +109,20 @@
 		"O=SK ID Solutions AS",
 		"2.5.4.97=#0c0e4e545245452d3130373437303133",
 		"CN=SK ID Solutions EID-Q 2021E"
+	], [
+		"C=EE",
+		"O=SK ID Solutions AS",
+		"2.5.4.97=#0c0e4e545245452d3130373437303133",
+		"CN=SK ID Solutions EID-Q 2021R"
+	], [
+		"CN=SK ID Solutions EID-Q 2024E",
+		"2.5.4.97=#0c0e4e545245452d3130373437303133",
+		"O=SK ID Solutions AS",
+		"C=EE"
+	], [
+		"CN=SK ID Solutions EID-Q 2024R",
+		"2.5.4.97=#0c0e4e545245452d3130373437303133",
+		"O=SK ID Solutions AS",
+		"C=EE"
 	]]
 }

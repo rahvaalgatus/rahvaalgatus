@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?><TrustServiceStatusList xmlns="http://uri.etsi.org/02231/v2#" xmlns:ns2="http://www.w3.org/2000/09/xmldsig#" xmlns:ns3="http://uri.etsi.org/02231/v2/additionaltypes#" xmlns:ns4="http://uri.etsi.org/01903/v1.3.2#" xmlns:ns5="http://uri.etsi.org/TrstSvc/SvcInfoExt/eSigDir-1999-93-EC-TrustedList/#" xmlns:ns6="http://uri.etsi.org/01903/v1.4.1#" Id="EE0001" TSLTag="http://uri.etsi.org/19612/TSLTag">
     <SchemeInformation>
         <TSLVersionIdentifier>5</TSLVersionIdentifier>
-        <TSLSequenceNumber>65</TSLSequenceNumber>
+        <TSLSequenceNumber>66</TSLSequenceNumber>
         <TSLType>http://uri.etsi.org/TrstSvc/TrustedList/TSLType/EUgeneric</TSLType>
         <SchemeOperatorName>
             <Name xml:lang="en">Estonian Information System Authority</Name>
@@ -104,9 +104,9 @@
                 </AdditionalInformation>
             </OtherTSLPointer>
         </PointersToOtherTSL>
-        <ListIssueDateTime>2024-06-12T02:00:10Z</ListIssueDateTime>
+        <ListIssueDateTime>2024-10-18T01:00:00Z</ListIssueDateTime>
         <NextUpdate>
-            <dateTime>2024-12-12T03:00:10Z</dateTime>
+            <dateTime>2025-04-18T01:00:00Z</dateTime>
         </NextUpdate>
         <DistributionPoints>
             <URI>https://sr.riik.ee/tsl/estonian-tsl.xml</URI>
@@ -3199,7 +3199,7 @@
                     <ServiceInformation>
                         <ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceTypeIdentifier>
                         <ServiceName>
-                            <Name xml:lang="en">KLASS3-SK ORG 2021E</Name>
+                            <Name xml:lang="en">KLASS3-SK ORG 2021E qualified certificate for electronic seal</Name>
                         </ServiceName>
                         <ServiceDigitalIdentity>
                             <DigitalId>
@@ -3213,7 +3213,7 @@
                             </DigitalId>
                         </ServiceDigitalIdentity>
                         <ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>
-                        <StatusStartingTime>2024-02-08T05:00:41Z</StatusStartingTime>
+                        <StatusStartingTime>2024-10-17T01:00:00Z</StatusStartingTime>
                         <ServiceInformationExtensions>
                             <Extension Critical="true">
 <AdditionalServiceInformation>
@@ -3290,12 +3290,105 @@
                             </Extension>
                         </ServiceInformationExtensions>
                     </ServiceInformation>
+                    <ServiceHistory>
+                        <ServiceHistoryInstance>
+                            <ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceTypeIdentifier>
+                            <ServiceName>
+<Name xml:lang="en">KLASS3-SK ORG 2021E</Name>
+                            </ServiceName>
+                            <ServiceDigitalIdentity>
+<DigitalId>
+    <X509SubjectName>CN=SK ID Solutions ORG 2021E, OID.2.5.4.97=NTREE-10747013, O=SK ID Solutions AS, C=EE</X509SubjectName>
+</DigitalId>
+<DigitalId>
+    <X509SKI>/Inn/EN4/+wsw4Soo4DjI0ga1Cg=</X509SKI>
+</DigitalId>
+                            </ServiceDigitalIdentity>
+                            <ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>
+                            <StatusStartingTime>2024-02-08T05:00:41Z</StatusStartingTime>
+                            <ServiceInformationExtensions>
+<Extension Critical="true">
+    <AdditionalServiceInformation>
+        <URI xml:lang="en">http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</URI>
+    </AdditionalServiceInformation>
+</Extension>
+<Extension Critical="true">
+    <ns5:Qualifications>
+        <ns5:QualificationElement>
+            <ns5:Qualifiers>
+                <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCQSCDStatusAsInCert"/>
+            </ns5:Qualifiers>
+            <ns5:CriteriaList assert="all">
+                <ns5:KeyUsage>
+                    <ns5:KeyUsageBit name="nonRepudiation">true</ns5:KeyUsageBit>
+                </ns5:KeyUsage>
+                <ns5:PolicySet>
+                    <ns5:PolicyIdentifier>
+                        <ns4:Identifier Qualifier="OIDAsURN">urn:oid:0.4.0.194112.1.3</ns4:Identifier>
+                    </ns5:PolicyIdentifier>
+                </ns5:PolicySet>
+                <ns5:Description>Any certificate that is issued under the CA/QC Sdi certificate and that is issued as a QC (i.e. containing a QcCompliance statement) and having its Certificate Policy PolicyIdentifier OID set as 0.4.0.194112.1.3, is to be considered as supported by a QSCD. They are issued for digital stamping according to eIDAS regulation</ns5:Description>
+            </ns5:CriteriaList>
+        </ns5:QualificationElement>
+    </ns5:Qualifications>
+</Extension>
+<Extension Critical="true">
+    <ns5:Qualifications>
+        <ns5:QualificationElement>
+            <ns5:Qualifiers>
+                <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCForLegalPerson"/>
+            </ns5:Qualifiers>
+            <ns5:CriteriaList assert="atLeastOne">
+                <ns5:KeyUsage>
+                    <ns5:KeyUsageBit name="nonRepudiation">true</ns5:KeyUsageBit>
+                </ns5:KeyUsage>
+                <ns5:KeyUsage>
+                    <ns5:KeyUsageBit name="nonRepudiation">false</ns5:KeyUsageBit>
+                </ns5:KeyUsage>
+                <ns5:Description>Any certificate issued under the CA/QC Sdi certificate and is issued as a QC (i.e. containing a QcCompliance statement) is to be considered as issued to a Legal Person</ns5:Description>
+            </ns5:CriteriaList>
+        </ns5:QualificationElement>
+    </ns5:Qualifications>
+</Extension>
+<Extension Critical="true">
+    <ns5:Qualifications>
+        <ns5:QualificationElement>
+            <ns5:Qualifiers>
+                <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCStatement"/>
+            </ns5:Qualifiers>
+            <ns5:CriteriaList assert="all">
+                <ns5:KeyUsage>
+                    <ns5:KeyUsageBit name="nonRepudiation">true</ns5:KeyUsageBit>
+                </ns5:KeyUsage>
+                <ns5:Description>All certificates issued under this CA/QC service that have nonRepudiation bit set exclusively are issued as qualified certificates</ns5:Description>
+            </ns5:CriteriaList>
+        </ns5:QualificationElement>
+    </ns5:Qualifications>
+</Extension>
+<Extension Critical="true">
+    <ns5:Qualifications>
+        <ns5:QualificationElement>
+            <ns5:Qualifiers>
+                <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCForESeal"/>
+            </ns5:Qualifiers>
+            <ns5:CriteriaList assert="all">
+                <ns5:KeyUsage>
+                    <ns5:KeyUsageBit name="nonRepudiation">true</ns5:KeyUsageBit>
+                </ns5:KeyUsage>
+                <ns5:Description/>
+            </ns5:CriteriaList>
+        </ns5:QualificationElement>
+    </ns5:Qualifications>
+</Extension>
+                            </ServiceInformationExtensions>
+                        </ServiceHistoryInstance>
+                    </ServiceHistory>
                 </TSPService>
                 <TSPService>
                     <ServiceInformation>
                         <ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceTypeIdentifier>
                         <ServiceName>
-                            <Name xml:lang="en">KLASS3-SK ORG 2021R</Name>
+                            <Name xml:lang="en">KLASS3-SK ORG 2021R qualified certificate for electronic seal</Name>
                         </ServiceName>
                         <ServiceDigitalIdentity>
                             <DigitalId>
@@ -3309,7 +3402,7 @@
                             </DigitalId>
                         </ServiceDigitalIdentity>
                         <ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>
-                        <StatusStartingTime>2024-02-08T05:00:37Z</StatusStartingTime>
+                        <StatusStartingTime>2024-10-17T01:00:00Z</StatusStartingTime>
                         <ServiceInformationExtensions>
                             <Extension Critical="false">
 <AdditionalServiceInformation>
@@ -3385,12 +3478,104 @@
                             </Extension>
                         </ServiceInformationExtensions>
                     </ServiceInformation>
+                    <ServiceHistory>
+                        <ServiceHistoryInstance>
+                            <ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceTypeIdentifier>
+                            <ServiceName>
+<Name xml:lang="en">KLASS3-SK ORG 2021R</Name>
+                            </ServiceName>
+                            <ServiceDigitalIdentity>
+<DigitalId>
+    <X509SubjectName>CN=SK ID Solutions ORG 2021R, OID.2.5.4.97=NTREE-10747013, O=SK ID Solutions AS, C=EE</X509SubjectName>
+</DigitalId>
+<DigitalId>
+    <X509SKI>4samGOCgsknyhaCx7UTxvYfIpjY=</X509SKI>
+</DigitalId>
+                            </ServiceDigitalIdentity>
+                            <ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>
+                            <StatusStartingTime>2024-02-08T05:00:37Z</StatusStartingTime>
+                            <ServiceInformationExtensions>
+<Extension Critical="false">
+    <AdditionalServiceInformation>
+        <URI xml:lang="en">http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSeals</URI>
+    </AdditionalServiceInformation>
+</Extension>
+<Extension Critical="false">
+    <ns5:Qualifications>
+        <ns5:QualificationElement>
+            <ns5:Qualifiers>
+                <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCQSCDStatusAsInCert"/>
+            </ns5:Qualifiers>
+            <ns5:CriteriaList assert="all">
+                <ns5:KeyUsage>
+                    <ns5:KeyUsageBit name="nonRepudiation">true</ns5:KeyUsageBit>
+                </ns5:KeyUsage>
+                <ns5:PolicySet>
+                    <ns5:PolicyIdentifier>
+                        <ns4:Identifier Qualifier="OIDAsURN">urn:oid:0.4.0.194112.1.3</ns4:Identifier>
+                    </ns5:PolicyIdentifier>
+                </ns5:PolicySet>
+                <ns5:Description>Any certificate that is issued under the CA/QC Sdi certificate and that is issued as a QC (i.e. containing a QcCompliance statement) and having its Certificate Policy PolicyIdentifier OID set as 0.4.0.194112.1.3, is to be considered as supported by a QSCD. They are issued for digital stamping according to eIDAS regulation</ns5:Description>
+            </ns5:CriteriaList>
+        </ns5:QualificationElement>
+    </ns5:Qualifications>
+</Extension>
+<Extension Critical="false">
+    <ns5:Qualifications>
+        <ns5:QualificationElement>
+            <ns5:Qualifiers>
+                <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCForLegalPerson"/>
+            </ns5:Qualifiers>
+            <ns5:CriteriaList assert="atLeastOne">
+                <ns5:KeyUsage>
+                    <ns5:KeyUsageBit name="nonRepudiation">true</ns5:KeyUsageBit>
+                </ns5:KeyUsage>
+                <ns5:KeyUsage>
+                    <ns5:KeyUsageBit name="nonRepudiation">false</ns5:KeyUsageBit>
+                </ns5:KeyUsage>
+                <ns5:Description>Any certificate issued under the CA/QC Sdi certificate and is issued as a QC (i.e. containing a QcCompliance statement) is to be considered as issued to a Legal Person</ns5:Description>
+            </ns5:CriteriaList>
+        </ns5:QualificationElement>
+    </ns5:Qualifications>
+</Extension>
+<Extension Critical="false">
+    <ns5:Qualifications>
+        <ns5:QualificationElement>
+            <ns5:Qualifiers>
+                <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCStatement"/>
+            </ns5:Qualifiers>
+            <ns5:CriteriaList assert="all">
+                <ns5:KeyUsage>
+                    <ns5:KeyUsageBit name="nonRepudiation">true</ns5:KeyUsageBit>
+                </ns5:KeyUsage>
+                <ns5:Description>All certificates issued under this CA/QC service that have nonRepudiation bit set exclusively are issued as qualified certificates</ns5:Description>
+            </ns5:CriteriaList>
+        </ns5:QualificationElement>
+    </ns5:Qualifications>
+</Extension>
+<Extension Critical="false">
+    <ns5:Qualifications>
+        <ns5:QualificationElement>
+            <ns5:Qualifiers>
+                <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCForESeal"/>
+            </ns5:Qualifiers>
+            <ns5:CriteriaList assert="all">
+                <ns5:KeyUsage>
+                    <ns5:KeyUsageBit name="nonRepudiation">true</ns5:KeyUsageBit>
+                </ns5:KeyUsage>
+            </ns5:CriteriaList>
+        </ns5:QualificationElement>
+    </ns5:Qualifications>
+</Extension>
+                            </ServiceInformationExtensions>
+                        </ServiceHistoryInstance>
+                    </ServiceHistory>
                 </TSPService>
                 <TSPService>
                     <ServiceInformation>
                         <ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceTypeIdentifier>
                         <ServiceName>
-                            <Name xml:lang="en">EID-SK-Q 2021E</Name>
+                            <Name xml:lang="en">EID-SK-Q 2021E qualified certificates for electronic signatures </Name>
                         </ServiceName>
                         <ServiceDigitalIdentity>
                             <DigitalId>
@@ -3404,7 +3589,7 @@
                             </DigitalId>
                         </ServiceDigitalIdentity>
                         <ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>
-                        <StatusStartingTime>2024-02-08T05:00:01Z</StatusStartingTime>
+                        <StatusStartingTime>2024-10-17T01:00:00Z</StatusStartingTime>
                         <ServiceInformationExtensions>
                             <Extension Critical="false">
 <AdditionalServiceInformation>
@@ -3424,14 +3609,317 @@
             </ns5:KeyUsage>
             <ns5:PolicySet>
                 <ns5:PolicyIdentifier>
-                    <ns4:Identifier Qualifier="OIDAsURN">urn:oid:1.3.6.1.4.1.10015.17.2</ns4:Identifier>
-                    <ns4:Description>Certificate Policy for Qualified Smart-ID</ns4:Description>
+                    <ns4:Identifier Qualifier="OIDAsURN">urn:oid:1.3.6.1.4.1.10015.18.1</ns4:Identifier>
+                    <ns4:Description>Certificate Policy for Qualified Mobile-ID</ns4:Description>
                 </ns5:PolicyIdentifier>
             </ns5:PolicySet>
+            <ns5:Description>All certificates issued under this CA/QC service that have nonRepudiation bit set exclusively are issued as qualified certificates</ns5:Description>
+        </ns5:CriteriaList>
+    </ns5:QualificationElement>
+</ns5:Qualifications>
+                            </Extension>
+                        </ServiceInformationExtensions>
+                    </ServiceInformation>
+                    <ServiceHistory>
+                        <ServiceHistoryInstance>
+                            <ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceTypeIdentifier>
+                            <ServiceName>
+<Name xml:lang="en">EID-SK-Q 2021E qualified certificates for electronic signatures </Name>
+                            </ServiceName>
+                            <ServiceDigitalIdentity>
+<DigitalId>
+    <X509SubjectName>CN=SK ID Solutions EID-Q 2021E, OID.2.5.4.97=NTREE-10747013, O=SK ID Solutions AS, C=EE</X509SubjectName>
+</DigitalId>
+<DigitalId>
+    <X509SKI>6JTmj2ESPfcfwS5P/BSPLQuC2Bw=</X509SKI>
+</DigitalId>
+                            </ServiceDigitalIdentity>
+                            <ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>
+                            <StatusStartingTime>2024-10-17T01:00:00Z</StatusStartingTime>
+                            <ServiceInformationExtensions>
+<Extension Critical="false">
+    <AdditionalServiceInformation>
+        <URI xml:lang="en">http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</URI>
+    </AdditionalServiceInformation>
+</Extension>
+<Extension Critical="false">
+    <ns5:Qualifications>
+        <ns5:QualificationElement>
+            <ns5:Qualifiers>
+                <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCStatement"/>
+                <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCForESig"/>
+            </ns5:Qualifiers>
+            <ns5:CriteriaList assert="all">
+                <ns5:KeyUsage>
+                    <ns5:KeyUsageBit name="nonRepudiation">true</ns5:KeyUsageBit>
+                </ns5:KeyUsage>
+                <ns5:PolicySet>
+                    <ns5:PolicyIdentifier>
+                        <ns4:Identifier Qualifier="OIDAsURN">urn:oid:1.3.6.1.4.1.10015.17.2</ns4:Identifier>
+                        <ns4:Description>Certificate Policy for Qualified Smart-ID</ns4:Description>
+                    </ns5:PolicyIdentifier>
+                </ns5:PolicySet>
+                <ns5:PolicySet>
+                    <ns5:PolicyIdentifier>
+                        <ns4:Identifier Qualifier="OIDAsURN">urn:oid:1.3.6.1.4.1.10015.18.1</ns4:Identifier>
+                        <ns4:Description>Certificate Policy for Qualified Mobile-ID</ns4:Description>
+                    </ns5:PolicyIdentifier>
+                </ns5:PolicySet>
+                <ns5:Description>All certificates issued under this CA/QC service that have nonRepudiation bit set exclusively are issued as qualified certificates</ns5:Description>
+            </ns5:CriteriaList>
+        </ns5:QualificationElement>
+    </ns5:Qualifications>
+</Extension>
+                            </ServiceInformationExtensions>
+                        </ServiceHistoryInstance>
+                        <ServiceHistoryInstance>
+                            <ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceTypeIdentifier>
+                            <ServiceName>
+<Name xml:lang="en">EID-SK-Q 2021E</Name>
+                            </ServiceName>
+                            <ServiceDigitalIdentity>
+<DigitalId>
+    <X509SubjectName>CN=SK ID Solutions EID-Q 2021E, OID.2.5.4.97=NTREE-10747013, O=SK ID Solutions AS, C=EE</X509SubjectName>
+</DigitalId>
+<DigitalId>
+    <X509SKI>6JTmj2ESPfcfwS5P/BSPLQuC2Bw=</X509SKI>
+</DigitalId>
+                            </ServiceDigitalIdentity>
+                            <ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>
+                            <StatusStartingTime>2024-02-08T05:00:01Z</StatusStartingTime>
+                            <ServiceInformationExtensions>
+<Extension Critical="false">
+    <AdditionalServiceInformation>
+        <URI xml:lang="en">http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</URI>
+    </AdditionalServiceInformation>
+</Extension>
+<Extension Critical="false">
+    <ns5:Qualifications>
+        <ns5:QualificationElement>
+            <ns5:Qualifiers>
+                <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCStatement"/>
+                <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCForESig"/>
+            </ns5:Qualifiers>
+            <ns5:CriteriaList assert="all">
+                <ns5:KeyUsage>
+                    <ns5:KeyUsageBit name="nonRepudiation">true</ns5:KeyUsageBit>
+                </ns5:KeyUsage>
+                <ns5:PolicySet>
+                    <ns5:PolicyIdentifier>
+                        <ns4:Identifier Qualifier="OIDAsURN">urn:oid:1.3.6.1.4.1.10015.17.2</ns4:Identifier>
+                        <ns4:Description>Certificate Policy for Qualified Smart-ID</ns4:Description>
+                    </ns5:PolicyIdentifier>
+                </ns5:PolicySet>
+                <ns5:PolicySet>
+                    <ns5:PolicyIdentifier>
+                        <ns4:Identifier Qualifier="OIDAsURN">urn:oid:1.3.6.1.4.1.10015.18.1</ns4:Identifier>
+                        <ns4:Description>Certificate Policy for Qualified Mobile-ID</ns4:Description>
+                    </ns5:PolicyIdentifier>
+                </ns5:PolicySet>
+                <ns5:Description>All certificates issued under this CA/QC service that have nonRepudiation bit set exclusively are issued as qualified certificates</ns5:Description>
+            </ns5:CriteriaList>
+        </ns5:QualificationElement>
+    </ns5:Qualifications>
+</Extension>
+                            </ServiceInformationExtensions>
+                        </ServiceHistoryInstance>
+                    </ServiceHistory>
+                </TSPService>
+                <TSPService>
+                    <ServiceInformation>
+                        <ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceTypeIdentifier>
+                        <ServiceName>
+                            <Name xml:lang="en">EID-SK-Q 2021R qualified certificates for electronic signatures</Name>
+                        </ServiceName>
+                        <ServiceDigitalIdentity>
+                            <DigitalId>
+<X509Certificate>MIIGtTCCBJ2gAwIBAgIQOCjEgffj3n9hWvHCGo8aFTANBgkqhkiG9w0BAQwFADBmMQswCQYDVQQGEwJFRTEbMBkGA1UECgwSU0sgSUQgU29sdXRpb25zIEFTMRcwFQYDVQRhDA5OVFJFRS0xMDc0NzAxMzEhMB8GA1UEAwwYU0sgSUQgU29sdXRpb25zIFJPT1QgRzFSMB4XDTIxMTAwNDEyMjEyMloXDTM2MTAwNDEyMjEyMlowaTELMAkGA1UEBhMCRUUxGzAZBgNVBAoMElNLIElEIFNvbHV0aW9ucyBBUzEXMBUGA1UEYQwOTlRSRUUtMTA3NDcwMTMxJDAiBgNVBAMMG1NLIElEIFNvbHV0aW9ucyBFSUQtUSAyMDIxUjCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAMw6wtLCsUzKKXHy7e1T/8tzpQzcEDt8IhIfJ53+KELujxXOhdVk5SoPvv3YObSvXjhvGpaaOOMRxwQCBxFv5qQ3ZGtvc8UydBpxpKi/VHI3CUAXmPjtj7/Cx7cH7+zT0YyE41RT2bRpsxzU2LMfIckJoSO+CeBStcaSZJ23LW/MXbegtmOoorU68fq82HlJOuFxv5NZNiQdsh03ZeDRveEBkATyp4WjCTZtlyUKSleKxzfRDAtvuZhAuI6w84btVtUic6K/BuN6hHxwMR8uvInIZ76a/9n2N2t7JgYx8qoaq5dte8oqpSOucr1Y8imr+3T4byRZIL3EHK4l33q0+4lCZSjy7UbMRfpz8DcuFGFX59tnDlaOD2UlsgP/dU28i6jruQOol6X6Z+LQ/8OGgxXT/nbJzgROs/KrrCUi20d4jOe79PT532wVeQhWc8+ethQd0sjLEV/1tRd5SqLGlBmv/+lPRVPdIk86kS11OP/PwKVU2kH5loaYmhzlqLTp/ir0yFjS+0T5Ocf8UuBFazomdhPHNcy6PmaOQnV7rE9ZOFiVFiZLPfcSBmnCW9Zeeq05kvljbDmJnjmYihyQwcOQr4iIn458bPPFm18gxlVVn8mJAi/8Z37wNtADGS2Hj4xd+LSdQTHiJDOKwlnzVGc/8HI5Cy3tixi7U8vmSMN3AgMBAAGjggFaMIIBVjAfBgNVHSMEGDAWgBSVDbdkGMKmm2Z22Pz8mlokvCjWzTAdBgNVHQ4EFgQUpW/ifkyViDntwvVH12J+c6YD1YYwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQAwbQYIKwYBBQUHAQEEYTBfMCAGCCsGAQUFBzABhhRodHRwOi8vb2NzcC5zay5lZS9DQTA7BggrBgEFBQcwAoYvaHR0cDovL2Muc2suZWUvU0tfSURfU29sdXRpb25zX1JPT1RfRzFSLmRlci5jcnQwLwYDVR0fBCgwJjAkoCKgIIYeaHR0cDovL2Muc2suZWUvU0tfUk9PVF9HMVIuY3JsMFAGA1UdIARJMEcwRQYEVR0gADA9MDsGCCsGAQUFBwIBFi9odHRwczovL3d3dy5za2lkc29sdXRpb25zLmV1L2VuL3JlcG9zaXRvcnkvQ1BTLzANBgkqhkiG9w0BAQwFAAOCAgEAoLWe39b3tLZlKYJElR55D9hP2VyRQ6v9bhKKNa+DiVxvIvpgRKEu1L0Obys+Bu3h04HtzxS+smrLKVTCK7cQn4tdMkoVEU70KXjCknza1pgl5Z4R24T2R/iakhGt6Go38m5kfGMZ7iv3N7ooFcWrptk/PjhGNxjcC/tBkNsGqrJolpa5uHUsT8dB1PHNTod2oLZhrRGKQl63Ahwa4NCxRIu9972Kuxgph+ARbkIUR9GzFSe7SDSXA8nGxOILN/YbD0pN+PKvyumI4eKfQEDyu2w1/+Gkqz/kRDIrE57lHvpr5VSkmunw8BpCSDxfESt9JrEhpkO2RHcVxh6LKMW9PXrvi1phNqLctFs2jDiQCexPf8FWW4OhIHvFqAnz4Yb4ShWKN6ATe45qJoQ7ee+rz25jhhWwMQ0yLTe2kx+nPLoSTqj1vnwXRYLeynKDAEn4brXP0KzenSGU5Ywkg0TVfM4L7mSxYrsDyr+4PYw9+RrThtGbUXHl65lKFQxVBFdcdCncqn/O9TXedtzxUsxMbDrgkNz9B3TF3+o0SbN/xoPR/TYvIpmXxuANPyIBSHFvQcCTX5UrzBEzp7vd0YM+Lexde+ZuCnlihOwDezT08TnOlWA/TqB+YrBVyc6KgrQbkZ+0KhlMTLiqnua5QVW7oMEFqdFUILlmHvppaa+1Aks=</X509Certificate>
+                            </DigitalId>
+                            <DigitalId>
+<X509SubjectName>CN=SK ID Solutions EID-Q 2021R, OID.2.5.4.97=NTREE-10747013, O=SK ID Solutions AS, C=EE</X509SubjectName>
+                            </DigitalId>
+                            <DigitalId>
+<X509SKI>pW/ifkyViDntwvVH12J+c6YD1YY=</X509SKI>
+                            </DigitalId>
+                        </ServiceDigitalIdentity>
+                        <ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>
+                        <StatusStartingTime>2024-10-17T01:00:00Z</StatusStartingTime>
+                        <ServiceInformationExtensions>
+                            <Extension Critical="false">
+<AdditionalServiceInformation>
+    <URI xml:lang="en">http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</URI>
+</AdditionalServiceInformation>
+                            </Extension>
+                            <Extension Critical="false">
+<ns5:Qualifications>
+    <ns5:QualificationElement>
+        <ns5:Qualifiers>
+            <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCStatement"/>
+            <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCForESig"/>
+        </ns5:Qualifiers>
+        <ns5:CriteriaList assert="all">
+            <ns5:KeyUsage>
+                <ns5:KeyUsageBit name="nonRepudiation">true</ns5:KeyUsageBit>
+            </ns5:KeyUsage>
             <ns5:PolicySet>
                 <ns5:PolicyIdentifier>
                     <ns4:Identifier Qualifier="OIDAsURN">urn:oid:1.3.6.1.4.1.10015.18.1</ns4:Identifier>
                     <ns4:Description>Certificate Policy for Qualified Mobile-ID</ns4:Description>
+                </ns5:PolicyIdentifier>
+            </ns5:PolicySet>
+            <ns5:Description>All certificates issued under this CA/QC service that have nonRepudiation bit set exclusively are issued as qualified certificates</ns5:Description>
+        </ns5:CriteriaList>
+    </ns5:QualificationElement>
+</ns5:Qualifications>
+                            </Extension>
+                        </ServiceInformationExtensions>
+                    </ServiceInformation>
+                    <ServiceHistory>
+                        <ServiceHistoryInstance>
+                            <ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceTypeIdentifier>
+                            <ServiceName>
+<Name xml:lang="en">EID-SK-Q 2021R qualified certificates for electronic signatures</Name>
+                            </ServiceName>
+                            <ServiceDigitalIdentity>
+<DigitalId>
+    <X509SubjectName>CN=SK ID Solutions EID-Q 2021R, OID.2.5.4.97=NTREE-10747013, O=SK ID Solutions AS, C=EE</X509SubjectName>
+</DigitalId>
+<DigitalId>
+    <X509SKI>pW/ifkyViDntwvVH12J+c6YD1YY=</X509SKI>
+</DigitalId>
+                            </ServiceDigitalIdentity>
+                            <ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>
+                            <StatusStartingTime>2024-10-17T01:00:00Z</StatusStartingTime>
+                            <ServiceInformationExtensions>
+<Extension Critical="false">
+    <AdditionalServiceInformation>
+        <URI xml:lang="en">http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</URI>
+    </AdditionalServiceInformation>
+</Extension>
+<Extension Critical="false">
+    <ns5:Qualifications>
+        <ns5:QualificationElement>
+            <ns5:Qualifiers>
+                <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCStatement"/>
+                <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCForESig"/>
+            </ns5:Qualifiers>
+            <ns5:CriteriaList assert="all">
+                <ns5:KeyUsage>
+                    <ns5:KeyUsageBit name="nonRepudiation">true</ns5:KeyUsageBit>
+                </ns5:KeyUsage>
+                <ns5:PolicySet>
+                    <ns5:PolicyIdentifier>
+                        <ns4:Identifier Qualifier="OIDAsURN">urn:oid:1.3.6.1.4.1.10015.17.2</ns4:Identifier>
+                        <ns4:Description>Certificate Policy for Qualified Smart-ID</ns4:Description>
+                    </ns5:PolicyIdentifier>
+                </ns5:PolicySet>
+                <ns5:PolicySet>
+                    <ns5:PolicyIdentifier>
+                        <ns4:Identifier Qualifier="OIDAsURN">urn:oid:1.3.6.1.4.1.10015.18.1</ns4:Identifier>
+                        <ns4:Description>Certificate Policy for Qualified Mobile-ID</ns4:Description>
+                    </ns5:PolicyIdentifier>
+                </ns5:PolicySet>
+                <ns5:Description>All certificates issued under this CA/QC service that have nonRepudiation bit set exclusively are issued as qualified certificates</ns5:Description>
+            </ns5:CriteriaList>
+        </ns5:QualificationElement>
+    </ns5:Qualifications>
+</Extension>
+                            </ServiceInformationExtensions>
+                        </ServiceHistoryInstance>
+                        <ServiceHistoryInstance>
+                            <ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceTypeIdentifier>
+                            <ServiceName>
+<Name xml:lang="en">EID-SK-Q 2021R</Name>
+                            </ServiceName>
+                            <ServiceDigitalIdentity>
+<DigitalId>
+    <X509SubjectName>CN=SK ID Solutions EID-Q 2021R, OID.2.5.4.97=NTREE-10747013, O=SK ID Solutions AS, C=EE</X509SubjectName>
+</DigitalId>
+<DigitalId>
+    <X509SKI>pW/ifkyViDntwvVH12J+c6YD1YY=</X509SKI>
+</DigitalId>
+                            </ServiceDigitalIdentity>
+                            <ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>
+                            <StatusStartingTime>2024-02-08T05:00:20Z</StatusStartingTime>
+                            <ServiceInformationExtensions>
+<Extension Critical="false">
+    <AdditionalServiceInformation>
+        <URI xml:lang="en">http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</URI>
+    </AdditionalServiceInformation>
+</Extension>
+<Extension Critical="false">
+    <ns5:Qualifications>
+        <ns5:QualificationElement>
+            <ns5:Qualifiers>
+                <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCStatement"/>
+                <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCForESig"/>
+            </ns5:Qualifiers>
+            <ns5:CriteriaList assert="all">
+                <ns5:KeyUsage>
+                    <ns5:KeyUsageBit name="nonRepudiation">true</ns5:KeyUsageBit>
+                </ns5:KeyUsage>
+                <ns5:PolicySet>
+                    <ns5:PolicyIdentifier>
+                        <ns4:Identifier Qualifier="OIDAsURN">urn:oid:1.3.6.1.4.1.10015.17.2</ns4:Identifier>
+                        <ns4:Description>Certificate Policy for Qualified Smart-ID</ns4:Description>
+                    </ns5:PolicyIdentifier>
+                </ns5:PolicySet>
+                <ns5:PolicySet>
+                    <ns5:PolicyIdentifier>
+                        <ns4:Identifier Qualifier="OIDAsURN">urn:oid:1.3.6.1.4.1.10015.18.1</ns4:Identifier>
+                        <ns4:Description>Certificate Policy for Qualified Mobile-ID</ns4:Description>
+                    </ns5:PolicyIdentifier>
+                </ns5:PolicySet>
+                <ns5:Description>All certificates issued under this CA/QC service that have nonRepudiation bit set exclusively are issued as qualified certificates</ns5:Description>
+            </ns5:CriteriaList>
+        </ns5:QualificationElement>
+    </ns5:Qualifications>
+</Extension>
+                            </ServiceInformationExtensions>
+                        </ServiceHistoryInstance>
+                    </ServiceHistory>
+                </TSPService>
+                <TSPService>
+                    <ServiceInformation>
+                        <ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceTypeIdentifier>
+                        <ServiceName>
+                            <Name xml:lang="en">EID-SK-Q 2024E qualified certificates for electronic signatures</Name>
+                        </ServiceName>
+                        <ServiceDigitalIdentity>
+                            <DigitalId>
+<X509Certificate>MIIDrzCCAxCgAwIBAgIUJFmkBcQvQ0QOhvceUs8st3JaFI4wCgYIKoZIzj0EAwMwZjELMAkGA1UEBhMCRUUxGzAZBgNVBAoMElNLIElEIFNvbHV0aW9ucyBBUzEXMBUGA1UEYQwOTlRSRUUtMTA3NDcwMTMxITAfBgNVBAMMGFNLIElEIFNvbHV0aW9ucyBST09UIEcxRTAeFw0yNDA3MDIwODM0NThaFw0zOTA2MjkwODM0NTdaMGkxJDAiBgNVBAMMG1NLIElEIFNvbHV0aW9ucyBFSUQtUSAyMDI0RTEXMBUGA1UEYQwOTlRSRUUtMTA3NDcwMTMxGzAZBgNVBAoMElNLIElEIFNvbHV0aW9ucyBBUzELMAkGA1UEBhMCRUUwdjAQBgcqhkjOPQIBBgUrgQQAIgNiAASS0qdCTcqwsTWm/TSe1ZTHV8+92muF2Lr8s8og8kF8lVAk/b9BEIch0SlB99gWbjZcXEGVY5pn3TnxbOIB4gAfbcrkToAGHZ6CnQHy0Cu1yGx26SgxGiIT7G6aWKgVjRyjggF6MIIBdjASBgNVHRMBAf8ECDAGAQH/AgEAMB8GA1UdIwQYMBaAFIZ0TzrrOPKwp+7tuYWbnYMJRTFrMG0GCCsGAQUFBwEBBGEwXzA7BggrBgEFBQcwAoYvaHR0cDovL2Muc2suZWUvU0tfSURfU29sdXRpb25zX1JPT1RfRzFFLmRlci5jcnQwIAYIKwYBBQUHMAGGFGh0dHA6Ly9vY3NwLnNrLmVlL0NBMHAGA1UdIARpMGcwBgYEVR0gADBdBgNVHSAwVjBUBggrBgEFBQcCARZIaHR0cHM6Ly93d3cuc2tpZHNvbHV0aW9ucy5ldS9yZXNvdXJjZXMvY2VydGlmaWNhdGlvbi1wcmFjdGljZS1zdGF0ZW1lbnQvMC8GA1UdHwQoMCYwJKAioCCGHmh0dHA6Ly9jLnNrLmVlL1NLX1JPT1RfRzFFLmNybDAdBgNVHQ4EFgQUdkUHZ+4lf+4gTZwsqVexnp+H1TkwDgYDVR0PAQH/BAQDAgEGMAoGCCqGSM49BAMDA4GMADCBiAJCAIBxMfYdVnp1WBtpFerhlPritsebecWtmgE59KIirv/bsIPBIFecs6TyvLY00l0XVD0KoEuPQ+OxjPbNX5e2GmWoAkIBjZTfQqK4XPWV0QIBMr2GIFCTWOVs4MY/jMMBmGnZ283eQ+PTJhyz2kA+rEdlhlMGwz1RGIuh2gbUwvB11yoHhnc=</X509Certificate>
+                            </DigitalId>
+                            <DigitalId>
+<X509SubjectName>C=EE, O=SK ID Solutions AS, OID.2.5.4.97=NTREE-10747013, CN=SK ID Solutions EID-Q 2024E</X509SubjectName>
+                            </DigitalId>
+                            <DigitalId>
+<X509SKI>dkUHZ+4lf+4gTZwsqVexnp+H1Tk=</X509SKI>
+                            </DigitalId>
+                        </ServiceDigitalIdentity>
+                        <ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>
+                        <StatusStartingTime>2024-10-17T01:00:00Z</StatusStartingTime>
+                        <ServiceInformationExtensions>
+                            <Extension Critical="false">
+<AdditionalServiceInformation>
+    <URI xml:lang="en">http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/ForeSignatures</URI>
+</AdditionalServiceInformation>
+                            </Extension>
+                            <Extension Critical="false">
+<ns5:Qualifications>
+    <ns5:QualificationElement>
+        <ns5:Qualifiers>
+            <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCStatement"/>
+            <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCForESig"/>
+            <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCQSCDManagedOnBehalf"/>
+        </ns5:Qualifiers>
+        <ns5:CriteriaList assert="all">
+            <ns5:KeyUsage>
+                <ns5:KeyUsageBit name="nonRepudiation">true</ns5:KeyUsageBit>
+            </ns5:KeyUsage>
+            <ns5:PolicySet>
+                <ns5:PolicyIdentifier>
+                    <ns4:Identifier Qualifier="OIDAsURN">urn:oid:1.3.6.1.4.1.10015.17.2</ns4:Identifier>
+                    <ns4:Description>Certificate Policy for Qualified Smart-ID</ns4:Description>
                 </ns5:PolicyIdentifier>
             </ns5:PolicySet>
             <ns5:Description>All certificates issued under this CA/QC service that have nonRepudiation bit set exclusively are issued as qualified certificates</ns5:Description>
@@ -3446,21 +3934,21 @@
                     <ServiceInformation>
                         <ServiceTypeIdentifier>http://uri.etsi.org/TrstSvc/Svctype/CA/QC</ServiceTypeIdentifier>
                         <ServiceName>
-                            <Name xml:lang="en">EID-SK-Q 2021R</Name>
+                            <Name xml:lang="en">EID-SK-Q 2024R qualified certificates for electronic signatures</Name>
                         </ServiceName>
                         <ServiceDigitalIdentity>
                             <DigitalId>
-<X509Certificate>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</X509Certificate>
+<X509Certificate>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</X509Certificate>
                             </DigitalId>
                             <DigitalId>
-<X509SubjectName>CN=SK ID Solutions EID-Q 2021R, OID.2.5.4.97=NTREE-10747013, O=SK ID Solutions AS, C=EE</X509SubjectName>
+<X509SubjectName>C=EE, O=SK ID Solutions AS, OID.2.5.4.97=NTREE-10747013, CN=SK ID Solutions EID-Q 2024R</X509SubjectName>
                             </DigitalId>
                             <DigitalId>
-<X509SKI>pW/ifkyViDntwvVH12J+c6YD1YY=</X509SKI>
+<X509SKI>U/DnNLlgAkLLml/Vz0mTHxwNn1c=</X509SKI>
                             </DigitalId>
                         </ServiceDigitalIdentity>
                         <ServiceStatus>http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted</ServiceStatus>
-                        <StatusStartingTime>2024-02-08T05:00:20Z</StatusStartingTime>
+                        <StatusStartingTime>2024-10-17T01:00:00Z</StatusStartingTime>
                         <ServiceInformationExtensions>
                             <Extension Critical="false">
 <AdditionalServiceInformation>
@@ -3473,6 +3961,7 @@
         <ns5:Qualifiers>
             <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCStatement"/>
             <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCForESig"/>
+            <ns5:Qualifier uri="http://uri.etsi.org/TrstSvc/TrustedList/SvcInfoExt/QCQSCDManagedOnBehalf"/>
         </ns5:Qualifiers>
         <ns5:CriteriaList assert="all">
             <ns5:KeyUsage>
@@ -3482,12 +3971,6 @@
                 <ns5:PolicyIdentifier>
                     <ns4:Identifier Qualifier="OIDAsURN">urn:oid:1.3.6.1.4.1.10015.17.2</ns4:Identifier>
                     <ns4:Description>Certificate Policy for Qualified Smart-ID</ns4:Description>
-                </ns5:PolicyIdentifier>
-            </ns5:PolicySet>
-            <ns5:PolicySet>
-                <ns5:PolicyIdentifier>
-                    <ns4:Identifier Qualifier="OIDAsURN">urn:oid:1.3.6.1.4.1.10015.18.1</ns4:Identifier>
-                    <ns4:Description>Certificate Policy for Qualified Mobile-ID</ns4:Description>
                 </ns5:PolicyIdentifier>
             </ns5:PolicySet>
             <ns5:Description>All certificates issued under this CA/QC service that have nonRepudiation bit set exclusively are issued as qualified certificates</ns5:Description>
@@ -4308,4 +4791,4 @@
             </TSPServices>
         </TrustServiceProvider>
     </TrustServiceProviderList>
-<ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="id-a9761fb715d0359d5b6ef7eb43f3f4ee"><ds:SignedInfo><ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/><ds:Reference Id="xml_ref_id" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/><ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><ds:DigestValue>MYHnUCCu2ZuWMPWDmRHI0PNkOu7oC0o/bSuxHpiPKlY=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#xades-id-a9761fb715d0359d5b6ef7eb43f3f4ee"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><ds:DigestValue>QfXpEDSakrkvlM50ouRLxqiQjMxP1IuzAfxutxgrAW0=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue Id="value-id-a9761fb715d0359d5b6ef7eb43f3f4ee">mTW3ZNsYXH6yeZifBt9ll6aKa34rEzag+XU7K6TvC8NYaCJkaQZGnFhsfuhAQrag2no6PBRjj75e1eGyp7GB7OGXEUXhPAEgxpjtZ4NlzzvA1bLUeoQQM0K7HLvXmSYER7jfdzSKwX0XVu4BszC1DhPIwDs/bn5Jkz30DDFInc7xNvlAnDk5DQGuUQOcZIwXVCjBuT2aqLWmAnSAxCfaUwQKuZtmqfJqYfslfsmg2odJKIdu36wVPucMZryyvuH4Uccii6Fgo2rNJkQrIal0/hvYWJDpFz4E9WEPQIyynB2VXWPgd/5u3SN0SQ4aGix0vZy3R7YjpUNgle0cpEr8fg==</ds:SignatureValue><ds:KeyInfo><ds:X509Data><ds:X509Certificate>MIIDrDCCApSgAwIBAgIJAJp9F/NFeDmmMA0GCSqGSIb3DQEBDQUAMG0xLjAsBgNVBAMMJUVzdG9uaWFuIFRydXN0ZWQgTGlzdCBTY2hlbWUgT3BlcmF0b3IxCzAJBgNVBAYTAkVFMS4wLAYDVQQKDCVFc3RvbmlhbiBJbmZvcm1hdGlvbiBTeXN0ZW0gQXV0aG9yaXR5MB4XDTE5MDEyNTA5NDAwNloXDTI4MDcyNDA5NDAwNlowbTEuMCwGA1UEAwwlRXN0b25pYW4gVHJ1c3RlZCBMaXN0IFNjaGVtZSBPcGVyYXRvcjELMAkGA1UEBhMCRUUxLjAsBgNVBAoMJUVzdG9uaWFuIEluZm9ybWF0aW9uIFN5c3RlbSBBdXRob3JpdHkwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDBMux4ivfdlZy9W75NgMWfD7ahajygYHCp8Tw9LxQ0vkmpuyaNNlXU+uj+yffWfekVgMoLaQrCpVIN0FF8ZMnnlsK600hpgnQNI+snPxU1u9BK6P87ZpoQU2wvan2oqjWflm06ybLzvvJrPJVNoVelrUDTY6SPngMbyqqpsdXo+dW8916ZoRUcEkTFWjQXVjhY1Lqsorbpaop1iv9BV2SXmsh4szRlqpu4dDSElWViBn0+A1ptiSAt7JINr0DDjfswqE+dhvjf6xq+IEaqUoMtGPKgz7SDqKKyg/KBO1ZGunUZE+91HKUASt+sPy3O3wMZM1SpZe1INEXQ0EQ4gytdAgMBAAGjTzBNMAwGA1UdEwQFMAMCAQAwCwYDVR0PBAQDAgeAMB0GA1UdDgQWBBScAndEhykw8vEHVFuQ7XPtHnqFajARBgNVHSUECjAIBgYEAJE3AwAwDQYJKoZIhvcNAQENBQADggEBAHaLcIDZmUA9Bcv7TjuQW2Q3cFWFSmKc8aT5HaRKBxRRy10j9czqT439w/smT4De8JYyULXU+SoUX6/5sjmcpYxczFIC6imH8XLTgOca3vRAhek5iM80+h6v8CvxQHrsqNiSrLImE4LWfXWhQ/WPcyQdNrHCFrynJ9Gf6Q1DzQBRstpj5I8WjE+ME+w+vDj+VHHjI4wd5NkJhwwaF5PFB6uRrdb95e1dqLe4CTALe6+dh2QYhzSWZ+AZ2GaF+LlFreHhyV0sl+KwcNKSzSotStHL0zPTnq/yxPNaihhFmAlPdZdwq7vTN+yn5PAqEcfhTn06Gf5yDZjrmf5JO5eMpzM=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object><xades:QualifyingProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Target="#id-a9761fb715d0359d5b6ef7eb43f3f4ee"><xades:SignedProperties Id="xades-id-a9761fb715d0359d5b6ef7eb43f3f4ee"><xades:SignedSignatureProperties><xades:SigningTime>2024-06-11T09:42:46Z</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha512"/><ds:DigestValue>R14uA1QdIRBhGMN270QwubqLrkRR+Vg+UPT+uSs7gebBC1+F+qyvGFWCwonfGaYPDppY0O4KYJW6HA01hHWOvw==</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName>O=Estonian Information System Authority,C=EE,CN=Estonian Trusted List Scheme Operator</ds:X509IssuerName><ds:X509SerialNumber>11132080187539732902</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#xml_ref_id"><xades:MimeType>text/xml</xades:MimeType></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties></xades:QualifyingProperties></ds:Object></ds:Signature></TrustServiceStatusList>
+<ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="id-f539533b661378c53100ca8f8a4946c3"><ds:SignedInfo><ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/><ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/><ds:Reference Id="tl_signing_tool" URI=""><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/><ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><ds:DigestValue>KHGqs/gO7axkm5zAPOQmPj5GYtNfPhSOFBQme/LqBeY=</ds:DigestValue></ds:Reference><ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#xades-id-f539533b661378c53100ca8f8a4946c3"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/><ds:DigestValue>S38J/GgqL+MsD8nfdHDp/04ry59dVcyFLvbobh8NeWM=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue Id="value-id-f539533b661378c53100ca8f8a4946c3">ihbszZv4Rk76b5ly4b7K8/JbvupzNiqaVW13t+BMC4bEuJNA+pVyXj/Wrz14xCVdViRCLJZJMZZRzqf1LY7AMdKUBMB+Al3Mh9dlDl40Udnmq1jx/BgZS+FawE34pCoEiGFPsgzNY+j5HGvAgNzWyeCEiUT6JH5gW8PIQZeLi2C7ZH2zo5hWTnlCLbMgAdvWMrCmZsrZGtd773UFnxzAzVSXuFO47DuG7v7mcYH52L6m8lerCLD4WEUcb9R7cID3X/GspcTN7agXC2771zurSPdrWo441UrhQ55sQjj1H1rHIr7zv3GyykkOLWpg5RP5pNeb1aHWy2JD+vh2SD8LJA==</ds:SignatureValue><ds:KeyInfo><ds:X509Data><ds:X509Certificate>MIIDrDCCApSgAwIBAgIJAJp9F/NFeDmmMA0GCSqGSIb3DQEBDQUAMG0xLjAsBgNVBAMMJUVzdG9uaWFuIFRydXN0ZWQgTGlzdCBTY2hlbWUgT3BlcmF0b3IxCzAJBgNVBAYTAkVFMS4wLAYDVQQKDCVFc3RvbmlhbiBJbmZvcm1hdGlvbiBTeXN0ZW0gQXV0aG9yaXR5MB4XDTE5MDEyNTA5NDAwNloXDTI4MDcyNDA5NDAwNlowbTEuMCwGA1UEAwwlRXN0b25pYW4gVHJ1c3RlZCBMaXN0IFNjaGVtZSBPcGVyYXRvcjELMAkGA1UEBhMCRUUxLjAsBgNVBAoMJUVzdG9uaWFuIEluZm9ybWF0aW9uIFN5c3RlbSBBdXRob3JpdHkwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDBMux4ivfdlZy9W75NgMWfD7ahajygYHCp8Tw9LxQ0vkmpuyaNNlXU+uj+yffWfekVgMoLaQrCpVIN0FF8ZMnnlsK600hpgnQNI+snPxU1u9BK6P87ZpoQU2wvan2oqjWflm06ybLzvvJrPJVNoVelrUDTY6SPngMbyqqpsdXo+dW8916ZoRUcEkTFWjQXVjhY1Lqsorbpaop1iv9BV2SXmsh4szRlqpu4dDSElWViBn0+A1ptiSAt7JINr0DDjfswqE+dhvjf6xq+IEaqUoMtGPKgz7SDqKKyg/KBO1ZGunUZE+91HKUASt+sPy3O3wMZM1SpZe1INEXQ0EQ4gytdAgMBAAGjTzBNMAwGA1UdEwQFMAMCAQAwCwYDVR0PBAQDAgeAMB0GA1UdDgQWBBScAndEhykw8vEHVFuQ7XPtHnqFajARBgNVHSUECjAIBgYEAJE3AwAwDQYJKoZIhvcNAQENBQADggEBAHaLcIDZmUA9Bcv7TjuQW2Q3cFWFSmKc8aT5HaRKBxRRy10j9czqT439w/smT4De8JYyULXU+SoUX6/5sjmcpYxczFIC6imH8XLTgOca3vRAhek5iM80+h6v8CvxQHrsqNiSrLImE4LWfXWhQ/WPcyQdNrHCFrynJ9Gf6Q1DzQBRstpj5I8WjE+ME+w+vDj+VHHjI4wd5NkJhwwaF5PFB6uRrdb95e1dqLe4CTALe6+dh2QYhzSWZ+AZ2GaF+LlFreHhyV0sl+KwcNKSzSotStHL0zPTnq/yxPNaihhFmAlPdZdwq7vTN+yn5PAqEcfhTn06Gf5yDZjrmf5JO5eMpzM=</ds:X509Certificate></ds:X509Data></ds:KeyInfo><ds:Object><xades:QualifyingProperties xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Target="#id-f539533b661378c53100ca8f8a4946c3"><xades:SignedProperties Id="xades-id-f539533b661378c53100ca8f8a4946c3"><xades:SignedSignatureProperties><xades:SigningTime>2024-10-17T06:18:43Z</xades:SigningTime><xades:SigningCertificate><xades:Cert><xades:CertDigest><ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha512"/><ds:DigestValue>R14uA1QdIRBhGMN270QwubqLrkRR+Vg+UPT+uSs7gebBC1+F+qyvGFWCwonfGaYPDppY0O4KYJW6HA01hHWOvw==</ds:DigestValue></xades:CertDigest><xades:IssuerSerial><ds:X509IssuerName>O=Estonian Information System Authority,C=EE,CN=Estonian Trusted List Scheme Operator</ds:X509IssuerName><ds:X509SerialNumber>11132080187539732902</ds:X509SerialNumber></xades:IssuerSerial></xades:Cert></xades:SigningCertificate></xades:SignedSignatureProperties><xades:SignedDataObjectProperties><xades:DataObjectFormat ObjectReference="#tl_signing_tool"><xades:MimeType>text/xml</xades:MimeType></xades:DataObjectFormat></xades:SignedDataObjectProperties></xades:SignedProperties></xades:QualifyingProperties></ds:Object></ds:Signature></TrustServiceStatusList>
