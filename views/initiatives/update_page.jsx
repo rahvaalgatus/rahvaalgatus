@@ -103,7 +103,9 @@ module.exports = function(attrs) {
 
 			{textSections ? <>
 				<p class="description">
-					{Jsx.html(t("edit_initiative_page.text.sections_description"))}
+					{Jsx.html(t("edit_initiative_page.text.sections_description", {
+						tosUrl: "/about#tos"
+					}))}
 				</p>
 
 				{textSections.map(function(section) {
@@ -116,9 +118,7 @@ module.exports = function(attrs) {
 							title = t("edit_initiative_page.text.sections.summary")
 
 							description =
-								t("edit_initiative_page.text.sections.summary_description", {
-									tosUrl: "/about#tos"
-								})
+								t("edit_initiative_page.text.sections.summary_description")
 							break
 
 						case "problem":
