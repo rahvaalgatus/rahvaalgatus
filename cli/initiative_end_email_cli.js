@@ -76,12 +76,7 @@ function* emailEndedDiscussions({actuallyEmail}) {
 
 function* emailEndedInitiatives({actuallyEmail}) {
 	var initiatives = initiativesDb.search(sql`
-		SELECT
-			initiative.*,
-			user.email AS user_email,
-			${initiativesDb.countSignatures(sql`initiative_uuid = initiative.uuid`)}
-			AS signature_count
-
+		SELECT initiative.*, user.email AS user_email
 		FROM initiatives AS initiative
 		JOIN users AS user ON initiative.user_id = user.id
 

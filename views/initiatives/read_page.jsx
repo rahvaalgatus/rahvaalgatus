@@ -1640,8 +1640,10 @@ function EventsView(attrs) {
 	var {lang} = attrs
 	var {user} = attrs
 	var {initiative} = attrs
-	var events = attrs.events.sort(compareEvent).reverse()
+	var {events} = attrs
 	var initiativePath = "/initiatives/" + initiative.id
+
+	events = events.sort(compareEvent).reverse()
 
 	var canCreateEvents = (
 		user &&
@@ -1973,23 +1975,31 @@ function EventsView(attrs) {
 	else return null
 }
 
-function CommentsView(attrs) {
-	var {t} = attrs
-	var {req} = attrs
-	var {initiative} = attrs
-	var {comments} = attrs
-	var {subscription} = attrs
+function CommentsView({t, req, initiative, subscription, comments}) {
+	var commentsByPhase = _.groupBy(comments, "initiative_phase")
 
 	return <section id="initiative-comments" class="transparent-section"><center>
-		<h2>{t("COMMENT_HEADING")}</h2>
+		<h2>{t("initiative_page.comments.title")}</h2>
 
-		<ol class="comments">
-			{comments.map((comment) => <li
+		{PHASES.map(function(phase) {
+			var comments = commentsByPhase[phase] || []
+			if (comments.length == 0) return null
+
+			var commentsEl = <ol class="comments">{comments.map((comment) => <li
 				id={`comment-${comment.id}`}
 				class="comment">
 				<CommentView req={req} initiative={initiative} comment={comment} />
-			</li>)}
-		</ol>
+			</li>)}</ol>
+
+			if (Initiative.isPhaseGte(phase, initiative.phase)) return commentsEl
+			return <details class={"phased-comments " + phase + "-phase"}>
+				<summary>{t("initiative_page.comments.phased." + phase, {
+					count: comments.length
+				})}</summary>
+
+				{commentsEl}
+			</details>
+		})}
 
 		<CommentForm
 			req={req}

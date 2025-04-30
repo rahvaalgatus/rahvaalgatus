@@ -5945,12 +5945,14 @@ describe("InitiativesController", function() {
 
 					var comment = commentsDb.create(new ValidComment({
 						initiative_uuid: initiative.uuid,
+						initiative_phase: initiative.phase,
 						user_id: author.id,
 						user_uuid: _.serializeUuid(author.uuid)
 					}))
 
 					var reply = commentsDb.create(new ValidComment({
 						initiative_uuid: initiative.uuid,
+						initiative_phase: initiative.phase,
 						user_id: replier.id,
 						user_uuid: _.serializeUuid(replier.uuid),
 						parent_id: comment.id
@@ -5984,6 +5986,7 @@ describe("InitiativesController", function() {
 
 					var comment = commentsDb.create(new ValidComment({
 						initiative_uuid: initiative.uuid,
+						initiative_phase: initiative.phase,
 						user_id: author.id,
 						user_uuid: _.serializeUuid(author.uuid),
 						anonymized_at: new Date
@@ -5991,6 +5994,7 @@ describe("InitiativesController", function() {
 
 					commentsDb.create(new ValidComment({
 						initiative_uuid: initiative.uuid,
+						initiative_phase: initiative.phase,
 						user_id: replier.id,
 						user_uuid: _.serializeUuid(replier.uuid),
 						parent_id: comment.id,
@@ -6017,6 +6021,7 @@ describe("InitiativesController", function() {
 
 					var comment = commentsDb.create(new ValidComment({
 						initiative_uuid: other.uuid,
+						initiative_phase: other.phase,
 						user_id: author.id,
 						user_uuid: _.serializeUuid(author.uuid)
 					}))
@@ -7336,6 +7341,7 @@ describe("InitiativesController", function() {
 
 					commentsDb.create(new ValidComment({
 						initiative_uuid: initiative.uuid,
+						initiative_phase: initiative.phase,
 						user_id: this.user.id,
 						user_uuid: _.serializeUuid(this.user.uuid)
 					}))
@@ -7355,6 +7361,7 @@ describe("InitiativesController", function() {
 
 					commentsDb.create(new ValidComment({
 						initiative_uuid: initiative.uuid,
+						initiative_phase: initiative.phase,
 						user_id: this.user.id,
 						user_uuid: _.serializeUuid(this.user.uuid)
 					}))
@@ -12208,6 +12215,7 @@ describe("InitiativesController", function() {
 							phase: "parliament",
 							sent_to_parliament_at: new Date,
 							parliament_token: updatedInitiative.parliament_token,
+							signature_count: signatureCount,
 							signature_threshold: Config.votesRequired,
 							signature_threshold_at: new Date,
 							last_signature_created_at: _.last(signatures).created_at
@@ -12541,6 +12549,7 @@ describe("InitiativesController", function() {
 							phase: "government",
 							sent_to_government_at: new Date,
 							parliament_token: updatedInitiative.parliament_token,
+							signature_count: signatureCount,
 							signature_threshold: signatureThreshold,
 							signature_threshold_at: new Date,
 							last_signature_created_at: _.last(signatures).created_at
@@ -13090,6 +13099,7 @@ describe("InitiativesController", function() {
 
 				commentsDb.create(new ValidComment({
 					initiative_uuid: initiative.uuid,
+					initiative_phase: initiative.phase,
 					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid)
 				}))
@@ -13119,6 +13129,7 @@ describe("InitiativesController", function() {
 
 				var comment = commentsDb.create(new ValidComment({
 					initiative_uuid: initiative.uuid,
+					initiative_phase: initiative.phase,
 					user_id: this.user.id,
 					user_uuid: _.serializeUuid(this.user.uuid)
 				}))

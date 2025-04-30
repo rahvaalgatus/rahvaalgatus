@@ -1099,6 +1099,7 @@ describe("HomeController", function() {
 
 					commentsDb.create(new ValidComment({
 						initiative_uuid: initiative.uuid,
+						initiative_phase: initiative.phase,
 						user_id: self.author.id,
 						user_uuid: self.author.uuid,
 						created_at: DateFns.addMinutes(new Date, i * 2)
@@ -1178,6 +1179,7 @@ describe("HomeController", function() {
 
 					(initiative, i) => commentsDb.create(new ValidComment({
 						initiative_uuid: initiative.uuid,
+						initiative_phase: initiative.phase,
 						user_id: this.author.id,
 						user_uuid: this.author.uuid,
 						created_at: DateFns.addMinutes(new Date, -i)

@@ -53,6 +53,7 @@ exports.router.post("/", assertUser, rateLimit, next(function*(req, res) {
 
 	var attrs = _.assign(parse(req.body), {
 		initiative_uuid: initiative.uuid,
+		initiative_phase: initiative.phase,
 		user_id: user.id,
 		user_uuid: _.serializeUuid(user.uuid),
 		created_at: new Date,
@@ -207,6 +208,7 @@ exports.router.post("/:commentId/replies",
 	var parse = isAdmin(user) ? parseCommentAsAdmin : parseComment
 	var attrs = _.assign(parse(req.body), {
 		initiative_uuid: parent.initiative_uuid,
+		initiative_phase: parent.initiative_phase,
 		parent_id: parent.id,
 		user_id: user.id,
 		user_uuid: _.serializeUuid(user.uuid),

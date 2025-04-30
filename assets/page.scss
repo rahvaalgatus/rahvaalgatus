@@ -4055,35 +4055,6 @@ main {
 
 		h2 { @media screen { display: none; } }
 
-		.create-event-button {
-			display: block;
-
-			background: $light-background;
-			text-align: center;
-			color: $secondary-light-text;
-			line-height: 4rem;
-			text-transform: uppercase;
-			font-weight: bold;
-			border-bottom: 1px solid $light-background-border;
-
-			&:hover { color: $link-color; }
-
-			&:focus {
-				box-shadow: 0 0 .5rem $link-color;
-				border-top-left-radius: .5rem;
-				border-top-right-radius: .5rem;
-			}
-
-			@include mobile-and-tablet {
-				border-radius: 0;
-				border-left: none;
-				border-right: none;
-				max-width: none;
-			}
-
-			@media print { display: none; }
-		}
-
 		.empty {
 			text-align: center;
 			font-size: 1.3rem;
@@ -4093,17 +4064,18 @@ main {
 
 		.event {
 			$event-separator-color: #eee;
+			$border-width: 0.5rem;
 
 			position: relative;
-			padding: 2.5rem $article-padding;
+			padding: 2.5rem ($article-padding - $border-width);
 			border-left: 0.5rem solid transparent;
 			font-size: 1.3rem;
 			line-height: 1.5;
 			font-weight: 500;
 
 			@include mobile {
-				padding-left: $article-padding-mobile;
-				padding-right: $article-padding-mobile;
+				padding-left: $article-padding-mobile - $border-width;
+				padding-right: $article-padding-mobile - $border-width;
 			}
 
 			@media print {
@@ -4222,45 +4194,33 @@ main {
 			}
 		}
 
-		#contribute {
-			// Max width for the events is ~64rem. With some for margin, that
-			// leaves ~30rem for the sidebar.
-			max-width: 30rem;
-			float: right;
-			margin-left: 3rem;
-			margin-bottom: 4rem;
-			border: 1px dashed #ccc;
-			padding: 2.5rem 1.5rem 1rem;
-			line-height: 1.5;
+		.create-event-button {
+			display: block;
+
+			background: $light-background;
 			text-align: center;
-			font-size: 1.6rem;
-			border-radius: $button-radius;
+			color: $secondary-light-text;
+			line-height: 4rem;
+			text-transform: uppercase;
+			font-weight: bold;
+			border-bottom: 1px solid $light-background-border;
 
-			h2 {
-				font-family: $museo-sans;
-				line-height: 1.2;
-				font-size: 2rem;
-				color: $title-text;
-				font-weight: 500;
-				margin-bottom: 1rem;
+			&:hover { color: $link-color; }
+
+			&:focus {
+				box-shadow: 0 0 .5rem $link-color;
+				border-top-left-radius: .5rem;
+				border-top-right-radius: .5rem;
 			}
 
-			p { white-space: pre-wrap; }
-			p + p { margin-top: 2rem; }
-
-			a {
-				margin-right: 0.5rem;
-				margin-bottom: 0.5rem;
-				padding: 0 1rem;
-				font-size: 1.2rem;
-				height: 3rem;
-				line-height: 3rem;
+			@include mobile-and-tablet {
+				border-radius: 0;
+				border-left: none;
+				border-right: none;
+				max-width: none;
 			}
 
-			@include mobile {
-				float: none;
-				margin-left: 0;
-			}
+			@media print { display: none; }
 		}
 	}
 
@@ -4268,10 +4228,15 @@ main {
 		page-break-after: always;
 
 		center {
+			padding-left: 0;
+			padding-right: 0;
+
 			& > * {
 				width: $article-width-percentage;
 				@include mobile-and-tablet { width: auto; }
 			}
+
+			@media screen { max-width: $page-width + $article-padding; }
 
 			@media print {
 				padding: 0;
@@ -4280,17 +4245,10 @@ main {
 			}
 		}
 
-		@include mobile-and-tablet {
-			center {
-				padding-left: 0;
-				padding-right: 0;
-			}
-
-			h2,
-			center > form {
-				padding-left: $article-padding;
-				padding-right: $article-padding;
-			}
+		h2,
+		center > form {
+			padding-left: $article-padding;
+			padding-right: $article-padding;
 		}
 
 		@include mobile {
@@ -4319,6 +4277,58 @@ main {
 		}
 
 		.comments:empty + .comment-form { margin-top: 0; }
+
+		.phased-comments {
+			summary {
+				cursor: pointer;
+				padding: 2rem $article-padding;
+				background: white;
+				font-weight: 500;
+				font-size: 2rem;
+				color: $title-text;
+				border-left: 0.5rem solid transparent;
+				box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.15);
+
+				@include mobile {
+					padding-left: $article-padding-mobile;
+					padding-right: $article-padding-mobile;
+				}
+			}
+
+			.comment {
+				border-left: 0.5rem solid transparent;
+			}
+
+			&.edit-phase {
+				summary,
+				.comment { border-left-color: $edit-phase-color; }
+			}
+			&.sign-phase {
+				summary,
+				.comment { border-left-color: $sign-phase-color; }
+			}
+
+			&.parliament-phase {
+				summary,
+				.comment { border-left-color: $parliament-phase-color; }
+			}
+
+			&.government-phase {
+				summary,
+				.comment { border-left-color: $government-phase-color; }
+			}
+
+			&[open] summary {
+				position: sticky;
+				top: 0;
+				margin-bottom: 1rem;
+			}
+
+			& + .phased-comments,
+			& + .comments {
+				margin-top: 2rem;
+			}
+		}
 
 		.comment-form {
 			input[type=text]:disabled,

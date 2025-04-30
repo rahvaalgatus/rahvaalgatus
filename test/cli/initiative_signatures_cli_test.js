@@ -39,6 +39,7 @@ describe("InitiativeSignaturesCli", function() {
 			cli(["initiative-signatures", "anonymize", "--yes"])
 
 			initiativesDb.read(initiative).must.eql(_.assign({}, initiative, {
+				signature_count: 6,
 				signatures_anonymized_at: new Date,
 				last_signature_created_at: _.last(signatures).created_at
 			}))
@@ -77,6 +78,7 @@ describe("InitiativeSignaturesCli", function() {
 			cli(["initiative-signatures", "anonymize", "--yes"])
 
 			initiativesDb.read(initiative).must.eql(_.defaults({
+				signature_count: 2,
 				last_signature_created_at: signature.created_at
 			}, initiative))
 
@@ -124,6 +126,7 @@ describe("InitiativeSignaturesCli", function() {
 			}))
 
 			initiativesDb.read(otherInitiative).must.eql(_.defaults({
+				signature_count: 2,
 				last_signature_created_at: signature.created_at
 			}, otherInitiative))
 

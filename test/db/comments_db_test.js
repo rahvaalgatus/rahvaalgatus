@@ -23,6 +23,7 @@ describe("CommentsDb", function() {
 			var comment = commentsDb.create(new ValidComment({
 				uuid: "245e3e1f-9d64-48bb-b008-817448e79c79",
 				initiative_uuid: this.initiative.uuid,
+				initiative_phase: this.initiative.phase,
 				user_id: author.id,
 				user_uuid: _.serializeUuid(author.uuid)
 			}))
@@ -32,6 +33,7 @@ describe("CommentsDb", function() {
 				commentsDb.create(new ValidComment({
 					uuid: comment.uuid,
 					initiative_uuid: comment.initiative_uuid,
+					initiative_phase: comment.initiative_phase,
 					user_id: comment.user_id,
 					user_uuid: comment.user_uuid
 				}))

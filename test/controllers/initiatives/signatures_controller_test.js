@@ -1694,6 +1694,7 @@ describe("SignaturesController", function() {
 				})])
 
 				initiativesDb.read(this.initiative).must.eql(_.defaults({
+					signature_count: 1,
 					last_signature_created_at: new Date
 				}, this.initiative))
 			})
@@ -2096,6 +2097,7 @@ describe("SignaturesController", function() {
 					})])
 
 					initiativesDb.read(this.initiative).must.eql(_.defaults({
+						signature_count: 1,
 						last_signature_created_at: new Date
 					}, this.initiative))
 				})
@@ -2347,6 +2349,7 @@ describe("SignaturesController", function() {
 					`).must.not.be.empty()
 
 					initiativesDb.read(this.initiative).must.eql(_.defaults({
+						signature_count: 1,
 						last_signature_created_at: new Date
 					}, this.initiative))
 				})
@@ -2892,6 +2895,7 @@ describe("SignaturesController", function() {
 					})])
 
 					initiativesDb.read(this.initiative).must.eql(_.defaults({
+						signature_count: 1,
 						last_signature_created_at: new Date
 					}, this.initiative))
 				})
@@ -3194,6 +3198,7 @@ describe("SignaturesController", function() {
 					`).must.not.be.empty()
 
 					initiativesDb.read(this.initiative).must.eql(_.defaults({
+						signature_count: 1,
 						last_signature_created_at: new Date
 					}, this.initiative))
 				})
@@ -3734,6 +3739,11 @@ describe("SignaturesController", function() {
 			signaturesDb.search(sql`
 				SELECT * FROM initiative_signatures
 			`).must.be.empty()
+
+			initiativesDb.read(this.initiative).must.eql(_.defaults({
+				signature_count: 0,
+				last_signature_created_at: signature.created_at
+			}, this.initiative))
 
 			var cookies = parseCookies(deleted.headers["set-cookie"])
 			var res = yield this.request(deleted.headers.location, {

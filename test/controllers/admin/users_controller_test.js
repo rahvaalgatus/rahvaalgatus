@@ -40,6 +40,7 @@ describe("AdminUsersController", function() {
 
 				var comment = commentsDb.create(new ValidComment({
 					initiative_uuid: initiative.uuid,
+					initiative_phase: initiative.phase,
 					user_id: source.id,
 					user_uuid: _.serializeUuid(source.id)
 				}))
@@ -106,6 +107,7 @@ describe("AdminUsersController", function() {
 
 				var comment = commentsDb.create(new ValidComment({
 					initiative_uuid: initiative.uuid,
+					initiative_phase: initiative.phase,
 					user_id: other.id,
 					user_uuid: _.serializeUuid(other.id)
 				}))
