@@ -56,6 +56,16 @@ module.exports = function(attrs) {
 
 		<table id="initiative-table" class="admin-horizontal-table">
 			<tr>
+				<th scope="row">Id</th>
+				<td>{initiative.id}</td>
+			</tr>
+
+			<tr>
+				<th scope="row">UUID</th>
+				<td>{initiative.uuid}</td>
+			</tr>
+
+			<tr>
 				<th scope="row">Destination</th>
 				<td>
 					<Form
