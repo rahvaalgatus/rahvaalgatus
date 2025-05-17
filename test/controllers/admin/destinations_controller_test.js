@@ -6,6 +6,7 @@ var signatureTrusteesDb = require("root/db/initiative_signature_trustees_db")
 var sql = require("sqlate")
 var {serializePersonalId} = require("root/lib/user")
 var LOCAL_GOVERNMENTS = require("root/lib/local_governments")
+var escapePath = encodeURIComponent
 
 describe("AdminDestinationsController", function() {
 	require("root/test/adm")()
@@ -29,7 +30,7 @@ describe("AdminDestinationsController", function() {
 			require("root/test/fixtures").admin()
 
 			it("must render", function*() {
-				var res = yield this.request("/destinations/" + dest)
+				var res = yield this.request("/destinations/" + escapePath(dest))
 				res.statusCode.must.equal(200)
 				res.headers["content-type"].must.equal("text/html; charset=utf-8")
 			})

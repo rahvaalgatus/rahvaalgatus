@@ -2,7 +2,6 @@ NODE = node
 NODE_OPTS = --use-strict --require j6pack/register
 ENV = development
 NPM = npm
-NPM_REBUILD = $(NPM) --ignore-scripts false rebuild --build-from-source
 TEST = $$(find test -name "*_test.js" -o -name "*_test.jsx")
 TEST_TAGS =
 MOCHA = ./node_modules/.bin/_mocha
@@ -46,8 +45,7 @@ RSYNC_OPTS = \
 	--exclude "/node_modules/sass/***" \
 	--exclude "/node_modules/jsdom/***" \
 	--exclude "/node_modules/better-sqlite3/build/***" \
-	--exclude "/node_modules/sharp/build/***" \
-	--exclude "/node_modules/sharp/vendor/***" \
+	--exclude "/node_modules/sharp/src/build/***" \
 	--exclude "/node_modules/emailjs-mime-parser/***" \
 	--exclude "/node_modules/sinon/***" \
 	--exclude "/tmp/***"
@@ -127,12 +125,11 @@ livereload:
 		./node_modules/.bin/livereload public --wait 50 --port $(LIVERELOAD_PORT)
 
 shrinkwrap:
-	$(NPM) shrinkwrap --dev
+	$(NPM) shrinkwrap --include=dev
 
 rebuild:
 	cd node_modules/better-sqlite3 && \
 	$(NPM) --ignore-scripts false run build-release
-	$(NPM_REBUILD) sharp --sharp-dist-base-url=http://localhost:0
 
 config/database.sql:
 	@$(SHANGE) schema > config/database.sql

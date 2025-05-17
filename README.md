@@ -9,7 +9,7 @@ The website of <https://rahvaalgatus.ee> built with JavaScript on Node.js, [JSX]
 
 Development
 -----------
-After installing a stable version of [Node.js](https://nodejs.org) (so far tested against Node.js v14 and NPM v2), follow these steps:
+After installing a stable version of [Node.js](https://nodejs.org) (so far tested against Node.js v20 and NPM v10), follow these steps:
 
 1. Install the JavaScript modules necessary for the server and client-side components.
 
@@ -46,16 +46,14 @@ After installing a stable version of [Node.js](https://nodejs.org) (so far teste
    make web PORT=8888
    ```
 
-5. Set up the <rahvaalgatus.test> domains.
+5. Set up the <rahvaalgatus.test> domain.
 
-   While Rahvaalgatus home page works fine when accessed via <http://localhost>, its parliament and local government sites link to specific subdomains. Email confirmation and notification emails also use the host from `Config.url` (`config/development.json` for the development environment). To be able to click on links in emails during development, update the configuration to use <localhost> or set up your preferred domain.
+   While Rahvaalgatus home page works fine when accessed via <http://localhost>, email confirmation and notification emails use the host from `Config.url` (`config/development.json` for the development environment). To be able to click on links in emails during development, update the configuration to use <localhost> or set up your preferred domain.
 
    To use <rahvaalgatus.test>, add it to your `/etc/hosts` file:
 
    ```
    127.0.0.1 rahvaalgatus.test
-   127.0.0.1 riigikogu.rahvaalgatus.test
-   127.0.0.1 kohalik.rahvaalgatus.test
    ```
 
 6. Open your local domain (e.g. <http://rahvaalgatus.test:3000>) in your browser and proceed with typing code.

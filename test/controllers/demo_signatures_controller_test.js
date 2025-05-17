@@ -517,8 +517,6 @@ function* signWithMobileId(router, request, cert, headers) {
 	})
 
 	router.get(`${MOBILE_ID_URL.path}signature/session/:token`, (req, res) => {
-		res.writeHead(200)
-
 		var {xades} = demoSignaturesDb.read(sql`
 			SELECT xades FROM demo_signatures ORDER BY created_at DESC LIMIT 1
 		`)
@@ -582,8 +580,6 @@ function* signWithSmartId(router, request, cert, headers) {
 	)
 
 	router.get(`${SMART_ID_URL.path}session/${signSession}`, function(req, res) {
-		res.writeHead(200)
-
 		var {xades} = demoSignaturesDb.read(sql`
 			SELECT xades FROM demo_signatures ORDER BY created_at DESC LIMIT 1
 		`)
