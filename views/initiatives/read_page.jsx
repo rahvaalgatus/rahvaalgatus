@@ -23,7 +23,6 @@ var {getSignatureThreshold} = require("root/lib/initiative")
 var {isAdmin} = require("root/lib/user")
 var {selected} = require("root/lib/css")
 var {javascript} = require("root/lib/jsx")
-var serializeImageUrl = require("root/lib/initiative").imageUrl
 var {pathToSignature} =
 	require("root/controllers/initiatives/signatures_controller")
 var {confirm} = require("root/lib/jsx")
@@ -145,7 +144,7 @@ function ReadPage(attrs) {
 			"twitter:card": "summary_large_image",
 			"og:title": initiative.title,
 			"og:url": initiativeSlugUrl,
-			"og:image": image && serializeImageUrl(initiative, image)
+			"og:image": image && Initiative.imageUrl(initiative, image)
 		}, Boolean)}
 
 		links={[{
@@ -464,8 +463,11 @@ function ReadPage(attrs) {
 						id="initiative-image"
 						class={imageEditable ? "editable" : ""}
 					>
-						<a href={serializeImageUrl(initiative, image)} class="image-link">
-							<img src={serializeImageUrl(initiative, image)} />
+						<a
+							href={Initiative.imagePath(initiative, image)}
+							class="image-link"
+						>
+							<img src={Initiative.imagePath(initiative, image)} />
 						</a>
 
 						{(

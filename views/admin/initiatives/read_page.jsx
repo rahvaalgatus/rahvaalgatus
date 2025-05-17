@@ -9,7 +9,6 @@ var {Form} = Page
 var {FormButton} = Page
 var {Flash} = Page
 var Initiative = require("root/lib/initiative")
-var serializeImageUrl = require("root/lib/initiative").imageUrl
 var {isEditableEvent} = require("root/controllers/admin/initiatives_controller")
 var isEventNotifiable = require("root/lib/event").isNotifiable
 var {anonymizeSignaturesReceivedAfterDays} = require("root").config
@@ -478,7 +477,7 @@ module.exports = function(attrs) {
 						req={req}
 						name="image"
 						action={initiativePath + "/image"}
-						value={image ? serializeImageUrl(initiative, image) : null}
+						value={image ? Initiative.imageUrl(initiative, image) : null}
 					/>
 				</td>
 			</tr>
