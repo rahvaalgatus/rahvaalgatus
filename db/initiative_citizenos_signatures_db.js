@@ -17,10 +17,9 @@ exports.parse = function(attrs) {
 }
 
 exports.countByInitiativeUuid = function(uuid) {
-	return this.sqlite(sql`
+	return this.select1(sql`
 		SELECT COUNT(*) AS count
 		FROM initiative_citizenos_signatures
 		WHERE initiative_uuid = ${uuid}
 	`).count
 }
-
