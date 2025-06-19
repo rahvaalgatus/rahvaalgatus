@@ -3,16 +3,16 @@ name: Tests on Node.js
 
 jobs:
   test:
-    name: "Node.js v16"
+    name: "Node.js v20"
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install Node.js v16
+      - name: Install Node.js v20
         uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: "20"
           cache: npm
           cache-dependency-path: npm-shrinkwrap.json
 
@@ -21,9 +21,6 @@ jobs:
 
       - name: Rebuild Better SQLite3
         run: "cd node_modules/better-sqlite3 && npm run build-release"
-
-      - name: Rebuild Sharp
-        run: npm rebuild --build-from-source sharp
 
       - name: Restore node_modules/root
         run: ln -s .. node_modules/root
